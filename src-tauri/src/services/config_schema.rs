@@ -257,7 +257,10 @@ fn ids<'a>(config: &'a Value, key: &str) -> HashSet<&'a str> {
 
 /// The filled slots of a shortcut grid.
 fn slot_values(slots: &Value) -> impl Iterator<Item = &Value> {
-    slots.as_object().into_iter().flat_map(|slots| slots.values())
+    slots
+        .as_object()
+        .into_iter()
+        .flat_map(|slots| slots.values())
 }
 
 const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
@@ -279,7 +282,11 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     }
     for (slots, key, field) in [
         (&config["aiTasks"], "aiTasks", Some("id")),
-        (&config["translation"]["targetLanguages"], "translation.targetLanguages", None),
+        (
+            &config["translation"]["targetLanguages"],
+            "translation.targetLanguages",
+            None,
+        ),
     ] {
         let mut seen = HashSet::new();
         for value in slot_values(slots) {
@@ -505,11 +512,13 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         .into_iter()
         .map(str::to_owned)
         .collect();
-    retain_slots(&mut config["mainActions"], |slot| match slot["type"].as_str() {
-        Some("command") => command_ids.contains(slot["commandId"].as_str().unwrap_or_default()),
-        Some("aiTask") => task_ids.contains(slot["taskId"].as_str().unwrap_or_default()),
-        Some("launcherPage") => page_ids.contains(slot["pageId"].as_str().unwrap_or_default()),
-        _ => true,
+    retain_slots(&mut config["mainActions"], |slot| {
+        match slot["type"].as_str() {
+            Some("command") => command_ids.contains(slot["commandId"].as_str().unwrap_or_default()),
+            Some("aiTask") => task_ids.contains(slot["taskId"].as_str().unwrap_or_default()),
+            Some("launcherPage") => page_ids.contains(slot["pageId"].as_str().unwrap_or_default()),
+            _ => true,
+        }
     });
     for page in config["launcherPages"].as_array_mut().into_iter().flatten() {
         retain_slots(&mut page["slots"], |id| {
@@ -606,11 +615,17 @@ mod tests {
                 "/mainActions",
                 json!({"q": {"type":"command","commandId":"missing"}}),
             ),
-            ("/mainActions", json!({"y": {"type":"standard","actionId":"askInChat"}})),
+            (
+                "/mainActions",
+                json!({"y": {"type":"standard","actionId":"askInChat"}}),
+            ),
             ("/launcherPages/0/slots", json!([])),
             ("/launcherPages/0/slots", json!({"q": "missing"})),
             ("/launcherPages", json!([])),
-            ("/translation/targetLanguages", json!({"q": "en_US", "w": "en_US"})),
+            (
+                "/translation/targetLanguages",
+                json!({"q": "en_US", "w": "en_US"}),
+            ),
         ] {
             let mut config = defaults.clone();
             *config.pointer_mut(path).unwrap() = value;
@@ -643,7 +658,10 @@ mod tests {
             config["mainActions"],
             json!({"w": {"type":"standard","actionId":"askInChat"}})
         );
-        assert_eq!(config["translation"]["targetLanguages"], json!({"q": "en_US"}));
+        assert_eq!(
+            config["translation"]["targetLanguages"],
+            json!({"q": "en_US"})
+        );
         assert_eq!(config["stt"]["isLlmFormattingEnabled"], false);
     }
 }

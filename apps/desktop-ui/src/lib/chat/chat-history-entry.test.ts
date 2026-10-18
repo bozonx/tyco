@@ -10,13 +10,13 @@ describe('createChatHistoryEntry', () => {
       createChatHistoryEntry({
         id: 'chat-1',
         title: 'Question',
-        lastMessageAt: '2026-04-22T00:00:00.000Z',
+        lastMessageAt: 1_776_816_000_000,
         messages: [userMessage, assistantMessage],
       })
     ).toEqual({
       id: 'chat-1',
       title: 'Question',
-      lastMessageAt: '2026-04-22T00:00:00.000Z',
+      lastMessageAt: 1_776_816_000_000,
       messages: [userMessage, assistantMessage],
     })
   })

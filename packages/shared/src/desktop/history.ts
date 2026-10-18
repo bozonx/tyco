@@ -10,7 +10,7 @@ export type EditorHistoryKind = 'output' | 'draft' | 'source'
 
 /** The AI transformation a `source` entry was taken before. */
 export type EditorHistoryOperation =
-  'ai-task' | 'translate' | 'correction' | 'voice-correction'
+  'aiTask' | 'translation' | 'correction' | 'voiceCorrection'
 
 export interface EditorHistoryEntry {
   text: string
@@ -30,5 +30,5 @@ export interface EditorHistoryItem {
   /** What the AI turned a `source` entry into. */
   result?: string
   /** The `result` of a `source` entry was inserted into a window or copied. */
-  sent?: boolean
+  isResultApplied?: boolean
 }

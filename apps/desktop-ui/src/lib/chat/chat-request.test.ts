@@ -5,7 +5,7 @@ describe('prepareChatRequest', () => {
   it('prepares a chat request with attachments', () => {
     const result = prepareChatRequest('Hello', [
       { text: 'file-a' },
-      { text: 'file-b', source: 'editor-text' },
+      { text: 'file-b', source: 'editorText' },
     ])
 
     expect(result.userMessage).toEqual({
@@ -13,13 +13,13 @@ describe('prepareChatRequest', () => {
       content: 'Hello',
       attachments: [
         { text: 'file-a' },
-        { text: 'file-b', source: 'editor-text' },
+        { text: 'file-b', source: 'editorText' },
       ],
     })
 
     expect(result.promptText).toContain('<attachment>\nfile-a\n</attachment>')
     expect(result.promptText).toContain(
-      '<attachment source="editor-text">\nfile-b\n</attachment>'
+      '<attachment source="editorText">\nfile-b\n</attachment>'
     )
     expect(result.promptText).toContain('Hello')
   })

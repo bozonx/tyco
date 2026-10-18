@@ -86,7 +86,7 @@ describe('chat store dependency wiring', () => {
     editor.setValue('Draft')
     editor.setSelection('Draft', 0, 5)
     const store = useChatStore()
-    expect(store.voiceChatContext?.source).toBe('editor-selection')
+    expect(store.voiceChatContext?.source).toBe('editorSelection')
     useDesktopStore().applyViewState({
       ...useDesktopStore().desktopState,
       isWindowShown: false,

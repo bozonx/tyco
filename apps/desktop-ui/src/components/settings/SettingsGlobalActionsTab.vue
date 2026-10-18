@@ -134,7 +134,9 @@
         <FieldSelect
           :model-value="userConfig.editor.submitKey ?? DEFAULT_SUBMIT_KEY"
           :options="submitKeyOptions"
-          @update:model-value="userConfig.editor.submitKey = resolveSubmitKey($event)"
+          @update:model-value="
+            userConfig.editor.submitKey = resolveSubmitKey($event)
+          "
         />
       </FieldRow>
     </SettingsSection>

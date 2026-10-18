@@ -18,9 +18,9 @@ const origins = {
 describe('inferAttachmentSource', () => {
   it('tells where a text came from', () => {
     expect(inferAttachmentSource(' outside ', origins)).toBe('selection')
-    expect(inferAttachmentSource('part', origins)).toBe('editor-selection')
+    expect(inferAttachmentSource('part', origins)).toBe('editorSelection')
     expect(inferAttachmentSource('whole text with a part', origins)).toBe(
-      'editor-text'
+      'editorText'
     )
   })
 
@@ -41,11 +41,11 @@ describe('formatAttachmentsForPrompt', () => {
     expect(
       formatAttachmentsForPrompt([
         { text: 'a "b"' },
-        { text: 'c', source: 'editor-text' },
+        { text: 'c', source: 'editorText' },
       ])
     ).toBe(
       '<attachment>\na "b"\n</attachment>\n\n' +
-        '<attachment source="editor-text">\nc\n</attachment>'
+        '<attachment source="editorText">\nc\n</attachment>'
     )
   })
   it('tells the model where a kept file is', () => {
@@ -71,7 +71,7 @@ describe('formatAttachmentsForPrompt', () => {
 describe('attachment labels', () => {
   it('falls back to a plain text for an attachment without a source', () => {
     expect(attachmentLabelKey()).toBe('chat.attachedText')
-    expect(attachmentLabelKey('editor-selection')).toBe('chat.editorSelection')
+    expect(attachmentLabelKey('editorSelection')).toBe('chat.editorSelection')
     expect(attachmentIcon('selection')).toBe('mdi:selection-drag')
     expect(attachmentIcon()).toBe('mdi:text-box-outline')
     expect(attachmentIcon(undefined, 'application/pdf')).toBe(

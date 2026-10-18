@@ -48,7 +48,10 @@ describe('settings session', () => {
   it('keeps a dirty draft and its baseline when another window sends a config', async () => {
     const { deps, model } = setup()
     model.draft.value.appearance.theme = 'dark'
-    model.applyIncoming({ ...config(), language: { ui: 'auto', user: 'ru_RU' } })
+    model.applyIncoming({
+      ...config(),
+      language: { ui: 'auto', user: 'ru_RU' },
+    })
     await model.persist()
     expect(deps.save).toHaveBeenCalledWith(
       expect.objectContaining({

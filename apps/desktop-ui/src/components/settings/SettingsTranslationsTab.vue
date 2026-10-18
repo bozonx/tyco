@@ -45,7 +45,9 @@
             @update:model-value="updateQualityGate"
           />
           <Button
-            v-if="translation.qualityGate === 'always' && !qualityGatePromptOpen"
+            v-if="
+              translation.qualityGate === 'always' && !qualityGatePromptOpen
+            "
             size="xs"
             variant="ghost"
             icon="mdi:plus"

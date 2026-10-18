@@ -30,10 +30,10 @@
   </FieldRow>
 </template>
 <script setup lang="ts">
-import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'

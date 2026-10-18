@@ -4,7 +4,6 @@
 
 pub(crate) mod audio;
 pub(crate) mod clipboard;
-pub(crate) mod process;
 mod file_manager;
 mod foreground_context;
 pub(crate) mod hotkeys;
@@ -13,6 +12,7 @@ pub mod keychain;
 #[cfg(any(target_os = "windows", test))]
 mod native_selection;
 mod panel_surface;
+pub(crate) mod process;
 pub(crate) mod selection;
 pub mod session;
 pub mod shell;

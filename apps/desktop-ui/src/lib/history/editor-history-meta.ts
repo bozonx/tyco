@@ -11,30 +11,30 @@ export interface EditorHistoryView extends EditorHistoryMeta {
   /** The text the AI was given, shown on demand under the result. */
   original?: { labelKey: string; text: string }
   /** The AI result was inserted into a window or copied. */
-  sent: boolean
+  isResultApplied: boolean
 }
 
 const OPERATION_ICONS: Record<EditorHistoryOperation, string> = {
-  'ai-task': 'mdi:auto-fix',
-  translate: 'mdi:translate',
+  aiTask: 'mdi:auto-fix',
+  translation: 'mdi:translate',
   correction: 'mdi:spellcheck',
-  'voice-correction': 'mdi:microphone-outline',
+  voiceCorrection: 'mdi:microphone-outline',
 }
 
 /** Label of an entry that holds the AI result. */
 const RESULT_LABELS: Record<EditorHistoryOperation, string> = {
-  'ai-task': 'history.kindAiTask',
-  translate: 'history.kindTranslate',
+  aiTask: 'history.kindAiTask',
+  translation: 'history.kindTranslate',
   correction: 'history.kindCorrection',
-  'voice-correction': 'history.kindVoiceInput',
+  voiceCorrection: 'history.kindVoiceInput',
 }
 
 /** Label of a source the AI produced nothing from (failed or cancelled). */
 const SOURCE_LABELS: Record<EditorHistoryOperation, string> = {
-  'ai-task': 'history.kindBeforeAiTask',
-  translate: 'history.kindBeforeTranslate',
+  aiTask: 'history.kindBeforeAiTask',
+  translation: 'history.kindBeforeTranslate',
   correction: 'history.kindBeforeCorrection',
-  'voice-correction': 'history.kindVoiceTranscript',
+  voiceCorrection: 'history.kindVoiceTranscript',
 }
 
 /** Icon and label that tell the user why the text is in the history. */
@@ -61,12 +61,12 @@ export function getEditorHistoryMeta(
 
 export function getEditorHistoryView(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result' | 'text'> &
-    Partial<Pick<EditorHistoryItem, 'sent'>>
+    Partial<Pick<EditorHistoryItem, 'isResultApplied'>>
 ): EditorHistoryView {
   const meta = getEditorHistoryMeta(item)
 
   if (item.kind !== 'source' || !item.result) {
-    return { ...meta, text: item.text, sent: false }
+    return { ...meta, text: item.text, isResultApplied: false }
   }
 
   return {
@@ -74,11 +74,11 @@ export function getEditorHistoryView(
     text: item.result,
     original: {
       labelKey:
-        item.operation === 'voice-correction'
+        item.operation === 'voiceCorrection'
           ? 'history.originalTranscript'
           : 'history.original',
       text: item.text,
     },
-    sent: !!item.sent,
+    isResultApplied: !!item.isResultApplied,
   }
 }

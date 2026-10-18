@@ -102,7 +102,7 @@ impl From<&Chat> for ChatSummary {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "camelCase")]
 pub enum ChatAttachmentSource {
     Selection,
     EditorSelection,

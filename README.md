@@ -98,7 +98,8 @@ Use `--wait` to obtain actual command completion, or manage the returned job ID
 through `tyco-ctl jobs`. Selection replacement is explicit:
 
 ```sh
-tyco-ctl run default:core.correct:fix --selection --replace --interactive --wait
+tyco-ctl run my-fix --selection --replace --interactive --wait
+tyco-ctl replace correction
 ```
 
 The command and selection grants must both be enabled. Internal selection

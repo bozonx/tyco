@@ -79,7 +79,8 @@ const submitKey = computed(() =>
   resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
 )
 const prefetch = computed(
-  () => desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled === true
+  () =>
+    desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled === true
 )
 const submitShortcutLabel = computed(() => submitShortcut(submitKey.value))
 const newlineShortcutLabel = computed(() => newlineShortcut(submitKey.value))

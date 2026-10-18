@@ -5,8 +5,8 @@ use std::time::{Duration, Instant};
 
 use serde_json::Value;
 
-use crate::errors::AppError;
 use super::binary_paths::default_binary_path;
+use crate::errors::AppError;
 use crate::services::platform::session::{self, DisplayServer};
 use crate::services::platform::window_tracker::tracker;
 
@@ -510,7 +510,8 @@ mod tests {
         let directory = std::env::temp_dir().join(format!("tyco-path-{}", std::process::id()));
         std::fs::create_dir_all(&directory).unwrap();
         std::fs::write(directory.join("xdotool"), "").unwrap();
-        let path = std::env::join_paths([std::path::Path::new("/nonexistent"), &directory]).unwrap();
+        let path =
+            std::env::join_paths([std::path::Path::new("/nonexistent"), &directory]).unwrap();
         assert_eq!(
             find_on_path("xdotool", Some(&path)),
             Some(directory.join("xdotool").to_string_lossy().into_owned())

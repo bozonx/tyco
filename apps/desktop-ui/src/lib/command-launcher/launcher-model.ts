@@ -19,10 +19,7 @@ import type {
   InvocationOutcome,
 } from '../invocation/invocation-types'
 import { moveHighlight } from '../menu-query/menu-query'
-import {
-  SHORTCUT_SLOT_COUNT,
-  slotList,
-} from '../shortcut-slots/shortcut-slots'
+import { SHORTCUT_SLOT_COUNT, slotList } from '../shortcut-slots/shortcut-slots'
 import type { ToolLookup } from '../tools/tool-types'
 
 /** The first commands of the list are run with the keys `1`–`9` */

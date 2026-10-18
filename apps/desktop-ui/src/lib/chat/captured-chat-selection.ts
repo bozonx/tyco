@@ -49,7 +49,7 @@ export function createCapturedChatSelection(
     const text = (params.selectedText ?? editorText ?? '').trim()
     const attachment: ChatAttachment = {
       text,
-      source: hasExternal ? 'selection' : 'editor-selection',
+      source: hasExternal ? 'selection' : 'editorSelection',
     }
 
     if (params.mode !== StartMode.CHAT || !params.isWindowShown || !text) {

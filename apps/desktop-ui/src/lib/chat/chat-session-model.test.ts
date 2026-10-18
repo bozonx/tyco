@@ -138,7 +138,7 @@ describe('createChatSessionModel', () => {
       const sampleChat: Chat = {
         id: 'chat-42',
         title: 'Loaded Chat',
-        lastMessageAt: '2026-01-01',
+        lastMessageAt: 1_767_225_600_000,
         messages: [{ role: 'user', content: 'Hi' }],
       }
       deps.loadChat.mockResolvedValueOnce(sampleChat)
@@ -177,7 +177,7 @@ describe('createChatSessionModel', () => {
       deps.loadChat.mockResolvedValueOnce({
         id: 'chat-99',
         title: 'Last',
-        lastMessageAt: '2026-01-01',
+        lastMessageAt: 1_767_225_600_000,
         messages: [],
       })
 

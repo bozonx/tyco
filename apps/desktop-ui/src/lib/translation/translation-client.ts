@@ -106,7 +106,9 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
                   problems,
                   options,
                   glossary,
-                  config.qualityGate === 'always' ? config.qualityGatePrompt : ''
+                  config.qualityGate === 'always'
+                    ? config.qualityGatePrompt
+                    : ''
                 )
               },
       })

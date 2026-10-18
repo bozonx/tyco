@@ -127,7 +127,7 @@ const editorItems = computed<HistoryListItem[]>(() =>
       meta: {
         icon: view.icon,
         label,
-        note: view.sent ? t('history.sent') : undefined,
+        note: view.isResultApplied ? t('history.sent') : undefined,
       },
       original: view.original && {
         label: t(view.original.labelKey),

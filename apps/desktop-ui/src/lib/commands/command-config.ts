@@ -136,13 +136,15 @@ export function normalizeCommands(value: unknown): CommandConfig[] {
   })
 }
 
-/** The command ids of a launcher page in key order; a missing command leaves its slot empty */
+/**
+ * The command ids of a launcher page in key order; a missing command leaves its
+ * slot empty
+ */
 export function normalizeLauncherCommands(
   value: unknown,
   commands: readonly CommandConfig[] = []
 ): (string | null)[] {
-  const source: Record<string, unknown> =
-    isRecord(value) ? value : {}
+  const source: Record<string, unknown> = isRecord(value) ? value : {}
   const existingIds = new Set(commands.map((c) => c.id))
   return SHORTCUT_SLOT_KEYS.map((key) => {
     const id = source[key]

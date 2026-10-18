@@ -101,7 +101,7 @@ tests cover dependency wiring, instance isolation and disposal.
 
 Capture stores during setup. Bind lazily acquired dependencies to the owner's
 Pinia instance rather than whichever Pinia is active when the callback runs.
-The invocations, translation, defaultCommands, and toolCatalog stores also own
+The invocations, translation, and toolCatalog stores also own
 services without public reactive state. This keeps their dependencies and
 lifetimes scoped to the application instead of a module singleton.
 

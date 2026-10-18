@@ -19,7 +19,7 @@ describe('getEditorHistoryMeta', () => {
     expect(
       getEditorHistoryMeta({
         kind: 'source',
-        operation: 'translate',
+        operation: 'translation',
         result: 'Hola',
       })
     ).toEqual({ icon: 'mdi:translate', labelKey: 'history.kindTranslate' })
@@ -27,13 +27,13 @@ describe('getEditorHistoryMeta', () => {
 
   it('names the operation a source without a result was taken before', () => {
     expect(
-      getEditorHistoryMeta({ kind: 'source', operation: 'translate' })
+      getEditorHistoryMeta({ kind: 'source', operation: 'translation' })
     ).toEqual({
       icon: 'mdi:translate',
       labelKey: 'history.kindBeforeTranslate',
     })
     expect(
-      getEditorHistoryMeta({ kind: 'source', operation: 'voice-correction' })
+      getEditorHistoryMeta({ kind: 'source', operation: 'voiceCorrection' })
         .labelKey
     ).toBe('history.kindVoiceTranscript')
   })
@@ -53,14 +53,14 @@ describe('getEditorHistoryView', () => {
         operation: 'correction',
         text: 'helo',
         result: 'Hello.',
-        sent: true,
+        isResultApplied: true,
       })
     ).toEqual({
       icon: 'mdi:spellcheck',
       labelKey: 'history.kindCorrection',
       text: 'Hello.',
       original: { labelKey: 'history.original', text: 'helo' },
-      sent: true,
+      isResultApplied: true,
     })
   })
 
@@ -68,7 +68,7 @@ describe('getEditorHistoryView', () => {
     expect(
       getEditorHistoryView({
         kind: 'source',
-        operation: 'voice-correction',
+        operation: 'voiceCorrection',
         text: 'raw',
         result: 'Raw.',
       }).original?.labelKey
@@ -78,19 +78,19 @@ describe('getEditorHistoryView', () => {
   it('shows a source without a result as is', () => {
     const view = getEditorHistoryView({
       kind: 'source',
-      operation: 'ai-task',
+      operation: 'aiTask',
       text: 'text',
     })
 
     expect(view.text).toBe('text')
     expect(view.original).toBeUndefined()
-    expect(view.sent).toBe(false)
+    expect(view.isResultApplied).toBe(false)
   })
 
   it('shows drafts and outputs as is', () => {
     const view = getEditorHistoryView({ kind: 'draft', text: 'text' })
 
-    expect(view).toMatchObject({ text: 'text', sent: false })
+    expect(view).toMatchObject({ text: 'text', isResultApplied: false })
     expect(view.original).toBeUndefined()
   })
 })

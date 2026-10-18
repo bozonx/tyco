@@ -17,7 +17,7 @@ export interface VoiceRecognitionDependencies {
   voiceCorrection: (text: string, signal?: AbortSignal) => Promise<string>
   saveSource: (
     text: string,
-    action: 'voice-correction'
+    action: 'voiceCorrection'
   ) => Promise<string | null>
   saveSourceResult: (sourceId: string | null, text: string) => Promise<unknown>
   setPendingModal: (options: {
@@ -201,7 +201,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         // distort it, and it cannot be dictated the same way twice
         let sourceId: string | null = null
         try {
-          sourceId = await deps.saveSource(recognizedText, 'voice-correction')
+          sourceId = await deps.saveSource(recognizedText, 'voiceCorrection')
         } catch {
           // the text is still here; only its copy in the history is missing
           toastKey('history.operationFailed', 'error')

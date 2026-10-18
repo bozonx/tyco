@@ -71,7 +71,9 @@ export function normalizeAppearance(value: unknown): AppearanceSettings {
     motion: isMotionMode(source.motion)
       ? source.motion
       : DEFAULT_APPEARANCE.motion,
-    uiScalePercent: isUiScale(uiScalePercent) ? uiScalePercent : DEFAULT_APPEARANCE.uiScalePercent,
+    uiScalePercent: isUiScale(uiScalePercent)
+      ? uiScalePercent
+      : DEFAULT_APPEARANCE.uiScalePercent,
   }
 }
 

@@ -28,7 +28,7 @@ describe('chat-session-storage', () => {
         if (name === 'getChat') {
           return {
             success: true,
-            result: { id: 'c1', title: 'T1', lastMessageAt: '', messages: [] },
+            result: { id: 'c1', title: 'T1', lastMessageAt: 0, messages: [] },
           }
         }
         if (name === 'saveChat') return { success: true, result: undefined }
@@ -47,22 +47,17 @@ describe('chat-session-storage', () => {
     expect(await driver.getChat('c1')).toEqual({
       id: 'c1',
       title: 'T1',
-      lastMessageAt: '',
+      lastMessageAt: 0,
       messages: [],
     })
     await expect(
-      driver.saveChat({
-        id: 'c1',
-        title: 'T1',
-        lastMessageAt: '',
-        messages: [],
-      })
+      driver.saveChat({ id: 'c1', title: 'T1', lastMessageAt: 0, messages: [] })
     ).resolves.toBeUndefined()
     await expect(driver.renameChat('c1', 'New Title')).resolves.toBeUndefined()
     expect(await driver.deleteChat('c1')).toEqual({
       id: 'c1',
       title: 'T1',
-      lastMessageAt: '',
+      lastMessageAt: 0,
       messages: [],
     })
     expect(await driver.searchChats!('query')).toEqual(['c1'])
@@ -79,7 +74,7 @@ describe('chat-session-storage', () => {
             result: {
               id: 'p1',
               title: 'Profile',
-              lastMessageAt: '',
+              lastMessageAt: 0,
               messages: [],
             },
           }
@@ -92,7 +87,7 @@ describe('chat-session-storage', () => {
       { callFunction: callFunction as DesktopCall },
       'writer'
     )
-    const chat = { id: 'p1', title: 'Profile', lastMessageAt: '', messages: [] }
+    const chat = { id: 'p1', title: 'Profile', lastMessageAt: 0, messages: [] }
 
     await driver.listChats()
     await driver.getChat('p1')

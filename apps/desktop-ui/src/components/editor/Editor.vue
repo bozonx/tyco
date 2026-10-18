@@ -134,7 +134,7 @@ const handleAskAi = async () => {
   menuModalsStore.closeAll()
   await chatStore.attachToChat(
     text,
-    selection ? 'editor-selection' : 'editor-text'
+    selection ? 'editorSelection' : 'editorText'
   )
 }
 

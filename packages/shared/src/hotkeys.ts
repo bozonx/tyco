@@ -17,14 +17,13 @@ export function configuredHotkey(
   config: Pick<UserConfig, 'hotkeys' | 'launcherPages'>,
   id: string
 ): string {
-  if (id === INLINE_CORRECTION_HOTKEY_ID) return config.hotkeys.selectionCorrection
+  if (id === INLINE_CORRECTION_HOTKEY_ID)
+    return config.hotkeys.selectionCorrection
   if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
     const pageId = id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
     return config.launcherPages.find((page) => page.id === pageId)?.hotkey ?? ''
   }
-  return Object.hasOwn(config.hotkeys, id)
-    ? config.hotkeys[id as HotkeyId]
-    : ''
+  return Object.hasOwn(config.hotkeys, id) ? config.hotkeys[id as HotkeyId] : ''
 }
 
 export const HOTKEY_MODIFIERS = ['Ctrl', 'Alt', 'Shift', 'Super'] as const

@@ -12,7 +12,10 @@ export function pluginId(plugin: ReturnType<PluginFactory>): string {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
-/** The saved entry of the plugin, a copy; a disabled one without settings when there is none */
+/**
+ * The saved entry of the plugin, a copy; a disabled one without settings when
+ * there is none
+ */
 export function getPluginState(
   plugin: ReturnType<PluginFactory>,
   states: Record<string, unknown> = {}

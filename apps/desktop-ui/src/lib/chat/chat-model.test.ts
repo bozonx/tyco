@@ -22,7 +22,7 @@ function createDeps(
     messageTooLongError: () => 'Message too long',
     noModelError: () => 'No model',
     createId: vi.fn(() => 'chat-id-1'),
-    nowIso: vi.fn(() => '2026-04-22T00:00:00.000Z'),
+    nowMs: vi.fn(() => 1_776_816_000_000),
     saveSessionState: vi.fn(),
     getLastChatId: vi.fn(() => null),
     getChatModel: vi.fn(() => ({ id: 'model-1', budgetCharacters: 100_000 })),
@@ -223,7 +223,7 @@ describe('chat-model', () => {
       loadChat: vi.fn(async () => ({
         id: 'chat-7',
         title: 'Saved prompt',
-        lastMessageAt: '2026-04-22T00:00:00.000Z',
+        lastMessageAt: 1_776_816_000_000,
         messages: [
           { role: 'user' as const, content: 'Saved prompt' },
           { role: 'assistant' as const, content: 'Saved reply' },
@@ -858,7 +858,7 @@ describe('file and image context policies', () => {
     const chat = (id: string) => ({
       id,
       title: id,
-      lastMessageAt: '',
+      lastMessageAt: 0,
       messages: [{ role: 'user' as const, content: id }],
     })
 

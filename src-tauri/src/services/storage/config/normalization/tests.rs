@@ -23,13 +23,17 @@ fn window_insertion_defaults_follow_the_injected_session() {
             json!({ "windowInsertion": { "linux": { "method": "wtype" } } }),
         ] {
             assert!(normalize_window_insertion_for_session(&mut config, session));
-            assert_eq!(config["windowInsertion"]["linux"]["method"], expected_method);
+            assert_eq!(
+                config["windowInsertion"]["linux"]["method"],
+                expected_method
+            );
             assert!(!normalize_window_insertion_for_session(
                 &mut config,
                 session
             ));
         }
-        let mut custom = json!({ "windowInsertion": { "linux": { "xdotoolPath": "/opt/bin/xdotool" } } });
+        let mut custom =
+            json!({ "windowInsertion": { "linux": { "xdotoolPath": "/opt/bin/xdotool" } } });
         normalize_window_insertion_for_session(&mut custom, session);
         assert_eq!(
             custom["windowInsertion"]["linux"]["xdotoolPath"],
@@ -37,7 +41,10 @@ fn window_insertion_defaults_follow_the_injected_session() {
         );
         for method in ["xdotool", "ydotool"] {
             let mut config = json!({ "windowInsertion": { "linux": { "method": method } } });
-            assert!(!normalize_window_insertion_for_session(&mut config, session));
+            assert!(!normalize_window_insertion_for_session(
+                &mut config,
+                session
+            ));
             assert_eq!(config["windowInsertion"]["linux"]["method"], method);
         }
     }

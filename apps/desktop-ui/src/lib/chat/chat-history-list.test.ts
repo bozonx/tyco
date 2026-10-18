@@ -6,7 +6,7 @@ import { filterChatHistory, groupChatHistory } from './chat-history-list'
 const item = (id: string, date: string, title = id): Chat => ({
   id,
   title,
-  lastMessageAt: date,
+  lastMessageAt: Date.parse(date),
   messages: [],
 })
 

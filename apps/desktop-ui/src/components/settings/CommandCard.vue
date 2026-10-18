@@ -14,7 +14,8 @@
       <span
         class="command-name"
         :class="{
-          'is-empty': !command.name || !command.isEnabled || unavailableReasonKey,
+          'is-empty':
+            !command.name || !command.isEnabled || unavailableReasonKey,
         }"
       >
         {{ command.name || t('commands.unnamed') }}

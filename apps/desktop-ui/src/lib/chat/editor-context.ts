@@ -25,6 +25,6 @@ export function resolveVoiceChatContext(
   if (external) return { text: external, source: 'selection' }
   const selection = input.editorSelection.trim()
   return selection && selection !== input.staleSelection?.trim()
-    ? { text: selection, source: 'editor-selection' }
+    ? { text: selection, source: 'editorSelection' }
     : null
 }

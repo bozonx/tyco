@@ -38,7 +38,10 @@ export interface DesktopActivationState {
   windowId: string | null
   selectedText: string | null
   mode: StartMode | null
-  /** The page of `launcherPages` the command overlay opens on; `null` for the first */
+  /**
+   * The page of `launcherPages` the command overlay opens on; `null` for the
+   * first
+   */
   launcherPageId?: string | null
   launcherRequest?: LauncherRequest | null
   accessRequest?: AccessRequest | null

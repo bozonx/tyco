@@ -1,86 +1,69 @@
 # Configuration and persistent files
 
-`userConfig.json` is a JSON object with camelCase keys. The supported schema
+`config.json` is a JSON object with camelCase keys. The supported schema
 version is `1` and comes from `packages/shared/src/config-version.json`. Portable defaults
-come from `user-config-defaults.json`; the Rust backend overrides only platform
-hotkeys and insertion binaries. `user-config-schema.json` describes known fields,
-with `defaultPath` pointing into those defaults. The two schema adapters support
-only the keywords used by this checked-in schema, not arbitrary JSON Schema.
-Shared normalization fixtures verify that both adapters produce identical data.
+come from `user-config-defaults.json`; the Rust backend overrides only the platform
+hotkeys and the Linux insertion method of the session. `user-config-schema.json`
+describes known fields, with `defaultPath` pointing into those defaults. The two
+schema adapters support only the keywords used by this checked-in schema
+(`propertyNames` included), not arbitrary JSON Schema. Shared normalization
+fixtures verify that both adapters produce identical data.
 
 The backend repairs malformed known settings on startup and drops unknown
 fields. Only the current field names and structure are supported: there are no
 migrations or aliases for earlier development formats. Normalization fills
 missing fields and stamps the current version.
 It rejects invalid IPC saves before storing credentials or writing the config:
-counts must be safe nonnegative integers, entity ids must be unique, and command,
-task, provider, model and launcher references must exist. Opaque plugin settings
-and plugin tool config remain plugin-owned. A newer schema version is rejected without modifying the file.
+counts must be safe nonnegative integers, entity ids and translation languages
+must be unique, and command, task, provider, model and launcher references must
+exist. Opaque plugin settings and plugin tool config remain plugin-owned. A newer
+schema version is rejected without modifying the file.
 
-The normalized `UserConfig` type has all core sections present. Serialized input
+The config holds settings only, no state: nothing records what the app added
+by itself, because it adds nothing. Tools (core and plugin) are registered at
+runtime and are not stored; `commands` holds only the commands the user made
+from them.
+
+## Structure
+
+The normalized `UserConfig` type has every section present. Serialized input
 is untrusted `UserConfigInput` and must pass through normalization before use.
-Related preferences are grouped under `appearance`, `editorHistory`, `chat`,
-`stt`, and `translation`. For example:
 
-```json
-{
-  "configVersion": 1,
-  "appearance": {
-    "theme": "auto",
-    "contrast": "auto",
-    "motion": "auto",
-    "uiScale": 100
-  },
-  "editorHistory": {
-    "storage": "disk",
-    "maxItems": 1000,
-    "retentionDays": 30,
-    "sanitizeSecrets": true
-  },
-  "chat": {
-    "imageQuality": "balanced",
-    "isHistoryEnabled": true,
-    "historyRetentionDays": 0
-  },
-  "launcherPages": [
-    {
-      "id": "main",
-      "inputMode": "selection",
-      "slots": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ]
-    }
-  ]
-}
-```
+| Section           | Contents                                                                                            |
+| ----------------- | --------------------------------------------------------------------------------------------------- |
+| `appearance`      | `theme`, `contrast`, `motion`, `uiScalePercent`                                                     |
+| `language`        | `ui` (interface locale or `auto`), `user` (the locale the user speaks and writes, or `auto`)        |
+| `editor`          | `submitKey`, `diffViewMode`                                                                         |
+| `quickWindow`     | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`                                                     |
+| `hotkeys`         | one shortcut per global mode, and `selectionCorrection` for the in-place correction                 |
+| `externalAccess`  | `canAccessSelection`                                                                                |
+| `windowInsertion` | `pasteShortcut`; `linux.method`, `linux.xdotoolPath`, `linux.ydotoolPath` (empty: from `PATH`)      |
+| `translation`     | provider settings, `qualityGatePrompt`, `glossary`, `targetLanguages` (a shortcut grid)             |
+| `mainActions`     | the action menu (a shortcut grid)                                                                   |
+| `launcherPages`   | `id`, `inputMode`, `hotkey`, `slots` (a shortcut grid of command ids)                               |
+| `commands`        | the commands of the user: `toolId`, `toolConfig`, `isEnabled`, `isOutputLogged`, …                  |
+| `llm`             | `providers`, `models`, `taskModelChains` (`translation`, `correction`, `voiceCorrection`, `aiTask`) |
+| `aiRules`         | `chat`, `correction`, `translation`, `voiceCorrection`                                              |
+| `aiTasks`         | named rules (a shortcut grid)                                                                       |
+| `aiVault`         | `path`, absent for the default location                                                             |
+| `plugins`         | per plugin id: `isEnabled` and the plugin-owned `settings`                                          |
+| `editorHistory`   | `storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`                                 |
+| `chatHistory`     | `isEnabled`, `retentionDays`                                                                        |
+| `chat`            | `imageQuality`                                                                                      |
+| `stt`             | `providerId`, `isLlmFormattingEnabled`, `providers.deepgram`, `providers.sherpaOnnx`                |
 
-This is a structural excerpt, not a complete configuration. Launcher pages
-share one representation, including the first page. Every page has a stable
-`id`, exactly 15 nullable command slots, and `inputMode` (`selection` or `none`).
-Main actions reference pages through `pageId`; reordering pages preserves these
-references. At least one page is required. Keyboard page numbers remain positions
-in the current page list.
+A shortcut grid is an object keyed by the keys of `SHORTCUT_SLOT_KEYS`
+(`q`…`b`, row by row); an empty slot is absent. Launcher pages have stable ids:
+main actions refer to them through `pageId`, and a page opens with the
+activation mode `commandLauncher:<page id>`. The overlay itself opens on its
+first page; a hotkey belongs to the page that it opens. At least one page is
+required.
 
-Translation targets and display preferences live in `translation.targetLanguages`
-and `translation.viewMode`; LLM task assignments live in `llm.taskModelChains`.
 Script tools use `workingDirectory`; webhook tools use `isAuthEnabled` and
 `authSecretId`; commands use `isLlmArgumentParsingEnabled`. The insertion output
-action is `insertIntoWindow`. SDK-specific enum spellings are converted only at
-the SDK boundary.
+action is `insertIntoWindow`. Enum values are camelCase; SDK-specific spellings
+(e.g. ai-kit's `openai-compatible` and `sherpa-onnx`) are converted only at the
+SDK boundary.
 
 Voice invocation is opt-in per command: `isVoiceEnabled` defaults to `false`.
 `voiceConfirmation` is `always` by default; `auto` permits only exact, unambiguous
@@ -89,10 +72,6 @@ entry. `hotkeys.voiceCommands` opens the separate voice command overlay and is
 unassigned by default. The voice catalog is independent of `launcherPages` and
 `availableIn.external`.
 
-The portable `registrationState` ledger has separate `reviewedMainActionIds`,
-`seededCommandIds`, and `seededToolIds`; it travels with the user's configuration
-so deleted defaults do not return on another installation.
-
 Every save writes the whole config atomically. Concurrent window edits use a
 three-way merge; conflicting arrays are rejected explicitly.
 
@@ -100,28 +79,35 @@ three-way merge; conflicting arrays are rejected explicitly.
 
 `SessionState` is shared across windows and lives only in backend memory. Last
 chat, last model, activation mode and recent menu inputs reset on restart.
-`diffViewMode` and `translation.viewMode` are persistent user preferences in the
-config. The browser's `localStorage.appearance` is a bootstrap cache to avoid a
-flash before the authoritative config arrives.
+`editor.diffViewMode` and `translation.viewMode` are persistent user preferences
+in the config. The browser's `localStorage.appearance` is a bootstrap cache to
+avoid a flash before the authoritative config arrives.
 
 Linux paths below honor XDG overrides. macOS and Windows use the platform paths
 in `services/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage.
 
-| Root                                  | Files                                                                                                                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Config (`~/.config/com.tyco.app`)     | `userConfig.json`, latest `userConfig.repaired.bak`, `secrets.json`                                                                                                      |
-| Data (`~/.local/share/com.tyco.app`)  | `history/editor-history.jsonl`; `chats/index.json`, `<id>.json`, `images/`, `chat-transaction.pending`; `plugins/<key>.json` and `<key>.previous`; Linux webview storage |
-| State (`~/.local/state/com.tyco.app`) | `logs/tyco.log` and its rotations; `logs/actions.log` and `actions.log.1`                                                                                                |
-| Cache (`~/.cache/com.tyco.app`)       | Platform/app cache directory; no application-owned model downloads                                                                                                       |
-| User-selected paths                   | Plugin note files                                                                                                                                                        |
+| Root                                  | Files                                                                                                                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Config (`~/.config/com.tyco.app`)     | `config.json` and up to 3 `config.json.repaired-<unix ms>` snapshots, `secrets.json`                                                                                       |
+| Data (`~/.local/share/com.tyco.app`)  | `editor-history.jsonl`; `chats/index.json`, `<id>.json`, `images/`, `chat-transaction.pending`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/`; `webview/` (Linux) |
+| State (`~/.local/state/com.tyco.app`) | `logs/tyco.log` and its rotations; `logs/actions.log` and `actions.log.1`; `webview/` (Windows)                                                                            |
+| Cache (`~/.cache/com.tyco.app`)       | Platform cache directory, created when opened; no application-owned model downloads                                                                                        |
+| User-selected paths                   | Plugin note files; `aiVault.path`                                                                                                                                          |
 
-Config backups remove API-key fields and webhook headers. Unknown core
+A profile of the AI vault keeps `profile.json`, `SOUL.md`, its chats in `chats/`
+(laid out as the app's own `chats/`) and its files in `workspace/`. Timestamps
+in the stored files are Unix milliseconds (`createdAt`, `updatedAt`,
+`lastMessageAt`). A plugin file is named by the hex of its id, because ids that
+differ only in case collide on a case-insensitive file system.
+
+Config snapshots remove API-key fields and webhook headers. Unknown core
 fields are rejected on save; startup repairs keep the original mapping in a
-backup before removing unsupported fields. Unreadable
-files are retained as private `.broken-*` copies. Before JSONL salvage, an exact
-copy named by its content digest is saved once, including invalid UTF-8 bytes.
-Explicit editor-history clearing removes its damage copies too. Temporary atomic
-write files may remain after a crash; successful writes clean up their own files.
+snapshot before removing unsupported fields. Unreadable files are retained as
+private `.broken-*` copies; up to 3 copies of a file are kept. Before JSONL
+salvage, an exact copy named by its content digest is saved once, including
+invalid UTF-8 bytes. Explicit editor-history clearing removes its damage copies
+too. Temporary atomic write files may remain after a crash; successful writes
+clean up their own files.
 
 ## Credentials and undo
 

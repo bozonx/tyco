@@ -61,4 +61,3 @@ export interface AiProject {
   createdAt: number
   updatedAt: number
 }
-

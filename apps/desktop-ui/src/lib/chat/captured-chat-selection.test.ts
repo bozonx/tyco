@@ -69,7 +69,7 @@ describe('createCapturedChatSelection', () => {
     ).toBe(true)
     expect(startChatWithAttachment).toHaveBeenCalledWith({
       text: 'Fallback text',
-      source: 'editor-selection',
+      source: 'editorSelection',
     })
   })
 
@@ -112,7 +112,7 @@ describe('createCapturedChatSelection', () => {
       )
     ).toBe(true)
     expect(startChatWithAttachment.mock.calls).toEqual([
-      [{ text: 'Fallback text', source: 'editor-selection' }],
+      [{ text: 'Fallback text', source: 'editorSelection' }],
       [{ text: 'External text', source: 'selection' }],
     ])
   })

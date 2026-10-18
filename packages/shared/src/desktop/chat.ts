@@ -3,7 +3,7 @@
  * application, the others come from the editor of the app
  */
 export type ChatAttachmentSource =
-  'selection' | 'editor-selection' | 'editor-text'
+  'selection' | 'editorSelection' | 'editorText'
 
 export interface ChatAttachment {
   text: string
@@ -143,7 +143,7 @@ export function parseOpenMainChatEvent(value: unknown): OpenMainChatEvent {
       throw new Error('Invalid chat attachment')
     if (
       attachment.source !== undefined &&
-      !['selection', 'editor-selection', 'editor-text'].includes(
+      !['selection', 'editorSelection', 'editorText'].includes(
         String(attachment.source)
       )
     )

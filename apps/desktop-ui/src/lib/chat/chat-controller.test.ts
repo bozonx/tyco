@@ -44,7 +44,7 @@ function setup() {
     messageTooLongError: () => 'Message too long',
     noModelError: () => 'No model',
     createId: () => `chat-${++id}`,
-    nowIso: () => '2026-10-11T00:00:00.000Z',
+    nowMs: () => 1_791_676_800_000,
     saveSessionState: vi.fn(),
     getLastChatId: () => null,
     getChatModel: () =>
@@ -136,7 +136,7 @@ describe('chat controller', () => {
     editor.value = 'Draft'
     await controller.attachToChat('Draft')
     expect(model.currentChatParams.value.attachments).toEqual([
-      { text: 'Draft', source: 'editor-text' },
+      { text: 'Draft', source: 'editorText' },
     ])
     await controller.attachToChat('Another', 'selection')
     expect(model.currentChatParams.value.attachments).toContainEqual({
@@ -168,7 +168,7 @@ describe('chat controller', () => {
     expect(first.controller.voiceChatContext.value).toBeNull()
     expect(second.controller.voiceChatContext.value).toEqual({
       text: 'selection',
-      source: 'editor-selection',
+      source: 'editorSelection',
     })
   })
 
@@ -264,7 +264,7 @@ describe('chat controller', () => {
     loadChat.mockResolvedValue({
       id: 'stored',
       title: 'Stored',
-      lastMessageAt: '2026-10-11',
+      lastMessageAt: 1_791_676_800_000,
       messages: [{ role: 'user', content: 'question' }],
     })
     await controller.openChat('stored')

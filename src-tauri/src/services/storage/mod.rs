@@ -221,27 +221,29 @@ mod tests {
 
     #[test]
     fn history_limit_falls_back_to_the_default() {
-        let config = json!({ "chatHistoryLimit": "many", "negative": -3 });
+        let config = json!({ "maxItems": "many", "negative": -3 });
 
-        assert_eq!(history_limit(&config, "chatHistoryLimit", 20), 20);
+        assert_eq!(history_limit(&config, "maxItems", 20), 20);
         assert_eq!(history_limit(&config, "negative", 20), 20);
         assert_eq!(history_limit(&config, "missing", 10), 10);
     }
 
     #[test]
     fn history_limit_accepts_numbers_and_rejects_numeric_strings() {
-        let config = json!({ "editorHistoryLimit": 5, "chatHistoryLimit": " 7 " });
-
-        assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 5);
-        assert_eq!(history_limit(&config, "chatHistoryLimit", 50), 50);
+        assert_eq!(history_limit(&json!({ "maxItems": 5 }), "maxItems", 50), 5);
+        assert_eq!(
+            history_limit(&json!({ "maxItems": " 7 " }), "maxItems", 50),
+            50
+        );
     }
 
     #[test]
     fn history_limit_zero_turns_the_history_off() {
-        let config = json!({ "editorHistoryLimit": 0, "chatHistoryLimit": "0" });
-
-        assert_eq!(history_limit(&config, "editorHistoryLimit", 50), 0);
-        assert_eq!(history_limit(&config, "chatHistoryLimit", 50), 50);
+        assert_eq!(history_limit(&json!({ "maxItems": 0 }), "maxItems", 50), 0);
+        assert_eq!(
+            history_limit(&json!({ "maxItems": "0" }), "maxItems", 50),
+            50
+        );
     }
 
     #[test]
@@ -291,7 +293,7 @@ mod tests {
                 "id": "x",
                 "text": "text",
                 "kind": "source",
-                "operation": "voice-correction",
+                "operation": "voiceCorrection",
                 "createdAt": 1,
                 "result": "Text.",
             })
@@ -299,7 +301,10 @@ mod tests {
 
         item.is_result_applied = true;
 
-        assert_eq!(serde_json::to_value(&item).unwrap()["sent"], json!(true));
+        assert_eq!(
+            serde_json::to_value(&item).unwrap()["isResultApplied"],
+            json!(true)
+        );
     }
 
     #[test]

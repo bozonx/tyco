@@ -23,7 +23,7 @@ function createApi() {
               {
                 id: 'chat-1',
                 title: 'Hello',
-                lastMessageAt: '2026-04-22T00:00:00.000Z',
+                lastMessageAt: 1_776_816_000_000,
                 messages: [],
               },
             ],
@@ -34,7 +34,7 @@ function createApi() {
             result: {
               id: 'chat-1',
               title: 'Hello',
-              lastMessageAt: '2026-04-22T00:00:00.000Z',
+              lastMessageAt: 1_776_816_000_000,
               messages: [{ role: 'user', content: 'Hello' }],
             },
           }
@@ -93,14 +93,14 @@ describe('history-model', () => {
 
     await store.saveOutput('sent')
     await store.saveOutput('left')
-    await store.saveSource('before', 'translate')
+    await store.saveSource('before', 'translation')
 
     expect(api.callFunction.mock.calls).toEqual([
       ['saveEditorHistory', [{ text: 'sent', kind: 'output' }]],
       ['saveEditorHistory', [{ text: 'left', kind: 'output' }]],
       [
         'saveEditorHistory',
-        [{ text: 'before', kind: 'source', operation: 'translate' }],
+        [{ text: 'before', kind: 'source', operation: 'translation' }],
       ],
     ])
   })
@@ -180,8 +180,8 @@ describe('history-model', () => {
     const store = createHistoryModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one'), editorItem('2', 'two')]
     store.chatHistory.value = [
-      { id: 'chat-1', title: 'A', lastMessageAt: 'x' },
-      { id: 'chat-2', title: 'B', lastMessageAt: 'y' },
+      { id: 'chat-1', title: 'A', lastMessageAt: 1 },
+      { id: 'chat-2', title: 'B', lastMessageAt: 2 },
     ]
 
     const removed = await store.removeFromEditorHistory('1')
@@ -213,7 +213,7 @@ describe('history-model', () => {
     const api = createApi()
     const store = createHistoryModel(api as unknown as HistoryApi)
     store.chatHistory.value = [
-      { id: 'chat-1', title: 'Hello', lastMessageAt: 'x' },
+      { id: 'chat-1', title: 'Hello', lastMessageAt: 1 },
     ]
 
     const removed = await store.deleteChat('chat-1')
@@ -228,7 +228,7 @@ describe('history-model', () => {
     const api = createApi()
     const store = createHistoryModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one')]
-    store.chatHistory.value = [{ id: 'chat-1', title: 'A', lastMessageAt: 'x' }]
+    store.chatHistory.value = [{ id: 'chat-1', title: 'A', lastMessageAt: 1 }]
 
     await store.clearEditorHistory()
     await store.clearChats()
@@ -283,7 +283,7 @@ describe('history-model', () => {
       store.saveChat({
         id: 'chat-1',
         title: 'Hello',
-        lastMessageAt: '',
+        lastMessageAt: 0,
         messages: [],
       })
     ).resolves.toBeUndefined()
@@ -305,7 +305,7 @@ describe('history-model', () => {
 
     const load = store.loadChatHistory()
     await store.deleteChat('chat-1')
-    finishLoad({ result: [{ id: 'chat-1', title: '', lastMessageAt: '' }] })
+    finishLoad({ result: [{ id: 'chat-1', title: '', lastMessageAt: 0 }] })
     await load
 
     expect(store.chatHistory.value).toEqual([])

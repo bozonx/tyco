@@ -34,9 +34,7 @@ export function groupChatHistory(
   startWeek.setDate(startWeek.getDate() - 7)
 
   const groups = new Map<ChatHistoryGroup, ChatSummary[]>()
-  const sorted = [...items].sort(
-    (a, b) => b.lastMessageAt - a.lastMessageAt
-  )
+  const sorted = [...items].sort((a, b) => b.lastMessageAt - a.lastMessageAt)
 
   for (const item of sorted) {
     const time = item.lastMessageAt

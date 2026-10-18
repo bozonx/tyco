@@ -429,9 +429,7 @@ describe('command removal', () => {
 
 describe('commandCliCall', () => {
   it('quotes an id only when the shell needs it', () => {
-    expect(commandCliCall('translate-en')).toBe(
-      'tyco-ctl run translate-en'
-    )
+    expect(commandCliCall('translate-en')).toBe('tyco-ctl run translate-en')
     expect(commandCliCall("it's mine")).toBe("tyco-ctl run 'it'\\''s mine'")
     expect(commandCliCall('Work note', true)).toBe(
       "tyco-ctl run --name 'Work note'"

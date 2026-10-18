@@ -29,9 +29,7 @@ pub(super) fn normalize_window_insertion_for_session(
     }
     let default_method =
         default_user_config_for_session(session)["windowInsertion"]["linux"]["method"].clone();
-    let insertion = config
-        .entry("windowInsertion")
-        .or_insert_with(|| json!({}));
+    let insertion = config.entry("windowInsertion").or_insert_with(|| json!({}));
     if !insertion.is_object() {
         *insertion = json!({});
     }

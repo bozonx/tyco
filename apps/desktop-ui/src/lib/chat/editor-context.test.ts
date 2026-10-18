@@ -20,7 +20,7 @@ describe('resolveVoiceChatContext', () => {
         editorSelection: 'inside',
         staleSelection: null,
       })
-    ).toEqual({ text: 'inside', source: 'editor-selection' })
+    ).toEqual({ text: 'inside', source: 'editorSelection' })
   })
 
   it('skips a selection left from an earlier showing of the window', () => {

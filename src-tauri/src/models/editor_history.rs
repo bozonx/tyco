@@ -15,10 +15,10 @@ pub enum EditorHistoryKind {
 
 /// The AI transformation a `Source` entry was taken before.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "camelCase")]
 pub enum EditorHistoryOperation {
     AiTask,
-    Translate,
+    Translation,
     Correction,
     VoiceCorrection,
 }
@@ -39,7 +39,6 @@ pub struct EditorHistoryRecord {
     pub result: Option<String>,
     /// The `result` of a `Source` entry was inserted into a window or copied.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    #[serde(rename = "sent")]
     pub is_result_applied: bool,
 }
 
@@ -60,7 +59,7 @@ pub struct CreateEditorHistoryRequest {
 mod tests {
     #[test]
     fn persisted_records_preserve_timestamp_and_applied_result_wire_names() {
-        let value = serde_json::json!({"id":"record", "text":"source", "kind":"source", "createdAt":123, "result":"output", "sent":true});
+        let value = serde_json::json!({"id":"record", "text":"source", "kind":"source", "createdAt":123, "result":"output", "isResultApplied":true});
         let record: super::EditorHistoryRecord = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(record.created_at_ms, 123);
         assert!(record.is_result_applied);

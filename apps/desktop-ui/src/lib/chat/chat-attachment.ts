@@ -5,9 +5,9 @@ export function attachmentLabelKey(source?: ChatAttachmentSource): string {
   switch (source) {
     case 'selection':
       return 'chat.selectedText'
-    case 'editor-selection':
+    case 'editorSelection':
       return 'chat.editorSelection'
-    case 'editor-text':
+    case 'editorText':
       return 'chat.editorText'
     default:
       return 'chat.attachedText'
@@ -24,8 +24,8 @@ export function attachmentIcon(
   switch (source) {
     case 'selection':
       return 'mdi:selection-drag'
-    case 'editor-selection':
-    case 'editor-text':
+    case 'editorSelection':
+    case 'editorText':
       return 'mdi:file-document-edit-outline'
     default:
       return 'mdi:text-box-outline'
@@ -53,8 +53,8 @@ export function inferAttachmentSource(
   // a text taken into the editor from another application is still that
   // application's selection
   if (trimmed === origins.externalSelection?.trim()) return 'selection'
-  if (trimmed === origins.editorSelection.trim()) return 'editor-selection'
-  if (trimmed === origins.editorText.trim()) return 'editor-text'
+  if (trimmed === origins.editorSelection.trim()) return 'editorSelection'
+  if (trimmed === origins.editorText.trim()) return 'editorText'
   return undefined
 }
 

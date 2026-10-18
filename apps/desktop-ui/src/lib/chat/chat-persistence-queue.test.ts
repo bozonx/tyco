@@ -24,7 +24,7 @@ describe('createChatPersistenceQueue', () => {
     const renameChat = vi.fn(async () => {})
     const currentChatParams = ref<ChatParams>({ id: '' })
     const queue = createChatPersistenceQueue(
-      { saveChat, renameChat, nowIso: () => '2026-01-01T00:00:00.000Z' },
+      { saveChat, renameChat, nowMs: () => 1_767_225_600_000 },
       { currentChatParams }
     )
 
@@ -52,7 +52,7 @@ describe('createChatPersistenceQueue', () => {
       title: 'Original',
     })
     const queue = createChatPersistenceQueue(
-      { saveChat, renameChat, nowIso: () => '2026-01-01T00:00:00.000Z' },
+      { saveChat, renameChat, nowMs: () => 1_767_225_600_000 },
       { currentChatParams }
     )
 
@@ -86,7 +86,7 @@ describe('createChatPersistenceQueue', () => {
     const renameChat = vi.fn(async () => {})
     const currentChatParams = ref<ChatParams>({ id: 'chat-1', title: 'Old' })
     const queue = createChatPersistenceQueue(
-      { saveChat, renameChat, nowIso: () => '2026-01-01T00:00:00.000Z' },
+      { saveChat, renameChat, nowMs: () => 1_767_225_600_000 },
       { currentChatParams }
     )
 
@@ -104,7 +104,7 @@ describe('createChatPersistenceQueue', () => {
     const renameChat = vi.fn(async () => {})
     const currentChatParams = ref<ChatParams>({ id: 'chat-1' })
     const queue = createChatPersistenceQueue(
-      { saveChat, renameChat, nowIso: () => '2026-01-01T00:00:00.000Z' },
+      { saveChat, renameChat, nowMs: () => 1_767_225_600_000 },
       { currentChatParams }
     )
 
@@ -120,7 +120,7 @@ describe('createChatPersistenceQueue', () => {
     })
     const currentChatParams = ref<ChatParams>({ id: 'chat-1' })
     const queue = createChatPersistenceQueue(
-      { saveChat, renameChat, nowIso: () => '2026-01-01T00:00:00.000Z' },
+      { saveChat, renameChat, nowMs: () => 1_767_225_600_000 },
       { currentChatParams }
     )
 

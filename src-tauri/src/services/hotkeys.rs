@@ -14,8 +14,8 @@ use crate::services::platform::linux::hotkeys_portal::{
 };
 use crate::services::platform::session;
 use crate::state::AppState;
-pub(crate) use bindings::{bindings_from_config, global_target, HotkeyBinding, HotkeyTarget};
 pub use bindings::default_hotkeys_config;
+pub(crate) use bindings::{bindings_from_config, global_target, HotkeyBinding, HotkeyTarget};
 pub use global_shortcut::HotkeyRegistry;
 use global_shortcut::{
     apply_global_shortcut, suspend_with, GlobalShortcutProvider, SystemHotkeyProvider,

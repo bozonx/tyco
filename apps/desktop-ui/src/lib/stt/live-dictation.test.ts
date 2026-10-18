@@ -7,10 +7,7 @@ import type { LiveTranscriptState } from './live-transcript'
 import type { SttClient, SttLiveRequest } from './stt-client'
 import type { VoiceCaptureControl } from './voice-capture'
 
-const model = {
-  provider: 'deepgram' as const,
-  modelId: 'nova-3',
-}
+const model = { provider: 'deepgram' as const, modelId: 'nova-3' }
 
 /** A microphone whose audio ends when stopped, and a provider driven by hand */
 function setup(finishTimeoutMs?: number) {

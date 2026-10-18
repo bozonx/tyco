@@ -58,7 +58,9 @@
               :separator="false"
             >
               <FieldSwitch
-                :model-value="userConfig.editorHistory.isSecretSanitizingEnabled ?? false"
+                :model-value="
+                  userConfig.editorHistory.isSecretSanitizingEnabled ?? false
+                "
                 @update:model-value="
                   userConfig.editorHistory.isSecretSanitizingEnabled = $event
                 "

@@ -33,7 +33,7 @@ function request(
 ): MenuStepRunRequest {
   return {
     text: 'source',
-    operation: 'translate',
+    operation: 'translation',
     pending: { label: 'Working' },
     invoke: vi.fn().mockResolvedValue({ ok: true, content: 'result' }),
     read: (result) => result.content ?? null,
@@ -48,7 +48,7 @@ describe('menu step run', () => {
     const show = vi.fn()
     await run(request({ show }))
 
-    expect(deps.saveSource).toHaveBeenCalledWith('source', 'translate')
+    expect(deps.saveSource).toHaveBeenCalledWith('source', 'translation')
     expect(deps.saveSourceResult).toHaveBeenCalledWith('source-1', 'result')
     expect(show).toHaveBeenCalledWith('result', { ok: true, content: 'result' })
     expect(menu.pendingModal.value).toBeNull()

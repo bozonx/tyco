@@ -64,10 +64,7 @@ describe('voice recognition model', () => {
     const { deps, model } = setup()
     await model.startSession()
     await model.finish('next')
-    expect(deps.saveSource).toHaveBeenCalledWith(
-      'Raw words',
-      'voice-correction'
-    )
+    expect(deps.saveSource).toHaveBeenCalledWith('Raw words', 'voiceCorrection')
     expect(deps.saveSourceResult).toHaveBeenCalledWith(
       'source-id',
       'Formatted words.'

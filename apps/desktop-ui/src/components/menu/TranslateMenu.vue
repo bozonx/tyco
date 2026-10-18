@@ -75,8 +75,8 @@ import {
   getLanguageLabelKey,
 } from '../../lib/locale/language'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
-import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import type { TranslateMenuParams } from '../../lib/modals/menu-modal-params'
+import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import { translationMetaOf } from '../../lib/translation/translation-meta'
 import {
   type LanguageGroup,
@@ -130,16 +130,15 @@ const languageLabel = (id: string): string => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  slotList(desktopStore.userConfig.translation.targetLanguages).map(
-    (lang) =>
-      lang
-        ? {
-            name: languageLabel(lang),
-            action: async () => {
-              await translate(lang)
-            },
-          }
-        : undefined
+  slotList(desktopStore.userConfig.translation.targetLanguages).map((lang) =>
+    lang
+      ? {
+          name: languageLabel(lang),
+          action: async () => {
+            await translate(lang)
+          },
+        }
+      : undefined
   )
 )
 
@@ -298,7 +297,7 @@ const translate = async (targetLanguage: string, source?: string) => {
   } as const
   await runStep({
     text: sourceText,
-    operation: 'translate',
+    operation: 'translation',
     pending: { label: t(stageLabels.translating) },
     invoke: (signal, updatePending) =>
       invocations.call('core.translate', sourceText, {

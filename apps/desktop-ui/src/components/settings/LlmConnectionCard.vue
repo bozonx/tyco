@@ -171,7 +171,7 @@ const PROVIDER_ICONS: Record<string, string> = {
   google: 'mdi:google',
   openrouter: 'mdi:router-network',
   deepseek: 'mdi:fish',
-  'openaiCompatible': 'mdi:server-network',
+  openaiCompatible: 'mdi:server-network',
 }
 function providerIcon(provider: LlmProvider) {
   return PROVIDER_ICONS[provider.type] ?? 'mdi:cube-outline'

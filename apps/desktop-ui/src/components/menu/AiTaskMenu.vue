@@ -43,8 +43,8 @@ import useToast from '../../composables/use-toast'
 import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
-import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import type { AiTaskMenuParams } from '../../lib/modals/menu-modal-params'
+import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import { type ActionItem } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
@@ -221,7 +221,7 @@ async function makeDiff(prompt: string) {
 
   await runStep({
     text: trimmedText,
-    operation: 'ai-task',
+    operation: 'aiTask',
     pending: { ai: true },
     invoke: (signal) =>
       invocations.call('core.aiTask', trimmedText, {

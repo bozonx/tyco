@@ -39,7 +39,9 @@ describe('normalizeAppearance', () => {
   })
 
   it('accepts a numeric scale stored as a string', () => {
-    expect(normalizeAppearance({ uiScalePercent: '175' }).uiScalePercent).toBe(100)
+    expect(normalizeAppearance({ uiScalePercent: '175' }).uiScalePercent).toBe(
+      100
+    )
   })
 })
 
@@ -68,7 +70,12 @@ describe('resolveAppearance', () => {
   it('lets explicit values override system preferences', () => {
     expect(
       resolveAppearance(
-        { theme: 'light', contrast: 'normal', motion: 'normal', uiScalePercent: 130 },
+        {
+          theme: 'light',
+          contrast: 'normal',
+          motion: 'normal',
+          uiScalePercent: 130,
+        },
         {
           prefersDark: true,
           prefersMoreContrast: true,
@@ -86,7 +93,12 @@ describe('resolveAppearance', () => {
   it('forces high contrast and no motion for e-ink', () => {
     expect(
       resolveAppearance(
-        { theme: 'e-ink', contrast: 'normal', motion: 'normal', uiScalePercent: 100 },
+        {
+          theme: 'e-ink',
+          contrast: 'normal',
+          motion: 'normal',
+          uiScalePercent: 100,
+        },
         NO_PREFERENCES
       )
     ).toMatchObject({ theme: 'e-ink', contrast: 'more', motion: 'reduce' })

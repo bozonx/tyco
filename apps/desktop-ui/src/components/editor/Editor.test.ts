@@ -391,13 +391,13 @@ describe('Editor.vue toolbar', () => {
     await askAi().trigger('click')
     expect(attachToChat).toHaveBeenLastCalledWith(
       'Hello foo world',
-      'editor-text'
+      'editorText'
     )
 
     editorInputStore.setSelection('foo', 6, 9)
     await wrapper.vm.$nextTick()
     await askAi().trigger('click')
-    expect(attachToChat).toHaveBeenLastCalledWith('foo', 'editor-selection')
+    expect(attachToChat).toHaveBeenLastCalledWith('foo', 'editorSelection')
   })
 
   it('tells that the buttons act on the selection while there is one', async () => {

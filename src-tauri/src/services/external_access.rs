@@ -188,16 +188,25 @@ mod tests {
         let mut config =
             json!({"externalAccess":{"canAccessSelection":false } ,"appearance":{"theme":"dark"}});
         grant_selection(&mut config);
-        assert_eq!(config["externalAccess"], json!({ "canAccessSelection": true }));
+        assert_eq!(
+            config["externalAccess"],
+            json!({ "canAccessSelection": true })
+        );
         assert_eq!(config["appearance"]["theme"], json!("dark"));
 
         let mut config = json!({ "externalAccess": null });
         grant_selection(&mut config);
-        assert_eq!(config["externalAccess"], json!({ "canAccessSelection": true }));
+        assert_eq!(
+            config["externalAccess"],
+            json!({ "canAccessSelection": true })
+        );
 
         let mut config = json!({});
         grant_selection(&mut config);
-        assert_eq!(config["externalAccess"], json!({ "canAccessSelection": true }));
+        assert_eq!(
+            config["externalAccess"],
+            json!({ "canAccessSelection": true })
+        );
     }
 
     #[test]

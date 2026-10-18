@@ -4,10 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createAsyncQueue } from '../net/async-queue'
 import { buildSttCatalog, createSttClient } from './stt-client'
 
-const model = {
-  provider: 'deepgram' as const,
-  modelId: 'nova-3',
-}
+const model = { provider: 'deepgram' as const, modelId: 'nova-3' }
 
 const sherpa = {
   provider: 'sherpaOnnx' as const,

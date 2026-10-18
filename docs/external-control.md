@@ -59,6 +59,11 @@ tyco-ctl open select --text 'Please improve this text.'
 tyco-ctl open command-launcher --selection
 ```
 
+The chooser opens on its first page. A page of its own opens with
+`tyco --mode=commandLauncher:<page id>`; Settings → Hotkeys shows that line for
+each page, and the hotkey of a page is stored on the page itself
+(`launcherPages[].hotkey`).
+
 On Linux the same windows can be opened through the session bus:
 
 ```sh
@@ -84,8 +89,7 @@ arguments; use `tyco-ctl run --stdin` for private scripted input.
 
 Each library command is allowed on its own: the terminal icon in its row in
 Settings → Commands, or **Available from outside** in its settings. The command
-must also be enabled. Newly created and seeded core/plugin commands are not
-granted external access.
+must also be enabled. A newly created command is not granted external access.
 
 The **External access** section below the list holds one capability that is
 independent of the command grants:
@@ -162,7 +166,7 @@ the clipboard after capture. Later changes to clipboard content are preserved.
 
 ```sh
 tyco-ctl commands list --json
-tyco-ctl commands describe default:core.correct:fix
+tyco-ctl commands describe my-fix
 tyco-ctl commands describe --name 'My command'
 ```
 
@@ -329,7 +333,7 @@ busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
   RunCommand s my-backup
 
 busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
-  ReplaceSelection s default:core.correct:fix
+  ReplaceSelection s my-fix
 ```
 
 Successful calls acknowledge activation; they do not return command results or

@@ -134,7 +134,9 @@ describe('ChatInput.vue', () => {
     })
 
     it('emits send on Ctrl+Enter when submitKey is configured as ctrlEnter', async () => {
-      mocks.ipcState.desktopState.userConfig = { editor: { submitKey: 'ctrlEnter' } }
+      mocks.ipcState.desktopState.userConfig = {
+        editor: { submitKey: 'ctrlEnter' },
+      }
       const wrapper = mount(ChatInput)
       const textarea = wrapper.get('textarea')
 

@@ -165,7 +165,7 @@ mod tests {
     fn push_editor_history_keeps_an_output_and_a_new_source_separate() {
         let mut history = vec![history_item("a", "sent", EditorHistoryKind::Output)];
         let mut source = history_item("b", "sent", EditorHistoryKind::Source);
-        source.operation = Some(EditorHistoryOperation::Translate);
+        source.operation = Some(EditorHistoryOperation::Translation);
 
         push_editor_history(&mut history, source, None, 10);
 
@@ -174,7 +174,7 @@ mod tests {
         assert_eq!(history[0].kind, EditorHistoryKind::Source);
         assert_eq!(
             history[0].operation,
-            Some(EditorHistoryOperation::Translate)
+            Some(EditorHistoryOperation::Translation)
         );
         assert_eq!(history[1].kind, EditorHistoryKind::Output);
     }
@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn push_editor_history_keeps_repeated_ai_operations_separate() {
         let mut first = history_item("a", "text", EditorHistoryKind::Source);
-        first.operation = Some(EditorHistoryOperation::Translate);
+        first.operation = Some(EditorHistoryOperation::Translation);
         first.result = Some(String::from("Translation"));
         let mut second = history_item("b", "text", EditorHistoryKind::Source);
         second.operation = Some(EditorHistoryOperation::Correction);

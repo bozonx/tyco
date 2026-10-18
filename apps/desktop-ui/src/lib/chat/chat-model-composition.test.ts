@@ -25,7 +25,7 @@ function fixture() {
     messageTooLongError: () => 'Too long',
     noModelError: () => 'No model',
     createId: () => 'new-id',
-    nowIso: () => '2026-04-22T00:00:00.000Z',
+    nowMs: () => 1_776_816_000_000,
     saveSessionState: vi.fn(),
     getLastChatId: () => null,
     getChatModel: () => ({ id: 'model', budgetCharacters: 1000 }),

@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   chatHistory: [] as Array<{
     id: string
     title: string
-    lastMessageAt: string
+    lastMessageAt: number
   }>,
   currentChatParams: { id: null as string | null, title: '' },
   isGenerating: false,
@@ -163,7 +163,7 @@ describe('ChatSidebar.vue', () => {
     const item = {
       id: 'image-chat',
       title: 'Image chat',
-      lastMessageAt: new Date().toISOString(),
+      lastMessageAt: Date.now(),
       messages: [],
     }
     mocks.chatHistory.push(item)
@@ -252,7 +252,7 @@ it('refreshes message search when chat history changes without changing the quer
   history.push({
     id: 'chat',
     title: 'Unrelated title',
-    lastMessageAt: new Date().toISOString(),
+    lastMessageAt: Date.now(),
   })
   mocks.searchChats.mockResolvedValue([])
   const wrapper = mount(ChatSidebar, {
@@ -279,7 +279,7 @@ it('refreshes message search when chat history changes without changing the quer
   await vi.advanceTimersByTimeAsync(200)
   expect(wrapper.find('.chat-list-item').exists()).toBe(false)
   mocks.searchChats.mockResolvedValue(['chat'])
-  history[0].lastMessageAt = new Date(Date.now() + 1000).toISOString()
+  history[0].lastMessageAt = Date.now() + 1000
   await flushPromises()
   await vi.advanceTimersByTimeAsync(200)
   expect(mocks.searchChats).toHaveBeenLastCalledWith('needle')

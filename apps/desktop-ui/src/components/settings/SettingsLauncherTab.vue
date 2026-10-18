@@ -107,12 +107,7 @@ watch(pagesCount, (count) => {
 function addPage() {
   const pages: LauncherPageConfig[] = [
     ...userConfig.value.launcherPages,
-    {
-      id: crypto.randomUUID(),
-      inputMode: 'selection',
-      hotkey: '',
-      slots: {},
-    },
+    { id: crypto.randomUUID(), inputMode: 'selection', hotkey: '', slots: {} },
   ]
   operations.updateLauncherPages(pages)
   page.value = pages.length - 1
