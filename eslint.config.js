@@ -11,6 +11,9 @@ export default defineConfig(
   {
     ignores: [
       '**/dist/**',
+      '**/dist-browser/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
       '**/node_modules/**',
       '**/coverage/**',
       '**/src-tauri/target/**',

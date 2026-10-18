@@ -66,7 +66,7 @@ export function installTauriInternals({
         emit(event, args.payload)
         return null
       default:
-        return null
+        throw new Error(`Unhandled event plugin command: ${command}`)
     }
   }
 
@@ -78,11 +78,16 @@ export function installTauriInternals({
     const bridge = (window as unknown as Record<string, unknown>)[
       bridgeName
     ] as (command: string, args: unknown) => Promise<BridgeReply>
-    // binary payloads are not serializable through the binding
+    // Match Tauri's JSON boundary, including Channel.toJSON().
+    // Binary commands use an explicit envelope because exposed bindings are JSON-only.
     const serializableArgs =
       args instanceof Uint8Array || args instanceof ArrayBuffer
-        ? { byteLength: args.byteLength }
-        : args
+        ? {
+            __tycoBinary: Array.from(
+              args instanceof Uint8Array ? args : new Uint8Array(args)
+            ),
+          }
+        : JSON.parse(JSON.stringify(args))
     const reply = await bridge(command, serializableArgs)
     if (!reply.ok) throw reply.error
     return reply.value

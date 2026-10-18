@@ -6,6 +6,7 @@ import {
   StartMode,
   type AppEventPayloads,
   type Chat,
+  type DesktopChannel,
   type DesktopCommandArgs,
   type DesktopCommandName,
   type DesktopCommandResult,
@@ -36,7 +37,6 @@ export interface FakeDesktopOptions {
   userConfig?: UserConfig
   sessionState?: SessionState
   mode?: StartMode
-  windowLabel?: string
   history?: EditorHistoryItem[]
   chats?: Chat[]
 }
@@ -55,14 +55,16 @@ export class FakeDesktopError extends Error {
  */
 export class FakeDesktop {
   readonly calls: DesktopCall[] = []
-  /** Commands that reached the default no-op reply. */
+  /** Commands without an explicit handler; always fail fixture teardown. */
   readonly unhandledCommands = new Set<string>()
 
+  isFocused = true
   userConfig: UserConfig
   sessionState: SessionState
   history: EditorHistoryItem[]
   chats: Chat[]
 
+  private readonly channelIndices = new Map<number, number>()
   private revision = 1
   private nextId = 1
   private readonly mode: StartMode
@@ -82,6 +84,9 @@ export class FakeDesktop {
 
   async attach(page: Page, windowLabel = 'main') {
     this.page = page
+    page.on('framenavigated', (frame) => {
+      if (frame === page.mainFrame()) this.channelIndices.clear()
+    })
     await page.exposeFunction(BRIDGE_NAME, (command: string, args: unknown) =>
       this.dispatch(command, args)
     )
@@ -106,6 +111,10 @@ export class FakeDesktop {
     event: K,
     payload: AppEventPayloads[K]
   ) {
+    await this.emitEvent(event, payload)
+  }
+
+  private async emitEvent(event: string, payload: unknown) {
     if (!this.page) throw new Error('FakeDesktop is not attached to a page')
     await this.page.evaluate(
       ([name, eventName, eventPayload]) => {
@@ -116,6 +125,40 @@ export class FakeDesktop {
         emit(eventName, eventPayload)
       },
       [EMIT_NAME, event, payload] as const
+    )
+  }
+
+  async setWindowFocus(isFocused: boolean) {
+    this.isFocused = isFocused
+    await this.emitEvent(isFocused ? 'tauri://focus' : 'tauri://blur', null)
+  }
+
+  /** Deliver real Tauri Channel envelopes, including ordered binary messages. */
+  async sendChannel(channel: DesktopChannel, message: unknown) {
+    if (!this.page) throw new Error('FakeDesktop is not attached to a page')
+    // Channel.toJSON serializes to this marker at the IPC boundary.
+    const id =
+      typeof channel === 'string'
+        ? Number(String(channel).replace('__CHANNEL__:', ''))
+        : channel.id
+    const index = this.channelIndices.get(id) ?? 0
+    this.channelIndices.set(id, index + 1)
+    const bytes = message instanceof Uint8Array ? [...message] : null
+    await this.page.evaluate(
+      ({ id, index, message, bytes }) => {
+        const internals = (
+          window as unknown as {
+            __TAURI_INTERNALS__: {
+              runCallback: (id: number, value: unknown) => void
+            }
+          }
+        ).__TAURI_INTERNALS__
+        internals.runCallback(id, {
+          index,
+          message: bytes ? new Uint8Array(bytes).buffer : message,
+        })
+      },
+      { id, index, message: bytes ? null : message, bytes }
     )
   }
 
@@ -138,12 +181,18 @@ export class FakeDesktop {
   }
 
   private async dispatch(command: string, args: unknown) {
+    if (args && typeof args === 'object' && '__tycoBinary' in args)
+      args = new Uint8Array((args as { __tycoBinary: number[] }).__tycoBinary)
     this.calls.push({ command, args })
     const handler = (this.handlers as Record<string, unknown>)[command] as
       ((args: unknown) => unknown) | undefined
+    if (command === 'plugin:window|is_visible') return { ok: true, value: true }
+    if (command === 'plugin:window|is_focused')
+      return { ok: true, value: this.isFocused }
     if (!handler) this.unhandledCommands.add(command)
     try {
-      const value = handler ? await handler(args) : null
+      if (!handler) throw new Error(`Unhandled desktop command: ${command}`)
+      const value = await handler(args)
       return { ok: true, value: value ?? null }
     } catch (error) {
       return {
@@ -165,7 +214,11 @@ export class FakeDesktop {
 
     this.handle('get_desktop_state', () => this.snapshot())
     this.handle('get_user_config', () => structuredClone(this.userConfig))
-    this.handle('save_user_config', ({ userConfig }) => {
+    // Deliberately limited to single-writer saves. Native merge/validation is
+    // covered by Rust and desktop smoke tests; never silently emulate it here.
+    this.handle('save_user_config', ({ userConfig, baseConfig }) => {
+      if (JSON.stringify(baseConfig) !== JSON.stringify(this.userConfig))
+        throw new Error('Stale config requires an explicit test handler')
       this.userConfig = structuredClone(userConfig)
       this.revision++
       return this.snapshot()
@@ -191,7 +244,9 @@ export class FakeDesktop {
       this.history = []
     })
     this.handle('restore_editor_history_item', ({ item }) => {
-      this.history.unshift(item)
+      this.history = this.history.filter((entry) => entry.id !== item.id)
+      this.history.push(structuredClone(item))
+      this.history.sort((a, b) => b.createdAt - a.createdAt)
     })
     this.handle('set_editor_history_result', ({ id, result }) => {
       const item = this.history.find((entry) => entry.id === id)
@@ -209,7 +264,10 @@ export class FakeDesktop {
       structuredClone(this.chats.find((chat) => chat.id === id) ?? null)
     )
     this.handle('save_chat', ({ chat }) => {
-      this.chats = [chat, ...this.chats.filter((item) => item.id !== chat.id)]
+      this.chats = [
+        structuredClone(chat),
+        ...this.chats.filter((item) => item.id !== chat.id),
+      ]
     })
     this.handle('delete_chat', ({ id }) => {
       this.chats = this.chats.filter((chat) => chat.id !== id)

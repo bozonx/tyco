@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { browserTest as test, expect } from './support/fixtures'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/ui-catalog.html')
@@ -7,7 +7,9 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible()
 })
 
-test('menus and native dialogs preserve keyboard focus', async ({ page }) => {
+test('menus preserve keyboard focus and nested navigation', async ({
+  page,
+}) => {
   const trigger = page.getByRole('button', { name: 'Actions', exact: true })
   await trigger.focus()
   await page.keyboard.press('ArrowDown')
@@ -41,7 +43,11 @@ test('menus and native dialogs preserve keyboard focus', async ({ page }) => {
   ).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(page.getByRole('menu')).toHaveCount(0)
+})
 
+test('native dialogs contain focus and close one layer at a time', async ({
+  page,
+}) => {
   const dialogTrigger = page.getByRole('button', {
     name: 'Open dialog',
     exact: true,
@@ -74,53 +80,65 @@ test('menus and native dialogs preserve keyboard focus', async ({ page }) => {
 
 for (const theme of ['Light', 'Dark', 'E-ink']) {
   for (const width of [480, 1000]) {
-    test(`${theme} at ${width}px and 150% scale`, async ({
-      page,
-    }, testInfo) => {
-      await page.setViewportSize({ width, height: 900 })
-      await page.getByText(theme, { exact: true }).click()
-      await expect(
-        page.getByRole('radio', { name: theme, exact: true })
-      ).toBeChecked()
-      await page.getByLabel('High contrast', { exact: true }).check()
-      await page.getByLabel('Reduced motion', { exact: true }).check()
-      await page
-        .getByLabel('Interface scale', { exact: true })
-        .selectOption('2')
-      await expect(page.locator('html')).toHaveAttribute(
-        'data-motion',
-        'reduce'
-      )
-      expect(
+    test(
+      `${theme} at ${width}px and 150% scale`,
+      { tag: '@visual' },
+      async ({ page }, testInfo) => {
+        await page.setViewportSize({ width, height: 900 })
+        await page.getByText(theme, { exact: true }).click()
+        await expect(
+          page.getByRole('radio', { name: theme, exact: true })
+        ).toBeChecked()
+        await page.getByLabel('High contrast', { exact: true }).check()
+        await page.getByLabel('Reduced motion', { exact: true }).check()
         await page
-          .locator('html')
-          .evaluate((el) => getComputedStyle(el).fontSize)
-      ).toBe('24px')
-      const overflow = await page
-        .locator('.ui-catalog')
-        .evaluate((el) => el.scrollWidth > el.clientWidth)
-      expect(overflow).toBe(false)
-      if (theme === 'E-ink') {
-        expect(
-          await page
-            .locator('.catalog-quick-surface')
-            .evaluate((el) => getComputedStyle(el).backdropFilter)
-        ).toBe('none')
+          .getByLabel('Interface scale', { exact: true })
+          .selectOption('2')
+        await expect(page.locator('html')).toHaveAttribute(
+          'data-motion',
+          'reduce'
+        )
+        await expect(page.locator('html')).toHaveCSS('font-size', '24px')
+        await expect
+          .poll(() =>
+            page
+              .locator('.ui-catalog')
+              .evaluate((el) => el.scrollWidth > el.clientWidth)
+          )
+          .toBe(false)
+        if (theme === 'E-ink') {
+          await expect(page.locator('.catalog-quick-surface')).toHaveCSS(
+            'backdrop-filter',
+            'none'
+          )
+        }
+        await expect(
+          page.locator('.catalog-standard-controls')
+        ).toHaveScreenshot(
+          `standard-controls-${theme.toLowerCase()}-${width}.png`
+        )
+        await expect(
+          page
+            .locator('.catalog-section')
+            .filter({
+              has: page.getByRole('heading', {
+                name: 'Navigation and menus',
+                exact: true,
+              }),
+            })
+        ).toHaveScreenshot(`navigation-${theme.toLowerCase()}-${width}.png`)
+        const sections = page.locator('.catalog-section')
+        for (let index = 0; index < (await sections.count()); index++) {
+          await sections
+            .nth(index)
+            .screenshot({ path: testInfo.outputPath(`section-${index}.png`) })
+        }
+        await page.screenshot({
+          path: testInfo.outputPath('catalog.png'),
+          fullPage: true,
+        })
       }
-      await expect(page.locator('.catalog-standard-controls')).toHaveScreenshot(
-        `standard-controls-${theme.toLowerCase()}-${width}.png`
-      )
-      const sections = page.locator('.catalog-section')
-      for (let index = 0; index < (await sections.count()); index++) {
-        await sections
-          .nth(index)
-          .screenshot({ path: testInfo.outputPath(`section-${index}.png`) })
-      }
-      await page.screenshot({
-        path: testInfo.outputPath('catalog.png'),
-        fullPage: true,
-      })
-    })
+    )
   }
 }
 
@@ -187,9 +205,7 @@ test('grouped fields, compact notices and preview scroll ownership', async ({
   await expect(page.getByText('Passive guidance')).not.toHaveAttribute('role')
 
   const preview = page.locator('.catalog-preview pre.is-plain')
-  expect(
-    await preview.evaluate((el) => getComputedStyle(el).borderTopWidth)
-  ).toBe('0px')
+  await expect(preview).toHaveCSS('border-top-width', '0px')
   expect(
     await preview.evaluate((el) => el.scrollHeight > el.clientHeight)
   ).toBe(true)
@@ -197,11 +213,10 @@ test('grouped fields, compact notices and preview scroll ownership', async ({
     el.scrollTop = 100
   })
   expect(await preview.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
-  expect(
-    await page
-      .locator('.catalog-preview pre:not(.is-plain)')
-      .evaluate((el) => getComputedStyle(el).borderTopWidth)
-  ).toBe('1px')
+  await expect(page.locator('.catalog-preview pre:not(.is-plain)')).toHaveCSS(
+    'border-top-width',
+    '1px'
+  )
   await expect(page.locator('.audio-waveform-container.is-inline')).toHaveCount(
     2
   )
@@ -288,11 +303,10 @@ test('embedded controls adapt to container width on a wide viewport', async ({
   await preview.evaluate((el) => {
     ;(el as HTMLElement).style.width = '300px'
   })
-  expect(
-    await preview
-      .locator('.split-panes')
-      .evaluate((el) => getComputedStyle(el).flexDirection)
-  ).toBe('column')
+  await expect(preview.locator('.split-panes')).toHaveCSS(
+    'flex-direction',
+    'column'
+  )
 })
 
 test('floating menus stay in the viewport and resume the trigger Tab order', async ({
@@ -306,12 +320,14 @@ test('floating menus stay in the viewport and resume the trigger Tab order', asy
   await trigger.click()
   const menu = page.getByRole('menu', { name: 'Edge actions' })
   await expect(menu).toBeVisible()
-  const bounds = await menu.boundingBox()
-  expect(bounds).not.toBeNull()
-  expect(bounds!.x).toBeGreaterThanOrEqual(0)
-  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(480)
-  expect(bounds!.y).toBeGreaterThanOrEqual(0)
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900)
+  await expect(async () => {
+    const bounds = await menu.boundingBox()
+    expect(bounds).not.toBeNull()
+    expect(bounds!.x).toBeGreaterThanOrEqual(0)
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(480)
+    expect(bounds!.y).toBeGreaterThanOrEqual(0)
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900)
+  }).toPass()
   await page.keyboard.press('Tab')
   await expect(
     page.getByRole('button', { name: 'After edge menu', exact: true })

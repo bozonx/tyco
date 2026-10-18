@@ -21,13 +21,20 @@ export default defineConfig(({ command, mode }) => {
     clearScreen: false,
     envPrefix: ['VITE_', 'TAURI_ENV_'],
     build: {
-      outDir: 'dist',
+      outDir: mode === 'browser-test' ? 'dist-browser' : 'dist',
       assetsDir: 'assets',
       emptyOutDir: true,
       target: webviewTarget,
       minify: !isDebugBuild,
       sourcemap: isDebugBuild,
-      rolldownOptions: { input: { main: resolve(rootDir, 'index.html') } },
+      rolldownOptions: {
+        input: {
+          main: resolve(rootDir, 'index.html'),
+          ...(mode === 'browser-test'
+            ? { catalog: resolve(rootDir, 'ui-catalog.html') }
+            : {}),
+        },
+      },
     },
     server: {
       port: parseDevPort(env.PORT),

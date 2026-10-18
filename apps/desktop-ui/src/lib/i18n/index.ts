@@ -9,6 +9,14 @@ export const i18n = createI18n({
   fallbackLocale: false,
   messages,
   missingWarn: false,
+  ...(import.meta.env.MODE === 'browser-test'
+    ? {
+        missing: (locale: string, key: string) => {
+          // eslint-disable-next-line no-console -- Browser tests must reject missing translations.
+          console.error(`[intlify] Missing translation in ${locale}: ${key}`)
+        },
+      }
+    : {}),
   fallbackWarn: false,
 })
 

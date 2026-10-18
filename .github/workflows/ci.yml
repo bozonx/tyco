@@ -65,6 +65,34 @@ jobs:
         env:
           TYCO_TEST_BROWSER: google-chrome
 
+  browser:
+    name: Playwright Browser Tests
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
+      options: --ipc=host
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Run browser tests
+        run: pnpm test:browser
+      - name: Upload browser report and failure traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            apps/desktop-ui/playwright-report/
+            apps/desktop-ui/test-results/
+          retention-days: 14
+          if-no-files-found: error
+
   rust:
     name: Rust Quality & Tests
     runs-on: ubuntu-latest
@@ -178,7 +206,7 @@ jobs:
   bundle:
     name: Tauri Bundle
     runs-on: ubuntu-latest
-    needs: [frontend, rust]
+    needs: [frontend, browser, rust]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -227,7 +255,7 @@ jobs:
   desktop-smoke:
     name: Linux System WebView Smoke
     runs-on: ubuntu-latest
-    needs: [frontend, rust]
+    needs: [frontend, browser, rust]
     steps:
       - uses: actions/checkout@v4
       - name: Install system webview and headless display

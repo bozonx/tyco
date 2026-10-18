@@ -5,18 +5,19 @@
 Use Node.js and pnpm versions declared by the repository and the Rust toolchain
 pinned in `rust-toolchain.toml`.
 
-| Command                      | Scope                                                            |
-| ---------------------------- | ---------------------------------------------------------------- |
-| `pnpm test:unit`             | Tooling, frontend, plugins, and Rust unit tests                  |
-| `pnpm test:unit:ui`          | All desktop UI unit and component tests                          |
-| `pnpm test:unit:models`      | The DOM-independent desktop UI project                           |
-| `pnpm test:unit:rust`        | Workspace library/binary tests, excluding `integration_` tests   |
-| `pnpm test:integration:rust` | Local socket/process tests and all integration test targets      |
-| `pnpm test`                  | Tooling, frontend, and plugin tests                              |
-| `pnpm test:rust`             | All Rust test targets and doc tests                              |
-| `pnpm test:cov`              | Frontend and plugin coverage with package coverage floors        |
-| `pnpm test:cov:rust`         | Rust unit coverage in `coverage/rust/lcov.info`                  |
-| `pnpm validate:all`          | Frontend checks, tests/build, Rust formatting, Clippy, and tests |
+| Command                      | Scope                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `pnpm test:unit`             | Tooling, frontend, plugins, and Rust unit tests                             |
+| `pnpm test:unit:ui`          | All desktop UI unit and component tests                                     |
+| `pnpm test:unit:models`      | The DOM-independent desktop UI project                                      |
+| `pnpm test:unit:rust`        | Workspace library/binary tests, excluding `integration_` tests              |
+| `pnpm test:integration:rust` | Local socket/process tests and all integration test targets                 |
+| `pnpm test`                  | Tooling, frontend, and plugin tests                                         |
+| `pnpm test:rust`             | All Rust test targets and doc tests                                         |
+| `pnpm test:cov`              | Frontend and plugin coverage with package coverage floors                   |
+| `pnpm test:cov:rust`         | Rust unit coverage in `coverage/rust/lcov.info`                             |
+| `pnpm test:browser`          | Chromium and WebKit browser integration tests and Chromium visual baselines |
+| `pnpm validate:all`          | Frontend checks, tests/build, Rust formatting, Clippy, and tests            |
 
 Extra command-line arguments can be passed directly to the package runner, for
 example `pnpm --filter @tyco/desktop-ui exec vitest run --project unit-dom
@@ -105,38 +106,103 @@ while all platforms continue to run the full Rust test suite across CI jobs.
 
 # Browser tests
 
-`pnpm --filter @tyco/desktop-ui test:browser` runs Playwright against the Vite
-dev server. Build the plugins first (`pnpm build:plugins`). Without a bundled
-Playwright browser, point `TYCO_BROWSER_PATH` at a local Chromium, e.g.
-`TYCO_BROWSER_PATH=/usr/bin/chromium`.
+`pnpm test:browser` builds the plugins and runs Playwright against a dedicated
+production build in `apps/desktop-ui/dist-browser`. The Vite preview server serves
+the application and the UI catalog; the catalog is included only in this test
+build, never in the shipped application. Local `TYCO_LOCAL_AI_KIT` overrides are
+ignored. There is no HMR or on-demand dependency optimization during a test.
 
-- `ui-catalog.spec.ts` checks shared components on `ui-catalog.html`.
-- The other specs open the real application at `/` with a fake desktop
-  runtime instead of Tauri.
+Install the browsers once after installing dependencies:
 
-## Fake desktop runtime
+```sh
+pnpm --filter @tyco/desktop-ui exec playwright install --with-deps chromium webkit
+pnpm test:browser
+```
 
-`browser-tests/support/tauri-internals.ts` installs `window.__TAURI_INTERNALS__`
-before any page script runs, so the application takes its Tauri code path
-unchanged. Commands go to `FakeDesktop` (`support/fake-desktop.ts`) in the test
-process. It keeps the state the UI reads back (config, session, editor
-history, chats), records every call, and answers the remaining commands with
-`null`.
+To run a functional subset, pass the file before the project option:
 
-Import `test` and `expect` from `support/fixtures.ts`. The `desktop` fixture is
-installed automatically before the page loads:
+```sh
+pnpm --filter @tyco/desktop-ui test:browser chat.spec.ts --project=chromium
+```
 
-- seed the backend (`desktop.history = [...]`, `desktop.userConfig...`) before
-  `page.goto('/')`;
-- replace a command with `desktop.handle(command, handler)`; throw
-  `FakeDesktopError` to return a structured desktop error;
-- assert the calls with `desktop.callsOf(command)`;
-- send backend events with `desktop.emit(DESKTOP_EVENTS..., payload)`.
+`TYCO_BROWSER_PATH=/usr/bin/chromium` can select a local Chromium for debugging;
+it never overrides WebKit. Use the bundled browser for visual comparisons.
+CI uses the pinned Playwright Noble container. Keep its version in
+`.github/workflows/ci.yml` synchronized with `@playwright/test` and the lockfile.
+Generate and review visual updates in that same container environment:
 
-A test fails on uncaught page errors, console errors, and Vue or vue-i18n
-warnings, so a missing locale key fails it. A test that triggers an expected
-error clears it from the `pageErrors` fixture.
+```sh
+pnpm --filter @tyco/desktop-ui test:browser ui-catalog.spec.ts --project=chromium --update-snapshots
+```
 
-These tests cover the UI and its IPC contract, not the native side. The real
-binary is covered by `pnpm test:desktop` (`tauri-driver`); OS integration is
-covered as described in `cross-platform.md`.
+The browser job runs on every PR, blocks the bundle and desktop smoke jobs, and
+uploads the HTML report and failure traces/screenshots. `pnpm validate:all` also
+includes the browser suite. There are no automatic retries that could conceal a
+failure. For a stability check, use `--repeat-each=3`.
+
+## Scope and test boundaries
+
+- `ui-catalog.spec.ts` checks real browser focus, modal layering, keyboard input,
+  responsive layout and accessible relationships. Chromium compares standard
+  controls and navigation/menu screenshots in three themes at two widths. Other
+  section and full-page screenshots are diagnostic artifacts, not assertions.
+- `app-shell.spec.ts`, `editor-history.spec.ts`, and `locales.spec.ts` cover startup,
+  navigation, clipboard/history, undo, desktop events and the supported locales.
+- `settings.spec.ts` covers autosave, failed saves, explicit retry and reload.
+- `chat.spec.ts` covers partial streaming, completion, cancellation, retry after
+  a provider error and restoration of a saved chat.
+- `editor-actions.spec.ts` covers correction review/application and enabling,
+  executing and disabling a built-in plugin action.
+- `voice.spec.ts` covers live and final transcription, cancellation and a broken
+  speech connection, including microphone cleanup.
+- `quick-window.spec.ts` uses the quick window identity and activation mode to
+  cover draft recall, restoration after focus loss and command execution.
+
+Both Chromium and WebKit run functional scenarios. The real clipboard test is
+tagged `@chromium` because WebKit cannot grant `clipboard-write`. Visual comparisons run only in
+Chromium/Linux. These are UI integration tests: native storage, system focus,
+actual microphones, OS insertion and provider connectivity are replaced at the
+IPC boundary. They do not prove native OS integration or production CSP behavior.
+`pnpm test:desktop` uses `tauri-driver` against the actual embedded application;
+additional platform checks are described in `cross-platform.md`.
+
+Keep timing combinations, queues, normalization and business-rule matrices in
+unit tests. Browser scenarios should demonstrate a complete user action and its
+observable result. Browser focus, scrolling, geometry and native dialog behavior
+cannot be established by jsdom tests even when their assertions look similar.
+
+## Strict fixtures and fake desktop runtime
+
+Import `test` and `expect` from `support/fixtures.ts` for the application, or
+`browserTest as test` for the catalog. Both reject uncaught page errors, console
+errors, Vue/vue-i18n warnings and external HTTP requests. Missing translations
+emit explicit errors in the browser build, including when Vue is built for
+production. An expected console error must be registered with
+`expectConsoleError(pattern, count)`; it cannot suppress page exceptions or
+unrelated errors.
+
+The application fixture installs `window.__TAURI_INTERNALS__` before page scripts
+run. Each test owns a fresh `FakeDesktop` and browser context. Commands preserve
+the real argument serialization and Tauri Channel envelope, including binary
+stream data. Unknown commands return errors and independently fail teardown even
+if application code catches the error. Unexpected `log_client_message` errors
+also fail; register intentional failures with `expectDesktopError(pattern, count)`.
+
+- Seed `desktop.userConfig`, `desktop.sessionState`, `desktop.history` or
+  `desktop.chats` before `page.goto('/')`.
+- Use `test.use({ startMode, windowLabel })` for non-editor/quick scenarios.
+- Replace a command with `desktop.handle(command, handler)`; throw
+  `FakeDesktopError` for a structured native failure.
+- Assert boundary effects with `desktop.callsOf(command)` and `expect.poll`.
+- Emit application events with `desktop.emit(DESKTOP_EVENTS..., payload)`;
+  `desktop.setWindowFocus` controls native focus responses and events together.
+- `support/llm.ts` controls provider response heads, SSE chunks and completion.
+  `support/voice.ts` controls the microphone channel and speech socket separately.
+  They preserve the production request, transport and provider parsing code.
+
+The default config save handler supports single-writer saves only and rejects a
+stale `baseConfig`. It does not implement Rust normalization, validation, secret
+protection or concurrent merges. Test those in Rust and the native desktop smoke;
+use an explicit handler when a UI scenario needs a particular backend response.
+Draft recall in the quick window is in-memory across activations, not durable
+across a webview reload. Persistence tests reload settings and saved chats instead.

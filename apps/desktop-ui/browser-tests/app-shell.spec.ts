@@ -31,7 +31,8 @@ test('navigates between the main pages', async ({ page }) => {
   await expect(page.getByRole('textbox', { name: 'Text editor' })).toBeVisible()
 })
 
-test.describe('copying', () => {
+// WebKit cannot grant clipboard-write; verify the real clipboard in Chromium.
+test.describe('copying', { tag: '@chromium' }, () => {
   test.use({ permissions: ['clipboard-read', 'clipboard-write'] })
 
   test('copies the editor text and records it in the history', async ({
