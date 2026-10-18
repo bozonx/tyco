@@ -30,3 +30,6 @@ pub async fn capture_selection(target: Option<String>) -> Option<String> {
 pub fn inject_paste(user_config: &Value, target_window_id: Option<&str>) -> Result<(), AppError> {
     text_injector::SystemTextInjector::detect().inject_paste(user_config, target_window_id)
 }
+
+#[cfg(test)]
+mod headless_tests;

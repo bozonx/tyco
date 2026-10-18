@@ -38,6 +38,7 @@
     "build:plugins": "turbo run build --filter=\"./packages/plugin-*\"",
     "test:plugin-runtime": "node scripts/check-plugin-runtime.mjs",
     "test:browser": "pnpm build:plugins && pnpm --filter @tyco/desktop-ui test:browser",
+    "test:platform:linux": "node scripts/test-linux-platform.mjs",
     "test:desktop": "node scripts/check-desktop-runtime.mjs",
     "check:architecture": "node scripts/generate-desktop-commands.mjs --check && node scripts/check-desktop-contracts.mjs",
     "test:tooling": "node --test scripts/*.test.js",

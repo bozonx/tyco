@@ -1,0 +1,63 @@
+name: Linux platform sessions
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-platform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  headless:
+    name: Headless ${{ matrix.session }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        session: [x11, kwin, sway]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build platform test container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: scripts/linux-platform/Dockerfile
+          load: true
+          tags: tyco-platform-tests
+          cache-from: type=gha,scope=linux-platform-${{ matrix.session }}
+          cache-to: type=gha,mode=max,scope=linux-platform-${{ matrix.session }}
+      - name: Prepare virtual input for wlroots
+        if: matrix.session == 'sway'
+        run: |
+          sudo modprobe uinput
+          test -c /dev/uinput
+      - name: Run isolated platform tests
+        env:
+          SESSION: ${{ matrix.session }}
+        run: |
+          mkdir -p platform-logs
+          chmod 777 platform-logs
+          args=()
+          if [[ "$SESSION" == sway ]]; then
+            args+=(--privileged --device=/dev/uinput -v /dev/input:/dev/input)
+          fi
+          set -o pipefail
+          docker run --rm --init --network=none "${args[@]}" \
+            -v "$PWD/platform-logs:/tmp/tyco-platform-logs" \
+            tyco-platform-tests "$SESSION" 2>&1 | tee platform-logs/tests.log
+      - name: Upload session diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-platform-${{ matrix.session }}
+          path: platform-logs/
+          if-no-files-found: ignore
