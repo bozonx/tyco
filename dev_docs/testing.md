@@ -102,3 +102,41 @@ provided through `LLVM_COV` and `LLVM_PROFDATA`.
 CI runs the full Rust suite and uploads a separate Rust unit LCOV report. Rust coverage is initially informational: platform adapters cannot be
 fully exercised by a Linux unit runner. Reports exclude tagged integration tests,
 while all platforms continue to run the full Rust test suite across CI jobs.
+
+# Browser tests
+
+`pnpm --filter @tyco/desktop-ui test:browser` runs Playwright against the Vite
+dev server. Build the plugins first (`pnpm build:plugins`). Without a bundled
+Playwright browser, point `TYCO_BROWSER_PATH` at a local Chromium, e.g.
+`TYCO_BROWSER_PATH=/usr/bin/chromium`.
+
+- `ui-catalog.spec.ts` checks shared components on `ui-catalog.html`.
+- The other specs open the real application at `/` with a fake desktop
+  runtime instead of Tauri.
+
+## Fake desktop runtime
+
+`browser-tests/support/tauri-internals.ts` installs `window.__TAURI_INTERNALS__`
+before any page script runs, so the application takes its Tauri code path
+unchanged. Commands go to `FakeDesktop` (`support/fake-desktop.ts`) in the test
+process. It keeps the state the UI reads back (config, session, editor
+history, chats), records every call, and answers the remaining commands with
+`null`.
+
+Import `test` and `expect` from `support/fixtures.ts`. The `desktop` fixture is
+installed automatically before the page loads:
+
+- seed the backend (`desktop.history = [...]`, `desktop.userConfig...`) before
+  `page.goto('/')`;
+- replace a command with `desktop.handle(command, handler)`; throw
+  `FakeDesktopError` to return a structured desktop error;
+- assert the calls with `desktop.callsOf(command)`;
+- send backend events with `desktop.emit(DESKTOP_EVENTS..., payload)`.
+
+A test fails on uncaught page errors, console errors, and Vue or vue-i18n
+warnings, so a missing locale key fails it. A test that triggers an expected
+error clears it from the `pageErrors` fixture.
+
+These tests cover the UI and its IPC contract, not the native side. The real
+binary is covered by `pnpm test:desktop` (`tauri-driver`); OS integration is
+covered as described in `cross-platform.md`.

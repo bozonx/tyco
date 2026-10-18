@@ -1,5 +1,5 @@
-import configDefaults from './user-config-defaults.json'
-import configVersion from './config-version.json'
+import configDefaults from './user-config-defaults.json' with { type: 'json' }
+import configVersion from './config-version.json' with { type: 'json' }
 import { type MarkdownSettings, type MarkdownCleanSettings } from './markdown'
 import type { AppearanceSettings } from './appearance'
 

@@ -1,6 +1,6 @@
-import schemaValue from './user-config-schema.json'
-import configDefaults from './user-config-defaults.json'
-import configVersion from './config-version.json'
+import schemaValue from './user-config-schema.json' with { type: 'json' }
+import configDefaults from './user-config-defaults.json' with { type: 'json' }
+import configVersion from './config-version.json' with { type: 'json' }
 import type { UserConfig, UserConfigInput } from './user-config'
 
 interface Schema {
