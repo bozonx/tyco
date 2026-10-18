@@ -1,4 +1,5 @@
 import {
+  configuredHotkey,
   DESKTOP_EVENTS,
   type HotkeyProviderInfo,
   type IpcResult,
@@ -22,8 +23,7 @@ export const useGlobalHotkeysStore = defineStore('globalHotkeys', () => {
       )) as IpcResult<HotkeyProviderInfo>,
     listenHotkeysChanged: (handler) =>
       desktopClient.listen(DESKTOP_EVENTS.HOTKEYS_CHANGED, handler),
-    getConfiguredHotkey: (mode) =>
-      desktopStore.userConfig.hotkeys?.[mode] ?? '',
+    getConfiguredHotkey: (id) => configuredHotkey(desktopStore.userConfig, id),
     suspendHotkeys: (suspended) =>
       ipc.callFunction('suspendHotkeys', [suspended]),
     checkTextInjection: () => ipc.callFunction('checkTextInjection'),

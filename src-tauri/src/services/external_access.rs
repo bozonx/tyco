@@ -1,5 +1,5 @@
 //! Asks the user whether an external call may use the selection while
-//! `externalAccess.selection` is off: once, from now on, or not at all.
+//! `externalAccess.canAccessSelection` is off: once, from now on, or not at all.
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -176,7 +176,7 @@ fn grant_selection(user_config: &mut Value) {
     if !access.is_object() {
         *access = json!({});
     }
-    access["selection"] = json!(true);
+    access["canAccessSelection"] = json!(true);
 }
 
 #[cfg(test)]
@@ -186,18 +186,18 @@ mod tests {
     #[test]
     fn granting_keeps_the_other_settings() {
         let mut config =
-            json!({"externalAccess":{"selection":false } ,"appearance":{"theme":"dark"}});
+            json!({"externalAccess":{"canAccessSelection":false } ,"appearance":{"theme":"dark"}});
         grant_selection(&mut config);
-        assert_eq!(config["externalAccess"], json!({ "selection": true }));
+        assert_eq!(config["externalAccess"], json!({ "canAccessSelection": true }));
         assert_eq!(config["appearance"]["theme"], json!("dark"));
 
         let mut config = json!({ "externalAccess": null });
         grant_selection(&mut config);
-        assert_eq!(config["externalAccess"], json!({ "selection": true }));
+        assert_eq!(config["externalAccess"], json!({ "canAccessSelection": true }));
 
         let mut config = json!({});
         grant_selection(&mut config);
-        assert_eq!(config["externalAccess"], json!({ "selection": true }));
+        assert_eq!(config["externalAccess"], json!({ "canAccessSelection": true }));
     }
 
     #[test]

@@ -27,14 +27,14 @@ export interface AppearanceSettings {
   theme: ThemeMode
   contrast: ContrastMode
   motion: MotionMode
-  uiScale: UiScale
+  uiScalePercent: UiScale
 }
 
 export const DEFAULT_APPEARANCE: AppearanceSettings = {
   theme: 'auto',
   contrast: 'auto',
   motion: 'auto',
-  uiScale: 100,
+  uiScalePercent: 100,
 }
 
 function includes<T extends string | number>(
@@ -61,7 +61,7 @@ export function normalizeAppearance(value: unknown): AppearanceSettings {
   const source = (value && typeof value === 'object' ? value : {}) as Partial<
     Record<keyof AppearanceSettings, unknown>
   >
-  const uiScale = source.uiScale
+  const uiScalePercent = source.uiScalePercent
 
   return {
     theme: isThemeMode(source.theme) ? source.theme : DEFAULT_APPEARANCE.theme,
@@ -71,7 +71,7 @@ export function normalizeAppearance(value: unknown): AppearanceSettings {
     motion: isMotionMode(source.motion)
       ? source.motion
       : DEFAULT_APPEARANCE.motion,
-    uiScale: isUiScale(uiScale) ? uiScale : DEFAULT_APPEARANCE.uiScale,
+    uiScalePercent: isUiScale(uiScalePercent) ? uiScalePercent : DEFAULT_APPEARANCE.uiScalePercent,
   }
 }
 
@@ -86,7 +86,7 @@ export interface ResolvedAppearance {
   theme: ThemeName
   contrast: ContrastLevel
   motion: MotionLevel
-  uiScale: UiScale
+  uiScalePercent: UiScale
 }
 
 /**
@@ -124,7 +124,7 @@ export function resolveAppearance(
           ? 'reduce'
           : 'normal'
 
-  return { theme, contrast, motion, uiScale: settings.uiScale }
+  return { theme, contrast, motion, uiScalePercent: settings.uiScalePercent }
 }
 
 /** Light-on-dark palettes; drives the `color-scheme` of native controls */

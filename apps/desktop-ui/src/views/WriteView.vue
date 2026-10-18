@@ -76,10 +76,10 @@ const menuModalsStore = useMenuModalsStore()
 const correctionWorkflowStore = useCorrectionWorkflowStore()
 const { t } = useI18n()
 const submitKey = computed(() =>
-  resolveSubmitKey(desktopStore.userConfig?.submitKey)
+  resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
 )
 const prefetch = computed(
-  () => desktopStore.userConfig?.quickCorrectionPrefetch === true
+  () => desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled === true
 )
 const submitShortcutLabel = computed(() => submitShortcut(submitKey.value))
 const newlineShortcutLabel = computed(() => newlineShortcut(submitKey.value))

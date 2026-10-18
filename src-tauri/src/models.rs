@@ -12,7 +12,7 @@ pub use editor_history::*;
 pub use session_state::*;
 pub use storage::*;
 
-pub const CONFIG_FILE_NAME: &str = "userConfig.json";
+pub const CONFIG_FILE_NAME: &str = "config.json";
 
 #[cfg(test)]
 mod tests {

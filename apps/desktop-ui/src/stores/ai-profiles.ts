@@ -80,7 +80,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
 
   // the vault moves once the settings with its new path are stored
   watch(
-    () => desktopStore.userConfig?.aiProfiles?.vaultPath,
+    () => desktopStore.userConfig?.aiVault?.path,
     (path, previous) => {
       if (path !== previous) void loadAll()
     }

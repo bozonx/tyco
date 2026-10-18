@@ -11,7 +11,7 @@ vi.mock('../../composables/use-i18n', () => ({
 describe('SettingsTasksTab.vue', () => {
   it('adds and updates task slots', async () => {
     const context = createTestSettingsContext({
-      aiTasks: [{ id: 'task-1', name: 'Existing', rule: 'Do this' }],
+      aiTasks: { q: { id: 'task-1', name: 'Existing', rule: 'Do this' } },
     })
     const wrapper = mount(SettingsTasksTab, {
       global: {
@@ -39,7 +39,7 @@ describe('SettingsTasksTab.vue', () => {
 
     await slots.vm.$emit('add', 1)
 
-    expect(context.draft.value.aiTasks[1]).toEqual({
+    expect(context.draft.value.aiTasks.w).toEqual({
       id: 'task-2',
       name: '',
       rule: '',
@@ -48,10 +48,10 @@ describe('SettingsTasksTab.vue', () => {
 
   it('prunes empty tasks when unmounted', async () => {
     const context = createTestSettingsContext({
-      aiTasks: [
-        { id: 'keep', name: 'Keep', rule: 'Rule' },
-        { id: 'empty', name: '', rule: '   ' },
-      ],
+      aiTasks: {
+        q: { id: 'keep', name: 'Keep', rule: 'Rule' },
+        w: { id: 'empty', name: '', rule: '   ' },
+      },
     })
     const wrapper = mount(SettingsTasksTab, {
       global: {
@@ -72,7 +72,6 @@ describe('SettingsTasksTab.vue', () => {
     wrapper.unmount()
 
     const tasks = context.draft.value.aiTasks
-    expect(tasks[0]).toEqual({ id: 'keep', name: 'Keep', rule: 'Rule' })
-    expect(tasks[1]).toBeNull()
+    expect(tasks).toEqual({ q: { id: 'keep', name: 'Keep', rule: 'Rule' } })
   })
 })

@@ -77,7 +77,10 @@ import {
   commandLabel,
   isCommandAvailable,
 } from '../../lib/commands/command-runtime'
-import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
+import {
+  moveShortcutSlot,
+  slotsFromList,
+} from '../../lib/shortcut-slots/shortcut-slots'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -106,8 +109,9 @@ function addPage() {
     ...userConfig.value.launcherPages,
     {
       id: crypto.randomUUID(),
-      slots: Array<string | null>(15).fill(null),
       inputMode: 'selection',
+      hotkey: '',
+      slots: {},
     },
   ]
   operations.updateLauncherPages(pages)
@@ -134,7 +138,7 @@ function setTakesText(value: boolean) {
   updatePage({ inputMode: value ? 'selection' : 'none' })
 }
 function updateSlots(slots: (string | null)[]) {
-  updatePage({ slots })
+  updatePage({ slots: slotsFromList(slots) })
 }
 const launcherSlots = computed(() =>
   normalizeLauncherCommands(

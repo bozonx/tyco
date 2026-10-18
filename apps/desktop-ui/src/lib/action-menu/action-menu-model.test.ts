@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
+import { DEFAULT_MAIN_ACTIONS } from '@tyco/shared'
 
 import { createCommand } from '../commands/command-config'
 import { createCoreTools } from '../tools/core-tools'
@@ -53,10 +54,10 @@ describe('createActionMenuModel', () => {
       openLauncherPage,
       launcherPages: () =>
         Array.from({ length: 13 }, (_, index) => ({ id: `page-${index}` })),
-      mainActions: () => [{ type: 'launcherPage', pageId: 'page-12' }],
+      mainActions: () => ({ q: { type: 'launcherPage', pageId: 'page-12' } }),
     })
     await store.getShortcutActions()[0]?.action('current text')
-    expect(openLauncherPage).toHaveBeenCalledWith(12, 'current text')
+    expect(openLauncherPage).toHaveBeenCalledWith('page-12', 'current text')
   })
 
   it('shows toast when attempting actions on empty text', async () => {
@@ -198,10 +199,17 @@ describe('createActionMenuModel', () => {
   })
 
   it('updates reactive menus and replaces duplicate registrations', async () => {
-    const { store } = setup()
+    const { deps } = setup()
+    const store = createActionMenuModel({
+      ...deps,
+      mainActions: () => ({
+        ...DEFAULT_MAIN_ACTIONS,
+        v: { type: 'plugin', actionId: 'Search:search' },
+      }),
+    })
     const slots = computed(() => store.getShortcutActions())
     expect(slots.value).toHaveLength(6)
-    const original = { id: 'Search:search', preferredKey: 'v', action: vi.fn() }
+    const original = { id: 'Search:search', action: vi.fn() }
     const replacement = { ...original, action: vi.fn() }
     store.registerActionsItems([original])
     expect(slots.value[13]).toBe(original)
@@ -214,14 +222,19 @@ describe('createActionMenuModel', () => {
     expect(slots.value).toHaveLength(6)
   })
 
+  it('places plugin actions only where the menu holds them', () => {
+    const { store } = setup()
+    store.registerActionsItems([{ id: 'Search:search', action: vi.fn() }])
+    expect(store.getShortcutActions()).toHaveLength(6)
+  })
+
   it('restores saved plugin positions after disabling and re-enabling', () => {
     const { deps } = setup()
     const store = createActionMenuModel({
       ...deps,
-      mainActions: () => [null, { type: 'plugin', actionId: 'Notes:create' }],
-      reviewedMainActionIds: () => ['Notes:create'],
+      mainActions: () => ({ w: { type: 'plugin', actionId: 'Notes:create' } }),
     })
-    const action = { id: 'Notes:create', preferredKey: 'c', action: vi.fn() }
+    const action = { id: 'Notes:create', action: vi.fn() }
     store.registerActionsItems([action])
     expect(store.getShortcutActions()).toEqual([undefined, action])
     store.clearRegisteredActions()
@@ -231,11 +244,10 @@ describe('createActionMenuModel', () => {
   })
 
   it('maps configured actions to their shortcut slots', () => {
-    const mainActions = [
-      null,
-      { type: 'standard' as const, actionId: 'translation' as const },
-      { type: 'standard' as const, actionId: 'copyToClipboard' as const },
-    ]
+    const mainActions = {
+      w: { type: 'standard' as const, actionId: 'translation' as const },
+      e: { type: 'standard' as const, actionId: 'copyToClipboard' as const },
+    }
     const deps = {
       saveOutput: vi.fn().mockResolvedValue(undefined),
       openAiTaskModal: vi.fn(),
@@ -277,7 +289,7 @@ describe('createActionMenuModel', () => {
     const store = createActionMenuModel({
       ...deps,
       tools: testTools({ executeScriptAction }),
-      mainActions: () => [{ type: 'command', commandId: 'sc1' }],
+      mainActions: () => ({ q: { type: 'command', commandId: 'sc1' } }),
       commands: () => [noText],
     })
 
@@ -302,7 +314,7 @@ describe('createActionMenuModel', () => {
       ...createCommand('webhook', 'wh1'),
       toolConfig: { url: 'https://x.test' },
     }
-    const disabled = { ...createCommand('script', 'sc2'), enabled: false }
+    const disabled = { ...createCommand('script', 'sc2'), isEnabled: false }
     const executeScriptAction = vi
       .fn()
       .mockResolvedValue({
@@ -315,13 +327,13 @@ describe('createActionMenuModel', () => {
     const store = createActionMenuModel({
       ...deps,
       tools: testTools({ executeScriptAction }),
-      mainActions: () => [
-        { type: 'command', commandId: 'sc1' },
-        { type: 'command', commandId: 'wh1' },
-        { type: 'command', commandId: 'sc2' },
-        { type: 'command', commandId: 'missing' },
-        { type: 'standard', actionId: 'translation' },
-      ],
+      mainActions: () => ({
+        q: { type: 'command', commandId: 'sc1' },
+        w: { type: 'command', commandId: 'wh1' },
+        e: { type: 'command', commandId: 'sc2' },
+        r: { type: 'command', commandId: 'missing' },
+        t: { type: 'standard', actionId: 'translation' },
+      }),
       commands: () => [script, noText, disabled],
     })
 
@@ -347,12 +359,12 @@ describe('createActionMenuModel', () => {
     const { deps } = setup()
     const store = createActionMenuModel({
       ...deps,
-      mainActions: () => [
-        { type: 'aiTask', taskId: 'task-2' },
-        { type: 'aiTask', taskId: 'gone' },
-        { type: 'translation', language: 'en_US' },
-      ],
-      aiTasks: () => [null, { id: 'task-2', name: 'Shorten' }],
+      mainActions: () => ({
+        q: { type: 'aiTask', taskId: 'task-2' },
+        w: { type: 'aiTask', taskId: 'gone' },
+        e: { type: 'translation', language: 'en_US' },
+      }),
+      aiTasks: () => ({ w: { id: 'task-2', name: 'Shorten' } }),
     })
 
     const slots = store.getShortcutActions()

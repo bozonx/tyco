@@ -131,6 +131,7 @@ with `ConfigurationChanged` instead of executing a stale configuration.
  tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
               [--replace] [--interactive]
               [--wait] [--json] [--timeout SECONDS]
+ tyco-ctl replace correction
  tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
  tyco-ctl quit
 ```
@@ -182,7 +183,7 @@ can change with configuration or localization.
 ### Execute and return the result
 
 ```sh
-tyco-ctl run default:core.correct:fix --stdin --wait < draft.txt > corrected.txt
+tyco-ctl run my-fix --stdin --wait < draft.txt > corrected.txt
 tyco-ctl run my-backup --wait
 tyco-ctl run my-reminder --input-json '{"at":"18:00","message":"Call"}' --wait
 ```
@@ -213,7 +214,7 @@ returned output does not undo or disable those effects.
 
 ```sh
 tyco-ctl run my-command --interactive --wait
-tyco-ctl run default:core.correct:fix --selection --replace --interactive --wait
+tyco-ctl run my-fix --selection --replace --interactive --wait
 tyco-ctl run my-transform --selection --wait
 ```
 
@@ -228,6 +229,12 @@ clipboard, the job fails with `SelectionFailed`, and its output remains
 available for recovery. An interactive command launcher is hidden before
 replacement so focus can return to the target. No window is forcibly focused
 when an unrelated application has taken focus.
+
+`tyco-ctl replace correction` corrects the selection in place, as the inline
+correction hotkey does, without a command of the library. It is meant for a
+desktop shortcut: the capture starts after a short delay, once the keys of that
+shortcut are released, and the call returns without waiting for the result.
+While the selection permission is off it fails with `AccessDenied`.
 
 Selection jobs are exclusive. A second external invocation returns a busy/
 selection error; it does not toggle cancellation of the first one. Internal
@@ -305,11 +312,13 @@ authorization dispatcher, so the same grants and capabilities apply.
 | `OpenWithSelection` | `s` mode           | Opens it with the selection of the focused window |
 | `RunCommand`        | `s` command ID     | Runs the command interactively                    |
 | `ReplaceSelection`  | `s` command ID     | Replaces the selection with the command's output  |
+| `CorrectSelection`  |                    | Corrects the selection in place                   |
 
 Modes are those of `tyco-ctl open`. `RunCommand` behaves like
 `tyco-ctl run <id> --interactive`: it asks for missing input in the command
 launcher. `ReplaceSelection` behaves like
-`tyco-ctl run <id> --selection --replace --interactive`. Command IDs are
+`tyco-ctl run <id> --selection --replace --interactive`, and
+`CorrectSelection` like `tyco-ctl replace correction`. Command IDs are
 stable library IDs; display names are not accepted.
 
 ```sh

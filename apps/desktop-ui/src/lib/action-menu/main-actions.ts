@@ -1,100 +1,10 @@
-import {
-  DEFAULT_MAIN_ACTIONS,
-  STANDARD_ACTION_IDS,
-  type MainActionConfig,
-  type StandardActionId,
-} from '@tyco/shared'
+import { normalizeConfigField, type MainActionConfig } from '@tyco/shared'
 
-import { SHORTCUT_SLOT_KEYS } from '../../types'
+import { slotList } from '../shortcut-slots/shortcut-slots'
 
-import { normalizeShortcutSlots } from '../shortcut-slots/shortcut-slots'
-
-const standardActionIds = new Set<string>(STANDARD_ACTION_IDS)
-
-function isStandardActionId(value: unknown): value is StandardActionId {
-  return typeof value === 'string' && standardActionIds.has(value)
-}
-
+/** The items of the action menu grid in key order; an empty slot is `null` */
 export function normalizeMainActions(
   value: unknown
 ): (MainActionConfig | null)[] {
-  const source = Array.isArray(value) ? value : DEFAULT_MAIN_ACTIONS
-
-  return normalizeShortcutSlots<unknown>(source).map(
-    (value): MainActionConfig | null => {
-      if (!value || typeof value !== 'object' || Array.isArray(value))
-        return null
-      const item = value as Record<string, unknown>
-      if (
-        item?.type === 'launcherPage' &&
-        typeof item.pageId === 'string' &&
-        item.pageId.trim().length > 0
-      )
-        return { type: 'launcherPage', pageId: item.pageId }
-      if (
-        item?.type === 'plugin' &&
-        typeof item.actionId === 'string' &&
-        item.actionId.trim()
-      ) {
-        return { type: 'plugin', actionId: item.actionId }
-      }
-      if (
-        item?.type === 'command' &&
-        typeof item.commandId === 'string' &&
-        item.commandId.trim()
-      ) {
-        return { type: 'command', commandId: item.commandId }
-      }
-      if (
-        item?.type === 'aiTask' &&
-        typeof item.taskId === 'string' &&
-        item.taskId.trim()
-      ) {
-        return { type: 'aiTask', taskId: item.taskId }
-      }
-      if (
-        item?.type === 'translation' &&
-        typeof item.language === 'string' &&
-        item.language.trim()
-      ) {
-        return { type: 'translation', language: item.language }
-      }
-      if (
-        !item ||
-        item.type !== 'standard' ||
-        !isStandardActionId(item.actionId)
-      ) {
-        return null
-      }
-
-      return { type: 'standard', actionId: item.actionId }
-    }
-  )
-}
-
-export function assignPluginActions(
-  value: unknown,
-  actions: readonly { id?: string; preferredKey?: string }[],
-  registrations: readonly string[] = []
-): (MainActionConfig | null)[] {
-  const slots = normalizeMainActions(value)
-  for (const action of actions) {
-    if (
-      !action.id ||
-      registrations.includes(action.id) ||
-      slots.some(
-        (slot) => slot?.type === 'plugin' && slot.actionId === action.id
-      )
-    )
-      continue
-    const preferred = SHORTCUT_SLOT_KEYS.indexOf(
-      action.preferredKey?.toLowerCase() ?? ''
-    )
-    const index =
-      preferred >= 0 && !slots[preferred]
-        ? preferred
-        : slots.findIndex((slot) => !slot)
-    if (index >= 0) slots[index] = { type: 'plugin', actionId: action.id }
-  }
-  return slots
+  return slotList(normalizeConfigField('mainActions', value))
 }

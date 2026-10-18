@@ -153,18 +153,6 @@ export function createPluginContext(
         ? key(definition.defaultPhrasesKey)
         : undefined,
       configFields: scopeConfigFields(id, definition.configFields),
-      defaultCommands: definition.defaultCommands
-        ? ({ t }) =>
-            definition.defaultCommands!.map((preset) => ({
-              ...preset,
-              name: preset.nameKey
-                ? t(key(preset.nameKey))
-                : (preset.name ?? preset.id),
-              phrases: preset.phrasesKey
-                ? t(key(preset.phrasesKey)).split('\n')
-                : preset.phrases,
-            }))
-        : undefined,
       getUnavailableReasonKey: () =>
         lifecycle.signal.aborted ? 'toast.commandUnavailable' : undefined,
       parseText: definition.parseText
@@ -245,22 +233,7 @@ export function createPluginContext(
               (field.value !== undefined && field.value !== ''))
           )
             throw new Error('Plugin tools cannot grant notes access')
-          if (
-            Array.isArray(definition.defaultCommands) &&
-            definition.defaultCommands.some(
-              (command) =>
-                command.toolConfig?.[directoryField] !== undefined &&
-                command.toolConfig[directoryField] !== ''
-            )
-          )
-            throw new Error('Plugin commands cannot grant notes access')
         }
-
-        if (
-          definition.defaultCommands &&
-          !Array.isArray(definition.defaultCommands)
-        )
-          throw new Error('Invalid plugin default commands')
       }
       // Tools use dot-separated IDs; reserve them in the same owned registry.
       scope('tool', items)

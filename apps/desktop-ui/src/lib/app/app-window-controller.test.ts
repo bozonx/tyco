@@ -60,7 +60,6 @@ function fixture(overrides: Partial<AppWindowControllerDependencies> = {}) {
     reportError: vi.fn(),
     startBootstrap: vi.fn(async () => {}),
     stopBootstrap: vi.fn(),
-    startDefaultCommands: vi.fn(),
     startMetrics: vi.fn(async () => {}),
     stopMetrics: vi.fn(),
     disposePlugins: vi.fn(async () => {}),
@@ -145,7 +144,6 @@ describe('application window events', () => {
     expect(quick.deps.cancelSelection).toHaveBeenCalledWith(3)
     expect(main.deps.startMetrics).not.toHaveBeenCalled()
     expect(quick.deps.startMetrics).toHaveBeenCalledOnce()
-    expect(quick.deps.startDefaultCommands).toHaveBeenCalledOnce()
     main.controller.stop()
     quick.controller.stop()
   })
@@ -210,7 +208,6 @@ describe('application window events', () => {
     f.controller.stop()
     finish()
     await start
-    expect(f.deps.startDefaultCommands).not.toHaveBeenCalled()
     expect(f.cleanups.every((cleanup) => cleanup.mock.calls.length === 1)).toBe(
       true
     )

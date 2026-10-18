@@ -12,7 +12,7 @@ describe('LLM connection checker', () => {
 
     await check({
       id: 'local',
-      type: 'openai-compatible',
+      type: 'openaiCompatible',
       baseUrl: ' http://localhost:11434/v1/ ',
     })
 
@@ -28,7 +28,7 @@ describe('LLM connection checker', () => {
 
     await check({
       id: 'private-server',
-      type: 'openai-compatible',
+      type: 'openaiCompatible',
       baseUrl: 'https://llm.example/v1',
     })
 
@@ -45,7 +45,7 @@ describe('LLM connection checker', () => {
     await expect(
       check({
         id: 'local',
-        type: 'openai-compatible',
+        type: 'openaiCompatible',
         baseUrl: 'file:///tmp/server',
       })
     ).rejects.toBeInstanceOf(InvalidLlmBaseUrlError)
@@ -59,7 +59,7 @@ describe('LLM connection checker', () => {
     await expect(
       check({
         id: 'private-server',
-        type: 'openai-compatible',
+        type: 'openaiCompatible',
         baseUrl: 'https://llm.example/v1',
       })
     ).rejects.toThrow('HTTP 401')
@@ -72,7 +72,7 @@ describe('LLM connection checker', () => {
     await expect(
       check({
         id: 'local',
-        type: 'openai-compatible',
+        type: 'openaiCompatible',
         baseUrl: 'http://localhost:11434/v1',
       })
     ).rejects.toThrow('HTTP 404')
@@ -92,7 +92,7 @@ it('checks actual generation and reports a configured model that cannot run', as
   await expect(
     check({
       id: 'local',
-      type: 'openai-compatible',
+      type: 'openaiCompatible',
       baseUrl: 'http://localhost:11434/v1',
     })
   ).rejects.toThrow('Model model: HTTP 404')
@@ -112,7 +112,7 @@ it('does not accept an arbitrary JSON response as a model list', async () => {
   await expect(
     check({
       id: 'local',
-      type: 'openai-compatible',
+      type: 'openaiCompatible',
       baseUrl: 'http://localhost:11434/v1',
     })
   ).rejects.toThrow('model list')

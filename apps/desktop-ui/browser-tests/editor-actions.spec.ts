@@ -60,5 +60,8 @@ test('enables a plugin, uses its editor action and disables it', async ({
   await expect(
     page.getByRole('menuitem', { name: 'snake_case', exact: true })
   ).toHaveCount(0)
-  expect(desktop.userConfig.plugins.TextCase).toMatchObject({ enabled: false })
+  expect(desktop.userConfig.plugins.TextCase).toMatchObject({
+    isEnabled: false,
+    settings: {},
+  })
 })

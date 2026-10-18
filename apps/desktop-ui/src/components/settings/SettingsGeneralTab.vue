@@ -10,7 +10,7 @@
       </FieldRow>
       <FieldRow :label="t('settings.userLanguage')">
         <FieldSelect
-          v-model="userConfig.userLanguage"
+          v-model="userConfig.language.user"
           :options="userLanguageOptions"
         />
       </FieldRow>
@@ -47,16 +47,18 @@
           <SegmentedControl
             :label="t('settings.windowInsertion')"
             :options="windowInsertionOptions"
-            :model-value="userConfig.windowInsertion.method"
+            :model-value="userConfig.windowInsertion.linux.method"
             @update:model-value="updateWindowInsertionMethod"
           />
           <FieldInput
-            v-if="userConfig.windowInsertion.method === 'xdotool'"
-            v-model="userConfig.windowInsertion.xdotoolBin"
+            v-if="userConfig.windowInsertion.linux.method === 'xdotool'"
+            v-model="userConfig.windowInsertion.linux.xdotoolPath"
+            :placeholder="t('settings.binaryPathPlaceholder')"
           />
           <FieldInput
-            v-if="userConfig.windowInsertion.method === 'ydotool'"
-            v-model="userConfig.windowInsertion.ydotoolBin"
+            v-if="userConfig.windowInsertion.linux.method === 'ydotool'"
+            v-model="userConfig.windowInsertion.linux.ydotoolPath"
+            :placeholder="t('settings.binaryPathPlaceholder')"
           />
         </div>
       </FieldRow>
@@ -110,7 +112,7 @@ const windowInsertionOptions = computed(() => [
 ])
 
 const isAppLanguageManual = computed(
-  () => userConfig.value.appLanguage !== AUTO_LANGUAGE_VALUE
+  () => userConfig.value.language.ui !== AUTO_LANGUAGE_VALUE
 )
 
 const pasteShortcutOptions = computed(() => {
@@ -129,7 +131,7 @@ const pasteShortcutOptions = computed(() => {
 
 const appLanguageOptions = computed(() => {
   return buildLanguageOptions(
-    [effectiveAppLanguage.value, userConfig.value.appLanguage],
+    [effectiveAppLanguage.value, userConfig.value.language.ui],
     false,
     t,
     SUPPORTED_UI_LANGUAGE_OPTIONS
@@ -137,7 +139,7 @@ const appLanguageOptions = computed(() => {
 })
 
 const userLanguageOptions = computed(() => {
-  return buildLanguageOptions([userConfig.value.userLanguage], true, t)
+  return buildLanguageOptions([userConfig.value.language.user], true, t)
 })
 
 const getLanguageName = (language: string) =>
@@ -149,7 +151,7 @@ const updateWindowInsertionMethod = (value: string | number) => {
     return
   }
 
-  userConfig.value.windowInsertion.method = value
+  userConfig.value.windowInsertion.linux.method = value
 }
 
 const updateAppLanguage = (value: number | string | undefined) => {
@@ -157,15 +159,15 @@ const updateAppLanguage = (value: number | string | undefined) => {
     return
   }
 
-  userConfig.value.appLanguage = value
+  userConfig.value.language.ui = value
 }
 
 const toggleAppLanguageMode = () => {
   if (isAppLanguageManual.value) {
-    userConfig.value.appLanguage = AUTO_LANGUAGE_VALUE
+    userConfig.value.language.ui = AUTO_LANGUAGE_VALUE
     return
   }
 
-  userConfig.value.appLanguage = effectiveAppLanguage.value
+  userConfig.value.language.ui = effectiveAppLanguage.value
 }
 </script>

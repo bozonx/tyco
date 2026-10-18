@@ -31,19 +31,16 @@ describe('SettingsHistoryTab.vue', () => {
 
   const createConfig = (
     overrides = {}
-  ): Pick<UserConfig, 'editorHistory' | 'chat'> => ({
+  ): Pick<UserConfig, 'editorHistory' | 'chat' | 'chatHistory'> => ({
     editorHistory: {
       storage: 'disk',
       maxItems: 100,
       retentionDays: 30,
-      sanitizeSecrets: true,
+      isSecretSanitizingEnabled: true,
     },
 
-    chat: {
-      imageQuality: 'balanced',
-      isHistoryEnabled: true,
-      historyRetentionDays: 0,
-    },
+    chat: { imageQuality: 'balanced' },
+    chatHistory: { isEnabled: true, retentionDays: 0 },
 
     ...overrides,
   })
@@ -232,11 +229,11 @@ describe('SettingsHistoryTab.vue', () => {
 
     const chatSection = wrapper.findAll('.section-stub')[1]
     await chatSection.find('.field-checkbox-stub').setValue(false)
-    expect(config.chat.isHistoryEnabled).toBe(true)
+    expect(config.chatHistory.isEnabled).toBe(true)
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
 
     await wrapper.find('.cancel-btn').trigger('click')
-    expect(config.chat.isHistoryEnabled).toBe(true)
+    expect(config.chatHistory.isEnabled).toBe(true)
     expect(
       (chatSection.find('.field-checkbox-stub').element as HTMLInputElement)
         .checked
@@ -244,7 +241,7 @@ describe('SettingsHistoryTab.vue', () => {
 
     await chatSection.find('.field-checkbox-stub').setValue(false)
     await wrapper.find('.confirm-btn').trigger('click')
-    expect(config.chat.isHistoryEnabled).toBe(false)
+    expect(config.chatHistory.isEnabled).toBe(false)
     expect(
       wrapper
         .findAll('.section-stub')[1]
@@ -260,7 +257,7 @@ describe('SettingsHistoryTab.vue', () => {
     const chatSection = wrapper.findAll('.section-stub')[1]
     await chatSection.find('.field-checkbox-stub').setValue(true)
 
-    expect(config.chat.isHistoryEnabled).toBe(true)
+    expect(config.chatHistory.isEnabled).toBe(true)
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 })

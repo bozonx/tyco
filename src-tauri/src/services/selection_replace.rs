@@ -25,6 +25,9 @@ use crate::state::AppState;
 pub const SELECTION_RUN_EVENT: &str = "app://selection-run";
 pub const SELECTION_CANCEL_EVENT: &str = "app://selection-cancel";
 
+/// The built-in selection action: the LLM correction of the text.
+pub const CORRECTION_ACTION: &str = "correction";
+
 /// Prefix of the selection action that runs a command of the library.
 pub const COMMAND_ACTION_PREFIX: &str = "command:";
 
@@ -32,7 +35,7 @@ pub const COMMAND_ACTION_PREFIX: &str = "command:";
 /// result: `correction`, and `command:<id>`, a command of the library that
 /// returns a text.
 pub fn is_selection_action(value: &str) -> bool {
-    if value == "correction" {
+    if value == CORRECTION_ACTION {
         return true;
     }
     value
@@ -42,6 +45,9 @@ pub fn is_selection_action(value: &str) -> bool {
 
 /// The portal reports the press of a hotkey; its keys are still down then.
 const HOTKEY_RELEASE_TIMEOUT: Duration = Duration::from_millis(600);
+/// How long a call made from a desktop shortcut waits before the capture:
+/// the keys of that shortcut are still down, and nothing reports their release.
+pub const SHORTCUT_RELEASE_DELAY: Duration = HOTKEY_RELEASE_TIMEOUT;
 /// A tray menu has to close and give the focus back first.
 pub const TRAY_MENU_DELAY: Duration = Duration::from_millis(300);
 /// A run the webview never finished, e.g. because it was reloaded, must not
@@ -476,7 +482,7 @@ mod tests {
 
     #[test]
     fn validates_selection_actions() {
-        for valid in ["correction", "command:default:core.correct:fix"] {
+        for valid in ["correction", "command:fix"] {
             assert!(is_selection_action(valid), "{valid}");
         }
         for invalid in [

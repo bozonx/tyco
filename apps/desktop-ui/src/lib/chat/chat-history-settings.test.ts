@@ -11,12 +11,12 @@ describe('isChatHistoryEnabled', () => {
     expect(isChatHistoryEnabled(DEFAULT_USER_CONFIG)).toBe(true)
     expect(
       isChatHistoryEnabled({
-        chat: { ...DEFAULT_USER_CONFIG.chat, isHistoryEnabled: true },
+        chatHistory: { ...DEFAULT_USER_CONFIG.chatHistory, isEnabled: true },
       })
     ).toBe(true)
     expect(
       isChatHistoryEnabled({
-        chat: { ...DEFAULT_USER_CONFIG.chat, isHistoryEnabled: false },
+        chatHistory: { ...DEFAULT_USER_CONFIG.chatHistory, isEnabled: false },
       })
     ).toBe(false)
   })

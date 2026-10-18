@@ -1,71 +1,30 @@
-import {
-  DEFAULT_USER_CONFIG,
-  type SttModel,
-  type SttProvider,
-  type SttConfig,
-} from '@tyco/shared'
+import type { SttConfig, SttProvider } from '@tyco/shared'
 
-export type { SttConfig } from '@tyco/shared'
-
-/**
- * One speech model per provider: the defaults with the user's own settings for
- * that provider laid over them. Entries of unknown providers are dropped, and
- * the active model falls back to the first default when it is not one of them.
- * Mirrors `normalize_stt_config` on the Rust side.
- */
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value)
-
-export function normalizeSttConfig(value: unknown): SttConfig {
-  const config = isRecord(value) ? value : {}
-  const existing: unknown[] = Array.isArray(config.models) ? config.models : []
-  const sttModels = DEFAULT_USER_CONFIG.stt.models.map((defaults): SttModel => {
-    const own = existing.find(
-      (model): model is Record<string, unknown> =>
-        isRecord(model) && model.provider === defaults.provider
-    )
-    const model = { ...defaults }
-    if (!own) return model
-    if (typeof own.providerModelId === 'string')
-      model.providerModelId = own.providerModelId
-    if (typeof own.description === 'string') model.description = own.description
-    if (typeof own.language === 'string') model.language = own.language
-    if (typeof own.baseUrl === 'string') model.baseUrl = own.baseUrl
-    if (typeof own.formatWithLlm === 'boolean')
-      model.formatWithLlm = own.formatWithLlm
-    return model
-  })
-  const active = config.selectedModelId
-  const first = sttModels[0]
-  if (!first) throw new Error('No default speech model is configured')
-  const stt =
-    typeof active === 'string' && sttModels.some((model) => model.id === active)
-      ? active
-      : first.id
-  return { models: sttModels, selectedModelId: stt }
+/** What dictation runs on: the chosen provider with its settings */
+export interface SttModel {
+  provider: SttProvider
+  /** The model of the provider */
+  modelId: string
+  /** See `DeepgramSttSettings.language`; absent for a server without a choice */
+  language?: string
+  /** The address of a self-hosted server */
+  baseUrl?: string
 }
+
+/** A sherpa-onnx server runs the one model it was started with */
+const SHERPA_ONNX_MODEL_ID = 'sherpa-onnx'
 
 /** The model dictation uses, by the provider chosen in the settings */
 export function activeSttModel(config: SttConfig): SttModel {
-  const model =
-    config.models.find((item) => item.id === config.selectedModelId) ??
-    config.models[0]
-  if (!model) throw new Error('No speech model is configured')
-  return model
-}
-
-/** Makes the model of `provider` the one dictation uses */
-export function selectSttProvider(
-  config: SttConfig,
-  provider: SttProvider
-): void {
-  const current = activeSttModel(config)
-  const formatWithLlm = current?.formatWithLlm
-  const model = config.models.find((item) => item.provider === provider)
-  if (model) {
-    if (formatWithLlm !== undefined) {
-      model.formatWithLlm = formatWithLlm
+  if (config.providerId === 'sherpaOnnx')
+    return {
+      provider: 'sherpaOnnx',
+      modelId: SHERPA_ONNX_MODEL_ID,
+      baseUrl: config.providers.sherpaOnnx.baseUrl,
     }
-    config.selectedModelId = model.id
+  return {
+    provider: 'deepgram',
+    modelId: config.providers.deepgram.modelId,
+    language: config.providers.deepgram.language,
   }
 }

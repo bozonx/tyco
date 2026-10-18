@@ -45,11 +45,11 @@
             @update:model-value="updateQualityGate"
           />
           <Button
-            v-if="translation.qualityGate === 'always' && !correctionPromptOpen"
+            v-if="translation.qualityGate === 'always' && !qualityGatePromptOpen"
             size="xs"
             variant="ghost"
             icon="mdi:plus"
-            @click="correctionPromptOpen = true"
+            @click="qualityGatePromptOpen = true"
           >
             {{ t('settings.translationCorrectionPromptAdd') }}
           </Button>
@@ -57,13 +57,13 @@
       </FieldRow>
 
       <FieldRow
-        v-if="translation.qualityGate === 'always' && correctionPromptOpen"
+        v-if="translation.qualityGate === 'always' && qualityGatePromptOpen"
         :label="t('settings.translationCorrectionPrompt')"
         :info="t('settings.translationCorrectionPromptInfo')"
         vertical
       >
         <FieldTextArea
-          :model-value="translation.correctionPrompt"
+          :model-value="translation.qualityGatePrompt"
           @update:model-value="updateCorrectionPrompt"
         />
       </FieldRow>
@@ -74,7 +74,7 @@
       :title="t('settings.translationRules')"
       :info="t('settings.translationRulesInfo')"
     >
-      <FieldTextArea v-model="userConfig.aiRules.translate" />
+      <FieldTextArea v-model="userConfig.aiRules.translation" />
     </SettingsSection>
 
     <SettingsSection
@@ -137,8 +137,8 @@ const {
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
 })
 // An empty prompt starts collapsed each time the page opens.
-const correctionPromptOpen = ref(
-  Boolean(translation.value.correctionPrompt?.trim())
+const qualityGatePromptOpen = ref(
+  Boolean(translation.value.qualityGatePrompt?.trim())
 )
 const providerOptions = computed(() => [
   { id: 'deepl', name: t('settings.translationProviderDeepl') },

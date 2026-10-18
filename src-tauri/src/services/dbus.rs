@@ -109,6 +109,15 @@ impl TycoDbus {
         })
         .await
     }
+
+    /// Corrects the selection of the focused window in place, as the inline
+    /// correction hotkey does.
+    async fn correct_selection(&self) -> Result<(), ApiError> {
+        self.dispatch(Request::ReplaceSelection {
+            action: String::from("correction"),
+        })
+        .await
+    }
 }
 
 impl TycoDbus {

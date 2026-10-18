@@ -225,7 +225,7 @@ mod tests {
     }
     fn changed(base: &Value) -> Value {
         let mut next = base.clone();
-        next["appLanguage"] = serde_json::json!("ru_RU");
+        next["language"]["ui"] = serde_json::json!("ru_RU");
         next
     }
     #[test]
@@ -320,7 +320,7 @@ mod tests {
         stale["aiRules"]["chat"] = serde_json::json!("Use concise answers");
         let saved = save_with(&state, &Host::default(), stale, base).unwrap();
         assert_eq!(saved.revision, 2);
-        assert_eq!(saved.settings.user_config["appLanguage"], "ru_RU");
+        assert_eq!(saved.settings.user_config["language"]["ui"], "ru_RU");
         assert_eq!(
             saved.settings.user_config["aiRules"]["chat"],
             "Use concise answers"

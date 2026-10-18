@@ -1,5 +1,4 @@
 import type { TranscriptPart } from '@bozonx/ai-kit'
-import type { SttModel } from '@tyco/shared'
 
 import {
   applyTranscriptPart,
@@ -8,6 +7,7 @@ import {
   liveTranscriptText,
 } from './live-transcript'
 import type { SttClient } from './stt-client'
+import type { SttModel } from './stt-config'
 import type { VoiceCaptureControl } from './voice-capture'
 
 /** A failure of the dictation itself, told to the user by `kind` */

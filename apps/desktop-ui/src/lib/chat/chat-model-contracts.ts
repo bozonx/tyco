@@ -57,7 +57,7 @@ export interface ChatModelDependencies {
   imageOmittedText?: () => string
   formatError?: (error: unknown) => string
   createId: () => string
-  nowIso: () => string
+  nowMs: () => number
   saveSessionState: (state: Partial<SessionState>) => void | Promise<void>
   getLastChatId: () => string | null | undefined
   /** The model picked in the chat; null when none is available */

@@ -34,8 +34,11 @@ function usePersistedMode<T extends string>(
 export function usePersistedDiffMode() {
   const desktopStore = useDesktopStore()
   const diffMode = usePersistedMode<DiffViewMode>(
-    () => resolveDiffMode(desktopStore.userConfig.diffViewMode),
-    (diffViewMode) => void desktopStore.updateUserConfig({ diffViewMode })
+    () => resolveDiffMode(desktopStore.userConfig.editor.diffViewMode),
+    (diffViewMode) =>
+      void desktopStore.updateUserConfig({
+        editor: { ...desktopStore.userConfig.editor, diffViewMode },
+      })
   )
 
   function cycleMode() {

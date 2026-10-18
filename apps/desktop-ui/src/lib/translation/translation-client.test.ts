@@ -10,7 +10,7 @@ function config(overrides: Partial<TranslationConfig> = {}): TranslationConfig {
     qualityGate: 'off',
     deeplEndpoint: 'free',
     glossary: [],
-    correctionPrompt: '',
+    qualityGatePrompt: '',
     ...overrides,
   }
 }
@@ -45,7 +45,7 @@ describe('createTranslationClient', () => {
       .mockResolvedValueOnce('Здравствуйте.')
     const client = createTranslationClient({
       getConfig: () =>
-        config({ qualityGate: 'always', correctionPrompt: 'Use formal tone.' }),
+        config({ qualityGate: 'always', qualityGatePrompt: 'Use formal tone.' }),
       keys: { get: vi.fn() },
       transport: { fetch: vi.fn(), openSocket: vi.fn() },
       runLlm,

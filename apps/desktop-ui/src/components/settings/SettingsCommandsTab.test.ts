@@ -54,10 +54,10 @@ const mountTab = (focusCommandId?: string) => {
   context = createTestSettingsContext({
     launcherPages: [],
     commands: [webhook, script],
-    mainActions: [
-      { type: 'command', commandId: 'wh1' },
-      { type: 'standard', actionId: 'translation' },
-    ],
+    mainActions: {
+      q: { type: 'command', commandId: 'wh1' },
+      w: { type: 'standard', actionId: 'translation' },
+    },
   } as Partial<UserConfig>)
   return mount(SettingsCommandsTab, {
     props: { focusCommandId },
@@ -86,7 +86,7 @@ describe('SettingsCommandsTab.vue', () => {
     context = createTestSettingsContext({
       launcherPages: [],
       commands: [webhook, script],
-      mainActions: [],
+      mainActions: {},
     } as Partial<UserConfig>)
     const wrapper = mount(SettingsCommandsTab, {
       attachTo: document.body,
@@ -142,13 +142,16 @@ describe('SettingsCommandsTab.vue', () => {
 
   it('shows action keys and assignments on every launcher page', async () => {
     const wrapper = mountTab()
-    context.draft.value.launcherPages = [['wh1'], [null, 'wh1'], ['sc1']].map(
-      (slots, index) => ({
-        id: `page-${index}`,
-        slots,
-        inputMode: 'selection' as const,
-      })
-    )
+    context.draft.value.launcherPages = [
+      { q: 'wh1' },
+      { w: 'wh1' },
+      { q: 'sc1' },
+    ].map((slots, index) => ({
+      id: `page-${index}`,
+      inputMode: 'selection' as const,
+      hotkey: '',
+      slots,
+    }))
     await nextTick()
     const placements = wrapper.findAll('.command-placements')
     expect(placements[0].text()).toContain('"key":"Q"')
@@ -205,10 +208,9 @@ describe('SettingsCommandsTab.vue', () => {
     await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
 
     expect(commandIds()).toEqual(['sc1'])
-    expect(context.draft.value.mainActions).toEqual([
-      null,
-      { type: 'standard', actionId: 'translation' },
-    ])
+    expect(context.draft.value.mainActions).toEqual({
+      w: { type: 'standard', actionId: 'translation' },
+    })
     expect(wrapper.find('.commands-notice').text()).toContain(
       'commands.removed'
     )
@@ -223,10 +225,10 @@ describe('SettingsCommandsTab.vue', () => {
     await wrapper.find('.commands-notice button').trigger('click')
 
     expect(commandIds()).toEqual(['wh1', 'sc1'])
-    expect(context.draft.value.mainActions).toEqual([
-      { type: 'command', commandId: 'wh1' },
-      { type: 'standard', actionId: 'translation' },
-    ])
+    expect(context.draft.value.mainActions).toEqual({
+      q: { type: 'command', commandId: 'wh1' },
+      w: { type: 'standard', actionId: 'translation' },
+    })
     expect(wrapper.find('.commands-notice').exists()).toBe(false)
     wrapper.unmount()
     expect(removeSecret).not.toHaveBeenCalled()
@@ -252,21 +254,23 @@ describe('SettingsCommandsTab.vue', () => {
     await card.find('.enabled-switch input').setValue(false)
 
     const commands = () => context.draft.value.commands as CommandConfig[]
-    expect(commands()[1].enabled).toBe(false)
-    expect(commands()[0].enabled).toBe(true)
+    expect(commands()[1].isEnabled).toBe(false)
+    expect(commands()[0].isEnabled).toBe(true)
     await nextTick()
     expect(card.find('.enabled-switch input').attributes('title')).toBe(
       'commands.enable'
     )
     await card.find('.enabled-switch input').setValue(true)
-    expect(commands()[1].enabled).toBe(true)
+    expect(commands()[1].isEnabled).toBe(true)
   })
 
   it('grants selection capture without touching the commands', async () => {
     const wrapper = mountTab()
     const commands = context.draft.value.commands
     await wrapper.findAll('.field-row input[type="checkbox"]')[0].setValue(true)
-    expect(context.draft.value.externalAccess).toEqual({ selection: true })
+    expect(context.draft.value.externalAccess).toEqual({
+      canAccessSelection: true,
+    })
     expect(context.draft.value.commands).toBe(commands)
   })
 })

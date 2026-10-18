@@ -9,6 +9,8 @@ const PROFILE_FILE: &str = "profile.json";
 /// What an internal project keeps its settings in, next to its files.
 pub const PROJECT_FILE: &str = "project.json";
 const SOUL_FILE: &str = "SOUL.md";
+/// The chats of a profile, laid out as the app's own `chats` folder.
+const PROFILE_CHATS_DIR: &str = "chats";
 const MAX_TEMPERATURE: f64 = 2.0;
 /// Mirrors MAX_TOOL_STEP_COUNT in shared.
 const MAX_TOOL_STEP_COUNT: u32 = 50;
@@ -159,7 +161,7 @@ pub fn create_profile(vault_root: &Path, profile: AiProfile, soul: &str) -> Resu
         )));
     }
     create_private_dir(&dir)?;
-    create_private_dir(&dir.join("history"))?;
+    create_private_dir(&dir.join(PROFILE_CHATS_DIR))?;
     let workspace = dir.join("workspace");
     for sub in ["uploads", "generated", "downloads"] {
         create_private_dir(&workspace.join(sub))?;
@@ -199,8 +201,8 @@ pub fn write_profile_soul(vault_root: &Path, id: &str, content: &str) -> Result<
 }
 
 /// Where the profile keeps its chats; only an existing profile has one.
-pub fn profile_history_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
-    let dir = existing_profile_dir(vault_root, id)?.join("history");
+pub fn profile_chats_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+    let dir = existing_profile_dir(vault_root, id)?.join(PROFILE_CHATS_DIR);
     create_private_dir(&dir)?;
     Ok(dir)
 }

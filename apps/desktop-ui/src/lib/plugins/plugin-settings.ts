@@ -31,11 +31,11 @@ export function resolveInstalledPlugins(
     let config: Record<string, unknown> = {}
     let error = plugin._loadError ?? runtime[pluginId]?.error
     try {
-      config = resolvePluginConfig(plugin, pluginState)
+      config = resolvePluginConfig(plugin, pluginState.settings)
     } catch (reason) {
       error = reason instanceof Error ? reason.message : String(reason)
     }
-    const isEnabled = pluginState.enabled === true
+    const isEnabled = pluginState.isEnabled
     const status = isEnabled ? runtime[pluginId]?.status : undefined
     const rawFields = plugin.defaultConfig?.fields || []
 

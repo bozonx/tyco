@@ -1,21 +1,33 @@
 import { ref } from 'vue'
 
-import { type CommandConfig, type MainActionConfig } from '@tyco/shared'
+import {
+  SHORTCUT_SLOT_KEYS,
+  type CommandConfig,
+  type MainActionConfig,
+  type ShortcutSlots,
+} from '@tyco/shared'
 
 import { webhookToolConfig } from './command-config'
 
 interface RemovedCommand {
   command: CommandConfig
   index: number
-  mainActions?: (MainActionConfig | null)[]
+  mainActions?: MenuSlots
 }
+
+type MenuSlots = ShortcutSlots<MainActionConfig>
+
+const isCommandItem = (
+  slot: MainActionConfig | undefined,
+  commandId: string
+): boolean => slot?.type === 'command' && slot.commandId === commandId
 
 /** Undo restores references without overwriting edits made after removal. */
 export function createCommandRemovalModel(deps: {
   getCommands: () => CommandConfig[]
-  getMainActions: () => (MainActionConfig | null)[]
+  getMainActions: () => MenuSlots
   updateCommands: (commands: CommandConfig[]) => void
-  updateMainActions: (actions: (MainActionConfig | null)[]) => void
+  updateMainActions: (actions: MenuSlots) => void
   removeSecret: (id: string) => Promise<void>
   persist: () => Promise<unknown>
   isSaved: () => boolean
@@ -53,13 +65,13 @@ export function createCommandRemovalModel(deps: {
     finishRemoval()
     const commands = deps.getCommands()
     const mainActions = deps.getMainActions()
-    const referenced = mainActions.some(
-      (slot) => slot?.type === 'command' && slot.commandId === command.id
+    const referenced = Object.values(mainActions).some((slot) =>
+      isCommandItem(slot, command.id)
     )
     removed.value = {
       command,
       index: commands.findIndex((item) => item.id === command.id),
-      mainActions: referenced ? [...mainActions] : undefined,
+      mainActions: referenced ? { ...mainActions } : undefined,
     }
     deps.updateCommands(commands.filter((item) => item.id !== command.id))
     if (referenced)
@@ -101,26 +113,25 @@ export function restoreCommand(
  * before and are still empty
  */
 export function restoreCommandReferences(
-  slots: readonly (MainActionConfig | null)[],
-  previous: readonly (MainActionConfig | null)[],
+  slots: MenuSlots,
+  previous: MenuSlots,
   commandId: string
-): (MainActionConfig | null)[] {
-  return slots.map((slot, index) => {
-    const before = previous[index]
-    return slot === null &&
-      before?.type === 'command' &&
-      before.commandId === commandId
-      ? before
-      : slot
-  })
+): MenuSlots {
+  const next = { ...slots }
+  for (const key of SHORTCUT_SLOT_KEYS) {
+    const before = previous[key]
+    if (!next[key] && before && isCommandItem(before, commandId))
+      next[key] = before
+  }
+  return next
 }
 
 /** The menu without the items that refer to the command */
 export function removeCommandReferences(
-  slots: readonly (MainActionConfig | null)[],
+  slots: MenuSlots,
   commandId: string
-): (MainActionConfig | null)[] {
-  return slots.map((slot) =>
-    slot?.type === 'command' && slot.commandId === commandId ? null : slot
+): MenuSlots {
+  return Object.fromEntries(
+    Object.entries(slots).filter(([, slot]) => !isCommandItem(slot, commandId))
   )
 }

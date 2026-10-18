@@ -26,12 +26,12 @@ export const useTranslationStore = defineStore('translation', () => {
     getLlmLimits: () =>
       taskModelLimits(
         normalizeLlmConfig(desktopStore.userConfig?.llm),
-        'translate'
+        'translation'
       ),
     transport: createTauriTransport(tauriNetIpc),
     keys: createSecretKeyProvider(() => secretsStore.client.status()),
     runLlm: (prompt, signal, options = {}) =>
-      llmStore.client.run('translate', prompt, { signal, ...options }),
+      llmStore.client.run('translation', prompt, { signal, ...options }),
   })
   const actions = createTranslationActions({
     client,

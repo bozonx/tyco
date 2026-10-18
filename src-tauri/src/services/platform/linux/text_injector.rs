@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 use serde_json::Value;
 
 use crate::errors::AppError;
+use super::binary_paths::default_binary_path;
 use crate::services::platform::session::{self, DisplayServer};
 use crate::services::platform::window_tracker::tracker;
 
@@ -214,14 +215,14 @@ impl SystemTextInjector {
         }
         let command = match method {
             InjectionMethod::Ydotool => CommandSpec {
-                binary: configured_binary(insertion, "ydotoolBin", "/usr/bin/ydotool"),
+                binary: linux_binary(insertion, YDOTOOL),
                 args: std::iter::once(String::from("key"))
                     .chain(action.ydotool_keys(shortcut))
                     .collect(),
                 env: vec![(String::from("YDOTOOL_SOCKET"), ydotool_socket()?)],
             },
             InjectionMethod::Xdotool => CommandSpec {
-                binary: xdotool_binary(insertion),
+                binary: linux_binary(insertion, XDOTOOL),
                 args: ["key", "--clearmodifiers", action.xdotool_keys(shortcut)]
                     .into_iter()
                     .map(String::from)
@@ -239,12 +240,12 @@ impl SystemTextInjector {
         let method = select_method(self.session, configured_method(insertion))?;
         match method {
             InjectionMethod::Ydotool => {
-                let binary = configured_binary(insertion, "ydotoolBin", "/usr/bin/ydotool");
+                let binary = linux_binary(insertion, YDOTOOL);
                 ensure_binary(&binary, "ydotool")?;
                 ydotool_socket()?;
             }
             InjectionMethod::Xdotool => {
-                ensure_binary(&xdotool_binary(insertion), "xdotool")?;
+                ensure_binary(&linux_binary(insertion, XDOTOOL), "xdotool")?;
             }
         }
         if self.session == InjectionSessionKind::Wayland && !tracker().is_running() {
@@ -256,19 +257,51 @@ impl SystemTextInjector {
     }
 }
 
+/// The Linux part of `windowInsertion`.
+fn linux_settings(insertion: Option<&Value>) -> Option<&Value> {
+    insertion.and_then(|value| value.get("linux"))
+}
+
 fn configured_method(insertion: Option<&Value>) -> &str {
-    insertion
+    linux_settings(insertion)
         .and_then(|value| value.get("method"))
         .and_then(Value::as_str)
         .unwrap_or("xdotool")
 }
 
-fn xdotool_binary(insertion: Option<&Value>) -> String {
-    insertion
-        .and_then(|value| value.get("xdotoolBin"))
+/// A key injection tool and the setting with its path.
+struct InjectionBinary {
+    name: &'static str,
+    path_key: &'static str,
+}
+
+const XDOTOOL: InjectionBinary = InjectionBinary {
+    name: "xdotool",
+    path_key: "xdotoolPath",
+};
+const YDOTOOL: InjectionBinary = InjectionBinary {
+    name: "ydotool",
+    path_key: "ydotoolPath",
+};
+
+/// The configured path of the tool; without one the tool found on `PATH`,
+/// or where the distribution installs it.
+fn linux_binary(insertion: Option<&Value>, binary: InjectionBinary) -> String {
+    linux_settings(insertion)
+        .and_then(|value| value.get(binary.path_key))
         .and_then(Value::as_str)
-        .unwrap_or("/usr/bin/xdotool")
-        .to_owned()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map(str::to_owned)
+        .or_else(|| find_on_path(binary.name, std::env::var_os("PATH").as_deref()))
+        .unwrap_or_else(|| default_binary_path(binary.name))
+}
+
+fn find_on_path(name: &str, path: Option<&std::ffi::OsStr>) -> Option<String> {
+    std::env::split_paths(path?)
+        .map(|directory| directory.join(name))
+        .find(|candidate| candidate.is_file())
+        .map(|candidate| candidate.to_string_lossy().into_owned())
 }
 
 fn ensure_binary(binary: &str, name: &str) -> Result<(), AppError> {
@@ -311,7 +344,7 @@ fn command_spec(
 ) -> Result<CommandSpec, AppError> {
     match method {
         InjectionMethod::Ydotool => Ok(CommandSpec {
-            binary: configured_binary(insertion, "ydotoolBin", "/usr/bin/ydotool"),
+            binary: linux_binary(insertion, YDOTOOL),
             args: std::iter::once(String::from("key"))
                 .chain(shortcut.ydotool_keys())
                 .collect(),
@@ -324,7 +357,7 @@ fn command_spec(
                 ))
             })?;
             Ok(CommandSpec {
-                binary: xdotool_binary(insertion),
+                binary: linux_binary(insertion, XDOTOOL),
                 args: [
                     "windowactivate",
                     "--sync",
@@ -340,14 +373,6 @@ fn command_spec(
             })
         }
     }
-}
-
-fn configured_binary(insertion: Option<&Value>, key: &str, fallback: &str) -> String {
-    insertion
-        .and_then(|value| value.get(key))
-        .and_then(Value::as_str)
-        .unwrap_or(fallback)
-        .to_owned()
 }
 
 fn ydotool_socket_paths() -> Vec<PathBuf> {
@@ -443,8 +468,7 @@ mod tests {
     #[test]
     fn xdotool_waits_for_focus_before_pasting() {
         let config = json!({
-            "xdotoolBin": "/legacy/xdotool",
-            "windowInsertion": { "xdotoolBin": "/custom/xdotool" }
+            "windowInsertion": { "linux": { "xdotoolPath": "/custom/xdotool" } }
         });
         let spec = command_spec(
             InjectionMethod::Xdotool,
@@ -469,7 +493,7 @@ mod tests {
 
     #[test]
     fn ydotool_presses_and_releases_paste_keys() {
-        let config = json!({ "ydotoolBin": "/custom/ydotool" });
+        let config = json!({ "linux": { "ydotoolPath": " /custom/ydotool " } });
         let spec = command_spec(
             InjectionMethod::Ydotool,
             Some(&config),
@@ -479,6 +503,21 @@ mod tests {
         .unwrap();
         assert_eq!(spec.binary, "/custom/ydotool");
         assert_eq!(spec.args, ["key", "29:1", "47:1", "47:0", "29:0"]);
+    }
+
+    #[test]
+    fn an_unset_path_finds_the_tool_on_path() {
+        let directory = std::env::temp_dir().join(format!("tyco-path-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("xdotool"), "").unwrap();
+        let path = std::env::join_paths([std::path::Path::new("/nonexistent"), &directory]).unwrap();
+        assert_eq!(
+            find_on_path("xdotool", Some(&path)),
+            Some(directory.join("xdotool").to_string_lossy().into_owned())
+        );
+        assert_eq!(find_on_path("ydotool", Some(&path)), None);
+        assert_eq!(find_on_path("xdotool", None), None);
+        std::fs::remove_dir_all(&directory).unwrap();
     }
 
     #[test]

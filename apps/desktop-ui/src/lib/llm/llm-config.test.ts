@@ -33,13 +33,13 @@ describe('llm-config', () => {
       'deepseek',
     ])
     expect(config.models).toEqual([])
-    expect(config.taskModelChains.aiTasks).toEqual([])
+    expect(config.taskModelChains.aiTask).toEqual([])
   })
 
   it('puts missing built-in providers back, first', () => {
     const config = normalizeLlmConfig({
       providers: [
-        { id: 'local', type: 'openai-compatible', baseUrl: 'http://x' },
+        { id: 'local', type: 'openaiCompatible', baseUrl: 'http://x' },
         { id: 'deepseek', type: 'deepseek', name: 'Mine' },
       ],
     })
@@ -56,12 +56,12 @@ describe('llm-config', () => {
   it('drops providers that are malformed or impersonate a built-in', () => {
     const config = normalizeLlmConfig({
       providers: [
-        { id: 'google', type: 'openai-compatible', baseUrl: 'http://evil' },
-        { id: 'Bad Id', type: 'openai-compatible' },
+        { id: 'google', type: 'openaiCompatible', baseUrl: 'http://evil' },
+        { id: 'Bad Id', type: 'openaiCompatible' },
         { id: 'x', type: 'unknown' },
         { id: 'custom', type: 'google' },
-        { id: 'local', type: 'openai-compatible' },
-        { id: 'local', type: 'openai-compatible', baseUrl: 'http://dup' },
+        { id: 'local', type: 'openaiCompatible' },
+        { id: 'local', type: 'openaiCompatible', baseUrl: 'http://dup' },
       ],
     })
 
@@ -70,7 +70,7 @@ describe('llm-config', () => {
       config.providers.filter(
         (p) => !['google', 'openrouter', 'deepseek'].includes(p.id)
       )
-    ).toEqual([{ id: 'local', type: 'openai-compatible', baseUrl: '' }])
+    ).toEqual([{ id: 'local', type: 'openaiCompatible', baseUrl: '' }])
   })
 
   it('keeps models of known providers and cleans their numbers', () => {
@@ -102,11 +102,11 @@ describe('llm-config', () => {
         { id: 'a', providerId: 'google', providerModelId: 'g' },
         { id: 'b', providerId: 'deepseek', providerModelId: 'd' },
       ],
-      taskModelChains: { aiTasks: ['b', 'gone', 'b', 'a'], translate: [] },
+      taskModelChains: { aiTask: ['b', 'gone', 'b', 'a'], translation: [] },
     })
 
-    expect(config.taskModelChains.aiTasks).toEqual(['b', 'a'])
-    expect(config.taskModelChains.translate).toEqual([])
+    expect(config.taskModelChains.aiTask).toEqual(['b', 'a'])
+    expect(config.taskModelChains.translation).toEqual([])
     expect(config.taskModelChains.correction).toEqual([])
   })
 
@@ -127,7 +127,7 @@ describe('llm-config', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
     const provider = addCompatibleProvider(config)
     const model = addModel(config, provider.id)
-    config.taskModelChains.aiTasks = [model.id, 'local-qwen']
+    config.taskModelChains.aiTask = [model.id, 'local-qwen']
 
     expect(provider.id).toMatch(/^local-[a-f0-9-]{36}$/)
     expect(model.id).toBe(`${provider.id}-model`)
@@ -135,7 +135,7 @@ describe('llm-config', () => {
     removeProvider(config, provider.id)
     expect(config.providers.some((item) => item.id === provider.id)).toBe(false)
     expect(config.models.some((item) => item.id === model.id)).toBe(false)
-    expect(config.taskModelChains.aiTasks).toEqual(['local-qwen'])
+    expect(config.taskModelChains.aiTask).toEqual(['local-qwen'])
   })
 
   it('never removes a built-in provider', () => {
@@ -148,10 +148,10 @@ describe('llm-config', () => {
 
   it('removes a model from every task', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
-    config.taskModelChains.translate = ['gemini-flash', 'local-qwen']
+    config.taskModelChains.translation = ['gemini-flash', 'local-qwen']
     removeModel(config, 'gemini-flash')
 
-    expect(config.taskModelChains.translate).toEqual(['local-qwen'])
+    expect(config.taskModelChains.translation).toEqual(['local-qwen'])
   })
 
   it('labels a model by name, then model id', () => {

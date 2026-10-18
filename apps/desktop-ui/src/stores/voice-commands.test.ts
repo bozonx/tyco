@@ -48,7 +48,7 @@ describe('useVoiceCommandsStore', () => {
     const validVoiceCommand: CommandConfig = {
       ...createCommand('core.correct', 'cmd-1'),
       name: 'Test Voice Command',
-      enabled: true,
+      isEnabled: true,
       isVoiceEnabled: true,
       phrases: ['test voice'],
     }

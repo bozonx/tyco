@@ -1,12 +1,16 @@
-use super::super::{write_json, AppError, Path, Value, CONFIG_FILE_NAME};
+use super::super::{now_ms, write_json, AppError, Path, Value};
+use crate::services::atomic_file::{prune_copies, KEPT_COPY_COUNT};
 
-/// A recoverable snapshot before repairing a current-version file.
+/// What the name of a snapshot adds to the name of the config file.
+const REPAIRED_COPY_MARKER: &str = ".repaired-";
+
+/// A recoverable snapshot before repairing a current-version file:
+/// `config.json.repaired-<unix ms>`; the newest few are kept.
 pub(super) fn back_up_config_before_repair(path: &Path, original: &Value) -> Result<(), AppError> {
-    let stem = CONFIG_FILE_NAME
-        .rsplit_once('.')
-        .map_or(CONFIG_FILE_NAME, |(stem, _)| stem);
-    let backup = path.with_file_name(format!("{stem}.repaired.bak"));
-    write_json(&backup, &without_api_keys(original))
+    let mut name = path.file_name().unwrap_or_default().to_os_string();
+    name.push(format!("{REPAIRED_COPY_MARKER}{}", now_ms()));
+    write_json(&path.with_file_name(name), &without_api_keys(original))?;
+    prune_copies(path, REPAIRED_COPY_MARKER, KEPT_COPY_COUNT)
 }
 
 /// Removes credential fields from untrusted input at any depth.
@@ -30,6 +34,7 @@ fn without_api_keys(value: &Value) -> Value {
 mod tests {
     use super::super::super::fs;
     use super::*;
+    use crate::models::CONFIG_FILE_NAME;
     use crate::services::storage::test_support::TestDir;
     use serde_json::json;
 
@@ -40,7 +45,18 @@ mod tests {
         let config = json!({"llm":{"providers":[{"baseUrl":"https://x.example","apiKey":"sk-secret" }]},"appearance":{"theme":"dark"}});
 
         back_up_config_before_repair(&path, &config).unwrap();
-        let raw = fs::read_to_string(dir.join("userConfig.repaired.bak")).unwrap();
+        let backup = fs::read_dir(&*dir)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .find(|backup| {
+                backup
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .starts_with("config.json.repaired-")
+            })
+            .unwrap();
+        let raw = fs::read_to_string(backup).unwrap();
         assert!(!raw.contains("sk-secret"));
         assert!(raw.contains("x.example"));
     }

@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DEFAULT_USER_CONFIG, SELECTION_HOTKEY_PREFIX } from '@tyco/shared'
+import {
+  DEFAULT_USER_CONFIG,
+  INLINE_CORRECTION_HOTKEY_ID,
+  launcherPageHotkeyId,
+} from '@tyco/shared'
 import type { PluginFactory } from '../../types/plugins'
 import { createSettingsOperations } from './settings-operations'
 
@@ -30,7 +34,7 @@ describe('settings operations', () => {
     const pending = f.model.finishProviderRemoval('local')
     f.config.llm.providers.push({
       id: 'local',
-      type: 'openai-compatible',
+      type: 'openaiCompatible',
       baseUrl: 'http://localhost:11434/v1',
     })
     finish()
@@ -70,58 +74,63 @@ describe('settings operations', () => {
     const f = fixture()
     const pages = ['a', 'b', 'c'].map((id) => ({
       id,
-      slots: Array<string | null>(15).fill(null),
       inputMode: 'selection' as const,
+      hotkey: '',
+      slots: {},
     }))
     f.config.launcherPages = pages
-    f.config.mainActions = ['a', 'b', 'c'].map((pageId) => ({
-      type: 'launcherPage',
-      pageId,
-    }))
+    f.config.mainActions = {
+      q: { type: 'launcherPage', pageId: 'a' },
+      w: { type: 'launcherPage', pageId: 'b' },
+      e: { type: 'launcherPage', pageId: 'c' },
+    }
     f.model.updateLauncherPages([pages[0], pages[2]])
-    expect(f.config.mainActions).toEqual([
-      { type: 'launcherPage', pageId: 'a' },
-      null,
-      { type: 'launcherPage', pageId: 'c' },
-    ])
+    expect(f.config.mainActions).toEqual({
+      q: { type: 'launcherPage', pageId: 'a' },
+      e: { type: 'launcherPage', pageId: 'c' },
+    })
   })
 
   it('keeps stable references when pages are reordered', () => {
     const f = fixture()
     const pages = ['a', 'b'].map((id) => ({
       id,
-      slots: Array<string | null>(15).fill(null),
       inputMode: 'selection' as const,
+      hotkey: '',
+      slots: {},
     }))
     f.config.launcherPages = pages
-    f.config.mainActions = [{ type: 'launcherPage', pageId: 'a' }]
+    f.config.mainActions = { q: { type: 'launcherPage', pageId: 'a' } }
     f.model.updateLauncherPages([pages[1], pages[0]])
-    expect(f.config.mainActions).toEqual([
-      { type: 'launcherPage', pageId: 'a' },
-    ])
+    expect(f.config.mainActions).toEqual({
+      q: { type: 'launcherPage', pageId: 'a' },
+    })
     expect(() => f.model.updateLauncherPages([])).toThrow(
       'At least one launcher page is required'
     )
     expect(f.config.launcherPages).toEqual([pages[1], pages[0]])
   })
 
-  it('stores selection hotkeys apart from mode hotkeys', () => {
+  it('stores each hotkey id where it belongs', () => {
     const f = fixture()
     f.model.updateHotkey('voice', 'Ctrl+Alt+V')
-    f.model.updateHotkey(`${SELECTION_HOTKEY_PREFIX}translate`, 'Ctrl+T')
+    f.model.updateHotkey(INLINE_CORRECTION_HOTKEY_ID, 'Ctrl+Alt+F')
+    f.model.updateHotkey(launcherPageHotkeyId('main'), 'Ctrl+Alt+1')
+    f.model.updateHotkey(launcherPageHotkeyId('missing'), 'Ctrl+Alt+2')
+    f.model.updateHotkey('unknown', 'Ctrl+Alt+3')
     expect(f.config.hotkeys.voice).toBe('Ctrl+Alt+V')
-    expect(f.config.selectionHotkeys?.translate).toBe('Ctrl+T')
-    expect(f.config.hotkeys).not.toHaveProperty(
-      `${SELECTION_HOTKEY_PREFIX}translate`
-    )
+    expect(f.config.hotkeys.selectionCorrection).toBe('Ctrl+Alt+F')
+    expect(f.config.launcherPages[0]?.hotkey).toBe('Ctrl+Alt+1')
+    expect(f.config.hotkeys).not.toHaveProperty('unknown')
+    expect(f.config.hotkeys).not.toHaveProperty(INLINE_CORRECTION_HOTKEY_ID)
   })
 
   it('sets and resets the vault path', () => {
     const f = fixture()
     f.model.updateVaultPath('/vault')
-    expect(f.config.aiProfiles?.vaultPath).toBe('/vault')
+    expect(f.config.aiVault).toEqual({ path: '/vault' })
     f.model.updateVaultPath(undefined)
-    expect(f.config.aiProfiles).not.toHaveProperty('vaultPath')
+    expect(f.config.aiVault).toEqual({})
   })
 
   it('applies plugin presets and preserves unrelated settings', () => {
@@ -143,20 +152,21 @@ describe('settings operations', () => {
       }),
     ]
     const model = createSettingsOperations(f.deps)
-    f.config.plugins.test = { enabled: true, limit: 1 }
+    f.config.plugins.test = { isEnabled: true, settings: { limit: 1 } }
     model.updatePluginConfig('test', { mode: 'fast' })
     expect(f.config.plugins.test).toEqual({
-      enabled: true,
-      mode: 'fast',
-      limit: 5,
+      isEnabled: true,
+      settings: { mode: 'fast', limit: 5 },
     })
     model.updatePluginEnabled('test', false)
     expect(f.config.plugins.test).toEqual({
-      enabled: false,
-      mode: 'fast',
-      limit: 5,
+      isEnabled: false,
+      settings: { mode: 'fast', limit: 5 },
     })
     model.updatePluginConfig('unknown', { value: 'custom' })
-    expect(f.config.plugins.unknown).toEqual({ value: 'custom' })
+    expect(f.config.plugins.unknown).toEqual({
+      isEnabled: false,
+      settings: { value: 'custom' },
+    })
   })
 })

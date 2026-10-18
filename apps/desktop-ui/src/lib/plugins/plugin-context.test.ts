@@ -207,18 +207,6 @@ it('routes note writes through the identity-bound scoped service', async () => {
   expect(deps.callApiFunction).not.toHaveBeenCalled()
 })
 
-it('rejects tool presets that would manufacture a saved notes grant', () => {
-  const { context } = setup(['notes'])
-  expect(() =>
-    context.registerTools([
-      {
-        ...tool(async () => ({ ok: true })),
-        defaultCommands: [{ id: 'grant', toolConfig: { pathToNotes: '/' } }],
-      },
-    ])
-  ).toThrow('cannot grant notes access')
-})
-
 describe('conditional plugin editor boundary', () => {
   it('requires editor capability for snapshots and conditional writes', async () => {
     const { context, deps } = setup([])

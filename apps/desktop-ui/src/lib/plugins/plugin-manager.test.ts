@@ -68,7 +68,10 @@ describe('plugin manager', () => {
       plugin('Second', second),
     ])
     await manager.loadPlugins({
-      plugins: { First: { enabled: true }, Second: { enabled: false } },
+      plugins: {
+        First: { isEnabled: true, settings: {} },
+        Second: { isEnabled: false, settings: {} },
+      },
     })
     expect(first).toHaveBeenCalledOnce()
     expect(second).not.toHaveBeenCalled()
@@ -84,15 +87,15 @@ describe('plugin manager', () => {
     ])
     await manager.loadPlugins({
       plugins: {
-        First: { enabled: true, value: 1 },
-        Second: { enabled: true },
+        First: { isEnabled: true, settings: { value: 1 } },
+        Second: { isEnabled: true, settings: {} },
       },
     })
     const previous = contexts.get('First')!.lifecycle.signal
     await manager.loadPlugins({
       plugins: {
-        First: { enabled: true, value: 2 },
-        Second: { enabled: true },
+        First: { isEnabled: true, settings: { value: 2 } },
+        Second: { isEnabled: true, settings: {} },
       },
     })
     expect(first).toHaveBeenCalledTimes(2)
@@ -109,13 +112,15 @@ describe('plugin manager', () => {
       init: vi.fn(),
     })
     const { manager, contexts } = setup([index])
-    const saved = reactive({ plugins: { Example: { enabled: true } } })
+    const saved = reactive({
+      plugins: { Example: { isEnabled: true, settings: {} } },
+    })
     await manager.loadPlugins(saved)
     const context = contexts.get('Example')!
     const config = context.config()
     config.value = 'mutated'
     expect(context.config()).toEqual({ value: 'default' })
-    expect(saved.plugins.Example).toEqual({ enabled: true })
+    expect(saved.plugins.Example).toEqual({ isEnabled: true, settings: {} })
   })
   it('cleans partially registered plugins and continues after an activation failure', async () => {
     const cleanup = vi.fn()
@@ -126,7 +131,10 @@ describe('plugin manager', () => {
     })
     const { manager, deps } = setup([broken, plugin('Next', next)])
     await manager.loadPlugins({
-      plugins: { Broken: { enabled: true }, Next: { enabled: true } },
+      plugins: {
+        Broken: { isEnabled: true, settings: {} },
+        Next: { isEnabled: true, settings: {} },
+      },
     })
     expect(cleanup).toHaveBeenCalledOnce()
     expect(deps.unregisterPlugin).toHaveBeenCalledWith('Broken')
@@ -141,9 +149,13 @@ describe('plugin manager', () => {
         ctx.onDispose(cleanup)
       }),
     ])
-    await manager.loadPlugins({ plugins: { Example: { enabled: true } } })
+    await manager.loadPlugins({
+      plugins: { Example: { isEnabled: true, settings: {} } },
+    })
     const signal = contexts.get('Example')!.lifecycle.signal
-    await manager.loadPlugins({ plugins: { Example: { enabled: false } } })
+    await manager.loadPlugins({
+      plugins: { Example: { isEnabled: false, settings: {} } },
+    })
     expect(signal.aborted).toBe(true)
     expect(cleanup).toHaveBeenCalledOnce()
     expect(manager.getActivePluginNames()).toEqual([])
@@ -156,7 +168,7 @@ describe('plugin manager', () => {
     })
     const { manager, contexts } = setup([plugin('Example', () => activation)])
     const loading = manager.loadPlugins({
-      plugins: { Example: { enabled: true } },
+      plugins: { Example: { isEnabled: true, settings: {} } },
     })
     await vi.waitFor(() => expect(contexts.has('Example')).toBe(true))
     await manager.dispose()
@@ -173,7 +185,9 @@ describe('plugin manager', () => {
       () => ({ ...plugin('Future', init)(), apiVersion: 99 }),
       plugin('Good'),
     ])
-    await manager.loadPlugins({ plugins: { Good: { enabled: true } } })
+    await manager.loadPlugins({
+      plugins: { Good: { isEnabled: true, settings: {} } },
+    })
     expect(init).not.toHaveBeenCalled()
     expect(manager.getActivePluginNames()).toEqual(['Good'])
     expect(deps.reportError).toHaveBeenCalledTimes(2)
@@ -184,9 +198,13 @@ describe('plugin manager', () => {
     const { manager } = setup([
       () => ({ ...plugin('Example', init)(), _revision: revision }),
     ])
-    await manager.loadPlugins({ plugins: { Example: { enabled: true } } })
+    await manager.loadPlugins({
+      plugins: { Example: { isEnabled: true, settings: {} } },
+    })
     revision = 'second'
-    await manager.loadPlugins({ plugins: { Example: { enabled: true } } })
+    await manager.loadPlugins({
+      plugins: { Example: { isEnabled: true, settings: {} } },
+    })
     expect(init).toHaveBeenCalledTimes(2)
   })
 })

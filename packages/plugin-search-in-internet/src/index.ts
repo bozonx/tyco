@@ -41,14 +41,6 @@ export default function pluginIndex(): PluginDefinition {
         description: 'Opens a web search for the text in the browser',
         inputSchema: TEXT_INPUT_SCHEMA,
         configFields: [urlField],
-        defaultCommands: [
-          {
-            id: 'search',
-            nameKey: 'local.label',
-            phrasesKey: 'local.phrases',
-            menu: { preferredKey: 'v' },
-          },
-        ],
         run: async ({ input, config }) => {
           const text = String(input.text ?? '').trim()
           if (!text) {

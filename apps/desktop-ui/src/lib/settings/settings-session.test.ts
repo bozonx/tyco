@@ -48,7 +48,7 @@ describe('settings session', () => {
   it('keeps a dirty draft and its baseline when another window sends a config', async () => {
     const { deps, model } = setup()
     model.draft.value.appearance.theme = 'dark'
-    model.applyIncoming({ ...config(), userLanguage: 'ru_RU' })
+    model.applyIncoming({ ...config(), language: { ui: 'auto', user: 'ru_RU' } })
     await model.persist()
     expect(deps.save).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -83,21 +83,21 @@ describe('settings session', () => {
       result: {
         ...config(),
         appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-        userLanguage: 'ru_RU',
+        language: { ui: 'auto', user: 'ru_RU' },
       },
     })
     await Promise.all([first, second])
     expect(save.mock.calls[1][0]).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      userLanguage: 'ru_RU',
+      language: { ui: 'auto', user: 'ru_RU' },
     })
     expect(save.mock.calls[1][1]).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-      userLanguage: 'ru_RU',
+      language: { ui: 'auto', user: 'ru_RU' },
     })
     expect(model.draft.value).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      userLanguage: 'ru_RU',
+      language: { ui: 'auto', user: 'ru_RU' },
     })
     expect(model.isSaved()).toBe(true)
   })
@@ -151,13 +151,13 @@ describe('settings concurrency and recovery', () => {
     model.applyIncoming({
       ...config(),
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      userLanguage: 'ru_RU',
+      language: { ui: 'auto', user: 'ru_RU' },
     })
     model.draft.value.appearance.theme = DEFAULT_USER_CONFIG.appearance.theme
     model.schedule()
     expect(model.draft.value).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      userLanguage: 'ru_RU',
+      language: { ui: 'auto', user: 'ru_RU' },
     })
     expect(model.conflicts.value).toEqual([])
     expect(model.isSaved()).toBe(true)
@@ -197,15 +197,15 @@ describe('settings concurrency and recovery', () => {
     model.draft.value.appearance.theme = 'dark'
     const first = model.persist()
     await Promise.resolve()
-    model.draft.value.chat.isHistoryEnabled = false
+    model.draft.value.chatHistory.isEnabled = false
     const second = model.persist()
-    model.draft.value.chat.isHistoryEnabled = true
+    model.draft.value.chatHistory.isEnabled = true
     finish({
       success: true,
       result: {
         ...config(),
         appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-        chat: { ...DEFAULT_USER_CONFIG.chat, isHistoryEnabled: true },
+        chatHistory: { ...DEFAULT_USER_CONFIG.chatHistory, isEnabled: true },
       },
     })
     await Promise.all([first, second])
@@ -229,7 +229,7 @@ describe('settings concurrency and recovery', () => {
     latest = {
       ...config(),
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-      userLanguage: 'ru_RU',
+      language: { ui: 'auto', user: 'ru_RU' },
     }
     model.applyIncoming(latest)
     finish({
@@ -240,7 +240,7 @@ describe('settings concurrency and recovery', () => {
       },
     })
     await pending
-    expect(model.draft.value.userLanguage).toBe('ru_RU')
+    expect(model.draft.value.language.user).toBe('ru_RU')
     expect(model.isSaved()).toBe(true)
   })
 
@@ -250,7 +250,7 @@ describe('settings concurrency and recovery', () => {
     model.applyIncoming({
       ...config(),
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      userLanguage: 'ru_RU',
+      language: { ui: 'auto', user: 'ru_RU' },
     })
     expect(model.conflicts.value).toEqual(['appearance.theme'])
     await model.persist()
@@ -259,7 +259,7 @@ describe('settings concurrency and recovery', () => {
     await model.persist()
     expect(model.draft.value).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-      userLanguage: 'ru_RU',
+      language: { ui: 'auto', user: 'ru_RU' },
     })
     expect(model.isSaved()).toBe(true)
   })
@@ -326,16 +326,18 @@ describe('settings concurrency and recovery', () => {
   it('keeps unfinished fields when another setting is saved', async () => {
     const prepare = (value: unknown) => {
       const next = JSON.parse(JSON.stringify(value)) as UserConfig
-      next.aiTasks = next.aiTasks.map((task) =>
-        task && !task.name && !task.rule ? null : task
+      next.aiTasks = Object.fromEntries(
+        Object.entries(next.aiTasks).filter(
+          ([, task]) => task.name || task.rule
+        )
       )
       return next
     }
     const { model } = setup({ prepare })
-    model.draft.value.aiTasks = [{ id: 'unfinished', name: '', rule: '' }]
+    model.draft.value.aiTasks = { q: { id: 'unfinished', name: '', rule: '' } }
     model.draft.value.appearance.theme = 'dark'
     await model.persist()
-    expect(model.draft.value.aiTasks[0]?.id).toBe('unfinished')
+    expect(model.draft.value.aiTasks.q?.id).toBe('unfinished')
     expect(model.isSaved()).toBe(true)
   })
 })

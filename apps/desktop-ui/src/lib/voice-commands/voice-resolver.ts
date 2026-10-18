@@ -237,7 +237,7 @@ export function isVoiceCommand(
   tools: ToolLookup
 ): boolean {
   return (
-    command.enabled &&
+    command.isEnabled &&
     command.isVoiceEnabled &&
     isCommandAvailable(command, tools)
   )
@@ -252,7 +252,7 @@ export function compileVoiceRoutes(
   const routes: VoiceRoute[] = []
   for (const command of commands.filter(
     (item) =>
-      item.enabled &&
+      item.isEnabled &&
       item.isVoiceEnabled &&
       (includeUnavailable || isCommandAvailable(item, tools))
   )) {

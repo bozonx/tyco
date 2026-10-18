@@ -322,7 +322,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         snapshot.activation.mode = Some(activation.mode);
         snapshot.activation.target_window_id = activation.target_window_id;
         snapshot.activation.selected_text = activation.selected_text;
-        snapshot.activation.launcher_page_index = activation.launcher_page_index;
+        snapshot.activation.launcher_page_id = activation.launcher_page_id;
         snapshot.activation.launcher_request = activation.launcher_request;
         snapshot.activation.access_request = activation.access_request;
         snapshot.window.is_window_shown = true;

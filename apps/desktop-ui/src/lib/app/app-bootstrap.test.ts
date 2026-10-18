@@ -105,7 +105,7 @@ describe('app-bootstrap', () => {
           ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
           windowInsertion: {
             ...DEFAULT_DESKTOP_VIEW_STATE.userConfig.windowInsertion,
-            xdotoolBin: '/custom/xdotool',
+            pasteShortcut: 'shift+insert',
           },
         },
       })

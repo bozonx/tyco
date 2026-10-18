@@ -5,15 +5,13 @@ import { createAsyncQueue } from '../net/async-queue'
 import { buildSttCatalog, createSttClient } from './stt-client'
 
 const model = {
-  id: 'deepgram-stt',
   provider: 'deepgram' as const,
-  providerModelId: 'nova-3',
+  modelId: 'nova-3',
 }
 
 const sherpa = {
-  id: 'sherpa-onnx-stt',
-  provider: 'sherpa-onnx' as const,
-  providerModelId: 'sherpa-onnx',
+  provider: 'sherpaOnnx' as const,
+  modelId: 'sherpa-onnx',
   baseUrl: 'ws://speech.lan:6006',
 }
 
@@ -63,7 +61,7 @@ describe('buildSttCatalog', () => {
     const catalog = buildSttCatalog(model)
 
     expect(catalog.kindOf('transcription')).toBe('stt')
-    expect(catalog.require('deepgram-stt')).toMatchObject({
+    expect(catalog.require('deepgram')).toMatchObject({
       kind: 'stt',
       provider: 'deepgram',
       model: 'nova-3',
@@ -74,7 +72,7 @@ describe('buildSttCatalog', () => {
   it('points a self-hosted model at its server', () => {
     const catalog = buildSttCatalog(sherpa)
 
-    expect(catalog.require('sherpa-onnx-stt')).toMatchObject({
+    expect(catalog.require('sherpaOnnx')).toMatchObject({
       provider: 'sherpa-onnx',
       baseUrl: 'ws://speech.lan:6006',
     })
@@ -87,7 +85,7 @@ describe('buildSttCatalog', () => {
   })
 
   it('rejects an empty model name', () => {
-    expect(() => buildSttCatalog({ ...model, providerModelId: ' ' })).toThrow(
+    expect(() => buildSttCatalog({ ...model, modelId: ' ' })).toThrow(
       'model name is empty'
     )
   })

@@ -20,20 +20,20 @@ const PROMPT_BUSY: &str = "Another request for the selection is waiting for an a
 
 /// Selection capture is opt-in; which commands run from
 /// outside is decided by each command's own grant.
-fn is_external_access_allowed(config: &Value, capability: &str) -> bool {
+fn is_selection_access_allowed(config: &Value) -> bool {
     config
-        .pointer(&format!("/externalAccess/{capability}"))
+        .pointer("/externalAccess/canAccessSelection")
         .and_then(Value::as_bool)
         .unwrap_or(false)
 }
 
-fn ensure_external_access_allowed(config: &Value, capability: &str) -> ApiResult<()> {
-    if is_external_access_allowed(config, capability) {
+fn ensure_selection_access_allowed(config: &Value) -> ApiResult<()> {
+    if is_selection_access_allowed(config) {
         Ok(())
     } else {
         Err(Response::coded_error(
             "AccessDenied",
-            format!("External {capability} access is disabled"),
+            "External selection access is disabled",
         ))
     }
 }
@@ -156,7 +156,7 @@ fn start(app: &AppHandle, mut request: RunRequest, source: ActivationSource) -> 
     validate_run(&command, &request)?;
     let config = app.state::<AppState>().snapshot().settings.user_config;
     // without the permission the user is asked, see `external_access`
-    let ask = request.selection && !is_external_access_allowed(&config, "selection");
+    let ask = request.selection && !is_selection_access_allowed(&config);
     // checked again when the prompt is taken; this saves the capture
     if ask && app.state::<AccessPrompt>().is_pending() {
         return Err(Response::coded_error("AccessDenied", PROMPT_BUSY));
@@ -430,7 +430,7 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
     }
     let config = app.state::<AppState>().snapshot().settings.user_config;
     if request.selection && !jobs.is_selection_approved(id) {
-        if let Err(error) = ensure_external_access_allowed(&config, "selection") {
+        if let Err(error) = ensure_selection_access_allowed(&config) {
             complete(
                 app,
                 id,
@@ -507,7 +507,7 @@ fn open(
     }
     let config = app.state::<AppState>().snapshot().settings.user_config;
     if selection {
-        ensure_external_access_allowed(&config, "selection")?;
+        ensure_selection_access_allowed(&config)?;
     }
     let mut activation = Activation::new(mode, source);
     activation.selected_text = if selection {
@@ -519,6 +519,26 @@ fn open(
         text
     };
     runtime::activate(app, activation).map_err(|error| Response::error(error.to_string()))
+}
+
+/// Corrects the selection of the focused window in place, as the inline
+/// correction hotkey does. The shortcut that started the call may still be
+/// held, so the capture waits for its keys to be released.
+fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
+    if action != selection_replace::CORRECTION_ACTION {
+        return Err(Response::coded_error(
+            "InvalidArgs",
+            format!("Unknown selection action: {action}"),
+        ));
+    }
+    let config = app.state::<AppState>().snapshot().settings.user_config;
+    ensure_selection_access_allowed(&config)?;
+    selection_replace::trigger(
+        app,
+        action,
+        selection_replace::TriggerWait::Delay(selection_replace::SHORTCUT_RELEASE_DELAY),
+    )
+    .map_err(|error| Response::coded_error("SelectionFailed", error.to_string()))
 }
 
 pub fn dispatch(app: &AppHandle, request: Request, source: ActivationSource) -> Response {
@@ -549,7 +569,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
                 "version": app.package_info().version.to_string(),
                 "running": true,
                 "externalAccess": {
-                    "selection": is_external_access_allowed(&config, "selection"),
+                    "selection": is_selection_access_allowed(&config),
                 },
             }))
         }
@@ -568,6 +588,10 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
         },
         Request::Run { request } => match start(app, request, source) {
             Ok(job) => Response::json(&job),
+            Err(error) => error,
+        },
+        Request::ReplaceSelection { action } => match replace_selection(app, &action) {
+            Ok(()) => Response::success(),
             Err(error) => error,
         },
         Request::JobStatus { id } => app
@@ -632,18 +656,14 @@ mod tests {
     }
     #[test]
     fn permission_defaults_deny_capture() {
-        assert!(ensure_external_access_allowed(&json!({}), "selection").is_err());
-        assert!(
-            ensure_external_access_allowed(&json!({"externalAccess":null}), "selection").is_err()
-        );
-        assert!(ensure_external_access_allowed(
-            &json!({"externalAccess":{"selection":"true"}}),
-            "selection"
+        assert!(ensure_selection_access_allowed(&json!({})).is_err());
+        assert!(ensure_selection_access_allowed(&json!({"externalAccess":null})).is_err());
+        assert!(ensure_selection_access_allowed(
+            &json!({"externalAccess":{"canAccessSelection":"true"}})
         )
         .is_err());
-        assert!(ensure_external_access_allowed(
-            &json!({"externalAccess":{"selection":true}}),
-            "selection"
+        assert!(ensure_selection_access_allowed(
+            &json!({"externalAccess":{"canAccessSelection":true}})
         )
         .is_ok());
     }

@@ -7,7 +7,6 @@ import type {
   RegisteredTool,
   ToolInputKind,
   ToolLookup,
-  ToolOwner,
 } from '../tools/tool-types'
 import { scriptToolConfig, webhookToolConfig } from './command-config'
 
@@ -73,7 +72,7 @@ export function isMenuCommand(
   command: CommandConfig,
   tools: ToolLookup
 ): boolean {
-  return command.enabled && isCommandAvailable(command, tools)
+  return command.isEnabled && isCommandAvailable(command, tools)
 }
 
 export function commandIcon(command: CommandConfig, tools: ToolLookup): string {
@@ -126,7 +125,7 @@ export function commandInvocation(command: CommandConfig): Invocation {
     label: commandLabel(command),
     commandId: command.id,
     isLlmArgumentParsingEnabled: command.isLlmArgumentParsingEnabled,
-    logOutput: command.logOutput,
+    logOutput: command.isOutputLogged,
     launcherSink: command.launcherAfterRun,
   }
 }
@@ -184,13 +183,4 @@ export function validateCommand(
     issues.push({ field: 'toolId', messageKey: 'commands.errorUnknownTool' })
   }
   return issues
-}
-
-/** Who added a default command, or `undefined` for one the user made */
-export function commandAddedBy(
-  command: CommandConfig,
-  tools: ToolLookup
-): ToolOwner | undefined {
-  if (!command.id.startsWith('default:')) return undefined
-  return tools.get(command.toolId)?.owner ?? { kind: 'core' }
 }

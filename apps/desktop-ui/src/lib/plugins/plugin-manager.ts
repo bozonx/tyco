@@ -77,8 +77,8 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     return Boolean(
       state &&
       typeof state === 'object' &&
-      'enabled' in state &&
-      state.enabled === true
+      'isEnabled' in state &&
+      state.isEnabled === true
     )
   }
   async function deactivate(id: string) {
@@ -141,7 +141,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
           if (
             !plugin ||
             plugin._loadError ||
-            getPluginState(plugin, states).enabled !== true
+            !getPluginState(plugin, states).isEnabled
           )
             await deactivate(id)
         }
@@ -150,7 +150,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
             if (requested !== revision || disposed) return
             try {
               const state = getPluginState(plugin, states)
-              if (state.enabled !== true || plugin._loadError) {
+              if (!state.isEnabled || plugin._loadError) {
                 setState(
                   id,
                   plugin._loadError
@@ -162,7 +162,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
                 )
                 return
               }
-              const config = resolvePluginConfig(plugin, state)
+              const config = resolvePluginConfig(plugin, state.settings)
               const signature = JSON.stringify([
                 plugin.version,
                 plugin._revision,

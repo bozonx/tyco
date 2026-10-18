@@ -37,7 +37,7 @@ it('does not retry a depleted subscription through ai-kit', async () => {
       qualityGate: 'off',
       deeplEndpoint: 'free',
       glossary: [],
-      correctionPrompt: '',
+      qualityGatePrompt: '',
     }),
     keys: { get: async () => 'reference' },
     transport: { fetch, openSocket: vi.fn() },

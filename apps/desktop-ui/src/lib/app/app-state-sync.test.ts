@@ -39,11 +39,11 @@ describe('application state synchronization', () => {
     f.state.value.userConfig.aiRules.chat = 'Updated rules'
     await nextTick()
     expect(f.deps.syncDocumentLanguage).not.toHaveBeenCalled()
-    f.state.value.userConfig.appLanguage = 'tr_TR'
+    f.state.value.userConfig.language.ui = 'tr_TR'
     await nextTick()
     expect(f.deps.syncLocale).toHaveBeenLastCalledWith(
       'tr_TR',
-      f.state.value.userConfig.userLanguage
+      f.state.value.userConfig.language.user
     )
     expect(f.deps.syncDocumentLanguage).toHaveBeenCalledOnce()
     f.locale.value = 'tr_TR'
@@ -102,13 +102,16 @@ describe('application state synchronization', () => {
       isWindowShown: true,
       selectedText: 'Text',
     })
-    f.state.value.userConfig.plugins.example = { enabled: true }
+    f.state.value.userConfig.plugins.example = { isEnabled: true, settings: {} }
     await nextTick()
     expect(f.deps.replaceEditorValue).not.toHaveBeenCalled()
     expect(f.deps.reloadPlugins).toHaveBeenCalledOnce()
     f.sync.stop()
-    f.state.value.userConfig.plugins.example = { enabled: false }
-    f.state.value.userConfig.appLanguage = 'es_AR'
+    f.state.value.userConfig.plugins.example = {
+      isEnabled: false,
+      settings: {},
+    }
+    f.state.value.userConfig.language.ui = 'es_AR'
     await nextTick()
     expect(f.deps.reloadPlugins).toHaveBeenCalledOnce()
     expect(f.deps.syncLocale).toHaveBeenCalledOnce()
@@ -119,7 +122,7 @@ describe('application state synchronization', () => {
     const error = new Error('Unavailable')
     vi.mocked(f.deps.reloadPlugins).mockRejectedValue(error)
     vi.mocked(f.deps.patchLastMode).mockRejectedValue(error)
-    f.state.value.userConfig.plugins.example = { enabled: true }
+    f.state.value.userConfig.plugins.example = { isEnabled: true, settings: {} }
     f.route.value = '/history'
     await nextTick()
     await Promise.resolve()

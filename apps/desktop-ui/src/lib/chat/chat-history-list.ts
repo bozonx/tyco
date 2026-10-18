@@ -35,11 +35,11 @@ export function groupChatHistory(
 
   const groups = new Map<ChatHistoryGroup, ChatSummary[]>()
   const sorted = [...items].sort(
-    (a, b) => timeOf(b.lastMessageAt) - timeOf(a.lastMessageAt)
+    (a, b) => b.lastMessageAt - a.lastMessageAt
   )
 
   for (const item of sorted) {
-    const time = timeOf(item.lastMessageAt)
+    const time = item.lastMessageAt
     const key: ChatHistoryGroup =
       time >= startToday.getTime()
         ? 'today'
@@ -56,9 +56,4 @@ export function groupChatHistory(
   return (['today', 'yesterday', 'previousWeek', 'older'] as const)
     .filter((key) => groups.has(key))
     .map((key) => ({ key, items: groups.get(key) || [] }))
-}
-
-function timeOf(date: string): number {
-  const time = Date.parse(date)
-  return Number.isNaN(time) ? 0 : time
 }

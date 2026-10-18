@@ -19,6 +19,10 @@ import type {
   InvocationOutcome,
 } from '../invocation/invocation-types'
 import { moveHighlight } from '../menu-query/menu-query'
+import {
+  SHORTCUT_SLOT_COUNT,
+  slotList,
+} from '../shortcut-slots/shortcut-slots'
 import type { ToolLookup } from '../tools/tool-types'
 
 /** The first commands of the list are run with the keys `1`–`9` */
@@ -43,7 +47,7 @@ export function isLauncherCommand(
   command: CommandConfig,
   tools: ToolLookup
 ): boolean {
-  return command.enabled && isCommandAvailable(command, tools)
+  return command.isEnabled && isCommandAvailable(command, tools)
 }
 
 const normalize = (text: string): string =>
@@ -177,17 +181,15 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   )
 
   const slotCommands = computed<(CommandConfig | null)[]>(() => {
-    const rawSlots = deps.launcherPages()[pageIndex.value]?.slots
+    const slots = deps.launcherPages()[pageIndex.value]?.slots ?? {}
     const all = deps.commands() ?? []
-    if (rawSlots && rawSlots.length > 0) {
-      return Array.from({ length: 15 }, (_, index) => {
-        const id = rawSlots[index]
-        if (!id) return null
-        return all.find((cmd) => cmd.id === id) ?? null
-      })
+    if (Object.keys(slots).length > 0) {
+      return slotList(slots).map(
+        (id) => (id && all.find((cmd) => cmd.id === id)) || null
+      )
     }
     return Array.from(
-      { length: 15 },
+      { length: SHORTCUT_SLOT_COUNT },
       (_, index) => commands.value[index] ?? null
     )
   })

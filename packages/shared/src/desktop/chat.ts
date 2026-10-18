@@ -108,7 +108,8 @@ export interface ChatParams {
 export interface ChatSummary {
   id: string
   title: string
-  lastMessageAt: string
+  /** Unix time in milliseconds */
+  lastMessageAt: number
 }
 
 export interface Chat extends ChatSummary {

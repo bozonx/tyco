@@ -65,7 +65,15 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       if (request) void model.request(request)
       else {
         model.reset()
-        model.setPage(desktopStore.desktopState.launcherPage ?? 0)
+        const pageId = desktopStore.desktopState.launcherPageId
+        model.setPage(
+          Math.max(
+            0,
+            desktopStore.userConfig.launcherPages.findIndex(
+              (page) => page.id === pageId
+            )
+          )
+        )
       }
     }
   )

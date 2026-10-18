@@ -4,7 +4,7 @@ import { createChatHistoryEntry } from './chat-history-entry'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
 export function createChatPersistenceQueue(
-  deps: Pick<ChatModelDependencies, 'saveChat' | 'renameChat' | 'nowIso'>,
+  deps: Pick<ChatModelDependencies, 'saveChat' | 'renameChat' | 'nowMs'>,
   state: Pick<ChatState, 'currentChatParams'>
 ) {
   const { currentChatParams } = state
@@ -23,7 +23,7 @@ export function createChatPersistenceQueue(
     const entry = createChatHistoryEntry({
       id,
       title: chatParams.title || '',
-      lastMessageAt: deps.nowIso(),
+      lastMessageAt: deps.nowMs(),
       messages: [...chatMessages],
     })
     const held = chatMessages.flatMap((message) => message.images || [])

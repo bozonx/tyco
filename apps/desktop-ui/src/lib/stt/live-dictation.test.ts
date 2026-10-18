@@ -8,9 +8,8 @@ import type { SttClient, SttLiveRequest } from './stt-client'
 import type { VoiceCaptureControl } from './voice-capture'
 
 const model = {
-  id: 'deepgram-stt',
   provider: 'deepgram' as const,
-  providerModelId: 'nova-3',
+  modelId: 'nova-3',
 }
 
 /** A microphone whose audio ends when stopped, and a provider driven by hand */

@@ -124,6 +124,8 @@ fn package_digest(path: &Path) -> Result<String, AppError> {
         Sha256::digest(read_bounded(path)?.as_bytes())
     ))
 }
+/// The file name of a plugin: ids may differ only in case, which a
+/// case-insensitive file system would not tell apart.
 fn storage_key(id: &str) -> String {
     id.bytes().map(|byte| format!("{byte:02x}")).collect()
 }
@@ -131,7 +133,7 @@ impl PluginStore {
     /// A directory that cannot be created leaves the app without installed
     /// plugins, which is reported when they are listed, not without a start.
     pub fn new(root: PathBuf) -> Self {
-        if let Err(error) = fs::create_dir_all(&root) {
+        if let Err(error) = atomic_file::create_private_dir(&root) {
             log::error!("Could not create {}: {error}", root.display());
         }
         Self {
@@ -323,12 +325,12 @@ pub fn approved_note_roots(
     id: &str,
     field: &str,
 ) -> Result<Vec<String>, AppError> {
-    let settings = &config["plugins"][id];
-    if settings["enabled"].as_bool() != Some(true) {
+    let plugin = &config["plugins"][id];
+    if plugin["isEnabled"].as_bool() != Some(true) {
         return Err(error("Plugin is disabled"));
     }
     let mut roots = Vec::new();
-    if let Some(root) = settings[field]
+    if let Some(root) = plugin["settings"][field]
         .as_str()
         .filter(|root| !root.trim().is_empty())
     {
@@ -337,7 +339,7 @@ pub fn approved_note_roots(
     if let Some(commands) = config["commands"].as_array() {
         let prefix = format!("{id}.");
         for command in commands {
-            if command["enabled"].as_bool() == Some(true)
+            if command["isEnabled"].as_bool() == Some(true)
                 && command["toolId"]
                     .as_str()
                     .is_some_and(|tool| tool.starts_with(&prefix))
@@ -366,16 +368,16 @@ mod tests {
     }
     #[test]
     fn only_saved_enabled_plugin_and_command_settings_grant_note_roots() {
-        let mut config = serde_json::json!({"plugins": {"Example": {"enabled": true, "notesPath": "/notes"}}, "commands": [
-            {"enabled": true, "toolId": "Example.write", "toolConfig": {"notesPath": "/command-notes"}},
-            {"enabled": false, "toolId": "Example.write", "toolConfig": {"notesPath": "/disabled"}},
-            {"enabled": true, "toolId": "Other.write", "toolConfig": {"notesPath": "/other"}}
+        let mut config = serde_json::json!({"plugins": {"Example": {"isEnabled": true, "settings": {"notesPath": "/notes"}}}, "commands": [
+            {"isEnabled": true, "toolId": "Example.write", "toolConfig": {"notesPath": "/command-notes"}},
+            {"isEnabled": false, "toolId": "Example.write", "toolConfig": {"notesPath": "/disabled"}},
+            {"isEnabled": true, "toolId": "Other.write", "toolConfig": {"notesPath": "/other"}}
         ]});
         assert_eq!(
             approved_note_roots(&config, "Example", "notesPath").unwrap(),
             ["/notes", "/command-notes"]
         );
-        config["plugins"]["Example"]["enabled"] = false.into();
+        config["plugins"]["Example"]["isEnabled"] = false.into();
         assert!(approved_note_roots(&config, "Example", "notesPath").is_err());
     }
     #[test]

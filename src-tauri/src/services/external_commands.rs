@@ -140,7 +140,7 @@ fn id_of(command: &Value) -> &str {
 }
 
 fn is_enabled(command: &Value) -> bool {
-    command.get("enabled").and_then(Value::as_bool) != Some(false)
+    command.get("isEnabled").and_then(Value::as_bool) != Some(false)
 }
 
 fn can_run_externally(command: &Value) -> bool {
@@ -364,7 +364,7 @@ mod tests {
                     "name": "Off",
                     "toolId": "script",
                     "toolConfig": { "command": "x" },
-                    "enabled": false,
+                    "isEnabled": false,
                     "availableIn": { "external": true }
                 },
                 {

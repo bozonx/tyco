@@ -19,15 +19,12 @@ describe('SettingsGeneralTab.vue', () => {
         theme: 'auto',
         contrast: 'normal',
         motion: 'auto',
-        uiScale: 100,
+        uiScalePercent: 100,
       },
-      userLanguage: 'en_US',
-      appLanguage: AUTO_LANGUAGE_VALUE,
+      language: { ui: AUTO_LANGUAGE_VALUE, user: 'en_US' },
       windowInsertion: {
-        method: 'xdotool',
-        xdotoolBin: '/usr/bin/xdotool',
-        ydotoolBin: '/usr/bin/ydotool',
         pasteShortcut: 'ctrl+v',
+        linux: { method: 'xdotool', xdotoolPath: '', ydotoolPath: '' },
       },
       ...overrides,
     }) as UserConfig
@@ -97,26 +94,26 @@ describe('SettingsGeneralTab.vue', () => {
   })
 
   it('toggles app language mode between auto and manual', async () => {
-    const config = createConfig({ appLanguage: AUTO_LANGUAGE_VALUE })
+    const config = createConfig({
+      language: { ui: AUTO_LANGUAGE_VALUE, user: 'auto' },
+    })
     const wrapper = mountTab(config)
 
     const toggleBtn = wrapper.find('button.btn')
     expect(toggleBtn.text()).toBe('settings.appLanguageManual')
 
     await toggleBtn.trigger('click')
-    expect(config.appLanguage).not.toBe(AUTO_LANGUAGE_VALUE)
+    expect(config.language.ui).not.toBe(AUTO_LANGUAGE_VALUE)
 
     await toggleBtn.trigger('click')
-    expect(config.appLanguage).toBe(AUTO_LANGUAGE_VALUE)
+    expect(config.language.ui).toBe(AUTO_LANGUAGE_VALUE)
   })
 
-  it('shows xdotool bin input only when method is xdotool and ydotool bin when ydotool', async () => {
+  it('shows the path of the tool of the chosen insertion method', async () => {
     const config = createConfig({
       windowInsertion: {
-        method: 'xdotool',
-        xdotoolBin: '/usr/bin/xdotool',
-        ydotoolBin: '/usr/bin/ydotool',
         pasteShortcut: 'ctrl+v',
+        linux: { method: 'xdotool', xdotoolPath: '', ydotoolPath: '' },
       },
     })
     const wrapper = mountTab(config)
@@ -126,7 +123,7 @@ describe('SettingsGeneralTab.vue', () => {
     const ydotoolBtn = wrapper.find('.seg-ydotool')
     await ydotoolBtn.trigger('click')
 
-    expect(config.windowInsertion.method).toBe('ydotool')
+    expect(config.windowInsertion.linux.method).toBe('ydotool')
     expect(wrapper.find('.field-input-stub').exists()).toBe(true)
   })
 })

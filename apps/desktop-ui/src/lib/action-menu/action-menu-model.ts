@@ -7,6 +7,7 @@ import {
   type CommandConfig,
   type CoreToolId,
   type MainActionConfig,
+  type ShortcutSlots,
 } from '@tyco/shared'
 
 import {
@@ -22,7 +23,7 @@ import {
   type InvocationRunnerDependencies,
 } from '../invocation/invocation-runner'
 import { getLanguageLabelKey } from '../locale/language'
-import { assignPluginActions } from './main-actions'
+import { normalizeMainActions } from './main-actions'
 
 export type { ActionItem } from '@tyco/plugin-sdk'
 export interface ActionMenuDependencies extends InvocationRunnerDependencies {
@@ -35,14 +36,13 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
   startCorrection: (text: string, extra?: CorrectionStepExtra) => Promise<void>
   minCorrectionLength?: () => number
-  reviewedMainActionIds?: () => readonly string[] | undefined
-  openLauncherPage?: (page: number, text: string) => Promise<void>
+  openLauncherPage?: (pageId: string, text: string) => Promise<void>
   launcherPages?: () => readonly { id: string }[]
-  mainActions?: () => readonly (MainActionConfig | null)[] | undefined
+  mainActions?: () => ShortcutSlots<MainActionConfig> | undefined
   /** The command library the menu items of the `command` type refer to */
   commands?: () => readonly CommandConfig[] | undefined
   /** The AI tasks the menu items of the `aiTask` type refer to by id */
-  aiTasks?: () => readonly ({ id: string; name: string } | null)[] | undefined
+  aiTasks?: () => ShortcutSlots<{ id: string; name: string }> | undefined
 }
 
 export function createActionMenuModel(deps: ActionMenuDependencies) {
@@ -98,7 +98,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
 
   /** The menu item of an AI task, or none when the task is gone */
   const createAiTaskActionItem = (taskId: string): ActionItem | undefined => {
-    const task = deps.aiTasks?.()?.find((item) => item?.id === taskId)
+    const task = Object.values(deps.aiTasks?.() ?? {}).find(
+      (item) => item.id === taskId
+    )
     if (!task?.name) return undefined
     return {
       id: `aiTask:${taskId}`,
@@ -195,10 +197,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
 
   const getRegisteredActions = () => registeredActionsMenu.value
 
-  const resolveMainActions = (
-    config: unknown = deps.mainActions?.(),
-    registrations = deps.reviewedMainActionIds?.()
-  ) => assignPluginActions(config, registeredActionsMenu.value, registrations)
+  const resolveMainActions = (config: unknown = deps.mainActions?.()) =>
+    normalizeMainActions(config)
 
   const getShortcutActions = (): (ActionItem | undefined)[] => {
     const defaults = new Map(
@@ -222,12 +222,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           }),
           icon: 'mdi:view-grid-outline',
           action: async (text: string) => {
-            await deps.openLauncherPage?.(
-              (deps.launcherPages?.() ?? []).findIndex(
-                (page) => page.id === item.pageId
-              ),
-              text
-            )
+            await deps.openLauncherPage?.(item.pageId, text)
           },
         }
       if (item.type === 'standard') return defaults.get(item.actionId)

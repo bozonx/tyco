@@ -86,7 +86,10 @@ describe('SettingsPluginDetailTab.vue', () => {
     })
 
     await wrapper.find('.checkbox-stub').trigger('click')
-    expect(context.draft.value.plugins.SamplePlugin).toEqual({ enabled: false })
+    expect(context.draft.value.plugins.SamplePlugin).toEqual({
+      isEnabled: false,
+      settings: {},
+    })
   })
 
   it('stores the modified plugin config', async () => {
@@ -108,7 +111,8 @@ describe('SettingsPluginDetailTab.vue', () => {
 
     await wrapper.find('.cfg-stub').trigger('click')
     expect(context.draft.value.plugins.SamplePlugin).toEqual({
-      token: 'new-token',
+      isEnabled: false,
+      settings: { token: 'new-token' },
     })
   })
 

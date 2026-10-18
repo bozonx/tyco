@@ -206,7 +206,7 @@ mod tests {
     fn unassigned_external_binding_returns_only_the_activation_command() {
         assert_eq!(
             external_command(&HotkeyTarget::InlineCorrection, None),
-            "tyco-ctl run default:core.correct:fix --selection --replace --interactive"
+            "tyco-ctl replace correction"
         );
     }
 }

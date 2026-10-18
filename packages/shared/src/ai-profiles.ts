@@ -62,6 +62,3 @@ export interface AiProject {
   updatedAt: number
 }
 
-export interface AiVaultConfig {
-  vaultPath?: string
-}

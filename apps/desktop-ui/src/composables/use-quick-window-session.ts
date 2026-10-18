@@ -29,7 +29,7 @@ export function useQuickWindowSession(
     hasModal: () => menuModalsStore.currentModal !== MenuModals.NONE,
     hasPendingModal: () => Boolean(menuModalsStore.pendingModal),
     isHideOnBlurEnabled: () =>
-      desktopStore.userConfig?.quickHideOnBlur !== false,
+      desktopStore.userConfig?.quickWindow?.isHiddenOnBlur !== false,
     isDismissHeld: () => quickDismissStore.isHeld,
     markInputDismissed: quickInputStore.markDismissed,
     cancelAndCloseModals: menuModalsStore.cancelAndCloseAll,

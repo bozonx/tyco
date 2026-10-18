@@ -31,7 +31,7 @@ export const APP_CONFIG = {
   rulePrefix: 'User rules (they take precedence over the instructions above)',
   aiInstructions: {
     correction: CORRECTION_TASK,
-    aiTasks: CUSTOM_AI_TASKS,
+    aiTask: CUSTOM_AI_TASKS,
     voiceCorrection: VOICE_CORRECTION_TASK,
     chat: CHAT_TASK,
   },

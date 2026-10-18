@@ -20,7 +20,6 @@ import { createSettingsShutdown } from '../lib/settings/settings-shutdown'
 import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chat-input'
 import { useCommandLauncherStore } from '../stores/command-launcher'
-import { useDefaultCommandsStore } from '../stores/default-commands'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useExternalCommandsStore } from '../stores/external-commands'
 import { useDesktopStore } from '../stores/desktop'
@@ -175,7 +174,6 @@ export function useAppRuntime() {
       clientLogger.error('App runtime failed', error, 'bootstrap'),
     startBootstrap: bootstrap.start,
     stopBootstrap: bootstrap.stop,
-    startDefaultCommands: () => useDefaultCommandsStore().start(),
     startMetrics: activationMetrics.start,
     stopMetrics: activationMetrics.stop,
     disposePlugins: pluginRuntime.dispose,

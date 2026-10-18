@@ -34,10 +34,10 @@ export function createLlmSettingsModel(deps: {
     const value = keyDrafts[provider.id]?.trim()
     if (!value) return
     const origin =
-      provider.type === 'openai-compatible'
+      provider.type === 'openaiCompatible'
         ? httpOrigin(provider.baseUrl)
         : null
-    if (provider.type === 'openai-compatible' && !origin) {
+    if (provider.type === 'openaiCompatible' && !origin) {
       deps.notifyInvalidUrl()
       return
     }

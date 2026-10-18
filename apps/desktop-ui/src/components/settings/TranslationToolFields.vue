@@ -35,9 +35,7 @@ const language = computed(() =>
     : ''
 )
 const languageOptions = computed(() => {
-  const slots = (props.userConfig?.translation.targetLanguages ?? []).filter(
-    (language): language is string => Boolean(language)
-  )
+  const slots = Object.values(props.userConfig?.translation.targetLanguages ?? {})
   const options = buildLanguageOptions([...slots, language.value], false, t)
   // the languages of the translation slots come first
   const slotOptions = slots.flatMap(

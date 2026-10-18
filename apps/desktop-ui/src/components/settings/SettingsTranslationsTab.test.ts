@@ -31,19 +31,19 @@ describe('SettingsTranslationsTab.vue', () => {
   const createConfig = (
     overrides = {}
   ): Pick<UserConfig, 'translation' | 'aiRules'> => ({
-    aiRules: { chat: '', correction: '', translate: '', voiceCorrection: '' },
+    aiRules: { chat: '', correction: '', translation: '', voiceCorrection: '' },
     translation: {
       viewMode: 'split',
       provider: 'deepl',
       qualityGate: 'off',
       deeplEndpoint: 'free',
-      correctionPrompt: '',
+      qualityGatePrompt: '',
       glossary: [
         { term: 'foo', use: 'bar', doNotTranslate: false },
         { term: 'baz', use: 'baz', doNotTranslate: true },
       ],
       ...overrides,
-      targetLanguages: ['en', 'es', null, null, null],
+      targetLanguages: { q: 'en', w: 'es' },
     },
   })
 
@@ -102,7 +102,7 @@ describe('SettingsTranslationsTab.vue', () => {
   it('shows the correction prompt only in the always mode', async () => {
     const userConfig = createConfig({
       qualityGate: 'always',
-      correctionPrompt: 'Keep it short',
+      qualityGatePrompt: 'Keep it short',
     })
     const wrapper = mount(SettingsTranslationsTab, {
       global: {
@@ -131,7 +131,7 @@ describe('SettingsTranslationsTab.vue', () => {
     )
     expect(promptRow.exists()).toBe(true)
     await promptRow.find('textarea').setValue('Be formal')
-    expect(userConfig.translation.correctionPrompt).toBe('Be formal')
+    expect(userConfig.translation.qualityGatePrompt).toBe('Be formal')
   })
 
   it('auto-detects deepl free vs pro endpoint when saving api key', async () => {

@@ -3,7 +3,7 @@
     <SettingsSection>
       <FieldRow :label="t('settings.sttProvider')">
         <FieldSelect
-          :model-value="currentSttModel.provider"
+          :model-value="userConfig.stt.providerId"
           :options="sttProviderOptions"
           @update:model-value="setSttProvider"
         />
@@ -14,14 +14,14 @@
         :hint="t('settings.sttServerUrlHint')"
       >
         <FieldInput
-          :model-value="currentSttModel.baseUrl || ''"
+          :model-value="userConfig.stt.providers.sherpaOnnx.baseUrl"
           placeholder="ws://localhost:6006"
           @update:model-value="setSttServerUrl"
         />
       </FieldRow>
       <FieldRow v-if="sttNeedsKey" :label="t('settings.model')">
         <FieldInput
-          :model-value="currentSttModel.providerModelId || ''"
+          :model-value="userConfig.stt.providers.deepgram.modelId"
           placeholder="nova-3"
           @update:model-value="setSttModelName"
         />
@@ -32,7 +32,10 @@
         :hint="t('settings.sttLanguageHint')"
       >
         <FieldSelect
-          :model-value="currentSttModel.language || DICTATION_LANGUAGE_USER"
+          :model-value="
+            userConfig.stt.providers.deepgram.language ||
+            DICTATION_LANGUAGE_USER
+          "
           :options="sttLanguageOptions"
           @update:model-value="setSttLanguage"
         />
@@ -50,14 +53,10 @@
 
     <SettingsSection :title="t('settings.sttLlmFormatting')">
       <FieldRow :label="t('settings.formatWithLlm')">
-        <FieldSwitch
-          :key="currentSttModel.id"
-          :model-value="Boolean(currentSttModel.formatWithLlm)"
-          @update:model-value="setSttFormatWithLlm"
-        />
+        <FieldSwitch v-model="userConfig.stt.isLlmFormattingEnabled" />
       </FieldRow>
       <FieldRow
-        v-if="Boolean(currentSttModel.formatWithLlm)"
+        v-if="userConfig.stt.isLlmFormattingEnabled"
         :label="t('settings.sttLlmRules')"
         vertical
       >
@@ -78,7 +77,7 @@ import {
   DICTATION_LANGUAGE_USER,
 } from '../../lib/stt/dictation-language'
 import { secretId, sttProviderNeedsKey } from '../../lib/stt/stt-client'
-import { activeSttModel, selectSttProvider } from '../../lib/stt/stt-config'
+import { activeSttModel } from '../../lib/stt/stt-config'
 import { useSecretsStore } from '../../stores/secrets'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -87,7 +86,7 @@ import FieldSwitch from '../common/FieldSwitch.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SettingsSection from './SettingsSection.vue'
-import type { SttProvider } from '@tyco/shared'
+import { STT_PROVIDERS, type SttProvider } from '@tyco/shared'
 
 const { draft: userConfig } = useSettingsContext()
 const { t } = useI18n()
@@ -102,19 +101,20 @@ const sttNeedsKey = computed(() =>
 
 const sttProviderOptions = computed(() => [
   { id: 'deepgram', name: 'Deepgram' },
-  { id: 'sherpa-onnx', name: t('settings.sttProviderSherpaOnnx') },
+  { id: 'sherpaOnnx', name: t('settings.sttProviderSherpaOnnx') },
 ])
 
 const setSttProvider = (value: string | number | undefined) => {
-  selectSttProvider(userConfig.value.stt, value as SttProvider)
+  if (STT_PROVIDERS.includes(value as SttProvider))
+    userConfig.value.stt.providerId = value as SttProvider
 }
 
 const setSttServerUrl = (value: string) => {
-  currentSttModel.value.baseUrl = value.trim()
+  userConfig.value.stt.providers.sherpaOnnx.baseUrl = value.trim()
 }
 
 const setSttModelName = (value: string) => {
-  currentSttModel.value.providerModelId = value
+  userConfig.value.stt.providers.deepgram.modelId = value
 }
 
 const hasSttKey = computed(() =>
@@ -144,15 +144,10 @@ async function removeSttKey() {
   }
 }
 
-const setSttFormatWithLlm = (value: boolean) => {
-  currentSttModel.value.formatWithLlm = value
-  for (const model of userConfig.value.stt.models ?? []) {
-    model.formatWithLlm = value
-  }
-}
-
 const setSttLanguage = (value: string | number | undefined) => {
-  currentSttModel.value.language = String(value || DICTATION_LANGUAGE_USER)
+  userConfig.value.stt.providers.deepgram.language = String(
+    value || DICTATION_LANGUAGE_USER
+  )
 }
 
 const sttLanguageOptions = computed(() => {

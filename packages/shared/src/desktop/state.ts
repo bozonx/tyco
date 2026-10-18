@@ -38,7 +38,8 @@ export interface DesktopActivationState {
   windowId: string | null
   selectedText: string | null
   mode: StartMode | null
-  launcherPage?: number
+  /** The page of `launcherPages` the command overlay opens on; `null` for the first */
+  launcherPageId?: string | null
   launcherRequest?: LauncherRequest | null
   accessRequest?: AccessRequest | null
 }
@@ -99,7 +100,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
     windowId,
     selectedText,
     mode,
-    launcherPage,
+    launcherPageId,
     launcherRequest,
     accessRequest,
     isWindowShown,
@@ -115,7 +116,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
       windowId,
       selectedText,
       mode,
-      launcherPage,
+      launcherPageId,
       launcherRequest,
       accessRequest,
     },

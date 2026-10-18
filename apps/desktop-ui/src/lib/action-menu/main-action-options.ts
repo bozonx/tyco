@@ -77,8 +77,7 @@ export function commandGroup(
 
 /**
  * Whether the command does just what an item of the picker does already: a
- * translation into one of the translation languages, or the rule of an AI task.
- * Such commands are made once from the settings, see `defaultCommands`
+ * translation into one of the translation languages, or the rule of an AI task
  */
 export function duplicatesDirectChoice(
   command: CommandConfig,

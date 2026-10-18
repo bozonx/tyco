@@ -9,7 +9,7 @@ describe('LLM settings model', () => {
       providers: [
         {
           id: 'local',
-          type: 'openai-compatible',
+          type: 'openaiCompatible',
           baseUrl: 'http://localhost:11434/v1',
         },
       ],
@@ -88,8 +88,8 @@ describe('LLM settings model', () => {
     expect(model.contextWindowTokens).toBe(11)
     f.model.setNumber(model, 'contextWindowTokens', '')
     expect(model.contextWindowTokens).toBeUndefined()
-    f.model.addFallback('aiTasks')
-    f.model.addFallback('aiTasks')
-    expect(f.config.taskModelChains.aiTasks).toEqual(['model'])
+    f.model.addFallback('aiTask')
+    f.model.addFallback('aiTask')
+    expect(f.config.taskModelChains.aiTask).toEqual(['model'])
   })
 })

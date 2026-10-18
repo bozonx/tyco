@@ -84,7 +84,7 @@ function handleBlur(event: FocusEvent) {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  const submitKey = resolveSubmitKey(desktopStore.userConfig?.submitKey)
+  const submitKey = resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
   // a line break is left to the textarea itself
   if (resolveInputKeyAction(event, submitKey) === 'submit') {
     event.preventDefault()

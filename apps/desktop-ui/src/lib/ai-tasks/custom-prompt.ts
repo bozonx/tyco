@@ -1,21 +1,19 @@
-/** An AI task of the user config: a named rule applied to the text */
-export interface AiTaskConfig {
-  /** Stable and hidden: what the main menu refers to the task by */
-  id: string
-  name: string
-  rule: string
-}
+import {
+  SHORTCUT_SLOT_KEYS,
+  type AiTaskConfig,
+  type ShortcutSlots,
+} from '@tyco/shared'
 
-export type AiTaskSlots = readonly (AiTaskConfig | null)[]
+export type { AiTaskConfig } from '@tyco/shared'
 
 const TASK_NAME_LIMIT = 32
 
-const hasId = (task: { id?: unknown } | null): boolean =>
+const hasId = (task: { id?: unknown } | null | undefined): boolean =>
   typeof task?.id === 'string' && task.id.trim() !== ''
 
 /** An id no task has yet: `task-<n>` */
 export function newAiTaskId(
-  tasks: readonly ({ id?: unknown } | null)[]
+  tasks: readonly ({ id?: unknown } | null | undefined)[]
 ): string {
   const used = new Set(tasks.map((task) => (hasId(task) ? task!.id : null)))
   let n = 1
@@ -34,30 +32,24 @@ export function taskNameFromPrompt(prompt: string): string {
 
 /**
  * The AI tasks with `prompt` saved in the first free slot, or null when all
- * `slotCount` slots are taken. A request already saved as a task is not added
- * twice: the tasks come back unchanged.
+ * slots are taken. A request already saved as a task is not added twice: the
+ * tasks come back unchanged.
  */
 export function addTaskFromPrompt(
-  tasks: AiTaskSlots,
-  prompt: string,
-  slotCount: number
-): (AiTaskConfig | null)[] | null {
+  tasks: ShortcutSlots<AiTaskConfig>,
+  prompt: string
+): ShortcutSlots<AiTaskConfig> | null {
   const rule = prompt.trim()
 
   if (!rule) return null
-  if (tasks.some((task) => task?.rule.trim() === rule)) return [...tasks]
+  const saved = Object.values(tasks)
+  if (saved.some((task) => task.rule.trim() === rule)) return { ...tasks }
 
-  const next = [...tasks]
-  const free = next.findIndex((task) => !task || !task.name)
-  const task = { id: newAiTaskId(next), name: taskNameFromPrompt(rule), rule }
+  const free = SHORTCUT_SLOT_KEYS.find((key) => !tasks[key]?.name)
+  if (!free) return null
 
-  if (free >= 0) {
-    next[free] = task
-    return next
+  return {
+    ...tasks,
+    [free]: { id: newAiTaskId(saved), name: taskNameFromPrompt(rule), rule },
   }
-
-  if (next.length >= slotCount) return null
-
-  next.push(task)
-  return next
 }

@@ -220,8 +220,8 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
       codeLetter = event.code.slice(3).toLowerCase()
     }
 
-    if (codeLetter && SHORTCUT_SLOT_KEYS.includes(codeLetter)) {
-      const index = SHORTCUT_SLOT_KEYS.indexOf(codeLetter)
+    const index = SHORTCUT_SLOT_KEYS.findIndex((key) => key === codeLetter)
+    if (index >= 0) {
       const action = props.leftLetterKeys[index]
       if (action && !action.disabled) {
         void action.action(props.text || '')

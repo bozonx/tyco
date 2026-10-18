@@ -3,10 +3,8 @@
 //! itself; backends for a single platform live in its submodule.
 
 pub(crate) mod audio;
-mod binary_paths;
 pub(crate) mod clipboard;
 pub(crate) mod process;
-pub use binary_paths::default_binary_path;
 mod file_manager;
 mod foreground_context;
 pub(crate) mod hotkeys;

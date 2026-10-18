@@ -21,7 +21,7 @@ function canRunCommandExternally(
   tools: ToolLookup
 ): boolean {
   return (
-    command.enabled &&
+    command.isEnabled &&
     command.availableIn.external &&
     isCommandAvailable(command, tools)
   )

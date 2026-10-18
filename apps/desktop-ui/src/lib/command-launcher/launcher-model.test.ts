@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { slotsFromList } from '../shortcut-slots/shortcut-slots'
 
 import type { CommandConfig } from '@tyco/shared'
 
@@ -54,7 +55,8 @@ function setup(
       {
         id: 'main',
         inputMode: 'selection' as const,
-        slots: commands.map((command) => command.id),
+        hotkey: '',
+        slots: slotsFromList(commands.map((command) => command.id)),
       },
     ],
     selectedText: vi.fn<() => string | null>(() => null),
@@ -69,7 +71,9 @@ function setup(
 describe('isLauncherCommand', () => {
   it('offers enabled commands whose tool is available', () => {
     expect(isLauncherCommand(backup, tools)).toBe(true)
-    expect(isLauncherCommand({ ...backup, enabled: false }, tools)).toBe(false)
+    expect(isLauncherCommand({ ...backup, isEnabled: false }, tools)).toBe(
+      false
+    )
     expect(isLauncherCommand({ ...backup, toolId: 'notes.write' }, tools)).toBe(
       false
     )
@@ -85,8 +89,9 @@ describe('slotCommands and pickSlot', () => {
       launcherPages: () => [
         {
           id: 'main',
-          slots: ['note', null, 'backup'],
+          slots: { q: 'note', e: 'backup' },
           inputMode: 'selection' as const,
+          hotkey: '',
         },
       ],
       selectedText: () => null,
@@ -141,7 +146,7 @@ describe('searchCommands', () => {
 
 describe('createCommandLauncherModel', () => {
   it('lists only the commands of the overlay', () => {
-    const hidden = { ...note, id: 'hidden', enabled: false }
+    const hidden = { ...note, id: 'hidden', isEnabled: false }
     const { model } = setup([backup, hidden, lights])
     expect(model.filteredCommands.value.map((item) => item.id)).toEqual([
       'backup',
@@ -585,8 +590,9 @@ describe('launcher pages', () => {
       launcherPages: () =>
         ['backup', 'note', 'lights'].map((id) => ({
           id,
-          slots: [id],
+          slots: { q: id },
           inputMode: 'selection' as const,
+          hotkey: '',
         })),
     })
     expect(model.slotCommands.value[0]?.id).toBe('backup')
@@ -608,8 +614,18 @@ describe('launcher pages', () => {
     const model = createCommandLauncherModel({
       ...deps,
       launcherPages: () => [
-        { id: 'main', slots: ['note'], inputMode: 'selection' as const },
-        { id: 'other', slots: ['note'], inputMode: 'none' as const },
+        {
+          id: 'main',
+          slots: { q: 'note' },
+          inputMode: 'selection' as const,
+          hotkey: '',
+        },
+        {
+          id: 'other',
+          slots: { q: 'note' },
+          inputMode: 'none' as const,
+          hotkey: '',
+        },
       ],
     })
     model.setPage(1)
@@ -664,7 +680,12 @@ describe('launcher completion ownership', () => {
       tools,
       commands: () => [backup],
       launcherPages: () => [
-        { id: 'main', slots: [backup.id], inputMode: 'selection' as const },
+        {
+          id: 'main',
+          slots: { q: backup.id },
+          inputMode: 'selection' as const,
+          hotkey: '',
+        },
       ],
       selectedText: () => null,
       run: async () => ({ success: true }),

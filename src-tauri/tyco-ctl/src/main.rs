@@ -13,6 +13,7 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl run <id | --name NAME> [--text TEXT | --stdin | --input-json JSON | --selection]
                     [--replace] [--interactive]
                     [--wait] [--json] [--timeout SECONDS]
+       tyco-ctl replace correction
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
        tyco-ctl quit
 
@@ -21,6 +22,7 @@ Modes: editor, write, chat, voice-chat, voice-commands, voice, select, ai-tasks,
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and always returns output.
 Use --replace to replace a selection.
+replace correction corrects the selection in place, as its hotkey does.
 Tyco must already be running in the same user session.";
 
 #[derive(Debug, PartialEq, Eq)]
@@ -106,6 +108,14 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
                 selection,
             };
         }
+        "replace" => match &args[1..] {
+            [action] if action == "correction" => {
+                command.request = Request::ReplaceSelection {
+                    action: action.clone(),
+                }
+            }
+            _ => return Err(USAGE.into()),
+        },
         "run" => {
             let by_name = args.get(1).is_some_and(|arg| arg == "--name");
             let mut request = RunRequest {
@@ -345,6 +355,8 @@ mod tests {
         assert!(command(&["run", "test", "-"]).is_err());
         assert!(command(&["open", "command-launcher", "--selection"]).is_ok());
         assert!(command(&["replace", "command:test"]).is_err());
+        assert!(command(&["replace", "correction"]).is_ok());
+        assert!(command(&["replace", "correction", "--selection"]).is_err());
         assert!(command(&["run", "test", "--replace"]).is_err());
         assert!(command(&["run", "test", "--stdin", "--text", "x"]).is_err());
         assert!(command(&["run", "test", "--input-json", "[]"]).is_err());

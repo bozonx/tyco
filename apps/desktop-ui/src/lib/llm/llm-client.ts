@@ -64,7 +64,7 @@ export interface LlmClientDependencies {
 export function isKeylessProvider(config: LlmConfig, providerId: string) {
   return config.providers.some(
     (provider) =>
-      provider.id === providerId && provider.type === 'openai-compatible'
+      provider.id === providerId && provider.type === 'openaiCompatible'
   )
 }
 

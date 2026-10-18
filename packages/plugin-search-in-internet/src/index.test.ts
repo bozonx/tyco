@@ -15,9 +15,6 @@ describe('SearchInInternet plugin', () => {
 
     expect(mocks.registerActionsItems).not.toHaveBeenCalled()
     expect(tools.map((tool) => tool.id)).toEqual(['search'])
-    expect(tools[0].defaultCommands).toEqual([
-      expect.objectContaining({ id: 'search', menu: { preferredKey: 'v' } }),
-    ])
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
       id: 'searchInInternet',

@@ -99,17 +99,16 @@ describe('desktop state revision ordering', () => {
     const { model, callFunction } = setup()
     await model.loadDesktopState()
     const base = model.userConfig.value
+    const editor = { ...base.editor, diffViewMode: 'split' as const }
     callFunction.mockResolvedValueOnce(
-      response(1, { userConfig: { ...base, diffViewMode: 'split' } })
+      response(1, { userConfig: { ...base, editor } })
     )
-    expect(
-      (await model.updateUserConfig({ diffViewMode: 'split' })).success
-    ).toBe(true)
+    expect((await model.updateUserConfig({ editor })).success).toBe(true)
     expect(callFunction).toHaveBeenCalledWith('saveUserConfig', [
-      { ...base, diffViewMode: 'split' },
+      { ...base, editor },
       base,
     ])
-    expect(model.userConfig.value.diffViewMode).toBe('split')
+    expect(model.userConfig.value.editor.diffViewMode).toBe('split')
   })
 
   it('uses detached browser state without invoking the backend', async () => {

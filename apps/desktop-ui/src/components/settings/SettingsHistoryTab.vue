@@ -58,9 +58,9 @@
               :separator="false"
             >
               <FieldSwitch
-                :model-value="userConfig.editorHistory.sanitizeSecrets ?? false"
+                :model-value="userConfig.editorHistory.isSecretSanitizingEnabled ?? false"
                 @update:model-value="
-                  userConfig.editorHistory.sanitizeSecrets = $event
+                  userConfig.editorHistory.isSecretSanitizingEnabled = $event
                 "
               />
             </FieldRow>
@@ -99,7 +99,7 @@
             :separator="false"
           >
             <FieldSelect
-              :model-value="userConfig.chat.historyRetentionDays ?? 0"
+              :model-value="userConfig.chatHistory.retentionDays ?? 0"
               :options="chatHistoryRetentionOptions"
               @update:model-value="setChatHistoryRetentionDays"
             />
@@ -193,7 +193,7 @@ const chatHistoryChecked = computed(
 /** Turning it off deletes the saved chats, so it asks first */
 function setChatHistoryEnabled(enabled: boolean) {
   if (enabled) {
-    userConfig.value.chat.isHistoryEnabled = true
+    userConfig.value.chatHistory.isEnabled = true
     return
   }
   showDisableChatHistoryModal.value = true
@@ -201,13 +201,13 @@ function setChatHistoryEnabled(enabled: boolean) {
 
 function onDisableChatHistory() {
   showDisableChatHistoryModal.value = false
-  userConfig.value.chat.isHistoryEnabled = false
+  userConfig.value.chatHistory.isEnabled = false
 }
 
 function setChatHistoryRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  userConfig.value.chat.historyRetentionDays = parsed
+  userConfig.value.chatHistory.retentionDays = parsed
 }
 
 function setEditorHistoryLimit(value: string) {
@@ -250,7 +250,7 @@ const editorHistoryRetentionOptions = computed(() =>
 
 const chatHistoryRetentionOptions = computed(() =>
   retentionOptions(
-    chatHistoryRetentionChoices(userConfig.value.chat.historyRetentionDays),
+    chatHistoryRetentionChoices(userConfig.value.chatHistory.retentionDays),
     t('settings.chatHistoryRetentionNever')
   )
 )

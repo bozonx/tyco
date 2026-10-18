@@ -39,7 +39,8 @@ import {
 } from '../../lib/locale/language'
 import {
   moveShortcutSlot,
-  normalizeShortcutSlots,
+  slotList,
+  slotsFromList,
 } from '../../lib/shortcut-slots/shortcut-slots'
 import FieldSelect from '../common/FieldSelect.vue'
 import InlineAction from '../common/InlineAction.vue'
@@ -51,7 +52,7 @@ const { draft: userConfig, navigate } = useSettingsContext()
 
 const translateLanguageOptions = computed(() => {
   return buildLanguageOptions(
-    (userConfig.value.translation.targetLanguages || []).filter(Boolean),
+    Object.values(userConfig.value.translation.targetLanguages ?? {}),
     false,
     t
   ).map((option) => ({
@@ -61,20 +62,27 @@ const translateLanguageOptions = computed(() => {
 })
 
 const translateLanguageSlots = computed(() =>
-  normalizeShortcutSlots<string>(userConfig.value.translation.targetLanguages)
+  slotList(userConfig.value.translation.targetLanguages)
 )
 
 function setSlots(slots: (string | null)[]) {
-  userConfig.value.translation.targetLanguages = slots as string[]
+  userConfig.value.translation.targetLanguages = slotsFromList(slots)
 }
 
 function moveLanguage(from: number, to: number) {
   setSlots(moveShortcutSlot(translateLanguageSlots.value, from, to))
 }
 
+/** A language is in one slot only: a new slot takes the first one not used yet */
 function addLanguage(index: number) {
   const slots = [...translateLanguageSlots.value]
-  slots[index] = DEFAULT_LANGUAGE
+  const used = new Set(slots)
+  const language = [
+    DEFAULT_LANGUAGE,
+    ...translateLanguageOptions.value.map((option) => String(option.id)),
+  ].find((id) => id && !used.has(id))
+  if (!language) return
+  slots[index] = language
   setSlots(slots)
 }
 
@@ -86,7 +94,10 @@ function removeLanguage(index: number) {
 
 function updateLanguage(index: number, value: string | number | undefined) {
   if (typeof value !== 'string') return
-  const slots = [...translateLanguageSlots.value]
+  // a language chosen again leaves the slot it was in
+  const slots = translateLanguageSlots.value.map((language) =>
+    language === value ? null : language
+  )
   slots[index] = value
   setSlots(slots)
 }

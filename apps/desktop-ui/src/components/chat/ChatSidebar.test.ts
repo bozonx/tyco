@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ChatSidebar from './ChatSidebar.vue'
 
 const mocks = vi.hoisted(() => ({
-  userConfig: { chat: { isHistoryEnabled: true } },
+  userConfig: { chatHistory: { isEnabled: true } },
   chatHistory: [] as Array<{
     id: string
     title: string
@@ -72,7 +72,7 @@ describe('ChatSidebar.vue', () => {
   afterEach(() => vi.useRealTimers())
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.userConfig.chat.isHistoryEnabled = true
+    mocks.userConfig.chatHistory.isEnabled = true
     mocks.chatHistory.length = 0
     mocks.currentChatParams.id = null
     mocks.currentChatParams.title = ''
@@ -96,7 +96,7 @@ describe('ChatSidebar.vue', () => {
   })
 
   it('renders subtle hint under chats when history is disabled, without warning banner', () => {
-    mocks.userConfig.chat.isHistoryEnabled = false
+    mocks.userConfig.chatHistory.isEnabled = false
 
     const wrapper = mount(ChatSidebar, {
       global: {

@@ -26,7 +26,7 @@ export function createCommandRunner(deps: InvocationRunnerDependencies) {
     text: string,
     options: InvocationOptions = {}
   ): Promise<InvocationOutcome> => {
-    if (!command.enabled) {
+    if (!command.isEnabled) {
       deps.showToast('toast.commandDisabled', 'warn')
       return { success: false, message: 'Disabled' }
     }
@@ -39,7 +39,7 @@ export function createCommandRunner(deps: InvocationRunnerDependencies) {
     text: string,
     options: InvocationOptions = {}
   ): Promise<ToolResult> =>
-    command.enabled
+    command.isEnabled
       ? runner.transform(commandInvocation(command), text, options)
       : disabled
 

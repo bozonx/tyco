@@ -13,7 +13,7 @@ const PROVIDER_TYPES: readonly LlmProviderType[] = [
   'google',
   'openrouter',
   'deepseek',
-  'openai-compatible',
+  'openaiCompatible',
 ]
 
 /** Provider ids double as secret ids, so they follow the secret id rules */
@@ -52,12 +52,12 @@ function normalizeProviders(raw: unknown): LlmProvider[] {
     const type = item.type as LlmProviderType
     if (!PROVIDER_TYPES.includes(type)) continue
     // A built-in provider is its type; a custom endpoint may not take its id
-    if (isBuiltinProvider(item.id) !== (type !== 'openai-compatible')) continue
+    if (isBuiltinProvider(item.id) !== (type !== 'openaiCompatible')) continue
     if (isBuiltinProvider(item.id) && item.id !== type) continue
 
     const provider: LlmProvider = { id: item.id, type }
     if (typeof item.name === 'string') provider.name = item.name
-    if (type === 'openai-compatible') {
+    if (type === 'openaiCompatible') {
       provider.baseUrl = typeof item.baseUrl === 'string' ? item.baseUrl : ''
     }
     seen.add(item.id)
@@ -158,7 +158,7 @@ export function uniqueLlmId(prefix: string, taken: Iterable<string>): string {
 export function addCompatibleProvider(config: LlmConfig): LlmProvider {
   const provider: LlmProvider = {
     id: `local-${crypto.randomUUID()}`,
-    type: 'openai-compatible',
+    type: 'openaiCompatible',
     name: '',
     baseUrl: '',
   }

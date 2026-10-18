@@ -2,9 +2,6 @@
 //! defaults are repaired by `config_schema::normalize_user_config`, which runs
 //! after these.
 
-mod stt;
-pub(super) use stt::normalize_stt_config;
-
 mod hotkeys;
 pub(super) use hotkeys::normalize_hotkeys_config;
 

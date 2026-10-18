@@ -13,7 +13,7 @@
       }}</Badge></template
     >
     <div class="connection-body">
-      <template v-if="provider.type === 'openai-compatible'">
+      <template v-if="provider.type === 'openaiCompatible'">
         <FieldRow :label="t('settings.name')">
           <FieldInput
             :model-value="provider.name || ''"
@@ -82,7 +82,7 @@
 
       <div class="connection-actions">
         <Button
-          v-if="provider.type === 'openai-compatible'"
+          v-if="provider.type === 'openaiCompatible'"
           size="sm"
           variant="neutral"
           icon="mdi:connection"
@@ -110,7 +110,7 @@
           :message="connectionErrors[provider.id]"
         />
         <Button
-          v-if="provider.type === 'openai-compatible'"
+          v-if="provider.type === 'openaiCompatible'"
           size="sm"
           variant="danger-ghost"
           icon="mdi:trash-can-outline"
@@ -171,7 +171,7 @@ const PROVIDER_ICONS: Record<string, string> = {
   google: 'mdi:google',
   openrouter: 'mdi:router-network',
   deepseek: 'mdi:fish',
-  'openai-compatible': 'mdi:server-network',
+  'openaiCompatible': 'mdi:server-network',
 }
 function providerIcon(provider: LlmProvider) {
   return PROVIDER_ICONS[provider.type] ?? 'mdi:cube-outline'
@@ -196,7 +196,7 @@ function hasKey(id: string) {
 function statusLabel(provider: LlmProvider) {
   if (connectionCheckStatusByProviderId[provider.id] === 'success')
     return t('settings.connectionReady')
-  if (provider.type === 'openai-compatible' && !hasKey(provider.id))
+  if (provider.type === 'openaiCompatible' && !hasKey(provider.id))
     return t('settings.connectionUnchecked')
   return hasKey(provider.id)
     ? t('settings.connectionConfigured')
@@ -208,7 +208,7 @@ function statusTone(provider: LlmProvider) {
     : 'neutral'
 }
 function keyHint(provider: LlmProvider) {
-  if (provider.type !== 'openai-compatible') return undefined
+  if (provider.type !== 'openaiCompatible') return undefined
   const origins = props.secrets[provider.id]?.origins
   const origin = httpOrigin(provider.baseUrl)
   return origins && origin && !origins.includes(origin)

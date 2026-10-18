@@ -51,7 +51,7 @@ pub fn app_data_sub_dir(app: &AppHandle, sub: &str) -> Result<PathBuf, AppError>
     Ok(dir)
 }
 
-pub fn app_cache_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
+fn app_cache_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.cache_dir;
     create_private_dir(&dir)?;
     Ok(dir)
@@ -63,13 +63,15 @@ pub fn app_log_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(dir)
 }
 
+/// Where each kind of file is; listing them creates no directory.
 pub fn get_storage_info(app: &AppHandle) -> Result<StorageInfo, AppError> {
+    let paths = AppPaths::resolve(app)?;
     Ok(StorageInfo {
         locations: group_storage_locations([
-            (StorageKind::Config, app_config_dir(app)?),
-            (StorageKind::Data, app_data_dir(app)?),
-            (StorageKind::Cache, app_cache_dir(app)?),
-            (StorageKind::Logs, app_log_dir(app)?),
+            (StorageKind::Config, paths.config_dir),
+            (StorageKind::Data, paths.data_dir),
+            (StorageKind::Cache, paths.cache_dir),
+            (StorageKind::Logs, paths.log_dir),
         ]),
     })
 }
@@ -184,9 +186,6 @@ fn history_limit(config: &Value, key: &str, default: usize) -> usize {
         .unwrap_or(default)
 }
 
-/// Reads the user config. A config that cannot be parsed is set aside and
-/// replaced by the defaults: the app must start either way, and the user keeps
-/// the broken file to fix it.
 fn now_ms() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
 

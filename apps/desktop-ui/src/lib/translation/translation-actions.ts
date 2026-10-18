@@ -38,7 +38,7 @@ export function createTranslationActions(deps: TranslationActionsDependencies) {
         sourceLanguage: options.sourceLanguage,
         signal: options.signal,
         onStage: options.onStage,
-        rules: deps.getUserConfig().aiRules?.translate,
+        rules: deps.getUserConfig().aiRules?.translation,
       })
     } catch (error) {
       return handleLlmRequestError(

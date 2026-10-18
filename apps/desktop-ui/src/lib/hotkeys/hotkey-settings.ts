@@ -149,6 +149,5 @@ const CLI_MODES: Record<string, string> = {
 
 /** The shell line that opens `mode`, spelled as `tyco-ctl --help` lists it */
 export function modeCliCall(mode: string): string {
-  if (/^commandLauncher[2-5]$/.test(mode)) return `tyco --mode=${mode}`
   return `tyco-ctl open ${CLI_MODES[mode] ?? mode}`
 }

@@ -43,6 +43,7 @@ import useToast from '../../composables/use-toast'
 import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
+import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import type { AiTaskMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
@@ -50,7 +51,6 @@ import { useChatInputStore } from '../../stores/chat-input'
 import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import { SHORTCUT_SLOT_KEYS } from '../../types'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
@@ -97,16 +97,17 @@ const closePromptMode = () => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  (desktopStore.userConfig?.aiTasks ?? []).map(
-    (item: (typeof desktopStore.userConfig.aiTasks)[number], index: number) =>
-      item && item.name
-        ? { name: item.name, action: () => runTask(index) }
-        : undefined
+  slotList(desktopStore.userConfig?.aiTasks).map((item) =>
+    item && item.name
+      ? { name: item.name, action: () => runTask(item.id) }
+      : undefined
   )
 )
 
-async function runTask(index: number) {
-  const task = desktopStore.userConfig?.aiTasks?.[index]
+async function runTask(taskId: string) {
+  const task = Object.values(desktopStore.userConfig?.aiTasks ?? {}).find(
+    (item) => item.id === taskId
+  )
   if (!task || !task.rule?.trim()) {
     toastKey('toast.desktopCommandFailed', 'error')
     return
@@ -124,14 +125,7 @@ onMounted(() => {
       taskId: undefined,
     })
   }
-  const index = (desktopStore.userConfig?.aiTasks ?? []).findIndex(
-    (task) => task?.id === taskId
-  )
-  if (index < 0) {
-    toastKey('toast.desktopCommandFailed', 'error')
-    return
-  }
-  void runTask(index)
+  void runTask(taskId)
 })
 
 const recentPrompts = computed(
@@ -201,11 +195,7 @@ async function savePromptAsTask() {
   const userConfig = desktopStore.userConfig
   if (!value || !userConfig) return
 
-  const aiTasks = addTaskFromPrompt(
-    userConfig.aiTasks ?? [],
-    value,
-    SHORTCUT_SLOT_KEYS.length
-  )
+  const aiTasks = addTaskFromPrompt(userConfig.aiTasks ?? {}, value)
   if (!aiTasks) {
     toastKey('menu.aiPromptSlotsFull', 'warn')
     return

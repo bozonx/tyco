@@ -8,9 +8,9 @@
 //! | cache   | `~/.cache/<id>`             | `~/Library/Caches/<id>`        | `%LOCALAPPDATA%\<id>`  |
 //! | logs    | `~/.local/state/<id>/logs`  | `~/Library/Logs/<id>`          | `%LOCALAPPDATA%\<id>\logs` |
 //!
-//! The webview keeps its own storage (local storage, its HTTP cache) in
-//! `data` on Linux and in `state` on Windows, where Tauri would put it
-//! anyway; WKWebView on macOS has no such setting.
+//! The webview keeps its own storage (local storage, its HTTP cache) in a
+//! `webview` folder of `data` on Linux and of `state` on Windows, apart from
+//! the app's files; WKWebView on macOS has no such setting.
 //!
 //! The state directory holds logs and platform webview state. `SessionState`
 //! lives only in memory; persistent preview preferences belong to the config.
@@ -23,6 +23,8 @@ use crate::errors::AppError;
 
 #[cfg(debug_assertions)]
 const DEV_HOME_ENV: &str = "TYCO_DEV_HOME";
+/// The folder of the webview storage, see `AppPaths::webview_dir`.
+const WEBVIEW_DIR: &str = "webview";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppPaths {
@@ -35,13 +37,13 @@ pub struct AppPaths {
 
 impl AppPaths {
     /// Where the webviews keep their storage; `None` where it cannot be set.
-    pub fn webview_dir(&self) -> Option<&Path> {
+    pub fn webview_dir(&self) -> Option<PathBuf> {
         if cfg!(target_os = "windows") {
-            Some(&self.state_dir)
+            Some(self.state_dir.join(WEBVIEW_DIR))
         } else if cfg!(target_os = "macos") {
             None
         } else {
-            Some(&self.data_dir)
+            Some(self.data_dir.join(WEBVIEW_DIR))
         }
     }
 

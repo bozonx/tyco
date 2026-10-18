@@ -71,7 +71,7 @@
               'is-sorting': isSorting,
               'is-dragged': draggedIndex === index,
               'is-disabled':
-                !command.enabled || Boolean(getUnavailableReasonKey(command)),
+                !command.isEnabled || Boolean(getUnavailableReasonKey(command)),
             }"
             :style="itemStyle(index)"
           >
@@ -106,9 +106,9 @@
         :info="t('commands.externalSelectionInfo')"
       >
         <FieldSwitch
-          :model-value="externalAccess.selection"
+          :model-value="externalAccess.canAccessSelection"
           :title="t('commands.externalSelection')"
-          @update:model-value="setExternalAccess('selection', $event)"
+          @update:model-value="setExternalAccess('canAccessSelection', $event)"
         />
       </FieldRow>
     </SettingsSection>
@@ -137,6 +137,7 @@ import { findExternalCommandNameConflicts } from '../../lib/commands/command-ext
 import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
 import { commandUnavailableReason } from '../../lib/commands/command-runtime'
 import { clientLogger } from '../../lib/logger'
+import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useSecretsStore } from '../../stores/secrets'
@@ -167,11 +168,10 @@ const { toastKey } = useToast()
 const secretsStore = useSecretsStore()
 const toolsStore = useToolsStore()
 
-// only the known keys: a saved config may still hold the dropped `recording`
 const externalAccess = computed<ExternalAccess>(() => ({
-  selection:
-    userConfig.value.externalAccess?.selection ??
-    DEFAULT_EXTERNAL_ACCESS.selection,
+  canAccessSelection:
+    userConfig.value.externalAccess?.canAccessSelection ??
+    DEFAULT_EXTERNAL_ACCESS.canAccessSelection,
 }))
 const setExternalAccess = (key: keyof ExternalAccess, value: boolean) => {
   userConfig.value.externalAccess = { ...externalAccess.value, [key]: value }
@@ -185,7 +185,7 @@ const commands = computed(() => normalizeCommands(userConfig.value.commands))
 /** The first slot of the action menu that holds each command */
 const menuSlots = computed(() => {
   const slots = new Map<string, number>()
-  ;(userConfig.value.mainActions ?? []).forEach((slot, index) => {
+  slotList(userConfig.value.mainActions).forEach((slot, index) => {
     if (slot?.type === 'command' && !slots.has(slot.commandId)) {
       slots.set(slot.commandId, index)
     }
@@ -198,7 +198,7 @@ const launcherSlots = computed(() => {
   const slots = new Map<string, { page: number; index: number }[]>()
   const pages = userConfig.value.launcherPages.map((page) => page.slots)
   pages.forEach((commands, page) => {
-    commands.forEach((id, index) => {
+    slotList(commands).forEach((id, index) => {
       if (!id) return
       const placements = slots.get(id) ?? []
       placements.push({ page, index })
@@ -300,7 +300,7 @@ const settingsSession = useSettingsSessionStore()
 const { removed, removeCommand, undoRemove, finishRemoval } =
   createCommandRemovalModel({
     getCommands: () => commands.value,
-    getMainActions: () => userConfig.value.mainActions ?? [],
+    getMainActions: () => userConfig.value.mainActions ?? {},
     updateCommands: setCommands,
     updateMainActions: (actions) => {
       userConfig.value.mainActions = actions

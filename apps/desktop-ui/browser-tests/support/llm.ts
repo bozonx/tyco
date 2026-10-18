@@ -7,7 +7,7 @@ import type { FakeDesktop } from './fake-desktop'
 export function installLlm(desktop: FakeDesktop) {
   desktop.userConfig.llm.providers.push({
     id: 'browser-test',
-    type: 'openai-compatible',
+    type: 'openaiCompatible',
     name: 'Browser test',
     baseUrl: 'http://llm.invalid/v1',
   })

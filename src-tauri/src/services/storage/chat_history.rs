@@ -120,7 +120,7 @@ fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
             }
         }
     }
-    history.sort_by(|left, right| right.last_message_at.cmp(&left.last_message_at));
+    history.sort_by(|left, right| right.last_message_at_ms.cmp(&left.last_message_at_ms));
     Ok(history)
 }
 
@@ -151,7 +151,7 @@ pub fn save_chat(
     images: &Mutex<ChatImageStore>,
     chat: Chat,
 ) -> Result<(), AppError> {
-    if !policy.enabled {
+    if !policy.is_enabled {
         return Ok(());
     }
 
@@ -195,7 +195,7 @@ pub fn read_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError>
         Chat {
             id,
             title: String::new(),
-            last_message_at: String::new(),
+            last_message_at_ms: 0,
             messages: Vec::new(),
         },
     )?;
@@ -282,7 +282,7 @@ pub fn delete_chat(chats_dir: &Path, id: String) -> Result<(), AppError> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ChatHistoryPolicy {
     /// Chats are saved at all.
-    pub enabled: bool,
+    pub is_enabled: bool,
     /// Chats without a message for this many days are dropped; 0 keeps them
     /// forever.
     pub retention_days: u64,
@@ -291,78 +291,27 @@ pub struct ChatHistoryPolicy {
 impl ChatHistoryPolicy {
     pub fn from_config(user_config: &Value) -> Self {
         Self {
-            enabled: user_config
-                .get("chat")
-                .and_then(|value| value.get("isHistoryEnabled"))
+            is_enabled: user_config
+                .get("chatHistory")
+                .and_then(|value| value.get("isEnabled"))
                 .and_then(Value::as_bool)
                 .unwrap_or(true),
             retention_days: user_config
-                .get("chat")
-                .and_then(|value| value.get("historyRetentionDays"))
+                .get("chatHistory")
+                .and_then(|value| value.get("retentionDays"))
                 .and_then(Value::as_u64)
                 .unwrap_or(0),
         }
     }
 
     /// Drops the chats whose last message is older than the retention period.
-    /// A chat with a date that cannot be read is kept: nothing says it is old.
     fn drop_expired(&self, history: &mut Vec<ChatSummary>, now_ms: u64) {
         if self.retention_days == 0 {
             return;
         }
         let cutoff = now_ms.saturating_sub(self.retention_days.saturating_mul(DAY_MS));
-        history
-            .retain(|item| parse_iso_utc_ms(&item.last_message_at).is_none_or(|ms| ms >= cutoff));
+        history.retain(|item| item.last_message_at_ms >= cutoff);
     }
-}
-
-/// Milliseconds since the epoch of an ISO 8601 UTC date as
-/// `Date.toISOString()` writes it: `2026-10-09T12:30:00.000Z`. Fractions of a
-/// second are optional.
-fn parse_iso_utc_ms(value: &str) -> Option<u64> {
-    let value = value.trim().strip_suffix('Z')?;
-    let (date, time) = value.split_once('T')?;
-    let mut date_parts = date.splitn(3, '-').map(str::parse::<i64>);
-    let (year, month, day) = (
-        date_parts.next()?.ok()?,
-        date_parts.next()?.ok()?,
-        date_parts.next()?.ok()?,
-    );
-    let (time, fraction) = time.split_once('.').unwrap_or((time, ""));
-    let mut time_parts = time.splitn(3, ':').map(str::parse::<i64>);
-    let (hour, minute, second) = (
-        time_parts.next()?.ok()?,
-        time_parts.next()?.ok()?,
-        time_parts.next()?.ok()?,
-    );
-    let valid = (1..=12).contains(&month)
-        && (1..=31).contains(&day)
-        && (0..24).contains(&hour)
-        && (0..60).contains(&minute)
-        && (0..=60).contains(&second);
-    if !valid {
-        return None;
-    }
-    let millis = if fraction.is_empty() {
-        0
-    } else {
-        if !fraction.bytes().all(|byte| byte.is_ascii_digit()) {
-            return None;
-        }
-        format!("{fraction:0<3}")[..3].parse::<i64>().ok()?
-    };
-
-    // days from the civil date, after Howard Hinnant's algorithm
-    let year = if month <= 2 { year - 1 } else { year };
-    let era = year.div_euclid(400);
-    let year_of_era = year - era * 400;
-    let month_index = (month + 9) % 12;
-    let day_of_year = (153 * month_index + 2) / 5 + day - 1;
-    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
-    let days = era * 146_097 + day_of_era - 719_468;
-
-    let seconds = days * 86_400 + hour * 3_600 + minute * 60 + second;
-    u64::try_from(seconds * 1_000 + millis).ok()
 }
 
 /// Brings the stored chats in line with the settings: all of them go when the
@@ -371,7 +320,7 @@ pub(super) fn enforce_chat_history_policy(
     chats_dir: &Path,
     policy: ChatHistoryPolicy,
 ) -> Result<(), AppError> {
-    if !policy.enabled {
+    if !policy.is_enabled {
         return clear_chats(chats_dir);
     }
 
@@ -460,14 +409,14 @@ mod tests {
         Chat {
             id: id.to_string(),
             title: String::from("chat"),
-            last_message_at: String::from("0"),
+            last_message_at_ms: 0,
             messages: Vec::new(),
         }
     }
 
     fn enabled_policy() -> ChatHistoryPolicy {
         ChatHistoryPolicy {
-            enabled: true,
+            is_enabled: true,
             retention_days: 0,
         }
     }
@@ -476,7 +425,7 @@ mod tests {
     fn any_folder_keeps_its_own_chat_history() {
         let dir = TestDir::new("chat-history-folder");
         let ask_dir = dir.join("chats");
-        let profile_dir = dir.join("profile-history");
+        let profile_dir = dir.join("profile-chats");
         fs::create_dir_all(&ask_dir).unwrap();
         fs::create_dir_all(&profile_dir).unwrap();
         let images = Mutex::new(ChatImageStore::default());
@@ -517,7 +466,7 @@ mod tests {
         let dir = TestDir::new("chat-history-disabled");
         let images = Mutex::new(ChatImageStore::default());
         let policy = ChatHistoryPolicy {
-            enabled: false,
+            is_enabled: false,
             retention_days: 0,
         };
 
@@ -688,40 +637,20 @@ mod tests {
     }
 
     #[test]
-    fn parse_iso_utc_ms_reads_the_dates_the_webview_writes() {
-        assert_eq!(parse_iso_utc_ms("1970-01-01T00:00:00.000Z"), Some(0));
-        assert_eq!(
-            parse_iso_utc_ms("2026-10-09T12:30:15.250Z"),
-            Some(1_791_549_015_250)
-        );
-        assert_eq!(
-            parse_iso_utc_ms("2000-02-29T00:00:00Z"),
-            Some(951_782_400_000)
-        );
-        assert_eq!(
-            parse_iso_utc_ms("2026-10-09T12:30:15.5Z"),
-            Some(1_791_549_015_500)
-        );
-        assert_eq!(parse_iso_utc_ms("0"), None);
-        assert_eq!(parse_iso_utc_ms("2026-13-01T00:00:00Z"), None);
-        assert_eq!(parse_iso_utc_ms("2026-10-09T12:30:15+03:00"), None);
-    }
-
-    #[test]
     fn chat_history_policy_reads_the_settings() {
         assert_eq!(
             ChatHistoryPolicy::from_config(&json!({})),
             ChatHistoryPolicy {
-                enabled: true,
+                is_enabled: true,
                 retention_days: 0,
             }
         );
         assert_eq!(
             ChatHistoryPolicy::from_config(
-                &json!({"chat":{"isHistoryEnabled":false,"historyRetentionDays":30}})
+                &json!({"chatHistory":{"isEnabled":false,"retentionDays":30}})
             ),
             ChatHistoryPolicy {
-                enabled: false,
+                is_enabled: false,
                 retention_days: 30,
             }
         );
@@ -729,19 +658,19 @@ mod tests {
 
     #[test]
     fn chat_history_policy_drops_the_chats_past_the_retention_period() {
-        let dated = |id: &str, date: &str| {
+        let now = 1_791_504_000_000;
+        let dated = |id: &str, days_ago: u64| {
             let mut chat = chat_item(id);
-            chat.last_message_at = date.to_string();
+            chat.last_message_at_ms = now - days_ago * DAY_MS;
             chat
         };
         let mut history = vec![
-            ChatSummary::from(&dated("fresh", "2026-10-08T00:00:00.000Z")),
-            ChatSummary::from(&dated("old", "2026-09-01T00:00:00.000Z")),
-            ChatSummary::from(&dated("undated", "unknown")),
+            ChatSummary::from(&dated("fresh", 1)),
+            ChatSummary::from(&dated("old", 38)),
+            ChatSummary::from(&dated("recent", 29)),
         ];
-        let now = parse_iso_utc_ms("2026-10-09T00:00:00.000Z").unwrap();
         let policy = |retention_days| ChatHistoryPolicy {
-            enabled: true,
+            is_enabled: true,
             retention_days,
         };
 
@@ -750,16 +679,16 @@ mod tests {
 
         policy(30).drop_expired(&mut history, now);
         let ids: Vec<_> = history.iter().map(|item| item.id.as_str()).collect();
-        assert_eq!(ids, ["fresh", "undated"]);
+        assert_eq!(ids, ["fresh", "recent"]);
     }
 
     #[test]
     fn a_lost_or_broken_index_is_rebuilt_from_the_chat_files() {
         let dir = TestDir::new("rebuild");
         let mut older = chat_item("older");
-        older.last_message_at = String::from("2026-01-01T00:00:00.000Z");
+        older.last_message_at_ms = 1_767_225_600_000;
         let mut newer = chat_item("newer");
-        newer.last_message_at = String::from("2026-02-01T00:00:00.000Z");
+        newer.last_message_at_ms = 1_769_904_000_000;
         for chat in [&older, &newer] {
             write_json(&dir.join(format!("{}.json", chat.id)), chat).unwrap();
         }

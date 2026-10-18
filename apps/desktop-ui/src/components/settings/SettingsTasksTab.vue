@@ -30,10 +30,14 @@ import { computed, onUnmounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
-import { newAiTaskId } from '../../lib/ai-tasks/custom-prompt'
+import {
+  type AiTaskConfig,
+  newAiTaskId,
+} from '../../lib/ai-tasks/custom-prompt'
 import {
   moveShortcutSlot,
-  normalizeShortcutSlots,
+  slotList,
+  slotsFromList,
 } from '../../lib/shortcut-slots/shortcut-slots'
 import FieldInput from '../common/FieldInput.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
@@ -43,14 +47,10 @@ import ShortcutSlots from './ShortcutSlots.vue'
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
 
-type AiTask = { id: string; name: string; rule: string }
+const taskSlots = computed(() => slotList(userConfig.value.aiTasks))
 
-const taskSlots = computed(() =>
-  normalizeShortcutSlots<AiTask>(userConfig.value.aiTasks)
-)
-
-function setSlots(slots: (AiTask | null)[]) {
-  userConfig.value.aiTasks = slots
+function setSlots(slots: (AiTaskConfig | null)[]) {
+  userConfig.value.aiTasks = slotsFromList(slots)
 }
 
 function moveTask(from: number, to: number) {
@@ -69,7 +69,7 @@ function removeTask(index: number) {
   setSlots(slots)
 }
 
-function updateTask(index: number, field: keyof AiTask, value: unknown) {
+function updateTask(index: number, field: keyof AiTaskConfig, value: unknown) {
   if (typeof value !== 'string' || !taskSlots.value[index]) return
   const slots = [...taskSlots.value]
   slots[index] = { ...slots[index]!, [field]: value }

@@ -13,10 +13,8 @@ export interface AppStateSyncDependencies {
   getLocale: () => string
   getRoutePath: () => string
   reloadPlugins: (config: UserConfig) => Promise<void>
-  syncLocale: (appLanguage?: string, userLanguage?: string) => void
-  syncDocumentLanguage: (
-    config: Pick<UserConfig, 'appLanguage' | 'userLanguage'>
-  ) => void
+  syncLocale: (uiLanguage?: string, userLanguage?: string) => void
+  syncDocumentLanguage: (language: UserConfig['language']) => void
   updateTitle: () => void
   patchLastMode: (mode: StartMode) => Promise<unknown>
   replaceEditorValue: (text: string) => void
@@ -52,21 +50,21 @@ export function createAppStateSync(deps: AppStateSyncDependencies) {
       )
       watch(
         [
-          () => deps.getDesktopState().userConfig.appLanguage,
-          () => deps.getDesktopState().userConfig.userLanguage,
+          () => deps.getDesktopState().userConfig.language.ui,
+          () => deps.getDesktopState().userConfig.language.user,
         ],
-        ([appLanguage, userLanguage]) => {
-          deps.syncLocale(appLanguage, userLanguage)
-          deps.syncDocumentLanguage({ appLanguage, userLanguage })
+        ([ui, user]) => {
+          deps.syncLocale(ui, user)
+          deps.syncDocumentLanguage({ ui, user })
         },
         { immediate: true }
       )
       watch(
         deps.getLocale,
         () => {
-          const { appLanguage, userLanguage } =
-            deps.getDesktopState().userConfig
-          deps.syncDocumentLanguage({ appLanguage, userLanguage })
+          deps.syncDocumentLanguage({
+            ...deps.getDesktopState().userConfig.language,
+          })
           deps.updateTitle()
         },
         { immediate: true }

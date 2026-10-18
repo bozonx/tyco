@@ -275,7 +275,7 @@ async function copyChatMarkdown(id: string) {
     targetChat = {
       id,
       title: chatStore.currentChatParams.title || '',
-      lastMessageAt: '',
+      lastMessageAt: 0,
       messages: chatStore.messages,
     }
   } else {

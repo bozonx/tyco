@@ -132,9 +132,9 @@
     >
       <FieldRow :label="t('settings.submitKey.label')">
         <FieldSelect
-          :model-value="userConfig.submitKey ?? DEFAULT_SUBMIT_KEY"
+          :model-value="userConfig.editor.submitKey ?? DEFAULT_SUBMIT_KEY"
           :options="submitKeyOptions"
-          @update:model-value="userConfig.submitKey = resolveSubmitKey($event)"
+          @update:model-value="userConfig.editor.submitKey = resolveSubmitKey($event)"
         />
       </FieldRow>
     </SettingsSection>
@@ -171,7 +171,10 @@ import SettingsSection from './SettingsSection.vue'
 import {
   DEFAULT_SUBMIT_KEY,
   DEFAULT_USER_CONFIG,
-  SELECTION_HOTKEY_PREFIX,
+  type HotkeyId,
+  INLINE_CORRECTION_HOTKEY_ID,
+  launcherPageHotkeyId,
+  launcherPageMode,
 } from '@tyco/shared'
 
 const { t } = useI18n()
@@ -194,12 +197,10 @@ const MODE_ORDER = [
   'aiTasks',
   'correction',
   'translate',
-  'commandLauncher',
 ]
-const INLINE_CORRECTION = 'correction'
 
 interface HotkeyRow {
-  /** The id `applyHotkey` takes: a mode or a `replace.` action */
+  /** The id `applyHotkey` takes: a mode, a `replace.` action or a page */
   id: string
   label: string
   value: string
@@ -224,12 +225,14 @@ const globalInfo = computed(() =>
     .join('\n\n')
 )
 
-const modes = Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort(
-  (a, b) =>
-    (MODE_ORDER.indexOf(a) + 1 || Infinity) -
-    (MODE_ORDER.indexOf(b) + 1 || Infinity)
-)
-const inlineId = `${SELECTION_HOTKEY_PREFIX}${INLINE_CORRECTION}`
+const modes = (Object.keys(DEFAULT_USER_CONFIG.hotkeys) as HotkeyId[])
+  .filter((id) => id !== 'selectionCorrection')
+  .sort(
+    (a, b) =>
+      (MODE_ORDER.indexOf(a) + 1 || Infinity) -
+      (MODE_ORDER.indexOf(b) + 1 || Infinity)
+  )
+const inlineId = INLINE_CORRECTION_HOTKEY_ID
 
 const rows = computed<HotkeyRow[]>(() => [
   ...modes.map((mode) => ({
@@ -254,20 +257,29 @@ const rows = computed<HotkeyRow[]>(() => [
     value: displayedShortcut(
       providerState,
       inlineId,
-      userConfig.value.selectionHotkeys?.[INLINE_CORRECTION] ??
-        DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION]
+      userConfig.value.hotkeys.selectionCorrection
     ),
     defaultValue: defaultShortcut(
       providerState,
       inlineId,
-      DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION]
+      DEFAULT_USER_CONFIG.hotkeys.selectionCorrection
     ),
-    command:
-      'tyco-ctl run default:core.correct:fix --selection --replace --interactive',
+    command: 'tyco-ctl replace correction',
     externalHint: t('settings.inlineCorrectionExternalHint'),
     description: t('settings.inlineCorrectionHint'),
     inline: true,
   },
+  ...userConfig.value.launcherPages.map((page, index) => {
+    const id = launcherPageHotkeyId(page.id)
+    return {
+      id,
+      label: t('settings.launcherPage', { page: index + 1 }),
+      value: displayedShortcut(providerState, id, page.hotkey),
+      defaultValue: defaultShortcut(providerState, id, ''),
+      command: `tyco --mode=${launcherPageMode(page.id)}`,
+      externalHint: t('settings.externalMethodsHint'),
+    }
+  }),
 ])
 
 function setShortcut(mode: string, shortcut: string) {

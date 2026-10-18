@@ -140,10 +140,10 @@ describe('SettingsLlmTab.vue', () => {
     providers: [],
     models: [],
     taskModelChains: {
-      translate: [],
+      translation: [],
       voiceCorrection: [],
       correction: [],
-      aiTasks: [],
+      aiTask: [],
       chat: [],
     },
   }
@@ -152,7 +152,7 @@ describe('SettingsLlmTab.vue', () => {
     const aiRules = {
       chat: 'Chat rule text',
       correction: 'Correction rule text',
-      translate: 'Translate rule text',
+      translation: 'Translate rule text',
       voiceCorrection: '',
     }
 

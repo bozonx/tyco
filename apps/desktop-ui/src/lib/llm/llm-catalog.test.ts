@@ -56,16 +56,16 @@ describe('llm-catalog', () => {
       config({
         taskModelChains: {
           ...DEFAULT_LLM_CONFIG.taskModelChains,
-          aiTasks: ['gemini-flash', 'deepseek-chat'],
+          aiTask: ['gemini-flash', 'deepseek-chat'],
         },
       })
     )!
 
-    expect(names(catalog.candidatesFor('aiTasks'))).toEqual([
+    expect(names(catalog.candidatesFor('aiTask'))).toEqual([
       'gemini-flash',
       'deepseek-chat',
     ])
-    expect(names(catalog.candidatesFor('translate'))).toEqual(['local-qwen'])
+    expect(names(catalog.candidatesFor('translation'))).toEqual(['local-qwen'])
   })
 
   it('leaves out unfinished models and the tasks left without any', () => {
@@ -83,14 +83,14 @@ describe('llm-catalog', () => {
       ],
       taskModelChains: {
         ...base.taskModelChains,
-        aiTasks: ['blank', 'gemini-flash'],
+        aiTask: ['blank', 'gemini-flash'],
       },
     })!
 
     expect(catalog.find('local-qwen')).toBeUndefined()
     expect(catalog.find('blank')).toBeUndefined()
-    expect(names(catalog.candidatesFor('aiTasks'))).toEqual(['gemini-flash'])
-    expect(catalog.taskClasses).not.toContain('translate')
+    expect(names(catalog.candidatesFor('aiTask'))).toEqual(['gemini-flash'])
+    expect(catalog.taskClasses).not.toContain('translation')
   })
 
   it('caps a configured output limit at the ceiling', () => {
@@ -111,7 +111,7 @@ describe('llm-catalog', () => {
           maxOutputTokens: 10_000_000,
         },
       ],
-      taskModelChains: { ...base.taskModelChains, aiTasks: ['a'] },
+      taskModelChains: { ...base.taskModelChains, aiTask: ['a'] },
     })!
 
     expect(catalog.require('a').maxOutputTokens).toBe(1024)

@@ -59,8 +59,11 @@ describe('plugin-settings', () => {
   it('respects userConfig values and enabled state', () => {
     const userConfig = {
       plugins: {
-        AlphaPlugin: { enabled: false, apiKey: 'custom-secret' },
-        BetaPlugin: { enabled: true },
+        AlphaPlugin: {
+          isEnabled: false,
+          settings: { apiKey: 'custom-secret' },
+        },
+        BetaPlugin: { isEnabled: true, settings: {} },
       },
     }
 
@@ -76,7 +79,7 @@ describe('plugin-settings', () => {
     (status) => {
       const plugins = resolveInstalledPlugins(
         samplePlugins,
-        { plugins: { AlphaPlugin: { enabled: true } } },
+        { plugins: { AlphaPlugin: { isEnabled: true, settings: {} } } },
         { AlphaPlugin: { status } }
       )
       expect(plugins[0].status).toBeUndefined()
@@ -88,7 +91,7 @@ describe('plugin-settings', () => {
     (status) => {
       const plugins = resolveInstalledPlugins(
         samplePlugins,
-        { plugins: { AlphaPlugin: { enabled: true } } },
+        { plugins: { AlphaPlugin: { isEnabled: true, settings: {} } } },
         { AlphaPlugin: { status } }
       )
       expect(plugins[0].status).toBe(status)

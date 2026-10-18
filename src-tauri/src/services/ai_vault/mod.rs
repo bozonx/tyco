@@ -39,12 +39,12 @@ pub fn resolve_vault_path_from_config(
 }
 
 /// Resolves the AI vault root directory for the application.
-/// If `vaultPath` is set in `user_config["aiProfiles"]["vaultPath"]`, it is used.
+/// If `aiVault.path` is set in the user config, it is used.
 /// Otherwise, it defaults to `app_data_sub_dir(app, "ai-vault")`.
 pub fn resolve_vault_path(app: &AppHandle, user_config: &Value) -> Result<PathBuf, AppError> {
     let configured = user_config
-        .get("aiProfiles")
-        .and_then(|p| p.get("vaultPath"))
+        .get("aiVault")
+        .and_then(|vault| vault.get("path"))
         .and_then(Value::as_str);
 
     resolve_vault_path_from_config(configured, || app_data_sub_dir(app, "ai-vault"))

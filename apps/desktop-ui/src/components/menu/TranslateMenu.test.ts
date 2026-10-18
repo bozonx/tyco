@@ -71,7 +71,7 @@ describe('TranslateMenu', () => {
 
   it('translates into a configured language by its key', async () => {
     const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.translation.targetLanguages = ['de_DE']
+    desktop.desktopState.userConfig.translation.targetLanguages = { q: 'de_DE' }
     mountMenu()
 
     await shortcutListProps.leftLetterKeys[0].action()
@@ -206,9 +206,9 @@ describe('TranslateMenu', () => {
         resolve = done
       })
     )
-    useDesktopStore().desktopState.userConfig.translation.targetLanguages = [
-      'de_DE',
-    ]
+    useDesktopStore().desktopState.userConfig.translation.targetLanguages = {
+      q: 'de_DE',
+    }
     const wrapper = mountMenu()
     const pending = shortcutListProps.leftLetterKeys[0].action()
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())

@@ -14,18 +14,20 @@ describe('hotkeys', () => {
         (mode) =>
           mode !== StartMode.HISTORY &&
           mode !== StartMode.CONFIG &&
-          mode !== StartMode.EXTERNAL_ACCESS
+          mode !== StartMode.EXTERNAL_ACCESS &&
+          mode !== StartMode.COMMAND_LAUNCHER
       ),
-      ...[2, 3, 4, 5].map((page) => `commandLauncher${page}`),
+      'selectionCorrection',
     ]
     expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(
       expectedModes.sort()
     )
   })
 
-  it('leaves the additional command page shortcuts unassigned', () => {
-    for (const page of [2, 3, 4, 5])
-      expect(DEFAULT_USER_CONFIG.hotkeys[`commandLauncher${page}`]).toBe('')
+  it('keeps the hotkeys of the command pages on the pages', () => {
+    expect(DEFAULT_USER_CONFIG.launcherPages.map((page) => page.hotkey)).toEqual(
+      ['']
+    )
   })
 
   it('normalizes aliases and modifier order', () => {

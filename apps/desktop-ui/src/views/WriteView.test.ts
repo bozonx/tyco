@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
     isWindowShown: true,
     mode: 'write',
     activationId: 1,
-    userConfig: { submitKey: undefined as SubmitKey | undefined },
+    userConfig: { editor: { submitKey: undefined as SubmitKey | undefined } },
   },
   writer: {
     value: 'Original text',
@@ -89,7 +89,7 @@ beforeEach(() => {
     }
   )
   mocks.desktopState.isWindowShown = true
-  mocks.desktopState.userConfig.submitKey = undefined
+  mocks.desktopState.userConfig.editor.submitKey = undefined
   mocks.modals.pendingModal = null
   mocks.modals.hasOpenModal = false
   wrapper = mount(WriteView)
@@ -140,7 +140,7 @@ describe('quick input screen', () => {
   })
 
   it('sends with Ctrl+Enter in that mode and updates the hint', async () => {
-    reactive(mocks.desktopState).userConfig.submitKey = 'ctrlEnter'
+    reactive(mocks.desktopState).userConfig.editor.submitKey = 'ctrlEnter'
     await nextTick()
     press('Enter')
     expect(mocks.correction.insert).not.toHaveBeenCalled()

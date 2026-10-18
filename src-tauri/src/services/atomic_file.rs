@@ -8,6 +8,12 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::errors::AppError;
 
+/// How many set-aside copies of one file stay: the broken ones moved out of
+/// the way, or the snapshots taken before a repair. Older ones are deleted.
+pub const KEPT_COPY_COUNT: usize = 3;
+/// What the name of a broken copy adds to the name of its file.
+const BROKEN_COPY_MARKER: &str = ".broken-";
+
 /// Writes a temporary file next to `path` and renames it over: a crash in the
 /// middle of the write leaves the previous content intact instead of a torn
 /// file. The file is readable by its owner only, as it may hold user texts or
@@ -127,7 +133,7 @@ pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
     let target = loop {
         let mut name = path.file_name().unwrap_or_default().to_os_string();
         name.push(format!(
-            ".broken-{stamp}-{}-{}",
+            "{BROKEN_COPY_MARKER}{stamp}-{}-{}",
             std::process::id(),
             NEXT_QUARANTINE.fetch_add(1, Ordering::Relaxed)
         ));
@@ -155,7 +161,31 @@ pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
         fs::set_permissions(&target, fs::Permissions::from_mode(0o600))?;
     }
     sync_parent(path)?;
+    prune_copies(path, BROKEN_COPY_MARKER, KEPT_COPY_COUNT)?;
     Ok(target)
+}
+
+/// Deletes all but the `keep` newest copies of `path`: the files next to it
+/// named after it with `marker` and a suffix.
+pub fn prune_copies(path: &Path, marker: &str, keep: usize) -> Result<(), AppError> {
+    let (Some(dir), Some(name)) = (path.parent(), path.file_name()) else {
+        return Ok(());
+    };
+    let prefix = format!("{}{marker}", name.to_string_lossy());
+    let mut copies = Vec::new();
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        if !entry.file_name().to_string_lossy().starts_with(&prefix) {
+            continue;
+        }
+        let modified = entry.metadata()?.modified()?;
+        copies.push((modified, entry.path()));
+    }
+    copies.sort_by(|a, b| b.0.cmp(&a.0));
+    for (_, copy) in copies.into_iter().skip(keep) {
+        fs::remove_file(copy)?;
+    }
+    Ok(())
 }
 
 /// Keeps the exact damaged bytes before a salvage operation rewrites a file.
@@ -163,10 +193,11 @@ pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
 pub fn preserve_broken_copy(path: &Path, raw: &[u8]) -> Result<PathBuf, AppError> {
     use sha2::{Digest, Sha256};
     let mut name = path.file_name().unwrap_or_default().to_os_string();
-    name.push(format!(".broken-{:x}", Sha256::digest(raw)));
+    name.push(format!("{BROKEN_COPY_MARKER}{:x}", Sha256::digest(raw)));
     let target = path.with_file_name(name);
     if !target.exists() {
         write_private_bytes(&target, raw)?;
+        prune_copies(path, BROKEN_COPY_MARKER, KEPT_COPY_COUNT)?;
     }
     Ok(target)
 }
@@ -208,6 +239,35 @@ mod tests {
     use super::*;
 
     use crate::services::test_support::TestDir;
+
+    #[test]
+    fn keeps_only_the_newest_copies_of_a_file() {
+        let dir = TestDir::new("prune");
+        let path = dir.join("config.json");
+        fs::write(&path, "current").unwrap();
+        fs::write(dir.join("other.json.broken-1"), "unrelated").unwrap();
+        for index in 0..5 {
+            fs::write(dir.join(format!("config.json.broken-{index}")), "x").unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(15));
+        }
+
+        prune_copies(&path, BROKEN_COPY_MARKER, 2).unwrap();
+
+        let mut names: Vec<_> = fs::read_dir(&*dir)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        assert_eq!(
+            names,
+            [
+                "config.json",
+                "config.json.broken-3",
+                "config.json.broken-4",
+                "other.json.broken-1"
+            ]
+        );
+    }
 
     #[test]
     fn replaces_the_file_and_leaves_no_temp_file() {

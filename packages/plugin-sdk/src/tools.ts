@@ -104,34 +104,6 @@ export interface ToolResult {
   keepWindow?: boolean
 }
 
-export interface DefaultCommandsContext {
-  t(key: string, params?: Record<string, unknown>): string
-}
-
-/** A preset command of a tool, added to the library once */
-export interface DefaultCommand {
-  /** Local; the command id becomes `default:<toolId>:<id>` */
-  id: string
-  /** Already translated; stored as the command name */
-  name: string
-  phrases?: string[]
-  description?: string
-  toolConfig?: Record<string, unknown>
-  /**
-   * Initial quick-command output handling; selection replacement becomes a
-   * result view without selection.
-   */
-  afterRun?: CustomActionAfterRun
-  /** Adds a menu item, taking the place of a former plugin action item */
-  menu?: { preferredKey?: string }
-}
-
-export interface PluginDefaultCommand extends Omit<DefaultCommand, 'name'> {
-  name?: string
-  nameKey?: string
-  phrasesKey?: string
-}
-
 export interface ToolDefinition {
   /** Local to the plugin; the full id becomes `<pluginName>.<id>` */
   id: string
@@ -158,7 +130,5 @@ export interface ToolDefinition {
   defaultAfterRun?: CustomActionAfterRun
   /** Phrases suggested when the user creates a command for this tool */
   defaultPhrasesKey?: string
-  /** Declarative presets; the host translates keys before persisting commands. */
-  defaultCommands?: PluginDefaultCommand[]
   run(call: ToolCall): Promise<ToolResult>
 }

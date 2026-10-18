@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { type MainActionConfig } from '@tyco/shared'
+import { type MainActionConfig, type ShortcutSlots } from '@tyco/shared'
 
 import { createCommand } from './command-config'
 import { createCommandRemovalModel } from './command-removal-model'
@@ -16,9 +16,9 @@ describe('command removal model', () => {
       },
     }
     let commands = [command]
-    let actions: (MainActionConfig | null)[] = [
-      { type: 'command', commandId: command.id },
-    ]
+    let actions: ShortcutSlots<MainActionConfig> = {
+      q: { type: 'command', commandId: command.id },
+    }
     const removeSecret = vi.fn().mockResolvedValue(undefined)
     const model = createCommandRemovalModel({
       getCommands: () => commands,
@@ -40,7 +40,7 @@ describe('command removal model', () => {
       removeSecret,
       getCommands: () => commands,
       getActions: () => actions,
-      setActions: (value: (MainActionConfig | null)[]) => {
+      setActions: (value: ShortcutSlots<MainActionConfig>) => {
         actions = value
       },
     }
@@ -49,12 +49,12 @@ describe('command removal model', () => {
     const f = fixture()
     f.model.removeCommand(f.command)
     expect(f.getCommands()).toEqual([])
-    expect(f.getActions()).toEqual([null])
+    expect(f.getActions()).toEqual({})
     f.model.undoRemove()
     expect(f.getCommands()).toEqual([f.command])
-    expect(f.getActions()).toEqual([
-      { type: 'command', commandId: f.command.id },
-    ])
+    expect(f.getActions()).toEqual({
+      q: { type: 'command', commandId: f.command.id },
+    })
     f.model.finishRemoval()
     expect(f.removeSecret).not.toHaveBeenCalled()
   })
@@ -90,7 +90,7 @@ describe('command removal model', () => {
     f.model.removeCommand(second)
     f.model.undoRemove()
     expect(f.getCommands()).toEqual([second])
-    expect(f.getActions()).toEqual([null])
+    expect(f.getActions()).toEqual({})
   })
 
   it('handles secret cleanup failure without retaining the pending deletion', async () => {
@@ -110,10 +110,10 @@ describe('command removal model', () => {
       type: 'command',
       commandId: 'replacement',
     }
-    f.setActions([replacement])
+    f.setActions({ q: replacement })
     f.model.undoRemove()
     expect(f.getCommands()).toEqual([f.command])
-    expect(f.getActions()).toEqual([replacement])
+    expect(f.getActions()).toEqual({ q: replacement })
     expect(f.removeSecret).not.toHaveBeenCalled()
   })
 })

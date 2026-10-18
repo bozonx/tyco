@@ -70,6 +70,11 @@ pub enum Request {
     Run {
         request: RunRequest,
     },
+    /// Replaces the selection of the focused window with the result of a
+    /// built-in action, as its hotkey does; only `correction` exists.
+    ReplaceSelection {
+        action: String,
+    },
     JobStatus {
         id: String,
     },
@@ -218,6 +223,9 @@ mod tests {
                 },
             },
             Request::ListCommands,
+            Request::ReplaceSelection {
+                action: "correction".into(),
+            },
             Request::Quit,
         ] {
             let encoded = serde_json::to_string(&request).unwrap();

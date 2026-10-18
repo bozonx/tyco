@@ -189,7 +189,7 @@ describe('createCoreTools', () => {
   it('tells why a tool of the LLM cannot run', () => {
     const { tools } = setup({
       getLlmUnavailableReasonKey: (task) =>
-        task === 'aiTasks' ? 'tools.noLlm' : undefined,
+        task === 'aiTask' ? 'tools.noLlm' : undefined,
       getTranslatorUnavailableReasonKey: () => 'tools.noLlm',
     })
     expect(

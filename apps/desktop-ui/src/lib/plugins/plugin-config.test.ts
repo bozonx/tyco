@@ -41,9 +41,12 @@ describe('plugin config', () => {
   it('preserves disabled state without writing migration metadata', () => {
     expect(
       applyPluginDefaults([() => plugin], {
-        Example: { mode: 'custom', enabled: false },
+        Example: { isEnabled: false, settings: { mode: 'custom' } },
       }).Example
-    ).toEqual({ mode: 'custom', enabledFeature: true, enabled: false })
+    ).toEqual({
+      isEnabled: false,
+      settings: { mode: 'custom', enabledFeature: true },
+    })
   })
   it('applies declared preset defaults on selection changes without a migration callback', () => {
     const withPresets = {
@@ -70,10 +73,16 @@ describe('plugin config', () => {
     })
   })
   it('reads only its current identity and returns detached settings', () => {
-    const states = { Other: { mode: 'custom' }, Example: { mode: 'safe' } }
-    getPluginState(plugin, states).mode = 'custom'
-    expect(states.Example.mode).toBe('safe')
-    expect(getPluginState(plugin, { Other: states.Other })).toEqual({})
+    const states = {
+      Other: { isEnabled: true, settings: { mode: 'custom' } },
+      Example: { isEnabled: true, settings: { mode: 'safe' } },
+    }
+    getPluginState(plugin, states).settings.mode = 'custom'
+    expect(states.Example.settings.mode).toBe('safe')
+    expect(getPluginState(plugin, { Other: states.Other })).toEqual({
+      isEnabled: false,
+      settings: {},
+    })
     expect(applyPluginDefaults([() => plugin], states).Other).toEqual(
       states.Other
     )

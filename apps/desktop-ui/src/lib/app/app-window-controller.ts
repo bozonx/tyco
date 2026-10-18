@@ -15,7 +15,6 @@ export interface AppWindowControllerDependencies {
   reportError: (error: unknown) => void
   startBootstrap: () => Promise<void>
   stopBootstrap: () => void
-  startDefaultCommands: () => void
   startMetrics: () => Promise<void>
   stopMetrics: () => void
   disposePlugins: () => Promise<void>
@@ -126,9 +125,7 @@ export function createAppWindowController(
     }
     starting = Promise.all([
       ...subscriptions,
-      deps.startBootstrap().then(() => {
-        if (!scope.stopped && deps.isQuickWindow) deps.startDefaultCommands()
-      }),
+      deps.startBootstrap(),
       ...(deps.isQuickWindow ? [deps.startMetrics()] : []),
     ])
       .then(() => undefined)

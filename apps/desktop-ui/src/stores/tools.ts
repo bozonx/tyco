@@ -83,7 +83,7 @@ export const useToolsStore = defineStore('tools', () => {
     getLlmUnavailableReasonKey,
     getTranslatorUnavailableReasonKey: () =>
       desktopStore.userConfig?.translation?.provider === 'llm'
-        ? getLlmUnavailableReasonKey('translate')
+        ? getLlmUnavailableReasonKey('translation')
         : undefined,
     describeError: (error) => describeError(error, translate),
   })

@@ -7,11 +7,12 @@ import {
   type TranscriptPart,
   type Transport,
 } from '@bozonx/ai-kit'
-import type { SttModel, SttProvider } from '@tyco/shared'
+import type { SttProvider } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 import { createDeepgramProvider } from './deepgram-provider'
 import { createSherpaProvider } from './sherpa-provider'
+import type { SttModel } from './stt-config'
 
 const TRANSCRIPTION_TASK = 'transcription'
 /** Covers opening the provider socket only; the session itself has no limit */
@@ -23,7 +24,12 @@ const CONNECT_TIMEOUT_MS = 20_000
  */
 const MULTILINGUAL_LANGUAGE = 'multi'
 /** Self-hosted servers: reached by the configured address, without a key */
-const KEYLESS_STT_PROVIDERS: readonly SttProvider[] = ['sherpa-onnx']
+const KEYLESS_STT_PROVIDERS: readonly SttProvider[] = ['sherpaOnnx']
+/** The names `@bozonx/ai-kit` knows the providers by */
+const KIT_PROVIDERS: Record<SttProvider, string> = {
+  deepgram: 'deepgram',
+  sherpaOnnx: 'sherpa-onnx',
+}
 
 /** Whether dictation with this provider needs an API key */
 export function sttProviderNeedsKey(provider: SttProvider): boolean {
@@ -52,7 +58,7 @@ export interface SttClient {
 
 /** Builds a speech catalog for the one configured live model. */
 export function buildSttCatalog(model: SttModel): Catalog {
-  if (!model.providerModelId.trim()) {
+  if (!model.modelId.trim()) {
     throw new Error('The speech recognition model name is empty')
   }
   const baseUrl = model.baseUrl?.trim()
@@ -64,10 +70,10 @@ export function buildSttCatalog(model: SttModel): Catalog {
     requirePricing: false,
     models: [
       {
-        name: model.id,
+        name: model.provider,
         kind: 'stt',
-        provider: model.provider,
-        model: model.providerModelId.trim(),
+        provider: KIT_PROVIDERS[model.provider],
+        model: model.modelId.trim(),
         ...(baseUrl ? { baseUrl } : {}),
         tier: 'standard',
         modalities: { input: ['audio'], output: ['text'] },
@@ -78,7 +84,7 @@ export function buildSttCatalog(model: SttModel): Catalog {
         },
       },
     ],
-    taskClasses: { [TRANSCRIPTION_TASK]: [model.id] },
+    taskClasses: { [TRANSCRIPTION_TASK]: [model.provider] },
   })
 }
 
@@ -86,16 +92,16 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
   const kits = new Map<string, AiKit>()
   const defaultKeys: KeyProvider = {
     async get(provider) {
-      if (!sttProviderNeedsKey(provider as SttProvider)) return ''
+      if (KEYLESS_STT_PROVIDERS.some((id) => KIT_PROVIDERS[id] === provider))
+        return ''
       throw new Error(`No API key configured for provider "${provider}"`)
     },
   }
 
   const kitFor = (model: SttModel): AiKit => {
     const key = JSON.stringify({
-      id: model.id,
       provider: model.provider,
-      model: model.providerModelId,
+      model: model.modelId,
       baseUrl: model.baseUrl,
     })
     const cached = kits.get(key)
@@ -106,8 +112,8 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
       keys: deps.keys ?? defaultKeys,
       transport: deps.transport,
       sttProviders: {
-        deepgram: createDeepgramProvider,
-        'sherpa-onnx': createSherpaProvider,
+        [KIT_PROVIDERS.deepgram]: createDeepgramProvider,
+        [KIT_PROVIDERS.sherpaOnnx]: createSherpaProvider,
       },
       retry: { totalTimeoutMs: CONNECT_TIMEOUT_MS },
     })
@@ -124,7 +130,7 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
         policy: {
           mode: 'manual',
           taskClass: TRANSCRIPTION_TASK,
-          requestedModel: request.model.id,
+          requestedModel: request.model.provider,
         },
         options: {
           language: request.language ?? MULTILINGUAL_LANGUAGE,
@@ -133,7 +139,9 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
         ...(request.hasApiKey
           ? {
               keys: {
-                [request.model.provider]: secretRef(secretId(request.model)),
+                [KIT_PROVIDERS[request.model.provider]]: secretRef(
+                  secretId(request.model)
+                ),
               },
             }
           : {}),

@@ -59,16 +59,16 @@ test.describe('command launcher', () => {
         toolId: 'script',
         toolConfig: { command: 'printf browser', workingDirectory: '' },
         phrases: [],
-        enabled: true,
+        isEnabled: true,
         isVoiceEnabled: false,
         isLlmArgumentParsingEnabled: false,
         voiceConfirmation: 'always',
         launcherAfterRun: { action: 'showMenu' },
-        logOutput: false,
+        isOutputLogged: false,
         availableIn: { chat: false, external: false },
       },
     ]
-    desktop.userConfig.launcherPages[0]!.slots[0] = 'browser-command'
+    desktop.userConfig.launcherPages[0]!.slots.q = 'browser-command'
     desktop.handle('log_command_run', () => undefined)
     desktop.handle('execute_script_action', () => ({
       success: true,

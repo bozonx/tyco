@@ -54,11 +54,12 @@ describe('command launcher store wiring', () => {
         ...desktop.desktopState.userConfig,
         launcherPages: ['main', 'other'].map((id) => ({
           id,
-          slots: Array<string | null>(15).fill(null),
           inputMode: 'selection',
+          hotkey: '',
+          slots: {},
         })),
       },
-      launcherPage: 1,
+      launcherPageId: 'other',
       launcherRequest: null,
       activationId: 2,
     })
@@ -92,7 +93,7 @@ describe('command launcher store wiring', () => {
     const cmd: CommandConfig = {
       id: 'cmd1',
       name: 'Cmd 1',
-      enabled: true,
+      isEnabled: true,
       toolId: 'core.copy',
       toolConfig: {},
       phrases: [],
@@ -100,7 +101,7 @@ describe('command launcher store wiring', () => {
       isVoiceEnabled: false,
       voiceConfirmation: 'always',
       launcherAfterRun: { action: 'none' },
-      logOutput: false,
+      isOutputLogged: false,
       availableIn: { external: false, chat: false },
     }
     store.stage = { kind: 'prepare', command: cmd, autoRun: false }
@@ -122,7 +123,7 @@ describe('command launcher store wiring', () => {
     const cmd: CommandConfig = {
       id: 'cmd1',
       name: 'Cmd 1',
-      enabled: true,
+      isEnabled: true,
       toolId: 'core.copy',
       toolConfig: {},
       phrases: [],
@@ -130,7 +131,7 @@ describe('command launcher store wiring', () => {
       isVoiceEnabled: false,
       voiceConfirmation: 'always',
       launcherAfterRun: { action: 'none' },
-      logOutput: false,
+      isOutputLogged: false,
       availableIn: { external: false, chat: false },
     }
     desktop.applyViewState({

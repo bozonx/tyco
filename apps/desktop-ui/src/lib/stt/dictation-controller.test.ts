@@ -1,4 +1,4 @@
-import { DEFAULT_USER_CONFIG, type SttModel } from '@tyco/shared'
+import { DEFAULT_USER_CONFIG, type SttConfig } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { SecretsStatus } from '../net/secrets'
@@ -6,17 +6,10 @@ import { createDictationController } from './dictation-controller'
 import type { LiveDictationStart } from './live-dictation'
 import { createLiveTranscriptState } from './live-transcript'
 
-function setup(
-  model: SttModel = {
-    id: 'voice',
-    provider: 'deepgram',
-    providerModelId: 'nova-3',
-  }
-) {
+function setup(stt: Partial<SttConfig> = {}) {
   const config = structuredClone(DEFAULT_USER_CONFIG)
-  config.stt.models = [model]
-  config.stt.selectedModelId = model.id
-  config.userLanguage = 'es_AR'
+  config.stt = { ...config.stt, ...stt }
+  config.language.user = 'es_AR'
   const secrets: SecretsStatus = { deepgram: { origins: [], available: true } }
   const deps = {
     getConfig: () => config,
@@ -65,7 +58,7 @@ describe('dictation controller', () => {
     )
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: { id: 'voice', provider: 'deepgram', providerModelId: 'nova-3' },
+        model: { provider: 'deepgram', modelId: 'nova-3', language: 'auto' },
         language: 'es',
         hasApiKey: true,
         onText: handlers.onText,
@@ -97,41 +90,40 @@ describe('dictation controller', () => {
 
   it('allows a keyless provider and follows an explicitly selected language', async () => {
     const { deps, handlers, controller } = setup({
-      id: 'local',
-      provider: 'sherpa-onnx',
-      providerModelId: 'sherpa-onnx',
-      baseUrl: 'ws://speech.lan:6006',
-      language: 'tr_TR',
+      providerId: 'sherpaOnnx',
+      providers: {
+        deepgram: { modelId: 'nova-3', language: 'tr_TR' },
+        sherpaOnnx: { baseUrl: 'ws://speech.lan:6006' },
+      },
     })
     await controller.startDictation(handlers)
     expect(deps.refreshSecrets).not.toHaveBeenCalled()
+    // a server without a language choice follows the user language
     expect(deps.dictation.start).toHaveBeenCalledWith(
-      expect.objectContaining({ language: 'tr', hasApiKey: false })
+      expect.objectContaining({ language: 'es', hasApiKey: false })
     )
   })
 
   it('uses the latest configuration for each session and formatting preference', async () => {
     const { config, deps, handlers, controller } = setup()
     expect(controller.shouldFormatRecognizedText()).toBe(false)
-    config.stt.models[0].formatWithLlm = true
-    config.stt.models[0].language = 'en_US'
+    config.stt.isLlmFormattingEnabled = true
+    config.stt.providers.deepgram.language = 'en_US'
     expect(controller.shouldFormatRecognizedText()).toBe(true)
     await controller.startDictation(handlers)
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({ language: 'en' })
     )
-    config.stt.selectedModelId = 'missing'
-    await expect(controller.startDictation(handlers)).rejects.toThrow(
-      'toast.modelNotFound'
-    )
+    config.stt.isLlmFormattingEnabled = false
     expect(controller.shouldFormatRecognizedText()).toBe(false)
   })
 
   it('rejects an incomplete provider configuration before checking credentials', async () => {
     const { deps, handlers, controller } = setup({
-      id: 'voice',
-      provider: 'deepgram',
-      providerModelId: '',
+      providers: {
+        deepgram: { modelId: '', language: 'auto' },
+        sherpaOnnx: { baseUrl: '' },
+      },
     })
     await expect(controller.startDictation(handlers)).rejects.toThrow(
       'toast.sttModelIncomplete'

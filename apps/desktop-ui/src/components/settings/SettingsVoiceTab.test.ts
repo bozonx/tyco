@@ -25,23 +25,12 @@ describe('SettingsVoiceTab.vue', () => {
     return reactive({
       ...structuredClone(DEFAULT_USER_CONFIG),
       stt: {
-        selectedModelId: 'sherpa-default',
-        models: [
-          {
-            id: 'sherpa-default',
-            provider: 'sherpa-onnx',
-            providerModelId: 'sherpa',
-            baseUrl: 'ws://localhost:6006',
-            formatWithLlm: false,
-          },
-          {
-            id: 'deepgram-default',
-            provider: 'deepgram',
-            providerModelId: 'nova-3',
-            language: 'user',
-            formatWithLlm: false,
-          },
-        ],
+        providerId: 'sherpaOnnx',
+        isLlmFormattingEnabled: false,
+        providers: {
+          deepgram: { modelId: 'nova-3', language: 'user' },
+          sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
+        },
       },
       ...overrides,
     }) as UserConfig
@@ -106,20 +95,8 @@ describe('SettingsVoiceTab.vue', () => {
   })
 
   it('renders API key and model fields when provider is deepgram', async () => {
-    const config = createConfig({
-      stt: {
-        selectedModelId: 'deepgram-default',
-        models: [
-          {
-            id: 'deepgram-default',
-            provider: 'deepgram',
-            providerModelId: 'nova-3',
-            language: 'user',
-            formatWithLlm: false,
-          },
-        ],
-      },
-    })
+    const config = createConfig()
+    config.stt.providerId = 'deepgram'
     const wrapper = mountTab(config)
 
     const labels = wrapper
@@ -131,7 +108,7 @@ describe('SettingsVoiceTab.vue', () => {
     expect(labels).not.toContain('settings.sttServerUrl')
   })
 
-  it('toggles formatWithLlm to reveal the rules field and updates all models', async () => {
+  it('toggles the LLM formatting to reveal the rules field', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
 
@@ -141,7 +118,7 @@ describe('SettingsVoiceTab.vue', () => {
     await switchInput.setValue(true)
 
     expect(wrapper.find('.field-textarea-stub').exists()).toBe(true)
-    expect(config.stt.models?.[0]?.formatWithLlm).toBe(true)
+    expect(config.stt.isLlmFormattingEnabled).toBe(true)
   })
 
   it('calls secretsStore when saving and removing API key', async () => {
@@ -153,15 +130,12 @@ describe('SettingsVoiceTab.vue', () => {
 
     const config = createConfig({
       stt: {
-        selectedModelId: 'deepgram-default',
-        models: [
-          {
-            id: 'deepgram-default',
-            provider: 'deepgram',
-            providerModelId: 'nova-3',
-            formatWithLlm: false,
-          },
-        ],
+        providerId: 'deepgram',
+        isLlmFormattingEnabled: false,
+        providers: {
+          deepgram: { modelId: 'nova-3', language: 'auto' },
+          sherpaOnnx: { baseUrl: '' },
+        },
       },
     })
     const wrapper = mountTab(config)

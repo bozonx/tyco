@@ -17,7 +17,7 @@
       "windowId": "target",
       "selectedText": "Captured text",
       "mode": "editor",
-      "launcherPage": 0,
+      "launcherPageId": null,
       "launcherRequest": null,
       "accessRequest": null
     },
@@ -37,6 +37,6 @@
   "chatSummary": {
     "id": "chat-1",
     "title": "Chat title",
-    "lastMessageAt": "2026-10-12T10:00:00.000Z"
+    "lastMessageAt": 1791806400000
   }
 }

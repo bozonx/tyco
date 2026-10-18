@@ -28,7 +28,7 @@
             {{ t('settings.selectFolder') }}
           </Button>
           <Button
-            v-if="userConfig.aiProfiles?.vaultPath"
+            v-if="userConfig.aiVault.path"
             size="sm"
             variant="ghost"
             icon="mdi:restore"

@@ -10,7 +10,7 @@ const LOCALES = { en_US, es_AR, ru_RU, tr_TR }
 // Missing keys fail through the vue-i18n warnings the fixture collects.
 for (const [locale, messages] of Object.entries(LOCALES)) {
   test(`main pages render in ${locale}`, async ({ page, desktop }) => {
-    desktop.userConfig.appLanguage = locale
+    desktop.userConfig.language.ui = locale
     await page.goto('/')
     const banner = page.getByRole('banner')
 

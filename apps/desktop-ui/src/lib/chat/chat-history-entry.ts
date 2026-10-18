@@ -3,7 +3,7 @@ import type { Chat, ChatMessage } from '@tyco/shared'
 export function createChatHistoryEntry(params: {
   id: string
   title: string
-  lastMessageAt: string
+  lastMessageAt: number
   messages: ChatMessage[]
 }): Chat {
   return {

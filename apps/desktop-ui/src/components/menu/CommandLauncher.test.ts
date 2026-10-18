@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick, reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { slotsFromList } from '../../lib/shortcut-slots/shortcut-slots'
 
 import type { CommandConfig } from '@tyco/shared'
 
@@ -74,8 +75,9 @@ function mountLauncher(
       launcherPages: () =>
         [[], ...launcherPages].map((slots, index) => ({
           id: `page-${index}`,
-          slots,
           inputMode: 'selection',
+          hotkey: '',
+          slots: slotsFromList(slots),
         })),
       tools: testTools(),
       commands: () => commands,

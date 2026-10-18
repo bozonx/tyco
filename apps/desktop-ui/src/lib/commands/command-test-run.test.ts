@@ -32,7 +32,7 @@ const deps = (
 describe('runCommandTest', () => {
   it('waits for a script and keeps its exit code and stderr', async () => {
     const d = deps()
-    const command = script({ timeoutSec: 5 }, { logOutput: true })
+    const command = script({ timeoutSec: 5 }, { isOutputLogged: true })
     const result = await runCommandTest(
       command,
       'hi',

@@ -136,7 +136,7 @@ fn scope_chats_dir(
                 app,
                 &state.snapshot().settings.user_config,
             )?;
-            crate::services::ai_vault::profile_history_dir(&vault_root, profile_id)
+            crate::services::ai_vault::profile_chats_dir(&vault_root, profile_id)
         }
     }
 }

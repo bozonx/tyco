@@ -6,16 +6,12 @@ import type { FakeDesktop } from './fake-desktop'
 /** Native microphone and sherpa socket controlled independently by the test. */
 export function installVoice(desktop: FakeDesktop) {
   desktop.userConfig.stt = {
-    selectedModelId: 'browser-speech',
-    models: [
-      {
-        id: 'browser-speech',
-        provider: 'sherpa-onnx',
-        providerModelId: 'streaming',
-        baseUrl: 'ws://speech.invalid:6006',
-        formatWithLlm: false,
-      },
-    ],
+    providerId: 'sherpaOnnx',
+    isLlmFormattingEnabled: false,
+    providers: {
+      deepgram: { modelId: 'nova-3', language: 'auto' },
+      sherpaOnnx: { baseUrl: 'ws://speech.invalid:6006' },
+    },
   }
   let audio: DesktopChannel | undefined
   let socket: DesktopChannel | undefined

@@ -97,13 +97,6 @@ const COMMAND_FIELDS = FIELDS.filter(
   (field) => field.name !== 'clearInputAfterSave'
 )
 
-/** The settings of the former daily item of the menu */
-const APPEND_DAILY: Partial<FastNoteConfig> = {
-  saveMode: 'append',
-  fileNameTemplate: '{YYYY}-{MM}-{DD}.md',
-  contentTemplate: '- **{HH}:{mm}**: {content}',
-}
-
 export default function pluginIndex(): PluginDefinition {
   return {
     id: 'FastNote',
@@ -126,21 +119,6 @@ export default function pluginIndex(): PluginDefinition {
           'Saves the text as a new note, or appends it to a note, in the notes folder of the user',
         inputSchema: TEXT_INPUT_SCHEMA,
         configFields: COMMAND_FIELDS,
-        defaultCommands: [
-          {
-            id: 'note',
-            nameKey: 'local.label',
-            phrasesKey: 'local.notePhrases',
-            menu: { preferredKey: 'c' },
-          },
-          {
-            id: 'daily',
-            nameKey: 'local.actionAppendDaily',
-            phrasesKey: 'local.dailyPhrases',
-            toolConfig: { ...APPEND_DAILY },
-            menu: { preferredKey: 'd' },
-          },
-        ],
         run: async ({
           input,
           config,

@@ -1,6 +1,5 @@
 import type { CoreToolId, LlmTask } from '@tyco/shared'
 
-import { getLanguageLabelKey } from '../locale/language'
 import {
   TEXT_INPUT_SCHEMA,
   type ToolCall,
@@ -52,13 +51,6 @@ const textOf = (call: ToolCall): string =>
 
 const stringOf = (value: unknown): string =>
   typeof value === 'string' ? value.trim() : ''
-
-/** Phrases of a default command, one per line of the translated text */
-const phrasesOf = (text: string): string[] =>
-  text
-    .split('\n')
-    .map((phrase) => phrase.trim())
-    .filter(Boolean)
 
 const noText: ToolResult = {
   ok: false,
@@ -150,13 +142,6 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     icon: 'mdi:chat-processing-outline',
     description: 'Opens the chat of the app with the text attached',
     inputSchema: TEXT_INPUT_SCHEMA,
-    defaultCommands: ({ t }) => [
-      {
-        id: 'ask',
-        name: t('tools.defaultAskInChat'),
-        phrases: phrasesOf(t('tools.defaultAskInChatPhrases')),
-      },
-    ],
     run: async (call) => {
       const text = textOf(call)
       if (!text.trim()) return noText
@@ -177,13 +162,6 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
         'Corrects spelling, grammar and punctuation of the text with the LLM',
       getUnavailableReasonKey: () =>
         deps.getLlmUnavailableReasonKey('correction'),
-      defaultCommands: ({ t }) => [
-        {
-          id: 'fix',
-          name: t('tools.defaultCorrect'),
-          phrases: phrasesOf(t('tools.defaultCorrectPhrases')),
-        },
-      ],
     },
     (call, text) => deps.correctText(text, call.signal)
   )
@@ -198,23 +176,6 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       description:
         'Translates the text into the language of the command; `sourceLanguage` of the config skips detecting it',
       getUnavailableReasonKey: () => deps.getTranslatorUnavailableReasonKey(),
-      // one per translation language set at the time; a language added
-      // later gets a command only when the user makes one
-      defaultCommands: ({ userConfig, t }) =>
-        [...new Set(userConfig.translation.targetLanguages)].flatMap(
-          (language) =>
-            language
-              ? [
-                  {
-                    id: language,
-                    name: t('tools.defaultTranslate', {
-                      language: t(getLanguageLabelKey(language)),
-                    }),
-                    toolConfig: { language },
-                  },
-                ]
-              : []
-        ),
     },
     (call, text) => {
       const language = stringOf(call.config.language)
@@ -239,7 +200,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       icon: 'mdi:robot-outline',
       description:
         'Applies the instruction of the command to the text with the LLM',
-      getUnavailableReasonKey: () => deps.getLlmUnavailableReasonKey('aiTasks'),
+      getUnavailableReasonKey: () => deps.getLlmUnavailableReasonKey('aiTask'),
     },
     (call, text) => {
       const prompt = stringOf(call.config.prompt)

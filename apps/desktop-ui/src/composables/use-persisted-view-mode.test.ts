@@ -4,7 +4,7 @@ import { nextTick, reactive } from 'vue'
 import { usePersistedDiffMode } from './use-persisted-view-mode'
 
 const mocks = vi.hoisted(() => ({
-  userConfig: {} as { diffViewMode?: string },
+  userConfig: {} as { editor: { diffViewMode?: string } },
   updateUserConfig: vi.fn(),
 }))
 
@@ -19,18 +19,18 @@ vi.mock('../stores/desktop', () => ({
 
 describe('usePersistedDiffMode', () => {
   it('stores a picked mode and follows a mode stored elsewhere', async () => {
-    mocks.userConfig = reactive({ diffViewMode: 'unified' })
+    mocks.userConfig = reactive({ editor: { diffViewMode: 'unified' } })
     const { diffMode, cycleMode } = usePersistedDiffMode()
     expect(diffMode.value).toBe('unified')
 
     cycleMode()
     await nextTick()
     expect(mocks.updateUserConfig).toHaveBeenCalledWith({
-      diffViewMode: diffMode.value,
+      editor: { diffViewMode: diffMode.value },
     })
 
     mocks.updateUserConfig.mockClear()
-    mocks.userConfig.diffViewMode = 'result'
+    mocks.userConfig.editor.diffViewMode = 'result'
     await nextTick()
     expect(diffMode.value).toBe('result')
     // the mode came from the settings: nothing to store

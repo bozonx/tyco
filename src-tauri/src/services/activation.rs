@@ -115,14 +115,17 @@ pub enum ActivationSource {
     Ui,
 }
 
+const LAUNCHER_PAGE_MODE_PREFIX: &str = "commandLauncher:";
+
 #[derive(Debug)]
 pub struct Activation {
     pub mode: ActivationMode,
     pub source: ActivationSource,
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
-    /// The command the command overlay opens with, for an external call.
-    pub launcher_page_index: usize,
+    /// The page of `launcherPages` the command overlay opens on; `None` for
+    /// the first one.
+    pub launcher_page_id: Option<String>,
     pub launcher_request: Option<LauncherRequest>,
     /// What the access prompt asks about, see `external_access`.
     pub access_request: Option<AccessRequest>,
@@ -135,27 +138,29 @@ impl Activation {
             source,
             target_window_id: None,
             selected_text: None,
-            launcher_page_index: 0,
+            launcher_page_id: None,
             launcher_request: None,
             access_request: None,
         }
     }
 
+    /// A mode, or `commandLauncher:<page id>` for a page of the command
+    /// overlay.
     pub fn from_mode(value: &str, source: ActivationSource) -> Result<Self, AppError> {
-        if let Some(page) = value
-            .strip_prefix("commandLauncher")
-            .filter(|page| !page.is_empty())
-        {
-            let page = page
-                .parse::<usize>()
-                .ok()
-                .filter(|page| *page > 0)
-                .ok_or_else(|| AppError::Message("Invalid command page".into()))?;
+        if let Some(page_id) = value.strip_prefix(LAUNCHER_PAGE_MODE_PREFIX) {
+            if page_id.trim().is_empty() {
+                return Err(AppError::Message("Invalid command page".into()));
+            }
             let mut activation = Self::new(ActivationMode::CommandLauncher, source);
-            activation.launcher_page_index = page - 1;
+            activation.launcher_page_id = Some(page_id.to_owned());
             return Ok(activation);
         }
         Ok(Self::new(ActivationMode::parse(value)?, source))
+    }
+
+    /// The mode string that opens the command overlay on `page_id`.
+    pub fn launcher_page_mode(page_id: &str) -> String {
+        format!("{LAUNCHER_PAGE_MODE_PREFIX}{page_id}")
     }
 
     /// Whether the activation takes the selection of the window it was made
@@ -168,7 +173,12 @@ impl Activation {
         if self.mode != ActivationMode::CommandLauncher || self.launcher_request.is_some() {
             return true;
         }
-        user_config["launcherPages"][self.launcher_page_index]["inputMode"] != "none"
+        let pages = user_config["launcherPages"].as_array();
+        let page = match &self.launcher_page_id {
+            Some(id) => pages.and_then(|pages| pages.iter().find(|page| page["id"] == **id)),
+            None => pages.and_then(|pages| pages.first()),
+        };
+        page.is_none_or(|page| page["inputMode"] != "none")
     }
 
     /// Whether this activation confirms the voice input it would open, instead
@@ -217,9 +227,10 @@ mod tests {
         let page = |mode: &str| Activation::from_mode(mode, ActivationSource::Ui).unwrap();
         assert!(!page("voiceCommands").can_take_selection(&config));
         assert!(!page("commandLauncher").can_take_selection(&config));
-        assert!(page("commandLauncher2").can_take_selection(&config));
-        assert!(!page("commandLauncher3").can_take_selection(&config));
-        assert!(page("commandLauncher3").can_take_selection(&json!({})));
+        assert!(page("commandLauncher:second").can_take_selection(&config));
+        assert!(!page("commandLauncher:third").can_take_selection(&config));
+        assert!(page("commandLauncher:third").can_take_selection(&json!({})));
+        assert!(page("commandLauncher:removed").can_take_selection(&config));
         assert!(page("translate").can_take_selection(&config));
     }
 
@@ -252,15 +263,21 @@ mod tests {
 
     #[test]
     fn command_pages_parse_without_changing_the_overlay_mode() {
-        let activation = Activation::from_mode("commandLauncher5", ActivationSource::Ui).unwrap();
+        let activation =
+            Activation::from_mode("commandLauncher:work", ActivationSource::Ui).unwrap();
         assert_eq!(activation.mode, ActivationMode::CommandLauncher);
-        assert_eq!(activation.launcher_page_index, 4);
-        assert!(Activation::from_mode("commandLauncher0", ActivationSource::Ui).is_err());
+        assert_eq!(activation.launcher_page_id.as_deref(), Some("work"));
         assert_eq!(
-            Activation::from_mode("commandLauncher42", ActivationSource::Ui)
+            Activation::launcher_page_mode("work"),
+            "commandLauncher:work"
+        );
+        assert!(Activation::from_mode("commandLauncher:", ActivationSource::Ui).is_err());
+        assert!(Activation::from_mode("commandLauncher2", ActivationSource::Ui).is_err());
+        assert_eq!(
+            Activation::from_mode("commandLauncher", ActivationSource::Ui)
                 .unwrap()
-                .launcher_page_index,
-            41
+                .launcher_page_id,
+            None
         );
     }
 

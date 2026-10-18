@@ -1,6 +1,7 @@
 import { clonePluginValue } from '@tyco/plugin-sdk'
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 
+import type { PluginEntryConfig } from '@tyco/shared'
 import type { PluginFactory } from '../../types/plugins'
 import { resolveSortableChecklist } from '@tyco/plugin-sdk'
 
@@ -8,14 +9,22 @@ export function pluginId(plugin: ReturnType<PluginFactory>): string {
   return plugin.id
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+
+/** The saved entry of the plugin, a copy; a disabled one without settings when there is none */
 export function getPluginState(
   plugin: ReturnType<PluginFactory>,
   states: Record<string, unknown> = {}
-): Record<string, unknown> {
+): PluginEntryConfig {
   const value = states[plugin.id]
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (clonePluginValue(value) as Record<string, unknown>)
-    : {}
+  const entry = isRecord(value) ? value : {}
+  return {
+    isEnabled: entry.isEnabled === true,
+    settings: isRecord(entry.settings)
+      ? (clonePluginValue(entry.settings) as Record<string, unknown>)
+      : {},
+  }
 }
 
 function validField(field: InputConfigItem, value: unknown): boolean {
@@ -103,8 +112,10 @@ export function applyPluginDefaults(
       const plugin = factory()
       if (plugin._loadError) continue
       const state = getPluginState(plugin, states)
-      const config = resolvePluginConfig(plugin, state)
-      result[pluginId(plugin)] = { ...config, enabled: state.enabled === true }
+      result[pluginId(plugin)] = {
+        isEnabled: state.isEnabled,
+        settings: resolvePluginConfig(plugin, state.settings),
+      }
     } catch {
       // Preserve settings for a broken package; the runtime reports the error.
     }

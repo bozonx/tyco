@@ -15,7 +15,7 @@ export function modelContextWindowTokens(
 ): number {
   if (model.contextWindowTokens !== undefined) return model.contextWindowTokens
   return providers.find((provider) => provider.id === model.providerId)
-    ?.type === 'openai-compatible'
+    ?.type === 'openaiCompatible'
     ? DEFAULT_CONTEXT_WINDOW_TOKENS
     : 128_000
 }
@@ -69,7 +69,7 @@ export function buildProviderFactories(
 ): Record<string, ProviderFactory> {
   return Object.fromEntries(
     config.providers
-      .filter((provider) => provider.type === 'openai-compatible')
+      .filter((provider) => provider.type === 'openaiCompatible')
       .map((provider): [string, ProviderFactory] => [
         provider.id,
         ({ apiKey, modelId, baseUrl, fetch }) =>
@@ -93,7 +93,7 @@ export function usableModels(config: LlmConfig) {
   return config.models.flatMap((model) => {
     const provider = providers.get(model.providerId)
     if (!provider || !model.providerModelId.trim()) return []
-    if (provider.type === 'openai-compatible' && !isHttpUrl(provider.baseUrl)) {
+    if (provider.type === 'openaiCompatible' && !isHttpUrl(provider.baseUrl)) {
       return []
     }
     return [{ model, provider }]
@@ -123,14 +123,14 @@ export function supportsTools(
 ): boolean {
   if (model.canUseTools !== undefined) return model.canUseTools
   const provider = providers.find((item) => item.id === model.providerId)
-  return provider !== undefined && provider.type !== 'openai-compatible'
+  return provider !== undefined && provider.type !== 'openaiCompatible'
 }
 
 function toDefinition(
   model: LlmModel,
   provider: LlmProvider
 ): ModelDefinitionInput {
-  const custom = provider.type === 'openai-compatible'
+  const custom = provider.type === 'openaiCompatible'
 
   return {
     name: model.id,

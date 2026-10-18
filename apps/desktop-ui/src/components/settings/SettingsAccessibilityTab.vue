@@ -24,7 +24,7 @@
     </FieldRow>
     <FieldRow :label="t('settings.uiScale')">
       <FieldSelect
-        :model-value="appearance.uiScale"
+        :model-value="appearance.uiScalePercent"
         :options="uiScaleOptions"
         @update:model-value="updateUiScale"
       />
@@ -77,7 +77,7 @@ const updateUiScale = (value: string | number | undefined) => {
   const scale = Number(value)
 
   if (isUiScale(scale)) {
-    setAppearance({ uiScale: scale })
+    setAppearance({ uiScalePercent: scale })
   }
 }
 function updateContrast(value: string | number | undefined) {

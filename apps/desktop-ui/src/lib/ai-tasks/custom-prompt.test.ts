@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 import {
   addTaskFromPrompt,
@@ -30,27 +31,27 @@ describe('addTaskFromPrompt', () => {
   it('fills the first free slot', () => {
     expect(
       addTaskFromPrompt(
-        [{ id: 'task-1', name: 'a', rule: 'A' }, null],
-        'Be brief',
-        15
+        { w: { id: 'task-1', name: 'a', rule: 'A' } },
+        'Be brief'
       )
-    ).toEqual([
-      { id: 'task-1', name: 'a', rule: 'A' },
-      { id: 'task-2', name: 'Be brief', rule: 'Be brief' },
-    ])
+    ).toEqual({
+      q: { id: 'task-2', name: 'Be brief', rule: 'Be brief' },
+      w: { id: 'task-1', name: 'a', rule: 'A' },
+    })
   })
 
-  it('appends while there are slots and refuses when all are taken', () => {
-    expect(addTaskFromPrompt([], 'Be brief', 1)).toEqual([
-      { id: 'task-1', name: 'Be brief', rule: 'Be brief' },
-    ])
-    expect(
-      addTaskFromPrompt([{ id: 'task-1', name: 'a', rule: 'A' }], 'Be brief', 1)
-    ).toBe(null)
+  it('refuses when all slots are taken', () => {
+    const full = Object.fromEntries(
+      SHORTCUT_SLOT_KEYS.map((key, index) => [
+        key,
+        { id: `task-${index}`, name: key, rule: key },
+      ])
+    )
+    expect(addTaskFromPrompt(full, 'Be brief')).toBe(null)
   })
 
   it('does not save the same request twice', () => {
-    const tasks = [{ id: 'task-1', name: 'Be brief', rule: 'Be brief' }]
-    expect(addTaskFromPrompt(tasks, ' Be brief ', 15)).toEqual(tasks)
+    const tasks = { q: { id: 'task-1', name: 'Be brief', rule: 'Be brief' } }
+    expect(addTaskFromPrompt(tasks, ' Be brief ')).toEqual(tasks)
   })
 })

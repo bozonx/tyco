@@ -118,7 +118,7 @@ fn a_created_profile_has_its_folders_and_soul() {
     create_profile(&vault_root, profile("writer", 1000), "# Writer\n").unwrap();
 
     let dir = vault_root.join("profiles").join("writer");
-    assert!(dir.join("history").is_dir());
+    assert!(dir.join("chats").is_dir());
     for sub in ["uploads", "generated", "downloads"] {
         assert!(dir.join("workspace").join(sub).is_dir());
     }
@@ -161,7 +161,7 @@ fn saving_never_brings_back_a_deleted_profile() {
 
     assert!(save_profile(&vault_root, profile("writer", 1000)).is_err());
     assert!(write_profile_soul(&vault_root, "writer", "soul").is_err());
-    assert!(profile_history_dir(&vault_root, "writer").is_err());
+    assert!(profile_chats_dir(&vault_root, "writer").is_err());
     assert!(!vault_root.join("profiles").join("writer").exists());
 }
 

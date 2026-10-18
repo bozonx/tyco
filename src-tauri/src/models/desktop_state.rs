@@ -23,8 +23,9 @@ pub struct ActivationSnapshot {
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
     pub mode: Option<ActivationMode>,
-    #[serde(rename = "launcherPage")]
-    pub launcher_page_index: usize,
+    /// The page of `launcherPages` the command overlay opens on; `None` for
+    /// the first one.
+    pub launcher_page_id: Option<String>,
     pub launcher_request: Option<LauncherRequest>,
     pub access_request: Option<AccessRequest>,
 }

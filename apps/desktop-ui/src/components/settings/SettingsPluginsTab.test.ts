@@ -71,8 +71,8 @@ describe('SettingsPluginsTab.vue', () => {
   it('renders all installed plugins with toggle checkboxes without field config', () => {
     const userConfig = {
       plugins: {
-        PluginWithConfig: { enabled: true, apiKey: 'my-key' },
-        PluginWithoutConfig: { enabled: false },
+        PluginWithConfig: { isEnabled: true, settings: { apiKey: 'my-key' } },
+        PluginWithoutConfig: { isEnabled: false, settings: {} },
       },
     }
 
@@ -120,7 +120,8 @@ describe('SettingsPluginsTab.vue', () => {
     await toggleBtn.trigger('click')
 
     expect(context.draft.value.plugins.PluginWithConfig).toEqual({
-      enabled: false,
+      isEnabled: false,
+      settings: {},
     })
     expect(context.navigate).not.toHaveBeenCalled()
   })

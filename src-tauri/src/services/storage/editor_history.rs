@@ -11,7 +11,7 @@ const EDITOR_HISTORY_FILE: &str = "editor-history.jsonl";
 pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 100;
 
 fn editor_history_path(app: &AppHandle) -> Result<PathBuf, AppError> {
-    Ok(app_data_sub_dir(app, "history")?.join(EDITOR_HISTORY_FILE))
+    Ok(app_data_dir(app)?.join(EDITOR_HISTORY_FILE))
 }
 
 fn remove_editor_history_files(path: &Path) -> Result<(), AppError> {

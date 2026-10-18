@@ -145,9 +145,9 @@
         <div class="command-field-row">
           <template v-if="tool?.logsOutput">
             <FieldSwitch
-              :model-value="command.logOutput"
+              :model-value="command.isOutputLogged"
               :label="t('settings.actionLogOutput')"
-              @update:model-value="update({ logOutput: $event })"
+              @update:model-value="update({ isOutputLogged: $event })"
             />
             <InfoTooltip :text="t('settings.actionLogOutputInfo')" />
           </template>
@@ -207,7 +207,6 @@ import {
   normalizeCommandName,
 } from '../../lib/commands/command-external'
 import {
-  commandAddedBy,
   commandLabel,
   commandTool,
   commandUnavailableReason,
@@ -314,15 +313,12 @@ const backgroundScript = computed(
     props.command.launcherAfterRun.action === 'none'
 )
 
-/** Who added a default command and which tool it runs */
-const origin = computed(() => {
-  const owner = commandAddedBy(props.command, toolsStore)
-  const label = tool.value ? toolLabel(tool.value, t) : props.command.toolId
-  if (!owner) return t('commands.toolInfo', { tool: label })
-  return owner.kind === 'plugin'
-    ? t('commands.toolInfoPlugin', { tool: label, name: owner.pluginId })
-    : t('commands.toolInfoApp', { tool: label })
-})
+/** Which tool the command runs */
+const origin = computed(() =>
+  t('commands.toolInfo', {
+    tool: tool.value ? toolLabel(tool.value, t) : props.command.toolId,
+  })
+)
 
 /** Shown open when one of its settings is set, so it is not missed */
 const isTestOpen = ref(false)
@@ -331,7 +327,7 @@ const advancedBodyId = useId()
 const isAdvancedOpen = ref(
   Boolean(props.command.description) ||
     Boolean(scriptConfig.value.timeoutSec) ||
-    props.command.logOutput ||
+    props.command.isOutputLogged ||
     props.command.availableIn.external
 )
 

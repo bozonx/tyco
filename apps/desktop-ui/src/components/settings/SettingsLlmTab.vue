@@ -204,7 +204,7 @@ const modelOptions = computed(() =>
         Boolean(model.providerModelId.trim()) &&
         Boolean(
           provider &&
-          (provider.type !== 'openai-compatible' ||
+          (provider.type !== 'openaiCompatible' ||
             httpOrigin(provider.baseUrl))
         )
       )

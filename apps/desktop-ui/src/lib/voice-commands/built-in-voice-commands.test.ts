@@ -31,7 +31,7 @@ describe('built-in voice commands', () => {
     expect(
       commands.every(
         (item) =>
-          item.enabled &&
+          item.isEnabled &&
           item.isVoiceEnabled &&
           item.voiceConfirmation === 'always'
       )

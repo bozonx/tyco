@@ -109,7 +109,7 @@ describe('script commands', () => {
     const executeScriptAction = vi.fn().mockResolvedValue(result())
     const { deps, runner } = setup({ executeScriptAction })
     const outcome = await runner.run(
-      script({ workingDirectory: ' /tmp ' }, { logOutput: true }),
+      script({ workingDirectory: ' /tmp ' }, { isOutputLogged: true }),
       'input'
     )
 
@@ -226,7 +226,7 @@ describe('webhook commands', () => {
   it('calls the webhook under the id of the command', async () => {
     const executeWebhook = vi.fn().mockResolvedValue('')
     const { deps, runner } = setup({ executeWebhook })
-    await runner.run(webhook({ method: 'GET' }, { logOutput: true }), 'x')
+    await runner.run(webhook({ method: 'GET' }, { isOutputLogged: true }), 'x')
     expect(executeWebhook).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'wh-1',
@@ -282,7 +282,7 @@ describe('commands that cannot run', () => {
   it('does not run a disabled command', async () => {
     const executeScriptAction = vi.fn()
     const { deps, runner } = setup({ executeScriptAction })
-    const outcome = await runner.run(script({}, { enabled: false }), 'x')
+    const outcome = await runner.run(script({}, { isEnabled: false }), 'x')
     expect(outcome.success).toBe(false)
     expect(executeScriptAction).not.toHaveBeenCalled()
     expect(deps.showToast).toHaveBeenCalledWith('toast.commandDisabled', 'warn')
@@ -593,7 +593,7 @@ describe('the output of a command', () => {
     ).toEqual({ ok: true, content: 'Hello' })
     expect(
       await runner.transform(
-        { ...command('insertIntoWindow'), enabled: false },
+        { ...command('insertIntoWindow'), isEnabled: false },
         'hola'
       )
     ).toMatchObject({ ok: false, messageKey: 'toast.commandDisabled' })

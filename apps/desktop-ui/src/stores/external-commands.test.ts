@@ -46,7 +46,7 @@ describe('external commands store wiring', () => {
     const cmd: CommandConfig = {
       id: 'cmd-ext',
       name: 'External Command',
-      enabled: true,
+      isEnabled: true,
       toolId: 'mock.tool',
       toolConfig: {},
       phrases: [],
@@ -54,7 +54,7 @@ describe('external commands store wiring', () => {
       isVoiceEnabled: false,
       voiceConfirmation: 'always',
       launcherAfterRun: { action: 'none' },
-      logOutput: false,
+      isOutputLogged: false,
       availableIn: { external: true, chat: false },
     }
 

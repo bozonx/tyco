@@ -2,7 +2,19 @@
   {
     "name": "fractional counts and invalid speech fields",
     "input": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -11,42 +23,34 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
-        "translate": ""
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F"
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -56,7 +60,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -99,25 +103,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -136,77 +140,37 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1.5,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": "yes",
-            "language": "auto",
-            "providerModelId": 42
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ]
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": 42, "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": "yes"
+      }
     },
     "expected": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -215,43 +179,35 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
         "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -261,7 +217,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -304,25 +260,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -341,80 +297,41 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": ""
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
       },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ]
+      "aiVault": {}
     }
   },
   {
     "name": "duplicate models and dangling task references",
     "input": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -423,42 +340,34 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
-        "translate": ""
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F"
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -468,7 +377,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -520,25 +429,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["missing", "local-qwen", "local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["missing", "local-qwen", "local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -557,77 +466,37 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ]
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      }
     },
     "expected": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -636,43 +505,35 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
         "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -682,7 +543,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -725,25 +586,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -762,80 +623,41 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
       },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ]
+      "aiVault": {}
     }
   },
   {
     "name": "dangling menu slots and pages",
     "input": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -844,380 +666,310 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
-        "translate": ""
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F"
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "command", "commandId": "missing" },
-        { "type": "aiTask", "taskId": "missing" },
-        { "type": "launcherPage", "pageId": "page-2" }
-      ],
-      "commands": [],
-      "llm": {
-        "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
-          {
-            "id": "local",
-            "type": "openai-compatible",
-            "name": "Ollama",
-            "baseUrl": "http://localhost:11434/v1"
-          }
-        ],
-        "models": [
-          {
-            "id": "local-qwen",
-            "providerId": "local",
-            "providerModelId": "qwen2.5:7b",
-            "name": "Qwen 2.5 7B",
-            "temperature": 0.2,
-            "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
-          },
-          {
-            "id": "gemini-flash",
-            "providerId": "google",
-            "providerModelId": "gemini-3.8-flash",
-            "name": "Gemini 3.8 Flash",
-            "temperature": 1,
-            "contextWindowTokens": 128000,
-            "canUseImages": true
-          },
-          {
-            "id": "deepseek-chat",
-            "providerId": "deepseek",
-            "providerModelId": "deepseek-flash",
-            "name": "DeepSeek Flash",
-            "temperature": 0.2,
-            "contextWindowTokens": 128000
-          },
-          {
-            "id": "openrouter-gpt-4-1-mini",
-            "providerId": "openrouter",
-            "providerModelId": "openai/gpt-4.1-mini",
-            "name": "GPT-4.1 mini",
-            "temperature": 0.2,
-            "contextWindowTokens": 128000,
-            "canUseImages": true
-          }
-        ],
-        "taskModelChains": {
-          "translate": ["local-qwen"],
-          "voiceCorrection": ["local-qwen"],
-          "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
-        }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
-      },
-      "aiTasks": [
-        {
-          "id": "deepEdit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "markdown": {
-        "bullet": "-",
-        "emphasis": "*",
-        "strong": "*",
-        "headingStyle": "atx",
-        "incrementListMarker": true
-      },
-      "markdownClean": {
-        "bullet": "-",
-        "codeBlockIndent": "none",
-        "blockquoteIndent": "none",
-        "keepInlineCode": false,
-        "linkFormat": "text",
-        "imageFormat": "alt",
-        "keepThematicBreaks": true,
-        "keepTaskCheckboxes": true
-      },
-      "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
-      "editorHistory": {
-        "storage": "disk",
-        "maxItems": 1000,
-        "retentionDays": 30,
-        "sanitizeSecrets": true
-      },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
-      "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
-      },
-      "launcherPages": [
-        { "id": "main", "slots": ["missing", null], "inputMode": "none" }
-      ]
-    },
-    "expected": {
-      "externalAccess": { "selection": false },
-      "hotkeys": {
-        "editor": "",
-        "write": "",
-        "chat": "",
-        "voiceChat": "",
-        "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
-        "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
-        "correction": "",
-        "translate": "",
-        "voiceCommands": ""
-      },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
-      "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
-      },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
-      "translation": {
-        "provider": "llm",
-        "qualityGate": "off",
-        "deeplEndpoint": "free",
-        "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
-      },
-      "mainActions": [null, null, null],
-      "commands": [],
-      "llm": {
-        "providers": [
-          { "id": "google", "type": "google", "name": "Google Gemini" },
-          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
-          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
-          {
-            "id": "local",
-            "type": "openai-compatible",
-            "name": "Ollama",
-            "baseUrl": "http://localhost:11434/v1"
-          }
-        ],
-        "models": [
-          {
-            "id": "local-qwen",
-            "providerId": "local",
-            "providerModelId": "qwen2.5:7b",
-            "name": "Qwen 2.5 7B",
-            "temperature": 0.2,
-            "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
-          },
-          {
-            "id": "gemini-flash",
-            "providerId": "google",
-            "providerModelId": "gemini-3.8-flash",
-            "name": "Gemini 3.8 Flash",
-            "temperature": 1,
-            "contextWindowTokens": 128000,
-            "canUseImages": true
-          },
-          {
-            "id": "deepseek-chat",
-            "providerId": "deepseek",
-            "providerModelId": "deepseek-flash",
-            "name": "DeepSeek Flash",
-            "temperature": 0.2,
-            "contextWindowTokens": 128000
-          },
-          {
-            "id": "openrouter-gpt-4-1-mini",
-            "providerId": "openrouter",
-            "providerModelId": "openai/gpt-4.1-mini",
-            "name": "GPT-4.1 mini",
-            "temperature": 0.2,
-            "contextWindowTokens": 128000,
-            "canUseImages": true
-          }
-        ],
-        "taskModelChains": {
-          "translate": ["local-qwen"],
-          "voiceCorrection": ["local-qwen"],
-          "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
-        }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
-      },
-      "aiTasks": [
-        {
-          "id": "deepEdit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "markdown": {
-        "bullet": "-",
-        "emphasis": "*",
-        "strong": "*",
-        "headingStyle": "atx",
-        "incrementListMarker": true
-      },
-      "markdownClean": {
-        "bullet": "-",
-        "codeBlockIndent": "none",
-        "blockquoteIndent": "none",
-        "keepInlineCode": false,
-        "linkFormat": "text",
-        "imageFormat": "alt",
-        "keepThematicBreaks": true,
-        "keepTaskCheckboxes": true
-      },
-      "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
-      "editorHistory": {
-        "storage": "disk",
-        "maxItems": 1000,
-        "retentionDays": 30,
-        "sanitizeSecrets": true
-      },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
-      "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
+      "mainActions": {
+        "q": { "type": "command", "commandId": "missing" },
+        "w": { "type": "aiTask", "taskId": "missing" },
+        "e": { "type": "launcherPage", "pageId": "page-2" }
       },
       "launcherPages": [
         {
           "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "none"
+          "slots": { "q": "missing" },
+          "inputMode": "none",
+          "hotkey": ""
         }
-      ]
+      ],
+      "commands": [],
+      "llm": {
+        "providers": [
+          { "id": "google", "type": "google", "name": "Google Gemini" },
+          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
+          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "local",
+            "type": "openaiCompatible",
+            "name": "Ollama",
+            "baseUrl": "http://localhost:11434/v1"
+          }
+        ],
+        "models": [
+          {
+            "id": "local-qwen",
+            "providerId": "local",
+            "providerModelId": "qwen2.5:7b",
+            "name": "Qwen 2.5 7B",
+            "temperature": 0.2,
+            "contextWindowTokens": 4096,
+            "maxOutputTokens": 1024
+          },
+          {
+            "id": "gemini-flash",
+            "providerId": "google",
+            "providerModelId": "gemini-3.8-flash",
+            "name": "Gemini 3.8 Flash",
+            "temperature": 1,
+            "contextWindowTokens": 128000,
+            "canUseImages": true
+          },
+          {
+            "id": "deepseek-chat",
+            "providerId": "deepseek",
+            "providerModelId": "deepseek-flash",
+            "name": "DeepSeek Flash",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000
+          },
+          {
+            "id": "openrouter-gpt-4-1-mini",
+            "providerId": "openrouter",
+            "providerModelId": "openai/gpt-4.1-mini",
+            "name": "GPT-4.1 mini",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": true
+          }
+        ],
+        "taskModelChains": {
+          "voiceCorrection": ["local-qwen"],
+          "correction": ["local-qwen"],
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
+        }
+      },
+      "aiRules": {
+        "chat": "",
+        "correction": "",
+        "voiceCorrection": "",
+        "translation": ""
+      },
+      "aiTasks": {
+        "q": {
+          "id": "deepEdit",
+          "name": "deepEdit",
+          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+        }
+      },
+      "markdown": {
+        "bullet": "-",
+        "emphasis": "*",
+        "strong": "*",
+        "headingStyle": "atx",
+        "incrementListMarker": true
+      },
+      "markdownClean": {
+        "bullet": "-",
+        "codeBlockIndent": "none",
+        "blockquoteIndent": "none",
+        "keepInlineCode": false,
+        "linkFormat": "text",
+        "imageFormat": "alt",
+        "keepThematicBreaks": true,
+        "keepTaskCheckboxes": true
+      },
+      "plugins": {},
+      "editorHistory": {
+        "storage": "disk",
+        "maxItems": 1000,
+        "retentionDays": 30,
+        "isSecretSanitizingEnabled": true
+      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
+      "stt": {
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      }
+    },
+    "expected": {
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
+      "hotkeys": {
+        "editor": "",
+        "write": "",
+        "chat": "",
+        "voiceChat": "",
+        "voice": "Ctrl+Alt+V",
+        "select": "Ctrl+Alt+S",
+        "aiTasks": "",
+        "correction": "",
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
+        "voiceCommands": ""
+      },
+      "externalAccess": { "canAccessSelection": false },
+      "windowInsertion": {
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+      },
+      "translation": {
+        "provider": "llm",
+        "qualityGate": "off",
+        "deeplEndpoint": "free",
+        "glossary": [],
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
+      },
+      "mainActions": {},
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "none", "hotkey": "" }
+      ],
+      "commands": [],
+      "llm": {
+        "providers": [
+          { "id": "google", "type": "google", "name": "Google Gemini" },
+          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
+          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "local",
+            "type": "openaiCompatible",
+            "name": "Ollama",
+            "baseUrl": "http://localhost:11434/v1"
+          }
+        ],
+        "models": [
+          {
+            "id": "local-qwen",
+            "providerId": "local",
+            "providerModelId": "qwen2.5:7b",
+            "name": "Qwen 2.5 7B",
+            "temperature": 0.2,
+            "contextWindowTokens": 4096,
+            "maxOutputTokens": 1024
+          },
+          {
+            "id": "gemini-flash",
+            "providerId": "google",
+            "providerModelId": "gemini-3.8-flash",
+            "name": "Gemini 3.8 Flash",
+            "temperature": 1,
+            "contextWindowTokens": 128000,
+            "canUseImages": true
+          },
+          {
+            "id": "deepseek-chat",
+            "providerId": "deepseek",
+            "providerModelId": "deepseek-flash",
+            "name": "DeepSeek Flash",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000
+          },
+          {
+            "id": "openrouter-gpt-4-1-mini",
+            "providerId": "openrouter",
+            "providerModelId": "openai/gpt-4.1-mini",
+            "name": "GPT-4.1 mini",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": true
+          }
+        ],
+        "taskModelChains": {
+          "voiceCorrection": ["local-qwen"],
+          "correction": ["local-qwen"],
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
+        }
+      },
+      "aiRules": {
+        "chat": "",
+        "correction": "",
+        "voiceCorrection": "",
+        "translation": ""
+      },
+      "aiTasks": {
+        "q": {
+          "id": "deepEdit",
+          "name": "deepEdit",
+          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+        }
+      },
+      "markdown": {
+        "bullet": "-",
+        "emphasis": "*",
+        "strong": "*",
+        "headingStyle": "atx",
+        "incrementListMarker": true
+      },
+      "markdownClean": {
+        "bullet": "-",
+        "codeBlockIndent": "none",
+        "blockquoteIndent": "none",
+        "keepInlineCode": false,
+        "linkFormat": "text",
+        "imageFormat": "alt",
+        "keepThematicBreaks": true,
+        "keepTaskCheckboxes": true
+      },
+      "plugins": {},
+      "editorHistory": {
+        "storage": "disk",
+        "maxItems": 1000,
+        "retentionDays": 30,
+        "isSecretSanitizingEnabled": true
+      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
+      "stt": {
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      },
+      "aiVault": {}
     }
   },
   {
     "name": "opaque plugin settings",
     "input": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -1226,26 +978,15 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
-        "translate": ""
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F"
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -1253,17 +994,20 @@
         "glossary": [
           { "term": "word", "use": "term", "doNotTranslate": "yes" }
         ],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -1273,7 +1017,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -1316,25 +1060,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -1352,78 +1096,43 @@
         "keepThematicBreaks": true,
         "keepTaskCheckboxes": true
       },
-      "plugins": { "Custom": { "enabled": true, "nested": { "count": 3 } } },
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
+      "plugins": {
+        "Custom": {
+          "isEnabled": true,
+          "settings": { "nested": { "count": 3 } }
+        }
       },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ]
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      }
     },
     "expected": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -1432,27 +1141,16 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
         "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
@@ -1460,17 +1158,20 @@
         "glossary": [
           { "term": "word", "use": "term", "doNotTranslate": false }
         ],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -1480,7 +1181,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -1523,25 +1224,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -1559,81 +1260,47 @@
         "keepThematicBreaks": true,
         "keepTaskCheckboxes": true
       },
-      "plugins": { "Custom": { "enabled": true, "nested": { "count": 3 } } },
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
+      "plugins": {
+        "Custom": {
+          "isEnabled": true,
+          "settings": { "nested": { "count": 3 } }
+        }
       },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
       },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ]
+      "aiVault": {}
     }
   },
   {
     "name": "appearance and invalid provider identities",
     "input": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "e-ink",
+        "contrast": "auto",
+        "motion": "reduce",
+        "uiScalePercent": "175"
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -1642,50 +1309,42 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
-        "translate": ""
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F"
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
         "providers": [
-          { "id": "google", "type": "openai-compatible" },
+          { "id": "google", "type": "openaiCompatible" },
           { "id": "Bad Id", "type": "google" },
           { "id": "custom", "type": "google" },
-          { "id": "local", "type": "openai-compatible" }
+          { "id": "local", "type": "openaiCompatible" }
         ],
         "models": [
           {
@@ -1725,25 +1384,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -1762,77 +1421,37 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
+      "editorHistory": {
+        "storage": "disk",
+        "maxItems": 1000,
+        "retentionDays": 30,
+        "isSecretSanitizingEnabled": true
       },
-      "diffViewMode": "unified",
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
+      "stt": {
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      }
+    },
+    "expected": {
       "configVersion": 1,
       "appearance": {
         "theme": "e-ink",
         "contrast": "auto",
         "motion": "reduce",
-        "uiScale": "175"
+        "uiScalePercent": 100
       },
-      "editorHistory": {
-        "storage": "disk",
-        "maxItems": 1000,
-        "retentionDays": 30,
-        "sanitizeSecrets": true
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
-      "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ]
-    },
-    "expected": {
-      "externalAccess": { "selection": false },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -1841,43 +1460,35 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
         "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -1885,7 +1496,7 @@
           { "id": "google", "type": "google", "name": "Google Gemini" },
           { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
-          { "id": "local", "type": "openai-compatible", "baseUrl": "" }
+          { "id": "local", "type": "openaiCompatible", "baseUrl": "" }
         ],
         "models": [
           {
@@ -1923,25 +1534,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -1960,80 +1571,41 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "configVersion": 1,
-      "appearance": {
-        "theme": "e-ink",
-        "contrast": "auto",
-        "motion": "reduce",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
       },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ]
+      "aiVault": {}
     }
   },
   {
     "name": "normalizes page slots and preserves stable page references",
     "input": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -2042,38 +1614,32 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
-        "translate": ""
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F"
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "launcherPage", "pageId": "beta" },
-        { "type": "launcherPage", "pageId": "missing" }
+      "mainActions": {
+        "q": { "type": "launcherPage", "pageId": "beta" },
+        "w": { "type": "launcherPage", "pageId": "missing" }
+      },
+      "launcherPages": [
+        { "id": "alpha", "inputMode": "none", "slots": {}, "hotkey": "" },
+        { "id": "beta", "inputMode": "selection", "slots": {}, "hotkey": "" },
+        { "id": "alpha", "inputMode": "selection", "slots": {}, "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -2083,7 +1649,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -2126,25 +1692,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -2163,81 +1729,37 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
-      },
-      "launcherPages": [
-        { "id": "alpha", "inputMode": "none", "slots": [null] },
-        {
-          "id": "beta",
-          "inputMode": "selection",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ]
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        { "id": "alpha", "inputMode": "selection", "slots": [] }
-      ],
-      "configVersion": 1
+        "isLlmFormattingEnabled": false
+      }
     },
     "expected": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -2246,37 +1768,30 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
         "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [{ "type": "launcherPage", "pageId": "beta" }, null],
+      "mainActions": { "q": { "type": "launcherPage", "pageId": "beta" } },
+      "launcherPages": [
+        { "id": "alpha", "inputMode": "none", "slots": {}, "hotkey": "" },
+        { "id": "beta", "inputMode": "selection", "slots": {}, "hotkey": "" }
+      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -2285,7 +1800,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -2328,25 +1843,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -2365,101 +1880,41 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
-      },
-      "launcherPages": [
-        {
-          "id": "alpha",
-          "inputMode": "none",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ]
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        {
-          "id": "beta",
-          "inputMode": "selection",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ]
-        }
-      ],
-      "configVersion": 1
+        "isLlmFormattingEnabled": false
+      },
+      "aiVault": {}
     }
   },
   {
     "name": "drops unsupported hotkey names",
     "input": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -2468,43 +1923,35 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
         "translate": "",
-        "unknownAction": "Ctrl+Alt+U"
+        "unknownAction": "Ctrl+Alt+U",
+        "selectionCorrection": "Ctrl+Alt+F"
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -2514,7 +1961,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -2557,25 +2004,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -2594,77 +2041,37 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
-        }
-      ],
-      "configVersion": 1
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      }
     },
     "expected": {
-      "externalAccess": { "selection": false },
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
       "hotkeys": {
         "editor": "",
         "write": "",
@@ -2673,43 +2080,35 @@
         "voice": "Ctrl+Alt+V",
         "select": "Ctrl+Alt+S",
         "aiTasks": "",
-        "commandLauncher": "",
-        "commandLauncher2": "",
-        "commandLauncher3": "",
-        "commandLauncher4": "",
-        "commandLauncher5": "",
         "correction": "",
         "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
-      "selectionHotkeys": { "correction": "Ctrl+Alt+F" },
-      "submitKey": "enter",
-      "quickCorrectionPrefetch": false,
-      "quickHideOnBlur": true,
+      "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "method": "xdotool",
-        "xdotoolBin": "/usr/bin/xdotool",
-        "ydotoolBin": "/usr/bin/ydotool",
-        "pasteShortcut": "ctrl+v"
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
       },
-      "appLanguage": "auto",
-      "userLanguage": "auto",
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "deeplEndpoint": "free",
         "glossary": [],
-        "correctionPrompt": "",
-        "targetLanguages": ["en_US"],
-        "viewMode": "split"
+        "targetLanguages": { "q": "en_US" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
       },
-      "mainActions": [
-        { "type": "standard", "actionId": "insertIntoWindow" },
-        { "type": "standard", "actionId": "copyToClipboard" },
-        { "type": "standard", "actionId": "aiTask" },
-        { "type": "standard", "actionId": "correction" },
-        { "type": "standard", "actionId": "translation" },
-        { "type": "standard", "actionId": "askInChat" }
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "w": { "type": "standard", "actionId": "copyToClipboard" },
+        "e": { "type": "standard", "actionId": "aiTask" },
+        "r": { "type": "standard", "actionId": "correction" },
+        "t": { "type": "standard", "actionId": "translation" },
+        "a": { "type": "standard", "actionId": "askInChat" }
+      },
+      "launcherPages": [
+        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
       ],
       "commands": [],
       "llm": {
@@ -2719,7 +2118,7 @@
           { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
           {
             "id": "local",
-            "type": "openai-compatible",
+            "type": "openaiCompatible",
             "name": "Ollama",
             "baseUrl": "http://localhost:11434/v1"
           }
@@ -2762,25 +2161,25 @@
           }
         ],
         "taskModelChains": {
-          "translate": ["local-qwen"],
           "voiceCorrection": ["local-qwen"],
           "correction": ["local-qwen"],
-          "aiTasks": ["local-qwen"]
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
         }
       },
       "aiRules": {
         "chat": "",
         "correction": "",
-        "translate": "",
-        "voiceCorrection": ""
+        "voiceCorrection": "",
+        "translation": ""
       },
-      "aiTasks": [
-        {
+      "aiTasks": {
+        "q": {
           "id": "deepEdit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
-      ],
+      },
       "markdown": {
         "bullet": "-",
         "emphasis": "*",
@@ -2799,74 +2198,336 @@
         "keepTaskCheckboxes": true
       },
       "plugins": {},
-      "registrationState": {
-        "reviewedMainActionIds": [],
-        "seededCommandIds": [],
-        "seededToolIds": []
-      },
-      "diffViewMode": "unified",
-      "appearance": {
-        "theme": "auto",
-        "contrast": "auto",
-        "motion": "auto",
-        "uiScale": 100
-      },
       "editorHistory": {
         "storage": "disk",
         "maxItems": 1000,
         "retentionDays": 30,
-        "sanitizeSecrets": true
+        "isSecretSanitizingEnabled": true
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "isHistoryEnabled": true,
-        "historyRetentionDays": 0
-      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
       "stt": {
-        "models": [
-          {
-            "id": "deepgram-stt",
-            "provider": "deepgram",
-            "description": "Deepgram speech recognition",
-            "formatWithLlm": false,
-            "language": "auto",
-            "providerModelId": "nova-3"
-          },
-          {
-            "id": "sherpa-onnx-stt",
-            "provider": "sherpa-onnx",
-            "description": "Self-hosted sherpa-onnx streaming server",
-            "formatWithLlm": false,
-            "baseUrl": "ws://localhost:6006",
-            "providerModelId": "sherpa-onnx"
-          }
-        ],
-        "selectedModelId": "deepgram-stt"
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      },
+      "aiVault": {}
+    }
+  },
+  {
+    "name": "drops slots under unknown keys, broken items and repeated languages",
+    "input": {
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
+      "hotkeys": {
+        "editor": "",
+        "write": "",
+        "chat": "",
+        "voiceChat": "",
+        "voice": "Ctrl+Alt+V",
+        "select": "Ctrl+Alt+S",
+        "aiTasks": "",
+        "correction": "",
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
+        "voiceCommands": ""
+      },
+      "externalAccess": { "canAccessSelection": false },
+      "windowInsertion": {
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+      },
+      "translation": {
+        "provider": "llm",
+        "qualityGate": "off",
+        "deeplEndpoint": "free",
+        "glossary": [],
+        "targetLanguages": {
+          "q": "en_US",
+          "w": "ru_RU",
+          "e": "en_US",
+          "r": ""
+        },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
+      },
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" },
+        "y": { "type": "standard", "actionId": "askInChat" },
+        "w": { "type": "bogus" },
+        "e": null
       },
       "launcherPages": [
         {
           "id": "main",
-          "slots": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "inputMode": "selection"
+          "inputMode": "selection",
+          "slots": { "q": "missing", "1": "x" }
         }
       ],
-      "configVersion": 1
+      "commands": [],
+      "llm": {
+        "providers": [
+          { "id": "google", "type": "google", "name": "Google Gemini" },
+          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
+          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "local",
+            "type": "openaiCompatible",
+            "name": "Ollama",
+            "baseUrl": "http://localhost:11434/v1"
+          }
+        ],
+        "models": [
+          {
+            "id": "local-qwen",
+            "providerId": "local",
+            "providerModelId": "qwen2.5:7b",
+            "name": "Qwen 2.5 7B",
+            "temperature": 0.2,
+            "contextWindowTokens": 4096,
+            "maxOutputTokens": 1024
+          },
+          {
+            "id": "gemini-flash",
+            "providerId": "google",
+            "providerModelId": "gemini-3.8-flash",
+            "name": "Gemini 3.8 Flash",
+            "temperature": 1,
+            "contextWindowTokens": 128000,
+            "canUseImages": true
+          },
+          {
+            "id": "deepseek-chat",
+            "providerId": "deepseek",
+            "providerModelId": "deepseek-flash",
+            "name": "DeepSeek Flash",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000
+          },
+          {
+            "id": "openrouter-gpt-4-1-mini",
+            "providerId": "openrouter",
+            "providerModelId": "openai/gpt-4.1-mini",
+            "name": "GPT-4.1 mini",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": true
+          }
+        ],
+        "taskModelChains": {
+          "voiceCorrection": ["local-qwen"],
+          "correction": ["local-qwen"],
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
+        }
+      },
+      "aiRules": {
+        "chat": "",
+        "correction": "",
+        "voiceCorrection": "",
+        "translation": ""
+      },
+      "aiTasks": {
+        "q": { "id": "a", "name": "A", "rule": "x" },
+        "w": { "id": "a", "name": "Copy", "rule": "y" },
+        "e": "bogus"
+      },
+      "markdown": {
+        "bullet": "-",
+        "emphasis": "*",
+        "strong": "*",
+        "headingStyle": "atx",
+        "incrementListMarker": true
+      },
+      "markdownClean": {
+        "bullet": "-",
+        "codeBlockIndent": "none",
+        "blockquoteIndent": "none",
+        "keepInlineCode": false,
+        "linkFormat": "text",
+        "imageFormat": "alt",
+        "keepThematicBreaks": true,
+        "keepTaskCheckboxes": true
+      },
+      "plugins": {},
+      "editorHistory": {
+        "storage": "disk",
+        "maxItems": 1000,
+        "retentionDays": 30,
+        "isSecretSanitizingEnabled": true
+      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
+      "stt": {
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      },
+      "aiVault": {}
+    },
+    "expected": {
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
+      "hotkeys": {
+        "editor": "",
+        "write": "",
+        "chat": "",
+        "voiceChat": "",
+        "voice": "Ctrl+Alt+V",
+        "select": "Ctrl+Alt+S",
+        "aiTasks": "",
+        "correction": "",
+        "translate": "",
+        "selectionCorrection": "Ctrl+Alt+F",
+        "voiceCommands": ""
+      },
+      "externalAccess": { "canAccessSelection": false },
+      "windowInsertion": {
+        "pasteShortcut": "ctrl+v",
+        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+      },
+      "translation": {
+        "provider": "llm",
+        "qualityGate": "off",
+        "deeplEndpoint": "free",
+        "glossary": [],
+        "targetLanguages": { "q": "en_US", "w": "ru_RU" },
+        "viewMode": "split",
+        "qualityGatePrompt": ""
+      },
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" }
+      },
+      "launcherPages": [
+        { "id": "main", "inputMode": "selection", "hotkey": "", "slots": {} }
+      ],
+      "commands": [],
+      "llm": {
+        "providers": [
+          { "id": "google", "type": "google", "name": "Google Gemini" },
+          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
+          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "local",
+            "type": "openaiCompatible",
+            "name": "Ollama",
+            "baseUrl": "http://localhost:11434/v1"
+          }
+        ],
+        "models": [
+          {
+            "id": "local-qwen",
+            "providerId": "local",
+            "providerModelId": "qwen2.5:7b",
+            "name": "Qwen 2.5 7B",
+            "temperature": 0.2,
+            "contextWindowTokens": 4096,
+            "maxOutputTokens": 1024
+          },
+          {
+            "id": "gemini-flash",
+            "providerId": "google",
+            "providerModelId": "gemini-3.8-flash",
+            "name": "Gemini 3.8 Flash",
+            "temperature": 1,
+            "contextWindowTokens": 128000,
+            "canUseImages": true
+          },
+          {
+            "id": "deepseek-chat",
+            "providerId": "deepseek",
+            "providerModelId": "deepseek-flash",
+            "name": "DeepSeek Flash",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000
+          },
+          {
+            "id": "openrouter-gpt-4-1-mini",
+            "providerId": "openrouter",
+            "providerModelId": "openai/gpt-4.1-mini",
+            "name": "GPT-4.1 mini",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": true
+          }
+        ],
+        "taskModelChains": {
+          "voiceCorrection": ["local-qwen"],
+          "correction": ["local-qwen"],
+          "translation": ["local-qwen"],
+          "aiTask": ["local-qwen"]
+        }
+      },
+      "aiRules": {
+        "chat": "",
+        "correction": "",
+        "voiceCorrection": "",
+        "translation": ""
+      },
+      "aiTasks": { "q": { "id": "a", "name": "A", "rule": "x" } },
+      "markdown": {
+        "bullet": "-",
+        "emphasis": "*",
+        "strong": "*",
+        "headingStyle": "atx",
+        "incrementListMarker": true
+      },
+      "markdownClean": {
+        "bullet": "-",
+        "codeBlockIndent": "none",
+        "blockquoteIndent": "none",
+        "keepInlineCode": false,
+        "linkFormat": "text",
+        "imageFormat": "alt",
+        "keepThematicBreaks": true,
+        "keepTaskCheckboxes": true
+      },
+      "plugins": {},
+      "editorHistory": {
+        "storage": "disk",
+        "maxItems": 1000,
+        "retentionDays": 30,
+        "isSecretSanitizingEnabled": true
+      },
+      "chatHistory": { "isEnabled": true, "retentionDays": 0 },
+      "chat": { "imageQuality": "balanced" },
+      "stt": {
+        "providerId": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isLlmFormattingEnabled": false
+      },
+      "aiVault": {}
     }
   }
 ]

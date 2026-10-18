@@ -30,7 +30,7 @@ export function chatModelOptions(
   return usableModels(config)
     .filter(
       ({ provider }) =>
-        provider.type === 'openai-compatible' || hasKey(provider.id)
+        provider.type === 'openaiCompatible' || hasKey(provider.id)
     )
     .map(({ model, provider }) => ({
       id: model.id,

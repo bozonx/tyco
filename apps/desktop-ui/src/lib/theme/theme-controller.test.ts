@@ -43,7 +43,7 @@ describe('theme-controller', () => {
     const stored: AppearanceSettings = {
       ...DEFAULT_APPEARANCE,
       theme: 'dark',
-      uiScale: 130,
+      uiScalePercent: 130,
     }
     const controller = createThemeController(createRuntime({ stored }))
 
@@ -65,7 +65,7 @@ describe('theme-controller', () => {
       theme: 'dark',
       contrast: 'more',
       motion: 'reduce',
-      uiScale: 100,
+      uiScalePercent: 100,
     })
   })
 

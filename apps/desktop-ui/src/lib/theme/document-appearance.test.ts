@@ -40,7 +40,7 @@ describe('applyAppearanceToDocument', () => {
       theme: 'dark',
       contrast: 'more',
       motion: 'reduce',
-      uiScale: 150,
+      uiScalePercent: 150,
     })
 
     expect(root.getAttribute('data-theme')).toBe('dark')
@@ -57,7 +57,7 @@ describe('applyAppearanceToDocument', () => {
       theme: 'e-ink',
       contrast: 'more',
       motion: 'reduce',
-      uiScale: 100,
+      uiScalePercent: 100,
     })
 
     expect(root.style.colorScheme).toBe('light')

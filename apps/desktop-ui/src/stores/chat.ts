@@ -287,7 +287,7 @@ function createChatStoreSetup(profileId: string | null) {
           ? formatLlmError(error, translate)
           : String(error instanceof Error ? error.message : error),
       createId: () => crypto.randomUUID(),
-      nowIso: () => new Date().toISOString(),
+      nowMs: () => Date.now(),
       // which chat to reopen is a convenience: a failure is only logged
       saveSessionState: async (patch) => {
         if (profileId) {

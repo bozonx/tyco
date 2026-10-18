@@ -5,6 +5,9 @@ use super::*;
 use backups::back_up_config_before_repair;
 use normalization::*;
 
+/// Reads the user config. A config that cannot be parsed is set aside and
+/// replaced by the defaults: the app must start either way, and the user keeps
+/// the broken file to fix it.
 pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
     let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
 
@@ -63,8 +66,7 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
 fn normalize_loaded_config(value: &mut Value) -> bool {
     let normalized = normalize_window_insertion_config(value)
         | normalize_hotkeys_config(value)
-        | normalize_language_config(value)
-        | normalize_stt_config(value);
+        | normalize_language_config(value);
     let repaired = crate::services::config_schema::normalize_user_config(value);
     normalized | repaired
 }

@@ -75,7 +75,9 @@ pub struct ChatMessagePart {
 pub struct Chat {
     pub id: String,
     pub title: String,
-    pub last_message_at: String,
+    /// Unix time in milliseconds.
+    #[serde(rename = "lastMessageAt")]
+    pub last_message_at_ms: u64,
     pub messages: Vec<ChatMessage>,
 }
 
@@ -84,7 +86,9 @@ pub struct Chat {
 pub struct ChatSummary {
     pub id: String,
     pub title: String,
-    pub last_message_at: String,
+    /// Unix time in milliseconds.
+    #[serde(rename = "lastMessageAt")]
+    pub last_message_at_ms: u64,
 }
 
 impl From<&Chat> for ChatSummary {
@@ -92,7 +96,7 @@ impl From<&Chat> for ChatSummary {
         Self {
             id: chat.id.clone(),
             title: chat.title.clone(),
-            last_message_at: chat.last_message_at.clone(),
+            last_message_at_ms: chat.last_message_at_ms,
         }
     }
 }
@@ -160,7 +164,7 @@ mod tests {
     #[test]
     fn chat_summaries_use_the_wire_names() {
         let chat: Chat = serde_json::from_value(serde_json::json!({
-            "id": "chat-1", "title": "Chat title", "lastMessageAt": "2026-10-12T10:00:00.000Z", "messages": []
+            "id": "chat-1", "title": "Chat title", "lastMessageAt": 1_791_806_400_000_u64, "messages": []
         })).unwrap();
         let summary = serde_json::to_value(ChatSummary::from(&chat)).unwrap();
         let fixture: serde_json::Value = serde_json::from_str(include_str!(
@@ -169,9 +173,9 @@ mod tests {
         .unwrap();
         assert_eq!(summary, fixture["chatSummary"]);
         let serialized = serde_json::to_value(chat).unwrap();
-        assert_eq!(serialized["lastMessageAt"], "2026-10-12T10:00:00.000Z");
+        assert_eq!(serialized["lastMessageAt"], 1_791_806_400_000_u64);
         let round_trip: Chat = serde_json::from_value(serialized.clone()).unwrap();
-        assert_eq!(round_trip.last_message_at, "2026-10-12T10:00:00.000Z");
+        assert_eq!(round_trip.last_message_at_ms, 1_791_806_400_000);
         assert_eq!(serialized["title"], "Chat title");
     }
 }

@@ -62,12 +62,12 @@ fn configured_base_urls(config: &serde_json::Value) -> impl Iterator<Item = &str
         .and_then(serde_json::Value::as_array)
         .into_iter()
         .flatten();
-    let stt_models = config
+    let stt_providers = config
         .get("stt")
-        .and_then(|value| value.get("models"))
-        .and_then(serde_json::Value::as_array)
+        .and_then(|value| value.get("providers"))
+        .and_then(serde_json::Value::as_object)
         .into_iter()
-        .flatten();
+        .flat_map(|providers| providers.values());
 
     let webhooks = config
         .get("commands")
@@ -85,7 +85,7 @@ fn configured_base_urls(config: &serde_json::Value) -> impl Iterator<Item = &str
         .filter_map(serde_json::Value::as_str);
 
     llm_providers
-        .chain(stt_models)
+        .chain(stt_providers)
         .filter_map(|entry| entry.get("baseUrl"))
         .filter_map(serde_json::Value::as_str)
         .chain(webhooks)
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn allows_only_configured_or_secret_bound_origins() {
         let config = serde_json::json!({"llm":{"providers":[{"baseUrl":"http://localhost:11434/v1" }]
-            },"stt":{"models":[{"baseUrl":"wss://speech.example/v1" }]
+            },"stt":{"providers":{"sherpaOnnx":{"baseUrl":"wss://speech.example/v1" }}
         }});
         let mut secrets = crate::services::secrets::Secrets::new();
         secrets.insert(

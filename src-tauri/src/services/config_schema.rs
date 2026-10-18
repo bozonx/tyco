@@ -65,6 +65,11 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
             }
             for (key, value) in fields {
                 let nested_path = format!("{path}.{key}");
+                if schema["propertyNames"].is_object()
+                    && validate(&json!(key), &schema["propertyNames"], &nested_path).is_err()
+                {
+                    return Err(invalid(&nested_path));
+                }
                 if let Some(child) = schema["properties"].get(key) {
                     validate(value, child, &nested_path)?;
                 } else if schema["additionalProperties"] == false {
@@ -188,6 +193,11 @@ fn repair(value: &Value, schema: &Value) -> Value {
                     .or_insert_with(|| default_of(&schema["properties"][key]).clone());
             }
             result.retain(|key, value| {
+                if schema["propertyNames"].is_object()
+                    && validate(&json!(key), &schema["propertyNames"], "").is_err()
+                {
+                    return false;
+                }
                 if let Some(child) = schema["properties"].get(key) {
                     *value = repair(value, child);
                     let required = schema["required"]
@@ -200,6 +210,7 @@ fn repair(value: &Value, schema: &Value) -> Value {
                     return false;
                 } else if schema["additionalProperties"].is_object() {
                     *value = repair(value, &schema["additionalProperties"]);
+                    return validate(value, &schema["additionalProperties"], "").is_ok();
                 }
                 true
             });
@@ -244,23 +255,36 @@ fn ids<'a>(config: &'a Value, key: &str) -> HashSet<&'a str> {
         .collect()
 }
 
+/// The filled slots of a shortcut grid.
+fn slot_values(slots: &Value) -> impl Iterator<Item = &Value> {
+    slots.as_object().into_iter().flat_map(|slots| slots.values())
+}
+
+const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
+const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
+
 fn validate_references(config: &Value) -> Result<(), AppError> {
     for (collection, key) in [
         (&config["commands"], "commands"),
-        (&config["aiTasks"], "aiTasks"),
-        (&config["stt"]["models"], "stt.models"),
         (&config["launcherPages"], "launcherPages"),
         (&config["llm"]["providers"], "llm.providers"),
         (&config["llm"]["models"], "llm.models"),
     ] {
         let mut seen = HashSet::new();
-        for item in collection
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter(|item| !item.is_null())
-        {
+        for item in collection.as_array().into_iter().flatten() {
             if !seen.insert(item["id"].as_str()) {
+                return Err(invalid(key));
+            }
+        }
+    }
+    for (slots, key, field) in [
+        (&config["aiTasks"], "aiTasks", Some("id")),
+        (&config["translation"]["targetLanguages"], "translation.targetLanguages", None),
+    ] {
+        let mut seen = HashSet::new();
+        for value in slot_values(slots) {
+            let value = field.map_or(value, |field| &value[field]);
+            if !seen.insert(value.as_str()) {
                 return Err(invalid(key));
             }
         }
@@ -268,25 +292,19 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     let providers = ids(&config["llm"], "providers");
     for provider in config["llm"]["providers"].as_array().into_iter().flatten() {
         let id = provider["id"].as_str().unwrap_or_default();
-        let builtin = ["google", "openrouter", "deepseek"].contains(&id);
+        let builtin = BUILTIN_LLM_PROVIDERS.contains(&id);
         if (builtin && provider["type"] != id)
-            || (!builtin && provider["type"] != "openai-compatible")
+            || (!builtin && provider["type"] != CUSTOM_LLM_PROVIDER_TYPE)
         {
             return Err(invalid("llm.providers.type"));
         }
     }
     let models = ids(&config["llm"], "models");
     let commands = ids(config, "commands");
-    let tasks = ids(config, "aiTasks");
+    let tasks: HashSet<&str> = slot_values(&config["aiTasks"])
+        .filter_map(|task| task["id"].as_str())
+        .collect();
     let pages = ids(config, "launcherPages");
-    let stt = ids(&config["stt"], "models");
-    if !stt.contains(
-        config["stt"]["selectedModelId"]
-            .as_str()
-            .unwrap_or_default(),
-    ) {
-        return Err(invalid("stt.selectedModelId"));
-    }
     for model in config["llm"]["models"].as_array().into_iter().flatten() {
         if !providers.contains(model["providerId"].as_str().unwrap_or_default()) {
             return Err(invalid("llm.models.providerId"));
@@ -308,7 +326,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             }
         }
     }
-    for slot in config["mainActions"].as_array().into_iter().flatten() {
+    for slot in slot_values(&config["mainActions"]) {
         match slot["type"].as_str() {
             Some("command")
                 if !commands.contains(slot["commandId"].as_str().unwrap_or_default()) =>
@@ -327,12 +345,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
         }
     }
     for page in config["launcherPages"].as_array().into_iter().flatten() {
-        for id in page["slots"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter_map(Value::as_str)
-        {
+        for id in slot_values(&page["slots"]).filter_map(Value::as_str) {
             if !commands.contains(id) {
                 return Err(invalid("launcherPages.slots"));
             }
@@ -391,7 +404,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
     for model in config["llm"]["models"].as_array_mut().into_iter().flatten() {
         model["id"] = json!(model["id"].as_str().unwrap_or_default().trim());
     }
-    let builtin_ids = ["google", "openrouter", "deepseek"];
+    let builtin_ids = BUILTIN_LLM_PROVIDERS;
     let mut providers = config["llm"]["providers"]
         .as_array()
         .cloned()
@@ -401,7 +414,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         if builtin_ids.contains(&id) {
             provider["type"] == id
         } else {
-            provider["type"] == "openai-compatible"
+            provider["type"] == CUSTOM_LLM_PROVIDER_TYPE
         }
     });
     let mut ordered = Vec::new();
@@ -426,7 +439,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
             .filter(|provider| !builtin_ids.contains(&provider["id"].as_str().unwrap_or_default())),
     );
     for provider in &mut ordered {
-        let is_custom = provider["type"] == "openai-compatible";
+        let is_custom = provider["type"] == CUSTOM_LLM_PROVIDER_TYPE;
         if let Some(fields) = provider.as_object_mut() {
             if is_custom {
                 fields.entry("baseUrl").or_insert_with(|| json!(""));
@@ -444,7 +457,11 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         }
         glossary.retain(|entry| entry["term"].as_str().is_some_and(|term| !term.is_empty()));
     }
-    deduplicate_by_id(&mut config["commands"], false);
+    let mut languages = HashSet::new();
+    retain_slots(&mut config["translation"]["targetLanguages"], |language| {
+        languages.insert(language.as_str().unwrap_or_default().to_owned())
+    });
+    deduplicate_by_id(&mut config["commands"]);
     for command in config["commands"].as_array_mut().into_iter().flatten() {
         let schema = match command["toolId"].as_str() {
             Some("script") => Some(&SCHEMA["$defs"]["scriptToolConfig"]),
@@ -455,10 +472,12 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
             command["toolConfig"] = repair(&command["toolConfig"], schema);
         }
     }
-    deduplicate_by_id(&mut config["aiTasks"], true);
-    deduplicate_by_id(&mut config["stt"]["models"], false);
-    deduplicate_by_id(&mut config["llm"]["providers"], false);
-    deduplicate_by_id(&mut config["llm"]["models"], false);
+    let mut task_ids = HashSet::new();
+    retain_slots(&mut config["aiTasks"], |task| {
+        task_ids.insert(task["id"].as_str().unwrap_or_default().to_owned())
+    });
+    deduplicate_by_id(&mut config["llm"]["providers"]);
+    deduplicate_by_id(&mut config["llm"]["models"]);
     let provider_ids: HashSet<String> = ids(&config["llm"], "providers")
         .into_iter()
         .map(str::to_owned)
@@ -481,72 +500,56 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         .into_iter()
         .map(str::to_owned)
         .collect();
-    let task_ids: HashSet<String> = ids(config, "aiTasks")
-        .into_iter()
-        .map(str::to_owned)
-        .collect();
-    deduplicate_by_id(&mut config["launcherPages"], false);
+    deduplicate_by_id(&mut config["launcherPages"]);
     let page_ids: HashSet<String> = ids(config, "launcherPages")
         .into_iter()
         .map(str::to_owned)
         .collect();
-    if let Some(slots) = config["mainActions"].as_array_mut() {
-        for slot in slots {
-            let valid = match slot["type"].as_str() {
-                Some("command") => {
-                    command_ids.contains(slot["commandId"].as_str().unwrap_or_default())
-                }
-                Some("aiTask") => task_ids.contains(slot["taskId"].as_str().unwrap_or_default()),
-                Some("launcherPage") => {
-                    page_ids.contains(slot["pageId"].as_str().unwrap_or_default())
-                }
-                _ => true,
-            };
-            if !valid {
-                *slot = Value::Null;
-            }
-        }
-    }
-    if let Some(pages) = config["launcherPages"].as_array_mut() {
-        for page in pages {
-            clean_slots(&mut page["slots"], &command_ids);
-        }
-    }
-    if !ids(&config["stt"], "models").contains(
-        config["stt"]["selectedModelId"]
-            .as_str()
-            .unwrap_or_default(),
-    ) {
-        config["stt"]["selectedModelId"] = config["stt"]["models"][0]["id"].clone();
+    retain_slots(&mut config["mainActions"], |slot| match slot["type"].as_str() {
+        Some("command") => command_ids.contains(slot["commandId"].as_str().unwrap_or_default()),
+        Some("aiTask") => task_ids.contains(slot["taskId"].as_str().unwrap_or_default()),
+        Some("launcherPage") => page_ids.contains(slot["pageId"].as_str().unwrap_or_default()),
+        _ => true,
+    });
+    for page in config["launcherPages"].as_array_mut().into_iter().flatten() {
+        retain_slots(&mut page["slots"], |id| {
+            command_ids.contains(id.as_str().unwrap_or_default())
+        });
     }
     *config != original
 }
 
-fn deduplicate_by_id(collection: &mut Value, preserve_slots: bool) {
+fn deduplicate_by_id(collection: &mut Value) {
     let mut seen_ids = HashSet::new();
     if let Some(items) = collection.as_array_mut() {
-        for item in items.iter_mut() {
-            if !item.is_null()
-                && !seen_ids.insert(item["id"].as_str().unwrap_or_default().to_owned())
-            {
-                *item = Value::Null;
-            }
-        }
-        if !preserve_slots {
-            items.retain(|item| !item.is_null());
-        }
+        items.retain(|item| seen_ids.insert(item["id"].as_str().unwrap_or_default().to_owned()));
     }
 }
 
-fn clean_slots(collection: &mut Value, commands: &HashSet<String>) {
-    if let Some(slots) = collection.as_array_mut() {
-        for slot in slots {
-            if !slot.is_null() && !commands.contains(slot.as_str().unwrap_or_default()) {
-                *slot = Value::Null;
+/// Keeps the slots of a shortcut grid that pass `keep`, visited in the order
+/// of the shortcut keys, so that the first of two duplicates stays.
+fn retain_slots(slots: &mut Value, mut keep: impl FnMut(&Value) -> bool) {
+    let Some(slots) = slots.as_object_mut() else {
+        return;
+    };
+    let mut dropped = Vec::new();
+    for key in SHORTCUT_SLOT_KEYS {
+        if let Some(value) = slots.get(key) {
+            if !keep(value) {
+                dropped.push(key);
             }
         }
     }
+    for key in dropped {
+        slots.remove(key);
+    }
 }
+
+/// The keys of the shortcut grids, row by row; see `SHORTCUT_SLOT_KEYS` of
+/// the shared package.
+const SHORTCUT_SLOT_KEYS: [&str; 15] = [
+    "q", "w", "e", "r", "t", "a", "s", "d", "f", "g", "z", "x", "c", "v", "b",
+];
 
 #[cfg(test)]
 mod tests {
@@ -595,16 +598,19 @@ mod tests {
         let defaults = crate::models::default_user_config();
         for (path, value) in [
             ("/editorHistory/maxItems", json!(1.5)),
-            ("/chat/historyRetentionDays", json!(-1)),
-            ("/stt/models", json!("bad")),
-            ("/stt/selectedModelId", json!("missing")),
+            ("/chatHistory/retentionDays", json!(-1)),
+            ("/stt/providers", json!("bad")),
+            ("/stt/providerId", json!("missing")),
             ("/commands", json!([{"id":"a"}])),
             (
                 "/mainActions",
-                json!([{"type":"command","commandId":"missing"}]),
+                json!({"q": {"type":"command","commandId":"missing"}}),
             ),
+            ("/mainActions", json!({"y": {"type":"standard","actionId":"askInChat"}})),
             ("/launcherPages/0/slots", json!([])),
+            ("/launcherPages/0/slots", json!({"q": "missing"})),
             ("/launcherPages", json!([])),
+            ("/translation/targetLanguages", json!({"q": "en_US", "w": "en_US"})),
         ] {
             let mut config = defaults.clone();
             *config.pointer_mut(path).unwrap() = value;
@@ -623,11 +629,21 @@ mod tests {
     fn startup_repair_is_idempotent_and_removes_dangling_references() {
         let mut config = crate::models::default_user_config();
         config["editorHistory"]["maxItems"] = json!(1.5);
-        config["stt"]["models"][0]["formatWithLlm"] = json!("yes");
-        config["mainActions"] = json!([{"type":"command","commandId":"missing"}]);
+        config["stt"]["isLlmFormattingEnabled"] = json!("yes");
+        config["mainActions"] = json!({
+            "q": {"type":"command","commandId":"missing"},
+            "w": {"type":"standard","actionId":"askInChat"},
+            "y": {"type":"standard","actionId":"askInChat"},
+        });
+        config["translation"]["targetLanguages"] = json!({"q": "en_US", "w": "en_US", "e": 1});
         assert!(normalize_user_config(&mut config));
         validate_user_config(&config).unwrap();
         assert!(!normalize_user_config(&mut config));
-        assert_eq!(config["mainActions"][0], Value::Null);
+        assert_eq!(
+            config["mainActions"],
+            json!({"w": {"type":"standard","actionId":"askInChat"}})
+        );
+        assert_eq!(config["translation"]["targetLanguages"], json!({"q": "en_US"}));
+        assert_eq!(config["stt"]["isLlmFormattingEnabled"], false);
     }
 }

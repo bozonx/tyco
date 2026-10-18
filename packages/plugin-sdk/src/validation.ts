@@ -151,9 +151,7 @@ export function validatePluginManifest(
             const field = fields.get(name)
             if (
               !field ||
-              ['enabled', '__proto__', 'constructor', 'prototype'].includes(
-                name
-              ) ||
+              ['__proto__', 'constructor', 'prototype'].includes(name) ||
               !validPresetValue(field, entry)
             )
               fail('Invalid plugin preset value')
@@ -247,7 +245,7 @@ export function validatePluginFields(fields: unknown): void {
       !record(field) ||
       typeof field.name !== 'string' ||
       !/^[A-Za-z][A-Za-z0-9_-]*$/.test(field.name) ||
-      ['enabled', 'constructor', 'prototype'].includes(field.name) ||
+      ['constructor', 'prototype'].includes(field.name) ||
       names.has(field.name)
     )
       fail('Invalid plugin field name')

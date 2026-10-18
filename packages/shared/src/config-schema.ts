@@ -1,7 +1,14 @@
 import schemaValue from './user-config-schema.json' with { type: 'json' }
 import configDefaults from './user-config-defaults.json' with { type: 'json' }
 import configVersion from './config-version.json' with { type: 'json' }
-import type { UserConfig, UserConfigInput } from './user-config'
+import {
+  BUILTIN_LLM_PROVIDERS,
+  LLM_TASKS,
+  SHORTCUT_SLOT_KEYS,
+  type ShortcutSlots,
+  type UserConfig,
+  type UserConfigInput,
+} from './user-config'
 
 interface Schema {
   minItems?: number
@@ -10,6 +17,7 @@ interface Schema {
   enum?: unknown[]
   anyOf?: Schema[]
   properties?: Record<string, Schema>
+  propertyNames?: Schema
   required?: string[]
   additionalProperties?: boolean | Schema
   items?: Schema
@@ -23,7 +31,7 @@ interface Schema {
   uniqueItems?: boolean
 }
 
-const schema = schemaValue as Schema
+const schema = schemaValue as unknown as Schema
 const portableDefaults: Record<string, unknown> = {
   ...configDefaults,
   configVersion,
@@ -47,6 +55,8 @@ function valid(value: unknown, shape: Schema): boolean {
         isRecord(value) &&
         (shape.required ?? []).every((key) => Object.hasOwn(value, key)) &&
         Object.entries(value).every(([key, item]) => {
+          if (shape.propertyNames && !valid(key, shape.propertyNames))
+            return false
           const child = shape.properties?.[key]
           if (child) return valid(item, child)
           if (shape.additionalProperties === false) return false
@@ -118,6 +128,10 @@ function repair(value: unknown, shape: Schema): unknown {
         result[key] = defaultOf(shape.properties?.[key] ?? {})
     }
     for (const [key, item] of Object.entries(result)) {
+      if (shape.propertyNames && !valid(key, shape.propertyNames)) {
+        delete result[key]
+        continue
+      }
       const child = shape.properties?.[key]
       if (child) {
         const repaired = repair(item, child)
@@ -125,8 +139,11 @@ function repair(value: unknown, shape: Schema): unknown {
           delete result[key]
         else result[key] = repaired
       } else if (shape.additionalProperties === false) delete result[key]
-      else if (typeof shape.additionalProperties === 'object')
-        result[key] = repair(item, shape.additionalProperties)
+      else if (typeof shape.additionalProperties === 'object') {
+        const repaired = repair(item, shape.additionalProperties)
+        if (valid(repaired, shape.additionalProperties)) result[key] = repaired
+        else delete result[key]
+      }
     }
     return result
   }
@@ -159,18 +176,26 @@ function repair(value: unknown, shape: Schema): unknown {
   return valid(value, shape) ? value : defaultOf(shape)
 }
 
-function deduplicate<T extends { id: string }>(
-  items: (T | null)[],
-  slots = false
-): (T | null)[] {
+function deduplicate<T extends { id: string }>(items: T[]): T[] {
   const seen = new Set<string>()
-  const result = items.map((item) => {
-    if (!item) return null
-    if (seen.has(item.id)) return null
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false
     seen.add(item.id)
-    return item
+    return true
   })
-  return slots ? result : result.filter((item) => item !== null)
+}
+
+/** Keeps the slots whose value passes `keep`, in the order of the keys. */
+function filterSlots<T>(
+  slots: ShortcutSlots<T>,
+  keep: (value: T) => boolean
+): ShortcutSlots<T> {
+  const result: ShortcutSlots<T> = {}
+  for (const key of SHORTCUT_SLOT_KEYS) {
+    const value = slots[key]
+    if (value !== undefined && keep(value)) result[key] = value
+  }
+  return result
 }
 
 /** Domain adapters use the same field rules as the authoritative reader. */
@@ -190,11 +215,11 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
     command.toolId = command.toolId.trim()
   }
   for (const model of config.llm.models) model.id = model.id.trim()
-  const builtinIds = ['google', 'openrouter', 'deepseek']
+  const builtinIds: readonly string[] = BUILTIN_LLM_PROVIDERS
   config.llm.providers = config.llm.providers.filter((provider) =>
     builtinIds.includes(provider.id)
       ? provider.type === provider.id
-      : provider.type === 'openai-compatible'
+      : provider.type === 'openaiCompatible'
   )
   const builtins = configDefaults.llm.providers.filter((provider) =>
     builtinIds.includes(provider.id)
@@ -210,7 +235,7 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
     ),
   ]
   for (const provider of config.llm.providers) {
-    if (provider.type === 'openai-compatible') provider.baseUrl ??= ''
+    if (provider.type === 'openaiCompatible') provider.baseUrl ??= ''
     else delete provider.baseUrl
   }
   config.translation.glossary = config.translation.glossary
@@ -220,7 +245,16 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
       use: entry.use.trim(),
     }))
     .filter((entry) => entry.term.length > 0)
-  config.commands = deduplicate(config.commands) as UserConfig['commands']
+  const languages = new Set<string>()
+  config.translation.targetLanguages = filterSlots(
+    config.translation.targetLanguages,
+    (language) => {
+      if (languages.has(language)) return false
+      languages.add(language)
+      return true
+    }
+  )
+  config.commands = deduplicate(config.commands)
   for (const command of config.commands) {
     const toolSchema =
       command.toolId === 'script'
@@ -234,47 +268,33 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
         toolSchema as Schema
       ) as Record<string, unknown>
   }
-  config.aiTasks = deduplicate(config.aiTasks, true)
-  config.stt.models = deduplicate(
-    config.stt.models
-  ) as UserConfig['stt']['models']
-  config.llm.providers = deduplicate(
-    config.llm.providers
-  ) as UserConfig['llm']['providers']
-  config.llm.models = deduplicate(
-    config.llm.models
-  ) as UserConfig['llm']['models']
+  const taskIds = new Set<string>()
+  config.aiTasks = filterSlots(config.aiTasks, (task) => {
+    if (taskIds.has(task.id)) return false
+    taskIds.add(task.id)
+    return true
+  })
+  config.llm.providers = deduplicate(config.llm.providers)
+  config.llm.models = deduplicate(config.llm.models)
   const providers = new Set(config.llm.providers.map((provider) => provider.id))
   config.llm.models = config.llm.models.filter((model) =>
     providers.has(model.providerId)
   )
   const models = new Set(config.llm.models.map((model) => model.id))
-  for (const task of Object.keys(
-    config.llm.taskModelChains
-  ) as (keyof UserConfig['llm']['taskModelChains'])[])
+  for (const task of LLM_TASKS)
     config.llm.taskModelChains[task] = config.llm.taskModelChains[task].filter(
       (id) => models.has(id)
     )
   const commands = new Set(config.commands.map((command) => command.id))
-  const tasks = new Set(
-    config.aiTasks.flatMap((task) => (task ? [task.id] : []))
-  )
-  config.launcherPages = deduplicate(
-    config.launcherPages
-  ) as UserConfig['launcherPages']
+  config.launcherPages = deduplicate(config.launcherPages)
   const pageIds = new Set(config.launcherPages.map((page) => page.id))
-  config.mainActions = config.mainActions.map((slot) => {
-    if (slot?.type === 'command' && !commands.has(slot.commandId)) return null
-    if (slot?.type === 'aiTask' && !tasks.has(slot.taskId)) return null
-    if (slot?.type === 'launcherPage' && !pageIds.has(slot.pageId)) return null
-    return slot
+  config.mainActions = filterSlots(config.mainActions, (slot) => {
+    if (slot.type === 'command') return commands.has(slot.commandId)
+    if (slot.type === 'aiTask') return taskIds.has(slot.taskId)
+    if (slot.type === 'launcherPage') return pageIds.has(slot.pageId)
+    return true
   })
-  const cleanSlots = (slots: (string | null)[]) =>
-    slots.map((id) => (id && commands.has(id) ? id : null))
-  for (const page of config.launcherPages) page.slots = cleanSlots(page.slots)
-  if (
-    !config.stt.models.some((model) => model.id === config.stt.selectedModelId)
-  )
-    config.stt.selectedModelId = config.stt.models[0]?.id ?? ''
+  for (const page of config.launcherPages)
+    page.slots = filterSlots(page.slots, (id) => commands.has(id))
   return config
 }

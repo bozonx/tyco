@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CommandConfig, MainActionConfig } from '@tyco/shared'
+import type {
+  CommandConfig,
+  MainActionConfig,
+  ShortcutSlots,
+} from '@tyco/shared'
 
 import { testTools } from '../tools/testing'
 
 import {
-  commandAddedBy,
   commandAfterRun,
   commandLabel,
   commandTakesText,
@@ -69,9 +72,9 @@ describe('normalizeCommand', () => {
       isVoiceEnabled: false,
       voiceConfirmation: 'always',
       launcherAfterRun: { action: 'none' },
-      logOutput: false,
+      isOutputLogged: false,
       availableIn: { external: false, chat: false },
-      enabled: true,
+      isEnabled: true,
     })
   })
 
@@ -178,7 +181,7 @@ describe('menu commands', () => {
   it('admits enabled commands, with or without text', () => {
     const script = createCommand('script', 'a')
     expect(isMenuCommand(script, tools)).toBe(true)
-    expect(isMenuCommand({ ...script, enabled: false }, tools)).toBe(false)
+    expect(isMenuCommand({ ...script, isEnabled: false }, tools)).toBe(false)
     expect(commandTakesText(script, tools)).toBe(false)
     expect(isMenuCommand(script, tools)).toBe(true)
     expect(commandTakesText({ ...script, toolId: 'notes.write' }, tools)).toBe(
@@ -243,20 +246,18 @@ describe('menu commands', () => {
   it('removes every reference to a command from the menu', () => {
     expect(
       removeCommandReferences(
-        [
-          { type: 'command', commandId: 'a' },
-          null,
-          { type: 'command', commandId: 'b' },
-          { type: 'standard', actionId: 'translation' },
-        ],
+        {
+          q: { type: 'command', commandId: 'a' },
+          e: { type: 'command', commandId: 'b' },
+          r: { type: 'standard', actionId: 'translation' },
+          t: { type: 'command', commandId: 'a' },
+        },
         'a'
       )
-    ).toEqual([
-      null,
-      null,
-      { type: 'command', commandId: 'b' },
-      { type: 'standard', actionId: 'translation' },
-    ])
+    ).toEqual({
+      e: { type: 'command', commandId: 'b' },
+      r: { type: 'standard', actionId: 'translation' },
+    })
   })
 })
 
@@ -321,7 +322,7 @@ describe('external names', () => {
     const a = named('a', 'Свёт')
     const b = named('b', ' свет ')
     const c = named('c', 'Свет', false)
-    const d = { ...named('d', 'свет'), enabled: false }
+    const d = { ...named('d', 'свет'), isEnabled: false }
     const commands = [a, b, c, d, named('e', 'Other')]
     expect(findExternalCommandNameConflicts(commands, a, tools)).toEqual([b])
     // a command that may not be called has no twins to warn about
@@ -368,9 +369,9 @@ describe('commands of the core tools', () => {
 })
 
 describe('normalizeLauncherCommands', () => {
-  it('pads to 15 slots and filters out missing command ids', () => {
+  it('lists the 15 slots and drops missing command ids', () => {
     const cmd1 = createCommand('script', 'cmd1')
-    const slots = normalizeLauncherCommands(['cmd1', 'missing', null], [cmd1])
+    const slots = normalizeLauncherCommands({ q: 'cmd1', w: 'missing' }, [cmd1])
     expect(slots).toHaveLength(15)
     expect(slots[0]).toBe('cmd1')
     expect(slots[1]).toBeNull()
@@ -409,45 +410,32 @@ describe('command removal', () => {
   })
 
   it('refills only the menu slots that held the command and are empty', () => {
-    const previous: (MainActionConfig | null)[] = [
-      { type: 'command', commandId: 'b' },
-      { type: 'command', commandId: 'b' },
-      { type: 'standard', actionId: 'translation' },
-    ]
-    const current: (MainActionConfig | null)[] = [
-      null,
-      { type: 'command', commandId: 'a' },
-      { type: 'standard', actionId: 'translation' },
-    ]
-    expect(restoreCommandReferences(current, previous, 'b')).toEqual([
-      { type: 'command', commandId: 'b' },
-      { type: 'command', commandId: 'a' },
-      { type: 'standard', actionId: 'translation' },
-    ])
+    const previous: ShortcutSlots<MainActionConfig> = {
+      q: { type: 'command', commandId: 'b' },
+      w: { type: 'command', commandId: 'b' },
+      e: { type: 'standard', actionId: 'translation' },
+    }
+    const current: ShortcutSlots<MainActionConfig> = {
+      w: { type: 'command', commandId: 'a' },
+      e: { type: 'standard', actionId: 'translation' },
+    }
+    expect(restoreCommandReferences(current, previous, 'b')).toEqual({
+      q: { type: 'command', commandId: 'b' },
+      w: { type: 'command', commandId: 'a' },
+      e: { type: 'standard', actionId: 'translation' },
+    })
   })
 })
 
 describe('commandCliCall', () => {
   it('quotes an id only when the shell needs it', () => {
-    expect(commandCliCall('default:core.translate:en_US')).toBe(
-      'tyco-ctl run default:core.translate:en_US'
+    expect(commandCliCall('translate-en')).toBe(
+      'tyco-ctl run translate-en'
     )
     expect(commandCliCall("it's mine")).toBe("tyco-ctl run 'it'\\''s mine'")
     expect(commandCliCall('Work note', true)).toBe(
       "tyco-ctl run --name 'Work note'"
     )
-  })
-})
-
-describe('commandAddedBy', () => {
-  it('names the owner of a default command only', () => {
-    const tools = { get: () => undefined }
-    expect(commandAddedBy(createCommand('script', 'mine'), tools)).toBe(
-      undefined
-    )
-    expect(
-      commandAddedBy(createCommand('script', 'default:core.x:y'), tools)
-    ).toEqual({ kind: 'core' })
   })
 })
 

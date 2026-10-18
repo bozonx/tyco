@@ -68,7 +68,7 @@ export function createTranslationSettingsModel(deps: {
     )
   }
   function updateCorrectionPrompt(value: string) {
-    deps.setConfig({ ...translation.value, correctionPrompt: value })
+    deps.setConfig({ ...translation.value, qualityGatePrompt: value })
   }
   function updateGlossary(value: string) {
     deps.setConfig({

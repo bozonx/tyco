@@ -243,7 +243,7 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
             || !name
                 .bytes()
                 .all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))
-            || matches!(name, "enabled" | "constructor" | "prototype")
+            || matches!(name, "constructor" | "prototype")
             || !names.insert(name)
         {
             return Err(error("Invalid plugin field name"));
@@ -350,10 +350,7 @@ fn validate_presets(
                     .as_object()
                     .ok_or_else(|| error("Invalid plugin preset values"))?;
                 for (name, value) in values {
-                    if matches!(
-                        name.as_str(),
-                        "enabled" | "__proto__" | "constructor" | "prototype"
-                    ) {
+                    if matches!(name.as_str(), "__proto__" | "constructor" | "prototype") {
                         return Err(error("Unsafe plugin preset field"));
                     }
                     let field = fields

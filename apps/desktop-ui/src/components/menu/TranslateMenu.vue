@@ -75,6 +75,7 @@ import {
   getLanguageLabelKey,
 } from '../../lib/locale/language'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
+import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import type { TranslateMenuParams } from '../../lib/modals/menu-modal-params'
 import { translationMetaOf } from '../../lib/translation/translation-meta'
 import {
@@ -129,8 +130,8 @@ const languageLabel = (id: string): string => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  desktopStore.userConfig.translation.targetLanguages.map(
-    (lang: string | null) =>
+  slotList(desktopStore.userConfig.translation.targetLanguages).map(
+    (lang) =>
       lang
         ? {
             name: languageLabel(lang),

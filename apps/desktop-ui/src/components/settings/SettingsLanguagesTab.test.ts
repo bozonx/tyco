@@ -15,7 +15,7 @@ describe('SettingsLanguagesTab.vue', () => {
     context = createTestSettingsContext({
       translation: {
         ...DEFAULT_USER_CONFIG.translation,
-        targetLanguages: ['en_US', 'ru_RU'],
+        targetLanguages: { q: 'en_US', w: 'ru_RU' },
       },
     })
     return mount(SettingsLanguagesTab, {
@@ -44,11 +44,9 @@ describe('SettingsLanguagesTab.vue', () => {
 
     await slots.vm.$emit('remove', 0)
 
-    const languages = context.draft.value.translation.targetLanguages
-    expect((languages as (string | null)[]).slice(0, 2)).toEqual([
-      null,
-      'ru_RU',
-    ])
+    expect(context.draft.value.translation.targetLanguages).toEqual({
+      w: 'ru_RU',
+    })
   })
 
   it('links to the translation settings tab', async () => {

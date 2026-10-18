@@ -11,7 +11,7 @@ export const CONFIG_VERSION = configVersion
 
 /** Provider families the app can talk to; see `@bozonx/ai-kit` */
 export type LlmProviderType =
-  'google' | 'openrouter' | 'deepseek' | 'openai-compatible'
+  'google' | 'openrouter' | 'deepseek' | 'openaiCompatible'
 
 /** Providers that always exist once; their id equals their type */
 export const BUILTIN_LLM_PROVIDERS = [
@@ -28,7 +28,7 @@ export interface LlmProvider {
   id: string
   type: LlmProviderType
   name?: string
-  /** Required for `openai-compatible`, e.g. `http://localhost:11434/v1` */
+  /** Required for `openaiCompatible`, e.g. `http://localhost:11434/v1` */
   baseUrl?: string
 }
 
@@ -53,10 +53,10 @@ export interface LlmModel {
 }
 
 export const LLM_TASKS = [
-  'translate',
+  'translation',
   'voiceCorrection',
   'correction',
-  'aiTasks',
+  'aiTask',
 ] as const
 
 export type LlmTask = (typeof LLM_TASKS)[number]
@@ -87,41 +87,66 @@ export interface TranslationGlossaryEntry {
   doNotTranslate: boolean
 }
 
+/**
+ * The keys of the shortcut grids (menu, launcher pages, AI tasks, translation
+ * languages), row by row; a grid is stored by key, empty slots are absent
+ */
+export const SHORTCUT_SLOT_KEYS = [
+  'q',
+  'w',
+  'e',
+  'r',
+  't',
+  'a',
+  's',
+  'd',
+  'f',
+  'g',
+  'z',
+  'x',
+  'c',
+  'v',
+  'b',
+] as const
+export type ShortcutSlotKey = (typeof SHORTCUT_SLOT_KEYS)[number]
+export type ShortcutSlots<T> = Partial<Record<ShortcutSlotKey, T>>
+
 export interface TranslationConfig {
-  targetLanguages: (string | null)[]
+  /** Distinct locales such as `en_US` */
+  targetLanguages: ShortcutSlots<string>
   viewMode: 'split' | 'result'
   provider: TranslationProvider
   qualityGate: TranslationQualityGate
   deeplEndpoint: 'free' | 'pro'
   glossary: TranslationGlossaryEntry[]
   /** Extra instructions for the AI correction pass in the `always` mode. */
-  correctionPrompt: string
+  qualityGatePrompt: string
 }
 
 export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig
-
-export interface SttModel {
-  id: string
-  providerModelId: string
-  provider: SttProvider
-  description?: string
-  formatWithLlm?: boolean
-  /**
-   * `auto` (the default) follows the user language, `multi` lets the
-   * multilingual model guess; anything else is a locale such as `de_DE`
-   */
-  language?: string
-  /** The server of a self-hosted provider, e.g. `ws://localhost:6006` */
-  baseUrl?: string
-}
 
 /**
  * Dictation is live only: Deepgram in the cloud, or a sherpa-onnx streaming
  * server the user runs themselves
  */
-export const STT_PROVIDERS = ['deepgram', 'sherpa-onnx'] as const
+export const STT_PROVIDERS = ['deepgram', 'sherpaOnnx'] as const
 
 export type SttProvider = (typeof STT_PROVIDERS)[number]
+
+export interface DeepgramSttSettings {
+  /** The Deepgram model, e.g. `nova-3` */
+  modelId: string
+  /**
+   * `auto` (the default) follows the user language, `multi` lets the
+   * multilingual model guess; anything else is a locale such as `de_DE`
+   */
+  language: string
+}
+
+export interface SherpaOnnxSttSettings {
+  /** The server, e.g. `ws://localhost:6006` */
+  baseUrl: string
+}
 
 export const STANDARD_ACTION_IDS = [
   'insertIntoWindow',
@@ -279,9 +304,9 @@ export interface CommandConfig {
    * behavior
    */
   launcherAfterRun: CommandLauncherAfterRun
-  logOutput: boolean
+  isOutputLogged: boolean
   availableIn: CommandAvailability
-  enabled: boolean
+  isEnabled: boolean
 }
 
 /** A command of the library placed in the action menu */
@@ -296,7 +321,7 @@ export interface AiTaskMainAction {
   taskId: string
 }
 
-/** A translation into one of `translation.targetLanguages`. */
+/** A translation into one of `translation.targetLanguages` */
 export interface TranslationMainAction {
   type: 'translation'
   language: string
@@ -310,8 +335,8 @@ export type MainActionConfig =
   | AiTaskMainAction
   | TranslationMainAction
 
-export const DEFAULT_MAIN_ACTIONS: (MainActionConfig | null)[] =
-  STANDARD_ACTION_IDS.map((actionId) => ({ type: 'standard', actionId }))
+export const DEFAULT_MAIN_ACTIONS =
+  configDefaults.mainActions as ShortcutSlots<MainActionConfig>
 
 /** Keys pressed in the target window to paste the inserted text */
 export const PASTE_SHORTCUTS = [
@@ -342,22 +367,21 @@ export const DEFAULT_SUBMIT_KEY: SubmitKey = 'enter'
  */
 export interface ExternalAccess {
   /** Read the selection of the focused window and replace it */
-  selection: boolean
+  canAccessSelection: boolean
 }
 
-export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = { selection: false }
-
-export interface ConfigRegistrationState {
-  reviewedMainActionIds: string[]
-  seededCommandIds: string[]
-  seededToolIds: string[]
+export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = {
+  canAccessSelection: false,
 }
 
 /** A configured launcher page; references stay stable when pages move. */
 export interface LauncherPageConfig {
   id: string
-  slots: (string | null)[]
   inputMode: 'selection' | 'none'
+  /** Opens the page; empty for none */
+  hotkey: string
+  /** Command ids */
+  slots: ShortcutSlots<string>
 }
 
 export interface EditorHistoryConfig {
@@ -365,64 +389,107 @@ export interface EditorHistoryConfig {
   maxItems: number
   /** Zero retains entries indefinitely. */
   retentionDays: number
-  sanitizeSecrets: boolean
+  isSecretSanitizingEnabled: boolean
+}
+
+export interface ChatHistoryConfig {
+  isEnabled: boolean
+  /** Zero retains chats indefinitely. */
+  retentionDays: number
 }
 
 export interface ChatConfig {
   imageQuality: 'economy' | 'balanced' | 'original'
-  isHistoryEnabled: boolean
-  /** Zero retains chats indefinitely. */
-  historyRetentionDays: number
 }
 
 export interface SttConfig {
-  models: SttModel[]
-  selectedModelId: string
+  providerId: SttProvider
+  /** The LLM turns the transcript into written text */
+  isLlmFormattingEnabled: boolean
+  providers: {
+    deepgram: DeepgramSttSettings
+    sherpaOnnx: SherpaOnnxSttSettings
+  }
+}
+
+/** The modes a global hotkey opens, and the in-place selection correction */
+export interface HotkeysConfig {
+  editor: string
+  write: string
+  chat: string
+  voiceChat: string
+  voice: string
+  select: string
+  aiTasks: string
+  correction: string
+  translate: string
+  voiceCommands: string
+  selectionCorrection: string
+}
+
+export type HotkeyId = keyof HotkeysConfig
+
+/** Per-plugin state: the plugin owns `settings` */
+export interface PluginEntryConfig {
+  isEnabled: boolean
+  settings: Record<string, unknown>
+}
+
+export interface AiTaskConfig {
+  id: string
+  name: string
+  rule: string
 }
 
 /** Complete, normalized configuration used throughout the application. */
 export interface UserConfig {
   configVersion: number
-  externalAccess: ExternalAccess
-  hotkeys: Record<string, string>
-  selectionHotkeys: Record<string, string>
-  submitKey: SubmitKey
-  quickCorrectionPrefetch: boolean
-  quickHideOnBlur: boolean
   appearance: AppearanceSettings
-  windowInsertion: {
-    method: 'xdotool' | 'ydotool'
-    xdotoolBin: string
-    ydotoolBin: string
-    pasteShortcut: PasteShortcut
+  language: {
+    /** The interface locale, or `auto` for the system one */
+    ui: string
+    /** The locale the user speaks and writes, or `auto` */
+    user: string
   }
-  appLanguage: string
-  userLanguage: string
+  editor: {
+    submitKey: SubmitKey
+    diffViewMode: 'unified' | 'split' | 'result'
+  }
+  quickWindow: {
+    isHiddenOnBlur: boolean
+    isCorrectionPrefetchEnabled: boolean
+  }
+  hotkeys: HotkeysConfig
+  externalAccess: ExternalAccess
+  windowInsertion: {
+    pasteShortcut: PasteShortcut
+    linux: {
+      method: 'xdotool' | 'ydotool'
+      /** Empty: found on `PATH` */
+      xdotoolPath: string
+      ydotoolPath: string
+    }
+  }
   translation: TranslationConfig
-  mainActions: (MainActionConfig | null)[]
+  mainActions: ShortcutSlots<MainActionConfig>
   launcherPages: LauncherPageConfig[]
   commands: CommandConfig[]
-  registrationState: ConfigRegistrationState
-  diffViewMode: 'unified' | 'split' | 'result'
-  editorHistory: EditorHistoryConfig
-  chat: ChatConfig
   llm: LlmConfig
-  stt: SttConfig
-  aiRules: {
-    chat: string
-    correction: string
-    translate: string
-    voiceCorrection: string
-  }
-  aiTasks: ({ id: string; name: string; rule: string } | null)[]
+  aiRules: Record<'chat' | 'correction' | 'translation' | 'voiceCorrection', string>
+  aiTasks: ShortcutSlots<AiTaskConfig>
+  aiVault: AiVaultLocationConfig
   markdown: MarkdownSettings
   markdownClean: MarkdownCleanSettings
-  plugins: Record<string, unknown>
-  aiProfiles?: AiProfilesConfig
+  plugins: Record<string, PluginEntryConfig>
+  editorHistory: EditorHistoryConfig
+  chatHistory: ChatHistoryConfig
+  chat: ChatConfig
+  stt: SttConfig
 }
 
-export interface AiProfilesConfig {
-  vaultPath?: string
+export interface AiVaultLocationConfig {
+  /** Absent for the default location in the app data */
+  path?: string
 }
 
 /** Untrusted serialized input; normalize before reading any field. */

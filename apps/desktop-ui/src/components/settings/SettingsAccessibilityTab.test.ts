@@ -42,7 +42,7 @@ describe('SettingsAccessibilityTab.vue', () => {
       theme: 'dark',
       contrast: 'normal',
       motion: 'auto',
-      uiScale: 100,
+      uiScalePercent: 100,
     }
     const wrapper = mountTab(appearance)
 
@@ -62,7 +62,7 @@ describe('SettingsAccessibilityTab.vue', () => {
       theme: 'e-ink',
       contrast: 'more',
       motion: 'reduce',
-      uiScale: 130,
+      uiScalePercent: 130,
     }
     const wrapper = mountTab(appearance)
 
@@ -81,7 +81,7 @@ describe('SettingsAccessibilityTab.vue', () => {
       theme: 'light',
       contrast: 'normal',
       motion: 'auto',
-      uiScale: 100,
+      uiScalePercent: 100,
     }
     const wrapper = mountTab(appearance)
 
@@ -99,7 +99,7 @@ describe('SettingsAccessibilityTab.vue', () => {
       theme: 'light',
       contrast: 'normal',
       motion: 'auto',
-      uiScale: 100,
+      uiScalePercent: 100,
     }
     const wrapper = mountTab(appearance)
 
@@ -112,12 +112,12 @@ describe('SettingsAccessibilityTab.vue', () => {
     })
   })
 
-  it('stores the appearance when uiScale is changed to a valid scale', async () => {
+  it('stores the appearance when uiScalePercent is changed to a valid scale', async () => {
     const appearance: UserConfig['appearance'] = {
       theme: 'light',
       contrast: 'normal',
       motion: 'auto',
-      uiScale: 100,
+      uiScalePercent: 100,
     }
     const wrapper = mountTab(appearance)
 
@@ -126,7 +126,7 @@ describe('SettingsAccessibilityTab.vue', () => {
 
     expect(context.draft.value.appearance).toEqual({
       ...appearance,
-      uiScale: 115,
+      uiScalePercent: 115,
     })
   })
 })

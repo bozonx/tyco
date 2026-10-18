@@ -77,7 +77,7 @@ impl EditorHistoryPolicy {
             } else {
                 0
             },
-            should_redact_secrets: on_disk && flag("sanitizeSecrets"),
+            should_redact_secrets: on_disk && flag("isSecretSanitizingEnabled"),
         }
     }
 
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn policy_reads_the_settings() {
-        let config = json!({"editorHistory":{"storage":"disk","maxItems":20,"retentionDays":7,"sanitizeSecrets":true}});
+        let config = json!({"editorHistory":{"storage":"disk","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}});
 
         assert_eq!(
             EditorHistoryPolicy::from_config(&config),
@@ -154,7 +154,7 @@ mod tests {
         );
         assert_eq!(
             EditorHistoryPolicy::from_config(
-                &json!({"editorHistory":{"storage":"session","maxItems":20,"retentionDays":7,"sanitizeSecrets":true}})
+                &json!({"editorHistory":{"storage":"session","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}})
             ),
             EditorHistoryPolicy {
                 max_entries: 20,

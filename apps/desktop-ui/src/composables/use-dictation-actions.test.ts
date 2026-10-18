@@ -12,18 +12,14 @@ vi.mock('../stores/desktop', () => ({
   useDesktopStore: () => ({
     userConfig: {
       stt: {
-        selectedModelId: 'speech',
-        models: [
-          {
-            id: 'speech',
-            provider: mocks.provider,
-            providerModelId: 'nova-3',
-            baseUrl: 'ws://localhost:6006',
-          },
-        ],
+        providerId: mocks.provider,
+        isLlmFormattingEnabled: false,
+        providers: {
+          deepgram: { modelId: 'nova-3', language: 'auto' },
+          sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
+        },
       },
-
-      userLanguage: 'en_US',
+      language: { ui: 'auto', user: 'en_US' },
     },
   }),
 }))
@@ -90,7 +86,7 @@ describe('dictation credential preflight', () => {
   })
 
   it('starts a self-hosted provider without checking keys', async () => {
-    mocks.provider = 'sherpa-onnx'
+    mocks.provider = 'sherpaOnnx'
     await useDictationActions().startDictation(handlers)
     expect(mocks.refreshSecrets).not.toHaveBeenCalled()
     expect(mocks.start).toHaveBeenCalledWith(

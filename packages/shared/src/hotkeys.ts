@@ -1,3 +1,32 @@
+import type { HotkeyId, UserConfig } from './user-config'
+
+/** The hotkey id of the in-place correction of the selection */
+export const INLINE_CORRECTION_HOTKEY_ID = 'replace.correction'
+
+/** Hotkey ids of command overlay pages carry this prefix and the page id */
+export const LAUNCHER_PAGE_HOTKEY_PREFIX = 'launcherPage.'
+
+export const launcherPageHotkeyId = (pageId: string) =>
+  `${LAUNCHER_PAGE_HOTKEY_PREFIX}${pageId}`
+
+/** The activation mode that opens the command overlay on a page */
+export const launcherPageMode = (pageId: string) => `commandLauncher:${pageId}`
+
+/** The shortcut saved for a hotkey id; empty when there is none */
+export function configuredHotkey(
+  config: Pick<UserConfig, 'hotkeys' | 'launcherPages'>,
+  id: string
+): string {
+  if (id === INLINE_CORRECTION_HOTKEY_ID) return config.hotkeys.selectionCorrection
+  if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
+    const pageId = id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
+    return config.launcherPages.find((page) => page.id === pageId)?.hotkey ?? ''
+  }
+  return Object.hasOwn(config.hotkeys, id)
+    ? config.hotkeys[id as HotkeyId]
+    : ''
+}
+
 export const HOTKEY_MODIFIERS = ['Ctrl', 'Alt', 'Shift', 'Super'] as const
 
 export type HotkeyModifier = (typeof HOTKEY_MODIFIERS)[number]

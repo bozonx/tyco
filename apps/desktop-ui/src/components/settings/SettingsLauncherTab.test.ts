@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
+import { slotsFromList } from '../../lib/shortcut-slots/shortcut-slots'
 import { nextTick } from 'vue'
 
 import { createCommand } from '../../lib/commands/command-config'
@@ -40,8 +41,9 @@ const mountTab = (commandSlots: (string | null)[] = ['cmd1', null, 'cmd2']) =>
     launcherPages: [
       {
         id: 'main',
-        slots: [...commandSlots, ...Array(15).fill(null)].slice(0, 15),
         inputMode: 'selection',
+        hotkey: '',
+        slots: slotsFromList(commandSlots),
       },
     ],
   })
@@ -59,8 +61,9 @@ describe('SettingsLauncherTab.vue', () => {
     expect(pages()).toHaveLength(2)
     expect(pages()[1]).toEqual({
       id: expect.any(String),
-      slots: Array(15).fill(null),
       inputMode: 'selection',
+      hotkey: '',
+      slots: {},
     })
     await nextTick()
     const remove = wrapper
@@ -79,8 +82,9 @@ describe('SettingsLauncherTab.vue', () => {
     expect(remove().attributes('disabled')).toBeDefined()
     const other: LauncherPageConfig = {
       id: 'other',
-      slots: Array<string | null>(15).fill(null),
       inputMode: 'none',
+      hotkey: '',
+      slots: {},
     }
     context.draft.value.launcherPages = [pages()[0], other]
     await nextTick()
@@ -112,7 +116,7 @@ describe('SettingsLauncherTab.vue', () => {
     expect(deleteBtn.exists()).toBe(true)
 
     await deleteBtn.trigger('click')
-    expect(pages()[0].slots[0]).toBeNull()
+    expect(pages()[0].slots.q).toBeUndefined()
   })
 
   it('does not include new script or new webhook in command options', () => {
@@ -127,10 +131,11 @@ describe('SettingsLauncherTab.vue', () => {
 
   it('renders page buttons with numbers and switches pages on click', async () => {
     const wrapper = mountWith({
-      launcherPages: [['cmd1'], ['cmd2'], [null]].map((slots, index) => ({
+      launcherPages: [{ q: 'cmd1' }, { q: 'cmd2' }, {}].map((slots, index) => ({
         id: `page-${index}`,
-        slots,
         inputMode: 'selection' as const,
+        hotkey: '',
+        slots,
       })),
     })
     const buttons = wrapper.findAll('button')

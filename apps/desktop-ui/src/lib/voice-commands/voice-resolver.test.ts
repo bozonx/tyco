@@ -162,7 +162,7 @@ describe('voice resolver', () => {
         [
           enabled,
           { ...enabled, id: 'b', isVoiceEnabled: false },
-          { ...enabled, id: 'c', enabled: false },
+          { ...enabled, id: 'c', isEnabled: false },
           { ...enabled, id: 'd', toolId: 'missing' },
         ],
         tools

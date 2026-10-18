@@ -110,8 +110,8 @@ describe('LLM application actions', () => {
     expect(await f.actions.aiCustomPrompt('  Summarize  ', 'Sample')).toBe(
       'Answer'
     )
-    expect(f.aiRequest).toHaveBeenCalledWith('aiTasks', 'Sample', {
-      instructions: APP_CONFIG.aiInstructions.aiTasks,
+    expect(f.aiRequest).toHaveBeenCalledWith('aiTask', 'Sample', {
+      instructions: APP_CONFIG.aiInstructions.aiTask,
       rules: 'Summarize',
     })
     f.aiRequest.mockClear()

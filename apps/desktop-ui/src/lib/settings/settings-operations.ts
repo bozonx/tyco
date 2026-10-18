@@ -1,6 +1,8 @@
 import {
+  type HotkeyId,
+  INLINE_CORRECTION_HOTKEY_ID,
+  LAUNCHER_PAGE_HOTKEY_PREFIX,
   type LauncherPageConfig,
-  SELECTION_HOTKEY_PREFIX,
   type UserConfig,
 } from '@tyco/shared'
 import type { PluginFactory } from '../../types/plugins'
@@ -39,18 +41,19 @@ export function createSettingsOperations(deps: {
       throw new Error('At least one launcher page is required')
     const config = deps.getConfig()
     const ids = new Set(pages.map((page) => page.id))
-    config.mainActions = config.mainActions.map((item) =>
-      item?.type === 'launcherPage' && !ids.has(item.pageId) ? null : item
+    config.mainActions = Object.fromEntries(
+      Object.entries(config.mainActions).filter(
+        ([, item]) => item.type !== 'launcherPage' || ids.has(item.pageId)
+      )
     )
     config.launcherPages = pages
   }
 
-  const updatePluginEnabled = (pluginId: string, enabled: boolean) => {
+  const updatePluginEnabled = (pluginId: string, isEnabled: boolean) => {
     const config = deps.getConfig()
-    const current = config.plugins[pluginId]
     config.plugins[pluginId] = {
-      ...(current && typeof current === 'object' ? current : {}),
-      enabled,
+      settings: config.plugins[pluginId]?.settings ?? {},
+      isEnabled,
     }
   }
 
@@ -60,39 +63,42 @@ export function createSettingsOperations(deps: {
   ) => {
     const config = deps.getConfig()
     const current = config.plugins[pluginId]
-    const previous: Record<string, unknown> =
-      current && typeof current === 'object'
-        ? (current as Record<string, unknown>)
-        : {}
+    const previous = current?.settings ?? {}
     const definition = deps
       .pluginFactories()
       .find((factory) => factory().id === pluginId)?.()
-    config.plugins[pluginId] = definition
-      ? applyPluginPreset(definition, previous, values)
-      : { ...previous, ...values }
+    config.plugins[pluginId] = {
+      isEnabled: current?.isEnabled ?? false,
+      settings: definition
+        ? applyPluginPreset(definition, previous, values)
+        : { ...previous, ...values },
+    }
   }
-  /** A selection hotkey is stored apart from the mode hotkeys */
-  const updateHotkey = (mode: string, shortcut: string) => {
+
+  /**
+   * `id` is a hotkey id: a mode, the inline correction, or a page of the
+   * command overlay, each stored where it belongs
+   */
+  const updateHotkey = (id: string, shortcut: string) => {
     const config = deps.getConfig()
-    if (mode.startsWith(SELECTION_HOTKEY_PREFIX)) {
-      const action = mode.slice(SELECTION_HOTKEY_PREFIX.length)
-      config.selectionHotkeys = {
-        ...config.selectionHotkeys,
-        [action]: shortcut,
-      }
+    if (id === INLINE_CORRECTION_HOTKEY_ID) {
+      config.hotkeys.selectionCorrection = shortcut
       return
     }
-    config.hotkeys[mode] = shortcut
+    if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
+      const pageId = id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
+      const page = config.launcherPages.find((item) => item.id === pageId)
+      if (page) page.hotkey = shortcut
+      return
+    }
+    if (Object.hasOwn(config.hotkeys, id))
+      config.hotkeys[id as HotkeyId] = shortcut
   }
 
   /** No path stands for the default vault location */
-  const updateVaultPath = (vaultPath: string | undefined) => {
+  const updateVaultPath = (path: string | undefined) => {
     const config = deps.getConfig()
-    if (vaultPath) {
-      config.aiProfiles = { ...(config.aiProfiles || {}), vaultPath }
-    } else if (config.aiProfiles) {
-      delete config.aiProfiles.vaultPath
-    }
+    config.aiVault = path ? { path } : {}
   }
 
   return {

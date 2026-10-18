@@ -89,5 +89,5 @@ export function applyAppearanceToDocument(
   root.setAttribute('data-contrast', appearance.contrast)
   root.setAttribute('data-motion', appearance.motion)
   root.style.colorScheme = isDarkTheme(appearance.theme) ? 'dark' : 'light'
-  root.style.setProperty('--ui-scale', String(appearance.uiScale / 100))
+  root.style.setProperty('--ui-scale', String(appearance.uiScalePercent / 100))
 }

@@ -62,7 +62,7 @@ describe('selection actions', () => {
   })
 
   it('carries the id of a command, whatever it holds', () => {
-    const id = 'default:core.translate:en_US'
+    const id = 'translate-en'
     expect(parseSelectionAction(`command:${id}`)).toEqual({
       kind: 'command',
       commandId: id,

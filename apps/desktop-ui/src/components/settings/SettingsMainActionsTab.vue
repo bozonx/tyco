@@ -48,7 +48,11 @@ import { normalizeCommands } from '../../lib/commands/command-config'
 import { commandLabel, isMenuCommand } from '../../lib/commands/command-runtime'
 import { getLanguageLabelKey } from '../../lib/locale/language'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
-import { moveShortcutSlot } from '../../lib/shortcut-slots/shortcut-slots'
+import {
+  moveShortcutSlot,
+  slotList,
+  slotsFromList,
+} from '../../lib/shortcut-slots/shortcut-slots'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import { useToolsStore } from '../../stores/tools'
@@ -80,7 +84,7 @@ const optionId = mainActionOptionId
 
 /** The AI tasks the menu can refer to: those with a name */
 const aiTasks = computed(() =>
-  (userConfig.value.aiTasks ?? []).flatMap((task) =>
+  slotList(userConfig.value.aiTasks).flatMap((task) =>
     task?.id && task.name.trim() ? [task] : []
   )
 )
@@ -88,7 +92,7 @@ const aiTasks = computed(() =>
 /** The translation languages, and those the slots translate into already */
 const languages = computed(() => [
   ...new Set([
-    ...(userConfig.value.translation.targetLanguages ?? []).filter(
+    ...slotList(userConfig.value.translation.targetLanguages).filter(
       (language): language is string => !!language
     ),
     ...actionSlots.value.flatMap((slot) =>
@@ -223,13 +227,15 @@ const actionOptions = computed(() =>
 )
 
 function moveAction(from: number, to: number) {
-  userConfig.value.mainActions = moveShortcutSlot(actionSlots.value, from, to)
+  userConfig.value.mainActions = slotsFromList(
+    moveShortcutSlot(actionSlots.value, from, to)
+  )
 }
 
 function setSlot(index: number, value: MainActionConfig | null) {
   const slots = [...actionSlots.value]
   slots[index] = value
-  userConfig.value.mainActions = slots
+  userConfig.value.mainActions = slotsFromList(slots)
 }
 
 function addAction(index: number) {

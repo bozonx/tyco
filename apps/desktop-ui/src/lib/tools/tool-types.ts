@@ -1,24 +1,14 @@
 import type {
   ToolDefinition as SdkToolDefinition,
-  DefaultCommandsContext as SdkDefaultCommandsContext,
-  DefaultCommand,
   JsonSchema,
 } from '@tyco/plugin-sdk'
-import type { UserConfig } from '@tyco/shared'
 export * from '@tyco/plugin-sdk'
 
-export interface DefaultCommandsContext extends SdkDefaultCommandsContext {
-  userConfig: UserConfig
-}
-export interface ToolDefinition extends Omit<
-  SdkToolDefinition,
-  'defaultCommands'
-> {
+export interface ToolDefinition extends SdkToolDefinition {
   inputSchemaFor?(config: Record<string, unknown>): JsonSchema
   getUnavailableReasonKey?(): string | undefined
   /** The tool writes its output to the action log when the command asks */
   logsOutput?: boolean
-  defaultCommands?(context: DefaultCommandsContext): DefaultCommand[]
 }
 
 /** Who provides a tool of the registry */

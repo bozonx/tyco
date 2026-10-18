@@ -91,7 +91,7 @@ describe('llm-client', () => {
     const { client } = setup(fetch)
     const chunks: string[] = []
 
-    const text = await client.run('aiTasks', prompt, {
+    const text = await client.run('aiTask', prompt, {
       onChunk: (chunk) => chunks.push(chunk),
     })
 
@@ -157,10 +157,10 @@ describe('llm-client', () => {
       streamResponse(sse(['from local']))
     )
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.taskModelChains.aiTasks = ['gemini-flash', 'local-qwen']
+    llm.taskModelChains.aiTask = ['gemini-flash', 'local-qwen']
     const { client } = setup(fetch, llm)
 
-    const text = await client.run('aiTasks', prompt, {
+    const text = await client.run('aiTask', prompt, {
       onChunk: () => undefined,
     })
 
@@ -192,11 +192,11 @@ describe('llm-client', () => {
         maxOutputTokens: 200,
       },
     ]
-    llm.taskModelChains.aiTasks = ['first', 'second']
+    llm.taskModelChains.aiTask = ['first', 'second']
     const { client } = setup(fetch, llm)
 
     await expect(
-      client.run('aiTasks', prompt, { onChunk: () => undefined })
+      client.run('aiTask', prompt, { onChunk: () => undefined })
     ).resolves.toBe('fallback')
 
     const bodies = fetch.mock.calls.map((call) =>
@@ -250,12 +250,12 @@ describe('llm-client', () => {
   it('sends a key reference to a provider that has a key', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.taskModelChains.aiTasks = ['deepseek-chat']
+    llm.taskModelChains.aiTask = ['deepseek-chat']
     const { client } = setup(fetch, llm, {
       deepseek: { origins: ['https://api.deepseek.com'], available: true },
     })
 
-    await client.run('aiTasks', prompt, { onChunk: () => undefined })
+    await client.run('aiTask', prompt, { onChunk: () => undefined })
 
     const [url, init] = fetch.mock.calls[0]
     expect(String(url)).toBe('https://api.deepseek.com/chat/completions')
@@ -270,7 +270,7 @@ describe('llm-client', () => {
     )
     const { client } = setup(fetch)
 
-    const error = await client.run('aiTasks', prompt).catch((e: unknown) => e)
+    const error = await client.run('aiTask', prompt).catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(LlmError)
     expect((error as LlmError).kind).toBe('auth')
@@ -282,7 +282,7 @@ describe('llm-client', () => {
     llm.models = llm.models.map((model) => ({ ...model, providerModelId: '' }))
     const { client } = setup(vi.fn<FetchFunction>(), llm)
 
-    await expect(client.run('aiTasks', prompt)).rejects.toMatchObject({
+    await expect(client.run('aiTask', prompt)).rejects.toMatchObject({
       kind: 'no_model',
     })
   })
@@ -305,7 +305,7 @@ describe('llm-client', () => {
     )
     const { client } = setup(fetch)
 
-    const text = await client.run('aiTasks', prompt, {
+    const text = await client.run('aiTask', prompt, {
       signal: controller.signal,
       onChunk: () => controller.abort(),
     })
@@ -316,12 +316,12 @@ describe('llm-client', () => {
   it('picks up a changed config', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const { client, config } = setup(fetch)
-    await client.run('aiTasks', prompt, { onChunk: () => undefined })
+    await client.run('aiTask', prompt, { onChunk: () => undefined })
 
     const next = structuredClone(DEFAULT_LLM_CONFIG)
     next.models[0].providerModelId = 'llama3'
     config.current = next
-    await client.run('aiTasks', prompt, { onChunk: () => undefined })
+    await client.run('aiTask', prompt, { onChunk: () => undefined })
 
     const body = JSON.parse(String(fetch.mock.calls[1][1]?.body))
     expect(body.model).toBe('llama3')
@@ -468,11 +468,11 @@ it('rejects truncated streamed output without switching models and retains the t
     )
   )
   const config = structuredClone(DEFAULT_LLM_CONFIG)
-  config.taskModelChains.aiTasks = ['local-qwen', 'gemini-flash']
+  config.taskModelChains.aiTask = ['local-qwen', 'gemini-flash']
   const { client } = setup(fetch, config)
   const chunks: string[] = []
   await expect(
-    client.run('aiTasks', prompt, { onChunk: (chunk) => chunks.push(chunk) })
+    client.run('aiTask', prompt, { onChunk: (chunk) => chunks.push(chunk) })
   ).rejects.toMatchObject({ kind: 'output_truncated', partialText: 'partial' })
   expect(chunks).toEqual(['partial'])
   expect(fetch).toHaveBeenCalledOnce()
@@ -496,7 +496,7 @@ it('rejects truncated non-streamed output and preserves its partial text', async
     })
   )
   const { client } = setup(fetch)
-  await expect(client.run('aiTasks', prompt)).rejects.toMatchObject({
+  await expect(client.run('aiTask', prompt)).rejects.toMatchObject({
     kind: 'output_truncated',
     partialText: 'partial',
   })
@@ -509,7 +509,7 @@ it('shares one deadline across the entire fallback chain', async () => {
     providerId: 'local',
     providerModelId: 'fallback',
   })
-  config.taskModelChains.aiTasks = ['local-qwen', 'fallback']
+  config.taskModelChains.aiTask = ['local-qwen', 'fallback']
   const fetch = vi.fn<FetchFunction>(
     async (_url, options) =>
       new Promise((_resolve, reject) => {
@@ -526,7 +526,7 @@ it('shares one deadline across the entire fallback chain', async () => {
     timeoutMs: 30,
     transport: { fetch, openSocket: vi.fn() },
   })
-  await expect(client.run('aiTasks', prompt)).rejects.toMatchObject({
+  await expect(client.run('aiTask', prompt)).rejects.toMatchObject({
     kind: 'timeout',
   })
   expect(fetch).toHaveBeenCalledOnce()
@@ -620,7 +620,7 @@ describe('llm-client stream', () => {
     const { client } = setup(fetch, toolConfig())
 
     const events = await collect(
-      client.stream('aiTasks', prompt, { tools: clock(), maxSteps: 3 })
+      client.stream('aiTask', prompt, { tools: clock(), maxSteps: 3 })
     )
 
     expect(events.map((event) => event.type)).toEqual([
@@ -653,7 +653,7 @@ describe('llm-client stream', () => {
       toolApproval: { now: 'user-approval' as const },
     }
 
-    const first = await collect(client.stream('aiTasks', prompt, options))
+    const first = await collect(client.stream('aiTask', prompt, options))
     const request = first.find((event) => event.type === 'approval-request')
     const finish = first.at(-1)
     expect(request).toMatchObject({ toolName: 'now', input: {} })
@@ -663,7 +663,7 @@ describe('llm-client stream', () => {
 
     const second = await collect(
       client.stream(
-        'aiTasks',
+        'aiTask',
         {
           messages: [
             ...prompt.messages,
@@ -690,7 +690,7 @@ describe('llm-client stream', () => {
     const { client } = setup(fetch, toolConfig())
 
     await expect(
-      collect(client.stream('aiTasks', prompt, { tools: clock(), maxSteps: 1 }))
+      collect(client.stream('aiTask', prompt, { tools: clock(), maxSteps: 1 }))
     ).rejects.toMatchObject({ kind: 'step_limit' })
   })
 
@@ -703,7 +703,7 @@ describe('llm-client stream', () => {
     const { client } = setup(fetch, toolConfig())
 
     const error = await collect(
-      client.stream('aiTasks', prompt, { tools: clock(), maxSteps: 2 })
+      client.stream('aiTask', prompt, { tools: clock(), maxSteps: 2 })
     ).catch((caught: unknown) => caught)
 
     expect(error).toMatchObject({ kind: 'tools_unsupported' })
@@ -728,7 +728,7 @@ describe('llm-client stream', () => {
     const { client } = setup(fetch)
     const events: LlmStreamEvent[] = []
 
-    for await (const event of client.stream('aiTasks', prompt, {
+    for await (const event of client.stream('aiTask', prompt, {
       signal: controller.signal,
     })) {
       events.push(event)

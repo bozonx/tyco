@@ -20,20 +20,24 @@ describe('bundled plugin config', () => {
     })
     const defaults = applyPluginDefaults(indexes)
     for (const factory of indexes) {
-      expect(defaults[factory().id]).toMatchObject({ enabled: false })
+      expect(defaults[factory().id]).toMatchObject({
+        isEnabled: false,
+        settings: {},
+      })
     }
     expect(
-      applyPluginDefaults(indexes, { WebFormatter: { enabled: true } })
-        .WebFormatter
-    ).toMatchObject({ enabled: true })
+      applyPluginDefaults(indexes, {
+        WebFormatter: { isEnabled: true, settings: {} },
+      }).WebFormatter
+    ).toMatchObject({ isEnabled: true, settings: {} })
   })
   it('resolves current settings without reading other plugin identities', () => {
     const definition = { ...diacritics(), name: 'Diacritics' }
     const saved = applyPluginDefaults([() => definition], {
-      Other: { enabled: false },
+      Other: { isEnabled: false, settings: {} },
     })
-    expect(saved.Other).toEqual({ enabled: false })
-    expect(saved.Diacritics).toMatchObject({ enabled: false })
+    expect(saved.Other).toEqual({ isEnabled: false, settings: {} })
+    expect(saved.Diacritics).toMatchObject({ isEnabled: false, settings: {} })
     const config = resolvePluginConfig(definition)
     expect(
       (config.actions as Array<{ id: string; enabled: boolean }>)

@@ -253,8 +253,8 @@ const currentTabTitle = computed(() =>
 
 const effectiveAppLanguage = computed(() =>
   resolveUiLanguagePreference(
-    userConfig.value.appLanguage,
-    userConfig.value.userLanguage,
+    userConfig.value.language.ui,
+    userConfig.value.language.user,
     getNavigatorLanguages()
   )
 )
@@ -291,7 +291,7 @@ provide(SETTINGS_CONTEXT_KEY, {
 })
 
 watch(
-  () => [userConfig.value.appLanguage, userConfig.value.userLanguage],
+  () => [userConfig.value.language.ui, userConfig.value.language.user],
   ([appLanguage, userLanguage]) => {
     syncI18nLocale(appLanguage, userLanguage)
   }
@@ -307,11 +307,11 @@ const configIsNewer = computed(
 )
 
 watch(
-  () => userConfig.value.userLanguage,
+  () => userConfig.value.language.user,
   (userLanguage) => {
     const normalized = normalizeLocale(userLanguage || AUTO_LANGUAGE_VALUE)
-    if (userConfig.value.userLanguage !== normalized) {
-      userConfig.value.userLanguage = normalized
+    if (userConfig.value.language.user !== normalized) {
+      userConfig.value.language.user = normalized
     }
   }
 )

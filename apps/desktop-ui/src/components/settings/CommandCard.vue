@@ -14,7 +14,7 @@
       <span
         class="command-name"
         :class="{
-          'is-empty': !command.name || !command.enabled || unavailableReasonKey,
+          'is-empty': !command.name || !command.isEnabled || unavailableReasonKey,
         }"
       >
         {{ command.name || t('commands.unnamed') }}
@@ -23,7 +23,7 @@
         {{ t('commands.badgeNoText') }}
       </Badge>
       <Badge
-        v-if="command.enabled && unavailableReasonKey"
+        v-if="command.isEnabled && unavailableReasonKey"
         tone="muted"
         :title="t(unavailableReasonKey!)"
       >
@@ -57,9 +57,9 @@
       <FieldSwitch
         :key="command.id"
         class="enabled-switch"
-        :model-value="command.enabled"
-        :title="t(command.enabled ? 'commands.disable' : 'commands.enable')"
-        @update:model-value="emit('update', { ...command, enabled: $event })"
+        :model-value="command.isEnabled"
+        :title="t(command.isEnabled ? 'commands.disable' : 'commands.enable')"
+        @update:model-value="emit('update', { ...command, isEnabled: $event })"
       />
       <DropdownMenu
         size="xs"

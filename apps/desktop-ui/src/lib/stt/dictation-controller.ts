@@ -1,4 +1,4 @@
-import type { SttModel, UserConfig } from '@tyco/shared'
+import type { UserConfig } from '@tyco/shared'
 import { resolveLanguagePreference } from '../locale/language'
 import type { SecretsStatus } from '../net/secrets'
 import { assertSttKeyAvailable } from './stt-readiness'
@@ -6,6 +6,7 @@ import { dictationLanguageFor } from './dictation-language'
 import type { LiveTranscriptState } from './live-transcript'
 import type { LiveDictation } from './live-dictation'
 import { buildSttCatalog, secretId, sttProviderNeedsKey } from './stt-client'
+import { activeSttModel, type SttModel } from './stt-config'
 
 export interface DictationHandlers {
   onText: (state: LiveTranscriptState) => void
@@ -13,7 +14,7 @@ export interface DictationHandlers {
 }
 
 export interface DictationControllerDependencies {
-  getConfig: () => Pick<UserConfig, 'stt' | 'userLanguage'>
+  getConfig: () => Pick<UserConfig, 'stt' | 'language'>
   dictation: LiveDictation
   refreshSecrets: () => Promise<unknown>
   getSecrets: () => SecretsStatus
@@ -25,38 +26,20 @@ export function createDictationController(
   deps: DictationControllerDependencies
 ) {
   let generation = 0
-  const currentSttModel = () => {
-    const userConfig = deps.getConfig()
-    const modelId = userConfig.stt.selectedModelId
-
-    return userConfig.stt.models.find((model: SttModel) => model.id === modelId)
-  }
-
-  const shouldFormatRecognizedText = () => {
-    return Boolean(currentSttModel()?.formatWithLlm)
-  }
-
-  const currentVoiceModel = () => {
-    const sttModel = currentSttModel()
-
-    if (!sttModel) {
-      throw new Error(deps.translate('toast.modelNotFound'))
-    }
-
-    return sttModel
-  }
+  const shouldFormatRecognizedText = () =>
+    deps.getConfig().stt.isLlmFormattingEnabled
 
   // naming the language matters: the multilingual model takes Russian for
   // Spanish and the like, so it is used only when chosen explicitly
   const currentDictationLanguage = (model: SttModel) =>
     dictationLanguageFor(
       model.language,
-      resolveLanguagePreference(deps.getConfig().userLanguage)
+      resolveLanguagePreference(deps.getConfig().language.user)
     )
 
   const startDictation = async (handlers: DictationHandlers) => {
     const runGeneration = ++generation
-    const model = currentVoiceModel()
+    const model = activeSttModel(deps.getConfig().stt)
     try {
       buildSttCatalog(model)
     } catch {

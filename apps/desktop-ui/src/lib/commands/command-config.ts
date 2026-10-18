@@ -4,10 +4,10 @@ import {
   type CommandLauncherAfterRun,
   type CustomActionAfterRun,
   SCRIPT_MAX_TIMEOUT_SEC,
+  SHORTCUT_SLOT_KEYS,
   type ScriptToolConfig,
   type WebhookToolConfig,
 } from '@tyco/shared'
-import { normalizeShortcutSlots } from '../shortcut-slots/shortcut-slots'
 import type { RegisteredTool } from '../tools/tool-types'
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -110,12 +110,12 @@ export function normalizeCommand(value: unknown): CommandConfig | null {
     toolConfig: isRecord(value.toolConfig) ? value.toolConfig : {},
     isLlmArgumentParsingEnabled: value.isLlmArgumentParsingEnabled === true,
     launcherAfterRun: normalizeLauncherAfterRun(value.launcherAfterRun),
-    logOutput: value.logOutput === true,
+    isOutputLogged: value.isOutputLogged === true,
     availableIn: {
       external: availableIn.external === true,
       chat: availableIn.chat === true,
     },
-    enabled: value.enabled !== false,
+    isEnabled: value.isEnabled !== false,
   }
   if (typeof value.description === 'string' && value.description) {
     command.description = value.description
@@ -136,18 +136,18 @@ export function normalizeCommands(value: unknown): CommandConfig[] {
   })
 }
 
-/** Normalizes the 15 slots of the command overlay. */
+/** The command ids of a launcher page in key order; a missing command leaves its slot empty */
 export function normalizeLauncherCommands(
   value: unknown,
   commands: readonly CommandConfig[] = []
 ): (string | null)[] {
-  const source: readonly unknown[] = Array.isArray(value) ? value : []
+  const source: Record<string, unknown> =
+    isRecord(value) ? value : {}
   const existingIds = new Set(commands.map((c) => c.id))
-  return normalizeShortcutSlots<string>(
-    source.map((item) =>
-      typeof item === 'string' && item.trim() ? item : null
-    )
-  ).map((id) => (id && existingIds.has(id) ? id : null))
+  return SHORTCUT_SLOT_KEYS.map((key) => {
+    const id = source[key]
+    return typeof id === 'string' && existingIds.has(id) ? id : null
+  })
 }
 
 function newCommandId(): string {
@@ -198,8 +198,8 @@ export function createCommand(
     toolConfig: defaultToolConfig(toolId),
     isLlmArgumentParsingEnabled: false,
     launcherAfterRun: launcherAfterRunFromOutput(tool?.defaultAfterRun),
-    logOutput: false,
+    isOutputLogged: false,
     availableIn: { external: false, chat: false },
-    enabled: true,
+    isEnabled: true,
   }
 }

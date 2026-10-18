@@ -23,11 +23,6 @@ describe('FastNote plugin', () => {
     expect(tools[0].configFields?.map((field) => field.name)).not.toContain(
       'clearInputAfterSave'
     )
-    const defaults = tools[0].defaultCommands
-    expect(defaults?.map((preset) => [preset.id, preset.menu])).toEqual([
-      ['note', { preferredKey: 'c' }],
-      ['daily', { preferredKey: 'd' }],
-    ])
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
       id: 'fastNote',
@@ -99,20 +94,20 @@ describe('FastNote plugin', () => {
     expect(mocks.toast).toHaveBeenCalledWith('local.noteAppended', 'success')
   })
 
-  it('appends to the daily note with the settings of its default command', async () => {
+  it('appends to the daily note with the settings of the command', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 9, 3, 12, 0, 0))
 
     const { mocks, tools } = setup({ config: { pathToNotes: '/vault' } })
-    const daily = tools[0].defaultCommands?.find(
-      (preset) => preset.id === 'daily'
-    )
-
-    expect(daily).toBeDefined()
+    const daily = {
+      saveMode: 'append',
+      fileNameTemplate: '{YYYY}-{MM}-{DD}.md',
+      contentTemplate: '- **{HH}:{mm}**: {content}',
+    }
 
     const result = await tools[0].run({
       input: { text: 'Quick thought' },
-      config: { pathToNotes: '/vault', ...daily?.toolConfig },
+      config: { pathToNotes: '/vault', ...daily },
       source: 'launcher',
       signal: new AbortController().signal,
       wantsOutput: false,

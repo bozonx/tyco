@@ -54,7 +54,7 @@ describe('translation settings model', () => {
     expect(model.usesTranslationRules.value).toBe(false)
     model.updateCorrectionPrompt('Check terminology')
     model.updateGlossary('!TyCo')
-    expect(state.config.correctionPrompt).toBe('Check terminology')
+    expect(state.config.qualityGatePrompt).toBe('Check terminology')
     expect(model.glossaryText.value).toBe('!TyCo')
     model.updateProvider('llm')
     expect(model.usesTranslationRules.value).toBe(true)

@@ -115,10 +115,10 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     }
     if (!prompt.trim()) return ''
 
-    return await aiRequest(LlmInstructionKind.AI_TASKS, text, {
+    return await aiRequest(LlmInstructionKind.AI_TASK, text, {
       ...options,
       instructions:
-        deps.getAppConfig().aiInstructions[LlmInstructionKind.AI_TASKS],
+        deps.getAppConfig().aiInstructions[LlmInstructionKind.AI_TASK],
       rules: prompt.trim(),
     })
   }

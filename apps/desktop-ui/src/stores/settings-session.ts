@@ -7,7 +7,6 @@ import { translate } from '../lib/i18n'
 import { createSettingsConfig } from '../lib/settings/settings-config'
 import { createSettingsSession } from '../lib/settings/settings-session'
 import { usePluginRuntimeStore } from './plugin-runtime'
-import { useActionMenuStore } from './action-menu'
 import { useDesktopStore } from './desktop'
 import { useThemeStore } from './theme'
 
@@ -15,12 +14,9 @@ import { useThemeStore } from './theme'
 export const useSettingsSessionStore = defineStore('settingsSession', () => {
   const desktop = useDesktopStore()
   const { pluginFactories } = usePluginRuntimeStore()
-  const actions = useActionMenuStore()
   const theme = useThemeStore()
   const { toastText } = useToast()
   const config = createSettingsConfig({
-    resolveMainActions: actions.resolveMainActions,
-    getRegisteredActions: actions.getRegisteredActions,
     pluginFactories: () => pluginFactories,
     appearance: () => theme.settings,
   })

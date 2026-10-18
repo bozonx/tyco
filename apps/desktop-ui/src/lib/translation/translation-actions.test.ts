@@ -24,7 +24,7 @@ function fixture() {
     client: { translate: translateClient },
     getUserConfig: () => ({
       ...DEFAULT_USER_CONFIG,
-      aiRules: { ...DEFAULT_USER_CONFIG.aiRules, translate: 'Use formal tone' },
+      aiRules: { ...DEFAULT_USER_CONFIG.aiRules, translation: 'Use formal tone' },
     }),
     notifyEmptyText,
     notifyError,

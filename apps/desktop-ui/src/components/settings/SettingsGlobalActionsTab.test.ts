@@ -50,7 +50,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
   beforeEach(() => {
     context = createTestSettingsContext({
       ...structuredClone(DEFAULT_USER_CONFIG),
-      submitKey: 'enter',
+      editor: { ...DEFAULT_USER_CONFIG.editor, submitKey: 'enter' },
     })
   })
 
@@ -136,7 +136,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
 
     await select.vm.$emit('update:modelValue', 'ctrlEnter')
 
-    expect(context.draft.value.submitKey).toBe('ctrlEnter')
+    expect(context.draft.value.editor.submitKey).toBe('ctrlEnter')
   })
 
   it('unassigns a hotkey', async () => {

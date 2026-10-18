@@ -16,7 +16,7 @@ pub fn create_windows(app: &App) -> Result<(), AppError> {
     for config in &app.config().app.windows {
         let mut builder = tauri::WebviewWindowBuilder::from_config(app, config)?;
         if let Some(dir) = paths.webview_dir() {
-            builder = builder.data_directory(dir.to_path_buf());
+            builder = builder.data_directory(dir);
         }
         let window = builder.build()?;
         crate::services::platform::allow_clipboard_read(&window)?;

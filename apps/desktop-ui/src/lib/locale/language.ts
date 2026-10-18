@@ -236,18 +236,18 @@ export function buildLanguageOptions(
   return options
 }
 
-export function syncDocumentLanguageAttributes(userConfig?: {
-  appLanguage?: string | null
-  userLanguage?: string | null
+export function syncDocumentLanguageAttributes(language?: {
+  ui?: string | null
+  user?: string | null
 }) {
   const navigatorLanguages = getNavigatorLanguages()
   const appLanguage = resolveUiLanguagePreference(
-    userConfig?.appLanguage,
-    userConfig?.userLanguage,
+    language?.ui,
+    language?.user,
     navigatorLanguages
   )
   const userLanguage = resolveLanguagePreference(
-    userConfig?.userLanguage,
+    language?.user,
     navigatorLanguages
   )
 

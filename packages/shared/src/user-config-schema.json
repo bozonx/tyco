@@ -1,23 +1,64 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tyco user configuration",
   "type": "object",
   "properties": {
-    "submitKey": { "enum": ["enter", "ctrlEnter"], "defaultPath": "submitKey" },
-    "quickCorrectionPrefetch": {
-      "type": "boolean",
-      "defaultPath": "quickCorrectionPrefetch"
-    },
-    "quickHideOnBlur": { "type": "boolean", "defaultPath": "quickHideOnBlur" },
-    "appLanguage": { "type": "string", "defaultPath": "appLanguage" },
-    "userLanguage": { "type": "string", "defaultPath": "userLanguage" },
-    "diffViewMode": {
-      "enum": ["unified", "split", "result"],
-      "defaultPath": "diffViewMode"
-    },
     "configVersion": {
       "type": "integer",
       "minimum": 0,
       "maximum": 9007199254740991,
       "defaultPath": "configVersion"
+    },
+    "appearance": {
+      "type": "object",
+      "properties": {
+        "theme": {
+          "enum": ["auto", "light", "dark", "e-ink"],
+          "default": "auto"
+        },
+        "contrast": { "enum": ["auto", "normal", "more"], "default": "auto" },
+        "motion": { "enum": ["auto", "normal", "reduce"], "default": "auto" },
+        "uiScalePercent": {
+          "enum": [100, 115, 130, 150, 175, 200],
+          "default": 100
+        }
+      },
+      "required": ["theme", "contrast", "motion", "uiScalePercent"],
+      "additionalProperties": false,
+      "defaultPath": "appearance"
+    },
+    "language": {
+      "type": "object",
+      "properties": {
+        "ui": { "type": "string", "default": "auto" },
+        "user": { "type": "string", "default": "auto" }
+      },
+      "required": ["ui", "user"],
+      "additionalProperties": false,
+      "defaultPath": "language"
+    },
+    "editor": {
+      "type": "object",
+      "properties": {
+        "submitKey": { "enum": ["enter", "ctrlEnter"], "default": "enter" },
+        "diffViewMode": {
+          "enum": ["unified", "split", "result"],
+          "default": "unified"
+        }
+      },
+      "required": ["submitKey", "diffViewMode"],
+      "additionalProperties": false,
+      "defaultPath": "editor"
+    },
+    "quickWindow": {
+      "type": "object",
+      "properties": {
+        "isHiddenOnBlur": { "type": "boolean", "default": true },
+        "isCorrectionPrefetchEnabled": { "type": "boolean", "default": false }
+      },
+      "required": ["isHiddenOnBlur", "isCorrectionPrefetchEnabled"],
+      "additionalProperties": false,
+      "defaultPath": "quickWindow"
     },
     "hotkeys": {
       "type": "object",
@@ -29,14 +70,10 @@
         "voice": { "type": "string", "default": "Ctrl+Alt+V" },
         "select": { "type": "string", "default": "Ctrl+Alt+S" },
         "aiTasks": { "type": "string", "default": "" },
-        "commandLauncher": { "type": "string", "default": "" },
-        "commandLauncher2": { "type": "string", "default": "" },
-        "commandLauncher3": { "type": "string", "default": "" },
-        "commandLauncher4": { "type": "string", "default": "" },
-        "commandLauncher5": { "type": "string", "default": "" },
         "correction": { "type": "string", "default": "" },
         "translate": { "type": "string", "default": "" },
-        "voiceCommands": { "type": "string", "default": "" }
+        "voiceCommands": { "type": "string", "default": "" },
+        "selectionCorrection": { "type": "string", "default": "Ctrl+Alt+F" }
       },
       "required": [
         "editor",
@@ -46,50 +83,134 @@
         "voice",
         "select",
         "aiTasks",
-        "commandLauncher",
-        "commandLauncher2",
-        "commandLauncher3",
-        "commandLauncher4",
-        "commandLauncher5",
         "correction",
         "translate",
-        "voiceCommands"
+        "voiceCommands",
+        "selectionCorrection"
       ],
       "additionalProperties": false,
       "defaultPath": "hotkeys"
     },
-    "selectionHotkeys": {
-      "type": "object",
-      "properties": { "correction": { "type": "string", "default": "" } },
-      "required": [],
-      "additionalProperties": false,
-      "defaultPath": "selectionHotkeys"
-    },
     "externalAccess": {
       "type": "object",
-      "properties": { "selection": { "type": "boolean", "default": false } },
-      "required": ["selection"],
+      "properties": {
+        "canAccessSelection": { "type": "boolean", "default": false }
+      },
+      "required": ["canAccessSelection"],
       "additionalProperties": false,
       "defaultPath": "externalAccess"
     },
     "windowInsertion": {
       "type": "object",
       "properties": {
-        "method": { "enum": ["xdotool", "ydotool"], "default": "xdotool" },
-        "xdotoolBin": { "type": "string", "default": "" },
-        "ydotoolBin": { "type": "string", "default": "" },
         "pasteShortcut": {
           "enum": ["ctrl+v", "ctrl+shift+v", "shift+insert"],
           "default": "ctrl+v"
+        },
+        "linux": {
+          "type": "object",
+          "properties": {
+            "method": { "enum": ["xdotool", "ydotool"], "default": "xdotool" },
+            "xdotoolPath": { "type": "string", "default": "" },
+            "ydotoolPath": { "type": "string", "default": "" }
+          },
+          "required": ["method", "xdotoolPath", "ydotoolPath"],
+          "additionalProperties": false,
+          "default": {
+            "method": "xdotool",
+            "xdotoolPath": "",
+            "ydotoolPath": ""
+          }
         }
       },
-      "required": ["method", "xdotoolBin", "ydotoolBin", "pasteShortcut"],
+      "required": ["pasteShortcut", "linux"],
       "additionalProperties": false,
       "defaultPath": "windowInsertion"
     },
+    "translation": {
+      "type": "object",
+      "properties": {
+        "provider": { "enum": ["deepl", "google", "llm"], "default": "llm" },
+        "qualityGate": {
+          "enum": ["off", "onProblems", "always"],
+          "default": "off"
+        },
+        "deeplEndpoint": { "enum": ["free", "pro"], "default": "free" },
+        "glossary": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "term": { "type": "string", "default": "", "minLength": 1 },
+              "use": { "type": "string", "default": "" },
+              "doNotTranslate": { "type": "boolean", "default": false }
+            },
+            "required": ["term", "use", "doNotTranslate"],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "targetLanguages": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "q",
+              "w",
+              "e",
+              "r",
+              "t",
+              "a",
+              "s",
+              "d",
+              "f",
+              "g",
+              "z",
+              "x",
+              "c",
+              "v",
+              "b"
+            ]
+          },
+          "additionalProperties": { "type": "string", "minLength": 1 },
+          "default": { "q": "en_US" }
+        },
+        "viewMode": { "enum": ["split", "result"], "default": "split" },
+        "qualityGatePrompt": { "type": "string", "default": "" }
+      },
+      "required": [
+        "provider",
+        "qualityGate",
+        "qualityGatePrompt",
+        "deeplEndpoint",
+        "glossary",
+        "targetLanguages",
+        "viewMode"
+      ],
+      "additionalProperties": false,
+      "defaultPath": "translation"
+    },
     "mainActions": {
-      "type": "array",
-      "items": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "q",
+          "w",
+          "e",
+          "r",
+          "t",
+          "a",
+          "s",
+          "d",
+          "f",
+          "g",
+          "z",
+          "x",
+          "c",
+          "v",
+          "b"
+        ]
+      },
+      "additionalProperties": {
         "anyOf": [
           {
             "type": "object",
@@ -103,8 +224,7 @@
                   "correction",
                   "translation",
                   "askInChat"
-                ],
-                "default": "insertIntoWindow"
+                ]
               }
             },
             "required": ["type", "actionId"],
@@ -154,8 +274,7 @@
             },
             "required": ["type", "pageId"],
             "additionalProperties": false
-          },
-          { "type": "null" }
+          }
         ]
       },
       "defaultPath": "mainActions"
@@ -168,86 +287,39 @@
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "slots": {
-            "type": "array",
-            "minItems": 15,
-            "maxItems": 15,
-            "items": {
-              "anyOf": [
-                { "type": "string", "minLength": 1 },
-                { "type": "null" }
-              ],
-              "default": null
+            "type": "object",
+            "propertyNames": {
+              "enum": [
+                "q",
+                "w",
+                "e",
+                "r",
+                "t",
+                "a",
+                "s",
+                "d",
+                "f",
+                "g",
+                "z",
+                "x",
+                "c",
+                "v",
+                "b"
+              ]
             },
-            "default": [
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null
-            ]
+            "additionalProperties": { "type": "string", "minLength": 1 },
+            "default": {}
           },
-          "inputMode": { "enum": ["selection", "none"], "default": "selection" }
+          "inputMode": {
+            "enum": ["selection", "none"],
+            "default": "selection"
+          },
+          "hotkey": { "type": "string", "default": "" }
         },
-        "required": ["id", "slots", "inputMode"],
+        "required": ["id", "inputMode", "hotkey", "slots"],
         "additionalProperties": false
       },
       "defaultPath": "launcherPages"
-    },
-    "translation": {
-      "type": "object",
-      "properties": {
-        "provider": { "enum": ["deepl", "google", "llm"], "default": "llm" },
-        "qualityGate": {
-          "enum": ["off", "onProblems", "always"],
-          "default": "off"
-        },
-        "deeplEndpoint": { "enum": ["free", "pro"], "default": "free" },
-        "glossary": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "term": { "type": "string", "default": "", "minLength": 1 },
-              "use": { "type": "string", "default": "" },
-              "doNotTranslate": { "type": "boolean", "default": false }
-            },
-            "required": ["term", "use", "doNotTranslate"],
-            "additionalProperties": false
-          },
-          "default": []
-        },
-        "correctionPrompt": { "type": "string", "default": "" },
-        "targetLanguages": {
-          "type": "array",
-          "items": {
-            "anyOf": [{ "type": "string", "default": "" }, { "type": "null" }],
-            "default": null
-          },
-          "default": ["en_US"]
-        },
-        "viewMode": { "enum": ["split", "result"], "default": "split" }
-      },
-      "required": [
-        "provider",
-        "qualityGate",
-        "deeplEndpoint",
-        "glossary",
-        "correctionPrompt",
-        "targetLanguages",
-        "viewMode"
-      ],
-      "additionalProperties": false,
-      "defaultPath": "translation"
     },
     "commands": {
       "type": "array",
@@ -284,7 +356,6 @@
             "required": ["action"],
             "additionalProperties": false
           },
-          "logOutput": { "type": "boolean", "default": false },
           "availableIn": {
             "type": "object",
             "properties": {
@@ -294,12 +365,13 @@
             "required": ["external", "chat"],
             "additionalProperties": false
           },
-          "enabled": { "type": "boolean", "default": true },
           "isVoiceEnabled": { "type": "boolean", "default": false },
           "voiceConfirmation": {
             "enum": ["always", "auto"],
             "default": "always"
-          }
+          },
+          "isOutputLogged": { "type": "boolean", "default": false },
+          "isEnabled": { "type": "boolean", "default": true }
         },
         "required": [
           "id",
@@ -309,45 +381,15 @@
           "toolConfig",
           "isLlmArgumentParsingEnabled",
           "launcherAfterRun",
-          "logOutput",
+          "isOutputLogged",
           "availableIn",
-          "enabled",
+          "isEnabled",
           "isVoiceEnabled",
           "voiceConfirmation"
         ],
         "additionalProperties": false
       },
       "defaultPath": "commands"
-    },
-    "registrationState": {
-      "type": "object",
-      "properties": {
-        "reviewedMainActionIds": {
-          "type": "array",
-          "items": { "type": "string", "default": "" },
-          "default": [],
-          "uniqueItems": true
-        },
-        "seededCommandIds": {
-          "type": "array",
-          "items": { "type": "string", "default": "" },
-          "default": [],
-          "uniqueItems": true
-        },
-        "seededToolIds": {
-          "type": "array",
-          "items": { "type": "string", "default": "" },
-          "default": [],
-          "uniqueItems": true
-        }
-      },
-      "required": [
-        "reviewedMainActionIds",
-        "seededCommandIds",
-        "seededToolIds"
-      ],
-      "additionalProperties": false,
-      "defaultPath": "registrationState"
     },
     "llm": {
       "type": "object",
@@ -369,7 +411,7 @@
                   "google",
                   "openrouter",
                   "deepseek",
-                  "openai-compatible"
+                  "openaiCompatible"
                 ],
                 "default": "google"
               },
@@ -413,7 +455,7 @@
         "taskModelChains": {
           "type": "object",
           "properties": {
-            "translate": {
+            "translation": {
               "type": "array",
               "items": { "type": "string", "default": "" },
               "default": [],
@@ -431,14 +473,19 @@
               "default": [],
               "uniqueItems": true
             },
-            "aiTasks": {
+            "aiTask": {
               "type": "array",
               "items": { "type": "string", "default": "" },
               "default": [],
               "uniqueItems": true
             }
           },
-          "required": ["translate", "voiceCorrection", "correction", "aiTasks"],
+          "required": [
+            "translation",
+            "voiceCorrection",
+            "correction",
+            "aiTask"
+          ],
           "additionalProperties": false
         }
       },
@@ -451,45 +498,52 @@
       "properties": {
         "chat": { "type": "string", "default": "" },
         "correction": { "type": "string", "default": "" },
-        "translate": { "type": "string", "default": "" },
+        "translation": { "type": "string", "default": "" },
         "voiceCorrection": { "type": "string", "default": "" }
       },
-      "required": ["chat", "correction", "translate", "voiceCorrection"],
+      "required": ["chat", "correction", "translation", "voiceCorrection"],
       "additionalProperties": false,
       "defaultPath": "aiRules"
     },
     "aiTasks": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string", "default": "", "minLength": 1 },
-              "name": { "type": "string", "default": "" },
-              "rule": { "type": "string", "default": "" }
-            },
-            "required": ["id", "name", "rule"],
-            "additionalProperties": false
-          },
-          { "type": "null" }
-        ],
-        "default": null
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "q",
+          "w",
+          "e",
+          "r",
+          "t",
+          "a",
+          "s",
+          "d",
+          "f",
+          "g",
+          "z",
+          "x",
+          "c",
+          "v",
+          "b"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "default": "", "minLength": 1 },
+          "name": { "type": "string", "default": "" },
+          "rule": { "type": "string", "default": "" }
+        },
+        "required": ["id", "name", "rule"],
+        "additionalProperties": false
       },
       "defaultPath": "aiTasks"
     },
-    "plugins": {
+    "aiVault": {
       "type": "object",
-      "properties": {},
+      "properties": { "path": { "type": "string" } },
       "required": [],
-      "additionalProperties": true,
-      "defaultPath": "plugins"
-    },
-    "aiProfiles": {
-      "type": "object",
-      "properties": { "vaultPath": { "type": "string" } },
       "additionalProperties": false,
-      "default": {}
+      "defaultPath": "aiVault"
     },
     "markdown": {
       "type": "object",
@@ -547,20 +601,27 @@
       "additionalProperties": false,
       "defaultPath": "markdownClean"
     },
-    "appearance": {
+    "plugins": {
       "type": "object",
-      "properties": {
-        "theme": {
-          "enum": ["auto", "light", "dark", "e-ink"],
-          "default": "auto"
+      "properties": {},
+      "required": [],
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "isEnabled": { "type": "boolean", "default": false },
+          "settings": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": true,
+            "default": {}
+          }
         },
-        "contrast": { "enum": ["auto", "normal", "more"], "default": "auto" },
-        "motion": { "enum": ["auto", "normal", "reduce"], "default": "auto" },
-        "uiScale": { "enum": [100, 115, 130, 150, 175, 200], "default": 100 }
+        "required": ["isEnabled", "settings"],
+        "additionalProperties": false,
+        "default": { "isEnabled": false, "settings": {} }
       },
-      "required": ["theme", "contrast", "motion", "uiScale"],
-      "additionalProperties": false,
-      "defaultPath": "appearance"
+      "defaultPath": "plugins"
     },
     "editorHistory": {
       "type": "object",
@@ -578,11 +639,31 @@
           "maximum": 9007199254740991,
           "default": 30
         },
-        "sanitizeSecrets": { "type": "boolean", "default": true }
+        "isSecretSanitizingEnabled": { "type": "boolean", "default": true }
       },
-      "required": ["storage", "maxItems", "retentionDays", "sanitizeSecrets"],
+      "required": [
+        "storage",
+        "maxItems",
+        "retentionDays",
+        "isSecretSanitizingEnabled"
+      ],
       "additionalProperties": false,
       "defaultPath": "editorHistory"
+    },
+    "chatHistory": {
+      "type": "object",
+      "properties": {
+        "isEnabled": { "type": "boolean", "default": true },
+        "retentionDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "default": 0
+        }
+      },
+      "required": ["isEnabled", "retentionDays"],
+      "additionalProperties": false,
+      "defaultPath": "chatHistory"
     },
     "chat": {
       "type": "object",
@@ -590,80 +671,71 @@
         "imageQuality": {
           "enum": ["economy", "balanced", "original"],
           "default": "balanced"
-        },
-        "isHistoryEnabled": { "type": "boolean", "default": true },
-        "historyRetentionDays": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991,
-          "default": 0
         }
       },
-      "required": ["imageQuality", "isHistoryEnabled", "historyRetentionDays"],
+      "required": ["imageQuality"],
       "additionalProperties": false,
       "defaultPath": "chat"
     },
     "stt": {
       "type": "object",
       "properties": {
-        "models": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string", "default": "", "minLength": 1 },
-              "providerModelId": { "type": "string", "default": "" },
-              "provider": {
-                "enum": ["deepgram", "sherpa-onnx"],
-                "default": "deepgram"
-              },
-              "description": { "type": "string", "default": "" },
-              "formatWithLlm": { "type": "boolean", "default": false },
-              "language": { "type": "string", "default": "" },
-              "baseUrl": { "type": "string", "default": "" }
-            },
-            "required": ["id", "providerModelId", "provider"],
-            "additionalProperties": false
-          },
-          "default": [
-            {
-              "id": "deepgram-stt",
-              "provider": "deepgram",
-              "description": "Deepgram speech recognition",
-              "formatWithLlm": false,
-              "language": "auto",
-              "providerModelId": "nova-3"
-            },
-            {
-              "id": "sherpa-onnx-stt",
-              "provider": "sherpa-onnx",
-              "description": "Self-hosted sherpa-onnx streaming server",
-              "formatWithLlm": false,
-              "baseUrl": "ws://localhost:6006",
-              "providerModelId": "sherpa-onnx"
-            }
-          ],
-          "minItems": 1
+        "providerId": {
+          "enum": ["deepgram", "sherpaOnnx"],
+          "default": "deepgram"
         },
-        "selectedModelId": { "type": "string", "default": "deepgram-stt" }
+        "isLlmFormattingEnabled": { "type": "boolean", "default": false },
+        "providers": {
+          "type": "object",
+          "properties": {
+            "deepgram": {
+              "type": "object",
+              "properties": {
+                "modelId": { "type": "string", "default": "nova-3" },
+                "language": { "type": "string", "default": "auto" }
+              },
+              "required": ["modelId", "language"],
+              "additionalProperties": false,
+              "default": { "modelId": "nova-3", "language": "auto" }
+            },
+            "sherpaOnnx": {
+              "type": "object",
+              "properties": {
+                "baseUrl": {
+                  "type": "string",
+                  "default": "ws://localhost:6006"
+                }
+              },
+              "required": ["baseUrl"],
+              "additionalProperties": false,
+              "default": { "baseUrl": "ws://localhost:6006" }
+            }
+          },
+          "required": ["deepgram", "sherpaOnnx"],
+          "additionalProperties": false,
+          "default": {
+            "deepgram": { "modelId": "nova-3", "language": "auto" },
+            "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+          }
+        }
       },
-      "required": ["models", "selectedModelId"],
+      "required": ["providerId", "isLlmFormattingEnabled", "providers"],
       "additionalProperties": false,
       "defaultPath": "stt"
     }
   },
   "required": [
-    "externalAccess",
+    "configVersion",
+    "appearance",
+    "language",
+    "editor",
+    "quickWindow",
     "hotkeys",
-    "selectionHotkeys",
-    "submitKey",
-    "quickCorrectionPrefetch",
-    "quickHideOnBlur",
+    "externalAccess",
     "windowInsertion",
-    "appLanguage",
-    "userLanguage",
     "translation",
     "mainActions",
+    "launcherPages",
     "commands",
     "llm",
     "aiRules",
@@ -671,18 +743,13 @@
     "markdown",
     "markdownClean",
     "plugins",
-    "registrationState",
-    "diffViewMode",
-    "configVersion",
-    "appearance",
     "editorHistory",
+    "chatHistory",
     "chat",
     "stt",
-    "launcherPages"
+    "aiVault"
   ],
   "additionalProperties": false,
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Tyco user configuration",
   "$defs": {
     "scriptToolConfig": {
       "type": "object",
