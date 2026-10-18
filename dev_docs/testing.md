@@ -166,6 +166,48 @@ IPC boundary. They do not prove native OS integration or production CSP behavior
 `pnpm test:desktop` uses `tauri-driver` against the actual embedded application;
 additional platform checks are described in `cross-platform.md`.
 
+### Native binary smoke
+
+The `desktop-smoke` CI job runs on every PR to `main` on Linux and Windows.
+It builds embedded assets with `pnpm tauri:build --debug --no-bundle` and builds
+`tyco-ctl` separately. This uses the production CSP and real Rust commands,
+with an isolated temporary `TYCO_DEV_HOME`; no development server or mocked IPC
+is involved. Debug builds are required for the isolated home override.
+
+Keep this suite small. Its scenarios cover:
+
+1. Native startup and the main CodeMirror editor.
+2. Embedded asset origin (reject a development server).
+3. Main-window IPC permissions.
+4. Saving settings and merging stale snapshots.
+5. Saving editor history and updating its result.
+6. Removing editor history.
+7. Saving a note and checking the file on disk.
+8. Production CSP blocking direct HTTP without reaching the fixture server.
+9. Rust HTTP proxy reaching that same offline fixture.
+10. CLI status against the running application.
+11. CLI activation delivering text to the editor.
+12. D-Bus activation delivering text to the editor (Linux only).
+13. Plugin installation, activation and worker sandbox restrictions.
+14. Lazy settings navigation and plugin removal.
+
+Linux needs `tauri-driver`, `WebKitWebDriver`, Xvfb, Openbox and a session D-Bus:
+
+```sh
+cargo install tauri-driver --version 2.0.5 --locked
+cargo build --manifest-path src-tauri/Cargo.toml --locked -p tyco-ctl
+pnpm tauri:build --debug --no-bundle
+xvfb-run -a dbus-run-session -- sh -c 'openbox >/tmp/tyco-openbox.log 2>&1 & pnpm test:desktop'
+```
+
+Windows runs `pnpm test:desktop` directly after the same builds, with
+`tauri-driver.exe` and a matching `msedgedriver.exe` on `PATH`. CI downloads the
+Edge driver matching the installed Edge version. `TYCO_TEST_APP` and
+`TYCO_TEST_DRIVER` can override the application and driver paths.
+The standard Tauri driver does not support WKWebView on macOS; keep unit tests
+and manual native verification there. Failure screenshots and driver/application
+logs are uploaded separately for each smoke platform.
+
 Keep timing combinations, queues, normalization and business-rule matrices in
 unit tests. Browser scenarios should demonstrate a complete user action and its
 observable result. Browser focus, scrolling, geometry and native dialog behavior

@@ -253,12 +253,18 @@ jobs:
           if-no-files-found: error
 
   desktop-smoke:
-    name: Linux System WebView Smoke
-    runs-on: ubuntu-latest
+    name: Desktop Smoke on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     needs: [frontend, browser, rust]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - name: Install system webview and headless display
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y ${{ env.LINUX_TAURI_DEPS }} webkit2gtk-driver xvfb openbox dbus-x11
@@ -276,14 +282,31 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Install Tauri WebDriver
         run: cargo install tauri-driver --version 2.0.5 --locked
+      - name: Install matching Edge WebDriver
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $edge = (Get-Item "${env:ProgramFiles(x86)}/Microsoft/Edge/Application/msedge.exe").VersionInfo.ProductVersion
+          $driverDir = Join-Path $env:RUNNER_TEMP 'edge-driver'
+          Invoke-WebRequest "https://msedgedriver.microsoft.com/$edge/edgedriver_win64.zip" -OutFile "$env:RUNNER_TEMP/edgedriver.zip"
+          Expand-Archive "$env:RUNNER_TEMP/edgedriver.zip" -DestinationPath $driverDir
+          $driverDir >> $env:GITHUB_PATH
+      - name: Build the local control client
+        run: cargo build --manifest-path src-tauri/Cargo.toml --locked -p tyco-ctl
       - name: Build an embedded debug app
         run: pnpm tauri:build --debug --no-bundle
-      - name: Verify the actual desktop runtime
+      - name: Verify the actual desktop runtime on Linux
+        if: runner.os == 'Linux'
         run: xvfb-run -a dbus-run-session -- sh -c 'openbox >/tmp/tyco-openbox.log 2>&1 & pnpm test:desktop'
-      - name: Upload failed smoke screenshot
+      - name: Verify the actual desktop runtime on Windows
+        if: runner.os == 'Windows'
+        run: pnpm test:desktop
+      - name: Upload smoke failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: desktop-smoke-failure
-          path: desktop-smoke-failure.png
+          name: desktop-smoke-failure-${{ runner.os }}
+          path: |
+            desktop-smoke-failure.png
+            desktop-smoke-failure.log
           if-no-files-found: ignore

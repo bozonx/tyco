@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   mkdir,
@@ -10,31 +10,47 @@ import {
   rm,
   writeFile,
 } from 'node:fs/promises'
+import { createServer } from 'node:http'
+import { promisify } from 'node:util'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 
+const runFile = promisify(execFile)
+const isWindows = process.platform === 'win32'
 const root = resolve(import.meta.dirname, '..')
 const home = await mkdtemp(resolve(tmpdir(), 'tyco-desktop-smoke-'))
 const binary = resolve(
   root,
-  process.env.TYCO_TEST_APP ?? 'src-tauri/target/debug/tyco'
+  process.env.TYCO_TEST_APP ??
+    `src-tauri/target/debug/tyco${isWindows ? '.exe' : ''}`
 )
 const runtimeDir = resolve(home, 'runtime')
 await mkdir(runtimeDir, { mode: 0o700 })
 const endpoint = 'http://127.0.0.1:4444'
+const appEnv = {
+  ...process.env,
+  TYCO_DEV_HOME: home,
+  ...(!isWindows
+    ? {
+        XDG_RUNTIME_DIR: runtimeDir,
+        XDG_SESSION_TYPE: 'x11',
+        XDG_CURRENT_DESKTOP: 'Openbox',
+        XDG_SESSION_DESKTOP: 'openbox',
+        WAYLAND_DISPLAY: '',
+        GDK_BACKEND: 'x11',
+        WEBKIT_DISABLE_DMABUF_RENDERER: '1',
+      }
+    : {}),
+}
+let proxyRequestCount = 0
+const server = createServer((_request, response) => {
+  proxyRequestCount += 1
+  response.writeHead(204)
+  response.end()
+})
 const driver = spawn(process.env.TYCO_TEST_DRIVER ?? 'tauri-driver', [], {
-  env: {
-    ...process.env,
-    TYCO_DEV_HOME: home,
-    XDG_RUNTIME_DIR: runtimeDir,
-    XDG_SESSION_TYPE: 'x11',
-    XDG_CURRENT_DESKTOP: 'Openbox',
-    XDG_SESSION_DESKTOP: 'openbox',
-    WAYLAND_DISPLAY: '',
-    GDK_BACKEND: 'x11',
-    WEBKIT_DISABLE_DMABUF_RENDERER: '1',
-  },
+  env: appEnv,
   stdio: ['ignore', 'pipe', 'pipe'],
 })
 let driverOutput = ''
@@ -173,6 +189,131 @@ try {
   )
   assert.equal(second.settings.userConfig.userLanguage, 'en_US')
 
+  const historyId = await invoke('save_editor_history', {
+    entry: {
+      text: 'Desktop smoke source',
+      kind: 'source',
+      operation: 'ai-task',
+    },
+  })
+  assert.equal(typeof historyId, 'string')
+  await invoke('set_editor_history_result', {
+    id: historyId,
+    result: 'Smoke result',
+  })
+  const history = await invoke('get_editor_history')
+  assert.equal(
+    history.find((/** @type {{ id: string }} */ item) => item.id === historyId)
+      ?.result,
+    'Smoke result'
+  )
+  await invoke('remove_from_editor_history', { id: historyId })
+  assert.equal(
+    (await invoke('get_editor_history')).some(
+      (/** @type {{ id: string }} */ item) => item.id === historyId
+    ),
+    false
+  )
+  const notePath = await invoke('save_note', {
+    dir: home,
+    fileName: 'smoke.txt',
+    text: 'Smoke note',
+  })
+  assert.equal(await readFile(notePath, 'utf8'), 'Smoke note')
+
+  // The offline fixture must be unreachable from the webview, but reachable via Rust.
+  await new Promise((done) =>
+    server.listen(0, '127.0.0.1', () => done(undefined))
+  )
+  const address = /** @type {import('node:net').AddressInfo} */ (
+    server.address()
+  )
+  const proxyUrl = `http://127.0.0.1:${address.port}/smoke`
+  const cspBlocked = await request(
+    'POST',
+    `/session/${session}/execute/async`,
+    {
+      script: `const done = arguments[arguments.length - 1];
+      fetch(arguments[0]).then(() => done(false), () => done(true));`,
+      args: [proxyUrl],
+    }
+  )
+  assert.equal(cspBlocked, true, 'Production CSP must block direct HTTP')
+  assert.equal(proxyRequestCount, 0)
+  const networkConfig = await invoke('get_user_config')
+  await invoke('save_user_config', {
+    baseConfig: networkConfig,
+    userConfig: {
+      ...networkConfig,
+      llm: {
+        ...networkConfig.llm,
+        providers: [
+          ...(networkConfig.llm?.providers ?? []),
+          { id: 'desktop-smoke', baseUrl: proxyUrl },
+        ],
+      },
+    },
+  })
+  const proxyResult = await request(
+    'POST',
+    `/session/${session}/execute/async`,
+    {
+      script: `const done = arguments[arguments.length - 1];
+      const ipc = window.__TAURI_INTERNALS__;
+      let status;
+      const callback = ipc.transformCallback(({ message }) => {
+        if (message?.type === 'head') status = message.status;
+        if (message?.type === 'end') done({ status });
+        if (message?.type === 'error') done({ error: message.message });
+      });
+      ipc.invoke('net_fetch', { request: { method: 'GET', url: arguments[0] }, onEvent: '__CHANNEL__:' + callback })
+        .catch(error => done({ error: String(error) }));`,
+      args: [proxyUrl],
+    }
+  )
+  assert.deepEqual(proxyResult, { status: 204 })
+  assert.equal(proxyRequestCount, 1)
+
+  const ctl = resolve(binary, '..', `tyco-ctl${isWindows ? '.exe' : ''}`)
+  const status = await runFile(ctl, ['status'], { env: appEnv, timeout: 20000 })
+  assert.equal(JSON.parse(status.stdout).running, true)
+  await runFile(ctl, ['open', 'editor', '--text', 'CLI smoke input'], {
+    env: appEnv,
+    timeout: 20000,
+  })
+  await waitFor(
+    () =>
+      execute(
+        "return document.querySelector('.cm-content')?.textContent.includes('CLI smoke input')"
+      ),
+    'CLI editor input'
+  )
+  if (!isWindows) {
+    await runFile(
+      'gdbus',
+      [
+        'call',
+        '--session',
+        '--dest',
+        'org.tyco.Service',
+        '--object-path',
+        '/org/tyco/Object',
+        '--method',
+        'org.tyco.Interface.OpenWithText',
+        'editor',
+        'D-Bus smoke input',
+      ],
+      { env: appEnv, timeout: 20000 }
+    )
+    await waitFor(
+      () =>
+        execute(
+          "return document.querySelector('.cm-content')?.textContent.includes('D-Bus smoke input')"
+        ),
+      'D-Bus editor input'
+    )
+  }
+
   const manifest = {
     id: 'DesktopSmoke',
     version: '1.0.0',
@@ -223,12 +364,16 @@ try {
   )
   await invoke('remove_plugin_package', { id: manifest.id })
   console.log(
-    'Desktop smoke passed: startup, IPC permissions, concurrent config updates, plugin CSP and lazy routes'
+    'Desktop smoke passed: embedded startup, IPC permissions, config updates, history lifecycle, note storage, production CSP, Rust HTTP proxy, CLI, D-Bus (Linux), plugin sandbox and lazy routes'
   )
 } catch (error) {
+  let failureLog = `${String(error)}\n${driverOutput}\n`
   for (const file of await readdir(home, { recursive: true })) {
-    if (file.endsWith('.log'))
-      console.error((await readFile(resolve(home, file), 'utf8')).slice(-20000))
+    if (file.endsWith('.log')) {
+      const log = (await readFile(resolve(home, file), 'utf8')).slice(-20000)
+      failureLog += `\n${file}\n${log}`
+      console.error(log)
+    }
   }
   if (session) {
     try {
@@ -242,6 +387,7 @@ try {
       /* Preserve the original failure if the webview has exited. */
     }
   }
+  await writeFile(resolve(root, 'desktop-smoke-failure.log'), failureLog)
   console.error(driverOutput)
   throw error
 } finally {
@@ -252,6 +398,7 @@ try {
       /* The driver may have already exited. */
     }
   }
+  await new Promise((done) => server.close(() => done(undefined)))
   const stopped = new Promise((done) => driver.once('exit', done))
   driver.kill('SIGTERM')
   if (driver.exitCode === null && !driverError) {
