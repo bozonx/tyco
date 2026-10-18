@@ -11,6 +11,7 @@ const logDirectory = fileURLToPath(
   new URL(`../platform-logs/${session}/`, import.meta.url)
 )
 mkdirSync(logDirectory, { recursive: true })
+/** @param {string[]} args */
 function run(args) {
   const result = spawnSync('docker', args, { stdio: 'inherit' })
   if (result.error) throw result.error
