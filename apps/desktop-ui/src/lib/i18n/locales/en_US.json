@@ -203,7 +203,6 @@
     "nameLabel": "Name",
     "namePlaceholder": "How the command is called in the menu",
     "pickTool": "What should the command do?",
-    "placeConfigure": "Configure",
     "pluginFieldsHint": "Empty fields take their value from the plugin settings.",
     "promptFromTask": "Take the instruction from an AI task",
     "promptFromTaskPlaceholder": "Choose an AI task…",

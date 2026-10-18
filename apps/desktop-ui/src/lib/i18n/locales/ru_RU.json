@@ -203,7 +203,6 @@
     "nameLabel": "Название",
     "namePlaceholder": "Как команда называется в меню",
     "pickTool": "Что будет делать команда?",
-    "placeConfigure": "Настроить",
     "pluginFieldsHint": "Пустые поля берут значение из настроек плагина.",
     "promptFromTask": "Взять инструкцию из AI-задачи",
     "promptFromTaskPlaceholder": "Выберите AI-задачу…",

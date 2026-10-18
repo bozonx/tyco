@@ -156,12 +156,7 @@ describe('SettingsCommandsTab.vue', () => {
     expect(placements[0].text()).toContain('"page":1,"key":"Q"')
     expect(placements[0].text()).toContain('"page":2,"key":"W"')
     expect(placements[1].text()).toContain('"page":3,"key":"Q"')
-    await placements[0].find('button').trigger('click')
-    await placements[0].findAll('button')[1].trigger('click')
-    expect(wrapper.emitted('navigate')).toEqual([
-      ['main-actions'],
-      ['launcher-commands'],
-    ])
+    expect(placements[0].findAll('button')).toHaveLength(0)
     expect(wrapper.find('.command-body').exists()).toBe(false)
   })
 

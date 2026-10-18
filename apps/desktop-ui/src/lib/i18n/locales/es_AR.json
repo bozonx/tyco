@@ -203,7 +203,6 @@
     "nameLabel": "Nombre",
     "namePlaceholder": "Cómo se llama el comando en el menú",
     "pickTool": "¿Qué debe hacer el comando?",
-    "placeConfigure": "Configurar",
     "pluginFieldsHint": "Los campos vacíos toman su valor de los ajustes del plugin.",
     "promptFromTask": "Tomar la instrucción de una tarea de IA",
     "promptFromTaskPlaceholder": "Elegí una tarea de IA…",

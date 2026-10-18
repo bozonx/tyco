@@ -39,20 +39,12 @@
     </template>
     <template #actions>
       <div class="command-placements">
-        <Badge
-          interactive
-          v-if="menuSlot !== undefined"
-          :title="t('commands.placeConfigure')"
-          @click="emit('navigate', 'main-actions')"
-        >
+        <Badge v-if="menuSlot !== undefined">
           {{ t('commands.badgeInMenu', { key: slotKey(menuSlot!) }) }}
         </Badge>
         <Badge
-          interactive
           v-for="slot in launcherSlots"
           :key="`${slot.page}:${slot.index}`"
-          :title="t('commands.placeConfigure')"
-          @click="emit('navigate', 'launcher-commands')"
         >
           {{
             t('commands.badgeInLauncher', {
