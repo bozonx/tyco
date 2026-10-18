@@ -2,7 +2,7 @@
   <SettingsSection :description="t('settings.launcherCommandsHint')" bare>
     <div class="flex flex-wrap items-center gap-2 mb-3">
       <Button
-        v-for="(pageItem, index) in props.userConfig.launcherPages"
+        v-for="(pageItem, index) in userConfig.launcherPages"
         :key="pageItem.id"
         size="sm"
         :variant="page === index ? 'primary' : 'neutral'"
@@ -20,19 +20,23 @@
     <div class="flex flex-wrap items-center gap-4 mb-3">
       <div class="flex items-center gap-2">
         <FieldSwitch
-          :key="props.userConfig.launcherPages[page]?.id ?? page"
+          :key="userConfig.launcherPages[page]?.id ?? page"
           :model-value="takesText"
           :label="t('settings.launcherPageTakesText')"
           @update:model-value="setTakesText"
         />
         <InfoTooltip :text="t('settings.launcherPageTakesTextInfo')" />
       </div>
-      <Button :disabled="pagesCount <= 1" size="sm" @click="removePage">{{
-        t('settings.removeLauncherPage')
-      }}</Button>
+      <Button
+        variant="danger-ghost"
+        :disabled="pagesCount <= 1"
+        size="sm"
+        @click="removePage"
+        >{{ t('settings.removeLauncherPage') }}</Button
+      >
     </div>
     <ShortcutSlots
-      :key="props.userConfig.launcherPages[page]?.id ?? page"
+      :key="userConfig.launcherPages[page]?.id ?? page"
       :items="launcherSlots"
       @move="moveSlot"
       @add="addSlot"
@@ -50,7 +54,7 @@
             v-if="item"
             variant="ghost"
             size="sm"
-            @click="emit('editCommand', item)"
+            @click="editCommand(item)"
             :label="t('commands.editCommand')"
             icon="mdi:pencil-outline"
           />
@@ -64,6 +68,7 @@
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import {
   normalizeCommands,
   normalizeLauncherCommands,
@@ -79,23 +84,18 @@ import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
-import ShortcutSlots from '../common/ShortcutSlots.vue'
-import type { LauncherPageConfig, UserConfig } from '@tyco/shared'
-
-const props = defineProps<{ userConfig: UserConfig }>()
-
-const emit = defineEmits<{
-  (event: 'update:launcherPages', value: LauncherPageConfig[]): void
-  (event: 'editCommand', commandId: string): void
-}>()
+import SettingsSection from './SettingsSection.vue'
+import ShortcutSlots from './ShortcutSlots.vue'
+import type { LauncherPageConfig } from '@tyco/shared'
 
 const { t } = useI18n()
+const { draft: userConfig, operations, editCommand } = useSettingsContext()
 const toolsStore = useToolsStore()
 
-const commands = computed(() => normalizeCommands(props.userConfig.commands))
+const commands = computed(() => normalizeCommands(userConfig.value.commands))
 
 const page = ref(0)
-const pagesCount = computed(() => props.userConfig.launcherPages.length)
+const pagesCount = computed(() => userConfig.value.launcherPages.length)
 watch(pagesCount, (count) => {
   if (page.value >= count) {
     page.value = Math.max(0, count - 1)
@@ -103,31 +103,29 @@ watch(pagesCount, (count) => {
 })
 function addPage() {
   const pages: LauncherPageConfig[] = [
-    ...props.userConfig.launcherPages,
+    ...userConfig.value.launcherPages,
     {
       id: crypto.randomUUID(),
       slots: Array<string | null>(15).fill(null),
       inputMode: 'selection',
     },
   ]
-  emit('update:launcherPages', pages)
+  operations.updateLauncherPages(pages)
   page.value = pages.length - 1
 }
 function removePage() {
   if (pagesCount.value <= 1) return
-  emit(
-    'update:launcherPages',
-    props.userConfig.launcherPages.filter((_, index) => index !== page.value)
+  operations.updateLauncherPages(
+    userConfig.value.launcherPages.filter((_, index) => index !== page.value)
   )
   page.value = Math.max(0, page.value - 1)
 }
 const takesText = computed(
-  () => props.userConfig.launcherPages[page.value]?.inputMode === 'selection'
+  () => userConfig.value.launcherPages[page.value]?.inputMode === 'selection'
 )
 function updatePage(values: Partial<LauncherPageConfig>) {
-  emit(
-    'update:launcherPages',
-    props.userConfig.launcherPages.map((item, index) =>
+  operations.updateLauncherPages(
+    userConfig.value.launcherPages.map((item, index) =>
       index === page.value ? { ...item, ...values } : item
     )
   )
@@ -140,7 +138,7 @@ function updateSlots(slots: (string | null)[]) {
 }
 const launcherSlots = computed(() =>
   normalizeLauncherCommands(
-    props.userConfig.launcherPages[page.value]?.slots,
+    userConfig.value.launcherPages[page.value]?.slots,
     commands.value
   )
 )

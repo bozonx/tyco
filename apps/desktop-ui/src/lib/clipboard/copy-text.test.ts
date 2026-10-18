@@ -17,7 +17,7 @@ describe('createCopyText', () => {
     await expect(copyText('hello')).resolves.toBe('copied')
 
     expect(deps.writeText).toHaveBeenCalledWith('hello')
-    expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
+    expect(deps.showToast).toHaveBeenCalledWith('common.copied', 'success')
     expect(deps.saveOutput).toHaveBeenCalledWith('hello')
   })
 

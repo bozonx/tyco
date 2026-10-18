@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="settings-stack">
     <SettingsSection :title="t('settings.sectionAppearance')">
       <FieldRow group :label="t('settings.theme')">
         <SegmentedControl
@@ -78,27 +78,23 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import {
   AUTO_LANGUAGE_VALUE,
   SUPPORTED_UI_LANGUAGE_OPTIONS,
   buildLanguageOptions,
-  getNavigatorLanguages,
-  resolveUiLanguagePreference,
 } from '../../lib/locale/language'
+import Button from '../common/Button.vue'
+import FieldInput from '../common/FieldInput.vue'
+import FieldRow from '../common/FieldRow.vue'
+import FieldSelect from '../common/FieldSelect.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
+import SettingsSection from './SettingsSection.vue'
 import StorageLocations from './StorageLocations.vue'
-import type { UserConfig } from '@tyco/shared'
 import type { ThemeMode } from '@tyco/shared'
 
-const props = defineProps<{ userConfig: UserConfig }>()
-const userConfig = computed(() => props.userConfig)
 const { t } = useI18n()
-const effectiveAppLanguage = computed(() =>
-  resolveUiLanguagePreference(
-    userConfig.value.appLanguage,
-    userConfig.value.userLanguage,
-    getNavigatorLanguages()
-  )
-)
+const { draft: userConfig, effectiveAppLanguage } = useSettingsContext()
 const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
   () => [
     { id: 'auto', name: t('theme.auto'), icon: 'mdi:theme-light-dark' },

@@ -59,12 +59,12 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 
-import { useEditorNavigation } from '../composables/use-editor-navigation'
-import { useI18n } from '../composables/use-i18n'
-import { useOverlayNav } from '../composables/use-overlay-nav'
-import { type ActionItem } from '../stores/action-menu'
-import { SHORTCUT_SLOT_KEYS } from '../types'
-import ShortcutButton from './common/ShortcutButton.vue'
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
+import { useI18n } from '../../composables/use-i18n'
+import { useOverlayNav } from '../../composables/use-overlay-nav'
+import { type ActionItem } from '../../stores/action-menu'
+import { SHORTCUT_SLOT_KEYS } from '../../types'
+import ShortcutButton from './ShortcutButton.vue'
 
 interface ShortcutSlotItem {
   key: string

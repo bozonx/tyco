@@ -1,7 +1,7 @@
 <template>
   <ActionOverlayLayout
     :title="t('menu.aiTask')"
-    :onEsc="promptMode ? closePromptMode : undefined"
+    :on-esc="promptMode ? closePromptMode : undefined"
   >
     <template #preview>
       <TextPreview :text="props.text" />
@@ -24,10 +24,10 @@
       <ShortcutList
         v-else
         :text="props.text"
-        :spaceKey="customPromptAction"
-        :leftLetterKeys="leftLetterKeys"
-        :shortcutsDisabled="props.shortcutsDisabled"
-        :isEditorButtonVisible="!editorNavigation.isEditorPage()"
+        :space-key="customPromptAction"
+        :left-letter-keys="leftLetterKeys"
+        :shortcuts-disabled="props.shortcutsDisabled"
+        :is-editor-button-visible="!editorNavigation.isEditorPage()"
       />
     </template>
   </ActionOverlayLayout>
@@ -51,9 +51,9 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
-import ShortcutList from '../ShortcutList.vue'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import TextPreview from '../common/TextPreview.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ShortcutList from '../overlay/ShortcutList.vue'
 import QueryPanel, {
   type QueryPanelHint,
   type QueryPanelOption,

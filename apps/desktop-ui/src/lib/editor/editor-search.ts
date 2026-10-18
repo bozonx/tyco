@@ -32,7 +32,7 @@ const EDITOR_PHRASE_KEYS: Record<string, string> = {
   'replaced match on line $': 'editor.search.replacedOnLine',
   'replaced $ matches': 'editor.search.replacedCount',
   'Copy code': 'chat.copyCode',
-  Copied: 'chat.copied',
+  Copied: 'common.copied',
   'Clipboard is not available': 'editor.menu.clipboardUnavailable',
 }
 

@@ -2,6 +2,7 @@
   <FieldTextArea
     ref="textareaRef"
     class="main-input"
+    appearance="plain"
     auto-resize
     :max-auto-height="maxHeight"
     :placeholder="t('input.textPlaceholder')"
@@ -16,6 +17,7 @@ import { nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
+import FieldTextArea from '../common/FieldTextArea.vue'
 
 withDefaults(defineProps<{ maxHeight?: number }>(), { maxHeight: 200 })
 
@@ -67,6 +69,16 @@ const handleInput = (value: string): void => {
 <style scoped>
 .main-input {
   width: 100%;
+  min-height: 0 !important;
+  height: auto;
+  padding: var(--space-sm) var(--space-md);
   resize: none;
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+}
+
+/* The write frame around the field shows the focus */
+.main-input:focus {
+  outline: none;
 }
 </style>

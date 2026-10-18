@@ -8,7 +8,7 @@
   >
     <span class="language-field-label">{{ props.label }}</span>
     <span class="language-field-value" :class="{ 'is-empty': !props.value }">
-      <Icon v-if="props.icon" :icon="props.icon" height="16" />
+      <AppIcon v-if="props.icon" :icon="props.icon" size="md" />
       <span class="language-field-text">{{
         props.value || props.emptyText
       }}</span>
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 
 const props = withDefaults(
   defineProps<{

@@ -36,7 +36,6 @@
     "configureModels": "Настроить модели",
     "contextBudgetHigh": "Сообщение с контекстом занимает {percent}% лимита модели",
     "contextBudgetOver": "Текст не помещается в модель: {used} из {budget} симв. Уберите часть контекста",
-    "copied": "Скопировано",
     "copy": "Копировать",
     "copyCode": "Копировать код",
     "copyMarkdown": "Скопировать Markdown",
@@ -193,7 +192,6 @@
     "fieldOn": "Да",
     "fromPluginSettings": "Из настроек плагина: {value}",
     "hint": "Команду настраивают один раз и вызывают из меню основных действий, из быстрых команд и из других приложений.",
-    "idCopied": "Скопировано",
     "inputUnsupported": "Инструменту нужен структурированный вход, его нельзя получить из текста",
     "languageInfo": "Язык хранится в команде: перестановка языков перевода в настройках его не меняет.",
     "languageLabel": "Переводить на",
@@ -244,6 +242,7 @@
     "cancel": "Отмена",
     "close": "Закрыть",
     "confirm": "Подтвердить",
+    "copied": "Скопировано",
     "delete": "Удалить",
     "empty": "пусто",
     "inProgress": "Выполняется",
@@ -475,12 +474,6 @@
     "voiceInput": "Голосовой ввод",
     "voiceSend": "Отправить",
     "voiceToInput": "Вставить в поле ввода"
-  },
-  "mode": {
-    "aiTasks": "Режим редактирования",
-    "select": "Режим выбора",
-    "voice": "Режим голоса",
-    "write": "Режим написания"
   },
   "nav": {
     "aiChat": "Спросить у ИИ",
@@ -896,9 +889,9 @@
     "profileDefaultSoul": "# Роль\nОпишите, кто этот ассистент и с чем он помогает.\n\n# Правила\n- Отвечай на языке вопроса.\n",
     "profileModelDefault": "Первая доступная модель",
     "profileModelUnavailable": "недоступна",
-    "profileSaveFailed": "Не сохранено",
-    "profileSaving": "Сохранение…",
-    "profileSaved": "Сохранено"
+    "autosaveFailed": "Не сохранено",
+    "autosaveSaving": "Сохранение…",
+    "autosaveSaved": "Сохранено"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
@@ -914,7 +907,6 @@
     "commandInputInvalid": "Неверный вход команды",
     "commandInputUnsupported": "Эта команда не принимает текст: её инструменту нужен структурированный вход",
     "commandUnavailable": "Команда недоступна",
-    "copied": "Скопировано",
     "desktopCommandFailed": "Не удалось выполнить действие",
     "insertFailed": "Не удалось вставить текст",
     "modelNotFound": "Модель не найдена",

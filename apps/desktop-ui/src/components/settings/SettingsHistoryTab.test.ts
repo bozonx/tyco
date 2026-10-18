@@ -2,6 +2,7 @@ import type { UserConfig } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsHistoryTab from './SettingsHistoryTab.vue'
 
 const mockToast = vi.fn()
@@ -49,8 +50,8 @@ describe('SettingsHistoryTab.vue', () => {
 
   const mountTab = (userConfig = createConfig()) => {
     return mount(SettingsHistoryTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
             props: ['title'],

@@ -11,7 +11,7 @@
     :aria-label="label"
     :title="title ?? label"
     square
-    ><Icon v-if="!loading" :icon="icon" height="16" aria-hidden="true"
+    ><AppIcon v-if="!loading" :icon="icon" size="md" aria-hidden="true"
   /></Button>
 </template>
 
@@ -19,7 +19,7 @@
 import { ref } from 'vue'
 
 import type { ButtonProps } from '../../lib/ui/control-types'
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 import Button from './Button.vue'
 
 withDefaults(

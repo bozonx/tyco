@@ -28,7 +28,6 @@ const router = createRouter({
       path: APP_ROUTES.HOME.path,
       name: APP_ROUTES.HOME.name,
       component: HomeView,
-      props: true,
     },
     {
       path: APP_ROUTES.EDITOR.path,

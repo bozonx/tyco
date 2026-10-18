@@ -23,7 +23,7 @@
 
       <div class="waveform-meta">
         <div class="waveform-status">
-          <Icon icon="mdi:microphone" class="mic-icon animate-pulse" />
+          <AppIcon icon="mdi:microphone" class="mic-icon animate-pulse" />
           <span>{{ t('menu.listening') }}</span>
         </div>
         <div class="waveform-timer">{{ formattedDuration }}</div>
@@ -36,7 +36,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 
 const BAR_COUNT = 32
 const MIN_BAR_HEIGHT = 4
@@ -223,7 +223,7 @@ onUnmounted(() => {
 }
 
 .mic-icon {
-  font-size: 1.125rem;
+  font-size: var(--text-lead);
   color: var(--color-primary);
 }
 

@@ -4,6 +4,7 @@ import { reactive } from 'vue'
 import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 import { AUTO_LANGUAGE_VALUE } from '../../lib/locale/language'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsGeneralTab from './SettingsGeneralTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -34,8 +35,8 @@ describe('SettingsGeneralTab.vue', () => {
 
   const mountTab = (userConfig: UserConfig) => {
     return mount(SettingsGeneralTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
             props: ['title'],

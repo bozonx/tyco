@@ -1,9 +1,9 @@
-import { DEFAULT_LLM_CONFIG } from '@tyco/shared'
+import { DEFAULT_LLM_CONFIG, type UserConfig } from '@tyco/shared'
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { reactive } from 'vue'
 
 import ConfirmModal from '../common/ConfirmModal.vue'
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsLlmTab from './SettingsLlmTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -24,16 +24,18 @@ vi.mock('../../composables/use-toast', () => ({
 }))
 
 function setup() {
-  const llm = reactive(structuredClone(DEFAULT_LLM_CONFIG))
+  const context = createTestSettingsContext({
+    llm: structuredClone(DEFAULT_LLM_CONFIG),
+  })
+  const llm = context.draft.value.llm
   const wrapper = mount(SettingsLlmTab, {
-    props: { llm },
-    global: { stubs: { BaseDialog: true } },
+    global: { provide: context.provide, stubs: { BaseDialog: true } },
   })
   const localCard = () =>
     wrapper
       .findAll('.connection-card')
       .find((card) => card.text().includes('Ollama'))!
-  return { llm, wrapper, localCard }
+  return { context, llm, wrapper, localCard }
 }
 
 describe('LLM settings cards', () => {
@@ -104,7 +106,7 @@ describe('LLM settings cards', () => {
   })
 
   it('adds a model through the card and keeps removal behind the parent confirmation', async () => {
-    const { llm, wrapper, localCard } = setup()
+    const { context, llm, wrapper, localCard } = setup()
     const card = localCard()
     await card.get('.disclosure-header').trigger('click')
     const count = llm.models.length
@@ -129,7 +131,7 @@ describe('LLM settings cards', () => {
       false
     )
     expect(llm.models.some((model) => model.providerId === 'local')).toBe(false)
-    expect(wrapper.emitted('providerRemoved')).toEqual([['local']])
+    expect(context.deps.persist).toHaveBeenCalled()
   })
 })
 
@@ -155,8 +157,11 @@ describe('SettingsLlmTab.vue', () => {
     }
 
     const wrapper = mount(SettingsLlmTab, {
-      props: { llm: baseLlmConfig, aiRules },
       global: {
+        provide: createTestSettingsContext({
+          llm: baseLlmConfig as unknown as UserConfig['llm'],
+          aiRules,
+        }).provide,
         stubs: {
           SettingsSection: {
             props: ['title'],

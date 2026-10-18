@@ -1,6 +1,6 @@
 <template>
   <ContentPadding>
-    <ActionOverlayLayout :title="t('voiceCommands.title')" :onEsc="close">
+    <ActionOverlayLayout :title="t('voiceCommands.title')" :on-esc="close">
       <template #header-extra>
         <InfoTooltip :text="t('voiceCommands.hint')" placement="bottom" />
       </template>
@@ -10,9 +10,9 @@
           <section class="voice-main">
             <template v-if="isListening">
               <div v-if="voice.activeCommand" class="voice-chosen">
-                <Icon
+                <AppIcon
                   :icon="commandIcon(voice.activeCommand, tools)"
-                  height="20"
+                  size="xl"
                   aria-hidden="true"
                 />
                 <span class="voice-chosen-name">{{ liveChosenName }}</span>
@@ -21,7 +21,7 @@
                 }}</Badge>
               </div>
               <p v-else class="voice-phase-hint">
-                <Icon icon="mdi:microphone" height="16" aria-hidden="true" />
+                <AppIcon icon="mdi:microphone" size="md" aria-hidden="true" />
                 <span>{{ t('voiceCommands.phaseAwaitingCommand') }}</span>
               </p>
               <AudioWaveform
@@ -49,9 +49,9 @@
 
             <template v-else>
               <div v-if="voice.command" class="voice-chosen">
-                <Icon
+                <AppIcon
                   :icon="commandIcon(voice.command, tools)"
-                  height="20"
+                  size="xl"
                   aria-hidden="true"
                 />
                 <span class="voice-chosen-name">{{ chosenName }}</span>
@@ -111,10 +111,10 @@
                 :title="entry.commands[0]!.description || undefined"
                 @click="pick(entry)"
               >
-                <Icon
+                <AppIcon
                   class="voice-entry-icon"
                   :icon="commandIcon(entry.commands[0]!, tools)"
-                  height="18"
+                  size="lg"
                   aria-hidden="true"
                 />
                 <span class="voice-entry-body">
@@ -133,11 +133,11 @@
                     >{{ phrase }}</span
                   >
                 </span>
-                <Icon
+                <AppIcon
                   v-if="unavailable(entry)"
                   class="voice-entry-warning"
                   icon="mdi:alert-circle-outline"
-                  height="16"
+                  size="md"
                   :title="t(unavailable(entry)!)"
                   :aria-label="t(unavailable(entry)!)"
                 />
@@ -198,16 +198,16 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import ActionOverlayLayout from '../components/common/ActionOverlayLayout.vue'
-import Icon from '../components/common/AppIcon.vue'
+import AppIcon from '../components/common/AppIcon.vue'
 import Badge from '../components/common/Badge.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import FieldSelect from '../components/common/FieldSelect.vue'
 import FieldTextArea from '../components/common/FieldTextArea.vue'
 import InfoTooltip from '../components/common/InfoTooltip.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
-import ShortcutButton from '../components/common/ShortcutButton.vue'
 import StateMessage from '../components/common/StateMessage.vue'
+import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
+import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import AudioWaveform from '../components/voice/AudioWaveform.vue'
 import LiveTranscript from '../components/voice/LiveTranscript.vue'
 import { useI18n } from '../composables/use-i18n'
@@ -573,7 +573,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: 1rem;
+  font-size: var(--text-title);
   font-weight: 600;
 }
 

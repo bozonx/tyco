@@ -1,13 +1,15 @@
 import { computed, ref, watch } from 'vue'
 import type { AiProfile } from '@tyco/shared'
 
-import { createAutosave } from '../settings/autosave'
+import {
+  createAutosave,
+  summarizeAutosave,
+  type AutosaveSummary,
+} from '../settings/autosave'
 import {
   parseProfileMaxOutputTokens,
   parseProfileTemperature,
 } from './profile-generation'
-
-export type ProfileEditorSaveStatus = 'error' | 'saving' | 'saved' | ''
 
 export interface ProfileEditorDependencies {
   updateProfile: (patch: Partial<AiProfile>) => Promise<void>
@@ -94,14 +96,9 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
 
   const changeSoul = () => soulAutosave.schedule()
 
-  const saveStatus = computed<ProfileEditorSaveStatus>(() => {
-    const statuses = [profileAutosave.status.value, soulAutosave.status.value]
-    if (statuses.includes('error')) return 'error'
-    if (statuses.includes('saving') || statuses.includes('pending'))
-      return 'saving'
-    if (statuses.includes('saved')) return 'saved'
-    return ''
-  })
+  const saveStatus = computed<AutosaveSummary>(() =>
+    summarizeAutosave([profileAutosave.status.value, soulAutosave.status.value])
+  )
 
   watch(
     () => profileAutosave.error.value || soulAutosave.error.value,

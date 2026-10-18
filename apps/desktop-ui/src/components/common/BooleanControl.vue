@@ -14,8 +14,8 @@
       @change="handleChange"
       :class="
         kind === 'switch'
-          ? 'toggle toggle-primary toggle-sm'
-          : 'checkbox checkbox-primary checkbox-sm'
+          ? 'toggle toggle-primary'
+          : 'checkbox checkbox-primary'
       "
     />
     <span v-if="label" class="boolean-control-label">{{ label }}</span>

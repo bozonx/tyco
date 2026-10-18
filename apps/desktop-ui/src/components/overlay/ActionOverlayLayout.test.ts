@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils'
 import { h } from 'vue'
 
-import TextPreview from './TextPreview.vue'
-import Diff from './Diff.vue'
+import TextPreview from '../common/TextPreview.vue'
+import Diff from '../common/Diff.vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ActionOverlayLayout from './ActionOverlayLayout.vue'

@@ -14,7 +14,7 @@
         <KeyboardKey>{{ submitShortcutLabel }}</KeyboardKey>
         <span>{{ t('write.correctAndInsert') }}</span>
       </button>
-      <span class="opacity-40">•</span>
+      <span class="text-faint">•</span>
       <button
         type="button"
         class="write-hint-action"
@@ -24,7 +24,7 @@
         <KeyboardKey>Tab</KeyboardKey>
         <span>{{ t('write.next') }}</span>
       </button>
-      <span class="opacity-40">•</span>
+      <span class="text-faint">•</span>
       <button
         type="button"
         class="write-hint-action"
@@ -34,7 +34,7 @@
         <KeyboardKey>{{ newlineShortcutLabel }}</KeyboardKey>
         <span>{{ t('write.newLine') }}</span>
       </button>
-      <span class="opacity-40">•</span>
+      <span class="text-faint">•</span>
       <button
         type="button"
         class="write-hint-action"
@@ -51,6 +51,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import KeyboardKey from '../components/common/KeyboardKey.vue'
+import WriteModeInput from '../components/quick/WriteModeInput.vue'
 import { useI18n } from '../composables/use-i18n'
 import {
   newlineShortcut,
@@ -295,19 +297,6 @@ function submit() {
   box-shadow: var(--app-shadow-sm), var(--app-focus-ring);
 }
 
-.write-frame :deep(.main-input) {
-  min-height: 0 !important;
-  height: auto;
-  padding: 0.5rem 0.75rem;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
-  font-size: var(--editor-font-size);
-  line-height: var(--editor-line-height);
-  box-sizing: border-box;
-}
-
 /* The window is transparent: the plate keeps the hint readable over whatever
    lies below it */
 .write-hint {
@@ -323,7 +312,7 @@ function submit() {
   background-color: var(--app-quick-hint-surface);
   backdrop-filter: var(--app-quick-backdrop);
   box-shadow: var(--app-shadow-sm);
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   color: var(--app-text-muted);
   flex-shrink: 0;
 }

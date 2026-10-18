@@ -82,7 +82,7 @@ vi.mock('../composables/use-overlay-nav', () => ({
   useOverlayNav: () => ({ handleEsc: mocks.hide }),
 }))
 vi.mock('../stores/tools', () => ({ useToolsStore: () => testTools() }))
-vi.mock('../components/common/ActionOverlayLayout.vue', () => ({
+vi.mock('../components/overlay/ActionOverlayLayout.vue', () => ({
   default: {
     template:
       '<div><slot name="header-extra" /><slot name="preview" /><slot name="actions" /></div>',

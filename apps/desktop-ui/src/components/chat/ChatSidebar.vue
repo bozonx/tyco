@@ -2,6 +2,7 @@
   <aside class="chat-sidebar">
     <div class="sidebar-header">
       <Button
+        variant="primary"
         class="flex-1"
         size="sm"
         icon="mdi:plus"
@@ -86,7 +87,11 @@
                 :title="item.title"
                 @click="openChat(item.id)"
               >
-                <Icon icon="mdi:message-outline" height="15" class="shrink-0" />
+                <AppIcon
+                  icon="mdi:message-outline"
+                  size="sm"
+                  class="shrink-0"
+                />
                 <span class="truncate">{{
                   item.title || t('common.empty')
                 }}</span>
@@ -129,6 +134,7 @@
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
 import { useChatScope } from '../../composables/use-chat-scope'
+import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
@@ -140,7 +146,7 @@ import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { releaseChatImageUndo } from '../../lib/chat/chat-image-storage'
 import { createRemovalUndo } from '../../lib/history/removal-undo'
 import { useDesktopStore } from '../../stores/desktop'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
@@ -153,6 +159,7 @@ import type { Chat, ChatSummary } from '@tyco/shared'
 const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 const { t } = useI18n()
 const { toastKey } = useToast()
+const copyValue = useCopyValue()
 const { chat: chatStore } = useChatScope()
 /** The chats of the shown chat only: "Ask AI" or one profile */
 const history = chatStore.history
@@ -283,13 +290,7 @@ async function copyChatMarkdown(id: string) {
   const md = formatChatToMarkdown(targetChat.messages, {
     title: targetChat.title,
   })
-  try {
-    await navigator.clipboard.writeText(md)
-  } catch {
-    toastKey('editor.menu.clipboardUnavailable', 'error')
-    return
-  }
-  toastKey('chat.markdownCopied', 'info')
+  if (await copyValue.copy(md)) toastKey('chat.markdownCopied', 'info')
 }
 
 async function startChat() {

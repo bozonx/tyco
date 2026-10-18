@@ -1,5 +1,5 @@
 <template>
-  <ActionOverlayLayout :title="t('settings.selectAction')" escMode="back">
+  <ActionOverlayLayout :title="t('settings.selectAction')" esc-mode="back">
     <template #preview>
       <div class="flex flex-col gap-2 p-3 overflow-y-auto h-full">
         <Button
@@ -23,8 +23,8 @@ import { useI18n } from '../../composables/use-i18n'
 import type { ActionSelectMenuParams } from '../../lib/modals/menu-modal-params'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useMenuModalsStore } from '../../stores/menu-modals'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Button from '../common/Button.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 
 const { t } = useI18n()
 const menuModalsStore = useMenuModalsStore()

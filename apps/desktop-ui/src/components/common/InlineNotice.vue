@@ -14,10 +14,10 @@
           : undefined
     "
   >
-    <Icon
+    <AppIcon
       v-if="icon"
       :icon="icon"
-      height="18"
+      size="lg"
       class="shrink-0"
       aria-hidden="true"
     />
@@ -26,7 +26,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 
 withDefaults(
   defineProps<{

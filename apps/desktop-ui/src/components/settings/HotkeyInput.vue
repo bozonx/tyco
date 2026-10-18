@@ -46,16 +46,16 @@
           : t('settings.hotkeyInput.cancelHint')
       }}
     </span>
-    <Icon
+    <AppIcon
       v-else-if="isSaved"
       icon="mdi:check-circle"
-      height="16"
+      size="md"
       class="hotkey-saved-icon"
     />
-    <Icon
+    <AppIcon
       v-else-if="!readonly"
       icon="mdi:keyboard-outline"
-      height="16"
+      size="md"
       class="hotkey-edit-icon"
     />
   </button>
@@ -73,8 +73,8 @@ import {
   shortcutAlternatives,
   shortcutKeys,
 } from '../../lib/hotkeys/hotkey-recorder'
-import Icon from './AppIcon.vue'
-import KeyboardKey from './KeyboardKey.vue'
+import AppIcon from '../common/AppIcon.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 import type { HotkeyPlatform } from '@tyco/shared'
 
 defineOptions({ inheritAttrs: false })

@@ -47,7 +47,7 @@
   scroll-behavior: auto;
 }
 
-/* Catches daisyUI and scoped animations that do not use the tokens */
+/* Catches control and scoped animations that do not use the tokens */
 [data-motion='reduce'] *,
 [data-motion='reduce'] *::before,
 [data-motion='reduce'] *::after {

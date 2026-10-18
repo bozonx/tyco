@@ -36,7 +36,6 @@
     "configureModels": "Modelleri yapılandır",
     "contextBudgetHigh": "Bağlamıyla birlikte mesaj, model sınırının %{percent} kadarını kullanıyor",
     "contextBudgetOver": "Metin modele sığmıyor: {used} / {budget} karakter. Bağlamın bir kısmını kaldırın",
-    "copied": "Kopyalandı",
     "copy": "Kopyala",
     "copyCode": "Kodu kopyala",
     "copyMarkdown": "Markdown'ı kopyala",
@@ -193,7 +192,6 @@
     "fieldOn": "Evet",
     "fromPluginSettings": "Eklenti ayarlarından: {value}",
     "hint": "Bir komutu bir kez ayarlayın; ana eylem menüsünden, hızlı komutlardan ve diğer uygulamalardan çalıştırın.",
-    "idCopied": "Kopyalandı",
     "inputUnsupported": "Aracı, metinden alınamayan yapılandırılmış bir girdi bekliyor",
     "languageInfo": "Dil komutta saklanır: ayarlardaki çeviri dillerinin sırasını değiştirmek onu etkilemez.",
     "languageLabel": "Şu dile çevir",
@@ -244,6 +242,7 @@
     "cancel": "İptal",
     "close": "Kapat",
     "confirm": "Onayla",
+    "copied": "Kopyalandı",
     "delete": "Sil",
     "empty": "boş",
     "inProgress": "İşleniyor",
@@ -475,12 +474,6 @@
     "voiceInput": "Sesli giriş",
     "voiceSend": "Gönder",
     "voiceToInput": "Giriş alanına ekle"
-  },
-  "mode": {
-    "aiTasks": "Düzenleme modu",
-    "select": "Seçim modu",
-    "voice": "Ses modu",
-    "write": "Yazma modu"
   },
   "nav": {
     "aiChat": "Yapay Zekâya Sor",
@@ -896,9 +889,9 @@
     "profileDefaultSoul": "# Rol\nBu asistanın kim olduğunu ve neye yardım ettiğini yazın.\n\n# Kurallar\n- Sorunun dilinde yanıt ver.\n",
     "profileModelDefault": "İlk kullanılabilir model",
     "profileModelUnavailable": "kullanılamıyor",
-    "profileSaveFailed": "Kaydedilmedi",
-    "profileSaving": "Kaydediliyor…",
-    "profileSaved": "Kaydedildi"
+    "autosaveFailed": "Kaydedilmedi",
+    "autosaveSaving": "Kaydediliyor…",
+    "autosaveSaved": "Kaydedildi"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -914,7 +907,6 @@
     "commandInputInvalid": "Komutun girdisi geçersiz",
     "commandInputUnsupported": "Bu komut metin alamaz: aracı yapılandırılmış bir girdi bekliyor",
     "commandUnavailable": "Komut kullanılamıyor",
-    "copied": "Kopyalandı",
     "desktopCommandFailed": "İşlem başarısız oldu",
     "insertFailed": "Metin eklenemedi",
     "modelNotFound": "Model bulunamadı",

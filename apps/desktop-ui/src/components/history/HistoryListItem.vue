@@ -7,11 +7,11 @@
       <div v-if="item.meta || item.time" class="history-meta">
         <template v-if="item.meta">
           <span class="history-meta-badge">
-            <Icon :icon="item.meta.icon" height="14" />
+            <AppIcon :icon="item.meta.icon" size="sm" />
             <span>{{ item.meta.label }}</span>
           </span>
           <span v-if="item.meta.note" class="history-meta-note">
-            <Icon icon="mdi:check" height="12" />
+            <AppIcon icon="mdi:check" size="xs" />
             {{ item.meta.note }}
           </span>
         </template>
@@ -110,7 +110,7 @@ import type {
   HistoryListAction,
   HistoryListItem,
 } from '../../lib/history/history-list-types'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
 import IconButton from '../common/IconButton.vue'
 

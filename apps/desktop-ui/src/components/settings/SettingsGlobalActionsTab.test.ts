@@ -3,6 +3,7 @@ import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsGlobalActionsTab from './SettingsGlobalActionsTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -45,9 +46,13 @@ describe('SettingsGlobalActionsTab.vue', () => {
   })
   afterEach(() => disposePinia(pinia))
 
-  const defaultProps = {
-    userConfig: { ...DEFAULT_USER_CONFIG, submitKey: 'enter' as const },
-  }
+  let context: ReturnType<typeof createTestSettingsContext>
+  beforeEach(() => {
+    context = createTestSettingsContext({
+      ...structuredClone(DEFAULT_USER_CONFIG),
+      submitKey: 'enter',
+    })
+  })
 
   const globalStubs = {
     SettingsSection: {
@@ -92,8 +97,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
 
   it('renders global hotkeys and application hotkeys sections with titles', () => {
     const wrapper = mount(SettingsGlobalActionsTab, {
-      props: defaultProps,
-      global: { stubs: globalStubs },
+      global: { provide: context.provide, stubs: globalStubs },
     })
 
     const sections = wrapper.findAll('.section-stub')
@@ -111,10 +115,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
     expect(appSection?.attributes('data-info')).toBe('settings.appHotkeysHint')
   })
 
-  it('renders submitKey row inside application hotkeys section and emits update:submit-key', async () => {
+  it('renders submitKey row inside application hotkeys section and stores the submit key', async () => {
     const wrapper = mount(SettingsGlobalActionsTab, {
-      props: defaultProps,
-      global: { stubs: globalStubs },
+      global: { provide: context.provide, stubs: globalStubs },
     })
 
     const appSection = wrapper
@@ -133,14 +136,13 @@ describe('SettingsGlobalActionsTab.vue', () => {
 
     await select.vm.$emit('update:modelValue', 'ctrlEnter')
 
-    expect(wrapper.emitted('update:submit-key')).toBeTruthy()
-    expect(wrapper.emitted('update:submit-key')![0]).toEqual(['ctrlEnter'])
+    expect(context.draft.value.submitKey).toBe('ctrlEnter')
   })
 
   it('unassigns a hotkey', async () => {
     const wrapper = mount(SettingsGlobalActionsTab, {
-      props: defaultProps,
       global: {
+        provide: context.provide,
         stubs: {
           ...globalStubs,
           Button: {
@@ -160,7 +162,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
     expect(
       callFunction.mock.calls.some(([name]) => name === 'applyHotkey')
     ).toBe(false)
-    expect(wrapper.emitted('update:hotkey')).toEqual([['voice', '']])
+    expect(context.draft.value.hotkeys.voice).toBe('')
     // an unassigned hotkey offers no removal
     const editorRow = wrapper.find(
       '[data-label="settings.hotkeyActions.editor"]'

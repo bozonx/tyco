@@ -1,20 +1,16 @@
-import type {
-  BuiltinToolId,
-  CommandConfig,
-  LauncherPageConfig,
-  UserConfig,
+import {
+  type LauncherPageConfig,
+  SELECTION_HOTKEY_PREFIX,
+  type UserConfig,
 } from '@tyco/shared'
 import type { PluginFactory } from '../../types/plugins'
-import {
-  normalizeCommands,
-  normalizeLauncherCommands,
-} from '../commands/command-config'
 import { applyPluginPreset } from '../plugins/plugin-config'
+
+export type SettingsOperations = ReturnType<typeof createSettingsOperations>
 
 export function createSettingsOperations(deps: {
   getConfig: () => UserConfig
   pluginFactories: () => PluginFactory[]
-  createCommand: (toolId: BuiltinToolId) => CommandConfig
   persist: () => Promise<unknown>
   isSaved: () => boolean
   hasSecret: (id: string) => boolean
@@ -49,26 +45,6 @@ export function createSettingsOperations(deps: {
     config.launcherPages = pages
   }
 
-  const createLauncherCommand = (
-    index: number,
-    toolId: BuiltinToolId,
-    page = 0
-  ) => {
-    const config = deps.getConfig()
-    const targetPage = config.launcherPages[page]
-    if (!targetPage) throw new Error('Launcher page does not exist')
-    const command = deps.createCommand(toolId)
-    const nextCommands = [...normalizeCommands(config.commands), command]
-    const slots = normalizeLauncherCommands(
-      config.launcherPages[page]?.slots,
-      nextCommands
-    )
-    slots[index] = command.id
-    config.commands = nextCommands
-    targetPage.slots = slots
-    return command.id
-  }
-
   const updatePluginEnabled = (pluginId: string, enabled: boolean) => {
     const config = deps.getConfig()
     const current = config.plugins[pluginId]
@@ -95,10 +71,35 @@ export function createSettingsOperations(deps: {
       ? applyPluginPreset(definition, previous, values)
       : { ...previous, ...values }
   }
+  /** A selection hotkey is stored apart from the mode hotkeys */
+  const updateHotkey = (mode: string, shortcut: string) => {
+    const config = deps.getConfig()
+    if (mode.startsWith(SELECTION_HOTKEY_PREFIX)) {
+      const action = mode.slice(SELECTION_HOTKEY_PREFIX.length)
+      config.selectionHotkeys = {
+        ...config.selectionHotkeys,
+        [action]: shortcut,
+      }
+      return
+    }
+    config.hotkeys[mode] = shortcut
+  }
+
+  /** No path stands for the default vault location */
+  const updateVaultPath = (vaultPath: string | undefined) => {
+    const config = deps.getConfig()
+    if (vaultPath) {
+      config.aiProfiles = { ...(config.aiProfiles || {}), vaultPath }
+    } else if (config.aiProfiles) {
+      delete config.aiProfiles.vaultPath
+    }
+  }
+
   return {
     finishProviderRemoval,
     updateLauncherPages,
-    createLauncherCommand,
+    updateHotkey,
+    updateVaultPath,
     updatePluginEnabled,
     updatePluginConfig,
   }

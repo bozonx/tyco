@@ -1,19 +1,19 @@
 <template>
   <ActionOverlayLayout
     :title="title"
-    :onEsc="
+    :on-esc="
       stage.kind === 'prepare'
         ? launcher.back
         : searchMode
           ? closeSearch
           : undefined
     "
-    :escMode="stage.kind === 'prepare' || searchMode ? 'back' : 'auto'"
+    :esc-mode="stage.kind === 'prepare' || searchMode ? 'back' : 'auto'"
   >
     <template #preview>
       <div v-if="stage.kind === 'prepare'" class="launcher-prepare">
         <div class="launcher-prepare-head">
-          <Icon :icon="commandIcon(stage.command, toolsStore)" height="20" />
+          <AppIcon :icon="commandIcon(stage.command, toolsStore)" size="xl" />
           <span class="launcher-prepare-name">
             {{ commandLabel(stage.command) }}
           </span>
@@ -44,7 +44,7 @@
         :label="
           t('commandLauncher.running', { name: commandLabel(stage.command) })
         "
-        :onCancel="launcher.cancel"
+        :on-cancel="launcher.cancel"
       />
 
       <!-- the selection may be a leftover of an earlier one: the user sees it
@@ -86,8 +86,8 @@
           :placeholder="t('commandLauncher.searchPlaceholder')"
           :options="searchOptions"
           :hints="searchHints"
-          :emptyText="t('commandLauncher.nothingFound')"
-          autoHighlight
+          :empty-text="t('commandLauncher.nothingFound')"
+          auto-highlight
           @submit="submitSearch"
           @back="closeSearch"
         />
@@ -114,9 +114,9 @@
           <ShortcutList
             :key="launcher.pageIndex"
             :text="selectedText"
-            :spaceKey="searchAction"
-            :leftLetterKeys="leftLetterKeys"
-            :shortcutsDisabled="props.shortcutsDisabled"
+            :space-key="searchAction"
+            :left-letter-keys="leftLetterKeys"
+            :shortcuts-disabled="props.shortcutsDisabled"
           />
         </div>
       </template>
@@ -141,12 +141,12 @@ import { type ActionItem } from '../../stores/action-menu'
 import { useCommandLauncherStore } from '../../stores/command-launcher'
 import { useDesktopStore } from '../../stores/desktop'
 import { useToolsStore } from '../../stores/tools'
-import ShortcutList from '../ShortcutList.vue'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
-import SelectionContextPreview from '../common/SelectionContextPreview.vue'
-import ShortcutHint from '../common/ShortcutHint.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import SelectionContextPreview from '../overlay/SelectionContextPreview.vue'
+import ShortcutHint from '../overlay/ShortcutHint.vue'
+import ShortcutList from '../overlay/ShortcutList.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import QueryPanel, {
   type QueryPanelHint,
@@ -406,7 +406,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: 1rem;
+  font-size: var(--text-title);
   font-weight: 600;
 }
 

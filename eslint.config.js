@@ -19,7 +19,6 @@ export default defineConfig(
       '**/src-tauri/target/**',
       '**/src-tauri/gen/**',
       '**/.turbo/**',
-      '**/components.d.ts',
     ],
   },
   eslint.configs.recommended,
@@ -46,7 +45,8 @@ export default defineConfig(
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
       'vue/require-default-prop': 'off',
-      'vue/attribute-hyphenation': 'off',
+      'vue/attribute-hyphenation': ['error', 'always'],
+      'vue/v-on-event-hyphenation': ['error', 'always', { autofix: true }],
       'vue/attributes-order': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': 'off',
@@ -194,17 +194,6 @@ export default defineConfig(
         },
       ],
     },
-  },
-
-  {
-    // These tabs edit the settings session's owned draft, never persisted state.
-    files: [
-      'apps/desktop-ui/src/components/settings/SettingsEditorTab.vue',
-      'apps/desktop-ui/src/components/settings/SettingsHistoryTab.vue',
-      'apps/desktop-ui/src/components/settings/SettingsLlmTab.vue',
-      'apps/desktop-ui/src/components/settings/SettingsTranslationsTab.vue',
-    ],
-    rules: { 'vue/no-mutating-props': 'off' },
   },
 
   {

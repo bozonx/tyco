@@ -67,10 +67,10 @@
           @click="emit('submit', { option, ctrl: false })"
         >
           <span class="query-panel-option-label">
-            <Icon
+            <AppIcon
               v-if="option.icon"
               :icon="option.icon"
-              height="16"
+              size="md"
               class="query-panel-option-icon"
             />
             <span class="query-panel-option-text">{{ option.label }}</span>
@@ -79,10 +79,10 @@
             <span v-if="option.hint" class="query-panel-option-hint">{{
               option.hint
             }}</span>
-            <Icon
+            <AppIcon
               v-if="option.selected"
               icon="mdi:check"
-              height="16"
+              size="md"
               class="query-panel-option-check"
             />
           </span>
@@ -118,8 +118,8 @@ import {
   type QueryOption,
   moveHighlight,
 } from '../../lib/menu-query/menu-query'
-import Icon from '../common/AppIcon.vue'
-import ShortcutHint from '../common/ShortcutHint.vue'
+import AppIcon from '../common/AppIcon.vue'
+import ShortcutHint from '../overlay/ShortcutHint.vue'
 
 export interface QueryPanelOption extends QueryOption {
   /** Shown on the right of the label */

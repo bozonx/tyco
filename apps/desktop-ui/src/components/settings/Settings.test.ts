@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useRoute } from 'vue-router'
 import { CONFIG_VERSION } from '@tyco/shared'
-import { useSettingsSessionStore } from '../stores/settings-session'
+import { useSettingsSessionStore } from '../../stores/settings-session'
 import Settings from './Settings.vue'
 
 const settingsMocks = vi.hoisted(() => ({
@@ -28,15 +28,15 @@ vi.mock(import('vue-router'), async (importOriginal) => {
   return { ...(await importOriginal()), useRoute: () => route }
 })
 
-vi.mock('../composables/use-i18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../composables/use-toast', () => ({
+vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastText: vi.fn() }),
 }))
 
-vi.mock('../stores/action-menu', () => ({
+vi.mock('../../stores/action-menu', () => ({
   useActionMenuStore: () => ({
     clearRegisteredActions: vi.fn(),
     resolveMainActions: (actions: any) => actions ?? [],
@@ -44,7 +44,7 @@ vi.mock('../stores/action-menu', () => ({
   }),
 }))
 
-vi.mock('../stores/ipc', () => ({
+vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({
     callFunction: vi.fn().mockImplementation((fn: string) => {
       if (fn === 'getStorageInfo') {
@@ -63,7 +63,7 @@ vi.mock('../stores/ipc', () => ({
     updateConfig: vi.fn(),
   }),
 }))
-vi.mock('../stores/desktop', () => ({
+vi.mock('../../stores/desktop', () => ({
   useDesktopStore: () => ({
     userConfig: {
       configVersion: settingsMocks.configVersion,
@@ -73,17 +73,17 @@ vi.mock('../stores/desktop', () => ({
   }),
 }))
 
-vi.mock('../stores/secrets', () => ({
+vi.mock('../../stores/secrets', () => ({
   useSecretsStore: () => ({ refreshSecrets: vi.fn(), secrets: {} }),
 }))
 
-vi.mock('../stores/history', () => ({
+vi.mock('../../stores/history', () => ({
   useHistoryStore: () => ({ clearChats: vi.fn() }),
 }))
 
-vi.mock('../stores/theme', () => ({ useThemeStore: () => ({}) }))
+vi.mock('../../stores/theme', () => ({ useThemeStore: () => ({}) }))
 
-vi.mock('../stores/plugin-runtime', () => ({
+vi.mock('../../stores/plugin-runtime', () => ({
   usePluginRuntimeStore: () => ({
     pluginRuntimeStates: {},
     pluginFactories: [
@@ -511,6 +511,7 @@ describe('Settings.vue', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 0))
     await wrapper.vm.$nextTick()
+    await wrapper.get('.storage-summary').trigger('click')
 
     const storageItems = wrapper.findAll('.storage-item')
     expect(storageItems).toHaveLength(2)

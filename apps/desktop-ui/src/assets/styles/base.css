@@ -1,7 +1,7 @@
 /* ────────────────────────────────────────────────
    Base element styles
 
-   In the `base` layer, so Tailwind utilities, daisyUI components and scoped
+   In the `base` layer, so Tailwind utilities, control styles and scoped
    component styles all override them without specificity fights.
    ──────────────────────────────────────────────── */
 

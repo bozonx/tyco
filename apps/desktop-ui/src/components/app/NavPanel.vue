@@ -12,7 +12,7 @@
         }"
         @click="editorNavigation.toEditor()"
       >
-        <Icon icon="mdi:pencil-outline" height="16" />
+        <AppIcon icon="mdi:pencil-outline" size="md" />
         {{ t('nav.editor') }}
       </button>
       <button
@@ -22,11 +22,11 @@
         :class="{ 'is-active': isBaseChatActive }"
         @click="openChat"
       >
-        <Icon icon="mdi:chat-processing-outline" height="16" />
+        <AppIcon icon="mdi:chat-processing-outline" size="md" />
         {{ t('nav.aiChat') }}
       </button>
       <template v-if="profiles.length > 0">
-        <div class="topbar-divider h-4 w-px bg-base-content/20 mx-1" />
+        <div class="topbar-divider" aria-hidden="true" />
         <div
           ref="profilesContainerRef"
           class="profiles-tabs-container overflow-x-auto no-scrollbar flex items-center gap-1 min-w-0"
@@ -47,7 +47,7 @@
             :title="profile.name"
             @click="openProfileChat(profile.id)"
           >
-            <Icon icon="mdi:account-outline" height="16" />
+            <AppIcon icon="mdi:account-outline" size="md" />
             <span class="truncate max-w-[120px]">{{ profile.name }}</span>
           </button>
         </div>
@@ -102,17 +102,18 @@ import {
   watch,
 } from 'vue'
 
-import { useEditorNavigation } from '../composables/use-editor-navigation'
-import { useI18n } from '../composables/use-i18n'
-import { EDITOR_ACTIONS_SHORTCUT } from '../lib/input-keys/input-keys'
-import { appNavigation } from '../lib/navigation/navigation'
-import { APP_ROUTES } from '../lib/navigation/routes'
-import { useAiProfilesStore } from '../stores/ai-profiles'
-import { useChatStore, useProfileChatStore } from '../stores/chat'
-import { useMenuModalsStore } from '../stores/menu-modals'
-import { useNavPanelStore } from '../stores/nav-panel'
-import Icon from './common/AppIcon.vue'
-import IconButton from './common/IconButton.vue'
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
+import { useI18n } from '../../composables/use-i18n'
+import { EDITOR_ACTIONS_SHORTCUT } from '../../lib/input-keys/input-keys'
+import { appNavigation } from '../../lib/navigation/navigation'
+import { APP_ROUTES } from '../../lib/navigation/routes'
+import { useAiProfilesStore } from '../../stores/ai-profiles'
+import { useChatStore, useProfileChatStore } from '../../stores/chat'
+import { useMenuModalsStore } from '../../stores/menu-modals'
+import { useNavPanelStore } from '../../stores/nav-panel'
+import AppIcon from '../common/AppIcon.vue'
+import Button from '../common/Button.vue'
+import IconButton from '../common/IconButton.vue'
 
 const editorNavigation = useEditorNavigation()
 const chatStore = useChatStore()
@@ -209,6 +210,13 @@ function openHistory() {
 </script>
 
 <style scoped>
+.topbar-divider {
+  width: 1px;
+  height: 1rem;
+  margin-inline: var(--space-xs);
+  background-color: var(--app-border);
+}
+
 .app-topbar {
   --button-ghost-color: var(--app-text-muted);
   display: flex;

@@ -2,7 +2,7 @@
   <div class="model-row">
     <div class="model-row-header">
       <div class="flex items-center gap-2 min-w-0">
-        <Icon icon="mdi:cube-outline" height="17" class="text-muted" />
+        <AppIcon icon="mdi:cube-outline" size="lg" class="text-muted" />
         <span class="font-medium truncate">{{ modelLabel(model) }}</span>
       </div>
       <IconButton
@@ -27,22 +27,21 @@
       />
     </FieldRow>
     <div class="advanced-toggle">
-      <Button
-        size="xs"
-        variant="ghost"
-        :icon="
-          expandedModelIds.has(model.id) ? 'mdi:chevron-up' : 'mdi:tune-variant'
-        "
-        @click="toggle(expandedModelIds, model.id)"
-      >
-        {{
+      <DisclosureHeader
+        density="compact"
+        icon="mdi:tune-variant"
+        icon-size="md"
+        :expanded="expandedModelIds.has(model.id)"
+        :controls="advancedId"
+        :title="
           expandedModelIds.has(model.id)
             ? t('settings.hideAdvanced')
             : t('settings.showAdvanced')
-        }}
-      </Button>
+        "
+        @toggle="toggle(expandedModelIds, model.id)"
+      />
     </div>
-    <template v-if="expandedModelIds.has(model.id)">
+    <div v-if="expandedModelIds.has(model.id)" :id="advancedId">
       <FieldRow :label="t('settings.vision')">
         <FieldSwitch
           :model-value="supportsImages(model)"
@@ -126,16 +125,18 @@
           "
         />
       </FieldRow>
-    </template>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
+import { useId } from 'vue'
+
 import { useI18n } from '../../composables/use-i18n'
 import { supportsImages, supportsTools } from '../../lib/llm/llm-catalog'
 import { modelLabel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
-import Icon from '../common/AppIcon.vue'
-import Button from '../common/Button.vue'
+import AppIcon from '../common/AppIcon.vue'
+import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -155,6 +156,7 @@ const emit = defineEmits<{
   update: [patch: Partial<LlmModel>]
 }>()
 const { t } = useI18n()
+const advancedId = useId()
 const { expandedModelIds, numberDrafts, numberErrors, setNumber } =
   props.settings
 function toggle(set: Set<string>, id: string) {
@@ -179,7 +181,9 @@ function toggle(set: Set<string>, id: string) {
   background: var(--app-surface-raised);
 }
 .advanced-toggle {
-  padding: var(--space-xs) var(--space-md) var(--space-sm);
-  text-align: right;
+  display: flex;
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-control);
+  color: var(--app-text-muted);
 }
 </style>

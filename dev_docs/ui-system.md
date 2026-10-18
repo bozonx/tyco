@@ -1,13 +1,18 @@
 # UI system
 
-The existing Vue, Tailwind and daisyUI stack is the UI system. Shared primitives
-live in `apps/desktop-ui/src/components/common`; semantic appearance tokens live
-in `assets/styles/tokens.css`. Assets must remain bundled and work offline.
+Vue and Tailwind are the UI system. Shared primitives live in
+`apps/desktop-ui/src/components/common`; the palettes live in
+`assets/styles/themes.css`, semantic appearance tokens in `tokens.css`, the base
+looks of the native controls (`.btn`, `.input`, `.select`, `.textarea`,
+`.toggle`, `.checkbox`, `.kbd`, `.loading`) in `controls.css` and their app
+refinements in `components.css`. There is no component library. Assets must
+remain bundled and work offline.
 
 ## Component contracts
 
-- `Button`: use `variant="primary|neutral|ghost|danger"` and `size="xs|sm|md"`.
-  Omit size for the default size. `loading` blocks activation, exposes `aria-busy`
+- `Button`: use `variant="primary|neutral|ghost|danger|danger-ghost"` and
+  `size="xs|sm|md"`. The default is neutral/md; a view's main action states
+  `variant="primary"` explicitly. `loading` blocks activation, exposes `aria-busy`
   and preserves the label beside a decorative spinner. Do not reintroduce boolean
   variant/size aliases. Shared types live in `lib/ui/control-types.ts`.
 - `ShortcutButton`: use `variant="primary|ghost"` and `size="xs|sm|md"`;
@@ -22,12 +27,11 @@ in `assets/styles/tokens.css`. Assets must remain bundled and work offline.
 - `FieldRow` provides labels, hints, errors, disabled and required state to common
   controls through `useFieldControl`. Put tooltip buttons outside native labels.
   Composite controls must forward native attributes to their actual control.
-- `Tabs` represents panels: provide a localized label and the `panel` slot, or
-  supply `panelId` and a corresponding external `tabpanel` with `aria-labelledby`.
-  It uses a single Tab stop and arrow/Home/End navigation. `NavigationList`
-  uses ordinary buttons and `aria-current` for section navigation.
-- `SegmentedControl` selects a value through native radios. Share segment tokens
-  with tabs, but preserve radio semantics.
+- `NavigationList` uses ordinary buttons and `aria-current` for section
+  navigation.
+- `SegmentedControl` selects a value through native radios.
+- `AppIcon` sizes come from `lib/ui/icon-size.ts` in rem, so icons follow the
+  interface scale. Do not size icons in pixels.
 - `BaseDialog` uses native `showModal()` for focus containment and inert background.
   Supply `labelledby` (visible title) or a localized `label`. The parent owns
   `open` and handles `close`; `ConfirmModal` supplies confirmation actions and
@@ -92,6 +96,15 @@ behavior.
 
 ## Settings models
 
+`Settings.vue` provides a `SettingsContext` (`lib/settings/settings-context.ts`)
+to its tabs: the session draft, `settings-operations`, the effective UI language
+and `navigate`/`editCommand`. A tab reads it with `useSettingsContext()`, edits
+the draft in place and emits nothing; detail tabs take only their entity id or
+plugin as a prop. The navigation tree, tab availability and titles live in
+`lib/settings/settings-navigation.ts`. A detail page uses `SettingsDetailHeader`
+and saves automatically, showing `SettingsAutosaveStatus`; only creating an
+entity waits for an explicit button.
+
 Keep business edits and validation in tested DI models. Command editing and
 undoable removal live in `lib/commands/*-model.ts`; LLM key operations, connection
 state and numeric edits live in `lib/llm/llm-settings-model.ts`. Components retain
@@ -110,7 +123,6 @@ controls layout spacing. `NavigationList.isCollapsed` describes rail visibility.
 | Select an item or acknowledge a condition  | `FieldCheckbox`                        |
 | Enable or disable a feature                | `FieldSwitch`                          |
 | Choose one value                           | `FieldSelect` or `SegmentedControl`    |
-| Switch between content panels              | `Tabs`                                 |
 | Navigate between settings pages            | `NavigationList`                       |
 | Show noninteractive explanatory text       | `InfoTooltip`                          |
 | Show help containing buttons or links      | `InfoPopover`                          |

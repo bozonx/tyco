@@ -1,31 +1,19 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between gap-3">
-      <Button
-        size="sm"
-        variant="ghost"
-        icon="mdi:arrow-left"
-        @click="emit('back')"
-      >
-        {{ t('settings.aiProfilesOverview') }}
-      </Button>
-      <span
-        v-if="!isNew && saveStatusText"
-        class="text-xs"
-        :class="hasSaveError ? 'text-error' : 'text-base-content/60'"
-        role="status"
-      >
-        {{ saveStatusText }}
-      </span>
-    </div>
+  <div class="settings-stack">
+    <SettingsDetailHeader
+      :back-label="t('settings.aiProfilesOverview')"
+      @back="navigate(AI_OVERVIEW_TAB)"
+    >
+      <SettingsAutosaveStatus v-if="!isNew" :status="editor.saveStatus.value" />
+    </SettingsDetailHeader>
 
     <template v-if="isNew">
       <SettingsSection :title="t('settings.newProfile')">
-        <form class="flex flex-col gap-3" @submit.prevent="handleCreate">
+        <form class="profile-create-form" @submit.prevent="handleCreate">
           <FieldRow :label="t('settings.profileName')">
             <FieldInput v-model="newName" />
           </FieldRow>
-          <div class="flex justify-end">
+          <div class="profile-form-actions">
             <Button
               type="submit"
               size="sm"
@@ -108,7 +96,7 @@
         :title="t('settings.profileSoulPrompt')"
         :info="t('settings.profileSoulPromptHint')"
       >
-        <div class="flex flex-col gap-2">
+        <div class="settings-section-content">
           <FieldTextArea
             v-model="soulPrompt"
             :rows="8"
@@ -117,7 +105,7 @@
             :aria-label="t('settings.profileSoulPrompt')"
             @update:model-value="changeSoul"
           />
-          <div class="flex justify-end">
+          <div class="profile-form-actions">
             <Button
               size="sm"
               variant="neutral"
@@ -134,87 +122,54 @@
         :title="t('settings.projectPermissions')"
         :info="t('settings.projectPermissionsHint')"
       >
-        <div
-          v-if="projects.length === 0"
-          class="text-sm text-base-content/50 italic"
-        >
-          {{ t('settings.noProjectsYet') }}
-        </div>
-        <div v-else class="flex flex-col gap-3">
-          <div
-            v-for="project in projects"
-            :key="project.id"
-            class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-base-200/40 border border-base-300/40 gap-3"
-          >
-            <div class="flex items-center gap-2">
-              <Icon
-                :icon="
-                  project.isExternal
-                    ? 'mdi:folder-open-outline'
-                    : 'mdi:folder-table-outline'
-                "
-                height="18"
-                class="text-secondary shrink-0"
-              />
-              <span class="font-medium text-sm">{{ project.name }}</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-base-content/70"
-                  >{{ t('settings.accessRead') }}:</span
-                >
+        <div class="settings-section-content">
+          <StateMessage
+            v-if="projects.length === 0"
+            density="compact"
+            :message="t('settings.noProjectsYet')"
+          />
+          <div v-else class="settings-entity-list">
+            <SettingsEntityItem
+              v-for="project in projects"
+              :key="project.id"
+              :icon="
+                project.isExternal
+                  ? 'mdi:folder-open-outline'
+                  : 'mdi:folder-table-outline'
+              "
+              icon-tone="secondary"
+              :title="project.name"
+            >
+              <span
+                v-for="kind in PERMISSION_KINDS"
+                :key="kind"
+                class="profile-permission"
+              >
+                <span class="settings-entity-meta">{{
+                  t(PERMISSION_LABEL_KEYS[kind])
+                }}</span>
                 <SegmentedControl
                   size="sm"
-                  :label="`${project.name} read`"
-                  :model-value="getPermission(project.id).read"
+                  :label="`${project.name}: ${t(PERMISSION_LABEL_KEYS[kind])}`"
+                  :model-value="getPermission(project.id)[kind]"
                   :options="permissionOptions"
                   @update:model-value="
-                    setPermission(
-                      project.id,
-                      'read',
-                      $event as ProjectAccessMode
-                    )
+                    setPermission(project.id, kind, $event as ProjectAccessMode)
                   "
                 />
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-base-content/70"
-                  >{{ t('settings.accessWrite') }}:</span
-                >
-                <SegmentedControl
-                  size="sm"
-                  :label="`${project.name} write`"
-                  :model-value="getPermission(project.id).write"
-                  :options="permissionOptions"
-                  @update:model-value="
-                    setPermission(
-                      project.id,
-                      'write',
-                      $event as ProjectAccessMode
-                    )
-                  "
-                />
-              </div>
-            </div>
+              </span>
+            </SettingsEntityItem>
           </div>
         </div>
       </SettingsSection>
 
       <SettingsSection :title="t('settings.deleteProfile')">
-        <div
-          class="p-4 rounded-lg border border-error/30 bg-error/5 flex items-center justify-between gap-3"
-        >
-          <div class="text-sm text-error/90">
-            {{ t('settings.deleteProfileHint') }}
-          </div>
-          <Button
-            size="sm"
-            variant="danger"
-            icon="mdi:trash-can-outline"
-            @click="askDelete"
-          >
-            {{ t('settings.deleteProfile') }}
-          </Button>
+        <div class="settings-section-content">
+          <SettingsDangerZone
+            :message="t('settings.deleteProfileHint')"
+            :action-label="t('settings.deleteProfile')"
+            @action="askDelete"
+          />
         </div>
       </SettingsSection>
     </template>
@@ -235,16 +190,20 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
 import { CHAT_TOOL_GROUPS } from '../../lib/chat-tools/chat-tool-groups'
 import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
 import { normalizeLlmConfig } from '../../lib/llm/llm-config'
 import { isSecretUsable } from '../../lib/net/secrets'
+import {
+  AI_OVERVIEW_TAB,
+  profileTab,
+} from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
 import { useSecretsStore } from '../../stores/secrets'
-import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldInput from '../common/FieldInput.vue'
@@ -253,8 +212,13 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
-import SettingsSection from '../common/SettingsSection.vue'
+import StateMessage from '../common/StateMessage.vue'
+import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
+import SettingsDangerZone from './SettingsDangerZone.vue'
+import SettingsDetailHeader from './SettingsDetailHeader.vue'
+import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
+import SettingsSection from './SettingsSection.vue'
 import {
   DEFAULT_PROJECT_PERMISSION,
   MAX_PROFILE_TEMPERATURE,
@@ -264,10 +228,7 @@ import {
 } from '@tyco/shared'
 
 const props = defineProps<{ profileId: string }>()
-const emit = defineEmits<{
-  (e: 'back'): void
-  (e: 'saved', id: string): void
-}>()
+const { navigate } = useSettingsContext()
 
 /** Autosave waits this long after the last keystroke */
 const AUTOSAVE_DELAY_MS = 600
@@ -299,7 +260,7 @@ async function handleCreate() {
       name: newName.value,
       soul: t('settings.profileDefaultSoul'),
     })
-    emit('saved', created.id)
+    navigate(profileTab(created.id))
   } catch (error) {
     toastText(String(error), 'error')
   } finally {
@@ -381,17 +342,6 @@ const modelOptions = computed(() => {
   return options
 })
 
-const SAVE_STATUS_KEYS = {
-  error: 'settings.profileSaveFailed',
-  saving: 'settings.profileSaving',
-  saved: 'settings.profileSaved',
-} as const
-const saveStatusText = computed(() => {
-  const status = editor.saveStatus.value
-  return status ? t(SAVE_STATUS_KEYS[status]) : ''
-})
-const hasSaveError = computed(() => editor.saveStatus.value === 'error')
-
 onBeforeUnmount(() => {
   void editor.flush()
 })
@@ -399,6 +349,15 @@ onBeforeUnmount(() => {
 // ---------------------------------------------------------------------------
 // Project permissions
 // ---------------------------------------------------------------------------
+
+const PERMISSION_KINDS = [
+  'read',
+  'write',
+] as const satisfies readonly (keyof ProjectPermission)[]
+const PERMISSION_LABEL_KEYS = {
+  read: 'settings.accessRead',
+  write: 'settings.accessWrite',
+} as const
 
 const permissionOptions = computed(() => [
   { id: 'deny', name: t('settings.accessDeny') },
@@ -458,9 +417,28 @@ async function handleDelete() {
     editor.cancel()
     await aiProfilesStore.deleteProfile(props.profileId)
     showDeleteConfirm.value = false
-    emit('back')
+    navigate(AI_OVERVIEW_TAB)
   } catch (error) {
     toastText(String(error), 'error')
   }
 }
 </script>
+
+<style scoped>
+.profile-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.profile-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.profile-permission {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+</style>

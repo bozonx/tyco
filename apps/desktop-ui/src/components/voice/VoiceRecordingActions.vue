@@ -103,7 +103,7 @@ import type {
   VoiceFinishIntent,
 } from '../../lib/stt/voice-finish-intent'
 import IconButton from '../common/IconButton.vue'
-import ShortcutButton from '../common/ShortcutButton.vue'
+import ShortcutButton from '../overlay/ShortcutButton.vue'
 
 const props = defineProps<{
   compact?: boolean

@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import InfoTooltip from './InfoTooltip.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 
 withDefaults(
   defineProps<{

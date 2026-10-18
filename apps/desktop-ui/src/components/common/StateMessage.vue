@@ -15,10 +15,10 @@
       class="loading loading-spinner text-primary"
       aria-hidden="true"
     />
-    <Icon
+    <AppIcon
       v-else-if="icon"
       :icon="icon"
-      height="28"
+      size="3xl"
       class="ui-state-icon"
       :aria-hidden="true"
     />
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 
 withDefaults(
   defineProps<{

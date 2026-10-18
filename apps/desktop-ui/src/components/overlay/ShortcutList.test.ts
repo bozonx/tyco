@@ -18,19 +18,19 @@ const mocks = vi.hoisted(() => ({
   mode: 'write',
 }))
 
-vi.mock('../composables/use-i18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../composables/use-editor-navigation', () => ({
+vi.mock('../../composables/use-editor-navigation', () => ({
   useEditorNavigation: () => ({ toEditor: mocks.toEditor }),
 }))
 
-vi.mock('../stores/quick-input', () => ({
+vi.mock('../../stores/quick-input', () => ({
   useQuickInputStore: () => ({ discard: mocks.discardQuickInput }),
 }))
 
-vi.mock('../stores/menu-modals', () => ({
+vi.mock('../../stores/menu-modals', () => ({
   MenuModals: {
     NONE: 'none',
     INSERT: 'insert',
@@ -57,25 +57,25 @@ vi.mock('../stores/menu-modals', () => ({
   }),
 }))
 
-vi.mock('../stores/ipc', () => ({
+vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({
     callFunction: mocks.hideWindow,
     callFunctionOrNotify: mocks.hideWindow,
   }),
 }))
-vi.mock('../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../test/desktop-store')
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
   return {
     useDesktopStore: () =>
       mockDesktopStore(() => ({ mode: mocks.mode, userConfig: {} })),
   }
 })
 
-vi.mock('../lib/navigation/navigation', () => ({
+vi.mock('../../lib/navigation/navigation', () => ({
   appNavigation: { goToEditor: mocks.goToEditor },
 }))
 
-vi.mock('../lib/desktop/window', () => ({
+vi.mock('../../lib/desktop/window', () => ({
   isQuickWindow: () => mocks.currentWindowLabel === 'quick',
 }))
 

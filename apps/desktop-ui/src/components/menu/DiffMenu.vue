@@ -3,7 +3,7 @@
     :title="
       t(props.replaceEditor ? 'editor.conflict.title' : 'menu.compareResult')
     "
-    escMode="back"
+    esc-mode="back"
   >
     <template #header-extra>
       <ResultViewModeToggle preset="diff" v-model="diffMode" />
@@ -11,8 +11,8 @@
 
     <template #preview>
       <Diff
-        :oldText="props.oldText"
-        :newText="props.newText"
+        :old-text="props.oldText"
+        :new-text="props.newText"
         :mode="diffMode"
       />
     </template>
@@ -20,10 +20,10 @@
     <template #actions>
       <ShortcutList
         :text="props.newText"
-        :sourceText="props.oldText"
-        :leftLetterKeys="props.replaceEditor ? [] : leftLetterKeys"
-        :spaceKey="props.replaceEditor ? replaceEditorAction : spaceKey"
-        :isEditorButtonVisible="!props.replaceEditor"
+        :source-text="props.oldText"
+        :left-letter-keys="props.replaceEditor ? [] : leftLetterKeys"
+        :space-key="props.replaceEditor ? replaceEditorAction : spaceKey"
+        :is-editor-button-visible="!props.replaceEditor"
       />
     </template>
   </ActionOverlayLayout>
@@ -37,10 +37,10 @@ import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import { useResultActions } from '../../composables/use-result-actions'
 import type { DiffMenuParams } from '../../lib/modals/menu-modal-params'
-import ShortcutList from '../ShortcutList.vue'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Diff from '../common/Diff.vue'
-import ResultViewModeToggle from '../common/ResultViewModeToggle.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ShortcutList from '../overlay/ShortcutList.vue'
+import ResultViewModeToggle from './ResultViewModeToggle.vue'
 import type { ActionItem } from '@tyco/plugin-sdk'
 
 const props = defineProps<DiffMenuParams>()

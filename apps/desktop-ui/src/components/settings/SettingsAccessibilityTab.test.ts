@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import type { UserConfig } from '@tyco/shared'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsAccessibilityTab from './SettingsAccessibilityTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -9,10 +10,12 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsAccessibilityTab.vue', () => {
+  let context: ReturnType<typeof createTestSettingsContext>
   const mountTab = (appearance: UserConfig['appearance']) => {
+    context = createTestSettingsContext({ appearance })
     return mount(SettingsAccessibilityTab, {
-      props: { appearance },
       global: {
+        provide: context.provide,
         stubs: {
           SettingsSection: {
             props: ['title'],
@@ -73,7 +76,7 @@ describe('SettingsAccessibilityTab.vue', () => {
     expect(rows[1].attributes('data-hint')).toBe('settings.forcedByEInk')
   })
 
-  it('emits update:appearance when contrast is changed', async () => {
+  it('stores the appearance when contrast is changed', async () => {
     const appearance: UserConfig['appearance'] = {
       theme: 'light',
       contrast: 'normal',
@@ -85,14 +88,13 @@ describe('SettingsAccessibilityTab.vue', () => {
     const selects = wrapper.findAll('.field-select-stub')
     await selects[0].setValue('more')
 
-    expect(wrapper.emitted('update:appearance')).toBeTruthy()
-    expect(wrapper.emitted('update:appearance')?.[0]?.[0]).toEqual({
+    expect(context.draft.value.appearance).toEqual({
       ...appearance,
       contrast: 'more',
     })
   })
 
-  it('emits update:appearance when motion is changed', async () => {
+  it('stores the appearance when motion is changed', async () => {
     const appearance: UserConfig['appearance'] = {
       theme: 'light',
       contrast: 'normal',
@@ -104,14 +106,13 @@ describe('SettingsAccessibilityTab.vue', () => {
     const selects = wrapper.findAll('.field-select-stub')
     await selects[1].setValue('reduce')
 
-    expect(wrapper.emitted('update:appearance')).toBeTruthy()
-    expect(wrapper.emitted('update:appearance')?.[0]?.[0]).toEqual({
+    expect(context.draft.value.appearance).toEqual({
       ...appearance,
       motion: 'reduce',
     })
   })
 
-  it('emits update:appearance when uiScale is changed to a valid scale', async () => {
+  it('stores the appearance when uiScale is changed to a valid scale', async () => {
     const appearance: UserConfig['appearance'] = {
       theme: 'light',
       contrast: 'normal',
@@ -123,8 +124,7 @@ describe('SettingsAccessibilityTab.vue', () => {
     const selects = wrapper.findAll('.field-select-stub')
     await selects[2].setValue('115')
 
-    expect(wrapper.emitted('update:appearance')).toBeTruthy()
-    expect(wrapper.emitted('update:appearance')?.[0]?.[0]).toEqual({
+    expect(context.draft.value.appearance).toEqual({
       ...appearance,
       uiScale: 115,
     })

@@ -17,12 +17,12 @@
         :class="{ 'is-error': Boolean(props.correctionError) }"
         :title="props.correctionError"
       >
-        <Icon
+        <AppIcon
           v-if="props.correctionError"
           icon="mdi:alert-circle-outline"
-          height="14"
+          size="sm"
         />
-        <Icon v-else icon="mdi:check" height="14" />
+        <AppIcon v-else icon="mdi:check" size="sm" />
         {{ statusText }}
       </span>
     </template>
@@ -31,12 +31,12 @@
       <InProgressMessage
         v-if="props.isCorrecting"
         correction
-        :onCancel="menuModalsStore.back"
+        :on-cancel="menuModalsStore.back"
       />
       <Diff
         v-else-if="props.oldText && !props.correctionError"
-        :oldText="props.oldText"
-        :newText="props.text"
+        :old-text="props.oldText"
+        :new-text="props.text"
         :mode="diffMode"
       />
       <TextPreview v-else :text="props.text" />
@@ -45,21 +45,21 @@
     <template #actions>
       <ShortcutList
         :text="props.text"
-        :sourceText="props.oldText"
-        :leftLetterKeys="leftLetterKeys"
-        :spaceKey="spaceKey"
-        :altText="
+        :source-text="props.oldText"
+        :left-letter-keys="leftLetterKeys"
+        :space-key="spaceKey"
+        :alt-text="
           props.insertOnly || editorTarget ? undefined : props.originalText
         "
-        :altAlwaysVisible="props.isCorrecting"
-        :altAction="primaryAction"
-        :shortcutsDisabled="props.shortcutsDisabled"
-        :isEditorButtonVisible="
+        :alt-always-visible="props.isCorrecting"
+        :alt-action="primaryAction"
+        :shortcuts-disabled="props.shortcutsDisabled"
+        :is-editor-button-visible="
           !props.isCorrecting &&
           !editorTarget &&
           (props.isEditorButtonVisible ?? !editorNavigation.isEditorPage())
         "
-        :escMode="props.correction ? 'back' : 'auto'"
+        :esc-mode="props.correction ? 'back' : 'auto'"
       />
     </template>
   </ActionOverlayLayout>
@@ -77,13 +77,13 @@ import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useMenuModalsStore } from '../../stores/menu-modals'
-import ShortcutList from '../ShortcutList.vue'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import Diff from '../common/Diff.vue'
-import ResultViewModeToggle from '../common/ResultViewModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ShortcutList from '../overlay/ShortcutList.vue'
 import InProgressMessage from './InProgressMessage.vue'
+import ResultViewModeToggle from './ResultViewModeToggle.vue'
 
 const editorNavigation = useEditorNavigation()
 

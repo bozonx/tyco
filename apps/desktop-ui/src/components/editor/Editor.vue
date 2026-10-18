@@ -48,7 +48,7 @@
             :title="scoped(getToolbarTooltip(item))"
             @click="item.action"
           >
-            <Icon v-if="item.icon" :icon="item.icon" height="18" />
+            <AppIcon v-if="item.icon" :icon="item.icon" size="lg" />
             <span
               v-if="getToolbarLabel(item)"
               class="text-sm font-medium leading-none"
@@ -74,7 +74,7 @@
             :title="scoped(getToolbarTooltip(item))"
             @click="item.action"
           >
-            <Icon v-if="item.icon" :icon="item.icon" height="18" />
+            <AppIcon v-if="item.icon" :icon="item.icon" size="lg" />
             <span
               v-if="getToolbarLabel(item)"
               class="text-sm font-medium leading-none"
@@ -126,7 +126,7 @@
             class="selection-chip"
             role="status"
           >
-            <Icon icon="mdi:selection-drag" height="14" />
+            <AppIcon icon="mdi:selection-drag" size="sm" />
             {{
               t('editor.selectionScope', {
                 count: editorInputStore.selectedText.length,
@@ -230,7 +230,7 @@
           @click="openQuick(StartMode.VOICE_COMMANDS)"
           title="Open Quick Voice Commands"
         >
-          <Icon icon="mdi:microphone-message" height="15" />
+          <AppIcon icon="mdi:microphone-message" size="sm" />
           Voice Commands
         </Button>
         <Button
@@ -239,7 +239,7 @@
           @click="openQuick(StartMode.WRITE)"
           title="Open Quick Write"
         >
-          <Icon icon="mdi:pencil-outline" height="15" />
+          <AppIcon icon="mdi:pencil-outline" size="sm" />
           Write
         </Button>
         <Button
@@ -248,7 +248,7 @@
           @click="openQuick(StartMode.AI_TASKS)"
           title="Open Quick AI Tasks"
         >
-          <Icon icon="mdi:robot-outline" height="15" />
+          <AppIcon icon="mdi:robot-outline" size="sm" />
           AI Tasks
         </Button>
         <Button
@@ -257,7 +257,7 @@
           @click="openQuick(StartMode.SELECT)"
           title="Open Quick Select"
         >
-          <Icon icon="mdi:format-list-checks" height="15" />
+          <AppIcon icon="mdi:format-list-checks" size="sm" />
           Select
         </Button>
         <Button
@@ -266,7 +266,7 @@
           @click="openQuick(StartMode.VOICE)"
           title="Open Quick Voice"
         >
-          <Icon icon="mdi:microphone-outline" height="15" />
+          <AppIcon icon="mdi:microphone-outline" size="sm" />
           Voice
         </Button>
         <Button
@@ -275,7 +275,7 @@
           @click="openQuick(StartMode.COMMAND_LAUNCHER)"
           title="Open Quick Commands"
         >
-          <Icon icon="mdi:console-line" height="15" />
+          <AppIcon icon="mdi:console-line" size="sm" />
           Commands
         </Button>
         <Button
@@ -284,7 +284,7 @@
           @click="openQuick(StartMode.TRANSLATE)"
           title="Open Quick Translate"
         >
-          <Icon icon="mdi:translate" height="15" />
+          <AppIcon icon="mdi:translate" size="sm" />
           Translate
         </Button>
         <Button
@@ -293,7 +293,7 @@
           @click="openQuick(StartMode.CORRECTION)"
           title="Open Quick Correction"
         >
-          <Icon icon="mdi:text-box-edit-outline" height="15" />
+          <AppIcon icon="mdi:text-box-edit-outline" size="sm" />
           Correction
         </Button>
       </div>
@@ -324,11 +324,13 @@ import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useToolbarStore } from '../../stores/toolbar'
 import type { ToolbarItem } from '../../types/plugins'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
+import Button from '../common/Button.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
+import EditorInput from './EditorInput.vue'
 import { StartMode } from '@tyco/shared'
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })

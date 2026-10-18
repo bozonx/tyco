@@ -45,7 +45,7 @@
     />
   </Overlay>
 
-  <Overlay :navBarVisible="false" v-if="menuModalsStore.pendingModal">
+  <Overlay :nav-bar-visible="false" v-if="menuModalsStore.pendingModal">
     <InProgressMessage v-bind="menuModalsStore.pendingModal" />
   </Overlay>
 </template>
@@ -54,7 +54,7 @@
 import { computed } from 'vue'
 
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import Overlay from '../common/Overlay.vue'
+import Overlay from '../overlay/Overlay.vue'
 import ActionSelectModal from './ActionSelectModal.vue'
 import AiTaskMenu from './AiTaskMenu.vue'
 import DiffMenu from './DiffMenu.vue'

@@ -5,6 +5,7 @@ import { reactive } from 'vue'
 import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 
 import { useSecretsStore } from '../../stores/secrets'
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsVoiceTab from './SettingsVoiceTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -48,8 +49,8 @@ describe('SettingsVoiceTab.vue', () => {
 
   const mountTab = (userConfig: UserConfig) => {
     return mount(SettingsVoiceTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
             props: ['title'],

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="settings-stack">
     <SettingsSection :title="t('settings.sectionEditorHistory')">
       <template #actions>
         <Button
@@ -144,17 +144,14 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import {
   chatHistoryRetentionChoices,
   isChatHistoryEnabled,
 } from '../../lib/chat/chat-history-settings'
 import { editorHistoryRetentionChoices } from '../../lib/history/editor-history-storage'
-import {
-  getNavigatorLanguages,
-  resolveUiLanguagePreference,
-  toHtmlLang,
-} from '../../lib/locale/language'
+import { toHtmlLang } from '../../lib/locale/language'
 import { useHistoryStore } from '../../stores/history'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -162,16 +159,10 @@ import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import SettingsSection from '../common/SettingsSection.vue'
-import type { UserConfig } from '@tyco/shared'
-
-const props = defineProps<{
-  userConfig: Pick<UserConfig, 'editorHistory' | 'chat'> &
-    Partial<Pick<UserConfig, 'appLanguage' | 'userLanguage'>>
-  effectiveAppLanguage?: string
-}>()
+import SettingsSection from './SettingsSection.vue'
 
 const { t } = useI18n()
+const { draft: userConfig, effectiveAppLanguage } = useSettingsContext()
 const { toastKey } = useToast()
 const historyStore = useHistoryStore()
 
@@ -196,13 +187,13 @@ const showDisableChatHistoryModal = ref(false)
 /** Shown off while the user confirms turning it off */
 const chatHistoryChecked = computed(
   () =>
-    isChatHistoryEnabled(props.userConfig) && !showDisableChatHistoryModal.value
+    isChatHistoryEnabled(userConfig.value) && !showDisableChatHistoryModal.value
 )
 
 /** Turning it off deletes the saved chats, so it asks first */
 function setChatHistoryEnabled(enabled: boolean) {
   if (enabled) {
-    props.userConfig.chat.isHistoryEnabled = true
+    userConfig.value.chat.isHistoryEnabled = true
     return
   }
   showDisableChatHistoryModal.value = true
@@ -210,37 +201,26 @@ function setChatHistoryEnabled(enabled: boolean) {
 
 function onDisableChatHistory() {
   showDisableChatHistoryModal.value = false
-  props.userConfig.chat.isHistoryEnabled = false
+  userConfig.value.chat.isHistoryEnabled = false
 }
 
 function setChatHistoryRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  props.userConfig.chat.historyRetentionDays = parsed
+  userConfig.value.chat.historyRetentionDays = parsed
 }
 
 function setEditorHistoryLimit(value: string) {
   const parsed = Number(value)
   if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 1) return
-  props.userConfig.editorHistory.maxItems = Math.round(parsed)
+  userConfig.value.editorHistory.maxItems = Math.round(parsed)
 }
 
 function setEditorHistoryRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  props.userConfig.editorHistory.retentionDays = parsed
+  userConfig.value.editorHistory.retentionDays = parsed
 }
-
-const currentLanguage = computed(() => {
-  if (props.effectiveAppLanguage) {
-    return props.effectiveAppLanguage
-  }
-  return resolveUiLanguagePreference(
-    props.userConfig.appLanguage,
-    props.userConfig.userLanguage,
-    getNavigatorLanguages()
-  )
-})
 
 const editorHistoryStorageOptions = computed(() => [
   { id: 'disk', name: t('settings.editorHistoryStorageDisk') },
@@ -249,7 +229,7 @@ const editorHistoryStorageOptions = computed(() => [
 ])
 
 const retentionOptions = (choices: number[], foreverLabel: string) => {
-  const format = new Intl.NumberFormat(toHtmlLang(currentLanguage.value), {
+  const format = new Intl.NumberFormat(toHtmlLang(effectiveAppLanguage.value), {
     style: 'unit',
     unit: 'day',
     unitDisplay: 'long',
@@ -263,14 +243,14 @@ const retentionOptions = (choices: number[], foreverLabel: string) => {
 
 const editorHistoryRetentionOptions = computed(() =>
   retentionOptions(
-    editorHistoryRetentionChoices(props.userConfig.editorHistory.retentionDays),
+    editorHistoryRetentionChoices(userConfig.value.editorHistory.retentionDays),
     t('settings.editorHistoryRetentionForever')
   )
 )
 
 const chatHistoryRetentionOptions = computed(() =>
   retentionOptions(
-    chatHistoryRetentionChoices(props.userConfig.chat.historyRetentionDays),
+    chatHistoryRetentionChoices(userConfig.value.chat.historyRetentionDays),
     t('settings.chatHistoryRetentionNever')
   )
 )

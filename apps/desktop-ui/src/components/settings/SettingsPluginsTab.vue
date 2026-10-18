@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="plugins-tab">
     <Button
       class="self-start"
       :disabled="installation.isBusy.value"
@@ -48,98 +48,58 @@
         </Button>
       </div>
     </div>
-    <div v-if="installedPlugins.length === 0" class="text-sm text-muted">
-      {{ t('settings.noInstalledPlugins') }}
-    </div>
+    <StateMessage
+      v-if="installedPlugins.length === 0"
+      density="compact"
+      :message="t('settings.noInstalledPlugins')"
+    />
 
-    <div
+    <PluginCard
       v-for="plugin of installedPlugins"
       :key="plugin.pluginId"
-      class="surface plugin-card"
-      :class="{ 'is-disabled': !plugin.isEnabled }"
-      :data-plugin="plugin.pluginId"
-      role="button"
-      tabindex="0"
-      @click="openPluginSettings(plugin.pluginId)"
-      @keydown.enter.prevent="openPluginSettings(plugin.pluginId)"
-      @keydown.space.prevent="openPluginSettings(plugin.pluginId)"
+      :plugin="plugin"
+      openable
+      @open="navigate(pluginTab(plugin.pluginId))"
+      @update:enabled="operations.updatePluginEnabled(plugin.pluginId, $event)"
     >
-      <div class="plugin-card-header">
-        <div class="plugin-icon">
-          <Icon icon="mdi:puzzle-outline" height="18" />
-        </div>
-        <div class="flex flex-col min-w-0 flex-1">
-          <h3 class="font-medium text-sm leading-tight">
-            {{
-              plugin.labelKey
-                ? t(plugin.labelKey)
-                : plugin.label || plugin.pluginId
-            }}
-          </h3>
-          <p class="text-xs text-muted">
-            {{ plugin.version
-            }}<span v-if="plugin.status">
-              · {{ t(`settings.pluginStatus.${plugin.status}`) }}</span
-            >
-          </p>
-          <InlineNotice
-            v-if="plugin.error"
-            kind="error"
-            announcement="assertive"
-            :message="
-              t('settings.pluginPackageFailed', { detail: plugin.error })
-            "
-          />
-          <p
-            v-if="plugin.descriptionKey || plugin.description"
-            class="text-xs text-muted mt-0.5"
+      <template #meta>
+        <p class="text-xs text-muted">
+          {{ plugin.version
+          }}<span v-if="plugin.status">
+            · {{ t(`settings.pluginStatus.${plugin.status}`) }}</span
           >
-            {{
-              plugin.descriptionKey
-                ? t(plugin.descriptionKey)
-                : plugin.description
-            }}
-          </p>
-        </div>
-
+        </p>
+        <InlineNotice
+          v-if="plugin.error"
+          kind="error"
+          announcement="assertive"
+          :message="t('settings.pluginPackageFailed', { detail: plugin.error })"
+        />
+      </template>
+      <template
+        v-if="plugin.canRestore || !builtinPluginIds?.includes(plugin.pluginId)"
+        #actions
+      >
         <Button
           v-if="plugin.canRestore"
           :disabled="installation.isBusy.value"
-          @click.stop="installation.restore(plugin.pluginId)"
           variant="neutral"
           size="sm"
+          @click="installation.restore(plugin.pluginId)"
         >
           {{ t('settings.restorePluginPackage') }}
         </Button>
         <Button
           v-if="!builtinPluginIds?.includes(plugin.pluginId)"
           :disabled="installation.isBusy.value"
-          @click.stop="installation.remove(plugin.pluginId)"
-          variant="neutral"
+          variant="danger-ghost"
           size="sm"
+          @click="installation.remove(plugin.pluginId)"
         >
           {{ t('settings.removePluginPackage') }}
         </Button>
-        <div class="plugin-toggle" @click.stop>
-          <FieldSwitch
-            :key="plugin.pluginId"
-            :model-value="plugin.isEnabled"
-            :title="
-              plugin.isEnabled
-                ? t('settings.pluginEnabled')
-                : t('settings.pluginDisabled')
-            "
-            @update:model-value="setPluginEnabled(plugin.pluginId, $event)"
-          />
-        </div>
-
-        <Icon
-          icon="mdi:chevron-right"
-          height="20"
-          class="plugin-chevron text-muted"
-        />
-      </div>
-    </div>
+      </template>
+    </PluginCard>
   </div>
 </template>
 
@@ -147,30 +107,24 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { builtinPluginIds } from '../../lib/plugins/builtin-plugins'
 import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
+import { pluginTab } from '../../lib/settings/settings-navigation'
 import { useIpcStore } from '../../stores/ipc'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
-import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import FieldSwitch from '../common/FieldSwitch.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import StateMessage from '../common/StateMessage.vue'
+import PluginCard from './PluginCard.vue'
 
 const plugins = usePluginRuntimeStore()
 const { pluginFactories, pluginRuntimeStates } = plugins
 
-const props = defineProps<{
-  userConfig: { plugins?: Record<string, unknown> }
-}>()
-
-const emit = defineEmits<{
-  'update:pluginEnabled': [pluginId: string, enabled: boolean]
-  selectPlugin: [pluginId: string]
-}>()
-
 const { t } = useI18n()
+const { draft, operations, navigate } = useSettingsContext()
 const ipc = useIpcStore()
 const { toastKey } = useToast()
 const requireResult = <T,>(result: {
@@ -205,78 +159,16 @@ const installation = createPluginInstallation({
 const installedPlugins = computed(() => {
   return resolveInstalledPlugins(
     pluginFactories,
-    props.userConfig,
+    draft.value,
     pluginRuntimeStates ?? {}
   )
 })
-
-const setPluginEnabled = (pluginId: string, enabled: boolean) => {
-  emit('update:pluginEnabled', pluginId, enabled)
-}
-
-const openPluginSettings = (pluginId: string) => {
-  emit('selectPlugin', pluginId)
-}
 </script>
 
 <style scoped>
-.plugin-card {
-  overflow: hidden;
-  box-shadow: var(--app-shadow-sm);
-  cursor: pointer;
-  user-select: none;
-  transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-.plugin-card:hover {
-  background-color: var(--app-surface-raised);
-  border-color: var(--app-border-strong);
-}
-
-.plugin-card:focus-visible {
-  outline: none;
-  box-shadow: var(--app-focus-ring);
-}
-
-.plugin-card-header {
+.plugins-tab {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--space-md);
-  padding: var(--space-md) var(--space-lg);
-}
-
-.plugin-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-md);
-  background-color: var(--app-accent-soft);
-  color: var(--color-primary);
-}
-
-.plugin-card.is-disabled .plugin-icon {
-  background-color: var(--app-hover);
-  color: var(--app-text-faint);
-}
-
-.plugin-toggle {
-  display: flex;
-  align-items: center;
-}
-
-.plugin-chevron {
-  flex-shrink: 0;
-  transition: transform var(--transition-fast);
-}
-
-.plugin-card:hover .plugin-chevron {
-  transform: translateX(2px);
-  color: var(--color-base-content);
 }
 </style>

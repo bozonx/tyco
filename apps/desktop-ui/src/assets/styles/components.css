@@ -1,12 +1,10 @@
 /* ────────────────────────────────────────────────
-   daisyUI overrides and shared component classes
+   App refinements of the native controls and shared component classes
 
-   daisyUI 5 puts its components in the `daisyui` cascade layer, which comes
-   after Tailwind's `utilities`. An override placed in any layer would lose to
-   it, so the rules below are deliberately unlayered.
+   Unlayered, so they apply on top of the base looks in `controls.css`.
    ──────────────────────────────────────────────── */
 
-/* ── form controls: tighten daisyUI defaults ── */
+/* ── form controls ── */
 
 .input,
 .select,
@@ -72,8 +70,7 @@
 }
 
 /* ── buttons ───────────────────────────────────
-   `btn-neutral` in this app is a quiet bordered button on the surface
-   color, not daisyUI's filled dark one. */
+   `btn-neutral` is a quiet bordered button on the surface color. */
 
 .btn {
   font-weight: 500;
@@ -171,6 +168,43 @@
 
 @utility text-faint {
   color: var(--app-text-faint);
+}
+
+@utility text-primary {
+  color: var(--color-primary);
+}
+
+/* ── settings layout ─────────────────────────── */
+
+/* The parts of a settings page; spaced like adjacent `SettingsSection`s, so
+   the two rules never add up */
+.settings-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-stack > * + * {
+  margin-top: var(--space-2xl);
+}
+
+/* Free content inside a `SettingsSection` frame, where no `FieldRow` pads it */
+.settings-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+/* Rows of `SettingsEntityItem` */
+.settings-entity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.settings-entity-meta {
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
 }
 
 /* Forms adapt to their available width, including interface scaling. */

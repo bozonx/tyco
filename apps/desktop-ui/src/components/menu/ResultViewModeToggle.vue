@@ -13,7 +13,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { DiffViewMode } from '../../lib/diff/diff-model'
-import SegmentedControl from './SegmentedControl.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
 
 export type ResultViewPreset = 'diff' | 'parallel'
 

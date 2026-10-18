@@ -14,6 +14,7 @@
       @update:model-value="emit('update:modelValue', $event)"
     />
     <Button
+      variant="primary"
       size="sm"
       :disabled="isBusy || !modelValue.trim()"
       @click="run(save)"

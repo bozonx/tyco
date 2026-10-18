@@ -75,7 +75,7 @@ describe('code block clipboard feedback', () => {
     expect(writeText).toHaveBeenCalledWith('const value = 1')
     expect(button.classList.contains('copied')).toBe(true)
     expect(view.dom.querySelector('[role="status"]')?.textContent).toBe(
-      translate('chat.copied')
+      translate('common.copied')
     )
     vi.advanceTimersByTime(1500)
     expect(button.classList.contains('copied')).toBe(false)

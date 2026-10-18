@@ -12,11 +12,11 @@
       class="loading loading-spinner loading-xs"
       aria-hidden="true"
     />
-    <Icon
+    <AppIcon
       v-else-if="props.icon"
       :icon="props.icon"
       class="shrink-0"
-      height="16"
+      size="md"
     />
     <slot></slot>
   </button>
@@ -26,12 +26,12 @@
 import { computed, ref } from 'vue'
 
 import type { ButtonProps } from '../../lib/ui/control-types'
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps<ButtonProps>()
 
 const buttonClass = computed(() => {
-  const variant = props.variant ?? 'primary'
+  const variant = props.variant ?? 'neutral'
   const size = props.size
   return {
     'btn-neutral': variant === 'neutral',

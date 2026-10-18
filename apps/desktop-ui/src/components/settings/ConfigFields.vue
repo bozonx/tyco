@@ -24,8 +24,8 @@ import {
   configFieldOptions,
 } from '../../lib/config-fields/config-field-labels'
 import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-control'
+import FieldRow from '../common/FieldRow.vue'
 import ConfigFieldControl from './ConfigFieldControl.vue'
-import FieldRow from './FieldRow.vue'
 import type { InputConfigItem } from '@/types'
 import { withConfigFieldValue } from '@tyco/plugin-sdk'
 

@@ -19,10 +19,10 @@
         <template v-if="$slots.status" #status><slot name="status" /></template>
       </DisclosureHeader>
       <slot name="actions" />
-      <Icon
+      <AppIcon
         v-if="hasTrailingChevron"
         icon="mdi:chevron-down"
-        height="18"
+        size="lg"
         class="disclosure-chevron shrink-0"
         :class="{ 'is-expanded': expanded }"
         aria-hidden="true"
@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { computed, useId, useSlots } from 'vue'
 
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 import DisclosureHeader from './DisclosureHeader.vue'
 
 const props = defineProps<{
@@ -71,12 +71,15 @@ function handleHeaderClick(event: MouseEvent) {
 <style scoped>
 .disclosure-panel {
   overflow: hidden;
+  border-color: var(--disclosure-panel-border-color, var(--app-border));
   box-shadow: var(--app-shadow-sm);
 }
 .disclosure-panel-header {
   display: flex;
   align-items: center;
+  gap: var(--disclosure-panel-header-gap, 0);
   min-width: 0;
+  padding: var(--disclosure-panel-header-padding, 0);
   cursor: pointer;
 }
 .disclosure-panel-body {

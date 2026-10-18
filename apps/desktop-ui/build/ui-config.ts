@@ -1,7 +1,6 @@
 import { resolve } from 'node:path'
 
 import vue from '@vitejs/plugin-vue'
-import Components from 'unplugin-vue-components/vite'
 import { loadEnv, type UserConfig } from 'vite'
 
 import { resolveLocalAiKit } from './local-ai-kit.ts'
@@ -20,7 +19,7 @@ export function createUiConfig(mode: string, useLocalKit: boolean): UserConfig {
 
   return {
     envDir,
-    plugins: [vue(), Components({}), offlineIconsPlugin(srcDir)],
+    plugins: [vue(), offlineIconsPlugin(srcDir)],
     resolve: {
       alias: [
         { find: '@', replacement: srcDir },

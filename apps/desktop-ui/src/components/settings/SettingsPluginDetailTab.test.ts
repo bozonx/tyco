@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsPluginDetailTab from './SettingsPluginDetailTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -8,6 +9,11 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsPluginDetailTab.vue', () => {
+  let context: ReturnType<typeof createTestSettingsContext>
+  beforeEach(() => {
+    context = createTestSettingsContext({ plugins: {} })
+  })
+
   const pluginWithConfig = {
     pluginId: 'SamplePlugin',
     labelKey: 'plugin.sample.label',
@@ -19,6 +25,7 @@ describe('SettingsPluginDetailTab.vue', () => {
     const wrapper = mount(SettingsPluginDetailTab, {
       props: { plugin: pluginWithConfig },
       global: {
+        provide: context.provide,
         stubs: {
           Button: {
             template:
@@ -41,10 +48,11 @@ describe('SettingsPluginDetailTab.vue', () => {
     expect(wrapper.find('.fields-stub').exists()).toBe(true)
   })
 
-  it('emits back when back button clicked', async () => {
+  it('goes back to the plugins from the back button', async () => {
     const wrapper = mount(SettingsPluginDetailTab, {
       props: { plugin: pluginWithConfig },
       global: {
+        provide: context.provide,
         stubs: {
           Button: {
             template:
@@ -57,13 +65,14 @@ describe('SettingsPluginDetailTab.vue', () => {
     })
 
     await wrapper.find('.btn-back').trigger('click')
-    expect(wrapper.emitted('back')).toBeTruthy()
+    expect(context.navigate).toHaveBeenCalledWith('plugins')
   })
 
-  it('emits update:pluginEnabled when toggle is clicked', async () => {
+  it('switches the plugin from its toggle', async () => {
     const wrapper = mount(SettingsPluginDetailTab, {
       props: { plugin: pluginWithConfig },
       global: {
+        provide: context.provide,
         stubs: {
           Button: true,
           FieldSwitch: {
@@ -77,15 +86,14 @@ describe('SettingsPluginDetailTab.vue', () => {
     })
 
     await wrapper.find('.checkbox-stub').trigger('click')
-    expect(wrapper.emitted('update:pluginEnabled')).toEqual([
-      ['SamplePlugin', false],
-    ])
+    expect(context.draft.value.plugins.SamplePlugin).toEqual({ enabled: false })
   })
 
-  it('emits update:pluginConfig when config is modified', async () => {
+  it('stores the modified plugin config', async () => {
     const wrapper = mount(SettingsPluginDetailTab, {
       props: { plugin: pluginWithConfig },
       global: {
+        provide: context.provide,
         stubs: {
           Button: true,
           FieldSwitch: true,
@@ -99,15 +107,16 @@ describe('SettingsPluginDetailTab.vue', () => {
     })
 
     await wrapper.find('.cfg-stub').trigger('click')
-    expect(wrapper.emitted('update:pluginConfig')).toEqual([
-      ['SamplePlugin', { token: 'new-token' }],
-    ])
+    expect(context.draft.value.plugins.SamplePlugin).toEqual({
+      token: 'new-token',
+    })
   })
 
   it('shows disabled hint when plugin is not enabled', () => {
     const wrapper = mount(SettingsPluginDetailTab, {
       props: { plugin: { ...pluginWithConfig, isEnabled: false } },
       global: {
+        provide: context.provide,
         stubs: { Button: true, FieldSwitch: true, ConfigFields: true },
       },
     })

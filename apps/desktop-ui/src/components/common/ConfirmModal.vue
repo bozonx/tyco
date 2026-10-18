@@ -7,17 +7,17 @@
   >
     <div class="confirm-modal-box">
       <div class="confirm-modal-header">
-        <Icon
+        <AppIcon
           v-if="danger"
           icon="mdi:alert-circle-outline"
           class="confirm-icon danger"
-          height="22"
+          size="2xl"
         />
-        <Icon
+        <AppIcon
           v-else
           icon="mdi:help-circle-outline"
           class="confirm-icon"
-          height="22"
+          size="2xl"
         />
         <h3 :id="titleId" class="confirm-modal-title">{{ title }}</h3>
       </div>
@@ -42,7 +42,7 @@
 import { useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 import BaseDialog from './BaseDialog.vue'
 import Button from './Button.vue'
 

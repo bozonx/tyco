@@ -2,6 +2,7 @@ import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsEditorTab from './SettingsEditorTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -32,8 +33,8 @@ describe('SettingsEditorTab.vue', () => {
   it('renders both Markdown formatting and Markdown cleanup sections', () => {
     const userConfig = createConfig()
     const wrapper = mount(SettingsEditorTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
             props: ['title', 'description', 'info'],
@@ -123,8 +124,8 @@ describe('SettingsEditorTab.vue', () => {
   it('uses the normalized markdown defaults', () => {
     const userConfig = structuredClone(DEFAULT_USER_CONFIG)
     mount(SettingsEditorTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: true,
           FieldRow: true,

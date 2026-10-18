@@ -18,7 +18,7 @@
             v-if="item.type === 'command'"
             variant="ghost"
             size="sm"
-            @click="emit('editCommand', item.commandId)"
+            @click="editCommand(item.commandId)"
             :label="t('commands.editCommand')"
             icon="mdi:pencil-outline"
           />
@@ -32,6 +32,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import {
   type MainActionChoice,
   type MainActionGroup,
@@ -53,39 +54,33 @@ import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import { useToolsStore } from '../../stores/tools'
 import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
-import ShortcutSlots from '../common/ShortcutSlots.vue'
+import SettingsSection from './SettingsSection.vue'
+import ShortcutSlots from './ShortcutSlots.vue'
 import {
   type CommandConfig,
   type MainActionConfig,
   STANDARD_ACTION_IDS,
   type StandardActionId,
-  type UserConfig,
 } from '@tyco/shared'
 
 const { pluginFactories } = usePluginRuntimeStore()
 
-const props = defineProps<{ userConfig: UserConfig }>()
-
-const emit = defineEmits<{
-  (event: 'update:mainActions', value: (MainActionConfig | null)[]): void
-  (event: 'editCommand', commandId: string): void
-}>()
-
 const { t } = useI18n()
+const { draft: userConfig, editCommand } = useSettingsContext()
 const actionMenuStore = useActionMenuStore()
 const toolsStore = useToolsStore()
 
 const actionSlots = computed(() =>
-  normalizeMainActions(props.userConfig.mainActions)
+  normalizeMainActions(userConfig.value.mainActions)
 )
 
-const commands = computed(() => normalizeCommands(props.userConfig.commands))
+const commands = computed(() => normalizeCommands(userConfig.value.commands))
 
 const optionId = mainActionOptionId
 
 /** The AI tasks the menu can refer to: those with a name */
 const aiTasks = computed(() =>
-  (props.userConfig.aiTasks ?? []).flatMap((task) =>
+  (userConfig.value.aiTasks ?? []).flatMap((task) =>
     task?.id && task.name.trim() ? [task] : []
   )
 )
@@ -93,7 +88,7 @@ const aiTasks = computed(() =>
 /** The translation languages, and those the slots translate into already */
 const languages = computed(() => [
   ...new Set([
-    ...(props.userConfig.translation.targetLanguages ?? []).filter(
+    ...(userConfig.value.translation.targetLanguages ?? []).filter(
       (language): language is string => !!language
     ),
     ...actionSlots.value.flatMap((slot) =>
@@ -119,7 +114,7 @@ const isOffered = (command: CommandConfig) =>
 const OPENS_DIALOG = new Set<StandardActionId>(['translation', 'aiTask'])
 
 const availableActions = computed((): MainActionChoice[] => [
-  ...props.userConfig.launcherPages.map((page, index) => ({
+  ...userConfig.value.launcherPages.map((page, index) => ({
     config: { type: 'launcherPage' as const, pageId: page.id },
     name: t('settings.launcherPage', { page: index + 1 }),
     group: { kind: 'commands' as const },
@@ -172,7 +167,7 @@ const availableActions = computed((): MainActionChoice[] => [
 const pluginLabels = computed(
   () =>
     new Map(
-      resolveInstalledPlugins(pluginFactories, props.userConfig).map(
+      resolveInstalledPlugins(pluginFactories, userConfig.value).map(
         (plugin) => [
           plugin.pluginId,
           plugin.labelKey
@@ -205,7 +200,7 @@ function unavailableName(slot: MainActionConfig): string {
   if (slot.type === 'launcherPage')
     return t('settings.launcherPage', {
       page:
-        props.userConfig.launcherPages.findIndex(
+        userConfig.value.launcherPages.findIndex(
           (page) => page.id === slot.pageId
         ) + 1,
     })
@@ -228,13 +223,13 @@ const actionOptions = computed(() =>
 )
 
 function moveAction(from: number, to: number) {
-  emit('update:mainActions', moveShortcutSlot(actionSlots.value, from, to))
+  userConfig.value.mainActions = moveShortcutSlot(actionSlots.value, from, to)
 }
 
 function setSlot(index: number, value: MainActionConfig | null) {
   const slots = [...actionSlots.value]
   slots[index] = value
-  emit('update:mainActions', slots)
+  userConfig.value.mainActions = slots
 }
 
 function addAction(index: number) {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { createAutosave } from './autosave'
+import { createAutosave, summarizeAutosave } from './autosave'
 
 describe('createAutosave', () => {
   it('saves once after the last change', async () => {
@@ -82,5 +82,14 @@ describe('createAutosave', () => {
 
     expect(save).not.toHaveBeenCalled()
     expect(autosave.status.value).toBe('idle')
+  })
+})
+
+describe('autosave summary', () => {
+  it('shows the worst state of the parts', () => {
+    expect(summarizeAutosave(['saved', 'error', 'saving'])).toBe('error')
+    expect(summarizeAutosave(['saved', 'pending'])).toBe('saving')
+    expect(summarizeAutosave(['idle', 'saved'])).toBe('saved')
+    expect(summarizeAutosave(['idle'])).toBe('')
   })
 })

@@ -30,7 +30,7 @@ export function createCopyText(deps: CopyTextDependencies) {
       return 'failed'
     }
 
-    deps.showToast('toast.copied', 'success')
+    deps.showToast('common.copied', 'success')
     await deps.saveOutput?.(text)
 
     return 'copied'

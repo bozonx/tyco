@@ -21,7 +21,7 @@
       @click="toggleClick"
       @keydown.escape.stop.prevent="dismiss"
     >
-      <Icon icon="mdi:information-outline" :height="iconSize" />
+      <AppIcon icon="mdi:information-outline" :size="iconSize" />
     </button>
 
     <Teleport to="body" :disabled="!shouldTeleport">
@@ -67,7 +67,8 @@ import {
 } from '../../composables/use-dismissible-layer'
 import { translate } from '../../lib/i18n'
 import { focusAfterTrigger } from '../../lib/ui/focus-navigation'
-import Icon from './AppIcon.vue'
+import type { IconSize } from '../../lib/ui/icon-size'
+import AppIcon from './AppIcon.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -95,7 +96,7 @@ const shouldTeleport = computed(
 
 let closeTimeout: ReturnType<typeof setTimeout> | null = null
 
-const iconSize = computed(() => (props.size === 'md' ? 17 : 15))
+const iconSize = computed<IconSize>(() => (props.size === 'md' ? 'lg' : 'sm'))
 
 const alignClass = computed(() => {
   if (props.align === 'center') return 'align-center'

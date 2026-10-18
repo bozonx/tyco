@@ -24,14 +24,14 @@
       @keydown.up.stop.prevent="openAndFocus(items.length - 1)"
       @click="toggleMenu"
     >
-      <Icon v-if="icon" :icon="icon" height="16" />
+      <AppIcon v-if="icon" :icon="icon" size="md" />
       <span v-if="label" class="truncate max-w-44 sm:max-w-64">{{
         label
       }}</span>
-      <Icon
+      <AppIcon
         v-if="!hideChevron"
         icon="mdi:chevron-down"
-        height="16"
+        size="md"
         class="opacity-70 transition-transform duration-150 shrink-0"
         :class="{ 'rotate-180': isOpen }"
       />
@@ -77,7 +77,7 @@ import type {
 } from '../../lib/ui/control-types'
 import { focusAfterTrigger } from '../../lib/ui/focus-navigation'
 import { focusMenuItem, menuButtons } from '../../lib/ui/menu-navigation'
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 import Button from './Button.vue'
 import MenuItem from './MenuItem.vue'
 import MenuSurface from './MenuSurface.vue'

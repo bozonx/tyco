@@ -36,7 +36,6 @@
     "configureModels": "Configure models",
     "contextBudgetHigh": "The message with its context takes {percent}% of the model limit",
     "contextBudgetOver": "The text does not fit the model: {used} of {budget} chars. Remove some of the context",
-    "copied": "Copied",
     "copy": "Copy",
     "copyCode": "Copy code",
     "copyMarkdown": "Copy Markdown",
@@ -193,7 +192,6 @@
     "fieldOn": "Yes",
     "fromPluginSettings": "From the plugin settings: {value}",
     "hint": "Set a command up once and run it from the main action menu, quick commands, and other applications.",
-    "idCopied": "Copied",
     "inputUnsupported": "Its tool needs a structured input that cannot be taken from a text",
     "languageInfo": "The language is kept in the command: reordering the translation languages in the settings does not change it.",
     "languageLabel": "Translate into",
@@ -244,6 +242,7 @@
     "cancel": "Cancel",
     "close": "Close",
     "confirm": "Confirm",
+    "copied": "Copied",
     "delete": "Delete",
     "empty": "empty",
     "inProgress": "In progress",
@@ -475,12 +474,6 @@
     "voiceInput": "Voice input",
     "voiceSend": "Send",
     "voiceToInput": "Insert into input"
-  },
-  "mode": {
-    "aiTasks": "Editing mode",
-    "select": "Selection mode",
-    "voice": "Voice mode",
-    "write": "Writing mode"
   },
   "nav": {
     "aiChat": "Ask AI",
@@ -899,9 +892,9 @@
     "profileDefaultSoul": "# Role\nDescribe who this assistant is and what it helps with.\n\n# Rules\n- Answer in the language of the question.\n",
     "profileModelDefault": "First available model",
     "profileModelUnavailable": "unavailable",
-    "profileSaveFailed": "Not saved",
-    "profileSaving": "Saving…",
-    "profileSaved": "Saved"
+    "autosaveFailed": "Not saved",
+    "autosaveSaving": "Saving…",
+    "autosaveSaved": "Saved"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -917,7 +910,6 @@
     "commandInputInvalid": "The input of the command is not valid",
     "commandInputUnsupported": "This command cannot take a text: its tool needs a structured input",
     "commandUnavailable": "The command is unavailable",
-    "copied": "Copied",
     "desktopCommandFailed": "Action failed",
     "insertFailed": "Could not insert the text",
     "modelNotFound": "Model not found",

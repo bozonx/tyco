@@ -2,7 +2,7 @@
    Design tokens
 
    Three levels:
-   1. palette    — daisyUI `--color-*` from `themes.css`;
+   1. palette    — `--color-*` from `themes.css`;
    2. semantic   — `--app-*`, derived from the palette below;
    3. components — scoped styles reference semantic tokens only.
    Accessibility modifiers (`accessibility.css`) override level 2, so they
@@ -59,6 +59,7 @@
   --text-control: 0.8125rem;
   --text-body: 0.875rem;
   --text-title: 1rem;
+  --text-lead: 1.125rem;
   --preview-font-size: var(--text-title);
   --preview-line-height: 1.6;
   --control-size-xs: 1.5rem;

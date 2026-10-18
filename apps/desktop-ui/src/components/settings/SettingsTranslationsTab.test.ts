@@ -1,7 +1,9 @@
 import type { UserConfig } from '@tyco/shared'
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsTranslationsTab from './SettingsTranslationsTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -48,8 +50,8 @@ describe('SettingsTranslationsTab.vue', () => {
   it('renders provider, quality and deepl options when deepl is selected', () => {
     const userConfig = createConfig()
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
             props: ['title', 'description'],
@@ -103,8 +105,8 @@ describe('SettingsTranslationsTab.vue', () => {
       correctionPrompt: 'Keep it short',
     })
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: { template: '<section><slot /></section>' },
           FieldRow: {
@@ -135,8 +137,8 @@ describe('SettingsTranslationsTab.vue', () => {
   it('auto-detects deepl free vs pro endpoint when saving api key', async () => {
     const userConfig = createConfig({ deeplEndpoint: 'free' })
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: { template: '<section><slot /></section>' },
           FieldRow: { template: '<div><slot /></div>' },
@@ -172,8 +174,8 @@ describe('SettingsTranslationsTab.vue', () => {
     mockSetSecret.mockRejectedValueOnce(new Error('keychain unavailable'))
     const userConfig = createConfig({ deeplEndpoint: 'free' })
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: { template: '<section><slot /></section>' },
           FieldRow: { template: '<div><slot /></div>' },
@@ -203,8 +205,8 @@ describe('SettingsTranslationsTab.vue', () => {
   it('keeps an empty correction prompt collapsed behind a button', async () => {
     const userConfig = createConfig({ qualityGate: 'always' })
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: { template: '<section><slot /></section>' },
           FieldRow: {
@@ -236,10 +238,10 @@ describe('SettingsTranslationsTab.vue', () => {
   })
 
   it('links to the languages page from the page description', async () => {
-    const userConfig = createConfig()
+    const context = createTestSettingsContext(createConfig())
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: context.provide,
         stubs: {
           FieldRow: { template: '<div><slot /></div>' },
           FieldSelect: true,
@@ -251,14 +253,14 @@ describe('SettingsTranslationsTab.vue', () => {
 
     await wrapper.find('.inline-action').trigger('click')
 
-    expect(wrapper.emitted('navigate')).toEqual([['languages']])
+    expect(context.navigate).toHaveBeenCalledWith('languages')
   })
 
   it('shows rules only when an AI model reads them and hints glossary limits', async () => {
-    const userConfig = createConfig()
+    const context = createTestSettingsContext(createConfig())
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: context.provide,
         stubs: {
           SettingsSection: {
             props: ['title', 'description', 'info'],
@@ -290,9 +292,10 @@ describe('SettingsTranslationsTab.vue', () => {
       'settings.translationGlossaryMachineHint'
     )
 
-    await wrapper.setProps({
-      userConfig: createConfig({ qualityGate: 'onProblems' }),
-    })
+    context.draft.value.translation = createConfig({
+      qualityGate: 'onProblems',
+    }).translation
+    await nextTick()
     expect(section('settings.translationRules')?.attributes('data-info')).toBe(
       'settings.translationRulesInfo'
     )
@@ -300,15 +303,18 @@ describe('SettingsTranslationsTab.vue', () => {
       section('settings.translationGlossary')?.attributes('data-desc')
     ).toBeFalsy()
 
-    await wrapper.setProps({ userConfig: createConfig({ provider: 'llm' }) })
+    context.draft.value.translation = createConfig({
+      provider: 'llm',
+    }).translation
+    await nextTick()
     expect(titles()).toContain('settings.translationRules')
   })
 
   it('hides deepl plan and api key when llm provider is selected', () => {
     const userConfig = createConfig({ provider: 'llm' })
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
             props: ['title', 'description', 'info'],
@@ -342,8 +348,8 @@ describe('SettingsTranslationsTab.vue', () => {
   it('updates glossary entries when glossary text changes', async () => {
     const userConfig = createConfig()
     const wrapper = mount(SettingsTranslationsTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: { template: '<section><slot /></section>' },
           FieldRow: { template: '<div><slot /></div>' },

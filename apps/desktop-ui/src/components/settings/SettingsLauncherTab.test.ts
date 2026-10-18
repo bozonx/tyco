@@ -1,7 +1,9 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { createCommand } from '../../lib/commands/command-config'
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsLauncherTab from './SettingsLauncherTab.vue'
 import {
   DEFAULT_USER_CONFIG,
@@ -22,22 +24,29 @@ vi.mock('../../stores/tools', async () => {
 const cmd1 = { ...createCommand('script', 'cmd1'), name: 'Script 1' }
 const cmd2 = { ...createCommand('webhook', 'cmd2'), name: 'Webhook 2' }
 
+let context: ReturnType<typeof createTestSettingsContext>
+
+const mountWith = (config: Partial<UserConfig>) => {
+  context = createTestSettingsContext({
+    ...structuredClone(DEFAULT_USER_CONFIG),
+    commands: [cmd1, cmd2],
+    ...config,
+  } as Partial<UserConfig>)
+  return mount(SettingsLauncherTab, { global: { provide: context.provide } })
+}
+
 const mountTab = (commandSlots: (string | null)[] = ['cmd1', null, 'cmd2']) =>
-  mount(SettingsLauncherTab, {
-    props: {
-      userConfig: {
-        ...structuredClone(DEFAULT_USER_CONFIG),
-        commands: [cmd1, cmd2],
-        launcherPages: [
-          {
-            id: 'main',
-            slots: [...commandSlots, ...Array(15).fill(null)].slice(0, 15),
-            inputMode: 'selection',
-          },
-        ],
-      } as unknown as UserConfig,
-    },
+  mountWith({
+    launcherPages: [
+      {
+        id: 'main',
+        slots: [...commandSlots, ...Array(15).fill(null)].slice(0, 15),
+        inputMode: 'selection',
+      },
+    ],
   })
+
+const pages = () => context.draft.value.launcherPages
 
 describe('SettingsLauncherTab.vue', () => {
   it('adds an empty page and deletes the selected extra page', async () => {
@@ -46,26 +55,19 @@ describe('SettingsLauncherTab.vue', () => {
       .findAll('button')
       .find((button) => button.text() === 'settings.addLauncherPage')!
     await add.trigger('click')
-    const pages = wrapper.emitted(
-      'update:launcherPages'
-    )?.[0]?.[0] as LauncherPageConfig[]
-    expect(pages).toHaveLength(2)
-    expect(pages[0]).toEqual(wrapper.props('userConfig').launcherPages[0])
-    expect(pages[1]).toEqual({
+    const [main] = pages()
+    expect(pages()).toHaveLength(2)
+    expect(pages()[1]).toEqual({
       id: expect.any(String),
       slots: Array(15).fill(null),
       inputMode: 'selection',
     })
-    await wrapper.setProps({
-      userConfig: { ...wrapper.props('userConfig'), launcherPages: pages },
-    })
+    await nextTick()
     const remove = wrapper
       .findAll('button')
       .find((button) => button.text() === 'settings.removeLauncherPage')!
     await remove.trigger('click')
-    expect(wrapper.emitted('update:launcherPages')?.[1]?.[0]).toEqual([
-      pages[0],
-    ])
+    expect(pages()).toEqual([main])
   })
 
   it('allows removing the first page but retains the final page', async () => {
@@ -75,21 +77,16 @@ describe('SettingsLauncherTab.vue', () => {
         .findAll('button')
         .find((button) => button.text() === 'settings.removeLauncherPage')!
     expect(remove().attributes('disabled')).toBeDefined()
-    const main = wrapper.props('userConfig').launcherPages[0]
-    const other = {
+    const other: LauncherPageConfig = {
       id: 'other',
       slots: Array<string | null>(15).fill(null),
-      inputMode: 'none' as const,
+      inputMode: 'none',
     }
-    await wrapper.setProps({
-      userConfig: {
-        ...wrapper.props('userConfig'),
-        launcherPages: [main, other],
-      },
-    })
+    context.draft.value.launcherPages = [pages()[0], other]
+    await nextTick()
     expect(remove().attributes('disabled')).toBeUndefined()
     await remove().trigger('click')
-    expect(wrapper.emitted('update:launcherPages')?.[0]?.[0]).toEqual([other])
+    expect(pages()).toEqual([other])
   })
 
   it('renders 15 shortcut slots with configured commands', () => {
@@ -98,7 +95,7 @@ describe('SettingsLauncherTab.vue', () => {
     expect(slots).toHaveLength(15)
   })
 
-  it('emits editCommand when pencil button is clicked', async () => {
+  it('opens a command from its pencil button', async () => {
     const wrapper = mountTab()
     const editBtn = wrapper.find(
       '.shortcut-slot button[title="commands.editCommand"]'
@@ -106,20 +103,16 @@ describe('SettingsLauncherTab.vue', () => {
     expect(editBtn.exists()).toBe(true)
 
     await editBtn.trigger('click')
-    expect(wrapper.emitted('editCommand')?.[0]).toEqual(['cmd1'])
+    expect(context.editCommand).toHaveBeenCalledWith('cmd1')
   })
 
-  it('emits update:launcherPages when a slot is cleared', async () => {
+  it('clears a slot of the page', async () => {
     const wrapper = mountTab()
     const deleteBtn = wrapper.find('.shortcut-slot .delete-btn')
     expect(deleteBtn.exists()).toBe(true)
 
     await deleteBtn.trigger('click')
-    const emitted = wrapper.emitted(
-      'update:launcherPages'
-    )?.[0]?.[0] as LauncherPageConfig[]
-    expect(emitted).toBeDefined()
-    expect(emitted[0].slots[0]).toBeNull()
+    expect(pages()[0].slots[0]).toBeNull()
   })
 
   it('does not include new script or new webhook in command options', () => {
@@ -133,18 +126,12 @@ describe('SettingsLauncherTab.vue', () => {
   })
 
   it('renders page buttons with numbers and switches pages on click', async () => {
-    const wrapper = mount(SettingsLauncherTab, {
-      props: {
-        userConfig: {
-          ...structuredClone(DEFAULT_USER_CONFIG),
-          commands: [cmd1, cmd2],
-          launcherPages: [['cmd1'], ['cmd2'], [null]].map((slots, index) => ({
-            id: `page-${index}`,
-            slots,
-            inputMode: 'selection',
-          })),
-        } as unknown as UserConfig,
-      },
+    const wrapper = mountWith({
+      launcherPages: [['cmd1'], ['cmd2'], [null]].map((slots, index) => ({
+        id: `page-${index}`,
+        slots,
+        inputMode: 'selection' as const,
+      })),
     })
     const buttons = wrapper.findAll('button')
     const page1Btn = buttons.find((b) => b.text() === '1')!

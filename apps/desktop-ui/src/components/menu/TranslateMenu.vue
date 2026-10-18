@@ -1,7 +1,7 @@
 <template>
   <ActionOverlayLayout
     :title="t('menu.translate')"
-    :onEsc="pickerMode ? closePicker : undefined"
+    :on-esc="pickerMode ? closePicker : undefined"
   >
     <template #preview>
       <TextPreview :text="props.text" />
@@ -26,8 +26,8 @@
         "
         :options="pickerOptions"
         :hints="pickerHints"
-        :emptyText="t('menu.translateNoLanguage')"
-        :autoHighlight="query.trim() !== ''"
+        :empty-text="t('menu.translateNoLanguage')"
+        :auto-highlight="query.trim() !== ''"
         @submit="submitLanguage"
         @back="closePicker"
       >
@@ -38,13 +38,13 @@
             :icon="sourceIcon"
             @activate="switchField"
           />
-          <Icon icon="mdi:arrow-right" height="18" class="translate-arrow" />
+          <AppIcon icon="mdi:arrow-right" size="lg" class="translate-arrow" />
         </template>
         <template v-else #after-input>
-          <Icon icon="mdi:arrow-right" height="18" class="translate-arrow" />
+          <AppIcon icon="mdi:arrow-right" size="lg" class="translate-arrow" />
           <LanguageField
             :label="t('menu.translateTargetLanguage')"
-            :emptyText="t('menu.translateNotChosen')"
+            :empty-text="t('menu.translateNotChosen')"
             @activate="switchField"
           />
         </template>
@@ -52,10 +52,10 @@
       <ShortcutList
         v-else
         :text="props.text"
-        :spaceKey="otherLanguageAction"
-        :leftLetterKeys="leftLetterKeys"
-        :shortcutsDisabled="props.shortcutsDisabled"
-        :isEditorButtonVisible="!editorNavigation.isEditorPage()"
+        :space-key="otherLanguageAction"
+        :left-letter-keys="leftLetterKeys"
+        :shortcuts-disabled="props.shortcutsDisabled"
+        :is-editor-button-visible="!editorNavigation.isEditorPage()"
       />
     </template>
   </ActionOverlayLayout>
@@ -87,10 +87,10 @@ import { type ActionItem } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import ShortcutList from '../ShortcutList.vue'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import TextPreview from '../common/TextPreview.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ShortcutList from '../overlay/ShortcutList.vue'
 import LanguageField from './LanguageField.vue'
 import QueryPanel, {
   type QueryPanelHint,

@@ -22,7 +22,9 @@
 </template>
 
 <script setup lang="ts">
+import NavPanel from './components/app/NavPanel.vue'
 import ToastContainer from './components/common/ToastContainer.vue'
+import MenuModals from './components/menu/MenuModals.vue'
 import QuickOverlay from './components/quick/QuickOverlay.vue'
 import { useAppRuntime } from './composables/use-app-runtime'
 
@@ -33,7 +35,7 @@ const { settingsShutdown, t, isQuickWindow, navPanelStore } = useAppRuntime()
 .shutdown-status {
   position: fixed;
   inset: 0 0 auto;
-  z-index: 100;
+  z-index: var(--z-overlay);
   padding: var(--space-md);
   background: var(--app-surface-raised);
   text-align: center;

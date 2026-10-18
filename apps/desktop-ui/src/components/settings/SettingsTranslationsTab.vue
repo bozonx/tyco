@@ -1,10 +1,10 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="settings-stack">
     <SettingsSection>
       <template #description>
         <span>{{ t('settings.translationsPageHint') }}</span
         >{{ ' ' }}
-        <InlineAction @click="emit('navigate', 'languages')">
+        <InlineAction @click="navigate('languages')">
           {{ t('settings.languagesTab') }}</InlineAction
         >.
       </template>
@@ -95,6 +95,7 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { createTranslationSettingsModel } from '../../lib/translation/translation-settings-model'
 import { useSecretsStore } from '../../stores/secrets'
@@ -103,18 +104,12 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import InlineAction from '../common/InlineAction.vue'
-import SettingsSection from '../common/SettingsSection.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
-import type { UserConfig } from '@tyco/shared'
-
-const props = defineProps<{
-  userConfig: Pick<UserConfig, 'translation' | 'aiRules'>
-}>()
-
-const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()
+import SettingsSection from './SettingsSection.vue'
 
 const { t } = useI18n()
+const { draft: userConfig, navigate } = useSettingsContext()
 const { toastText } = useToast()
 const secretsStore = useSecretsStore()
 const {
@@ -131,9 +126,9 @@ const {
   saveProviderKey,
   removeProviderKey,
 } = createTranslationSettingsModel({
-  getConfig: () => props.userConfig.translation,
+  getConfig: () => userConfig.value.translation,
   setConfig: (config) => {
-    props.userConfig.translation = config
+    userConfig.value.translation = config
   },
   hasSecret: (id) => Object.hasOwn(secretsStore.secrets, id),
   setSecret: (id, value) => secretsStore.setSecret(id, value),

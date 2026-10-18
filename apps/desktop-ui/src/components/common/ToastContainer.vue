@@ -20,9 +20,9 @@
         @focusin="toastStore.pauseToast(item.id)"
         @focusout="onFocusout($event, item.id)"
       >
-        <Icon
+        <AppIcon
           :icon="getToastIcon(item.type)"
-          height="18"
+          size="lg"
           class="shrink-0 mt-0.5"
           :class="getToastIconClass(item.type)"
         />
@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { translate } from '../../lib/i18n'
 import { type ToastType, useToastStore } from '../../stores/toast'
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 import IconButton from './IconButton.vue'
 
 const toastStore = useToastStore()

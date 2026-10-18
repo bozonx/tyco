@@ -1,11 +1,11 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="settings-stack">
     <SettingsSection bare>
       <template #description>
         <span>{{ t('settings.translationsHint') }}</span
         >{{ ' ' }} <span>{{ t('settings.translationsMethodHint') }}</span
         >{{ ' ' }}
-        <InlineAction @click="emit('navigate', 'translations')">
+        <InlineAction @click="navigate('translations')">
           {{ t('settings.translationsTab') }}</InlineAction
         >.
       </template>
@@ -32,6 +32,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import {
   DEFAULT_LANGUAGE,
   buildLanguageOptions,
@@ -42,22 +43,15 @@ import {
 } from '../../lib/shortcut-slots/shortcut-slots'
 import FieldSelect from '../common/FieldSelect.vue'
 import InlineAction from '../common/InlineAction.vue'
-import SettingsSection from '../common/SettingsSection.vue'
-import ShortcutSlots from '../common/ShortcutSlots.vue'
-import type { UserConfig } from '@tyco/shared'
-
-const props = defineProps<{ userConfig: Pick<UserConfig, 'translation'> }>()
-
-const emit = defineEmits<{
-  (e: 'update:targetLanguages', value: string[]): void
-  (e: 'navigate', tab: string): void
-}>()
+import SettingsSection from './SettingsSection.vue'
+import ShortcutSlots from './ShortcutSlots.vue'
 
 const { t } = useI18n()
+const { draft: userConfig, navigate } = useSettingsContext()
 
 const translateLanguageOptions = computed(() => {
   return buildLanguageOptions(
-    (props.userConfig.translation.targetLanguages || []).filter(Boolean),
+    (userConfig.value.translation.targetLanguages || []).filter(Boolean),
     false,
     t
   ).map((option) => ({
@@ -67,34 +61,34 @@ const translateLanguageOptions = computed(() => {
 })
 
 const translateLanguageSlots = computed(() =>
-  normalizeShortcutSlots<string>(props.userConfig.translation.targetLanguages)
+  normalizeShortcutSlots<string>(userConfig.value.translation.targetLanguages)
 )
 
-function emitSlots(slots: (string | null)[]) {
-  emit('update:targetLanguages', slots as string[])
+function setSlots(slots: (string | null)[]) {
+  userConfig.value.translation.targetLanguages = slots as string[]
 }
 
 function moveLanguage(from: number, to: number) {
-  emitSlots(moveShortcutSlot(translateLanguageSlots.value, from, to))
+  setSlots(moveShortcutSlot(translateLanguageSlots.value, from, to))
 }
 
 function addLanguage(index: number) {
   const slots = [...translateLanguageSlots.value]
   slots[index] = DEFAULT_LANGUAGE
-  emitSlots(slots)
+  setSlots(slots)
 }
 
 function removeLanguage(index: number) {
   const slots = [...translateLanguageSlots.value]
   slots[index] = null
-  emitSlots(slots)
+  setSlots(slots)
 }
 
 function updateLanguage(index: number, value: string | number | undefined) {
   if (typeof value !== 'string') return
   const slots = [...translateLanguageSlots.value]
   slots[index] = value
-  emitSlots(slots)
+  setSlots(slots)
 }
 </script>
 

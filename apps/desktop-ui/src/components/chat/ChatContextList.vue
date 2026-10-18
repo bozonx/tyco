@@ -28,7 +28,7 @@
       :class="`is-${budgetWarning.level}`"
       role="status"
     >
-      <Icon icon="mdi:alert-outline" height="14" class="shrink-0" />
+      <AppIcon icon="mdi:alert-outline" size="sm" class="shrink-0" />
       <span>{{ budgetWarning.text }}</span>
     </div>
   </div>
@@ -39,7 +39,7 @@ import { computed } from 'vue'
 
 import { useChatScope } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 

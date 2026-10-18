@@ -100,7 +100,7 @@ describe('built-in invocations', () => {
     )
     expect(outcome).toEqual({ success: true, result: undefined })
     expect(copyText).toHaveBeenCalledWith('ECHO')
-    expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
+    expect(deps.showToast).toHaveBeenCalledWith('common.copied', 'success')
     expect(deps.hideWindow).toHaveBeenCalled()
   })
 

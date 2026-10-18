@@ -14,8 +14,8 @@
     <InsertMenu
       v-else
       :text="dictationResultText"
-      :allowInsertButton="true"
-      :shortcutsDisabled="menuModalsStore.hasOpenModal"
+      :allow-insert-button="true"
+      :shortcuts-disabled="menuModalsStore.hasOpenModal"
     />
   </ContentPadding>
 </template>

@@ -102,6 +102,58 @@
       </div>
     </section>
     <section class="surface catalog-section ui-form-container">
+      <h2>Icons, keys and copy</h2>
+      <div class="catalog-row">
+        <AppIcon
+          v-for="size in iconSizes"
+          :key="size"
+          icon="mdi:star-outline"
+          :size="size"
+          :title="size"
+        />
+        <KeyboardKey>Ctrl</KeyboardKey><KeyboardKey>K</KeyboardKey>
+        <CopyButton value="tyco-ctl run notes" label="Copy command" />
+      </div>
+    </section>
+    <section class="surface catalog-section ui-form-container">
+      <h2>Settings building blocks</h2>
+      <SettingsDetailHeader
+        back-label="Back to the overview"
+        @back="detailBacks++"
+      >
+        <SettingsAutosaveStatus status="saved" />
+      </SettingsDetailHeader>
+      <div class="settings-entity-list">
+        <SettingsEntityItem
+          icon="mdi:account-outline"
+          :title="`Opens a profile (${entityOpens})`"
+          openable
+          @open="entityOpens++"
+        />
+        <SettingsEntityItem
+          icon="mdi:folder-open-outline"
+          icon-tone="secondary"
+          title="A deliberately long project name that has to stay on one line"
+          description="With a description and trailing controls"
+        >
+          <SegmentedControl
+            v-model="entityAccess"
+            size="sm"
+            label="Project access"
+            :options="[
+              { id: 'deny', name: 'Deny' },
+              { id: 'ask', name: 'Ask' },
+              { id: 'allow', name: 'Allow' },
+            ]"
+          />
+        </SettingsEntityItem>
+      </div>
+      <SettingsDangerZone
+        message="Removing the profile deletes its folder"
+        action-label="Delete profile"
+      />
+    </section>
+    <section class="surface catalog-section ui-form-container">
       <h2>Quick surfaces and long content</h2>
       <div class="catalog-quick-surface">
         <FieldInput
@@ -377,10 +429,12 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 
+import AppIcon from '../components/common/AppIcon.vue'
 import Badge from '../components/common/Badge.vue'
 import BaseDialog from '../components/common/BaseDialog.vue'
 import Button from '../components/common/Button.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
+import CopyButton from '../components/common/CopyButton.vue'
 import Diff from '../components/common/Diff.vue'
 import DisclosureHeader from '../components/common/DisclosureHeader.vue'
 import DisclosurePanel from '../components/common/DisclosurePanel.vue'
@@ -398,17 +452,23 @@ import InfoPopover from '../components/common/InfoPopover.vue'
 import InfoTooltip from '../components/common/InfoTooltip.vue'
 import InlineAction from '../components/common/InlineAction.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
+import KeyboardKey from '../components/common/KeyboardKey.vue'
 import NavigationList from '../components/common/NavigationList.vue'
 import ParallelTextPreview from '../components/common/ParallelTextPreview.vue'
 import SearchInput from '../components/common/SearchInput.vue'
 import SegmentedControl from '../components/common/SegmentedControl.vue'
-import ShortcutButton from '../components/common/ShortcutButton.vue'
-import ShortcutHint from '../components/common/ShortcutHint.vue'
 import StateMessage from '../components/common/StateMessage.vue'
 import TextPreview from '../components/common/TextPreview.vue'
 import ToastContainer from '../components/common/ToastContainer.vue'
 import EditorContextMenu from '../components/editor/EditorContextMenu.vue'
+import ShortcutButton from '../components/overlay/ShortcutButton.vue'
+import ShortcutHint from '../components/overlay/ShortcutHint.vue'
+import SettingsAutosaveStatus from '../components/settings/SettingsAutosaveStatus.vue'
+import SettingsDangerZone from '../components/settings/SettingsDangerZone.vue'
+import SettingsDetailHeader from '../components/settings/SettingsDetailHeader.vue'
+import SettingsEntityItem from '../components/settings/SettingsEntityItem.vue'
 import AudioWaveform from '../components/voice/AudioWaveform.vue'
+import { ICON_SIZES, type IconSize } from '../lib/ui/icon-size'
 import { useToastStore } from '../stores/toast'
 
 const themes = [
@@ -432,6 +492,10 @@ const previewText = Array.from(
   (_, index) => `Preview line ${index + 1}`
 ).join('\n')
 
+const iconSizes = Object.keys(ICON_SIZES) as IconSize[]
+const detailBacks = ref(0)
+const entityOpens = ref(0)
+const entityAccess = ref<string | number>('ask')
 const theme = ref('light')
 const itemSelected = ref(false)
 const featureEnabled = ref(false)

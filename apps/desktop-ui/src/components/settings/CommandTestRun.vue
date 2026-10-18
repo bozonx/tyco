@@ -9,6 +9,7 @@
     />
     <div class="test-run-actions">
       <Button
+        variant="primary"
         v-if="!isRunning"
         size="sm"
         icon="mdi:play"

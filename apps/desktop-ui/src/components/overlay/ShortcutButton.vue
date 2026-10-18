@@ -13,7 +13,7 @@
     <span class="shortcut-keys">
       <KeyboardKey v-for="key in keys" :key="key">{{ key }}</KeyboardKey>
     </span>
-    <Icon v-if="icon" :icon="icon" height="16" class="shortcut-icon" />
+    <AppIcon v-if="icon" :icon="icon" size="md" class="shortcut-icon" />
     <span class="shortcut-label">
       <slot />
     </span>
@@ -22,8 +22,8 @@
 
 <script setup lang="ts">
 import type { ControlSize } from '../../lib/ui/control-types'
-import Icon from './AppIcon.vue'
-import KeyboardKey from './KeyboardKey.vue'
+import AppIcon from '../common/AppIcon.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 
 withDefaults(
   defineProps<{

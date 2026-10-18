@@ -39,7 +39,6 @@
     "@tyco/plugin-text-case": "workspace:^",
     "@tyco/plugin-web-formatter": "workspace:^",
     "@tyco/shared": "workspace:*",
-    "daisyui": "^5.7.50",
     "diff": "^9.0.0",
     "dompurify": "^3.4.17",
     "fflate": "^0.8.3",
@@ -81,7 +80,6 @@
     "@vue/test-utils": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",
-    "unplugin-vue-components": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
     "vue-tsc": "catalog:"

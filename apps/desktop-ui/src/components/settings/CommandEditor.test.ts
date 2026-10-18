@@ -117,8 +117,10 @@ describe('CommandEditor.vue', () => {
 
   it('keeps placement settings inside advanced and uses one external toggle', () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
-    const advanced = wrapper.findAll('details').at(-1)!
-    expect(advanced.element.open).toBe(false)
+    const advanced = wrapper.get('.command-group-advanced')
+    expect(advanced.get('[aria-expanded]').attributes('aria-expanded')).toBe(
+      'false'
+    )
     expect(advanced.find('section').text()).toContain(
       'commands.launcherResultGroup'
     )
@@ -129,7 +131,7 @@ describe('CommandEditor.vue', () => {
 
   it('explains how the insertion treats a selection', () => {
     const wrapper = mountEditor(script({ command: 'echo hello' }))
-    const section = wrapper.findAll('details').at(-1)!.find('section')
+    const section = wrapper.get('.command-group-advanced').find('section')
     const tooltip = section.findComponent(InfoTooltip)
     expect(tooltip.props('text')).toBe('commands.launcherSelectionHint')
   })

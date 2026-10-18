@@ -36,7 +36,6 @@
     "configureModels": "Configurar modelos",
     "contextBudgetHigh": "El mensaje con su contexto ocupa el {percent}% del límite del modelo",
     "contextBudgetOver": "El texto no entra en el modelo: {used} de {budget} caracteres. Quitá parte del contexto",
-    "copied": "Copiado",
     "copy": "Copiar",
     "copyCode": "Copiar código",
     "copyMarkdown": "Copiar Markdown",
@@ -193,7 +192,6 @@
     "fieldOn": "Sí",
     "fromPluginSettings": "De los ajustes del plugin: {value}",
     "hint": "Configurás un comando una vez y lo ejecutás desde el menú de acciones principales, los comandos rápidos y otras aplicaciones.",
-    "idCopied": "Copiado",
     "inputUnsupported": "Su herramienta necesita una entrada estructurada que no se obtiene de un texto",
     "languageInfo": "El idioma se guarda en el comando: reordenar los idiomas de traducción en los ajustes no lo cambia.",
     "languageLabel": "Traducir al",
@@ -244,6 +242,7 @@
     "cancel": "Cancelar",
     "close": "Cerrar",
     "confirm": "Confirmar",
+    "copied": "Copiado",
     "delete": "Eliminar",
     "empty": "vacío",
     "inProgress": "En progreso",
@@ -475,12 +474,6 @@
     "voiceInput": "Entrada de voz",
     "voiceSend": "Enviar",
     "voiceToInput": "Insertar en el campo"
-  },
-  "mode": {
-    "aiTasks": "Modo edición",
-    "select": "Modo selección",
-    "voice": "Modo voz",
-    "write": "Modo escritura"
   },
   "nav": {
     "aiChat": "Preguntar a la IA",
@@ -899,9 +892,9 @@
     "profileDefaultSoul": "# Rol\nDescribí quién es este asistente y en qué ayuda.\n\n# Reglas\n- Respondé en el idioma de la pregunta.\n",
     "profileModelDefault": "Primer modelo disponible",
     "profileModelUnavailable": "no disponible",
-    "profileSaveFailed": "No se guardó",
-    "profileSaving": "Guardando…",
-    "profileSaved": "Guardado"
+    "autosaveFailed": "No se guardó",
+    "autosaveSaving": "Guardando…",
+    "autosaveSaved": "Guardado"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
@@ -917,7 +910,6 @@
     "commandInputInvalid": "La entrada del comando no es válida",
     "commandInputUnsupported": "Este comando no acepta texto: su herramienta necesita una entrada estructurada",
     "commandUnavailable": "El comando no está disponible",
-    "copied": "Copiado",
     "desktopCommandFailed": "No se pudo completar la acción",
     "insertFailed": "No se pudo insertar el texto",
     "modelNotFound": "Modelo no encontrado",

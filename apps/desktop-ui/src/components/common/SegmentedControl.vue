@@ -25,7 +25,7 @@
         :checked="option.id === props.modelValue"
         @change="selectOption(option.id)"
       />
-      <Icon v-if="option.icon" :icon="option.icon" height="15" />
+      <AppIcon v-if="option.icon" :icon="option.icon" size="sm" />
       <span class="option-label">{{ option.name }}</span>
     </label>
   </div>
@@ -37,7 +37,7 @@ import { useId } from 'vue'
 import { useFieldControl } from '../../composables/use-field-control'
 import type { ControlOption } from '../../lib/ui/control-option'
 import type { ControlSize } from '../../lib/ui/control-types'
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 
 defineOptions({ inheritAttrs: false })
 const props = defineProps<{

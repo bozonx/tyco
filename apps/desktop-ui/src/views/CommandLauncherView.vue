@@ -1,12 +1,13 @@
 <template>
   <ContentPadding>
-    <CommandLauncher :shortcutsDisabled="shortcutsDisabled" />
+    <CommandLauncher :shortcuts-disabled="shortcutsDisabled" />
   </ContentPadding>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import ContentPadding from '../components/common/ContentPadding.vue'
 import CommandLauncher from '../components/menu/CommandLauncher.vue'
 import { useDesktopStore } from '../stores/desktop'
 import { useMenuModalsStore } from '../stores/menu-modals'

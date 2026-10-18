@@ -5,7 +5,6 @@
     "src/**/*.test.ts",
     "src/test/**/*.ts",
     "src/**/*.d.ts",
-    "components.d.ts",
     "build/**/*.ts",
     "vite.config.ts",
     "vitest.config.ts",

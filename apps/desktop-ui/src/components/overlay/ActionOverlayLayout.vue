@@ -43,7 +43,7 @@ import { provide } from 'vue'
 
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import { previewAppearanceKey } from '../../lib/ui/preview-context'
-import KeyboardKey from './KeyboardKey.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 
 provide(previewAppearanceKey, 'plain')
 
@@ -110,7 +110,7 @@ const { escLabel, handleEsc } = useOverlayNav(() => ({
 
 .action-overlay-title {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: var(--text-lead);
   font-weight: 600;
   color: var(--color-base-content);
   line-height: 1.25;

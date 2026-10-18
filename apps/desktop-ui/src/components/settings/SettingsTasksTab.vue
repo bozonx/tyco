@@ -29,6 +29,7 @@
 import { computed, onUnmounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import { newAiTaskId } from '../../lib/ai-tasks/custom-prompt'
 import {
   moveShortcutSlot,
@@ -36,48 +37,43 @@ import {
 } from '../../lib/shortcut-slots/shortcut-slots'
 import FieldInput from '../common/FieldInput.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
-import ShortcutSlots from '../common/ShortcutSlots.vue'
-import type { UserConfig } from '@tyco/shared'
-
-const props = defineProps<{ userConfig: Pick<UserConfig, 'aiTasks'> }>()
-
-const emit = defineEmits<{
-  (e: 'update:aiTasks', value: UserConfig['aiTasks']): void
-}>()
+import SettingsSection from './SettingsSection.vue'
+import ShortcutSlots from './ShortcutSlots.vue'
 
 const { t } = useI18n()
+const { draft: userConfig } = useSettingsContext()
 
 type AiTask = { id: string; name: string; rule: string }
 
 const taskSlots = computed(() =>
-  normalizeShortcutSlots<AiTask>(props.userConfig.aiTasks)
+  normalizeShortcutSlots<AiTask>(userConfig.value.aiTasks)
 )
 
-function emitSlots(slots: (AiTask | null)[]) {
-  emit('update:aiTasks', slots)
+function setSlots(slots: (AiTask | null)[]) {
+  userConfig.value.aiTasks = slots
 }
 
 function moveTask(from: number, to: number) {
-  emitSlots(moveShortcutSlot(taskSlots.value, from, to))
+  setSlots(moveShortcutSlot(taskSlots.value, from, to))
 }
 
 function addTask(index: number) {
   const slots = [...taskSlots.value]
   slots[index] = { id: newAiTaskId(slots), name: '', rule: '' }
-  emitSlots(slots)
+  setSlots(slots)
 }
 
 function removeTask(index: number) {
   const slots = [...taskSlots.value]
   slots[index] = null
-  emitSlots(slots)
+  setSlots(slots)
 }
 
 function updateTask(index: number, field: keyof AiTask, value: unknown) {
   if (typeof value !== 'string' || !taskSlots.value[index]) return
   const slots = [...taskSlots.value]
   slots[index] = { ...slots[index]!, [field]: value }
-  emitSlots(slots)
+  setSlots(slots)
 }
 
 onUnmounted(() => {
@@ -88,7 +84,7 @@ onUnmounted(() => {
     const cleaned = taskSlots.value.map((task) =>
       task && (task.name.trim() || task.rule.trim()) ? task : null
     )
-    emitSlots(cleaned)
+    setSlots(cleaned)
   }
 })
 </script>

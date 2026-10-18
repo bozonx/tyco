@@ -47,22 +47,36 @@
       </p>
     </div>
 
-    <details v-if="canTest" class="command-group">
-      <summary class="command-group-title command-group-toggle">
-        <Icon icon="mdi:chevron-right" width="16" height="16" />
-        {{ t('commands.testGroup') }}
-      </summary>
-      <div class="command-group-body">
+    <section v-if="canTest" class="command-group">
+      <DisclosureHeader
+        :expanded="isTestOpen"
+        :controls="testBodyId"
+        density="compact"
+        icon-size="md"
+        @toggle="isTestOpen = !isTestOpen"
+      >
+        <span class="command-group-title">{{ t('commands.testGroup') }}</span>
+      </DisclosureHeader>
+      <div v-show="isTestOpen" :id="testBodyId" class="command-group-body">
         <CommandTestRun :command="command" />
       </div>
-    </details>
+    </section>
 
-    <details class="command-group" :open="advancedOpen">
-      <summary class="command-group-title command-group-toggle">
-        <Icon icon="mdi:chevron-right" width="16" height="16" />
-        {{ t('commands.advanced') }}
-      </summary>
-      <div class="command-group-body">
+    <section class="command-group command-group-advanced">
+      <DisclosureHeader
+        :expanded="isAdvancedOpen"
+        :controls="advancedBodyId"
+        density="compact"
+        icon-size="md"
+        @toggle="isAdvancedOpen = !isAdvancedOpen"
+      >
+        <span class="command-group-title">{{ t('commands.advanced') }}</span>
+      </DisclosureHeader>
+      <div
+        v-show="isAdvancedOpen"
+        :id="advancedBodyId"
+        class="command-group-body"
+      >
         <section class="command-group">
           <h4 class="command-group-title">
             {{ t('commands.launcherResultGroup') }}
@@ -162,13 +176,7 @@
             <code class="command-cli" :title="cliCommand">{{
               cliCommand
             }}</code>
-            <IconButton
-              variant="ghost"
-              size="sm"
-              @click="copyCli"
-              :label="isCopied ? t('commands.idCopied') : t('commands.copyCli')"
-              :icon="isCopied ? 'mdi:check' : 'mdi:content-copy'"
-            />
+            <CopyButton :value="cliCommand" :label="t('commands.copyCli')" />
           </span>
         </div>
         <p
@@ -183,12 +191,12 @@
         </p>
         <p v-if="origin" class="command-hint command-origin">{{ origin }}</p>
       </div>
-    </details>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
@@ -210,15 +218,15 @@ import { canTestCommand } from '../../lib/commands/command-test-run'
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useIpcStore } from '../../stores/ipc'
 import { useToolsStore } from '../../stores/tools'
-import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
+import CopyButton from '../common/CopyButton.vue'
+import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
-import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandTestRun from './CommandTestRun.vue'
 import CommandVoiceFields from './CommandVoiceFields.vue'
@@ -317,7 +325,10 @@ const origin = computed(() => {
 })
 
 /** Shown open when one of its settings is set, so it is not missed */
-const advancedOpen = ref(
+const isTestOpen = ref(false)
+const testBodyId = useId()
+const advancedBodyId = useId()
+const isAdvancedOpen = ref(
   Boolean(props.command.description) ||
     Boolean(scriptConfig.value.timeoutSec) ||
     props.command.logOutput ||
@@ -331,31 +342,11 @@ const cliCommand = computed(() =>
     : commandCliCall(props.command.id)
 )
 
-const isCopied = ref(false)
-let copiedTimer: ReturnType<typeof setTimeout> | null = null
-
-async function copyCli() {
-  try {
-    await navigator.clipboard.writeText(cliCommand.value)
-    isCopied.value = true
-    if (copiedTimer) clearTimeout(copiedTimer)
-    copiedTimer = setTimeout(() => {
-      isCopied.value = false
-    }, 2000)
-  } catch {
-    // clipboard access might be denied; the line stays selectable
-  }
-}
-
 async function openLog() {
   const res = await ipcStore.callFunction('openActionLog', [])
   if (!res.success) toastKey('commands.openLogFailed', 'error')
   else if (!res.result) toastKey('commands.logEmpty')
 }
-
-onUnmounted(() => {
-  if (copiedTimer) clearTimeout(copiedTimer)
-})
 </script>
 
 <style scoped>
@@ -389,26 +380,6 @@ onUnmounted(() => {
   font-size: var(--text-caption);
   font-weight: 600;
   color: var(--app-text-muted);
-}
-
-.command-group-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs, 0.25rem);
-  cursor: pointer;
-  list-style: none;
-}
-
-.command-group-toggle::-webkit-details-marker {
-  display: none;
-}
-
-.command-group-toggle svg {
-  transition: transform var(--transition-fast);
-}
-
-details[open] > .command-group-toggle svg {
-  transform: rotate(90deg);
 }
 
 .command-group-body {

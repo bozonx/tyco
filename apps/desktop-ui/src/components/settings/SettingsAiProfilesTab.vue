@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="settings-stack">
     <SettingsSection
       :title="t('settings.aiProfilesOverview')"
       :info="t('settings.aiVaultPathHint')"
@@ -10,7 +10,7 @@
         :error="vaultError || undefined"
         :info="vaultPath"
       >
-        <div class="flex items-center gap-2">
+        <div class="vault-actions">
           <Button
             size="sm"
             variant="neutral"
@@ -28,7 +28,7 @@
             {{ t('settings.selectFolder') }}
           </Button>
           <Button
-            v-if="userConfig?.aiProfiles?.vaultPath"
+            v-if="userConfig.aiProfiles?.vaultPath"
             size="sm"
             variant="ghost"
             icon="mdi:restore"
@@ -41,44 +41,32 @@
     </SettingsSection>
 
     <SettingsSection :title="t('settings.aiProfilesTab')">
-      <div class="flex flex-col gap-3">
-        <div class="text-sm text-base-content/70">
+      <div class="settings-section-content">
+        <p class="settings-entity-meta">
           {{ t('settings.profilesCount', { count: profiles.length }) }}
-        </div>
-        <div
+        </p>
+        <StateMessage
           v-if="profiles.length === 0"
-          class="text-sm text-base-content/50 italic"
-        >
-          {{ t('settings.noProfilesYet') }}
-        </div>
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div
+          density="compact"
+          :message="t('settings.noProfilesYet')"
+        />
+        <div v-else class="entity-grid">
+          <SettingsEntityItem
             v-for="profile in profiles"
             :key="profile.id"
-            class="flex items-center justify-between p-3 rounded-lg bg-base-200/50 border border-base-300/50 cursor-pointer hover:bg-base-200 transition-colors"
-            @click="emit('navigate', `ai-profile:${profile.id}`)"
-          >
-            <div class="flex items-center gap-2.5 truncate">
-              <Icon
-                icon="mdi:account-outline"
-                height="18"
-                class="text-primary shrink-0"
-              />
-              <span class="font-medium truncate">{{ profile.name }}</span>
-            </div>
-            <Icon
-              icon="mdi:chevron-right"
-              height="18"
-              class="text-base-content/40 shrink-0"
-            />
-          </div>
+            icon="mdi:account-outline"
+            icon-tone="primary"
+            :title="profile.name"
+            openable
+            @open="navigate(profileTab(profile.id))"
+          />
         </div>
         <div>
           <Button
             size="sm"
             variant="primary"
             icon="mdi:plus"
-            @click="emit('navigate', 'ai-profile:new')"
+            @click="navigate(profileTab(NEW_ENTITY_ID))"
           >
             {{ t('settings.newProfile') }}
           </Button>
@@ -87,48 +75,36 @@
     </SettingsSection>
 
     <SettingsSection :title="t('settings.projectPermissions')">
-      <div class="flex flex-col gap-3">
-        <div class="text-sm text-base-content/70">
+      <div class="settings-section-content">
+        <p class="settings-entity-meta">
           {{ t('settings.projectsCount', { count: projects.length }) }}
-        </div>
-        <div
+        </p>
+        <StateMessage
           v-if="projects.length === 0"
-          class="text-sm text-base-content/50 italic"
-        >
-          {{ t('settings.noProjectsYet') }}
-        </div>
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div
+          density="compact"
+          :message="t('settings.noProjectsYet')"
+        />
+        <div v-else class="entity-grid">
+          <SettingsEntityItem
             v-for="project in projects"
             :key="project.id"
-            class="flex items-center justify-between p-3 rounded-lg bg-base-200/50 border border-base-300/50 cursor-pointer hover:bg-base-200 transition-colors"
-            @click="emit('navigate', `ai-project:${project.id}`)"
-          >
-            <div class="flex items-center gap-2.5 truncate">
-              <Icon
-                :icon="
-                  project.isExternal
-                    ? 'mdi:folder-open-outline'
-                    : 'mdi:folder-table-outline'
-                "
-                height="18"
-                class="text-secondary shrink-0"
-              />
-              <span class="font-medium truncate">{{ project.name }}</span>
-            </div>
-            <Icon
-              icon="mdi:chevron-right"
-              height="18"
-              class="text-base-content/40 shrink-0"
-            />
-          </div>
+            :icon="
+              project.isExternal
+                ? 'mdi:folder-open-outline'
+                : 'mdi:folder-table-outline'
+            "
+            icon-tone="secondary"
+            :title="project.name"
+            openable
+            @open="navigate(projectTab(project.id))"
+          />
         </div>
         <div>
           <Button
             size="sm"
             variant="neutral"
             icon="mdi:plus"
-            @click="emit('navigate', 'ai-project:new')"
+            @click="navigate(projectTab(NEW_ENTITY_ID))"
           >
             {{ t('settings.newProject') }}
           </Button>
@@ -142,20 +118,22 @@
 import { computed, onMounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
+import {
+  NEW_ENTITY_ID,
+  profileTab,
+  projectTab,
+} from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
-import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
-import SettingsSection from '../common/SettingsSection.vue'
-import type { UserConfig } from '@tyco/shared'
+import StateMessage from '../common/StateMessage.vue'
+import SettingsEntityItem from './SettingsEntityItem.vue'
+import SettingsSection from './SettingsSection.vue'
 
-defineProps<{ userConfig?: UserConfig }>()
-const emit = defineEmits<{
-  (e: 'navigate', tab: string): void
-  (e: 'update:vaultPath', path: string | undefined): void
-}>()
 const { t } = useI18n()
+const { draft: userConfig, operations, navigate } = useSettingsContext()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
@@ -180,13 +158,28 @@ async function handleOpenVault() {
 async function handlePickVaultFolder() {
   try {
     const selected = await aiProfilesStore.pickFolder()
-    if (selected) emit('update:vaultPath', selected)
+    if (selected) operations.updateVaultPath(selected)
   } catch (error) {
     toastText(String(error), 'error')
   }
 }
 
 function handleResetVaultFolder() {
-  emit('update:vaultPath', undefined)
+  operations.updateVaultPath(undefined)
 }
 </script>
+
+<style scoped>
+.vault-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.entity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-sm);
+}
+</style>

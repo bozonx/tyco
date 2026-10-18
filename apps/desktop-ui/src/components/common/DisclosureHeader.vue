@@ -7,10 +7,10 @@
     :aria-controls="expanded ? controls : undefined"
     @click="emit('toggle')"
   >
-    <Icon
+    <AppIcon
       v-if="icon"
       :icon="icon"
-      height="18"
+      :size="iconSize"
       class="shrink-0"
       :title="iconTitle"
       aria-hidden="true"
@@ -23,10 +23,10 @@
       }}</span></span
     >
     <slot name="status" />
-    <Icon
+    <AppIcon
       v-if="!hideChevron"
       icon="mdi:chevron-down"
-      height="18"
+      :size="iconSize"
       class="disclosure-chevron"
       :class="{ 'is-expanded': expanded }"
       aria-hidden="true"
@@ -34,18 +34,23 @@
   </button>
 </template>
 <script setup lang="ts">
-import Icon from './AppIcon.vue'
+import type { IconSize } from '../../lib/ui/icon-size'
+import AppIcon from './AppIcon.vue'
 
-defineProps<{
-  expanded: boolean
-  controls: string
-  title?: string
-  description?: string
-  icon?: string
-  iconTitle?: string
-  density?: 'default' | 'compact'
-  hideChevron?: boolean
-}>()
+withDefaults(
+  defineProps<{
+    expanded: boolean
+    controls: string
+    title?: string
+    description?: string
+    icon?: string
+    iconTitle?: string
+    density?: 'default' | 'compact'
+    hideChevron?: boolean
+    iconSize?: IconSize
+  }>(),
+  { iconSize: 'lg' }
+)
 const emit = defineEmits<{ toggle: [] }>()
 </script>
 <style scoped>
@@ -55,14 +60,14 @@ const emit = defineEmits<{ toggle: [] }>()
   gap: var(--space-sm);
   width: 100%;
   min-width: 0;
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--disclosure-padding, var(--space-md) var(--space-lg));
   color: inherit;
   text-align: left;
   cursor: pointer;
-  background: var(--app-surface-raised);
+  background: var(--disclosure-background, var(--app-surface-raised));
 }
 .disclosure-header:hover {
-  background: var(--app-surface-sunken);
+  background: var(--disclosure-hover-background, var(--app-surface-sunken));
 }
 .disclosure-copy {
   display: flex;

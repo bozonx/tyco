@@ -34,11 +34,11 @@
 </template>
 <script setup lang="ts">
 import type { ConfigFieldControl } from '../../lib/ui/config-field-control'
-import FieldCheckbox from './FieldCheckbox.vue'
-import FieldInput from './FieldInput.vue'
-import FieldSelect from './FieldSelect.vue'
-import FieldSortableChecklist from './FieldSortableChecklist.vue'
-import FieldTextArea from './FieldTextArea.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldInput from '../common/FieldInput.vue'
+import FieldSelect from '../common/FieldSelect.vue'
+import FieldSortableChecklist from '../common/FieldSortableChecklist.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
 
 defineProps<{ control: ConfigFieldControl; autoResize?: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: unknown] }>()

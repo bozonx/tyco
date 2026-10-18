@@ -1,5 +1,5 @@
 <template>
-  <ActionOverlayLayout :title="t('menu.reviewResult')" escMode="back">
+  <ActionOverlayLayout :title="t('menu.reviewResult')" esc-mode="back">
     <template #header-extra>
       <div class="translation-header-tools">
         <ResultViewModeToggle
@@ -8,9 +8,9 @@
           v-model="viewMode"
         />
         <div v-if="props.translationMeta" class="translation-provider-badge">
-          <Icon icon="mdi:translate" height="14" class="opacity-70" />
+          <AppIcon icon="mdi:translate" size="sm" class="text-muted" />
           <span>{{ providerLabel }}</span>
-          <span v-if="props.translationMeta.model" class="opacity-70">
+          <span v-if="props.translationMeta.model" class="text-muted">
             · {{ props.translationMeta.model }}
           </span>
         </div>
@@ -40,10 +40,10 @@
     <template #actions>
       <ShortcutList
         :text="currentText"
-        :sourceText="props.sourceText"
-        :leftLetterKeys="leftLetterKeys"
-        :spaceKey="spaceKey"
-        :isEditorButtonVisible="true"
+        :source-text="props.sourceText"
+        :left-letter-keys="leftLetterKeys"
+        :space-key="spaceKey"
+        :is-editor-button-visible="true"
       />
     </template>
   </ActionOverlayLayout>
@@ -57,13 +57,13 @@ import { usePersistedTranslationViewMode } from '../../composables/use-persisted
 import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import { useResultActions } from '../../composables/use-result-actions'
 import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
-import ShortcutList from '../ShortcutList.vue'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import ParallelTextPreview from '../common/ParallelTextPreview.vue'
-import ResultViewModeToggle from '../common/ResultViewModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import ShortcutList from '../overlay/ShortcutList.vue'
+import ResultViewModeToggle from './ResultViewModeToggle.vue'
 
 const props = defineProps<PreviewMenuParams>()
 

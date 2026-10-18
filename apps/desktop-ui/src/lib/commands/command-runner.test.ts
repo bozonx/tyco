@@ -568,7 +568,7 @@ describe('the output of a command', () => {
       result: undefined,
     })
     expect(copyText).toHaveBeenCalledWith('result')
-    expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
+    expect(deps.showToast).toHaveBeenCalledWith('common.copied', 'success')
     expect(deps.hideWindow).toHaveBeenCalled()
   })
 

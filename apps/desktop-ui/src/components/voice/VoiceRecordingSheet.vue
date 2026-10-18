@@ -5,7 +5,7 @@
         ? t('menu.voiceChat')
         : t('menu.voiceInput')
     "
-    :onEsc="cancel"
+    :on-esc="cancel"
   >
     <template #preview>
       <!-- the question goes to the chat with this text: the user sees what
@@ -46,8 +46,8 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
-import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
-import SelectionContextPreview from '../common/SelectionContextPreview.vue'
+import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
+import SelectionContextPreview from '../overlay/SelectionContextPreview.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'

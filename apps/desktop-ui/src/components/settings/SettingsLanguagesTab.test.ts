@@ -2,6 +2,7 @@ import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsLanguagesTab from './SettingsLanguagesTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -9,17 +10,17 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsLanguagesTab.vue', () => {
-  const mountTab = () =>
-    mount(SettingsLanguagesTab, {
-      props: {
-        userConfig: {
-          translation: {
-            ...DEFAULT_USER_CONFIG.translation,
-            targetLanguages: ['en_US', 'ru_RU'],
-          },
-        },
+  let context: ReturnType<typeof createTestSettingsContext>
+  const mountTab = () => {
+    context = createTestSettingsContext({
+      translation: {
+        ...DEFAULT_USER_CONFIG.translation,
+        targetLanguages: ['en_US', 'ru_RU'],
       },
+    })
+    return mount(SettingsLanguagesTab, {
       global: {
+        provide: context.provide,
         stubs: {
           SettingsSection: {
             template: '<section><slot name="description" /><slot /></section>',
@@ -34,6 +35,7 @@ describe('SettingsLanguagesTab.vue', () => {
         },
       },
     })
+  }
 
   it('edits the language slots', async () => {
     const wrapper = mountTab()
@@ -42,7 +44,7 @@ describe('SettingsLanguagesTab.vue', () => {
 
     await slots.vm.$emit('remove', 0)
 
-    const [[languages]] = wrapper.emitted('update:targetLanguages')!
+    const languages = context.draft.value.translation.targetLanguages
     expect((languages as (string | null)[]).slice(0, 2)).toEqual([
       null,
       'ru_RU',
@@ -54,6 +56,6 @@ describe('SettingsLanguagesTab.vue', () => {
 
     await wrapper.find('.inline-action').trigger('click')
 
-    expect(wrapper.emitted('navigate')).toEqual([['translations']])
+    expect(context.navigate).toHaveBeenCalledWith('translations')
   })
 })

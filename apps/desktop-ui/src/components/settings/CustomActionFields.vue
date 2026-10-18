@@ -174,7 +174,12 @@
             "
             @update:model-value="authDraft = $event"
           />
-          <Button size="sm" :disabled="!authDraft.trim()" @click="saveAuth">
+          <Button
+            variant="primary"
+            size="sm"
+            :disabled="!authDraft.trim()"
+            @click="saveAuth"
+          >
             {{ t('common.save') }}
           </Button>
           <Button
@@ -217,6 +222,7 @@ import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
 import {

@@ -96,7 +96,7 @@ describe('createActionMenuModel', () => {
       ?.action('copied')
 
     expect(services.copyText).toHaveBeenCalledWith('copied')
-    expect(deps.showToast).toHaveBeenCalledWith('toast.copied', 'success')
+    expect(deps.showToast).toHaveBeenCalledWith('common.copied', 'success')
     expect(deps.hideWindow).toHaveBeenCalled()
   })
 

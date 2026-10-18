@@ -29,8 +29,8 @@ import {
 import type { RegisteredTool } from '../../lib/tools/tool-types'
 import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-control'
 import type { InputConfigItem } from '../../types'
-import ConfigFieldControl from '../common/ConfigFieldControl.vue'
 import FieldRow from '../common/FieldRow.vue'
+import ConfigFieldControl from './ConfigFieldControl.vue'
 import type { CommandConfig } from '@tyco/shared'
 
 const props = defineProps<{ command: CommandConfig; tool: RegisteredTool }>()

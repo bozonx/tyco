@@ -12,11 +12,12 @@
       class="chat-attachment-toggle"
       :title="toggleTitle"
       :aria-expanded="isOpen"
+      :aria-controls="isOpen ? previewId : undefined"
       @click="isOpen = !isOpen"
     >
-      <Icon
+      <AppIcon
         :icon="attachmentIcon(source, mediaType)"
-        height="14"
+        size="sm"
         class="shrink-0"
       />
       <span class="chat-attachment-label">{{ label }}</span>
@@ -31,11 +32,15 @@
       icon="mdi:close"
     />
   </span>
-  <pre v-if="isOpen" class="chat-attachment-preview selectable">{{ text }}</pre>
+  <pre
+    v-if="isOpen"
+    :id="previewId"
+    class="chat-attachment-preview selectable"
+    >{{ text }}</pre>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
@@ -44,7 +49,7 @@ import {
   attachmentLabelKey,
   attachmentTitle,
 } from '../../lib/chat/chat-attachment'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'
 import type { ChatAttachmentSource } from '@tyco/shared'
 
@@ -60,6 +65,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ (e: 'remove'): void }>()
 const { t } = useI18n()
+const previewId = useId()
 const isOpen = ref(false)
 const isArriving = ref(false)
 

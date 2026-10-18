@@ -1,36 +1,31 @@
 <template>
   <div class="tool-call" :class="`is-${call.state}`">
-    <button
-      type="button"
-      class="tool-call-header"
-      :aria-expanded="isExpanded"
-      @click="isExpanded = !isExpanded"
+    <DisclosureHeader
+      :expanded="isExpanded"
+      :controls="detailsId"
+      :icon="call.icon || 'mdi:tools'"
+      icon-size="md"
+      @toggle="isExpanded = !isExpanded"
     >
-      <Icon
-        :icon="call.icon || 'mdi:tools'"
-        height="16"
-        class="shrink-0 text-muted"
-      />
-      <span class="tool-call-name" :title="call.toolName">{{ label }}</span>
-      <span v-if="argumentsPreview" class="tool-call-args">
-        {{ argumentsPreview }}
+      <span class="tool-call-summary">
+        <span class="tool-call-name" :title="call.toolName">{{ label }}</span>
+        <span v-if="argumentsPreview" class="tool-call-args">
+          {{ argumentsPreview }}
+        </span>
       </span>
-      <span class="tool-call-status">
-        <Icon
-          :icon="stateIcon"
-          height="14"
-          class="tool-call-state shrink-0"
-          :class="{ 'is-running': call.state === 'pending' }"
-        />
-        {{ t(stateKey) }}
-      </span>
-      <Icon
-        :icon="isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'"
-        height="16"
-        class="shrink-0 text-muted"
-      />
-    </button>
-    <div v-if="isExpanded" class="tool-call-details selectable">
+      <template #status>
+        <span class="tool-call-status">
+          <AppIcon
+            :icon="stateIcon"
+            size="sm"
+            class="tool-call-state shrink-0"
+            :class="{ 'is-running': call.state === 'pending' }"
+          />
+          {{ t(stateKey) }}
+        </span>
+      </template>
+    </DisclosureHeader>
+    <div v-if="isExpanded" :id="detailsId" class="tool-call-details selectable">
       <ChatToolChange
         v-if="isAwaitingAnswer && preview?.kind === 'file-change'"
         :change="preview"
@@ -58,12 +53,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
 import type { ChatToolPreview } from '../../lib/chat-tools/chat-tool-registry'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
+import DisclosureHeader from '../common/DisclosureHeader.vue'
 import ChatToolApproval from './ChatToolApproval.vue'
 import ChatToolChange from './ChatToolChange.vue'
 import type { ChatMessagePart } from '@tyco/shared'
@@ -82,6 +78,7 @@ const props = defineProps<{
 const emit = defineEmits<{ decide: [decision: ChatToolDecision] }>()
 const { t } = useI18n()
 const isExpanded = ref(false)
+const detailsId = useId()
 // the user decides on what the call does, so its arguments are in view
 watch(
   () => props.isAwaitingAnswer,
@@ -131,6 +128,9 @@ const argumentsPreview = computed(() => {
 
 <style scoped>
 .tool-call {
+  --disclosure-padding: var(--space-xs) var(--space-md);
+  --disclosure-background: transparent;
+  --disclosure-hover-background: var(--app-hover);
   overflow: hidden;
   margin: var(--space-xs) 0;
   border: 1px solid var(--app-border-subtle);
@@ -140,17 +140,11 @@ const argumentsPreview = computed(() => {
 .tool-call.is-awaiting-approval {
   border-color: var(--color-warning);
 }
-.tool-call-header {
+.tool-call-summary {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  width: 100%;
-  padding: var(--space-xs) var(--space-md);
-  text-align: left;
-  cursor: pointer;
-}
-.tool-call-header:hover {
-  background: var(--app-hover);
+  min-width: 0;
 }
 .tool-call-name {
   font-weight: 500;
@@ -167,7 +161,7 @@ const argumentsPreview = computed(() => {
 .tool-call-status {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-xs);
   margin-left: auto;
   color: var(--app-text-faint);
   white-space: nowrap;

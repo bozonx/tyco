@@ -7,10 +7,10 @@
     :class="{ 'is-danger': danger, 'is-accent': accent, 'is-open': active }"
     :disabled="disabled"
   >
-    <Icon
+    <AppIcon
       v-if="icon"
       :icon="icon"
-      height="16"
+      size="md"
       class="shrink-0"
       aria-hidden="true"
     />
@@ -20,10 +20,10 @@
       aria-hidden="true"
     />
     <span class="menu-item-label">{{ label }}</span>
-    <Icon
+    <AppIcon
       v-if="hasSubmenu"
       icon="mdi:chevron-right"
-      height="16"
+      size="md"
       class="menu-item-chevron"
       aria-hidden="true"
     />
@@ -31,7 +31,7 @@
   </button>
 </template>
 <script setup lang="ts">
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 
 defineProps<{
   label: string

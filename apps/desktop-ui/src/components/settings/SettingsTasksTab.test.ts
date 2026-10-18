@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsTasksTab from './SettingsTasksTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -9,13 +10,12 @@ vi.mock('../../composables/use-i18n', () => ({
 
 describe('SettingsTasksTab.vue', () => {
   it('adds and updates task slots', async () => {
+    const context = createTestSettingsContext({
+      aiTasks: [{ id: 'task-1', name: 'Existing', rule: 'Do this' }],
+    })
     const wrapper = mount(SettingsTasksTab, {
-      props: {
-        userConfig: {
-          aiTasks: [{ id: 'task-1', name: 'Existing', rule: 'Do this' }],
-        },
-      },
       global: {
+        provide: context.provide,
         stubs: {
           SettingsSection: { template: '<section><slot /></section>' },
           ShortcutSlots: {
@@ -39,26 +39,23 @@ describe('SettingsTasksTab.vue', () => {
 
     await slots.vm.$emit('add', 1)
 
-    const emitted = wrapper.emitted('update:aiTasks')
-    expect(emitted).toBeTruthy()
-    const firstEmitted = emitted![0]![0] as ({
-      name: string
-      rule: string
-    } | null)[]
-    expect(firstEmitted[1]).toEqual({ id: 'task-2', name: '', rule: '' })
+    expect(context.draft.value.aiTasks[1]).toEqual({
+      id: 'task-2',
+      name: '',
+      rule: '',
+    })
   })
 
   it('prunes empty tasks when unmounted', async () => {
+    const context = createTestSettingsContext({
+      aiTasks: [
+        { id: 'keep', name: 'Keep', rule: 'Rule' },
+        { id: 'empty', name: '', rule: '   ' },
+      ],
+    })
     const wrapper = mount(SettingsTasksTab, {
-      props: {
-        userConfig: {
-          aiTasks: [
-            { id: 'keep', name: 'Keep', rule: 'Rule' },
-            { id: 'empty', name: '', rule: '   ' },
-          ],
-        },
-      },
       global: {
+        provide: context.provide,
         stubs: {
           SettingsSection: { template: '<section><slot /></section>' },
           ShortcutSlots: {
@@ -74,13 +71,8 @@ describe('SettingsTasksTab.vue', () => {
 
     wrapper.unmount()
 
-    const emitted = wrapper.emitted('update:aiTasks')
-    expect(emitted).toBeTruthy()
-    const lastEmitted = emitted![emitted!.length - 1]![0] as ({
-      name: string
-      rule: string
-    } | null)[]
-    expect(lastEmitted[0]).toEqual({ id: 'keep', name: 'Keep', rule: 'Rule' })
-    expect(lastEmitted[1]).toBeNull()
+    const tasks = context.draft.value.aiTasks
+    expect(tasks[0]).toEqual({ id: 'keep', name: 'Keep', rule: 'Rule' })
+    expect(tasks[1]).toBeNull()
   })
 })

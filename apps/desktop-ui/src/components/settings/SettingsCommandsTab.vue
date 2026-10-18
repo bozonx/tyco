@@ -1,116 +1,118 @@
 <template>
-  <SettingsSection :description="t('commands.hint')" bare>
-    <template #actions>
-      <Button
-        class="add-btn"
-        size="sm"
-        icon="mdi:plus"
-        :aria-expanded="pickingTool"
-        @click="pickingTool = !pickingTool"
-      >
-        {{ t('commands.create') }}
-      </Button>
-    </template>
-    <div class="commands-tab">
-      <div v-if="pickingTool" class="tool-picker">
-        <p class="tool-picker-hint">{{ t('commands.pickTool') }}</p>
-        <button
-          v-for="tool in tools"
-          :key="tool.id"
-          type="button"
-          class="tool-option"
-          :class="{ 'is-unavailable': tool.reason }"
-          @click="addCommand(tool.id)"
+  <div class="settings-stack">
+    <SettingsSection :description="t('commands.hint')" bare>
+      <template #actions>
+        <Button
+          variant="primary"
+          class="add-btn"
+          size="sm"
+          icon="mdi:plus"
+          :aria-expanded="pickingTool"
+          @click="pickingTool = !pickingTool"
         >
-          <Icon
-            :icon="tool.icon ?? 'mdi:puzzle-outline'"
-            width="18"
-            height="18"
-            class="shrink-0"
-          />
-          <span class="tool-option-text">
-            <span class="tool-option-name">{{ tool.name }}</span>
-            <span v-if="tool.description" class="tool-option-description">
-              {{ tool.description }}
-            </span>
-            <span v-if="tool.reason" class="tool-option-reason">
-              {{ tool.reason }}
-            </span>
-          </span>
-        </button>
-      </div>
-      <InlineNotice
-        v-if="removed"
-        class="commands-notice"
-        kind="info"
-        announcement="polite"
-        icon="mdi:trash-can-outline"
-        :message="t('commands.removed', { name: removedName })"
-        appearance="surface"
-        density="compact"
-      >
-        <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
-          {{ t('commands.undo') }}
+          {{ t('commands.create') }}
         </Button>
-      </InlineNotice>
-      <StateMessage
-        v-if="!commands.length"
-        class="commands-empty"
-        :message="t('commands.empty')"
-      />
-
-      <div ref="listRef" class="commands-list">
-        <div
-          v-for="(command, index) in commands"
-          :key="command.id"
-          :ref="(el) => setItemRef(command.id, el)"
-          data-sortable-item
-          class="command-card"
-          :class="{
-            'is-sorting': isSorting,
-            'is-dragged': draggedIndex === index,
-            'is-disabled':
-              !command.enabled || Boolean(getUnavailableReasonKey(command)),
-          }"
-          :style="itemStyle(index)"
+      </template>
+      <div class="commands-tab">
+        <div v-if="pickingTool" class="tool-picker">
+          <p class="tool-picker-hint">{{ t('commands.pickTool') }}</p>
+          <button
+            v-for="tool in tools"
+            :key="tool.id"
+            type="button"
+            class="tool-option"
+            :class="{ 'is-unavailable': tool.reason }"
+            @click="addCommand(tool.id)"
+          >
+            <AppIcon
+              :icon="tool.icon ?? 'mdi:puzzle-outline'"
+              size="lg"
+              class="shrink-0"
+            />
+            <span class="tool-option-text">
+              <span class="tool-option-name">{{ tool.name }}</span>
+              <span v-if="tool.description" class="tool-option-description">
+                {{ tool.description }}
+              </span>
+              <span v-if="tool.reason" class="tool-option-reason">
+                {{ tool.reason }}
+              </span>
+            </span>
+          </button>
+        </div>
+        <InlineNotice
+          v-if="removed"
+          class="commands-notice"
+          kind="info"
+          announcement="polite"
+          icon="mdi:trash-can-outline"
+          :message="t('commands.removed', { name: removedName })"
+          appearance="surface"
+          density="compact"
         >
-          <CommandCard
-            :command="command"
-            :user-config="userConfig"
-            :expanded="isExpanded(command.id)"
-            :autofocus-name="focusedCommandId === command.id"
-            :menu-slot="menuSlots.get(command.id)"
-            :launcher-slots="launcherSlots.get(command.id) ?? []"
-            :name-conflicts="
-              findExternalCommandNameConflicts(commands, command, toolsStore)
-            "
-            @toggle="toggle(command.id)"
-            @drag="startDrag(index, $event)"
-            @update="updateCommand(index, $event)"
-            @navigate="emit('navigate', $event)"
-            @copy-id="copyId(command)"
-            @remove="removeCommand(command)"
-          />
+          <Button size="xs" variant="ghost" icon="mdi:undo" @click="undoRemove">
+            {{ t('commands.undo') }}
+          </Button>
+        </InlineNotice>
+        <StateMessage
+          v-if="!commands.length"
+          class="commands-empty"
+          :message="t('commands.empty')"
+        />
+
+        <div ref="listRef" class="commands-list">
+          <div
+            v-for="(command, index) in commands"
+            :key="command.id"
+            :ref="(el) => setItemRef(command.id, el)"
+            data-sortable-item
+            class="command-card"
+            :class="{
+              'is-sorting': isSorting,
+              'is-dragged': draggedIndex === index,
+              'is-disabled':
+                !command.enabled || Boolean(getUnavailableReasonKey(command)),
+            }"
+            :style="itemStyle(index)"
+          >
+            <CommandCard
+              :command="command"
+              :user-config="userConfig"
+              :expanded="isExpanded(command.id)"
+              :autofocus-name="focusedCommandId === command.id"
+              :menu-slot="menuSlots.get(command.id)"
+              :launcher-slots="launcherSlots.get(command.id) ?? []"
+              :name-conflicts="
+                findExternalCommandNameConflicts(commands, command, toolsStore)
+              "
+              @toggle="toggle(command.id)"
+              @drag="startDrag(index, $event)"
+              @update="updateCommand(index, $event)"
+              @navigate="navigate"
+              @copy-id="copyId(command)"
+              @remove="removeCommand(command)"
+            />
+          </div>
         </div>
       </div>
-    </div>
-  </SettingsSection>
+    </SettingsSection>
 
-  <SettingsSection
-    :title="t('commands.externalTitle')"
-    :info="t('commands.externalDescription')"
-  >
-    <FieldRow
-      :label="t('commands.externalSelection')"
-      :info="t('commands.externalSelectionInfo')"
+    <SettingsSection
+      :title="t('commands.externalTitle')"
+      :info="t('commands.externalDescription')"
     >
-      <FieldSwitch
-        :model-value="externalAccess.selection"
-        :title="t('commands.externalSelection')"
-        @update:model-value="setExternalAccess('selection', $event)"
-      />
-    </FieldRow>
-  </SettingsSection>
+      <FieldRow
+        :label="t('commands.externalSelection')"
+        :info="t('commands.externalSelectionInfo')"
+      >
+        <FieldSwitch
+          :model-value="externalAccess.selection"
+          :title="t('commands.externalSelection')"
+          @update:model-value="setExternalAccess('selection', $event)"
+        />
+      </FieldRow>
+    </SettingsSection>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -122,7 +124,9 @@ import {
   ref,
 } from 'vue'
 
+import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import { useSortableList } from '../../composables/use-sortable-list'
 import useToast from '../../composables/use-toast'
 import {
@@ -138,35 +142,25 @@ import { toolLabel } from '../../lib/tools/tool-label'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import SettingsSection from '../common/SettingsSection.vue'
 import StateMessage from '../common/StateMessage.vue'
 import CommandCard from './CommandCard.vue'
+import SettingsSection from './SettingsSection.vue'
 import {
   type CommandConfig,
   DEFAULT_EXTERNAL_ACCESS,
   type ExternalAccess,
-  type MainActionConfig,
-  type UserConfig,
 } from '@tyco/shared'
 
 const props = defineProps<{
-  userConfig: UserConfig
   /** A command to open and scroll to, e.g. one just created from the menu */
   focusCommandId?: string
 }>()
-
-const emit = defineEmits<{
-  (event: 'update:externalAccess', value: ExternalAccess): void
-  (event: 'update:commands', value: CommandConfig[]): void
-  (event: 'update:mainActions', value: (MainActionConfig | null)[]): void
-  /** Opens another tab of the settings */
-  (event: 'navigate', tab: string): void
-}>()
+const { draft: userConfig, navigate } = useSettingsContext()
 
 const { t } = useI18n()
 const { toastKey } = useToast()
@@ -176,18 +170,22 @@ const toolsStore = useToolsStore()
 // only the known keys: a saved config may still hold the dropped `recording`
 const externalAccess = computed<ExternalAccess>(() => ({
   selection:
-    props.userConfig.externalAccess?.selection ??
+    userConfig.value.externalAccess?.selection ??
     DEFAULT_EXTERNAL_ACCESS.selection,
 }))
-const setExternalAccess = (key: keyof ExternalAccess, value: boolean) =>
-  emit('update:externalAccess', { ...externalAccess.value, [key]: value })
+const setExternalAccess = (key: keyof ExternalAccess, value: boolean) => {
+  userConfig.value.externalAccess = { ...externalAccess.value, [key]: value }
+}
 
-const commands = computed(() => normalizeCommands(props.userConfig.commands))
+const setCommands = (next: CommandConfig[]) => {
+  userConfig.value.commands = next
+}
+const commands = computed(() => normalizeCommands(userConfig.value.commands))
 
 /** The first slot of the action menu that holds each command */
 const menuSlots = computed(() => {
   const slots = new Map<string, number>()
-  ;(props.userConfig.mainActions ?? []).forEach((slot, index) => {
+  ;(userConfig.value.mainActions ?? []).forEach((slot, index) => {
     if (slot?.type === 'command' && !slots.has(slot.commandId)) {
       slots.set(slot.commandId, index)
     }
@@ -198,7 +196,7 @@ const menuSlots = computed(() => {
 /** Every quick-command page and key assigned to each command. */
 const launcherSlots = computed(() => {
   const slots = new Map<string, { page: number; index: number }[]>()
-  const pages = props.userConfig.launcherPages.map((page) => page.slots)
+  const pages = userConfig.value.launcherPages.map((page) => page.slots)
   pages.forEach((commands, page) => {
     commands.forEach((id, index) => {
       if (!id) return
@@ -210,13 +208,10 @@ const launcherSlots = computed(() => {
   return slots
 })
 
+const { copy } = useCopyValue()
+
 async function copyId(command: CommandConfig) {
-  try {
-    await navigator.clipboard.writeText(command.id)
-    toastKey('commands.idCopied', 'success')
-  } catch {
-    // clipboard access might be denied
-  }
+  if (await copy(command.id)) toastKey('common.copied', 'success')
 }
 
 const focusedCommandId = ref<string | null>(props.focusCommandId ?? null)
@@ -278,7 +273,7 @@ const { draggedIndex, isSorting, startDrag, itemOffset } = useSortableList(
 )
 
 function moveCommand(from: number, to: number) {
-  emit('update:commands', moveItem(commands.value, from, to))
+  setCommands(moveItem(commands.value, from, to))
 }
 
 const itemStyle = (index: number) => {
@@ -290,7 +285,7 @@ function addCommand(toolId: string) {
   pickingTool.value = false
   const command = createCommand(toolId, undefined, toolsStore.get(toolId))
   focusedCommandId.value = command.id
-  emit('update:commands', [command, ...commands.value])
+  setCommands([command, ...commands.value])
   expanded.value = new Set([command.id, ...expanded.value])
   void reveal(command.id)
 }
@@ -298,16 +293,18 @@ function addCommand(toolId: string) {
 function updateCommand(index: number, command: CommandConfig) {
   const next = [...commands.value]
   next[index] = command
-  emit('update:commands', next)
+  setCommands(next)
 }
 
 const settingsSession = useSettingsSessionStore()
 const { removed, removeCommand, undoRemove, finishRemoval } =
   createCommandRemovalModel({
     getCommands: () => commands.value,
-    getMainActions: () => props.userConfig.mainActions ?? [],
-    updateCommands: (commands) => emit('update:commands', commands),
-    updateMainActions: (actions) => emit('update:mainActions', actions),
+    getMainActions: () => userConfig.value.mainActions ?? [],
+    updateCommands: setCommands,
+    updateMainActions: (actions) => {
+      userConfig.value.mainActions = actions
+    },
     removeSecret: (id) => secretsStore.removeSecret(id),
     persist: settingsSession.persist,
     isSaved: settingsSession.isSaved,
@@ -402,8 +399,8 @@ onBeforeUnmount(finishRemoval)
     transform var(--transition-base),
     opacity var(--transition-fast);
 }
-.command-card:hover :deep(.disclosure-panel) {
-  border-color: var(--app-border-strong);
+.command-card:hover {
+  --disclosure-panel-border-color: var(--app-border-strong);
 }
 
 /* Neighbours glide into place only while a drag is in progress */
@@ -420,7 +417,7 @@ onBeforeUnmount(finishRemoval)
   box-shadow: var(--app-shadow-lg);
   transition: none;
 }
-.command-card.is-dragged :deep(.disclosure-panel) {
-  border-color: var(--color-primary);
+.command-card.is-dragged {
+  --disclosure-panel-border-color: var(--color-primary);
 }
 </style>

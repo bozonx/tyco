@@ -1,135 +1,141 @@
 <template>
-  <SettingsSection :title="t('settings.chatAttachments')">
-    <FieldRow
-      :label="t('settings.chatImageQuality')"
-      :hint="t('settings.chatImageQualityHint')"
-      vertical
+  <div class="settings-stack">
+    <SettingsSection :title="t('settings.chatAttachments')">
+      <FieldRow
+        :label="t('settings.chatImageQuality')"
+        :hint="t('settings.chatImageQualityHint')"
+        vertical
+      >
+        <FieldSelect
+          :model-value="userConfig.chat.imageQuality || 'balanced'"
+          :options="[
+            { id: 'economy', name: t('settings.imageQualityEconomy') },
+            { id: 'balanced', name: t('settings.imageQualityBalanced') },
+            { id: 'original', name: t('settings.imageQualityOriginal') },
+          ]"
+          @update:model-value="
+            userConfig.chat.imageQuality =
+              $event as UserConfig['chat']['imageQuality']
+          "
+        />
+      </FieldRow>
+    </SettingsSection>
+    <SettingsSection
+      :title="t('settings.llmConnections')"
+      :description="t('settings.llmConnectionsHint')"
+      bare
     >
-      <FieldSelect
-        :model-value="imageQuality || 'balanced'"
-        :options="[
-          { id: 'economy', name: t('settings.imageQualityEconomy') },
-          { id: 'balanced', name: t('settings.imageQualityBalanced') },
-          { id: 'original', name: t('settings.imageQualityOriginal') },
-        ]"
-        @update:model-value="
-          emit(
-            'update:imageQuality',
-            $event as UserConfig['chat']['imageQuality']
-          )
-        "
-      />
-    </FieldRow>
-  </SettingsSection>
-  <SettingsSection
-    :title="t('settings.llmConnections')"
-    :description="t('settings.llmConnectionsHint')"
-    bare
-  >
-    <template #actions>
-      <Button size="sm" icon="mdi:plus" @click="addProvider">
-        {{ t('settings.addConnection') }}
-      </Button>
-    </template>
-
-    <div class="flex flex-col gap-3">
-      <SecretStorageNotice />
-      <LlmConnectionCard
-        v-for="provider in llm.providers"
-        :key="provider.id"
-        :provider="provider"
-        :expanded="settings.expandedProviderIds.has(provider.id)"
-        @toggle="toggleProvider(provider.id)"
-        :label="providerLabel(provider)"
-        :llm="llm"
-        :settings="settings"
-        :secrets="secretsStore.secrets"
-        @remove="pendingProviderId = $event"
-        @update="Object.assign(provider, $event)"
-      />
-    </div>
-  </SettingsSection>
-
-  <SettingsSection
-    :title="t('settings.modelsForFeatures')"
-    :description="t('settings.aiModelUsageHint')"
-  >
-    <FieldRow
-      v-for="task in LLM_TASKS"
-      :key="task"
-      :label="t(`settings.${task}`)"
-      vertical
-    >
-      <div class="flex flex-col gap-2 w-full">
-        <div
-          v-for="(modelId, index) in llm.taskModelChains[task]"
-          :key="`${task}-${index}`"
-          class="assignment-row"
+      <template #actions>
+        <Button
+          variant="primary"
+          size="sm"
+          icon="mdi:plus"
+          @click="addProvider"
         >
-          <span class="assignment-label text-muted">
-            {{
-              index === 0
-                ? t('settings.primaryModel')
-                : t('settings.fallbackModel', { index })
-            }}
-          </span>
-          <FieldSelect
-            class="flex-1"
-            :model-value="modelId"
-            :options="modelOptions"
-            @update:model-value="
-              llm.taskModelChains[task][index] = String($event)
-            "
-          />
-          <IconButton
-            size="sm"
-            variant="ghost"
-            icon="mdi:close"
-            :label="t('settings.removeFallback')"
-            @click="llm.taskModelChains[task].splice(index, 1)"
-          />
-        </div>
-        <div>
-          <Button
-            size="xs"
-            variant="ghost"
-            icon="mdi:plus"
-            :disabled="!nextFallback(task)"
-            @click="addFallback(task)"
-          >
-            {{
-              llm.taskModelChains[task].length
-                ? t('settings.addFallback')
-                : t('settings.addPrimaryModel')
-            }}
-          </Button>
-        </div>
-      </div>
-    </FieldRow>
-  </SettingsSection>
+          {{ t('settings.addConnection') }}
+        </Button>
+      </template>
 
-  <SettingsSection v-if="aiRules" :title="t('settings.aiRules')">
-    <FieldRow :label="t('settings.chatRules')" vertical>
-      <FieldTextArea v-model="aiRules.chat" />
-    </FieldRow>
-    <FieldRow :label="t('settings.textCorrection')" vertical>
-      <FieldTextArea v-model="aiRules.correction" />
-    </FieldRow>
-  </SettingsSection>
-  <ConfirmModal
-    :open="pendingProviderId !== null"
-    :title="t('common.delete')"
-    :message="t('settings.removeProviderConfirm')"
-    danger
-    @confirm="confirmProviderRemoval"
-    @cancel="pendingProviderId = null"
-  />
+      <div class="flex flex-col gap-3">
+        <SecretStorageNotice />
+        <LlmConnectionCard
+          v-for="provider in llm.providers"
+          :key="provider.id"
+          :provider="provider"
+          :expanded="settings.expandedProviderIds.has(provider.id)"
+          @toggle="toggleProvider(provider.id)"
+          :label="providerLabel(provider)"
+          :llm="llm"
+          :settings="settings"
+          :secrets="secretsStore.secrets"
+          @remove="pendingProviderId = $event"
+          @update="Object.assign(provider, $event)"
+        />
+      </div>
+    </SettingsSection>
+
+    <SettingsSection
+      :title="t('settings.modelsForFeatures')"
+      :description="t('settings.aiModelUsageHint')"
+    >
+      <FieldRow
+        v-for="task in LLM_TASKS"
+        :key="task"
+        :label="t(`settings.${task}`)"
+        vertical
+      >
+        <div class="flex flex-col gap-2 w-full">
+          <div
+            v-for="(modelId, index) in llm.taskModelChains[task]"
+            :key="`${task}-${index}`"
+            class="assignment-row"
+          >
+            <span class="assignment-label text-muted">
+              {{
+                index === 0
+                  ? t('settings.primaryModel')
+                  : t('settings.fallbackModel', { index })
+              }}
+            </span>
+            <FieldSelect
+              class="flex-1"
+              :model-value="modelId"
+              :options="modelOptions"
+              @update:model-value="
+                llm.taskModelChains[task][index] = String($event)
+              "
+            />
+            <IconButton
+              size="sm"
+              variant="ghost"
+              icon="mdi:close"
+              :label="t('settings.removeFallback')"
+              @click="llm.taskModelChains[task].splice(index, 1)"
+            />
+          </div>
+          <div>
+            <Button
+              size="xs"
+              variant="ghost"
+              icon="mdi:plus"
+              :disabled="!nextFallback(task)"
+              @click="addFallback(task)"
+            >
+              {{
+                llm.taskModelChains[task].length
+                  ? t('settings.addFallback')
+                  : t('settings.addPrimaryModel')
+              }}
+            </Button>
+          </div>
+        </div>
+      </FieldRow>
+    </SettingsSection>
+
+    <SettingsSection :title="t('settings.aiRules')">
+      <FieldRow :label="t('settings.chatRules')" vertical>
+        <FieldTextArea v-model="aiRules.chat" />
+      </FieldRow>
+      <FieldRow :label="t('settings.textCorrection')" vertical>
+        <FieldTextArea v-model="aiRules.correction" />
+      </FieldRow>
+    </SettingsSection>
+    <ConfirmModal
+      :open="pendingProviderId !== null"
+      :title="t('common.delete')"
+      :message="t('settings.removeProviderConfirm')"
+      danger
+      @confirm="confirmProviderRemoval"
+      @cancel="pendingProviderId = null"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { modelLabel } from '../../lib/llm/llm-config'
 import { createLlmConnectionChecker } from '../../lib/llm/llm-connection'
@@ -137,45 +143,32 @@ import { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { httpOrigin } from '../../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
 import { useSecretsStore } from '../../stores/secrets'
+import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import IconButton from '../common/IconButton.vue'
-import SettingsSection from '../common/SettingsSection.vue'
 import LlmConnectionCard from './LlmConnectionCard.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
-import {
-  LLM_TASKS,
-  type LlmConfig,
-  type LlmProvider,
-  type UserConfig,
-} from '@tyco/shared'
+import SettingsSection from './SettingsSection.vue'
+import { LLM_TASKS, type LlmProvider, type UserConfig } from '@tyco/shared'
 
-const props = defineProps<{
-  llm: LlmConfig
-  aiRules?: UserConfig['aiRules']
-  imageQuality?: UserConfig['chat']['imageQuality']
-}>()
-const emit = defineEmits<{
-  (event: 'providerRemoved', id: string): void
-  (
-    event: 'update:imageQuality',
-    value: UserConfig['chat']['imageQuality']
-  ): void
-}>()
 const { t } = useI18n()
+const { draft: userConfig, operations } = useSettingsContext()
+const llm = computed(() => userConfig.value.llm)
+const aiRules = computed(() => userConfig.value.aiRules)
 const { toastKey, toastText } = useToast()
 const secretsStore = useSecretsStore()
 const checkLlmConnection = createLlmConnectionChecker({
   fetch: createTauriTransport(tauriNetIpc).fetch,
   hasKey,
   getModelId: (providerId) =>
-    props.llm.models.find((model) => model.providerId === providerId)
+    llm.value.models.find((model) => model.providerId === providerId)
       ?.providerModelId,
 })
 const settings = createLlmSettingsModel({
-  getConfig: () => props.llm,
+  getConfig: () => llm.value,
   getUsableModelIds: () => modelOptions.value.map((option) => option.id),
   setSecret: (id, value, origins) => secretsStore.setSecret(id, value, origins),
   removeSecret: (id) => secretsStore.removeSecret(id),
@@ -185,7 +178,7 @@ const settings = createLlmSettingsModel({
   notifyInvalidUrl: () => toastKey('settings.invalidBaseUrl', 'error'),
   formatConnectionError: (error) =>
     `${t('settings.connectionFailed')}: ${String(error)}`,
-  providerRemoved: (id) => emit('providerRemoved', id),
+  providerRemoved: (id) => void operations.finishProviderRemoval(id),
 })
 const { addProvider, removeProviderById, nextFallback, addFallback, dispose } =
   settings
@@ -202,9 +195,9 @@ function confirmProviderRemoval() {
 }
 
 const modelOptions = computed(() =>
-  props.llm.models
+  llm.value.models
     .filter((model) => {
-      const provider = props.llm.providers.find(
+      const provider = llm.value.providers.find(
         (item) => item.id === model.providerId
       )
       return (
@@ -226,7 +219,7 @@ function providerLabel(provider: LlmProvider) {
   return provider.name?.trim() || provider.baseUrl?.trim() || provider.id
 }
 function providerName(id: string) {
-  const provider = props.llm.providers.find((item) => item.id === id)
+  const provider = llm.value.providers.find((item) => item.id === id)
   return provider ? providerLabel(provider) : id
 }
 function hasKey(id: string) {

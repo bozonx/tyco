@@ -20,8 +20,8 @@
     <InsertMenu
       v-else
       :text="dictationResultText"
-      :allowInsertButton="true"
-      :shortcutsDisabled="menuModalsStore.hasOpenModal"
+      :allow-insert-button="true"
+      :shortcuts-disabled="menuModalsStore.hasOpenModal"
     />
   </ContentPadding>
 </template>
@@ -29,6 +29,9 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 
+import ContentPadding from '../components/common/ContentPadding.vue'
+import InsertMenu from '../components/menu/InsertMenu.vue'
+import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
 import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import { isQuickWindow } from '../lib/desktop/window'
 import { appNavigation } from '../lib/navigation/navigation'

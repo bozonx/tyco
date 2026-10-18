@@ -18,10 +18,10 @@
           :title="item.name"
           @click="emit('update:modelValue', item.id)"
         >
-          <Icon
+          <AppIcon
             v-if="item.icon"
             :icon="item.icon"
-            :height="item.nested ? 14 : 16"
+            :size="item.nested ? 'sm' : 'md'"
             class="shrink-0"
             aria-hidden="true"
           />
@@ -39,7 +39,7 @@
 </template>
 <script setup lang="ts">
 import type { NavigationItem } from '../../lib/ui/navigation-item'
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 import Badge from './Badge.vue'
 
 defineProps<{

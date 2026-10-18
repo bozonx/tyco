@@ -2,12 +2,12 @@
   <div class="history-page">
     <HistoryList
       :items="editorItems"
-      :searchQuery="searchQuery"
-      :openTitle="t('history.placeIntoEditor')"
+      :search-query="searchQuery"
+      :open-title="t('history.placeIntoEditor')"
       :actions="editorActions"
-      :originalActions="originalActions"
-      :emptyHint="t('history.emptyHint')"
-      :totalCount="historyStore.editorHistory.length"
+      :original-actions="originalActions"
+      :empty-hint="t('history.emptyHint')"
+      :total-count="historyStore.editorHistory.length"
       @open="toEditor"
       @action="onEditorAction"
       @clear="clearEditorHistory"

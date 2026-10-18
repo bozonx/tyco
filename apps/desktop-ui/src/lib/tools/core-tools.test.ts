@@ -75,7 +75,7 @@ describe('createCoreTools', () => {
     expect(deps.insertText).toHaveBeenCalledWith('hi')
     expect(await run('core.copy', 'hi')).toEqual({
       ok: true,
-      messageKey: 'toast.copied',
+      messageKey: 'common.copied',
     })
     expect(deps.copyText).toHaveBeenCalledWith('hi')
     await run('core.askInChat', 'why?')

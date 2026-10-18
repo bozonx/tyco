@@ -61,8 +61,8 @@
           v-if="message.content"
           class="message-action"
           @click="copyMessage"
-          :label="isCopied ? t('chat.copied') : t('chat.copy')"
-          :icon="isCopied ? 'mdi:check' : 'mdi:content-copy'"
+          :label="isCopied() ? t('common.copied') : t('chat.copy')"
+          :icon="isCopied() ? 'mdi:check' : 'mdi:content-copy'"
         />
         <DropdownMenu
           size="xs"
@@ -80,10 +80,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed } from 'vue'
 
+import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
-import useToast from '../../composables/use-toast'
 import { messageSteps } from '../../lib/chat-tools/chat-message-steps'
 import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
 import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
@@ -121,8 +121,7 @@ const pendingApproval = (
 /** The answer's text and tool calls in order; null for a plain answer */
 const steps = computed(() => messageSteps(props.message))
 const { t } = useI18n()
-const { toastKey } = useToast()
-const isCopied = ref(false)
+const { copy: copyText, isCopied } = useCopyValue()
 
 const moreMenuItems = computed<DropdownMenuItem[]>(() => [
   ...(props.message.role === 'assistant' && props.canRegenerate
@@ -145,21 +144,6 @@ const moreMenuItems = computed<DropdownMenuItem[]>(() => [
     action: () => emit('branch'),
   },
 ])
-let copiedTimer: ReturnType<typeof setTimeout> | undefined
-onBeforeUnmount(() => clearTimeout(copiedTimer))
-
-async function copyText(value: string) {
-  try {
-    await navigator.clipboard.writeText(value)
-  } catch {
-    toastKey('editor.menu.clipboardUnavailable', 'error')
-    return
-  }
-  isCopied.value = true
-  clearTimeout(copiedTimer)
-  copiedTimer = setTimeout(() => (isCopied.value = false), 1500)
-}
-
 function copyMessage() {
   void copyText(props.message.content)
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="selection-context-preview">
     <div class="context-preview-header">
-      <Icon :icon="icon" height="14" class="shrink-0 text-primary" />
+      <AppIcon :icon="icon" size="sm" class="shrink-0 text-primary" />
       <span class="context-preview-title">{{ title }}</span>
       <IconButton
         class="context-preview-remove"
@@ -18,9 +18,9 @@
 </template>
 
 <script setup lang="ts">
-import Icon from './AppIcon.vue'
-import IconButton from './IconButton.vue'
-import TextPreview from './TextPreview.vue'
+import AppIcon from '../common/AppIcon.vue'
+import IconButton from '../common/IconButton.vue'
+import TextPreview from '../common/TextPreview.vue'
 
 withDefaults(
   defineProps<{

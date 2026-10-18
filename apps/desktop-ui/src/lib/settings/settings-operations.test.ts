@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DEFAULT_USER_CONFIG } from '@tyco/shared'
+import { DEFAULT_USER_CONFIG, SELECTION_HOTKEY_PREFIX } from '@tyco/shared'
 import type { PluginFactory } from '../../types/plugins'
-import { createCommand } from '../commands/command-config'
 import { createSettingsOperations } from './settings-operations'
 
 function fixture() {
@@ -9,7 +8,6 @@ function fixture() {
   const deps = {
     getConfig: () => config,
     pluginFactories: (): PluginFactory[] => [],
-    createCommand: vi.fn((toolId: string) => createCommand(toolId, 'created')),
     persist: vi.fn().mockResolvedValue(undefined),
     isSaved: vi.fn(() => true),
     hasSecret: vi.fn(() => true),
@@ -107,21 +105,24 @@ describe('settings operations', () => {
     expect(f.config.launcherPages).toEqual([pages[1], pages[0]])
   })
 
-  it.each([0, 1])(
-    'creates and places a command on launcher page %i',
-    (page) => {
-      const f = fixture()
-      f.config.commands = []
-      f.config.launcherPages = ['a', 'b'].map((id) => ({
-        id,
-        slots: Array<string | null>(15).fill(null),
-        inputMode: 'selection' as const,
-      }))
-      const id = f.model.createLauncherCommand(2, 'script', page)
-      expect(f.config.commands[0].id).toBe(id)
-      expect(f.config.launcherPages[page].slots[2]).toBe(id)
-    }
-  )
+  it('stores selection hotkeys apart from mode hotkeys', () => {
+    const f = fixture()
+    f.model.updateHotkey('voice', 'Ctrl+Alt+V')
+    f.model.updateHotkey(`${SELECTION_HOTKEY_PREFIX}translate`, 'Ctrl+T')
+    expect(f.config.hotkeys.voice).toBe('Ctrl+Alt+V')
+    expect(f.config.selectionHotkeys?.translate).toBe('Ctrl+T')
+    expect(f.config.hotkeys).not.toHaveProperty(
+      `${SELECTION_HOTKEY_PREFIX}translate`
+    )
+  })
+
+  it('sets and resets the vault path', () => {
+    const f = fixture()
+    f.model.updateVaultPath('/vault')
+    expect(f.config.aiProfiles?.vaultPath).toBe('/vault')
+    f.model.updateVaultPath(undefined)
+    expect(f.config.aiProfiles).not.toHaveProperty('vaultPath')
+  })
 
   it('applies plugin presets and preserves unrelated settings', () => {
     const f = fixture()

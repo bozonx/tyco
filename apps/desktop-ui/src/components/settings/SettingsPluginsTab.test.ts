@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsPluginsTab from './SettingsPluginsTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -76,8 +77,8 @@ describe('SettingsPluginsTab.vue', () => {
     }
 
     const wrapper = mount(SettingsPluginsTab, {
-      props: { userConfig },
       global: {
+        provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           FieldSwitch: {
             props: ['modelValue', 'label'],
@@ -97,12 +98,12 @@ describe('SettingsPluginsTab.vue', () => {
     expect(wrapper.find('.fields-stub').exists()).toBe(false)
   })
 
-  it('emits update:pluginEnabled when toggle is clicked without selecting plugin', async () => {
-    const userConfig = { plugins: {} }
+  it('switches a plugin from its toggle without opening it', async () => {
+    const context = createTestSettingsContext({ plugins: {} })
 
     const wrapper = mount(SettingsPluginsTab, {
-      props: { userConfig },
       global: {
+        provide: context.provide,
         stubs: {
           FieldSwitch: {
             props: ['modelValue', 'label'],
@@ -118,26 +119,25 @@ describe('SettingsPluginsTab.vue', () => {
     )
     await toggleBtn.trigger('click')
 
-    expect(wrapper.emitted('update:pluginEnabled')).toBeTruthy()
-    expect(wrapper.emitted('update:pluginEnabled')![0]).toEqual([
-      'PluginWithConfig',
-      false,
-    ])
-    expect(wrapper.emitted('selectPlugin')).toBeFalsy()
+    expect(context.draft.value.plugins.PluginWithConfig).toEqual({
+      enabled: false,
+    })
+    expect(context.navigate).not.toHaveBeenCalled()
   })
 
-  it('emits selectPlugin when card is clicked', async () => {
-    const userConfig = { plugins: {} }
+  it('opens a plugin from the card open button', async () => {
+    const context = createTestSettingsContext({ plugins: {} })
 
     const wrapper = mount(SettingsPluginsTab, {
-      props: { userConfig },
-      global: { stubs: { FieldSwitch: true } },
+      global: { provide: context.provide, stubs: { FieldSwitch: true } },
     })
 
-    const card = wrapper.find('[data-plugin="PluginWithConfig"]')
-    await card.trigger('click')
+    const open = wrapper.find(
+      '[data-plugin="PluginWithConfig"] .plugin-card-open'
+    )
+    expect(open.element.tagName).toBe('BUTTON')
+    await open.trigger('click')
 
-    expect(wrapper.emitted('selectPlugin')).toBeTruthy()
-    expect(wrapper.emitted('selectPlugin')![0]).toEqual(['PluginWithConfig'])
+    expect(context.navigate).toHaveBeenCalledWith('plugin:PluginWithConfig')
   })
 })

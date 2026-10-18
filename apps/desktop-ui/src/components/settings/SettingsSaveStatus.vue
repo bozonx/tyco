@@ -1,6 +1,6 @@
 <template>
   <p v-if="configIsNewer" class="settings-config-warning" role="alert">
-    <Icon icon="mdi:alert-outline" height="16" class="shrink-0" />
+    <AppIcon icon="mdi:alert-outline" size="md" class="shrink-0" />
     <span>{{ t('settings.configNewerWarning') }}</span>
     <Button
       size="sm"
@@ -35,9 +35,13 @@
     </template>
     <template v-else-if="saveError">
       <p>{{ saveError }}</p>
-      <Button size="sm" :loading="isSaving" @click="emit('retry')">{{
-        t('settings.saveRetry')
-      }}</Button>
+      <Button
+        variant="primary"
+        size="sm"
+        :loading="isSaving"
+        @click="emit('retry')"
+        >{{ t('settings.saveRetry') }}</Button
+      >
       <Button size="sm" :disabled="isSaving" @click="emit('reload')">{{
         t('settings.saveReload')
       }}</Button>
@@ -46,7 +50,7 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 
 defineProps<{

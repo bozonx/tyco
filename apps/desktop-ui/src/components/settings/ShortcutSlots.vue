@@ -35,7 +35,7 @@
         :title="t('common.add')"
         @click="$emit('add', index)"
       >
-        <Icon icon="mdi:plus" width="16" height="16" />
+        <AppIcon icon="mdi:plus" size="md" />
         {{ t('common.add') }}
       </button>
     </div>
@@ -48,10 +48,10 @@ import { ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSortableList } from '../../composables/use-sortable-list'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
-import Icon from './AppIcon.vue'
-import DragHandle from './DragHandle.vue'
-import IconButton from './IconButton.vue'
-import KeyboardKey from './KeyboardKey.vue'
+import AppIcon from '../common/AppIcon.vue'
+import DragHandle from '../common/DragHandle.vue'
+import IconButton from '../common/IconButton.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 
 const props = defineProps<{ items: readonly (T | null | undefined)[] }>()
 

@@ -79,7 +79,7 @@
       drag-and-drop event of the webview -->
     <div class="composer-wrap" :class="{ 'is-dragging': draggingFiles }">
       <div v-if="draggingFiles" class="drop-hint" role="status">
-        <Icon icon="mdi:paperclip" height="16" class="shrink-0" />
+        <AppIcon icon="mdi:paperclip" size="md" class="shrink-0" />
         {{ t('chat.dropFiles') }}
       </div>
       <VoiceRecognitionMenu
@@ -116,18 +116,21 @@ import { computed, onMounted, toRaw } from 'vue'
 import { useChatFileDrop } from '../../composables/use-chat-file-drop'
 import { useChatScope } from '../../composables/use-chat-scope'
 import { useChatScroll } from '../../composables/use-chat-scroll'
+import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
 import { appNavigation } from '../../lib/navigation/navigation'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useSecretsStore } from '../../stores/secrets'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
+import Button from '../common/Button.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
 import ChatComposer from './ChatComposer.vue'
+import ChatMessageItem from './ChatMessageItem.vue'
 import ChatResponseAnnouncer from './ChatResponseAnnouncer.vue'
 import type { ChatMessage } from '@tyco/shared'
 
@@ -135,6 +138,7 @@ const { chat: chatStore, input: chatInputStore } = useChatScope()
 const secretsStore = useSecretsStore()
 const menuModalsStore = useMenuModalsStore()
 const { toastKey } = useToast()
+const copyValue = useCopyValue()
 const { t } = useI18n()
 
 const voiceParams = computed(() => {
@@ -233,13 +237,7 @@ async function copyMarkdownToPoint(index: number) {
   const slice = chatStore.messages.slice(0, index + 1)
   const title = chatStore.currentChatParams.title || ''
   const md = formatChatToMarkdown(slice, title ? { title } : undefined)
-  try {
-    await navigator.clipboard.writeText(md)
-  } catch {
-    toastKey('editor.menu.clipboardUnavailable', 'error')
-    return
-  }
-  toastKey('chat.markdownCopied', 'info')
+  if (await copyValue.copy(md)) toastKey('chat.markdownCopied', 'info')
 }
 
 const { dropZoneRef, draggingFiles } = useChatFileDrop({

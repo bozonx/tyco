@@ -139,7 +139,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
       } catch (error) {
         return { ok: false, message: deps.describeError(error) }
       }
-      return { ok: true, messageKey: 'toast.copied' }
+      return { ok: true, messageKey: 'common.copied' }
     },
   }
 

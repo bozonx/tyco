@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="settings-stack">
     <SettingsSection>
       <FieldRow :label="t('settings.sttProvider')">
         <FieldSelect
@@ -70,6 +70,7 @@
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { buildLanguageOptions } from '../../lib/locale/language'
 import {
@@ -79,12 +80,16 @@ import {
 import { secretId, sttProviderNeedsKey } from '../../lib/stt/stt-client'
 import { activeSttModel, selectSttProvider } from '../../lib/stt/stt-config'
 import { useSecretsStore } from '../../stores/secrets'
+import FieldInput from '../common/FieldInput.vue'
+import FieldRow from '../common/FieldRow.vue'
+import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
+import FieldTextArea from '../common/FieldTextArea.vue'
 import SecretKeyField from './SecretKeyField.vue'
-import type { UserConfig } from '@tyco/shared'
+import SettingsSection from './SettingsSection.vue'
 import type { SttProvider } from '@tyco/shared'
 
-const props = defineProps<{ userConfig: UserConfig }>()
-const userConfig = computed(() => props.userConfig)
+const { draft: userConfig } = useSettingsContext()
 const { t } = useI18n()
 const secretsStore = useSecretsStore()
 const { toastText } = useToast()

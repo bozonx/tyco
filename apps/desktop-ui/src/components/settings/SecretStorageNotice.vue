@@ -1,6 +1,6 @@
 <template>
   <div v-if="unavailable" class="secret-storage-notice">
-    <Icon icon="mdi:alert-outline" height="16" class="shrink-0" />
+    <AppIcon icon="mdi:alert-outline" size="md" class="shrink-0" />
     <p>{{ t('settings.secretStorageUnavailable') }}</p>
   </div>
 </template>
@@ -10,7 +10,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSecretsStore } from '../../stores/secrets'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 
 const { t } = useI18n()
 const secretsStore = useSecretsStore()

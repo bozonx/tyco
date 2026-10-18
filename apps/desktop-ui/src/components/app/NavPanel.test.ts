@@ -32,19 +32,19 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('vue-router', () => ({ useRoute: () => mocks.currentRoute.value }))
 
-vi.mock('../composables/use-editor-navigation', () => ({
+vi.mock('../../composables/use-editor-navigation', () => ({
   useEditorNavigation: () => mocks.editorNavigation,
 }))
 
-vi.mock('../composables/use-i18n', () => ({
+vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../lib/navigation/navigation', () => ({
+vi.mock('../../lib/navigation/navigation', () => ({
   appNavigation: mocks.appNavigation,
 }))
 
-vi.mock('../stores/chat', () => ({
+vi.mock('../../stores/chat', () => ({
   useChatStore: () => mocks.chatStore,
   useProfileChatStore: (id: string) => {
     mocks.useProfileChatStore(id)
@@ -52,15 +52,15 @@ vi.mock('../stores/chat', () => ({
   },
 }))
 
-vi.mock('../stores/nav-panel', () => ({
+vi.mock('../../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanelStore,
 }))
 
-vi.mock('../stores/menu-modals', () => ({
+vi.mock('../../stores/menu-modals', () => ({
   useMenuModalsStore: () => mocks.menuModalsStore,
 }))
 
-vi.mock('../stores/ai-profiles', () => ({
+vi.mock('../../stores/ai-profiles', () => ({
   useAiProfilesStore: () => mocks.aiProfilesStore,
 }))
 

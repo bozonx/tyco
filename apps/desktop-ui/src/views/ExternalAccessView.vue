@@ -7,10 +7,9 @@
     >
       <template #preview>
         <div class="access-prompt">
-          <Icon
+          <AppIcon
             icon="mdi:shield-key-outline"
-            width="32"
-            height="32"
+            size="4xl"
             class="access-prompt-icon"
           />
           <p class="access-prompt-text">
@@ -35,7 +34,11 @@
         <!-- nothing is focused: a key meant for the window under the prompt
              must not allow the call -->
         <div class="access-prompt-actions">
-          <Button class="access-allow-once" @click="respond('once')">
+          <Button
+            variant="primary"
+            class="access-allow-once"
+            @click="respond('once')"
+          >
             {{ t('externalAccess.allowOnce') }}
           </Button>
           <Button
@@ -57,10 +60,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, watch } from 'vue'
 
-import ActionOverlayLayout from '../components/common/ActionOverlayLayout.vue'
-import Icon from '../components/common/AppIcon.vue'
+import AppIcon from '../components/common/AppIcon.vue'
 import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
+import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
 import { useI18n } from '../composables/use-i18n'
 import { createAccessPrompt } from '../lib/external-access/access-prompt'
 import { useDesktopStore } from '../stores/desktop'
@@ -130,13 +133,13 @@ onUnmounted(() => {
 
 .access-prompt-text {
   max-width: 36rem;
-  font-size: 1rem;
+  font-size: var(--text-title);
   line-height: 1.5;
 }
 
 .access-prompt-note {
   max-width: 36rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-control);
   color: var(--app-text-muted);
 }
 

@@ -1,20 +1,16 @@
 /* ────────────────────────────────────────────────
-   daisyUI palettes (v5 tokens)
-   Flat, neutral palette with a single indigo accent.
-   `--depth: 0` removes the 3D shadows daisyUI adds to controls.
+   Palettes
+   Flat, neutral palette with a single indigo accent. `document-appearance`
+   sets `data-theme` on `<html>`; a subtree such as a dark overlay may set its
+   own. Without an attribute the light palette applies, or the dark one when
+   the system prefers it.
 
    A palette name here must also be listed in `THEME_MODES`
    (`packages/shared/src/appearance.ts`).
    ──────────────────────────────────────────────── */
 
-@plugin "daisyui" {
-  themes: false;
-}
-
-@plugin "daisyui/theme" {
-  name: 'light';
-  default: true;
-  prefersdark: false;
+:where(:root),
+[data-theme='light'] {
   color-scheme: light;
 
   --color-base-100: oklch(100% 0 0);
@@ -37,21 +33,9 @@
   --color-warning-content: oklch(25% 0.05 75);
   --color-error: oklch(57% 0.21 25);
   --color-error-content: oklch(99% 0 0);
-
-  --radius-selector: 0.375rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.225rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
 }
 
-@plugin "daisyui/theme" {
-  name: 'dark';
-  default: false;
-  prefersdark: true;
+[data-theme='dark'] {
   color-scheme: dark;
 
   --color-base-100: oklch(20% 0.008 265);
@@ -74,15 +58,33 @@
   --color-warning-content: oklch(20% 0.04 75);
   --color-error: oklch(66% 0.19 25);
   --color-error-content: oklch(16% 0.03 25);
+}
 
-  --radius-selector: 0.375rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.225rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --color-base-100: oklch(20% 0.008 265);
+    --color-base-200: oklch(17% 0.008 265);
+    --color-base-300: oklch(25.5% 0.01 265);
+    --color-base-content: oklch(92% 0.006 265);
+    --color-primary: oklch(68% 0.15 272);
+    --color-primary-content: oklch(16% 0.03 272);
+    --color-secondary: oklch(68% 0.09 200);
+    --color-secondary-content: oklch(16% 0.02 200);
+    --color-accent: oklch(76% 0.13 75);
+    --color-accent-content: oklch(20% 0.04 75);
+    --color-neutral: oklch(32% 0.012 265);
+    --color-neutral-content: oklch(92% 0.006 265);
+    --color-info: oklch(68% 0.13 245);
+    --color-info-content: oklch(16% 0.02 245);
+    --color-success: oklch(70% 0.14 155);
+    --color-success-content: oklch(16% 0.03 155);
+    --color-warning: oklch(80% 0.14 75);
+    --color-warning-content: oklch(20% 0.04 75);
+    --color-error: oklch(66% 0.19 25);
+    --color-error-content: oklch(16% 0.03 25);
+  }
 }
 
 /* E-ink panels show a handful of gray levels and refresh slowly: pure black
@@ -90,10 +92,7 @@
    colors dark enough to read as black on a monochrome screen while keeping
    their hue on color panels. Contrast and motion are forced by
    `resolveAppearance`, see `accessibility.css`. */
-@plugin "daisyui/theme" {
-  name: 'e-ink';
-  default: false;
-  prefersdark: false;
+[data-theme='e-ink'] {
   color-scheme: light;
 
   --color-base-100: oklch(100% 0 0);
@@ -116,13 +115,22 @@
   --color-warning-content: oklch(100% 0 0);
   --color-error: oklch(40% 0.16 25);
   --color-error-content: oklch(100% 0 0);
+}
 
-  --radius-selector: 0.375rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.225rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
+/* A palette root paints its own background, unless it is transparent such as
+   the quick window. In the base layer, so any component style wins. */
+@layer base {
+  :where(:root, [data-theme]) {
+    --root-bg: var(--color-base-100);
+  }
+
+  :root,
+  [data-theme] {
+    background-color: var(--root-bg);
+    color: var(--color-base-content);
+  }
+
+  :root {
+    scrollbar-color: color-mix(in oklch, currentColor 35%, #0000) #0000;
+  }
 }

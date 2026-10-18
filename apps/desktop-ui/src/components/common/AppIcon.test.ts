@@ -11,12 +11,12 @@ it('updates plugin SVGs after replacement and removes them after disposal', asyn
     icons: { test: { body: '<path d="M0 0h1v1z"/>' } },
   })
   const wrapper = mount(AppIcon, {
-    props: { icon: `${prefix}:test` },
-    attrs: { height: 18, 'aria-hidden': true },
+    props: { icon: `${prefix}:test`, size: 'lg' },
+    attrs: { 'aria-hidden': true },
   })
   await nextTick()
   expect(wrapper.find('path').exists()).toBe(true)
-  expect(wrapper.find('svg').attributes('height')).toBe('18')
+  expect(wrapper.find('svg').attributes('height')).toBe('1.125rem')
   pluginIcons.register({
     prefix,
     icons: { test: { body: '<circle cx="5" cy="5" r="2"/>' } },

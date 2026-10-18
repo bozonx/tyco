@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="settings-stack">
     <SettingsSection
       :title="t('settings.sectionMarkdown')"
       :info="t('settings.markdownHint')"
@@ -74,21 +74,19 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import SettingsSection from '../common/SettingsSection.vue'
-import type { MarkdownSettings, UserConfig } from '@tyco/shared'
+import SettingsSection from './SettingsSection.vue'
+import type { MarkdownSettings } from '@tyco/shared'
 import { normalizeMarkdownSettings } from '@tyco/shared'
 
-const props = defineProps<{
-  userConfig: Pick<UserConfig, 'markdown' | 'markdownClean'>
-}>()
-
 const { t } = useI18n()
+const { draft } = useSettingsContext()
 
-const markdown = computed(() => props.userConfig.markdown)
-const markdownClean = computed(() => props.userConfig.markdownClean)
+const markdown = computed(() => draft.value.markdown)
+const markdownClean = computed(() => draft.value.markdownClean)
 
 function updateMarkdown(
   name: keyof Omit<MarkdownSettings, 'incrementListMarker'>,

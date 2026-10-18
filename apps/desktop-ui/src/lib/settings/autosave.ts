@@ -84,3 +84,16 @@ export function createAutosave(deps: AutosaveDependencies) {
 }
 
 export type Autosave = ReturnType<typeof createAutosave>
+
+/** What a page with several autosaved parts shows: the worst state first */
+export type AutosaveSummary = 'error' | 'saving' | 'saved' | ''
+
+export function summarizeAutosave(
+  statuses: readonly AutosaveStatus[]
+): AutosaveSummary {
+  if (statuses.includes('error')) return 'error'
+  if (statuses.includes('saving') || statuses.includes('pending'))
+    return 'saving'
+  if (statuses.includes('saved')) return 'saved'
+  return ''
+}

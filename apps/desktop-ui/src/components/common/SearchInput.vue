@@ -5,7 +5,7 @@
     :data-size="size ?? 'md'"
     :class="[$attrs.class, { 'search-input--quiet': quiet }]"
   >
-    <Icon icon="mdi:magnify" height="18" class="text-faint shrink-0" />
+    <AppIcon icon="mdi:magnify" size="lg" class="text-faint shrink-0" />
     <input
       v-bind="controlAttrs()"
       :value="props.modelValue"
@@ -24,7 +24,7 @@ import { ref } from 'vue'
 import { useFieldControl } from '../../composables/use-field-control'
 import { useTextControl } from '../../composables/use-text-control'
 import type { ControlSize } from '../../lib/ui/control-types'
-import Icon from './AppIcon.vue'
+import AppIcon from './AppIcon.vue'
 
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl({ wrapped: true })

@@ -35,9 +35,10 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import SettingsSection from '../common/SettingsSection.vue'
+import SettingsSection from './SettingsSection.vue'
 import {
   type ContrastMode,
   type MotionMode,
@@ -46,11 +47,12 @@ import {
   isUiScale,
 } from '@tyco/shared'
 
-const props = defineProps<{ appearance: UserConfig['appearance'] }>()
-const emit = defineEmits<{
-  'update:appearance': [value: UserConfig['appearance']]
-}>()
 const { t } = useI18n()
+const { draft } = useSettingsContext()
+const appearance = computed(() => draft.value.appearance)
+const setAppearance = (patch: Partial<UserConfig['appearance']>) => {
+  draft.value.appearance = { ...appearance.value, ...patch }
+}
 const contrastOptions = computed<{ id: ContrastMode; name: string }[]>(() => [
   { id: 'auto', name: t('settings.contrastAuto') },
   { id: 'normal', name: t('settings.contrastNormal') },
@@ -68,22 +70,22 @@ const uiScaleOptions = UI_SCALES.map((scale) => ({
   name: `${scale}%`,
 }))
 
-const isEInkTheme = computed(() => props.appearance.theme === 'e-ink')
+const isEInkTheme = computed(() => appearance.value.theme === 'e-ink')
 
 // <select> reports option values as strings
 const updateUiScale = (value: string | number | undefined) => {
   const scale = Number(value)
 
   if (isUiScale(scale)) {
-    emit('update:appearance', { ...props.appearance, uiScale: scale })
+    setAppearance({ uiScale: scale })
   }
 }
 function updateContrast(value: string | number | undefined) {
   if (value === 'auto' || value === 'normal' || value === 'more')
-    emit('update:appearance', { ...props.appearance, contrast: value })
+    setAppearance({ contrast: value })
 }
 function updateMotion(value: string | number | undefined) {
   if (value === 'auto' || value === 'normal' || value === 'reduce')
-    emit('update:appearance', { ...props.appearance, motion: value })
+    setAppearance({ motion: value })
 }
 </script>

@@ -1,10 +1,10 @@
 <template>
   <ContentPadding>
-    <InProgressMessage v-if="isStarting" correction :onCancel="handleCancel" />
+    <InProgressMessage v-if="isStarting" correction :on-cancel="handleCancel" />
     <ActionOverlayLayout
       v-else
       :title="t('menu.correction')"
-      :onEsc="handleCancel"
+      :on-esc="handleCancel"
     >
       <p class="p-4 text-center">{{ emptyMessage }}</p>
     </ActionOverlayLayout>
@@ -14,8 +14,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import ActionOverlayLayout from '../components/common/ActionOverlayLayout.vue'
+import ContentPadding from '../components/common/ContentPadding.vue'
 import InProgressMessage from '../components/menu/InProgressMessage.vue'
+import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
 import { createCorrectionMode } from '../lib/correction/correction-mode'

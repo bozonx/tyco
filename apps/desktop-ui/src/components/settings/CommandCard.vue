@@ -34,7 +34,7 @@
         tone="warning"
         :title="t('commands.badgeIssuesHint')"
       >
-        <Icon icon="mdi:alert-outline" width="14" height="14" />
+        <AppIcon icon="mdi:alert-outline" size="sm" />
       </Badge>
     </template>
     <template #actions>
@@ -97,7 +97,7 @@ import {
 import { toolLabel } from '../../lib/tools/tool-label'
 import { useToolsStore } from '../../stores/tools'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
-import Icon from '../common/AppIcon.vue'
+import AppIcon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
 import DisclosurePanel from '../common/DisclosurePanel.vue'
 import DragHandle from '../common/DragHandle.vue'
@@ -154,11 +154,10 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
 ])
 </script>
 <style scoped>
-.command-panel :deep(.disclosure-panel-header) {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-xs);
+.command-panel {
+  --disclosure-panel-header-gap: var(--space-xs);
+  --disclosure-panel-header-padding: var(--space-xs) var(--space-sm)
+    var(--space-xs) var(--space-xs);
 }
 
 .command-name {

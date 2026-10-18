@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useMenuModalsStore } from '../../stores/menu-modals'
-import ShortcutList from '../ShortcutList.vue'
+import ShortcutList from '../overlay/ShortcutList.vue'
 import InsertMenu from './InsertMenu.vue'
 
 const mocks = vi.hoisted(() => ({ editorPage: true }))

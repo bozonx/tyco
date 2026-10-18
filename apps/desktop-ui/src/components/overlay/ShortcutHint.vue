@@ -12,7 +12,7 @@
   </component>
 </template>
 <script setup lang="ts">
-import KeyboardKey from './KeyboardKey.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 
 withDefaults(
   defineProps<{ keys: string[]; interactive?: boolean; disabled?: boolean }>(),

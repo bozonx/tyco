@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="settings-stack">
     <SettingsSection
       :title="t('settings.globalHotkeysTitle')"
       :info="globalInfo"
@@ -61,12 +61,9 @@
               <p>{{ row.externalHint }}</p>
               <div class="external-command">
                 <code>{{ row.command }}</code>
-                <IconButton
-                  size="sm"
-                  variant="ghost"
-                  icon="mdi:content-copy"
+                <CopyButton
+                  :value="row.command"
                   :label="t('settings.copyActivationCommand')"
-                  @click="copyText(row.command)"
                 />
               </div>
             </div>
@@ -120,14 +117,9 @@
             class="external-command"
           >
             <code>{{ providerState.statuses[row.id].externalCommand }}</code>
-            <IconButton
-              size="sm"
-              variant="ghost"
-              icon="mdi:content-copy"
+            <CopyButton
+              :value="providerState.statuses[row.id].externalCommand ?? ''"
               :label="t('settings.copyHotkeyCommand')"
-              @click="
-                copyText(providerState.statuses[row.id].externalCommand ?? '')
-              "
             />
           </div>
         </div>
@@ -142,9 +134,7 @@
         <FieldSelect
           :model-value="userConfig.submitKey ?? DEFAULT_SUBMIT_KEY"
           :options="submitKeyOptions"
-          @update:model-value="
-            emit('update:submit-key', resolveSubmitKey($event))
-          "
+          @update:model-value="userConfig.submitKey = resolveSubmitKey($event)"
         />
       </FieldRow>
     </SettingsSection>
@@ -156,7 +146,7 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import useToast from '../../composables/use-toast'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import {
   isEditable as checkIsEditable,
   isSystemManaged as checkIsSystemManaged,
@@ -170,27 +160,22 @@ import {
 import { resolveSubmitKey } from '../../lib/input-keys/input-keys'
 import { useGlobalHotkeysStore } from '../../stores/global-hotkeys'
 import Button from '../common/Button.vue'
+import CopyButton from '../common/CopyButton.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import HotkeyInput from '../common/HotkeyInput.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoPopover from '../common/InfoPopover.vue'
 import InlineNotice from '../common/InlineNotice.vue'
-import SettingsSection from '../common/SettingsSection.vue'
+import HotkeyInput from './HotkeyInput.vue'
+import SettingsSection from './SettingsSection.vue'
 import {
   DEFAULT_SUBMIT_KEY,
   DEFAULT_USER_CONFIG,
   SELECTION_HOTKEY_PREFIX,
-  type SubmitKey,
-  type UserConfig,
 } from '@tyco/shared'
 
-const props = defineProps<{ userConfig: UserConfig }>()
-const emit = defineEmits<{
-  (event: 'update:hotkey', mode: string, shortcut: string): void
-  (event: 'update:submit-key', value: SubmitKey): void
-}>()
 const { t } = useI18n()
+const { draft: userConfig, operations } = useSettingsContext()
 
 const submitKeyOptions = computed(() => [
   { id: 'enter', name: t('settings.submitKey.enter') },
@@ -229,7 +214,6 @@ interface HotkeyRow {
 const hotkeysStore = useGlobalHotkeysStore()
 const { portalError, isRebinding } = storeToRefs(hotkeysStore)
 const { providerState, injection } = hotkeysStore
-const { toastKey } = useToast()
 const canConfigure = computed(() => providerState.canConfigure)
 const isEditable = computed(() => checkIsEditable(providerState))
 const isSystemManaged = computed(() => checkIsSystemManaged(providerState))
@@ -254,7 +238,7 @@ const rows = computed<HotkeyRow[]>(() => [
     value: displayedShortcut(
       providerState,
       mode,
-      props.userConfig.hotkeys[mode] ?? ''
+      userConfig.value.hotkeys[mode] ?? ''
     ),
     defaultValue: defaultShortcut(
       providerState,
@@ -270,7 +254,7 @@ const rows = computed<HotkeyRow[]>(() => [
     value: displayedShortcut(
       providerState,
       inlineId,
-      props.userConfig.selectionHotkeys?.[INLINE_CORRECTION] ??
+      userConfig.value.selectionHotkeys?.[INLINE_CORRECTION] ??
         DEFAULT_USER_CONFIG.selectionHotkeys[INLINE_CORRECTION]
     ),
     defaultValue: defaultShortcut(
@@ -288,20 +272,12 @@ const rows = computed<HotkeyRow[]>(() => [
 
 function setShortcut(mode: string, shortcut: string) {
   // Native registration and persistence are one backend transaction.
-  emit('update:hotkey', mode, shortcut)
+  operations.updateHotkey(mode, shortcut)
 }
 
 // pressing a bound shortcut must reach the field, not run its action
 function suspendHotkeys(suspended: boolean) {
   hotkeysStore.suspendHotkeys(suspended)
-}
-
-async function copyText(text: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-  } catch {
-    toastKey('editor.menu.clipboardUnavailable', 'error')
-  }
 }
 
 async function checkInjection() {

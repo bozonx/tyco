@@ -35,7 +35,7 @@ vi.mock('../composables/use-i18n', () => ({
 vi.mock('../composables/use-toast', () => ({
   default: () => ({ toastText: vi.fn() }),
 }))
-vi.mock('../components/common/ActionOverlayLayout.vue', () => ({
+vi.mock('../components/overlay/ActionOverlayLayout.vue', () => ({
   default: {
     props: ['title', 'onEsc'],
     template:

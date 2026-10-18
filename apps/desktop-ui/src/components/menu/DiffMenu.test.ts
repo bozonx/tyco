@@ -2,7 +2,7 @@ import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import ShortcutList from '../ShortcutList.vue'
+import ShortcutList from '../overlay/ShortcutList.vue'
 import DiffMenu from './DiffMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({

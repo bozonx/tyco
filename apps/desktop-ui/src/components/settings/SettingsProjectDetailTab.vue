@@ -1,31 +1,28 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between">
+  <div class="settings-stack">
+    <SettingsDetailHeader
+      :back-label="t('settings.aiProfilesOverview')"
+      @back="navigate(AI_OVERVIEW_TAB)"
+    >
       <Button
-        size="sm"
-        variant="ghost"
-        icon="mdi:arrow-left"
-        @click="emit('back')"
-      >
-        {{ t('settings.aiProfilesOverview') }}
-      </Button>
-      <Button
+        v-if="isNew"
         size="sm"
         variant="primary"
         icon="mdi:content-save"
-        :disabled="!name.trim() || (isExternal && !targetPath.trim())"
-        @click="handleSave"
+        :disabled="!isValid"
+        @click="handleCreate"
       >
         {{ t('settings.saveProject') }}
       </Button>
-    </div>
+      <SettingsAutosaveStatus v-else :status="saveStatus" />
+    </SettingsDetailHeader>
 
     <SettingsSection :title="t('settings.projectName')">
       <FieldRow :label="t('settings.projectName')">
-        <FieldInput v-model="name" />
+        <FieldInput v-model="name" @update:model-value="change" />
       </FieldRow>
       <FieldRow :label="t('settings.projectDescription')">
-        <FieldInput v-model="description" />
+        <FieldInput v-model="description" @update:model-value="change" />
       </FieldRow>
       <FieldRow :label="t('settings.projectType')">
         <SegmentedControl
@@ -33,7 +30,7 @@
           :label="t('settings.projectType')"
           :model-value="isExternal ? 'external' : 'internal'"
           :options="projectTypeOptions"
-          @update:model-value="isExternal = $event === 'external'"
+          @update:model-value="changeType($event === 'external')"
         />
       </FieldRow>
       <FieldRow
@@ -41,73 +38,51 @@
         :label="t('settings.projectTargetPath')"
         :info="targetPath || undefined"
       >
-        <div class="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="neutral"
-            icon="mdi:folder-open-outline"
-            @click="handlePickFolder"
-          >
-            {{ t('settings.selectFolder') }}
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="neutral"
+          icon="mdi:folder-open-outline"
+          @click="handlePickFolder"
+        >
+          {{ t('settings.selectFolder') }}
+        </Button>
       </FieldRow>
     </SettingsSection>
 
     <SettingsSection v-if="!isNew" :title="t('settings.aiProfilesTab')">
-      <div
-        v-if="profiles.length === 0"
-        class="text-sm text-base-content/50 italic"
-      >
-        {{ t('settings.noProfilesYet') }}
-      </div>
-      <div v-else class="flex flex-col gap-2">
-        <div
-          v-for="profile in profiles"
-          :key="profile.id"
-          class="flex items-center justify-between p-3 rounded-lg bg-base-200/40 border border-base-300/40"
-        >
-          <div class="flex items-center gap-2">
-            <Icon
-              icon="mdi:account-outline"
-              height="18"
-              class="text-primary shrink-0"
-            />
-            <span class="font-medium text-sm">{{ profile.name }}</span>
-          </div>
-          <div class="flex items-center gap-4 text-xs text-base-content/80">
-            <span
-              >{{ t('settings.accessRead') }}:
-              {{
-                formatAccess(profile.projectPermissions[props.projectId]?.read)
-              }}</span
-            >
-            <span
-              >{{ t('settings.accessWrite') }}:
-              {{
-                formatAccess(profile.projectPermissions[props.projectId]?.write)
-              }}</span
-            >
-          </div>
+      <div class="settings-section-content">
+        <StateMessage
+          v-if="profiles.length === 0"
+          density="compact"
+          :message="t('settings.noProfilesYet')"
+        />
+        <div v-else class="settings-entity-list">
+          <SettingsEntityItem
+            v-for="profile in profiles"
+            :key="profile.id"
+            icon="mdi:account-outline"
+            :title="profile.name"
+          >
+            <span class="settings-entity-meta">
+              {{ t('settings.accessRead') }}:
+              {{ formatAccess(profile.projectPermissions[projectId]?.read) }}
+            </span>
+            <span class="settings-entity-meta">
+              {{ t('settings.accessWrite') }}:
+              {{ formatAccess(profile.projectPermissions[projectId]?.write) }}
+            </span>
+          </SettingsEntityItem>
         </div>
       </div>
     </SettingsSection>
 
     <SettingsSection v-if="!isNew" :title="t('settings.deleteProject')">
-      <div
-        class="p-4 rounded-lg border border-error/30 bg-error/5 flex items-center justify-between"
-      >
-        <div class="text-sm text-error/90">
-          {{ t('settings.deleteProjectConfirm') }}
-        </div>
-        <Button
-          size="sm"
-          variant="danger"
-          icon="mdi:trash-can-outline"
-          @click="showDeleteConfirm = true"
-        >
-          {{ t('settings.deleteProject') }}
-        </Button>
+      <div class="settings-section-content">
+        <SettingsDangerZone
+          :message="t('settings.deleteProjectConfirm')"
+          :action-label="t('settings.deleteProject')"
+          @action="showDeleteConfirm = true"
+        />
       </div>
     </SettingsSection>
 
@@ -124,38 +99,44 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
+import { createProjectEditor } from '../../lib/ai-profiles/project-editor'
+import {
+  AI_OVERVIEW_TAB,
+  projectTab,
+} from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
-import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
-import SettingsSection from '../common/SettingsSection.vue'
+import StateMessage from '../common/StateMessage.vue'
+import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
+import SettingsDangerZone from './SettingsDangerZone.vue'
+import SettingsDetailHeader from './SettingsDetailHeader.vue'
+import SettingsEntityItem from './SettingsEntityItem.vue'
+import SettingsSection from './SettingsSection.vue'
 import {
   DEFAULT_PROJECT_PERMISSION,
   type ProjectAccessMode,
 } from '@tyco/shared'
 
 const props = defineProps<{ projectId: string }>()
-const emit = defineEmits<{
-  (e: 'back'): void
-  (e: 'saved', id: string): void
-}>()
+const { navigate } = useSettingsContext()
+
+/** Autosave waits this long after the last keystroke */
+const AUTOSAVE_DELAY_MS = 600
 
 const { t } = useI18n()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
 const isNew = computed(() => props.projectId === 'new')
-const name = ref('')
-const description = ref('')
-const isExternal = ref(false)
-const targetPath = ref('')
 const showDeleteConfirm = ref(false)
 
 const profiles = computed(() => aiProfilesStore.profiles)
@@ -164,6 +145,44 @@ const projectTypeOptions = computed(() => [
   { id: 'internal', name: t('settings.projectTypeInternal') },
   { id: 'external', name: t('settings.projectTypeExternal') },
 ])
+
+const editor = createProjectEditor({
+  delayMs: AUTOSAVE_DELAY_MS,
+  saveProject: async (fields) => {
+    const current = aiProfilesStore.getProject(props.projectId)
+    if (current) await aiProfilesStore.saveProject({ ...current, ...fields })
+  },
+  reportError: (message) => toastText(message, 'error'),
+})
+const { name, description, isExternal, targetPath, isValid, saveStatus } =
+  editor
+
+// the fields take the project once it is there; the settings may open
+// before the vault is read
+const project = computed(() =>
+  isNew.value ? undefined : aiProfilesStore.getProject(props.projectId)
+)
+watch(
+  () => Boolean(project.value),
+  (isThere) => {
+    if (isThere) editor.load(project.value)
+  },
+  { immediate: true }
+)
+
+onBeforeUnmount(() => {
+  void editor.flush()
+})
+
+/** Only an existing project is stored on change; a new one waits for Save */
+function change() {
+  if (!isNew.value) editor.change()
+}
+
+function changeType(external: boolean) {
+  isExternal.value = external
+  change()
+}
 
 /** A profile without an entry for the project has no access to it */
 function formatAccess(
@@ -174,62 +193,23 @@ function formatAccess(
   return t('settings.accessDeny')
 }
 
-function loadProjectData() {
-  if (isNew.value) {
-    name.value = ''
-    description.value = ''
-    isExternal.value = false
-    targetPath.value = ''
-  } else {
-    const project = aiProfilesStore.getProject(props.projectId)
-    if (project) {
-      name.value = project.name
-      description.value = project.description || ''
-      isExternal.value = project.isExternal
-      targetPath.value = project.targetPath || ''
-    }
-  }
-}
-
-onMounted(loadProjectData)
-watch(() => props.projectId, loadProjectData)
-
 async function handlePickFolder() {
   try {
     const picked = await aiProfilesStore.pickFolder()
     if (picked) {
       targetPath.value = picked
+      change()
     }
   } catch (error) {
     toastText(String(error), 'error')
   }
 }
 
-async function handleSave() {
-  if (!name.value.trim()) return
-  if (isExternal.value && !targetPath.value.trim()) return
+async function handleCreate() {
+  if (!isValid.value) return
   try {
-    if (isNew.value) {
-      const created = await aiProfilesStore.createProject({
-        name: name.value,
-        description: description.value || undefined,
-        isExternal: isExternal.value,
-        targetPath: isExternal.value ? targetPath.value : null,
-      })
-      emit('saved', created.id)
-    } else {
-      const current = aiProfilesStore.getProject(props.projectId)
-      if (current) {
-        await aiProfilesStore.saveProject({
-          ...current,
-          name: name.value.trim(),
-          description: description.value.trim() || undefined,
-          isExternal: isExternal.value,
-          targetPath: isExternal.value ? targetPath.value.trim() : null,
-        })
-        emit('saved', props.projectId)
-      }
-    }
+    const created = await aiProfilesStore.createProject(editor.fields())
+    navigate(projectTab(created.id))
   } catch (error) {
     toastText(String(error), 'error')
   }
@@ -237,10 +217,11 @@ async function handleSave() {
 
 async function handleDelete() {
   if (isNew.value) return
+  editor.cancel()
   try {
     await aiProfilesStore.deleteProject(props.projectId)
     showDeleteConfirm.value = false
-    emit('back')
+    navigate(AI_OVERVIEW_TAB)
   } catch (error) {
     toastText(String(error), 'error')
   }

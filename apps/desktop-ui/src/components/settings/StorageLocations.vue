@@ -1,12 +1,20 @@
 <template>
-  <details class="storage-details">
-    <summary class="storage-summary">
-      {{ t('settings.storageLocations') }}
-    </summary>
-    <div v-if="!storageInfo" class="text-sm text-muted">
-      {{ t('settings.storageLocationsUnavailable') }}
-    </div>
-    <div v-else class="storage-list">
+  <section class="storage-details">
+    <DisclosureHeader
+      class="storage-summary"
+      density="compact"
+      :expanded="isOpen"
+      :controls="bodyId"
+      :title="t('settings.storageLocations')"
+      @toggle="isOpen = !isOpen"
+    />
+    <StateMessage
+      v-if="isOpen && !storageInfo"
+      :id="bodyId"
+      density="compact"
+      :message="t('settings.storageLocationsUnavailable')"
+    />
+    <div v-else-if="isOpen" :id="bodyId" class="storage-list">
       <div
         v-for="item in storageInfoItems"
         :key="item.key"
@@ -21,17 +29,11 @@
         <div class="storage-path-box">
           <code class="storage-path" :title="item.value">{{ item.value }}</code>
           <div class="storage-path-actions">
-            <IconButton
+            <CopyButton
               class="storage-copy-btn"
-              @click="copyStoragePath(item.value, item.key)"
-              :label="
-                copiedStorageKey === item.key
-                  ? t('settings.storagePathCopied')
-                  : t('settings.storageCopyPath')
-              "
-              :icon="
-                copiedStorageKey === item.key ? 'mdi:check' : 'mdi:content-copy'
-              "
+              :value="item.value"
+              :label="t('settings.storageCopyPath')"
+              :copied-label="t('settings.storagePathCopied')"
             />
             <IconButton
               class="storage-copy-btn"
@@ -43,14 +45,17 @@
         </div>
       </div>
     </div>
-  </details>
+  </section>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useIpcStore } from '../../stores/ipc'
+import CopyButton from '../common/CopyButton.vue'
+import DisclosureHeader from '../common/DisclosureHeader.vue'
 import IconButton from '../common/IconButton.vue'
+import StateMessage from '../common/StateMessage.vue'
 import type { StorageInfo, StorageKind } from '@tyco/shared'
 
 const { t } = useI18n()
@@ -63,23 +68,8 @@ const STORAGE_KIND_LABELS: Record<StorageKind, string> = {
   logs: 'settings.storageLogs',
 }
 
-const copiedStorageKey = ref<string | null>(null)
-let copyStorageTimeout: ReturnType<typeof setTimeout> | null = null
-
-async function copyStoragePath(path: string, key: string) {
-  try {
-    await navigator.clipboard.writeText(path)
-    copiedStorageKey.value = key
-    if (copyStorageTimeout) {
-      clearTimeout(copyStorageTimeout)
-    }
-    copyStorageTimeout = setTimeout(() => {
-      copiedStorageKey.value = null
-    }, 2000)
-  } catch {
-    // Clipboard access might be denied
-  }
-}
+const isOpen = ref(false)
+const bodyId = useId()
 
 /** One row per root directory, named after everything it holds. */
 const storageInfoItems = computed(() =>
@@ -111,9 +101,6 @@ async function loadStorageInfo() {
 onMounted(() => {
   void loadStorageInfo()
 })
-onUnmounted(() => {
-  if (copyStorageTimeout) clearTimeout(copyStorageTimeout)
-})
 </script>
 <style scoped>
 .storage-details {
@@ -123,10 +110,7 @@ onUnmounted(() => {
 
 .storage-summary {
   font-size: var(--text-control);
-  font-weight: 500;
   color: var(--app-text-muted);
-  cursor: pointer;
-  user-select: none;
   transition: color var(--transition-fast);
 }
 
@@ -134,7 +118,7 @@ onUnmounted(() => {
   color: var(--color-base-content);
 }
 
-.storage-details > :not(summary) {
+.storage-details > :not(.storage-summary) {
   margin-top: var(--space-md);
 }
 
