@@ -6,6 +6,7 @@ import {
   chatRequestBudgetCharacters,
   contextBudgetCharacters,
   pickChatModel,
+  pickScopedChatModel,
 } from './chat-llm-selection'
 
 function config(): LlmConfig {
@@ -41,6 +42,34 @@ describe('chat-llm-selection', () => {
     expect(pickChatModel(options, 'deepseek-chat')?.id).toBe('deepseek-chat')
     expect(pickChatModel(options, 'gone')?.id).toBe('local-qwen')
     expect(pickChatModel([], 'gone')).toBeNull()
+  })
+
+  it('picks scoped model for Ask AI and clamps maxOutputTokens for profiles', () => {
+    const llm = config()
+    llm.models[0].maxOutputTokens = 2000
+    const options = chatModelOptions(llm, () => true)
+
+    expect(
+      pickScopedChatModel(options, {
+        profileId: null,
+        lastChatModelId: 'deepseek-chat',
+      })?.id
+    ).toBe('deepseek-chat')
+
+    const capped = pickScopedChatModel(options, {
+      profileId: 'writer',
+      profileModelId: 'local-qwen',
+      profileMaxOutputTokens: 500,
+    })
+    expect(capped?.id).toBe('local-qwen')
+    expect(capped?.maxOutputTokens).toBe(500)
+
+    const uncapped = pickScopedChatModel(options, {
+      profileId: 'writer',
+      profileModelId: 'local-qwen',
+      profileMaxOutputTokens: 4000,
+    })
+    expect(uncapped?.maxOutputTokens).toBe(2000)
   })
 
   it('keeps a floor for the context budget', () => {

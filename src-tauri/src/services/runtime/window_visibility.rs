@@ -1,0 +1,265 @@
+use tauri::{AppHandle, Emitter, Manager, WindowEvent};
+
+use super::panel_layer::is_current_quick_activation;
+#[cfg(target_os = "linux")]
+use super::panel_layer::{settle_quick_keyboard, LayerShellRuntimeState};
+use super::{
+    emit_state, on_main_thread, RuntimeWindows, MAIN_WINDOW_CLOSED_EVENT, MAIN_WINDOW_LABEL,
+    OPEN_MAIN_CHAT_EVENT, OPEN_MAIN_EDITOR_EVENT, QUICK_WINDOW_LABEL,
+};
+use crate::errors::AppError;
+use crate::services::activation::{ActivationMode, WindowProfile};
+use crate::state::AppState;
+
+pub(super) fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Result<(), AppError> {
+    let inactive_label = if active_label == MAIN_WINDOW_LABEL {
+        QUICK_WINDOW_LABEL
+    } else {
+        MAIN_WINDOW_LABEL
+    };
+    let Some(window) = app.get_webview_window(inactive_label) else {
+        return Ok(());
+    };
+
+    #[cfg(target_os = "linux")]
+    if inactive_label == QUICK_WINDOW_LABEL && app.state::<LayerShellRuntimeState>().supported {
+        crate::services::platform::disable_panel_keyboard(&window)?;
+    }
+
+    window.hide()?;
+    Ok(())
+}
+
+/// Shows the main window from the tray or a launch without a mode. The window
+/// Tyco was last activated from may be long gone from the user's mind, so the
+/// target is taken anew, the way an activation takes it.
+pub fn show_application(app: &AppHandle) -> Result<(), AppError> {
+    let target_window_id = crate::services::platform::capture_foreground_target()
+        .map(crate::services::platform::ForegroundTarget::into_platform_id);
+    on_main_thread(app, move |app| {
+        app.state::<AppState>()
+            .update_snapshot(|snapshot| snapshot.activation.target_window_id = target_window_id);
+        show_application_on_main_thread(app)
+    })
+}
+
+pub fn open_main_editor(
+    app: &AppHandle,
+    text: Option<String>,
+    source_text: Option<String>,
+    activation_id: u64,
+) -> Result<(), AppError> {
+    show_main_with(
+        app,
+        ActivationMode::Editor,
+        OPEN_MAIN_EDITOR_EVENT,
+        serde_json::json!({ "text": text, "sourceText": source_text }),
+        activation_id,
+    )
+}
+
+pub fn open_main_chat(
+    app: &AppHandle,
+    attachment: Option<crate::models::ChatAttachment>,
+    question: Option<String>,
+    auto_send: Option<bool>,
+    activation_id: u64,
+) -> Result<(), AppError> {
+    show_main_with(
+        app,
+        ActivationMode::Chat,
+        OPEN_MAIN_CHAT_EVENT,
+        serde_json::to_value(crate::models::OpenMainChatEvent {
+            attachment,
+            question,
+            auto_send: auto_send.unwrap_or(false),
+        })?,
+        activation_id,
+    )
+}
+
+/// Shows the main window and hands `payload` over to it.
+fn show_main_with(
+    app: &AppHandle,
+    mode: ActivationMode,
+    event: &'static str,
+    payload: serde_json::Value,
+    activation_id: u64,
+) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        if app.state::<AppState>().snapshot().activation.activation_id != activation_id {
+            return Err(AppError::InvalidInput(
+                "The window activation is no longer current".into(),
+            ));
+        }
+        show_application_mode_on_main_thread(app, mode)?;
+        let window = app
+            .get_webview_window(MAIN_WINDOW_LABEL)
+            .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+        window.emit(event, payload)?;
+        Ok(())
+    })
+}
+
+fn show_application_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
+    show_application_mode_on_main_thread(app, ActivationMode::Editor)
+}
+
+fn show_application_mode_on_main_thread(
+    app: &AppHandle,
+    mode: ActivationMode,
+) -> Result<(), AppError> {
+    app.state::<RuntimeWindows>()
+        .set_active_label(MAIN_WINDOW_LABEL);
+    hide_inactive_window(app, MAIN_WINDOW_LABEL)?;
+
+    let window = app
+        .get_webview_window(MAIN_WINDOW_LABEL)
+        .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+    let state = app.state::<AppState>();
+
+    window.set_decorations(true)?;
+    window.set_resizable(true)?;
+    window.set_focusable(true)?;
+    window.show()?;
+    if let Err(error) = window.unminimize() {
+        log::warn!("Could not unminimize window: {error}");
+    }
+    if let Err(error) = window.set_focus() {
+        log::warn!("Could not focus window: {error}");
+    }
+
+    state.update_snapshot(|snapshot| {
+        snapshot.activation.activation_id = snapshot.activation.activation_id.wrapping_add(1);
+        snapshot.activation.selected_text = None;
+        snapshot.activation.mode = Some(mode);
+        snapshot.window.is_window_shown = true;
+        snapshot.window.window_profile = WindowProfile::Sheet;
+    });
+    log::debug!("Showed main application with mode {}", mode.as_str());
+    emit_state(app, &state)
+}
+
+pub fn dismiss_quick_window(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        let snapshot = app.state::<AppState>().snapshot();
+        let active_label = app.state::<RuntimeWindows>().active_label();
+        if !is_current_quick_activation(
+            active_label,
+            snapshot.window.is_window_shown,
+            snapshot.activation.activation_id,
+            activation_id,
+        ) {
+            return Ok(());
+        }
+        hide_on_main_thread(app)
+    })
+}
+
+/// Hides whichever Tyco window is active.
+pub fn hide_active_window(app: &AppHandle) -> Result<(), AppError> {
+    on_main_thread(app, hide_on_main_thread)
+}
+
+fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
+    let state = app.state::<AppState>();
+    let label = app.state::<RuntimeWindows>().active_label();
+    let window = app
+        .get_webview_window(label)
+        .ok_or_else(|| AppError::Message(format!("Window {label} not found")))?;
+
+    #[cfg(target_os = "linux")]
+    if label == QUICK_WINDOW_LABEL && app.state::<LayerShellRuntimeState>().supported {
+        crate::services::platform::disable_panel_keyboard(&window)?;
+    }
+
+    state.update_snapshot(|snapshot| {
+        snapshot.window.is_window_shown = false;
+    });
+
+    window.hide()?;
+    emit_state(app, &state)
+}
+
+pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEvent) {
+    if let Some(state) = app.try_state::<AppState>() {
+        match event {
+            WindowEvent::CloseRequested { api, .. } => {
+                if !state.is_quitting() {
+                    api.prevent_close();
+                    if window_label == MAIN_WINDOW_LABEL {
+                        app.state::<RuntimeWindows>()
+                            .set_active_label(MAIN_WINDOW_LABEL);
+                        if let Err(error) =
+                            app.emit_to(MAIN_WINDOW_LABEL, MAIN_WINDOW_CLOSED_EVENT, ())
+                        {
+                            log::warn!("Could not report the closed main window: {error}");
+                        }
+                    } else if window_label == QUICK_WINDOW_LABEL {
+                        app.state::<RuntimeWindows>()
+                            .set_active_label(QUICK_WINDOW_LABEL);
+                    }
+                    if let Err(error) = hide_active_window(app) {
+                        log::error!("Could not hide the {window_label} window: {error}");
+                    }
+                }
+            }
+            WindowEvent::Focused(true) => {
+                crate::services::activation_metrics::mark_os_focus(app);
+                #[cfg(target_os = "linux")]
+                if window_label == QUICK_WINDOW_LABEL {
+                    settle_quick_keyboard(app);
+                }
+            }
+            WindowEvent::Focused(false) => {}
+            WindowEvent::Destroyed => {
+                state
+                    .chat_images
+                    .lock()
+                    .expect("chat image lock poisoned")
+                    .release_owner(window_label);
+            }
+            _ => {}
+        }
+    }
+}
+
+/// Hides only the requesting window, never a window activated while waiting.
+pub fn hide_window(app: &AppHandle, label: String, activation_id: u64) -> Result<(), AppError> {
+    on_main_thread(app, move |app| {
+        let state = app.state::<AppState>();
+        let snapshot = state.snapshot();
+        if !matches_window_activation(
+            app.state::<RuntimeWindows>().active_label(),
+            snapshot.activation.activation_id,
+            &label,
+            activation_id,
+        ) {
+            return Err(AppError::InvalidInput(
+                "The window activation is no longer current".into(),
+            ));
+        }
+        hide_on_main_thread(app)
+    })
+}
+
+fn matches_window_activation(
+    active_label: &str,
+    current_id: u64,
+    label: &str,
+    activation_id: u64,
+) -> bool {
+    active_label == label && current_id == activation_id
+}
+
+#[cfg(test)]
+mod window_command_tests {
+    use super::matches_window_activation;
+
+    #[test]
+    fn delayed_operations_cannot_hide_a_different_window_or_activation() {
+        assert!(matches_window_activation("quick", 4, "quick", 4));
+        assert!(!matches_window_activation("main", 4, "quick", 4));
+        assert!(!matches_window_activation("quick", 5, "quick", 4));
+    }
+}

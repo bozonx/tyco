@@ -2,118 +2,13 @@
   <div class="editor-root" :class="{ 'is-compact': compact }">
     <div class="editor-frame">
       <!-- Toolbar above editor -->
-      <div
+      <EditorToolbar
         v-show="!compact"
-        class="editor-toolbar flex items-center justify-between gap-2"
-      >
-        <!-- Left column: view mode, Case and Format dropdowns, then plugin items -->
-        <div data-testid="editor-toolbar-left" class="flex items-center gap-1">
-          <IconButton
-            size="sm"
-            variant="ghost"
-            class="view-mode-toggle"
-            :tone="showMarkup ? 'accent' : 'muted'"
-            :active="showMarkup"
-            :aria-pressed="showMarkup"
-            @click="toggleShowMarkup"
-            :label="viewModeTitle"
-            :icon="
-              showMarkup ? 'mdi:language-markdown-outline' : 'mdi:format-text'
-            "
-          />
-          <IconButton
-            size="sm"
-            variant="ghost"
-            :label="t('editor.search.title')"
-            icon="mdi:magnify"
-            @click="editorInputStore.requestSearch"
-          />
-          <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
-          <DropdownMenu
-            :label="t('editor.format')"
-            :items="formatDropdownItems"
-          />
-          <Button
-            v-for="item in leftToolbarItems"
-            :key="item.id"
-            size="sm"
-            :square="
-              !getToolbarLabel(item) || getToolbarLabel(item).length <= 2
-            "
-            variant="ghost"
-            :disabled="
-              item.disabled ||
-              (item.selectionOnly && !editorInputStore.hasSelection)
-            "
-            :title="scoped(getToolbarTooltip(item))"
-            @click="item.action"
-          >
-            <AppIcon v-if="item.icon" :icon="item.icon" size="lg" />
-            <span
-              v-if="getToolbarLabel(item)"
-              class="text-sm font-medium leading-none"
-              >{{ getToolbarLabel(item) }}</span
-            >
-          </Button>
-        </div>
-
-        <!-- Right column: plugin items, then Ask AI, AI task, Translation & Insert to window -->
-        <div data-testid="editor-toolbar-right" class="flex items-center gap-1">
-          <Button
-            v-for="item in rightToolbarItems"
-            :key="item.id"
-            size="sm"
-            :square="
-              !getToolbarLabel(item) || getToolbarLabel(item).length <= 2
-            "
-            variant="ghost"
-            :disabled="
-              item.disabled ||
-              (item.selectionOnly && !editorInputStore.hasSelection)
-            "
-            :title="scoped(getToolbarTooltip(item))"
-            @click="item.action"
-          >
-            <AppIcon v-if="item.icon" :icon="item.icon" size="lg" />
-            <span
-              v-if="getToolbarLabel(item)"
-              class="text-sm font-medium leading-none"
-              >{{ getToolbarLabel(item) }}</span
-            >
-          </Button>
-          <IconButton
-            size="sm"
-            variant="ghost"
-            class="ask-ai"
-            :disabled="!editorInputStore.value.trim()"
-            @click="handleAskAi"
-            :label="scoped(t('editor.askAi'))"
-            icon="mdi:chat-question-outline"
-          />
-          <IconButton
-            size="sm"
-            variant="ghost"
-            @click="handleAiTask"
-            :label="scoped(t('action.aiTask'))"
-            icon="mdi:robot-outline"
-          />
-          <IconButton
-            size="sm"
-            variant="ghost"
-            @click="handleTranslation"
-            :label="scoped(t('action.translation'))"
-            icon="mdi:translate"
-          />
-          <IconButton
-            size="sm"
-            variant="ghost"
-            :disabled="!desktopStore.desktopState.windowId"
-            @click="handleInsertToWindow"
-            :label="scoped(t('action.insertIntoWindow'))"
-            icon="mdi:application-export"
-          />
-        </div>
-      </div>
+        @ask-ai="handleAskAi"
+        @ai-task="handleAiTask"
+        @translation="handleTranslation"
+        @insert-to-window="handleInsertToWindow"
+      />
 
       <!-- Main editor area -->
       <div class="editor-body">
@@ -134,63 +29,12 @@
             }}
           </div>
         </div>
-        <div class="editor-rail">
-          <template v-if="compact">
-            <IconButton
-              size="sm"
-              variant="danger-ghost"
-              @click="editorInputStore.clear"
-              :label="t('editor.clear')"
-              icon="mdi:eraser"
-            />
-          </template>
-          <template v-else>
-            <IconButton
-              size="sm"
-              variant="ghost"
-              tone="accent"
-              @click="voiceRecognition"
-              :label="t('editor.voiceInput')"
-              icon="mdi:microphone-outline"
-            />
-            <IconButton
-              size="sm"
-              variant="ghost"
-              tone="accent"
-              @click="handleCorrection"
-              :label="scoped(t('action.correction'))"
-              icon="mdi:auto-fix"
-            />
-            <div class="rail-divider" />
-            <IconButton
-              size="sm"
-              variant="ghost"
-              @click="handleCopy"
-              :label="scoped(t('action.copy'))"
-              icon="mdi:content-copy"
-            />
-            <IconButton
-              size="sm"
-              variant="ghost"
-              @click="editorInputStore.requestSelectAll"
-              :label="t('editor.selectAll')"
-              icon="mdi:select-all"
-            />
-            <IconButton
-              size="sm"
-              variant="danger-ghost"
-              @click="editorInputStore.clear"
-              :label="t('editor.clear')"
-              icon="mdi:eraser"
-            />
-            <div class="rail-divider" />
-            <InfoTooltip
-              :text="t('editor.selectionHint')"
-              align="end"
-              placement="bottom"
-            />
-          </template>
-        </div>
+        <EditorRail
+          :compact="compact"
+          @voice-recognition="voiceRecognition"
+          @correction="handleCorrection"
+          @copy="handleCopy"
+        />
       </div>
     </div>
 
@@ -219,84 +63,7 @@
         >
       </div>
 
-      <div
-        v-if="!compact && isDev"
-        class="dev-quick-panel flex items-center gap-1.5 w-full flex-wrap pt-2 border-t border-[var(--app-border-subtle)] text-xs text-[var(--app-text-muted)]"
-      >
-        <span class="font-mono font-medium">DEV Quick:</span>
-        <Button
-          size="sm"
-          variant="neutral"
-          @click="openQuick(StartMode.VOICE_COMMANDS)"
-          title="Open Quick Voice Commands"
-        >
-          <AppIcon icon="mdi:microphone-message" size="sm" />
-          Voice Commands
-        </Button>
-        <Button
-          size="sm"
-          variant="neutral"
-          @click="openQuick(StartMode.WRITE)"
-          title="Open Quick Write"
-        >
-          <AppIcon icon="mdi:pencil-outline" size="sm" />
-          Write
-        </Button>
-        <Button
-          size="sm"
-          variant="neutral"
-          @click="openQuick(StartMode.AI_TASKS)"
-          title="Open Quick AI Tasks"
-        >
-          <AppIcon icon="mdi:robot-outline" size="sm" />
-          AI Tasks
-        </Button>
-        <Button
-          size="sm"
-          variant="neutral"
-          @click="openQuick(StartMode.SELECT)"
-          title="Open Quick Select"
-        >
-          <AppIcon icon="mdi:format-list-checks" size="sm" />
-          Select
-        </Button>
-        <Button
-          size="sm"
-          variant="neutral"
-          @click="openQuick(StartMode.VOICE)"
-          title="Open Quick Voice"
-        >
-          <AppIcon icon="mdi:microphone-outline" size="sm" />
-          Voice
-        </Button>
-        <Button
-          size="sm"
-          variant="neutral"
-          @click="openQuick(StartMode.COMMAND_LAUNCHER)"
-          title="Open Quick Commands"
-        >
-          <AppIcon icon="mdi:console-line" size="sm" />
-          Commands
-        </Button>
-        <Button
-          size="sm"
-          variant="neutral"
-          @click="openQuick(StartMode.TRANSLATE)"
-          title="Open Quick Translate"
-        >
-          <AppIcon icon="mdi:translate" size="sm" />
-          Translate
-        </Button>
-        <Button
-          size="sm"
-          variant="neutral"
-          @click="openQuick(StartMode.CORRECTION)"
-          title="Open Quick Correction"
-        >
-          <AppIcon icon="mdi:text-box-edit-outline" size="sm" />
-          Correction
-        </Button>
-      </div>
+      <EditorDevQuickPanel v-if="!compact && isDev" />
 
       <slot />
     </div>
@@ -310,28 +77,19 @@ import { useCopyText } from '../../composables/use-copy-text'
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
 import { provideMarkupMode } from '../../composables/use-markup-mode'
-import { desktopClient } from '../../lib/desktop/client'
-import { appNavigation } from '../../lib/navigation/navigation'
-import { resolveModeRoute } from '../../lib/navigation/routes'
 import type { ActionItem } from '../../stores/action-menu'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
-import { useDesktopStore } from '../../stores/desktop'
-import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
-import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import { useToolbarStore } from '../../stores/toolbar'
-import type { ToolbarItem } from '../../types/plugins'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
-import IconButton from '../common/IconButton.vue'
-import InfoTooltip from '../common/InfoTooltip.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
+import EditorDevQuickPanel from './EditorDevQuickPanel.vue'
 import EditorInput from './EditorInput.vue'
-import { StartMode } from '@tyco/shared'
+import EditorRail from './EditorRail.vue'
+import EditorToolbar from './EditorToolbar.vue'
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
@@ -339,22 +97,12 @@ const actionMenuStore = useActionMenuStore()
 const editorInputStore = useEditorInputStore()
 const chatStore = useChatStore()
 const editMenuStore = useEditMenuStore()
-const toolbarStore = useToolbarStore()
-const ipcStore = useIpcStore()
-const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
 // the Markdown view lasts only while the page is open
-const { showMarkup, toggleShowMarkup } = provideMarkupMode()
+provideMarkupMode()
 
-const viewModeTitle = computed(() =>
-  t(
-    showMarkup.value
-      ? 'editor.markup.switchToFormatted'
-      : 'editor.markup.switchToSource'
-  )
-)
 const isDev = import.meta.env.DEV
 
 /** The voice input runs in a bar under the editor, which stays in view */
@@ -365,79 +113,18 @@ const voiceParams = computed(() => {
 const isInlineVoice = computed(() => Boolean(voiceParams.value?.inline))
 const copyText = useCopyText({ saveOutput: true })
 
-const openQuick = async (mode: StartMode) => {
-  const text =
-    editorInputStore.selectedText || editorInputStore.value || undefined
-
-  const res = await ipcStore.callFunction('activateMode', [mode, text])
-  if (!res?.success) {
-    desktopClient.setLocalParams({
-      mode: mode,
-      selectedText: text ?? '',
-      isWindowShown: true,
-    })
-    void appNavigation.push(resolveModeRoute(mode))
-  }
-}
-
-const caseDropdownItems = computed<DropdownMenuItem[]>(() =>
-  editMenuStore
-    .getCaseItems()
-    .map((item: EditItem) => ({
-      label: getLabel(item),
-      icon: item.icon,
-      action: () => doEdit(item),
-    }))
-)
-
-const formatDropdownItems = computed<DropdownMenuItem[]>(() =>
-  editMenuStore
-    .getFormatItems()
-    .map((item: EditItem) => ({
-      label: getLabel(item),
-      icon: item.icon,
-      action: () => doEdit(item),
-    }))
-)
-
 const otherEditItems = computed(() => editMenuStore.getOtherEditItems())
 
-const leftToolbarItems = computed(() => toolbarStore.getLeftToolbarItems())
-const rightToolbarItems = computed(() => toolbarStore.getRightToolbarItems())
-
-/** The label of a button that acts on the selection when there is one */
-const scoped = (label: string): string =>
-  editorInputStore.hasSelection
-    ? t('editor.appliesToSelection', { action: label })
-    : label
-
-const getToolbarTooltip = (item: ToolbarItem): string => {
-  if (item.tooltipKey) {
-    return t(item.tooltipKey)
-  }
-  if (item.tooltip) {
-    return item.tooltip
-  }
-  if (item.labelKey) {
-    return t(item.labelKey)
-  }
-  return item.label || ''
-}
-
-const getToolbarLabel = (item: ToolbarItem): string => {
-  if (item.label) return item.label
-  if (item.labelKey) return t(item.labelKey)
-  return ''
-}
-
-const handleAiTask = async () => {
-  const aiTaskAction = actionMenuStore
+const runMenuAction = async (labelKey: string) => {
+  const item = actionMenuStore
     .getActionsMenu()
-    .find((item: ActionItem) => item.labelKey === 'action.aiTask')
-  if (aiTaskAction) {
-    await doAction(aiTaskAction)
+    .find((action: ActionItem) => action.labelKey === labelKey)
+  if (item) {
+    await doAction(item)
   }
 }
+
+const handleAiTask = () => runMenuAction('action.aiTask')
 
 /** Opens the chat with the selection, or the whole text, attached */
 const handleAskAi = async () => {
@@ -451,32 +138,9 @@ const handleAskAi = async () => {
   )
 }
 
-const handleInsertToWindow = async () => {
-  const insertAction = actionMenuStore
-    .getActionsMenu()
-    .find((item: ActionItem) => item.labelKey === 'action.insertIntoWindow')
-  if (insertAction) {
-    await doAction(insertAction)
-  }
-}
-
-const handleTranslation = async () => {
-  const translationAction = actionMenuStore
-    .getActionsMenu()
-    .find((item: ActionItem) => item.labelKey === 'action.translation')
-  if (translationAction) {
-    await doAction(translationAction)
-  }
-}
-
-const handleCorrection = async () => {
-  const correctionAction = actionMenuStore
-    .getActionsMenu()
-    .find((item: ActionItem) => item.labelKey === 'action.correction')
-  if (correctionAction) {
-    await doAction(correctionAction)
-  }
-}
+const handleInsertToWindow = () => runMenuAction('action.insertIntoWindow')
+const handleTranslation = () => runMenuAction('action.translation')
+const handleCorrection = () => runMenuAction('action.correction')
 
 const handleCopy = async () => {
   // a plain copy: "copy and close" stays in the action menu
@@ -539,17 +203,6 @@ const handleCopy = async () => {
     0 0 0 3px color-mix(in oklab, var(--color-primary) 12%, transparent);
 }
 
-.editor-toolbar {
-  padding: 0.3125rem 0.375rem;
-  border-bottom: 1px solid var(--app-border-subtle);
-  background-color: var(--app-surface-raised);
-}
-
-.editor-toolbar > div:first-child {
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
 .editor-body {
   display: flex;
   flex: 1;
@@ -577,22 +230,6 @@ const handleCopy = async () => {
   font-size: var(--text-caption);
   /* the text below stays clickable and selectable */
   pointer-events: none;
-}
-
-.editor-rail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 0.375rem;
-  border-left: 1px solid var(--app-border-subtle);
-}
-
-.rail-divider {
-  width: 1.25rem;
-  height: 1px;
-  margin: 0.25rem 0;
-  background-color: var(--app-border);
 }
 
 .editor-footer {

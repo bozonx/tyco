@@ -1,64 +1,26 @@
-import { invokeDesktop } from '../lib/desktop/invoke'
-import { createChatController } from '../lib/chat/chat-controller'
-import {
-  readDroppedChatFile,
-  createChatImageStorage,
-  getChatImage,
-} from '../lib/chat/chat-image-storage'
-import {
-  CHAT_FILE_ERROR_KEYS,
-  formatChatFileNotice,
-} from '../lib/chat/chat-file-error'
-import { createChatFileController } from '../lib/chat/chat-file-controller'
-import { createChatFileReader } from '../lib/chat/chat-file-reader'
-import { isChatHistoryEnabled } from '../lib/chat/chat-history-settings'
-import { createChatProfileRuntime } from '../lib/chat/chat-profile-runtime'
-import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-storage'
-import { createChatHistoryModel } from '../lib/history/chat-history'
-import { formatLlmError } from '../lib/llm/llm-errors'
-import { isSecretUsable } from '../lib/net/secrets'
-import { LlmError } from '../lib/llm/llm-client'
-import {
-  APP_CONFIG,
-  DESKTOP_COMMANDS,
-  type ProfileToolSettings,
-} from '@tyco/shared'
-import { LlmInstructionKind } from '../types'
 import { defineStore, getActivePinia, type Pinia } from 'pinia'
-import { computed, nextTick, onScopeDispose, watch } from 'vue'
+import { nextTick, onScopeDispose, watch } from 'vue'
+
+import useToast from '../composables/use-toast'
+import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-storage'
+import { createChatStoreRuntime } from '../lib/chat/chat-store-runtime'
+import { invokeDesktop } from '../lib/desktop/invoke'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
+import { createChatHistoryModel } from '../lib/history/chat-history'
+import { translate } from '../lib/i18n'
+import { clientLogger } from '../lib/logger'
+import { appNavigation } from '../lib/navigation/navigation'
+import { APP_ROUTES } from '../lib/navigation/routes'
+import { isSecretUsable } from '../lib/net/secrets'
+import { useAiProfilesStore } from './ai-profiles'
 import {
   disposeProfileChatInputStore,
   useChatInputStore,
   useProfileChatInputStore,
 } from './chat-input'
-import { useAiProfilesStore } from './ai-profiles'
-
-import useToast from '../composables/use-toast'
-import {
-  chatModelOptions,
-  chatRequestBudgetCharacters,
-  pickChatModel,
-  type ChatLlmOption,
-} from '../lib/chat/chat-llm-selection'
-import { createChatModel } from '../lib/chat/chat-model'
-import { FILES_TOOL_GROUP_ID } from '../lib/chat-tools/chat-tool-groups'
-import { createChatToolsSession } from '../lib/chat-tools/chat-tools-session'
-import { readDocumentText } from '../lib/chat-tools/file-document-text'
-import { createFileToolProvider } from '../lib/chat-tools/file-tools'
-import { withWorkspaceUploads } from '../lib/chat/chat-workspace-uploads'
-import {
-  createDebugChatToolProvider,
-  isDebugChatToolsEnabled,
-} from '../lib/chat-tools/debug-chat-tools'
-import { translate } from '../lib/i18n'
-import { clientLogger } from '../lib/logger'
-import { normalizeLlmConfig } from '../lib/llm/llm-config'
-import { appNavigation } from '../lib/navigation/navigation'
-import { APP_ROUTES } from '../lib/navigation/routes'
+import { useDesktopStore } from './desktop'
 import { useEditorInputStore } from './editor-input'
 import { useHistoryStore } from './history'
-import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
 import { useMenuModalsStore } from './menu-modals'
@@ -73,19 +35,11 @@ import { useToolsStore } from './tools'
  */
 function createChatStoreSetup(profileId: string | null) {
   return () => {
-    const { storeChatImage, syncChatImages, loadChatWithImages } =
-      createChatImageStorage({
-        invoke: invokeDesktop,
-        createId: () => crypto.randomUUID(),
-        profileId: profileId ?? undefined,
-      })
     const { toastKey, toastText } = useToast()
     const ipcStore = useIpcStore()
     const desktopStore = useDesktopStore()
-    const saveSessionState = desktopStore.patchSessionState
     const llmStore = useLlmStore()
     const secretsStore = useSecretsStore()
-    const { sendChatMessage, generateChatTitle } = llmStore.actions
     const aiProfilesStore = useAiProfilesStore()
     if (profileId) {
       const pinia = getActivePinia()
@@ -107,158 +61,30 @@ function createChatStoreSetup(profileId: string | null) {
       : null
     const history = profileHistory ?? useHistoryStore()
 
-    const profile = computed(() =>
-      profileId ? aiProfilesStore.getProfile(profileId) : undefined
-    )
-    const { soul, lastProfileChatId, refreshProfile, prepareProfile } =
-      createChatProfileRuntime({
-        profileId,
-        loadChatHistory: () => history.loadChatHistory(),
-        refreshProfile: (id) => aiProfilesStore.refreshProfile(id),
-        readSoul: (id) => aiProfilesStore.readSoul(id),
-        warn: (message) => clientLogger.warn(message, 'chat'),
-      })
-
-    const modelOptions = computed(() =>
-      chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
-        isSecretUsable(secretsStore.secrets, id)
-      )
-    )
-    const selectedModel = computed<ChatLlmOption | null>(() => {
-      if (!profileId) {
-        return pickChatModel(
-          modelOptions.value,
-          desktopStore.sessionState?.lastChatModelId
-        )
-      }
-      const picked = pickChatModel(modelOptions.value, profile.value?.modelId)
-      const cap = profile.value?.maxOutputTokens
-      if (!picked || cap === undefined) return picked
-      return {
-        ...picked,
-        maxOutputTokens: Math.min(picked.maxOutputTokens ?? cap, cap),
-      }
-    })
-
-    const getChatInstructions = () =>
-      profileId
-        ? soul.value
-        : (desktopStore.appConfig ?? APP_CONFIG).aiInstructions[
-            LlmInstructionKind.CHAT
-          ]
-    const getChatRules = () =>
-      profileId ? undefined : desktopStore.userConfig.aiRules?.chat
-    const requestBudgetCharacters = () => {
-      const picked = selectedModel.value
-      if (!picked) return 0
-      return chatRequestBudgetCharacters(picked, {
-        instructions: getChatInstructions(),
-        rules: getChatRules(),
-        rulePrefix: (desktopStore.appConfig ?? APP_CONFIG).rulePrefix,
-      })
-    }
-
-    const warnTools = (message: string) => clientLogger.warn(message, 'chat')
-    const debugToolProvider = createDebugChatToolProvider()
-    const fileToolProvider = createFileToolProvider({
-      listRoots: (id) =>
-        invokeDesktop(DESKTOP_COMMANDS.LIST_AI_FILE_ROOTS, { profileId: id }),
-      run: (id, request) =>
-        invokeDesktop(DESKTOP_COMMANDS.RUN_AI_FILE_TOOL, {
-          profileId: id,
-          request,
-        }),
-      preview: (id, request) =>
-        invokeDesktop(DESKTOP_COMMANDS.PREVIEW_AI_FILE_CHANGE, {
-          profileId: id,
-          request,
-        }),
-      readDocumentText: async (id, path, mediaType) =>
-        readDocumentText(
-          new Uint8Array(
-            await invokeDesktop(DESKTOP_COMMANDS.READ_AI_FILE_BYTES, {
-              profileId: id,
-              path,
-            })
-          ),
-          path,
-          mediaType
-        ),
-      warn: warnTools,
-    })
-    const chatTools = createChatToolsSession({
-      providers: () =>
-        isDebugChatToolsEnabled()
-          ? [fileToolProvider, debugToolProvider]
-          : [fileToolProvider],
-      isDebugEnabled: () => isDebugChatToolsEnabled(),
-      warn: warnTools,
-    })
-    onScopeDispose(chatTools.dispose)
-    /** The tools of a turn on the model picked in the chat */
-    const turnTools = async (
-      modelId: string,
-      outputBudgetCharacters: number | undefined,
-      profileTools?: ProfileToolSettings
-    ) => {
-      const canUseTools = selectedModel.value?.canUseTools ?? false
-      return {
-        canUseTools,
-        tools: await chatTools.toolsFor({
-          profileId,
-          modelId,
-          canUseTools,
-          settings: profileTools,
-          outputBudgetCharacters,
-        }),
-      }
-    }
-
-    const model = createChatModel({
-      sendChatMessage: async (
-        message,
-        prevMessages,
-        instructions,
-        { toolOutputBudgetCharacters, ...options }
-      ) => {
-        if (!profileId) {
-          return sendChatMessage(message, prevMessages, instructions, {
-            ...options,
-            ...(await turnTools(options.modelId, toolOutputBudgetCharacters)),
-            rules: getChatRules(),
-          })
-        }
-        const stored = await refreshProfile()
-        return sendChatMessage(message, prevMessages, soul.value, {
-          ...options,
-          ...(await turnTools(
-            options.modelId,
-            toolOutputBudgetCharacters,
-            stored?.tools
-          )),
-          temperature: stored?.temperature,
-          maxOutputTokens: stored?.maxOutputTokens,
-          loadImage: (id) => getChatImage(id, profileId),
-        })
-      },
-      generateChatTitle,
-      saveChat: async (item) => {
-        try {
-          await history.saveChat(item)
-        } catch (error) {
-          toastKey('history.operationFailed', 'error')
-          throw error
-        }
-      },
-      renameChat: async (id, title) => {
-        try {
-          await history.renameChat(id, title)
-        } catch (error) {
-          toastKey('history.operationFailed', 'error')
-          throw error
-        }
-      },
-      loadChat: loadChatWithImages,
+    const { dispose, ...runtime } = createChatStoreRuntime({
+      profileId,
+      invoke: invokeDesktop,
+      history,
+      getFallbackProfileChatId: () => profileHistory?.chatHistory.value[0]?.id,
+      llmActions: llmStore.actions,
+      editor: editorInputStore,
+      input: chatInputStore,
+      getProfile: (id) => aiProfilesStore.getProfile(id),
+      refreshProfile: (id) => aiProfilesStore.refreshProfile(id),
+      readSoul: (id) => aiProfilesStore.readSoul(id),
+      updateProfileModel: (id, modelId) =>
+        aiProfilesStore.updateProfile(id, { modelId }),
+      getUserConfig: () => desktopStore.userConfig,
+      getAppConfig: () => desktopStore.appConfig,
+      getSessionState: () => desktopStore.sessionState,
+      saveSessionState: desktopStore.patchSessionState,
+      hasSecret: (id) => isSecretUsable(secretsStore.secrets, id),
+      externalSelection: () => desktopStore.desktopState.selectedText,
+      windowLabel: getDesktopWindowLabel,
+      openMainChat: (attachment) =>
+        ipcStore.callFunctionOrNotify('openMainChat', [attachment]),
+      closeModals: menuModalsStore.closeAll,
+      afterRender: nextTick,
       navigateTo: async (path) => {
         if (profileId && path === APP_ROUTES.CHAT.path) {
           const isShown =
@@ -269,183 +95,28 @@ function createChatStoreSetup(profileId: string | null) {
         }
         await appNavigation.push(path)
       },
-      notifyError: (message) => {
-        toastText(message, 'error')
-      },
-      emptyMessageError: () => translate('toast.textNotSelected'),
-      chatNotFoundError: () => translate('history.empty'),
-      chatLoadError: () => translate('history.operationFailed'),
-      messageTooLongError: () => translate('llmErrors.contextLength'),
-      noModelError: () => translate('chat.noModels'),
-      imageModelError: () => translate('chat.imageModelRequired'),
-      imageTitle: () => translate('chat.imageTitle'),
-      branchTitle: (title) => translate('chat.branchTitle', { title }),
-      getChatInstructions,
-      imageOmittedText: () => translate('chat.imageOmitted'),
-      formatError: (error) =>
-        error instanceof LlmError
-          ? formatLlmError(error, translate)
-          : String(error instanceof Error ? error.message : error),
-      createId: () => crypto.randomUUID(),
-      nowMs: () => Date.now(),
-      // which chat to reopen is a convenience: a failure is only logged
-      saveSessionState: async (patch) => {
-        if (profileId) {
-          if (patch.lastChatId) lastProfileChatId.value = patch.lastChatId
-          return
-        }
-        const result = await saveSessionState(patch)
-        if (!result.success)
-          clientLogger.warn(
-            `Could not save the last chat: ${result.error}`,
-            'chat'
-          )
-      },
-      getLastChatId: () =>
-        profileId
-          ? (lastProfileChatId.value ??
-            profileHistory?.chatHistory.value[0]?.id)
-          : desktopStore.sessionState?.lastChatId,
-      isHistoryEnabled: () => isChatHistoryEnabled(desktopStore.userConfig),
-      getChatModel: () => {
-        const picked = selectedModel.value
-        return picked
-          ? {
-              id: picked.id,
-              canUseImages: picked.canUseImages,
-              budgetCharacters: requestBudgetCharacters(),
-              reservesToolSteps: chatTools.mayOfferTools({
-                canUseTools: picked.canUseTools,
-                settings: profileId ? profile.value?.tools : undefined,
-              }),
-            }
-          : null
-      },
+      translate,
+      toastText,
+      toastKey,
+      warn: (message) => clientLogger.warn(message, 'chat'),
     })
 
-    onScopeDispose(model.stopGeneration)
-    // permissions given "for this session" end with the conversation
-    watch(
-      () => model.currentChatParams.value.id,
-      () => chatTools.resetPermissions()
-    )
-
-    const files = createChatFileController({
-      getDraft: () => model.currentChatParams.value,
-      getMessages: () => model.messages.value,
-      getSavingImages: () => model.savingImages.value,
-      isGenerating: () => model.isGenerating.value,
-      prepare: withWorkspaceUploads(
-        createChatFileReader({
-          quality: () =>
-            desktopStore.userConfig?.chat.imageQuality || 'balanced',
-          storeImage: storeChatImage,
-        }),
-        {
-          // only where the file tools could reach the kept file
-          shouldKeep: () => {
-            const group = profile.value?.tools?.groups[FILES_TOOL_GROUP_ID]
-            return Boolean(group?.isEnabled && group.access !== 'deny')
-          },
-          saveUpload: async (file) =>
-            invokeDesktop(
-              DESKTOP_COMMANDS.SAVE_AI_UPLOAD,
-              new Uint8Array(await file.arrayBuffer()),
-              {
-                headers: {
-                  'x-ai-upload-profile': encodeURIComponent(profileId ?? ''),
-                  // headers are ASCII; names are not
-                  'x-ai-upload-name': encodeURIComponent(file.name),
-                },
-              }
-            ),
-          warn: warnTools,
-        }
-      ),
-      addAttachment: model.addAttachment,
-      readDroppedFile: readDroppedChatFile,
-      syncImages: syncChatImages,
-      report: (name, kind) =>
-        toastText(`${name}: ${translate(CHAT_FILE_ERROR_KEYS[kind])}`, 'error'),
-      notify: (name, notice) =>
-        toastText(formatChatFileNotice(name, notice, translate), 'warn'),
-      reportSyncError: () => toastKey('chat.imageUnavailable', 'error'),
-      reportBusy: () => toastKey('chat.filesWhileGenerating', 'warn'),
-    })
-    onScopeDispose(files.dispose)
-    const controller = createChatController({
-      model,
-      files,
-      editor: editorInputStore,
-      input: chatInputStore,
-      selectedModel: () => selectedModel.value,
-      requestBudgetCharacters,
-      externalSelection: () => desktopStore.desktopState.selectedText,
-      windowLabel: getDesktopWindowLabel,
-      openMainChat: (attachment) =>
-        ipcStore.callFunctionOrNotify('openMainChat', [attachment]),
-      closeModals: menuModalsStore.closeAll,
-      afterRender: nextTick,
-      // the picked model is read back from the state: unsaved, it is not picked
-      selectModel: async (id) => {
-        if (profileId) {
-          try {
-            await aiProfilesStore.updateProfile(profileId, { modelId: id })
-          } catch (error) {
-            toastText(
-              `${translate('toast.desktopCommandFailed')}: ${String(error)}`,
-              'error'
-            )
-          }
-          return
-        }
-        const result = await saveSessionState({ lastChatModelId: id })
-        if (!result.success)
-          toastText(
-            `${translate('toast.desktopCommandFailed')}: ${result.error ?? ''}`,
-            'error'
-          )
-      },
-    })
+    onScopeDispose(dispose)
 
     watch(
       () => desktopStore.desktopState.isWindowShown,
       (isShown) => {
-        if (!isShown) controller.markEditorSelectionStale()
+        if (!isShown) runtime.markEditorSelectionStale()
       }
     )
 
     // "Ask AI" is the chat of `core.askInChat`
     if (!profileId)
       onScopeDispose(
-        useToolsStore().provideAskInChat((text) =>
-          controller.attachToChat(text)
-        )
+        useToolsStore().provideAskInChat((text) => runtime.attachToChat(text))
       )
 
-    return {
-      ...model,
-      ...controller,
-      /** The chat reopened in a profile is its last one, or a new one */
-      async openLastOrNewChat() {
-        if (profileId) await prepareProfile()
-        await controller.openLastOrNewChat()
-      },
-      addFiles: files.addFiles,
-      addDroppedFiles: files.addDroppedFiles,
-      importingImages: files.importing,
-      pendingImages: files.pendingImages,
-      removeImage: files.removeImage,
-      modelOptions,
-      selectedModel,
-      /** The tool calls of the answer that wait for the user */
-      pendingToolApprovals: chatTools.pendingApprovals,
-      answerToolApproval: chatTools.answerApproval,
-      /** The profile this chat belongs to; null for "Ask AI" */
-      profileId,
-      /** The chats listed in the sidebar */
-      history,
-    }
+    return runtime
   }
 }
 

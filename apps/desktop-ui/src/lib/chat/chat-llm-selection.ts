@@ -53,6 +53,33 @@ export function pickChatModel(
   )
 }
 
+export interface ScopedChatModelOptions {
+  profileId: string | null
+  lastChatModelId?: string | null
+  profileModelId?: string
+  profileMaxOutputTokens?: number
+}
+
+/**
+ * Resolves the active chat model for "Ask AI" or a specific profile, clamping
+ * `maxOutputTokens` when the profile specifies an output token cap.
+ */
+export function pickScopedChatModel(
+  options: ChatLlmOption[],
+  scope: ScopedChatModelOptions
+): ChatLlmOption | null {
+  if (!scope.profileId) {
+    return pickChatModel(options, scope.lastChatModelId)
+  }
+  const picked = pickChatModel(options, scope.profileModelId)
+  const cap = scope.profileMaxOutputTokens
+  if (!picked || cap === undefined) return picked
+  return {
+    ...picked,
+    maxOutputTokens: Math.min(picked.maxOutputTokens ?? cap, cap),
+  }
+}
+
 /**
  * Approximate input budget, reserving at least a quarter of the context for
  * output and subtracting the system prompt before admitting conversation text.

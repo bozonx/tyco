@@ -9,14 +9,20 @@
 //! The values live in the system credential store only; without one no key
 //! can be saved. `secrets.json` lists the secrets and their origins only.
 
+mod origins;
+#[cfg(test)]
+mod tests;
+
+pub use origins::{is_id_char, normalize_origin, origin_of};
+
+use self::origins::{checked_secret, vault_namespace};
+
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager};
-use url::Url;
 
 use crate::errors::AppError;
 use crate::services::app_paths::{dev_paths_from_env, AppPaths};
@@ -25,28 +31,9 @@ use crate::services::atomic_file::{create_private_dir, read_or_quarantine};
 pub const SECRETS_FILE_NAME: &str = "secrets.json";
 pub const SECRET_REF_PREFIX: &str = "tyco-secret:";
 
-const MAX_ID_LEN: usize = 64;
-
 /// Looked up to learn whether the vault can be reached at all. Not a valid
 /// secret id, so it never names a real secret.
 const PROBE_ID: &str = "-probe";
-
-/// Where the well-known providers live. A secret stored under one of these
-/// ids is bound to these origins unless the caller names others.
-const BUILTIN_ORIGINS: &[(&str, &[&str])] = &[
-    ("google", &["https://generativelanguage.googleapis.com"]),
-    ("google-translate", &["https://translation.googleapis.com"]),
-    (
-        "deepl",
-        &["https://api.deepl.com", "https://api-free.deepl.com"],
-    ),
-    ("openrouter", &["https://openrouter.ai"]),
-    ("deepseek", &["https://api.deepseek.com"]),
-    ("openai", &["https://api.openai.com"]),
-    ("anthropic", &["https://api.anthropic.com"]),
-    ("groq", &["https://api.groq.com"]),
-    ("deepgram", &["https://api.deepgram.com"]),
-];
 
 /// A store for secret values, keyed by the secret id.
 pub trait SecretVault: Send + Sync {
@@ -101,7 +88,7 @@ struct SecretsFile {
 pub type Secrets = BTreeMap<String, SecretEntry>;
 
 #[derive(Default)]
-struct StoreState {
+pub(super) struct StoreState {
     stored: BTreeMap<String, StoredSecret>,
     /// The values read from the vault.
     vault_values: BTreeMap<String, String>,
@@ -120,9 +107,9 @@ impl StoreState {
 /// The calls that reach the vault block, possibly on an unlock prompt: run
 /// them through [`with_store`], never on the main thread.
 pub struct SecretStore {
-    path: Option<PathBuf>,
-    vault: Option<Box<dyn SecretVault>>,
-    state: Mutex<StoreState>,
+    pub(super) path: Option<PathBuf>,
+    pub(super) vault: Option<Box<dyn SecretVault>>,
+    pub(super) state: Mutex<StoreState>,
 }
 
 /// Runs `task` on a blocking thread, so that waiting for the vault holds
@@ -354,51 +341,6 @@ fn vault_unavailable() -> AppError {
     ))
 }
 
-/// The trimmed value and the normalized origins of a secret to store.
-fn checked_secret<'a>(
-    id: &str,
-    value: &'a str,
-    origins: Option<Vec<String>>,
-) -> Result<(&'a str, Vec<String>), AppError> {
-    validate_id(id)?;
-    let value = value.trim();
-    if value.is_empty() {
-        return Err(AppError::Message(format!("Secret \"{id}\" is empty")));
-    }
-
-    let origins = match origins {
-        Some(origins) if !origins.is_empty() => origins
-            .iter()
-            .map(|origin| normalize_origin(origin))
-            .collect::<Result<Vec<_>, _>>()?,
-        _ => builtin_origins(id).ok_or_else(|| {
-            AppError::Message(format!(
-                "Secret \"{id}\" is not a known provider; name the origins it may be sent to"
-            ))
-        })?,
-    };
-    Ok((value, dedup(origins)))
-}
-
-/// Writes the value and reads it back: the copy in the file is dropped only
-/// once the vault is known to hold it.
-/// The app identifier, and for a development home a suffix of its own: the
-/// system store is one per user, and a test setup must not read or delete
-/// the real keys.
-fn vault_namespace(identifier: &str, dev_config_dir: Option<&std::path::Path>) -> String {
-    match dev_config_dir {
-        None => identifier.to_string(),
-        Some(dir) => {
-            let digest = Sha256::digest(dir.to_string_lossy().as_bytes());
-            let suffix: String = digest[..4]
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect();
-            format!("{identifier}.dev-{suffix}")
-        }
-    }
-}
-
 #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 fn system_vault(namespace: String) -> Option<Box<dyn SecretVault>> {
     Some(Box::new(
@@ -409,344 +351,4 @@ fn system_vault(namespace: String) -> Option<Box<dyn SecretVault>> {
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 fn system_vault(_namespace: String) -> Option<Box<dyn SecretVault>> {
     None
-}
-
-pub fn builtin_origins(id: &str) -> Option<Vec<String>> {
-    BUILTIN_ORIGINS
-        .iter()
-        .find(|(builtin, _)| *builtin == id)
-        .map(|(_, origins)| origins.iter().map(|origin| origin.to_string()).collect())
-}
-
-pub fn is_valid_id(id: &str) -> bool {
-    !id.is_empty()
-        && id.len() <= MAX_ID_LEN
-        && id.chars().all(is_id_char)
-        && id.starts_with(|c: char| c.is_ascii_alphanumeric())
-}
-
-pub fn is_id_char(c: char) -> bool {
-    c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, '.' | '_' | '-')
-}
-
-fn validate_id(id: &str) -> Result<(), AppError> {
-    if is_valid_id(id) {
-        Ok(())
-    } else {
-        Err(AppError::Message(format!("Invalid secret id \"{id}\"")))
-    }
-}
-
-/// `scheme://host[:port]` of an HTTP or WebSocket URL, with `ws`/`wss` folded
-/// into `http`/`https`: a provider's live endpoint is the same party as its
-/// REST one.
-pub fn origin_of(url: &Url) -> Option<String> {
-    let scheme = match url.scheme() {
-        "http" | "ws" => "http",
-        "https" | "wss" => "https",
-        _ => return None,
-    };
-    let host = url.host_str()?;
-    Some(match url.port() {
-        Some(port) => format!("{scheme}://{host}:{port}"),
-        None => format!("{scheme}://{host}"),
-    })
-}
-
-pub fn normalize_origin(origin: &str) -> Result<String, AppError> {
-    let url = Url::parse(origin.trim())
-        .map_err(|error| AppError::Message(format!("Invalid origin \"{origin}\": {error}")))?;
-    origin_of(&url).ok_or_else(|| {
-        AppError::Message(format!(
-            "Invalid origin \"{origin}\": expected an http(s) or ws(s) URL"
-        ))
-    })
-}
-
-fn dedup(origins: Vec<String>) -> Vec<String> {
-    let mut result = Vec::with_capacity(origins.len());
-    for origin in origins {
-        if !result.contains(&origin) {
-            result.push(origin);
-        }
-    }
-    result
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
-
-    /// A vault in memory that can be made unreachable or read-only.
-    #[derive(Default)]
-    struct FakeVault {
-        values: Mutex<BTreeMap<String, String>>,
-        unreachable: AtomicBool,
-        read_only: AtomicBool,
-        /// Ids whose reads fail, like an item the user did not unlock.
-        locked: Mutex<std::collections::BTreeSet<String>>,
-    }
-
-    impl SecretVault for Arc<FakeVault> {
-        fn get(&self, id: &str) -> Result<Option<String>, String> {
-            if self.unreachable.load(Ordering::SeqCst) {
-                return Err(String::from("no vault"));
-            }
-            if self.locked.lock().unwrap().contains(id) {
-                return Err(String::from("prompt dismissed"));
-            }
-            Ok(self.values.lock().unwrap().get(id).cloned())
-        }
-
-        fn set(&self, id: &str, value: &str) -> Result<(), String> {
-            if self.unreachable.load(Ordering::SeqCst) || self.read_only.load(Ordering::SeqCst) {
-                return Err(String::from("write refused"));
-            }
-            self.values
-                .lock()
-                .unwrap()
-                .insert(id.to_string(), value.to_string());
-            Ok(())
-        }
-
-        fn delete(&self, id: &str) -> Result<(), String> {
-            if self.unreachable.load(Ordering::SeqCst) {
-                return Err(String::from("no vault"));
-            }
-            self.values.lock().unwrap().remove(id);
-            Ok(())
-        }
-    }
-
-    impl FakeVault {
-        fn value(&self, id: &str) -> Option<String> {
-            self.values.lock().unwrap().get(id).cloned()
-        }
-    }
-
-    /// A store with a working vault and no file.
-    fn in_memory() -> SecretStore {
-        SecretStore {
-            path: None,
-            vault: Some(Box::new(Arc::new(FakeVault::default()))),
-            state: Mutex::new(StoreState::default()),
-        }
-    }
-
-    use crate::services::test_support::TestDir;
-
-    fn temp_secrets_path(label: &str) -> (TestDir, PathBuf) {
-        let directory = TestDir::new(label);
-        let path = directory.join(SECRETS_FILE_NAME);
-        (directory, path)
-    }
-
-    fn load_with(path: &std::path::Path, vault: &Arc<FakeVault>) -> SecretStore {
-        SecretStore::load(path.to_path_buf(), Some(Box::new(vault.clone()))).unwrap()
-    }
-
-    #[test]
-    fn a_key_left_locked_is_read_on_the_next_retry() {
-        let (_directory, path) = temp_secrets_path("locked");
-        let vault = Arc::new(FakeVault::default());
-        load_with(&path, &vault).set("google", "key", None).unwrap();
-        vault.locked.lock().unwrap().insert(String::from("google"));
-
-        let store = load_with(&path, &vault);
-        assert_eq!(store.vault_state(), VaultState::Available);
-        assert!(!store.status()["google"].is_available);
-
-        vault.locked.lock().unwrap().clear();
-        assert!(
-            !store.status()["google"].is_available,
-            "a request does not retry"
-        );
-        store.vault_state();
-        assert!(store.status()["google"].is_available);
-    }
-
-    #[test]
-    fn builtin_id_gets_provider_origins() {
-        let store = in_memory();
-        store.set("google", " key ", None).unwrap();
-        store.set("deepl", " deepl-key ", None).unwrap();
-
-        let snapshot = store.snapshot();
-        let entry = snapshot.get("google").unwrap();
-        assert_eq!(entry.value, "key");
-        assert_eq!(
-            entry.origins,
-            vec!["https://generativelanguage.googleapis.com"]
-        );
-        assert_eq!(
-            snapshot.get("deepl").unwrap().origins,
-            vec!["https://api.deepl.com", "https://api-free.deepl.com"]
-        );
-    }
-
-    #[test]
-    fn custom_id_requires_origins() {
-        let store = in_memory();
-        assert!(store.set("openai-compatible", "key", None).is_err());
-
-        store
-            .set(
-                "openai-compatible",
-                "key",
-                Some(vec!["http://localhost:11434/v1/".into()]),
-            )
-            .unwrap();
-        assert_eq!(
-            store.status().get("openai-compatible").unwrap().origins,
-            vec!["http://localhost:11434"]
-        );
-    }
-
-    #[test]
-    fn websocket_origins_fold_into_http() {
-        assert_eq!(
-            normalize_origin("wss://api.deepgram.com/v1/listen").unwrap(),
-            "https://api.deepgram.com"
-        );
-        assert!(normalize_origin("file:///etc/passwd").is_err());
-    }
-
-    #[test]
-    fn rejects_bad_ids_and_empty_values() {
-        let store = in_memory();
-        assert!(store.set("Google", "key", None).is_err());
-        assert!(store.set("", "key", None).is_err());
-        assert!(store.set("google", "   ", None).is_err());
-    }
-
-    #[test]
-    fn status_never_carries_values() {
-        let store = in_memory();
-        store.set("deepseek", "sk-secret", None).unwrap();
-        let raw = serde_json::to_string(&store.status()).unwrap();
-        assert!(!raw.contains("sk-secret"));
-    }
-
-    #[test]
-    fn values_go_to_the_vault_and_not_to_the_file() {
-        let (_directory, path) = temp_secrets_path("vault");
-        let vault = Arc::new(FakeVault::default());
-
-        let store = load_with(&path, &vault);
-        store.set("deepseek", "ds-key", None).unwrap();
-
-        assert_eq!(store.vault_state(), VaultState::Available);
-        assert_eq!(vault.value("deepseek").as_deref(), Some("ds-key"));
-        let raw = fs::read_to_string(&path).unwrap();
-        assert!(!raw.contains("ds-key"));
-        assert!(raw.contains("https://api.deepseek.com"));
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mode = fs::metadata(&path).unwrap().permissions().mode();
-            assert_eq!(mode & 0o777, 0o600);
-        }
-
-        let reloaded = load_with(&path, &vault);
-        assert_eq!(reloaded.snapshot()["deepseek"].value, "ds-key");
-
-        reloaded.remove("deepseek").unwrap();
-        assert_eq!(vault.value("deepseek"), None);
-        assert!(load_with(&path, &vault).status().is_empty());
-    }
-
-    #[test]
-    fn an_unreadable_file_is_moved_aside() {
-        let dir = TestDir::new("secrets-broken");
-        let path = dir.join(SECRETS_FILE_NAME);
-        fs::write(&path, "{ not json").unwrap();
-
-        let store = SecretStore::load(path.clone(), None).unwrap();
-
-        assert!(store.status().is_empty());
-        assert!(!path.exists());
-        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
-    }
-
-    #[test]
-    fn without_a_vault_no_key_is_saved() {
-        let (_directory, path) = temp_secrets_path("no-vault");
-        let vault = Arc::new(FakeVault::default());
-        vault.unreachable.store(true, Ordering::SeqCst);
-
-        let store = load_with(&path, &vault);
-        assert!(store.set("groq", "gq-key", None).is_err());
-        assert_eq!(store.vault_state(), VaultState::Unavailable);
-        assert!(store.status().is_empty());
-        // the listing written before the vault refused is taken back
-        assert!(load_with(&path, &vault).status().is_empty());
-
-        // the vault is asked again, e.g. once the user has unlocked it
-        vault.unreachable.store(false, Ordering::SeqCst);
-        store.set("groq", "gq-key", None).unwrap();
-        assert_eq!(vault.value("groq").as_deref(), Some("gq-key"));
-    }
-
-    #[test]
-    fn a_refused_write_is_an_error() {
-        let (_directory, path) = temp_secrets_path("read-only");
-        let vault = Arc::new(FakeVault::default());
-        vault.read_only.store(true, Ordering::SeqCst);
-
-        let store = load_with(&path, &vault);
-        assert!(store.set("anthropic", "an-key", None).is_err());
-
-        assert_eq!(store.vault_state(), VaultState::Available);
-        assert!(store.status().is_empty());
-        // the listing written before the vault refused is taken back
-        assert!(load_with(&path, &vault).status().is_empty());
-    }
-
-    #[test]
-    fn a_secret_of_an_unreachable_vault_stays_listed() {
-        let (_directory, path) = temp_secrets_path("unreachable");
-        let vault = Arc::new(FakeVault::default());
-        load_with(&path, &vault)
-            .set("google", "g-key", None)
-            .unwrap();
-
-        vault.unreachable.store(true, Ordering::SeqCst);
-        let offline = load_with(&path, &vault);
-        assert_eq!(
-            offline.status()["google"],
-            SecretStatus {
-                origins: vec![String::from("https://generativelanguage.googleapis.com")],
-                is_available: false,
-            }
-        );
-        assert!(offline.snapshot().is_empty());
-        // removing it now would leave the key in the vault unseen
-        assert!(offline.remove("google").is_err());
-        assert!(offline.status().contains_key("google"));
-
-        vault.unreachable.store(false, Ordering::SeqCst);
-        assert_eq!(offline.vault_state(), VaultState::Available);
-        assert!(offline.status()["google"].is_available);
-        assert_eq!(offline.snapshot()["google"].value, "g-key");
-    }
-
-    #[test]
-    fn a_development_home_gets_its_own_namespace() {
-        assert_eq!(vault_namespace("com.tyco.app", None), "com.tyco.app");
-        let dev = vault_namespace(
-            "com.tyco.app",
-            Some(std::path::Path::new("/repo/dev_files/.config/com.tyco.app")),
-        );
-        assert!(dev.starts_with("com.tyco.app.dev-"));
-        assert_ne!(
-            dev,
-            vault_namespace(
-                "com.tyco.app",
-                Some(std::path::Path::new("/other/.config/com.tyco.app"))
-            )
-        );
-    }
 }
