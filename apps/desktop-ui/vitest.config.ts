@@ -6,7 +6,7 @@ import { createUiConfig } from './build/ui-config.ts'
 const NODE_TEST_PATTERNS = [
   'build/**/*.test.ts',
   'src/test/offline-assets.test.ts',
-  'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,ai-tasks,logger,diff,locale,input-keys,command-launcher,voice-commands,shortcut-slots,sortable,toast,toolbar,menu-query,external-access}/**/*.test.ts',
+  'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,ai-tasks,logger,diff,locale,input-keys,command-launcher,voice-commands,shortcut-slots,sortable,toast,toolbar,menu-query,external-access,ai-profiles,custom-actions,chat-tools}/**/*.test.ts',
   'src/lib/theme/{appearance,theme-controller}.test.ts',
   'src/lib/desktop/ipc-error.test.ts',
   'src/lib/quick-input/{draft-restore,quick-insert}.test.ts',
