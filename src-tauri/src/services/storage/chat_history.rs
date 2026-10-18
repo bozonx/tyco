@@ -120,7 +120,7 @@ fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
             }
         }
     }
-    history.sort_by(|left, right| right.last_message_at_ms.cmp(&left.last_message_at_ms));
+    history.sort_by_key(|item| std::cmp::Reverse(item.last_message_at_ms));
     Ok(history)
 }
 

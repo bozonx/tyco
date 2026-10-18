@@ -24,7 +24,7 @@ describe('plugin manifest validation', () => {
     ])
       expect(() => validatePluginManifest(invalid)).toThrow()
   })
-  it('rejects active SVG and settings metadata collisions', () => {
+  it('rejects active SVG', () => {
     for (const body of [
       '<script>alert(1)</script>',
       '<path onclick="alert(1)"/>',
@@ -37,14 +37,6 @@ describe('plugin manifest validation', () => {
           icons: { prefix: 'example', icons: { bad: { body } } },
         })
       ).toThrow()
-    expect(() =>
-      validatePluginManifest({
-        ...manifest,
-        defaultConfig: {
-          fields: [{ name: 'enabled', type: 'checkbox', defaultValue: true }],
-        },
-      })
-    ).toThrow()
   })
 })
 

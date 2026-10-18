@@ -181,7 +181,7 @@ pub fn prune_copies(path: &Path, marker: &str, keep: usize) -> Result<(), AppErr
         let modified = entry.metadata()?.modified()?;
         copies.push((modified, entry.path()));
     }
-    copies.sort_by(|a, b| b.0.cmp(&a.0));
+    copies.sort_by_key(|(modified, _)| std::cmp::Reverse(*modified));
     for (_, copy) in copies.into_iter().skip(keep) {
         fs::remove_file(copy)?;
     }
