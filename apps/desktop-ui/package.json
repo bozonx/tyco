@@ -31,7 +31,7 @@
     "@lezer/highlight": "^1.2.5",
     "@openrouter/ai-sdk-provider": "^3.1.0",
     "@tailwindcss/vite": "^4.3.3",
-    "@tauri-apps/api": "^2.12.3",
+    "@tauri-apps/api": "^2.12.4",
     "@tyco/plugin-diacritics": "workspace:^",
     "@tyco/plugin-fast-note": "workspace:^",
     "@tyco/plugin-sdk": "workspace:^",
