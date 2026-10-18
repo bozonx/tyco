@@ -135,7 +135,7 @@ import { commandUnavailableReason } from '../../lib/commands/command-runtime'
 import { clientLogger } from '../../lib/logger'
 import { moveItem } from '../../lib/sortable/sortable-list'
 import { toolLabel } from '../../lib/tools/tool-label'
-import { useLlmStore } from '../../stores/llm'
+import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
 import Icon from '../common/AppIcon.vue'
@@ -170,7 +170,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { toastKey } = useToast()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 const toolsStore = useToolsStore()
 
 // only the known keys: a saved config may still hold the dropped `recording`
@@ -308,7 +308,7 @@ const { removed, removeCommand, undoRemove, finishRemoval } =
     getMainActions: () => props.userConfig.mainActions ?? [],
     updateCommands: (commands) => emit('update:commands', commands),
     updateMainActions: (actions) => emit('update:mainActions', actions),
-    removeSecret: (id) => llmStore.removeSecret(id),
+    removeSecret: (id) => secretsStore.removeSecret(id),
     persist: settingsSession.persist,
     isSaved: settingsSession.isSaved,
     notifyError: (error) =>

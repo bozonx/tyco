@@ -88,12 +88,10 @@ import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import { createRemovalUndo } from '../lib/history/removal-undo'
 import { useHistoryStore } from '../stores/history'
 import { useIpcStore } from '../stores/ipc'
-import { useNavPanelStore } from '../stores/nav-panel'
 import type { EditorHistoryItem } from '@tyco/shared'
 
 const { toastKey } = useToast()
 const { t } = useI18n()
-const navPanelStore = useNavPanelStore()
 const historyStore = useHistoryStore()
 const ipcStore = useIpcStore()
 // the text is already in the history and the window stays open
@@ -177,8 +175,6 @@ onMounted(() => {
 onUnmounted(() => {
   void removal.dispose()
 })
-
-navPanelStore.resetNavPanelState({})
 
 const loadEditorHistory = async () => {
   try {

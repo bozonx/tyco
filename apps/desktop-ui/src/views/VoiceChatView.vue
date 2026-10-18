@@ -26,7 +26,7 @@ import { computed, ref, watch } from 'vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
 import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
-import { useVoiceFinishSignal } from '../composables/use-voice-finish-signal'
+import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { useChatStore } from '../stores/chat'
 import { useIpcStore } from '../stores/ipc'
@@ -43,22 +43,14 @@ navPanelStore.resetNavPanelState({ panelVisible: false })
 /** The user removed the context of this activation */
 const contextRemoved = ref(false)
 /** The dictated text went to the actions step instead of the chat */
-const isInsertMenuVisible = ref(false)
-const dictationResultText = ref('')
+const { isInsertMenuVisible, dictationResultText, showResult, resetResult } =
+  useVoiceResultStep(() => 'voiceChat')
+
 watch(
   () => ipcStore.desktopState.activationId,
   () => {
     contextRemoved.value = false
-    isInsertMenuVisible.value = false
-    dictationResultText.value = ''
-  }
-)
-// past the dictation, its hotkey starts a new one, as it did before
-useVoiceFinishSignal(
-  () => (isInsertMenuVisible.value ? 'voiceChat' : undefined),
-  () => {
-    isInsertMenuVisible.value = false
-    dictationResultText.value = ''
+    resetResult()
   }
 )
 /** What the question is about; it is shown before it goes to the chat */
@@ -73,8 +65,7 @@ async function handleCorrected(
   intent: VoiceFinishIntent
 ) {
   if (intent === 'next') {
-    dictationResultText.value = resultText
-    isInsertMenuVisible.value = true
+    showResult(resultText)
     return
   }
 
@@ -92,8 +83,7 @@ async function handleCorrected(
     ipcStore.desktopState.mode === 'voiceChat' &&
     ipcStore.desktopState.isWindowShown
   ) {
-    dictationResultText.value = resultText
-    isInsertMenuVisible.value = true
+    showResult(resultText)
   }
 }
 

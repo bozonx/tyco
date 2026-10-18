@@ -1,11 +1,11 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
 import ChatView from './ChatView.vue'
 
 const mocks = vi.hoisted(() => ({
-  navPanel: { resetNavPanelState: vi.fn() },
   startNewChat: vi.fn(),
   openLastOrNewChat: vi.fn(),
   mediaMatches: false,
@@ -37,10 +37,6 @@ const profileChatState = chatFor('writer')
 
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
-}))
-
-vi.mock('../stores/nav-panel', () => ({
-  useNavPanelStore: () => mocks.navPanel,
 }))
 
 vi.mock('../composables/use-chat-scope', () => ({
@@ -90,7 +86,10 @@ vi.mock('../components/common/IconButton.vue', () => ({
 }))
 
 describe('ChatView.vue', () => {
+  let pinia: ReturnType<typeof createPinia>
   beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
     vi.clearAllMocks()
     chatState.isGenerating = false
     mocks.mediaMatches = false
@@ -107,12 +106,12 @@ describe('ChatView.vue', () => {
       dispatchEvent: vi.fn(),
     }))
   })
+  afterEach(() => disposePinia(pinia))
 
-  it('resets nav panel and shows the sidebar and the chat on mount', async () => {
+  it('shows the sidebar and the chat on mount', async () => {
     const wrapper = mount(ChatView)
     await flushPromises()
 
-    expect(mocks.navPanel.resetNavPanelState).toHaveBeenCalledWith({})
     expect(wrapper.findComponent({ name: 'ChatSidebar' }).exists()).toBe(true)
     expect(wrapper.findComponent({ name: 'AiChat' }).exists()).toBe(true)
     expect(wrapper.find('.sidebar-closed-tools').exists()).toBe(false)

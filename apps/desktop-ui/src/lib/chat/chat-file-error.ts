@@ -40,3 +40,31 @@ export type ChatFileNotice =
   | { kind: 'secrets' }
   | { kind: 'pdfPagesSkipped'; count: number }
   | { kind: 'animatedFirstFrame' }
+
+export const CHAT_FILE_ERROR_KEYS: Record<ChatFileErrorKind, string> = {
+  unsupported: 'chat.fileUnsupported',
+  size: 'chat.fileSizeLimit',
+  invalid: 'chat.fileInvalid',
+  empty: 'chat.fileEmpty',
+  textLimit: 'chat.fileTextLimit',
+  imageLimit: 'chat.imageLimit',
+  fileLimit: 'chat.fileCountLimit',
+  pdfPages: 'chat.pdfPageLimit',
+  password: 'chat.pdfPassword',
+  memory: 'chat.imageMemoryLimit',
+  imageFormat: 'chat.imageFormatUnavailable',
+}
+
+export function formatChatFileNotice(
+  name: string,
+  notice: ChatFileNotice,
+  translate: (key: string, params?: Record<string, string | number>) => string
+): string {
+  const message =
+    notice.kind === 'secrets'
+      ? translate('chat.fileSecretsWarning')
+      : notice.kind === 'animatedFirstFrame'
+        ? translate('chat.animatedImageFirstFrame')
+        : translate('chat.pdfPagesSkipped', { count: notice.count })
+  return `${name}: ${message}`
+}

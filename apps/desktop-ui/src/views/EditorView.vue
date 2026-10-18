@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onScopeDispose, onUnmounted } from 'vue'
 
 import ContentPadding from '../components/common/ContentPadding.vue'
 import Editor from '../components/editor/Editor.vue'
@@ -38,6 +38,9 @@ navPanelStore.resetNavPanelState({
     openInsertMenu()
   },
   escapeButtonLabelKey: 'menu.actions',
+})
+onScopeDispose(() => {
+  navPanelStore.resetNavPanelState()
 })
 
 function handleKeyDown(event: KeyboardEvent) {

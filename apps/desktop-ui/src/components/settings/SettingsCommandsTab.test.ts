@@ -26,7 +26,9 @@ vi.mock('../../stores/settings-session', () => ({
   }),
 }))
 
-vi.mock('../../stores/llm', () => ({ useLlmStore: () => ({ removeSecret }) }))
+vi.mock('../../stores/secrets', () => ({
+  useSecretsStore: () => ({ removeSecret }),
+}))
 vi.mock('../../stores/tools', async () => {
   const { testTools } = await import('../../lib/tools/testing')
   const tools = testTools()

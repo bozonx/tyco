@@ -46,7 +46,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, watch } from 'vue'
 
 import AiChat from '../components/chat/AiChat.vue'
 import ChatSidebar from '../components/chat/ChatSidebar.vue'
@@ -59,12 +60,11 @@ import {
 import { useI18n } from '../composables/use-i18n'
 import { appNavigation } from '../lib/navigation/navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
-import { useNavPanelStore } from '../stores/nav-panel'
+import { useChatLayoutStore } from '../stores/chat-layout'
 
-const navPanelStore = useNavPanelStore()
 const aiProfilesStore = useAiProfilesStore()
+const { isSidebarOpen: sidebarOpen } = storeToRefs(useChatLayoutStore())
 const { t } = useI18n()
-const sidebarOpen = ref(true)
 
 /** "Ask AI" without a profile in the route, that profile's chat with one */
 const profileId = computed(() => appNavigation.currentProfileId())
@@ -86,8 +86,6 @@ function openProfileSettings() {
   if (profileId.value)
     void appNavigation.goToConfig(`ai-profile:${profileId.value}`)
 }
-
-navPanelStore.resetNavPanelState({})
 
 // a profile chat opened by its route starts on its last chat
 watch(

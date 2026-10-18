@@ -97,7 +97,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { createTranslationSettingsModel } from '../../lib/translation/translation-settings-model'
-import { useLlmStore } from '../../stores/llm'
+import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -116,7 +116,7 @@ const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()
 
 const { t } = useI18n()
 const { toastText } = useToast()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 const {
   translation,
   keyDraft,
@@ -135,9 +135,9 @@ const {
   setConfig: (config) => {
     props.userConfig.translation = config
   },
-  hasSecret: (id) => Object.hasOwn(llmStore.secrets, id),
-  setSecret: (id, value) => llmStore.setSecret(id, value),
-  removeSecret: (id) => llmStore.removeSecret(id),
+  hasSecret: (id) => Object.hasOwn(secretsStore.secrets, id),
+  setSecret: (id, value) => secretsStore.setSecret(id, value),
+  removeSecret: (id) => secretsStore.removeSecret(id),
   notifyKeyError: (error) =>
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
 })

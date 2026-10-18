@@ -10,17 +10,13 @@ import { computed } from 'vue'
 import CommandLauncher from '../components/menu/CommandLauncher.vue'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
-import { useNavPanelStore } from '../stores/nav-panel'
 
 const ipcStore = useIpcStore()
 const menuModalsStore = useMenuModalsStore()
-const navPanelStore = useNavPanelStore()
 
 // The view outlives a hidden window. Until the next activation reaches it, the
 // keys belong to whatever mode that activation opens
 const shortcutsDisabled = computed(
   () => menuModalsStore.hasOpenModal || !ipcStore.desktopState.isWindowShown
 )
-
-navPanelStore.resetNavPanelState({})
 </script>

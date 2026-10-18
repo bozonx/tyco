@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DEFAULT_DIFF_VIEW_MODE,
+  cycleDiffMode,
+  cycleParallelViewMode,
   splitDiffParts,
   computeWordDiff,
   hasDifferences,
   isDiffViewMode,
   resolveDiffMode,
+  resolveParallelViewMode,
 } from './diff-model'
 
 describe('diff-model', () => {
@@ -83,11 +86,20 @@ describe('diff-model', () => {
     })
   })
 
-  it('resolves a session preference or the default mode', () => {
+  it('resolves and cycles diff and parallel view modes', () => {
     expect(resolveDiffMode()).toBe(DEFAULT_DIFF_VIEW_MODE)
     expect(resolveDiffMode(null)).toBe(DEFAULT_DIFF_VIEW_MODE)
     expect(resolveDiffMode('split')).toBe('split')
     expect(resolveDiffMode('result')).toBe('result')
     expect(isDiffViewMode('other')).toBe(false)
+
+    expect(cycleDiffMode('unified')).toBe('split')
+    expect(cycleDiffMode('split')).toBe('result')
+    expect(cycleDiffMode('result')).toBe('unified')
+
+    expect(resolveParallelViewMode()).toBe('split')
+    expect(resolveParallelViewMode('result')).toBe('result')
+    expect(cycleParallelViewMode('split')).toBe('result')
+    expect(cycleParallelViewMode('result')).toBe('split')
   })
 })

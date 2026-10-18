@@ -1,22 +1,25 @@
 import { defineStore } from 'pinia'
 import { markRaw } from 'vue'
 
-import { normalizeTranslationConfig } from '../lib/translation/translation-config'
-import { createTranslationClient } from '../lib/translation/translation-client'
-import {
-  createSecretKeyProvider,
-  createSecretsClient,
-} from '../lib/net/secrets'
-import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
-import { useIpcStore } from './ipc'
-import { useLlmStore } from './llm'
+import { translate } from '../lib/i18n'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { taskModelLimits } from '../lib/llm/llm-limits'
+import { clientLogger } from '../lib/logger'
+import { createSecretKeyProvider } from '../lib/net/secrets'
+import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
+import { createTranslationActions } from '../lib/translation/translation-actions'
+import { createTranslationClient } from '../lib/translation/translation-client'
+import { normalizeTranslationConfig } from '../lib/translation/translation-config'
+import { useIpcStore } from './ipc'
+import { useLlmStore } from './llm'
+import { useSecretsStore } from './secrets'
+import { useToastStore } from './toast'
 
 export const useTranslationStore = defineStore('translation', () => {
   const ipcStore = useIpcStore()
   const llmStore = useLlmStore()
-  const secretsClient = createSecretsClient(tauriNetIpc)
+  const secretsStore = useSecretsStore()
+  const toast = useToastStore()
   const client = createTranslationClient({
     getConfig: () =>
       normalizeTranslationConfig(ipcStore.desktopState.userConfig?.translation),
@@ -26,10 +29,20 @@ export const useTranslationStore = defineStore('translation', () => {
         'translate'
       ),
     transport: createTauriTransport(tauriNetIpc),
-    keys: createSecretKeyProvider(() => secretsClient.status()),
+    keys: createSecretKeyProvider(() => secretsStore.client.status()),
     runLlm: (prompt, signal, options = {}) =>
       llmStore.client.run('translate', prompt, { signal, ...options }),
   })
+  const actions = createTranslationActions({
+    client,
+    getUserConfig: () => ipcStore.desktopState.userConfig,
+    translate,
+    logError: (message, failure) =>
+      clientLogger.error(message, failure, 'translation'),
+    notifyError: (message) => toast.addToast(message, 'error'),
+    notifyEmptyText: () =>
+      toast.addToast(translate('toast.textNotSelected'), 'warn'),
+  })
 
-  return { client: markRaw(client) }
+  return { client: markRaw(client), actions: markRaw(actions) }
 })

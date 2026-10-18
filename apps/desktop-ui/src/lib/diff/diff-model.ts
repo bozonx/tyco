@@ -25,6 +25,25 @@ export function resolveDiffMode(preferred?: DiffViewMode | null): DiffViewMode {
   return isDiffViewMode(preferred) ? preferred : DEFAULT_DIFF_VIEW_MODE
 }
 
+export function cycleDiffMode(current: DiffViewMode): DiffViewMode {
+  const modes: DiffViewMode[] = ['unified', 'split', 'result']
+  return modes[(modes.indexOf(current) + 1) % modes.length]
+}
+
+export type ParallelViewMode = 'split' | 'result'
+
+export function resolveParallelViewMode(
+  preferred?: ParallelViewMode | string | null
+): ParallelViewMode {
+  return preferred === 'split' || preferred === 'result' ? preferred : 'split'
+}
+
+export function cycleParallelViewMode(
+  current: ParallelViewMode
+): ParallelViewMode {
+  return current === 'split' ? 'result' : 'split'
+}
+
 class UnicodeWordsWithSpaceDiff extends Diff<string, string, string> {
   override tokenize(value: string): string[] {
     // Matches:
@@ -83,5 +102,3 @@ export function splitDiffParts(parts: readonly DiffPart[]): SplitDiffResult {
 export function hasDifferences(parts: DiffPart[]): boolean {
   return parts.some((p) => p.added || p.removed)
 }
-
-export type ParallelViewMode = 'split' | 'result'

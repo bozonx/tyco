@@ -1,21 +1,15 @@
 import { translate } from '../lib/i18n/index'
+import { createDesktopInsertion } from '../lib/ipc/desktop-insertion'
 import { useIpcStore } from '../stores/ipc'
 
 export const useDesktopInsertion = () => {
   const ipcStore = useIpcStore()
 
-  async function pasteIntoTargetAndHide(text: string) {
-    if (!text?.trim()) return
-
-    const result = await ipcStore.callFunction('pasteIntoTargetAndHide', [text])
-    if (result.success) return
-
-    const summary = translate('toast.insertFailed')
-    const body = result.error || ''
-    // the window may be hidden by now, where a toast would go unseen
-    void ipcStore.callFunction('notifyDesktop', [summary, body])
-    throw new Error(body ? `${summary}: ${body}` : summary)
-  }
-
-  return { pasteIntoTargetAndHide }
+  return createDesktopInsertion({
+    pasteIntoTargetAndHide: (text) =>
+      ipcStore.callFunction('pasteIntoTargetAndHide', [text]),
+    notifyDesktop: (summary, body) =>
+      ipcStore.callFunction('notifyDesktop', [summary, body]),
+    translateInsertFailed: () => translate('toast.insertFailed'),
+  })
 }

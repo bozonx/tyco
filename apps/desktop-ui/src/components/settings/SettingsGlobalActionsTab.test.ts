@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 import SettingsGlobalActionsTab from './SettingsGlobalActionsTab.vue'
@@ -26,9 +27,22 @@ const { callFunction } = vi.hoisted(() => ({
   })),
 }))
 
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
+vi.mock('../../stores/ipc', () => ({
+  useIpcStore: () => ({
+    callFunction,
+    desktopState: { userConfig: DEFAULT_USER_CONFIG },
+  }),
+}))
 
 describe('SettingsGlobalActionsTab.vue', () => {
+  let pinia: ReturnType<typeof createPinia>
+  beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    vi.clearAllMocks()
+  })
+  afterEach(() => disposePinia(pinia))
+
   const defaultProps = {
     userConfig: { ...DEFAULT_USER_CONFIG, submitKey: 'enter' as const },
   }

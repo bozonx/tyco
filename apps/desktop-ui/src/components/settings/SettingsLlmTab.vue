@@ -43,7 +43,7 @@
         :label="providerLabel(provider)"
         :llm="llm"
         :settings="settings"
-        :secrets="llmStore.secrets"
+        :secrets="secretsStore.secrets"
         @remove="pendingProviderId = $event"
         @update="Object.assign(provider, $event)"
       />
@@ -136,7 +136,7 @@ import { createLlmConnectionChecker } from '../../lib/llm/llm-connection'
 import { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { httpOrigin } from '../../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
-import { useLlmStore } from '../../stores/llm'
+import { useSecretsStore } from '../../stores/secrets'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -166,7 +166,7 @@ const emit = defineEmits<{
 }>()
 const { t } = useI18n()
 const { toastKey, toastText } = useToast()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 const checkLlmConnection = createLlmConnectionChecker({
   fetch: createTauriTransport(tauriNetIpc).fetch,
   hasKey,
@@ -177,8 +177,8 @@ const checkLlmConnection = createLlmConnectionChecker({
 const settings = createLlmSettingsModel({
   getConfig: () => props.llm,
   getUsableModelIds: () => modelOptions.value.map((option) => option.id),
-  setSecret: (id, value, origins) => llmStore.setSecret(id, value, origins),
-  removeSecret: (id) => llmStore.removeSecret(id),
+  setSecret: (id, value, origins) => secretsStore.setSecret(id, value, origins),
+  removeSecret: (id) => secretsStore.removeSecret(id),
   checkConnection: checkLlmConnection,
   notifyKeyError: (error) =>
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
@@ -230,10 +230,10 @@ function providerName(id: string) {
   return provider ? providerLabel(provider) : id
 }
 function hasKey(id: string) {
-  return Object.hasOwn(llmStore.secrets, id)
+  return Object.hasOwn(secretsStore.secrets, id)
 }
 onMounted(() => {
-  llmStore.refreshSecrets().catch((error: unknown) => {
+  secretsStore.refreshSecrets().catch((error: unknown) => {
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
   })
 })

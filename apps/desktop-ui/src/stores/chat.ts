@@ -5,10 +5,14 @@ import {
   createChatImageStorage,
   getChatImage,
 } from '../lib/chat/chat-image-storage'
-import { type ChatFileErrorKind } from '../lib/chat/chat-file-input'
+import {
+  CHAT_FILE_ERROR_KEYS,
+  formatChatFileNotice,
+} from '../lib/chat/chat-file-error'
 import { createChatFileController } from '../lib/chat/chat-file-controller'
 import { createChatFileReader } from '../lib/chat/chat-file-reader'
 import { isChatHistoryEnabled } from '../lib/chat/chat-history-settings'
+import { createChatProfileRuntime } from '../lib/chat/chat-profile-runtime'
 import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-storage'
 import { createChatHistoryModel } from '../lib/history/chat-history'
 import { formatLlmError } from '../lib/llm/llm-errors'
@@ -21,9 +25,13 @@ import {
 } from '@tyco/shared'
 import { LlmInstructionKind } from '../types'
 import { defineStore, getActivePinia, type Pinia } from 'pinia'
-import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
+import { computed, nextTick, onScopeDispose, watch } from 'vue'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
-import { useChatInputStore, useProfileChatInputStore } from './chat-input'
+import {
+  disposeProfileChatInputStore,
+  useChatInputStore,
+  useProfileChatInputStore,
+} from './chat-input'
 import { useAiProfilesStore } from './ai-profiles'
 
 import useToast from '../composables/use-toast'
@@ -53,6 +61,7 @@ import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
 import { useMenuModalsStore } from './menu-modals'
+import { useSecretsStore } from './secrets'
 
 /**
  * One chat: "Ask AI" when `profileId` is null, a profile chat otherwise. Each
@@ -72,6 +81,7 @@ function createChatStoreSetup(profileId: string | null) {
     const ipcStore = useIpcStore()
     const saveSessionState = ipcStore.patchSessionState
     const llmStore = useLlmStore()
+    const secretsStore = useSecretsStore()
     const { sendChatMessage, generateChatTitle } = llmStore.actions
     const aiProfilesStore = useAiProfilesStore()
     const editorInputStore = useEditorInputStore()
@@ -89,48 +99,19 @@ function createChatStoreSetup(profileId: string | null) {
     const profile = computed(() =>
       profileId ? aiProfilesStore.getProfile(profileId) : undefined
     )
-    /** The profile's root instruction as last read from `SOUL.md` */
-    const soul = ref('')
-    /** The chat to reopen; a profile chat remembers it while the app runs */
-    const lastProfileChatId = ref<string | null>(null)
-
-    /**
-     * Reads `SOUL.md` and `profile.json` anew: the user may edit them by hand
-     * between two requests
-     */
-    const refreshProfile = async () => {
-      if (!profileId) return
-      const [stored, content] = await Promise.all([
-        aiProfilesStore.refreshProfile(profileId),
-        aiProfilesStore.readSoul(profileId),
-      ])
-      soul.value = content
-      return stored
-    }
-
-    let profileReady: Promise<void> | null = null
-    /** The history and the root instruction a profile chat starts with */
-    const prepareProfile = () => {
-      profileReady ??= Promise.all([
-        history.loadChatHistory(),
-        refreshProfile(),
-      ]).then(
-        () => {},
-        (error: unknown) => {
-          profileReady = null
-          clientLogger.warn(
-            `Could not read the profile ${profileId}: ${String(error)}`,
-            'chat'
-          )
-        }
-      )
-      return profileReady
-    }
+    const { soul, lastProfileChatId, refreshProfile, prepareProfile } =
+      createChatProfileRuntime({
+        profileId,
+        loadChatHistory: () => history.loadChatHistory(),
+        refreshProfile: (id) => aiProfilesStore.refreshProfile(id),
+        readSoul: (id) => aiProfilesStore.readSoul(id),
+        warn: (message) => clientLogger.warn(message, 'chat'),
+      })
 
     const modelOptions = computed(() =>
       chatModelOptions(
         normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm),
-        (id) => isSecretUsable(llmStore.secrets, id)
+        (id) => isSecretUsable(secretsStore.secrets, id)
       )
     )
     const selectedModel = computed<ChatLlmOption | null>(() => {
@@ -340,19 +321,6 @@ function createChatStoreSetup(profileId: string | null) {
       () => chatTools.resetPermissions()
     )
 
-    const fileErrorKeys: Record<ChatFileErrorKind, string> = {
-      unsupported: 'chat.fileUnsupported',
-      size: 'chat.fileSizeLimit',
-      invalid: 'chat.fileInvalid',
-      empty: 'chat.fileEmpty',
-      textLimit: 'chat.fileTextLimit',
-      imageLimit: 'chat.imageLimit',
-      fileLimit: 'chat.fileCountLimit',
-      pdfPages: 'chat.pdfPageLimit',
-      password: 'chat.pdfPassword',
-      memory: 'chat.imageMemoryLimit',
-      imageFormat: 'chat.imageFormatUnavailable',
-    }
     const files = createChatFileController({
       getDraft: () => model.currentChatParams.value,
       getMessages: () => model.messages.value,
@@ -389,18 +357,9 @@ function createChatStoreSetup(profileId: string | null) {
       readDroppedFile: readDroppedChatFile,
       syncImages: syncChatImages,
       report: (name, kind) =>
-        toastText(`${name}: ${translate(fileErrorKeys[kind])}`, 'error'),
+        toastText(`${name}: ${translate(CHAT_FILE_ERROR_KEYS[kind])}`, 'error'),
       notify: (name, notice) =>
-        toastText(
-          `${name}: ${
-            notice.kind === 'secrets'
-              ? translate('chat.fileSecretsWarning')
-              : notice.kind === 'animatedFirstFrame'
-                ? translate('chat.animatedImageFirstFrame')
-                : translate('chat.pdfPagesSkipped', { count: notice.count })
-          }`,
-          'warn'
-        ),
+        toastText(formatChatFileNotice(name, notice, translate), 'warn'),
       reportSyncError: () => toastKey('chat.imageUnavailable', 'error'),
       reportBusy: () => toastKey('chat.filesWhileGenerating', 'warn'),
     })
@@ -498,11 +457,13 @@ export function useProfileChatStore(
   return definition(pinia)
 }
 
-/** Stops and forgets the chat of a removed profile */
+/** Stops and forgets the chat and input draft of a removed profile */
 export function disposeProfileChatStore(profileId: string, pinia?: Pinia) {
   const active = pinia ?? getActivePinia()
+  if (!active) return
+  disposeProfileChatInputStore(profileId, active)
   const definition = profileChatStores.get(profileId)
-  if (!active || !definition) return
+  if (!definition) return
   const id = profileChatStoreId(profileId)
   // a store only exists once something used it
   if (!(id in active.state.value)) return

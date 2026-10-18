@@ -22,9 +22,11 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { appNavigation } from '../navigation/navigation'
 import { chatAnswer } from '../chat/testing'
 
+vi.mock('../../stores/secrets', () => ({
+  useSecretsStore: () => ({ secrets: {} }),
+}))
 vi.mock('../../stores/llm', () => ({
   useLlmStore: () => ({
-    secrets: {},
     actions: {
       sendChatMessage: async () => chatAnswer('Answer'),
       generateChatTitle: async () => '',

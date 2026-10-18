@@ -29,7 +29,8 @@ vi.mock('../stores/ipc', () => ({
     },
   }),
 }))
-vi.mock('../stores/llm', () => ({ useLlmStore: () => mocks }))
+vi.mock('../stores/secrets', () => ({ useSecretsStore: () => mocks }))
+vi.mock('../stores/llm', () => ({ useLlmStore: () => ({ actions: {} }) }))
 vi.mock('../stores/translation', () => ({ useTranslationStore: () => ({}) }))
 vi.mock('../lib/stt/live-dictation', () => ({
   createLiveDictation: () => ({

@@ -249,7 +249,7 @@ import { createAutosave } from '../../lib/settings/autosave'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { disposeProfileChatStore } from '../../stores/chat'
 import { useIpcStore } from '../../stores/ipc'
-import { useLlmStore } from '../../stores/llm'
+import { useSecretsStore } from '../../stores/secrets'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -284,7 +284,7 @@ const { t } = useI18n()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 const ipcStore = useIpcStore()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 
 const isNew = computed(() => props.profileId === 'new')
 const profile = computed(() => aiProfilesStore.getProfile(props.profileId))
@@ -403,7 +403,7 @@ function changeTools(tools: ProfileToolSettings) {
 const availableModels = computed(() =>
   chatModelOptions(
     normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm),
-    (id) => isSecretUsable(llmStore.secrets, id)
+    (id) => isSecretUsable(secretsStore.secrets, id)
   )
 )
 

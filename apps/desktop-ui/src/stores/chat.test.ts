@@ -22,7 +22,8 @@ const ai = vi.hoisted(() => ({
   generateChatTitle: vi.fn(async () => ''),
 }))
 
-vi.mock('./llm', () => ({ useLlmStore: () => ({ actions: ai, secrets: {} }) }))
+vi.mock('./llm', () => ({ useLlmStore: () => ({ actions: ai }) }))
+vi.mock('./secrets', () => ({ useSecretsStore: () => ({ secrets: {} }) }))
 vi.mock(import('../lib/chat/chat-image-storage'), async (importOriginal) => {
   const original = await importOriginal()
   return {
@@ -280,16 +281,18 @@ describe('profile chats', () => {
     expect(appNavigation.push).not.toHaveBeenCalled()
   })
 
-  it('forgets the chat of a removed profile', async () => {
+  it('forgets the chat and input draft of a removed profile', async () => {
     mockVault({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
     const before = useProfileChatStore('writer')
     before.currentChatParams.title = 'Draft'
+    useProfileChatInputStore('writer').setValue('Unsent message')
 
     disposeProfileChatStore('writer')
 
     expect(useProfileChatStore('writer').currentChatParams.title).toBe(
       undefined
     )
+    expect(useProfileChatInputStore('writer').value).toBe('')
   })
 })

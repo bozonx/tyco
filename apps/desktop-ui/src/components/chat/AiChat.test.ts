@@ -44,8 +44,8 @@ vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({ desktopState: { userConfig: {} } }),
 }))
 
-vi.mock('../../stores/llm', () => ({
-  useLlmStore: () => ({ refreshSecrets: async () => undefined }),
+vi.mock('../../stores/secrets', () => ({
+  useSecretsStore: () => ({ refreshSecrets: async () => undefined }),
 }))
 
 vi.mock('../../stores/menu-modals', () => ({

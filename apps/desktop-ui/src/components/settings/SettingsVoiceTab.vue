@@ -78,7 +78,7 @@ import {
 } from '../../lib/stt/dictation-language'
 import { secretId, sttProviderNeedsKey } from '../../lib/stt/stt-client'
 import { activeSttModel, selectSttProvider } from '../../lib/stt/stt-config'
-import { useLlmStore } from '../../stores/llm'
+import { useSecretsStore } from '../../stores/secrets'
 import SecretKeyField from './SecretKeyField.vue'
 import type { UserConfig } from '@tyco/shared'
 import type { SttProvider } from '@tyco/shared'
@@ -86,7 +86,7 @@ import type { SttProvider } from '@tyco/shared'
 const props = defineProps<{ userConfig: UserConfig }>()
 const userConfig = computed(() => props.userConfig)
 const { t } = useI18n()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 const { toastText } = useToast()
 const sttKeyDraft = ref('')
 const currentSttModel = computed(() => activeSttModel(userConfig.value.stt))
@@ -115,13 +115,13 @@ const setSttModelName = (value: string) => {
 const hasSttKey = computed(() =>
   Boolean(
     currentSttModel.value &&
-    Object.hasOwn(llmStore.secrets, secretId(currentSttModel.value))
+    Object.hasOwn(secretsStore.secrets, secretId(currentSttModel.value))
   )
 )
 
 async function saveSttKey() {
   try {
-    await llmStore.setSecret(
+    await secretsStore.setSecret(
       secretId(currentSttModel.value),
       sttKeyDraft.value.trim()
     )
@@ -133,7 +133,7 @@ async function saveSttKey() {
 
 async function removeSttKey() {
   try {
-    await llmStore.removeSecret(secretId(currentSttModel.value))
+    await secretsStore.removeSecret(secretId(currentSttModel.value))
   } catch (error) {
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
   }

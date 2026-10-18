@@ -210,7 +210,7 @@ import {
 import { validateCommand } from '../../lib/commands/command-runtime'
 import { httpOrigin } from '../../lib/net/secrets'
 import { useIpcStore } from '../../stores/ipc'
-import { useLlmStore } from '../../stores/llm'
+import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
@@ -235,7 +235,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { toastKey, toastText } = useToast()
 const ipcStore = useIpcStore()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 const toolsStore = useToolsStore()
 
 const script = computed(() => scriptToolConfig(props.command))
@@ -296,10 +296,10 @@ const hasAuth = computed(
   () =>
     props.command.toolId === 'webhook' &&
     Boolean(webhook.value.isAuthEnabled) &&
-    Object.hasOwn(llmStore.secrets, secretId.value)
+    Object.hasOwn(secretsStore.secrets, secretId.value)
 )
 const authOrigins = computed(
-  () => llmStore.secrets[secretId.value]?.origins ?? []
+  () => secretsStore.secrets[secretId.value]?.origins ?? []
 )
 const authBoundElsewhere = computed(() => {
   if (!hasAuth.value) return false
@@ -319,7 +319,7 @@ async function saveAuth() {
   try {
     // Fresh authorization gets its own identity.
     const newSecretId = `webhook-auth-${crypto.randomUUID()}`
-    await llmStore.setSecret(newSecretId, value, [origin])
+    await secretsStore.setSecret(newSecretId, value, [origin])
     update('authSecretId', newSecretId)
     await nextTick()
     authDraft.value = ''
@@ -336,14 +336,14 @@ async function removeAuth() {
     await nextTick()
     await session.persist()
     if (session.isSaved() && previousSecretId)
-      await llmStore.removeSecret(previousSecretId)
+      await secretsStore.removeSecret(previousSecretId)
   } catch (error) {
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
   }
 }
 
 if (props.command.toolId === 'webhook' && webhook.value.isAuthEnabled) {
-  llmStore.refreshSecrets().catch(() => {
+  secretsStore.refreshSecrets().catch(() => {
     // the status only decides which placeholder is shown
   })
 }

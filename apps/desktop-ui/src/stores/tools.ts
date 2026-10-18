@@ -3,10 +3,9 @@ import { defineStore, getActivePinia } from 'pinia'
 import type { LlmTask } from '@tyco/shared'
 
 import { useLlmStore } from './llm'
-import { useTranslationActions } from '../composables/use-translation-actions'
-import { useDesktopInsertion } from '../composables/use-desktop-insertion'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
 import { translate } from '../lib/i18n'
+import { createDesktopInsertion } from '../lib/ipc/desktop-insertion'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { describeError } from '../lib/llm/llm-errors'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
@@ -17,6 +16,7 @@ import { createToolRegistry } from '../lib/tools/tool-registry'
 import type { TranslationMeta } from '../lib/translation/translation-meta'
 import { useChatStore } from './chat'
 import { useTextCorrectionStore } from './text-correction'
+import { useTranslationStore } from './translation'
 import { createScriptActionClient } from '../lib/custom-actions/script-action-client'
 import { useIpcStore } from './ipc'
 import { useMenuModalsStore } from './menu-modals'
@@ -31,9 +31,15 @@ export const useToolsStore = defineStore('tools', () => {
   const menuModalsStore = useMenuModalsStore()
   const ipcStore = useIpcStore()
   const { aiCustomPrompt } = useLlmStore().actions
-  const { translateTo } = useTranslationActions()
+  const { translateTo } = useTranslationStore().actions
   const textCorrectionStore = useTextCorrectionStore()
-  const { pasteIntoTargetAndHide } = useDesktopInsertion()
+  const { pasteIntoTargetAndHide } = createDesktopInsertion({
+    pasteIntoTargetAndHide: (text) =>
+      ipcStore.callFunction('pasteIntoTargetAndHide', [text]),
+    notifyDesktop: (summary, body) =>
+      ipcStore.callFunction('notifyDesktop', [summary, body]),
+    translateInsertFailed: () => translate('toast.insertFailed'),
+  })
 
   const getLlmUnavailableReasonKey = (task: LlmTask) =>
     normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm).taskModelChains[

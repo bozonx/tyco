@@ -190,8 +190,8 @@ import {
 import { resolveInstalledPlugins } from '../lib/plugins/plugin-settings'
 import { createSettingsOperations } from '../lib/settings/settings-operations'
 import { useAiProfilesStore } from '../stores/ai-profiles'
-import { useLlmStore } from '../stores/llm'
 import { usePluginRuntimeStore } from '../stores/plugin-runtime'
+import { useSecretsStore } from '../stores/secrets'
 import { useSettingsSessionStore } from '../stores/settings-session'
 import NavigationList from './common/NavigationList.vue'
 import SettingsAccessibilityTab from './settings/SettingsAccessibilityTab.vue'
@@ -222,7 +222,7 @@ import {
 } from '@tyco/shared'
 
 const { pluginFactories, pluginRuntimeStates } = usePluginRuntimeStore()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 const aiProfilesStore = useAiProfilesStore()
 const { t } = useI18n()
 const { toastText } = useToast()
@@ -485,8 +485,8 @@ const operations = createSettingsOperations({
   createCommand,
   persist: persistUserConfig,
   isSaved: session.isSaved,
-  hasSecret: (id) => Object.hasOwn(llmStore.secrets, id),
-  removeSecret: (id) => llmStore.removeSecret(id),
+  hasSecret: (id) => Object.hasOwn(secretsStore.secrets, id),
+  removeSecret: (id) => secretsStore.removeSecret(id),
   notifySecretError: (error) =>
     toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
 })
@@ -574,7 +574,7 @@ const updateVaultPath = (vaultPath: string | undefined) => {
 }
 
 onMounted(() => {
-  void Promise.resolve(llmStore.refreshSecrets()).catch((error: unknown) =>
+  void Promise.resolve(secretsStore.refreshSecrets()).catch((error: unknown) =>
     toastText(`${t('settings.keySaveFailed')}: ${String(error)}`, 'error')
   )
 })

@@ -9,16 +9,16 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { useLlmStore } from '../../stores/llm'
+import { useSecretsStore } from '../../stores/secrets'
 import Icon from '../common/AppIcon.vue'
 
 const { t } = useI18n()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 
 const unavailable = computed(
   () =>
-    llmStore.vaultState === 'unavailable' ||
-    Object.values(llmStore.secrets).some((secret) => !secret.available)
+    secretsStore.vaultState === 'unavailable' ||
+    Object.values(secretsStore.secrets).some((secret) => !secret.available)
 )
 </script>
 

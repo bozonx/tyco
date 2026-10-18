@@ -17,8 +17,8 @@ vi.mock('../../composables/use-toast', () => ({
 const mockSetSecret = vi.fn().mockResolvedValue(undefined)
 const mockRemoveSecret = vi.fn().mockResolvedValue(undefined)
 
-vi.mock('../../stores/llm', () => ({
-  useLlmStore: () => ({
+vi.mock('../../stores/secrets', () => ({
+  useSecretsStore: () => ({
     secrets: { deepl: { origins: ['https://api.deepl.com'], available: true } },
     setSecret: mockSetSecret,
     removeSecret: mockRemoveSecret,

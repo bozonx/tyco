@@ -66,11 +66,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
-import { type DiffViewMode, resolveDiffMode } from '../../lib/diff/diff-model'
+import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
+import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
@@ -143,9 +144,7 @@ const actionsMenu = computed(() => {
 })
 const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
-const diffMode = ref<DiffViewMode>(
-  resolveDiffMode(ipcStore.desktopState.userConfig.diffViewMode)
-)
+const { diffMode, cycleMode } = usePersistedDiffMode()
 
 /** Space was pressed while isCorrecting: insert once the correction is in. */
 const insertQueued = ref(false)
@@ -157,13 +156,6 @@ const statusVisible = computed(
 const statusText = computed(() => {
   if (props.correctionError) return t('write.correctionFailed')
   return t('write.nothingToCorrect')
-})
-
-watch(diffMode, (mode) => {
-  void ipcStore.saveUserConfig({
-    ...ipcStore.desktopState.userConfig,
-    diffViewMode: mode,
-  })
 })
 
 watch(
@@ -179,21 +171,9 @@ watch(
   }
 )
 
-function handleKeyDown(event: KeyboardEvent) {
-  if (
-    hasDiff.value &&
-    event.key.toLowerCase() === 'd' &&
-    (event.ctrlKey || event.altKey) &&
-    !event.shiftKey
-  ) {
-    event.preventDefault()
-    const modes: DiffViewMode[] = ['unified', 'split', 'result']
-    diffMode.value = modes[(modes.indexOf(diffMode.value) + 1) % modes.length]
-  }
-}
-
-onMounted(() => window.addEventListener('keydown', handleKeyDown))
-onUnmounted(() => window.removeEventListener('keydown', handleKeyDown))
+usePreviewModeShortcut(() => {
+  if (hasDiff.value) cycleMode()
+})
 
 const minCorrectionLength = computed(
   () => ipcStore.desktopState?.appConfig?.minCorrectionLength ?? 0

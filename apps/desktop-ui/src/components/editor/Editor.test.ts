@@ -9,13 +9,6 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const mockPasteIntoTargetAndHide = vi.fn()
-vi.mock('../../composables/use-desktop-insertion', () => ({
-  useDesktopInsertion: () => ({
-    pasteIntoTargetAndHide: mockPasteIntoTargetAndHide,
-  }),
-}))
-
 describe('Editor.vue toolbar', () => {
   beforeEach(() => {
     const pinia = createPinia()

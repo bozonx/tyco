@@ -72,8 +72,8 @@ vi.mock('../stores/ipc', () => ({
   }),
 }))
 
-vi.mock('../stores/llm', () => ({
-  useLlmStore: () => ({ refreshSecrets: vi.fn(), secrets: {} }),
+vi.mock('../stores/secrets', () => ({
+  useSecretsStore: () => ({ refreshSecrets: vi.fn(), secrets: {} }),
 }))
 
 vi.mock('../stores/history', () => ({

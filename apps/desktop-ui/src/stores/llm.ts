@@ -10,18 +10,14 @@ import { markRaw } from 'vue'
 
 import { createLlmClient, isKeylessProvider } from '../lib/llm/llm-client'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
-import {
-  createSecretKeyProvider,
-  createSecretsClient,
-} from '../lib/net/secrets'
+import { createSecretKeyProvider } from '../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { useIpcStore } from './ipc'
-import { createSecretsState } from '../lib/net/secrets-state'
+import { useSecretsStore } from './secrets'
 
 export const useLlmStore = defineStore('llm', () => {
   const ipcStore = useIpcStore()
-  const secretsClient = createSecretsClient(tauriNetIpc)
-  const state = createSecretsState(secretsClient)
+  const secretsStore = useSecretsStore()
 
   const getConfig = () =>
     normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm)
@@ -29,7 +25,7 @@ export const useLlmStore = defineStore('llm', () => {
     getConfig,
     transport: createTauriTransport(tauriNetIpc),
     keys: createSecretKeyProvider(
-      () => secretsClient.status(),
+      () => secretsStore.client.status(),
       (provider) => isKeylessProvider(getConfig(), provider)
     ),
   })
@@ -51,5 +47,5 @@ export const useLlmStore = defineStore('llm', () => {
     notifyEmptyText: () =>
       toast.addToast(translate('toast.textNotSelected'), 'warn'),
   })
-  return { client: markRaw(client), actions: markRaw(actions), ...state }
+  return { client: markRaw(client), actions: markRaw(actions) }
 })

@@ -27,9 +27,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 
-import { useVoiceFinishSignal } from '../composables/use-voice-finish-signal'
+import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import { getDesktopWindow as getCurrentWindow } from '../lib/desktop/window'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
@@ -56,22 +56,14 @@ const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
 const actionMenuStore = useActionMenuStore()
-const isInsertMenuVisible = ref(false)
-const dictationResultText = ref('')
 
 navPanelStore.resetNavPanelState({ panelVisible: false })
 
 /** Only the quick window is opened by the `voice` activation */
 const activationMode =
   getCurrentWindow().label === 'quick' ? ('voice' as const) : undefined
-// past the dictation, its hotkey starts a new one, as it did before
-useVoiceFinishSignal(
-  () => (isInsertMenuVisible.value ? activationMode : undefined),
-  () => {
-    isInsertMenuVisible.value = false
-    dictationResultText.value = ''
-  }
-)
+const { isInsertMenuVisible, dictationResultText, showResult, resetResult } =
+  useVoiceResultStep(() => activationMode)
 
 watch(isInsertMenuVisible, (shown) => emit('result-shown', shown), {
   immediate: true,
@@ -85,8 +77,7 @@ watch(
   ],
   ([isShown, mode, activationId], previous) => {
     if (!isShown || mode !== 'voice' || activationId !== previous?.[2]) {
-      isInsertMenuVisible.value = false
-      dictationResultText.value = ''
+      resetResult()
     }
   }
 )
@@ -105,8 +96,7 @@ function handleCorrected(
     void insertAction.action(resultText)
     return
   }
-  dictationResultText.value = resultText
-  isInsertMenuVisible.value = true
+  showResult(resultText)
 }
 
 function handleCancelled() {

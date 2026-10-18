@@ -53,11 +53,10 @@
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { usePersistedTranslationViewMode } from '../../composables/use-persisted-view-mode'
 import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import { useResultActions } from '../../composables/use-result-actions'
-import type { ParallelViewMode } from '../../lib/diff/diff-model'
 import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
-import { useIpcStore } from '../../stores/ipc'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
 import Icon from '../common/AppIcon.vue'
@@ -67,15 +66,6 @@ import ResultViewModeToggle from '../common/ResultViewModeToggle.vue'
 import TextPreview from '../common/TextPreview.vue'
 
 const props = defineProps<PreviewMenuParams>()
-const ipcStore = useIpcStore()
-
-function readStoredTranslationMode(): ParallelViewMode {
-  const fromState = ipcStore.desktopState.userConfig.translation.viewMode
-  if (fromState === 'split' || fromState === 'result') {
-    return fromState
-  }
-  return 'split'
-}
 
 const currentText = ref(props.text)
 watch(
@@ -85,24 +75,9 @@ watch(
   }
 )
 
-const viewMode = ref<ParallelViewMode>(
-  props.sourceText ? readStoredTranslationMode() : 'result'
+const { viewMode, cycleMode } = usePersistedTranslationViewMode(() =>
+  Boolean(props.sourceText)
 )
-
-watch(viewMode, (newMode) => {
-  void ipcStore.saveUserConfig({
-    ...ipcStore.desktopState.userConfig,
-    translation: {
-      ...ipcStore.desktopState.userConfig.translation,
-      viewMode: newMode,
-    },
-  })
-})
-
-function cycleMode() {
-  if (!props.sourceText) return
-  viewMode.value = viewMode.value === 'split' ? 'result' : 'split'
-}
 
 usePreviewModeShortcut(cycleMode)
 

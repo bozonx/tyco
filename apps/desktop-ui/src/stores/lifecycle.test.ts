@@ -1,7 +1,11 @@
-import { createPinia, disposePinia } from 'pinia'
+import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { desktopClient } from '../lib/desktop/client'
 import { browserThemeRuntime } from '../lib/theme/browser-theme-runtime'
+import { disposeProfileChatStore, useProfileChatStore } from './chat'
+import { useProfileChatInputStore } from './chat-input'
+import { useGlobalHotkeysStore } from './global-hotkeys'
 import { useNavPanelStore } from './nav-panel'
 import { useThemeStore } from './theme'
 import { useToastStore } from './toast'
@@ -52,5 +56,32 @@ describe('store lifecycle', () => {
     expect(nav.navPanelState.panelVisible).toBe(true)
     disposePinia(first)
     disposePinia(second)
+  })
+
+  it('unsubscribes global hotkeys listener on disposal', async () => {
+    const unsubscribe = vi.fn()
+    vi.spyOn(desktopClient, 'listen').mockReturnValue(
+      Promise.resolve(unsubscribe)
+    )
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useGlobalHotkeysStore(pinia)
+    await store.load()
+    disposePinia(pinia)
+    expect(unsubscribe).toHaveBeenCalledOnce()
+  })
+
+  it('disposes both profile chat store and profile chat input store on profile removal', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    useProfileChatStore('p1', pinia)
+    const inputStore = useProfileChatInputStore('p1', pinia)
+    inputStore.value = 'unsent draft'
+
+    disposeProfileChatStore('p1', pinia)
+
+    const recreatedInput = useProfileChatInputStore('p1', pinia)
+    expect(recreatedInput.value).toBe('')
+    disposePinia(pinia)
   })
 })

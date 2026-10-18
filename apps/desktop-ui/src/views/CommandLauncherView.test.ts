@@ -8,8 +8,6 @@ const desktopState = reactive({ isWindowShown: true })
 
 const menuModalsState = reactive({ hasOpenModal: false })
 
-const mocks = vi.hoisted(() => ({ navPanel: { resetNavPanelState: vi.fn() } }))
-
 vi.mock('../components/common/ContentPadding.vue', () => ({
   default: { template: '<div class="content-padding-stub"><slot /></div>' },
 }))
@@ -29,20 +27,11 @@ vi.mock('../stores/menu-modals', () => ({
   useMenuModalsStore: () => menuModalsState,
 }))
 
-vi.mock('../stores/nav-panel', () => ({
-  useNavPanelStore: () => mocks.navPanel,
-}))
-
 describe('CommandLauncherView.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     desktopState.isWindowShown = true
     menuModalsState.hasOpenModal = false
-  })
-
-  it('resets nav panel state on mount', () => {
-    mount(CommandLauncherView)
-    expect(mocks.navPanel.resetNavPanelState).toHaveBeenCalledWith({})
   })
 
   it('enables shortcuts when window is shown and no modal is open', () => {

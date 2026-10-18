@@ -152,16 +152,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { desktopClient } from '../../lib/desktop/client'
 import {
-  applyProviderInfo,
   isEditable as checkIsEditable,
   isSystemManaged as checkIsSystemManaged,
-  createHotkeySettingsState,
   defaultShortcut,
   displayedShortcut,
   hasConflict,
@@ -170,7 +168,7 @@ import {
   providerNoteKey,
 } from '../../lib/hotkeys/hotkey-settings'
 import { resolveSubmitKey } from '../../lib/input-keys/input-keys'
-import { useIpcStore } from '../../stores/ipc'
+import { useGlobalHotkeysStore } from '../../stores/global-hotkeys'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -182,8 +180,6 @@ import SettingsSection from '../common/SettingsSection.vue'
 import {
   DEFAULT_SUBMIT_KEY,
   DEFAULT_USER_CONFIG,
-  DESKTOP_EVENTS,
-  type HotkeyProviderInfo,
   SELECTION_HOTKEY_PREFIX,
   type SubmitKey,
   type UserConfig,
@@ -230,9 +226,10 @@ interface HotkeyRow {
   inline?: boolean
 }
 
-const ipcStore = useIpcStore()
+const hotkeysStore = useGlobalHotkeysStore()
+const { portalError, isRebinding } = storeToRefs(hotkeysStore)
+const { providerState, injection } = hotkeysStore
 const { toastKey } = useToast()
-const providerState = reactive(createHotkeySettingsState())
 const canConfigure = computed(() => providerState.canConfigure)
 const isEditable = computed(() => checkIsEditable(providerState))
 const isSystemManaged = computed(() => checkIsSystemManaged(providerState))
@@ -242,12 +239,6 @@ const globalInfo = computed(() =>
     .filter(Boolean)
     .join('\n\n')
 )
-const portalError = ref('')
-const isRebinding = ref(false)
-const injection = reactive<{ ok: boolean | null; error: string }>({
-  ok: null,
-  error: '',
-})
 
 const modes = Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort(
   (a, b) =>
@@ -302,7 +293,7 @@ function setShortcut(mode: string, shortcut: string) {
 
 // pressing a bound shortcut must reach the field, not run its action
 function suspendHotkeys(suspended: boolean) {
-  void ipcStore.callFunction('suspendHotkeys', [suspended])
+  hotkeysStore.suspendHotkeys(suspended)
 }
 
 async function copyText(text: string) {
@@ -314,10 +305,7 @@ async function copyText(text: string) {
 }
 
 async function checkInjection() {
-  injection.ok = null
-  const result = await ipcStore.callFunction('checkTextInjection')
-  injection.ok = result.success
-  injection.error = result.error ?? ''
+  await hotkeysStore.checkTextInjection()
 }
 
 const missing = computed(() =>
@@ -328,48 +316,17 @@ const missing = computed(() =>
 )
 
 async function configureHotkeys() {
-  portalError.value = ''
-  const result = await ipcStore.callFunction('configureHotkeys')
-  if (!result.success) {
-    portalError.value = result.error || t('settings.configureHotkeysError')
-  }
+  await hotkeysStore.configureHotkeys(t('settings.configureHotkeysError'))
 }
 
 // the backend reports the new shortcuts with the hotkeys changed event
 async function rebindHotkeys() {
-  portalError.value = ''
-  isRebinding.value = true
-  const result = await ipcStore.callFunction('rebindHotkeys')
-  isRebinding.value = false
-  if (!result.success) {
-    portalError.value = result.error || t('settings.rebindHotkeysError')
-  }
+  await hotkeysStore.rebindHotkeys(t('settings.rebindHotkeysError'))
 }
-
-async function loadProviderInfo() {
-  const result = await ipcStore.callFunction('getHotkeyProviderInfo')
-  if (result.success) {
-    applyProviderInfo(providerState, result.result as HotkeyProviderInfo)
-  }
-}
-
-let unlistenHotkeysChanged: (() => void) | undefined
-let unmounted = false
 
 onMounted(async () => {
   void checkInjection()
-  const unlisten = await desktopClient.listen(
-    DESKTOP_EVENTS.HOTKEYS_CHANGED,
-    () => void loadProviderInfo()
-  )
-  if (unmounted) unlisten()
-  else unlistenHotkeysChanged = unlisten
-  await loadProviderInfo()
-})
-
-onBeforeUnmount(() => {
-  unmounted = true
-  unlistenHotkeysChanged?.()
+  await hotkeysStore.reload()
 })
 </script>
 

@@ -16,8 +16,8 @@ const mocks = vi.hoisted(() => ({
   toastKey: vi.fn(),
   toastText: vi.fn(),
 }))
-vi.mock('../../stores/llm', () => ({
-  useLlmStore: () => ({ ...mocks, secrets: {}, vaultState: 'available' }),
+vi.mock('../../stores/secrets', () => ({
+  useSecretsStore: () => ({ ...mocks, secrets: {}, vaultState: 'available' }),
 }))
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: mocks.toastKey, toastText: mocks.toastText }),

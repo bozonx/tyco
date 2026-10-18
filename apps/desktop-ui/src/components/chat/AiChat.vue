@@ -120,8 +120,8 @@ import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
 import { appNavigation } from '../../lib/navigation/navigation'
-import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useSecretsStore } from '../../stores/secrets'
 import Icon from '../common/AppIcon.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
@@ -132,7 +132,7 @@ import ChatResponseAnnouncer from './ChatResponseAnnouncer.vue'
 import type { ChatMessage } from '@tyco/shared'
 
 const { chat: chatStore, input: chatInputStore } = useChatScope()
-const llmStore = useLlmStore()
+const secretsStore = useSecretsStore()
 const menuModalsStore = useMenuModalsStore()
 const { toastKey } = useToast()
 const { t } = useI18n()
@@ -254,7 +254,7 @@ const { dropZoneRef, draggingFiles } = useChatFileDrop({
 })
 onMounted(() => {
   // Keys may have changed while the chat was not shown.
-  llmStore.refreshSecrets().catch(() => undefined)
+  secretsStore.refreshSecrets().catch(() => undefined)
 })
 </script>
 

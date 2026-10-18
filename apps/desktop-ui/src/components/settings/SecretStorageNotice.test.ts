@@ -13,7 +13,7 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../../stores/llm', () => ({ useLlmStore: () => store }))
+vi.mock('../../stores/secrets', () => ({ useSecretsStore: () => store }))
 
 const origins = ['https://api.openai.com']
 
