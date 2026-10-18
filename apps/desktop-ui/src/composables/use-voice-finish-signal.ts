@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted } from 'vue'
 
 import { desktopClient } from '../lib/desktop/client'
 import { useGlobalHotkeysStore } from '../stores/global-hotkeys'
-import { useIpcStore } from '../stores/ipc'
+import { useDesktopStore } from '../stores/desktop'
 import { DESKTOP_EVENTS } from '@tyco/shared'
 
 /**
@@ -15,7 +15,7 @@ export function useVoiceFinishSignal(
   mode: () => string | undefined,
   confirm: () => void
 ) {
-  const ipc = useIpcStore()
+  const desktopStore = useDesktopStore()
   const hotkeys = useGlobalHotkeysStore()
   let unlisten: (() => void) | undefined
   let unmounted = false
@@ -26,8 +26,8 @@ export function useVoiceFinishSignal(
       .listen(DESKTOP_EVENTS.VOICE_FINISH, (activationId) => {
         if (
           mode() &&
-          activationId === ipc.desktopState.activationId &&
-          ipc.desktopState.isWindowShown
+          activationId === desktopStore.desktopState.activationId &&
+          desktopStore.desktopState.isWindowShown
         )
           confirm()
       })

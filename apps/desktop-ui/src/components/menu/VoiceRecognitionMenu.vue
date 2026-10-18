@@ -24,15 +24,15 @@ import { onMounted, onUnmounted, watch } from 'vue'
 
 import { useDictationActions } from '../../composables/use-dictation-actions'
 import { useI18n } from '../../composables/use-i18n'
-import { useLlmActions } from '../../composables/use-llm-actions'
 import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { desktopClient } from '../../lib/desktop/client'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
+import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
-import { useIpcStore } from '../../stores/ipc'
+import { useLlmStore } from '../../stores/llm'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
 import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
@@ -58,14 +58,14 @@ const {
   shouldFormatRecognizedText,
   startDictation,
 } = useDictationActions()
-const { voiceCorrection } = useLlmActions()
+const { voiceCorrection } = useLlmStore().actions
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
-const ipcStore = useIpcStore()
-let sessionActivationId = ipcStore.desktopState.activationId
+const desktopStore = useDesktopStore()
+let sessionActivationId = desktopStore.desktopState.activationId
 const ownsActivation = () =>
-  sessionActivationId === ipcStore.desktopState.activationId &&
-  ipcStore.desktopState.isWindowShown
+  sessionActivationId === desktopStore.desktopState.activationId &&
+  desktopStore.desktopState.isWindowShown
 const historyStore = useHistoryStore()
 const menuModalsStore = useMenuModalsStore()
 // a click elsewhere must not cut a dictation short
@@ -186,19 +186,19 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 watch(
-  () => ipcStore.desktopState.activationId,
+  () => desktopStore.desktopState.activationId,
   async (activationId) => {
-    if (!ipcStore.desktopState.isWindowShown) return
+    if (!desktopStore.desktopState.isWindowShown) return
     sessionActivationId = activationId
     await model.restartSession()
   }
 )
 
 watch(
-  () => ipcStore.desktopState?.isWindowShown,
+  () => desktopStore.desktopState?.isWindowShown,
   (isShown) => {
     if (isShown) {
-      sessionActivationId = ipcStore.desktopState.activationId
+      sessionActivationId = desktopStore.desktopState.activationId
       void startSession()
     } else {
       if ((isStarted.value || model.isStarting()) && !isFinishing.value) {
@@ -226,7 +226,7 @@ onMounted(async () => {
     })
     .catch(() => undefined)
 
-  if (ipcStore.desktopState?.isWindowShown !== false) {
+  if (desktopStore.desktopState?.isWindowShown !== false) {
     await startSession()
   }
 })

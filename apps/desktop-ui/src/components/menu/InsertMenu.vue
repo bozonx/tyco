@@ -74,8 +74,8 @@ import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
+import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
-import { useIpcStore } from '../../stores/ipc'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -102,7 +102,7 @@ const props = withDefaults(defineProps<InsertMenuParams>(), {
   insertOnly: false,
 })
 
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
 const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
@@ -176,7 +176,7 @@ usePreviewModeShortcut(() => {
 })
 
 const minCorrectionLength = computed(
-  () => ipcStore.desktopState?.appConfig?.minCorrectionLength ?? 0
+  () => desktopStore.appConfig?.minCorrectionLength ?? 0
 )
 
 /** Why the correction action is off for this text, if it is. */
@@ -194,7 +194,7 @@ function shouldDisableAction(item?: ActionItem) {
   if (!item) return false
   if (item.id === 'insertIntoWindow') {
     return !(
-      ipcStore.desktopState?.windowId &&
+      desktopStore.desktopState?.windowId &&
       props.text &&
       props.allowInsertButton
     )
@@ -210,7 +210,10 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
       if (item.id === 'correction' && correctionBlocker.value) {
         return { ...item, disabled: true, hint: correctionBlocker.value }
       }
-      if (item.id === 'insertIntoWindow' && !ipcStore.desktopState?.windowId) {
+      if (
+        item.id === 'insertIntoWindow' &&
+        !desktopStore.desktopState?.windowId
+      ) {
         return { ...item, disabled: true, hint: t('selection.noTarget') }
       }
       return { ...item, disabled: item.disabled || shouldDisableAction(item) }
@@ -229,7 +232,7 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 
   const disabled = firstItem.disabled || shouldDisableAction(firstItem)
   const hint =
-    firstItem.id === 'insertIntoWindow' && !ipcStore.desktopState?.windowId
+    firstItem.id === 'insertIntoWindow' && !desktopStore.desktopState?.windowId
       ? t('selection.noTarget')
       : firstItem.hint
 

@@ -22,9 +22,11 @@ vi.mock('../composables/use-i18n', () => ({
       values?.name ? `${key}:${values.name}` : key,
   }),
 }))
-vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunction, desktopState: reactiveParams }),
-}))
+vi.mock('../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
+vi.mock('../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../test/desktop-store')
+  return { useDesktopStore: () => mockDesktopStore(() => reactiveParams) }
+})
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => ({ resetNavPanelState: vi.fn() }),
 }))

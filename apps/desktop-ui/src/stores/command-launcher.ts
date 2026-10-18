@@ -10,20 +10,22 @@ import { createCommandRunner } from '../lib/commands/command-runner'
 import { translate } from '../lib/i18n/index'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useHistoryStore } from './history'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import { useToolsStore } from './tools'
 
 export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const historyStore = useHistoryStore()
   const runner = createCommandRunner(useInvocationRunnerDependencies())
   const { toastText } = useToast()
 
   const model = createCommandLauncherModel({
     tools: useToolsStore(),
-    commands: () => ipcStore.desktopState.userConfig?.commands,
-    launcherPages: () => ipcStore.desktopState.userConfig.launcherPages,
-    selectedText: () => ipcStore.desktopState.selectedText,
+    commands: () => desktopStore.userConfig?.commands,
+    launcherPages: () => desktopStore.userConfig.launcherPages,
+    selectedText: () => desktopStore.desktopState.selectedText,
     run: runner.run,
     ...createExternalJobAdapter({
       callFunction: ipcStore.callFunction,
@@ -56,27 +58,27 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   // every activation of the overlay starts at the full list, or at the
   // command of an external call
   watch(
-    () => ipcStore.desktopState.activationId,
+    () => desktopStore.desktopState.activationId,
     () => {
-      if (ipcStore.desktopState.mode !== StartMode.COMMAND_LAUNCHER) return
-      const request = ipcStore.desktopState.launcherRequest
+      if (desktopStore.desktopState.mode !== StartMode.COMMAND_LAUNCHER) return
+      const request = desktopStore.desktopState.launcherRequest
       if (request) void model.request(request)
       else {
         model.reset()
-        model.setPage(ipcStore.desktopState.launcherPage ?? 0)
+        model.setPage(desktopStore.desktopState.launcherPage ?? 0)
       }
     }
   )
 
   watch(
-    () => ipcStore.desktopState.selectedText,
+    () => desktopStore.desktopState.selectedText,
     (text) => {
       void model.selectionArrived(text)
     }
   )
 
   watch(
-    () => ipcStore.desktopState.isWindowShown,
+    () => desktopStore.desktopState.isWindowShown,
     (shown) => {
       if (!shown && model.stage.value.kind === 'prepare')
         model.dismissExternal()

@@ -63,16 +63,18 @@ import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import { useI18n } from '../composables/use-i18n'
 import { createAccessPrompt } from '../lib/external-access/access-prompt'
+import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/nav-panel'
 import type { AccessDecision } from '@tyco/shared'
 
 const { t } = useI18n()
 const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 
 useNavPanelStore().resetNavPanelState({ panelVisible: false })
 
-const request = computed(() => ipcStore.desktopState.accessRequest ?? null)
+const request = computed(() => desktopStore.desktopState.accessRequest ?? null)
 
 const prompt = createAccessPrompt({
   answer: async (jobId, decision) => {

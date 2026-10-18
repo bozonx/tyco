@@ -1,10 +1,11 @@
-import { getDesktopWindow as getCurrentWindow } from '../lib/desktop/window'
+import { isQuickWindow } from '../lib/desktop/window'
 
 import {
   createOverlayNavModel,
   type OverlayNavOptions,
 } from '../lib/modals/overlay-nav'
 import { appNavigation } from '../lib/navigation/navigation'
+import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickInputStore } from '../stores/quick-input'
@@ -13,16 +14,9 @@ import { useI18n } from './use-i18n'
 export function useOverlayNav(options?: () => OverlayNavOptions) {
   const menuModalsStore = useMenuModalsStore()
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const quickInputStore = useQuickInputStore()
   const { t } = useI18n()
-
-  const isQuickWindow = () => {
-    try {
-      return getCurrentWindow().label === 'quick'
-    } catch {
-      return false
-    }
-  }
 
   const goBack = () => {
     if (menuModalsStore.currentModal !== MenuModals.NONE) {
@@ -35,7 +29,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     menuModalsStore.closeAll()
     try {
       if (isQuickWindow()) {
-        if (ipcStore.desktopState?.mode === 'write') {
+        if (desktopStore.desktopState?.mode === 'write') {
           quickInputStore.discard()
         }
         void ipcStore.callFunctionOrNotify('hideWindow')

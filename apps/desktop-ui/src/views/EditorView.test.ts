@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
+import { useDesktopStore } from '../stores/desktop'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import EditorView from './EditorView.vue'
@@ -83,7 +84,7 @@ describe('Editor actions shortcut', () => {
   })
 
   it('keeps Ctrl+Enter for actions whatever sends the text', () => {
-    useIpcStore().desktopState.userConfig.submitKey = 'ctrlEnter'
+    useDesktopStore().desktopState.userConfig.submitKey = 'ctrlEnter'
     const open = vi.spyOn(useMenuModalsStore(), 'nextModal')
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },

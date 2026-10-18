@@ -8,12 +8,12 @@ import { createSettingsConfig } from '../lib/settings/settings-config'
 import { createSettingsSession } from '../lib/settings/settings-session'
 import { usePluginRuntimeStore } from './plugin-runtime'
 import { useActionMenuStore } from './action-menu'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 import { useThemeStore } from './theme'
 
 /** Owns the draft across settings navigation, including failed final saves. */
 export const useSettingsSessionStore = defineStore('settingsSession', () => {
-  const ipc = useIpcStore()
+  const desktop = useDesktopStore()
   const { pluginFactories } = usePluginRuntimeStore()
   const actions = useActionMenuStore()
   const theme = useThemeStore()
@@ -25,13 +25,13 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
     appearance: () => theme.settings,
   })
   const session = createSettingsSession({
-    initialConfig: ipc.desktopState.userConfig,
+    initialConfig: desktop.userConfig,
     prepare: config.prepare,
-    save: (next, base) => ipc.saveUserConfig(next, base),
-    getLatestConfig: () => ipc.desktopState.userConfig,
+    save: (next, base) => desktop.saveUserConfig(next, base),
+    getLatestConfig: () => desktop.userConfig,
     loadConfig: async () => {
-      await ipc.loadDesktopState()
-      return ipc.desktopState.userConfig
+      await desktop.loadDesktopState()
+      return desktop.userConfig
     },
     canSave: () =>
       Math.max(
@@ -47,7 +47,7 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
       ),
     debounceMs: 500,
   })
-  watch(() => ipc.desktopState.userConfig, session.applyIncoming)
+  watch(() => desktop.userConfig, session.applyIncoming)
   watch(session.draft, session.schedule, { deep: true, flush: 'sync' })
   onScopeDispose(() => {
     void session.dispose()

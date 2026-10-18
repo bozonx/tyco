@@ -58,10 +58,12 @@ import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import { useEditorInputStore } from './editor-input'
 import { useHistoryStore } from './history'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import { useLlmStore } from './llm'
 import { useMenuModalsStore } from './menu-modals'
 import { useSecretsStore } from './secrets'
+import { useToolsStore } from './tools'
 
 /**
  * One chat: "Ask AI" when `profileId` is null, a profile chat otherwise. Each
@@ -79,11 +81,20 @@ function createChatStoreSetup(profileId: string | null) {
       })
     const { toastKey, toastText } = useToast()
     const ipcStore = useIpcStore()
-    const saveSessionState = ipcStore.patchSessionState
+    const desktopStore = useDesktopStore()
+    const saveSessionState = desktopStore.patchSessionState
     const llmStore = useLlmStore()
     const secretsStore = useSecretsStore()
     const { sendChatMessage, generateChatTitle } = llmStore.actions
     const aiProfilesStore = useAiProfilesStore()
+    if (profileId) {
+      const pinia = getActivePinia()
+      // a removed profile takes its chat and draft along, before its files go
+      aiProfilesStore.$onAction(({ name, args }) => {
+        if (name === 'deleteProfile' && args[0] === profileId)
+          disposeProfileChatStore(profileId, pinia)
+      })
+    }
     const editorInputStore = useEditorInputStore()
     const chatInputStore = profileId
       ? useProfileChatInputStore(profileId)
@@ -109,16 +120,15 @@ function createChatStoreSetup(profileId: string | null) {
       })
 
     const modelOptions = computed(() =>
-      chatModelOptions(
-        normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm),
-        (id) => isSecretUsable(secretsStore.secrets, id)
+      chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
+        isSecretUsable(secretsStore.secrets, id)
       )
     )
     const selectedModel = computed<ChatLlmOption | null>(() => {
       if (!profileId) {
         return pickChatModel(
           modelOptions.value,
-          ipcStore.desktopState.sessionState?.lastChatModelId
+          desktopStore.sessionState?.lastChatModelId
         )
       }
       const picked = pickChatModel(modelOptions.value, profile.value?.modelId)
@@ -133,18 +143,18 @@ function createChatStoreSetup(profileId: string | null) {
     const getChatInstructions = () =>
       profileId
         ? soul.value
-        : (ipcStore.desktopState.appConfig ?? APP_CONFIG).aiInstructions[
+        : (desktopStore.appConfig ?? APP_CONFIG).aiInstructions[
             LlmInstructionKind.CHAT
           ]
     const getChatRules = () =>
-      profileId ? undefined : ipcStore.desktopState.userConfig.aiRules?.chat
+      profileId ? undefined : desktopStore.userConfig.aiRules?.chat
     const requestBudgetCharacters = () => {
       const picked = selectedModel.value
       if (!picked) return 0
       return chatRequestBudgetCharacters(picked, {
         instructions: getChatInstructions(),
         rules: getChatRules(),
-        rulePrefix: (ipcStore.desktopState.appConfig ?? APP_CONFIG).rulePrefix,
+        rulePrefix: (desktopStore.appConfig ?? APP_CONFIG).rulePrefix,
       })
     }
 
@@ -295,9 +305,8 @@ function createChatStoreSetup(profileId: string | null) {
         profileId
           ? (lastProfileChatId.value ??
             profileHistory?.chatHistory.value[0]?.id)
-          : ipcStore.desktopState.sessionState?.lastChatId,
-      isHistoryEnabled: () =>
-        isChatHistoryEnabled(ipcStore.desktopState.userConfig),
+          : desktopStore.sessionState?.lastChatId,
+      isHistoryEnabled: () => isChatHistoryEnabled(desktopStore.userConfig),
       getChatModel: () => {
         const picked = selectedModel.value
         return picked
@@ -329,7 +338,7 @@ function createChatStoreSetup(profileId: string | null) {
       prepare: withWorkspaceUploads(
         createChatFileReader({
           quality: () =>
-            ipcStore.desktopState.userConfig?.chat.imageQuality || 'balanced',
+            desktopStore.userConfig?.chat.imageQuality || 'balanced',
           storeImage: storeChatImage,
         }),
         {
@@ -371,7 +380,7 @@ function createChatStoreSetup(profileId: string | null) {
       input: chatInputStore,
       selectedModel: () => selectedModel.value,
       requestBudgetCharacters,
-      externalSelection: () => ipcStore.desktopState.selectedText,
+      externalSelection: () => desktopStore.desktopState.selectedText,
       windowLabel: getDesktopWindowLabel,
       openMainChat: (attachment) =>
         ipcStore.callFunctionOrNotify('openMainChat', [attachment]),
@@ -400,11 +409,19 @@ function createChatStoreSetup(profileId: string | null) {
     })
 
     watch(
-      () => ipcStore.desktopState.isWindowShown,
+      () => desktopStore.desktopState.isWindowShown,
       (isShown) => {
         if (!isShown) controller.markEditorSelectionStale()
       }
     )
+
+    // "Ask AI" is the chat of `core.askInChat`
+    if (!profileId)
+      onScopeDispose(
+        useToolsStore().provideAskInChat((text) =>
+          controller.attachToChat(text)
+        )
+      )
 
     return {
       ...model,

@@ -20,26 +20,28 @@ import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
 import { createCorrectionMode } from '../lib/correction/correction-mode'
 import { useActionMenuStore } from '../stores/action-menu'
+import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/nav-panel'
 
 const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const navPanelStore = useNavPanelStore()
 const isStarting = ref(false)
 const { t } = useI18n()
 const { toastText } = useToast()
-const viewActivationId = ipcStore.desktopState.activationId
+const viewActivationId = desktopStore.desktopState.activationId
 let unmounted = false
 const isCurrent = () =>
   !unmounted &&
-  ipcStore.desktopState.activationId === viewActivationId &&
-  ipcStore.desktopState.mode === 'correction' &&
-  ipcStore.desktopState.isWindowShown
+  desktopStore.desktopState.activationId === viewActivationId &&
+  desktopStore.desktopState.mode === 'correction' &&
+  desktopStore.desktopState.isWindowShown
 const emptyMessage = computed(() => {
-  const text = ipcStore.desktopState.selectedText
+  const text = desktopStore.desktopState.selectedText
   if (!text?.trim()) return t('toast.textNotSelected')
-  const minLength = ipcStore.desktopState.appConfig?.minCorrectionLength ?? 0
+  const minLength = desktopStore.appConfig?.minCorrectionLength ?? 0
   return t(
     text.length < minLength
       ? 'toast.textTooShortForCorrection'
@@ -67,8 +69,8 @@ const correctionMode = createCorrectionMode({
 watch(
   () =>
     [
-      ipcStore.desktopState.selectedText,
-      ipcStore.desktopState.activationId,
+      desktopStore.desktopState.selectedText,
+      desktopStore.desktopState.activationId,
     ] as const,
   ([text, activationId]) => {
     if (!isCurrent()) return

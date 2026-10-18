@@ -31,11 +31,14 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({
-    desktopState: reactive(mocks.desktopState),
-    callFunction: mocks.callFunction,
-  }),
+  useIpcStore: () => ({ callFunction: mocks.callFunction }),
 }))
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
+  return {
+    useDesktopStore: () => mockDesktopStore(() => reactive(mocks.desktopState)),
+  }
+})
 vi.mock('../../stores/quick-input', () => ({
   useQuickInputStore: () => ({
     requestFocus: mocks.focus,

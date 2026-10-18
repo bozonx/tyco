@@ -8,15 +8,15 @@
 import { computed } from 'vue'
 
 import CommandLauncher from '../components/menu/CommandLauncher.vue'
-import { useIpcStore } from '../stores/ipc'
+import { useDesktopStore } from '../stores/desktop'
 import { useMenuModalsStore } from '../stores/menu-modals'
 
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
 
 // The view outlives a hidden window. Until the next activation reaches it, the
 // keys belong to whatever mode that activation opens
 const shortcutsDisabled = computed(
-  () => menuModalsStore.hasOpenModal || !ipcStore.desktopState.isWindowShown
+  () => menuModalsStore.hasOpenModal || !desktopStore.desktopState.isWindowShown
 )
 </script>

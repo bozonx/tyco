@@ -2,7 +2,7 @@ import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useTextCorrectionStore } from './text-correction'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 
 const mocks = vi.hoisted(() => ({
   correctText: vi.fn(async () => 'First result'),
@@ -22,28 +22,28 @@ describe('corrector configuration ownership', () => {
     'invalidates a completed correction immediately when %s change',
     async (setting) => {
       const store = useTextCorrectionStore()
-      const ipc = useIpcStore()
+      const desktop = useDesktopStore()
       const signal = new AbortController().signal
       expect(await store.correct('Sample', signal)).toBe('First result')
       mocks.correctText.mockResolvedValue('Updated result')
       if (setting === 'rules')
-        ipc.desktopState.userConfig.aiRules = {
-          ...ipc.desktopState.userConfig.aiRules,
+        desktop.desktopState.userConfig.aiRules = {
+          ...desktop.desktopState.userConfig.aiRules,
           correction: 'New rules',
         }
       if (setting === 'models')
-        ipc.desktopState.userConfig.llm.taskModelChains.correction = [
+        desktop.desktopState.userConfig.llm.taskModelChains.correction = [
           'another-model',
         ]
       // Simulate a new backend instruction snapshot; production defaults have literal types.
       if (setting === 'instructions')
         Reflect.set(
-          ipc.desktopState.appConfig.aiInstructions,
+          desktop.desktopState.appConfig.aiInstructions,
           'correction',
           'New instructions'
         )
       if (setting === 'prefix')
-        Reflect.set(ipc.desktopState.appConfig, 'rulePrefix', 'New prefix')
+        Reflect.set(desktop.desktopState.appConfig, 'rulePrefix', 'New prefix')
       expect(store.getCachedCorrection('Sample')).toBeUndefined()
       expect(await store.correct('Sample', signal)).toBe('Updated result')
       expect(mocks.correctText).toHaveBeenCalledTimes(2)

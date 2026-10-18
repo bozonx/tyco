@@ -2,17 +2,17 @@ import { defineStore } from 'pinia'
 import { onScopeDispose, ref, watchEffect } from 'vue'
 import { browserThemeRuntime } from '../lib/theme/browser-theme-runtime'
 import { createThemeController } from '../lib/theme/theme-controller'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 import { normalizeAppearance } from '@tyco/shared/appearance'
 
 export const useThemeStore = defineStore('theme', () => {
-  const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const controller = createThemeController(browserThemeRuntime)
   const settings = ref(controller.resolveInitialSettings())
   const resolved = ref(controller.applySettings(settings.value))
 
   watchEffect(() => {
-    const userConfig = ipcStore.desktopState.userConfig
+    const userConfig = desktopStore.userConfig
 
     // Until the config arrives keep what the bootstrap applied from storage.
     if (!userConfig) {

@@ -31,11 +31,14 @@ vi.mock('../../composables/use-overlay-nav', () => ({
   }),
 }))
 vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({
-    desktopState: reactive(mocks.desktopState),
-    callFunctionOrNotify: vi.fn(),
-  }),
+  useIpcStore: () => ({ callFunctionOrNotify: vi.fn() }),
 }))
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
+  return {
+    useDesktopStore: () => mockDesktopStore(() => reactive(mocks.desktopState)),
+  }
+})
 vi.mock('../../stores/tools', async () => {
   const { testTools } = await import('../../lib/tools/testing')
   const tools = testTools()

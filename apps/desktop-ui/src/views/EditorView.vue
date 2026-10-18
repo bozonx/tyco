@@ -1,7 +1,7 @@
 <template>
   <ContentPadding>
     <div class="editor-view">
-      <Editor v-if="ipcStore.desktopState" :compact="false" />
+      <Editor v-if="desktopStore.desktopState" :compact="false" />
     </div>
   </ContentPadding>
 </template>
@@ -12,12 +12,15 @@ import { onMounted, onScopeDispose, onUnmounted } from 'vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import Editor from '../components/editor/Editor.vue'
 import { isCtrlEnter } from '../lib/input-keys/input-keys'
+import { useDesktopStore } from '../stores/desktop'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 
 const ipcStore = useIpcStore()
+
+const desktopStore = useDesktopStore()
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()

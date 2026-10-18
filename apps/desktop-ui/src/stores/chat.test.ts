@@ -15,6 +15,7 @@ import { useChatInputStore, useProfileChatInputStore } from './chat-input'
 import { useEditorInputStore } from './editor-input'
 import { useHistoryStore } from './history'
 import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 import { chatAnswer } from '../lib/chat/testing'
 
 const ai = vi.hoisted(() => ({
@@ -42,15 +43,15 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.spyOn(appNavigation, 'push').mockResolvedValue()
   vi.spyOn(useHistoryStore(), 'saveChat').mockResolvedValue()
-  const ipc = useIpcStore()
-  vi.spyOn(ipc, 'patchSessionState').mockResolvedValue({
+  const desktopStore = useDesktopStore()
+  vi.spyOn(desktopStore, 'patchSessionState').mockResolvedValue({
     success: true,
-    result: ipc.desktopState.sessionState,
+    result: desktopStore.desktopState.sessionState,
   })
-  ipc.applyViewState({
-    ...ipc.desktopState,
+  desktopStore.applyViewState({
+    ...desktopStore.desktopState,
     userConfig: {
-      ...ipc.desktopState.userConfig,
+      ...desktopStore.desktopState.userConfig,
       llm: structuredClone(DEFAULT_LLM_CONFIG),
     },
     isWindowShown: true,
@@ -86,8 +87,8 @@ describe('chat store dependency wiring', () => {
     editor.setSelection('Draft', 0, 5)
     const store = useChatStore()
     expect(store.voiceChatContext?.source).toBe('editor-selection')
-    useIpcStore().applyViewState({
-      ...useIpcStore().desktopState,
+    useDesktopStore().applyViewState({
+      ...useDesktopStore().desktopState,
       isWindowShown: false,
     })
     await nextTick()
@@ -103,11 +104,11 @@ describe('chat store dependency wiring', () => {
 })
 
 it('budgets the actual chat instructions, rules and configured output consistently', async () => {
-  const ipc = useIpcStore()
-  ipc.desktopState.userConfig.llm!.models[0].contextWindowTokens = 4096
-  ipc.desktopState.userConfig.llm!.models[0].maxOutputTokens = 3000
-  ipc.desktopState.userConfig.aiRules = {
-    ...ipc.desktopState.userConfig.aiRules,
+  const desktopStore = useDesktopStore()
+  desktopStore.desktopState.userConfig.llm!.models[0].contextWindowTokens = 4096
+  desktopStore.desktopState.userConfig.llm!.models[0].maxOutputTokens = 3000
+  desktopStore.desktopState.userConfig.aiRules = {
+    ...desktopStore.desktopState.userConfig.aiRules,
     chat: 'x'.repeat(4000),
   }
   const store = useChatStore()
@@ -190,9 +191,9 @@ describe('profile chats', () => {
     const files = { soul: '# Old', profile: writer }
     mockVault(files)
     await useAiProfilesStore().loadAll()
-    const ipc = useIpcStore()
-    ipc.desktopState.userConfig.aiRules = {
-      ...ipc.desktopState.userConfig.aiRules,
+    const desktopStore = useDesktopStore()
+    desktopStore.desktopState.userConfig.aiRules = {
+      ...desktopStore.desktopState.userConfig.aiRules,
       chat: 'Ask AI rules',
     }
     const profileChat = useProfileChatStore('writer')
@@ -212,9 +213,9 @@ describe('profile chats', () => {
   })
 
   it('gives "Ask AI" its own instructions and the user chat rules', async () => {
-    const ipc = useIpcStore()
-    ipc.desktopState.userConfig.aiRules = {
-      ...ipc.desktopState.userConfig.aiRules,
+    const desktopStore = useDesktopStore()
+    desktopStore.desktopState.userConfig.aiRules = {
+      ...desktopStore.desktopState.userConfig.aiRules,
       chat: 'Ask AI rules',
     }
     const store = useChatStore()
@@ -255,7 +256,7 @@ describe('profile chats', () => {
   it('keeps the model picked in a profile in the profile', async () => {
     const call = mockVault({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()
-    const ipc = useIpcStore()
+    const desktopStore = useDesktopStore()
     const profileChat = useProfileChatStore('writer')
     const modelId = profileChat.modelOptions[0]!.id
 
@@ -264,7 +265,7 @@ describe('profile chats', () => {
     expect(call).toHaveBeenCalledWith('saveAiProfile', [
       expect.objectContaining({ id: 'writer', modelId }),
     ])
-    expect(ipc.patchSessionState).not.toHaveBeenCalled()
+    expect(desktopStore.patchSessionState).not.toHaveBeenCalled()
   })
 
   it('opens a profile chat on the profile route', async () => {
@@ -293,6 +294,19 @@ describe('profile chats', () => {
     expect(useProfileChatStore('writer').currentChatParams.title).toBe(
       undefined
     )
+    expect(useProfileChatInputStore('writer').value).toBe('')
+  })
+
+  it('forgets the chat of a profile once the profile is removed', async () => {
+    mockVault({ soul: '', profile: writer })
+    await useAiProfilesStore().loadAll()
+    const before = useProfileChatStore('writer')
+    before.currentChatParams.title = 'Draft'
+    useProfileChatInputStore('writer').setValue('Unsent message')
+
+    await useAiProfilesStore().deleteProfile('writer')
+
+    expect(useProfileChatStore('writer')).not.toBe(before)
     expect(useProfileChatInputStore('writer').value).toBe('')
   })
 })

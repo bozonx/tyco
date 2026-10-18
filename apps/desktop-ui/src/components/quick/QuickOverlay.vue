@@ -19,7 +19,9 @@
       </div>
       <div v-show="currentMode === 'voice'" class="quick-mode-layer">
         <VoiceView
-          v-if="currentMode === 'voice' && ipcStore.desktopState.isWindowShown"
+          v-if="
+            currentMode === 'voice' && desktopStore.desktopState.isWindowShown
+          "
           bar
           @result-shown="voiceResultShown = $event"
         />
@@ -40,7 +42,8 @@
       </div>
       <div
         v-if="
-          currentMode === 'voiceCommands' && ipcStore.desktopState.isWindowShown
+          currentMode === 'voiceCommands' &&
+          desktopStore.desktopState.isWindowShown
         "
         class="quick-mode-layer"
       >
@@ -63,7 +66,7 @@
         <ExternalAccessView
           v-if="
             currentMode === 'externalAccess' &&
-            ipcStore.desktopState.isWindowShown
+            desktopStore.desktopState.isWindowShown
           "
         />
       </div>
@@ -75,6 +78,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useQuickWindowSession } from '../../composables/use-quick-window-session'
 import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
 import { createFocusLossWatcher } from '../../lib/quick-panel/focus-loss'
 import {
@@ -84,10 +88,9 @@ import {
   unionRect,
 } from '../../lib/quick-panel/input-region'
 import { createWindowFocus } from '../../lib/quick-panel/window-focus'
-import { useCommandLauncherStore } from '../../stores/command-launcher'
+import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import { useQuickDismissStore } from '../../stores/quick-dismiss'
 import { useQuickInputStore } from '../../stores/quick-input'
 import AiTaskView from '../../views/AiTaskView.vue'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
@@ -101,15 +104,14 @@ import VoiceView from '../../views/VoiceView.vue'
 import WriteView from '../../views/WriteView.vue'
 
 const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
 const quickInputStore = useQuickInputStore()
-const quickDismissStore = useQuickDismissStore()
-const commandLauncherStore = useCommandLauncherStore()
 const cardRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
 
-const currentMode = computed(() => ipcStore.desktopState?.mode || 'write')
-const activationId = computed(() => ipcStore.desktopState.activationId)
+const currentMode = computed(() => desktopStore.desktopState?.mode || 'write')
+const activationId = computed(() => desktopStore.desktopState.activationId)
 const hasModal = computed(
   () => menuModalsStore.currentModal !== MenuModals.NONE
 )
@@ -135,38 +137,20 @@ const isSheet = computed(() => {
 /** What stays clickable while only the input or the voice bar is shown. */
 const INPUT_PARTS = '.write-frame, .write-hint, .voice-bar'
 
-/** Modes whose first step (the input, the action menu) has nothing to lose. */
-const DISMISSIBLE_MODES = new Set([
-  'write',
-  'select',
-  'aiTasks',
-  'commandLauncher',
-  'translate',
-  'correction',
-])
+// The window keeps one size; while it shows only the input, the rest of it
+// lets clicks through to the windows below
+const regionSync = createInputRegionSync({
+  apply: async (region) => {
+    const result = await ipcStore.callFunction('setQuickInputRegion', [region])
+    if (!result.success) throw new Error(result.error)
+  },
+})
 
-/**
- * Only the first step goes away when the focus goes elsewhere. Everything past
- * it (the step after the input or the menu, a correction on its way) stays
- * until the user closes it with Esc: a click must not lose it
- */
-const keepsOnFocusLoss = computed(
-  () =>
-    !DISMISSIBLE_MODES.has(currentMode.value) ||
-    // past the list: a typed text or a running command
-    (currentMode.value === 'commandLauncher' &&
-      commandLauncherStore.stage.kind !== 'list') ||
-    hasModal.value ||
-    Boolean(menuModalsStore.pendingModal)
-)
-
-/** The user clicked elsewhere: drop what is in progress, keep the text. */
-const dismiss = () => {
-  if (currentMode.value === 'write') quickInputStore.markDismissed()
-  menuModalsStore.cancelAndCloseAll()
-  // a failed dismissal leaves the window shown, which tells enough
-  void ipcStore.callFunction('dismissQuickWindow')
-}
+// a new activation owns its own operations, results and input region
+const session = useQuickWindowSession({
+  onActivation: () => regionSync.invalidate(),
+})
+const keepsOnFocusLoss = computed(session.keepsOnFocusLoss)
 
 const handleRootPointerDown = (event: PointerEvent) => {
   // a click around the input lands in this window; a menu takes them all
@@ -176,7 +160,7 @@ const handleRootPointerDown = (event: PointerEvent) => {
   const isInputPart = Array.from(
     cardRef.value.querySelectorAll(INPUT_PARTS)
   ).some((part) => target && part.contains(target))
-  if (target && !isInputPart) dismiss()
+  if (target && !isInputPart) session.dismiss()
 }
 
 const focusLoss = createFocusLossWatcher({
@@ -185,12 +169,8 @@ const focusLoss = createFocusLossWatcher({
     // a hidden window has nothing to dismiss
     return !(await window.isVisible()) || (await window.isFocused())
   },
-  canDismiss: () =>
-    Boolean(ipcStore.desktopState.isWindowShown) &&
-    !keepsOnFocusLoss.value &&
-    ipcStore.desktopState.userConfig?.quickHideOnBlur !== false &&
-    !quickDismissStore.isHeld,
-  onLost: dismiss,
+  canDismiss: session.canDismissOnFocusLoss,
+  onLost: session.dismiss,
 })
 let removeFocusListener: (() => void) | undefined
 
@@ -214,21 +194,16 @@ const showFocusHint = computed(
   () =>
     !isWindowFocused.value &&
     isSheet.value &&
-    Boolean(ipcStore.desktopState.isWindowShown)
+    Boolean(desktopStore.desktopState.isWindowShown)
 )
 let unmounted = false
 
-// The window keeps one size; while it shows only the input, the rest of it
-// lets clicks through to the windows below
-const regionSync = createInputRegionSync({
-  apply: async (region) => {
-    const result = await ipcStore.callFunction('setQuickInputRegion', [region])
-    if (!result.success) throw new Error(result.error)
-  },
-})
-
 const measureInputRegion = (): InputRect | null => {
-  if (isSheet.value || !ipcStore.desktopState.isWindowShown || !cardRef.value) {
+  if (
+    isSheet.value ||
+    !desktopStore.desktopState.isWindowShown ||
+    !cardRef.value
+  ) {
     return null
   }
   const rects = Array.from(cardRef.value.querySelectorAll(INPUT_PARTS))
@@ -293,27 +268,7 @@ onUnmounted(() => {
   delete document.documentElement.dataset.windowFocused
 })
 
-// whatever hid the window, work started for it has no one to show it to
-watch(
-  () => ipcStore.desktopState.isWindowShown,
-  (isShown) => {
-    if (isShown) return
-    // a correction must not finish into an insert nobody sees
-    menuModalsStore.cancelAndCloseAll()
-  }
-)
-
-// A new activation owns its own operations and results.
-watch(
-  () => ipcStore.desktopState.activationId,
-  () => {
-    menuModalsStore.cancelAndCloseAll()
-    regionSync.invalidate()
-  },
-  { flush: 'sync' }
-)
-
-watch([currentMode, () => ipcStore.desktopState.isWindowShown], () => {
+watch([currentMode, () => desktopStore.desktopState.isWindowShown], () => {
   void nextTick(observeInputParts)
 })
 
@@ -322,15 +277,15 @@ watch(
     isSheet,
     // the input and the voice bar are both panels, of different sizes
     currentMode,
-    () => ipcStore.desktopState.isWindowShown,
-    () => ipcStore.desktopState.activationId,
+    () => desktopStore.desktopState.isWindowShown,
+    () => desktopStore.desktopState.activationId,
   ],
   updateInputRegionAfterRender
 )
 
 // Keep focus in the input field when window is shown or hidden so focus arrives immediately
 watch(
-  () => ipcStore.desktopState.isWindowShown,
+  () => desktopStore.desktopState.isWindowShown,
   (isShown) => {
     syncFocus()
     if (isShown) void windowFocus.refresh()

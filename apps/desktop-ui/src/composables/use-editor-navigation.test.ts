@@ -10,6 +10,7 @@ import { useEditorNavigation } from './use-editor-navigation'
 const windowState = vi.hoisted(() => ({ label: 'main' }))
 vi.mock('../lib/desktop/window', () => ({
   getDesktopWindow: () => windowState,
+  isQuickWindow: () => windowState.label === 'quick',
 }))
 
 let pinia: ReturnType<typeof createPinia>

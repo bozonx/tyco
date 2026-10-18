@@ -60,6 +60,7 @@ import {
 } from '../lib/input-keys/input-keys'
 import { maxInputHeight } from '../lib/quick-panel/input-height'
 import { useCorrectionWorkflowStore } from '../stores/correction-workflow'
+import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
@@ -68,14 +69,15 @@ import { useQuickInputStore } from '../stores/quick-input'
 const navPanelStore = useNavPanelStore()
 const quickInputStore = useQuickInputStore()
 const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
 const correctionWorkflowStore = useCorrectionWorkflowStore()
 const { t } = useI18n()
 const submitKey = computed(() =>
-  resolveSubmitKey(ipcStore.desktopState?.userConfig?.submitKey)
+  resolveSubmitKey(desktopStore.userConfig?.submitKey)
 )
 const prefetch = computed(
-  () => ipcStore.desktopState?.userConfig?.quickCorrectionPrefetch === true
+  () => desktopStore.userConfig?.quickCorrectionPrefetch === true
 )
 const submitShortcutLabel = computed(() => submitShortcut(submitKey.value))
 const newlineShortcutLabel = computed(() => newlineShortcut(submitKey.value))
@@ -117,10 +119,10 @@ function resetNav() {
 resetNav()
 
 watch(
-  () => ipcStore.desktopState?.activationId,
+  () => desktopStore.desktopState?.activationId,
   () => {
     correctionWorkflowStore.cancelInsert()
-    const { isWindowShown, mode } = ipcStore.desktopState
+    const { isWindowShown, mode } = desktopStore.desktopState
     if (isWindowShown && mode === 'write') {
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
@@ -145,7 +147,7 @@ watch(
 )
 
 watch(
-  () => ipcStore.desktopState?.isWindowShown,
+  () => desktopStore.desktopState?.isWindowShown,
   (isShown) => {
     if (!isShown) {
       correctionWorkflowStore.cancelInsert()
@@ -167,8 +169,8 @@ function cancelAndClose() {
 
 /** Whether the input takes commands: not while a modal is over it. */
 const acceptsInput = () =>
-  ipcStore.desktopState.isWindowShown &&
-  ipcStore.desktopState.mode === 'write' &&
+  desktopStore.desktopState.isWindowShown &&
+  desktopStore.desktopState.mode === 'write' &&
   !menuModalsStore.hasOpenModal
 
 function submitFromHint() {

@@ -61,22 +61,22 @@ vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
     callFunction: mocks.hideWindow,
     callFunctionOrNotify: mocks.hideWindow,
-    get desktopState() {
-      return { mode: mocks.mode, userConfig: {} }
-    },
   }),
 }))
+vi.mock('../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../test/desktop-store')
+  return {
+    useDesktopStore: () =>
+      mockDesktopStore(() => ({ mode: mocks.mode, userConfig: {} })),
+  }
+})
 
 vi.mock('../lib/navigation/navigation', () => ({
   appNavigation: { goToEditor: mocks.goToEditor },
 }))
 
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({
-    get label() {
-      return mocks.currentWindowLabel
-    },
-  }),
+vi.mock('../lib/desktop/window', () => ({
+  isQuickWindow: () => mocks.currentWindowLabel === 'quick',
 }))
 
 const press = (

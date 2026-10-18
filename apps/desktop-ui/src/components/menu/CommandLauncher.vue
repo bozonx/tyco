@@ -139,7 +139,7 @@ import {
 import type { TextControl } from '../../lib/ui/text-control'
 import { type ActionItem } from '../../stores/action-menu'
 import { useCommandLauncherStore } from '../../stores/command-launcher'
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import { useToolsStore } from '../../stores/tools'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -159,7 +159,7 @@ const props = withDefaults(defineProps<{ shortcutsDisabled?: boolean }>(), {
 })
 
 const { t } = useI18n()
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const launcher = useCommandLauncherStore()
 const toolsStore = useToolsStore()
 
@@ -327,7 +327,7 @@ watch(
 )
 
 watch(
-  () => [ipcStore.desktopState.activationId, props.shortcutsDisabled],
+  () => [desktopStore.desktopState.activationId, props.shortcutsDisabled],
   () => {
     searchMode.value = false
     query.value = ''

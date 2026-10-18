@@ -4,6 +4,7 @@ import { onScopeDispose, watch } from 'vue'
 import { createDefaultCommandsSync } from '../lib/commands/default-commands'
 import { translate } from '../lib/i18n'
 import { clientLogger } from '../lib/logger'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import { useToolsStore } from './tools'
 
@@ -13,6 +14,7 @@ import { useToolsStore } from './tools'
  */
 export const useDefaultCommandsStore = defineStore('defaultCommands', () => {
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const toolsStore = useToolsStore()
   let stop: (() => void) | null = null
   let disposed = false
@@ -25,7 +27,7 @@ export const useDefaultCommandsStore = defineStore('defaultCommands', () => {
       return result.result ?? null
     },
     saveUserConfig: async (userConfig, baseConfig) => {
-      const result = await ipcStore.saveUserConfig(userConfig, baseConfig)
+      const result = await desktopStore.saveUserConfig(userConfig, baseConfig)
       if (!result.success) throw new Error(result.error ?? 'Config save failed')
       return true
     },

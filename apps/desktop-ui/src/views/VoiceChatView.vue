@@ -29,11 +29,14 @@ import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
 import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { useChatStore } from '../stores/chat'
+import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 
 const ipcStore = useIpcStore()
+
+const desktopStore = useDesktopStore()
 const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
@@ -47,7 +50,7 @@ const { isInsertMenuVisible, dictationResultText, showResult, resetResult } =
   useVoiceResultStep(() => 'voiceChat')
 
 watch(
-  () => ipcStore.desktopState.activationId,
+  () => desktopStore.desktopState.activationId,
   () => {
     contextRemoved.value = false
     resetResult()
@@ -71,7 +74,7 @@ async function handleCorrected(
 
   const autoSend = intent === 'submit'
 
-  const activationId = ipcStore.desktopState.activationId
+  const activationId = desktopStore.desktopState.activationId
   const result = await ipcStore.callFunctionOrNotify('openMainChat', [
     context.value ?? undefined,
     resultText,
@@ -79,9 +82,9 @@ async function handleCorrected(
   ])
   if (
     !result.success &&
-    ipcStore.desktopState.activationId === activationId &&
-    ipcStore.desktopState.mode === 'voiceChat' &&
-    ipcStore.desktopState.isWindowShown
+    desktopStore.desktopState.activationId === activationId &&
+    desktopStore.desktopState.mode === 'voiceChat' &&
+    desktopStore.desktopState.isWindowShown
   ) {
     showResult(resultText)
   }

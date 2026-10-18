@@ -10,6 +10,7 @@ import {
   useInvocationsStore,
 } from './invocations'
 import { useHistoryStore } from './history'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import type { SelectionFinishStatus } from '@tyco/shared'
 import { createSelectionAction } from '../lib/selection-replace/selection-action'
@@ -18,12 +19,13 @@ import { clientLogger } from '../lib/logger'
 /** Replaces the selection in another window; lives in the quick window. */
 export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const historyStore = useHistoryStore()
   const runner = createCommandRunner(useInvocationRunnerDependencies())
   const invocations = useInvocationsStore()
 
   const action = createSelectionAction({
-    commands: () => ipcStore.desktopState.userConfig.commands,
+    commands: () => desktopStore.userConfig.commands,
     correct: (text, signal) =>
       invocations.call('core.correct', text, { signal, source: 'selection' }),
     transform: (command, text, signal) =>
@@ -62,7 +64,8 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
       void ipcStore.callFunction('notifyDesktop', [summary, body])
     },
     saveResult: action.saveResult,
-    applyUserConfig: (userConfig) => ipcStore.setExecutionConfig(userConfig),
+    applyUserConfig: (userConfig) =>
+      desktopStore.setExecutionConfig(userConfig),
     t: (key) => translate(key),
     describeError: (error) => describeError(error, translate),
     isAborted: action.isAborted,

@@ -65,7 +65,6 @@ describe('Editor.vue toolbar', () => {
   })
 
   it('toggles the Markdown view with one highlighted button that resets on leave', async () => {
-    const { useMarkupModeStore } = await import('../../stores/markup-mode')
     const stubs = {
       Icon: true,
       EditorInput: true,
@@ -93,7 +92,11 @@ describe('Editor.vue toolbar', () => {
     )
 
     wrapper.unmount()
-    expect(useMarkupModeStore().showMarkup).toBe(false)
+    const next = mount(Editor, { global: { stubs } })
+    expect(next.find('.view-mode-toggle').attributes('aria-pressed')).toBe(
+      'false'
+    )
+    next.unmount()
   })
 
   it('renders plugin toolbar buttons in left and right positions', async () => {

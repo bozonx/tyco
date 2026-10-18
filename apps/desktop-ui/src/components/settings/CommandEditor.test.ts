@@ -14,6 +14,7 @@ const { callFunction, toastKey } = vi.hoisted(() => ({
   toastKey: vi.fn(),
 }))
 vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
+vi.mock('../../stores/desktop', () => ({ useDesktopStore: () => ({}) }))
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey }),
 }))

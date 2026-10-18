@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createInvocationRunner } from '../lib/invocation/invocation-runner'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useIpcStore } from './ipc'
+import { appNavigation } from '../lib/navigation/navigation'
 import { useChatStore } from './chat'
 import { useToolsStore } from './tools'
 import { useToastStore } from './toast'
@@ -39,31 +40,30 @@ describe('core insertion dependency wiring', () => {
   })
 })
 
-describe('lazy tool dependency ownership', () => {
-  it('opens chat in its owner even when another Pinia becomes active', async () => {
-    const owner = useChatStore(pinia)
-    const attach = vi.spyOn(owner, 'attachToChat').mockResolvedValue()
-    const tools = useToolsStore(pinia)
-    const otherPinia = createPinia()
-    try {
-      const otherAttach = vi
-        .spyOn(useChatStore(otherPinia), 'attachToChat')
-        .mockResolvedValue()
-      setActivePinia(otherPinia)
-      const result = await tools
-        .get('core.askInChat')!
-        .run({
-          input: { text: 'Owner context' },
-          config: {},
-          source: 'menu',
-          signal: new AbortController().signal,
-          wantsOutput: false,
-        })
-      expect(result.ok).toBe(true)
-      expect(attach).toHaveBeenCalledExactlyOnceWith('Owner context')
-      expect(otherAttach).not.toHaveBeenCalled()
-    } finally {
-      disposePinia(otherPinia)
-    }
+describe('ask in chat', () => {
+  const askInChat = () =>
+    useToolsStore()
+      .get('core.askInChat')!
+      .run({
+        input: { text: 'Context' },
+        config: {},
+        source: 'menu',
+        signal: new AbortController().signal,
+        wantsOutput: false,
+      })
+
+  it('attaches the text to "Ask AI", which provides itself', async () => {
+    vi.spyOn(appNavigation, 'push').mockResolvedValue()
+    const chat = useChatStore()
+    expect((await askInChat()).ok).toBe(true)
+    expect(chat.currentChatParams.attachments).toEqual([
+      expect.objectContaining({ text: 'Context' }),
+    ])
+  })
+
+  it('is released with the chat that provided it', async () => {
+    const release = useToolsStore().provideAskInChat(async () => {})
+    release()
+    await expect(askInChat()).rejects.toThrow('The chat is not available')
   })
 })

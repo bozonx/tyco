@@ -95,6 +95,23 @@ describe('desktop state revision ordering', () => {
     expect(callFunction).not.toHaveBeenCalled()
   })
 
+  it('stores a patch over the current config and exposes the result', async () => {
+    const { model, callFunction } = setup()
+    await model.loadDesktopState()
+    const base = model.userConfig.value
+    callFunction.mockResolvedValueOnce(
+      response(1, { userConfig: { ...base, diffViewMode: 'split' } })
+    )
+    expect(
+      (await model.updateUserConfig({ diffViewMode: 'split' })).success
+    ).toBe(true)
+    expect(callFunction).toHaveBeenCalledWith('saveUserConfig', [
+      { ...base, diffViewMode: 'split' },
+      base,
+    ])
+    expect(model.userConfig.value.diffViewMode).toBe('split')
+  })
+
   it('uses detached browser state without invoking the backend', async () => {
     const { model, invoke } = setup(false)
     expect((await model.loadDesktopState()).revision).toBe(0)

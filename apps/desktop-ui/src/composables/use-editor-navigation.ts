@@ -3,7 +3,7 @@ import { APP_ROUTES } from '../lib/navigation/routes'
 import { useEditorInputStore } from '../stores/editor-input'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useIpcStore } from '../stores/ipc'
-import { getDesktopWindow as getCurrentWindow } from '../lib/desktop/window'
+import { isQuickWindow } from '../lib/desktop/window'
 import useToast from './use-toast'
 
 export function useEditorNavigation() {
@@ -53,7 +53,7 @@ export function useEditorNavigation() {
   }
 
   function toEditor(text?: string, sourceText?: string) {
-    if (getCurrentWindow().label === 'quick') {
+    if (isQuickWindow()) {
       menuModalsStore.closeAll()
       void ipcStore.callFunctionOrNotify('openMainEditor', [text, sourceText])
       return

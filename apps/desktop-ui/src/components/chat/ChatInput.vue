@@ -26,12 +26,12 @@ import {
   resolveSubmitKey,
 } from '../../lib/input-keys/input-keys'
 import type { TextControl } from '../../lib/ui/text-control'
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import FieldTextArea from '../common/FieldTextArea.vue'
 
 const emit = defineEmits<{ (e: 'send'): void }>()
 const { chat: chatStore, input: chatInputStore } = useChatScope()
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const textareaRef = ref<TextControl | null>(null)
 const { t } = useI18n()
 /** Tells that the question will be about the attached text */
@@ -84,9 +84,7 @@ function handleBlur(event: FocusEvent) {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  const submitKey = resolveSubmitKey(
-    ipcStore.desktopState?.userConfig?.submitKey
-  )
+  const submitKey = resolveSubmitKey(desktopStore.userConfig?.submitKey)
   // a line break is left to the textarea itself
   if (resolveInputKeyAction(event, submitKey) === 'submit') {
     event.preventDefault()

@@ -14,8 +14,8 @@ const mocks = vi.hoisted(() => ({
   toastText: vi.fn(),
 }))
 
-vi.mock('../../composables/use-llm-actions', () => ({
-  useLlmActions: () => ({ voiceCorrection: mocks.voiceCorrection }),
+vi.mock('../../stores/llm', () => ({
+  useLlmStore: () => ({ actions: { voiceCorrection: mocks.voiceCorrection } }),
 }))
 
 vi.mock('../../composables/use-dictation-actions', () => ({
@@ -43,14 +43,14 @@ vi.mock('../../lib/desktop/client', () => ({
   },
 }))
 
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 
 describe('VoiceRecognitionMenu', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useIpcStore().desktopState.isWindowShown = true
+    useDesktopStore().desktopState.isWindowShown = true
     vi.clearAllMocks()
     mocks.startDictation.mockResolvedValue(undefined)
     mocks.cancelDictation.mockResolvedValue(undefined)
@@ -275,7 +275,7 @@ describe('VoiceRecognitionMenu', () => {
     const wrapper = mountChat()
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledOnce()
-    useIpcStore().desktopState.activationId++
+    useDesktopStore().desktopState.activationId++
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledTimes(2)
     expect(wrapper.emitted('cancelled')).toBeUndefined()
@@ -293,7 +293,7 @@ describe('VoiceRecognitionMenu', () => {
     await flushPromises()
     await wrapper.find('button[title="chat.voiceSendHint"]').trigger('click')
     await flushPromises()
-    useIpcStore().desktopState.activationId++
+    useDesktopStore().desktopState.activationId++
     await flushPromises()
     resolve('Old transcript')
     await flushPromises()

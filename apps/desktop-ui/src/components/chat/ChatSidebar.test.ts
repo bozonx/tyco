@@ -45,11 +45,13 @@ vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: vi.fn() }),
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({
-    desktopState: { userConfig: reactive(mocks.userConfig) },
-  }),
-}))
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
+  return {
+    useDesktopStore: () =>
+      mockDesktopStore(() => ({ userConfig: reactive(mocks.userConfig) })),
+  }
+})
 
 vi.mock('../../composables/use-chat-scope', () => ({
   useChatScope: () => ({

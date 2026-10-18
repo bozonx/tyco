@@ -8,7 +8,7 @@ import {
   type UserConfig,
   type SessionState,
 } from '@tyco/shared'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { DesktopInvoker } from './ipc-model'
 import type { DesktopCall } from './desktop-functions'
 
@@ -77,6 +77,10 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     return { success: true as const, result: desktopState.value.userConfig }
   }
 
+  /** Stores the fields of `patch` over the current config */
+  const updateUserConfig = (patch: Partial<UserConfig>) =>
+    saveUserConfig({ ...desktopState.value.userConfig, ...patch })
+
   const patchSessionState = (patch: Partial<SessionState>) => {
     if (!loaded) return Promise.resolve(notLoaded())
     const queuedPatch = { ...patch }
@@ -99,6 +103,10 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     return write
   }
 
+  /**
+   * Runs with `userConfig` until the next snapshot: an external run brings the
+   * config it was started with
+   */
   const setExecutionConfig = (userConfig: UserConfig) => {
     desktopState.value = { ...desktopState.value, userConfig }
   }
@@ -106,6 +114,10 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
   return {
     setExecutionConfig,
     desktopState,
+    userConfig: computed(() => desktopState.value.userConfig),
+    appConfig: computed(() => desktopState.value.appConfig),
+    sessionState: computed(() => desktopState.value.sessionState),
+    updateUserConfig,
     applyViewState,
     loadDesktopState,
     saveUserConfig,

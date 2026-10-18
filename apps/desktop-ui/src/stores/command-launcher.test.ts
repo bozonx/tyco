@@ -4,7 +4,7 @@ import { nextTick } from 'vue'
 import { StartMode, type CommandConfig } from '@tyco/shared'
 
 import { useCommandLauncherStore } from './command-launcher'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 
 const mockToastText = vi.fn()
 vi.mock('../composables/use-toast', () => ({
@@ -18,10 +18,10 @@ beforeEach(() => {
   setActivePinia(pinia)
   vi.clearAllMocks()
 
-  const ipc = useIpcStore()
-  ipc.applyViewState({
-    ...ipc.desktopState,
-    revision: ipc.desktopState.revision + 1,
+  const desktop = useDesktopStore()
+  desktop.applyViewState({
+    ...desktop.desktopState,
+    revision: desktop.desktopState.revision + 1,
     mode: StartMode.COMMAND_LAUNCHER,
     isWindowShown: true,
     activationId: 1,
@@ -42,16 +42,16 @@ describe('command launcher store wiring', () => {
 
   it('resets and updates page when activationId changes without launcherRequest', async () => {
     const store = useCommandLauncherStore()
-    const ipc = useIpcStore()
+    const desktop = useDesktopStore()
 
     store.setQuery('search text')
     expect(store.query).toBe('search text')
 
-    ipc.applyViewState({
-      ...ipc.desktopState,
-      revision: ipc.desktopState.revision + 1,
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      revision: desktop.desktopState.revision + 1,
       userConfig: {
-        ...ipc.desktopState.userConfig,
+        ...desktop.desktopState.userConfig,
         launcherPages: ['main', 'other'].map((id) => ({
           id,
           slots: Array<string | null>(15).fill(null),
@@ -70,13 +70,13 @@ describe('command launcher store wiring', () => {
 
   it('ignores activationId changes when mode is not COMMAND_LAUNCHER', async () => {
     const store = useCommandLauncherStore()
-    const ipc = useIpcStore()
+    const desktop = useDesktopStore()
 
     store.setQuery('search text')
 
-    ipc.applyViewState({
-      ...ipc.desktopState,
-      revision: ipc.desktopState.revision + 1,
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      revision: desktop.desktopState.revision + 1,
       mode: StartMode.EDITOR,
       activationId: 3,
     })
@@ -87,7 +87,7 @@ describe('command launcher store wiring', () => {
 
   it('populates text when selectedText arrives during prepare stage', async () => {
     const store = useCommandLauncherStore()
-    const ipc = useIpcStore()
+    const desktop = useDesktopStore()
 
     const cmd: CommandConfig = {
       id: 'cmd1',
@@ -105,9 +105,9 @@ describe('command launcher store wiring', () => {
     }
     store.stage = { kind: 'prepare', command: cmd, autoRun: false }
 
-    ipc.applyViewState({
-      ...ipc.desktopState,
-      revision: ipc.desktopState.revision + 1,
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      revision: desktop.desktopState.revision + 1,
       selectedText: 'hello selected',
     })
     await nextTick()
@@ -117,7 +117,7 @@ describe('command launcher store wiring', () => {
 
   it('dismisses external preparation and resets when window hides', async () => {
     const store = useCommandLauncherStore()
-    const ipc = useIpcStore()
+    const desktop = useDesktopStore()
 
     const cmd: CommandConfig = {
       id: 'cmd1',
@@ -133,18 +133,18 @@ describe('command launcher store wiring', () => {
       logOutput: false,
       availableIn: { external: false, chat: false },
     }
-    ipc.applyViewState({
-      ...ipc.desktopState,
-      revision: ipc.desktopState.revision + 1,
-      userConfig: { ...ipc.desktopState.userConfig, commands: [cmd] },
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      revision: desktop.desktopState.revision + 1,
+      userConfig: { ...desktop.desktopState.userConfig, commands: [cmd] },
     })
 
     await store.request({ jobId: 'job-123', commandId: 'cmd1' })
     expect(store.stage.kind).toBe('prepare')
 
-    ipc.applyViewState({
-      ...ipc.desktopState,
-      revision: ipc.desktopState.revision + 1,
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      revision: desktop.desktopState.revision + 1,
       isWindowShown: false,
     })
     await nextTick()

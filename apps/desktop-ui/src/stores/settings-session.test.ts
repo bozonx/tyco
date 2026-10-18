@@ -10,16 +10,15 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   toastText: vi.fn(),
 }))
-vi.mock('./ipc', () => ({
-  useIpcStore: () => ({
-    desktopState: {
-      get userConfig() {
-        return mocks.config
-      },
-    },
-    saveUserConfig: mocks.save,
-  }),
-}))
+vi.mock('./desktop', async () => {
+  const { mockDesktopStore } = await import('../test/desktop-store')
+  return {
+    useDesktopStore: () =>
+      mockDesktopStore(() => ({ userConfig: mocks.config }), {
+        saveUserConfig: mocks.save,
+      }),
+  }
+})
 vi.mock('./action-menu', () => ({
   useActionMenuStore: () => ({
     resolveMainActions: (actions: unknown[]) => actions,

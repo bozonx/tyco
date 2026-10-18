@@ -139,7 +139,7 @@ import {
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { releaseChatImageUndo } from '../../lib/chat/chat-image-storage'
 import { createRemovalUndo } from '../../lib/history/removal-undo'
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -156,7 +156,7 @@ const { toastKey } = useToast()
 const { chat: chatStore } = useChatScope()
 /** The chats of the shown chat only: "Ask AI" or one profile */
 const history = chatStore.history
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 
 void history
   .loadChatHistory()
@@ -206,7 +206,7 @@ const removedChat = removal.removed
 const undoRemoveChat = removal.undo
 
 const chatHistoryDisabled = computed(
-  () => !isChatHistoryEnabled(ipcStore.desktopState.userConfig)
+  () => !isChatHistoryEnabled(desktopStore.userConfig)
 )
 
 /** Chats whose messages match the query, found in storage */

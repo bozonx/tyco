@@ -4,6 +4,7 @@ import type { SelectionRunEvent } from '@tyco/shared'
 
 import { useSelectionReplaceStore } from './selection-replace'
 import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 import { useInvocationsStore } from './invocations'
 
 let pinia: ReturnType<typeof createPinia>
@@ -21,6 +22,7 @@ afterEach(() => {
 describe('selection replace store wiring', () => {
   it('wires action, runner, invocations and IPC correctly on handleRun', async () => {
     const ipc = useIpcStore()
+    const desktop = useDesktopStore()
     const invocations = useInvocationsStore()
 
     const callFunctionSpy = vi
@@ -42,7 +44,7 @@ describe('selection replace store wiring', () => {
       runId: 42,
       action: 'correction',
       text: 'teh text',
-      userConfig: ipc.desktopState.userConfig,
+      userConfig: desktop.desktopState.userConfig,
     }
 
     await store.handleRun(event)

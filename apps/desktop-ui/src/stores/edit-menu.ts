@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 
 import { formatMarkdown } from '../lib/editor/format-markdown'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 import { transformTextCase } from '../lib/edit-menu/text-edit'
 import {
   type EditItem,
@@ -12,13 +12,13 @@ import { stripMarkdown } from '../lib/editor/strip-markdown'
 export type { EditItem }
 
 export const useEditMenuStore = defineStore('editMenu', () => {
-  const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
 
   return createEditMenuModel({
     transformTextCase,
     formatMdAndStyle: async (text) =>
-      formatMarkdown(text, ipcStore.desktopState?.userConfig?.markdown),
+      formatMarkdown(text, desktopStore.userConfig?.markdown),
     stripMarkdown: (text) =>
-      stripMarkdown(text, ipcStore.desktopState?.userConfig?.markdownClean),
+      stripMarkdown(text, desktopStore.userConfig?.markdownClean),
   })
 })

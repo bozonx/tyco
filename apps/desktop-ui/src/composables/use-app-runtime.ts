@@ -10,7 +10,7 @@ import { createAppBootstrap } from '../lib/app/app-bootstrap'
 import { createAppWindowController } from '../lib/app/app-window-controller'
 import { createMainWindowReset } from '../lib/app/main-window-reset'
 import { desktopClient } from '../lib/desktop/client'
-import { getDesktopWindowLabel } from '../lib/desktop/window'
+import { isQuickWindow as isInQuickWindow } from '../lib/desktop/window'
 import { syncI18nLocale } from '../lib/i18n'
 import { syncDocumentLanguageAttributes } from '../lib/locale/language'
 import { clientLogger } from '../lib/logger'
@@ -23,6 +23,7 @@ import { useCommandLauncherStore } from '../stores/command-launcher'
 import { useDefaultCommandsStore } from '../stores/default-commands'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useExternalCommandsStore } from '../stores/external-commands'
+import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
@@ -38,6 +39,7 @@ import { DESKTOP_COMMANDS, DESKTOP_EVENTS } from '@tyco/shared'
 export function useAppRuntime() {
   useThemeStore()
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const pluginRuntime = usePluginRuntimeStore()
   const { locale, t } = useI18n()
   const menuModalsStore = useMenuModalsStore()
@@ -48,11 +50,11 @@ export function useAppRuntime() {
   const quickInputStore = useQuickInputStore()
   const editorNavigation = useEditorNavigation()
   const route = useRoute()
-  const isQuickWindow = getDesktopWindowLabel() === 'quick'
+  const isQuickWindow = isInQuickWindow()
   const { toastKey } = useToast()
   const settingsShutdown = createSettingsShutdown({
     flush: async () => {
-      await ipcStore.loadDesktopState()
+      await desktopStore.loadDesktopState()
       const session = useSettingsSessionStore()
       await session.persist()
       return session.isSaved()
@@ -98,14 +100,14 @@ export function useAppRuntime() {
     goToEditor: () => appNavigation.goToEditor(),
   })
   const bootstrap = createAppBootstrap({
-    loadDesktopState: () => ipcStore.loadDesktopState(),
+    loadDesktopState: () => desktopStore.loadDesktopState(),
     onError: (error) =>
       clientLogger.error('Could not refresh desktop state', error, 'bootstrap'),
     addWindowFocusListener: (handler) => {
       window.addEventListener('focus', handler)
       return () => window.removeEventListener('focus', handler)
     },
-    applyViewState: (params) => ipcStore.applyViewState(params),
+    applyViewState: (params) => desktopStore.applyViewState(params),
     closeAllModals: () => menuModalsStore.cancelAndCloseAll(),
     navigateTo: (path) => appNavigation.push(path),
     // the quick window has no routes of its own: it renders by the mode
@@ -133,7 +135,7 @@ export function useAppRuntime() {
 
   const stateSync = createAppStateSync({
     isQuickWindow,
-    getDesktopState: () => ipcStore.desktopState,
+    getDesktopState: () => desktopStore.desktopState,
     getLocale: () => locale.value,
     getRoutePath: () => route.path,
     reloadPlugins: pluginRuntime.reloadPlugins,
@@ -142,7 +144,7 @@ export function useAppRuntime() {
     updateTitle: () => {
       document.title = t('app.title')
     },
-    patchLastMode: (lastMode) => ipcStore.patchSessionState({ lastMode }),
+    patchLastMode: (lastMode) => desktopStore.patchSessionState({ lastMode }),
     replaceEditorValue: editorInputStore.replaceValue,
     focusEditor: editorInputStore.requestFocus,
     startChatWithAttachment: (attachment) =>

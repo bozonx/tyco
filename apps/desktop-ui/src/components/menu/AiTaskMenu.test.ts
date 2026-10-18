@@ -4,7 +4,7 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useHistoryStore } from '../../stores/history'
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import AiTaskMenu from './AiTaskMenu.vue'
 
@@ -71,12 +71,12 @@ describe('AiTaskMenu', () => {
   })
 
   it('runs an own request on the text and remembers it', async () => {
-    const ipcStore = useIpcStore()
+    const desktop = useDesktopStore()
     const patchSessionState = vi
-      .spyOn(ipcStore, 'patchSessionState')
+      .spyOn(desktop, 'patchSessionState')
       .mockResolvedValue({
         success: true,
-        result: ipcStore.desktopState.sessionState,
+        result: desktop.desktopState.sessionState,
       })
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
@@ -114,15 +114,15 @@ describe('AiTaskMenu', () => {
   })
 
   it('saves an own request as a task in a free key', async () => {
-    const ipcStore = useIpcStore()
-    ipcStore.desktopState.userConfig.aiTasks = [
+    const desktop = useDesktopStore()
+    desktop.desktopState.userConfig.aiTasks = [
       { id: 'task-1', name: 'edit', rule: 'Edit it' },
     ]
-    const saveUserConfig = vi
-      .spyOn(ipcStore, 'saveUserConfig')
+    const updateUserConfig = vi
+      .spyOn(desktop, 'updateUserConfig')
       .mockResolvedValue({
         success: true,
-        result: ipcStore.desktopState.userConfig,
+        result: desktop.desktopState.userConfig,
       })
     let shortcutListProps: Record<string, any> = {}
 
@@ -136,8 +136,8 @@ describe('AiTaskMenu', () => {
     await input.setValue('Make it formal')
     await input.trigger('keydown', { key: 's', code: 'KeyS', ctrlKey: true })
 
-    await vi.waitFor(() => expect(saveUserConfig).toHaveBeenCalled())
-    expect(saveUserConfig.mock.calls[0]![0].aiTasks).toEqual([
+    await vi.waitFor(() => expect(updateUserConfig).toHaveBeenCalled())
+    expect(updateUserConfig.mock.calls[0]![0].aiTasks).toEqual([
       { id: 'task-1', name: 'edit', rule: 'Edit it' },
       { id: 'task-2', name: 'Make it formal', rule: 'Make it formal' },
     ])
@@ -179,8 +179,8 @@ describe('AiTaskMenu', () => {
   })
 
   it('keeps the result of a menu closed meanwhile off the screen', async () => {
-    const ipcStore = useIpcStore()
-    ipcStore.desktopState.userConfig.aiTasks = [
+    const desktop = useDesktopStore()
+    desktop.desktopState.userConfig.aiTasks = [
       { id: 'task-1', name: 'edit', rule: 'Edit it' },
     ]
     const historyStore = useHistoryStore()
@@ -229,8 +229,8 @@ describe('AiTaskMenu', () => {
   })
 
   it('runs the task of the main menu item once, by its id', async () => {
-    const ipcStore = useIpcStore()
-    ipcStore.desktopState.userConfig.aiTasks = [
+    const desktop = useDesktopStore()
+    desktop.desktopState.userConfig.aiTasks = [
       null,
       { id: 'task-7', name: 'edit', rule: 'Edit it' },
     ]

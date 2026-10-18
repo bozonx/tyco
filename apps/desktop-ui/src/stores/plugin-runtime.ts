@@ -20,6 +20,7 @@ import { useActionMenuStore } from './action-menu'
 import { useEditMenuStore } from './edit-menu'
 import { useToolbarStore } from './toolbar'
 import { useToolsStore } from './tools'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 
 export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
@@ -29,6 +30,7 @@ export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
   const toolbar = useToolbarStore()
   const tools = useToolsStore()
   const ipc = useIpcStore()
+  const desktopStore = useDesktopStore()
   const loader = createPluginPackageLoader({
     activate: (manifest, path, ctx) =>
       activatePluginSandbox(manifest, path, ctx, (error) => {
@@ -39,7 +41,7 @@ export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
   })
   const model = createPluginRuntime({
     builtinPlugins,
-    getConfig: () => ipc.desktopState.userConfig,
+    getConfig: () => desktopStore.userConfig,
     loadInstalled: async () => {
       if (!desktopClient.isAvailable()) return []
       const result = await ipc.callFunction('listInstalledPlugins', [])

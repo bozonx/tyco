@@ -6,7 +6,6 @@ import {
   type DesktopCommandResult,
   type IpcResult,
 } from '@tyco/shared'
-import { createDesktopStateModel } from './desktop-state'
 
 import type {
   DesktopCallArgs,
@@ -34,6 +33,8 @@ export interface IpcModelDependencies {
   errorTitle?: () => string
   /** Resolves once the user has released the keys held in this window. */
   waitForKeysReleased?: () => Promise<void>
+  /** The activation a call belongs to, for the commands that carry it */
+  getActivationId: () => number
 }
 
 export function createIpcModel(deps: IpcModelDependencies) {
@@ -63,7 +64,7 @@ export function createIpcModel(deps: IpcModelDependencies) {
         }
       }
 
-      const activationId = state.desktopState.value.activationId
+      const activationId = deps.getActivationId()
       if (mappedCommand.waitForKeysReleased) {
         await deps.waitForKeysReleased?.()
       }
@@ -102,12 +103,11 @@ export function createIpcModel(deps: IpcModelDependencies) {
     return result
   }
 
-  const state = createDesktopStateModel({
-    desktopClient: deps.desktopClient,
+  return {
     callFunction,
-    reportFailure: (name, message) =>
+    callFunctionOrNotify,
+    /** Tells the user that the desktop function `name` failed */
+    reportFailure: (name: string, message: string) =>
       reportFailure(name, { success: false, error: message }),
-  })
-
-  return { ...state, callFunction, callFunctionOrNotify }
+  }
 }

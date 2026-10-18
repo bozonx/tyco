@@ -5,6 +5,7 @@ import {
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createDesktopStateModel } from './desktop-state'
 import { createIpcModel, type IpcModelDependencies } from './ipc-model'
 
 function createDeps(
@@ -22,14 +23,29 @@ function createDeps(
     },
     notifyError: vi.fn(),
     logError: vi.fn(),
+    getActivationId: () => DEFAULT_DESKTOP_VIEW_STATE.activationId,
     ...overrides,
   }
+}
+
+/** The calls and the state wired together, as the desktop runtime store does */
+function createModels(deps: IpcModelDependencies) {
+  const ipc = createIpcModel({
+    ...deps,
+    getActivationId: () => state.desktopState.value.activationId,
+  })
+  const state = createDesktopStateModel({
+    desktopClient: deps.desktopClient,
+    callFunction: ipc.callFunction,
+    reportFailure: ipc.reportFailure,
+  })
+  return { ...ipc, ...state }
 }
 
 describe('ipc-model', () => {
   it('binds quick dismissal and input regions to their activation', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
     await store.callFunction('dismissQuickWindow')
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
       DESKTOP_COMMANDS.DISMISS_QUICK_WINDOW,
@@ -44,7 +60,7 @@ describe('ipc-model', () => {
   })
   it('maps a function name to desktop command invocation', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('setEditorHistoryResult', ['id-1', 'abc'])
 
@@ -56,7 +72,7 @@ describe('ipc-model', () => {
 
   it('maps storage info command', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('getStorageInfo')
 
@@ -68,7 +84,7 @@ describe('ipc-model', () => {
 
   it('maps the system hotkey configuration command', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('configureHotkeys')
 
@@ -80,7 +96,7 @@ describe('ipc-model', () => {
 
   it('maps the hotkey rebinding command', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('rebindHotkeys')
 
@@ -92,7 +108,7 @@ describe('ipc-model', () => {
 
   it('maps the hotkey provider info command', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('getHotkeyProviderInfo')
 
@@ -104,7 +120,7 @@ describe('ipc-model', () => {
 
   it('maps a transfer to the decorated editor window', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('openMainEditor', ['result', 'source'])
 
@@ -120,7 +136,7 @@ describe('ipc-model', () => {
 
   it('binds a voice handoff to the activation that produced its question', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
     await store.callFunction('openMainChat', [undefined, 'Question', true])
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
       DESKTOP_COMMANDS.OPEN_MAIN_CHAT,
@@ -135,7 +151,7 @@ describe('ipc-model', () => {
 
   it('maps the activate mode command', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('activateMode', ['aiTasks', 'sample text'])
 
@@ -156,7 +172,7 @@ describe('ipc-model', () => {
       order.push('invoked')
       return { success: true, result: undefined }
     })
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('pasteIntoTargetAndHide', ['text'])
     await store.callFunction('copyText', ['text'])
@@ -170,7 +186,7 @@ describe('ipc-model', () => {
 
   it('maps the save note command', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('saveNote', ['/notes', 'note.md', 'text'])
 
@@ -182,7 +198,7 @@ describe('ipc-model', () => {
 
   it('maps the append note command', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await store.callFunction('appendNote', ['/notes', 'daily.md', 'entry'])
 
@@ -194,7 +210,7 @@ describe('ipc-model', () => {
 
   it('returns an error for unknown function names', async () => {
     const deps = createDeps()
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     // untyped callers, e.g. plugins, may pass any name
     const result = await store.callFunction(
@@ -218,7 +234,7 @@ describe('ipc-model', () => {
         isAvailable: () => false,
       },
     })
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     const result = await store.loadDesktopState()
 
@@ -238,7 +254,7 @@ describe('ipc-model', () => {
         isAvailable: () => true,
       },
     })
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     await expect(store.loadDesktopState()).rejects.toThrow('failed')
     expect(deps.notifyError).toHaveBeenCalled()
@@ -259,7 +275,7 @@ describe('ipc-model', () => {
         isAvailable: () => true,
       },
     })
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     const result = await store.callFunction('getEditorHistory')
 
@@ -280,7 +296,7 @@ describe('ipc-model', () => {
       },
       errorTitle: () => 'Action failed',
     })
-    const store = createIpcModel(deps)
+    const store = createModels(deps)
 
     const result = await store.callFunctionOrNotify('pasteIntoTargetAndHide', [
       'text',
@@ -310,7 +326,7 @@ describe('ipc-model', () => {
           isAvailable: () => true,
         },
       })
-      const store = createIpcModel(deps)
+      const store = createModels(deps)
       await store.loadDesktopState()
       return { deps, store }
     }
@@ -343,7 +359,7 @@ it('keeps the invoking activation while waiting for held keys to release', async
         release = resolve
       }),
   })
-  const store = createIpcModel(deps)
+  const store = createModels(deps)
   store.applyViewState({
     ...DEFAULT_DESKTOP_VIEW_STATE,
     revision: 1,

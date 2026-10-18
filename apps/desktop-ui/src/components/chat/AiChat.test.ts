@@ -40,9 +40,15 @@ vi.mock('../../stores/chat', () => ({
   useChatStore: () => reactive(mocks.chatState),
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ desktopState: { userConfig: {} } }),
-}))
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
+  return {
+    useDesktopStore: () => {
+      const state = { userConfig: {} }
+      return mockDesktopStore(() => state)
+    },
+  }
+})
 
 vi.mock('../../stores/secrets', () => ({
   useSecretsStore: () => ({ refreshSecrets: async () => undefined }),

@@ -30,11 +30,12 @@
 import { watch } from 'vue'
 
 import { useVoiceResultStep } from '../composables/use-voice-result-step'
-import { getDesktopWindow as getCurrentWindow } from '../lib/desktop/window'
+import { isQuickWindow } from '../lib/desktop/window'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { useActionMenuStore } from '../stores/action-menu'
+import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
@@ -55,13 +56,13 @@ const emit = defineEmits<{
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
 
 navPanelStore.resetNavPanelState({ panelVisible: false })
 
 /** Only the quick window is opened by the `voice` activation */
-const activationMode =
-  getCurrentWindow().label === 'quick' ? ('voice' as const) : undefined
+const activationMode = isQuickWindow() ? ('voice' as const) : undefined
 const { isInsertMenuVisible, dictationResultText, showResult, resetResult } =
   useVoiceResultStep(() => activationMode)
 
@@ -71,9 +72,9 @@ watch(isInsertMenuVisible, (shown) => emit('result-shown', shown), {
 
 watch(
   () => [
-    ipcStore.desktopState?.isWindowShown,
-    ipcStore.desktopState?.mode,
-    ipcStore.desktopState.activationId,
+    desktopStore.desktopState?.isWindowShown,
+    desktopStore.desktopState?.mode,
+    desktopStore.desktopState.activationId,
   ],
   ([isShown, mode, activationId], previous) => {
     if (!isShown || mode !== 'voice' || activationId !== previous?.[2]) {
@@ -92,7 +93,11 @@ function handleCorrected(
     .getDefaultActions()
     .find((action) => action.id === 'insertIntoWindow')
   // without a target window the text stays in the actions step, not lost
-  if (intent !== 'next' && insertAction && ipcStore.desktopState?.windowId) {
+  if (
+    intent !== 'next' &&
+    insertAction &&
+    desktopStore.desktopState?.windowId
+  ) {
     void insertAction.action(resultText)
     return
   }
@@ -101,12 +106,12 @@ function handleCorrected(
 
 function handleCancelled() {
   if (
-    !ipcStore.desktopState.isWindowShown ||
-    ipcStore.desktopState.mode !== 'voice'
+    !desktopStore.desktopState.isWindowShown ||
+    desktopStore.desktopState.mode !== 'voice'
   )
     return
 
-  if (getCurrentWindow().label === 'quick') {
+  if (isQuickWindow()) {
     void ipcStore.callFunctionOrNotify('hideWindow')
   } else {
     void appNavigation.push(APP_ROUTES.EDITOR.path)

@@ -38,18 +38,17 @@ import { computed, onMounted, ref } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
+import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import useToast from '../../composables/use-toast'
 import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
-import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
-import { toolResultMessage } from '../../lib/invocation/invocation-result'
+import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import type { AiTaskMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
-import { useHistoryStore } from '../../stores/history'
+import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
-import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { SHORTCUT_SLOT_KEYS } from '../../types'
 import ShortcutList from '../ShortcutList.vue'
@@ -69,11 +68,11 @@ const props = withDefaults(defineProps<AiTaskMenuParams>(), {
 
 const editorNavigation = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const invocations = useInvocationsStore()
-const appConfig = computed(() => ipcStore.desktopState.appConfig)
-const { toastKey, toastText } = useToast()
-const historyStore = useHistoryStore()
+const appConfig = computed(() => desktopStore.appConfig)
+const { toastKey } = useToast()
+const runStep = useMenuStepRun()
 const { t } = useI18n()
 const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
@@ -82,13 +81,7 @@ const chatInputStore = useChatInputStore()
 const promptMode = ref(false)
 const prompt = ref('')
 
-const isQuickWindow = (() => {
-  try {
-    return getCurrentWindow().label === 'quick'
-  } catch {
-    return false
-  }
-})()
+const isQuickWindow = isInQuickWindow()
 
 const customPromptAction: ActionItem = {
   labelKey: 'menu.aiCustomPrompt',
@@ -104,11 +97,8 @@ const closePromptMode = () => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  (ipcStore.desktopState.userConfig?.aiTasks ?? []).map(
-    (
-      item: (typeof ipcStore.desktopState.userConfig.aiTasks)[number],
-      index: number
-    ) =>
+  (desktopStore.userConfig?.aiTasks ?? []).map(
+    (item: (typeof desktopStore.userConfig.aiTasks)[number], index: number) =>
       item && item.name
         ? { name: item.name, action: () => runTask(index) }
         : undefined
@@ -116,7 +106,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 )
 
 async function runTask(index: number) {
-  const task = ipcStore.desktopState.userConfig?.aiTasks?.[index]
+  const task = desktopStore.userConfig?.aiTasks?.[index]
   if (!task || !task.rule?.trim()) {
     toastKey('toast.desktopCommandFailed', 'error')
     return
@@ -134,7 +124,7 @@ onMounted(() => {
       taskId: undefined,
     })
   }
-  const index = (ipcStore.desktopState.userConfig?.aiTasks ?? []).findIndex(
+  const index = (desktopStore.userConfig?.aiTasks ?? []).findIndex(
     (task) => task?.id === taskId
   )
   if (index < 0) {
@@ -145,7 +135,7 @@ onMounted(() => {
 })
 
 const recentPrompts = computed(
-  () => ipcStore.desktopState.sessionState?.recentAiPrompts ?? []
+  () => desktopStore.sessionState?.recentAiPrompts ?? []
 )
 
 const recentOptions = computed<QueryPanelOption[]>(() =>
@@ -184,7 +174,7 @@ const promptHints = computed<QueryPanelHint[]>(() => [
 ])
 
 const rememberPrompt = (value: string) => {
-  void ipcStore.patchSessionState({
+  void desktopStore.patchSessionState({
     recentAiPrompts: pushRecent(recentPrompts.value, value),
   })
 }
@@ -208,7 +198,7 @@ async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {
 
 async function savePromptAsTask() {
   const value = prompt.value.trim()
-  const userConfig = ipcStore.desktopState.userConfig
+  const userConfig = desktopStore.userConfig
   if (!value || !userConfig) return
 
   const aiTasks = addTaskFromPrompt(
@@ -221,7 +211,7 @@ async function savePromptAsTask() {
     return
   }
 
-  const result = await ipcStore.saveUserConfig({ ...userConfig, aiTasks })
+  const result = await desktopStore.updateUserConfig({ aiTasks })
   if (!result.success) toastKey('toast.desktopCommandFailed', 'error')
 }
 
@@ -239,43 +229,26 @@ async function makeDiff(prompt: string) {
     return
   }
 
-  // the menu step, when the menu is one: closing it hides the result
-  const stepId = menuModalsStore.currentStepId
-  const controller = new AbortController()
-  const owner = menuModalsStore.setPendingModal({
-    ai: true,
-    onCancel: () => controller.abort(),
-  })
-  try {
-    const sourceId = await historyStore.saveSource(trimmedText, 'ai-task')
-    if (controller.signal.aborted) return
-    const result = await invocations.call('core.aiTask', trimmedText, {
-      signal: controller.signal,
-      toolConfig: { prompt },
-    })
-    if (result.cancelled || controller.signal.aborted) return
-    if (!result.ok) {
-      toastText(toolResultMessage(result, t), 'error')
-      return
-    }
-    const newText = result.content ?? ''
-    if (!newText.trim()) {
+  await runStep({
+    text: trimmedText,
+    operation: 'ai-task',
+    pending: { ai: true },
+    invoke: (signal) =>
+      invocations.call('core.aiTask', trimmedText, {
+        signal,
+        toolConfig: { prompt },
+      }),
+    read: (result) => {
+      const newText = result.content ?? ''
+      if (newText.trim()) return newText
       toastKey('toast.desktopCommandFailed', 'error')
-      return
-    }
-    await historyStore.saveSourceResult(sourceId, newText).catch(() => {
-      toastKey('history.operationFailed', 'error')
-    })
-    // closed meanwhile: the result is in the history, not on the screen
-    if (controller.signal.aborted) return
-    if (stepId !== undefined && !menuModalsStore.hasStep(stepId)) return
-    menuModalsStore.nextModal(MenuModals.DIFF, { oldText: props.text, newText })
-  } catch (error) {
-    if (controller.signal.aborted) return
-    const message = error instanceof Error ? error.message : String(error)
-    toastText(message, 'error')
-  } finally {
-    menuModalsStore.clearPendingModal(owner)
-  }
+      return null
+    },
+    show: (newText) =>
+      menuModalsStore.nextModal(MenuModals.DIFF, {
+        oldText: props.text,
+        newText,
+      }),
+  })
 }
 </script>

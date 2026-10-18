@@ -61,9 +61,10 @@ const voice = reactive({
 vi.mock('../stores/voice-commands', () => ({
   useVoiceCommandsStore: () => voice,
 }))
-vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ desktopState: state }),
-}))
+vi.mock('../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../test/desktop-store')
+  return { useDesktopStore: () => mockDesktopStore(() => state) }
+})
 const hotkeys = vi.hoisted(() => ({
   load: vi.fn().mockResolvedValue(undefined),
   shortcutLabel: vi.fn((_mode: string) => ''),

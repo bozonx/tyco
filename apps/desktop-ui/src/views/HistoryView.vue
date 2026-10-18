@@ -86,14 +86,14 @@ import useToast from '../composables/use-toast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import { createRemovalUndo } from '../lib/history/removal-undo'
+import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
-import { useIpcStore } from '../stores/ipc'
 import type { EditorHistoryItem } from '@tyco/shared'
 
 const { toastKey } = useToast()
 const { t } = useI18n()
 const historyStore = useHistoryStore()
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 // the text is already in the history and the window stays open
 const copyText = useCopyText({ saveOutput: false })
 const editorNavigation = useEditorNavigation()
@@ -110,7 +110,7 @@ const clearEditorHistory = removal.clear
 const hasEditorLoadError = ref(false)
 
 const isEditorHistoryDisabled = computed(() =>
-  isEditorHistoryOff({ ...ipcStore.desktopState.userConfig })
+  isEditorHistoryOff({ ...desktopStore.userConfig })
 )
 
 const searchQuery = ref<string>('')

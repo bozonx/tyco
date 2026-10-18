@@ -8,6 +8,7 @@ import {
 import { useInvocationRunnerDependencies } from './invocations'
 import { useCorrectionWorkflowStore } from './correction-workflow'
 import { useHistoryStore } from './history'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
 
@@ -15,9 +16,10 @@ export type { ActionItem }
 
 export const useActionMenuStore = defineStore('actionMenu', () => {
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const menuModalsStore = useMenuModalsStore()
   const historyStore = useHistoryStore()
-  const appConfig = computed(() => ipcStore.desktopState.appConfig)
+  const appConfig = computed(() => desktopStore.appConfig)
   const correctionWorkflowStore = useCorrectionWorkflowStore()
 
   return createActionMenuModel({
@@ -38,17 +40,17 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       }),
     minCorrectionLength: () => appConfig.value.minCorrectionLength,
     reviewedMainActionIds: () =>
-      ipcStore.desktopState.userConfig.registrationState?.reviewedMainActionIds,
+      desktopStore.userConfig.registrationState?.reviewedMainActionIds,
     openLauncherPage: async (page, text) => {
       await ipcStore.callFunction('activateMode', [
         `commandLauncher${page + 1}`,
         text,
       ])
     },
-    launcherPages: () => ipcStore.desktopState.userConfig.launcherPages,
-    mainActions: () => ipcStore.desktopState.userConfig.mainActions,
-    commands: () => ipcStore.desktopState.userConfig.commands,
-    aiTasks: () => ipcStore.desktopState.userConfig.aiTasks,
+    launcherPages: () => desktopStore.userConfig.launcherPages,
+    mainActions: () => desktopStore.userConfig.mainActions,
+    commands: () => desktopStore.userConfig.commands,
+    aiTasks: () => desktopStore.userConfig.aiTasks,
     ...useInvocationRunnerDependencies(),
   })
 })

@@ -16,7 +16,10 @@ const desktopState = reactive({ activationId: 7, isWindowShown: true })
 vi.mock('../lib/desktop/client', () => ({
   desktopClient: { listen: mocks.listen },
 }))
-vi.mock('../stores/ipc', () => ({ useIpcStore: () => ({ desktopState }) }))
+vi.mock('../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../test/desktop-store')
+  return { useDesktopStore: () => mockDesktopStore(() => desktopState) }
+})
 vi.mock('../stores/global-hotkeys', () => ({
   useGlobalHotkeysStore: () => ({
     load: mocks.load,

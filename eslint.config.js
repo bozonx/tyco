@@ -71,7 +71,7 @@ export default defineConfig(
   },
 
   {
-    files: ['**/workers/**', '**/plugins/**', '**/stores/ipc.ts'],
+    files: ['**/workers/**', '**/plugins/**', '**/stores/desktop-runtime.ts'],
     rules: { 'no-console': 'off' },
   },
 

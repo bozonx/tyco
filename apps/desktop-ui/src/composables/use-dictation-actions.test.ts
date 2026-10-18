@@ -8,24 +8,22 @@ const mocks = vi.hoisted(() => ({
   provider: 'deepgram',
 }))
 
-vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({
-    desktopState: {
-      userConfig: {
-        stt: {
-          selectedModelId: 'speech',
-          models: [
-            {
-              id: 'speech',
-              provider: mocks.provider,
-              providerModelId: 'nova-3',
-              baseUrl: 'ws://localhost:6006',
-            },
-          ],
-        },
-
-        userLanguage: 'en_US',
+vi.mock('../stores/desktop', () => ({
+  useDesktopStore: () => ({
+    userConfig: {
+      stt: {
+        selectedModelId: 'speech',
+        models: [
+          {
+            id: 'speech',
+            provider: mocks.provider,
+            providerModelId: 'nova-3',
+            baseUrl: 'ws://localhost:6006',
+          },
+        ],
       },
+
+      userLanguage: 'en_US',
     },
   }),
 }))

@@ -104,9 +104,8 @@ describe('PreviewMenu', () => {
   })
 
   it('reads translation view mode preference from sessionState', async () => {
-    const { useIpcStore } = await import('../../stores/ipc')
-    const ipcStore = useIpcStore()
-    ipcStore.desktopState.userConfig.translation.viewMode = 'result'
+    const { useDesktopStore } = await import('../../stores/desktop')
+    useDesktopStore().desktopState.userConfig.translation.viewMode = 'result'
 
     const wrapper = mount(PreviewMenu, {
       props: { text: 'Translation text', sourceText: 'Original text' },

@@ -2,7 +2,7 @@ import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { LlmClient } from '../lib/llm/llm-client'
 import { useLlmStore } from './llm'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 
 const mocks = vi.hoisted(() => ({
   run: vi.fn(async () => 'Answer'),
@@ -37,9 +37,9 @@ describe('LLM store service wiring', () => {
     setActivePinia(pinia)
     try {
       const store = useLlmStore()
-      const ipc = useIpcStore()
+      const desktop = useDesktopStore()
       expect(await store.actions.correctText('Sample')).toBe('Answer')
-      ipc.desktopState.userConfig.aiRules.chat = 'Current chat rules'
+      desktop.desktopState.userConfig.aiRules.chat = 'Current chat rules'
       expect(
         (
           await store.actions.sendChatMessage('Question', [], undefined, {

@@ -21,7 +21,10 @@ vi.mock('../components/menu/CommandLauncher.vue', () => ({
   },
 }))
 
-vi.mock('../stores/ipc', () => ({ useIpcStore: () => ({ desktopState }) }))
+vi.mock('../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../test/desktop-store')
+  return { useDesktopStore: () => mockDesktopStore(() => desktopState) }
+})
 
 vi.mock('../stores/menu-modals', () => ({
   useMenuModalsStore: () => menuModalsState,

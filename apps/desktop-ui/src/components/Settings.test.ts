@@ -46,14 +46,6 @@ vi.mock('../stores/action-menu', () => ({
 
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({
-    desktopState: {
-      userConfig: {
-        configVersion: settingsMocks.configVersion,
-        appearance: { theme: 'auto', contrast: 'normal', motion: 'auto' },
-
-        plugins: { PluginA: { enabled: true }, PluginB: { enabled: false } },
-      },
-    },
     callFunction: vi.fn().mockImplementation((fn: string) => {
       if (fn === 'getStorageInfo') {
         return Promise.resolve({
@@ -69,6 +61,15 @@ vi.mock('../stores/ipc', () => ({
       return Promise.resolve({ status: 'ok', success: true, result: null })
     }),
     updateConfig: vi.fn(),
+  }),
+}))
+vi.mock('../stores/desktop', () => ({
+  useDesktopStore: () => ({
+    userConfig: {
+      configVersion: settingsMocks.configVersion,
+      appearance: { theme: 'auto', contrast: 'normal', motion: 'auto' },
+      plugins: { PluginA: { enabled: true }, PluginB: { enabled: false } },
+    },
   }),
 }))
 

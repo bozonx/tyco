@@ -32,6 +32,7 @@ vi.mock('../composables/use-voice-finish-signal', () => ({
 
 vi.mock('../lib/desktop/window', () => ({
   getDesktopWindow: () => ({ label: mocks.windowLabel }),
+  isQuickWindow: () => mocks.windowLabel === 'quick',
 }))
 
 vi.mock('../lib/navigation/navigation', () => ({
@@ -61,11 +62,12 @@ vi.mock('../components/menu/InsertMenu.vue', () => ({
 }))
 
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({
-    desktopState,
-    callFunctionOrNotify: mocks.callFunctionOrNotify,
-  }),
+  useIpcStore: () => ({ callFunctionOrNotify: mocks.callFunctionOrNotify }),
 }))
+vi.mock('../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../test/desktop-store')
+  return { useDesktopStore: () => mockDesktopStore(() => desktopState) }
+})
 
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanel,

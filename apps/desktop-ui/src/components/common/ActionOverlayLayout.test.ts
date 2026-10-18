@@ -17,8 +17,8 @@ const mocks = vi.hoisted(() => ({
   discardQuickInput: vi.fn(),
 }))
 
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ label: mocks.currentWindowLabel }),
+vi.mock('../../lib/desktop/window', () => ({
+  isQuickWindow: () => mocks.currentWindowLabel === 'quick',
 }))
 
 vi.mock('../../stores/menu-modals', () => ({
@@ -33,11 +33,17 @@ vi.mock('../../stores/menu-modals', () => ({
 }))
 
 vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({
-    desktopState: { mode: 'write' },
-    callFunctionOrNotify: mocks.hideWindow,
-  }),
+  useIpcStore: () => ({ callFunctionOrNotify: mocks.hideWindow }),
 }))
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
+  return {
+    useDesktopStore: () => {
+      const state = { mode: 'write' as const }
+      return mockDesktopStore(() => state)
+    },
+  }
+})
 
 vi.mock('../../stores/quick-input', () => ({
   useQuickInputStore: () => ({ discard: mocks.discardQuickInput }),

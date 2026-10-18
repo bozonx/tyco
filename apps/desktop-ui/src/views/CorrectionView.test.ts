@@ -44,11 +44,14 @@ vi.mock('../components/common/ActionOverlayLayout.vue', () => ({
 }))
 
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({
-    desktopState: reactive(mocks.desktopState),
-    callFunctionOrNotify: mocks.callFunctionOrNotify,
-  }),
+  useIpcStore: () => ({ callFunctionOrNotify: mocks.callFunctionOrNotify }),
 }))
+vi.mock('../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../test/desktop-store')
+  return {
+    useDesktopStore: () => mockDesktopStore(() => reactive(mocks.desktopState)),
+  }
+})
 
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanel,

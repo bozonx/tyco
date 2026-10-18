@@ -7,6 +7,7 @@ import { createExternalRun } from '../lib/commands/external-run'
 import { translate } from '../lib/i18n/index'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useHistoryStore } from './history'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 
 /**
@@ -15,6 +16,7 @@ import { useIpcStore } from './ipc'
  */
 export const useExternalCommandsStore = defineStore('externalCommands', () => {
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const historyStore = useHistoryStore()
   const runnerDeps = useInvocationRunnerDependencies()
 
@@ -47,7 +49,8 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
     notify: (summary, body) => {
       void ipcStore.callFunction('notifyDesktop', [summary, body])
     },
-    applyUserConfig: (userConfig) => ipcStore.setExecutionConfig(userConfig),
+    applyUserConfig: (userConfig) =>
+      desktopStore.setExecutionConfig(userConfig),
     logRun: async (record) => {
       await ipcStore.callFunction('logCommandRun', [record])
     },

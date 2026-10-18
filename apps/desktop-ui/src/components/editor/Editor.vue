@@ -107,7 +107,7 @@
           <IconButton
             size="sm"
             variant="ghost"
-            :disabled="!ipcStore.desktopState.windowId"
+            :disabled="!desktopStore.desktopState.windowId"
             @click="handleInsertToWindow"
             :label="scoped(t('action.insertIntoWindow'))"
             icon="mdi:application-export"
@@ -304,23 +304,23 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { computed, onBeforeUnmount } from 'vue'
+import { computed } from 'vue'
 
 import { useCopyText } from '../../composables/use-copy-text'
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
+import { provideMarkupMode } from '../../composables/use-markup-mode'
 import { desktopClient } from '../../lib/desktop/client'
 import { appNavigation } from '../../lib/navigation/navigation'
 import { resolveModeRoute } from '../../lib/navigation/routes'
 import type { ActionItem } from '../../stores/action-menu'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
+import { useDesktopStore } from '../../stores/desktop'
 import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
-import { useMarkupModeStore } from '../../stores/markup-mode'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useToolbarStore } from '../../stores/toolbar'
 import type { ToolbarItem } from '../../types/plugins'
@@ -339,14 +339,12 @@ const chatStore = useChatStore()
 const editMenuStore = useEditMenuStore()
 const toolbarStore = useToolbarStore()
 const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 const { getLabel, voiceRecognition, doAction, doEdit } = useEditorActions()
-const markupMode = useMarkupModeStore()
-const { showMarkup } = storeToRefs(markupMode)
-const { toggleShowMarkup, resetShowMarkup } = markupMode
 // the Markdown view lasts only while the page is open
-onBeforeUnmount(resetShowMarkup)
+const { showMarkup, toggleShowMarkup } = provideMarkupMode()
 
 const viewModeTitle = computed(() =>
   t(

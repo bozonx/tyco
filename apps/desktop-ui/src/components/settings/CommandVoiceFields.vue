@@ -49,7 +49,7 @@ import {
   findVoiceConflicts,
   resolveVoice,
 } from '../../lib/voice-commands/voice-resolver'
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import { useToolsStore } from '../../stores/tools'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -61,7 +61,7 @@ import type { CommandConfig, UserConfig } from '@tyco/shared'
 const props = defineProps<{ command: CommandConfig; userConfig?: UserConfig }>()
 const emit = defineEmits<{ update: [patch: Partial<CommandConfig>] }>()
 const { t } = useI18n()
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const toolsStore = useToolsStore()
 const voiceTrial = ref('')
 const voiceRoutes = computed(() =>
@@ -70,7 +70,7 @@ const voiceRoutes = computed(() =>
       ...createBuiltInVoiceCommands(toolsStore, t),
       ...(
         props.userConfig?.commands ??
-        ipcStore.desktopState.userConfig.commands ??
+        desktopStore.userConfig.commands ??
         []
       ).filter((item) => item.id !== props.command.id),
       props.command,
@@ -104,7 +104,7 @@ const voiceTrialResult = computed(() => {
   const candidates = result.candidates
     .map((candidate) => {
       const command = (
-        props.userConfig?.commands ?? ipcStore.desktopState.userConfig.commands
+        props.userConfig?.commands ?? desktopStore.userConfig.commands
       ).find((item) => item.id === candidate.commandId)
       const builtIn = createBuiltInVoiceCommands(toolsStore, t).find(
         (item) => item.id === candidate.commandId

@@ -12,15 +12,14 @@ import { createLlmClient, isKeylessProvider } from '../lib/llm/llm-client'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { createSecretKeyProvider } from '../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 import { useSecretsStore } from './secrets'
 
 export const useLlmStore = defineStore('llm', () => {
-  const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const secretsStore = useSecretsStore()
 
-  const getConfig = () =>
-    normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm)
+  const getConfig = () => normalizeLlmConfig(desktopStore.userConfig?.llm)
   const client = createLlmClient({
     getConfig,
     transport: createTauriTransport(tauriNetIpc),
@@ -31,7 +30,7 @@ export const useLlmStore = defineStore('llm', () => {
   })
 
   const toast = useToastStore()
-  const getAppConfig = () => ipcStore.desktopState.appConfig ?? APP_CONFIG
+  const getAppConfig = () => desktopStore.appConfig ?? APP_CONFIG
   const aiRequest = createLlmRequest({
     client,
     getImage: getChatImage,
@@ -42,7 +41,7 @@ export const useLlmStore = defineStore('llm', () => {
   })
   const actions = createLlmActions({
     aiRequest,
-    getUserConfig: () => ipcStore.desktopState.userConfig,
+    getUserConfig: () => desktopStore.userConfig,
     getAppConfig,
     notifyEmptyText: () =>
       toast.addToast(translate('toast.textNotSelected'), 'warn'),

@@ -228,7 +228,7 @@ import {
   matchVoiceCatalog,
 } from '../lib/voice-commands/voice-catalog'
 import type { VoiceCandidate } from '../lib/voice-commands/voice-resolver'
-import { useIpcStore } from '../stores/ipc'
+import { useDesktopStore } from '../stores/desktop'
 import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useToolsStore } from '../stores/tools'
 import { useVoiceCommandsStore } from '../stores/voice-commands'
@@ -238,7 +238,7 @@ import { DESKTOP_EVENTS } from '@tyco/shared'
 const DEFAULT_TRANSLATION_ID = 'builtin:voice:translate:en_US'
 
 const { t } = useI18n()
-const ipc = useIpcStore()
+const desktopStore = useDesktopStore()
 const tools = useToolsStore()
 const voice = useVoiceCommandsStore()
 const releaseHold = useQuickDismissStore().hold()
@@ -444,7 +444,7 @@ watch(
 )
 
 watch(
-  () => ipc.desktopState.isWindowShown,
+  () => desktopStore.desktopState.isWindowShown,
   (shown) => {
     if (!shown) void voice.cancel()
   }

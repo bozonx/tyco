@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { onScopeDispose, watch } from 'vue'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 
 import { useLlmStore } from './llm'
 import { createQuickCorrection } from '../lib/quick-input/quick-correction'
@@ -19,14 +19,14 @@ export const useTextCorrectionStore = defineStore('textCorrection', () => {
       correctText(text, { signal, notifyError: false }),
   })
 
-  const ipc = useIpcStore()
+  const desktop = useDesktopStore()
   watch(
     () =>
       JSON.stringify([
-        ipc.desktopState.userConfig.llm,
-        ipc.desktopState.userConfig.aiRules?.correction,
-        ipc.desktopState.appConfig.aiInstructions.correction,
-        ipc.desktopState.appConfig.rulePrefix,
+        desktop.userConfig.llm,
+        desktop.userConfig.aiRules?.correction,
+        desktop.appConfig.aiInstructions.correction,
+        desktop.appConfig.rulePrefix,
       ]),
     corrector.invalidate,
     { flush: 'sync' }

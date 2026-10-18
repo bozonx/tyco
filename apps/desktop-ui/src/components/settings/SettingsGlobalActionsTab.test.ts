@@ -27,12 +27,14 @@ const { callFunction } = vi.hoisted(() => ({
   })),
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({
-    callFunction,
-    desktopState: { userConfig: DEFAULT_USER_CONFIG },
-  }),
-}))
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
+  return {
+    useDesktopStore: () =>
+      mockDesktopStore(() => ({ userConfig: DEFAULT_USER_CONFIG })),
+  }
+})
 
 describe('SettingsGlobalActionsTab.vue', () => {
   let pinia: ReturnType<typeof createPinia>

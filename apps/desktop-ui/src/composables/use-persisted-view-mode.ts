@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 
 import {
   cycleDiffMode,
@@ -8,20 +8,35 @@ import {
   type DiffViewMode,
   type ParallelViewMode,
 } from '../lib/diff/diff-model'
-import { useIpcStore } from '../stores/ipc'
+import { useDesktopStore } from '../stores/desktop'
+
+/**
+ * A view mode kept in the settings: the picked mode shows at once and is
+ * stored, and a mode stored elsewhere, e.g. in another window, shows here too
+ */
+function usePersistedMode<T extends string>(
+  stored: () => T,
+  store: (mode: T) => void
+) {
+  const mode = ref(stored()) as Ref<T>
+  watch(stored, (next) => {
+    mode.value = next
+  })
+  watch(
+    () => mode.value,
+    (next) => {
+      if (next !== stored()) store(next)
+    }
+  )
+  return mode
+}
 
 export function usePersistedDiffMode() {
-  const ipcStore = useIpcStore()
-  const diffMode = ref<DiffViewMode>(
-    resolveDiffMode(ipcStore.desktopState.userConfig.diffViewMode)
+  const desktopStore = useDesktopStore()
+  const diffMode = usePersistedMode<DiffViewMode>(
+    () => resolveDiffMode(desktopStore.userConfig.diffViewMode),
+    (diffViewMode) => void desktopStore.updateUserConfig({ diffViewMode })
   )
-
-  watch(diffMode, (mode) => {
-    void ipcStore.saveUserConfig({
-      ...ipcStore.desktopState.userConfig,
-      diffViewMode: mode,
-    })
-  })
 
   function cycleMode() {
     diffMode.value = cycleDiffMode(diffMode.value)
@@ -31,24 +46,17 @@ export function usePersistedDiffMode() {
 }
 
 export function usePersistedTranslationViewMode(hasSourceText: () => boolean) {
-  const ipcStore = useIpcStore()
-  const viewMode = ref<ParallelViewMode>(
-    hasSourceText()
-      ? resolveParallelViewMode(
-          ipcStore.desktopState.userConfig.translation.viewMode
-        )
-      : 'result'
+  const desktopStore = useDesktopStore()
+  const viewMode = usePersistedMode<ParallelViewMode>(
+    () =>
+      hasSourceText()
+        ? resolveParallelViewMode(desktopStore.userConfig.translation.viewMode)
+        : 'result',
+    (mode) =>
+      void desktopStore.updateUserConfig({
+        translation: { ...desktopStore.userConfig.translation, viewMode: mode },
+      })
   )
-
-  watch(viewMode, (newMode) => {
-    void ipcStore.saveUserConfig({
-      ...ipcStore.desktopState.userConfig,
-      translation: {
-        ...ipcStore.desktopState.userConfig.translation,
-        viewMode: newMode,
-      },
-    })
-  })
 
   function cycleMode() {
     if (!hasSourceText()) return

@@ -4,7 +4,7 @@ import { nextTick } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useHistoryStore } from '../../stores/history'
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import TranslateMenu from './TranslateMenu.vue'
 
@@ -62,16 +62,16 @@ describe('TranslateMenu', () => {
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
-    vi.spyOn(useIpcStore(), 'patchSessionState').mockResolvedValue({
+    vi.spyOn(useDesktopStore(), 'patchSessionState').mockResolvedValue({
       success: true,
-      result: useIpcStore().desktopState.sessionState,
+      result: useDesktopStore().desktopState.sessionState,
     })
     useMenuModalsStore().nextModal(MenuModals.TRANSLATE)
   })
 
   it('translates into a configured language by its key', async () => {
-    const ipcStore = useIpcStore()
-    ipcStore.desktopState.userConfig.translation.targetLanguages = ['de_DE']
+    const desktop = useDesktopStore()
+    desktop.desktopState.userConfig.translation.targetLanguages = ['de_DE']
     mountMenu()
 
     await shortcutListProps.leftLetterKeys[0].action()
@@ -115,7 +115,7 @@ describe('TranslateMenu', () => {
   })
 
   it('translates into any language picked from the full list', async () => {
-    const ipcStore = useIpcStore()
+    const desktop = useDesktopStore()
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
@@ -126,7 +126,7 @@ describe('TranslateMenu', () => {
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it_IT')
-    expect(ipcStore.patchSessionState).toHaveBeenCalledWith({
+    expect(desktop.patchSessionState).toHaveBeenCalledWith({
       recentTranslateLanguages: ['it_IT'],
     })
   })
@@ -154,8 +154,8 @@ describe('TranslateMenu', () => {
   })
 
   it('translates nothing on Enter until a language is typed or chosen', async () => {
-    const ipcStore = useIpcStore()
-    ipcStore.desktopState.sessionState = { recentTranslateLanguages: ['it_IT'] }
+    const desktop = useDesktopStore()
+    desktop.desktopState.sessionState = { recentTranslateLanguages: ['it_IT'] }
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
@@ -184,7 +184,7 @@ describe('TranslateMenu', () => {
   })
 
   it('translates the highlighted language by clicking the Enter hint', async () => {
-    useIpcStore().desktopState.sessionState = {
+    useDesktopStore().desktopState.sessionState = {
       recentTranslateLanguages: ['it_IT'],
     }
     const wrapper = mountMenu()
@@ -206,7 +206,7 @@ describe('TranslateMenu', () => {
         resolve = done
       })
     )
-    useIpcStore().desktopState.userConfig.translation.targetLanguages = [
+    useDesktopStore().desktopState.userConfig.translation.targetLanguages = [
       'de_DE',
     ]
     const wrapper = mountMenu()

@@ -32,7 +32,12 @@ vi.mock('../../stores/chat-input', () => ({
     }),
 }))
 
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => mocks.ipcState }))
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
+  return {
+    useDesktopStore: () => mockDesktopStore(() => mocks.ipcState.desktopState),
+  }
+})
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),

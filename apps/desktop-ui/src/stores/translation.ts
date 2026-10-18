@@ -10,22 +10,22 @@ import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { createTranslationActions } from '../lib/translation/translation-actions'
 import { createTranslationClient } from '../lib/translation/translation-client'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
-import { useIpcStore } from './ipc'
+import { useDesktopStore } from './desktop'
 import { useLlmStore } from './llm'
 import { useSecretsStore } from './secrets'
 import { useToastStore } from './toast'
 
 export const useTranslationStore = defineStore('translation', () => {
-  const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const llmStore = useLlmStore()
   const secretsStore = useSecretsStore()
   const toast = useToastStore()
   const client = createTranslationClient({
     getConfig: () =>
-      normalizeTranslationConfig(ipcStore.desktopState.userConfig?.translation),
+      normalizeTranslationConfig(desktopStore.userConfig?.translation),
     getLlmLimits: () =>
       taskModelLimits(
-        normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm),
+        normalizeLlmConfig(desktopStore.userConfig?.llm),
         'translate'
       ),
     transport: createTauriTransport(tauriNetIpc),
@@ -35,7 +35,7 @@ export const useTranslationStore = defineStore('translation', () => {
   })
   const actions = createTranslationActions({
     client,
-    getUserConfig: () => ipcStore.desktopState.userConfig,
+    getUserConfig: () => desktopStore.userConfig,
     translate,
     logError: (message, failure) =>
       clientLogger.error(message, failure, 'translation'),

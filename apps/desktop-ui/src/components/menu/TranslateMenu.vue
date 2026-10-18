@@ -66,6 +66,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
+import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import useToast from '../../composables/use-toast'
 import { toolResultMessage } from '../../lib/invocation/invocation-result'
 import {
@@ -83,9 +84,8 @@ import {
   nativeLanguageName,
 } from '../../lib/translation/translation-picker'
 import { type ActionItem } from '../../stores/action-menu'
-import { useHistoryStore } from '../../stores/history'
+import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
-import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import ShortcutList from '../ShortcutList.vue'
 import ActionOverlayLayout from '../common/ActionOverlayLayout.vue'
@@ -104,11 +104,11 @@ const props = withDefaults(defineProps<TranslateMenuParams>(), {
   language: undefined,
 })
 
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const editorNavigation = useEditorNavigation()
 const invocations = useInvocationsStore()
 const menuModalsStore = useMenuModalsStore()
-const historyStore = useHistoryStore()
+const runStep = useMenuStepRun()
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
 
@@ -129,7 +129,7 @@ const languageLabel = (id: string): string => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  ipcStore.desktopState.userConfig.translation.targetLanguages.map(
+  desktopStore.userConfig.translation.targetLanguages.map(
     (lang: string | null) =>
       lang
         ? {
@@ -157,7 +157,7 @@ const closePicker = () => {
 }
 
 const recentLanguages = computed(
-  () => ipcStore.desktopState.sessionState?.recentTranslateLanguages ?? []
+  () => desktopStore.sessionState?.recentTranslateLanguages ?? []
 )
 
 const ALL_LANGUAGES = buildLanguageOptions([], false).map((option) => option.id)
@@ -266,7 +266,7 @@ async function submitLanguage({ option }: QueryPanelSubmit) {
     return
   }
 
-  void ipcStore.patchSessionState({
+  void desktopStore.patchSessionState({
     recentTranslateLanguages: pushRecent(recentLanguages.value, option.id),
   })
   await translate(
@@ -290,60 +290,38 @@ const translate = async (targetLanguage: string, source?: string) => {
     return
   }
 
-  // the menu step, when the menu is one: closing it hides the result
-  const stepId = menuModalsStore.currentStepId
-  const controller = new AbortController()
   const stageLabels = {
     translating: 'menu.translationProgressTranslating',
     checking: 'menu.translationProgressChecking',
     repairing: 'menu.translationProgressRepairing',
   } as const
-  const owner = menuModalsStore.setPendingModal({
-    label: t(stageLabels.translating),
-    onCancel: () => controller.abort(),
-  })
-  const setStage = (stage: string) => {
-    if (controller.signal.aborted || !(stage in stageLabels)) return
-    menuModalsStore.setPendingModal(
-      {
-        label: t(stageLabels[stage as keyof typeof stageLabels]),
-        onCancel: () => controller.abort(),
-      },
-      owner
-    )
-  }
-  try {
-    const sourceId = await historyStore.saveSource(sourceText, 'translate')
-    if (controller.signal.aborted) return
-    const result = await invocations.call('core.translate', sourceText, {
-      signal: controller.signal,
-      onProgress: setStage,
-      toolConfig: { language: targetLanguage, sourceLanguage: source },
-    })
-    if (result.cancelled || controller.signal.aborted) return
-    if (!result.ok || result.content === undefined) {
+  await runStep({
+    text: sourceText,
+    operation: 'translate',
+    pending: { label: t(stageLabels.translating) },
+    invoke: (signal, updatePending) =>
+      invocations.call('core.translate', sourceText, {
+        signal,
+        onProgress: (stage) => {
+          if (stage in stageLabels)
+            updatePending({
+              label: t(stageLabels[stage as keyof typeof stageLabels]),
+            })
+        },
+        toolConfig: { language: targetLanguage, sourceLanguage: source },
+      }),
+    read: (result) => {
+      if (result.content !== undefined) return result.content
       toastText(toolResultMessage(result, t), 'error')
-      return
-    }
-    const text = result.content
-    await historyStore.saveSourceResult(sourceId, text).catch(() => {
-      toastKey('history.operationFailed', 'error')
-    })
-    // closed meanwhile: the result is in the history, not on the screen
-    if (controller.signal.aborted) return
-    if (stepId !== undefined && !menuModalsStore.hasStep(stepId)) return
-    menuModalsStore.nextModal(MenuModals.PREVIEW, {
-      text,
-      sourceText,
-      translationMeta: translationMetaOf(result.meta),
-    })
-  } catch (error) {
-    if (controller.signal.aborted) return
-    const message = error instanceof Error ? error.message : String(error)
-    toastText(message, 'error')
-  } finally {
-    menuModalsStore.clearPendingModal(owner)
-  }
+      return null
+    },
+    show: (text, result) =>
+      menuModalsStore.nextModal(MenuModals.PREVIEW, {
+        text,
+        sourceText,
+        translationMeta: translationMetaOf(result.meta),
+      }),
+  })
 }
 
 // once: back on this step from the result, the menu waits for a choice

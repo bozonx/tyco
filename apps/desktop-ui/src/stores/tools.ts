@@ -1,4 +1,4 @@
-import { defineStore, getActivePinia } from 'pinia'
+import { defineStore } from 'pinia'
 
 import type { LlmTask } from '@tyco/shared'
 
@@ -14,12 +14,11 @@ import { createScriptAndWebhookTools } from '../lib/tools/script-and-webhook-too
 import { createCoreTools } from '../lib/tools/core-tools'
 import { createToolRegistry } from '../lib/tools/tool-registry'
 import type { TranslationMeta } from '../lib/translation/translation-meta'
-import { useChatStore } from './chat'
 import { useTextCorrectionStore } from './text-correction'
 import { useTranslationStore } from './translation'
 import { createScriptActionClient } from '../lib/custom-actions/script-action-client'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
-import { useMenuModalsStore } from './menu-modals'
 
 /**
  * The tool registry of the window: the built-in tools of the app and those the
@@ -27,9 +26,8 @@ import { useMenuModalsStore } from './menu-modals'
  */
 
 export const useToolsStore = defineStore('tools', () => {
-  const pinia = getActivePinia()
-  const menuModalsStore = useMenuModalsStore()
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const { aiCustomPrompt } = useLlmStore().actions
   const { translateTo } = useTranslationStore().actions
   const textCorrectionStore = useTextCorrectionStore()
@@ -42,11 +40,20 @@ export const useToolsStore = defineStore('tools', () => {
   })
 
   const getLlmUnavailableReasonKey = (task: LlmTask) =>
-    normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm).taskModelChains[
-      task
-    ]?.length
+    normalizeLlmConfig(desktopStore.userConfig?.llm).taskModelChains[task]
+      ?.length
       ? undefined
       : 'tools.noLlm'
+
+  // the chat hands itself in: the registry does not depend on it
+  let askInChatHandler: ((text: string) => Promise<void>) | null = null
+  /** Lets `core.askInChat` reach the chat; returns the release function */
+  const provideAskInChat = (handler: (text: string) => Promise<void>) => {
+    askInChatHandler = handler
+    return () => {
+      if (askInChatHandler === handler) askInChatHandler = null
+    }
+  }
 
   const coreTools = createCoreTools({
     insertText: pasteIntoTargetAndHide,
@@ -55,9 +62,8 @@ export const useToolsStore = defineStore('tools', () => {
       if (!result.success) throw new Error(result.error ?? 'copyText')
     },
     askInChat: async (text) => {
-      // the chat takes the place of whatever step the menu was on
-      menuModalsStore.closeAll()
-      await useChatStore(pinia).attachToChat(text)
+      if (!askInChatHandler) throw new Error('The chat is not available')
+      await askInChatHandler(text)
     },
     correctText: textCorrectionStore.correct,
     translateTo: async (language, text, options) => {
@@ -76,13 +82,13 @@ export const useToolsStore = defineStore('tools', () => {
       aiCustomPrompt(prompt, text, { signal, notifyError: false }),
     getLlmUnavailableReasonKey,
     getTranslatorUnavailableReasonKey: () =>
-      ipcStore.desktopState.userConfig?.translation?.provider === 'llm'
+      desktopStore.userConfig?.translation?.provider === 'llm'
         ? getLlmUnavailableReasonKey('translate')
         : undefined,
     describeError: (error) => describeError(error, translate),
   })
 
-  return createToolRegistry([
+  const registry = createToolRegistry([
     ...createScriptAndWebhookTools({
       ...createScriptActionClient(ipcStore.callFunction),
       executeWebhook: (target, text, signal) =>
@@ -102,4 +108,5 @@ export const useToolsStore = defineStore('tools', () => {
     }),
     ...coreTools,
   ])
+  return { ...registry, provideAskInChat }
 })

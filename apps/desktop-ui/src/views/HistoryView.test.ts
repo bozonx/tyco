@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import HistoryView from './HistoryView.vue'
 import { useHistoryStore } from '../stores/history'
-import { useIpcStore } from '../stores/ipc'
+import { useDesktopStore } from '../stores/desktop'
 
 const mockToEditor = vi.fn()
 vi.mock('../composables/use-editor-navigation', () => ({
@@ -168,9 +168,9 @@ describe('HistoryView.vue', () => {
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'loadEditorHistory').mockResolvedValue()
 
-    const ipc = useIpcStore()
-    ipc.desktopState.userConfig = {
-      ...ipc.desktopState.userConfig,
+    const desktop = useDesktopStore()
+    desktop.desktopState.userConfig = {
+      ...desktop.desktopState.userConfig,
       editorHistory: { storage: 'off' },
     } as any
 

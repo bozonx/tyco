@@ -13,11 +13,11 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
+import { useMarkupMode } from '../../composables/use-markup-mode'
 import useToast from '../../composables/use-toast'
 import {
   StaleClipboardError,
@@ -48,11 +48,10 @@ import { actionIcon, buildContextMenu } from '../../lib/editor/menu-builder'
 import type { EditorMenuItem, MenuPlacement } from '../../lib/editor/menu-item'
 import type { ActionItem } from '../../stores/action-menu'
 import { useActionMenuStore } from '../../stores/action-menu'
+import { useDesktopStore } from '../../stores/desktop'
 import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
-import { useIpcStore } from '../../stores/ipc'
-import { useMarkupModeStore } from '../../stores/markup-mode'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { redo, redoDepth, undo, undoDepth } from '@codemirror/commands'
 import { EditorView } from '@codemirror/view'
@@ -61,7 +60,7 @@ const editorInputStore = useEditorInputStore()
 const menuModalsStore = useMenuModalsStore()
 const actionMenuStore = useActionMenuStore()
 const editMenuStore = useEditMenuStore()
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const { toastKey } = useToast()
 const { t } = useI18n()
 const { getLabel, doAction, doEdit } = useEditorActions()
@@ -78,9 +77,7 @@ interface OpenMenu {
 
 const menu = ref<OpenMenu | null>(null)
 
-const markupMode = useMarkupModeStore()
-const { showMarkup } = storeToRefs(markupMode)
-const { toggleShowMarkup } = markupMode
+const { showMarkup, toggleShowMarkup } = useMarkupMode()
 
 let view: EditorView | null = null
 
@@ -122,7 +119,7 @@ const commands: EditorMenuCommands = {
   copy: () => withClipboard(() => copySelection(view!)),
   paste: () =>
     withClipboard(() =>
-      pasteFromClipboard(view!, ipcStore.desktopState?.userConfig.markdown)
+      pasteFromClipboard(view!, desktopStore.userConfig.markdown)
     ),
   pastePlain: () => withClipboard(() => pastePlainFromClipboard(view!)),
   selectAll: () => {
@@ -206,7 +203,7 @@ onMounted(() => {
       ariaLabel: t('editor.inputLabel'),
       t,
       paste: true,
-      getMarkdownSettings: () => ipcStore.desktopState?.userConfig.markdown,
+      getMarkdownSettings: () => desktopStore.userConfig.markdown,
       onPastePlain: () => void commands.pastePlain(),
       markdownPreview: !showMarkup.value,
       onToggleMarkup: toggleShowMarkup,

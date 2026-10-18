@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { readonly, ref, watch } from 'vue'
 import type { IpcResult } from '@tyco/shared'
 
 import { createAiProfilesModel } from '../lib/ai-profiles/ai-profiles-model'
 import { createAiProjectsModel } from '../lib/ai-profiles/ai-projects-model'
+import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-storage'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 
 function resultOf<T>(response: IpcResult<T>): T {
@@ -13,6 +15,7 @@ function resultOf<T>(response: IpcResult<T>): T {
 
 export const useAiProfilesStore = defineStore('ai-profiles', () => {
   const ipcStore = useIpcStore()
+  const desktopStore = useDesktopStore()
   const call = ipcStore.callFunction
 
   const profilesModel = createAiProfilesModel({
@@ -77,7 +80,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
 
   // the vault moves once the settings with its new path are stored
   watch(
-    () => ipcStore.desktopState.userConfig?.aiProfiles?.vaultPath,
+    () => desktopStore.userConfig?.aiProfiles?.vaultPath,
     (path, previous) => {
       if (path !== previous) void loadAll()
     }
@@ -87,6 +90,10 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     resultOf(await call('openAiVaultDir', profileId ? [profileId] : []))
   }
 
+  /** How many chats removing the profile `id` removes with it */
+  const countChats = async (id: string): Promise<number> =>
+    (await createIpcChatSessionStorageDriver(ipcStore, id).listChats()).length
+
   /** Removing a project removes the profiles' permissions for it as well */
   const deleteProject = async (id: string): Promise<void> => {
     await projectsModel.deleteProject(id)
@@ -94,11 +101,11 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   }
 
   return {
-    profiles: profilesModel.profiles,
-    projects: projectsModel.projects,
-    vaultPath,
-    vaultError,
-    isLoaded,
+    profiles: readonly(profilesModel.profiles),
+    projects: readonly(projectsModel.projects),
+    vaultPath: readonly(vaultPath),
+    vaultError: readonly(vaultError),
+    isLoaded: readonly(isLoaded),
     loadAll,
     openVaultDir,
     pickFolder: projectsModel.pickExternalFolder,
@@ -108,6 +115,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     updateProfile: profilesModel.updateProfile,
     refreshProfile: profilesModel.refreshProfile,
     deleteProfile: profilesModel.deleteProfile,
+    countChats,
     setProjectPermission: profilesModel.setProjectPermission,
     readSoul: profilesModel.readSoul,
     writeSoul: profilesModel.writeSoul,

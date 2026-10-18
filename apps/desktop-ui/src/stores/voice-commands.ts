@@ -11,12 +11,14 @@ import {
 } from '../lib/voice-commands/voice-resolver'
 import { commandLabel } from '../lib/commands/command-runtime'
 import { useInvocationRunnerDependencies } from './invocations'
+import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import { useToolsStore } from './tools'
 import { useHistoryStore } from './history'
 
 export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
   const ipc = useIpcStore()
+  const desktop = useDesktopStore()
   const history = useHistoryStore()
   const tools = useToolsStore()
   const runner = createCommandRunner(useInvocationRunnerDependencies())
@@ -25,7 +27,7 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
   )
   const model = createVoiceCommandModel({
     builtInCommands: () => builtInCommands.value,
-    commands: () => ipc.desktopState.userConfig.commands,
+    commands: () => desktop.userConfig.commands,
     tools,
     ...useDictationActions(),
     run: async (command, text, signal) => {
@@ -33,7 +35,7 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
       if (signal.aborted) return { success: false, cancelled: true }
       const current = [
         ...builtInCommands.value,
-        ...ipc.desktopState.userConfig.commands,
+        ...desktop.userConfig.commands,
       ].find((item) => item.id === command.id)
       if (
         !current ||

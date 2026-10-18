@@ -6,5 +6,7 @@ export const getDesktopWindow = () => getCurrentWindow()
 export const getDesktopWebview = () => getCurrentWebview()
 export const getDesktopWindowLabel = () =>
   isTauri() ? getCurrentWindow().label : 'main'
+/** The quick window renders the overlays; every other window is a main one */
+export const isQuickWindow = () => getDesktopWindowLabel() === 'quick'
 
 export { convertFileSrc } from '@tauri-apps/api/core'

@@ -120,7 +120,7 @@ import {
   submitShortcut,
 } from '../../lib/input-keys/input-keys'
 import { appNavigation } from '../../lib/navigation/navigation'
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import Button from '../common/Button.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
@@ -131,16 +131,14 @@ import ChatInput from './ChatInput.vue'
 defineProps<{ canSend: boolean; draggingFiles: boolean }>()
 const emit = defineEmits<{ send: [] }>()
 const { chat: chatStore } = useChatScope()
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const { t } = useI18n()
 const { openChatVoiceInput } = useChatVoiceInput()
 function openModelSettings() {
   void appNavigation.goToConfig('llm')
 }
 const inputHint = computed(() => {
-  const submitKey = resolveSubmitKey(
-    ipcStore.desktopState?.userConfig?.submitKey
-  )
+  const submitKey = resolveSubmitKey(desktopStore.userConfig?.submitKey)
   return t('chat.inputHint', {
     send: submitShortcut(submitKey),
     newline: newlineShortcut(submitKey),

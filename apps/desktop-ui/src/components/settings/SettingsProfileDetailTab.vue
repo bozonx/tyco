@@ -115,7 +115,7 @@
             auto-resize
             :max-auto-height="400"
             :aria-label="t('settings.profileSoulPrompt')"
-            @update:model-value="soulAutosave.schedule()"
+            @update:model-value="changeSoul"
           />
           <div class="flex justify-end">
             <Button
@@ -236,19 +236,13 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import {
-  parseProfileMaxOutputTokens,
-  parseProfileTemperature,
-} from '../../lib/ai-profiles/profile-generation'
+import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
 import { CHAT_TOOL_GROUPS } from '../../lib/chat-tools/chat-tool-groups'
 import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
-import { createIpcChatSessionStorageDriver } from '../../lib/chat/chat-session-storage'
 import { normalizeLlmConfig } from '../../lib/llm/llm-config'
 import { isSecretUsable } from '../../lib/net/secrets'
-import { createAutosave } from '../../lib/settings/autosave'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
-import { disposeProfileChatStore } from '../../stores/chat'
-import { useIpcStore } from '../../stores/ipc'
+import { useDesktopStore } from '../../stores/desktop'
 import { useSecretsStore } from '../../stores/secrets'
 import Icon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -283,7 +277,7 @@ const DEFAULT_MODEL_OPTION = ''
 const { t } = useI18n()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
-const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
 const secretsStore = useSecretsStore()
 
 const isNew = computed(() => props.profileId === 'new')
@@ -317,75 +311,36 @@ async function handleCreate() {
 // Settings, each stored on its own a moment after it changes
 // ---------------------------------------------------------------------------
 
-const name = ref('')
-const temperatureText = ref('')
-const maxOutputTokensText = ref('')
-const temperatureError = ref(false)
-const maxOutputTokensError = ref(false)
-const soulPrompt = ref('')
-const isSoulLoaded = ref(false)
-
-const profileAutosave = createAutosave({
+const editor = createProfileEditor({
   delayMs: AUTOSAVE_DELAY_MS,
-  save: async () => {
-    const temperature = parseProfileTemperature(temperatureText.value)
-    const maxOutputTokens = parseProfileMaxOutputTokens(
-      maxOutputTokensText.value
-    )
-    await aiProfilesStore.updateProfile(props.profileId, {
-      ...(name.value.trim() ? { name: name.value.trim() } : {}),
-      ...(temperature.isValid ? { temperature: temperature.value } : {}),
-      ...(maxOutputTokens.isValid
-        ? { maxOutputTokens: maxOutputTokens.value }
-        : {}),
-    })
-  },
+  updateProfile: (patch) =>
+    aiProfilesStore.updateProfile(props.profileId, patch),
+  readSoul: () => aiProfilesStore.readSoul(props.profileId),
+  writeSoul: (content) => aiProfilesStore.writeSoul(props.profileId, content),
+  reportError: (message) => toastText(message, 'error'),
 })
-
-const soulAutosave = createAutosave({
-  delayMs: AUTOSAVE_DELAY_MS,
-  save: async () => {
-    // the field shows the file only once it has been read
-    if (!isSoulLoaded.value) return
-    await aiProfilesStore.writeSoul(props.profileId, soulPrompt.value)
-  },
-})
+const {
+  name,
+  temperatureText,
+  maxOutputTokensText,
+  temperatureError,
+  maxOutputTokensError,
+  soulPrompt,
+  changeName,
+  changeTemperature,
+  changeMaxOutputTokens,
+  changeSoul,
+} = editor
 
 // the fields take the profile once it is there; the settings may open
 // before the vault is read
 watch(
   () => Boolean(profile.value),
-  async (isThere) => {
-    const current = profile.value
-    if (!isThere || !current || isSoulLoaded.value) return
-    name.value = current.name
-    temperatureText.value = String(current.temperature ?? '')
-    maxOutputTokensText.value = String(current.maxOutputTokens ?? '')
-    try {
-      soulPrompt.value = await aiProfilesStore.readSoul(current.id)
-      isSoulLoaded.value = true
-    } catch (error) {
-      toastText(String(error), 'error')
-    }
+  (isThere) => {
+    if (isThere && profile.value) void editor.load(profile.value)
   },
   { immediate: true }
 )
-
-function changeName() {
-  if (name.value.trim()) profileAutosave.schedule()
-}
-
-function changeTemperature(value: string) {
-  temperatureText.value = value
-  temperatureError.value = !parseProfileTemperature(value).isValid
-  if (!temperatureError.value) profileAutosave.schedule()
-}
-
-function changeMaxOutputTokens(value: string) {
-  maxOutputTokensText.value = value
-  maxOutputTokensError.value = !parseProfileMaxOutputTokens(value).isValid
-  if (!maxOutputTokensError.value) profileAutosave.schedule()
-}
 
 function changeModel(value: string | number | undefined) {
   const modelId = value ? String(value) : undefined
@@ -401,9 +356,8 @@ function changeTools(tools: ProfileToolSettings) {
 }
 
 const availableModels = computed(() =>
-  chatModelOptions(
-    normalizeLlmConfig(ipcStore.desktopState.userConfig?.llm),
-    (id) => isSecretUsable(secretsStore.secrets, id)
+  chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
+    isSecretUsable(secretsStore.secrets, id)
   )
 )
 
@@ -427,30 +381,19 @@ const modelOptions = computed(() => {
   return options
 })
 
+const SAVE_STATUS_KEYS = {
+  error: 'settings.profileSaveFailed',
+  saving: 'settings.profileSaving',
+  saved: 'settings.profileSaved',
+} as const
 const saveStatusText = computed(() => {
-  const statuses = [profileAutosave.status.value, soulAutosave.status.value]
-  if (statuses.includes('error')) return t('settings.profileSaveFailed')
-  if (statuses.includes('saving') || statuses.includes('pending'))
-    return t('settings.profileSaving')
-  if (statuses.includes('saved')) return t('settings.profileSaved')
-  return ''
+  const status = editor.saveStatus.value
+  return status ? t(SAVE_STATUS_KEYS[status]) : ''
 })
-const hasSaveError = computed(
-  () =>
-    profileAutosave.status.value === 'error' ||
-    soulAutosave.status.value === 'error'
-)
-
-watch(
-  () => profileAutosave.error.value || soulAutosave.error.value,
-  (message) => {
-    if (message) toastText(message, 'error')
-  }
-)
+const hasSaveError = computed(() => editor.saveStatus.value === 'error')
 
 onBeforeUnmount(() => {
-  void profileAutosave.flush()
-  void soulAutosave.flush()
+  void editor.flush()
 })
 
 // ---------------------------------------------------------------------------
@@ -504,23 +447,15 @@ const deleteMessage = computed(() =>
 )
 
 async function askDelete() {
-  try {
-    const chats = await createIpcChatSessionStorageDriver(
-      ipcStore,
-      props.profileId
-    ).listChats()
-    chatCount.value = chats.length
-  } catch {
-    chatCount.value = 0
-  }
+  chatCount.value = await aiProfilesStore
+    .countChats(props.profileId)
+    .catch(() => 0)
   showDeleteConfirm.value = true
 }
 
 async function handleDelete() {
   try {
-    profileAutosave.cancel()
-    soulAutosave.cancel()
-    disposeProfileChatStore(props.profileId)
+    editor.cancel()
     await aiProfilesStore.deleteProfile(props.profileId)
     showDeleteConfirm.value = false
     emit('back')
