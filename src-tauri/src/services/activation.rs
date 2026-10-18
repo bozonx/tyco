@@ -171,6 +171,24 @@ impl Activation {
         user_config["launcherPages"][self.launcher_page_index]["inputMode"] != "none"
     }
 
+    /// Whether this activation confirms the voice input it would open, instead
+    /// of starting it anew: the hotkey, D-Bus call or `tyco-ctl` call that
+    /// opened a voice input also finishes it, as Space or Enter does. A call
+    /// that brings its own text asks for a new input.
+    pub fn finishes_open_voice_input(
+        &self,
+        open_mode: Option<ActivationMode>,
+        is_window_shown: bool,
+    ) -> bool {
+        matches!(
+            self.mode,
+            ActivationMode::Voice | ActivationMode::VoiceChat | ActivationMode::VoiceCommands
+        ) && self.source != ActivationSource::Ui
+            && self.selected_text.is_none()
+            && is_window_shown
+            && open_mode == Some(self.mode)
+    }
+
     /// Accept a positional mode, --mode MODE, or --mode=MODE after argv[0].
     pub fn from_args(args: &[String]) -> Result<Option<Self>, AppError> {
         let values = &args[args.len().min(1)..];
@@ -203,6 +221,33 @@ mod tests {
         assert!(!page("commandLauncher3").can_take_selection(&config));
         assert!(page("commandLauncher3").can_take_selection(&json!({})));
         assert!(page("translate").can_take_selection(&config));
+    }
+
+    #[test]
+    fn a_repeated_external_activation_finishes_the_open_voice_input() {
+        use ActivationMode::{Chat, Voice, VoiceChat, VoiceCommands};
+        for mode in [Voice, VoiceChat, VoiceCommands] {
+            for source in [
+                ActivationSource::Hotkey,
+                ActivationSource::Dbus,
+                ActivationSource::Cli,
+            ] {
+                let activation = Activation::new(mode, source);
+                assert!(activation.finishes_open_voice_input(Some(mode), true));
+                assert!(!activation.finishes_open_voice_input(Some(mode), false));
+                assert!(!activation.finishes_open_voice_input(Some(Chat), true));
+                assert!(!activation.finishes_open_voice_input(None, true));
+            }
+            let from_ui = Activation::new(mode, ActivationSource::Ui);
+            assert!(!from_ui.finishes_open_voice_input(Some(mode), true));
+            let mut with_text = Activation::new(mode, ActivationSource::Dbus);
+            with_text.selected_text = Some("text".into());
+            assert!(!with_text.finishes_open_voice_input(Some(mode), true));
+        }
+        let chat = Activation::new(Chat, ActivationSource::Hotkey);
+        assert!(!chat.finishes_open_voice_input(Some(Chat), true));
+        let voice = Activation::new(Voice, ActivationSource::Hotkey);
+        assert!(!voice.finishes_open_voice_input(Some(VoiceChat), true));
     }
 
     #[test]

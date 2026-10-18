@@ -8,6 +8,7 @@
     :is-transcribing="isTranscribing"
     :is-finishing="isFinishing"
     :finish-behavior="props.finishBehavior"
+    :finish-hotkey="finishHotkey"
     :chat="props.chat"
     :prefix="props.prefix"
     :suffix="props.suffix"
@@ -25,6 +26,7 @@ import { useDictationActions } from '../../composables/use-dictation-actions'
 import { useI18n } from '../../composables/use-i18n'
 import { useLlmActions } from '../../composables/use-llm-actions'
 import useToast from '../../composables/use-toast'
+import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { desktopClient } from '../../lib/desktop/client'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
@@ -112,6 +114,15 @@ const {
   finish,
   startSession,
 } = model
+/** What Space and Enter do: send the question to the chat, or insert the text */
+const primaryIntent = (): VoiceFinishIntent =>
+  props.finishBehavior === 'submitToChat' ? 'submit' : 'insert'
+const finishHotkey = useVoiceFinishSignal(
+  () => props.activationMode,
+  () => {
+    if (ownsActivation()) void finish(primaryIntent())
+  }
+)
 let unlistenAudioLevel: (() => void) | undefined
 let unmounted = false
 
@@ -153,7 +164,7 @@ function handleKeyUp(event: KeyboardEvent) {
   }
 
   if (event.code === 'Space' || event.code === 'Enter') {
-    void finish(props.finishBehavior === 'submitToChat' ? 'submit' : 'insert')
+    void finish(primaryIntent())
   }
 }
 

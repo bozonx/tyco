@@ -22,6 +22,7 @@
         compact
         :chat="chat"
         :finish-behavior="finishBehavior"
+        :finish-hotkey="finishHotkey"
         :is-finishing="isFinishing"
         :finish="finish"
         :cancel="cancel"

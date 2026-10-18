@@ -44,6 +44,9 @@ vi.mock('../components/menu/InsertMenu.vue', () => ({
   },
 }))
 
+vi.mock('../composables/use-voice-finish-signal', () => ({
+  useVoiceFinishSignal: () => ({ value: '' }),
+}))
 vi.mock('../stores/menu-modals', () => ({
   useMenuModalsStore: () => mocks.menuModals,
 }))

@@ -12,6 +12,8 @@ export interface VoiceRecordingProps {
   isTranscribing: boolean
   isFinishing: boolean
   finishBehavior?: VoiceFinishBehavior
+  /** The global hotkey that also confirms the input, see `VoiceRecordingActions` */
+  finishHotkey?: string
   chat?: boolean
   prefix?: string
   suffix?: string

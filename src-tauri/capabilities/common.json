@@ -21,6 +21,7 @@
     "allow-get-chat-image",
     "allow-get-editor-history",
     "allow-get-desktop-state",
+    "allow-get-hotkey-provider-info",
     "allow-get-user-config",
     "allow-list-installed-plugins",
     "allow-log-client-message",

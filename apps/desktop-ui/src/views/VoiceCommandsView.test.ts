@@ -64,6 +64,13 @@ vi.mock('../stores/voice-commands', () => ({
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({ desktopState: state }),
 }))
+const hotkeys = vi.hoisted(() => ({
+  load: vi.fn().mockResolvedValue(undefined),
+  shortcutLabel: vi.fn((_mode: string) => ''),
+}))
+vi.mock('../stores/global-hotkeys', () => ({
+  useGlobalHotkeysStore: () => hotkeys,
+}))
 vi.mock('../stores/quick-dismiss', () => ({
   useQuickDismissStore: () => ({ hold: () => mocks.release }),
 }))
@@ -135,20 +142,41 @@ describe('separate voice command overlay', () => {
     expect(mocks.cancel).toHaveBeenCalled()
     expect(mocks.release).toHaveBeenCalledOnce()
   })
-  it('finishes only the current activation on a repeat hotkey and cancels on hiding', async () => {
+  it('presses Run only for the current activation on a repeat activation and cancels on hiding', async () => {
     const wrapper = mountView()
     await flushPromises()
     const call = mocks.listen.mock.calls.find(
-      ([event]) => event === DESKTOP_EVENTS.VOICE_COMMAND_FINISH
+      ([event]) => event === DESKTOP_EVENTS.VOICE_FINISH
     )!
     const handler = call[1] as (id: number) => void
     handler(11)
     expect(mocks.finish).not.toHaveBeenCalled()
     handler(12)
+    expect(mocks.finish).toHaveBeenCalledExactlyOnceWith('run')
+    expect(mocks.run).not.toHaveBeenCalled()
+    voice.stage = 'review'
+    handler(12)
+    expect(mocks.run).toHaveBeenCalledOnce()
     expect(mocks.finish).toHaveBeenCalledOnce()
     state.isWindowShown = false
     await flushPromises()
     expect(mocks.cancel).toHaveBeenCalled()
+    wrapper.unmount()
+  })
+  it('shows the hotkey that opened the overlay on its Run button', async () => {
+    hotkeys.shortcutLabel.mockImplementation((mode) =>
+      mode === 'voiceCommands' ? 'Ctrl+Alt+K' : ''
+    )
+    const wrapper = mountView()
+    await flushPromises()
+    expect(hotkeys.load).toHaveBeenCalled()
+    const keys = wrapper.findAll('.shortcut')[0]!.findAll('kbd')
+    expect(keys.map((key) => key.text())).toEqual([
+      'Space',
+      'Enter',
+      'Ctrl+Alt+K',
+    ])
+    hotkeys.shortcutLabel.mockImplementation(() => '')
     wrapper.unmount()
   })
   it('disables shortcuts while awaiting command and finishes on Space/Tab once recognized', async () => {

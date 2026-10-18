@@ -23,7 +23,9 @@ use gtk::prelude::WidgetExt;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
-pub const VOICE_COMMAND_FINISH_EVENT: &str = "app://voice-command-finish";
+/// A repeated activation confirms the open voice input, see
+/// `Activation::finishes_open_voice_input`; the payload is its activation id.
+pub const VOICE_FINISH_EVENT: &str = "app://voice-finish";
 pub const STATE_CHANGED_EVENT: &str = "app://state-changed";
 pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
 pub const OPEN_MAIN_CHAT_EVENT: &str = "app://open-main-chat";
@@ -145,15 +147,13 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
             return;
         }
         let snapshot = handle.state::<AppState>().snapshot();
-        if activation.mode == ActivationMode::VoiceCommands
-            && activation.source == super::activation::ActivationSource::Hotkey
-            && snapshot.activation.mode == Some(ActivationMode::VoiceCommands)
-            && snapshot.window.is_window_shown
+        if activation
+            .finishes_open_voice_input(snapshot.activation.mode, snapshot.window.is_window_shown)
         {
             let result = handle
                 .emit_to(
                     QUICK_WINDOW_LABEL,
-                    VOICE_COMMAND_FINISH_EVENT,
+                    VOICE_FINISH_EVENT,
                     snapshot.activation.activation_id,
                 )
                 .map(|()| None)

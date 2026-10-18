@@ -184,9 +184,10 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
 .command-placements {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: var(--space-xs);
-  max-width: 50%;
+  max-width: 65%;
 }
 
 .command-body {

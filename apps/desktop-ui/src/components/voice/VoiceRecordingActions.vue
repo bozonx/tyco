@@ -3,7 +3,7 @@
     <template v-if="compact && chat">
       <ShortcutButton
         :size="compact ? 'sm' : 'md'"
-        :keys="['Space', 'Enter']"
+        :keys="primaryKeys"
         :icon="insertIcon"
         variant="primary"
         :disabled="isFinishing"
@@ -33,7 +33,7 @@
       <template v-if="finishBehavior === 'submitToChat'">
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
-          :keys="submitKeys"
+          :keys="primaryKeys"
           icon="mdi:send"
           variant="primary"
           :disabled="isFinishing"
@@ -63,7 +63,7 @@
       <template v-else>
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
-          :keys="['Space', 'Enter']"
+          :keys="primaryKeys"
           :icon="insertIcon"
           variant="primary"
           :disabled="isFinishing"
@@ -109,6 +109,8 @@ const props = defineProps<{
   compact?: boolean
   chat?: boolean
   finishBehavior?: VoiceFinishBehavior
+  /** The global hotkey that also presses the primary button */
+  finishHotkey?: string
   isFinishing: boolean
   finish: (intent?: VoiceFinishIntent) => Promise<void>
   cancel: () => Promise<void>
@@ -124,5 +126,9 @@ const insertIcon = computed(() =>
     ? 'mdi:application-export'
     : 'mdi:check'
 )
-const submitKeys = ['Space', 'Enter']
+const primaryKeys = computed(() =>
+  props.finishHotkey
+    ? ['Space', 'Enter', props.finishHotkey]
+    : ['Space', 'Enter']
+)
 </script>

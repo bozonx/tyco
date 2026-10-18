@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  activationShortcutLabel,
   applyProviderInfo,
   createHotkeySettingsState,
   defaultShortcut,
@@ -145,5 +146,37 @@ describe('hotkey settings', () => {
     expect(modeCliCall('editor')).toBe('tyco-ctl open editor')
     expect(modeCliCall('voiceChat')).toBe('tyco-ctl open voice-chat')
     expect(modeCliCall('config')).toBe('tyco-ctl open settings')
+  })
+
+  it('labels the shortcut that opens a mode once the provider is known', () => {
+    const state = createHotkeySettingsState()
+    expect(activationShortcutLabel(state, 'voice', 'Ctrl+Alt+V')).toBe('')
+
+    const info = {
+      provider: 'global-shortcut' as const,
+      canConfigure: false,
+      actions: {},
+      systemTriggers: {},
+      registered: false,
+      defaults: {},
+      platform: 'linux' as const,
+    }
+    applyProviderInfo(state, info)
+    expect(activationShortcutLabel(state, 'voice', 'Ctrl+Alt+V')).toBe(
+      'Ctrl+Alt+V'
+    )
+    expect(activationShortcutLabel(state, 'voice', '')).toBe('')
+
+    applyProviderInfo(state, { ...info, platform: 'macos' })
+    expect(activationShortcutLabel(state, 'voice', 'Ctrl+Alt+V')).toBe('⌃⌥V')
+
+    applyProviderInfo(state, {
+      ...info,
+      provider: 'portal',
+      systemTriggers: { voice: 'Meta+V, Ctrl+F12' },
+      registered: true,
+    })
+    expect(activationShortcutLabel(state, 'voice', 'Ctrl+Alt+V')).toBe('Meta+V')
+    expect(activationShortcutLabel(state, 'voiceChat', 'Ctrl+Alt+C')).toBe('')
   })
 })

@@ -24,6 +24,7 @@
     >
     <slot name="status" />
     <Icon
+      v-if="!hideChevron"
       icon="mdi:chevron-down"
       height="18"
       class="disclosure-chevron"
@@ -43,6 +44,7 @@ defineProps<{
   icon?: string
   iconTitle?: string
   density?: 'default' | 'compact'
+  hideChevron?: boolean
 }>()
 const emit = defineEmits<{ toggle: [] }>()
 </script>

@@ -5,6 +5,12 @@ import type {
   HotkeyProviderKind,
 } from '@tyco/shared'
 
+import {
+  keyLabelFor,
+  shortcutAlternatives,
+  shortcutKeys,
+} from './hotkey-recorder'
+
 export interface HotkeySettingsState {
   provider: HotkeyProviderKind | null
   canConfigure: boolean
@@ -76,6 +82,26 @@ export function displayedShortcut(
 ): string {
   if (!isSystemManaged(state)) return configured
   return state.systemTriggers[id] ?? ''
+}
+
+/**
+ * The shortcut that opens `mode`, as one label next to the keys of a button:
+ * its first alternative, with the keys named the way the platform does. Empty
+ * until the provider is known, since the desktop may have bound another one.
+ */
+export function activationShortcutLabel(
+  state: HotkeySettingsState,
+  mode: string,
+  configured: string
+): string {
+  if (state.provider === null) return ''
+  const [shortcut] = shortcutAlternatives(
+    displayedShortcut(state, mode, configured)
+  )
+  if (!shortcut) return ''
+  return shortcutKeys(shortcut)
+    .map((key) => keyLabelFor(key, state.platform))
+    .join(state.platform === 'macos' ? '' : '+')
 }
 
 /**

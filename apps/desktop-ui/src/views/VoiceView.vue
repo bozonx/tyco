@@ -4,6 +4,7 @@
     <VoiceRecognitionMenu
       variant="bar"
       finish-behavior="insertIntoTarget"
+      :activation-mode="activationMode"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
@@ -12,6 +13,7 @@
     <VoiceRecognitionMenu
       v-if="!isInsertMenuVisible"
       finish-behavior="insertIntoTarget"
+      :activation-mode="activationMode"
       @corrected="handleCorrected"
       @cancelled="handleCancelled"
     />
@@ -27,6 +29,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
+import { useVoiceFinishSignal } from '../composables/use-voice-finish-signal'
 import { getDesktopWindow as getCurrentWindow } from '../lib/desktop/window'
 import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
@@ -57,6 +60,18 @@ const isInsertMenuVisible = ref(false)
 const dictationResultText = ref('')
 
 navPanelStore.resetNavPanelState({ panelVisible: false })
+
+/** Only the quick window is opened by the `voice` activation */
+const activationMode =
+  getCurrentWindow().label === 'quick' ? ('voice' as const) : undefined
+// past the dictation, its hotkey starts a new one, as it did before
+useVoiceFinishSignal(
+  () => (isInsertMenuVisible.value ? activationMode : undefined),
+  () => {
+    isInsertMenuVisible.value = false
+    dictationResultText.value = ''
+  }
+)
 
 watch(isInsertMenuVisible, (shown) => emit('result-shown', shown), {
   immediate: true,

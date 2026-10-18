@@ -19,6 +19,15 @@ const mocks = vi.hoisted(() => ({
   menuModals: { hasOpenModal: false },
   callFunctionOrNotify: vi.fn(),
   navigationPush: vi.fn(),
+  finishSignal: {
+    mode: (): string | undefined => undefined,
+    confirm: () => {},
+  },
+}))
+
+vi.mock('../composables/use-voice-finish-signal', () => ({
+  useVoiceFinishSignal: (mode: () => string | undefined, confirm: () => void) =>
+    (mocks.finishSignal = { mode, confirm }),
 }))
 
 vi.mock('../lib/desktop/window', () => ({
@@ -36,7 +45,7 @@ vi.mock('../components/common/ContentPadding.vue', () => ({
 vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
   default: {
     name: 'VoiceRecognitionMenu',
-    props: ['variant', 'finishBehavior'],
+    props: ['variant', 'finishBehavior', 'activationMode'],
     emits: ['corrected', 'cancelled'],
     template: '<div class="voice-menu-stub" :data-variant="variant" />',
   },
@@ -142,6 +151,34 @@ describe('VoiceView.vue', () => {
     expect(insertMenu.props('text')).toBe('Review text')
     expect(insertMenu.props('allowInsertButton')).toBe(true)
     expect(wrapper.emitted('result-shown')?.at(-1)).toEqual([true])
+  })
+
+  it('starts a new dictation when its hotkey comes again in the actions step', async () => {
+    const wrapper = mount(VoiceView, { props: { bar: true } })
+    const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+    expect(voiceMenu.props('activationMode')).toBe('voice')
+    expect(mocks.finishSignal.mode()).toBeUndefined()
+
+    voiceMenu.vm.$emit('corrected', 'Text', 'Text', undefined, 'next')
+    await flushPromises()
+    expect(mocks.finishSignal.mode()).toBe('voice')
+
+    mocks.finishSignal.confirm()
+    await flushPromises()
+    expect(wrapper.findComponent({ name: 'InsertMenu' }).exists()).toBe(false)
+    expect(
+      wrapper.findComponent({ name: 'VoiceRecognitionMenu' }).exists()
+    ).toBe(true)
+  })
+
+  it('leaves the hotkey to the quick window', () => {
+    mocks.windowLabel = 'main'
+    const wrapper = mount(VoiceView, { props: { bar: false } })
+    expect(
+      wrapper
+        .findComponent({ name: 'VoiceRecognitionMenu' })
+        .props('activationMode')
+    ).toBeUndefined()
   })
 
   it('hides quick window on cancellation when window label is quick', async () => {

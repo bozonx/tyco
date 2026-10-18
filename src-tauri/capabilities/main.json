@@ -12,7 +12,6 @@
     "allow-delete-ai-project",
     "allow-get-ai-profile",
     "allow-get-ai-vault-path",
-    "allow-get-hotkey-provider-info",
     "allow-get-storage-info",
     "allow-inspect-plugin-package",
     "allow-install-plugin-package",

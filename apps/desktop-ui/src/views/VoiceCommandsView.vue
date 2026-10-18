@@ -157,7 +157,7 @@
         <div class="voice-actions">
           <template v-if="isListening">
             <ShortcutButton
-              :keys="['Space', 'Enter']"
+              :keys="withHotkey(['Space', 'Enter'])"
               icon="mdi:play"
               variant="primary"
               :disabled="!canRunLive || voice.stage === 'finishing'"
@@ -180,7 +180,7 @@
           </template>
           <template v-else>
             <ShortcutButton
-              :keys="['Enter']"
+              :keys="withHotkey(['Enter'])"
               icon="mdi:play"
               variant="primary"
               :disabled="!voice.canRun"
@@ -212,6 +212,7 @@ import AudioWaveform from '../components/voice/AudioWaveform.vue'
 import LiveTranscript from '../components/voice/LiveTranscript.vue'
 import { useI18n } from '../composables/use-i18n'
 import { useOverlayNav } from '../composables/use-overlay-nav'
+import { useVoiceFinishSignal } from '../composables/use-voice-finish-signal'
 import {
   commandIcon,
   commandLabel,
@@ -462,6 +463,20 @@ const onCatalogKeyDown = (event: KeyboardEvent) => {
   rows[(index + step + rows.length) % rows.length]?.focus()
 }
 
+/**
+ * The hotkey that opened the overlay presses its Run button: it stops the
+ * recording and runs a recognized command, or runs the reviewed one.
+ */
+const finishHotkey = useVoiceFinishSignal(
+  () => 'voiceCommands',
+  () => {
+    if (voice.stage === 'recording') void voice.finish('run')
+    else if (voice.stage === 'review') void voice.run()
+  }
+)
+const withHotkey = (keys: string[]) =>
+  finishHotkey.value ? [...keys, finishHotkey.value] : keys
+
 const onKeyDown = (event: KeyboardEvent) => {
   if (event.repeat) return
   if (event.code === 'Escape') {
@@ -502,16 +517,6 @@ const keep = (stop: () => void) => {
 }
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
-  void desktopClient
-    .listen(DESKTOP_EVENTS.VOICE_COMMAND_FINISH, (id) => {
-      if (
-        id === ipc.desktopState.activationId &&
-        ipc.desktopState.isWindowShown
-      )
-        void voice.finish()
-    })
-    .then(keep)
-    .catch(() => undefined)
   // the level meter is decoration: the recording must not wait for it
   void desktopClient
     .listen(DESKTOP_EVENTS.VOICE_AUDIO_LEVEL, (payload) => {

@@ -70,6 +70,11 @@ export interface VoiceMenuParams {
   suffix?: string
   /** Context attached to the dictated chat question. */
   context?: string
+  /**
+   * The activation mode that opened this voice input: its repeated hotkey or
+   * external call confirms the input.
+   */
+  activationMode?: 'voice' | 'voiceChat'
 }
 export interface DiffMenuParams {
   oldText: string

@@ -4,6 +4,7 @@
       v-if="!isInsertMenuVisible"
       variant="sheet"
       finish-behavior="submitToChat"
+      activation-mode="voiceChat"
       :context="context?.text"
       @remove-context="contextRemoved = true"
       @corrected="handleCorrected"
@@ -25,6 +26,7 @@ import { computed, ref, watch } from 'vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import InsertMenu from '../components/menu/InsertMenu.vue'
 import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
+import { useVoiceFinishSignal } from '../composables/use-voice-finish-signal'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
 import { useChatStore } from '../stores/chat'
 import { useIpcStore } from '../stores/ipc'
@@ -47,6 +49,14 @@ watch(
   () => ipcStore.desktopState.activationId,
   () => {
     contextRemoved.value = false
+    isInsertMenuVisible.value = false
+    dictationResultText.value = ''
+  }
+)
+// past the dictation, its hotkey starts a new one, as it did before
+useVoiceFinishSignal(
+  () => (isInsertMenuVisible.value ? 'voiceChat' : undefined),
+  () => {
     isInsertMenuVisible.value = false
     dictationResultText.value = ''
   }
