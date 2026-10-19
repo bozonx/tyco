@@ -9,6 +9,7 @@ pub mod background;
 pub mod chat_images;
 pub mod clock;
 pub mod custom_actions;
+pub mod dropped_files;
 pub mod external;
 pub mod file_ids;
 pub mod hotkeys;

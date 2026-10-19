@@ -19,14 +19,13 @@ use std::time::{Duration, Instant};
 
 use serde::Serialize;
 use serde_json::Value;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
+use ts_rs::TS;
 
 use super::platform::selection::{capture, paste_result, restore_clipboard};
 use crate::errors::AppError;
+use crate::events::{self, DesktopEvent};
 use crate::state::AppState;
-
-pub const SELECTION_RUN_EVENT: &str = "app://selection-run";
-pub const SELECTION_CANCEL_EVENT: &str = "app://selection-cancel";
 
 /// The built-in selection action: the LLM correction of the text.
 pub const CORRECTION_ACTION: &str = "correction";
@@ -62,7 +61,7 @@ pub enum TriggerWait {
     HotkeyRelease(HotkeyPress),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionRunErrorCode {
     /// No application window has the focus.
@@ -75,7 +74,7 @@ pub enum SelectionRunErrorCode {
     Unsupported,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct SelectionRunError {
     pub(super) code: SelectionRunErrorCode,
@@ -92,20 +91,23 @@ impl SelectionRunError {
 }
 
 /// Sent to the webview: the text to transform, or why there is none.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct SelectionRunEvent {
+pub struct SelectionRunEvent {
     pub(super) run_id: u64,
     pub(super) action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub(super) text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub(super) error: Option<SelectionRunError>,
     /// The quick window does not receive config changes made elsewhere.
+    #[ts(type = "UserConfig")]
     pub(super) user_config: std::sync::Arc<Value>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionFinishStatus {
     /// The result replaced the selection.
@@ -174,13 +176,12 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
                 "Selection service is stopping".into(),
             ));
         }
-        emit_to_webview(self.0, SELECTION_RUN_EVENT, event)
+        emit_to_quick::<events::SelectionRun>(self.0, event)
     }
     fn cancelled(&self, id: u64) -> Result<(), AppError> {
-        emit_to_webview(
+        emit_to_quick::<events::SelectionCancel>(
             self.0,
-            SELECTION_CANCEL_EVENT,
-            serde_json::json!({ "runId": id }),
+            events::SelectionCancelEvent { run_id: id },
         )
     }
 }
@@ -260,13 +261,9 @@ pub fn read_external(app: &AppHandle) -> Result<String, AppError> {
     Ok(text)
 }
 
-fn emit_to_webview(
-    app: &AppHandle,
-    event: &str,
-    payload: impl Serialize + Clone,
-) -> Result<(), AppError> {
+fn emit_to_quick<E: DesktopEvent>(app: &AppHandle, payload: E::Payload) -> Result<(), AppError> {
     let window = app
         .get_webview_window(super::runtime::QUICK_WINDOW_LABEL)
         .ok_or_else(|| AppError::Message(String::from("Quick window not found")))?;
-    Ok(window.emit(event, payload)?)
+    Ok(events::emit::<E, _>(&window, payload)?)
 }

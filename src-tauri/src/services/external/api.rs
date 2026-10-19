@@ -18,8 +18,6 @@ use crate::services::external::jobs::ExternalJobs;
 use crate::services::{runtime, selection_replace};
 use crate::state::AppState;
 
-pub const JOB_CANCEL_EVENT: &str = "app://external-job-cancel";
-
 /// A failed request answers with a `Response` of its own; boxed, as it is large.
 type ApiResult<T> = Result<T, Box<Response>>;
 

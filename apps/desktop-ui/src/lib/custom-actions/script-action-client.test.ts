@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ScriptActionRequest } from '@tyco/shared'
-import type { DesktopCall } from '../ipc/desktop-functions'
+import type { DesktopCall } from '../ipc/ipc-model'
 import { createScriptActionClient } from './script-action-client'
 
 const request: ScriptActionRequest = {
@@ -19,9 +19,13 @@ describe('script action client', () => {
       .mockResolvedValueOnce({ success: true, result: true })
     const client = createScriptActionClient(call as DesktopCall)
     expect(await client.executeScriptAction(request)).toBe(result)
-    expect(call).toHaveBeenNthCalledWith(1, 'executeScriptAction', [request])
+    expect(call).toHaveBeenNthCalledWith(1, 'execute_script_action', {
+      request,
+    })
     expect(await client.cancelScriptAction('run-1')).toBe(true)
-    expect(call).toHaveBeenNthCalledWith(2, 'cancelScriptAction', ['run-1'])
+    expect(call).toHaveBeenNthCalledWith(2, 'cancel_script_action', {
+      runId: 'run-1',
+    })
   })
 
   it.each([

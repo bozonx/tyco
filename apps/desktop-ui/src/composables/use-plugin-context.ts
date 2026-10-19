@@ -51,15 +51,15 @@ export default function usePluginContext() {
           ? clientLogger.log(level, message, id)
           : clientLogger.error(message, error, id),
       writeNote: (pluginId, dir, fileName, text, append) =>
-        ipc.callFunction('writePluginNote', [
+        ipc.call('write_plugin_note', {
           pluginId,
           dir,
           fileName,
           text,
           append,
-        ]),
+        }),
       openInBrowserAndHide: (url) =>
-        ipc.callFunction('openInBrowserAndHide', [url]),
+        ipc.call('open_in_browser_and_hide', { url }),
     })
   }
   return { createContext }

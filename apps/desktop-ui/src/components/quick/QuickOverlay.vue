@@ -82,7 +82,7 @@ import { useQuickWindowSession } from '../../composables/use-quick-window-sessio
 import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
 import { createFocusLossWatcher } from '../../lib/quick-panel/focus-loss'
 import {
-  type InputRect,
+  type InputRegion,
   createInputRegionSync,
   inputRegion,
   unionRect,
@@ -141,7 +141,7 @@ const INPUT_PARTS = '.write-frame, .write-hint, .voice-bar'
 // lets clicks through to the windows below
 const regionSync = createInputRegionSync({
   apply: async (region) => {
-    const result = await ipcStore.callFunction('setQuickInputRegion', [region])
+    const result = await ipcStore.call('set_quick_input_region', { region })
     if (!result.success) throw new Error(result.error)
   },
 })
@@ -198,7 +198,7 @@ const showFocusHint = computed(
 )
 let unmounted = false
 
-const measureInputRegion = (): InputRect | null => {
+const measureInputRegion = (): InputRegion | null => {
   if (
     isSheet.value ||
     !desktopStore.desktopState.isWindowShown ||

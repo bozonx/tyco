@@ -16,38 +16,39 @@ function resultOf<T>(response: IpcResult<T>): T {
 export const useAiProfilesStore = defineStore('ai-profiles', () => {
   const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
-  const call = ipcStore.callFunction
+  const call = ipcStore.call
 
   const profilesModel = createAiProfilesModel({
-    listProfiles: async () => resultOf(await call('listAiProfiles')),
-    getProfile: async (id) => resultOf(await call('getAiProfile', [id])),
+    listProfiles: async () => resultOf(await call('list_ai_profiles')),
+    getProfile: async (id) => resultOf(await call('get_ai_profile', { id })),
     createProfile: async (profile, soul) => {
-      resultOf(await call('createAiProfile', [profile, soul]))
+      resultOf(await call('create_ai_profile', { profile, soul }))
     },
     saveProfile: async (profile) => {
-      resultOf(await call('saveAiProfile', [profile]))
+      resultOf(await call('save_ai_profile', { profile }))
     },
     deleteProfile: async (id) => {
-      resultOf(await call('deleteAiProfile', [id]))
+      resultOf(await call('delete_ai_profile', { id }))
     },
-    readSoul: async (id) => resultOf(await call('readProfileSoul', [id])),
+    readSoul: async (id) =>
+      resultOf(await call('read_ai_profile_soul', { id })),
     writeSoul: async (id, content) => {
-      resultOf(await call('writeProfileSoul', [id, content]))
+      resultOf(await call('write_ai_profile_soul', { id, content }))
     },
   })
 
   const projectsModel = createAiProjectsModel({
-    listProjects: async () => resultOf(await call('listAiProjects')),
+    listProjects: async () => resultOf(await call('list_ai_projects')),
     createProject: async (project) => {
-      resultOf(await call('createAiProject', [project]))
+      resultOf(await call('create_ai_project', { project }))
     },
     saveProject: async (project) => {
-      resultOf(await call('saveAiProject', [project]))
+      resultOf(await call('save_ai_project', { project }))
     },
     deleteProject: async (id) => {
-      resultOf(await call('deleteAiProject', [id]))
+      resultOf(await call('delete_ai_project', { id }))
     },
-    pickExternalFolder: async () => resultOf(await call('pickDirectory')),
+    pickExternalFolder: async () => resultOf(await call('pick_directory')),
   })
 
   const vaultPath = ref('')
@@ -60,7 +61,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   const loadAll = async (): Promise<void> => {
     const request = ++loadRequest
     try {
-      const path = resultOf(await call('getAiVaultPath'))
+      const path = resultOf(await call('get_ai_vault_path'))
       await Promise.all([
         profilesModel.loadProfiles(),
         projectsModel.loadProjects(),
@@ -87,7 +88,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   )
 
   const openVaultDir = async (profileId?: string): Promise<void> => {
-    resultOf(await call('openAiVaultDir', profileId ? [profileId] : []))
+    resultOf(await call('open_ai_vault_location', { profileId }))
   }
 
   /** How many chats removing the profile `id` removes with it */

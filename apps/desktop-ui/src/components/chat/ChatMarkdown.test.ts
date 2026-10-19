@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   diagram: vi.fn(async () => new Blob(['<svg/>'], { type: 'image/svg+xml' })),
 }))
 vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunctionOrNotify: mocks.openLink }),
+  useIpcStore: () => ({ callOrNotify: mocks.openLink }),
 }))
 vi.mock('../../lib/chat/chat-mermaid', () => ({
   renderChatMermaid: mocks.diagram,
@@ -91,9 +91,9 @@ describe('ChatMarkdown.vue', () => {
     const wrapper = render('[Source](https://example.com)', true)
     await flushPromises()
     await wrapper.find('a').trigger('click')
-    expect(mocks.openLink).toHaveBeenCalledWith('openInBrowser', [
-      'https://example.com',
-    ])
+    expect(mocks.openLink).toHaveBeenCalledWith('open_in_browser', {
+      url: 'https://example.com',
+    })
   })
 
   it('renders a streamed answer in batches, and at once when it ends', async () => {

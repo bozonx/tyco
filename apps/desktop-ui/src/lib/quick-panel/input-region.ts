@@ -1,6 +1,6 @@
 /** Rectangle in CSS pixels from the top left corner of the window. */
-export type { InputRect } from '@tyco/shared'
-import type { InputRect } from '@tyco/shared'
+export type { InputRegion } from '@tyco/shared'
+import type { InputRegion } from '@tyco/shared'
 
 export interface ViewportSize {
   width: number
@@ -11,7 +11,7 @@ export interface ViewportSize {
 const INPUT_REGION_MARGIN = 8
 
 /** Smallest rectangle containing all of `rects`, or null when there are none. */
-export function unionRect(rects: readonly InputRect[]): InputRect | null {
+export function unionRect(rects: readonly InputRegion[]): InputRegion | null {
   if (rects.length === 0) return null
   const left = Math.min(...rects.map((rect) => rect.x))
   const top = Math.min(...rects.map((rect) => rect.y))
@@ -26,10 +26,10 @@ export function unionRect(rects: readonly InputRect[]): InputRect | null {
  * window takes clicks.
  */
 export function inputRegion(
-  content: InputRect | null,
+  content: InputRegion | null,
   viewport: ViewportSize,
   margin = INPUT_REGION_MARGIN
-): InputRect | null {
+): InputRegion | null {
   if (!content || content.width <= 0 || content.height <= 0) return null
   const left = Math.max(0, Math.floor(content.x - margin))
   const top = Math.max(0, Math.floor(content.y - margin))
@@ -45,7 +45,10 @@ export function inputRegion(
   return { x: left, y: top, width: right - left, height: bottom - top }
 }
 
-export function sameRegion(a: InputRect | null, b: InputRect | null): boolean {
+export function sameRegion(
+  a: InputRegion | null,
+  b: InputRegion | null
+): boolean {
   if (a === null || b === null) return a === b
   return (
     a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height
@@ -53,7 +56,7 @@ export function sameRegion(a: InputRect | null, b: InputRect | null): boolean {
 }
 
 export interface InputRegionSyncDependencies {
-  apply: (region: InputRect | null) => Promise<void>
+  apply: (region: InputRegion | null) => Promise<void>
 }
 
 /**
@@ -63,8 +66,8 @@ export interface InputRegionSyncDependencies {
  */
 export function createInputRegionSync(deps: InputRegionSyncDependencies) {
   // undefined: nothing is known to be applied
-  let applied: InputRect | null | undefined
-  let wanted: InputRect | null = null
+  let applied: InputRegion | null | undefined
+  let wanted: InputRegion | null = null
   let running = false
   let disposed = false
   // bumped by invalidate: a request in flight across it may land either side
@@ -93,7 +96,7 @@ export function createInputRegionSync(deps: InputRegionSyncDependencies) {
     }
   }
 
-  const update = (region: InputRect | null): Promise<void> => {
+  const update = (region: InputRegion | null): Promise<void> => {
     wanted = region
     if (running || disposed) return Promise.resolve()
     return flush()

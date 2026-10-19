@@ -124,7 +124,7 @@ async function run() {
       text.value,
       toolsStore,
       {
-        ...createScriptActionClient(ipcStore.callFunction),
+        ...createScriptActionClient(ipcStore.call),
         newRunId: () => `command-test-${Date.now()}-${++runCounter}`,
         saveCommand: async (commandId) => {
           await settingsSession.persist()

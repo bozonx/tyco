@@ -1,7 +1,7 @@
 use super::ActivationMode;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionState {
     pub last_chat_id: Option<String>,

@@ -1,12 +1,8 @@
-import type {
-  DesktopCall,
-  DesktopCallArgs,
-  DesktopFunctionName,
-  DesktopFunctionResult,
-} from '../ipc/desktop-functions'
+import type { DesktopCommandName, DesktopCommandResult } from '@tyco/shared'
+import type { DesktopCall, DesktopCallParams } from '../ipc/ipc-model'
 
 export interface HistoryApi {
-  callFunction: DesktopCall
+  call: DesktopCall
 }
 class HistoryOperationError extends Error {
   constructor(operation: string, message?: string) {
@@ -15,15 +11,16 @@ class HistoryOperationError extends Error {
   }
 }
 
+/** Calls a history command, throwing on a failure */
 export function createHistoryCall(historyApi: HistoryApi) {
-  const call = async <K extends DesktopFunctionName>(
-    functionName: K,
-    ...args: DesktopCallArgs<K>
-  ): Promise<DesktopFunctionResult<K> | undefined> => {
-    const response = await historyApi.callFunction(functionName, ...args)
+  const call = async <K extends DesktopCommandName>(
+    command: K,
+    ...args: DesktopCallParams<K>
+  ): Promise<DesktopCommandResult<K> | undefined> => {
+    const response = await historyApi.call(command, ...args)
 
     if (response.success === false) {
-      throw new HistoryOperationError(functionName, response.error)
+      throw new HistoryOperationError(command, response.error)
     }
 
     return response.result

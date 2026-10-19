@@ -1,7 +1,7 @@
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
-import { StartMode, type CommandConfig } from '@tyco/shared'
+import { ActivationMode, type CommandConfig } from '@tyco/shared'
 
 import { useCommandLauncherStore } from './command-launcher'
 import { useDesktopStore } from './desktop'
@@ -22,7 +22,7 @@ beforeEach(() => {
   desktop.applyViewState({
     ...desktop.desktopState,
     revision: desktop.desktopState.revision + 1,
-    mode: StartMode.COMMAND_LAUNCHER,
+    mode: ActivationMode.COMMAND_LAUNCHER,
     isWindowShown: true,
     activationId: 1,
     selectedText: '',
@@ -78,7 +78,7 @@ describe('command launcher store wiring', () => {
     desktop.applyViewState({
       ...desktop.desktopState,
       revision: desktop.desktopState.revision + 1,
-      mode: StartMode.EDITOR,
+      mode: ActivationMode.EDITOR,
       activationId: 3,
     })
     await nextTick()

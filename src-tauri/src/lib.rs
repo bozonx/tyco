@@ -1,5 +1,9 @@
+#[cfg(test)]
+mod bindings;
 mod commands;
 mod errors;
+mod events;
+mod ipc;
 mod locks;
 mod models;
 mod services;
@@ -92,6 +96,8 @@ pub fn run() {
             .manage(services::external::jobs::ExternalJobs::default())
             .manage(services::external::command_library::ToolCatalogState::default())
             .manage(services::chat_images::ChatImages::default())
+            .manage(services::dropped_files::DroppedFiles::default())
+            .manage(commands::plugins::PluginInspection::default())
             .manage(services::voice::session::VoiceSessionState::default())
             .manage(services::external::access::AccessPrompt::default()),
     ));
@@ -178,10 +184,19 @@ pub fn run() {
         .on_window_event(|window, event| {
             runtime::handle_window_event(window.app_handle(), window.label(), event);
         })
+        // a webview of a plain window reports its drops here, a webview
+        // window above
+        .on_webview_event(|webview, event| {
+            if let tauri::WebviewEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) = event {
+                webview
+                    .state::<services::dropped_files::DroppedFiles>()
+                    .record(webview.label(), paths);
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             commands::action_logs::log_client_message,
             commands::action_logs::log_command_run,
-            commands::action_logs::log_custom_action,
+            commands::action_logs::log_webhook_call,
             commands::action_logs::open_action_log,
             commands::activation::activate_mode,
             commands::activation::open_main_chat,
@@ -199,14 +214,14 @@ pub fn run() {
             commands::ai_vault::get_ai_vault_path,
             commands::ai_vault::list_ai_profiles,
             commands::ai_vault::list_ai_projects,
-            commands::ai_vault::open_ai_vault_dir,
-            commands::ai_vault::read_profile_soul,
+            commands::ai_vault::open_ai_vault_location,
+            commands::ai_vault::read_ai_profile_soul,
             commands::ai_vault::save_ai_profile,
             commands::ai_vault::save_ai_project,
-            commands::ai_vault::write_profile_soul,
-            commands::chat_images::get_chat_image,
-            commands::chat_images::read_chat_file,
-            commands::chat_images::release_chat_image_undo,
+            commands::ai_vault::write_ai_profile_soul,
+            commands::chat_images::read_chat_image,
+            commands::chat_images::read_dropped_file,
+            commands::chat_images::release_deleted_chat_images,
             commands::chat_images::store_chat_image,
             commands::chat_images::sync_chat_images,
             commands::chats::clear_chats,
@@ -219,58 +234,58 @@ pub fn run() {
             commands::desktop_state::get_desktop_state,
             commands::diagnostics::mark_activation_metric,
             commands::diagnostics::submit_activation_metric_value,
+            commands::editor_history::add_editor_history_item,
             commands::editor_history::clear_editor_history,
+            commands::editor_history::delete_editor_history_item,
             commands::editor_history::get_editor_history,
-            commands::editor_history::remove_from_editor_history,
             commands::editor_history::restore_editor_history_item,
-            commands::editor_history::save_editor_history,
-            commands::editor_history::set_editor_history_result,
+            commands::editor_history::set_editor_history_item_result,
             commands::external_jobs::answer_external_access,
             commands::external_jobs::claim_external_job,
             commands::external_jobs::finish_external_job,
             commands::external_jobs::set_tool_catalog,
             commands::hotkeys::apply_hotkey,
-            commands::hotkeys::configure_hotkeys,
             commands::hotkeys::get_hotkey_provider_info,
+            commands::hotkeys::open_system_hotkey_settings,
             commands::hotkeys::rebind_hotkeys,
             commands::hotkeys::suspend_hotkeys,
-            commands::net::net_cancel,
-            commands::net::net_fetch,
-            commands::net::net_fetch_ack,
-            commands::net::net_socket_close,
-            commands::net::net_socket_open,
-            commands::net::net_socket_send_binary,
-            commands::net::net_socket_send_text,
-            commands::plugins::inspect_plugin_package,
+            commands::net::acknowledge_fetch_chunk,
+            commands::net::cancel_net_task,
+            commands::net::close_socket,
+            commands::net::open_socket,
+            commands::net::send_socket_binary,
+            commands::net::send_socket_text,
+            commands::net::start_fetch,
             commands::plugins::install_plugin_package,
             commands::plugins::list_installed_plugins,
-            commands::plugins::remove_plugin_package,
-            commands::plugins::restore_plugin_package,
+            commands::plugins::pick_plugin_package,
+            commands::plugins::restore_previous_plugin_package,
+            commands::plugins::uninstall_plugin_package,
             commands::plugins::write_plugin_note,
             commands::script_actions::cancel_script_action,
             commands::script_actions::execute_script_action,
             commands::script_actions::pick_directory,
             commands::script_actions::pick_script_file,
-            commands::secrets::secrets_remove,
-            commands::secrets::secrets_set,
-            commands::secrets::secrets_status,
-            commands::secrets::secrets_vault_state,
+            commands::secrets::delete_secret,
+            commands::secrets::get_secret_statuses,
+            commands::secrets::get_secret_vault_state,
+            commands::secrets::set_secret,
             commands::selection::check_text_injection,
             commands::selection::finish_selection_run,
-            commands::selection::notify_desktop,
             commands::selection::replace_selection_with_command,
-            commands::selection::show_status_overlay,
             commands::settings::acknowledge_settings_shutdown,
             commands::settings::patch_session_state,
             commands::settings::save_user_config,
             commands::storage::get_storage_info,
             commands::storage::open_storage_location,
+            commands::system::copy_text,
+            commands::system::open_in_browser,
+            commands::system::show_desktop_notification,
+            commands::system::show_status_overlay,
             commands::voice::start_voice_capture,
             commands::voice::stop_voice_capture,
-            commands::window::copy_text,
-            commands::window::dismiss_quick_window,
+            commands::window::hide_quick_window_on_blur,
             commands::window::hide_window,
-            commands::window::open_in_browser,
             commands::window::open_in_browser_and_hide,
             commands::window::paste_into_target_and_hide,
             commands::window::set_quick_input_region,

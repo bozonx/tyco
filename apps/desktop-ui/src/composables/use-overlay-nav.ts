@@ -32,7 +32,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
         if (desktopStore.desktopState?.mode === 'write') {
           quickInputStore.discard()
         }
-        void ipcStore.callFunctionOrNotify('hideWindow')
+        void ipcStore.callOrNotify('hide_window')
       } else {
         void appNavigation.goToEditor()
       }

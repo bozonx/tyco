@@ -1,8 +1,4 @@
-import {
-  DESKTOP_COMMANDS,
-  type ChatConfig,
-  type ProfileToolSettings,
-} from '@tyco/shared'
+import { type ChatConfig, type ProfileToolSettings } from '@tyco/shared'
 
 import { FILES_TOOL_GROUP_ID } from '../chat-tools/chat-tool-groups'
 import type { invokeDesktop } from '../desktop/invoke'
@@ -58,17 +54,10 @@ export function createChatDesktopFiles(deps: ChatDesktopFilesDependencies) {
           return Boolean(group?.isEnabled && group.access !== 'deny')
         },
         saveUpload: async (file) =>
-          deps.invoke(
-            DESKTOP_COMMANDS.SAVE_AI_UPLOAD,
-            new Uint8Array(await file.arrayBuffer()),
-            {
-              headers: {
-                'x-ai-upload-profile': encodeURIComponent(deps.profileId ?? ''),
-                // headers are ASCII; names are not
-                'x-ai-upload-name': encodeURIComponent(file.name),
-              },
-            }
-          ),
+          deps.invoke('save_ai_upload', {
+            bytes: new Uint8Array(await file.arrayBuffer()),
+            meta: { profileId: deps.profileId ?? '', name: file.name },
+          }),
         warn: deps.warn,
       }
     ),

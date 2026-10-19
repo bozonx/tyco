@@ -8,7 +8,7 @@ describe('ai-projects-model', () => {
     name: 'Documentation App',
     description: 'Markdown docs',
     isExternal: false,
-    targetPath: null,
+    targetPath: undefined,
     createdAt: 1000,
     updatedAt: 1000,
   }
@@ -45,7 +45,7 @@ describe('ai-projects-model', () => {
 
     expect(created.id).toBe('backend-api')
     expect(created.isExternal).toBe(false)
-    expect(created.targetPath).toBeNull()
+    expect(created.targetPath).toBeUndefined()
     expect(deps.createProject).toHaveBeenCalledWith(created)
     expect(model.projects.value).toContainEqual(created)
   })

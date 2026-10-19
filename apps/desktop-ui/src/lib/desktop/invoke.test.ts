@@ -3,36 +3,35 @@ import { describe, expect, it, vi } from 'vitest'
 const native = vi.hoisted(() => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/core', () => ({ invoke: native.invoke }))
 
-import { invokeDesktop } from './invoke'
+import { BINARY_META_HEADER, invokeDesktop } from './invoke'
 import { DesktopIpcError } from './ipc-error'
 
 describe('native invoke boundary', () => {
-  it('forwards binary bodies and options without changing the argument list', async () => {
-    native.invoke.mockResolvedValueOnce(7)
-    const body = new Uint8Array([1, 2])
-    const options = { headers: { 'x-tyco-socket-id': '1' } }
-    expect(await invokeDesktop('net_socket_send_binary', body, options)).toBe(7)
-    expect(native.invoke).toHaveBeenLastCalledWith(
-      'net_socket_send_binary',
-      body,
-      options
-    )
-    await invokeDesktop('net_cancel', { id: 1 })
-    expect(native.invoke).toHaveBeenLastCalledWith('net_cancel', { id: 1 })
+  it('sends binary bytes as the body and their metadata as a header', async () => {
+    native.invoke.mockResolvedValueOnce(undefined)
+    const bytes = new Uint8Array([1, 2])
+    await invokeDesktop('save_ai_upload', {
+      bytes,
+      meta: { profileId: 'p', name: 'отчёт.pdf' },
+    })
+    expect(native.invoke).toHaveBeenLastCalledWith('save_ai_upload', bytes, {
+      headers: {
+        [BINARY_META_HEADER]: encodeURIComponent(
+          '{"profileId":"p","name":"отчёт.pdf"}'
+        ),
+      },
+    })
+    await invokeDesktop('cancel_net_task', { id: 1 })
+    expect(native.invoke).toHaveBeenLastCalledWith('cancel_net_task', { id: 1 })
   })
 
-  it('rejects with a coded Error and preserves specialized import failures', async () => {
+  it('rejects with a coded Error', async () => {
     native.invoke.mockRejectedValueOnce({
       code: 'ioError',
       message: 'Permission denied',
     })
-    await expect(invokeDesktop('clear_chats', {})).rejects.toBeInstanceOf(
-      DesktopIpcError
-    )
-    const specialized = { kind: 'memory', message: 'Too many images' }
-    native.invoke.mockRejectedValueOnce(specialized)
-    await expect(
-      invokeDesktop('store_chat_image', new Uint8Array())
-    ).rejects.toBe(specialized)
+    const failure = invokeDesktop('clear_chats', {})
+    await expect(failure).rejects.toBeInstanceOf(DesktopIpcError)
+    await expect(failure).rejects.toMatchObject({ code: 'ioError' })
   })
 })

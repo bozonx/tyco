@@ -32,7 +32,7 @@ vi.mock('../../composables/use-overlay-nav', () => ({
   }),
 }))
 vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunctionOrNotify: vi.fn() }),
+  useIpcStore: () => ({ callOrNotify: vi.fn() }),
 }))
 vi.mock('../../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../../test/desktop-store')

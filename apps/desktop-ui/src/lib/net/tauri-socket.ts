@@ -1,5 +1,4 @@
 import type { SocketOpener, SocketSession } from '@bozonx/ai-kit'
-import { DESKTOP_COMMANDS } from '@tyco/shared'
 
 import { DesktopIpcError } from '../desktop/ipc-error'
 import { createAsyncQueue } from './async-queue'
@@ -8,7 +7,6 @@ import {
   errorMessage,
   isArrayBuffer,
   type NetIpc,
-  SOCKET_ID_HEADER,
   type SocketEvent,
 } from './net-ipc'
 
@@ -48,9 +46,7 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
     const cancelRemote = () => {
       cancelRequested = true
       if (id !== undefined) {
-        void ipc
-          .invoke(DESKTOP_COMMANDS.NET_CANCEL, { id })
-          .catch(() => undefined)
+        void ipc.invoke('cancel_net_task', { id }).catch(() => undefined)
       }
     }
     const abortWith = (error: unknown) => {
@@ -108,7 +104,7 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
     }
 
     const opening = ipc
-      .invoke(DESKTOP_COMMANDS.NET_SOCKET_OPEN, {
+      .invoke('open_socket', {
         request: {
           url,
           headers: Object.entries(options.headers ?? {}),
@@ -191,10 +187,11 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
         })
     }
 
-    const close = (payload?: string) => {
+    /** With `finalMessage`, sends it and lets the server close */
+    const close = (finalMessage?: string) => {
       if (closed) return
       if (closeRequested) {
-        if (payload !== undefined) return
+        if (finalMessage !== undefined) return
         // The protocol has finished flushing; release a server that stays open.
         closed = true
         detach()
@@ -205,11 +202,13 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
       closeRequested = true
       enqueue(
         () =>
-          ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_CLOSE, {
+          ipc.invoke('close_socket', {
             id: id!,
-            payload: payload ?? null,
+            finalMessage: finalMessage ?? null,
           }),
-        payload === undefined ? 0 : encoder.encode(payload).byteLength,
+        finalMessage === undefined
+          ? 0
+          : encoder.encode(finalMessage).byteLength,
         true
       )
     }
@@ -220,19 +219,16 @@ export function createTauriSocketOpener(ipc: NetIpc): SocketOpener {
         if (closeRequested || closed) return
         if (typeof data === 'string') {
           enqueue(
-            () =>
-              ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT, {
-                id: id!,
-                text: data,
-              }),
+            () => ipc.invoke('send_socket_text', { id: id!, text: data }),
             encoder.encode(data).byteLength
           )
           return
         }
         enqueue(
           () =>
-            ipc.invoke(DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY, data, {
-              headers: { [SOCKET_ID_HEADER]: String(id) },
+            ipc.invoke('send_socket_binary', {
+              bytes: data,
+              meta: { id: id! },
             }),
           data.byteLength
         )

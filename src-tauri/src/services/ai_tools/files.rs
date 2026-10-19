@@ -44,15 +44,17 @@ pub enum Access {
 }
 
 /// A folder the model may reach, as the profile sees it.
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct FileRoot {
+pub struct AiFileRoot {
     /// What the model calls it: `workspace` or `projects/<id>`.
     pub path: String,
     /// The project's name; none for the workspace.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub description: Option<String>,
     pub read: ProjectAccessMode,
     pub write: ProjectAccessMode,
@@ -63,7 +65,7 @@ pub struct FileRoot {
     pub(super) has_project_file: bool,
 }
 
-impl FileRoot {
+impl AiFileRoot {
     #[cfg(test)]
     pub(super) fn for_test(
         path: &str,
@@ -92,39 +94,49 @@ impl FileRoot {
 }
 
 /// One call of a file tool, as the webview sends it.
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, ts_rs::TS)]
 #[serde(
     tag = "operation",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-pub enum FileToolRequest {
+pub enum AiFileToolRequest {
     ListDir {
         /// Empty lists the roots.
         #[serde(default)]
+        #[ts(as = "Option<String>", optional)]
         path: String,
+        #[ts(optional = nullable)]
         depth: Option<usize>,
         /// A glob on file names, e.g. `*.md`.
+        #[ts(optional = nullable)]
         pattern: Option<String>,
     },
     ReadFile {
         path: String,
         /// The first line to read, from 1.
+        #[ts(optional = nullable)]
         offset: Option<usize>,
         /// How many lines to read.
+        #[ts(optional = nullable)]
         limit: Option<usize>,
         /// Whole lines are read up to this many characters.
+        #[ts(optional = nullable)]
         max_characters: Option<usize>,
     },
     SearchFiles {
         /// Empty searches every root the profile may read.
         #[serde(default)]
+        #[ts(as = "Option<String>", optional)]
         path: String,
         /// Text the lines must contain.
+        #[ts(optional = nullable)]
         query: Option<String>,
         /// A glob the file names must match.
+        #[ts(optional = nullable)]
         name_pattern: Option<String>,
         #[serde(default)]
+        #[ts(as = "Option<bool>", optional)]
         is_regex: bool,
     },
     WriteFile {
@@ -136,6 +148,7 @@ pub enum FileToolRequest {
         old_text: String,
         new_text: String,
         #[serde(default)]
+        #[ts(as = "Option<bool>", optional)]
         replace_all: bool,
     },
     MovePath {
@@ -147,42 +160,48 @@ pub enum FileToolRequest {
     },
 }
 
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "lowercase")]
+#[ts(rename = "AiFileEntryKind")]
 pub enum EntryKind {
     File,
     Dir,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(rename = "AiFileEntry")]
 pub struct DirEntry {
     /// A folder's path ends with `/`.
     pub path: String,
     pub kind: EntryKind,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub size: Option<u64>,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(rename = "AiFileSearchMatch")]
 pub struct SearchMatch {
     pub path: String,
     /// None when the file matched by its name.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub line: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub text: Option<String>,
 }
 
 /// What a file tool did, for the webview to tell the model.
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq, ts_rs::TS)]
 #[serde(
     tag = "operation",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-pub enum FileToolOutput {
+pub enum AiFileToolOutput {
     ListDir {
         path: String,
         entries: Vec<DirEntry>,
@@ -196,6 +215,7 @@ pub enum FileToolOutput {
         total_lines: usize,
         /// The offset to read on from; none at the end of the file.
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
         next_offset: Option<usize>,
     },
     /// A PDF or DOCX: the webview reads its text from the bytes.
@@ -226,9 +246,9 @@ pub enum FileToolOutput {
 }
 
 /// A change the user is asked about, before it is made.
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct FileChangePreview {
+pub struct AiFileChangePreview {
     pub path: String,
     /// None for a file the change creates.
     pub before: Option<String>,
@@ -241,20 +261,20 @@ fn invalid(message: impl Into<String>) -> AppError {
 
 /// The folders a profile's file tools reach, with its permissions to each.
 pub struct ProfileFiles {
-    roots: Vec<FileRoot>,
+    roots: Vec<AiFileRoot>,
 }
 
 impl ProfileFiles {
     #[cfg(test)]
-    pub(super) fn from_roots(roots: Vec<FileRoot>) -> Self {
+    pub(super) fn from_roots(roots: Vec<AiFileRoot>) -> Self {
         Self { roots }
     }
 
-    pub fn roots(&self) -> &[FileRoot] {
+    pub fn roots(&self) -> &[AiFileRoot] {
         &self.roots
     }
 
-    pub fn run(&self, request: FileToolRequest) -> Result<FileToolOutput, AppError> {
+    pub fn run(&self, request: AiFileToolRequest) -> Result<AiFileToolOutput, AppError> {
         self.run_with(request, |path| {
             trash::delete(path)
                 .map_err(|error| AppError::Message(format!("Could not move to the trash: {error}")))
@@ -264,22 +284,22 @@ impl ProfileFiles {
     /// Runs a call; `remove` takes a deleted path away, to the trash in the app.
     pub(super) fn run_with(
         &self,
-        request: FileToolRequest,
+        request: AiFileToolRequest,
         remove: impl FnOnce(&Path) -> Result<(), AppError>,
-    ) -> Result<FileToolOutput, AppError> {
+    ) -> Result<AiFileToolOutput, AppError> {
         match request {
-            FileToolRequest::ListDir {
+            AiFileToolRequest::ListDir {
                 path,
                 depth,
                 pattern,
             } => self.list_dir(&path, depth, pattern.as_deref()),
-            FileToolRequest::ReadFile {
+            AiFileToolRequest::ReadFile {
                 path,
                 offset,
                 limit,
                 max_characters,
             } => self.read_file(&path, offset, limit, max_characters),
-            FileToolRequest::SearchFiles {
+            AiFileToolRequest::SearchFiles {
                 path,
                 query,
                 name_pattern,
@@ -291,15 +311,15 @@ impl ProfileFiles {
                 name_pattern.as_deref(),
                 is_regex,
             ),
-            FileToolRequest::WriteFile { path, content } => self.write_file(&path, &content),
-            FileToolRequest::EditFile {
+            AiFileToolRequest::WriteFile { path, content } => self.write_file(&path, &content),
+            AiFileToolRequest::EditFile {
                 path,
                 old_text,
                 new_text,
                 replace_all,
             } => self.edit_file(&path, &old_text, &new_text, replace_all),
-            FileToolRequest::MovePath { from, to } => self.move_path(&from, &to),
-            FileToolRequest::DeletePath { path } => {
+            AiFileToolRequest::MovePath { from, to } => self.move_path(&from, &to),
+            AiFileToolRequest::DeletePath { path } => {
                 let target = self.resolve(&path, Access::Write, false)?;
                 if target.is_root() {
                     return Err(invalid("A root folder cannot be deleted"));
@@ -308,7 +328,7 @@ impl ProfileFiles {
                     .map_err(|_| invalid(format!("{path} does not exist")))?;
                 let path = target.virtual_path();
                 remove(&target.path)?;
-                Ok(FileToolOutput::DeletePath { path })
+                Ok(AiFileToolOutput::DeletePath { path })
             }
         }
     }

@@ -2,8 +2,8 @@ import type { Page } from '@playwright/test'
 import {
   DEFAULT_SESSION_STATE,
   DEFAULT_USER_CONFIG,
-  StartMode,
-  type AppEventPayloads,
+  ActivationMode,
+  type DesktopEventPayloads,
   type Chat,
   type DesktopChannel,
   type DesktopCommandArgs,
@@ -35,7 +35,7 @@ export interface DesktopCall {
 export interface FakeDesktopOptions {
   userConfig?: UserConfig
   sessionState?: SessionState
-  mode?: StartMode
+  mode?: ActivationMode
   history?: EditorHistoryItem[]
   chats?: Chat[]
 }
@@ -66,7 +66,7 @@ export class FakeDesktop {
   private readonly channelIndices = new Map<number, number>()
   private revision = 1
   private nextId = 1
-  private readonly mode: StartMode
+  private readonly mode: ActivationMode
   private readonly handlers: HandlerMap = {}
   private page: Page | null = null
 
@@ -75,7 +75,7 @@ export class FakeDesktop {
     this.sessionState = structuredClone(
       options.sessionState ?? DEFAULT_SESSION_STATE
     )
-    this.mode = options.mode ?? StartMode.EDITOR
+    this.mode = options.mode ?? ActivationMode.EDITOR
     this.history = structuredClone(options.history ?? [])
     this.chats = structuredClone(options.chats ?? [])
     this.installDefaultHandlers()
@@ -106,9 +106,9 @@ export class FakeDesktop {
       .map((call) => call.args as DesktopCommandArgs<K>)
   }
 
-  async emit<K extends keyof AppEventPayloads>(
+  async emit<K extends keyof DesktopEventPayloads>(
     event: K,
-    payload: AppEventPayloads[K]
+    payload: DesktopEventPayloads[K]
   ) {
     await this.emitEvent(event, payload)
   }
@@ -169,6 +169,9 @@ export class FakeDesktop {
         windowId: null,
         selectedText: null,
         mode: this.mode,
+        launcherPageId: null,
+        launcherRequest: null,
+        accessRequest: null,
       },
       window: { isWindowShown: true, windowProfile: 'sheet' },
       settings: {
@@ -179,8 +182,10 @@ export class FakeDesktop {
   }
 
   private async dispatch(command: string, args: unknown) {
-    if (args && typeof args === 'object' && '__tycoBinary' in args)
-      args = new Uint8Array((args as { __tycoBinary: number[] }).__tycoBinary)
+    if (args && typeof args === 'object' && '__tycoBinary' in args) {
+      const binary = args as { __tycoBinary: number[]; meta: unknown }
+      args = { bytes: new Uint8Array(binary.__tycoBinary), meta: binary.meta }
+    }
     this.calls.push({ command, args })
     const handler = (this.handlers as Record<string, unknown>)[command] as
       ((args: unknown) => unknown) | undefined
@@ -227,14 +232,19 @@ export class FakeDesktop {
     })
 
     this.handle('get_editor_history', () => structuredClone(this.history))
-    this.handle('save_editor_history', ({ entry }) => {
-      const { replaceId, ...rest } = entry
+    this.handle('add_editor_history_item', ({ entry }) => {
+      const { replaceId, operation, ...rest } = entry
       this.history = this.history.filter((item) => item.id !== replaceId)
       const id = this.generateId('history')
-      this.history.unshift({ ...rest, id, createdAt: Date.now() })
+      this.history.unshift({
+        ...rest,
+        ...(operation ? { operation } : {}),
+        id,
+        createdAt: Date.now(),
+      })
       return id
     })
-    this.handle('remove_from_editor_history', ({ id }) => {
+    this.handle('delete_editor_history_item', ({ id }) => {
       this.history = this.history.filter((item) => item.id !== id)
     })
     this.handle('clear_editor_history', () => {
@@ -245,7 +255,7 @@ export class FakeDesktop {
       this.history.push(structuredClone(item))
       this.history.sort((a, b) => b.createdAt - a.createdAt)
     })
-    this.handle('set_editor_history_result', ({ id, result }) => {
+    this.handle('set_editor_history_item_result', ({ id, result }) => {
       const item = this.history.find((entry) => entry.id === id)
       if (item) item.result = result
     })
@@ -289,8 +299,8 @@ export class FakeDesktop {
     this.handle('list_ai_profiles', () => [])
     this.handle('list_ai_projects', () => [])
     this.handle('list_installed_plugins', () => [])
-    this.handle('secrets_status', () => ({}))
-    this.handle('secrets_vault_state', () => 'available')
+    this.handle('get_secret_statuses', () => ({}))
+    this.handle('get_secret_vault_state', () => 'available')
     this.handle('get_hotkey_provider_info', () => ({
       provider: 'global-shortcut',
       canConfigure: true,

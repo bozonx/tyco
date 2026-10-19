@@ -1,4 +1,4 @@
-import type { AppEventPayloads, DesktopListen } from '@tyco/shared'
+import type { DesktopEventPayloads, DesktopListen } from '@tyco/shared'
 
 /** Owns synchronous and pending resources for one runtime lifetime. */
 export function createCleanupScope() {
@@ -8,10 +8,10 @@ export function createCleanupScope() {
     if (stopped) cleanup()
     else cleanups.push(cleanup)
   }
-  const listen = async <K extends keyof AppEventPayloads>(
+  const listen = async <K extends keyof DesktopEventPayloads>(
     subscribe: DesktopListen,
     event: K,
-    handler: (payload: AppEventPayloads[K]) => void | Promise<void>
+    handler: (payload: DesktopEventPayloads[K]) => void | Promise<void>
   ) => {
     if (stopped) return
     add(

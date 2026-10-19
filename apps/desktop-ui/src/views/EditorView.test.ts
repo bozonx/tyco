@@ -13,7 +13,7 @@ describe('Editor actions shortcut', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('does not hide the editor when Escape was handled by its search panel', () => {
-    const call = vi.spyOn(useIpcStore(), 'callFunctionOrNotify')
+    const call = vi.spyOn(useIpcStore(), 'callOrNotify')
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },
     })
@@ -107,12 +107,12 @@ describe('Editor actions shortcut', () => {
     const editor = useEditorInputStore()
     editor.setValue('Unsaved text', 'plain')
     const ipc = useIpcStore()
-    vi.spyOn(ipc, 'callFunction').mockResolvedValue({
+    vi.spyOn(ipc, 'call').mockResolvedValue({
       success: true,
       result: undefined,
     })
-    const callFunctionSpy = vi
-      .spyOn(ipc, 'callFunctionOrNotify')
+    const callSpy = vi
+      .spyOn(ipc, 'callOrNotify')
       .mockResolvedValue({ success: true, result: undefined })
 
     const wrapper = mount(EditorView, {
@@ -125,9 +125,9 @@ describe('Editor actions shortcut', () => {
     await flushPromises()
 
     expect(editor.value).toBe('Unsaved text')
-    expect(callFunctionSpy).toHaveBeenCalledWith('hideWindow')
-    expect(ipc.callFunction).not.toHaveBeenCalledWith(
-      'saveEditorHistory',
+    expect(callSpy).toHaveBeenCalledWith('hide_window')
+    expect(ipc.call).not.toHaveBeenCalledWith(
+      'add_editor_history_item',
       expect.anything()
     )
     wrapper.unmount()

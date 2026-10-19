@@ -66,7 +66,7 @@ test('stops an in-flight response and retries from the UI', async ({
   await expect(page.getByText('One', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Stop', exact: true }).click()
   await expect
-    .poll(() => desktop.callsOf('net_cancel'))
+    .poll(() => desktop.callsOf('cancel_net_task'))
     .toContainEqual({ id: 1 })
   await page.getByRole('button', { name: 'Retry', exact: true }).click()
   await llm.start(1)

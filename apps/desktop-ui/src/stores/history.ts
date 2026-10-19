@@ -5,5 +5,5 @@ import { useIpcStore } from './ipc'
 export const useHistoryStore = defineStore('history', () => {
   const ipcStore = useIpcStore()
 
-  return createHistoryModel({ callFunction: ipcStore.callFunction })
+  return createHistoryModel({ call: ipcStore.call })
 })

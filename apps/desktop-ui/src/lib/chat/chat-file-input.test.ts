@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import type { DesktopErrorCode } from '@tyco/shared'
+import { DesktopIpcError } from '../desktop/ipc-error'
 import { chatFileErrorKind } from './chat-file-error'
 import {
   chatFileKind,
@@ -49,12 +51,12 @@ describe('chat files', () => {
     for (const name of ['env.ts', 'readme.md', 'keys.txt'])
       expect(mayContainSecrets(name)).toBe(false)
   })
-  it('reads the error kind the Rust commands report', () => {
-    expect(chatFileErrorKind({ kind: 'size', message: 'File too large' })).toBe(
-      'size'
-    )
-    expect(chatFileErrorKind({ kind: 'memory', message: '' })).toBe('memory')
-    expect(chatFileErrorKind({ kind: 'password' })).toBe('invalid')
+  it('reads the error kind from the code the Rust commands report', () => {
+    const rejected = (code: DesktopErrorCode) =>
+      chatFileErrorKind(new DesktopIpcError(code, 'Rejected', null))
+    expect(rejected('fileTooLarge')).toBe('size')
+    expect(rejected('resourceLimit')).toBe('memory')
+    expect(rejected('invalidInput')).toBe('invalid')
     expect(chatFileErrorKind('size limit exceeded')).toBe('invalid')
   })
   it('preserves filenames, decodes BOMs and rejects binary and invalid UTF-8', () => {

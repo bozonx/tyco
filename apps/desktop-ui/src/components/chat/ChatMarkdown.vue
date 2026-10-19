@@ -90,7 +90,7 @@ const view = createChatMarkdownView({
   createObjectUrl: (blob) => URL.createObjectURL(blob),
   revokeObjectUrl: (url) => URL.revokeObjectURL(url),
   async openLink(url) {
-    await ipc.callFunctionOrNotify('openInBrowser', [url])
+    await ipc.callOrNotify('open_in_browser', { url })
   },
   copyCode: (source) => emit('copy-code', source),
   labels: () => ({

@@ -29,7 +29,7 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
     const version = ++editorListVersion
     await Promise.allSettled([...pendingWrites])
 
-    const loadedHistory = await call('getEditorHistory')
+    const loadedHistory = await call('get_editor_history')
     if (version === editorListVersion) editorHistory.value = loadedHistory || []
   }
 
@@ -39,7 +39,7 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
   ): Promise<string | null> => {
     if (!entry.text.trim()) return null
 
-    const saved = await track(call('saveEditorHistory', [entry]))
+    const saved = await track(call('add_editor_history_item', { entry }))
 
     return typeof saved === 'string' ? saved : null
   }
@@ -59,7 +59,7 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
   ): Promise<void> => {
     if (!id) return
 
-    await track(call('setEditorHistoryResult', [id, result]))
+    await track(call('set_editor_history_item_result', { id, result }))
   }
 
   /** Resolves to the removed entry, so that the removal can be undone. */
@@ -68,7 +68,7 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
   ): Promise<EditorHistoryItem | null> => {
     const removed = editorHistory.value.find((item) => item.id === id) ?? null
 
-    await track(call('removeFromEditorHistory', [id]))
+    await track(call('delete_editor_history_item', { id }))
     editorListVersion += 1
     editorHistory.value = editorHistory.value.filter((item) => item.id !== id)
 
@@ -77,12 +77,12 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
 
   /** Puts a removed entry back to its place. */
   const restoreEditorItem = async (item: EditorHistoryItem): Promise<void> => {
-    await track(call('restoreEditorHistoryItem', [item]))
+    await track(call('restore_editor_history_item', { item }))
     await loadEditorHistory()
   }
 
   const clearEditorHistory = async (): Promise<void> => {
-    await track(call('clearEditorHistory'))
+    await track(call('clear_editor_history'))
     editorListVersion += 1
     editorHistory.value = []
   }

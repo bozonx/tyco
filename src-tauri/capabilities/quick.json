@@ -9,7 +9,7 @@
     "core:window:allow-set-size",
     "allow-answer-external-access",
     "allow-claim-external-job",
-    "allow-dismiss-quick-window",
+    "allow-hide-quick-window-on-blur",
     "allow-finish-external-job",
     "allow-finish-selection-run",
     "allow-mark-activation-metric",

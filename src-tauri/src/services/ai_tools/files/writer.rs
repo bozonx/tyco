@@ -2,14 +2,18 @@ use std::fs;
 
 use super::reader::read_existing_text;
 use super::{
-    invalid, Access, FileChangePreview, FileToolOutput, FileToolRequest, ProfileFiles,
+    invalid, Access, AiFileChangePreview, AiFileToolOutput, AiFileToolRequest, ProfileFiles,
     MAX_WRITE_BYTES,
 };
 use crate::errors::AppError;
 use crate::services::atomic_file::write_user_file;
 
 impl ProfileFiles {
-    pub(super) fn write_file(&self, path: &str, content: &str) -> Result<FileToolOutput, AppError> {
+    pub(super) fn write_file(
+        &self,
+        path: &str,
+        content: &str,
+    ) -> Result<AiFileToolOutput, AppError> {
         if content.len() > MAX_WRITE_BYTES {
             return Err(AppError::ResourceLimit(format!(
                 "The content is larger than {MAX_WRITE_BYTES} bytes"
@@ -24,7 +28,7 @@ impl ProfileFiles {
             fs::create_dir_all(parent)?;
         }
         write_user_file(&target.path, content.as_bytes())?;
-        Ok(FileToolOutput::WriteFile {
+        Ok(AiFileToolOutput::WriteFile {
             path: target.virtual_path(),
             is_created,
             bytes: content.len(),
@@ -37,18 +41,18 @@ impl ProfileFiles {
         old_text: &str,
         new_text: &str,
         replace_all: bool,
-    ) -> Result<FileToolOutput, AppError> {
+    ) -> Result<AiFileToolOutput, AppError> {
         let target = self.resolve(path, Access::Write, true)?;
         let before = read_existing_text(&target, path)?;
         let (after, replacement_count) = apply_edit(&before, old_text, new_text, replace_all)?;
         write_user_file(&target.path, after.as_bytes())?;
-        Ok(FileToolOutput::EditFile {
+        Ok(AiFileToolOutput::EditFile {
             path: target.virtual_path(),
             replacement_count,
         })
     }
 
-    pub(super) fn move_path(&self, from: &str, to: &str) -> Result<FileToolOutput, AppError> {
+    pub(super) fn move_path(&self, from: &str, to: &str) -> Result<AiFileToolOutput, AppError> {
         let source = self.resolve(from, Access::Write, false)?;
         let destination = self.resolve(to, Access::Write, false)?;
         if source.is_root() || destination.is_root() {
@@ -73,29 +77,29 @@ impl ProfileFiles {
             fs::copy(&source.path, &destination.path)?;
             fs::remove_file(&source.path)?;
         }
-        Ok(FileToolOutput::MovePath {
+        Ok(AiFileToolOutput::MovePath {
             from: source.virtual_path(),
             to: destination.virtual_path(),
         })
     }
 
     /// What a write or an edit would change, without changing anything.
-    pub fn preview(&self, request: FileToolRequest) -> Result<FileChangePreview, AppError> {
+    pub fn preview(&self, request: AiFileToolRequest) -> Result<AiFileChangePreview, AppError> {
         match request {
-            FileToolRequest::WriteFile { path, content } => {
+            AiFileToolRequest::WriteFile { path, content } => {
                 let target = self.resolve(&path, Access::Write, true)?;
                 let before = if target.path.is_file() {
                     Some(read_existing_text(&target, &path)?)
                 } else {
                     None
                 };
-                Ok(FileChangePreview {
+                Ok(AiFileChangePreview {
                     path: target.virtual_path(),
                     before,
                     after: content,
                 })
             }
-            FileToolRequest::EditFile {
+            AiFileToolRequest::EditFile {
                 path,
                 old_text,
                 new_text,
@@ -104,7 +108,7 @@ impl ProfileFiles {
                 let target = self.resolve(&path, Access::Write, true)?;
                 let before = read_existing_text(&target, &path)?;
                 let (after, _) = apply_edit(&before, &old_text, &new_text, replace_all)?;
-                Ok(FileChangePreview {
+                Ok(AiFileChangePreview {
                     path: target.virtual_path(),
                     before: Some(before),
                     after,

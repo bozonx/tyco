@@ -11,6 +11,7 @@ use tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
 use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use tokio_tungstenite::tungstenite::{protocol::WebSocketConfig, Message};
 use tokio_tungstenite::{connect_async_with_config, MaybeTlsStream, WebSocketStream};
+use ts_rs::TS;
 
 use super::request::PreparedRequest;
 use super::EventSink;
@@ -29,13 +30,15 @@ const ABNORMAL_CLOSE: u16 = 1006;
 /// Close code for a close frame that carried no status.
 const NO_STATUS: u16 = 1005;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct SocketRequest {
     pub url: String,
     #[serde(default)]
+    #[ts(as = "Option<Vec<(String, String)>>", optional)]
     pub headers: Vec<(String, String)>,
     #[serde(default)]
+    #[ts(as = "Option<Vec<String>>", optional)]
     pub protocols: Vec<String>,
 }
 
@@ -43,12 +46,13 @@ pub struct SocketRequest {
 pub enum SocketCommand {
     Text(String),
     Binary(Vec<u8>),
-    /// With a payload: send it and let the server close. Without: close now.
+    /// With a final message: send it and let the server close. Without:
+    /// close now.
     Close(Option<String>),
 }
 
 /// Control events. Binary frames travel as raw bytes.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum SocketEvent {
     Open,

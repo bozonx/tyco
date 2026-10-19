@@ -9,7 +9,7 @@ const project: AiProject = {
   name: 'Notes',
   description: 'Daily notes',
   isExternal: false,
-  targetPath: null,
+  targetPath: undefined,
   createdAt: 0,
   updatedAt: 0,
 }
@@ -55,7 +55,7 @@ describe('project editor', () => {
       name: 'Journal',
       description: 'Daily notes',
       isExternal: false,
-      targetPath: null,
+      targetPath: undefined,
     })
     expect(editor.saveStatus.value).toBe('saved')
   })

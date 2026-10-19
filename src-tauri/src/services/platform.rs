@@ -46,7 +46,9 @@ pub use webview::allow_clipboard_read;
 
 /// Shows the status bubble as `request` says, or hides it for `None`; only
 /// Linux has one so far. Runs on the main thread.
-pub fn update_status_overlay(request: Option<crate::services::status_overlay::OverlayRequest>) {
+pub fn update_status_overlay(
+    request: Option<crate::services::status_overlay::StatusOverlayRequest>,
+) {
     #[cfg(target_os = "linux")]
     linux::status_overlay::update(request);
     #[cfg(not(target_os = "linux"))]

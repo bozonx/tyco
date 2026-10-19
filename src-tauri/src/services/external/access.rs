@@ -18,7 +18,7 @@ const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
 
 pub use crate::models::AccessRequest;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub enum AccessDecision {
     Once,

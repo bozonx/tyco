@@ -7,7 +7,7 @@ use crate::{
 use tauri::{AppHandle, WebviewWindow};
 
 // Without `profile_id` a command works on the chats of "Ask AI", with it on
-// the chats of that profile.
+// the chats of that profile. How chat images are held: see `chat_images`.
 
 #[tauri::command]
 pub async fn list_chats(
@@ -23,10 +23,12 @@ pub async fn get_chat(
     window: WebviewWindow,
     app: AppHandle,
     id: String,
-    lease: Option<String>,
+    import_id: Option<String>,
     profile_id: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
-    let owner = lease.map(|lease| format!("{}/import/{lease}", window.label()));
+    let owner = import_id
+        .map(|import_id| super::chat_images::import_owner(&window, &import_id))
+        .transpose()?;
     let scope = ChatScope::from_profile_id(profile_id);
     run_blocking(move || storage::read_chat(&app, &scope, id, owner)).await?
 }
@@ -69,7 +71,7 @@ pub async fn delete_chat(
     id: String,
     profile_id: Option<String>,
 ) -> Result<(), AppError> {
-    let owner = format!("{}/undo/{id}", window.label());
+    let owner = super::chat_images::deleted_chat_owner(&window, &id);
     let scope = ChatScope::from_profile_id(profile_id);
     run_blocking(move || storage::delete_chat(&app, &scope, id, owner)).await?
 }

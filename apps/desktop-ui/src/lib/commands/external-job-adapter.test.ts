@@ -1,32 +1,28 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { DesktopCall } from '../ipc/desktop-functions'
+import type { DesktopCall } from '../ipc/ipc-model'
 import { createExternalJobAdapter } from './external-job-adapter'
 
 describe('external job adapter', () => {
   it('claims only confirmed jobs', async () => {
-    const callFunction = vi
+    const call = vi
       .fn<DesktopCall>()
       .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
       .mockResolvedValueOnce({ success: true, result: false })
       .mockResolvedValueOnce({ success: true, result: true })
-    const adapter = createExternalJobAdapter({
-      callFunction: callFunction as DesktopCall,
-    })
+    const adapter = createExternalJobAdapter({ call: call as DesktopCall })
     expect(await adapter.claimJob('job')).toBe(false)
     expect(await adapter.claimJob('job')).toBe(false)
     expect(await adapter.claimJob('job')).toBe(true)
-    expect(callFunction).toHaveBeenCalledWith('claimExternalJob', ['job'])
+    expect(call).toHaveBeenCalledWith('claim_external_job', { id: 'job' })
   })
 
   it('preserves completion when no job is returned and propagates IPC failures', async () => {
-    const callFunction = vi
+    const call = vi
       .fn<DesktopCall>()
       .mockResolvedValueOnce({ success: true, result: null })
       .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
-    const adapter = createExternalJobAdapter({
-      callFunction: callFunction as DesktopCall,
-    })
+    const adapter = createExternalJobAdapter({ call: call as DesktopCall })
     const completion = { success: true, output: 'Output' }
     expect(await adapter.finishJob('job', completion)).toBe(completion)
     expect(await adapter.finishJob('job', completion)).toEqual({
@@ -46,12 +42,12 @@ describe('external job adapter', () => {
         error: 'Insertion failed',
         code: state === 'failed' ? 'SelectionFailed' : undefined,
       }
-      const callFunction = vi
+      const call = vi
         .fn<DesktopCall>()
         .mockResolvedValue({ success: true, result: job })
       const selectionFailed = vi.fn()
       const adapter = createExternalJobAdapter({
-        callFunction: callFunction as DesktopCall,
+        call: call as DesktopCall,
         selectionFailed,
       })
       expect(await adapter.finishJob('job', { success: true })).toEqual({

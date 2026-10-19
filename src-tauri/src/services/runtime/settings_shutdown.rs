@@ -3,10 +3,9 @@ use crate::locks::MutexExt;
 use std::collections::HashSet;
 use std::sync::Mutex;
 use std::time::Duration;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 
-pub const QUIT_REQUESTED_EVENT: &str = "app://quit-requested";
-pub const QUIT_CANCELLED_EVENT: &str = "app://quit-cancelled";
+use crate::events;
 
 #[derive(Default)]
 pub struct SettingsShutdown(Mutex<ShutdownState>);
@@ -66,7 +65,7 @@ impl ShutdownState {
 }
 
 fn cancel_exit(app: &AppHandle) {
-    if let Err(error) = app.emit(QUIT_CANCELLED_EVENT, ()) {
+    if let Err(error) = events::emit::<events::QuitCancelled, _>(app, ()) {
         log::warn!("Could not publish cancelled shutdown: {error}");
     }
     if let Err(error) = super::show_application(app) {
@@ -93,7 +92,7 @@ pub fn request(app: &AppHandle) {
         return;
     };
     for window in windows {
-        if let Err(error) = app.emit_to(&window, QUIT_REQUESTED_EVENT, request_id) {
+        if let Err(error) = events::emit_to::<events::QuitRequested, _>(app, &window, request_id) {
             log::warn!("Could not request settings flush: {error}");
             app.state::<SettingsShutdown>()
                 .0

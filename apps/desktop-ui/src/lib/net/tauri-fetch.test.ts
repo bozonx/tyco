@@ -1,4 +1,3 @@
-import { DESKTOP_COMMANDS } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import { bytes, createFakeNetIpc } from './fake-net-ipc'
@@ -16,7 +15,7 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 describe('tauri-fetch', () => {
   it('sends the request through the proxy command', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      ['start_fetch']: (_call, emit) => {
         setTimeout(() => {
           emit(head())
           emit({ type: 'end' })
@@ -32,7 +31,7 @@ describe('tauri-fetch', () => {
       body: '{"a":1}',
     })
 
-    const [call] = fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)
+    const [call] = fake.callsOf('start_fetch')
     const request = (call.args as { request: Record<string, unknown> }).request
     expect(request.method).toBe('POST')
     expect(request.url).toBe('https://api.deepseek.com/chat/completions')
@@ -45,7 +44,7 @@ describe('tauri-fetch', () => {
 
   it('omits the body of a GET request', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      ['start_fetch']: (_call, emit) => {
         setTimeout(() => emit(head(204)))
         return 1
       },
@@ -53,7 +52,7 @@ describe('tauri-fetch', () => {
 
     const response = await createTauriFetch(fake.ipc)('https://example.com/')
 
-    const [call] = fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)
+    const [call] = fake.callsOf('start_fetch')
     expect(
       (call.args as { request: { body?: string } }).request.body
     ).toBeUndefined()
@@ -62,7 +61,7 @@ describe('tauri-fetch', () => {
   })
 
   it('resolves on the head and streams the body', async () => {
-    const fake = createFakeNetIpc({ [DESKTOP_COMMANDS.NET_FETCH]: () => 7 })
+    const fake = createFakeNetIpc({ ['start_fetch']: () => 7 })
     const pending = createTauriFetch(fake.ipc)('https://example.com/')
     await tick()
 
@@ -81,7 +80,7 @@ describe('tauri-fetch', () => {
 
   it('keeps error statuses as responses', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      ['start_fetch']: (_call, emit) => {
         setTimeout(() => {
           emit(head(401))
           emit(bytes('{"error":"bad key"}'))
@@ -99,7 +98,7 @@ describe('tauri-fetch', () => {
 
   it('rejects with a TypeError when the request fails before a response', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      ['start_fetch']: (_call, emit) => {
         setTimeout(() => emit({ type: 'error', message: 'connection refused' }))
         return 1
       },
@@ -112,7 +111,7 @@ describe('tauri-fetch', () => {
 
   it('rejects with a TypeError when the proxy refuses the request', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_FETCH]: () => {
+      ['start_fetch']: () => {
         throw 'Secret "google" may not be sent to https://evil.example'
       },
     })
@@ -124,7 +123,7 @@ describe('tauri-fetch', () => {
 
   it('errors the body when the connection drops mid-stream', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      ['start_fetch']: (_call, emit) => {
         setTimeout(() => {
           emit(head())
           emit(bytes('partial'))
@@ -140,7 +139,7 @@ describe('tauri-fetch', () => {
   })
 
   it('cancels the proxied request on abort before the head', async () => {
-    const fake = createFakeNetIpc({ [DESKTOP_COMMANDS.NET_FETCH]: () => 42 })
+    const fake = createFakeNetIpc({ ['start_fetch']: () => 42 })
     const controller = new AbortController()
     const pending = createTauriFetch(fake.ipc)('https://example.com/', {
       signal: controller.signal,
@@ -150,15 +149,13 @@ describe('tauri-fetch', () => {
     controller.abort()
 
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({
-      id: 42,
-    })
+    expect(fake.callsOf('cancel_net_task')[0].args).toEqual({ id: 42 })
   })
 
   it('cancels once the id arrives when aborted before it', async () => {
     let resolveId: (id: number) => void = () => undefined
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_FETCH]: () =>
+      ['start_fetch']: () =>
         new Promise<number>((resolve) => {
           resolveId = resolve
         }),
@@ -171,16 +168,16 @@ describe('tauri-fetch', () => {
 
     controller.abort()
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(0)
+    expect(fake.callsOf('cancel_net_task')).toHaveLength(0)
 
     resolveId(5)
     await tick()
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 5 })
+    expect(fake.callsOf('cancel_net_task')[0].args).toEqual({ id: 5 })
   })
 
   it('cancels the proxied request when the reader stops early', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      ['start_fetch']: (_call, emit) => {
         setTimeout(() => emit(head()))
         return 3
       },
@@ -189,7 +186,7 @@ describe('tauri-fetch', () => {
     const response = await createTauriFetch(fake.ipc)('https://example.com/')
     await response.body!.cancel()
 
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 3 })
+    expect(fake.callsOf('cancel_net_task')[0].args).toEqual({ id: 3 })
   })
 
   it('rejects at once for an already aborted signal', async () => {
@@ -212,12 +209,12 @@ describe('tauri-fetch', () => {
     })
     controller.abort()
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)).toHaveLength(0)
+    expect(fake.callsOf('start_fetch')).toHaveLength(0)
   })
 })
 
 it('acknowledges body consumption and pauses acknowledgements while the consumer stalls', async () => {
-  const fake = createFakeNetIpc({ [DESKTOP_COMMANDS.NET_FETCH]: () => 7 })
+  const fake = createFakeNetIpc({ ['start_fetch']: () => 7 })
   const pending = createTauriFetch(fake.ipc)('https://example.com')
   await tick()
   fake.emit(head())
@@ -225,29 +222,29 @@ it('acknowledges body consumption and pauses acknowledgements while the consumer
   fake.emit(bytes('first'))
   fake.emit(bytes('second'))
   await tick()
-  expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH_ACK)).toHaveLength(1)
+  expect(fake.callsOf('acknowledge_fetch_chunk')).toHaveLength(1)
   const reader = response.body!.getReader()
   expect(new TextDecoder().decode((await reader.read()).value)).toBe('first')
   await tick()
-  expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH_ACK)).toHaveLength(2)
+  expect(fake.callsOf('acknowledge_fetch_chunk')).toHaveLength(2)
   await reader.cancel()
-  expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+  expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
 })
 
 it('cancels an overflowing receive queue', async () => {
-  const fake = createFakeNetIpc({ [DESKTOP_COMMANDS.NET_FETCH]: () => 7 })
+  const fake = createFakeNetIpc({ ['start_fetch']: () => 7 })
   const pending = createTauriFetch(fake.ipc)('https://example.com')
   await tick()
   fake.emit(head())
   const response = await pending
   fake.emit(new ArrayBuffer(1024 * 1024 + 1))
   await expect(response.text()).rejects.toThrow('receive queue limit')
-  expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+  expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
 })
 
 it('marks explicit image requests without adding provider credentials', async () => {
   const fake = createFakeNetIpc({
-    [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+    ['start_fetch']: (_call, emit) => {
       setTimeout(() => emit(head(204)))
       return 1
     },
@@ -256,14 +253,14 @@ it('marks explicit image requests without adding provider credentials', async ()
     fake.ipc,
     'chat-image'
   )('https://example.com/image.png')
-  expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)[0].args).toMatchObject({
+  expect(fake.callsOf('start_fetch')[0].args).toMatchObject({
     request: { purpose: 'chat-image', headers: [] },
   })
 })
 
 it('rejects malformed response headers and releases the remote request', async () => {
   const fake = createFakeNetIpc({
-    [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+    ['start_fetch']: (_call, emit) => {
       emit(head(200, [['invalid\nname', 'value']]))
       return 1
     },
@@ -272,5 +269,5 @@ it('rejects malformed response headers and releases the remote request', async (
     createTauriFetch(fake.ipc)('https://example.com')
   ).rejects.toBeInstanceOf(TypeError)
   await tick()
-  expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+  expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
 })

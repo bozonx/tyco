@@ -22,16 +22,16 @@ export function installVoice(desktop: FakeDesktop) {
   desktop.handle('stop_voice_capture', async () => {
     if (audio) await desktop.sendChannel(audio, { type: 'end' })
   })
-  desktop.handle('net_socket_open', async ({ request, onEvent }) => {
+  desktop.handle('open_socket', async ({ request, onEvent }) => {
     expect(request.url).toBe('ws://speech.invalid:6006')
     socket = onEvent
     await desktop.sendChannel(socket, { type: 'open' })
     return 8
   })
-  desktop.handle('net_socket_send_binary', () => undefined)
-  desktop.handle('net_socket_send_text', () => undefined)
-  desktop.handle('net_socket_close', () => undefined)
-  desktop.handle('net_cancel', () => undefined)
+  desktop.handle('send_socket_binary', () => undefined)
+  desktop.handle('send_socket_text', () => undefined)
+  desktop.handle('close_socket', () => undefined)
+  desktop.handle('cancel_net_task', () => undefined)
   const connected = async () => {
     await expect.poll(() => Boolean(audio && socket)).toBe(true)
     return socket!

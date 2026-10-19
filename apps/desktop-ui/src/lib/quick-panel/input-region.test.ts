@@ -5,7 +5,7 @@ import {
   inputRegion,
   sameRegion,
   unionRect,
-  type InputRect,
+  type InputRegion,
 } from './input-region'
 
 const viewport = { width: 800, height: 500 }
@@ -70,17 +70,17 @@ describe('sameRegion', () => {
 })
 
 describe('createInputRegionSync', () => {
-  const a: InputRect = { x: 0, y: 400, width: 800, height: 100 }
-  const b: InputRect = { x: 0, y: 300, width: 800, height: 200 }
+  const a: InputRegion = { x: 0, y: 400, width: 800, height: 100 }
+  const b: InputRegion = { x: 0, y: 300, width: 800, height: 200 }
 
   function deferredApply() {
     const calls: Array<{
-      region: InputRect | null
+      region: InputRegion | null
       resolve: () => void
       reject: () => void
     }> = []
     const apply = vi.fn(
-      (region: InputRect | null) =>
+      (region: InputRegion | null) =>
         new Promise<void>((resolve, reject) => {
           calls.push({ region, resolve, reject })
         })

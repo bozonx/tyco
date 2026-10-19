@@ -6,7 +6,7 @@ use std::time::Duration;
 use gtk::glib;
 use gtk::prelude::*;
 
-use crate::services::status_overlay::{OverlayKind, OverlayRequest};
+use crate::services::status_overlay::{StatusOverlayKind, StatusOverlayRequest};
 
 const MARGIN_BOTTOM: i32 = 72;
 /// GLib keeps timer intervals in 32-bit milliseconds.
@@ -51,7 +51,7 @@ fn can_show() -> bool {
         || crate::services::platform::session::current().is_x11()
 }
 
-pub fn update(request: Option<OverlayRequest>) {
+pub fn update(request: Option<StatusOverlayRequest>) {
     if !can_show() {
         return;
     }
@@ -183,19 +183,19 @@ impl Overlay {
         }
     }
 
-    fn set_content(&self, request: &OverlayRequest) {
+    fn set_content(&self, request: &StatusOverlayRequest) {
         let style = self.frame.style_context();
         for class in KIND_CLASSES {
             style.remove_class(class);
         }
         let (class, glyph) = match request.kind {
-            OverlayKind::Pending => ("pending", ""),
-            OverlayKind::Success => ("success", "✓"),
-            OverlayKind::Info => ("info", "ℹ"),
-            OverlayKind::Error => ("error", "⚠"),
+            StatusOverlayKind::Pending => ("pending", ""),
+            StatusOverlayKind::Success => ("success", "✓"),
+            StatusOverlayKind::Info => ("info", "ℹ"),
+            StatusOverlayKind::Error => ("error", "⚠"),
         };
         style.add_class(class);
-        let pending = request.kind == OverlayKind::Pending;
+        let pending = request.kind == StatusOverlayKind::Pending;
         self.spinner.set_visible(pending);
         if pending {
             self.spinner.start();

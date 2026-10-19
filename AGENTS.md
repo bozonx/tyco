@@ -23,7 +23,7 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
   - Extract pure business and state logic into decoupled models inside `apps/desktop-ui/src/lib/` (e.g. `history/`, `ipc/`, `action-menu/`, `editor-input/`, `modals/`).
   - Accompany every DI model with focused unit tests.
   - Place state by its lifetime and audience: a Pinia store for state shared across components or that outlives a page; `provide`/`inject` for state of one component subtree (e.g. `use-markup-mode`); a composable for per-component wiring and lifecycle reactions (e.g. `use-quick-window-session`).
-  - Desktop state (settings, session, activation, window) is read from `useDesktopStore`; `useIpcStore` only calls desktop functions. Change the settings with `updateUserConfig(patch)` rather than spreading the whole config.
+  - Desktop state (settings, session, activation, window) is read from `useDesktopStore`; `useIpcStore` only calls desktop commands, by their Rust names (`call('copy_text', { text })`). Change the settings with `updateUserConfig(patch)` rather than spreading the whole config.
   - Composables called from a store setup must not use lifecycle hooks or `inject`.
   - A lower-level store does not import a feature store; the feature hands itself in instead (e.g. the chat provides `core.askInChat` to the tool registry).
 - **Naming Conventions**:

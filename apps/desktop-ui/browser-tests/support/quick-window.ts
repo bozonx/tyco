@@ -6,7 +6,7 @@ import type { FakeDesktop } from './fake-desktop'
 export function installQuickWindow(desktop: FakeDesktop) {
   desktop.handle('set_quick_input_region', () => undefined)
   desktop.handle('hide_window', () => undefined)
-  desktop.handle('dismiss_quick_window', () => undefined)
+  desktop.handle('hide_quick_window_on_blur', () => undefined)
   let revision = 10
   let activationId = 1
   return {

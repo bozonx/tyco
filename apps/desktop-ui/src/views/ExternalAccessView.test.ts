@@ -4,8 +4,8 @@ import { reactive } from 'vue'
 
 import ExternalAccessView from './ExternalAccessView.vue'
 
-const { callFunction, desktopState } = vi.hoisted(() => ({
-  callFunction: vi.fn(async () => ({ success: true, result: undefined })),
+const { call, desktopState } = vi.hoisted(() => ({
+  call: vi.fn(async () => ({ success: true, result: undefined })),
   desktopState: {
     accessRequest: null as null | {
       jobId: string
@@ -22,7 +22,7 @@ vi.mock('../composables/use-i18n', () => ({
       values?.name ? `${key}:${values.name}` : key,
   }),
 }))
-vi.mock('../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
+vi.mock('../stores/ipc', () => ({ useIpcStore: () => ({ call }) }))
 vi.mock('../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../test/desktop-store')
   return { useDesktopStore: () => mockDesktopStore(() => reactiveParams) }
@@ -40,7 +40,7 @@ const mountView = () => mount(ExternalAccessView, { attachTo: document.body })
 
 describe('ExternalAccessView.vue', () => {
   beforeEach(() => {
-    callFunction.mockClear()
+    call.mockClear()
     reactiveParams.accessRequest = {
       jobId: 'job-1',
       commandName: 'Fix',
@@ -59,25 +59,25 @@ describe('ExternalAccessView.vue', () => {
     await wrapper.find('.access-allow-always').trigger('click')
     await wrapper.find('.access-allow-once').trigger('click')
     wrapper.unmount()
-    expect(callFunction.mock.calls).toEqual([
-      ['answerExternalAccess', ['job-1', 'always']],
+    expect(call.mock.calls).toEqual([
+      ['answer_external_access', { jobId: 'job-1', decision: 'always' }],
     ])
   })
 
   it('denies on Esc', () => {
     const wrapper = mountView()
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
-    expect(callFunction).toHaveBeenCalledWith('answerExternalAccess', [
-      'job-1',
-      'deny',
-    ])
+    expect(call).toHaveBeenCalledWith('answer_external_access', {
+      jobId: 'job-1',
+      decision: 'deny',
+    })
     wrapper.unmount()
   })
 
   it('denies a prompt closed without an answer', () => {
     mountView().unmount()
-    expect(callFunction.mock.calls).toEqual([
-      ['answerExternalAccess', ['job-1', 'deny']],
+    expect(call.mock.calls).toEqual([
+      ['answer_external_access', { jobId: 'job-1', decision: 'deny' }],
     ])
   })
 })

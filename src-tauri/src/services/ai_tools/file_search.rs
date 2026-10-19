@@ -10,7 +10,7 @@ use grep_searcher::{sinks, BinaryDetection, SearcherBuilder};
 use ignore::{DirEntry as WalkEntry, WalkBuilder};
 
 use super::files::{
-    is_forbidden, virtual_path, Access, DirEntry, EntryKind, FileRoot, FileToolOutput,
+    is_forbidden, virtual_path, Access, AiFileRoot, AiFileToolOutput, DirEntry, EntryKind,
     ProfileFiles, Resolved, SearchMatch,
 };
 use crate::errors::AppError;
@@ -109,7 +109,7 @@ pub(super) fn search(
     query: Option<&str>,
     name_pattern: Option<&str>,
     is_regex: bool,
-) -> Result<FileToolOutput, AppError> {
+) -> Result<AiFileToolOutput, AppError> {
     let query = query.filter(|query| !query.is_empty());
     let name_pattern = name_pattern.filter(|pattern| !pattern.is_empty());
     if query.is_none() && name_pattern.is_none() {
@@ -138,7 +138,7 @@ pub(super) fn search(
         files
             .roots()
             .iter()
-            .filter(|root: &&FileRoot| root.read != ProjectAccessMode::Deny)
+            .filter(|root: &&AiFileRoot| root.read != ProjectAccessMode::Deny)
             .filter_map(|root| files.resolve(&root.path, Access::Read, true).ok())
             .collect()
     } else {
@@ -163,7 +163,7 @@ pub(super) fn search(
             let shown = virtual_path(target.root, &target.root_dir, entry.path());
             let Some(matcher) = &content_matcher else {
                 if matches.len() == MAX_SEARCH_MATCHES {
-                    return Ok(FileToolOutput::SearchFiles {
+                    return Ok(AiFileToolOutput::SearchFiles {
                         matches,
                         is_truncated: true,
                     });
@@ -210,14 +210,14 @@ pub(super) fn search(
                 );
             }
             if is_full {
-                return Ok(FileToolOutput::SearchFiles {
+                return Ok(AiFileToolOutput::SearchFiles {
                     matches,
                     is_truncated: true,
                 });
             }
         }
     }
-    Ok(FileToolOutput::SearchFiles {
+    Ok(AiFileToolOutput::SearchFiles {
         matches,
         is_truncated: false,
     })

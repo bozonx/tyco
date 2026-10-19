@@ -31,7 +31,7 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
     transform: (command, text, signal) =>
       runner.transform(command, text, { signal, source: 'selection' }),
     logRun: async (record) => {
-      const result = await ipcStore.callFunction('logCommandRun', [record])
+      const result = await ipcStore.call('log_command_run', { record })
       if (!result.success) throw new Error(result.error ?? 'Command log failed')
     },
     history: historyStore,
@@ -44,12 +44,9 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
     runId: number,
     text: string | null
   ): Promise<SelectionFinishStatus> => {
-    const result = await ipcStore.callFunction('finishSelectionRun', [
-      runId,
-      text,
-    ])
+    const result = await ipcStore.call('finish_selection_run', { runId, text })
     if (!result.success || !result.result) {
-      throw new Error(result.error || 'finishSelectionRun')
+      throw new Error(result.error || 'finish_selection_run')
     }
     return result.result
   }
@@ -58,10 +55,10 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
     run: action.run,
     finish,
     showOverlay: (request) => {
-      void ipcStore.callFunction('showStatusOverlay', [request])
+      void ipcStore.call('show_status_overlay', { request })
     },
     notify: (summary, body) => {
-      void ipcStore.callFunction('notifyDesktop', [summary, body])
+      void ipcStore.call('show_desktop_notification', { summary, body })
     },
     saveResult: action.saveResult,
     applyUserConfig: (userConfig) =>

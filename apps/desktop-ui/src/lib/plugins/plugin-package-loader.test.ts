@@ -16,7 +16,7 @@ const manifest = {
 const entry = {
   manifest,
   modulePath: '4578616d706c65/123.js',
-  canRestore: false,
+  hasPreviousVersion: false,
 }
 describe('plugin package loader', () => {
   it('builds metadata for disabled packages without executing any code', async () => {

@@ -21,7 +21,7 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
   const runnerDeps = useInvocationRunnerDependencies()
 
   const model = createExternalRun({
-    ...createExternalJobAdapter({ callFunction: ipcStore.callFunction }),
+    ...createExternalJobAdapter({ call: ipcStore.call }),
     run: (command, text, report, options) =>
       createCommandRunner({
         ...runnerDeps,
@@ -44,15 +44,15 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
         showResultMenu: undefined,
       }).run(command, text, { ...options, source: 'external' }),
     showOverlay: (request) => {
-      void ipcStore.callFunction('showStatusOverlay', [request])
+      void ipcStore.call('show_status_overlay', { request })
     },
     notify: (summary, body) => {
-      void ipcStore.callFunction('notifyDesktop', [summary, body])
+      void ipcStore.call('show_desktop_notification', { summary, body })
     },
     applyUserConfig: (userConfig) =>
       desktopStore.setExecutionConfig(userConfig),
     logRun: async (record) => {
-      await ipcStore.callFunction('logCommandRun', [record])
+      await ipcStore.call('log_command_run', { record })
     },
     saveOutput: async (text) => {
       await historyStore.saveOutput(text)

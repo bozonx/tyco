@@ -1,12 +1,10 @@
-use tauri::{AppHandle, Emitter, Manager, WindowEvent};
+use tauri::{AppHandle, Manager, WindowEvent};
 
 use super::panel_layer::is_current_quick_activation;
 use super::panel_layer::{settle_quick_keyboard, PanelLayerState};
-use super::{
-    emit_state, on_main_thread, RuntimeWindows, MAIN_WINDOW_CLOSED_EVENT, MAIN_WINDOW_LABEL,
-    OPEN_MAIN_CHAT_EVENT, OPEN_MAIN_EDITOR_EVENT, QUICK_WINDOW_LABEL,
-};
+use super::{emit_state, on_main_thread, RuntimeWindows, MAIN_WINDOW_LABEL, QUICK_WINDOW_LABEL};
 use crate::errors::AppError;
+use crate::events::{self, DesktopEvent};
 use crate::services::activation::{ActivationMode, WindowProfile};
 use crate::state::AppState;
 
@@ -47,11 +45,10 @@ pub fn open_main_editor(
     source_text: Option<String>,
     activation_id: u64,
 ) -> Result<(), AppError> {
-    show_main_with(
+    show_main_with::<events::OpenMainEditor>(
         app,
         ActivationMode::Editor,
-        OPEN_MAIN_EDITOR_EVENT,
-        serde_json::json!({ "text": text, "sourceText": source_text }),
+        events::EditorTransfer { text, source_text },
         activation_id,
     )
 }
@@ -63,27 +60,28 @@ pub fn open_main_chat(
     auto_send: Option<bool>,
     activation_id: u64,
 ) -> Result<(), AppError> {
-    show_main_with(
+    show_main_with::<events::OpenMainChat>(
         app,
         ActivationMode::Chat,
-        OPEN_MAIN_CHAT_EVENT,
-        serde_json::to_value(crate::models::OpenMainChatEvent {
+        crate::models::OpenMainChatEvent {
             attachment,
             question,
             auto_send: auto_send.unwrap_or(false),
-        })?,
+        },
         activation_id,
     )
 }
 
 /// Shows the main window and hands `payload` over to it.
-fn show_main_with(
+fn show_main_with<E: DesktopEvent>(
     app: &AppHandle,
     mode: ActivationMode,
-    event: &'static str,
-    payload: serde_json::Value,
+    payload: E::Payload,
     activation_id: u64,
-) -> Result<(), AppError> {
+) -> Result<(), AppError>
+where
+    E::Payload: Send + 'static,
+{
     on_main_thread(app, move |app| {
         if app.state::<AppState>().snapshot().activation.activation_id != activation_id {
             return Err(AppError::InvalidInput(
@@ -94,7 +92,7 @@ fn show_main_with(
         let window = app
             .get_webview_window(MAIN_WINDOW_LABEL)
             .ok_or_else(|| AppError::Message("Main window not found".into()))?;
-        window.emit(event, payload)?;
+        events::emit::<E, _>(&window, payload)?;
         Ok(())
     })
 }
@@ -138,7 +136,7 @@ fn show_application_mode_on_main_thread(
     emit_state(app, &state)
 }
 
-pub fn dismiss_quick_window(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
+pub fn hide_quick_window_on_blur(app: &AppHandle, activation_id: u64) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
         let snapshot = app.state::<AppState>().snapshot();
         let active_label = app.state::<RuntimeWindows>().active_label();
@@ -187,9 +185,11 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                     if window_label == MAIN_WINDOW_LABEL {
                         app.state::<RuntimeWindows>()
                             .set_active_label(MAIN_WINDOW_LABEL);
-                        if let Err(error) =
-                            app.emit_to(MAIN_WINDOW_LABEL, MAIN_WINDOW_CLOSED_EVENT, ())
-                        {
+                        if let Err(error) = events::emit_to::<events::MainWindowClosed, _>(
+                            app,
+                            MAIN_WINDOW_LABEL,
+                            (),
+                        ) {
                             log::warn!("Could not report the closed main window: {error}");
                         }
                     } else if window_label == QUICK_WINDOW_LABEL {
@@ -208,7 +208,13 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                 }
             }
             WindowEvent::Focused(false) => {}
+            WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {
+                app.state::<crate::services::dropped_files::DroppedFiles>()
+                    .record(window_label, paths);
+            }
             WindowEvent::Destroyed => {
+                app.state::<crate::services::dropped_files::DroppedFiles>()
+                    .forget(window_label);
                 app.state::<crate::services::chat_images::ChatImages>()
                     .lock()
                     .release_owner(window_label);

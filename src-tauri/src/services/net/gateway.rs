@@ -14,20 +14,16 @@ use tokio::sync::mpsc;
 
 pub async fn fetch<S: EventSink>(
     net: &NetState,
+    owner: &str,
     policy: NetworkPolicy,
     secret_snapshot: impl Future<Output = Result<Secrets, AppError>>,
     request: FetchRequest,
     sink: S,
 ) -> Result<u64, AppError> {
-    let (task, registration) = net.register_task()?;
-    let (prepared, client) = if request.purpose.as_deref() == Some("chat-image") {
+    let (task, registration) = net.register_task(owner)?;
+    let (prepared, client) = if request.purpose == Some(http::FetchPurpose::ChatImage) {
         crate::services::net::image::prepare_image(&request).await?
     } else {
-        if request.purpose.is_some() {
-            return Err(AppError::InvalidInput(
-                "Unknown network request purpose".into(),
-            ));
-        }
         let secrets = secret_snapshot.await?;
         let prepared = policy.prepare(Protocol::Http, &request.url, &request.headers, &secrets)?;
         (prepared, net.client().clone())
@@ -62,12 +58,13 @@ pub async fn fetch<S: EventSink>(
 
 pub async fn open_socket<S: EventSink>(
     net: &NetState,
+    owner: &str,
     policy: NetworkPolicy,
     secret_snapshot: impl Future<Output = Result<Secrets, AppError>>,
     request: SocketRequest,
     sink: S,
 ) -> Result<u64, AppError> {
-    let (task, registration) = net.register_task()?;
+    let (task, registration) = net.register_task(owner)?;
     let secrets = secret_snapshot.await?;
     let prepared = policy.prepare(
         Protocol::WebSocket,
@@ -128,6 +125,7 @@ mod tests {
         let net = NetState::new().unwrap();
         let result = fetch(
             &net,
+            "main",
             NetworkPolicy::default(),
             async { Ok(Secrets::new()) },
             request(),
@@ -142,7 +140,15 @@ mod tests {
         let net = NetState::new().unwrap();
         net.stop();
         let secrets = async { panic!("a stopping service must not access the keychain") };
-        let result = fetch(&net, NetworkPolicy::default(), secrets, request(), Sink).await;
+        let result = fetch(
+            &net,
+            "main",
+            NetworkPolicy::default(),
+            secrets,
+            request(),
+            Sink,
+        )
+        .await;
         assert!(matches!(result, Err(AppError::ServiceUnavailable(_))));
     }
 }

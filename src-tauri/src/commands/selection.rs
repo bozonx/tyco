@@ -5,7 +5,6 @@ use std::time::Duration;
 use crate::errors::AppError;
 use crate::services::runtime;
 use crate::services::selection_replace::{self, SelectionFinishStatus, COMMAND_ACTION_PREFIX};
-use crate::services::status_overlay::{self, OverlayRequest};
 use crate::state::AppState;
 
 const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
@@ -42,20 +41,6 @@ pub async fn replace_selection_with_command(
         )
     })
     .await?
-}
-
-#[tauri::command]
-pub fn show_status_overlay(
-    app: AppHandle,
-    request: Option<OverlayRequest>,
-) -> Result<(), AppError> {
-    status_overlay::update(&app, request)
-}
-
-#[tauri::command]
-pub async fn notify_desktop(summary: String, body: String) -> Result<(), AppError> {
-    super::run_blocking(move || crate::services::platform::notifications::notify(&summary, &body))
-        .await?
 }
 
 /// Fails with what is missing for pressing keys in other windows.

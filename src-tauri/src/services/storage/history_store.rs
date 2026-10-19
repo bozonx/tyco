@@ -8,7 +8,7 @@ use tauri::{AppHandle, Manager};
 
 use super::{chat_history as chats, editor_history as editor};
 use crate::errors::AppError;
-use crate::models::{Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryRecord};
+use crate::models::{Chat, ChatSummary, EditorHistoryEntry, EditorHistoryItem};
 use crate::services::chat_images::ChatImages;
 use crate::state::AppState;
 
@@ -30,13 +30,13 @@ impl HistorySettings {
 
 #[derive(Default)]
 pub struct HistoryStorageCoordinator {
-    editor_history: Mutex<Vec<EditorHistoryRecord>>,
+    editor_history: Mutex<Vec<EditorHistoryItem>>,
     chat_history_lock: Mutex<()>,
     cleanup_pending: AtomicBool,
 }
 
 impl HistoryStorageCoordinator {
-    fn lock_editor_history(&self) -> MutexGuard<'_, Vec<EditorHistoryRecord>> {
+    fn lock_editor_history(&self) -> MutexGuard<'_, Vec<EditorHistoryItem>> {
         self.editor_history.locked()
     }
 
@@ -117,7 +117,7 @@ fn enforce_history_policies(app: &AppHandle, settings: HistorySettings) -> Resul
 
 fn with_editor<T>(
     app: &AppHandle,
-    operation: impl FnOnce(&serde_json::Value, &mut Vec<EditorHistoryRecord>) -> Result<T, AppError>,
+    operation: impl FnOnce(&serde_json::Value, &mut Vec<EditorHistoryItem>) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let mut memory = state.history.lock_editor_history();
@@ -176,18 +176,18 @@ pub fn while_chats_locked<T>(
     operation()
 }
 
-pub fn read_editor_history(app: &AppHandle) -> Result<Vec<EditorHistoryRecord>, AppError> {
+pub fn read_editor_history(app: &AppHandle) -> Result<Vec<EditorHistoryItem>, AppError> {
     with_editor(app, |config, memory| {
         editor::read_editor_history(app, config, memory)
     })
 }
 
-pub fn save_editor_history(
+pub fn add_editor_history_item(
     app: &AppHandle,
-    entry: CreateEditorHistoryRequest,
+    entry: EditorHistoryEntry,
 ) -> Result<Option<String>, AppError> {
     with_editor(app, |config, memory| {
-        editor::save_editor_history(app, config, memory, entry)
+        editor::add_editor_history_item(app, config, memory, entry)
     })
 }
 
@@ -203,16 +203,16 @@ pub fn set_editor_history_result(
 
 pub fn restore_editor_history_item(
     app: &AppHandle,
-    item: EditorHistoryRecord,
+    item: EditorHistoryItem,
 ) -> Result<(), AppError> {
     with_editor(app, |config, memory| {
         editor::restore_editor_history_item(app, config, memory, item)
     })
 }
 
-pub fn remove_from_editor_history(app: &AppHandle, id: String) -> Result<(), AppError> {
+pub fn delete_editor_history_item(app: &AppHandle, id: String) -> Result<(), AppError> {
     with_editor(app, |config, memory| {
-        editor::remove_from_editor_history(app, config, memory, id)
+        editor::delete_editor_history_item(app, config, memory, id)
     })
 }
 
@@ -367,7 +367,7 @@ mod tests {
             for index in 0..16 {
                 let storage = &storage;
                 scope.spawn(move || {
-                    storage.lock_editor_history().push(EditorHistoryRecord {
+                    storage.lock_editor_history().push(EditorHistoryItem {
                         id: index.to_string(),
                         text: String::new(),
                         kind: crate::models::EditorHistoryKind::Draft,

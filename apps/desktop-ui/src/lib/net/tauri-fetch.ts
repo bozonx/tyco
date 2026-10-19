@@ -1,5 +1,4 @@
 import type { FetchFunction } from '@bozonx/ai-kit'
-import { DESKTOP_COMMANDS } from '@tyco/shared'
 
 import { bytesToBase64 } from './base64'
 import {
@@ -60,7 +59,7 @@ export function createTauriFetch(
           return
         }
         void ipc
-          .invoke(DESKTOP_COMMANDS.NET_FETCH_ACK, { id })
+          .invoke('acknowledge_fetch_chunk', { id })
           .catch((error: unknown) => {
             if (finished) return
             finish()
@@ -88,9 +87,7 @@ export function createTauriFetch(
           cancelRequested = true
           return
         }
-        void ipc
-          .invoke(DESKTOP_COMMANDS.NET_CANCEL, { id })
-          .catch(() => undefined)
+        void ipc.invoke('cancel_net_task', { id }).catch(() => undefined)
       }
 
       const finish = () => {
@@ -189,7 +186,7 @@ export function createTauriFetch(
       signal?.addEventListener('abort', onAbort, { once: true })
 
       ipc
-        .invoke(DESKTOP_COMMANDS.NET_FETCH, {
+        .invoke('start_fetch', {
           request: {
             method: request.method,
             url: request.url,

@@ -36,16 +36,13 @@ const mocks = vi.hoisted(() => ({
     schedulePrecorrection: vi.fn(),
     cancelPrecorrection: vi.fn(),
   },
-  callFunction: vi.fn(),
+  call: vi.fn(),
 }))
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({
-    callFunction: mocks.callFunction,
-    callFunctionOrNotify: mocks.callFunction,
-  }),
+  useIpcStore: () => ({ call: mocks.call, callOrNotify: mocks.call }),
 }))
 vi.mock('../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../test/desktop-store')
@@ -125,7 +122,7 @@ describe('quick input screen', () => {
     press('Escape')
     expect(mocks.writer.discard).toHaveBeenCalledOnce()
     expect(mocks.correction.cancelInsert).toHaveBeenCalledOnce()
-    expect(mocks.callFunction).toHaveBeenCalledWith('hideWindow')
+    expect(mocks.call).toHaveBeenCalledWith('hide_window')
   })
 
   it('blocks duplicate submissions while pending but allows cancellation', async () => {

@@ -11,8 +11,12 @@ pub(crate) const DEFAULT_MODIFIERS: &str = if cfg!(target_os = "windows") {
     "Ctrl+Alt"
 };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ProviderKind {
+/// What binds the hotkeys: the desktop portal, the global shortcut API of
+/// the system, or the user in the desktop settings with `tyco-ctl`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ts_rs::TS)]
+#[serde(rename_all = "kebab-case")]
+#[ts(rename = "HotkeyProviderKind")]
+pub enum ProviderKind {
     Portal,
     GlobalShortcut,
     External,

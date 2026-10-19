@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   insertAction: vi.fn(),
   navPanel: { resetNavPanelState: vi.fn() },
   menuModals: { hasOpenModal: false },
-  callFunctionOrNotify: vi.fn(),
+  callOrNotify: vi.fn(),
   navigationPush: vi.fn(),
   finishSignal: {
     mode: (): string | undefined => undefined,
@@ -62,7 +62,7 @@ vi.mock('../components/menu/InsertMenu.vue', () => ({
 }))
 
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunctionOrNotify: mocks.callFunctionOrNotify }),
+  useIpcStore: () => ({ callOrNotify: mocks.callOrNotify }),
 }))
 vi.mock('../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../test/desktop-store')
@@ -191,7 +191,7 @@ describe('VoiceView.vue', () => {
     voiceMenu.vm.$emit('cancelled')
     await flushPromises()
 
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
+    expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
     expect(mocks.navigationPush).not.toHaveBeenCalled()
   })
 
@@ -204,7 +204,7 @@ describe('VoiceView.vue', () => {
     await flushPromises()
 
     expect(mocks.navigationPush).toHaveBeenCalledWith(APP_ROUTES.EDITOR.path)
-    expect(mocks.callFunctionOrNotify).not.toHaveBeenCalled()
+    expect(mocks.callOrNotify).not.toHaveBeenCalled()
   })
 
   it('ignores cancellation if window is hidden or mode is not voice', async () => {
@@ -215,7 +215,7 @@ describe('VoiceView.vue', () => {
     voiceMenu.vm.$emit('cancelled')
     await flushPromises()
 
-    expect(mocks.callFunctionOrNotify).not.toHaveBeenCalled()
+    expect(mocks.callOrNotify).not.toHaveBeenCalled()
     expect(mocks.navigationPush).not.toHaveBeenCalled()
   })
 

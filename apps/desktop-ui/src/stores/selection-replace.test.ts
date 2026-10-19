@@ -25,10 +25,10 @@ describe('selection replace store wiring', () => {
     const desktop = useDesktopStore()
     const invocations = useInvocationsStore()
 
-    const callFunctionSpy = vi
-      .spyOn(ipc, 'callFunction')
+    const ipcCallSpy = vi
+      .spyOn(ipc, 'call')
       .mockImplementation(async (name: string) => {
-        if (name === 'finishSelectionRun') {
+        if (name === 'finish_selection_run') {
           return { success: true, result: 'pasted' as any }
         }
         return { success: true, result: undefined as any }
@@ -54,23 +54,23 @@ describe('selection replace store wiring', () => {
       'teh text',
       expect.objectContaining({ source: 'selection' })
     )
-    expect(callFunctionSpy).toHaveBeenCalledWith('finishSelectionRun', [
-      42,
-      'corrected text',
-    ])
+    expect(ipcCallSpy).toHaveBeenCalledWith('finish_selection_run', {
+      runId: 42,
+      text: 'corrected text',
+    })
   })
 
   it('handles cancellation and aborts active run', async () => {
     const ipc = useIpcStore()
     const store = useSelectionReplaceStore()
-    const callFunctionSpy = vi
-      .spyOn(ipc, 'callFunction')
+    const ipcCallSpy = vi
+      .spyOn(ipc, 'call')
       .mockResolvedValue({ success: true, result: undefined as any })
 
     store.handleCancel(99)
 
-    expect(callFunctionSpy).toHaveBeenCalledWith(
-      'showStatusOverlay',
+    expect(ipcCallSpy).toHaveBeenCalledWith(
+      'show_status_overlay',
       expect.anything()
     )
   })

@@ -6,20 +6,23 @@ use crate::{
         storage,
     },
 };
+use serde::Deserialize;
 use tauri::AppHandle;
+use ts_rs::TS;
+
+/// Writes a webhook call of the command `name` to the action log.
 #[tauri::command]
-pub async fn log_custom_action(
+pub async fn log_webhook_call(
     app: AppHandle,
     name: String,
-    action_type: String,
     details: String,
 ) -> Result<(), AppError> {
     run_blocking(move || {
         if let Ok(log_dir) = storage::app_log_dir(&app) {
             if let Err(error) =
-                custom_actions::log_custom_action(&log_dir, &name, &action_type, &details)
+                custom_actions::log_custom_action(&log_dir, &name, "webhook", &details)
             {
-                log::warn!("Could not log the custom action: {error}");
+                log::warn!("Could not log the webhook call: {error}");
             }
         }
     })
@@ -51,14 +54,24 @@ pub async fn open_action_log(app: AppHandle) -> Result<bool, AppError> {
     .await?
 }
 
+#[derive(Debug, Clone, Copy, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+pub enum ClientLogLevel {
+    Error,
+    Warn,
+    Info,
+    Debug,
+}
+
+/// Writes a message of the webview to the app log, secrets masked.
 #[tauri::command(async)]
-pub fn log_client_message(level: String, message: String, context: Option<String>) {
+pub fn log_client_message(level: ClientLogLevel, message: String, context: Option<String>) {
     let sanitized = crate::services::secrets::detector::redact_secrets(&message);
     let ctx = context.map(|c| format!("[{c}] ")).unwrap_or_default();
-    match level.as_str() {
-        "error" => log::error!(target: "desktop_ui", "{ctx}{sanitized}"),
-        "warn" => log::warn!(target: "desktop_ui", "{ctx}{sanitized}"),
-        "debug" => log::debug!(target: "desktop_ui", "{ctx}{sanitized}"),
-        _ => log::info!(target: "desktop_ui", "{ctx}{sanitized}"),
+    match level {
+        ClientLogLevel::Error => log::error!(target: "desktop_ui", "{ctx}{sanitized}"),
+        ClientLogLevel::Warn => log::warn!(target: "desktop_ui", "{ctx}{sanitized}"),
+        ClientLogLevel::Info => log::info!(target: "desktop_ui", "{ctx}{sanitized}"),
+        ClientLogLevel::Debug => log::debug!(target: "desktop_ui", "{ctx}{sanitized}"),
     }
 }

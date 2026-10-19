@@ -1,7 +1,7 @@
 import {
   DEFAULT_DESKTOP_VIEW_STATE,
   desktopViewToSnapshot,
-  StartMode,
+  ActivationMode,
   type DesktopViewState,
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
@@ -21,7 +21,7 @@ function createDeps(overrides: Partial<AppBootstrapDependencies> = {}) {
   const deps: AppBootstrapDependencies = {
     loadDesktopState: vi.fn(async () => ({
       ...DEFAULT_DESKTOP_VIEW_STATE,
-      mode: StartMode.EDITOR,
+      mode: ActivationMode.EDITOR,
     })),
     applyViewState: vi.fn(),
     closeAllModals: vi.fn(),
@@ -53,7 +53,7 @@ describe('app-bootstrap', () => {
     const bootstrap = createAppBootstrap(deps)
     const params: DesktopViewState = {
       ...DEFAULT_DESKTOP_VIEW_STATE,
-      mode: StartMode.AI_TASKS,
+      mode: ActivationMode.AI_TASKS,
     }
 
     await bootstrap.applyParams(params)
@@ -67,7 +67,7 @@ describe('app-bootstrap', () => {
     const { deps, listeners } = createDeps({
       loadDesktopState: vi.fn(async () => ({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: StartMode.WRITE,
+        mode: ActivationMode.WRITE,
       })),
     })
     const bootstrap = createAppBootstrap(deps)
@@ -85,7 +85,7 @@ describe('app-bootstrap', () => {
     const { deps, listeners } = createDeps({
       loadDesktopState: vi.fn(async () => ({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: StartMode.EDITOR,
+        mode: ActivationMode.EDITOR,
       })),
     })
     const bootstrap = createAppBootstrap(deps)
@@ -99,7 +99,7 @@ describe('app-bootstrap', () => {
     await paramsChangedHandler?.(
       desktopViewToSnapshot({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: StartMode.EDITOR,
+        mode: ActivationMode.EDITOR,
         revision: 1,
         userConfig: {
           ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
@@ -118,7 +118,7 @@ describe('app-bootstrap', () => {
     const { deps, listeners } = createDeps({
       loadDesktopState: vi.fn(async () => ({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: StartMode.EDITOR,
+        mode: ActivationMode.EDITOR,
       })),
     })
     const bootstrap = createAppBootstrap(deps)
@@ -131,7 +131,7 @@ describe('app-bootstrap', () => {
     await paramsChangedHandler?.(
       desktopViewToSnapshot({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: StartMode.WRITE,
+        mode: ActivationMode.WRITE,
         revision: 1,
       })
     )
@@ -163,7 +163,7 @@ describe('app-bootstrap', () => {
 
   it('leaves the screen alone for a mode of the other window', async () => {
     const { deps, listeners } = createDeps({
-      ownsMode: (mode) => mode !== StartMode.VOICE,
+      ownsMode: (mode) => mode !== ActivationMode.VOICE,
     })
     const bootstrap = createAppBootstrap(deps)
 
@@ -172,7 +172,7 @@ describe('app-bootstrap', () => {
     const voice = {
       ...DEFAULT_DESKTOP_VIEW_STATE,
       revision: 1,
-      mode: StartMode.VOICE,
+      mode: ActivationMode.VOICE,
     }
     await paramsChangedHandler?.(desktopViewToSnapshot(voice))
 
@@ -184,7 +184,7 @@ describe('app-bootstrap', () => {
     await paramsChangedHandler?.(
       desktopViewToSnapshot({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: StartMode.EDITOR,
+        mode: ActivationMode.EDITOR,
         revision: 2,
       })
     )
@@ -195,9 +195,9 @@ describe('app-bootstrap', () => {
     const { deps } = createDeps({
       loadDesktopState: vi.fn(async () => ({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: StartMode.VOICE,
+        mode: ActivationMode.VOICE,
       })),
-      ownsMode: (mode) => mode !== StartMode.VOICE,
+      ownsMode: (mode) => mode !== ActivationMode.VOICE,
     })
 
     await createAppBootstrap(deps).start()
@@ -274,13 +274,13 @@ describe('bootstrap snapshot ordering', () => {
       desktopViewToSnapshot({
         ...DEFAULT_DESKTOP_VIEW_STATE,
         revision: 2,
-        mode: StartMode.VOICE,
+        mode: ActivationMode.VOICE,
       })
     )
     finish({
       ...DEFAULT_DESKTOP_VIEW_STATE,
       revision: 1,
-      mode: StartMode.EDITOR,
+      mode: ActivationMode.EDITOR,
     })
     await pending
     expect(deps.navigateTo).toHaveBeenCalledExactlyOnceWith(
@@ -304,7 +304,7 @@ it('resynchronizes snapshots on focus and disposes the focus listener', async ()
   vi.mocked(deps.loadDesktopState).mockResolvedValueOnce({
     ...DEFAULT_DESKTOP_VIEW_STATE,
     revision: 3,
-    mode: StartMode.WRITE,
+    mode: ActivationMode.WRITE,
   })
   focus()
   await vi.waitFor(() =>

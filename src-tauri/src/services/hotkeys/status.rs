@@ -9,8 +9,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use tauri::{AppHandle, Manager};
 
-/// Mirrors `HotkeyApplyStatus` in `@tyco/shared`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, ts_rs::TS)]
 #[serde(rename_all = "kebab-case")]
 pub enum HotkeyApplyStatus {
     Ready,
@@ -18,23 +17,26 @@ pub enum HotkeyApplyStatus {
     External,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct ApplyHotkeyResult {
+pub struct HotkeyApplyResult {
     pub status: HotkeyApplyStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub external_command: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub message: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct HotkeyProviderInfo {
-    #[serde(rename = "provider")]
-    pub provider_id: &'static str,
+    pub provider: ProviderKind,
     pub can_configure: bool,
-    pub actions: HashMap<String, ApplyHotkeyResult>,
+    /// Only external bindings report something per action: their command.
+    pub actions: HashMap<String, HotkeyApplyResult>,
+    /// The shortcuts the desktop bound through the portal, in its own words.
     pub system_triggers: HashMap<String, String>,
     /// The portal session is bound, so `system_triggers` is what the desktop
     /// has, not what it has not reported yet
@@ -44,6 +46,7 @@ pub struct HotkeyProviderInfo {
     #[serde(rename = "defaults")]
     pub default_shortcuts: HashMap<String, String>,
     #[serde(rename = "platform")]
+    #[ts(type = r#""linux" | "windows" | "macos""#)]
     pub platform_name: &'static str,
 }
 
@@ -58,7 +61,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
         ProviderKind::External => bindings_from_config(&config)
             .into_iter()
             .map(|binding| {
-                let result = ApplyHotkeyResult {
+                let result = HotkeyApplyResult {
                     status: HotkeyApplyStatus::External,
                     external_command: Some(external_command(
                         &binding.target,
@@ -76,7 +79,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
             .read_locked()
             .iter()
             .map(|(id, message)| {
-                let result = ApplyHotkeyResult {
+                let result = HotkeyApplyResult {
                     status: HotkeyApplyStatus::Conflict,
                     external_command: None,
                     message: Some(message.clone()),
@@ -95,11 +98,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
         ProviderKind::GlobalShortcut | ProviderKind::External => HashMap::new(),
     };
     HotkeyProviderInfo {
-        provider_id: match kind {
-            ProviderKind::Portal => "portal",
-            ProviderKind::GlobalShortcut => "global-shortcut",
-            ProviderKind::External => "external",
-        },
+        provider: kind,
         can_configure: kind == ProviderKind::Portal && portal::can_configure(app),
         is_registered: kind == ProviderKind::Portal && portal::is_registered(app),
         actions,
@@ -122,7 +121,7 @@ mod tests {
         let mut actions = HashMap::new();
         actions.insert(
             "write".to_string(),
-            ApplyHotkeyResult {
+            HotkeyApplyResult {
                 status: HotkeyApplyStatus::Ready,
                 external_command: None,
                 message: None,
@@ -130,7 +129,7 @@ mod tests {
         );
         actions.insert(
             "editor".to_string(),
-            ApplyHotkeyResult {
+            HotkeyApplyResult {
                 status: HotkeyApplyStatus::External,
                 external_command: Some("tyco --mode=editor".to_string()),
                 message: Some("configured externally".to_string()),
@@ -141,7 +140,7 @@ mod tests {
         defaults.insert("write".to_string(), "Ctrl+Space".to_string());
 
         let info = HotkeyProviderInfo {
-            provider_id: "global-shortcut",
+            provider: ProviderKind::GlobalShortcut,
             can_configure: false,
             actions,
             system_triggers: HashMap::new(),

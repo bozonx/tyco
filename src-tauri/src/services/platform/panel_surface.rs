@@ -9,7 +9,7 @@ use crate::services::activation::{WindowProfile, WINDOW_SIZE};
 
 /// Part of the window, in logical pixels from its top left corner, that takes
 /// pointer input.
-#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, ts_rs::TS)]
 pub struct InputRegion {
     pub x: f64,
     pub y: f64,

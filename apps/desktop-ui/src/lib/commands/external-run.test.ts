@@ -22,6 +22,7 @@ const lamp: CommandConfig = {
 
 const event = (extra: Partial<CommandRunEvent> = {}): CommandRunEvent => ({
   commandId: 'lamp',
+  jobId: 'job',
   userConfig: { ...DEFAULT_USER_CONFIG, commands: [lamp] },
   ...extra,
 })

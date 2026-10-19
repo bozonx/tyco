@@ -9,11 +9,11 @@ import type { CommandConfig } from '@tyco/shared'
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
-const { callFunction, toastKey } = vi.hoisted(() => ({
-  callFunction: vi.fn(),
+const { call, toastKey } = vi.hoisted(() => ({
+  call: vi.fn(),
   toastKey: vi.fn(),
 }))
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call }) }))
 vi.mock('../../stores/desktop', () => ({ useDesktopStore: () => ({}) }))
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey }),
@@ -47,7 +47,7 @@ const lastUpdate = (wrapper: ReturnType<typeof mountEditor>) =>
 
 describe('CommandEditor.vue', () => {
   beforeEach(() => {
-    callFunction.mockReset()
+    call.mockReset()
     toastKey.mockReset()
   })
 
@@ -145,12 +145,12 @@ describe('CommandEditor.vue', () => {
   it('opens the log and tells when there is none yet', async () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
     const button = wrapper.find('.command-open-log')
-    callFunction.mockResolvedValueOnce({ success: true, result: true })
+    call.mockResolvedValueOnce({ success: true, result: true })
     await button.trigger('click')
-    expect(callFunction).toHaveBeenCalledWith('openActionLog', [])
+    expect(call).toHaveBeenCalledWith('open_action_log')
     expect(toastKey).not.toHaveBeenCalled()
 
-    callFunction.mockResolvedValueOnce({ success: true, result: false })
+    call.mockResolvedValueOnce({ success: true, result: false })
     await button.trigger('click')
     await flushPromises()
     expect(toastKey).toHaveBeenCalledWith('commands.logEmpty')

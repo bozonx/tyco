@@ -6,14 +6,13 @@ use std::sync::{Condvar, Mutex};
 use std::time::Duration;
 
 use serde::Serialize;
-use tauri::{App, AppHandle, Emitter, Manager};
+use tauri::{App, AppHandle, Manager};
 
 use crate::errors::AppError;
+use crate::events;
 use crate::services::activation::{Activation, ActivationMode, ActivationSource};
 use crate::services::runtime;
 
-pub const START_EVENT: &str = "app://activation-metrics-start";
-pub const COLLECT_EVENT: &str = "app://activation-metrics-collect";
 const ENABLE_ENV: &str = "TYCO_ACTIVATION_BENCH";
 const CSV_ENV: &str = "TYCO_METRICS_CSV";
 
@@ -188,21 +187,22 @@ pub fn mark_os_focus(app: &AppHandle) {
     }
 }
 
-pub fn mark_from_frontend(app: &AppHandle, id: u64, mark: &str) {
+pub use super::metric_mark::ActivationMetricMark;
+
+pub fn mark_from_frontend(app: &AppHandle, id: u64, mark: ActivationMetricMark) {
     let Some(metrics) = app.try_state::<ActivationMetrics>() else {
         return;
     };
     metrics.mark(id, |trial| match mark {
-        "frame" => {
+        ActivationMetricMark::Frame => {
             trial.frame_rendered_at_ns.get_or_insert_with(now_ns);
         }
-        "dom-focus" => {
+        ActivationMetricMark::DomFocus => {
             trial.dom_focused_at_ns.get_or_insert_with(now_ns);
         }
-        "first-char" => {
+        ActivationMetricMark::FirstChar => {
             trial.first_char_received_at_ns.get_or_insert_with(now_ns);
         }
-        _ => {}
     });
 }
 
@@ -317,10 +317,10 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
                     Ok(()) => {
                         // `emit` would reach the main window too, and it would
                         // answer with its own editor
-                        let _ = app.emit_to(
+                        let _ = events::emit_to::<events::ActivationMetricsStart, _>(
+                            app,
                             runtime::QUICK_WINDOW_LABEL,
-                            START_EVENT,
-                            serde_json::json!({ "id": id }),
+                            events::ActivationMetricsRequest { id },
                         );
                         String::from("ok")
                     }
@@ -331,10 +331,10 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
         },
         ["result", id, chars_sent] => match (id.parse::<u64>(), chars_sent.parse::<usize>()) {
             (Ok(id), Ok(chars_sent)) => {
-                let _ = app.emit_to(
+                let _ = events::emit_to::<events::ActivationMetricsCollect, _>(
+                    app,
                     runtime::QUICK_WINDOW_LABEL,
-                    COLLECT_EVENT,
-                    serde_json::json!({ "id": id }),
+                    events::ActivationMetricsRequest { id },
                 );
                 let metrics = app.state::<ActivationMetrics>();
                 match metrics.wait_for_result(id) {

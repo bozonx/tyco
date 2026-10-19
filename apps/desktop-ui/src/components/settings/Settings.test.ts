@@ -46,8 +46,8 @@ vi.mock('../../stores/action-menu', () => ({
 
 vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({
-    callFunction: vi.fn().mockImplementation((fn: string) => {
-      if (fn === 'getStorageInfo') {
+    call: vi.fn().mockImplementation((fn: string) => {
+      if (fn === 'get_storage_info') {
         return Promise.resolve({
           success: true,
           result: {

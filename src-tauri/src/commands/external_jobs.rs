@@ -4,6 +4,7 @@ use crate::{
     services::external::command_library::{self, ToolCatalogEntry, ToolCatalogState},
 };
 use tauri::{AppHandle, State};
+use tyco_activation_protocol::Job as ExternalJob;
 #[tauri::command]
 pub fn set_tool_catalog(state: State<'_, ToolCatalogState>, tools: Vec<ToolCatalogEntry>) {
     state.set(command_library::catalog_from(tools));
@@ -37,7 +38,7 @@ pub async fn finish_external_job(
     window: tauri::WebviewWindow,
     id: String,
     completion: crate::services::external::api::JobCompletion,
-) -> Result<Option<tyco_activation_protocol::Job>, AppError> {
+) -> Result<Option<ExternalJob>, AppError> {
     if window.label() != crate::services::runtime::QUICK_WINDOW_LABEL {
         return Ok(None);
     }

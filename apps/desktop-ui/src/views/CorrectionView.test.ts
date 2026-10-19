@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
     activationId: 1,
   },
   navPanel: { resetNavPanelState: vi.fn() },
-  callFunctionOrNotify: vi.fn(),
+  callOrNotify: vi.fn(),
   correct: vi.fn(),
 }))
 
@@ -44,7 +44,7 @@ vi.mock('../components/overlay/ActionOverlayLayout.vue', () => ({
 }))
 
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunctionOrNotify: mocks.callFunctionOrNotify }),
+  useIpcStore: () => ({ callOrNotify: mocks.callOrNotify }),
 }))
 vi.mock('../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../test/desktop-store')
@@ -75,7 +75,7 @@ describe('CorrectionView', () => {
     expect(wrapper.text()).toContain('toast.textNotSelected')
     expect(mocks.correct).not.toHaveBeenCalled()
     await wrapper.find('.close-btn').trigger('click')
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
+    expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
     wrapper.unmount()
   })
 
@@ -85,7 +85,7 @@ describe('CorrectionView', () => {
     const onCancel = mocks.correct.mock.calls[0]![1].onCancel
     reactive(mocks.desktopState).activationId++
     onCancel()
-    expect(mocks.callFunctionOrNotify).not.toHaveBeenCalled()
+    expect(mocks.callOrNotify).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -107,7 +107,7 @@ describe('CorrectionView', () => {
     expect(options?.onCancel).toBeTypeOf('function')
 
     options.onCancel()
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
+    expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
   })
 
   it('closes window when cancel button in InProgressMessage is clicked', async () => {
@@ -124,11 +124,11 @@ describe('CorrectionView', () => {
     expect(cancelBtn.exists()).toBe(true)
 
     await cancelBtn.trigger('click')
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
+    expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
 
     if (capturedOnCancel) {
       capturedOnCancel()
-      expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('hideWindow')
+      expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
     }
   })
 })

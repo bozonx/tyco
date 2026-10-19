@@ -335,7 +335,7 @@ const cliCommand = computed(() =>
 )
 
 async function openLog() {
-  const res = await ipcStore.callFunction('openActionLog', [])
+  const res = await ipcStore.call('open_action_log')
   if (!res.success) toastKey('commands.openLogFailed', 'error')
   else if (!res.result) toastKey('commands.logEmpty')
 }

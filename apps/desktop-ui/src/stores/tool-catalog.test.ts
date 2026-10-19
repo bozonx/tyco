@@ -3,10 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { useToolCatalogStore } from './tool-catalog'
 
-const mocks = vi.hoisted(() => ({ callFunction: vi.fn(), error: vi.fn() }))
-vi.mock('./ipc', () => ({
-  useIpcStore: () => ({ callFunction: mocks.callFunction }),
-}))
+const mocks = vi.hoisted(() => ({ call: vi.fn(), error: vi.fn() }))
+vi.mock('./ipc', () => ({ useIpcStore: () => ({ call: mocks.call }) }))
 vi.mock('./tools', () => ({ useToolsStore: () => ({ list: () => [] }) }))
 vi.mock('../lib/i18n', () => ({ translate: (key: string) => key }))
 vi.mock('../lib/logger', () => ({ clientLogger: { error: mocks.error } }))
@@ -18,7 +16,7 @@ describe('tool catalog IPC delivery', () => {
     vi.clearAllMocks()
     const pinia = createPinia()
     setActivePinia(pinia)
-    mocks.callFunction
+    mocks.call
       .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
       .mockResolvedValue({ success: true, result: undefined })
     const store = useToolCatalogStore()
@@ -29,8 +27,10 @@ describe('tool catalog IPC delivery', () => {
       expect.objectContaining({ message: 'Unavailable' })
     )
     await vi.advanceTimersByTimeAsync(1000)
-    expect(mocks.callFunction).toHaveBeenCalledTimes(2)
-    expect(mocks.callFunction).toHaveBeenLastCalledWith('setToolCatalog', [[]])
+    expect(mocks.call).toHaveBeenCalledTimes(2)
+    expect(mocks.call).toHaveBeenLastCalledWith('set_tool_catalog', {
+      tools: [],
+    })
     disposePinia(pinia)
     expect(vi.getTimerCount()).toBe(0)
   })

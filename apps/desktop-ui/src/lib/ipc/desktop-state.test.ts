@@ -1,16 +1,15 @@
 import {
+  DEFAULT_SESSION_STATE,
   DEFAULT_DESKTOP_VIEW_STATE,
-  DESKTOP_COMMANDS,
   desktopViewToSnapshot,
-  StartMode,
+  ActivationMode,
   type DesktopViewState,
   type IpcResult,
   type DesktopSnapshot,
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 import { createDesktopStateModel } from './desktop-state'
-import type { DesktopInvoker } from './ipc-model'
-import type { DesktopCall } from './desktop-functions'
+import type { DesktopCall, DesktopInvoker } from './ipc-model'
 
 const view = (
   revision: number,
@@ -32,7 +31,7 @@ function setup(available = true) {
   const invoke = vi
     .fn<DesktopInvoker['invoke']>()
     .mockResolvedValue(response(0))
-  const callFunction = vi.fn<DesktopCall>().mockResolvedValue(response(1))
+  const call = vi.fn<DesktopCall>().mockResolvedValue(response(1))
   const reportFailure = vi.fn()
   const model = createDesktopStateModel({
     desktopClient: {
@@ -40,10 +39,10 @@ function setup(available = true) {
       isAvailable: () => available,
       getDesktopViewState: () => view(0),
     },
-    callFunction: callFunction as DesktopCall,
+    call: call as DesktopCall,
     reportFailure,
   })
-  return { model, invoke, callFunction, reportFailure }
+  return { model, invoke, call, reportFailure }
 }
 
 describe('desktop state revision ordering', () => {
@@ -57,9 +56,9 @@ describe('desktop state revision ordering', () => {
         })
     )
     const pending = model.loadDesktopState()
-    model.applyViewState(view(2, { mode: StartMode.VOICE }))
-    finish(response(1, { mode: StartMode.EDITOR }))
-    expect((await pending).mode).toBe(StartMode.VOICE)
+    model.applyViewState(view(2, { mode: ActivationMode.VOICE }))
+    finish(response(1, { mode: ActivationMode.EDITOR }))
+    expect((await pending).mode).toBe(ActivationMode.VOICE)
     expect(model.desktopState.value.revision).toBe(2)
   })
 
@@ -71,7 +70,7 @@ describe('desktop state revision ordering', () => {
   })
 
   it('refuses writes until authoritative state arrives', async () => {
-    const { model, callFunction } = setup()
+    const { model, call } = setup()
     expect(
       (await model.saveUserConfig(DEFAULT_DESKTOP_VIEW_STATE.userConfig))
         .success
@@ -79,11 +78,11 @@ describe('desktop state revision ordering', () => {
     expect(
       (await model.patchSessionState({ lastChatId: 'chat' })).success
     ).toBe(false)
-    expect(callFunction).not.toHaveBeenCalled()
+    expect(call).not.toHaveBeenCalled()
   })
 
   it('reports a failed initial read and keeps writes blocked', async () => {
-    const { model, invoke, reportFailure, callFunction } = setup()
+    const { model, invoke, reportFailure, call } = setup()
     invoke.mockResolvedValueOnce({
       success: false,
       error: 'Unavailable',
@@ -92,22 +91,20 @@ describe('desktop state revision ordering', () => {
     await expect(model.loadDesktopState()).rejects.toThrow('Unavailable')
     expect(reportFailure).toHaveBeenCalledOnce()
     await model.patchSessionState({ lastChatId: 'chat' })
-    expect(callFunction).not.toHaveBeenCalled()
+    expect(call).not.toHaveBeenCalled()
   })
 
   it('stores a patch over the current config and exposes the result', async () => {
-    const { model, callFunction } = setup()
+    const { model, call } = setup()
     await model.loadDesktopState()
     const base = model.userConfig.value
     const editor = { ...base.editor, diffViewMode: 'split' as const }
-    callFunction.mockResolvedValueOnce(
-      response(1, { userConfig: { ...base, editor } })
-    )
+    call.mockResolvedValueOnce(response(1, { userConfig: { ...base, editor } }))
     expect((await model.updateUserConfig({ editor })).success).toBe(true)
-    expect(callFunction).toHaveBeenCalledWith('saveUserConfig', [
-      { ...base, editor },
-      base,
-    ])
+    expect(call).toHaveBeenCalledWith('save_user_config', {
+      userConfig: { ...base, editor },
+      baseConfig: base,
+    })
     expect(model.userConfig.value.editor.diffViewMode).toBe('split')
   })
 
@@ -118,10 +115,10 @@ describe('desktop state revision ordering', () => {
   })
 
   it('does not replace newer settings with a delayed save response', async () => {
-    const { model, callFunction } = setup()
+    const { model, call } = setup()
     await model.loadDesktopState()
     let finish!: (value: IpcResult<DesktopSnapshot>) => void
-    callFunction.mockImplementationOnce(
+    call.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           finish = resolve
@@ -152,14 +149,14 @@ describe('desktop state revision ordering', () => {
   })
 
   it('preserves state and error codes after a rejected save', async () => {
-    const { model, callFunction } = setup()
+    const { model, call } = setup()
     await model.loadDesktopState()
     const failure = {
       success: false as const,
       error: 'Conflict',
       errorCode: 'configConflict' as const,
     }
-    callFunction.mockResolvedValueOnce(failure)
+    call.mockResolvedValueOnce(failure)
     expect(
       await model.saveUserConfig({
         ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
@@ -173,18 +170,22 @@ describe('desktop state revision ordering', () => {
   })
 
   it('serializes patches, detaches queued values and applies merged snapshots', async () => {
-    const { model, callFunction } = setup()
+    const { model, call } = setup()
     await model.loadDesktopState()
     let finish!: (value: IpcResult<DesktopSnapshot>) => void
-    callFunction.mockImplementationOnce(
+    call.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           finish = resolve
         })
     )
-    callFunction.mockResolvedValueOnce(
+    call.mockResolvedValueOnce(
       response(2, {
-        sessionState: { lastChatId: 'chat', recentAiPrompts: ['original'] },
+        sessionState: {
+          ...DEFAULT_SESSION_STATE,
+          lastChatId: 'chat',
+          recentAiPrompts: ['original'],
+        },
       })
     )
     const first = model.patchSessionState({ lastChatId: 'chat' })
@@ -192,23 +193,28 @@ describe('desktop state revision ordering', () => {
     const second = model.patchSessionState({ recentAiPrompts: prompts })
     prompts.push('later')
     await Promise.resolve()
-    expect(callFunction).toHaveBeenCalledTimes(1)
-    finish(response(1, { sessionState: { lastChatId: 'chat' } }))
+    expect(call).toHaveBeenCalledTimes(1)
+    finish(
+      response(1, {
+        sessionState: { ...DEFAULT_SESSION_STATE, lastChatId: 'chat' },
+      })
+    )
     await Promise.all([first, second])
-    expect(callFunction).toHaveBeenLastCalledWith('patchSessionState', [
-      { recentAiPrompts: ['original'] },
-    ])
+    expect(call).toHaveBeenLastCalledWith('patch_session_state', {
+      patch: { recentAiPrompts: ['original'] },
+    })
     expect(model.desktopState.value.sessionState).toEqual({
+      ...DEFAULT_SESSION_STATE,
       lastChatId: 'chat',
       recentAiPrompts: ['original'],
     })
   })
 
   it('preserves a newer event while a patch is pending', async () => {
-    const { model, callFunction } = setup()
+    const { model, call } = setup()
     await model.loadDesktopState()
     let finish!: (value: IpcResult<DesktopSnapshot>) => void
-    callFunction.mockImplementationOnce(
+    call.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           finish = resolve
@@ -216,24 +222,32 @@ describe('desktop state revision ordering', () => {
     )
     const pending = model.patchSessionState({ lastChatId: 'old' })
     await Promise.resolve()
-    model.applyViewState(view(3, { sessionState: { lastChatId: 'new' } }))
-    finish(response(2, { sessionState: { lastChatId: 'old' } }))
+    model.applyViewState(
+      view(3, { sessionState: { ...DEFAULT_SESSION_STATE, lastChatId: 'new' } })
+    )
+    finish(
+      response(2, {
+        sessionState: { ...DEFAULT_SESSION_STATE, lastChatId: 'old' },
+      })
+    )
     await pending
     expect(model.desktopState.value.sessionState.lastChatId).toBe('new')
   })
 
   it('continues processing queued patches after failure', async () => {
-    const { model, callFunction, invoke } = setup()
+    const { model, call, invoke } = setup()
     await model.loadDesktopState()
-    callFunction.mockResolvedValueOnce({ success: false, error: 'Disk error' })
-    callFunction.mockResolvedValueOnce(
-      response(1, { sessionState: { lastChatId: 'saved' } })
+    call.mockResolvedValueOnce({ success: false, error: 'Disk error' })
+    call.mockResolvedValueOnce(
+      response(1, {
+        sessionState: { ...DEFAULT_SESSION_STATE, lastChatId: 'saved' },
+      })
     )
     expect(
       (await model.patchSessionState({ lastChatId: 'failed' })).success
     ).toBe(false)
     await model.patchSessionState({ lastChatId: 'saved' })
     expect(model.desktopState.value.sessionState.lastChatId).toBe('saved')
-    expect(invoke).toHaveBeenCalledWith(DESKTOP_COMMANDS.GET_DESKTOP_STATE)
+    expect(invoke).toHaveBeenCalledWith('get_desktop_state')
   })
 })

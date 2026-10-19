@@ -1,8 +1,6 @@
-import { DESKTOP_COMMANDS } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import { bytes, createFakeNetIpc } from './fake-net-ipc'
-import { SOCKET_ID_HEADER } from './net-ipc'
 import { createTauriSocketOpener } from './tauri-socket'
 
 async function collect(messages: AsyncIterable<string>) {
@@ -24,7 +22,7 @@ function barrier() {
 describe('tauri-socket', () => {
   it('opens through the proxy with headers and protocols', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      ['open_socket']: (_call, emit) => {
         emit({ type: 'open' })
         return 9
       },
@@ -39,7 +37,7 @@ describe('tauri-socket', () => {
       }
     )
 
-    const [call] = fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_OPEN)
+    const [call] = fake.callsOf('open_socket')
     expect((call.args as Record<string, unknown>).request).toEqual({
       url: 'wss://api.deepgram.com/v1/listen',
       headers: [['authorization', 'Token tyco-secret:deepgram']],
@@ -49,7 +47,7 @@ describe('tauri-socket', () => {
 
   it('delivers text and binary frames and ends on a normal close', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      ['open_socket']: (_call, emit) => {
         // Frames may arrive before the open command resolves.
         emit({ type: 'open' })
         emit({ type: 'message', data: 'one' })
@@ -68,7 +66,7 @@ describe('tauri-socket', () => {
 
   it('fails the messages on an abnormal close', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      ['open_socket']: (_call, emit) => {
         emit({ type: 'open' })
         return 1
       },
@@ -91,7 +89,7 @@ describe('tauri-socket', () => {
 
   it('rejects when the proxy cannot open the socket', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => {
+      ['open_socket']: () => {
         throw 'WebSocket handshake timed out'
       },
     })
@@ -109,18 +107,18 @@ describe('tauri-socket', () => {
     const release = barrier()
     const closed = barrier()
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      ['open_socket']: (_call, emit) => {
         emit({ type: 'open' })
         return 4
       },
-      [DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY]: async () => {
+      ['send_socket_binary']: async () => {
         // A slow first frame must not be overtaken by the next ones.
         started.resolve()
         await release.promise
         order.push('binary')
       },
-      [DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT]: () => order.push('text'),
-      [DESKTOP_COMMANDS.NET_SOCKET_CLOSE]: () => {
+      ['send_socket_text']: () => order.push('text'),
+      ['close_socket']: () => {
         order.push('close')
         closed.resolve()
       },
@@ -140,24 +138,23 @@ describe('tauri-socket', () => {
     await closed.promise
 
     expect(order).toEqual(['binary', 'text', 'close'])
-    const [binary] = fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY)
-    expect(binary.args).toBe(audio)
-    expect(binary.headers).toEqual({ [SOCKET_ID_HEADER]: '4' })
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_CLOSE)[0].args).toEqual({
+    const [binary] = fake.callsOf('send_socket_binary')
+    expect(binary.args).toEqual({ bytes: audio, meta: { id: 4 } })
+    expect(fake.callsOf('close_socket')[0].args).toEqual({
       id: 4,
-      payload: '{"type":"CloseStream"}',
+      finalMessage: '{"type":"CloseStream"}',
     })
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT)).toHaveLength(1)
+    expect(fake.callsOf('send_socket_text')).toHaveLength(1)
   })
 
   it('bounds queued audio while an IPC send is stalled', async () => {
     let completeSend!: () => void
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      ['open_socket']: (_call, emit) => {
         emit({ type: 'open' })
         return 2
       },
-      [DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY]: () =>
+      ['send_socket_binary']: () =>
         new Promise<void>((resolve) => {
           completeSend = resolve
         }),
@@ -173,17 +170,15 @@ describe('tauri-socket', () => {
     await tick()
     for (let i = 0; i < 5; i += 1) session.send(new Uint8Array(256 * 1024))
     await rejected
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 2 })
+    expect(fake.callsOf('cancel_net_task')[0].args).toEqual({ id: 2 })
     completeSend()
     await tick()
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY)).toHaveLength(
-      1
-    )
+    expect(fake.callsOf('send_socket_binary')).toHaveLength(1)
   })
 
   it('bounds the number of pending zero-length frames', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      ['open_socket']: (_call, emit) => {
         emit({ type: 'open' })
         return 2
       },
@@ -196,12 +191,12 @@ describe('tauri-socket', () => {
     )
     for (let i = 0; i < 129; i += 1) session.send('')
     await rejected
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
   })
 
   it('closes on abort', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      ['open_socket']: (_call, emit) => {
         emit({ type: 'open' })
         return 2
       },
@@ -214,18 +209,14 @@ describe('tauri-socket', () => {
     controller.abort()
     await tick()
 
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 2 })
+    expect(fake.callsOf('cancel_net_task')[0].args).toEqual({ id: 2 })
   })
 
-  it.each([
-    DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY,
-    DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT,
-    DESKTOP_COMMANDS.NET_SOCKET_CLOSE,
-  ])(
+  it.each(['send_socket_binary', 'send_socket_text', 'close_socket'])(
     'reports an IPC failure in %s to the transcript reader',
     async (command) => {
       const fake = createFakeNetIpc({
-        [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+        ['open_socket']: (_call, emit) => {
           emit({ type: 'open' })
           return 2
         },
@@ -239,10 +230,10 @@ describe('tauri-socket', () => {
       const messages = collect(session.messages)
       const rejected = expect(messages).rejects.toThrow('Audio delivery failed')
 
-      if (command === DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY) {
+      if (command === 'send_socket_binary') {
         session.send(new Uint8Array([1, 2]))
         session.send('must not overtake failed audio')
-      } else if (command === DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT) {
+      } else if (command === 'send_socket_text') {
         session.send('audio control message')
       } else {
         session.close()
@@ -250,18 +241,16 @@ describe('tauri-socket', () => {
 
       await rejected
       await tick()
-      expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_CLOSE)).toHaveLength(1)
-      if (command === DESKTOP_COMMANDS.NET_SOCKET_SEND_BINARY) {
-        expect(
-          fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT)
-        ).toHaveLength(0)
+      expect(fake.callsOf('close_socket')).toHaveLength(1)
+      if (command === 'send_socket_binary') {
+        expect(fake.callsOf('send_socket_text')).toHaveLength(0)
       }
     }
   )
   it('cancels a handshake before its IPC id arrives and ignores late frames', async () => {
     let resolveId!: (id: number) => void
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () =>
+      ['open_socket']: () =>
         new Promise<number>((resolve) => {
           resolveId = resolve
         }),
@@ -276,14 +265,12 @@ describe('tauri-socket', () => {
     fake.emit({ type: 'open' })
     fake.emit({ type: 'message', data: 'late' })
     await tick()
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 7 })
+    expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')[0].args).toEqual({ id: 7 })
   })
 
   it('honors a connection deadline without limiting an established session', async () => {
-    const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 8,
-    })
+    const fake = createFakeNetIpc({ ['open_socket']: () => 8 })
     const connect = new AbortController()
     const lifetime = new AbortController()
     const pending = createTauriSocketOpener(fake.ipc)('ws://x/', {
@@ -293,7 +280,7 @@ describe('tauri-socket', () => {
     connect.abort(new DOMException('Connection timed out', 'TimeoutError'))
     await expect(pending).rejects.toMatchObject({ name: 'TimeoutError' })
     await tick()
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
 
     const nextConnect = new AbortController()
     const next = createTauriSocketOpener(fake.ipc)('ws://x/', {
@@ -305,14 +292,14 @@ describe('tauri-socket', () => {
     nextConnect.abort()
     session.send('audio')
     await tick()
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_SEND_TEXT)).toHaveLength(1)
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+    expect(fake.callsOf('send_socket_text')).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
     fake.emit({ type: 'close', code: 1000, reason: '' })
   })
 
   it('aborts immediately even while final transcripts are being drained', async () => {
     const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+      ['open_socket']: (_call, emit) => {
         emit({ type: 'open' })
         return 2
       },
@@ -326,13 +313,13 @@ describe('tauri-socket', () => {
     const messages = collect(session.messages)
     controller.abort()
     await expect(messages).rejects.toMatchObject({ name: 'AbortError' })
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
   })
 })
 
 it('releases a socket after the provider confirms the flushed results', async () => {
   const fake = createFakeNetIpc({
-    [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: (_call, emit) => {
+    ['open_socket']: (_call, emit) => {
       emit({ type: 'open' })
       return 2
     },
@@ -345,5 +332,5 @@ it('releases a socket after the provider confirms the flushed results', async ()
   fake.emit({ type: 'message', data: 'Done!' })
   session.close()
   expect(await collect(session.messages)).toEqual(['Done!'])
-  expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
+  expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
 })

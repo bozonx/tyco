@@ -1,6 +1,6 @@
 import { nextTick, ref } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
-import { DEFAULT_DESKTOP_VIEW_STATE, StartMode } from '@tyco/shared'
+import { DEFAULT_DESKTOP_VIEW_STATE, ActivationMode } from '@tyco/shared'
 import {
   createAppStateSync,
   type AppStateSyncDependencies,
@@ -54,13 +54,13 @@ describe('application state synchronization', () => {
 
   it('persists route modes only when they differ from desktop state', async () => {
     const f = fixture()
-    f.state.value.sessionState.lastMode = StartMode.CHAT
+    f.state.value.sessionState.lastMode = ActivationMode.CHAT
     f.route.value = '/chat'
     await nextTick()
     expect(f.deps.patchLastMode).not.toHaveBeenCalled()
     f.route.value = '/history'
     await nextTick()
-    expect(f.deps.patchLastMode).toHaveBeenCalledWith(StartMode.HISTORY)
+    expect(f.deps.patchLastMode).toHaveBeenCalledWith(ActivationMode.HISTORY)
     f.sync.stop()
   })
 
@@ -68,7 +68,7 @@ describe('application state synchronization', () => {
     const f = fixture()
     Object.assign(f.state.value, {
       activationId: 1,
-      mode: StartMode.EDITOR,
+      mode: ActivationMode.EDITOR,
       isWindowShown: true,
       selectedText: 'Editor selection',
     })
@@ -80,7 +80,7 @@ describe('application state synchronization', () => {
     expect(f.deps.replaceEditorValue).toHaveBeenCalledOnce()
     Object.assign(f.state.value, {
       activationId: 2,
-      mode: StartMode.CHAT,
+      mode: ActivationMode.CHAT,
       selectedText: ' Chat context ',
     })
     await nextTick()
@@ -98,7 +98,7 @@ describe('application state synchronization', () => {
     const f = fixture(true)
     Object.assign(f.state.value, {
       activationId: 1,
-      mode: StartMode.EDITOR,
+      mode: ActivationMode.EDITOR,
       isWindowShown: true,
       selectedText: 'Text',
     })

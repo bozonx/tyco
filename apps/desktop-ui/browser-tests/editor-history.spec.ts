@@ -45,7 +45,7 @@ test('removes an item and restores it on undo', async ({ page, desktop }) => {
 
   await expect(historyItem(page, 'draft')).toHaveCount(0)
   await expect
-    .poll(() => desktop.callsOf('remove_from_editor_history'))
+    .poll(() => desktop.callsOf('delete_editor_history_item'))
     .toEqual([{ id: 'draft' }])
 
   await page.getByRole('button', { name: 'Undo' }).click()

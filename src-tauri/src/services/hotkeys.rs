@@ -5,7 +5,7 @@ mod config_transaction;
 pub use config_transaction::with_config_changes;
 mod global_shortcut;
 mod status;
-pub use status::{provider_info, ApplyHotkeyResult, HotkeyApplyStatus, HotkeyProviderInfo};
+pub use status::{provider_info, HotkeyApplyResult, HotkeyApplyStatus, HotkeyProviderInfo};
 
 use crate::errors::AppError;
 use crate::services::platform::hotkeys::{external_command, portal, provider_kind, ProviderKind};
@@ -22,9 +22,6 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 use tauri::{App, AppHandle, Manager};
 use tauri_plugin_global_shortcut::Shortcut;
-
-/// Emitted when the desktop reports changed portal shortcuts.
-pub const HOTKEYS_CHANGED_EVENT: &str = "app://hotkeys-changed";
 
 /// The provider chosen at startup; the portal one turns `External` when the
 /// desktop has no working GlobalShortcuts portal after all.
@@ -50,9 +47,10 @@ impl ProviderState {
 #[derive(Default)]
 pub(crate) struct PortalShortcutBindings(pub(crate) RwLock<HashMap<String, String>>);
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct ApplyHotkeyRequest {
+pub struct HotkeyApplyRequest {
+    /// The hotkey id, e.g. a mode or `replace.correction`.
     pub mode: String,
     pub shortcut: String,
 }
@@ -123,7 +121,7 @@ pub fn set_suspended(app: &AppHandle, suspended: bool) {
     );
 }
 
-pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkeyResult, AppError> {
+pub fn apply(app: &AppHandle, request: HotkeyApplyRequest) -> Result<HotkeyApplyResult, AppError> {
     let target = HotkeyTarget::parse(&request.mode)?;
     // an empty shortcut unassigns the hotkey
     let requested = request.shortcut.trim();
@@ -145,7 +143,7 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
         ProviderKind::Portal => Err(AppError::ServiceUnavailable(String::from(
             "Hotkeys are managed by the desktop; change them in its settings",
         ))),
-        ProviderKind::External => Ok(ApplyHotkeyResult {
+        ProviderKind::External => Ok(HotkeyApplyResult {
             status: HotkeyApplyStatus::External,
             external_command: Some(external_command(&target, shortcut.map(|_| requested))),
             message: None,

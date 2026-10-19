@@ -1,4 +1,5 @@
 pub(crate) mod coordinator;
+mod metric_mark;
 /// Timings of activations for `examples/activation-bench.rs`: a socket that
 /// starts activations and returns what was typed, so it is built only with
 /// the `activation-bench` feature.

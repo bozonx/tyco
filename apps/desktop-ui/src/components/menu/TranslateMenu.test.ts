@@ -1,3 +1,4 @@
+import { DEFAULT_SESSION_STATE } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
@@ -155,7 +156,10 @@ describe('TranslateMenu', () => {
 
   it('translates nothing on Enter until a language is typed or chosen', async () => {
     const desktop = useDesktopStore()
-    desktop.desktopState.sessionState = { recentTranslateLanguages: ['it_IT'] }
+    desktop.desktopState.sessionState = {
+      ...DEFAULT_SESSION_STATE,
+      recentTranslateLanguages: ['it_IT'],
+    }
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
@@ -185,6 +189,7 @@ describe('TranslateMenu', () => {
 
   it('translates the highlighted language by clicking the Enter hint', async () => {
     useDesktopStore().desktopState.sessionState = {
+      ...DEFAULT_SESSION_STATE,
       recentTranslateLanguages: ['it_IT'],
     }
     const wrapper = mountMenu()

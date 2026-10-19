@@ -30,7 +30,7 @@ export function installLlm(desktop: FakeDesktop) {
     body: string
     url: string
   }> = []
-  desktop.handle('net_fetch', ({ request, onEvent }) => {
+  desktop.handle('start_fetch', ({ request, onEvent }) => {
     requests.push({
       channel: onEvent,
       body: Buffer.from(request.body ?? '', 'base64').toString(),
@@ -38,8 +38,8 @@ export function installLlm(desktop: FakeDesktop) {
     })
     return requests.length
   })
-  desktop.handle('net_fetch_ack', () => undefined)
-  desktop.handle('net_cancel', () => undefined)
+  desktop.handle('acknowledge_fetch_chunk', () => undefined)
+  desktop.handle('cancel_net_task', () => undefined)
 
   const requestAt = async (index: number) => {
     await expect.poll(() => requests.length).toBeGreaterThan(index)

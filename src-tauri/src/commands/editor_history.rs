@@ -1,25 +1,28 @@
 use super::run_blocking;
 use crate::{
     errors::AppError,
-    models::{CreateEditorHistoryRequest, EditorHistoryRecord},
+    models::{EditorHistoryEntry, EditorHistoryItem},
     services::storage,
 };
 use tauri::AppHandle;
 #[tauri::command]
-pub async fn get_editor_history(app: AppHandle) -> Result<Vec<EditorHistoryRecord>, AppError> {
+pub async fn get_editor_history(app: AppHandle) -> Result<Vec<EditorHistoryItem>, AppError> {
     run_blocking(move || storage::read_editor_history(&app)).await?
 }
 
+/// Adds a text, or replaces the draft it supersedes; returns the id of the
+/// item, or nothing while the history is off.
 #[tauri::command]
-pub async fn save_editor_history(
+pub async fn add_editor_history_item(
     app: AppHandle,
-    entry: CreateEditorHistoryRequest,
+    entry: EditorHistoryEntry,
 ) -> Result<Option<String>, AppError> {
-    run_blocking(move || storage::save_editor_history(&app, entry)).await?
+    run_blocking(move || storage::add_editor_history_item(&app, entry)).await?
 }
 
+/// Keeps what the AI turned the `source` item `id` into.
 #[tauri::command]
-pub async fn set_editor_history_result(
+pub async fn set_editor_history_item_result(
     app: AppHandle,
     id: String,
     result: String,
@@ -27,17 +30,18 @@ pub async fn set_editor_history_result(
     run_blocking(move || storage::set_editor_history_result(&app, id, result)).await?
 }
 
+/// Puts back an item deleted with `delete_editor_history_item`.
 #[tauri::command]
 pub async fn restore_editor_history_item(
     app: AppHandle,
-    item: EditorHistoryRecord,
+    item: EditorHistoryItem,
 ) -> Result<(), AppError> {
     run_blocking(move || storage::restore_editor_history_item(&app, item)).await?
 }
 
 #[tauri::command]
-pub async fn remove_from_editor_history(app: AppHandle, id: String) -> Result<(), AppError> {
-    run_blocking(move || storage::remove_from_editor_history(&app, id)).await?
+pub async fn delete_editor_history_item(app: AppHandle, id: String) -> Result<(), AppError> {
+    run_blocking(move || storage::delete_editor_history_item(&app, id)).await?
 }
 
 #[tauri::command]

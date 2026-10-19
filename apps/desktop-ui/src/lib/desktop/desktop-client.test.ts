@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DESKTOP_EVENTS, type AppEventPayloads } from '@tyco/shared'
+import { DESKTOP_EVENTS, type DesktopEventPayloads } from '@tyco/shared'
 
 import {
   createDesktopClient,
@@ -107,9 +107,8 @@ describe('desktop client', () => {
     deliver({ autoSend: 'invalid' })
     expect(onEventError).toHaveBeenCalledOnce()
     expect(handler).not.toHaveBeenCalled()
-    const payload: AppEventPayloads[typeof DESKTOP_EVENTS.OPEN_MAIN_CHAT] = {
-      autoSend: true,
-    }
+    const payload: DesktopEventPayloads[typeof DESKTOP_EVENTS.OPEN_MAIN_CHAT] =
+      { autoSend: true }
     await deliver(payload)
     expect(handler).toHaveBeenCalledWith(payload)
     unlisten()

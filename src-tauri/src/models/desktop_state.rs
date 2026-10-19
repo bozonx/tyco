@@ -2,7 +2,7 @@ use super::{AccessRequest, ActivationMode, LauncherRequest, SessionState, Window
 use serde::Serialize;
 use serde_json::Value;
 /// Wire state is grouped by domain; all domains share a coherent revision.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct DesktopSnapshot {
     pub revision: u64,
@@ -10,8 +10,9 @@ pub struct DesktopSnapshot {
     pub window: WindowSnapshot,
     pub settings: SettingsSnapshot,
 }
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(rename = "DesktopActivationState")]
 pub struct ActivationSnapshot {
     pub activation_id: u64,
     #[serde(rename = "windowId")]
@@ -24,15 +25,18 @@ pub struct ActivationSnapshot {
     pub launcher_request: Option<LauncherRequest>,
     pub access_request: Option<AccessRequest>,
 }
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(rename = "DesktopWindowState")]
 pub struct WindowSnapshot {
     pub is_window_shown: bool,
     pub window_profile: WindowProfile,
 }
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(rename = "DesktopSettingsState")]
 pub struct SettingsSnapshot {
+    #[ts(type = "UserConfig")]
     pub user_config: std::sync::Arc<Value>,
     pub session_state: SessionState,
 }

@@ -3,13 +3,15 @@ use tauri::AppHandle;
 #[tauri::command]
 pub fn apply_hotkey(
     app: AppHandle,
-    request: crate::services::hotkeys::ApplyHotkeyRequest,
-) -> Result<crate::services::hotkeys::ApplyHotkeyResult, AppError> {
+    request: crate::services::hotkeys::HotkeyApplyRequest,
+) -> Result<crate::services::hotkeys::HotkeyApplyResult, AppError> {
     crate::services::hotkeys::apply(&app, request)
 }
 
+/// Lets the user change the portal shortcuts: in the portal's dialog, or in
+/// the desktop settings where the portal has none.
 #[tauri::command]
-pub async fn configure_hotkeys(app: AppHandle) -> Result<(), AppError> {
+pub async fn open_system_hotkey_settings(app: AppHandle) -> Result<(), AppError> {
     crate::services::hotkeys::configure(&app).await
 }
 
@@ -18,6 +20,7 @@ pub fn suspend_hotkeys(app: AppHandle, suspended: bool) {
     crate::services::hotkeys::set_suspended(&app, suspended);
 }
 
+/// Binds the portal hotkeys again in a new session; see `hotkeys::rebind`.
 #[tauri::command]
 pub async fn rebind_hotkeys(app: AppHandle) -> Result<(), AppError> {
     crate::services::hotkeys::rebind(&app).await

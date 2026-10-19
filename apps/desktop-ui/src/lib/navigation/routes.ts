@@ -1,4 +1,4 @@
-import { StartMode } from '@tyco/shared'
+import { ActivationMode } from '@tyco/shared'
 
 const APP_ROUTE_NAMES = {
   HOME: 'home',
@@ -40,45 +40,45 @@ export const APP_ROUTES = {
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
 
-export const MODE_ROUTE_MAP: Record<StartMode, AppRoutePath> = {
-  [StartMode.SELECT]: APP_ROUTES.SELECT.path,
-  [StartMode.VOICE]: APP_ROUTES.VOICE.path,
-  [StartMode.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
-  [StartMode.VOICE_COMMANDS]: APP_ROUTES.VOICE_COMMANDS.path,
-  [StartMode.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
-  [StartMode.CORRECTION]: APP_ROUTES.CORRECTION.path,
-  [StartMode.TRANSLATE]: APP_ROUTES.TRANSLATE.path,
-  [StartMode.EDITOR]: APP_ROUTES.EDITOR.path,
-  [StartMode.WRITE]: APP_ROUTES.WRITE.path,
-  [StartMode.CHAT]: APP_ROUTES.CHAT.path,
-  [StartMode.VOICE_CHAT]: APP_ROUTES.CHAT.path,
-  [StartMode.HISTORY]: APP_ROUTES.HISTORY.path,
-  [StartMode.CONFIG]: APP_ROUTES.CONFIG.path,
+export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
+  [ActivationMode.SELECT]: APP_ROUTES.SELECT.path,
+  [ActivationMode.VOICE]: APP_ROUTES.VOICE.path,
+  [ActivationMode.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
+  [ActivationMode.VOICE_COMMANDS]: APP_ROUTES.VOICE_COMMANDS.path,
+  [ActivationMode.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
+  [ActivationMode.CORRECTION]: APP_ROUTES.CORRECTION.path,
+  [ActivationMode.TRANSLATE]: APP_ROUTES.TRANSLATE.path,
+  [ActivationMode.EDITOR]: APP_ROUTES.EDITOR.path,
+  [ActivationMode.WRITE]: APP_ROUTES.WRITE.path,
+  [ActivationMode.CHAT]: APP_ROUTES.CHAT.path,
+  [ActivationMode.VOICE_CHAT]: APP_ROUTES.CHAT.path,
+  [ActivationMode.HISTORY]: APP_ROUTES.HISTORY.path,
+  [ActivationMode.CONFIG]: APP_ROUTES.CONFIG.path,
   // the quick window renders it by the mode, see `QuickOverlay`
-  [StartMode.EXTERNAL_ACCESS]: APP_ROUTES.HOME.path,
+  [ActivationMode.EXTERNAL_ACCESS]: APP_ROUTES.HOME.path,
 }
 
 /**
  * Modes shown by the quick window; the rest belong to the main window. Keep in
  * sync with `window_label_for_mode` in `src-tauri/src/services/runtime.rs`.
  */
-const QUICK_WINDOW_MODES: ReadonlySet<StartMode> = new Set([
-  StartMode.WRITE,
-  StartMode.VOICE,
-  StartMode.SELECT,
-  StartMode.AI_TASKS,
-  StartMode.VOICE_COMMANDS,
-  StartMode.COMMAND_LAUNCHER,
-  StartMode.CORRECTION,
-  StartMode.VOICE_CHAT,
-  StartMode.TRANSLATE,
-  StartMode.EXTERNAL_ACCESS,
+const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
+  ActivationMode.WRITE,
+  ActivationMode.VOICE,
+  ActivationMode.SELECT,
+  ActivationMode.AI_TASKS,
+  ActivationMode.VOICE_COMMANDS,
+  ActivationMode.COMMAND_LAUNCHER,
+  ActivationMode.CORRECTION,
+  ActivationMode.VOICE_CHAT,
+  ActivationMode.TRANSLATE,
+  ActivationMode.EXTERNAL_ACCESS,
 ])
 
-export function isQuickWindowMode(mode: StartMode | null): boolean {
+export function isQuickWindowMode(mode: ActivationMode | null): boolean {
   return mode !== null && QUICK_WINDOW_MODES.has(mode)
 }
 
-export function resolveModeRoute(mode: StartMode | null): AppRoutePath {
+export function resolveModeRoute(mode: ActivationMode | null): AppRoutePath {
   return mode ? MODE_ROUTE_MAP[mode] : APP_ROUTES.HOME.path
 }

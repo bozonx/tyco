@@ -10,18 +10,21 @@ use crate::services::secrets::{with_store, SecretStatus, SecretStore, VaultState
 
 /// Which secrets exist and where each may be sent. Never the values.
 #[tauri::command]
-pub async fn secrets_status(app: AppHandle) -> Result<BTreeMap<String, SecretStatus>, AppError> {
+pub async fn get_secret_statuses(
+    app: AppHandle,
+) -> Result<BTreeMap<String, SecretStatus>, AppError> {
     with_store(&app, SecretStore::status).await
 }
 
 /// Whether keys can be saved, for the settings to warn when they cannot.
 #[tauri::command]
-pub async fn secrets_vault_state(app: AppHandle) -> Result<VaultState, AppError> {
+pub async fn get_secret_vault_state(app: AppHandle) -> Result<VaultState, AppError> {
     with_store(&app, SecretStore::vault_state).await
 }
 
+/// Saves a secret that may be sent only to `origins`.
 #[tauri::command]
-pub async fn secrets_set(
+pub async fn set_secret(
     app: AppHandle,
     id: String,
     value: String,
@@ -30,8 +33,9 @@ pub async fn secrets_set(
     with_store(&app, move |secrets| secrets.set(&id, &value, origins)).await?
 }
 
+/// Refuses while a saved setting still refers to the secret.
 #[tauri::command]
-pub async fn secrets_remove(app: AppHandle, id: String) -> Result<(), AppError> {
+pub async fn delete_secret(app: AppHandle, id: String) -> Result<(), AppError> {
     let handle = app.clone();
     with_store(&app, move |secrets| {
         let state = handle.state::<crate::state::AppState>();

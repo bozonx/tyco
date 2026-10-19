@@ -1,5 +1,5 @@
 import {
-  StartMode,
+  ActivationMode,
   type ChatAttachment,
   type DesktopViewState,
 } from '@tyco/shared'
@@ -52,7 +52,7 @@ export function createCapturedChatSelection(
       source: hasExternal ? 'selection' : 'editorSelection',
     }
 
-    if (params.mode !== StartMode.CHAT || !params.isWindowShown || !text) {
+    if (params.mode !== ActivationMode.CHAT || !params.isWindowShown || !text) {
       return false
     }
 

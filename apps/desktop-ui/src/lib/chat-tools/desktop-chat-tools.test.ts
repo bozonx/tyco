@@ -1,4 +1,3 @@
-import { DESKTOP_COMMANDS } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
@@ -9,7 +8,7 @@ import {
 describe('desktop-chat-tools', () => {
   it('resolves file tools for an enabled profile and delegates IPC calls', async () => {
     const invoke = vi.fn(async (command: string) => {
-      if (command === DESKTOP_COMMANDS.LIST_AI_FILE_ROOTS) {
+      if (command === 'list_ai_file_roots') {
         return [{ path: 'workspace', read: 'allow', write: 'allow' }]
       }
       return []
@@ -30,7 +29,7 @@ describe('desktop-chat-tools', () => {
 
     expect(result.canUseTools).toBe(true)
     expect(result.tools?.maxStepCount).toBe(4)
-    expect(invoke).toHaveBeenCalledWith(DESKTOP_COMMANDS.LIST_AI_FILE_ROOTS, {
+    expect(invoke).toHaveBeenCalledWith('list_ai_file_roots', {
       profileId: 'writer',
     })
   })

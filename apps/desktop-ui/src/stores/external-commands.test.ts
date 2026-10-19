@@ -57,14 +57,18 @@ describe('external commands store wiring', () => {
       isAvailableExternally: true,
     }
 
-    const callFunctionSpy = vi
-      .spyOn(ipc, 'callFunction')
-      .mockResolvedValue({ success: true, result: undefined as any })
+    const callSpy = vi
+      .spyOn(ipc, 'call')
+      .mockImplementation(async (command) => ({
+        success: true,
+        result: (command === 'claim_external_job') as any,
+      }))
 
     const store = useExternalCommandsStore()
 
     const event: CommandRunEvent = {
       commandId: 'cmd-ext',
+      jobId: 'job-ext',
       text: 'input text',
       userConfig: { ...DEFAULT_USER_CONFIG, commands: [cmd] },
     }
@@ -77,10 +81,7 @@ describe('external commands store wiring', () => {
         source: 'external',
       })
     )
-    expect(callFunctionSpy).toHaveBeenCalledWith(
-      'logCommandRun',
-      expect.anything()
-    )
+    expect(callSpy).toHaveBeenCalledWith('log_command_run', expect.anything())
   })
 
   it('handles cancellation properly', () => {

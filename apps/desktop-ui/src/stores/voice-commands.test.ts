@@ -11,7 +11,7 @@ import { useVoiceCommandsStore } from './voice-commands'
 const mocks = vi.hoisted(() => ({
   runCommand: vi.fn(),
   saveOutput: vi.fn(),
-  callFunction: vi.fn(),
+  call: vi.fn(),
   dictationText: 'test voice hello voice',
 }))
 
@@ -42,8 +42,8 @@ describe('useVoiceCommandsStore', () => {
     vi.spyOn(history, 'saveOutput').mockImplementation(mocks.saveOutput)
 
     const ipc = useIpcStore()
-    mocks.callFunction.mockResolvedValue({ success: true })
-    vi.spyOn(ipc, 'callFunction').mockImplementation(mocks.callFunction)
+    mocks.call.mockResolvedValue({ success: true })
+    vi.spyOn(ipc, 'call').mockImplementation(mocks.call)
 
     const validVoiceCommand: CommandConfig = {
       ...createCommand('core.correct', 'cmd-1'),
@@ -85,8 +85,8 @@ describe('useVoiceCommandsStore', () => {
       'hello voice',
       expect.objectContaining({ source: 'voice' })
     )
-    expect(mocks.callFunction).toHaveBeenCalledWith('logCommandRun', [
-      {
+    expect(mocks.call).toHaveBeenCalledWith('log_command_run', {
+      record: {
         commandId: 'cmd-1',
         name: 'Test Voice Command',
         source: 'voice',
@@ -94,7 +94,7 @@ describe('useVoiceCommandsStore', () => {
         success: true,
         message: 'Done',
       },
-    ])
+    })
   })
 
   it('handles cancellation and abort without running command', async () => {

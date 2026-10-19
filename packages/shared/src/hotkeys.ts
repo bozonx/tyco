@@ -1,3 +1,4 @@
+import type { HotkeyProviderInfo } from './generated/desktop-types'
 import type { HotkeyId, UserConfig } from './user-config'
 
 /** The hotkey id of the in-place correction of the selection */
@@ -135,36 +136,5 @@ export function hotkeyFromKeyboardEvent(event: {
   )
 }
 
-export type HotkeyApplyStatus = 'ready' | 'conflict' | 'external'
-
-export interface HotkeyApplyResult {
-  status: HotkeyApplyStatus
-  externalCommand?: string
-  message?: string
-}
-
-export type HotkeyProviderKind = 'portal' | 'global-shortcut' | 'external'
-
-export type HotkeyPlatform = 'linux' | 'windows' | 'macos'
-
-export interface HotkeyProviderInfo {
-  provider: HotkeyProviderKind
-  canConfigure: boolean
-  /** Only external bindings report something per action: their command */
-  actions: Record<string, HotkeyApplyResult>
-  /** Shortcuts the desktop bound through the portal, in its own words */
-  systemTriggers: Record<string, string>
-  /**
-   * The portal session is bound, so `systemTriggers` is what the desktop has
-   * and a missing id was removed there
-   */
-  registered: boolean
-  /** The default shortcut of every hotkey id on this platform */
-  defaults: Record<string, string>
-  platform: HotkeyPlatform
-}
-
-export interface HotkeyApplyRequest {
-  mode: string
-  shortcut: string
-}
+/** The platform the hotkeys are bound on */
+export type HotkeyPlatform = HotkeyProviderInfo['platform']

@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest'
-import type { DesktopCall } from '../ipc/desktop-functions'
+import type { DesktopCall } from '../ipc/ipc-model'
 import type { ChatSummary } from '@tyco/shared'
 import { createChatHistoryModel } from './chat-history'
 
@@ -10,7 +10,7 @@ it('does not restore a removed chat from a delayed list response', async () => {
     lastMessageAt: 1_791_799_200_000,
   }
   let finish!: (value: { success: true; result: ChatSummary[] }) => void
-  const callFunction = vi
+  const call = vi
     .fn<DesktopCall>()
     .mockImplementationOnce(
       () =>
@@ -23,9 +23,7 @@ it('does not restore a removed chat from a delayed list response', async () => {
       result: { ...summary, messages: [] },
     })
     .mockResolvedValueOnce({ success: true, result: undefined })
-  const model = createChatHistoryModel({
-    callFunction: callFunction as DesktopCall,
-  })
+  const model = createChatHistoryModel({ call: call as DesktopCall })
   model.chatHistory.value = [summary]
   const pending = model.loadChatHistory()
   await model.deleteChat('chat')
@@ -35,13 +33,11 @@ it('does not restore a removed chat from a delayed list response', async () => {
 })
 
 it('keeps a persisted chat successful when refreshing its summary list fails', async () => {
-  const callFunction = vi
+  const call = vi
     .fn<DesktopCall>()
     .mockResolvedValueOnce({ success: true, result: undefined })
     .mockResolvedValueOnce({ success: false, error: 'List unavailable' })
-  const model = createChatHistoryModel({
-    callFunction: callFunction as DesktopCall,
-  })
+  const model = createChatHistoryModel({ call: call as DesktopCall })
   await expect(
     model.saveChat({
       id: 'chat',

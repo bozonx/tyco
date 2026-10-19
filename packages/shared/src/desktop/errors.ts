@@ -1,20 +1,9 @@
-export type DesktopErrorCode =
-  | 'operationFailed'
-  | 'configConflict'
-  | 'serviceUnavailable'
-  | 'resourceLimit'
-  | 'invalidInput'
-  | 'unsupportedConfig'
-  | 'stale'
-  | 'runtimeError'
-  | 'ioError'
-  | 'invalidData'
+import type { DesktopErrorCode } from '../generated/desktop-types'
 
-export interface DesktopErrorPayload {
-  code: DesktopErrorCode
-  message: string
-}
-
+/**
+ * The outcome of a desktop command for callers that handle a failure themselves
+ * rather than catch it
+ */
 export type IpcResult<T = unknown> =
   | ({ success: true; error?: never; errorCode?: never } & ([T] extends [void]
       ? { result?: T }

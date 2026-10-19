@@ -13,8 +13,8 @@ pub use panel_layer::set_quick_input_region;
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
 pub use target_paste::paste_into_target;
 pub use window_visibility::{
-    dismiss_quick_window, handle_window_event, hide_active_window, hide_window, open_main_chat,
-    open_main_editor, show_application,
+    handle_window_event, hide_active_window, hide_quick_window_on_blur, hide_window,
+    open_main_chat, open_main_editor, show_application,
 };
 
 use self::panel_layer::{is_quick_window_shown, panel_layer, PanelLayerState};
@@ -28,26 +28,17 @@ pub use super::activation::Activation;
 use super::activation::{ActivationMode, WindowProfile, WINDOW_SIZE};
 use super::platform::PanelKeyboardMode;
 
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 use crate::state::AppState;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
-/// A repeated activation confirms the open voice input, see
-/// `Activation::finishes_open_voice_input`; the payload is its activation id.
-pub const VOICE_FINISH_EVENT: &str = "app://voice-finish";
-pub const STATE_CHANGED_EVENT: &str = "app://state-changed";
-pub const OPEN_MAIN_EDITOR_EVENT: &str = "app://open-main-editor";
-pub const OPEN_MAIN_CHAT_EVENT: &str = "app://open-main-chat";
-/// The user closed the main window, as opposed to hiding it with a hotkey or
-/// the tray: what was open in it is done with.
-pub const MAIN_WINDOW_CLOSED_EVENT: &str = "app://main-window-closed";
 
 pub fn emit_state(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let snapshot = state.snapshot();
-    app.emit(STATE_CHANGED_EVENT, snapshot)?;
+    crate::events::emit::<crate::events::StateChanged, _>(app, snapshot)?;
 
     Ok(())
 }
@@ -141,14 +132,13 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
         if activation
             .finishes_open_voice_input(snapshot.activation.mode, snapshot.window.is_window_shown)
         {
-            let result = handle
-                .emit_to(
-                    QUICK_WINDOW_LABEL,
-                    VOICE_FINISH_EVENT,
-                    snapshot.activation.activation_id,
-                )
-                .map(|()| None)
-                .map_err(AppError::from);
+            let result = crate::events::emit_to::<crate::events::VoiceFinish, _>(
+                &handle,
+                QUICK_WINDOW_LABEL,
+                snapshot.activation.activation_id,
+            )
+            .map(|()| None)
+            .map_err(AppError::from);
             let _ = sender.send(result);
             return;
         }

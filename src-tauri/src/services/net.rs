@@ -71,6 +71,8 @@ pub struct NetState {
     operation_permits: Arc<Semaphore>,
     next_id: AtomicU64,
     task_abort_handles: Arc<Mutex<HashMap<u64, AbortHandle>>>,
+    /// The window that started each task; only it may steer the task.
+    task_owners: Arc<Mutex<HashMap<u64, String>>>,
     sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
     response_chunk_permits: Arc<Mutex<HashMap<u64, Arc<Semaphore>>>>,
 }
@@ -91,6 +93,7 @@ impl NetState {
             operation_permits: Arc::new(Semaphore::new(MAX_ACTIVE_OPERATIONS)),
             next_id: AtomicU64::new(1),
             task_abort_handles: Arc::default(),
+            task_owners: Arc::default(),
             sockets: Arc::default(),
             response_chunk_permits: Arc::default(),
         })
@@ -105,7 +108,11 @@ impl NetState {
     }
 
     /// Registration owns cleanup even when a task is cancelled or panics.
-    pub fn register_task(&self) -> Result<(NetTaskRegistration, AbortRegistration), AppError> {
+    /// `owner` names the window that started the task.
+    pub fn register_task(
+        &self,
+        owner: &str,
+    ) -> Result<(NetTaskRegistration, AbortRegistration), AppError> {
         let operation_permit =
             self.operation_permits
                 .clone()
@@ -124,6 +131,7 @@ impl NetState {
             .lock()
             .expect("task abort handles lock")
             .insert(id, handle);
+        self.task_owners.locked().insert(id, owner.to_owned());
         let chunk_permits = Arc::new(Semaphore::new(FETCH_WINDOW_CHUNKS));
         self.response_chunk_permits
             .lock()
@@ -137,6 +145,7 @@ impl NetState {
                 _operation_permit: operation_permit,
                 id,
                 task_abort_handles: Arc::clone(&self.task_abort_handles),
+                task_owners: Arc::clone(&self.task_owners),
                 sockets: Arc::clone(&self.sockets),
                 response_chunk_permits: Arc::clone(&self.response_chunk_permits),
                 chunk_permits,
@@ -145,8 +154,18 @@ impl NetState {
         ))
     }
 
+    fn is_owned_by(&self, id: u64, owner: &str) -> bool {
+        self.task_owners
+            .locked()
+            .get(&id)
+            .is_some_and(|task_owner| task_owner == owner)
+    }
+
     /// Stops a request. Unknown ids are fine: the request may have finished.
-    pub fn cancel_task(&self, id: u64) {
+    pub fn cancel_task(&self, owner: &str, id: u64) {
+        if !self.is_owned_by(id, owner) {
+            return;
+        }
         if let Some(handle) = self
             .task_abort_handles
             .lock()
@@ -157,7 +176,11 @@ impl NetState {
         }
     }
 
-    pub fn acknowledge_fetch(&self, id: u64) {
+    /// Lets a response send one more chunk: the webview took one.
+    pub fn acknowledge_fetch_chunk(&self, owner: &str, id: u64) {
+        if !self.is_owned_by(id, owner) {
+            return;
+        }
         if let Some(chunk_permits) = self
             .response_chunk_permits
             .lock()
@@ -170,7 +193,15 @@ impl NetState {
         }
     }
 
-    pub fn socket_command(&self, id: u64, command: SocketCommand) -> Result<(), AppError> {
+    pub fn socket_command(
+        &self,
+        owner: &str,
+        id: u64,
+        command: SocketCommand,
+    ) -> Result<(), AppError> {
+        if !self.is_owned_by(id, owner) {
+            return Err(AppError::Stale(format!("Socket {id} is closed")));
+        }
         let sockets = self.sockets.lock().expect("sockets lock");
         let sender = sockets
             .get(&id)
@@ -240,6 +271,7 @@ pub struct NetTaskRegistration {
     chunk_permits: Arc<Semaphore>,
     id: u64,
     task_abort_handles: Arc<Mutex<HashMap<u64, AbortHandle>>>,
+    task_owners: Arc<Mutex<HashMap<u64, String>>>,
     sockets: Arc<Mutex<HashMap<u64, Sender<SocketCommand>>>>,
     response_chunk_permits: Arc<Mutex<HashMap<u64, Arc<Semaphore>>>>,
 }
@@ -269,6 +301,7 @@ impl Drop for NetTaskRegistration {
             .expect("response chunk permits lock")
             .remove(&self.id);
         self.sockets.lock().expect("sockets lock").remove(&self.id);
+        self.task_owners.locked().remove(&self.id);
         if let Some(handle) = self
             .task_abort_handles
             .lock()
@@ -290,6 +323,8 @@ mod tests {
     use tokio::net::TcpListener;
 
     use super::*;
+
+    const OWNER: &str = "main";
     use crate::services::net::request::{prepare, Protocol};
     use crate::services::secrets::Secrets;
 
@@ -297,19 +332,19 @@ mod tests {
     fn active_operations_are_bounded_and_release_capacity_only_on_drop() {
         let net = NetState::new().unwrap();
         let mut tasks = (0..MAX_ACTIVE_OPERATIONS)
-            .map(|_| net.register_task().unwrap().0)
+            .map(|_| net.register_task(OWNER).unwrap().0)
             .collect::<Vec<_>>();
         assert!(matches!(
-            net.register_task(),
+            net.register_task(OWNER),
             Err(AppError::ResourceLimit(_))
         ));
-        net.cancel_task(tasks[0].id());
+        net.cancel_task(OWNER, tasks[0].id());
         assert!(matches!(
-            net.register_task(),
+            net.register_task(OWNER),
             Err(AppError::ResourceLimit(_))
         ));
         tasks.pop();
-        let (replacement, _) = net.register_task().unwrap();
+        let (replacement, _) = net.register_task(OWNER).unwrap();
         drop(tasks);
         drop(replacement);
         assert!(net.wait_until(Instant::now()));
@@ -318,10 +353,10 @@ mod tests {
     #[test]
     fn shutdown_rejects_new_tasks_and_late_socket_registration() {
         let net = NetState::new().unwrap();
-        let (task, _) = net.register_task().unwrap();
+        let (task, _) = net.register_task(OWNER).unwrap();
         net.stop();
         assert!(matches!(
-            net.register_task(),
+            net.register_task(OWNER),
             Err(AppError::ServiceUnavailable(_))
         ));
         let (sender, _) = tokio::sync::mpsc::channel(1);
@@ -340,7 +375,7 @@ mod tests {
         std::thread::scope(|scope| {
             for _ in 0..MAX_ACTIVE_OPERATIONS * 2 {
                 scope.spawn(|| {
-                    let lease = net.register_task();
+                    let lease = net.register_task(OWNER);
                     if lease.is_ok() {
                         accepted.fetch_add(1, Ordering::SeqCst);
                     }
@@ -356,7 +391,7 @@ mod tests {
     #[test]
     fn task_registration_drop_cleans_all_registries() {
         let net = NetState::new().unwrap();
-        let (task, _) = net.register_task().unwrap();
+        let (task, _) = net.register_task(OWNER).unwrap();
         let (sender, _) = tokio::sync::mpsc::channel(1);
         task.register_socket(sender);
         assert_eq!(net.task_abort_handles.lock().unwrap().len(), 1);
@@ -364,8 +399,25 @@ mod tests {
         assert_eq!(net.response_chunk_permits.lock().unwrap().len(), 1);
         drop(task);
         assert!(net.task_abort_handles.lock().unwrap().is_empty());
+        assert!(net.task_owners.lock().unwrap().is_empty());
         assert!(net.sockets.lock().unwrap().is_empty());
         assert!(net.response_chunk_permits.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn only_the_window_that_started_a_task_steers_it() {
+        let net = NetState::new().unwrap();
+        let (task, _) = net.register_task(OWNER).unwrap();
+        let (sender, _receiver) = tokio::sync::mpsc::channel(1);
+        task.register_socket(sender);
+        assert!(matches!(
+            net.socket_command("quick", task.id(), SocketCommand::Close(None)),
+            Err(AppError::Stale(_))
+        ));
+        net.cancel_task("quick", task.id());
+        assert_eq!(net.task_abort_handles.lock().unwrap().len(), 1);
+        net.cancel_task(OWNER, task.id());
+        assert!(net.task_abort_handles.lock().unwrap().is_empty());
     }
 
     #[test]
@@ -373,23 +425,26 @@ mod tests {
         let net = NetState::new().unwrap();
         let (sender, mut receiver) = tokio::sync::mpsc::channel(socket::SOCKET_QUEUE_CAPACITY);
         net.sockets.lock().unwrap().insert(1, sender);
+        net.task_owners.lock().unwrap().insert(1, OWNER.into());
         assert!(matches!(
             net.socket_command(
+                OWNER,
                 1,
                 SocketCommand::Binary(vec![0; socket::MAX_FRAME_BYTES + 1])
             ),
             Err(AppError::ResourceLimit(_))
         ));
         for _ in 0..socket::SOCKET_QUEUE_CAPACITY {
-            net.socket_command(1, SocketCommand::Text("frame".into()))
+            net.socket_command(OWNER, 1, SocketCommand::Text("frame".into()))
                 .unwrap();
         }
         assert!(matches!(
-            net.socket_command(1, SocketCommand::Text("overflow".into())),
+            net.socket_command(OWNER, 1, SocketCommand::Text("overflow".into())),
             Err(AppError::ResourceLimit(_))
         ));
         receiver.try_recv().unwrap();
-        net.socket_command(1, SocketCommand::Close(None)).unwrap();
+        net.socket_command(OWNER, 1, SocketCommand::Close(None))
+            .unwrap();
     }
 
     #[tokio::test]
@@ -407,6 +462,7 @@ mod tests {
         let id = net.next_id();
         let (handle, registration) = AbortHandle::new_pair();
         net.task_abort_handles.lock().unwrap().insert(id, handle);
+        net.task_owners.lock().unwrap().insert(id, OWNER.into());
         let connecting = tokio::spawn(async move {
             Abortable::new(socket::connect(&prepared, &[]), registration).await
         });
@@ -414,7 +470,7 @@ mod tests {
         let mut bytes = [0; 4096];
         assert!(peer.read(&mut bytes).await.unwrap() > 0);
 
-        net.cancel_task(id);
+        net.cancel_task(OWNER, id);
         assert!(connecting.await.unwrap().is_err());
         let remaining = tokio::time::timeout(Duration::from_secs(1), async {
             loop {
@@ -426,6 +482,6 @@ mod tests {
         .await;
         assert!(remaining.is_ok(), "cancel closes the pending connection");
         assert!(net.task_abort_handles.lock().unwrap().is_empty());
-        net.cancel_task(id);
+        net.cancel_task(OWNER, id);
     }
 }

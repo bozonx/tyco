@@ -115,7 +115,7 @@ function handleCancelled() {
     return
 
   if (isQuickWindow()) {
-    void ipcStore.callFunctionOrNotify('hideWindow')
+    void ipcStore.callOrNotify('hide_window')
   } else {
     void appNavigation.push(APP_ROUTES.EDITOR.path)
   }

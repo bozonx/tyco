@@ -70,7 +70,11 @@ export function installTauriInternals({
     }
   }
 
-  const invoke = async (command: string, args: unknown = {}) => {
+  const invoke = async (
+    command: string,
+    args: unknown = {},
+    options?: { headers?: Record<string, string> }
+  ) => {
     if (command.startsWith('plugin:event|')) {
       return handleEventPlugin(command, args as Record<string, unknown>)
     }
@@ -79,13 +83,17 @@ export function installTauriInternals({
       bridgeName
     ] as (command: string, args: unknown) => Promise<BridgeReply>
     // Match Tauri's JSON boundary, including Channel.toJSON().
-    // Binary commands use an explicit envelope because exposed bindings are JSON-only.
+    // Binary commands use an explicit envelope because exposed bindings are
+    // JSON-only; their metadata comes in a header, see `src-tauri/src/ipc.rs`.
+    const meta = options?.headers?.['x-tyco-meta']
     const serializableArgs =
       args instanceof Uint8Array || args instanceof ArrayBuffer
         ? {
             __tycoBinary: Array.from(
               args instanceof Uint8Array ? args : new Uint8Array(args)
             ),
+            meta:
+              meta === undefined ? null : JSON.parse(decodeURIComponent(meta)),
           }
         : JSON.parse(JSON.stringify(args))
     const reply = await bridge(command, serializableArgs)

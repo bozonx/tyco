@@ -44,7 +44,7 @@ export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
     getConfig: () => desktopStore.userConfig,
     loadInstalled: async () => {
       if (!desktopClient.isAvailable()) return []
-      const result = await ipc.callFunction('listInstalledPlugins', [])
+      const result = await ipc.call('list_installed_plugins')
       if (!result.success)
         throw new Error(result.error ?? 'Plugin catalog load failed')
       return loader.load(result.result ?? [], builtinPluginIds)

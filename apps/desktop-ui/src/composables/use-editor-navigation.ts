@@ -55,7 +55,7 @@ export function useEditorNavigation() {
   function toEditor(text?: string, sourceText?: string) {
     if (isQuickWindow()) {
       menuModalsStore.closeAll()
-      void ipcStore.callFunctionOrNotify('openMainEditor', [text, sourceText])
+      void ipcStore.callOrNotify('open_main_editor', { text, sourceText })
       return
     }
 

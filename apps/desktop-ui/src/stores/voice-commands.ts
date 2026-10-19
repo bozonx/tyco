@@ -48,8 +48,8 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
         signal,
       })
       await ipc
-        .callFunction('logCommandRun', [
-          {
+        .call('log_command_run', {
+          record: {
             commandId: command.id,
             name: commandLabel(command),
             source: 'voice',
@@ -57,7 +57,7 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
             success: outcome.success,
             message: outcome.message,
           },
-        ])
+        })
         .catch(() => undefined)
       return outcome
     },

@@ -75,11 +75,11 @@ async function handleCorrected(
   const autoSend = intent === 'submit'
 
   const activationId = desktopStore.desktopState.activationId
-  const result = await ipcStore.callFunctionOrNotify('openMainChat', [
-    context.value ?? undefined,
-    resultText,
+  const result = await ipcStore.callOrNotify('open_main_chat', {
+    attachment: context.value ?? undefined,
+    question: resultText,
     autoSend,
-  ])
+  })
   if (
     !result.success &&
     desktopStore.desktopState.activationId === activationId &&
@@ -91,6 +91,6 @@ async function handleCorrected(
 }
 
 async function handleCancelled() {
-  await ipcStore.callFunction('dismissQuickWindow')
+  await ipcStore.call('hide_quick_window_on_blur')
 }
 </script>

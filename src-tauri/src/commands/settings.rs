@@ -1,27 +1,29 @@
 use super::run_blocking;
 use crate::{
     errors::AppError,
+    ipc::{SessionStatePatch, UserConfig},
     models::DesktopSnapshot,
     services::{runtime, settings},
 };
-use serde_json::Value;
 use tauri::AppHandle;
 
+/// Saves `user_config`, merged with what was saved since `base_config`, the
+/// config it was edited from.
 #[tauri::command]
 pub async fn save_user_config(
     app: AppHandle,
-    user_config: Value,
-    base_config: Value,
+    user_config: UserConfig,
+    base_config: UserConfig,
 ) -> Result<DesktopSnapshot, AppError> {
-    run_blocking(move || settings::save_user_config(&app, user_config, base_config)).await?
+    run_blocking(move || settings::save_user_config(&app, user_config.0, base_config.0)).await?
 }
 
 #[tauri::command]
 pub async fn patch_session_state(
     app: AppHandle,
-    patch: serde_json::Map<String, Value>,
+    patch: SessionStatePatch,
 ) -> Result<DesktopSnapshot, AppError> {
-    run_blocking(move || settings::patch_session_state(&app, patch)).await?
+    run_blocking(move || settings::patch_session_state(&app, patch.0)).await?
 }
 
 #[tauri::command]

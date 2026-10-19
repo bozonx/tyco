@@ -1,5 +1,5 @@
 //! Pure ordering, deduplication, result updates, and restoration of entries.
-use crate::models::{EditorHistoryKind, EditorHistoryRecord};
+use crate::models::{EditorHistoryItem, EditorHistoryKind};
 
 /// How much an entry says about the text: a text that was sent somewhere or
 /// fed to the AI must not turn into a plain draft just because it is still in
@@ -29,8 +29,8 @@ fn collapses_duplicate(new_kind: EditorHistoryKind, existing_kind: EditorHistory
 /// an output of an AI result is not a new entry: its source is moved to the top
 /// instead, marked as sent in the case of an output.
 pub(super) fn push_editor_history(
-    history: &mut Vec<EditorHistoryRecord>,
-    mut item: EditorHistoryRecord,
+    history: &mut Vec<EditorHistoryItem>,
+    mut item: EditorHistoryItem,
     replace_id: Option<&str>,
     limit: usize,
 ) -> String {
@@ -61,7 +61,7 @@ pub(super) fn push_editor_history(
         }
     }
 
-    let duplicates: Vec<EditorHistoryRecord> = history
+    let duplicates: Vec<EditorHistoryItem> = history
         .iter()
         .filter(|existing| {
             existing.text.trim() == text && collapses_duplicate(item.kind, existing.kind)
@@ -94,7 +94,7 @@ pub(super) fn push_editor_history(
 }
 
 pub(super) fn apply_editor_history_result(
-    history: &mut [EditorHistoryRecord],
+    history: &mut [EditorHistoryItem],
     id: &str,
     result: String,
 ) -> bool {
@@ -109,8 +109,8 @@ pub(super) fn apply_editor_history_result(
 /// Entries are ordered newest first, so the item goes before the first older
 /// one. Nothing is inserted when the same text has been added again meanwhile
 pub(super) fn insert_restored_item(
-    history: &mut Vec<EditorHistoryRecord>,
-    item: EditorHistoryRecord,
+    history: &mut Vec<EditorHistoryItem>,
+    item: EditorHistoryItem,
     limit: usize,
 ) -> bool {
     let text = item.text.trim();

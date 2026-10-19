@@ -61,7 +61,7 @@ pub trait SecretVault: Send + Sync {
 }
 
 /// Whether the system credential store can be reached.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub enum VaultState {
     Available,
@@ -79,7 +79,7 @@ pub struct SecretEntry {
 
 /// What the webview may know about a secret: that it exists, where it goes,
 /// and whether its value can be read now.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct SecretStatus {
     pub origins: Vec<String>,

@@ -4,7 +4,7 @@ use serde_json::Value;
 
 use crate::errors::AppError;
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub enum ActivationMode {
     Editor,
@@ -81,7 +81,7 @@ impl ActivationMode {
 
 /// Where the window is placed. Its size never depends on it: every activation
 /// uses `WINDOW_SIZE`, so the window is never resized while it is shown.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "lowercase")]
 pub enum WindowProfile {
     /// Anchored to the bottom of the screen.
@@ -91,7 +91,7 @@ pub enum WindowProfile {
 }
 
 /// What the prompt shows, see `DesktopSnapshot::access_request`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct AccessRequest {
     pub job_id: String,
@@ -102,15 +102,18 @@ pub struct AccessRequest {
 }
 
 /// A command the overlay opens with, see `Activation::launcher_request`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct LauncherRequest {
     pub command_id: String,
     /// The text of the call; without it the selection or the field gives it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub job_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(type = "Record<string, unknown>")]
     pub input: Option<serde_json::Map<String, Value>>,
 }

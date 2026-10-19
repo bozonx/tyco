@@ -18,9 +18,6 @@ export interface NetIpc {
 
 export type { FetchEvent, SocketEvent } from '@tyco/shared'
 
-/** Names the socket a raw binary frame is for; see `commands/net.rs`. */
-export const SOCKET_ID_HEADER = 'x-tyco-socket-id'
-
 export function abortReason(signal: AbortSignal): unknown {
   return (
     signal.reason ??

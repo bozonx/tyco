@@ -1,13 +1,14 @@
 import {
   DESKTOP_EVENTS,
-  type AppEventPayloads,
+  type DesktopEventPayloads,
   type ChatParams,
   type DesktopListen,
 } from '@tyco/shared'
 
 import { createCleanupScope } from './cleanup-scope'
 
-type EventPayload<K extends keyof AppEventPayloads> = AppEventPayloads[K]
+type EventPayload<K extends keyof DesktopEventPayloads> =
+  DesktopEventPayloads[K]
 
 export interface AppWindowControllerDependencies {
   isQuickWindow: boolean
@@ -85,9 +86,9 @@ export function createAppWindowController(
   function start(): Promise<void> {
     if (scope.stopped) return Promise.resolve()
     if (starting) return starting
-    const subscribe = <K extends keyof AppEventPayloads>(
+    const subscribe = <K extends keyof DesktopEventPayloads>(
       event: K,
-      handler: (payload: AppEventPayloads[K]) => void | Promise<void>
+      handler: (payload: DesktopEventPayloads[K]) => void | Promise<void>
     ) => scope.listen(deps.listen, event, handler)
     const subscriptions = [
       subscribe(DESKTOP_EVENTS.QUIT_REQUESTED, deps.shutdown.request),
@@ -114,7 +115,10 @@ export function createAppWindowController(
       subscriptions.push(
         subscribe(DESKTOP_EVENTS.OPEN_MAIN_CHAT, openChat),
         subscribe(DESKTOP_EVENTS.OPEN_MAIN_EDITOR, async (payload) => {
-          deps.applyEditorTransfer(payload.text, payload.sourceText)
+          deps.applyEditorTransfer(
+            payload.text ?? undefined,
+            payload.sourceText ?? undefined
+          )
           await deps.goToEditor()
         }),
         subscribe(DESKTOP_EVENTS.MAIN_WINDOW_CLOSED, async () => {

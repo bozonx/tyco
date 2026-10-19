@@ -62,12 +62,15 @@ struct InstalledPackage {
     package: PluginPackage,
     revision: String,
 }
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct InstalledPlugin {
+    #[ts(type = "PluginManifest")]
     pub manifest: PluginManifest,
+    /// Where `plugin://` serves the module from.
     pub module_path: String,
-    pub can_restore: bool,
+    /// The version the last installation replaced can be restored.
+    pub has_previous_version: bool,
 }
 
 pub struct PluginStore {
@@ -204,7 +207,7 @@ impl PluginStore {
         let result = InstalledPlugin {
             manifest: package.manifest.clone(),
             module_path: format!("{key}/{revision}.js"),
-            can_restore: self.root.join(format!("{key}.json")).exists(),
+            has_previous_version: self.root.join(format!("{key}.json")).exists(),
         };
         let installed = InstalledPackage { package, revision };
         let current = self.root.join(format!("{key}.json"));
@@ -240,7 +243,7 @@ impl PluginStore {
                     result.push(InstalledPlugin {
                         manifest: installed.package.manifest,
                         module_path: format!("{key}/{}.js", installed.revision),
-                        can_restore: self.root.join(format!("{key}.previous")).exists(),
+                        has_previous_version: self.root.join(format!("{key}.previous")).exists(),
                     });
                 }
                 Err(reason) => log::warn!("Could not read installed plugin: {reason}"),
@@ -433,11 +436,11 @@ mod tests {
         assert!(store.install(&file, &manifest(), &first_digest).is_err());
         let second_digest = package_digest(&file).unwrap();
         let second = store.install(&file, &manifest(), &second_digest).unwrap();
-        assert!(second.can_restore);
+        assert!(second.has_previous_version);
         assert!(store.module(&second.module_path).unwrap().contains("two"));
         store.restore("example").unwrap();
         let restored = store.list().unwrap();
-        assert!(!restored[0].can_restore);
+        assert!(!restored[0].has_previous_version);
         assert!(store
             .module(&restored[0].module_path)
             .unwrap()

@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-/// Payload of app://open-main-chat; mirrored by OpenMainChatEvent in shared.
-#[derive(Debug, Serialize, Deserialize)]
+/// What the main window opens its chat with.
+#[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(optional_fields = nullable)]
 pub struct OpenMainChatEvent {
     pub attachment: Option<ChatAttachment>,
     pub question: Option<String>,
@@ -10,26 +11,33 @@ pub struct OpenMainChatEvent {
 }
 
 /// A text the user attached to a chat message.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 pub struct ChatAttachment {
     pub text: String,
-    /// Where the attached text came from.
+    /// Where the attached text came from; unknown for attachments stored
+    /// before it was kept.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub source: Option<ChatAttachmentSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub name: Option<String>,
     #[serde(default, rename = "mediaType", skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub media_type: Option<String>,
-    /// Where a file dropped into a profile chat is kept for the file tools.
+    /// Where a file dropped into a profile chat is kept for the file tools,
+    /// e.g. `workspace/uploads/report.pdf`.
     #[serde(
         default,
         rename = "workspacePath",
         skip_serializing_if = "Option::is_none"
     )]
+    #[ts(optional)]
     pub workspace_path: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// A normalized image owned by the chat image store.
+#[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]
 pub struct ChatImage {
     pub id: String,
     #[serde(rename = "mediaType")]
@@ -41,10 +49,11 @@ pub struct ChatImage {
     #[serde(rename = "size")]
     pub size_bytes: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub name: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]
 pub struct ChatMessage {
     pub role: ChatRole,
     pub content: String,
@@ -54,14 +63,17 @@ pub struct ChatMessage {
     pub images: Vec<ChatImage>,
     /// The steps of an answer that used tools; chats saved before them have none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(type = "Array<ChatMessagePart>")]
     pub parts: Vec<ChatMessagePart>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub status: Option<ChatMessageStatus>,
 }
 
-/// One piece of an assistant message; mirrored by ChatMessagePart in shared.
-/// The backend only stores parts, so it keeps them as the webview wrote them:
-/// a part of a kind this version does not know yet still loads and saves.
+/// One piece of an assistant message; its shape is `ChatMessagePart` of
+/// `@tyco/shared`. The backend only stores parts, so it keeps them as the
+/// webview wrote them: a part of a kind this version does not know yet still
+/// loads and saves.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ChatMessagePart {
     #[serde(rename = "type")]
@@ -70,7 +82,7 @@ pub struct ChatMessagePart {
     pub fields: serde_json::Map<String, serde_json::Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct Chat {
     pub id: String,
@@ -81,7 +93,7 @@ pub struct Chat {
     pub messages: Vec<ChatMessage>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatSummary {
     pub id: String,
@@ -101,28 +113,30 @@ impl From<&Chat> for ChatSummary {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Where an attached text came from: `selection` was selected in another
+/// application, the others come from the editor of the app.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub enum ChatAttachmentSource {
     Selection,
     EditorSelection,
     EditorText,
 }
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "lowercase")]
 pub enum ChatRole {
     User,
     Assistant,
     Developer,
 }
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "lowercase")]
 pub enum ChatMessageStatus {
     Complete,
     Stopped,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 pub enum ChatImageMediaType {
     #[serde(rename = "image/webp")]
     Webp,

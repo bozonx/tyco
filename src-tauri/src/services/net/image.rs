@@ -124,7 +124,7 @@ mod tests {
             url: "https://example.com/image.png".into(),
             headers: vec![],
             body: None,
-            purpose: Some("chat-image".into()),
+            purpose: Some(crate::services::net::http::FetchPurpose::ChatImage),
         };
         assert!(validate_request(&request).is_ok());
         request

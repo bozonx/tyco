@@ -20,7 +20,7 @@ describe('core insertion dependency wiring', () => {
   it('returns failure and reports once when the native paste fails', async () => {
     const ipc = useIpcStore()
     const call = vi
-      .spyOn(ipc, 'callFunction')
+      .spyOn(ipc, 'call')
       .mockResolvedValueOnce({ success: false, error: 'Target unavailable' })
       .mockResolvedValue({ success: true, result: undefined })
     const toast = vi.spyOn(useToastStore(), 'addToast')
@@ -31,11 +31,13 @@ describe('core insertion dependency wiring', () => {
     )
     expect(outcome.success).toBe(false)
     expect(outcome.message).toContain('Target unavailable')
-    expect(call).toHaveBeenCalledWith('pasteIntoTargetAndHide', ['Hello'])
-    expect(call).toHaveBeenCalledWith('notifyDesktop', [
-      expect.any(String),
-      'Target unavailable',
-    ])
+    expect(call).toHaveBeenCalledWith('paste_into_target_and_hide', {
+      text: 'Hello',
+    })
+    expect(call).toHaveBeenCalledWith('show_desktop_notification', {
+      summary: expect.any(String),
+      body: 'Target unavailable',
+    })
     expect(toast).toHaveBeenCalledOnce()
   })
 })

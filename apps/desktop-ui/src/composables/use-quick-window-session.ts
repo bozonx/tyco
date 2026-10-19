@@ -34,7 +34,7 @@ export function useQuickWindowSession(
     markInputDismissed: quickInputStore.markDismissed,
     cancelAndCloseModals: menuModalsStore.cancelAndCloseAll,
     // a failed dismissal leaves the window shown, which tells enough
-    dismissWindow: () => void ipcStore.callFunction('dismissQuickWindow'),
+    dismissWindow: () => void ipcStore.call('hide_quick_window_on_blur'),
   })
 
   watch(

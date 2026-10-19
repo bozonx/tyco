@@ -3,7 +3,7 @@ import {
   validatePluginManifest,
   type PluginManifest,
 } from '@tyco/plugin-sdk'
-import type { InstalledPluginPackage } from '@tyco/shared'
+import type { InstalledPlugin } from '@tyco/shared'
 
 import type { PluginFactory } from '../../types/plugins'
 
@@ -20,7 +20,7 @@ export function createPluginPackageLoader(
   deps: PluginPackageLoaderDependencies
 ) {
   async function load(
-    packages: InstalledPluginPackage[],
+    packages: InstalledPlugin[],
     reservedIds: readonly string[]
   ): Promise<PluginFactory[]> {
     const factories: PluginFactory[] = []
@@ -39,7 +39,7 @@ export function createPluginPackageLoader(
           name: manifest.id,
           _revision: modulePath,
           _external: true,
-          _canRestore: installed.canRestore,
+          _canRestore: installed.hasPreviousVersion,
           init: (ctx) => deps.activate(manifest, modulePath, ctx),
         }))
       } catch (error) {
@@ -59,7 +59,7 @@ export function createPluginPackageLoader(
             name: manifest.id,
             _revision: modulePath,
             _external: true,
-            _canRestore: installed.canRestore,
+            _canRestore: installed.hasPreviousVersion,
             _incompatible: manifest.apiVersion !== PLUGIN_API_VERSION,
             _loadError: message,
             init: () => {},

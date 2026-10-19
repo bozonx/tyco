@@ -262,12 +262,12 @@ function update(field: string, value: unknown) {
 }
 
 async function browseScript() {
-  const res = await ipcStore.callFunctionOrNotify('pickScriptFile', [])
+  const res = await ipcStore.callOrNotify('pick_script_file')
   if (typeof res.result === 'string') await commandRef.value?.insert(res.result)
 }
 
 async function browseWorkingDir() {
-  const res = await ipcStore.callFunctionOrNotify('pickDirectory', [])
+  const res = await ipcStore.callOrNotify('pick_directory')
   if (typeof res.result === 'string') update('workingDirectory', res.result)
 }
 

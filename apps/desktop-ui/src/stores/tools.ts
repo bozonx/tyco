@@ -33,9 +33,9 @@ export const useToolsStore = defineStore('tools', () => {
   const textCorrectionStore = useTextCorrectionStore()
   const { pasteIntoTargetAndHide } = createDesktopInsertion({
     pasteIntoTargetAndHide: (text) =>
-      ipcStore.callFunction('pasteIntoTargetAndHide', [text]),
+      ipcStore.call('paste_into_target_and_hide', { text }),
     notifyDesktop: (summary, body) =>
-      ipcStore.callFunction('notifyDesktop', [summary, body]),
+      ipcStore.call('show_desktop_notification', { summary, body }),
     translateInsertFailed: () => translate('toast.insertFailed'),
   })
 
@@ -58,8 +58,8 @@ export const useToolsStore = defineStore('tools', () => {
   const coreTools = createCoreTools({
     insertText: pasteIntoTargetAndHide,
     copyText: async (text) => {
-      const result = await ipcStore.callFunction('copyText', [text])
-      if (!result.success) throw new Error(result.error ?? 'copyText')
+      const result = await ipcStore.call('copy_text', { text })
+      if (!result.success) throw new Error(result.error ?? 'copy_text')
     },
     askInChat: async (text) => {
       if (!askInChatHandler) throw new Error('The chat is not available')
@@ -90,18 +90,14 @@ export const useToolsStore = defineStore('tools', () => {
 
   const registry = createToolRegistry([
     ...createScriptAndWebhookTools({
-      ...createScriptActionClient(ipcStore.callFunction),
+      ...createScriptActionClient(ipcStore.call),
       executeWebhook: (target, text, signal) =>
         executeWebhook(
           target,
           text,
           createTauriFetch(tauriNetIpc),
-          async (name, type, details) => {
-            await ipcStore.callFunction('logCustomAction', [
-              name,
-              type,
-              details,
-            ])
+          async (name, details) => {
+            await ipcStore.call('log_webhook_call', { name, details })
           },
           signal
         ),

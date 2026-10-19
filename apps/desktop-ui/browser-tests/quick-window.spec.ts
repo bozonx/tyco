@@ -1,4 +1,4 @@
-import { StartMode } from '@tyco/shared'
+import { ActivationMode } from '@tyco/shared'
 
 import { expect, test } from './support/fixtures'
 import { installQuickWindow } from './support/quick-window'
@@ -6,7 +6,7 @@ import { installQuickWindow } from './support/quick-window'
 test.use({ windowLabel: 'quick' })
 
 test.describe('quick input', () => {
-  test.use({ startMode: StartMode.WRITE })
+  test.use({ startMode: ActivationMode.WRITE })
 
   test('recalls a discarded draft when the quick window opens again', async ({
     page,
@@ -37,7 +37,7 @@ test.describe('quick input', () => {
     await input.fill('Keep the dismissed draft')
     await desktop.setWindowFocus(false)
     await expect
-      .poll(() => desktop.callsOf('dismiss_quick_window').length)
+      .poll(() => desktop.callsOf('hide_quick_window_on_blur').length)
       .toBeGreaterThan(0)
     await quick.reopen()
     await expect(input).toHaveValue('Keep the dismissed draft')
@@ -45,7 +45,7 @@ test.describe('quick input', () => {
 })
 
 test.describe('command launcher', () => {
-  test.use({ startMode: StartMode.COMMAND_LAUNCHER })
+  test.use({ startMode: ActivationMode.COMMAND_LAUNCHER })
 
   test('runs a command from the quick launcher and shows its result', async ({
     page,

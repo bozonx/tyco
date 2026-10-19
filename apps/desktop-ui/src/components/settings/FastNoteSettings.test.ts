@@ -14,7 +14,7 @@ import tr from '../../lib/i18n/locales/tr_TR.json'
 
 const { pickDirectory } = vi.hoisted(() => ({ pickDirectory: vi.fn() }))
 vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunctionOrNotify: pickDirectory }),
+  useIpcStore: () => ({ callOrNotify: pickDirectory }),
 }))
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -79,7 +79,7 @@ describe('FastNote settings', () => {
     pickDirectory.mockResolvedValue({ success: true, result: '/new-notes' })
     const wrapper = mount(FastNoteSettings, { props: { fields: fields() } })
     await wrapper.findAll('button')[1].trigger('click')
-    expect(pickDirectory).toHaveBeenCalledWith('pickDirectory', [])
+    expect(pickDirectory).toHaveBeenCalledWith('pick_directory')
     expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({
       pathToNotes: '/new-notes',
     })

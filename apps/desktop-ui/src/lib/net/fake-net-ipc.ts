@@ -3,8 +3,7 @@ import type { NetIpc } from './net-ipc'
 
 interface FakeInvokeCall {
   command: string
-  args: Record<string, unknown> | Uint8Array | undefined
-  headers: Record<string, string> | undefined
+  args: Record<string, unknown> | undefined
 }
 
 type Emit = (message: unknown) => void
@@ -21,15 +20,10 @@ export function createFakeNetIpc(handlers: Record<string, Handler> = {}) {
   let lastEmit: Emit = () => undefined
 
   const ipc: NetIpc = {
-    invoke: (async (
-      command: string,
-      args?: Record<string, unknown> | Uint8Array,
-      options?: { headers?: Record<string, string> }
-    ) => {
-      const call = { command, args, headers: options?.headers }
+    invoke: (async (command: string, args?: Record<string, unknown>) => {
+      const call = { command, args }
       calls.push(call)
-      const channel =
-        args && !(args instanceof Uint8Array) ? args.onEvent : undefined
+      const channel = args?.onEvent
       const emit = channels.get(channel) ?? (() => undefined)
       const handler = handlers[command]
       return await handler?.(call, emit)

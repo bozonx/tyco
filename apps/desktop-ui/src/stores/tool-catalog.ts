@@ -19,7 +19,7 @@ export const useToolCatalogStore = defineStore('toolCatalog', () => {
     tools: () => toolsStore.list(),
     t: (key) => translate(key),
     send: async (catalog) => {
-      const result = await ipcStore.callFunction('setToolCatalog', [catalog])
+      const result = await ipcStore.call('set_tool_catalog', { tools: catalog })
       if (!result.success)
         throw new Error(result.error ?? 'Tool catalog sync failed')
     },

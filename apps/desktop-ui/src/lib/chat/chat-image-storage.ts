@@ -1,14 +1,10 @@
 import { invokeDesktop as invoke } from '../desktop/invoke'
-import {
-  DESKTOP_COMMANDS,
-  type ChatImage,
-  type Chat,
-  type DesktopInvoke,
-} from '@tyco/shared'
+import { type ChatImage, type Chat, type DesktopInvoke } from '@tyco/shared'
 
 /**
- * Owns pending image leases for one chat of a window: "Ask AI", or the profile
- * `profileId`
+ * Holds the images imported into one chat of a window until a sync of the chat
+ * takes them over: "Ask AI", or the profile `profileId`. See
+ * `src-tauri/src/commands/chat_images.rs`
  */
 export function createChatImageStorage(deps: {
   invoke: DesktopInvoke
@@ -16,43 +12,36 @@ export function createChatImageStorage(deps: {
   profileId?: string
 }) {
   const { profileId } = deps
-  const completedImports: string[] = []
+  const completedImportIds: string[] = []
 
   /** The PNG goes as the raw IPC body, not as base64 inside JSON */
   async function storeChatImage(
     bytes: Uint8Array<ArrayBuffer>,
     name: string
   ): Promise<ChatImage> {
-    const lease = deps.createId()
-    const image = await deps.invoke(DESKTOP_COMMANDS.STORE_CHAT_IMAGE, bytes, {
-      headers: {
-        'x-chat-image-lease': lease,
-        // headers are ASCII; names are not
-        'x-chat-image-name': encodeURIComponent(name),
-      },
+    const importId = deps.createId()
+    const image = await deps.invoke('store_chat_image', {
+      bytes,
+      meta: { importId, name },
     })
-    completedImports.push(lease)
+    completedImportIds.push(importId)
     return image
   }
 
   function syncChatImages(ids: string[]): Promise<void> {
-    const leases = completedImports.splice(0)
+    const importIds = completedImportIds.splice(0)
     return deps
-      .invoke(DESKTOP_COMMANDS.SYNC_CHAT_IMAGES, { ids, leases, profileId })
+      .invoke('sync_chat_images', { ids, importIds, profileId })
       .catch((error) => {
-        completedImports.push(...leases)
+        completedImportIds.push(...importIds)
         throw error
       })
   }
 
   async function loadChatWithImages(id: string): Promise<Chat | null> {
-    const lease = deps.createId()
-    const chat = await deps.invoke(DESKTOP_COMMANDS.GET_CHAT, {
-      id,
-      lease,
-      profileId,
-    })
-    completedImports.push(lease)
+    const importId = deps.createId()
+    const chat = await deps.invoke('get_chat', { id, importId, profileId })
+    completedImportIds.push(importId)
     return chat
   }
 
@@ -64,21 +53,19 @@ export async function getChatImage(
   id: string,
   profileId?: string
 ): Promise<Uint8Array<ArrayBuffer>> {
-  const response = await invoke(DESKTOP_COMMANDS.GET_CHAT_IMAGE, {
-    id,
-    profileId,
-  })
+  const response = await invoke('read_chat_image', { id, profileId })
   return new Uint8Array(response)
 }
 
 export async function readDroppedChatFile(path: string): Promise<File> {
-  const response = await invoke(DESKTOP_COMMANDS.READ_CHAT_FILE, { path })
+  const response = await invoke('read_dropped_file', { path })
   return new File(
     [new Uint8Array(response)],
     path.split(/[\\/]/).at(-1) || 'file'
   )
 }
 
-export function releaseChatImageUndo(id: string): Promise<void> {
-  return invoke(DESKTOP_COMMANDS.RELEASE_CHAT_IMAGE_UNDO, { id })
+/** Ends the undo of a deleted chat, which held its images */
+export function releaseDeletedChatImages(id: string): Promise<void> {
+  return invoke('release_deleted_chat_images', { id })
 }

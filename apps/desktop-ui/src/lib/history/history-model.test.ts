@@ -9,40 +9,38 @@ function editorItem(id: string, text: string): EditorHistoryItem {
 
 function createApi() {
   return {
-    callFunction: vi.fn(
-      async (functionName: string): Promise<{ result?: unknown }> => {
-        if (functionName === 'saveEditorHistory') {
-          return { result: 'new-id' }
-        }
-        if (functionName === 'getEditorHistory') {
-          return { result: [editorItem('1', 'one'), editorItem('2', 'two')] }
-        }
-        if (functionName === 'listChats') {
-          return {
-            result: [
-              {
-                id: 'chat-1',
-                title: 'Hello',
-                lastMessageAt: 1_776_816_000_000,
-                messages: [],
-              },
-            ],
-          }
-        }
-        if (functionName === 'getChat') {
-          return {
-            result: {
+    call: vi.fn(async (functionName: string): Promise<{ result?: unknown }> => {
+      if (functionName === 'add_editor_history_item') {
+        return { result: 'new-id' }
+      }
+      if (functionName === 'get_editor_history') {
+        return { result: [editorItem('1', 'one'), editorItem('2', 'two')] }
+      }
+      if (functionName === 'list_chats') {
+        return {
+          result: [
+            {
               id: 'chat-1',
               title: 'Hello',
               lastMessageAt: 1_776_816_000_000,
-              messages: [{ role: 'user', content: 'Hello' }],
+              messages: [],
             },
-          }
+          ],
         }
-
-        return {}
       }
-    ),
+      if (functionName === 'get_chat') {
+        return {
+          result: {
+            id: 'chat-1',
+            title: 'Hello',
+            lastMessageAt: 1_776_816_000_000,
+            messages: [{ role: 'user', content: 'Hello' }],
+          },
+        }
+      }
+
+      return {}
+    }),
   }
 }
 
@@ -66,14 +64,11 @@ describe('history-model', () => {
 
     await store.renameChat('chat-1', 'Renamed')
 
-    expect(api.callFunction).toHaveBeenCalledWith('renameChat', [
-      'chat-1',
-      'Renamed',
-    ])
-    expect(api.callFunction).not.toHaveBeenCalledWith(
-      'saveChat',
-      expect.anything()
-    )
+    expect(api.call).toHaveBeenCalledWith('rename_chat', {
+      id: 'chat-1',
+      title: 'Renamed',
+    })
+    expect(api.call).not.toHaveBeenCalledWith('save_chat', expect.anything())
     expect(store.chatHistory.value[0]?.title).toBe('Renamed')
   })
 
@@ -95,12 +90,12 @@ describe('history-model', () => {
     await store.saveOutput('left')
     await store.saveSource('before', 'translation')
 
-    expect(api.callFunction.mock.calls).toEqual([
-      ['saveEditorHistory', [{ text: 'sent', kind: 'output' }]],
-      ['saveEditorHistory', [{ text: 'left', kind: 'output' }]],
+    expect(api.call.mock.calls).toEqual([
+      ['add_editor_history_item', { entry: { text: 'sent', kind: 'output' } }],
+      ['add_editor_history_item', { entry: { text: 'left', kind: 'output' } }],
       [
-        'saveEditorHistory',
-        [{ text: 'before', kind: 'source', operation: 'translation' }],
+        'add_editor_history_item',
+        { entry: { text: 'before', kind: 'source', operation: 'translation' } },
       ],
     ])
   })
@@ -116,7 +111,7 @@ describe('history-model', () => {
   })
 
   it('resolves to null when the history is turned off', async () => {
-    const api = { callFunction: vi.fn(async () => ({ result: null })) }
+    const api = { call: vi.fn(async () => ({ result: null })) }
     const store = createHistoryModel(api as unknown as HistoryApi)
 
     await expect(store.saveOutput('sent')).resolves.toBeNull()
@@ -129,8 +124,8 @@ describe('history-model', () => {
     await store.saveSourceResult('id-1', 'Result.')
     await store.saveSourceResult(null, 'Lost.')
 
-    expect(api.callFunction.mock.calls).toEqual([
-      ['setEditorHistoryResult', ['id-1', 'Result.']],
+    expect(api.call.mock.calls).toEqual([
+      ['set_editor_history_item_result', { id: 'id-1', result: 'Result.' }],
     ])
   })
 
@@ -138,10 +133,10 @@ describe('history-model', () => {
     let finishWrite: () => void = () => {}
     const calls: string[] = []
     const api = {
-      callFunction: vi.fn(async (functionName: string) => {
+      call: vi.fn(async (functionName: string) => {
         calls.push(`start ${functionName}`)
 
-        if (functionName === 'saveEditorHistory') {
+        if (functionName === 'add_editor_history_item') {
           await new Promise<void>((resolve) => (finishWrite = resolve))
         }
 
@@ -158,10 +153,10 @@ describe('history-model', () => {
     await Promise.all([save, load])
 
     expect(calls).toEqual([
-      'start saveEditorHistory',
-      'end saveEditorHistory',
-      'start getEditorHistory',
-      'end getEditorHistory',
+      'start add_editor_history_item',
+      'end add_editor_history_item',
+      'start get_editor_history',
+      'end get_editor_history',
     ])
   })
 
@@ -172,7 +167,7 @@ describe('history-model', () => {
     await store.saveOutput('')
     await store.saveOutput('  \n')
 
-    expect(api.callFunction).not.toHaveBeenCalled()
+    expect(api.call).not.toHaveBeenCalled()
   })
 
   it('removes items from session state after delete commands', async () => {
@@ -188,9 +183,9 @@ describe('history-model', () => {
     await store.deleteChat('chat-1')
 
     expect(removed).toEqual(editorItem('1', 'one'))
-    expect(api.callFunction).toHaveBeenCalledWith('removeFromEditorHistory', [
-      '1',
-    ])
+    expect(api.call).toHaveBeenCalledWith('delete_editor_history_item', {
+      id: '1',
+    })
     expect(store.editorHistory.value.map((item) => item.id)).toEqual(['2'])
     expect(store.chatHistory.value.map((item) => item.id)).toEqual(['chat-2'])
   })
@@ -202,9 +197,9 @@ describe('history-model', () => {
 
     await store.restoreEditorItem(item)
 
-    expect(api.callFunction.mock.calls).toEqual([
-      ['restoreEditorHistoryItem', [item]],
-      ['getEditorHistory'],
+    expect(api.call.mock.calls).toEqual([
+      ['restore_editor_history_item', { item }],
+      ['get_editor_history'],
     ])
     expect(store.editorHistory.value).toHaveLength(2)
   })
@@ -220,7 +215,7 @@ describe('history-model', () => {
     expect(removed?.messages).toEqual([{ role: 'user', content: 'Hello' }])
 
     await store.restoreChatItem(removed!)
-    expect(api.callFunction).toHaveBeenCalledWith('saveChat', [removed])
+    expect(api.call).toHaveBeenCalledWith('save_chat', { chat: removed })
     expect(store.chatHistory.value).toHaveLength(1)
   })
 
@@ -239,10 +234,7 @@ describe('history-model', () => {
 
   it('keeps session state when a destructive command fails', async () => {
     const api = {
-      callFunction: vi.fn(async () => ({
-        success: false,
-        error: 'disk is read-only',
-      })),
+      call: vi.fn(async () => ({ success: false, error: 'disk is read-only' })),
     }
     const store = createHistoryModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one')]
@@ -259,7 +251,7 @@ describe('history-model', () => {
 
   it('keeps loaded state when refreshing fails', async () => {
     const api = {
-      callFunction: vi.fn(async () => ({ success: false, error: 'broken' })),
+      call: vi.fn(async () => ({ success: false, error: 'broken' })),
     }
     const store = createHistoryModel(api as unknown as HistoryApi)
     store.editorHistory.value = [editorItem('1', 'one')]
@@ -271,8 +263,8 @@ describe('history-model', () => {
 
   it('keeps a stored chat stored when only the list fails to reload', async () => {
     const api = {
-      callFunction: vi.fn(async (functionName: string) =>
-        functionName === 'listChats'
+      call: vi.fn(async (functionName: string) =>
+        functionName === 'list_chats'
           ? { success: false, error: 'broken' }
           : { success: true, result: undefined }
       ),
@@ -292,12 +284,12 @@ describe('history-model', () => {
   it('does not bring back a removed chat with a list read before the removal', async () => {
     let finishLoad!: (value: unknown) => void
     const api = {
-      callFunction: vi.fn(async (functionName: string) => {
-        if (functionName === 'listChats')
+      call: vi.fn(async (functionName: string) => {
+        if (functionName === 'list_chats')
           return new Promise((resolve) => {
             finishLoad = resolve
           })
-        if (functionName === 'getChat') return { result: null }
+        if (functionName === 'get_chat') return { result: null }
         return {}
       }),
     }
@@ -316,7 +308,7 @@ describe('editor history response ordering', () => {
   it('keeps the newest load when responses arrive out of order', async () => {
     const api = createApi()
     let resolveOld!: (value: { result: EditorHistoryItem[] }) => void
-    api.callFunction.mockImplementationOnce(
+    api.call.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveOld = resolve
@@ -331,14 +323,14 @@ describe('editor history response ordering', () => {
     expect(model.editorHistory.value.map((item) => item.id)).toEqual(['1', '2'])
   })
 
-  it.each(['removeFromEditorHistory', 'clearEditorHistory'] as const)(
+  it.each(['delete_editor_history_item', 'clear_editor_history'] as const)(
     'does not resurrect items when a load finishes after %s',
     async (operation) => {
       const api = createApi()
       const model = createHistoryModel(api as unknown as HistoryApi)
       await model.loadEditorHistory()
       let resolveLoad!: (value: { result: EditorHistoryItem[] }) => void
-      api.callFunction.mockImplementationOnce(
+      api.call.mockImplementationOnce(
         () =>
           new Promise((resolve) => {
             resolveLoad = resolve
@@ -346,12 +338,12 @@ describe('editor history response ordering', () => {
       )
       const loading = model.loadEditorHistory()
       await Promise.resolve()
-      if (operation === 'clearEditorHistory') await model.clearEditorHistory()
+      if (operation === 'clear_editor_history') await model.clearEditorHistory()
       else await model.removeFromEditorHistory('1')
       resolveLoad({ result: [editorItem('1', 'one'), editorItem('2', 'two')] })
       await loading
       expect(model.editorHistory.value.map((item) => item.id)).toEqual(
-        operation === 'clearEditorHistory' ? [] : ['2']
+        operation === 'clear_editor_history' ? [] : ['2']
       )
     }
   )

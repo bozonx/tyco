@@ -3,7 +3,7 @@ use std::path::Path;
 
 use super::sandbox::Resolved;
 use super::{
-    invalid, Access, DirEntry, EntryKind, FileToolOutput, ProfileFiles, MAX_READ_BYTES,
+    invalid, Access, AiFileToolOutput, DirEntry, EntryKind, ProfileFiles, MAX_READ_BYTES,
     MAX_WRITE_BYTES,
 };
 use crate::errors::AppError;
@@ -20,7 +20,7 @@ impl ProfileFiles {
         path: &str,
         depth: Option<usize>,
         pattern: Option<&str>,
-    ) -> Result<FileToolOutput, AppError> {
+    ) -> Result<AiFileToolOutput, AppError> {
         if path
             .split(['/', '\\'])
             .all(|part| part.is_empty() || part == ".")
@@ -35,7 +35,7 @@ impl ProfileFiles {
                     size: None,
                 })
                 .collect();
-            return Ok(FileToolOutput::ListDir {
+            return Ok(AiFileToolOutput::ListDir {
                 path: String::new(),
                 entries,
                 is_truncated: false,
@@ -46,7 +46,7 @@ impl ProfileFiles {
             return Err(invalid(format!("{path} is not a folder")));
         }
         let (entries, is_truncated) = file_search::list(&target, depth, pattern)?;
-        Ok(FileToolOutput::ListDir {
+        Ok(AiFileToolOutput::ListDir {
             path: target.virtual_path(),
             entries,
             is_truncated,
@@ -76,7 +76,7 @@ impl ProfileFiles {
         offset: Option<usize>,
         limit: Option<usize>,
         max_characters: Option<usize>,
-    ) -> Result<FileToolOutput, AppError> {
+    ) -> Result<AiFileToolOutput, AppError> {
         let target = self.resolve(path, Access::Read, true)?;
         let meta =
             fs::metadata(&target.path).map_err(|_| invalid(format!("{path} does not exist")))?;
@@ -92,7 +92,7 @@ impl ProfileFiles {
             )));
         }
         if let Some(media_type) = document_media_type(&target.path) {
-            return Ok(FileToolOutput::ReadDocument {
+            return Ok(AiFileToolOutput::ReadDocument {
                 path: target.virtual_path(),
                 media_type: media_type.into(),
             });
@@ -104,7 +104,7 @@ impl ProfileFiles {
             limit.unwrap_or(DEFAULT_READ_LINES),
             max_characters.unwrap_or(usize::MAX),
         )?;
-        Ok(FileToolOutput::ReadFile {
+        Ok(AiFileToolOutput::ReadFile {
             path: target.virtual_path(),
             content: page.content,
             start_line: page.start_line,

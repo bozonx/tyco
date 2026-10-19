@@ -1,35 +1,8 @@
-/**
- * Where an attached text came from: `selection` was selected in another
- * application, the others come from the editor of the app
- */
-export type ChatAttachmentSource =
-  'selection' | 'editorSelection' | 'editorText'
-
-export interface ChatAttachment {
-  text: string
-  /** Unknown for attachments stored before the source was kept */
-  source?: ChatAttachmentSource
-  name?: string
-  mediaType?: string
-  /**
-   * Where a file dropped into a profile chat is kept for the file tools, e.g.
-   * `workspace/uploads/report.pdf`
-   */
-  workspacePath?: string
-}
-
-/**
- * A normalized image owned by the Rust chat image store; PNG only in chats
- * saved before WebP.
- */
-export interface ChatImage {
-  id: string
-  mediaType: 'image/webp'
-  width: number
-  height: number
-  size: number
-  name?: string
-}
+import type {
+  ChatAttachment,
+  ChatImage,
+  OpenMainChatEvent,
+} from '../generated/desktop-types'
 
 /**
  * Where a tool call stands: running, waiting for the user's decision, not
@@ -87,39 +60,12 @@ export type ChatMessagePart =
     }
   | { type: 'sources'; sources: ChatSource[] }
 
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'developer'
-  content: string
-  images?: ChatImage[]
-  attachments?: ChatAttachment[]
-  /** The steps of an answer that used tools; absent in plain answers */
-  parts?: ChatMessagePart[]
-  status?: 'complete' | 'stopped'
-}
-
 export interface ChatParams {
   id?: string
   /** The title the chat has in the history */
   title?: string
   images?: ChatImage[]
   attachments?: ChatAttachment[]
-}
-
-export interface ChatSummary {
-  id: string
-  title: string
-  /** Unix time in milliseconds */
-  lastMessageAt: number
-}
-
-export interface Chat extends ChatSummary {
-  messages: ChatMessage[]
-}
-
-export interface OpenMainChatEvent {
-  attachment?: ChatAttachment | null
-  question?: string | null
-  autoSend?: boolean
 }
 
 /** Rejects malformed externally delivered chat events before UI side effects. */

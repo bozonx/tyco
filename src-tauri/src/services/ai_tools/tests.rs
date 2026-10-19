@@ -12,8 +12,8 @@ use crate::services::test_support::TestDir;
 
 use ProjectAccessMode::{Allow, Ask, Deny};
 
-fn root(path: &str, dir: &Path, read: ProjectAccessMode, write: ProjectAccessMode) -> FileRoot {
-    FileRoot::for_test(path, dir, read, write, path.starts_with("projects/"))
+fn root(path: &str, dir: &Path, read: ProjectAccessMode, write: ProjectAccessMode) -> AiFileRoot {
+    AiFileRoot::for_test(path, dir, read, write, path.starts_with("projects/"))
 }
 
 /// The workspace and two projects: `docs` to read only, `site` to change.
@@ -32,7 +32,7 @@ fn fixture(label: &str) -> (TestDir, ProfileFiles) {
     (dir, files)
 }
 
-fn run(files: &ProfileFiles, request: serde_json::Value) -> Result<FileToolOutput, AppError> {
+fn run(files: &ProfileFiles, request: serde_json::Value) -> Result<AiFileToolOutput, AppError> {
     files.run_with(serde_json::from_value(request).unwrap(), |path| {
         if path.is_dir() {
             fs::remove_dir_all(path)?;
@@ -43,7 +43,7 @@ fn run(files: &ProfileFiles, request: serde_json::Value) -> Result<FileToolOutpu
     })
 }
 
-fn message(result: Result<FileToolOutput, AppError>) -> String {
+fn message(result: Result<AiFileToolOutput, AppError>) -> String {
     result.unwrap_err().to_string()
 }
 
@@ -112,7 +112,7 @@ fn a_link_out_of_the_root_is_refused() {
         serde_json::json!({"operation": "readFile", "path": "workspace/inside.txt"}),
     )
     .unwrap();
-    assert!(matches!(read, FileToolOutput::ReadFile { content, .. } if content == "real"));
+    assert!(matches!(read, AiFileToolOutput::ReadFile { content, .. } if content == "real"));
     run(
         &files,
         serde_json::json!({"operation": "deletePath", "path": "workspace/inside.txt"}),
@@ -141,7 +141,7 @@ fn tyco_and_git_files_are_hidden() {
         assert!(error.contains("not available"), "{path}: {error}");
     }
 
-    let FileToolOutput::ListDir { entries, .. } = run(
+    let AiFileToolOutput::ListDir { entries, .. } = run(
         &files,
         serde_json::json!({"operation": "listDir", "path": "projects/docs"}),
     )
@@ -153,7 +153,7 @@ fn tyco_and_git_files_are_hidden() {
         ["projects/docs/readme.md"]
     );
 
-    let FileToolOutput::SearchFiles { matches, .. } = run(
+    let AiFileToolOutput::SearchFiles { matches, .. } = run(
         &files,
         serde_json::json!({"operation": "searchFiles", "path": "projects/site", "namePattern": "*"}),
     )
@@ -193,7 +193,7 @@ fn denied_access_is_enforced() {
 #[test]
 fn the_roots_are_listed_and_cannot_be_removed() {
     let (_dir, files) = fixture("ai_files_roots");
-    let FileToolOutput::ListDir { entries, .. } =
+    let AiFileToolOutput::ListDir { entries, .. } =
         run(&files, serde_json::json!({"operation": "listDir"})).unwrap()
     else {
         panic!("not a listing")
@@ -213,7 +213,7 @@ fn the_roots_are_listed_and_cannot_be_removed() {
 fn files_are_read_by_lines() {
     let (_dir, files) = fixture("ai_files_read");
     let read = |request: serde_json::Value| match run(&files, request).unwrap() {
-        FileToolOutput::ReadFile {
+        AiFileToolOutput::ReadFile {
             content,
             start_line,
             end_line,
@@ -274,7 +274,7 @@ fn binary_and_large_files_are_not_read() {
             serde_json::json!({"operation": "readFile", "path": "workspace/report.PDF"})
         )
         .unwrap(),
-        FileToolOutput::ReadDocument {
+        AiFileToolOutput::ReadDocument {
             path: "workspace/report.PDF".into(),
             media_type: "application/pdf".into(),
         }
@@ -291,7 +291,7 @@ fn writes_create_folders_and_report_what_they_did() {
             serde_json::json!({"operation": "writeFile", "path": "projects/site/src/app.js", "content": "let a = 1\n"})
         )
         .unwrap(),
-        FileToolOutput::WriteFile {
+        AiFileToolOutput::WriteFile {
             path: "projects/site/src/app.js".into(),
             is_created: true,
             bytes: 10,
@@ -350,7 +350,7 @@ fn a_preview_changes_nothing() {
         .unwrap();
     assert_eq!(
         preview,
-        FileChangePreview {
+        AiFileChangePreview {
             path: "projects/site/page.md".into(),
             before: Some("Hello world\n".into()),
             after: "Hello there\n".into(),
@@ -391,7 +391,7 @@ fn moves_keep_both_ends_inside_writable_roots() {
             serde_json::json!({"operation": "movePath", "from": "workspace/draft.md", "to": "projects/site/posts/draft.md"})
         )
         .unwrap(),
-        FileToolOutput::MovePath {
+        AiFileToolOutput::MovePath {
             from: "workspace/draft.md".into(),
             to: "projects/site/posts/draft.md".into(),
         }
@@ -417,7 +417,7 @@ fn a_search_finds_lines_and_names() {
     fs::create_dir_all(dir.join("workspace/build")).unwrap();
     fs::write(dir.join("workspace/build/out.md"), "beta\n").unwrap();
 
-    let FileToolOutput::SearchFiles { matches, .. } = run(
+    let AiFileToolOutput::SearchFiles { matches, .. } = run(
         &files,
         serde_json::json!({"operation": "searchFiles", "query": "beta"}),
     )
@@ -433,7 +433,7 @@ fn a_search_finds_lines_and_names() {
         }]
     );
 
-    let FileToolOutput::SearchFiles { matches, .. } = run(
+    let AiFileToolOutput::SearchFiles { matches, .. } = run(
         &files,
         serde_json::json!({"operation": "searchFiles", "query": "^alp", "isRegex": true, "namePattern": "*.md"}),
     )
@@ -459,7 +459,7 @@ fn listings_go_down_to_the_depth_asked() {
     )
     .unwrap()
     {
-        FileToolOutput::ListDir { entries, .. } => {
+        AiFileToolOutput::ListDir { entries, .. } => {
             entries.into_iter().map(|e| e.path).collect::<Vec<_>>()
         }
         other => panic!("{other:?}"),

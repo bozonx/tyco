@@ -143,7 +143,7 @@ import {
   groupChatHistory,
 } from '../../lib/chat/chat-history-list'
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
-import { releaseChatImageUndo } from '../../lib/chat/chat-image-storage'
+import { releaseDeletedChatImages } from '../../lib/chat/chat-image-storage'
 import { createRemovalUndo } from '../../lib/history/removal-undo'
 import { useDesktopStore } from '../../stores/desktop'
 import AppIcon from '../common/AppIcon.vue'
@@ -206,7 +206,7 @@ const removal = createRemovalUndo<Chat>({
     }
   },
   restore: (item) => history.restoreChatItem(item),
-  release: (item) => releaseChatImageUndo(item.id),
+  release: (item) => releaseDeletedChatImages(item.id),
   reportError: () => toastKey('history.operationFailed', 'error'),
 })
 const removedChat = removal.removed

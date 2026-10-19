@@ -1,4 +1,6 @@
+use serde::Serialize;
 use thiserror::Error;
+use ts_rs::TS;
 
 #[derive(Debug, Error)]
 pub enum AppError {
@@ -12,6 +14,9 @@ pub enum AppError {
     ResourceLimit(String),
     #[error("{0}")]
     InvalidInput(String),
+    /// A file is larger than the operation accepts.
+    #[error("{0}")]
+    FileTooLarge(String),
     #[error("{0}")]
     UnsupportedConfig(String),
     /// The request was made for a state that has changed since, e.g. an
@@ -26,33 +31,74 @@ pub enum AppError {
     Json(#[from] serde_json::Error),
 }
 
+macro_rules! error_codes {
+    ($($(#[$doc:meta])* $code:ident),* $(,)?) => {
+        /// What went wrong with a desktop command, for the webview to decide
+        /// on; the message is for people.
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+        #[serde(rename_all = "camelCase")]
+        #[ts(rename = "DesktopErrorCode")]
+        pub enum ErrorCode {
+            $($(#[$doc])* $code),*
+        }
+
+        impl ErrorCode {
+            #[cfg(test)]
+            pub const ALL: &'static [ErrorCode] = &[$(ErrorCode::$code),*];
+        }
+    };
+}
+
+error_codes! {
+    OperationFailed,
+    ConfigConflict,
+    ServiceUnavailable,
+    ResourceLimit,
+    InvalidInput,
+    FileTooLarge,
+    UnsupportedConfig,
+    Stale,
+    RuntimeError,
+    IoError,
+    InvalidData,
+}
+
 impl AppError {
-    pub fn code(&self) -> &'static str {
+    pub fn code(&self) -> ErrorCode {
         match self {
-            Self::Message(_) => "operationFailed",
-            Self::ConfigConflict(_) => "configConflict",
-            Self::ServiceUnavailable(_) => "serviceUnavailable",
-            Self::ResourceLimit(_) => "resourceLimit",
-            Self::InvalidInput(_) => "invalidInput",
-            Self::UnsupportedConfig(_) => "unsupportedConfig",
-            Self::Stale(_) => "stale",
-            Self::Tauri(_) => "runtimeError",
-            Self::Io(_) => "ioError",
-            Self::Json(_) => "invalidData",
+            Self::Message(_) => ErrorCode::OperationFailed,
+            Self::ConfigConflict(_) => ErrorCode::ConfigConflict,
+            Self::ServiceUnavailable(_) => ErrorCode::ServiceUnavailable,
+            Self::ResourceLimit(_) => ErrorCode::ResourceLimit,
+            Self::InvalidInput(_) => ErrorCode::InvalidInput,
+            Self::FileTooLarge(_) => ErrorCode::FileTooLarge,
+            Self::UnsupportedConfig(_) => ErrorCode::UnsupportedConfig,
+            Self::Stale(_) => ErrorCode::Stale,
+            Self::Tauri(_) => ErrorCode::RuntimeError,
+            Self::Io(_) => ErrorCode::IoError,
+            Self::Json(_) => ErrorCode::InvalidData,
         }
     }
 }
 
-impl serde::Serialize for AppError {
+/// How every failed command reaches the webview.
+#[derive(Serialize, TS)]
+#[ts(rename = "DesktopErrorPayload")]
+pub struct ErrorPayload {
+    pub code: ErrorCode,
+    pub message: String,
+}
+
+impl Serialize for AppError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        use serde::ser::SerializeStruct;
-        let mut error = serializer.serialize_struct("AppError", 2)?;
-        error.serialize_field("code", self.code())?;
-        error.serialize_field("message", &self.to_string())?;
-        error.end()
+        ErrorPayload {
+            code: self.code(),
+            message: self.to_string(),
+        }
+        .serialize(serializer)
     }
 }
 
@@ -84,6 +130,10 @@ mod tests {
             (
                 AppError::InvalidInput("Invalid argument".into()),
                 "invalidInput",
+            ),
+            (
+                AppError::FileTooLarge("File size limit exceeded".into()),
+                "fileTooLarge",
             ),
             (
                 AppError::UnsupportedConfig("Config version 99".into()),

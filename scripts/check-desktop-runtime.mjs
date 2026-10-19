@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
 import { execFile, spawn } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import {
   mkdir,
   mkdtemp,
@@ -189,7 +188,7 @@ try {
   )
   assert.equal(second.settings.userConfig.userLanguage, 'en_US')
 
-  const historyId = await invoke('save_editor_history', {
+  const historyId = await invoke('add_editor_history_item', {
     entry: {
       text: 'Desktop smoke source',
       kind: 'source',
@@ -197,7 +196,7 @@ try {
     },
   })
   assert.equal(typeof historyId, 'string')
-  await invoke('set_editor_history_result', {
+  await invoke('set_editor_history_item_result', {
     id: historyId,
     result: 'Smoke result',
   })
@@ -207,7 +206,7 @@ try {
       ?.result,
     'Smoke result'
   )
-  await invoke('remove_from_editor_history', { id: historyId })
+  await invoke('delete_editor_history_item', { id: historyId })
   assert.equal(
     (await invoke('get_editor_history')).some(
       (/** @type {{ id: string }} */ item) => item.id === historyId
@@ -259,7 +258,7 @@ try {
         if (message?.type === 'end') done({ status });
         if (message?.type === 'error') done({ error: message.message });
       });
-      ipc.invoke('net_fetch', { request: { method: 'GET', url: arguments[0] }, onEvent: '__CHANNEL__:' + callback })
+      ipc.invoke('start_fetch', { request: { method: 'GET', url: arguments[0] }, onEvent: '__CHANNEL__:' + callback })
         .catch(error => done({ error: String(error) }));`,
       args: [proxyUrl],
     }
@@ -324,14 +323,31 @@ try {
     if (!blocked) throw new Error('Worker network exposed');
     await ctx.toastText('Desktop sandbox verified', 'success');
   } })`
-  const path = resolve(home, 'smoke.tyco-plugin')
-  const raw = JSON.stringify({ formatVersion: 1, manifest, module })
-  await writeFile(path, raw)
-  await invoke('install_plugin_package', {
-    path,
-    manifest,
-    digest: createHash('sha256').update(raw).digest('hex'),
-  })
+  // Installation goes through the file dialog; the store of installed
+  // packages is filled the way an installation leaves it instead.
+  /** @type {{ locations: { kinds: string[]; path: string }[] }} */
+  const storage = await invoke('get_storage_info')
+  const dataDir = storage.locations.find(({ kinds }) =>
+    kinds.includes('data')
+  )?.path
+  assert.ok(dataDir, 'The app has no data directory')
+  const pluginsDir = resolve(dataDir, 'plugins')
+  await mkdir(pluginsDir, { recursive: true })
+  await writeFile(
+    resolve(pluginsDir, `${Buffer.from(manifest.id).toString('hex')}.json`),
+    JSON.stringify({
+      package: { formatVersion: 1, manifest, module },
+      revision: '1',
+    })
+  )
+  await execute('location.reload()')
+  await waitFor(
+    () =>
+      execute(
+        'return document.readyState === "complete" && Boolean(window.__TAURI_INTERNALS__)'
+      ),
+    'reloaded webview'
+  )
   const current = (await invoke('get_desktop_state')).settings.userConfig
   await invoke('save_user_config', {
     baseConfig: current,
@@ -355,7 +371,7 @@ try {
     () => execute("return Boolean(document.querySelector('.settings-panel'))"),
     'lazy settings route'
   )
-  await invoke('remove_plugin_package', { id: manifest.id })
+  await invoke('uninstall_plugin_package', { id: manifest.id })
   console.log(
     'Desktop smoke passed: embedded startup, IPC permissions, config updates, history lifecycle, production CSP, Rust HTTP proxy, CLI, D-Bus (Linux), plugin sandbox and lazy routes'
   )

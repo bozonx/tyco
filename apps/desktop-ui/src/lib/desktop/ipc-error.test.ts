@@ -22,9 +22,10 @@ describe('desktop IPC errors', () => {
     expect(desktopErrorMessage(payload)).toBe(payload.message)
   })
 
-  it('preserves file-import errors', () => {
-    const fileError = { kind: 'memory', message: 'Too many images' }
-    expect(normalizeDesktopError(fileError)).toBe(fileError)
+  it('keeps the code of a rejected file', () => {
+    expect(
+      normalizeDesktopError({ code: 'fileTooLarge', message: 'Too large' })
+    ).toMatchObject({ code: 'fileTooLarge' })
   })
 
   it('rejects unstructured error payloads', () => {

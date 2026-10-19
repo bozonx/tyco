@@ -9,35 +9,38 @@ use tauri::AppHandle;
 
 use crate::errors::AppError;
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub enum OverlayKind {
+pub enum StatusOverlayKind {
     Pending,
     Success,
     Info,
     Error,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
-pub struct OverlayRequest {
-    pub(crate) kind: OverlayKind,
+#[ts(optional_fields = nullable)]
+pub struct StatusOverlayRequest {
+    pub(crate) kind: StatusOverlayKind,
     pub(crate) text: String,
     /// Shows a hidden bubble only after this delay, so quick work finishes
     /// without anything flashing on the screen.
     #[serde(default)]
+    #[ts(as = "Option<u64>", optional)]
     pub(crate) delay_ms: u64,
     #[serde(default)]
     pub(crate) hide_after_ms: Option<u64>,
     /// Updates a visible bubble, but neither shows a hidden one nor lets a
     /// pending delay run out.
     #[serde(default)]
+    #[ts(as = "Option<bool>", optional)]
     pub(crate) only_if_visible: bool,
 }
 
 /// Shows the bubble as `request` says, or hides it for `None`. A request
 /// replaces the previous one together with its timers.
-pub fn update(app: &AppHandle, request: Option<OverlayRequest>) -> Result<(), AppError> {
+pub fn update(app: &AppHandle, request: Option<StatusOverlayRequest>) -> Result<(), AppError> {
     app.run_on_main_thread(move || crate::services::platform::update_status_overlay(request))?;
     Ok(())
 }
@@ -52,8 +55,8 @@ mod tests {
             "kind": "success",
             "text": "Done"
         });
-        let req: OverlayRequest = serde_json::from_value(json).unwrap();
-        assert_eq!(req.kind, OverlayKind::Success);
+        let req: StatusOverlayRequest = serde_json::from_value(json).unwrap();
+        assert_eq!(req.kind, StatusOverlayKind::Success);
         assert_eq!(req.text, "Done");
         assert_eq!(req.delay_ms, 0);
         assert_eq!(req.hide_after_ms, None);
@@ -63,12 +66,13 @@ mod tests {
     #[test]
     fn deserializes_overlay_kinds() {
         for (name, expected) in [
-            ("pending", OverlayKind::Pending),
-            ("success", OverlayKind::Success),
-            ("info", OverlayKind::Info),
-            ("error", OverlayKind::Error),
+            ("pending", StatusOverlayKind::Pending),
+            ("success", StatusOverlayKind::Success),
+            ("info", StatusOverlayKind::Info),
+            ("error", StatusOverlayKind::Error),
         ] {
-            let parsed: OverlayKind = serde_json::from_value(serde_json::json!(name)).unwrap();
+            let parsed: StatusOverlayKind =
+                serde_json::from_value(serde_json::json!(name)).unwrap();
             assert_eq!(parsed, expected);
         }
     }

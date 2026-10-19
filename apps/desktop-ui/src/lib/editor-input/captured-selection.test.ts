@@ -1,4 +1,4 @@
-import { StartMode } from '@tyco/shared'
+import { ActivationMode } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
@@ -18,7 +18,7 @@ const activation = (
   overrides: Partial<SelectionActivation> = {}
 ): SelectionActivation => ({
   activationId: 1,
-  mode: StartMode.EDITOR,
+  mode: ActivationMode.EDITOR,
   isWindowShown: true,
   selectedText: 'Selected elsewhere',
   ...overrides,
@@ -56,7 +56,7 @@ describe('createCapturedSelection', () => {
   it('ignores other modes, a hidden window and a blank selection', () => {
     const { selection, replaceValue } = setup()
 
-    selection.apply(activation({ mode: StartMode.CHAT }))
+    selection.apply(activation({ mode: ActivationMode.CHAT }))
     selection.apply(activation({ activationId: 2, isWindowShown: false }))
     selection.apply(activation({ activationId: 3, selectedText: '  \n' }))
 

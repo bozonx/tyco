@@ -138,15 +138,19 @@ const requireResult = <T,>(result: {
 }
 const installation = createPluginInstallation({
   inspect: async () =>
-    requireResult(await ipc.callFunction('inspectPluginPackage', [])) ?? null,
+    requireResult(await ipc.call('pick_plugin_package')) ?? null,
   install: async (preview) => {
-    requireResult(await ipc.callFunction('installPluginPackage', [preview]))
+    requireResult(
+      await ipc.call('install_plugin_package', {
+        inspectionId: preview.inspectionId,
+      })
+    )
   },
   restore: async (id) => {
-    requireResult(await ipc.callFunction('restorePluginPackage', [id]))
+    requireResult(await ipc.call('restore_previous_plugin_package', { id }))
   },
   remove: async (id) => {
-    requireResult(await ipc.callFunction('removePluginPackage', [id]))
+    requireResult(await ipc.call('uninstall_plugin_package', { id }))
   },
   refresh: plugins.refreshInstalledPlugins,
   reservedIds: builtinPluginIds ?? [],

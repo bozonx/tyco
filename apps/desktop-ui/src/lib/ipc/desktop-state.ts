@@ -1,6 +1,5 @@
 import {
   DEFAULT_DESKTOP_VIEW_STATE,
-  DESKTOP_COMMANDS,
   desktopSnapshotToView,
   desktopViewToSnapshot,
   type DesktopSnapshot,
@@ -9,12 +8,11 @@ import {
   type SessionState,
 } from '@tyco/shared'
 import { computed, ref } from 'vue'
-import type { DesktopInvoker } from './ipc-model'
-import type { DesktopCall } from './desktop-functions'
+import type { DesktopCall, DesktopInvoker } from './ipc-model'
 
 export interface DesktopStateDependencies {
   desktopClient: DesktopInvoker
-  callFunction: DesktopCall
+  call: DesktopCall
   reportFailure: (name: string, message: string) => void
 }
 
@@ -46,12 +44,10 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
       )
       return desktopState.value
     }
-    const response = await deps.desktopClient.invoke(
-      DESKTOP_COMMANDS.GET_DESKTOP_STATE
-    )
+    const response = await deps.desktopClient.invoke('get_desktop_state')
     if (!response.success) {
       const error = new Error(`Could not load desktop state: ${response.error}`)
-      deps.reportFailure('getDesktopState', error.message)
+      deps.reportFailure('get_desktop_state', error.message)
       throw error
     }
     applySnapshot(response.result)
@@ -68,10 +64,10 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     baseConfig: UserConfig = desktopState.value.userConfig
   ) => {
     if (!loaded) return notLoaded()
-    const response = await deps.callFunction('saveUserConfig', [
+    const response = await deps.call('save_user_config', {
       userConfig,
       baseConfig,
-    ])
+    })
     if (!response.success) return response
     applySnapshot(response.result)
     return { success: true as const, result: desktopState.value.userConfig }
@@ -89,9 +85,9 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     if (patch.recentTranslateLanguages)
       queuedPatch.recentTranslateLanguages = [...patch.recentTranslateLanguages]
     const write = sessionStateWrites.then(async () => {
-      const response = await deps.callFunction('patchSessionState', [
-        queuedPatch,
-      ])
+      const response = await deps.call('patch_session_state', {
+        patch: queuedPatch,
+      })
       if (!response.success) return response
       applySnapshot(response.result)
       return {

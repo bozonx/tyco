@@ -18,17 +18,16 @@ export const useGlobalHotkeysStore = defineStore('globalHotkeys', () => {
   const desktopStore = useDesktopStore()
   const model = createGlobalHotkeysModel({
     getProviderInfo: async () =>
-      (await ipc.callFunction(
-        'getHotkeyProviderInfo'
+      (await ipc.call(
+        'get_hotkey_provider_info'
       )) as IpcResult<HotkeyProviderInfo>,
     listenHotkeysChanged: (handler) =>
       desktopClient.listen(DESKTOP_EVENTS.HOTKEYS_CHANGED, handler),
     getConfiguredHotkey: (id) => configuredHotkey(desktopStore.userConfig, id),
-    suspendHotkeys: (suspended) =>
-      ipc.callFunction('suspendHotkeys', [suspended]),
-    checkTextInjection: () => ipc.callFunction('checkTextInjection'),
-    configureHotkeys: () => ipc.callFunction('configureHotkeys'),
-    rebindHotkeys: () => ipc.callFunction('rebindHotkeys'),
+    suspendHotkeys: (suspended) => ipc.call('suspend_hotkeys', { suspended }),
+    checkTextInjection: () => ipc.call('check_text_injection'),
+    configureHotkeys: () => ipc.call('open_system_hotkey_settings'),
+    rebindHotkeys: () => ipc.call('rebind_hotkeys'),
   })
 
   onScopeDispose(model.dispose)

@@ -11,8 +11,9 @@ use crate::{
 use serde::Deserialize;
 use std::time::Duration;
 use tauri::{AppHandle, Manager, State};
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(optional_fields = nullable)]
 pub struct ScriptActionRequest {
     /// The saved command to run; its shell command, working directory and
     /// timeout are read from the config, see `user_config::script_command`.

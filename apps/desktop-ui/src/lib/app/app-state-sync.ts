@@ -1,5 +1,5 @@
 import { effectScope, watch } from 'vue'
-import type { DesktopViewState, StartMode, UserConfig } from '@tyco/shared'
+import type { DesktopViewState, ActivationMode, UserConfig } from '@tyco/shared'
 import {
   createCapturedChatSelection,
   type CapturedChatSelectionDependencies,
@@ -16,7 +16,7 @@ export interface AppStateSyncDependencies {
   syncLocale: (uiLanguage?: string, userLanguage?: string) => void
   syncDocumentLanguage: (language: UserConfig['language']) => void
   updateTitle: () => void
-  patchLastMode: (mode: StartMode) => Promise<unknown>
+  patchLastMode: (mode: ActivationMode) => Promise<unknown>
   replaceEditorValue: (text: string) => void
   focusEditor: () => void
   startChatWithAttachment: CapturedChatSelectionDependencies['startChatWithAttachment']
@@ -72,7 +72,7 @@ export function createAppStateSync(deps: AppStateSyncDependencies) {
       watch(deps.getRoutePath, (path) => {
         const mode = Object.entries(MODE_ROUTE_MAP).find(
           ([, routePath]) => routePath === path
-        )?.[0] as StartMode | undefined
+        )?.[0] as ActivationMode | undefined
         if (mode && mode !== deps.getDesktopState().sessionState.lastMode)
           void deps.patchLastMode(mode).catch(deps.reportError)
       })

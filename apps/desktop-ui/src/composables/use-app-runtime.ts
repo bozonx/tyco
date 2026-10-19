@@ -32,7 +32,7 @@ import { useSelectionReplaceStore } from '../stores/selection-replace'
 import { useSettingsSessionStore } from '../stores/settings-session'
 import { useThemeStore } from '../stores/theme'
 import { useToolCatalogStore } from '../stores/tool-catalog'
-import { DESKTOP_COMMANDS, DESKTOP_EVENTS } from '@tyco/shared'
+import { DESKTOP_EVENTS } from '@tyco/shared'
 
 /** Wires application services to the lifetime of the root component. */
 export function useAppRuntime() {
@@ -60,7 +60,7 @@ export function useAppRuntime() {
     },
     acknowledge: async (requestId, saved) => {
       const result = await desktopClient.invoke(
-        DESKTOP_COMMANDS.ACKNOWLEDGE_SETTINGS_SHUTDOWN,
+        'acknowledge_settings_shutdown',
         { requestId, saved }
       )
       if (!result.success) throw new Error(result.error)
@@ -78,13 +78,13 @@ export function useAppRuntime() {
         handler
       ),
     mark: (id, mark) => {
-      void ipcStore.callFunction('markActivationMetric', [id, mark])
+      void ipcStore.call('mark_activation_metric', { id, mark })
     },
     submitValue: (id) => {
-      void ipcStore.callFunction('submitActivationMetricValue', [
+      void ipcStore.call('submit_activation_metric_value', {
         id,
-        quickInputStore.value,
-      ])
+        value: quickInputStore.value,
+      })
     },
     prepareTrial: () => quickInputStore.clear(),
     activeElement: () => document.activeElement,

@@ -48,10 +48,13 @@ describe('editor navigation', () => {
   it('delegates a quick window transfer to the main window', () => {
     windowState.label = 'quick'
     const call = vi
-      .spyOn(useIpcStore(), 'callFunctionOrNotify')
+      .spyOn(useIpcStore(), 'callOrNotify')
       .mockResolvedValue({ success: true, result: undefined })
     useEditorNavigation().toEditor('new', 'old')
-    expect(call).toHaveBeenCalledWith('openMainEditor', ['new', 'old'])
+    expect(call).toHaveBeenCalledWith('open_main_editor', {
+      text: 'new',
+      sourceText: 'old',
+    })
     expect(useEditorInputStore().value).toBe('')
     expect(appNavigation.goToEditor).not.toHaveBeenCalled()
   })

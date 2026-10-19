@@ -2,7 +2,7 @@ import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { defineStore } from 'pinia'
 import { onScopeDispose, watch } from 'vue'
 
-import { StartMode } from '@tyco/shared'
+import { ActivationMode } from '@tyco/shared'
 
 import useToast from '../composables/use-toast'
 import { createCommandLauncherModel } from '../lib/command-launcher/launcher-model'
@@ -28,7 +28,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
     selectedText: () => desktopStore.desktopState.selectedText,
     run: runner.run,
     ...createExternalJobAdapter({
-      callFunction: ipcStore.callFunction,
+      call: ipcStore.call,
       selectionFailed: (message) =>
         toastText(message ?? translate('toast.commandFailed'), 'error'),
     }),
@@ -36,13 +36,12 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       await historyStore.saveOutput(text)
     },
     logRun: async (record) => {
-      await ipcStore.callFunction('logCommandRun', [record])
+      await ipcStore.call('log_command_run', { record })
     },
     replaceSelection: async (command) => {
-      const result = await ipcStore.callFunction(
-        'replaceSelectionWithCommand',
-        [command.id]
-      )
+      const result = await ipcStore.call('replace_selection_with_command', {
+        commandId: command.id,
+      })
       if (!result.success) {
         toastText(result.error ?? translate('toast.commandFailed'), 'error')
       }
@@ -60,7 +59,8 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   watch(
     () => desktopStore.desktopState.activationId,
     () => {
-      if (desktopStore.desktopState.mode !== StartMode.COMMAND_LAUNCHER) return
+      if (desktopStore.desktopState.mode !== ActivationMode.COMMAND_LAUNCHER)
+        return
       const request = desktopStore.desktopState.launcherRequest
       if (request) void model.request(request)
       else {

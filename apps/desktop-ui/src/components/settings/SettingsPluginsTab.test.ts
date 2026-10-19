@@ -8,9 +8,7 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunction: vi.fn() }),
-}))
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call: vi.fn() }) }))
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: vi.fn() }),
 }))

@@ -33,7 +33,7 @@ pub const SCRIPT_CANCELLED: &str = "Cancelled";
 
 const MAX_OUTPUT_BYTES: usize = 1 << 20;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct ScriptExecutionResult {
     #[serde(rename = "success")]

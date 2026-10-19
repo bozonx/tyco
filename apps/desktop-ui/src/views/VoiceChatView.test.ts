@@ -19,8 +19,8 @@ const mocks = vi.hoisted(() => ({
   },
   navPanel: { resetNavPanelState: vi.fn() },
   menuModals: { hasOpenModal: false },
-  callFunction: vi.fn(),
-  callFunctionOrNotify: vi.fn(),
+  call: vi.fn(),
+  callOrNotify: vi.fn(),
 }))
 
 vi.mock('../components/common/ContentPadding.vue', () => ({
@@ -52,10 +52,7 @@ vi.mock('../stores/menu-modals', () => ({
 }))
 
 vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({
-    callFunction: mocks.callFunction,
-    callFunctionOrNotify: mocks.callFunctionOrNotify,
-  }),
+  useIpcStore: () => ({ call: mocks.call, callOrNotify: mocks.callOrNotify }),
 }))
 vi.mock('../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../test/desktop-store')
@@ -73,7 +70,7 @@ vi.mock('../stores/chat', () => ({ useChatStore: () => mocks.chat }))
 describe('VoiceChatView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.callFunctionOrNotify.mockResolvedValue({ success: true })
+    mocks.callOrNotify.mockResolvedValue({ success: true })
     mocks.desktopState.activationId = 1
     mocks.desktopState.mode = 'voiceChat'
     mocks.desktopState.isWindowShown = true
@@ -102,11 +99,11 @@ describe('VoiceChatView', () => {
     menu.vm.$emit('corrected', 'Why?', 'Why?', undefined, 'submit')
     await flushPromises()
 
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('openMainChat', [
-      undefined,
-      'Why?',
-      true,
-    ])
+    expect(mocks.callOrNotify).toHaveBeenCalledWith('open_main_chat', {
+      attachment: undefined,
+      question: 'Why?',
+      autoSend: true,
+    })
   })
 
   it('submits voice result to main chat with autoSend=true when intent is submit', async () => {
@@ -122,12 +119,12 @@ describe('VoiceChatView', () => {
     )
     await flushPromises()
 
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('openMainChat', [
-      { text: 'Selected context', source: 'selection' },
-      'How does this work?',
-      true,
-    ])
-    expect(mocks.callFunction).not.toHaveBeenCalled()
+    expect(mocks.callOrNotify).toHaveBeenCalledWith('open_main_chat', {
+      attachment: { text: 'Selected context', source: 'selection' },
+      question: 'How does this work?',
+      autoSend: true,
+    })
+    expect(mocks.call).not.toHaveBeenCalled()
   })
 
   it('inserts voice result into chat input with autoSend=false when intent is insert', async () => {
@@ -143,12 +140,12 @@ describe('VoiceChatView', () => {
     )
     await flushPromises()
 
-    expect(mocks.callFunctionOrNotify).toHaveBeenCalledWith('openMainChat', [
-      { text: 'Selected context', source: 'selection' },
-      'Explain this function',
-      false,
-    ])
-    expect(mocks.callFunction).not.toHaveBeenCalled()
+    expect(mocks.callOrNotify).toHaveBeenCalledWith('open_main_chat', {
+      attachment: { text: 'Selected context', source: 'selection' },
+      question: 'Explain this function',
+      autoSend: false,
+    })
+    expect(mocks.call).not.toHaveBeenCalled()
   })
 
   it('opens the actions for the text instead of the chat when intent is next', async () => {
@@ -164,7 +161,7 @@ describe('VoiceChatView', () => {
     expect(wrapper.findComponent({ name: 'InsertMenu' }).props('text')).toBe(
       'Some text'
     )
-    expect(mocks.callFunction).not.toHaveBeenCalled()
+    expect(mocks.call).not.toHaveBeenCalled()
   })
 
   it('dismisses quick window on cancel', async () => {
@@ -173,18 +170,15 @@ describe('VoiceChatView', () => {
 
     menu.vm.$emit('cancelled')
 
-    expect(mocks.callFunction).toHaveBeenCalledWith('dismissQuickWindow')
-    expect(mocks.callFunction).not.toHaveBeenCalledWith(
-      'openMainChat',
+    expect(mocks.call).toHaveBeenCalledWith('hide_quick_window_on_blur')
+    expect(mocks.call).not.toHaveBeenCalledWith(
+      'open_main_chat',
       expect.anything()
     )
   })
 
   it('keeps the recognized text in the actions menu when opening chat fails', async () => {
-    mocks.callFunctionOrNotify.mockResolvedValue({
-      success: false,
-      error: 'Failed',
-    })
+    mocks.callOrNotify.mockResolvedValue({ success: false, error: 'Failed' })
     const wrapper = mount(VoiceChatView)
     wrapper
       .findComponent({ name: 'VoiceRecognitionMenu' })
@@ -199,13 +193,13 @@ describe('VoiceChatView', () => {
     expect(wrapper.findComponent({ name: 'InsertMenu' }).props('text')).toBe(
       'Keep these words'
     )
-    expect(mocks.callFunction).not.toHaveBeenCalled()
+    expect(mocks.call).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
   it('does not put a failed handoff into a newer activation', async () => {
     let resolve!: (result: { success: false; error: string }) => void
-    mocks.callFunctionOrNotify.mockReturnValue(
+    mocks.callOrNotify.mockReturnValue(
       new Promise((done) => {
         resolve = done
       })
@@ -218,7 +212,7 @@ describe('VoiceChatView', () => {
     resolve({ success: false, error: 'Failed' })
     await flushPromises()
     expect(wrapper.findComponent({ name: 'InsertMenu' }).exists()).toBe(false)
-    expect(mocks.callFunction).not.toHaveBeenCalled()
+    expect(mocks.call).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 })

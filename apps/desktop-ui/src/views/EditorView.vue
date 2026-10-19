@@ -26,7 +26,7 @@ const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
 
 async function closeEditor() {
-  await ipcStore.callFunctionOrNotify('hideWindow')
+  await ipcStore.callOrNotify('hide_window')
 }
 
 function openInsertMenu() {

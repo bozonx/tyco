@@ -81,10 +81,10 @@ const request = computed(() => desktopStore.desktopState.accessRequest ?? null)
 
 const prompt = createAccessPrompt({
   answer: async (jobId, decision) => {
-    const result = await ipcStore.callFunction('answerExternalAccess', [
+    const result = await ipcStore.call('answer_external_access', {
       jobId,
       decision,
-    ])
+    })
     if (!result.success) throw new Error(result.error)
   },
 })

@@ -1,4 +1,8 @@
-import { DEFAULT_USER_CONFIG, type AiProfile } from '@tyco/shared'
+import {
+  DEFAULT_SESSION_STATE,
+  DEFAULT_USER_CONFIG,
+  type AiProfile,
+} from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 import { reactive, ref } from 'vue'
 
@@ -46,7 +50,7 @@ describe('chat-store-runtime', () => {
       readSoul: vi.fn(async () => ''),
       updateProfileModel: vi.fn(async () => {}),
       getUserConfig: () => structuredClone(DEFAULT_USER_CONFIG),
-      getSessionState: () => ({}),
+      getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
       saveSessionState: vi.fn(async () => ({ success: true })),
       hasSecret: () => true,
       externalSelection: () => '',
@@ -97,7 +101,7 @@ describe('chat-store-runtime', () => {
         throw new Error('vault locked')
       }),
       getUserConfig: () => structuredClone(DEFAULT_USER_CONFIG),
-      getSessionState: () => ({}),
+      getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
       saveSessionState: vi.fn(async () => ({ success: true })),
       hasSecret: () => true,
       externalSelection: () => '',

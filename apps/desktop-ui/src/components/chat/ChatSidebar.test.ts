@@ -34,7 +34,7 @@ mocks.history = reactive({
 })
 
 vi.mock('../../lib/chat/chat-image-storage', () => ({
-  releaseChatImageUndo: mocks.releaseUndo,
+  releaseDeletedChatImages: mocks.releaseUndo,
 }))
 
 vi.mock('../../composables/use-i18n', () => ({

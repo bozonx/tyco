@@ -1,28 +1,60 @@
 # Desktop API
 
-Rust command signatures are the source of truth for the native command surface.
-Run `pnpm generate:desktop` after changing a command. `pnpm check:architecture`
-rejects stale bindings, missing registration and missing explicit permissions.
-Unsupported Rust signature types fail generation rather than becoming `any`.
+The Rust code is the source of truth for the native command surface. Run
+`pnpm generate:desktop` after changing a command, an IPC type or an event:
 
-## Contracts and adapters
+- `src-tauri/src/bindings.rs` declares every IPC type with ts-rs into
+  `packages/shared/src/generated/desktop-types.ts`, along with the error codes
+  and the payload of every event of `src-tauri/src/events.rs`. `cargo test`
+  fails while the file is stale.
+- `scripts/generate-desktop-commands.mjs` reads the command signatures of
+  `src-tauri/src/commands` into `packages/shared/src/generated/desktop-commands.ts`.
+  A type without a binding fails the generation rather than becoming `any`.
+  `pnpm check:architecture` rejects stale commands, missing registration and
+  missing explicit permissions.
 
-- `packages/shared/src/desktop-commands.ts`: generated names, arguments and results.
-- `packages/shared/src/desktop/`: domain DTOs, events and error contracts.
-- `packages/shared/src/desktop-transport.ts`: channel and transport DTOs.
+A type keeps its Rust name in TypeScript. `#[ts(rename)]` is for nested types
+only, where the Rust module gives the context the TypeScript name must carry.
+
+## Naming
+
+Commands are `verb_noun`: `get_*` returns a DTO, `read_*`/`write_*` move file
+contents or bytes, `save_*` stores a DTO, `delete_*` removes an entity, `list_*`
+returns a collection, `open_*` shows something in the system.
+
+## Errors
+
+Every command fails with `DesktopErrorPayload { code, message }`. The code says
+what the webview may decide on (`configConflict`, `fileTooLarge`, `stale`, ...),
+the message is for people.
+
+## Events
+
+Each event of `src-tauri/src/events.rs` names its payload type; it is emitted
+with `events::emit::<E>` or `events::emit_to::<E>`, so the payload cannot drift
+from `DesktopEventPayloads`. `DESKTOP_EVENTS` of `@tyco/shared` must name every
+event.
+
+## Binary arguments
+
+A command that takes bytes takes a `BinaryRequest<M>`: the bytes go as the raw
+IPC body, the metadata `M` as percent-encoded JSON in the `x-tyco-meta` header.
+In TypeScript the argument is `BinaryArgs<M>`; `invokeDesktop` splits it.
+
+## Calling commands
+
 - `apps/desktop-ui/src/lib/desktop/invoke.ts`: the native boundary; rejects with
-  `DesktopIpcError` for coded Rust failures. Binary file-import errors retain their
-  specialized payload.
-- `apps/desktop-ui/src/lib/ipc/functions/`: domain function argument tuples.
-- `apps/desktop-ui/src/lib/ipc/*-command-map.ts`: typed adapters from domain
-  functions to generated native commands. Results are inferred from Rust bindings.
+  `DesktopIpcError`. Native adapters (network, microphone, images, file tools)
+  call it directly.
+- `apps/desktop-ui/src/lib/ipc/ipc-model.ts` (`useIpcStore`): `call` and
+  `callOrNotify` resolve to an `IpcResult` instead. They add the `activationId`
+  of the window to the commands that act for an activation and wait for held
+  keys before an insertion.
 - `apps/desktop-ui/src/lib/ipc/desktop-state.ts`: snapshot ordering and settings
   writes, separate from command invocation.
 
-Native adapters (network, microphone and images) use rejected promises. The UI
-command facade converts those failures into the discriminated `IpcResult` union.
-A successful value-returning operation must contain its result; a failed operation
-must contain its error and cannot also contain a result.
+A successful value-returning call contains its result; a failed call contains
+its error and cannot also contain a result.
 
 DTO serialization is covered by shared Rust/TypeScript fixtures under
 `packages/shared/fixtures/`. Configuration JSON remains extensible on the Rust side
@@ -64,20 +96,27 @@ requesting window and activation on the main thread. Text injection checks the
 activation again after waiting for focus release. A stale request fails without
 hiding the newly active window or pasting into its activation.
 
-## What the webview may run or write
+## What the webview may run, read or write
 
 A script in the webview, e.g. one injected through a model answer, must not
-run a command or write a file the user never set up. `execute_script_action`
+run a command, read a file or write one the user never set up. `execute_script_action`
 takes the id of a saved `script` command: the shell command, its working
 directory and timeout are read from the saved config. The command editor saves
 the draft before a test run and runs only what was saved. Notes are written
 only by `write_plugin_note`, under a root the user approved for that plugin.
+`read_dropped_file` reads only the paths of the last drop onto the window.
+`install_plugin_package` installs the package the user picked in the dialog of
+`pick_plugin_package`, by its `inspectionId`, never a path the webview names.
+Network tasks are steered only by the window that started them.
 
 ## Chats and compatibility
 
 `list_chats` returns `ChatSummary[]`, without messages. `get_chat` returns a full
 `Chat | null`; `save_chat` accepts a full chat. The title field is `title`.
 Attachments use objects containing `text` and optional source and file metadata.
+
+Images live in session memory until a saved chat shows them; how the webview
+holds them is described in `src-tauri/src/commands/chat_images.rs`.
 
 Plugins use `openInBrowserAndHide`; removed SDK browser names are rejected.
 

@@ -66,18 +66,18 @@ describe('secrets', () => {
     await client.vaultState()
 
     expect(fake.calls.map(({ command, args }) => [command, args])).toEqual([
-      ['secrets_set', { id: 'deepseek', value: 'sk-1', origins: null }],
+      ['set_secret', { id: 'deepseek', value: 'sk-1', origins: null }],
       [
-        'secrets_set',
+        'set_secret',
         {
           id: 'openai-compatible',
           value: 'k',
           origins: ['http://localhost:11434'],
         },
       ],
-      ['secrets_remove', { id: 'deepseek' }],
-      ['secrets_status', undefined],
-      ['secrets_vault_state', undefined],
+      ['delete_secret', { id: 'deepseek' }],
+      ['get_secret_statuses', undefined],
+      ['get_secret_vault_state', undefined],
     ])
   })
 })

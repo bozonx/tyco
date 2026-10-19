@@ -88,11 +88,11 @@ const storageInfoItems = computed(() =>
 
 async function openStorageLocation(kind: StorageKind) {
   // a failure leaves nothing open, which tells enough
-  await ipcStore.callFunction('openStorageLocation', [kind])
+  await ipcStore.call('open_storage_location', { kind })
 }
 
 async function loadStorageInfo() {
-  const result = await ipcStore.callFunction('getStorageInfo')
+  const result = await ipcStore.call('get_storage_info')
   storageInfo.value = result.success
     ? (result.result as StorageInfo | null) || null
     : null

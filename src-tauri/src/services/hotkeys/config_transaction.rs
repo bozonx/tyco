@@ -1,12 +1,12 @@
 //! Native registrations commit with the configuration, or return to their previous state.
 use super::{
-    apply, bindings_from_config, ApplyHotkeyRequest, HotkeyApplyStatus, HotkeyBinding,
+    apply, bindings_from_config, HotkeyApplyRequest, HotkeyApplyStatus, HotkeyBinding,
     HotkeyRegistry, HotkeyTarget, ProviderKind, ProviderState,
 };
 use crate::errors::AppError;
 use crate::locks::RwLockExt;
 use serde_json::Value;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 
 pub fn with_config_changes<T>(
     app: &AppHandle,
@@ -35,7 +35,7 @@ pub fn with_config_changes<T>(
         |mode, shortcut| {
             let result = apply(
                 app,
-                ApplyHotkeyRequest {
+                HotkeyApplyRequest {
                     mode: mode.into(),
                     shortcut: shortcut.into(),
                 },
@@ -50,7 +50,7 @@ pub fn with_config_changes<T>(
         save,
     );
     if !changes.is_empty() {
-        if let Err(error) = app.emit(super::HOTKEYS_CHANGED_EVENT, ()) {
+        if let Err(error) = crate::events::emit::<crate::events::HotkeysChanged, _>(app, ()) {
             log::warn!("Could not publish hotkey changes: {error}");
         }
     }

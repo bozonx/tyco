@@ -1,7 +1,5 @@
 export * from './desktop/errors'
 export * from './desktop/chat'
-export * from './desktop/history'
-export * from './desktop/storage'
 export * from './desktop/state'
 export * from './desktop/events'
 export * from './desktop/actions'

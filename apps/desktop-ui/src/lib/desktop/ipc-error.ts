@@ -1,17 +1,10 @@
-import type { DesktopErrorCode, DesktopErrorPayload } from '@tyco/shared'
+import {
+  DESKTOP_ERROR_CODES,
+  type DesktopErrorCode,
+  type DesktopErrorPayload,
+} from '@tyco/shared'
 
-const ERROR_CODES: ReadonlySet<string> = new Set([
-  'operationFailed',
-  'configConflict',
-  'serviceUnavailable',
-  'resourceLimit',
-  'invalidInput',
-  'unsupportedConfig',
-  'stale',
-  'runtimeError',
-  'ioError',
-  'invalidData',
-])
+const ERROR_CODES: ReadonlySet<string> = new Set(DESKTOP_ERROR_CODES)
 
 export function isDesktopError(error: unknown): error is DesktopErrorPayload {
   return (
@@ -35,13 +28,11 @@ export class DesktopIpcError extends Error {
   }
 }
 
-/** Native commands return structured errors; file-import errors keep their kind. */
+/** Every native command fails with `{ code, message }` */
 export function normalizeDesktopError(error: unknown): unknown {
   if (error instanceof Error) return error
   if (isDesktopError(error))
     return new DesktopIpcError(error.code, error.message, error)
-  if (typeof error === 'object' && error !== null && 'kind' in error)
-    return error
   return new DesktopIpcError(
     'invalidData',
     'Invalid desktop error payload',

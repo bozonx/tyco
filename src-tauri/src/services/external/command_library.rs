@@ -15,11 +15,10 @@ use serde_json::Value;
 use crate::errors::AppError;
 use crate::services::custom_actions::TEXT_PLACEHOLDER;
 
-pub const COMMAND_RUN_EVENT: &str = "app://command-run";
-
 /// How a command of a tool gets its input from a text.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(rename = "ToolCatalogInput")]
 pub enum ToolInputKind {
     None,
     Text,
@@ -31,8 +30,9 @@ pub enum ToolInputKind {
 }
 
 /// A tool as the webview registry describes it, see `set_tool_catalog`.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(optional_fields = nullable)]
 pub struct ToolCatalogEntry {
     pub id: String,
     pub input: ToolInputKind,
@@ -42,6 +42,7 @@ pub struct ToolCatalogEntry {
     #[serde(default)]
     pub reason: Option<String>,
     #[serde(default)]
+    #[ts(type = "Record<string, unknown>", optional = nullable)]
     pub input_schema: Option<Value>,
 }
 

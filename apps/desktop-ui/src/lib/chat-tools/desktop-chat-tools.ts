@@ -1,5 +1,4 @@
 import {
-  DESKTOP_COMMANDS,
   type AiFileChangePreview,
   type AiFileRoot,
   type AiFileToolOutput,
@@ -17,19 +16,19 @@ import { createFileToolProvider } from './file-tools'
 
 export interface DesktopChatToolsInvoke {
   (
-    command: typeof DESKTOP_COMMANDS.LIST_AI_FILE_ROOTS,
+    command: 'list_ai_file_roots',
     args: { profileId: string }
   ): Promise<AiFileRoot[]>
   (
-    command: typeof DESKTOP_COMMANDS.RUN_AI_FILE_TOOL,
+    command: 'run_ai_file_tool',
     args: { profileId: string; request: AiFileToolRequest }
   ): Promise<AiFileToolOutput>
   (
-    command: typeof DESKTOP_COMMANDS.PREVIEW_AI_FILE_CHANGE,
+    command: 'preview_ai_file_change',
     args: { profileId: string; request: AiFileToolRequest }
   ): Promise<AiFileChangePreview>
   (
-    command: typeof DESKTOP_COMMANDS.READ_AI_FILE_BYTES,
+    command: 'read_ai_file_bytes',
     args: { profileId: string; path: string }
   ): Promise<ArrayBuffer | number[]>
 }
@@ -49,25 +48,15 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
   const checkDebug = deps.isDebugEnabled ?? isDebugChatToolsEnabled
   const debugToolProvider = createDebugChatToolProvider()
   const fileToolProvider = createFileToolProvider({
-    listRoots: (id) =>
-      deps.invoke(DESKTOP_COMMANDS.LIST_AI_FILE_ROOTS, { profileId: id }),
+    listRoots: (id) => deps.invoke('list_ai_file_roots', { profileId: id }),
     run: (id, request) =>
-      deps.invoke(DESKTOP_COMMANDS.RUN_AI_FILE_TOOL, {
-        profileId: id,
-        request,
-      }),
+      deps.invoke('run_ai_file_tool', { profileId: id, request }),
     preview: (id, request) =>
-      deps.invoke(DESKTOP_COMMANDS.PREVIEW_AI_FILE_CHANGE, {
-        profileId: id,
-        request,
-      }),
+      deps.invoke('preview_ai_file_change', { profileId: id, request }),
     readDocumentText: async (id, path, mediaType) =>
       extractText(
         new Uint8Array(
-          await deps.invoke(DESKTOP_COMMANDS.READ_AI_FILE_BYTES, {
-            profileId: id,
-            path,
-          })
+          await deps.invoke('read_ai_file_bytes', { profileId: id, path })
         ),
         path,
         mediaType

@@ -10,7 +10,7 @@ const emit = defineEmits<{ select: [path: string] }>()
 const { t } = useI18n()
 const ipc = useIpcStore()
 async function browse() {
-  const result = await ipc.callFunctionOrNotify('pickDirectory', [])
+  const result = await ipc.callOrNotify('pick_directory')
   if (typeof result.result === 'string') emit('select', result.result)
 }
 </script>

@@ -13,8 +13,8 @@ test('shows live speech and inserts the final transcript into the editor', async
   await expect
     .poll(() =>
       desktop
-        .callsOf('net_socket_send_binary')
-        .some((bytes) => bytes.byteLength > 320)
+        .callsOf('send_socket_binary')
+        .some(({ bytes }) => bytes.byteLength > 320)
     )
     .toBe(true)
   await page.keyboard.press('Enter')

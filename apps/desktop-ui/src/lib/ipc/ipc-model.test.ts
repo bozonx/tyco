@@ -1,8 +1,4 @@
-import {
-  DEFAULT_DESKTOP_VIEW_STATE,
-  desktopViewToSnapshot,
-  DESKTOP_COMMANDS,
-} from '@tyco/shared'
+import { DEFAULT_DESKTOP_VIEW_STATE, desktopViewToSnapshot } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createDesktopStateModel } from './desktop-state'
@@ -36,7 +32,7 @@ function createModels(deps: IpcModelDependencies) {
   })
   const state = createDesktopStateModel({
     desktopClient: deps.desktopClient,
-    callFunction: ipc.callFunction,
+    call: ipc.call,
     reportFailure: ipc.reportFailure,
   })
   return { ...ipc, ...state }
@@ -46,119 +42,48 @@ describe('ipc-model', () => {
   it('binds quick dismissal and input regions to their activation', async () => {
     const deps = createDeps()
     const store = createModels(deps)
-    await store.callFunction('dismissQuickWindow')
+    await store.call('hide_quick_window_on_blur')
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.DISMISS_QUICK_WINDOW,
+      'hide_quick_window_on_blur',
       { activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId }
     )
     const region = { x: 0, y: 400, width: 800, height: 100 }
-    await store.callFunction('setQuickInputRegion', [region])
+    await store.call('set_quick_input_region', { region })
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.SET_QUICK_INPUT_REGION,
+      'set_quick_input_region',
       { region, activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId }
     )
   })
-  it('maps a function name to desktop command invocation', async () => {
-    const deps = createDeps()
-    const store = createModels(deps)
-
-    await store.callFunction('setEditorHistoryResult', ['id-1', 'abc'])
-
-    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.SET_EDITOR_HISTORY_RESULT,
-      { id: 'id-1', result: 'abc' }
-    )
-  })
-
-  it('maps storage info command', async () => {
-    const deps = createDeps()
-    const store = createModels(deps)
-
-    await store.callFunction('getStorageInfo')
-
-    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.GET_STORAGE_INFO,
-      undefined
-    )
-  })
-
-  it('maps the system hotkey configuration command', async () => {
-    const deps = createDeps()
-    const store = createModels(deps)
-
-    await store.callFunction('configureHotkeys')
-
-    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.CONFIGURE_HOTKEYS,
-      undefined
-    )
-  })
-
-  it('maps the hotkey rebinding command', async () => {
-    const deps = createDeps()
-    const store = createModels(deps)
-
-    await store.callFunction('rebindHotkeys')
-
-    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.REBIND_HOTKEYS,
-      undefined
-    )
-  })
-
-  it('maps the hotkey provider info command', async () => {
-    const deps = createDeps()
-    const store = createModels(deps)
-
-    await store.callFunction('getHotkeyProviderInfo')
-
-    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.GET_HOTKEY_PROVIDER_INFO,
-      undefined
-    )
-  })
-
   it('maps a transfer to the decorated editor window', async () => {
     const deps = createDeps()
     const store = createModels(deps)
 
-    await store.callFunction('openMainEditor', ['result', 'source'])
+    await store.call('open_main_editor', {
+      text: 'result',
+      sourceText: 'source',
+    })
 
-    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.OPEN_MAIN_EDITOR,
-      {
-        text: 'result',
-        sourceText: 'source',
-        activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId,
-      }
-    )
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith('open_main_editor', {
+      text: 'result',
+      sourceText: 'source',
+      activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId,
+    })
   })
 
   it('binds a voice handoff to the activation that produced its question', async () => {
     const deps = createDeps()
     const store = createModels(deps)
-    await store.callFunction('openMainChat', [undefined, 'Question', true])
-    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.OPEN_MAIN_CHAT,
-      {
-        attachment: undefined,
-        question: 'Question',
-        autoSend: true,
-        activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId,
-      }
-    )
-  })
-
-  it('maps the activate mode command', async () => {
-    const deps = createDeps()
-    const store = createModels(deps)
-
-    await store.callFunction('activateMode', ['aiTasks', 'sample text'])
-
-    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.ACTIVATE_MODE,
-      { mode: 'aiTasks', text: 'sample text' }
-    )
+    await store.call('open_main_chat', {
+      attachment: undefined,
+      question: 'Question',
+      autoSend: true,
+    })
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith('open_main_chat', {
+      attachment: undefined,
+      question: 'Question',
+      autoSend: true,
+      activationId: DEFAULT_DESKTOP_VIEW_STATE.activationId,
+    })
   })
 
   it('waits for released keys before inserting into a window', async () => {
@@ -174,29 +99,34 @@ describe('ipc-model', () => {
     })
     const store = createModels(deps)
 
-    await store.callFunction('pasteIntoTargetAndHide', ['text'])
-    await store.callFunction('copyText', ['text'])
+    await store.call('paste_into_target_and_hide', { text: 'text' })
+    await store.call('copy_text', { text: 'text' })
 
     expect(order).toEqual(['released', 'invoked', 'invoked'])
     expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.PASTE_INTO_TARGET_AND_HIDE,
+      'paste_into_target_and_hide',
       { text: 'text', activationId: 0 }
     )
   })
 
-  it('returns an error for unknown function names', async () => {
+  it('passes the arguments of other commands as they are', async () => {
     const deps = createDeps()
     const store = createModels(deps)
 
-    // untyped callers, e.g. plugins, may pass any name
-    const result = await store.callFunction(
-      'unknownMethod' as 'getEditorHistory'
-    )
-
-    expect(result).toEqual({
-      success: false,
-      error: 'Unknown desktop function: unknownMethod',
+    await store.call('set_editor_history_item_result', {
+      id: 'id-1',
+      result: 'abc',
     })
+    await store.call('get_storage_info')
+
+    expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
+      'set_editor_history_item_result',
+      { id: 'id-1', result: 'abc' }
+    )
+    expect(deps.desktopClient.invoke).toHaveBeenLastCalledWith(
+      'get_storage_info',
+      undefined
+    )
   })
 
   it('falls back to local init desktopState without the desktop runtime', async () => {
@@ -253,7 +183,7 @@ describe('ipc-model', () => {
     })
     const store = createModels(deps)
 
-    const result = await store.callFunction('getEditorHistory')
+    const result = await store.call('get_editor_history')
 
     expect(result).toEqual({ success: false as const, error: 'Error: boom' })
     expect(deps.logError).toHaveBeenCalled()
@@ -274,9 +204,9 @@ describe('ipc-model', () => {
     })
     const store = createModels(deps)
 
-    const result = await store.callFunctionOrNotify('pasteIntoTargetAndHide', [
-      'text',
-    ])
+    const result = await store.callOrNotify('paste_into_target_and_hide', {
+      text: 'text',
+    })
 
     expect(result.success).toBe(false)
     expect(deps.notifyError).toHaveBeenCalledWith('no xdotool', 'Action failed')
@@ -289,7 +219,7 @@ describe('ipc-model', () => {
       const deps = createDeps({
         desktopClient: {
           invoke: vi.fn(async (command: string, _args?: unknown) =>
-            command === DESKTOP_COMMANDS.GET_DESKTOP_STATE
+            command === 'get_desktop_state'
               ? {
                   success: true,
                   result: desktopViewToSnapshot(
@@ -341,7 +271,7 @@ it('keeps the invoking activation while waiting for held keys to release', async
     revision: 1,
     activationId: 10,
   })
-  const pending = store.callFunction('pasteIntoTargetAndHide', ['Result'])
+  const pending = store.call('paste_into_target_and_hide', { text: 'Result' })
   store.applyViewState({
     ...DEFAULT_DESKTOP_VIEW_STATE,
     revision: 2,
@@ -350,7 +280,7 @@ it('keeps the invoking activation while waiting for held keys to release', async
   release()
   await pending
   expect(deps.desktopClient.invoke).toHaveBeenCalledWith(
-    DESKTOP_COMMANDS.PASTE_INTO_TARGET_AND_HIDE,
+    'paste_into_target_and_hide',
     { text: 'Result', activationId: 10 }
   )
 })

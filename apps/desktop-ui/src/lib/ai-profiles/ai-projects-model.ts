@@ -17,7 +17,7 @@ export interface CreateProjectData {
   name: string
   description?: string
   isExternal: boolean
-  targetPath?: string | null
+  targetPath?: string
 }
 
 export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
@@ -45,7 +45,7 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
       name: data.name.trim(),
       description: data.description?.trim(),
       isExternal: data.isExternal,
-      targetPath: data.isExternal ? data.targetPath?.trim() || null : null,
+      targetPath: (data.isExternal && data.targetPath?.trim()) || undefined,
       createdAt: timestamp,
       updatedAt: timestamp,
     }

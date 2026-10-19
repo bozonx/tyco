@@ -27,12 +27,12 @@ assert.deepEqual(
   registered,
   'Every registered command must be covered by AppManifest'
 )
-const shared = await read('packages/shared/src/desktop-commands.ts')
+const shared = await read('packages/shared/src/generated/desktop-commands.ts')
 const frontend = Array.from(
   shared
-    .split('export const DESKTOP_COMMANDS =')[1]
-    .split('} as const')[0]
-    .matchAll(/'([a-z_]+)'/g),
+    .split('export interface DesktopCommands {')[1]
+    .split('\n}\n')[0]
+    .matchAll(/^ {2}([a-z_]+): /gm),
   (match) => match[1]
 )
 assert.deepEqual(
@@ -68,11 +68,12 @@ for (const file of await readdir(resolve(root, 'src-tauri/capabilities'))) {
       granted.add(command)
       if (
         [
-          'secrets_set',
-          'secrets_remove',
+          'set_secret',
+          'delete_secret',
+          'pick_plugin_package',
           'install_plugin_package',
-          'remove_plugin_package',
-          'restore_plugin_package',
+          'uninstall_plugin_package',
+          'restore_previous_plugin_package',
         ].includes(command)
       )
         assert.deepEqual(capability.windows, ['main'])

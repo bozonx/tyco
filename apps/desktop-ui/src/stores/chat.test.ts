@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { APP_CONFIG, DEFAULT_LLM_CONFIG, type AiProfile } from '@tyco/shared'
 
-import type { DesktopCall } from '../lib/ipc/desktop-functions'
+import type { DesktopCall } from '../lib/ipc/ipc-model'
 import { appNavigation } from '../lib/navigation/navigation'
 import { useAiProfilesStore } from './ai-profiles'
 import {
@@ -135,21 +135,19 @@ describe('profile chats', () => {
   /** The vault holds one profile; its files may change between requests */
   function mockVault(files: { soul: string; profile: AiProfile }) {
     const ipc = useIpcStore()
-    return vi.spyOn(ipc, 'callFunction').mockImplementation((async (
-      name: string
-    ) => {
+    return vi.spyOn(ipc, 'call').mockImplementation((async (name: string) => {
       switch (name) {
-        case 'getAiVaultPath':
+        case 'get_ai_vault_path':
           return { success: true, result: '/vault' }
-        case 'listAiProfiles':
+        case 'list_ai_profiles':
           return { success: true, result: [files.profile] }
-        case 'listAiProjects':
+        case 'list_ai_projects':
           return { success: true, result: [] }
-        case 'getAiProfile':
+        case 'get_ai_profile':
           return { success: true, result: files.profile }
-        case 'readProfileSoul':
+        case 'read_ai_profile_soul':
           return { success: true, result: files.soul }
-        case 'listChats':
+        case 'list_chats':
           return { success: true, result: [] }
         default:
           return { success: true, result: undefined }
@@ -181,10 +179,10 @@ describe('profile chats', () => {
     expect(useChatStore().messages).toEqual([])
     expect(useChatInputStore().value).toBe('')
     expect(useHistoryStore().saveChat).not.toHaveBeenCalled()
-    expect(call).toHaveBeenCalledWith('saveChat', [
-      expect.objectContaining({ id: profileChat.currentChatParams.id }),
-      'writer',
-    ])
+    expect(call).toHaveBeenCalledWith('save_chat', {
+      chat: expect.objectContaining({ id: profileChat.currentChatParams.id }),
+      profileId: 'writer',
+    })
   })
 
   it('asks with the SOUL.md and settings read just before the request', async () => {
@@ -262,9 +260,9 @@ describe('profile chats', () => {
 
     await profileChat.selectModel(modelId)
 
-    expect(call).toHaveBeenCalledWith('saveAiProfile', [
-      expect.objectContaining({ id: 'writer', modelId }),
-    ])
+    expect(call).toHaveBeenCalledWith('save_ai_profile', {
+      profile: expect.objectContaining({ id: 'writer', modelId }),
+    })
     expect(desktopStore.patchSessionState).not.toHaveBeenCalled()
   })
 

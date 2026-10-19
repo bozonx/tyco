@@ -87,14 +87,42 @@ pub fn log_custom_action(
     append_action_log(log_dir, &entry)
 }
 
-/// One run of a library command, as the command overlay reports it.
-#[derive(Debug, Clone, Deserialize)]
+/// Where a command or a tool is invoked from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+pub enum CommandRunSource {
+    Menu,
+    Toolbar,
+    Launcher,
+    Voice,
+    External,
+    Chat,
+    /// A selection run: the output replaces the selection it got.
+    Selection,
+}
+
+impl CommandRunSource {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Menu => "menu",
+            Self::Toolbar => "toolbar",
+            Self::Launcher => "launcher",
+            Self::Voice => "voice",
+            Self::External => "external",
+            Self::Chat => "chat",
+            Self::Selection => "selection",
+        }
+    }
+}
+
+/// One run of a library command, as the command overlay reports it.
+#[derive(Debug, Clone, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(optional_fields = nullable)]
 pub struct CommandRunRecord {
     pub command_id: String,
     pub name: String,
-    /// Where the command was invoked from, e.g. `launcher`.
-    pub source: String,
+    pub source: CommandRunSource,
     /// The text the command got; absent for a command that takes none.
     pub text: Option<String>,
     #[serde(rename = "success")]
@@ -115,7 +143,7 @@ fn format_command_run(record: &CommandRunRecord) -> String {
         format_timestamp(),
         record.name,
         record.command_id,
-        record.source,
+        record.source.as_str(),
         if record.is_success {
             "success"
         } else {
@@ -223,7 +251,7 @@ mod tests {
         let record = CommandRunRecord {
             command_id: String::from("backup"),
             name: String::from("Backup"),
-            source: String::from("launcher"),
+            source: CommandRunSource::Launcher,
             text: Some(String::from("key sk-proj-1234567890abcdef1234567890")),
             is_success: false,
             message: Some(String::from("exit code 1")),

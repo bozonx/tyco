@@ -5,11 +5,8 @@ import { secretRef } from '../net/secrets'
 
 const WEBHOOK_TIMEOUT_MS = 30_000
 
-export type CustomActionLog = (
-  name: string,
-  type: string,
-  details: string
-) => Promise<void>
+/** Writes a webhook call of the command `name` to the action log */
+export type WebhookCallLog = (name: string, details: string) => Promise<void>
 
 /** A webhook to call: the settings of the tool and who calls it */
 export interface WebhookTarget extends WebhookToolConfig {
@@ -113,7 +110,7 @@ export async function executeWebhook(
   target: WebhookTarget,
   text: string | null,
   fetchFn: FetchFunction,
-  logFn?: CustomActionLog,
+  logFn?: WebhookCallLog,
   signal?: AbortSignal
 ): Promise<string> {
   const { url, init } = buildWebhookRequest(target, text)
@@ -122,7 +119,7 @@ export async function executeWebhook(
   // failures are logged always, like those of commands
   const log = async (details: string, failed: boolean) => {
     if (target.logOutput || failed) {
-      await logFn?.(target.name || 'Webhook', 'webhook', details)
+      await logFn?.(target.name || 'Webhook', details)
     }
   }
 

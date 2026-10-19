@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { APP_CONFIG, launcherPageMode } from '@tyco/shared'
+import { ActivationMode, APP_CONFIG } from '@tyco/shared'
 
 import {
   type ActionItem,
@@ -39,10 +39,11 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       }),
     minCorrectionLength: () => APP_CONFIG.minCorrectionLength,
     openLauncherPage: async (pageId, text) => {
-      await ipcStore.callFunction('activateMode', [
-        launcherPageMode(pageId),
+      await ipcStore.call('activate_mode', {
+        mode: ActivationMode.COMMAND_LAUNCHER,
+        launcherPageId: pageId,
         text,
-      ])
+      })
     },
     launcherPages: () => desktopStore.userConfig.launcherPages,
     mainActions: () => desktopStore.userConfig.mainActions,

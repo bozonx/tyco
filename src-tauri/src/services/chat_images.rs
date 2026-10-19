@@ -6,7 +6,6 @@ use std::fs;
 use std::io::{Cursor, Read};
 use std::path::{Path, PathBuf};
 
-use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use super::atomic_file::write_private_bytes;
@@ -29,39 +28,8 @@ const MAX_MESSAGE_IMAGES: usize = 4;
 const WEBP_QUALITIES: [f32; 4] = [85.0, 75.0, 60.0, 45.0];
 const FORMATS: [(&str, &str); 1] = [("webp", "image/webp")];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ChatFileErrorKind {
-    Size,
-    Memory,
-    Invalid,
-}
-
-/// Reaches the webview as `{ kind, message }`, so the UI never parses messages.
-#[derive(Debug, Serialize, thiserror::Error)]
-#[error("{message}")]
-pub struct ChatFileError {
-    pub kind: ChatFileErrorKind,
-    pub message: String,
-}
-
-impl ChatFileError {
-    pub fn new(kind: ChatFileErrorKind, message: &str) -> Self {
-        Self {
-            kind,
-            message: message.to_string(),
-        }
-    }
-}
-
-impl From<ChatFileError> for AppError {
-    fn from(error: ChatFileError) -> Self {
-        AppError::Message(error.message)
-    }
-}
-
-fn invalid(message: &str) -> ChatFileError {
-    ChatFileError::new(ChatFileErrorKind::Invalid, message)
+fn invalid(message: &str) -> AppError {
+    AppError::InvalidInput(message.into())
 }
 
 pub fn validate_id(id: &str) -> Result<(), AppError> {
@@ -92,12 +60,9 @@ fn within_limits(width: u32, height: u32) -> bool {
 
 /// Decode the webview's PNG and encode the pixels as a WebP, never carrying
 /// source metadata onto disk.
-fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>), ChatFileError> {
+fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>), AppError> {
     if bytes.is_empty() || bytes.len() > MAX_SOURCE_BYTES {
-        return Err(ChatFileError::new(
-            ChatFileErrorKind::Size,
-            "Image size limit exceeded",
-        ));
+        return Err(AppError::FileTooLarge("Image size limit exceeded".into()));
     }
     let mut decoder = png::Decoder::new(Cursor::new(bytes));
     decoder.set_limits(png::Limits {
@@ -144,15 +109,12 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
         };
         return Ok((image, encoded.to_vec()));
     }
-    Err(ChatFileError::new(
-        ChatFileErrorKind::Size,
-        "Image size limit exceeded",
-    ))
+    Err(AppError::FileTooLarge("Image size limit exceeded".into()))
 }
 
 /// Dimensions from the header: stored bytes are already normalized and are
 /// verified by their hash, so they are never re-encoded.
-fn stored_dimensions(bytes: &[u8]) -> Result<(u32, u32), ChatFileError> {
+fn stored_dimensions(bytes: &[u8]) -> Result<(u32, u32), AppError> {
     let features =
         webp::BitstreamFeatures::new(bytes).ok_or_else(|| invalid("Invalid WebP image"))?;
     if features.has_animation() {
@@ -210,14 +172,11 @@ impl ChatImageStore {
 
     /// Normalizes an image without touching the store, so that the slow
     /// encoding does not hold its lock; [`Self::remember`] keeps the result.
-    pub fn prepare(
-        bytes: &[u8],
-        name: Option<String>,
-    ) -> Result<(ChatImage, Vec<u8>), ChatFileError> {
+    pub fn prepare(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>), AppError> {
         normalize(bytes, name)
     }
 
-    pub fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), ChatFileError> {
+    pub fn remember(&mut self, image: ChatImage, bytes: Vec<u8>) -> Result<(), AppError> {
         self.expire_owners();
         if self.images.contains_key(&image.id) {
             return Ok(());
@@ -239,9 +198,8 @@ impl ChatImageStore {
             });
         }
         if self.total_image_bytes + bytes.len() > MAX_SESSION_BYTES {
-            return Err(ChatFileError::new(
-                ChatFileErrorKind::Memory,
-                "Chat image session memory limit exceeded",
+            return Err(AppError::ResourceLimit(
+                "Chat image session memory limit exceeded".into(),
             ));
         }
         self.total_image_bytes += bytes.len();
@@ -300,11 +258,7 @@ impl ChatImageStore {
     }
 
     #[cfg(test)]
-    pub fn insert(
-        &mut self,
-        bytes: &[u8],
-        name: Option<String>,
-    ) -> Result<ChatImage, ChatFileError> {
+    pub fn insert(&mut self, bytes: &[u8], name: Option<String>) -> Result<ChatImage, AppError> {
         let (image, bytes) = normalize(bytes, name)?;
         self.remember(image.clone(), bytes)?;
         Ok(image)
@@ -502,8 +456,8 @@ mod tests {
         assert_eq!(
             normalize(&vec![0; MAX_SOURCE_BYTES + 1], None)
                 .unwrap_err()
-                .kind,
-            ChatFileErrorKind::Size
+                .code(),
+            crate::errors::ErrorCode::FileTooLarge
         );
         assert!(validate_id("../secret").is_err());
     }

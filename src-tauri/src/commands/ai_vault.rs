@@ -22,7 +22,7 @@ pub fn get_ai_vault_path(app: AppHandle, state: State<'_, AppState>) -> Result<S
 /// Shows the vault, or one profile folder in it, in the file manager. The
 /// path is built here: the webview never names a folder to open.
 #[tauri::command]
-pub async fn open_ai_vault_dir(
+pub async fn open_ai_vault_location(
     app: AppHandle,
     state: State<'_, AppState>,
     profile_id: Option<String>,
@@ -88,7 +88,7 @@ pub async fn delete_ai_profile(
 }
 
 #[tauri::command]
-pub async fn read_profile_soul(
+pub async fn read_ai_profile_soul(
     app: AppHandle,
     state: State<'_, AppState>,
     id: String,
@@ -98,7 +98,7 @@ pub async fn read_profile_soul(
 }
 
 #[tauri::command]
-pub async fn write_profile_soul(
+pub async fn write_ai_profile_soul(
     app: AppHandle,
     state: State<'_, AppState>,
     id: String,

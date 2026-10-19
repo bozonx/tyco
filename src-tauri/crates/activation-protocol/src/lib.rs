@@ -228,6 +228,7 @@ pub struct RunRequest {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(rename = "ExternalJobState"))]
 #[serde(rename_all = "camelCase")]
 pub enum JobState {
     Accepted,
@@ -244,16 +245,20 @@ impl JobState {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "ts", derive(ts_rs::TS), ts(rename = "ExternalJob"))]
 #[serde(rename_all = "camelCase")]
 pub struct Job {
     pub id: String,
     pub command_id: String,
     pub state: JobState,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     pub output: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     pub error: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
 }
 

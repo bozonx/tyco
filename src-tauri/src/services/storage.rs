@@ -40,7 +40,7 @@ const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{CreateEditorHistoryRequest, EditorHistoryKind, EditorHistoryOperation};
+    use crate::models::{EditorHistoryEntry, EditorHistoryKind, EditorHistoryOperation};
     use crate::services::storage::test_support::history_item;
 
     #[test]
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn editor_history_entry_reads_the_replace_id() {
-        let entry: CreateEditorHistoryRequest = serde_json::from_value(json!({
+        let entry: EditorHistoryEntry = serde_json::from_value(json!({
             "text": "text",
             "kind": "draft",
             "replaceId": "abc",

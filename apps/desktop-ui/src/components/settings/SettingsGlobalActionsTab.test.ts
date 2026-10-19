@@ -18,17 +18,17 @@ vi.mock('../../lib/desktop/client', () => ({
   desktopClient: { listen: vi.fn().mockResolvedValue(() => {}) },
 }))
 
-const { callFunction } = vi.hoisted(() => ({
-  callFunction: vi.fn(async (name: string) => ({
+const { call } = vi.hoisted(() => ({
+  call: vi.fn(async (name: string) => ({
     success: true,
     result:
-      name === 'getHotkeyProviderInfo'
+      name === 'get_hotkey_provider_info'
         ? { provider: 'global-shortcut', canConfigure: false, actions: {} }
         : { status: 'ready' },
   })),
 }))
 
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ callFunction }) }))
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call }) }))
 vi.mock('../../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../../test/desktop-store')
   return {
@@ -162,9 +162,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
     await voiceRow.find('[title="settings.unassignHotkey"]').trigger('click')
     await flushPromises()
 
-    expect(
-      callFunction.mock.calls.some(([name]) => name === 'applyHotkey')
-    ).toBe(false)
+    expect(call.mock.calls.some(([name]) => name === 'apply_hotkey')).toBe(
+      false
+    )
     expect(context.draft.value.hotkeys.voice).toBe('')
     // an unassigned hotkey offers no removal
     const editorRow = wrapper.find(

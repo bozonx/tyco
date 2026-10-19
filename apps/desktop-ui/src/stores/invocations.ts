@@ -34,7 +34,7 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
       toastText(text, type)
     },
     hideWindow: () => {
-      void ipcStore.callFunctionOrNotify('hideWindow', [])
+      void ipcStore.callOrNotify('hide_window')
     },
     showError: (messageKey, detail) => {
       toastText(

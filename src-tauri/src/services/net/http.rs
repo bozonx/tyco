@@ -3,6 +3,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
+use ts_rs::TS;
 
 use super::request::PreparedRequest;
 use super::EventSink;
@@ -10,20 +11,30 @@ use super::EventSink;
 const MAX_REQUEST_BODY_BYTES: usize = 128 * 1024 * 1024;
 pub const MAX_RESPONSE_BODY_BYTES: usize = 128 * 1024 * 1024;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(optional_fields = nullable)]
 pub struct FetchRequest {
     pub method: String,
     pub url: String,
     #[serde(default)]
+    #[ts(as = "Option<Vec<(String, String)>>", optional)]
     pub headers: Vec<(String, String)>,
     /// Base64: the IPC arguments are JSON, and the body may be audio.
     pub body: Option<String>,
-    pub purpose: Option<String>,
+    /// A request of the app itself rather than of an AI provider.
+    pub purpose: Option<FetchPurpose>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, TS)]
+#[serde(rename_all = "kebab-case")]
+pub enum FetchPurpose {
+    /// An image a chat answer links to, fetched without credentials.
+    ChatImage,
 }
 
 /// Control events. Body chunks travel as raw bytes between `Head` and `End`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum FetchEvent {
     #[serde(rename_all = "camelCase")]

@@ -1,6 +1,5 @@
-import type { SecretsStatus, VaultState } from '@tyco/shared'
+import type { SecretStatus, VaultState } from '@tyco/shared'
 import type { KeyProvider } from '@bozonx/ai-kit'
-import { DESKTOP_COMMANDS } from '@tyco/shared'
 
 import type { NetIpc } from './net-ipc'
 
@@ -10,11 +9,9 @@ const SECRET_REF_PREFIX = 'tyco-secret:'
 /** Provider ids that may be called without a key by default */
 const KEYLESS_PROVIDERS: readonly string[] = ['openai-compatible']
 
-/**
- * What the webview may know about a secret: that it exists, where it goes, and
- * whether its value can be read now
- */
-export type { SecretsStatus, VaultState } from '@tyco/shared'
+/** What the webview may know about every secret, by id */
+export type SecretsStatus = Record<string, SecretStatus>
+export type { VaultState } from '@tyco/shared'
 /** Whether a stored secret can be used for a request now */
 export function isSecretUsable(secrets: SecretsStatus, id: string): boolean {
   return Object.hasOwn(secrets, id) && secrets[id].available
@@ -49,15 +46,11 @@ export interface SecretsClient {
 
 export function createSecretsClient(ipc: NetIpc): SecretsClient {
   return {
-    status: () => ipc.invoke(DESKTOP_COMMANDS.SECRETS_STATUS),
-    vaultState: () => ipc.invoke(DESKTOP_COMMANDS.SECRETS_VAULT_STATE),
+    status: () => ipc.invoke('get_secret_statuses'),
+    vaultState: () => ipc.invoke('get_secret_vault_state'),
     set: (id, value, origins) =>
-      ipc.invoke(DESKTOP_COMMANDS.SECRETS_SET, {
-        id,
-        value,
-        origins: origins ?? null,
-      }),
-    remove: (id) => ipc.invoke(DESKTOP_COMMANDS.SECRETS_REMOVE, { id }),
+      ipc.invoke('set_secret', { id, value, origins: origins ?? null }),
+    remove: (id) => ipc.invoke('delete_secret', { id }),
   }
 }
 

@@ -59,8 +59,8 @@ vi.mock('../../stores/menu-modals', () => ({
 
 vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({
-    callFunction: mocks.hideWindow,
-    callFunctionOrNotify: mocks.hideWindow,
+    call: mocks.hideWindow,
+    callOrNotify: mocks.hideWindow,
   }),
 }))
 vi.mock('../../stores/desktop', async () => {
@@ -185,7 +185,7 @@ describe('ShortcutList', () => {
 
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardQuickInput).toHaveBeenCalled()
-    expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
+    expect(mocks.hideWindow).toHaveBeenCalledWith('hide_window')
     wrapper.unmount()
   })
 

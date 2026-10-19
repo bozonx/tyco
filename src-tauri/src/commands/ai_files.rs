@@ -2,21 +2,29 @@
 //! the model gave; the folders and the permissions are read here, anew for
 //! every call, since the user may change them by hand meanwhile.
 
+use serde::Deserialize;
 use std::path::PathBuf;
 use tauri::{AppHandle, State};
+use ts_rs::TS;
 
 use super::run_blocking;
 use crate::{
     errors::AppError,
+    ipc::BinaryRequest,
     services::ai_tools::files::{
-        FileChangePreview, FileRoot, FileToolOutput, FileToolRequest, ProfileFiles,
+        AiFileChangePreview, AiFileRoot, AiFileToolOutput, AiFileToolRequest, ProfileFiles,
     },
     services::ai_vault,
     state::AppState,
 };
 
-pub const AI_UPLOAD_PROFILE_HEADER: &str = "x-ai-upload-profile";
-pub const AI_UPLOAD_NAME_HEADER: &str = "x-ai-upload-name";
+#[derive(Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct AiUploadMeta {
+    pub profile_id: String,
+    /// The name of the dropped file.
+    pub name: String,
+}
 
 fn vault_dir(app: &AppHandle, state: &AppState) -> Result<PathBuf, AppError> {
     ai_vault::resolve_vault_path(app, &state.user_config())
@@ -28,7 +36,7 @@ pub async fn list_ai_file_roots(
     app: AppHandle,
     state: State<'_, AppState>,
     profile_id: String,
-) -> Result<Vec<FileRoot>, AppError> {
+) -> Result<Vec<AiFileRoot>, AppError> {
     let dir = vault_dir(&app, &state)?;
     run_blocking(move || Ok(ProfileFiles::load(&dir, &profile_id)?.roots().to_vec())).await?
 }
@@ -38,8 +46,8 @@ pub async fn run_ai_file_tool(
     app: AppHandle,
     state: State<'_, AppState>,
     profile_id: String,
-    request: FileToolRequest,
-) -> Result<FileToolOutput, AppError> {
+    request: AiFileToolRequest,
+) -> Result<AiFileToolOutput, AppError> {
     let dir = vault_dir(&app, &state)?;
     run_blocking(move || ProfileFiles::load(&dir, &profile_id)?.run(request)).await?
 }
@@ -50,8 +58,8 @@ pub async fn preview_ai_file_change(
     app: AppHandle,
     state: State<'_, AppState>,
     profile_id: String,
-    request: FileToolRequest,
-) -> Result<FileChangePreview, AppError> {
+    request: AiFileToolRequest,
+) -> Result<AiFileChangePreview, AppError> {
     let dir = vault_dir(&app, &state)?;
     run_blocking(move || ProfileFiles::load(&dir, &profile_id)?.preview(request)).await?
 }
@@ -79,23 +87,12 @@ pub async fn read_ai_file_bytes(
 pub async fn save_ai_upload(
     app: AppHandle,
     state: State<'_, AppState>,
-    request: tauri::ipc::Request<'_>,
+    request: BinaryRequest<AiUploadMeta>,
 ) -> Result<String, AppError> {
-    let header = |name: &str| {
-        request
-            .headers()
-            .get(name)
-            .and_then(|value| value.to_str().ok())
-            .map(|value| percent_encoding::percent_decode_str(value).decode_utf8_lossy())
-            .map(|value| value.into_owned())
-    };
-    let profile_id = header(AI_UPLOAD_PROFILE_HEADER)
-        .ok_or_else(|| AppError::InvalidInput("Missing upload profile".into()))?;
-    let name = header(AI_UPLOAD_NAME_HEADER).unwrap_or_default();
-    let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
-        return Err(AppError::InvalidInput("Expected a raw binary body".into()));
-    };
-    let bytes = bytes.clone();
     let dir = vault_dir(&app, &state)?;
-    run_blocking(move || ProfileFiles::load(&dir, &profile_id)?.save_upload(&name, &bytes)).await?
+    let BinaryRequest { bytes, meta } = request;
+    run_blocking(move || {
+        ProfileFiles::load(&dir, &meta.profile_id)?.save_upload(&meta.name, &bytes)
+    })
+    .await?
 }

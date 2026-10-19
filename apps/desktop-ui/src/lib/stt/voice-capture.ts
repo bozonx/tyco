@@ -1,5 +1,5 @@
 import type { AudioChunk } from '@bozonx/ai-kit'
-import { DESKTOP_COMMANDS, type VoiceCaptureEvent } from '@tyco/shared'
+import { type VoiceCaptureEvent } from '@tyco/shared'
 
 import { createAsyncQueue } from '../net/async-queue'
 import { errorMessage, isArrayBuffer, type NetIpc } from '../net/net-ipc'
@@ -34,9 +34,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
           overflowed = true
           if (captureSessionId !== undefined)
             void ipc
-              .invoke(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE, {
-                sessionId: captureSessionId,
-              })
+              .invoke('stop_voice_capture', { sessionId: captureSessionId })
               .catch(() => undefined)
         },
       })
@@ -51,13 +49,12 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
       }
 
       try {
-        const started = await ipc.invoke(DESKTOP_COMMANDS.START_VOICE_CAPTURE, {
+        const started = await ipc.invoke('start_voice_capture', {
           onAudio: ipc.createChannel(onMessage),
         })
         captureSessionId = started.sessionId
         sessionId = captureSessionId
-        if (overflowed)
-          await ipc.invoke(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE, { sessionId })
+        if (overflowed) await ipc.invoke('stop_voice_capture', { sessionId })
         const { sampleRate } = started
         return { sampleRate, audio: queue.values }
       } catch (error) {
@@ -69,7 +66,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
       try {
         // nothing started here: there is nothing of ours to stop
         if (sessionId === undefined) return
-        await ipc.invoke(DESKTOP_COMMANDS.STOP_VOICE_CAPTURE, { sessionId })
+        await ipc.invoke('stop_voice_capture', { sessionId })
       } catch (error) {
         throw new Error(errorMessage(error), { cause: error })
       }

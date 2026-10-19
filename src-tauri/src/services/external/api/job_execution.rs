@@ -1,14 +1,14 @@
 use serde::Deserialize;
-use serde_json::json;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tyco_activation_protocol::{ErrorCode, Job, JobState, Response, RunRequest};
 
 use super::validation::{
     command_name, ensure_selection_access_allowed, is_selection_access_allowed, lookup,
     raw_command, validate_run,
 };
-use super::{ApiResult, JOB_CANCEL_EVENT};
+use super::ApiResult;
 use crate::errors::AppError;
+use crate::events;
 use crate::services::activation::{Activation, ActivationMode, ActivationSource};
 use crate::services::external::access::{self, AccessPrompt, AccessPromptError, AccessRequest};
 use crate::services::external::command_library::{self, ExternalCommand};
@@ -18,12 +18,14 @@ use crate::state::AppState;
 
 const PROMPT_BUSY: &str = "Another request for the selection is waiting for an answer";
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(optional_fields = nullable)]
 pub struct JobCompletion {
     #[serde(rename = "success")]
     pub is_success: bool,
     #[serde(default, rename = "cancelled")]
+    #[ts(as = "Option<bool>", optional)]
     pub is_cancelled: bool,
     pub output: Option<String>,
     pub message: Option<String>,
@@ -140,18 +142,17 @@ fn hand_off(
         app.get_webview_window(runtime::QUICK_WINDOW_LABEL)
             .ok_or_else(|| "Quick window not found".to_owned())
             .and_then(|window| {
-                window
-                    .emit(
-                        command_library::COMMAND_RUN_EVENT,
-                        json!({
-                            "commandId": command.id,
-                            "jobId": job_id,
-                            "text": request.text,
-                            "input": request.input,
-                            "userConfig": config,
-                        }),
-                    )
-                    .map_err(|error| error.to_string())
+                events::emit::<events::CommandRun, _>(
+                    &window,
+                    events::CommandRunEvent {
+                        command_id: command.id.clone(),
+                        job_id: job_id.to_owned(),
+                        text: request.text.clone(),
+                        input: request.input.clone(),
+                        user_config: config,
+                    },
+                )
+                .map_err(|error| error.to_string())
             })
     };
     handoff.map_err(|error| {
@@ -289,7 +290,7 @@ pub(super) fn cancel(app: &AppHandle, id: &str, code: ErrorCode) -> Response {
             },
         );
         if let Some(window) = app.get_webview_window(runtime::QUICK_WINDOW_LABEL) {
-            let _ = window.emit(JOB_CANCEL_EVENT, id);
+            let _ = events::emit::<events::ExternalJobCancel, _>(&window, id.to_owned());
         }
     }
     Response::json(&jobs.get(id))

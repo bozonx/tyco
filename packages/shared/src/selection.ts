@@ -1,5 +1,3 @@
-import type { UserConfig } from './user-config'
-
 /**
  * Actions that replace the selection in the focused window with their result,
  * see `src-tauri/src/services/selection_replace.rs`
@@ -22,31 +20,4 @@ export function parseSelectionAction(id: string): SelectionAction | null {
     return commandId.trim() ? { kind: 'command', commandId } : null
   }
   return null
-}
-
-export type SelectionRunErrorCode =
-  'noTarget' | 'noSelection' | 'capture' | 'unsupported'
-
-/** The selection captured for an action, or why there is none */
-export interface SelectionRunEvent {
-  runId: number
-  action: string
-  text?: string
-  error?: { code: SelectionRunErrorCode; message: string }
-  userConfig: UserConfig
-}
-
-export type SelectionFinishStatus =
-  'pasted' | 'clipboard' | 'restored' | 'stale'
-
-export type StatusOverlayKind = 'pending' | 'success' | 'info' | 'error'
-
-export interface StatusOverlayRequest {
-  kind: StatusOverlayKind
-  text: string
-  /** A hidden bubble shows up only after this delay */
-  delayMs?: number
-  hideAfterMs?: number
-  /** Update a visible bubble, but do not show a hidden one */
-  onlyIfVisible?: boolean
 }

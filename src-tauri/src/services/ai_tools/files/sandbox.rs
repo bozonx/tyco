@@ -3,14 +3,14 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use super::{
-    invalid, Access, FileRoot, ProfileFiles, FILES_TOOL_GROUP, PROJECTS_ROOT, WORKSPACE_ROOT,
+    invalid, Access, AiFileRoot, ProfileFiles, FILES_TOOL_GROUP, PROJECTS_ROOT, WORKSPACE_ROOT,
 };
 use crate::errors::AppError;
 use crate::services::ai_vault::{self, AiProfile, ProjectAccessMode};
 
 /// A path resolved inside one of the roots.
 pub(in crate::services::ai_tools) struct Resolved<'a> {
-    pub root: &'a FileRoot,
+    pub root: &'a AiFileRoot,
     /// The canonical folder of the root.
     pub root_dir: PathBuf,
     /// Where on disk.
@@ -30,7 +30,7 @@ impl Resolved<'_> {
 
 /// The model's path of a file on disk inside the root.
 pub(in crate::services::ai_tools) fn virtual_path(
-    root: &FileRoot,
+    root: &AiFileRoot,
     root_dir: &Path,
     path: &Path,
 ) -> String {
@@ -44,7 +44,7 @@ pub(in crate::services::ai_tools) fn virtual_path(
 }
 
 /// Whether a path inside a root is one of the files Tyco or git own.
-pub(in crate::services::ai_tools) fn is_forbidden(root: &FileRoot, relative: &Path) -> bool {
+pub(in crate::services::ai_tools) fn is_forbidden(root: &AiFileRoot, relative: &Path) -> bool {
     let mut components = relative.components().peekable();
     let mut is_top = true;
     while let Some(component) = components.next() {
@@ -101,7 +101,7 @@ impl ProfileFiles {
     pub fn load(vault_root: &Path, profile_id: &str) -> Result<Self, AppError> {
         let profile = ai_vault::get_profile(vault_root, profile_id)?;
         ensure_files_enabled(&profile)?;
-        let mut roots = vec![FileRoot {
+        let mut roots = vec![AiFileRoot {
             path: WORKSPACE_ROOT.into(),
             name: None,
             description: None,
@@ -126,7 +126,7 @@ impl ProfileFiles {
                     continue;
                 }
             };
-            roots.push(FileRoot {
+            roots.push(AiFileRoot {
                 path: format!("{PROJECTS_ROOT}/{}", project.id),
                 name: Some(project.name.clone()),
                 description: project
@@ -144,7 +144,7 @@ impl ProfileFiles {
 
     /// The root a path starts with and the rest of it, checked to be plain
     /// names inside the root.
-    fn locate(&self, path: &str) -> Result<(&FileRoot, PathBuf), AppError> {
+    fn locate(&self, path: &str) -> Result<(&AiFileRoot, PathBuf), AppError> {
         let mut parts = Vec::new();
         for part in path.split(['/', '\\']) {
             match part {
@@ -179,7 +179,7 @@ impl ProfileFiles {
         Ok((root, relative))
     }
 
-    fn find_root(&self, path: &str) -> Result<&FileRoot, AppError> {
+    fn find_root(&self, path: &str) -> Result<&AiFileRoot, AppError> {
         self.roots
             .iter()
             .find(|root| root.path == path)

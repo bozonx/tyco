@@ -282,8 +282,8 @@ describe('Editor.vue toolbar', () => {
 
     editorInputStore.setValue('hello from editor test', 'plain')
 
-    const callFunctionSpy = vi
-      .spyOn(ipcStore, 'callFunction')
+    const callSpy = vi
+      .spyOn(ipcStore, 'call')
       .mockResolvedValue({ success: true, result: undefined } as any)
 
     const wrapper = mount(Editor, {
@@ -306,10 +306,10 @@ describe('Editor.vue toolbar', () => {
 
     await aiTasksQuickBtn.trigger('click')
 
-    expect(callFunctionSpy).toHaveBeenCalledWith('activateMode', [
-      'aiTasks',
-      'hello from editor test',
-    ])
+    expect(callSpy).toHaveBeenCalledWith('activate_mode', {
+      mode: 'aiTasks',
+      text: 'hello from editor test',
+    })
   })
 
   it('renders info tooltip with selection hint in the right rail and not in footer', () => {

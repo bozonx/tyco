@@ -345,8 +345,10 @@ export function createFileToolProvider(
       return formatTextPage(
         pageText(
           documentText,
-          request.operation === 'readFile' ? request.offset : undefined,
-          request.operation === 'readFile' ? request.limit : undefined,
+          (request.operation === 'readFile' ? request.offset : null) ??
+            undefined,
+          (request.operation === 'readFile' ? request.limit : null) ??
+            undefined,
           Math.max(1, options.outputLimitCharacters - PAGE_NOTE_CHARACTERS)
         ),
         output.path

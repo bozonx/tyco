@@ -1,6 +1,6 @@
 //! Native shortcut registration, suspension, conflict handling, and rollback.
 use super::bindings::{HotkeyBinding, HotkeyTarget};
-use super::{ApplyHotkeyResult, HotkeyApplyStatus, ProviderKind};
+use super::{HotkeyApplyResult, HotkeyApplyStatus, ProviderKind};
 use crate::errors::AppError;
 use crate::locks::RwLockExt;
 use crate::services::selection_replace;
@@ -94,7 +94,7 @@ pub(super) fn apply_global_shortcut(
     app: &AppHandle,
     target: &HotkeyTarget,
     shortcut: Option<Shortcut>,
-) -> Result<ApplyHotkeyResult, AppError> {
+) -> Result<HotkeyApplyResult, AppError> {
     apply_global_shortcut_with(
         &app.state::<HotkeyRegistry>(),
         &SystemHotkeyProvider(app),
@@ -108,8 +108,8 @@ fn apply_global_shortcut_with(
     provider: &impl HotkeyProvider,
     target: &HotkeyTarget,
     shortcut: Option<Shortcut>,
-) -> Result<ApplyHotkeyResult, AppError> {
-    let ready = ApplyHotkeyResult {
+) -> Result<HotkeyApplyResult, AppError> {
+    let ready = HotkeyApplyResult {
         status: HotkeyApplyStatus::Ready,
         external_command: None,
         message: None,
@@ -149,7 +149,7 @@ fn apply_global_shortcut_with(
                 }
             }
         }
-        return Ok(ApplyHotkeyResult {
+        return Ok(HotkeyApplyResult {
             status: HotkeyApplyStatus::Conflict,
             external_command: None,
             message: Some(error.to_string()),

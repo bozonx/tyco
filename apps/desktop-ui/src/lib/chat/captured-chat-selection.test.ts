@@ -1,4 +1,4 @@
-import { StartMode } from '@tyco/shared'
+import { ActivationMode } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
@@ -20,7 +20,7 @@ const activation = (
   overrides: Partial<SelectionActivation> = {}
 ): SelectionActivation => ({
   activationId: 1,
-  mode: StartMode.CHAT,
+  mode: ActivationMode.CHAT,
   isWindowShown: true,
   selectedText: 'Selected for chat',
   ...overrides,
@@ -63,7 +63,9 @@ describe('createCapturedChatSelection', () => {
   it('takes the editor selection of a window that was shown already', () => {
     const { selection, startChatWithAttachment } = setup(() => 'Fallback text')
 
-    selection.apply(activation({ mode: StartMode.EDITOR, selectedText: null }))
+    selection.apply(
+      activation({ mode: ActivationMode.EDITOR, selectedText: null })
+    )
     expect(
       selection.apply(activation({ activationId: 2, selectedText: null }))
     ).toBe(true)
@@ -77,7 +79,7 @@ describe('createCapturedChatSelection', () => {
     const { selection, startChatWithAttachment } = setup(() => 'Stale text')
 
     selection.apply(
-      activation({ mode: StartMode.EDITOR, isWindowShown: false })
+      activation({ mode: ActivationMode.EDITOR, isWindowShown: false })
     )
     expect(
       selection.apply(activation({ activationId: 2, selectedText: null }))
@@ -92,7 +94,7 @@ describe('createCapturedChatSelection', () => {
   it('ignores other modes, a hidden window and a blank selection', () => {
     const { selection, startChatWithAttachment } = setup()
 
-    selection.apply(activation({ mode: StartMode.EDITOR }))
+    selection.apply(activation({ mode: ActivationMode.EDITOR }))
     selection.apply(activation({ activationId: 2, isWindowShown: false }))
     selection.apply(activation({ activationId: 3, selectedText: '  \n' }))
 
@@ -102,7 +104,9 @@ describe('createCapturedChatSelection', () => {
   it('prefers external selection arriving after editor fallback', () => {
     const { selection, startChatWithAttachment } = setup(() => 'Fallback text')
 
-    selection.apply(activation({ mode: StartMode.EDITOR, selectedText: null }))
+    selection.apply(
+      activation({ mode: ActivationMode.EDITOR, selectedText: null })
+    )
     expect(
       selection.apply(activation({ activationId: 2, selectedText: null }))
     ).toBe(true)

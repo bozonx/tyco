@@ -37,7 +37,7 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     name: name.value.trim(),
     description: description.value.trim() || undefined,
     isExternal: isExternal.value,
-    targetPath: isExternal.value ? targetPath.value.trim() : null,
+    targetPath: isExternal.value ? targetPath.value.trim() : undefined,
   })
 
   const autosave = createAutosave({

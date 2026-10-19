@@ -25,58 +25,58 @@ import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
-import { StartMode } from '@tyco/shared'
+import { ActivationMode } from '@tyco/shared'
 
 const QUICK_MODES: ReadonlyArray<{
-  mode: StartMode
+  mode: ActivationMode
   label: string
   title: string
   icon: string
 }> = [
   {
-    mode: StartMode.VOICE_COMMANDS,
+    mode: ActivationMode.VOICE_COMMANDS,
     label: 'Voice Commands',
     title: 'Open Quick Voice Commands',
     icon: 'mdi:microphone-message',
   },
   {
-    mode: StartMode.WRITE,
+    mode: ActivationMode.WRITE,
     label: 'Write',
     title: 'Open Quick Write',
     icon: 'mdi:pencil-outline',
   },
   {
-    mode: StartMode.AI_TASKS,
+    mode: ActivationMode.AI_TASKS,
     label: 'AI Tasks',
     title: 'Open Quick AI Tasks',
     icon: 'mdi:robot-outline',
   },
   {
-    mode: StartMode.SELECT,
+    mode: ActivationMode.SELECT,
     label: 'Select',
     title: 'Open Quick Select',
     icon: 'mdi:format-list-checks',
   },
   {
-    mode: StartMode.VOICE,
+    mode: ActivationMode.VOICE,
     label: 'Voice',
     title: 'Open Quick Voice',
     icon: 'mdi:microphone-outline',
   },
   {
-    mode: StartMode.COMMAND_LAUNCHER,
+    mode: ActivationMode.COMMAND_LAUNCHER,
     label: 'Commands',
     title: 'Open Quick Commands',
     icon: 'mdi:console-line',
   },
   {
-    mode: StartMode.TRANSLATE,
+    mode: ActivationMode.TRANSLATE,
     label: 'Translate',
     title: 'Open Quick Translate',
     icon: 'mdi:translate',
   },
   {
-    mode: StartMode.CORRECTION,
+    mode: ActivationMode.CORRECTION,
     label: 'Correction',
     title: 'Open Quick Correction',
     icon: 'mdi:text-box-edit-outline',
@@ -86,11 +86,11 @@ const QUICK_MODES: ReadonlyArray<{
 const editorInputStore = useEditorInputStore()
 const ipcStore = useIpcStore()
 
-const openQuick = async (mode: StartMode) => {
+const openQuick = async (mode: ActivationMode) => {
   const text =
     editorInputStore.selectedText || editorInputStore.value || undefined
 
-  const res = await ipcStore.callFunction('activateMode', [mode, text])
+  const res = await ipcStore.call('activate_mode', { mode, text })
   if (!res?.success) {
     desktopClient.setLocalParams({
       mode,

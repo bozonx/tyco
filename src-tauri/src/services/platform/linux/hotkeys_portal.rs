@@ -3,7 +3,6 @@ use crate::errors::AppError;
 use crate::locks::RwLockExt;
 use crate::services::hotkeys::{
     bindings_from_config, global_target, HotkeyBinding, PortalShortcutBindings, ProviderState,
-    HOTKEYS_CHANGED_EVENT,
 };
 use crate::services::platform::hotkeys::ProviderKind;
 use crate::services::selection_replace;
@@ -11,7 +10,7 @@ use crate::state::AppState;
 use std::sync::RwLock;
 #[cfg(target_os = "linux")]
 use std::sync::{Arc, OnceLock};
-use tauri::{App, AppHandle, Emitter, Manager};
+use tauri::{App, AppHandle, Manager};
 
 #[cfg(target_os = "linux")]
 use ashpd::desktop::global_shortcuts::{
@@ -272,7 +271,7 @@ async fn bind_session(
 
 #[cfg(target_os = "linux")]
 pub(crate) fn notify_hotkeys_changed(app: &AppHandle) {
-    if let Err(error) = app.emit(HOTKEYS_CHANGED_EVENT, ()) {
+    if let Err(error) = crate::events::emit::<crate::events::HotkeysChanged, _>(app, ()) {
         log::warn!("Could not report changed hotkeys: {error}");
     }
 }

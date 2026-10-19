@@ -33,7 +33,7 @@ vi.mock('../../stores/menu-modals', () => ({
 }))
 
 vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callFunctionOrNotify: mocks.hideWindow }),
+  useIpcStore: () => ({ callOrNotify: mocks.hideWindow }),
 }))
 vi.mock('../../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../../test/desktop-store')
@@ -109,7 +109,7 @@ describe('ActionOverlayLayout', () => {
     await wrapper.find('.action-overlay-esc').trigger('click')
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardQuickInput).toHaveBeenCalled()
-    expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
+    expect(mocks.hideWindow).toHaveBeenCalledWith('hide_window')
   })
 
   it('triggers hideWindow when only current modal is in breadcrumbs', async () => {
@@ -122,7 +122,7 @@ describe('ActionOverlayLayout', () => {
       'common.cancel'
     )
     await wrapper.find('.action-overlay-esc').trigger('click')
-    expect(mocks.hideWindow).toHaveBeenCalledWith('hideWindow')
+    expect(mocks.hideWindow).toHaveBeenCalledWith('hide_window')
   })
   it('provides a plain preview default while preserving explicit frames', () => {
     const wrapper = mount(ActionOverlayLayout, {

@@ -1,4 +1,8 @@
-use crate::{errors::AppError, services::runtime};
+use crate::{
+    errors::AppError,
+    services::activation::{Activation, ActivationMode, ActivationSource},
+    services::runtime,
+};
 use tauri::AppHandle;
 #[tauri::command]
 pub fn open_main_chat(
@@ -21,12 +25,28 @@ pub fn open_main_editor(
     runtime::open_main_editor(&app, text, source_text, activation_id)
 }
 
+/// Opens `mode` as the user would with a hotkey, with `text` in place of the
+/// selection. `launcher_page_id` picks a page of the command overlay.
 #[tauri::command]
-pub fn activate_mode(app: AppHandle, mode: String, text: Option<String>) -> Result<(), AppError> {
-    let mut activation = crate::services::activation::Activation::from_mode(
-        &mode,
-        crate::services::activation::ActivationSource::Ui,
-    )?;
+pub fn activate_mode(
+    app: AppHandle,
+    mode: ActivationMode,
+    launcher_page_id: Option<String>,
+    text: Option<String>,
+) -> Result<(), AppError> {
+    if !ActivationMode::PUBLIC_MODES.contains(&mode) {
+        return Err(AppError::InvalidInput(format!(
+            "The mode {} opens only by itself",
+            mode.as_str()
+        )));
+    }
+    let mut activation = Activation::new(mode, ActivationSource::Ui);
+    if let Some(page_id) = launcher_page_id {
+        if mode != ActivationMode::CommandLauncher || page_id.trim().is_empty() {
+            return Err(AppError::InvalidInput("Invalid command page".into()));
+        }
+        activation.launcher_page_id = Some(page_id);
+    }
     activation.selected_text = text;
     runtime::activate(&app, activation)
 }

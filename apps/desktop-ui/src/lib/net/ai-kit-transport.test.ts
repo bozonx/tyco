@@ -1,5 +1,5 @@
 import { Catalog, createAiKit, type StreamPart } from '@bozonx/ai-kit'
-import { DESKTOP_COMMANDS, llmSecretId } from '@tyco/shared'
+import { llmSecretId } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { bytes, createFakeNetIpc } from './fake-net-ipc'
@@ -48,7 +48,7 @@ describe('ai-kit over the Tauri transport', () => {
   it('streams an answer through the proxy with a key reference', async () => {
     const { fake, kit } = createKit(
       {
-        [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+        ['start_fetch']: (_call, emit) => {
           setTimeout(() => {
             emit({
               type: 'head',
@@ -84,7 +84,7 @@ describe('ai-kit over the Tauri transport', () => {
     expect(text).toBe('Hello')
     expect(parts.at(-1)?.type).toBe('finish')
 
-    const [call] = fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)
+    const [call] = fake.callsOf('start_fetch')
     const request = (
       call.args as { request: { url: string; headers: [string, string][] } }
     ).request
@@ -97,7 +97,7 @@ describe('ai-kit over the Tauri transport', () => {
 
   it('classifies a refused key as an auth failure', async () => {
     const { kit } = createKit({
-      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      ['start_fetch']: (_call, emit) => {
         setTimeout(() => {
           emit({ type: 'head', status: 401, statusText: '', headers: [] })
           emit(bytes('{"error":{"message":"bad key"}}'))
@@ -117,7 +117,7 @@ describe('ai-kit over the Tauri transport', () => {
   it('propagates chat cancellation through the SDK to the Rust proxy', async () => {
     const controller = new AbortController()
     const { fake, kit } = createKit({
-      [DESKTOP_COMMANDS.NET_FETCH]: (_call, emit) => {
+      ['start_fetch']: (_call, emit) => {
         setTimeout(() => {
           emit({
             type: 'head',
@@ -142,15 +142,13 @@ describe('ai-kit over the Tauri transport', () => {
       }
     }
     expect(text).toEqual(['Hel'])
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_FETCH)).toHaveLength(1)
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 4 })
+    expect(fake.callsOf('start_fetch')).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')[0].args).toEqual({ id: 4 })
   })
 
   it('propagates STT cancellation through the kit while its handshake is pending', async () => {
-    const fake = createFakeNetIpc({
-      [DESKTOP_COMMANDS.NET_SOCKET_OPEN]: () => 5,
-    })
+    const fake = createFakeNetIpc({ ['open_socket']: () => 5 })
     const controller = new AbortController()
     const audio = createAsyncQueue<AudioChunk>()
     const stt = createSttClient({ transport: createTauriTransport(fake.ipc) })
@@ -165,14 +163,12 @@ describe('ai-kit over the Tauri transport', () => {
         /* Drain the terminal cancellation event. */
       }
     })()
-    await vi.waitFor(() =>
-      expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_OPEN)).toHaveLength(1)
-    )
+    await vi.waitFor(() => expect(fake.callsOf('open_socket')).toHaveLength(1))
     const rejected = expect(pending).rejects.toMatchObject({ kind: 'aborted' })
     controller.abort()
     await rejected
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_SOCKET_OPEN)).toHaveLength(1)
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)).toHaveLength(1)
-    expect(fake.callsOf(DESKTOP_COMMANDS.NET_CANCEL)[0].args).toEqual({ id: 5 })
+    expect(fake.callsOf('open_socket')).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
+    expect(fake.callsOf('cancel_net_task')[0].args).toEqual({ id: 5 })
   })
 })

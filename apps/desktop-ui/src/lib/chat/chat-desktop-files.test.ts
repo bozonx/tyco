@@ -1,4 +1,4 @@
-import { DESKTOP_COMMANDS, type ChatParams } from '@tyco/shared'
+import { type ChatParams } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
@@ -9,7 +9,7 @@ describe('chat-desktop-files', () => {
   it('saves dropped text files to workspace uploads when profile file tools are enabled', async () => {
     const draft = ref<ChatParams>({})
     const invoke = vi.fn(async (command: string) => {
-      if (command === DESKTOP_COMMANDS.SAVE_AI_UPLOAD) {
+      if (command === 'save_ai_upload') {
         return 'workspace/uploads/notes.txt'
       }
       return undefined
@@ -42,16 +42,10 @@ describe('chat-desktop-files', () => {
       new File(['hello world'], 'notes.txt', { type: 'text/plain' }),
     ])
 
-    expect(invoke).toHaveBeenCalledWith(
-      DESKTOP_COMMANDS.SAVE_AI_UPLOAD,
-      expect.any(Uint8Array),
-      {
-        headers: {
-          'x-ai-upload-profile': 'writer',
-          'x-ai-upload-name': 'notes.txt',
-        },
-      }
-    )
+    expect(invoke).toHaveBeenCalledWith('save_ai_upload', {
+      bytes: expect.any(Uint8Array),
+      meta: { profileId: 'writer', name: 'notes.txt' },
+    })
     expect(addAttachment).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'notes.txt',

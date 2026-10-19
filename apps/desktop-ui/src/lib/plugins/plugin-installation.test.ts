@@ -3,8 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createPluginInstallation } from './plugin-installation'
 
 const preview = {
-  path: '/package.tyco-plugin',
-  digest: 'reviewed-digest',
+  inspectionId: 'reviewed-digest-1',
   manifest: {
     id: 'example',
     version: '1.0.0',

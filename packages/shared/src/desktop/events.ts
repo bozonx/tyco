@@ -1,7 +1,4 @@
-import type { SelectionRunEvent } from '../selection'
-import type { DesktopSnapshot } from './state'
-import type { OpenMainChatEvent } from './chat'
-import type { EditorTransfer, CommandRunEvent } from './actions'
+import type { DesktopEventPayloads } from '../generated/desktop-types'
 
 export const DESKTOP_EVENTS = {
   QUIT_REQUESTED: 'app://quit-requested',
@@ -23,29 +20,20 @@ export const DESKTOP_EVENTS = {
   /** An external call runs a command in the background */
   COMMAND_RUN: 'app://command-run',
   EXTERNAL_JOB_CANCEL: 'app://external-job-cancel',
-} as const
+} as const satisfies Record<string, DesktopEventName>
 
-/** Serialized payloads shared by every desktop event adapter. */
-export interface AppEventPayloads {
-  [DESKTOP_EVENTS.QUIT_REQUESTED]: number
-  [DESKTOP_EVENTS.QUIT_CANCELLED]: null
-  [DESKTOP_EVENTS.PLUGINS_CHANGED]: null
-  [DESKTOP_EVENTS.OPEN_MAIN_CHAT]: OpenMainChatEvent
-  [DESKTOP_EVENTS.STATE_CHANGED]: DesktopSnapshot
-  [DESKTOP_EVENTS.OPEN_MAIN_EDITOR]: EditorTransfer
-  [DESKTOP_EVENTS.ACTIVATION_METRICS_START]: { id: number }
-  [DESKTOP_EVENTS.ACTIVATION_METRICS_COLLECT]: { id: number }
-  [DESKTOP_EVENTS.VOICE_FINISH]: number
-  [DESKTOP_EVENTS.VOICE_AUDIO_LEVEL]: { level: number; peak: number }
-  [DESKTOP_EVENTS.SELECTION_RUN]: SelectionRunEvent
-  [DESKTOP_EVENTS.SELECTION_CANCEL]: { runId: number }
-  [DESKTOP_EVENTS.COMMAND_RUN]: CommandRunEvent
-  [DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL]: string
-  [DESKTOP_EVENTS.HOTKEYS_CHANGED]: null
-  [DESKTOP_EVENTS.MAIN_WINDOW_CLOSED]: null
-}
+export type DesktopEventName = keyof DesktopEventPayloads
 
-export type DesktopListen = <K extends keyof AppEventPayloads>(
+// every event of the backend has a name here
+type MissingEvent = Exclude<
+  DesktopEventName,
+  (typeof DESKTOP_EVENTS)[keyof typeof DESKTOP_EVENTS]
+>
+const EVERY_EVENT_NAMED: [MissingEvent] extends [never] ? true : MissingEvent =
+  true
+void EVERY_EVENT_NAMED
+
+export type DesktopListen = <K extends DesktopEventName>(
   event: K,
-  handler: (payload: AppEventPayloads[K]) => void | Promise<void>
+  handler: (payload: DesktopEventPayloads[K]) => void | Promise<void>
 ) => Promise<() => void>

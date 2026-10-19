@@ -56,7 +56,7 @@ navPanelStore.resetNavPanelState({ panelVisible: false })
 function handleCancel() {
   if (!isCurrent()) return
   isStarting.value = false
-  void ipcStore.callFunctionOrNotify('hideWindow')
+  void ipcStore.callOrNotify('hide_window')
 }
 
 const correctionMode = createCorrectionMode({

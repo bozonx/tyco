@@ -1,5 +1,5 @@
 import { test as base, expect, type ConsoleMessage } from '@playwright/test'
-import { StartMode } from '@tyco/shared'
+import { ActivationMode } from '@tyco/shared'
 
 import { FakeDesktop } from './fake-desktop'
 
@@ -14,7 +14,7 @@ interface AppFixtures {
 }
 
 interface AppOptions {
-  startMode: StartMode
+  startMode: ActivationMode
   windowLabel: string
 }
 
@@ -93,7 +93,7 @@ export const browserTest = base.extend<BrowserFixtures>({
 
 /** Every test gets its own backend, installed before navigation. */
 export const test = browserTest.extend<AppFixtures & AppOptions>({
-  startMode: [StartMode.EDITOR, { option: true }],
+  startMode: [ActivationMode.EDITOR, { option: true }],
   windowLabel: ['main', { option: true }],
   expectDesktopError: [
     async ({ desktop }, use) => {

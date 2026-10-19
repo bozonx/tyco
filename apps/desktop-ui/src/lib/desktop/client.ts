@@ -1,7 +1,7 @@
 import { isTauri } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 
-import { DESKTOP_COMMANDS, type AppEventPayloads } from '@tyco/shared'
+import { type DesktopEventPayloads } from '@tyco/shared'
 
 import { invokeDesktop as invoke } from './invoke'
 import { formatErrorMessage } from '../logger/client-logger'
@@ -10,18 +10,18 @@ import { createDesktopClient } from './desktop-client'
 export const desktopClient = createDesktopClient({
   isAvailable: isTauri,
   onEventError: (event, error) => {
-    void invoke(DESKTOP_COMMANDS.LOG_CLIENT_MESSAGE, {
+    void invoke('log_client_message', {
       level: 'error',
       message: formatErrorMessage(error),
       context: event,
     }).catch(() => {})
   },
   invoke,
-  listen: <EventName extends keyof AppEventPayloads>(
+  listen: <EventName extends keyof DesktopEventPayloads>(
     event: EventName,
-    handler: (payload: AppEventPayloads[EventName]) => void | Promise<void>
+    handler: (payload: DesktopEventPayloads[EventName]) => void | Promise<void>
   ) =>
-    listen<AppEventPayloads[EventName]>(event, ({ payload }) => {
+    listen<DesktopEventPayloads[EventName]>(event, ({ payload }) => {
       void handler(payload)
     }),
 })

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_USER_CONFIG,
   DESKTOP_EVENTS,
-  type AppEventPayloads,
+  type DesktopEventPayloads,
   type UserConfig,
 } from '@tyco/shared'
 
@@ -88,9 +88,9 @@ function fixture(overrides: Partial<AppWindowControllerDependencies> = {}) {
     ...overrides,
   }
   const controller = createAppWindowController(deps)
-  const deliver = async <K extends keyof AppEventPayloads>(
+  const deliver = async <K extends keyof DesktopEventPayloads>(
     event: K,
-    payload: AppEventPayloads[K]
+    payload: DesktopEventPayloads[K]
   ) => {
     await handlers.get(event)?.(payload as never)
   }
@@ -119,10 +119,16 @@ describe('application window events', () => {
   it('opens the last chat for an empty payload and focuses an unsent question', async () => {
     const f = fixture()
     await f.controller.start()
-    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, { question: '  ' })
+    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, {
+      question: '  ',
+      autoSend: false,
+    })
     expect(f.deps.openLastChat).toHaveBeenCalledOnce()
     expect(f.deps.setChatInput).not.toHaveBeenCalled()
-    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, { question: 'Draft' })
+    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, {
+      question: 'Draft',
+      autoSend: false,
+    })
     expect(f.deps.startChat).toHaveBeenCalledWith({})
     expect(f.deps.focusChatInput).toHaveBeenCalledOnce()
     expect(f.deps.sendChatInput).not.toHaveBeenCalled()
@@ -163,7 +169,10 @@ describe('application window events', () => {
       question: 'Earlier',
       autoSend: true,
     })
-    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, { question: 'Current' })
+    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, {
+      question: 'Current',
+      autoSend: false,
+    })
     finish()
     await earlier
     expect(f.deps.setChatInput).toHaveBeenCalledOnce()

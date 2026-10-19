@@ -17,14 +17,12 @@ use std::time::{Duration, Instant};
 
 use cpal::traits::DeviceTrait;
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 use crate::errors::AppError;
 use crate::services::net::EventSink;
 use crate::services::voice::session::VoiceCaptureSession;
 use crate::services::voice::session::VoiceSessionState;
-
-pub const VOICE_AUDIO_LEVEL_EVENT: &str = "app://voice-audio-level";
 
 /// What speech models are trained on; a higher device rate is averaged down.
 pub(crate) const TARGET_SAMPLE_RATE_HZ: u32 = 16_000;
@@ -35,14 +33,14 @@ const LEVEL_INTERVAL: Duration = Duration::from_millis(40);
 const SETUP_TIMEOUT: Duration = Duration::from_secs(10);
 const STOP_TIMEOUT: Duration = Duration::from_secs(2);
 
-#[derive(Clone, Serialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Debug, PartialEq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct VoiceAudioLevelPayload {
     pub level: f32,
     pub peak: f32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct VoiceCaptureInfo {
     /// Rate of the PCM16 mono chunks that follow.
@@ -53,9 +51,10 @@ pub struct VoiceCaptureInfo {
 }
 
 /// Control messages on the audio channel; the audio itself goes as raw bytes.
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize, Debug, PartialEq, ts_rs::TS)]
 #[serde(tag = "type", rename_all = "camelCase")]
-enum CaptureEvent {
+#[ts(rename = "VoiceCaptureEvent")]
+pub enum CaptureEvent {
     /// Every captured sample has been sent.
     End,
     Error {
@@ -81,7 +80,7 @@ trait AudioLevelSink {
 
 impl AudioLevelSink for AppHandle {
     fn publish(&self, payload: VoiceAudioLevelPayload) {
-        let _ = self.emit(VOICE_AUDIO_LEVEL_EVENT, payload);
+        let _ = crate::events::emit::<crate::events::VoiceAudioLevel, _>(self, payload);
     }
 }
 

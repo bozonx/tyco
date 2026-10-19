@@ -1,7 +1,7 @@
 import {
   desktopViewToSnapshot,
   parseOpenMainChatEvent,
-  type AppEventPayloads,
+  type DesktopEventPayloads,
   DEFAULT_DESKTOP_VIEW_STATE,
   DEFAULT_USER_CONFIG,
   DESKTOP_EVENTS,
@@ -19,9 +19,9 @@ export interface DesktopClientDependencies {
   onEventError: (event: string, error: unknown) => void
   isAvailable: () => boolean
   invoke: DesktopInvoke
-  listen: <EventName extends keyof AppEventPayloads>(
+  listen: <EventName extends keyof DesktopEventPayloads>(
     event: EventName,
-    handler: (payload: AppEventPayloads[EventName]) => void | Promise<void>
+    handler: (payload: DesktopEventPayloads[EventName]) => void | Promise<void>
   ) => Promise<() => void>
 }
 
@@ -73,11 +73,11 @@ export function createDesktopClient(deps: DesktopClientDependencies) {
     }
   }
 
-  async function listen<EventName extends keyof AppEventPayloads>(
+  async function listen<EventName extends keyof DesktopEventPayloads>(
     event: EventName,
-    handler: (payload: AppEventPayloads[EventName]) => void | Promise<void>
+    handler: (payload: DesktopEventPayloads[EventName]) => void | Promise<void>
   ): Promise<() => void> {
-    const deliver = (payload: AppEventPayloads[EventName]) => {
+    const deliver = (payload: DesktopEventPayloads[EventName]) => {
       try {
         if (event === DESKTOP_EVENTS.OPEN_MAIN_CHAT)
           parseOpenMainChatEvent(payload)

@@ -35,7 +35,7 @@ export const useDesktopRuntimeStore = defineStore('desktopRuntime', () => {
   })
   const state = createDesktopStateModel({
     desktopClient,
-    callFunction: ipc.callFunction,
+    call: ipc.call,
     reportFailure: ipc.reportFailure,
   })
   // handed out as they are: each facade store unwraps its own refs

@@ -1,25 +1,44 @@
-use std::path::Path;
+use std::path::PathBuf;
+use std::sync::Mutex;
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
+use ts_rs::TS;
 
 use super::run_blocking;
 use crate::errors::AppError;
+use crate::locks::MutexExt;
 use crate::services::plugins::{self, InstalledPlugin, PluginManifest, PluginStore};
 
 // The dialog waits for the user and the store reads packages of up to tens of
 // megabytes, so every command runs on the blocking pool.
 
-#[derive(Serialize)]
-pub struct PluginPreview {
-    path: String,
+/// What a picked package would install, for the user to confirm.
+#[derive(Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginPackagePreview {
+    /// What `install_plugin_package` takes to install this package.
+    inspection_id: String,
+    #[ts(type = "PluginManifest")]
+    manifest: PluginManifest,
+}
+
+struct Inspection {
+    id: String,
+    path: PathBuf,
     digest: String,
     manifest: PluginManifest,
 }
 
+/// The package picked last; the webview confirms it by its id and never
+/// names a file to install.
+#[derive(Default)]
+pub struct PluginInspection(Mutex<Option<Inspection>>);
+
+/// Lets the user pick a package and reads its manifest without running it.
 #[tauri::command]
-pub async fn inspect_plugin_package(app: AppHandle) -> Result<Option<PluginPreview>, AppError> {
+pub async fn pick_plugin_package(app: AppHandle) -> Result<Option<PluginPackagePreview>, AppError> {
     run_blocking(move || {
         let Some(file) = app
             .dialog()
@@ -33,11 +52,18 @@ pub async fn inspect_plugin_package(app: AppHandle) -> Result<Option<PluginPrevi
             .into_path()
             .map_err(|reason| AppError::Message(reason.to_string()))?;
         let (package, digest) = plugins::inspect(&path)?;
-        Ok(Some(PluginPreview {
-            path: path.to_string_lossy().into_owned(),
-            manifest: package.manifest,
+        let id = format!("{digest}-{}", crate::services::clock::now_ns());
+        let preview = PluginPackagePreview {
+            inspection_id: id.clone(),
+            manifest: package.manifest.clone(),
+        };
+        *app.state::<PluginInspection>().0.locked() = Some(Inspection {
+            id,
+            path,
             digest,
-        }))
+            manifest: package.manifest,
+        });
+        Ok(Some(preview))
     })
     .await?
 }
@@ -47,17 +73,25 @@ pub async fn list_installed_plugins(app: AppHandle) -> Result<Vec<InstalledPlugi
     run_blocking(move || app.state::<PluginStore>().list()).await?
 }
 
+/// Installs the package `pick_plugin_package` showed, unless the file changed
+/// since.
 #[tauri::command]
 pub async fn install_plugin_package(
     app: AppHandle,
-    path: String,
-    manifest: PluginManifest,
-    digest: String,
+    inspection_id: String,
 ) -> Result<InstalledPlugin, AppError> {
     run_blocking(move || {
-        let result = app
-            .state::<PluginStore>()
-            .install(Path::new(&path), &manifest, &digest)?;
+        let inspection = app
+            .state::<PluginInspection>()
+            .0
+            .locked()
+            .take_if(|inspection| inspection.id == inspection_id)
+            .ok_or_else(|| AppError::Stale("The plugin package is no longer picked".into()))?;
+        let result = app.state::<PluginStore>().install(
+            &inspection.path,
+            &inspection.manifest,
+            &inspection.digest,
+        )?;
         publish_plugins_changed(&app);
         Ok(result)
     })
@@ -65,7 +99,7 @@ pub async fn install_plugin_package(
 }
 
 #[tauri::command]
-pub async fn remove_plugin_package(app: AppHandle, id: String) -> Result<(), AppError> {
+pub async fn uninstall_plugin_package(app: AppHandle, id: String) -> Result<(), AppError> {
     run_blocking(move || {
         app.state::<PluginStore>().remove(&id)?;
         publish_plugins_changed(&app);
@@ -74,8 +108,9 @@ pub async fn remove_plugin_package(app: AppHandle, id: String) -> Result<(), App
     .await?
 }
 
+/// Brings back the version the last installation replaced.
 #[tauri::command]
-pub async fn restore_plugin_package(app: AppHandle, id: String) -> Result<(), AppError> {
+pub async fn restore_previous_plugin_package(app: AppHandle, id: String) -> Result<(), AppError> {
     run_blocking(move || {
         app.state::<PluginStore>().restore(&id)?;
         publish_plugins_changed(&app);
@@ -85,7 +120,7 @@ pub async fn restore_plugin_package(app: AppHandle, id: String) -> Result<(), Ap
 }
 
 fn publish_plugins_changed(app: &AppHandle) {
-    if let Err(error) = app.emit("app://plugins-changed", ()) {
+    if let Err(error) = crate::events::emit::<crate::events::PluginsChanged, _>(app, ()) {
         log::warn!("Could not publish plugin changes: {error}");
     }
 }
