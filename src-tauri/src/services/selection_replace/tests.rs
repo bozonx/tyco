@@ -38,7 +38,6 @@ fn run_at(id: u64, started_at: Instant) -> SelectionRun {
             is_terminal: false,
         },
         started_at,
-        #[cfg(any(target_os = "linux", target_os = "windows"))]
         clipboard_snapshot: None,
     }
 }

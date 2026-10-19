@@ -14,6 +14,10 @@ pub enum AppError {
     InvalidInput(String),
     #[error("{0}")]
     UnsupportedConfig(String),
+    /// The request was made for a state that has changed since, e.g. an
+    /// activation a newer one replaced.
+    #[error("{0}")]
+    Stale(String),
     #[error(transparent)]
     Tauri(#[from] tauri::Error),
     #[error(transparent)]
@@ -31,6 +35,7 @@ impl AppError {
             Self::ResourceLimit(_) => "resourceLimit",
             Self::InvalidInput(_) => "invalidInput",
             Self::UnsupportedConfig(_) => "unsupportedConfig",
+            Self::Stale(_) => "stale",
             Self::Tauri(_) => "runtimeError",
             Self::Io(_) => "ioError",
             Self::Json(_) => "invalidData",
@@ -84,6 +89,7 @@ mod tests {
                 AppError::UnsupportedConfig("Config version 99".into()),
                 "unsupportedConfig",
             ),
+            (AppError::Stale("Activation changed".into()), "stale"),
             (
                 AppError::Io(std::io::Error::new(
                     std::io::ErrorKind::PermissionDenied,

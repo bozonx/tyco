@@ -2,6 +2,7 @@ mod lifecycle;
 mod panel_layer;
 pub mod settings_shutdown;
 mod target_focus;
+mod target_paste;
 mod tray;
 mod warmup;
 mod window_visibility;
@@ -9,33 +10,27 @@ mod window_visibility;
 pub use lifecycle::{create_windows, request_exit, setup, shutdown};
 pub use panel_layer::set_quick_input_region;
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
+pub use target_paste::paste_into_target;
 pub use window_visibility::{
     dismiss_quick_window, handle_window_event, hide_active_window, hide_window, open_main_chat,
     open_main_editor, show_application,
 };
 
-use self::panel_layer::panel_layer;
-#[cfg(target_os = "linux")]
-use self::panel_layer::{is_quick_window_shown, LayerShellRuntimeState};
+use self::panel_layer::{is_quick_window_shown, panel_layer, PanelLayerState};
 use self::target_focus::has_focused_window;
 use self::window_visibility::hide_inactive_window;
 
 use std::sync::Mutex;
 
+use super::activation::coordinator::{ActivationCoordinator, ActivationHost};
 pub use super::activation::Activation;
-#[cfg(target_os = "linux")]
-use super::activation::WindowProfile;
-use super::activation::{ActivationMode, WINDOW_SIZE};
-use super::activation_coordinator::{ActivationCoordinator, ActivationHost};
-#[cfg(target_os = "linux")]
+use super::activation::{ActivationMode, WindowProfile, WINDOW_SIZE};
 use super::platform::PanelKeyboardMode;
 
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::errors::AppError;
 use crate::state::AppState;
-#[cfg(target_os = "linux")]
-use gtk::prelude::WidgetExt;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
@@ -214,8 +209,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     let state = app.state::<AppState>();
 
     // the warmup may have left the window transparent
-    #[cfg(target_os = "linux")]
-    window.gtk_window()?.set_opacity(1.0);
+    super::platform::set_window_opacity(&window, 1.0)?;
 
     let (width, height) = WINDOW_SIZE;
     if is_quick_window {
@@ -237,7 +231,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     }
     window.set_focusable(true)?;
     window.show()?;
-    super::activation_metrics::mark_show(app);
+    super::activation::metrics::mark_show(app);
     if let Err(error) = window.unminimize() {
         log::warn!("Could not unminimize window: {error}");
     }

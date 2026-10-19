@@ -3,15 +3,15 @@ use tauri::State;
 
 use crate::errors::AppError;
 use crate::services::voice;
+use crate::services::voice::session::VoiceSessionState;
 use crate::services::voice::VoiceCaptureInfo;
-use crate::state::AppState;
 
 /// Starts the microphone; PCM16 chunks, then `end` or `error`, arrive
 /// through `on_audio`.
 #[tauri::command]
 pub async fn start_voice_capture(
     app: tauri::AppHandle,
-    state: State<'_, AppState>,
+    state: State<'_, VoiceSessionState>,
     on_audio: Channel<InvokeResponseBody>,
 ) -> Result<VoiceCaptureInfo, AppError> {
     voice::start_capture(&app, &state, on_audio).await
@@ -19,7 +19,7 @@ pub async fn start_voice_capture(
 
 #[tauri::command]
 pub async fn stop_voice_capture(
-    state: State<'_, AppState>,
+    state: State<'_, VoiceSessionState>,
     session_id: Option<u64>,
 ) -> Result<(), AppError> {
     voice::stop_capture(&state, session_id).await

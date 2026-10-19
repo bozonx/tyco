@@ -2,7 +2,6 @@
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
-use tauri::AppHandle;
 
 use crate::errors::AppError;
 use crate::services::secrets::{normalize_origin, SecretStore, SECRET_REF_PREFIX};
@@ -186,10 +185,8 @@ fn cleanup(
 }
 
 /// Startup has no outstanding drafts or undo actions.
-pub fn cleanup_after_startup(app: &AppHandle, config: &Value) -> Result<(), AppError> {
-    let store = SecretStore::load_for_app(app)?;
-    cleanup(&store, &referenced_secrets(config), true, None);
-    Ok(())
+pub fn cleanup_after_startup(store: &SecretStore, config: &Value) {
+    cleanup(store, &referenced_secrets(config), true, None);
 }
 
 #[cfg(test)]

@@ -136,7 +136,7 @@ pub fn inject_paste(target_process_id: Option<&str>) -> Result<(), AppError> {
     let process_id = target_process_id
         .and_then(|value| value.parse::<i32>().ok())
         .filter(|process_id| *process_id > 0 && *process_id as u32 != std::process::id())
-        .ok_or_else(|| AppError::Message("Target application is not available".into()))?;
+        .ok_or_else(|| AppError::Stale("Target application is not available".into()))?;
     check_text_injection()?;
     const SCRIPT: &str = r#"
 ObjC.import('AppKit');
@@ -172,7 +172,7 @@ pub(super) fn check_text_injection() -> Result<(), AppError> {
     if unsafe { AXIsProcessTrusted() } {
         return Ok(());
     }
-    Err(AppError::Message(
+    Err(AppError::ServiceUnavailable(
         "Text insertion requires Accessibility permission".into(),
     ))
 }

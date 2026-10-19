@@ -4,7 +4,7 @@ import { isCommandAvailable } from './command-runtime'
 
 /**
  * A name as external calls compare it: case, `ё` and spaces do not matter. Keep
- * in sync with `normalize_name` in `services/external_commands.rs`
+ * in sync with `normalize_name` in `services/external/commands.rs`
  */
 export function normalizeCommandName(name: string): string {
   return name

@@ -18,7 +18,7 @@ impl AudioSource for SystemAudioSource {
         let host = cpal::default_host();
         let device = host
             .default_input_device()
-            .ok_or_else(|| AppError::Message("No default input device found".into()))?;
+            .ok_or_else(|| AppError::ServiceUnavailable("No default input device found".into()))?;
         let supported_config = device
             .default_input_config()
             .map_err(|error| AppError::Message(error.to_string()))?;

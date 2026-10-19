@@ -5,6 +5,7 @@ export type DesktopErrorCode =
   | 'resourceLimit'
   | 'invalidInput'
   | 'unsupportedConfig'
+  | 'stale'
   | 'runtimeError'
   | 'ioError'
   | 'invalidData'

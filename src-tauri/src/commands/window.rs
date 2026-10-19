@@ -1,12 +1,10 @@
-use std::time::Duration;
-use tauri::{AppHandle, State, WebviewWindow};
+use tauri::{AppHandle, WebviewWindow};
 
 use super::run_blocking;
 use crate::errors::AppError;
-use crate::services::clipboard::copy_to_clipboard;
+use crate::services::platform::clipboard::copy_to_clipboard;
 use crate::services::platform::InputRegion;
 use crate::services::runtime;
-use crate::state::AppState;
 
 #[tauri::command]
 pub fn hide_window(
@@ -55,8 +53,6 @@ pub async fn open_in_browser(url: String) -> Result<(), AppError> {
     run_blocking(move || open_url(&url)).await?
 }
 
-const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
-
 /// Async so it runs off the main thread: the GTK loop must be free to unmap
 /// the window and let the compositor focus the target window before paste.
 #[tauri::command]
@@ -64,54 +60,13 @@ pub async fn paste_into_target_and_hide(
     app: AppHandle,
     window: WebviewWindow,
     activation_id: u64,
-    state: State<'_, AppState>,
     text: String,
 ) -> Result<(), AppError> {
-    let snapshot = state.snapshot();
-    if snapshot.activation.activation_id != activation_id {
-        return Err(AppError::InvalidInput(
-            "The insertion activation is no longer current".into(),
-        ));
-    }
-    let focus_app = app.clone();
-    // The clipboard tools, waiting for focus and insertion must not hold an
-    // async worker.
     run_blocking(move || {
-        #[cfg(target_os = "linux")]
-        let previous_clipboard = crate::services::platform::linux::clipboard_restore::snapshot();
-        runtime::hide_window(&focus_app, window.label().into(), activation_id)?;
-        copy_to_clipboard(&text)?;
-        if state_activation_changed(&focus_app, activation_id) {
-            return Err(AppError::InvalidInput(
-                "The insertion activation changed".into(),
-            ));
-        }
-        crate::services::platform::paste_after_focus(
-            &ActivationTextInjector {
-                app: &focus_app,
-                activation_id,
-            },
-            &snapshot.settings.user_config,
-            snapshot
-                .activation
-                .target_window_id
-                .clone()
-                .map(crate::services::platform::ForegroundTarget::from_platform_id)
-                .as_ref(),
-            || runtime::wait_until_unfocused(&focus_app, FOCUS_RELEASE_TIMEOUT),
-            || {
-                #[cfg(target_os = "linux")]
-                if let Some(snapshot) = previous_clipboard {
-                    crate::services::platform::linux::clipboard_restore::restore_later(
-                        snapshot, text,
-                    );
-                }
-            },
-        )
+        runtime::paste_into_target(&app, window.label().into(), activation_id, text)
     })
     .await?
-    .inspect_err(|error| log::error!("Text insertion failed: {error}"))?;
-    Ok(())
+    .inspect_err(|error| log::error!("Text insertion failed: {error}"))
 }
 
 /// Leaves the windows as they are: a command run in the background copies
@@ -137,31 +92,6 @@ fn web_url(value: &str) -> Result<url::Url, AppError> {
 fn open_url(value: &str) -> Result<(), AppError> {
     let url = web_url(value)?;
     crate::services::platform::open_web_url(&url)
-}
-
-fn state_activation_changed(app: &AppHandle, activation_id: u64) -> bool {
-    use tauri::Manager;
-    app.state::<AppState>().snapshot().activation.activation_id != activation_id
-}
-
-struct ActivationTextInjector<'a> {
-    app: &'a AppHandle,
-    activation_id: u64,
-}
-
-impl crate::services::platform::TextInjector for ActivationTextInjector<'_> {
-    fn inject(
-        &self,
-        config: &serde_json::Value,
-        target: Option<&crate::services::platform::ForegroundTarget>,
-    ) -> Result<(), AppError> {
-        if state_activation_changed(self.app, self.activation_id) {
-            return Err(AppError::InvalidInput(
-                "The insertion activation changed while waiting for focus".into(),
-            ));
-        }
-        crate::services::platform::SystemTextInjector.inject(config, target)
-    }
 }
 
 #[cfg(test)]

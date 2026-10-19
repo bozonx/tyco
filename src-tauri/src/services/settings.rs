@@ -1,12 +1,16 @@
 //! Settings transactions are independent of IPC; adapters supply native effects.
+pub mod defaults;
+pub mod merge;
+pub mod schema;
+pub mod session_state;
+pub mod version;
+
 use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use super::secrets::SecretStore;
 use super::storage::HistorySettings;
-use super::{
-    config_schema, config_update, config_version, hotkeys, runtime, storage, webhook_secrets,
-};
+use super::{hotkeys, runtime, secrets::webhook, storage};
 use crate::{errors::AppError, models::DesktopSnapshot, state::AppState};
 
 trait HeaderSecrets {
@@ -14,7 +18,7 @@ trait HeaderSecrets {
     fn commit(self, previous: &Value, next: &Value);
 }
 
-impl HeaderSecrets for webhook_secrets::PendingHeaderSecrets<'_> {
+impl HeaderSecrets for webhook::PendingHeaderSecrets<'_> {
     fn retain(self) {
         self.retain();
     }
@@ -49,9 +53,9 @@ struct AppSettingsHost<'a> {
 }
 
 impl<'a> SettingsHost for AppSettingsHost<'a> {
-    type Secrets = webhook_secrets::PendingHeaderSecrets<'a>;
+    type Secrets = webhook::PendingHeaderSecrets<'a>;
     fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError> {
-        webhook_secrets::protect_for_save(self.secrets, config)
+        webhook::protect_for_save(self.secrets, config)
     }
     fn write_config(&self, config: &Value) -> Result<(), AppError> {
         storage::save_user_config(self.app, config)
@@ -98,19 +102,56 @@ pub fn save_user_config(
     )
 }
 
+/// Changes the config on behalf of the app itself, for a change that
+/// touches neither the hotkeys nor the history settings, e.g. a permission
+/// the user granted in a prompt.
+pub fn update_user_config(
+    app: &AppHandle,
+    change: impl FnOnce(&mut Value),
+) -> Result<DesktopSnapshot, AppError> {
+    let state = app.state::<AppState>();
+    let _guard = state.lock_settings_update();
+    ensure_running(&state)?;
+    let mut config = state.snapshot().settings.user_config;
+    if version::is_newer_than_supported(&config) {
+        return Err(storage::newer_config_error());
+    }
+    change(&mut config);
+    schema::validate_user_config(&config)?;
+    storage::save_user_config(app, &config)?;
+    let snapshot = state.update_snapshot(|snapshot| snapshot.settings.user_config = config);
+    runtime::publish_state(app, &state);
+    Ok(snapshot)
+}
+
 pub fn patch_session_state(
+    app: &AppHandle,
+    patch: serde_json::Map<String, Value>,
+) -> Result<DesktopSnapshot, AppError> {
+    let state = app.state::<AppState>();
+    let snapshot = patch_session_state_of(&state, patch)?;
+    runtime::publish_state(app, &state);
+    Ok(snapshot)
+}
+
+fn patch_session_state_of(
     state: &AppState,
     patch: serde_json::Map<String, Value>,
 ) -> Result<DesktopSnapshot, AppError> {
     let _guard = state.lock_settings_update();
+    ensure_running(state)?;
+    let session =
+        session_state::merge_session_state(&state.snapshot().settings.session_state, patch)?;
+    Ok(state.update_snapshot(|snapshot| snapshot.settings.session_state = session))
+}
+
+fn ensure_running(state: &AppState) -> Result<(), AppError> {
     if state.is_quitting() {
         return Err(AppError::ServiceUnavailable(
             "Settings service is stopping".into(),
         ));
     }
-    let session =
-        super::session_state::merge_session_state(&state.snapshot().settings.session_state, patch)?;
-    Ok(state.update_snapshot(|snapshot| snapshot.settings.session_state = session))
+    Ok(())
 }
 
 fn save_with(
@@ -120,17 +161,13 @@ fn save_with(
     base: Value,
 ) -> Result<DesktopSnapshot, AppError> {
     let _guard = state.lock_settings_update();
-    if state.is_quitting() {
-        return Err(AppError::ServiceUnavailable(
-            "Settings service is stopping".into(),
-        ));
-    }
+    ensure_running(state)?;
     let previous = state.snapshot().settings.user_config;
-    if config_version::is_newer_than_supported(&previous) {
+    if version::is_newer_than_supported(&previous) {
         return Err(storage::newer_config_error());
     }
-    let mut next = config_update::merge_config(&previous, &base, &next)?;
-    config_schema::validate_user_config(&next)?;
+    let mut next = merge::merge_config(&previous, &base, &next)?;
+    schema::validate_user_config(&next)?;
     let mut pending = Some(host.protect(&mut next)?);
     let before = HistorySettings::from_config(&previous);
     let after = HistorySettings::from_config(&next);
@@ -159,8 +196,9 @@ fn save_with(
 
 #[cfg(test)]
 mod tests {
+    use super::defaults::{default_desktop_snapshot, default_user_config};
     use super::*;
-    use crate::models::{default_desktop_snapshot, default_user_config, SessionState};
+    use crate::models::SessionState;
     use std::cell::RefCell;
 
     struct FakeSecrets;
@@ -233,7 +271,7 @@ mod tests {
         let state = state();
         let config = state.snapshot().settings.user_config;
         let patch = serde_json::from_value(serde_json::json!({"lastChatId":"chat-id"})).unwrap();
-        let saved = patch_session_state(&state, patch).unwrap();
+        let saved = patch_session_state_of(&state, patch).unwrap();
         assert_eq!(saved.revision, 1);
         assert_eq!(
             saved.settings.session_state.last_chat_id.as_deref(),
@@ -253,7 +291,7 @@ mod tests {
             Err(AppError::ServiceUnavailable(_))
         ));
         assert!(matches!(
-            patch_session_state(&state, serde_json::Map::new()),
+            patch_session_state_of(&state, serde_json::Map::new()),
             Err(AppError::ServiceUnavailable(_))
         ));
         assert!(host.calls.borrow().is_empty());

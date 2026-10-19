@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
-use tyco_activation_protocol::{Job, JobState, RunRequest};
+use tyco_activation_protocol::{ErrorCode, Job, JobState, RunRequest};
 
 const MAX_JOBS: usize = 128;
 const MAX_ACTIVE_JOBS: usize = 32;
@@ -18,7 +18,7 @@ struct ExternalJobEntry {
     selection_run_id: Option<u64>,
     command_snapshot: Option<serde_json::Value>,
     pending_completion: Option<Job>,
-    /// The user allowed this call to use the selection, see `external_access`.
+    /// The user allowed this call to use the selection, see `services::external::access`.
     is_selection_approved: bool,
 }
 
@@ -166,7 +166,7 @@ impl ExternalJobs {
         {
             entry.job.state = JobState::Failed;
             entry.job.error = Some("Command output is too large".into());
-            entry.job.code = Some("OutputTooLarge".into());
+            entry.job.code = Some(ErrorCode::OutputTooLarge.into());
         } else {
             entry.job.output = output;
             entry.job.error = error;
@@ -180,7 +180,7 @@ impl ExternalJobs {
             entry.job.state = JobState::Failed;
             entry.job.output = None;
             entry.job.error = Some("Serialized command output is too large".into());
-            entry.job.code = Some("OutputTooLarge".into());
+            entry.job.code = Some(ErrorCode::OutputTooLarge.into());
         }
         let job = entry.job.clone();
         let selection_run_id = entry.selection_run_id.take();
@@ -200,7 +200,7 @@ impl ExternalJobs {
             if let Some(mut job) = entry.pending_completion.take() {
                 if let Some(error) = error {
                     job.state = JobState::Failed;
-                    job.code = Some("SelectionFailed".into());
+                    job.code = Some(ErrorCode::SelectionFailed.into());
                     job.error = Some(error);
                 }
                 entry.job = job;
@@ -270,8 +270,8 @@ mod tests {
             &job.id,
             JobState::Cancelled,
             None,
-            Some("Cancelled".into()),
-            Some("Cancelled".into()),
+            Some(ErrorCode::Cancelled.into()),
+            Some(ErrorCode::Cancelled.into()),
         )
         .unwrap();
         assert!(jobs

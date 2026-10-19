@@ -57,7 +57,7 @@ pub fn show_status_overlay(
 #[tauri::command]
 pub async fn notify_desktop(summary: String, body: String) -> Result<(), AppError> {
     tauri::async_runtime::spawn_blocking(move || {
-        crate::services::desktop_notifications::notify(&summary, &body)
+        crate::services::platform::notifications::notify(&summary, &body)
     })
     .await
     .map_err(|error| AppError::Message(error.to_string()))?

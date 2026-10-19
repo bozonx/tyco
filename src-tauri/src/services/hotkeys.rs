@@ -7,11 +7,7 @@ mod status;
 pub use status::{provider_info, ApplyHotkeyResult, HotkeyApplyStatus, HotkeyProviderInfo};
 
 use crate::errors::AppError;
-use crate::services::platform::hotkeys::{external_command, provider_kind, ProviderKind};
-#[cfg(target_os = "linux")]
-use crate::services::platform::linux::hotkeys_portal::{
-    configure_portal, rebind_portal, PortalState,
-};
+use crate::services::platform::hotkeys::{external_command, portal, provider_kind, ProviderKind};
 use crate::services::platform::session;
 use crate::state::AppState;
 pub use bindings::default_hotkeys_config;
@@ -22,7 +18,6 @@ use global_shortcut::{
 };
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::RwLock;
 use tauri::{App, AppHandle, Manager};
 use tauri_plugin_global_shortcut::Shortcut;
@@ -30,19 +25,21 @@ use tauri_plugin_global_shortcut::Shortcut;
 /// Emitted when the desktop reports changed portal shortcuts.
 pub const HOTKEYS_CHANGED_EVENT: &str = "app://hotkeys-changed";
 
-pub(crate) struct ProviderState(AtomicU8);
+/// The provider chosen at startup; the portal one turns `External` when the
+/// desktop has no working GlobalShortcuts portal after all.
+pub(crate) struct ProviderState(RwLock<ProviderKind>);
 
 impl ProviderState {
     fn new(kind: ProviderKind) -> Self {
-        Self(AtomicU8::new(kind.as_u8()))
+        Self(RwLock::new(kind))
     }
 
     pub(crate) fn kind(&self) -> ProviderKind {
-        ProviderKind::from_u8(self.0.load(Ordering::SeqCst))
+        *self.0.read().expect("hotkey provider lock poisoned")
     }
 
     pub(crate) fn set(&self, kind: ProviderKind) {
-        self.0.store(kind.as_u8(), Ordering::SeqCst);
+        *self.0.write().expect("hotkey provider lock poisoned") = kind;
     }
 }
 
@@ -59,25 +56,6 @@ pub struct ApplyHotkeyRequest {
     pub shortcut: String,
 }
 
-pub(crate) struct PortalProvider;
-struct ExternalProvider;
-
-impl ExternalProvider {
-    fn register(self, _app: &mut App, _bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
-        log::info!("No in-process hotkey provider is available; use tyco-ctl or D-Bus");
-        Ok(())
-    }
-}
-
-#[cfg(not(target_os = "linux"))]
-impl PortalProvider {
-    fn register(self, _app: &mut App, _bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
-        Err(AppError::Message(String::from(
-            "The global shortcuts portal is only available on Linux",
-        )))
-    }
-}
-
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     let user_config = app.state::<AppState>().snapshot().settings.user_config;
     let bindings = bindings_from_config(&user_config);
@@ -86,13 +64,15 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
     app.manage(ProviderState::new(kind));
     app.manage(HotkeyRegistry::default());
     app.manage(PortalShortcutBindings::default());
-    #[cfg(target_os = "linux")]
-    app.manage(PortalState::default());
+    portal::manage_state(app);
 
     match kind {
-        ProviderKind::Portal => PortalProvider.register(app, bindings),
+        ProviderKind::Portal => portal::register(app, bindings),
         ProviderKind::GlobalShortcut => GlobalShortcutProvider.register(app, bindings),
-        ProviderKind::External => ExternalProvider.register(app, bindings),
+        ProviderKind::External => {
+            log::info!("No in-process hotkey provider is available; use tyco-ctl or D-Bus");
+            Ok(())
+        }
     }
 }
 
@@ -100,18 +80,15 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
 /// in the desktop settings where the portal has no dialog (version 1).
 pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
     if app.state::<ProviderState>().kind() != ProviderKind::Portal {
-        return Err(AppError::Message(String::from(
+        return Err(AppError::ServiceUnavailable(String::from(
             "System hotkey configuration is unavailable",
         )));
     }
 
-    #[cfg(target_os = "linux")]
-    if let Err(error) = configure_portal(app).await {
+    if let Err(error) = portal::configure(app).await {
         log::info!("Portal shortcut dialog is unavailable: {error}; opening the desktop settings");
         return super::platform::open_shortcut_settings();
     }
-    #[cfg(not(target_os = "linux"))]
-    let _ = app;
     Ok(())
 }
 
@@ -120,28 +97,25 @@ pub async fn configure(app: &AppHandle) -> Result<(), AppError> {
 /// removed in its settings, which it does not do within a session.
 pub async fn rebind(app: &AppHandle) -> Result<(), AppError> {
     if app.state::<ProviderState>().kind() != ProviderKind::Portal {
-        return Err(AppError::Message(String::from(
+        return Err(AppError::ServiceUnavailable(String::from(
             "Only desktop portal hotkeys are bound again",
         )));
     }
-    #[cfg(target_os = "linux")]
-    return rebind_portal(app).await;
-    #[cfg(not(target_os = "linux"))]
-    Ok(())
+    portal::rebind(app).await
 }
 
 /// Takes the global shortcuts away while the settings record a new one, so
 /// that pressing a bound shortcut reaches the settings instead of running it.
 /// Only Tyco's own registrations can be suspended: the desktop keeps portal
 /// shortcuts and compositor bindings.
-pub fn set_suspended(app: &AppHandle, suspended: bool) -> Result<(), AppError> {
+/// A shortcut that cannot be suspended or resumed is logged and skipped.
+pub fn set_suspended(app: &AppHandle, suspended: bool) {
     suspend_with(
         app.state::<ProviderState>().kind(),
         &app.state::<HotkeyRegistry>(),
         &SystemHotkeyProvider(app),
         suspended,
     );
-    Ok(())
 }
 
 pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkeyResult, AppError> {
@@ -151,7 +125,7 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
     let shortcut = (!requested.is_empty())
         .then(|| requested.parse::<Shortcut>())
         .transpose()
-        .map_err(|error| AppError::Message(format!("Invalid hotkey: {error}")))?;
+        .map_err(|error| AppError::InvalidInput(format!("Invalid hotkey: {error}")))?;
 
     match app.state::<ProviderState>().kind() {
         ProviderKind::GlobalShortcut => {
@@ -163,7 +137,7 @@ pub fn apply(app: &AppHandle, request: ApplyHotkeyRequest) -> Result<ApplyHotkey
         }
         // the desktop keeps the shortcut the user chose and ignores a new
         // preferred one, so only its settings change it
-        ProviderKind::Portal => Err(AppError::Message(String::from(
+        ProviderKind::Portal => Err(AppError::ServiceUnavailable(String::from(
             "Hotkeys are managed by the desktop; change them in its settings",
         ))),
         ProviderKind::External => Ok(ApplyHotkeyResult {

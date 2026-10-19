@@ -132,10 +132,8 @@ pub(crate) struct SelectionRun {
     pub captured_text: Option<String>,
     pub target: SelectionTarget,
     pub started_at: Instant,
-    #[cfg(target_os = "linux")]
-    pub clipboard_snapshot: Option<super::platform::linux::clipboard_restore::ClipboardSnapshot>,
-    #[cfg(target_os = "windows")]
-    pub clipboard_snapshot: Option<super::platform::windows_clipboard::ClipboardSnapshot>,
+    /// What the clipboard held before the copy keys overwrote it.
+    pub clipboard_snapshot: Option<super::platform::ClipboardSnapshot>,
 }
 
 struct SystemSelectionBackend<'a>(&'a AppHandle);
@@ -244,6 +242,22 @@ pub fn finish(
 ) -> Result<SelectionFinishStatus, AppError> {
     app.state::<SelectionRunCoordinator>()
         .finish_with(&SystemSelectionBackend(app), run_id, text)
+}
+
+/// Ends the run without replacing the selection: the clipboard gets its
+/// content back.
+pub fn release(app: &AppHandle, run_id: u64) {
+    if let Err(error) = finish(app, run_id, None) {
+        log::warn!("Could not release the selection run: {error}");
+    }
+}
+
+/// The selection of the focused window, read the way a replacement reads it
+/// and released right away.
+pub fn read_external(app: &AppHandle) -> Result<String, AppError> {
+    let (run_id, text) = prepare_external(app)?;
+    release(app, run_id);
+    Ok(text)
 }
 
 fn emit_to_webview(

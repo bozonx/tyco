@@ -4,40 +4,7 @@ mod models;
 mod services;
 mod state;
 
-use commands::actions::{
-    cancel_script_action, execute_script_action, log_client_message, log_command_run,
-    log_custom_action, open_action_log, pick_directory, pick_script_file, set_tool_catalog,
-};
-use commands::app::{
-    activate_mode, apply_hotkey, configure_hotkeys, get_desktop_state, get_hotkey_provider_info,
-    get_storage_info, get_user_config, mark_activation_metric, open_main_chat, open_main_editor,
-    open_storage_location, patch_session_state, rebind_hotkeys, save_user_config,
-    submit_activation_metric_value, suspend_hotkeys,
-};
-use commands::history::{
-    clear_chats, clear_editor_history, delete_chat, get_chat, get_chat_image, get_editor_history,
-    list_chats, read_chat_file, release_chat_image_undo, remove_from_editor_history, rename_chat,
-    restore_editor_history_item, save_chat, save_editor_history, search_chats,
-    set_editor_history_result, store_chat_image, sync_chat_images,
-};
-use commands::net::{
-    net_cancel, net_fetch, net_fetch_ack, net_socket_close, net_socket_open,
-    net_socket_send_binary, net_socket_send_text,
-};
-use commands::notes::{append_note, save_note};
-use commands::secrets::{secrets_remove, secrets_set, secrets_status, secrets_vault_state};
-use commands::selection::{
-    check_text_injection, finish_selection_run, notify_desktop, replace_selection_with_command,
-    show_status_overlay,
-};
-use commands::voice::{start_voice_capture, stop_voice_capture};
-use commands::window::{
-    copy_text, dismiss_quick_window, hide_window, open_in_browser, open_in_browser_and_hide,
-    paste_into_target_and_hide, set_quick_input_region,
-};
-use models::default_desktop_snapshot;
-#[cfg(target_os = "linux")]
-use services::dbus;
+use services::settings::defaults::default_desktop_snapshot;
 use services::{runtime, storage};
 use state::AppState;
 use tauri::Manager;
@@ -83,11 +50,6 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         .build()
 }
 
-/// How long the first activation waits for the window tracker. It normally
-/// reports within a few dozen milliseconds.
-#[cfg(target_os = "linux")]
-const TRACKER_STARTUP_WAIT: std::time::Duration = std::time::Duration::from_millis(800);
-
 /// Runs the activation the command line asks for. Arguments that cannot be
 /// parsed still show the application: a launch must never end up without a
 /// window and without a word to the user.
@@ -102,114 +64,34 @@ fn activate_from_args(app: &tauri::AppHandle, args: &[String]) -> Result<(), err
     }
 }
 
-/// Follows window changes on X11 the way `dbus` follows the KWin tracker.
-#[cfg(target_os = "linux")]
-fn spawn_x11_tracker(app: tauri::AppHandle) -> Result<(), errors::AppError> {
-    use services::platform::window_tracker::TrackerChange;
-
-    // GTK puts the program name into WM_CLASS
-    let own_class = gtk::glib::prgname().unwrap_or_default().to_string();
-    let services = app.state::<services::background::BackgroundServices>();
-    let handle = app.clone();
-    services::platform::linux::x11::spawn_tracker(&services, own_class, move |change| {
-        let app = &handle;
-        let result = match change {
-            TrackerChange::Activated => runtime::follow_target_window(app),
-            TrackerChange::Closed(id) => runtime::forget_target_window(app, &id),
-        };
-        if let Err(error) = result {
-            log::warn!("Could not follow the window change: {error}");
-        }
-    })
-}
-
-/// Serves the runtime of plugin frames and the modules of installed plugins,
-/// each plugin on an origin of its own.
-fn plugin_protocol_response(
+/// Follows the window the user works in, to insert text there later.
+fn follow_window_change(
     app: &tauri::AppHandle,
-    request: &tauri::http::Request<Vec<u8>>,
-) -> tauri::http::Response<Vec<u8>> {
-    let path = request.uri().path();
-    let host = request.uri().host().unwrap_or_default();
-    let plugin_key = host.strip_suffix(".localhost").unwrap_or_default();
-    let valid_key = !plugin_key.is_empty()
-        && plugin_key.len() <= 256
-        && plugin_key.len().is_multiple_of(2)
-        && plugin_key.bytes().all(|byte| byte.is_ascii_hexdigit());
-    let static_asset = if !valid_key {
-        None
-    } else {
-        match path {
-            "/runtime/index.html" => Some((
-                "text/html; charset=utf-8",
-                include_str!("../plugin-runtime/index.html"),
-            )),
-            "/runtime/frame.js" => Some((
-                "application/javascript; charset=utf-8",
-                include_str!("../plugin-runtime/frame.js"),
-            )),
-            "/runtime/protocol.js" => Some((
-                "application/javascript; charset=utf-8",
-                include_str!("../../packages/plugin-sdk/src/runtime-protocol.js"),
-            )),
-            "/runtime/worker.js" => Some((
-                "application/javascript; charset=utf-8",
-                include_str!("../plugin-runtime/worker.js"),
-            )),
-            _ => None,
-        }
+    change: services::platform::window_tracker::TrackerChange,
+) {
+    use services::platform::window_tracker::TrackerChange;
+    let result = match change {
+        TrackerChange::Activated => runtime::follow_target_window(app),
+        TrackerChange::Closed(id) => runtime::forget_target_window(app, &id),
     };
-    let (status, content_type, body) = if !valid_key {
-        (404, "text/plain", b"Plugin origin is unavailable".to_vec())
-    } else if let Some((content_type, asset)) = static_asset {
-        (200, content_type, asset.as_bytes().to_vec())
-    } else if path.trim_start_matches('/').split('/').next() != Some(plugin_key) {
-        (
-            404,
-            "text/plain",
-            b"Plugin origin does not match package".to_vec(),
-        )
-    } else {
-        match app.state::<services::plugins::PluginStore>().module(path) {
-            Ok(module) => (
-                200,
-                "application/javascript; charset=utf-8",
-                module.into_bytes(),
-            ),
-            Err(_) => (404, "text/plain", b"Plugin module is unavailable".to_vec()),
-        }
-    };
-    // Workers receive their own policy and cannot reach the app's IPC origin.
-    let worker_src = if path == "/runtime/index.html" {
-        "'self'"
-    } else {
-        "'none'"
-    };
-    let policy = format!("default-src 'none'; script-src 'self'; connect-src 'none'; worker-src {worker_src}; object-src 'none'; base-uri 'none'; frame-src 'none'");
-    tauri::http::Response::builder()
-        .status(status)
-        .header("Content-Type", content_type)
-        .header("Content-Security-Policy", policy)
-        .header("Access-Control-Allow-Origin", "*")
-        .header("Cache-Control", "no-store")
-        .header("X-Content-Type-Options", "nosniff")
-        .body(body)
-        .unwrap_or_else(|error| {
-            log::error!("Could not build a plugin protocol response: {error}");
-            tauri::http::Response::new(Vec::new())
-        })
+    if let Err(error) = result {
+        log::warn!("Could not follow the window change: {error}");
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
         // reading a package may take a while; the main thread must not wait
-        .register_asynchronous_uri_scheme_protocol("tyco-plugin", |context, request, responder| {
-            let app = context.app_handle().clone();
-            tauri::async_runtime::spawn_blocking(move || {
-                responder.respond(plugin_protocol_response(&app, &request));
-            });
-        })
+        .register_asynchronous_uri_scheme_protocol(
+            services::plugins::protocol::SCHEME,
+            |context, request, responder| {
+                let app = context.app_handle().clone();
+                tauri::async_runtime::spawn_blocking(move || {
+                    responder.respond(services::plugins::protocol::respond(&app, &request));
+                });
+            },
+        )
         .plugin(logger_plugin())
         .plugin(tauri_plugin_dialog::init())
         .plugin(single_instance(|app, args, _cwd| {
@@ -218,25 +100,25 @@ pub fn run() {
             }
         }))
         .setup(|app| {
-            app.manage(services::background::BackgroundServices::default());
-            app.manage(services::custom_actions::ScriptRuns::default());
             app.manage(services::plugins::PluginStore::new(
                 storage::app_data_dir(app.handle())?.join("plugins"),
             ));
-            runtime::create_windows(app)?;
             let user_config = storage::read_or_create_user_config(app.handle())?;
-            let history_cleanup_failed =
-                match storage::apply_history_settings_on_startup(app.handle(), &user_config) {
-                    Ok(()) => false,
-                    Err(error) => {
-                        log::error!("Could not apply the history settings: {error}");
-                        true
-                    }
-                };
-            let session_state = crate::models::SessionState::default();
+            let history_cleanup_failed = match storage::apply_history_settings_on_startup(
+                app.handle(),
+                &user_config.value,
+            ) {
+                Ok(()) => false,
+                Err(error) => {
+                    log::error!("Could not apply the history settings: {error}");
+                    true
+                }
+            };
+            // the state every command and window event reads exists before
+            // the first webview can call one
             app.manage(AppState::new(default_desktop_snapshot(
-                user_config,
-                session_state,
+                user_config.value.clone(),
+                crate::models::SessionState::default(),
             )));
             if history_cleanup_failed {
                 app.state::<AppState>().history.mark_cleanup_pending();
@@ -247,143 +129,148 @@ pub fn run() {
             let secrets_app = app.handle().clone();
             app.state::<services::background::BackgroundServices>()
                 .spawn_thread("secret-vault-warmup", move |_| {
-                    secrets_app
-                        .state::<services::secrets::SecretStore>()
-                        .vault_state();
+                    let store = secrets_app.state::<services::secrets::SecretStore>();
+                    store.vault_state();
+                    if !user_config.is_on_disk {
+                        return;
+                    }
+                    // A settings save meanwhile may have left secrets for its
+                    // undo; the next start cleans up after it.
+                    let state = secrets_app.state::<AppState>();
+                    let _settings = state.lock_settings_update();
+                    if state.snapshot().settings.user_config == user_config.value {
+                        services::secrets::webhook::cleanup_after_startup(
+                            &store,
+                            &user_config.value,
+                        );
+                    }
                 })?;
+            runtime::create_windows(app)?;
             app.manage(services::net::NetState::new()?);
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
-            services::activation_metrics::setup(app)?;
+            services::activation::metrics::setup(app)?;
             // the activation below needs the window tracker to know the
             // window Tyco was launched from
-            #[cfg(target_os = "linux")]
-            {
-                dbus::spawn_dbus_server(app.handle().clone())?;
-                let session = services::platform::session::current();
-                if session.is_x11() {
-                    spawn_x11_tracker(app.handle().clone())?;
-                }
-                if session.is_wayland() {
-                    services::platform::linux::primary_selection::spawn_watcher(
-                        &app.state::<services::background::BackgroundServices>(),
-                    )?;
-                }
-                if session.is_x11() || session.is_kde_wayland() {
-                    services::platform::window_tracker::wait_for_startup(TRACKER_STARTUP_WAIT);
-                }
-            }
+            services::platform::start_session_services(app.handle(), follow_window_change)?;
             let args = std::env::args().collect::<Vec<_>>();
             activate_from_args(app.handle(), &args)?;
-            services::external_api::spawn_reaper(app.handle().clone())?;
-            services::activation_socket::spawn_server(app.handle().clone())?;
+            services::external::api::spawn_reaper(app.handle().clone())?;
+            services::activation::socket::spawn_server(app.handle().clone())?;
             services::signals::spawn_signal_watcher(app.handle().clone())?;
             Ok(())
         })
         .on_window_event(|window, event| {
             runtime::handle_window_event(window.app_handle(), window.label(), event);
         })
-        .manage(services::external_jobs::ExternalJobs::default())
-        .manage(services::external_access::AccessPrompt::default())
+        // state that needs nothing to be built; what needs the config or a
+        // window is managed in `setup`
+        .manage(services::background::BackgroundServices::default())
+        .manage(services::custom_actions::ScriptRuns::default())
+        .manage(services::external::jobs::ExternalJobs::default())
+        .manage(services::external::commands::ToolCatalogState::default())
+        .manage(services::chat_images::ChatImages::default())
+        .manage(services::voice::session::VoiceSessionState::default())
+        .manage(services::external::access::AccessPrompt::default())
         .invoke_handler(tauri::generate_handler![
-            commands::actions::answer_external_access,
-            commands::actions::claim_external_job,
-            commands::actions::finish_external_job,
-            get_desktop_state,
-            get_user_config,
-            get_storage_info,
-            open_storage_location,
-            commands::ai_vault::get_ai_vault_path,
-            commands::ai_vault::open_ai_vault_dir,
-            commands::ai_vault::list_ai_profiles,
-            commands::ai_vault::get_ai_profile,
-            commands::ai_vault::create_ai_profile,
-            commands::ai_vault::save_ai_profile,
-            commands::ai_vault::delete_ai_profile,
-            commands::ai_vault::read_profile_soul,
-            commands::ai_vault::write_profile_soul,
-            commands::ai_vault::list_ai_projects,
-            commands::ai_vault::create_ai_project,
-            commands::ai_vault::save_ai_project,
-            commands::ai_vault::delete_ai_project,
+            commands::action_logs::log_client_message,
+            commands::action_logs::log_command_run,
+            commands::action_logs::log_custom_action,
+            commands::action_logs::open_action_log,
+            commands::activation::activate_mode,
+            commands::activation::open_main_chat,
+            commands::activation::open_main_editor,
             commands::ai_files::list_ai_file_roots,
-            commands::ai_files::run_ai_file_tool,
             commands::ai_files::preview_ai_file_change,
             commands::ai_files::read_ai_file_bytes,
+            commands::ai_files::run_ai_file_tool,
             commands::ai_files::save_ai_upload,
-            apply_hotkey,
-            configure_hotkeys,
-            rebind_hotkeys,
-            suspend_hotkeys,
-            get_hotkey_provider_info,
-            open_main_chat,
-            open_main_editor,
-            activate_mode,
-            mark_activation_metric,
-            submit_activation_metric_value,
-            save_user_config,
-            commands::settings::acknowledge_settings_shutdown,
-            patch_session_state,
-            hide_window,
-            dismiss_quick_window,
-            set_quick_input_region,
-            get_editor_history,
-            list_chats,
-            get_chat,
-            store_chat_image,
-            get_chat_image,
-            sync_chat_images,
-            release_chat_image_undo,
-            read_chat_file,
-            save_editor_history,
-            set_editor_history_result,
-            restore_editor_history_item,
-            save_chat,
-            rename_chat,
-            search_chats,
-            remove_from_editor_history,
-            delete_chat,
-            clear_editor_history,
-            clear_chats,
-            start_voice_capture,
-            stop_voice_capture,
-            open_in_browser,
-            open_in_browser_and_hide,
-            paste_into_target_and_hide,
-            copy_text,
+            commands::ai_vault::create_ai_profile,
+            commands::ai_vault::create_ai_project,
+            commands::ai_vault::delete_ai_profile,
+            commands::ai_vault::delete_ai_project,
+            commands::ai_vault::get_ai_profile,
+            commands::ai_vault::get_ai_vault_path,
+            commands::ai_vault::list_ai_profiles,
+            commands::ai_vault::list_ai_projects,
+            commands::ai_vault::open_ai_vault_dir,
+            commands::ai_vault::read_profile_soul,
+            commands::ai_vault::save_ai_profile,
+            commands::ai_vault::save_ai_project,
+            commands::ai_vault::write_profile_soul,
+            commands::chat_images::get_chat_image,
+            commands::chat_images::read_chat_file,
+            commands::chat_images::release_chat_image_undo,
+            commands::chat_images::store_chat_image,
+            commands::chat_images::sync_chat_images,
+            commands::chats::clear_chats,
+            commands::chats::delete_chat,
+            commands::chats::get_chat,
+            commands::chats::list_chats,
+            commands::chats::rename_chat,
+            commands::chats::save_chat,
+            commands::chats::search_chats,
+            commands::desktop_state::get_desktop_state,
+            commands::diagnostics::mark_activation_metric,
+            commands::diagnostics::submit_activation_metric_value,
+            commands::editor_history::clear_editor_history,
+            commands::editor_history::get_editor_history,
+            commands::editor_history::remove_from_editor_history,
+            commands::editor_history::restore_editor_history_item,
+            commands::editor_history::save_editor_history,
+            commands::editor_history::set_editor_history_result,
+            commands::external_jobs::answer_external_access,
+            commands::external_jobs::claim_external_job,
+            commands::external_jobs::finish_external_job,
+            commands::external_jobs::set_tool_catalog,
+            commands::hotkeys::apply_hotkey,
+            commands::hotkeys::configure_hotkeys,
+            commands::hotkeys::get_hotkey_provider_info,
+            commands::hotkeys::rebind_hotkeys,
+            commands::hotkeys::suspend_hotkeys,
+            commands::net::net_cancel,
+            commands::net::net_fetch,
+            commands::net::net_fetch_ack,
+            commands::net::net_socket_close,
+            commands::net::net_socket_open,
+            commands::net::net_socket_send_binary,
+            commands::net::net_socket_send_text,
+            commands::notes::append_note,
+            commands::notes::save_note,
             commands::plugins::inspect_plugin_package,
-            commands::plugins::list_installed_plugins,
             commands::plugins::install_plugin_package,
+            commands::plugins::list_installed_plugins,
             commands::plugins::remove_plugin_package,
             commands::plugins::restore_plugin_package,
-            save_note,
-            append_note,
             commands::plugins::write_plugin_note,
-            net_fetch,
-            net_fetch_ack,
-            net_cancel,
-            net_socket_open,
-            net_socket_send_text,
-            net_socket_send_binary,
-            net_socket_close,
-            secrets_status,
-            secrets_vault_state,
-            secrets_set,
-            secrets_remove,
-            finish_selection_run,
-            replace_selection_with_command,
-            show_status_overlay,
-            notify_desktop,
-            check_text_injection,
-            execute_script_action,
-            cancel_script_action,
-            pick_script_file,
-            pick_directory,
-            log_custom_action,
-            log_command_run,
-            open_action_log,
-            log_client_message,
-            set_tool_catalog,
+            commands::script_actions::cancel_script_action,
+            commands::script_actions::execute_script_action,
+            commands::script_actions::pick_directory,
+            commands::script_actions::pick_script_file,
+            commands::secrets::secrets_remove,
+            commands::secrets::secrets_set,
+            commands::secrets::secrets_status,
+            commands::secrets::secrets_vault_state,
+            commands::selection::check_text_injection,
+            commands::selection::finish_selection_run,
+            commands::selection::notify_desktop,
+            commands::selection::replace_selection_with_command,
+            commands::selection::show_status_overlay,
+            commands::settings::acknowledge_settings_shutdown,
+            commands::settings::get_user_config,
+            commands::settings::patch_session_state,
+            commands::settings::save_user_config,
+            commands::storage::get_storage_info,
+            commands::storage::open_storage_location,
+            commands::voice::start_voice_capture,
+            commands::voice::stop_voice_capture,
+            commands::window::copy_text,
+            commands::window::dismiss_quick_window,
+            commands::window::hide_window,
+            commands::window::open_in_browser,
+            commands::window::open_in_browser_and_hide,
+            commands::window::paste_into_target_and_hide,
+            commands::window::set_quick_input_region,
         ])
         .build(tauri::generate_context!());
     // a failed start ends with a word in the log and on stderr rather than

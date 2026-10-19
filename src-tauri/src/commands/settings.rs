@@ -6,7 +6,7 @@ use crate::{
     state::AppState,
 };
 use serde_json::Value;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, State};
 #[tauri::command]
 pub fn get_user_config(state: State<'_, AppState>) -> serde_json::Value {
     state.snapshot().settings.user_config
@@ -26,14 +26,7 @@ pub async fn patch_session_state(
     app: AppHandle,
     patch: serde_json::Map<String, Value>,
 ) -> Result<DesktopSnapshot, AppError> {
-    run_blocking(move || {
-        let state = app.state::<AppState>();
-        let snapshot = settings::patch_session_state(&state, patch)?;
-        runtime::publish_state(&app, &state);
-
-        Ok(snapshot)
-    })
-    .await?
+    run_blocking(move || settings::patch_session_state(&app, patch)).await?
 }
 
 #[tauri::command]

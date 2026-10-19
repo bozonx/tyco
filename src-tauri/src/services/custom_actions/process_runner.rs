@@ -129,7 +129,10 @@ impl ScriptRuns {
         }
         false
     }
-    pub fn stop(&self) {
+}
+
+impl crate::services::background::StoppableService for ScriptRuns {
+    fn stop(&self) {
         let mut registry = self
             .shared
             .registry
@@ -140,7 +143,7 @@ impl ScriptRuns {
             flag.store(true, Ordering::SeqCst);
         }
     }
-    pub fn wait_until(&self, deadline: Instant) -> bool {
+    fn wait_until(&self, deadline: Instant) -> bool {
         let registry = self
             .shared
             .registry
@@ -201,7 +204,7 @@ pub fn resolve_working_dir(working_dir: Option<&str>) -> Result<Option<PathBuf>,
     if path.is_dir() {
         Ok(Some(path))
     } else {
-        Err(AppError::Message(format!(
+        Err(AppError::InvalidInput(format!(
             "Working directory `{trimmed}` does not exist"
         )))
     }
@@ -419,6 +422,7 @@ fn empty_result() -> ScriptExecutionResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::background::StoppableService;
     use crate::services::test_support::TestDir;
     use std::fs;
 

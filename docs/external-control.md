@@ -339,7 +339,7 @@ busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
 Successful calls acknowledge activation; they do not return command results or
 wait for completion. A failure is a D-Bus error named after the machine code,
 for example `org.tyco.Error.AccessDenied`, `org.tyco.Error.NotFound`, or
-`org.tyco.Error.InteractionRequired`; the message is human-readable. Malformed
+`org.tyco.Error.Disabled`; the message is human-readable. Malformed
 arguments fail with the standard `org.freedesktop.DBus.Error.InvalidArgs`.
 
 KWin reports use the separate `org.tyco.KwinTracker` interface at the same

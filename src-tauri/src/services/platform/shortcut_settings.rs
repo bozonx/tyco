@@ -22,7 +22,7 @@ pub fn has_shortcut_settings() -> bool {
 
 pub fn open_shortcut_settings() -> Result<(), AppError> {
     let (program, args) = settings_command(session::current().desktop).ok_or_else(|| {
-        AppError::Message(String::from(
+        AppError::ServiceUnavailable(String::from(
             "This desktop has no shortcut settings to open",
         ))
     })?;

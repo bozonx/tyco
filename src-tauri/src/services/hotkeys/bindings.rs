@@ -34,13 +34,13 @@ impl HotkeyTarget {
     pub(crate) fn parse(id: &str) -> Result<Self, AppError> {
         if let Some(page_id) = id.strip_prefix(LAUNCHER_PAGE_TARGET_PREFIX) {
             if page_id.trim().is_empty() {
-                return Err(AppError::Message(String::from("Invalid command page")));
+                return Err(AppError::InvalidInput(String::from("Invalid command page")));
             }
             return Ok(Self::LauncherPage(page_id.to_owned()));
         }
         match id.strip_prefix(SELECTION_TARGET_PREFIX) {
             Some(CORRECTION_ACTION) => Ok(Self::InlineCorrection),
-            Some(action) => Err(AppError::Message(format!(
+            Some(action) => Err(AppError::InvalidInput(format!(
                 "Unknown selection action: {action}"
             ))),
             None => ActivationMode::parse(id).map(Self::Mode),
@@ -128,19 +128,13 @@ pub(crate) fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
         ),
         description: mode_description(mode).to_owned(),
     });
-    let pages = config
-        .get("launcherPages")
-        .and_then(Value::as_array)
+    let pages = crate::models::user_config::launcher_pages(config)
         .into_iter()
-        .flatten()
         .enumerate()
-        .filter_map(|(index, page)| {
-            let page_id = page.get("id").and_then(Value::as_str)?;
-            Some(HotkeyBinding {
-                target: HotkeyTarget::LauncherPage(page_id.to_owned()),
-                shortcut: configured_shortcut(page.get("hotkey"), || None),
-                description: format!("Quick commands: page {}", index + 1),
-            })
+        .map(|(index, page)| HotkeyBinding {
+            target: HotkeyTarget::LauncherPage(page.id),
+            shortcut: Some(page.hotkey.trim().to_owned()).filter(|hotkey| !hotkey.is_empty()),
+            description: format!("Quick commands: page {}", index + 1),
         });
     modes
         .chain(pages)

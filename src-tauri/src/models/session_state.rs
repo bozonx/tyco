@@ -1,4 +1,4 @@
-use crate::services::activation::ActivationMode;
+use super::ActivationMode;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

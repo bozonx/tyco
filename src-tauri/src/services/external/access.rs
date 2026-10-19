@@ -3,29 +3,20 @@
 use std::sync::Mutex;
 use std::time::Duration;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 
-use super::activation::{Activation, ActivationMode, ActivationSource};
-use super::external_api;
-use super::external_jobs::ExternalJobs;
-use super::{config_version, runtime, storage};
 use crate::errors::AppError;
+use crate::services::activation::{Activation, ActivationMode, ActivationSource};
+use crate::services::external::api;
+use crate::services::external::jobs::ExternalJobs;
+use crate::services::{runtime, settings};
 use crate::state::AppState;
 
 const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
 
-/// What the prompt shows, see `DesktopSnapshot::access_request`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AccessRequest {
-    pub job_id: String,
-    pub command_name: String,
-    /// The output is to replace the selection, not only to be returned.
-    #[serde(rename = "replace")]
-    pub should_replace: bool,
-}
+pub use crate::models::AccessRequest;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -117,7 +108,7 @@ pub fn answer(app: &AppHandle, job_id: &str, decision: AccessDecision) -> Result
     runtime::wait_until_unfocused(app, FOCUS_RELEASE_TIMEOUT);
     match decision {
         AccessDecision::Deny => {
-            external_api::deny_selection(app, job_id);
+            api::deny_selection(app, job_id);
             return Ok(());
         }
         AccessDecision::Always => {
@@ -129,7 +120,7 @@ pub fn answer(app: &AppHandle, job_id: &str, decision: AccessDecision) -> Result
         AccessDecision::Once => {}
     }
     app.state::<ExternalJobs>().approve_selection(job_id);
-    external_api::resume(app, job_id, pending.source);
+    api::resume(app, job_id, pending.source);
     Ok(())
 }
 
@@ -154,18 +145,7 @@ fn hide_prompt(app: &AppHandle) {
 }
 
 fn allow_selection_from_now_on(app: &AppHandle) -> Result<(), AppError> {
-    let state = app.state::<AppState>();
-    let _guard = state.lock_settings_update();
-    let mut user_config = state.snapshot().settings.user_config;
-    if config_version::is_newer_than_supported(&user_config) {
-        return Err(storage::newer_config_error());
-    }
-    grant_selection(&mut user_config);
-    storage::save_user_config(app, &user_config)?;
-    state.update_snapshot(|snapshot| {
-        snapshot.settings.user_config = user_config;
-    });
-    runtime::emit_state(app, &state)
+    settings::update_user_config(app, grant_selection).map(drop)
 }
 
 fn grant_selection(user_config: &mut Value) {

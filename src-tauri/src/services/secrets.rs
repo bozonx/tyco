@@ -9,9 +9,11 @@
 //! The values live in the system credential store only; without one no key
 //! can be saved. `secrets.json` lists the secrets and their origins only.
 
+pub mod detector;
 mod origins;
 #[cfg(test)]
 mod tests;
+pub mod webhook;
 
 pub use origins::{is_id_char, normalize_origin, origin_of};
 
@@ -35,14 +37,26 @@ pub const SECRET_REF_PREFIX: &str = "tyco-secret:";
 /// secret id, so it never names a real secret.
 const PROBE_ID: &str = "-probe";
 
+/// The vault could not be reached or refused the operation, e.g. because
+/// the user dismissed its unlock prompt.
+#[derive(Debug, thiserror::Error)]
+#[error("{0}")]
+pub struct VaultError(pub String);
+
+impl From<String> for VaultError {
+    fn from(message: String) -> Self {
+        Self(message)
+    }
+}
+
 /// A store for secret values, keyed by the secret id.
 pub trait SecretVault: Send + Sync {
     /// `Ok(None)` when there is no such secret, `Err` when the vault itself
     /// cannot be reached.
-    fn get(&self, id: &str) -> Result<Option<String>, String>;
-    fn set(&self, id: &str, value: &str) -> Result<(), String>;
+    fn get(&self, id: &str) -> Result<Option<String>, VaultError>;
+    fn set(&self, id: &str, value: &str) -> Result<(), VaultError>;
     /// Removing a secret that is not there succeeds.
-    fn delete(&self, id: &str) -> Result<(), String>;
+    fn delete(&self, id: &str) -> Result<(), VaultError>;
 }
 
 /// Whether the system credential store can be reached.

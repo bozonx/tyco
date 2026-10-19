@@ -4,7 +4,6 @@ mod policy;
 use entries::{apply_editor_history_result, insert_restored_item, push_editor_history};
 pub use policy::EditorHistoryPolicy;
 
-use super::chat_history::enforce_chat_history_policy;
 use super::*;
 
 const EDITOR_HISTORY_FILE: &str = "editor-history.jsonl";
@@ -224,21 +223,11 @@ pub fn clear_editor_history(
 /// Applies the history settings to what is stored. At startup the
 /// memory-only mode means that the history of the previous run is gone, also
 /// when that run ended without a chance to clean up.
-pub fn apply_history_settings_on_startup(
-    app: &AppHandle,
-    user_config: &Value,
-) -> Result<(), AppError> {
-    retry_history_cleanup(
-        app,
-        &EditorHistoryPolicy::from_config(user_config),
-        ChatHistoryPolicy::from_config(user_config),
-    )
-}
-
-pub(super) fn retry_history_cleanup(
+/// Brings the history file in line with `policy`: deletes it when the
+/// history is off or kept in memory only, and drops expired entries otherwise.
+pub(super) fn enforce_editor_history_policy(
     app: &AppHandle,
     policy: &EditorHistoryPolicy,
-    chat_policy: ChatHistoryPolicy,
 ) -> Result<(), AppError> {
     let path = editor_history_path(app)?;
     if policy.is_memory_only || policy.max_entries == 0 {
@@ -246,7 +235,7 @@ pub(super) fn retry_history_cleanup(
     } else {
         enforce_editor_history_file(&path, policy, now_ms())?;
     }
-    enforce_chat_history_policy(&super::chat_history::app_chats_dir(app)?, chat_policy)
+    Ok(())
 }
 
 fn enforce_editor_history_file(

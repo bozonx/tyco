@@ -36,7 +36,7 @@ pub async fn secrets_remove(app: AppHandle, id: String) -> Result<(), AppError> 
     with_store(&app, move |secrets| {
         let state = handle.state::<crate::state::AppState>();
         let _guard = state.lock_settings_update();
-        crate::services::webhook_secrets::ensure_secret_not_referenced(
+        crate::services::secrets::webhook::ensure_secret_not_referenced(
             &state.snapshot().settings.user_config,
             &id,
         )?;

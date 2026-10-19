@@ -75,9 +75,12 @@ fn active_target() -> Option<SelectionTarget> {
     })
 }
 
+/// The text the copy keys overwrite: a clipboard still holding it means
+/// nothing was copied.
+const SELECTION_PROBE_PREFIX: &str = "tyco-selection-probe-";
+
 #[cfg(target_os = "linux")]
 pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
-    use super::linux::clipboard_restore;
     use super::linux::text_injector::SystemTextInjector;
 
     let target = active_target().ok_or_else(|| {
@@ -93,7 +96,7 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), Sel
     let injector = SystemTextInjector::detect();
     // the copy keys overwrite the clipboard, which gets its content back
     // once the result is pasted
-    let snapshot = clipboard_restore::snapshot();
+    let snapshot = super::clipboard::snapshot();
     let mut run = SelectionRun {
         id: 0,
         is_external: false,
@@ -135,15 +138,13 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
 
 #[cfg(target_os = "windows")]
 pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
-    use super::{windows, windows_clipboard};
+    use super::{clipboard, windows};
     let id = windows::focused_foreground_target().ok_or_else(|| {
         SelectionRunError::new(SelectionRunErrorCode::NoTarget, "No foreground window")
     })?;
     // without a snapshot the selection is still replaced; the clipboard
     // keeps the result instead of getting its old content back
-    let snapshot = windows_clipboard::snapshot()
-        .inspect_err(|error| log::warn!("The clipboard will not be restored: {error}"))
-        .ok();
+    let snapshot = clipboard::snapshot();
     let run = SelectionRun {
         id: 0,
         is_external: false,
@@ -155,9 +156,9 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
         started_at: Instant::now(),
         clipboard_snapshot: snapshot,
     };
-    let probe = format!("tyco-selection-probe-{}", std::process::id());
+    let probe = format!("{SELECTION_PROBE_PREFIX}{}", std::process::id());
     let result = (|| {
-        windows_clipboard::write_text(&probe).map_err(|error| {
+        windows::clipboard::write_text(&probe).map_err(|error| {
             SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string())
         })?;
         if windows::focused_foreground_target().as_deref() != Some(run.target.id.as_str()) {
@@ -171,7 +172,7 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
         })?;
         let deadline = Instant::now() + Duration::from_millis(700);
         loop {
-            if let Some(text) = windows_clipboard::read_text() {
+            if let Some(text) = clipboard::read_text() {
                 if text != probe && !text.trim().is_empty() {
                     return Ok(text);
                 }
@@ -194,35 +195,6 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
     }
 }
 
-#[cfg(target_os = "windows")]
-pub(crate) fn restore_clipboard(run: SelectionRun) {
-    if run
-        .captured_text
-        .as_ref()
-        .is_some_and(|text| super::windows_clipboard::read_text().as_ref() != Some(text))
-    {
-        return;
-    }
-    match run.clipboard_snapshot {
-        Some(snapshot) => {
-            if let Err(error) = super::windows_clipboard::restore(&snapshot) {
-                log::warn!("Could not restore the clipboard: {error}");
-            }
-        }
-        // only the probe is taken away: a copied selection is what the user
-        // had selected anyway
-        None => {
-            if super::windows_clipboard::read_text()
-                .is_some_and(|text| text.starts_with("tyco-selection-probe-"))
-            {
-                if let Err(error) = super::windows_clipboard::clear() {
-                    log::warn!("Could not clear the clipboard: {error}");
-                }
-            }
-        }
-    }
-}
-
 /// Presses the copy keys and waits for the clipboard to change. A probe
 /// text put there first tells a copied selection from an unchanged clipboard,
 /// so `None` means nothing was selected.
@@ -238,18 +210,15 @@ fn copy_selection(
     const POLL_INTERVAL: Duration = Duration::from_millis(25);
 
     let probe = format!(
-        "tyco-selection-probe-{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|time| time.as_nanos())
-            .unwrap_or_default()
+        "{SELECTION_PROBE_PREFIX}{}",
+        crate::services::clock::now_ns()
     );
-    crate::services::clipboard::copy_to_clipboard(&probe)?;
+    super::clipboard::copy_to_clipboard(&probe)?;
     injector.press_in_focused(user_config, FocusedKeyAction::Copy, target.is_terminal)?;
 
     let deadline = Instant::now() + COPY_TIMEOUT;
     loop {
-        let read = super::linux::clipboard_restore::read_text();
+        let read = super::clipboard::read_text();
         match read {
             Some(ref text) if *text == probe => {}
             Some(ref text) if text.trim().is_empty() => return Ok(None),
@@ -274,31 +243,25 @@ fn copy_selection(
 /// Gives the clipboard its content from before the run back. Without a
 /// snapshot only the probe text is removed: a copied selection is what the
 /// user had selected anyway.
-#[cfg(target_os = "linux")]
 pub(crate) fn restore_clipboard(run: SelectionRun) {
-    use super::linux::clipboard_restore;
+    use super::clipboard;
     if run
         .captured_text
         .as_ref()
-        .is_some_and(|text| clipboard_restore::read_text().as_ref() != Some(text))
+        .is_some_and(|text| clipboard::read_text().as_ref() != Some(text))
     {
         return;
     }
 
     match run.clipboard_snapshot {
-        Some(snapshot) => clipboard_restore::restore_now(&snapshot),
+        Some(snapshot) => clipboard::restore_now(&snapshot),
         None => {
-            if clipboard_restore::read_text()
-                .is_some_and(|text| text.starts_with("tyco-selection-probe-"))
-            {
-                clipboard_restore::clear();
+            if clipboard::read_text().is_some_and(|text| text.starts_with(SELECTION_PROBE_PREFIX)) {
+                clipboard::clear();
             }
         }
     }
 }
-
-#[cfg(not(any(target_os = "linux", target_os = "windows")))]
-pub(crate) fn restore_clipboard(_run: SelectionRun) {}
 
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 trait PasteExecutor {
@@ -330,7 +293,7 @@ struct SystemPasteExecutor;
 #[cfg(target_os = "linux")]
 impl PasteExecutor for SystemPasteExecutor {
     fn write_text(&self, text: &str) -> Result<(), AppError> {
-        crate::services::clipboard::copy_to_clipboard(text)
+        super::clipboard::copy_to_clipboard(text)
     }
     fn active_target_id(&self) -> Option<String> {
         active_target().map(|target| target.id)
@@ -343,7 +306,7 @@ impl PasteExecutor for SystemPasteExecutor {
     }
     fn restore_later(&self, run: SelectionRun, text: String) {
         if let Some(snapshot) = run.clipboard_snapshot {
-            super::linux::clipboard_restore::restore_later(snapshot, text);
+            super::clipboard::restore_later(snapshot, text);
         }
     }
 }
@@ -351,7 +314,7 @@ impl PasteExecutor for SystemPasteExecutor {
 #[cfg(target_os = "windows")]
 impl PasteExecutor for SystemPasteExecutor {
     fn write_text(&self, text: &str) -> Result<(), AppError> {
-        super::windows_clipboard::write_text(text)
+        super::windows::clipboard::write_text(text)
     }
     fn active_target_id(&self) -> Option<String> {
         super::windows::focused_foreground_target()
@@ -359,9 +322,9 @@ impl PasteExecutor for SystemPasteExecutor {
     fn paste_keys(&self, _config: &Value, target: &SelectionTarget) -> Result<(), AppError> {
         super::windows::press_copy_or_paste(false, target.is_terminal)
     }
-    fn restore_later(&self, run: SelectionRun, _text: String) {
+    fn restore_later(&self, run: SelectionRun, text: String) {
         if let Some(snapshot) = run.clipboard_snapshot {
-            super::windows_clipboard::restore_later(snapshot);
+            super::clipboard::restore_later(snapshot, text);
         }
     }
 }
@@ -381,7 +344,7 @@ pub(crate) fn paste_result(
     _run: SelectionRun,
     _text: String,
 ) -> Result<SelectionFinishStatus, AppError> {
-    Err(AppError::Message(
+    Err(AppError::ServiceUnavailable(
         "Replacing the selection is only available on Linux and Windows".into(),
     ))
 }
@@ -436,7 +399,6 @@ mod tests {
                 is_terminal: true,
             },
             started_at: std::time::Instant::now(),
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
             clipboard_snapshot: None,
         }
     }

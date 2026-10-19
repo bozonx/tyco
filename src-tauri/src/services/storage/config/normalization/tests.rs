@@ -1,5 +1,5 @@
 use super::*;
-use crate::models::default_user_config;
+use crate::services::settings::defaults::default_user_config;
 use serde_json::{json, Value};
 
 #[test]

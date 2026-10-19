@@ -1,19 +1,17 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Mutex;
 
 use crate::models::DesktopSnapshot;
-use crate::services::external_commands::ToolCatalog;
-use crate::services::voice_session::VoiceSessionState;
+
+const PHASE_RUNNING: u8 = 0;
+const PHASE_QUITTING: u8 = 1;
+const PHASE_SHUTTING_DOWN: u8 = 2;
 
 pub struct AppState {
     snapshot: Mutex<DesktopSnapshot>,
     pub(crate) history: crate::services::storage::HistoryStorageCoordinator,
     settings_update_lock: Mutex<()>,
-    pub chat_images: Mutex<crate::services::chat_images::ChatImageStore>,
-    is_quitting: AtomicBool,
-    pub(crate) voice_session: VoiceSessionState,
-    /// `None` until the quick window sends it, see `set_tool_catalog`.
-    tool_catalog: Mutex<Option<ToolCatalog>>,
+    phase: AtomicU8,
 }
 
 impl AppState {
@@ -22,10 +20,7 @@ impl AppState {
             snapshot: Mutex::new(initial_snapshot),
             history: crate::services::storage::HistoryStorageCoordinator::default(),
             settings_update_lock: Mutex::new(()),
-            chat_images: Mutex::new(crate::services::chat_images::ChatImageStore::default()),
-            is_quitting: AtomicBool::new(false),
-            voice_session: VoiceSessionState::default(),
-            tool_catalog: Mutex::new(None),
+            phase: AtomicU8::new(PHASE_RUNNING),
         }
     }
 
@@ -56,33 +51,35 @@ impl AppState {
         snapshot.clone()
     }
 
-    pub fn tool_catalog(&self) -> Option<ToolCatalog> {
-        self.tool_catalog
-            .lock()
-            .expect("tool catalog lock poisoned")
-            .clone()
-    }
-
-    pub fn set_tool_catalog(&self, catalog: ToolCatalog) {
-        *self
-            .tool_catalog
-            .lock()
-            .expect("tool catalog lock poisoned") = Some(catalog);
-    }
-
+    /// The user or a caller asked the app to quit: new work is refused from
+    /// now on. True for the call that made the change.
     pub fn begin_quitting(&self) -> bool {
-        !self.is_quitting.swap(true, Ordering::SeqCst)
+        self.phase
+            .compare_exchange(
+                PHASE_RUNNING,
+                PHASE_QUITTING,
+                Ordering::SeqCst,
+                Ordering::SeqCst,
+            )
+            .is_ok()
+    }
+
+    /// The services are being stopped; it happens once, whether or not the
+    /// app was asked to quit first. True for the call that starts it.
+    pub fn begin_shutdown(&self) -> bool {
+        self.phase.swap(PHASE_SHUTTING_DOWN, Ordering::SeqCst) != PHASE_SHUTTING_DOWN
     }
 
     pub fn is_quitting(&self) -> bool {
-        self.is_quitting.load(Ordering::SeqCst)
+        self.phase.load(Ordering::SeqCst) != PHASE_RUNNING
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{default_desktop_snapshot, SessionState};
+    use crate::models::SessionState;
+    use crate::services::settings::defaults::default_desktop_snapshot;
 
     #[test]
     fn snapshots_order_settings_and_activation_changes_with_the_same_revision() {
@@ -138,6 +135,22 @@ mod tests {
             .recent_ai_prompts
             .is_empty());
         assert_eq!(restarted.settings.user_config, config);
+    }
+
+    #[test]
+    fn quitting_comes_before_a_single_shutdown() {
+        let state = AppState::new(default_desktop_snapshot(
+            serde_json::json!({}),
+            SessionState::default(),
+        ));
+        assert!(!state.is_quitting());
+        assert!(state.begin_quitting());
+        assert!(!state.begin_quitting());
+        assert!(state.is_quitting());
+        assert!(state.begin_shutdown());
+        assert!(!state.begin_shutdown());
+        assert!(!state.begin_quitting());
+        assert!(state.is_quitting());
     }
 
     #[test]

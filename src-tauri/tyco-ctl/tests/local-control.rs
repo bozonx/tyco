@@ -2,7 +2,7 @@
 use std::io::Write;
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
-use tyco_activation_protocol::{Request, Response};
+use tyco_activation_protocol::{ErrorCode, Request, Response};
 
 #[test]
 fn server_fixture() {
@@ -13,7 +13,7 @@ fn server_fixture() {
         Request::Status => Response::json(&serde_json::json!({"apiVersion":1})),
         Request::Run { request } => Response::json(&serde_json::json!({"id":"test-job","commandId":request.target,"state":"succeeded","output":request.text})),
         Request::JobStatus { .. } => Response::json(&serde_json::json!({"id":"test-job","commandId":"test","state":"failed","error":"Test failure","code":"ExecutionFailed"})),
-        _ => Response::coded_error("AccessDenied", "Test denial"),
+        _ => Response::coded_error(ErrorCode::AccessDenied, "Test denial"),
     }).unwrap();
 }
 

@@ -177,7 +177,7 @@ impl NetState {
         let sockets = self.sockets.lock().expect("sockets lock");
         let sender = sockets
             .get(&id)
-            .ok_or_else(|| AppError::Message(format!("Socket {id} is closed")))?;
+            .ok_or_else(|| AppError::Stale(format!("Socket {id} is closed")))?;
         let size = match &command {
             SocketCommand::Text(text) => text.len(),
             SocketCommand::Binary(bytes) => bytes.len(),
@@ -193,13 +193,15 @@ impl NetState {
                 AppError::ResourceLimit("WebSocket send queue is full".into())
             }
             tokio::sync::mpsc::error::TrySendError::Closed(_) => {
-                AppError::Message(format!("Socket {id} is closed"))
+                AppError::Stale(format!("Socket {id} is closed"))
             }
         })
     }
+}
 
+impl crate::services::background::StoppableService for NetState {
     /// Closes all active sockets and aborts in-flight fetches on shutdown.
-    pub fn close_all(&self) {
+    fn stop(&self) {
         let mut is_stopping = self
             .admission
             .lock()
@@ -220,7 +222,7 @@ impl NetState {
             handle.abort();
         }
     }
-    pub fn wait_until(&self, deadline: Instant) -> bool {
+    fn wait_until(&self, deadline: Instant) -> bool {
         let count = self
             .activity
             .active_count
@@ -299,6 +301,7 @@ impl Drop for NetTaskRegistration {
 
 #[cfg(test)]
 mod tests {
+    use crate::services::background::StoppableService;
     use futures_util::future::Abortable;
     use tokio::io::AsyncReadExt;
     use tokio::net::TcpListener;
@@ -333,7 +336,7 @@ mod tests {
     fn shutdown_rejects_new_tasks_and_late_socket_registration() {
         let net = NetState::new().unwrap();
         let (task, _) = net.register_task().unwrap();
-        net.close_all();
+        net.stop();
         assert!(matches!(
             net.register_task(),
             Err(AppError::ServiceUnavailable(_))

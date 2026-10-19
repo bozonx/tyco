@@ -126,10 +126,7 @@ pub fn create_private_dir(path: &Path) -> Result<(), AppError> {
 /// went.
 pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
     static NEXT_QUARANTINE: AtomicU64 = AtomicU64::new(0);
-    let stamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_nanos())
-        .unwrap_or_default();
+    let stamp = crate::services::clock::now_ns();
     let target = loop {
         let mut name = path.file_name().unwrap_or_default().to_os_string();
         name.push(format!(

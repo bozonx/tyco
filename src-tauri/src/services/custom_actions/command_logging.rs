@@ -1,5 +1,5 @@
 use super::process_runner::ScriptExecutionResult;
-use crate::services::secret_detector::redact_secrets;
+use crate::services::secrets::detector::redact_secrets;
 use serde::Deserialize;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -10,9 +10,7 @@ const MAX_LOGGED_OUTPUT_BYTES: usize = 4 << 10;
 const MAX_LOG_FILE_BYTES: u64 = 5 << 20;
 const LOG_FILE_NAME: &str = "actions.log";
 pub fn format_timestamp() -> String {
-    let secs = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_secs());
+    let secs = crate::services::clock::since_epoch().as_secs();
 
     let days = secs / 86400;
     let rem = secs % 86400;

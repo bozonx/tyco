@@ -1,12 +1,13 @@
+mod activation;
 mod chat;
-mod defaults;
 mod desktop_state;
 mod editor_history;
 mod session_state;
 mod storage;
+pub mod user_config;
 
+pub use activation::*;
 pub use chat::*;
-pub use defaults::*;
 pub use desktop_state::*;
 pub use editor_history::*;
 pub use session_state::*;

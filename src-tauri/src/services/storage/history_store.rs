@@ -8,6 +8,7 @@ use tauri::{AppHandle, Manager};
 use super::{chat_history as chats, editor_history as editor};
 use crate::errors::AppError;
 use crate::models::{Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryRecord};
+use crate::services::chat_images::ChatImages;
 use crate::state::AppState;
 
 /// Typed history policies are parsed once at the serialized config boundary.
@@ -60,7 +61,7 @@ impl HistoryStorageCoordinator {
         if self.cleanup_pending.load(Ordering::SeqCst) {
             // Complete the already committed cleanup before accepting another
             // policy; turning history on must not resurrect data pending deletion.
-            editor::retry_history_cleanup(app, &before.editor, before.chat)?;
+            enforce_history_policies(app, before)?;
             self.cleanup_pending.store(false, Ordering::SeqCst);
         }
         let result = editor::commit_history_settings(
@@ -95,10 +96,26 @@ impl HistoryStorageCoordinator {
         let _editor = self.lock_editor_history();
         let _chats = self.lock_chat_history();
         let policy = HistorySettings::from_config(&state.snapshot().settings.user_config);
-        if editor::retry_history_cleanup(app, &policy.editor, policy.chat).is_ok() {
+        if enforce_history_policies(app, policy).is_ok() {
             self.cleanup_pending.store(false, Ordering::SeqCst);
         }
     }
+}
+
+/// Applies the history settings of the config the app starts with. The
+/// caller marks a failed cleanup as pending, see `mark_cleanup_pending`.
+pub fn apply_history_settings_on_startup(
+    app: &AppHandle,
+    user_config: &serde_json::Value,
+) -> Result<(), AppError> {
+    enforce_history_policies(app, HistorySettings::from_config(user_config))
+}
+
+/// Deletes what the policies no longer keep, from the editor history file and
+/// from the chats of "Ask AI"; a profile's chats are the profile's own.
+fn enforce_history_policies(app: &AppHandle, settings: HistorySettings) -> Result<(), AppError> {
+    editor::enforce_editor_history_policy(app, &settings.editor)?;
+    chats::enforce_chat_history_policy(&chats::app_chats_dir(app)?, settings.chat)
 }
 
 fn with_editor<T>(
@@ -219,12 +236,12 @@ pub fn read_chat(
     id: String,
     owner: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
-    with_chats(app, scope, |state, chats_dir| {
+    with_chats(app, scope, |_, chats_dir| {
         chats::recover_chat_transaction(chats_dir)?;
         let chat = chats::read_chat(chats_dir, id)?;
         if let Some(chat) = &chat {
             load_chat_images(
-                state,
+                &app.state::<ChatImages>(),
                 chats_dir,
                 chat,
                 ImageRetention::Active(owner.as_deref()),
@@ -237,7 +254,7 @@ pub fn read_chat(
 pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), AppError> {
     with_chats(app, scope, |state, chats_dir| {
         let policy = chats::ChatHistoryPolicy::from_config(&state.snapshot().settings.user_config);
-        chats::save_chat(chats_dir, policy, &state.chat_images, item)
+        chats::save_chat(chats_dir, policy, app.state::<ChatImages>().store(), item)
     })
 }
 
@@ -271,11 +288,16 @@ pub fn delete_chat(
     id: String,
     owner: String,
 ) -> Result<(), AppError> {
-    with_chats(app, scope, |state, chats_dir| {
+    with_chats(app, scope, |_, chats_dir| {
         chats::recover_chat_transaction(chats_dir)?;
         match chats::read_chat(chats_dir, id.clone()) {
             Ok(Some(chat)) => {
-                load_chat_images(state, chats_dir, &chat, ImageRetention::Undo(&owner))?;
+                load_chat_images(
+                    &app.state::<ChatImages>(),
+                    chats_dir,
+                    &chat,
+                    ImageRetention::Undo(&owner),
+                )?;
             }
             Ok(None) => {}
             Err(error) => log::warn!("Removing chat {id}, which cannot be read: {error}"),
@@ -294,13 +316,13 @@ enum ImageRetention<'a> {
 }
 
 fn load_chat_images(
-    state: &AppState,
+    images: &ChatImages,
     chats_dir: &Path,
     chat: &Chat,
     retention: ImageRetention<'_>,
 ) -> Result<(), AppError> {
     let directory = chats::chat_image_directory(chats_dir);
-    let mut images = state.chat_images.lock().expect("chat image lock poisoned");
+    let mut images = images.lock();
     for image in chat.messages.iter().flat_map(|message| &message.images) {
         match retention {
             ImageRetention::Active(Some(owner)) => images.hold(owner, &image.id),
@@ -318,11 +340,9 @@ fn load_chat_images(
 }
 
 pub fn read_chat_image(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<Vec<u8>, AppError> {
-    with_chats(app, scope, |state, chats_dir| {
-        state
-            .chat_images
+    with_chats(app, scope, |_, chats_dir| {
+        app.state::<ChatImages>()
             .lock()
-            .expect("chat image lock poisoned")
             .get(&chats::chat_image_directory(chats_dir), id)
     })
 }

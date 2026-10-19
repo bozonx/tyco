@@ -252,7 +252,7 @@ impl WindowTracker {
                     return Some(Ok(()));
                 }
                 (state.missing_window_id.as_deref() == Some(id)).then(|| {
-                    Err(AppError::Message(String::from(
+                    Err(AppError::Stale(String::from(
                         "The target window has been closed",
                     )))
                 })
@@ -311,10 +311,7 @@ pub fn wait_for_startup(timeout: Duration) {
 pub(crate) fn new_session() -> String {
     static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     let count = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let nanos = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|time| time.subsec_nanos())
-        .unwrap_or_default();
+    let nanos = crate::services::clock::since_epoch().subsec_nanos();
     format!("{count}x{nanos}")
 }
 

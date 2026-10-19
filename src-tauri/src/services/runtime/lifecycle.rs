@@ -2,9 +2,11 @@
 use super::tray::setup_tray;
 use super::warmup::spawn_quick_warmup;
 use super::{ActivationCoordinator, RuntimeWindows, MAIN_WINDOW_LABEL};
-#[cfg(target_os = "linux")]
-use super::{LayerShellRuntimeState, PanelKeyboardMode, QUICK_WINDOW_LABEL};
+use super::{PanelKeyboardMode, PanelLayerState, QUICK_WINDOW_LABEL};
 use crate::errors::AppError;
+use crate::services::background::StoppableService;
+use crate::services::custom_actions::ScriptRuns;
+use crate::services::net::NetState;
 use crate::state::AppState;
 use tauri::{App, AppHandle, Manager};
 
@@ -33,23 +35,20 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         .get_webview_window(MAIN_WINDOW_LABEL)
         .ok_or_else(|| AppError::Message("Main window not found".into()))?;
     crate::services::platform::enable_titlebar_buttons(&main_window)?;
-    #[cfg(target_os = "linux")]
-    {
-        let supported = crate::services::platform::panel_surface_supported();
-        if supported {
-            let window = app
-                .get_webview_window(QUICK_WINDOW_LABEL)
-                .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
-            crate::services::platform::attach_panel_surface(&window)?;
-            log::info!("Using gtk-layer-shell for the quick window");
-        } else {
-            log::info!("gtk-layer-shell is unavailable; using a regular window");
-        }
-        app.manage(LayerShellRuntimeState {
-            supported,
-            keyboard: PanelKeyboardMode::from_env(),
-        });
+    let supported = crate::services::platform::is_layer_shell_supported();
+    if supported {
+        let window = app
+            .get_webview_window(QUICK_WINDOW_LABEL)
+            .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
+        crate::services::platform::attach_panel_surface(&window)?;
+        log::info!("The quick window is a layer-shell surface");
+    } else {
+        log::info!("The quick window is a regular window");
     }
+    app.manage(PanelLayerState {
+        supported,
+        keyboard: PanelKeyboardMode::from_env(),
+    });
     setup_tray(app)?;
     spawn_quick_warmup(app.handle().clone())?;
     Ok(())
@@ -78,11 +77,10 @@ pub fn request_exit(app: &AppHandle) {
 
 /// Cancellation is issued to every service before any bounded wait begins.
 pub fn shutdown(app: &AppHandle) {
-    let services = app.state::<crate::services::background::BackgroundServices>();
-    if !services.begin_shutdown() {
+    if !app.state::<AppState>().begin_shutdown() {
         return;
     }
-    app.state::<AppState>().begin_quitting();
+    let services = app.state::<crate::services::background::BackgroundServices>();
     let deadline = std::time::Instant::now() + SHUTDOWN_TIMEOUT;
     log::info!("Initiating application graceful shutdown");
     let cleanup_app = app.clone();
@@ -91,19 +89,25 @@ pub fn shutdown(app: &AppHandle) {
     }) {
         log::warn!("Could not start selection shutdown: {error}");
     }
-    services.stop();
-    let scripts = app.state::<crate::services::custom_actions::ScriptRuns>();
-    scripts.stop();
-    if let Some(net) = app.try_state::<crate::services::net::NetState>() {
-        net.close_all();
+    // a start that failed halfway may not have managed every service
+    let scripts = app.try_state::<ScriptRuns>();
+    let net = app.try_state::<NetState>();
+    let stoppable: Vec<(&str, &dyn StoppableService)> = [
+        Some(("Background service", &*services as &dyn StoppableService)),
+        scripts
+            .as_ref()
+            .map(|scripts| ("Script", &**scripts as &dyn StoppableService)),
+        net.as_ref()
+            .map(|net| ("Network", &**net as &dyn StoppableService)),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+    for (_, service) in &stoppable {
+        service.stop();
     }
-    if let Some(state) = app.try_state::<AppState>() {
-        crate::services::voice::stop_capture_on_shutdown(state.inner(), deadline);
-    }
-    if let Some(net) = app.try_state::<crate::services::net::NetState>() {
-        if !net.wait_until(deadline) {
-            log::warn!("Network shutdown deadline expired");
-        }
+    if let Some(voice) = app.try_state::<crate::services::voice::session::VoiceSessionState>() {
+        crate::services::voice::stop_capture_on_shutdown(&voice, deadline);
     }
     let remaining = deadline.saturating_duration_since(std::time::Instant::now());
     let portal = tauri::async_runtime::block_on(async {
@@ -112,11 +116,10 @@ pub fn shutdown(app: &AppHandle) {
     if portal.is_err() {
         log::warn!("Hotkey portal shutdown deadline expired");
     }
-    if !scripts.wait_until(deadline) {
-        log::warn!("Script shutdown deadline expired");
-    }
-    if !services.wait_until(deadline) {
-        log::warn!("Background service shutdown deadline expired");
+    for (name, service) in stoppable.iter().rev() {
+        if !service.wait_until(deadline) {
+            log::warn!("{name} shutdown deadline expired");
+        }
     }
     log::info!("Application service shutdown finished");
 }

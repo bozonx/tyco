@@ -1,4 +1,4 @@
-use crate::models::default_user_config;
+use crate::services::settings::defaults::default_user_config;
 use serde_json::Value;
 
 /// Keeps one hotkey per known target: the user's shortcut, or the platform

@@ -5,10 +5,18 @@ use super::*;
 use backups::back_up_config_before_repair;
 use normalization::*;
 
+/// The user config the app starts with.
+pub struct LoadedUserConfig {
+    pub value: Value,
+    /// Whether the file holds `value`. A repair that could not be written
+    /// leaves the old file, whose references must not be cleaned up yet.
+    pub is_on_disk: bool,
+}
+
 /// Reads the user config. A config that cannot be parsed is set aside and
 /// replaced by the defaults: the app must start either way, and the user keeps
 /// the broken file to fix it.
-pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
+pub fn read_or_create_user_config(app: &AppHandle) -> Result<LoadedUserConfig, AppError> {
     let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
 
     if let Some(mut value) = read_or_quarantine(&path, |raw| {
@@ -23,7 +31,7 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
         }
     })? {
         // Never interpret or overwrite an unsupported future schema.
-        if config_version::is_newer_than_supported(&value) {
+        if version::is_newer_than_supported(&value) {
             return Err(newer_config_error());
         }
 
@@ -32,7 +40,7 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
 
         // the app starts with the config in memory either way; the next
         // save writes it
-        let saved = !changed
+        let is_on_disk = !changed
             || match back_up_config_before_repair(&path, &original) {
                 Ok(()) => match save_user_config(app, &value) {
                     Ok(()) => true,
@@ -46,19 +54,22 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<Value, AppError> {
                     false
                 }
             };
-        if saved {
-            crate::services::webhook_secrets::cleanup_after_startup(app, &value)?;
-        }
-
-        return Ok(value);
+        return Ok(LoadedUserConfig { value, is_on_disk });
     }
 
     let default_config = default_user_config();
-    if let Err(error) = save_user_config(app, &default_config) {
-        log::error!("Could not save the default config: {error}");
-    }
+    let is_on_disk = match save_user_config(app, &default_config) {
+        Ok(()) => true,
+        Err(error) => {
+            log::error!("Could not save the default config: {error}");
+            false
+        }
+    };
 
-    Ok(default_config)
+    Ok(LoadedUserConfig {
+        value: default_config,
+        is_on_disk,
+    })
 }
 
 /// Repairs disk input using domain rules followed by the shared schema.
@@ -67,15 +78,15 @@ fn normalize_loaded_config(value: &mut Value) -> bool {
     let normalized = normalize_window_insertion_config(value)
         | normalize_hotkeys_config(value)
         | normalize_language_config(value);
-    let repaired = crate::services::config_schema::normalize_user_config(value);
+    let repaired = crate::services::settings::schema::normalize_user_config(value);
     normalized | repaired
 }
 
+/// Writes `user_config`, which the caller has validated: the settings
+/// service before it applies a change, the startup by normalizing it. A file
+/// a newer Tyco wrote meanwhile is left alone.
 pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppError> {
-    if config_version::is_newer_than_supported(user_config) {
-        return Err(newer_config_error());
-    }
-    crate::services::config_schema::validate_user_config(user_config)?;
+    debug_assert!(crate::services::settings::schema::validate_user_config(user_config).is_ok());
     let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
     let previous = match fs::read_to_string(&path) {
         Ok(raw) => Some(raw),
@@ -84,10 +95,10 @@ pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppE
     };
     if let Some(raw) = previous {
         let original: Value = serde_json::from_str(&raw)?;
-        if config_version::is_newer_than_supported(&original) {
+        if version::is_newer_than_supported(&original) {
             return Err(newer_config_error());
         }
-        if crate::services::config_schema::validate_user_config(&original).is_err() {
+        if crate::services::settings::schema::validate_user_config(&original).is_err() {
             back_up_config_before_repair(&path, &original)?;
         }
     }

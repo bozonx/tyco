@@ -1,8 +1,9 @@
-use super::{ActivationSnapshot, DesktopSnapshot, SessionState, SettingsSnapshot, WindowSnapshot};
-use crate::services::{
-    activation::{ActivationMode, WindowProfile},
-    hotkeys,
+//! The configuration and state a fresh start begins with.
+use crate::models::{
+    ActivationMode, ActivationSnapshot, DesktopSnapshot, SessionState, SettingsSnapshot,
+    WindowProfile, WindowSnapshot,
 };
+use crate::services::hotkeys;
 use serde_json::{json, Value};
 
 /// Shared portable defaults, followed by the platform hotkeys and insertion method.
@@ -14,10 +15,10 @@ pub(crate) fn default_user_config_for_session(
     session: crate::services::platform::session::Session,
 ) -> Value {
     let mut config: Value = serde_json::from_str(include_str!(
-        "../../../packages/shared/src/user-config-defaults.json"
+        "../../../../packages/shared/src/user-config-defaults.json"
     ))
     .expect("valid shared user config defaults");
-    config["configVersion"] = json!(crate::services::config_version::CONFIG_VERSION);
+    config["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
     config["hotkeys"] = hotkeys::default_hotkeys_config();
     config["windowInsertion"]["linux"]["method"] = json!(if session.is_wayland() {
         "ydotool"

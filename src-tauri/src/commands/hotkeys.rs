@@ -14,8 +14,8 @@ pub async fn configure_hotkeys(app: AppHandle) -> Result<(), AppError> {
 }
 
 #[tauri::command]
-pub fn suspend_hotkeys(app: AppHandle, suspended: bool) -> Result<(), AppError> {
-    crate::services::hotkeys::set_suspended(&app, suspended)
+pub fn suspend_hotkeys(app: AppHandle, suspended: bool) {
+    crate::services::hotkeys::set_suspended(&app, suspended);
 }
 
 #[tauri::command]

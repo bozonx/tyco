@@ -3,9 +3,9 @@ use std::sync::Mutex;
 
 use serde_json::Value;
 
-use super::activation::{Activation, ActivationMode};
-use super::platform::ForegroundTarget;
 use crate::errors::AppError;
+use crate::services::activation::{Activation, ActivationMode};
+use crate::services::platform::ForegroundTarget;
 
 pub(crate) trait ActivationHost {
     fn foreground_target(&self) -> Option<ForegroundTarget>;

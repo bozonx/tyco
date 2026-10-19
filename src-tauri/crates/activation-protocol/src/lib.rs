@@ -85,12 +85,123 @@ pub enum Request {
     Quit,
 }
 
+/// The machine codes of failed requests and jobs. They are stable: scripts
+/// and D-Bus error names (`org.tyco.Error.<code>`) depend on them.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ErrorCode {
+    /// A request or its input the API cannot take.
+    InvalidInput,
+    /// The frame was not a request of this protocol.
+    InvalidRequest,
+    /// The command needs input the call did not give.
+    InputRequired,
+    /// More than one command has the name.
+    AmbiguousName,
+    AccessDenied,
+    NotFound,
+    Disabled,
+    /// The app, or what the command needs, cannot serve the request now.
+    Unavailable,
+    /// The quick window has not reported its tools yet.
+    NotReady,
+    Busy,
+    SelectionFailed,
+    OutputTooLarge,
+    ExecutionFailed,
+    /// The command changed in the settings while it waited.
+    ConfigurationChanged,
+    TimedOut,
+    Cancelled,
+    Failed,
+}
+
+impl ErrorCode {
+    pub const ALL: [Self; 17] = [
+        Self::InvalidInput,
+        Self::InvalidRequest,
+        Self::InputRequired,
+        Self::AmbiguousName,
+        Self::AccessDenied,
+        Self::NotFound,
+        Self::Disabled,
+        Self::Unavailable,
+        Self::NotReady,
+        Self::Busy,
+        Self::SelectionFailed,
+        Self::OutputTooLarge,
+        Self::ExecutionFailed,
+        Self::ConfigurationChanged,
+        Self::TimedOut,
+        Self::Cancelled,
+        Self::Failed,
+    ];
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::InvalidInput => "InvalidInput",
+            Self::InvalidRequest => "InvalidRequest",
+            Self::InputRequired => "InputRequired",
+            Self::AmbiguousName => "AmbiguousName",
+            Self::AccessDenied => "AccessDenied",
+            Self::NotFound => "NotFound",
+            Self::Disabled => "Disabled",
+            Self::Unavailable => "Unavailable",
+            Self::NotReady => "NotReady",
+            Self::Busy => "Busy",
+            Self::SelectionFailed => "SelectionFailed",
+            Self::OutputTooLarge => "OutputTooLarge",
+            Self::ExecutionFailed => "ExecutionFailed",
+            Self::ConfigurationChanged => "ConfigurationChanged",
+            Self::TimedOut => "TimedOut",
+            Self::Cancelled => "Cancelled",
+            Self::Failed => "Failed",
+        }
+    }
+
+    /// `None` for a code this version does not know, e.g. from a newer app.
+    pub fn parse(code: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|known| known.as_str() == code)
+    }
+
+    /// The exit status `tyco-ctl` ends with on this code.
+    pub fn exit_code(self) -> i32 {
+        match self {
+            Self::InvalidInput
+            | Self::InvalidRequest
+            | Self::InputRequired
+            | Self::AmbiguousName => 2,
+            Self::AccessDenied => 3,
+            Self::NotFound | Self::Unavailable | Self::NotReady | Self::Disabled | Self::Busy => 4,
+            Self::TimedOut => 6,
+            Self::Cancelled => 7,
+            Self::SelectionFailed
+            | Self::OutputTooLarge
+            | Self::ExecutionFailed
+            | Self::ConfigurationChanged
+            | Self::Failed => 5,
+        }
+    }
+}
+
+impl From<ErrorCode> for String {
+    fn from(code: ErrorCode) -> Self {
+        code.as_str().to_owned()
+    }
+}
+
+impl std::fmt::Display for ErrorCode {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Response {
     pub success: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
+    /// An `ErrorCode`; kept as text so that a code of a newer app still reads.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     /// What the request asked for, e.g. the list of commands or a job.
@@ -147,13 +258,22 @@ pub struct Job {
 }
 
 impl Response {
-    pub fn coded_error(code: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn coded_error(code: ErrorCode, message: impl Into<String>) -> Self {
         Self {
             success: false,
             error: Some(message.into()),
-            code: Some(code.into()),
+            code: Some(code.as_str().into()),
             result: None,
         }
+    }
+
+    /// The code of a failed response; `Failed` when it has none this version
+    /// knows.
+    pub fn error_code(&self) -> ErrorCode {
+        self.code
+            .as_deref()
+            .and_then(ErrorCode::parse)
+            .unwrap_or(ErrorCode::Failed)
     }
 
     pub fn json(value: &impl Serialize) -> Self {
@@ -176,12 +296,7 @@ impl Response {
     }
 
     pub fn error(error: impl Into<String>) -> Self {
-        Self {
-            success: false,
-            error: Some(error.into()),
-            code: Some("Failed".into()),
-            result: None,
-        }
+        Self::coded_error(ErrorCode::Failed, error)
     }
 }
 
@@ -232,6 +347,19 @@ mod tests {
             let decoded: Request = serde_json::from_str(&encoded).unwrap();
             assert_eq!(decoded, request);
         }
+    }
+
+    #[test]
+    fn error_codes_round_trip_and_unknown_ones_read_as_failed() {
+        for code in ErrorCode::ALL {
+            assert_eq!(ErrorCode::parse(code.as_str()), Some(code));
+            assert_eq!(Response::coded_error(code, "x").error_code(), code);
+        }
+        let newer = Response {
+            code: Some("FromTheFuture".into()),
+            ..Response::error("x")
+        };
+        assert_eq!(newer.error_code(), ErrorCode::Failed);
     }
 
     #[test]

@@ -7,6 +7,7 @@ const ERROR_CODES: ReadonlySet<string> = new Set([
   'resourceLimit',
   'invalidInput',
   'unsupportedConfig',
+  'stale',
   'runtimeError',
   'ioError',
   'invalidData',

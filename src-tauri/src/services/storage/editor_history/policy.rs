@@ -1,7 +1,7 @@
 //! Storage modes, retention limits, and secret sanitization.
 use super::DEFAULT_EDITOR_HISTORY_LIMIT;
 use crate::models::EditorHistoryRecord;
-use crate::services::secret_detector::redact_secrets;
+use crate::services::secrets::detector::redact_secrets;
 use crate::services::storage::{history_limit, DAY_MS};
 use serde_json::Value;
 

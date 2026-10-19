@@ -49,6 +49,20 @@ pub struct ToolCatalogEntry {
 /// window sends the catalog whenever the plugins load.
 pub type ToolCatalog = HashMap<String, ToolCatalogEntry>;
 
+/// The tool catalog the quick window sent last; `None` until it does.
+#[derive(Default)]
+pub struct ToolCatalogState(std::sync::Mutex<Option<ToolCatalog>>);
+
+impl ToolCatalogState {
+    pub fn get(&self) -> Option<ToolCatalog> {
+        self.0.lock().expect("tool catalog lock poisoned").clone()
+    }
+
+    pub fn set(&self, catalog: ToolCatalog) {
+        *self.0.lock().expect("tool catalog lock poisoned") = Some(catalog);
+    }
+}
+
 pub fn catalog_from(entries: Vec<ToolCatalogEntry>) -> ToolCatalog {
     entries
         .into_iter()
@@ -314,19 +328,7 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
     serde_json::to_value(listed).unwrap_or_else(|_| Value::Array(Vec::new()))
 }
 
-/// A command the overlay opens with, see `Activation::launcher_request`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LauncherRequest {
-    pub command_id: String,
-    /// The text of the call; without it the selection or the field gives it.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub text: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub job_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub input: Option<serde_json::Map<String, Value>>,
-}
+pub use crate::models::LauncherRequest;
 
 #[cfg(test)]
 mod tests {

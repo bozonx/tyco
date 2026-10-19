@@ -1,8 +1,7 @@
 use tauri::{AppHandle, Emitter, Manager, WindowEvent};
 
 use super::panel_layer::is_current_quick_activation;
-#[cfg(target_os = "linux")]
-use super::panel_layer::{settle_quick_keyboard, LayerShellRuntimeState};
+use super::panel_layer::{settle_quick_keyboard, PanelLayerState};
 use super::{
     emit_state, on_main_thread, RuntimeWindows, MAIN_WINDOW_CLOSED_EVENT, MAIN_WINDOW_LABEL,
     OPEN_MAIN_CHAT_EVENT, OPEN_MAIN_EDITOR_EVENT, QUICK_WINDOW_LABEL,
@@ -21,8 +20,7 @@ pub(super) fn hide_inactive_window(app: &AppHandle, active_label: &str) -> Resul
         return Ok(());
     };
 
-    #[cfg(target_os = "linux")]
-    if inactive_label == QUICK_WINDOW_LABEL && app.state::<LayerShellRuntimeState>().supported {
+    if inactive_label == QUICK_WINDOW_LABEL && app.state::<PanelLayerState>().supported {
         crate::services::platform::disable_panel_keyboard(&window)?;
     }
 
@@ -168,8 +166,7 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
         .get_webview_window(label)
         .ok_or_else(|| AppError::Message(format!("Window {label} not found")))?;
 
-    #[cfg(target_os = "linux")]
-    if label == QUICK_WINDOW_LABEL && app.state::<LayerShellRuntimeState>().supported {
+    if label == QUICK_WINDOW_LABEL && app.state::<PanelLayerState>().supported {
         crate::services::platform::disable_panel_keyboard(&window)?;
     }
 
@@ -205,18 +202,15 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                 }
             }
             WindowEvent::Focused(true) => {
-                crate::services::activation_metrics::mark_os_focus(app);
-                #[cfg(target_os = "linux")]
+                crate::services::activation::metrics::mark_os_focus(app);
                 if window_label == QUICK_WINDOW_LABEL {
                     settle_quick_keyboard(app);
                 }
             }
             WindowEvent::Focused(false) => {}
             WindowEvent::Destroyed => {
-                state
-                    .chat_images
+                app.state::<crate::services::chat_images::ChatImages>()
                     .lock()
-                    .expect("chat image lock poisoned")
                     .release_owner(window_label);
             }
             _ => {}

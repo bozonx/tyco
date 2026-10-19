@@ -1,5 +1,5 @@
 //! Rules the shared config schema cannot express. Field types, enums and
-//! defaults are repaired by `config_schema::normalize_user_config`, which runs
+//! defaults are repaired by `schema::normalize_user_config`, which runs
 //! after these.
 
 mod hotkeys;

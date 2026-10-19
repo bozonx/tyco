@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde_json::json;
 use tauri::{AppHandle, Emitter, Manager};
-use tyco_activation_protocol::{Job, JobState, Response, RunRequest};
+use tyco_activation_protocol::{ErrorCode, Job, JobState, Response, RunRequest};
 
 use super::validation::{
     command_name, ensure_selection_access_allowed, is_selection_access_allowed, lookup,
@@ -10,9 +10,9 @@ use super::validation::{
 use super::{ApiResult, JOB_CANCEL_EVENT};
 use crate::errors::AppError;
 use crate::services::activation::{Activation, ActivationMode, ActivationSource};
-use crate::services::external_access::{self, AccessPrompt, AccessPromptError, AccessRequest};
-use crate::services::external_commands::{self, ExternalCommand};
-use crate::services::external_jobs::ExternalJobs;
+use crate::services::external::access::{self, AccessPrompt, AccessPromptError, AccessRequest};
+use crate::services::external::commands::{self, ExternalCommand};
+use crate::services::external::jobs::ExternalJobs;
 use crate::services::{runtime, selection_replace};
 use crate::state::AppState;
 
@@ -35,9 +35,13 @@ pub(super) fn start(
     mut request: RunRequest,
     source: ActivationSource,
 ) -> ApiResult<Job> {
-    if app.state::<AppState>().tool_catalog().is_none() {
+    if app
+        .state::<crate::services::external::commands::ToolCatalogState>()
+        .get()
+        .is_none()
+    {
         return Err(Response::coded_error(
-            "NotReady",
+            ErrorCode::NotReady,
             "Command execution tools are still loading",
         ));
     }
@@ -48,12 +52,13 @@ pub(super) fn start(
     let ask = request.selection && !is_selection_access_allowed(&config);
     // checked again when the prompt is taken; this saves the capture
     if ask && app.state::<AccessPrompt>().is_pending() {
-        return Err(Response::coded_error("AccessDenied", PROMPT_BUSY));
+        return Err(Response::coded_error(ErrorCode::AccessDenied, PROMPT_BUSY));
     }
     let selection = if request.selection {
         // taken before the prompt, which moves the focus away from it
-        let (id, text) = selection_replace::prepare_external(app)
-            .map_err(|error| Response::coded_error("SelectionFailed", error.to_string()))?;
+        let (id, text) = selection_replace::prepare_external(app).map_err(|error| {
+            Response::coded_error(ErrorCode::SelectionFailed, error.to_string())
+        })?;
         request.text = Some(text);
         // Retain the explicit selection capability for the authorization recheck.
         Some(id)
@@ -65,9 +70,9 @@ pub(super) fn start(
         Ok(job) => job,
         Err(error) => {
             if let Some(id) = selection {
-                let _ = selection_replace::finish(app, id, None);
+                selection_replace::release(app, id);
             }
-            return Err(Response::coded_error("Busy", error));
+            return Err(Response::coded_error(ErrorCode::Busy, error));
         }
     };
     if let Some(raw) = raw_command(&config, &command.id) {
@@ -79,10 +84,10 @@ pub(super) fn start(
             command_name: command_name(&config, &command.id),
             should_replace: request.replace,
         };
-        let (code, message) = match external_access::ask(app, prompt, source) {
+        let (code, message) = match access::ask(app, prompt, source) {
             Ok(()) => return Ok(job),
-            Err(AccessPromptError::Busy) => ("AccessDenied", String::from(PROMPT_BUSY)),
-            Err(AccessPromptError::Failed(error)) => ("Unavailable", error.to_string()),
+            Err(AccessPromptError::Busy) => (ErrorCode::AccessDenied, String::from(PROMPT_BUSY)),
+            Err(AccessPromptError::Failed(error)) => (ErrorCode::Unavailable, error.to_string()),
         };
         // also gives the selection run its clipboard back
         fail(app, &job.id, message.clone(), code);
@@ -92,7 +97,7 @@ pub(super) fn start(
     Ok(job)
 }
 
-fn fail(app: &AppHandle, id: &str, message: String, code: &str) {
+fn fail(app: &AppHandle, id: &str, message: String, code: ErrorCode) {
     complete(
         app,
         id,
@@ -121,7 +126,7 @@ fn hand_off(
         let mut activation = Activation::new(ActivationMode::CommandLauncher, source);
         // External calls never capture a selection implicitly when opening UI.
         activation.selected_text = Some(String::new());
-        activation.launcher_request = Some(external_commands::LauncherRequest {
+        activation.launcher_request = Some(commands::LauncherRequest {
             command_id: command.id.clone(),
             text: request.text.clone(),
             job_id: Some(job_id.to_owned()),
@@ -134,7 +139,7 @@ fn hand_off(
             .and_then(|window| {
                 window
                     .emit(
-                        external_commands::COMMAND_RUN_EVENT,
+                        commands::COMMAND_RUN_EVENT,
                         json!({
                             "commandId": command.id,
                             "jobId": job_id,
@@ -147,8 +152,8 @@ fn hand_off(
             })
     };
     handoff.map_err(|error| {
-        fail(app, job_id, error.clone(), "Unavailable");
-        Response::coded_error("Unavailable", error)
+        fail(app, job_id, error.clone(), ErrorCode::Unavailable);
+        Response::coded_error(ErrorCode::Unavailable, error)
     })
 }
 
@@ -185,7 +190,7 @@ pub fn deny_selection(app: &AppHandle, job_id: &str) {
         app,
         job_id,
         "The user did not allow access to the selection".into(),
-        "AccessDenied",
+        ErrorCode::AccessDenied,
     );
 }
 
@@ -208,9 +213,9 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
     let jobs = app.state::<ExternalJobs>();
     let code = completion.code.or_else(|| {
         if completion.is_cancelled {
-            Some("Cancelled".into())
+            Some(ErrorCode::Cancelled.into())
         } else if !completion.is_success {
-            Some("ExecutionFailed".into())
+            Some(ErrorCode::ExecutionFailed.into())
         } else {
             None
         }
@@ -262,13 +267,13 @@ fn jobs_request_replace(app: &AppHandle, id: &str) -> bool {
         .is_selection_replacement_requested(id)
 }
 
-pub(super) fn cancel(app: &AppHandle, id: &str, code: &str) -> Response {
+pub(super) fn cancel(app: &AppHandle, id: &str, code: ErrorCode) -> Response {
     let jobs = app.state::<ExternalJobs>();
     let Some(job) = jobs.get(id) else {
-        return Response::coded_error("NotFound", "No such job");
+        return Response::coded_error(ErrorCode::NotFound, "No such job");
     };
     if !job.state.is_terminal() {
-        external_access::withdraw(app, id);
+        access::withdraw(app, id);
         complete(
             app,
             id,
@@ -332,7 +337,7 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
                 is_cancelled: false,
                 output: None,
                 message: Some("Command configuration changed before execution".into()),
-                code: Some("ConfigurationChanged".into()),
+                code: Some(ErrorCode::ConfigurationChanged.into()),
             },
         );
         return false;
@@ -361,7 +366,7 @@ pub fn spawn_reaper(app: AppHandle) -> Result<(), AppError> {
                 let handle = app.clone();
                 let _ = app
                     .state::<crate::services::background::BackgroundServices>()
-                    .run_blocking(move || cancel(&handle, &id, "TimedOut"))
+                    .run_blocking(move || cancel(&handle, &id, ErrorCode::TimedOut))
                     .await;
             }
         }

@@ -1,3 +1,5 @@
+pub(crate) mod clipboard;
+
 use std::mem::size_of;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::time::Duration;
@@ -87,7 +89,7 @@ pub fn inject_paste(target_window_handle: Option<&str>) -> Result<(), AppError> 
     let window_handle = target_window_handle
         .and_then(|value| value.parse::<isize>().ok())
         .map(|value| value as HWND)
-        .ok_or_else(|| AppError::Message(String::from("Target window is not available")))?;
+        .ok_or_else(|| AppError::Stale(String::from("Target window is not available")))?;
     if unsafe { SetForegroundWindow(window_handle) } == 0 {
         return Err(AppError::Message(String::from(
             "Could not focus the target window",

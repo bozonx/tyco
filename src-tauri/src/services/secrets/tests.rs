@@ -19,19 +19,19 @@ struct FakeVault {
 }
 
 impl SecretVault for Arc<FakeVault> {
-    fn get(&self, id: &str) -> Result<Option<String>, String> {
+    fn get(&self, id: &str) -> Result<Option<String>, VaultError> {
         if self.unreachable.load(Ordering::SeqCst) {
-            return Err(String::from("no vault"));
+            return Err(VaultError(String::from("no vault")));
         }
         if self.locked.lock().unwrap().contains(id) {
-            return Err(String::from("prompt dismissed"));
+            return Err(VaultError(String::from("prompt dismissed")));
         }
         Ok(self.values.lock().unwrap().get(id).cloned())
     }
 
-    fn set(&self, id: &str, value: &str) -> Result<(), String> {
+    fn set(&self, id: &str, value: &str) -> Result<(), VaultError> {
         if self.unreachable.load(Ordering::SeqCst) || self.read_only.load(Ordering::SeqCst) {
-            return Err(String::from("write refused"));
+            return Err(VaultError(String::from("write refused")));
         }
         self.values
             .lock()
@@ -40,9 +40,9 @@ impl SecretVault for Arc<FakeVault> {
         Ok(())
     }
 
-    fn delete(&self, id: &str) -> Result<(), String> {
+    fn delete(&self, id: &str) -> Result<(), VaultError> {
         if self.unreachable.load(Ordering::SeqCst) {
-            return Err(String::from("no vault"));
+            return Err(VaultError(String::from("no vault")));
         }
         self.values.lock().unwrap().remove(id);
         Ok(())

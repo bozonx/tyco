@@ -5,6 +5,7 @@
 //! A dictation can therefore last as long as the user keeps talking.
 
 mod audio_processing;
+pub mod session;
 
 pub use audio_processing::compute_audio_level;
 use audio_processing::{mix_frame, pcm16_to_le_bytes, Downsampler};
@@ -20,8 +21,8 @@ use tauri::{AppHandle, Emitter};
 
 use crate::errors::AppError;
 use crate::services::net::EventSink;
-use crate::services::voice_session::VoiceCaptureSession;
-use crate::state::AppState;
+use crate::services::voice::session::VoiceCaptureSession;
+use crate::services::voice::session::VoiceSessionState;
 
 pub const VOICE_AUDIO_LEVEL_EVENT: &str = "app://voice-audio-level";
 
@@ -102,7 +103,7 @@ impl CaptureRuntime for SystemCaptureRuntime {
 
 pub async fn start_capture<S: EventSink>(
     app: &AppHandle,
-    state: &AppState,
+    state: &VoiceSessionState,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError> {
     start_capture_with(
@@ -117,7 +118,7 @@ pub async fn start_capture<S: EventSink>(
 async fn start_capture_with<A, L, S>(
     source: A,
     levels: L,
-    state: &AppState,
+    state: &VoiceSessionState,
     sink: S,
 ) -> Result<VoiceCaptureInfo, AppError>
 where
@@ -125,21 +126,21 @@ where
     L: AudioLevelSink + Send + 'static,
     S: EventSink,
 {
-    let _operation = state.voice_session.lock_capture_operation().await;
-    if !state.voice_session.can_start() {
+    let _operation = state.lock_capture_operation().await;
+    if !state.can_start() {
         return Err(AppError::ServiceUnavailable(
             "Voice service is stopping".into(),
         ));
     }
     // One microphone: a new dictation ends the previous one.
     stop_capture_unlocked(state, None).await?;
-    let session_id = state.voice_session.allocate_session_id();
+    let session_id = state.allocate_session_id();
     let (session, sample_rate_hz) = tokio::task::spawn_blocking(move || {
         create_capture_session(source, levels, sink, session_id, SETUP_TIMEOUT)
     })
     .await
     .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
-    if let Err(session) = state.voice_session.install(session) {
+    if let Err(session) = state.install(session) {
         let _ =
             tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
                 .await;
@@ -155,13 +156,19 @@ where
 
 /// Stops the microphone; returns once the last chunk and `end` are sent.
 /// With `session_id`, only that capture is stopped: a newer one goes on.
-pub async fn stop_capture(state: &AppState, session_id: Option<u64>) -> Result<(), AppError> {
-    let _operation = state.voice_session.lock_capture_operation().await;
+pub async fn stop_capture(
+    state: &VoiceSessionState,
+    session_id: Option<u64>,
+) -> Result<(), AppError> {
+    let _operation = state.lock_capture_operation().await;
     stop_capture_unlocked(state, session_id).await
 }
 
-async fn stop_capture_unlocked(state: &AppState, session_id: Option<u64>) -> Result<(), AppError> {
-    let Some(session) = state.voice_session.take(session_id) else {
+async fn stop_capture_unlocked(
+    state: &VoiceSessionState,
+    session_id: Option<u64>,
+) -> Result<(), AppError> {
+    let Some(session) = state.take(session_id) else {
         return Ok(());
     };
     tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
@@ -170,8 +177,8 @@ async fn stop_capture_unlocked(state: &AppState, session_id: Option<u64>) -> Res
 }
 
 /// Shutdown cannot wait indefinitely for a stalled device or event sink.
-pub fn stop_capture_on_shutdown(state: &AppState, deadline: Instant) {
-    if let Some(session) = state.voice_session.shutdown() {
+pub fn stop_capture_on_shutdown(state: &VoiceSessionState, deadline: Instant) {
+    if let Some(session) = state.shutdown() {
         if let Err(error) = session.stop_until(deadline) {
             log::warn!("Could not finish voice capture during shutdown: {error}");
         }
@@ -635,10 +642,7 @@ mod tests {
 
     #[tokio::test]
     async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
-        let state = AppState::new(crate::models::default_desktop_snapshot(
-            serde_json::Value::Null,
-            Default::default(),
-        ));
+        let state = VoiceSessionState::default();
         let trace = Trace::default();
         let first = start_capture_with(
             TestSource {
@@ -667,12 +671,11 @@ mod tests {
         assert_ne!(first.session_id, second.session_id);
         stop_capture(&state, Some(first.session_id)).await.unwrap();
         let session = state
-            .voice_session
             .take(Some(second.session_id))
             .expect("new capture was stopped");
-        assert!(state.voice_session.install(session).is_ok());
+        assert!(state.install(session).is_ok());
         stop_capture(&state, Some(second.session_id)).await.unwrap();
-        assert!(state.voice_session.take(None).is_none());
+        assert!(state.take(None).is_none());
         let values = trace.values();
         let second_open = values
             .iter()

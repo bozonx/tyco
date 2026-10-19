@@ -249,7 +249,7 @@ impl SystemTextInjector {
             }
         }
         if self.session == InjectionSessionKind::Wayland && !tracker().is_running() {
-            return Err(AppError::Message(String::from(
+            return Err(AppError::ServiceUnavailable(String::from(
                 "Text insertion on Wayland needs KDE Plasma 6: the KWin window tracker is not running",
             )));
         }
@@ -308,7 +308,7 @@ fn ensure_binary(binary: &str, name: &str) -> Result<(), AppError> {
     if PathBuf::from(binary).is_file() {
         Ok(())
     } else {
-        Err(AppError::Message(format!(
+        Err(AppError::ServiceUnavailable(format!(
             "{name} is not installed: {binary} does not exist"
         )))
     }
@@ -330,7 +330,7 @@ fn select_method(
     match (session, configured) {
         (InjectionSessionKind::Wayland, _) | (_, "ydotool") => Ok(InjectionMethod::Ydotool),
         (InjectionSessionKind::X11, _) => Ok(InjectionMethod::Xdotool),
-        (InjectionSessionKind::Unsupported, _) => Err(AppError::Message(String::from(
+        (InjectionSessionKind::Unsupported, _) => Err(AppError::ServiceUnavailable(String::from(
             "Text insertion is unavailable outside an X11 or Wayland session",
         ))),
     }
@@ -352,7 +352,7 @@ fn command_spec(
         }),
         InjectionMethod::Xdotool => {
             let window_id = target_window_id.ok_or_else(|| {
-                AppError::Message(String::from(
+                AppError::Stale(String::from(
                     "Target window is not available for text insertion",
                 ))
             })?;
@@ -397,7 +397,7 @@ fn ydotool_socket() -> Result<PathBuf, AppError> {
     }) {
         return Ok(path);
     }
-    Err(AppError::Message(String::from(
+    Err(AppError::ServiceUnavailable(String::from(
         "ydotool cannot insert text: ydotoold is not running. Start it, for example with `systemctl --user enable --now ydotool`, and make sure it can access /dev/uinput",
     )))
 }

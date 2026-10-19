@@ -1,11 +1,8 @@
 //! Serialized hotkey status and the provider snapshot shown by the UI.
 use super::bindings::{bindings_from_config, default_bindings};
 use super::{HotkeyRegistry, PortalShortcutBindings, ProviderKind, ProviderState};
+use crate::services::platform::hotkeys::portal;
 use crate::services::platform::hotkeys::{external_command, platform_name};
-#[cfg(target_os = "linux")]
-use crate::services::platform::linux::hotkeys_portal::{
-    can_configure_portal, refresh_system_triggers, PortalState,
-};
 use crate::state::AppState;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -51,9 +48,8 @@ pub struct HotkeyProviderInfo {
 
 pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
     let kind = app.state::<ProviderState>().kind();
-    #[cfg(target_os = "linux")]
     if kind == ProviderKind::Portal {
-        refresh_system_triggers(app).await;
+        portal::refresh_system_triggers(app).await;
     }
     let config = app.state::<AppState>().snapshot().settings.user_config;
     // only an external binding needs something per action: its command
@@ -105,8 +101,8 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
             ProviderKind::GlobalShortcut => "global-shortcut",
             ProviderKind::External => "external",
         },
-        can_configure: kind == ProviderKind::Portal && can_configure_portal(app),
-        is_registered: kind == ProviderKind::Portal && is_portal_registered(app),
+        can_configure: kind == ProviderKind::Portal && portal::can_configure(app),
+        is_registered: kind == ProviderKind::Portal && portal::is_registered(app),
         actions,
         system_triggers,
         default_shortcuts: default_bindings()
@@ -115,21 +111,6 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
             .collect(),
         platform_name: platform_name(),
     }
-}
-
-#[cfg(not(target_os = "linux"))]
-fn can_configure_portal(_app: &AppHandle) -> bool {
-    false
-}
-
-#[cfg(target_os = "linux")]
-fn is_portal_registered(app: &AppHandle) -> bool {
-    app.state::<PortalState>().registration().is_some()
-}
-
-#[cfg(not(target_os = "linux"))]
-fn is_portal_registered(_app: &AppHandle) -> bool {
-    false
 }
 
 #[cfg(test)]

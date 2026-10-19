@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::sync::{Condvar, Mutex};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 use serde::Serialize;
 use tauri::{App, AppHandle, Emitter, Manager};
@@ -16,12 +16,7 @@ pub const COLLECT_EVENT: &str = "app://activation-metrics-collect";
 const ENABLE_ENV: &str = "TYCO_ACTIVATION_BENCH";
 const CSV_ENV: &str = "TYCO_METRICS_CSV";
 
-pub fn now_ns() -> u128 {
-    // a clock set before 1970 gives zeros rather than an abort
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_nanos())
-}
+pub use crate::services::clock::now_ns;
 
 #[derive(Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -226,13 +221,13 @@ pub fn submit_received_text(app: &AppHandle, id: u64, received_text: String) {
 /// what was typed, so it must not sit where other users can reach it.
 #[cfg(unix)]
 fn socket_path() -> Result<std::path::PathBuf, AppError> {
-    let directory = std::env::var_os("XDG_RUNTIME_DIR").ok_or_else(|| {
-        AppError::Message(String::from(
+    let directory = crate::services::platform::user_runtime_dir().ok_or_else(|| {
+        AppError::ServiceUnavailable(String::from(
             "The activation benchmark socket needs XDG_RUNTIME_DIR",
         ))
     })?;
     let suffix = std::env::var("TYCO_METRICS_SOCKET_SUFFIX").unwrap_or_default();
-    Ok(std::path::PathBuf::from(directory).join(format!("tyco-activation-metrics{suffix}.sock")))
+    Ok(directory.join(format!("tyco-activation-metrics{suffix}.sock")))
 }
 
 #[cfg(unix)]

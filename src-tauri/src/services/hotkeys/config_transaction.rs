@@ -1,7 +1,7 @@
 //! Native registrations commit with the configuration, or return to their previous state.
 use super::{
-    apply, bindings_from_config, ApplyHotkeyRequest, HotkeyApplyStatus, HotkeyRegistry,
-    ProviderKind, ProviderState,
+    apply, bindings_from_config, ApplyHotkeyRequest, HotkeyApplyStatus, HotkeyBinding,
+    HotkeyRegistry, HotkeyTarget, ProviderKind, ProviderState,
 };
 use crate::errors::AppError;
 use serde_json::Value;
@@ -16,28 +16,18 @@ pub fn with_config_changes<T>(
     if app.state::<ProviderState>().kind() != ProviderKind::GlobalShortcut {
         return save();
     }
-    let before = bindings_from_config(previous);
     let registry = app.state::<HotkeyRegistry>();
-    let changes = bindings_from_config(next)
+    let changes = binding_changes(&bindings_from_config(previous), bindings_from_config(next))
         .into_iter()
-        .filter(|binding| {
-            before
-                .iter()
-                .any(|old| old.target == binding.target && old.shortcut != binding.shortcut)
-        })
-        .map(|binding| {
+        .map(|(target, shortcut)| {
             let previous = registry
                 .shortcuts
                 .read()
                 .expect("hotkey shortcuts lock poisoned")
-                .get(&binding.target)
+                .get(&target)
                 .map(ToString::to_string)
                 .unwrap_or_default();
-            (
-                binding.target.id(),
-                previous,
-                binding.shortcut.unwrap_or_default(),
-            )
+            (target.id(), previous, shortcut.unwrap_or_default())
         })
         .collect::<Vec<_>>();
     let result = transact(
@@ -65,6 +55,34 @@ pub fn with_config_changes<T>(
         }
     }
     result
+}
+
+/// The targets whose shortcut the new config changes, with the shortcut they
+/// get. A target only one side has, such as a launcher page added or removed,
+/// changes from or to no shortcut.
+fn binding_changes(
+    before: &[HotkeyBinding],
+    after: Vec<HotkeyBinding>,
+) -> Vec<(HotkeyTarget, Option<String>)> {
+    let shortcut_before = |target: &HotkeyTarget| {
+        before
+            .iter()
+            .find(|binding| binding.target == *target)
+            .and_then(|binding| binding.shortcut.clone())
+    };
+    let removed = before
+        .iter()
+        .filter(|old| {
+            old.shortcut.is_some() && !after.iter().any(|binding| binding.target == old.target)
+        })
+        .map(|old| (old.target.clone(), None))
+        .collect::<Vec<_>>();
+    after
+        .into_iter()
+        .filter(|binding| shortcut_before(&binding.target) != binding.shortcut)
+        .map(|binding| (binding.target, binding.shortcut))
+        .chain(removed)
+        .collect()
 }
 
 fn transact<T>(
@@ -155,6 +173,34 @@ mod tests {
         );
         assert!(result.is_err());
         assert_eq!(calls.borrow().last(), Some(&("write".into(), "old".into())));
+    }
+
+    #[test]
+    fn added_and_removed_launcher_pages_change_their_shortcuts() {
+        let before = bindings_from_config(&serde_json::json!({
+            "launcherPages": [
+                {"id": "kept", "hotkey": "Ctrl+Alt+K"},
+                {"id": "removed", "hotkey": "Ctrl+Alt+R"},
+                {"id": "unbound"},
+            ],
+        }));
+        let after = bindings_from_config(&serde_json::json!({
+            "launcherPages": [
+                {"id": "kept", "hotkey": "Ctrl+Alt+K"},
+                {"id": "added", "hotkey": "Ctrl+Alt+A"},
+            ],
+        }));
+        let changes = binding_changes(&before, after);
+        assert_eq!(
+            changes,
+            vec![
+                (
+                    HotkeyTarget::LauncherPage("added".into()),
+                    Some("Ctrl+Alt+A".into())
+                ),
+                (HotkeyTarget::LauncherPage("removed".into()), None),
+            ]
+        );
     }
 
     #[test]

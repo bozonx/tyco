@@ -3,7 +3,8 @@ use std::io::{self, Read, Write};
 use std::time::{Duration, Instant};
 
 use tyco_activation_protocol::{
-    is_start_mode, transport, Job, JobState, Request, Response, RunRequest, MAX_MESSAGE_BYTES,
+    is_start_mode, transport, ErrorCode, Job, JobState, Request, Response, RunRequest,
+    MAX_MESSAGE_BYTES,
 };
 
 const USAGE: &str = "Usage: tyco-ctl status
@@ -211,15 +212,11 @@ fn ensure_success_response(response: Response) -> Result<Response, (i32, String)
     if response.success {
         return Ok(response);
     }
-    let code = response.code.as_deref().unwrap_or("Failed");
-    let exit = match code {
-        "InvalidArgs" | "InvalidInput" | "InputRequired" | "InvalidRequest" | "AmbiguousName" => 2,
-        "AccessDenied" | "InteractionRequired" => 3,
-        "NotFound" | "Unavailable" | "NotReady" | "Disabled" | "Busy" => 4,
-        "TimedOut" => 6,
-        "Cancelled" => 7,
-        _ => 5,
-    };
+    let exit = response.error_code().exit_code();
+    let code = response
+        .code
+        .as_deref()
+        .unwrap_or(ErrorCode::Failed.as_str());
     Err((
         exit,
         format!("{code}: {}", response.error.unwrap_or_default()),
@@ -305,10 +302,14 @@ fn run() -> Result<(), (i32, String)> {
             println!("{}", serde_json::to_string(&job).unwrap());
         }
         if job.state != JobState::Succeeded {
-            return ensure_success_response(Response::coded_error(
-                job.code.unwrap_or_else(|| "ExecutionFailed".into()),
-                job.error.unwrap_or_else(|| "Command failed".into()),
-            ))
+            // the job's own code, even one this version does not know
+            return ensure_success_response(Response {
+                code: Some(
+                    job.code
+                        .unwrap_or_else(|| ErrorCode::ExecutionFailed.into()),
+                ),
+                ..Response::error(job.error.unwrap_or_else(|| "Command failed".into()))
+            })
             .map(|_| ());
         }
         if !command.json {
@@ -410,25 +411,25 @@ mod tests {
     #[test]
     fn errors_have_stable_exit_codes() {
         assert_eq!(
-            ensure_success_response(Response::coded_error("AccessDenied", "blocked"))
+            ensure_success_response(Response::coded_error(ErrorCode::AccessDenied, "blocked"))
                 .unwrap_err()
                 .0,
             3
         );
         assert_eq!(
-            ensure_success_response(Response::coded_error("ExecutionFailed", "failed"))
+            ensure_success_response(Response::coded_error(ErrorCode::ExecutionFailed, "failed"))
                 .unwrap_err()
                 .0,
             5
         );
         assert_eq!(
-            ensure_success_response(Response::coded_error("AmbiguousName", "twins"))
+            ensure_success_response(Response::coded_error(ErrorCode::AmbiguousName, "twins"))
                 .unwrap_err()
                 .0,
             2
         );
         assert_eq!(
-            ensure_success_response(Response::coded_error("Busy", "busy"))
+            ensure_success_response(Response::coded_error(ErrorCode::Busy, "busy"))
                 .unwrap_err()
                 .0,
             4

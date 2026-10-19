@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 
 use keyring_core::{CredentialStore, Entry, Error};
 
-use crate::services::secrets::SecretVault;
+use crate::services::secrets::{SecretVault, VaultError};
 
 pub struct SystemKeychain {
     /// The keychain "service" of every item, so that two Tyco installations
@@ -46,22 +46,22 @@ impl SystemKeychain {
 }
 
 impl SecretVault for SystemKeychain {
-    fn get(&self, id: &str) -> Result<Option<String>, String> {
+    fn get(&self, id: &str) -> Result<Option<String>, VaultError> {
         match self.entry(id)?.get_password() {
             Ok(value) => Ok(Some(value)),
             Err(Error::NoEntry) => Ok(None),
-            Err(error) => Err(describe(error)),
+            Err(error) => Err(describe(error).into()),
         }
     }
 
-    fn set(&self, id: &str, value: &str) -> Result<(), String> {
-        self.entry(id)?.set_password(value).map_err(describe)
+    fn set(&self, id: &str, value: &str) -> Result<(), VaultError> {
+        Ok(self.entry(id)?.set_password(value).map_err(describe)?)
     }
 
-    fn delete(&self, id: &str) -> Result<(), String> {
+    fn delete(&self, id: &str) -> Result<(), VaultError> {
         match self.entry(id)?.delete_credential() {
             Ok(()) | Err(Error::NoEntry) => Ok(()),
-            Err(error) => Err(describe(error)),
+            Err(error) => Err(describe(error).into()),
         }
     }
 }

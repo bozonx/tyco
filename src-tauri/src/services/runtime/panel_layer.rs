@@ -5,9 +5,8 @@ use crate::errors::AppError;
 use crate::services::platform::{InputRegion, PanelKeyboardMode};
 use crate::state::AppState;
 
-#[cfg(target_os = "linux")]
-#[derive(Default)]
-pub(super) struct LayerShellRuntimeState {
+/// Whether the quick window is a layer-shell surface, decided once at startup.
+pub(super) struct PanelLayerState {
     pub(super) supported: bool,
     pub(super) keyboard: PanelKeyboardMode,
 }
@@ -15,16 +14,8 @@ pub(super) struct LayerShellRuntimeState {
 /// Keyboard mode of the quick window's layer surface, `None` when it is a
 /// regular window.
 pub(super) fn panel_layer(app: &AppHandle) -> Option<PanelKeyboardMode> {
-    #[cfg(target_os = "linux")]
-    {
-        let layer = app.state::<LayerShellRuntimeState>();
-        layer.supported.then_some(layer.keyboard)
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        let _ = app;
-        None
-    }
+    let layer = app.state::<PanelLayerState>();
+    layer.supported.then_some(layer.keyboard)
 }
 
 /// Limits pointer input of the visible quick window to `region`; the rest of
@@ -69,7 +60,6 @@ pub(super) fn is_current_quick_activation(
 
 /// Leaves the exclusive grab once the quick window has the focus. Runs on the
 /// main thread, as window events do.
-#[cfg(target_os = "linux")]
 pub(super) fn settle_quick_keyboard(app: &AppHandle) {
     let Some(keyboard) = panel_layer(app) else {
         return;

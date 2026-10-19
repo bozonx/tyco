@@ -104,6 +104,7 @@ pub async fn open_socket<S: EventSink>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::background::StoppableService;
     struct Sink;
     impl EventSink for Sink {
         fn send_event<T: serde::Serialize>(&self, _: &T) -> bool {
@@ -139,7 +140,7 @@ mod tests {
     #[tokio::test]
     async fn shutdown_rejects_work_before_accessing_the_keychain() {
         let net = NetState::new().unwrap();
-        net.close_all();
+        net.stop();
         let secrets = async { panic!("a stopping service must not access the keychain") };
         let result = fetch(&net, NetworkPolicy::default(), secrets, request(), Sink).await;
         assert!(matches!(result, Err(AppError::ServiceUnavailable(_))));

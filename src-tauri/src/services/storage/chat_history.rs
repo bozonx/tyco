@@ -234,15 +234,20 @@ pub(super) fn search_chats(
     history: Vec<ChatSummary>,
     query: String,
 ) -> Result<Vec<String>, AppError> {
+    let query = query.trim().to_lowercase();
+    if query.is_empty() {
+        return Ok(history.into_iter().map(|item| item.id).collect());
+    }
     let mut found = Vec::new();
-
     for item in history {
         let matches = match read_chat(chats_dir, item.id.clone()) {
             Ok(Some(chat)) => chat_matches(&chat, &query),
-            _ => item
-                .title
-                .to_lowercase()
-                .contains(&query.trim().to_lowercase()),
+            // a chat the index lists without a file can still match by title
+            Ok(None) => item.title.to_lowercase().contains(&query),
+            Err(error) => {
+                log::warn!("Searching chat {} by its title only: {error}", item.id);
+                item.title.to_lowercase().contains(&query)
+            }
         };
         if matches {
             found.push(item.id);
@@ -252,17 +257,13 @@ pub(super) fn search_chats(
     Ok(found)
 }
 
+/// `query` is trimmed, lowercase and not empty.
 fn chat_matches(chat: &Chat, query: &str) -> bool {
-    let query = query.trim().to_lowercase();
-    if query.is_empty() {
-        return true;
-    }
-
-    chat.title.to_lowercase().contains(&query)
+    chat.title.to_lowercase().contains(query)
         || chat
             .messages
             .iter()
-            .any(|message| message.content.to_lowercase().contains(&query))
+            .any(|message| message.content.to_lowercase().contains(query))
 }
 
 pub fn delete_chat(chats_dir: &Path, id: String) -> Result<(), AppError> {
@@ -367,11 +368,7 @@ pub fn clear_chats(chats_dir: &Path) -> Result<(), AppError> {
 
 fn validate_chat_id(id: &str) -> Result<String, AppError> {
     // "index" would name the index file
-    let is_safe = !id.is_empty()
-        && id != "index"
-        && id
-            .chars()
-            .all(|ch| ch.is_ascii_alphanumeric() || ch == '-' || ch == '_');
+    let is_safe = crate::services::file_ids::is_file_id(id) && id != "index";
 
     if !is_safe {
         return Err(AppError::InvalidInput(String::from("Invalid chat id")));
@@ -459,6 +456,24 @@ mod tests {
         delete_chat(&profile_dir, "profile".into()).unwrap();
         assert!(list_chats(&profile_dir).unwrap().is_empty());
         assert!(!profile_dir.join("profile.json").exists());
+    }
+
+    #[test]
+    fn search_normalizes_the_query_once_and_an_empty_one_lists_every_chat() {
+        let dir = TestDir::new("chat-search");
+        let images = Mutex::new(ChatImageStore::default());
+        let mut trip = chat_item("trip");
+        trip.title = String::from("Trip plan");
+        save_chat(&dir, enabled_policy(), &images, trip).unwrap();
+        save_chat(&dir, enabled_policy(), &images, chat_item("other")).unwrap();
+        let search = |query: &str| {
+            let mut found = search_chats(&dir, list_chats(&dir).unwrap(), query.into()).unwrap();
+            found.sort();
+            found
+        };
+
+        assert_eq!(search("  TRIP "), vec!["trip"]);
+        assert_eq!(search("   "), vec!["other", "trip"]);
     }
 
     #[test]
@@ -611,7 +626,7 @@ mod tests {
         }];
 
         assert!(chat_matches(&chat, "trip"));
-        assert!(chat_matches(&chat, " билеты "));
+        assert!(chat_matches(&chat, "билеты"));
         assert!(!chat_matches(&chat, "hotel"));
     }
 

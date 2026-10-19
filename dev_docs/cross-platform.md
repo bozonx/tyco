@@ -40,21 +40,27 @@ Cinnamon, i3, LXQt и LTS-дистрибутивы (Ubuntu 22.04, RHEL 9, Debian
 системные утилиты сам — он спрашивает платформенный слой.
 
 ```
+platform.rs           фасад: capture_foreground_target, capture_selection, inject_paste,
+                      check_text_injection, panel surface, titlebar, status overlay,
+                      start_session_services
 platform/
-  mod.rs              фасад: capture_foreground_target, capture_selection, inject_paste,
-                      check_text_injection, panel surface, titlebar
   session.rs          определение сессии один раз за процесс
   window_tracker.rs   общее состояние «какое окно активно, куда вставлять»
+  clipboard.rs        запись текста и снимок буфера (ClipboardSnapshot) для всех ОС
+  hotkeys.rs          выбор провайдера хоткеев и фасад портала GlobalShortcuts
+  notifications.rs    системные уведомления
   keychain.rs         системное хранилище ключей: Keychain, Credential Manager,
                       Secret Service; без него ключи не сохраняются
-  linux/
+  linux.rs, linux/
+    dbus.rs           D-Bus API и колбэки KWin-трекера
     kwin.rs           бэкенд трекера: KWin-скрипты (KDE Wayland)
     x11.rs            бэкенд трекера: события _NET_ACTIVE_WINDOW (X11)
     text_injector.rs  xdotool / ydotool
     clipboard_restore.rs  снимок и восстановление буфера: wl-clipboard / xclip
     foreground_context.rs исходное окно и PRIMARY-выделение
     layer_shell.rs    gtk-layer-shell
-  windows.rs, macos.rs  бэкенды этих ОС
+    status_overlay.rs окно статуса на GTK
+  windows.rs, windows/clipboard.rs, macos.rs  бэкенды этих ОС
 ```
 
 ### Сессия (`session.rs`)

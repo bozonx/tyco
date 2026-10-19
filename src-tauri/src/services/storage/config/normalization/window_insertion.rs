@@ -1,5 +1,5 @@
-use crate::models::default_user_config_for_session;
 use crate::services::platform::session::{self, Session};
+use crate::services::settings::defaults::default_user_config_for_session;
 use serde_json::{json, Value};
 
 const METHODS: [&str; 2] = ["xdotool", "ydotool"];

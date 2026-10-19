@@ -24,12 +24,12 @@ pub fn spawn_server(app: AppHandle) -> Result<(), AppError> {
                 let lease = services.register();
                 if handler_stop.is_stopped() || lease.is_err() {
                     return tyco_activation_protocol::Response::coded_error(
-                        "ServiceUnavailable",
+                        tyco_activation_protocol::ErrorCode::Unavailable,
                         "Application is stopping",
                     );
                 }
                 let _lease = lease.expect("admitted local control handler");
-                super::external_api::dispatch(&handle, request, ActivationSource::Cli)
+                crate::services::external::api::dispatch(&handle, request, ActivationSource::Cli)
             },
             stop.cancelled(),
         ));

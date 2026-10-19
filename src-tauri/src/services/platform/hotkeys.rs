@@ -18,24 +18,6 @@ pub(crate) enum ProviderKind {
     External,
 }
 
-impl ProviderKind {
-    pub(crate) fn as_u8(self) -> u8 {
-        match self {
-            Self::Portal => 0,
-            Self::GlobalShortcut => 1,
-            Self::External => 2,
-        }
-    }
-
-    pub(crate) fn from_u8(value: u8) -> Self {
-        match value {
-            0 => Self::Portal,
-            1 => Self::GlobalShortcut,
-            _ => Self::External,
-        }
-    }
-}
-
 /// wlroots compositors are configured in their own files: Sway has no
 /// GlobalShortcuts portal, and Hyprland's ignores the preferred triggers and
 /// needs a binding in `hyprland.conf` anyway, so both get the binding to copy.
@@ -119,10 +101,101 @@ fn hyprland_shortcut(shortcut: &str) -> (String, String) {
 }
 
 pub(crate) async fn shutdown(app: &tauri::AppHandle) {
+    portal::shutdown(app).await;
+}
+
+/// The GlobalShortcuts portal of the desktop; only Linux desktops have one,
+/// elsewhere `provider_kind` never chooses it.
+pub(crate) mod portal {
+    use tauri::{App, AppHandle};
+
+    use crate::errors::AppError;
+    use crate::services::hotkeys::HotkeyBinding;
     #[cfg(target_os = "linux")]
-    super::linux::hotkeys_portal::shutdown(app).await;
+    use crate::services::platform::linux::hotkeys_portal as backend;
+
+    pub(crate) fn manage_state(app: &mut App) {
+        #[cfg(target_os = "linux")]
+        tauri::Manager::manage(app, backend::PortalState::default());
+        #[cfg(not(target_os = "linux"))]
+        let _ = app;
+    }
+
+    pub(crate) fn register(app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
+        #[cfg(target_os = "linux")]
+        return backend::register(app, bindings);
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _ = (app, bindings);
+            Err(AppError::ServiceUnavailable(String::from(
+                "The global shortcuts portal is only available on Linux",
+            )))
+        }
+    }
+
+    /// Opens the portal's own dialog for the shortcuts.
+    pub(crate) async fn configure(app: &AppHandle) -> Result<(), AppError> {
+        #[cfg(target_os = "linux")]
+        return backend::configure_portal(app).await;
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _ = app;
+            Err(unavailable())
+        }
+    }
+
+    pub(crate) async fn rebind(app: &AppHandle) -> Result<(), AppError> {
+        #[cfg(target_os = "linux")]
+        return backend::rebind_portal(app).await;
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _ = app;
+            Err(unavailable())
+        }
+    }
+
+    pub(crate) async fn refresh_system_triggers(app: &AppHandle) {
+        #[cfg(target_os = "linux")]
+        backend::refresh_system_triggers(app).await;
+        #[cfg(not(target_os = "linux"))]
+        let _ = app;
+    }
+
+    pub(crate) fn can_configure(app: &AppHandle) -> bool {
+        #[cfg(target_os = "linux")]
+        return backend::can_configure_portal(app);
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _ = app;
+            false
+        }
+    }
+
+    pub(crate) fn is_registered(app: &AppHandle) -> bool {
+        #[cfg(target_os = "linux")]
+        return tauri::Manager::state::<backend::PortalState>(app)
+            .registration()
+            .is_some();
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _ = app;
+            false
+        }
+    }
+
+    pub(super) async fn shutdown(app: &AppHandle) {
+        #[cfg(target_os = "linux")]
+        backend::shutdown(app).await;
+        #[cfg(not(target_os = "linux"))]
+        let _ = app;
+    }
+
     #[cfg(not(target_os = "linux"))]
-    let _ = app;
+    fn unavailable() -> AppError {
+        AppError::ServiceUnavailable(String::from(
+            "The global shortcuts portal is only available on Linux",
+        ))
+    }
 }
 
 #[cfg(test)]

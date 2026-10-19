@@ -1,106 +1,12 @@
+pub(crate) mod coordinator;
+pub mod metrics;
+pub mod socket;
+
 use serde_json::Value;
 
 use crate::errors::AppError;
-use crate::services::external_access::AccessRequest;
-use crate::services::external_commands::LauncherRequest;
-
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ActivationMode {
-    Editor,
-    Write,
-    Chat,
-    VoiceChat,
-    VoiceCommands,
-    Voice,
-    Select,
-    AiTasks,
-    CommandLauncher,
-    Correction,
-    Translate,
-    History,
-    Config,
-    /// Asks the user whether an external call may use the selection; Tyco
-    /// opens it itself, so no caller can name it.
-    ExternalAccess,
-}
-
-impl ActivationMode {
-    #[cfg(test)]
-    pub const PUBLIC_MODES: [Self; 13] = [
-        Self::Editor,
-        Self::Write,
-        Self::Chat,
-        Self::VoiceChat,
-        Self::VoiceCommands,
-        Self::Voice,
-        Self::Select,
-        Self::AiTasks,
-        Self::CommandLauncher,
-        Self::Correction,
-        Self::Translate,
-        Self::History,
-        Self::Config,
-    ];
-
-    pub fn parse(value: &str) -> Result<Self, AppError> {
-        match tyco_activation_protocol::canonical_mode(value) {
-            "editor" => Ok(Self::Editor),
-            "write" => Ok(Self::Write),
-            "chat" => Ok(Self::Chat),
-            "voiceCommands" => Ok(Self::VoiceCommands),
-            "voiceChat" => Ok(Self::VoiceChat),
-            "voice" => Ok(Self::Voice),
-            "select" => Ok(Self::Select),
-            "aiTasks" => Ok(Self::AiTasks),
-            "commandLauncher" => Ok(Self::CommandLauncher),
-            "correction" => Ok(Self::Correction),
-            "translate" => Ok(Self::Translate),
-            "history" => Ok(Self::History),
-            "config" => Ok(Self::Config),
-            _ => Err(AppError::Message(format!(
-                "Unknown activation mode: {value}"
-            ))),
-        }
-    }
-
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Editor => "editor",
-            Self::Write => "write",
-            Self::Chat => "chat",
-            Self::VoiceCommands => "voiceCommands",
-            Self::VoiceChat => "voiceChat",
-            Self::Voice => "voice",
-            Self::Select => "select",
-            Self::AiTasks => "aiTasks",
-            Self::CommandLauncher => "commandLauncher",
-            Self::Correction => "correction",
-            Self::Translate => "translate",
-            Self::History => "history",
-            Self::Config => "config",
-            Self::ExternalAccess => "externalAccess",
-        }
-    }
-    pub fn profile(self) -> WindowProfile {
-        match self {
-            // the dictation bar leaves the screen above it in view
-            Self::Write | Self::Voice => WindowProfile::Panel,
-            _ => WindowProfile::Sheet,
-        }
-    }
-}
-
-/// Where the window is placed. Its size never depends on it: every activation
-/// uses `WINDOW_SIZE`, so the window is never resized while it is shown.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum WindowProfile {
-    /// Anchored to the bottom of the screen.
-    Panel,
-    /// Centered on the screen.
-    Sheet,
-}
+use crate::models::user_config::{self, LauncherInputMode};
+pub use crate::models::{AccessRequest, ActivationMode, LauncherRequest, WindowProfile};
 
 /// Logical size of every activated window; keep it in sync with the windows in
 /// `tauri.conf.json`. The quick input panel draws only its input field and
@@ -127,7 +33,7 @@ pub struct Activation {
     /// the first one.
     pub launcher_page_id: Option<String>,
     pub launcher_request: Option<LauncherRequest>,
-    /// What the access prompt asks about, see `external_access`.
+    /// What the access prompt asks about, see `services::external::access`.
     pub access_request: Option<AccessRequest>,
 }
 
@@ -149,7 +55,7 @@ impl Activation {
     pub fn from_mode(value: &str, source: ActivationSource) -> Result<Self, AppError> {
         if let Some(page_id) = value.strip_prefix(LAUNCHER_PAGE_MODE_PREFIX) {
             if page_id.trim().is_empty() {
-                return Err(AppError::Message("Invalid command page".into()));
+                return Err(AppError::InvalidInput("Invalid command page".into()));
             }
             let mut activation = Self::new(ActivationMode::CommandLauncher, source);
             activation.launcher_page_id = Some(page_id.to_owned());
@@ -173,12 +79,12 @@ impl Activation {
         if self.mode != ActivationMode::CommandLauncher || self.launcher_request.is_some() {
             return true;
         }
-        let pages = user_config["launcherPages"].as_array();
+        let pages = user_config::launcher_pages(user_config);
         let page = match &self.launcher_page_id {
-            Some(id) => pages.and_then(|pages| pages.iter().find(|page| page["id"] == **id)),
-            None => pages.and_then(|pages| pages.first()),
+            Some(id) => pages.iter().find(|page| page.id == *id),
+            None => pages.first(),
         };
-        page.is_none_or(|page| page["inputMode"] != "none")
+        page.is_none_or(|page| page.input_mode != LauncherInputMode::None)
     }
 
     /// Whether this activation confirms the voice input it would open, instead
@@ -207,7 +113,7 @@ impl Activation {
             [flag, mode] if flag == "--mode" => mode.as_str(),
             [value] => value.strip_prefix("--mode=").unwrap_or(value),
             _ => {
-                return Err(AppError::Message(
+                return Err(AppError::InvalidInput(
                     "Expected a single activation mode".into(),
                 ))
             }

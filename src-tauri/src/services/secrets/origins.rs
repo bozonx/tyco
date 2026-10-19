@@ -31,7 +31,7 @@ pub(super) fn checked_secret<'a>(
     validate_id(id)?;
     let value = value.trim();
     if value.is_empty() {
-        return Err(AppError::Message(format!("Secret \"{id}\" is empty")));
+        return Err(AppError::InvalidInput(format!("Secret \"{id}\" is empty")));
     }
 
     let origins = match origins {
@@ -40,7 +40,7 @@ pub(super) fn checked_secret<'a>(
             .map(|origin| normalize_origin(origin))
             .collect::<Result<Vec<_>, _>>()?,
         _ => builtin_origins(id).ok_or_else(|| {
-            AppError::Message(format!(
+            AppError::InvalidInput(format!(
                 "Secret \"{id}\" is not a known provider; name the origins it may be sent to"
             ))
         })?,
@@ -92,7 +92,9 @@ fn validate_id(id: &str) -> Result<(), AppError> {
     if is_valid_id(id) {
         Ok(())
     } else {
-        Err(AppError::Message(format!("Invalid secret id \"{id}\"")))
+        Err(AppError::InvalidInput(format!(
+            "Invalid secret id \"{id}\""
+        )))
     }
 }
 
@@ -114,9 +116,9 @@ pub fn origin_of(url: &Url) -> Option<String> {
 
 pub fn normalize_origin(origin: &str) -> Result<String, AppError> {
     let url = Url::parse(origin.trim())
-        .map_err(|error| AppError::Message(format!("Invalid origin \"{origin}\": {error}")))?;
+        .map_err(|error| AppError::InvalidInput(format!("Invalid origin \"{origin}\": {error}")))?;
     origin_of(&url).ok_or_else(|| {
-        AppError::Message(format!(
+        AppError::InvalidInput(format!(
             "Invalid origin \"{origin}\": expected an http(s) or ws(s) URL"
         ))
     })

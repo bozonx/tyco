@@ -1,18 +1,15 @@
 use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
-use tyco_activation_protocol::{Response, RunRequest};
+use tyco_activation_protocol::{ErrorCode, Response, RunRequest};
 
 use super::ApiResult;
-use crate::services::external_commands::{self, CommandLookupError, ExternalCommand};
+use crate::services::external::commands::{self, CommandLookupError, ExternalCommand};
 use crate::state::AppState;
 
 /// Selection capture is opt-in; which commands run from
 /// outside is decided by each command's own grant.
 pub(super) fn is_selection_access_allowed(config: &Value) -> bool {
-    config
-        .pointer("/externalAccess/canAccessSelection")
-        .and_then(Value::as_bool)
-        .unwrap_or(false)
+    crate::models::user_config::external_access(config).can_access_selection
 }
 
 pub(super) fn ensure_selection_access_allowed(config: &Value) -> ApiResult<()> {
@@ -20,20 +17,19 @@ pub(super) fn ensure_selection_access_allowed(config: &Value) -> ApiResult<()> {
         Ok(())
     } else {
         Err(Response::coded_error(
-            "AccessDenied",
+            ErrorCode::AccessDenied,
             "External selection access is disabled",
         ))
     }
 }
 
 pub(super) fn lookup(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<ExternalCommand> {
-    let state = app.state::<AppState>();
-    let config = state.snapshot().settings.user_config;
-    let catalog = state.tool_catalog();
+    let config = app.state::<AppState>().snapshot().settings.user_config;
+    let catalog = app.state::<commands::ToolCatalogState>().get();
     if by_name {
-        external_commands::find_by_name(&config, catalog.as_ref(), target)
+        commands::find_by_name(&config, catalog.as_ref(), target)
     } else {
-        external_commands::find_by_id(&config, catalog.as_ref(), target)
+        commands::find_by_id(&config, catalog.as_ref(), target)
     }
     .map_err(lookup_error)
 }
@@ -63,8 +59,8 @@ pub(super) fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResul
     let input_schema = raw
         .and_then(|raw| raw["toolId"].as_str())
         .and_then(|tool_id| {
-            state
-                .tool_catalog()
+            app.state::<commands::ToolCatalogState>()
+                .get()
                 .and_then(|catalog| catalog.get(tool_id).cloned())
         })
         .and_then(|tool| tool.input_schema);
@@ -87,12 +83,12 @@ pub(super) fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResul
 
 fn lookup_error(error: CommandLookupError) -> Response {
     let code = match &error {
-        CommandLookupError::NotFound(_) => "NotFound",
-        CommandLookupError::Ambiguous(_, _) => "AmbiguousName",
-        CommandLookupError::Disabled(_) => "Disabled",
-        CommandLookupError::NotExternal(_) => "AccessDenied",
-        CommandLookupError::Unavailable(_, _) => "Unavailable",
-        CommandLookupError::ToolsLoading(_) => "NotReady",
+        CommandLookupError::NotFound(_) => ErrorCode::NotFound,
+        CommandLookupError::Ambiguous(_, _) => ErrorCode::AmbiguousName,
+        CommandLookupError::Disabled(_) => ErrorCode::Disabled,
+        CommandLookupError::NotExternal(_) => ErrorCode::AccessDenied,
+        CommandLookupError::Unavailable(_, _) => ErrorCode::Unavailable,
+        CommandLookupError::ToolsLoading(_) => ErrorCode::NotReady,
     };
     Response::coded_error(code, error.to_string())
 }
@@ -104,13 +100,13 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
         || (request.replace && !request.selection)
     {
         return Err(Response::coded_error(
-            "InvalidInput",
+            ErrorCode::InvalidInput,
             "Choose one input source; replacement requires selection",
         ));
     }
     if request.selection && (!command.can_take_text || command.has_structured_input) {
         return Err(Response::coded_error(
-            "InvalidInput",
+            ErrorCode::InvalidInput,
             "This command does not accept selection text",
         ));
     }
@@ -119,13 +115,13 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
         && (request.text.is_some() || request.input.is_some())
     {
         return Err(Response::coded_error(
-            "InvalidInput",
+            ErrorCode::InvalidInput,
             "This command does not accept input",
         ));
     }
     if command.has_structured_input && !command.can_take_text && request.input.is_none() {
         return Err(Response::coded_error(
-            "InputRequired",
+            ErrorCode::InputRequired,
             "This command requires structured input",
         ));
     }
@@ -136,7 +132,7 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
         && !request.interactive
     {
         return Err(Response::coded_error(
-            "InputRequired",
+            ErrorCode::InputRequired,
             "Provide text, structured input, or an explicit selection",
         ));
     }

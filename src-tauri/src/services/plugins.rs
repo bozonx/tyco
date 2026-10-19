@@ -1,4 +1,5 @@
 //! Self-contained JavaScript packages. Installation never evaluates code.
+pub mod protocol;
 mod validation;
 pub use validation::validate_manifest;
 
@@ -198,11 +199,7 @@ impl PluginStore {
         if package.manifest != *expected {
             return Err(error("Plugin manifest changed after inspection"));
         }
-        let revision = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|_| error("Could not create plugin revision"))?
-            .as_nanos()
-            .to_string();
+        let revision = crate::services::clock::now_ns().to_string();
         let key = storage_key(&package.manifest.id);
         let result = InstalledPlugin {
             manifest: package.manifest.clone(),

@@ -9,7 +9,7 @@ use crate::errors::AppError;
 /// Opens `dir` in the file manager.
 pub fn open_dir(dir: &Path) -> Result<(), AppError> {
     if !dir.is_dir() {
-        return Err(AppError::Message(format!(
+        return Err(AppError::InvalidInput(format!(
             "Not a directory: {}",
             dir.display()
         )));
@@ -20,7 +20,10 @@ pub fn open_dir(dir: &Path) -> Result<(), AppError> {
 /// Opens `file` in the application the desktop associates with its type.
 pub fn open_file(file: &Path) -> Result<(), AppError> {
     if !file.is_file() {
-        return Err(AppError::Message(format!("Not a file: {}", file.display())));
+        return Err(AppError::InvalidInput(format!(
+            "Not a file: {}",
+            file.display()
+        )));
     }
     open_path(file)
 }

@@ -7,7 +7,7 @@ use serde_json::Value;
 pub const CONFIG_VERSION: u64 = shared_config_version();
 
 const fn shared_config_version() -> u64 {
-    let bytes = include_bytes!("../../../packages/shared/src/config-version.json");
+    let bytes = include_bytes!("../../../../packages/shared/src/config-version.json");
     let mut version = 0;
     let mut index = 0;
     while index < bytes.len() {

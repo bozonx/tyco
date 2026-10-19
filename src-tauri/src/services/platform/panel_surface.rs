@@ -66,32 +66,6 @@ impl PanelKeyboardMode {
     }
 }
 
-pub(crate) trait PanelSurface {
-    fn is_supported(&self) -> bool;
-}
-
-struct SystemPanelSurface;
-
-impl PanelSurface for SystemPanelSurface {
-    fn is_supported(&self) -> bool {
-        panel_surface_supported_impl()
-    }
-}
-
-pub fn panel_surface_supported() -> bool {
-    SystemPanelSurface.is_supported()
-}
-
-#[cfg(target_os = "linux")]
-fn panel_surface_supported_impl() -> bool {
-    crate::services::platform::linux::layer_shell::is_supported()
-}
-
-#[cfg(any(target_os = "windows", target_os = "macos"))]
-fn panel_surface_supported_impl() -> bool {
-    true
-}
-
 #[cfg(target_os = "linux")]
 pub fn attach_panel_surface(window: &WebviewWindow) -> Result<(), AppError> {
     crate::services::platform::linux::layer_shell::attach(&window.gtk_window()?);
@@ -114,6 +88,40 @@ pub fn disable_panel_keyboard(window: &WebviewWindow) -> Result<(), AppError> {
 
 #[cfg(any(target_os = "windows", target_os = "macos"))]
 pub fn disable_panel_keyboard(_window: &WebviewWindow) -> Result<(), AppError> {
+    Ok(())
+}
+
+/// Whether the quick window can be a layer-shell surface, which takes its
+/// size and keyboard mode from `apply_panel_surface`; only Linux has them.
+pub fn is_layer_shell_supported() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        crate::services::platform::linux::layer_shell::is_supported()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        false
+    }
+}
+
+/// Fades the window in or out without unmapping it; only GTK can.
+pub fn set_window_opacity(window: &WebviewWindow, opacity: f64) -> Result<(), AppError> {
+    #[cfg(target_os = "linux")]
+    {
+        use gtk::prelude::WidgetExt;
+        window.gtk_window()?.set_opacity(opacity);
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = (window, opacity);
+    Ok(())
+}
+
+/// The shown panel got the focus: an exclusive grab is not needed any more.
+#[cfg(not(target_os = "linux"))]
+pub fn settle_panel_keyboard(
+    _window: &WebviewWindow,
+    _keyboard: PanelKeyboardMode,
+) -> Result<(), AppError> {
     Ok(())
 }
 

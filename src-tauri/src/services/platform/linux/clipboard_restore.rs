@@ -127,7 +127,7 @@ pub fn clear() {
         )
         .map(drop)
         .map_err(Into::into),
-        _ => crate::services::clipboard::copy_to_clipboard(""),
+        _ => super::super::clipboard::copy_to_clipboard(""),
     };
     if let Err(error) = result {
         log::warn!("Could not clear the clipboard: {error}");

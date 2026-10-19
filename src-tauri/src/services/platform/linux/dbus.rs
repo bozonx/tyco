@@ -10,7 +10,7 @@ use crate::services::activation::ActivationSource;
 use crate::services::platform::linux::kwin;
 use crate::services::platform::session;
 use crate::services::platform::window_tracker::{self, tracker, WindowKind};
-use crate::services::{external_api, runtime};
+use crate::services::{external::api, runtime};
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_DEST: &str = "org.tyco.Service";
@@ -147,7 +147,7 @@ impl TycoDbus {
             .app
             .state::<crate::services::background::BackgroundServices>();
         let response = services
-            .run_blocking(move || external_api::dispatch(&app, request, ActivationSource::Dbus))
+            .run_blocking(move || api::dispatch(&app, request, ActivationSource::Dbus))
             .await
             .unwrap_or_else(|error| Response::error(error.to_string()));
         if response.success {
@@ -301,13 +301,17 @@ fn not_kwin() -> zbus::fdo::Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tyco_activation_protocol::ErrorCode;
 
     #[test]
     fn errors_are_named_after_their_codes() {
-        let error = ApiError::from(Response::coded_error("AccessDenied", "blocked"));
+        let error = ApiError::from(Response::coded_error(ErrorCode::AccessDenied, "blocked"));
         assert_eq!(error.name().as_str(), "org.tyco.Error.AccessDenied");
         assert_eq!(error.description(), Some("blocked"));
-        let error = ApiError::from(Response::coded_error("not a name!", "odd"));
+        let error = ApiError::from(Response {
+            code: Some("not a name!".into()),
+            ..Response::error("odd")
+        });
         assert_eq!(error.name().as_str(), "org.tyco.Error.Failed");
     }
 }

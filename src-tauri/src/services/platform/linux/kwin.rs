@@ -160,7 +160,7 @@ fn start_tracker(own_class: &str) -> Result<(), AppError> {
         tracker()
             .wait_until_reported(TRACKER_START_TIMEOUT)
             .map_err(|_| {
-                AppError::Message(String::from(
+                AppError::ServiceUnavailable(String::from(
                     "The KWin window tracker script does not report; KDE Plasma 6 is required",
                 ))
             })
@@ -198,7 +198,9 @@ pub fn activate_window(id: &str) -> Result<(), AppError> {
     static ACTIVATION: Mutex<()> = Mutex::new(());
 
     if !is_window_id(id) {
-        return Err(AppError::Message(format!("Invalid KWin window id: {id}")));
+        return Err(AppError::InvalidInput(format!(
+            "Invalid KWin window id: {id}"
+        )));
     }
     let _activation = ACTIVATION.lock().unwrap_or_else(|error| error.into_inner());
     tracker().forget_missing();
@@ -316,7 +318,7 @@ fn run_script(name: &str, source: &str) -> Result<(), AppError> {
     write_script(&path, source)?;
     let path = path
         .to_str()
-        .ok_or_else(|| AppError::Message(String::from("Script path is not valid UTF-8")))?;
+        .ok_or_else(|| AppError::InvalidInput(String::from("Script path is not valid UTF-8")))?;
 
     let connection = session()?;
     // a script of a previous run or a crashed instance keeps its name taken

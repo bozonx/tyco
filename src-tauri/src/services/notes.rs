@@ -58,7 +58,9 @@ pub fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, Ap
     }
     let mut file = options.open(&path)?;
     if !file.metadata()?.is_file() {
-        return Err(AppError::Message("Notes require a regular file".into()));
+        return Err(AppError::InvalidInput(
+            "Notes require a regular file".into(),
+        ));
     }
     file.lock()?;
     let needs_newline = {
@@ -100,7 +102,7 @@ pub fn write_scoped_note(
         .components()
         .any(|part| matches!(part, std::path::Component::ParentDir))
     {
-        return Err(AppError::Message(
+        return Err(AppError::InvalidInput(
             "Plugin notes cannot traverse parent directories".into(),
         ));
     }
@@ -123,7 +125,7 @@ pub fn write_scoped_note(
                 target.push(name);
                 match fs::symlink_metadata(&target) {
                     Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_dir() => {
-                        return Err(AppError::Message(
+                        return Err(AppError::InvalidInput(
                             "Plugin notes cannot follow directory symlinks".into(),
                         ));
                     }
@@ -132,7 +134,7 @@ pub fn write_scoped_note(
                     Err(error) => return Err(error.into()),
                 }
                 if !target.canonicalize()?.starts_with(&canonical_root) {
-                    return Err(AppError::Message(
+                    return Err(AppError::InvalidInput(
                         "Plugin note directory is outside the approved root".into(),
                     ));
                 }
@@ -140,20 +142,20 @@ pub fn write_scoped_note(
         }
         let file = target.join(file_name);
         if fs::symlink_metadata(&file).is_ok_and(|metadata| !metadata.file_type().is_file()) {
-            return Err(AppError::Message(
+            return Err(AppError::InvalidInput(
                 "Plugin notes require a regular file".into(),
             ));
         }
         let target = target
             .to_str()
-            .ok_or_else(|| AppError::Message("Invalid notes directory encoding".into()))?;
+            .ok_or_else(|| AppError::InvalidInput("Invalid notes directory encoding".into()))?;
         return if append {
             append_note(target, file_name, text)
         } else {
             save_note(target, file_name, text)
         };
     }
-    Err(AppError::Message(
+    Err(AppError::InvalidInput(
         "Plugin note directory is outside the approved roots".into(),
     ))
 }
@@ -168,7 +170,7 @@ fn resolve_notes_dir(dir: &str, home: Option<&Path>) -> Result<PathBuf, AppError
     let dir = dir.trim();
 
     if dir.is_empty() {
-        return Err(AppError::Message(String::from(
+        return Err(AppError::ServiceUnavailable(String::from(
             "Notes directory is not configured",
         )));
     }
@@ -185,7 +187,7 @@ fn resolve_notes_dir(dir: &str, home: Option<&Path>) -> Result<PathBuf, AppError
     };
 
     if !resolved.is_absolute() {
-        return Err(AppError::Message(format!(
+        return Err(AppError::InvalidInput(format!(
             "Notes directory must be an absolute path: `{dir}`"
         )));
     }
@@ -205,7 +207,7 @@ fn validate_file_name(file_name: &str) -> Result<(), AppError> {
         || (cfg!(windows) && !is_windows_file_name(file_name));
 
     if is_invalid {
-        return Err(AppError::Message(format!(
+        return Err(AppError::InvalidInput(format!(
             "Invalid note file name: `{file_name}`"
         )));
     }

@@ -1,5 +1,5 @@
 //! Validation and repair use the portable schema shared with the webview.
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 
 use serde_json::{json, Value};
@@ -8,19 +8,32 @@ use crate::errors::AppError;
 
 static SCHEMA: LazyLock<Value> = LazyLock::new(|| {
     serde_json::from_str(include_str!(
-        "../../../packages/shared/src/user-config-schema.json"
+        "../../../../packages/shared/src/user-config-schema.json"
     ))
     .expect("valid user config schema")
 });
 
 static DEFAULTS: LazyLock<Value> = LazyLock::new(|| {
     let mut defaults: Value = serde_json::from_str(include_str!(
-        "../../../packages/shared/src/user-config-defaults.json"
+        "../../../../packages/shared/src/user-config-defaults.json"
     ))
     .expect("valid portable defaults");
-    defaults["configVersion"] = json!(super::config_version::CONFIG_VERSION);
+    defaults["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
     defaults
 });
+
+/// The compiled `pattern`s of the schema; a save validates the whole config,
+/// so each is compiled once rather than on every check.
+static PATTERNS: LazyLock<std::sync::Mutex<HashMap<String, regex::Regex>>> =
+    LazyLock::new(Default::default);
+
+fn matches_pattern(pattern: &str, text: &str) -> bool {
+    let mut patterns = PATTERNS.lock().expect("schema pattern lock poisoned");
+    patterns
+        .entry(pattern.to_owned())
+        .or_insert_with(|| regex::Regex::new(pattern).expect("valid schema pattern"))
+        .is_match(text)
+}
 
 fn default_of(schema: &Value) -> &Value {
     if let Some(path) = schema["defaultPath"].as_str() {
@@ -100,10 +113,7 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
         Some("string") => {
             let text = value.as_str().ok_or_else(|| invalid(path))?;
             if let Some(pattern) = schema["pattern"].as_str() {
-                if !regex::Regex::new(pattern)
-                    .expect("valid schema pattern")
-                    .is_match(text)
-                {
+                if !matches_pattern(pattern, text) {
                     return Err(invalid(path));
                 }
             }
@@ -363,7 +373,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
 
 pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
     validate(config, &SCHEMA, "userConfig")?;
-    if config["configVersion"] != json!(super::config_version::CONFIG_VERSION) {
+    if config["configVersion"] != json!(crate::services::settings::version::CONFIG_VERSION) {
         return Err(invalid("configVersion"));
     }
     for command in config["commands"].as_array().into_iter().flatten() {
@@ -395,9 +405,9 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
 pub fn normalize_user_config(config: &mut Value) -> bool {
     let original = config.clone();
     *config = repair(config, &SCHEMA);
-    config["configVersion"] = json!(super::config_version::CONFIG_VERSION);
+    config["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
     // Apply platform defaults when a field is missing.
-    let defaults = crate::models::default_user_config();
+    let defaults = crate::services::settings::defaults::default_user_config();
     for (key, value) in defaults.as_object().into_iter().flatten() {
         if original.get(key).is_none() {
             config[key] = value.clone();
@@ -567,7 +577,7 @@ mod tests {
     #[test]
     fn shared_repair_fixtures_match_the_webview() {
         let cases: Vec<Value> = serde_json::from_str(include_str!(
-            "../../../packages/shared/fixtures/config-normalization.json"
+            "../../../../packages/shared/fixtures/config-normalization.json"
         ))
         .unwrap();
         for case in cases {
@@ -599,12 +609,12 @@ mod tests {
 
     #[test]
     fn defaults_satisfy_the_shared_schema() {
-        validate_user_config(&crate::models::default_user_config()).unwrap();
+        validate_user_config(&crate::services::settings::defaults::default_user_config()).unwrap();
     }
 
     #[test]
     fn rejects_bad_types_counts_duplicate_ids_and_dangling_references() {
-        let defaults = crate::models::default_user_config();
+        let defaults = crate::services::settings::defaults::default_user_config();
         for (path, value) in [
             ("/editorHistory/maxItems", json!(1.5)),
             ("/chatHistory/retentionDays", json!(-1)),
@@ -642,7 +652,7 @@ mod tests {
 
     #[test]
     fn startup_repair_is_idempotent_and_removes_dangling_references() {
-        let mut config = crate::models::default_user_config();
+        let mut config = crate::services::settings::defaults::default_user_config();
         config["editorHistory"]["maxItems"] = json!(1.5);
         config["stt"]["isLlmFormattingEnabled"] = json!("yes");
         config["mainActions"] = json!({

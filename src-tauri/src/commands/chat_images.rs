@@ -2,17 +2,13 @@ use super::run_blocking;
 use crate::{
     errors::AppError,
     services::{
-        chat_images::{ChatFileError, ChatFileErrorKind, ChatImageStore},
+        chat_images::{ChatFileError, ChatFileErrorKind, ChatImageStore, ChatImages},
         storage::{self, ChatScope},
     },
-    state::AppState,
 };
 use tauri::{AppHandle, Manager, WebviewWindow};
 pub const CHAT_IMAGE_NAME_HEADER: &str = "x-chat-image-name";
 pub const CHAT_IMAGE_LEASE_HEADER: &str = "x-chat-image-lease";
-fn chat_images(state: &AppState) -> std::sync::MutexGuard<'_, ChatImageStore> {
-    state.chat_images.lock().expect("chat image lock poisoned")
-}
 #[tauri::command]
 pub async fn store_chat_image(
     window: WebviewWindow,
@@ -39,8 +35,8 @@ pub async fn store_chat_image(
     let bytes = bytes.clone();
     run_blocking(move || {
         let (image, encoded) = ChatImageStore::prepare(&bytes, name)?;
-        let state = app.state::<AppState>();
-        let mut images = chat_images(&state);
+        let images = app.state::<ChatImages>();
+        let mut images = images.lock();
         images.remember(image.clone(), encoded)?;
         images.hold(&format!("{}/import/{lease}", window.label()), &image.id);
         Ok(image)
@@ -82,8 +78,8 @@ pub async fn sync_chat_images(
 ) -> Result<(), AppError> {
     let owner = image_owner(&window, profile_id.as_deref())?;
     run_blocking(move || {
-        let state = app.state::<AppState>();
-        let mut images = chat_images(&state);
+        let images = app.state::<ChatImages>();
+        let mut images = images.lock();
         images.sync(&owner, &ids)?;
         for lease in leases {
             images.release_owner(&format!("{}/import/{lease}", window.label()));
@@ -154,5 +150,7 @@ mod tests {
 
 #[tauri::command]
 pub fn release_chat_image_undo(window: WebviewWindow, app: AppHandle, id: String) {
-    chat_images(&app.state::<AppState>()).release_owner(&format!("{}/undo/{id}", window.label()));
+    app.state::<ChatImages>()
+        .lock()
+        .release_owner(&format!("{}/undo/{id}", window.label()));
 }

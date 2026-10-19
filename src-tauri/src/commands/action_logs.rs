@@ -53,7 +53,7 @@ pub async fn open_action_log(app: AppHandle) -> Result<bool, AppError> {
 
 #[tauri::command(async)]
 pub fn log_client_message(level: String, message: String, context: Option<String>) {
-    let sanitized = crate::services::secret_detector::redact_secrets(&message);
+    let sanitized = crate::services::secrets::detector::redact_secrets(&message);
     let ctx = context.map(|c| format!("[{c}] ")).unwrap_or_default();
     match level.as_str() {
         "error" => log::error!(target: "desktop_ui", "{ctx}{sanitized}"),

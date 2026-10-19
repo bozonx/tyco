@@ -5,6 +5,26 @@ use std::time::{Duration, Instant};
 
 use crate::errors::AppError;
 
+/// Runs work that waits — for the disk, a lock, a process or a dialog — on
+/// the blocking pool. A synchronous `#[tauri::command(async)]` would run it on
+/// an async worker instead, and a few long waits there stall every request,
+/// socket and stream of the app.
+pub async fn run_blocking<T: Send + 'static>(
+    task: impl FnOnce() -> T + Send + 'static,
+) -> Result<T, AppError> {
+    tauri::async_runtime::spawn_blocking(task)
+        .await
+        .map_err(|error| AppError::Message(error.to_string()))
+}
+
+/// A service whose work the shutdown waits for. `stop` cancels it and turns
+/// new work down; `wait_until` waits for what still runs, and is false when
+/// the deadline came first.
+pub trait StoppableService {
+    fn stop(&self);
+    fn wait_until(&self, deadline: Instant) -> bool;
+}
+
 #[derive(Clone)]
 pub struct StopToken(Arc<StopState>);
 struct StopState {
@@ -71,16 +91,10 @@ impl Drop for TaskLease {
 
 #[derive(Default)]
 pub struct BackgroundServices {
-    shutdown_started: std::sync::atomic::AtomicBool,
     stop: StopToken,
     barrier: Arc<TaskBarrier>,
 }
 impl BackgroundServices {
-    pub fn begin_shutdown(&self) -> bool {
-        !self
-            .shutdown_started
-            .swap(true, std::sync::atomic::Ordering::SeqCst)
-    }
     pub fn token(&self) -> StopToken {
         self.stop.clone()
     }
@@ -119,12 +133,11 @@ impl BackgroundServices {
         run: impl FnOnce() -> T + Send + 'static,
     ) -> Result<T, AppError> {
         let lease = self.register()?;
-        tauri::async_runtime::spawn_blocking(move || {
+        run_blocking(move || {
             let _lease = lease;
             run()
         })
         .await
-        .map_err(|error| AppError::Message(error.to_string()))
     }
     pub fn spawn_async(
         &self,
@@ -142,7 +155,7 @@ impl BackgroundServices {
         });
         Ok(())
     }
-    pub fn stop(&self) {
+    fn stop_tasks(&self) {
         self.barrier
             .tasks
             .lock()
@@ -150,7 +163,7 @@ impl BackgroundServices {
             .is_stopping = true;
         self.stop.stop();
     }
-    pub fn wait_until(&self, deadline: Instant) -> bool {
+    fn wait_for_tasks(&self, deadline: Instant) -> bool {
         let tasks = self
             .barrier
             .tasks
@@ -164,6 +177,15 @@ impl BackgroundServices {
             .0
             .active_count
             == 0
+    }
+}
+
+impl StoppableService for BackgroundServices {
+    fn stop(&self) {
+        self.stop_tasks();
+    }
+    fn wait_until(&self, deadline: Instant) -> bool {
+        self.wait_for_tasks(deadline)
     }
 }
 

@@ -106,7 +106,7 @@ impl SelectionRunCoordinator {
         now: Instant,
     ) -> Result<TriggerDecision, AppError> {
         if !is_selection_action(action) {
-            return Err(AppError::Message(format!(
+            return Err(AppError::InvalidInput(format!(
                 "Unknown selection action: {action}"
             )));
         }

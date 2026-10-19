@@ -29,9 +29,28 @@ loads the current config. New edits during a save are rebased onto its result.
 
 ## Backend and trust boundaries
 
-`commands/` adapts IPC to services. `services/platform/` owns OS/session APIs.
-`services/storage/` separates config loading and session state, editor history,
-chat history and shared file primitives; existing callers use its public facade.
+`commands/` adapts IPC to services and holds no workflow of its own.
+`models/` holds the wire types and typed views of the config
+(`models/user_config.rs`); it depends on no service. `services/` is grouped by
+domain: `activation/` (coordinator, metrics, local socket), `settings/`
+(schema, three-way merge, version, defaults, session state), `external/`
+(the API shared by `tyco-ctl` and D-Bus, its jobs, commands and access prompt),
+`secrets/` (store, webhook headers, history redaction) and `voice/`.
+`services/platform/` owns OS/session APIs, the D-Bus server and the status
+overlay among them. `services/storage/` separates config loading, file paths,
+JSON files, editor history and chat history; existing callers use its public
+facade.
+
+`AppState` holds the desktop snapshot, the settings lock, the history
+coordinator and the lifecycle phase (running, quitting, shutting down). Other
+domains manage their own state (`NetState`, `SecretStore`, `ChatImages`,
+`VoiceSessionState`, `ToolCatalogState`, ...): state that needs nothing is
+managed on the builder, state built from the config or a window in `setup`,
+after the config is read and before the windows exist.
+
+Errors cross IPC as `AppError` with a stable `code`. Calls from outside use
+the `ErrorCode` of `tyco-activation-protocol`, which also maps each code to
+the exit status of `tyco-ctl`.
 
 Settings orchestration lives in `services/settings.rs`, with supplied secret,
 hotkey, config-storage, history and publication effects. History policies and
@@ -49,7 +68,8 @@ if its async caller is cancelled. Local control, D-Bus, window trackers, portal
 streams, selection workers and warmup participate in shutdown. After both
 webviews flush settings, the coordinator runs off the UI thread and shares a
 three-second deadline across voice, network, scripts, platform cleanup and
-background services. Stalled native workers are reported rather than joined
+background services, each a `StoppableService`: all are cancelled before the
+first wait. Stalled native workers are reported rather than joined
 indefinitely. Each application owns its script registry, including unnamed runs;
 intentionally detached applications remain independent of Tyco's lifetime.
 
@@ -58,7 +78,7 @@ and WebSocket operations, including request preparation. Cancellation releases
 capacity only when the operation lease is dropped. Shutdown closes admission,
 rejects late socket registration and waits for outstanding leases.
 
-Activation policy lives in `services/activation_coordinator.rs`, with a supplied
+Activation policy lives in `services/activation/coordinator.rs`, with a supplied
 window host and generation checks that discard late context captures. Generation
 allocation and window mutation run together on the main-thread executor; no
 coordinator lock is held while another thread waits for that executor.

@@ -10,12 +10,12 @@ use self::validation::{describe, ensure_selection_access_allowed, is_selection_a
 
 use serde_json::json;
 use tauri::{AppHandle, Manager};
-use tyco_activation_protocol::{Request, Response, API_VERSION};
+use tyco_activation_protocol::{ErrorCode, Request, Response, API_VERSION};
 
-use super::activation::{Activation, ActivationMode, ActivationSource};
-use super::external_commands;
-use super::external_jobs::ExternalJobs;
-use super::{runtime, selection_replace};
+use crate::services::activation::{Activation, ActivationMode, ActivationSource};
+use crate::services::external::commands;
+use crate::services::external::jobs::ExternalJobs;
+use crate::services::{runtime, selection_replace};
 use crate::state::AppState;
 
 pub const JOB_CANCEL_EVENT: &str = "app://external-job-cancel";
@@ -30,10 +30,10 @@ fn open(
     source: ActivationSource,
 ) -> ApiResult<()> {
     let mode = ActivationMode::parse(mode)
-        .map_err(|error| Response::coded_error("InvalidArgs", error.to_string()))?;
+        .map_err(|error| Response::coded_error(ErrorCode::InvalidInput, error.to_string()))?;
     if selection && text.is_some() {
         return Err(Response::coded_error(
-            "InvalidInput",
+            ErrorCode::InvalidInput,
             "Choose text or selection",
         ));
     }
@@ -43,10 +43,9 @@ fn open(
     }
     let mut activation = Activation::new(mode, source);
     activation.selected_text = if selection {
-        let (id, text) = selection_replace::prepare_external(app)
-            .map_err(|error| Response::coded_error("SelectionFailed", error.to_string()))?;
-        let _ = selection_replace::finish(app, id, None);
-        Some(text)
+        Some(selection_replace::read_external(app).map_err(|error| {
+            Response::coded_error(ErrorCode::SelectionFailed, error.to_string())
+        })?)
     } else {
         text
     };
@@ -59,7 +58,7 @@ fn open(
 fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
     if action != selection_replace::CORRECTION_ACTION {
         return Err(Response::coded_error(
-            "InvalidArgs",
+            ErrorCode::InvalidInput,
             format!("Unknown selection action: {action}"),
         ));
     }
@@ -70,7 +69,7 @@ fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
         action,
         selection_replace::TriggerWait::Delay(selection_replace::SHORTCUT_RELEASE_DELAY),
     )
-    .map_err(|error| Response::coded_error("SelectionFailed", error.to_string()))
+    .map_err(|error| Response::coded_error(ErrorCode::SelectionFailed, error.to_string()))
 }
 
 pub fn dispatch(app: &AppHandle, request: Request, source: ActivationSource) -> Response {
@@ -78,7 +77,10 @@ pub fn dispatch(app: &AppHandle, request: Request, source: ActivationSource) -> 
     if serde_json::to_vec(&response).map_or(true, |bytes| {
         bytes.len() >= tyco_activation_protocol::MAX_MESSAGE_BYTES
     }) {
-        Response::coded_error("OutputTooLarge", "Serialized response is too large")
+        Response::coded_error(
+            ErrorCode::OutputTooLarge,
+            "Serialized response is too large",
+        )
     } else {
         response
     }
@@ -88,10 +90,10 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
     if serde_json::to_vec(&request).map_or(true, |bytes| {
         bytes.len() >= tyco_activation_protocol::MAX_MESSAGE_BYTES
     }) {
-        return Response::coded_error("InvalidInput", "Protocol message is too large");
+        return Response::coded_error(ErrorCode::InvalidInput, "Protocol message is too large");
     }
     for id in app.state::<ExternalJobs>().expired_job_ids() {
-        cancel(app, &id, "TimedOut");
+        cancel(app, &id, ErrorCode::TimedOut);
     }
     match request {
         Request::Status => {
@@ -107,12 +109,9 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
         }
         // Each command carries its own grant, so the list holds the granted ones.
         Request::ListCommands => {
-            let state = app.state::<AppState>();
-            let config = state.snapshot().settings.user_config;
-            Response::json(&external_commands::list(
-                &config,
-                state.tool_catalog().as_ref(),
-            ))
+            let config = app.state::<AppState>().snapshot().settings.user_config;
+            let catalog = app.state::<commands::ToolCatalogState>().get();
+            Response::json(&commands::list(&config, catalog.as_ref()))
         }
         Request::DescribeCommand { target, by_name } => match describe(app, &target, by_name) {
             Ok(description) => Response::json(&description),
@@ -130,8 +129,8 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             .state::<ExternalJobs>()
             .get(&id)
             .map(|job| Response::json(&job))
-            .unwrap_or_else(|| Response::coded_error("NotFound", "No such job")),
-        Request::JobCancel { id } => cancel(app, &id, "Cancelled"),
+            .unwrap_or_else(|| Response::coded_error(ErrorCode::NotFound, "No such job")),
+        Request::JobCancel { id } => cancel(app, &id, ErrorCode::Cancelled),
         Request::Open {
             mode,
             text,
@@ -142,13 +141,13 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
         },
         Request::Quit => {
             let app = app.clone();
-            let services = app.state::<super::background::BackgroundServices>();
+            let services = app.state::<crate::services::background::BackgroundServices>();
             let handle = app.clone();
             if let Err(error) = services.spawn_async(async move {
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                 handle.exit(0);
             }) {
-                return Response::coded_error("ServiceUnavailable", error.to_string());
+                return Response::coded_error(ErrorCode::Unavailable, error.to_string());
             }
             Response::success()
         }

@@ -1,9 +1,4 @@
-use super::SessionState;
-use crate::services::{
-    activation::{ActivationMode, WindowProfile},
-    external_access::AccessRequest,
-    external_commands::LauncherRequest,
-};
+use super::{AccessRequest, ActivationMode, LauncherRequest, SessionState, WindowProfile};
 use serde::Serialize;
 use serde_json::Value;
 /// Wire state is grouped by domain; all domains share a coherent revision.
@@ -47,8 +42,10 @@ mod tests {
     use super::*;
     #[test]
     fn snapshot_matches_the_shared_domain_wire_fixture() {
-        let mut snapshot =
-            crate::models::default_desktop_snapshot(serde_json::json!({}), SessionState::default());
+        let mut snapshot = crate::services::settings::defaults::default_desktop_snapshot(
+            serde_json::json!({}),
+            SessionState::default(),
+        );
         snapshot.revision = 7;
         snapshot.activation.activation_id = 2;
         snapshot.activation.target_window_id = Some("target".into());

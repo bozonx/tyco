@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use super::types::{AiProfile, AiProject};
 use crate::errors::AppError;
 use crate::services::atomic_file::{create_private_dir, write_private};
+use crate::services::file_ids::{is_file_id, MAX_FILE_ID_LEN};
 
 const PROFILE_FILE: &str = "profile.json";
 /// What an internal project keeps its settings in, next to its files.
@@ -19,18 +20,12 @@ pub fn validate_id(id: &str) -> Result<(), AppError> {
     if id.is_empty() {
         return Err(AppError::InvalidInput("ID cannot be empty".into()));
     }
-    if id.len() > 64 {
-        return Err(AppError::InvalidInput(
-            "ID cannot exceed 64 characters".into(),
-        ));
+    if id.len() > MAX_FILE_ID_LEN {
+        return Err(AppError::InvalidInput(format!(
+            "ID cannot exceed {MAX_FILE_ID_LEN} characters"
+        )));
     }
-    if id == "." || id == ".." {
-        return Err(AppError::InvalidInput("Invalid ID".into()));
-    }
-    if !id
-        .chars()
-        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-    {
+    if !is_file_id(id) {
         return Err(AppError::InvalidInput(
             "ID may only contain alphanumeric characters, hyphens, and underscores".into(),
         ));

@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, BufReader};
 
-use crate::{Request, Response, MAX_MESSAGE_BYTES};
+use crate::{ErrorCode, Request, Response, MAX_MESSAGE_BYTES};
 
 const IO_TIMEOUT: Duration = Duration::from_secs(10);
 const MAX_CLIENTS: usize = 32;
@@ -52,7 +52,7 @@ async fn handle<S: AsyncRead + AsyncWrite + Unpin>(
             Ok(response) => response,
             Err(error) => Response::error(error.to_string()),
         },
-        Ok(Err(error)) => Response::coded_error("InvalidRequest", error.to_string()),
+        Ok(Err(error)) => Response::coded_error(ErrorCode::InvalidRequest, error.to_string()),
         Err(_) => return,
     };
     let _ = tokio::time::timeout(IO_TIMEOUT, write(&mut stream, &response)).await;

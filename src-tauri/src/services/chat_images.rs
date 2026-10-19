@@ -69,7 +69,7 @@ pub fn validate_id(id: &str) -> Result<(), AppError> {
             .bytes()
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
     {
-        return Err(AppError::Message("Invalid image id".into()));
+        return Err(AppError::InvalidInput("Invalid image id".into()));
     }
     Ok(())
 }
@@ -169,6 +169,21 @@ fn stored_file(directory: &Path, id: &str) -> Option<(PathBuf, &'static str)> {
         let path = directory.join(format!("{id}.{extension}"));
         path.is_file().then_some((path, *media_type))
     })
+}
+
+/// The chat images of the session, which every window shares.
+#[derive(Default)]
+pub struct ChatImages(std::sync::Mutex<ChatImageStore>);
+
+impl ChatImages {
+    pub fn lock(&self) -> std::sync::MutexGuard<'_, ChatImageStore> {
+        self.0.lock().expect("chat image lock poisoned")
+    }
+
+    /// For the history, which takes the lock only once it writes images.
+    pub fn store(&self) -> &std::sync::Mutex<ChatImageStore> {
+        &self.0
+    }
 }
 
 #[derive(Default)]
@@ -326,7 +341,9 @@ impl ChatImageStore {
             if message.images.len() > MAX_MESSAGE_IMAGES
                 || (!message.images.is_empty() && message.role != crate::models::ChatRole::User)
             {
-                return Err(AppError::Message("Unsupported chat image message".into()));
+                return Err(AppError::InvalidInput(
+                    "Unsupported chat image message".into(),
+                ));
             }
             for image in &message.images {
                 let bytes = self.get(directory, &image.id)?;
@@ -336,10 +353,10 @@ impl ChatImageStore {
                     || canonical.size_bytes != image.size_bytes
                     || canonical.media_type != image.media_type
                 {
-                    return Err(AppError::Message("Invalid chat image metadata".into()));
+                    return Err(AppError::InvalidInput("Invalid chat image metadata".into()));
                 }
                 let extension = extension(canonical.media_type.as_str())
-                    .ok_or_else(|| AppError::Message("Unsupported chat image type".into()))?;
+                    .ok_or_else(|| AppError::InvalidInput("Unsupported chat image type".into()))?;
                 fs::create_dir_all(directory)?;
                 let path = directory.join(format!("{}.{extension}", image.id));
                 if !path.exists() {

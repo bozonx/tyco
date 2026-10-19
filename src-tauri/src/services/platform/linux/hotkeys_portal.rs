@@ -1,8 +1,8 @@
 //! Linux GlobalShortcuts portal session lifecycle and event streams.
 use crate::errors::AppError;
 use crate::services::hotkeys::{
-    bindings_from_config, global_target, HotkeyBinding, PortalProvider, PortalShortcutBindings,
-    ProviderState, HOTKEYS_CHANGED_EVENT,
+    bindings_from_config, global_target, HotkeyBinding, PortalShortcutBindings, ProviderState,
+    HOTKEYS_CHANGED_EVENT,
 };
 use crate::services::platform::hotkeys::ProviderKind;
 use crate::services::selection_replace;
@@ -56,7 +56,7 @@ pub(crate) async fn configure_portal(app: &AppHandle) -> Result<(), AppError> {
     let (portal, session) = app
         .state::<PortalState>()
         .registration()
-        .ok_or_else(|| AppError::Message(String::from("Hotkey portal is not ready")))?;
+        .ok_or_else(|| AppError::ServiceUnavailable(String::from("Hotkey portal is not ready")))?;
     portal
         .configure_shortcuts(&session, None, ConfigureShortcutsOptions::default())
         .await
@@ -67,11 +67,10 @@ pub(crate) async fn configure_portal(app: &AppHandle) -> Result<(), AppError> {
 pub(crate) async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
     let state = app.state::<PortalState>();
     let _binding = state.binding.lock().await;
-    let portal = state
-        .portal
-        .get()
-        .cloned()
-        .ok_or_else(|| AppError::Message(String::from("Hotkey portal is not ready")))?;
+    let portal =
+        state.portal.get().cloned().ok_or_else(|| {
+            AppError::ServiceUnavailable(String::from("Hotkey portal is not ready"))
+        })?;
     let previous = state
         .session
         .write()
@@ -119,28 +118,21 @@ pub(crate) async fn refresh_system_triggers(app: &AppHandle) {
     }
 }
 
-#[cfg(target_os = "linux")]
-impl PortalProvider {
-    pub(crate) fn register(
-        self,
-        app: &mut App,
-        bindings: Vec<HotkeyBinding>,
-    ) -> Result<(), AppError> {
-        let app = app.handle().clone();
-        let services = app.state::<crate::services::background::BackgroundServices>();
-        let handle = app.clone();
-        services.spawn_async(async move {
-            let app = handle;
-            if let Err(error) = run_portal(app.clone(), bindings).await {
-                log::warn!("GlobalShortcuts portal is unavailable: {error}; use tyco-ctl or D-Bus");
-                // Wayland compositors without GlobalShortcuts must expose the
-                // external binding workflow in settings instead of claiming
-                // that a system confirmation is pending.
-                app.state::<ProviderState>().set(ProviderKind::External);
-                notify_hotkeys_changed(&app);
-            }
-        })
-    }
+pub(crate) fn register(app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
+    let app = app.handle().clone();
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    services.spawn_async(async move {
+        let app = handle;
+        if let Err(error) = run_portal(app.clone(), bindings).await {
+            log::warn!("GlobalShortcuts portal is unavailable: {error}; use tyco-ctl or D-Bus");
+            // Wayland compositors without GlobalShortcuts must expose the
+            // external binding workflow in settings instead of claiming
+            // that a system confirmation is pending.
+            app.state::<ProviderState>().set(ProviderKind::External);
+            notify_hotkeys_changed(&app);
+        }
+    })
 }
 
 #[cfg(target_os = "linux")]

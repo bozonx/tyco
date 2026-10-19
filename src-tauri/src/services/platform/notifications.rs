@@ -10,7 +10,7 @@ pub fn notify(summary: &str, body: &str) -> Result<(), AppError> {
     use zbus::zvariant::Value;
 
     let connection = zbus::blocking::Connection::session()
-        .map_err(|error| AppError::Message(format!("No session bus: {error}")))?;
+        .map_err(|error| AppError::ServiceUnavailable(format!("No session bus: {error}")))?;
     // lets the desktop show the icon and name of the application entry
     let hints = HashMap::from([("desktop-entry", Value::from("com.tyco.app"))]);
     connection

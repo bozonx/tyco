@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use serde_json::json;
 
 use super::{clipboard_restore, kwin, text_injector, x11};
-use crate::services::background::BackgroundServices;
+use crate::services::background::{BackgroundServices, StoppableService};
 use crate::services::platform::window_tracker::{tracker, WindowKind};
 
 const WAIT: Duration = Duration::from_secs(10);

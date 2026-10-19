@@ -5,8 +5,6 @@ use super::{
 };
 use crate::errors::AppError;
 use crate::state::AppState;
-#[cfg(target_os = "linux")]
-use gtk::prelude::WidgetExt;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
 
@@ -72,8 +70,7 @@ fn warmup_show(app: &AppHandle) -> Result<(), AppError> {
     let window = app
         .get_webview_window(QUICK_WINDOW_LABEL)
         .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
-    #[cfg(target_os = "linux")]
-    window.gtk_window()?.set_opacity(0.0);
+    crate::services::platform::set_window_opacity(&window, 0.0)?;
     let layer = panel_layer(app);
     if layer.is_none() {
         let (width, height) = WINDOW_SIZE;
