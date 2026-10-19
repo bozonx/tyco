@@ -245,7 +245,7 @@ describe('createActionMenuModel', () => {
 
   it('maps configured actions to their shortcut slots', () => {
     const mainActions = {
-      w: { type: 'standard' as const, actionId: 'translation' as const },
+      w: { type: 'standard' as const, actionId: 'translationMenu' as const },
       e: { type: 'standard' as const, actionId: 'copyToClipboard' as const },
     }
     const deps = {
@@ -261,11 +261,11 @@ describe('createActionMenuModel', () => {
 
     expect(store.getShortcutActions().map((action) => action?.id)).toEqual([
       undefined,
-      'translation',
+      'translationMenu',
       'copyToClipboard',
     ])
     expect(store.getActionsMenu().map((action) => action.id)).toEqual([
-      'translation',
+      'translationMenu',
       'copyToClipboard',
     ])
   })
@@ -332,7 +332,7 @@ describe('createActionMenuModel', () => {
         w: { type: 'command', commandId: 'wh1' },
         e: { type: 'command', commandId: 'sc2' },
         r: { type: 'command', commandId: 'missing' },
-        t: { type: 'standard', actionId: 'translation' },
+        t: { type: 'standard', actionId: 'translationMenu' },
       }),
       commands: () => [script, noText, disabled],
     })
@@ -343,7 +343,7 @@ describe('createActionMenuModel', () => {
       'command:wh1',
       undefined,
       undefined,
-      'translation',
+      'translationMenu',
     ])
     expect(slots[0]).toMatchObject({ name: 'Echo', icon: 'mdi:console-line' })
 
@@ -364,7 +364,7 @@ describe('createActionMenuModel', () => {
         w: { type: 'aiTask', taskId: 'gone' },
         e: { type: 'translation', language: 'en_US' },
       }),
-      aiTasks: () => ({ w: { id: 'task-2', name: 'Shorten' } }),
+      aiTasks: () => [{ id: 'task-2', name: 'Shorten' }],
     })
 
     const slots = store.getShortcutActions()

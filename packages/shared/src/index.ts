@@ -8,6 +8,7 @@ export * from './user-config'
 export * from './plugin-packages'
 export * from './desktop-commands'
 export * from './desktop-transport'
+export * from './secret-ids'
 
 export * from './config-schema'
 export * from './ai-profiles'

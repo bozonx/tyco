@@ -1,6 +1,12 @@
 import { reactive } from 'vue'
 
-import type { LlmConfig, LlmModel, LlmProvider, LlmTask } from '@tyco/shared'
+import {
+  llmSecretId,
+  type LlmConfig,
+  type LlmModel,
+  type LlmProvider,
+  type LlmTask,
+} from '@tyco/shared'
 
 import { httpOrigin } from '../net/secrets'
 import { addCompatibleProvider, addModel, removeProvider } from './llm-config'
@@ -40,7 +46,11 @@ export function createLlmSettingsModel(deps: {
       return
     }
     try {
-      await deps.setSecret(provider.id, value, origin ? [origin] : undefined)
+      await deps.setSecret(
+        llmSecretId(provider.id),
+        value,
+        origin ? [origin] : undefined
+      )
       requests.delete(provider.id)
       keyDrafts[provider.id] = ''
       delete connectionCheckStatusByProviderId[provider.id]
@@ -51,7 +61,7 @@ export function createLlmSettingsModel(deps: {
   }
   async function removeKey(id: string) {
     try {
-      await deps.removeSecret(id)
+      await deps.removeSecret(llmSecretId(id))
       requests.delete(id)
       delete connectionCheckStatusByProviderId[id]
       delete connectionErrors[id]

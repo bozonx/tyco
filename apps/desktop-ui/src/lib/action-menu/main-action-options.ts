@@ -50,7 +50,8 @@ export function mainActionOptionId(
 }
 
 export function standardActionGroup(id: StandardActionId): MainActionGroup {
-  if (id === 'translation' || id === 'aiTask') return { kind: id }
+  if (id === 'translationMenu') return { kind: 'translation' }
+  if (id === 'aiTaskMenu') return { kind: 'aiTask' }
   return { kind: 'basic' }
 }
 

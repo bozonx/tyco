@@ -349,7 +349,7 @@ describe('external calls', () => {
   const lamp = command(
     'lamp',
     'Lamp',
-    { availableIn: { external: true, chat: false } },
+    { isAvailableExternally: true },
     { url: 'https://x.test' }
   )
 
@@ -361,7 +361,7 @@ describe('external calls', () => {
   }
 
   it('runs a command missing from the overlay list on the given text', async () => {
-    const hidden = { ...note, availableIn: { external: true, chat: false } }
+    const hidden = { ...note, isAvailableExternally: true }
     const { deps, model } = setupExternal([hidden])
     await model.request({ commandId: 'note', text: 'from LHC' })
     expect(deps.run).toHaveBeenCalledWith(hidden, 'from LHC', expect.anything())
@@ -441,7 +441,7 @@ describe('commands that replace the selection', () => {
   const replacing = command(
     'translate',
     'Translate',
-    { launcherAfterRun: { action: 'insertIntoWindow' } },
+    { outputAction: 'insertIntoWindow' },
     {}
   )
 

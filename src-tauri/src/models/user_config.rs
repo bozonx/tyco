@@ -64,9 +64,9 @@ pub fn external_access(config: &Value) -> ExternalAccessConfig {
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AiVaultConfig {
-    /// The vault folder the user chose; the app data folder otherwise.
+    /// The vault folder the user chose; empty for the app data folder.
     #[serde(default)]
-    pub path: Option<String>,
+    pub path: String,
 }
 
 pub fn ai_vault(config: &Value) -> AiVaultConfig {
@@ -93,7 +93,7 @@ mod tests {
         assert_eq!(pages[0].hotkey, "Ctrl+Alt+M");
         assert_eq!(pages[1].input_mode, LauncherInputMode::Selection);
         assert!(external_access(&config).can_access_selection);
-        assert_eq!(ai_vault(&config).path.as_deref(), Some("/vault"));
+        assert_eq!(ai_vault(&config).path, "/vault");
 
         let partly = json!({"launcherPages": [{"hotkey": "x"}, {"id": "kept"}]});
         assert_eq!(launcher_pages(&partly).len(), 1);

@@ -23,7 +23,7 @@ describe('SettingsGeneralTab.vue', () => {
       },
       language: { ui: AUTO_LANGUAGE_VALUE, user: 'en_US' },
       windowInsertion: {
-        pasteShortcut: 'ctrl+v',
+        pasteShortcut: 'Ctrl+V',
         linux: { method: 'xdotool', xdotoolPath: '', ydotoolPath: '' },
       },
       ...overrides,
@@ -112,7 +112,7 @@ describe('SettingsGeneralTab.vue', () => {
   it('shows the path of the tool of the chosen insertion method', async () => {
     const config = createConfig({
       windowInsertion: {
-        pasteShortcut: 'ctrl+v',
+        pasteShortcut: 'Ctrl+V',
         linux: { method: 'xdotool', xdotoolPath: '', ydotoolPath: '' },
       },
     })

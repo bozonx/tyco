@@ -18,7 +18,7 @@ describe('document-appearance storage', () => {
   })
 
   it('round-trips settings', () => {
-    const settings = { ...DEFAULT_APPEARANCE, theme: 'e-ink' as const }
+    const settings = { ...DEFAULT_APPEARANCE, theme: 'eInk' as const }
 
     writeStoredAppearance(window.localStorage, settings)
 
@@ -54,7 +54,7 @@ describe('applyAppearanceToDocument', () => {
     const root = document.createElement('html')
 
     applyAppearanceToDocument(root, {
-      theme: 'e-ink',
+      theme: 'eInk',
       contrast: 'more',
       motion: 'reduce',
       uiScalePercent: 100,

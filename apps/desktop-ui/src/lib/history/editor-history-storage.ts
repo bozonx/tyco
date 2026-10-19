@@ -6,12 +6,10 @@ const EDITOR_HISTORY_RETENTION_DAYS = [0, 1, 7, 30, 90] as const
 
 /** The editor history keeps nothing */
 export function isEditorHistoryOff(
-  config: Pick<UserConfig, 'editorHistory'>
+  config: Pick<UserConfig, 'editor'>
 ): boolean {
-  return (
-    config.editorHistory.storage === 'off' ||
-    config.editorHistory.maxItems === 0
-  )
+  const { history } = config.editor
+  return history.storage === 'off' || history.maxItems === 0
 }
 
 /** The offered retention periods plus the saved one if it is not among them */

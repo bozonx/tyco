@@ -9,9 +9,7 @@ describe('normalizeTranslationConfig', () => {
       ...DEFAULT_USER_CONFIG.translation,
       provider: 'llm',
       qualityGate: 'off',
-      deeplEndpoint: 'free',
       glossary: [],
-      qualityGatePrompt: '',
     })
   })
 
@@ -20,8 +18,7 @@ describe('normalizeTranslationConfig', () => {
       normalizeTranslationConfig({
         provider: 'deepl',
         qualityGate: 'always',
-        deeplEndpoint: 'pro',
-        qualityGatePrompt: 'Use informal tone.',
+        providers: { deepl: { endpoint: 'pro' } },
         glossary: [
           { term: ' TyCo ', use: 'TyCo', doNotTranslate: true },
           { term: 'workspace', use: ' рабочее пространство ' },
@@ -32,7 +29,7 @@ describe('normalizeTranslationConfig', () => {
       ...DEFAULT_USER_CONFIG.translation,
       provider: 'deepl',
       qualityGate: 'always',
-      deeplEndpoint: 'pro',
+      providers: { deepl: { endpoint: 'pro' } },
       glossary: [
         { term: 'TyCo', use: 'TyCo', doNotTranslate: true },
         {
@@ -41,7 +38,6 @@ describe('normalizeTranslationConfig', () => {
           doNotTranslate: false,
         },
       ],
-      qualityGatePrompt: 'Use informal tone.',
     })
   })
 })

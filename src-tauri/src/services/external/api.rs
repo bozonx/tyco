@@ -20,7 +20,8 @@ use crate::state::AppState;
 
 pub const JOB_CANCEL_EVENT: &str = "app://external-job-cancel";
 
-type ApiResult<T> = Result<T, Response>;
+/// A failed request answers with a `Response` of its own; boxed, as it is large.
+type ApiResult<T> = Result<T, Box<Response>>;
 
 fn open(
     app: &AppHandle,
@@ -32,10 +33,10 @@ fn open(
     let mode = ActivationMode::parse(mode)
         .map_err(|error| Response::coded_error(ErrorCode::InvalidInput, error.to_string()))?;
     if selection && text.is_some() {
-        return Err(Response::coded_error(
+        return Err(Box::new(Response::coded_error(
             ErrorCode::InvalidInput,
             "Choose text or selection",
-        ));
+        )));
     }
     let config = app.state::<AppState>().snapshot().settings.user_config;
     if selection {
@@ -49,7 +50,7 @@ fn open(
     } else {
         text
     };
-    runtime::activate(app, activation).map_err(|error| Response::error(error.to_string()))
+    runtime::activate(app, activation).map_err(|error| Box::new(Response::error(error.to_string())))
 }
 
 /// Corrects the selection of the focused window in place, as the inline
@@ -57,10 +58,10 @@ fn open(
 /// held, so the capture waits for its keys to be released.
 fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
     if action != selection_replace::CORRECTION_ACTION {
-        return Err(Response::coded_error(
+        return Err(Box::new(Response::coded_error(
             ErrorCode::InvalidInput,
             format!("Unknown selection action: {action}"),
-        ));
+        )));
     }
     let config = app.state::<AppState>().snapshot().settings.user_config;
     ensure_selection_access_allowed(&config)?;
@@ -69,7 +70,12 @@ fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
         action,
         selection_replace::TriggerWait::Delay(selection_replace::SHORTCUT_RELEASE_DELAY),
     )
-    .map_err(|error| Response::coded_error(ErrorCode::SelectionFailed, error.to_string()))
+    .map_err(|error| {
+        Box::new(Response::coded_error(
+            ErrorCode::SelectionFailed,
+            error.to_string(),
+        ))
+    })
 }
 
 pub fn dispatch(app: &AppHandle, request: Request, source: ActivationSource) -> Response {
@@ -115,15 +121,15 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
         }
         Request::DescribeCommand { target, by_name } => match describe(app, &target, by_name) {
             Ok(description) => Response::json(&description),
-            Err(error) => error,
+            Err(error) => *error,
         },
         Request::Run { request } => match start(app, request, source) {
             Ok(job) => Response::json(&job),
-            Err(error) => error,
+            Err(error) => *error,
         },
         Request::ReplaceSelection { action } => match replace_selection(app, &action) {
             Ok(()) => Response::success(),
-            Err(error) => error,
+            Err(error) => *error,
         },
         Request::JobStatus { id } => app
             .state::<ExternalJobs>()
@@ -137,7 +143,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             selection,
         } => match open(app, &mode, text, selection, source) {
             Ok(()) => Response::success(),
-            Err(error) => error,
+            Err(error) => *error,
         },
         Request::Quit => {
             let app = app.clone();

@@ -17,14 +17,14 @@ describe('normalizeAppearance', () => {
   it('keeps valid values and ignores unrelated fields', () => {
     expect(
       normalizeAppearance({
-        theme: 'e-ink',
+        theme: 'eInk',
         contrast: 'normal',
         motion: 'reduce',
         uiScalePercent: 150,
-        submitKey: 'enter',
+        submitKey: 'Enter',
       })
     ).toEqual({
-      theme: 'e-ink',
+      theme: 'eInk',
       contrast: 'normal',
       motion: 'reduce',
       uiScalePercent: 150,
@@ -94,13 +94,13 @@ describe('resolveAppearance', () => {
     expect(
       resolveAppearance(
         {
-          theme: 'e-ink',
+          theme: 'eInk',
           contrast: 'normal',
           motion: 'normal',
           uiScalePercent: 100,
         },
         NO_PREFERENCES
       )
-    ).toMatchObject({ theme: 'e-ink', contrast: 'more', motion: 'reduce' })
+    ).toMatchObject({ theme: 'eInk', contrast: 'more', motion: 'reduce' })
   })
 })

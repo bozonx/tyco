@@ -228,6 +228,7 @@ import ActionTemplateField from './ActionTemplateField.vue'
 import {
   type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,
+  WEBHOOK_AUTH_SECRET_PREFIX,
 } from '@tyco/shared'
 
 /** The settings of the `script` or `webhook` tool of a command */
@@ -324,7 +325,7 @@ async function saveAuth() {
   }
   try {
     // Fresh authorization gets its own identity.
-    const newSecretId = `webhook-auth-${crypto.randomUUID()}`
+    const newSecretId = `${WEBHOOK_AUTH_SECRET_PREFIX}${crypto.randomUUID()}`
     await secretsStore.setSecret(newSecretId, value, [origin])
     update('authSecretId', newSecretId)
     await nextTick()

@@ -18,7 +18,7 @@ describe('chat-llm-selection', () => {
     const options = chatModelOptions(config(), (id) => id === 'deepseek')
 
     expect(options.map((option) => option.id)).toEqual([
-      'local-qwen',
+      'ollama-qwen',
       'deepseek-chat',
     ])
     expect(options[1]).toMatchObject({
@@ -40,7 +40,7 @@ describe('chat-llm-selection', () => {
     const options = chatModelOptions(config(), () => true)
 
     expect(pickChatModel(options, 'deepseek-chat')?.id).toBe('deepseek-chat')
-    expect(pickChatModel(options, 'gone')?.id).toBe('local-qwen')
+    expect(pickChatModel(options, 'gone')?.id).toBe('ollama-qwen')
     expect(pickChatModel([], 'gone')).toBeNull()
   })
 
@@ -58,15 +58,15 @@ describe('chat-llm-selection', () => {
 
     const capped = pickScopedChatModel(options, {
       profileId: 'writer',
-      profileModelId: 'local-qwen',
+      profileModelId: 'ollama-qwen',
       profileMaxOutputTokens: 500,
     })
-    expect(capped?.id).toBe('local-qwen')
+    expect(capped?.id).toBe('ollama-qwen')
     expect(capped?.maxOutputTokens).toBe(500)
 
     const uncapped = pickScopedChatModel(options, {
       profileId: 'writer',
-      profileModelId: 'local-qwen',
+      profileModelId: 'ollama-qwen',
       profileMaxOutputTokens: 4000,
     })
     expect(uncapped?.maxOutputTokens).toBe(2000)
@@ -89,7 +89,7 @@ describe('vision model options', () => {
     llm.models[1].canUseImages = false
     options = chatModelOptions(llm, () => true)
     expect(
-      options.find((model) => model.id === 'local-qwen')?.canUseImages
+      options.find((model) => model.id === 'ollama-qwen')?.canUseImages
     ).toBe(true)
     expect(
       options.find((model) => model.id === 'gemini-flash')?.canUseImages

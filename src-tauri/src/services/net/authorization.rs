@@ -132,7 +132,7 @@ mod tests {
         }});
         let mut secrets = crate::services::secrets::Secrets::new();
         secrets.insert(
-            "google".into(),
+            "llm.google".into(),
             SecretEntry {
                 value: "key".into(),
                 origins: vec!["https://generativelanguage.googleapis.com".into()],

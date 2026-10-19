@@ -51,12 +51,12 @@
             @update:model-value="updateWindowInsertionMethod"
           />
           <FieldInput
-            v-if="userConfig.windowInsertion.linux.method === 'xdotool'"
+            v-if="userConfig.windowInsertion.linux.method !== 'ydotool'"
             v-model="userConfig.windowInsertion.linux.xdotoolPath"
             :placeholder="t('settings.binaryPathPlaceholder')"
           />
           <FieldInput
-            v-if="userConfig.windowInsertion.linux.method === 'ydotool'"
+            v-if="userConfig.windowInsertion.linux.method !== 'xdotool'"
             v-model="userConfig.windowInsertion.linux.ydotoolPath"
             :placeholder="t('settings.binaryPathPlaceholder')"
           />
@@ -93,7 +93,11 @@ import FieldSelect from '../common/FieldSelect.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsSection from './SettingsSection.vue'
 import StorageLocations from './StorageLocations.vue'
-import type { ThemeMode } from '@tyco/shared'
+import {
+  LINUX_INSERTION_METHODS,
+  type LinuxInsertionMethod,
+  type ThemeMode,
+} from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig, effectiveAppLanguage } = useSettingsContext()
@@ -102,11 +106,12 @@ const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
     { id: 'auto', name: t('theme.auto'), icon: 'mdi:theme-light-dark' },
     { id: 'light', name: t('theme.light'), icon: 'mdi:white-balance-sunny' },
     { id: 'dark', name: t('theme.dark'), icon: 'mdi:weather-night' },
-    { id: 'e-ink', name: t('theme.eInk'), icon: 'mdi:book-open-page-variant' },
+    { id: 'eInk', name: t('theme.eInk'), icon: 'mdi:book-open-page-variant' },
   ]
 )
 
 const windowInsertionOptions = computed(() => [
+  { id: 'auto', name: t('settings.windowInsertionAuto') },
   { id: 'xdotool', name: 'xdotool' },
   { id: 'ydotool', name: 'ydotool' },
 ])
@@ -117,13 +122,13 @@ const isAppLanguageManual = computed(
 
 const pasteShortcutOptions = computed(() => {
   return [
-    { id: 'ctrl+v', name: `Ctrl+V — ${t('settings.pasteShortcutRegular')}` },
+    { id: 'Ctrl+V', name: `Ctrl+V — ${t('settings.pasteShortcutRegular')}` },
     {
-      id: 'ctrl+shift+v',
+      id: 'Ctrl+Shift+V',
       name: `Ctrl+Shift+V — ${t('settings.pasteShortcutTerminals')}`,
     },
     {
-      id: 'shift+insert',
+      id: 'Shift+Insert',
       name: `Shift+Insert — ${t('settings.pasteShortcutAnyLayout')}`,
     },
   ]
@@ -147,11 +152,8 @@ const getLanguageName = (language: string) =>
   language
 
 const updateWindowInsertionMethod = (value: string | number) => {
-  if (value !== 'xdotool' && value !== 'ydotool') {
-    return
-  }
-
-  userConfig.value.windowInsertion.linux.method = value
+  if (!LINUX_INSERTION_METHODS.includes(value as LinuxInsertionMethod)) return
+  userConfig.value.windowInsertion.linux.method = value as LinuxInsertionMethod
 }
 
 const updateAppLanguage = (value: number | string | undefined) => {

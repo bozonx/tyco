@@ -33,7 +33,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
+import { findAiTask } from '../../lib/ai-tasks/ai-task-library'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
@@ -52,8 +52,8 @@ const prompt = computed(() =>
     : ''
 )
 const aiTaskOptions = computed(() =>
-  slotList(props.userConfig?.aiTasks).flatMap((task, index) =>
-    task?.rule.trim()
+  (props.userConfig?.aiTasks ?? []).flatMap((task, index) =>
+    task.rule.trim()
       ? [{ id: task.id, name: task.name || `#${index + 1}` }]
       : []
   )
@@ -61,9 +61,10 @@ const aiTaskOptions = computed(() =>
 
 /** The rule is copied: the command keeps it when the task changes */
 function takeTaskRule(value: string | number | undefined) {
-  const task = Object.values(props.userConfig?.aiTasks ?? {}).find(
-    (item) => item.id === value
-  )
-  if (value !== '' && task) emit('update', 'prompt', task.rule)
+  const task =
+    typeof value === 'string'
+      ? findAiTask(props.userConfig?.aiTasks, value)
+      : undefined
+  if (task) emit('update', 'prompt', task.rule)
 }
 </script>

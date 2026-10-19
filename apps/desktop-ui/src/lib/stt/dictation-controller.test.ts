@@ -10,7 +10,9 @@ function setup(stt: Partial<SttConfig> = {}) {
   const config = structuredClone(DEFAULT_USER_CONFIG)
   config.stt = { ...config.stt, ...stt }
   config.language.user = 'es_AR'
-  const secrets: SecretsStatus = { deepgram: { origins: [], available: true } }
+  const secrets: SecretsStatus = {
+    'stt.deepgram': { origins: [], available: true },
+  }
   const deps = {
     getConfig: () => config,
     dictation: {
@@ -68,11 +70,11 @@ describe('dictation controller', () => {
 
   it('rejects missing and unavailable keys before opening the microphone', async () => {
     const { secrets, deps, handlers, controller } = setup()
-    secrets.deepgram.available = false
+    secrets['stt.deepgram']!.available = false
     await expect(controller.startDictation(handlers)).rejects.toThrow(
       'toast.voiceKeyUnavailable'
     )
-    delete secrets.deepgram
+    delete secrets['stt.deepgram']
     await expect(controller.startDictation(handlers)).rejects.toThrow(
       'toast.voiceKeyMissing'
     )
@@ -90,7 +92,7 @@ describe('dictation controller', () => {
 
   it('allows a keyless provider and follows an explicitly selected language', async () => {
     const { deps, handlers, controller } = setup({
-      providerId: 'sherpaOnnx',
+      provider: 'sherpaOnnx',
       providers: {
         deepgram: { modelId: 'nova-3', language: 'tr_TR' },
         sherpaOnnx: { baseUrl: 'ws://speech.lan:6006' },

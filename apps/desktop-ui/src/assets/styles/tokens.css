@@ -205,7 +205,7 @@
 
 /* No shadows, translucency or blur: they turn into dithering noise on e-ink.
    Diff and syntax fall back to text styles instead of color. */
-[data-theme='e-ink'] {
+[data-theme='eInk'] {
   --app-shadow-sm: none;
   --app-shadow-md: none;
   --app-shadow-lg: none;

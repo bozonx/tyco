@@ -1,4 +1,5 @@
 import {
+  llmSecretId,
   type HotkeyId,
   INLINE_CORRECTION_HOTKEY_ID,
   LAUNCHER_PAGE_HOTKEY_PREFIX,
@@ -27,9 +28,9 @@ export function createSettingsOperations(deps: {
     ) {
       return
     }
-    if (deps.hasSecret(id)) {
+    if (deps.hasSecret(llmSecretId(id))) {
       try {
-        await deps.removeSecret(id)
+        await deps.removeSecret(llmSecretId(id))
       } catch (error) {
         deps.notifySecretError(error)
       }
@@ -95,10 +96,9 @@ export function createSettingsOperations(deps: {
       config.hotkeys[id as HotkeyId] = shortcut
   }
 
-  /** No path stands for the default vault location */
+  /** An empty path stands for the default vault location */
   const updateVaultPath = (path: string | undefined) => {
-    const config = deps.getConfig()
-    config.aiVault = path ? { path } : {}
+    deps.getConfig().aiVault = { path: path ?? '' }
   }
 
   return {

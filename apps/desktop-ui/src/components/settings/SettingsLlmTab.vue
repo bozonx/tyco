@@ -152,7 +152,12 @@ import IconButton from '../common/IconButton.vue'
 import LlmConnectionCard from './LlmConnectionCard.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
-import { LLM_TASKS, type LlmProvider, type UserConfig } from '@tyco/shared'
+import {
+  LLM_TASKS,
+  type LlmProvider,
+  type UserConfig,
+  llmSecretId,
+} from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig, operations } = useSettingsContext()
@@ -221,8 +226,8 @@ function providerName(id: string) {
   const provider = llm.value.providers.find((item) => item.id === id)
   return provider ? providerLabel(provider) : id
 }
-function hasKey(id: string) {
-  return Object.hasOwn(secretsStore.secrets, id)
+function hasKey(providerId: string) {
+  return Object.hasOwn(secretsStore.secrets, llmSecretId(providerId))
 }
 onMounted(() => {
   secretsStore.refreshSecrets().catch((error: unknown) => {

@@ -84,7 +84,7 @@ describe('Editor actions shortcut', () => {
   })
 
   it('keeps Ctrl+Enter for actions whatever sends the text', () => {
-    useDesktopStore().desktopState.userConfig.editor.submitKey = 'ctrlEnter'
+    useDesktopStore().desktopState.userConfig.editor.submitKey = 'Ctrl+Enter'
     const open = vi.spyOn(useMenuModalsStore(), 'nextModal')
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },

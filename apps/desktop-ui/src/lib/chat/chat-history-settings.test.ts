@@ -11,12 +11,18 @@ describe('isChatHistoryEnabled', () => {
     expect(isChatHistoryEnabled(DEFAULT_USER_CONFIG)).toBe(true)
     expect(
       isChatHistoryEnabled({
-        chatHistory: { ...DEFAULT_USER_CONFIG.chatHistory, isEnabled: true },
+        chat: {
+          ...DEFAULT_USER_CONFIG.chat,
+          history: { ...DEFAULT_USER_CONFIG.chat.history, storage: 'disk' },
+        },
       })
     ).toBe(true)
     expect(
       isChatHistoryEnabled({
-        chatHistory: { ...DEFAULT_USER_CONFIG.chatHistory, isEnabled: false },
+        chat: {
+          ...DEFAULT_USER_CONFIG.chat,
+          history: { ...DEFAULT_USER_CONFIG.chat.history, storage: 'off' },
+        },
       })
     ).toBe(false)
   })

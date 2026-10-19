@@ -19,8 +19,7 @@ impl EditorHistoryStorageMode {
     /// The saved storage; `disk`, the default, when it is missing.
     pub fn from_config(user_config: &Value) -> Self {
         match user_config
-            .get("editorHistory")
-            .and_then(|value| value.get("storage"))
+            .pointer("/editor/history/storage")
             .and_then(Value::as_str)
         {
             Some("off") => Self::Off,
@@ -48,7 +47,7 @@ pub struct EditorHistoryPolicy {
 impl EditorHistoryPolicy {
     pub fn from_config(user_config: &Value) -> Self {
         let flag = |key: &str| {
-            user_config["editorHistory"]
+            user_config["editor"]["history"]
                 .get(key)
                 .and_then(Value::as_bool)
                 .unwrap_or(false)
@@ -62,7 +61,7 @@ impl EditorHistoryPolicy {
                 0
             } else {
                 history_limit(
-                    &user_config["editorHistory"],
+                    &user_config["editor"]["history"],
                     "maxItems",
                     DEFAULT_EDITOR_HISTORY_LIMIT,
                 )
@@ -70,8 +69,7 @@ impl EditorHistoryPolicy {
             is_memory_only: storage == EditorHistoryStorageMode::Session,
             retention_days: if on_disk {
                 user_config
-                    .get("editorHistory")
-                    .and_then(|value| value.get("retentionDays"))
+                    .pointer("/editor/history/retentionDays")
                     .and_then(Value::as_u64)
                     .unwrap_or(0)
             } else {
@@ -141,7 +139,7 @@ mod tests {
 
     #[test]
     fn policy_reads_the_settings() {
-        let config = json!({"editorHistory":{"storage":"disk","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}});
+        let config = json!({"editor":{"history":{"storage":"disk","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}}});
 
         assert_eq!(
             EditorHistoryPolicy::from_config(&config),
@@ -154,7 +152,7 @@ mod tests {
         );
         assert_eq!(
             EditorHistoryPolicy::from_config(
-                &json!({"editorHistory":{"storage":"session","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}})
+                &json!({"editor":{"history":{"storage":"session","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}}})
             ),
             EditorHistoryPolicy {
                 max_entries: 20,
@@ -164,7 +162,7 @@ mod tests {
         );
         assert_eq!(
             EditorHistoryPolicy::from_config(
-                &json!({"editorHistory":{"storage":"off","maxItems":20}})
+                &json!({"editor":{"history":{"storage":"off","maxItems":20}}})
             ),
             EditorHistoryPolicy {
                 max_entries: 0,

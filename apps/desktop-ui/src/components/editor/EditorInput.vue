@@ -120,7 +120,7 @@ const commands: EditorMenuCommands = {
   copy: () => withClipboard(() => copySelection(view!)),
   paste: () =>
     withClipboard(() =>
-      pasteFromClipboard(view!, desktopStore.userConfig.markdown)
+      pasteFromClipboard(view!, desktopStore.userConfig.markdown.format)
     ),
   pastePlain: () => withClipboard(() => pastePlainFromClipboard(view!)),
   selectAll: () => {
@@ -204,7 +204,7 @@ onMounted(() => {
       ariaLabel: t('editor.inputLabel'),
       t,
       paste: true,
-      getMarkdownSettings: () => desktopStore.userConfig.markdown,
+      getMarkdownSettings: () => desktopStore.userConfig.markdown.format,
       onPastePlain: () => void commands.pastePlain(),
       markdownPreview: !showMarkup.value,
       onToggleMarkup: toggleShowMarkup,

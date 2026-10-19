@@ -10,23 +10,25 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsEditorTab.vue', () => {
-  const createConfig = (): Pick<UserConfig, 'markdown' | 'markdownClean'> => ({
+  const createConfig = (): Pick<UserConfig, 'markdown'> => ({
     markdown: {
-      bullet: '-',
-      emphasis: '*',
-      strong: '*',
-      headingStyle: 'atx',
-      incrementListMarker: true,
-    },
-    markdownClean: {
-      bullet: '-',
-      codeBlockIndent: 'none',
-      blockquoteIndent: 'none',
-      keepInlineCode: false,
-      linkFormat: 'text',
-      imageFormat: 'alt',
-      keepThematicBreaks: true,
-      keepTaskCheckboxes: true,
+      format: {
+        bullet: '-',
+        emphasis: '*',
+        strong: '*',
+        headingStyle: 'atx',
+        isListMarkerIncremented: true,
+      },
+      strip: {
+        bullet: '-',
+        codeBlockIndent: 'none',
+        blockquoteIndent: 'none',
+        hasInlineCode: false,
+        linkFormat: 'text',
+        imageFormat: 'alt',
+        hasThematicBreaks: true,
+        hasTaskCheckboxes: true,
+      },
     },
   })
 
@@ -135,11 +137,9 @@ describe('SettingsEditorTab.vue', () => {
       },
     })
 
-    expect(userConfig.markdown).toBeDefined()
-    expect(userConfig.markdown.bullet).toBe('-')
-    expect(userConfig.markdownClean).toBeDefined()
-    expect(userConfig.markdownClean.bullet).toBe('-')
-    expect(userConfig.markdownClean.codeBlockIndent).toBe('none')
-    expect(userConfig.markdownClean.keepThematicBreaks).toBe(true)
+    expect(userConfig.markdown.format.bullet).toBe('-')
+    expect(userConfig.markdown.strip.bullet).toBe('-')
+    expect(userConfig.markdown.strip.codeBlockIndent).toBe('none')
+    expect(userConfig.markdown.strip.hasThematicBreaks).toBe(true)
   })
 })

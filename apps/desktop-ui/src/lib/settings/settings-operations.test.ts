@@ -63,7 +63,7 @@ describe('settings operations', () => {
     const error = new Error('Secret removal failed')
     f.deps.removeSecret.mockRejectedValue(error)
     await f.model.finishProviderRemoval('provider')
-    expect(f.deps.removeSecret).toHaveBeenCalledWith('provider')
+    expect(f.deps.removeSecret).toHaveBeenCalledWith('llm.provider')
     expect(f.deps.notifySecretError).toHaveBeenCalledWith(error)
     f.deps.hasSecret.mockReturnValue(false)
     await f.model.finishProviderRemoval('missing')
@@ -130,7 +130,7 @@ describe('settings operations', () => {
     f.model.updateVaultPath('/vault')
     expect(f.config.aiVault).toEqual({ path: '/vault' })
     f.model.updateVaultPath(undefined)
-    expect(f.config.aiVault).toEqual({})
+    expect(f.config.aiVault).toEqual({ path: '' })
   })
 
   it('applies plugin presets and preserves unrelated settings', () => {

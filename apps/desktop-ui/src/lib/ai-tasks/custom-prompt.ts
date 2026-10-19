@@ -1,8 +1,10 @@
+import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
+
 import {
-  SHORTCUT_SLOT_KEYS,
-  type AiTaskConfig,
-  type ShortcutSlots,
-} from '@tyco/shared'
+  cloneLibrary,
+  placeNewTask,
+  type AiTaskLibrary,
+} from './ai-task-library'
 
 export type { AiTaskConfig } from '@tyco/shared'
 
@@ -31,25 +33,26 @@ export function taskNameFromPrompt(prompt: string): string {
 }
 
 /**
- * The AI tasks with `prompt` saved in the first free slot, or null when all
- * slots are taken. A request already saved as a task is not added twice: the
- * tasks come back unchanged.
+ * The task library with `prompt` saved as a task in the first free slot, or
+ * null when all slots are taken. A request already saved as a task is not added
+ * twice: the library comes back unchanged.
  */
 export function addTaskFromPrompt(
-  tasks: ShortcutSlots<AiTaskConfig>,
+  library: AiTaskLibrary,
   prompt: string
-): ShortcutSlots<AiTaskConfig> | null {
+): AiTaskLibrary | null {
   const rule = prompt.trim()
 
   if (!rule) return null
-  const saved = Object.values(tasks)
-  if (saved.some((task) => task.rule.trim() === rule)) return { ...tasks }
+  if (library.aiTasks.some((task) => task.rule.trim() === rule))
+    return cloneLibrary(library)
 
-  const free = SHORTCUT_SLOT_KEYS.find((key) => !tasks[key]?.name)
-  if (!free) return null
+  const index = SHORTCUT_SLOT_KEYS.findIndex((key) => !library.aiTaskSlots[key])
+  if (index < 0) return null
 
-  return {
-    ...tasks,
-    [free]: { id: newAiTaskId(saved), name: taskNameFromPrompt(rule), rule },
-  }
+  return placeNewTask(library, index, {
+    id: newAiTaskId(library.aiTasks),
+    name: taskNameFromPrompt(rule),
+    rule,
+  })
 }

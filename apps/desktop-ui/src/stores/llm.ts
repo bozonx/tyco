@@ -1,4 +1,4 @@
-import { APP_CONFIG } from '@tyco/shared'
+import { APP_CONFIG, llmSecretId } from '@tyco/shared'
 import { getChatImage } from '../lib/chat/chat-image-storage'
 import { translate } from '../lib/i18n'
 import { clientLogger } from '../lib/logger'
@@ -25,6 +25,7 @@ export const useLlmStore = defineStore('llm', () => {
     transport: createTauriTransport(tauriNetIpc),
     keys: createSecretKeyProvider(
       () => secretsStore.client.status(),
+      llmSecretId,
       (provider) => isKeylessProvider(getConfig(), provider)
     ),
   })

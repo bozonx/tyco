@@ -126,7 +126,7 @@ export function commandInvocation(command: CommandConfig): Invocation {
     commandId: command.id,
     isLlmArgumentParsingEnabled: command.isLlmArgumentParsingEnabled,
     logOutput: command.isOutputLogged,
-    launcherSink: command.launcherAfterRun,
+    outputAction: command.outputAction,
   }
 }
 

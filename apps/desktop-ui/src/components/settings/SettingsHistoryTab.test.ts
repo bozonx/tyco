@@ -1,4 +1,8 @@
-import type { UserConfig } from '@tyco/shared'
+import type {
+  ChatHistoryConfig,
+  EditorHistoryConfig,
+  UserConfig,
+} from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -29,20 +33,28 @@ describe('SettingsHistoryTab.vue', () => {
     vi.clearAllMocks()
   })
 
-  const createConfig = (
-    overrides = {}
-  ): Pick<UserConfig, 'editorHistory' | 'chat' | 'chatHistory'> => ({
-    editorHistory: {
-      storage: 'disk',
-      maxItems: 100,
-      retentionDays: 30,
-      isSecretSanitizingEnabled: true,
+  const createConfig = ({
+    editorHistory = {},
+    chatHistory = {},
+  }: {
+    editorHistory?: Partial<EditorHistoryConfig>
+    chatHistory?: Partial<ChatHistoryConfig>
+  } = {}): Pick<UserConfig, 'editor' | 'chat'> => ({
+    editor: {
+      submitKey: 'Enter',
+      diffViewMode: 'unified',
+      history: {
+        storage: 'disk',
+        maxItems: 100,
+        retentionDays: 30,
+        isSecretSanitizingEnabled: true,
+        ...editorHistory,
+      },
     },
-
-    chat: { imageQuality: 'balanced' },
-    chatHistory: { isEnabled: true, retentionDays: 0 },
-
-    ...overrides,
+    chat: {
+      imageQuality: 'balanced',
+      history: { storage: 'disk', retentionDays: 0, ...chatHistory },
+    },
   })
 
   const mountTab = (userConfig = createConfig()) => {
@@ -229,11 +241,11 @@ describe('SettingsHistoryTab.vue', () => {
 
     const chatSection = wrapper.findAll('.section-stub')[1]
     await chatSection.find('.field-checkbox-stub').setValue(false)
-    expect(config.chatHistory.isEnabled).toBe(true)
+    expect(config.chat.history.storage).toBe('disk')
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
 
     await wrapper.find('.cancel-btn').trigger('click')
-    expect(config.chatHistory.isEnabled).toBe(true)
+    expect(config.chat.history.storage).toBe('disk')
     expect(
       (chatSection.find('.field-checkbox-stub').element as HTMLInputElement)
         .checked
@@ -241,7 +253,7 @@ describe('SettingsHistoryTab.vue', () => {
 
     await chatSection.find('.field-checkbox-stub').setValue(false)
     await wrapper.find('.confirm-btn').trigger('click')
-    expect(config.chatHistory.isEnabled).toBe(false)
+    expect(config.chat.history.storage).toBe('off')
     expect(
       wrapper
         .findAll('.section-stub')[1]
@@ -251,13 +263,13 @@ describe('SettingsHistoryTab.vue', () => {
   })
 
   it('turns the chat history on without asking', async () => {
-    const config = createConfig({ chat: { isHistoryEnabled: false } })
+    const config = createConfig({ chatHistory: { storage: 'off' } })
     const wrapper = mountTab(config)
 
     const chatSection = wrapper.findAll('.section-stub')[1]
     await chatSection.find('.field-checkbox-stub').setValue(true)
 
-    expect(config.chatHistory.isEnabled).toBe(true)
+    expect(config.chat.history.storage).toBe('disk')
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 })

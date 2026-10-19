@@ -44,10 +44,10 @@ describe('Editor.vue toolbar', () => {
     expect(dropdowns[1].attributes('data-label')).toBe('editor.format')
 
     // Check top right buttons: Ask AI, AI task, translation and insertIntoWindow
-    const aiTaskBtn = wrapper.find('button[title="action.aiTask"]')
+    const aiTaskBtn = wrapper.find('button[title="action.aiTaskMenu"]')
     expect(aiTaskBtn.exists()).toBe(true)
 
-    const translateBtn = wrapper.find('button[title="action.translation"]')
+    const translateBtn = wrapper.find('button[title="action.translationMenu"]')
     expect(translateBtn.exists()).toBe(true)
 
     const insertBtn = wrapper.find('button[title="action.insertIntoWindow"]')
@@ -58,8 +58,8 @@ describe('Editor.vue toolbar', () => {
     const titles = rightButtons.map((btn) => btn.attributes('title'))
     expect(titles).toEqual([
       'editor.askAi',
-      'action.aiTask',
-      'action.translation',
+      'action.aiTaskMenu',
+      'action.translationMenu',
       'action.insertIntoWindow',
     ])
   })
@@ -153,8 +153,8 @@ describe('Editor.vue toolbar', () => {
     ).toEqual([
       'tool.right',
       'editor.askAi',
-      'action.aiTask',
-      'action.translation',
+      'action.aiTaskMenu',
+      'action.translationMenu',
       'action.insertIntoWindow',
     ])
   })

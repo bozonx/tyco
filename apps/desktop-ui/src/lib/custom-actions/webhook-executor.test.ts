@@ -98,13 +98,13 @@ describe('buildWebhookRequest', () => {
         id: 'ABC',
         headers: { 'X-Token': 't', ' ': 'skip' },
         isAuthEnabled: true,
-        authSecretId: 'webhook-auth-abc',
+        authSecretId: 'webhook.auth.abc',
       }),
       'a'
     )
     expect(init.headers['x-token']).toBe('t')
     expect(init.headers[' ']).toBeUndefined()
-    expect(init.headers.authorization).toBe('tyco-secret:webhook-auth-abc')
+    expect(init.headers.authorization).toBe('tyco-secret:webhook.auth.abc')
   })
 })
 

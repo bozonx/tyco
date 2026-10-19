@@ -29,12 +29,7 @@ describe('built-in voice commands', () => {
       new Set(['core.askInChat', 'core.translate'])
     )
     expect(
-      commands.every(
-        (item) =>
-          item.isEnabled &&
-          item.isVoiceEnabled &&
-          item.voiceConfirmation === 'always'
-      )
+      commands.every((item) => item.isEnabled && item.isVoiceEnabled)
     ).toBe(true)
     expect(new Set(commands.map((item) => item.id)).size).toBe(commands.length)
   })

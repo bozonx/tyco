@@ -25,7 +25,7 @@ describe('SettingsVoiceTab.vue', () => {
     return reactive({
       ...structuredClone(DEFAULT_USER_CONFIG),
       stt: {
-        providerId: 'sherpaOnnx',
+        provider: 'sherpaOnnx',
         isLlmFormattingEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'user' },
@@ -96,7 +96,7 @@ describe('SettingsVoiceTab.vue', () => {
 
   it('renders API key and model fields when provider is deepgram', async () => {
     const config = createConfig()
-    config.stt.providerId = 'deepgram'
+    config.stt.provider = 'deepgram'
     const wrapper = mountTab(config)
 
     const labels = wrapper
@@ -130,7 +130,7 @@ describe('SettingsVoiceTab.vue', () => {
 
     const config = createConfig({
       stt: {
-        providerId: 'deepgram',
+        provider: 'deepgram',
         isLlmFormattingEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },

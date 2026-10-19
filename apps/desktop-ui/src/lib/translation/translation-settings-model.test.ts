@@ -43,18 +43,16 @@ describe('translation glossary', () => {
 
 describe('translation settings model', () => {
   it('normalizes edits and derives secret status, rules and glossary', () => {
-    const { model, state, deps } = setup()
+    const { model, deps } = setup()
     model.keyDraft.value = 'draft'
     model.updateProvider('google')
     expect(model.keyDraft.value).toBe('')
-    expect(model.providerSecretId.value).toBe('google-translate')
+    expect(model.providerSecretId.value).toBe('translation.google')
     expect(model.hasProviderKey.value).toBe(true)
-    expect(deps.hasSecret).toHaveBeenCalledWith('google-translate')
+    expect(deps.hasSecret).toHaveBeenCalledWith('translation.google')
     model.updateQualityGate('off')
     expect(model.usesTranslationRules.value).toBe(false)
-    model.updateCorrectionPrompt('Check terminology')
     model.updateGlossary('!TyCo')
-    expect(state.config.qualityGatePrompt).toBe('Check terminology')
     expect(model.glossaryText.value).toBe('!TyCo')
     model.updateProvider('llm')
     expect(model.usesTranslationRules.value).toBe(true)
@@ -64,14 +62,17 @@ describe('translation settings model', () => {
     const { model, state, deps } = setup()
     model.keyDraft.value = ' free-key:fx '
     await model.saveProviderKey()
-    expect(deps.setSecret).toHaveBeenCalledWith('deepl', 'free-key:fx')
-    expect(state.config.deeplEndpoint).toBe('free')
+    expect(deps.setSecret).toHaveBeenCalledWith(
+      'translation.deepl',
+      'free-key:fx'
+    )
+    expect(state.config.providers.deepl.endpoint).toBe('free')
     expect(model.keyDraft.value).toBe('')
     model.keyDraft.value = 'pro-key'
     await model.saveProviderKey()
-    expect(state.config.deeplEndpoint).toBe('pro')
+    expect(state.config.providers.deepl.endpoint).toBe('pro')
     await model.removeProviderKey()
-    expect(deps.removeSecret).toHaveBeenCalledWith('deepl')
+    expect(deps.removeSecret).toHaveBeenCalledWith('translation.deepl')
   })
 
   it('retains failed drafts and reports save and removal failures', async () => {

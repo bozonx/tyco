@@ -7,7 +7,7 @@ import {
   type TranscriptPart,
   type Transport,
 } from '@bozonx/ai-kit'
-import type { SttProvider } from '@tyco/shared'
+import { sttSecretId, type SttProvider } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 import { createDeepgramProvider } from './deepgram-provider'
@@ -152,5 +152,5 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
 }
 
 export function secretId(model: SttModel): string {
-  return model.provider
+  return sttSecretId(model.provider)
 }

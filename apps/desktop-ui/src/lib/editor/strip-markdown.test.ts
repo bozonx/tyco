@@ -37,20 +37,20 @@ describe('stripMarkdown', () => {
 
   it('supports keeping or removing task checkboxes', () => {
     const md = '- [x] done\n- [ ] todo'
-    expect(stripMarkdown(md, { keepTaskCheckboxes: true })).toBe(
+    expect(stripMarkdown(md, { hasTaskCheckboxes: true })).toBe(
       '- [x] done\n- [ ] todo'
     )
-    expect(stripMarkdown(md, { keepTaskCheckboxes: false })).toBe(
+    expect(stripMarkdown(md, { hasTaskCheckboxes: false })).toBe(
       '- done\n- todo'
     )
   })
 
   it('supports keeping inline code markup', () => {
     const md = 'Run `npm test` here.'
-    expect(stripMarkdown(md, { keepInlineCode: true })).toBe(
+    expect(stripMarkdown(md, { hasInlineCode: true })).toBe(
       'Run `npm test` here.'
     )
-    expect(stripMarkdown(md, { keepInlineCode: false })).toBe(
+    expect(stripMarkdown(md, { hasInlineCode: false })).toBe(
       'Run npm test here.'
     )
   })
@@ -117,10 +117,10 @@ describe('stripMarkdown', () => {
 
   it('supports keeping or stripping horizontal rules', () => {
     const md = 'First section\n\n---\n\nSecond section'
-    expect(stripMarkdown(md, { keepThematicBreaks: false })).toBe(
+    expect(stripMarkdown(md, { hasThematicBreaks: false })).toBe(
       'First section\n\nSecond section'
     )
-    expect(stripMarkdown(md, { keepThematicBreaks: true })).toBe(
+    expect(stripMarkdown(md, { hasThematicBreaks: true })).toBe(
       'First section\n\n---\n\nSecond section'
     )
   })

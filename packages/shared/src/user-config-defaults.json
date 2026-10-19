@@ -6,7 +6,16 @@
     "uiScalePercent": 100
   },
   "language": { "ui": "auto", "user": "auto" },
-  "editor": { "submitKey": "enter", "diffViewMode": "unified" },
+  "editor": {
+    "submitKey": "Enter",
+    "diffViewMode": "unified",
+    "history": {
+      "storage": "disk",
+      "maxItems": 1000,
+      "retentionDays": 30,
+      "isSecretSanitizingEnabled": true
+    }
+  },
   "quickWindow": {
     "isHiddenOnBlur": true,
     "isCorrectionPrefetchEnabled": false
@@ -26,14 +35,13 @@
   },
   "externalAccess": { "canAccessSelection": false },
   "windowInsertion": {
-    "pasteShortcut": "ctrl+v",
-    "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+    "pasteShortcut": "Ctrl+V",
+    "linux": { "method": "auto", "xdotoolPath": "", "ydotoolPath": "" }
   },
   "translation": {
     "provider": "llm",
+    "providers": { "deepl": { "endpoint": "free" } },
     "qualityGate": "off",
-    "qualityGatePrompt": "",
-    "deeplEndpoint": "free",
     "glossary": [],
     "targetLanguages": { "q": "en_US" },
     "viewMode": "split"
@@ -41,9 +49,9 @@
   "mainActions": {
     "q": { "type": "standard", "actionId": "insertIntoWindow" },
     "w": { "type": "standard", "actionId": "copyToClipboard" },
-    "e": { "type": "standard", "actionId": "aiTask" },
+    "e": { "type": "standard", "actionId": "aiTaskMenu" },
     "r": { "type": "standard", "actionId": "correction" },
-    "t": { "type": "standard", "actionId": "translation" },
+    "t": { "type": "standard", "actionId": "translationMenu" },
     "a": { "type": "standard", "actionId": "askInChat" }
   },
   "launcherPages": [
@@ -56,7 +64,7 @@
       { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
       { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
       {
-        "id": "local",
+        "id": "ollama",
         "type": "openaiCompatible",
         "name": "Ollama",
         "baseUrl": "http://localhost:11434/v1"
@@ -64,8 +72,8 @@
     ],
     "models": [
       {
-        "id": "local-qwen",
-        "providerId": "local",
+        "id": "ollama-qwen",
+        "providerId": "ollama",
         "providerModelId": "qwen2.5:7b",
         "name": "Qwen 2.5 7B",
         "temperature": 0.2,
@@ -100,54 +108,54 @@
       }
     ],
     "taskModelChains": {
-      "translation": ["local-qwen"],
-      "voiceCorrection": ["local-qwen"],
-      "correction": ["local-qwen"],
-      "aiTask": ["local-qwen"]
+      "translation": ["ollama-qwen"],
+      "voiceCorrection": ["ollama-qwen"],
+      "correction": ["ollama-qwen"],
+      "aiTask": ["ollama-qwen"]
     }
   },
   "aiRules": {
     "chat": "",
     "correction": "",
     "translation": "",
+    "translationQualityGate": "",
     "voiceCorrection": ""
   },
-  "aiTasks": {
-    "q": {
+  "aiTasks": [
+    {
       "id": "deepEdit",
-      "name": "deepEdit",
+      "name": "Deep edit",
       "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
     }
-  },
-  "aiVault": {},
+  ],
+  "aiTaskSlots": { "q": "deepEdit" },
+  "aiVault": { "path": "" },
   "markdown": {
-    "bullet": "-",
-    "emphasis": "*",
-    "strong": "*",
-    "headingStyle": "atx",
-    "incrementListMarker": true
-  },
-  "markdownClean": {
-    "bullet": "-",
-    "codeBlockIndent": "none",
-    "blockquoteIndent": "none",
-    "keepInlineCode": false,
-    "linkFormat": "text",
-    "imageFormat": "alt",
-    "keepThematicBreaks": true,
-    "keepTaskCheckboxes": true
+    "format": {
+      "bullet": "-",
+      "emphasis": "*",
+      "strong": "*",
+      "headingStyle": "atx",
+      "isListMarkerIncremented": true
+    },
+    "strip": {
+      "bullet": "-",
+      "codeBlockIndent": "none",
+      "blockquoteIndent": "none",
+      "hasInlineCode": false,
+      "linkFormat": "text",
+      "imageFormat": "alt",
+      "hasThematicBreaks": true,
+      "hasTaskCheckboxes": true
+    }
   },
   "plugins": {},
-  "editorHistory": {
-    "storage": "disk",
-    "maxItems": 1000,
-    "retentionDays": 30,
-    "isSecretSanitizingEnabled": true
+  "chat": {
+    "imageQuality": "balanced",
+    "history": { "storage": "disk", "retentionDays": 0 }
   },
-  "chatHistory": { "isEnabled": true, "retentionDays": 0 },
-  "chat": { "imageQuality": "balanced" },
   "stt": {
-    "providerId": "deepgram",
+    "provider": "deepgram",
     "isLlmFormattingEnabled": false,
     "providers": {
       "deepgram": { "modelId": "nova-3", "language": "auto" },

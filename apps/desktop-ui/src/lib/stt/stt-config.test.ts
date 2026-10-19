@@ -14,7 +14,7 @@ describe('activeSttModel', () => {
       modelId: 'nova-3-general',
       language: 'de_DE',
     })
-    config.providerId = 'sherpaOnnx'
+    config.provider = 'sherpaOnnx'
     expect(activeSttModel(config)).toEqual({
       provider: 'sherpaOnnx',
       modelId: 'sherpa-onnx',

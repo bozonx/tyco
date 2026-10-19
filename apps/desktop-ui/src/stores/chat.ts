@@ -1,3 +1,4 @@
+import { llmSecretId } from '@tyco/shared'
 import { defineStore, getActivePinia, type Pinia } from 'pinia'
 import { nextTick, onScopeDispose, watch } from 'vue'
 
@@ -78,7 +79,8 @@ function createChatStoreSetup(profileId: string | null) {
       getAppConfig: () => desktopStore.appConfig,
       getSessionState: () => desktopStore.sessionState,
       saveSessionState: desktopStore.patchSessionState,
-      hasSecret: (id) => isSecretUsable(secretsStore.secrets, id),
+      hasSecret: (providerId) =>
+        isSecretUsable(secretsStore.secrets, llmSecretId(providerId)),
       externalSelection: () => desktopStore.desktopState.selectedText,
       windowLabel: getDesktopWindowLabel,
       openMainChat: (attachment) =>

@@ -80,12 +80,12 @@ test('applies a config changed by another window', async ({
 }) => {
   await page.goto('/')
   await expect(page.getByRole('textbox', { name: 'Text editor' })).toBeVisible()
-  desktop.userConfig.appearance.theme = 'e-ink'
+  desktop.userConfig.appearance.theme = 'eInk'
 
   await desktop.emit(DESKTOP_EVENTS.STATE_CHANGED, {
     ...desktop.snapshot(),
     revision: 100,
   })
 
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'e-ink')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'eInk')
 })

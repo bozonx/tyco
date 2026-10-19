@@ -62,10 +62,9 @@ test.describe('command launcher', () => {
         isEnabled: true,
         isVoiceEnabled: false,
         isLlmArgumentParsingEnabled: false,
-        voiceConfirmation: 'always',
-        launcherAfterRun: { action: 'showMenu' },
+        outputAction: 'showMenu',
         isOutputLogged: false,
-        availableIn: { chat: false, external: false },
+        isAvailableExternally: false,
       },
     ]
     desktop.userConfig.launcherPages[0]!.slots.q = 'browser-command'

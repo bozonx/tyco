@@ -71,7 +71,7 @@ function transformTool(
   ) => Promise<string | TransformOutput> | ToolResult
 ): ToolDefinition {
   return {
-    defaultAfterRun: 'insertIntoWindow',
+    defaultOutputAction: 'insertIntoWindow',
     ...tool,
     inputSchema: TEXT_INPUT_SCHEMA,
     run: async (call) => {

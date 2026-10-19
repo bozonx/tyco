@@ -16,10 +16,10 @@ pub(super) fn ensure_selection_access_allowed(config: &Value) -> ApiResult<()> {
     if is_selection_access_allowed(config) {
         Ok(())
     } else {
-        Err(Response::coded_error(
+        Err(Box::new(Response::coded_error(
             ErrorCode::AccessDenied,
             "External selection access is disabled",
-        ))
+        )))
     }
 }
 
@@ -31,7 +31,7 @@ pub(super) fn lookup(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<
     } else {
         commands::find_by_id(&config, catalog.as_ref(), target)
     }
-    .map_err(lookup_error)
+    .map_err(|error| Box::new(lookup_error(error)))
 }
 
 /// The command `id` as the user config holds it.
@@ -99,31 +99,31 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
         || (request.selection && (request.text.is_some() || request.input.is_some()))
         || (request.replace && !request.selection)
     {
-        return Err(Response::coded_error(
+        return Err(Box::new(Response::coded_error(
             ErrorCode::InvalidInput,
             "Choose one input source; replacement requires selection",
-        ));
+        )));
     }
     if request.selection && (!command.can_take_text || command.has_structured_input) {
-        return Err(Response::coded_error(
+        return Err(Box::new(Response::coded_error(
             ErrorCode::InvalidInput,
             "This command does not accept selection text",
-        ));
+        )));
     }
     if !command.can_take_text
         && !command.has_structured_input
         && (request.text.is_some() || request.input.is_some())
     {
-        return Err(Response::coded_error(
+        return Err(Box::new(Response::coded_error(
             ErrorCode::InvalidInput,
             "This command does not accept input",
-        ));
+        )));
     }
     if command.has_structured_input && !command.can_take_text && request.input.is_none() {
-        return Err(Response::coded_error(
+        return Err(Box::new(Response::coded_error(
             ErrorCode::InputRequired,
             "This command requires structured input",
-        ));
+        )));
     }
     if command.can_take_text
         && request.text.is_none()
@@ -131,10 +131,10 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
         && !request.selection
         && !request.interactive
     {
-        return Err(Response::coded_error(
+        return Err(Box::new(Response::coded_error(
             ErrorCode::InputRequired,
             "Provide text, structured input, or an explicit selection",
-        ));
+        )));
     }
     Ok(())
 }

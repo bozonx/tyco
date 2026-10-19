@@ -24,7 +24,6 @@ import {
 } from './command-external'
 import {
   createCommand,
-  normalizeCommand,
   normalizeCommands,
   normalizeLauncherCommands,
   scriptToolConfigOf,
@@ -51,7 +50,10 @@ const withConfig = (
   toolConfig: { ...command.toolConfig, ...toolConfig },
 })
 
-describe('normalizeCommand', () => {
+/** One command read by the shared normalizer, or undefined when it is dropped */
+const normalizeCommand = (value: unknown) => normalizeCommands([value])[0]
+
+describe('normalizeCommands for one command', () => {
   it('fills the defaults of a sparse command', () => {
     expect(
       normalizeCommand({
@@ -67,44 +69,31 @@ describe('normalizeCommand', () => {
       name: '',
       phrases: [],
       toolId: 'script',
-      toolConfig: { command: 'echo', workingDirectory: '' },
+      toolConfig: { command: 'echo' },
       isLlmArgumentParsingEnabled: false,
       isVoiceEnabled: false,
-      voiceConfirmation: 'always',
-      launcherAfterRun: { action: 'none' },
+      outputAction: 'none',
       isOutputLogged: false,
-      availableIn: { external: false, chat: false },
+      isAvailableExternally: false,
       isEnabled: true,
     })
   })
 
-  it('ignores removed output settings', () => {
-    const command = normalizeCommand({
-      id: 'command',
-      toolId: 'script',
-      afterRun: 'copy',
-    })!
-    expect(command.launcherAfterRun).toEqual({ action: 'none' })
-    expect(command).not.toHaveProperty('afterRun')
-  })
-
-  it('keeps the action and ignores unsupported settings', () => {
+  it('keeps a known output action and repairs an unknown one', () => {
     expect(
       normalizeCommand({
         id: 'new',
         toolId: 'script',
-        afterRun: 'copy',
-        launcherAfterRun: { action: 'insertIntoWindow', fallback: 'copy' },
-      })?.launcherAfterRun
-    ).toEqual({ action: 'insertIntoWindow' })
+        outputAction: 'insertIntoWindow',
+      })?.outputAction
+    ).toBe('insertIntoWindow')
     expect(
       normalizeCommand({
         id: 'partial',
         toolId: 'script',
-        afterRun: 'copy',
-        launcherAfterRun: { action: 'invalid' },
-      })?.launcherAfterRun
-    ).toEqual({ action: 'none' })
+        outputAction: 'copy',
+      })?.outputAction
+    ).toBe('none')
   })
 
   it('normalizes the settings of a webhook', () => {
@@ -122,8 +111,6 @@ describe('normalizeCommand', () => {
       url: 'https://x.test',
       method: 'POST',
       headers: { 'x-a': '1' },
-      payloadTemplate: '',
-      isAuthEnabled: false,
     })
   })
 
@@ -136,9 +123,9 @@ describe('normalizeCommand', () => {
   })
 
   it('drops a command without an id or a tool', () => {
-    expect(normalizeCommand({ id: ' ', toolId: 'script' })).toBeNull()
-    expect(normalizeCommand({ id: 'a' })).toBeNull()
-    expect(normalizeCommand('script')).toBeNull()
+    expect(normalizeCommand({ id: ' ', toolId: 'script' })).toBeUndefined()
+    expect(normalizeCommand({ id: 'a' })).toBeUndefined()
+    expect(normalizeCommand('script')).toBeUndefined()
   })
 })
 
@@ -173,7 +160,7 @@ describe('normalizeCommands', () => {
 describe('createCommand', () => {
   it('keeps external access opt-in', () => {
     const command = createCommand('script', 'id1')
-    expect(command.availableIn).toEqual({ external: false, chat: false })
+    expect(command.isAvailableExternally).toBe(false)
   })
 })
 
@@ -249,14 +236,14 @@ describe('menu commands', () => {
         {
           q: { type: 'command', commandId: 'a' },
           e: { type: 'command', commandId: 'b' },
-          r: { type: 'standard', actionId: 'translation' },
+          r: { type: 'standard', actionId: 'translationMenu' },
           t: { type: 'command', commandId: 'a' },
         },
         'a'
       )
     ).toEqual({
       e: { type: 'command', commandId: 'b' },
-      r: { type: 'standard', actionId: 'translation' },
+      r: { type: 'standard', actionId: 'translationMenu' },
     })
   })
 })
@@ -311,7 +298,7 @@ describe('external names', () => {
   const named = (id: string, name: string, external = true): CommandConfig => ({
     ...createCommand('webhook', id),
     name,
-    availableIn: { external, chat: false },
+    isAvailableExternally: external,
   })
 
   it('compares names regardless of case, ё and spaces', () => {
@@ -336,10 +323,10 @@ describe('external names', () => {
 describe('commands of the core tools', () => {
   it('start with the settings and the output handling of their tool', () => {
     const translate = createCommand('core.translate', 't', {
-      defaultAfterRun: 'insertIntoWindow',
+      defaultOutputAction: 'insertIntoWindow',
     })
     expect(translate.toolConfig).toEqual({ language: '' })
-    expect(translate.launcherAfterRun).toEqual({ action: 'insertIntoWindow' })
+    expect(translate.outputAction).toBe('insertIntoWindow')
     expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({ prompt: '' })
     expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
   })
@@ -413,16 +400,16 @@ describe('command removal', () => {
     const previous: ShortcutSlots<MainActionConfig> = {
       q: { type: 'command', commandId: 'b' },
       w: { type: 'command', commandId: 'b' },
-      e: { type: 'standard', actionId: 'translation' },
+      e: { type: 'standard', actionId: 'translationMenu' },
     }
     const current: ShortcutSlots<MainActionConfig> = {
       w: { type: 'command', commandId: 'a' },
-      e: { type: 'standard', actionId: 'translation' },
+      e: { type: 'standard', actionId: 'translationMenu' },
     }
     expect(restoreCommandReferences(current, previous, 'b')).toEqual({
       q: { type: 'command', commandId: 'b' },
       w: { type: 'command', commandId: 'a' },
-      e: { type: 'standard', actionId: 'translation' },
+      e: { type: 'standard', actionId: 'translationMenu' },
     })
   })
 })
@@ -441,7 +428,7 @@ describe('commandAfterRun', () => {
   it('uses quick-command settings only in their matching context', () => {
     const command = {
       ...createCommand('script'),
-      launcherAfterRun: { action: 'insertIntoWindow' as const },
+      outputAction: 'insertIntoWindow' as const,
     }
     expect(commandAfterRun(command, 'launcher')).toBe('insertIntoWindow')
     expect(commandAfterRun(command, 'menu')).toBe('showMenu')

@@ -1,29 +1,34 @@
 import { describe, expect, it } from 'vitest'
 
+import { llmSecretId } from '@tyco/shared'
+
 import { createFakeNetIpc } from './fake-net-ipc'
 import { createSecretKeyProvider, createSecretsClient } from './secrets'
 
 describe('secrets', () => {
   const status = async () => ({
-    google: {
+    'llm.google': {
       origins: ['https://generativelanguage.googleapis.com'],
       available: true,
     },
   })
 
   it('hands out a reference, never a key', async () => {
-    const keys = createSecretKeyProvider(status)
+    const keys = createSecretKeyProvider(status, llmSecretId)
 
-    await expect(keys.get('google')).resolves.toBe('tyco-secret:google')
+    await expect(keys.get('google')).resolves.toBe('tyco-secret:llm.google')
   })
 
   it('refuses a key the keychain cannot give out now', async () => {
-    const keys = createSecretKeyProvider(async () => ({
-      google: {
-        origins: ['https://generativelanguage.googleapis.com'],
-        available: false,
-      },
-    }))
+    const keys = createSecretKeyProvider(
+      async () => ({
+        'llm.google': {
+          origins: ['https://generativelanguage.googleapis.com'],
+          available: false,
+        },
+      }),
+      llmSecretId
+    )
 
     await expect(keys.get('google')).rejects.toThrow(
       'locked or missing system keychain'
@@ -31,13 +36,13 @@ describe('secrets', () => {
   })
 
   it('lets a keyless provider through with an empty key', async () => {
-    const keys = createSecretKeyProvider(status)
+    const keys = createSecretKeyProvider(status, llmSecretId)
 
     await expect(keys.get('openai-compatible')).resolves.toBe('')
   })
 
   it('refuses a provider with no stored key', async () => {
-    const keys = createSecretKeyProvider(status)
+    const keys = createSecretKeyProvider(status, llmSecretId)
 
     await expect(keys.get('deepseek')).rejects.toThrow(
       'No API key configured for provider "deepseek"'
@@ -45,7 +50,7 @@ describe('secrets', () => {
   })
 
   it('does not treat object prototype names as stored keys', async () => {
-    const keys = createSecretKeyProvider(status)
+    const keys = createSecretKeyProvider(status, llmSecretId)
 
     await expect(keys.get('toString')).rejects.toThrow()
   })

@@ -78,37 +78,43 @@ fn load_with(path: &std::path::Path, vault: &Arc<FakeVault>) -> SecretStore {
 fn a_key_left_locked_is_read_on_the_next_retry() {
     let (_directory, path) = temp_secrets_path("locked");
     let vault = Arc::new(FakeVault::default());
-    load_with(&path, &vault).set("google", "key", None).unwrap();
-    vault.locked.lock().unwrap().insert(String::from("google"));
+    load_with(&path, &vault)
+        .set("llm.google", "key", None)
+        .unwrap();
+    vault
+        .locked
+        .lock()
+        .unwrap()
+        .insert(String::from("llm.google"));
 
     let store = load_with(&path, &vault);
     assert_eq!(store.vault_state(), VaultState::Available);
-    assert!(!store.status()["google"].is_available);
+    assert!(!store.status()["llm.google"].is_available);
 
     vault.locked.lock().unwrap().clear();
     assert!(
-        !store.status()["google"].is_available,
+        !store.status()["llm.google"].is_available,
         "a request does not retry"
     );
     store.vault_state();
-    assert!(store.status()["google"].is_available);
+    assert!(store.status()["llm.google"].is_available);
 }
 
 #[test]
 fn builtin_id_gets_provider_origins() {
     let store = in_memory();
-    store.set("google", " key ", None).unwrap();
-    store.set("deepl", " deepl-key ", None).unwrap();
+    store.set("llm.google", " key ", None).unwrap();
+    store.set("translation.deepl", " deepl-key ", None).unwrap();
 
     let snapshot = store.snapshot();
-    let entry = snapshot.get("google").unwrap();
+    let entry = snapshot.get("llm.google").unwrap();
     assert_eq!(entry.value, "key");
     assert_eq!(
         entry.origins,
         vec!["https://generativelanguage.googleapis.com"]
     );
     assert_eq!(
-        snapshot.get("deepl").unwrap().origins,
+        snapshot.get("translation.deepl").unwrap().origins,
         vec!["https://api.deepl.com", "https://api-free.deepl.com"]
     );
 }
@@ -145,13 +151,13 @@ fn rejects_bad_ids_and_empty_values() {
     let store = in_memory();
     assert!(store.set("Google", "key", None).is_err());
     assert!(store.set("", "key", None).is_err());
-    assert!(store.set("google", "   ", None).is_err());
+    assert!(store.set("llm.google", "   ", None).is_err());
 }
 
 #[test]
 fn status_never_carries_values() {
     let store = in_memory();
-    store.set("deepseek", "sk-secret", None).unwrap();
+    store.set("llm.deepseek", "sk-secret", None).unwrap();
     let raw = serde_json::to_string(&store.status()).unwrap();
     assert!(!raw.contains("sk-secret"));
 }
@@ -162,10 +168,10 @@ fn values_go_to_the_vault_and_not_to_the_file() {
     let vault = Arc::new(FakeVault::default());
 
     let store = load_with(&path, &vault);
-    store.set("deepseek", "ds-key", None).unwrap();
+    store.set("llm.deepseek", "ds-key", None).unwrap();
 
     assert_eq!(store.vault_state(), VaultState::Available);
-    assert_eq!(vault.value("deepseek").as_deref(), Some("ds-key"));
+    assert_eq!(vault.value("llm.deepseek").as_deref(), Some("ds-key"));
     let raw = fs::read_to_string(&path).unwrap();
     assert!(!raw.contains("ds-key"));
     assert!(raw.contains("https://api.deepseek.com"));
@@ -177,10 +183,10 @@ fn values_go_to_the_vault_and_not_to_the_file() {
     }
 
     let reloaded = load_with(&path, &vault);
-    assert_eq!(reloaded.snapshot()["deepseek"].value, "ds-key");
+    assert_eq!(reloaded.snapshot()["llm.deepseek"].value, "ds-key");
 
-    reloaded.remove("deepseek").unwrap();
-    assert_eq!(vault.value("deepseek"), None);
+    reloaded.remove("llm.deepseek").unwrap();
+    assert_eq!(vault.value("llm.deepseek"), None);
     assert!(load_with(&path, &vault).status().is_empty());
 }
 
@@ -204,7 +210,7 @@ fn without_a_vault_no_key_is_saved() {
     vault.unreachable.store(true, Ordering::SeqCst);
 
     let store = load_with(&path, &vault);
-    assert!(store.set("groq", "gq-key", None).is_err());
+    assert!(store.set("llm.groq", "gq-key", None).is_err());
     assert_eq!(store.vault_state(), VaultState::Unavailable);
     assert!(store.status().is_empty());
     // the listing written before the vault refused is taken back
@@ -212,8 +218,8 @@ fn without_a_vault_no_key_is_saved() {
 
     // the vault is asked again, e.g. once the user has unlocked it
     vault.unreachable.store(false, Ordering::SeqCst);
-    store.set("groq", "gq-key", None).unwrap();
-    assert_eq!(vault.value("groq").as_deref(), Some("gq-key"));
+    store.set("llm.groq", "gq-key", None).unwrap();
+    assert_eq!(vault.value("llm.groq").as_deref(), Some("gq-key"));
 }
 
 #[test]
@@ -223,7 +229,7 @@ fn a_refused_write_is_an_error() {
     vault.read_only.store(true, Ordering::SeqCst);
 
     let store = load_with(&path, &vault);
-    assert!(store.set("anthropic", "an-key", None).is_err());
+    assert!(store.set("llm.anthropic", "an-key", None).is_err());
 
     assert_eq!(store.vault_state(), VaultState::Available);
     assert!(store.status().is_empty());
@@ -236,13 +242,13 @@ fn a_secret_of_an_unreachable_vault_stays_listed() {
     let (_directory, path) = temp_secrets_path("unreachable");
     let vault = Arc::new(FakeVault::default());
     load_with(&path, &vault)
-        .set("google", "g-key", None)
+        .set("llm.google", "g-key", None)
         .unwrap();
 
     vault.unreachable.store(true, Ordering::SeqCst);
     let offline = load_with(&path, &vault);
     assert_eq!(
-        offline.status()["google"],
+        offline.status()["llm.google"],
         SecretStatus {
             origins: vec![String::from("https://generativelanguage.googleapis.com")],
             is_available: false,
@@ -250,13 +256,13 @@ fn a_secret_of_an_unreachable_vault_stays_listed() {
     );
     assert!(offline.snapshot().is_empty());
     // removing it now would leave the key in the vault unseen
-    assert!(offline.remove("google").is_err());
-    assert!(offline.status().contains_key("google"));
+    assert!(offline.remove("llm.google").is_err());
+    assert!(offline.status().contains_key("llm.google"));
 
     vault.unreachable.store(false, Ordering::SeqCst);
     assert_eq!(offline.vault_state(), VaultState::Available);
-    assert!(offline.status()["google"].is_available);
-    assert_eq!(offline.snapshot()["google"].value, "g-key");
+    assert!(offline.status()["llm.google"].is_available);
+    assert_eq!(offline.snapshot()["llm.google"].value, "g-key");
 }
 
 #[test]

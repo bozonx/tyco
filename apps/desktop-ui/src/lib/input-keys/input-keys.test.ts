@@ -20,7 +20,7 @@ describe('input keys', () => {
   })
 
   it('swaps Enter and Ctrl+Enter in the Ctrl+Enter mode', () => {
-    const mode = 'ctrlEnter'
+    const mode = 'Ctrl+Enter'
     expect(resolveInputKeyAction({ code: 'Enter', ctrlKey: true }, mode)).toBe(
       'submit'
     )
@@ -34,7 +34,7 @@ describe('input keys', () => {
   })
 
   it('keeps Tab and Esc fixed in both modes', () => {
-    for (const mode of ['enter', 'ctrlEnter'] as const) {
+    for (const mode of ['Enter', 'Ctrl+Enter'] as const) {
       expect(resolveInputKeyAction({ code: 'Tab' }, mode)).toBe('actions')
       expect(resolveInputKeyAction({ code: 'Escape' }, mode)).toBe('cancel')
     }
@@ -61,16 +61,16 @@ describe('input keys', () => {
   })
 
   it('falls back to Enter for unknown saved values', () => {
-    expect(resolveSubmitKey('ctrlEnter')).toBe('ctrlEnter')
-    expect(resolveSubmitKey('enter')).toBe('enter')
-    expect(resolveSubmitKey('Ctrl+Enter')).toBe('enter')
-    expect(resolveSubmitKey(undefined)).toBe('enter')
+    expect(resolveSubmitKey('Ctrl+Enter')).toBe('Ctrl+Enter')
+    expect(resolveSubmitKey('Enter')).toBe('Enter')
+    expect(resolveSubmitKey('ctrlEnter')).toBe('Enter')
+    expect(resolveSubmitKey(undefined)).toBe('Enter')
   })
 
   it('labels the keys of each mode', () => {
-    expect(submitShortcut('enter')).toBe('Enter')
-    expect(newlineShortcut('enter')).toBe('Shift+Enter')
-    expect(submitShortcut('ctrlEnter')).toBe('Ctrl+Enter')
-    expect(newlineShortcut('ctrlEnter')).toBe('Enter')
+    expect(submitShortcut('Enter')).toBe('Enter')
+    expect(newlineShortcut('Enter')).toBe('Shift+Enter')
+    expect(submitShortcut('Ctrl+Enter')).toBe('Ctrl+Enter')
+    expect(newlineShortcut('Ctrl+Enter')).toBe('Enter')
   })
 })

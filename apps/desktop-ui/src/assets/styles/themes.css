@@ -92,7 +92,7 @@
    colors dark enough to read as black on a monochrome screen while keeping
    their hue on color panels. Contrast and motion are forced by
    `resolveAppearance`, see `accessibility.css`. */
-[data-theme='e-ink'] {
+[data-theme='eInk'] {
   color-scheme: light;
 
   --color-base-100: oklch(100% 0 0);

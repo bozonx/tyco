@@ -5,7 +5,7 @@ import { assertSttKeyAvailable } from './stt-readiness'
 import { dictationLanguageFor } from './dictation-language'
 import type { LiveTranscriptState } from './live-transcript'
 import type { LiveDictation } from './live-dictation'
-import { buildSttCatalog, secretId, sttProviderNeedsKey } from './stt-client'
+import { buildSttCatalog, sttProviderNeedsKey } from './stt-client'
 import { activeSttModel, type SttModel } from './stt-config'
 
 export interface DictationHandlers {
@@ -52,7 +52,7 @@ export function createDictationController(
       } catch {
         throw new Error(deps.translate('toast.voiceKeyCheckFailed'))
       }
-      assertSttKeyAvailable(deps.getSecrets(), secretId(model), deps.translate)
+      assertSttKeyAvailable(deps.getSecrets(), model.provider, deps.translate)
     }
 
     if (runGeneration !== generation) return

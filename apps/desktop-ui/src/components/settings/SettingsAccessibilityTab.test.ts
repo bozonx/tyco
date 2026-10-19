@@ -59,7 +59,7 @@ describe('SettingsAccessibilityTab.vue', () => {
 
   it('disables contrast and motion when theme is e-ink and displays hint', () => {
     const appearance: UserConfig['appearance'] = {
-      theme: 'e-ink',
+      theme: 'eInk',
       contrast: 'more',
       motion: 'reduce',
       uiScalePercent: 130,

@@ -22,7 +22,7 @@ export interface SherpaOnnxSttSettings {
 }
 
 export interface SttConfig {
-  providerId: SttProvider
+  provider: SttProvider
   /** The LLM turns the transcript into written text */
   isLlmFormattingEnabled: boolean
   providers: {

@@ -1,147 +1,16 @@
 import {
   BUILTIN_LLM_PROVIDERS,
-  DEFAULT_LLM_CONFIG,
   LLM_TASKS,
+  normalizeLlmConfig,
   type LlmConfig,
   type LlmModel,
   type LlmProvider,
-  type LlmProviderType,
-  type LlmTask,
 } from '@tyco/shared'
 
-const PROVIDER_TYPES: readonly LlmProviderType[] = [
-  'google',
-  'openrouter',
-  'deepseek',
-  'openaiCompatible',
-]
-
-/** Provider ids double as secret ids, so they follow the secret id rules */
-const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
+export { normalizeLlmConfig }
 
 function isBuiltinProvider(id: string): boolean {
   return (BUILTIN_LLM_PROVIDERS as readonly string[]).includes(id)
-}
-
-function isValidLlmId(id: unknown): id is string {
-  return typeof id === 'string' && ID_PATTERN.test(id)
-}
-
-/**
- * Brings whatever the config file holds into a shape the rest of the app can
- * trust. Tolerant of half-edited values: an empty model name survives, so a
- * field being typed into is not wiped out
- */
-export function normalizeLlmConfig(raw: unknown): LlmConfig {
-  const source = isRecord(raw) ? raw : {}
-  const providers = normalizeProviders(source.providers)
-  const models = normalizeModels(source.models, providers)
-  const taskModelChains = normalizeTasks(source.taskModelChains, models)
-
-  return { providers, models, taskModelChains }
-}
-
-function normalizeProviders(raw: unknown): LlmProvider[] {
-  const result: LlmProvider[] = []
-  const seen = new Set<string>()
-
-  for (const item of Array.isArray(raw) ? raw : []) {
-    if (!isRecord(item) || !isValidLlmId(item.id) || seen.has(item.id)) {
-      continue
-    }
-    const type = item.type as LlmProviderType
-    if (!PROVIDER_TYPES.includes(type)) continue
-    // A built-in provider is its type; a custom endpoint may not take its id
-    if (isBuiltinProvider(item.id) !== (type !== 'openaiCompatible')) continue
-    if (isBuiltinProvider(item.id) && item.id !== type) continue
-
-    const provider: LlmProvider = { id: item.id, type }
-    if (typeof item.name === 'string') provider.name = item.name
-    if (type === 'openaiCompatible') {
-      provider.baseUrl = typeof item.baseUrl === 'string' ? item.baseUrl : ''
-    }
-    seen.add(item.id)
-    result.push(provider)
-  }
-
-  const builtins = DEFAULT_LLM_CONFIG.providers
-    .filter((provider) => isBuiltinProvider(provider.id))
-    .map(
-      (provider) =>
-        result.find((item) => item.id === provider.id) ?? { ...provider }
-    )
-
-  return [
-    ...builtins,
-    ...result.filter((provider) => !isBuiltinProvider(provider.id)),
-  ]
-}
-
-function normalizeModels(raw: unknown, providers: LlmProvider[]): LlmModel[] {
-  const providerIds = new Set(providers.map((provider) => provider.id))
-  const result: LlmModel[] = []
-  const seen = new Set<string>()
-
-  for (const item of Array.isArray(raw) ? raw : []) {
-    if (!isRecord(item) || typeof item.id !== 'string') continue
-    const id = item.id.trim()
-    if (!id || seen.has(id)) continue
-    const providerId = item.providerId
-    const providerModelId = item.providerModelId
-    if (typeof providerId !== 'string' || !providerIds.has(providerId)) {
-      continue
-    }
-
-    const model: LlmModel = {
-      id,
-      providerId,
-      providerModelId:
-        typeof providerModelId === 'string' ? providerModelId : '',
-    }
-    if (typeof item.name === 'string') model.name = item.name
-    if (typeof item.canUseImages === 'boolean')
-      model.canUseImages = item.canUseImages
-    if (typeof item.canUseTools === 'boolean')
-      model.canUseTools = item.canUseTools
-    if (typeof item.isThinkingEnabled === 'boolean')
-      model.isThinkingEnabled = item.isThinkingEnabled
-    const temperature = finiteNumber(item.temperature)
-    if (temperature !== undefined && temperature >= 0 && temperature <= 2) {
-      model.temperature = temperature
-    }
-    const maxOutputTokens = positiveInteger(item.maxOutputTokens)
-    if (maxOutputTokens !== undefined) model.maxOutputTokens = maxOutputTokens
-    const contextWindowTokens = positiveInteger(item.contextWindowTokens)
-    if (contextWindowTokens !== undefined)
-      model.contextWindowTokens = contextWindowTokens
-
-    seen.add(id)
-    result.push(model)
-  }
-
-  return result
-}
-
-function normalizeTasks(
-  raw: unknown,
-  models: LlmModel[]
-): Record<LlmTask, string[]> {
-  const source = isRecord(raw) ? raw : {}
-  const modelIds = new Set(models.map((model) => model.id))
-
-  return Object.fromEntries(
-    LLM_TASKS.map((task) => {
-      const chain = Array.isArray(source[task]) ? source[task] : []
-      const ids = [
-        ...new Set(
-          chain.filter(
-            (id): id is string => typeof id === 'string' && modelIds.has(id)
-          )
-        ),
-      ]
-      return [task, ids]
-    })
-  ) as Record<LlmTask, string[]>
 }
 
 /** A fresh id that is not in `taken`: `prefix`, then `prefix-2`, `prefix-3`… */
@@ -157,7 +26,7 @@ export function uniqueLlmId(prefix: string, taken: Iterable<string>): string {
 
 export function addCompatibleProvider(config: LlmConfig): LlmProvider {
   const provider: LlmProvider = {
-    id: `local-${crypto.randomUUID()}`,
+    id: `custom-${crypto.randomUUID()}`,
     type: 'openaiCompatible',
     name: '',
     baseUrl: '',
@@ -206,20 +75,4 @@ export function removeModel(config: LlmConfig, modelId: string) {
 
 export function modelLabel(model: LlmModel): string {
   return model.name?.trim() || model.providerModelId.trim() || model.id
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function finiteNumber(value: unknown): number | undefined {
-  if (value === '' || value === null || value === undefined) return undefined
-  return typeof value === 'number' && Number.isFinite(value) ? value : undefined
-}
-
-function positiveInteger(value: unknown): number | undefined {
-  const parsed = finiteNumber(value)
-  return parsed !== undefined && Number.isSafeInteger(parsed) && parsed > 0
-    ? parsed
-    : undefined
 }

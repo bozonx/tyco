@@ -1,8 +1,8 @@
 import {
-  CUSTOM_ACTION_AFTER_RUN,
+  COMMAND_OUTPUT_ACTIONS,
   type CommandConfig,
-  type CommandLauncherAfterRun,
-  type CustomActionAfterRun,
+  type CommandOutputAction,
+  normalizeCommands,
   SCRIPT_MAX_TIMEOUT_SEC,
   SHORTCUT_SLOT_KEYS,
   type ScriptToolConfig,
@@ -16,21 +16,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const stringOr = (value: unknown): string =>
   typeof value === 'string' ? value : ''
 
-const afterRunOf = (value: unknown): CustomActionAfterRun =>
-  CUSTOM_ACTION_AFTER_RUN.includes(value as CustomActionAfterRun)
-    ? (value as CustomActionAfterRun)
+/** The output action of a tool, or `none` */
+export const outputActionOf = (value: unknown): CommandOutputAction =>
+  COMMAND_OUTPUT_ACTIONS.includes(value as CommandOutputAction)
+    ? (value as CommandOutputAction)
     : 'none'
-
-/** Maps a tool output default to the quick-command output settings */
-export function launcherAfterRunFromOutput(
-  value: unknown
-): CommandLauncherAfterRun {
-  return { action: afterRunOf(value) }
-}
-
-function normalizeLauncherAfterRun(value: unknown): CommandLauncherAfterRun {
-  return { action: afterRunOf(isRecord(value) ? value.action : undefined) }
-}
 
 function headersOf(value: unknown): Record<string, string> {
   if (!isRecord(value)) return {}
@@ -80,61 +70,7 @@ export const scriptToolConfig = (command: CommandConfig): ScriptToolConfig =>
 export const webhookToolConfig = (command: CommandConfig): WebhookToolConfig =>
   webhookToolConfigOf(command.toolConfig)
 
-const normalizeToolConfig = (
-  toolId: string,
-  command: CommandConfig
-): Record<string, unknown> => {
-  if (toolId === 'script') return { ...scriptToolConfig(command) }
-  if (toolId === 'webhook') return { ...webhookToolConfig(command) }
-  // the settings of a tool this build does not know are kept as they are
-  return command.toolConfig
-}
-
-/** A command read from the config, or `null` when it has no id or tool */
-export function normalizeCommand(value: unknown): CommandConfig | null {
-  if (!isRecord(value)) return null
-  const id = stringOr(value.id).trim()
-  const toolId = stringOr(value.toolId).trim()
-  if (!id || !toolId) return null
-
-  const availableIn = isRecord(value.availableIn) ? value.availableIn : {}
-  const command: CommandConfig = {
-    id,
-    name: stringOr(value.name),
-    isVoiceEnabled: value.isVoiceEnabled === true,
-    voiceConfirmation: value.voiceConfirmation === 'auto' ? 'auto' : 'always',
-    phrases: Array.isArray(value.phrases)
-      ? value.phrases.filter((item): item is string => typeof item === 'string')
-      : [],
-    toolId,
-    toolConfig: isRecord(value.toolConfig) ? value.toolConfig : {},
-    isLlmArgumentParsingEnabled: value.isLlmArgumentParsingEnabled === true,
-    launcherAfterRun: normalizeLauncherAfterRun(value.launcherAfterRun),
-    isOutputLogged: value.isOutputLogged === true,
-    availableIn: {
-      external: availableIn.external === true,
-      chat: availableIn.chat === true,
-    },
-    isEnabled: value.isEnabled !== false,
-  }
-  if (typeof value.description === 'string' && value.description) {
-    command.description = value.description
-  }
-  command.toolConfig = normalizeToolConfig(toolId, command)
-  return command
-}
-
-/** The command library from the config; a repeated id keeps the first one */
-export function normalizeCommands(value: unknown): CommandConfig[] {
-  if (!Array.isArray(value)) return []
-  const seen = new Set<string>()
-  return value.flatMap((item) => {
-    const command = normalizeCommand(item)
-    if (!command || seen.has(command.id)) return []
-    seen.add(command.id)
-    return [command]
-  })
-}
+export { normalizeCommands }
 
 /**
  * The command ids of a launcher page in key order; a missing command leaves its
@@ -188,20 +124,19 @@ function defaultToolConfig(toolId: string): Record<string, unknown> {
 export function createCommand(
   toolId: string,
   id: string = newCommandId(),
-  tool?: Pick<RegisteredTool, 'defaultAfterRun'>
+  tool?: Pick<RegisteredTool, 'defaultOutputAction'>
 ): CommandConfig {
   return {
     id,
     name: '',
     phrases: [],
     isVoiceEnabled: false,
-    voiceConfirmation: 'always',
     toolId,
     toolConfig: defaultToolConfig(toolId),
     isLlmArgumentParsingEnabled: false,
-    launcherAfterRun: launcherAfterRunFromOutput(tool?.defaultAfterRun),
+    outputAction: outputActionOf(tool?.defaultOutputAction),
     isOutputLogged: false,
-    availableIn: { external: false, chat: false },
+    isAvailableExternally: false,
     isEnabled: true,
   }
 }

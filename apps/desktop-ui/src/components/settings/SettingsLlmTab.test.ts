@@ -50,7 +50,7 @@ describe('LLM settings cards', () => {
       .get('input[placeholder="http://localhost:11434/v1"]')
       .setValue('http://models.lan/v1')
     expect(
-      llm.providers.find((provider) => provider.id === 'local')
+      llm.providers.find((provider) => provider.id === 'ollama')
     ).toMatchObject({
       name: 'Local model server',
       baseUrl: 'http://models.lan/v1',
@@ -63,7 +63,7 @@ describe('LLM settings cards', () => {
 
   it('updates model fields through the model editor and preserves invalid numeric drafts', async () => {
     const { llm, localCard, wrapper } = setup()
-    const model = llm.models.find((item) => item.providerId === 'local')!
+    const model = llm.models.find((item) => item.providerId === 'ollama')!
     const card = localCard()
     await card.get('.disclosure-header').trigger('click')
     const row = card.get('.model-row')
@@ -99,7 +99,7 @@ describe('LLM settings cards', () => {
     await keyField.get('input').setValue('new-secret')
     await keyField.findAll('button')[0].trigger('click')
     await flushPromises()
-    expect(mocks.setSecret).toHaveBeenCalledWith('local', 'new-secret', [
+    expect(mocks.setSecret).toHaveBeenCalledWith('llm.ollama', 'new-secret', [
       'http://models.lan',
     ])
     expect((keyField.get('input').element as HTMLInputElement).value).toBe('')
@@ -112,25 +112,31 @@ describe('LLM settings cards', () => {
     const count = llm.models.length
     await card.get('.models-header button').trigger('click')
     expect(llm.models).toHaveLength(count + 1)
-    expect(llm.models.at(-1)?.providerId).toBe('local')
+    expect(llm.models.at(-1)?.providerId).toBe('ollama')
     expect(card.findAll('.model-row')).toHaveLength(2)
     const remove = card
       .findAll('.connection-actions button')
       .find((button) => button.text() === 'settings.removeProvider')!
     await remove.trigger('click')
-    expect(llm.providers.some((provider) => provider.id === 'local')).toBe(true)
+    expect(llm.providers.some((provider) => provider.id === 'ollama')).toBe(
+      true
+    )
     const confirmation = wrapper.getComponent(ConfirmModal)
     expect(confirmation.props('open')).toBe(true)
     confirmation.vm.$emit('cancel')
     await flushPromises()
-    expect(llm.providers.some((provider) => provider.id === 'local')).toBe(true)
+    expect(llm.providers.some((provider) => provider.id === 'ollama')).toBe(
+      true
+    )
     await remove.trigger('click')
     confirmation.vm.$emit('confirm')
     await flushPromises()
-    expect(llm.providers.some((provider) => provider.id === 'local')).toBe(
+    expect(llm.providers.some((provider) => provider.id === 'ollama')).toBe(
       false
     )
-    expect(llm.models.some((model) => model.providerId === 'local')).toBe(false)
+    expect(llm.models.some((model) => model.providerId === 'ollama')).toBe(
+      false
+    )
     expect(context.deps.persist).toHaveBeenCalled()
   })
 })
@@ -154,6 +160,7 @@ describe('SettingsLlmTab.vue', () => {
       correction: 'Correction rule text',
       translation: 'Translate rule text',
       voiceCorrection: '',
+      translationQualityGate: '',
     }
 
     const wrapper = mount(SettingsLlmTab, {

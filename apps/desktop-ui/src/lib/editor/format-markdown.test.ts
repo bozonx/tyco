@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  DEFAULT_MARKDOWN_SETTINGS,
-  DEFAULT_MARKDOWN_CLEAN_SETTINGS,
-  normalizeMarkdownSettings,
-  normalizeMarkdownCleanSettings,
-} from '@tyco/shared'
+import { DEFAULT_MARKDOWN_CONFIG, normalizeConfigValue } from '@tyco/shared'
 import { formatMarkdown } from './format-markdown'
 import { htmlToMarkdown } from './html-to-markdown'
 
@@ -25,7 +20,7 @@ describe('shared Markdown formatting', () => {
       emphasis: '_',
       strong: '_',
       headingStyle: 'setext',
-      incrementListMarker: false,
+      isListMarkerIncremented: false,
     }
     const pasted = htmlToMarkdown(
       '<h1>Title</h1><ul><li><em>one</em></li><li><strong>two</strong></li></ul>',
@@ -72,25 +67,25 @@ describe('shared Markdown formatting', () => {
 
 describe('Markdown settings', () => {
   it('supplies defaults and rejects malformed saved values', () => {
-    expect(normalizeMarkdownSettings(undefined)).toEqual(
-      DEFAULT_MARKDOWN_SETTINGS
+    expect(normalizeConfigValue('markdown.format', undefined)).toEqual(
+      DEFAULT_MARKDOWN_CONFIG.format
     )
     expect(
-      normalizeMarkdownSettings({
+      normalizeConfigValue('markdown.format', {
         bullet: '?',
         emphasis: false,
         headingStyle: 'unknown',
       })
-    ).toEqual(DEFAULT_MARKDOWN_SETTINGS)
+    ).toEqual(DEFAULT_MARKDOWN_CONFIG.format)
   })
   it('uses the shared ordered list numbering setting', () => {
     const input = '1. one\n2. two\n'
-    expect(formatMarkdown(input, { incrementListMarker: false })).toBe(
+    expect(formatMarkdown(input, { isListMarkerIncremented: false })).toBe(
       '1. one\n1. two\n'
     )
     expect(
       htmlToMarkdown('<ol><li>one</li><li>two</li></ol>', {
-        incrementListMarker: false,
+        isListMarkerIncremented: false,
       })
     ).toBe('1. one\n1. two')
   })
@@ -98,22 +93,18 @@ describe('Markdown settings', () => {
 
 describe('Markdown clean settings', () => {
   it('supplies defaults and handles invalid values', () => {
-    expect(normalizeMarkdownCleanSettings(undefined)).toEqual(
-      DEFAULT_MARKDOWN_CLEAN_SETTINGS
+    expect(normalizeConfigValue('markdown.strip', undefined)).toEqual(
+      DEFAULT_MARKDOWN_CONFIG.strip
     )
     expect(
-      normalizeMarkdownCleanSettings({
+      normalizeConfigValue('markdown.strip', {
         bullet: 'invalid',
         codeBlockIndent: 'invalid',
         blockquoteIndent: 'invalid',
         linkFormat: 'invalid',
-        keepInlineCode: 'notABool',
-        keepTaskCheckboxes: 'notABool',
+        hasInlineCode: 'notABool',
+        hasTaskCheckboxes: 'notABool',
       })
-    ).toEqual({
-      ...DEFAULT_MARKDOWN_CLEAN_SETTINGS,
-      keepInlineCode: false,
-      keepTaskCheckboxes: true,
-    })
+    ).toEqual(DEFAULT_MARKDOWN_CONFIG.strip)
   })
 })

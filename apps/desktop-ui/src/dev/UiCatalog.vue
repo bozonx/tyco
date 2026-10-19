@@ -474,7 +474,7 @@ import { useToastStore } from '../stores/toast'
 const themes = [
   { id: 'light', name: 'Light' },
   { id: 'dark', name: 'Dark' },
-  { id: 'e-ink', name: 'E-ink' },
+  { id: 'eInk', name: 'E-ink' },
 ]
 const variants = [
   'primary',

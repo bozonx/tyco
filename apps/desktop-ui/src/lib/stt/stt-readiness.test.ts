@@ -1,3 +1,4 @@
+import type { SttProvider } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { assertSttKeyAvailable } from './stt-readiness'
@@ -12,7 +13,10 @@ describe('STT key readiness', () => {
     expect(() =>
       assertSttKeyAvailable(
         {
-          deepgram: { origins: ['https://api.deepgram.com'], available: true },
+          'stt.deepgram': {
+            origins: ['https://api.deepgram.com'],
+            available: true,
+          },
         },
         'deepgram',
         translate
@@ -31,7 +35,10 @@ describe('STT key readiness', () => {
     expect(() =>
       assertSttKeyAvailable(
         {
-          deepgram: { origins: ['https://api.deepgram.com'], available: false },
+          'stt.deepgram': {
+            origins: ['https://api.deepgram.com'],
+            available: false,
+          },
         },
         'deepgram',
         translate
@@ -40,8 +47,8 @@ describe('STT key readiness', () => {
   })
 
   it('does not accept inherited properties as saved keys', () => {
-    expect(() => assertSttKeyAvailable({}, 'toString', translate)).toThrow(
-      'toast.voiceKeyMissing: toString'
-    )
+    expect(() =>
+      assertSttKeyAvailable({}, 'toString' as SttProvider, translate)
+    ).toThrow('toast.voiceKeyMissing: toString')
   })
 })

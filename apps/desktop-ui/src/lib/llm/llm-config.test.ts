@@ -24,16 +24,8 @@ describe('llm-config', () => {
     expect(normalizeLlmConfig(DEFAULT_LLM_CONFIG)).toEqual(DEFAULT_LLM_CONFIG)
   })
 
-  it('builds a usable config from nothing', () => {
-    const config = normalizeLlmConfig(undefined)
-
-    expect(config.providers.map((provider) => provider.id)).toEqual([
-      'google',
-      'openrouter',
-      'deepseek',
-    ])
-    expect(config.models).toEqual([])
-    expect(config.taskModelChains.aiTask).toEqual([])
+  it('takes the defaults for a missing section', () => {
+    expect(normalizeLlmConfig(undefined)).toEqual(DEFAULT_LLM_CONFIG)
   })
 
   it('puts missing built-in providers back, first', () => {
@@ -127,15 +119,15 @@ describe('llm-config', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
     const provider = addCompatibleProvider(config)
     const model = addModel(config, provider.id)
-    config.taskModelChains.aiTask = [model.id, 'local-qwen']
+    config.taskModelChains.aiTask = [model.id, 'ollama-qwen']
 
-    expect(provider.id).toMatch(/^local-[a-f0-9-]{36}$/)
+    expect(provider.id).toMatch(/^custom-[a-f0-9-]{36}$/)
     expect(model.id).toBe(`${provider.id}-model`)
 
     removeProvider(config, provider.id)
     expect(config.providers.some((item) => item.id === provider.id)).toBe(false)
     expect(config.models.some((item) => item.id === model.id)).toBe(false)
-    expect(config.taskModelChains.aiTask).toEqual(['local-qwen'])
+    expect(config.taskModelChains.aiTask).toEqual(['ollama-qwen'])
   })
 
   it('never removes a built-in provider', () => {
@@ -148,10 +140,10 @@ describe('llm-config', () => {
 
   it('removes a model from every task', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
-    config.taskModelChains.translation = ['gemini-flash', 'local-qwen']
+    config.taskModelChains.translation = ['gemini-flash', 'ollama-qwen']
     removeModel(config, 'gemini-flash')
 
-    expect(config.taskModelChains.translation).toEqual(['local-qwen'])
+    expect(config.taskModelChains.translation).toEqual(['ollama-qwen'])
   })
 
   it('labels a model by name, then model id', () => {

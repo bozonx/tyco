@@ -15,7 +15,7 @@ mod origins;
 mod tests;
 pub mod webhook;
 
-pub use origins::{is_id_char, normalize_origin, origin_of};
+pub use origins::{is_id_char, is_valid_id, normalize_origin, origin_of};
 
 use self::origins::{checked_secret, vault_namespace};
 

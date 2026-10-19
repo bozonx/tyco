@@ -1,8 +1,4 @@
-import type {
-  CommandLauncherAfterRun,
-  CommandRunSource,
-  CustomActionAfterRun,
-} from '@tyco/shared'
+import type { CommandOutputAction, CommandRunSource } from '@tyco/shared'
 
 /**
  * One run of a tool: a command of the library, or a built-in action of the app
@@ -20,12 +16,12 @@ export interface Invocation {
   isLlmArgumentParsingEnabled?: boolean
   /** The tool writes its output to the action log */
   logOutput?: boolean
-  /** Where quick commands send the output, see `resolveSink` */
-  launcherSink?: CommandLauncherAfterRun
+  /** Where the command launcher sends the output, see `resolveSink` */
+  outputAction?: CommandOutputAction
 }
 
 /** What happens to the text a tool returns */
-export type ResultSink = CustomActionAfterRun | 'return'
+export type ResultSink = CommandOutputAction | 'return'
 
 export interface InvocationOptions {
   /** The input as it is, in place of the one parsed from the text */

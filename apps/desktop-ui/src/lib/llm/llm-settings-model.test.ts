@@ -42,7 +42,7 @@ describe('LLM settings model', () => {
     const f = fixture()
     f.model.keyDrafts.local = ' key '
     await f.model.saveKey(f.provider)
-    expect(f.setSecret).toHaveBeenCalledWith('local', 'key', [
+    expect(f.setSecret).toHaveBeenCalledWith('llm.local', 'key', [
       'http://localhost:11434',
     ])
     expect(f.model.keyDrafts.local).toBe('')

@@ -39,6 +39,7 @@ export function createTranslationActions(deps: TranslationActionsDependencies) {
         signal: options.signal,
         onStage: options.onStage,
         rules: deps.getUserConfig().aiRules?.translation,
+        qualityGateRules: deps.getUserConfig().aiRules?.translationQualityGate,
       })
     } catch (error) {
       return handleLlmRequestError(

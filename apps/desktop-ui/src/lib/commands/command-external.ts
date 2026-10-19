@@ -22,7 +22,7 @@ function canRunCommandExternally(
 ): boolean {
   return (
     command.isEnabled &&
-    command.availableIn.external &&
+    command.isAvailableExternally &&
     isCommandAvailable(command, tools)
   )
 }

@@ -116,7 +116,7 @@ describe('createSttClient', () => {
     expect(parts.at(-1)).toMatchObject({ type: 'finish' })
 
     const [{ url, headers }] = deepgram.opened
-    expect(headers?.authorization).toBe('Token tyco-secret:deepgram')
+    expect(headers?.authorization).toBe('Token tyco-secret:stt.deepgram')
     expect(url).toContain('model=nova-3')
     expect(url).toContain('sample_rate=16000')
     expect(url).toContain('interim_results=true')

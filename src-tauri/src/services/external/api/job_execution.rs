@@ -40,10 +40,10 @@ pub(super) fn start(
         .get()
         .is_none()
     {
-        return Err(Response::coded_error(
+        return Err(Box::new(Response::coded_error(
             ErrorCode::NotReady,
             "Command execution tools are still loading",
-        ));
+        )));
     }
     let command = lookup(app, &request.target, request.by_name)?;
     validate_run(&command, &request)?;
@@ -52,7 +52,10 @@ pub(super) fn start(
     let ask = request.selection && !is_selection_access_allowed(&config);
     // checked again when the prompt is taken; this saves the capture
     if ask && app.state::<AccessPrompt>().is_pending() {
-        return Err(Response::coded_error(ErrorCode::AccessDenied, PROMPT_BUSY));
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::AccessDenied,
+            PROMPT_BUSY,
+        )));
     }
     let selection = if request.selection {
         // taken before the prompt, which moves the focus away from it
@@ -72,7 +75,7 @@ pub(super) fn start(
             if let Some(id) = selection {
                 selection_replace::release(app, id);
             }
-            return Err(Response::coded_error(ErrorCode::Busy, error));
+            return Err(Box::new(Response::coded_error(ErrorCode::Busy, error)));
         }
     };
     if let Some(raw) = raw_command(&config, &command.id) {
@@ -91,7 +94,7 @@ pub(super) fn start(
         };
         // also gives the selection run its clipboard back
         fail(app, &job.id, message.clone(), code);
-        return Err(Response::coded_error(code, message));
+        return Err(Box::new(Response::coded_error(code, message)));
     }
     hand_off(app, &job.id, &command, &request, source)?;
     Ok(job)
@@ -153,7 +156,7 @@ fn hand_off(
     };
     handoff.map_err(|error| {
         fail(app, job_id, error.clone(), ErrorCode::Unavailable);
-        Response::coded_error(ErrorCode::Unavailable, error)
+        Box::new(Response::coded_error(ErrorCode::Unavailable, error))
     })
 }
 

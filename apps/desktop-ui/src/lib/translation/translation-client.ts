@@ -18,7 +18,7 @@ import {
   type TranslationProblem,
   type TranslationQualityReport,
 } from '@bozonx/ai-kit/translate'
-import type { TranslationConfig } from '@tyco/shared'
+import { TRANSLATION_SECRET_IDS, type TranslationConfig } from '@tyco/shared'
 
 import type { LlmPrompt } from '../llm/llm-prompt'
 import { protectTranslationText } from './protected-text'
@@ -45,6 +45,8 @@ export interface TranslationRunOptions {
   targetLanguage: string
   signal?: AbortSignal
   rules?: string
+  /** The user rules of the review in the `always` quality gate */
+  qualityGateRules?: string
   onStage?: (stage: 'translating' | 'checking' | 'repairing') => void
 }
 
@@ -107,7 +109,7 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
                   options,
                   glossary,
                   config.qualityGate === 'always'
-                    ? config.qualityGatePrompt
+                    ? (options.qualityGateRules ?? '')
                     : ''
                 )
               },
@@ -129,6 +131,12 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
   }
 }
 
+/** The secret of a machine translation service as ai-kit names it */
+export const translationKitSecretId = (kitProvider: string): string =>
+  kitProvider === 'deepl'
+    ? TRANSLATION_SECRET_IDS.deepl
+    : TRANSLATION_SECRET_IDS.google
+
 async function translateWithMachine(
   deps: TranslationClientDependencies,
   config: TranslationConfig,
@@ -138,7 +146,7 @@ async function translateWithMachine(
   const provider = config.provider === 'deepl' ? 'deepl' : 'google-translate'
   const model = provider === 'deepl' ? 'quality_optimized' : 'nmt'
   const baseUrl =
-    provider === 'deepl' && config.deeplEndpoint === 'free'
+    provider === 'deepl' && config.providers.deepl.endpoint === 'free'
       ? 'https://api-free.deepl.com/v2/translate'
       : undefined
   const catalog = Catalog.fromObject({
@@ -270,7 +278,7 @@ async function repairWithLlm(
   problems: TranslationProblem[],
   options: TranslationRunOptions,
   glossary: GlossaryEntry[],
-  qualityGatePrompt: string
+  qualityGateRules: string
 ): Promise<FirstPass> {
   const repaired: string[] = []
   let detectedProvider = 'llm'
@@ -286,8 +294,8 @@ async function repairWithLlm(
     const prompt = buildPrompt({
       system: [
         translationSystem(options, applicable),
-        qualityGatePrompt.trim()
-          ? `User instructions for the correction pass:\n${qualityGatePrompt.trim()}`
+        qualityGateRules.trim()
+          ? `User instructions for the correction pass:\n${qualityGateRules.trim()}`
           : '',
         renderProblemsForPrompt(problems),
       ]

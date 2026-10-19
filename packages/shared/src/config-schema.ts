@@ -33,8 +33,8 @@ interface Schema {
 
 const schema = schemaValue as unknown as Schema
 const portableDefaults: Record<string, unknown> = {
-  ...configDefaults,
   configVersion,
+  ...configDefaults,
 }
 const defaultOf = (shape: Schema) =>
   shape.defaultPath
@@ -198,25 +198,55 @@ function filterSlots<T>(
   return result
 }
 
+/** Keeps the first slot of each value. */
+function distinctSlots<T>(slots: ShortcutSlots<T>): ShortcutSlots<T> {
+  const seen = new Set<T>()
+  return filterSlots(slots, (value) => {
+    if (seen.has(value)) return false
+    seen.add(value)
+    return true
+  })
+}
+
+/** The schema of a field, e.g. `markdown.strip`. */
+function schemaAt(path: string): Schema {
+  return path
+    .split('.')
+    .reduce<Schema>((shape, key) => shape.properties?.[key] ?? {}, schema)
+}
+
 /** Domain adapters use the same field rules as the authoritative reader. */
 export function normalizeConfigField<K extends keyof UserConfig>(
   key: K,
   value: unknown
 ): UserConfig[K] {
-  return repair(value, schema.properties?.[key] ?? {}) as UserConfig[K]
+  return repair(value, schemaAt(key)) as UserConfig[K]
 }
 
-/** Repairs known fields while preserving opaque plugin and tool settings. */
-export function normalizeUserConfig(value: UserConfigInput): UserConfig {
-  const config = repair(value, schema) as UserConfig
-  config.configVersion = configVersion
-  for (const command of config.commands) {
-    command.id = command.id.trim()
-    command.toolId = command.toolId.trim()
-  }
-  for (const model of config.llm.models) model.id = model.id.trim()
+/**
+ * A nested field repaired by the schema, e.g. `markdown.strip`; a missing value
+ * takes the default of the field
+ */
+export function normalizeConfigValue<T>(path: string, value: unknown): T {
+  const shape = schemaAt(path)
+  const fallback = path
+    .split('.')
+    .reduce<unknown>(
+      (defaults, key) => (isRecord(defaults) ? defaults[key] : undefined),
+      portableDefaults
+    )
+  return repair(value ?? fallback, shape) as T
+}
+
+/**
+ * The LLM section: built-in providers first, each once and of its own type,
+ * models of existing providers, task chains of existing models
+ */
+export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
+  const llm = repair(value, schemaAt('llm')) as UserConfig['llm']
+  for (const model of llm.models) model.id = model.id.trim()
   const builtinIds: readonly string[] = BUILTIN_LLM_PROVIDERS
-  config.llm.providers = config.llm.providers.filter((provider) =>
+  llm.providers = llm.providers.filter((provider) =>
     builtinIds.includes(provider.id)
       ? provider.type === provider.id
       : provider.type === 'openaiCompatible'
@@ -224,38 +254,39 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   const builtins = configDefaults.llm.providers.filter((provider) =>
     builtinIds.includes(provider.id)
   )
-  config.llm.providers = [
+  llm.providers = deduplicate([
     ...builtins.map(
       (defaults) =>
-        config.llm.providers.find((provider) => provider.id === defaults.id) ??
+        llm.providers.find((provider) => provider.id === defaults.id) ??
         ({ ...defaults } as UserConfig['llm']['providers'][number])
     ),
-    ...config.llm.providers.filter(
-      (provider) => !builtinIds.includes(provider.id)
-    ),
-  ]
-  for (const provider of config.llm.providers) {
+    ...llm.providers.filter((provider) => !builtinIds.includes(provider.id)),
+  ])
+  for (const provider of llm.providers) {
     if (provider.type === 'openaiCompatible') provider.baseUrl ??= ''
     else delete provider.baseUrl
   }
-  config.translation.glossary = config.translation.glossary
-    .map((entry) => ({
-      ...entry,
-      term: entry.term.trim(),
-      use: entry.use.trim(),
-    }))
-    .filter((entry) => entry.term.length > 0)
-  const languages = new Set<string>()
-  config.translation.targetLanguages = filterSlots(
-    config.translation.targetLanguages,
-    (language) => {
-      if (languages.has(language)) return false
-      languages.add(language)
-      return true
-    }
+  const providers = new Set(llm.providers.map((provider) => provider.id))
+  llm.models = deduplicate(llm.models).filter((model) =>
+    providers.has(model.providerId)
   )
-  config.commands = deduplicate(config.commands)
-  for (const command of config.commands) {
+  const models = new Set(llm.models.map((model) => model.id))
+  for (const task of LLM_TASKS)
+    llm.taskModelChains[task] = llm.taskModelChains[task].filter((id) =>
+      models.has(id)
+    )
+  return llm
+}
+
+/**
+ * The command library: trimmed ids, each once, with the tool settings of the
+ * built-in tools repaired
+ */
+export function normalizeCommands(value: unknown): UserConfig['commands'] {
+  const commands = repair(value, schemaAt('commands')) as UserConfig['commands']
+  for (const command of commands) {
+    command.id = command.id.trim()
+    command.toolId = command.toolId.trim()
     const toolSchema =
       command.toolId === 'script'
         ? schemaValue.$defs.scriptToolConfig
@@ -268,23 +299,30 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
         toolSchema as Schema
       ) as Record<string, unknown>
   }
-  const taskIds = new Set<string>()
-  config.aiTasks = filterSlots(config.aiTasks, (task) => {
-    if (taskIds.has(task.id)) return false
-    taskIds.add(task.id)
-    return true
-  })
-  config.llm.providers = deduplicate(config.llm.providers)
-  config.llm.models = deduplicate(config.llm.models)
-  const providers = new Set(config.llm.providers.map((provider) => provider.id))
-  config.llm.models = config.llm.models.filter((model) =>
-    providers.has(model.providerId)
+  return deduplicate(commands)
+}
+
+/** Repairs known fields while preserving opaque plugin and tool settings. */
+export function normalizeUserConfig(value: UserConfigInput): UserConfig {
+  const config = repair(value, schema) as UserConfig
+  config.configVersion = configVersion
+  config.commands = normalizeCommands(config.commands)
+  config.llm = normalizeLlmConfig(config.llm)
+  config.translation.glossary = config.translation.glossary
+    .map((entry) => ({
+      ...entry,
+      term: entry.term.trim(),
+      use: entry.use.trim(),
+    }))
+    .filter((entry) => entry.term.length > 0)
+  config.translation.targetLanguages = distinctSlots(
+    config.translation.targetLanguages
   )
-  const models = new Set(config.llm.models.map((model) => model.id))
-  for (const task of LLM_TASKS)
-    config.llm.taskModelChains[task] = config.llm.taskModelChains[task].filter(
-      (id) => models.has(id)
-    )
+  config.aiTasks = deduplicate(config.aiTasks)
+  const taskIds = new Set(config.aiTasks.map((task) => task.id))
+  config.aiTaskSlots = distinctSlots(
+    filterSlots(config.aiTaskSlots, (id) => taskIds.has(id))
+  )
   const commands = new Set(config.commands.map((command) => command.id))
   config.launcherPages = deduplicate(config.launcherPages)
   const pageIds = new Set(config.launcherPages.map((page) => page.id))

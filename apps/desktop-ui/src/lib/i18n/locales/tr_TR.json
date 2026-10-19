@@ -1,13 +1,13 @@
 {
   "action": {
-    "aiTask": "AI görevi",
+    "aiTaskMenu": "AI görevi",
     "askInChat": "Sohbette sor",
     "copy": "Kopyala",
     "copyToClipboard": "Kopyala ve kapat",
     "correction": "Düzeltme",
     "insertIntoWindow": "Pencereye ekle",
     "script": "Betik / Komut",
-    "translation": "Çeviri",
+    "translationMenu": "Çeviri",
     "webhook": "Web kancası"
   },
   "app": { "title": "TyCo" },
@@ -843,7 +843,8 @@
     "unassignHotkey": "Kısayolu kaldır",
     "userLanguage": "Kullanıcı dili",
     "windowInsertion": "Ekleme yöntemi",
-    "windowInsertionHint": "Diğer uygulamalara tuş simülasyonu ve metin yapıştırmak için kullanılan yardımcı program: xdotool (X11 oturumlarında) veya ydotool (Wayland'de). Aşağıda yürütülebilir dosya yolunu belirtin.",
+    "windowInsertionHint": "Diğer uygulamalara tuş simülasyonu ve metin yapıştırmak için kullanılan yardımcı program: xdotool (X11 oturumlarında) veya ydotool (Wayland'de). Otomatik, geçerli oturuma uygun olanı seçer. Aşağıda yürütülebilir dosya yolunu belirtin.",
+    "windowInsertionAuto": "Otomatik",
     "binaryPathPlaceholder": "PATH içinde aranır",
     "vision": "Görsel desteği",
     "toolUse": "Araç çağırma",

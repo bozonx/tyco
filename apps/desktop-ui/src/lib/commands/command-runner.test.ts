@@ -2,14 +2,14 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type {
   CommandConfig,
-  CustomActionAfterRun,
+  CommandOutputAction,
   ScriptExecutionResult,
 } from '@tyco/shared'
 
 import type { ScriptAndWebhookToolDependencies } from '../tools/script-and-webhook-tools'
 import { testCopyTool, testInsertTool, testTools } from '../tools/testing'
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
-import { createCommand, launcherAfterRunFromOutput } from './command-config'
+import { createCommand } from './command-config'
 import type { InvocationRunnerDependencies } from '../invocation/invocation-runner'
 import type { InvocationOptions } from '../invocation/invocation-types'
 import { createCommandRunner } from './command-runner'
@@ -182,10 +182,7 @@ describe('script commands', () => {
       .fn()
       .mockResolvedValue(result({ stdout: 'UPPER\n' }))
     const { deps, runner } = setup({ executeScriptAction })
-    await runner.run(
-      script({}, { launcherAfterRun: launcherAfterRunFromOutput('showMenu') }),
-      'upper'
-    )
+    await runner.run(script({}, { outputAction: 'showMenu' }), 'upper')
     expect(executeScriptAction.mock.calls[0][0].captureOutput).toBe(true)
     expect(deps.showResultMenu).toHaveBeenCalledWith('UPPER', 'upper')
     expect(deps.hideWindow).not.toHaveBeenCalled()
@@ -197,7 +194,7 @@ describe('script commands', () => {
       .mockResolvedValue(result({ stdout: '\n' }))
     const { deps, runner } = setup({ executeScriptAction })
     const outcome = await runner.run(
-      script({}, { launcherAfterRun: launcherAfterRunFromOutput('showMenu') }),
+      script({}, { outputAction: 'showMenu' }),
       'x'
     )
     expect(outcome.success).toBe(false)
@@ -258,10 +255,7 @@ describe('webhook commands', () => {
   it('opens the action menu on the answer', async () => {
     const executeWebhook = vi.fn().mockResolvedValue('{"text":"done"}')
     const { deps, runner } = setup({ executeWebhook })
-    await runner.run(
-      webhook({}, { launcherAfterRun: launcherAfterRunFromOutput('showMenu') }),
-      'x'
-    )
+    await runner.run(webhook({}, { outputAction: 'showMenu' }), 'x')
     expect(deps.showResultMenu).toHaveBeenCalledWith('done', 'x')
   })
 
@@ -472,13 +466,13 @@ describe('the output of a command', () => {
     inputSchema: TEXT_INPUT_SCHEMA,
     run: vi.fn(async () => ({ ok: true, content: output })),
   })
-  const command = (afterRun: CustomActionAfterRun): CommandConfig => ({
+  const command = (afterRun: CommandOutputAction): CommandConfig => ({
     ...createCommand('Test.echo', 'e-1'),
     name: 'Echo',
-    launcherAfterRun: launcherAfterRunFromOutput(afterRun),
+    outputAction: afterRun,
   })
 
-  it.each(['none', 'copy', 'insertIntoWindow'] as const)(
+  it.each(['none', 'copyToClipboard', 'insertIntoWindow'] as const)(
     'shows menu results regardless of quick-command setting %s',
     async (setting) => {
       const tool = echo('result')
@@ -496,7 +490,7 @@ describe('the output of a command', () => {
     }
   )
 
-  it.each(['none', 'copy', 'showMenu', 'insertIntoWindow'] as const)(
+  it.each(['none', 'copyToClipboard', 'showMenu', 'insertIntoWindow'] as const)(
     'returns external output without UI or clipboard actions for %s',
     async (setting) => {
       const tool = echo('result\n')
@@ -563,7 +557,7 @@ describe('the output of a command', () => {
   it('copies the output and closes the window', async () => {
     const copyText = vi.fn(async () => {})
     const { deps, runner } = setup({ copyText }, [echo('result\n')])
-    expect(await runner.run(command('copy'), 'x')).toEqual({
+    expect(await runner.run(command('copyToClipboard'), 'x')).toEqual({
       success: true,
       result: undefined,
     })
@@ -575,7 +569,7 @@ describe('the output of a command', () => {
   it('warns when there is no output to copy', async () => {
     const copyText = vi.fn(async () => {})
     const { deps, runner } = setup({ copyText }, [echo(' ')])
-    const outcome = await runner.run(command('copy'), 'x')
+    const outcome = await runner.run(command('copyToClipboard'), 'x')
     expect(outcome.success).toBe(false)
     expect(copyText).not.toHaveBeenCalled()
     expect(deps.showToast).toHaveBeenCalledWith(
@@ -665,7 +659,7 @@ it('opens a result menu for a voice translation without inserting or copying the
       labelKey: 'tools.translate',
       description: 'Translates input text',
       inputSchema: TEXT_INPUT_SCHEMA,
-      defaultAfterRun: 'insertIntoWindow',
+      defaultOutputAction: 'insertIntoWindow',
       run: async () => ({ ok: true, content: 'Hello, how are you?' }),
     },
   ])

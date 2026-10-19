@@ -200,15 +200,15 @@ describe('settings concurrency and recovery', () => {
     model.draft.value.appearance.theme = 'dark'
     const first = model.persist()
     await Promise.resolve()
-    model.draft.value.chatHistory.isEnabled = false
+    model.draft.value.chat.history.storage = 'off'
     const second = model.persist()
-    model.draft.value.chatHistory.isEnabled = true
+    model.draft.value.chat.history.storage = 'disk'
     finish({
       success: true,
       result: {
         ...config(),
         appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-        chatHistory: { ...DEFAULT_USER_CONFIG.chatHistory, isEnabled: true },
+        chat: DEFAULT_USER_CONFIG.chat,
       },
     })
     await Promise.all([first, second])
@@ -329,18 +329,14 @@ describe('settings concurrency and recovery', () => {
   it('keeps unfinished fields when another setting is saved', async () => {
     const prepare = (value: unknown) => {
       const next = JSON.parse(JSON.stringify(value)) as UserConfig
-      next.aiTasks = Object.fromEntries(
-        Object.entries(next.aiTasks).filter(
-          ([, task]) => task.name || task.rule
-        )
-      )
+      next.aiTasks = next.aiTasks.filter((task) => task.name || task.rule)
       return next
     }
     const { model } = setup({ prepare })
-    model.draft.value.aiTasks = { q: { id: 'unfinished', name: '', rule: '' } }
+    model.draft.value.aiTasks = [{ id: 'unfinished', name: '', rule: '' }]
     model.draft.value.appearance.theme = 'dark'
     await model.persist()
-    expect(model.draft.value.aiTasks.q?.id).toBe('unfinished')
+    expect(model.draft.value.aiTasks[0]?.id).toBe('unfinished')
     expect(model.isSaved()).toBe(true)
   })
 })

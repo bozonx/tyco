@@ -175,6 +175,7 @@ import {
   DEFAULT_USER_CONFIG,
   type HotkeyId,
   INLINE_CORRECTION_HOTKEY_ID,
+  type SubmitKey,
   launcherPageHotkeyId,
   launcherPageMode,
 } from '@tyco/shared'
@@ -182,9 +183,9 @@ import {
 const { t } = useI18n()
 const { draft: userConfig, operations } = useSettingsContext()
 
-const submitKeyOptions = computed(() => [
-  { id: 'enter', name: t('settings.submitKey.enter') },
-  { id: 'ctrlEnter', name: t('settings.submitKey.ctrlEnter') },
+const submitKeyOptions = computed((): { id: SubmitKey; name: string }[] => [
+  { id: 'Enter', name: t('settings.submitKey.enter') },
+  { id: 'Ctrl+Enter', name: t('settings.submitKey.ctrlEnter') },
 ])
 
 /** Display order of the activation modes; unknown modes go last. */

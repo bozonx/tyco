@@ -42,7 +42,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** The command library the menu items of the `command` type refer to */
   commands?: () => readonly CommandConfig[] | undefined
   /** The AI tasks the menu items of the `aiTask` type refer to by id */
-  aiTasks?: () => ShortcutSlots<{ id: string; name: string }> | undefined
+  aiTasks?: () => readonly { id: string; name: string }[] | undefined
 }
 
 export function createActionMenuModel(deps: ActionMenuDependencies) {
@@ -98,9 +98,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
 
   /** The menu item of an AI task, or none when the task is gone */
   const createAiTaskActionItem = (taskId: string): ActionItem | undefined => {
-    const task = Object.values(deps.aiTasks?.() ?? {}).find(
-      (item) => item.id === taskId
-    )
+    const task = deps.aiTasks?.()?.find((item) => item.id === taskId)
     if (!task?.name) return undefined
     return {
       id: `aiTask:${taskId}`,
@@ -155,8 +153,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       true
     ),
     {
-      id: 'aiTask',
-      labelKey: 'action.aiTask',
+      id: 'aiTaskMenu',
+      labelKey: 'action.aiTaskMenu',
       icon: 'mdi:robot-outline',
       action: async (text: string) => {
         if (!text?.trim()) {
@@ -173,8 +171,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       action: (text: string) => correct(text),
     },
     {
-      id: 'translation',
-      labelKey: 'action.translation',
+      id: 'translationMenu',
+      labelKey: 'action.translationMenu',
       icon: 'mdi:translate',
       action: async (text: string) => {
         if (!text?.trim()) {

@@ -1,5 +1,5 @@
 import type { FetchFunction } from '@bozonx/ai-kit'
-import type { LlmProvider } from '@tyco/shared'
+import { llmSecretId, type LlmProvider } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 
@@ -16,7 +16,7 @@ export function createLlmConnectionChecker(options: {
     if (!baseUrl) throw new InvalidLlmBaseUrlError('Invalid LLM base URL')
     const signal = AbortSignal.timeout(options.timeoutMs ?? 15_000)
     const headers = options.hasKey(provider.id)
-      ? { Authorization: `Bearer ${secretRef(provider.id)}` }
+      ? { Authorization: `Bearer ${secretRef(llmSecretId(provider.id))}` }
       : undefined
     const response = await options.fetch(`${baseUrl}/models`, {
       headers,

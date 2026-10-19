@@ -1,6 +1,6 @@
 import {
   type CommandConfig,
-  type CustomActionAfterRun,
+  type CommandOutputAction,
   SCRIPT_MAX_TIMEOUT_SEC,
 } from '@tyco/shared'
 
@@ -30,14 +30,14 @@ export function createCommandEditorModel(deps: {
         : undefined
     )
   }
-  function updateLauncherAfterRun(action: CustomActionAfterRun) {
-    update({ launcherAfterRun: { action } })
+  function updateOutputAction(outputAction: CommandOutputAction) {
+    update({ outputAction })
   }
   return {
     update,
     updateDescription,
     updateToolConfig,
     updateTimeout,
-    updateLauncherAfterRun,
+    updateOutputAction,
   }
 }

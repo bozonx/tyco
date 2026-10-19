@@ -6,6 +6,10 @@ use std::collections::HashSet;
 use crate::errors::AppError;
 use crate::services::secrets::{normalize_origin, SecretStore, SECRET_REF_PREFIX};
 
+/// The secrets the app makes for webhooks; it removes them once unused.
+const WEBHOOK_HEADER_PREFIX: &str = "webhook.header.";
+const WEBHOOK_AUTH_PREFIX: &str = "webhook.auth.";
+
 fn header_secret_id(command_id: &str, header: &str, value: &str, origin: &str) -> String {
     let digest = Sha256::digest(
         format!(
@@ -14,7 +18,7 @@ fn header_secret_id(command_id: &str, header: &str, value: &str, origin: &str) -
         )
         .as_bytes(),
     );
-    format!("webhook-header-{:x}", digest)[..63].to_owned()
+    format!("{WEBHOOK_HEADER_PREFIX}{:x}", digest)[..63].to_owned()
 }
 
 fn protect_headers(
@@ -174,8 +178,8 @@ fn cleanup(
     candidates: Option<&HashSet<String>>,
 ) {
     for id in store.ids() {
-        let managed = id.starts_with("webhook-header-")
-            || (include_authorization && id.starts_with("webhook-auth-"));
+        let managed = id.starts_with(WEBHOOK_HEADER_PREFIX)
+            || (include_authorization && id.starts_with(WEBHOOK_AUTH_PREFIX));
         if managed && !retained.contains(&id) && candidates.is_none_or(|ids| ids.contains(&id)) {
             if let Err(error) = store.remove(&id) {
                 log::warn!("Could not remove unused webhook secret: {error}");
@@ -200,20 +204,20 @@ mod tests {
         let path = directory.join("secrets.json");
         let origins = serde_json::json!({ "origins": ["https://example.com"] });
         let secrets: serde_json::Map<String, Value> = [
-            "webhook-header-shared",
-            "webhook-header-obsolete",
-            "webhook-header-undo",
-            "webhook-auth-unused",
+            "webhook.header.shared",
+            "webhook.header.obsolete",
+            "webhook.header.undo",
+            "webhook.auth.unused",
         ]
         .into_iter()
         .map(|id| (id.to_owned(), origins.clone()))
         .collect();
         std::fs::write(&path, serde_json::json!({ "secrets": secrets }).to_string()).unwrap();
         let store = SecretStore::load(path, None).unwrap();
-        let config = serde_json::json!({"commands":[{"toolConfig":{"headers":{"a":"tyco-secret:webhook-header-shared"}}}]});
+        let config = serde_json::json!({"commands":[{"toolConfig":{"headers":{"a":"tyco-secret:webhook.header.shared"}}}]});
         let candidates = HashSet::from([
-            "webhook-header-shared".into(),
-            "webhook-header-obsolete".into(),
+            "webhook.header.shared".into(),
+            "webhook.header.obsolete".into(),
         ]);
         cleanup(
             &store,
@@ -221,11 +225,11 @@ mod tests {
             false,
             Some(&candidates),
         );
-        assert!(store.ids().contains(&"webhook-header-shared".into()));
-        assert!(store.ids().contains(&"webhook-header-undo".into()));
-        assert!(!store.ids().contains(&"webhook-header-obsolete".into()));
+        assert!(store.ids().contains(&"webhook.header.shared".into()));
+        assert!(store.ids().contains(&"webhook.header.undo".into()));
+        assert!(!store.ids().contains(&"webhook.header.obsolete".into()));
         cleanup(&store, &referenced_secrets(&config), true, None);
-        assert_eq!(store.ids(), vec![String::from("webhook-header-shared")]);
+        assert_eq!(store.ids(), vec![String::from("webhook.header.shared")]);
     }
 
     #[test]

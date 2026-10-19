@@ -12,7 +12,7 @@ describe('command removal model', () => {
       toolConfig: {
         url: 'https://example.com',
         isAuthEnabled: true,
-        authSecretId: 'webhook-auth-test',
+        authSecretId: 'webhook.auth.test',
       },
     }
     let commands = [command]
@@ -65,7 +65,7 @@ describe('command removal model', () => {
     f.model.finishRemoval()
     await vi.waitFor(() =>
       expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
-        'webhook-auth-test'
+        'webhook.auth.test'
       )
     )
   })
@@ -75,7 +75,7 @@ describe('command removal model', () => {
     f.model.removeCommand(createCommand('script', 'second'))
     await vi.waitFor(() =>
       expect(f.removeSecret).toHaveBeenCalledExactlyOnceWith(
-        'webhook-auth-test'
+        'webhook.auth.test'
       )
     )
     f.model.undoRemove()

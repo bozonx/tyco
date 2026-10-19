@@ -269,22 +269,21 @@ it('does not automatically execute a manually recovered parameter', async () => 
   expect(deps.run).toHaveBeenCalledOnce()
 })
 
-it('automatically runs the final exact command by default regardless of the legacy confirmation setting', async () => {
+it('automatically runs the final exact command by default', async () => {
   const { model, deps, partial } = setup()
   await model.start()
   partial('save note Draft')
   expect(deps.run).not.toHaveBeenCalled()
   await model.finish()
   expect(deps.run).toHaveBeenCalledExactlyOnceWith(
-    expect.objectContaining({ id: 'note', voiceConfirmation: 'always' }),
+    expect.objectContaining({ id: 'note' }),
     'Hello!',
     expect.any(AbortSignal)
   )
 })
 
-it('waits for manual execution when finished for review even for a legacy automatic command', async () => {
-  const { model, deps, commands } = setup()
-  commands[0]!.voiceConfirmation = 'auto'
+it('waits for manual execution when finished for review', async () => {
+  const { model, deps } = setup()
   await model.start()
   await model.finish('review')
   expect(deps.run).not.toHaveBeenCalled()

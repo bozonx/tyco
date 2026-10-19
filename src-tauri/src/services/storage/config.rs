@@ -1,9 +1,7 @@
 mod backups;
-mod normalization;
 
 use super::*;
 use backups::back_up_config_before_repair;
-use normalization::*;
 
 /// The user config the app starts with.
 pub struct LoadedUserConfig {
@@ -17,11 +15,12 @@ pub struct LoadedUserConfig {
 /// replaced by the defaults: the app must start either way, and the user keeps
 /// the broken file to fix it.
 pub fn read_or_create_user_config(app: &AppHandle) -> Result<LoadedUserConfig, AppError> {
-    let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
+    load_user_config_at(&app_config_dir(app)?.join(CONFIG_FILE_NAME))
+}
 
-    if let Some(mut value) = read_or_quarantine(&path, |raw| {
+fn load_user_config_at(path: &Path) -> Result<LoadedUserConfig, AppError> {
+    if let Some(mut value) = read_or_quarantine(path, |raw| {
         let value: Value = serde_json::from_str(raw)?;
-
         if value.is_object() {
             Ok(value)
         } else {
@@ -34,15 +33,14 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<LoadedUserConfig, A
         if version::is_newer_than_supported(&value) {
             return Err(newer_config_error());
         }
-
         let original = value.clone();
-        let changed = normalize_loaded_config(&mut value);
-
+        let changed = crate::services::settings::schema::normalize_user_config(&mut value);
         // the app starts with the config in memory either way; the next
         // save writes it
         let is_on_disk = !changed
-            || match back_up_config_before_repair(&path, &original) {
-                Ok(()) => match save_user_config(app, &value) {
+            || match back_up_config_before_repair(path, &original) {
+                // the snapshot is taken: writing must not take another one
+                Ok(()) => match write_user_config(path, &value, false) {
                     Ok(()) => true,
                     Err(error) => {
                         log::error!("Could not save the updated config: {error}");
@@ -58,37 +56,39 @@ pub fn read_or_create_user_config(app: &AppHandle) -> Result<LoadedUserConfig, A
     }
 
     let default_config = default_user_config();
-    let is_on_disk = match save_user_config(app, &default_config) {
+    let is_on_disk = match write_user_config(path, &default_config, true) {
         Ok(()) => true,
         Err(error) => {
             log::error!("Could not save the default config: {error}");
             false
         }
     };
-
     Ok(LoadedUserConfig {
         value: default_config,
         is_on_disk,
     })
 }
 
-/// Repairs disk input using domain rules followed by the shared schema.
-/// Returns true when the normalized configuration differs from the input.
-fn normalize_loaded_config(value: &mut Value) -> bool {
-    let normalized = normalize_window_insertion_config(value)
-        | normalize_hotkeys_config(value)
-        | normalize_language_config(value);
-    let repaired = crate::services::settings::schema::normalize_user_config(value);
-    normalized | repaired
-}
-
 /// Writes `user_config`, which the caller has validated: the settings
 /// service before it applies a change, the startup by normalizing it. A file
 /// a newer Tyco wrote meanwhile is left alone.
 pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppError> {
+    write_user_config(
+        &app_config_dir(app)?.join(CONFIG_FILE_NAME),
+        user_config,
+        true,
+    )
+}
+
+/// Writes the config; `should_back_up_invalid` keeps a snapshot of a file on
+/// the disk that does not pass the schema, unless the caller has just taken one.
+fn write_user_config(
+    path: &Path,
+    user_config: &Value,
+    should_back_up_invalid: bool,
+) -> Result<(), AppError> {
     debug_assert!(crate::services::settings::schema::validate_user_config(user_config).is_ok());
-    let path = app_config_dir(app)?.join(CONFIG_FILE_NAME);
-    let previous = match fs::read_to_string(&path) {
+    let previous = match fs::read_to_string(path) {
         Ok(raw) => Some(raw),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => return Err(error.into()),
@@ -98,15 +98,87 @@ pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppE
         if version::is_newer_than_supported(&original) {
             return Err(newer_config_error());
         }
-        if crate::services::settings::schema::validate_user_config(&original).is_err() {
-            back_up_config_before_repair(&path, &original)?;
+        if should_back_up_invalid
+            && crate::services::settings::schema::validate_user_config(&original).is_err()
+        {
+            back_up_config_before_repair(path, &original)?;
         }
     }
-    write_json(&path, user_config)
+    write_json(path, user_config)
 }
 
 pub fn newer_config_error() -> AppError {
     AppError::UnsupportedConfig(String::from(
         "The config was written by a newer version of Tyco; update Tyco to open this configuration",
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::storage::test_support::TestDir;
+
+    fn snapshot_count(dir: &Path) -> usize {
+        fs::read_dir(dir)
+            .unwrap()
+            .filter(|entry| {
+                entry
+                    .as_ref()
+                    .unwrap()
+                    .file_name()
+                    .to_string_lossy()
+                    .contains(".repaired-")
+            })
+            .count()
+    }
+
+    #[test]
+    fn a_startup_repair_keeps_one_snapshot() {
+        let dir = TestDir::new("config-repair-snapshot");
+        let path = dir.join(CONFIG_FILE_NAME);
+        fs::write(&path, r#"{"appearance":{"theme":"sepia"},"unknown":1}"#).unwrap();
+
+        let loaded = load_user_config_at(&path).unwrap();
+
+        assert!(loaded.is_on_disk);
+        assert_eq!(snapshot_count(&dir), 1);
+        let saved: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(saved, loaded.value);
+        // a valid config is read as it is
+        load_user_config_at(&path).unwrap();
+        assert_eq!(snapshot_count(&dir), 1);
+    }
+
+    #[test]
+    fn a_missing_config_is_created_from_the_defaults() {
+        let dir = TestDir::new("config-create");
+        let path = dir.join(CONFIG_FILE_NAME);
+        let loaded = load_user_config_at(&path).unwrap();
+        assert_eq!(loaded.value, default_user_config());
+        assert!(path.is_file());
+        assert_eq!(snapshot_count(&dir), 0);
+    }
+
+    #[test]
+    fn a_newer_config_is_left_alone() {
+        let dir = TestDir::new("config-newer");
+        let path = dir.join(CONFIG_FILE_NAME);
+        let raw = format!(r#"{{"configVersion":{}}}"#, version::CONFIG_VERSION + 1);
+        fs::write(&path, &raw).unwrap();
+        assert!(load_user_config_at(&path).is_err());
+        assert_eq!(fs::read_to_string(&path).unwrap(), raw);
+    }
+
+    #[test]
+    fn missing_sections_come_from_the_defaults() {
+        let defaults = default_user_config();
+        let mut config = serde_json::json!({});
+        assert!(crate::services::settings::schema::normalize_user_config(
+            &mut config
+        ));
+        assert_eq!(config, defaults);
+        assert!(!crate::services::settings::schema::normalize_user_config(
+            &mut config
+        ));
+    }
 }

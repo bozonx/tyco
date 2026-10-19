@@ -28,30 +28,41 @@ describe('AI task ids', () => {
 })
 
 describe('addTaskFromPrompt', () => {
-  it('fills the first free slot', () => {
+  it('adds the task to the library and puts it into the first free slot', () => {
     expect(
       addTaskFromPrompt(
-        { w: { id: 'task-1', name: 'a', rule: 'A' } },
+        {
+          aiTasks: [{ id: 'task-1', name: 'a', rule: 'A' }],
+          aiTaskSlots: { w: 'task-1' },
+        },
         'Be brief'
       )
     ).toEqual({
-      q: { id: 'task-2', name: 'Be brief', rule: 'Be brief' },
-      w: { id: 'task-1', name: 'a', rule: 'A' },
+      aiTasks: [
+        { id: 'task-1', name: 'a', rule: 'A' },
+        { id: 'task-2', name: 'Be brief', rule: 'Be brief' },
+      ],
+      aiTaskSlots: { q: 'task-2', w: 'task-1' },
     })
   })
 
   it('refuses when all slots are taken', () => {
-    const full = Object.fromEntries(
-      SHORTCUT_SLOT_KEYS.map((key, index) => [
-        key,
-        { id: `task-${index}`, name: key, rule: key },
-      ])
+    const aiTasks = SHORTCUT_SLOT_KEYS.map((key, index) => ({
+      id: `task-${index}`,
+      name: key,
+      rule: key,
+    }))
+    const aiTaskSlots = Object.fromEntries(
+      SHORTCUT_SLOT_KEYS.map((key, index) => [key, `task-${index}`])
     )
-    expect(addTaskFromPrompt(full, 'Be brief')).toBe(null)
+    expect(addTaskFromPrompt({ aiTasks, aiTaskSlots }, 'Be brief')).toBe(null)
   })
 
   it('does not save the same request twice', () => {
-    const tasks = { q: { id: 'task-1', name: 'Be brief', rule: 'Be brief' } }
-    expect(addTaskFromPrompt(tasks, ' Be brief ')).toEqual(tasks)
+    const library = {
+      aiTasks: [{ id: 'task-1', name: 'Be brief', rule: 'Be brief' }],
+      aiTaskSlots: { q: 'task-1' },
+    }
+    expect(addTaskFromPrompt(library, ' Be brief ')).toEqual(library)
   })
 })

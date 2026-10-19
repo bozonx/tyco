@@ -6,7 +6,7 @@ import type { FakeDesktop } from './fake-desktop'
 /** Native microphone and sherpa socket controlled independently by the test. */
 export function installVoice(desktop: FakeDesktop) {
   desktop.userConfig.stt = {
-    providerId: 'sherpaOnnx',
+    provider: 'sherpaOnnx',
     isLlmFormattingEnabled: false,
     providers: {
       deepgram: { modelId: 'nova-3', language: 'auto' },

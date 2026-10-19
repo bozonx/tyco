@@ -26,9 +26,9 @@ describe('llm-catalog', () => {
     expect(gemini.contextSize).toBe(128_000)
     expect(gemini.maxOutputTokens).toBe(OUTPUT_TOKENS_CEILING)
 
-    const local = catalog.require('local-qwen')
+    const local = catalog.require('ollama-qwen')
     expect(local.contextSize).toBe(DEFAULT_CONTEXT_WINDOW_TOKENS)
-    expect(local.provider).toBe('local')
+    expect(local.provider).toBe('ollama')
     expect(local.baseUrl).toBe('http://localhost:11434/v1')
   })
 
@@ -36,9 +36,9 @@ describe('llm-catalog', () => {
     const base = config()
     const catalog = buildLlmCatalog(base)!
     expect(catalog.require('gemini-flash').capabilities.tools).toBe(true)
-    expect(catalog.require('local-qwen').capabilities.tools).toBe(false)
+    expect(catalog.require('ollama-qwen').capabilities.tools).toBe(false)
 
-    const local = base.models.find((model) => model.id === 'local-qwen')!
+    const local = base.models.find((model) => model.id === 'ollama-qwen')!
     expect(supportsTools({ ...local, canUseTools: true }, base.providers)).toBe(
       true
     )
@@ -65,7 +65,7 @@ describe('llm-catalog', () => {
       'gemini-flash',
       'deepseek-chat',
     ])
-    expect(names(catalog.candidatesFor('translation'))).toEqual(['local-qwen'])
+    expect(names(catalog.candidatesFor('translation'))).toEqual(['ollama-qwen'])
   })
 
   it('leaves out unfinished models and the tasks left without any', () => {
@@ -73,7 +73,7 @@ describe('llm-catalog', () => {
     const catalog = buildLlmCatalog({
       ...base,
       providers: base.providers.map((provider) =>
-        provider.id === 'local'
+        provider.id === 'ollama'
           ? { ...provider, baseUrl: 'not a url' }
           : provider
       ),
@@ -87,7 +87,7 @@ describe('llm-catalog', () => {
       },
     })!
 
-    expect(catalog.find('local-qwen')).toBeUndefined()
+    expect(catalog.find('ollama-qwen')).toBeUndefined()
     expect(catalog.find('blank')).toBeUndefined()
     expect(names(catalog.candidatesFor('aiTask'))).toEqual(['gemini-flash'])
     expect(catalog.taskClasses).not.toContain('translation')
@@ -132,6 +132,6 @@ describe('llm-catalog', () => {
   it('registers an adapter per custom endpoint only', () => {
     const factories = buildProviderFactories(config())
 
-    expect(Object.keys(factories)).toEqual(['local'])
+    expect(Object.keys(factories)).toEqual(['ollama'])
   })
 })

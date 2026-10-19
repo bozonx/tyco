@@ -6,20 +6,25 @@ use crate::errors::AppError;
 const MAX_ID_LEN: usize = 64;
 
 /// Where the well-known providers live. A secret stored under one of these
-/// ids is bound to these origins unless the caller names others.
+/// ids is bound to these origins unless the caller names others. An id names
+/// what the key is for, `<namespace>.<name>`; see `secret-ids.ts` of the
+/// shared package.
 const BUILTIN_ORIGINS: &[(&str, &[&str])] = &[
-    ("google", &["https://generativelanguage.googleapis.com"]),
-    ("google-translate", &["https://translation.googleapis.com"]),
+    ("llm.google", &["https://generativelanguage.googleapis.com"]),
+    ("llm.openrouter", &["https://openrouter.ai"]),
+    ("llm.deepseek", &["https://api.deepseek.com"]),
+    ("llm.openai", &["https://api.openai.com"]),
+    ("llm.anthropic", &["https://api.anthropic.com"]),
+    ("llm.groq", &["https://api.groq.com"]),
     (
-        "deepl",
+        "translation.google",
+        &["https://translation.googleapis.com"],
+    ),
+    (
+        "translation.deepl",
         &["https://api.deepl.com", "https://api-free.deepl.com"],
     ),
-    ("openrouter", &["https://openrouter.ai"]),
-    ("deepseek", &["https://api.deepseek.com"]),
-    ("openai", &["https://api.openai.com"]),
-    ("anthropic", &["https://api.anthropic.com"]),
-    ("groq", &["https://api.groq.com"]),
-    ("deepgram", &["https://api.deepgram.com"]),
+    ("stt.deepgram", &["https://api.deepgram.com"]),
 ];
 
 /// The trimmed value and the normalized origins of a secret to store.

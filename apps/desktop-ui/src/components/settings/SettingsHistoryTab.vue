@@ -18,12 +18,12 @@
           :info="t('settings.editorHistoryStorageHint')"
         >
           <FieldSelect
-            v-model="userConfig.editorHistory.storage"
+            v-model="userConfig.editor.history.storage"
             :options="editorHistoryStorageOptions"
           />
         </FieldRow>
         <div
-          v-if="userConfig.editorHistory.storage !== 'off'"
+          v-if="userConfig.editor.history.storage !== 'off'"
           class="editor-history-nested"
         >
           <FieldRow
@@ -34,11 +34,11 @@
             <FieldNumber
               :min="1"
               :step="1"
-              :model-value="userConfig.editorHistory.maxItems"
+              :model-value="userConfig.editor.history.maxItems"
               @update:model-value="setEditorHistoryLimit"
             />
           </FieldRow>
-          <template v-if="userConfig.editorHistory.storage === 'disk'">
+          <template v-if="userConfig.editor.history.storage === 'disk'">
             <FieldRow
               :label="t('settings.editorHistoryRetentionDays')"
               :info="t('settings.editorHistoryRetentionDaysHint')"
@@ -46,7 +46,7 @@
               :separator="false"
             >
               <FieldSelect
-                :model-value="userConfig.editorHistory.retentionDays ?? 0"
+                :model-value="userConfig.editor.history.retentionDays ?? 0"
                 :options="editorHistoryRetentionOptions"
                 @update:model-value="setEditorHistoryRetentionDays"
               />
@@ -59,10 +59,10 @@
             >
               <FieldSwitch
                 :model-value="
-                  userConfig.editorHistory.isSecretSanitizingEnabled ?? false
+                  userConfig.editor.history.isSecretSanitizingEnabled ?? false
                 "
                 @update:model-value="
-                  userConfig.editorHistory.isSecretSanitizingEnabled = $event
+                  userConfig.editor.history.isSecretSanitizingEnabled = $event
                 "
               />
             </FieldRow>
@@ -101,7 +101,7 @@
             :separator="false"
           >
             <FieldSelect
-              :model-value="userConfig.chatHistory.retentionDays ?? 0"
+              :model-value="userConfig.chat.history.retentionDays ?? 0"
               :options="chatHistoryRetentionOptions"
               @update:model-value="setChatHistoryRetentionDays"
             />
@@ -195,7 +195,7 @@ const chatHistoryChecked = computed(
 /** Turning it off deletes the saved chats, so it asks first */
 function setChatHistoryEnabled(enabled: boolean) {
   if (enabled) {
-    userConfig.value.chatHistory.isEnabled = true
+    userConfig.value.chat.history.storage = 'disk'
     return
   }
   showDisableChatHistoryModal.value = true
@@ -203,25 +203,25 @@ function setChatHistoryEnabled(enabled: boolean) {
 
 function onDisableChatHistory() {
   showDisableChatHistoryModal.value = false
-  userConfig.value.chatHistory.isEnabled = false
+  userConfig.value.chat.history.storage = 'off'
 }
 
 function setChatHistoryRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  userConfig.value.chatHistory.retentionDays = parsed
+  userConfig.value.chat.history.retentionDays = parsed
 }
 
 function setEditorHistoryLimit(value: string) {
   const parsed = Number(value)
   if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 1) return
-  userConfig.value.editorHistory.maxItems = Math.round(parsed)
+  userConfig.value.editor.history.maxItems = Math.round(parsed)
 }
 
 function setEditorHistoryRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  userConfig.value.editorHistory.retentionDays = parsed
+  userConfig.value.editor.history.retentionDays = parsed
 }
 
 const editorHistoryStorageOptions = computed(() => [
@@ -245,14 +245,16 @@ const retentionOptions = (choices: number[], foreverLabel: string) => {
 
 const editorHistoryRetentionOptions = computed(() =>
   retentionOptions(
-    editorHistoryRetentionChoices(userConfig.value.editorHistory.retentionDays),
+    editorHistoryRetentionChoices(
+      userConfig.value.editor.history.retentionDays
+    ),
     t('settings.editorHistoryRetentionForever')
   )
 )
 
 const chatHistoryRetentionOptions = computed(() =>
   retentionOptions(
-    chatHistoryRetentionChoices(userConfig.value.chatHistory.retentionDays),
+    chatHistoryRetentionChoices(userConfig.value.chat.history.retentionDays),
     t('settings.chatHistoryRetentionNever')
   )
 )

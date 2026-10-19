@@ -1,7 +1,4 @@
-import {
-  type MarkdownCleanSettings,
-  normalizeMarkdownCleanSettings,
-} from '@tyco/shared'
+import { type MarkdownStripSettings, normalizeConfigValue } from '@tyco/shared'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import { unified } from 'unified'
@@ -22,14 +19,14 @@ const parser = unified().use(remarkParse).use(remarkGfm)
 
 const HTML_TAG = /<[^>]*>/g
 
-const inline = (nodes: MdNode[] = [], options: MarkdownCleanSettings): string =>
+const inline = (nodes: MdNode[] = [], options: MarkdownStripSettings): string =>
   nodes
     .map((node) => {
       switch (node.type) {
         case 'text':
           return node.value ?? ''
         case 'inlineCode':
-          return options.keepInlineCode
+          return options.hasInlineCode
             ? `\`${node.value ?? ''}\``
             : (node.value ?? '')
         case 'break':
@@ -98,7 +95,7 @@ const indentLines = (text: string, prefix: string): string => {
 const indent = (text: string, width: number): string =>
   width > 0 ? text.replace(/\n(?=.)/g, `\n${' '.repeat(width)}`) : text
 
-const block = (node: MdNode, options: MarkdownCleanSettings): string | null => {
+const block = (node: MdNode, options: MarkdownStripSettings): string | null => {
   switch (node.type) {
     case 'paragraph':
     case 'heading':
@@ -134,9 +131,9 @@ const block = (node: MdNode, options: MarkdownCleanSettings): string | null => {
           }
 
           const task =
-            options.keepTaskCheckboxes && item.checked === true
+            options.hasTaskCheckboxes && item.checked === true
               ? '[x] '
-              : options.keepTaskCheckboxes && item.checked === false
+              : options.hasTaskCheckboxes && item.checked === false
                 ? '[ ] '
                 : ''
 
@@ -154,7 +151,7 @@ const block = (node: MdNode, options: MarkdownCleanSettings): string | null => {
         )
         .join('\n')
     case 'thematicBreak':
-      return options.keepThematicBreaks ? '---' : null
+      return options.hasThematicBreaks ? '---' : null
     case 'definition':
     case 'footnoteDefinition':
       return null
@@ -165,7 +162,7 @@ const block = (node: MdNode, options: MarkdownCleanSettings): string | null => {
 
 const blocks = (
   nodes: MdNode[] = [],
-  options: MarkdownCleanSettings
+  options: MarkdownStripSettings
 ): string[] =>
   nodes
     .map((node) => block(node, options))
@@ -177,8 +174,11 @@ const blocks = (
  * text has them too, table cells are split by tabs
  */
 export function stripMarkdown(markdown: string, options?: unknown): string {
-  const cleanSettings = normalizeMarkdownCleanSettings(options)
+  const stripSettings = normalizeConfigValue<MarkdownStripSettings>(
+    'markdown.strip',
+    options
+  )
   const tree = parser.parse(markdown) as MdNode
 
-  return blocks(tree.children, cleanSettings).join('\n\n')
+  return blocks(tree.children, stripSettings).join('\n\n')
 }

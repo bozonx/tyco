@@ -124,7 +124,7 @@ const runMenuAction = async (labelKey: string) => {
   }
 }
 
-const handleAiTask = () => runMenuAction('action.aiTask')
+const handleAiTask = () => runMenuAction('action.aiTaskMenu')
 
 /** Opens the chat with the selection, or the whole text, attached */
 const handleAskAi = async () => {
@@ -139,7 +139,7 @@ const handleAskAi = async () => {
 }
 
 const handleInsertToWindow = () => runMenuAction('action.insertIntoWindow')
-const handleTranslation = () => runMenuAction('action.translation')
+const handleTranslation = () => runMenuAction('action.translationMenu')
 const handleCorrection = () => runMenuAction('action.correction')
 
 const handleCopy = async () => {

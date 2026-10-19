@@ -6,9 +6,9 @@ const CHAT_HISTORY_RETENTION_DAYS = [0, 7, 30, 90, 365] as const
 
 /** Chats are saved unless the settings turn it off */
 export function isChatHistoryEnabled(
-  config: Pick<UserConfig, 'chatHistory'>
+  config: Pick<UserConfig, 'chat'>
 ): boolean {
-  return config.chatHistory.isEnabled
+  return config.chat.history.storage !== 'off'
 }
 
 /** The offered retention periods plus the saved one if it is not among them */

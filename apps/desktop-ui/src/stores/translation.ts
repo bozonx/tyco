@@ -8,7 +8,10 @@ import { clientLogger } from '../lib/logger'
 import { createSecretKeyProvider } from '../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { createTranslationActions } from '../lib/translation/translation-actions'
-import { createTranslationClient } from '../lib/translation/translation-client'
+import {
+  createTranslationClient,
+  translationKitSecretId,
+} from '../lib/translation/translation-client'
 import { normalizeTranslationConfig } from '../lib/translation/translation-config'
 import { useDesktopStore } from './desktop'
 import { useLlmStore } from './llm'
@@ -29,7 +32,10 @@ export const useTranslationStore = defineStore('translation', () => {
         'translation'
       ),
     transport: createTauriTransport(tauriNetIpc),
-    keys: createSecretKeyProvider(() => secretsStore.client.status()),
+    keys: createSecretKeyProvider(
+      () => secretsStore.client.status(),
+      translationKitSecretId
+    ),
     runLlm: (prompt, signal, options = {}) =>
       llmStore.client.run('translation', prompt, { signal, ...options }),
   })

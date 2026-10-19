@@ -225,6 +225,7 @@ import {
   type ProfileToolSettings,
   type ProjectAccessMode,
   type ProjectPermission,
+  llmSecretId,
 } from '@tyco/shared'
 
 const props = defineProps<{ profileId: string }>()
@@ -318,7 +319,7 @@ function changeTools(tools: ProfileToolSettings) {
 
 const availableModels = computed(() =>
   chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
-    isSecretUsable(secretsStore.secrets, id)
+    isSecretUsable(secretsStore.secrets, llmSecretId(id))
   )
 )
 

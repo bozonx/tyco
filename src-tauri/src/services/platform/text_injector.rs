@@ -93,7 +93,7 @@ mod tests {
         ) -> Result<(), AppError> {
             assert_eq!(
                 config,
-                &serde_json::json!({"pasteShortcut": "shift+insert"})
+                &serde_json::json!({"pasteShortcut": "Shift+Insert"})
             );
             assert_eq!(window.map(ForegroundTarget::as_platform_id), Some("target"));
             self.calls.borrow_mut().push("inject");
@@ -115,7 +115,7 @@ mod tests {
             };
             let result = paste_after_focus(
                 &injector,
-                &serde_json::json!({"pasteShortcut": "shift+insert"}),
+                &serde_json::json!({"pasteShortcut": "Shift+Insert"}),
                 Some(&ForegroundTarget::from_platform_id("target".into())),
                 || calls.borrow_mut().push("release-focus"),
                 || calls.borrow_mut().push("restore"),

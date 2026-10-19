@@ -38,14 +38,22 @@ export const SHORTCUT_SLOT_KEYS = [
 export type ShortcutSlotKey = (typeof SHORTCUT_SLOT_KEYS)[number]
 export type ShortcutSlots<T> = Partial<Record<ShortcutSlotKey, T>>
 
+export interface DeeplTranslationSettings {
+  /** The API of a free key (ending in `:fx`) or of a paid one */
+  endpoint: 'free' | 'pro'
+}
+
 export interface TranslationConfig {
-  /** Distinct locales such as `en_US` */
+  provider: TranslationProvider
+  /** The settings of the machine translation services */
+  providers: { deepl: DeeplTranslationSettings }
+  /**
+   * When the LLM reviews a translation; its rules are
+   * `aiRules.translationQualityGate`
+   */
+  qualityGate: TranslationQualityGate
+  glossary: TranslationGlossaryEntry[]
+  /** The translation menu: distinct locales such as `en_US` by shortcut key */
   targetLanguages: ShortcutSlots<string>
   viewMode: 'split' | 'result'
-  provider: TranslationProvider
-  qualityGate: TranslationQualityGate
-  deeplEndpoint: 'free' | 'pro'
-  glossary: TranslationGlossaryEntry[]
-  /** Extra instructions for the AI correction pass in the `always` mode. */
-  qualityGatePrompt: string
 }

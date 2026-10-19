@@ -80,7 +80,7 @@ describe('CommandEditor.vue', () => {
   it('has one output action, with or without a selection', async () => {
     const command = script(
       { command: 'echo {{TEXT}}' },
-      { name: 'Echo', launcherAfterRun: { action: 'insertIntoWindow' } }
+      { name: 'Echo', outputAction: 'insertIntoWindow' }
     )
     const wrapper = mountEditor(command)
     const selects = wrapper.findAll('select')
@@ -89,7 +89,7 @@ describe('CommandEditor.vue', () => {
       optionValue(selects[0], 'commands.afterRunInsert')
     )
     await selects[0].setValue(optionValue(selects[0], 'commands.afterRunCopy'))
-    expect(lastUpdate(wrapper).launcherAfterRun).toEqual({ action: 'copy' })
+    expect(lastUpdate(wrapper).outputAction).toBe('copyToClipboard')
   })
 
   it('offers the insertion for a command without text too', () => {
@@ -100,10 +100,7 @@ describe('CommandEditor.vue', () => {
   it('shows the call from outside only for a command allowed there', () => {
     const command = script({ command: 'ls' }, { name: 'Work note' })
     expect(mountEditor(command).find('.command-cli').exists()).toBe(false)
-    const external = {
-      ...command,
-      availableIn: { external: true, chat: false },
-    }
+    const external = { ...command, isAvailableExternally: true }
     expect(mountEditor(external).find('.command-cli').text()).toBe(
       "tyco-ctl run --name 'Work note'"
     )

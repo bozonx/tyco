@@ -14,12 +14,17 @@ describe('normalizeMainActions', () => {
   it('keeps valid slots and removes unsupported actions', () => {
     expect(
       normalizeMainActions({
-        w: { type: 'standard', actionId: 'translation' },
+        w: { type: 'standard', actionId: 'translationMenu' },
         e: { type: 'custom', command: 'echo nope' },
         r: { type: 'standard', actionId: 'unknown' },
         y: { type: 'standard', actionId: 'askInChat' },
       }).slice(0, 4)
-    ).toEqual([null, { type: 'standard', actionId: 'translation' }, null, null])
+    ).toEqual([
+      null,
+      { type: 'standard', actionId: 'translationMenu' },
+      null,
+      null,
+    ])
   })
 
   it('keeps references to commands, AI tasks and translation languages', () => {

@@ -12,7 +12,7 @@ vi.mock('../stores/desktop', () => ({
   useDesktopStore: () => ({
     userConfig: {
       stt: {
-        providerId: mocks.provider,
+        provider: mocks.provider,
         isLlmFormattingEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
@@ -62,7 +62,7 @@ describe('dictation credential preflight', () => {
   })
 
   it('explains how to unlock an inaccessible saved key', async () => {
-    mocks.secrets = { deepgram: { origins: [], available: false } }
+    mocks.secrets = { 'stt.deepgram': { origins: [], available: false } }
     await expect(
       useDictationActions().startDictation(handlers)
     ).rejects.toThrow('Unlock the system keychain')
@@ -78,7 +78,7 @@ describe('dictation credential preflight', () => {
   })
 
   it('starts capture with a usable key', async () => {
-    mocks.secrets = { deepgram: { origins: [], available: true } }
+    mocks.secrets = { 'stt.deepgram': { origins: [], available: true } }
     await useDictationActions().startDictation(handlers)
     expect(mocks.start).toHaveBeenCalledWith(
       expect.objectContaining({ hasApiKey: true })

@@ -159,7 +159,7 @@ fn is_enabled(command: &Value) -> bool {
 
 fn can_run_externally(command: &Value) -> bool {
     command
-        .pointer("/availableIn/external")
+        .get("isAvailableExternally")
         .and_then(Value::as_bool)
         == Some(true)
 }
@@ -344,7 +344,7 @@ mod tests {
                     "name": "Бэкап",
                     "toolId": "script",
                     "toolConfig": { "command": "backup.sh" },
-                    "availableIn": { "launcher": true, "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "note",
@@ -352,14 +352,14 @@ mod tests {
                     "toolId": "webhook",
                     "toolConfig": { "url": "https://example.com/?q={{TEXT}}" },
                     "afterRun": "showMenu",
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "hidden",
                     "name": "Hidden",
                     "toolId": "script",
                     "toolConfig": { "command": "x" },
-                    "availableIn": { "external": false }
+                    "isAvailableExternally": false
                 },
                 {
                     "id": "off",
@@ -367,80 +367,80 @@ mod tests {
                     "toolId": "script",
                     "toolConfig": { "command": "x" },
                     "isEnabled": false,
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "plugin",
                     "name": "Plugin",
                     "toolId": "FastNote.write",
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "missing-tool",
                     "name": "Missing",
                     "toolId": "Gone.tool",
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "translate",
                     "name": "Translate",
                     "toolId": "core.translate",
                     "afterRun": "insertIntoWindow",
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "lights",
                     "name": "Lights",
                     "toolId": "Home.lights",
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "remind",
                     "name": "Remind",
                     "toolId": "Home.remind",
                     "isLlmArgumentParsingEnabled": true,
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "remind-raw",
                     "name": "Remind raw",
                     "toolId": "Home.remind",
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "twin-a",
                     "name": "Twin",
                     "toolId": "script",
                     "toolConfig": { "command": "a" },
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "twin-b",
                     "name": "twin",
                     "toolId": "script",
                     "toolConfig": { "command": "b" },
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "twin-c",
                     "name": "Twin",
                     "toolId": "script",
                     "toolConfig": { "command": "c" },
-                    "availableIn": { "external": false }
+                    "isAvailableExternally": false
                 },
                 {
                     "id": "Lamp",
                     "name": "Свет",
                     "toolId": "webhook",
                     "toolConfig": { "url": "https://example.com" },
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 },
                 {
                     "id": "lamp-2",
                     "name": "Lamp",
                     "toolId": "webhook",
                     "toolConfig": { "url": "https://example.com" },
-                    "availableIn": { "external": true }
+                    "isAvailableExternally": true
                 }
             ]
         })

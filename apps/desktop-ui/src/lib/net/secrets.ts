@@ -68,6 +68,8 @@ export function createSecretsClient(ipc: NetIpc): SecretsClient {
  */
 export function createSecretKeyProvider(
   status: () => Promise<SecretsStatus>,
+  /** The secret of a provider as the kit names it, see `secret-ids.ts` */
+  secretIdOf: (provider: string) => string,
   /** Whether a provider may be called without a key, e.g. a local Ollama */
   isKeyless: (provider: string) => boolean = (provider) =>
     KEYLESS_PROVIDERS.includes(provider)
@@ -75,11 +77,12 @@ export function createSecretKeyProvider(
   return {
     async get(provider) {
       const secrets = await status()
+      const id = secretIdOf(provider)
 
-      if (isSecretUsable(secrets, provider)) {
-        return secretRef(provider)
+      if (isSecretUsable(secrets, id)) {
+        return secretRef(id)
       }
-      if (Object.hasOwn(secrets, provider)) {
+      if (Object.hasOwn(secrets, id)) {
         throw new Error(
           `The API key for provider "${provider}" is in a locked or missing system keychain`
         )

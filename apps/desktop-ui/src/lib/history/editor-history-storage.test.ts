@@ -10,24 +10,33 @@ describe('isEditorHistoryOff', () => {
   it('is off by the storage or by a zero limit', () => {
     expect(
       isEditorHistoryOff({
-        editorHistory: { ...DEFAULT_USER_CONFIG.editorHistory, storage: 'off' },
-      })
-    ).toBe(true)
-    expect(
-      isEditorHistoryOff({
-        editorHistory: {
-          ...DEFAULT_USER_CONFIG.editorHistory,
-          storage: 'disk',
-          maxItems: 0,
+        editor: {
+          ...DEFAULT_USER_CONFIG.editor,
+          history: { ...DEFAULT_USER_CONFIG.editor.history, storage: 'off' },
         },
       })
     ).toBe(true)
     expect(
       isEditorHistoryOff({
-        editorHistory: {
-          ...DEFAULT_USER_CONFIG.editorHistory,
-          storage: 'session',
-          maxItems: 10,
+        editor: {
+          ...DEFAULT_USER_CONFIG.editor,
+          history: {
+            ...DEFAULT_USER_CONFIG.editor.history,
+            storage: 'disk',
+            maxItems: 0,
+          },
+        },
+      })
+    ).toBe(true)
+    expect(
+      isEditorHistoryOff({
+        editor: {
+          ...DEFAULT_USER_CONFIG.editor,
+          history: {
+            ...DEFAULT_USER_CONFIG.editor.history,
+            storage: 'session',
+            maxItems: 10,
+          },
         },
       })
     ).toBe(false)

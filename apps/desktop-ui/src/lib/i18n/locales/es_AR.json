@@ -1,13 +1,13 @@
 {
   "action": {
-    "aiTask": "Tarea de IA",
+    "aiTaskMenu": "Tarea de IA",
     "askInChat": "Preguntar en el chat",
     "copy": "Copiar",
     "copyToClipboard": "Copiar y cerrar",
     "correction": "Corrección",
     "insertIntoWindow": "Insertar en la ventana",
     "script": "Script / Comando",
-    "translation": "Traducción",
+    "translationMenu": "Traducción",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -846,7 +846,8 @@
     "unassignHotkey": "Quitar atajo",
     "userLanguage": "Idioma del usuario",
     "windowInsertion": "Método de inserción",
-    "windowInsertionHint": "Utilidad para simular pulsaciones y pegar texto en otras aplicaciones: xdotool (en sesiones X11) o ydotool (en Wayland). Especifique la ruta al ejecutable a continuación.",
+    "windowInsertionHint": "Utilidad para simular pulsaciones y pegar texto en otras aplicaciones: xdotool (en sesiones X11) o ydotool (en Wayland). Auto elige la de la sesión actual. Especifique la ruta al ejecutable a continuación.",
+    "windowInsertionAuto": "Auto",
     "binaryPathPlaceholder": "Se busca en PATH",
     "vision": "Entrada de imágenes",
     "toolUse": "Llamada a herramientas",

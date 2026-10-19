@@ -8,9 +8,8 @@ function config(overrides: Partial<TranslationConfig> = {}): TranslationConfig {
     ...DEFAULT_USER_CONFIG.translation,
     provider: 'llm',
     qualityGate: 'off',
-    deeplEndpoint: 'free',
+    providers: { deepl: { endpoint: 'free' } },
     glossary: [],
-    qualityGatePrompt: '',
     ...overrides,
   }
 }
@@ -44,17 +43,16 @@ describe('createTranslationClient', () => {
       .mockResolvedValueOnce('Привет.')
       .mockResolvedValueOnce('Здравствуйте.')
     const client = createTranslationClient({
-      getConfig: () =>
-        config({
-          qualityGate: 'always',
-          qualityGatePrompt: 'Use formal tone.',
-        }),
+      getConfig: () => config({ qualityGate: 'always' }),
       keys: { get: vi.fn() },
       transport: { fetch: vi.fn(), openSocket: vi.fn() },
       runLlm,
     })
 
-    await client.translate('Hello.', { targetLanguage: 'ru' })
+    await client.translate('Hello.', {
+      targetLanguage: 'ru',
+      qualityGateRules: 'Use formal tone.',
+    })
 
     expect(runLlm.mock.calls[0]?.[0].system).not.toContain('Use formal tone.')
     expect(runLlm.mock.calls[1]?.[0].system).toContain('Use formal tone.')

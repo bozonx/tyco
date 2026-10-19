@@ -44,8 +44,8 @@ impl PasteShortcut {
             .and_then(|value| value.get("pasteShortcut"))
             .and_then(Value::as_str)
         {
-            Some("ctrl+shift+v") => Self::CtrlShiftV,
-            Some("shift+insert") => Self::ShiftInsert,
+            Some("Ctrl+Shift+V") => Self::CtrlShiftV,
+            Some("Shift+Insert") => Self::ShiftInsert,
             _ => Self::CtrlV,
         }
     }
@@ -266,7 +266,7 @@ fn configured_method(insertion: Option<&Value>) -> &str {
     linux_settings(insertion)
         .and_then(|value| value.get("method"))
         .and_then(Value::as_str)
-        .unwrap_or("xdotool")
+        .unwrap_or("auto")
 }
 
 /// A key injection tool and the setting with its path.
@@ -323,6 +323,8 @@ fn missing_wayland_target() -> AppError {
     AppError::Message(String::from(message))
 }
 
+/// `auto` and `xdotool` press the keys with xdotool on X11; Wayland has
+/// only ydotool.
 fn select_method(
     session: InjectionSessionKind,
     configured: &str,
@@ -463,6 +465,14 @@ mod tests {
             select_method(InjectionSessionKind::X11, "ydotool").unwrap(),
             InjectionMethod::Ydotool
         );
+        assert_eq!(
+            select_method(InjectionSessionKind::X11, "auto").unwrap(),
+            InjectionMethod::Xdotool
+        );
+        assert_eq!(
+            select_method(InjectionSessionKind::Wayland, "auto").unwrap(),
+            InjectionMethod::Ydotool
+        );
     }
 
     #[test]
@@ -530,11 +540,11 @@ mod tests {
             PasteShortcut::CtrlV
         );
         assert_eq!(
-            shortcut(json!({ "pasteShortcut": "ctrl+shift+v" })),
+            shortcut(json!({ "pasteShortcut": "Ctrl+Shift+V" })),
             PasteShortcut::CtrlShiftV
         );
         assert_eq!(
-            shortcut(json!({ "pasteShortcut": "shift+insert" })),
+            shortcut(json!({ "pasteShortcut": "Shift+Insert" })),
             PasteShortcut::ShiftInsert
         );
     }

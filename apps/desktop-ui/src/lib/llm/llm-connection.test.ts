@@ -33,7 +33,7 @@ describe('LLM connection checker', () => {
     })
 
     expect(fetch).toHaveBeenCalledWith('https://llm.example/v1/models', {
-      headers: { Authorization: 'Bearer tyco-secret:private-server' },
+      headers: { Authorization: 'Bearer tyco-secret:llm.private-server' },
       signal: expect.any(AbortSignal),
     })
   })

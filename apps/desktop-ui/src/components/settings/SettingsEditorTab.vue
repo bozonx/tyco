@@ -19,7 +19,7 @@
         :label="t('settings.markdownIncrementListMarker')"
         :info="t('settings.markdownIncrementListMarkerInfo')"
       >
-        <FieldSwitch v-model="markdown.incrementListMarker" />
+        <FieldSwitch v-model="markdown.isListMarkerIncremented" />
       </FieldRow>
     </SettingsSection>
 
@@ -29,42 +29,42 @@
     >
       <FieldRow :label="t('settings.markdownCleanBullet')">
         <FieldSelect
-          v-model="markdownClean.bullet"
+          v-model="markdownStrip.bullet"
           :options="cleanBulletOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanCodeBlockIndent')">
         <FieldSelect
-          v-model="markdownClean.codeBlockIndent"
+          v-model="markdownStrip.codeBlockIndent"
           :options="cleanCodeBlockIndentOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanBlockquoteIndent')">
         <FieldSelect
-          v-model="markdownClean.blockquoteIndent"
+          v-model="markdownStrip.blockquoteIndent"
           :options="cleanBlockquoteIndentOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanLinkFormat')">
         <FieldSelect
-          v-model="markdownClean.linkFormat"
+          v-model="markdownStrip.linkFormat"
           :options="cleanLinkFormatOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanImageFormat')">
         <FieldSelect
-          v-model="markdownClean.imageFormat"
+          v-model="markdownStrip.imageFormat"
           :options="cleanImageFormatOptions"
         />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepInlineCode')">
-        <FieldSwitch v-model="markdownClean.keepInlineCode" />
+        <FieldSwitch v-model="markdownStrip.hasInlineCode" />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepHorizontalRules')">
-        <FieldSwitch v-model="markdownClean.keepThematicBreaks" />
+        <FieldSwitch v-model="markdownStrip.hasThematicBreaks" />
       </FieldRow>
       <FieldRow :label="t('settings.markdownCleanKeepTaskCheckboxes')">
-        <FieldSwitch v-model="markdownClean.keepTaskCheckboxes" />
+        <FieldSwitch v-model="markdownStrip.hasTaskCheckboxes" />
       </FieldRow>
     </SettingsSection>
   </div>
@@ -79,22 +79,24 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsSection from './SettingsSection.vue'
-import type { MarkdownSettings } from '@tyco/shared'
-import { normalizeMarkdownSettings } from '@tyco/shared'
+import { type MarkdownFormatSettings, normalizeConfigValue } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft } = useSettingsContext()
 
-const markdown = computed(() => draft.value.markdown)
-const markdownClean = computed(() => draft.value.markdownClean)
+const markdown = computed(() => draft.value.markdown.format)
+const markdownStrip = computed(() => draft.value.markdown.strip)
 
 function updateMarkdown(
-  name: keyof Omit<MarkdownSettings, 'incrementListMarker'>,
+  name: keyof Omit<MarkdownFormatSettings, 'isListMarkerIncremented'>,
   value: unknown
 ) {
   Object.assign(
     markdown.value,
-    normalizeMarkdownSettings({ ...markdown.value, [name]: value })
+    normalizeConfigValue<MarkdownFormatSettings>('markdown.format', {
+      ...markdown.value,
+      [name]: value,
+    })
   )
 }
 

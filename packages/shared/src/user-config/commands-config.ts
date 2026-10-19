@@ -1,12 +1,17 @@
 import configDefaults from '../user-config-defaults.json' with { type: 'json' }
 import type { ShortcutSlots } from './translation-config'
 
+/**
+ * The built-in items of the action menu. `aiTaskMenu` and `translationMenu`
+ * open a menu to pick from; a single task or language is an item of the
+ * `aiTask` or `translation` type
+ */
 export const STANDARD_ACTION_IDS = [
   'insertIntoWindow',
   'copyToClipboard',
-  'aiTask',
+  'aiTaskMenu',
   'correction',
-  'translation',
+  'translationMenu',
   'askInChat',
 ] as const
 
@@ -28,16 +33,15 @@ export const ACTION_TEXT_PLACEHOLDER = '{{TEXT}}'
 /**
  * What a command does with the text its tool returns: nothing, the result menu,
  * pasting it into the window the user works in (over the selection, if there is
- * one), or the clipboard. `insertIntoWindow` pastes the result into the target
- * window
+ * one), or the clipboard
  */
-export const CUSTOM_ACTION_AFTER_RUN = [
+export const COMMAND_OUTPUT_ACTIONS = [
   'none',
   'showMenu',
   'insertIntoWindow',
-  'copy',
+  'copyToClipboard',
 ] as const
-export type CustomActionAfterRun = (typeof CUSTOM_ACTION_AFTER_RUN)[number]
+export type CommandOutputAction = (typeof COMMAND_OUTPUT_ACTIONS)[number]
 
 /** Tools that run what the user configured; the way out for anything else */
 export const BUILTIN_TOOL_IDS = ['script', 'webhook'] as const
@@ -110,20 +114,9 @@ export const webhookTakesText = (
   (config.method !== 'GET' &&
     Boolean(config.payloadTemplate?.includes(ACTION_TEXT_PLACEHOLDER)))
 
-/** Where a command can be invoked, besides the action menu */
-export interface CommandAvailability {
-  external: boolean
-  chat: boolean
-}
-
-/** Output handling for quick commands, with or without a selection */
-export interface CommandLauncherAfterRun {
-  action: CustomActionAfterRun
-}
-
 /**
  * A user command of the command library: a tool with its settings, invoked from
- * the action menu and, later, the command overlay, external calls and the chat.
+ * the action menu, the command launcher, voice, external calls and the chat.
  * See `dev_docs/design-voice-commands.md`
  */
 export interface CommandConfig {
@@ -135,15 +128,7 @@ export interface CommandConfig {
   /** Explicit literal voice phrases; the display name is never matched. */
   phrases: string[]
   isVoiceEnabled: boolean
-  /**
-   * Legacy serialized preference; the voice overlay now controls automatic
-   * execution.
-   */
-  voiceConfirmation: 'always' | 'auto'
-  /**
-   * `script`, `webhook`, `core.<tool>`, `<pluginName>.<toolId>` or
-   * `mcp:<server>.<tool>`
-   */
+  /** `script`, `webhook`, `core.<tool>` or `<pluginId>.<toolId>` */
   toolId: string
   /** Values for the tool's config fields */
   toolConfig: Record<string, unknown>
@@ -153,12 +138,13 @@ export interface CommandConfig {
    */
   isLlmArgumentParsingEnabled: boolean
   /**
-   * What quick commands do with returned text; other contexts have fixed
-   * behavior
+   * What the command launcher does with the returned text; the other places a
+   * command runs from handle it their own way
    */
-  launcherAfterRun: CommandLauncherAfterRun
+  outputAction: CommandOutputAction
   isOutputLogged: boolean
-  availableIn: CommandAvailability
+  /** Local applications may run it through tyco-ctl and D-Bus */
+  isAvailableExternally: boolean
   isEnabled: boolean
 }
 
@@ -168,7 +154,7 @@ export interface CommandMainAction {
   commandId: string
 }
 
-/** An AI task of `aiTasks`, by its `id` */
+/** A task of `aiTasks`, by its `id` */
 export interface AiTaskMainAction {
   type: 'aiTask'
   taskId: string

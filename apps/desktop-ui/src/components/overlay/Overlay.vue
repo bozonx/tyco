@@ -17,7 +17,7 @@ import { useThemeStore } from '../../stores/theme'
 
 const themeStore = useThemeStore()
 const overlayTheme = computed(() =>
-  themeStore.resolved.theme === 'e-ink' ? 'e-ink' : 'dark'
+  themeStore.resolved.theme === 'eInk' ? 'eInk' : 'dark'
 )
 withDefaults(defineProps<{ navBarVisible?: boolean }>(), {
   navBarVisible: true,

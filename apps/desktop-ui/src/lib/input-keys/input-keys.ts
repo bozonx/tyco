@@ -24,12 +24,13 @@ export function resolveSubmitKey(saved: unknown): SubmitKey {
     : DEFAULT_SUBMIT_KEY
 }
 
+/** The submit key is written as a shortcut already */
 export function submitShortcut(submitKey: SubmitKey): string {
-  return submitKey === 'ctrlEnter' ? 'Ctrl+Enter' : 'Enter'
+  return submitKey
 }
 
 export function newlineShortcut(submitKey: SubmitKey): string {
-  return submitKey === 'ctrlEnter' ? 'Enter' : 'Shift+Enter'
+  return submitKey === 'Ctrl+Enter' ? 'Enter' : 'Shift+Enter'
 }
 
 const isEnter = (event: InputKeyEvent) =>
@@ -55,8 +56,8 @@ export function resolveInputKeyAction(
   if (event.code === 'Tab' && noModifiers(event)) return 'actions'
   if (!isEnter(event)) return 'none'
 
-  if (noModifiers(event)) return submitKey === 'enter' ? 'submit' : 'newline'
-  if (onlyCtrl(event)) return submitKey === 'ctrlEnter' ? 'submit' : 'none'
+  if (noModifiers(event)) return submitKey === 'Enter' ? 'submit' : 'newline'
+  if (onlyCtrl(event)) return submitKey === 'Ctrl+Enter' ? 'submit' : 'none'
   if (event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey)
     return 'newline'
   return 'none'

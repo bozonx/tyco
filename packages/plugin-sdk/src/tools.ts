@@ -3,8 +3,8 @@ import type { EditorInputSnapshot } from './plugin.js'
 
 export type CommandRunSource =
   'menu' | 'toolbar' | 'launcher' | 'voice' | 'external' | 'chat' | 'selection'
-export type CustomActionAfterRun =
-  'none' | 'showMenu' | 'insertIntoWindow' | 'copy'
+export type CommandOutputAction =
+  'none' | 'showMenu' | 'insertIntoWindow' | 'copyToClipboard'
 
 /**
  * A JSON Schema as MCP tools describe their input; only the parts the app
@@ -127,7 +127,7 @@ export interface ToolDefinition {
    * What a new command of the tool does with its output; a tool that turns a
    * text into another one replaces the selection
    */
-  defaultAfterRun?: CustomActionAfterRun
+  defaultOutputAction?: CommandOutputAction
   /** Phrases suggested when the user creates a command for this tool */
   defaultPhrasesKey?: string
   run(call: ToolCall): Promise<ToolResult>

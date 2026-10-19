@@ -171,7 +171,7 @@ describe('HistoryView.vue', () => {
     const desktop = useDesktopStore()
     desktop.desktopState.userConfig = {
       ...desktop.desktopState.userConfig,
-      editorHistory: { storage: 'off' },
+      editor: { history: { storage: 'off' } },
     } as any
 
     const wrapper = mount(HistoryView, {

@@ -84,9 +84,7 @@ const optionId = mainActionOptionId
 
 /** The AI tasks the menu can refer to: those with a name */
 const aiTasks = computed(() =>
-  slotList(userConfig.value.aiTasks).flatMap((task) =>
-    task?.id && task.name.trim() ? [task] : []
-  )
+  userConfig.value.aiTasks.filter((task) => task.name.trim())
 )
 
 /** The translation languages, and those the slots translate into already */
@@ -115,7 +113,10 @@ const isOffered = (command: CommandConfig) =>
   })
 
 /** Actions that open a dialog to pick what to do are marked as such */
-const OPENS_DIALOG = new Set<StandardActionId>(['translation', 'aiTask'])
+const OPENS_DIALOG = new Set<StandardActionId>([
+  'translationMenu',
+  'aiTaskMenu',
+])
 
 const availableActions = computed((): MainActionChoice[] => [
   ...userConfig.value.launcherPages.map((page, index) => ({

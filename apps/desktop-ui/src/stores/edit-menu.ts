@@ -17,8 +17,8 @@ export const useEditMenuStore = defineStore('editMenu', () => {
   return createEditMenuModel({
     transformTextCase,
     formatMdAndStyle: async (text) =>
-      formatMarkdown(text, desktopStore.userConfig?.markdown),
+      formatMarkdown(text, desktopStore.userConfig?.markdown.format),
     stripMarkdown: (text) =>
-      stripMarkdown(text, desktopStore.userConfig?.markdownClean),
+      stripMarkdown(text, desktopStore.userConfig?.markdown.strip),
   })
 })

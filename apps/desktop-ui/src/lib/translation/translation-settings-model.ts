@@ -1,6 +1,10 @@
 import { computed, ref } from 'vue'
 
-import type { TranslationConfig, TranslationGlossaryEntry } from '@tyco/shared'
+import {
+  TRANSLATION_SECRET_IDS,
+  type TranslationConfig,
+  type TranslationGlossaryEntry,
+} from '@tyco/shared'
 
 import { normalizeTranslationConfig } from './translation-config'
 
@@ -45,7 +49,9 @@ export function createTranslationSettingsModel(deps: {
   const translation = computed(deps.getConfig)
   const keyDraft = ref('')
   const providerSecretId = computed(() =>
-    translation.value.provider === 'google' ? 'google-translate' : 'deepl'
+    translation.value.provider === 'google'
+      ? TRANSLATION_SECRET_IDS.google
+      : TRANSLATION_SECRET_IDS.deepl
   )
   const hasProviderKey = computed(() => deps.hasSecret(providerSecretId.value))
   const glossaryText = computed(() =>
@@ -67,9 +73,6 @@ export function createTranslationSettingsModel(deps: {
       normalizeTranslationConfig({ ...translation.value, qualityGate: value })
     )
   }
-  function updateCorrectionPrompt(value: string) {
-    deps.setConfig({ ...translation.value, qualityGatePrompt: value })
-  }
   function updateGlossary(value: string) {
     deps.setConfig({
       ...translation.value,
@@ -85,11 +88,14 @@ export function createTranslationSettingsModel(deps: {
     try {
       await deps.setSecret(secretId, value)
       if (translation.value.provider !== providerId) return
-      if (secretId === 'deepl')
+      if (secretId === TRANSLATION_SECRET_IDS.deepl)
         deps.setConfig(
           normalizeTranslationConfig({
             ...translation.value,
-            deeplEndpoint: value.endsWith(':fx') ? 'free' : 'pro',
+            providers: {
+              ...translation.value.providers,
+              deepl: { endpoint: value.endsWith(':fx') ? 'free' : 'pro' },
+            },
           })
         )
       if (keyDraft.value === draft) keyDraft.value = ''
@@ -114,7 +120,6 @@ export function createTranslationSettingsModel(deps: {
     usesTranslationRules,
     updateProvider,
     updateQualityGate,
-    updateCorrectionPrompt,
     updateGlossary,
     saveProviderKey,
     removeProviderKey,

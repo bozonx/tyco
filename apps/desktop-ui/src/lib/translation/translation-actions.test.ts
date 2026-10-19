@@ -72,6 +72,7 @@ describe('createTranslationActions', () => {
       signal: undefined,
       onStage,
       rules: 'Use formal tone',
+      qualityGateRules: '',
     })
   })
 

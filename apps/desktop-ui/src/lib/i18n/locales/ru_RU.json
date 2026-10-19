@@ -1,13 +1,13 @@
 {
   "action": {
-    "aiTask": "Задание для AI",
+    "aiTaskMenu": "Задание для AI",
     "askInChat": "В чат",
     "copy": "Скопировать",
     "copyToClipboard": "Скопировать и закрыть",
     "correction": "Коррекция",
     "insertIntoWindow": "В окно",
     "script": "Скрипт / Команда",
-    "translation": "Перевод",
+    "translationMenu": "Перевод",
     "webhook": "Вебхук"
   },
   "app": { "title": "TyCo" },
@@ -843,7 +843,8 @@
     "unassignHotkey": "Убрать сочетание",
     "userLanguage": "Язык пользователя",
     "windowInsertion": "Способ вставки",
-    "windowInsertionHint": "Утилита для эмуляции ввода и вставки текста в сторонние приложения: xdotool (в сессии X11) или ydotool (в Wayland). Ниже указывается путь к исполняемому файлу.",
+    "windowInsertionHint": "Утилита для эмуляции ввода и вставки текста в сторонние приложения: xdotool (в сессии X11) или ydotool (в Wayland). «Авто» выбирает утилиту по текущей сессии. Ниже указывается путь к исполняемому файлу.",
+    "windowInsertionAuto": "Авто",
     "binaryPathPlaceholder": "Ищется в PATH",
     "vision": "Поддержка изображений",
     "toolUse": "Вызов инструментов",

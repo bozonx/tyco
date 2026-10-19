@@ -69,14 +69,14 @@
         size="sm"
         variant="ghost"
         @click="emit('ai-task')"
-        :label="scoped(t('action.aiTask'))"
+        :label="scoped(t('action.aiTaskMenu'))"
         icon="mdi:robot-outline"
       />
       <IconButton
         size="sm"
         variant="ghost"
         @click="emit('translation')"
-        :label="scoped(t('action.translation'))"
+        :label="scoped(t('action.translationMenu'))"
         icon="mdi:translate"
       />
       <IconButton

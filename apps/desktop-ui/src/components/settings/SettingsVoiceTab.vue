@@ -3,7 +3,7 @@
     <SettingsSection>
       <FieldRow :label="t('settings.sttProvider')">
         <FieldSelect
-          :model-value="userConfig.stt.providerId"
+          :model-value="userConfig.stt.provider"
           :options="sttProviderOptions"
           @update:model-value="setSttProvider"
         />
@@ -106,7 +106,7 @@ const sttProviderOptions = computed(() => [
 
 const setSttProvider = (value: string | number | undefined) => {
   if (STT_PROVIDERS.includes(value as SttProvider))
-    userConfig.value.stt.providerId = value as SttProvider
+    userConfig.value.stt.provider = value as SttProvider
 }
 
 const setSttServerUrl = (value: string) => {

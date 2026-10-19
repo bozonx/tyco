@@ -99,10 +99,9 @@ describe('command launcher store wiring', () => {
       phrases: [],
       isLlmArgumentParsingEnabled: false,
       isVoiceEnabled: false,
-      voiceConfirmation: 'always',
-      launcherAfterRun: { action: 'none' },
+      outputAction: 'none',
       isOutputLogged: false,
-      availableIn: { external: false, chat: false },
+      isAvailableExternally: false,
     }
     store.stage = { kind: 'prepare', command: cmd, autoRun: false }
 
@@ -129,10 +128,9 @@ describe('command launcher store wiring', () => {
       phrases: [],
       isLlmArgumentParsingEnabled: false,
       isVoiceEnabled: false,
-      voiceConfirmation: 'always',
-      launcherAfterRun: { action: 'none' },
+      outputAction: 'none',
       isOutputLogged: false,
-      availableIn: { external: false, chat: false },
+      isAvailableExternally: false,
     }
     desktop.applyViewState({
       ...desktop.desktopState,

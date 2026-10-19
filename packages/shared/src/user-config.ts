@@ -1,6 +1,6 @@
 import configDefaults from './user-config-defaults.json' with { type: 'json' }
 import configVersion from './config-version.json' with { type: 'json' }
-import { type MarkdownSettings, type MarkdownCleanSettings } from './markdown'
+import type { MarkdownConfig } from './markdown'
 import type { AppearanceSettings } from './appearance'
 import type { LlmConfig } from './user-config/llm-config'
 import type {
@@ -30,11 +30,14 @@ export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig
 export const DEFAULT_MAIN_ACTIONS =
   configDefaults.mainActions as ShortcutSlots<MainActionConfig>
 
-/** Keys pressed in the target window to paste the inserted text */
+/**
+ * Keys pressed in the target window to paste the inserted text; written as the
+ * hotkeys are
+ */
 export const PASTE_SHORTCUTS = [
-  'ctrl+v',
-  'ctrl+shift+v',
-  'shift+insert',
+  'Ctrl+V',
+  'Ctrl+Shift+V',
+  'Shift+Insert',
 ] as const
 export type PasteShortcut = (typeof PASTE_SHORTCUTS)[number]
 
@@ -47,11 +50,15 @@ export type EditorHistoryStorage = (typeof EDITOR_HISTORY_STORAGES)[number]
 
 /**
  * Which key sends the text of a multi-line input (quick input, chat); the other
- * Enter variant inserts a line break
+ * Enter variant inserts a line break. Written as the hotkeys are
  */
-export const SUBMIT_KEYS = ['enter', 'ctrlEnter'] as const
+export const SUBMIT_KEYS = ['Enter', 'Ctrl+Enter'] as const
 export type SubmitKey = (typeof SUBMIT_KEYS)[number]
-export const DEFAULT_SUBMIT_KEY: SubmitKey = 'enter'
+export const DEFAULT_SUBMIT_KEY: SubmitKey = 'Enter'
+
+/** How the Linux insertion presses the keys; `auto` picks by the session */
+export const LINUX_INSERTION_METHODS = ['auto', 'xdotool', 'ydotool'] as const
+export type LinuxInsertionMethod = (typeof LINUX_INSERTION_METHODS)[number]
 
 /**
  * What local applications may do through tyco-ctl and D-Bus besides running the
@@ -74,17 +81,31 @@ export interface EditorHistoryConfig {
   isSecretSanitizingEnabled: boolean
 }
 
+/** Chats live on the disk or are not kept at all */
+export const CHAT_HISTORY_STORAGES = ['off', 'disk'] as const
+export type ChatHistoryStorage = (typeof CHAT_HISTORY_STORAGES)[number]
+
 export interface ChatHistoryConfig {
-  isEnabled: boolean
+  storage: ChatHistoryStorage
   /** Zero retains chats indefinitely. */
   retentionDays: number
 }
 
 export interface ChatConfig {
   imageQuality: 'economy' | 'balanced' | 'original'
+  history: ChatHistoryConfig
 }
 
-/** The modes a global hotkey opens, and the in-place selection correction */
+export interface EditorConfig {
+  submitKey: SubmitKey
+  diffViewMode: 'unified' | 'split' | 'result'
+  history: EditorHistoryConfig
+}
+
+/**
+ * The global hotkeys: one per activation mode a hotkey can open, named as the
+ * mode is (see `StartMode`), and the in-place selection correction
+ */
 export interface HotkeysConfig {
   editor: string
   write: string
@@ -107,10 +128,24 @@ export interface PluginEntryConfig {
   settings: Record<string, unknown>
 }
 
+/** A named AI rule of the task library */
 export interface AiTaskConfig {
   id: string
   name: string
   rule: string
+}
+
+/**
+ * Rules the user adds to the app instructions of each AI job; an AI task has
+ * its own rule
+ */
+export interface AiRulesConfig {
+  chat: string
+  correction: string
+  translation: string
+  /** The review pass of a translation, see `TranslationConfig.qualityGate` */
+  translationQualityGate: string
+  voiceCorrection: string
 }
 
 /** Complete, normalized configuration used throughout the application. */
@@ -123,14 +158,14 @@ export interface UserConfig {
     /** The locale the user speaks and writes, or `auto` */
     user: string
   }
-  editor: { submitKey: SubmitKey; diffViewMode: 'unified' | 'split' | 'result' }
+  editor: EditorConfig
   quickWindow: { isHiddenOnBlur: boolean; isCorrectionPrefetchEnabled: boolean }
   hotkeys: HotkeysConfig
   externalAccess: ExternalAccess
   windowInsertion: {
     pasteShortcut: PasteShortcut
     linux: {
-      method: 'xdotool' | 'ydotool'
+      method: LinuxInsertionMethod
       /** Empty: found on `PATH` */
       xdotoolPath: string
       ydotoolPath: string
@@ -141,30 +176,27 @@ export interface UserConfig {
   launcherPages: LauncherPageConfig[]
   commands: CommandConfig[]
   llm: LlmConfig
-  aiRules: Record<
-    'chat' | 'correction' | 'translation' | 'voiceCorrection',
-    string
-  >
-  aiTasks: ShortcutSlots<AiTaskConfig>
+  aiRules: AiRulesConfig
+  /** The task library, in the order the settings list it */
+  aiTasks: AiTaskConfig[]
+  /** The AI task menu: task ids by shortcut key */
+  aiTaskSlots: ShortcutSlots<string>
   aiVault: AiVaultLocationConfig
-  markdown: MarkdownSettings
-  markdownClean: MarkdownCleanSettings
+  markdown: MarkdownConfig
   plugins: Record<string, PluginEntryConfig>
-  editorHistory: EditorHistoryConfig
-  chatHistory: ChatHistoryConfig
   chat: ChatConfig
   stt: SttConfig
 }
 
 export interface AiVaultLocationConfig {
-  /** Absent for the default location in the app data */
-  path?: string
+  /** Empty for the default location in the app data */
+  path: string
 }
 
 /** Untrusted serialized input; normalize before reading any field. */
 export type UserConfigInput = unknown
 
 export const DEFAULT_USER_CONFIG: UserConfig = {
-  ...configDefaults,
   configVersion: CONFIG_VERSION,
+  ...configDefaults,
 } as UserConfig

@@ -40,11 +40,11 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import useToast from '../../composables/use-toast'
+import { findAiTask, taskSlotList } from '../../lib/ai-tasks/ai-task-library'
 import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import type { AiTaskMenuParams } from '../../lib/modals/menu-modal-params'
-import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
 import { type ActionItem } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
@@ -97,7 +97,7 @@ const closePromptMode = () => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  slotList(desktopStore.userConfig?.aiTasks).map((item) =>
+  taskSlotList(desktopStore.userConfig).map((item) =>
     item && item.name
       ? { name: item.name, action: () => runTask(item.id) }
       : undefined
@@ -105,9 +105,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 )
 
 async function runTask(taskId: string) {
-  const task = Object.values(desktopStore.userConfig?.aiTasks ?? {}).find(
-    (item) => item.id === taskId
-  )
+  const task = findAiTask(desktopStore.userConfig?.aiTasks, taskId)
   if (!task || !task.rule?.trim()) {
     toastKey('toast.desktopCommandFailed', 'error')
     return
@@ -195,13 +193,13 @@ async function savePromptAsTask() {
   const userConfig = desktopStore.userConfig
   if (!value || !userConfig) return
 
-  const aiTasks = addTaskFromPrompt(userConfig.aiTasks ?? {}, value)
-  if (!aiTasks) {
+  const library = addTaskFromPrompt(userConfig, value)
+  if (!library) {
     toastKey('menu.aiPromptSlotsFull', 'warn')
     return
   }
 
-  const result = await desktopStore.updateUserConfig({ aiTasks })
+  const result = await desktopStore.updateUserConfig(library)
   if (!result.success) toastKey('toast.desktopCommandFailed', 'error')
 }
 

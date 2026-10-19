@@ -64,10 +64,7 @@
         :info="t('settings.translationCorrectionPromptInfo')"
         vertical
       >
-        <FieldTextArea
-          :model-value="translation.qualityGatePrompt"
-          @update:model-value="updateCorrectionPrompt"
-        />
+        <FieldTextArea v-model="userConfig.aiRules.translationQualityGate" />
       </FieldRow>
     </SettingsSection>
 
@@ -123,7 +120,6 @@ const {
   usesTranslationRules,
   updateProvider,
   updateQualityGate,
-  updateCorrectionPrompt,
   updateGlossary,
   saveProviderKey,
   removeProviderKey,
@@ -140,7 +136,7 @@ const {
 })
 // An empty prompt starts collapsed each time the page opens.
 const qualityGatePromptOpen = ref(
-  Boolean(translation.value.qualityGatePrompt?.trim())
+  Boolean(userConfig.value.aiRules.translationQualityGate.trim())
 )
 const providerOptions = computed(() => [
   { id: 'deepl', name: t('settings.translationProviderDeepl') },

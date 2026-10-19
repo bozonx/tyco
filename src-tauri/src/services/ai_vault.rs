@@ -44,5 +44,5 @@ pub fn resolve_vault_path_from_config(
 pub fn resolve_vault_path(app: &AppHandle, user_config: &Value) -> Result<PathBuf, AppError> {
     let configured = crate::models::user_config::ai_vault(user_config).path;
 
-    resolve_vault_path_from_config(configured.as_deref(), || app_data_sub_dir(app, "ai-vault"))
+    resolve_vault_path_from_config(Some(&configured), || app_data_sub_dir(app, "ai-vault"))
 }

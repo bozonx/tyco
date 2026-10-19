@@ -34,7 +34,7 @@ describe('command editor model', () => {
         command = value
       },
     })
-    model.updateLauncherAfterRun('insertIntoWindow')
-    expect(command.launcherAfterRun).toEqual({ action: 'insertIntoWindow' })
+    model.updateOutputAction('insertIntoWindow')
+    expect(command.outputAction).toBe('insertIntoWindow')
   })
 })

@@ -6,7 +6,7 @@
  * pulling in the rest of the shared package.
  */
 
-export const THEME_MODES = ['auto', 'light', 'dark', 'e-ink'] as const
+export const THEME_MODES = ['auto', 'light', 'dark', 'eInk'] as const
 export type ThemeMode = (typeof THEME_MODES)[number]
 /** A concrete palette, i.e. a value of `data-theme` */
 export type ThemeName = Exclude<ThemeMode, 'auto'>
@@ -106,7 +106,7 @@ export function resolveAppearance(
         ? 'dark'
         : 'light'
       : settings.theme
-  const isEInk = theme === 'e-ink'
+  const isEInk = theme === 'eInk'
 
   const contrast: ContrastLevel =
     isEInk || settings.contrast === 'more'

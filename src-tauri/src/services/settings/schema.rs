@@ -13,14 +13,11 @@ static SCHEMA: LazyLock<Value> = LazyLock::new(|| {
     .expect("valid user config schema")
 });
 
-static DEFAULTS: LazyLock<Value> = LazyLock::new(|| {
-    let mut defaults: Value = serde_json::from_str(include_str!(
-        "../../../../packages/shared/src/user-config-defaults.json"
-    ))
-    .expect("valid portable defaults");
-    defaults["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
-    defaults
-});
+/// The defaults both runtimes share; the platform ones of
+/// `defaults::default_user_config` differ in the hotkeys only.
+#[cfg(test)]
+static PORTABLE_DEFAULTS: LazyLock<Value> =
+    LazyLock::new(crate::services::settings::defaults::portable_user_config);
 
 /// The compiled `pattern`s of the schema; a save validates the whole config,
 /// so each is compiled once rather than on every check.
@@ -35,9 +32,9 @@ fn matches_pattern(pattern: &str, text: &str) -> bool {
         .is_match(text)
 }
 
-fn default_of(schema: &Value) -> &Value {
+fn default_of<'a>(schema: &'a Value, defaults: &'a Value) -> &'a Value {
     if let Some(path) = schema["defaultPath"].as_str() {
-        &DEFAULTS[path]
+        &defaults[path]
     } else {
         &schema["default"]
     }
@@ -151,7 +148,7 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
     Ok(())
 }
 
-fn repair(value: &Value, schema: &Value) -> Value {
+fn repair(value: &Value, schema: &Value, defaults: &Value) -> Value {
     if schema["type"] == "integer" {
         if let Some(number) = value.as_f64().filter(|number| {
             number.is_finite()
@@ -180,16 +177,16 @@ fn repair(value: &Value, schema: &Value) -> Value {
                     .as_array()
                     .is_none_or(|tags| tags.contains(&value["type"]))
         }) {
-            return repair(value, choice);
+            return repair(value, choice, defaults);
         }
-        return default_of(schema).clone();
+        return default_of(schema, defaults).clone();
     }
     match schema["type"].as_str() {
         Some("object") => {
             let source = if value.is_object() {
                 value.clone()
             } else {
-                default_of(schema).clone()
+                default_of(schema, defaults).clone()
             };
             let mut result = source.as_object().cloned().unwrap_or_default();
             for key in schema["required"]
@@ -200,7 +197,7 @@ fn repair(value: &Value, schema: &Value) -> Value {
             {
                 result
                     .entry(key.to_owned())
-                    .or_insert_with(|| default_of(&schema["properties"][key]).clone());
+                    .or_insert_with(|| default_of(&schema["properties"][key], defaults).clone());
             }
             result.retain(|key, value| {
                 if schema["propertyNames"].is_object()
@@ -209,7 +206,7 @@ fn repair(value: &Value, schema: &Value) -> Value {
                     return false;
                 }
                 if let Some(child) = schema["properties"].get(key) {
-                    *value = repair(value, child);
+                    *value = repair(value, child, defaults);
                     let required = schema["required"]
                         .as_array()
                         .is_some_and(|keys| keys.contains(&json!(key)));
@@ -219,7 +216,7 @@ fn repair(value: &Value, schema: &Value) -> Value {
                 } else if schema["additionalProperties"] == false {
                     return false;
                 } else if schema["additionalProperties"].is_object() {
-                    *value = repair(value, &schema["additionalProperties"]);
+                    *value = repair(value, &schema["additionalProperties"], defaults);
                     return validate(value, &schema["additionalProperties"], "").is_ok();
                 }
                 true
@@ -227,10 +224,12 @@ fn repair(value: &Value, schema: &Value) -> Value {
             Value::Object(result)
         }
         Some("array") => {
-            let source = value.as_array().or_else(|| default_of(schema).as_array());
+            let source = value
+                .as_array()
+                .or_else(|| default_of(schema, defaults).as_array());
             let mut result = Vec::new();
             for item in source.into_iter().flatten() {
-                let item = repair(item, &schema["items"]);
+                let item = repair(item, &schema["items"], defaults);
                 if validate(&item, &schema["items"], "").is_ok()
                     && (schema["uniqueItems"] != true || !result.contains(&item))
                 {
@@ -242,9 +241,13 @@ fn repair(value: &Value, schema: &Value) -> Value {
             }
             if let Some(min) = schema["minItems"].as_u64() {
                 while result.len() < min as usize {
-                    let item = repair(default_of(&schema["items"]), &schema["items"]);
+                    let item = repair(
+                        default_of(&schema["items"], defaults),
+                        &schema["items"],
+                        defaults,
+                    );
                     if validate(&item, &schema["items"], "").is_err() {
-                        return default_of(schema).clone();
+                        return default_of(schema, defaults).clone();
                     }
                     result.push(item);
                 }
@@ -252,7 +255,7 @@ fn repair(value: &Value, schema: &Value) -> Value {
             Value::Array(result)
         }
         _ if validate(value, schema, "").is_ok() => value.clone(),
-        _ => default_of(schema).clone(),
+        _ => default_of(schema, defaults).clone(),
     }
 }
 
@@ -276,34 +279,55 @@ fn slot_values(slots: &Value) -> impl Iterator<Item = &Value> {
 const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
 const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 
+/// The entity collections, each with distinct ids.
+const ENTITY_COLLECTIONS: [&str; 5] = [
+    "/commands",
+    "/launcherPages",
+    "/aiTasks",
+    "/llm/providers",
+    "/llm/models",
+];
+
+fn tool_config_schema(tool_id: &Value) -> Option<&'static Value> {
+    match tool_id.as_str() {
+        Some("script") => Some(&SCHEMA["$defs"]["scriptToolConfig"]),
+        Some("webhook") => Some(&SCHEMA["$defs"]["webhookToolConfig"]),
+        _ => None,
+    }
+}
+
 fn validate_references(config: &Value) -> Result<(), AppError> {
-    for (collection, key) in [
-        (&config["commands"], "commands"),
-        (&config["launcherPages"], "launcherPages"),
-        (&config["llm"]["providers"], "llm.providers"),
-        (&config["llm"]["models"], "llm.models"),
-    ] {
+    for pointer in ENTITY_COLLECTIONS {
         let mut seen = HashSet::new();
-        for item in collection.as_array().into_iter().flatten() {
+        for item in config
+            .pointer(pointer)
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
             if !seen.insert(item["id"].as_str()) {
-                return Err(invalid(key));
+                return Err(invalid(pointer));
             }
         }
     }
-    for (slots, key, field) in [
-        (&config["aiTasks"], "aiTasks", Some("id")),
+    let tasks = ids(config, "aiTasks");
+    for (slots, key) in [
+        (&config["aiTaskSlots"], "aiTaskSlots"),
         (
             &config["translation"]["targetLanguages"],
             "translation.targetLanguages",
-            None,
         ),
     ] {
         let mut seen = HashSet::new();
         for value in slot_values(slots) {
-            let value = field.map_or(value, |field| &value[field]);
             if !seen.insert(value.as_str()) {
                 return Err(invalid(key));
             }
+        }
+    }
+    for id in slot_values(&config["aiTaskSlots"]).filter_map(Value::as_str) {
+        if !tasks.contains(id) {
+            return Err(invalid("aiTaskSlots"));
         }
     }
     let providers = ids(&config["llm"], "providers");
@@ -318,9 +342,6 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     }
     let models = ids(&config["llm"], "models");
     let commands = ids(config, "commands");
-    let tasks: HashSet<&str> = slot_values(&config["aiTasks"])
-        .filter_map(|task| task["id"].as_str())
-        .collect();
     let pages = ids(config, "launcherPages");
     for model in config["llm"]["models"].as_array().into_iter().flatten() {
         if !providers.contains(model["providerId"].as_str().unwrap_or_default()) {
@@ -377,23 +398,14 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
         return Err(invalid("configVersion"));
     }
     for command in config["commands"].as_array().into_iter().flatten() {
-        let schema = match command["toolId"].as_str() {
-            Some("script") => Some(&SCHEMA["$defs"]["scriptToolConfig"]),
-            Some("webhook") => Some(&SCHEMA["$defs"]["webhookToolConfig"]),
-            _ => None,
-        };
-        if let Some(schema) = schema {
+        if let Some(schema) = tool_config_schema(&command["toolId"]) {
             validate(&command["toolConfig"], schema, "commands.toolConfig")?;
         }
         if command["toolId"] == "webhook" && command["toolConfig"]["isAuthEnabled"] == true {
             let id = command["toolConfig"]["authSecretId"]
                 .as_str()
                 .ok_or_else(|| invalid("commands.toolConfig.authSecretId"))?;
-            if id.len() > 64
-                || !id
-                    .bytes()
-                    .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte))
-            {
+            if !crate::services::secrets::is_valid_id(id) {
                 return Err(invalid("commands.toolConfig.authSecretId"));
             }
         }
@@ -402,17 +414,20 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
 }
 
 /// Repairs untrusted disk input; IPC saves reject invalid input instead.
+/// Missing and broken fields take the defaults of this platform.
 pub fn normalize_user_config(config: &mut Value) -> bool {
+    normalize_with_defaults(
+        config,
+        &crate::services::settings::defaults::default_user_config(),
+    )
+}
+
+/// The rules of `normalizeUserConfig` in `@tyco/shared`; the shared fixtures
+/// check that both give the same result.
+fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     let original = config.clone();
-    *config = repair(config, &SCHEMA);
+    *config = repair(config, &SCHEMA, defaults);
     config["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
-    // Apply platform defaults when a field is missing.
-    let defaults = crate::services::settings::defaults::default_user_config();
-    for (key, value) in defaults.as_object().into_iter().flatten() {
-        if original.get(key).is_none() {
-            config[key] = value.clone();
-        }
-    }
     for command in config["commands"].as_array_mut().into_iter().flatten() {
         for key in ["id", "toolId"] {
             command[key] = json!(command[key].as_str().unwrap_or_default().trim());
@@ -435,7 +450,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         }
     });
     let mut ordered = Vec::new();
-    for default in DEFAULTS["llm"]["providers"]
+    for default in defaults["llm"]["providers"]
         .as_array()
         .into_iter()
         .flatten()
@@ -461,7 +476,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
             if is_custom {
                 fields.entry("baseUrl").or_insert_with(|| json!(""));
             } else {
-                fields.remove("baseUrl");
+                fields.shift_remove("baseUrl");
             }
         }
     }
@@ -478,23 +493,25 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
     retain_slots(&mut config["translation"]["targetLanguages"], |language| {
         languages.insert(language.as_str().unwrap_or_default().to_owned())
     });
-    deduplicate_by_id(&mut config["commands"]);
-    for command in config["commands"].as_array_mut().into_iter().flatten() {
-        let schema = match command["toolId"].as_str() {
-            Some("script") => Some(&SCHEMA["$defs"]["scriptToolConfig"]),
-            Some("webhook") => Some(&SCHEMA["$defs"]["webhookToolConfig"]),
-            _ => None,
-        };
-        if let Some(schema) = schema {
-            command["toolConfig"] = repair(&command["toolConfig"], schema);
+    for pointer in ENTITY_COLLECTIONS {
+        if let Some(collection) = config.pointer_mut(pointer) {
+            deduplicate_by_id(collection);
         }
     }
-    let mut task_ids = HashSet::new();
-    retain_slots(&mut config["aiTasks"], |task| {
-        task_ids.insert(task["id"].as_str().unwrap_or_default().to_owned())
+    for command in config["commands"].as_array_mut().into_iter().flatten() {
+        if let Some(schema) = tool_config_schema(&command["toolId"]) {
+            command["toolConfig"] = repair(&command["toolConfig"], schema, defaults);
+        }
+    }
+    let task_ids: HashSet<String> = ids(config, "aiTasks")
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+    let mut slotted_tasks = HashSet::new();
+    retain_slots(&mut config["aiTaskSlots"], |id| {
+        let id = id.as_str().unwrap_or_default();
+        task_ids.contains(id) && slotted_tasks.insert(id.to_owned())
     });
-    deduplicate_by_id(&mut config["llm"]["providers"]);
-    deduplicate_by_id(&mut config["llm"]["models"]);
     let provider_ids: HashSet<String> = ids(&config["llm"], "providers")
         .into_iter()
         .map(str::to_owned)
@@ -517,7 +534,6 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
         .into_iter()
         .map(str::to_owned)
         .collect();
-    deduplicate_by_id(&mut config["launcherPages"]);
     let page_ids: HashSet<String> = ids(config, "launcherPages")
         .into_iter()
         .map(str::to_owned)
@@ -560,7 +576,7 @@ fn retain_slots(slots: &mut Value, mut keep: impl FnMut(&Value) -> bool) {
         }
     }
     for key in dropped {
-        slots.remove(key);
+        slots.shift_remove(key);
     }
 }
 
@@ -582,29 +598,34 @@ mod tests {
         .unwrap();
         for case in cases {
             let mut config = case["input"].clone();
-            normalize_user_config(&mut config);
+            normalize_with_defaults(&mut config, &PORTABLE_DEFAULTS);
             assert_eq!(config, case["expected"], "{}", case["name"]);
             validate_user_config(&config).unwrap();
-            assert!(!normalize_user_config(&mut config));
+            assert!(!normalize_with_defaults(&mut config, &PORTABLE_DEFAULTS));
         }
     }
 
     #[test]
-    fn voice_permissions_are_opt_in_and_confirmation_is_safe_by_default() {
+    fn missing_fields_take_the_platform_defaults() {
+        let defaults = crate::services::settings::defaults::default_user_config();
+        let mut config = PORTABLE_DEFAULTS.clone();
+        config["hotkeys"]
+            .as_object_mut()
+            .unwrap()
+            .shift_remove("voice");
+        normalize_user_config(&mut config);
+        assert_eq!(config["hotkeys"]["voice"], defaults["hotkeys"]["voice"]);
+    }
+
+    #[test]
+    fn voice_permissions_are_opt_in() {
         let mut config = serde_json::json!({
             "commands": [{ "id": "note", "toolId": "script", "phrases": ["save note"] }]
         });
         normalize_user_config(&mut config);
         assert_eq!(config["commands"][0]["isVoiceEnabled"], false);
-        assert_eq!(config["commands"][0]["voiceConfirmation"], "always");
-        config["commands"][0]["isVoiceEnabled"] = serde_json::json!(true);
-        config["commands"][0]["voiceConfirmation"] = serde_json::json!("auto");
-        normalize_user_config(&mut config);
-        assert_eq!(config["commands"][0]["isVoiceEnabled"], true);
-        assert_eq!(config["commands"][0]["voiceConfirmation"], "auto");
-        config["commands"][0]["voiceConfirmation"] = serde_json::json!("invalid");
-        normalize_user_config(&mut config);
-        assert_eq!(config["commands"][0]["voiceConfirmation"], "always");
+        assert_eq!(config["commands"][0]["isAvailableExternally"], false);
+        assert_eq!(config["commands"][0]["outputAction"], "none");
     }
 
     #[test]
@@ -616,10 +637,10 @@ mod tests {
     fn rejects_bad_types_counts_duplicate_ids_and_dangling_references() {
         let defaults = crate::services::settings::defaults::default_user_config();
         for (path, value) in [
-            ("/editorHistory/maxItems", json!(1.5)),
-            ("/chatHistory/retentionDays", json!(-1)),
+            ("/editor/history/maxItems", json!(1.5)),
+            ("/chat/history/retentionDays", json!(-1)),
             ("/stt/providers", json!("bad")),
-            ("/stt/providerId", json!("missing")),
+            ("/stt/provider", json!("missing")),
             ("/commands", json!([{"id":"a"}])),
             (
                 "/mainActions",
@@ -636,24 +657,25 @@ mod tests {
                 "/translation/targetLanguages",
                 json!({"q": "en_US", "w": "en_US"}),
             ),
+            ("/aiTaskSlots", json!({"q": "missing"})),
+            ("/aiTaskSlots", json!({"q": "deepEdit", "w": "deepEdit"})),
         ] {
             let mut config = defaults.clone();
             *config.pointer_mut(path).unwrap() = value;
             assert!(validate_user_config(&config).is_err(), "{path}");
         }
-        let mut config = defaults;
-        let duplicate = config["llm"]["models"][0].clone();
-        config["llm"]["models"]
-            .as_array_mut()
-            .unwrap()
-            .push(duplicate);
-        assert!(validate_user_config(&config).is_err());
+        for pointer in ["/llm/models", "/aiTasks"] {
+            let mut config = defaults.clone();
+            let items = config.pointer_mut(pointer).unwrap().as_array_mut().unwrap();
+            items.push(items[0].clone());
+            assert!(validate_user_config(&config).is_err(), "{pointer}");
+        }
     }
 
     #[test]
     fn startup_repair_is_idempotent_and_removes_dangling_references() {
         let mut config = crate::services::settings::defaults::default_user_config();
-        config["editorHistory"]["maxItems"] = json!(1.5);
+        config["editor"]["history"]["maxItems"] = json!(1.5);
         config["stt"]["isLlmFormattingEnabled"] = json!("yes");
         config["mainActions"] = json!({
             "q": {"type":"command","commandId":"missing"},
@@ -661,6 +683,7 @@ mod tests {
             "y": {"type":"standard","actionId":"askInChat"},
         });
         config["translation"]["targetLanguages"] = json!({"q": "en_US", "w": "en_US", "e": 1});
+        config["aiTaskSlots"] = json!({"q": "gone", "w": "deepEdit", "e": "deepEdit"});
         assert!(normalize_user_config(&mut config));
         validate_user_config(&config).unwrap();
         assert!(!normalize_user_config(&mut config));
@@ -672,6 +695,15 @@ mod tests {
             config["translation"]["targetLanguages"],
             json!({"q": "en_US"})
         );
+        assert_eq!(config["aiTaskSlots"], json!({"w": "deepEdit"}));
         assert_eq!(config["stt"]["isLlmFormattingEnabled"], false);
+    }
+
+    #[test]
+    fn translation_languages_may_be_empty() {
+        let mut config = crate::services::settings::defaults::default_user_config();
+        config["translation"]["targetLanguages"] = json!({});
+        assert!(!normalize_user_config(&mut config));
+        validate_user_config(&config).unwrap();
     }
 }

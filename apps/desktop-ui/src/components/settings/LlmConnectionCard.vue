@@ -137,7 +137,7 @@ import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import LlmModelEditor from './LlmModelEditor.vue'
 import SecretKeyField from './SecretKeyField.vue'
-import type { LlmConfig, LlmProvider } from '@tyco/shared'
+import { type LlmConfig, type LlmProvider, llmSecretId } from '@tyco/shared'
 
 const props = defineProps<{
   expanded: boolean
@@ -190,8 +190,8 @@ function providerSummary(provider: LlmProvider) {
 function modelPlaceholder(id: string) {
   return MODEL_PLACEHOLDERS[id] ?? 'qwen2.5:7b'
 }
-function hasKey(id: string) {
-  return Object.hasOwn(props.secrets, id)
+function hasKey(providerId: string) {
+  return Object.hasOwn(props.secrets, llmSecretId(providerId))
 }
 function statusLabel(provider: LlmProvider) {
   if (connectionCheckStatusByProviderId[provider.id] === 'success')
@@ -209,7 +209,7 @@ function statusTone(provider: LlmProvider) {
 }
 function keyHint(provider: LlmProvider) {
   if (provider.type !== 'openaiCompatible') return undefined
-  const origins = props.secrets[provider.id]?.origins
+  const origins = props.secrets[llmSecretId(provider.id)]?.origins
   const origin = httpOrigin(provider.baseUrl)
   return origins && origin && !origins.includes(origin)
     ? t('settings.apiKeyBoundTo', { origin: origins.join(', ') })

@@ -20,7 +20,7 @@ describe('settings config preparation', () => {
     const original = structuredClone(input)
     const result = model().prepare(input)
     expect(input).toEqual(original)
-    expect(result.editor.submitKey).toBe('enter')
+    expect(result.editor.submitKey).toBe('Enter')
     expect(result).not.toHaveProperty('chatRoles')
     expect(result).not.toHaveProperty('registrationState')
     expect(result.aiRules).not.toHaveProperty('base')
@@ -29,29 +29,30 @@ describe('settings config preparation', () => {
   it('normalizes malformed nested settings and filters invalid task fields', () => {
     const input = {
       ...structuredClone(DEFAULT_USER_CONFIG),
-      aiTasks: {
-        q: null,
-        w: 42,
-        e: { name: 123, rule: {} },
-        r: { name: 123, rule: 'Translate', id: [] },
-        t: { id: 'kept', name: '', rule: 'Shorten' },
-      },
+      aiTasks: [
+        null,
+        42,
+        { name: 123, rule: {} },
+        { name: 123, rule: 'Translate', id: [] },
+        { id: 'empty', name: ' ', rule: '' },
+        { id: 'kept', name: '', rule: 'Shorten' },
+      ],
+      aiTaskSlots: { q: 'empty', t: 'kept', w: 'missing' },
       aiRules: { chat: [], correction: 1 },
       plugins: [],
       windowInsertion: { linux: { xdotoolPath: 42 }, pasteShortcut: {} },
       hotkeys: { editor: 123, write: 'Ctrl+W', selectionCorrection: false },
       launcherPages: 'invalid',
       translation: { targetLanguages: 'invalid' },
-      chatHistory: { retentionDays: -1, isEnabled: 'false' },
+      chat: { history: { retentionDays: -1, storage: false } },
       language: { ui: '', user: 7 },
-      editorHistory: { maxItems: {} },
+      editor: { history: { maxItems: {} } },
     }
     const original = structuredClone(input)
     const result = model().prepare(input)
     expect(input).toEqual(original)
-    expect(result.aiTasks).toEqual({
-      t: { id: 'kept', name: '', rule: 'Shorten' },
-    })
+    expect(result.aiTasks).toEqual([{ id: 'kept', name: '', rule: 'Shorten' }])
+    expect(result.aiTaskSlots).toEqual({ t: 'kept' })
     expect(result.aiRules).toEqual(DEFAULT_USER_CONFIG.aiRules)
     expect(result.windowInsertion).toEqual(DEFAULT_USER_CONFIG.windowInsertion)
     expect(result.hotkeys.editor).toBe(DEFAULT_USER_CONFIG.hotkeys.editor)
@@ -63,10 +64,10 @@ describe('settings config preparation', () => {
     expect(result.translation.targetLanguages).toEqual(
       DEFAULT_USER_CONFIG.translation.targetLanguages
     )
-    expect(result.chatHistory).toEqual(DEFAULT_USER_CONFIG.chatHistory)
+    expect(result.chat.history).toEqual(DEFAULT_USER_CONFIG.chat.history)
     expect(result.language).toEqual({ ui: 'auto', user: 'auto' })
-    expect(result.editorHistory.maxItems).toBe(
-      DEFAULT_USER_CONFIG.editorHistory.maxItems
+    expect(result.editor.history.maxItems).toBe(
+      DEFAULT_USER_CONFIG.editor.history.maxItems
     )
     expect(model().prepare(result)).toEqual(result)
   })

@@ -4,27 +4,27 @@ use crate::models::{
     WindowProfile, WindowSnapshot,
 };
 use crate::services::hotkeys;
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 
-/// Shared portable defaults, followed by the platform hotkeys and insertion method.
-pub fn default_user_config() -> Value {
-    default_user_config_for_session(crate::services::platform::session::current())
-}
-
-pub(crate) fn default_user_config_for_session(
-    session: crate::services::platform::session::Session,
-) -> Value {
-    let mut config: Value = serde_json::from_str(include_str!(
+/// The defaults both runtimes share, `configVersion` first.
+pub fn portable_user_config() -> Value {
+    let shared: Map<String, Value> = serde_json::from_str(include_str!(
         "../../../../packages/shared/src/user-config-defaults.json"
     ))
     .expect("valid shared user config defaults");
-    config["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
+    let mut config = Map::new();
+    config.insert(
+        String::from(crate::services::settings::version::CONFIG_VERSION_KEY),
+        json!(crate::services::settings::version::CONFIG_VERSION),
+    );
+    config.extend(shared);
+    Value::Object(config)
+}
+
+/// The portable defaults with the hotkeys of this platform.
+pub fn default_user_config() -> Value {
+    let mut config = portable_user_config();
     config["hotkeys"] = hotkeys::default_hotkeys_config();
-    config["windowInsertion"]["linux"]["method"] = json!(if session.is_wayland() {
-        "ydotool"
-    } else {
-        "xdotool"
-    });
     config
 }
 

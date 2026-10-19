@@ -5,7 +5,7 @@ import {
   type FetchFunction,
   type Transport,
 } from '@bozonx/ai-kit'
-import { DEFAULT_LLM_CONFIG, type LlmConfig } from '@tyco/shared'
+import { DEFAULT_LLM_CONFIG, llmSecretId, type LlmConfig } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createSecretKeyProvider } from '../net/secrets'
@@ -75,6 +75,7 @@ function setup(
     transport,
     keys: createSecretKeyProvider(
       async () => secrets,
+      llmSecretId,
       (provider) => isKeylessProvider(config.current, provider)
     ),
   })
@@ -110,7 +111,10 @@ describe('llm-client', () => {
       streamResponse(sse(['from deepseek']))
     )
     const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
-      deepseek: { origins: ['https://api.deepseek.com'], available: true },
+      'llm.deepseek': {
+        origins: ['https://api.deepseek.com'],
+        available: true,
+      },
     })
 
     const text = await client.run('chat', prompt, {
@@ -157,7 +161,7 @@ describe('llm-client', () => {
       streamResponse(sse(['from local']))
     )
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.taskModelChains.aiTask = ['gemini-flash', 'local-qwen']
+    llm.taskModelChains.aiTask = ['gemini-flash', 'ollama-qwen']
     const { client } = setup(fetch, llm)
 
     const text = await client.run('aiTask', prompt, {
@@ -179,14 +183,14 @@ describe('llm-client', () => {
     llm.models = [
       {
         id: 'first',
-        providerId: 'local',
+        providerId: 'ollama',
         providerModelId: 'first-model',
         temperature: 0.9,
         maxOutputTokens: 100,
       },
       {
         id: 'second',
-        providerId: 'local',
+        providerId: 'ollama',
         providerModelId: 'second-model',
         temperature: 0.1,
         maxOutputTokens: 200,
@@ -220,7 +224,7 @@ describe('llm-client', () => {
     llm.models = [
       {
         id: 'chosen',
-        providerId: 'local',
+        providerId: 'ollama',
         providerModelId: 'chosen-model',
         temperature: 0.9,
         maxOutputTokens: 300,
@@ -252,7 +256,10 @@ describe('llm-client', () => {
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
     llm.taskModelChains.aiTask = ['deepseek-chat']
     const { client } = setup(fetch, llm, {
-      deepseek: { origins: ['https://api.deepseek.com'], available: true },
+      'llm.deepseek': {
+        origins: ['https://api.deepseek.com'],
+        available: true,
+      },
     })
 
     await client.run('aiTask', prompt, { onChunk: () => undefined })
@@ -260,7 +267,7 @@ describe('llm-client', () => {
     const [url, init] = fetch.mock.calls[0]
     expect(String(url)).toBe('https://api.deepseek.com/chat/completions')
     expect(new Headers(init?.headers).get('authorization')).toBe(
-      'Bearer tyco-secret:deepseek'
+      'Bearer tyco-secret:llm.deepseek'
     )
   })
 
@@ -352,7 +359,7 @@ describe('vision transport', () => {
     const { client } = setup(fetch, llm)
     expect(
       await client.run('chat', imagePrompt, {
-        models: ['local-qwen'],
+        models: ['ollama-qwen'],
         onChunk: () => undefined,
       })
     ).toBe('Image reply')
@@ -377,7 +384,7 @@ describe('vision transport', () => {
     llm.models[0].canUseImages = true
     const { client } = setup(fetch, llm)
     await expect(
-      client.run('chat', imagePrompt, { models: ['local-qwen'] })
+      client.run('chat', imagePrompt, { models: ['ollama-qwen'] })
     ).rejects.toMatchObject({
       kind: 'image_unsupported',
       message: expect.stringContaining('does not support images'),
@@ -387,7 +394,7 @@ describe('vision transport', () => {
     const fetch = vi.fn<FetchFunction>()
     const { client } = setup(fetch)
     await expect(
-      client.run('chat', imagePrompt, { models: ['local-qwen'] })
+      client.run('chat', imagePrompt, { models: ['ollama-qwen'] })
     ).rejects.toMatchObject({ kind: 'no_model' })
     expect(fetch).not.toHaveBeenCalled()
   })
@@ -425,7 +432,7 @@ describe('built-in vision adapters', () => {
       })
     )
     const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
-      google: {
+      'llm.google': {
         origins: ['https://generativelanguage.googleapis.com'],
         available: true,
       },
@@ -443,7 +450,7 @@ describe('built-in vision adapters', () => {
       streamResponse(sse(['Image reply']))
     )
     const { client } = setup(fetch, DEFAULT_LLM_CONFIG, {
-      openrouter: { origins: ['https://openrouter.ai'], available: true },
+      'llm.openrouter': { origins: ['https://openrouter.ai'], available: true },
     })
     expect(
       await client.run('chat', imagePrompt, {
@@ -468,7 +475,7 @@ it('rejects truncated streamed output without switching models and retains the t
     )
   )
   const config = structuredClone(DEFAULT_LLM_CONFIG)
-  config.taskModelChains.aiTask = ['local-qwen', 'gemini-flash']
+  config.taskModelChains.aiTask = ['ollama-qwen', 'gemini-flash']
   const { client } = setup(fetch, config)
   const chunks: string[] = []
   await expect(
@@ -506,10 +513,10 @@ it('shares one deadline across the entire fallback chain', async () => {
   const config = structuredClone(DEFAULT_LLM_CONFIG)
   config.models.push({
     id: 'fallback',
-    providerId: 'local',
+    providerId: 'ollama',
     providerModelId: 'fallback',
   })
-  config.taskModelChains.aiTask = ['local-qwen', 'fallback']
+  config.taskModelChains.aiTask = ['ollama-qwen', 'fallback']
   const fetch = vi.fn<FetchFunction>(
     async (_url, options) =>
       new Promise((_resolve, reject) => {
@@ -541,7 +548,7 @@ it('sends the preserved DeepSeek thinking mode to the provider', async () => {
     streamResponse(sse(['answer']))
   )
   const { client } = setup(fetch, config, {
-    deepseek: { origins: ['https://api.deepseek.com'], available: true },
+    'llm.deepseek': { origins: ['https://api.deepseek.com'], available: true },
   })
   await client.run('chat', prompt, {
     models: ['deepseek-chat'],

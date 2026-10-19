@@ -31,13 +31,18 @@ describe('SettingsTranslationsTab.vue', () => {
   const createConfig = (
     overrides = {}
   ): Pick<UserConfig, 'translation' | 'aiRules'> => ({
-    aiRules: { chat: '', correction: '', translation: '', voiceCorrection: '' },
+    aiRules: {
+      chat: '',
+      correction: '',
+      translation: '',
+      translationQualityGate: '',
+      voiceCorrection: '',
+    },
     translation: {
       viewMode: 'split',
       provider: 'deepl',
+      providers: { deepl: { endpoint: 'free' } },
       qualityGate: 'off',
-      deeplEndpoint: 'free',
-      qualityGatePrompt: '',
       glossary: [
         { term: 'foo', use: 'bar', doNotTranslate: false },
         { term: 'baz', use: 'baz', doNotTranslate: true },
@@ -100,10 +105,8 @@ describe('SettingsTranslationsTab.vue', () => {
   })
 
   it('shows the correction prompt only in the always mode', async () => {
-    const userConfig = createConfig({
-      qualityGate: 'always',
-      qualityGatePrompt: 'Keep it short',
-    })
+    const userConfig = createConfig({ qualityGate: 'always' })
+    userConfig.aiRules.translationQualityGate = 'Keep it short'
     const wrapper = mount(SettingsTranslationsTab, {
       global: {
         provide: createTestSettingsContext(userConfig).provide,
@@ -131,11 +134,13 @@ describe('SettingsTranslationsTab.vue', () => {
     )
     expect(promptRow.exists()).toBe(true)
     await promptRow.find('textarea').setValue('Be formal')
-    expect(userConfig.translation.qualityGatePrompt).toBe('Be formal')
+    expect(userConfig.aiRules.translationQualityGate).toBe('Be formal')
   })
 
   it('auto-detects deepl free vs pro endpoint when saving api key', async () => {
-    const userConfig = createConfig({ deeplEndpoint: 'free' })
+    const userConfig = createConfig({
+      providers: { deepl: { endpoint: 'free' } },
+    })
     const wrapper = mount(SettingsTranslationsTab, {
       global: {
         provide: createTestSettingsContext(userConfig).provide,
@@ -160,19 +165,27 @@ describe('SettingsTranslationsTab.vue', () => {
     // Pro key (no :fx suffix)
     await input.setValue('some-pro-key-123')
     await saveButton.trigger('click')
-    expect(userConfig.translation.deeplEndpoint).toBe('pro')
-    expect(mockSetSecret).toHaveBeenCalledWith('deepl', 'some-pro-key-123')
+    expect(userConfig.translation.providers.deepl.endpoint).toBe('pro')
+    expect(mockSetSecret).toHaveBeenCalledWith(
+      'translation.deepl',
+      'some-pro-key-123'
+    )
 
     // Free key (with :fx suffix)
     await input.setValue('some-free-key:fx')
     await saveButton.trigger('click')
-    expect(userConfig.translation.deeplEndpoint).toBe('free')
-    expect(mockSetSecret).toHaveBeenCalledWith('deepl', 'some-free-key:fx')
+    expect(userConfig.translation.providers.deepl.endpoint).toBe('free')
+    expect(mockSetSecret).toHaveBeenCalledWith(
+      'translation.deepl',
+      'some-free-key:fx'
+    )
   })
 
   it('reports a key the keychain refused and keeps the endpoint', async () => {
     mockSetSecret.mockRejectedValueOnce(new Error('keychain unavailable'))
-    const userConfig = createConfig({ deeplEndpoint: 'free' })
+    const userConfig = createConfig({
+      providers: { deepl: { endpoint: 'free' } },
+    })
     const wrapper = mount(SettingsTranslationsTab, {
       global: {
         provide: createTestSettingsContext(userConfig).provide,
@@ -195,7 +208,7 @@ describe('SettingsTranslationsTab.vue', () => {
     await wrapper.find('button.btn-primary').trigger('click')
     await flushPromises()
 
-    expect(userConfig.translation.deeplEndpoint).toBe('free')
+    expect(userConfig.translation.providers.deepl.endpoint).toBe('free')
     expect(mockToastText).toHaveBeenCalledWith(
       expect.stringContaining('keychain unavailable'),
       'error'

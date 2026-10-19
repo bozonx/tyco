@@ -87,11 +87,11 @@
               t('commands.launcherResult')
             }}</span>
             <FieldSelect
-              :model-value="command.launcherAfterRun.action"
+              :model-value="command.outputAction"
               :title="t('commands.launcherResult')"
               :options="afterRunOptions"
               @update:model-value="
-                updateLauncherAfterRun($event as CustomActionAfterRun)
+                updateOutputAction($event as CommandOutputAction)
               "
             />
           </label>
@@ -163,16 +163,12 @@
         </div>
         <div class="command-field-row">
           <FieldSwitch
-            :model-value="command.availableIn.external"
+            :model-value="command.isAvailableExternally"
             :label="t('commands.external')"
-            @update:model-value="
-              update({
-                availableIn: { ...command.availableIn, external: $event },
-              })
-            "
+            @update:model-value="update({ isAvailableExternally: $event })"
           />
           <InfoTooltip :text="t('commands.externalInfo')" />
-          <span v-if="command.availableIn.external" class="command-cli-call">
+          <span v-if="command.isAvailableExternally" class="command-cli-call">
             <code class="command-cli" :title="cliCommand">{{
               cliCommand
             }}</code>
@@ -180,7 +176,7 @@
           </span>
         </div>
         <p
-          v-if="command.availableIn.external && nameConflicts.length"
+          v-if="command.isAvailableExternally && nameConflicts.length"
           class="command-warning"
         >
           {{
@@ -233,7 +229,7 @@ import CustomActionFields from './CustomActionFields.vue'
 import ToolConfigFields from './ToolConfigFields.vue'
 import {
   type CommandConfig,
-  type CustomActionAfterRun,
+  type CommandOutputAction,
   SCRIPT_MAX_TIMEOUT_SEC,
   SCRIPT_OUTPUT_TIMEOUT_SEC,
   type UserConfig,
@@ -284,7 +280,7 @@ const {
   updateDescription,
   updateToolConfig,
   updateTimeout,
-  updateLauncherAfterRun,
+  updateOutputAction,
 } = createCommandEditorModel({
   getCommand: () => props.command,
   update: (command) => emit('update', command),
@@ -299,18 +295,17 @@ function suggestName() {
 const afterRunOptions = computed(() => [
   { id: 'showMenu', name: t('commands.afterRunShowResult') },
   { id: 'insertIntoWindow', name: t('commands.afterRunInsert') },
-  { id: 'copy', name: t('commands.afterRunCopy') },
+  { id: 'copyToClipboard', name: t('commands.afterRunCopy') },
   { id: 'none', name: t('settings.actionAfterRunNone') },
 ])
 
 /**
- * Only quick-command runs configured to ignore output may stay in the
+ * Only command launcher runs configured to ignore output may stay in the
  * background.
  */
 const backgroundScript = computed(
   () =>
-    props.command.toolId === 'script' &&
-    props.command.launcherAfterRun.action === 'none'
+    props.command.toolId === 'script' && props.command.outputAction === 'none'
 )
 
 /** Which tool the command runs */
@@ -328,7 +323,7 @@ const isAdvancedOpen = ref(
   Boolean(props.command.description) ||
     Boolean(scriptConfig.value.timeoutSec) ||
     props.command.isOutputLogged ||
-    props.command.availableIn.external
+    props.command.isAvailableExternally
 )
 
 /** By the name, which reads better, while it is unique; otherwise by the id */

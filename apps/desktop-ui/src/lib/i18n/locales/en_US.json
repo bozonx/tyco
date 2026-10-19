@@ -1,13 +1,13 @@
 {
   "action": {
-    "aiTask": "AI task",
+    "aiTaskMenu": "AI task",
     "askInChat": "Ask in chat",
     "copy": "Copy",
     "copyToClipboard": "Copy and close",
     "correction": "Correction",
     "insertIntoWindow": "Insert into window",
     "script": "Script / Command",
-    "translation": "Translation",
+    "translationMenu": "Translation",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -846,7 +846,8 @@
     "unassignHotkey": "Remove shortcut",
     "userLanguage": "User language",
     "windowInsertion": "Insertion method",
-    "windowInsertionHint": "Utility used to simulate keystrokes and paste text into other applications: xdotool (in X11 sessions) or ydotool (in Wayland). Specify the executable path below.",
+    "windowInsertionHint": "Utility used to simulate keystrokes and paste text into other applications: xdotool (in X11 sessions) or ydotool (in Wayland). Auto picks the one of the current session. Specify the executable path below.",
+    "windowInsertionAuto": "Auto",
     "binaryPathPlaceholder": "Found on PATH",
     "vision": "Image input",
     "toolUse": "Tool calling",

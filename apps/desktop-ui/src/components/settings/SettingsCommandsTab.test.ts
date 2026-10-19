@@ -43,7 +43,7 @@ const webhook = {
   toolConfig: {
     url: 'https://x.test',
     isAuthEnabled: true,
-    authSecretId: 'webhook-auth-wh1',
+    authSecretId: 'webhook.auth.wh1',
   },
 }
 const script = { ...createCommand('script', 'sc1'), name: 'Backup' }
@@ -56,7 +56,7 @@ const mountTab = (focusCommandId?: string) => {
     commands: [webhook, script],
     mainActions: {
       q: { type: 'command', commandId: 'wh1' },
-      w: { type: 'standard', actionId: 'translation' },
+      w: { type: 'standard', actionId: 'translationMenu' },
     },
   } as Partial<UserConfig>)
   return mount(SettingsCommandsTab, {
@@ -209,7 +209,7 @@ describe('SettingsCommandsTab.vue', () => {
 
     expect(commandIds()).toEqual(['sc1'])
     expect(context.draft.value.mainActions).toEqual({
-      w: { type: 'standard', actionId: 'translation' },
+      w: { type: 'standard', actionId: 'translationMenu' },
     })
     expect(wrapper.find('.commands-notice').text()).toContain(
       'commands.removed'
@@ -227,7 +227,7 @@ describe('SettingsCommandsTab.vue', () => {
     expect(commandIds()).toEqual(['wh1', 'sc1'])
     expect(context.draft.value.mainActions).toEqual({
       q: { type: 'command', commandId: 'wh1' },
-      w: { type: 'standard', actionId: 'translation' },
+      w: { type: 'standard', actionId: 'translationMenu' },
     })
     expect(wrapper.find('.commands-notice').exists()).toBe(false)
     wrapper.unmount()
@@ -240,7 +240,7 @@ describe('SettingsCommandsTab.vue', () => {
     await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
     wrapper.unmount()
     await vi.waitFor(() =>
-      expect(removeSecret).toHaveBeenCalledWith('webhook-auth-wh1')
+      expect(removeSecret).toHaveBeenCalledWith('webhook.auth.wh1')
     )
   })
 

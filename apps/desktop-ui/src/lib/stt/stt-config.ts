@@ -16,7 +16,7 @@ const SHERPA_ONNX_MODEL_ID = 'sherpa-onnx'
 
 /** The model dictation uses, by the provider chosen in the settings */
 export function activeSttModel(config: SttConfig): SttModel {
-  if (config.providerId === 'sherpaOnnx')
+  if (config.provider === 'sherpaOnnx')
     return {
       provider: 'sherpaOnnx',
       modelId: SHERPA_ONNX_MODEL_ID,

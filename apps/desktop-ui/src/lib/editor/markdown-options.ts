@@ -1,5 +1,5 @@
 import type { Options as RemarkStringifyOptions } from 'remark-stringify'
-import { normalizeMarkdownSettings } from '@tyco/shared'
+import { normalizeConfigValue, type MarkdownFormatSettings } from '@tyco/shared'
 
 /**
  * Intra-word underscores do not start emphasis in CommonMark, but
@@ -12,13 +12,16 @@ const INTRAWORD_UNDERSCORE = /(?<=[\p{L}\p{N}])\\_(?=[\p{L}\p{N}])/gu
 export function markdownStringifyOptions(
   value?: unknown
 ): RemarkStringifyOptions {
-  const settings = normalizeMarkdownSettings(value)
+  const settings = normalizeConfigValue<MarkdownFormatSettings>(
+    'markdown.format',
+    value
+  )
   return {
     bullet: settings.bullet,
     emphasis: settings.emphasis,
     strong: settings.strong,
     setext: settings.headingStyle === 'setext',
-    incrementListMarker: settings.incrementListMarker,
+    incrementListMarker: settings.isListMarkerIncremented,
     handlers: {
       text: (node, _parent, state, info) =>
         state.safe(node.value, info).replace(INTRAWORD_UNDERSCORE, '_'),

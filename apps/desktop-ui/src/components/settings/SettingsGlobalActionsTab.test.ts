@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_USER_CONFIG } from '@tyco/shared'
+import { DEFAULT_USER_CONFIG, SUBMIT_KEYS } from '@tyco/shared'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsGlobalActionsTab from './SettingsGlobalActionsTab.vue'
 
@@ -50,7 +50,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
   beforeEach(() => {
     context = createTestSettingsContext({
       ...structuredClone(DEFAULT_USER_CONFIG),
-      editor: { ...DEFAULT_USER_CONFIG.editor, submitKey: 'enter' },
+      editor: { ...DEFAULT_USER_CONFIG.editor, submitKey: 'Enter' },
     })
   })
 
@@ -132,11 +132,14 @@ describe('SettingsGlobalActionsTab.vue', () => {
 
     const select = submitKeyRow.findComponent({ name: 'FieldSelect' })
     expect(select.exists()).toBe(true)
-    expect(select.props('modelValue')).toBe('enter')
+    expect(select.props('modelValue')).toBe('Enter')
+    expect(
+      (select.props('options') as { id: string }[]).map((option) => option.id)
+    ).toEqual([...SUBMIT_KEYS])
 
-    await select.vm.$emit('update:modelValue', 'ctrlEnter')
+    await select.vm.$emit('update:modelValue', 'Ctrl+Enter')
 
-    expect(context.draft.value.editor.submitKey).toBe('ctrlEnter')
+    expect(context.draft.value.editor.submitKey).toBe('Ctrl+Enter')
   })
 
   it('unassigns a hotkey', async () => {

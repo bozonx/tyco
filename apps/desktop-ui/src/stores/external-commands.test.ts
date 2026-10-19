@@ -52,10 +52,9 @@ describe('external commands store wiring', () => {
       phrases: [],
       isLlmArgumentParsingEnabled: false,
       isVoiceEnabled: false,
-      voiceConfirmation: 'always',
-      launcherAfterRun: { action: 'none' },
+      outputAction: 'none',
       isOutputLogged: false,
-      availableIn: { external: true, chat: false },
+      isAvailableExternally: true,
     }
 
     const callFunctionSpy = vi

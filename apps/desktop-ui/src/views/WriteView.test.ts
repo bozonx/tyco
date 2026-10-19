@@ -140,7 +140,7 @@ describe('quick input screen', () => {
   })
 
   it('sends with Ctrl+Enter in that mode and updates the hint', async () => {
-    reactive(mocks.desktopState).userConfig.editor.submitKey = 'ctrlEnter'
+    reactive(mocks.desktopState).userConfig.editor.submitKey = 'Ctrl+Enter'
     await nextTick()
     press('Enter')
     expect(mocks.correction.insert).not.toHaveBeenCalled()

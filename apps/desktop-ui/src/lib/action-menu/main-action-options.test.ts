@@ -18,8 +18,10 @@ const groupLabel = (group: MainActionGroup) =>
 
 describe('main action groups', () => {
   it('puts the translation and the AI task apart from the basic actions', () => {
-    expect(standardActionGroup('translation')).toEqual({ kind: 'translation' })
-    expect(standardActionGroup('aiTask')).toEqual({ kind: 'aiTask' })
+    expect(standardActionGroup('translationMenu')).toEqual({
+      kind: 'translation',
+    })
+    expect(standardActionGroup('aiTaskMenu')).toEqual({ kind: 'aiTask' })
     expect(standardActionGroup('insertIntoWindow')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('askInChat')).toEqual({ kind: 'basic' })
   })

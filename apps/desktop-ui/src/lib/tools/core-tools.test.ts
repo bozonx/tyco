@@ -62,8 +62,10 @@ describe('createCoreTools', () => {
       'core.aiTask',
       'core.askInChat',
     ])
-    expect(tools.get('core.correct')?.defaultAfterRun).toBe('insertIntoWindow')
-    expect(tools.get('core.copy')?.defaultAfterRun).toBeUndefined()
+    expect(tools.get('core.correct')?.defaultOutputAction).toBe(
+      'insertIntoWindow'
+    )
+    expect(tools.get('core.copy')?.defaultOutputAction).toBeUndefined()
   })
 
   it('inserts, copies and asks in the chat', async () => {

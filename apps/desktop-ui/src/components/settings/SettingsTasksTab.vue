@@ -31,14 +31,18 @@ import { computed, onUnmounted } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import {
+  type AiTaskLibrary,
+  moveTaskSlot,
+  placeNewTask,
+  removeTaskAt,
+  taskSlotList,
+  updateAiTask,
+  withoutEmptyTasks,
+} from '../../lib/ai-tasks/ai-task-library'
+import {
   type AiTaskConfig,
   newAiTaskId,
 } from '../../lib/ai-tasks/custom-prompt'
-import {
-  moveShortcutSlot,
-  slotList,
-  slotsFromList,
-} from '../../lib/shortcut-slots/shortcut-slots'
 import FieldInput from '../common/FieldInput.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from './SettingsSection.vue'
@@ -47,44 +51,40 @@ import ShortcutSlots from './ShortcutSlots.vue'
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
 
-const taskSlots = computed(() => slotList(userConfig.value.aiTasks))
+const taskSlots = computed(() => taskSlotList(userConfig.value))
 
-function setSlots(slots: (AiTaskConfig | null)[]) {
-  userConfig.value.aiTasks = slotsFromList(slots)
+function setLibrary(library: AiTaskLibrary) {
+  userConfig.value.aiTasks = library.aiTasks
+  userConfig.value.aiTaskSlots = library.aiTaskSlots
 }
 
 function moveTask(from: number, to: number) {
-  setSlots(moveShortcutSlot(taskSlots.value, from, to))
+  setLibrary(moveTaskSlot(userConfig.value, from, to))
 }
 
 function addTask(index: number) {
-  const slots = [...taskSlots.value]
-  slots[index] = { id: newAiTaskId(slots), name: '', rule: '' }
-  setSlots(slots)
+  setLibrary(
+    placeNewTask(userConfig.value, index, {
+      id: newAiTaskId(userConfig.value.aiTasks),
+      name: '',
+      rule: '',
+    })
+  )
 }
 
 function removeTask(index: number) {
-  const slots = [...taskSlots.value]
-  slots[index] = null
-  setSlots(slots)
+  setLibrary(removeTaskAt(userConfig.value, index))
 }
 
 function updateTask(index: number, field: keyof AiTaskConfig, value: unknown) {
-  if (typeof value !== 'string' || !taskSlots.value[index]) return
-  const slots = [...taskSlots.value]
-  slots[index] = { ...slots[index]!, [field]: value }
-  setSlots(slots)
+  const task = taskSlots.value[index]
+  if (typeof value !== 'string' || !task) return
+  setLibrary(updateAiTask(userConfig.value, task.id, { [field]: value }))
 }
 
 onUnmounted(() => {
-  const hasEmpty = taskSlots.value.some(
-    (task) => task && !task.name.trim() && !task.rule.trim()
-  )
-  if (hasEmpty) {
-    const cleaned = taskSlots.value.map((task) =>
-      task && (task.name.trim() || task.rule.trim()) ? task : null
-    )
-    setSlots(cleaned)
-  }
+  const cleaned = withoutEmptyTasks(userConfig.value)
+  if (cleaned.aiTasks.length !== userConfig.value.aiTasks.length)
+    setLibrary(cleaned)
 })
 </script>

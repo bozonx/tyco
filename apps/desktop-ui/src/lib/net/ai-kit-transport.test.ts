@@ -1,5 +1,5 @@
 import { Catalog, createAiKit, type StreamPart } from '@bozonx/ai-kit'
-import { DESKTOP_COMMANDS } from '@tyco/shared'
+import { DESKTOP_COMMANDS, llmSecretId } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { bytes, createFakeNetIpc } from './fake-net-ipc'
@@ -38,7 +38,7 @@ function createKit(
       ],
       taskClasses: { chat: ['local'] },
     }),
-    keys: createSecretKeyProvider(async () => secrets),
+    keys: createSecretKeyProvider(async () => secrets, llmSecretId),
     transport: createTauriTransport(fake.ipc),
   })
   return { fake, kit }
@@ -63,7 +63,7 @@ describe('ai-kit over the Tauri transport', () => {
         },
       },
       {
-        'openai-compatible': {
+        'llm.openai-compatible': {
           origins: ['http://localhost:11434'],
           available: true,
         },
@@ -91,7 +91,7 @@ describe('ai-kit over the Tauri transport', () => {
     expect(request.url).toBe('http://localhost:11434/v1/chat/completions')
     expect(request.headers).toContainEqual([
       'authorization',
-      'Bearer tyco-secret:openai-compatible',
+      'Bearer tyco-secret:llm.openai-compatible',
     ])
   })
 
