@@ -107,7 +107,7 @@ in the config. The browser's `localStorage.appearance` is a bootstrap cache to
 avoid a flash before the authoritative config arrives.
 
 Linux paths below honor XDG overrides. macOS and Windows use the platform paths
-in `services/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage.
+in `services/storage/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage.
 
 | Root                                  | Files                                                                                                                                                                      |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -3,5 +3,5 @@
 
 pub mod access;
 pub mod api;
-pub mod commands;
+pub mod command_library;
 pub mod jobs;

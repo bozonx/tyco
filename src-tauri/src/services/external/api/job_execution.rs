@@ -11,7 +11,7 @@ use super::{ApiResult, JOB_CANCEL_EVENT};
 use crate::errors::AppError;
 use crate::services::activation::{Activation, ActivationMode, ActivationSource};
 use crate::services::external::access::{self, AccessPrompt, AccessPromptError, AccessRequest};
-use crate::services::external::commands::{self, ExternalCommand};
+use crate::services::external::command_library::{self, ExternalCommand};
 use crate::services::external::jobs::ExternalJobs;
 use crate::services::{runtime, selection_replace};
 use crate::state::AppState;
@@ -36,7 +36,7 @@ pub(super) fn start(
     source: ActivationSource,
 ) -> ApiResult<Job> {
     if app
-        .state::<crate::services::external::commands::ToolCatalogState>()
+        .state::<crate::services::external::command_library::ToolCatalogState>()
         .get()
         .is_none()
     {
@@ -47,7 +47,7 @@ pub(super) fn start(
     }
     let command = lookup(app, &request.target, request.by_name)?;
     validate_run(&command, &request)?;
-    let config = app.state::<AppState>().snapshot().settings.user_config;
+    let config = app.state::<AppState>().user_config();
     // without the permission the user is asked, see `external_access`
     let ask = request.selection && !is_selection_access_allowed(&config);
     // checked again when the prompt is taken; this saves the capture
@@ -123,13 +123,13 @@ fn hand_off(
     request: &RunRequest,
     source: ActivationSource,
 ) -> ApiResult<()> {
-    let config = app.state::<AppState>().snapshot().settings.user_config;
+    let config = app.state::<AppState>().user_config();
     let needs_ui = command.can_take_text && request.text.is_none() && request.input.is_none();
     let handoff = if needs_ui {
         let mut activation = Activation::new(ActivationMode::CommandLauncher, source);
         // External calls never capture a selection implicitly when opening UI.
         activation.selected_text = Some(String::new());
-        activation.launcher_request = Some(commands::LauncherRequest {
+        activation.launcher_request = Some(command_library::LauncherRequest {
             command_id: command.id.clone(),
             text: request.text.clone(),
             job_id: Some(job_id.to_owned()),
@@ -142,7 +142,7 @@ fn hand_off(
             .and_then(|window| {
                 window
                     .emit(
-                        commands::COMMAND_RUN_EVENT,
+                        command_library::COMMAND_RUN_EVENT,
                         json!({
                             "commandId": command.id,
                             "jobId": job_id,
@@ -314,7 +314,7 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
         );
         return false;
     }
-    let config = app.state::<AppState>().snapshot().settings.user_config;
+    let config = app.state::<AppState>().user_config();
     if request.selection && !jobs.is_selection_approved(id) {
         if let Err(error) = ensure_selection_access_allowed(&config) {
             complete(

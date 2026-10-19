@@ -59,6 +59,7 @@ import QueryPanel, {
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
+import { APP_CONFIG } from '@tyco/shared'
 
 const props = withDefaults(defineProps<AiTaskMenuParams>(), {
   text: '',
@@ -70,7 +71,6 @@ const editorNavigation = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
 const desktopStore = useDesktopStore()
 const invocations = useInvocationsStore()
-const appConfig = computed(() => desktopStore.appConfig)
 const { toastKey } = useToast()
 const runStep = useMenuStepRun()
 const { t } = useI18n()
@@ -212,7 +212,7 @@ async function makeDiff(prompt: string) {
     return
   }
 
-  if (trimmedText.length < appConfig.value.minAiTaskLength) {
+  if (trimmedText.length < APP_CONFIG.minAiTaskLength) {
     toastKey('toast.textTooShortToProcess', 'warn')
     return
   }

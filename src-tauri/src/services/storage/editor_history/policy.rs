@@ -109,7 +109,7 @@ impl EditorHistoryPolicy {
 mod tests {
     use super::*;
     use crate::models::EditorHistoryKind;
-    use crate::services::storage::now_ms;
+    use crate::services::clock::now_ms;
     use serde_json::json;
 
     fn history_item(id: &str, text: &str, kind: EditorHistoryKind) -> EditorHistoryRecord {

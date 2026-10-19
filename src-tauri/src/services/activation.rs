@@ -1,4 +1,11 @@
 pub(crate) mod coordinator;
+/// Timings of activations for `examples/activation-bench.rs`: a socket that
+/// starts activations and returns what was typed, so it is built only with
+/// the `activation-bench` feature.
+#[cfg(feature = "activation-bench")]
+pub mod metrics;
+#[cfg(not(feature = "activation-bench"))]
+#[path = "activation/metrics_off.rs"]
 pub mod metrics;
 pub mod socket;
 

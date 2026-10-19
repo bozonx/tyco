@@ -3,7 +3,7 @@ use tauri::{AppHandle, Manager};
 use tyco_activation_protocol::{ErrorCode, Response, RunRequest};
 
 use super::ApiResult;
-use crate::services::external::commands::{self, CommandLookupError, ExternalCommand};
+use crate::services::external::command_library::{self, CommandLookupError, ExternalCommand};
 use crate::state::AppState;
 
 /// Selection capture is opt-in; which commands run from
@@ -24,12 +24,12 @@ pub(super) fn ensure_selection_access_allowed(config: &Value) -> ApiResult<()> {
 }
 
 pub(super) fn lookup(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<ExternalCommand> {
-    let config = app.state::<AppState>().snapshot().settings.user_config;
-    let catalog = app.state::<commands::ToolCatalogState>().get();
+    let config = app.state::<AppState>().user_config();
+    let catalog = app.state::<command_library::ToolCatalogState>().get();
     if by_name {
-        commands::find_by_name(&config, catalog.as_ref(), target)
+        command_library::find_by_name(&config, catalog.as_ref(), target)
     } else {
-        commands::find_by_id(&config, catalog.as_ref(), target)
+        command_library::find_by_id(&config, catalog.as_ref(), target)
     }
     .map_err(|error| Box::new(lookup_error(error)))
 }
@@ -54,12 +54,12 @@ pub(super) fn command_name(config: &Value, id: &str) -> String {
 pub(super) fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
     let command = lookup(app, target, by_name)?;
     let state = app.state::<AppState>();
-    let config = state.snapshot().settings.user_config;
+    let config = state.user_config();
     let raw = raw_command(&config, &command.id);
     let input_schema = raw
         .and_then(|raw| raw["toolId"].as_str())
         .and_then(|tool_id| {
-            app.state::<commands::ToolCatalogState>()
+            app.state::<command_library::ToolCatalogState>()
                 .get()
                 .and_then(|catalog| catalog.get(tool_id).cloned())
         })

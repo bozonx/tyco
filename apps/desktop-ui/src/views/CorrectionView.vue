@@ -24,6 +24,7 @@ import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/nav-panel'
+import { APP_CONFIG } from '@tyco/shared'
 
 const actionMenuStore = useActionMenuStore()
 const ipcStore = useIpcStore()
@@ -42,7 +43,7 @@ const isCurrent = () =>
 const emptyMessage = computed(() => {
   const text = desktopStore.desktopState.selectedText
   if (!text?.trim()) return t('toast.textNotSelected')
-  const minLength = desktopStore.appConfig?.minCorrectionLength ?? 0
+  const minLength = APP_CONFIG.minCorrectionLength
   return t(
     text.length < minLength
       ? 'toast.textTooShortForCorrection'

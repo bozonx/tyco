@@ -54,25 +54,24 @@ impl AppPaths {
         }
 
         let resolver = app.path();
-        let error = |error: tauri::Error| AppError::Message(error.to_string());
-        let data_dir = resolver.app_data_dir().map_err(error)?;
+        let data_dir = resolver.app_data_dir()?;
         let state_dir = if cfg!(target_os = "macos") {
             data_dir.clone()
         } else if cfg!(target_os = "windows") {
-            resolver.app_local_data_dir().map_err(error)?
+            resolver.app_local_data_dir()?
         } else {
             xdg_state_dir(identifier)?
         };
         let log_dir = if cfg!(any(target_os = "macos", target_os = "windows")) {
-            resolver.app_log_dir().map_err(error)?
+            resolver.app_log_dir()?
         } else {
             state_dir.join("logs")
         };
         Ok(Self {
-            config_dir: resolver.app_config_dir().map_err(error)?,
+            config_dir: resolver.app_config_dir()?,
             data_dir,
             state_dir,
-            cache_dir: resolver.app_cache_dir().map_err(error)?,
+            cache_dir: resolver.app_cache_dir()?,
             log_dir,
         })
     }

@@ -1,6 +1,21 @@
+use crate::locks::MutexExt;
 use std::sync::Mutex;
 
-use super::*;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use tauri::AppHandle;
+
+use super::json_files::{read_json, remove_file_if_exists, write_json};
+use super::paths::app_data_sub_dir;
+use super::DAY_MS;
+use crate::errors::AppError;
+use crate::models::{Chat, ChatSummary};
+use crate::services::atomic_file::read_or_quarantine;
+use crate::services::clock::now_ms;
+
 use crate::services::chat_images::ChatImageStore;
 
 const CHAT_INDEX_FILE: &str = "index.json";
@@ -159,8 +174,7 @@ pub fn save_chat(
     let mut history = list_chats(chats_dir)?;
 
     images
-        .lock()
-        .expect("chat image lock poisoned")
+        .locked()
         .persist(&chat_image_directory(chats_dir), &chat)?;
 
     upsert_chat_index(&mut history, &chat);
@@ -399,6 +413,7 @@ fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatSummary]) -> Result
 mod tests {
     use super::*;
     use crate::services::storage::test_support::TestDir;
+    use serde_json::json;
 
     fn chat_item(id: &str) -> Chat {
         Chat {

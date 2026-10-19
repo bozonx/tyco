@@ -21,7 +21,7 @@ impl AudioSource for SystemAudioSource {
             .ok_or_else(|| AppError::ServiceUnavailable("No default input device found".into()))?;
         let supported_config = device
             .default_input_config()
-            .map_err(|error| AppError::Message(error.to_string()))?;
+            .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
         let device_sample_rate_hz = supported_config.sample_rate().0;
         let output_sample_rate_hz = device_sample_rate_hz.min(TARGET_SAMPLE_RATE_HZ);
         let context = StreamContext {
@@ -46,7 +46,7 @@ impl AudioSource for SystemAudioSource {
         };
         stream
             .play()
-            .map_err(|error| AppError::Message(error.to_string()))?;
+            .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
         Ok(OpenedCapture {
             stream,
             context,

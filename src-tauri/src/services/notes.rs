@@ -12,7 +12,7 @@ const MAX_NAME_ATTEMPTS: u32 = 1000;
 /// The directory is created when it does not exist. An existing file is never
 /// overwritten: when `file_name` is taken, a numeric suffix is appended to its
 /// stem (`note.md` becomes `note-1.md`, `note-2.md` and so on).
-pub fn save_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppError> {
+fn save_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppError> {
     let dir = resolve_notes_dir(dir, home_dir().as_deref())?;
     validate_file_name(file_name)?;
 
@@ -41,7 +41,7 @@ pub fn save_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppE
 ///
 /// If the existing file is non-empty and does not end with a newline, a newline
 /// is inserted before appending `text`.
-pub fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppError> {
+fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppError> {
     let dir = resolve_notes_dir(dir, home_dir().as_deref())?;
     validate_file_name(file_name)?;
 
@@ -175,16 +175,8 @@ fn resolve_notes_dir(dir: &str, home: Option<&Path>) -> Result<PathBuf, AppError
         )));
     }
 
-    let resolved = if dir == "~" {
-        home_required(home)?.to_path_buf()
-    } else if let Some(rest) = dir
-        .strip_prefix("~/")
-        .or_else(|| dir.strip_prefix("~\\").filter(|_| cfg!(windows)))
-    {
-        home_required(home)?.join(rest)
-    } else {
-        PathBuf::from(dir)
-    };
+    let resolved = crate::services::platform::shell::expand_home(dir, home)
+        .ok_or_else(|| AppError::Message(String::from("Home directory is not known")))?;
 
     if !resolved.is_absolute() {
         return Err(AppError::InvalidInput(format!(
@@ -193,10 +185,6 @@ fn resolve_notes_dir(dir: &str, home: Option<&Path>) -> Result<PathBuf, AppError
     }
 
     Ok(resolved)
-}
-
-fn home_required(home: Option<&Path>) -> Result<&Path, AppError> {
-    home.ok_or_else(|| AppError::Message(String::from("Home directory is not known")))
 }
 
 fn validate_file_name(file_name: &str) -> Result<(), AppError> {

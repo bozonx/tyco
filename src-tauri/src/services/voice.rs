@@ -376,7 +376,7 @@ where
             error_callback,
             None,
         )
-        .map_err(|error| AppError::Message(error.to_string()))
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))
 }
 
 #[cfg(test)]

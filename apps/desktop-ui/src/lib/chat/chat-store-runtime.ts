@@ -54,7 +54,6 @@ export interface ChatStoreRuntimeDependencies {
   readSoul: (id: string) => Promise<string>
   updateProfileModel: (id: string, modelId: string) => Promise<unknown>
   getUserConfig: () => UserConfig | undefined
-  getAppConfig: () => typeof APP_CONFIG | undefined
   getSessionState: () => SessionState | undefined
   saveSessionState: (
     patch: Partial<SessionState>
@@ -113,11 +112,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   )
 
   const getChatInstructions = () =>
-    profileId
-      ? soul.value
-      : (deps.getAppConfig() ?? APP_CONFIG).aiInstructions[
-          LlmInstructionKind.CHAT
-        ]
+    profileId ? soul.value : APP_CONFIG.aiInstructions[LlmInstructionKind.CHAT]
   const getChatRules = () =>
     profileId ? undefined : deps.getUserConfig()?.aiRules?.chat
 
@@ -127,7 +122,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     return chatRequestBudgetCharacters(picked, {
       instructions: getChatInstructions(),
       rules: getChatRules(),
-      rulePrefix: (deps.getAppConfig() ?? APP_CONFIG).rulePrefix,
+      rulePrefix: APP_CONFIG.rulePrefix,
     })
   }
 

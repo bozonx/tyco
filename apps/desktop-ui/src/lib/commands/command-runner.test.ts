@@ -109,16 +109,14 @@ describe('script commands', () => {
     const executeScriptAction = vi.fn().mockResolvedValue(result())
     const { deps, runner } = setup({ executeScriptAction })
     const outcome = await runner.run(
-      script({ workingDirectory: ' /tmp ' }, { isOutputLogged: true }),
+      script({}, { isOutputLogged: true }),
       'input'
     )
 
     expect(outcome).toEqual({ success: true, result: undefined })
 
     expect(executeScriptAction).toHaveBeenCalledWith({
-      name: 'Echo',
-      command: 'echo {{TEXT}}',
-      workingDirectory: '/tmp',
+      commandId: 's-1',
       text: 'input',
       captureOutput: false,
       logOutput: true,
@@ -203,13 +201,6 @@ describe('script commands', () => {
       'toast.actionEmptyOutput',
       'warn'
     )
-  })
-
-  it('falls back to the command as the name', async () => {
-    const executeScriptAction = vi.fn().mockResolvedValue(result())
-    const { runner } = setup({ executeScriptAction })
-    await runner.run(script({}, { name: '' }), 'x')
-    expect(executeScriptAction.mock.calls[0][0].name).toBe('echo {{TEXT}}')
   })
 })
 

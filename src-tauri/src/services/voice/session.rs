@@ -1,3 +1,4 @@
+use crate::locks::MutexExt;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -49,19 +50,12 @@ impl Default for VoiceSessionState {
 }
 impl VoiceSessionState {
     pub fn can_start(&self) -> bool {
-        !self
-            .session
-            .lock()
-            .expect("voice capture session lock poisoned")
-            .is_stopping
+        !self.session.locked().is_stopping
     }
 
     /// Recheck under the shutdown lock after potentially slow device setup.
     pub fn install(&self, session: VoiceCaptureSession) -> Result<(), VoiceCaptureSession> {
-        let mut guard = self
-            .session
-            .lock()
-            .expect("voice capture session lock poisoned");
+        let mut guard = self.session.locked();
         if guard.is_stopping || guard.session.is_some() {
             return Err(session);
         }
@@ -70,10 +64,7 @@ impl VoiceSessionState {
     }
 
     pub fn shutdown(&self) -> Option<VoiceCaptureSession> {
-        let mut guard = self
-            .session
-            .lock()
-            .expect("voice capture session lock poisoned");
+        let mut guard = self.session.locked();
         guard.is_stopping = true;
         guard.session.take()
     }
@@ -81,10 +72,7 @@ impl VoiceSessionState {
     /// Takes the running capture if it is the one `id` names; `None` takes any.
     /// A late stop from a dictation that is over must not end the next one.
     pub fn take(&self, id: Option<u64>) -> Option<VoiceCaptureSession> {
-        let mut guard = self
-            .session
-            .lock()
-            .expect("voice capture session lock poisoned");
+        let mut guard = self.session.locked();
         match (id, guard.session.as_ref()) {
             (Some(id), Some(session)) if session.id != id => None,
             _ => guard.session.take(),

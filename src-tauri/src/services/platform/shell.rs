@@ -2,7 +2,7 @@
 //! PowerShell on Windows, with quoting rules to match.
 
 pub use super::process::kill_tree;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// The environment variable that carries the text into a command, see
@@ -61,6 +61,23 @@ pub fn script_invocation(path: &str) -> String {
         format!("& {}", quote(path))
     } else {
         quote(path)
+    }
+}
+
+/// `path` with a leading `~` standing for `home`: `~`, `~/…`, and `~\…` on
+/// Windows. `None` when it starts with one but the home directory is not
+/// known; any other path is returned as it is.
+pub fn expand_home(path: &str, home: Option<&Path>) -> Option<PathBuf> {
+    let rest = if path == "~" {
+        Some("")
+    } else {
+        path.strip_prefix("~/")
+            .or_else(|| path.strip_prefix("~\\").filter(|_| cfg!(windows)))
+    };
+    match rest {
+        None => Some(PathBuf::from(path)),
+        Some("") => home.map(Path::to_path_buf),
+        Some(rest) => home.map(|home| home.join(rest)),
     }
 }
 
@@ -164,6 +181,23 @@ fn escape_powershell_single(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_leading_tilde_stands_for_the_home_directory() {
+        let home = Path::new("/home/user");
+        assert_eq!(expand_home("~", Some(home)), Some(home.to_path_buf()));
+        assert_eq!(expand_home("~/notes", Some(home)), Some(home.join("notes")));
+        assert_eq!(
+            expand_home("/srv/~/x", Some(home)),
+            Some(PathBuf::from("/srv/~/x"))
+        );
+        assert_eq!(expand_home("~user/x", None), Some(PathBuf::from("~user/x")));
+        assert_eq!(expand_home("~/notes", None), None);
+        assert_eq!(
+            expand_home("~\\notes", Some(home)).is_some_and(|path| path.starts_with(home)),
+            cfg!(windows)
+        );
+    }
 
     const PLACEHOLDER: &str = "{{TEXT}}";
     const NASTY: &str = "it's \"quoted\" $HOME `id` \\ ; exit 3 ‘’“”";

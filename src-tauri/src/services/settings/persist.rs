@@ -1,6 +1,18 @@
+//! The config file: read and repaired at startup, written by the saves.
 mod backups;
 
-use super::*;
+use std::fs;
+use std::path::Path;
+
+use serde_json::Value;
+use tauri::AppHandle;
+
+use super::defaults::default_user_config;
+use super::{schema, version};
+use crate::errors::AppError;
+use crate::models::CONFIG_FILE_NAME;
+use crate::services::atomic_file::{read_or_quarantine, write_private};
+use crate::services::storage::app_config_dir;
 use backups::back_up_config_before_repair;
 
 /// The user config the app starts with.
@@ -34,7 +46,7 @@ fn load_user_config_at(path: &Path) -> Result<LoadedUserConfig, AppError> {
             return Err(newer_config_error());
         }
         let original = value.clone();
-        let changed = crate::services::settings::schema::normalize_user_config(&mut value);
+        let changed = schema::normalize_user_config(&mut value);
         // the app starts with the config in memory either way; the next
         // save writes it
         let is_on_disk = !changed
@@ -87,7 +99,7 @@ fn write_user_config(
     user_config: &Value,
     should_back_up_invalid: bool,
 ) -> Result<(), AppError> {
-    debug_assert!(crate::services::settings::schema::validate_user_config(user_config).is_ok());
+    debug_assert!(schema::validate_user_config(user_config).is_ok());
     let previous = match fs::read_to_string(path) {
         Ok(raw) => Some(raw),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
@@ -98,13 +110,15 @@ fn write_user_config(
         if version::is_newer_than_supported(&original) {
             return Err(newer_config_error());
         }
-        if should_back_up_invalid
-            && crate::services::settings::schema::validate_user_config(&original).is_err()
-        {
+        if should_back_up_invalid && schema::validate_user_config(&original).is_err() {
             back_up_config_before_repair(path, &original)?;
         }
     }
     write_json(path, user_config)
+}
+
+fn write_json(path: &Path, value: &Value) -> Result<(), AppError> {
+    write_private(path, &serde_json::to_string_pretty(value)?)
 }
 
 pub fn newer_config_error() -> AppError {
@@ -116,7 +130,7 @@ pub fn newer_config_error() -> AppError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::storage::test_support::TestDir;
+    use crate::services::test_support::TestDir;
 
     fn snapshot_count(dir: &Path) -> usize {
         fs::read_dir(dir)
@@ -173,12 +187,8 @@ mod tests {
     fn missing_sections_come_from_the_defaults() {
         let defaults = default_user_config();
         let mut config = serde_json::json!({});
-        assert!(crate::services::settings::schema::normalize_user_config(
-            &mut config
-        ));
+        assert!(schema::normalize_user_config(&mut config));
         assert_eq!(config, defaults);
-        assert!(!crate::services::settings::schema::normalize_user_config(
-            &mut config
-        ));
+        assert!(!schema::normalize_user_config(&mut config));
     }
 }

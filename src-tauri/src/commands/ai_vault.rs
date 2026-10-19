@@ -10,8 +10,7 @@ use crate::{
 };
 
 fn vault_dir(app: &AppHandle, state: &AppState) -> Result<PathBuf, AppError> {
-    let snapshot = state.snapshot();
-    ai_vault::resolve_vault_path(app, &snapshot.settings.user_config)
+    ai_vault::resolve_vault_path(app, &state.user_config())
 }
 
 #[tauri::command]

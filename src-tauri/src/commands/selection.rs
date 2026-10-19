@@ -19,9 +19,8 @@ pub async fn finish_selection_run(
     run_id: u64,
     text: Option<String>,
 ) -> Result<SelectionFinishStatus, AppError> {
-    tauri::async_runtime::spawn_blocking(move || selection_replace::finish(&app, run_id, text))
-        .await
-        .map_err(|error| AppError::Message(error.to_string()))?
+    super::run_blocking(move || selection_replace::finish(&app, run_id, text))
+        .await?
         .inspect_err(|error| log::error!("Could not replace the selection: {error}"))
 }
 
@@ -34,7 +33,7 @@ pub async fn replace_selection_with_command(
     command_id: String,
 ) -> Result<(), AppError> {
     runtime::hide_active_window(&app)?;
-    tauri::async_runtime::spawn_blocking(move || {
+    super::run_blocking(move || {
         runtime::wait_until_unfocused(&app, FOCUS_RELEASE_TIMEOUT);
         selection_replace::trigger(
             &app,
@@ -42,8 +41,7 @@ pub async fn replace_selection_with_command(
             selection_replace::TriggerWait::Now,
         )
     })
-    .await
-    .map_err(|error| AppError::Message(error.to_string()))?
+    .await?
 }
 
 #[tauri::command]
@@ -56,15 +54,12 @@ pub fn show_status_overlay(
 
 #[tauri::command]
 pub async fn notify_desktop(summary: String, body: String) -> Result<(), AppError> {
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::services::platform::notifications::notify(&summary, &body)
-    })
-    .await
-    .map_err(|error| AppError::Message(error.to_string()))?
+    super::run_blocking(move || crate::services::platform::notifications::notify(&summary, &body))
+        .await?
 }
 
 /// Fails with what is missing for pressing keys in other windows.
 #[tauri::command]
 pub fn check_text_injection(state: State<'_, AppState>) -> Result<(), AppError> {
-    crate::services::platform::check_text_injection(&state.snapshot().settings.user_config)
+    crate::services::platform::check_text_injection(&state.user_config())
 }

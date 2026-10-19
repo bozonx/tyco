@@ -13,7 +13,7 @@ use tauri::{AppHandle, Manager};
 use tyco_activation_protocol::{ErrorCode, Request, Response, API_VERSION};
 
 use crate::services::activation::{Activation, ActivationMode, ActivationSource};
-use crate::services::external::commands;
+use crate::services::external::command_library;
 use crate::services::external::jobs::ExternalJobs;
 use crate::services::{runtime, selection_replace};
 use crate::state::AppState;
@@ -38,7 +38,7 @@ fn open(
             "Choose text or selection",
         )));
     }
-    let config = app.state::<AppState>().snapshot().settings.user_config;
+    let config = app.state::<AppState>().user_config();
     if selection {
         ensure_selection_access_allowed(&config)?;
     }
@@ -63,7 +63,7 @@ fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
             format!("Unknown selection action: {action}"),
         )));
     }
-    let config = app.state::<AppState>().snapshot().settings.user_config;
+    let config = app.state::<AppState>().user_config();
     ensure_selection_access_allowed(&config)?;
     selection_replace::trigger(
         app,
@@ -103,7 +103,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
     }
     match request {
         Request::Status => {
-            let config = app.state::<AppState>().snapshot().settings.user_config;
+            let config = app.state::<AppState>().user_config();
             Response::json(&json!({
                 "apiVersion": API_VERSION,
                 "version": app.package_info().version.to_string(),
@@ -115,9 +115,9 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
         }
         // Each command carries its own grant, so the list holds the granted ones.
         Request::ListCommands => {
-            let config = app.state::<AppState>().snapshot().settings.user_config;
-            let catalog = app.state::<commands::ToolCatalogState>().get();
-            Response::json(&commands::list(&config, catalog.as_ref()))
+            let config = app.state::<AppState>().user_config();
+            let catalog = app.state::<command_library::ToolCatalogState>().get();
+            Response::json(&command_library::list(&config, catalog.as_ref()))
         }
         Request::DescribeCommand { target, by_name } => match describe(app, &target, by_name) {
             Ok(description) => Response::json(&description),

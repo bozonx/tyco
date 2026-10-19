@@ -1,4 +1,5 @@
 //! Storage owns synchronization; IPC callers never take history locks.
+use crate::locks::MutexExt;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
@@ -36,15 +37,11 @@ pub struct HistoryStorageCoordinator {
 
 impl HistoryStorageCoordinator {
     fn lock_editor_history(&self) -> MutexGuard<'_, Vec<EditorHistoryRecord>> {
-        self.editor_history
-            .lock()
-            .expect("editor history lock poisoned")
+        self.editor_history.locked()
     }
 
     fn lock_chat_history(&self) -> MutexGuard<'_, ()> {
-        self.chat_history_lock
-            .lock()
-            .expect("chat history lock poisoned")
+        self.chat_history_lock.locked()
     }
 
     /// Hold repository locks through the single config publication, then run
@@ -95,7 +92,7 @@ impl HistoryStorageCoordinator {
         let _settings = state.lock_settings_update();
         let _editor = self.lock_editor_history();
         let _chats = self.lock_chat_history();
-        let policy = HistorySettings::from_config(&state.snapshot().settings.user_config);
+        let policy = HistorySettings::from_config(&state.user_config());
         if enforce_history_policies(app, policy).is_ok() {
             self.cleanup_pending.store(false, Ordering::SeqCst);
         }
@@ -124,7 +121,7 @@ fn with_editor<T>(
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let mut memory = state.history.lock_editor_history();
-    operation(&state.snapshot().settings.user_config, &mut memory)
+    operation(&state.user_config(), &mut memory)
 }
 
 /// Whose chat history an operation works on: the chats of "Ask AI" or a
@@ -149,10 +146,8 @@ fn scope_chats_dir(
     match scope {
         ChatScope::AskAi => chats::app_chats_dir(app),
         ChatScope::Profile(profile_id) => {
-            let vault_root = crate::services::ai_vault::resolve_vault_path(
-                app,
-                &state.snapshot().settings.user_config,
-            )?;
+            let vault_root =
+                crate::services::ai_vault::resolve_vault_path(app, &state.user_config())?;
             crate::services::ai_vault::profile_chats_dir(&vault_root, profile_id)
         }
     }
@@ -253,7 +248,7 @@ pub fn read_chat(
 
 pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), AppError> {
     with_chats(app, scope, |state, chats_dir| {
-        let policy = chats::ChatHistoryPolicy::from_config(&state.snapshot().settings.user_config);
+        let policy = chats::ChatHistoryPolicy::from_config(&state.user_config());
         chats::save_chat(chats_dir, policy, app.state::<ChatImages>().store(), item)
     })
 }

@@ -84,6 +84,7 @@ import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'
+import { APP_CONFIG } from '@tyco/shared'
 
 const editorNavigation = useEditorNavigation()
 
@@ -175,16 +176,14 @@ usePreviewModeShortcut(() => {
   if (hasDiff.value) cycleMode()
 })
 
-const minCorrectionLength = computed(
-  () => desktopStore.appConfig?.minCorrectionLength ?? 0
-)
+const minCorrectionLength = APP_CONFIG.minCorrectionLength
 
 /** Why the correction action is off for this text, if it is. */
 const correctionBlocker = computed(() => {
   if (props.correction && !props.correctionError) {
     return t('write.alreadyCorrected')
   }
-  if (props.text.length < minCorrectionLength.value) {
+  if (props.text.length < minCorrectionLength) {
     return t('write.textTooShortForCorrection')
   }
   return undefined

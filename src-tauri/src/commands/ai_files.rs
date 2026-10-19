@@ -19,7 +19,7 @@ pub const AI_UPLOAD_PROFILE_HEADER: &str = "x-ai-upload-profile";
 pub const AI_UPLOAD_NAME_HEADER: &str = "x-ai-upload-name";
 
 fn vault_dir(app: &AppHandle, state: &AppState) -> Result<PathBuf, AppError> {
-    ai_vault::resolve_vault_path(app, &state.snapshot().settings.user_config)
+    ai_vault::resolve_vault_path(app, &state.user_config())
 }
 
 /// The folders the profile's file tools reach, with its permissions to each.

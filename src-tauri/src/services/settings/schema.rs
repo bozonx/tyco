@@ -1,4 +1,5 @@
 //! Validation and repair use the portable schema shared with the webview.
+use crate::locks::MutexExt;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 
@@ -25,7 +26,7 @@ static PATTERNS: LazyLock<std::sync::Mutex<HashMap<String, regex::Regex>>> =
     LazyLock::new(Default::default);
 
 fn matches_pattern(pattern: &str, text: &str) -> bool {
-    let mut patterns = PATTERNS.lock().expect("schema pattern lock poisoned");
+    let mut patterns = PATTERNS.locked();
     patterns
         .entry(pattern.to_owned())
         .or_insert_with(|| regex::Regex::new(pattern).expect("valid schema pattern"))

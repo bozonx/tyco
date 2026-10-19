@@ -6,6 +6,7 @@
 //! are known from the tool catalog the quick window sends.
 //! See `dev_docs/design-voice-commands.md`, §3.4.
 
+use crate::locks::MutexExt;
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
@@ -55,11 +56,11 @@ pub struct ToolCatalogState(std::sync::Mutex<Option<ToolCatalog>>);
 
 impl ToolCatalogState {
     pub fn get(&self) -> Option<ToolCatalog> {
-        self.0.lock().expect("tool catalog lock poisoned").clone()
+        self.0.locked().clone()
     }
 
     pub fn set(&self, catalog: ToolCatalog) {
-        *self.0.lock().expect("tool catalog lock poisoned") = Some(catalog);
+        *self.0.locked() = Some(catalog);
     }
 }
 
@@ -124,7 +125,16 @@ impl std::fmt::Display for CommandLookupError {
 
 impl From<CommandLookupError> for AppError {
     fn from(error: CommandLookupError) -> Self {
-        AppError::Message(error.to_string())
+        let message = error.to_string();
+        match error {
+            CommandLookupError::Unavailable(..) | CommandLookupError::ToolsLoading(_) => {
+                AppError::ServiceUnavailable(message)
+            }
+            CommandLookupError::NotFound(_)
+            | CommandLookupError::Ambiguous(..)
+            | CommandLookupError::Disabled(_)
+            | CommandLookupError::NotExternal(_) => AppError::InvalidInput(message),
+        }
     }
 }
 

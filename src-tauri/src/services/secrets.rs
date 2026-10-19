@@ -9,6 +9,7 @@
 //! The values live in the system credential store only; without one no key
 //! can be saved. `secrets.json` lists the secrets and their origins only.
 
+use crate::locks::MutexExt;
 pub mod detector;
 mod origins;
 #[cfg(test)]
@@ -27,8 +28,8 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
-use crate::services::app_paths::{dev_paths_from_env, AppPaths};
 use crate::services::atomic_file::{create_private_dir, read_or_quarantine};
+use crate::services::storage::app_paths::{dev_paths_from_env, AppPaths};
 
 pub const SECRETS_FILE_NAME: &str = "secrets.json";
 pub const SECRET_REF_PREFIX: &str = "tyco-secret:";
@@ -316,7 +317,7 @@ impl SecretStore {
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, StoreState> {
-        self.state.lock().expect("secrets lock poisoned")
+        self.state.locked()
     }
 
     fn persist(&self, state: &StoreState) -> Result<(), AppError> {

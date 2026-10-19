@@ -2,6 +2,7 @@
 use super::bindings::{HotkeyBinding, HotkeyTarget};
 use super::{ApplyHotkeyResult, HotkeyApplyStatus, ProviderKind};
 use crate::errors::AppError;
+use crate::locks::RwLockExt;
 use crate::services::selection_replace;
 use std::collections::HashMap;
 use std::sync::RwLock;
@@ -21,10 +22,7 @@ pub struct HotkeyRegistry {
 
 impl HotkeyRegistry {
     pub(super) fn set_failure(&self, id: String, message: Option<String>) {
-        let mut failures = self
-            .failures
-            .write()
-            .expect("hotkey failures lock poisoned");
+        let mut failures = self.failures.write_locked();
         match message {
             Some(message) => failures.insert(id, message),
             None => failures.remove(&id),
@@ -70,8 +68,7 @@ pub(super) fn suspend_with(
     }
     let shortcuts = registry
         .shortcuts
-        .read()
-        .expect("hotkey shortcuts lock poisoned")
+        .read_locked()
         .values()
         .copied()
         .collect::<Vec<_>>();
@@ -117,12 +114,7 @@ fn apply_global_shortcut_with(
         external_command: None,
         message: None,
     };
-    let previous = registry
-        .shortcuts
-        .read()
-        .expect("hotkey shortcuts lock poisoned")
-        .get(target)
-        .copied();
+    let previous = registry.shortcuts.read_locked().get(target).copied();
 
     if previous == shortcut {
         return Ok(ready);
@@ -134,18 +126,10 @@ fn apply_global_shortcut_with(
                 .unregister(previous)
                 .map_err(|error| AppError::Message(error.to_string()))?;
         }
-        registry
-            .targets
-            .write()
-            .expect("hotkey bindings lock poisoned")
-            .remove(&previous.id());
+        registry.targets.write_locked().remove(&previous.id());
     }
     let Some(shortcut) = shortcut else {
-        registry
-            .shortcuts
-            .write()
-            .expect("hotkey shortcuts lock poisoned")
-            .remove(target);
+        registry.shortcuts.write_locked().remove(target);
         return Ok(ready);
     };
     if let Err(error) = provider.register(shortcut) {
@@ -154,19 +138,14 @@ fn apply_global_shortcut_with(
                 Ok(()) => {
                     registry
                         .targets
-                        .write()
-                        .expect("hotkey bindings lock poisoned")
+                        .write_locked()
                         .insert(previous.id(), target.clone());
                 }
                 Err(restore_error) => {
                     // the target has no shortcut at all now; the registry
                     // must not claim the old one is still bound
                     log::error!("Could not restore the previous shortcut: {restore_error}");
-                    registry
-                        .shortcuts
-                        .write()
-                        .expect("hotkey shortcuts lock poisoned")
-                        .remove(target);
+                    registry.shortcuts.write_locked().remove(target);
                 }
             }
         }
@@ -179,13 +158,11 @@ fn apply_global_shortcut_with(
 
     registry
         .targets
-        .write()
-        .expect("hotkey bindings lock poisoned")
+        .write_locked()
         .insert(shortcut.id(), target.clone());
     registry
         .shortcuts
-        .write()
-        .expect("hotkey shortcuts lock poisoned")
+        .write_locked()
         .insert(target.clone(), shortcut);
     Ok(ready)
 }
@@ -207,8 +184,7 @@ impl GlobalShortcutProvider {
                     let target = app
                         .state::<HotkeyRegistry>()
                         .targets
-                        .read()
-                        .expect("hotkey bindings lock poisoned")
+                        .read_locked()
                         .get(&shortcut.id())
                         .cloned();
                     if let Some(target) = target {
@@ -237,13 +213,11 @@ impl GlobalShortcutProvider {
                 Ok(()) => {
                     registry
                         .targets
-                        .write()
-                        .expect("hotkey bindings lock poisoned")
+                        .write_locked()
                         .insert(shortcut.id(), binding.target.clone());
                     registry
                         .shortcuts
-                        .write()
-                        .expect("hotkey shortcuts lock poisoned")
+                        .write_locked()
                         .insert(binding.target, shortcut);
                 }
                 Err(error) => {

@@ -1,4 +1,5 @@
 //! Coordinates hotkey providers and exposes the application hotkey API.
+use crate::locks::RwLockExt;
 mod bindings;
 mod config_transaction;
 pub use config_transaction::with_config_changes;
@@ -35,11 +36,11 @@ impl ProviderState {
     }
 
     pub(crate) fn kind(&self) -> ProviderKind {
-        *self.0.read().expect("hotkey provider lock poisoned")
+        *self.0.read_locked()
     }
 
     pub(crate) fn set(&self, kind: ProviderKind) {
-        *self.0.write().expect("hotkey provider lock poisoned") = kind;
+        *self.0.write_locked() = kind;
     }
 }
 
@@ -56,17 +57,21 @@ pub struct ApplyHotkeyRequest {
     pub shortcut: String,
 }
 
+/// The hotkey state, which needs neither the config nor a window.
+pub fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    portal::manage_state(
+        builder
+            .manage(ProviderState::new(provider_kind(session::current())))
+            .manage(HotkeyRegistry::default())
+            .manage(PortalShortcutBindings::default()),
+    )
+}
+
 pub fn setup(app: &mut App) -> Result<(), AppError> {
-    let user_config = app.state::<AppState>().snapshot().settings.user_config;
+    let user_config = app.state::<AppState>().user_config();
     let bindings = bindings_from_config(&user_config);
 
-    let kind = provider_kind(session::current());
-    app.manage(ProviderState::new(kind));
-    app.manage(HotkeyRegistry::default());
-    app.manage(PortalShortcutBindings::default());
-    portal::manage_state(app);
-
-    match kind {
+    match app.state::<ProviderState>().kind() {
         ProviderKind::Portal => portal::register(app, bindings),
         ProviderKind::GlobalShortcut => GlobalShortcutProvider.register(app, bindings),
         ProviderKind::External => {

@@ -1,4 +1,5 @@
 //! Exit only after both trusted webviews have flushed their settings drafts.
+use crate::locks::MutexExt;
 use std::collections::HashSet;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -86,8 +87,7 @@ pub fn request(app: &AppHandle) {
     let Some(request_id) = app
         .state::<SettingsShutdown>()
         .0
-        .lock()
-        .expect("shutdown lock poisoned")
+        .locked()
         .start(windows.clone())
     else {
         return;
@@ -97,8 +97,7 @@ pub fn request(app: &AppHandle) {
             log::warn!("Could not request settings flush: {error}");
             app.state::<SettingsShutdown>()
                 .0
-                .lock()
-                .expect("shutdown lock poisoned")
+                .locked()
                 .cancel(request_id);
             cancel_exit(app);
             return;
@@ -113,8 +112,7 @@ pub fn request(app: &AppHandle) {
         let cancelled = app
             .state::<SettingsShutdown>()
             .0
-            .lock()
-            .expect("shutdown lock poisoned")
+            .locked()
             .cancel(request_id);
         if cancelled {
             log::warn!("Shutdown cancelled: a webview did not confirm saved settings");
@@ -129,8 +127,7 @@ pub fn acknowledge(app: &AppHandle, request_id: u64, window: &str, saved: bool) 
     let result = app
         .state::<SettingsShutdown>()
         .0
-        .lock()
-        .expect("shutdown lock poisoned")
+        .locked()
         .acknowledge(request_id, window, saved);
     match result {
         ShutdownFlushOutcome::Complete => {

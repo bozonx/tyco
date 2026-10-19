@@ -4,8 +4,7 @@ import type { DesktopCall } from '../ipc/desktop-functions'
 import { createScriptActionClient } from './script-action-client'
 
 const request: ScriptActionRequest = {
-  name: 'test',
-  command: 'echo test',
+  commandId: 'test',
   text: '',
   captureOutput: true,
   logOutput: false,

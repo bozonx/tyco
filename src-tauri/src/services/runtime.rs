@@ -1,3 +1,4 @@
+use crate::locks::MutexExt;
 mod lifecycle;
 mod panel_layer;
 pub mod settings_shutdown;
@@ -7,7 +8,7 @@ mod tray;
 mod warmup;
 mod window_visibility;
 
-pub use lifecycle::{create_windows, request_exit, setup, shutdown};
+pub use lifecycle::{create_windows, manage_state, request_exit, setup, shutdown};
 pub use panel_layer::set_quick_input_region;
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
 pub use target_paste::paste_into_target;
@@ -72,17 +73,11 @@ impl Default for RuntimeWindows {
 
 impl RuntimeWindows {
     pub(super) fn active_label(&self) -> &'static str {
-        *self
-            .active_label
-            .lock()
-            .expect("window label lock poisoned")
+        *self.active_label.locked()
     }
 
     pub(super) fn set_active_label(&self, label: &'static str) {
-        *self
-            .active_label
-            .lock()
-            .expect("window label lock poisoned") = label;
+        *self.active_label.locked() = label;
     }
 }
 
@@ -116,8 +111,8 @@ impl ActivationHost for RuntimeActivationHost<'_> {
         has_focused_window(self.app)
     }
 
-    fn user_config(&self) -> serde_json::Value {
-        self.app.state::<AppState>().snapshot().settings.user_config
+    fn user_config(&self) -> std::sync::Arc<serde_json::Value> {
+        self.app.state::<AppState>().user_config()
     }
 
     fn activate(&self, activation: Activation) -> Result<(), AppError> {

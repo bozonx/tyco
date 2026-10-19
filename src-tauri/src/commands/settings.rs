@@ -3,14 +3,9 @@ use crate::{
     errors::AppError,
     models::DesktopSnapshot,
     services::{runtime, settings},
-    state::AppState,
 };
 use serde_json::Value;
-use tauri::{AppHandle, State};
-#[tauri::command]
-pub fn get_user_config(state: State<'_, AppState>) -> serde_json::Value {
-    state.snapshot().settings.user_config
-}
+use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn save_user_config(

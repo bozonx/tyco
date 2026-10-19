@@ -97,7 +97,7 @@ export interface WebhookToolConfig {
 /**
  * Whether a script takes the text: its command mentions `{{TEXT}}`. Keep in
  * sync with `script_takes_text` in
- * `src-tauri/src/services/external/commands.rs`
+ * `src-tauri/src/services/external/command_library.rs`
  */
 export const scriptTakesText = (config: Pick<ScriptToolConfig, 'command'>) =>
   config.command.includes(ACTION_TEXT_PLACEHOLDER)
@@ -105,7 +105,7 @@ export const scriptTakesText = (config: Pick<ScriptToolConfig, 'command'>) =>
 /**
  * Whether a webhook takes the text: `{{TEXT}}` is in its URL or in the body of
  * a POST request. Keep in sync with `webhook_takes_text` in
- * `src-tauri/src/services/external/commands.rs`
+ * `src-tauri/src/services/external/command_library.rs`
  */
 export const webhookTakesText = (
   config: Pick<WebhookToolConfig, 'url' | 'method' | 'payloadTemplate'>

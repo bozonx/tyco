@@ -15,16 +15,16 @@ export interface EditorTransfer {
   sourceText?: string
 }
 
-/** A script action to run; see `execute_script_action` */
+/**
+ * A saved script command to run; see `execute_script_action`. The backend reads
+ * the shell command, its working directory and timeout from the saved config,
+ * so only a command the user saved can run
+ */
 export interface ScriptActionRequest {
-  name: string
-  command: string
-  workingDirectory?: string
+  commandId: string
   text: string
   /** The output is used: the command is waited for longer */
   captureOutput: boolean
-  /** How long the output is waited for, in seconds; absent for the default */
-  timeoutSec?: number
   logOutput: boolean
   /** Lets `cancel_script_action` stop the command while it is waited for */
   runId?: string

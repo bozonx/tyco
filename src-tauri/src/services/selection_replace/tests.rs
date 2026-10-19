@@ -112,14 +112,14 @@ struct Backend {
 }
 
 impl SelectionBackend for Backend {
-    fn user_config(&self) -> Value {
-        serde_json::json!({"setting": true})
+    fn user_config(&self) -> std::sync::Arc<Value> {
+        std::sync::Arc::new(serde_json::json!({"setting": true}))
     }
     fn wait(&self, _wait: TriggerWait) {
         self.operations.lock().unwrap().push("wait".into());
     }
     fn capture(&self, config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
-        assert_eq!(config, &self.user_config());
+        assert_eq!(config, &*self.user_config());
         self.operations.lock().unwrap().push("capture".into());
         if self.capture_error {
             Err(SelectionRunError::new(

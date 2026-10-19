@@ -4,6 +4,7 @@ use super::{
     HotkeyRegistry, HotkeyTarget, ProviderKind, ProviderState,
 };
 use crate::errors::AppError;
+use crate::locks::RwLockExt;
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -22,8 +23,7 @@ pub fn with_config_changes<T>(
         .map(|(target, shortcut)| {
             let previous = registry
                 .shortcuts
-                .read()
-                .expect("hotkey shortcuts lock poisoned")
+                .read_locked()
                 .get(&target)
                 .map(ToString::to_string)
                 .unwrap_or_default();

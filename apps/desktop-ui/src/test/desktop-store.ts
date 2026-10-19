@@ -17,9 +17,6 @@ export function mockDesktopStore<T extends object>(
     get userConfig() {
       return state().userConfig
     },
-    get appConfig() {
-      return state().appConfig
-    },
     get sessionState() {
       return state().sessionState
     },

@@ -1,5 +1,6 @@
 mod commands;
 mod errors;
+mod locks;
 mod models;
 mod services;
 mod state;
@@ -24,7 +25,7 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         log::LevelFilter::Info
     };
 
-    let file_target = services::app_paths::early_log_dir("com.tyco.app")
+    let file_target = services::storage::app_paths::early_log_dir("com.tyco.app")
         .expect("TYCO_DEV_HOME must contain a valid absolute path")
         .map_or(
             TargetKind::LogDir {
@@ -81,7 +82,20 @@ fn follow_window_change(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let app = tauri::Builder::default()
+    // state that needs nothing to be built exists before any window or
+    // event can ask for it; what needs the config or a window is managed in
+    // `setup`
+    let builder = services::hotkeys::manage_state(runtime::manage_state(
+        tauri::Builder::default()
+            .manage(services::background::BackgroundServices::default())
+            .manage(services::custom_actions::ScriptRuns::default())
+            .manage(services::external::jobs::ExternalJobs::default())
+            .manage(services::external::command_library::ToolCatalogState::default())
+            .manage(services::chat_images::ChatImages::default())
+            .manage(services::voice::session::VoiceSessionState::default())
+            .manage(services::external::access::AccessPrompt::default()),
+    ));
+    let app = builder
         // reading a package may take a while; the main thread must not wait
         .register_asynchronous_uri_scheme_protocol(
             services::plugins::protocol::SCHEME,
@@ -103,7 +117,8 @@ pub fn run() {
             app.manage(services::plugins::PluginStore::new(
                 storage::app_data_dir(app.handle())?.join("plugins"),
             ));
-            let user_config = storage::read_or_create_user_config(app.handle())?;
+            let user_config =
+                services::settings::persist::read_or_create_user_config(app.handle())?;
             let history_cleanup_failed = match storage::apply_history_settings_on_startup(
                 app.handle(),
                 &user_config.value,
@@ -138,7 +153,7 @@ pub fn run() {
                     // undo; the next start cleans up after it.
                     let state = secrets_app.state::<AppState>();
                     let _settings = state.lock_settings_update();
-                    if state.snapshot().settings.user_config == user_config.value {
+                    if *state.user_config() == user_config.value {
                         services::secrets::webhook::cleanup_after_startup(
                             &store,
                             &user_config.value,
@@ -163,15 +178,6 @@ pub fn run() {
         .on_window_event(|window, event| {
             runtime::handle_window_event(window.app_handle(), window.label(), event);
         })
-        // state that needs nothing to be built; what needs the config or a
-        // window is managed in `setup`
-        .manage(services::background::BackgroundServices::default())
-        .manage(services::custom_actions::ScriptRuns::default())
-        .manage(services::external::jobs::ExternalJobs::default())
-        .manage(services::external::commands::ToolCatalogState::default())
-        .manage(services::chat_images::ChatImages::default())
-        .manage(services::voice::session::VoiceSessionState::default())
-        .manage(services::external::access::AccessPrompt::default())
         .invoke_handler(tauri::generate_handler![
             commands::action_logs::log_client_message,
             commands::action_logs::log_command_run,
@@ -235,8 +241,6 @@ pub fn run() {
             commands::net::net_socket_open,
             commands::net::net_socket_send_binary,
             commands::net::net_socket_send_text,
-            commands::notes::append_note,
-            commands::notes::save_note,
             commands::plugins::inspect_plugin_package,
             commands::plugins::install_plugin_package,
             commands::plugins::list_installed_plugins,
@@ -257,7 +261,6 @@ pub fn run() {
             commands::selection::replace_selection_with_command,
             commands::selection::show_status_overlay,
             commands::settings::acknowledge_settings_shutdown,
-            commands::settings::get_user_config,
             commands::settings::patch_session_state,
             commands::settings::save_user_config,
             commands::storage::get_storage_info,

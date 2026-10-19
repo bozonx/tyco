@@ -12,7 +12,6 @@ pub mod editor_history;
 pub mod external_jobs;
 pub mod hotkeys;
 pub mod net;
-pub mod notes;
 pub mod plugins;
 pub mod script_actions;
 pub mod secrets;

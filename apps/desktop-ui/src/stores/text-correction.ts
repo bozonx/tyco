@@ -25,8 +25,6 @@ export const useTextCorrectionStore = defineStore('textCorrection', () => {
       JSON.stringify([
         desktop.userConfig.llm,
         desktop.userConfig.aiRules?.correction,
-        desktop.appConfig.aiInstructions.correction,
-        desktop.appConfig.rulePrefix,
       ]),
     corrector.invalidate,
     { flush: 'sync' }

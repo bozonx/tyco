@@ -5,6 +5,7 @@
 //! webview never holds one. Responses and socket frames go back through a
 //! Tauri channel — JSON events for control, raw bytes for bodies.
 
+use crate::locks::MutexExt;
 pub mod authorization;
 pub mod gateway;
 pub mod http;
@@ -128,11 +129,7 @@ impl NetState {
             .lock()
             .expect("response chunk permits lock")
             .insert(id, chunk_permits.clone());
-        *self
-            .activity
-            .active_count
-            .lock()
-            .expect("network activity lock poisoned") += 1;
+        *self.activity.active_count.locked() += 1;
         Ok((
             NetTaskRegistration {
                 admission: self.admission.clone(),
@@ -202,10 +199,7 @@ impl NetState {
 impl crate::services::background::StoppableService for NetState {
     /// Closes all active sockets and aborts in-flight fetches on shutdown.
     fn stop(&self) {
-        let mut is_stopping = self
-            .admission
-            .lock()
-            .expect("network admission lock poisoned");
+        let mut is_stopping = self.admission.locked();
         *is_stopping = true;
         self.operation_permits.close();
         let sockets = std::mem::take(&mut *self.sockets.lock().expect("sockets lock"));
@@ -223,11 +217,7 @@ impl crate::services::background::StoppableService for NetState {
         }
     }
     fn wait_until(&self, deadline: Instant) -> bool {
-        let count = self
-            .activity
-            .active_count
-            .lock()
-            .expect("network activity lock poisoned");
+        let count = self.activity.active_count.locked();
         *self
             .activity
             .changed
@@ -236,7 +226,7 @@ impl crate::services::background::StoppableService for NetState {
                 deadline.saturating_duration_since(Instant::now()),
                 |count| *count != 0,
             )
-            .expect("network activity lock poisoned")
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .0
             == 0
     }
@@ -261,10 +251,7 @@ impl NetTaskRegistration {
         self.chunk_permits.clone()
     }
     pub fn register_socket(&self, sender: Sender<SocketCommand>) -> bool {
-        let is_stopping = self
-            .admission
-            .lock()
-            .expect("network admission lock poisoned");
+        let is_stopping = self.admission.locked();
         if *is_stopping {
             return false;
         }
@@ -290,11 +277,7 @@ impl Drop for NetTaskRegistration {
         {
             handle.abort();
         }
-        *self
-            .activity
-            .active_count
-            .lock()
-            .expect("network activity lock poisoned") -= 1;
+        *self.activity.active_count.locked() -= 1;
         self.activity.changed.notify_all();
     }
 }

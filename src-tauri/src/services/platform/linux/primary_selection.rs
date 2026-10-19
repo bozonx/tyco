@@ -16,6 +16,7 @@
 //! lacks the data control protocol, or no tracker backend) nothing is known
 //! about the owner, and the selection is taken as it is.
 
+use crate::locks::MutexExt;
 use std::io::Read;
 use std::os::unix::process::CommandExt;
 use std::process::{Command, Stdio};
@@ -75,7 +76,7 @@ fn state() -> &'static Mutex<SelectionOriginState> {
 }
 
 fn update<T>(change: impl FnOnce(&mut SelectionOriginState) -> T) -> T {
-    change(&mut state().lock().expect("primary selection lock poisoned"))
+    change(&mut state().locked())
 }
 
 /// Whether the primary selection was made in `window_id`; `None` when that is

@@ -1,28 +1,21 @@
-import type {
-  ScriptActionRequest,
-  ScriptExecutionResult,
-  ScriptToolConfig,
-} from '@tyco/shared'
+import type { ScriptActionRequest, ScriptExecutionResult } from '@tyco/shared'
 
 const MAX_ERROR_DETAIL_LENGTH = 200
 
 /**
- * The request the backend runs; a call without text passes an empty one: the
- * backend substitutes `{{TEXT}}` with the quoted and escaped text
+ * The request the backend runs: it takes the shell command of the saved command
+ * `commandId`. A call without text passes an empty one: the backend substitutes
+ * `{{TEXT}}` with the quoted and escaped text
  */
 export function buildScriptRequest(
-  name: string,
-  config: Pick<ScriptToolConfig, 'command' | 'workingDirectory' | 'timeoutSec'>,
+  commandId: string,
   text: string | null,
   options: { captureOutput: boolean; logOutput: boolean }
 ): ScriptActionRequest {
   return {
-    name,
-    command: config.command,
-    workingDirectory: config.workingDirectory?.trim() || undefined,
+    commandId,
     text: text ?? '',
     captureOutput: options.captureOutput,
-    ...(config.timeoutSec ? { timeoutSec: config.timeoutSec } : {}),
     logOutput: options.logOutput,
   }
 }

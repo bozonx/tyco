@@ -1,38 +1,21 @@
 #[cfg(test)]
 mod test_support;
 
+pub mod app_paths;
 mod chat_history;
-mod config;
 mod editor_history;
 mod history_store;
 mod json_files;
 mod paths;
 
-pub use config::*;
 pub use history_store::*;
-pub use paths::{app_data_dir, app_data_sub_dir, app_log_dir, get_storage_info, storage_dir};
+pub use paths::{
+    app_config_dir, app_data_dir, app_data_sub_dir, app_log_dir, get_storage_info, storage_dir,
+};
 
-// the history and config modules reach these through `super::*`
-use json_files::*;
-use paths::*;
-
-use std::fs;
-use std::path::{Path, PathBuf};
-
-use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use serde_json::json;
 use serde_json::Value;
-use tauri::AppHandle;
-
-use crate::errors::AppError;
-use crate::models::{
-    Chat, ChatSummary, CreateEditorHistoryRequest, EditorHistoryRecord, CONFIG_FILE_NAME,
-};
-use crate::services::atomic_file::read_or_quarantine;
-use crate::services::clock::now_ms;
-use crate::services::settings::defaults::default_user_config;
-use crate::services::settings::version;
 
 /// How many entries to keep; 0 turns the history off. Missing or invalid
 /// numbers use the domain default; serialized numeric strings are not accepted.
@@ -57,7 +40,7 @@ const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{EditorHistoryKind, EditorHistoryOperation};
+    use crate::models::{CreateEditorHistoryRequest, EditorHistoryKind, EditorHistoryOperation};
     use crate::services::storage::test_support::history_item;
 
     #[test]

@@ -1,6 +1,7 @@
 //! Settings transactions are independent of IPC; adapters supply native effects.
 pub mod defaults;
 pub mod merge;
+pub mod persist;
 pub mod schema;
 pub mod session_state;
 pub mod version;
@@ -58,7 +59,7 @@ impl<'a> SettingsHost for AppSettingsHost<'a> {
         webhook::protect_for_save(self.secrets, config)
     }
     fn write_config(&self, config: &Value) -> Result<(), AppError> {
-        storage::save_user_config(self.app, config)
+        persist::save_user_config(self.app, config)
     }
     fn with_hotkeys<T>(
         &self,
@@ -102,26 +103,17 @@ pub fn save_user_config(
     )
 }
 
-/// Changes the config on behalf of the app itself, for a change that
-/// touches neither the hotkeys nor the history settings, e.g. a permission
-/// the user granted in a prompt.
+/// Changes the config on behalf of the app itself, e.g. for a permission the
+/// user granted in a prompt. It is a save like any other: merged with what
+/// was saved meanwhile, with the secrets, hotkeys and history kept in step.
 pub fn update_user_config(
     app: &AppHandle,
     change: impl FnOnce(&mut Value),
 ) -> Result<DesktopSnapshot, AppError> {
-    let state = app.state::<AppState>();
-    let _guard = state.lock_settings_update();
-    ensure_running(&state)?;
-    let mut config = state.snapshot().settings.user_config;
-    if version::is_newer_than_supported(&config) {
-        return Err(storage::newer_config_error());
-    }
-    change(&mut config);
-    schema::validate_user_config(&config)?;
-    storage::save_user_config(app, &config)?;
-    let snapshot = state.update_snapshot(|snapshot| snapshot.settings.user_config = config);
-    runtime::publish_state(app, &state);
-    Ok(snapshot)
+    let base = Value::clone(&app.state::<AppState>().user_config());
+    let mut next = base.clone();
+    change(&mut next);
+    save_user_config(app, next, base)
 }
 
 pub fn patch_session_state(
@@ -162,9 +154,9 @@ fn save_with(
 ) -> Result<DesktopSnapshot, AppError> {
     let _guard = state.lock_settings_update();
     ensure_running(state)?;
-    let previous = state.snapshot().settings.user_config;
+    let previous = Value::clone(&state.user_config());
     if version::is_newer_than_supported(&previous) {
-        return Err(storage::newer_config_error());
+        return Err(persist::newer_config_error());
     }
     let mut next = merge::merge_config(&previous, &base, &next)?;
     schema::validate_user_config(&next)?;
@@ -184,7 +176,9 @@ fn save_with(
                 return Err(error);
             }
             // Exactly one publication, while the history repositories are locked.
-            Ok(state.update_snapshot(|snapshot| snapshot.settings.user_config = next.clone()))
+            Ok(state.update_snapshot(|snapshot| {
+                snapshot.settings.user_config = std::sync::Arc::new(next.clone())
+            }))
         })
     })?;
     pending
@@ -269,7 +263,7 @@ mod tests {
     #[test]
     fn session_patch_preserves_config_and_increments_revision_once() {
         let state = state();
-        let config = state.snapshot().settings.user_config;
+        let config = Value::clone(&state.user_config());
         let patch = serde_json::from_value(serde_json::json!({"lastChatId":"chat-id"})).unwrap();
         let saved = patch_session_state_of(&state, patch).unwrap();
         assert_eq!(saved.revision, 1);
@@ -277,13 +271,13 @@ mod tests {
             saved.settings.session_state.last_chat_id.as_deref(),
             Some("chat-id")
         );
-        assert_eq!(saved.settings.user_config, config);
+        assert_eq!(*saved.settings.user_config, config);
     }
 
     #[test]
     fn shutdown_rejects_config_and_session_updates_without_effects() {
         let state = state();
-        let base = state.snapshot().settings.user_config;
+        let base = Value::clone(&state.user_config());
         state.begin_quitting();
         let host = Host::default();
         assert!(matches!(
@@ -301,12 +295,12 @@ mod tests {
     #[test]
     fn save_commits_once_before_cleanup_and_publication() {
         let state = state();
-        let base = state.snapshot().settings.user_config;
+        let base = Value::clone(&state.user_config());
         let host = Host::default();
         let next = changed(&base);
         let saved = save_with(&state, &host, next.clone(), base).unwrap();
         assert_eq!(saved.revision, 1);
-        assert_eq!(saved.settings.user_config, next);
+        assert_eq!(*saved.settings.user_config, next);
         assert_eq!(
             *host.calls.borrow(),
             ["prepare", "write", "cleanup", "publish"]
@@ -315,7 +309,7 @@ mod tests {
     #[test]
     fn failed_save_restores_disk_without_cleanup_or_publication() {
         let state = state();
-        let base = state.snapshot().settings.user_config;
+        let base = Value::clone(&state.user_config());
         let host = Host {
             fail_save: true,
             ..Host::default()
@@ -328,7 +322,7 @@ mod tests {
     #[test]
     fn failed_rollback_is_reported_without_publishing_uncertain_state() {
         let state = state();
-        let base = state.snapshot().settings.user_config;
+        let base = Value::clone(&state.user_config());
         let host = Host {
             fail_save: true,
             fail_rollback: true,
@@ -341,7 +335,7 @@ mod tests {
     #[test]
     fn conflicting_hotkeys_do_not_touch_storage() {
         let state = state();
-        let base = state.snapshot().settings.user_config;
+        let base = Value::clone(&state.user_config());
         let host = Host {
             conflict: true,
             ..Host::default()
@@ -352,7 +346,7 @@ mod tests {
     #[test]
     fn stale_independent_edit_preserves_the_committed_language() {
         let state = state();
-        let base = state.snapshot().settings.user_config;
+        let base = Value::clone(&state.user_config());
         save_with(&state, &Host::default(), changed(&base), base.clone()).unwrap();
         let mut stale = base.clone();
         stale["aiRules"]["chat"] = serde_json::json!("Use concise answers");

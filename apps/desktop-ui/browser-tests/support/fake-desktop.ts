@@ -1,6 +1,5 @@
 import type { Page } from '@playwright/test'
 import {
-  APP_CONFIG,
   DEFAULT_SESSION_STATE,
   DEFAULT_USER_CONFIG,
   StartMode,
@@ -175,7 +174,6 @@ export class FakeDesktop {
       settings: {
         userConfig: structuredClone(this.userConfig),
         sessionState: structuredClone(this.sessionState),
-        appConfig: APP_CONFIG,
       },
     }
   }
@@ -213,7 +211,6 @@ export class FakeDesktop {
     const noop = () => undefined
 
     this.handle('get_desktop_state', () => this.snapshot())
-    this.handle('get_user_config', () => structuredClone(this.userConfig))
     // Deliberately limited to single-writer saves. Native merge/validation is
     // covered by Rust and desktop smoke tests; never silently emulate it here.
     this.handle('save_user_config', ({ userConfig, baseConfig }) => {

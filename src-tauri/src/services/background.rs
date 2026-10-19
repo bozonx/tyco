@@ -1,4 +1,5 @@
 //! Application-owned tasks share cancellation and a bounded shutdown barrier.
+use crate::locks::MutexExt;
 use std::future::Future;
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
@@ -43,21 +44,21 @@ impl Default for StopToken {
 }
 impl StopToken {
     pub fn is_stopped(&self) -> bool {
-        *self.0.stopped.lock().expect("stop token lock poisoned")
+        *self.0.stopped.locked()
     }
     pub fn stop(&self) {
-        *self.0.stopped.lock().expect("stop token lock poisoned") = true;
+        *self.0.stopped.locked() = true;
         self.0.async_changed.send_replace(true);
         self.0.changed.notify_all();
     }
     /// Returns true on cancellation; retry delays can be interrupted.
     pub fn wait(&self, duration: Duration) -> bool {
-        let stopped = self.0.stopped.lock().expect("stop token lock poisoned");
+        let stopped = self.0.stopped.locked();
         *self
             .0
             .changed
             .wait_timeout_while(stopped, duration, |stopped| !*stopped)
-            .expect("stop token lock poisoned")
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .0
     }
     pub async fn cancelled(&self) {
@@ -83,7 +84,7 @@ struct TaskBarrier {
 pub(crate) struct TaskLease(Arc<TaskBarrier>);
 impl Drop for TaskLease {
     fn drop(&mut self) {
-        let mut tasks = self.0.tasks.lock().expect("background tasks lock poisoned");
+        let mut tasks = self.0.tasks.locked();
         tasks.active_count -= 1;
         self.0.changed.notify_all();
     }
@@ -99,11 +100,7 @@ impl BackgroundServices {
         self.stop.clone()
     }
     pub(crate) fn register(&self) -> Result<TaskLease, AppError> {
-        let mut tasks = self
-            .barrier
-            .tasks
-            .lock()
-            .expect("background tasks lock poisoned");
+        let mut tasks = self.barrier.tasks.locked();
         if tasks.is_stopping {
             return Err(AppError::ServiceUnavailable(
                 "Background services are stopping".into(),
@@ -156,24 +153,16 @@ impl BackgroundServices {
         Ok(())
     }
     fn stop_tasks(&self) {
-        self.barrier
-            .tasks
-            .lock()
-            .expect("background tasks lock poisoned")
-            .is_stopping = true;
+        self.barrier.tasks.locked().is_stopping = true;
         self.stop.stop();
     }
     fn wait_for_tasks(&self, deadline: Instant) -> bool {
-        let tasks = self
-            .barrier
-            .tasks
-            .lock()
-            .expect("background tasks lock poisoned");
+        let tasks = self.barrier.tasks.locked();
         let remaining = deadline.saturating_duration_since(Instant::now());
         self.barrier
             .changed
             .wait_timeout_while(tasks, remaining, |tasks| tasks.active_count != 0)
-            .expect("background tasks lock poisoned")
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .0
             .active_count
             == 0

@@ -180,28 +180,14 @@ impl Drop for CancelRegistration {
     }
 }
 
-pub fn expand_home_dir(path: &str) -> PathBuf {
-    let home = || shell::home_dir();
-    if path == "~" {
-        if let Some(home) = home() {
-            return home;
-        }
-    } else if let Some(stripped) = path.strip_prefix("~/").or_else(|| path.strip_prefix("~\\")) {
-        if let Some(home) = home() {
-            return home.join(stripped);
-        }
-    }
-    PathBuf::from(path)
-}
-
 /// The directory a command runs in: the given one, or the home directory.
 pub fn resolve_working_dir(working_dir: Option<&str>) -> Result<Option<PathBuf>, AppError> {
     let trimmed = working_dir.map(str::trim).unwrap_or_default();
     if trimmed.is_empty() {
         return Ok(shell::home_dir());
     }
-    let path = expand_home_dir(trimmed);
-    if path.is_dir() {
+    let path = shell::expand_home(trimmed, shell::home_dir().as_deref());
+    if let Some(path) = path.filter(|path| path.is_dir()) {
         Ok(Some(path))
     } else {
         Err(AppError::InvalidInput(format!(

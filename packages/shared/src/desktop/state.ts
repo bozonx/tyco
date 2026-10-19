@@ -1,4 +1,3 @@
-import { APP_CONFIG, type AppConfig } from '../app-config'
 import { DEFAULT_USER_CONFIG, type UserConfig } from '../user-config'
 import type { AccessRequest, LauncherRequest } from './actions'
 
@@ -55,7 +54,6 @@ export interface DesktopWindowState {
 export interface DesktopSettingsState {
   userConfig: UserConfig
   sessionState: SessionState
-  appConfig: AppConfig
 }
 
 /** UI projection of the domain snapshot, never serialized as an IPC payload. */
@@ -72,7 +70,6 @@ export const DEFAULT_DESKTOP_VIEW_STATE: DesktopViewState = {
   mode: StartMode.EDITOR,
   userConfig: DEFAULT_USER_CONFIG,
   sessionState: DEFAULT_SESSION_STATE,
-  appConfig: APP_CONFIG,
   isWindowShown: false,
   windowProfile: 'sheet',
 }
@@ -110,7 +107,6 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
     windowProfile,
     userConfig,
     sessionState,
-    appConfig,
   } = view
   return {
     revision,
@@ -124,6 +120,6 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
       accessRequest,
     },
     window: { isWindowShown, windowProfile },
-    settings: { userConfig, sessionState, appConfig },
+    settings: { userConfig, sessionState },
   }
 }

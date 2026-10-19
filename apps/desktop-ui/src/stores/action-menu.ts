@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed } from 'vue'
-import { launcherPageMode } from '@tyco/shared'
+import { APP_CONFIG, launcherPageMode } from '@tyco/shared'
 
 import {
   type ActionItem,
@@ -20,7 +19,6 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const desktopStore = useDesktopStore()
   const menuModalsStore = useMenuModalsStore()
   const historyStore = useHistoryStore()
-  const appConfig = computed(() => desktopStore.appConfig)
   const correctionWorkflowStore = useCorrectionWorkflowStore()
 
   return createActionMenuModel({
@@ -39,7 +37,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         isEditorButtonVisible: true,
         ...extra,
       }),
-    minCorrectionLength: () => appConfig.value.minCorrectionLength,
+    minCorrectionLength: () => APP_CONFIG.minCorrectionLength,
     openLauncherPage: async (pageId, text) => {
       await ipcStore.callFunction('activateMode', [
         launcherPageMode(pageId),

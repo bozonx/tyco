@@ -1,4 +1,5 @@
 //! Tracks releases independently for each hotkey press.
+use crate::locks::MutexExt;
 use std::collections::HashMap;
 use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::{Duration, Instant};
@@ -29,8 +30,7 @@ impl HotkeyPress {
     fn with_releases(id: &str, releases: Arc<HotkeyReleases>) -> Self {
         let initial_release_count = releases
             .counts
-            .lock()
-            .expect("hotkey release lock poisoned")
+            .locked()
             .get(id)
             .copied()
             .unwrap_or_default();
@@ -46,10 +46,7 @@ impl HotkeyPress {
     pub(super) fn wait(&self, timeout: Duration) -> bool {
         let releases = &self.releases;
         let deadline = Instant::now() + timeout;
-        let mut counts = releases
-            .counts
-            .lock()
-            .expect("hotkey release lock poisoned");
+        let mut counts = releases.counts.locked();
         let started = Instant::now();
         while counts.get(&self.id).copied().unwrap_or_default() == self.initial_release_count {
             let now = Instant::now();
@@ -60,7 +57,7 @@ impl HotkeyPress {
             counts = releases
                 .changed
                 .wait_timeout(counts, deadline - now)
-                .expect("hotkey release lock poisoned")
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .0;
         }
         log::debug!(
@@ -79,12 +76,7 @@ pub fn hotkey_released(id: &str) {
 
 impl HotkeyReleases {
     fn released(&self, id: &str) {
-        *self
-            .counts
-            .lock()
-            .expect("hotkey release lock poisoned")
-            .entry(id.to_owned())
-            .or_default() += 1;
+        *self.counts.locked().entry(id.to_owned()).or_default() += 1;
         self.changed.notify_all();
     }
 }

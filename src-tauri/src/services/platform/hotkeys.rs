@@ -114,11 +114,11 @@ pub(crate) mod portal {
     #[cfg(target_os = "linux")]
     use crate::services::platform::linux::hotkeys_portal as backend;
 
-    pub(crate) fn manage_state(app: &mut App) {
+    pub(crate) fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         #[cfg(target_os = "linux")]
-        tauri::Manager::manage(app, backend::PortalState::default());
+        return builder.manage(backend::PortalState::default());
         #[cfg(not(target_os = "linux"))]
-        let _ = app;
+        builder
     }
 
     pub(crate) fn register(app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {

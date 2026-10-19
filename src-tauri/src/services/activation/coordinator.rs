@@ -1,4 +1,5 @@
 //! Activation policy and stale capture protection, independent of the window runtime.
+use crate::locks::MutexExt;
 use std::sync::Mutex;
 
 use serde_json::Value;
@@ -10,7 +11,7 @@ use crate::services::platform::ForegroundTarget;
 pub(crate) trait ActivationHost {
     fn foreground_target(&self) -> Option<ForegroundTarget>;
     fn has_focused_window(&self) -> bool;
-    fn user_config(&self) -> Value;
+    fn user_config(&self) -> std::sync::Arc<Value>;
     fn activate(&self, activation: Activation) -> Result<(), AppError>;
 }
 
@@ -32,7 +33,7 @@ impl ActivationCoordinator {
     ) -> Result<Option<CaptureRequest>, AppError> {
         // Call only on the window executor: host activation must never wait
         // for another thread that can publish through this coordinator.
-        let mut generation = self.generation.lock().expect("activation lock poisoned");
+        let mut generation = self.generation.locked();
         let foreground_target = activation
             .target_window_id
             .clone()
@@ -59,7 +60,7 @@ impl ActivationCoordinator {
         request: &CaptureRequest,
         publish: impl FnOnce() -> Result<(), AppError>,
     ) -> Result<(), AppError> {
-        let generation = self.generation.lock().expect("activation lock poisoned");
+        let generation = self.generation.locked();
         if *generation == request.generation {
             publish()?;
         }
@@ -88,8 +89,8 @@ mod tests {
         fn has_focused_window(&self) -> bool {
             self.focused
         }
-        fn user_config(&self) -> Value {
-            self.config.clone()
+        fn user_config(&self) -> std::sync::Arc<Value> {
+            std::sync::Arc::new(self.config.clone())
         }
         fn activate(&self, activation: Activation) -> Result<(), AppError> {
             self.activated.borrow_mut().push(activation);
@@ -117,8 +118,8 @@ mod tests {
             fn has_focused_window(&self) -> bool {
                 false
             }
-            fn user_config(&self) -> Value {
-                serde_json::json!({})
+            fn user_config(&self) -> std::sync::Arc<Value> {
+                std::sync::Arc::new(serde_json::json!({}))
             }
             fn activate(&self, _: Activation) -> Result<(), AppError> {
                 std::thread::scope(|scope| {

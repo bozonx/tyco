@@ -55,7 +55,7 @@ pub fn update_status_overlay(request: Option<crate::services::status_overlay::Ov
 
 /// The directory of this user's runtime files that only they can reach,
 /// `XDG_RUNTIME_DIR`; `None` where the session has none.
-#[cfg(unix)]
+#[cfg(all(unix, feature = "activation-bench"))]
 pub fn user_runtime_dir() -> Option<std::path::PathBuf> {
     std::env::var_os("XDG_RUNTIME_DIR").map(std::path::PathBuf::from)
 }

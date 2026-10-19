@@ -14,7 +14,8 @@ pub(super) struct PanelLayerState {
 /// Keyboard mode of the quick window's layer surface, `None` when it is a
 /// regular window.
 pub(super) fn panel_layer(app: &AppHandle) -> Option<PanelKeyboardMode> {
-    let layer = app.state::<PanelLayerState>();
+    // managed once the windows exist; before that there is no panel
+    let layer = app.try_state::<PanelLayerState>()?;
     layer.supported.then_some(layer.keyboard)
 }
 

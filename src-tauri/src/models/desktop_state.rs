@@ -33,9 +33,8 @@ pub struct WindowSnapshot {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SettingsSnapshot {
-    pub user_config: Value,
+    pub user_config: std::sync::Arc<Value>,
     pub session_state: SessionState,
-    pub app_config: Value,
 }
 #[cfg(test)]
 mod tests {
@@ -51,7 +50,6 @@ mod tests {
         snapshot.activation.target_window_id = Some("target".into());
         snapshot.activation.selected_text = Some("Captured text".into());
         snapshot.window.is_window_shown = true;
-        snapshot.settings.app_config = serde_json::json!({});
         let fixture: Value = serde_json::from_str(include_str!(
             "../../../packages/shared/fixtures/desktop-events.json"
         ))

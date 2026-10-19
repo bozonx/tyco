@@ -40,7 +40,7 @@ function setup(
     toastText: vi.fn(),
     t: vi.fn((key) => key),
     log: vi.fn(),
-    callApiFunction: vi.fn(async () => ({ success: true, result: undefined })),
+    openInBrowserAndHide: vi.fn(async () => ({ success: true })),
   }
   const context = createPluginContext(
     'Example',
@@ -94,7 +94,7 @@ describe('plugin context boundary', () => {
     expect(
       await context.callApiFunction('saveUserConfig' as never, [] as never)
     ).toMatchObject({ success: false })
-    expect(deps.callApiFunction).not.toHaveBeenCalled()
+    expect(deps.openInBrowserAndHide).not.toHaveBeenCalled()
   })
   it('rejects stale contexts after deactivation', () => {
     const { context, controller, deps } = setup()
@@ -185,7 +185,7 @@ it('rejects removed browser API names', async () => {
       'https://example.com',
     ])
   ).resolves.toMatchObject({ success: false })
-  expect(deps.callApiFunction).not.toHaveBeenCalled()
+  expect(deps.openInBrowserAndHide).not.toHaveBeenCalled()
 })
 
 it('routes note writes through the identity-bound scoped service', async () => {
@@ -204,7 +204,7 @@ it('routes note writes through the identity-bound scoped service', async () => {
     'text',
     true
   )
-  expect(deps.callApiFunction).not.toHaveBeenCalled()
+  expect(deps.openInBrowserAndHide).not.toHaveBeenCalled()
 })
 
 describe('conditional plugin editor boundary', () => {

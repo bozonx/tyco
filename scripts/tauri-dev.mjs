@@ -53,6 +53,10 @@ await run(
     'dev',
     '--config',
     JSON.stringify(createDevConfig(config.app.security.csp, port)),
+    // the benchmark socket is built only on request, see `activation-bench`
+    ...(process.env.TYCO_ACTIVATION_BENCH === '1'
+      ? ['--features', 'activation-bench']
+      : []),
     ...process.argv.slice(2),
   ],
   'pnpm tauri:dev'

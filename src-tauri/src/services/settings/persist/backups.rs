@@ -1,5 +1,11 @@
-use super::super::{now_ms, write_json, AppError, Path, Value};
+use std::path::Path;
+
+use serde_json::Value;
+
+use super::write_json;
+use crate::errors::AppError;
 use crate::services::atomic_file::{prune_copies, KEPT_COPY_COUNT};
+use crate::services::clock::now_ms;
 
 /// What the name of a snapshot adds to the name of the config file.
 const REPAIRED_COPY_MARKER: &str = ".repaired-";
@@ -32,10 +38,11 @@ fn without_api_keys(value: &Value) -> Value {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::fs;
+    use std::fs;
+
     use super::*;
     use crate::models::CONFIG_FILE_NAME;
-    use crate::services::storage::test_support::TestDir;
+    use crate::services::test_support::TestDir;
     use serde_json::json;
 
     #[test]

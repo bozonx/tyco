@@ -1,3 +1,4 @@
+use crate::locks::MutexExt;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -30,7 +31,7 @@ pub struct SelectionRunCoordinator {
 
 impl SelectionRunCoordinator {
     pub(super) fn lock(&self) -> std::sync::MutexGuard<'_, Option<SelectionRun>> {
-        self.current.lock().expect("selection run lock poisoned")
+        self.current.locked()
     }
 
     /// Takes the run in progress, telling one the webview abandoned.
@@ -65,7 +66,7 @@ pub(super) trait SelectionBackend {
     fn can_run(&self) -> bool {
         true
     }
-    fn user_config(&self) -> Value;
+    fn user_config(&self) -> std::sync::Arc<Value>;
     fn wait(&self, wait: TriggerWait);
     fn capture(&self, config: &Value) -> Result<(String, SelectionRun), SelectionRunError>;
     fn restore(&self, run: SelectionRun);

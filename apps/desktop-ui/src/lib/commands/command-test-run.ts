@@ -20,6 +20,22 @@ export interface CommandTestDependencies {
   /** False when no such run is going */
   cancelScriptAction?: (runId: string) => Promise<boolean>
   newRunId: () => string
+  /**
+   * Saves the settings draft and gives the command `commandId` as it is saved:
+   * the backend runs saved scripts only
+   */
+  saveCommand: (commandId: string) => Promise<CommandConfig | undefined>
+}
+
+/** Whether the saved script runs the same as the one in the editor */
+const isSameScript = (saved: CommandConfig, draft: CommandConfig): boolean => {
+  const [a, b] = [scriptToolConfig(saved), scriptToolConfig(draft)]
+  return (
+    saved.toolId === 'script' &&
+    a.command === b.command &&
+    (a.workingDirectory ?? '') === (b.workingDirectory ?? '') &&
+    a.timeoutSec === b.timeoutSec
+  )
 }
 
 /**
@@ -41,8 +57,8 @@ export const canTestCommand = (command: CommandConfig): boolean =>
 
 /**
  * Runs `command` on `text` as it is configured, but keeps the output: nothing
- * replaces a selection, opens a menu or goes to the log. A script is always
- * waited for, so its exit code and stderr can be shown
+ * replaces a selection, opens a menu or goes to the log. A script is saved
+ * first and always waited for, so its exit code and stderr can be shown
  */
 export async function runCommandTest(
   command: CommandConfig,
@@ -57,6 +73,11 @@ export async function runCommandTest(
     if (!config.command.trim()) {
       return { kind: 'error', messageKey: 'commands.errorNoCommand' }
     }
+    const saved = await deps.saveCommand(command.id)
+    if (signal.aborted) return { kind: 'cancelled' }
+    if (!saved || !isSameScript(saved, command)) {
+      return { kind: 'error', messageKey: 'commands.testNeedsSave' }
+    }
     const runId = deps.newRunId()
     let over = false
     const cancel = () => {
@@ -65,7 +86,7 @@ export async function runCommandTest(
     signal.addEventListener('abort', cancel, { once: true })
     try {
       const result = await deps.executeScriptAction({
-        ...buildScriptRequest(commandLabel(command), config, input, {
+        ...buildScriptRequest(command.id, input, {
           captureOutput: true,
           logOutput: false,
         }),

@@ -46,7 +46,6 @@ export const DESKTOP_COMMANDS = {
   ACKNOWLEDGE_SETTINGS_SHUTDOWN: 'acknowledge_settings_shutdown',
   ACTIVATE_MODE: 'activate_mode',
   ANSWER_EXTERNAL_ACCESS: 'answer_external_access',
-  APPEND_NOTE: 'append_note',
   APPLY_HOTKEY: 'apply_hotkey',
   CANCEL_SCRIPT_ACTION: 'cancel_script_action',
   CHECK_TEXT_INJECTION: 'check_text_injection',
@@ -72,7 +71,6 @@ export const DESKTOP_COMMANDS = {
   GET_EDITOR_HISTORY: 'get_editor_history',
   GET_HOTKEY_PROVIDER_INFO: 'get_hotkey_provider_info',
   GET_STORAGE_INFO: 'get_storage_info',
-  GET_USER_CONFIG: 'get_user_config',
   HIDE_WINDOW: 'hide_window',
   INSPECT_PLUGIN_PACKAGE: 'inspect_plugin_package',
   INSTALL_PLUGIN_PACKAGE: 'install_plugin_package',
@@ -122,7 +120,6 @@ export const DESKTOP_COMMANDS = {
   SAVE_AI_UPLOAD: 'save_ai_upload',
   SAVE_CHAT: 'save_chat',
   SAVE_EDITOR_HISTORY: 'save_editor_history',
-  SAVE_NOTE: 'save_note',
   SAVE_USER_CONFIG: 'save_user_config',
   SEARCH_CHATS: 'search_chats',
   SECRETS_REMOVE: 'secrets_remove',
@@ -152,10 +149,6 @@ export interface DesktopCommands {
   answer_external_access: {
     args: { jobId: string; decision: AccessDecision }
     result: void
-  }
-  append_note: {
-    args: { dir: string; fileName: string; text: string }
-    result: string
   }
   apply_hotkey: {
     args: { request: HotkeyApplyRequest }
@@ -203,7 +196,6 @@ export interface DesktopCommands {
   get_editor_history: { args: undefined; result: Array<EditorHistoryItem> }
   get_hotkey_provider_info: { args: undefined; result: HotkeyProviderInfo }
   get_storage_info: { args: undefined; result: StorageInfo }
-  get_user_config: { args: undefined; result: UserConfig }
   hide_window: { args: { activationId: number }; result: void }
   inspect_plugin_package: {
     args: undefined
@@ -321,10 +313,6 @@ export interface DesktopCommands {
   save_editor_history: {
     args: { entry: EditorHistoryEntry }
     result: string | null
-  }
-  save_note: {
-    args: { dir: string; fileName: string; text: string }
-    result: string
   }
   save_user_config: {
     args: { userConfig: UserConfig; baseConfig: UserConfig }

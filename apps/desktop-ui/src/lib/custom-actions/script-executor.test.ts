@@ -20,51 +20,20 @@ const result = (
 })
 
 describe('buildScriptRequest', () => {
-  it('trims the working directory and drops an empty one', () => {
-    const options = { captureOutput: true, logOutput: false }
+  it('names the saved command instead of passing its shell command', () => {
     expect(
-      buildScriptRequest(
-        'Echo',
-        { command: 'echo', workingDirectory: ' /tmp ' },
-        'x',
-        options
-      )
+      buildScriptRequest('sc1', 'x', { captureOutput: true, logOutput: false })
     ).toEqual({
-      name: 'Echo',
-      command: 'echo',
-      workingDirectory: '/tmp',
+      commandId: 'sc1',
       text: 'x',
       captureOutput: true,
       logOutput: false,
     })
-    expect(
-      buildScriptRequest(
-        'Echo',
-        { command: 'echo', workingDirectory: ' ' },
-        'x',
-        options
-      ).workingDirectory
-    ).toBeUndefined()
-  })
-
-  it('passes the timeout of the command only when it has one', () => {
-    const options = { captureOutput: true, logOutput: false }
-    expect(
-      buildScriptRequest(
-        'Echo',
-        { command: 'echo', timeoutSec: 5 },
-        '',
-        options
-      ).timeoutSec
-    ).toBe(5)
-    expect(
-      buildScriptRequest('Echo', { command: 'echo' }, '', options)
-    ).not.toHaveProperty('timeoutSec')
   })
 
   it('passes an empty text for a call without one', () => {
     expect(
-      buildScriptRequest('Backup', { command: 'backup.sh' }, null, {
+      buildScriptRequest('backup', null, {
         captureOutput: false,
         logOutput: false,
       }).text

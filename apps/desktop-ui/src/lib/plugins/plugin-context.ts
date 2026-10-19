@@ -50,7 +50,13 @@ export interface PluginContextDependencies {
   toastText(message: string, type: 'success' | 'error' | 'warn' | 'info'): void
   t(key: string, params?: Record<string, string | number>): string
   log: PluginContext['log']
-  callApiFunction: PluginContext['callApiFunction']
+  /**
+   * The one desktop function a plugin reaches as it is; notes go through
+   * `writeNote`
+   */
+  openInBrowserAndHide(
+    url: string
+  ): Promise<{ success: boolean; error?: string }>
   writeNote?(
     id: string,
     dir: string,
@@ -310,7 +316,7 @@ export function createPluginContext(
               : Promise.reject(
                   new Error('Scoped notes service is unavailable')
                 ))
-          : await deps.callApiFunction(name, args)
+          : await deps.openInBrowserAndHide(args[0]!)
       check()
       return result
     },

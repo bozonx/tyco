@@ -1,12 +1,12 @@
 use super::run_blocking;
 use crate::{
     errors::AppError,
-    services::external::commands::{self, ToolCatalogEntry, ToolCatalogState},
+    services::external::command_library::{self, ToolCatalogEntry, ToolCatalogState},
 };
 use tauri::{AppHandle, State};
 #[tauri::command]
 pub fn set_tool_catalog(state: State<'_, ToolCatalogState>, tools: Vec<ToolCatalogEntry>) {
-    state.set(commands::catalog_from(tools));
+    state.set(command_library::catalog_from(tools));
 }
 
 #[tauri::command]
@@ -27,11 +27,8 @@ pub async fn answer_external_access(
             "Only the quick window answers access requests",
         )));
     }
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::services::external::access::answer(&app, &job_id, decision)
-    })
-    .await
-    .map_err(|error| AppError::Message(error.to_string()))?
+    super::run_blocking(move || crate::services::external::access::answer(&app, &job_id, decision))
+        .await?
 }
 
 #[tauri::command]

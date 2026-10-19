@@ -5,8 +5,6 @@ export interface ActionsFunctions {
   showStatusOverlay: { args: [request: StatusOverlayRequest | null] }
   notifyDesktop: { args: [summary: string, body: string] }
   checkTextInjection: { args: [] }
-  saveNote: { args: [dir: string, fileName: string, text: string] }
-  appendNote: { args: [dir: string, fileName: string, text: string] }
   executeScriptAction: { args: [request: ScriptActionRequest] }
   cancelScriptAction: { args: [runId: string] }
   pickScriptFile: { args: [] }

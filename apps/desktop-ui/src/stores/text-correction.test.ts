@@ -18,7 +18,7 @@ beforeEach(() => {
 afterEach(() => disposePinia(pinia))
 
 describe('corrector configuration ownership', () => {
-  it.each(['rules', 'models', 'instructions', 'prefix'] as const)(
+  it.each(['rules', 'models'] as const)(
     'invalidates a completed correction immediately when %s change',
     async (setting) => {
       const store = useTextCorrectionStore()
@@ -35,15 +35,6 @@ describe('corrector configuration ownership', () => {
         desktop.desktopState.userConfig.llm.taskModelChains.correction = [
           'another-model',
         ]
-      // Simulate a new backend instruction snapshot; production defaults have literal types.
-      if (setting === 'instructions')
-        Reflect.set(
-          desktop.desktopState.appConfig.aiInstructions,
-          'correction',
-          'New instructions'
-        )
-      if (setting === 'prefix')
-        Reflect.set(desktop.desktopState.appConfig, 'rulePrefix', 'New prefix')
       expect(store.getCachedCorrection('Sample')).toBeUndefined()
       expect(await store.correct('Sample', signal)).toBe('Updated result')
       expect(mocks.correctText).toHaveBeenCalledTimes(2)

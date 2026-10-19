@@ -1,5 +1,4 @@
 import {
-  APP_CONFIG,
   desktopViewToSnapshot,
   parseOpenMainChatEvent,
   type AppEventPayloads,
@@ -31,7 +30,6 @@ export function createDesktopClient(deps: DesktopClientDependencies) {
 
   let localParams: DesktopViewState = structuredClone({
     ...DEFAULT_DESKTOP_VIEW_STATE,
-    appConfig: APP_CONFIG,
     userConfig: DEFAULT_USER_CONFIG,
   })
 

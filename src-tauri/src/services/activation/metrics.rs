@@ -1,3 +1,4 @@
+use crate::locks::MutexExt;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -77,7 +78,7 @@ impl ActivationMetrics {
     }
 
     fn start(&self, id: u64, triggered_at_ns: u128) {
-        self.trials.lock().expect("metrics lock poisoned").insert(
+        self.trials.locked().insert(
             id,
             ActivationTrial {
                 id,
@@ -92,12 +93,7 @@ impl ActivationMetrics {
         if !self.enabled {
             return;
         }
-        if let Some(trial) = self
-            .trials
-            .lock()
-            .expect("metrics lock poisoned")
-            .get_mut(&id)
-        {
+        if let Some(trial) = self.trials.locked().get_mut(&id) {
             apply(trial);
         }
     }
@@ -108,8 +104,7 @@ impl ActivationMetrics {
         }
         if let Some(trial) = self
             .trials
-            .lock()
-            .expect("metrics lock poisoned")
+            .locked()
             .values_mut()
             .max_by_key(|trial| trial.triggered_at_ns)
         {
@@ -126,18 +121,18 @@ impl ActivationMetrics {
     }
 
     fn wait_for_result(&self, id: u64) -> Option<ActivationTrial> {
-        let trials = self.trials.lock().expect("metrics lock poisoned");
+        let trials = self.trials.locked();
         let (trials, _) = self
             .result_ready
             .wait_timeout_while(trials, Duration::from_secs(2), |trials| {
                 trials.get(&id).is_none_or(|trial| !trial.result_submitted)
             })
-            .expect("metrics lock poisoned");
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         trials.get(&id).cloned()
     }
 
     fn write_row(&self, trial: &ActivationTrial, chars_sent: usize) {
-        let mut csv = self.csv.lock().expect("metrics CSV lock poisoned");
+        let mut csv = self.csv.locked();
         let Some(writer) = csv.as_mut() else { return };
         let elapsed = |value: Option<u128>| {
             value

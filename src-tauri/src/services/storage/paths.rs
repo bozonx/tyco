@@ -6,10 +6,10 @@ use tauri::AppHandle;
 
 use crate::errors::AppError;
 use crate::models::{StorageInfo, StorageKind, StorageLocation};
-use crate::services::app_paths::AppPaths;
 use crate::services::atomic_file::create_private_dir;
+use crate::services::storage::app_paths::AppPaths;
 
-pub(super) fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
+pub fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
     let dir = AppPaths::resolve(app)?.config_dir;
 
     create_private_dir(&dir)?;

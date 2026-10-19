@@ -22,16 +22,6 @@ export function createActionsCommandMap(): DomainCommandMap<
         ({ summary, body }) satisfies DesktopCommandArgs<'notify_desktop'>,
     },
     checkTextInjection: { command: DESKTOP_COMMANDS.CHECK_TEXT_INJECTION },
-    saveNote: {
-      command: DESKTOP_COMMANDS.SAVE_NOTE,
-      buildArgs: ([dir, fileName, text]) =>
-        ({ dir, fileName, text }) satisfies DesktopCommandArgs<'save_note'>,
-    },
-    appendNote: {
-      command: DESKTOP_COMMANDS.APPEND_NOTE,
-      buildArgs: ([dir, fileName, text]) =>
-        ({ dir, fileName, text }) satisfies DesktopCommandArgs<'append_note'>,
-    },
     executeScriptAction: {
       command: DESKTOP_COMMANDS.EXECUTE_SCRIPT_ACTION,
       buildArgs: ([request]) =>

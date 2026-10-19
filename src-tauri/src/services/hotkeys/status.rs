@@ -1,6 +1,7 @@
 //! Serialized hotkey status and the provider snapshot shown by the UI.
 use super::bindings::{bindings_from_config, default_bindings};
 use super::{HotkeyRegistry, PortalShortcutBindings, ProviderKind, ProviderState};
+use crate::locks::RwLockExt;
 use crate::services::platform::hotkeys::portal;
 use crate::services::platform::hotkeys::{external_command, platform_name};
 use crate::state::AppState;
@@ -51,7 +52,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
     if kind == ProviderKind::Portal {
         portal::refresh_system_triggers(app).await;
     }
-    let config = app.state::<AppState>().snapshot().settings.user_config;
+    let config = app.state::<AppState>().user_config();
     // only an external binding needs something per action: its command
     let actions = match kind {
         ProviderKind::External => bindings_from_config(&config)
@@ -72,8 +73,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
         ProviderKind::GlobalShortcut => app
             .state::<HotkeyRegistry>()
             .failures
-            .read()
-            .expect("hotkey failures lock poisoned")
+            .read_locked()
             .iter()
             .map(|(id, message)| {
                 let result = ApplyHotkeyResult {
@@ -90,8 +90,7 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
         ProviderKind::Portal => app
             .state::<PortalShortcutBindings>()
             .0
-            .read()
-            .expect("system triggers lock poisoned")
+            .read_locked()
             .clone(),
         ProviderKind::GlobalShortcut | ProviderKind::External => HashMap::new(),
     };

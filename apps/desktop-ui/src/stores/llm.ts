@@ -31,7 +31,7 @@ export const useLlmStore = defineStore('llm', () => {
   })
 
   const toast = useToastStore()
-  const getAppConfig = () => desktopStore.appConfig ?? APP_CONFIG
+  const getAppConfig = () => APP_CONFIG
   const aiRequest = createLlmRequest({
     client,
     getImage: getChatImage,

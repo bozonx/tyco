@@ -26,7 +26,7 @@ pub async fn net_fetch(
 ) -> Result<u64, AppError> {
     crate::services::net::gateway::fetch(
         &net,
-        NetworkPolicy::from_config(&app_state.snapshot().settings.user_config),
+        NetworkPolicy::from_config(&app_state.user_config()),
         with_store(&app, SecretStore::snapshot),
         request,
         on_event,
@@ -55,7 +55,7 @@ pub async fn net_socket_open(
 ) -> Result<u64, AppError> {
     crate::services::net::gateway::open_socket(
         &net,
-        NetworkPolicy::from_config(&app_state.snapshot().settings.user_config),
+        NetworkPolicy::from_config(&app_state.user_config()),
         with_store(&app, SecretStore::snapshot),
         request,
         on_event,

@@ -30,8 +30,7 @@
         "lastChatModelId": null,
         "recentAiPrompts": [],
         "recentTranslateLanguages": []
-      },
-      "appConfig": {}
+      }
     }
   },
   "chatSummary": {

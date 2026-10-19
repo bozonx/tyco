@@ -37,8 +37,11 @@ DesktopSnapshot
   revision
   activation: activationId, target window, selection, mode, external request
   window: visibility, profile
-  settings: userConfig, sessionState, appConfig
+  settings: userConfig, sessionState
 ```
+
+The prompts and limits of the AI actions are not state: the webview takes them
+from `APP_CONFIG` in `@tyco/shared`.
 
 The revision advances under the state mutex for every update. Initial reads,
 events and settings write responses pass through the same revision gate. A delayed
@@ -60,6 +63,15 @@ the invoking webview and require `activationId`. Window operations verify the
 requesting window and activation on the main thread. Text injection checks the
 activation again after waiting for focus release. A stale request fails without
 hiding the newly active window or pasting into its activation.
+
+## What the webview may run or write
+
+A script in the webview, e.g. one injected through a model answer, must not
+run a command or write a file the user never set up. `execute_script_action`
+takes the id of a saved `script` command: the shell command, its working
+directory and timeout are read from the saved config. The command editor saves
+the draft before a test run and runs only what was saved. Notes are written
+only by `write_plugin_note`, under a root the user approved for that plugin.
 
 ## Chats and compatibility
 

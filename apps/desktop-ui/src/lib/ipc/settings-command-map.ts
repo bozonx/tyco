@@ -19,6 +19,5 @@ export function createSettingsCommandMap(): DomainCommandMap<
       buildArgs: ([patch]) =>
         ({ patch }) satisfies DesktopCommandArgs<'patch_session_state'>,
     },
-    getUserConfig: { command: DESKTOP_COMMANDS.GET_USER_CONFIG },
   }
 }

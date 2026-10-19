@@ -10,6 +10,7 @@
 // Only the Linux backends feed the tracker and ask about the session so far.
 #![cfg_attr(not(target_os = "linux"), allow(dead_code))]
 
+use crate::locks::MutexExt;
 use std::sync::{Condvar, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
@@ -140,7 +141,7 @@ pub fn tracker() -> &'static WindowTracker {
 
 impl WindowTracker {
     fn update<T>(&self, update: impl FnOnce(&mut TrackerState) -> T) -> T {
-        let result = update(&mut self.state.lock().expect("window tracker lock poisoned"));
+        let result = update(&mut self.state.locked());
         self.changed.notify_all();
         result
     }
@@ -178,14 +179,14 @@ impl WindowTracker {
     /// The window to insert text into, see `TrackerState::target`, if a
     /// backend runs.
     pub fn target(&self) -> Option<String> {
-        let state = self.state.lock().expect("window tracker lock poisoned");
+        let state = self.state.locked();
         state.running.then(|| state.target()).flatten()
     }
 
     /// The window that has the keyboard focus now, a Tyco one included, if
     /// it is an application window and a backend runs.
     pub fn active_window(&self) -> Option<ActiveWindow> {
-        let state = self.state.lock().expect("window tracker lock poisoned");
+        let state = self.state.locked();
         if !state.running || state.active_kind == WindowKind::Other {
             return None;
         }
@@ -196,10 +197,7 @@ impl WindowTracker {
     }
 
     pub fn is_running(&self) -> bool {
-        self.state
-            .lock()
-            .expect("window tracker lock poisoned")
-            .running
+        self.state.locked().running
     }
 
     /// Clears the window an activation found missing, before a new one.
@@ -226,7 +224,7 @@ impl WindowTracker {
         mut done: impl FnMut(&TrackerState) -> Option<Result<T, AppError>>,
     ) -> Result<T, AppError> {
         let deadline = Instant::now() + timeout;
-        let mut state = self.state.lock().expect("window tracker lock poisoned");
+        let mut state = self.state.locked();
         loop {
             if let Some(result) = done(&state) {
                 return result;
@@ -238,7 +236,7 @@ impl WindowTracker {
             state = self
                 .changed
                 .wait_timeout(state, deadline - now)
-                .expect("window tracker lock poisoned")
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .0;
         }
     }

@@ -1,5 +1,6 @@
 //! Normalized chat images. Drafts stay in bounded session memory; only history
 //! saves write bytes to disk. Session copies survive history deletion.
+use crate::locks::MutexExt;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::{Cursor, Read};
@@ -177,7 +178,7 @@ pub struct ChatImages(std::sync::Mutex<ChatImageStore>);
 
 impl ChatImages {
     pub fn lock(&self) -> std::sync::MutexGuard<'_, ChatImageStore> {
-        self.0.lock().expect("chat image lock poisoned")
+        self.0.locked()
     }
 
     /// For the history, which takes the lock only once it writes images.

@@ -147,10 +147,6 @@ for (const file of (await readdir(directory))
       fields.push(`${camelCase(key.trim())}${optional}: ${fieldType}`)
     }
     let result = type(match[3] ?? '()')
-    if (name === 'get_user_config') {
-      used.add('UserConfig')
-      result = 'UserConfig'
-    }
     commands.push({
       name,
       args: binary

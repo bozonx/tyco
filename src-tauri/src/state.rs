@@ -1,5 +1,8 @@
+use crate::locks::MutexExt;
 use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+
+use serde_json::Value;
 
 use crate::models::DesktopSnapshot;
 
@@ -26,23 +29,23 @@ impl AppState {
 
     /// Serializes config writes and session updates to keep snapshots coherent.
     pub fn lock_settings_update(&self) -> std::sync::MutexGuard<'_, ()> {
-        self.settings_update_lock
-            .lock()
-            .expect("config storage lock poisoned")
+        self.settings_update_lock.locked()
     }
 
     pub fn snapshot(&self) -> DesktopSnapshot {
-        self.snapshot
-            .lock()
-            .expect("desktop state lock poisoned")
-            .clone()
+        self.snapshot.locked().clone()
+    }
+
+    /// The user config alone; cheaper than a whole `snapshot`.
+    pub fn user_config(&self) -> Arc<Value> {
+        self.snapshot.locked().settings.user_config.clone()
     }
 
     pub fn update_snapshot<F>(&self, update: F) -> DesktopSnapshot
     where
         F: FnOnce(&mut DesktopSnapshot),
     {
-        let mut snapshot = self.snapshot.lock().expect("desktop state lock poisoned");
+        let mut snapshot = self.snapshot.locked();
         update(&mut snapshot);
         snapshot.revision = snapshot
             .revision
@@ -88,7 +91,8 @@ mod tests {
             SessionState::default(),
         ));
         state.update_snapshot(|snapshot| {
-            snapshot.settings.user_config = serde_json::json!({"appearance":{"theme":"dark" }})
+            snapshot.settings.user_config =
+                Arc::new(serde_json::json!({"appearance":{"theme":"dark" }}))
         });
         assert_eq!(state.snapshot().revision, 1);
         state.update_snapshot(|snapshot| {
@@ -134,7 +138,7 @@ mod tests {
             .session_state
             .recent_ai_prompts
             .is_empty());
-        assert_eq!(restarted.settings.user_config, config);
+        assert_eq!(*restarted.settings.user_config, config);
     }
 
     #[test]

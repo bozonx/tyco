@@ -14,7 +14,7 @@
     "test": "pnpm test:tooling && turbo run test",
     "test:ui": "pnpm build:plugins && pnpm --filter @tyco/desktop-ui test",
     "test:cov": "turbo run test:cov",
-    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --workspace --locked",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --workspace --locked --all-features",
     "lint": "pnpm lint:root && turbo run lint",
     "lint:root": "eslint 'scripts/**/*.{js,mjs,ts}' 'src-tauri/plugin-runtime/*.js' 'eslint.config.js' --max-warnings=0",
     "lint:fix": "pnpm lint:root --fix && turbo run lint:fix",

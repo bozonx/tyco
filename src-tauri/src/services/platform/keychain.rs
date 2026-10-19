@@ -5,6 +5,7 @@
 //! A Linux session may have no Secret Service at all, e.g. a bare i3 or a
 //! headless one; the caller then keeps the secrets elsewhere.
 
+use crate::locks::MutexExt;
 use std::sync::{Arc, Mutex};
 
 use keyring_core::{CredentialStore, Entry, Error};
@@ -29,7 +30,7 @@ impl SystemKeychain {
     }
 
     fn store(&self) -> Result<Arc<CredentialStore>, String> {
-        let mut store = self.store.lock().expect("keychain lock poisoned");
+        let mut store = self.store.locked();
         if let Some(store) = store.as_ref() {
             return Ok(Arc::clone(store));
         }

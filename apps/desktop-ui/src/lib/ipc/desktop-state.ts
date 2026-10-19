@@ -115,7 +115,6 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     setExecutionConfig,
     desktopState,
     userConfig: computed(() => desktopState.value.userConfig),
-    appConfig: computed(() => desktopState.value.appConfig),
     sessionState: computed(() => desktopState.value.sessionState),
     updateUserConfig,
     applyViewState,

@@ -14,7 +14,7 @@ use tauri::{App, AppHandle, Manager};
 /// itself: it cannot know where the webviews keep their storage, and would
 /// put a development build's into the user's data directory.
 pub fn create_windows(app: &App) -> Result<(), AppError> {
-    let paths = crate::services::app_paths::AppPaths::resolve(app.handle())?;
+    let paths = crate::services::storage::app_paths::AppPaths::resolve(app.handle())?;
     for config in &app.config().app.windows {
         let mut builder = tauri::WebviewWindowBuilder::from_config(app, config)?;
         if let Some(dir) = paths.webview_dir() {
@@ -26,11 +26,16 @@ pub fn create_windows(app: &App) -> Result<(), AppError> {
     Ok(())
 }
 
+/// The runtime state, which needs neither the config nor a window.
+pub fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    builder
+        .manage(super::settings_shutdown::SettingsShutdown::default())
+        .manage(ActivationCoordinator::default())
+        .manage(crate::services::selection_replace::SelectionRunCoordinator::default())
+        .manage(RuntimeWindows::default())
+}
+
 pub fn setup(app: &mut App) -> Result<(), AppError> {
-    app.manage(super::settings_shutdown::SettingsShutdown::default());
-    app.manage(ActivationCoordinator::default());
-    app.manage(crate::services::selection_replace::SelectionRunCoordinator::default());
-    app.manage(RuntimeWindows::default());
     let main_window = app
         .get_webview_window(MAIN_WINDOW_LABEL)
         .ok_or_else(|| AppError::Message("Main window not found".into()))?;

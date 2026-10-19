@@ -350,7 +350,7 @@ describe('createActionMenuModel', () => {
     await slots[0]?.action('menu text')
     expect(deps.saveOutput).toHaveBeenCalledWith('menu text')
     expect(executeScriptAction.mock.calls[0][0]).toMatchObject({
-      command: 'echo {{TEXT}}',
+      commandId: 'sc1',
       text: 'menu text',
     })
   })

@@ -4,7 +4,18 @@ mod policy;
 use entries::{apply_editor_history_result, insert_restored_item, push_editor_history};
 pub use policy::EditorHistoryPolicy;
 
-use super::*;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use serde_json::Value;
+use tauri::AppHandle;
+
+use super::json_files::{read_jsonl, remove_file_if_exists, write_jsonl};
+use super::new_history_id;
+use super::paths::app_data_dir;
+use crate::errors::AppError;
+use crate::models::{CreateEditorHistoryRequest, EditorHistoryRecord};
+use crate::services::clock::now_ms;
 
 const EDITOR_HISTORY_FILE: &str = "editor-history.jsonl";
 pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 100;
@@ -399,6 +410,8 @@ mod tests {
     use super::*;
     use crate::models::EditorHistoryKind;
     use crate::services::storage::test_support::{history_item, history_texts, TestDir};
+    use crate::services::storage::DAY_MS;
+    use serde_json::json;
 
     fn policy() -> EditorHistoryPolicy {
         EditorHistoryPolicy {

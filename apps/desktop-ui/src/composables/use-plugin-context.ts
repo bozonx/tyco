@@ -1,4 +1,3 @@
-import type { DesktopCallArgs } from '../lib/ipc/desktop-functions'
 import { translate } from '../lib/i18n/index'
 import { clientLogger } from '../lib/logger/index'
 import { createPluginContext } from '../lib/plugins/plugin-context'
@@ -59,8 +58,8 @@ export default function usePluginContext() {
           text,
           append,
         ]),
-      callApiFunction: (name, args) =>
-        ipc.callFunction(name, ...([args] as DesktopCallArgs<typeof name>)),
+      openInBrowserAndHide: (url) =>
+        ipc.callFunction('openInBrowserAndHide', [url]),
     })
   }
   return { createContext }

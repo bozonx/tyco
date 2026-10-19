@@ -104,11 +104,7 @@ pub async fn write_plugin_note(
         let field = app
             .state::<PluginStore>()
             .notes_directory_field(&plugin_id)?;
-        let config = app
-            .state::<crate::state::AppState>()
-            .snapshot()
-            .settings
-            .user_config;
+        let config = app.state::<crate::state::AppState>().user_config();
         let roots = plugins::approved_note_roots(&config, &plugin_id, &field)?;
         let path =
             crate::services::notes::write_scoped_note(&roots, &dir, &file_name, &text, append)?;

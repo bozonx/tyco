@@ -1,5 +1,6 @@
 //! Linux GlobalShortcuts portal session lifecycle and event streams.
 use crate::errors::AppError;
+use crate::locks::RwLockExt;
 use crate::services::hotkeys::{
     bindings_from_config, global_target, HotkeyBinding, PortalShortcutBindings, ProviderState,
     HOTKEYS_CHANGED_EVENT,
@@ -42,11 +43,7 @@ impl PortalState {
         &self,
     ) -> Option<(Arc<GlobalShortcuts>, Arc<Session<GlobalShortcuts>>)> {
         let portal = self.portal.get()?.clone();
-        let session = self
-            .session
-            .read()
-            .expect("portal session lock poisoned")
-            .clone()?;
+        let session = self.session.read_locked().clone()?;
         Some((portal, session))
     }
 }
@@ -60,7 +57,7 @@ pub(crate) async fn configure_portal(app: &AppHandle) -> Result<(), AppError> {
     portal
         .configure_shortcuts(&session, None, ConfigureShortcutsOptions::default())
         .await
-        .map_err(|error| AppError::Message(error.to_string()))
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))
 }
 
 #[cfg(target_os = "linux")]
@@ -71,11 +68,7 @@ pub(crate) async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
         state.portal.get().cloned().ok_or_else(|| {
             AppError::ServiceUnavailable(String::from("Hotkey portal is not ready"))
         })?;
-    let previous = state
-        .session
-        .write()
-        .expect("portal session lock poisoned")
-        .take();
+    let previous = state.session.write_locked().take();
     // the shortcuts belong to the app, not to the session: the old session
     // goes first, so that the new one binds the same ids
     if let Some(previous) = previous {
@@ -83,13 +76,12 @@ pub(crate) async fn rebind_portal(app: &AppHandle) -> Result<(), AppError> {
             log::warn!("Could not close the hotkey portal session: {error}");
         }
     }
-    let bindings = bindings_from_config(&app.state::<AppState>().snapshot().settings.user_config);
+    let bindings = bindings_from_config(&app.state::<AppState>().user_config());
     let result = bind_session(app, &portal, &bindings).await;
     if result.is_err() {
         app.state::<PortalShortcutBindings>()
             .0
-            .write()
-            .expect("system triggers lock poisoned")
+            .write_locked()
             .clear();
     }
     notify_hotkeys_changed(app);
@@ -145,19 +137,19 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
 
     let portal = GlobalShortcuts::new()
         .await
-        .map_err(|error| AppError::Message(error.to_string()))?;
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
     let mut activated = portal
         .receive_activated()
         .await
-        .map_err(|error| AppError::Message(error.to_string()))?;
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
     let mut deactivated = portal
         .receive_deactivated()
         .await
-        .map_err(|error| AppError::Message(error.to_string()))?;
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
     let mut changed = portal
         .receive_shortcuts_changed()
         .await
-        .map_err(|error| AppError::Message(error.to_string()))?;
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
     let portal = Arc::new(portal);
     {
         let state = app.state::<PortalState>();
@@ -211,11 +203,7 @@ pub(crate) async fn shutdown(app: &AppHandle) {
         return;
     };
     let _binding = state.binding.lock().await;
-    let session = state
-        .session
-        .write()
-        .expect("portal session lock poisoned")
-        .take();
+    let session = state.session.write_locked().take();
     if let Some(session) = session {
         if let Err(error) = session.close().await {
             log::warn!("Could not close hotkey portal session: {error}");
@@ -260,7 +248,7 @@ async fn bind_session(
     let session = portal
         .create_session(CreateSessionOptions::default())
         .await
-        .map_err(|error| AppError::Message(error.to_string()))?;
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
     let shortcuts = bindings
         .iter()
         .map(|binding| {
@@ -273,12 +261,11 @@ async fn bind_session(
         .bind_shortcuts(&session, &shortcuts, None, BindShortcutsOptions::default())
         .await
         .and_then(|request| request.response())
-        .map_err(|error| AppError::Message(error.to_string()))?;
+        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
     store_system_triggers(app, bound.shortcuts());
     app.state::<PortalState>()
         .session
-        .write()
-        .expect("portal session lock poisoned")
+        .write_locked()
         .replace(Arc::new(session));
     Ok(())
 }
@@ -296,7 +283,7 @@ fn store_system_triggers(
     shortcuts: &[ashpd::desktop::global_shortcuts::Shortcut],
 ) {
     let state = app.state::<PortalShortcutBindings>();
-    let mut triggers = state.0.write().expect("system triggers lock poisoned");
+    let mut triggers = state.0.write_locked();
     triggers.clear();
     triggers.extend(shortcuts.iter().map(|shortcut| {
         (

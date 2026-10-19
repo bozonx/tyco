@@ -82,6 +82,10 @@ function createScriptTool(
           messageKey: 'toast.scriptEmptyCommand',
         }
       }
+      // the backend runs saved commands only, see `ScriptActionRequest`
+      if (!call.command) {
+        return { ok: false, messageKey: 'toast.scriptNotSaved' }
+      }
       const runId = (deps.newRunId ?? defaultRunId)()
       let isExecutionFinished = false
       const cancel = () => {
@@ -96,12 +100,11 @@ function createScriptTool(
       try {
         result = await deps.executeScriptAction?.({
           ...buildScriptRequest(
-            call.command?.name || config.command.trim(),
-            config,
+            call.command.id,
             scriptTakesText(config) ? textOf(call.input) : null,
             {
               captureOutput: call.wantsOutput,
-              logOutput: call.command?.logOutput ?? false,
+              logOutput: call.command.logOutput,
             }
           ),
           runId,

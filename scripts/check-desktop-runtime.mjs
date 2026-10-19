@@ -172,7 +172,7 @@ try {
   })
   assert.equal(denied, true, 'Main window must not claim quick-window jobs')
 
-  const initial = await invoke('get_user_config')
+  const initial = (await invoke('get_desktop_state')).settings.userConfig
   const first = await invoke('save_user_config', {
     baseConfig: initial,
     userConfig: { ...initial, appearance: { theme: 'dark' } },
@@ -214,13 +214,6 @@ try {
     ),
     false
   )
-  const notePath = await invoke('save_note', {
-    dir: home,
-    fileName: 'smoke.txt',
-    text: 'Smoke note',
-  })
-  assert.equal(await readFile(notePath, 'utf8'), 'Smoke note')
-
   // The offline fixture must be unreachable from the webview, but reachable via Rust.
   await new Promise((done) =>
     server.listen(0, '127.0.0.1', () => done(undefined))
@@ -240,7 +233,7 @@ try {
   )
   assert.equal(cspBlocked, true, 'Production CSP must block direct HTTP')
   assert.equal(proxyRequestCount, 0)
-  const networkConfig = await invoke('get_user_config')
+  const networkConfig = (await invoke('get_desktop_state')).settings.userConfig
   await invoke('save_user_config', {
     baseConfig: networkConfig,
     userConfig: {
@@ -339,7 +332,7 @@ try {
     manifest,
     digest: createHash('sha256').update(raw).digest('hex'),
   })
-  const current = await invoke('get_user_config')
+  const current = (await invoke('get_desktop_state')).settings.userConfig
   await invoke('save_user_config', {
     baseConfig: current,
     userConfig: {
@@ -364,7 +357,7 @@ try {
   )
   await invoke('remove_plugin_package', { id: manifest.id })
   console.log(
-    'Desktop smoke passed: embedded startup, IPC permissions, config updates, history lifecycle, note storage, production CSP, Rust HTTP proxy, CLI, D-Bus (Linux), plugin sandbox and lazy routes'
+    'Desktop smoke passed: embedded startup, IPC permissions, config updates, history lifecycle, production CSP, Rust HTTP proxy, CLI, D-Bus (Linux), plugin sandbox and lazy routes'
   )
 } catch (error) {
   let failureLog = `${String(error)}\n${driverOutput}\n`

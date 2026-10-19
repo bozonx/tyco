@@ -102,7 +102,7 @@ pub(super) struct SelectionRunEvent {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) error: Option<SelectionRunError>,
     /// The quick window does not receive config changes made elsewhere.
-    pub(super) user_config: Value,
+    pub(super) user_config: std::sync::Arc<Value>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -142,8 +142,8 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
     fn can_run(&self) -> bool {
         !self.0.state::<AppState>().is_quitting()
     }
-    fn user_config(&self) -> Value {
-        self.0.state::<AppState>().snapshot().settings.user_config
+    fn user_config(&self) -> std::sync::Arc<Value> {
+        self.0.state::<AppState>().user_config()
     }
     fn wait(&self, wait: TriggerWait) {
         match wait {
@@ -268,7 +268,5 @@ fn emit_to_webview(
     let window = app
         .get_webview_window(super::runtime::QUICK_WINDOW_LABEL)
         .ok_or_else(|| AppError::Message(String::from("Quick window not found")))?;
-    window
-        .emit(event, payload)
-        .map_err(|error| AppError::Message(error.to_string()))
+    Ok(window.emit(event, payload)?)
 }

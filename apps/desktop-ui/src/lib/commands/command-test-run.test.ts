@@ -26,27 +26,41 @@ const finished: ScriptExecutionResult = {
 
 const deps = (
   executeScriptAction = vi.fn().mockResolvedValue(finished),
-  cancelScriptAction = vi.fn().mockResolvedValue(true)
-) => ({ executeScriptAction, cancelScriptAction, newRunId: () => 'run-1' })
+  cancelScriptAction = vi.fn().mockResolvedValue(true),
+  saveCommand = vi.fn(async (): Promise<CommandConfig | undefined> => saved)
+) => ({
+  executeScriptAction,
+  cancelScriptAction,
+  newRunId: () => 'run-1',
+  saveCommand,
+})
+
+/** What the editor saves before a test run: the command it shows */
+let saved: CommandConfig | undefined
+
+const testScript = async (command: CommandConfig, d = deps(), text = 'hi') => {
+  saved = command
+  return runCommandTest(
+    command,
+    text,
+    testTools(),
+    d,
+    new AbortController().signal
+  )
+}
 
 describe('runCommandTest', () => {
   it('waits for a script and keeps its exit code and stderr', async () => {
     const d = deps()
     const command = script({ timeoutSec: 5 }, { isOutputLogged: true })
-    const result = await runCommandTest(
-      command,
-      'hi',
-      testTools(),
-      d,
-      new AbortController().signal
-    )
+    const result = await testScript(command, d)
     expect(result).toEqual({ kind: 'script', result: finished })
+    expect(d.saveCommand).toHaveBeenCalledWith('sc1')
     expect(d.executeScriptAction).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'Echo',
+        commandId: 'sc1',
         text: 'hi',
         captureOutput: true,
-        timeoutSec: 5,
         // a test run stays out of the log
         logOutput: false,
         runId: 'run-1',
@@ -56,14 +70,34 @@ describe('runCommandTest', () => {
 
   it('gives no text to a script that takes none', async () => {
     const d = deps()
-    await runCommandTest(
-      script({ command: 'backup.sh' }),
-      'hi',
-      testTools(),
-      d,
-      new AbortController().signal
-    )
+    await testScript(script({ command: 'backup.sh' }), d)
     expect(d.executeScriptAction.mock.calls[0][0].text).toBe('')
+  })
+
+  it('runs only the script as it is saved', async () => {
+    for (const savedCommand of [
+      undefined,
+      script({ command: 'echo other' }),
+      script({ workingDirectory: '/tmp' }),
+    ]) {
+      const d = deps(
+        undefined,
+        undefined,
+        vi.fn().mockResolvedValue(savedCommand)
+      )
+      const result = await runCommandTest(
+        script({}),
+        'hi',
+        testTools(),
+        d,
+        new AbortController().signal
+      )
+      expect(result).toEqual({
+        kind: 'error',
+        messageKey: 'commands.testNeedsSave',
+      })
+      expect(d.executeScriptAction).not.toHaveBeenCalled()
+    }
   })
 
   it('does not run a script without a command', async () => {
@@ -90,6 +124,7 @@ describe('runCommandTest', () => {
         throw new Error('Cancelled')
       })
     )
+    saved = script({})
     const result = await runCommandTest(
       script({}),
       '',
@@ -103,15 +138,10 @@ describe('runCommandTest', () => {
 
   it('reports a script that could not run', async () => {
     const d = deps(vi.fn().mockRejectedValue(new Error('No such dir')))
-    expect(
-      await runCommandTest(
-        script({}),
-        '',
-        testTools(),
-        d,
-        new AbortController().signal
-      )
-    ).toEqual({ kind: 'error', message: 'No such dir' })
+    expect(await testScript(script({}), d, '')).toEqual({
+      kind: 'error',
+      message: 'No such dir',
+    })
   })
 
   it('returns the response of a webhook', async () => {

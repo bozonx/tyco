@@ -1,10 +1,12 @@
 use super::run_blocking;
 use crate::{
     errors::AppError,
+    models::user_config,
     services::{
         custom_actions::{self, ScriptExecutionResult, ScriptRequest},
         storage,
     },
+    state::AppState,
 };
 use serde::Deserialize;
 use std::time::Duration;
@@ -12,15 +14,12 @@ use tauri::{AppHandle, Manager, State};
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScriptActionRequest {
-    name: String,
-    command: String,
-    working_directory: Option<String>,
+    /// The saved command to run; its shell command, working directory and
+    /// timeout are read from the config, see `user_config::script_command`.
+    command_id: String,
     text: String,
     #[serde(rename = "captureOutput")]
     should_capture_output: bool,
-    /// How long the output is waited for, in seconds.
-    #[serde(rename = "timeoutSec")]
-    execution_timeout_secs: Option<u64>,
     #[serde(rename = "logOutput")]
     should_log_output: bool,
     /// Lets `cancel_script_action` stop the command.
@@ -32,17 +31,26 @@ pub async fn execute_script_action(
     app: AppHandle,
     request: ScriptActionRequest,
 ) -> Result<ScriptExecutionResult, AppError> {
+    let config = app.state::<AppState>().user_config();
+    let command = user_config::script_command(&config, &request.command_id).ok_or_else(|| {
+        AppError::InvalidInput(format!(
+            "No saved script command with the id `{}`",
+            request.command_id
+        ))
+    })?;
     run_blocking(move || {
         let log_dir = storage::app_log_dir(&app).ok();
+        let tool_config = &command.tool_config;
         custom_actions::execute_script(
             &app.state::<custom_actions::ScriptRuns>(),
             &ScriptRequest {
-                name: &request.name,
-                command: &request.command,
-                working_dir: request.working_directory.as_deref(),
+                name: &command.label,
+                command: &tool_config.command,
+                working_dir: Some(tool_config.working_directory.as_str())
+                    .filter(|dir| !dir.trim().is_empty()),
                 text: &request.text,
                 should_capture_output: request.should_capture_output,
-                output_timeout: request.execution_timeout_secs.map(Duration::from_secs),
+                output_timeout: tool_config.timeout_sec.map(Duration::from_secs),
                 should_log_output: request.should_log_output,
                 run_id: request.run_id.as_deref(),
             },
@@ -72,16 +80,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn script_request_preserves_the_timeout_wire_name() {
+    fn script_request_names_a_saved_command_only() {
         let request: ScriptActionRequest = serde_json::from_value(serde_json::json!({
-            "name": "Example",
-            "command": "echo example",
+            "commandId": "notes",
             "text": "",
             "captureOutput": true,
-            "timeoutSec": 45,
             "logOutput": false
         }))
         .unwrap();
-        assert_eq!(request.execution_timeout_secs, Some(45));
+        assert_eq!(request.command_id, "notes");
+        assert!(
+            serde_json::from_value::<ScriptActionRequest>(serde_json::json!({
+                "command": "rm -rf ~",
+                "text": "",
+                "captureOutput": true,
+                "logOutput": false
+            }))
+            .is_err()
+        );
     }
 }

@@ -75,7 +75,9 @@ import {
   runCommandTest,
 } from '../../lib/commands/command-test-run'
 import { createScriptActionClient } from '../../lib/custom-actions/script-action-client'
+import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
+import { useSettingsSessionStore } from '../../stores/settings-session'
 import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
@@ -86,6 +88,8 @@ const props = defineProps<{ command: CommandConfig }>()
 
 const { t } = useI18n()
 const ipcStore = useIpcStore()
+const desktopStore = useDesktopStore()
+const settingsSession = useSettingsSessionStore()
 const toolsStore = useToolsStore()
 
 const text = ref('')
@@ -122,6 +126,13 @@ async function run() {
       {
         ...createScriptActionClient(ipcStore.callFunction),
         newRunId: () => `command-test-${Date.now()}-${++runCounter}`,
+        saveCommand: async (commandId) => {
+          await settingsSession.persist()
+          if (!settingsSession.isSaved()) return undefined
+          return desktopStore.userConfig.commands.find(
+            (command) => command.id === commandId
+          )
+        },
       },
       current.signal
     )
