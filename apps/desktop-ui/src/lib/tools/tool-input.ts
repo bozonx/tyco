@@ -20,6 +20,14 @@ export function toolCallConfig(
   toolConfig: Record<string, unknown>
 ): Record<string, unknown> {
   const config = { ...(tool.baseConfig?.() ?? {}) }
+  for (const [selector, presets] of Object.entries(tool.configPresets ?? {})) {
+    const selected = toolConfig[selector]
+    if (
+      (typeof selected === 'string' || typeof selected === 'number') &&
+      Object.hasOwn(presets, selected)
+    )
+      Object.assign(config, presets[selected])
+  }
   for (const [key, value] of Object.entries(toolConfig)) {
     if (!isEmpty(value) || !(key in config)) config[key] = value
   }

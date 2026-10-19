@@ -1,6 +1,4 @@
 //! The config file: read and repaired at startup, written by the saves.
-mod backups;
-
 use std::fs;
 use std::path::Path;
 
@@ -13,7 +11,6 @@ use crate::errors::AppError;
 use crate::models::CONFIG_FILE_NAME;
 use crate::services::atomic_file::{read_or_quarantine, write_private};
 use crate::services::storage::app_config_dir;
-use backups::back_up_config_before_repair;
 
 /// The user config the app starts with.
 pub struct LoadedUserConfig {
@@ -45,22 +42,14 @@ fn load_user_config_at(path: &Path) -> Result<LoadedUserConfig, AppError> {
         if version::is_newer_than_supported(&value) {
             return Err(newer_config_error());
         }
-        let original = value.clone();
         let changed = schema::normalize_user_config(&mut value);
         // the app starts with the config in memory either way; the next
         // save writes it
         let is_on_disk = !changed
-            || match back_up_config_before_repair(path, &original) {
-                // the snapshot is taken: writing must not take another one
-                Ok(()) => match write_user_config(path, &value, false) {
-                    Ok(()) => true,
-                    Err(error) => {
-                        log::error!("Could not save the updated config: {error}");
-                        false
-                    }
-                },
+            || match write_user_config(path, &value) {
+                Ok(()) => true,
                 Err(error) => {
-                    log::error!("Could not back up config before repair: {error}");
+                    log::error!("Could not save the updated config: {error}");
                     false
                 }
             };
@@ -68,7 +57,7 @@ fn load_user_config_at(path: &Path) -> Result<LoadedUserConfig, AppError> {
     }
 
     let default_config = default_user_config();
-    let is_on_disk = match write_user_config(path, &default_config, true) {
+    let is_on_disk = match write_user_config(path, &default_config) {
         Ok(()) => true,
         Err(error) => {
             log::error!("Could not save the default config: {error}");
@@ -85,20 +74,12 @@ fn load_user_config_at(path: &Path) -> Result<LoadedUserConfig, AppError> {
 /// service before it applies a change, the startup by normalizing it. A file
 /// a newer Tyco wrote meanwhile is left alone.
 pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppError> {
-    write_user_config(
-        &app_config_dir(app)?.join(CONFIG_FILE_NAME),
-        user_config,
-        true,
-    )
+    write_user_config(&app_config_dir(app)?.join(CONFIG_FILE_NAME), user_config)
 }
 
-/// Writes the config; `should_back_up_invalid` keeps a snapshot of a file on
-/// the disk that does not pass the schema, unless the caller has just taken one.
-fn write_user_config(
-    path: &Path,
-    user_config: &Value,
-    should_back_up_invalid: bool,
-) -> Result<(), AppError> {
+/// Writes the config unless a newer Tyco wrote the file on the disk. Edits
+/// made by hand are not kept: the file belongs to the app.
+fn write_user_config(path: &Path, user_config: &Value) -> Result<(), AppError> {
     debug_assert!(schema::validate_user_config(user_config).is_ok());
     let previous = match fs::read_to_string(path) {
         Ok(raw) => Some(raw),
@@ -109,9 +90,6 @@ fn write_user_config(
         let original: Value = serde_json::from_str(&raw)?;
         if version::is_newer_than_supported(&original) {
             return Err(newer_config_error());
-        }
-        if should_back_up_invalid && schema::validate_user_config(&original).is_err() {
-            back_up_config_before_repair(path, &original)?;
         }
     }
     write_json(path, user_config)
@@ -132,35 +110,18 @@ mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
 
-    fn snapshot_count(dir: &Path) -> usize {
-        fs::read_dir(dir)
-            .unwrap()
-            .filter(|entry| {
-                entry
-                    .as_ref()
-                    .unwrap()
-                    .file_name()
-                    .to_string_lossy()
-                    .contains(".repaired-")
-            })
-            .count()
-    }
-
     #[test]
-    fn a_startup_repair_keeps_one_snapshot() {
-        let dir = TestDir::new("config-repair-snapshot");
+    fn a_startup_repair_is_written_in_place() {
+        let dir = TestDir::new("config-repair");
         let path = dir.join(CONFIG_FILE_NAME);
         fs::write(&path, r#"{"appearance":{"theme":"sepia"},"unknown":1}"#).unwrap();
 
         let loaded = load_user_config_at(&path).unwrap();
 
         assert!(loaded.is_on_disk);
-        assert_eq!(snapshot_count(&dir), 1);
         let saved: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
         assert_eq!(saved, loaded.value);
-        // a valid config is read as it is
-        load_user_config_at(&path).unwrap();
-        assert_eq!(snapshot_count(&dir), 1);
+        assert_eq!(fs::read_dir(&*dir).unwrap().count(), 1);
     }
 
     #[test]
@@ -170,7 +131,6 @@ mod tests {
         let loaded = load_user_config_at(&path).unwrap();
         assert_eq!(loaded.value, default_user_config());
         assert!(path.is_file());
-        assert_eq!(snapshot_count(&dir), 0);
     }
 
     #[test]

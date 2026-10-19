@@ -12,6 +12,7 @@ export interface PluginLifecycle {
   signal: AbortSignal
   capabilities: readonly PluginCapability[]
   iconPrefix?: string
+  configPresets?: Record<string, Record<string, object>>
   notesDirectoryField?: string
   onDispose(cleanup: () => void | Promise<void>): void
 }
@@ -183,6 +184,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
                 capabilities: plugin.capabilities ?? [],
                 iconPrefix: plugin.icons?.prefix,
                 notesDirectoryField: plugin.notesDirectoryField,
+                configPresets: plugin.defaultConfig?.presets,
                 onDispose: (cleanup) => {
                   if (instance.controller.signal.aborted)
                     throw new Error('Plugin is disposed')

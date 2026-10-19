@@ -19,8 +19,13 @@
         :message="t('settings.pluginPackageFailed', { detail: plugin.error })"
       />
       <div v-if="plugin.isEnabled" class="plugin-card-body">
+        <FastNoteSettings
+          v-if="plugin.pluginId === 'FastNote'"
+          :fields="plugin.fields"
+          @update="operations.updatePluginConfig(plugin.pluginId, $event)"
+        />
         <ConfigFields
-          v-if="plugin.fields.length > 0"
+          v-else-if="plugin.fields.length > 0"
           :key="plugin.pluginId"
           :config="plugin.fields"
           @update:values="
@@ -44,6 +49,7 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import type { InstalledPluginItem } from '../../lib/plugins/plugin-settings'
 import InlineNotice from '../common/InlineNotice.vue'
 import ConfigFields from './ConfigFields.vue'
+import FastNoteSettings from './FastNoteSettings.vue'
 import PluginCard from './PluginCard.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 

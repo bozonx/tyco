@@ -30,7 +30,10 @@ export interface PresetDefaults {
   contentTemplate: string
 }
 
-export const FAST_NOTE_PRESETS: Record<FastNotePreset, PresetDefaults> = {
+export const FAST_NOTE_PRESETS: Record<
+  FastNotePreset,
+  Partial<PresetDefaults>
+> = {
   default: {
     saveMode: 'create',
     folderPreset: 'flat',
@@ -67,26 +70,22 @@ export const FAST_NOTE_PRESETS: Record<FastNotePreset, PresetDefaults> = {
     fileNameTemplate: '{YYYY}_{MM}_{DD}.md',
     contentTemplate: '- {content}',
   },
-  custom: {
-    saveMode: 'create',
-    folderPreset: 'flat',
-    customSubfolderTemplate: '',
-    fileNameTemplate: '{YYYY}-{MM}-{DD}_{HH}-{mm}-{ss}.md',
-    contentTemplate: '{content}',
-  },
+  custom: {},
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** Returns the ISO-8601 week number (1-53) for the given date. */
 export function getIsoWeekNumber(date: Date): number {
-  const target = new Date(date.valueOf())
-  const dayNr = (date.getDay() + 6) % 7
-  target.setDate(target.getDate() - dayNr + 3)
+  const target = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  )
+  const dayNr = (target.getUTCDay() + 6) % 7
+  target.setUTCDate(target.getUTCDate() - dayNr + 3)
   const firstThursday = target.valueOf()
-  target.setMonth(0, 1)
-  if (target.getDay() !== 4) {
-    target.setMonth(0, 1 + ((4 - target.getDay() + 7) % 7))
+  target.setUTCMonth(0, 1)
+  if (target.getUTCDay() !== 4) {
+    target.setUTCMonth(0, 1 + ((4 - target.getUTCDay() + 7) % 7))
   }
   return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000)
 }
@@ -100,29 +99,41 @@ export function getDateTokens(date: Date) {
   const mm = pad(date.getMinutes())
   const ss = pad(date.getSeconds())
   const WW = pad(getIsoWeekNumber(date))
-  const zettel = `${YYYY}${MM}${DD}${HH}${mm}`
+  const weekDate = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  )
+  weekDate.setUTCDate(
+    weekDate.getUTCDate() + 3 - ((weekDate.getUTCDay() + 6) % 7)
+  )
+  const GGGG = String(weekDate.getUTCFullYear())
+  const zettel = `${YYYY}${MM}${DD}${HH}${mm}${ss}${String(date.getMilliseconds()).padStart(3, '0')}`
   const timestamp = String(Math.floor(date.getTime() / 1000))
 
-  return { YYYY, YY, MM, DD, HH, mm, ss, WW, zettel, timestamp }
+  return { YYYY, YY, MM, DD, HH, mm, ss, WW, GGGG, zettel, timestamp }
 }
 
 export function sanitizeFileName(name: string): string {
-  return name.replace(/[/\\:*?"<>|\0]+/g, '-').trim()
+  let cleaned = name
+    .replace(/[/\\:*?"<>|\p{Cc}]+/gu, '-')
+    .trim()
+    .replace(/[. ]+$/g, '')
+  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(cleaned))
+    cleaned = `_${cleaned}`
+  return cleaned
 }
 
-export function extractTitle(text: string, maxLength = 60): string {
+export function extractTitle(text: string, maxLength = Infinity): string {
   const firstLine =
     text.split(/\r?\n/).find((line) => line.trim().length > 0) || ''
   const cleaned = firstLine
     .replace(/^([#\s*-]+(\[[ xX]\])?|>+|\d+\.)\s*/, '')
     .trim()
-  const sanitized = sanitizeFileName(cleaned)
-  if (!sanitized) {
+  if (!cleaned) {
     return ''
   }
-  return sanitized.length > maxLength
-    ? sanitized.slice(0, maxLength).trim()
-    : sanitized
+  return Array.from(cleaned).length > maxLength
+    ? Array.from(cleaned).slice(0, maxLength).join('').trim()
+    : cleaned
 }
 
 export function slugify(text: string): string {
@@ -145,8 +156,10 @@ export function getEffectiveConfig(
   config?: Partial<FastNoteConfig>
 ): PresetDefaults {
   const presetKey = config?.preset || 'default'
-  const presetDefaults =
-    FAST_NOTE_PRESETS[presetKey] || FAST_NOTE_PRESETS.default
+  const presetDefaults = {
+    ...FAST_NOTE_PRESETS.default,
+    ...FAST_NOTE_PRESETS[presetKey],
+  } as PresetDefaults
 
   return {
     saveMode: config?.saveMode || presetDefaults.saveMode,
@@ -165,7 +178,10 @@ export function resolveNoteDir(
   customSubfolderTemplate: string,
   date: Date
 ): string {
-  const trimmedBase = baseDir.trim().replace(/[/\\]+$/, '')
+  const base = baseDir.trim()
+  const trimmedBase = /^[a-zA-Z]:[/\\]+$/.test(base)
+    ? `${base.slice(0, 2)}/`
+    : base.replace(/[/\\]+$/, '') || (baseDir.trim().startsWith('/') ? '/' : '')
   const tokens = getDateTokens(date)
 
   let subfolder: string
@@ -180,7 +196,7 @@ export function resolveNoteDir(
       subfolder = `${tokens.YYYY}-${tokens.MM}`
       break
     case 'year_week':
-      subfolder = `${tokens.YYYY}/W${tokens.WW}`
+      subfolder = `${tokens.GGGG}/W${tokens.WW}`
       break
     case 'custom':
       subfolder = renderTemplate(customSubfolderTemplate || '', tokens)
@@ -192,7 +208,9 @@ export function resolveNoteDir(
   }
 
   const cleanSubfolder = subfolder.replace(/^[/\\]+|[/\\]+$/g, '')
-  return cleanSubfolder ? `${trimmedBase}/${cleanSubfolder}` : trimmedBase
+  return cleanSubfolder
+    ? `${trimmedBase}${trimmedBase.endsWith('/') ? '' : '/'}${cleanSubfolder}`
+    : trimmedBase
 }
 
 export function resolveNoteFileName(
@@ -201,7 +219,7 @@ export function resolveNoteFileName(
   text: string
 ): string {
   const dateTokens = getDateTokens(date)
-  const title = extractTitle(text)
+  const title = sanitizeFileName(extractTitle(text, 60))
   const slug = slugify(title)
 
   const tokens = {
@@ -210,13 +228,11 @@ export function resolveNoteFileName(
     slug: slug || `${dateTokens.YYYY}-${dateTokens.MM}-${dateTokens.DD}`,
   }
 
-  const rawName = renderTemplate(
-    fileNameTemplate || '{YYYY}-{MM}-{DD}_{HH}-{mm}-{ss}.md',
-    tokens
-  )
+  const template = fileNameTemplate || '{YYYY}-{MM}-{DD}_{HH}-{mm}-{ss}.md'
+  const rawName = renderTemplate(template, tokens)
   let cleaned = sanitizeFileName(rawName)
 
-  if (!cleaned.includes('.')) {
+  if (!/\.[a-zA-Z][a-zA-Z0-9]{0,9}$/.test(template)) {
     cleaned = `${cleaned}.md`
   }
 
@@ -236,7 +252,19 @@ export function resolveNoteContent(
   const dateTokens = getDateTokens(date)
   const title = extractTitle(text)
 
-  const tokens = { ...dateTokens, title, content: text }
+  // Indent continuation lines when the template inserts content into a list.
+  const contentLine = contentTemplate
+    .split('\n')
+    .find((line) => line.includes('{content}'))
+  const listPrefix = contentLine?.match(/^(\s*(?:[-+*]|\d+[.)])\s+)/)?.[1]
+  const source =
+    /(?:^|\n)#+ \{title\}/.test(contentTemplate) && /^\s*#+\s/.test(text)
+      ? text.replace(/^\s*#+[^\n]*(?:\r?\n|$)/, '').replace(/^\r?\n/, '')
+      : text
+  const content = listPrefix
+    ? source.replace(/\r?\n/g, `\n${' '.repeat(listPrefix.length)}`)
+    : source
+  const tokens = { ...dateTokens, title, content }
 
   let result: string
   if (contentTemplate?.trim()) {
@@ -248,4 +276,58 @@ export function resolveNoteContent(
   }
 
   return result.endsWith('\n') ? result : `${result}\n`
+}
+
+export type FastNoteValidationIssue =
+  | 'noNotesPath'
+  | 'invalidNotesPath'
+  | 'invalidSubfolder'
+  | 'unknownTemplateToken'
+  | 'missingContentToken'
+  | 'invalidFileName'
+
+/** Validates templates before writing or clearing any editor content. */
+export function validateFastNoteConfig(
+  config: Partial<FastNoteConfig>
+): FastNoteValidationIssue[] {
+  const issues: FastNoteValidationIssue[] = []
+  const path = config.pathToNotes?.trim() ?? ''
+  if (!path) issues.push('noNotesPath')
+  else if (
+    !/^(?:\/|[a-zA-Z]:[/\\]|\\\\|~(?:[/\\]|$))/.test(path) ||
+    /\p{Cc}/u.test(path) ||
+    path.split(/[/\\]/).includes('..')
+  )
+    issues.push('invalidNotesPath')
+  const effective = getEffectiveConfig(config)
+  const dateKeys = Object.keys(getDateTokens(new Date()))
+  const templates: Array<[string, string[]]> = [
+    [effective.fileNameTemplate, [...dateKeys, 'title', 'slug']],
+    [effective.contentTemplate, [...dateKeys, 'title', 'content']],
+  ]
+  if (effective.folderPreset === 'custom') {
+    const folder = effective.customSubfolderTemplate
+    templates.push([folder, dateKeys])
+    if (
+      /^(?:[/\\]|[a-zA-Z]:)/.test(folder) ||
+      folder.split(/[/\\]/).includes('..') ||
+      /[:*?"<>|\p{Cc}]/u.test(folder)
+    )
+      issues.push('invalidSubfolder')
+  }
+  if (
+    templates.some(([template, keys]) =>
+      Array.from(template.matchAll(/\{([A-Za-z]\w*)\}/g)).some(
+        (match) => !keys.includes(match[1])
+      )
+    )
+  )
+    issues.push('unknownTemplateToken')
+  if (
+    effective.contentTemplate.trim() &&
+    !effective.contentTemplate.includes('{content}')
+  )
+    issues.push('missingContentToken')
+  if (/\p{Cc}/u.test(effective.fileNameTemplate)) issues.push('invalidFileName')
+  return issues
 }

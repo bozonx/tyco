@@ -159,6 +159,7 @@ export function createPluginContext(
         ? key(definition.defaultPhrasesKey)
         : undefined,
       configFields: scopeConfigFields(id, definition.configFields),
+      configPresets: lifecycle.configPresets,
       getUnavailableReasonKey: () =>
         lifecycle.signal.aborted ? 'toast.commandUnavailable' : undefined,
       parseText: definition.parseText

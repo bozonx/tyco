@@ -40,6 +40,7 @@
         :command="command"
         :tool="tool"
         :user-config="userConfig"
+        @patch="update({ toolConfig: { ...command.toolConfig, ...$event } })"
         @update="updateToolConfig"
       />
       <p v-else class="command-warning">

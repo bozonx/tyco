@@ -16,6 +16,7 @@ import {
   resolveNoteDir,
   resolveNoteFileName,
   FAST_NOTE_PRESETS,
+  validateFastNoteConfig,
 } from './fast-note-template.js'
 
 const FIELDS: InputConfigItem[] = [
@@ -139,6 +140,14 @@ export default function pluginIndex(): PluginDefinition {
           if (!baseDir) {
             return { ok: false, level: 'warn', messageKey: 'local.noNotesPath' }
           }
+
+          const issues = validateFastNoteConfig(settings)
+          if (issues.length)
+            return {
+              ok: false,
+              level: 'warn',
+              messageKey: `local.${issues[0]}`,
+            }
 
           const fromEditor = source === 'menu' || source === 'toolbar'
           const canClearEditor =

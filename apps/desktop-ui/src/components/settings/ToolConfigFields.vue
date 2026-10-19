@@ -14,7 +14,13 @@
       :warnings="warningsOf('prompt')"
       @update="update"
     />
-    <PluginToolFields v-else :command="command" :tool="tool" @update="update" />
+    <PluginToolFields
+      v-else
+      :command="command"
+      :tool="tool"
+      @update="update"
+      @patch="emit('patch', $event)"
+    />
   </div>
 </template>
 <script setup lang="ts">
@@ -38,7 +44,10 @@ const props = defineProps<{
   tool: RegisteredTool
   userConfig?: UserConfig
 }>()
-const emit = defineEmits<{ update: [field: string, value: unknown] }>()
+const emit = defineEmits<{
+  update: [field: string, value: unknown]
+  patch: [values: Record<string, unknown>]
+}>()
 const { t } = useI18n()
 const toolsStore = useToolsStore()
 const issues = computed(() => validateCommand(props.command, toolsStore))

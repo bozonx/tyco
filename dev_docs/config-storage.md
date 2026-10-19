@@ -111,7 +111,7 @@ in `services/storage/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage
 
 | Root                                  | Files                                                                                                                                                                      |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Config (`~/.config/com.tyco.app`)     | `config.json` and up to 3 `config.json.repaired-<unix ms>` snapshots, `secrets.json`                                                                                       |
+| Config (`~/.config/com.tyco.app`)     | `config.json`, `secrets.json`                                                                                                                                              |
 | Data (`~/.local/share/com.tyco.app`)  | `editor-history.jsonl`; `chats/index.json`, `<id>.json`, `images/`, `chat-transaction.pending`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/`; `webview/` (Linux) |
 | State (`~/.local/state/com.tyco.app`) | `logs/tyco.log` and its rotations; `logs/actions.log` and `actions.log.1`; `webview/` (Windows)                                                                            |
 | Cache (`~/.cache/com.tyco.app`)       | Platform cache directory, created when opened; no application-owned model downloads                                                                                        |
@@ -123,10 +123,9 @@ in the stored files are Unix milliseconds (`createdAt`, `updatedAt`,
 `lastMessageAt`). A plugin file is named by the hex of its id, because ids that
 differ only in case collide on a case-insensitive file system.
 
-Config snapshots remove API-key fields and webhook headers. A startup repair
-takes one snapshot of the file it replaces. Unknown core
-fields are rejected on save; startup repairs keep the original mapping in a
-snapshot before removing unsupported fields. Unreadable files are retained as
+The config file belongs to the app; edits made by hand are unsupported and are
+not preserved. Unknown core fields are rejected on save, and a startup repair
+rewrites the file in place without a copy. Unreadable files are retained as
 private `.broken-*` copies; up to 3 copies of a file are kept. Before JSONL
 salvage, an exact copy named by its content digest is saved once, including
 invalid UTF-8 bytes. Explicit editor-history clearing removes its damage copies

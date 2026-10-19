@@ -5,6 +5,7 @@ import type {
 export * from '@tyco/plugin-sdk'
 
 export interface ToolDefinition extends SdkToolDefinition {
+  configPresets?: Record<string, Record<string, object>>
   inputSchemaFor?(config: Record<string, unknown>): JsonSchema
   getUnavailableReasonKey?(): string | undefined
   /** The tool writes its output to the action log when the command asks */

@@ -195,3 +195,31 @@ describe('resolveToolInput', () => {
     ).toEqual({ ok: false, messageKey: 'toast.commandInputUnsupported' })
   })
 })
+
+describe('command preset inheritance', () => {
+  it('applies a command preset over plugin settings and then explicit overrides', () => {
+    const notes = tool({
+      baseConfig: () => ({
+        preset: 'default',
+        pathToNotes: '/notes',
+        saveMode: 'create',
+        fileNameTemplate: 'new.md',
+      }),
+      configPresets: {
+        preset: {
+          daily: { saveMode: 'append', fileNameTemplate: 'daily.md' },
+          custom: {},
+        },
+      },
+    })
+    expect(toolCallConfig(notes, { preset: 'daily' })).toMatchObject({
+      pathToNotes: '/notes',
+      saveMode: 'append',
+      fileNameTemplate: 'daily.md',
+    })
+    expect(
+      toolCallConfig(notes, { preset: 'daily', fileNameTemplate: 'other.md' })
+    ).toMatchObject({ saveMode: 'append', fileNameTemplate: 'other.md' })
+    expect(toolCallConfig(notes, { preset: 'custom' }).saveMode).toBe('create')
+  })
+})

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  FAST_NOTE_PRESETS,
+  validateFastNoteConfig,
   extractTitle,
   getDateTokens,
   getEffectiveConfig,
@@ -32,7 +34,7 @@ describe('fast-note-template', () => {
       mm: '30',
       ss: '45',
       WW: '40',
-      zettel: '202610030730',
+      zettel: '20261003073045000',
     })
   })
 
@@ -47,7 +49,7 @@ describe('fast-note-template', () => {
   it('sanitizes illegal characters in titles and filenames', () => {
     expect(sanitizeFileName('foo/bar:baz*qux?"<>|')).toBe('foo-bar-baz-qux-')
     expect(extractTitle('Meeting with John: 10/10/2026')).toBe(
-      'Meeting with John- 10-10-2026'
+      'Meeting with John: 10/10/2026'
     )
   })
 
@@ -93,7 +95,7 @@ describe('fast-note-template', () => {
 
     expect(
       resolveNoteFileName('{zettel} {title}.md', fixedDate, '# Project Kickoff')
-    ).toBe('202610030730 Project Kickoff.md')
+    ).toBe('20261003073045000 Project Kickoff.md')
 
     expect(
       resolveNoteFileName('{YYYY}-{MM}-{DD} - {slug}', fixedDate, 'My Note')
@@ -135,5 +137,99 @@ describe('fast-note-template', () => {
     const zettelDefaults = getEffectiveConfig({ preset: 'obsidian_zettel' })
     expect(zettelDefaults.saveMode).toBe('create')
     expect(zettelDefaults.fileNameTemplate).toBe('{zettel} {title}.md')
+  })
+})
+
+describe('fast note edge cases', () => {
+  const date = new Date(2021, 0, 1, 12)
+  it('uses the ISO week year and handles DST independently of local clock changes', () => {
+    expect(resolveNoteDir('/notes', 'year_week', '', date)).toBe(
+      '/notes/2020/W53'
+    )
+    expect(getDateTokens(new Date(2024, 11, 30))).toMatchObject({
+      GGGG: '2025',
+      WW: '01',
+    })
+  })
+  it('preserves filesystem roots', () => {
+    expect(resolveNoteDir('/', 'flat', '', date)).toBe('/')
+    expect(resolveNoteDir('/', 'year', '', date)).toBe('/2021')
+    expect(resolveNoteDir('C:\\', 'flat', '', date)).toBe('C:/')
+  })
+  it('adds markdown extensions to dotted titles and sanitizes Windows names', () => {
+    expect(resolveNoteFileName('{title}', date, 'Release 1.2')).toBe(
+      'Release 1.2.md'
+    )
+    expect(resolveNoteFileName('{title}', date, 'Release 1.beta')).toBe(
+      'Release 1.beta.md'
+    )
+    expect(resolveNoteFileName('{title}.txt', date, 'Note')).toBe('Note.txt')
+    expect(resolveNoteFileName('{title}.md', date, 'CON')).toBe('_CON.md')
+    expect(sanitizeFileName('bad\u0001name.')).toBe('bad-name')
+  })
+  it('keeps punctuation and full titles in content and avoids duplicate headings', () => {
+    const title = 'Meeting: API/UI ' + 'x'.repeat(100)
+    const config = getEffectiveConfig({ preset: 'obsidian_zettel' })
+    const content = resolveNoteContent(
+      'create',
+      config.contentTemplate,
+      `# ${title}\n\nDetails`,
+      date
+    )
+    expect(content).toContain(`# ${title}\n\nDetails`)
+    expect(content.match(/# Meeting/g)).toHaveLength(1)
+  })
+  it('keeps multiline lists, nested blocks and fenced code inside a journal entry', () => {
+    const input = 'First\n- nested\n\n```ts\nconst value = 1\n```'
+    expect(resolveNoteContent('append', '- {content}', input, date)).toBe(
+      '- First\n  - nested\n  \n  ```ts\n  const value = 1\n  ```\n'
+    )
+    expect(
+      resolveNoteContent(
+        'append',
+        '- **{HH}:{mm}**: {content}',
+        'First\nSecond',
+        date
+      )
+    ).toBe('- **12:00**: First\n  Second\n')
+  })
+  it('validates all built-in presets and rejects invalid templates and paths', () => {
+    for (const preset of Object.keys(FAST_NOTE_PRESETS)) {
+      expect(
+        validateFastNoteConfig({
+          pathToNotes: '/notes',
+          preset: preset as keyof typeof FAST_NOTE_PRESETS,
+        })
+      ).toEqual([])
+    }
+    expect(validateFastNoteConfig({ pathToNotes: 'relative' })).toContain(
+      'invalidNotesPath'
+    )
+    expect(
+      validateFastNoteConfig({
+        pathToNotes: '/notes',
+        contentTemplate: '# {title}',
+      })
+    ).toContain('missingContentToken')
+    expect(
+      validateFastNoteConfig({
+        pathToNotes: '/notes',
+        fileNameTemplate: '{typo}.md',
+      })
+    ).toContain('unknownTemplateToken')
+    expect(
+      validateFastNoteConfig({
+        pathToNotes: '/notes',
+        folderPreset: 'custom',
+        customSubfolderTemplate: '../outside',
+      })
+    ).toContain('invalidSubfolder')
+    expect(
+      validateFastNoteConfig({
+        pathToNotes: '/notes',
+        folderPreset: 'flat',
+        customSubfolderTemplate: '{unused}',
+      })
+    ).toEqual([])
   })
 })

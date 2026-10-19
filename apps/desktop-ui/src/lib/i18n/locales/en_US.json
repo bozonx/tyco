@@ -890,7 +890,29 @@
     "profileModelUnavailable": "unavailable",
     "autosaveFailed": "Not saved",
     "autosaveSaving": "Saving…",
-    "autosaveSaved": "Saved"
+    "autosaveSaved": "Saved",
+    "fastNote": {
+      "template": "Apply settings template",
+      "templateHint": "Applying a template replaces save mode, subfolders, file name and content templates. You can edit the values afterward.",
+      "apply": "Apply template",
+      "folder": "Notes folder",
+      "browse": "Choose folder",
+      "pathHint": "Use an absolute path or ~/notes. For Logseq, choose the graph root; journals is added automatically.",
+      "tokens": "Date tokens (GGGG is the ISO week year; zettel includes milliseconds):",
+      "textTokens": "File names also support {'{'}title{'}'} and {'{'}slug{'}'}. Content supports {'{'}title{'}'} and {'{'}content{'}'}; {'{'}content{'}'} is required. Subfolders support date tokens only.",
+      "collisionHint": "New files receive a numeric suffix on name collisions. Append mode creates the file if missing.",
+      "sample": "Example text (preview only)",
+      "sampleText": "Example note\nMore details",
+      "preview": "Preview: destination and content",
+      "errors": {
+        "noNotesPath": "Notes folder is not configured.",
+        "invalidNotesPath": "Use an absolute notes path or a path starting with ~/.",
+        "invalidSubfolder": "Subfolder must be relative, without .. or invalid path characters.",
+        "unknownTemplateToken": "Unknown template token. Check the supported tokens.",
+        "missingContentToken": "The content template must include {'{'}content{'}'}.",
+        "invalidFileName": "File name template contains control characters."
+      }
+    }
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

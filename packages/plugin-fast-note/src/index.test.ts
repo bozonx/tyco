@@ -257,3 +257,24 @@ describe('FastNote editor conflicts', () => {
     expect(mocks.applyEditorInputEdit).not.toHaveBeenCalled()
   })
 })
+
+describe('FastNote template safety', () => {
+  it('preserves the editor and refuses a template that omits the note text', async () => {
+    const { ctx, mocks, toolbarItems } = setup({
+      value: 'Important text',
+      config: {
+        pathToNotes: '/notes',
+        contentTemplate: '# {title}',
+        clearInputAfterSave: true,
+      },
+    })
+    await toolbarItems[0].action()
+    expect(mocks.callApiFunction).not.toHaveBeenCalled()
+    expect(mocks.applyEditorInputEdit).not.toHaveBeenCalled()
+    expect(await ctx.getEditorInputValue()).toBe('Important text')
+    expect(mocks.toast).toHaveBeenCalledWith(
+      'local.missingContentToken',
+      'warn'
+    )
+  })
+})

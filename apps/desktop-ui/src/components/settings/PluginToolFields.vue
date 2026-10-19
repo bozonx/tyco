@@ -1,6 +1,11 @@
 <template>
+  <FastNoteTemplatePicker
+    v-if="isFastNote"
+    :field="tool.configFields?.find((field) => field.name === 'preset')"
+    @apply="emit('patch', $event)"
+  />
   <FieldRow
-    v-for="field in tool.configFields ?? []"
+    v-for="field in visibleFields"
     :key="field.name"
     :group="field.type === 'sortable-checklist'"
     :label="fieldLabel(field)"
@@ -12,7 +17,12 @@
       auto-resize
       @update:model-value="updateField(field, $event)"
     />
+    <FastNoteDirectoryPicker
+      v-if="isFastNote && field.name === 'pathToNotes'"
+      @select="emit('update', field.name, $event)"
+    />
   </FieldRow>
+  <FastNotePreview v-if="isFastNote" :config="effectiveConfig" />
   <p
     v-if="tool.owner.kind === 'plugin' && tool.configFields?.length"
     class="tool-field-hint"
@@ -21,21 +31,43 @@
   </p>
 </template>
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useI18n } from '../../composables/use-i18n'
 import {
   configFieldLabel,
   configOptionLabel,
 } from '../../lib/config-fields/config-field-labels'
+import { toolCallConfig } from '../../lib/tools/tool-input'
 import type { RegisteredTool } from '../../lib/tools/tool-types'
 import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-control'
 import type { InputConfigItem } from '../../types'
 import FieldRow from '../common/FieldRow.vue'
 import ConfigFieldControl from './ConfigFieldControl.vue'
+import FastNoteDirectoryPicker from './FastNoteDirectoryPicker.vue'
+import FastNotePreview from './FastNotePreview.vue'
+import FastNoteTemplatePicker from './FastNoteTemplatePicker.vue'
 import type { CommandConfig } from '@tyco/shared'
 
 const props = defineProps<{ command: CommandConfig; tool: RegisteredTool }>()
-const emit = defineEmits<{ update: [field: string, value: unknown] }>()
+const emit = defineEmits<{
+  update: [field: string, value: unknown]
+  patch: [values: Record<string, unknown>]
+}>()
 const { t } = useI18n()
+const isFastNote = computed(() => props.tool.id === 'FastNote.write')
+const effectiveConfig = computed(() =>
+  toolCallConfig(props.tool, props.command.toolConfig)
+)
+const visibleFields = computed(() =>
+  (props.tool.configFields ?? []).filter(
+    (field) =>
+      !isFastNote.value ||
+      (field.name !== 'preset' &&
+        (field.name !== 'customSubfolderTemplate' ||
+          effectiveConfig.value.folderPreset === 'custom'))
+  )
+)
 const stringValue = (name: string): string => {
   const value = props.command.toolConfig[name]
   return typeof value === 'string' ? value : ''

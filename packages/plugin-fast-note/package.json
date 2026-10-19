@@ -6,6 +6,10 @@
     "dist"
   ],
   "exports": {
+    "./templates": {
+      "types": "./dist/fast-note-template.d.ts",
+      "default": "./dist/fast-note-template.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/host.js"

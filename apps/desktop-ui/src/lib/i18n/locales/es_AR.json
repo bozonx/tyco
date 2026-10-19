@@ -890,7 +890,29 @@
     "profileModelUnavailable": "no disponible",
     "autosaveFailed": "No se guardó",
     "autosaveSaving": "Guardando…",
-    "autosaveSaved": "Guardado"
+    "autosaveSaved": "Guardado",
+    "fastNote": {
+      "template": "Aplicar plantilla de configuración",
+      "templateHint": "La plantilla reemplaza el modo de guardado, las subcarpetas y las plantillas de nombre y contenido. Después podés editar los valores.",
+      "apply": "Aplicar plantilla",
+      "folder": "Carpeta de notas",
+      "browse": "Elegir carpeta",
+      "pathHint": "Usá una ruta absoluta o ~/notes. Para Logseq, elegí la raíz del grafo; journals se agrega automáticamente.",
+      "tokens": "Variables de fecha (GGGG es el año de la semana ISO; zettel incluye milisegundos):",
+      "textTokens": "Los nombres también admiten {'{'}title{'}'} y {'{'}slug{'}'}. El contenido admite {'{'}title{'}'} y {'{'}content{'}'}; {'{'}content{'}'} es obligatorio. Las subcarpetas solo admiten variables de fecha.",
+      "collisionHint": "Los archivos nuevos reciben un sufijo numérico si el nombre ya existe. El modo de anexado crea el archivo si falta.",
+      "sample": "Texto de ejemplo (solo vista previa)",
+      "sampleText": "Nota de ejemplo\nMás detalles",
+      "preview": "Vista previa: destino y contenido",
+      "errors": {
+        "noNotesPath": "No se configuró la carpeta de notas.",
+        "invalidNotesPath": "Usá una ruta absoluta para las notas o una que empiece con ~/.",
+        "invalidSubfolder": "La subcarpeta debe ser relativa, sin .. ni caracteres de ruta inválidos.",
+        "unknownTemplateToken": "Variable de plantilla desconocida. Revisá las variables disponibles.",
+        "missingContentToken": "La plantilla de contenido debe incluir {'{'}content{'}'}.",
+        "invalidFileName": "La plantilla de nombre contiene caracteres de control."
+      }
+    }
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
