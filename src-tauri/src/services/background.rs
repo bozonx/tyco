@@ -15,7 +15,7 @@ pub async fn run_blocking<T: Send + 'static>(
 ) -> Result<T, AppError> {
     tauri::async_runtime::spawn_blocking(task)
         .await
-        .map_err(|error| AppError::Message(error.to_string()))
+        .map_err(|error| AppError::Failed(error.to_string()))
 }
 
 /// A service whose work the shutdown waits for. `stop` cancels it and turns

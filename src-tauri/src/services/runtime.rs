@@ -85,7 +85,7 @@ pub(super) fn on_main_thread(
     })?;
     receiver
         .recv()
-        .map_err(|error| AppError::Message(error.to_string()))?
+        .map_err(|error| AppError::Failed(error.to_string()))?
 }
 
 struct RuntimeActivationHost<'a> {
@@ -153,7 +153,7 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
     })?;
     let request = receiver
         .recv()
-        .map_err(|error| AppError::Message(error.to_string()))??;
+        .map_err(|error| AppError::Failed(error.to_string()))??;
     if let Some(request) = request {
         let handle = app.clone();
         let services = app.state::<super::background::BackgroundServices>();
@@ -190,7 +190,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     hide_inactive_window(app, window_label)?;
     let window = app
         .get_webview_window(window_label)
-        .ok_or_else(|| AppError::Message(format!("Window {window_label} not found")))?;
+        .ok_or_else(|| AppError::ServiceUnavailable(format!("Window {window_label} not found")))?;
     let state = app.state::<AppState>();
 
     // the warmup may have left the window transparent

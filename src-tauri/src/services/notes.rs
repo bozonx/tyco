@@ -31,7 +31,7 @@ fn save_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppError
         }
     }
 
-    Err(AppError::Message(format!(
+    Err(AppError::Failed(format!(
         "Failed to find a free file name for `{file_name}` in `{}`",
         dir.display()
     )))
@@ -93,7 +93,7 @@ pub fn write_scoped_note(
 ) -> Result<PathBuf, AppError> {
     validate_file_name(file_name)?;
     if text.len() > 8 * 1024 * 1024 {
-        return Err(AppError::Message(
+        return Err(AppError::ResourceLimit(
             "Plugin note exceeds the size limit".into(),
         ));
     }
@@ -176,7 +176,7 @@ fn resolve_notes_dir(dir: &str, home: Option<&Path>) -> Result<PathBuf, AppError
     }
 
     let resolved = crate::services::platform::shell::expand_home(dir, home)
-        .ok_or_else(|| AppError::Message(String::from("Home directory is not known")))?;
+        .ok_or_else(|| AppError::ServiceUnavailable(String::from("Home directory is not known")))?;
 
     if !resolved.is_absolute() {
         return Err(AppError::InvalidInput(format!(

@@ -282,7 +282,7 @@ fn closed_windows<'a>(
 }
 
 fn x11_error(error: impl Display) -> AppError {
-    AppError::Message(format!("X11 request failed: {error}"))
+    AppError::Failed(format!("X11 request failed: {error}"))
 }
 
 #[cfg(test)]

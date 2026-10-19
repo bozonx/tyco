@@ -264,6 +264,6 @@ pub fn read_external(app: &AppHandle) -> Result<String, AppError> {
 fn emit_to_quick<E: DesktopEvent>(app: &AppHandle, payload: E::Payload) -> Result<(), AppError> {
     let window = app
         .get_webview_window(super::runtime::QUICK_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message(String::from("Quick window not found")))?;
+        .ok_or_else(|| AppError::ServiceUnavailable(String::from("Quick window not found")))?;
     Ok(events::emit::<E, _>(&window, payload)?)
 }

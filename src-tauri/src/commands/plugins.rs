@@ -50,7 +50,7 @@ pub async fn pick_plugin_package(app: AppHandle) -> Result<Option<PluginPackageP
         };
         let path = file
             .into_path()
-            .map_err(|reason| AppError::Message(reason.to_string()))?;
+            .map_err(|reason| AppError::InvalidInput(reason.to_string()))?;
         let (package, digest) = plugins::inspect(&path)?;
         let id = format!("{digest}-{}", crate::services::clock::now_ns());
         let preview = PluginPackagePreview {

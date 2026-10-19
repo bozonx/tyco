@@ -33,7 +33,7 @@ pub fn resolve_vault_path_from_config(
     }
     // The folder is the user's own: its permissions are left as they are.
     fs::create_dir_all(&path).map_err(|error| {
-        AppError::Message(format!("The AI vault folder {raw} is unavailable: {error}"))
+        AppError::Failed(format!("The AI vault folder {raw} is unavailable: {error}"))
     })?;
     Ok(path)
 }

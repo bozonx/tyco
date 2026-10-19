@@ -86,7 +86,7 @@ pub async fn prepare_image(
         .timeout(Duration::from_secs(30))
         .connect_timeout(Duration::from_secs(10))
         .build()
-        .map_err(|error| AppError::Message(format!("Image client: {error}")))?;
+        .map_err(|error| AppError::Failed(format!("Image client: {error}")))?;
     Ok((prepared, client))
 }
 

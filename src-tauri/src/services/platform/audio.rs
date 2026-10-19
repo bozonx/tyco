@@ -39,7 +39,7 @@ impl AudioSource for SystemAudioSource {
             cpal::SampleFormat::U16 => build_input_stream::<u16>(&device, &config, &context)?,
             cpal::SampleFormat::I32 => build_input_stream::<i32>(&device, &config, &context)?,
             format => {
-                return Err(AppError::Message(format!(
+                return Err(AppError::ServiceUnavailable(format!(
                     "Unsupported sample format: {format:?}"
                 )))
             }

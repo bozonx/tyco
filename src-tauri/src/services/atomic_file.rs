@@ -214,7 +214,7 @@ pub fn read_or_quarantine<T>(
     };
 
     let parsed = String::from_utf8(bytes)
-        .map_err(|error| AppError::Message(format!("not UTF-8: {error}")))
+        .map_err(|error| AppError::InvalidData(format!("not UTF-8: {error}")))
         .and_then(|raw| parse(&raw));
     match parsed {
         Ok(value) => Ok(Some(value)),

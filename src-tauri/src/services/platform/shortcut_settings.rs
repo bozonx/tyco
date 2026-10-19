@@ -26,10 +26,9 @@ pub fn open_shortcut_settings() -> Result<(), AppError> {
             "This desktop has no shortcut settings to open",
         ))
     })?;
-    let mut child = Command::new(program)
-        .args(args)
-        .spawn()
-        .map_err(|error| AppError::Message(format!("Could not start {program}: {error}")))?;
+    let mut child = Command::new(program).args(args).spawn().map_err(|error| {
+        AppError::ServiceUnavailable(format!("Could not start {program}: {error}"))
+    })?;
     // reap the settings app once it is closed
     std::thread::spawn(move || {
         let _ = child.wait();

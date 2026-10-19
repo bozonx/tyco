@@ -77,9 +77,6 @@ pub struct PluginStore {
     root: PathBuf,
     lock: Mutex<()>,
 }
-fn error(message: impl Into<String>) -> AppError {
-    AppError::Message(message.into())
-}
 fn is_valid_plugin_id(id: &str) -> bool {
     !id.is_empty()
         && id.len() <= 128
@@ -97,27 +94,34 @@ fn read_stored(path: &Path) -> Result<String, AppError> {
 }
 fn read_with_limit(path: &Path, limit: u64) -> Result<String, AppError> {
     if !fs::symlink_metadata(path)?.file_type().is_file() {
-        return Err(error("Plugin package must be a regular file"));
+        return Err(AppError::InvalidInput(
+            "Plugin package must be a regular file".into(),
+        ));
     }
     let mut bytes = Vec::new();
     fs::File::open(path)?
         .take(limit + 1)
         .read_to_end(&mut bytes)?;
     if bytes.len() as u64 > limit {
-        return Err(error("Plugin data exceeds the size limit"));
+        return Err(AppError::FileTooLarge(
+            "Plugin data exceeds the size limit".into(),
+        ));
     }
-    String::from_utf8(bytes).map_err(|_| error("Plugin package is not UTF-8"))
+    String::from_utf8(bytes)
+        .map_err(|_| AppError::InvalidData("Plugin package is not UTF-8".into()))
 }
 pub fn inspect(path: &Path) -> Result<(PluginPackage, String), AppError> {
     let raw = read_bounded(path)?;
     let digest = format!("{:x}", Sha256::digest(raw.as_bytes()));
     let package: PluginPackage = serde_json::from_str(&raw)?;
     if package.format_version != FORMAT_VERSION {
-        return Err(error("Unsupported plugin package format"));
+        return Err(AppError::InvalidData(
+            "Unsupported plugin package format".into(),
+        ));
     }
     validate_manifest(&package.manifest)?;
     if package.module.trim().is_empty() {
-        return Err(error("Plugin module is empty"));
+        return Err(AppError::InvalidData("Plugin module is empty".into()));
     }
     Ok((package, digest))
 }
@@ -151,12 +155,14 @@ impl PluginStore {
             return Ok("pathToNotes".into());
         }
         if !is_valid_plugin_id(id) || BUNDLED_IDS.contains(&id) {
-            return Err(error("Plugin has no notes capability"));
+            return Err(AppError::PermissionDenied(
+                "Plugin has no notes capability".into(),
+            ));
         }
         let _guard = self
             .lock
             .lock()
-            .map_err(|_| error("Plugin storage lock failed"))?;
+            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
         let installed: InstalledPackage = serde_json::from_str(&read_stored(
             &self.root.join(format!("{}.json", storage_key(id))),
         )?)?;
@@ -169,7 +175,9 @@ impl PluginStore {
                 .iter()
                 .any(|capability| capability == "notes")
         {
-            return Err(error("Plugin has no notes capability"));
+            return Err(AppError::PermissionDenied(
+                "Plugin has no notes capability".into(),
+            ));
         }
         Ok(installed
             .package
@@ -186,21 +194,27 @@ impl PluginStore {
         let _guard = self
             .lock
             .lock()
-            .map_err(|_| error("Plugin storage lock failed"))?;
+            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
         let raw = read_bounded(path)?;
         if format!("{:x}", Sha256::digest(raw.as_bytes())) != digest {
-            return Err(error("Plugin package changed after inspection"));
+            return Err(AppError::Stale(
+                "Plugin package changed after inspection".into(),
+            ));
         }
         let package: PluginPackage = serde_json::from_str(&raw)?;
         if package.format_version != FORMAT_VERSION || package.module.trim().is_empty() {
-            return Err(error("Invalid plugin package"));
+            return Err(AppError::InvalidData("Invalid plugin package".into()));
         }
         validate_manifest(&package.manifest)?;
         if BUNDLED_IDS.contains(&package.manifest.id.as_str()) {
-            return Err(error("A package cannot replace a bundled plugin"));
+            return Err(AppError::InvalidInput(
+                "A package cannot replace a bundled plugin".into(),
+            ));
         }
         if package.manifest != *expected {
-            return Err(error("Plugin manifest changed after inspection"));
+            return Err(AppError::Stale(
+                "Plugin manifest changed after inspection".into(),
+            ));
         }
         let revision = crate::services::clock::now_ns().to_string();
         let key = storage_key(&package.manifest.id);
@@ -224,7 +238,7 @@ impl PluginStore {
         let _guard = self
             .lock
             .lock()
-            .map_err(|_| error("Plugin storage lock failed"))?;
+            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
         let mut result = Vec::new();
         for entry in fs::read_dir(&self.root)? {
             let path = entry?.path();
@@ -256,9 +270,11 @@ impl PluginStore {
         let _guard = self
             .lock
             .lock()
-            .map_err(|_| error("Plugin storage lock failed"))?;
+            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
         if !is_valid_plugin_id(id) || BUNDLED_IDS.contains(&id) {
-            return Err(error("Invalid or bundled plugin ID"));
+            return Err(AppError::InvalidInput(
+                "Invalid or bundled plugin ID".into(),
+            ));
         }
         let key = storage_key(id);
         let previous = self.root.join(format!("{key}.previous"));
@@ -266,7 +282,9 @@ impl PluginStore {
         let installed: InstalledPackage = serde_json::from_str(&raw)?;
         validate_manifest(&installed.package.manifest)?;
         if installed.package.manifest.id != id {
-            return Err(error("Invalid previous plugin identity"));
+            return Err(AppError::InvalidData(
+                "Invalid previous plugin identity".into(),
+            ));
         }
         atomic_file::write_private(&self.root.join(format!("{key}.json")), &raw)?;
         fs::remove_file(previous)?;
@@ -276,12 +294,14 @@ impl PluginStore {
         let _guard = self
             .lock
             .lock()
-            .map_err(|_| error("Plugin storage lock failed"))?;
+            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
         if !is_valid_plugin_id(id) {
-            return Err(error("Invalid plugin ID"));
+            return Err(AppError::InvalidInput("Invalid plugin ID".into()));
         }
         if BUNDLED_IDS.contains(&id) {
-            return Err(error("A bundled plugin cannot be removed"));
+            return Err(AppError::InvalidInput(
+                "A bundled plugin cannot be removed".into(),
+            ));
         }
         let previous = self.root.join(format!("{}.previous", storage_key(id)));
         if previous.exists() {
@@ -299,13 +319,13 @@ impl PluginStore {
         let _guard = self
             .lock
             .lock()
-            .map_err(|_| error("Plugin storage lock failed"))?;
+            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
         let (key, revision) = path
             .trim_start_matches('/')
             .split_once('/')
-            .ok_or_else(|| error("Invalid plugin module path"))?;
+            .ok_or_else(|| AppError::InvalidInput("Invalid plugin module path".into()))?;
         if key.is_empty() || key.len() > 256 || !key.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-            return Err(error("Invalid plugin module key"));
+            return Err(AppError::InvalidInput("Invalid plugin module key".into()));
         }
         let installed: InstalledPackage =
             serde_json::from_str(&read_stored(&self.root.join(format!("{key}.json")))?)?;
@@ -313,7 +333,9 @@ impl PluginStore {
         if key != storage_key(&installed.package.manifest.id)
             || revision != format!("{}.js", installed.revision)
         {
-            return Err(error("Plugin module revision is unavailable"));
+            return Err(AppError::NotFound(
+                "Plugin module revision is unavailable".into(),
+            ));
         }
         Ok(installed.package.module)
     }
@@ -327,7 +349,7 @@ pub fn approved_note_roots(
 ) -> Result<Vec<String>, AppError> {
     let plugin = &config["plugins"][id];
     if plugin["isEnabled"].as_bool() != Some(true) {
-        return Err(error("Plugin is disabled"));
+        return Err(AppError::PermissionDenied("Plugin is disabled".into()));
     }
     let mut roots = Vec::new();
     if let Some(root) = plugin["settings"][field]
@@ -354,7 +376,9 @@ pub fn approved_note_roots(
         }
     }
     if roots.is_empty() {
-        return Err(error("Notes directory is not configured"));
+        return Err(AppError::PermissionDenied(
+            "Notes directory is not configured".into(),
+        ));
     }
     Ok(roots)
 }

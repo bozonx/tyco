@@ -95,7 +95,9 @@ fn xdg_state_dir(identifier: &str) -> Result<PathBuf, AppError> {
         std::env::var_os("XDG_STATE_HOME").map(PathBuf::from),
         std::env::var_os("HOME").map(PathBuf::from),
     )
-    .ok_or_else(|| AppError::Message(String::from("Could not find the home directory")))?;
+    .ok_or_else(|| {
+        AppError::ServiceUnavailable(String::from("Could not find the home directory"))
+    })?;
     Ok(state_home.join(identifier))
 }
 
@@ -117,7 +119,7 @@ pub fn dev_paths_from_env(identifier: &str) -> Result<Option<AppPaths>, AppError
     };
     let home = PathBuf::from(home);
     if !home.is_absolute() {
-        return Err(AppError::Message(format!(
+        return Err(AppError::InvalidInput(format!(
             "{DEV_HOME_ENV} must be an absolute path: {}",
             home.display()
         )));

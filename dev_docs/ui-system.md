@@ -91,8 +91,9 @@ Escape, and nested dialog focus restoration. It also checks layout at 480px and
 Each appearance case writes `catalog.png` under `apps/desktop-ui/test-results`;
 failing tests retain screenshots and traces. The standard-controls section also has reviewed pixel baselines in
 `browser-tests/ui-catalog.spec.ts-snapshots`. Refresh intentional changes with
-`pnpm --filter @tyco/desktop-ui exec playwright test --update-snapshots`. Native Tauri smoke tests remain necessary for webview-specific
-behavior.
+`pnpm test:browser:container ui-catalog.spec.ts --project=chromium --update-snapshots`
+in the CI image, see `dev_docs/testing.md`. Native Tauri smoke tests remain
+necessary for webview-specific behavior.
 
 ## Settings models
 

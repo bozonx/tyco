@@ -229,7 +229,7 @@ impl SecretStore {
             .insert(id.to_string(), StoredSecret { origins });
         let saved = self.persist(&state).and_then(|()| {
             vault.set(id, value).map_err(|error| {
-                AppError::Message(format!("Could not save secret \"{id}\": {error}"))
+                AppError::ServiceUnavailable(format!("Could not save secret \"{id}\": {error}"))
             })
         });
         if let Err(error) = saved {
@@ -257,7 +257,7 @@ impl SecretStore {
 
         if let Some(vault) = &self.vault {
             vault.delete(id).map_err(|error| {
-                AppError::Message(format!("Could not remove secret \"{id}\": {error}"))
+                AppError::ServiceUnavailable(format!("Could not remove secret \"{id}\": {error}"))
             })?;
         }
 

@@ -24,7 +24,7 @@ impl VoiceCaptureSession {
         }
         self.thread
             .join()
-            .map_err(|_| crate::errors::AppError::Message("Voice capture thread panicked".into()))
+            .map_err(|_| crate::errors::AppError::Failed("Voice capture thread panicked".into()))
     }
 }
 

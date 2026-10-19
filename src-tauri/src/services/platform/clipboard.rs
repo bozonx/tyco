@@ -58,7 +58,7 @@ fn write_to_clipboard_command(binary: &str, args: &[&str], text: &str) -> Result
         Duration::from_secs(5),
     )?;
     if !status.success() {
-        return Err(AppError::Message(format!(
+        return Err(AppError::Failed(format!(
             "Clipboard command `{binary}` failed with status {status}",
         )));
     }

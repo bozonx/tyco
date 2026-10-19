@@ -147,7 +147,7 @@ impl SelectionBackend for Backend {
             .unwrap()
             .push(format!("paste:{}:{text}", run.id));
         if self.paste_error {
-            Err(AppError::Message("paste failed".into()))
+            Err(AppError::Failed("paste failed".into()))
         } else {
             Ok(SelectionFinishStatus::Pasted)
         }
@@ -156,7 +156,7 @@ impl SelectionBackend for Backend {
         self.operations.lock().unwrap().push("publish".into());
         self.events.lock().unwrap().push(event);
         if self.publish_error {
-            Err(AppError::Message("webview gone".into()))
+            Err(AppError::Failed("webview gone".into()))
         } else {
             Ok(())
         }

@@ -69,7 +69,7 @@ fn warmup_show(app: &AppHandle) -> Result<(), AppError> {
     }
     let window = app
         .get_webview_window(QUICK_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
+        .ok_or_else(|| AppError::ServiceUnavailable("Quick window not found".into()))?;
     crate::services::platform::set_window_opacity(&window, 0.0)?;
     let layer = panel_layer(app);
     if layer.is_none() {
@@ -92,7 +92,7 @@ fn warmup_hide(app: &AppHandle) -> Result<(), AppError> {
     }
     let window = app
         .get_webview_window(QUICK_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
+        .ok_or_else(|| AppError::ServiceUnavailable("Quick window not found".into()))?;
     if panel_layer(app).is_some() {
         crate::services::platform::disable_panel_keyboard(&window)?;
     }

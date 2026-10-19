@@ -163,7 +163,7 @@ function run(argv) {
         Duration::from_secs(3),
     )?;
     if !status.success() {
-        return Err(AppError::Message("Could not paste into the target application; check Accessibility and Automation permissions".into()));
+        return Err(AppError::PermissionDenied("Could not paste into the target application; check Accessibility and Automation permissions".into()));
     }
     Ok(())
 }

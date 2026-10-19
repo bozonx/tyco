@@ -5,7 +5,6 @@ const DISMISSIBLE_MODES = new Set([
   'aiTasks',
   'commandLauncher',
   'translate',
-  'correction',
 ])
 
 export interface QuickWindowSessionDependencies {

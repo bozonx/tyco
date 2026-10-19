@@ -91,7 +91,7 @@ where
         show_application_mode_on_main_thread(app, mode)?;
         let window = app
             .get_webview_window(MAIN_WINDOW_LABEL)
-            .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+            .ok_or_else(|| AppError::ServiceUnavailable("Main window not found".into()))?;
         events::emit::<E, _>(&window, payload)?;
         Ok(())
     })
@@ -111,7 +111,7 @@ fn show_application_mode_on_main_thread(
 
     let window = app
         .get_webview_window(MAIN_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+        .ok_or_else(|| AppError::ServiceUnavailable("Main window not found".into()))?;
     let state = app.state::<AppState>();
 
     window.set_decorations(true)?;
@@ -162,7 +162,7 @@ fn hide_on_main_thread(app: &AppHandle) -> Result<(), AppError> {
     let label = app.state::<RuntimeWindows>().active_label();
     let window = app
         .get_webview_window(label)
-        .ok_or_else(|| AppError::Message(format!("Window {label} not found")))?;
+        .ok_or_else(|| AppError::ServiceUnavailable(format!("Window {label} not found")))?;
 
     if label == QUICK_WINDOW_LABEL && app.state::<PanelLayerState>().supported {
         crate::services::platform::disable_panel_keyboard(&window)?;

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 834e0316d118849b0d62c54bddf3e22573016df6715597c90e44b0b7e4893ba3
+// Source hash: 0ea54fcdbc19b41480c437f11f12a07232500463fe75d42ad2d256d31c2515fc
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -298,8 +298,11 @@ export type DesktopErrorCode =
   | 'operationFailed'
   | 'configConflict'
   | 'serviceUnavailable'
+  | 'busy'
+  | 'permissionDenied'
   | 'resourceLimit'
   | 'invalidInput'
+  | 'notFound'
   | 'fileTooLarge'
   | 'unsupportedConfig'
   | 'stale'
@@ -663,8 +666,11 @@ export const DESKTOP_ERROR_CODES = [
   'operationFailed',
   'configConflict',
   'serviceUnavailable',
+  'busy',
+  'permissionDenied',
   'resourceLimit',
   'invalidInput',
+  'notFound',
   'fileTooLarge',
   'unsupportedConfig',
   'stale',

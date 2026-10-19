@@ -276,7 +276,7 @@ impl ChatImageStore {
             .take((MAX_STORED_BYTES + 1) as u64)
             .read_to_end(&mut bytes)?;
         if bytes.len() > MAX_STORED_BYTES || format!("{:x}", Sha256::digest(&bytes)) != id {
-            return Err(AppError::Message("Corrupted chat image".into()));
+            return Err(AppError::InvalidData("Corrupted chat image".into()));
         }
         let (width, height) = stored_dimensions(&bytes)?;
         let image = ChatImage {

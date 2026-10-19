@@ -277,7 +277,7 @@ impl ProfileFiles {
     pub fn run(&self, request: AiFileToolRequest) -> Result<AiFileToolOutput, AppError> {
         self.run_with(request, |path| {
             trash::delete(path)
-                .map_err(|error| AppError::Message(format!("Could not move to the trash: {error}")))
+                .map_err(|error| AppError::Failed(format!("Could not move to the trash: {error}")))
         })
     }
 

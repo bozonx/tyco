@@ -222,7 +222,7 @@ pub fn read_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError>
 pub fn rename_chat(chats_dir: &Path, id: String, title: String) -> Result<(), AppError> {
     let mut history = list_chats(chats_dir)?;
     let Some(mut chat) = read_chat(chats_dir, id.clone())? else {
-        return Err(AppError::Message(String::from("Chat not found")));
+        return Err(AppError::NotFound(String::from("Chat not found")));
     };
     chat.title = title;
     rename_in_chat_index(&mut history, &id, &chat.title);

@@ -9,7 +9,8 @@ window.addEventListener('message', (event) => {
   )
     return
   const port = event.ports[0]
-  worker = new Worker(new URL('worker.js', location.href), { type: 'module' })
+  // classic: WebKitGTK loads no module worker from this scheme
+  worker = new Worker(new URL('worker.js', location.href))
   worker.onmessage = (message) => port.postMessage(message.data)
   worker.onerror = () =>
     port.postMessage({

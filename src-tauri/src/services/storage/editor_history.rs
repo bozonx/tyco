@@ -326,7 +326,7 @@ fn commit_history_transition<T>(
                     None => remove_file_if_exists(path),
                 };
                 if let Err(rollback) = rollback {
-                    return Err(AppError::Message(format!(
+                    return Err(AppError::Failed(format!(
                         "{error}; could not restore editor history: {rollback}"
                     )));
                 }
@@ -492,7 +492,7 @@ mod tests {
         };
         let result: Result<HistoryCommit<()>, AppError> =
             commit_history_transition(&path, &policy(), &after, &mut memory, || {
-                Err(AppError::Message("Config storage failed".into()))
+                Err(AppError::Failed("Config storage failed".into()))
             });
         assert!(result.is_err());
         assert!(memory.is_empty());
@@ -511,7 +511,7 @@ mod tests {
         };
         let result: Result<HistoryCommit<()>, AppError> =
             commit_history_transition(&path, &before, &policy(), &mut memory, || {
-                Err(AppError::Message("Config storage failed".into()))
+                Err(AppError::Failed("Config storage failed".into()))
             });
         assert!(result.is_err());
         assert_eq!(memory, original);

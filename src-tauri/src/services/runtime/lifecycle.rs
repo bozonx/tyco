@@ -38,13 +38,13 @@ pub fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri
 pub fn setup(app: &mut App) -> Result<(), AppError> {
     let main_window = app
         .get_webview_window(MAIN_WINDOW_LABEL)
-        .ok_or_else(|| AppError::Message("Main window not found".into()))?;
+        .ok_or_else(|| AppError::ServiceUnavailable("Main window not found".into()))?;
     crate::services::platform::enable_titlebar_buttons(&main_window)?;
     let supported = crate::services::platform::is_layer_shell_supported();
     if supported {
         let window = app
             .get_webview_window(QUICK_WINDOW_LABEL)
-            .ok_or_else(|| AppError::Message("Quick window not found".into()))?;
+            .ok_or_else(|| AppError::ServiceUnavailable("Quick window not found".into()))?;
         crate::services::platform::attach_panel_surface(&window)?;
         log::info!("The quick window is a layer-shell surface");
     } else {

@@ -2,21 +2,42 @@ use serde::Serialize;
 use thiserror::Error;
 use ts_rs::TS;
 
+/// Why a command failed. The variant decides the code the webview sees, so
+/// pick the one that tells it what it could do about the failure.
 #[derive(Debug, Error)]
 pub enum AppError {
+    /// The operation failed for a reason the app cannot name better, e.g. a
+    /// system tool that reported an error.
     #[error("{0}")]
-    Message(String),
+    Failed(String),
+    /// The config changed since the request read it.
     #[error("{0}")]
     ConfigConflict(String),
+    /// What the operation needs is not there now: a device, a window, the
+    /// system keychain, or the app is stopping.
     #[error("{0}")]
     ServiceUnavailable(String),
+    /// Another operation holds what this one needs; it may succeed later.
+    #[error("{0}")]
+    Busy(String),
+    /// The user or the system did not allow the operation.
+    #[error("{0}")]
+    PermissionDenied(String),
+    /// A bound is reached, e.g. a queue or the memory of the session.
     #[error("{0}")]
     ResourceLimit(String),
+    /// The request itself is wrong.
     #[error("{0}")]
     InvalidInput(String),
+    /// What the request names does not exist.
+    #[error("{0}")]
+    NotFound(String),
     /// A file is larger than the operation accepts.
     #[error("{0}")]
     FileTooLarge(String),
+    /// Stored or received data is malformed.
+    #[error("{0}")]
+    InvalidData(String),
     #[error("{0}")]
     UnsupportedConfig(String),
     /// The request was made for a state that has changed since, e.g. an
@@ -50,33 +71,53 @@ macro_rules! error_codes {
 }
 
 error_codes! {
+    /// The operation failed; only the message says why.
     OperationFailed,
+    /// The config changed since the request read it: read it and try again.
     ConfigConflict,
+    /// What the operation needs is not there now.
     ServiceUnavailable,
+    /// Another operation holds what this one needs; it may succeed later.
+    Busy,
+    /// The user or the system did not allow the operation.
+    PermissionDenied,
+    /// A bound is reached.
     ResourceLimit,
+    /// The request itself is wrong.
     InvalidInput,
+    /// What the request names does not exist.
+    NotFound,
+    /// A file is larger than the operation accepts.
     FileTooLarge,
+    /// The config was written by a newer version of the app.
     UnsupportedConfig,
+    /// The request was made for a state that has changed since.
     Stale,
+    /// The runtime of the app failed.
     RuntimeError,
+    /// Reading or writing a file failed.
     IoError,
+    /// Stored or received data is malformed.
     InvalidData,
 }
 
 impl AppError {
     pub fn code(&self) -> ErrorCode {
         match self {
-            Self::Message(_) => ErrorCode::OperationFailed,
+            Self::Failed(_) => ErrorCode::OperationFailed,
             Self::ConfigConflict(_) => ErrorCode::ConfigConflict,
             Self::ServiceUnavailable(_) => ErrorCode::ServiceUnavailable,
+            Self::Busy(_) => ErrorCode::Busy,
+            Self::PermissionDenied(_) => ErrorCode::PermissionDenied,
             Self::ResourceLimit(_) => ErrorCode::ResourceLimit,
             Self::InvalidInput(_) => ErrorCode::InvalidInput,
+            Self::NotFound(_) => ErrorCode::NotFound,
             Self::FileTooLarge(_) => ErrorCode::FileTooLarge,
+            Self::InvalidData(_) | Self::Json(_) => ErrorCode::InvalidData,
             Self::UnsupportedConfig(_) => ErrorCode::UnsupportedConfig,
             Self::Stale(_) => ErrorCode::Stale,
             Self::Tauri(_) => ErrorCode::RuntimeError,
             Self::Io(_) => ErrorCode::IoError,
-            Self::Json(_) => ErrorCode::InvalidData,
         }
     }
 }
@@ -112,8 +153,18 @@ mod tests {
 
         for (error, code) in [
             (
-                AppError::Message("Generic failure".into()),
+                AppError::Failed("Generic failure".into()),
                 "operationFailed",
+            ),
+            (AppError::Busy("Clipboard is busy".into()), "busy"),
+            (
+                AppError::PermissionDenied("Accessibility is off".into()),
+                "permissionDenied",
+            ),
+            (AppError::NotFound("Chat not found".into()), "notFound"),
+            (
+                AppError::InvalidData("Corrupted image".into()),
+                "invalidData",
             ),
             (
                 AppError::ConfigConflict("Changed in another window".into()),

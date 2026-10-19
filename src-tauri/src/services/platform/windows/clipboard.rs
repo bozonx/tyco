@@ -49,7 +49,7 @@ impl WindowsClipboardLock {
                 unsafe {
                     DestroyWindow(window);
                 }
-                return Err(AppError::Message("Clipboard is busy".into()));
+                return Err(AppError::Busy("Clipboard is busy".into()));
             }
             std::thread::sleep(Duration::from_millis(10));
         }
@@ -92,7 +92,7 @@ pub fn snapshot() -> Result<ClipboardSnapshot, AppError> {
         }
         total += size;
         if total > MAX_SNAPSHOT_BYTES {
-            return Err(AppError::Message(
+            return Err(AppError::ResourceLimit(
                 "Clipboard content is too large to be preserved".into(),
             ));
         }
@@ -107,7 +107,7 @@ pub fn snapshot() -> Result<ClipboardSnapshot, AppError> {
         formats.push((format, bytes));
     }
     if formats.is_empty() && unsafe { CountClipboardFormats() } != 0 {
-        return Err(AppError::Message(
+        return Err(AppError::Failed(
             "Clipboard holds no format that can be preserved".into(),
         ));
     }

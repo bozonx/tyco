@@ -119,6 +119,15 @@ pnpm --filter @tyco/desktop-ui exec playwright install --with-deps chromium webk
 pnpm test:browser
 ```
 
+The WebKit build of Playwright needs the libraries of Ubuntu 24.04 (ICU 74,
+`libxml2.so.2`); on another distribution, e.g. Arch or Manjaro, it does not
+start. There, and for visual baselines anywhere, run the suite in the CI image
+(Docker required); arguments go to `playwright test`:
+
+```sh
+pnpm test:browser:container
+```
+
 To run a functional subset, pass the file before the project option:
 
 ```sh
@@ -132,8 +141,11 @@ CI uses the pinned Playwright Noble container. Keep its version in
 Generate and review visual updates in that same container environment:
 
 ```sh
-pnpm --filter @tyco/desktop-ui test:browser ui-catalog.spec.ts --project=chromium --update-snapshots
+pnpm test:browser:container ui-catalog.spec.ts --project=chromium --update-snapshots
 ```
+
+A test stops at its first failed screenshot: after an update, run the suite
+again, since a later baseline of the same test may be stale too.
 
 The browser job runs on every PR, blocks the bundle and desktop smoke jobs, and
 uploads the HTML report and failure traces/screenshots. `pnpm validate:all` also
@@ -198,6 +210,14 @@ cargo install tauri-driver --version 2.0.5 --locked
 cargo build --manifest-path src-tauri/Cargo.toml --locked -p tyco-ctl
 pnpm tauri:build --debug --no-bundle
 xvfb-run -a dbus-run-session -- sh -c 'openbox >/tmp/tyco-openbox.log 2>&1 & pnpm test:desktop'
+```
+
+Where these are not packaged alike, e.g. on Arch or Manjaro, build and run the
+smoke in an Ubuntu 24.04 image with the packages of the CI job (Docker
+required); the app is built into `src-tauri/target/container`:
+
+```sh
+pnpm test:desktop:container
 ```
 
 Windows runs `pnpm test:desktop` directly after the same builds, with

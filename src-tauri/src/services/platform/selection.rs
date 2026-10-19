@@ -302,7 +302,7 @@ impl PasteExecutor for SystemPasteExecutor {
         use super::linux::text_injector::{FocusedKeyAction, SystemTextInjector};
         SystemTextInjector::detect()
             .press_in_focused(config, FocusedKeyAction::Paste, target.is_terminal)
-            .map_err(|error| AppError::Message(format!("{error}. The result is in the clipboard")))
+            .map_err(|error| AppError::Failed(format!("{error}. The result is in the clipboard")))
     }
     fn restore_later(&self, run: SelectionRun, text: String) {
         if let Some(snapshot) = run.clipboard_snapshot {
@@ -366,7 +366,7 @@ mod tests {
             assert_eq!(text, "result");
             self.calls.borrow_mut().push("write");
             if self.write_fails {
-                Err(AppError::Message("write failed".into()))
+                Err(AppError::Failed("write failed".into()))
             } else {
                 Ok(())
             }
@@ -379,7 +379,7 @@ mod tests {
             assert!(target.is_terminal);
             self.calls.borrow_mut().push("paste");
             if self.paste_fails {
-                Err(AppError::Message("paste failed".into()))
+                Err(AppError::Failed("paste failed".into()))
             } else {
                 Ok(())
             }

@@ -30,7 +30,7 @@ pub fn notify(summary: &str, body: &str) -> Result<(), AppError> {
                 -1i32,
             ),
         )
-        .map_err(|error| AppError::Message(format!("Could not show a notification: {error}")))?;
+        .map_err(|error| AppError::Failed(format!("Could not show a notification: {error}")))?;
     Ok(())
 }
 

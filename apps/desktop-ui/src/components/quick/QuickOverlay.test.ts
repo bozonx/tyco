@@ -348,10 +348,7 @@ describe('quick overlay menus', () => {
     expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
   })
 
-  // `quick-window-session.ts` lists `correction` among the modes a focus loss
-  // dismisses, against its own doc comment; this assertion was never checked
-  // before the IPC calls took typed arguments
-  it.fails('keeps a correction when the focus goes elsewhere', async () => {
+  it('keeps a correction when the focus goes elsewhere', async () => {
     await loseFocus('correction')
     expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
   })

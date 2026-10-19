@@ -91,12 +91,12 @@ pub fn inject_paste(target_window_handle: Option<&str>) -> Result<(), AppError> 
         .map(|value| value as HWND)
         .ok_or_else(|| AppError::Stale(String::from("Target window is not available")))?;
     if unsafe { SetForegroundWindow(window_handle) } == 0 {
-        return Err(AppError::Message(String::from(
+        return Err(AppError::Failed(String::from(
             "Could not focus the target window",
         )));
     }
     if unsafe { GetForegroundWindow() } != window_handle {
-        return Err(AppError::Message(
+        return Err(AppError::Failed(
             "The target window did not receive focus".into(),
         ));
     }
@@ -168,7 +168,7 @@ pub fn press_copy_or_paste(copy: bool, terminal: bool) -> Result<(), AppError> {
     if sent == inputs.len() as u32 {
         Ok(())
     } else {
-        Err(AppError::Message(String::from("SendInput failed")))
+        Err(AppError::Failed(String::from("SendInput failed")))
     }
 }
 

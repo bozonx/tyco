@@ -98,7 +98,7 @@ mod tests {
             assert_eq!(window.map(ForegroundTarget::as_platform_id), Some("target"));
             self.calls.borrow_mut().push("inject");
             if self.fail {
-                Err(AppError::Message("injection failed".into()))
+                Err(AppError::Failed("injection failed".into()))
             } else {
                 Ok(())
             }

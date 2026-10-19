@@ -95,7 +95,7 @@ mod tests {
         fn activate(&self, activation: Activation) -> Result<(), AppError> {
             self.activated.borrow_mut().push(activation);
             if self.fail {
-                Err(AppError::Message("activation failed".into()))
+                Err(AppError::Failed("activation failed".into()))
             } else {
                 Ok(())
             }
@@ -252,7 +252,7 @@ mod tests {
             .unwrap()
             .unwrap();
         assert!(coordinator
-            .publish(&request, || Err(AppError::Message("emit failed".into())))
+            .publish(&request, || Err(AppError::Failed("emit failed".into())))
             .is_err());
     }
 }

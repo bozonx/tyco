@@ -113,7 +113,7 @@ const invoke = async (command, args = {}) => {
   const result = await request('POST', `/session/${session}/execute/async`, {
     script: `const done = arguments[arguments.length - 1];
       window.__TAURI_INTERNALS__.invoke(arguments[0], arguments[1])
-        .then(value => done({ ok: true, value }), error => done({ ok: false, error: String(error) }));`,
+        .then(value => done({ ok: true, value }), error => done({ ok: false, error: typeof error === 'object' ? JSON.stringify(error) : String(error) }));`,
     args: [command, args],
   })
   assert.equal(result.ok, true, `${command}: ${result.error}`)
@@ -174,25 +174,28 @@ try {
   const initial = (await invoke('get_desktop_state')).settings.userConfig
   const first = await invoke('save_user_config', {
     baseConfig: initial,
-    userConfig: { ...initial, appearance: { theme: 'dark' } },
+    userConfig: {
+      ...initial,
+      appearance: { ...initial.appearance, theme: 'dark' },
+    },
   })
   assert.equal(first.settings.userConfig.appearance.theme, 'dark')
   const second = await invoke('save_user_config', {
     baseConfig: initial,
-    userConfig: { ...initial, userLanguage: 'en_US', appLanguage: 'en_US' },
+    userConfig: { ...initial, language: { ui: 'en_US', user: 'en_US' } },
   })
   assert.equal(
     second.settings.userConfig.appearance.theme,
     'dark',
     "Stale snapshots must preserve another window's changes"
   )
-  assert.equal(second.settings.userConfig.userLanguage, 'en_US')
+  assert.equal(second.settings.userConfig.language.user, 'en_US')
 
   const historyId = await invoke('add_editor_history_item', {
     entry: {
       text: 'Desktop smoke source',
       kind: 'source',
-      operation: 'ai-task',
+      operation: 'aiTask',
     },
   })
   assert.equal(typeof historyId, 'string')
@@ -241,7 +244,7 @@ try {
         ...networkConfig.llm,
         providers: [
           ...(networkConfig.llm?.providers ?? []),
-          { id: 'desktop-smoke', baseUrl: proxyUrl },
+          { id: 'desktop-smoke', type: 'openaiCompatible', baseUrl: proxyUrl },
         ],
       },
     },
@@ -353,7 +356,10 @@ try {
     baseConfig: current,
     userConfig: {
       ...current,
-      plugins: { ...current.plugins, DesktopSmoke: { enabled: true } },
+      plugins: {
+        ...current.plugins,
+        DesktopSmoke: { isEnabled: true, settings: {} },
+      },
     },
   })
   await waitFor(

@@ -116,7 +116,7 @@ impl SelectionRunCoordinator {
             return Ok(TriggerDecision::Busy);
         };
         if self.lock().as_ref().is_some_and(|run| run.is_external) {
-            return Err(AppError::Message(
+            return Err(AppError::Busy(
                 "An external selection job is running".into(),
             ));
         }
@@ -186,15 +186,13 @@ impl SelectionRunCoordinator {
     ) -> Result<(u64, String), AppError> {
         let _guard = self
             .reserve()
-            .ok_or_else(|| AppError::Message("A selection is being captured".into()))?;
+            .ok_or_else(|| AppError::Busy("A selection is being captured".into()))?;
         if self.lock().is_some() {
-            return Err(AppError::Message(
-                "A selection run is already active".into(),
-            ));
+            return Err(AppError::Busy("A selection run is already active".into()));
         }
         let (text, mut run) = backend
             .capture(&backend.user_config())
-            .map_err(|error| AppError::Message(error.message))?;
+            .map_err(|error| AppError::Failed(error.message))?;
         if !backend.can_run() {
             backend.restore(run);
             return Err(AppError::ServiceUnavailable(

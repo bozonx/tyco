@@ -129,7 +129,7 @@ pub(crate) fn register(app: &mut App, bindings: Vec<HotkeyBinding>) -> Result<()
 #[cfg(target_os = "linux")]
 async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), AppError> {
     let app_id = AppID::try_from(app.config().identifier.as_str())
-        .map_err(|error| AppError::Message(error.to_string()))?;
+        .map_err(|error| AppError::Failed(error.to_string()))?;
     if let Err(error) = register_host_app(app_id.clone()).await {
         log::warn!("Could not register host app ID {app_id} with the desktop portal: {error}");
     }

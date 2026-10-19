@@ -36,6 +36,8 @@ describe('quick window session', () => {
       true
     )
     expect(setup({ mode: 'voice' }).session.keepsOnFocusLoss()).toBe(true)
+    // a correction on its way is past the first step
+    expect(setup({ mode: 'correction' }).session.keepsOnFocusLoss()).toBe(true)
     expect(setup({ mode: 'commandLauncher' }).session.keepsOnFocusLoss()).toBe(
       false
     )

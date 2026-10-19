@@ -323,7 +323,7 @@ pub fn execute_script(
     };
     let fail = |log: &LogContext, message: String| {
         log.write(&empty_result(), Some(&message));
-        AppError::Message(message)
+        AppError::Failed(message)
     };
 
     let cwd =

@@ -169,7 +169,7 @@ fn save_with(
                 // A directory sync can fail after rename, so restore the old file.
                 if let Err(rollback) = host.write_config(&previous) {
                     pending.take().expect("pending header secrets").retain();
-                    return Err(AppError::Message(format!(
+                    return Err(AppError::Failed(format!(
                         "Could not save config: {error}; could not restore config: {rollback}"
                     )));
                 }

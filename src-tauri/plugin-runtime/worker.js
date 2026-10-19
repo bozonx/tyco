@@ -1,12 +1,25 @@
-import {
-  assertPluginMessage,
-  encodePluginValue,
-  decodePluginValue,
-  PLUGIN_RPC_LIMITS,
-  PLUGIN_EFFECT_METHODS,
-} from './protocol.js'
-
-// This module is served with a separate CSP: no connections, eval or child workers.
+// A classic worker: WebKitGTK does not load a module worker from the custom
+// scheme of the frame, while a dynamic import from a classic one works. Every
+// message waits for the protocol, so none is handled before it.
+// This script is served with a separate CSP: no connections, eval or child workers.
+let assertPluginMessage
+let encodePluginValue
+let decodePluginValue
+let PLUGIN_RPC_LIMITS
+const protocolLoaded = import('./protocol.js').then((protocol) => {
+  ;({
+    assertPluginMessage,
+    encodePluginValue,
+    decodePluginValue,
+    PLUGIN_RPC_LIMITS,
+  } = protocol)
+  for (const method of protocol.PLUGIN_EFFECT_METHODS) {
+    context[method] = (...args) => {
+      check()
+      effect(method, args)
+    }
+  }
+})
 const send = globalThis.postMessage.bind(globalThis)
 const pending = new Map()
 const callbacks = new Map()
@@ -131,15 +144,9 @@ const context = {
     return rpc('callApiFunction', [name, args])
   },
 }
-for (const method of PLUGIN_EFFECT_METHODS) {
-  context[method] = (...args) => {
-    check()
-    effect(method, args)
-  }
-}
-
 globalThis.onmessage = async ({ data }) => {
   try {
+    await protocolLoaded
     assertPluginMessage(data)
   } catch (error) {
     send({ type: 'fatal', error: errorData(error) })

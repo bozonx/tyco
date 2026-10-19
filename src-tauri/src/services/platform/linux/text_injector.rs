@@ -320,7 +320,7 @@ fn missing_wayland_target() -> AppError {
     } else {
         "Text insertion on Wayland needs KDE Plasma 6: the KWin window tracker is not running"
     };
-    AppError::Message(String::from(message))
+    AppError::ServiceUnavailable(String::from(message))
 }
 
 /// `auto` and `xdotool` press the keys with xdotool on X11; Wayland has
@@ -413,7 +413,7 @@ fn run_spec(spec: &CommandSpec) -> Result<(), AppError> {
     if status.success() {
         Ok(())
     } else {
-        Err(AppError::Message(format!(
+        Err(AppError::Failed(format!(
             "Command `{}` failed with status {status}",
             spec.binary
         )))
@@ -433,7 +433,7 @@ fn wait_with_timeout(
         if Instant::now() >= deadline {
             child.kill()?;
             let _ = child.wait();
-            return Err(AppError::Message(format!(
+            return Err(AppError::Failed(format!(
                 "Timed out waiting for `{binary}` to insert the text"
             )));
         }

@@ -106,7 +106,7 @@ fn transact<T>(
             }
         }
         if !rollback_errors.is_empty() {
-            return Err(AppError::Message(format!(
+            return Err(AppError::Failed(format!(
                 "{error}; could not restore hotkeys: {}",
                 rollback_errors.join("; ")
             )));
@@ -136,7 +136,7 @@ mod tests {
                     .push((mode.to_string(), shortcut.to_string()));
                 Ok(())
             },
-            || Err(AppError::Message("Disk unavailable".into())),
+            || Err(AppError::Failed("Disk unavailable".into())),
         );
         assert!(result.is_err());
         assert_eq!(

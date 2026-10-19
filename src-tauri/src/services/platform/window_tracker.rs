@@ -231,7 +231,7 @@ impl WindowTracker {
             }
             let now = Instant::now();
             if now >= deadline {
-                return Err(AppError::Message(timeout_message.to_owned()));
+                return Err(AppError::Failed(timeout_message.to_owned()));
             }
             state = self
                 .changed

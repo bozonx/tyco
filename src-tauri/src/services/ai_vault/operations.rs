@@ -43,7 +43,7 @@ pub fn ensure_vault_dirs(vault_root: &Path) -> Result<(), AppError> {
 }
 
 fn not_found(what: &str, id: &str) -> AppError {
-    AppError::InvalidInput(format!("{what} not found: {id}"))
+    AppError::NotFound(format!("{what} not found: {id}"))
 }
 
 /// Reads every `<dir>/<id>/<file>` of the folder; an unreadable one is

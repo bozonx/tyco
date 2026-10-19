@@ -84,7 +84,7 @@ impl NetState {
             .read_timeout(READ_TIMEOUT)
             .redirect(reqwest::redirect::Policy::none())
             .build()
-            .map_err(|error| AppError::Message(format!("HTTP client: {error}")))?;
+            .map_err(|error| AppError::Failed(format!("HTTP client: {error}")))?;
 
         Ok(Self {
             admission: Arc::default(),

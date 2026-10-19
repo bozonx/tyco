@@ -138,7 +138,7 @@ where
         create_capture_session(source, levels, sink, session_id, SETUP_TIMEOUT)
     })
     .await
-    .map_err(|error| AppError::Message(format!("capture setup task failed: {error}")))??;
+    .map_err(|error| AppError::Failed(format!("capture setup task failed: {error}")))??;
     if let Err(session) = state.install(session) {
         let _ =
             tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
@@ -172,7 +172,7 @@ async fn stop_capture_unlocked(
     };
     tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
         .await
-        .map_err(|error| AppError::Message(format!("capture stop task failed: {error}")))?
+        .map_err(|error| AppError::Failed(format!("capture stop task failed: {error}")))?
 }
 
 /// Shutdown cannot wait indefinitely for a stalled device or event sink.
@@ -225,7 +225,7 @@ where
         )),
         Ok(Err(error)) => {
             let _ = thread.join();
-            Err(AppError::Message(error))
+            Err(AppError::Failed(error))
         }
         Err(error) => {
             // the thread is most likely stuck opening the device; joining it
@@ -233,7 +233,7 @@ where
             // lock, so it is left to finish on its own
             stop_flag.store(true, Ordering::SeqCst);
             drop(thread);
-            Err(AppError::Message(format!(
+            Err(AppError::Failed(format!(
                 "The microphone did not start in time: {error}"
             )))
         }
@@ -256,7 +256,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
 
     setup_tx
         .send(Ok(output_sample_rate_hz))
-        .map_err(|error| AppError::Message(error.to_string()))?;
+        .map_err(|error| AppError::Failed(error.to_string()))?;
 
     let chunk_samples = output_sample_rate_hz as usize * CHUNK_MS / 1_000;
     let mut last_level = runtime.now();
@@ -471,7 +471,7 @@ mod tests {
         fn open(&self, stop_flag: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
             self.trace.push("open");
             if self.fail {
-                return Err(AppError::Message("device unavailable".into()));
+                return Err(AppError::Failed("device unavailable".into()));
             }
             stop_flag.store(self.stop_on_open, Ordering::SeqCst);
             let pending_pcm_samples = Arc::new(Mutex::new(vec![1; 1600]));
@@ -616,7 +616,7 @@ mod tests {
             fn open(&self, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<()>, AppError> {
                 self.release.lock().unwrap().recv().unwrap();
                 self.done.send(stop.load(Ordering::SeqCst)).unwrap();
-                Err(AppError::Message("device released".into()))
+                Err(AppError::Failed("device released".into()))
             }
         }
         let (release_tx, release_rx) = std_mpsc::channel();

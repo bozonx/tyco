@@ -28,11 +28,17 @@ export class DesktopIpcError extends Error {
   }
 }
 
-/** Every native command fails with `{ code, message }` */
+/**
+ * A command fails with `{ code, message }`; Tauri itself rejects with a plain
+ * message, e.g. for arguments it cannot read or a command the window may not
+ * call
+ */
 export function normalizeDesktopError(error: unknown): unknown {
   if (error instanceof Error) return error
   if (isDesktopError(error))
     return new DesktopIpcError(error.code, error.message, error)
+  if (typeof error === 'string')
+    return new DesktopIpcError('runtimeError', error, error)
   return new DesktopIpcError(
     'invalidData',
     'Invalid desktop error payload',

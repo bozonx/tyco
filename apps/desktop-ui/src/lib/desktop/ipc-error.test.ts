@@ -28,8 +28,17 @@ describe('desktop IPC errors', () => {
     ).toMatchObject({ code: 'fileTooLarge' })
   })
 
+  it('keeps the message Tauri rejects with itself', () => {
+    expect(
+      normalizeDesktopError('invalid args `id` for command `get_chat`')
+    ).toMatchObject({
+      code: 'runtimeError',
+      message: 'invalid args `id` for command `get_chat`',
+    })
+  })
+
   it('rejects unstructured error payloads', () => {
-    expect(normalizeDesktopError('failed')).toMatchObject({
+    expect(normalizeDesktopError({ failed: true })).toMatchObject({
       code: 'invalidData',
       message: 'Invalid desktop error payload',
     })

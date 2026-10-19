@@ -47,13 +47,13 @@ impl HotkeyProvider for SystemHotkeyProvider<'_> {
         self.0
             .global_shortcut()
             .register(shortcut)
-            .map_err(|error| AppError::Message(error.to_string()))
+            .map_err(|error| AppError::Failed(error.to_string()))
     }
     fn unregister(&self, shortcut: Shortcut) -> Result<(), AppError> {
         self.0
             .global_shortcut()
             .unregister(shortcut)
-            .map_err(|error| AppError::Message(error.to_string()))
+            .map_err(|error| AppError::Failed(error.to_string()))
     }
 }
 
@@ -124,7 +124,7 @@ fn apply_global_shortcut_with(
         if provider.is_registered(previous) {
             provider
                 .unregister(previous)
-                .map_err(|error| AppError::Message(error.to_string()))?;
+                .map_err(|error| AppError::Failed(error.to_string()))?;
         }
         registry.targets.write_locked().remove(&previous.id());
     }
@@ -252,7 +252,7 @@ mod tests {
         fn register(&self, shortcut: Shortcut) -> Result<(), AppError> {
             self.calls.borrow_mut().push((true, shortcut.id()));
             if self.rejected.borrow().contains(&shortcut.id()) {
-                return Err(AppError::Message("shortcut conflict".into()));
+                return Err(AppError::Failed("shortcut conflict".into()));
             }
             self.registered.borrow_mut().insert(shortcut.id());
             Ok(())
@@ -260,7 +260,7 @@ mod tests {
         fn unregister(&self, shortcut: Shortcut) -> Result<(), AppError> {
             self.calls.borrow_mut().push((false, shortcut.id()));
             if self.unregister_fails.get() {
-                return Err(AppError::Message("unregister failed".into()));
+                return Err(AppError::Failed("unregister failed".into()));
             }
             self.registered.borrow_mut().remove(&shortcut.id());
             Ok(())

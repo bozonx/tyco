@@ -230,7 +230,7 @@ fn session() -> Result<zbus::blocking::Connection, AppError> {
 }
 
 fn dbus_error(error: zbus::Error) -> AppError {
-    AppError::Message(format!("KWin D-Bus call failed: {error}"))
+    AppError::Failed(format!("KWin D-Bus call failed: {error}"))
 }
 
 /// A directory only this user can write to: KWin runs whatever script file
@@ -257,7 +257,7 @@ fn scripts_dir() -> Result<PathBuf, AppError> {
     }
     let metadata = std::fs::symlink_metadata(&directory)?;
     if !metadata.is_dir() || metadata.uid() != uid || metadata.permissions().mode() & 0o022 != 0 {
-        return Err(AppError::Message(format!(
+        return Err(AppError::Failed(format!(
             "{} must be a directory of the current user that others cannot write to",
             directory.display()
         )));
@@ -336,7 +336,7 @@ fn run_script(name: &str, source: &str) -> Result<(), AppError> {
         .deserialize()
         .map_err(dbus_error)?;
     if id < 0 {
-        return Err(AppError::Message(format!(
+        return Err(AppError::Failed(format!(
             "KWin refused to load the script {name}"
         )));
     }

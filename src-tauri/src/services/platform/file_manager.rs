@@ -59,7 +59,7 @@ pub fn open_web_url(url: &url::Url) -> Result<(), AppError> {
     command.arg(url.as_str());
     let status = super::process::status(command, None, std::time::Duration::from_secs(10))?;
     if !status.success() {
-        return Err(AppError::Message(format!(
+        return Err(AppError::Failed(format!(
             "URL opener failed with status {status}"
         )));
     }

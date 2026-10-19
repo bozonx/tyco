@@ -33,7 +33,7 @@ fn load_user_config_at(path: &Path) -> Result<LoadedUserConfig, AppError> {
         if value.is_object() {
             Ok(value)
         } else {
-            Err(AppError::Message(String::from(
+            Err(AppError::InvalidData(String::from(
                 "the config is not a mapping",
             )))
         }
