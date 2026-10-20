@@ -1,4 +1,4 @@
-use std::fs;
+use std::io::Read;
 use std::path::Path;
 
 use super::sandbox::Resolved;
@@ -57,17 +57,7 @@ impl ProfileFiles {
     /// document's text from.
     pub fn read_bytes(&self, path: &str) -> Result<Vec<u8>, AppError> {
         let target = self.resolve(path, Access::Read, true)?;
-        let meta =
-            fs::metadata(&target.path).map_err(|_| invalid(format!("{path} does not exist")))?;
-        if !meta.is_file() {
-            return Err(invalid(format!("{path} is not a file")));
-        }
-        if meta.len() > MAX_READ_BYTES {
-            return Err(AppError::ResourceLimit(format!(
-                "{path} is too large to read"
-            )));
-        }
-        Ok(fs::read(&target.path)?)
+        read_scoped_bytes(&target, path, MAX_READ_BYTES)
     }
 
     pub(super) fn read_file(
@@ -78,8 +68,7 @@ impl ProfileFiles {
         max_characters: Option<usize>,
     ) -> Result<AiFileToolOutput, AppError> {
         let target = self.resolve(path, Access::Read, true)?;
-        let meta =
-            fs::metadata(&target.path).map_err(|_| invalid(format!("{path} does not exist")))?;
+        let meta = target.directory.metadata(target.relative_path())?;
         if meta.is_dir() {
             return Err(invalid(format!(
                 "{path} is a folder: list it with list_dir"
@@ -97,7 +86,7 @@ impl ProfileFiles {
                 media_type: media_type.into(),
             });
         }
-        let text = read_text(&target.path, path)?;
+        let text = read_text(&target, path, MAX_READ_BYTES)?;
         let page = page_lines(
             &text,
             offset.unwrap_or(1),
@@ -125,8 +114,8 @@ fn document_media_type(path: &Path) -> Option<&'static str> {
 }
 
 /// The text of a file; a binary one is refused.
-fn read_text(path: &Path, shown: &str) -> Result<String, AppError> {
-    let bytes = fs::read(path)?;
+fn read_text(target: &Resolved<'_>, shown: &str, max_bytes: u64) -> Result<String, AppError> {
+    let bytes = read_scoped_bytes(target, shown, max_bytes)?;
     if bytes[..bytes.len().min(BINARY_PROBE_BYTES)].contains(&0) {
         return Err(invalid(format!("{shown} is a binary file")));
     }
@@ -141,17 +130,33 @@ fn read_text(path: &Path, shown: &str) -> Result<String, AppError> {
 }
 
 pub(super) fn read_existing_text(target: &Resolved<'_>, shown: &str) -> Result<String, AppError> {
-    let meta =
-        fs::metadata(&target.path).map_err(|_| invalid(format!("{shown} does not exist")))?;
-    if !meta.is_file() {
+    read_text(target, shown, MAX_WRITE_BYTES as u64)
+}
+
+/// Bound the actual read as well as metadata: another writer may grow the file.
+fn read_scoped_bytes(
+    target: &Resolved<'_>,
+    shown: &str,
+    max_bytes: u64,
+) -> Result<Vec<u8>, AppError> {
+    let file = crate::services::platform::filesystem::open_read(
+        &target.directory,
+        target.relative_path(),
+    )?;
+    let metadata = file.metadata()?;
+    if !metadata.is_file() {
         return Err(invalid(format!("{shown} is not a file")));
     }
-    if meta.len() > MAX_WRITE_BYTES as u64 {
-        return Err(AppError::ResourceLimit(format!(
-            "{shown} is too large to edit"
-        )));
+    let too_large = || AppError::ResourceLimit(format!("{shown} is too large to read or edit"));
+    if metadata.len() > max_bytes {
+        return Err(too_large());
     }
-    read_text(&target.path, shown)
+    let mut bytes = Vec::new();
+    file.take(max_bytes + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > max_bytes {
+        return Err(too_large());
+    }
+    Ok(bytes)
 }
 
 pub(in crate::services::ai_tools) struct LinePage {

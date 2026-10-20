@@ -1,4 +1,6 @@
-use std::fs;
+use std::io;
+
+use super::scoped_io;
 
 use super::reader::read_existing_text;
 use super::{
@@ -6,7 +8,6 @@ use super::{
     MAX_WRITE_BYTES,
 };
 use crate::errors::AppError;
-use crate::services::atomic_file::write_user_file;
 
 impl ProfileFiles {
     pub(super) fn write_file(
@@ -14,20 +15,21 @@ impl ProfileFiles {
         path: &str,
         content: &str,
     ) -> Result<AiFileToolOutput, AppError> {
-        if content.len() > MAX_WRITE_BYTES {
-            return Err(AppError::ResourceLimit(format!(
-                "The content is larger than {MAX_WRITE_BYTES} bytes"
-            )));
-        }
+        ensure_write_size(content.len())?;
         let target = self.resolve(path, Access::Write, true)?;
-        if target.is_root() || target.path.is_dir() {
+        if target.is_root() {
             return Err(invalid(format!("{path} is a folder")));
         }
-        let is_created = !target.path.exists();
-        if let Some(parent) = target.path.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        write_user_file(&target.path, content.as_bytes())?;
+        let is_created = match target.directory.metadata(target.relative_path()) {
+            Ok(metadata) if metadata.is_dir() => {
+                return Err(invalid(format!("{path} is a folder")))
+            }
+            Ok(_) => false,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => true,
+            Err(error) => return Err(error.into()),
+        };
+        let (parent, name) = target.parent(true)?;
+        scoped_io::write_file(&parent, name, content.as_bytes(), true)?;
         Ok(AiFileToolOutput::WriteFile {
             path: target.virtual_path(),
             is_created,
@@ -45,7 +47,8 @@ impl ProfileFiles {
         let target = self.resolve(path, Access::Write, true)?;
         let before = read_existing_text(&target, path)?;
         let (after, replacement_count) = apply_edit(&before, old_text, new_text, replace_all)?;
-        write_user_file(&target.path, after.as_bytes())?;
+        let (parent, name) = target.parent(false)?;
+        scoped_io::write_file(&parent, name, after.as_bytes(), true)?;
         Ok(AiFileToolOutput::EditFile {
             path: target.virtual_path(),
             replacement_count,
@@ -58,24 +61,28 @@ impl ProfileFiles {
         if source.is_root() || destination.is_root() {
             return Err(invalid("A root folder cannot be moved"));
         }
-        let meta = fs::symlink_metadata(&source.path)
-            .map_err(|_| invalid(format!("{from} does not exist")))?;
-        if fs::symlink_metadata(&destination.path).is_ok() {
-            return Err(invalid(format!("{to} already exists")));
-        }
+        let (source_parent, source_name) = source.parent(false)?;
+        let meta = source_parent.symlink_metadata(source_name)?;
         if meta.is_dir() && destination.path.starts_with(&source.path) {
             return Err(invalid("A folder cannot be moved into itself"));
         }
-        if let Some(parent) = destination.path.parent() {
-            fs::create_dir_all(parent)?;
+        let (destination_parent, destination_name) = destination.parent(true)?;
+        match destination_parent.symlink_metadata(destination_name) {
+            Ok(_) => return Err(invalid(format!("{to} already exists"))),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
         }
-        if let Err(error) = fs::rename(&source.path, &destination.path) {
-            // another file system, e.g. from the workspace to an external project
-            if !meta.is_file() {
+        if let Err(error) = source_parent.rename(source_name, &destination_parent, destination_name)
+        {
+            if error.kind() != io::ErrorKind::CrossesDevices || !meta.is_file() {
                 return Err(error.into());
             }
-            fs::copy(&source.path, &destination.path)?;
-            fs::remove_file(&source.path)?;
+            scoped_io::copy_move(
+                &source_parent,
+                source_name,
+                &destination_parent,
+                destination_name,
+            )?;
         }
         Ok(AiFileToolOutput::MovePath {
             from: source.virtual_path(),
@@ -87,11 +94,15 @@ impl ProfileFiles {
     pub fn preview(&self, request: AiFileToolRequest) -> Result<AiFileChangePreview, AppError> {
         match request {
             AiFileToolRequest::WriteFile { path, content } => {
+                ensure_write_size(content.len())?;
                 let target = self.resolve(&path, Access::Write, true)?;
-                let before = if target.path.is_file() {
-                    Some(read_existing_text(&target, &path)?)
-                } else {
-                    None
+                if target.is_root() {
+                    return Err(invalid(format!("{path} is a folder")));
+                }
+                let before = match target.directory.metadata(target.relative_path()) {
+                    Ok(_) => Some(read_existing_text(&target, &path)?),
+                    Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+                    Err(error) => return Err(error.into()),
                 };
                 Ok(AiFileChangePreview {
                     path: target.virtual_path(),
@@ -142,6 +153,13 @@ pub(in crate::services::ai_tools) fn apply_edit(
             (old_text.to_string(), new_text.to_string())
         };
     let count = text.matches(old_text.as_str()).count();
+    if count > 0 && (count == 1 || replace_all) {
+        let result_bytes = count
+            .checked_mul(new_text.len())
+            .and_then(|added| (text.len() - count * old_text.len()).checked_add(added))
+            .ok_or_else(|| AppError::ResourceLimit("The edited file is too large".into()))?;
+        ensure_write_size(result_bytes)?;
+    }
     match count {
         0 => Err(invalid(
             "old_text was not found in the file: read it again and copy the text exactly",
@@ -152,4 +170,13 @@ pub(in crate::services::ai_tools) fn apply_edit(
             "old_text was found {count} times: add surrounding text to make it unique, or set replaceAll"
         ))),
     }
+}
+
+fn ensure_write_size(bytes: usize) -> Result<(), AppError> {
+    if bytes > MAX_WRITE_BYTES {
+        return Err(AppError::ResourceLimit(format!(
+            "The content is larger than {MAX_WRITE_BYTES} bytes"
+        )));
+    }
+    Ok(())
 }

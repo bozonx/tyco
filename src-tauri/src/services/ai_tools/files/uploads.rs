@@ -1,9 +1,10 @@
-use std::fs;
+use std::io;
+
+use super::scoped_io;
 
 use super::sandbox::virtual_path;
 use super::{Access, ProfileFiles, MAX_UPLOAD_BYTES, WORKSPACE_ROOT};
 use crate::errors::AppError;
-use crate::services::atomic_file::write_user_file;
 
 /// Where the files dropped into a profile chat are kept, inside the workspace.
 const UPLOADS_DIR: &str = "uploads";
@@ -22,7 +23,8 @@ impl ProfileFiles {
             Access::Write,
             true,
         )?;
-        fs::create_dir_all(&uploads.path)?;
+        uploads.directory.create_dir_all(uploads.relative_path())?;
+        let directory = uploads.directory.open_dir(uploads.relative_path())?;
         let name = upload_file_name(name);
         let (stem, extension) = match name.rsplit_once('.') {
             Some((stem, extension)) if !stem.is_empty() => {
@@ -37,11 +39,11 @@ impl ProfileFiles {
                 format!("{stem} ({index}){extension}")
             };
             let path = uploads.path.join(&candidate);
-            if fs::symlink_metadata(&path).is_ok() {
-                continue;
+            match scoped_io::write_file(&directory, candidate.as_ref(), bytes, false) {
+                Ok(()) => return Ok(virtual_path(uploads.root, &uploads.root_dir, &path)),
+                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
+                Err(error) => return Err(error.into()),
             }
-            write_user_file(&path, bytes)?;
-            return Ok(virtual_path(uploads.root, &uploads.root_dir, &path));
         }
         Err(AppError::ResourceLimit(
             "Too many uploads with this name".into(),

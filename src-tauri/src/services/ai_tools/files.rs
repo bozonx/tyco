@@ -8,6 +8,7 @@
 
 mod reader;
 mod sandbox;
+mod scoped_io;
 mod uploads;
 mod writer;
 

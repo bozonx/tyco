@@ -54,6 +54,7 @@ grep-regex = "0.1.14"
 grep-matcher = "0.1.9"
 trash = "5.2.9"
 globset = "0.4.20"
+cap-std = "4.0.3"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt", "net", "io-util", "time"] }

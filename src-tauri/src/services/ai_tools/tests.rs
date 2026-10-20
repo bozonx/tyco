@@ -586,3 +586,70 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
         .to_string()
         .contains("off"));
 }
+
+#[test]
+fn edits_reject_expansion_beyond_the_limit_before_building_the_result() {
+    let input = "a".repeat(1024 * 1024);
+    assert!(matches!(
+        apply_edit(&input, "a", &"b".repeat(100), true),
+        Err(AppError::ResourceLimit(_))
+    ));
+    let (at_limit, _) = apply_edit("x", "x", &"b".repeat(MAX_WRITE_BYTES), false).unwrap();
+    assert_eq!(at_limit.len(), MAX_WRITE_BYTES);
+    assert!(matches!(
+        apply_edit("x", "x", &"b".repeat(MAX_WRITE_BYTES + 1), false),
+        Err(AppError::ResourceLimit(_))
+    ));
+}
+
+#[test]
+fn oversized_edits_and_previews_leave_the_file_unchanged() {
+    let (directory, files) = fixture("ai-files-edit-limit");
+    fs::write(directory.join("workspace/file.txt"), "aa").unwrap();
+    let edit = AiFileToolRequest::EditFile {
+        path: "workspace/file.txt".into(),
+        old_text: "a".into(),
+        new_text: "b".repeat(MAX_WRITE_BYTES / 2 + 1),
+        replace_all: true,
+    };
+    assert!(matches!(
+        files.preview(edit.clone()),
+        Err(AppError::ResourceLimit(_))
+    ));
+    assert!(matches!(files.run(edit), Err(AppError::ResourceLimit(_))));
+    assert!(matches!(
+        files.preview(AiFileToolRequest::WriteFile {
+            path: "workspace/file.txt".into(),
+            content: "b".repeat(MAX_WRITE_BYTES + 1),
+        }),
+        Err(AppError::ResourceLimit(_))
+    ));
+    assert_eq!(
+        fs::read_to_string(directory.join("workspace/file.txt")).unwrap(),
+        "aa"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn a_permission_denied_rename_does_not_fall_back_to_copying() {
+    use std::os::unix::fs::PermissionsExt;
+    let (directory, files) = fixture("ai-files-rename-denied");
+    let parent = directory.join("workspace/readonly");
+    fs::create_dir(&parent).unwrap();
+    fs::write(parent.join("file.txt"), "original").unwrap();
+    fs::set_permissions(&parent, fs::Permissions::from_mode(0o555)).unwrap();
+    let result = files.run(AiFileToolRequest::MovePath {
+        from: "workspace/readonly/file.txt".into(),
+        to: "workspace/moved.txt".into(),
+    });
+    fs::set_permissions(&parent, fs::Permissions::from_mode(0o755)).unwrap();
+    assert!(
+        matches!(result, Err(AppError::Io(error)) if error.kind() == std::io::ErrorKind::PermissionDenied)
+    );
+    assert_eq!(
+        fs::read_to_string(parent.join("file.txt")).unwrap(),
+        "original"
+    );
+    assert!(!directory.join("workspace/moved.txt").exists());
+}

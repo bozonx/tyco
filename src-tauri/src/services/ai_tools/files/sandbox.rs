@@ -1,4 +1,6 @@
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
+
+use cap_std::fs::Dir;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
@@ -15,12 +17,43 @@ pub(in crate::services::ai_tools) struct Resolved<'a> {
     pub root_dir: PathBuf,
     /// Where on disk.
     pub path: PathBuf,
+    /// The capability used for I/O after validation; paths cannot escape it.
+    pub(super) directory: Dir,
 }
 
 impl Resolved<'_> {
     /// The path as the model knows it.
     pub fn virtual_path(&self) -> String {
         virtual_path(self.root, &self.root_dir, &self.path)
+    }
+
+    pub(super) fn relative_path(&self) -> &Path {
+        let relative = self
+            .path
+            .strip_prefix(&self.root_dir)
+            .expect("Resolved paths stay inside their root");
+        if relative.as_os_str().is_empty() {
+            Path::new(".")
+        } else {
+            relative
+        }
+    }
+
+    /// Opens the parent relative to the pinned root, including when it was
+    /// replaced by a symlink after resolve. No ambient path is used for I/O.
+    pub(super) fn parent(&self, create: bool) -> Result<(Dir, &OsStr), AppError> {
+        let relative = self.relative_path();
+        let name = relative
+            .file_name()
+            .ok_or_else(|| invalid("A root folder cannot be changed"))?;
+        let parent = relative
+            .parent()
+            .filter(|path| !path.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
+        if create {
+            self.directory.create_dir_all(parent)?;
+        }
+        Ok((self.directory.open_dir(parent)?, name))
     }
 
     pub(super) fn is_root(&self) -> bool {
@@ -216,6 +249,7 @@ impl ProfileFiles {
                 root.path
             ))
         })?;
+        let directory = Dir::open_ambient_dir(&root_dir, cap_std::ambient_authority())?;
         let mut real = match (relative.parent(), relative.file_name()) {
             (Some(parent), Some(name)) => canonical_prefix(&root_dir.join(parent))?.join(name),
             _ => root_dir.clone(),
@@ -234,6 +268,7 @@ impl ProfileFiles {
             root,
             root_dir,
             path: real,
+            directory,
         })
     }
 }
@@ -246,5 +281,68 @@ fn ensure_files_enabled(profile: &AiProfile) -> Result<(), AppError> {
     match group {
         Some(group) if group.is_enabled && group.access != ProjectAccessMode::Deny => Ok(()),
         _ => Err(invalid("The file tools are off for this profile")),
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::super::scoped_io;
+    use super::*;
+    use crate::services::test_support::TestDir;
+    use std::os::unix::fs::symlink;
+
+    #[test]
+    fn replacing_a_validated_parent_with_an_external_link_cannot_escape() {
+        let directory = TestDir::new("sandbox-parent-swap");
+        let workspace = directory.join("workspace");
+        let outside = directory.join("outside");
+        fs::create_dir_all(workspace.join("nested")).unwrap();
+        fs::create_dir(&outside).unwrap();
+        let files = ProfileFiles::from_roots(vec![AiFileRoot::for_test(
+            WORKSPACE_ROOT,
+            &workspace,
+            ProjectAccessMode::Allow,
+            ProjectAccessMode::Allow,
+            false,
+        )]);
+        let target = files
+            .resolve("workspace/nested/file.txt", Access::Write, true)
+            .unwrap();
+        fs::rename(workspace.join("nested"), workspace.join("held")).unwrap();
+        symlink(&outside, workspace.join("nested")).unwrap();
+        assert!(target.parent(true).is_err());
+        assert!(!outside.join("file.txt").exists());
+    }
+
+    #[test]
+    fn an_open_parent_stays_pinned_after_its_path_is_replaced() {
+        let directory = TestDir::new("sandbox-pinned-parent");
+        let workspace = directory.join("workspace");
+        let outside = directory.join("outside");
+        fs::create_dir_all(workspace.join("nested")).unwrap();
+        fs::create_dir(&outside).unwrap();
+        fs::write(outside.join("file.txt"), "outside").unwrap();
+        let files = ProfileFiles::from_roots(vec![AiFileRoot::for_test(
+            WORKSPACE_ROOT,
+            &workspace,
+            ProjectAccessMode::Allow,
+            ProjectAccessMode::Allow,
+            false,
+        )]);
+        let target = files
+            .resolve("workspace/nested/file.txt", Access::Write, true)
+            .unwrap();
+        let (parent, name) = target.parent(true).unwrap();
+        fs::rename(workspace.join("nested"), workspace.join("held")).unwrap();
+        symlink(&outside, workspace.join("nested")).unwrap();
+        scoped_io::write_file(&parent, name, b"inside", true).unwrap();
+        assert_eq!(
+            fs::read_to_string(outside.join("file.txt")).unwrap(),
+            "outside"
+        );
+        assert_eq!(
+            fs::read_to_string(workspace.join("held/file.txt")).unwrap(),
+            "inside"
+        );
     }
 }

@@ -118,10 +118,12 @@ fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
         if chat_file_id(&path).is_none() || !path.is_file() {
             continue;
         }
-        let parsed = fs::read_to_string(&path)
+        // I/O failures do not establish corruption: leave the file untouched
+        // and abort rebuilding instead of publishing an incomplete index.
+        let raw = fs::read(&path)?;
+        let parsed = serde_json::from_slice::<Chat>(&raw)
             .map_err(AppError::from)
-            .and_then(|raw| {
-                let chat: Chat = serde_json::from_str(&raw)?;
+            .and_then(|chat| {
                 validate_stored_chat_id(&path, &chat)?;
                 Ok(chat)
             });
@@ -708,6 +710,28 @@ mod tests {
         policy(30).drop_expired(&mut history, now);
         let ids: Vec<_> = history.iter().map(|item| item.id.as_str()).collect();
         assert_eq!(ids, ["fresh", "recent"]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn rebuilding_does_not_quarantine_a_chat_that_cannot_be_read() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = TestDir::new("rebuild-permission-denied");
+        let path = dir.join("unreadable.json");
+        let chat = chat_item("unreadable");
+        write_json(&path, &chat).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).unwrap();
+        let result = load_chat_index(&dir);
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+        assert!(
+            matches!(result, Err(AppError::Io(error)) if error.kind() == std::io::ErrorKind::PermissionDenied)
+        );
+        assert_eq!(
+            read_chat(&dir, "unreadable".into()).unwrap().unwrap().id,
+            "unreadable"
+        );
+        assert!(!dir.join(CHAT_INDEX_FILE).exists());
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
     }
 
     #[test]

@@ -27,17 +27,6 @@ pub fn write_private_bytes(path: &Path, raw: &[u8]) -> Result<(), AppError> {
     write_atomic(path, raw, 0o600, None)
 }
 
-/// Atomically writes a file of the user's own, e.g. one in a project: an
-/// existing file keeps its permissions, a new one gets the usual ones.
-pub fn write_user_file(path: &Path, raw: &[u8]) -> Result<(), AppError> {
-    let permissions = match fs::metadata(path) {
-        Ok(meta) => Some(meta.permissions()),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
-        Err(error) => return Err(error.into()),
-    };
-    write_atomic(path, raw, 0o666, permissions)
-}
-
 /// `mode` applies to a new temporary file on Unix, before the umask;
 /// `permissions`, when given, replace it before the rename.
 fn write_atomic(
@@ -281,28 +270,6 @@ mod tests {
             use std::os::unix::fs::PermissionsExt;
             let mode = fs::metadata(&path).unwrap().permissions().mode();
             assert_eq!(mode & 0o777, 0o600);
-        }
-    }
-
-    #[test]
-    fn a_user_file_keeps_its_permissions() {
-        let dir = TestDir::new("user_file");
-        let path = dir.join("notes.md");
-        fs::write(&path, "old").unwrap();
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            fs::set_permissions(&path, fs::Permissions::from_mode(0o640)).unwrap();
-        }
-
-        write_user_file(&path, b"new").unwrap();
-
-        assert_eq!(fs::read_to_string(&path).unwrap(), "new");
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mode = fs::metadata(&path).unwrap().permissions().mode();
-            assert_eq!(mode & 0o777, 0o640);
         }
     }
 

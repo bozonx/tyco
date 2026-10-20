@@ -5,6 +5,7 @@
 pub(crate) mod audio;
 pub(crate) mod clipboard;
 mod file_manager;
+pub(crate) mod filesystem;
 mod foreground_context;
 pub(crate) mod hotkeys;
 #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
