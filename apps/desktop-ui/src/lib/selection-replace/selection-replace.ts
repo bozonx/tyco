@@ -1,4 +1,10 @@
 import {
+  PENDING_OVERLAY_DELAY_MS,
+  ERROR_HIDE_MS,
+  SELECTION_SUCCESS_HIDE_MS as SUCCESS_HIDE_MS,
+} from '../commands/status-overlay-timing'
+import { keepSurroundingWhitespace } from '@tyco/shared'
+import {
   type SelectionAction,
   type SelectionFinishStatus,
   type SelectionRunEvent,
@@ -8,11 +14,8 @@ import {
 } from '@tyco/shared'
 
 /** Quick work finishes before the bubble would show up, so nothing flashes */
-export const PENDING_OVERLAY_DELAY_MS = 400
-const SUCCESS_HIDE_MS = 900
 const INFO_HIDE_MS = 1800
 const NOTICE_HIDE_MS = 4000
-const ERROR_HIDE_MS = 6000
 
 export interface SelectionReplaceDependencies {
   /** Transforms the text; rejects on failure */
@@ -42,14 +45,7 @@ export interface SelectionReplaceDependencies {
  * Keeps the whitespace around the selection: models drop a trailing newline,
  * and pasting would then remove it from the document
  */
-export function keepSurroundingWhitespace(
-  original: string,
-  result: string
-): string {
-  const leading = /^\s*/.exec(original)?.[0] ?? ''
-  const trailing = /\s*$/.exec(original)?.[0] ?? ''
-  return `${leading}${result.trim()}${trailing}`
-}
+export { keepSurroundingWhitespace } from '@tyco/shared'
 
 /**
  * Runs an action on the selection captured by the backend and hands the result
@@ -212,3 +208,5 @@ export function createSelectionReplace(deps: SelectionReplaceDependencies) {
   }
   return { handleRun, handleCancel, dispose }
 }
+
+export { PENDING_OVERLAY_DELAY_MS } from '../commands/status-overlay-timing'

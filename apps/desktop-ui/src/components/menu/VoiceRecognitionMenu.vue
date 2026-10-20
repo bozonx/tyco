@@ -23,6 +23,7 @@
 import { onMounted, onUnmounted, watch } from 'vue'
 
 import { useDictationActions } from '../../composables/use-dictation-actions'
+import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
@@ -126,15 +127,17 @@ const finishHotkey = useVoiceFinishSignal(
 let unlistenAudioLevel: (() => void) | undefined
 let unmounted = false
 
+useDismissibleLayer({
+  isOpen: ownsActivation,
+  elements: () => [],
+  canDismissOutside: false,
+  dismiss: () => {
+    void cancel()
+  },
+})
+
 function handleKeyUp(event: KeyboardEvent) {
   if (event.defaultPrevented) return
-
-  // Esc cancels the whole dictation and closes the quick window, never a step back
-  if (event.code === 'Escape') {
-    event.preventDefault()
-    void cancel()
-    return
-  }
 
   if ((event.ctrlKey || event.metaKey) && event.code === 'Enter') {
     event.preventDefault()

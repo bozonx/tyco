@@ -1,7 +1,7 @@
 <template>
   <ActionOverlayLayout
     :title="t('menu.aiTask')"
-    :on-esc="promptMode ? closePromptMode : undefined"
+    :on-esc="isPromptMode ? closePromptMode : undefined"
   >
     <template #preview>
       <TextPreview :text="props.text" />
@@ -9,7 +9,7 @@
 
     <template #actions>
       <QueryPanel
-        v-if="promptMode"
+        v-if="isPromptMode"
         :disabled="
           props.shortcutsDisabled || Boolean(menuModalsStore.pendingModal)
         "
@@ -78,7 +78,7 @@ const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
 
 /** The own request mode: an input instead of the task keys */
-const promptMode = ref(false)
+const isPromptMode = ref(false)
 const prompt = ref('')
 
 const isQuickWindow = isInQuickWindow()
@@ -88,12 +88,12 @@ const customPromptAction: ActionItem = {
   icon: 'mdi:pencil-outline',
   action: async () => {
     prompt.value = ''
-    promptMode.value = true
+    isPromptMode.value = true
   },
 }
 
 const closePromptMode = () => {
-  promptMode.value = false
+  isPromptMode.value = false
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>

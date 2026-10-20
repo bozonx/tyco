@@ -6,7 +6,7 @@ import {
   OUTPUT_TOKENS_CEILING,
   buildLlmCatalog,
   buildProviderFactories,
-  supportsTools,
+  canUseTools,
 } from './llm-catalog'
 
 const names = (models: readonly { name: string }[]) =>
@@ -39,15 +39,15 @@ describe('llm-catalog', () => {
     expect(catalog.require('ollama-qwen').capabilities.tools).toBe(false)
 
     const local = base.models.find((model) => model.id === 'ollama-qwen')!
-    expect(supportsTools({ ...local, canUseTools: true }, base.providers)).toBe(
+    expect(canUseTools({ ...local, canUseTools: true }, base.providers)).toBe(
       true
     )
     const gemini = base.models.find((model) => model.id === 'gemini-flash')!
+    expect(canUseTools({ ...gemini, canUseTools: false }, base.providers)).toBe(
+      false
+    )
     expect(
-      supportsTools({ ...gemini, canUseTools: false }, base.providers)
-    ).toBe(false)
-    expect(
-      supportsTools({ ...gemini, providerId: 'missing' }, base.providers)
+      canUseTools({ ...gemini, providerId: 'missing' }, base.providers)
     ).toBe(false)
   })
 

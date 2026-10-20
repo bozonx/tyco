@@ -4,7 +4,7 @@ import {
   createOverlayNavModel,
   type OverlayNavOptions,
 } from '../lib/modals/overlay-nav'
-import { appNavigation } from '../lib/navigation/navigation'
+import { appNavigation } from '../navigation'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'

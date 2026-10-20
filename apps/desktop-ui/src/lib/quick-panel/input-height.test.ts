@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { MIN_INPUT_HEIGHT, maxInputHeight } from './input-height'
+import { MIN_INPUT_HEIGHT_PX, maxInputHeight } from './input-height'
 
 describe('maxInputHeight', () => {
   it('leaves room for the hint, the gap and the frame', () => {
@@ -33,6 +33,6 @@ describe('maxInputHeight', () => {
         gapsHeight: 8,
         frameChromeHeight: 2,
       })
-    ).toBe(MIN_INPUT_HEIGHT)
+    ).toBe(MIN_INPUT_HEIGHT_PX)
   })
 })

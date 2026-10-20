@@ -1,3 +1,5 @@
+import { errorMessage } from '@tyco/shared/value-guards'
+import { isRecord as object } from '@tyco/shared/value-guards'
 import { computed, ref } from 'vue'
 import type { DesktopErrorCode, IpcResult, UserConfig } from '@tyco/shared'
 
@@ -15,8 +17,6 @@ export interface SettingsSessionDependencies {
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
 const equal = (a: unknown, b: unknown) =>
   JSON.stringify(a) === JSON.stringify(b)
-const object = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value)
 
 /** Reapplies local edits over a newer config; arrays are indivisible fields. */
 function rebase(saved: unknown, submitted: unknown, draft: unknown): unknown {
@@ -156,7 +156,7 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
           retryCount = 0
         }
       } catch (error) {
-        reportFailure(error instanceof Error ? error.message : String(error))
+        reportFailure(errorMessage(error))
       } finally {
         isSaving.value = false
         pending = undefined

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
-import useToast from '../composables/use-toast'
+import { useToastStore } from './toast'
 import { createCorrectionStep } from '../lib/correction/correction-step'
 import { translate } from '../lib/i18n'
 import { toolResultMessage } from '../lib/invocation/invocation-result'
@@ -19,7 +19,7 @@ import { MenuModals, useMenuModalsStore } from './menu-modals'
 export const useCorrectionWorkflowStore = defineStore(
   'correctionWorkflow',
   () => {
-    const { toastKey, toastText } = useToast()
+    const { toastKey, toastText } = useToastStore()
     const menuModalsStore = useMenuModalsStore()
     const historyStore = useHistoryStore()
 

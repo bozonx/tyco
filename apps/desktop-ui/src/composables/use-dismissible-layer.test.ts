@@ -38,6 +38,9 @@ describe('dismissible layers', () => {
     expect(inner.dismiss).toHaveBeenCalledOnce()
     expect(outer.dismiss).not.toHaveBeenCalled()
     document.body.dispatchEvent(
+      new KeyboardEvent('keyup', { key: 'Escape', bubbles: true })
+    )
+    document.body.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
     )
     expect(outer.dismiss).toHaveBeenCalledOnce()

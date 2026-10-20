@@ -1,10 +1,5 @@
 <template>
-  <!-- keyup.esc stops here: the window's own Esc handling must not close the menu -->
-  <div
-    class="query-panel"
-    :inert="props.disabled"
-    @keyup.esc.prevent.stop="emit('back')"
-  >
+  <div class="query-panel" :inert="props.disabled" ref="rootRef">
     <div class="query-panel-head">
       <slot name="before-input" />
       <label class="query-panel-field">
@@ -114,6 +109,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, useId, watch } from 'vue'
 
+import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import {
   type QueryOption,
   moveHighlight,
@@ -266,6 +262,14 @@ const onKeyDown = (event: KeyboardEvent) => {
       }
   }
 }
+
+const rootRef = ref<HTMLElement | null>(null)
+useDismissibleLayer({
+  isOpen: () => !props.disabled,
+  elements: () => [rootRef.value],
+  canDismissOutside: false,
+  dismiss: () => emit('back'),
+})
 
 onMounted(focus)
 

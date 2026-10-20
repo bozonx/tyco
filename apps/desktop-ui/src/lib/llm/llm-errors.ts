@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import { LlmError, type LlmErrorKind } from './llm-client'
 
 /** The i18n key that tells the user what went wrong and what to do about it */
@@ -52,5 +53,5 @@ export function describeError(
   translate: (key: string) => string
 ): string {
   if (error instanceof LlmError) return formatLlmError(error, translate)
-  return error instanceof Error ? error.message : String(error)
+  return errorMessage(error)
 }

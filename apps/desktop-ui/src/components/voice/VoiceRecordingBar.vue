@@ -1,5 +1,5 @@
 <template>
-  <div class="voice-bar" role="region">
+  <div class="voice-bar" role="region" :aria-label="t('menu.listening')">
     <LiveTranscript
       class="voice-bar-transcript"
       :committed="transcript.committed"
@@ -31,12 +31,14 @@
   </div>
 </template>
 <script setup lang="ts">
+import { useI18n } from '../../composables/use-i18n'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 
 defineProps<VoiceRecordingProps>()
+const { t } = useI18n()
 </script>
 <style scoped>
 .voice-bar {

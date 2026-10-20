@@ -7,8 +7,12 @@ import { useCommandLauncherStore } from './command-launcher'
 import { useDesktopStore } from './desktop'
 
 const mockToastText = vi.fn()
-vi.mock('../composables/use-toast', () => ({
-  default: () => ({ toastText: mockToastText }),
+vi.mock('./toast', () => ({
+  useToastStore: () => ({
+    addToast: vi.fn(),
+    toastKey: vi.fn(),
+    toastText: mockToastText,
+  }),
 }))
 
 let pinia: ReturnType<typeof createPinia>

@@ -1,10 +1,11 @@
+import { clientLogger } from '../lib/logger'
 import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { defineStore } from 'pinia'
 import { onScopeDispose, watch } from 'vue'
 
 import { ActivationMode } from '@tyco/shared'
 
-import useToast from '../composables/use-toast'
+import { useToastStore } from './toast'
 import { createCommandLauncherModel } from '../lib/command-launcher/launcher-model'
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { translate } from '../lib/i18n/index'
@@ -19,9 +20,15 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
   const desktopStore = useDesktopStore()
   const historyStore = useHistoryStore()
   const runner = createCommandRunner(useInvocationRunnerDependencies())
-  const { toastText } = useToast()
+  const { toastText } = useToastStore()
 
   const model = createCommandLauncherModel({
+    reportError: (error) =>
+      clientLogger.error(
+        'Could not persist command run',
+        error,
+        'command-launcher'
+      ),
     tools: useToolsStore(),
     commands: () => desktopStore.userConfig?.commands,
     launcherPages: () => desktopStore.userConfig.launcherPages,
@@ -36,7 +43,8 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       await historyStore.saveOutput(text)
     },
     logRun: async (record) => {
-      await ipcStore.call('log_command_run', { record })
+      const result = await ipcStore.call('log_command_run', { record })
+      if (!result.success) throw new Error(result.error)
     },
     replaceSelection: async (command) => {
       const result = await ipcStore.call('replace_selection_with_command', {

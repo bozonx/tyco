@@ -5,7 +5,7 @@ export interface MarkupMenuSources {
   t: (key: string) => string
   run: (command: MarkdownCommand) => void
   /** Whether the raw markup is shown everywhere, not only on the edited line */
-  showMarkup: boolean
+  isMarkupShown: boolean
   toggleShowMarkup: () => void
 }
 
@@ -42,7 +42,7 @@ const ENTRIES: MarkupEntry[] = [
 export const buildMarkupItems = ({
   t,
   run,
-  showMarkup,
+  isMarkupShown,
   toggleShowMarkup,
 }: MarkupMenuSources): EditorMenuItem[] => [
   ...ENTRIES.map((entry) => ({
@@ -56,7 +56,7 @@ export const buildMarkupItems = ({
   {
     id: 'markup-show-source',
     label: t('editor.markup.showSource'),
-    icon: showMarkup
+    icon: isMarkupShown
       ? 'mdi:checkbox-marked-outline'
       : 'mdi:checkbox-blank-outline',
     shortcut: 'Ctrl+Shift+M',

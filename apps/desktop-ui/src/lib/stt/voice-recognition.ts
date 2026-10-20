@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import { computed, ref } from 'vue'
 import { DictationError, type LiveDictationStart } from './live-dictation'
 import {
@@ -107,7 +108,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   function describeVoiceError(error: unknown): string {
     if (error instanceof DictationError)
       return t(DICTATION_ERROR_KEYS[error.kind])
-    return error instanceof Error ? error.message : String(error)
+    return errorMessage(error)
   }
 
   function notifyCancelled() {

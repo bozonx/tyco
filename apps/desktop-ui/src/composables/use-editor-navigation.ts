@@ -1,4 +1,4 @@
-import { appNavigation } from '../lib/navigation/navigation'
+import { appNavigation } from '../navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import { useEditorInputStore } from '../stores/editor-input'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'

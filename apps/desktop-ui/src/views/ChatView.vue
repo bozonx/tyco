@@ -1,9 +1,9 @@
 <template>
   <div class="chat-view">
-    <div v-if="!sidebarOpen" class="sidebar-closed-tools">
+    <div v-if="!isSidebarOpen" class="sidebar-closed-tools">
       <IconButton
         class="sidebar-tool"
-        @click="sidebarOpen = true"
+        @click="isSidebarOpen = true"
         :label="t('chat.openSidebar')"
         icon="mdi:dock-left"
       />
@@ -16,17 +16,17 @@
       />
     </div>
     <button
-      v-if="sidebarOpen"
+      v-if="isSidebarOpen"
       type="button"
       class="sidebar-backdrop"
       :aria-label="t('common.close')"
-      @click="sidebarOpen = false"
+      @click="isSidebarOpen = false"
     />
     <ChatSidebar
-      v-if="sidebarOpen"
+      v-if="isSidebarOpen"
       :key="scopeKey"
       class="chat-sidebar-panel"
-      @collapse="sidebarOpen = false"
+      @collapse="isSidebarOpen = false"
       @navigate="closeMobileSidebar"
     />
     <div class="chat-main">
@@ -58,12 +58,12 @@ import {
   resolveChatScope,
 } from '../composables/use-chat-scope'
 import { useI18n } from '../composables/use-i18n'
-import { appNavigation } from '../lib/navigation/navigation'
+import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useChatLayoutStore } from '../stores/chat-layout'
 
 const aiProfilesStore = useAiProfilesStore()
-const { isSidebarOpen: sidebarOpen } = storeToRefs(useChatLayoutStore())
+const { isSidebarOpen } = storeToRefs(useChatLayoutStore())
 const { t } = useI18n()
 
 /** "Ask AI" without a profile in the route, that profile's chat with one */
@@ -79,7 +79,7 @@ const profile = computed(() =>
 
 function closeMobileSidebar() {
   if (window.matchMedia('(max-width: 47.5rem)').matches)
-    sidebarOpen.value = false
+    isSidebarOpen.value = false
 }
 
 function openProfileSettings() {

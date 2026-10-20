@@ -1,3 +1,4 @@
+// @ts-check
 /** Shared wire format used by the host and the isolated worker. */
 export const PLUGIN_RPC_LIMITS = Object.freeze({
   messageBytes: 8 * 1024 * 1024,
@@ -16,6 +17,7 @@ export const PLUGIN_RPC_LIMITS = Object.freeze({
  */
 export function encodePluginValue(value, registerCallback) {
   let entries = 0
+  /** @param {unknown} value @param {number} depth @returns {unknown} */
   const visit = (value, depth) => {
     if (
       ++entries > PLUGIN_RPC_LIMITS.entries ||
@@ -23,7 +25,11 @@ export function encodePluginValue(value, registerCallback) {
     )
       throw new Error('Plugin value exceeds the complexity limit')
     if (typeof value === 'function')
-      return { $callback: registerCallback(value) }
+      return {
+        $callback: registerCallback(
+          /** @type {(...args: unknown[]) => unknown} */ (value)
+        ),
+      }
     if (value instanceof Date) return { $date: value.toISOString() }
     if (value instanceof AbortSignal) return undefined
     if (Array.isArray(value))
@@ -53,11 +59,14 @@ export function encodePluginValue(value, registerCallback) {
  */
 export function decodePluginValue(value, callback) {
   assertPluginMessage(value)
+  /** @param {unknown} value @returns {unknown} */
   const visit = (value) => {
     if (Array.isArray(value)) return value.map(visit)
     if (value && typeof value === 'object') {
       if (Object.keys(value).length === 1) {
-        if (Array.isArray(value.$object)) {
+        if ('$object' in value) {
+          if (!Array.isArray(value.$object))
+            throw new Error('Invalid escaped plugin object')
           if (
             !value.$object.every(
               (pair) =>
@@ -71,9 +80,18 @@ export function decodePluginValue(value, callback) {
             value.$object.map(([key, entry]) => [key, visit(entry)])
           )
         }
-        if (Number.isSafeInteger(value.$callback) && value.$callback > 0)
+        if ('$callback' in value) {
+          if (
+            typeof value.$callback !== 'number' ||
+            !Number.isSafeInteger(value.$callback) ||
+            value.$callback <= 0
+          )
+            throw new Error('Invalid plugin callback')
           return callback(value.$callback)
-        if (typeof value.$date === 'string') {
+        }
+        if ('$date' in value) {
+          if (typeof value.$date !== 'string')
+            throw new Error('Invalid plugin date')
           const date = new Date(value.$date)
           if (!Number.isFinite(date.getTime()))
             throw new Error('Invalid plugin date')
@@ -92,6 +110,7 @@ export function decodePluginValue(value, callback) {
 /** @param {unknown} value */
 export function assertPluginMessage(value) {
   let entries = 0
+  /** @param {unknown} value @param {number} depth @returns {void} */
   const visit = (value, depth) => {
     if (
       ++entries > PLUGIN_RPC_LIMITS.entries ||

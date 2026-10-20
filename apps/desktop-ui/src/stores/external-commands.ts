@@ -1,3 +1,5 @@
+import { clientLogger } from '../lib/logger'
+import type { AccessDecision } from '@tyco/shared'
 import { createExternalJobAdapter } from '../lib/commands/external-job-adapter'
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
@@ -21,6 +23,12 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
   const runnerDeps = useInvocationRunnerDependencies()
 
   const model = createExternalRun({
+    reportError: (error) =>
+      clientLogger.error(
+        'Could not persist command run',
+        error,
+        'external-commands'
+      ),
     ...createExternalJobAdapter({ call: ipcStore.call }),
     run: (command, text, report, options) =>
       createCommandRunner({
@@ -52,7 +60,8 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
     applyUserConfig: (userConfig) =>
       desktopStore.setExecutionConfig(userConfig),
     logRun: async (record) => {
-      await ipcStore.call('log_command_run', { record })
+      const result = await ipcStore.call('log_command_run', { record })
+      if (!result.success) throw new Error(result.error)
     },
     saveOutput: async (text) => {
       await historyStore.saveOutput(text)
@@ -60,5 +69,12 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
     t: (key, params) => translate(key, params),
   })
   onScopeDispose(model.dispose)
-  return model
+  const answerAccess = async (jobId: string, decision: AccessDecision) => {
+    const result = await ipcStore.call('answer_external_access', {
+      jobId,
+      decision,
+    })
+    if (!result.success) throw new Error(result.error)
+  }
+  return { ...model, answerAccess }
 })

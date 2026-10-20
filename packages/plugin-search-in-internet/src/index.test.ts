@@ -90,7 +90,7 @@ it('searches the text of a command with the URL of the command', async () => {
     config: { url: 'https://example.com/?q=' },
     source: 'launcher',
     signal: new AbortController().signal,
-    wantsOutput: false,
+    isOutputRequested: false,
   })
   expect(result).toEqual({ ok: true, keepWindow: true })
   expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndHide', [

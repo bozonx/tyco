@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import { clonePluginValue } from '@tyco/plugin-sdk'
 import {
   pluginManifest,
@@ -243,10 +244,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
               await deactivate(id)
               if (!cancelled) {
                 report(id, error)
-                setState(id, {
-                  status: 'error',
-                  error: error instanceof Error ? error.message : String(error),
-                })
+                setState(id, { status: 'error', error: errorMessage(error) })
               }
             }
           })

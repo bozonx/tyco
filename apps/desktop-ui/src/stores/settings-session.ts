@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { onScopeDispose, watch } from 'vue'
 import { CONFIG_VERSION } from '@tyco/shared'
 
-import useToast from '../composables/use-toast'
+import { useToastStore } from './toast'
 import { translate } from '../lib/i18n'
 import { createSettingsConfig } from '../lib/settings/settings-config'
 import { createSettingsSession } from '../lib/settings/settings-session'
@@ -15,7 +15,7 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
   const desktop = useDesktopStore()
   const { pluginFactories } = usePluginRuntimeStore()
   const theme = useThemeStore()
-  const { toastText } = useToast()
+  const { toastText } = useToastStore()
   const config = createSettingsConfig({
     pluginFactories: () => pluginFactories,
     appearance: () => theme.settings,

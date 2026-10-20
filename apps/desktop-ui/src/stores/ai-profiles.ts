@@ -1,3 +1,5 @@
+import { errorMessage } from '@tyco/shared/value-guards'
+import { clientLogger } from '../lib/logger'
 import { defineStore } from 'pinia'
 import { readonly, ref, watch } from 'vue'
 import type { IpcResult } from '@tyco/shared'
@@ -19,6 +21,8 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   const call = ipcStore.call
 
   const profilesModel = createAiProfilesModel({
+    reportError: (error) =>
+      clientLogger.error('Could not save AI profile', error, 'ai-profiles'),
     listProfiles: async () => resultOf(await call('list_ai_profiles')),
     getProfile: async (id) => resultOf(await call('get_ai_profile', { id })),
     createProfile: async (profile, soul) => {
@@ -73,7 +77,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       if (request !== loadRequest) return
       profilesModel.profiles.value = []
       projectsModel.projects.value = []
-      vaultError.value = error instanceof Error ? error.message : String(error)
+      vaultError.value = errorMessage(error)
     } finally {
       if (request === loadRequest) isLoaded.value = true
     }

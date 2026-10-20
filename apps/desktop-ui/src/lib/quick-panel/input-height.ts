@@ -10,7 +10,7 @@ export interface InputHeightLayout {
 }
 
 /** The text area never gets shorter than one line of it. */
-export const MIN_INPUT_HEIGHT = 36
+export const MIN_INPUT_HEIGHT_PX = 36
 
 /**
  * The tallest the auto-growing text area may get: it grows until the frame
@@ -22,5 +22,5 @@ export function maxInputHeight(layout: InputHeightLayout): number {
     layout.siblingsHeight -
     layout.gapsHeight -
     layout.frameChromeHeight
-  return Math.max(MIN_INPUT_HEIGHT, Math.floor(available))
+  return Math.max(MIN_INPUT_HEIGHT_PX, Math.floor(available))
 }

@@ -35,15 +35,15 @@ describe('createNavPanelModel', () => {
     })
     model.resetNavPanelState({ onEscape })
 
-    model.handleKeyUp({ code: 'Escape', defaultPrevented: false })
+    model.handleKeyDown({ code: 'Escape', defaultPrevented: false })
     expect(backModal).toHaveBeenCalledOnce()
     expect(onEscape).not.toHaveBeenCalled()
 
     modalOpen = false
-    model.handleKeyUp({ code: 'Escape', defaultPrevented: false })
+    model.handleKeyDown({ code: 'Escape', defaultPrevented: false })
     expect(onEscape).toHaveBeenCalledOnce()
 
-    model.handleKeyUp({ code: 'Escape', defaultPrevented: true })
+    model.handleKeyDown({ code: 'Escape', defaultPrevented: true })
     expect(onEscape).toHaveBeenCalledOnce()
   })
 })

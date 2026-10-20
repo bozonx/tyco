@@ -8,8 +8,12 @@ import { MenuModals, useMenuModalsStore } from './menu-modals'
 
 const mocks = vi.hoisted(() => ({ toastKey: vi.fn(), toastText: vi.fn() }))
 
-vi.mock('../composables/use-toast', () => ({
-  default: () => ({ toastKey: mocks.toastKey, toastText: mocks.toastText }),
+vi.mock('./toast', () => ({
+  useToastStore: () => ({
+    addToast: vi.fn(),
+    toastKey: mocks.toastKey,
+    toastText: mocks.toastText,
+  }),
 }))
 
 describe('useCorrectionWorkflowStore', () => {

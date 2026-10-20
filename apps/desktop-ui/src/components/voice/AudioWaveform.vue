@@ -36,13 +36,11 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import {
+  createAudioWaveformModel,
+  formatWaveformDuration,
+} from '../../lib/voice/audio-waveform-model'
 import AppIcon from '../common/AppIcon.vue'
-
-const BAR_COUNT = 32
-const MIN_BAR_HEIGHT = 4
-const MAX_BAR_HEIGHT = 72
-/** Room left for the recognized text below */
-const COMPACT_MAX_BAR_HEIGHT = 28
 
 const props = withDefaults(
   defineProps<{
@@ -58,106 +56,51 @@ const props = withDefaults(
 
 const { t } = useI18n()
 
-const barHeights = ref<number[]>(new Array(BAR_COUNT).fill(MIN_BAR_HEIGHT))
-const barOpacities = ref<number[]>(new Array(BAR_COUNT).fill(0.45))
-
-// Weights across bars to form a natural vocal bell-curve shape
-const weights = Array.from({ length: BAR_COUNT }, (_, i) => {
-  const norm = (i - BAR_COUNT / 2) / (BAR_COUNT / 2)
-  return Math.exp(-norm * norm * 1.8)
-})
-
+const model = createAudioWaveformModel()
+const initial = model.step({ level: 0, peak: 0, isCompact: props.compact })
+const barHeights = ref(initial.heights)
+const barOpacities = ref(initial.opacities)
+const formattedDuration = computed(() =>
+  formatWaveformDuration(props.durationMs)
+)
+const isReducedMotion = ref(false)
 let animationFrameId: number | null = null
-let phase = 0
-
-function formatTime(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  const clock = `${pad(minutes)}:${pad(seconds)}`
-  return hours > 0 ? `${hours}:${clock}` : clock
-}
-
-const formattedDuration = computed(() => formatTime(props.durationMs))
+let motionQuery: MediaQueryList | undefined
 
 function updateAnimation() {
-  phase += 0.08
-  const currentLevel = Math.max(0, Math.min(1, props.level))
-  const currentPeak = Math.max(0, Math.min(1, props.peak))
-  const effectiveLevel = Math.max(currentLevel * 1.5, currentPeak * 0.8)
-  const maxBarHeight = props.compact ? COMPACT_MAX_BAR_HEIGHT : MAX_BAR_HEIGHT
-
-  const newHeights: number[] = []
-  const newOpacities: number[] = []
-
-  for (let i = 0; i < BAR_COUNT; i++) {
-    // Ambient breathing wave when silent or low volume
-    const ambient = Math.sin(phase + i * 0.35) * 0.5 + 0.5
-    const ambientHeight = MIN_BAR_HEIGHT + ambient * 4
-
-    // Dynamic voice response when audio is received
-    const voiceModulation =
-      Math.sin(phase * 1.5 + i * 0.6) * 0.2 +
-      Math.cos(phase * 2.2 + i * 0.4) * 0.2 +
-      0.8
-    const voiceHeight =
-      MIN_BAR_HEIGHT +
-      weights[i] *
-        voiceModulation *
-        effectiveLevel *
-        (maxBarHeight - MIN_BAR_HEIGHT)
-
-    const targetHeight = Math.max(ambientHeight, voiceHeight)
-    const prevHeight = barHeights.value[i] || MIN_BAR_HEIGHT
-
-    // Fast attack, smooth decay
-    const smoothedHeight =
-      targetHeight > prevHeight
-        ? prevHeight + (targetHeight - prevHeight) * 0.55
-        : prevHeight + (targetHeight - prevHeight) * 0.2
-
-    newHeights.push(Math.round(smoothedHeight * 10) / 10)
-
-    const opacity =
-      effectiveLevel > 0.03
-        ? 0.45 + (smoothedHeight / maxBarHeight) * 0.55
-        : 0.35 + ambient * 0.25
-    newOpacities.push(Math.min(1, Math.max(0.2, opacity)))
-  }
-
-  barHeights.value = newHeights
-  barOpacities.value = newOpacities
-
-  if (!props.isTranscribing) {
-    animationFrameId = requestAnimationFrame(updateAnimation)
-  }
+  animationFrameId = null
+  if (props.isTranscribing || isReducedMotion.value) return
+  const frame = model.step({
+    level: props.level,
+    peak: props.peak,
+    isCompact: props.compact,
+  })
+  barHeights.value = frame.heights
+  barOpacities.value = frame.opacities
+  animationFrameId = requestAnimationFrame(updateAnimation)
 }
 
-watch(
-  () => props.isTranscribing,
-  (transcribing) => {
-    if (transcribing && animationFrameId !== null) {
-      cancelAnimationFrame(animationFrameId)
-      animationFrameId = null
-    } else if (!transcribing && animationFrameId === null) {
-      animationFrameId = requestAnimationFrame(updateAnimation)
-    }
-  }
-)
-
-onMounted(() => {
-  if (!props.isTranscribing) {
+function syncAnimation() {
+  if (animationFrameId !== null) cancelAnimationFrame(animationFrameId)
+  animationFrameId = null
+  if (!props.isTranscribing && !isReducedMotion.value)
     animationFrameId = requestAnimationFrame(updateAnimation)
-  }
-})
+}
 
+function syncMotionPreference() {
+  isReducedMotion.value = motionQuery?.matches ?? false
+  syncAnimation()
+}
+
+watch(() => props.isTranscribing, syncAnimation)
+onMounted(() => {
+  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  motionQuery.addEventListener('change', syncMotionPreference)
+  syncMotionPreference()
+})
 onUnmounted(() => {
-  if (animationFrameId !== null) {
-    cancelAnimationFrame(animationFrameId)
-    animationFrameId = null
-  }
+  motionQuery?.removeEventListener('change', syncMotionPreference)
+  if (animationFrameId !== null) cancelAnimationFrame(animationFrameId)
 })
 </script>
 
@@ -303,5 +246,13 @@ onUnmounted(() => {
 .is-inline .transcribing-state {
   min-height: 0;
   padding: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .waveform-bar {
+    transition: none;
+  }
+  .mic-icon {
+    animation: none;
+  }
 }
 </style>

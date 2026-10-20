@@ -9,7 +9,7 @@ export interface ToolDefinition extends SdkToolDefinition {
   inputSchemaFor?(config: Record<string, unknown>): JsonSchema
   getUnavailableReasonKey?(): string | undefined
   /** The tool writes its output to the action log when the command asks */
-  logsOutput?: boolean
+  canLogOutput?: boolean
 }
 
 /** Who provides a tool of the registry */

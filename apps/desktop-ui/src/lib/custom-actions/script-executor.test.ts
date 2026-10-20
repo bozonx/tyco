@@ -22,7 +22,10 @@ const result = (
 describe('buildScriptRequest', () => {
   it('names the saved command instead of passing its shell command', () => {
     expect(
-      buildScriptRequest('sc1', 'x', { captureOutput: true, logOutput: false })
+      buildScriptRequest('sc1', 'x', {
+        captureOutput: true,
+        isOutputLogged: false,
+      })
     ).toEqual({
       commandId: 'sc1',
       text: 'x',
@@ -35,7 +38,7 @@ describe('buildScriptRequest', () => {
     expect(
       buildScriptRequest('backup', null, {
         captureOutput: false,
-        logOutput: false,
+        isOutputLogged: false,
       }).text
     ).toBe('')
   })

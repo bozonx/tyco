@@ -1,3 +1,4 @@
+import { isRecord } from './value-guards'
 import schemaValue from './user-config-schema.json' with { type: 'json' }
 import configDefaults from './user-config-defaults.json' with { type: 'json' }
 import configVersion from './config-version.json' with { type: 'json' }
@@ -40,8 +41,6 @@ const defaultOf = (shape: Schema) =>
   shape.defaultPath
     ? portableDefaults[shape.defaultPath]
     : (shape.default ?? null)
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value)
 const equal = (a: unknown, b: unknown) =>
   JSON.stringify(a) === JSON.stringify(b)
 

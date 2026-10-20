@@ -1,7 +1,7 @@
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { appNavigation } from '../lib/navigation/navigation'
+import { appNavigation } from '../navigation'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'

@@ -4,8 +4,8 @@ import { buildLlmPrompt, type LlmPromptOptions } from '../llm/llm-prompt'
 import {
   modelContextWindowTokens,
   modelMaxOutputTokens,
-  supportsImages,
-  supportsTools,
+  canUseImages,
+  canUseTools,
   usableModels,
 } from '../llm/llm-catalog'
 
@@ -36,8 +36,8 @@ export function chatModelOptions(
       id: model.id,
       name: model.name?.trim() || model.providerModelId.trim(),
       providerLabel: provider.name?.trim() || provider.type,
-      canUseImages: supportsImages(model),
-      canUseTools: supportsTools(model, config.providers),
+      canUseImages: canUseImages(model),
+      canUseTools: canUseTools(model, config.providers),
       contextWindowTokens: modelContextWindowTokens(model, config.providers),
       maxOutputTokens: modelMaxOutputTokens(model, config.providers),
     }))

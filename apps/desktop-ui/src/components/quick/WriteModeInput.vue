@@ -15,6 +15,7 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import type { TextControl } from '../../lib/ui/text-control'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
 import FieldTextArea from '../common/FieldTextArea.vue'
@@ -24,7 +25,7 @@ withDefaults(defineProps<{ maxHeight?: number }>(), { maxHeight: 200 })
 const quickInputStore = useQuickInputStore()
 const menuModalsStore = useMenuModalsStore()
 // FieldTextArea exposes these
-const textareaRef = ref<{ focus: () => void; select: () => void } | null>(null)
+const textareaRef = ref<TextControl | null>(null)
 const { t } = useI18n()
 
 // set value from route params and focus
@@ -64,6 +65,13 @@ watch(
 const handleInput = (value: string): void => {
   quickInputStore.setValue(value)
 }
+defineExpose({
+  focus: () => textareaRef.value?.focus(),
+  isFocused: () => textareaRef.value?.isFocused() ?? false,
+  getSelection: () => textareaRef.value?.getSelection() ?? null,
+  select: (start?: number, end?: number) =>
+    textareaRef.value?.select(start, end),
+} satisfies TextControl)
 </script>
 
 <style scoped>

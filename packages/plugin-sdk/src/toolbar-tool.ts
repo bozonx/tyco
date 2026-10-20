@@ -21,6 +21,7 @@ export async function runToolFromToolbar(
       source: 'toolbar',
       editorSnapshot,
       signal: ctx.signal,
+      isOutputRequested: false,
       wantsOutput: false,
     })
     if (result.cancelled || ctx.signal.aborted) return

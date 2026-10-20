@@ -7,11 +7,11 @@ import {
   type ChatFileNotice,
 } from './chat-file-error'
 import { chatImageType } from './chat-image-format'
-import { MAX_CHAT_IMAGES } from './chat-image-input'
+import { MAX_CHAT_IMAGES_COUNT } from './chat-image-input'
 
 export const MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024
 export const MAX_CHAT_FILE_CHARACTERS = 500_000
-const MAX_CHAT_FILES = 16
+const MAX_CHAT_FILES_COUNT = 16
 export { ChatFileError, type ChatFileErrorKind } from './chat-file-error'
 
 export interface PreparedChatFile {
@@ -132,21 +132,24 @@ export function createChatFileInput(deps: ChatFileInputDependencies) {
   return {
     add(files: File[], isCurrent: () => boolean): Promise<void> {
       const task = queue.then(async () => {
-        if (files.length > MAX_CHAT_FILES && isCurrent())
-          deps.report(files[MAX_CHAT_FILES].name, 'fileLimit')
-        for (const file of files.slice(0, MAX_CHAT_FILES)) {
+        if (files.length > MAX_CHAT_FILES_COUNT && isCurrent())
+          deps.report(files[MAX_CHAT_FILES_COUNT].name, 'fileLimit')
+        for (const file of files.slice(0, MAX_CHAT_FILES_COUNT)) {
           if (!isCurrent()) return
           try {
             validateChatFile(file)
-            if (deps.fileCount() >= MAX_CHAT_FILES)
+            if (deps.fileCount() >= MAX_CHAT_FILES_COUNT)
               throw new ChatFileError('fileLimit')
             const prepared = await deps.prepare(
               file,
-              MAX_CHAT_IMAGES - deps.imageCount(),
+              MAX_CHAT_IMAGES_COUNT - deps.imageCount(),
               isCurrent
             )
             if (!isCurrent()) return
-            if (deps.imageCount() + prepared.images.length > MAX_CHAT_IMAGES)
+            if (
+              deps.imageCount() + prepared.images.length >
+              MAX_CHAT_IMAGES_COUNT
+            )
               throw new ChatFileError('imageLimit')
             deps.accept(prepared)
             for (const notice of prepared.notices || [])
@@ -177,12 +180,13 @@ export async function importDroppedChatFiles(
   deps: ChatFileDropDependencies,
   isCurrent: () => boolean
 ) {
-  if (paths.length > MAX_CHAT_FILES && isCurrent())
+  if (paths.length > MAX_CHAT_FILES_COUNT && isCurrent())
     deps.report(
-      paths[MAX_CHAT_FILES].split(/[\\/]/).at(-1) || paths[MAX_CHAT_FILES],
+      paths[MAX_CHAT_FILES_COUNT].split(/[\\/]/).at(-1) ||
+        paths[MAX_CHAT_FILES_COUNT],
       'fileLimit'
     )
-  for (const path of paths.slice(0, MAX_CHAT_FILES)) {
+  for (const path of paths.slice(0, MAX_CHAT_FILES_COUNT)) {
     if (!isCurrent()) return
     const name = path.split(/[\\/]/).at(-1) || path
     try {

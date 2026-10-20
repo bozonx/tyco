@@ -1,8 +1,6 @@
 import {
   llmSecretId,
-  type HotkeyId,
-  INLINE_CORRECTION_HOTKEY_ID,
-  LAUNCHER_PAGE_HOTKEY_PREFIX,
+  resolveHotkeyTarget,
   type LauncherPageConfig,
   type UserConfig,
 } from '@tyco/shared'
@@ -81,19 +79,7 @@ export function createSettingsOperations(deps: {
    * command overlay, each stored where it belongs
    */
   const updateHotkey = (id: string, shortcut: string) => {
-    const config = deps.getConfig()
-    if (id === INLINE_CORRECTION_HOTKEY_ID) {
-      config.hotkeys.selectionCorrection = shortcut
-      return
-    }
-    if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
-      const pageId = id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
-      const page = config.launcherPages.find((item) => item.id === pageId)
-      if (page) page.hotkey = shortcut
-      return
-    }
-    if (Object.hasOwn(config.hotkeys, id))
-      config.hotkeys[id as HotkeyId] = shortcut
+    resolveHotkeyTarget(deps.getConfig(), id)?.set(shortcut)
   }
 
   /** An empty path stands for the default vault location */

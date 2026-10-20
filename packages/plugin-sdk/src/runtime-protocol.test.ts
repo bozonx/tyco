@@ -37,3 +37,18 @@ describe('plugin wire values', () => {
     }
   })
 })
+
+it('rejects malformed reserved wire markers without resolving callbacks', () => {
+  const callback = vi.fn()
+  for (const value of [
+    { $object: false },
+    { $object: [[1, 'value']] },
+    { $callback: -1 },
+    { $callback: '1' },
+    { $date: 123 },
+    { $date: 'invalid' },
+  ]) {
+    expect(() => decodePluginValue(value, callback)).toThrow()
+  }
+  expect(callback).not.toHaveBeenCalled()
+})

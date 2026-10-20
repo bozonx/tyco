@@ -8,7 +8,7 @@ describe('buildMarkupItems', () => {
     const items = buildMarkupItems({
       t: (key) => key,
       run,
-      showMarkup: false,
+      isMarkupShown: false,
       toggleShowMarkup: vi.fn(),
     })
 
@@ -25,8 +25,8 @@ describe('buildMarkupItems', () => {
     const toggleShowMarkup = vi.fn()
     const sources = { t: (key: string) => key, run: vi.fn(), toggleShowMarkup }
 
-    const off = buildMarkupItems({ ...sources, showMarkup: false }).at(-1)!
-    const on = buildMarkupItems({ ...sources, showMarkup: true }).at(-1)!
+    const off = buildMarkupItems({ ...sources, isMarkupShown: false }).at(-1)!
+    const on = buildMarkupItems({ ...sources, isMarkupShown: true }).at(-1)!
 
     expect(off.id).toBe('markup-show-source')
     expect(off.icon).toBe('mdi:checkbox-blank-outline')

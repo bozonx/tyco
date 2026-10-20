@@ -113,7 +113,6 @@ import { builtinPluginIds } from '../../lib/plugins/builtin-plugins'
 import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import { pluginTab } from '../../lib/settings/settings-navigation'
-import { useIpcStore } from '../../stores/ipc'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import Button from '../common/Button.vue'
 import InlineNotice from '../common/InlineNotice.vue'
@@ -125,33 +124,12 @@ const { pluginFactories, pluginRuntimeStates } = plugins
 
 const { t } = useI18n()
 const { draft, operations, navigate } = useSettingsContext()
-const ipc = useIpcStore()
 const { toastKey } = useToast()
-const requireResult = <T,>(result: {
-  success: boolean
-  result?: T
-  error?: string
-}): T | undefined => {
-  if (!result.success)
-    throw new Error(result.error ?? 'Plugin operation failed')
-  return result.result
-}
 const installation = createPluginInstallation({
-  inspect: async () =>
-    requireResult(await ipc.call('pick_plugin_package')) ?? null,
-  install: async (preview) => {
-    requireResult(
-      await ipc.call('install_plugin_package', {
-        inspectionId: preview.inspectionId,
-      })
-    )
-  },
-  restore: async (id) => {
-    requireResult(await ipc.call('restore_previous_plugin_package', { id }))
-  },
-  remove: async (id) => {
-    requireResult(await ipc.call('uninstall_plugin_package', { id }))
-  },
+  inspect: plugins.inspectPackage,
+  install: plugins.installPackage,
+  restore: plugins.restorePackage,
+  remove: plugins.removePackage,
   refresh: plugins.refreshInstalledPlugins,
   reservedIds: builtinPluginIds ?? [],
   reportError: (error) =>

@@ -44,7 +44,7 @@
     <div v-if="expandedModelIds.has(model.id)" :id="advancedId">
       <FieldRow :label="t('settings.vision')">
         <FieldSwitch
-          :model-value="supportsImages(model)"
+          :model-value="canUseImages(model)"
           @update:model-value="emit('update', { canUseImages: $event })"
         />
       </FieldRow>
@@ -53,7 +53,7 @@
         :hint="t('settings.toolUseHint')"
       >
         <FieldSwitch
-          :model-value="supportsTools(model, providers)"
+          :model-value="canUseTools(model, providers)"
           @update:model-value="emit('update', { canUseTools: $event })"
         />
       </FieldRow>
@@ -132,7 +132,7 @@
 import { useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { supportsImages, supportsTools } from '../../lib/llm/llm-catalog'
+import { canUseImages, canUseTools } from '../../lib/llm/llm-catalog'
 import { modelLabel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import AppIcon from '../common/AppIcon.vue'

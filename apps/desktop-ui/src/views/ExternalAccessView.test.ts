@@ -5,7 +5,12 @@ import { reactive } from 'vue'
 import ExternalAccessView from './ExternalAccessView.vue'
 
 const { call, desktopState } = vi.hoisted(() => ({
-  call: vi.fn(async () => ({ success: true, result: undefined })),
+  call: vi.fn(
+    async (
+      _name: string,
+      _args?: unknown
+    ): Promise<{ success: boolean; error?: string }> => ({ success: true })
+  ),
   desktopState: {
     accessRequest: null as null | {
       jobId: string
@@ -27,6 +32,14 @@ vi.mock('../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../test/desktop-store')
   return { useDesktopStore: () => mockDesktopStore(() => reactiveParams) }
 })
+vi.mock('../stores/external-commands', () => ({
+  useExternalCommandsStore: () => ({
+    answerAccess: async (jobId: string, decision: string) => {
+      const result = await call('answer_external_access', { jobId, decision })
+      if (!result.success) throw new Error(result.error)
+    },
+  }),
+}))
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => ({ resetNavPanelState: vi.fn() }),
 }))
@@ -66,11 +79,22 @@ describe('ExternalAccessView.vue', () => {
 
   it('denies on Esc', () => {
     const wrapper = mountView()
-    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape' })
+    )
     expect(call).toHaveBeenCalledWith('answer_external_access', {
       jobId: 'job-1',
       decision: 'deny',
     })
+    wrapper.unmount()
+  })
+
+  it('ignores an Escape released without a keydown in this window', () => {
+    const wrapper = mountView()
+    window.dispatchEvent(
+      new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape' })
+    )
+    expect(call).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 

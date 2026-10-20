@@ -1,3 +1,4 @@
+import type { PluginPackagePreview } from '@tyco/shared'
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
@@ -65,5 +66,31 @@ export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
   onScopeDispose(() => {
     void model.dispose()
   })
-  return model
+  const requireResult = <T>(result: {
+    success: boolean
+    result?: T
+    error?: string
+  }): T | undefined => {
+    if (!result.success)
+      throw new Error(result.error ?? 'Plugin operation failed')
+    return result.result
+  }
+  return {
+    ...model,
+    inspectPackage: async () =>
+      requireResult(await ipc.call('pick_plugin_package')) ?? null,
+    installPackage: async (preview: PluginPackagePreview) => {
+      requireResult(
+        await ipc.call('install_plugin_package', {
+          inspectionId: preview.inspectionId,
+        })
+      )
+    },
+    restorePackage: async (id: string) => {
+      requireResult(await ipc.call('restore_previous_plugin_package', { id }))
+    },
+    removePackage: async (id: string) => {
+      requireResult(await ipc.call('uninstall_plugin_package', { id }))
+    },
+  }
 })

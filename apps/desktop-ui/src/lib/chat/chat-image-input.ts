@@ -8,7 +8,7 @@ import {
 } from './chat-image-format'
 
 /** Mirrored by `MAX_MESSAGE_IMAGES` in `src-tauri/src/services/chat_images.rs` */
-export const MAX_CHAT_IMAGES = 4
+export const MAX_CHAT_IMAGES_COUNT = 4
 const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
 /**
  * The lossless PNG handed to Rust, which keeps it as a WebP; mirrors

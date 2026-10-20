@@ -125,7 +125,7 @@ export function commandInvocation(command: CommandConfig): Invocation {
     label: commandLabel(command),
     commandId: command.id,
     isLlmArgumentParsingEnabled: command.isLlmArgumentParsingEnabled,
-    logOutput: command.isOutputLogged,
+    isOutputLogged: command.isOutputLogged,
     outputAction: command.outputAction,
   }
 }

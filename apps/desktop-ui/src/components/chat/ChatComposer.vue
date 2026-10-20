@@ -119,7 +119,7 @@ import {
   resolveSubmitKey,
   submitShortcut,
 } from '../../lib/input-keys/input-keys'
-import { appNavigation } from '../../lib/navigation/navigation'
+import { appNavigation } from '../../navigation'
 import { useDesktopStore } from '../../stores/desktop'
 import Button from '../common/Button.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'

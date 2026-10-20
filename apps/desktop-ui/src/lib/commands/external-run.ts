@@ -1,3 +1,9 @@
+import { errorMessage } from '@tyco/shared/value-guards'
+import {
+  PENDING_OVERLAY_DELAY_MS,
+  ERROR_HIDE_MS,
+  COMMAND_SUCCESS_HIDE_MS as SUCCESS_HIDE_MS,
+} from './status-overlay-timing'
 import type {
   CommandConfig,
   CommandRunEvent,
@@ -14,9 +20,6 @@ import type {
 } from '../invocation/invocation-types'
 
 /** Quick commands finish before the bubble would show up */
-const PENDING_OVERLAY_DELAY_MS = 400
-const SUCCESS_HIDE_MS = 1500
-const ERROR_HIDE_MS = 6000
 
 type RunReportKind = 'info' | 'warn' | 'error' | 'success'
 
@@ -24,6 +27,7 @@ type RunReportKind = 'info' | 'warn' | 'error' | 'success'
 export type RunReport = (kind: RunReportKind, message: string) => void
 
 export interface ExternalRunDependencies {
+  reportError?: (error: unknown) => void
   /** Runs the command and reports how it went through `report` */
   run: (
     command: CommandConfig,
@@ -143,7 +147,10 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       delayMs: PENDING_OVERLAY_DELAY_MS,
     })
     const input = event.text ?? null
-    if (input !== null) await deps.saveOutput?.(input).catch(() => {})
+    if (input !== null)
+      await deps
+        .saveOutput?.(input)
+        .catch((error: unknown) => deps.reportError?.(error))
 
     if (disposed || controller.signal.aborted) {
       if (!disposed) deps.showOverlay(null)
@@ -156,10 +163,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
         input: event.input,
       })
     } catch (error) {
-      outcome = {
-        success: false,
-        message: error instanceof Error ? error.message : String(error),
-      }
+      outcome = { success: false, message: errorMessage(error) }
     }
     if (controller.signal.aborted)
       outcome = { success: false, cancelled: true, message: 'Cancelled' }
@@ -181,7 +185,9 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     }
     if (input !== null) record.text = input
     if (outcome.message) record.message = outcome.message
-    void Promise.resolve(deps.logRun?.(record)).catch(() => {})
+    void Promise.resolve()
+      .then(() => deps.logRun?.(record))
+      .catch((error: unknown) => deps.reportError?.(error))
     return outcome
   }
 

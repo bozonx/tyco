@@ -1,41 +1,46 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-
+import { i18n } from '../../lib/i18n'
 import AudioWaveform from './AudioWaveform.vue'
 
-vi.mock('../../composables/use-i18n', () => ({
-  useI18n: () => ({ t: (key: string) => key }),
-}))
+it('stops scheduling frames when reduced motion is enabled and releases its listener', async () => {
+  let onChange: (() => void) | undefined
+  const query = {
+    matches: false,
+    addEventListener: vi.fn((_event: string, handler: () => void) => {
+      onChange = handler
+    }),
+    removeEventListener: vi.fn(),
+  }
+  vi.spyOn(window, 'matchMedia').mockReturnValue(
+    query as unknown as MediaQueryList
+  )
+  const request = vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(12)
+  const cancel = vi
+    .spyOn(window, 'cancelAnimationFrame')
+    .mockImplementation(() => {})
+  const wrapper = mount(AudioWaveform, { global: { plugins: [i18n] } })
+  expect(request).toHaveBeenCalledOnce()
+  query.matches = true
+  onChange?.()
+  expect(cancel).toHaveBeenCalledWith(12)
+  await wrapper.setProps({ isTranscribing: true })
+  await wrapper.setProps({ isTranscribing: false })
+  expect(request).toHaveBeenCalledOnce()
+  wrapper.unmount()
+  expect(query.removeEventListener).toHaveBeenCalledWith('change', onChange)
+})
 
-describe('AudioWaveform', () => {
-  it('renders listening state with timer and waveform bars', () => {
-    const wrapper = mount(AudioWaveform, {
-      props: { durationMs: 45_000, level: 0.4, peak: 0.7 },
-      global: { stubs: { Icon: true } },
-    })
-
-    expect(wrapper.find('[data-testid="audio-waveform"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('00:45')
-    const bars = wrapper.findAll('.waveform-bar')
-    expect(bars.length).toBe(32)
-  })
-
-  it('shows hours once a dictation runs past one', () => {
-    const wrapper = mount(AudioWaveform, {
-      props: { durationMs: 3_725_000 },
-      global: { stubs: { Icon: true } },
-    })
-
-    expect(wrapper.text()).toContain('1:02:05')
-  })
-
-  it('renders transcribing state when isTranscribing is true', () => {
-    const wrapper = mount(AudioWaveform, {
-      props: { isTranscribing: true },
-      global: { stubs: { Icon: true } },
-    })
-
-    expect(wrapper.find('.transcribing-state').exists()).toBe(true)
-    expect(wrapper.find('.waveform-visualizer').exists()).toBe(false)
+describe('reduced motion at mount', () => {
+  it('does not start an animation loop', () => {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaQueryList)
+    const request = vi.spyOn(window, 'requestAnimationFrame')
+    const wrapper = mount(AudioWaveform, { global: { plugins: [i18n] } })
+    expect(request).not.toHaveBeenCalled()
+    wrapper.unmount()
   })
 })

@@ -1,7 +1,7 @@
 <template>
   <ActionOverlayLayout
     :title="t('menu.translate')"
-    :on-esc="pickerMode ? closePicker : undefined"
+    :on-esc="isPickerMode ? closePicker : undefined"
   >
     <template #preview>
       <TextPreview :text="props.text" />
@@ -9,7 +9,7 @@
 
     <template #actions>
       <QueryPanel
-        v-if="pickerMode"
+        v-if="isPickerMode"
         :disabled="
           props.shortcutsDisabled || Boolean(menuModalsStore.pendingModal)
         "
@@ -116,7 +116,7 @@ const { t } = useI18n()
 const MIN_TRANSLATE_LENGTH = 2
 
 /** The full language list instead of the configured keys */
-const pickerMode = ref(false)
+const isPickerMode = ref(false)
 /** Which language the input picks */
 const field = ref<'target' | 'source'>('target')
 const query = ref('')
@@ -148,12 +148,12 @@ const otherLanguageAction: ActionItem = {
   action: async () => {
     field.value = 'target'
     query.value = ''
-    pickerMode.value = true
+    isPickerMode.value = true
   },
 }
 
 const closePicker = () => {
-  pickerMode.value = false
+  isPickerMode.value = false
 }
 
 const recentLanguages = computed(

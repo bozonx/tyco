@@ -32,7 +32,7 @@ const KIT_PROVIDERS: Record<SttProvider, string> = {
 }
 
 /** Whether dictation with this provider needs an API key */
-export function sttProviderNeedsKey(provider: SttProvider): boolean {
+export function isKeyRequiredForSttProvider(provider: SttProvider): boolean {
   return !KEYLESS_STT_PROVIDERS.includes(provider)
 }
 
@@ -62,7 +62,7 @@ export function buildSttCatalog(model: SttModel): Catalog {
     throw new Error('The speech recognition model name is empty')
   }
   const baseUrl = model.baseUrl?.trim()
-  if (!sttProviderNeedsKey(model.provider) && !baseUrl) {
+  if (!isKeyRequiredForSttProvider(model.provider) && !baseUrl) {
     throw new Error('The speech recognition server address is empty')
   }
 

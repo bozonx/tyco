@@ -1,3 +1,4 @@
+import { isRecord } from '@tyco/shared/value-guards'
 import {
   COMMAND_OUTPUT_ACTIONS,
   type CommandConfig,
@@ -9,9 +10,6 @@ import {
   type WebhookToolConfig,
 } from '@tyco/shared'
 import type { RegisteredTool } from '../tools/tool-types'
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
 const stringOr = (value: unknown): string =>
   typeof value === 'string' ? value : ''

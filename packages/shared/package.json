@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./appearance": "./src/appearance.ts"
+    "./appearance": "./src/appearance.ts",
+    "./value-guards": "./src/value-guards.ts"
   },
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",

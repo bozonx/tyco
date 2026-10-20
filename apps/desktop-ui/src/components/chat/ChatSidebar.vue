@@ -72,6 +72,7 @@
                 ref="renameInputs"
                 v-model="renameValue"
                 maxlength="120"
+                :aria-label="t('chat.renameChat')"
                 @keydown.esc="cancelRename"
                 @blur="finishRename(item)"
               />

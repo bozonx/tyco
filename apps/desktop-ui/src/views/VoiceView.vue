@@ -34,14 +34,14 @@ import InsertMenu from '../components/menu/InsertMenu.vue'
 import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
 import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import { isQuickWindow } from '../lib/desktop/window'
-import { appNavigation } from '../lib/navigation/navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
+import { appNavigation } from '../navigation'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
-import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
+import { useWindowStore } from '../stores/window'
 
 const props = withDefaults(
   defineProps<{
@@ -58,7 +58,7 @@ const emit = defineEmits<{
 
 const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
-const ipcStore = useIpcStore()
+const windowStore = useWindowStore()
 const desktopStore = useDesktopStore()
 const actionMenuStore = useActionMenuStore()
 
@@ -115,7 +115,7 @@ function handleCancelled() {
     return
 
   if (isQuickWindow()) {
-    void ipcStore.callOrNotify('hide_window')
+    void windowStore.hide()
   } else {
     void appNavigation.push(APP_ROUTES.EDITOR.path)
   }

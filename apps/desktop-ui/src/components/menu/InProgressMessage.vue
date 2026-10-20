@@ -19,8 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
-
+import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import type { PendingModalParams } from '../../lib/modals/menu-modal-params'
 import { useMenuModalsStore } from '../../stores/menu-modals'
@@ -43,19 +42,11 @@ function handleCancel() {
   }
 }
 
-function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    event.preventDefault()
-    handleCancel()
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown)
+useDismissibleLayer({
+  isOpen: () => true,
+  elements: () => [],
+  canDismissOutside: false,
+  dismiss: handleCancel,
 })
 </script>
 

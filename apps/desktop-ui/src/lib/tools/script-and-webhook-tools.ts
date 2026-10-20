@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import {
   SCRIPT_CANCELLED_ERROR,
   type ScriptActionRequest,
@@ -50,9 +51,6 @@ const defaultRunId = () => `command-run-${Date.now()}-${++runCounter}`
 
 const cancelled: ToolResult = { ok: false, cancelled: true }
 
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error)
-
 /** The text, when the settings of a script or a webhook mention it */
 const textSchema = (takesText: boolean) =>
   takesText ? TEXT_INPUT_SCHEMA : NO_INPUT_SCHEMA
@@ -72,7 +70,7 @@ function createScriptTool(
     inputSchema: TEXT_INPUT_SCHEMA,
     inputSchemaFor: (config) =>
       textSchema(scriptTakesText(scriptToolConfigOf(config))),
-    logsOutput: true,
+    canLogOutput: true,
     run: async (call) => {
       const config = scriptToolConfigOf(call.config)
       if (!config.command.trim()) {
@@ -103,8 +101,8 @@ function createScriptTool(
             call.command.id,
             scriptTakesText(config) ? textOf(call.input) : null,
             {
-              captureOutput: call.wantsOutput,
-              logOutput: call.command.logOutput,
+              captureOutput: call.isOutputRequested,
+              isOutputLogged: call.command.isOutputLogged,
             }
           ),
           runId,
@@ -151,7 +149,7 @@ function createWebhookTool(
     inputSchema: TEXT_INPUT_SCHEMA,
     inputSchemaFor: (config) =>
       textSchema(webhookTakesText(webhookToolConfigOf(config))),
-    logsOutput: true,
+    canLogOutput: true,
     run: async (call) => {
       const config = webhookToolConfigOf(call.config)
       if (!config.url.trim()) {
@@ -164,7 +162,7 @@ function createWebhookTool(
             ...config,
             id: call.command?.id ?? '',
             name: call.command?.name || 'Webhook',
-            logOutput: call.command?.logOutput ?? false,
+            isOutputLogged: call.command?.isOutputLogged ?? false,
           },
           webhookTakesText(config) ? textOf(call.input) : null,
           call.signal

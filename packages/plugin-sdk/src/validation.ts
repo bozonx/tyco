@@ -1,3 +1,4 @@
+import { isRecord as record } from './value-guards.js'
 import {
   PLUGIN_API_VERSION,
   type PluginDefinition,
@@ -6,8 +7,6 @@ import {
 } from './plugin.js'
 
 export const PLUGIN_PACKAGE_FORMAT_VERSION = 1
-const record = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
 function fail(message: string): never {
   throw new Error(message)
 }

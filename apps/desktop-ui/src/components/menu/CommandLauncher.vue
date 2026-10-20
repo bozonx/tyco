@@ -4,11 +4,11 @@
     :on-esc="
       stage.kind === 'prepare'
         ? launcher.back
-        : searchMode
+        : isSearchMode
           ? closeSearch
           : undefined
     "
-    :esc-mode="stage.kind === 'prepare' || searchMode ? 'back' : 'auto'"
+    :esc-mode="stage.kind === 'prepare' || isSearchMode ? 'back' : 'auto'"
   >
     <template #preview>
       <div v-if="stage.kind === 'prepare'" class="launcher-prepare">
@@ -81,7 +81,7 @@
 
       <template v-else-if="stage.kind === 'list'">
         <QueryPanel
-          v-if="searchMode"
+          v-if="isSearchMode"
           v-model="query"
           :placeholder="t('commandLauncher.searchPlaceholder')"
           :options="searchOptions"
@@ -127,6 +127,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
 import { searchCommands } from '../../lib/command-launcher/launcher-model'
@@ -167,7 +168,7 @@ const stage = computed(() => launcher.stage)
 const selectedText = computed(() => launcher.selection)
 const hasSelection = computed(() => Boolean(selectedText.value.trim()))
 
-const searchMode = ref(false)
+const isSearchMode = ref(false)
 const query = ref('')
 
 /** What the prepared command runs, so the user knows before it does */
@@ -184,7 +185,7 @@ const title = computed(() =>
 )
 
 const closeSearch = () => {
-  searchMode.value = false
+  isSearchMode.value = false
   query.value = ''
 }
 
@@ -192,7 +193,7 @@ const { handleEsc } = useOverlayNav(() => {
   if (stage.value.kind === 'prepare') {
     return { escMode: 'back', onEsc: launcher.back }
   }
-  if (searchMode.value) {
+  if (isSearchMode.value) {
     return { escMode: 'back', onEsc: closeSearch }
   }
   return {}
@@ -211,7 +212,7 @@ const searchAction = computed<ActionItem>(() => ({
   labelKey: 'commandLauncher.allCommands',
   icon: 'mdi:magnify',
   action: async () => {
-    searchMode.value = true
+    isSearchMode.value = true
     query.value = ''
   },
 }))
@@ -256,7 +257,7 @@ function submitSearch({ option }: QueryPanelSubmit) {
   if (!option) return
   const cmd = launcher.commands.find((c) => c.id === option.id)
   if (cmd) {
-    searchMode.value = false
+    isSearchMode.value = false
     query.value = ''
     void launcher.pick(cmd)
   }
@@ -268,17 +269,11 @@ const onTextKeyDown = (event: KeyboardEvent) => {
   if (!event.repeat) void launcher.submit()
 }
 
-/**
- * Only an Esc pressed here counts: the release of a key pressed before the
- * window opened must not close it
- */
-let escPressed = false
-
 const handleKeyDown = (event: KeyboardEvent) => {
   if (props.shortcutsDisabled) return
   if (
     stage.value.kind === 'list' &&
-    !searchMode.value &&
+    !isSearchMode.value &&
     !event.ctrlKey &&
     !event.altKey &&
     !event.metaKey &&
@@ -295,32 +290,24 @@ const handleKeyDown = (event: KeyboardEvent) => {
       launcher.dropSelection()
     }
   }
-  if (event.code === 'Escape') {
-    escPressed = !event.repeat || escPressed
-  }
 }
 
-const handleKeyUp = (event: KeyboardEvent) => {
-  if (event.code !== 'Escape') return
-  const pressed = escPressed
-  escPressed = false
-  if (!pressed || props.shortcutsDisabled || stage.value.kind === 'running') {
-    return
-  }
-  event.preventDefault()
-  handleEsc()
-  focusStage()
-}
-
-const handleBlur = () => {
-  escPressed = false
-}
+useDismissibleLayer({
+  isOpen: () => !props.shortcutsDisabled,
+  elements: () => [],
+  canDismissOutside: false,
+  dismiss: () => {
+    if (stage.value.kind === 'running') return
+    handleEsc()
+    focusStage()
+  },
+})
 
 watch(
   () => stage.value.kind,
   (kind) => {
     if (kind === 'prepare') {
-      searchMode.value = false
+      isSearchMode.value = false
     }
     focusStage()
   }
@@ -329,7 +316,7 @@ watch(
 watch(
   () => [desktopStore.desktopState.activationId, props.shortcutsDisabled],
   () => {
-    searchMode.value = false
+    isSearchMode.value = false
     query.value = ''
     focusStage()
   }
@@ -337,15 +324,11 @@ watch(
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
-  window.addEventListener('keyup', handleKeyUp)
-  window.addEventListener('blur', handleBlur)
   focusStage()
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
-  window.removeEventListener('keyup', handleKeyUp)
-  window.removeEventListener('blur', handleBlur)
 })
 </script>
 

@@ -40,6 +40,7 @@ function setup(
     notify: vi.fn(),
     applyUserConfig: vi.fn(),
     logRun: vi.fn(),
+    reportError: vi.fn(),
     saveOutput: vi.fn(async () => {}),
     t: (key: string, params?: Record<string, string>) =>
       params ? `${key} ${JSON.stringify(params)}` : key,
@@ -48,6 +49,20 @@ function setup(
 }
 
 describe('createExternalRun', () => {
+  it('reports persistence failures while preserving the command outcome', async () => {
+    const { deps, external } = setup(async () => ({ success: true }))
+    const error = new Error('disk full')
+    deps.saveOutput.mockRejectedValueOnce(error)
+    deps.logRun.mockImplementationOnce(() => {
+      throw error
+    })
+    await expect(
+      external.handleRun(event({ text: 'selection' }))
+    ).resolves.toMatchObject({ success: true })
+    await vi.waitFor(() => expect(deps.reportError).toHaveBeenCalledTimes(2))
+    external.dispose()
+  })
+
   it('runs the command of the event and shows how it went', async () => {
     const { deps, external } = setup(async (_command, _text, report) => {
       report('success', 'done')

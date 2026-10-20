@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import { isPluginCancellation, isPluginError } from '@tyco/plugin-sdk'
 import type { ActionItem } from '../action-menu/action-menu-model'
 import type { EditItem } from '../edit-menu/edit-menu-model'
@@ -98,7 +99,7 @@ export function createEditorActions(deps: EditorActionsDependencies) {
       if (result === 'stale') toastKey('toast.textTransformStale', 'warn')
     } catch (error) {
       if (isPluginCancellation(error)) return
-      const detail = error instanceof Error ? error.message : String(error)
+      const detail = errorMessage(error)
       if (isPluginError(error)) {
         toastKey(error.messageKey, 'error')
       } else {

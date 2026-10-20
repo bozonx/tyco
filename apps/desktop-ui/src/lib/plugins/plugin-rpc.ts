@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import {
   assertPluginMessage,
   PLUGIN_RPC_LIMITS,
@@ -166,10 +167,7 @@ export function createPluginRpc(deps: PluginRpcDependencies) {
               deps.transport.send({
                 type: 'host-result',
                 id,
-                error: {
-                  message:
-                    error instanceof Error ? error.message : String(error),
-                },
+                error: { message: errorMessage(error) },
               })
           }
         )

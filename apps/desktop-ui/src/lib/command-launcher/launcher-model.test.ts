@@ -63,10 +63,26 @@ function setup(
     run: vi.fn(async () => ({ success: true, result: undefined })),
     saveOutput: vi.fn(async () => {}),
     logRun: vi.fn(),
+    reportError: vi.fn(),
     ...extra,
   }
   return { deps, model: createCommandLauncherModel(deps) }
 }
+
+it('reports output persistence and logging errors without failing a command', async () => {
+  const { deps, model } = setup()
+  const error = new Error('disk full')
+  deps.saveOutput.mockRejectedValueOnce(error)
+  deps.logRun.mockImplementationOnce(() => {
+    throw error
+  })
+  await model.pickByKey(2)
+  model.setText('note text')
+  await model.submit()
+  await vi.waitFor(() => expect(deps.reportError).toHaveBeenCalledTimes(2))
+  expect(deps.run).toHaveBeenCalledOnce()
+  model.dispose()
+})
 
 describe('isLauncherCommand', () => {
   it('offers enabled commands whose tool is available', () => {

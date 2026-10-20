@@ -12,6 +12,7 @@ export interface AiProfilesModelDependencies {
   deleteProfile: (id: string) => Promise<void>
   readSoul: (id: string) => Promise<string>
   writeSoul: (id: string, content: string) => Promise<void>
+  reportError?: (error: unknown) => void
   now?: () => number
   /** A random suffix for an id the name gives none for */
   randomSuffix?: () => string
@@ -92,8 +93,12 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
         if (latest) await deps.saveProfile(latest)
       })
     pendingSaves.set(id, save)
-    void save.finally(() => {
+    const cleanup = () => {
       if (pendingSaves.get(id) === save) pendingSaves.delete(id)
+    }
+    void save.then(cleanup, (error: unknown) => {
+      cleanup()
+      deps.reportError?.(error)
     })
     return save
   }

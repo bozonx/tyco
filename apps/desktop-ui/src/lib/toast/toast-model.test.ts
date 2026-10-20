@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   DEFAULT_TOAST_DURATIONS_MS,
-  MAX_TOASTS,
+  MAX_TOASTS_COUNT,
   createToastModel,
 } from './toast-model'
 
@@ -176,16 +176,16 @@ describe('createToastModel', () => {
     expect(store.toasts.value).toHaveLength(0)
   })
 
-  it('respects MAX_TOASTS limit by evicting oldest toasts', () => {
+  it('respects MAX_TOASTS_COUNT limit by evicting oldest toasts', () => {
     const store = createToastModel()
 
-    for (let i = 1; i <= MAX_TOASTS + 2; i++) {
+    for (let i = 1; i <= MAX_TOASTS_COUNT + 2; i++) {
       store.addToast(`Toast ${i}`, 'info', { durationMs: 0 })
     }
 
-    expect(store.toasts.value).toHaveLength(MAX_TOASTS)
+    expect(store.toasts.value).toHaveLength(MAX_TOASTS_COUNT)
     expect(store.toasts.value[0]?.message).toBe('Toast 3')
-    expect(store.toasts.value[MAX_TOASTS - 1]?.message).toBe('Toast 7')
+    expect(store.toasts.value[MAX_TOASTS_COUNT - 1]?.message).toBe('Toast 7')
   })
 
   it('clears all toasts', () => {

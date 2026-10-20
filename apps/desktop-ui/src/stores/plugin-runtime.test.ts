@@ -1,5 +1,6 @@
+import { useIpcStore } from './ipc'
 import { createPinia, disposePinia } from 'pinia'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { usePluginRuntimeStore } from './plugin-runtime'
 
@@ -23,4 +24,28 @@ describe('plugin runtime Pinia ownership', () => {
       disposePinia(second)
     }
   })
+})
+
+it('owns package operations and rejects failed desktop results', async () => {
+  const pinia = createPinia()
+  try {
+    const runtime = usePluginRuntimeStore(pinia)
+    const call = vi
+      .spyOn(useIpcStore(pinia), 'call')
+      .mockResolvedValue({ success: true, result: undefined })
+    await expect(runtime.inspectPackage()).resolves.toBeNull()
+    await runtime.restorePackage('example')
+    await runtime.removePackage('example')
+    expect(call.mock.calls).toEqual([
+      ['pick_plugin_package'],
+      ['restore_previous_plugin_package', { id: 'example' }],
+      ['uninstall_plugin_package', { id: 'example' }],
+    ])
+    call.mockResolvedValueOnce({ success: false, error: 'Package unavailable' })
+    await expect(runtime.restorePackage('example')).rejects.toThrow(
+      'Package unavailable'
+    )
+  } finally {
+    disposePinia(pinia)
+  }
 })

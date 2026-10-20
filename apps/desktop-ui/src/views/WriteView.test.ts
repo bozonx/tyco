@@ -41,6 +41,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
+vi.mock('../stores/window', () => ({
+  useWindowStore: () => ({ hide: () => mocks.call('hide_window') }),
+}))
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({ call: mocks.call, callOrNotify: mocks.call }),
 }))
@@ -63,15 +66,38 @@ vi.mock('../stores/correction-workflow', () => ({
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => ({ resetNavPanelState: vi.fn() }),
 }))
-vi.mock('../components/quick/WriteModeInput.vue', () => ({
-  default: { template: '<textarea />' },
-}))
+vi.mock('../components/quick/WriteModeInput.vue', async () => {
+  const { defineComponent, ref } = await import('vue')
+  return {
+    default: defineComponent({
+      setup(_props, { expose }) {
+        const element = ref<HTMLTextAreaElement | null>(null)
+        expose({
+          getSelection: () =>
+            element.value
+              ? {
+                  start: element.value.selectionStart,
+                  end: element.value.selectionEnd,
+                }
+              : null,
+          focus: () => element.value?.focus(),
+          select: (start: number, end: number) =>
+            element.value?.setSelectionRange(start, end),
+          isFocused: () => document.activeElement === element.value,
+        })
+        return { element }
+      },
+      template: '<textarea ref="element" />',
+    }),
+  }
+})
 
 let wrapper: ReturnType<typeof mount>
 const press = (code: string, options: KeyboardEventInit = {}) =>
   window.dispatchEvent(
     new KeyboardEvent('keydown', {
       code,
+      key: code,
       bubbles: true,
       cancelable: true,
       ...options,

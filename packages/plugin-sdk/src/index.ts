@@ -5,3 +5,5 @@ export * from './sortable-checklist.js'
 export * from './toolbar-tool.js'
 export * from './validation.js'
 export * from './config-field-value.js'
+
+export { isRecord, errorMessage } from './value-guards.js'

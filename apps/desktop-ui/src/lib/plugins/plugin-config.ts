@@ -1,3 +1,4 @@
+import { isRecord } from '@tyco/shared/value-guards'
 import { clonePluginValue } from '@tyco/plugin-sdk'
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 
@@ -8,9 +9,6 @@ import { resolveSortableChecklist } from '@tyco/plugin-sdk'
 export function pluginId(plugin: ReturnType<PluginFactory>): string {
   return plugin.id
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
 /**
  * The saved entry of the plugin, a copy; a disabled one without settings when

@@ -61,7 +61,9 @@ export type ParseResult =
 export interface ToolCallCommand {
   id: string
   name: string
-  logOutput: boolean
+  isOutputLogged: boolean
+  /** @deprecated Use isOutputLogged. Supplied for older installed plugins. */
+  logOutput?: boolean
 }
 
 export interface ToolCall {
@@ -75,7 +77,9 @@ export interface ToolCall {
   signal: AbortSignal
   command?: ToolCallCommand
   /** The output is used: it is not enough to start a long script and leave */
-  wantsOutput: boolean
+  isOutputRequested: boolean
+  /** @deprecated Use isOutputRequested. Supplied for older installed plugins. */
+  wantsOutput?: boolean
   /** Tells the caller which stage a long run is at, for it to show */
   onProgress?: (stage: string) => void
 }

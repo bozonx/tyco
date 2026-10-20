@@ -58,47 +58,40 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onUnmounted, watch } from 'vue'
 
 import AppIcon from '../components/common/AppIcon.vue'
 import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
+import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
 import { createAccessPrompt } from '../lib/external-access/access-prompt'
 import { useDesktopStore } from '../stores/desktop'
-import { useIpcStore } from '../stores/ipc'
+import { useExternalCommandsStore } from '../stores/external-commands'
 import { useNavPanelStore } from '../stores/nav-panel'
 import type { AccessDecision } from '@tyco/shared'
 
 const { t } = useI18n()
-const ipcStore = useIpcStore()
+const externalCommands = useExternalCommandsStore()
 const desktopStore = useDesktopStore()
 
 useNavPanelStore().resetNavPanelState({ panelVisible: false })
 
 const request = computed(() => desktopStore.desktopState.accessRequest ?? null)
 
-const prompt = createAccessPrompt({
-  answer: async (jobId, decision) => {
-    const result = await ipcStore.call('answer_external_access', {
-      jobId,
-      decision,
-    })
-    if (!result.success) throw new Error(result.error)
-  },
-})
+const prompt = createAccessPrompt({ answer: externalCommands.answerAccess })
 
 const respond = (decision: AccessDecision) =>
   prompt.respond(request.value?.jobId, decision)
 const deny = () => respond('deny')
 
-const handleKeyUp = (event: KeyboardEvent) => {
-  if (event.code === 'Escape' && !event.repeat) {
-    event.preventDefault()
-    deny()
-  }
-}
+useDismissibleLayer({
+  isOpen: () => true,
+  elements: () => [],
+  canDismissOutside: false,
+  dismiss: deny,
+})
 
 // a request replaced by another one without an answer is denied
 watch(
@@ -106,11 +99,8 @@ watch(
   (_jobId, previous) => prompt.dismiss(previous)
 )
 
-onMounted(() => window.addEventListener('keyup', handleKeyUp))
-
 // the view goes with the window: a prompt closed without an answer denies
 onUnmounted(() => {
-  window.removeEventListener('keyup', handleKeyUp)
   prompt.dismiss(request.value?.jobId)
 })
 </script>

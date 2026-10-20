@@ -25,11 +25,6 @@ export * from './user-config/commands-config'
  */
 export const CONFIG_VERSION = configVersion
 
-export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig
-
-export const DEFAULT_MAIN_ACTIONS =
-  configDefaults.mainActions as ShortcutSlots<MainActionConfig>
-
 /**
  * Keys pressed in the target window to paste the inserted text; written as the
  * hotkeys are

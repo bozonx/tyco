@@ -35,7 +35,7 @@ vi.mock('../lib/desktop/window', () => ({
   isQuickWindow: () => mocks.windowLabel === 'quick',
 }))
 
-vi.mock('../lib/navigation/navigation', () => ({
+vi.mock('../navigation', () => ({
   appNavigation: { push: mocks.navigationPush },
 }))
 
@@ -61,6 +61,9 @@ vi.mock('../components/menu/InsertMenu.vue', () => ({
   },
 }))
 
+vi.mock('../stores/window', () => ({
+  useWindowStore: () => ({ hide: () => mocks.callOrNotify('hide_window') }),
+}))
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({ callOrNotify: mocks.callOrNotify }),
 }))

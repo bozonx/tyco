@@ -51,7 +51,7 @@ vi.mock('../stores/ai-profiles', () => ({
   useAiProfilesStore: () => mocks.aiProfiles,
 }))
 
-vi.mock('../lib/navigation/navigation', () => ({
+vi.mock('../navigation', () => ({
   appNavigation: {
     currentProfileId: () => mocks.profileId,
     goToChat: mocks.goToChat,

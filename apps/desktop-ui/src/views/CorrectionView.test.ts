@@ -43,6 +43,9 @@ vi.mock('../components/overlay/ActionOverlayLayout.vue', () => ({
   },
 }))
 
+vi.mock('../stores/window', () => ({
+  useWindowStore: () => ({ hide: () => mocks.callOrNotify('hide_window') }),
+}))
 vi.mock('../stores/ipc', () => ({
   useIpcStore: () => ({ callOrNotify: mocks.callOrNotify }),
 }))

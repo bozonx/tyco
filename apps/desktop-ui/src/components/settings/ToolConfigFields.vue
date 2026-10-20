@@ -14,7 +14,8 @@
       :warnings="warningsOf('prompt')"
       @update="update"
     />
-    <PluginToolFields
+    <component
+      :is="TOOL_FIELD_COMPONENTS[tool.id] ?? PluginToolFields"
       v-else
       :command="command"
       :tool="tool"
@@ -33,6 +34,7 @@ import { useToolsStore } from '../../stores/tools'
 import AiTaskToolFields from './AiTaskToolFields.vue'
 import PluginToolFields from './PluginToolFields.vue'
 import TranslationToolFields from './TranslationToolFields.vue'
+import { TOOL_FIELD_COMPONENTS } from './tool-field-components'
 import {
   type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,

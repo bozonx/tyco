@@ -15,12 +15,20 @@ export interface PluginTestContextOptions {
   apiResult?: { success: boolean; error?: string }
 }
 
+type PluginTestMocks = {
+  [Key in keyof PluginContext]: PluginContext[Key] extends (
+    ...args: infer Args
+  ) => infer Result
+    ? Mock<(...args: Args) => Result>
+    : PluginContext[Key]
+}
+
 /** Builds a mutable editor context for plugin behavior and conflict tests. */
 export function createPluginTestContext(
   options: PluginTestContextOptions = {}
 ): {
   ctx: PluginContext
-  mocks: Record<string, Mock<(...args: any[]) => any>>
+  mocks: PluginTestMocks
   toolbarItems: ToolbarItem[]
   tools: ToolDefinition[]
 } {
@@ -85,14 +93,13 @@ export function createPluginTestContext(
     setEditorInputFocus: vi.fn(),
     toEditor: vi.fn(),
     toast: vi.fn(),
-    callApiFunction: vi.fn(async () => options.apiResult ?? { success: true }),
-    getMyConfig: vi.fn(() => options.config),
+    callApiFunction: vi.fn<PluginContext['callApiFunction']>(
+      async () => options.apiResult ?? { success: true }
+    ),
+    getMyConfig: vi.fn<PluginContext['getMyConfig']>(
+      () => (options.config ?? {}) as ReturnType<PluginContext['getMyConfig']>
+    ),
   }
 
-  return {
-    ctx: ctx as unknown as PluginContext,
-    mocks: ctx as unknown as Record<string, Mock<(...args: any[]) => any>>,
-    toolbarItems,
-    tools,
-  }
+  return { ctx: ctx satisfies PluginContext, mocks: ctx, toolbarItems, tools }
 }

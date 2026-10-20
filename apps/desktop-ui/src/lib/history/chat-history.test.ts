@@ -23,7 +23,7 @@ it('does not restore a removed chat from a delayed list response', async () => {
       result: { ...summary, messages: [] },
     })
     .mockResolvedValueOnce({ success: true, result: undefined })
-  const model = createChatHistoryModel({ call: call as DesktopCall })
+  const model = createChatHistoryModel({ call: call as DesktopCall }, vi.fn())
   model.chatHistory.value = [summary]
   const pending = model.loadChatHistory()
   await model.deleteChat('chat')
@@ -37,7 +37,11 @@ it('keeps a persisted chat successful when refreshing its summary list fails', a
     .fn<DesktopCall>()
     .mockResolvedValueOnce({ success: true, result: undefined })
     .mockResolvedValueOnce({ success: false, error: 'List unavailable' })
-  const model = createChatHistoryModel({ call: call as DesktopCall })
+  const reportError = vi.fn()
+  const model = createChatHistoryModel(
+    { call: call as DesktopCall },
+    reportError
+  )
   await expect(
     model.saveChat({
       id: 'chat',
@@ -46,6 +50,9 @@ it('keeps a persisted chat successful when refreshing its summary list fails', a
       messages: [],
     })
   ).resolves.toBeUndefined()
+  expect(reportError).toHaveBeenCalledWith(
+    expect.objectContaining({ message: 'List unavailable' })
+  )
 })
 
 it('uses a custom ChatSessionStorageDriver directly', async () => {
@@ -60,7 +67,7 @@ it('uses a custom ChatSessionStorageDriver directly', async () => {
       .fn()
       .mockResolvedValue({ id: 'c1', title: 'Custom', messages: [] }),
   }
-  const model = createChatHistoryModel(driver)
+  const model = createChatHistoryModel(driver, vi.fn())
   await model.loadChatHistory()
   expect(model.chatHistory.value).toEqual([{ id: 'c1', title: 'Custom' }])
 

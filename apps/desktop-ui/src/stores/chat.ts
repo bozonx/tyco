@@ -2,7 +2,7 @@ import { llmSecretId } from '@tyco/shared'
 import { defineStore, getActivePinia, type Pinia } from 'pinia'
 import { nextTick, onScopeDispose, watch } from 'vue'
 
-import useToast from '../composables/use-toast'
+import { useToastStore } from './toast'
 import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-storage'
 import { createChatStoreRuntime } from '../lib/chat/chat-store-runtime'
 import { invokeDesktop } from '../lib/desktop/invoke'
@@ -10,7 +10,7 @@ import { getDesktopWindowLabel } from '../lib/desktop/window'
 import { createChatHistoryModel } from '../lib/history/chat-history'
 import { translate } from '../lib/i18n'
 import { clientLogger } from '../lib/logger'
-import { appNavigation } from '../lib/navigation/navigation'
+import { appNavigation } from '../navigation'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import { isSecretUsable } from '../lib/net/secrets'
 import { useAiProfilesStore } from './ai-profiles'
@@ -36,7 +36,7 @@ import { useToolsStore } from './tools'
  */
 function createChatStoreSetup(profileId: string | null) {
   return () => {
-    const { toastKey, toastText } = useToast()
+    const { toastKey, toastText } = useToastStore()
     const ipcStore = useIpcStore()
     const desktopStore = useDesktopStore()
     const llmStore = useLlmStore()
@@ -57,7 +57,13 @@ function createChatStoreSetup(profileId: string | null) {
     const menuModalsStore = useMenuModalsStore()
     const profileHistory = profileId
       ? createChatHistoryModel(
-          createIpcChatSessionStorageDriver(ipcStore, profileId)
+          createIpcChatSessionStorageDriver(ipcStore, profileId),
+          (error) =>
+            clientLogger.error(
+              'Could not refresh profile chat history',
+              error,
+              'history'
+            )
         )
       : null
     const history = profileHistory ?? useHistoryStore()

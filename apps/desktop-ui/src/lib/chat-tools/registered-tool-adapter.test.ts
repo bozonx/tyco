@@ -75,7 +75,7 @@ describe('registered-tool-adapter', () => {
       config: { locale: 'en', strict: true },
       source: 'chat',
       signal,
-      wantsOutput: true,
+      isOutputRequested: true,
     })
   })
 })

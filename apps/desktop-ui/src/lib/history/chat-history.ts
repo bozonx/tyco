@@ -8,7 +8,8 @@ import {
 } from '../chat/chat-session-storage'
 
 export function createChatHistoryModel(
-  storage: ChatSessionStorageDriver | HistoryApi
+  storage: ChatSessionStorageDriver | HistoryApi,
+  reportError: (error: unknown) => void
 ) {
   const driver: ChatSessionStorageDriver = isChatSessionStorageDriver(storage)
     ? storage
@@ -27,7 +28,7 @@ export function createChatHistoryModel(
   }
 
   /** The chat is stored; a list that failed to reload is refreshed next time */
-  const refreshChatHistory = () => loadChatHistory().catch(() => {})
+  const refreshChatHistory = () => loadChatHistory().catch(reportError)
 
   const loadChat = async (id: string): Promise<Chat | null> => {
     const loadedChat = await driver.getChat(id)

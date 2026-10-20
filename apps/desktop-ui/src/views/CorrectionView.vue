@@ -12,22 +12,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
 import ContentPadding from '../components/common/ContentPadding.vue'
 import InProgressMessage from '../components/menu/InProgressMessage.vue'
 import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
+import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
 import { createCorrectionMode } from '../lib/correction/correction-mode'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
-import { useIpcStore } from '../stores/ipc'
 import { useNavPanelStore } from '../stores/nav-panel'
+import { useWindowStore } from '../stores/window'
 import { APP_CONFIG } from '@tyco/shared'
 
 const actionMenuStore = useActionMenuStore()
-const ipcStore = useIpcStore()
+const windowStore = useWindowStore()
 const desktopStore = useDesktopStore()
 const navPanelStore = useNavPanelStore()
 const isStarting = ref(false)
@@ -56,7 +57,7 @@ navPanelStore.resetNavPanelState({ panelVisible: false })
 function handleCancel() {
   if (!isCurrent()) return
   isStarting.value = false
-  void ipcStore.callOrNotify('hide_window')
+  void windowStore.hide()
 }
 
 const correctionMode = createCorrectionMode({
@@ -83,16 +84,15 @@ watch(
   { immediate: true }
 )
 
-function handleKeyUp(event: KeyboardEvent) {
-  if (event.code !== 'Escape' || event.defaultPrevented || !isCurrent()) return
-  event.preventDefault()
-  handleCancel()
-}
+useDismissibleLayer({
+  isOpen: () => true,
+  elements: () => [],
+  canDismissOutside: false,
+  dismiss: handleCancel,
+})
 
-onMounted(() => window.addEventListener('keyup', handleKeyUp))
 onUnmounted(() => {
   unmounted = true
   correctionMode.dispose()
-  window.removeEventListener('keyup', handleKeyUp)
 })
 </script>

@@ -39,8 +39,6 @@ function createDeps(overrides: Partial<AppBootstrapDependencies> = {}) {
       }
     ),
     initPlugins: vi.fn(),
-    handleNavKeyUp: vi.fn(),
-    addWindowKeyupListener: vi.fn(() => vi.fn()),
     ...overrides,
   }
 
@@ -75,7 +73,6 @@ describe('app-bootstrap', () => {
     await bootstrap.start()
 
     expect(deps.initPlugins).toHaveBeenCalledOnce()
-    expect(deps.addWindowKeyupListener).toHaveBeenCalledOnce()
     expect(deps.listen).toHaveBeenCalledTimes(1)
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.WRITE.path)
     expect(listeners.size).toBe(1)
@@ -206,25 +203,12 @@ describe('app-bootstrap', () => {
       APP_ROUTES.HOME.path
     )
   })
-
-  it('forwards window keyup events to the nav handler', async () => {
-    const { deps } = createDeps()
-    const bootstrap = createAppBootstrap(deps)
-    const event = new KeyboardEvent('keyup', { code: 'Escape' })
-
-    await bootstrap.start()
-    vi.mocked(deps.addWindowKeyupListener).mock.calls[0][0](event)
-
-    expect(deps.handleNavKeyUp).toHaveBeenCalledWith(event)
-  })
 })
 
 describe('bootstrap lifetime', () => {
   it('rolls back subscriptions when loading fails and can retry', async () => {
-    const removeKey = vi.fn()
     const removeEvent = vi.fn()
     const { deps } = createDeps({
-      addWindowKeyupListener: vi.fn(() => removeKey),
       listen: async () => removeEvent,
       loadDesktopState: vi
         .fn()
@@ -233,10 +217,9 @@ describe('bootstrap lifetime', () => {
     })
     const bootstrap = createAppBootstrap(deps)
     await expect(bootstrap.start()).rejects.toThrow('Failed')
-    expect(removeKey).toHaveBeenCalledOnce()
     expect(removeEvent).toHaveBeenCalledTimes(1)
     await bootstrap.start()
-    expect(deps.addWindowKeyupListener).toHaveBeenCalledTimes(2)
+    expect(deps.loadDesktopState).toHaveBeenCalledTimes(2)
   })
 
   it('does not initialize after a pending load finishes following stop', async () => {

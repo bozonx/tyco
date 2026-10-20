@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import {
   type CommandConfig,
   SCRIPT_CANCELLED_ERROR,
@@ -48,9 +49,6 @@ export type CommandTestResult =
   | { kind: 'error'; messageKey?: string; message?: string }
   | { kind: 'cancelled' }
 
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error)
-
 /** The commands the editor can test: a script or a webhook */
 export const canTestCommand = (command: CommandConfig): boolean =>
   command.toolId === 'script' || command.toolId === 'webhook'
@@ -88,7 +86,7 @@ export async function runCommandTest(
       const result = await deps.executeScriptAction({
         ...buildScriptRequest(command.id, input, {
           captureOutput: true,
-          logOutput: false,
+          isOutputLogged: false,
         }),
         runId,
       })
@@ -116,8 +114,10 @@ export async function runCommandTest(
       command: {
         id: command.id,
         name: commandLabel(command),
+        isOutputLogged: false,
         logOutput: false,
       },
+      isOutputRequested: true,
       wantsOutput: true,
     })
     if (signal.aborted || result.cancelled) return { kind: 'cancelled' }

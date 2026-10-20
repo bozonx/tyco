@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import {
   PLUGIN_API_VERSION,
   validatePluginManifest,
@@ -48,7 +49,7 @@ export function createPluginPackageLoader(
           !reservedIds.includes(manifest.id) &&
           /^[A-Za-z0-9][A-Za-z0-9 _-]{0,127}$/.test(manifest.id)
         ) {
-          const message = error instanceof Error ? error.message : String(error)
+          const message = errorMessage(error)
           factories.push(() => ({
             id: manifest.id,
             version: '0.0.0',

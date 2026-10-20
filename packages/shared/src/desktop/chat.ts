@@ -1,3 +1,4 @@
+import { isRecord as record } from '../value-guards'
 import type {
   ChatAttachment,
   ChatImage,
@@ -70,8 +71,6 @@ export interface ChatParams {
 
 /** Rejects malformed externally delivered chat events before UI side effects. */
 export function parseOpenMainChatEvent(value: unknown): OpenMainChatEvent {
-  const record = (entry: unknown): entry is Record<string, unknown> =>
-    entry !== null && typeof entry === 'object' && !Array.isArray(entry)
   if (
     !record(value) ||
     Object.keys(value).some(

@@ -3,9 +3,12 @@ import { createEditorHistoryModel } from './editor-history'
 import { createChatHistoryModel } from './chat-history'
 export type { HistoryApi } from './history-call'
 
-export function createHistoryModel(historyApi: HistoryApi) {
+export function createHistoryModel(
+  historyApi: HistoryApi,
+  reportError: (error: unknown) => void
+) {
   return {
     ...createEditorHistoryModel(historyApi),
-    ...createChatHistoryModel(historyApi),
+    ...createChatHistoryModel(historyApi, reportError),
   }
 }

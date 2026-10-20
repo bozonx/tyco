@@ -15,7 +15,7 @@ describe('script tool', () => {
       config: { command: 'echo {{TEXT}}' },
       source: 'chat',
       signal: new AbortController().signal,
-      wantsOutput: true,
+      isOutputRequested: true,
     })
     expect(result).toEqual({ ok: false, messageKey: 'toast.scriptNotSaved' })
     expect(executeScriptAction).not.toHaveBeenCalled()

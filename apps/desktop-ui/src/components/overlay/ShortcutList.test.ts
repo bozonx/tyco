@@ -71,7 +71,7 @@ vi.mock('../../stores/desktop', async () => {
   }
 })
 
-vi.mock('../../lib/navigation/navigation', () => ({
+vi.mock('../../navigation', () => ({
   appNavigation: { goToEditor: mocks.goToEditor },
 }))
 

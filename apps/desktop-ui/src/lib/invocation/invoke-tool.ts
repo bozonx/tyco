@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import {
   resolveToolInput,
   toolCallConfig,
@@ -49,9 +50,6 @@ export function invocationUnavailableReason(
   )
   return kind === null ? 'commands.inputUnsupported' : undefined
 }
-
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error)
 
 /**
  * Calls the tool of an invocation: checks that it can run, turns the text into
@@ -127,10 +125,12 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
               command: {
                 id: invocation.commandId,
                 name: invocation.label,
-                logOutput: invocation.logOutput ?? false,
+                isOutputLogged: invocation.isOutputLogged ?? false,
+                logOutput: invocation.isOutputLogged ?? false,
               },
             }
           : {}),
+        isOutputRequested: resolveSink(invocation, options) !== 'none',
         wantsOutput: resolveSink(invocation, options) !== 'none',
         ...(options.onProgress ? { onProgress: options.onProgress } : {}),
       })

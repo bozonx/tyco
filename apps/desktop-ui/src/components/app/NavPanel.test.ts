@@ -40,9 +40,7 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../../lib/navigation/navigation', () => ({
-  appNavigation: mocks.appNavigation,
-}))
+vi.mock('../../navigation', () => ({ appNavigation: mocks.appNavigation }))
 
 vi.mock('../../stores/chat', () => ({
   useChatStore: () => mocks.chatStore,

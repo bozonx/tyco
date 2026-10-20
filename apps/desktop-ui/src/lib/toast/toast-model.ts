@@ -33,7 +33,7 @@ export const DEFAULT_TOAST_DURATIONS_MS: Record<ToastType, number> = {
   error: 7000,
 }
 
-export const MAX_TOASTS = 5
+export const MAX_TOASTS_COUNT = 5
 
 export function createToastModel(deps: ToastDependencies = {}) {
   const now = deps.now ?? Date.now
@@ -119,7 +119,7 @@ export function createToastModel(deps: ToastDependencies = {}) {
     }
 
     // If max reached, drop the oldest toast
-    if (toasts.value.length >= MAX_TOASTS) {
+    if (toasts.value.length >= MAX_TOASTS_COUNT) {
       const oldest = toasts.value[0]
       if (oldest) {
         clearItemTimer(oldest)

@@ -221,7 +221,7 @@ describe('webhook commands', () => {
         name: 'My Webhook',
         url: 'https://api.example.com/endpoint?q={{TEXT}}',
         method: 'GET',
-        logOutput: true,
+        isOutputLogged: true,
       }),
       'x',
       expect.any(AbortSignal)
@@ -374,7 +374,13 @@ describe('plugin tools', () => {
       config: { dir: '~/work' },
       source: 'launcher',
       signal: expect.any(AbortSignal),
-      command: { id: 'n-1', name: 'Note', logOutput: false },
+      command: {
+        id: 'n-1',
+        name: 'Note',
+        isOutputLogged: false,
+        logOutput: false,
+      },
+      isOutputRequested: false,
       wantsOutput: false,
     })
     expect(deps.showToast).toHaveBeenCalledWith('toast.noteSaved', 'success')
@@ -476,7 +482,7 @@ describe('the output of a command', () => {
       expect(copyText).not.toHaveBeenCalled()
       expect(deps.hideWindow).not.toHaveBeenCalled()
       expect(tool.run).toHaveBeenCalledWith(
-        expect.objectContaining({ wantsOutput: true })
+        expect.objectContaining({ isOutputRequested: true })
       )
     }
   )
@@ -491,7 +497,7 @@ describe('the output of a command', () => {
         await runner.run(command(setting), 'source', { source: 'external' })
       ).toEqual({ success: true, output: 'result\n' })
       expect(tool.run).toHaveBeenCalledWith(
-        expect.objectContaining({ wantsOutput: true })
+        expect.objectContaining({ isOutputRequested: true })
       )
       expect(deps.showResultMenu).not.toHaveBeenCalled()
       expect(deps.hideWindow).not.toHaveBeenCalled()
@@ -541,7 +547,7 @@ describe('the output of a command', () => {
       await runner.transform(command('none'), 'source', { source: 'selection' })
     ).toEqual({ ok: true, content: 'result' })
     expect(tool.run).toHaveBeenCalledWith(
-      expect.objectContaining({ wantsOutput: true })
+      expect.objectContaining({ isOutputRequested: true })
     )
   })
 

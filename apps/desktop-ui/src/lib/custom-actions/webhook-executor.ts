@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import type { FetchFunction } from '@bozonx/ai-kit'
 import { ACTION_TEXT_PLACEHOLDER, type WebhookToolConfig } from '@tyco/shared'
 
@@ -13,7 +14,7 @@ export interface WebhookTarget extends WebhookToolConfig {
   /** The id of the command; the Authorization secret is kept under it */
   id: string
   name: string
-  logOutput?: boolean
+  isOutputLogged?: boolean
 }
 
 /**
@@ -118,7 +119,7 @@ export async function executeWebhook(
   const logPrefix = `URL: ${target.url}\nMethod: ${init.method}`
   // failures are logged always, like those of commands
   const log = async (details: string, failed: boolean) => {
-    if (target.logOutput || failed) {
+    if (target.isOutputLogged || failed) {
       await logFn?.(target.name || 'Webhook', details)
     }
   }
@@ -141,7 +142,7 @@ export async function executeWebhook(
     responseText =
       typeof response.text === 'function' ? await response.text() : ''
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = errorMessage(error)
     await log(`${logPrefix}\nError: ${message}`, true)
     throw new Error(message, { cause: error })
   } finally {

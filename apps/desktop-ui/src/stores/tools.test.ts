@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createInvocationRunner } from '../lib/invocation/invocation-runner'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useIpcStore } from './ipc'
-import { appNavigation } from '../lib/navigation/navigation'
+import { appNavigation } from '../navigation'
 import { useChatStore } from './chat'
 import { useToolsStore } from './tools'
 import { useToastStore } from './toast'
@@ -51,7 +51,7 @@ describe('ask in chat', () => {
         config: {},
         source: 'menu',
         signal: new AbortController().signal,
-        wantsOutput: false,
+        isOutputRequested: false,
       })
 
   it('attaches the text to "Ask AI", which provides itself', async () => {

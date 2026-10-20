@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import { computed, ref, shallowRef } from 'vue'
 
 import type {
@@ -99,6 +100,7 @@ export function searchCommands(
 }
 
 export interface CommandLauncherDependencies {
+  reportError?: (error: unknown) => void
   /** The tools the commands run */
   tools: ToolLookup
   claimJob?: (id: string) => Promise<boolean>
@@ -250,7 +252,9 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     }
     if (input !== null) record.text = input
     if (outcome.message) record.message = outcome.message
-    void Promise.resolve(deps.logRun?.(record)).catch(() => {})
+    void Promise.resolve()
+      .then(() => deps.logRun?.(record))
+      .catch((error: unknown) => deps.reportError?.(error))
   }
 
   const execute = async (
@@ -284,7 +288,9 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       return { success: false, cancelled: true }
     if (input !== null) {
       // the history keeps the text even when the command fails
-      await deps.saveOutput?.(input).catch(() => {})
+      await deps
+        .saveOutput?.(input)
+        .catch((error: unknown) => deps.reportError?.(error))
     }
     if (disposed || runController.signal.aborted)
       return { success: false, cancelled: true }
@@ -298,10 +304,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     } catch (error) {
       outcome = runController.signal.aborted
         ? { success: false, cancelled: true, message: 'Cancelled' }
-        : {
-            success: false,
-            message: error instanceof Error ? error.message : String(error),
-          }
+        : { success: false, message: errorMessage(error) }
     }
     if (disposed) return { success: false, cancelled: true }
     if (controller === runController) controller = null

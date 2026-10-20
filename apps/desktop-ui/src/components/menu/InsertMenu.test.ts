@@ -17,7 +17,7 @@ vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ label: 'main' }),
 }))
 
-vi.mock('../../lib/navigation/navigation', () => ({
+vi.mock('../../navigation', () => ({
   appNavigation: { isCurrent: () => mocks.editorPage, goToEditor: vi.fn() },
 }))
 

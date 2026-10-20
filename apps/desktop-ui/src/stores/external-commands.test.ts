@@ -89,3 +89,19 @@ describe('external commands store wiring', () => {
     expect(() => store.handleCancel('job-1')).not.toThrow()
   })
 })
+
+it('answers external access through the store and propagates failures', async () => {
+  const call = vi
+    .spyOn(useIpcStore(), 'call')
+    .mockResolvedValue({ success: true, result: undefined })
+  const store = useExternalCommandsStore()
+  await store.answerAccess('job-1', 'deny')
+  expect(call).toHaveBeenCalledWith('answer_external_access', {
+    jobId: 'job-1',
+    decision: 'deny',
+  })
+  call.mockResolvedValueOnce({ success: false, error: 'Request expired' })
+  await expect(store.answerAccess('job-1', 'once')).rejects.toThrow(
+    'Request expired'
+  )
+})

@@ -10,13 +10,13 @@ const MAX_ERROR_DETAIL_LENGTH = 200
 export function buildScriptRequest(
   commandId: string,
   text: string | null,
-  options: { captureOutput: boolean; logOutput: boolean }
+  options: { captureOutput: boolean; isOutputLogged: boolean }
 ): ScriptActionRequest {
   return {
     commandId,
     text: text ?? '',
     captureOutput: options.captureOutput,
-    logOutput: options.logOutput,
+    logOutput: options.isOutputLogged,
   }
 }
 

@@ -101,7 +101,7 @@ export function usableModels(config: LlmConfig) {
 }
 
 /** Defaults only for the vision models shipped with the app. */
-export function supportsImages(model: LlmModel): boolean {
+export function canUseImages(model: LlmModel): boolean {
   return (
     model.canUseImages ??
     ((model.providerId === 'google' &&
@@ -117,7 +117,7 @@ export function supportsImages(model: LlmModel): boolean {
  * Whether the chat may offer the model tools. Local models served through a
  * custom endpoint often cannot call them, so those opt in
  */
-export function supportsTools(
+export function canUseTools(
   model: LlmModel,
   providers: readonly LlmProvider[]
 ): boolean {
@@ -143,10 +143,10 @@ function toDefinition(
     // is the whole policy
     tier: 'standard',
     modalities: {
-      input: supportsImages(model) ? ['text', 'image'] : ['text'],
+      input: canUseImages(model) ? ['text', 'image'] : ['text'],
       output: ['text'],
     },
-    capabilities: { tools: supportsTools(model, [provider]) },
+    capabilities: { tools: canUseTools(model, [provider]) },
     contextSize: modelContextWindowTokens(model, [provider]),
     maxOutputTokens: Math.min(
       model.maxOutputTokens ?? OUTPUT_TOKENS_CEILING,

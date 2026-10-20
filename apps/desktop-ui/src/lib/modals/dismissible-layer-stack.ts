@@ -3,11 +3,37 @@ export interface DismissibleLayer {
   elements: () => (HTMLElement | null | undefined)[]
   dismiss: () => void
   keydown?: (event: KeyboardEvent) => void
+  canDismissOutside?: boolean
+  keyboardPhase?: 'capture' | 'bubble'
   outsideEvent?: 'click' | 'mousedown'
 }
 
 export function createDismissibleLayerStack() {
   const layers: DismissibleLayer[] = []
+  let isEscapeHeld = false
+
+  function onKeyup(event: KeyboardEvent) {
+    if (event.key !== 'Escape' || !isEscapeHeld) return
+    isEscapeHeld = false
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    if (!layers.length) {
+      window.removeEventListener('keyup', onKeyup, true)
+      window.removeEventListener('keydown', onKeydown, true)
+      window.removeEventListener('keydown', onBubbleKeydown)
+      window.removeEventListener('blur', onBlur)
+    }
+  }
+
+  function onBlur() {
+    isEscapeHeld = false
+    if (!layers.length) {
+      window.removeEventListener('keyup', onKeyup, true)
+      window.removeEventListener('keydown', onKeydown, true)
+      window.removeEventListener('keydown', onBubbleKeydown)
+      window.removeEventListener('blur', onBlur)
+    }
+  }
 
   /** Include teleported descendants whose trigger belongs to this layer. */
   function isWithinDismissibleLayer(
@@ -39,6 +65,7 @@ export function createDismissibleLayerStack() {
     const layer = layers.at(-1)
     if (
       layer &&
+      layer.canDismissOutside !== false &&
       event.type === (layer.outsideEvent ?? 'click') &&
       !isWithinDismissibleLayer(layer.elements(), event.target)
     )
@@ -46,8 +73,22 @@ export function createDismissibleLayerStack() {
   }
 
   function onKeydown(event: KeyboardEvent) {
+    handleKeydown(event, 'capture')
+  }
+
+  function onBubbleKeydown(event: KeyboardEvent) {
+    handleKeydown(event, 'bubble')
+  }
+
+  function handleKeydown(event: KeyboardEvent, phase: 'capture' | 'bubble') {
+    if (event.defaultPrevented) return
+    if (event.key === 'Escape' && (isEscapeHeld || event.repeat)) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      return
+    }
     const layer = layers.at(-1)
-    if (!layer) return
+    if (!layer || (layer.keyboardPhase ?? 'capture') !== phase) return
     const dialog =
       event.target instanceof Element
         ? event.target.closest('dialog[open]')
@@ -57,11 +98,19 @@ export function createDismissibleLayerStack() {
       !layer.elements().some((element) => element && dialog.contains(element))
     )
       return
+    if (event.key === 'Escape') {
+      isEscapeHeld = true
+      window.addEventListener('keyup', onKeyup, true)
+    }
     if (layer.keydown) layer.keydown(event)
     else if (event.key === 'Escape') {
       event.preventDefault()
       event.stopPropagation()
       layer.dismiss()
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopImmediatePropagation()
     }
   }
 
@@ -71,7 +120,12 @@ export function createDismissibleLayerStack() {
     if (!layers.length) {
       document.removeEventListener('click', onPointer, true)
       document.removeEventListener('mousedown', onPointer, true)
-      window.removeEventListener('keydown', onKeydown, true)
+      if (!isEscapeHeld) {
+        window.removeEventListener('keydown', onKeydown, true)
+        window.removeEventListener('keydown', onBubbleKeydown)
+        window.removeEventListener('keyup', onKeyup, true)
+        window.removeEventListener('blur', onBlur)
+      }
     }
   }
 
@@ -82,15 +136,21 @@ export function createDismissibleLayerStack() {
       document.addEventListener('click', onPointer, true)
       document.addEventListener('mousedown', onPointer, true)
       window.addEventListener('keydown', onKeydown, true)
+      window.addEventListener('keydown', onBubbleKeydown)
+      window.addEventListener('blur', onBlur)
     }
     layers.push(layer)
   }
 
   function clear() {
     layers.length = 0
+    isEscapeHeld = false
+    window.removeEventListener('keyup', onKeyup, true)
+    window.removeEventListener('blur', onBlur)
     document.removeEventListener('click', onPointer, true)
     document.removeEventListener('mousedown', onPointer, true)
     window.removeEventListener('keydown', onKeydown, true)
+    window.removeEventListener('keydown', onBubbleKeydown)
   }
 
   return { layers, isWithinDismissibleLayer, remove, sync, clear }

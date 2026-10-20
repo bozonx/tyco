@@ -24,6 +24,22 @@ describe('ai-profiles-model', () => {
     randomSuffix: () => 'abcd1234',
   })
 
+  it('reports failed writes without breaking later saves', async () => {
+    const deps = { ...createDeps(), reportError: vi.fn() }
+    const error = new Error('disk full')
+    deps.saveProfile.mockRejectedValueOnce(error)
+    const model = createAiProfilesModel(deps)
+    await model.loadProfiles()
+    await expect(
+      model.updateProfile('tech-writer', { name: 'First' })
+    ).rejects.toThrow('disk full')
+    expect(deps.reportError).toHaveBeenCalledWith(error)
+    await model.updateProfile('tech-writer', { name: 'Second' })
+    expect(deps.saveProfile).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: 'Second' })
+    )
+  })
+
   it('loads profiles into state', async () => {
     const deps = createDeps()
     const model = createAiProfilesModel(deps)

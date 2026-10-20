@@ -19,8 +19,8 @@
 
 <script setup lang="ts">
 import { desktopClient } from '../../lib/desktop/client'
-import { appNavigation } from '../../lib/navigation/navigation'
 import { resolveModeRoute } from '../../lib/navigation/routes'
+import { appNavigation } from '../../navigation'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useIpcStore } from '../../stores/ipc'
 import AppIcon from '../common/AppIcon.vue'

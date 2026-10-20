@@ -140,7 +140,7 @@ describe('executeWebhook', () => {
     const log = vi.fn().mockResolvedValue(undefined)
     await expect(
       executeWebhook(
-        webhook({ url: 'https://x.test/{{TEXT}}', logOutput: true }),
+        webhook({ url: 'https://x.test/{{TEXT}}', isOutputLogged: true }),
         'private',
         fetchFn as never,
         log

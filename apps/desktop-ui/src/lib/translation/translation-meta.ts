@@ -1,3 +1,4 @@
+import { isRecord } from '@tyco/shared/value-guards'
 import {
   TRANSLATION_PROBLEM_CODES,
   type TranslationProblem,
@@ -11,9 +12,6 @@ export type TranslationMeta = Pick<
   TranslationRunResult,
   'provider' | 'kind' | 'model' | 'quality'
 >
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
 function isProblem(value: unknown): value is TranslationProblem {
   return (

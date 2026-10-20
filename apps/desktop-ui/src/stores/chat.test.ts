@@ -4,7 +4,7 @@ import { nextTick } from 'vue'
 import { APP_CONFIG, DEFAULT_LLM_CONFIG, type AiProfile } from '@tyco/shared'
 
 import type { DesktopCall } from '../lib/ipc/ipc-model'
-import { appNavigation } from '../lib/navigation/navigation'
+import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from './ai-profiles'
 import {
   disposeProfileChatStore,

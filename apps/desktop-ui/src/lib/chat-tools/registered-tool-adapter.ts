@@ -51,7 +51,7 @@ export function adaptRegisteredTool(
         config: { ...tool.baseConfig?.(), ...options.config },
         source: 'chat',
         signal,
-        wantsOutput: true,
+        isOutputRequested: true,
       })
       return toolResultForModel(result)
     },

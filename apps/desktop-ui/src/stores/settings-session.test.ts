@@ -29,8 +29,12 @@ vi.mock('./theme', () => ({ useThemeStore: () => ({ settings: {} }) }))
 vi.mock('./plugin-runtime', () => ({
   usePluginRuntimeStore: () => ({ pluginFactories: [] }),
 }))
-vi.mock('../composables/use-toast', () => ({
-  default: () => ({ toastText: mocks.toastText }),
+vi.mock('./toast', () => ({
+  useToastStore: () => ({
+    addToast: vi.fn(),
+    toastKey: vi.fn(),
+    toastText: mocks.toastText,
+  }),
 }))
 vi.mock('../lib/i18n', () => ({ translate: (key: string) => key }))
 

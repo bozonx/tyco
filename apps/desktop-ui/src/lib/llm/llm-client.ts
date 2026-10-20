@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import {
   AiError,
   AllCandidatesFailedError,
@@ -563,11 +564,7 @@ export function toLlmError(error: unknown): LlmError {
   if (error instanceof AiError) {
     return new LlmError(errorKind(error.kind), error.message, { cause: error })
   }
-  return new LlmError(
-    'unknown',
-    error instanceof Error ? error.message : String(error),
-    { cause: error }
-  )
+  return new LlmError('unknown', errorMessage(error), { cause: error })
 }
 
 function errorKind(kind: AiErrorKind): LlmErrorKind {

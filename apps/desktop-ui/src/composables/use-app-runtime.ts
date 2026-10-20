@@ -1,6 +1,7 @@
 import { nextTick, onMounted, onUnmounted, onScopeDispose } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { useDismissibleLayer } from './use-dismissible-layer'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
@@ -14,7 +15,7 @@ import { isQuickWindow as isInQuickWindow } from '../lib/desktop/window'
 import { syncI18nLocale } from '../lib/i18n'
 import { syncDocumentLanguageAttributes } from '../lib/locale/language'
 import { clientLogger } from '../lib/logger'
-import { appNavigation } from '../lib/navigation/navigation'
+import { appNavigation } from '../navigation'
 import { isQuickWindowMode } from '../lib/navigation/routes'
 import { createSettingsShutdown } from '../lib/settings/settings-shutdown'
 import { useChatStore } from '../stores/chat'
@@ -39,17 +40,27 @@ export function useAppRuntime() {
   useThemeStore()
   const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
+  const isQuickWindow = isInQuickWindow()
   const pluginRuntime = usePluginRuntimeStore()
   const { locale, t } = useI18n()
   const menuModalsStore = useMenuModalsStore()
   const navPanelStore = useNavPanelStore()
+  useDismissibleLayer({
+    isOpen: () => !isQuickWindow,
+    elements: () => [],
+    canDismissOutside: false,
+    keyboardPhase: 'bubble',
+    dismiss: () => {},
+    keydown: (event) => {
+      if (event.key === 'Escape') navPanelStore.handleKeyDown(event)
+    },
+  })
   const chatStore = useChatStore()
   const chatInputStore = useChatInputStore()
   const editorInputStore = useEditorInputStore()
   const quickInputStore = useQuickInputStore()
   const editorNavigation = useEditorNavigation()
   const route = useRoute()
-  const isQuickWindow = isInQuickWindow()
   const { toastKey } = useToast()
   const settingsShutdown = createSettingsShutdown({
     flush: async () => {
@@ -117,18 +128,6 @@ export function useAppRuntime() {
       await pluginRuntime.reloadPlugins()
       // external calls find the commands of plugin tools by this catalog
       if (isQuickWindow) useToolCatalogStore().start()
-    },
-    // The nav panel turns Esc into a step back. The quick window has no nav
-    // panel, and there Esc must cancel and close: its screens handle it
-    handleNavKeyUp: (event) => {
-      if (!isQuickWindow) navPanelStore.handleKeyUp(event)
-    },
-    addWindowKeyupListener: (handler) => {
-      window.addEventListener('keyup', handler)
-
-      return () => {
-        window.removeEventListener('keyup', handler)
-      }
     },
   })
 

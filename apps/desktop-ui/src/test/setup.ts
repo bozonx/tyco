@@ -1,5 +1,6 @@
 import { config, enableAutoUnmount } from '@vue/test-utils'
 import { afterEach, vi } from 'vitest'
+import { clearDismissibleLayers } from '../composables/use-dismissible-layer'
 
 config.global.config.warnHandler = (message) => {
   throw new Error(`Unexpected Vue warning: ${message}`)
@@ -8,6 +9,7 @@ config.global.config.warnHandler = (message) => {
 enableAutoUnmount(afterEach)
 
 afterEach(() => {
+  clearDismissibleLayers()
   vi.useRealTimers()
   window.localStorage.clear()
   window.sessionStorage.clear()

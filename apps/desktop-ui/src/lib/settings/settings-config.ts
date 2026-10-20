@@ -1,3 +1,4 @@
+import { isRecord } from '@tyco/shared/value-guards'
 import {
   DEFAULT_USER_CONFIG,
   normalizeUserConfig,
@@ -14,8 +15,6 @@ export interface SettingsConfigDependencies {
   appearance: () => AppearanceSettings
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value)
 const recordOf = (value: unknown): Record<string, unknown> =>
   isRecord(value) ? value : {}
 

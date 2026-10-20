@@ -78,7 +78,7 @@ interface OpenMenu {
 
 const menu = ref<OpenMenu | null>(null)
 
-const { showMarkup, toggleShowMarkup } = useMarkupMode()
+const { isMarkupShown, toggleShowMarkup } = useMarkupMode()
 
 let view: EditorView | null = null
 
@@ -162,7 +162,7 @@ const menuGroups = (): EditorMenuGroups => ({
       markdownCommands[command](view)
       view.focus()
     },
-    showMarkup: showMarkup.value,
+    isMarkupShown: isMarkupShown.value,
     toggleShowMarkup,
   }),
 })
@@ -206,7 +206,7 @@ onMounted(() => {
       paste: true,
       getMarkdownSettings: () => desktopStore.userConfig.markdown.format,
       onPastePlain: () => void commands.pastePlain(),
-      markdownPreview: !showMarkup.value,
+      markdownPreview: !isMarkupShown.value,
       onToggleMarkup: toggleShowMarkup,
       onContextMenu: openContextMenu,
       onDocChange: (value) => editorInputStore.setValue(value),
@@ -244,7 +244,7 @@ watch(
   }
 )
 
-watch(showMarkup, (show) => {
+watch(isMarkupShown, (show) => {
   if (view) setMarkdownPreview(view, !show)
 })
 
@@ -255,7 +255,7 @@ watch(
     if (view) {
       setPlaceholder(view, text)
       setEditorPhrases(view, t)
-      setMarkdownPreview(view, !showMarkup.value)
+      setMarkdownPreview(view, !isMarkupShown.value)
     }
   }
 )

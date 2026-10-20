@@ -1,6 +1,9 @@
 import type { ChatAttachment, ChatImage } from '@tyco/shared'
 import { chatContextCharacters, trimChatContext } from './chat-context'
-import { imageBudgetCharacters, MAX_CHAT_IMAGES } from './chat-image-input'
+import {
+  imageBudgetCharacters,
+  MAX_CHAT_IMAGES_COUNT,
+} from './chat-image-input'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
 /**
@@ -41,7 +44,7 @@ export function prepareGenerationRequest(
   }
 
   if (
-    images.length > MAX_CHAT_IMAGES ||
+    images.length > MAX_CHAT_IMAGES_COUNT ||
     (images.length > 0 && !model.canUseImages)
   ) {
     deps.notifyError(deps.imageModelError?.() || deps.noModelError())

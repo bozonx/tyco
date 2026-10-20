@@ -24,10 +24,6 @@ export interface AppBootstrapDependencies {
   ownsMode?: (mode: DesktopViewState['mode']) => boolean
   listen: DesktopListen
   initPlugins: () => void | Promise<void>
-  handleNavKeyUp: (event: KeyboardEvent) => void
-  addWindowKeyupListener: (
-    handler: (event: KeyboardEvent) => void
-  ) => () => void
 }
 
 export function createAppBootstrap(deps: AppBootstrapDependencies) {
@@ -81,7 +77,6 @@ export function createAppBootstrap(deps: AppBootstrapDependencies) {
     lastRevision = -1
     const work = async () => {
       try {
-        run.add(deps.addWindowKeyupListener(deps.handleNavKeyUp))
         await run.listen(
           deps.listen,
           DESKTOP_EVENTS.STATE_CHANGED,

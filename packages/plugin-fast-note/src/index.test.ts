@@ -110,7 +110,7 @@ describe('FastNote plugin', () => {
       config: { pathToNotes: '/vault', ...daily },
       source: 'launcher',
       signal: new AbortController().signal,
-      wantsOutput: false,
+      isOutputRequested: false,
     })
 
     expect(mocks.callApiFunction).toHaveBeenCalledWith('appendNote', [
@@ -171,7 +171,7 @@ describe('FastNote plugin', () => {
         config: { pathToNotes: '/notes' },
         source,
         signal: new AbortController().signal,
-        wantsOutput: false,
+        isOutputRequested: false,
       })
 
     expect(await call('launcher')).toMatchObject({ keepWindow: false })
@@ -240,7 +240,7 @@ describe('FastNote editor conflicts', () => {
       config: { pathToNotes: '/notes' },
       source: 'menu',
       signal: new AbortController().signal,
-      wantsOutput: false,
+      isOutputRequested: false,
     })
     expect(await ctx.getEditorInputValue()).toBe('new unsaved text')
     expect(mocks.applyEditorInputEdit).not.toHaveBeenCalled()

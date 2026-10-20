@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
@@ -23,8 +24,7 @@ function setup(extra: Partial<CoreToolDependencies> = {}) {
     ),
     getLlmUnavailableReasonKey: vi.fn(() => undefined),
     getTranslatorUnavailableReasonKey: vi.fn(() => undefined),
-    describeError: (error) =>
-      error instanceof Error ? error.message : String(error),
+    describeError: (error) => errorMessage(error),
     ...extra,
   }
   const tools = new Map(
@@ -44,7 +44,7 @@ function setup(extra: Partial<CoreToolDependencies> = {}) {
       config,
       source: 'launcher',
       signal,
-      wantsOutput: true,
+      isOutputRequested: true,
     }
     return tools.get(id)!.run(call)
   }
@@ -128,7 +128,7 @@ describe('createCoreTools', () => {
         config: { language: 'en_US', sourceLanguage: 'es_AR' },
         source: 'menu',
         signal,
-        wantsOutput: true,
+        isOutputRequested: true,
         onProgress,
       })
     expect(result).toEqual({

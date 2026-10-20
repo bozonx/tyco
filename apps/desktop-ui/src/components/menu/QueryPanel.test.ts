@@ -98,12 +98,15 @@ describe('QueryPanel', () => {
   })
 
   it('goes back on Esc and passes Ctrl+S on', async () => {
-    const wrapper = mount(QueryPanel, { props: { modelValue: '' } })
+    const wrapper = mount(QueryPanel, {
+      attachTo: document.body,
+      props: { modelValue: '' },
+    })
     const input = wrapper.find('input')
 
     await input.trigger('keydown', { key: 'Tab' })
     await input.trigger('keydown', { key: 's', code: 'KeyS', ctrlKey: true })
-    await input.trigger('keyup', { key: 'Escape' })
+    await input.trigger('keydown', { key: 'Escape' })
 
     expect(wrapper.emitted('tab')).toBeUndefined()
     expect(wrapper.emitted('save')).toHaveLength(1)

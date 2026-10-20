@@ -2,7 +2,6 @@
   <div
     ref="root"
     class="chat-markdown selectable"
-    v-html="html"
     @click="handleClick"
     @auxclick="handleAuxClick"
     @load.capture="emit('content-resized')"
@@ -111,7 +110,7 @@ watch(
     clearTimeout(timer)
     view.reset()
     await nextTick()
-    // Status changes may leave v-html unchanged; always start from clean markup.
+    // Enhancement mutates the DOM; status changes also start from clean markup.
     if (!root.value || currentRevision !== revision) return
     root.value.innerHTML = html.value
     timer = setTimeout(

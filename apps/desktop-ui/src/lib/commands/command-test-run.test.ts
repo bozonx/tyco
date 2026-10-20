@@ -160,7 +160,7 @@ describe('runCommandTest', () => {
     )
     expect(result).toEqual({ kind: 'output', output: 'done' })
     expect(executeWebhook).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Hook', logOutput: false }),
+      expect.objectContaining({ name: 'Hook', isOutputLogged: false }),
       'hi',
       expect.anything()
     )

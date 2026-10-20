@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 import type { CoreToolId } from '@tyco/shared'
 
-import useToast from '../composables/use-toast'
+import { useToastStore } from './toast'
 import { translate } from '../lib/i18n'
 import { builtinInvocation } from '../lib/invocation/builtin-invocation'
 import {
@@ -23,7 +23,7 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
   const ipcStore = useIpcStore()
   const menuModalsStore = useMenuModalsStore()
   const toolsStore = useToolsStore()
-  const { toastKey, toastText } = useToast()
+  const { toastKey, toastText } = useToastStore()
 
   return {
     tools: toolsStore,

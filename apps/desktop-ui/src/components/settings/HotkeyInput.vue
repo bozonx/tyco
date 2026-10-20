@@ -301,4 +301,12 @@ onBeforeUnmount(() => {
     transform: scale(0.7);
   }
 }
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 </style>

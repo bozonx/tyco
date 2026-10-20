@@ -24,7 +24,7 @@ export function createNavPanelModel(deps: NavPanelModelDependencies) {
     navPanelState.value = { ...DEFAULT_NAV_PANEL_STATE, ...stateOverrides }
   }
 
-  function handleKeyUp(
+  function handleKeyDown(
     event: Pick<KeyboardEvent, 'code' | 'defaultPrevented'>
   ) {
     if (event.code !== 'Escape' || event.defaultPrevented) return
@@ -36,5 +36,5 @@ export function createNavPanelModel(deps: NavPanelModelDependencies) {
     }
   }
 
-  return { navPanelState, resetNavPanelState, handleKeyUp }
+  return { navPanelState, resetNavPanelState, handleKeyDown }
 }

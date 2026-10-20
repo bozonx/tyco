@@ -139,7 +139,7 @@ describe('plugin context boundary', () => {
       config: {},
       source: 'external',
       signal: new AbortController().signal,
-      wantsOutput: true,
+      isOutputRequested: true,
     })
     controller.abort()
     expect(received.aborted).toBe(true)

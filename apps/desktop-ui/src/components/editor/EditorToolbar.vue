@@ -6,12 +6,14 @@
         size="sm"
         variant="ghost"
         class="view-mode-toggle"
-        :tone="showMarkup ? 'accent' : 'muted'"
-        :active="showMarkup"
-        :aria-pressed="showMarkup"
+        :tone="isMarkupShown ? 'accent' : 'muted'"
+        :active="isMarkupShown"
+        :aria-pressed="isMarkupShown"
         @click="toggleShowMarkup"
         :label="viewModeTitle"
-        :icon="showMarkup ? 'mdi:language-markdown-outline' : 'mdi:format-text'"
+        :icon="
+          isMarkupShown ? 'mdi:language-markdown-outline' : 'mdi:format-text'
+        "
       />
       <IconButton
         size="sm"
@@ -128,11 +130,11 @@ const toolbarStore = useToolbarStore()
 const desktopStore = useDesktopStore()
 const { t } = useI18n()
 const { getLabel, doEdit } = useEditorActions()
-const { showMarkup, toggleShowMarkup } = useMarkupMode()
+const { isMarkupShown, toggleShowMarkup } = useMarkupMode()
 
 const viewModeTitle = computed(() =>
   t(
-    showMarkup.value
+    isMarkupShown.value
       ? 'editor.markup.switchToFormatted'
       : 'editor.markup.switchToSource'
   )

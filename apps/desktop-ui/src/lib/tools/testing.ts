@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import {
   type ScriptAndWebhookToolDependencies,
   createScriptAndWebhookTools,
@@ -31,8 +32,7 @@ function testCoreTool(
     aiCustomPrompt: unused,
     getLlmUnavailableReasonKey: () => undefined,
     getTranslatorUnavailableReasonKey: () => undefined,
-    describeError: (error) =>
-      error instanceof Error ? error.message : String(error),
+    describeError: (error) => errorMessage(error),
   }).find((tool) => tool.id === id)!
 }
 

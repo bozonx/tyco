@@ -1,7 +1,11 @@
 <template>
   <div ref="containerRef" class="write-mode-container">
     <div ref="frameRef" class="write-frame">
-      <WriteModeInput class="flex-1" :max-height="inputMaxHeight" />
+      <WriteModeInput
+        ref="inputRef"
+        class="flex-1"
+        :max-height="inputMaxHeight"
+      />
     </div>
     <!-- mousedown.prevent keeps the focus and the caret in the input -->
     <p ref="hintRef" class="write-hint">
@@ -53,6 +57,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import KeyboardKey from '../components/common/KeyboardKey.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'
+import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
 import {
   newlineShortcut,
@@ -63,14 +68,14 @@ import {
 import { maxInputHeight } from '../lib/quick-panel/input-height'
 import { useCorrectionWorkflowStore } from '../stores/correction-workflow'
 import { useDesktopStore } from '../stores/desktop'
-import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { useQuickInputStore } from '../stores/quick-input'
+import { useWindowStore } from '../stores/window'
 
 const navPanelStore = useNavPanelStore()
 const quickInputStore = useQuickInputStore()
-const ipcStore = useIpcStore()
+const windowStore = useWindowStore()
 const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
 const correctionWorkflowStore = useCorrectionWorkflowStore()
@@ -86,6 +91,7 @@ const submitShortcutLabel = computed(() => submitShortcut(submitKey.value))
 const newlineShortcutLabel = computed(() => newlineShortcut(submitKey.value))
 
 const containerRef = ref<HTMLElement | null>(null)
+const inputRef = ref<InstanceType<typeof WriteModeInput> | null>(null)
 const frameRef = ref<HTMLElement | null>(null)
 const hintRef = ref<HTMLElement | null>(null)
 // the input grows up to the top of the window, then scrolls
@@ -167,7 +173,7 @@ function cancelAndClose() {
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
   resetNav()
-  void ipcStore.callOrNotify('hide_window')
+  void windowStore.hide()
 }
 
 /** Whether the input takes commands: not while a modal is over it. */
@@ -197,28 +203,30 @@ function cancelFromHint() {
 /** Inserts a line break at the caret, as the newline shortcut does. */
 async function insertNewline() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
-  const textarea = frameRef.value?.querySelector('textarea')
+  const input = inputRef.value
+  const selection = input?.getSelection()
   const text = quickInputStore.value
-  const start = textarea?.selectionStart ?? text.length
-  const end = textarea?.selectionEnd ?? text.length
+  const start = selection?.start ?? text.length
+  const end = selection?.end ?? text.length
   quickInputStore.setValue(`${text.slice(0, start)}\n${text.slice(end)}`)
   await nextTick()
-  textarea?.focus()
-  textarea?.setSelectionRange(start + 1, start + 1)
+  input?.focus()
+  input?.select(start + 1, start + 1)
 }
 
+useDismissibleLayer({
+  isOpen: acceptsInput,
+  elements: () => [containerRef.value],
+  canDismissOutside: false,
+  keyboardPhase: 'bubble',
+  dismiss: cancelAndClose,
+})
+
 function handleKeyDown(event: KeyboardEvent) {
-  if (!acceptsInput()) return
+  if (!acceptsInput() || event.defaultPrevented) return
 
   const action = resolveInputKeyAction(event, submitKey.value)
-
-  // Cancellation drops the text and closes the window, including while
-  // waiting for correction.
-  if (action === 'cancel') {
-    event.preventDefault()
-    cancelAndClose()
-    return
-  }
+  if (action === 'cancel') return
 
   if (menuModalsStore.pendingModal) {
     if (action !== 'none') event.preventDefault()

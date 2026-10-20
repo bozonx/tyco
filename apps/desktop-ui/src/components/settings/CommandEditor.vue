@@ -144,7 +144,7 @@
           /></template>
         </FieldRow>
         <div class="command-field-row">
-          <template v-if="tool?.logsOutput">
+          <template v-if="tool?.canLogOutput">
             <FieldSwitch
               :model-value="command.isOutputLogged"
               :label="t('settings.actionLogOutput')"

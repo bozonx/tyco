@@ -59,6 +59,21 @@ afterEach(() => {
 })
 
 describe('ChatMarkdown.vue', () => {
+  it('writes streamed HTML to the root once per rendered update', async () => {
+    const setter = vi.spyOn(Element.prototype, 'innerHTML', 'set')
+    const wrapper = render('first', true)
+    await settle()
+    const writes = () =>
+      setter.mock.contexts.filter((element) => element === wrapper.element)
+        .length
+    expect(writes()).toBe(1)
+    await wrapper.setProps({ content: 'first second' })
+    await vi.advanceTimersByTimeAsync(150)
+    await settle()
+    expect(writes()).toBe(2)
+    expect(wrapper.text()).toContain('first second')
+  })
+
   it('enhances code and refreshes button labels when the locale changes', async () => {
     const wrapper = render('```ts\nconst x = 1\n```')
     await settle()

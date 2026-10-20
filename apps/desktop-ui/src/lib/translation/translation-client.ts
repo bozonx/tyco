@@ -1,3 +1,4 @@
+import { keepSurroundingWhitespace } from '@tyco/shared'
 import {
   Catalog,
   AiError,
@@ -24,8 +25,8 @@ import type { LlmPrompt } from '../llm/llm-prompt'
 import { protectTranslationText } from './protected-text'
 import { createDeepLProvider } from './machine-providers'
 
-const MT_CHUNK_LIMIT = 4_500
-const LLM_CHUNK_LIMIT = 36_000
+const MT_CHUNK_LIMIT_CHARACTERS = 4_500
+const LLM_CHUNK_LIMIT_CHARACTERS = 36_000
 const LLM_REPAIR_COMBINED_LIMIT = 48_000
 
 export interface TranslationClientDependencies {
@@ -177,7 +178,7 @@ async function translateWithMachine(
       .filter((entry) => entry.doNotTranslate)
       .map((entry) => entry.term)
   )
-  const chunks = chunkText(protectedText.text, MT_CHUNK_LIMIT)
+  const chunks = chunkText(protectedText.text, MT_CHUNK_LIMIT_CHARACTERS)
   const translated: string[] = []
   let detectedSourceLanguage: string | undefined
   let resultProvider = provider
@@ -373,9 +374,7 @@ function restoreTranslationChunkWhitespace(
 ) {
   if (count < 2) return translated
   if (!source.trim()) return source
-  const leading = /^\s*/.exec(source)?.[0] ?? ''
-  const trailing = /\s*$/.exec(source)?.[0] ?? ''
-  return `${leading}${translated.trim()}${trailing}`
+  return keepSurroundingWhitespace(source, translated)
 }
 
 function normalizeLanguage(language: string): string {
@@ -403,12 +402,12 @@ function llmChunkLimit(
   options: TranslationRunOptions,
   glossary: GlossaryEntry[]
 ): number {
-  if (!deps.getLlmLimits) return LLM_CHUNK_LIMIT
+  if (!deps.getLlmLimits) return LLM_CHUNK_LIMIT_CHARACTERS
   const { contextWindowTokens: context, maxOutputTokens } = deps.getLlmLimits()
   const instructions = translationSystem(options, glossary).length
   const characters = Math.floor(context / 3) - instructions - 512
   const limit = Math.min(
-    LLM_CHUNK_LIMIT,
+    LLM_CHUNK_LIMIT_CHARACTERS,
     characters,
     Math.floor(maxOutputTokens / 2)
   )

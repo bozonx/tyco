@@ -18,13 +18,42 @@ export function configuredHotkey(
   config: Pick<UserConfig, 'hotkeys' | 'launcherPages'>,
   id: string
 ): string {
+  const target = resolveHotkeyTarget(config, id)
+  return target?.get() ?? ''
+}
+
+export function resolveHotkeyTarget(
+  config: Pick<UserConfig, 'hotkeys' | 'launcherPages'>,
+  id: string
+): { get: () => string; set: (shortcut: string) => void } | null {
   if (id === INLINE_CORRECTION_HOTKEY_ID)
-    return config.hotkeys.selectionCorrection
+    return {
+      get: () => config.hotkeys.selectionCorrection,
+      set: (value) => {
+        config.hotkeys.selectionCorrection = value
+      },
+    }
   if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
-    const pageId = id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
-    return config.launcherPages.find((page) => page.id === pageId)?.hotkey ?? ''
+    const page = config.launcherPages.find(
+      (item) => item.id === id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
+    )
+    return page
+      ? {
+          get: () => page.hotkey,
+          set: (value) => {
+            page.hotkey = value
+          },
+        }
+      : null
   }
-  return Object.hasOwn(config.hotkeys, id) ? config.hotkeys[id as HotkeyId] : ''
+  if (!Object.hasOwn(config.hotkeys, id)) return null
+  const key = id as HotkeyId
+  return {
+    get: () => config.hotkeys[key],
+    set: (value) => {
+      config.hotkeys[key] = value
+    },
+  }
 }
 
 export const HOTKEY_MODIFIERS = ['Ctrl', 'Alt', 'Shift', 'Super'] as const

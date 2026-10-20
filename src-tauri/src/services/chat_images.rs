@@ -22,7 +22,7 @@ const MAX_SESSION_BYTES: usize = 128 * 1024 * 1024;
 /// The webview scales images down to this; providers reject larger ones.
 const MAX_DIMENSION: u32 = 8_000;
 const MAX_PIXELS: u64 = 24_000_000;
-/// Mirrors `MAX_CHAT_IMAGES` in `apps/desktop-ui/src/lib/chat/chat-image-input.ts`.
+/// Mirrors `MAX_CHAT_IMAGES_COUNT` in `apps/desktop-ui/src/lib/chat/chat-image-input.ts`.
 const MAX_MESSAGE_IMAGES: usize = 4;
 /// Lower qualities are tried only while the image exceeds `MAX_IMAGE_BYTES`.
 const WEBP_QUALITIES: [f32; 4] = [85.0, 75.0, 60.0, 45.0];

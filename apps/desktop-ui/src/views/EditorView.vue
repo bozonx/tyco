@@ -11,14 +11,15 @@ import { onMounted, onScopeDispose, onUnmounted } from 'vue'
 
 import ContentPadding from '../components/common/ContentPadding.vue'
 import Editor from '../components/editor/Editor.vue'
+import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { isCtrlEnter } from '../lib/input-keys/input-keys'
 import { useDesktopStore } from '../stores/desktop'
 import { useEditorInputStore } from '../stores/editor-input'
-import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
+import { useWindowStore } from '../stores/window'
 
-const ipcStore = useIpcStore()
+const windowStore = useWindowStore()
 
 const desktopStore = useDesktopStore()
 const navPanelStore = useNavPanelStore()
@@ -26,7 +27,7 @@ const menuModalsStore = useMenuModalsStore()
 const editorInputStore = useEditorInputStore()
 
 async function closeEditor() {
-  await ipcStore.callOrNotify('hide_window')
+  await windowStore.hide()
 }
 
 function openInsertMenu() {
@@ -46,16 +47,19 @@ onScopeDispose(() => {
   navPanelStore.resetNavPanelState()
 })
 
+useDismissibleLayer({
+  isOpen: () => !menuModalsStore.hasOpenModal && !menuModalsStore.pendingModal,
+  elements: () => [],
+  canDismissOutside: false,
+  keyboardPhase: 'bubble',
+  dismiss: () => {
+    void closeEditor()
+  },
+})
+
 function handleKeyDown(event: KeyboardEvent) {
   if (event.defaultPrevented) return
   if (menuModalsStore.hasOpenModal || menuModalsStore.pendingModal) return
-  if (event.code === 'Escape') {
-    event.preventDefault()
-    if (!event.repeat) {
-      void closeEditor()
-    }
-    return
-  }
   // Enter breaks lines in the editor whatever the submit key is
   if (isCtrlEnter(event)) {
     event.preventDefault()

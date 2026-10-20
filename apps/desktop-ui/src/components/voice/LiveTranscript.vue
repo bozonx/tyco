@@ -162,4 +162,12 @@ watch(
 .fade-leave-to {
   opacity: 0;
 }
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 </style>

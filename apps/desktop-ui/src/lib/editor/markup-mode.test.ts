@@ -9,7 +9,7 @@ describe('markup mode', () => {
     mode.setShowMarkup(false)
     expect(focus).not.toHaveBeenCalled()
     mode.toggleShowMarkup()
-    expect(mode.showMarkup.value).toBe(true)
+    expect(mode.isMarkupShown.value).toBe(true)
     mode.setShowMarkup(true)
     expect(focus).toHaveBeenCalledOnce()
   })

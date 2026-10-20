@@ -5,7 +5,7 @@ import { assertSttKeyAvailable } from './stt-readiness'
 import { dictationLanguageFor } from './dictation-language'
 import type { LiveTranscriptState } from './live-transcript'
 import type { LiveDictation } from './live-dictation'
-import { buildSttCatalog, sttProviderNeedsKey } from './stt-client'
+import { buildSttCatalog, isKeyRequiredForSttProvider } from './stt-client'
 import { activeSttModel, type SttModel } from './stt-config'
 
 export interface DictationHandlers {
@@ -45,7 +45,7 @@ export function createDictationController(
     } catch {
       throw new Error(deps.translate('toast.sttModelIncomplete'))
     }
-    const needsKey = sttProviderNeedsKey(model.provider)
+    const needsKey = isKeyRequiredForSttProvider(model.provider)
     if (needsKey) {
       try {
         await deps.refreshSecrets()

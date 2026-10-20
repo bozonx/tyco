@@ -76,7 +76,7 @@ import {
   DICTATION_LANGUAGE_MULTI,
   DICTATION_LANGUAGE_USER,
 } from '../../lib/stt/dictation-language'
-import { secretId, sttProviderNeedsKey } from '../../lib/stt/stt-client'
+import { isKeyRequiredForSttProvider, secretId } from '../../lib/stt/stt-client'
 import { activeSttModel } from '../../lib/stt/stt-config'
 import { useSecretsStore } from '../../stores/secrets'
 import FieldInput from '../common/FieldInput.vue'
@@ -96,7 +96,7 @@ const sttKeyDraft = ref('')
 const currentSttModel = computed(() => activeSttModel(userConfig.value.stt))
 
 const sttNeedsKey = computed(() =>
-  sttProviderNeedsKey(currentSttModel.value.provider)
+  isKeyRequiredForSttProvider(currentSttModel.value.provider)
 )
 
 const sttProviderOptions = computed(() => [

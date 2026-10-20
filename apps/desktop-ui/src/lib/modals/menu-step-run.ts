@@ -1,3 +1,4 @@
+import { errorMessage } from '@tyco/shared/value-guards'
 import type { EditorHistoryOperation } from '@tyco/shared'
 
 import type { ToolResult } from '../tools/tool-types'
@@ -78,7 +79,7 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
       request.show(text, result)
     } catch (error) {
       if (controller.signal.aborted) return
-      deps.reportError(error instanceof Error ? error.message : String(error))
+      deps.reportError(errorMessage(error))
     } finally {
       deps.clearPending(owner)
     }
