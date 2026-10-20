@@ -25,7 +25,7 @@ activation-bench = []
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-base64 = "0.22"
+base64 = "0.23"
 cpal = "0.15"
 futures-util = "0.3"
 log = "0.4"
