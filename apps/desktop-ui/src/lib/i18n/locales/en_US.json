@@ -236,6 +236,7 @@
     "launcherResultGroup": "Quick command result"
   },
   "common": {
+    "retry": "Retry",
     "add": "Add",
     "back": "Back",
     "cancel": "Cancel",

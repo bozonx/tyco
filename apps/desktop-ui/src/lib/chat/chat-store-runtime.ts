@@ -196,6 +196,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       toastText(message, 'error')
     },
     emptyMessageError: () => translate('toast.textNotSelected'),
+    emptyResponseError: () => translate('selection.emptyResult'),
     chatNotFoundError: () => translate('history.empty'),
     chatLoadError: () => translate('history.operationFailed'),
     messageTooLongError: () => translate('llmErrors.contextLength'),

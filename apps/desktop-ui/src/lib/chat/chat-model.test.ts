@@ -146,7 +146,7 @@ describe('chat-model', () => {
     expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
   })
 
-  it('rolls back optimistic user message when request returns no content', async () => {
+  it('keeps an empty response turn available for retry', async () => {
     const deps = createDeps({
       sendChatMessage: vi.fn(async () => chatAnswer('')),
     })
@@ -155,7 +155,15 @@ describe('chat-model', () => {
     const result = await store.sendMessage('Hello')
 
     expect(result).toBe('')
-    expect(store.messages.value).toEqual([])
+    expect(store.messages.value).toEqual([{ role: 'user', content: 'Hello' }])
+    expect(store.error.value).toBeTruthy()
+    expect(store.lastFailedTurn.value?.message).toBe('Hello')
+    vi.mocked(deps.sendChatMessage).mockResolvedValueOnce(
+      chatAnswer('Recovered')
+    )
+    await store.retryLastTurn()
+    expect(store.messages.value).toHaveLength(2)
+    expect(store.messages.value[1]?.content).toBe('Recovered')
   })
 
   it('keeps a failed user turn and retries it', async () => {

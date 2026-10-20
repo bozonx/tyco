@@ -45,6 +45,7 @@ export interface ChatModelDependencies {
   navigateTo: (path: AppRoutePath) => void | Promise<void>
   notifyError: (message: string) => void
   emptyMessageError: () => string
+  emptyResponseError?: () => string
   chatNotFoundError: () => string
   /** The stored chat could not be read */
   chatLoadError?: () => string

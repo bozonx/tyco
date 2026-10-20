@@ -20,40 +20,60 @@ export function createAutosave(deps: AutosaveDependencies) {
   const clearTimer =
     deps.clearTimer ??
     ((timer) => globalThis.clearTimeout(timer as ReturnType<typeof setTimeout>))
+  const save = async () => deps.save()
   const status = ref<AutosaveStatus>('idle')
   const error = ref('')
   let timer: unknown = null
-  let running: Promise<void> | null = null
+  let running: Promise<boolean> | null = null
+  let revision = 0
+  let changeCount = 0
   let isDirty = false
 
-  const run = async (): Promise<void> => {
+  const run = async (): Promise<boolean> => {
     if (running) {
-      await running
-      return isDirty ? run() : undefined
+      const saved = await running
+      return saved && isDirty ? run() : saved
     }
-    if (!isDirty) return
+    if (!isDirty) return status.value !== 'error'
+    const savingRevision = revision
+    const savingChangeCount = changeCount
     isDirty = false
     status.value = 'saving'
-    running = deps.save().then(
+    running = save().then(
       () => {
-        status.value = isDirty ? 'pending' : 'saved'
-        error.value = ''
+        if (savingRevision === revision) {
+          status.value = isDirty ? 'pending' : 'saved'
+          error.value = ''
+        }
+        return true
       },
       (cause: unknown) => {
-        status.value = 'error'
-        error.value = cause instanceof Error ? cause.message : String(cause)
+        if (savingRevision === revision) {
+          isDirty = true
+          status.value = 'error'
+          error.value = cause instanceof Error ? cause.message : String(cause)
+        }
+        return false
       }
     )
+    let saved: boolean
     try {
-      await running
+      saved = await running
     } finally {
       running = null
     }
-    if (isDirty && timer === null) await run()
+    if (
+      isDirty &&
+      timer === null &&
+      (saved || savingChangeCount !== changeCount)
+    )
+      return run()
+    return saved
   }
 
   /** A change to save once the field rests */
   const schedule = () => {
+    changeCount += 1
     isDirty = true
     status.value = 'pending'
     if (timer !== null) clearTimer(timer)
@@ -69,7 +89,7 @@ export function createAutosave(deps: AutosaveDependencies) {
       clearTimer(timer)
       timer = null
     }
-    await run()
+    return await run()
   }
 
   /** Forgets a waiting change, e.g. of a removed item */
@@ -77,7 +97,9 @@ export function createAutosave(deps: AutosaveDependencies) {
     if (timer !== null) clearTimer(timer)
     timer = null
     isDirty = false
-    if (status.value === 'pending') status.value = 'idle'
+    revision += 1
+    status.value = 'idle'
+    error.value = ''
   }
 
   return { status, error, schedule, flush, cancel }

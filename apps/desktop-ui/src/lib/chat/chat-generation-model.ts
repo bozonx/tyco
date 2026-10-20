@@ -22,6 +22,7 @@ export function createChatGenerationModel(
     | 'sendChatMessage'
     | 'notifyError'
     | 'emptyMessageError'
+    | 'emptyResponseError'
     | 'createId'
     | 'imageTitle'
     | 'saveSessionState'
@@ -188,6 +189,11 @@ export function createChatGenerationModel(
       if (!hasAnswer(assistantMessage) && hasAnswer(result)) {
         // Fallback if streamer wasn't used but we got a full text result
         applyAnswerState(assistantMessage, result)
+      }
+      if (!hasAnswer(assistantMessage)) {
+        throw new Error(
+          deps.emptyResponseError?.() ?? 'The model returned an empty result'
+        )
       }
     } catch (e) {
       if (currentGenerationId === generationId) {

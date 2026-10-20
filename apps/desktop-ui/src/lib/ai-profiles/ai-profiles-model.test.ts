@@ -40,6 +40,27 @@ describe('ai-profiles-model', () => {
     )
   })
 
+  it('ignores older list responses and invalidated loads', async () => {
+    const deps = createDeps()
+    let resolveOld!: (items: never[]) => void
+    deps.listProfiles.mockImplementationOnce(
+      () =>
+        new Promise<never[]>((resolve) => {
+          resolveOld = resolve
+        })
+    )
+    const model = createAiProfilesModel(deps)
+    const oldLoad = model.loadProfiles()
+    await model.loadProfiles()
+    const current = model.profiles.value
+    resolveOld([])
+    await oldLoad
+    expect(model.profiles.value).toBe(current)
+    deps.listProfiles.mockResolvedValue([])
+    await model.loadProfiles(() => false)
+    expect(model.profiles.value).toBe(current)
+  })
+
   it('loads profiles into state', async () => {
     const deps = createDeps()
     const model = createAiProfilesModel(deps)

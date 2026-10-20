@@ -59,6 +59,7 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
   /** Stores a change of an existing project once it is valid */
   const change = () => {
     if (isValid.value) autosave.schedule()
+    else autosave.cancel()
   }
 
   watch(autosave.error, (message) => {

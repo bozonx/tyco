@@ -22,6 +22,27 @@ describe('ai-projects-model', () => {
     now: vi.fn().mockReturnValue(2000),
   })
 
+  it('ignores older list responses and invalidated loads', async () => {
+    const deps = createDeps()
+    let resolveOld!: (items: never[]) => void
+    deps.listProjects.mockImplementationOnce(
+      () =>
+        new Promise<never[]>((resolve) => {
+          resolveOld = resolve
+        })
+    )
+    const model = createAiProjectsModel(deps)
+    const oldLoad = model.loadProjects()
+    await model.loadProjects()
+    const current = model.projects.value
+    resolveOld([])
+    await oldLoad
+    expect(model.projects.value).toBe(current)
+    deps.listProjects.mockResolvedValue([])
+    await model.loadProjects(() => false)
+    expect(model.projects.value).toBe(current)
+  })
+
   it('loads projects into state', async () => {
     const deps = createDeps()
     const model = createAiProjectsModel(deps)

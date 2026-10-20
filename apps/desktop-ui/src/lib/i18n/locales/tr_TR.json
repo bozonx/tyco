@@ -236,6 +236,7 @@
     "launcherResultGroup": "Hızlı komut sonucu"
   },
   "common": {
+    "retry": "Yeniden dene",
     "add": "Ekle",
     "back": "Geri",
     "cancel": "İptal",

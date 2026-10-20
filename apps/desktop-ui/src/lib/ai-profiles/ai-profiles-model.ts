@@ -43,8 +43,13 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   /** Writes of each profile, one after another, so the last change wins */
   const pendingSaves = new Map<string, Promise<void>>()
 
-  const loadProfiles = async (): Promise<void> => {
-    profiles.value = (await deps.listProfiles()) ?? []
+  let loadRequest = 0
+  const loadProfiles = async (
+    isCurrent: () => boolean = () => true
+  ): Promise<void> => {
+    const request = ++loadRequest
+    const loaded = (await deps.listProfiles()) ?? []
+    if (request === loadRequest && isCurrent()) profiles.value = loaded
   }
 
   const getProfile = (id: string): AiProfile | undefined => {

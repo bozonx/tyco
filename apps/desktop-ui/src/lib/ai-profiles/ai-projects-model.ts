@@ -24,8 +24,13 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
   const projects: Ref<AiProject[]> = ref([])
   const now = deps.now ?? (() => Date.now())
 
-  const loadProjects = async (): Promise<void> => {
-    projects.value = (await deps.listProjects()) ?? []
+  let loadRequest = 0
+  const loadProjects = async (
+    isCurrent: () => boolean = () => true
+  ): Promise<void> => {
+    const request = ++loadRequest
+    const loaded = (await deps.listProjects()) ?? []
+    if (request === loadRequest && isCurrent()) projects.value = loaded
   }
 
   const getProject = (id: string): AiProject | undefined => {

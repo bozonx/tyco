@@ -74,6 +74,44 @@ describe('profile editor', () => {
     editor.changeSoul()
     await editor.flush()
     expect(deps.writeSoul).not.toHaveBeenCalled()
+    expect(editor.saveStatus.value).toBe('error')
+  })
+
+  it('retries a failed instruction read without resetting profile edits', async () => {
+    const readSoul = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('unavailable'))
+      .mockResolvedValue('Recovered')
+    const { deps, editor } = setup({ readSoul })
+    await editor.load(profile)
+    editor.name.value = 'Edited'
+    expect(editor.isSoulLoaded.value).toBe(false)
+    await editor.load(profile)
+    expect(editor.name.value).toBe('Edited')
+    expect(editor.soulLoadError.value).toBe('')
+    expect(editor.soulPrompt.value).toBe('Recovered')
+    editor.soulPrompt.value = 'New instructions'
+    editor.changeSoul()
+    expect(await editor.flush()).toBe(true)
+    expect(deps.writeSoul).toHaveBeenCalledWith('New instructions')
+  })
+
+  it('does not replace text changed during an instruction read', async () => {
+    let resolveRead!: (text: string) => void
+    const { editor } = setup({
+      readSoul: () =>
+        new Promise<string>((resolve) => {
+          resolveRead = resolve
+        }),
+    })
+    const loading = editor.load(profile)
+    await Promise.resolve()
+    expect(editor.isSoulLoading.value).toBe(true)
+    editor.soulPrompt.value = 'Typed instructions'
+    resolveRead('Stored instructions')
+    await loading
+    expect(editor.soulPrompt.value).toBe('Typed instructions')
+    expect(editor.isSoulLoading.value).toBe(false)
   })
 
   it('reports a failed save and forgets cancelled changes', async () => {

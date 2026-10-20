@@ -50,6 +50,7 @@ describe('createAutosave', () => {
     const first = autosave.flush()
     autosave.schedule()
     const second = autosave.flush()
+    await Promise.resolve()
     release()
     await Promise.all([first, second])
 
@@ -70,6 +71,68 @@ describe('createAutosave', () => {
 
     expect(autosave.status.value).toBe('error')
     expect(autosave.error.value).toBe('disk full')
+  })
+
+  it('retains a failed write for an explicit retry without looping', async () => {
+    const save = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('disk full'))
+      .mockResolvedValue(undefined)
+    const autosave = createAutosave({ save, delayMs: 10000 })
+    autosave.schedule()
+    expect(await autosave.flush()).toBe(false)
+    expect(save).toHaveBeenCalledOnce()
+    expect(await autosave.flush()).toBe(true)
+    expect(save).toHaveBeenCalledTimes(2)
+    expect(autosave.status.value).toBe('saved')
+    expect(autosave.error.value).toBe('')
+  })
+
+  it('saves newer edits after an in-flight write fails', async () => {
+    vi.useFakeTimers()
+    try {
+      let rejectSave!: (error: Error) => void
+      const save = vi
+        .fn()
+        .mockImplementationOnce(
+          () =>
+            new Promise<void>((_resolve, reject) => {
+              rejectSave = reject
+            })
+        )
+        .mockResolvedValue(undefined)
+      const autosave = createAutosave({ save, delayMs: 100 })
+      autosave.schedule()
+      const pending = autosave.flush()
+      autosave.schedule()
+      await vi.advanceTimersByTimeAsync(100)
+      rejectSave(new Error('temporary failure'))
+      expect(await pending).toBe(true)
+      expect(save).toHaveBeenCalledTimes(2)
+      expect(autosave.status.value).toBe('saved')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not resurrect a failed write after cancellation', async () => {
+    let rejectSave!: (error: Error) => void
+    const save = vi.fn(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectSave = reject
+        })
+    )
+    const autosave = createAutosave({ save, delayMs: 10000 })
+    autosave.schedule()
+    const pending = autosave.flush()
+    await Promise.resolve()
+    autosave.cancel()
+    rejectSave(new Error('disk full'))
+    await pending
+    await autosave.flush()
+    expect(save).toHaveBeenCalledOnce()
+    expect(autosave.status.value).toBe('idle')
   })
 
   it('forgets a cancelled change', async () => {

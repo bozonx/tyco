@@ -64,11 +64,14 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   /** Reads the vault anew; a load started later wins */
   const loadAll = async (): Promise<void> => {
     const request = ++loadRequest
+    let active = true
+    const isCurrent = () => active && request === loadRequest
     try {
       const path = resultOf(await call('get_ai_vault_path'))
+      if (!isCurrent()) return
       await Promise.all([
-        profilesModel.loadProfiles(),
-        projectsModel.loadProjects(),
+        profilesModel.loadProfiles(isCurrent),
+        projectsModel.loadProjects(isCurrent),
       ])
       if (request !== loadRequest) return
       vaultPath.value = path
@@ -79,6 +82,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       projectsModel.projects.value = []
       vaultError.value = errorMessage(error)
     } finally {
+      active = false
       if (request === loadRequest) isLoaded.value = true
     }
   }

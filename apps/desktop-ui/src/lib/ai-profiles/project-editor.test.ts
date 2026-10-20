@@ -76,6 +76,26 @@ describe('project editor', () => {
     )
   })
 
+  it.each(['name', 'targetPath'] as const)(
+    'cancels a pending save when %s becomes invalid',
+    async (field) => {
+      const { deps, editor } = setup()
+      editor.load(project)
+      editor.isExternal.value = true
+      editor.targetPath.value = '/notes'
+      editor.change()
+      editor[field].value = ''
+      editor.change()
+      await vi.advanceTimersByTimeAsync(100)
+      await editor.flush()
+      expect(deps.saveProject).not.toHaveBeenCalled()
+      editor[field].value = field === 'name' ? 'Notes' : '/notes'
+      editor.change()
+      await editor.flush()
+      expect(deps.saveProject).toHaveBeenCalledOnce()
+    }
+  )
+
   it('reports a failed save', async () => {
     const { deps, editor } = setup()
     deps.saveProject.mockRejectedValue(new Error('disk full'))

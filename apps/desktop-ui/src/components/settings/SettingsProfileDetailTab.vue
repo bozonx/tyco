@@ -99,6 +99,7 @@
         <div class="settings-section-content">
           <FieldTextArea
             v-model="soulPrompt"
+            :disabled="!editor.isSoulLoaded.value"
             :rows="8"
             auto-resize
             :max-auto-height="400"
@@ -106,6 +107,14 @@
             @update:model-value="changeSoul"
           />
           <div class="profile-form-actions">
+            <Button
+              v-if="editor.soulLoadError.value"
+              size="sm"
+              :disabled="editor.isSoulLoading.value"
+              @click="editor.loadSoul()"
+            >
+              {{ t('common.retry') }}
+            </Button>
             <Button
               size="sm"
               variant="neutral"

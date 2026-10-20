@@ -34,6 +34,10 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
   const maxOutputTokensError = ref(false)
   const soulPrompt = ref('')
   const isSoulLoaded = ref(false)
+  const isSoulLoading = ref(false)
+  const soulLoadError = ref('')
+  let hasLoadedProfile = false
+  let soulRead: Promise<void> | null = null
   const timers = { setTimer: deps.setTimer, clearTimer: deps.clearTimer }
 
   const profileAutosave = createAutosave({
@@ -64,18 +68,39 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     },
   })
 
-  /** Fills the fields from the stored profile, once */
+  const loadSoul = (): Promise<void> => {
+    if (soulRead) return soulRead
+    isSoulLoading.value = true
+    soulLoadError.value = ''
+    const initialPrompt = soulPrompt.value
+    soulRead = Promise.resolve()
+      .then(deps.readSoul)
+      .then(
+        (content) => {
+          if (soulPrompt.value === initialPrompt) soulPrompt.value = content
+          isSoulLoaded.value = true
+        },
+        (error: unknown) => {
+          soulLoadError.value = String(error)
+          deps.reportError(soulLoadError.value)
+        }
+      )
+      .finally(() => {
+        isSoulLoading.value = false
+        soulRead = null
+      })
+    return soulRead
+  }
+
+  /** Fills profile fields once; a failed instruction read can be retried. */
   const load = async (profile: AiProfile): Promise<void> => {
-    if (isSoulLoaded.value) return
-    name.value = profile.name
-    temperatureText.value = String(profile.temperature ?? '')
-    maxOutputTokensText.value = String(profile.maxOutputTokens ?? '')
-    try {
-      soulPrompt.value = await deps.readSoul()
-      isSoulLoaded.value = true
-    } catch (error) {
-      deps.reportError(String(error))
+    if (!hasLoadedProfile) {
+      name.value = profile.name
+      temperatureText.value = String(profile.temperature ?? '')
+      maxOutputTokensText.value = String(profile.maxOutputTokens ?? '')
+      hasLoadedProfile = true
     }
+    if (!isSoulLoaded.value) await loadSoul()
   }
 
   const changeName = () => {
@@ -94,10 +119,17 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     if (!maxOutputTokensError.value) profileAutosave.schedule()
   }
 
-  const changeSoul = () => soulAutosave.schedule()
+  const changeSoul = () => {
+    if (isSoulLoaded.value) soulAutosave.schedule()
+  }
 
   const saveStatus = computed<AutosaveSummary>(() =>
-    summarizeAutosave([profileAutosave.status.value, soulAutosave.status.value])
+    soulLoadError.value
+      ? 'error'
+      : summarizeAutosave([
+          profileAutosave.status.value,
+          soulAutosave.status.value,
+        ])
   )
 
   watch(
@@ -109,7 +141,11 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
 
   /** Saves the waiting changes now, e.g. when the page is left */
   const flush = async () => {
-    await Promise.all([profileAutosave.flush(), soulAutosave.flush()])
+    const saved = await Promise.all([
+      profileAutosave.flush(),
+      soulAutosave.flush(),
+    ])
+    return saved.every(Boolean) && !soulLoadError.value
   }
 
   /** Forgets the waiting changes of a profile about to be removed */
@@ -126,6 +162,9 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     maxOutputTokensError,
     soulPrompt,
     isSoulLoaded,
+    isSoulLoading,
+    soulLoadError,
+    loadSoul,
     saveStatus,
     load,
     changeName,
