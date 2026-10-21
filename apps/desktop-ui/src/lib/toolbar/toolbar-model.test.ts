@@ -44,7 +44,7 @@ describe('createToolbarModel', () => {
     ])
   })
 
-  it('clears registered toolbar items', () => {
+  it('disposes registered toolbar items', () => {
     const store = createToolbarModel()
 
     const item: ToolbarItem = {
@@ -53,10 +53,10 @@ describe('createToolbarModel', () => {
       action: vi.fn(),
     }
 
-    store.registerToolbarItems([item])
+    const dispose = store.registerToolbarItems([item])
     expect(store.getToolbarItems()).toHaveLength(1)
 
-    store.clearToolbarItems()
+    dispose()
     expect(store.getToolbarItems()).toHaveLength(0)
     expect(store.getLeftToolbarItems()).toHaveLength(0)
     expect(store.getRightToolbarItems()).toHaveLength(0)

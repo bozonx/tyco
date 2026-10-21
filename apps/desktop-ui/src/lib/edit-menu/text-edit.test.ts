@@ -1,76 +1,70 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  createTextEditModel,
-  type TextEditSnapshot,
-  transformTextCase,
-} from './text-edit'
+import { proxyRefs } from 'vue'
+import { createEditorInputModel } from '../editor-input/editor-input-model'
+import { createTextEditModel, transformTextCase } from './text-edit'
+
+function setup(value: string, selectedText = '', from = 0, to = 0) {
+  const editor = proxyRefs(createEditorInputModel())
+  editor.setValue(value)
+  editor.setSelection(selectedText, from, to)
+  const model = createTextEditModel({
+    snapshot: editor.getSnapshot,
+    applyEdit: editor.applySnapshotEdit,
+  })
+  return { editor, model }
+}
 
 describe('text edit', () => {
-  function setup(snapshot: TextEditSnapshot) {
-    const deps = {
-      snapshot: () => snapshot,
-      replaceSelection: vi.fn(),
-      replaceText: vi.fn(),
-    }
-    return { deps, model: createTextEditModel(deps) }
-  }
   it('never falls back to the document for selection-only commands', async () => {
-    const { deps, model } = setup({
-      text: 'hello',
-      selectedText: '',
-      from: 0,
-      to: 0,
-    })
+    const { editor, model } = setup('hello')
     const action = vi.fn(() => 'changed')
     expect(await model.run({ selectionOnly: true, action })).toBe('empty')
     expect(action).not.toHaveBeenCalled()
-    expect(deps.replaceText).not.toHaveBeenCalled()
+    expect(editor.value).toBe('hello')
   })
-  it('preserves whitespace in the selected input and replaces only it', async () => {
-    const { deps, model } = setup({
-      text: 'x a y',
-      selectedText: ' a ',
-      from: 1,
-      to: 4,
-    })
-    const action = vi.fn((text: string) => text.toUpperCase())
-    await model.run({ selectionOnly: true, action })
-    expect(action).toHaveBeenCalledWith(' a ')
-    expect(deps.replaceSelection).toHaveBeenCalledWith(' A ')
-    expect(deps.replaceText).not.toHaveBeenCalled()
+  it('preserves whitespace and replaces only the selection', async () => {
+    const { editor, model } = setup('x a y', ' a ', 1, 4)
+    expect(await model.run({ action: (text) => text.toUpperCase() })).toBe(
+      'applied'
+    )
+    expect(editor.value).toBe('x A y')
   })
-  it('keeps text on formatter errors', async () => {
-    const { deps, model } = setup({
-      text: 'bad',
-      selectedText: '',
-      from: 0,
-      to: 0,
-    })
+  it('keeps text on formatter errors and invalid results', async () => {
+    const { editor, model } = setup('bad')
     await expect(
       model.run({
         action: () => {
-          throw Error('invalid')
+          throw new Error('invalid')
         },
       })
     ).rejects.toThrow('invalid')
-    expect(deps.replaceText).not.toHaveBeenCalled()
+    await expect(model.run({ action: () => null as never })).rejects.toThrow(
+      'Invalid text transform result'
+    )
+    expect(editor.value).toBe('bad')
   })
-  it('discards delayed results after the selection changes', async () => {
-    const snapshot = { text: 'abc', selectedText: 'a', from: 0, to: 1 }
-    const { deps, model } = setup(snapshot)
-    let finish!: (text: string) => void
-    const running = model.run({
-      action: () =>
-        new Promise<string>((resolve) => {
-          finish = resolve
-        }),
-    })
-    snapshot.to = 2
-    finish('changed')
-    expect(await running).toBe('stale')
-    expect(deps.replaceSelection).not.toHaveBeenCalled()
-    expect(deps.replaceText).not.toHaveBeenCalled()
-  })
+  it.each(['selection', 'document', 'undo'])(
+    'discards delayed results after %s changes',
+    async (change) => {
+      const { editor, model } = setup('abc', 'a', 0, 1)
+      let finish!: (text: string) => void
+      const pending = model.run({
+        action: () =>
+          new Promise<string>((resolve) => {
+            finish = resolve
+          }),
+      })
+      if (change === 'selection') editor.setSelection('ab', 0, 2)
+      else {
+        editor.setValue('new')
+        if (change === 'undo') editor.setValue('abc')
+      }
+      const before = editor.getSnapshot()
+      finish('changed')
+      expect(await pending).toBe('stale')
+      expect(editor.getSnapshot()).toEqual(before)
+    }
+  )
 })
 
 describe('transformTextCase', () => {

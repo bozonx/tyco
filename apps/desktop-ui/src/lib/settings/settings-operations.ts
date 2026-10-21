@@ -51,6 +51,7 @@ export function createSettingsOperations(deps: {
   const updatePluginEnabled = (pluginId: string, isEnabled: boolean) => {
     const config = deps.getConfig()
     config.plugins[pluginId] = {
+      ...config.plugins[pluginId],
       settings: config.plugins[pluginId]?.settings ?? {},
       isEnabled,
     }
@@ -67,6 +68,7 @@ export function createSettingsOperations(deps: {
       .pluginFactories()
       .find((factory) => factory().id === pluginId)?.()
     config.plugins[pluginId] = {
+      ...current,
       isEnabled: current?.isEnabled ?? false,
       settings: definition
         ? applyPluginPreset(definition, previous, values)

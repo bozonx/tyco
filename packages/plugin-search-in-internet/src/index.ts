@@ -2,7 +2,6 @@ import type { PluginDefinition } from '@tyco/plugin-sdk'
 import { locales } from './locales.js'
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 
-import { runToolFromToolbar } from '@tyco/plugin-sdk'
 import {
   type PluginContext,
   TEXT_INPUT_SCHEMA,
@@ -85,7 +84,7 @@ export default function pluginIndex(): PluginDefinition {
           icon: 'mdi:web',
           tooltipKey: 'local.label',
           position: 'right',
-          action: () => runToolFromToolbar(ctx, search),
+          toolId: search.id,
         },
       ])
     },

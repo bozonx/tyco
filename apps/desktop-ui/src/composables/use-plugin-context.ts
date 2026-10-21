@@ -1,3 +1,4 @@
+import { createToolInvoker } from '../lib/invocation/invoke-tool'
 import { translate } from '../lib/i18n/index'
 import { clientLogger } from '../lib/logger/index'
 import { createPluginContext } from '../lib/plugins/plugin-context'
@@ -16,6 +17,7 @@ export default function usePluginContext() {
   const edits = useEditMenuStore()
   const toolbar = useToolbarStore()
   const tools = useToolsStore()
+  const invokeTool = createToolInvoker({ tools })
   const editor = useEditorInputStore()
   const ipc = useIpcStore()
   const routes = useEditorNavigation()
@@ -34,6 +36,17 @@ export default function usePluginContext() {
       registerToolbarItems: (items) => toolbar.registerToolbarItems(items),
       registerTools: (items, baseConfig) =>
         tools.registerPluginTools(id, items, baseConfig),
+      invokeTool: (toolId, snapshot, signal) =>
+        invokeTool(
+          { toolId, toolConfig: {}, label: toolId, outputAction: 'none' },
+          snapshot.selectedText.trim() ? snapshot.selectedText : snapshot.value,
+          {
+            source: 'toolbar',
+            output: 'none',
+            signal,
+            editorSnapshot: snapshot,
+          }
+        ),
       getEditorInputValue: () => editor.value,
       getEditorInputSelectedText: () =>
         editor.hasSelection ? editor.selectedText : '',

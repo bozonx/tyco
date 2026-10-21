@@ -44,5 +44,7 @@ export function isToolbarItemDisabled(
   item: ToolbarItem,
   hasSelection: boolean
 ): boolean {
-  return Boolean(item.disabled || (item.selectionOnly && !hasSelection))
+  return Boolean(
+    item.disabled || item.isRunning || (item.selectionOnly && !hasSelection)
+  )
 }

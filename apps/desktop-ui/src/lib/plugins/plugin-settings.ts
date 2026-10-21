@@ -31,7 +31,11 @@ export function resolveInstalledPlugins(
     let config: Record<string, unknown> = {}
     let error = plugin._loadError ?? runtime[pluginId]?.error
     try {
-      config = resolvePluginConfig(plugin, pluginState.settings)
+      config = resolvePluginConfig(
+        plugin,
+        pluginState.settings,
+        pluginState.settingsVersion
+      )
     } catch (reason) {
       error = reason instanceof Error ? reason.message : String(reason)
     }

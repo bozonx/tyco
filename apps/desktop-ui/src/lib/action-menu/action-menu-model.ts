@@ -1,6 +1,6 @@
 import type { CorrectionStepExtra } from '../correction/correction-step'
-import type { ActionItem } from '@tyco/plugin-sdk'
-import { shallowRef } from 'vue'
+import type { ActionItem } from '../../types/plugins'
+import { createContributionRegistry } from '../plugins/contribution-registry'
 
 import {
   APP_CONFIG,
@@ -25,7 +25,7 @@ import {
 import { getLanguageLabelKey } from '../locale/language'
 import { normalizeMainActions } from './main-actions'
 
-export type { ActionItem } from '@tyco/plugin-sdk'
+export type { ActionItem } from '../../types/plugins'
 export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
@@ -46,7 +46,8 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
 }
 
 export function createActionMenuModel(deps: ActionMenuDependencies) {
-  const registeredActionsMenu = shallowRef<ActionItem[]>([])
+  const registry = createContributionRegistry<ActionItem>()
+  const registeredActionsMenu = registry.items
   const commandRunner = createCommandRunner(deps)
   const invocationRunner = createInvocationRunner(deps)
 
@@ -193,7 +194,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     ),
   ]
 
-  const getRegisteredActions = () => registeredActionsMenu.value
+  const getRegisteredActions = registry.list
 
   const resolveMainActions = (config: unknown = deps.mainActions?.()) =>
     normalizeMainActions(config)
@@ -248,27 +249,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
   const getActionsMenu = () =>
     getShortcutActions().filter((action): action is ActionItem => !!action)
 
-  const registerActionsItems = (actions: ActionItem[]) => {
-    const next = [...registeredActionsMenu.value]
-    for (const action of actions) {
-      const index = action.id
-        ? next.findIndex((item) => item.id === action.id)
-        : -1
-      if (index >= 0) next[index] = action
-      else next.push(action)
-    }
-    registeredActionsMenu.value = next
-  }
-
-  const clearRegisteredActions = () => {
-    registeredActionsMenu.value = []
-  }
-
-  const unregisterPlugin = (id: string) => {
-    registeredActionsMenu.value = registeredActionsMenu.value.filter(
-      (item) => !item.id?.startsWith(`${id}:`)
-    )
-  }
+  const registerActionsItems = registry.register
+  const unregisterPlugin = registry.unregisterPlugin
 
   return {
     registeredActionsMenu,
@@ -280,6 +262,5 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     getActionsMenu,
     getShortcutActions,
     registerActionsItems,
-    clearRegisteredActions,
   }
 }

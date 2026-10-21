@@ -1,5 +1,5 @@
 import { isRecord } from '@tyco/shared/value-guards'
-import { clonePluginValue } from '@tyco/plugin-sdk'
+import { clonePluginValue, migratePluginSettings } from '@tyco/plugin-sdk'
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 
 import type { PluginEntryConfig } from '@tyco/shared'
@@ -21,6 +21,9 @@ export function getPluginState(
   const value = states[plugin.id]
   const entry = isRecord(value) ? value : {}
   return {
+    ...(entry.settingsVersion !== undefined
+      ? { settingsVersion: entry.settingsVersion as number }
+      : {}),
     isEnabled: entry.isEnabled === true,
     settings: isRecord(entry.settings)
       ? (clonePluginValue(entry.settings) as Record<string, unknown>)
@@ -45,8 +48,10 @@ function validField(field: InputConfigItem, value: unknown): boolean {
 /** Resolves declared fields only; plugins never read another identity. */
 export function resolvePluginConfig(
   plugin: ReturnType<PluginFactory>,
-  state: Record<string, unknown> = {}
+  state: Record<string, unknown> = {},
+  savedVersion = 0
 ): Record<string, unknown> {
+  state = migratePluginSettings(plugin.defaultConfig, state, savedVersion)
   const presetDefaults: Record<string, unknown> = {}
   for (const [selector, presets] of Object.entries(
     plugin.defaultConfig?.presets ?? {}
@@ -115,7 +120,14 @@ export function applyPluginDefaults(
       const state = getPluginState(plugin, states)
       result[pluginId(plugin)] = {
         isEnabled: state.isEnabled,
-        settings: resolvePluginConfig(plugin, state.settings),
+        ...(plugin.defaultConfig?.version !== undefined
+          ? { settingsVersion: plugin.defaultConfig.version }
+          : {}),
+        settings: resolvePluginConfig(
+          plugin,
+          state.settings,
+          state.settingsVersion
+        ),
       }
     } catch {
       // Preserve settings for a broken package; the runtime reports the error.

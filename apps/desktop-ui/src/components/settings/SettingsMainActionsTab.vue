@@ -151,8 +151,8 @@ const availableActions = computed((): MainActionChoice[] => [
               config: { type: 'plugin' as const, actionId: action.id },
               name: action.labelKey
                 ? t(action.labelKey)
-                : (action.name ?? action.id),
-              group: pluginActionGroup(action.id),
+                : (action.label ?? action.name ?? action.id),
+              group: pluginActionGroup(action.id, action.ownerPluginId),
             },
           ]
         : []

@@ -1,3 +1,4 @@
+import type { EditorInputSnapshot } from '@tyco/plugin-sdk'
 import type { CommandOutputAction, CommandRunSource } from '@tyco/shared'
 
 /**
@@ -24,10 +25,14 @@ export interface Invocation {
 export type ResultSink = CommandOutputAction | 'return'
 
 export interface InvocationOptions {
+  editorSnapshot?: EditorInputSnapshot
   /** The input as it is, in place of the one parsed from the text */
   input?: Record<string, unknown>
-  /** `return` hands the output to the caller whatever the context */
-  output?: 'return'
+  /**
+   * Explicit output handling for callers that return or consume results
+   * themselves.
+   */
+  output?: 'return' | 'none'
   /** Cancels the run: the script is killed, the request is aborted */
   signal?: AbortSignal
   /** Where the run is invoked from; the action menu by default */

@@ -1,3 +1,4 @@
+import { isPluginError, isPluginCancellation } from '@tyco/plugin-sdk'
 import { errorMessage } from '@tyco/shared/value-guards'
 import {
   resolveToolInput,
@@ -118,6 +119,7 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
       const result = await tool.run({
         input: parsed.input,
         config,
+        editorSnapshot: options.editorSnapshot,
         source: options.source ?? 'menu',
         signal,
         ...(invocation.commandId
@@ -140,7 +142,10 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
         sourceText: Object.keys(parsed.input).length ? text : '',
       }
     } catch (error) {
-      if (signal.aborted) return { ok: false, cancelled: true }
+      if (signal.aborted || isPluginCancellation(error))
+        return { ok: false, cancelled: true }
+      if (isPluginError(error))
+        return { ok: false, messageKey: error.messageKey }
       const message = errorMessage(error)
       return {
         ok: false,

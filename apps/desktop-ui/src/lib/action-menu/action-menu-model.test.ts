@@ -184,14 +184,14 @@ describe('createActionMenuModel', () => {
     expect(allActions).toContain(customAction)
   })
 
-  it('allows clearing registered action items', () => {
+  it('allows disposing registered action items', () => {
     const { store } = setup()
 
     const customAction = { name: 'custom', action: vi.fn() }
-    store.registerActionsItems([customAction])
+    const dispose = store.registerActionsItems([customAction])
     expect(store.getActionsMenu()).toContain(customAction)
 
-    store.clearRegisteredActions()
+    dispose()
     expect(store.getActionsMenu()).not.toContain(customAction)
     expect(store.getActionsMenu()).toHaveLength(
       store.getDefaultActions().length
@@ -213,12 +213,12 @@ describe('createActionMenuModel', () => {
     const replacement = { ...original, action: vi.fn() }
     store.registerActionsItems([original])
     expect(slots.value[13]).toBe(original)
-    store.registerActionsItems([replacement])
+    const dispose = store.registerActionsItems([replacement])
     await slots.value[13]?.action('menu text')
     expect(replacement.action).toHaveBeenCalledWith('menu text')
     expect(original.action).not.toHaveBeenCalled()
     expect(store.getRegisteredActions()).toHaveLength(1)
-    store.clearRegisteredActions()
+    dispose()
     expect(slots.value).toHaveLength(6)
   })
 
@@ -235,9 +235,9 @@ describe('createActionMenuModel', () => {
       mainActions: () => ({ w: { type: 'plugin', actionId: 'Notes:create' } }),
     })
     const action = { id: 'Notes:create', action: vi.fn() }
-    store.registerActionsItems([action])
+    const dispose = store.registerActionsItems([action])
     expect(store.getShortcutActions()).toEqual([undefined, action])
-    store.clearRegisteredActions()
+    dispose()
     expect(store.getActionsMenu()).toEqual([])
     store.registerActionsItems([action])
     expect(store.getShortcutActions()).toEqual([undefined, action])

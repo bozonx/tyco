@@ -1,47 +1,16 @@
-import { shallowRef } from 'vue'
-
 import type { ToolbarItem } from '../../types/plugins'
+import { createContributionRegistry } from '../plugins/contribution-registry'
 
 export function createToolbarModel() {
-  const registeredToolbarItems = shallowRef<ToolbarItem[]>([])
-
-  const getToolbarItems = (): ToolbarItem[] => {
-    return [...registeredToolbarItems.value]
-  }
-
-  const getLeftToolbarItems = (): ToolbarItem[] => {
-    return registeredToolbarItems.value.filter(
-      (item) => item.position === 'left'
-    )
-  }
-
-  const getRightToolbarItems = (): ToolbarItem[] => {
-    return registeredToolbarItems.value.filter(
-      (item) => item.position !== 'left'
-    )
-  }
-
-  const registerToolbarItems = (items: ToolbarItem[]) => {
-    registeredToolbarItems.value = [...registeredToolbarItems.value, ...items]
-  }
-
-  const clearToolbarItems = () => {
-    registeredToolbarItems.value = []
-  }
-
-  const unregisterPlugin = (id: string) => {
-    registeredToolbarItems.value = registeredToolbarItems.value.filter(
-      (item) => !item.id?.startsWith(`${id}:`)
-    )
-  }
-
+  const registry = createContributionRegistry<ToolbarItem>()
   return {
-    registeredToolbarItems,
-    unregisterPlugin,
-    getToolbarItems,
-    getLeftToolbarItems,
-    getRightToolbarItems,
-    registerToolbarItems,
-    clearToolbarItems,
+    registeredToolbarItems: registry.items,
+    unregisterPlugin: registry.unregisterPlugin,
+    getToolbarItems: registry.list,
+    getLeftToolbarItems: () =>
+      registry.list().filter((item) => item.position === 'left'),
+    getRightToolbarItems: () =>
+      registry.list().filter((item) => item.position !== 'left'),
+    registerToolbarItems: registry.register,
   }
 }

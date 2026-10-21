@@ -13,7 +13,32 @@ const protocolLoaded = import('./protocol.js').then((protocol) => {
     decodePluginValue,
     PLUGIN_RPC_LIMITS,
   } = protocol)
-  for (const method of protocol.PLUGIN_EFFECT_METHODS) {
+  for (const method of protocol.PLUGIN_REGISTRATION_METHODS) {
+    context[method] = (...args) => {
+      check()
+      const ownedCallbacks = []
+      const release = () => {
+        for (const id of ownedCallbacks) callbacks.delete(id)
+      }
+      const registration = track(
+        rpc(method, args, ownedCallbacks).catch((error) => {
+          release()
+          throw error
+        })
+      )
+      let disposal
+      return () => {
+        if (controller.signal.aborted) return Promise.resolve()
+        disposal ??= track(
+          registration.then((dispose) => dispose?.()).finally(release)
+        )
+        return disposal
+      }
+    }
+  }
+  for (const method of protocol.PLUGIN_EFFECT_METHODS.filter(
+    (method) => !protocol.PLUGIN_REGISTRATION_METHODS.includes(method)
+  )) {
     context[method] = (...args) => {
       check()
       effect(method, args)
@@ -40,9 +65,9 @@ const errorData = (error) => ({
   code: error?.code,
   messageKey: error?.messageKey,
 })
-const rpc = (method, args) =>
+const rpc = (method, args, ownedCallbacks) =>
   new Promise((resolve, reject) => {
-    const encoded = encode(args)
+    const encoded = encode(args, ownedCallbacks)
     const id = ++sequence
     if (pending.size >= PLUGIN_RPC_LIMITS.pendingRequests) {
       reject(new Error('Too many plugin host requests'))
@@ -61,10 +86,13 @@ const rpc = (method, args) =>
       args: encoded,
     })
   })
-const effect = (method, args) => {
-  const promise = rpc(method, args)
+const track = (promise) => {
   currentRequest?.effects.add(promise)
   void promise.catch(() => {})
+  return promise
+}
+const effect = (method, args) => {
+  track(rpc(method, args))
 }
 async function flush(request) {
   while (request.effects.size) {
@@ -73,12 +101,13 @@ async function flush(request) {
     await Promise.all(batch)
   }
 }
-const encode = (value) =>
+const encode = (value, ownedCallbacks) =>
   encodePluginValue(value, (callback) => {
     if (callbacks.size >= PLUGIN_RPC_LIMITS.callbacks)
       throw new Error('Too many plugin callbacks')
     const id = ++sequence
     callbacks.set(id, callback)
+    ownedCallbacks?.push(id)
     return id
   })
 const decode = (value) =>
@@ -246,7 +275,20 @@ globalThis.onmessage = async ({ data }) => {
         for (const invocation of controllers.values()) invocation.abort()
         for (const cleanup of cleanups.reverse()) {
           try {
-            await cleanup()
+            let timer
+            try {
+              await Promise.race([
+                Promise.resolve().then(cleanup),
+                new Promise((_, reject) => {
+                  timer = setTimeout(
+                    () => reject(new Error('Plugin cleanup timed out')),
+                    PLUGIN_RPC_LIMITS.cleanupTimeoutMs / cleanups.length
+                  )
+                }),
+              ])
+            } finally {
+              clearTimeout(timer)
+            }
           } catch (error) {
             send({ type: 'cleanup-error', error: errorData(error) })
           }

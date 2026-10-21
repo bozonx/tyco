@@ -15,7 +15,7 @@ export function resolveSink(
     Partial<Pick<Invocation, 'toolId'>>,
   options: Pick<InvocationOptions, 'output' | 'source'> = {}
 ): ResultSink {
-  if (options.output === 'return') return 'return'
+  if (options.output) return options.output
   const source = options.source ?? 'menu'
   if (source === 'external') return 'return'
   if (source === 'voice' && invocation.toolId === 'core.translate')

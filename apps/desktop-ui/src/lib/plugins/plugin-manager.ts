@@ -89,22 +89,16 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     active.delete(id)
     instance.controller.abort()
     deps.unregisterPlugin(id)
-    try {
-      await bounded(
-        (async () => {
-          for (const cleanup of instance.cleanups.reverse()) {
-            try {
-              await cleanup()
-            } catch (error) {
-              report(id, error)
-            }
-          }
-        })(),
-        deps.cleanupTimeoutMs ?? 2000,
-        'Plugin cleanup timed out'
-      )
-    } catch (error) {
-      report(id, error)
+    for (const cleanup of instance.cleanups.reverse()) {
+      try {
+        await bounded(
+          Promise.resolve().then(cleanup),
+          deps.cleanupTimeoutMs ?? 2000,
+          'Plugin cleanup timed out'
+        )
+      } catch (error) {
+        report(id, error)
+      }
     }
   }
   function loadPlugins(userConfig?: { plugins?: Record<string, unknown> }) {
@@ -164,7 +158,11 @@ export function createPluginManager(deps: PluginManagerDependencies) {
                 )
                 return
               }
-              const config = resolvePluginConfig(plugin, state.settings)
+              const config = resolvePluginConfig(
+                plugin,
+                state.settings,
+                state.settingsVersion
+              )
               const signature = JSON.stringify([
                 plugin.version,
                 plugin._revision,

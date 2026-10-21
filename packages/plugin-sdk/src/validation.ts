@@ -1,3 +1,4 @@
+import { validateSettingsMigrations } from './settings-migrations.js'
 import { isRecord as record } from './value-guards.js'
 import {
   PLUGIN_API_VERSION,
@@ -122,6 +123,12 @@ export function validatePluginManifest(
   if (value.defaultConfig !== undefined) {
     if (!record(value.defaultConfig)) fail('Invalid plugin config')
     validatePluginFields(value.defaultConfig.fields)
+    validateSettingsMigrations(
+      value.defaultConfig,
+      (value.capabilities as string[]).includes('notes')
+        ? String(value.notesDirectoryField ?? 'pathToNotes')
+        : undefined
+    )
     if (value.defaultConfig.presets !== undefined) {
       if (!record(value.defaultConfig.presets)) fail('Invalid plugin presets')
       const fields = new Map(

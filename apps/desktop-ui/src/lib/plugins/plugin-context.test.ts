@@ -1,3 +1,5 @@
+import { createToolRegistry } from '../tools/tool-registry'
+import { createToolInvoker } from '../invocation/invoke-tool'
 import {
   PluginError,
   TEXT_INPUT_SCHEMA,
@@ -260,4 +262,122 @@ describe('conditional plugin editor boundary', () => {
     ).rejects.toThrow('disposed')
     expect(deps.applyEditorInputEdit).not.toHaveBeenCalled()
   })
+})
+
+it('routes declarative toolbar buttons through host invocation with a snapshot', async () => {
+  const { context, deps, controller } = setup()
+  deps.invokeTool = vi.fn(async () => ({
+    ok: true,
+    messageKey: 'toast.commandFailed',
+  }))
+  context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+  const item = vi.mocked(deps.registerToolbarItems).mock.calls[0][0][0]
+  await item.action()
+  expect(deps.invokeTool).toHaveBeenCalledWith(
+    'Example.test',
+    deps.getEditorInputSnapshot(),
+    controller.signal
+  )
+  expect(item.ownerPluginId).toBe('Example')
+})
+
+it('releases IDs on disposal and rolls back failed registrations', () => {
+  const { context, deps } = setup()
+  const disposeHost = vi.fn()
+  vi.mocked(deps.registerToolbarItems).mockReturnValue(disposeHost)
+  const dispose = context.registerToolbarItems([
+    { id: 'button', action: vi.fn() },
+  ])
+  dispose()
+  dispose()
+  expect(disposeHost).toHaveBeenCalledOnce()
+  context.registerToolbarItems([{ id: 'button', action: vi.fn() }])
+  vi.mocked(deps.registerToolbarItems).mockImplementationOnce(() => {
+    throw new Error('failed')
+  })
+  expect(() =>
+    context.registerToolbarItems([{ id: 'next', action: vi.fn() }])
+  ).toThrow('failed')
+  expect(() =>
+    context.registerToolbarItems([{ id: 'next', action: vi.fn() }])
+  ).not.toThrow()
+})
+
+it.each([
+  { disabled: 'false' },
+  { label: {} },
+  { position: 'middle' },
+  { order: NaN },
+])('rejects malformed UI metadata: %j', (metadata) => {
+  const { context, deps } = setup()
+  expect(() =>
+    context.registerToolbarItems([
+      { id: 'button', action: vi.fn(), ...metadata } as never,
+    ])
+  ).toThrow()
+  expect(deps.registerToolbarItems).not.toHaveBeenCalled()
+})
+
+it('rejects malformed callback results before they reach consumers', async () => {
+  const { context, deps } = setup()
+  context.registerTools([
+    tool(async () => ({ ok: true, content: {} }) as never),
+  ])
+  const registered = vi.mocked(deps.registerTools).mock.calls[0][0][0]
+  await expect(
+    registered.run({
+      input: {},
+      config: {},
+      source: 'toolbar',
+      signal: new AbortController().signal,
+      isOutputRequested: false,
+    })
+  ).rejects.toThrow('Invalid tool result content')
+})
+
+it('shares structured input preparation between toolbar tools and commands', async () => {
+  const { context, deps } = setup()
+  const registry = createToolRegistry()
+  deps.registerTools = (tools, config) =>
+    registry.registerPluginTools('Example', tools, config)
+  const invoke = createToolInvoker({ tools: registry })
+  deps.invokeTool = (toolId, snapshot, signal) =>
+    invoke(
+      { toolId, toolConfig: {}, label: toolId, outputAction: 'none' },
+      snapshot.value,
+      { source: 'toolbar', output: 'none', editorSnapshot: snapshot, signal }
+    )
+  const run = vi.fn<ToolDefinition['run']>(async () => ({ ok: true }))
+  context.registerTools([
+    {
+      id: 'structured',
+      description: 'structured',
+      inputSchema: {
+        type: 'object',
+        properties: { count: { type: 'integer' } },
+        required: ['count'],
+      },
+      parseText: async () => ({ ok: true, input: { count: 3 } }),
+      run,
+    },
+  ])
+  context.registerToolbarItems([{ id: 'button', toolId: 'structured' }])
+  const item = vi.mocked(deps.registerToolbarItems).mock.calls[0][0][0]
+  const pending = item.action()
+  expect(item.disabled).toBe(true)
+  await pending
+  expect(item.disabled).toBe(false)
+  expect(run).toHaveBeenCalledWith(
+    expect.objectContaining({
+      input: { count: 3 },
+      editorSnapshot: deps.getEditorInputSnapshot(),
+      source: 'toolbar',
+      isOutputRequested: false,
+    })
+  )
+  await invoke(
+    { toolId: 'Example.structured', toolConfig: {}, label: 'Command' },
+    'text'
+  )
+  expect(run.mock.calls[0][0].input).toEqual(run.mock.calls[1][0].input)
 })

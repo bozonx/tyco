@@ -96,12 +96,15 @@ export async function activatePluginSandbox(
   }
   const hostCallbacks = new Map<number, (...args: unknown[]) => unknown>()
   let sequence = 0
-  const encode = (value: unknown): unknown =>
+  const encode = (value: unknown, once = false): unknown =>
     encodePluginValue(value, (callback) => {
       if (hostCallbacks.size >= PLUGIN_RPC_LIMITS.callbacks)
         throw new Error('Too many plugin callbacks')
       const id = ++sequence
-      hostCallbacks.set(id, callback as (...args: unknown[]) => unknown)
+      hostCallbacks.set(id, (...args) => {
+        if (once) hostCallbacks.delete(id)
+        return callback(...args)
+      })
       return id
     })
   const decode = (value: unknown): unknown =>
@@ -178,7 +181,7 @@ export async function activatePluginSandbox(
       const fn = ctx[method as keyof PluginContext] as (
         ...args: unknown[]
       ) => unknown
-      return encode(await fn(...args))
+      return encode(await fn(...args), method.startsWith('register'))
     },
   })
   const stopMessages = watch(i18n.global.locale, () =>

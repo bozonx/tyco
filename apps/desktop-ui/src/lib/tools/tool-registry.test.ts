@@ -42,7 +42,7 @@ describe('createToolRegistry', () => {
   it('drops the plugin tools and keeps the core ones', () => {
     const registry = createToolRegistry([tool('script')])
     registry.registerPluginTools('Notes', [tool('write')])
-    registry.clearPluginTools()
+    registry.unregisterPlugin('Notes')
     expect(registry.list().map((item) => item.id)).toEqual(['script'])
   })
 
@@ -52,7 +52,22 @@ describe('createToolRegistry', () => {
     expect(known.value).toBe(false)
     registry.registerPluginTools('Notes', [tool('write')])
     expect(known.value).toBe(true)
-    registry.clearPluginTools()
+    registry.unregisterPlugin('Notes')
     expect(known.value).toBe(false)
   })
+})
+
+it('keeps plugin tools ordered independently of activation timing and protects replacements from stale disposal', () => {
+  const registry = createToolRegistry([tool('core.copy')])
+  const dispose = registry.registerPluginTools('Zulu', [tool('write')])
+  registry.registerPluginTools('Alpha', [tool('search')])
+  expect(registry.list().map((item) => item.id)).toEqual([
+    'core.copy',
+    'Alpha.search',
+    'Zulu.write',
+  ])
+  registry.unregisterPlugin('Zulu')
+  registry.registerPluginTools('Zulu', [tool('write')])
+  dispose()
+  expect(registry.get('Zulu.write')).toBeDefined()
 })

@@ -1,5 +1,9 @@
 import { errorMessage } from '@tyco/shared/value-guards'
-import { isPluginCancellation, isPluginError } from '@tyco/plugin-sdk'
+import {
+  type EditorInputSnapshot,
+  isPluginCancellation,
+  isPluginError,
+} from '@tyco/plugin-sdk'
 import type { ActionItem } from '../action-menu/action-menu-model'
 import type { EditItem } from '../edit-menu/edit-menu-model'
 import type { EditSource } from './edit-source'
@@ -7,6 +11,12 @@ import { createTextEditModel } from '../edit-menu/text-edit'
 
 export interface EditorActionsDependencies {
   editor: {
+    getSnapshot(): EditorInputSnapshot
+    applySnapshotEdit(
+      snapshot: EditorInputSnapshot,
+      text: string,
+      scope: 'selection' | 'document'
+    ): boolean
     value: string
     selectedText: string
     selectionStart: number
@@ -36,7 +46,7 @@ export interface EditorActionsDependencies {
 export function createEditorActions(deps: EditorActionsDependencies) {
   const { editor: editorInputStore, t, toastKey } = deps
   const getLabel = (item: ActionItem | EditItem): string =>
-    item.labelKey ? t(item.labelKey) : item.name || ''
+    item.labelKey ? t(item.labelKey) : item.label || item.name || ''
 
   const voiceRecognition = (): void => {
     const initialValue = editorInputStore.value
@@ -81,14 +91,8 @@ export function createEditorActions(deps: EditorActionsDependencies) {
   }
 
   const textEdit = createTextEditModel({
-    snapshot: () => ({
-      text: editorInputStore.value,
-      selectedText: editorInputStore.selectedText,
-      from: editorInputStore.selectionStart,
-      to: editorInputStore.selectionEnd,
-    }),
-    replaceSelection: (text) => editorInputStore.replaceSelection(text, 'ai'),
-    replaceText: (text) => editorInputStore.setValue(text, 'ai'),
+    snapshot: editorInputStore.getSnapshot,
+    applyEdit: editorInputStore.applySnapshotEdit,
   })
 
   /** Transforms the selection, or the whole text, in place: one undo step. */

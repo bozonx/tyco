@@ -8,6 +8,7 @@ export const PLUGIN_RPC_LIMITS = Object.freeze({
   callbacks: 4096,
   cancellationGraceMs: 1500,
   hostTimeoutMs: 10000,
+  cleanupTimeoutMs: 1000,
 })
 
 /**
@@ -137,13 +138,16 @@ export function assertPluginMessage(value) {
 }
 
 /** Host effects have void SDK signatures; the worker flushes them per operation. */
-export const PLUGIN_EFFECT_METHODS = Object.freeze([
+export const PLUGIN_REGISTRATION_METHODS = Object.freeze([
   'registerActionsItems',
   'registerEditItems',
   'registerCaseItems',
   'registerFormatItems',
   'registerToolbarItems',
   'registerTools',
+])
+export const PLUGIN_EFFECT_METHODS = Object.freeze([
+  ...PLUGIN_REGISTRATION_METHODS,
   'setEditorInputValue',
   'replaceEditorInputSelection',
   'setEditorInputFocus',

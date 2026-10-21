@@ -117,3 +117,24 @@ it('resolves and applies presets with numeric selector IDs', () => {
     applyPluginPreset(numeric, { mode: 0, enabledFeature: false }, { mode: 1 })
   ).toEqual({ mode: 1, enabledFeature: true })
 })
+
+it('persists migrated settings and their version without losing newer settings on downgrade', () => {
+  const upgraded = {
+    ...plugin,
+    defaultConfig: {
+      fields: [{ name: 'current', type: 'text' as const, defaultValue: '' }],
+      version: 1,
+      migrations: [{ fromVersion: 0, rename: { legacy: 'current' } }],
+    },
+  }
+  const saved = { Example: { isEnabled: false, settings: { legacy: 'saved' } } }
+  const prepared = applyPluginDefaults([() => upgraded], saved)
+  expect(prepared.Example).toEqual({
+    isEnabled: false,
+    settingsVersion: 1,
+    settings: { current: 'saved' },
+  })
+  expect(saved.Example.settings).toEqual({ legacy: 'saved' })
+  expect(applyPluginDefaults([() => upgraded], prepared)).toEqual(prepared)
+  expect(applyPluginDefaults([() => plugin], prepared)).toEqual(prepared)
+})

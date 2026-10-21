@@ -25,7 +25,12 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
   const get = (toolId: string): RegisteredTool | undefined =>
     tools.value.get(toolId)
 
-  const list = (): RegisteredTool[] => [...tools.value.values()]
+  const list = (): RegisteredTool[] =>
+    [...tools.value.values()].sort((left, right) => {
+      const a = left.owner.kind === 'plugin' ? left.owner.pluginId : ''
+      const b = right.owner.kind === 'plugin' ? right.owner.pluginId : ''
+      return a < b ? -1 : a > b ? 1 : 0
+    })
 
   /** Adds tools of the app; a tool with the same id is replaced */
   const registerCoreTools = (definitions: readonly ToolDefinition[]) => {
@@ -51,15 +56,14 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
       next.set(id, { ...tool, id, owner, baseConfig })
     }
     set(next)
-  }
-
-  /** Drops the tools of every plugin, before the plugins load again */
-  const clearPluginTools = () => {
-    set(
-      new Map(
-        [...tools.value].filter(([, tool]) => tool.owner.kind !== 'plugin')
-      )
-    )
+    return () => {
+      const remaining = new Map(tools.value)
+      for (const definition of definitions) {
+        const id = pluginToolId(pluginId, definition.id)
+        if (remaining.get(id) === next.get(id)) remaining.delete(id)
+      }
+      set(remaining)
+    }
   }
 
   const unregisterPlugin = (id: string) => {
@@ -80,6 +84,5 @@ export function createToolRegistry(coreTools: readonly ToolDefinition[] = []) {
     list,
     registerCoreTools,
     registerPluginTools,
-    clearPluginTools,
   }
 }

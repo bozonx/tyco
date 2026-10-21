@@ -2,7 +2,6 @@ import type { PluginDefinition } from '@tyco/plugin-sdk'
 import { locales } from './locales.js'
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 
-import { runToolFromToolbar } from '@tyco/plugin-sdk'
 import {
   type PluginContext,
   TEXT_INPUT_SCHEMA,
@@ -217,7 +216,7 @@ export default function pluginIndex(): PluginDefinition {
           icon: 'mdi:note-plus-outline',
           tooltipKey: 'local.label',
           position: 'right',
-          action: () => runToolFromToolbar(ctx, write),
+          toolId: write.id,
         },
       ])
     },

@@ -332,7 +332,11 @@ const desktopUiBaseData = JSON.parse(
 const desktopUiBaseKeys = getAllKeys(desktopUiBaseData).sort()
 const desktopUiKeySet = new Set(desktopUiBaseKeys)
 
-const desktopUiSources = walkDir(desktopUiSrcDir)
+// SDK utilities return host message keys as part of their public result contract.
+const desktopUiSources = [
+  ...walkDir(desktopUiSrcDir),
+  ...walkDir(path.join(packagesDir, 'plugin-sdk/src')),
+]
 const desktopUiSourceContent = desktopUiSources
   .map((f) => fs.readFileSync(f, 'utf8'))
   .join('\n')

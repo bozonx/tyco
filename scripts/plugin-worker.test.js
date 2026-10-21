@@ -347,3 +347,46 @@ test(
     assert.equal(runtime.getFailure(), undefined)
   }
 )
+
+test(
+  'cleanup continues after an asynchronous handler never settles',
+  { timeout: 5000 },
+  async (t) => {
+    const runtime = await session(
+      t,
+      `(ctx) => {
+    ctx.onDispose(() => globalThis.postMessage({ type: 'probe-cleaned' }));
+    ctx.onDispose(() => new Promise(() => {}));
+  }`
+    )
+    await runtime.rpc.request('dispose', {})
+    assert.ok(runtime.events.some((event) => event.type === 'cleanup-error'))
+    assert.ok(runtime.events.some((event) => event.type === 'probe-cleaned'))
+  }
+)
+
+test(
+  'worker registration returns a usable idempotent disposer',
+  { timeout: 5000 },
+  async (t) => {
+    let disposed = 0
+    const runtime = await session(
+      t,
+      `(ctx) => {
+    const dispose = ctx.registerToolbarItems([{ id: 'temporary', action: () => {} }]);
+    dispose();
+    dispose();
+  }`,
+      async (method, args) => {
+        if (method === 'registerToolbarItems') return { $callback: 1 }
+        if (method === 'callback') {
+          assert.deepEqual(args, [1, []])
+          disposed++
+        }
+        return undefined
+      }
+    )
+    assert.equal(disposed, 1)
+    assert.equal(runtime.getFailure(), undefined)
+  }
+)

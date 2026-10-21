@@ -164,3 +164,17 @@ describe('editor actions', () => {
     else expect(toastKey).not.toHaveBeenCalled()
   })
 })
+
+it('resolves the public label field and gives translation keys priority', () => {
+  const { actions } = setup()
+  expect(actions.getLabel({ label: 'Label', action: async () => {} })).toBe(
+    'Label'
+  )
+  expect(
+    actions.getLabel({
+      label: 'Label',
+      labelKey: 'edit.uppercase',
+      action: async () => {},
+    })
+  ).toBe('translated:edit.uppercase')
+})

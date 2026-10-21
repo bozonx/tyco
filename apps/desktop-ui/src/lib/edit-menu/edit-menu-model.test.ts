@@ -86,7 +86,7 @@ describe('createEditMenuModel', () => {
     expect(allEditItems).toContain(customEdit)
   })
 
-  it('allows clearing registered items', () => {
+  it('allows disposing registered items', () => {
     const { store } = setup()
 
     const customCase = {
@@ -105,11 +105,13 @@ describe('createEditMenuModel', () => {
       action: vi.fn(),
     }
 
-    store.registerCaseItems([customCase])
-    store.registerFormatItems([customFormat])
-    store.registerEditItems([customEdit])
+    const disposeCase = store.registerCaseItems([customCase])
+    const disposeFormat = store.registerFormatItems([customFormat])
+    const disposeEdit = store.registerEditItems([customEdit])
 
-    store.clearRegisteredItems()
+    disposeCase()
+    disposeFormat()
+    disposeEdit()
 
     expect(store.getCaseItems()).not.toContain(customCase)
     expect(store.getFormatItems()).not.toContain(customFormat)

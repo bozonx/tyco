@@ -7,3 +7,6 @@ export * from './validation.js'
 export * from './config-field-value.js'
 
 export { isRecord, errorMessage } from './value-guards.js'
+export * from './tool-input.js'
+export * from './contributions.js'
+export * from './settings-migrations.js'

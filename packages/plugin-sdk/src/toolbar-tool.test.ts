@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { TEXT_INPUT_SCHEMA } from './index.js'
+import { PluginError, TEXT_INPUT_SCHEMA } from './index.js'
 import { createPluginTestContext } from './testing.js'
 import { runToolFromToolbar } from './toolbar-tool.js'
 
@@ -33,4 +33,50 @@ describe('toolbar tools', () => {
     )
     expect(mocks.toast).toHaveBeenCalledWith('toast.commandFailed', 'error')
   })
+})
+
+it('parses structured toolbar input using the shared input resolver', async () => {
+  const { ctx } = createPluginTestContext({ value: 'three' })
+  const run = vi.fn(async () => ({ ok: true }))
+  await runToolFromToolbar(ctx, {
+    id: 'structured',
+    description: 'structured',
+    inputSchema: {
+      type: 'object',
+      properties: { count: { type: 'integer' } },
+      required: ['count'],
+    },
+    parseText: async () => ({ ok: true, input: { count: 3 } }),
+    run,
+  })
+  expect(run).toHaveBeenCalledWith(
+    expect.objectContaining({ input: { count: 3 }, source: 'toolbar' })
+  )
+})
+
+it('rejects malformed parsed toolbar input and preserves portable errors', async () => {
+  const { ctx, mocks } = createPluginTestContext({ value: 'text' })
+  const run = vi.fn(async () => ({ ok: true }))
+  await runToolFromToolbar(ctx, {
+    id: 'structured',
+    description: 'structured',
+    inputSchema: {
+      type: 'object',
+      properties: { count: { type: 'integer' } },
+      required: ['count'],
+    },
+    parseText: async () => ({ ok: true, input: { count: 'wrong' } }),
+    run,
+  })
+  expect(run).not.toHaveBeenCalled()
+  expect(mocks.toast).toHaveBeenCalledWith('toast.commandInputInvalid', 'error')
+  await runToolFromToolbar(ctx, {
+    id: 'failed',
+    description: 'failed',
+    inputSchema: TEXT_INPUT_SCHEMA,
+    run: async () => {
+      throw new PluginError('local.failure')
+    },
+  })
+  expect(mocks.toast).toHaveBeenCalledWith('local.failure', 'error')
 })

@@ -671,6 +671,7 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
+          "settingsVersion": { "type": "integer", "minimum": 0, "maximum": 64 },
           "isEnabled": { "type": "boolean", "default": false },
           "settings": {
             "type": "object",

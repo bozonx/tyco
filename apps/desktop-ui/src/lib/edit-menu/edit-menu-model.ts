@@ -1,7 +1,7 @@
-import type { EditItem } from '@tyco/plugin-sdk'
-import { shallowRef } from 'vue'
+import type { EditItem } from '../../types/plugins'
+import { createContributionRegistry } from '../plugins/contribution-registry'
 
-export type { EditItem } from '@tyco/plugin-sdk'
+export type { EditItem } from '../../types/plugins'
 export interface EditMenuDependencies {
   transformTextCase: (text: string, caseType: string) => string
   formatMdAndStyle: (text: string) => Promise<string>
@@ -9,9 +9,12 @@ export interface EditMenuDependencies {
 }
 
 export function createEditMenuModel(deps: EditMenuDependencies) {
-  const registeredCaseMenu = shallowRef<EditItem[]>([])
-  const registeredFormatMenu = shallowRef<EditItem[]>([])
-  const registeredOtherEditMenu = shallowRef<EditItem[]>([])
+  const cases = createContributionRegistry<EditItem>()
+  const registeredCaseMenu = cases.items
+  const formats = createContributionRegistry<EditItem>()
+  const registeredFormatMenu = formats.items
+  const others = createContributionRegistry<EditItem>()
+  const registeredOtherEditMenu = others.items
 
   const getDefaultCaseItems = (): EditItem[] => [
     {
@@ -41,44 +44,28 @@ export function createEditMenuModel(deps: EditMenuDependencies) {
   ]
 
   const getCaseItems = (): EditItem[] => {
-    return [...getDefaultCaseItems(), ...registeredCaseMenu.value]
+    return [...getDefaultCaseItems(), ...cases.list()]
   }
 
   const getFormatItems = (): EditItem[] => {
-    return [...getDefaultFormatItems(), ...registeredFormatMenu.value]
+    return [...getDefaultFormatItems(), ...formats.list()]
   }
 
   const getOtherEditItems = (): EditItem[] => {
-    return [...registeredOtherEditMenu.value]
+    return [...others.list()]
   }
 
   const getEditMenu = (): EditItem[] => {
     return [...getFormatItems(), ...getCaseItems(), ...getOtherEditItems()]
   }
 
-  const registerCaseItems = (items: EditItem[]) => {
-    registeredCaseMenu.value = [...registeredCaseMenu.value, ...items]
-  }
-
-  const registerFormatItems = (items: EditItem[]) => {
-    registeredFormatMenu.value = [...registeredFormatMenu.value, ...items]
-  }
-
-  const registerEditItems = (items: EditItem[]) => {
-    registeredOtherEditMenu.value = [...registeredOtherEditMenu.value, ...items]
-  }
-
-  const clearRegisteredItems = () => {
-    registeredCaseMenu.value = []
-    registeredFormatMenu.value = []
-    registeredOtherEditMenu.value = []
-  }
-
+  const registerCaseItems = cases.register
+  const registerFormatItems = formats.register
+  const registerEditItems = others.register
   const unregisterPlugin = (id: string) => {
-    const keep = (item: EditItem) => !item.id?.startsWith(`${id}:`)
-    registeredCaseMenu.value = registeredCaseMenu.value.filter(keep)
-    registeredFormatMenu.value = registeredFormatMenu.value.filter(keep)
-    registeredOtherEditMenu.value = registeredOtherEditMenu.value.filter(keep)
+    cases.unregisterPlugin(id)
+    formats.unregisterPlugin(id)
+    others.unregisterPlugin(id)
   }
 
   return {
@@ -95,6 +82,5 @@ export function createEditMenuModel(deps: EditMenuDependencies) {
     registerCaseItems,
     registerFormatItems,
     registerEditItems,
-    clearRegisteredItems,
   }
 }

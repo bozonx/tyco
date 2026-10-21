@@ -32,6 +32,8 @@
         variant="ghost"
         :disabled="isToolbarItemDisabled(item, editorInputStore.hasSelection)"
         :title="scoped(tooltipOf(item))"
+        :aria-label="scoped(tooltipOf(item))"
+        :aria-busy="item.isRunning || undefined"
         @click="item.action"
       >
         <AppIcon v-if="item.icon" :icon="item.icon" size="lg" />
@@ -51,6 +53,8 @@
         variant="ghost"
         :disabled="isToolbarItemDisabled(item, editorInputStore.hasSelection)"
         :title="scoped(tooltipOf(item))"
+        :aria-label="scoped(tooltipOf(item))"
+        :aria-busy="item.isRunning || undefined"
         @click="item.action"
       >
         <AppIcon v-if="item.icon" :icon="item.icon" size="lg" />

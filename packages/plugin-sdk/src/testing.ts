@@ -1,7 +1,8 @@
 import { vi, type Mock } from 'vitest'
+import { runToolFromToolbar } from './toolbar-tool.js'
 
 import type {
-  ActionItem,
+  ToolbarContribution,
   EditorInputSnapshot,
   PluginContext,
   ToolbarItem,
@@ -44,15 +45,46 @@ export function createPluginTestContext(
     t: vi.fn((key: string) => key),
     log: vi.fn(),
     toastText: vi.fn(),
-    registerActionsItems: vi.fn<(items: ActionItem[]) => void>(),
-    registerEditItems: vi.fn(),
-    registerCaseItems: vi.fn(),
-    registerFormatItems: vi.fn(),
-    registerToolbarItems: vi.fn((items: ToolbarItem[]) => {
-      toolbarItems.push(...items)
+    registerActionsItems: vi.fn<PluginContext['registerActionsItems']>(
+      () => () => {}
+    ),
+    registerEditItems: vi.fn<PluginContext['registerEditItems']>(
+      () => () => {}
+    ),
+    registerCaseItems: vi.fn<PluginContext['registerCaseItems']>(
+      () => () => {}
+    ),
+    registerFormatItems: vi.fn<PluginContext['registerFormatItems']>(
+      () => () => {}
+    ),
+    registerToolbarItems: vi.fn((items: ToolbarContribution[]) => {
+      const registered = items.map((item): ToolbarItem => ({
+        ...item,
+        action:
+          item.toolId !== undefined
+            ? async () => {
+                const tool = tools.find((tool) => tool.id === item.toolId)
+                if (!tool) throw new Error('Unknown toolbar tool')
+                await runToolFromToolbar(ctx, tool)
+              }
+            : item.action!,
+      }))
+      toolbarItems.push(...registered)
+      return () => {
+        for (const item of registered) {
+          const index = toolbarItems.indexOf(item)
+          if (index >= 0) toolbarItems.splice(index, 1)
+        }
+      }
     }),
     registerTools: vi.fn((items: ToolDefinition[]) => {
       tools.push(...items)
+      return () => {
+        for (const item of items) {
+          const index = tools.indexOf(item)
+          if (index >= 0) tools.splice(index, 1)
+        }
+      }
     }),
     getEditorInputValue: vi.fn(async () => value),
     getEditorInputSelectedText: vi.fn(async () => selectedText),

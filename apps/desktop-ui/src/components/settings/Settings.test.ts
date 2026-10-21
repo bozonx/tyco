@@ -38,7 +38,6 @@ vi.mock('../../composables/use-toast', () => ({
 
 vi.mock('../../stores/action-menu', () => ({
   useActionMenuStore: () => ({
-    clearRegisteredActions: vi.fn(),
     resolveMainActions: (actions: any) => actions ?? [],
     getRegisteredActions: () => [],
   }),

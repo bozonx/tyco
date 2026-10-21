@@ -26,10 +26,17 @@ export interface PluginManifest {
   icons?: PluginIcons
   defaultConfig?: PluginConfig
 }
-export interface ActionItem {
+export interface Contribution {
+  /** Lower values appear first within a UI placement. */
+  order?: number
+}
+export type PluginDisposer = () => void | Promise<void>
+
+export interface ActionItem extends Contribution {
   id?: string
   preferredKey?: string
   name?: string
+  label?: string
   labelKey?: string
   icon?: string
   disabled?: boolean
@@ -38,7 +45,7 @@ export interface ActionItem {
   preserveWhitespace?: boolean
   action: (text: string) => Promise<void>
 }
-export interface EditItem {
+export interface EditItem extends Contribution {
   id?: string
   name?: string
   labelKey?: string
@@ -47,7 +54,7 @@ export interface EditItem {
   selectionOnly?: boolean
   action: (text: string) => Promise<string> | string
 }
-export interface ToolbarItem {
+export interface ToolbarItem extends Contribution {
   id: string
   icon?: string
   label?: string
@@ -59,7 +66,18 @@ export interface ToolbarItem {
   disabled?: boolean
   action: () => void | Promise<void>
 }
+/** Public registrations require stable IDs; host-built menu items may omit them. */
+export type ActionContribution = ActionItem & { id: string }
+export type EditContribution = EditItem & { id: string }
+export type ToolbarContribution =
+  | (ToolbarItem & { toolId?: never })
+  | (Omit<ToolbarItem, 'action'> & { toolId: string; action?: never })
+
 export interface PluginConfig {
+  /** Version of persisted plugin settings, independent of the package version. */
+  version?: number
+  /** Ordered, declarative renames from version 0; never execute plugin code. */
+  migrations?: Array<{ fromVersion: number; rename: Record<string, string> }>
   fields: InputConfigItem[]
   presets?: Record<string, Record<string, object>>
 }
@@ -85,12 +103,12 @@ export interface EditorInputSnapshot {
 export interface PluginContext {
   readonly signal: AbortSignal
   onDispose(cleanup: () => void | Promise<void>): void
-  registerActionsItems(items: ActionItem[]): void
-  registerEditItems(items: EditItem[]): void
-  registerCaseItems(items: EditItem[]): void
-  registerFormatItems(items: EditItem[]): void
-  registerToolbarItems(items: ToolbarItem[]): void
-  registerTools(tools: ToolDefinition[]): void
+  registerActionsItems(items: ActionContribution[]): PluginDisposer
+  registerEditItems(items: EditContribution[]): PluginDisposer
+  registerCaseItems(items: EditContribution[]): PluginDisposer
+  registerFormatItems(items: EditContribution[]): PluginDisposer
+  registerToolbarItems(items: ToolbarContribution[]): PluginDisposer
+  registerTools(items: ToolDefinition[]): PluginDisposer
   getEditorInputValue(): Promise<string>
   getEditorInputSelectedText(): Promise<string>
   getEditorInputSnapshot(): Promise<EditorInputSnapshot>

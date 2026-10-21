@@ -104,7 +104,7 @@ describe('createToolCatalogSync', () => {
     ).toEqual(['script', 'core.correct', 'Notes.write'])
 
     // the plugins load again with the same tools
-    registry.clearPluginTools()
+    registry.unregisterPlugin('Notes')
     registry.registerPluginTools('Notes', [tool('write')])
     await nextTick()
     expect(send).toHaveBeenCalledTimes(2)
@@ -120,7 +120,7 @@ describe('createToolCatalogSync', () => {
     })
 
     sync.dispose()
-    registry.clearPluginTools()
+    registry.unregisterPlugin('Notes')
     await nextTick()
     expect(send).toHaveBeenCalledTimes(3)
   })

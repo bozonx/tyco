@@ -36,7 +36,9 @@ const actions = computed(() => {
     .getDefaultActions()
     .map((action) => ({
       id: action.id || '',
-      name: action.labelKey ? t(action.labelKey) : action.name || '',
+      name: action.labelKey
+        ? t(action.labelKey)
+        : action.label || action.name || '',
     }))
     .filter((a) => a.id)
 })

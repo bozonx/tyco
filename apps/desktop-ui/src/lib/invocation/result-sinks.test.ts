@@ -44,3 +44,12 @@ it.each(['insertIntoWindow', 'copyToClipboard', 'none', 'showMenu'] as const)(
     )
   }
 )
+
+it('allows notification-only toolbar invocations without requesting output', () => {
+  expect(
+    resolveSink(
+      { outputAction: 'copyToClipboard' },
+      { source: 'toolbar', output: 'none' }
+    )
+  ).toBe('none')
+})

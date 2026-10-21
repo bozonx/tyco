@@ -236,7 +236,7 @@ function goToEditor() {
 
 function getActionLabel(item?: ActionItem) {
   if (!item) return ''
-  return item.labelKey ? t(item.labelKey) : item.name || ''
+  return item.labelKey ? t(item.labelKey) : item.label || item.name || ''
 }
 </script>
 

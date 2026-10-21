@@ -119,6 +119,7 @@ export type HotkeyId = keyof HotkeysConfig
 
 /** Per-plugin state: the plugin owns `settings` */
 export interface PluginEntryConfig {
+  settingsVersion?: number
   isEnabled: boolean
   settings: Record<string, unknown>
 }

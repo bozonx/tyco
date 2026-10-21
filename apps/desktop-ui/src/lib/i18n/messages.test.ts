@@ -225,7 +225,10 @@ describe('i18n messages', () => {
   })
 
   it('ensures all translation keys referenced in application code exist across all locales', () => {
-    const sourceFiles = walkDir(srcDir)
+    const sourceFiles = [
+      ...walkDir(srcDir),
+      ...walkDir(path.resolve(srcDir, '../../../packages/plugin-sdk/src')),
+    ]
     const missingKeys: { file: string; key: string }[] = []
 
     for (const file of sourceFiles) {
@@ -265,7 +268,10 @@ describe('i18n messages', () => {
   })
 
   it('ensures no unused / dead keys exist in locale files', () => {
-    const sourceFiles = walkDir(srcDir)
+    const sourceFiles = [
+      ...walkDir(srcDir),
+      ...walkDir(path.resolve(srcDir, '../../../packages/plugin-sdk/src')),
+    ]
     const allContent = sourceFiles
       .map((f) => fs.readFileSync(f, 'utf8'))
       .join('\n')

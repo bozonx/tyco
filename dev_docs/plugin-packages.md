@@ -65,7 +65,8 @@ export default function plugin(): PluginDefinition {
 Plugin IDs and tool IDs are immutable and distinct from translated labels.
 Existing IDs such as `Diacritics` and `FastNote.write` are current contract
 identities. Plugin settings are keyed only by the current plugin ID; the plugin
-SDK does not support identity aliases, migrations, or schema-version callbacks.
+SDK does not support identity aliases or executable schema-version callbacks.
+Settings migrations use the declarative versioned rename chain described below.
 Changing an ID starts a new plugin identity.
 
 Use `local.*` for plugin-owned messages. The host namespaces these keys in metadata,
@@ -77,7 +78,12 @@ already resolved text. A package must include complete dictionaries for `en_US`,
 Missing translations are rejected; the host never falls back to another locale.
 
 Toolbar/edit/action IDs are local to the plugin and are scoped by the host. Tool
-IDs become `<pluginId>.<toolId>`. Duplicate registrations are rejected. Icons are
+IDs become `<pluginId>.<toolId>`. Duplicate registrations are rejected. Registration methods return an idempotent
+function that removes only that registration; disposing a registration releases its
+IDs for reuse. Await the returned disposer before re-registering the same IDs
+from an external worker. Host UI registries store the plugin owner explicitly. Contributions
+are sorted by optional numeric `order`, then plugin ID; registration order within
+a plugin is preserved for ties. Async activation therefore cannot reorder plugins. Icons are
 bundled offline from literal `mdi:*` references and registered under a plugin-owned
 prefix so one package cannot overwrite another package's icons. Plugin collections
 live in an owned reactive registry, outside Iconify's permanent global cache.
@@ -126,7 +132,10 @@ cleanup is still called. Tool execution combines the caller's cancellation signa
 with the plugin lifetime and suppresses cancelled output. Cancellation gives an
 external worker 1.5 seconds to finish its current callback; an uncooperative worker
 is terminated and marked failed. Cancellation of queued invocations is remembered.
-Cleanup handlers run in reverse order and a throwing handler does not skip the rest.
+Cleanup handlers run in reverse order. A throwing or asynchronously stalled handler
+does not skip the rest: host handlers have individual deadlines, and worker handlers
+share a bounded cleanup budget. The host closes the sandbox even when worker cleanup
+cannot complete. Synchronous infinite loops in bundled code cannot be interrupted.
 
 Background SDK calls from timers and subscriptions are accepted after successful
 initialization and stop with the plugin lifetime. Invalid or expired host calls
@@ -183,7 +192,7 @@ through a typed, capability-checked RPC adapter.
 
 Native inspection accepts package format 1 and plugin API 2, numeric semantic
 versions, known unique capabilities, safe icons and bounded UTF-8 JSON packages
-(32 MiB maximum). User settings have no plugin schema migration path. Revisions
+(32 MiB maximum). User settings support declarative versioned field renames. Revisions
 retain one prior package so a failed update can be restored. Runtime status is
 visible in plugin settings. A corrupt installed package is logged and skipped
 without preventing startup.
@@ -193,3 +202,58 @@ Both native and SDK manifest validators run the shared cases in
 connects the production worker to the actual host RPC adapter to cover background
 calls, cooperative and uncooperative cancellation, and cleanup failures; the
 Chromium check separately verifies worker isolation under CSP.
+
+## UI contributions and execution
+
+Prefer declarative toolbar tool references for operations also used by commands:
+
+```ts
+ctx.registerTools([search])
+const removeButton = ctx.registerToolbarItems([
+  {
+    id: 'search',
+    toolId: search.id,
+    tooltipKey: 'local.label',
+    position: 'right',
+  },
+])
+```
+
+`toolId` is local to the plugin. The host captures an editor snapshot and uses the
+same invoker as commands, including input parsing, validation, plugin config,
+cancellation and portable error handling. A missing tool is unavailable. Toolbar
+results report notifications and keep output handling within the tool; they do not
+implicitly paste text or close the window. `toolId` and `action` are mutually
+exclusive. Callback buttons remain supported for editor-specific interactions.
+The SDK `runToolFromToolbar` helper remains compatible and shares the input resolver.
+
+UI callbacks drop repeated clicks while running. Their running state disables the
+button; cancellation is silent, and other errors are logged and reported. Explicit
+command runs retain their own invocation lifetimes. Registration metadata and
+callback results are validated at runtime, including for installed JavaScript.
+
+Plugin action and edit registrations require stable local IDs. Prefer `labelKey`
+for localized labels and `label` for literal text. `name` remains accepted at the
+compatibility boundary for older plugins.
+
+## Settings schema versions
+
+A plugin may declare `defaultConfig.version` and a complete `migrations` array,
+starting at version 0. Each step contains `fromVersion` and a `rename` map:
+
+```ts
+defaultConfig: {
+  version: 1,
+  migrations: [{ fromVersion: 0, rename: { oldMode: 'mode' } }],
+  fields: [{ type: 'text', name: 'mode', defaultValue: '' }],
+}
+```
+
+The host migrates a detached copy before validating fields and applies defaults
+only afterwards. Saving settings persists `settingsVersion` beside `settings`.
+Existing target values win over renamed values. A downgrade cannot discard newer
+settings; unsupported versions are reported and preserved. Migrations cannot
+introduce values, rename plugin identities, or rename the authorized notes-directory
+field. Per-command tool configuration is a separate persisted contract: keep its
+field names stable. No plugin code executes during settings migration or package
+inspection.

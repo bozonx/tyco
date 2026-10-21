@@ -55,8 +55,15 @@ export function standardActionGroup(id: StandardActionId): MainActionGroup {
   return { kind: 'basic' }
 }
 
-/** A plugin action is registered as `<plugin>:<action>` */
-export function pluginActionGroup(actionId: string): MainActionGroup {
+/**
+ * Available contributions carry ownership; saved unavailable IDs use the legacy
+ * boundary.
+ */
+export function pluginActionGroup(
+  actionId: string,
+  ownerPluginId?: string
+): MainActionGroup {
+  if (ownerPluginId) return { kind: 'plugin', plugin: ownerPluginId }
   const separator = actionId.indexOf(':')
   return {
     kind: 'plugin',

@@ -208,3 +208,28 @@ describe('plugin manager', () => {
     expect(init).toHaveBeenCalledTimes(2)
   })
 })
+
+it('continues reverse cleanup after a handler never settles', async () => {
+  const completed = vi.fn()
+  const reportError = vi.fn()
+  const manager = createPluginManager({
+    cleanupTimeoutMs: 5,
+    pluginFactories: [
+      plugin('Example', (ctx) => {
+        ctx.onDispose(completed)
+        ctx.onDispose(() => new Promise(() => {}))
+      }),
+    ],
+    createPluginContext: (_id, _config, lifecycle) =>
+      ({ onDispose: lifecycle.onDispose }) as PluginContext,
+    unregisterPlugin: vi.fn(),
+    reportError,
+  })
+  await manager.loadPlugins({ plugins: { Example: { isEnabled: true } } })
+  await manager.dispose()
+  expect(completed).toHaveBeenCalledOnce()
+  expect(reportError).toHaveBeenCalledWith(
+    'Example',
+    expect.objectContaining({ message: 'Plugin cleanup timed out' })
+  )
+})

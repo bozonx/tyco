@@ -56,6 +56,80 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
     if let Some(config) = &manifest.default_config {
         let fields = validate_config_fields(config)?;
         validate_presets(config, fields)?;
+        validate_settings_migrations(
+            config,
+            has_notes.then_some(
+                manifest
+                    .notes_directory_field
+                    .as_deref()
+                    .unwrap_or("pathToNotes"),
+            ),
+        )?;
+    }
+    Ok(())
+}
+
+fn validate_settings_migrations(
+    config: &serde_json::Value,
+    notes_directory_field: Option<&str>,
+) -> Result<(), AppError> {
+    let version = match config.get("version") {
+        Some(value) => value
+            .as_u64()
+            .filter(|version| *version <= 64)
+            .ok_or_else(|| invalid("Invalid plugin settings version"))?,
+        None => 0,
+    };
+    let empty = Vec::new();
+    let migrations = match config.get("migrations") {
+        Some(value) => value
+            .as_array()
+            .ok_or_else(|| invalid("Invalid plugin settings migrations"))?,
+        None => &empty,
+    };
+    if migrations.len() as u64 != version {
+        return Err(invalid("Invalid plugin settings migration chain"));
+    }
+    let valid_name = |name: &str| {
+        !name.is_empty()
+            && name.len() <= 128
+            && name.as_bytes()[0].is_ascii_alphabetic()
+            && name
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))
+            && !["__proto__", "constructor", "prototype"].contains(&name)
+    };
+    for (index, migration) in migrations.iter().enumerate() {
+        if migration
+            .get("fromVersion")
+            .and_then(serde_json::Value::as_u64)
+            != Some(index as u64)
+        {
+            return Err(invalid("Invalid plugin settings migration"));
+        }
+        let renames = migration
+            .get("rename")
+            .and_then(serde_json::Value::as_object)
+            .ok_or_else(|| invalid("Invalid plugin settings renames"))?;
+        if renames.len() > 256 {
+            return Err(invalid("Too many plugin settings renames"));
+        }
+        let mut targets = std::collections::HashSet::new();
+        for (source, target) in renames {
+            let target = target
+                .as_str()
+                .ok_or_else(|| invalid("Invalid plugin settings rename"))?;
+            if !valid_name(source)
+                || !valid_name(target)
+                || source == target
+                || renames.contains_key(target)
+                || !targets.insert(target)
+                || notes_directory_field == Some(source.as_str())
+                || notes_directory_field == Some(target)
+            {
+                return Err(invalid("Invalid plugin settings rename"));
+            }
+        }
     }
     Ok(())
 }

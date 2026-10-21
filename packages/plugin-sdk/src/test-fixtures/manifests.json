@@ -649,5 +649,188 @@
         "presets": { "mode": { "a": { "notesPath": "/" } } }
       }
     }
+  },
+  {
+    "name": "versioned settings",
+    "valid": true,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
+        "version": 1,
+        "migrations": [{ "fromVersion": 0, "rename": { "old": "current" } }]
+      }
+    }
+  },
+  {
+    "name": "missing settings migration",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
+        "version": 1
+      }
+    }
+  },
+  {
+    "name": "settings migration out of order",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
+        "version": 1,
+        "migrations": [{ "fromVersion": 1, "rename": {} }]
+      }
+    }
+  },
+  {
+    "name": "settings migration duplicate target",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
+        "version": 1,
+        "migrations": [
+          {
+            "fromVersion": 0,
+            "rename": { "old": "current", "other": "current" }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "settings migration prototype",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
+        "version": 1,
+        "migrations": [{ "fromVersion": 0, "rename": { "old": "constructor" } }]
+      }
+    }
+  },
+  {
+    "name": "settings migration cycle",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
+        "version": 1,
+        "migrations": [
+          { "fromVersion": 0, "rename": { "old": "current", "current": "old" } }
+        ]
+      }
+    }
+  },
+  {
+    "name": "settings migration invalid version",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
+        "version": 1.5
+      }
+    }
+  },
+  {
+    "name": "settings migration cannot grant notes access",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["notes"],
+      "defaultLocale": "en_US",
+      "locales": {
+        "en_US": { "label": "Example" },
+        "ru_RU": { "label": "Example" },
+        "es_AR": { "label": "Example" },
+        "tr_TR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          { "name": "pathToNotes", "type": "text", "defaultValue": "" }
+        ],
+        "version": 1,
+        "migrations": [{ "fromVersion": 0, "rename": { "old": "pathToNotes" } }]
+      }
+    }
   }
 ]
