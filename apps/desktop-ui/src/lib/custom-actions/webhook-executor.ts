@@ -5,6 +5,7 @@ import { ACTION_TEXT_PLACEHOLDER, type WebhookToolConfig } from '@tyco/shared'
 import { secretRef } from '../net/secrets'
 
 const WEBHOOK_TIMEOUT_MS = 30_000
+const MAX_LOG_RESPONSE_CHARS = 4096
 
 /** Writes a webhook call of the command `name` to the action log */
 export type WebhookCallLog = (name: string, details: string) => Promise<void>
@@ -63,7 +64,9 @@ export function buildWebhookRequest(
   let body: string | undefined
   if (method === 'POST') {
     body = target.payloadTemplate?.trim()
-      ? fillJsonTemplate(target.payloadTemplate, text ?? '')
+      ? isJson(fillJsonTemplate(target.payloadTemplate, ''))
+        ? fillJsonTemplate(target.payloadTemplate, text ?? '')
+        : target.payloadTemplate.split(ACTION_TEXT_PLACEHOLDER).join(text ?? '')
       : JSON.stringify({
           action: target.name || target.id,
           timestamp: Date.now(),
@@ -115,12 +118,22 @@ export async function executeWebhook(
   signal?: AbortSignal
 ): Promise<string> {
   const { url, init } = buildWebhookRequest(target, text)
-  // the URL is logged as written: the text is the user's, not ours to keep
-  const logPrefix = `URL: ${target.url}\nMethod: ${init.method}`
+  // Paths and query strings can contain webhook credentials.
+  let origin = '[invalid URL]'
+  try {
+    origin = new URL(url).origin
+  } catch {
+    // Invalid URLs are rejected by the transport.
+  }
+  const logPrefix = `Origin: ${origin}\nMethod: ${init.method}`
   // failures are logged always, like those of commands
   const log = async (details: string, failed: boolean) => {
     if (target.isOutputLogged || failed) {
-      await logFn?.(target.name || 'Webhook', details)
+      try {
+        await logFn?.(target.name || 'Webhook', details)
+      } catch {
+        // Logging must never change the outcome of an external action.
+      }
     }
   }
 
@@ -143,15 +156,20 @@ export async function executeWebhook(
       typeof response.text === 'function' ? await response.text() : ''
   } catch (error) {
     const message = errorMessage(error)
-    await log(`${logPrefix}\nError: ${message}`, true)
+    await log(`${logPrefix}\nError: Request failed or was cancelled`, true)
     throw new Error(message, { cause: error })
   } finally {
     clearTimeout(timer)
     signal?.removeEventListener('abort', abort)
   }
 
+  const loggedResponse = target.isOutputLogged
+    ? `\nResponse:\n${responseText.slice(0, MAX_LOG_RESPONSE_CHARS)}${
+        responseText.length > MAX_LOG_RESPONSE_CHARS ? '\n[truncated]' : ''
+      }`
+    : ''
   await log(
-    `${logPrefix}\nStatus: ${response.status} ${response.statusText ?? ''}\nResponse:\n${responseText}`,
+    `${logPrefix}\nStatus: ${response.status}${loggedResponse}`,
     !response.ok
   )
   if (!response.ok) {

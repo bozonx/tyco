@@ -23,7 +23,7 @@ const BODYLESS_METHODS = new Set(['GET', 'HEAD'])
  */
 export function createTauriFetch(
   ipc: NetIpc,
-  purpose?: 'chat-image'
+  purpose?: 'chat-image' | 'webhook'
 ): FetchFunction {
   return async (input, init) => {
     // Normalizes every accepted input shape, and encodes `FormData` with the

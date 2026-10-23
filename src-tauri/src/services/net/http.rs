@@ -31,6 +31,8 @@ pub struct FetchRequest {
 pub enum FetchPurpose {
     /// An image a chat answer links to, fetched without credentials.
     ChatImage,
+    /// A user-configured webhook, with a bounded text response.
+    Webhook,
 }
 
 /// Control events. Body chunks travel as raw bytes between `Head` and `End`.
@@ -336,6 +338,51 @@ mod tests {
             .unwrap()
             .iter()
             .any(|item| item == &Recorded::Bytes(b"abc".to_vec())));
+    }
+
+    #[tokio::test]
+    async fn integration_rejects_a_response_exceeding_the_limit() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0; 4096];
+            assert!(socket.read(&mut request).await.unwrap() > 0);
+            socket
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nabc")
+                .await
+                .unwrap();
+        });
+        let prepared = prepare(
+            Protocol::Http,
+            &format!("http://{address}"),
+            &[],
+            &Secrets::new(),
+        )
+        .unwrap();
+        let sink = RecordingSink::default();
+        run_fetch_controlled(
+            &reqwest::Client::new(),
+            reqwest::Method::GET,
+            prepared,
+            None,
+            &sink,
+            None,
+            2,
+        )
+        .await;
+        server.await.unwrap();
+        let records = sink.take();
+        assert!(!records
+            .iter()
+            .any(|record| matches!(record, Recorded::Bytes(_))));
+        assert_eq!(
+            records.last(),
+            Some(&Recorded::Event(serde_json::json!({
+                "type": "error",
+                "message": "Response body exceeds the 2 byte limit"
+            })))
+        );
     }
 
     /// Reads one HTTP/1.1 request, returns its head and body.

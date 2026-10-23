@@ -57,7 +57,7 @@ describe('buildWebhookRequest', () => {
       webhook({ payloadTemplate: 'Text: {{TEXT}}' }),
       'a'
     )
-    expect(init.body).toBe('Text: "a"')
+    expect(init.body).toBe('Text: a')
     expect(init.headers['content-type']).toContain('text/plain')
   })
 
@@ -128,7 +128,7 @@ describe('executeWebhook', () => {
     expect(fetchFn.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal)
   })
 
-  it('fails on an error status and logs the template URL', async () => {
+  it('fails on an error status and logs only the origin', async () => {
     const fetchFn = vi
       .fn()
       .mockResolvedValue({
@@ -147,7 +147,85 @@ describe('executeWebhook', () => {
       )
     ).rejects.toThrow('HTTP 500 Internal Server Error')
     expect(log).toHaveBeenCalledTimes(1)
-    expect(log.mock.calls[0][1]).toContain('URL: https://x.test/{{TEXT}}')
+    expect(log.mock.calls[0][1]).toContain('Origin: https://x.test')
     expect(log.mock.calls[0][1]).not.toContain('private')
+  })
+  it('preserves raw text including quotes, newlines and placeholders', () => {
+    const text = '"hello"\n\\{{TEXT}}'
+    const { init } = buildWebhookRequest(
+      webhook({ payloadTemplate: 'Text: {{TEXT}} / {{TEXT}}' }),
+      text
+    )
+    expect(init.body).toBe(`Text: ${text} / ${text}`)
+    expect(init.headers['content-type']).toContain('text/plain')
+  })
+
+  it('does not let logging failure change a successful result', async () => {
+    await expect(
+      executeWebhook(
+        webhook({ isOutputLogged: true }),
+        null,
+        vi.fn().mockResolvedValue(okResponse('done')),
+        vi.fn().mockRejectedValue(new Error('IPC unavailable'))
+      )
+    ).resolves.toBe('done')
+  })
+
+  it('preserves the request error when logging also fails', async () => {
+    await expect(
+      executeWebhook(
+        webhook(),
+        null,
+        vi.fn().mockRejectedValue(new Error('Connection refused')),
+        vi.fn().mockRejectedValue(new Error('IPC unavailable'))
+      )
+    ).rejects.toThrow('Connection refused')
+  })
+
+  it('omits credentials and response data from automatic failure logs', async () => {
+    const log = vi.fn()
+    await expect(
+      executeWebhook(
+        webhook({ url: 'https://user:password@x.test/private-id?key=secret' }),
+        null,
+        vi
+          .fn()
+          .mockResolvedValue(new Response('private response', { status: 500 })),
+        log
+      )
+    ).rejects.toThrow('HTTP 500')
+    expect(log.mock.calls[0][1]).toBe(
+      'Origin: https://x.test\nMethod: POST\nStatus: 500'
+    )
+  })
+
+  it('does not persist transport errors containing the expanded URL', async () => {
+    const log = vi.fn()
+    await expect(
+      executeWebhook(
+        webhook(),
+        null,
+        vi
+          .fn()
+          .mockRejectedValue(new Error('Failed https://x.test/private-text')),
+        log
+      )
+    ).rejects.toThrow('Failed')
+    expect(log.mock.calls[0][1]).not.toContain('private-text')
+  })
+
+  it('bounds explicitly enabled response logging without truncating the result', async () => {
+    const body = 'x'.repeat(10000)
+    const log = vi.fn()
+    await expect(
+      executeWebhook(
+        webhook({ isOutputLogged: true }),
+        null,
+        vi.fn().mockResolvedValue(okResponse(body)),
+        log
+      )
+    ).resolves.toBe(body)
+    expect(log.mock.calls[0][1].length).toBeLessThan(4300)
+    expect(log.mock.calls[0][1]).toContain('[truncated]')
   })
 })

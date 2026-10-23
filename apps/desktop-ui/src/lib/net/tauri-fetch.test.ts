@@ -271,3 +271,16 @@ it('rejects malformed response headers and releases the remote request', async (
   await tick()
   expect(fake.callsOf('cancel_net_task')).toHaveLength(1)
 })
+
+it('marks webhook requests for the Rust response limit', async () => {
+  const fake = createFakeNetIpc({
+    ['start_fetch']: (_call, emit) => {
+      setTimeout(() => emit(head(204)))
+      return 1
+    },
+  })
+  await createTauriFetch(fake.ipc, 'webhook')('https://example.com/hook')
+  expect(fake.callsOf('start_fetch')[0].args).toMatchObject({
+    request: { purpose: 'webhook' },
+  })
+})

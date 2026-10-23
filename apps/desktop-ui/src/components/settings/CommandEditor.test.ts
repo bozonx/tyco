@@ -14,7 +14,9 @@ const { call, toastKey } = vi.hoisted(() => ({
   toastKey: vi.fn(),
 }))
 vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call }) }))
-vi.mock('../../stores/desktop', () => ({ useDesktopStore: () => ({}) }))
+vi.mock('../../stores/desktop', () => ({
+  useDesktopStore: () => ({ userConfig: { commands: [] } }),
+}))
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey }),
 }))
@@ -155,29 +157,31 @@ describe('CommandEditor.vue', () => {
     await flushPromises()
     expect(toastKey).toHaveBeenCalledWith('commands.logEmpty')
   })
-  it('distinguishes incomplete and unknown phrases and names ambiguous candidates', async () => {
-    const command = script(
-      { command: 'echo {{TEXT}}' },
-      { name: 'Work note', isVoiceEnabled: true, phrases: ['save note'] }
+  it('shows voice phrases immediately after enabling a new command', async () => {
+    const wrapper = mountEditor(script())
+    expect(
+      wrapper
+        .findComponent({ name: 'CommandVoiceFields' })
+        .find('textarea')
+        .exists()
+    ).toBe(false)
+    await wrapper.find('input[role="switch"]').setValue(true)
+    const command = lastUpdate(wrapper)
+    expect(command.isVoiceEnabled).toBe(true)
+    await wrapper.setProps({ command })
+    const phrases = wrapper
+      .findComponent({ name: 'CommandVoiceFields' })
+      .get('textarea')
+    await phrases.setValue('save note\nmake note')
+    expect(lastUpdate(wrapper).phrases).toEqual(['save note', 'make note'])
+    expect(wrapper.findComponent(InfoTooltip).props('text')).toBe(
+      'voiceCommands.phrasesInfo'
     )
-    const other = { ...command, id: 'other', name: 'Personal note' }
-    const wrapper = mountEditor(command, {
-      userConfig: { commands: [command, other] },
-    })
-    const trial = wrapper
-      .findAll('input')
-      .find((input) =>
-        input.element
-          .closest('.field-row')
-          ?.textContent?.includes('voiceCommands.try')
-      )!
-    await trial.setValue('save')
-    expect(wrapper.text()).toContain('voiceCommands.incomplete')
-    await trial.setValue('unrelated')
-    expect(wrapper.text()).toContain('voiceCommands.none')
-    await trial.setValue('save note Hello!')
-    expect(wrapper.text()).toContain('voiceCommands.choose')
-    expect(wrapper.text()).toContain('Work note: Hello!')
-    expect(wrapper.text()).toContain('Personal note: Hello!')
+    expect(wrapper.findAll('input[type="text"]')).toHaveLength(1)
+    expect(
+      wrapper
+        .findComponent({ name: 'CommandVoiceFields' })
+        .findAll('.command-hint')
+    ).toHaveLength(0)
   })
 })

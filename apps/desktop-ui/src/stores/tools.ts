@@ -95,7 +95,7 @@ export const useToolsStore = defineStore('tools', () => {
         executeWebhook(
           target,
           text,
-          createTauriFetch(tauriNetIpc),
+          createTauriFetch(tauriNetIpc, 'webhook'),
           async (name, details) => {
             await ipcStore.call('log_webhook_call', { name, details })
           },

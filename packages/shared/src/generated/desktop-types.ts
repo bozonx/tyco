@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 9c6bcd214c06573619b8b54000af3fa9f6ce9249262af4f26140ae1af3eec837
+// Source hash: 8db7abfaab7c25d5ffd369ea41ed581d365c96a148b70ccd8fa6169264519ec3
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -399,7 +399,7 @@ export type FetchEvent =
   | { type: 'end' }
   | { type: 'error'; message: string }
 
-export type FetchPurpose = 'chat-image'
+export type FetchPurpose = 'chat-image' | 'webhook'
 
 export type FetchRequest = {
   method: string

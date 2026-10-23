@@ -28,6 +28,11 @@ vi.mock('../../stores/settings-session', () => ({
   }),
 }))
 
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call: vi.fn() }) }))
+vi.mock('../../stores/desktop', () => ({
+  useDesktopStore: () => ({ userConfig: { commands: [] } }),
+}))
+
 vi.mock('../../stores/secrets', () => ({
   useSecretsStore: () => ({ removeSecret }),
 }))
@@ -50,7 +55,7 @@ const script = { ...createCommand('script', 'sc1'), name: 'Backup' }
 
 let context: ReturnType<typeof createTestSettingsContext>
 
-const mountTab = (focusCommandId?: string) => {
+const mountTab = (focusCommandId?: string, stubEditor = true) => {
   context = createTestSettingsContext({
     launcherPages: [],
     commands: [webhook, script],
@@ -63,7 +68,12 @@ const mountTab = (focusCommandId?: string) => {
     props: { focusCommandId },
     global: {
       provide: context.provide,
-      stubs: { Teleport: true, CommandEditor: true },
+      stubs: {
+        Teleport: true,
+        CommandEditor: stubEditor,
+        CustomActionFields: true,
+        CommandTestRun: true,
+      },
     },
   })
 }
@@ -200,6 +210,24 @@ describe('SettingsCommandsTab.vue', () => {
     const firstCard = wrapper.findAllComponents({ name: 'CommandCard' })[0]
     expect(firstCard.props('autofocusName')).toBe(true)
     expect(firstCard.props('expanded')).toBe(true)
+  })
+
+  it('shows voice phrases when enabled immediately after creating a command', async () => {
+    const wrapper = mountTab(undefined, false)
+    await wrapper.get('.add-btn').trigger('click')
+    await wrapper.findAll('.tool-option')[0].trigger('click')
+    const card = wrapper.findAllComponents({ name: 'CommandCard' })[0]
+    await card
+      .findComponent({ name: 'CommandVoiceFields' })
+      .get('input')
+      .setValue(true)
+    expect(context.draft.value.commands[0].isVoiceEnabled).toBe(true)
+    expect(
+      card
+        .findComponent({ name: 'CommandVoiceFields' })
+        .find('textarea')
+        .exists()
+    ).toBe(true)
   })
 
   it('removes a command with its menu items and offers to undo it', async () => {
