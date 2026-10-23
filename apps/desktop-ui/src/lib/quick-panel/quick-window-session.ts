@@ -1,10 +1,10 @@
 /** Modes whose first step (the input, the action menu) has nothing to lose. */
 const DISMISSIBLE_MODES = new Set([
-  'write',
-  'select',
+  'quickInput',
+  'selectionActions',
   'aiTasks',
   'commandLauncher',
-  'translate',
+  'translation',
 ])
 
 export interface QuickWindowSessionDependencies {
@@ -48,7 +48,7 @@ export function createQuickWindowSession(deps: QuickWindowSessionDependencies) {
 
   /** The user clicked elsewhere: drop what is in progress, keep the text. */
   const dismiss = (): void => {
-    if (deps.mode() === 'write') deps.markInputDismissed()
+    if (deps.mode() === 'quickInput') deps.markInputDismissed()
     deps.cancelAndCloseModals()
     deps.dismissWindow()
   }

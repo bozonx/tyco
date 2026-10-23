@@ -6,7 +6,7 @@ import { installQuickWindow } from './support/quick-window'
 test.use({ windowLabel: 'quick' })
 
 test.describe('quick input', () => {
-  test.use({ startMode: ActivationMode.WRITE })
+  test.use({ startMode: ActivationMode.QUICK_INPUT })
 
   test('recalls a discarded draft when the quick window opens again', async ({
     page,

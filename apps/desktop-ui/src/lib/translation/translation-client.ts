@@ -19,7 +19,12 @@ import {
   type TranslationProblem,
   type TranslationQualityReport,
 } from '@bozonx/ai-kit/translate'
-import { TRANSLATION_SECRET_IDS, type TranslationConfig } from '@tyco/shared'
+import {
+  TRANSLATION_SECRET_IDS,
+  isGlossaryTermKept,
+  type TranslationConfig,
+  type TranslationGlossaryEntry,
+} from '@tyco/shared'
 
 import type { LlmPrompt } from '../llm/llm-prompt'
 import { protectTranslationText } from './protected-text'
@@ -77,7 +82,7 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
     async translate(text, options) {
       options.signal?.throwIfAborted()
       const config = deps.getConfig()
-      const glossary: GlossaryEntry[] = config.glossary
+      const glossary = toKitGlossary(config.glossary)
       options.onStage?.('translating')
       const pipeline = await runTranslationPipeline({
         source: text,
@@ -171,7 +176,10 @@ async function translateWithMachine(
     transport: deps.transport,
     mtProviders: { deepl: createDeepLProvider },
   })
-  const applicableGlossary = selectGlossaryForText(config.glossary, text)
+  const applicableGlossary = selectGlossaryForText(
+    toKitGlossary(config.glossary),
+    text
+  )
   const protectedText = protectTranslationText(
     text,
     applicableGlossary
@@ -417,4 +425,13 @@ function llmChunkLimit(
       'The translation instructions exceed the language model context'
     )
   return limit
+}
+
+/** The glossary as ai-kit spells it */
+function toKitGlossary(entries: TranslationGlossaryEntry[]): GlossaryEntry[] {
+  return entries.map((entry) => ({
+    term: entry.term,
+    use: entry.translation,
+    doNotTranslate: isGlossaryTermKept(entry),
+  }))
 }

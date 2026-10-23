@@ -55,16 +55,16 @@ There is no per-script identity or per-client grant system.
 
 ## Open the text action chooser
 
-Use `select` to open the action menu for text. Use `command-launcher` for the
+Use `selection-actions` to open the action menu for text. Use `command-launcher` for the
 searchable library command chooser. Both accept explicit text or the current
 selection; opening either without input does not capture the selection.
 
 ```sh
 # Open the text action menu for the current selection.
-tyco-ctl open select --selection
+tyco-ctl open selection-actions --selection
 
 # Open the text action menu with supplied text.
-tyco-ctl open select --text 'Please improve this text.'
+tyco-ctl open selection-actions --text 'Please improve this text.'
 
 # Open the searchable command chooser for the current selection.
 tyco-ctl open command-launcher --selection
@@ -80,11 +80,11 @@ On Linux the same windows can be opened through the session bus:
 ```sh
 # Open the text action menu for the current selection.
 busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
-  OpenWithSelection s select
+  OpenWithSelection s selection-actions
 
 # Open the text action menu with supplied text.
 busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
-  OpenWithText ss select 'Please improve this text.'
+  OpenWithText ss selection-actions 'Please improve this text.'
 
 # Open the searchable command chooser for the current selection.
 busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
@@ -120,7 +120,7 @@ is shown at a time; another such call meanwhile fails with `AccessDenied`. A
 prompt left unanswered ends with the job's timeout. `open --selection` still
 requires the permission and does not ask.
 
-Opening a mode that records, such as `voice`, `voice-chat` or `write`, needs no
+Opening a mode that records, such as `voice`, `voice-chat` or `quick-input`, needs no
 permission: the recording happens in a visible Tyco window and nothing of it is
 returned to the caller. Hotkeys bound in the desktop's own configuration, as on
 Hyprland and Sway, run `tyco-ctl open voice` and rely on that.
@@ -200,8 +200,8 @@ tyco-ctl open chat --text 'Explain this paragraph'
 tyco-ctl open editor --selection
 ```
 
-Modes: `editor`, `write`, `chat`, `voice-chat`, `voice-commands`, `voice`, `select`, `ai-tasks`,
-`command-launcher`, `correction`, `translate`, `history`, `settings`.
+Modes: `editor`, `quick-input`, `chat`, `voice-chat`, `voice-commands`, `voice`, `selection-actions`, `ai-tasks`,
+`command-launcher`, `correction`, `translation`, `history`, `settings`.
 The old camelCase spellings and `config` remain valid aliases.
 
 Opening UI does not implicitly capture a selection. `--selection` captures

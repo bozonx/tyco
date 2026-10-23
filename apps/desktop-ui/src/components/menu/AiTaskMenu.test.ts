@@ -115,10 +115,10 @@ describe('AiTaskMenu', () => {
 
   it('saves an own request as a task in a free key', async () => {
     const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.aiTasks = [
-      { id: 'task-1', name: 'edit', rule: 'Edit it' },
-    ]
-    desktop.desktopState.userConfig.aiTaskSlots = { q: 'task-1' }
+    desktop.desktopState.userConfig.aiTasks = {
+      items: [{ id: 'task-1', name: 'edit', rule: 'Edit it' }],
+      slots: { q: 'task-1' },
+    }
     const updateUserConfig = vi
       .spyOn(desktop, 'updateUserConfig')
       .mockResolvedValue({
@@ -139,11 +139,13 @@ describe('AiTaskMenu', () => {
 
     await vi.waitFor(() => expect(updateUserConfig).toHaveBeenCalled())
     expect(updateUserConfig.mock.calls[0]![0]).toEqual({
-      aiTasks: [
-        { id: 'task-1', name: 'edit', rule: 'Edit it' },
-        { id: 'task-2', name: 'Make it formal', rule: 'Make it formal' },
-      ],
-      aiTaskSlots: { q: 'task-1', w: 'task-2' },
+      aiTasks: {
+        items: [
+          { id: 'task-1', name: 'edit', rule: 'Edit it' },
+          { id: 'task-2', name: 'Make it formal', rule: 'Make it formal' },
+        ],
+        slots: { q: 'task-1', w: 'task-2' },
+      },
     })
   })
 
@@ -184,10 +186,10 @@ describe('AiTaskMenu', () => {
 
   it('keeps the result of a menu closed meanwhile off the screen', async () => {
     const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.aiTasks = [
-      { id: 'task-1', name: 'edit', rule: 'Edit it' },
-    ]
-    desktop.desktopState.userConfig.aiTaskSlots = { q: 'task-1' }
+    desktop.desktopState.userConfig.aiTasks = {
+      items: [{ id: 'task-1', name: 'edit', rule: 'Edit it' }],
+      slots: { q: 'task-1' },
+    }
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     const saveResult = vi
@@ -235,10 +237,10 @@ describe('AiTaskMenu', () => {
 
   it('runs the task of the main menu item once, by its id', async () => {
     const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.aiTasks = [
-      { id: 'task-7', name: 'edit', rule: 'Edit it' },
-    ]
-    desktop.desktopState.userConfig.aiTaskSlots = { w: 'task-7' }
+    desktop.desktopState.userConfig.aiTasks = {
+      items: [{ id: 'task-7', name: 'edit', rule: 'Edit it' }],
+      slots: { w: 'task-7' },
+    }
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()

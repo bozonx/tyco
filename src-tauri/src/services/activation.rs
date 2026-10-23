@@ -145,7 +145,7 @@ mod tests {
         assert!(!page("commandLauncher:third").can_take_selection(&config));
         assert!(page("commandLauncher:third").can_take_selection(&json!({})));
         assert!(page("commandLauncher:removed").can_take_selection(&config));
-        assert!(page("translate").can_take_selection(&config));
+        assert!(page("translation").can_take_selection(&config));
     }
 
     #[test]
@@ -199,15 +199,15 @@ mod tests {
     fn modes_round_trip() {
         for value in [
             "editor",
-            "write",
+            "quickInput",
             "chat",
             "voiceChat",
             "voice",
-            "select",
+            "selectionActions",
             "aiTasks",
             "commandLauncher",
             "correction",
-            "translate",
+            "translation",
             "history",
             "config",
         ] {
@@ -229,15 +229,15 @@ mod tests {
 
     #[test]
     fn selects_geometry_profile() {
-        assert_eq!(ActivationMode::Write.profile(), WindowProfile::Panel);
+        assert_eq!(ActivationMode::QuickInput.profile(), WindowProfile::Panel);
         assert_eq!(ActivationMode::Voice.profile(), WindowProfile::Panel);
         for mode in [
             ActivationMode::Editor,
-            ActivationMode::Select,
+            ActivationMode::SelectionActions,
             ActivationMode::AiTasks,
             ActivationMode::CommandLauncher,
             ActivationMode::Correction,
-            ActivationMode::Translate,
+            ActivationMode::Translation,
             ActivationMode::Chat,
             ActivationMode::VoiceChat,
             ActivationMode::History,

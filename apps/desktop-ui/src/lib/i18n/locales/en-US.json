@@ -646,12 +646,12 @@
       "chat": "Use selected text as context in AI chat",
       "correction": "Correction with preview",
       "editor": "Open selected text in the editor",
-      "inlineCorrection": "Correct selected text in place",
-      "select": "Selection actions",
-      "translate": "Translate selected text",
+      "selectionCorrection": "Correct selected text in place",
+      "selectionActions": "Selection actions",
+      "translation": "Translate selected text",
       "voice": "Voice input",
       "voiceChat": "Voice question about selected text in AI chat",
-      "write": "Quick text input",
+      "quickInput": "Quick text input",
       "voiceCommands": "Voice commands"
     },
     "hotkeyInput": {

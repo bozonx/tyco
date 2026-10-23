@@ -97,7 +97,7 @@ const closePromptMode = () => {
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  taskSlotList(desktopStore.userConfig).map((item) =>
+  taskSlotList(desktopStore.userConfig?.aiTasks).map((item) =>
     item && item.name
       ? { name: item.name, action: () => runTask(item.id) }
       : undefined
@@ -105,7 +105,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 )
 
 async function runTask(taskId: string) {
-  const task = findAiTask(desktopStore.userConfig?.aiTasks, taskId)
+  const task = findAiTask(desktopStore.userConfig?.aiTasks.items, taskId)
   if (!task || !task.rule?.trim()) {
     toastKey('toast.desktopCommandFailed', 'error')
     return
@@ -193,13 +193,13 @@ async function savePromptAsTask() {
   const userConfig = desktopStore.userConfig
   if (!value || !userConfig) return
 
-  const library = addTaskFromPrompt(userConfig, value)
+  const library = addTaskFromPrompt(userConfig.aiTasks, value)
   if (!library) {
     toastKey('menu.aiPromptSlotsFull', 'warn')
     return
   }
 
-  const result = await desktopStore.updateUserConfig(library)
+  const result = await desktopStore.updateUserConfig({ aiTasks: library })
   if (!result.success) toastKey('toast.desktopCommandFailed', 'error')
 }
 

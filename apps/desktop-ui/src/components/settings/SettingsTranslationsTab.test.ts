@@ -38,8 +38,8 @@ describe('SettingsTranslationsTab.vue', () => {
       providers: { deepl: { endpoint: 'free' } },
       qualityGate: 'off',
       glossary: [
-        { term: 'foo', use: 'bar', doNotTranslate: false },
-        { term: 'baz', use: 'baz', doNotTranslate: true },
+        { term: 'foo', translation: 'bar' },
+        { term: 'baz', translation: 'baz' },
       ],
       ...overrides,
       targetLanguages: { q: 'en', w: 'es' },
@@ -376,8 +376,8 @@ describe('SettingsTranslationsTab.vue', () => {
     await textarea.setValue('hello = privet\n!KeepThis')
 
     expect(userConfig.translation.glossary).toEqual([
-      { term: 'hello', use: 'privet', doNotTranslate: false },
-      { term: 'KeepThis', use: 'KeepThis', doNotTranslate: true },
+      { term: 'hello', translation: 'privet' },
+      { term: 'KeepThis', translation: 'KeepThis' },
     ])
   })
 })

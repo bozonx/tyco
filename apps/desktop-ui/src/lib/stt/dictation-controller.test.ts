@@ -109,14 +109,14 @@ describe('dictation controller', () => {
   it('uses the latest configuration for each session and formatting preference', async () => {
     const { config, deps, handlers, controller } = setup()
     expect(controller.shouldFormatRecognizedText()).toBe(false)
-    config.stt.isLlmFormattingEnabled = true
+    config.stt.isVoiceCorrectionEnabled = true
     config.stt.providers.deepgram.language = 'en-US'
     expect(controller.shouldFormatRecognizedText()).toBe(true)
     await controller.startDictation(handlers)
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({ language: 'en' })
     )
-    config.stt.isLlmFormattingEnabled = false
+    config.stt.isVoiceCorrectionEnabled = false
     expect(controller.shouldFormatRecognizedText()).toBe(false)
   })
 

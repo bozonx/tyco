@@ -39,7 +39,7 @@ vi.mock('../../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../../test/desktop-store')
   return {
     useDesktopStore: () => {
-      const state = { mode: 'write' as const }
+      const state = { mode: 'quickInput' as const }
       return mockDesktopStore(() => state)
     },
   }

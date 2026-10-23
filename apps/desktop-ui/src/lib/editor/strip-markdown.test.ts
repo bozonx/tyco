@@ -73,10 +73,10 @@ describe('stripMarkdown', () => {
     expect(stripMarkdown(md, { codeBlockIndent: 'none' })).toBe(
       'const a = 1\nconst b = 2'
     )
-    expect(stripMarkdown(md, { codeBlockIndent: '2spaces' })).toBe(
+    expect(stripMarkdown(md, { codeBlockIndent: 'twoSpaces' })).toBe(
       '  const a = 1\n  const b = 2'
     )
-    expect(stripMarkdown(md, { codeBlockIndent: '4spaces' })).toBe(
+    expect(stripMarkdown(md, { codeBlockIndent: 'fourSpaces' })).toBe(
       '    const a = 1\n    const b = 2'
     )
     expect(stripMarkdown(md, { codeBlockIndent: 'tab' })).toBe(
@@ -92,10 +92,10 @@ describe('stripMarkdown', () => {
     expect(stripMarkdown(md, { blockquoteIndent: 'angle' })).toBe(
       '> Line 1\n> Line 2'
     )
-    expect(stripMarkdown(md, { blockquoteIndent: '2spaces' })).toBe(
+    expect(stripMarkdown(md, { blockquoteIndent: 'twoSpaces' })).toBe(
       '  Line 1\n  Line 2'
     )
-    expect(stripMarkdown(md, { blockquoteIndent: '4spaces' })).toBe(
+    expect(stripMarkdown(md, { blockquoteIndent: 'fourSpaces' })).toBe(
       '    Line 1\n    Line 2'
     )
     expect(stripMarkdown(md, { blockquoteIndent: 'tab' })).toBe(

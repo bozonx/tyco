@@ -18,8 +18,8 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl jobs list [--json]
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
 
-Modes: editor, write, chat, voice-chat, voice-commands, voice, select, ai-tasks,
-       command-launcher, correction, translate, history, settings.
+Modes: editor, quick-input, chat, voice-chat, voice-commands, voice, selection-actions,
+       ai-tasks, command-launcher, correction, translation, history, settings.
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and always returns output.
 Use --replace to replace a selection.

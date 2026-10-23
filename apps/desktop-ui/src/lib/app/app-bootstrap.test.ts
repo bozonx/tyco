@@ -65,7 +65,7 @@ describe('app-bootstrap', () => {
     const { deps, listeners } = createDeps({
       loadDesktopState: vi.fn(async () => ({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: ActivationMode.WRITE,
+        mode: ActivationMode.QUICK_INPUT,
       })),
     })
     const bootstrap = createAppBootstrap(deps)
@@ -130,7 +130,7 @@ describe('app-bootstrap', () => {
     await paramsChangedHandler?.(
       desktopViewToSnapshot({
         ...DEFAULT_DESKTOP_VIEW_STATE,
-        mode: ActivationMode.WRITE,
+        mode: ActivationMode.QUICK_INPUT,
         revision: 1,
       })
     )
@@ -289,7 +289,7 @@ it('resynchronizes snapshots on focus and disposes the focus listener', async ()
   vi.mocked(deps.loadDesktopState).mockResolvedValueOnce({
     ...DEFAULT_DESKTOP_VIEW_STATE,
     revision: 3,
-    mode: ActivationMode.WRITE,
+    mode: ActivationMode.QUICK_INPUT,
   })
   focus()
   await vi.waitFor(() =>

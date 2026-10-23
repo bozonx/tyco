@@ -48,7 +48,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     launcherPages: () => desktopStore.userConfig.launcherPages,
     mainActions: () => desktopStore.userConfig.mainActions,
     commands: () => desktopStore.userConfig.commands,
-    aiTasks: () => desktopStore.userConfig.aiTasks,
+    aiTasks: () => desktopStore.userConfig.aiTasks.items,
     ...useInvocationRunnerDependencies(),
   })
 })

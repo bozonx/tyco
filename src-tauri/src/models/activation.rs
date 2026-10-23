@@ -8,16 +8,16 @@ use crate::errors::AppError;
 #[serde(rename_all = "camelCase")]
 pub enum ActivationMode {
     Editor,
-    Write,
+    QuickInput,
     Chat,
     VoiceChat,
     VoiceCommands,
     Voice,
-    Select,
+    SelectionActions,
     AiTasks,
     CommandLauncher,
     Correction,
-    Translate,
+    Translation,
     History,
     Config,
     /// Asks the user whether an external call may use the selection; Tyco
@@ -29,16 +29,16 @@ impl ActivationMode {
     /// The modes a caller may name: every one but `ExternalAccess`.
     pub const PUBLIC_MODES: [Self; 13] = [
         Self::Editor,
-        Self::Write,
+        Self::QuickInput,
         Self::Chat,
         Self::VoiceChat,
         Self::VoiceCommands,
         Self::Voice,
-        Self::Select,
+        Self::SelectionActions,
         Self::AiTasks,
         Self::CommandLauncher,
         Self::Correction,
-        Self::Translate,
+        Self::Translation,
         Self::History,
         Self::Config,
     ];
@@ -55,16 +55,16 @@ impl ActivationMode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Editor => "editor",
-            Self::Write => "write",
+            Self::QuickInput => "quickInput",
             Self::Chat => "chat",
             Self::VoiceCommands => "voiceCommands",
             Self::VoiceChat => "voiceChat",
             Self::Voice => "voice",
-            Self::Select => "select",
+            Self::SelectionActions => "selectionActions",
             Self::AiTasks => "aiTasks",
             Self::CommandLauncher => "commandLauncher",
             Self::Correction => "correction",
-            Self::Translate => "translate",
+            Self::Translation => "translation",
             Self::History => "history",
             Self::Config => "config",
             Self::ExternalAccess => "externalAccess",
@@ -73,7 +73,7 @@ impl ActivationMode {
     pub fn profile(self) -> WindowProfile {
         match self {
             // the dictation bar leaves the screen above it in view
-            Self::Write | Self::Voice => WindowProfile::Panel,
+            Self::QuickInput | Self::Voice => WindowProfile::Panel,
             _ => WindowProfile::Sheet,
         }
     }

@@ -23,8 +23,11 @@ export interface SherpaOnnxSttSettings {
 
 export interface SttConfig {
   provider: SttProvider
-  /** The LLM turns the transcript into written text */
-  isLlmFormattingEnabled: boolean
+  /**
+   * The LLM turns the transcript into written text; its settings are
+   * `llm.tasks.voiceCorrection`
+   */
+  isVoiceCorrectionEnabled: boolean
   providers: {
     deepgram: DeepgramSttSettings
     sherpaOnnx: SherpaOnnxSttSettings

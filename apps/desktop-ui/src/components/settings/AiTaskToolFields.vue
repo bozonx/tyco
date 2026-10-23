@@ -52,7 +52,7 @@ const prompt = computed(() =>
     : ''
 )
 const aiTaskOptions = computed(() =>
-  (props.userConfig?.aiTasks ?? []).flatMap((task, index) =>
+  (props.userConfig?.aiTasks.items ?? []).flatMap((task, index) =>
     task.rule.trim()
       ? [{ id: task.id, name: task.name || `#${index + 1}` }]
       : []
@@ -63,7 +63,7 @@ const aiTaskOptions = computed(() =>
 function takeTaskRule(value: string | number | undefined) {
   const task =
     typeof value === 'string'
-      ? findAiTask(props.userConfig?.aiTasks, value)
+      ? findAiTask(props.userConfig?.aiTasks.items, value)
       : undefined
   if (task) emit('update', 'prompt', task.rule)
 }

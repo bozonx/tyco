@@ -1,8 +1,8 @@
 import type { HotkeyProviderInfo } from './generated/desktop-types'
 import type { HotkeyId, UserConfig } from './user-config'
 
-/** The hotkey id of the in-place correction of the selection */
-export const INLINE_CORRECTION_HOTKEY_ID = 'replace.correction'
+/** The hotkey id of the in-place correction of the selection, as in `hotkeys` */
+export const INLINE_CORRECTION_HOTKEY_ID = 'selectionCorrection'
 
 /** Hotkey ids of command overlay pages carry this prefix and the page id */
 export const LAUNCHER_PAGE_HOTKEY_PREFIX = 'launcherPage.'
@@ -26,13 +26,6 @@ export function resolveHotkeyTarget(
   config: Pick<UserConfig, 'hotkeys' | 'launcherPages'>,
   id: string
 ): { get: () => string; set: (shortcut: string) => void } | null {
-  if (id === INLINE_CORRECTION_HOTKEY_ID)
-    return {
-      get: () => config.hotkeys.selectionCorrection,
-      set: (value) => {
-        config.hotkeys.selectionCorrection = value
-      },
-    }
   if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
     const page = config.launcherPages.find(
       (item) => item.id === id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)

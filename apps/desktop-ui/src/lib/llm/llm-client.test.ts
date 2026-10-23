@@ -185,6 +185,8 @@ describe('llm-client', () => {
         id: 'first',
         providerId: 'ollama',
         providerModelId: 'first-model',
+        canUseImages: false,
+        canUseTools: false,
         temperature: 0.9,
         maxOutputTokens: 100,
       },
@@ -192,6 +194,8 @@ describe('llm-client', () => {
         id: 'second',
         providerId: 'ollama',
         providerModelId: 'second-model',
+        canUseImages: false,
+        canUseTools: false,
         temperature: 0.1,
         maxOutputTokens: 200,
       },
@@ -226,6 +230,8 @@ describe('llm-client', () => {
         id: 'chosen',
         providerId: 'ollama',
         providerModelId: 'chosen-model',
+        canUseImages: false,
+        canUseTools: false,
         temperature: 0.9,
         maxOutputTokens: 300,
       },
@@ -515,6 +521,8 @@ it('shares one deadline across the entire fallback chain', async () => {
     id: 'fallback',
     providerId: 'ollama',
     providerModelId: 'fallback',
+    canUseImages: false,
+    canUseTools: false,
   })
   config.tasks.aiTask.modelChain = ['ollama-qwen', 'fallback']
   const fetch = vi.fn<FetchFunction>(

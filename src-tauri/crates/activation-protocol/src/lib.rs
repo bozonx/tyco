@@ -7,22 +7,24 @@ pub const API_VERSION: u32 = 2;
 pub const MAX_MESSAGE_BYTES: usize = 1024 * 1024;
 pub const START_MODES: &[&str] = &[
     "editor",
-    "write",
+    "quickInput",
     "chat",
     "voiceChat",
     "voiceCommands",
     "voice",
-    "select",
+    "selectionActions",
     "aiTasks",
     "commandLauncher",
     "correction",
-    "translate",
+    "translation",
     "history",
     "config",
 ];
 
 pub fn canonical_mode(value: &str) -> &str {
     match value {
+        "quick-input" => "quickInput",
+        "selection-actions" => "selectionActions",
         "voice-commands" => "voiceCommands",
         "voice-chat" => "voiceChat",
         "ai-tasks" => "aiTasks",
@@ -36,6 +38,8 @@ pub fn canonical_mode(value: &str) -> &str {
 /// `voiceChat`; the inverse of `canonical_mode`.
 pub fn cli_mode(mode: &str) -> &str {
     match mode {
+        "quickInput" => "quick-input",
+        "selectionActions" => "selection-actions",
         "voiceCommands" => "voice-commands",
         "voiceChat" => "voice-chat",
         "aiTasks" => "ai-tasks",

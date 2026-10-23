@@ -246,15 +246,15 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
 
 fn window_label_for_mode(mode: ActivationMode) -> &'static str {
     match mode {
-        ActivationMode::Write
+        ActivationMode::QuickInput
         | ActivationMode::Voice
-        | ActivationMode::Select
+        | ActivationMode::SelectionActions
         | ActivationMode::AiTasks
         | ActivationMode::VoiceCommands
         | ActivationMode::CommandLauncher
         | ActivationMode::Correction
         | ActivationMode::VoiceChat
-        | ActivationMode::Translate
+        | ActivationMode::Translation
         | ActivationMode::ExternalAccess => QUICK_WINDOW_LABEL,
         ActivationMode::Editor
         | ActivationMode::Chat
@@ -270,14 +270,14 @@ mod tests {
     #[test]
     fn quick_modes_use_the_quick_window_and_main_modes_use_the_main_window() {
         for mode in [
-            ActivationMode::Write,
+            ActivationMode::QuickInput,
             ActivationMode::Voice,
-            ActivationMode::Select,
+            ActivationMode::SelectionActions,
             ActivationMode::AiTasks,
             ActivationMode::CommandLauncher,
             ActivationMode::Correction,
             ActivationMode::VoiceChat,
-            ActivationMode::Translate,
+            ActivationMode::Translation,
             ActivationMode::ExternalAccess,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);

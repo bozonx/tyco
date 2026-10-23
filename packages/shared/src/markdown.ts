@@ -13,8 +13,8 @@ export interface MarkdownFormatSettings {
 /** What is left of the Markdown when it becomes plain text, `markdown.strip` */
 export interface MarkdownStripSettings {
   bullet: '-' | '*' | 'none'
-  codeBlockIndent: 'none' | '2spaces' | '4spaces' | 'tab'
-  blockquoteIndent: 'none' | '2spaces' | '4spaces' | 'tab' | 'angle'
+  codeBlockIndent: 'none' | 'twoSpaces' | 'fourSpaces' | 'tab'
+  blockquoteIndent: 'none' | 'twoSpaces' | 'fourSpaces' | 'tab' | 'angle'
   /** The text keeps the backticks of inline code */
   hasInlineCode: boolean
   linkFormat: 'text' | 'textAndUrl' | 'url'

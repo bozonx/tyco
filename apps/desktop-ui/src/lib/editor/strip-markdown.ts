@@ -72,9 +72,9 @@ const inline = (nodes: MdNode[] = [], options: MarkdownStripSettings): string =>
 
 const getIndentPrefix = (style: string): string => {
   switch (style) {
-    case '2spaces':
+    case 'twoSpaces':
       return '  '
-    case '4spaces':
+    case 'fourSpaces':
       return '    '
     case 'tab':
       return '\t'

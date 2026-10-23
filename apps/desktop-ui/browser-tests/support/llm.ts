@@ -16,6 +16,8 @@ export function installLlm(desktop: FakeDesktop) {
       id: 'browser-model',
       providerId: 'browser-test',
       providerModelId: 'browser-model',
+      canUseImages: false,
+      canUseTools: false,
       name: 'Browser model',
     },
   ]

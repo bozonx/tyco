@@ -84,7 +84,7 @@ const optionId = mainActionOptionId
 
 /** The AI tasks the menu can refer to: those with a name */
 const aiTasks = computed(() =>
-  userConfig.value.aiTasks.filter((task) => task.name.trim())
+  userConfig.value.aiTasks.items.filter((task) => task.name.trim())
 )
 
 /** The translation languages, and those the slots translate into already */

@@ -40,7 +40,7 @@ const QUICK_MODES: ReadonlyArray<{
     icon: 'mdi:microphone-message',
   },
   {
-    mode: ActivationMode.WRITE,
+    mode: ActivationMode.QUICK_INPUT,
     label: 'Write',
     title: 'Open Quick Write',
     icon: 'mdi:pencil-outline',
@@ -52,7 +52,7 @@ const QUICK_MODES: ReadonlyArray<{
     icon: 'mdi:robot-outline',
   },
   {
-    mode: ActivationMode.SELECT,
+    mode: ActivationMode.SELECTION_ACTIONS,
     label: 'Select',
     title: 'Open Quick Select',
     icon: 'mdi:format-list-checks',
@@ -70,7 +70,7 @@ const QUICK_MODES: ReadonlyArray<{
     icon: 'mdi:console-line',
   },
   {
-    mode: ActivationMode.TRANSLATE,
+    mode: ActivationMode.TRANSLATION,
     label: 'Translate',
     title: 'Open Quick Translate',
     icon: 'mdi:translate',

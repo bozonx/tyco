@@ -134,7 +134,7 @@ mod tests {
             coordinator: &coordinator,
         };
         let request = coordinator
-            .begin(&host, activation(ActivationMode::Write))
+            .begin(&host, activation(ActivationMode::QuickInput))
             .unwrap()
             .unwrap();
         let mut published = false;
@@ -152,7 +152,7 @@ mod tests {
         let coordinator = ActivationCoordinator::default();
         let host = Host::default();
         let first = coordinator
-            .begin(&host, activation(ActivationMode::Write))
+            .begin(&host, activation(ActivationMode::QuickInput))
             .unwrap()
             .unwrap();
         let second = coordinator
@@ -190,7 +190,7 @@ mod tests {
             ..Host::default()
         };
         let old = coordinator
-            .begin(&host, activation(ActivationMode::Write))
+            .begin(&host, activation(ActivationMode::QuickInput))
             .unwrap()
             .unwrap();
         assert!(coordinator
@@ -235,7 +235,7 @@ mod tests {
             ..Host::default()
         };
         assert!(coordinator
-            .begin(&failing, activation(ActivationMode::Write))
+            .begin(&failing, activation(ActivationMode::QuickInput))
             .is_err());
         coordinator
             .publish(&old, || {

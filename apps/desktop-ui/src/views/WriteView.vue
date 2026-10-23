@@ -132,7 +132,7 @@ watch(
   () => {
     correctionWorkflowStore.cancelInsert()
     const { isWindowShown, mode } = desktopStore.desktopState
-    if (isWindowShown && mode === 'write') {
+    if (isWindowShown && mode === 'quickInput') {
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
       resetNav()
@@ -179,7 +179,7 @@ function cancelAndClose() {
 /** Whether the input takes commands: not while a modal is over it. */
 const acceptsInput = () =>
   desktopStore.desktopState.isWindowShown &&
-  desktopStore.desktopState.mode === 'write' &&
+  desktopStore.desktopState.mode === 'quickInput' &&
   !menuModalsStore.hasOpenModal
 
 function submitFromHint() {

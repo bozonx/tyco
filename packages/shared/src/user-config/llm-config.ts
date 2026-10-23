@@ -15,13 +15,20 @@ export const BUILTIN_LLM_PROVIDERS = [
  * One place models are served from. The id doubles as the id of its API key in
  * the Rust-side secret store; keys are never part of this config
  */
-export interface LlmProvider {
-  id: string
-  type: LlmProviderType
-  name?: string
-  /** Required for `openaiCompatible`, e.g. `http://localhost:11434/v1` */
-  baseUrl?: string
-}
+export type LlmProvider =
+  | {
+      id: string
+      type: Exclude<LlmProviderType, 'openaiCompatible'>
+      name?: string
+      baseUrl?: never
+    }
+  | {
+      id: string
+      type: 'openaiCompatible'
+      name?: string
+      /** E.g. `http://localhost:11434/v1` */
+      baseUrl: string
+    }
 
 export interface LlmModel {
   id: string
@@ -33,12 +40,12 @@ export interface LlmModel {
   temperature?: number
   maxOutputTokens?: number
   contextWindowTokens?: number
-  canUseImages?: boolean
+  canUseImages: boolean
   /**
-   * Whether the model can call tools in the chat. Unset: yes for the built-in
-   * cloud providers, no for a custom endpoint, where local models often cannot
+   * Whether the model can call tools in the chat; a new model of a custom
+   * endpoint starts without them, as local models often cannot call them
    */
-  canUseTools?: boolean
+  canUseTools: boolean
   /** DeepSeek thinking mode */
   isThinkingEnabled?: boolean
 }

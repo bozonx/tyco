@@ -643,12 +643,12 @@
       "chat": "Seçili metni yapay zekâ sohbetinde bağlam olarak kullan",
       "correction": "Önizlemeli düzeltme",
       "editor": "Seçili metni düzenleyicide aç",
-      "inlineCorrection": "Seçili metni yerinde düzelt",
-      "select": "Seçim eylemleri",
-      "translate": "Seçili metni çevir",
+      "selectionCorrection": "Seçili metni yerinde düzelt",
+      "selectionActions": "Seçim eylemleri",
+      "translation": "Seçili metni çevir",
       "voice": "Sesli giriş",
       "voiceChat": "Seçili metin hakkında yapay zekâ sohbetinde sesli soru",
-      "write": "Hızlı metin girişi",
+      "quickInput": "Hızlı metin girişi",
       "voiceCommands": "Sesli komutlar"
     },
     "hotkeyInput": {

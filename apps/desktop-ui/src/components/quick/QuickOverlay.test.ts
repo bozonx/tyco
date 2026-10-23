@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import QuickOverlay from './QuickOverlay.vue'
 
 const mocks = vi.hoisted(() => ({
-  desktopState: { mode: 'write', isWindowShown: true, activationId: 1 },
+  desktopState: { mode: 'quickInput', isWindowShown: true, activationId: 1 },
   call: vi.fn(async () => ({ success: true, result: undefined })),
   focus: vi.fn(),
   hideWindow: vi.fn(),
@@ -131,7 +131,7 @@ describe('quick overlay keyboard ownership', () => {
       }
     )
     const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'write'
+    desktopState.mode = 'quickInput'
     desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
@@ -143,7 +143,7 @@ describe('quick overlay keyboard ownership', () => {
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
       expect(mocks.hideWindow).toHaveBeenCalledOnce()
 
-      desktopState.mode = 'write'
+      desktopState.mode = 'quickInput'
       await nextTick()
       mocks.hideWindow.mockClear()
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
@@ -163,7 +163,7 @@ describe('quick overlay keyboard ownership', () => {
       }
     )
     const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'write'
+    desktopState.mode = 'quickInput'
     desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
@@ -184,7 +184,7 @@ describe('quick overlay keyboard ownership', () => {
       }
     )
     const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'write'
+    desktopState.mode = 'quickInput'
     desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
@@ -205,7 +205,7 @@ describe('quick overlay keyboard ownership', () => {
       }
     )
     const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'write'
+    desktopState.mode = 'quickInput'
     desktopState.isWindowShown = true
     const modals = reactive(mocks.modals)
     modals.currentModal = 'insert'
@@ -249,7 +249,7 @@ describe('quick overlay input region', () => {
         return rects[this.className] ?? new DOMRect()
       })
     const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'write'
+    desktopState.mode = 'quickInput'
     desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
@@ -278,7 +278,7 @@ describe('quick overlay input region', () => {
     } finally {
       wrapper.unmount()
       rectSpy.mockRestore()
-      desktopState.mode = 'write'
+      desktopState.mode = 'quickInput'
     }
   })
 })
@@ -304,7 +304,7 @@ describe('quick overlay menus', () => {
       expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
     } finally {
       wrapper.unmount()
-      desktopState.mode = 'write'
+      desktopState.mode = 'quickInput'
     }
   })
 
@@ -324,12 +324,12 @@ describe('quick overlay menus', () => {
     } finally {
       wrapper.unmount()
       vi.useRealTimers()
-      desktopState.mode = 'write'
+      desktopState.mode = 'quickInput'
       mocks.modals.currentModal = 'none'
     }
   }
 
-  it.each(['select', 'aiTasks', 'commandLauncher', 'translate'])(
+  it.each(['selectionActions', 'aiTasks', 'commandLauncher', 'translation'])(
     'dismisses the %s menu when the focus goes elsewhere',
     async (mode) => {
       await loseFocus(mode)
@@ -338,7 +338,7 @@ describe('quick overlay menus', () => {
   )
 
   it('keeps the step after the menu when the focus goes elsewhere', async () => {
-    await loseFocus('select', 'translate')
+    await loseFocus('selectionActions', 'translate')
     expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
   })
 
@@ -376,7 +376,7 @@ describe('quick overlay menus', () => {
     } finally {
       wrapper.unmount()
       vi.useRealTimers()
-      desktopState.mode = 'write'
+      desktopState.mode = 'quickInput'
     }
   })
 
@@ -401,12 +401,12 @@ describe('quick overlay menus', () => {
       expect(mocks.aiTaskUnmounts).toBe(1)
       expect(mocks.cancelAndCloseAll).toHaveBeenCalledOnce()
 
-      desktopState.mode = 'write'
+      desktopState.mode = 'quickInput'
       await nextTick()
       expect(mocks.aiTaskUnmounts).toBe(2)
     } finally {
       wrapper.unmount()
-      desktopState.mode = 'write'
+      desktopState.mode = 'quickInput'
     }
   })
 })

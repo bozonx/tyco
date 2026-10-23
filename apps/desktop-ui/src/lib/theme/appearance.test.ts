@@ -33,12 +33,25 @@ describe('normalizeAppearance', () => {
 
   it('replaces invalid or missing values with defaults', () => {
     expect(
-      normalizeAppearance({ theme: 'sepia', contrast: 1, uiScalePercent: 123 })
+      normalizeAppearance({
+        theme: 'sepia',
+        contrast: 1,
+        uiScalePercent: 123.5,
+      })
     ).toEqual(DEFAULT_APPEARANCE)
     expect(normalizeAppearance(null)).toEqual(DEFAULT_APPEARANCE)
   })
 
-  it('accepts a numeric scale stored as a string', () => {
+  it('takes any whole scale in the range, not only the presets', () => {
+    expect(normalizeAppearance({ uiScalePercent: 120 }).uiScalePercent).toBe(
+      120
+    )
+    expect(normalizeAppearance({ uiScalePercent: 301 }).uiScalePercent).toBe(
+      100
+    )
+  })
+
+  it('rejects a numeric scale stored as a string', () => {
     expect(normalizeAppearance({ uiScalePercent: '175' }).uiScalePercent).toBe(
       100
     )

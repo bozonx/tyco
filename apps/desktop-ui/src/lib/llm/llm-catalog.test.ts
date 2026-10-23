@@ -6,7 +6,6 @@ import {
   OUTPUT_TOKENS_CEILING,
   buildLlmCatalog,
   buildProviderFactories,
-  canUseTools,
 } from './llm-catalog'
 
 const names = (models: readonly { name: string }[]) =>
@@ -32,23 +31,11 @@ describe('llm-catalog', () => {
     expect(local.baseUrl).toBe('http://localhost:11434/v1')
   })
 
-  it('lets cloud models call tools and a custom endpoint only when told', () => {
+  it('offers tools to the models that can use them', () => {
     const base = config()
     const catalog = buildLlmCatalog(base)!
     expect(catalog.require('gemini-flash').capabilities.tools).toBe(true)
     expect(catalog.require('ollama-qwen').capabilities.tools).toBe(false)
-
-    const local = base.models.find((model) => model.id === 'ollama-qwen')!
-    expect(canUseTools({ ...local, canUseTools: true }, base.providers)).toBe(
-      true
-    )
-    const gemini = base.models.find((model) => model.id === 'gemini-flash')!
-    expect(canUseTools({ ...gemini, canUseTools: false }, base.providers)).toBe(
-      false
-    )
-    expect(
-      canUseTools({ ...gemini, providerId: 'missing' }, base.providers)
-    ).toBe(false)
   })
 
   it('turns task chains into task classes', () => {
@@ -73,13 +60,19 @@ describe('llm-catalog', () => {
     const catalog = buildLlmCatalog({
       ...base,
       providers: base.providers.map((provider) =>
-        provider.id === 'ollama'
+        provider.type === 'openaiCompatible'
           ? { ...provider, baseUrl: 'not a url' }
           : provider
       ),
       models: [
         ...base.models,
-        { id: 'blank', providerId: 'google', providerModelId: '  ' },
+        {
+          id: 'blank',
+          providerId: 'google',
+          providerModelId: '  ',
+          canUseImages: false,
+          canUseTools: false,
+        },
       ],
       tasks: {
         ...base.tasks,
@@ -103,12 +96,16 @@ describe('llm-catalog', () => {
           providerId: 'google',
           providerModelId: 'g',
           maxOutputTokens: 1024,
+          canUseImages: false,
+          canUseTools: false,
         },
         {
           id: 'b',
           providerId: 'google',
           providerModelId: 'g',
           maxOutputTokens: 10_000_000,
+          canUseImages: false,
+          canUseTools: false,
         },
       ],
       tasks: { ...base.tasks, aiTask: { modelChain: ['a'] } },

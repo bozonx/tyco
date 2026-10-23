@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 
 import {
   TRANSLATION_SECRET_IDS,
+  isGlossaryTermKept,
   type TranslationConfig,
   type TranslationGlossaryEntry,
 } from '@tyco/shared'
@@ -17,13 +18,13 @@ export function parseTranslationGlossary(
     if (!trimmed) continue
     if (trimmed.startsWith('!')) {
       const term = trimmed.slice(1).trim()
-      if (term) entries.push({ term, use: term, doNotTranslate: true })
+      if (term) entries.push({ term, translation: term })
       continue
     }
-    const [termPart, ...useParts] = trimmed.split('=')
+    const [termPart, ...translationParts] = trimmed.split('=')
     const term = termPart?.trim()
-    const use = useParts.join('=').trim()
-    if (term && use) entries.push({ term, use, doNotTranslate: false })
+    const translation = translationParts.join('=').trim()
+    if (term && translation) entries.push({ term, translation })
   }
   return entries
 }
@@ -33,7 +34,9 @@ export function formatTranslationGlossary(
 ): string {
   return entries
     .map((entry) =>
-      entry.doNotTranslate ? `!${entry.term}` : `${entry.term} = ${entry.use}`
+      isGlossaryTermKept(entry)
+        ? `!${entry.term}`
+        : `${entry.term} = ${entry.translation}`
     )
     .join('\n')
 }

@@ -7,7 +7,7 @@ import WriteView from './WriteView.vue'
 const mocks = vi.hoisted(() => ({
   desktopState: {
     isWindowShown: true,
-    mode: 'write',
+    mode: 'quickInput',
     activationId: 1,
     userConfig: { editor: { submitKey: undefined as SubmitKey | undefined } },
   },

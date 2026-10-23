@@ -37,7 +37,7 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
       ),
     })
     // a task being typed in is not a change until it has a name or a rule
-    return { ...config, ...withoutEmptyTasks(config) }
+    return { ...config, aiTasks: withoutEmptyTasks(config.aiTasks) }
   }
   return { prepare }
 }

@@ -19,12 +19,13 @@
         "contrast": { "enum": ["auto", "normal", "more"], "default": "auto" },
         "motion": { "enum": ["auto", "normal", "reduce"], "default": "auto" },
         "uiScalePercent": {
-          "enum": [100, 115, 130, 150, 175, 200],
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 300,
           "default": 100
         }
       },
       "required": ["theme", "contrast", "motion", "uiScalePercent"],
-      "additionalProperties": false,
       "defaultPath": "appearance"
     },
     "language": {
@@ -34,7 +35,6 @@
         "user": { "type": "string", "default": "auto", "minLength": 1 }
       },
       "required": ["ui", "user"],
-      "additionalProperties": false,
       "defaultPath": "language"
     },
     "editor": {
@@ -66,7 +66,6 @@
             "isSecretSanitizingEnabled": { "type": "boolean", "default": true }
           },
           "required": ["storage", "maxItems", "isSecretSanitizingEnabled"],
-          "additionalProperties": false,
           "default": {
             "storage": "disk",
             "maxItems": 1000,
@@ -76,7 +75,6 @@
         }
       },
       "required": ["submitKey", "diffViewMode", "history"],
-      "additionalProperties": false,
       "defaultPath": "editor"
     },
     "quickWindow": {
@@ -86,38 +84,36 @@
         "isCorrectionPrefetchEnabled": { "type": "boolean", "default": false }
       },
       "required": ["isHiddenOnBlur", "isCorrectionPrefetchEnabled"],
-      "additionalProperties": false,
       "defaultPath": "quickWindow"
     },
     "hotkeys": {
       "type": "object",
       "properties": {
         "editor": { "type": "string", "default": "" },
-        "write": { "type": "string", "default": "" },
+        "quickInput": { "type": "string", "default": "" },
         "chat": { "type": "string", "default": "" },
         "voiceChat": { "type": "string", "default": "" },
         "voice": { "type": "string", "default": "Ctrl+Alt+V" },
-        "select": { "type": "string", "default": "Ctrl+Alt+S" },
+        "selectionActions": { "type": "string", "default": "Ctrl+Alt+S" },
         "aiTasks": { "type": "string", "default": "" },
         "correction": { "type": "string", "default": "" },
-        "translate": { "type": "string", "default": "" },
+        "translation": { "type": "string", "default": "" },
         "voiceCommands": { "type": "string", "default": "" },
         "selectionCorrection": { "type": "string", "default": "Ctrl+Alt+F" }
       },
       "required": [
         "editor",
-        "write",
+        "quickInput",
         "chat",
         "voiceChat",
         "voice",
-        "select",
+        "selectionActions",
         "aiTasks",
         "correction",
-        "translate",
+        "translation",
         "voiceCommands",
         "selectionCorrection"
       ],
-      "additionalProperties": false,
       "defaultPath": "hotkeys"
     },
     "externalAccess": {
@@ -126,7 +122,6 @@
         "canAccessSelection": { "type": "boolean", "default": false }
       },
       "required": ["canAccessSelection"],
-      "additionalProperties": false,
       "defaultPath": "externalAccess"
     },
     "windowInsertion": {
@@ -147,7 +142,6 @@
             "ydotoolPath": { "type": "string", "default": "" }
           },
           "required": ["pasteShortcut", "method", "xdotoolPath", "ydotoolPath"],
-          "additionalProperties": false,
           "default": {
             "pasteShortcut": "Ctrl+V",
             "method": "auto",
@@ -157,7 +151,6 @@
         }
       },
       "required": ["linux"],
-      "additionalProperties": false,
       "defaultPath": "windowInsertion"
     },
     "translation": {
@@ -173,12 +166,10 @@
                 "endpoint": { "enum": ["free", "pro"], "default": "free" }
               },
               "required": ["endpoint"],
-              "additionalProperties": false,
               "default": { "endpoint": "free" }
             }
           },
           "required": ["deepl"],
-          "additionalProperties": false,
           "default": { "deepl": { "endpoint": "free" } }
         },
         "qualityGate": {
@@ -191,11 +182,9 @@
             "type": "object",
             "properties": {
               "term": { "type": "string", "default": "", "minLength": 1 },
-              "use": { "type": "string", "default": "" },
-              "doNotTranslate": { "type": "boolean", "default": false }
+              "translation": { "type": "string", "default": "", "minLength": 1 }
             },
-            "required": ["term", "use", "doNotTranslate"],
-            "additionalProperties": false
+            "required": ["term", "translation"]
           },
           "default": []
         },
@@ -233,7 +222,6 @@
         "targetLanguages",
         "viewMode"
       ],
-      "additionalProperties": false,
       "defaultPath": "translation"
     },
     "mainActions": {
@@ -274,8 +262,7 @@
                 ]
               }
             },
-            "required": ["type", "actionId"],
-            "additionalProperties": false
+            "required": ["type", "actionId"]
           },
           {
             "type": "object",
@@ -283,8 +270,7 @@
               "type": { "enum": ["plugin"] },
               "actionId": { "type": "string", "default": "", "minLength": 1 }
             },
-            "required": ["type", "actionId"],
-            "additionalProperties": false
+            "required": ["type", "actionId"]
           },
           {
             "type": "object",
@@ -292,8 +278,7 @@
               "type": { "enum": ["command"] },
               "commandId": { "type": "string", "default": "", "minLength": 1 }
             },
-            "required": ["type", "commandId"],
-            "additionalProperties": false
+            "required": ["type", "commandId"]
           },
           {
             "type": "object",
@@ -301,8 +286,7 @@
               "type": { "enum": ["aiTask"] },
               "taskId": { "type": "string", "default": "", "minLength": 1 }
             },
-            "required": ["type", "taskId"],
-            "additionalProperties": false
+            "required": ["type", "taskId"]
           },
           {
             "type": "object",
@@ -310,8 +294,7 @@
               "type": { "enum": ["translation"] },
               "language": { "type": "string", "default": "", "minLength": 1 }
             },
-            "required": ["type", "language"],
-            "additionalProperties": false
+            "required": ["type", "language"]
           },
           {
             "type": "object",
@@ -319,8 +302,7 @@
               "type": { "enum": ["launcherPage"] },
               "pageId": { "type": "string", "minLength": 1 }
             },
-            "required": ["type", "pageId"],
-            "additionalProperties": false
+            "required": ["type", "pageId"]
           }
         ]
       },
@@ -368,8 +350,7 @@
           },
           "hotkey": { "type": "string", "default": "" }
         },
-        "required": ["id", "inputMode", "hotkey", "slots"],
-        "additionalProperties": false
+        "required": ["id", "inputMode", "hotkey", "slots"]
       },
       "defaultPath": "launcherPages"
     },
@@ -415,6 +396,7 @@
         "required": [
           "id",
           "name",
+          "description",
           "phrases",
           "toolId",
           "toolConfig",
@@ -424,8 +406,7 @@
           "isAvailableExternally",
           "isEnabled",
           "isVoiceEnabled"
-        ],
-        "additionalProperties": false
+        ]
       },
       "defaultPath": "commands"
     },
@@ -435,29 +416,39 @@
         "providers": {
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "default": "",
-                "minLength": 1,
-                "pattern": "^[a-z0-9][a-z0-9._-]{0,59}$",
-                "maxLength": 60
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "default": "",
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9][a-z0-9._-]{0,59}$",
+                    "maxLength": 60
+                  },
+                  "type": { "enum": ["google", "openrouter", "deepseek"] },
+                  "name": { "type": "string", "default": "" }
+                },
+                "required": ["id", "type"]
               },
-              "type": {
-                "enum": [
-                  "google",
-                  "openrouter",
-                  "deepseek",
-                  "openaiCompatible"
-                ],
-                "default": "google"
-              },
-              "name": { "type": "string", "default": "" },
-              "baseUrl": { "type": "string", "default": "" }
-            },
-            "required": ["id", "type"],
-            "additionalProperties": false
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "default": "",
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9][a-z0-9._-]{0,59}$",
+                    "maxLength": 60
+                  },
+                  "type": { "enum": ["openaiCompatible"] },
+                  "name": { "type": "string", "default": "" },
+                  "baseUrl": { "type": "string", "default": "" }
+                },
+                "required": ["id", "type", "baseUrl"]
+              }
+            ]
           },
           "default": []
         },
@@ -488,11 +479,16 @@
                 "maximum": 9007199254740991
               },
               "canUseImages": { "type": "boolean", "default": false },
-              "canUseTools": { "type": "boolean" },
+              "canUseTools": { "type": "boolean", "default": false },
               "isThinkingEnabled": { "type": "boolean", "default": false }
             },
-            "required": ["id", "providerId", "providerModelId"],
-            "additionalProperties": false
+            "required": [
+              "id",
+              "providerId",
+              "providerModelId",
+              "canUseImages",
+              "canUseTools"
+            ]
           },
           "default": []
         },
@@ -503,7 +499,6 @@
               "type": "object",
               "properties": { "rule": { "type": "string", "default": "" } },
               "required": ["rule"],
-              "additionalProperties": false,
               "default": { "rule": "" }
             },
             "correction": {
@@ -518,7 +513,6 @@
                 "rule": { "type": "string", "default": "" }
               },
               "required": ["modelChain", "rule"],
-              "additionalProperties": false,
               "default": { "modelChain": [], "rule": "" }
             },
             "translation": {
@@ -534,7 +528,6 @@
                 "qualityGateRule": { "type": "string", "default": "" }
               },
               "required": ["modelChain", "rule", "qualityGateRule"],
-              "additionalProperties": false,
               "default": { "modelChain": [], "rule": "", "qualityGateRule": "" }
             },
             "voiceCorrection": {
@@ -549,7 +542,6 @@
                 "rule": { "type": "string", "default": "" }
               },
               "required": ["modelChain", "rule"],
-              "additionalProperties": false,
               "default": { "modelChain": [], "rule": "" }
             },
             "aiTask": {
@@ -563,7 +555,6 @@
                 }
               },
               "required": ["modelChain"],
-              "additionalProperties": false,
               "default": { "modelChain": [] }
             }
           },
@@ -573,63 +564,66 @@
             "translation",
             "voiceCorrection",
             "aiTask"
-          ],
-          "additionalProperties": false
+          ]
         }
       },
       "required": ["providers", "models", "tasks"],
-      "additionalProperties": false,
       "defaultPath": "llm"
     },
     "aiTasks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "default": "",
-            "minLength": 1,
-            "maxLength": 64,
-            "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
-          },
-          "name": { "type": "string", "default": "" },
-          "rule": { "type": "string", "default": "" }
-        },
-        "required": ["id", "name", "rule"],
-        "additionalProperties": false
-      },
-      "defaultPath": "aiTasks"
-    },
-    "aiTaskSlots": {
       "type": "object",
-      "propertyNames": {
-        "enum": [
-          "q",
-          "w",
-          "e",
-          "r",
-          "t",
-          "a",
-          "s",
-          "d",
-          "f",
-          "g",
-          "z",
-          "x",
-          "c",
-          "v",
-          "b"
-        ]
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "default": "",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+              },
+              "name": { "type": "string", "default": "" },
+              "rule": { "type": "string", "default": "" }
+            },
+            "required": ["id", "name", "rule"]
+          },
+          "default": []
+        },
+        "slots": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "q",
+              "w",
+              "e",
+              "r",
+              "t",
+              "a",
+              "s",
+              "d",
+              "f",
+              "g",
+              "z",
+              "x",
+              "c",
+              "v",
+              "b"
+            ]
+          },
+          "additionalProperties": { "type": "string", "minLength": 1 },
+          "default": {}
+        }
       },
-      "additionalProperties": { "type": "string", "minLength": 1 },
-      "defaultPath": "aiTaskSlots"
+      "required": ["items", "slots"],
+      "defaultPath": "aiTasks"
     },
     "aiVault": {
       "type": "object",
       "properties": { "path": { "type": "string", "default": "" } },
       "required": ["path"],
-      "additionalProperties": false,
       "defaultPath": "aiVault"
     },
     "markdown": {
@@ -651,7 +645,6 @@
             "headingStyle",
             "isListMarkerIncremented"
           ],
-          "additionalProperties": false,
           "default": {
             "bullet": "-",
             "emphasis": "*",
@@ -665,11 +658,11 @@
           "properties": {
             "bullet": { "enum": ["-", "*", "none"], "default": "-" },
             "codeBlockIndent": {
-              "enum": ["none", "2spaces", "4spaces", "tab"],
+              "enum": ["none", "twoSpaces", "fourSpaces", "tab"],
               "default": "none"
             },
             "blockquoteIndent": {
-              "enum": ["none", "2spaces", "4spaces", "tab", "angle"],
+              "enum": ["none", "twoSpaces", "fourSpaces", "tab", "angle"],
               "default": "none"
             },
             "hasInlineCode": { "type": "boolean", "default": false },
@@ -694,7 +687,6 @@
             "hasThematicBreaks",
             "hasTaskCheckboxes"
           ],
-          "additionalProperties": false,
           "default": {
             "bullet": "-",
             "codeBlockIndent": "none",
@@ -708,7 +700,6 @@
         }
       },
       "required": ["format", "strip"],
-      "additionalProperties": false,
       "defaultPath": "markdown"
     },
     "plugins": {
@@ -718,7 +709,11 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "settingsVersion": { "type": "integer", "minimum": 0, "maximum": 64 },
+          "settingsVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
           "isEnabled": { "type": "boolean", "default": false },
           "settings": {
             "type": "object",
@@ -729,7 +724,6 @@
           }
         },
         "required": ["isEnabled", "settings"],
-        "additionalProperties": false,
         "default": { "isEnabled": false, "settings": {} }
       },
       "defaultPath": "plugins"
@@ -752,12 +746,10 @@
             }
           },
           "required": ["storage"],
-          "additionalProperties": false,
           "default": { "storage": "disk" }
         }
       },
       "required": ["imageQuality", "history"],
-      "additionalProperties": false,
       "defaultPath": "chat"
     },
     "stt": {
@@ -767,7 +759,7 @@
           "enum": ["deepgram", "sherpaOnnx"],
           "default": "deepgram"
         },
-        "isLlmFormattingEnabled": { "type": "boolean", "default": false },
+        "isVoiceCorrectionEnabled": { "type": "boolean", "default": false },
         "providers": {
           "type": "object",
           "properties": {
@@ -778,7 +770,6 @@
                 "language": { "type": "string", "default": "auto" }
               },
               "required": ["modelId", "language"],
-              "additionalProperties": false,
               "default": { "modelId": "nova-3", "language": "auto" }
             },
             "sherpaOnnx": {
@@ -790,20 +781,17 @@
                 }
               },
               "required": ["baseUrl"],
-              "additionalProperties": false,
               "default": { "baseUrl": "ws://localhost:6006" }
             }
           },
           "required": ["deepgram", "sherpaOnnx"],
-          "additionalProperties": false,
           "default": {
             "deepgram": { "modelId": "nova-3", "language": "auto" },
             "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
           }
         }
       },
-      "required": ["provider", "isLlmFormattingEnabled", "providers"],
-      "additionalProperties": false,
+      "required": ["provider", "isVoiceCorrectionEnabled", "providers"],
       "defaultPath": "stt"
     }
   },
@@ -822,14 +810,12 @@
     "commands",
     "llm",
     "aiTasks",
-    "aiTaskSlots",
     "markdown",
     "plugins",
     "chat",
     "stt",
     "aiVault"
   ],
-  "additionalProperties": false,
   "$defs": {
     "scriptToolConfig": {
       "type": "object",
@@ -838,8 +824,7 @@
         "workingDirectory": { "type": "string", "default": "" },
         "timeoutSec": { "type": "integer", "minimum": 1, "maximum": 3600 }
       },
-      "required": ["command"],
-      "additionalProperties": false
+      "required": ["command"]
     },
     "webhookToolConfig": {
       "type": "object",
@@ -860,8 +845,7 @@
           "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
         }
       },
-      "required": ["url"],
-      "additionalProperties": false
+      "required": ["url"]
     }
   }
 }

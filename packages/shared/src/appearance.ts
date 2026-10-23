@@ -20,14 +20,16 @@ export type MotionMode = (typeof MOTION_MODES)[number]
 export type MotionLevel = Exclude<MotionMode, 'auto'>
 
 /** Interface scale in percent of the default root font size */
-export const UI_SCALES = [100, 115, 130, 150, 175, 200] as const
-export type UiScale = (typeof UI_SCALES)[number]
+export const MIN_UI_SCALE_PERCENT = 50
+export const MAX_UI_SCALE_PERCENT = 300
+/** The scales the settings offer; the config takes any in the range */
+export const UI_SCALE_PRESETS = [100, 115, 130, 150, 175, 200] as const
 
 export interface AppearanceSettings {
   theme: ThemeMode
   contrast: ContrastMode
   motion: MotionMode
-  uiScalePercent: UiScale
+  uiScalePercent: number
 }
 
 export const DEFAULT_APPEARANCE: AppearanceSettings = {
@@ -53,8 +55,10 @@ export const isContrastMode = (value: unknown): value is ContrastMode =>
 export const isMotionMode = (value: unknown): value is MotionMode =>
   includes(MOTION_MODES, value)
 
-export const isUiScale = (value: unknown): value is UiScale =>
-  includes(UI_SCALES, value)
+export const isUiScale = (value: unknown): value is number =>
+  Number.isInteger(value) &&
+  (value as number) >= MIN_UI_SCALE_PERCENT &&
+  (value as number) <= MAX_UI_SCALE_PERCENT
 
 /** Picks valid appearance fields from untrusted input, filling in defaults */
 export function normalizeAppearance(value: unknown): AppearanceSettings {
@@ -88,7 +92,7 @@ export interface ResolvedAppearance {
   theme: ThemeName
   contrast: ContrastLevel
   motion: MotionLevel
-  uiScalePercent: UiScale
+  uiScalePercent: number
 }
 
 /**

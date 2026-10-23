@@ -7,9 +7,6 @@ export type SelectionAction =
   /** A command of the library whose output replaces the selection */
   | { kind: 'command'; commandId: string }
 
-/** Hotkey ids of selection actions carry this prefix, e.g. `replace.correction` */
-export const SELECTION_HOTKEY_PREFIX = 'replace.'
-
 /** Prefix of the selection action of a command, e.g. `command:<id>` */
 export const COMMAND_SELECTION_PREFIX = 'command:'
 

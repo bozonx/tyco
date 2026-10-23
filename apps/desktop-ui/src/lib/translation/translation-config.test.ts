@@ -20,8 +20,9 @@ describe('normalizeTranslationConfig', () => {
         qualityGate: 'always',
         providers: { deepl: { endpoint: 'pro' } },
         glossary: [
-          { term: ' TyCo ', use: 'TyCo', doNotTranslate: true },
-          { term: 'workspace', use: ' рабочее пространство ' },
+          { term: ' TyCo ', translation: 'TyCo' },
+          { term: 'workspace', translation: ' рабочее пространство ' },
+          { term: 'untranslated', translation: ' ' },
           { term: '' },
         ],
       })
@@ -31,12 +32,8 @@ describe('normalizeTranslationConfig', () => {
       qualityGate: 'always',
       providers: { deepl: { endpoint: 'pro' } },
       glossary: [
-        { term: 'TyCo', use: 'TyCo', doNotTranslate: true },
-        {
-          term: 'workspace',
-          use: 'рабочее пространство',
-          doNotTranslate: false,
-        },
+        { term: 'TyCo', translation: 'TyCo' },
+        { term: 'workspace', translation: 'рабочее пространство' },
       ],
     })
   })

@@ -31,9 +31,9 @@ describe('translation glossary', () => {
       ' !TyCo \n cat = gato \n equation = a=b\ninvalid\n = missing\nmissing =\n!\n'
     )
     expect(entries).toEqual([
-      { term: 'TyCo', use: 'TyCo', doNotTranslate: true },
-      { term: 'cat', use: 'gato', doNotTranslate: false },
-      { term: 'equation', use: 'a=b', doNotTranslate: false },
+      { term: 'TyCo', translation: 'TyCo' },
+      { term: 'cat', translation: 'gato' },
+      { term: 'equation', translation: 'a=b' },
     ])
     expect(
       parseTranslationGlossary(formatTranslationGlossary(entries))

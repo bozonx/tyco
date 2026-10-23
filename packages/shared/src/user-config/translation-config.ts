@@ -8,11 +8,18 @@ export const TRANSLATION_QUALITY_GATES = [
 ] as const
 export type TranslationQualityGate = (typeof TRANSLATION_QUALITY_GATES)[number]
 
+/**
+ * How a term is translated into every target language; a term kept as it is has
+ * itself as its translation
+ */
 export interface TranslationGlossaryEntry {
   term: string
-  use: string
-  doNotTranslate: boolean
+  translation: string
 }
+
+/** Whether the glossary keeps the term untranslated */
+export const isGlossaryTermKept = (entry: TranslationGlossaryEntry) =>
+  entry.translation === entry.term
 
 /**
  * The keys of the shortcut grids (menu, launcher pages, AI tasks, translation

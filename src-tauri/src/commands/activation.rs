@@ -58,8 +58,8 @@ mod tests {
     #[test]
     fn parses_valid_and_invalid_modes() {
         assert_eq!(
-            ActivationMode::parse("write").unwrap(),
-            ActivationMode::Write
+            ActivationMode::parse("quickInput").unwrap(),
+            ActivationMode::QuickInput
         );
         assert_eq!(
             ActivationMode::parse("aiTasks").unwrap(),
@@ -70,8 +70,8 @@ mod tests {
             ActivationMode::Voice
         );
         assert_eq!(
-            ActivationMode::parse("select").unwrap(),
-            ActivationMode::Select
+            ActivationMode::parse("selectionActions").unwrap(),
+            ActivationMode::SelectionActions
         );
         assert!(ActivationMode::parse("invalidMode").is_err());
     }

@@ -51,21 +51,20 @@ import ShortcutSlots from './ShortcutSlots.vue'
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
 
-const taskSlots = computed(() => taskSlotList(userConfig.value))
+const taskSlots = computed(() => taskSlotList(userConfig.value.aiTasks))
 
 function setLibrary(library: AiTaskLibrary) {
-  userConfig.value.aiTasks = library.aiTasks
-  userConfig.value.aiTaskSlots = library.aiTaskSlots
+  userConfig.value.aiTasks = library
 }
 
 function moveTask(from: number, to: number) {
-  setLibrary(moveTaskSlot(userConfig.value, from, to))
+  setLibrary(moveTaskSlot(userConfig.value.aiTasks, from, to))
 }
 
 function addTask(index: number) {
   setLibrary(
-    placeNewTask(userConfig.value, index, {
-      id: newAiTaskId(userConfig.value.aiTasks),
+    placeNewTask(userConfig.value.aiTasks, index, {
+      id: newAiTaskId(userConfig.value.aiTasks.items),
       name: '',
       rule: '',
     })
@@ -73,18 +72,20 @@ function addTask(index: number) {
 }
 
 function removeTask(index: number) {
-  setLibrary(removeTaskAt(userConfig.value, index))
+  setLibrary(removeTaskAt(userConfig.value.aiTasks, index))
 }
 
 function updateTask(index: number, field: keyof AiTaskConfig, value: unknown) {
   const task = taskSlots.value[index]
   if (typeof value !== 'string' || !task) return
-  setLibrary(updateAiTask(userConfig.value, task.id, { [field]: value }))
+  setLibrary(
+    updateAiTask(userConfig.value.aiTasks, task.id, { [field]: value })
+  )
 }
 
 onUnmounted(() => {
-  const cleaned = withoutEmptyTasks(userConfig.value)
-  if (cleaned.aiTasks.length !== userConfig.value.aiTasks.length)
+  const cleaned = withoutEmptyTasks(userConfig.value.aiTasks)
+  if (cleaned.items.length !== userConfig.value.aiTasks.items.length)
     setLibrary(cleaned)
 })
 </script>

@@ -48,7 +48,12 @@ export function removeProvider(config: LlmConfig, providerId: string) {
   removed.forEach((modelId) => removeModel(config, modelId))
 }
 
+/**
+ * A new model of a custom endpoint starts without tools: local models often
+ * cannot call them
+ */
 export function addModel(config: LlmConfig, providerId: string): LlmModel {
+  const provider = config.providers.find((item) => item.id === providerId)
   const model: LlmModel = {
     id: uniqueLlmId(
       `${providerId}-model`,
@@ -57,6 +62,8 @@ export function addModel(config: LlmConfig, providerId: string): LlmModel {
     providerId: providerId,
     providerModelId: '',
     name: '',
+    canUseImages: false,
+    canUseTools: provider?.type !== 'openaiCompatible',
   }
   config.models.push(model)
   return model
@@ -73,6 +80,8 @@ export function removeModel(config: LlmConfig, modelId: string) {
   }
 }
 
-export function modelLabel(model: LlmModel): string {
+export function modelLabel(
+  model: Pick<LlmModel, 'id' | 'name' | 'providerModelId'>
+): string {
   return model.name?.trim() || model.providerModelId.trim() || model.id
 }

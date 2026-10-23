@@ -9,7 +9,7 @@ const model = () =>
     appearance: () => DEFAULT_APPEARANCE,
   })
 describe('settings config preparation', () => {
-  it('drops unknown fields without mutating input', () => {
+  it('keeps unknown fields, e.g. of a newer build, without mutating input', () => {
     const input = {
       ...structuredClone(DEFAULT_USER_CONFIG),
       editor: { ...DEFAULT_USER_CONFIG.editor, submitKey: 'invalid' },
@@ -21,23 +21,25 @@ describe('settings config preparation', () => {
     const result = model().prepare(input)
     expect(input).toEqual(original)
     expect(result.editor.submitKey).toBe('Enter')
-    expect(result).not.toHaveProperty('chatRoles')
-    expect(result).not.toHaveProperty('registrationState')
-    expect(result).not.toHaveProperty('aiRules')
+    expect(result).toHaveProperty('chatRoles', ['old'])
+    expect(result).toHaveProperty('registrationState')
+    expect(result).toHaveProperty('aiRules', { chat: 'old' })
     expect(result.markdown).toBeDefined()
   })
   it('normalizes malformed nested settings and filters invalid task fields', () => {
     const input = {
       ...structuredClone(DEFAULT_USER_CONFIG),
-      aiTasks: [
-        null,
-        42,
-        { name: 123, rule: {} },
-        { name: 123, rule: 'Translate', id: [] },
-        { id: 'empty', name: ' ', rule: '' },
-        { id: 'kept', name: '', rule: 'Shorten' },
-      ],
-      aiTaskSlots: { q: 'empty', t: 'kept', w: 'missing' },
+      aiTasks: {
+        items: [
+          null,
+          42,
+          { name: 123, rule: {} },
+          { name: 123, rule: 'Translate', id: [] },
+          { id: 'empty', name: ' ', rule: '' },
+          { id: 'kept', name: '', rule: 'Shorten' },
+        ],
+        slots: { q: 'empty', t: 'kept', w: 'missing' },
+      },
       llm: {
         ...structuredClone(DEFAULT_USER_CONFIG.llm),
         tasks: {
@@ -48,7 +50,11 @@ describe('settings config preparation', () => {
       },
       plugins: [],
       windowInsertion: { linux: { xdotoolPath: 42, pasteShortcut: {} } },
-      hotkeys: { editor: 123, write: 'Ctrl+W', selectionCorrection: false },
+      hotkeys: {
+        editor: 123,
+        quickInput: 'Ctrl+W',
+        selectionCorrection: false,
+      },
       launcherPages: 'invalid',
       translation: { targetLanguages: 'invalid' },
       chat: { history: { retentionDays: -1, storage: false } },
@@ -58,15 +64,17 @@ describe('settings config preparation', () => {
     const original = structuredClone(input)
     const result = model().prepare(input)
     expect(input).toEqual(original)
-    expect(result.aiTasks).toEqual([{ id: 'kept', name: '', rule: 'Shorten' }])
-    expect(result.aiTaskSlots).toEqual({ t: 'kept' })
+    expect(result.aiTasks).toEqual({
+      items: [{ id: 'kept', name: '', rule: 'Shorten' }],
+      slots: { t: 'kept' },
+    })
     expect(result.llm.tasks).toEqual({
       ...DEFAULT_USER_CONFIG.llm.tasks,
       correction: { modelChain: [], rule: '' },
     })
     expect(result.windowInsertion).toEqual(DEFAULT_USER_CONFIG.windowInsertion)
     expect(result.hotkeys.editor).toBe(DEFAULT_USER_CONFIG.hotkeys.editor)
-    expect(result.hotkeys.write).toBe('Ctrl+W')
+    expect(result.hotkeys.quickInput).toBe('Ctrl+W')
     expect(result.hotkeys.selectionCorrection).toBe(
       DEFAULT_USER_CONFIG.hotkeys.selectionCorrection
     )

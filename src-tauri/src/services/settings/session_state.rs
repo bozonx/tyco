@@ -61,14 +61,14 @@ mod tests {
             last_mode: Some(crate::services::activation::ActivationMode::Editor),
             ..SessionState::default()
         };
-        let patch = json!({ "lastMode": "write" });
+        let patch = json!({ "lastMode": "quickInput" });
 
         let merged = merge_session_state(&current, patch.as_object().unwrap().clone()).unwrap();
 
         assert_eq!(merged.last_chat_id.as_deref(), Some("chat"));
         assert_eq!(
             merged.last_mode,
-            Some(crate::services::activation::ActivationMode::Write)
+            Some(crate::services::activation::ActivationMode::QuickInput)
         );
 
         let cleared = merge_session_state(

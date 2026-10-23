@@ -53,10 +53,10 @@
 
     <SettingsSection :title="t('settings.sttLlmFormatting')">
       <FieldRow :label="t('settings.formatWithLlm')">
-        <FieldSwitch v-model="userConfig.stt.isLlmFormattingEnabled" />
+        <FieldSwitch v-model="userConfig.stt.isVoiceCorrectionEnabled" />
       </FieldRow>
       <FieldRow
-        v-if="userConfig.stt.isLlmFormattingEnabled"
+        v-if="userConfig.stt.isVoiceCorrectionEnabled"
         :label="t('settings.sttLlmRules')"
         vertical
       >

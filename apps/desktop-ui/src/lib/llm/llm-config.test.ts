@@ -85,8 +85,20 @@ describe('llm-config', () => {
     })
 
     expect(config.models).toEqual([
-      { id: 'a', providerId: 'google', providerModelId: 'gemini' },
-      { id: 'c', providerId: 'deepseek', providerModelId: '' },
+      {
+        id: 'a',
+        providerId: 'google',
+        providerModelId: 'gemini',
+        canUseImages: false,
+        canUseTools: false,
+      },
+      {
+        id: 'c',
+        providerId: 'deepseek',
+        providerModelId: '',
+        canUseImages: false,
+        canUseTools: false,
+      },
     ])
   })
 
@@ -152,19 +164,8 @@ describe('llm-config', () => {
   })
 
   it('labels a model by name, then model id', () => {
-    expect(
-      modelLabel({
-        id: 'x',
-        providerId: 'p',
-        providerModelId: 'm',
-        name: ' N ',
-      })
-    ).toBe('N')
-    expect(
-      modelLabel({ id: 'x', providerId: 'p', providerModelId: 'm', name: '' })
-    ).toBe('m')
-    expect(modelLabel({ id: 'x', providerId: 'p', providerModelId: '' })).toBe(
-      'x'
-    )
+    expect(modelLabel({ id: 'x', providerModelId: 'm', name: ' N ' })).toBe('N')
+    expect(modelLabel({ id: 'x', providerModelId: 'm', name: '' })).toBe('m')
+    expect(modelLabel({ id: 'x', providerModelId: '' })).toBe('x')
   })
 })

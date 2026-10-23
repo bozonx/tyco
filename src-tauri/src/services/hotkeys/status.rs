@@ -120,7 +120,7 @@ mod tests {
     fn hotkey_provider_info_preserves_wire_names() {
         let mut actions = HashMap::new();
         actions.insert(
-            "write".to_string(),
+            "quickInput".to_string(),
             HotkeyApplyResult {
                 status: HotkeyApplyStatus::Ready,
                 external_command: None,
@@ -137,7 +137,7 @@ mod tests {
         );
 
         let mut defaults = HashMap::new();
-        defaults.insert("write".to_string(), "Ctrl+Space".to_string());
+        defaults.insert("quickInput".to_string(), "Ctrl+Space".to_string());
 
         let info = HotkeyProviderInfo {
             provider: ProviderKind::GlobalShortcut,
@@ -154,9 +154,9 @@ mod tests {
         assert_eq!(serialized["canConfigure"], false);
         assert_eq!(serialized["registered"], true);
         assert_eq!(serialized["platform"], "linux");
-        assert_eq!(serialized["defaults"]["write"], "Ctrl+Space");
-        assert_eq!(serialized["actions"]["write"]["status"], "ready");
-        assert!(serialized["actions"]["write"]
+        assert_eq!(serialized["defaults"]["quickInput"], "Ctrl+Space");
+        assert_eq!(serialized["actions"]["quickInput"]["status"], "ready");
+        assert!(serialized["actions"]["quickInput"]
             .get("externalCommand")
             .is_none());
         assert_eq!(serialized["actions"]["editor"]["status"], "external");

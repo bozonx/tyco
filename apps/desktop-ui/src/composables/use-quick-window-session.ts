@@ -23,7 +23,7 @@ export function useQuickWindowSession(
   const commandLauncherStore = useCommandLauncherStore()
 
   const session = createQuickWindowSession({
-    mode: () => desktopStore.desktopState.mode || 'write',
+    mode: () => desktopStore.desktopState.mode || 'quickInput',
     isWindowShown: () => Boolean(desktopStore.desktopState.isWindowShown),
     isLauncherPastList: () => commandLauncherStore.stage.kind !== 'list',
     hasModal: () => menuModalsStore.currentModal !== MenuModals.NONE,

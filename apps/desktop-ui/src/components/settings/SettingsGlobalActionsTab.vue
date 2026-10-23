@@ -256,7 +256,7 @@ const rows = computed<HotkeyRow[]>(() => [
   })),
   {
     id: inlineId,
-    label: t('settings.hotkeyActions.inlineCorrection'),
+    label: t('settings.hotkeyActions.selectionCorrection'),
     value: displayedShortcut(
       providerState,
       inlineId,

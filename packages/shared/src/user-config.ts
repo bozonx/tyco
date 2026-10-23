@@ -104,14 +104,14 @@ export interface EditorConfig {
  */
 export interface HotkeysConfig {
   editor: string
-  write: string
+  quickInput: string
   chat: string
   voiceChat: string
   voice: string
-  select: string
+  selectionActions: string
   aiTasks: string
   correction: string
-  translate: string
+  translation: string
   voiceCommands: string
   selectionCorrection: string
 }
@@ -130,6 +130,13 @@ export interface AiTaskConfig {
   id: string
   name: string
   rule: string
+}
+
+export interface AiTasksConfig {
+  /** The task library, in the order the settings list it */
+  items: AiTaskConfig[]
+  /** The AI task menu: task ids by shortcut key */
+  slots: ShortcutSlots<string>
 }
 
 /** Complete, normalized configuration used throughout the application. */
@@ -161,10 +168,7 @@ export interface UserConfig {
   launcherPages: LauncherPageConfig[]
   commands: CommandConfig[]
   llm: LlmConfig
-  /** The task library, in the order the settings list it */
-  aiTasks: AiTaskConfig[]
-  /** The AI task menu: task ids by shortcut key */
-  aiTaskSlots: ShortcutSlots<string>
+  aiTasks: AiTasksConfig
   aiVault: AiVaultLocationConfig
   markdown: MarkdownConfig
   plugins: Record<string, PluginEntryConfig>

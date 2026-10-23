@@ -1,7 +1,7 @@
 import {
   SHORTCUT_SLOT_KEYS,
   type AiTaskConfig,
-  type UserConfig,
+  type AiTasksConfig,
 } from '@tyco/shared'
 
 import {
@@ -10,13 +10,14 @@ import {
   slotsFromList,
 } from '../shortcut-slots/shortcut-slots'
 
-/** The AI tasks and the menu that shows them, as the config holds them */
-export type AiTaskLibrary = Pick<UserConfig, 'aiTasks' | 'aiTaskSlots'>
+/** The AI tasks and the menu that shows them, `aiTasks` of the config */
+export type AiTaskLibrary = AiTasksConfig
 
 export function cloneLibrary(library: AiTaskLibrary): AiTaskLibrary {
   return {
-    aiTasks: library.aiTasks.map((task) => ({ ...task })),
-    aiTaskSlots: { ...library.aiTaskSlots },
+    ...library,
+    items: library.items.map((task) => ({ ...task })),
+    slots: { ...library.slots },
   }
 }
 
@@ -31,8 +32,8 @@ export function findAiTask(
 export function taskSlotList(
   library: AiTaskLibrary | undefined
 ): (AiTaskConfig | null)[] {
-  return slotList(library?.aiTaskSlots).map(
-    (taskId) => (taskId && findAiTask(library?.aiTasks, taskId)) || null
+  return slotList(library?.slots).map(
+    (taskId) => (taskId && findAiTask(library?.items, taskId)) || null
   )
 }
 
@@ -42,11 +43,12 @@ export function placeNewTask(
   index: number,
   task: AiTaskConfig
 ): AiTaskLibrary {
-  const ids = slotList(library.aiTaskSlots)
+  const ids = slotList(library.slots)
   ids[index] = task.id
   return {
-    aiTasks: [...library.aiTasks, task],
-    aiTaskSlots: slotsFromList(ids),
+    ...library,
+    items: [...library.items, task],
+    slots: slotsFromList(ids),
   }
 }
 
@@ -55,12 +57,13 @@ export function removeTaskAt(
   library: AiTaskLibrary,
   index: number
 ): AiTaskLibrary {
-  const taskId = library.aiTaskSlots[SHORTCUT_SLOT_KEYS[index]!]
-  const ids = slotList(library.aiTaskSlots)
+  const taskId = library.slots[SHORTCUT_SLOT_KEYS[index]!]
+  const ids = slotList(library.slots)
   ids[index] = null
   return {
-    aiTasks: library.aiTasks.filter((task) => task.id !== taskId),
-    aiTaskSlots: slotsFromList(ids),
+    ...library,
+    items: library.items.filter((task) => task.id !== taskId),
+    slots: slotsFromList(ids),
   }
 }
 
@@ -71,10 +74,8 @@ export function moveTaskSlot(
   to: number
 ): AiTaskLibrary {
   return {
-    aiTasks: library.aiTasks,
-    aiTaskSlots: slotsFromList(
-      moveShortcutSlot(slotList(library.aiTaskSlots), from, to)
-    ),
+    ...library,
+    slots: slotsFromList(moveShortcutSlot(slotList(library.slots), from, to)),
   }
 }
 
@@ -84,23 +85,24 @@ export function updateAiTask(
   patch: Partial<Omit<AiTaskConfig, 'id'>>
 ): AiTaskLibrary {
   return {
-    aiTasks: library.aiTasks.map((task) =>
+    ...library,
+    items: library.items.map((task) =>
       task.id === taskId ? { ...task, ...patch } : task
     ),
-    aiTaskSlots: library.aiTaskSlots,
   }
 }
 
 /** Drops the tasks with neither a name nor a rule, with their slots */
 export function withoutEmptyTasks(library: AiTaskLibrary): AiTaskLibrary {
-  const kept = library.aiTasks.filter(
+  const kept = library.items.filter(
     (task) => task.name.trim() || task.rule.trim()
   )
   const ids = new Set(kept.map((task) => task.id))
   return {
-    aiTasks: kept,
-    aiTaskSlots: slotsFromList(
-      slotList(library.aiTaskSlots).map((id) => (id && ids.has(id) ? id : null))
+    ...library,
+    items: kept,
+    slots: slotsFromList(
+      slotList(library.slots).map((id) => (id && ids.has(id) ? id : null))
     ),
   }
 }

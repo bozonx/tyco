@@ -50,7 +50,7 @@ pub(crate) struct PortalShortcutBindings(pub(crate) RwLock<HashMap<String, Strin
 #[derive(Debug, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct HotkeyApplyRequest {
-    /// The hotkey id, e.g. a mode or `replace.correction`.
+    /// The hotkey id, e.g. a mode or `selectionCorrection`.
     pub mode: String,
     pub shortcut: String,
 }

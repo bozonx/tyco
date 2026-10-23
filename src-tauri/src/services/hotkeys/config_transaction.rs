@@ -125,7 +125,7 @@ mod tests {
     fn failed_storage_restores_all_native_shortcuts_in_reverse_order() {
         let calls = RefCell::new(Vec::new());
         let changes = vec![
-            ("write".into(), "old-write".into(), "new-write".into()),
+            ("quickInput".into(), "old-write".into(), "new-write".into()),
             ("chat".into(), "old-chat".into(), "new-chat".into()),
         ];
         let result: Result<(), _> = transact(
@@ -142,10 +142,10 @@ mod tests {
         assert_eq!(
             *calls.borrow(),
             vec![
-                ("write".into(), "new-write".into()),
+                ("quickInput".into(), "new-write".into()),
                 ("chat".into(), "new-chat".into()),
                 ("chat".into(), "old-chat".into()),
-                ("write".into(), "old-write".into())
+                ("quickInput".into(), "old-write".into())
             ]
         );
     }
@@ -154,7 +154,7 @@ mod tests {
     fn conflicting_registration_restores_earlier_changes_without_saving() {
         let calls = RefCell::new(Vec::new());
         let changes = vec![
-            ("write".into(), "old".into(), "new".into()),
+            ("quickInput".into(), "old".into(), "new".into()),
             ("chat".into(), "old-chat".into(), "conflict".into()),
         ];
         let result: Result<(), _> = transact(
@@ -172,7 +172,10 @@ mod tests {
             || panic!("Conflicting registrations must not save"),
         );
         assert!(result.is_err());
-        assert_eq!(calls.borrow().last(), Some(&("write".into(), "old".into())));
+        assert_eq!(
+            calls.borrow().last(),
+            Some(&("quickInput".into(), "old".into()))
+        );
     }
 
     #[test]
@@ -207,7 +210,7 @@ mod tests {
     fn successful_storage_keeps_the_new_registration() {
         let calls = RefCell::new(Vec::new());
         let result = transact(
-            &[("write".into(), "old".into(), "new".into())],
+            &[("quickInput".into(), "old".into(), "new".into())],
             |_, shortcut| {
                 calls.borrow_mut().push(shortcut.to_string());
                 Ok(())

@@ -7,7 +7,7 @@ import type { FakeDesktop } from './fake-desktop'
 export function installVoice(desktop: FakeDesktop) {
   desktop.userConfig.stt = {
     provider: 'sherpaOnnx',
-    isLlmFormattingEnabled: false,
+    isVoiceCorrectionEnabled: false,
     providers: {
       deepgram: { modelId: 'nova-3', language: 'auto' },
       sherpaOnnx: { baseUrl: 'ws://speech.invalid:6006' },

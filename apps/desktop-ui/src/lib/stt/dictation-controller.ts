@@ -27,7 +27,7 @@ export function createDictationController(
 ) {
   let generation = 0
   const shouldFormatRecognizedText = () =>
-    deps.getConfig().stt.isLlmFormattingEnabled
+    deps.getConfig().stt.isVoiceCorrectionEnabled
 
   // naming the language matters: the multilingual model takes Russian for
   // Spanish and the like, so it is used only when chosen explicitly

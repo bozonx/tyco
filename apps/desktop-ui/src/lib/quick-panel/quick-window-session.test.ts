@@ -4,7 +4,7 @@ import { createQuickWindowSession } from './quick-window-session'
 
 function setup(state: Partial<Record<string, unknown>> = {}) {
   const current = {
-    mode: 'write',
+    mode: 'quickInput',
     isWindowShown: true,
     isLauncherPastList: false,
     hasModal: false,
@@ -68,7 +68,7 @@ describe('quick window session', () => {
     expect(deps.cancelAndCloseModals).toHaveBeenCalledOnce()
     expect(deps.dismissWindow).toHaveBeenCalledOnce()
 
-    const menu = setup({ mode: 'select' })
+    const menu = setup({ mode: 'selectionActions' })
     menu.session.dismiss()
     expect(menu.deps.markInputDismissed).not.toHaveBeenCalled()
   })

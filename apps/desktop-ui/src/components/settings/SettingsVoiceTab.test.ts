@@ -26,7 +26,7 @@ describe('SettingsVoiceTab.vue', () => {
       ...structuredClone(DEFAULT_USER_CONFIG),
       stt: {
         provider: 'sherpaOnnx',
-        isLlmFormattingEnabled: false,
+        isVoiceCorrectionEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'user' },
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
@@ -118,7 +118,7 @@ describe('SettingsVoiceTab.vue', () => {
     await switchInput.setValue(true)
 
     expect(wrapper.find('.field-textarea-stub').exists()).toBe(true)
-    expect(config.stt.isLlmFormattingEnabled).toBe(true)
+    expect(config.stt.isVoiceCorrectionEnabled).toBe(true)
   })
 
   it('calls secretsStore when saving and removing API key', async () => {
@@ -131,7 +131,7 @@ describe('SettingsVoiceTab.vue', () => {
     const config = createConfig({
       stt: {
         provider: 'deepgram',
-        isLlmFormattingEnabled: false,
+        isVoiceCorrectionEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: '' },

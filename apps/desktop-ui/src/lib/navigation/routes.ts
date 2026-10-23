@@ -41,15 +41,15 @@ export const APP_ROUTES = {
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
 
 export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
-  [ActivationMode.SELECT]: APP_ROUTES.SELECT.path,
+  [ActivationMode.SELECTION_ACTIONS]: APP_ROUTES.SELECT.path,
   [ActivationMode.VOICE]: APP_ROUTES.VOICE.path,
   [ActivationMode.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
   [ActivationMode.VOICE_COMMANDS]: APP_ROUTES.VOICE_COMMANDS.path,
   [ActivationMode.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
   [ActivationMode.CORRECTION]: APP_ROUTES.CORRECTION.path,
-  [ActivationMode.TRANSLATE]: APP_ROUTES.TRANSLATE.path,
+  [ActivationMode.TRANSLATION]: APP_ROUTES.TRANSLATE.path,
   [ActivationMode.EDITOR]: APP_ROUTES.EDITOR.path,
-  [ActivationMode.WRITE]: APP_ROUTES.WRITE.path,
+  [ActivationMode.QUICK_INPUT]: APP_ROUTES.WRITE.path,
   [ActivationMode.CHAT]: APP_ROUTES.CHAT.path,
   [ActivationMode.VOICE_CHAT]: APP_ROUTES.CHAT.path,
   [ActivationMode.HISTORY]: APP_ROUTES.HISTORY.path,
@@ -63,15 +63,15 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
  * sync with `window_label_for_mode` in `src-tauri/src/services/runtime.rs`.
  */
 const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
-  ActivationMode.WRITE,
+  ActivationMode.QUICK_INPUT,
   ActivationMode.VOICE,
-  ActivationMode.SELECT,
+  ActivationMode.SELECTION_ACTIONS,
   ActivationMode.AI_TASKS,
   ActivationMode.VOICE_COMMANDS,
   ActivationMode.COMMAND_LAUNCHER,
   ActivationMode.CORRECTION,
   ActivationMode.VOICE_CHAT,
-  ActivationMode.TRANSLATE,
+  ActivationMode.TRANSLATION,
   ActivationMode.EXTERNAL_ACCESS,
 ])
 

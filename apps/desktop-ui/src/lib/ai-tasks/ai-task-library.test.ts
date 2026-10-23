@@ -12,11 +12,11 @@ import {
 } from './ai-task-library'
 
 const library = (): AiTaskLibrary => ({
-  aiTasks: [
+  items: [
     { id: 'a', name: 'A', rule: 'x' },
     { id: 'b', name: 'B', rule: 'y' },
   ],
-  aiTaskSlots: { q: 'a', e: 'b' },
+  slots: { q: 'a', e: 'b' },
 })
 
 describe('AI task library', () => {
@@ -29,29 +29,27 @@ describe('AI task library', () => {
   })
 
   it('leaves a slot of a missing task empty', () => {
-    expect(
-      taskSlotList({ aiTasks: [], aiTaskSlots: { q: 'gone' } })[0]
-    ).toBeNull()
+    expect(taskSlotList({ items: [], slots: { q: 'gone' } })[0]).toBeNull()
   })
 
   it('adds a task into a slot and removes it with its slot', () => {
     const added = placeNewTask(library(), 1, { id: 'c', name: 'C', rule: '' })
-    expect(added.aiTaskSlots).toEqual({ q: 'a', w: 'c', e: 'b' })
-    expect(findAiTask(added.aiTasks, 'c')?.name).toBe('C')
+    expect(added.slots).toEqual({ q: 'a', w: 'c', e: 'b' })
+    expect(findAiTask(added.items, 'c')?.name).toBe('C')
 
     const removed = removeTaskAt(added, 0)
-    expect(removed.aiTaskSlots).toEqual({ w: 'c', e: 'b' })
-    expect(removed.aiTasks.map((task) => task.id)).toEqual(['b', 'c'])
+    expect(removed.slots).toEqual({ w: 'c', e: 'b' })
+    expect(removed.items.map((task) => task.id)).toEqual(['b', 'c'])
   })
 
   it('moves a task between slots without touching the library', () => {
     const moved = moveTaskSlot(library(), 0, 3)
-    expect(moved.aiTaskSlots).toEqual({ e: 'b', r: 'a' })
-    expect(moved.aiTasks).toEqual(library().aiTasks)
+    expect(moved.slots).toEqual({ e: 'b', r: 'a' })
+    expect(moved.items).toEqual(library().items)
   })
 
   it('updates a task by its id', () => {
-    expect(updateAiTask(library(), 'b', { rule: 'z' }).aiTasks[1]).toEqual({
+    expect(updateAiTask(library(), 'b', { rule: 'z' }).items[1]).toEqual({
       id: 'b',
       name: 'B',
       rule: 'z',

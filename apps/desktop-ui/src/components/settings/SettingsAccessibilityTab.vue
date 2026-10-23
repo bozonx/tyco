@@ -42,7 +42,7 @@ import SettingsSection from './SettingsSection.vue'
 import {
   type ContrastMode,
   type MotionMode,
-  UI_SCALES,
+  UI_SCALE_PRESETS,
   type UserConfig,
   isUiScale,
 } from '@tyco/shared'
@@ -65,10 +65,12 @@ const motionOptions = computed<{ id: MotionMode; name: string }[]>(() => [
   { id: 'reduce', name: t('settings.motionReduce') },
 ])
 
-const uiScaleOptions = UI_SCALES.map((scale) => ({
-  id: scale,
-  name: `${scale}%`,
-}))
+/** The presets, and a scale set outside of them */
+const uiScaleOptions = computed(() =>
+  [...new Set<number>([...UI_SCALE_PRESETS, appearance.value.uiScalePercent])]
+    .sort((a, b) => a - b)
+    .map((scale) => ({ id: scale, name: `${scale}%` }))
+)
 
 const isEInkTheme = computed(() => appearance.value.theme === 'eInk')
 

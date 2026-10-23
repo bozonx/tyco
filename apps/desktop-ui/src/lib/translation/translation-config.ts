@@ -7,7 +7,8 @@ export function normalizeTranslationConfig(value: unknown): TranslationConfig {
     ...config,
     glossary: config.glossary.flatMap((entry) => {
       const term = entry.term.trim()
-      return term ? [{ ...entry, term, use: entry.use.trim() }] : []
+      const translation = entry.translation.trim()
+      return term && translation ? [{ ...entry, term, translation }] : []
     }),
   }
 }

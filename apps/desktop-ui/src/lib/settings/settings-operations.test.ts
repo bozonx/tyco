@@ -122,7 +122,6 @@ describe('settings operations', () => {
     expect(f.config.hotkeys.selectionCorrection).toBe('Ctrl+Alt+F')
     expect(f.config.launcherPages[0]?.hotkey).toBe('Ctrl+Alt+1')
     expect(f.config.hotkeys).not.toHaveProperty('unknown')
-    expect(f.config.hotkeys).not.toHaveProperty(INLINE_CORRECTION_HOTKEY_ID)
   })
 
   it('sets and resets the vault path', () => {

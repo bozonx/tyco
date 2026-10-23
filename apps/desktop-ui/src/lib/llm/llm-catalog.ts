@@ -105,32 +105,6 @@ export function usableModels(config: LlmConfig) {
   })
 }
 
-/** Defaults only for the vision models shipped with the app. */
-export function canUseImages(model: LlmModel): boolean {
-  return (
-    model.canUseImages ??
-    ((model.providerId === 'google' &&
-      ['gemini-2.5-flash', 'gemini-3.8-flash'].includes(
-        model.providerModelId
-      )) ||
-      (model.providerId === 'openrouter' &&
-        model.providerModelId === 'openai/gpt-4.1-mini'))
-  )
-}
-
-/**
- * Whether the chat may offer the model tools. Local models served through a
- * custom endpoint often cannot call them, so those opt in
- */
-export function canUseTools(
-  model: LlmModel,
-  providers: readonly LlmProvider[]
-): boolean {
-  if (model.canUseTools !== undefined) return model.canUseTools
-  const provider = providers.find((item) => item.id === model.providerId)
-  return provider !== undefined && provider.type !== 'openaiCompatible'
-}
-
 function toDefinition(
   model: LlmModel,
   provider: LlmProvider
@@ -148,10 +122,10 @@ function toDefinition(
     // is the whole policy
     tier: 'standard',
     modalities: {
-      input: canUseImages(model) ? ['text', 'image'] : ['text'],
+      input: model.canUseImages ? ['text', 'image'] : ['text'],
       output: ['text'],
     },
-    capabilities: { tools: canUseTools(model, [provider]) },
+    capabilities: { tools: model.canUseTools },
     contextSize: modelContextWindowTokens(model, [provider]),
     maxOutputTokens: Math.min(
       model.maxOutputTokens ?? OUTPUT_TOKENS_CEILING,

@@ -67,6 +67,7 @@ describe('normalizeCommands for one command', () => {
     ).toEqual({
       id: 'sc1',
       name: '',
+      description: '',
       phrases: [],
       toolId: 'script',
       toolConfig: { command: 'echo' },
@@ -76,6 +77,10 @@ describe('normalizeCommands for one command', () => {
       isOutputLogged: false,
       isAvailableExternally: false,
       isEnabled: true,
+      // fields it does not know stay for the build that wrote them
+      afterRun: 'bogus',
+      confirm: 'never',
+      availableIn: { launcher: true, external: 'yes' },
     })
   })
 

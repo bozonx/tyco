@@ -18,16 +18,31 @@ no rules of its own; the shared fixtures in `packages/shared/fixtures` check tha
 both runtimes give identical data. Only what the webview alone knows is added
 there: the cached appearance and the plugin defaults.
 
-The backend repairs malformed known settings on startup and drops unknown
-fields. Only the current field names and structure are supported: there are no
-migrations or aliases for earlier development formats. Normalization fills
-missing fields and stamps the current version.
+The backend repairs malformed known settings on startup. Normalization fills
+missing fields and stamps the current version. Only the current field names and
+structure are supported: there are no migrations or aliases for earlier
+development formats.
 
-Format 1 ships with the first release. From then on any change of the schema —
-a new field or enum value included, since an older Tyco drops what it does not
-know — raises `configVersion` and comes with a migration from the previous
-version, run before the normalization.
-It rejects invalid IPC saves before storing credentials or writing the config:
+### Versions and compatibility
+
+Format 1 ships with the first release. `configVersion` counts breaking changes
+only, so that most releases leave it alone:
+
+- **Compatible, the version stays**: a new field or section with a default, a
+  new item type of a list or a grid, a wider range of a number. Both runtimes
+  keep the fields they do not know as they are, through the repair, the merge
+  and the save, so a config written by a newer build of the same version keeps
+  its new settings when an older build opens and saves it. A new enum value is
+  compatible too when an older build may fall back to the default of the field;
+  the startup repair then keeps the file it read, see below.
+- **Breaking, the version is raised**: a field renamed, moved or removed, a type
+  or meaning changed, a constraint narrowed. Such a change comes with a migration
+  from the previous version, run before the normalization.
+
+A build never writes over a config of a newer version: it shows the settings
+but saves nothing (`configIsNewer`).
+
+The backend rejects invalid IPC saves before storing credentials or writing the config:
 counts must be safe nonnegative integers, entity ids and translation languages
 must be unique, and command, task, provider, model and launcher references must
 exist. Opaque plugin settings and plugin tool config remain plugin-owned. A newer
@@ -45,7 +60,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 
 | Section           | Contents                                                                                                           |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `appearance`      | `theme`, `contrast`, `motion`, `uiScalePercent`                                                                    |
+| `appearance`      | `theme`, `contrast`, `motion`, `uiScalePercent` (50–300; the settings offer presets)                               |
 | `language`        | `ui` (interface locale or `auto`), `user` (the locale the user speaks and writes, or `auto`)                       |
 | `editor`          | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`)       |
 | `quickWindow`     | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`                                                                    |
@@ -56,14 +71,29 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `mainActions`     | the action menu (a shortcut grid)                                                                                  |
 | `launcherPages`   | `id`, `inputMode`, `hotkey`, `slots` (a shortcut grid of command ids)                                              |
 | `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, …                 |
-| `llm`             | `providers`, `models`, `tasks`: per task its `modelChain` and `rule` (see below)                                   |
-| `aiTasks`         | the task library: `id`, `name`, `rule`                                                                             |
-| `aiTaskSlots`     | the AI task menu: task ids (a shortcut grid)                                                                       |
+| `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelChain` and `rule` (see below)                       |
+| `aiTasks`         | `items`, the task library (`id`, `name`, `rule`); `slots`, the AI task menu (a shortcut grid of task ids)          |
 | `aiVault`         | `path`, empty for the default location                                                                             |
 | `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                              |
 | `plugins`         | per plugin id: `isEnabled` and the plugin-owned `settings`                                                         |
 | `chat`            | `imageQuality`, `history` (`storage`: `off` or `disk`, `retentionDays`)                                            |
-| `stt`             | `provider`, `isLlmFormattingEnabled`, `providers.deepgram`, `providers.sherpaOnnx`                                 |
+| `stt`             | `provider`, `isVoiceCorrectionEnabled`, `providers.deepgram`, `providers.sherpaOnnx`                               |
+
+The hotkeys of `hotkeys` are named as the activation modes they open
+(`quickInput`, `selectionActions`, `translation`, …); the name is also the
+hotkey id the UI and the system portal use. `selectionCorrection` corrects the
+selection in place, and a launcher page carries its own `hotkey`, with the id
+`launcherPage.<page id>`.
+
+The glossary is one for every target language: `{ "term", "translation" }`,
+where a term kept as it is has itself as its translation. ai-kit's
+`use`/`doNotTranslate` spelling is made only at the SDK boundary.
+
+An LLM provider has the fields of its `type`: the built-in `google`,
+`openrouter` and `deepseek` (each once, the id equal to the type) have `id`,
+`type` and `name`; an `openaiCompatible` one has a `baseUrl` too. A model states
+its capabilities explicitly with `canUseImages` and `canUseTools`; a new model
+of a custom endpoint starts without tools.
 
 A shortcut grid is an object keyed by the keys of `SHORTCUT_SLOT_KEYS`
 (`q`…`b`, row by row); an empty slot is absent. A grid lays out entities kept
@@ -75,7 +105,7 @@ hotkey belongs to the page that it opens. At least one page is required.
 
 `llm.tasks` holds what each LLM task needs: `chat` (`rule`; the chat runs on
 the model picked in it), `correction`, `voiceCorrection` (`modelChain`,
-`rule`), `translation` (`modelChain`, `rule`, `qualityGateRule` for the review
+`rule`; on when `stt.isVoiceCorrectionEnabled`), `translation` (`modelChain`, `rule`, `qualityGateRule` for the review
 pass) and `aiTask` (`modelChain`; every AI task has its own rule). A model
 chain lists model ids: the first answers, the rest are its fallbacks.
 
@@ -98,7 +128,8 @@ Conventions:
   match `^[a-z0-9][a-z0-9._-]{0,63}$`; provider ids are at most 60 characters,
   as they go into secret ids. An entity with a malformed id is dropped.
 - Locales are BCP 47 tags with a region: `en-US`, `ru-RU`.
-- Booleans read as predicates: `is*`, `has*`, `can*`.
+- Booleans read as predicates: `is*`, `has*`, `can*`. A boolean that is not
+  set is `false`; there is no hidden third state.
 - Enum values are camelCase; SDK-specific spellings (e.g. ai-kit's
   `openai-compatible` and `sherpa-onnx`) are converted only at the SDK
   boundary.
@@ -146,9 +177,9 @@ in the stored files are Unix milliseconds (`createdAt`, `updatedAt`,
 `lastMessageAt`). A plugin file is named by the hex of its id, because ids that
 differ only in case collide on a case-insensitive file system.
 
-The config file belongs to the app; edits made by hand are unsupported and are
-not preserved. Unknown core fields are rejected on save, and a startup repair
-rewrites the file in place. A repair that drops or replaces a value first keeps
+The config file belongs to the app; edits made by hand are unsupported, and a
+malformed known value is repaired. Unknown fields are kept (see the versions
+above), and a startup repair rewrites the file in place. A repair that drops or replaces a value first keeps
 the file it read as `config.json.repaired-<digest>`; one that only fills missing
 fields or stamps the version keeps none. Unreadable files are retained as
 private `.broken-*` copies; up to 3 copies of a file are kept. Before JSONL

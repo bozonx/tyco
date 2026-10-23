@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
   currentWindowLabel: 'main',
   currentModal: 'insert',
   breadcrumbs: ['insert'] as string[],
-  mode: 'write',
+  mode: 'quickInput',
 }))
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -101,7 +101,7 @@ describe('ShortcutList', () => {
     mocks.currentWindowLabel = 'main'
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = ['insert']
-    mocks.mode = 'write'
+    mocks.mode = 'quickInput'
     mocks.currentModalParams = {}
   })
 
@@ -175,7 +175,7 @@ describe('ShortcutList', () => {
     mocks.currentWindowLabel = 'quick'
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = []
-    mocks.mode = 'write'
+    mocks.mode = 'quickInput'
 
     const wrapper = mount(ShortcutList, {
       props: { text: 'result text', escVisible: true },

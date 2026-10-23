@@ -312,7 +312,7 @@ fn handle_request(app: &AppHandle, request: &str) -> String {
                 metrics.start(id, t0);
                 match runtime::activate(
                     app,
-                    Activation::new(ActivationMode::Write, ActivationSource::Cli),
+                    Activation::new(ActivationMode::QuickInput, ActivationSource::Cli),
                 ) {
                     Ok(()) => {
                         // `emit` would reach the main window too, and it would

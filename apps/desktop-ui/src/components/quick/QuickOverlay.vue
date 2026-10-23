@@ -14,7 +14,7 @@
       {{ t('window.clickToFocus') }}
     </div>
     <div ref="cardRef" class="quick-overlay-card">
-      <div v-show="currentMode === 'write'" class="quick-mode-layer">
+      <div v-show="currentMode === 'quickInput'" class="quick-mode-layer">
         <WriteView />
       </div>
       <div v-show="currentMode === 'voice'" class="quick-mode-layer">
@@ -31,8 +31,11 @@
       <div v-show="currentMode === 'aiTasks'" class="quick-mode-layer">
         <AiTaskView v-if="currentMode === 'aiTasks'" :key="activationId" />
       </div>
-      <div v-show="currentMode === 'select'" class="quick-mode-layer">
-        <SelectionView v-if="currentMode === 'select'" :key="activationId" />
+      <div v-show="currentMode === 'selectionActions'" class="quick-mode-layer">
+        <SelectionView
+          v-if="currentMode === 'selectionActions'"
+          :key="activationId"
+        />
       </div>
       <div v-show="currentMode === 'commandLauncher'" class="quick-mode-layer">
         <CommandLauncherView
@@ -55,8 +58,11 @@
           :key="activationId"
         />
       </div>
-      <div v-show="currentMode === 'translate'" class="quick-mode-layer">
-        <TranslateView v-if="currentMode === 'translate'" :key="activationId" />
+      <div v-show="currentMode === 'translation'" class="quick-mode-layer">
+        <TranslateView
+          v-if="currentMode === 'translation'"
+          :key="activationId"
+        />
       </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView v-if="currentMode === 'voiceChat'" />
@@ -110,7 +116,9 @@ const quickInputStore = useQuickInputStore()
 const cardRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
 
-const currentMode = computed(() => desktopStore.desktopState?.mode || 'write')
+const currentMode = computed(
+  () => desktopStore.desktopState?.mode || 'quickInput'
+)
 const activationId = computed(() => desktopStore.desktopState.activationId)
 const hasModal = computed(
   () => menuModalsStore.currentModal !== MenuModals.NONE
@@ -122,7 +130,7 @@ const voiceResultShown = ref(false)
 /** Modes shown as a panel at the bottom while nothing else is open */
 const isPanelMode = computed(
   () =>
-    currentMode.value === 'write' ||
+    currentMode.value === 'quickInput' ||
     (currentMode.value === 'voice' && !voiceResultShown.value)
 )
 
@@ -234,7 +242,7 @@ function observeInputParts() {
 }
 
 const syncFocus = () => {
-  if (currentMode.value === 'write') {
+  if (currentMode.value === 'quickInput') {
     quickInputStore.requestFocus()
   }
 }

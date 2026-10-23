@@ -125,17 +125,17 @@ const DYNAMIC_KEYS = new Set([
     'glossary',
   ].map((code) => `translationProblems.${code}`),
   ...[
-    'write',
+    'quickInput',
     'voice',
     'editor',
     'chat',
     'voiceChat',
     'voiceCommands',
-    'select',
+    'selectionActions',
     'aiTasks',
-    'inlineCorrection',
+    'selectionCorrection',
     'correction',
-    'translate',
+    'translation',
   ].map((mode) => `settings.hotkeyActions.${mode}`),
   ...['editor', 'browser', 'notes', 'none'].map(
     (cap) => `settings.pluginCapability.${cap}`

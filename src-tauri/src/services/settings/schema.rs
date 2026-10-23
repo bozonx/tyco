@@ -260,9 +260,11 @@ fn repair(value: &Value, schema: &Value, defaults: &Value) -> Value {
     }
 }
 
-fn ids<'a>(config: &'a Value, key: &str) -> HashSet<&'a str> {
-    config[key]
-        .as_array()
+/// The ids of the entity collection at `pointer`.
+fn ids<'a>(config: &'a Value, pointer: &str) -> HashSet<&'a str> {
+    config
+        .pointer(pointer)
+        .and_then(Value::as_array)
         .into_iter()
         .flatten()
         .filter_map(|item| item["id"].as_str())
@@ -284,7 +286,7 @@ const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 const ENTITY_COLLECTIONS: [&str; 5] = [
     "/commands",
     "/launcherPages",
-    "/aiTasks",
+    "/aiTasks/items",
     "/llm/providers",
     "/llm/models",
 ];
@@ -311,9 +313,9 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             }
         }
     }
-    let tasks = ids(config, "aiTasks");
+    let tasks = ids(config, "/aiTasks/items");
     for (slots, key) in [
-        (&config["aiTaskSlots"], "aiTaskSlots"),
+        (&config["aiTasks"]["slots"], "aiTasks.slots"),
         (
             &config["translation"]["targetLanguages"],
             "translation.targetLanguages",
@@ -326,12 +328,12 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             }
         }
     }
-    for id in slot_values(&config["aiTaskSlots"]).filter_map(Value::as_str) {
+    for id in slot_values(&config["aiTasks"]["slots"]).filter_map(Value::as_str) {
         if !tasks.contains(id) {
-            return Err(invalid("aiTaskSlots"));
+            return Err(invalid("aiTasks.slots"));
         }
     }
-    let providers = ids(&config["llm"], "providers");
+    let providers = ids(config, "/llm/providers");
     for provider in config["llm"]["providers"].as_array().into_iter().flatten() {
         let id = provider["id"].as_str().unwrap_or_default();
         let builtin = BUILTIN_LLM_PROVIDERS.contains(&id);
@@ -341,9 +343,9 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             return Err(invalid("llm.providers.type"));
         }
     }
-    let models = ids(&config["llm"], "models");
-    let commands = ids(config, "commands");
-    let pages = ids(config, "launcherPages");
+    let models = ids(config, "/llm/models");
+    let commands = ids(config, "/commands");
+    let pages = ids(config, "/launcherPages");
     for model in config["llm"]["models"].as_array().into_iter().flatten() {
         if !providers.contains(model["providerId"].as_str().unwrap_or_default()) {
             return Err(invalid("llm.models.providerId"));
@@ -468,11 +470,8 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             .filter(|provider| !builtin_ids.contains(&provider["id"].as_str().unwrap_or_default())),
     );
     for provider in &mut ordered {
-        let is_custom = provider["type"] == CUSTOM_LLM_PROVIDER_TYPE;
-        if let Some(fields) = provider.as_object_mut() {
-            if is_custom {
-                fields.entry("baseUrl").or_insert_with(|| json!(""));
-            } else {
+        if provider["type"] != CUSTOM_LLM_PROVIDER_TYPE {
+            if let Some(fields) = provider.as_object_mut() {
                 fields.shift_remove("baseUrl");
             }
         }
@@ -480,11 +479,15 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     config["llm"]["providers"] = json!(ordered);
     if let Some(glossary) = config["translation"]["glossary"].as_array_mut() {
         for entry in glossary.iter_mut() {
-            for key in ["term", "use"] {
+            for key in ["term", "translation"] {
                 entry[key] = json!(entry[key].as_str().unwrap_or_default().trim());
             }
         }
-        glossary.retain(|entry| entry["term"].as_str().is_some_and(|term| !term.is_empty()));
+        glossary.retain(|entry| {
+            ["term", "translation"]
+                .iter()
+                .all(|key| entry[key].as_str().is_some_and(|text| !text.is_empty()))
+        });
     }
     let mut languages = HashSet::new();
     retain_slots(&mut config["translation"]["targetLanguages"], |language| {
@@ -500,16 +503,16 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             command["toolConfig"] = repair(&command["toolConfig"], schema, defaults);
         }
     }
-    let task_ids: HashSet<String> = ids(config, "aiTasks")
+    let task_ids: HashSet<String> = ids(config, "/aiTasks/items")
         .into_iter()
         .map(str::to_owned)
         .collect();
     let mut slotted_tasks = HashSet::new();
-    retain_slots(&mut config["aiTaskSlots"], |id| {
+    retain_slots(&mut config["aiTasks"]["slots"], |id| {
         let id = id.as_str().unwrap_or_default();
         task_ids.contains(id) && slotted_tasks.insert(id.to_owned())
     });
-    let provider_ids: HashSet<String> = ids(&config["llm"], "providers")
+    let provider_ids: HashSet<String> = ids(config, "/llm/providers")
         .into_iter()
         .map(str::to_owned)
         .collect();
@@ -518,7 +521,7 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             provider_ids.contains(model["providerId"].as_str().unwrap_or_default())
         });
     }
-    let model_ids: HashSet<String> = ids(&config["llm"], "models")
+    let model_ids: HashSet<String> = ids(config, "/llm/models")
         .into_iter()
         .map(str::to_owned)
         .collect();
@@ -530,11 +533,11 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             chain.retain(|id| model_ids.contains(id.as_str().unwrap_or_default()));
         }
     }
-    let command_ids: HashSet<String> = ids(config, "commands")
+    let command_ids: HashSet<String> = ids(config, "/commands")
         .into_iter()
         .map(str::to_owned)
         .collect();
-    let page_ids: HashSet<String> = ids(config, "launcherPages")
+    let page_ids: HashSet<String> = ids(config, "/launcherPages")
         .into_iter()
         .map(str::to_owned)
         .collect();
@@ -640,7 +643,7 @@ mod tests {
             ("/editor/history/maxItems", json!(1.5)),
             ("/editor/history/maxItems", json!(0)),
             ("/editor/history/retentionDays", json!(0)),
-            ("/aiTasks/0/id", json!("Deep edit")),
+            ("/aiTasks/items/0/id", json!("Deep edit")),
             ("/launcherPages/0/id", json!("Main")),
             ("/llm/models/0/id", json!(" ollama-qwen")),
             ("/stt/providers", json!("bad")),
@@ -661,14 +664,17 @@ mod tests {
                 "/translation/targetLanguages",
                 json!({"q": "en-US", "w": "en-US"}),
             ),
-            ("/aiTaskSlots", json!({"q": "missing"})),
-            ("/aiTaskSlots", json!({"q": "deep-edit", "w": "deep-edit"})),
+            ("/aiTasks/slots", json!({"q": "missing"})),
+            (
+                "/aiTasks/slots",
+                json!({"q": "deep-edit", "w": "deep-edit"}),
+            ),
         ] {
             let mut config = defaults.clone();
             *config.pointer_mut(path).unwrap() = value;
             assert!(validate_user_config(&config).is_err(), "{path}");
         }
-        for pointer in ["/llm/models", "/aiTasks"] {
+        for pointer in ["/llm/models", "/aiTasks/items"] {
             let mut config = defaults.clone();
             let items = config.pointer_mut(pointer).unwrap().as_array_mut().unwrap();
             items.push(items[0].clone());
@@ -680,14 +686,14 @@ mod tests {
     fn startup_repair_is_idempotent_and_removes_dangling_references() {
         let mut config = crate::services::settings::defaults::default_user_config();
         config["editor"]["history"]["maxItems"] = json!(1.5);
-        config["stt"]["isLlmFormattingEnabled"] = json!("yes");
+        config["stt"]["isVoiceCorrectionEnabled"] = json!("yes");
         config["mainActions"] = json!({
             "q": {"type":"command","commandId":"missing"},
             "w": {"type":"standard","actionId":"askInChat"},
             "y": {"type":"standard","actionId":"askInChat"},
         });
         config["translation"]["targetLanguages"] = json!({"q": "en-US", "w": "en-US", "e": 1});
-        config["aiTaskSlots"] = json!({"q": "gone", "w": "deep-edit", "e": "deep-edit"});
+        config["aiTasks"]["slots"] = json!({"q": "gone", "w": "deep-edit", "e": "deep-edit"});
         assert!(normalize_user_config(&mut config));
         validate_user_config(&config).unwrap();
         assert!(!normalize_user_config(&mut config));
@@ -699,8 +705,40 @@ mod tests {
             config["translation"]["targetLanguages"],
             json!({"q": "en-US"})
         );
-        assert_eq!(config["aiTaskSlots"], json!({"w": "deep-edit"}));
-        assert_eq!(config["stt"]["isLlmFormattingEnabled"], false);
+        assert_eq!(config["aiTasks"]["slots"], json!({"w": "deep-edit"}));
+        assert_eq!(config["stt"]["isVoiceCorrectionEnabled"], false);
+    }
+
+    #[test]
+    fn unknown_fields_of_a_newer_build_survive_repair_and_save() {
+        let mut config = crate::services::settings::defaults::default_user_config();
+        config["futureSection"] = json!({ "isEnabled": true });
+        config["editor"]["futureField"] = json!(3);
+        config["llm"]["models"][0]["futureCapability"] = json!("x");
+        let expected = config.clone();
+        assert!(!normalize_user_config(&mut config));
+        assert_eq!(config, expected);
+        validate_user_config(&config).unwrap();
+    }
+
+    #[test]
+    fn llm_providers_carry_the_fields_of_their_type() {
+        let mut config = crate::services::settings::defaults::default_user_config();
+        config["llm"]["providers"][0]["baseUrl"] = json!("http://example.com");
+        config["llm"]["providers"][3]
+            .as_object_mut()
+            .unwrap()
+            .shift_remove("baseUrl");
+        assert!(normalize_user_config(&mut config));
+        assert!(config["llm"]["providers"][0].get("baseUrl").is_none());
+        assert_eq!(config["llm"]["providers"][3]["baseUrl"], "");
+
+        let mut config = crate::services::settings::defaults::default_user_config();
+        config["llm"]["providers"][3]
+            .as_object_mut()
+            .unwrap()
+            .shift_remove("baseUrl");
+        assert!(validate_user_config(&config).is_err());
     }
 
     #[test]

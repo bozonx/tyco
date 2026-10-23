@@ -126,16 +126,16 @@ const cleanBulletOptions = computed(() => [
 
 const cleanCodeBlockIndentOptions = computed(() => [
   { id: 'none', name: t('settings.markdownCleanIndentNone') },
-  { id: '2spaces', name: t('settings.markdownCleanIndent2Spaces') },
-  { id: '4spaces', name: t('settings.markdownCleanIndent4Spaces') },
+  { id: 'twoSpaces', name: t('settings.markdownCleanIndent2Spaces') },
+  { id: 'fourSpaces', name: t('settings.markdownCleanIndent4Spaces') },
   { id: 'tab', name: t('settings.markdownCleanIndentTab') },
 ])
 
 const cleanBlockquoteIndentOptions = computed(() => [
   { id: 'none', name: t('settings.markdownCleanIndentNone') },
   { id: 'angle', name: t('settings.markdownCleanBlockquoteAngle') },
-  { id: '2spaces', name: t('settings.markdownCleanIndent2Spaces') },
-  { id: '4spaces', name: t('settings.markdownCleanIndent4Spaces') },
+  { id: 'twoSpaces', name: t('settings.markdownCleanIndent2Spaces') },
+  { id: 'fourSpaces', name: t('settings.markdownCleanIndent4Spaces') },
   { id: 'tab', name: t('settings.markdownCleanIndentTab') },
 ])
 

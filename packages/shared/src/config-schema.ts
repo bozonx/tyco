@@ -260,10 +260,8 @@ export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
     ),
     ...llm.providers.filter((provider) => !builtinIds.includes(provider.id)),
   ])
-  for (const provider of llm.providers) {
-    if (provider.type === 'openaiCompatible') provider.baseUrl ??= ''
-    else delete provider.baseUrl
-  }
+  for (const provider of llm.providers)
+    if (provider.type !== 'openaiCompatible') delete provider.baseUrl
   const providers = new Set(llm.providers.map((provider) => provider.id))
   llm.models = deduplicate(llm.models).filter((model) =>
     providers.has(model.providerId)
@@ -299,7 +297,10 @@ export function normalizeCommands(value: unknown): UserConfig['commands'] {
   return deduplicate(commands)
 }
 
-/** Repairs known fields while preserving opaque plugin and tool settings. */
+/**
+ * Repairs known fields; unknown ones, e.g. of a newer build, are kept as they
+ * are, as are the opaque plugin and tool settings
+ */
 export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   const config = repair(value, schema) as UserConfig
   config.configVersion = configVersion
@@ -309,16 +310,16 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
     .map((entry) => ({
       ...entry,
       term: entry.term.trim(),
-      use: entry.use.trim(),
+      translation: entry.translation.trim(),
     }))
-    .filter((entry) => entry.term.length > 0)
+    .filter((entry) => entry.term.length > 0 && entry.translation.length > 0)
   config.translation.targetLanguages = distinctSlots(
     config.translation.targetLanguages
   )
-  config.aiTasks = deduplicate(config.aiTasks)
-  const taskIds = new Set(config.aiTasks.map((task) => task.id))
-  config.aiTaskSlots = distinctSlots(
-    filterSlots(config.aiTaskSlots, (id) => taskIds.has(id))
+  config.aiTasks.items = deduplicate(config.aiTasks.items)
+  const taskIds = new Set(config.aiTasks.items.map((task) => task.id))
+  config.aiTasks.slots = distinctSlots(
+    filterSlots(config.aiTasks.slots, (id) => taskIds.has(id))
   )
   const commands = new Set(config.commands.map((command) => command.id))
   config.launcherPages = deduplicate(config.launcherPages)

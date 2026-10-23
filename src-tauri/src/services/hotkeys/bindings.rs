@@ -8,9 +8,8 @@ use serde_json::{Map, Value};
 use tauri::AppHandle;
 
 const HOTKEYS_CONFIG_KEY: &str = "hotkeys";
-/// The key of the inline correction in `hotkeys`.
+/// The key of the inline correction in `hotkeys`, and its hotkey id.
 const SELECTION_CORRECTION_CONFIG_KEY: &str = "selectionCorrection";
-const SELECTION_TARGET_PREFIX: &str = "replace.";
 const LAUNCHER_PAGE_TARGET_PREFIX: &str = "launcherPage.";
 pub(super) use crate::services::selection_replace::CORRECTION_ACTION;
 const DEFAULT_CORRECTION_KEY: &str = "F";
@@ -30,7 +29,7 @@ pub(crate) enum HotkeyTarget {
 
 impl HotkeyTarget {
     /// The id shared with the UI and the portal: the mode name,
-    /// `replace.correction`, or `launcherPage.<page id>`.
+    /// `selectionCorrection`, or `launcherPage.<page id>`.
     pub(crate) fn parse(id: &str) -> Result<Self, AppError> {
         if let Some(page_id) = id.strip_prefix(LAUNCHER_PAGE_TARGET_PREFIX) {
             if page_id.trim().is_empty() {
@@ -38,20 +37,17 @@ impl HotkeyTarget {
             }
             return Ok(Self::LauncherPage(page_id.to_owned()));
         }
-        match id.strip_prefix(SELECTION_TARGET_PREFIX) {
-            Some(CORRECTION_ACTION) => Ok(Self::InlineCorrection),
-            Some(action) => Err(AppError::InvalidInput(format!(
-                "Unknown selection action: {action}"
-            ))),
-            None => ActivationMode::parse(id).map(Self::Mode),
+        if id == SELECTION_CORRECTION_CONFIG_KEY {
+            return Ok(Self::InlineCorrection);
         }
+        ActivationMode::parse(id).map(Self::Mode)
     }
 
     pub(crate) fn id(&self) -> String {
         match self {
             Self::LauncherPage(page_id) => format!("{LAUNCHER_PAGE_TARGET_PREFIX}{page_id}"),
             Self::Mode(mode) => mode.as_str().to_owned(),
-            Self::InlineCorrection => format!("{SELECTION_TARGET_PREFIX}{CORRECTION_ACTION}"),
+            Self::InlineCorrection => SELECTION_CORRECTION_CONFIG_KEY.to_owned(),
         }
     }
 
@@ -104,15 +100,15 @@ pub(crate) struct HotkeyBinding {
 /// The command overlay opens by the hotkeys of its pages, see `launcherPages`.
 pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 10] = [
     ActivationMode::Editor,
-    ActivationMode::Write,
+    ActivationMode::QuickInput,
     ActivationMode::Chat,
     ActivationMode::VoiceChat,
     ActivationMode::VoiceCommands,
     ActivationMode::Voice,
-    ActivationMode::Select,
+    ActivationMode::SelectionActions,
     ActivationMode::AiTasks,
     ActivationMode::Correction,
-    ActivationMode::Translate,
+    ActivationMode::Translation,
 ];
 
 /// Every global hotkey, assigned or not: a configured shortcut wins, an
@@ -185,16 +181,16 @@ pub(crate) fn global_target(id: &str) -> Option<HotkeyTarget> {
 fn default_key(mode: ActivationMode) -> Option<&'static str> {
     match mode {
         ActivationMode::Voice => Some("V"),
-        ActivationMode::Select => Some("S"),
+        ActivationMode::SelectionActions => Some("S"),
         ActivationMode::Editor
-        | ActivationMode::Write
+        | ActivationMode::QuickInput
         | ActivationMode::Chat
         | ActivationMode::VoiceCommands
         | ActivationMode::VoiceChat
         | ActivationMode::AiTasks
         | ActivationMode::CommandLauncher
         | ActivationMode::Correction
-        | ActivationMode::Translate
+        | ActivationMode::Translation
         | ActivationMode::History
         | ActivationMode::Config
         | ActivationMode::ExternalAccess => None,
@@ -235,16 +231,16 @@ pub fn default_hotkeys_config() -> Value {
 fn mode_description(mode: ActivationMode) -> &'static str {
     match mode {
         ActivationMode::Editor => "Open quick editor",
-        ActivationMode::Write => "Open writing mode",
+        ActivationMode::QuickInput => "Open writing mode",
         ActivationMode::Chat => "Open chat",
         ActivationMode::VoiceCommands => "Run a command by voice",
         ActivationMode::VoiceChat => "Ask the chat by voice",
         ActivationMode::Voice => "Start voice input",
-        ActivationMode::Select => "Open selection actions",
+        ActivationMode::SelectionActions => "Open selection actions",
         ActivationMode::AiTasks => "Open AI tasks",
         ActivationMode::CommandLauncher => "Run a command",
         ActivationMode::Correction => "Correct selected text with review",
-        ActivationMode::Translate => "Translate selected text",
+        ActivationMode::Translation => "Translate selected text",
         ActivationMode::History => "Open history",
         ActivationMode::Config => "Open settings",
         ActivationMode::ExternalAccess => "Answer a request for the selection",
@@ -286,7 +282,10 @@ mod tests {
             .filter(|binding| binding.shortcut.is_some())
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(assigned, ["voice", "select", "replace.correction"]);
+        assert_eq!(
+            assigned,
+            ["voice", "selectionActions", "selectionCorrection"]
+        );
         assert_eq!(
             default_hotkeys_config().get("editor"),
             Some(&Value::String(String::new()))
@@ -300,7 +299,7 @@ mod tests {
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
         assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1);
-        assert!(defaults.contains(&String::from("replace.correction")));
+        assert!(defaults.contains(&String::from("selectionCorrection")));
     }
 
     #[test]
@@ -323,7 +322,10 @@ mod tests {
         assert_eq!(shortcut("launcherPage.main"), None);
         assert_eq!(shortcut("launcherPage.work").as_deref(), Some("Ctrl+Alt+2"));
         assert_eq!(shortcut("voice"), None);
-        assert_eq!(shortcut("select"), default_shortcut(ActivationMode::Select));
+        assert_eq!(
+            shortcut("selectionActions"),
+            default_shortcut(ActivationMode::SelectionActions)
+        );
         assert_eq!(shortcut("chat"), None);
     }
 
@@ -336,7 +338,7 @@ mod tests {
         assert_eq!(
             selection(json!({})),
             (
-                String::from("replace.correction"),
+                String::from("selectionCorrection"),
                 Some(default_correction_shortcut())
             )
         );
@@ -346,7 +348,7 @@ mod tests {
                 "translate.0": "Ctrl+Alt+1"
             } })),
             (
-                String::from("replace.correction"),
+                String::from("selectionCorrection"),
                 Some(String::from("Ctrl+Alt+X"))
             )
         );
@@ -392,9 +394,9 @@ mod tests {
             HotkeyTarget::parse("editor").unwrap(),
             HotkeyTarget::Mode(ActivationMode::Editor)
         );
-        let target = HotkeyTarget::parse("replace.correction").unwrap();
+        let target = HotkeyTarget::parse("selectionCorrection").unwrap();
         assert_eq!(target, HotkeyTarget::InlineCorrection);
-        assert_eq!(target.id(), "replace.correction");
+        assert_eq!(target.id(), "selectionCorrection");
         // commands have no hotkeys
         assert!(HotkeyTarget::parse("replace.command:task-fix").is_err());
         assert!(HotkeyTarget::parse("replace.aiTask.2").is_err());
@@ -419,11 +421,11 @@ mod tests {
             Some(HotkeyTarget::Mode(ActivationMode::Correction))
         );
         assert_eq!(
-            global_target("translate"),
-            Some(HotkeyTarget::Mode(ActivationMode::Translate))
+            global_target("translation"),
+            Some(HotkeyTarget::Mode(ActivationMode::Translation))
         );
         assert_eq!(
-            global_target("replace.correction"),
+            global_target("selectionCorrection"),
             Some(HotkeyTarget::InlineCorrection)
         );
         assert_eq!(global_target("history"), None);

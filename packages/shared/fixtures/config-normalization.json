@@ -26,14 +26,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -85,7 +85,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -94,7 +96,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -102,7 +105,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -111,7 +116,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -126,14 +132,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -161,7 +169,7 @@
           "deepgram": { "modelId": 42, "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": "yes"
+        "isVoiceCorrectionEnabled": "yes"
       }
     },
     "expected": {
@@ -189,14 +197,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -249,7 +257,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -258,7 +268,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -266,7 +277,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -275,7 +288,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -290,14 +304,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -325,7 +341,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     }
@@ -357,14 +373,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -416,7 +432,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -425,7 +443,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -433,7 +452,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -442,7 +463,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "ollama-qwen",
@@ -451,7 +473,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           }
         ],
         "tasks": {
@@ -466,14 +490,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -501,7 +527,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       }
     },
     "expected": {
@@ -529,14 +555,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -589,7 +615,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -598,7 +626,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -606,7 +635,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -615,7 +646,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -630,14 +662,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -665,7 +699,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     }
@@ -697,14 +731,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -758,7 +792,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -767,7 +803,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -775,7 +812,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -784,7 +823,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -799,14 +839,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -834,7 +876,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       }
     },
     "expected": {
@@ -862,14 +904,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -915,7 +957,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -924,7 +968,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -932,7 +977,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -941,7 +988,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -956,14 +1004,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -991,7 +1041,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     }
@@ -1023,14 +1073,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -1045,9 +1095,7 @@
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
-        "glossary": [
-          { "term": "word", "use": "term", "doNotTranslate": "yes" }
-        ],
+        "glossary": [{ "term": "word", "translation": "term" }],
         "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
@@ -1084,7 +1132,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -1093,7 +1143,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -1101,7 +1152,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -1110,7 +1163,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -1125,14 +1179,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1165,7 +1221,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       }
     },
     "expected": {
@@ -1193,14 +1249,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -1216,9 +1272,7 @@
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
-        "glossary": [
-          { "term": "word", "use": "term", "doNotTranslate": false }
-        ],
+        "glossary": [{ "term": "word", "translation": "term" }],
         "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
@@ -1255,7 +1309,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -1264,7 +1320,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -1272,7 +1329,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -1281,7 +1340,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -1296,14 +1356,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1336,7 +1398,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     }
@@ -1368,14 +1430,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -1422,7 +1484,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": "0.5",
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1.5
+            "maxOutputTokens": 1.5,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -1431,7 +1495,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": false
           },
           {
             "id": "deepseek-chat",
@@ -1439,7 +1504,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -1448,7 +1515,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -1463,14 +1531,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1498,7 +1568,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       }
     },
     "expected": {
@@ -1526,14 +1596,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -1579,7 +1649,9 @@
             "providerId": "ollama",
             "providerModelId": "qwen2.5:7b",
             "name": "Qwen 2.5 7B",
-            "contextWindowTokens": 4096
+            "contextWindowTokens": 4096,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -1588,7 +1660,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": false
           },
           {
             "id": "deepseek-chat",
@@ -1596,7 +1669,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -1605,7 +1680,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -1620,14 +1696,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1655,7 +1733,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     }
@@ -1687,14 +1765,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -1744,7 +1822,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -1753,7 +1833,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -1761,7 +1842,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -1770,7 +1853,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -1785,14 +1869,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1820,7 +1906,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       }
     },
     "expected": {
@@ -1848,14 +1934,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -1902,7 +1988,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -1911,7 +1999,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -1919,7 +2008,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -1928,7 +2019,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -1943,14 +2035,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1978,13 +2072,13 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     }
   },
   {
-    "name": "drops unsupported hotkey names",
+    "name": "keeps hotkey names it does not know",
     "input": {
       "configVersion": 1,
       "appearance": {
@@ -2010,14 +2104,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F"
       },
@@ -2070,7 +2164,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -2079,7 +2175,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -2087,7 +2184,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -2096,7 +2195,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -2111,14 +2211,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2146,7 +2248,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       }
     },
     "expected": {
@@ -2174,16 +2276,17 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "",
+        "unknownAction": "Ctrl+Alt+U"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2234,7 +2337,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -2243,7 +2348,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -2251,7 +2357,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -2260,7 +2368,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -2275,14 +2384,16 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        {
-          "id": "deep-edit",
-          "name": "deepEdit",
-          "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-        }
-      ],
-      "aiTaskSlots": { "q": "deep-edit" },
+      "aiTasks": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "deepEdit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2310,7 +2421,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     }
@@ -2342,14 +2453,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -2409,7 +2520,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -2418,7 +2531,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -2426,7 +2540,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -2435,7 +2551,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -2450,12 +2567,14 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [
-        { "id": "a", "name": "A", "rule": "x" },
-        { "id": "a", "name": "Copy", "rule": "y" },
-        "bogus"
-      ],
-      "aiTaskSlots": { "q": "a", "w": "a" },
+      "aiTasks": {
+        "items": [
+          { "id": "a", "name": "A", "rule": "x" },
+          { "id": "a", "name": "Copy", "rule": "y" },
+          "bogus"
+        ],
+        "slots": { "q": "a", "w": "a" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2483,7 +2602,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     },
@@ -2512,14 +2631,14 @@
       },
       "hotkeys": {
         "editor": "",
-        "write": "",
+        "quickInput": "",
         "chat": "",
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
-        "select": "Ctrl+Alt+S",
+        "selectionActions": "Ctrl+Alt+S",
         "aiTasks": "",
         "correction": "",
-        "translate": "",
+        "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -2567,7 +2686,9 @@
             "name": "Qwen 2.5 7B",
             "temperature": 0.2,
             "contextWindowTokens": 4096,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
           },
           {
             "id": "gemini-flash",
@@ -2576,7 +2697,8 @@
             "name": "Gemini 3.8 Flash",
             "temperature": 1,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           },
           {
             "id": "deepseek-chat",
@@ -2584,7 +2706,9 @@
             "providerModelId": "deepseek-flash",
             "name": "DeepSeek Flash",
             "temperature": 0.2,
-            "contextWindowTokens": 128000
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
           },
           {
             "id": "openrouter-gpt-4-1-mini",
@@ -2593,7 +2717,8 @@
             "name": "GPT-4.1 mini",
             "temperature": 0.2,
             "contextWindowTokens": 128000,
-            "canUseImages": true
+            "canUseImages": true,
+            "canUseTools": true
           }
         ],
         "tasks": {
@@ -2608,8 +2733,10 @@
           "aiTask": { "modelChain": ["ollama-qwen"] }
         }
       },
-      "aiTasks": [{ "id": "a", "name": "A", "rule": "x" }],
-      "aiTaskSlots": { "q": "a" },
+      "aiTasks": {
+        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "slots": { "q": "a" }
+      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2637,7 +2764,7 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isLlmFormattingEnabled": false
+        "isVoiceCorrectionEnabled": false
       },
       "aiVault": { "path": "" }
     }

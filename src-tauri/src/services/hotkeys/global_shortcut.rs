@@ -276,7 +276,7 @@ mod tests {
     ) {
         let registry = HotkeyRegistry::default();
         let provider = FakeProvider::default();
-        let target = HotkeyTarget::Mode(ActivationMode::Write);
+        let target = HotkeyTarget::Mode(ActivationMode::QuickInput);
         let old: Shortcut = "Ctrl+Shift+W".parse().unwrap();
         let new: Shortcut = "Ctrl+Shift+E".parse().unwrap();
         registry

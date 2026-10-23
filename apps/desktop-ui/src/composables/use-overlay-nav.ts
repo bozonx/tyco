@@ -29,7 +29,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     menuModalsStore.closeAll()
     try {
       if (isQuickWindow()) {
-        if (desktopStore.desktopState?.mode === 'write') {
+        if (desktopStore.desktopState?.mode === 'quickInput') {
           quickInputStore.discard()
         }
         void ipcStore.callOrNotify('hide_window')

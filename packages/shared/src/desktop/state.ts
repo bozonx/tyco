@@ -12,15 +12,15 @@ import type {
 export type ActivationMode = ActivationModeName
 
 export const ActivationMode = {
-  SELECT: 'select',
+  SELECTION_ACTIONS: 'selectionActions',
   VOICE: 'voice',
   AI_TASKS: 'aiTasks',
   VOICE_COMMANDS: 'voiceCommands',
   COMMAND_LAUNCHER: 'commandLauncher',
   CORRECTION: 'correction',
-  TRANSLATE: 'translate',
+  TRANSLATION: 'translation',
   EDITOR: 'editor',
-  WRITE: 'write',
+  QUICK_INPUT: 'quickInput',
   CHAT: 'chat',
   VOICE_CHAT: 'voiceChat',
   HISTORY: 'history',

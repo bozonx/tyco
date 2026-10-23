@@ -29,7 +29,13 @@ describe('chat-llm-selection', () => {
 
   it('leaves out unfinished models', () => {
     const llm = config()
-    llm.models.push({ id: 'blank', providerId: 'google', providerModelId: ' ' })
+    llm.models.push({
+      id: 'blank',
+      providerId: 'google',
+      providerModelId: ' ',
+      canUseImages: false,
+      canUseTools: false,
+    })
 
     const options = chatModelOptions(llm, () => true)
 

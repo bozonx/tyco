@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 46a8b162b50f1b235c937ef4f377c86ff3d4e19eb3f7173de83486e7dd3981f5
+// Source hash: 9c6bcd214c06573619b8b54000af3fa9f6ce9249262af4f26140ae1af3eec837
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -23,16 +23,16 @@ export type ActivationMetricsRequest = { id: number }
 
 export type ActivationMode =
   | 'editor'
-  | 'write'
+  | 'quickInput'
   | 'chat'
   | 'voiceChat'
   | 'voiceCommands'
   | 'voice'
-  | 'select'
+  | 'selectionActions'
   | 'aiTasks'
   | 'commandLauncher'
   | 'correction'
-  | 'translate'
+  | 'translation'
   | 'history'
   | 'config'
   | 'externalAccess'
@@ -412,7 +412,7 @@ export type FetchRequest = {
 }
 
 export type HotkeyApplyRequest = {
-  /** The hotkey id, e.g. a mode or `replace.correction`. */
+  /** The hotkey id, e.g. a mode or `selectionCorrection`. */
   mode: string
   shortcut: string
 }

@@ -22,14 +22,14 @@
   },
   "hotkeys": {
     "editor": "",
-    "write": "",
+    "quickInput": "",
     "chat": "",
     "voiceChat": "",
     "voice": "Ctrl+Alt+V",
-    "select": "Ctrl+Alt+S",
+    "selectionActions": "Ctrl+Alt+S",
     "aiTasks": "",
     "correction": "",
-    "translate": "",
+    "translation": "",
     "voiceCommands": "",
     "selectionCorrection": "Ctrl+Alt+F"
   },
@@ -82,7 +82,9 @@
         "name": "Qwen 2.5 7B",
         "temperature": 0.2,
         "contextWindowTokens": 4096,
-        "maxOutputTokens": 1024
+        "maxOutputTokens": 1024,
+        "canUseImages": false,
+        "canUseTools": false
       },
       {
         "id": "gemini-flash",
@@ -91,7 +93,8 @@
         "name": "Gemini 3.8 Flash",
         "temperature": 1,
         "contextWindowTokens": 128000,
-        "canUseImages": true
+        "canUseImages": true,
+        "canUseTools": true
       },
       {
         "id": "deepseek-chat",
@@ -99,7 +102,9 @@
         "providerModelId": "deepseek-flash",
         "name": "DeepSeek Flash",
         "temperature": 0.2,
-        "contextWindowTokens": 128000
+        "contextWindowTokens": 128000,
+        "canUseImages": false,
+        "canUseTools": true
       },
       {
         "id": "openrouter-gpt-4-1-mini",
@@ -108,7 +113,8 @@
         "name": "GPT-4.1 mini",
         "temperature": 0.2,
         "contextWindowTokens": 128000,
-        "canUseImages": true
+        "canUseImages": true,
+        "canUseTools": true
       }
     ],
     "tasks": {
@@ -123,14 +129,16 @@
       "aiTask": { "modelChain": ["ollama-qwen"] }
     }
   },
-  "aiTasks": [
-    {
-      "id": "deep-edit",
-      "name": "Deep edit",
-      "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
-    }
-  ],
-  "aiTaskSlots": { "q": "deep-edit" },
+  "aiTasks": {
+    "items": [
+      {
+        "id": "deep-edit",
+        "name": "Deep edit",
+        "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+      }
+    ],
+    "slots": { "q": "deep-edit" }
+  },
   "aiVault": { "path": "" },
   "markdown": {
     "format": {
@@ -155,7 +163,7 @@
   "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
   "stt": {
     "provider": "deepgram",
-    "isLlmFormattingEnabled": false,
+    "isVoiceCorrectionEnabled": false,
     "providers": {
       "deepgram": { "modelId": "nova-3", "language": "auto" },
       "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
