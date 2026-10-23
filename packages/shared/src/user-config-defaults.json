@@ -22,16 +22,16 @@
   },
   "hotkeys": {
     "editor": "",
-    "quickInput": "",
+    "quickInput": "Ctrl+Alt+Shift+W",
     "chat": "",
     "voiceChat": "",
-    "voice": "Ctrl+Alt+V",
-    "selectionActions": "Ctrl+Alt+S",
+    "voice": "Ctrl+Alt+Shift+V",
+    "selectionActions": "Ctrl+Alt+Shift+S",
     "aiTasks": "",
     "correction": "",
     "translation": "",
-    "voiceCommands": "Ctrl+Alt+X",
-    "selectionCorrection": "Ctrl+Alt+F"
+    "voiceCommands": "Ctrl+Alt+Shift+X",
+    "selectionCorrection": "Ctrl+Alt+Shift+F"
   },
   "externalAccess": { "canAccessSelection": false },
   "windowInsertion": {
@@ -62,7 +62,7 @@
     {
       "id": "main",
       "inputMode": "selection",
-      "hotkey": "Ctrl+Alt+Q",
+      "hotkey": "Ctrl+Alt+Shift+Q",
       "slots": {}
     }
   ],

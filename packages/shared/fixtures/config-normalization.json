@@ -206,7 +206,7 @@
         "correction": "",
         "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -564,7 +564,7 @@
         "correction": "",
         "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -913,7 +913,7 @@
         "correction": "",
         "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1258,7 +1258,7 @@
         "correction": "",
         "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1605,7 +1605,7 @@
         "correction": "",
         "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1943,7 +1943,7 @@
         "correction": "",
         "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2285,7 +2285,7 @@
         "correction": "",
         "translation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
         "unknownAction": "Ctrl+Alt+U"
       },
       "externalAccess": { "canAccessSelection": false },

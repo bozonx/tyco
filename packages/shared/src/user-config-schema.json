@@ -90,16 +90,19 @@
       "type": "object",
       "properties": {
         "editor": { "type": "string", "default": "" },
-        "quickInput": { "type": "string", "default": "" },
+        "quickInput": { "type": "string", "default": "Ctrl+Alt+Shift+W" },
         "chat": { "type": "string", "default": "" },
         "voiceChat": { "type": "string", "default": "" },
-        "voice": { "type": "string", "default": "Ctrl+Alt+V" },
-        "selectionActions": { "type": "string", "default": "Ctrl+Alt+S" },
+        "voice": { "type": "string", "default": "Ctrl+Alt+Shift+V" },
+        "selectionActions": { "type": "string", "default": "Ctrl+Alt+Shift+S" },
         "aiTasks": { "type": "string", "default": "" },
         "correction": { "type": "string", "default": "" },
         "translation": { "type": "string", "default": "" },
-        "voiceCommands": { "type": "string", "default": "" },
-        "selectionCorrection": { "type": "string", "default": "Ctrl+Alt+F" }
+        "voiceCommands": { "type": "string", "default": "Ctrl+Alt+Shift+X" },
+        "selectionCorrection": {
+          "type": "string",
+          "default": "Ctrl+Alt+Shift+F"
+        }
       },
       "required": [
         "editor",

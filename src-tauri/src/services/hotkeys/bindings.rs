@@ -177,17 +177,17 @@ pub(crate) fn global_target(id: &str) -> Option<HotkeyTarget> {
     global.then_some(target)
 }
 
-/// Only the hotkeys that act on what the user is doing in another window
-/// are assigned by default: every default may collide with a shortcut of the
-/// desktop or another application, and the rest open Tyco windows that the
-/// tray reaches as well.
+/// Only the hotkeys that act on what the user is doing in another window,
+/// and quick input that writes into it, are assigned by default: every
+/// default may collide with a shortcut of the desktop or another
+/// application, and the rest open Tyco windows that the tray reaches as well.
 fn default_key(mode: ActivationMode) -> Option<&'static str> {
     match mode {
         ActivationMode::Voice => Some("V"),
         ActivationMode::SelectionActions => Some("S"),
         ActivationMode::VoiceCommands => Some("X"),
+        ActivationMode::QuickInput => Some("W"),
         ActivationMode::Editor
-        | ActivationMode::QuickInput
         | ActivationMode::Chat
         | ActivationMode::VoiceChat
         | ActivationMode::AiTasks
@@ -265,12 +265,8 @@ mod tests {
     use super::*;
     use serde_json::json;
     #[test]
-    fn default_shortcuts_avoid_altgr_on_windows() {
-        let expected = if cfg!(target_os = "windows") {
-            "Ctrl+Shift+Alt+V"
-        } else {
-            "Ctrl+Alt+V"
-        };
+    fn default_shortcuts_avoid_altgr() {
+        let expected = "Ctrl+Alt+Shift+V";
         assert_eq!(
             default_shortcut(ActivationMode::Voice).as_deref(),
             Some(expected)
@@ -298,6 +294,7 @@ mod tests {
         assert_eq!(
             assigned,
             [
+                "quickInput",
                 "voiceCommands",
                 "voice",
                 "selectionActions",

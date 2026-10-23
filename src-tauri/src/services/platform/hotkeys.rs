@@ -2,14 +2,11 @@
 use super::session::{self, Desktop, DisplayServer};
 use crate::services::hotkeys::HotkeyTarget;
 
-/// The modifiers of every default shortcut. Ctrl+Alt is AltGr on Windows,
-/// which types characters on many layouts (Ctrl+Alt+E is € in German), so
-/// Shift joins it there.
-pub(crate) const DEFAULT_MODIFIERS: &str = if cfg!(target_os = "windows") {
-    "Ctrl+Shift+Alt"
-} else {
-    "Ctrl+Alt"
-};
+/// The modifiers of every default shortcut, the same on every platform so
+/// that one keyboard layout of a key remapper can trigger them anywhere.
+/// Ctrl+Alt alone is AltGr on Windows, which types characters on many
+/// layouts (Ctrl+Alt+E is € in German), so Shift joins it.
+pub(crate) const DEFAULT_MODIFIERS: &str = "Ctrl+Alt+Shift";
 
 /// What binds the hotkeys: the desktop portal, the global shortcut API of
 /// the system, or the user in the desktop settings with `tyco-ctl`.
