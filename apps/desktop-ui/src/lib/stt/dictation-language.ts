@@ -10,7 +10,7 @@ export const DICTATION_LANGUAGE_MULTI = 'multi'
 /**
  * The language tag to ask a live session for. `setting` is the dictation
  * language from the speech settings, `userLocale` the resolved user language
- * (`ru_RU`). `undefined` means the multilingual model.
+ * (`ru-RU`). `undefined` means the multilingual model.
  */
 export function dictationLanguageFor(
   setting: string | undefined,
@@ -22,11 +22,11 @@ export function dictationLanguageFor(
   return toProviderTag(locale)
 }
 
-/** `ru_RU` → `ru`; Chinese keeps its script region, the only one that matters */
+/** `ru-RU` → `ru`; Chinese keeps its script region, the only one that matters */
 function toProviderTag(locale: string | undefined): string | undefined {
   const [language, region] = (locale ?? '')
     .trim()
-    .split(/[_-]/)
+    .split('-')
     .map((part) => part.toLowerCase())
   if (!language) return undefined
   if (language === 'zh' && region) return `zh-${region.toUpperCase()}`

@@ -132,12 +132,13 @@ export function createLlmSettingsModel(deps: {
     const config = deps.getConfig()
     return config.models.find(
       (model) =>
-        usable.has(model.id) && !config.taskModelChains[task].includes(model.id)
+        usable.has(model.id) &&
+        !config.tasks[task].modelChain.includes(model.id)
     )
   }
   function addFallback(task: LlmTask) {
     const model = nextFallback(task)
-    if (model) deps.getConfig().taskModelChains[task].push(model.id)
+    if (model) deps.getConfig().tasks[task].modelChain.push(model.id)
   }
   function dispose() {
     requests.clear()

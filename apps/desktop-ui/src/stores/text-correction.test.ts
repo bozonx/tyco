@@ -27,12 +27,9 @@ describe('corrector configuration ownership', () => {
       expect(await store.correct('Sample', signal)).toBe('First result')
       mocks.correctText.mockResolvedValue('Updated result')
       if (setting === 'rules')
-        desktop.desktopState.userConfig.aiRules = {
-          ...desktop.desktopState.userConfig.aiRules,
-          correction: 'New rules',
-        }
+        desktop.desktopState.userConfig.llm.tasks.correction.rule = 'New rules'
       if (setting === 'models')
-        desktop.desktopState.userConfig.llm.taskModelChains.correction = [
+        desktop.desktopState.userConfig.llm.tasks.correction.modelChain = [
           'another-model',
         ]
       expect(store.getCachedCorrection('Sample')).toBeUndefined()

@@ -36,7 +36,7 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
   - Prefer domain-specific modules over generic `helpers` collections; keep SDK and legacy serialized names at explicit compatibility boundaries.
 - **I18n & Locales**:
   - Core locale messages live in `apps/desktop-ui/src/lib/i18n/locales/*.json`; plugin messages live in their own `packages/plugin-*/src/locales/*.json`.
-  - **No Fallbacks**: Translation fallbacks are prohibited (`fallbackLocale: false`). Every supported locale (`ru_RU`, `en_US`, `es_AR`, `tr_TR`) must provide 100% of all keys. A missing key is an error, never a silent fallback to English.
+  - **No Fallbacks**: Translation fallbacks are prohibited (`fallbackLocale: false`). Every supported locale (`ru-RU`, `en-US`, `es-AR`, `tr-TR`) must provide 100% of all keys. A missing key is an error, never a silent fallback to English.
   - **Completeness & Hygiene**: Every key referenced in application code (templates, scripts, `*Key` properties) must exist across all supported locales. Conversely, dead/unused localization keys must not remain in locale dictionaries.
   - All keys, placeholders (`{param}`), types, and structure across locales within each package must stay synchronized. Run `pnpm check:i18n` to validate.
 - **IPC & System Contracts**:

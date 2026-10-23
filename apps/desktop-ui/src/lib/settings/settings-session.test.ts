@@ -50,7 +50,7 @@ describe('settings session', () => {
     model.draft.value.appearance.theme = 'dark'
     model.applyIncoming({
       ...config(),
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     })
     await model.persist()
     expect(deps.save).toHaveBeenCalledWith(
@@ -86,21 +86,21 @@ describe('settings session', () => {
       result: {
         ...config(),
         appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-        language: { ui: 'auto', user: 'ru_RU' },
+        language: { ui: 'auto', user: 'ru-RU' },
       },
     })
     await Promise.all([first, second])
     expect(save.mock.calls[1][0]).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     })
     expect(save.mock.calls[1][1]).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     })
     expect(model.draft.value).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     })
     expect(model.isSaved()).toBe(true)
   })
@@ -154,13 +154,13 @@ describe('settings concurrency and recovery', () => {
     model.applyIncoming({
       ...config(),
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     })
     model.draft.value.appearance.theme = DEFAULT_USER_CONFIG.appearance.theme
     model.schedule()
     expect(model.draft.value).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     })
     expect(model.conflicts.value).toEqual([])
     expect(model.isSaved()).toBe(true)
@@ -232,7 +232,7 @@ describe('settings concurrency and recovery', () => {
     latest = {
       ...config(),
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     }
     model.applyIncoming(latest)
     finish({
@@ -243,7 +243,7 @@ describe('settings concurrency and recovery', () => {
       },
     })
     await pending
-    expect(model.draft.value.language.user).toBe('ru_RU')
+    expect(model.draft.value.language.user).toBe('ru-RU')
     expect(model.isSaved()).toBe(true)
   })
 
@@ -253,7 +253,7 @@ describe('settings concurrency and recovery', () => {
     model.applyIncoming({
       ...config(),
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'light' },
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     })
     expect(model.conflicts.value).toEqual(['appearance.theme'])
     await model.persist()
@@ -262,7 +262,7 @@ describe('settings concurrency and recovery', () => {
     await model.persist()
     expect(model.draft.value).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
-      language: { ui: 'auto', user: 'ru_RU' },
+      language: { ui: 'auto', user: 'ru-RU' },
     })
     expect(model.isSaved()).toBe(true)
   })

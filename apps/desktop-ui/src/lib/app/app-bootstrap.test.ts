@@ -101,8 +101,10 @@ describe('app-bootstrap', () => {
         userConfig: {
           ...DEFAULT_DESKTOP_VIEW_STATE.userConfig,
           windowInsertion: {
-            ...DEFAULT_DESKTOP_VIEW_STATE.userConfig.windowInsertion,
-            pasteShortcut: 'Shift+Insert',
+            linux: {
+              ...DEFAULT_DESKTOP_VIEW_STATE.userConfig.windowInsertion.linux,
+              pasteShortcut: 'Shift+Insert',
+            },
           },
         },
       })

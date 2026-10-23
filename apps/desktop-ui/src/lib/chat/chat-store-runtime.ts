@@ -114,7 +114,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   const getChatInstructions = () =>
     profileId ? soul.value : APP_CONFIG.aiInstructions[LlmInstructionKind.CHAT]
   const getChatRules = () =>
-    profileId ? undefined : deps.getUserConfig()?.aiRules?.chat
+    profileId ? undefined : deps.getUserConfig()?.llm?.tasks.chat.rule
 
   const requestBudgetCharacters = () => {
     const picked = selectedModel.value

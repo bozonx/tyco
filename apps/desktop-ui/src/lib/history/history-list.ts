@@ -14,16 +14,14 @@ function dayKey(time: number): string {
   return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
 }
 
-/** `locale` is an app locale like `en_US`; falls back to the system one. */
+/** `locale` is an app locale like `en-US`; falls back to the system one. */
 function formatWith(
   time: number,
   locale: string,
   options: Intl.DateTimeFormatOptions
 ): string {
   try {
-    return new Intl.DateTimeFormat(locale.replace('_', '-'), options).format(
-      time
-    )
+    return new Intl.DateTimeFormat(locale, options).format(time)
   } catch {
     return new Intl.DateTimeFormat(undefined, options).format(time)
   }

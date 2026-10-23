@@ -61,13 +61,13 @@ describe('voice resolver', () => {
         commandId: 'en',
         phrase: 'translate to',
         parameters: [
-          { name: 'language', value: 'en_GB', variants: ['British English'] },
+          { name: 'language', value: 'en-GB', variants: ['British English'] },
         ],
       },
     ]
     expect(
       resolveVoice(routes, 'translate to British English: Hello!').candidates[0]
-    ).toMatchObject({ parameters: { language: 'en_GB' }, text: 'Hello!' })
+    ).toMatchObject({ parameters: { language: 'en-GB' }, text: 'Hello!' })
     expect(resolveVoice(routes, 'translate to British').kind).toBe('incomplete')
     expect(resolveVoice(routes, 'translate to Klingon Hello').kind).toBe(
       'parameter-error'
@@ -81,7 +81,7 @@ describe('voice resolver', () => {
         commandId: 'en',
         phrase: 'translate to',
         parameters: [
-          { name: 'language', value: 'en_GB', variants: ['British English'] },
+          { name: 'language', value: 'en-GB', variants: ['British English'] },
         ],
       },
     ]
@@ -141,7 +141,7 @@ describe('voice resolver', () => {
         commandId: 'en',
         phrase: 'translate to',
         parameters: [
-          { name: 'language', value: 'en_US', variants: ['English'] },
+          { name: 'language', value: 'en-US', variants: ['English'] },
         ],
       },
     ]
@@ -189,7 +189,7 @@ describe('voice resolver', () => {
     const first = {
       ...script('first', ['my translation']),
       toolId: 'core.translate',
-      toolConfig: { language: 'en_US' },
+      toolConfig: { language: 'en-US' },
     }
     const second = { ...first, id: 'second' }
     const before = structuredClone(first)
@@ -224,7 +224,7 @@ it('offers explicit parameter recovery without guessing which unknown words to r
     {
       commandId: 'en',
       phrase: 'translate to',
-      parameters: [{ name: 'language', value: 'en_US', variants: ['English'] }],
+      parameters: [{ name: 'language', value: 'en-US', variants: ['English'] }],
     },
   ]
   expect(resolveVoice(routes, 'translate to Klingon Hello!')).toMatchObject({
@@ -232,7 +232,7 @@ it('offers explicit parameter recovery without guessing which unknown words to r
     parameterChoices: [
       {
         commandId: 'en',
-        parameters: { language: 'en_US' },
+        parameters: { language: 'en-US' },
         text: 'Klingon Hello!',
       },
     ],

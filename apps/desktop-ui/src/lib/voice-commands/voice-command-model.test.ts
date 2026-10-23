@@ -257,7 +257,7 @@ it('does not automatically execute a manually recovered parameter', async () => 
   await model.finish()
   model.choose({
     commandId: commands[0]!.id,
-    parameters: { language: 'en_US' },
+    parameters: { language: 'en-US' },
     text: 'Hello!',
     consumedWordCount: 0,
     textOffset: 0,

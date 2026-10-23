@@ -15,12 +15,12 @@ describe('plugin-sandbox', () => {
     version: '1.0.0',
     apiVersion: 2,
     capabilities: [],
-    defaultLocale: 'en_US',
+    defaultLocale: 'en-US',
     locales: {
-      en_US: { label: 'Example' },
-      ru_RU: { label: 'Example' },
-      es_AR: { label: 'Example' },
-      tr_TR: { label: 'Example' },
+      'en-US': { label: 'Example' },
+      'ru-RU': { label: 'Example' },
+      'es-AR': { label: 'Example' },
+      'tr-TR': { label: 'Example' },
     },
   })
 

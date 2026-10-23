@@ -42,7 +42,7 @@ function render(content: string, streaming = false) {
 
 beforeEach(() => {
   vi.useFakeTimers()
-  setI18nLocale('en_US')
+  setI18nLocale('en-US')
   Object.defineProperty(URL, 'createObjectURL', {
     configurable: true,
     value: vi.fn(() => 'blob:preview'),
@@ -55,7 +55,7 @@ beforeEach(() => {
 afterEach(() => {
   wrappers.splice(0).forEach((wrapper) => wrapper.unmount())
   vi.useRealTimers()
-  setI18nLocale('en_US')
+  setI18nLocale('en-US')
 })
 
 describe('ChatMarkdown.vue', () => {
@@ -80,7 +80,7 @@ describe('ChatMarkdown.vue', () => {
     expect(wrapper.find('button').text()).toBe('Copy code')
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('copy-code')?.[0]).toEqual(['const x = 1\n'])
-    setI18nLocale('es_AR')
+    setI18nLocale('es-AR')
     await settle()
     expect(wrapper.find('button').text()).toBe(i18n.global.t('chat.copyCode'))
     expect(wrapper.findAll('button')).toHaveLength(1)

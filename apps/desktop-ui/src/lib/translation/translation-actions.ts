@@ -38,8 +38,9 @@ export function createTranslationActions(deps: TranslationActionsDependencies) {
         sourceLanguage: options.sourceLanguage,
         signal: options.signal,
         onStage: options.onStage,
-        rules: deps.getUserConfig().aiRules?.translation,
-        qualityGateRules: deps.getUserConfig().aiRules?.translationQualityGate,
+        rules: deps.getUserConfig().llm?.tasks.translation.rule,
+        qualityGateRules:
+          deps.getUserConfig().llm?.tasks.translation.qualityGateRule,
       })
     } catch (error) {
       return handleLlmRequestError(

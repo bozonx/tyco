@@ -161,7 +161,7 @@ describe('llm-client', () => {
       streamResponse(sse(['from local']))
     )
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.taskModelChains.aiTask = ['gemini-flash', 'ollama-qwen']
+    llm.tasks.aiTask.modelChain = ['gemini-flash', 'ollama-qwen']
     const { client } = setup(fetch, llm)
 
     const text = await client.run('aiTask', prompt, {
@@ -196,7 +196,7 @@ describe('llm-client', () => {
         maxOutputTokens: 200,
       },
     ]
-    llm.taskModelChains.aiTask = ['first', 'second']
+    llm.tasks.aiTask.modelChain = ['first', 'second']
     const { client } = setup(fetch, llm)
 
     await expect(
@@ -254,7 +254,7 @@ describe('llm-client', () => {
   it('sends a key reference to a provider that has a key', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.taskModelChains.aiTask = ['deepseek-chat']
+    llm.tasks.aiTask.modelChain = ['deepseek-chat']
     const { client } = setup(fetch, llm, {
       'llm.deepseek': {
         origins: ['https://api.deepseek.com'],
@@ -475,7 +475,7 @@ it('rejects truncated streamed output without switching models and retains the t
     )
   )
   const config = structuredClone(DEFAULT_LLM_CONFIG)
-  config.taskModelChains.aiTask = ['ollama-qwen', 'gemini-flash']
+  config.tasks.aiTask.modelChain = ['ollama-qwen', 'gemini-flash']
   const { client } = setup(fetch, config)
   const chunks: string[] = []
   await expect(
@@ -516,7 +516,7 @@ it('shares one deadline across the entire fallback chain', async () => {
     providerId: 'ollama',
     providerModelId: 'fallback',
   })
-  config.taskModelChains.aiTask = ['ollama-qwen', 'fallback']
+  config.tasks.aiTask.modelChain = ['ollama-qwen', 'fallback']
   const fetch = vi.fn<FetchFunction>(
     async (_url, options) =>
       new Promise((_resolve, reject) => {

@@ -45,11 +45,11 @@ describe('built-in voice commands', () => {
       expect(
         resolveVoice(
           routes,
-          `${locale.voiceGrammar.translate} ${locale.voiceGrammar.languages.en_US.split(';')[0]} Hello!`
+          `${locale.voiceGrammar.translate} ${locale.voiceGrammar.languages['en-US'].split(';')[0]} Hello!`
         ).candidates[0]
       ).toMatchObject({
-        commandId: 'builtin:voice:translate:en_US',
-        parameters: { language: 'en_US' },
+        commandId: 'builtin:voice:translate:en-US',
+        parameters: { language: 'en-US' },
         text: 'Hello!',
       })
     }
@@ -59,7 +59,7 @@ describe('built-in voice commands', () => {
       ...createCommand('core.translate', 'saved'),
       enabled: false,
       isVoiceEnabled: false,
-      toolConfig: { language: 'en_US', sourceLanguage: 'ru_RU' },
+      toolConfig: { language: 'en-US', sourceLanguage: 'ru-RU' },
     }
     const before = structuredClone(saved)
     const run = vi.fn(async () => ({ success: true }))
@@ -75,7 +75,7 @@ describe('built-in voice commands', () => {
     await model.start()
     await model.finish()
     expect(run).toHaveBeenCalledOnce()
-    expect(model.command.value?.toolConfig).toEqual({ language: 'en_US' })
+    expect(model.command.value?.toolConfig).toEqual({ language: 'en-US' })
     expect(saved).toEqual(before)
   })
   it('keeps unavailable standard functions visible and rechecks availability before running', async () => {

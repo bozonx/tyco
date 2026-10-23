@@ -205,14 +205,14 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
         let bytes = locale.as_bytes();
         if bytes.len() != 5
             || !bytes[..2].iter().all(u8::is_ascii_lowercase)
-            || bytes[2] != b'_'
+            || bytes[2] != b'-'
             || !bytes[3..].iter().all(u8::is_ascii_uppercase)
         {
             return Err(invalid("Invalid plugin locale"));
         }
         validate_messages(dictionary, 0)?;
     }
-    for locale in ["en_US", "ru_RU", "es_AR", "tr_TR"] {
+    for locale in ["en-US", "ru-RU", "es-AR", "tr-TR"] {
         if !dictionaries.contains_key(locale) {
             return Err(invalid(format!("Missing plugin locale: {locale}")));
         }
@@ -235,7 +235,7 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
                 .collect(),
         )
     }
-    let expected = signature(&dictionaries["en_US"]);
+    let expected = signature(&dictionaries["en-US"]);
     if dictionaries
         .values()
         .any(|dictionary| signature(dictionary) != expected)
@@ -486,7 +486,7 @@ mod tests {
     use super::*;
 
     fn manifest() -> PluginManifest {
-        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en_US", "locales":{"en_US":{},"ru_RU":{},"es_AR":{},"tr_TR":{}}})).unwrap()
+        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en-US", "locales":{"en-US":{},"ru-RU":{},"es-AR":{},"tr-TR":{}}})).unwrap()
     }
     #[test]
     fn matches_sdk_manifest_fixtures() {
@@ -509,15 +509,15 @@ mod tests {
     #[test]
     fn rejects_incomplete_or_mismatched_plugin_locales() {
         let mut missing = manifest();
-        missing.locales.as_object_mut().unwrap().remove("tr_TR");
+        missing.locales.as_object_mut().unwrap().remove("tr-TR");
         assert!(validate_manifest(&missing).is_err());
         let mut mismatched = manifest();
         mismatched.locales = serde_json::json!({
-            "en_US":{"label":"Hello {name}"}, "ru_RU":{"label":"Hello {user}"},
-            "es_AR":{"label":"Hello {name}"}, "tr_TR":{"label":"Hello {name}"}
+            "en-US":{"label":"Hello {name}"}, "ru-RU":{"label":"Hello {user}"},
+            "es-AR":{"label":"Hello {name}"}, "tr-TR":{"label":"Hello {name}"}
         });
         assert!(validate_manifest(&mismatched).is_err());
-        mismatched.locales["ru_RU"] = serde_json::json!({"label":"{name}, hello {name}"});
+        mismatched.locales["ru-RU"] = serde_json::json!({"label":"{name}, hello {name}"});
         assert!(validate_manifest(&mismatched).is_ok());
     }
 

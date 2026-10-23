@@ -11,7 +11,7 @@ export interface DeepgramSttSettings {
   modelId: string
   /**
    * `auto` (the default) follows the user language, `multi` lets the
-   * multilingual model guess; anything else is a locale such as `de_DE`
+   * multilingual model guess; anything else is a locale such as `de-DE`
    */
   language: string
 }

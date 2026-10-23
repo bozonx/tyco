@@ -5,9 +5,9 @@ const manifest = {
   version: '1.0.0',
   apiVersion: 2,
   capabilities: ['editor'],
-  defaultLocale: 'en_US',
+  defaultLocale: 'en-US',
   locales: Object.fromEntries(
-    ['en_US', 'ru_RU', 'es_AR', 'tr_TR'].map((locale) => [
+    ['en-US', 'ru-RU', 'es-AR', 'tr-TR'].map((locale) => [
       locale,
       { label: 'Example' },
     ])
@@ -43,22 +43,22 @@ describe('plugin manifest validation', () => {
 describe('plugin locale completeness', () => {
   it('rejects missing locales, keys, changed types and interpolation arguments', () => {
     const dictionaries = Object.fromEntries(
-      ['en_US', 'ru_RU', 'es_AR', 'tr_TR'].map((locale) => [
+      ['en-US', 'ru-RU', 'es-AR', 'tr-TR'].map((locale) => [
         locale,
         { nested: { label: 'Hello {name}' } },
       ])
     )
     for (const invalid of [
-      { ...dictionaries, tr_TR: undefined },
+      { ...dictionaries, 'tr-TR': undefined },
       {
-        en_US: { label: 'Text' },
-        ru_RU: { label: {} },
-        es_AR: { label: 'Text' },
-        tr_TR: { label: 'Text' },
+        'en-US': { label: 'Text' },
+        'ru-RU': { label: {} },
+        'es-AR': { label: 'Text' },
+        'tr-TR': { label: 'Text' },
       },
-      { ...dictionaries, ru_RU: { nested: {} } },
-      { ...dictionaries, ru_RU: { nested: 'Hello {name}' } },
-      { ...dictionaries, ru_RU: { nested: { label: 'Hello {user}' } } },
+      { ...dictionaries, 'ru-RU': { nested: {} } },
+      { ...dictionaries, 'ru-RU': { nested: 'Hello {name}' } },
+      { ...dictionaries, 'ru-RU': { nested: { label: 'Hello {user}' } } },
     ])
       expect(() =>
         validatePluginManifest({ ...manifest, locales: invalid })
@@ -68,7 +68,7 @@ describe('plugin locale completeness', () => {
         ...manifest,
         locales: {
           ...dictionaries,
-          ru_RU: { nested: { label: '{name}, welcome {name}' } },
+          'ru-RU': { nested: { label: '{name}, welcome {name}' } },
         },
       })
     ).not.toThrow()

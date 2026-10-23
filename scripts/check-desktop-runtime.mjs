@@ -182,14 +182,14 @@ try {
   assert.equal(first.settings.userConfig.appearance.theme, 'dark')
   const second = await invoke('save_user_config', {
     baseConfig: initial,
-    userConfig: { ...initial, language: { ui: 'en_US', user: 'en_US' } },
+    userConfig: { ...initial, language: { ui: 'en-US', user: 'en-US' } },
   })
   assert.equal(
     second.settings.userConfig.appearance.theme,
     'dark',
     "Stale snapshots must preserve another window's changes"
   )
-  assert.equal(second.settings.userConfig.language.user, 'en_US')
+  assert.equal(second.settings.userConfig.language.user, 'en-US')
 
   const historyId = await invoke('add_editor_history_item', {
     entry: {
@@ -315,8 +315,8 @@ try {
     apiVersion: 2,
     capabilities: [],
     label: 'Desktop smoke',
-    defaultLocale: 'en_US',
-    locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
+    defaultLocale: 'en-US',
+    locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
   }
   const module = `export default () => ({ ...${JSON.stringify(manifest)}, async init(ctx) {
     if (typeof window !== 'undefined' || typeof document !== 'undefined' || typeof globalThis.__TAURI_INTERNALS__ !== 'undefined') throw new Error('Host globals exposed');

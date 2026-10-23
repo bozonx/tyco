@@ -41,12 +41,12 @@ export default function plugin(): PluginDefinition {
     version: '1.0.0',
     apiVersion: 2,
     capabilities: ['editor'],
-    defaultLocale: 'en_US',
+    defaultLocale: 'en-US',
     locales: {
-      en_US: { label: 'Example', transform: 'Transform text' },
-      ru_RU: { label: 'Example', transform: 'Transform text' },
-      es_AR: { label: 'Example', transform: 'Transform text' },
-      tr_TR: { label: 'Example', transform: 'Transform text' },
+      en-US: { label: 'Example', transform: 'Transform text' },
+      ru-RU: { label: 'Example', transform: 'Transform text' },
+      es-AR: { label: 'Example', transform: 'Transform text' },
+      tr-TR: { label: 'Example', transform: 'Transform text' },
     },
     labelKey: 'local.label',
     init(ctx) {
@@ -73,8 +73,8 @@ Use `local.*` for plugin-owned messages. The host namespaces these keys in metad
 settings, contributions, tool results and portable `PluginError` instances. Common
 host notification keys such as `toast.textNotSelected` and `toast.commandFailed`
 are also supported. `ctx.t` translates plugin messages; `ctx.toastText` accepts
-already resolved text. A package must include complete dictionaries for `en_US`, `ru_RU`, `es_AR`, and
-`tr_TR`. Keys, value types, and placeholders must match across all dictionaries.
+already resolved text. A package must include complete dictionaries for `en-US`, `ru-RU`, `es-AR`, and
+`tr-TR`. Keys, value types, and placeholders must match across all dictionaries.
 Missing translations are rejected; the host never falls back to another locale.
 
 Toolbar/edit/action IDs are local to the plugin and are scoped by the host. Tool

@@ -83,7 +83,7 @@ describe('createTranslationClient', () => {
     })
 
     const result = await client.translate('Hello {{name}}', {
-      targetLanguage: 'ru_RU',
+      targetLanguage: 'ru-RU',
     })
 
     expect(result.text).toBe('Привет {{name}}')

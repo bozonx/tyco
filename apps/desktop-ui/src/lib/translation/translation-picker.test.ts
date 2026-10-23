@@ -3,36 +3,36 @@ import { describe, expect, it } from 'vitest'
 import { groupLanguages, languageSearchNames } from './translation-picker'
 
 const LABELS: Record<string, string> = {
-  de_DE: 'Немецкий',
-  en_US: 'Английский',
-  it_IT: 'Итальянский',
-  pl_PL: 'Польский',
+  'de-DE': 'Немецкий',
+  'en-US': 'Английский',
+  'it-IT': 'Итальянский',
+  'pl-PL': 'Польский',
 }
 const label = (id: string) => LABELS[id] ?? id
-const all = ['de_DE', 'en_US', 'it_IT', 'pl_PL']
+const all = ['de-DE', 'en-US', 'it-IT', 'pl-PL']
 
 describe('groupLanguages', () => {
   it('puts the recent picks first, then the others by their labels', () => {
-    expect(groupLanguages(['pl_PL'], all, label)).toEqual([
-      { id: 'pl_PL', group: 'recent' },
-      { id: 'en_US', group: 'all' },
-      { id: 'it_IT', group: 'all' },
-      { id: 'de_DE', group: 'all' },
+    expect(groupLanguages(['pl-PL'], all, label)).toEqual([
+      { id: 'pl-PL', group: 'recent' },
+      { id: 'en-US', group: 'all' },
+      { id: 'it-IT', group: 'all' },
+      { id: 'de-DE', group: 'all' },
     ])
   })
 
   it('leaves out the language of the other field and unknown recent ones', () => {
     expect(
-      groupLanguages(['pl_PL', 'xx_XX'], all, label, 'pl_PL').map(
+      groupLanguages(['pl-PL', 'xx-XX'], all, label, 'pl-PL').map(
         ({ id }) => id
       )
-    ).toEqual(['en_US', 'it_IT', 'de_DE'])
+    ).toEqual(['en-US', 'it-IT', 'de-DE'])
   })
 })
 
 describe('languageSearchNames', () => {
   it('has the native and the English names, each once', () => {
-    expect(languageSearchNames('pl_PL')).toEqual(['Polski', 'Polish'])
-    expect(languageSearchNames('en_US')).toEqual(['English (US)'])
+    expect(languageSearchNames('pl-PL')).toEqual(['Polski', 'Polish'])
+    expect(languageSearchNames('en-US')).toEqual(['English (US)'])
   })
 })

@@ -48,12 +48,12 @@ export interface TranslationConfig {
   /** The settings of the machine translation services */
   providers: { deepl: DeeplTranslationSettings }
   /**
-   * When the LLM reviews a translation; its rules are
-   * `aiRules.translationQualityGate`
+   * When the LLM reviews a translation; its rule is
+   * `llm.tasks.translation.qualityGateRule`
    */
   qualityGate: TranslationQualityGate
   glossary: TranslationGlossaryEntry[]
-  /** The translation menu: distinct locales such as `en_US` by shortcut key */
+  /** The translation menu: distinct locales such as `en-US` by shortcut key */
   targetLanguages: ShortcutSlots<string>
   viewMode: 'split' | 'result'
 }

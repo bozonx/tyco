@@ -15,7 +15,7 @@ describe('SettingsLanguagesTab.vue', () => {
     context = createTestSettingsContext({
       translation: {
         ...DEFAULT_USER_CONFIG.translation,
-        targetLanguages: { q: 'en_US', w: 'ru_RU' },
+        targetLanguages: { q: 'en-US', w: 'ru-RU' },
       },
     })
     return mount(SettingsLanguagesTab, {
@@ -40,12 +40,12 @@ describe('SettingsLanguagesTab.vue', () => {
   it('edits the language slots', async () => {
     const wrapper = mountTab()
     const slots = wrapper.findComponent({ name: 'ShortcutSlots' })
-    expect(slots.props('items').slice(0, 2)).toEqual(['en_US', 'ru_RU'])
+    expect(slots.props('items').slice(0, 2)).toEqual(['en-US', 'ru-RU'])
 
     await slots.vm.$emit('remove', 0)
 
     expect(context.draft.value.translation.targetLanguages).toEqual({
-      w: 'ru_RU',
+      w: 'ru-RU',
     })
   })
 

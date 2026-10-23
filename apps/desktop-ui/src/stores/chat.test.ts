@@ -107,10 +107,7 @@ it('budgets the actual chat instructions, rules and configured output consistent
   const desktopStore = useDesktopStore()
   desktopStore.desktopState.userConfig.llm!.models[0].contextWindowTokens = 4096
   desktopStore.desktopState.userConfig.llm!.models[0].maxOutputTokens = 3000
-  desktopStore.desktopState.userConfig.aiRules = {
-    ...desktopStore.desktopState.userConfig.aiRules,
-    chat: 'x'.repeat(4000),
-  }
+  desktopStore.desktopState.userConfig.llm!.tasks.chat.rule = 'x'.repeat(4000)
   const store = useChatStore()
   const input = useChatInputStore()
   input.setValue('Question')
@@ -190,10 +187,7 @@ describe('profile chats', () => {
     mockVault(files)
     await useAiProfilesStore().loadAll()
     const desktopStore = useDesktopStore()
-    desktopStore.desktopState.userConfig.aiRules = {
-      ...desktopStore.desktopState.userConfig.aiRules,
-      chat: 'Ask AI rules',
-    }
+    desktopStore.desktopState.userConfig.llm!.tasks.chat.rule = 'Ask AI rules'
     const profileChat = useProfileChatStore('writer')
     files.soul = '# Edited by hand'
     files.profile = { ...writer, temperature: 1.1 }
@@ -212,10 +206,7 @@ describe('profile chats', () => {
 
   it('gives "Ask AI" its own instructions and the user chat rules', async () => {
     const desktopStore = useDesktopStore()
-    desktopStore.desktopState.userConfig.aiRules = {
-      ...desktopStore.desktopState.userConfig.aiRules,
-      chat: 'Ask AI rules',
-    }
+    desktopStore.desktopState.userConfig.llm!.tasks.chat.rule = 'Ask AI rules'
     const store = useChatStore()
 
     await sendIn(store, useChatInputStore(), 'Question')

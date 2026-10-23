@@ -28,7 +28,7 @@ describe('groupByDay', () => {
       item('o', 'draft', at(3, 9)),
     ]
 
-    const groups = groupByDay(items, (i) => i.createdAt, now, 'en_US')
+    const groups = groupByDay(items, (i) => i.createdAt, now, 'en-US')
 
     expect(groups.map((g) => g.items.map((i) => i.id))).toEqual([
       ['t1', 't2'],
@@ -47,7 +47,7 @@ describe('groupByDay', () => {
       [item('new', 'draft', at(21, 10)), item('legacy', 'draft', 0)],
       (i) => i.createdAt,
       now,
-      'en_US'
+      'en-US'
     )
 
     expect(groups[1]).toEqual({
@@ -60,13 +60,13 @@ describe('groupByDay', () => {
 
 describe('formatHistoryTime', () => {
   it('returns an empty string for an unknown time', () => {
-    expect(formatHistoryTime(0, 'en_US')).toBe('')
+    expect(formatHistoryTime(0, 'en-US')).toBe('')
   })
 
   it('formats with the app locale', () => {
     const time = Date.UTC(2026, 8, 21, 12, 0)
 
-    expect(formatHistoryTime(time, 'en_US')).toBe(
+    expect(formatHistoryTime(time, 'en-US')).toBe(
       new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(time)
     )
   })
@@ -80,7 +80,7 @@ describe('formatHistoryDateTime', () => {
   it('formats a full localized timestamp', () => {
     const time = Date.UTC(2026, 8, 21, 12, 0)
 
-    expect(formatHistoryDateTime(time, 'en_US')).toBe(
+    expect(formatHistoryDateTime(time, 'en-US')).toBe(
       new Intl.DateTimeFormat('en-US', {
         dateStyle: 'long',
         timeStyle: 'medium',

@@ -65,7 +65,7 @@ export function createPluginResources(
   function register(
     id: string,
     locales: Record<string, PluginMessages> = {},
-    defaultLocale = 'en_US',
+    defaultLocale = 'en-US',
     icons?: PluginDefinition['icons']
   ) {
     validatePluginLocales(locales)

@@ -53,7 +53,7 @@ describe('SettingsHistoryTab.vue', () => {
     },
     chat: {
       imageQuality: 'balanced',
-      history: { storage: 'disk', retentionDays: 0, ...chatHistory },
+      history: { storage: 'disk', ...chatHistory },
     },
   })
 

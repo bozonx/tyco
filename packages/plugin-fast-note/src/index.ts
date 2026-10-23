@@ -108,7 +108,7 @@ export default function pluginIndex(): PluginDefinition {
     apiVersion: 2,
     capabilities: ['editor', 'notes'],
     notesDirectoryField: 'pathToNotes',
-    defaultLocale: 'en_US',
+    defaultLocale: 'en-US',
     locales,
     labelKey: 'local.label',
     descriptionKey: 'local.description',

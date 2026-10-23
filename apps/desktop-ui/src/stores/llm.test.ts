@@ -39,7 +39,7 @@ describe('LLM store service wiring', () => {
       const store = useLlmStore()
       const desktop = useDesktopStore()
       expect(await store.actions.correctText('Sample')).toBe('Answer')
-      desktop.desktopState.userConfig.aiRules.chat = 'Current chat rules'
+      desktop.desktopState.userConfig.llm.tasks.chat.rule = 'Current chat rules'
       expect(
         (
           await store.actions.sendChatMessage('Question', [], undefined, {

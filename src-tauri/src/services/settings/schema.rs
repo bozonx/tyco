@@ -349,10 +349,11 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             return Err(invalid("llm.models.providerId"));
         }
     }
-    for chain in config["llm"]["taskModelChains"]
+    for chain in config["llm"]["tasks"]
         .as_object()
         .into_iter()
-        .flat_map(|fields| fields.values())
+        .flat_map(|tasks| tasks.values())
+        .map(|task| &task["modelChain"])
     {
         for id in chain
             .as_array()
@@ -361,7 +362,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             .filter_map(Value::as_str)
         {
             if !models.contains(id) {
-                return Err(invalid("llm.taskModelChains"));
+                return Err(invalid("llm.tasks.modelChain"));
             }
         }
     }
@@ -430,12 +431,7 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     *config = repair(config, &SCHEMA, defaults);
     config["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
     for command in config["commands"].as_array_mut().into_iter().flatten() {
-        for key in ["id", "toolId"] {
-            command[key] = json!(command[key].as_str().unwrap_or_default().trim());
-        }
-    }
-    for model in config["llm"]["models"].as_array_mut().into_iter().flatten() {
-        model["id"] = json!(model["id"].as_str().unwrap_or_default().trim());
+        command["toolId"] = json!(command["toolId"].as_str().unwrap_or_default().trim());
     }
     let builtin_ids = BUILTIN_LLM_PROVIDERS;
     let mut providers = config["llm"]["providers"]
@@ -526,8 +522,11 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         .into_iter()
         .map(str::to_owned)
         .collect();
-    if let Some(tasks) = config["llm"]["taskModelChains"].as_object_mut() {
-        for chain in tasks.values_mut().filter_map(Value::as_array_mut) {
+    if let Some(tasks) = config["llm"]["tasks"].as_object_mut() {
+        for chain in tasks
+            .values_mut()
+            .filter_map(|task| task.get_mut("modelChain").and_then(Value::as_array_mut))
+        {
             chain.retain(|id| model_ids.contains(id.as_str().unwrap_or_default()));
         }
     }
@@ -639,7 +638,11 @@ mod tests {
         let defaults = crate::services::settings::defaults::default_user_config();
         for (path, value) in [
             ("/editor/history/maxItems", json!(1.5)),
-            ("/chat/history/retentionDays", json!(-1)),
+            ("/editor/history/maxItems", json!(0)),
+            ("/editor/history/retentionDays", json!(0)),
+            ("/aiTasks/0/id", json!("Deep edit")),
+            ("/launcherPages/0/id", json!("Main")),
+            ("/llm/models/0/id", json!(" ollama-qwen")),
             ("/stt/providers", json!("bad")),
             ("/stt/provider", json!("missing")),
             ("/commands", json!([{"id":"a"}])),
@@ -656,10 +659,10 @@ mod tests {
             ("/launcherPages", json!([])),
             (
                 "/translation/targetLanguages",
-                json!({"q": "en_US", "w": "en_US"}),
+                json!({"q": "en-US", "w": "en-US"}),
             ),
             ("/aiTaskSlots", json!({"q": "missing"})),
-            ("/aiTaskSlots", json!({"q": "deepEdit", "w": "deepEdit"})),
+            ("/aiTaskSlots", json!({"q": "deep-edit", "w": "deep-edit"})),
         ] {
             let mut config = defaults.clone();
             *config.pointer_mut(path).unwrap() = value;
@@ -683,8 +686,8 @@ mod tests {
             "w": {"type":"standard","actionId":"askInChat"},
             "y": {"type":"standard","actionId":"askInChat"},
         });
-        config["translation"]["targetLanguages"] = json!({"q": "en_US", "w": "en_US", "e": 1});
-        config["aiTaskSlots"] = json!({"q": "gone", "w": "deepEdit", "e": "deepEdit"});
+        config["translation"]["targetLanguages"] = json!({"q": "en-US", "w": "en-US", "e": 1});
+        config["aiTaskSlots"] = json!({"q": "gone", "w": "deep-edit", "e": "deep-edit"});
         assert!(normalize_user_config(&mut config));
         validate_user_config(&config).unwrap();
         assert!(!normalize_user_config(&mut config));
@@ -694,9 +697,9 @@ mod tests {
         );
         assert_eq!(
             config["translation"]["targetLanguages"],
-            json!({"q": "en_US"})
+            json!({"q": "en-US"})
         );
-        assert_eq!(config["aiTaskSlots"], json!({"w": "deepEdit"}));
+        assert_eq!(config["aiTaskSlots"], json!({"w": "deep-edit"}));
         assert_eq!(config["stt"]["isLlmFormattingEnabled"], false);
     }
 

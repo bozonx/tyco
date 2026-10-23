@@ -31,7 +31,7 @@ export function createBuiltInVoiceCommands(
   )
   return [
     { ...chat, name: t('tools.askInChat'), isVoiceEnabled: true },
-    ...Object.keys(messages.en_US.voiceGrammar.languages).map((language) => {
+    ...Object.keys(messages['en-US'].voiceGrammar.languages).map((language) => {
       const command = createCommand(
         'core.translate',
         `${BUILT_IN_VOICE_PREFIX}translate:${language}`,

@@ -67,7 +67,7 @@ export function removeModel(config: LlmConfig, modelId: string) {
   config.models = config.models.filter((model) => model.id !== modelId)
 
   for (const task of LLM_TASKS) {
-    config.taskModelChains[task] = config.taskModelChains[task].filter(
+    config.tasks[task].modelChain = config.tasks[task].modelChain.filter(
       (id) => id !== modelId
     )
   }

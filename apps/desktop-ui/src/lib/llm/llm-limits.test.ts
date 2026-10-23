@@ -4,7 +4,7 @@ import { taskModelLimits } from './llm-limits'
 
 it('budgets against every model in the task chain', () => {
   const config = structuredClone(DEFAULT_LLM_CONFIG)
-  config.taskModelChains.translation = ['gemini-flash', 'ollama-qwen']
+  config.tasks.translation.modelChain = ['gemini-flash', 'ollama-qwen']
   expect(taskModelLimits(config, 'translation')).toEqual({
     contextWindowTokens: 4096,
     maxOutputTokens: 1024,

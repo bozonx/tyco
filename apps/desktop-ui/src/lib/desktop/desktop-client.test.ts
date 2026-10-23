@@ -52,9 +52,9 @@ describe('desktop client', () => {
   it('returns detached copies of initial parameters', () => {
     const { client } = setup()
     const params = client.getDesktopViewState()
-    params.userConfig.language.user = 'tr_TR'
+    params.userConfig.language.user = 'tr-TR'
     expect(client.getDesktopViewState().userConfig.language.user).not.toBe(
-      'tr_TR'
+      'tr-TR'
     )
   })
 

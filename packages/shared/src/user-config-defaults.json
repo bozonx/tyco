@@ -35,15 +35,19 @@
   },
   "externalAccess": { "canAccessSelection": false },
   "windowInsertion": {
-    "pasteShortcut": "Ctrl+V",
-    "linux": { "method": "auto", "xdotoolPath": "", "ydotoolPath": "" }
+    "linux": {
+      "pasteShortcut": "Ctrl+V",
+      "method": "auto",
+      "xdotoolPath": "",
+      "ydotoolPath": ""
+    }
   },
   "translation": {
     "provider": "llm",
     "providers": { "deepl": { "endpoint": "free" } },
     "qualityGate": "off",
     "glossary": [],
-    "targetLanguages": { "q": "en_US" },
+    "targetLanguages": { "q": "en-US" },
     "viewMode": "split"
   },
   "mainActions": {
@@ -107,28 +111,26 @@
         "canUseImages": true
       }
     ],
-    "taskModelChains": {
-      "translation": ["ollama-qwen"],
-      "voiceCorrection": ["ollama-qwen"],
-      "correction": ["ollama-qwen"],
-      "aiTask": ["ollama-qwen"]
+    "tasks": {
+      "chat": { "rule": "" },
+      "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+      "translation": {
+        "modelChain": ["ollama-qwen"],
+        "rule": "",
+        "qualityGateRule": ""
+      },
+      "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+      "aiTask": { "modelChain": ["ollama-qwen"] }
     }
-  },
-  "aiRules": {
-    "chat": "",
-    "correction": "",
-    "translation": "",
-    "translationQualityGate": "",
-    "voiceCorrection": ""
   },
   "aiTasks": [
     {
-      "id": "deepEdit",
+      "id": "deep-edit",
       "name": "Deep edit",
       "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
     }
   ],
-  "aiTaskSlots": { "q": "deepEdit" },
+  "aiTaskSlots": { "q": "deep-edit" },
   "aiVault": { "path": "" },
   "markdown": {
     "format": {
@@ -150,10 +152,7 @@
     }
   },
   "plugins": {},
-  "chat": {
-    "imageQuality": "balanced",
-    "history": { "storage": "disk", "retentionDays": 0 }
-  },
+  "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
   "stt": {
     "provider": "deepgram",
     "isLlmFormattingEnabled": false,

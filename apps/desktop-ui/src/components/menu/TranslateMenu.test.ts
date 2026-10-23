@@ -72,7 +72,7 @@ describe('TranslateMenu', () => {
 
   it('translates into a configured language by its key', async () => {
     const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.translation.targetLanguages = { q: 'de_DE' }
+    desktop.desktopState.userConfig.translation.targetLanguages = { q: 'de-DE' }
     mountMenu()
 
     await shortcutListProps.leftLetterKeys[0].action()
@@ -81,7 +81,7 @@ describe('TranslateMenu', () => {
       'core.translate',
       'Hello world',
       expect.objectContaining({
-        toolConfig: { language: 'de_DE', sourceLanguage: undefined },
+        toolConfig: { language: 'de-DE', sourceLanguage: undefined },
       })
     )
   })
@@ -91,16 +91,16 @@ describe('TranslateMenu', () => {
     menuModalsStore.updateStep(
       menuModalsStore.currentStepId!,
       MenuModals.TRANSLATE,
-      { language: 'de_DE' }
+      { language: 'de-DE' }
     )
-    mountMenu({ language: 'de_DE' })
+    mountMenu({ language: 'de-DE' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     expect(transform).toHaveBeenCalledWith(
       'core.translate',
       'Hello world',
       expect.objectContaining({
-        toolConfig: expect.objectContaining({ language: 'de_DE' }),
+        toolConfig: expect.objectContaining({ language: 'de-DE' }),
       })
     )
     await vi.waitFor(() =>
@@ -126,9 +126,9 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it_IT')
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it-IT')
     expect(desktop.patchSessionState).toHaveBeenCalledWith({
-      recentTranslateLanguages: ['it_IT'],
+      recentTranslateLanguages: ['it-IT'],
     })
   })
 
@@ -149,7 +149,7 @@ describe('TranslateMenu', () => {
       'core.translate',
       'Hello world',
       expect.objectContaining({
-        toolConfig: { language: 'it_IT', sourceLanguage: 'pl_PL' },
+        toolConfig: { language: 'it-IT', sourceLanguage: 'pl-PL' },
       })
     )
   })
@@ -158,7 +158,7 @@ describe('TranslateMenu', () => {
     const desktop = useDesktopStore()
     desktop.desktopState.sessionState = {
       ...DEFAULT_SESSION_STATE,
-      recentTranslateLanguages: ['it_IT'],
+      recentTranslateLanguages: ['it-IT'],
     }
     const wrapper = mountMenu()
 
@@ -171,7 +171,7 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'ArrowDown' })
     await input.trigger('keydown', { key: 'Enter' })
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it_IT')
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it-IT')
   })
 
   it('finds a language by its English name', async () => {
@@ -184,13 +184,13 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('de_DE')
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('de-DE')
   })
 
   it('translates the highlighted language by clicking the Enter hint', async () => {
     useDesktopStore().desktopState.sessionState = {
       ...DEFAULT_SESSION_STATE,
-      recentTranslateLanguages: ['it_IT'],
+      recentTranslateLanguages: ['it-IT'],
     }
     const wrapper = mountMenu()
     await shortcutListProps.spaceKey.action()
@@ -201,7 +201,7 @@ describe('TranslateMenu', () => {
     expect(button.attributes('disabled')).toBeUndefined()
     await button.trigger('click')
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it_IT')
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it-IT')
     wrapper.unmount()
   })
   it('drops late results and stages after cancellation without clearing a new operation', async () => {
@@ -212,7 +212,7 @@ describe('TranslateMenu', () => {
       })
     )
     useDesktopStore().desktopState.userConfig.translation.targetLanguages = {
-      q: 'de_DE',
+      q: 'de-DE',
     }
     const wrapper = mountMenu()
     const pending = shortcutListProps.leftLetterKeys[0].action()

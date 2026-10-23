@@ -177,13 +177,19 @@ pub fn prune_copies(path: &Path, marker: &str, keep: usize) -> Result<(), AppErr
 /// Keeps the exact damaged bytes before a salvage operation rewrites a file.
 /// The content digest avoids making another copy on every read.
 pub fn preserve_broken_copy(path: &Path, raw: &[u8]) -> Result<PathBuf, AppError> {
+    preserve_copy(path, BROKEN_COPY_MARKER, raw)
+}
+
+/// Keeps `raw` next to `path`, named with `marker` and the content digest, so
+/// that the same content is kept once; only the newest copies stay.
+pub fn preserve_copy(path: &Path, marker: &str, raw: &[u8]) -> Result<PathBuf, AppError> {
     use sha2::{Digest, Sha256};
     let mut name = path.file_name().unwrap_or_default().to_os_string();
-    name.push(format!("{BROKEN_COPY_MARKER}{:x}", Sha256::digest(raw)));
+    name.push(format!("{marker}{:x}", Sha256::digest(raw)));
     let target = path.with_file_name(name);
     if !target.exists() {
         write_private_bytes(&target, raw)?;
-        prune_copies(path, BROKEN_COPY_MARKER, KEPT_COPY_COUNT)?;
+        prune_copies(path, marker, KEPT_COPY_COUNT)?;
     }
     Ok(target)
 }

@@ -5,7 +5,7 @@ import { getLanguageLabelKey } from '../locale/language'
 import { isTranslateEntry, type VoiceCatalogEntry } from './voice-catalog'
 import type { VoiceCandidate, VoiceResolution } from './voice-resolver'
 
-export const DEFAULT_TRANSLATION_ID = 'builtin:voice:translate:en_US'
+export const DEFAULT_TRANSLATION_ID = 'builtin:voice:translate:en-US'
 
 export interface VoiceRouteLike {
   commandId: string

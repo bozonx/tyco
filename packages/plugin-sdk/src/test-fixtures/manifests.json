@@ -7,12 +7,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       }
     }
   },
@@ -24,12 +24,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "extra": true
     }
@@ -42,12 +42,12 @@
       "version": "1.0.0",
       "apiVersion": 3,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       }
     }
   },
@@ -59,12 +59,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor", "editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       }
     }
   },
@@ -76,12 +76,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "1label": "Example" },
-        "ru_RU": { "1label": "Example" },
-        "es_AR": { "1label": "Example" },
-        "tr_TR": { "1label": "Example" }
+        "en-US": { "1label": "Example" },
+        "ru-RU": { "1label": "Example" },
+        "es-AR": { "1label": "Example" },
+        "tr-TR": { "1label": "Example" }
       }
     }
   },
@@ -93,8 +93,8 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
-      "locales": { "en_US": {} }
+      "defaultLocale": "en-US",
+      "locales": { "en-US": {} }
     }
   },
   {
@@ -105,12 +105,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [
@@ -132,12 +132,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [
@@ -159,12 +159,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [
@@ -186,12 +186,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [
@@ -215,12 +215,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "field", "type": "text", "defaultValue": {} }]
@@ -235,12 +235,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "field", "type": "textarea", "defaultValue": 7 }]
@@ -255,12 +255,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [
@@ -281,12 +281,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [
@@ -303,12 +303,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [
@@ -330,12 +330,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [
@@ -361,12 +361,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": {
         "prefix": "example",
@@ -382,12 +382,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": { "icons": { "test": { "body": "<path/>" } } }
     }
@@ -400,12 +400,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": {
         "prefix": "example",
@@ -421,12 +421,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": {
         "prefix": "example",
@@ -442,12 +442,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": {
         "prefix": "example",
@@ -463,12 +463,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": {
         "prefix": "example",
@@ -484,12 +484,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": {
         "prefix": "example",
@@ -505,12 +505,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": {
         "prefix": "example",
@@ -526,12 +526,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "icons": {
         "prefix": "example",
@@ -547,12 +547,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["notes"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "notesDirectoryField": "notesPath",
       "defaultConfig": {
@@ -568,12 +568,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["notes"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "notesDirectoryField": "notesPath"
     }
@@ -586,12 +586,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "notesDirectoryField": "notesPath",
       "defaultConfig": {
@@ -607,12 +607,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["notes"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "notesDirectoryField": "notesPath",
       "defaultConfig": {
@@ -628,12 +628,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["notes"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "notesDirectoryField": "notesPath",
       "defaultConfig": {
@@ -658,12 +658,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
@@ -680,12 +680,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
@@ -701,12 +701,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
@@ -723,12 +723,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
@@ -750,12 +750,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
@@ -772,12 +772,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
@@ -796,12 +796,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["editor"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [{ "name": "current", "type": "text", "defaultValue": "" }],
@@ -817,12 +817,12 @@
       "version": "1.0.0",
       "apiVersion": 2,
       "capabilities": ["notes"],
-      "defaultLocale": "en_US",
+      "defaultLocale": "en-US",
       "locales": {
-        "en_US": { "label": "Example" },
-        "ru_RU": { "label": "Example" },
-        "es_AR": { "label": "Example" },
-        "tr_TR": { "label": "Example" }
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "es-AR": { "label": "Example" },
+        "tr-TR": { "label": "Example" }
       },
       "defaultConfig": {
         "fields": [

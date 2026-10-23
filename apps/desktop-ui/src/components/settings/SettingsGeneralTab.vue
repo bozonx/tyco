@@ -67,7 +67,7 @@
         :info="t('settings.pasteShortcutHint')"
       >
         <FieldSelect
-          v-model="userConfig.windowInsertion.pasteShortcut"
+          v-model="userConfig.windowInsertion.linux.pasteShortcut"
           :options="pasteShortcutOptions"
         />
       </FieldRow>

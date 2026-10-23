@@ -1,43 +1,43 @@
 export const AUTO_LANGUAGE_VALUE = 'auto'
-export const DEFAULT_LANGUAGE = 'ru_RU'
-const DEFAULT_UI_LANGUAGE = 'en_US'
+export const DEFAULT_LANGUAGE = 'ru-RU'
+const DEFAULT_UI_LANGUAGE = 'en-US'
 
 export const SUPPORTED_USER_LANGUAGE_OPTIONS = [
-  { id: 'ru_RU', name: 'Русский' },
-  { id: 'en_US', name: 'English (US)' },
-  { id: 'en_GB', name: 'English (UK)' },
-  { id: 'es_ES', name: 'Español (España)' },
-  { id: 'es_AR', name: 'Español (Argentina)' },
-  { id: 'pt_BR', name: 'Português (Brasil)' },
-  { id: 'pt_PT', name: 'Português (Portugal)' },
-  { id: 'de_DE', name: 'Deutsch' },
-  { id: 'fr_FR', name: 'Français' },
-  { id: 'it_IT', name: 'Italiano' },
-  { id: 'nl_NL', name: 'Nederlands' },
-  { id: 'pl_PL', name: 'Polski' },
-  { id: 'uk_UA', name: 'Українська' },
-  { id: 'tr_TR', name: 'Türkçe (Türkiye)' },
-  { id: 'ar_SA', name: 'العربية' },
-  { id: 'hi_IN', name: 'हिन्दी' },
-  { id: 'bn_BD', name: 'বাংলা' },
-  { id: 'ur_PK', name: 'اردو' },
-  { id: 'fa_IR', name: 'فارسی' },
-  { id: 'he_IL', name: 'עברית' },
-  { id: 'zh_CN', name: '中文 (简体)' },
-  { id: 'zh_TW', name: '中文 (繁體)' },
-  { id: 'ja_JP', name: '日本語' },
-  { id: 'ko_KR', name: '한국어' },
-  { id: 'vi_VN', name: 'Tiếng Việt' },
-  { id: 'th_TH', name: 'ไทย' },
-  { id: 'id_ID', name: 'Bahasa Indonesia' },
-  { id: 'ms_MY', name: 'Bahasa Melayu' },
+  { id: 'ru-RU', name: 'Русский' },
+  { id: 'en-US', name: 'English (US)' },
+  { id: 'en-GB', name: 'English (UK)' },
+  { id: 'es-ES', name: 'Español (España)' },
+  { id: 'es-AR', name: 'Español (Argentina)' },
+  { id: 'pt-BR', name: 'Português (Brasil)' },
+  { id: 'pt-PT', name: 'Português (Portugal)' },
+  { id: 'de-DE', name: 'Deutsch' },
+  { id: 'fr-FR', name: 'Français' },
+  { id: 'it-IT', name: 'Italiano' },
+  { id: 'nl-NL', name: 'Nederlands' },
+  { id: 'pl-PL', name: 'Polski' },
+  { id: 'uk-UA', name: 'Українська' },
+  { id: 'tr-TR', name: 'Türkçe (Türkiye)' },
+  { id: 'ar-SA', name: 'العربية' },
+  { id: 'hi-IN', name: 'हिन्दी' },
+  { id: 'bn-BD', name: 'বাংলা' },
+  { id: 'ur-PK', name: 'اردو' },
+  { id: 'fa-IR', name: 'فارسی' },
+  { id: 'he-IL', name: 'עברית' },
+  { id: 'zh-CN', name: '中文 (简体)' },
+  { id: 'zh-TW', name: '中文 (繁體)' },
+  { id: 'ja-JP', name: '日本語' },
+  { id: 'ko-KR', name: '한국어' },
+  { id: 'vi-VN', name: 'Tiếng Việt' },
+  { id: 'th-TH', name: 'ไทย' },
+  { id: 'id-ID', name: 'Bahasa Indonesia' },
+  { id: 'ms-MY', name: 'Bahasa Melayu' },
 ] as const
 
 export const SUPPORTED_UI_LANGUAGE_OPTIONS = [
-  { id: 'ru_RU', name: 'Русский' },
-  { id: 'en_US', name: 'English (US)' },
-  { id: 'es_AR', name: 'Español (Argentina)' },
-  { id: 'tr_TR', name: 'Türkçe (Türkiye)' },
+  { id: 'ru-RU', name: 'Русский' },
+  { id: 'en-US', name: 'English (US)' },
+  { id: 'es-AR', name: 'Español (Argentina)' },
+  { id: 'tr-TR', name: 'Türkçe (Türkiye)' },
 ] as const
 
 const SUPPORTED_USER_LANGUAGE_CODES: readonly string[] =
@@ -47,7 +47,7 @@ const SUPPORTED_UI_LANGUAGE_CODES: readonly string[] =
   SUPPORTED_UI_LANGUAGE_OPTIONS.map((option) => option.id)
 
 function splitLocale(locale: string) {
-  return locale.trim().replace(/-/g, '_').split('_').filter(Boolean)
+  return locale.trim().split(/[-_]/).filter(Boolean)
 }
 
 export function normalizeLocale(locale?: string | null): string {
@@ -65,7 +65,7 @@ export function normalizeLocale(locale?: string | null): string {
     return language.toLowerCase()
   }
 
-  return `${language.toLowerCase()}_${region.toUpperCase()}`
+  return `${language.toLowerCase()}-${region.toUpperCase()}`
 }
 
 function findSupportedLocale(
@@ -78,11 +78,11 @@ function findSupportedLocale(
     return normalized
   }
 
-  const [language] = normalized.split('_')
+  const [language] = normalized.split('-')
 
   return (
     supportedLocales.find((supportedLocale) =>
-      supportedLocale.startsWith(`${language}_`)
+      supportedLocale.startsWith(`${language}-`)
     ) || null
   )
 }
@@ -142,9 +142,9 @@ export function resolveUiLanguageFromUserLanguage(
     return normalizedUserLanguage
   }
 
-  const [language] = normalizedUserLanguage.split('_')
+  const [language] = normalizedUserLanguage.split('-')
   const partialMatch = SUPPORTED_UI_LANGUAGE_CODES.find((supportedLocale) =>
-    supportedLocale.startsWith(`${language}_`)
+    supportedLocale.startsWith(`${language}-`)
   )
 
   return partialMatch || fallbackLanguage
@@ -174,8 +174,9 @@ export function resolveUiLanguagePreference(
   )
 }
 
+/** Locales are BCP 47 tags already; this only normalizes the case */
 export function toHtmlLang(locale: string): string {
-  return normalizeLocale(locale).replace(/_/g, '-')
+  return normalizeLocale(locale)
 }
 
 export function getLanguageLabelKey(locale: string): string {

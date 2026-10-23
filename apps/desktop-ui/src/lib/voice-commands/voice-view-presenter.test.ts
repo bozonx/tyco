@@ -17,7 +17,7 @@ describe('voice-view-presenter', () => {
   it('identifies built-in translation commands and formats entry labels', () => {
     const translateCmd = {
       ...createCommand('core.translate', DEFAULT_TRANSLATION_ID),
-      toolConfig: { language: 'en_US' },
+      toolConfig: { language: 'en-US' },
     }
     const customCmd = {
       ...createCommand('script', 'custom-1'),

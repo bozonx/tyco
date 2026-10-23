@@ -24,9 +24,15 @@ function fixture() {
     client: { translate: translateClient },
     getUserConfig: () => ({
       ...DEFAULT_USER_CONFIG,
-      aiRules: {
-        ...DEFAULT_USER_CONFIG.aiRules,
-        translation: 'Use formal tone',
+      llm: {
+        ...DEFAULT_USER_CONFIG.llm,
+        tasks: {
+          ...DEFAULT_USER_CONFIG.llm.tasks,
+          translation: {
+            ...DEFAULT_USER_CONFIG.llm.tasks.translation,
+            rule: 'Use formal tone',
+          },
+        },
       },
     }),
     notifyEmptyText,

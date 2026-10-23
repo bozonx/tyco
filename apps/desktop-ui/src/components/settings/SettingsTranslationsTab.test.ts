@@ -1,4 +1,4 @@
-import type { UserConfig } from '@tyco/shared'
+import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
@@ -30,14 +30,8 @@ vi.mock('../../stores/secrets', () => ({
 describe('SettingsTranslationsTab.vue', () => {
   const createConfig = (
     overrides = {}
-  ): Pick<UserConfig, 'translation' | 'aiRules'> => ({
-    aiRules: {
-      chat: '',
-      correction: '',
-      translation: '',
-      translationQualityGate: '',
-      voiceCorrection: '',
-    },
+  ): Pick<UserConfig, 'translation' | 'llm'> => ({
+    llm: structuredClone(DEFAULT_USER_CONFIG.llm),
     translation: {
       viewMode: 'split',
       provider: 'deepl',
@@ -106,7 +100,7 @@ describe('SettingsTranslationsTab.vue', () => {
 
   it('shows the correction prompt only in the always mode', async () => {
     const userConfig = createConfig({ qualityGate: 'always' })
-    userConfig.aiRules.translationQualityGate = 'Keep it short'
+    userConfig.llm.tasks.translation.qualityGateRule = 'Keep it short'
     const wrapper = mount(SettingsTranslationsTab, {
       global: {
         provide: createTestSettingsContext(userConfig).provide,
@@ -134,7 +128,7 @@ describe('SettingsTranslationsTab.vue', () => {
     )
     expect(promptRow.exists()).toBe(true)
     await promptRow.find('textarea').setValue('Be formal')
-    expect(userConfig.aiRules.translationQualityGate).toBe('Be formal')
+    expect(userConfig.llm.tasks.translation.qualityGateRule).toBe('Be formal')
   })
 
   it('auto-detects deepl free vs pro endpoint when saving api key', async () => {

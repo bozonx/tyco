@@ -51,8 +51,13 @@ export function buildLlmCatalog(config: LlmConfig): Catalog | null {
   const usableIds = new Set(usable.map(({ model }) => model.id))
 
   const taskClasses = Object.fromEntries(
-    Object.entries(config.taskModelChains)
-      .map(([task, chain]) => [task, chain.filter((id) => usableIds.has(id))])
+    Object.entries(config.tasks)
+      .map(([task, settings]) => [
+        task,
+        ('modelChain' in settings ? settings.modelChain : []).filter(
+          (id: string) => usableIds.has(id)
+        ),
+      ])
       .filter(([, chain]) => chain.length > 0)
   )
 

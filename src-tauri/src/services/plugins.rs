@@ -388,7 +388,7 @@ mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
     fn manifest() -> PluginManifest {
-        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en_US", "locales":{"en_US":{},"ru_RU":{},"es_AR":{},"tr_TR":{}}})).unwrap()
+        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en-US", "locales":{"en-US":{},"ru-RU":{},"es-AR":{},"tr-TR":{}}})).unwrap()
     }
     #[test]
     fn only_saved_enabled_plugin_and_command_settings_grant_note_roots() {

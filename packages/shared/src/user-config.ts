@@ -26,8 +26,8 @@ export * from './user-config/commands-config'
 export const CONFIG_VERSION = configVersion
 
 /**
- * Keys pressed in the target window to paste the inserted text; written as the
- * hotkeys are
+ * Keys pressed in the target window to paste the inserted text on Linux;
+ * written as the hotkeys are
  */
 export const PASTE_SHORTCUTS = [
   'Ctrl+V',
@@ -70,9 +70,10 @@ export const DEFAULT_EXTERNAL_ACCESS: ExternalAccess = {
 
 export interface EditorHistoryConfig {
   storage: EditorHistoryStorage
+  /** The most entries kept; turning the history off is `storage: 'off'` */
   maxItems: number
-  /** Zero retains entries indefinitely. */
-  retentionDays: number
+  /** Absent: entries are kept indefinitely */
+  retentionDays?: number
   isSecretSanitizingEnabled: boolean
 }
 
@@ -82,8 +83,8 @@ export type ChatHistoryStorage = (typeof CHAT_HISTORY_STORAGES)[number]
 
 export interface ChatHistoryConfig {
   storage: ChatHistoryStorage
-  /** Zero retains chats indefinitely. */
-  retentionDays: number
+  /** Absent: chats are kept indefinitely */
+  retentionDays?: number
 }
 
 export interface ChatConfig {
@@ -131,19 +132,6 @@ export interface AiTaskConfig {
   rule: string
 }
 
-/**
- * Rules the user adds to the app instructions of each AI job; an AI task has
- * its own rule
- */
-export interface AiRulesConfig {
-  chat: string
-  correction: string
-  translation: string
-  /** The review pass of a translation, see `TranslationConfig.qualityGate` */
-  translationQualityGate: string
-  voiceCorrection: string
-}
-
 /** Complete, normalized configuration used throughout the application. */
 export interface UserConfig {
   configVersion: number
@@ -158,9 +146,10 @@ export interface UserConfig {
   quickWindow: { isHiddenOnBlur: boolean; isCorrectionPrefetchEnabled: boolean }
   hotkeys: HotkeysConfig
   externalAccess: ExternalAccess
+  /** How the text is typed into other windows, per platform */
   windowInsertion: {
-    pasteShortcut: PasteShortcut
     linux: {
+      pasteShortcut: PasteShortcut
       method: LinuxInsertionMethod
       /** Empty: found on `PATH` */
       xdotoolPath: string
@@ -172,7 +161,6 @@ export interface UserConfig {
   launcherPages: LauncherPageConfig[]
   commands: CommandConfig[]
   llm: LlmConfig
-  aiRules: AiRulesConfig
   /** The task library, in the order the settings list it */
   aiTasks: AiTaskConfig[]
   /** The AI task menu: task ids by shortcut key */

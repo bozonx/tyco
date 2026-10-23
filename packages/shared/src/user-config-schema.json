@@ -54,24 +54,18 @@
             },
             "maxItems": {
               "type": "integer",
-              "minimum": 0,
+              "minimum": 1,
               "maximum": 9007199254740991,
               "default": 1000
             },
             "retentionDays": {
               "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991,
-              "default": 30
+              "minimum": 1,
+              "maximum": 9007199254740991
             },
             "isSecretSanitizingEnabled": { "type": "boolean", "default": true }
           },
-          "required": [
-            "storage",
-            "maxItems",
-            "retentionDays",
-            "isSecretSanitizingEnabled"
-          ],
+          "required": ["storage", "maxItems", "isSecretSanitizingEnabled"],
           "additionalProperties": false,
           "default": {
             "storage": "disk",
@@ -138,13 +132,13 @@
     "windowInsertion": {
       "type": "object",
       "properties": {
-        "pasteShortcut": {
-          "enum": ["Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"],
-          "default": "Ctrl+V"
-        },
         "linux": {
           "type": "object",
           "properties": {
+            "pasteShortcut": {
+              "enum": ["Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"],
+              "default": "Ctrl+V"
+            },
             "method": {
               "enum": ["auto", "xdotool", "ydotool"],
               "default": "auto"
@@ -152,12 +146,17 @@
             "xdotoolPath": { "type": "string", "default": "" },
             "ydotoolPath": { "type": "string", "default": "" }
           },
-          "required": ["method", "xdotoolPath", "ydotoolPath"],
+          "required": ["pasteShortcut", "method", "xdotoolPath", "ydotoolPath"],
           "additionalProperties": false,
-          "default": { "method": "auto", "xdotoolPath": "", "ydotoolPath": "" }
+          "default": {
+            "pasteShortcut": "Ctrl+V",
+            "method": "auto",
+            "xdotoolPath": "",
+            "ydotoolPath": ""
+          }
         }
       },
-      "required": ["pasteShortcut", "linux"],
+      "required": ["linux"],
       "additionalProperties": false,
       "defaultPath": "windowInsertion"
     },
@@ -222,7 +221,7 @@
             ]
           },
           "additionalProperties": { "type": "string", "minLength": 1 },
-          "default": { "q": "en_US" }
+          "default": { "q": "en-US" }
         },
         "viewMode": { "enum": ["split", "result"], "default": "split" }
       },
@@ -333,7 +332,12 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "minLength": 1 },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+          },
           "slots": {
             "type": "object",
             "propertyNames": {
@@ -374,7 +378,13 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "default": "", "minLength": 1 },
+          "id": {
+            "type": "string",
+            "default": "",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+          },
           "name": { "type": "string", "default": "" },
           "description": { "type": "string", "default": "" },
           "phrases": {
@@ -456,7 +466,13 @@
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string", "default": "", "minLength": 1 },
+              "id": {
+                "type": "string",
+                "default": "",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+              },
               "providerId": { "type": "string", "default": "", "minLength": 1 },
               "providerModelId": { "type": "string", "default": "" },
               "name": { "type": "string", "default": "" },
@@ -472,7 +488,7 @@
                 "maximum": 9007199254740991
               },
               "canUseImages": { "type": "boolean", "default": false },
-              "canUseTools": { "type": "boolean", "default": false },
+              "canUseTools": { "type": "boolean" },
               "isThinkingEnabled": { "type": "boolean", "default": false }
             },
             "required": ["id", "providerId", "providerModelId"],
@@ -480,72 +496,103 @@
           },
           "default": []
         },
-        "taskModelChains": {
+        "tasks": {
           "type": "object",
           "properties": {
-            "translation": {
-              "type": "array",
-              "items": { "type": "string", "default": "" },
-              "default": [],
-              "uniqueItems": true
-            },
-            "voiceCorrection": {
-              "type": "array",
-              "items": { "type": "string", "default": "" },
-              "default": [],
-              "uniqueItems": true
+            "chat": {
+              "type": "object",
+              "properties": { "rule": { "type": "string", "default": "" } },
+              "required": ["rule"],
+              "additionalProperties": false,
+              "default": { "rule": "" }
             },
             "correction": {
-              "type": "array",
-              "items": { "type": "string", "default": "" },
-              "default": [],
-              "uniqueItems": true
+              "type": "object",
+              "properties": {
+                "modelChain": {
+                  "type": "array",
+                  "items": { "type": "string", "default": "" },
+                  "default": [],
+                  "uniqueItems": true
+                },
+                "rule": { "type": "string", "default": "" }
+              },
+              "required": ["modelChain", "rule"],
+              "additionalProperties": false,
+              "default": { "modelChain": [], "rule": "" }
+            },
+            "translation": {
+              "type": "object",
+              "properties": {
+                "modelChain": {
+                  "type": "array",
+                  "items": { "type": "string", "default": "" },
+                  "default": [],
+                  "uniqueItems": true
+                },
+                "rule": { "type": "string", "default": "" },
+                "qualityGateRule": { "type": "string", "default": "" }
+              },
+              "required": ["modelChain", "rule", "qualityGateRule"],
+              "additionalProperties": false,
+              "default": { "modelChain": [], "rule": "", "qualityGateRule": "" }
+            },
+            "voiceCorrection": {
+              "type": "object",
+              "properties": {
+                "modelChain": {
+                  "type": "array",
+                  "items": { "type": "string", "default": "" },
+                  "default": [],
+                  "uniqueItems": true
+                },
+                "rule": { "type": "string", "default": "" }
+              },
+              "required": ["modelChain", "rule"],
+              "additionalProperties": false,
+              "default": { "modelChain": [], "rule": "" }
             },
             "aiTask": {
-              "type": "array",
-              "items": { "type": "string", "default": "" },
-              "default": [],
-              "uniqueItems": true
+              "type": "object",
+              "properties": {
+                "modelChain": {
+                  "type": "array",
+                  "items": { "type": "string", "default": "" },
+                  "default": [],
+                  "uniqueItems": true
+                }
+              },
+              "required": ["modelChain"],
+              "additionalProperties": false,
+              "default": { "modelChain": [] }
             }
           },
           "required": [
+            "chat",
+            "correction",
             "translation",
             "voiceCorrection",
-            "correction",
             "aiTask"
           ],
           "additionalProperties": false
         }
       },
-      "required": ["providers", "models", "taskModelChains"],
+      "required": ["providers", "models", "tasks"],
       "additionalProperties": false,
       "defaultPath": "llm"
-    },
-    "aiRules": {
-      "type": "object",
-      "properties": {
-        "chat": { "type": "string", "default": "" },
-        "correction": { "type": "string", "default": "" },
-        "translation": { "type": "string", "default": "" },
-        "translationQualityGate": { "type": "string", "default": "" },
-        "voiceCorrection": { "type": "string", "default": "" }
-      },
-      "required": [
-        "chat",
-        "correction",
-        "translation",
-        "translationQualityGate",
-        "voiceCorrection"
-      ],
-      "additionalProperties": false,
-      "defaultPath": "aiRules"
     },
     "aiTasks": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "default": "", "minLength": 1 },
+          "id": {
+            "type": "string",
+            "default": "",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+          },
           "name": { "type": "string", "default": "" },
           "rule": { "type": "string", "default": "" }
         },
@@ -700,14 +747,13 @@
             "storage": { "enum": ["off", "disk"], "default": "disk" },
             "retentionDays": {
               "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991,
-              "default": 0
+              "minimum": 1,
+              "maximum": 9007199254740991
             }
           },
-          "required": ["storage", "retentionDays"],
+          "required": ["storage"],
           "additionalProperties": false,
-          "default": { "storage": "disk", "retentionDays": 0 }
+          "default": { "storage": "disk" }
         }
       },
       "required": ["imageQuality", "history"],
@@ -775,7 +821,6 @@
     "launcherPages",
     "commands",
     "llm",
-    "aiRules",
     "aiTasks",
     "aiTaskSlots",
     "markdown",

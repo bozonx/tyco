@@ -7,7 +7,7 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({
     t: (key: string, params?: Record<string, unknown>) =>
       params ? `${key}:${JSON.stringify(params)}` : key,
-    locale: { value: 'en_US' },
+    locale: { value: 'en-US' },
   }),
 }))
 

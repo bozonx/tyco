@@ -362,7 +362,7 @@ describe('createActionMenuModel', () => {
       mainActions: () => ({
         q: { type: 'aiTask', taskId: 'task-2' },
         w: { type: 'aiTask', taskId: 'gone' },
-        e: { type: 'translation', language: 'en_US' },
+        e: { type: 'translation', language: 'en-US' },
       }),
       aiTasks: () => [{ id: 'task-2', name: 'Shorten' }],
     })
@@ -371,15 +371,15 @@ describe('createActionMenuModel', () => {
     expect(slots.map((action) => action?.id)).toEqual([
       'aiTask:task-2',
       undefined,
-      'translation:en_US',
+      'translation:en-US',
     ])
     expect(slots[0]).toMatchObject({ name: 'Shorten' })
-    expect(slots[2]).toMatchObject({ labelKey: 'language.en_US' })
+    expect(slots[2]).toMatchObject({ labelKey: 'language.en-US' })
 
     await slots[0]?.action('some text')
     expect(deps.openAiTaskModal).toHaveBeenCalledWith('some text', 'task-2')
     await slots[2]?.action('some text')
-    expect(deps.openTranslateModal).toHaveBeenCalledWith('some text', 'en_US')
+    expect(deps.openTranslateModal).toHaveBeenCalledWith('some text', 'en-US')
 
     await slots[2]?.action('  ')
     expect(deps.openTranslateModal).toHaveBeenCalledTimes(1)

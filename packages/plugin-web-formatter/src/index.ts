@@ -10,7 +10,7 @@ export default function pluginIndex(): PluginDefinition {
     version: '0.1.0',
     apiVersion: 2,
     capabilities: ['editor'],
-    defaultLocale: 'en_US',
+    defaultLocale: 'en-US',
     locales,
     labelKey: 'local.label',
     descriptionKey: 'local.description',

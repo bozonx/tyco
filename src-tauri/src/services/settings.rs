@@ -257,7 +257,7 @@ mod tests {
     }
     fn changed(base: &Value) -> Value {
         let mut next = base.clone();
-        next["language"]["ui"] = serde_json::json!("ru_RU");
+        next["language"]["ui"] = serde_json::json!("ru-RU");
         next
     }
     #[test]
@@ -349,12 +349,12 @@ mod tests {
         let base = Value::clone(&state.user_config());
         save_with(&state, &Host::default(), changed(&base), base.clone()).unwrap();
         let mut stale = base.clone();
-        stale["aiRules"]["chat"] = serde_json::json!("Use concise answers");
+        stale["llm"]["tasks"]["chat"]["rule"] = serde_json::json!("Use concise answers");
         let saved = save_with(&state, &Host::default(), stale, base).unwrap();
         assert_eq!(saved.revision, 2);
-        assert_eq!(saved.settings.user_config["language"]["ui"], "ru_RU");
+        assert_eq!(saved.settings.user_config["language"]["ui"], "ru-RU");
         assert_eq!(
-            saved.settings.user_config["aiRules"]["chat"],
+            saved.settings.user_config["llm"]["tasks"]["chat"]["rule"],
             "Use concise answers"
         );
     }

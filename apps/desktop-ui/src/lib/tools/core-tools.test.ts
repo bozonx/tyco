@@ -101,9 +101,9 @@ describe('createCoreTools', () => {
       ok: true,
       content: 'fixed teh',
     })
-    expect(await run('core.translate', 'hola', { language: 'en_US' })).toEqual({
+    expect(await run('core.translate', 'hola', { language: 'en-US' })).toEqual({
       ok: true,
-      content: 'en_US: hola',
+      content: 'en-US: hola',
     })
     expect(await run('core.aiTask', 'text', { prompt: ' Shorter ' })).toEqual({
       ok: true,
@@ -125,7 +125,7 @@ describe('createCoreTools', () => {
       .get('core.translate')!
       .run({
         input: { text: 'hola' },
-        config: { language: 'en_US', sourceLanguage: 'es_AR' },
+        config: { language: 'en-US', sourceLanguage: 'es-AR' },
         source: 'menu',
         signal,
         isOutputRequested: true,
@@ -133,12 +133,12 @@ describe('createCoreTools', () => {
       })
     expect(result).toEqual({
       ok: true,
-      content: 'en_US: hola',
+      content: 'en-US: hola',
       meta: { provider: 'deepl' },
     })
-    expect(deps.translateTo).toHaveBeenCalledWith('en_US', 'hola', {
+    expect(deps.translateTo).toHaveBeenCalledWith('en-US', 'hola', {
       signal,
-      sourceLanguage: 'es_AR',
+      sourceLanguage: 'es-AR',
       onStage: onProgress,
     })
     expect(onProgress).toHaveBeenCalledWith('checking')

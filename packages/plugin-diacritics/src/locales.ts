@@ -1,5 +1,10 @@
-import en_US from './locales/en_US.json' with { type: 'json' }
-import es_AR from './locales/es_AR.json' with { type: 'json' }
-import ru_RU from './locales/ru_RU.json' with { type: 'json' }
-import tr_TR from './locales/tr_TR.json' with { type: 'json' }
-export const locales = { en_US, es_AR, ru_RU, tr_TR }
+import enUS from './locales/en-US.json' with { type: 'json' }
+import esAR from './locales/es-AR.json' with { type: 'json' }
+import ruRU from './locales/ru-RU.json' with { type: 'json' }
+import trTR from './locales/tr-TR.json' with { type: 'json' }
+export const locales = {
+  'en-US': enUS,
+  'es-AR': esAR,
+  'ru-RU': ruRU,
+  'tr-TR': trTR,
+}

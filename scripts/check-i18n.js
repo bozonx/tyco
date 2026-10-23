@@ -14,10 +14,10 @@ const desktopUiLocalesDir = path.join(desktopUiSrcDir, 'lib/i18n/locales')
 const packagesDir = path.join(root, 'packages')
 
 const REQUIRED_UI_LOCALES = [
-  'en_US.json',
-  'es_AR.json',
-  'ru_RU.json',
-  'tr_TR.json',
+  'en-US.json',
+  'es-AR.json',
+  'ru-RU.json',
+  'tr-TR.json',
 ]
 
 const localeDirectories = [
@@ -114,51 +114,51 @@ const DYNAMIC_KEYS = new Set([
   'voiceGrammar.translate',
   'voiceGrammar.actions.askInChat',
   ...[
-    'en_US',
-    'en_GB',
-    'es_AR',
-    'es_ES',
-    'ru_RU',
-    'tr_TR',
-    'de_DE',
-    'fr_FR',
-    'it_IT',
-    'pt_BR',
-    'pt_PT',
-    'uk_UA',
-    'zh_CN',
-    'ja_JP',
+    'en-US',
+    'en-GB',
+    'es-AR',
+    'es-ES',
+    'ru-RU',
+    'tr-TR',
+    'de-DE',
+    'fr-FR',
+    'it-IT',
+    'pt-BR',
+    'pt-PT',
+    'uk-UA',
+    'zh-CN',
+    'ja-JP',
   ].map((id) => `voiceGrammar.languages.${id}`),
   ...[
     'auto',
-    'ru_RU',
-    'en_US',
-    'en_GB',
-    'es_ES',
-    'es_AR',
-    'pt_BR',
-    'pt_PT',
-    'de_DE',
-    'fr_FR',
-    'it_IT',
-    'nl_NL',
-    'pl_PL',
-    'uk_UA',
-    'tr_TR',
-    'ar_SA',
-    'hi_IN',
-    'bn_BD',
-    'ur_PK',
-    'fa_IR',
-    'he_IL',
-    'zh_CN',
-    'zh_TW',
-    'ja_JP',
-    'ko_KR',
-    'vi_VN',
-    'th_TH',
-    'id_ID',
-    'ms_MY',
+    'ru-RU',
+    'en-US',
+    'en-GB',
+    'es-ES',
+    'es-AR',
+    'pt-BR',
+    'pt-PT',
+    'de-DE',
+    'fr-FR',
+    'it-IT',
+    'nl-NL',
+    'pl-PL',
+    'uk-UA',
+    'tr-TR',
+    'ar-SA',
+    'hi-IN',
+    'bn-BD',
+    'ur-PK',
+    'fa-IR',
+    'he-IL',
+    'zh-CN',
+    'zh-TW',
+    'ja-JP',
+    'ko-KR',
+    'vi-VN',
+    'th-TH',
+    'id-ID',
+    'ms-MY',
   ].map((code) => `language.${code}`),
   ...['correction', 'command'].map((action) => `selection.working.${action}`),
   ...['correction', 'command'].map((action) => `selection.failed.${action}`),
@@ -238,7 +238,7 @@ for (const localesDir of localeDirectories) {
   const localeFiles = fs
     .readdirSync(localesDir)
     .filter((file) => file.endsWith('.json'))
-  const baseLocale = 'en_US.json'
+  const baseLocale = 'en-US.json'
   if (!localeFiles.includes(baseLocale)) {
     console.error(`❌ Base locale ${baseLocale} not found in ${relDir}.`)
     process.exit(1)
@@ -327,7 +327,7 @@ for (const localesDir of localeDirectories) {
 
 // 3. Scan desktop-ui code for missing and unused keys
 const desktopUiBaseData = JSON.parse(
-  fs.readFileSync(path.join(desktopUiLocalesDir, 'en_US.json'), 'utf8')
+  fs.readFileSync(path.join(desktopUiLocalesDir, 'en-US.json'), 'utf8')
 )
 const desktopUiBaseKeys = getAllKeys(desktopUiBaseData).sort()
 const desktopUiKeySet = new Set(desktopUiBaseKeys)
@@ -402,7 +402,7 @@ for (const pluginDir of pluginDirs) {
   const pluginLocalesDir = path.join(pluginDir, 'src/locales')
   if (!fs.existsSync(pluginLocalesDir)) continue
 
-  const pluginEnPath = path.join(pluginLocalesDir, 'en_US.json')
+  const pluginEnPath = path.join(pluginLocalesDir, 'en-US.json')
   const pluginData = JSON.parse(fs.readFileSync(pluginEnPath, 'utf8'))
   const pluginKeys = Object.keys(pluginData)
   const pluginKeySet = new Set(pluginKeys)

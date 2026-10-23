@@ -7,24 +7,12 @@ import {
 } from './editor-history-storage'
 
 describe('isEditorHistoryOff', () => {
-  it('is off by the storage or by a zero limit', () => {
+  it('is off by the storage', () => {
     expect(
       isEditorHistoryOff({
         editor: {
           ...DEFAULT_USER_CONFIG.editor,
           history: { ...DEFAULT_USER_CONFIG.editor.history, storage: 'off' },
-        },
-      })
-    ).toBe(true)
-    expect(
-      isEditorHistoryOff({
-        editor: {
-          ...DEFAULT_USER_CONFIG.editor,
-          history: {
-            ...DEFAULT_USER_CONFIG.editor.history,
-            storage: 'disk',
-            maxItems: 0,
-          },
         },
       })
     ).toBe(true)

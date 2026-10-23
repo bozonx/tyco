@@ -64,7 +64,9 @@
         :info="t('settings.translationCorrectionPromptInfo')"
         vertical
       >
-        <FieldTextArea v-model="userConfig.aiRules.translationQualityGate" />
+        <FieldTextArea
+          v-model="userConfig.llm.tasks.translation.qualityGateRule"
+        />
       </FieldRow>
     </SettingsSection>
 
@@ -73,7 +75,7 @@
       :title="t('settings.translationRules')"
       :info="t('settings.translationRulesInfo')"
     >
-      <FieldTextArea v-model="userConfig.aiRules.translation" />
+      <FieldTextArea v-model="userConfig.llm.tasks.translation.rule" />
     </SettingsSection>
 
     <SettingsSection
@@ -136,7 +138,7 @@ const {
 })
 // An empty prompt starts collapsed each time the page opens.
 const qualityGatePromptOpen = ref(
-  Boolean(userConfig.value.aiRules.translationQualityGate.trim())
+  Boolean(userConfig.value.llm.tasks.translation.qualityGateRule.trim())
 )
 const providerOptions = computed(() => [
   { id: 'deepl', name: t('settings.translationProviderDeepl') },

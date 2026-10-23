@@ -26,7 +26,7 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     return await aiRequest(LlmInstructionKind.VOICE_CORRECTION, text, {
       instructions:
         deps.getAppConfig().aiInstructions[LlmInstructionKind.VOICE_CORRECTION],
-      rules: userConfig.aiRules?.voiceCorrection,
+      rules: userConfig.llm?.tasks.voiceCorrection.rule,
       signal,
     })
   }
@@ -99,7 +99,7 @@ export function createLlmActions(deps: LlmActionsDependencies) {
       ...options,
       instructions:
         deps.getAppConfig().aiInstructions[LlmInstructionKind.CORRECTION],
-      rules: userConfig.aiRules?.correction,
+      rules: userConfig.llm?.tasks.correction.rule,
     })
   }
 

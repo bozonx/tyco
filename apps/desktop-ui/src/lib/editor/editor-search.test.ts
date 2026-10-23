@@ -46,7 +46,7 @@ const press = (key: string, keyCode: number, extra: KeyboardEventInit = {}) => {
 }
 afterEach(() => {
   view?.destroy()
-  setI18nLocale('en_US')
+  setI18nLocale('en-US')
 })
 
 describe('editor search and replace', () => {
@@ -189,7 +189,7 @@ describe('editor search and replace', () => {
     expect(view.state.doc.toString()).toBe('cat Cat cat\nscatter')
   })
 
-  it.each(['en_US', 'ru_RU', 'es_AR', 'tr_TR'] as const)(
+  it.each(['en-US', 'ru-RU', 'es-AR', 'tr-TR'] as const)(
     'localizes the panel in %s and preserves its query when language changes',
     (locale) => {
       mount()

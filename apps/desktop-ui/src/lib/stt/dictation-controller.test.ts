@@ -9,7 +9,7 @@ import { createLiveTranscriptState } from './live-transcript'
 function setup(stt: Partial<SttConfig> = {}) {
   const config = structuredClone(DEFAULT_USER_CONFIG)
   config.stt = { ...config.stt, ...stt }
-  config.language.user = 'es_AR'
+  config.language.user = 'es-AR'
   const secrets: SecretsStatus = {
     'stt.deepgram': { origins: [], available: true },
   }
@@ -94,7 +94,7 @@ describe('dictation controller', () => {
     const { deps, handlers, controller } = setup({
       provider: 'sherpaOnnx',
       providers: {
-        deepgram: { modelId: 'nova-3', language: 'tr_TR' },
+        deepgram: { modelId: 'nova-3', language: 'tr-TR' },
         sherpaOnnx: { baseUrl: 'ws://speech.lan:6006' },
       },
     })
@@ -110,7 +110,7 @@ describe('dictation controller', () => {
     const { config, deps, handlers, controller } = setup()
     expect(controller.shouldFormatRecognizedText()).toBe(false)
     config.stt.isLlmFormattingEnabled = true
-    config.stt.providers.deepgram.language = 'en_US'
+    config.stt.providers.deepgram.language = 'en-US'
     expect(controller.shouldFormatRecognizedText()).toBe(true)
     await controller.startDictation(handlers)
     expect(deps.dictation.start).toHaveBeenCalledWith(

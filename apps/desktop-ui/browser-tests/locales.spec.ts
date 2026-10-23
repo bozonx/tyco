@@ -1,11 +1,11 @@
-import en_US from '../src/lib/i18n/locales/en_US.json' with { type: 'json' }
-import es_AR from '../src/lib/i18n/locales/es_AR.json' with { type: 'json' }
-import ru_RU from '../src/lib/i18n/locales/ru_RU.json' with { type: 'json' }
-import tr_TR from '../src/lib/i18n/locales/tr_TR.json' with { type: 'json' }
+import enUS from '../src/lib/i18n/locales/en-US.json' with { type: 'json' }
+import esAR from '../src/lib/i18n/locales/es-AR.json' with { type: 'json' }
+import ruRU from '../src/lib/i18n/locales/ru-RU.json' with { type: 'json' }
+import trTR from '../src/lib/i18n/locales/tr-TR.json' with { type: 'json' }
 
 import { expect, test } from './support/fixtures'
 
-const LOCALES = { en_US, es_AR, ru_RU, tr_TR }
+const LOCALES = { 'en-US': enUS, 'es-AR': esAR, 'ru-RU': ruRU, 'tr-TR': trTR }
 
 // Missing keys fail through the vue-i18n warnings the fixture collects.
 for (const [locale, messages] of Object.entries(LOCALES)) {

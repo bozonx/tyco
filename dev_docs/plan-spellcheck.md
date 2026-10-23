@@ -34,11 +34,11 @@
 
 ```
 <app_cache_dir>/dictionaries/
-  ru_RU/
-    ru_RU.aff
-    ru_RU.dic
+  ru-RU/
+    ru-RU.aff
+    ru-RU.dic
     metadata.json     { language, files: [{name, size, sha256}], complete: bool, source_url }
-  en_US/
+  en-US/
     ...
 ```
 
@@ -53,7 +53,7 @@
 ```ts
 spellcheck: {
   enabled: boolean            // по умолчанию true
-  language: string | 'auto'   // коды из ui/src/lib/locale/language.ts, напр. 'ru_RU'
+  language: string | 'auto'   // коды из ui/src/lib/locale/language.ts, напр. 'ru-RU'
   userWords: string[]         // «Добавить в словарь» — постоянно
 }
 ```
@@ -68,7 +68,7 @@ spellcheck: {
 файлов моделей в `llm.rs`, чтобы не тянуть индекс из сети. Маппинг «код языка → путь словаря»
 держать в `packages/shared`, чтобы его видели и фронт, и настройки.
 
-Языки первой очереди: `ru_RU`, `en_US`, `en_GB`, `de_DE`, `fr_FR`, `es_ES`, `uk_UA`.
+Языки первой очереди: `ru-RU`, `en-US`, `en-GB`, `de-DE`, `fr-FR`, `es-ES`, `uk-UA`.
 Остальные из `SUPPORTED_USER_LANGUAGE_OPTIONS` — по мере необходимости; для языков без словаря
 спеллчек просто выключается, без ошибки.
 

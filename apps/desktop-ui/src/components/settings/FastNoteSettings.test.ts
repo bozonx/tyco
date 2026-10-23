@@ -9,10 +9,10 @@ import FastNoteSettings from './FastNoteSettings.vue'
 import FastNotePreview from './FastNotePreview.vue'
 import FastNoteDirectoryPicker from './FastNoteDirectoryPicker.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
-import en from '../../lib/i18n/locales/en_US.json'
-import ru from '../../lib/i18n/locales/ru_RU.json'
-import es from '../../lib/i18n/locales/es_AR.json'
-import tr from '../../lib/i18n/locales/tr_TR.json'
+import en from '../../lib/i18n/locales/en-US.json'
+import ru from '../../lib/i18n/locales/ru-RU.json'
+import es from '../../lib/i18n/locales/es-AR.json'
+import tr from '../../lib/i18n/locales/tr-TR.json'
 
 const { pickDirectory } = vi.hoisted(() => ({ pickDirectory: vi.fn() }))
 vi.mock('../../stores/ipc', () => ({

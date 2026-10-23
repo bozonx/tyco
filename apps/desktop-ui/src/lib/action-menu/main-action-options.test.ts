@@ -119,14 +119,14 @@ describe('mainActionOptionId', () => {
     expect(mainActionOptionId({ type: 'aiTask', taskId: 'task-1' })).toBe(
       'aiTask:task-1'
     )
-    expect(mainActionOptionId({ type: 'translation', language: 'en_US' })).toBe(
-      'translation:en_US'
+    expect(mainActionOptionId({ type: 'translation', language: 'en-US' })).toBe(
+      'translation:en-US'
     )
   })
 })
 
 describe('duplicatesDirectChoice', () => {
-  const direct = { languages: ['en_US'], rules: [' Be brief '] }
+  const direct = { languages: ['en-US'], rules: [' Be brief '] }
   const command = (toolId: string, toolConfig: Record<string, unknown>) => ({
     ...createCommand(toolId),
     toolConfig,
@@ -135,7 +135,7 @@ describe('duplicatesDirectChoice', () => {
   it('finds commands that do what a language or a task does', () => {
     expect(
       duplicatesDirectChoice(
-        command('core.translate', { language: 'en_US' }),
+        command('core.translate', { language: 'en-US' }),
         direct
       )
     ).toBe(true)
@@ -150,7 +150,7 @@ describe('duplicatesDirectChoice', () => {
   it('keeps the commands that do something else', () => {
     expect(
       duplicatesDirectChoice(
-        command('core.translate', { language: 'de_DE' }),
+        command('core.translate', { language: 'de-DE' }),
         direct
       )
     ).toBe(false)

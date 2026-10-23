@@ -8,7 +8,7 @@ import {
 
 function fixture(isQuickWindow = false) {
   const state = ref(structuredClone(DEFAULT_DESKTOP_VIEW_STATE))
-  const locale = ref('en_US')
+  const locale = ref('en-US')
   const route = ref('/editor')
   const deps: AppStateSyncDependencies = {
     isQuickWindow,
@@ -36,17 +36,17 @@ describe('application state synchronization', () => {
     const f = fixture()
     vi.mocked(f.deps.syncDocumentLanguage).mockClear()
     f.state.value.userConfig.appearance.theme = 'dark'
-    f.state.value.userConfig.aiRules.chat = 'Updated rules'
+    f.state.value.userConfig.llm.tasks.chat.rule = 'Updated rules'
     await nextTick()
     expect(f.deps.syncDocumentLanguage).not.toHaveBeenCalled()
-    f.state.value.userConfig.language.ui = 'tr_TR'
+    f.state.value.userConfig.language.ui = 'tr-TR'
     await nextTick()
     expect(f.deps.syncLocale).toHaveBeenLastCalledWith(
-      'tr_TR',
+      'tr-TR',
       f.state.value.userConfig.language.user
     )
     expect(f.deps.syncDocumentLanguage).toHaveBeenCalledOnce()
-    f.locale.value = 'tr_TR'
+    f.locale.value = 'tr-TR'
     await nextTick()
     expect(f.deps.updateTitle).toHaveBeenCalledTimes(2)
     f.sync.stop()
@@ -111,7 +111,7 @@ describe('application state synchronization', () => {
       isEnabled: false,
       settings: {},
     }
-    f.state.value.userConfig.language.ui = 'es_AR'
+    f.state.value.userConfig.language.ui = 'es-AR'
     await nextTick()
     expect(f.deps.reloadPlugins).toHaveBeenCalledOnce()
     expect(f.deps.syncLocale).toHaveBeenCalledOnce()

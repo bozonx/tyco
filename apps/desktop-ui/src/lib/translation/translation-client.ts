@@ -378,7 +378,7 @@ function restoreTranslationChunkWhitespace(
 }
 
 function normalizeLanguage(language: string): string {
-  return language.trim().replaceAll('_', '-')
+  return language.trim()
 }
 
 function ensureTranslationOutput(result: string, source: string): void {

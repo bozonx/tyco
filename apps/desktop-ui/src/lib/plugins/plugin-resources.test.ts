@@ -22,14 +22,14 @@ describe('plugin resources', () => {
     resources.register('First', locales('First'))
     resources.register('Second', locales('Second'))
     expect(host.setMessages).toHaveBeenCalledWith(
-      'ru_RU',
+      'ru-RU',
       pluginNamespace('First'),
-      { label: 'First:ru_RU' }
+      { label: 'First:ru-RU' }
     )
     resources.remove('First')
     expect(host.removeMessages).toHaveBeenCalledTimes(4)
     expect(host.removeMessages).not.toHaveBeenCalledWith(
-      'en_US',
+      'en-US',
       pluginNamespace('Second')
     )
   })
@@ -39,7 +39,7 @@ describe('plugin resources', () => {
     const resources = createPluginResources(host, SUPPORTED_PLUGIN_LOCALES)
     resources.register('First', locales('First'))
     expect(() =>
-      resources.register('First', { en_US: { label: 'First' } })
+      resources.register('First', { 'en-US': { label: 'First' } })
     ).toThrow('Missing plugin locale')
     expect(host.removeMessages).not.toHaveBeenCalled()
   })

@@ -19,11 +19,11 @@ afterEach(() => {
   view?.destroy()
   vi.unstubAllGlobals()
   vi.useRealTimers()
-  setI18nLocale('en_US')
+  setI18nLocale('en-US')
 })
 
 describe('code block clipboard feedback', () => {
-  it.each(['en_US', 'ru_RU', 'es_AR', 'tr_TR'] as const)(
+  it.each(['en-US', 'ru-RU', 'es-AR', 'tr-TR'] as const)(
     'localizes the copy button in %s',
     (locale) => {
       setI18nLocale(locale)

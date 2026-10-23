@@ -243,7 +243,6 @@ export function normalizeConfigValue<T>(path: string, value: unknown): T {
  */
 export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
   const llm = repair(value, schemaAt('llm')) as UserConfig['llm']
-  for (const model of llm.models) model.id = model.id.trim()
   const builtinIds: readonly string[] = BUILTIN_LLM_PROVIDERS
   llm.providers = llm.providers.filter((provider) =>
     builtinIds.includes(provider.id)
@@ -271,20 +270,19 @@ export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
   )
   const models = new Set(llm.models.map((model) => model.id))
   for (const task of LLM_TASKS)
-    llm.taskModelChains[task] = llm.taskModelChains[task].filter((id) =>
+    llm.tasks[task].modelChain = llm.tasks[task].modelChain.filter((id) =>
       models.has(id)
     )
   return llm
 }
 
 /**
- * The command library: trimmed ids, each once, with the tool settings of the
- * built-in tools repaired
+ * The command library: each id once, with the tool settings of the built-in
+ * tools repaired
  */
 export function normalizeCommands(value: unknown): UserConfig['commands'] {
   const commands = repair(value, schemaAt('commands')) as UserConfig['commands']
   for (const command of commands) {
-    command.id = command.id.trim()
     command.toolId = command.toolId.trim()
     const toolSchema =
       command.toolId === 'script'

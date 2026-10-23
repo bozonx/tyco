@@ -24,7 +24,7 @@ describe('LLM application actions', () => {
   it('reads the current rules on each correction and preserves cancellation options', async () => {
     const f = fixture()
     const signal = new AbortController().signal
-    f.userConfig.aiRules.correction = 'First rules'
+    f.userConfig.llm.tasks.correction.rule = 'First rules'
     await f.actions.correctText('Sample', { signal, notifyError: false })
     expect(f.aiRequest).toHaveBeenLastCalledWith('correction', 'Sample', {
       instructions: APP_CONFIG.aiInstructions.correction,
@@ -32,7 +32,7 @@ describe('LLM application actions', () => {
       signal,
       notifyError: false,
     })
-    f.userConfig.aiRules.correction = 'Updated rules'
+    f.userConfig.llm.tasks.correction.rule = 'Updated rules'
     await f.actions.correctText('Next')
     expect(f.aiRequest).toHaveBeenLastCalledWith(
       'correction',
@@ -43,7 +43,7 @@ describe('LLM application actions', () => {
 
   it('runs voice correction with its own instructions and rules', async () => {
     const f = fixture()
-    f.userConfig.aiRules.voiceCorrection = 'Voice rules'
+    f.userConfig.llm.tasks.voiceCorrection.rule = 'Voice rules'
     const signal = new AbortController().signal
     expect(await f.actions.voiceCorrection('Transcript', signal)).toBe('Answer')
     expect(f.aiRequest).toHaveBeenCalledWith('voiceCorrection', 'Transcript', {

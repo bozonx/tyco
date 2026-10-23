@@ -33,7 +33,7 @@ describe('normalizeMainActions', () => {
       w: { type: 'command', commandId: ' ' },
       e: { type: 'aiTask', taskId: 'task-1' },
       r: { type: 'aiTask', taskId: '' },
-      t: { type: 'translation', language: 'en_US' },
+      t: { type: 'translation', language: 'en-US' },
       a: { type: 'translation' },
     }
     expect(normalizeMainActions(raw).slice(0, 6)).toEqual([
@@ -41,7 +41,7 @@ describe('normalizeMainActions', () => {
       null,
       { type: 'aiTask', taskId: 'task-1' },
       null,
-      { type: 'translation', language: 'en_US' },
+      { type: 'translation', language: 'en-US' },
       null,
     ])
   })

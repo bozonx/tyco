@@ -19,7 +19,7 @@ vi.mock('../stores/desktop', () => ({
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
         },
       },
-      language: { ui: 'auto', user: 'en_US' },
+      language: { ui: 'auto', user: 'en-US' },
     },
   }),
 }))
@@ -51,7 +51,7 @@ describe('dictation credential preflight', () => {
     mocks.provider = 'deepgram'
     mocks.secrets = {}
     mocks.refreshSecrets.mockResolvedValue(undefined)
-    setI18nLocale('en_US')
+    setI18nLocale('en-US')
   })
 
   it('explains how to configure a missing key before starting capture', async () => {

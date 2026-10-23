@@ -66,7 +66,7 @@
       >
         <div class="flex flex-col gap-2 w-full">
           <div
-            v-for="(modelId, index) in llm.taskModelChains[task]"
+            v-for="(modelId, index) in llm.tasks[task].modelChain"
             :key="`${task}-${index}`"
             class="assignment-row"
           >
@@ -82,7 +82,7 @@
               :model-value="modelId"
               :options="modelOptions"
               @update:model-value="
-                llm.taskModelChains[task][index] = String($event)
+                llm.tasks[task].modelChain[index] = String($event)
               "
             />
             <IconButton
@@ -90,7 +90,7 @@
               variant="ghost"
               icon="mdi:close"
               :label="t('settings.removeFallback')"
-              @click="llm.taskModelChains[task].splice(index, 1)"
+              @click="llm.tasks[task].modelChain.splice(index, 1)"
             />
           </div>
           <div>
@@ -102,7 +102,7 @@
               @click="addFallback(task)"
             >
               {{
-                llm.taskModelChains[task].length
+                llm.tasks[task].modelChain.length
                   ? t('settings.addFallback')
                   : t('settings.addPrimaryModel')
               }}
@@ -114,10 +114,10 @@
 
     <SettingsSection :title="t('settings.aiRules')">
       <FieldRow :label="t('settings.chatRules')" vertical>
-        <FieldTextArea v-model="aiRules.chat" />
+        <FieldTextArea v-model="llm.tasks.chat.rule" />
       </FieldRow>
       <FieldRow :label="t('settings.textCorrection')" vertical>
-        <FieldTextArea v-model="aiRules.correction" />
+        <FieldTextArea v-model="llm.tasks.correction.rule" />
       </FieldRow>
     </SettingsSection>
     <ConfirmModal
@@ -162,7 +162,6 @@ import {
 const { t } = useI18n()
 const { draft: userConfig, operations } = useSettingsContext()
 const llm = computed(() => userConfig.value.llm)
-const aiRules = computed(() => userConfig.value.aiRules)
 const { toastKey, toastText } = useToast()
 const secretsStore = useSecretsStore()
 const checkLlmConnection = createLlmConnectionChecker({

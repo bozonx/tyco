@@ -60,7 +60,7 @@
         :label="t('settings.sttLlmRules')"
         vertical
       >
-        <FieldTextArea v-model="userConfig.aiRules.voiceCorrection" />
+        <FieldTextArea v-model="userConfig.llm.tasks.voiceCorrection.rule" />
       </FieldRow>
     </SettingsSection>
   </div>

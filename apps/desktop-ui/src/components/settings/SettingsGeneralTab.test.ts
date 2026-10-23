@@ -21,10 +21,14 @@ describe('SettingsGeneralTab.vue', () => {
         motion: 'auto',
         uiScalePercent: 100,
       },
-      language: { ui: AUTO_LANGUAGE_VALUE, user: 'en_US' },
+      language: { ui: AUTO_LANGUAGE_VALUE, user: 'en-US' },
       windowInsertion: {
-        pasteShortcut: 'Ctrl+V',
-        linux: { method: 'xdotool', xdotoolPath: '', ydotoolPath: '' },
+        linux: {
+          pasteShortcut: 'Ctrl+V',
+          method: 'xdotool',
+          xdotoolPath: '',
+          ydotoolPath: '',
+        },
       },
       ...overrides,
     }) as UserConfig
@@ -112,8 +116,12 @@ describe('SettingsGeneralTab.vue', () => {
   it('shows the path of the tool of the chosen insertion method', async () => {
     const config = createConfig({
       windowInsertion: {
-        pasteShortcut: 'Ctrl+V',
-        linux: { method: 'xdotool', xdotoolPath: '', ydotoolPath: '' },
+        linux: {
+          pasteShortcut: 'Ctrl+V',
+          method: 'xdotool',
+          xdotoolPath: '',
+          ydotoolPath: '',
+        },
       },
     })
     const wrapper = mountTab(config)

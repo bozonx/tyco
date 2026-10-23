@@ -13,10 +13,10 @@ function fail(message: string): never {
 }
 
 export const SUPPORTED_PLUGIN_LOCALES = [
-  'en_US',
-  'ru_RU',
-  'es_AR',
-  'tr_TR',
+  'en-US',
+  'ru-RU',
+  'es-AR',
+  'tr-TR',
 ] as const
 
 /** Requires identical dictionary structure and interpolation arguments. */
@@ -56,9 +56,9 @@ export function validatePluginLocales(
   for (const locale of SUPPORTED_PLUGIN_LOCALES) {
     if (!record(value[locale])) fail(`Missing plugin locale: ${locale}`)
   }
-  const expected = JSON.stringify(signature(value.en_US))
+  const expected = JSON.stringify(signature(value['en-US']))
   for (const [locale, dictionary] of Object.entries(value)) {
-    if (!/^[a-z]{2}_[A-Z]{2}$/.test(locale)) fail('Invalid plugin locale')
+    if (!/^[a-z]{2}-[A-Z]{2}$/.test(locale)) fail('Invalid plugin locale')
     if (JSON.stringify(signature(dictionary)) !== expected)
       fail(`Plugin locale structure or placeholders differ: ${locale}`)
   }
@@ -114,7 +114,7 @@ export function validatePluginManifest(
       fail('Invalid plugin text')
   if (
     typeof value.defaultLocale !== 'string' ||
-    !/^[a-z]{2}_[A-Z]{2}$/.test(value.defaultLocale) ||
+    !/^[a-z]{2}-[A-Z]{2}$/.test(value.defaultLocale) ||
     !record(value.locales) ||
     !record(value.locales[value.defaultLocale])
   )

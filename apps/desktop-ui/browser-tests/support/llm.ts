@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import type { DesktopChannel } from '@tyco/shared'
+import { LLM_TASKS, type DesktopChannel } from '@tyco/shared'
 
 import type { FakeDesktop } from './fake-desktop'
 
@@ -19,10 +19,8 @@ export function installLlm(desktop: FakeDesktop) {
       name: 'Browser model',
     },
   ]
-  for (const task of Object.keys(desktop.userConfig.llm.taskModelChains)) {
-    desktop.userConfig.llm.taskModelChains[
-      task as keyof typeof desktop.userConfig.llm.taskModelChains
-    ] = ['browser-model']
+  for (const task of LLM_TASKS) {
+    desktop.userConfig.llm.tasks[task].modelChain = ['browser-model']
   }
   desktop.sessionState.lastChatModelId = 'browser-model'
   const requests: Array<{

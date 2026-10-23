@@ -38,14 +38,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -110,28 +114,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -152,10 +154,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -203,14 +202,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -275,28 +278,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -317,10 +318,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -371,14 +369,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -452,28 +454,26 @@
             "maxOutputTokens": 1024
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["missing", "ollama-qwen", "ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["missing", "ollama-qwen", "ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -494,10 +494,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -545,14 +542,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -617,28 +618,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -659,10 +658,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -713,14 +709,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -787,28 +787,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -829,10 +827,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -880,14 +875,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -945,28 +944,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -987,10 +984,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -1041,8 +1035,12 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
@@ -1050,7 +1048,7 @@
         "glossary": [
           { "term": "word", "use": "term", "doNotTranslate": "yes" }
         ],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -1115,28 +1113,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1162,10 +1158,7 @@
           "settings": { "nested": { "count": 3 } }
         }
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -1213,8 +1206,12 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
@@ -1222,7 +1219,7 @@
         "glossary": [
           { "term": "word", "use": "term", "doNotTranslate": false }
         ],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -1287,28 +1284,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1334,10 +1329,7 @@
           "settings": { "nested": { "count": 3 } }
         }
       },
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -1388,14 +1380,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -1455,28 +1451,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1497,10 +1491,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -1548,14 +1539,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -1613,28 +1608,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1655,10 +1648,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -1709,14 +1699,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -1779,28 +1773,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1821,10 +1813,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -1872,14 +1861,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -1938,28 +1931,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1980,10 +1971,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -2035,14 +2023,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -2107,28 +2099,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2149,10 +2139,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -2200,14 +2187,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US" },
+        "targetLanguages": { "q": "en-US" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -2272,28 +2263,26 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         {
-          "id": "deepEdit",
+          "id": "deep-edit",
           "name": "deepEdit",
           "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
         }
       ],
-      "aiTaskSlots": { "q": "deepEdit" },
+      "aiTaskSlots": { "q": "deep-edit" },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2314,10 +2303,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -2369,17 +2355,21 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
         "targetLanguages": {
-          "q": "en_US",
-          "w": "ru_RU",
-          "e": "en_US",
+          "q": "en-US",
+          "w": "ru-RU",
+          "e": "en-US",
           "r": ""
         },
         "viewMode": "split",
@@ -2448,19 +2438,17 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [
         { "id": "a", "name": "A", "rule": "x" },
@@ -2488,10 +2476,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {
@@ -2540,14 +2525,18 @@
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
-        "pasteShortcut": "Ctrl+V",
-        "linux": { "method": "xdotool", "xdotoolPath": "", "ydotoolPath": "" }
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
       },
       "translation": {
         "provider": "llm",
         "qualityGate": "off",
         "glossary": [],
-        "targetLanguages": { "q": "en_US", "w": "ru_RU" },
+        "targetLanguages": { "q": "en-US", "w": "ru-RU" },
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
@@ -2607,19 +2596,17 @@
             "canUseImages": true
           }
         ],
-        "taskModelChains": {
-          "voiceCorrection": ["ollama-qwen"],
-          "correction": ["ollama-qwen"],
-          "translation": ["ollama-qwen"],
-          "aiTask": ["ollama-qwen"]
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
         }
-      },
-      "aiRules": {
-        "chat": "",
-        "correction": "",
-        "voiceCorrection": "",
-        "translation": "",
-        "translationQualityGate": ""
       },
       "aiTasks": [{ "id": "a", "name": "A", "rule": "x" }],
       "aiTaskSlots": { "q": "a" },
@@ -2643,10 +2630,7 @@
         }
       },
       "plugins": {},
-      "chat": {
-        "imageQuality": "balanced",
-        "history": { "storage": "disk", "retentionDays": 0 }
-      },
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
       "stt": {
         "provider": "deepgram",
         "providers": {

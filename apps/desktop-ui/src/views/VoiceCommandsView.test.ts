@@ -234,8 +234,8 @@ describe('separate voice command overlay', () => {
   })
   it('recovers an unrecognized language through the translation row', async () => {
     const choice = {
-      ...candidate('builtin:voice:translate:es_AR', 'Klingon Hello!'),
-      parameters: { language: 'es_AR' },
+      ...candidate('builtin:voice:translate:es-AR', 'Klingon Hello!'),
+      parameters: { language: 'es-AR' },
     }
     voice.stage = 'review'
     voice.resolution = {
@@ -252,22 +252,22 @@ describe('separate voice command overlay', () => {
   })
   it('switches the translation language of the chosen command', async () => {
     const chosen = builtInCommands.find(
-      (item) => item.id === 'builtin:voice:translate:en_US'
+      (item) => item.id === 'builtin:voice:translate:en-US'
     )!
     voice.stage = 'review'
     voice.selected = candidate(chosen.id)
     voice.command = chosen
     const wrapper = mountView()
     expect(entry(wrapper, TRANSLATE_KEY).text()).toContain(
-      translate(getLanguageLabelKey('en_US'))
+      translate(getLanguageLabelKey('en-US'))
     )
     const select = wrapper.find<HTMLSelectElement>('.voice-language')
     const index = [...select.element.options].findIndex(
-      (option) => option.text === translate(getLanguageLabelKey('es_AR'))
+      (option) => option.text === translate(getLanguageLabelKey('es-AR'))
     )
     await select.setValue(String(index))
     expect(mocks.switchCommand).toHaveBeenCalledWith(
-      'builtin:voice:translate:es_AR'
+      'builtin:voice:translate:es-AR'
     )
     expect(mocks.run).not.toHaveBeenCalled()
     wrapper.unmount()

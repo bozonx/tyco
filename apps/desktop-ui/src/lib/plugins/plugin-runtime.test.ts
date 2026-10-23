@@ -15,8 +15,8 @@ const index =
     version: '1.0.0',
     apiVersion: 2,
     capabilities: [],
-    defaultLocale: 'en_US',
-    locales: { en_US: {}, ru_RU: {}, es_AR: {}, tr_TR: {} },
+    defaultLocale: 'en-US',
+    locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
     init: () => {},
   })
 function setup(extra: Partial<PluginRuntimeDependencies> = {}) {

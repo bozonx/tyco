@@ -39,8 +39,9 @@ enum PasteShortcut {
 }
 
 impl PasteShortcut {
-    fn from_config(insertion: Option<&Value>) -> Self {
-        match insertion
+    /// Reads `windowInsertion.linux.pasteShortcut`.
+    fn from_config(linux: Option<&Value>) -> Self {
+        match linux
             .and_then(|value| value.get("pasteShortcut"))
             .and_then(Value::as_str)
         {
@@ -178,7 +179,7 @@ impl SystemTextInjector {
     ) -> Result<(), AppError> {
         let insertion = user_config.get("windowInsertion");
         let method = select_method(self.session, configured_method(insertion))?;
-        let shortcut = PasteShortcut::from_config(insertion);
+        let shortcut = PasteShortcut::from_config(linux_settings(insertion));
         let mut command = command_spec(method, insertion, target_window_id, shortcut)?;
 
         if method == InjectionMethod::Ydotool {
@@ -209,7 +210,7 @@ impl SystemTextInjector {
     ) -> Result<(), AppError> {
         let insertion = user_config.get("windowInsertion");
         let method = select_method(self.session, configured_method(insertion))?;
-        let mut shortcut = PasteShortcut::from_config(insertion);
+        let mut shortcut = PasteShortcut::from_config(linux_settings(insertion));
         if terminal && shortcut == PasteShortcut::CtrlV {
             shortcut = PasteShortcut::CtrlShiftV;
         }

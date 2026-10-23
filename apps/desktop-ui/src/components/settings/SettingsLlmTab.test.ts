@@ -145,29 +145,29 @@ describe('SettingsLlmTab.vue', () => {
   const baseLlmConfig = {
     providers: [],
     models: [],
-    taskModelChains: {
-      translation: [],
-      voiceCorrection: [],
-      correction: [],
-      aiTask: [],
-      chat: [],
+    tasks: {
+      chat: { rule: '' },
+      correction: { modelChain: [], rule: '' },
+      translation: { modelChain: [], rule: '', qualityGateRule: '' },
+      voiceCorrection: { modelChain: [], rule: '' },
+      aiTask: { modelChain: [] },
     },
   }
 
   it('renders AI rules section with chat and correction fields', () => {
-    const aiRules = {
-      chat: 'Chat rule text',
-      correction: 'Correction rule text',
-      translation: 'Translate rule text',
-      voiceCorrection: '',
-      translationQualityGate: '',
+    const llm = {
+      ...baseLlmConfig,
+      tasks: {
+        ...baseLlmConfig.tasks,
+        chat: { rule: 'Chat rule text' },
+        correction: { modelChain: [], rule: 'Correction rule text' },
+      },
     }
 
     const wrapper = mount(SettingsLlmTab, {
       global: {
         provide: createTestSettingsContext({
-          llm: baseLlmConfig as unknown as UserConfig['llm'],
-          aiRules,
+          llm: llm as unknown as UserConfig['llm'],
         }).provide,
         stubs: {
           SettingsSection: {

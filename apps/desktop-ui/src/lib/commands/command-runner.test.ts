@@ -665,7 +665,7 @@ it('opens a result menu for a voice translation without inserting or copying the
     'translation',
     deps.tools.get('core.translate')
   )
-  command.toolConfig = { language: 'en_US' }
+  command.toolConfig = { language: 'en-US' }
   const outcome = await runner.run(command, 'Original text', {
     source: 'voice',
   })

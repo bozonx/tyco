@@ -209,7 +209,9 @@ function onDisableChatHistory() {
 function setChatHistoryRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  userConfig.value.chat.history.retentionDays = parsed
+  const { history } = userConfig.value.chat
+  if (parsed === 0) delete history.retentionDays
+  else history.retentionDays = parsed
 }
 
 function setEditorHistoryLimit(value: string) {
@@ -221,7 +223,9 @@ function setEditorHistoryLimit(value: string) {
 function setEditorHistoryRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  userConfig.value.editor.history.retentionDays = parsed
+  const { history } = userConfig.value.editor
+  if (parsed === 0) delete history.retentionDays
+  else history.retentionDays = parsed
 }
 
 const editorHistoryStorageOptions = computed(() => [

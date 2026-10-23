@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { filterOptions, moveHighlight, pushRecent } from './menu-query'
 
 const languages = [
-  { id: 'en_US', label: 'English', keywords: ['English (US)'] },
-  { id: 'de_DE', label: 'German', keywords: ['Deutsch'] },
-  { id: 'fr_FR', label: 'French', keywords: ['Français'] },
+  { id: 'en-US', label: 'English', keywords: ['English (US)'] },
+  { id: 'de-DE', label: 'German', keywords: ['Deutsch'] },
+  { id: 'fr-FR', label: 'French', keywords: ['Français'] },
 ]
 
 describe('filterOptions', () => {
@@ -15,11 +15,11 @@ describe('filterOptions', () => {
 
   it('puts prefix matches before inner ones and finds by keywords', () => {
     expect(filterOptions(languages, 'en').map((o) => o.id)).toEqual([
-      'en_US',
-      'fr_FR',
+      'en-US',
+      'fr-FR',
     ])
-    expect(filterOptions(languages, 'deu').map((o) => o.id)).toEqual(['de_DE'])
-    expect(filterOptions(languages, 'FR').map((o) => o.id)).toEqual(['fr_FR'])
+    expect(filterOptions(languages, 'deu').map((o) => o.id)).toEqual(['de-DE'])
+    expect(filterOptions(languages, 'FR').map((o) => o.id)).toEqual(['fr-FR'])
   })
 })
 

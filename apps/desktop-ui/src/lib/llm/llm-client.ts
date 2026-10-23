@@ -223,7 +223,7 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
     const config = deps.getConfig()
     const chain =
       options.models ??
-      (task === 'chat' ? [] : config.taskModelChains[task]) ??
+      (task === 'chat' ? [] : config.tasks[task].modelChain) ??
       []
     const candidates = chain
       .map((id) => config.models.find((model) => model.id === id))
@@ -257,10 +257,13 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
     signal: AbortSignal,
     deadline: number
   ) => {
-    // the catalog's task classes come from `taskModelChains`; the chat is one too
+    // the catalog's task classes come from the model chains; the chat is one too
     const scopedConfig = {
       ...config,
-      taskModelChains: { ...config.taskModelChains, [task]: [model.id] },
+      tasks: {
+        ...config.tasks,
+        [task]: { ...config.tasks[task], modelChain: [model.id] },
+      },
     } as LlmConfig
     const kit = kitFor(scopedConfig)
     const isDeepSeek =

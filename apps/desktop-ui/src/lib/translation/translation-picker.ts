@@ -14,7 +14,7 @@ const NATIVE_NAMES = new Map<string, string>(
 )
 
 const ENGLISH_NAMES: Record<string, string | undefined> =
-  messages.en_US.language
+  messages['en-US'].language
 
 /** The name of a language in itself, e.g. `Polski` */
 export function nativeLanguageName(id: string): string | undefined {

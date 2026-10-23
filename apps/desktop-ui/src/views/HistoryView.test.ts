@@ -17,7 +17,7 @@ vi.mock('../composables/use-copy-text', () => ({
 }))
 
 vi.mock('../composables/use-i18n', () => ({
-  useI18n: () => ({ t: (key: string) => key, locale: { value: 'en_US' } }),
+  useI18n: () => ({ t: (key: string) => key, locale: { value: 'en-US' } }),
 }))
 
 describe('HistoryView.vue', () => {

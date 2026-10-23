@@ -69,7 +69,7 @@ describe('llm-config', () => {
     const config = normalizeLlmConfig({
       models: [
         {
-          id: ' a ',
+          id: 'a',
           providerId: 'google',
           providerModelId: 'gemini',
           temperature: '0.5',
@@ -77,6 +77,8 @@ describe('llm-config', () => {
           contextWindowTokens: -1,
         },
         { id: 'a', providerId: 'google', providerModelId: 'dup' },
+        { id: ' d ', providerId: 'google', providerModelId: 'spaced' },
+        { id: 'Upper', providerId: 'google', providerModelId: 'upper' },
         { id: 'b', providerId: 'nowhere', providerModelId: 'x' },
         { id: 'c', providerId: 'deepseek' },
       ],
@@ -94,12 +96,15 @@ describe('llm-config', () => {
         { id: 'a', providerId: 'google', providerModelId: 'g' },
         { id: 'b', providerId: 'deepseek', providerModelId: 'd' },
       ],
-      taskModelChains: { aiTask: ['b', 'gone', 'b', 'a'], translation: [] },
+      tasks: {
+        aiTask: { modelChain: ['b', 'gone', 'b', 'a'] },
+        translation: { modelChain: [] },
+      },
     })
 
-    expect(config.taskModelChains.aiTask).toEqual(['b', 'a'])
-    expect(config.taskModelChains.translation).toEqual([])
-    expect(config.taskModelChains.correction).toEqual([])
+    expect(config.tasks.aiTask.modelChain).toEqual(['b', 'a'])
+    expect(config.tasks.translation.modelChain).toEqual([])
+    expect(config.tasks.correction.modelChain).toEqual([])
   })
 
   it('generates unique ids', () => {
@@ -119,7 +124,7 @@ describe('llm-config', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
     const provider = addCompatibleProvider(config)
     const model = addModel(config, provider.id)
-    config.taskModelChains.aiTask = [model.id, 'ollama-qwen']
+    config.tasks.aiTask.modelChain = [model.id, 'ollama-qwen']
 
     expect(provider.id).toMatch(/^custom-[a-f0-9-]{36}$/)
     expect(model.id).toBe(`${provider.id}-model`)
@@ -127,7 +132,7 @@ describe('llm-config', () => {
     removeProvider(config, provider.id)
     expect(config.providers.some((item) => item.id === provider.id)).toBe(false)
     expect(config.models.some((item) => item.id === model.id)).toBe(false)
-    expect(config.taskModelChains.aiTask).toEqual(['ollama-qwen'])
+    expect(config.tasks.aiTask.modelChain).toEqual(['ollama-qwen'])
   })
 
   it('never removes a built-in provider', () => {
@@ -140,10 +145,10 @@ describe('llm-config', () => {
 
   it('removes a model from every task', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
-    config.taskModelChains.translation = ['gemini-flash', 'ollama-qwen']
+    config.tasks.translation.modelChain = ['gemini-flash', 'ollama-qwen']
     removeModel(config, 'gemini-flash')
 
-    expect(config.taskModelChains.translation).toEqual(['ollama-qwen'])
+    expect(config.tasks.translation.modelChain).toEqual(['ollama-qwen'])
   })
 
   it('labels a model by name, then model id', () => {

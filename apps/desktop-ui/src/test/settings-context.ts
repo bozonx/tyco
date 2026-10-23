@@ -39,7 +39,7 @@ export function createTestSettingsContext(
     draft,
     operations: createSettingsOperations(deps),
     effectiveAppLanguage: computed(
-      () => options.effectiveAppLanguage ?? 'en_US'
+      () => options.effectiveAppLanguage ?? 'en-US'
     ),
     navigate: vi.fn(),
     editCommand: vi.fn(),
