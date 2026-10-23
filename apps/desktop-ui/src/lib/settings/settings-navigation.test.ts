@@ -94,7 +94,7 @@ describe('settings navigation', () => {
       'settings.newProfile'
     )
     expect(settingsTabTitle('ai-project:gone', sources)).toBe(
-      'settings.projectPermissions'
+      'settings.projectsTitle'
     )
     expect(settingsTabTitle('ai-profiles', sources)).toBe(
       'settings.aiProfilesTab'

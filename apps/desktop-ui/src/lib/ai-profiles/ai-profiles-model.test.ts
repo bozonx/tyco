@@ -205,6 +205,38 @@ describe('ai-profiles-model', () => {
     )
   })
 
+  it('duplicates the settings and root instruction of a profile', async () => {
+    const deps = createDeps()
+    const model = createAiProfilesModel(deps)
+    await model.loadProfiles()
+    await model.updateProfile('tech-writer', {
+      icon: 'mdi:robot-outline',
+      temperature: 0.3,
+      tools: { groups: { files: { isEnabled: true, access: 'ask' } } },
+    })
+
+    const copy = await model.duplicateProfile('tech-writer', 'Tech Writer 2')
+
+    expect(deps.readSoul).toHaveBeenCalledWith('tech-writer')
+    expect(copy).toEqual({
+      id: 'tech-writer-2',
+      name: 'Tech Writer 2',
+      icon: 'mdi:robot-outline',
+      modelId: 'gpt-4o',
+      temperature: 0.3,
+      projectPermissions: mockProfile.projectPermissions,
+      tools: { groups: { files: { isEnabled: true, access: 'ask' } } },
+      createdAt: 2000,
+      updatedAt: 2000,
+    })
+    expect(deps.createProfile).toHaveBeenCalledWith(copy, '# Writer Prompt')
+    // the copy does not share state with the original
+    copy.projectPermissions['docs-proj']!.write = 'deny'
+    expect(
+      model.getProfile('tech-writer')?.projectPermissions['docs-proj']?.write
+    ).toBe('ask')
+  })
+
   it('deletes a profile after its pending write', async () => {
     const deps = createDeps()
     const model = createAiProfilesModel(deps)

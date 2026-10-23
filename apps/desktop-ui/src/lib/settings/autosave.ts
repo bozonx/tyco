@@ -119,3 +119,41 @@ export function summarizeAutosave(
   if (statuses.includes('saved')) return 'saved'
   return ''
 }
+
+/**
+ * The state of saves that start at once, e.g. of a switch, shown the way an
+ * autosave is. The last save to end decides between saved and failed
+ */
+export function createSaveTracker() {
+  const status = ref<AutosaveStatus>('idle')
+  const error = ref('')
+  const running = new Set<Promise<boolean>>()
+
+  const track = (save: Promise<unknown>): Promise<boolean> => {
+    status.value = 'saving'
+    const done = save.then(
+      () => {
+        error.value = ''
+        return true
+      },
+      (cause: unknown) => {
+        error.value = cause instanceof Error ? cause.message : String(cause)
+        return false
+      }
+    )
+    running.add(done)
+    void done.then(() => {
+      running.delete(done)
+      if (running.size === 0) status.value = error.value ? 'error' : 'saved'
+    })
+    return done
+  }
+
+  /** Waits for the saves under way; false when the last one failed */
+  const flush = async (): Promise<boolean> => {
+    await Promise.all([...running])
+    return !error.value
+  }
+
+  return { status, error, track, flush }
+}

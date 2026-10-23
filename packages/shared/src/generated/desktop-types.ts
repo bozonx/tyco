@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 0776a6f83e8615063cb167b69b763ee9a1f441e4afa6875dc3f332828c2c0764
+// Source hash: 46a8b162b50f1b235c937ef4f377c86ff3d4e19eb3f7173de83486e7dd3981f5
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -146,6 +146,8 @@ export type AiFileToolRequest =
 export type AiProfile = {
   id: string
   name: string
+  /** An `mdi:*` icon from the app's own set; the default one when unset. */
+  icon?: string
   /**
    * The model the profile's chats run on; the first usable one when unset.
    * Profiles written before the setting kept the last picked model.
@@ -571,6 +573,8 @@ export type SessionState = {
   lastMode: ActivationMode | null
   /** The model the chat was last used with. */
   lastChatModelId: string | null
+  /** The chat last opened in each profile, by profile id. */
+  lastProfileChatIds: { [key in string]: string }
   /** Own AI requests typed in the AI task menu, the newest first. */
   recentAiPrompts: Array<string>
   /** Languages picked from the full list in the translate menu, newest first. */

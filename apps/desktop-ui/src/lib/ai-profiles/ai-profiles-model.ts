@@ -18,17 +18,12 @@ export interface AiProfilesModelDependencies {
   randomSuffix?: () => string
 }
 
-export interface CreateProfileData {
-  name: string
-  /** The root instruction the profile starts with */
-  soul: string
-}
-
 /** What the settings of a profile change */
 export type AiProfilePatch = Partial<
   Pick<
     AiProfile,
     | 'name'
+    | 'icon'
     | 'modelId'
     | 'temperature'
     | 'maxOutputTokens'
@@ -36,6 +31,14 @@ export type AiProfilePatch = Partial<
     | 'tools'
   >
 >
+
+export interface CreateProfileData {
+  name: string
+  /** The root instruction the profile starts with */
+  soul: string
+  /** Settings the profile starts with instead of the defaults */
+  settings?: Omit<AiProfilePatch, 'name'>
+}
 
 export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   const profiles: Ref<AiProfile[]> = ref([])
@@ -73,6 +76,10 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
       ),
       name: data.name.trim(),
       projectPermissions: {},
+      // a plain copy: the source may be another profile's reactive state
+      ...(data.settings
+        ? (JSON.parse(JSON.stringify(data.settings)) as AiProfilePatch)
+        : {}),
       createdAt: timestamp,
       updatedAt: timestamp,
     }
@@ -120,6 +127,32 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     return stored
   }
 
+  /**
+   * A new profile with the settings and root instruction of `id`; its chats and
+   * files stay with the original
+   */
+  const duplicateProfile = async (
+    id: string,
+    name: string
+  ): Promise<AiProfile> => {
+    const source = getProfile(id)
+    if (!source) throw new Error(`Profile not found: ${id}`)
+    const soul = await deps.readSoul(id)
+    const { icon, modelId, temperature, maxOutputTokens } = source
+    return createProfile({
+      name,
+      soul,
+      settings: {
+        icon,
+        modelId,
+        temperature,
+        maxOutputTokens,
+        projectPermissions: source.projectPermissions,
+        tools: source.tools,
+      },
+    })
+  }
+
   const deleteProfile = async (id: string): Promise<void> => {
     await pendingSaves.get(id)?.catch(() => {})
     await deps.deleteProfile(id)
@@ -152,6 +185,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     createProfile,
     updateProfile,
     refreshProfile,
+    duplicateProfile,
     deleteProfile,
     setProjectPermission,
     readSoul,

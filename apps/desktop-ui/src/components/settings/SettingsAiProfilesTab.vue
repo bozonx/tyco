@@ -1,7 +1,81 @@
 <template>
   <div class="settings-stack">
     <SettingsSection
-      :title="t('settings.aiProfilesOverview')"
+      :title="t('settings.aiProfilesTab')"
+      :info="t('settings.aiProfilesHint')"
+    >
+      <div class="settings-section-content">
+        <StateMessage
+          v-if="profiles.length === 0"
+          density="compact"
+          :message="t('settings.noProfilesYet')"
+        />
+        <div v-else class="entity-grid">
+          <SettingsEntityItem
+            v-for="profile in profiles"
+            :key="profile.id"
+            :icon="profileIcon(profile)"
+            icon-tone="primary"
+            :title="profile.name"
+            :description="describeProfile(profile)"
+            openable
+            @open="navigate(profileTab(profile.id))"
+          />
+        </div>
+        <div>
+          <Button
+            size="sm"
+            variant="primary"
+            icon="mdi:plus"
+            @click="navigate(profileTab(NEW_ENTITY_ID))"
+          >
+            {{ t('settings.newProfile') }}
+          </Button>
+        </div>
+      </div>
+    </SettingsSection>
+
+    <SettingsSection
+      :title="t('settings.projectsTitle')"
+      :info="t('settings.projectsHint')"
+    >
+      <div class="settings-section-content">
+        <StateMessage
+          v-if="projects.length === 0"
+          density="compact"
+          :message="t('settings.noProjectsYet')"
+        />
+        <div v-else class="entity-grid">
+          <SettingsEntityItem
+            v-for="project in projects"
+            :key="project.id"
+            :icon="
+              project.isExternal
+                ? 'mdi:folder-open-outline'
+                : 'mdi:folder-table-outline'
+            "
+            icon-tone="secondary"
+            :title="project.name"
+            :description="project.description || undefined"
+            openable
+            @open="navigate(projectTab(project.id))"
+          />
+        </div>
+        <div>
+          <Button
+            size="sm"
+            variant="neutral"
+            icon="mdi:plus"
+            @click="navigate(projectTab(NEW_ENTITY_ID))"
+          >
+            {{ t('settings.newProject') }}
+          </Button>
+        </div>
+      </div>
+    </SettingsSection>
+
+    <SettingsSection
+      :title="t('settings.aiVaultTitle')"
       :info="t('settings.aiVaultPathHint')"
     >
       <FieldRow
@@ -39,78 +113,6 @@
         </div>
       </FieldRow>
     </SettingsSection>
-
-    <SettingsSection :title="t('settings.aiProfilesTab')">
-      <div class="settings-section-content">
-        <p class="settings-entity-meta">
-          {{ t('settings.profilesCount', { count: profiles.length }) }}
-        </p>
-        <StateMessage
-          v-if="profiles.length === 0"
-          density="compact"
-          :message="t('settings.noProfilesYet')"
-        />
-        <div v-else class="entity-grid">
-          <SettingsEntityItem
-            v-for="profile in profiles"
-            :key="profile.id"
-            icon="mdi:account-outline"
-            icon-tone="primary"
-            :title="profile.name"
-            openable
-            @open="navigate(profileTab(profile.id))"
-          />
-        </div>
-        <div>
-          <Button
-            size="sm"
-            variant="primary"
-            icon="mdi:plus"
-            @click="navigate(profileTab(NEW_ENTITY_ID))"
-          >
-            {{ t('settings.newProfile') }}
-          </Button>
-        </div>
-      </div>
-    </SettingsSection>
-
-    <SettingsSection :title="t('settings.projectPermissions')">
-      <div class="settings-section-content">
-        <p class="settings-entity-meta">
-          {{ t('settings.projectsCount', { count: projects.length }) }}
-        </p>
-        <StateMessage
-          v-if="projects.length === 0"
-          density="compact"
-          :message="t('settings.noProjectsYet')"
-        />
-        <div v-else class="entity-grid">
-          <SettingsEntityItem
-            v-for="project in projects"
-            :key="project.id"
-            :icon="
-              project.isExternal
-                ? 'mdi:folder-open-outline'
-                : 'mdi:folder-table-outline'
-            "
-            icon-tone="secondary"
-            :title="project.name"
-            openable
-            @open="navigate(projectTab(project.id))"
-          />
-        </div>
-        <div>
-          <Button
-            size="sm"
-            variant="neutral"
-            icon="mdi:plus"
-            @click="navigate(projectTab(NEW_ENTITY_ID))"
-          >
-            {{ t('settings.newProject') }}
-          </Button>
-        </div>
-      </div>
-    </SettingsSection>
   </div>
 </template>
 
@@ -120,27 +122,61 @@ import { computed, onMounted } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
+import { profileIcon } from '../../lib/ai-profiles/profile-icons'
+import {
+  CHAT_TOOL_GROUPS,
+  toolGroupSettings,
+} from '../../lib/chat-tools/chat-tool-groups'
+import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
+import { normalizeLlmConfig } from '../../lib/llm/llm-config'
+import { isSecretUsable } from '../../lib/net/secrets'
 import {
   NEW_ENTITY_ID,
   profileTab,
   projectTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
+import { useDesktopStore } from '../../stores/desktop'
+import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
+import { type AiProfile, llmSecretId } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig, operations, navigate } = useSettingsContext()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
+const desktopStore = useDesktopStore()
+const secretsStore = useSecretsStore()
 
 const profiles = computed(() => aiProfilesStore.profiles)
 const projects = computed(() => aiProfilesStore.projects)
 const vaultPath = computed(() => aiProfilesStore.vaultPath)
 const vaultError = computed(() => aiProfilesStore.vaultError)
+
+const modelNames = computed(
+  () =>
+    new Map(
+      chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
+        isSecretUsable(secretsStore.secrets, llmSecretId(id))
+      ).map((model) => [model.id, model.name])
+    )
+)
+
+/** The model of a profile and the tools it may use, in one line */
+function describeProfile(profile: AiProfile): string {
+  const model = profile.modelId
+    ? (modelNames.value.get(profile.modelId) ??
+      `${profile.modelId} (${t('settings.profileModelUnavailable')})`)
+    : t('settings.profileModelDefault')
+  const tools = CHAT_TOOL_GROUPS.filter(
+    (group) => toolGroupSettings(profile.tools, group).isEnabled
+  ).map((group) => t(group.labelKey))
+  return [model, ...tools].join(' · ')
+}
 
 onMounted(() => {
   void aiProfilesStore.loadAll()

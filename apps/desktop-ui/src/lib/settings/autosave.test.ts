@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { createAutosave, summarizeAutosave } from './autosave'
+import {
+  createAutosave,
+  createSaveTracker,
+  summarizeAutosave,
+} from './autosave'
 
 describe('createAutosave', () => {
   it('saves once after the last change', async () => {
@@ -154,5 +158,31 @@ describe('autosave summary', () => {
     expect(summarizeAutosave(['saved', 'pending'])).toBe('saving')
     expect(summarizeAutosave(['idle', 'saved'])).toBe('saved')
     expect(summarizeAutosave(['idle'])).toBe('')
+  })
+})
+
+describe('save tracker', () => {
+  it('shows saving until every save ends, then the last outcome', async () => {
+    const tracker = createSaveTracker()
+    let failFirst!: (error: Error) => void
+    const first = tracker.track(
+      new Promise((_, reject) => {
+        failFirst = reject
+      })
+    )
+    const second = tracker.track(Promise.resolve())
+    expect(tracker.status.value).toBe('saving')
+    expect(await second).toBe(true)
+    expect(tracker.status.value).toBe('saving')
+
+    failFirst(new Error('disk full'))
+    expect(await first).toBe(false)
+    expect(await tracker.flush()).toBe(false)
+    expect(tracker.status.value).toBe('error')
+    expect(tracker.error.value).toBe('disk full')
+
+    await tracker.track(Promise.resolve())
+    expect(await tracker.flush()).toBe(true)
+    expect(tracker.status.value).toBe('saved')
   })
 })

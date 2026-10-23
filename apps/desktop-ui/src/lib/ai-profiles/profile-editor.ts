@@ -2,17 +2,26 @@ import { computed, ref, watch } from 'vue'
 import type { AiProfile } from '@tyco/shared'
 
 import {
+  parseToolStepCount,
+  withToolStepCount,
+} from '../chat-tools/chat-tool-groups'
+import {
   createAutosave,
+  createSaveTracker,
   summarizeAutosave,
+  type AutosaveStatus,
   type AutosaveSummary,
 } from '../settings/autosave'
+import type { AiProfilePatch } from './ai-profiles-model'
 import {
   parseProfileMaxOutputTokens,
   parseProfileTemperature,
 } from './profile-generation'
 
 export interface ProfileEditorDependencies {
-  updateProfile: (patch: Partial<AiProfile>) => Promise<void>
+  /** The profile as the app holds it now */
+  getProfile: () => AiProfile | undefined
+  updateProfile: (patch: AiProfilePatch) => Promise<void>
   readSoul: () => Promise<string>
   writeSoul: (content: string) => Promise<void>
   reportError: (message: string) => void
@@ -22,16 +31,23 @@ export interface ProfileEditorDependencies {
   clearTimer?: (timer: unknown) => void
 }
 
+/** A field with nothing waiting to be saved may take the stored value */
+const isSettled = (status: AutosaveStatus) =>
+  status === 'idle' || status === 'saved'
+
 /**
- * The text fields of a profile and its `SOUL.md`, each stored on its own a
- * moment after it changes; invalid numbers wait for a valid one
+ * The settings of a profile and its `SOUL.md`. Typed fields are stored a moment
+ * after they change, invalid numbers wait for a valid one; picked values are
+ * stored at once. Every save shows in one status
  */
 export function createProfileEditor(deps: ProfileEditorDependencies) {
   const name = ref('')
   const temperatureText = ref('')
   const maxOutputTokensText = ref('')
+  const stepCountText = ref('')
   const temperatureError = ref(false)
   const maxOutputTokensError = ref(false)
+  const stepCountError = ref(false)
   const soulPrompt = ref('')
   const isSoulLoaded = ref(false)
   const isSoulLoading = ref(false)
@@ -48,11 +64,16 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
       const maxOutputTokens = parseProfileMaxOutputTokens(
         maxOutputTokensText.value
       )
+      const stepCount = parseToolStepCount(stepCountText.value)
+      const tools = deps.getProfile()?.tools
       await deps.updateProfile({
         ...(name.value.trim() ? { name: name.value.trim() } : {}),
         ...(temperature.isValid ? { temperature: temperature.value } : {}),
         ...(maxOutputTokens.isValid
           ? { maxOutputTokens: maxOutputTokens.value }
+          : {}),
+        ...(stepCount.isValid && stepCount.value !== tools?.maxStepCount
+          ? { tools: withToolStepCount(tools, stepCount.value) }
           : {}),
       })
     },
@@ -67,6 +88,8 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
       await deps.writeSoul(soulPrompt.value)
     },
   })
+
+  const pickedSaves = createSaveTracker()
 
   const loadSoul = (): Promise<void> => {
     if (soulRead) return soulRead
@@ -92,15 +115,45 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     return soulRead
   }
 
+  const fillFields = (profile: AiProfile) => {
+    name.value = profile.name
+    temperatureText.value = String(profile.temperature ?? '')
+    maxOutputTokensText.value = String(profile.maxOutputTokens ?? '')
+    stepCountText.value = String(profile.tools?.maxStepCount ?? '')
+    temperatureError.value = false
+    maxOutputTokensError.value = false
+    stepCountError.value = false
+  }
+
   /** Fills profile fields once; a failed instruction read can be retried. */
   const load = async (profile: AiProfile): Promise<void> => {
     if (!hasLoadedProfile) {
-      name.value = profile.name
-      temperatureText.value = String(profile.temperature ?? '')
-      maxOutputTokensText.value = String(profile.maxOutputTokens ?? '')
+      fillFields(profile)
       hasLoadedProfile = true
     }
     if (!isSoulLoaded.value) await loadSoul()
+  }
+
+  /**
+   * Takes the profile and `SOUL.md` as they are on disk now, e.g. edited by
+   * hand while the app was in the background; a field being typed in keeps what
+   * was typed
+   */
+  const syncFromStored = async (profile: AiProfile): Promise<void> => {
+    if (hasLoadedProfile && isSettled(profileAutosave.status.value))
+      fillFields(profile)
+    if (!isSoulLoaded.value || !isSettled(soulAutosave.status.value)) return
+    const shownPrompt = soulPrompt.value
+    try {
+      const content = await deps.readSoul()
+      if (
+        soulPrompt.value === shownPrompt &&
+        isSettled(soulAutosave.status.value)
+      )
+        soulPrompt.value = content
+    } catch {
+      // the field keeps what it shows; the next save writes it back
+    }
   }
 
   const changeName = () => {
@@ -119,9 +172,19 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     if (!maxOutputTokensError.value) profileAutosave.schedule()
   }
 
+  const changeStepCount = (value: string) => {
+    stepCountText.value = value
+    stepCountError.value = !parseToolStepCount(value).isValid
+    if (!stepCountError.value) profileAutosave.schedule()
+  }
+
   const changeSoul = () => {
     if (isSoulLoaded.value) soulAutosave.schedule()
   }
+
+  /** A picked value: the model, the icon, a switch or an access mode */
+  const changeSettings = (patch: AiProfilePatch): Promise<boolean> =>
+    pickedSaves.track(deps.updateProfile(patch))
 
   const saveStatus = computed<AutosaveSummary>(() =>
     soulLoadError.value
@@ -129,11 +192,15 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
       : summarizeAutosave([
           profileAutosave.status.value,
           soulAutosave.status.value,
+          pickedSaves.status.value,
         ])
   )
 
   watch(
-    () => profileAutosave.error.value || soulAutosave.error.value,
+    () =>
+      profileAutosave.error.value ||
+      soulAutosave.error.value ||
+      pickedSaves.error.value,
     (message) => {
       if (message) deps.reportError(message)
     }
@@ -144,6 +211,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     const saved = await Promise.all([
       profileAutosave.flush(),
       soulAutosave.flush(),
+      pickedSaves.flush(),
     ])
     return saved.every(Boolean) && !soulLoadError.value
   }
@@ -158,8 +226,10 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     name,
     temperatureText,
     maxOutputTokensText,
+    stepCountText,
     temperatureError,
     maxOutputTokensError,
+    stepCountError,
     soulPrompt,
     isSoulLoaded,
     isSoulLoading,
@@ -167,10 +237,13 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     loadSoul,
     saveStatus,
     load,
+    syncFromStored,
     changeName,
     changeTemperature,
     changeMaxOutputTokens,
+    changeStepCount,
     changeSoul,
+    changeSettings,
     flush,
     cancel,
   }

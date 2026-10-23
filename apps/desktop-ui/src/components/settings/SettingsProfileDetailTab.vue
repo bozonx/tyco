@@ -1,10 +1,21 @@
 <template>
   <div class="settings-stack">
     <SettingsDetailHeader
-      :back-label="t('settings.aiProfilesOverview')"
+      :back-label="t('settings.aiProfilesTab')"
       @back="navigate(AI_OVERVIEW_TAB)"
     >
-      <SettingsAutosaveStatus v-if="!isNew" :status="editor.saveStatus.value" />
+      <template v-if="profile && !isNew">
+        <SettingsAutosaveStatus :status="editor.saveStatus.value" />
+        <Button
+          size="sm"
+          variant="neutral"
+          icon="mdi:content-copy"
+          :disabled="isDuplicating"
+          @click="handleDuplicate"
+        >
+          {{ t('settings.duplicateProfile') }}
+        </Button>
+      </template>
     </SettingsDetailHeader>
 
     <template v-if="isNew">
@@ -12,6 +23,12 @@
         <form class="profile-create-form" @submit.prevent="handleCreate">
           <FieldRow :label="t('settings.profileName')">
             <FieldInput v-model="newName" />
+          </FieldRow>
+          <FieldRow :label="t('settings.profileIcon')">
+            <ProfileIconPicker
+              v-model="newIcon"
+              :label="t('settings.profileIcon')"
+            />
           </FieldRow>
           <div class="profile-form-actions">
             <Button
@@ -29,19 +46,23 @@
     </template>
 
     <template v-else-if="profile">
-      <SettingsSection :title="t('settings.profileName')">
+      <SettingsSection
+        :title="t('settings.aiEntityGeneral')"
+        :info="t('settings.profileGenerationHint')"
+      >
         <FieldRow
           :label="t('settings.profileName')"
           :error="name.trim() ? undefined : t('settings.profileNameRequired')"
         >
           <FieldInput v-model="name" @update:model-value="changeName" />
         </FieldRow>
-      </SettingsSection>
-
-      <SettingsSection
-        :title="t('settings.profileGeneration')"
-        :info="t('settings.profileGenerationHint')"
-      >
+        <FieldRow :label="t('settings.profileIcon')">
+          <ProfileIconPicker
+            :model-value="profileIcon(profile)"
+            :label="t('settings.profileIcon')"
+            @update:model-value="changeSettings({ icon: $event })"
+          />
+        </FieldRow>
         <FieldRow :label="t('settings.profileModel')">
           <FieldSelect
             :model-value="profile.modelId ?? DEFAULT_MODEL_OPTION"
@@ -89,8 +110,31 @@
         v-if="CHAT_TOOL_GROUPS.length > 0"
         :groups="CHAT_TOOL_GROUPS"
         :tools="profile.tools"
-        @update="changeTools"
-      />
+        :step-count-text="stepCountText"
+        :step-count-error="stepCountError"
+        @update="changeSettings({ tools: $event })"
+        @change-step-count="changeStepCount"
+        @invalid-step-count="stepCountError = true"
+      >
+        <template #group="{ group, settings }">
+          <template v-if="group.id === FILES_TOOL_GROUP_ID">
+            <p class="settings-entity-meta">
+              {{ t('settings.projectPermissionsHint') }}
+            </p>
+            <InlineNotice
+              v-if="settings.access === 'ask'"
+              density="compact"
+              icon="mdi:information-outline"
+              :message="t('settings.profileFilesAskAll')"
+            />
+            <SettingsProfileProjectAccess
+              :projects="projects"
+              :permissions="profile.projectPermissions"
+              @change="setPermission"
+            />
+          </template>
+        </template>
+      </SettingsProfileToolsSection>
 
       <SettingsSection
         :title="t('settings.profileSoulPrompt')"
@@ -127,51 +171,6 @@
         </div>
       </SettingsSection>
 
-      <SettingsSection
-        :title="t('settings.projectPermissions')"
-        :info="t('settings.projectPermissionsHint')"
-      >
-        <div class="settings-section-content">
-          <StateMessage
-            v-if="projects.length === 0"
-            density="compact"
-            :message="t('settings.noProjectsYet')"
-          />
-          <div v-else class="settings-entity-list">
-            <SettingsEntityItem
-              v-for="project in projects"
-              :key="project.id"
-              :icon="
-                project.isExternal
-                  ? 'mdi:folder-open-outline'
-                  : 'mdi:folder-table-outline'
-              "
-              icon-tone="secondary"
-              :title="project.name"
-            >
-              <span
-                v-for="kind in PERMISSION_KINDS"
-                :key="kind"
-                class="profile-permission"
-              >
-                <span class="settings-entity-meta">{{
-                  t(PERMISSION_LABEL_KEYS[kind])
-                }}</span>
-                <SegmentedControl
-                  size="sm"
-                  :label="`${project.name}: ${t(PERMISSION_LABEL_KEYS[kind])}`"
-                  :model-value="getPermission(project.id)[kind]"
-                  :options="permissionOptions"
-                  @update:model-value="
-                    setPermission(project.id, kind, $event as ProjectAccessMode)
-                  "
-                />
-              </span>
-            </SettingsEntityItem>
-          </div>
-        </div>
-      </SettingsSection>
-
       <SettingsSection :title="t('settings.deleteProfile')">
         <div class="settings-section-content">
           <SettingsDangerZone
@@ -182,6 +181,18 @@
         </div>
       </SettingsSection>
     </template>
+
+    <StateMessage
+      v-else-if="aiProfilesStore.isLoaded"
+      icon="mdi:account-question-outline"
+      :title="t('settings.profileNotFound')"
+      :message="t('settings.profileNotFoundHint')"
+    >
+      <Button size="sm" variant="neutral" @click="navigate(AI_OVERVIEW_TAB)">
+        {{ t('settings.aiProfilesTab') }}
+      </Button>
+    </StateMessage>
+    <StateMessage v-else kind="loading" />
 
     <ConfirmModal
       :open="showDeleteConfirm"
@@ -196,18 +207,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
-import { CHAT_TOOL_GROUPS } from '../../lib/chat-tools/chat-tool-groups'
+import {
+  DEFAULT_PROFILE_ICON,
+  profileIcon,
+} from '../../lib/ai-profiles/profile-icons'
+import {
+  CHAT_TOOL_GROUPS,
+  FILES_TOOL_GROUP_ID,
+} from '../../lib/chat-tools/chat-tool-groups'
 import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
 import { normalizeLlmConfig } from '../../lib/llm/llm-config'
 import { isSecretUsable } from '../../lib/net/secrets'
 import {
   AI_OVERVIEW_TAB,
+  NEW_ENTITY_ID,
   profileTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
@@ -220,19 +239,17 @@ import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
-import SegmentedControl from '../common/SegmentedControl.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
+import ProfileIconPicker from './ProfileIconPicker.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDangerZone from './SettingsDangerZone.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
-import SettingsEntityItem from './SettingsEntityItem.vue'
+import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
-  DEFAULT_PROJECT_PERMISSION,
   MAX_PROFILE_TEMPERATURE,
-  type ProfileToolSettings,
-  type ProjectAccessMode,
   type ProjectPermission,
   llmSecretId,
 } from '@tyco/shared'
@@ -251,7 +268,7 @@ const aiProfilesStore = useAiProfilesStore()
 const desktopStore = useDesktopStore()
 const secretsStore = useSecretsStore()
 
-const isNew = computed(() => props.profileId === 'new')
+const isNew = computed(() => props.profileId === NEW_ENTITY_ID)
 const profile = computed(() => aiProfilesStore.getProfile(props.profileId))
 const projects = computed(() => aiProfilesStore.projects)
 
@@ -260,6 +277,7 @@ const projects = computed(() => aiProfilesStore.projects)
 // ---------------------------------------------------------------------------
 
 const newName = ref('')
+const newIcon = ref(DEFAULT_PROFILE_ICON)
 const isCreating = ref(false)
 
 async function handleCreate() {
@@ -269,6 +287,8 @@ async function handleCreate() {
     const created = await aiProfilesStore.createProfile({
       name: newName.value,
       soul: t('settings.profileDefaultSoul'),
+      settings:
+        newIcon.value === DEFAULT_PROFILE_ICON ? {} : { icon: newIcon.value },
     })
     navigate(profileTab(created.id))
   } catch (error) {
@@ -278,12 +298,34 @@ async function handleCreate() {
   }
 }
 
+const isDuplicating = ref(false)
+
+async function handleDuplicate() {
+  if (!profile.value || isDuplicating.value) return
+  isDuplicating.value = true
+  try {
+    // the copy takes the instruction as typed, not only as stored
+    await editor.flush()
+    const copy = await aiProfilesStore.duplicateProfile(
+      props.profileId,
+      t('settings.profileCopyName', { name: profile.value.name })
+    )
+    navigate(profileTab(copy.id))
+  } catch (error) {
+    toastText(String(error), 'error')
+  } finally {
+    isDuplicating.value = false
+  }
+}
+
 // ---------------------------------------------------------------------------
-// Settings, each stored on its own a moment after it changes
+// Settings: typed ones are stored a moment after they change, picked ones
+// at once
 // ---------------------------------------------------------------------------
 
 const editor = createProfileEditor({
   delayMs: AUTOSAVE_DELAY_MS,
+  getProfile: () => aiProfilesStore.getProfile(props.profileId),
   updateProfile: (patch) =>
     aiProfilesStore.updateProfile(props.profileId, patch),
   readSoul: () => aiProfilesStore.readSoul(props.profileId),
@@ -294,13 +336,17 @@ const {
   name,
   temperatureText,
   maxOutputTokensText,
+  stepCountText,
   temperatureError,
   maxOutputTokensError,
+  stepCountError,
   soulPrompt,
   changeName,
   changeTemperature,
   changeMaxOutputTokens,
+  changeStepCount,
   changeSoul,
+  changeSettings,
 } = editor
 
 // the fields take the profile once it is there; the settings may open
@@ -313,17 +359,43 @@ watch(
   { immediate: true }
 )
 
+/**
+ * The files may be edited by hand while the app is in the background: back in
+ * it, the page shows them as they are, so that a save does not undo the edit
+ */
+async function syncFromDisk() {
+  if (isNew.value || !profile.value) return
+  try {
+    const stored = await aiProfilesStore.refreshProfile(props.profileId)
+    if (stored) await editor.syncFromStored(stored)
+  } catch {
+    // the page keeps what it shows; the profile may be gone meanwhile
+  }
+}
+function syncWhenVisible() {
+  if (document.visibilityState === 'visible') void syncFromDisk()
+}
+onMounted(() => {
+  window.addEventListener('focus', syncWhenVisible)
+  document.addEventListener('visibilitychange', syncWhenVisible)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', syncWhenVisible)
+  document.removeEventListener('visibilitychange', syncWhenVisible)
+})
+
 function changeModel(value: string | number | undefined) {
-  const modelId = value ? String(value) : undefined
-  void aiProfilesStore
-    .updateProfile(props.profileId, { modelId })
-    .catch((error: unknown) => toastText(String(error), 'error'))
+  void changeSettings({ modelId: value ? String(value) : undefined })
 }
 
-function changeTools(tools: ProfileToolSettings) {
-  void aiProfilesStore
-    .updateProfile(props.profileId, { tools })
-    .catch((error: unknown) => toastText(String(error), 'error'))
+function setPermission(projectId: string, permission: ProjectPermission) {
+  if (!profile.value) return
+  void changeSettings({
+    projectPermissions: {
+      ...profile.value.projectPermissions,
+      [projectId]: permission,
+    },
+  })
 }
 
 const availableModels = computed(() =>
@@ -333,8 +405,14 @@ const availableModels = computed(() =>
 )
 
 const modelOptions = computed(() => {
+  const firstModel = availableModels.value[0]
   const options = [
-    { id: DEFAULT_MODEL_OPTION, name: t('settings.profileModelDefault') },
+    {
+      id: DEFAULT_MODEL_OPTION,
+      name: firstModel
+        ? t('settings.profileModelDefaultNamed', { model: firstModel.name })
+        : t('settings.profileModelDefault'),
+    },
     ...availableModels.value.map((option) => ({
       id: option.id,
       name: option.name,
@@ -357,44 +435,6 @@ onBeforeUnmount(() => {
 })
 
 // ---------------------------------------------------------------------------
-// Project permissions
-// ---------------------------------------------------------------------------
-
-const PERMISSION_KINDS = [
-  'read',
-  'write',
-] as const satisfies readonly (keyof ProjectPermission)[]
-const PERMISSION_LABEL_KEYS = {
-  read: 'settings.accessRead',
-  write: 'settings.accessWrite',
-} as const
-
-const permissionOptions = computed(() => [
-  { id: 'deny', name: t('settings.accessDeny') },
-  { id: 'ask', name: t('settings.accessAsk') },
-  { id: 'allow', name: t('settings.accessAllow') },
-])
-
-function getPermission(projectId: string): ProjectPermission {
-  return (
-    profile.value?.projectPermissions[projectId] ?? DEFAULT_PROJECT_PERMISSION
-  )
-}
-
-function setPermission(
-  projectId: string,
-  access: keyof ProjectPermission,
-  mode: ProjectAccessMode
-) {
-  void aiProfilesStore
-    .setProjectPermission(props.profileId, projectId, {
-      ...getPermission(projectId),
-      [access]: mode,
-    })
-    .catch((error: unknown) => toastText(String(error), 'error'))
-}
-
-// ---------------------------------------------------------------------------
 // Folder and removal
 // ---------------------------------------------------------------------------
 
@@ -407,18 +447,22 @@ async function handleOpenFolder() {
 }
 
 const showDeleteConfirm = ref(false)
-const chatCount = ref(0)
-const deleteMessage = computed(() =>
-  t('settings.deleteProfileConfirm', {
-    name: profile.value?.name ?? '',
-    count: chatCount.value,
-  })
-)
+/** Unknown when the chats could not be counted */
+const chatCount = ref<number | null>(null)
+const deleteMessage = computed(() => {
+  const profileName = profile.value?.name ?? ''
+  return chatCount.value === null
+    ? t('settings.deleteProfileConfirmUncounted', { name: profileName })
+    : t('settings.deleteProfileConfirm', {
+        name: profileName,
+        count: chatCount.value,
+      })
+})
 
 async function askDelete() {
   chatCount.value = await aiProfilesStore
     .countChats(props.profileId)
-    .catch(() => 0)
+    .catch(() => null)
   showDeleteConfirm.value = true
 }
 
@@ -444,11 +488,5 @@ async function handleDelete() {
 .profile-form-actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.profile-permission {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
 }
 </style>

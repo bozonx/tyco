@@ -33,6 +33,7 @@ export const DEFAULT_SESSION_STATE: SessionState = {
   lastChatId: null,
   lastMode: null,
   lastChatModelId: null,
+  lastProfileChatIds: {},
   recentAiPrompts: [],
   recentTranslateLanguages: [],
 }

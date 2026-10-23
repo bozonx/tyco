@@ -8,6 +8,7 @@ const profile = { id: 'writer', name: 'Writer', temperature: 0.5 } as AiProfile
 
 function setup(overrides: { readSoul?: () => Promise<string> } = {}) {
   const deps = {
+    getProfile: vi.fn((): AiProfile | undefined => profile),
     updateProfile: vi.fn().mockResolvedValue(undefined),
     readSoul: overrides.readSoul ?? vi.fn().mockResolvedValue('Be brief'),
     writeSoul: vi.fn().mockResolvedValue(undefined),
@@ -128,5 +129,67 @@ describe('profile editor', () => {
     editor.cancel()
     await vi.advanceTimersByTimeAsync(100)
     expect(deps.updateProfile).toHaveBeenCalledOnce()
+  })
+
+  it('saves the step count with the tools it belongs to', async () => {
+    const { deps, editor } = setup()
+    const tools = { groups: { files: { isEnabled: true, access: 'ask' } } }
+    deps.getProfile.mockReturnValue({ ...profile, tools } as AiProfile)
+    await editor.load(profile)
+    editor.changeStepCount('99')
+    expect(editor.stepCountError.value).toBe(true)
+    editor.changeStepCount('12')
+    expect(editor.stepCountError.value).toBe(false)
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(deps.updateProfile).toHaveBeenCalledWith({
+      name: 'Writer',
+      temperature: 0.5,
+      tools: { ...tools, maxStepCount: 12 },
+    })
+  })
+
+  it('shows picked values in the same save status', async () => {
+    const { deps, editor } = setup()
+    await editor.load(profile)
+    let resolveSave!: () => void
+    deps.updateProfile.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        resolveSave = resolve
+      })
+    )
+    const saved = editor.changeSettings({ modelId: 'model-a' })
+    expect(editor.saveStatus.value).toBe('saving')
+    resolveSave()
+    expect(await saved).toBe(true)
+    expect(editor.saveStatus.value).toBe('saved')
+
+    deps.updateProfile.mockRejectedValueOnce(new Error('disk full'))
+    expect(await editor.changeSettings({ icon: 'mdi:robot-outline' })).toBe(
+      false
+    )
+    await nextTick()
+    expect(editor.saveStatus.value).toBe('error')
+    expect(deps.reportError).toHaveBeenCalledWith('disk full')
+  })
+
+  it('takes changes made on disk, but not over typed text', async () => {
+    const readSoul = vi.fn().mockResolvedValue('Edited by hand')
+    const synced = setup({ readSoul })
+    await synced.editor.load(profile)
+    expect(synced.editor.soulPrompt.value).toBe('Edited by hand')
+
+    readSoul.mockResolvedValue('Edited again')
+    await synced.editor.syncFromStored({ ...profile, temperature: 1.5 })
+    expect(synced.editor.temperatureText.value).toBe('1.5')
+    expect(synced.editor.soulPrompt.value).toBe('Edited again')
+
+    synced.editor.changeTemperature('0.1')
+    synced.editor.soulPrompt.value = 'Typed'
+    synced.editor.changeSoul()
+    readSoul.mockResolvedValue('On disk')
+    await synced.editor.syncFromStored({ ...profile, temperature: 2 })
+    expect(synced.editor.temperatureText.value).toBe('0.1')
+    expect(synced.editor.soulPrompt.value).toBe('Typed')
   })
 })

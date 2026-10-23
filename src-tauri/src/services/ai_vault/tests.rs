@@ -7,6 +7,7 @@ fn profile(id: &str, created_at: u64) -> AiProfile {
     AiProfile {
         id: id.to_string(),
         name: format!("Profile {id}"),
+        icon: None,
         model_id: None,
         temperature: None,
         max_output_tokens: None,
@@ -172,6 +173,7 @@ fn profile_settings_round_trip_and_are_validated() {
     create_profile(&vault_root, profile("writer", 1000), "").unwrap();
 
     let mut updated = profile("writer", 1000);
+    updated.icon = Some("mdi:robot-outline".into());
     updated.model_id = Some("model-a".into());
     updated.temperature = Some(0.4);
     updated.max_output_tokens = Some(2048);
@@ -184,9 +186,36 @@ fn profile_settings_round_trip_and_are_validated() {
     let mut empty = updated.clone();
     empty.max_output_tokens = Some(0);
     assert!(save_profile(&vault_root, empty).is_err());
+    for icon in ["robot", "mdi:", "mdi:Robot", "mdi:robot/../x"] {
+        let mut odd_icon = updated.clone();
+        odd_icon.icon = Some(icon.into());
+        assert!(save_profile(&vault_root, odd_icon).is_err(), "{icon}");
+    }
     let mut unnamed = updated;
     unnamed.name = "  ".into();
     assert!(save_profile(&vault_root, unnamed).is_err());
+}
+
+/// The limits are checked on both sides of the IPC boundary.
+#[test]
+fn profile_limits_match_the_shared_package() {
+    let shared = include_str!("../../../../packages/shared/src/ai-profiles.ts");
+    let declared = |name: &str| {
+        shared
+            .lines()
+            .find_map(|line| line.strip_prefix(&format!("export const {name} = ")))
+            .unwrap_or_else(|| panic!("{name} is not declared in @tyco/shared"))
+            .trim()
+            .to_owned()
+    };
+    assert_eq!(
+        declared("MAX_PROFILE_TEMPERATURE").parse::<f64>().unwrap(),
+        operations::MAX_TEMPERATURE
+    );
+    assert_eq!(
+        declared("MAX_TOOL_STEP_COUNT").parse::<u32>().unwrap(),
+        operations::MAX_TOOL_STEP_COUNT
+    );
 }
 
 #[test]

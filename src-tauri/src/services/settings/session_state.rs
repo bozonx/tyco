@@ -5,6 +5,7 @@ pub const VALID_SESSION_STATE_KEYS: &[&str] = &[
     "lastChatId",
     "lastMode",
     "lastChatModelId",
+    "lastProfileChatIds",
     "recentAiPrompts",
     "recentTranslateLanguages",
 ];

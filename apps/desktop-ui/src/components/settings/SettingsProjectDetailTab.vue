@@ -1,7 +1,7 @@
 <template>
   <div class="settings-stack">
     <SettingsDetailHeader
-      :back-label="t('settings.aiProfilesOverview')"
+      :back-label="t('settings.aiProfilesTab')"
       @back="navigate(AI_OVERVIEW_TAB)"
     >
       <Button
@@ -17,74 +17,90 @@
       <SettingsAutosaveStatus v-else :status="saveStatus" />
     </SettingsDetailHeader>
 
-    <SettingsSection :title="t('settings.projectName')">
-      <FieldRow :label="t('settings.projectName')">
-        <FieldInput v-model="name" @update:model-value="change" />
-      </FieldRow>
-      <FieldRow :label="t('settings.projectDescription')">
-        <FieldInput v-model="description" @update:model-value="change" />
-      </FieldRow>
-      <FieldRow :label="t('settings.projectType')">
-        <SegmentedControl
-          size="sm"
-          :label="t('settings.projectType')"
-          :model-value="isExternal ? 'external' : 'internal'"
-          :options="projectTypeOptions"
-          @update:model-value="changeType($event === 'external')"
-        />
-      </FieldRow>
-      <FieldRow
-        v-if="isExternal"
-        :label="t('settings.projectTargetPath')"
-        :info="targetPath || undefined"
-      >
-        <Button
-          size="sm"
-          variant="neutral"
-          icon="mdi:folder-open-outline"
-          @click="handlePickFolder"
+    <template v-if="isNew || project">
+      <SettingsSection :title="t('settings.aiEntityGeneral')">
+        <FieldRow :label="t('settings.projectName')">
+          <FieldInput v-model="name" @update:model-value="change" />
+        </FieldRow>
+        <FieldRow :label="t('settings.projectDescription')">
+          <FieldInput v-model="description" @update:model-value="change" />
+        </FieldRow>
+        <FieldRow :label="t('settings.projectType')">
+          <SegmentedControl
+            size="sm"
+            :label="t('settings.projectType')"
+            :model-value="isExternal ? 'external' : 'internal'"
+            :options="projectTypeOptions"
+            @update:model-value="changeType($event === 'external')"
+          />
+        </FieldRow>
+        <FieldRow
+          v-if="isExternal"
+          :label="t('settings.projectTargetPath')"
+          :info="targetPath || undefined"
         >
-          {{ t('settings.selectFolder') }}
-        </Button>
-      </FieldRow>
-    </SettingsSection>
-
-    <SettingsSection v-if="!isNew" :title="t('settings.aiProfilesTab')">
-      <div class="settings-section-content">
-        <StateMessage
-          v-if="profiles.length === 0"
-          density="compact"
-          :message="t('settings.noProfilesYet')"
-        />
-        <div v-else class="settings-entity-list">
-          <SettingsEntityItem
-            v-for="profile in profiles"
-            :key="profile.id"
-            icon="mdi:account-outline"
-            :title="profile.name"
+          <Button
+            size="sm"
+            variant="neutral"
+            icon="mdi:folder-open-outline"
+            @click="handlePickFolder"
           >
-            <span class="settings-entity-meta">
-              {{ t('settings.accessRead') }}:
-              {{ formatAccess(profile.projectPermissions[projectId]?.read) }}
-            </span>
-            <span class="settings-entity-meta">
-              {{ t('settings.accessWrite') }}:
-              {{ formatAccess(profile.projectPermissions[projectId]?.write) }}
-            </span>
-          </SettingsEntityItem>
-        </div>
-      </div>
-    </SettingsSection>
+            {{ t('settings.selectFolder') }}
+          </Button>
+        </FieldRow>
+      </SettingsSection>
 
-    <SettingsSection v-if="!isNew" :title="t('settings.deleteProject')">
-      <div class="settings-section-content">
-        <SettingsDangerZone
-          :message="t('settings.deleteProjectConfirm')"
-          :action-label="t('settings.deleteProject')"
-          @action="showDeleteConfirm = true"
-        />
-      </div>
-    </SettingsSection>
+      <SettingsSection v-if="!isNew" :title="t('settings.aiProfilesTab')">
+        <div class="settings-section-content">
+          <StateMessage
+            v-if="profiles.length === 0"
+            density="compact"
+            :message="t('settings.noProfilesYet')"
+          />
+          <div v-else class="settings-entity-list">
+            <SettingsEntityItem
+              v-for="profile in profiles"
+              :key="profile.id"
+              :icon="profileIcon(profile)"
+              :title="profile.name"
+              openable
+              @open="navigate(profileTab(profile.id))"
+            >
+              <span class="settings-entity-meta">
+                {{ t('settings.accessRead') }}:
+                {{ formatAccess(profile.projectPermissions[projectId]?.read) }}
+              </span>
+              <span class="settings-entity-meta">
+                {{ t('settings.accessWrite') }}:
+                {{ formatAccess(profile.projectPermissions[projectId]?.write) }}
+              </span>
+            </SettingsEntityItem>
+          </div>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection v-if="!isNew" :title="t('settings.deleteProject')">
+        <div class="settings-section-content">
+          <SettingsDangerZone
+            :message="t('settings.deleteProjectConfirm')"
+            :action-label="t('settings.deleteProject')"
+            @action="showDeleteConfirm = true"
+          />
+        </div>
+      </SettingsSection>
+    </template>
+
+    <StateMessage
+      v-else-if="aiProfilesStore.isLoaded"
+      icon="mdi:folder-question-outline"
+      :title="t('settings.projectNotFound')"
+      :message="t('settings.projectNotFoundHint')"
+    >
+      <Button size="sm" variant="neutral" @click="navigate(AI_OVERVIEW_TAB)">
+        {{ t('settings.aiProfilesTab') }}
+      </Button>
+    </StateMessage>
+    <StateMessage v-else kind="loading" />
 
     <ConfirmModal
       :open="showDeleteConfirm"
@@ -104,9 +120,12 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
+import { profileIcon } from '../../lib/ai-profiles/profile-icons'
 import { createProjectEditor } from '../../lib/ai-profiles/project-editor'
 import {
   AI_OVERVIEW_TAB,
+  NEW_ENTITY_ID,
+  profileTab,
   projectTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
@@ -136,7 +155,7 @@ const { t } = useI18n()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
-const isNew = computed(() => props.projectId === 'new')
+const isNew = computed(() => props.projectId === NEW_ENTITY_ID)
 const showDeleteConfirm = ref(false)
 
 const profiles = computed(() => aiProfilesStore.profiles)

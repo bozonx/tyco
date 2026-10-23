@@ -16,7 +16,7 @@ export interface ChatProfileRuntimeDependencies {
 export function createChatProfileRuntime(deps: ChatProfileRuntimeDependencies) {
   /** The profile's root instruction as last read from `SOUL.md` */
   const soul = ref('')
-  /** The chat to reopen; a profile chat remembers it while the app runs */
+  /** The chat to reopen, known before the session state stores it */
   const lastProfileChatId = ref<string | null>(null)
 
   /**

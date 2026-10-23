@@ -1,3 +1,4 @@
+import { profileIcon } from '../ai-profiles/profile-icons'
 import type { NavigationItem } from '../ui/navigation-item'
 
 /** Settings pages without a parameter, in navigation order */
@@ -107,7 +108,7 @@ export const projectTab = (projectId: string) => `ai-project:${projectId}`
 
 export interface SettingsNavigationSources {
   translate: (key: string) => string
-  profiles: readonly { id: string; name: string }[]
+  profiles: readonly { id: string; name: string; icon?: string }[]
   projects: readonly { id: string; name: string; isExternal: boolean }[]
   plugins: readonly { pluginId: string; label: string; isEnabled: boolean }[]
 }
@@ -129,7 +130,7 @@ function aiNavigationItems(
     ...sources.profiles.map((profile) => ({
       id: profileTab(profile.id),
       name: profile.name,
-      icon: 'mdi:account-outline',
+      icon: profileIcon(profile),
       nested: true,
     })),
     {
@@ -268,7 +269,7 @@ export function settingsTabTitle(
         return translate('settings.newProject')
       return (
         sources.projects.find((project) => project.id === parsed.projectId)
-          ?.name || translate('settings.projectPermissions')
+          ?.name || translate('settings.projectsTitle')
       )
     default:
       return ''

@@ -45,6 +45,10 @@ pub struct ProfileToolSettings {
 pub struct AiProfile {
     pub id: String,
     pub name: String,
+    /// An `mdi:*` icon from the app's own set; the default one when unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub icon: Option<String>,
     /// The model the profile's chats run on; the first usable one when unset.
     /// Profiles written before the setting kept the last picked model.
     #[serde(

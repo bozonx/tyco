@@ -78,10 +78,17 @@ describe('NavPanel.vue', () => {
     expect(wrapper.text()).toContain('nav.aiChat')
   })
 
-  it('does not render profile container or divider without profiles', () => {
+  it('offers to create a profile when there is none yet', async () => {
     const wrapper = shallowMount(NavPanel)
-    expect(wrapper.find('.topbar-divider').exists()).toBe(false)
     expect(wrapper.find('.profiles-tabs-container').exists()).toBe(false)
+
+    const create = wrapper.findComponent({ name: 'IconButton' })
+    expect(create.attributes('label')).toBe('nav.newProfile')
+    create.vm.$emit('click')
+    expect(mocks.menuModalsStore.closeAll).toHaveBeenCalled()
+    expect(mocks.appNavigation.goToConfig).toHaveBeenCalledWith(
+      'ai-profile:new'
+    )
   })
 
   it('renders divider and profile tabs when profiles are provided', async () => {

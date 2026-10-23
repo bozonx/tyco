@@ -28,6 +28,7 @@
         "lastChatId": null,
         "lastMode": null,
         "lastChatModelId": null,
+        "lastProfileChatIds": {},
         "recentAiPrompts": [],
         "recentTranslateLanguages": []
       }

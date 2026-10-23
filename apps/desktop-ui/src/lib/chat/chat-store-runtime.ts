@@ -215,7 +215,15 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     // which chat to reopen is a convenience: a failure is only logged
     saveSessionState: async (patch) => {
       if (profileId) {
-        if (patch.lastChatId) lastProfileChatId.value = patch.lastChatId
+        if (!patch.lastChatId) return
+        lastProfileChatId.value = patch.lastChatId
+        const stored = deps.getSessionState()?.lastProfileChatIds ?? {}
+        if (stored[profileId] === patch.lastChatId) return
+        const result = await deps.saveSessionState({
+          lastProfileChatIds: { ...stored, [profileId]: patch.lastChatId },
+        })
+        if (!result.success)
+          warn(`Could not save the last profile chat: ${result.error}`)
         return
       }
       const result = await deps.saveSessionState(patch)
@@ -223,7 +231,9 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     },
     getLastChatId: () =>
       profileId
-        ? (lastProfileChatId.value ?? deps.getFallbackProfileChatId?.())
+        ? (lastProfileChatId.value ??
+          deps.getSessionState()?.lastProfileChatIds?.[profileId] ??
+          deps.getFallbackProfileChatId?.())
         : deps.getSessionState()?.lastChatId,
     isHistoryEnabled: () => {
       const config = deps.getUserConfig()

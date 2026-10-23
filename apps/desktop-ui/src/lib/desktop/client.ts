@@ -1,5 +1,6 @@
 import { isTauri } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 import { type DesktopEventPayloads } from '@tyco/shared'
 
@@ -21,7 +22,13 @@ export const desktopClient = createDesktopClient({
     event: EventName,
     handler: (payload: DesktopEventPayloads[EventName]) => void | Promise<void>
   ) =>
-    listen<DesktopEventPayloads[EventName]>(event, ({ payload }) => {
-      void handler(payload)
-    }),
+    // Addressed backend events only reach listeners with a matching target.
+    // Broadcast events still reach every window's listener.
+    listen<DesktopEventPayloads[EventName]>(
+      event,
+      ({ payload }) => {
+        void handler(payload)
+      },
+      { target: { kind: 'AnyLabel', label: getCurrentWindow().label } }
+    ),
 })

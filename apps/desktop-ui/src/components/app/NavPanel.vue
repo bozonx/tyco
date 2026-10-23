@@ -25,8 +25,8 @@
         <AppIcon icon="mdi:chat-processing-outline" size="md" />
         {{ t('nav.aiChat') }}
       </button>
+      <div class="topbar-divider" aria-hidden="true" />
       <template v-if="profiles.length > 0">
-        <div class="topbar-divider" aria-hidden="true" />
         <div
           ref="profilesContainerRef"
           class="profiles-tabs-container overflow-x-auto no-scrollbar flex items-center gap-1 min-w-0"
@@ -47,11 +47,17 @@
             :title="profile.name"
             @click="openProfileChat(profile.id)"
           >
-            <AppIcon icon="mdi:account-outline" size="md" />
+            <AppIcon :icon="profileIcon(profile)" size="md" />
             <span class="truncate max-w-[120px]">{{ profile.name }}</span>
           </button>
         </div>
       </template>
+      <IconButton
+        class="shrink-0"
+        icon="mdi:account-plus-outline"
+        :label="t('nav.newProfile')"
+        @click="createProfile"
+      />
     </nav>
     <div class="flex-1" />
     <div class="flex flex-row gap-1 items-center">
@@ -104,8 +110,13 @@ import {
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
+import { profileIcon } from '../../lib/ai-profiles/profile-icons'
 import { EDITOR_ACTIONS_SHORTCUT } from '../../lib/input-keys/input-keys'
 import { APP_ROUTES } from '../../lib/navigation/routes'
+import {
+  NEW_ENTITY_ID,
+  profileTab,
+} from '../../lib/settings/settings-navigation'
 import { appNavigation } from '../../navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useChatStore, useProfileChatStore } from '../../stores/chat'
@@ -201,6 +212,12 @@ function openChat() {
 function openProfileChat(profileId: string) {
   menuModalsStore.closeAll()
   void useProfileChatStore(profileId).openLastOrNewChat()
+}
+
+/** Profiles are made in the settings, where the new one opens right away */
+function createProfile() {
+  menuModalsStore.closeAll()
+  void appNavigation.goToConfig(profileTab(NEW_ENTITY_ID))
 }
 
 function openHistory() {

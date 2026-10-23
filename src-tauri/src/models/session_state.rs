@@ -1,5 +1,6 @@
 use super::ActivationMode;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -9,6 +10,9 @@ pub struct SessionState {
     /// The model the chat was last used with.
     #[serde(default)]
     pub last_chat_model_id: Option<String>,
+    /// The chat last opened in each profile, by profile id.
+    #[serde(default)]
+    pub last_profile_chat_ids: HashMap<String, String>,
     /// Own AI requests typed in the AI task menu, the newest first.
     #[serde(default)]
     pub recent_ai_prompts: Vec<String>,

@@ -123,6 +123,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     createProfile: profilesModel.createProfile,
     updateProfile: profilesModel.updateProfile,
     refreshProfile: profilesModel.refreshProfile,
+    duplicateProfile: profilesModel.duplicateProfile,
     deleteProfile: profilesModel.deleteProfile,
     countChats,
     setProjectPermission: profilesModel.setProjectPermission,

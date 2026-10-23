@@ -14,11 +14,12 @@ const web = {
   icon: 'mdi:web',
   defaultAccess: 'allow' as const,
 }
+const typed = { stepCountText: '', stepCountError: false }
 
 describe('SettingsProfileToolsSection', () => {
   it('switches a group on with its default access', async () => {
     const wrapper = mount(SettingsProfileToolsSection, {
-      props: { groups: [web], tools: undefined },
+      props: { groups: [web], tools: undefined, ...typed },
     })
 
     expect(wrapper.text()).toContain('web.label')
@@ -29,19 +30,31 @@ describe('SettingsProfileToolsSection', () => {
     ])
   })
 
-  it('stores a valid step limit and refuses another', async () => {
+  it('shows the step limit and group details only for a group that is on', async () => {
     const wrapper = mount(SettingsProfileToolsSection, {
-      props: { groups: [web], tools: { groups: {} } },
+      props: { groups: [web], tools: { groups: {} }, ...typed },
+      slots: { group: '<p class="details">details</p>' },
     })
-    const steps = wrapper.get('input[type="number"]')
+    expect(wrapper.find('input[type="number"]').exists()).toBe(false)
+    expect(wrapper.find('.details').exists()).toBe(false)
 
-    await steps.setValue('12')
-    expect(wrapper.emitted('update')?.at(-1)).toEqual([
-      { groups: {}, maxStepCount: 12 },
-    ])
+    await wrapper.setProps({
+      tools: { groups: { web: { isEnabled: true, access: 'ask' } } },
+    })
+    expect(wrapper.find('.details').exists()).toBe(true)
+    await wrapper.get('input[type="number"]').setValue('12')
+    expect(wrapper.emitted('changeStepCount')?.at(-1)).toEqual(['12'])
+  })
 
-    await steps.setValue('99')
-    expect(wrapper.emitted('update')).toHaveLength(1)
+  it('shows the error of an invalid step limit', () => {
+    const wrapper = mount(SettingsProfileToolsSection, {
+      props: {
+        groups: [web],
+        tools: { groups: { web: { isEnabled: true, access: 'allow' } } },
+        stepCountText: '99',
+        stepCountError: true,
+      },
+    })
     expect(wrapper.text()).toContain('settings.profileToolStepsInvalid')
   })
 })

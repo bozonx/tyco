@@ -124,4 +124,70 @@ describe('chat-store-runtime', () => {
     )
     runtime.dispose()
   })
+
+  it('remembers the last chat of a profile across restarts', async () => {
+    const profile: AiProfile = {
+      id: 'writer',
+      name: 'Writer',
+      projectPermissions: {},
+      createdAt: 1,
+      updatedAt: 1,
+    }
+    const invoke = vi.fn(async (command: string, args?: { id?: string }) =>
+      command === 'get_chat'
+        ? {
+            id: args?.id,
+            title: 'Stored',
+            lastMessageAt: 1,
+            messages: [{ role: 'user', content: 'question' }],
+          }
+        : undefined
+    )
+    const sessionState = {
+      ...structuredClone(DEFAULT_SESSION_STATE),
+      lastProfileChatIds: { other: 'chat-9', writer: 'chat-2' },
+    }
+    const saveSessionState = vi.fn(async () => ({ success: true }))
+
+    const runtime = createChatStoreRuntime({
+      profileId: 'writer',
+      invoke: invoke as unknown as typeof invokeDesktop,
+      history: createFakeHistory(),
+      llmActions: {
+        sendChatMessage: vi.fn(async () => chatAnswer('reply')),
+        generateChatTitle: vi.fn(async () => ''),
+      },
+      editor: { value: '', selectedText: '' },
+      input: reactive(createChatInputModel()),
+      getProfile: () => profile,
+      refreshProfile: vi.fn(async () => profile),
+      readSoul: vi.fn(async () => '# Soul'),
+      updateProfileModel: vi.fn(async () => {}),
+      getUserConfig: () => structuredClone(DEFAULT_USER_CONFIG),
+      getSessionState: () => sessionState,
+      saveSessionState,
+      hasSecret: () => true,
+      externalSelection: () => '',
+      windowLabel: () => 'main',
+      openMainChat: vi.fn(async () => {}),
+      closeModals: vi.fn(),
+      afterRender: vi.fn(async () => {}),
+      navigateTo: vi.fn(async () => {}),
+      translate: (key) => key,
+      toastText: vi.fn(),
+      toastKey: vi.fn(),
+      warn: vi.fn(),
+    })
+
+    await runtime.openLastOrNewChat()
+    expect(runtime.currentChatParams.value.id).toBe('chat-2')
+    // the chat stored already is not written again
+    expect(saveSessionState).not.toHaveBeenCalled()
+
+    await runtime.openChat('chat-3')
+    expect(saveSessionState).toHaveBeenCalledWith({
+      lastProfileChatIds: { other: 'chat-9', writer: 'chat-3' },
+    })
+    runtime.dispose()
+  })
 })
