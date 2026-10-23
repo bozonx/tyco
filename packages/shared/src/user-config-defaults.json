@@ -30,7 +30,7 @@
     "aiTasks": "",
     "correction": "",
     "translation": "",
-    "voiceCommands": "",
+    "voiceCommands": "Ctrl+Alt+X",
     "selectionCorrection": "Ctrl+Alt+F"
   },
   "externalAccess": { "canAccessSelection": false },

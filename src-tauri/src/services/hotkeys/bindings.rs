@@ -182,10 +182,10 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
     match mode {
         ActivationMode::Voice => Some("V"),
         ActivationMode::SelectionActions => Some("S"),
+        ActivationMode::VoiceCommands => Some("X"),
         ActivationMode::Editor
         | ActivationMode::QuickInput
         | ActivationMode::Chat
-        | ActivationMode::VoiceCommands
         | ActivationMode::VoiceChat
         | ActivationMode::AiTasks
         | ActivationMode::CommandLauncher
@@ -284,7 +284,12 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(
             assigned,
-            ["voice", "selectionActions", "selectionCorrection"]
+            [
+                "voiceCommands",
+                "voice",
+                "selectionActions",
+                "selectionCorrection"
+            ]
         );
         assert_eq!(
             default_hotkeys_config().get("editor"),
@@ -344,12 +349,12 @@ mod tests {
         );
         assert_eq!(
             selection(json!({ "hotkeys": {
-                "selectionCorrection": "Ctrl+Alt+X",
+                "selectionCorrection": "Ctrl+Alt+K",
                 "translate.0": "Ctrl+Alt+1"
             } })),
             (
                 String::from("selectionCorrection"),
-                Some(String::from("Ctrl+Alt+X"))
+                Some(String::from("Ctrl+Alt+K"))
             )
         );
         assert_eq!(
