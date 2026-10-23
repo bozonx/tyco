@@ -160,15 +160,15 @@ failure. For a stability check, use `--repeat-each=3`.
   section and full-page screenshots are diagnostic artifacts, not assertions.
 - `app-shell.spec.ts`, `editor-history.spec.ts`, and `locales.spec.ts` cover startup,
   navigation, clipboard/history, undo, desktop events and the supported locales.
-- `settings.spec.ts` covers autosave, failed saves, explicit retry and reload.
+- `settings.spec.ts` covers autosave, failed saves, explicit retry and reload, and creating a connection/model through the UI before sending a chat request.
 - `chat.spec.ts` covers partial streaming, completion, cancellation, retry after
-  a provider error and restoration of a saved chat.
+  a provider error restoration of a saved chat, pasted text attachments, and allow/deny approval of a profile file tool followed by the next model response.
 - `editor-actions.spec.ts` covers correction review/application and enabling,
-  executing and disabling a built-in plugin action.
+  executing and disabling a built-in plugin action, and selecting a translation language and applying the translated result.
 - `voice.spec.ts` covers live and final transcription, cancellation and a broken
   speech connection, including microphone cleanup.
 - `quick-window.spec.ts` uses the quick window identity and activation mode to
-  cover draft recall, restoration after focus loss and command execution.
+  cover draft recall, restoration after focus loss, correction followed by native insertion IPC, and command execution. A command configuration scenario creates a script command and assigns its launcher slot through settings before opening a separate quick webview fixture.
 
 Both Chromium and WebKit run functional scenarios. The real clipboard test is
 tagged `@chromium` because WebKit cannot grant `clipboard-write`. Visual comparisons run only in
@@ -194,16 +194,17 @@ Keep this suite small. Its scenarios cover:
 4. Saving settings and merging stale snapshots.
 5. Saving editor history and updating its result.
 6. Removing editor history.
-7. Saving a note and checking the file on disk.
-8. Production CSP blocking direct HTTP without reaching the fixture server.
-9. Rust HTTP proxy reaching that same offline fixture.
-10. CLI status against the running application.
-11. CLI activation delivering text to the editor.
-12. D-Bus activation delivering text to the editor (Linux only).
-13. Plugin installation, activation and worker sandbox restrictions.
-14. Lazy settings navigation and plugin removal.
+7. Production CSP blocking direct HTTP without reaching the fixture server.
+8. Rust HTTP proxy reaching that same offline fixture.
+9. CLI status against the running application.
+10. CLI activation delivering text to the editor.
+11. D-Bus activation delivering text to the editor (Linux only).
+12. Loading a preinstalled plugin package, activation and worker sandbox restrictions (the native installation dialog is not automated).
+13. Lazy settings navigation and plugin removal.
+14. Changing the theme through the UI, restarting the native application with the same isolated home, and restoring the theme and editor history.
+15. On Linux/X11, activating quick input over a separate GTK editor and inserting text through the real UI into that editor.
 
-Linux needs `tauri-driver`, `WebKitWebDriver`, Xvfb, Openbox and a session D-Bus:
+Linux needs `tauri-driver`, `WebKitWebDriver`, Xvfb, Openbox, xdotool, xclip, Python with PyGObject/GTK 3 and a session D-Bus:
 
 ```sh
 cargo install tauri-driver --version 2.0.5 --locked
@@ -236,7 +237,7 @@ cannot be established by jsdom tests even when their assertions look similar.
 ## Strict fixtures and fake desktop runtime
 
 Import `test` and `expect` from `support/fixtures.ts` for the application, or
-`browserTest as test` for the catalog. Both reject uncaught page errors, console
+`browserTest as test` for the catalog. Both monitor every page in the test context and reject uncaught page errors, console
 errors, Vue/vue-i18n warnings and external HTTP requests. Missing translations
 emit explicit errors in the browser build, including when Vue is built for
 production. An expected console error must be registered with
@@ -268,3 +269,29 @@ protection or concurrent merges. Test those in Rust and the native desktop smoke
 use an explicit handler when a UI scenario needs a particular backend response.
 Draft recall in the quick window is in-memory across activations, not durable
 across a webview reload. Persistence tests reload settings and saved chats instead.
+
+## Choosing integration tests without virtual machines
+
+Use Rust integration tests for real local sockets, HTTP/WebSocket fixtures,
+child processes, cancellation and filesystem storage. They run on the host or
+in a container: `pnpm test:integration:rust`. The CLI integration target uses a
+real child CLI and a protocol server fixture; it does not replace the native
+application smoke.
+
+Use browser tests for complete UI actions with deterministic IPC responses.
+Keep rule matrices, serialization edge cases and static component attributes in
+unit/component tests. The catalog retains real browser focus, keyboard, dialog,
+accessible-name examples, scrolling and geometry checks; it does not repeat the
+full component attribute matrix.
+
+Use native smoke for the embedded origin, production CSP, actual IPC authority,
+storage across process restart and Linux/X11 insertion into a foreign process.
+Use `pnpm test:platform:linux` for the separate X11/KWin/Sway adapter matrix.
+Those headless compositors are not virtual machines. The KWin and Sway adapter
+runs do not establish full-application Wayland insertion.
+
+Reserve full OS sessions (a dedicated host or VM) for desktop portals, real
+permission prompts, global shortcuts, tray behavior and installer verification.
+Windows/macOS adapters require their own OS; a VM is one way to provide it, not
+a requirement of integration testing. Real audio capture, full Wayland desktop
+behavior and hardware/GPU compatibility remain outside the deterministic smoke.

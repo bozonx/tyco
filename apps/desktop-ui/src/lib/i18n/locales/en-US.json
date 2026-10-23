@@ -811,6 +811,7 @@
     "tasksHint": "Instructions for AI (prompts). Each task is assigned a hotkey for quick access from the action menu.",
     "tasksTab": "AI tasks",
     "temperature": "Temperature",
+    "voiceTextCorrection": "Voice text correction",
     "textCorrection": "Text correction",
     "textInjection": {
       "recheck": "Check again",

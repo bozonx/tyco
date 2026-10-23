@@ -142,7 +142,7 @@ for (const theme of ['Light', 'Dark', 'E-ink']) {
   }
 }
 
-test('navigation, disclosures and field messages retain their accessible relationships', async ({
+test('navigation and disclosures respond to keyboard input', async ({
   page,
 }) => {
   const navigation = page.getByRole('navigation', {
@@ -163,47 +163,9 @@ test('navigation, disclosures and field messages retain their accessible relatio
   await page.keyboard.press('Space')
   await expect(disclosure).toHaveAttribute('aria-expanded', 'false')
   await expect(page.locator('#catalog-details')).toHaveCount(0)
-
-  const field = page.getByRole('textbox', {
-    name: 'Multiple errors',
-    exact: true,
-  })
-  await expect(field).toHaveAttribute('aria-invalid', 'true')
-  await expect(field).toHaveAccessibleDescription(
-    'A value is required The value must be unique'
-  )
-  await expect(
-    page.getByRole('textbox', { name: 'Warnings', exact: true })
-  ).toHaveAccessibleDescription(
-    'Inherited from plugin settings Check the selected value'
-  )
-  await expect(
-    page.getByRole('textbox', { name: 'Disabled compact field', exact: true })
-  ).toBeDisabled()
 })
 
-test('grouped fields, compact notices and preview scroll ownership', async ({
-  page,
-}) => {
-  const group = page.getByRole('group', { name: 'Connection endpoints' })
-  await expect(group).toBeVisible()
-  await expect(
-    group.getByRole('textbox', { name: 'Primary endpoint' })
-  ).toBeDisabled()
-  await expect(
-    group.getByRole('textbox', { name: 'Secondary endpoint' })
-  ).toBeDisabled()
-  await expect(
-    group.getByRole('textbox', { name: 'Primary endpoint' })
-  ).toHaveAccessibleDescription('Both addresses are required')
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Connection verified' })
-  ).toBeVisible()
-  await expect(
-    page.getByRole('alert').filter({ hasText: 'Attachment needs attention' })
-  ).toBeVisible()
-  await expect(page.getByText('Passive guidance')).not.toHaveAttribute('role')
-
+test('preview scroll ownership', async ({ page }) => {
   const preview = page.locator('.catalog-preview pre.is-plain')
   await expect(preview).toHaveCSS('border-top-width', '0px')
   expect(

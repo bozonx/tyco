@@ -120,15 +120,7 @@ const invoke = async (command, args = {}) => {
   console.log(`Desktop IPC verified: ${command}`)
   return result.value
 }
-try {
-  await readFile(binary)
-  await waitFor(async () => {
-    try {
-      return Boolean(await request('GET', '/status'))
-    } catch {
-      return false
-    }
-  }, 'WebDriver')
+const startSession = async () => {
   const created = await request('POST', '/session', {
     capabilities: {
       alwaysMatch: {
@@ -154,6 +146,17 @@ try {
     }
     return false
   }, 'main editor')
+}
+try {
+  await readFile(binary)
+  await waitFor(async () => {
+    try {
+      return Boolean(await request('GET', '/status'))
+    } catch {
+      return false
+    }
+  }, 'WebDriver')
+  await startSession()
 
   const origin = await execute('return location.origin')
   assert.match(
@@ -208,13 +211,6 @@ try {
     history.find((/** @type {{ id: string }} */ item) => item.id === historyId)
       ?.result,
     'Smoke result'
-  )
-  await invoke('delete_editor_history_item', { id: historyId })
-  assert.equal(
-    (await invoke('get_editor_history')).some(
-      (/** @type {{ id: string }} */ item) => item.id === historyId
-    ),
-    false
   )
   // The offline fixture must be unreachable from the webview, but reachable via Rust.
   await new Promise((done) =>
@@ -377,9 +373,163 @@ try {
     () => execute("return Boolean(document.querySelector('.settings-panel'))"),
     'lazy settings route'
   )
+  // Change a setting through the actual UI, then restart the native process.
+  await waitFor(
+    () =>
+      execute(
+        `return Boolean(document.querySelector('.settings-panel input[type="radio"][value="eInk"]'))`
+      ),
+    'theme control'
+  )
+  await execute(
+    `document.querySelector('.settings-panel input[type="radio"][value="eInk"]').click()`
+  )
+  await waitFor(
+    async () =>
+      (await invoke('get_desktop_state')).settings.userConfig.appearance
+        .theme === 'eInk',
+    'UI setting persisted by Rust'
+  )
+  await request('DELETE', `/session/${session}`)
+  session = undefined
+  await startSession()
+  assert.equal(
+    (await invoke('get_desktop_state')).settings.userConfig.appearance.theme,
+    'eInk'
+  )
+  await waitFor(
+    () => execute("return document.documentElement.dataset.theme === 'eInk'"),
+    'restored theme'
+  )
+  assert.equal(
+    (await invoke('get_editor_history')).find(
+      (/** @type {{ id: string }} */ item) => item.id === historyId
+    )?.result,
+    'Smoke result'
+  )
+  await invoke('delete_editor_history_item', { id: historyId })
+  assert.equal(
+    (await invoke('get_editor_history')).some(
+      (/** @type {{ id: string }} */ item) => item.id === historyId
+    ),
+    false
+  )
+  await waitFor(
+    () =>
+      execute(
+        "return document.body.textContent.includes('Desktop sandbox verified')"
+      ),
+    'plugin activation after restart'
+  )
   await invoke('uninstall_plugin_package', { id: manifest.id })
+  if (!isWindows) {
+    const mainHandle = await request('GET', `/session/${session}/window`)
+    const foreign = spawn(
+      'python3',
+      [
+        resolve(root, 'scripts/linux-platform/editor.py'),
+        home,
+        'TycoSmokeTarget',
+      ],
+      { env: appEnv, stdio: ['ignore', 'ignore', 'pipe'] }
+    )
+    let foreignOutput = ''
+    /** @type {Error | undefined} */
+    let foreignError
+    foreign.on('error', (error) => {
+      foreignError = error
+    })
+    foreign.stderr.on('data', (chunk) => {
+      foreignOutput = (foreignOutput + chunk).slice(-20000)
+    })
+    try {
+      await waitFor(async () => {
+        if (foreignError) throw foreignError
+        if (foreign.exitCode !== null)
+          throw new Error(`Foreign editor exited: ${foreignOutput}`)
+        try {
+          await readFile(resolve(home, 'TycoSmokeTarget.text'))
+          return true
+        } catch {
+          return false
+        }
+      }, 'foreign GTK editor')
+      const { stdout: target } = await runFile(
+        'xdotool',
+        ['search', '--onlyvisible', '--sync', '--name', '^TycoSmokeTarget$'],
+        { env: appEnv, timeout: 10000 }
+      )
+      await runFile('xdotool', ['windowactivate', '--sync', target.trim()], {
+        env: appEnv,
+        timeout: 10000,
+      })
+      await waitFor(
+        async () =>
+          (await readFile(resolve(home, 'TycoSmokeTarget.focused'), 'utf8')) ===
+          'True',
+        'focused foreign editor'
+      )
+      await runFile(ctl, ['open', 'quick-input'], {
+        env: appEnv,
+        timeout: 20000,
+      })
+      await waitFor(async () => {
+        for (const handle of await request(
+          'GET',
+          `/session/${session}/window/handles`
+        )) {
+          // Switching to main would blur and dismiss the quick input.
+          if (handle === mainHandle) continue
+          await request('POST', `/session/${session}/window`, { handle })
+          if (
+            await execute(
+              "return document.documentElement.dataset.window === 'quick' && Boolean(document.querySelector('textarea'))"
+            )
+          )
+            return true
+        }
+        return false
+      }, 'quick input window')
+      const input = await request('POST', `/session/${session}/element`, {
+        using: 'css selector',
+        value: 'textarea',
+      })
+      const inputId = input['element-6066-11e4-a52e-4f735466cecf']
+      await request('POST', `/session/${session}/element/${inputId}/value`, {
+        text: 'Native quick insertion',
+      })
+      // Tab opens the actions for the original text; this path needs no provider.
+      await request('POST', `/session/${session}/element/${inputId}/value`, {
+        text: '\uE004',
+      })
+      await waitFor(
+        () =>
+          execute(
+            `return [...document.querySelectorAll('button')].some(button => button.textContent.includes('Insert into window'))`
+          ),
+        'insert action'
+      )
+      await execute(
+        `const button = [...document.querySelectorAll('button')].find(button => button.textContent.includes('Insert into window')); button.click()`
+      )
+      await waitFor(
+        async () =>
+          (await readFile(resolve(home, 'TycoSmokeTarget.text'), 'utf8')) ===
+          'Native quick insertion',
+        'text received by foreign editor'
+      )
+    } finally {
+      foreign.kill('SIGTERM')
+      await Promise.race([
+        new Promise((done) => foreign.once('exit', done)),
+        delay(3000),
+      ])
+      if (foreign.exitCode === null && !foreignError) foreign.kill('SIGKILL')
+      await writeFile(resolve(home, 'foreign-editor.log'), foreignOutput)
+    }
+  }
   console.log(
-    'Desktop smoke passed: embedded startup, IPC permissions, config updates, history lifecycle, production CSP, Rust HTTP proxy, CLI, D-Bus (Linux), plugin sandbox and lazy routes'
+    'Desktop smoke passed: embedded startup, IPC permissions, config updates, history lifecycle, production CSP, Rust HTTP proxy, CLI, D-Bus (Linux), plugin sandbox, lazy routes, native restart persistence and X11 quick insertion (Linux)'
   )
 } catch (error) {
   let failureLog = `${String(error)}\n${driverOutput}\n`

@@ -65,3 +65,31 @@ test('enables a plugin, uses its editor action and disables it', async ({
     settings: {},
   })
 })
+
+test('translates into a chosen language and applies the result', async ({
+  page,
+  desktop,
+}) => {
+  const llm = installLlm(desktop)
+  desktop.userConfig.translation.provider = 'llm'
+  desktop.userConfig.translation.qualityGate = 'off'
+  await page.goto('/')
+  const editor = page.getByRole('textbox', { name: 'Text editor' })
+  await editor.fill('Good morning, everyone.')
+  await page
+    .locator('.editor-root')
+    .getByRole('button', { name: 'Translation', exact: true })
+    .click()
+  await page.getByRole('button', { name: /Other language/ }).click()
+  await page
+    .getByRole('combobox', { name: 'Search the target language…', exact: true })
+    .fill('Spanish')
+  await page.keyboard.press('Enter')
+  await llm.answer('Buenos días a todos.')
+  expect(llm.requests[0]!.body).toContain('Good morning, everyone.')
+  expect(llm.requests[0]!.body).toContain(
+    'Translate the source_text block to es'
+  )
+  await page.getByRole('button', { name: /Insert into editor/ }).click()
+  await expect(editor).toHaveText('Buenos días a todos.')
+})

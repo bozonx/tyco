@@ -9,7 +9,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev \
     libayatana-appindicator3-dev librsvg2-dev libgtk-layer-shell-dev libasound2-dev \
-    webkit2gtk-driver xvfb openbox dbus-x11 \
+    webkit2gtk-driver xvfb openbox dbus-x11 xdotool xclip python3-gi gir1.2-gtk-3.0 \
   && rm -rf /var/lib/apt/lists/*
 
 ENV RUSTUP_HOME=/usr/local/rustup \

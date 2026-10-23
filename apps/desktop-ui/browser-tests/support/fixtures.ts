@@ -1,4 +1,9 @@
-import { test as base, expect, type ConsoleMessage } from '@playwright/test'
+import {
+  test as base,
+  expect,
+  type ConsoleMessage,
+  type WebError,
+} from '@playwright/test'
 import { ActivationMode } from '@tyco/shared'
 
 import { FakeDesktop } from './fake-desktop'
@@ -46,9 +51,9 @@ function assertExpectedErrors(
  */
 export const browserTest = base.extend<BrowserFixtures>({
   expectConsoleError: [
-    async ({ page }, use) => {
+    async ({ context }, use) => {
       const externalRequests: string[] = []
-      await page.route(/^https?:\/\//, async (route) => {
+      await context.route(/^https?:\/\//, async (route) => {
         const url = new URL(route.request().url())
         if (url.origin === 'http://127.0.0.1:3100') await route.continue()
         else {
@@ -56,7 +61,7 @@ export const browserTest = base.extend<BrowserFixtures>({
           await route.abort('blockedbyclient')
         }
       })
-      await page.routeWebSocket(/.*/, (socket) => {
+      await context.routeWebSocket(/.*/, (socket) => {
         externalRequests.push(socket.url())
         socket.close()
       })
@@ -72,11 +77,12 @@ export const browserTest = base.extend<BrowserFixtures>({
         )
           consoleErrors.push(text)
       }
-      page.on('pageerror', onPageError)
-      page.on('console', onConsole)
+      const onWebError = (error: WebError) => onPageError(error.error())
+      context.on('weberror', onWebError)
+      context.on('console', onConsole)
       await use((pattern, count = 1) => expected.push({ pattern, count }))
-      page.off('pageerror', onPageError)
-      page.off('console', onConsole)
+      context.off('weberror', onWebError)
+      context.off('console', onConsole)
       expect.soft(pageErrors, 'uncaught page errors').toEqual([])
       expect
         .soft(externalRequests, 'unexpected external browser requests')

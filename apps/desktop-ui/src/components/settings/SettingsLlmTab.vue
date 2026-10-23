@@ -61,7 +61,7 @@
       <FieldRow
         v-for="task in LLM_TASKS"
         :key="task"
-        :label="t(`settings.${task}`)"
+        :label="t(TASK_LABEL_KEYS[task])"
         vertical
       >
         <div class="flex flex-col gap-2 w-full">
@@ -158,6 +158,14 @@ import {
   type UserConfig,
   llmSecretId,
 } from '@tyco/shared'
+
+const TASK_LABEL_KEYS = {
+  chat: 'settings.chat',
+  translation: 'action.translationMenu',
+  voiceCorrection: 'settings.voiceTextCorrection',
+  correction: 'settings.textCorrection',
+  aiTask: 'settings.tasksTab',
+} as const
 
 const { t } = useI18n()
 const { draft: userConfig, operations } = useSettingsContext()

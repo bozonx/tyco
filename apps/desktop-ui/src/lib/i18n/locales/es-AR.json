@@ -811,6 +811,7 @@
     "tasksHint": "Instrucciones para la IA (prompts). A cada tarea se le asigna un atajo para acceso rápido desde el menú de acciones.",
     "tasksTab": "Tareas de IA",
     "temperature": "Temperatura",
+    "voiceTextCorrection": "Corrección del texto reconocido",
     "textCorrection": "Corrección de texto",
     "textInjection": {
       "recheck": "Comprobar de nuevo",

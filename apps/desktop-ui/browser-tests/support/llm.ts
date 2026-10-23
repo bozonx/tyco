@@ -4,27 +4,29 @@ import { LLM_TASKS, type DesktopChannel } from '@tyco/shared'
 import type { FakeDesktop } from './fake-desktop'
 
 /** A controlled OpenAI-compatible server at the native network boundary. */
-export function installLlm(desktop: FakeDesktop) {
-  desktop.userConfig.llm.providers.push({
-    id: 'browser-test',
-    type: 'openaiCompatible',
-    name: 'Browser test',
-    baseUrl: 'http://llm.invalid/v1',
-  })
-  desktop.userConfig.llm.models = [
-    {
-      id: 'browser-model',
-      providerId: 'browser-test',
-      providerModelId: 'browser-model',
-      canUseImages: false,
-      canUseTools: false,
-      name: 'Browser model',
-    },
-  ]
-  for (const task of LLM_TASKS) {
-    desktop.userConfig.llm.tasks[task].modelChain = ['browser-model']
+export function installLlm(desktop: FakeDesktop, seedConfig = true) {
+  if (seedConfig) {
+    desktop.userConfig.llm.providers.push({
+      id: 'browser-test',
+      type: 'openaiCompatible',
+      name: 'Browser test',
+      baseUrl: 'http://llm.invalid/v1',
+    })
+    desktop.userConfig.llm.models = [
+      {
+        id: 'browser-model',
+        providerId: 'browser-test',
+        providerModelId: 'browser-model',
+        canUseImages: false,
+        canUseTools: false,
+        name: 'Browser model',
+      },
+    ]
+    for (const task of LLM_TASKS) {
+      desktop.userConfig.llm.tasks[task].modelChain = ['browser-model']
+    }
+    desktop.sessionState.lastChatModelId = 'browser-model'
   }
-  desktop.sessionState.lastChatModelId = 'browser-model'
   const requests: Array<{
     channel: DesktopChannel
     body: string
@@ -96,6 +98,44 @@ export function installLlm(desktop: FakeDesktop) {
         statusText: 'OK',
         headers: [['content-type', 'text/event-stream']],
       })
+    },
+    async toolCall(name: string, input: Record<string, unknown>, index = 0) {
+      const { channel } = await requestAt(index)
+      await send(channel, {
+        id: 'browser-tool-response',
+        object: 'chat.completion.chunk',
+        created: 1,
+        model: 'browser-model',
+        choices: [
+          {
+            index: 0,
+            delta: {
+              role: 'assistant',
+              tool_calls: [
+                {
+                  index: 0,
+                  id: 'browser-call',
+                  type: 'function',
+                  function: { name, arguments: JSON.stringify(input) },
+                },
+              ],
+            },
+            finish_reason: null,
+          },
+        ],
+      })
+      await send(channel, {
+        id: 'browser-tool-response',
+        object: 'chat.completion.chunk',
+        created: 1,
+        model: 'browser-model',
+        choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }],
+      })
+      await desktop.sendChannel(
+        channel,
+        new TextEncoder().encode('data: [DONE]\n\n')
+      )
+      await desktop.sendChannel(channel, { type: 'end' })
     },
     async chunk(text: string, index = 0) {
       const { channel } = await requestAt(index)

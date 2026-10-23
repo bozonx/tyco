@@ -249,7 +249,14 @@ Sway использует `/dev/uinput`, `/dev/input`, seatd и привилег
 доступ к input-устройствам предназначен для изолированного CI-раннера.
 GNOME/Mutter и Weston в автоматическую матрицу пока не входят.
 
-Сценарии полного приложения (уровень 2, отдельно от платформенного набора):
+Native smoke (`pnpm test:desktop`) automates the full Linux/X11 path: a
+separate GTK editor → CLI quick-input activation → typing in the real Tyco
+webview → insertion through the actions menu → checking the text recorded by
+the foreign process. It also checks theme and history restoration after a native
+process restart with the same isolated home. There is no IPC replacement or VM.
+Windows runs the restart checks but does not run the foreign GTK editor scenario.
+
+Other full-application scenarios (level 2, separate from platform adapter tests):
 
 1. Запустить редактор (kate / gedit / xterm), ввести текст, выделить его.
 2. Вызвать `tyco-ctl replace correction` — проверить текст в редакторе и что

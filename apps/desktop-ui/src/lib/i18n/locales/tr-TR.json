@@ -808,6 +808,7 @@
     "tasksHint": "Yapay zekâ talimatları (istemler). Her göreve eylem menüsünden hızlı erişim için bir kısayol atanır.",
     "tasksTab": "AI görevleri",
     "temperature": "Sıcaklık",
+    "voiceTextCorrection": "Tanınan metni düzeltme",
     "textCorrection": "Metin düzeltme",
     "textInjection": {
       "recheck": "Yeniden denetle",
