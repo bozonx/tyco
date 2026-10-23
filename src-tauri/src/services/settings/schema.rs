@@ -15,7 +15,8 @@ static SCHEMA: LazyLock<Value> = LazyLock::new(|| {
 });
 
 /// The defaults both runtimes share; the platform ones of
-/// `defaults::default_user_config` differ in the hotkeys only.
+/// `defaults::default_user_config` differ in the hotkeys only, those of the
+/// launcher pages included.
 #[cfg(test)]
 static PORTABLE_DEFAULTS: LazyLock<Value> =
     LazyLock::new(crate::services::settings::defaults::portable_user_config);
@@ -618,6 +619,10 @@ mod tests {
             .shift_remove("voice");
         normalize_user_config(&mut config);
         assert_eq!(config["hotkeys"]["voice"], defaults["hotkeys"]["voice"]);
+        assert_eq!(
+            defaults["launcherPages"][0]["hotkey"],
+            json!(crate::services::hotkeys::default_launcher_page_shortcut())
+        );
     }
 
     #[test]

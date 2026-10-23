@@ -25,6 +25,9 @@ pub fn portable_user_config() -> Value {
 pub fn default_user_config() -> Value {
     let mut config = portable_user_config();
     config["hotkeys"] = hotkeys::default_hotkeys_config();
+    if let Some(page) = config["launcherPages"].get_mut(0) {
+        page["hotkey"] = json!(hotkeys::default_launcher_page_shortcut());
+    }
     config
 }
 

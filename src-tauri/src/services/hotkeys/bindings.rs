@@ -13,6 +13,9 @@ const SELECTION_CORRECTION_CONFIG_KEY: &str = "selectionCorrection";
 const LAUNCHER_PAGE_TARGET_PREFIX: &str = "launcherPage.";
 pub(super) use crate::services::selection_replace::CORRECTION_ACTION;
 const DEFAULT_CORRECTION_KEY: &str = "F";
+/// The first page of the default `launcherPages`, the one with a hotkey.
+const DEFAULT_LAUNCHER_PAGE_ID: &str = "main";
+const DEFAULT_LAUNCHER_PAGE_KEY: &str = "Q";
 const CORRECTION_DESCRIPTION: &str = "Correct selected text in place";
 
 /// What a hotkey does: open a mode or a page of the command overlay, or
@@ -205,8 +208,18 @@ fn default_correction_shortcut() -> String {
     format!("{DEFAULT_MODIFIERS}+{DEFAULT_CORRECTION_KEY}")
 }
 
+/// The shortcut of the first page of the default `launcherPages`.
+pub fn default_launcher_page_shortcut() -> String {
+    format!("{DEFAULT_MODIFIERS}+{DEFAULT_LAUNCHER_PAGE_KEY}")
+}
+
 pub(super) fn default_bindings() -> Vec<HotkeyBinding> {
-    bindings_from_config(&Value::Null)
+    bindings_from_config(&serde_json::json!({
+        "launcherPages": [{
+            "id": DEFAULT_LAUNCHER_PAGE_ID,
+            "hotkey": default_launcher_page_shortcut()
+        }]
+    }))
 }
 
 /// The `hotkeys` of the default user config on this platform; an unassigned
@@ -288,6 +301,7 @@ mod tests {
                 "voiceCommands",
                 "voice",
                 "selectionActions",
+                "launcherPage.main",
                 "selectionCorrection"
             ]
         );
@@ -303,8 +317,9 @@ mod tests {
             .into_iter()
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1);
+        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 2);
         assert!(defaults.contains(&String::from("selectionCorrection")));
+        assert!(defaults.contains(&String::from("launcherPage.main")));
     }
 
     #[test]

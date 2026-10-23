@@ -59,7 +59,12 @@
     "a": { "type": "standard", "actionId": "askInChat" }
   },
   "launcherPages": [
-    { "id": "main", "inputMode": "selection", "hotkey": "", "slots": {} }
+    {
+      "id": "main",
+      "inputMode": "selection",
+      "hotkey": "Ctrl+Alt+Q",
+      "slots": {}
+    }
   ],
   "commands": [],
   "llm": {
