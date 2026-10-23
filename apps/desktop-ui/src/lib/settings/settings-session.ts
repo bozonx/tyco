@@ -149,7 +149,11 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
           savedDraft = deps.prepare(saved)
           isApplying = true
           // Preserve unfinished UI values while adopting backend updates.
-          draft.value = rebase(savedDraft, submitted, rawDraft) as UserConfig
+          // A copy: the rebase shares objects with `savedDraft`, and an edit
+          // of the draft would change it too, so the edit would look saved.
+          draft.value = clone(
+            rebase(savedDraft, submitted, rawDraft)
+          ) as UserConfig
           isApplying = false
           saveError.value = ''
           conflicts.value = []

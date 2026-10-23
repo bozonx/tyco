@@ -341,4 +341,21 @@ describe('settings concurrency and recovery', () => {
     expect(model.draft.value.aiTasks.items[0]?.id).toBe('unfinished')
     expect(model.isSaved()).toBe(true)
   })
+
+  it('keeps the first edit after a save from looking saved', async () => {
+    const { deps, model } = setup()
+    model.draft.value.appearance.theme = 'dark'
+    await model.persist()
+    model.draft.value.appearance.theme = 'light'
+    expect(model.isSaved()).toBe(false)
+    model.schedule()
+    expect(model.draft.value.appearance.theme).toBe('light')
+    await model.persist()
+    expect(deps.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        appearance: expect.objectContaining({ theme: 'light' }),
+      }),
+      expect.anything()
+    )
+  })
 })
