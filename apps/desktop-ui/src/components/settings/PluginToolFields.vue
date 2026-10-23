@@ -5,6 +5,7 @@
     :key="field.name"
     :group="field.type === 'sortable-checklist'"
     :label="fieldLabel(field)"
+    :info="fieldInfo(field)"
     vertical
     density="compact"
   >
@@ -28,6 +29,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
+  configFieldInfo,
   configFieldLabel,
   configOptionLabel,
 } from '../../lib/config-fields/config-field-labels'
@@ -59,6 +61,7 @@ const stringValue = (name: string): string => {
 }
 
 const fieldLabel = (field: InputConfigItem) => configFieldLabel(field, t)
+const fieldInfo = (field: InputConfigItem) => configFieldInfo(field, t)
 
 const pluginSetting = (name: string): unknown => props.tool.baseConfig?.()[name]
 

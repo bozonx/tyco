@@ -14,6 +14,8 @@ interface InputConfigField<Type extends string, Value> {
   name: string
   label?: string
   labelKey?: string
+  info?: string
+  infoKey?: string
   value?: Value
   defaultValue?: Value
   options?: InputConfigOption[]

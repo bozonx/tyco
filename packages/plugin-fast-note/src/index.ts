@@ -23,6 +23,7 @@ const FIELDS: InputConfigItem[] = [
     type: 'text',
     name: 'pathToNotes',
     labelKey: 'local.pathToNotes',
+    infoKey: 'local.pathToNotesInfo',
     defaultValue: '',
   },
   {
@@ -67,18 +68,21 @@ const FIELDS: InputConfigItem[] = [
     type: 'text',
     name: 'customSubfolderTemplate',
     labelKey: 'local.customSubfolderTemplate',
+    infoKey: 'local.customSubfolderTemplateInfo',
     defaultValue: '',
   },
   {
     type: 'text',
     name: 'fileNameTemplate',
     labelKey: 'local.fileNameTemplate',
+    infoKey: 'local.fileNameTemplateInfo',
     defaultValue: '{YYYY}-{MM}-{DD}_{HH}-{mm}-{ss}.md',
   },
   {
     type: 'textarea',
     name: 'contentTemplate',
     labelKey: 'local.contentTemplate',
+    infoKey: 'local.contentTemplateInfo',
     defaultValue: '{content}',
   },
   {

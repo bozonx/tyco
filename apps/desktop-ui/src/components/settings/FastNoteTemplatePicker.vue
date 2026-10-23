@@ -1,9 +1,5 @@
 <template>
-  <FieldRow
-    :label="t('settings.fastNote.template')"
-    :hint="t('settings.fastNote.templateHint')"
-    vertical
-  >
+  <FieldRow :label="t('settings.fastNote.template')" vertical>
     <FieldSelect v-model="selected" :options="options" />
     <Button size="sm" @click="apply">{{ t('settings.fastNote.apply') }}</Button>
   </FieldRow>

@@ -215,7 +215,7 @@ const DYNAMIC_KEYS = new Set([
 
 const KEY_PATTERNS = [
   /\b(?:t|\$t|translate|toastKey)\s*\(\s*['"]([a-zA-Z0-9_.-]+)['"]/g,
-  /\b(?:labelKey|titleKey|messageKey|reasonKey|phrasesKey|nameKey|hintKey|descriptionKey|helpKey|escBtnLabelKey)\s*:\s*['"]([a-zA-Z0-9_.-]+)['"]/g,
+  /\b(?:labelKey|titleKey|messageKey|reasonKey|phrasesKey|nameKey|hintKey|infoKey|descriptionKey|helpKey|escBtnLabelKey)\s*:\s*['"]([a-zA-Z0-9_.-]+)['"]/g,
 ]
 
 let hasErrors = false

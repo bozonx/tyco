@@ -1,13 +1,5 @@
 <template>
   <div class="note-preview">
-    <p>{{ t('settings.fastNote.pathHint') }}</p>
-    <p>{{ t('settings.fastNote.tokens') }}</p>
-    <code>{{ dateTokens }}</code>
-    <p>{{ t('settings.fastNote.textTokens') }}</p>
-    <p>{{ t('settings.fastNote.collisionHint') }}</p>
-    <FieldRow :label="t('settings.fastNote.sample')" vertical>
-      <FieldTextArea v-model="sample" auto-resize />
-    </FieldRow>
     <p v-for="issue in issues" :key="issue" role="alert" class="note-warning">
       {{ issueMessages[issue] }}
     </p>
@@ -17,11 +9,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import FieldRow from '../common/FieldRow.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
 import {
   type FastNoteConfig,
   getEffectiveConfig,
@@ -33,14 +23,9 @@ import {
 
 const props = defineProps<{ config: Partial<FastNoteConfig> }>()
 const { t } = useI18n()
-const sample = ref('')
 const now = new Date()
-const dateTokens =
-  '{YYYY} {YY} {MM} {DD} {HH} {mm} {ss} {WW} {GGGG} {zettel} {timestamp}'
 const effective = computed(() => getEffectiveConfig(props.config))
-const text = computed(
-  () => sample.value.trim() || t('settings.fastNote.sampleText')
-)
+const text = computed(() => t('settings.fastNote.sampleText'))
 const issueMessages = computed(() => ({
   noNotesPath: t('settings.fastNote.errors.noNotesPath'),
   invalidNotesPath: t('settings.fastNote.errors.invalidNotesPath'),

@@ -36,6 +36,7 @@ export function scopeConfigFields(
   return fields.map((field) => ({
     ...field,
     labelKey: pluginMessageKey(id, field.labelKey),
+    infoKey: pluginMessageKey(id, field.infoKey),
     options: field.options?.map((option) => ({
       ...option,
       labelKey: pluginMessageKey(id, option.labelKey),

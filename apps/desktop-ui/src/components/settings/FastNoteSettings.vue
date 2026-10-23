@@ -2,7 +2,7 @@
   <FastNoteTemplatePicker :field="presetField" @apply="apply" />
   <FieldRow
     :label="t('settings.fastNote.folder')"
-    :hint="t('settings.fastNote.pathHint')"
+    :info="t('settings.fastNote.pathHint')"
     vertical
   >
     <FieldInput

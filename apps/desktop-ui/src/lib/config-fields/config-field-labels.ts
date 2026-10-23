@@ -13,6 +13,13 @@ export function configOptionLabel(
   return option.labelKey ? t(option.labelKey) : option.name || String(option.id)
 }
 
+export function configFieldInfo(
+  field: InputConfigItem,
+  t: Translate
+): string | undefined {
+  return field.infoKey ? t(field.infoKey) : field.info
+}
+
 export function configFieldOptions(field: InputConfigItem, t: Translate) {
   return (field.options ?? []).map((option) => ({
     id: option.id,

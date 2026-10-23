@@ -5,6 +5,7 @@
       :key="item.name"
       :group="item.type === 'sortable-checklist'"
       :label="configFieldLabel(item, t)"
+      :info="configFieldInfo(item, t)"
       :vertical="item.vertical ?? item.type === 'sortable-checklist'"
     >
       <ConfigFieldControl
@@ -20,6 +21,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import {
+  configFieldInfo,
   configFieldLabel,
   configFieldOptions,
 } from '../../lib/config-fields/config-field-labels'
