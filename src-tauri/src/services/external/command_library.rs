@@ -29,6 +29,17 @@ pub enum ToolInputKind {
     Structured,
 }
 
+/// Effective input for one configured command, computed by its tool registry.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandInputDescription {
+    #[ts(type = "Record<string, unknown>")]
+    pub tool_config: Value,
+    pub input: ToolInputKind,
+    #[ts(type = "Record<string, unknown>")]
+    pub input_schema: Value,
+}
+
 /// A tool as the webview registry describes it, see `set_tool_catalog`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -44,6 +55,8 @@ pub struct ToolCatalogEntry {
     #[serde(default)]
     #[ts(type = "Record<string, unknown>", optional = nullable)]
     pub input_schema: Option<Value>,
+    #[serde(default)]
+    pub command_inputs: HashMap<String, CommandInputDescription>,
 }
 
 /// The tools of the webview registry by id. Plugin tools and whether a tool
@@ -175,6 +188,31 @@ fn can_run_externally(command: &Value) -> bool {
         == Some(true)
 }
 
+pub fn command_input<'a>(
+    command: &Value,
+    tool: &'a ToolCatalogEntry,
+) -> Result<Option<&'a CommandInputDescription>, CommandLookupError> {
+    let Some(input) = tool.command_inputs.get(id_of(command)) else {
+        return Ok(None);
+    };
+    if input.tool_config
+        != command
+            .get("toolConfig")
+            .cloned()
+            .unwrap_or_else(|| serde_json::json!({}))
+    {
+        return Err(CommandLookupError::ToolsLoading(id_of(command).into()));
+    }
+    Ok(Some(input))
+}
+
+fn input_kind(
+    command: &Value,
+    tool: &ToolCatalogEntry,
+) -> Result<ToolInputKind, CommandLookupError> {
+    Ok(command_input(command, tool)?.map_or(tool.input, |input| input.input))
+}
+
 /// Whether a script takes the text: its command mentions `{{TEXT}}`.
 /// Keep in sync with `scriptTakesText` in
 /// `packages/shared/src/user-config.ts`.
@@ -213,7 +251,7 @@ fn resolve_text_input_support(
     if !tool.is_available {
         return Err(CommandLookupError::Unavailable(id, tool.reason.clone()));
     }
-    match tool.input {
+    match input_kind(command, tool)? {
         ToolInputKind::None => Ok(false),
         ToolInputKind::Text | ToolInputKind::Parsed => Ok(true),
         ToolInputKind::Structured
@@ -246,7 +284,9 @@ fn resolve_callable_command(
         can_take_text,
         has_structured_input: catalog
             .and_then(|catalog| catalog.get(str_field(command, "toolId")))
-            .is_some_and(|tool| tool.input == ToolInputKind::Structured),
+            .map(|tool| input_kind(command, tool))
+            .transpose()?
+            .is_some_and(|input| input == ToolInputKind::Structured),
     })
 }
 
@@ -337,6 +377,39 @@ pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
         })
         .collect();
     serde_json::to_value(listed).unwrap_or_else(|_| Value::Array(Vec::new()))
+}
+
+/// Describe the same effective input used by the execution registry.
+pub fn describe(
+    user_config: &Value,
+    catalog: Option<&ToolCatalog>,
+    target: &str,
+    by_name: bool,
+) -> Result<Value, CommandLookupError> {
+    let command = if by_name {
+        find_by_name(user_config, catalog, target)?
+    } else {
+        find_by_id(user_config, catalog, target)?
+    };
+    let raw = commands_of(user_config)
+        .iter()
+        .find(|raw| id_of(raw) == command.id);
+    let tool = raw.and_then(|raw| catalog?.get(str_field(raw, "toolId")));
+    let schema = match (raw, tool) {
+        (Some(raw), Some(tool)) => command_input(raw, tool)?
+            .map(|input| input.input_schema.clone())
+            .or_else(|| tool.input_schema.clone()),
+        _ => None,
+    };
+    Ok(serde_json::json!({
+        "id": command.id,
+        "name": raw.and_then(|item| item.get("name")),
+        "input": if command.has_structured_input { "structured" } else if command.can_take_text { "text" } else { "none" },
+        "textAccepted": command.can_take_text,
+        "canReplaceSelection": command.can_take_text && !command.has_structured_input,
+        "output": "return",
+        "inputSchema": schema,
+    }))
 }
 
 pub use crate::models::LauncherRequest;
@@ -464,6 +537,7 @@ mod tests {
             is_available: available,
             reason: reason.map(str::to_owned),
             input_schema: None,
+            command_inputs: HashMap::new(),
         };
         catalog_from(vec![
             entry("script", ToolInputKind::Text, true, None),
@@ -485,6 +559,50 @@ mod tests {
 
     fn find_named(name: &str) -> Result<ExternalCommand, CommandLookupError> {
         find_by_name(&config(), Some(&catalog()), name)
+    }
+
+    #[test]
+    fn configured_input_changes_schema_and_call_capabilities() {
+        let command = json!({
+            "id": "configured", "toolId": "Plugin.dynamic",
+            "toolConfig": {"mode": "structured"}, "isAvailableExternally": true
+        });
+        let mut tool = ToolCatalogEntry {
+            id: "Plugin.dynamic".into(),
+            input: ToolInputKind::Text,
+            is_available: true,
+            reason: None,
+            input_schema: None,
+            command_inputs: HashMap::new(),
+        };
+        tool.command_inputs.insert("configured".into(), CommandInputDescription {
+            tool_config: command["toolConfig"].clone(), input: ToolInputKind::Structured,
+            input_schema: json!({"type":"object", "properties":{"at":{"type":"string"}}, "required":["at"]}),
+        });
+        assert_eq!(
+            command_input(&command, &tool)
+                .unwrap()
+                .unwrap()
+                .input_schema["required"],
+            json!(["at"])
+        );
+        let config = json!({"commands":[command.clone()]});
+        let catalog = catalog_from(vec![tool]);
+        let found = find_by_id(&config, Some(&catalog), "configured").unwrap();
+        assert!(found.has_structured_input);
+        assert!(!found.can_take_text);
+        let description = describe(&config, Some(&catalog), "configured", false).unwrap();
+        assert_eq!(description["inputSchema"]["required"], json!(["at"]));
+        assert_eq!(description["textAccepted"], false);
+        let listed = list(&config, Some(&catalog));
+        assert_eq!(listed[0]["input"], "structured");
+        assert_eq!(listed[0]["canReplaceSelection"], false);
+        let mut changed = config;
+        changed["commands"][0]["toolConfig"]["mode"] = json!("text");
+        assert_eq!(
+            find_by_id(&changed, Some(&catalog), "configured"),
+            Err(CommandLookupError::ToolsLoading("configured".into()))
+        );
     }
 
     #[test]

@@ -129,6 +129,7 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             Ok(()) => Response::success(),
             Err(error) => *error,
         },
+        Request::ListJobs => Response::json(&app.state::<ExternalJobs>().list()),
         Request::JobStatus { id } => app
             .state::<ExternalJobs>()
             .get(&id)
@@ -143,17 +144,5 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             Ok(()) => Response::success(),
             Err(error) => *error,
         },
-        Request::Quit => {
-            let app = app.clone();
-            let services = app.state::<crate::services::background::BackgroundServices>();
-            let handle = app.clone();
-            if let Err(error) = services.spawn_async(async move {
-                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                handle.exit(0);
-            }) {
-                return Response::coded_error(ErrorCode::Unavailable, error.to_string());
-            }
-            Response::success()
-        }
     }
 }

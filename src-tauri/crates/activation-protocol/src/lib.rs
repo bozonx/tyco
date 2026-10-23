@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod transport;
 
-pub const API_VERSION: u32 = 1;
+pub const API_VERSION: u32 = 2;
 /// Room for the text of a command and the list of commands.
 pub const MAX_MESSAGE_BYTES: usize = 1024 * 1024;
 pub const START_MODES: &[&str] = &[
@@ -75,14 +75,13 @@ pub enum Request {
     ReplaceSelection {
         action: String,
     },
+    ListJobs,
     JobStatus {
         id: String,
     },
     JobCancel {
         id: String,
     },
-    /// Quits the application gracefully.
-    Quit,
 }
 
 /// The machine codes of failed requests and jobs. They are stable: scripts
@@ -320,6 +319,7 @@ mod tests {
     #[test]
     fn rejects_removed_protocol_requests() {
         for request in [
+            r#"{"command":"quit"}"#,
             r#"{"command":"activate","mode":"editor"}"#,
             r#"{"command":"runCommand","target":"test"}"#,
             r#"{"command":"replace","action":"command:test"}"#,
@@ -346,7 +346,7 @@ mod tests {
             Request::ReplaceSelection {
                 action: "correction".into(),
             },
-            Request::Quit,
+            Request::ListJobs,
         ] {
             let encoded = serde_json::to_string(&request).unwrap();
             let decoded: Request = serde_json::from_str(&encoded).unwrap();

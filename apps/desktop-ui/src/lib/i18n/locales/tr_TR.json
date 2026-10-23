@@ -891,15 +891,10 @@
     "autosaveSaved": "Kaydedildi",
     "fastNote": {
       "template": "Ayar şablonu uygula",
-      "templateHint": "Şablon; kaydetme modunu, alt klasörleri, dosya adı ve içerik şablonlarını değiştirir. Değerleri daha sonra düzenleyebilirsiniz.",
       "apply": "Şablonu uygula",
       "folder": "Not klasörü",
       "browse": "Klasör seç",
       "pathHint": "Mutlak yol veya ~/notes kullanın. Logseq için grafiğin kökünü seçin; journals otomatik eklenir.",
-      "tokens": "Tarih belirteçleri (GGGG ISO hafta yılıdır; zettel milisaniye içerir):",
-      "textTokens": "Dosya adları ayrıca {'{'}title{'}'} ve {'{'}slug{'}'} destekler. İçerik {'{'}title{'}'} ve {'{'}content{'}'} destekler; {'{'}content{'}'} zorunludur. Alt klasörler yalnızca tarih belirteçlerini destekler.",
-      "collisionHint": "Ad çakışmasında yeni dosyalara sayısal ek verilir. Ekleme modu dosya yoksa oluşturur.",
-      "sample": "Örnek metin (yalnızca önizleme)",
       "sampleText": "Örnek not\nDiğer ayrıntılar",
       "preview": "Önizleme: hedef ve içerik",
       "errors": {

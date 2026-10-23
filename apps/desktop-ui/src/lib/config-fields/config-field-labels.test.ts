@@ -31,7 +31,9 @@ describe('config field labels', () => {
     expect(configFieldLabel({ name: 'enabled', type: 'checkbox' }, t)).toBe(
       'enabled'
     )
-    expect(configFieldInfo({ name: 'enabled', type: 'checkbox' }, t)).toBeUndefined()
+    expect(
+      configFieldInfo({ name: 'enabled', type: 'checkbox' }, t)
+    ).toBeUndefined()
     expect(
       configFieldInfo(
         { name: 'enabled', type: 'checkbox', info: 'Static info' },

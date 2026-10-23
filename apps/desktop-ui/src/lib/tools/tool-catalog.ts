@@ -1,14 +1,15 @@
 import { watch } from 'vue'
 
-import type { ToolCatalogEntry } from '@tyco/shared'
+import type { CommandConfig, ToolCatalogEntry } from '@tyco/shared'
 
-import { schemaShape } from './tool-input'
+import { schemaShape, toolCallConfig, toolInputSchema } from './tool-input'
 import type { RegisteredTool } from './tool-types'
 
 /** The tools as the backend checks external calls against them */
 export function buildToolCatalog(
   tools: readonly RegisteredTool[],
-  t: (key: string) => string
+  t: (key: string) => string,
+  commands: readonly CommandConfig[] = []
 ): ToolCatalogEntry[] {
   return tools.map((tool) => {
     const shape = schemaShape(tool.inputSchema)
@@ -23,6 +24,30 @@ export function buildToolCatalog(
             : 'structured',
       available: !reason,
       inputSchema: tool.inputSchema,
+      commandInputs: {},
+    }
+    const matchingCommands = commands.filter(
+      (command) => command.toolId === tool.id
+    )
+    if (matchingCommands.length) {
+      entry.commandInputs = Object.fromEntries(
+        matchingCommands.map((command) => {
+          const inputSchema = toolInputSchema(
+            tool,
+            toolCallConfig(tool, command.toolConfig)
+          )
+          const shape = schemaShape(inputSchema)
+          return [
+            command.id,
+            {
+              toolConfig: command.toolConfig,
+              input:
+                shape === 'structured' && tool.parseText ? 'parsed' : shape,
+              inputSchema,
+            },
+          ]
+        })
+      )
     }
     if (reason) entry.reason = t(reason)
     return entry
@@ -30,6 +55,7 @@ export function buildToolCatalog(
 }
 
 export interface ToolCatalogSyncDependencies {
+  commands?: () => readonly CommandConfig[]
   tools: () => readonly RegisteredTool[]
   t: (key: string) => string
   send: (catalog: ToolCatalogEntry[]) => Promise<void> | void
@@ -92,7 +118,10 @@ export function createToolCatalogSync(deps: ToolCatalogSyncDependencies) {
     delivered = undefined
     failures = 0
     stop = watch(
-      () => JSON.stringify(buildToolCatalog(deps.tools(), deps.t)),
+      () =>
+        JSON.stringify(
+          buildToolCatalog(deps.tools(), deps.t, deps.commands?.())
+        ),
       (json) => {
         desired = json
         clearTimeout(retryTimer)

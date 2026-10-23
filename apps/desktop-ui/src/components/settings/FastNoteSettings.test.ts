@@ -7,6 +7,8 @@ import { FAST_NOTE_PRESETS } from '@tyco/plugin-fast-note/templates'
 import { scopeConfigFields } from '../../lib/plugins/plugin-resources'
 import FastNoteSettings from './FastNoteSettings.vue'
 import FastNotePreview from './FastNotePreview.vue'
+import FastNoteDirectoryPicker from './FastNoteDirectoryPicker.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import en from '../../lib/i18n/locales/en_US.json'
 import ru from '../../lib/i18n/locales/ru_RU.json'
 import es from '../../lib/i18n/locales/es_AR.json'
@@ -17,7 +19,10 @@ vi.mock('../../stores/ipc', () => ({
   useIpcStore: () => ({ callOrNotify: pickDirectory }),
 }))
 vi.mock('../../composables/use-i18n', () => ({
-  useI18n: () => ({ t: (key: string) => key }),
+  useI18n: () => ({
+    t: (key: string) =>
+      key === 'settings.fastNote.sampleText' ? 'First\nSecond' : key,
+  }),
 }))
 
 const fields = () =>
@@ -78,17 +83,40 @@ describe('FastNote settings', () => {
   it('uses the directory picker without writing notes', async () => {
     pickDirectory.mockResolvedValue({ success: true, result: '/new-notes' })
     const wrapper = mount(FastNoteSettings, { props: { fields: fields() } })
-    await wrapper.findAll('button')[1].trigger('click')
+    await wrapper
+      .findComponent(FastNoteDirectoryPicker)
+      .get('button')
+      .trigger('click')
     expect(pickDirectory).toHaveBeenCalledWith('pick_directory')
     expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({
       pathToNotes: '/new-notes',
     })
   })
-  it('previews multiline journal content and reports missing content tokens', async () => {
+  it('renders info tooltips for notes folder and template fields', () => {
+    const config = fields().map((field) =>
+      field.name === 'folderPreset'
+        ? withConfigFieldValue(field, 'custom')
+        : field
+    )
+    const wrapper = mount(FastNoteSettings, { props: { fields: config } })
+    const tooltips = wrapper.findAllComponents(InfoTooltip)
+    const texts = tooltips.map((tip) => tip.props('text'))
+    expect(texts).toContain('settings.fastNote.pathHint')
+    expect(
+      texts.some((text) => String(text).includes('customSubfolderTemplateInfo'))
+    ).toBe(true)
+    expect(
+      texts.some((text) => String(text).includes('fileNameTemplateInfo'))
+    ).toBe(true)
+    expect(
+      texts.some((text) => String(text).includes('contentTemplateInfo'))
+    ).toBe(true)
+  })
+  it('previews multiline journal content with localized sample text and reports missing content tokens', async () => {
     const wrapper = mount(FastNotePreview, {
       props: { config: { pathToNotes: '/notes', preset: 'logseq_journal' } },
     })
-    await wrapper.get('textarea').setValue('First\nSecond')
+    expect(wrapper.find('textarea').exists()).toBe(false)
     expect(wrapper.get('pre').text()).toBe('- First\n  Second')
     expect(wrapper.text()).toContain('/notes/journals/')
     await wrapper.setProps({
@@ -106,9 +134,6 @@ describe('FastNote settings', () => {
         fallbackLocale: false,
         messages: { test: messages },
       })
-      expect(i18n.global.t('settings.fastNote.textTokens')).toContain(
-        '{content}'
-      )
       expect(
         i18n.global.t('settings.fastNote.errors.missingContentToken')
       ).toContain('{content}')

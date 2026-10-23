@@ -3,7 +3,8 @@
 Tyco exposes a deliberately limited API for local desktop integration. It does
 not expose arbitrary Tauri functions, secret management, plugin installation,
 or configuration writes. The CLI and D-Bus share one Rust authorization and
-execution dispatcher.
+execution dispatcher. The current external API version is 2; version 2 removes
+the shutdown request and adds job listing.
 
 ## Prerequisites and transports
 
@@ -22,7 +23,9 @@ install it in `PATH`. To build and install the client in Cargo's binary director
 cargo install --path src-tauri/tyco-ctl --locked
 ```
 
-There is no TCP listener and no network fallback.
+There is no TCP listener and no network fallback. Application shutdown is not
+part of the external API: neither CLI nor raw local IPC accepts `quit`. Use the
+application's own Quit action to exit.
 
 | Platform | CLI transport | Access boundary                            |
 | -------- | ------------- | ------------------------------------------ |
@@ -144,8 +147,8 @@ with `ConfigurationChanged` instead of executing a stale configuration.
               [--replace] [--interactive]
               [--wait] [--json] [--timeout SECONDS]
  tyco-ctl replace correction
+ tyco-ctl jobs list [--json]
  tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
- tyco-ctl quit
 ```
 
 `--help` and `--version` work without a running Tyco instance.
@@ -163,17 +166,30 @@ Choose the command by the result you need:
 | Inspect a command's accepted input                    | `commands describe`          |
 | Execute a library command and obtain its output       | `run ... --wait`             |
 | Submit work and collect the result later              | `run`, then `jobs wait`      |
+| Find retained invocations                             | `jobs list`                  |
 | Inspect or cancel a submitted invocation              | `jobs status`, `jobs cancel` |
 | Correct the current selection from a desktop shortcut | `replace correction`         |
-| Request that the entire Tyco application exits        | `quit`                       |
 
-`open`, `replace correction`, and `quit` return no stdout on success. They
+`open` and `replace correction` return no stdout on success. They
 acknowledge a request, rather than return a job or wait for the operation to
 finish. `status`, descriptions, and non-waiting job operations return JSON.
-Errors go to stderr as `Code: message`; local argument/transport errors may
-contain only a message. `--json` does not make errors JSON.
-Only top-level `--help` / `-h` is implemented; `run --help`, for example, is not
-subcommand help.
+Errors go to stderr as `Code: message`. Every request accepts `--json`; with
+it errors are JSON objects on stderr with `success: false`, `code`, and `error`. Successful
+responses without a result still produce no stdout. JSON output never mixes
+errors into stdout. For example:
+
+```sh
+tyco-ctl commands describe my-fix --json
+tyco-ctl run my-fix --stdin --wait --json < draft.txt
+```
+
+Use `--help` / `-h` at any command level, without a running Tyco instance:
+
+```sh
+tyco-ctl run --help
+tyco-ctl commands describe --help
+tyco-ctl jobs wait --help
+```
 
 ### Open the UI
 
@@ -234,8 +250,11 @@ For example, a text command description can look like:
   selection permission or platform support.
 - `output: "return"` means external runs return tool output instead of applying
   the library command's configured `afterRun` action.
-- `inputSchema` is the catalog's tool schema, or `null`. It is not necessarily
-  the effective schema after command-specific overrides.
+- `inputSchema` is the effective schema after command-specific overrides,
+  presets, and plugin defaults, or `null` when no schema has been published.
+  It is the schema used by the tool registry to validate explicit JSON input.
+  While updated command settings are waiting for catalog synchronization,
+  discovery/execution can return `NotReady`; retry after synchronization.
 
 An empty list does not prove the library is empty: commands without grants,
 disabled commands, and unavailable tools are omitted. During startup the tool
@@ -325,6 +344,7 @@ Without `--wait`, `run` returns a JSON job object immediately:
 ```
 
 ```sh
+tyco-ctl jobs list
 tyco-ctl jobs status job-1234-1
 tyco-ctl jobs wait job-1234-1 --timeout 60 --json
 tyco-ctl jobs cancel job-1234-1
@@ -333,7 +353,7 @@ tyco-ctl jobs cancel job-1234-1
 A job is one invocation of a library command, not the command definition, an
 OS process, or a scheduled task. Two runs of the same command have different
 job IDs. Jobs are created by `run` (and the corresponding D-Bus library command
-calls), not by `open`, `replace correction`, or `quit`.
+calls), not by `open` or `replace correction`.
 
 | Operation             | stdout                                                | Exit status                                   |
 | --------------------- | ----------------------------------------------------- | --------------------------------------------- |
@@ -342,11 +362,17 @@ calls), not by `open`, `replace correction`, or `quit`.
 | `jobs wait ID`        | Successful output, with no added newline              | The job's completion code                     |
 | `jobs wait ID --json` | Full terminal job JSON, also on failure/cancellation  | The job's completion code                     |
 
-`--json` on `jobs status` and `jobs cancel` is accepted but redundant: their
-output is already JSON. `--timeout` is only valid for `jobs wait`.
+`jobs status` and `jobs cancel` always return JSON on stdout; `--json` also
+selects JSON errors on stderr. `--timeout` is only valid for `jobs wait`.
 `jobs wait` polls the server; it neither reruns nor claims the command.
-There is no `jobs list`: keep the ID returned by submission. For example,
-with the optional external `jq` utility:
+`jobs list` returns a JSON array of all retained jobs, newest submissions first.
+Each entry contains `id`, `commandId`, and `state`; output and error details
+are omitted to keep the response small. Use `jobs status ID` for the full job.
+An empty array means no jobs are retained. This includes calls from other local
+clients within the same session; there is no per-client ownership.
+
+Keep the ID returned by submission when a script needs its own result. For
+example, with the optional external `jq` utility:
 
 ```sh
 job_id=$(tyco-ctl run my-fix --stdin < draft.txt | jq -er '.id')
@@ -371,33 +397,10 @@ not finish within 300 seconds are cancelled with `TimedOut`. Returned output
 is capped at 512 KiB and must also fit the escaped 1 MiB protocol envelope. Oversized output fails with `OutputTooLarge`.
 
 Client `--timeout` controls waiting (default 300, range 1–3600 seconds); it is
-accepted only together with waiting, like `run --json`. A client
+accepted only together with waiting. A client
 wait timeout does not itself cancel the job; use `jobs cancel` explicitly. Local
 IPC frames have a 10-second read/write deadline and a 1 MiB limit. Idle clients
 do not block the listener; connections are bounded.
-
-### Quit the application
-
-```sh
-tyco-ctl quit
-```
-
-This requests normal application shutdown, like the tray's Quit action. It is
-useful for desktop/session scripts, maintenance, or stopping Tyco before
-starting another build. Ordinary command execution does not need it: the CLI
-exits after each request while Tyco keeps running.
-
-The request is acknowledged before shutdown. The normal exit handler asks both
-webviews to save pending settings, then stops background services. A failed
-save or a webview that does not acknowledge within 10 seconds cancels shutdown;
-`quit` may already have returned 0. There is no `quit --wait`, restart, or force
-option. In-memory jobs disappear on exit; shutdown does not wait for their
-successful completion.
-
-No separate external-access permission protects `quit`. Any process allowed
-through the local transport boundary can request it, even with selection
-access disabled and no library commands granted. This is part of the current
-API's session-level trust model.
 
 ### Exit codes
 
@@ -418,7 +421,7 @@ Machine error codes are stable identifiers separate from human-readable text.
 
 D-Bus is a shortcut-friendly launcher on Linux: it opens Tyco windows and
 starts library commands the way a user would. It has no discovery, background
-execution, job monitoring, or quitting; use `tyco-ctl` for those. Both share the
+execution, or job monitoring; use `tyco-ctl` for those. Both share the
 authorization dispatcher, so the same grants and capabilities apply.
 
 | Method              | Arguments          | What it does                                      |

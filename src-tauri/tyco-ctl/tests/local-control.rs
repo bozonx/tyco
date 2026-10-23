@@ -2,7 +2,7 @@
 use std::io::Write;
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
-use tyco_activation_protocol::{ErrorCode, Request, Response};
+use tyco_activation_protocol::{ErrorCode, Request, Response, API_VERSION};
 
 #[test]
 fn server_fixture() {
@@ -10,7 +10,8 @@ fn server_fixture() {
         return;
     }
     tyco_activation_protocol::transport::serve(|request| match request {
-        Request::Status => Response::json(&serde_json::json!({"apiVersion":1})),
+        Request::Status => Response::json(&serde_json::json!({"apiVersion":API_VERSION})),
+        Request::ListJobs => Response::json(&serde_json::json!([{ "id": "test-job", "commandId": "test", "state": "failed" }])),
         Request::Run { request } => Response::json(&serde_json::json!({"id":"test-job","commandId":request.target,"state":"succeeded","output":request.text})),
         Request::JobStatus { .. } => Response::json(&serde_json::json!({"id":"test-job","commandId":"test","state":"failed","error":"Test failure","code":"ExecutionFailed"})),
         _ => Response::coded_error(ErrorCode::AccessDenied, "Test denial"),
@@ -86,6 +87,23 @@ fn cli_round_trip_and_failures() {
         stream.write_all(b"{\"command\":").unwrap();
         stream
     };
+    #[cfg(unix)]
+    {
+        use std::io::{BufRead, BufReader};
+        let mut stream =
+            std::os::unix::net::UnixStream::connect(directory.join("tyco-control/control.sock"))
+                .unwrap();
+        stream
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .unwrap();
+        stream.write_all(b"{\"command\":\"quit\"}\n").unwrap();
+        let mut response = String::new();
+        BufReader::new(stream).read_line(&mut response).unwrap();
+        let response: Response = serde_json::from_str(&response).unwrap();
+        assert!(!response.success);
+        assert_eq!(response.error_code(), ErrorCode::InvalidRequest);
+        assert!(client().arg("status").output().unwrap().status.success());
+    }
     let mut process = client()
         .args(["run", "test", "--stdin", "--wait"])
         .stdin(Stdio::piped())
@@ -116,9 +134,42 @@ fn cli_round_trip_and_failures() {
             .code(),
         Some(5)
     );
+    let list = client().args(["jobs", "list"]).output().unwrap();
+    assert!(list.status.success());
+    let jobs: serde_json::Value = serde_json::from_slice(&list.stdout).unwrap();
+    assert_eq!(jobs[0]["id"], "test-job");
+    let failure = client()
+        .args(["jobs", "wait", "test-job", "--json"])
+        .output()
+        .unwrap();
+    assert_eq!(failure.status.code(), Some(5));
+    let job: serde_json::Value = serde_json::from_slice(&failure.stdout).unwrap();
+    assert_eq!(job["state"], "failed");
+    let error: serde_json::Value = serde_json::from_slice(&failure.stderr).unwrap();
+    assert_eq!(error["code"], "ExecutionFailed");
+    let denial = client()
+        .args(["run", "test", "--replace", "--json"])
+        .output()
+        .unwrap();
+    assert_eq!(denial.status.code(), Some(2));
+    assert_eq!(
+        serde_json::from_slice::<serde_json::Value>(&denial.stderr).unwrap()["code"],
+        "InvalidInput"
+    );
+    for args in [
+        ["run", "--help"],
+        ["jobs", "--help"],
+        ["commands", "--help"],
+    ] {
+        let help = client().args(args).output().unwrap();
+        assert!(help.status.success());
+        assert!(String::from_utf8(help.stdout)
+            .unwrap()
+            .starts_with("Usage:"));
+    }
     assert_eq!(
         client().arg("quit").output().unwrap().status.code(),
-        Some(3)
+        Some(2)
     );
     assert_eq!(
         client()
@@ -129,4 +180,16 @@ fn cli_round_trip_and_failures() {
             .code(),
         Some(2)
     );
+    drop(_server);
+    let unavailable = client().args(["status", "--json"]).output().unwrap();
+    assert_eq!(unavailable.status.code(), Some(4));
+    assert!(unavailable.stdout.is_empty());
+    let error: serde_json::Value = serde_json::from_slice(&unavailable.stderr).unwrap();
+    assert_eq!(error["code"], "Unavailable");
+    assert!(client()
+        .args(["jobs", "list", "--help"])
+        .output()
+        .unwrap()
+        .status
+        .success());
 }

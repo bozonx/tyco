@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 0ea54fcdbc19b41480c437f11f12a07232500463fe75d42ad2d256d31c2515fc
+// Source hash: 0776a6f83e8615063cb167b69b763ee9a1f441e4afa6875dc3f332828c2c0764
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -250,6 +250,13 @@ export type ChatSummary = {
 }
 
 export type ClientLogLevel = 'error' | 'warn' | 'info' | 'debug'
+
+/** Effective input for one configured command, computed by its tool registry. */
+export type CommandInputDescription = {
+  toolConfig: Record<string, unknown>
+  input: ToolCatalogInput
+  inputSchema: Record<string, unknown>
+}
 
 export type CommandRunEvent = {
   commandId: string
@@ -627,6 +634,7 @@ export type ToolCatalogEntry = {
   /** Why it is not available, already translated. */
   reason?: string | null
   inputSchema?: Record<string, unknown>
+  commandInputs: { [key in string]: CommandInputDescription }
 }
 
 /** How a command of a tool gets its input from a text. */

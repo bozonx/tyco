@@ -132,6 +132,24 @@ impl ExternalJobs {
             .map(|entry| entry.request.clone())
     }
 
+    /// Newest submissions first; omit output so the list stays bounded on the wire.
+    pub fn list(&self) -> Vec<Job> {
+        let entries = self.lock_entries();
+        let mut ordered = entries.values().collect::<Vec<_>>();
+        ordered.sort_by_key(|entry| std::cmp::Reverse(entry.created_at));
+        ordered
+            .into_iter()
+            .map(|entry| Job {
+                output: None,
+                error: None,
+                code: None,
+                id: entry.job.id.clone(),
+                command_id: entry.job.command_id.clone(),
+                state: entry.job.state.clone(),
+            })
+            .collect()
+    }
+
     pub fn get(&self, id: &str) -> Option<Job> {
         self.lock_entries().get(id).map(|entry| entry.job.clone())
     }
@@ -240,6 +258,40 @@ impl ExternalJobs {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn lists_retained_jobs_newest_first_without_results() {
+        let jobs = ExternalJobs::default();
+        let now = Instant::now();
+        let first = jobs
+            .create_at("first".into(), RunRequest::default(), None, now)
+            .unwrap();
+        let second = jobs
+            .create_at(
+                "second".into(),
+                RunRequest::default(),
+                None,
+                now + Duration::from_secs(1),
+            )
+            .unwrap();
+        jobs.finish(
+            &first.id,
+            JobState::Succeeded,
+            Some("result".into()),
+            None,
+            None,
+        );
+        let listed = jobs.list();
+        assert_eq!(
+            listed.iter().map(|job| job.id.as_str()).collect::<Vec<_>>(),
+            vec![second.id.as_str(), first.id.as_str()]
+        );
+        assert!(listed.iter().all(|job| job.output.is_none()));
+        assert_eq!(
+            jobs.get(&first.id).unwrap().output.as_deref(),
+            Some("result")
+        );
+    }
+
     #[test]
     fn a_selection_approval_holds_for_its_job_only() {
         let jobs = ExternalJobs::default();

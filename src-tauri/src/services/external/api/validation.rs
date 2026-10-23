@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::Value;
 use tauri::{AppHandle, Manager};
 use tyco_activation_protocol::{ErrorCode, Response, RunRequest};
 
@@ -52,33 +52,10 @@ pub(super) fn command_name(config: &Value, id: &str) -> String {
 }
 
 pub(super) fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
-    let command = lookup(app, target, by_name)?;
-    let state = app.state::<AppState>();
-    let config = state.user_config();
-    let raw = raw_command(&config, &command.id);
-    let input_schema = raw
-        .and_then(|raw| raw["toolId"].as_str())
-        .and_then(|tool_id| {
-            app.state::<command_library::ToolCatalogState>()
-                .get()
-                .and_then(|catalog| catalog.get(tool_id).cloned())
-        })
-        .and_then(|tool| tool.input_schema);
-    Ok(json!({
-        "id": command.id,
-        "name": raw.and_then(|item| item.get("name")),
-        "input": if command.has_structured_input {
-            "structured"
-        } else if command.can_take_text {
-            "text"
-        } else {
-            "none"
-        },
-        "textAccepted": command.can_take_text,
-        "canReplaceSelection": command.can_take_text && !command.has_structured_input,
-        "output": "return",
-        "inputSchema": input_schema,
-    }))
+    let config = app.state::<AppState>().user_config();
+    let catalog = app.state::<command_library::ToolCatalogState>().get();
+    command_library::describe(&config, catalog.as_ref(), target, by_name)
+        .map_err(|error| Box::new(lookup_error(error)))
 }
 
 fn lookup_error(error: CommandLookupError) -> Response {
@@ -142,6 +119,7 @@ pub fn validate_run(command: &ExternalCommand, request: &RunRequest) -> ApiResul
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     fn command() -> ExternalCommand {
         ExternalCommand {
