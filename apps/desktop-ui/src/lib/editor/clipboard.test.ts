@@ -101,3 +101,73 @@ describe('asynchronous clipboard edits', () => {
     expect(view.state.doc.toString()).toBe('first second')
   })
 })
+
+describe('clipboard reads', () => {
+  const item = (types: Record<string, string>) => ({
+    types: Object.keys(types),
+    getType: async (type: string) => new Blob([types[type]!]),
+  })
+  const stubClipboard = (clipboard: Record<string, unknown>) =>
+    vi.stubGlobal('navigator', { clipboard })
+
+  it('does nothing without a selection', async () => {
+    mount()
+    view.dispatch({ selection: { anchor: 0 } })
+    const writeText = vi.fn()
+    stubClipboard({ writeText })
+    await copySelection(view)
+    await cutSelection(view)
+    expect(writeText).not.toHaveBeenCalled()
+  })
+
+  it('pastes HTML as Markdown', async () => {
+    mount()
+    stubClipboard({
+      read: async () => [
+        item({
+          'text/plain': 'Bold',
+          'text/html': '<p><strong>Bold</strong></p>',
+        }),
+      ],
+    })
+    await pasteFromClipboard(view)
+    expect(view.state.doc.toString()).toBe('**Bold** second')
+  })
+
+  it('pastes plain text from the first item that has some', async () => {
+    mount()
+    stubClipboard({
+      read: async () => [
+        item({ 'image/png': 'x' }),
+        item({ 'text/plain': 'next' }),
+      ],
+    })
+    await pasteFromClipboard(view)
+    expect(view.state.doc.toString()).toBe('next second')
+  })
+
+  it('falls back to plain text when rich reads are denied', async () => {
+    mount()
+    stubClipboard({
+      read: vi.fn().mockRejectedValue(new Error('denied')),
+      readText: async () => 'plain',
+    })
+    await pasteFromClipboard(view)
+    expect(view.state.doc.toString()).toBe('plain second')
+  })
+
+  it('leaves the document alone for an empty clipboard', async () => {
+    mount()
+    stubClipboard({ readText: async () => '' })
+    await pasteFromClipboard(view)
+    await pastePlainFromClipboard(view)
+    expect(view.state.doc.toString()).toBe('first second')
+  })
+
+  it('pastes plain text without conversion', async () => {
+    mount()
+    stubClipboard({ readText: async () => '**raw**' })
+    await pastePlainFromClipboard(view)
+    expect(view.state.doc.toString()).toBe('**raw** second')
+  })
+})

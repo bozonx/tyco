@@ -123,6 +123,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { profileIcon } from '../../lib/ai-profiles/profile-icons'
+import { profileModelName } from '../../lib/ai-profiles/profile-model-options'
 import {
   CHAT_TOOL_GROUPS,
   toolGroupSettings,
@@ -157,21 +158,15 @@ const projects = computed(() => aiProfilesStore.projects)
 const vaultPath = computed(() => aiProfilesStore.vaultPath)
 const vaultError = computed(() => aiProfilesStore.vaultError)
 
-const modelNames = computed(
-  () =>
-    new Map(
-      chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
-        isSecretUsable(secretsStore.secrets, llmSecretId(id))
-      ).map((model) => [model.id, model.name])
-    )
+const availableModels = computed(() =>
+  chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
+    isSecretUsable(secretsStore.secrets, llmSecretId(id))
+  )
 )
 
 /** The model of a profile and the tools it may use, in one line */
 function describeProfile(profile: AiProfile): string {
-  const model = profile.modelId
-    ? (modelNames.value.get(profile.modelId) ??
-      `${profile.modelId} (${t('settings.profileModelUnavailable')})`)
-    : t('settings.profileModelDefault')
+  const model = profileModelName(availableModels.value, profile.modelId, t)
   const tools = CHAT_TOOL_GROUPS.filter(
     (group) => toolGroupSettings(profile.tools, group).isEnabled
   ).map((group) => t(group.labelKey))

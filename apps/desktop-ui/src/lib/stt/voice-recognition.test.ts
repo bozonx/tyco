@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DictationError, type LiveDictationStart } from './live-dictation'
 import {
   createVoiceRecognition,
   type VoiceRecognitionDependencies,
@@ -141,5 +142,186 @@ describe('voice recognition model', () => {
     expect(deps.onCorrected).toHaveBeenCalledWith('', '', undefined, 'submit')
     expect(deps.onCancelled).not.toHaveBeenCalled()
     model.dispose()
+  })
+})
+
+describe('voice recognition failures', () => {
+  type Handlers = Pick<LiveDictationStart, 'onText' | 'onError'>
+  /** Starts a session and hands back the handlers the provider received */
+  async function started(
+    overrides: Partial<VoiceRecognitionDependencies> = {}
+  ) {
+    let handlers!: Handlers
+    const context = setup({
+      startDictation: vi.fn(async (next: Handlers) => {
+        handlers = next
+      }),
+      ...overrides,
+    })
+    await context.model.startSession()
+    return { ...context, handlers }
+  }
+
+  it.each([
+    [
+      new DictationError('timeout', 'Slow'),
+      'toastText',
+      'toast.dictationTimeout',
+    ],
+    [new Error(''), 'toastKey', 'toast.voiceRecognitionFailed'],
+  ] as const)('reports a failed start: %s', async (error, toast, message) => {
+    vi.useFakeTimers()
+    const { deps, model } = setup({
+      startDictation: vi.fn().mockRejectedValue(error),
+    })
+    await model.startSession()
+    expect(deps[toast]).toHaveBeenCalledWith(message, 'error')
+    expect(deps.onCancelled).toHaveBeenCalledOnce()
+    expect(model.isStarted.value).toBe(false)
+  })
+
+  it('cancels a session that failed before saying anything', async () => {
+    vi.useFakeTimers()
+    const { deps, model, handlers } = await started()
+    handlers.onError(new DictationError('closed', 'Closed'))
+    await vi.waitFor(() => expect(deps.onCancelled).toHaveBeenCalledOnce())
+    expect(deps.toastText).toHaveBeenCalledWith(
+      'toast.dictationClosed',
+      'error'
+    )
+    expect(model.isStarted.value).toBe(false)
+    model.dispose()
+  })
+
+  it('keeps the text heard before an interruption and finishes with it', async () => {
+    vi.useFakeTimers()
+    const { deps, model, handlers } = await started({
+      shouldFormatRecognizedText: () => false,
+    })
+    handlers.onText({ committed: 'Heard', draft: '' })
+    expect(model.transcript.value.committed).toBe('Heard')
+    handlers.onError(new Error('Network'))
+    await vi.waitFor(() =>
+      expect(deps.toastText).toHaveBeenCalledWith(
+        'Network\nmenu.dictationInterrupted',
+        'error'
+      )
+    )
+    expect(deps.onCancelled).not.toHaveBeenCalled()
+    await model.finish()
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Raw words',
+      'Raw words',
+      undefined,
+      'insert'
+    )
+    expect(deps.voiceCorrection).not.toHaveBeenCalled()
+  })
+
+  it('warns when nothing was recognized', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = await started({
+      finishDictation: vi.fn().mockResolvedValue('  '),
+    })
+    await model.finish()
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'toast.nothingRecognized',
+      'warn'
+    )
+    expect(deps.onCancelled).toHaveBeenCalledOnce()
+  })
+
+  it('reports a failed transcription', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = await started({
+      finishDictation: vi.fn().mockRejectedValue(new Error('Lost')),
+    })
+    await model.finish()
+    expect(deps.toastText).toHaveBeenCalledWith('Lost', 'error')
+    expect(deps.onCancelled).toHaveBeenCalledOnce()
+    expect(model.isFinishing.value).toBe(false)
+  })
+
+  it('treats finishing without a session as a cancellation', async () => {
+    const { deps, model } = setup()
+    await model.finish()
+    expect(deps.finishDictation).not.toHaveBeenCalled()
+    expect(deps.onCancelled).toHaveBeenCalledOnce()
+  })
+
+  it('formats text even when its history copy cannot be saved', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = await started({
+      saveSource: vi.fn().mockRejectedValue(new Error('Disk')),
+      saveSourceResult: vi.fn().mockRejectedValue(new Error('Disk')),
+    })
+    await model.finish()
+    expect(deps.toastKey).toHaveBeenCalledTimes(2)
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'history.operationFailed',
+      'error'
+    )
+    expect(deps.saveSourceResult).toHaveBeenCalledWith(null, 'Formatted words.')
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Formatted words.',
+      'Raw words',
+      'Formatted words.',
+      'insert'
+    )
+  })
+
+  it('keeps the raw text when formatting returns nothing', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = await started({
+      voiceCorrection: vi.fn().mockResolvedValue(' '),
+    })
+    await model.finish()
+    expect(deps.saveSourceResult).not.toHaveBeenCalled()
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Raw words',
+      'Raw words',
+      undefined,
+      'insert'
+    )
+  })
+
+  it('reports a failed cancellation and still settles', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = await started({
+      cancelDictation: vi.fn().mockRejectedValue(new Error('')),
+    })
+    await model.cancel()
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'toast.voiceRecognitionFailed',
+      'error'
+    )
+    expect(deps.onCancelled).toHaveBeenCalledOnce()
+    expect(model.isStarted.value).toBe(false)
+  })
+
+  it('counts the recording time and stops at the limit', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = await started({
+      shouldFormatRecognizedText: () => false,
+    })
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(model.recordingDurationMs.value).toBeGreaterThanOrEqual(900)
+    await vi.advanceTimersByTimeAsync(3_600_000)
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'toast.recordingLimitReached',
+      'warn'
+    )
+    await vi.waitFor(() => expect(deps.onCorrected).toHaveBeenCalled())
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('ignores a second start while one is running', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = await started()
+    await model.startSession()
+    expect(deps.startDictation).toHaveBeenCalledOnce()
+    model.dispose()
+    await model.startSession()
+    expect(deps.startDictation).toHaveBeenCalledOnce()
   })
 })

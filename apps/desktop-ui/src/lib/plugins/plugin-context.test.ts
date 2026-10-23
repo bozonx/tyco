@@ -381,3 +381,310 @@ it('shares structured input preparation between toolbar tools and commands', asy
   )
   expect(run.mock.calls[0][0].input).toEqual(run.mock.calls[1][0].input)
 })
+
+describe('plugin context registrations', () => {
+  const call = (signal = new AbortController().signal) => ({
+    input: {},
+    config: {},
+    source: 'toolbar' as const,
+    signal,
+    isOutputRequested: false,
+  })
+
+  it('limits the number of contributions', () => {
+    const { context } = setup()
+    expect(() => context.registerActionsItems('items' as never)).toThrow(
+      'Too many plugin contributions'
+    )
+    const many = Array.from({ length: 257 }, (_, index) => ({
+      id: `item${index}`,
+      action: vi.fn(),
+    }))
+    expect(() => context.registerToolbarItems(many)).toThrow(
+      'Too many plugin contributions'
+    )
+    expect(() => context.registerTools(many as never)).toThrow(
+      'Too many plugin contributions'
+    )
+  })
+
+  it('tracks running actions and reports their failures with scoped keys', async () => {
+    const { context, deps } = setup()
+    let finish!: () => void
+    context.registerActionsItems([
+      {
+        id: 'slow',
+        action: () =>
+          new Promise<void>((resolve) => {
+            finish = resolve
+          }),
+      },
+      {
+        id: 'broken',
+        action: () => {
+          throw new PluginError('local.failed')
+        },
+      },
+    ])
+    const [slow, broken] = vi.mocked(deps.registerActionsItems).mock
+      .calls[0]![0]
+    const running = slow!.action('text')
+    expect(slow!.isRunning).toBe(true)
+    expect(slow!.disabled).toBe(true)
+    finish()
+    await running
+    expect(slow!.disabled).toBe(false)
+    await broken!.action('text')
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      pluginMessageKey('Example', 'local.failed'),
+      'error'
+    )
+    expect(deps.log).toHaveBeenCalledWith(
+      'error',
+      'Plugin action failed',
+      expect.any(PluginError)
+    )
+  })
+
+  it('rejects non-text edit results and passes ordinary errors through', async () => {
+    const { context, deps } = setup()
+    context.registerEditItems([
+      { id: 'number', action: async () => 1 as never },
+    ])
+    context.registerCaseItems([
+      {
+        id: 'broken',
+        action: () => {
+          throw new Error('Plain')
+        },
+      },
+    ])
+    const numeric = vi.mocked(deps.registerEditItems).mock.calls[0]![0][0]!
+    const broken = vi.mocked(deps.registerCaseItems).mock.calls[0]![0][0]!
+    await expect(numeric.action('text')).rejects.toThrow(
+      'Invalid text transform result'
+    )
+    await expect(broken.action('text')).rejects.toThrow('Plain')
+  })
+
+  it('scopes tool metadata and reports unavailability after disposal', () => {
+    const { context, deps, controller } = setup()
+    context.registerTools([
+      {
+        ...tool(async () => ({ ok: true })),
+        labelKey: 'local.label',
+        descriptionKey: 'local.description',
+        defaultPhrasesKey: 'local.phrases',
+      },
+    ])
+    const registered = vi.mocked(deps.registerTools).mock.calls[0]![0][0]!
+    expect(registered).toMatchObject({
+      labelKey: pluginMessageKey('Example', 'local.label'),
+      descriptionKey: pluginMessageKey('Example', 'local.description'),
+      defaultPhrasesKey: pluginMessageKey('Example', 'local.phrases'),
+    })
+    expect(registered.getUnavailableReasonKey?.()).toBe(undefined)
+    controller.abort()
+    expect(registered.getUnavailableReasonKey?.()).toBe(
+      'toast.commandUnavailable'
+    )
+  })
+
+  it('validates and scopes parser results', async () => {
+    const { context, deps } = setup()
+    const parseText = vi.fn()
+    context.registerTools([{ ...tool(async () => ({ ok: true })), parseText }])
+    const registered = vi.mocked(deps.registerTools).mock.calls[0]![0][0]!
+    const parseContext = { signal: new AbortController().signal } as never
+
+    parseText.mockResolvedValueOnce({ ok: true, input: { text: 'a' } })
+    await expect(registered.parseText!('a', parseContext)).resolves.toEqual({
+      ok: true,
+      input: { text: 'a' },
+    })
+    parseText.mockResolvedValueOnce({ ok: false, messageKey: 'local.bad' })
+    await expect(registered.parseText!('a', parseContext)).resolves.toEqual({
+      ok: false,
+      messageKey: pluginMessageKey('Example', 'local.bad'),
+    })
+    parseText.mockResolvedValueOnce({ ok: true })
+    await expect(registered.parseText!('a', parseContext)).rejects.toThrow(
+      'Invalid plugin parsed input'
+    )
+    parseText.mockRejectedValueOnce(new PluginError('local.parse'))
+    await expect(
+      registered.parseText!('a', parseContext)
+    ).rejects.toMatchObject({
+      messageKey: pluginMessageKey('Example', 'local.parse'),
+    })
+  })
+
+  it('maps tool failures to results', async () => {
+    const { context, deps } = setup()
+    const run = vi.fn<ToolDefinition['run']>()
+    context.registerTools([tool(run)])
+    const registered = vi.mocked(deps.registerTools).mock.calls[0]![0][0]!
+
+    run.mockResolvedValueOnce({ ok: false, messageKey: 'local.denied' })
+    await expect(registered.run(call())).resolves.toEqual({
+      ok: false,
+      messageKey: pluginMessageKey('Example', 'local.denied'),
+    })
+    run.mockRejectedValueOnce(new PluginError('local.failed'))
+    await expect(registered.run(call())).resolves.toEqual({
+      ok: false,
+      messageKey: pluginMessageKey('Example', 'local.failed'),
+    })
+    run.mockRejectedValueOnce(new Error('Crash'))
+    await expect(registered.run(call())).rejects.toThrow('Crash')
+    const controller = new AbortController()
+    run.mockImplementationOnce(async () => {
+      controller.abort()
+      throw new Error('Aborted')
+    })
+    await expect(registered.run(call(controller.signal))).resolves.toEqual({
+      ok: false,
+      cancelled: true,
+    })
+  })
+
+  it.each([
+    [{ run: 'run' }, 'Invalid plugin tool'],
+    [{ description: undefined }, 'Invalid plugin tool'],
+    [{ inputSchema: null }, 'Invalid plugin tool'],
+    [{ parseText: 'parse' }, 'Invalid plugin parser'],
+  ])('rejects malformed tool definitions: %j', (patch, message) => {
+    const { context, deps } = setup()
+    expect(() =>
+      context.registerTools([
+        { ...tool(async () => ({ ok: true })), ...patch } as never,
+      ])
+    ).toThrow(message)
+    expect(deps.registerTools).not.toHaveBeenCalled()
+  })
+
+  it('keeps tools from granting themselves notes access', () => {
+    const { context } = setup(['notes'])
+    const withField = (field: Record<string, unknown>) =>
+      context.registerTools([
+        {
+          ...tool(async () => ({ ok: true })),
+          id: `tool${Math.random().toString(36).slice(2)}`,
+          configFields: [
+            { name: 'pathToNotes', type: 'text', defaultValue: '', ...field },
+          ],
+        } as never,
+      ])
+    expect(() => withField({})).not.toThrow()
+    expect(() => withField({ defaultValue: '/home' })).toThrow(
+      'cannot grant notes access'
+    )
+    expect(() => withField({ value: '/home' })).toThrow(
+      'cannot grant notes access'
+    )
+  })
+
+  it('releases IDs after asynchronous and failing host disposers', async () => {
+    const { context, deps } = setup()
+    vi.mocked(deps.registerToolbarItems)
+      .mockReturnValueOnce(async () => {})
+      .mockReturnValueOnce(() => {
+        throw new Error('Stuck')
+      })
+    const disposeAsync = context.registerToolbarItems([
+      { id: 'first', action: vi.fn() },
+    ])
+    await disposeAsync()
+    const disposeFailing = context.registerToolbarItems([
+      { id: 'second', action: vi.fn() },
+    ])
+    expect(() => disposeFailing()).toThrow('Stuck')
+    expect(() =>
+      context.registerToolbarItems([
+        { id: 'first', action: vi.fn() },
+        { id: 'second', action: vi.fn() },
+      ])
+    ).not.toThrow()
+  })
+})
+
+describe('plugin toolbar tools', () => {
+  it('shows tool results as notifications', async () => {
+    const { context, deps } = setup()
+    deps.invokeTool = vi.fn(async () => ({
+      ok: false,
+      messageKey: 'toast.commandFailed',
+      message: 'Details',
+    }))
+    context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+    const item = vi.mocked(deps.registerToolbarItems).mock.calls[0]![0][0]!
+    await item.action()
+    expect(deps.toastKey).toHaveBeenCalledWith('toast.commandFailed', 'error')
+    expect(deps.toastText).toHaveBeenCalledWith('Details', 'error')
+  })
+
+  it('stays silent for cancelled tools', async () => {
+    const { context, deps } = setup()
+    deps.invokeTool = vi.fn(async () => ({ ok: false, cancelled: true }))
+    context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+    const item = vi.mocked(deps.registerToolbarItems).mock.calls[0]![0][0]!
+    await item.action()
+    expect(deps.toastKey).not.toHaveBeenCalled()
+  })
+
+  it('reports a missing invoker without scoping host keys', async () => {
+    const { context, deps } = setup()
+    context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+    const item = vi.mocked(deps.registerToolbarItems).mock.calls[0]![0][0]!
+    await item.action()
+    expect(deps.toastKey).toHaveBeenCalledWith('toast.commandFailed', 'error')
+  })
+})
+
+describe('plugin desktop functions', () => {
+  it('opens links for plugins with the browser capability', async () => {
+    const { context, deps } = setup(['browser'])
+    await expect(
+      context.callApiFunction('openInBrowserAndHide', ['https://example.com'])
+    ).resolves.toEqual({ success: true })
+    expect(deps.openInBrowserAndHide).toHaveBeenCalledWith(
+      'https://example.com'
+    )
+  })
+
+  it.each([
+    ['openInBrowserAndHide', ['a', 'b']],
+    ['openInBrowserAndHide', [1]],
+    ['saveNote', ['dir', 'file']],
+    ['appendNote', 'dir'],
+  ])('rejects malformed arguments for %s', async (name, args) => {
+    const { context } = setup(['browser', 'notes'])
+    await expect(
+      context.callApiFunction(name as never, args as never)
+    ).rejects.toThrow('Invalid desktop function arguments')
+  })
+
+  it('fails note writes without a scoped notes service', async () => {
+    const { context } = setup(['notes'])
+    await expect(
+      context.callApiFunction('appendNote', ['dir', 'file', 'text'])
+    ).rejects.toThrow('Scoped notes service is unavailable')
+  })
+
+  it('exposes editor reads, translations and config copies', async () => {
+    const { context, deps } = setup()
+    await expect(context.getEditorInputSelectedText()).resolves.toBe(
+      'selection'
+    )
+    expect(context.t('local.label')).toBe(
+      pluginMessageKey('Example', 'local.label')
+    )
+    context.toast('local.saved', 'success')
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      pluginMessageKey('Example', 'local.saved'),
+      'success'
+    )
+    const config = context.getMyConfig()
+    expect(config).toEqual({ nested: { value: 1 } })
+  })
+})

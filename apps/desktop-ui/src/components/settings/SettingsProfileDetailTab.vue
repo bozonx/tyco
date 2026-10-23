@@ -65,7 +65,7 @@
         </FieldRow>
         <FieldRow :label="t('settings.profileModel')">
           <FieldSelect
-            :model-value="profile.modelId ?? DEFAULT_MODEL_OPTION"
+            :model-value="profile.modelId ?? DEFAULT_PROFILE_MODEL_OPTION"
             :options="modelOptions"
             @update:model-value="changeModel"
           />
@@ -218,6 +218,10 @@ import {
   profileIcon,
 } from '../../lib/ai-profiles/profile-icons'
 import {
+  DEFAULT_PROFILE_MODEL_OPTION,
+  profileModelOptions,
+} from '../../lib/ai-profiles/profile-model-options'
+import {
   CHAT_TOOL_GROUPS,
   FILES_TOOL_GROUP_ID,
 } from '../../lib/chat-tools/chat-tool-groups'
@@ -256,9 +260,6 @@ import {
 
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
-
-/** The select value of an unset model: the first usable one */
-const DEFAULT_MODEL_OPTION = ''
 
 const { t } = useI18n()
 const { toastText } = useToast()
@@ -404,31 +405,9 @@ const availableModels = computed(() =>
   )
 )
 
-const modelOptions = computed(() => {
-  const firstModel = availableModels.value[0]
-  const options = [
-    {
-      id: DEFAULT_MODEL_OPTION,
-      name: firstModel
-        ? t('settings.profileModelDefaultNamed', { model: firstModel.name })
-        : t('settings.profileModelDefault'),
-    },
-    ...availableModels.value.map((option) => ({
-      id: option.id,
-      name: option.name,
-      group: option.providerLabel,
-    })),
-  ]
-  const modelId = profile.value?.modelId
-  // a model removed or left without a key stays visible as picked
-  if (modelId && !availableModels.value.some((m) => m.id === modelId)) {
-    options.push({
-      id: modelId,
-      name: `${modelId} (${t('settings.profileModelUnavailable')})`,
-    })
-  }
-  return options
-})
+const modelOptions = computed(() =>
+  profileModelOptions(availableModels.value, profile.value?.modelId, t)
+)
 
 onBeforeUnmount(() => {
   void editor.flush()

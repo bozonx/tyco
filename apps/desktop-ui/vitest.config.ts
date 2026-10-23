@@ -71,6 +71,8 @@ export default defineConfig((configEnv) =>
           exclude: [
             'src/**/*.test.ts',
             'src/test/**',
+            'src/**/testing.ts',
+            'src/dev/**',
             'src/types/**',
             'src/env.d.ts',
           ],

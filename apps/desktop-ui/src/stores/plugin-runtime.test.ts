@@ -2,6 +2,7 @@ import { useIpcStore } from './ipc'
 import { createPinia, disposePinia } from 'pinia'
 import { describe, expect, it, vi } from 'vitest'
 
+import { desktopClient } from '../lib/desktop/client'
 import { usePluginRuntimeStore } from './plugin-runtime'
 
 // Exercise the actual store wiring, not just the runtime factory.
@@ -44,6 +45,53 @@ it('owns package operations and rejects failed desktop results', async () => {
     call.mockResolvedValueOnce({ success: false, error: 'Package unavailable' })
     await expect(runtime.restorePackage('example')).rejects.toThrow(
       'Package unavailable'
+    )
+  } finally {
+    disposePinia(pinia)
+  }
+})
+
+it('installs packages by inspection and reports failures with a default message', async () => {
+  const pinia = createPinia()
+  try {
+    const runtime = usePluginRuntimeStore(pinia)
+    const call = vi
+      .spyOn(useIpcStore(pinia), 'call')
+      .mockResolvedValue({ success: true, result: undefined })
+    await runtime.installPackage({ inspectionId: 'inspection' } as never)
+    expect(call).toHaveBeenCalledWith('install_plugin_package', {
+      inspectionId: 'inspection',
+    })
+    call.mockResolvedValueOnce({ success: false } as never)
+    await expect(runtime.removePackage('example')).rejects.toThrow(
+      'Plugin operation failed'
+    )
+  } finally {
+    disposePinia(pinia)
+  }
+})
+
+it('loads installed packages only from the desktop', async () => {
+  const pinia = createPinia()
+  try {
+    const runtime = usePluginRuntimeStore(pinia)
+    const call = vi
+      .spyOn(useIpcStore(pinia), 'call')
+      .mockResolvedValue({ success: true, result: [] })
+    const builtinCount = runtime.pluginFactories.length
+
+    vi.spyOn(desktopClient, 'isAvailable').mockReturnValue(false)
+    await runtime.refreshInstalledPlugins()
+    expect(call).not.toHaveBeenCalled()
+
+    vi.mocked(desktopClient.isAvailable).mockReturnValue(true)
+    await runtime.refreshInstalledPlugins()
+    expect(call).toHaveBeenCalledWith('list_installed_plugins')
+    expect(runtime.pluginFactories.length).toBe(builtinCount)
+
+    call.mockResolvedValueOnce({ success: false } as never)
+    await expect(runtime.refreshInstalledPlugins()).rejects.toThrow(
+      'Plugin catalog load failed'
     )
   } finally {
     disposePinia(pinia)

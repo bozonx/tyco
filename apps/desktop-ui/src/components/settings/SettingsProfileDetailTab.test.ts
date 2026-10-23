@@ -1,0 +1,196 @@
+import { flushPromises, mount } from '@vue/test-utils'
+import { DEFAULT_USER_CONFIG, type AiProfile } from '@tyco/shared'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { reactive } from 'vue'
+
+import { createTestSettingsContext } from '../../test/settings-context'
+import SettingsProfileDetailTab from './SettingsProfileDetailTab.vue'
+
+vi.mock('../../composables/use-i18n', () => ({
+  useI18n: () => ({
+    t: (key: string, params?: Record<string, unknown>) =>
+      params ? `${key}:${JSON.stringify(params)}` : key,
+  }),
+}))
+
+const toastText = vi.hoisted(() => vi.fn())
+vi.mock('../../composables/use-toast', () => ({
+  default: () => ({ toastText }),
+}))
+
+const profiles = vi.hoisted(() => ({ store: null as unknown }))
+vi.mock('../../stores/ai-profiles', () => ({
+  useAiProfilesStore: () => profiles.store,
+}))
+vi.mock('../../stores/secrets', () => ({
+  useSecretsStore: () => ({ secrets: {} }),
+}))
+vi.mock('../../stores/desktop', async () => {
+  const { mockDesktopStore } = await import('../../test/desktop-store')
+  return {
+    useDesktopStore: () =>
+      mockDesktopStore(() => ({ userConfig: DEFAULT_USER_CONFIG })),
+  }
+})
+
+const profile = (): AiProfile => ({
+  id: 'writer',
+  name: 'Writer',
+  modelId: 'removed-model',
+  projectPermissions: {},
+  createdAt: 1,
+  updatedAt: 1,
+})
+
+function createStore() {
+  const state = reactive({
+    profiles: [profile()] as AiProfile[],
+    projects: [],
+    isLoaded: true,
+  })
+  return Object.assign(state, {
+    getProfile: (id: string) => state.profiles.find((item) => item.id === id),
+    createProfile: vi.fn(async () => ({ id: 'created' })),
+    duplicateProfile: vi.fn(async () => ({ id: 'copy' })),
+    updateProfile: vi.fn(async () => {}),
+    readSoul: vi.fn(async () => 'Be kind'),
+    writeSoul: vi.fn(async () => {}),
+    refreshProfile: vi.fn(async () => undefined),
+    openVaultDir: vi.fn(async () => {}),
+    countChats: vi.fn(async () => 3),
+    deleteProfile: vi.fn(async () => {}),
+  })
+}
+
+describe('SettingsProfileDetailTab.vue', () => {
+  let store: ReturnType<typeof createStore>
+  let context: ReturnType<typeof createTestSettingsContext>
+  beforeEach(() => {
+    store = createStore()
+    profiles.store = store
+    context = createTestSettingsContext()
+  })
+  afterEach(() => toastText.mockReset())
+
+  const mountTab = (profileId = 'writer') =>
+    mount(SettingsProfileDetailTab, {
+      props: { profileId },
+      global: {
+        provide: context.provide,
+        stubs: {
+          ProfileIconPicker: true,
+          SettingsProfileToolsSection: true,
+          ConfirmModal: {
+            props: ['open', 'message'],
+            template:
+              '<div v-if="open" class="confirm">{{ message }}<button class="confirm-yes" @click="$emit(\'confirm\')" /></div>',
+          },
+        },
+      },
+    })
+
+  const button = (wrapper: ReturnType<typeof mountTab>, label: string) =>
+    wrapper.findAll('button').find((item) => item.text().includes(label))!
+
+  it('creates a profile and opens it', async () => {
+    const wrapper = mountTab('new')
+    await wrapper.get('input').setValue('Editor')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(store.createProfile).toHaveBeenCalledWith({
+      name: 'Editor',
+      soul: 'settings.profileDefaultSoul',
+      settings: {},
+    })
+    expect(context.navigate).toHaveBeenCalledWith('ai-profile:created')
+  })
+
+  it('reports a failed creation', async () => {
+    store.createProfile.mockRejectedValueOnce(new Error('Disk full'))
+    const wrapper = mountTab('new')
+    await wrapper.get('input').setValue('Editor')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(toastText).toHaveBeenCalledWith('Error: Disk full', 'error')
+    expect(context.navigate).not.toHaveBeenCalled()
+  })
+
+  it('duplicates the profile under a copy name', async () => {
+    const wrapper = mountTab()
+    await flushPromises()
+    await button(wrapper, 'settings.duplicateProfile').trigger('click')
+    await flushPromises()
+    expect(store.duplicateProfile).toHaveBeenCalledWith(
+      'writer',
+      'settings.profileCopyName:{"name":"Writer"}'
+    )
+    expect(context.navigate).toHaveBeenCalledWith('ai-profile:copy')
+  })
+
+  it('keeps a removed model visible and resets it to the default', async () => {
+    const wrapper = mountTab()
+    await flushPromises()
+    const select = wrapper.get('select')
+    expect(select.text()).toContain(
+      'removed-model (settings.profileModelUnavailable)'
+    )
+    const options = select.findAll('option')
+    await select.setValue(options[0]!.element.value)
+    await flushPromises()
+    expect(store.updateProfile).toHaveBeenCalledWith('writer', {
+      modelId: undefined,
+    })
+  })
+
+  it('counts the chats before deleting the profile', async () => {
+    const wrapper = mountTab()
+    await flushPromises()
+    await wrapper
+      .findComponent({ name: 'SettingsDangerZone' })
+      .vm.$emit('action')
+    await flushPromises()
+    expect(wrapper.get('.confirm').text()).toContain(
+      'settings.deleteProfileConfirm:{"name":"Writer","count":3}'
+    )
+    await wrapper.get('.confirm-yes').trigger('click')
+    await flushPromises()
+    expect(store.deleteProfile).toHaveBeenCalledWith('writer')
+    expect(context.navigate).toHaveBeenCalledWith('ai-profiles:overview')
+  })
+
+  it('warns when the chats could not be counted', async () => {
+    store.countChats.mockRejectedValueOnce(new Error('Locked'))
+    const wrapper = mountTab()
+    await flushPromises()
+    await wrapper
+      .findComponent({ name: 'SettingsDangerZone' })
+      .vm.$emit('action')
+    await flushPromises()
+    expect(wrapper.get('.confirm').text()).toContain(
+      'settings.deleteProfileConfirmUncounted'
+    )
+  })
+
+  it('opens the profile folder and reports failures', async () => {
+    store.openVaultDir.mockRejectedValueOnce(new Error('No folder'))
+    const wrapper = mountTab()
+    await flushPromises()
+    await button(wrapper, 'settings.openProfileFolder').trigger('click')
+    await flushPromises()
+    expect(store.openVaultDir).toHaveBeenCalledWith('writer')
+    expect(toastText).toHaveBeenCalledWith('Error: No folder', 'error')
+  })
+
+  it('rereads the profile when the window comes back', async () => {
+    mountTab()
+    await flushPromises()
+    window.dispatchEvent(new Event('focus'))
+    await flushPromises()
+    expect(store.refreshProfile).toHaveBeenCalledWith('writer')
+  })
+
+  it('tells when the profile does not exist', () => {
+    const wrapper = mountTab('missing')
+    expect(wrapper.text()).toContain('settings.profileNotFound')
+  })
+})

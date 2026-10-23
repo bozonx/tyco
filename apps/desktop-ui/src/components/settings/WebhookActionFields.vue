@@ -149,6 +149,14 @@ import useToast from '../../composables/use-toast'
 import { webhookToolConfig } from '../../lib/commands/command-config'
 import { validateCommand } from '../../lib/commands/command-runtime'
 import { createWebhookAuthModel } from '../../lib/commands/webhook-auth-model'
+import {
+  type WebhookHeaderRow,
+  addWebhookHeaderRow,
+  removeWebhookHeaderRow,
+  updateWebhookHeaderRow,
+  webhookHeaderRows,
+  webhookHeadersFromRows,
+} from '../../lib/commands/webhook-header-rows'
 import { clientLogger } from '../../lib/logger'
 import { httpOrigin } from '../../lib/net/secrets'
 import { useSecretsStore } from '../../stores/secrets'
@@ -180,30 +188,27 @@ function update(field: string, value: unknown) {
 const webhook = computed(() => webhookToolConfig(props.command))
 const secretsStore = useSecretsStore()
 const { toastKey, toastText } = useToast()
-// headers are edited as rows: a row with an empty name is still shown
-const headerRows = computed<[string, string][]>(() =>
+const headerRows = computed<WebhookHeaderRow[]>(() =>
   props.command.toolId === 'webhook'
-    ? Object.entries(webhook.value.headers ?? {})
+    ? webhookHeaderRows(webhook.value.headers)
     : []
 )
 
-function setHeaders(rows: [string, string][]) {
-  update('headers', Object.fromEntries(rows))
+function setHeaders(rows: WebhookHeaderRow[]) {
+  update('headers', webhookHeadersFromRows(rows))
 }
 
 function updateHeader(index: number, part: 0 | 1, value: string) {
-  const rows = headerRows.value.map((row) => [...row] as [string, string])
-  rows[index][part] = value
-  setHeaders(rows)
+  setHeaders(updateWebhookHeaderRow(headerRows.value, index, part, value))
 }
 
 function addHeader() {
-  if (headerRows.value.some(([name]) => !name)) return
-  setHeaders([...headerRows.value, ['', '']])
+  const rows = addWebhookHeaderRow(headerRows.value)
+  if (rows) setHeaders(rows)
 }
 
 function removeHeader(index: number) {
-  setHeaders(headerRows.value.filter((_, i) => i !== index))
+  setHeaders(removeWebhookHeaderRow(headerRows.value, index))
 }
 
 const session = useSettingsSessionStore()
