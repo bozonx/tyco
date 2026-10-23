@@ -50,8 +50,6 @@ const HOTKEY_RELEASE_TIMEOUT: Duration = Duration::from_millis(600);
 /// How long a call made from a desktop shortcut waits before the capture:
 /// the keys of that shortcut are still down, and nothing reports their release.
 pub const SHORTCUT_RELEASE_DELAY: Duration = HOTKEY_RELEASE_TIMEOUT;
-/// A tray menu has to close and give the focus back first.
-pub const TRAY_MENU_DELAY: Duration = Duration::from_millis(300);
 
 /// When a trigger may start capturing the selection.
 pub enum TriggerWait {

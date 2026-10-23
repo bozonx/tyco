@@ -289,6 +289,7 @@ pub fn run() {
             commands::window::open_in_browser_and_hide,
             commands::window::paste_into_target_and_hide,
             commands::window::set_quick_input_region,
+            commands::window::set_tray_menu_labels,
         ])
         .build(tauri::generate_context!());
     // a failed start ends with a word in the log and on stderr rather than

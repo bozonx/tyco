@@ -12,6 +12,7 @@ pub use lifecycle::{create_windows, manage_state, request_exit, setup, shutdown}
 pub use panel_layer::set_quick_input_region;
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
 pub use target_paste::paste_into_target;
+pub use tray::set_tray_menu_labels;
 pub use window_visibility::{
     handle_window_event, hide_active_window, hide_quick_window_on_blur, hide_window,
     open_main_chat, open_main_editor, show_application,

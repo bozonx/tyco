@@ -141,6 +141,20 @@ export function useAppRuntime() {
     syncDocumentLanguage: syncDocumentLanguageAttributes,
     updateTitle: () => {
       document.title = t('app.title')
+      if (!isQuickWindow) {
+        void ipcStore
+          .call('set_tray_menu_labels', {
+            showLabel: t('tray.show'),
+            quitLabel: t('tray.quit'),
+          })
+          .catch((error: unknown) =>
+            clientLogger.error(
+              'Could not localize tray menu',
+              error,
+              'bootstrap'
+            )
+          )
+      }
     },
     patchLastMode: (lastMode) => desktopStore.patchSessionState({ lastMode }),
     replaceEditorValue: editorInputStore.replaceValue,

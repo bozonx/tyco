@@ -61,3 +61,12 @@ pub async fn paste_into_target_and_hide(
     .await?
     .inspect_err(|error| log::error!("Text insertion failed: {error}"))
 }
+
+#[tauri::command]
+pub fn set_tray_menu_labels(
+    app: AppHandle,
+    show_label: String,
+    quit_label: String,
+) -> Result<(), AppError> {
+    runtime::set_tray_menu_labels(&app, &show_label, &quit_label)
+}

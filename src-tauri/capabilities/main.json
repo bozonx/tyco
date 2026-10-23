@@ -34,6 +34,7 @@
     "allow-save-ai-project",
     "allow-delete-secret",
     "allow-set-secret",
+    "allow-set-tray-menu-labels",
     "allow-suspend-hotkeys",
     "allow-write-ai-profile-soul"
   ]

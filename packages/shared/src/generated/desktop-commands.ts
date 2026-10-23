@@ -254,6 +254,10 @@ export interface DesktopCommands {
     result: void
   }
   set_tool_catalog: { args: { tools: Array<ToolCatalogEntry> }; result: void }
+  set_tray_menu_labels: {
+    args: { showLabel: string; quitLabel: string }
+    result: void
+  }
   show_desktop_notification: {
     args: { summary: string; body: string }
     result: void

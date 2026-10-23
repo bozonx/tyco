@@ -2,12 +2,11 @@
 use super::{hide_active_window, show_application};
 use crate::errors::AppError;
 use crate::state::AppState;
-use tauri::menu::{MenuBuilder, MenuItemBuilder};
+use tauri::menu::{MenuBuilder, MenuItem, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{App, Manager};
 
 const TRAY_SHOW_ID: &str = "show";
-const TRAY_CORRECT_ID: &str = "correct-selection";
 const TRAY_QUIT_ID: &str = "quit";
 #[derive(Debug, PartialEq, Eq)]
 enum TrayClickAction {
@@ -23,16 +22,35 @@ fn tray_click_action(is_window_shown: bool) -> TrayClickAction {
     }
 }
 
+struct TrayMenu {
+    show_item: MenuItem<tauri::Wry>,
+    quit_item: MenuItem<tauri::Wry>,
+}
+
+pub fn set_tray_menu_labels(
+    app: &tauri::AppHandle,
+    show_label: &str,
+    quit_label: &str,
+) -> Result<(), AppError> {
+    let menu = app.state::<TrayMenu>();
+    menu.show_item.set_text(show_label)?;
+    menu.quit_item.set_text(quit_label)?;
+    Ok(())
+}
+
 pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
     let show_item = MenuItemBuilder::with_id(TRAY_SHOW_ID, "Show Tyco").build(app)?;
-    let correct_item =
-        MenuItemBuilder::with_id(TRAY_CORRECT_ID, "Correct selected text").build(app)?;
     let quit_item = MenuItemBuilder::with_id(TRAY_QUIT_ID, "Quit").build(app)?;
     let menu = MenuBuilder::new(app)
-        .items(&[&show_item, &correct_item])
+        .items(&[&show_item])
         .separator()
         .items(&[&quit_item])
         .build()?;
+
+    app.manage(TrayMenu {
+        show_item,
+        quit_item,
+    });
 
     let tray_icon = app.default_window_icon().cloned();
 
@@ -51,17 +69,6 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
                     TRAY_SHOW_ID => {
                         if let Err(error) = show_application(app) {
                             log::error!("Could not show the application: {error}");
-                        }
-                    }
-                    TRAY_CORRECT_ID => {
-                        if let Err(error) = crate::services::selection_replace::trigger(
-                            app,
-                            "correction",
-                            crate::services::selection_replace::TriggerWait::Delay(
-                                crate::services::selection_replace::TRAY_MENU_DELAY,
-                            ),
-                        ) {
-                            log::error!("Could not correct the selection: {error}");
                         }
                     }
                     TRAY_QUIT_ID => {

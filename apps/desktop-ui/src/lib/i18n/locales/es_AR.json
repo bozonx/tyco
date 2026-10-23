@@ -1043,5 +1043,6 @@
       "zh_CN": "chino",
       "ja_JP": "japonés"
     }
-  }
+  },
+  "tray": { "show": "Mostrar Tyco", "quit": "Salir" }
 }

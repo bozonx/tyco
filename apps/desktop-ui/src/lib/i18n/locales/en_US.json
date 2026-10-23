@@ -1043,5 +1043,6 @@
       "zh_CN": "Chinese",
       "ja_JP": "Japanese"
     }
-  }
+  },
+  "tray": { "show": "Show Tyco", "quit": "Quit" }
 }

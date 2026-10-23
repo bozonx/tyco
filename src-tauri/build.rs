@@ -89,6 +89,7 @@ fn main() {
             "set_quick_input_region",
             "set_secret",
             "set_tool_catalog",
+            "set_tray_menu_labels",
             "show_desktop_notification",
             "show_status_overlay",
             "start_fetch",
