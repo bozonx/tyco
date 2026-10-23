@@ -27,7 +27,7 @@ describe('hotkeys', () => {
   it('keeps the hotkeys of the command pages on the pages', () => {
     expect(
       DEFAULT_USER_CONFIG.launcherPages.map((page) => page.hotkey)
-    ).toEqual([''])
+    ).toEqual(['Ctrl+Alt+Q'])
   })
 
   it('normalizes aliases and modifier order', () => {

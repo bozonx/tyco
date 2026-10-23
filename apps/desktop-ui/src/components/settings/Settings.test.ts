@@ -202,7 +202,7 @@ describe('Settings.vue', () => {
     wrapper.unmount()
   })
 
-  it('places accessibility tab right above plugins tab', () => {
+  it('renders a navigation list per group under its heading', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
@@ -220,46 +220,27 @@ describe('Settings.vue', () => {
       },
     })
 
-    const tabKeys = wrapper
-      .findAll('.tabs-stub button')
-      .map((btn) => btn.attributes('data-key'))
-
-    const accessibilityIdx = tabKeys.indexOf('accessibility')
-    const pluginsIdx = tabKeys.indexOf('plugins')
-
-    expect(accessibilityIdx).toBeGreaterThan(-1)
-    expect(pluginsIdx).toBeGreaterThan(-1)
-    expect(accessibilityIdx).toBe(pluginsIdx - 1)
-  })
-
-  it('places translations tab in primary tabs right after llm tab', () => {
-    const wrapper = mount(Settings, {
-      global: {
-        stubs: {
-          NavigationList: {
-            props: ['items'],
-            template: `
-              <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
-                  {{ tab.name }}
-                </button>
-              </div>
-            `,
-          },
-        },
-      },
-    })
-
-    const tabKeys = wrapper
-      .findAll('.tabs-stub button')
-      .map((btn) => btn.attributes('data-key'))
-
-    const llmIdx = tabKeys.indexOf('llm')
-    const translationsIdx = tabKeys.indexOf('translations')
-
-    expect(llmIdx).toBeGreaterThan(-1)
-    expect(translationsIdx).toBeGreaterThan(-1)
-    expect(translationsIdx).toBe(llmIdx + 1)
+    expect(
+      wrapper.findAll('.settings-nav-category').map((node) => node.text())
+    ).toEqual([
+      'settings.modelsCategory',
+      'settings.actionsCategory',
+      'settings.profilesCategory',
+      'settings.extensionsCategory',
+    ])
+    expect(
+      wrapper
+        .findAll('.tabs-stub')
+        .map((list) =>
+          list.findAll('button').map((btn) => btn.attributes('data-key'))
+        )
+    ).toEqual([
+      ['general', 'editor', 'history', 'global-actions', 'accessibility'],
+      ['stt', 'llm', 'translations'],
+      ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],
+      ['ai-profiles'],
+      ['plugins'],
+    ])
   })
 
   it('places editor tab in primary tabs right after general tab', () => {
@@ -370,39 +351,6 @@ describe('Settings.vue', () => {
     expect(hotkeysTab.text()).toBe('settings.hotkeysTab')
   })
 
-  it('places launcher commands above commands and commands at the very bottom of actions category', () => {
-    const wrapper = mount(Settings, {
-      global: {
-        stubs: {
-          NavigationList: {
-            props: ['items'],
-            template: `
-              <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
-                  {{ tab.name }}
-                </button>
-              </div>
-            `,
-          },
-        },
-      },
-    })
-
-    const allTabsContainers = wrapper.findAll('.tabs-stub')
-    // Second tabs container is action tabs
-    const actionTabKeys = allTabsContainers[1]
-      .findAll('button')
-      .map((btn) => btn.attributes('data-key'))
-
-    expect(actionTabKeys).toEqual([
-      'main-actions',
-      'tasks',
-      'languages',
-      'launcher-commands',
-      'commands',
-    ])
-  })
-
   it('renders contrast and motion as FieldSelect controls in accessibility tab', async () => {
     const wrapper = mount(Settings, {
       global: {
@@ -439,28 +387,7 @@ describe('Settings.vue', () => {
     expect(motionRow.find('.field-select-stub').exists()).toBe(true)
   })
 
-  it('renders subnav list with plugin items and status badges under plugins tab', () => {
-    const wrapper = mount(Settings, {
-      global: { stubs: { NavigationList: false } },
-    })
-
-    const subnavItems = wrapper.findAll('.navigation-item.is-nested')
-    expect(subnavItems).toHaveLength(2)
-
-    expect(subnavItems[0].text()).toContain('plugin.a.label')
-    expect(
-      subnavItems[0].find('.navigation-status.ui-badge--accent').exists()
-    ).toBe(true)
-    expect(subnavItems[0].text()).toContain('settings.pluginStatusOn')
-
-    expect(subnavItems[1].text()).toContain('Plugin B')
-    expect(
-      subnavItems[1].find('.navigation-status.ui-badge--muted').exists()
-    ).toBe(true)
-    expect(subnavItems[1].text()).toContain('settings.pluginStatusOff')
-  })
-
-  it('navigates to plugin detail when subnav item is clicked', async () => {
+  it('keeps the plugins section active on a plugin page and returns to the list', async () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
@@ -473,32 +400,34 @@ describe('Settings.vue', () => {
         },
       },
     })
-
-    const subnavItems = wrapper.findAll('.navigation-item.is-nested')
-    await subnavItems[0].trigger('click')
+    expect(wrapper.findAll('.navigation-item.is-nested')).toHaveLength(0)
 
     const vm = wrapper.vm as any
-    expect(vm.currentTab).toBe('plugin:PluginA')
-    expect(wrapper.find('.plugin-detail-stub').exists()).toBe(true)
-    expect(wrapper.find('.plugin-detail-stub').text()).toBe('PluginA')
+    vm.currentTab = 'plugin:PluginA'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('.plugin-detail-stub').text()).toBe('PluginA')
+    const active = wrapper.get('.navigation-item.is-active')
+    expect(active.text()).toBe('settings.pluginsTab')
+
+    await active.trigger('click')
+    expect(vm.currentTab).toBe('plugins')
+    expect(wrapper.find('.plugin-detail-stub').exists()).toBe(false)
   })
 
   it('remounts SettingsPluginDetailTab with pluginId key when switching plugins', async () => {
     const wrapper = mount(Settings, {
-      global: { stubs: { NavigationList: false } },
+      global: { stubs: { NavigationList: true } },
     })
 
-    const subnavItems = wrapper.findAll('.navigation-item.is-nested')
-    // Click on Plugin A (enabled: true)
-    await subnavItems[0].trigger('click')
+    const vm = wrapper.vm as any
+    vm.currentTab = 'plugin:PluginA'
     await wrapper.vm.$nextTick()
 
     const detailCardA = wrapper.find('[data-plugin="PluginA"]')
     expect(detailCardA.exists()).toBe(true)
     expect(detailCardA.classes()).not.toContain('is-disabled')
 
-    // Click on Plugin B (enabled: false)
-    await subnavItems[1].trigger('click')
+    vm.currentTab = 'plugin:PluginB'
     await wrapper.vm.$nextTick()
 
     const detailCardB = wrapper.find('[data-plugin="PluginB"]')

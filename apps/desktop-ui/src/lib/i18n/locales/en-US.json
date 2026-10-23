@@ -510,7 +510,6 @@
     "accessDeny": "Deny",
     "accessRead": "Read",
     "accessWrite": "Write",
-    "aiProfilesOverview": "Overview",
     "aiProfilesTab": "AI Profiles",
     "aiVaultPath": "AI Profiles Vault Path",
     "aiVaultPathHint": "Directory for storing profiles, SOUL.md system prompts, chat sessions, and project files.",
@@ -753,8 +752,6 @@
       "error": "Failed",
       "incompatible": "Incompatible"
     },
-    "pluginStatusOff": "Off",
-    "pluginStatusOn": "On",
     "pluginTrustNotice": "Plugin code runs in an isolated worker. Install packages only from sources you trust; declared services can read or modify your data.",
     "pluginsTab": "Plugins",
     "primaryModel": "Primary",
@@ -923,7 +920,10 @@
     "profileWorkspaceAccess": "Read and write — always",
     "profileFilesAskAll": "“Files” is set to “Ask”: every call waits for confirmation, even where the project allows it.",
     "profileModelDefaultNamed": "First available ({model})",
-    "deleteProfileConfirmUncounted": "Delete the profile “{name}”? Its SOUL.md, workspace and all its chats will be deleted for good."
+    "deleteProfileConfirmUncounted": "Delete the profile “{name}”? Its SOUL.md, workspace and all its chats will be deleted for good.",
+    "modelsCategory": "Models",
+    "profilesCategory": "Profiles",
+    "extensionsCategory": "Extensions"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

@@ -510,7 +510,6 @@
     "accessDeny": "Denegar",
     "accessRead": "Lectura",
     "accessWrite": "Escritura",
-    "aiProfilesOverview": "Resumen",
     "aiProfilesTab": "Perfiles de IA",
     "aiVaultPath": "Ruta del almacén de perfiles de IA",
     "aiVaultPathHint": "Directorio para almacenar perfiles, prompts del sistema SOUL.md, sesiones y archivos de proyectos.",
@@ -753,8 +752,6 @@
       "error": "Error",
       "incompatible": "Incompatible"
     },
-    "pluginStatusOff": "Desactivado",
-    "pluginStatusOn": "Activado",
     "pluginTrustNotice": "El código del plugin se ejecuta en un worker aislado. Instalá paquetes de fuentes confiables: los servicios declarados pueden leer o modificar tus datos.",
     "pluginsTab": "Plugins",
     "primaryModel": "Principal",
@@ -923,7 +920,10 @@
     "profileWorkspaceAccess": "Lectura y escritura — siempre",
     "profileFilesAskAll": "«Archivos» está en «Preguntar»: cada llamada espera confirmación, incluso donde el proyecto lo permite.",
     "profileModelDefaultNamed": "Primero disponible ({model})",
-    "deleteProfileConfirmUncounted": "¿Eliminar el perfil «{name}»? Su SOUL.md, su carpeta de trabajo y todos sus chats se eliminarán para siempre."
+    "deleteProfileConfirmUncounted": "¿Eliminar el perfil «{name}»? Su SOUL.md, su carpeta de trabajo y todos sus chats se eliminarán para siempre.",
+    "modelsCategory": "Modelos",
+    "profilesCategory": "Perfiles",
+    "extensionsCategory": "Extensiones"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

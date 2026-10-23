@@ -507,7 +507,6 @@
     "accessDeny": "Engelle",
     "accessRead": "Okuma",
     "accessWrite": "Yazma",
-    "aiProfilesOverview": "Genel bakış",
     "aiProfilesTab": "Yapay Zekâ Profilleri",
     "aiVaultPath": "Yapay Zekâ Profil Kasa Yolu",
     "aiVaultPathHint": "Profilleri, SOUL.md sistem yönergelerini, sohbet oturumlarını ve proje dosyalarını depolamak için dizin.",
@@ -750,8 +749,6 @@
       "error": "Hata",
       "incompatible": "Uyumsuz"
     },
-    "pluginStatusOff": "Kapalı",
-    "pluginStatusOn": "Açık",
     "pluginTrustNotice": "Eklenti kodu yalıtılmış bir worker içinde çalışır. Güvendiğiniz kaynaklardan paket yükleyin; belirtilen hizmetler verilerinizi okuyabilir veya değiştirebilir.",
     "pluginsTab": "Eklentiler",
     "primaryModel": "Birincil",
@@ -920,7 +917,10 @@
     "profileWorkspaceAccess": "Okuma ve yazma — her zaman",
     "profileFilesAskAll": "«Dosyalar» için «Sor» seçili: proje izin verse bile her çağrı onay bekler.",
     "profileModelDefaultNamed": "İlk kullanılabilir ({model})",
-    "deleteProfileConfirmUncounted": "«{name}» profili silinsin mi? SOUL.md, çalışma klasörü ve tüm sohbetleri kalıcı olarak silinecek."
+    "deleteProfileConfirmUncounted": "«{name}» profili silinsin mi? SOUL.md, çalışma klasörü ve tüm sohbetleri kalıcı olarak silinecek.",
+    "modelsCategory": "Modeller",
+    "profilesCategory": "Profiller",
+    "extensionsCategory": "Uzantılar"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

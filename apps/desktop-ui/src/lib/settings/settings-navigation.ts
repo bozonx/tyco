@@ -1,63 +1,104 @@
-import { profileIcon } from '../ai-profiles/profile-icons'
 import type { NavigationItem } from '../ui/navigation-item'
 
-/** Settings pages without a parameter, in navigation order */
-export const SETTINGS_PRIMARY_SECTIONS = [
-  { id: 'general', labelKey: 'settings.generalTab', icon: 'mdi:tune-variant' },
-  { id: 'editor', labelKey: 'settings.editorTab', icon: 'mdi:pencil-outline' },
-  { id: 'history', labelKey: 'settings.historyTab', icon: 'mdi:history' },
+/**
+ * Settings pages without a parameter, grouped and in navigation order. The
+ * first group sits under the settings title and has no heading of its own
+ */
+export const SETTINGS_NAVIGATION_GROUPS = [
   {
-    id: 'global-actions',
-    labelKey: 'settings.hotkeysTab',
-    icon: 'mdi:keyboard-outline',
+    id: 'general',
+    sections: [
+      {
+        id: 'general',
+        labelKey: 'settings.generalTab',
+        icon: 'mdi:tune-variant',
+      },
+      {
+        id: 'editor',
+        labelKey: 'settings.editorTab',
+        icon: 'mdi:pencil-outline',
+      },
+      { id: 'history', labelKey: 'settings.historyTab', icon: 'mdi:history' },
+      {
+        id: 'global-actions',
+        labelKey: 'settings.hotkeysTab',
+        icon: 'mdi:keyboard-outline',
+      },
+      {
+        id: 'accessibility',
+        labelKey: 'settings.sectionAccessibility',
+        icon: 'mdi:human-handsup',
+      },
+    ],
   },
-  { id: 'stt', labelKey: 'settings.sttTab', icon: 'mdi:microphone-outline' },
-  { id: 'llm', labelKey: 'settings.llmTab', icon: 'mdi:cube-outline' },
   {
-    id: 'translations',
-    labelKey: 'settings.translationsTab',
-    icon: 'mdi:translate',
+    id: 'models',
+    labelKey: 'settings.modelsCategory',
+    sections: [
+      {
+        id: 'stt',
+        labelKey: 'settings.sttTab',
+        icon: 'mdi:microphone-outline',
+      },
+      { id: 'llm', labelKey: 'settings.llmTab', icon: 'mdi:cube-outline' },
+      {
+        id: 'translations',
+        labelKey: 'settings.translationsTab',
+        icon: 'mdi:translate',
+      },
+    ],
   },
   {
-    id: 'accessibility',
-    labelKey: 'settings.sectionAccessibility',
-    icon: 'mdi:human-handsup',
+    id: 'actions',
+    labelKey: 'settings.actionsCategory',
+    sections: [
+      {
+        id: 'main-actions',
+        labelKey: 'settings.mainActionsTab',
+        icon: 'mdi:gesture-tap-button',
+      },
+      { id: 'tasks', labelKey: 'settings.tasksTab', icon: 'mdi:robot-outline' },
+      { id: 'languages', labelKey: 'settings.languagesTab', icon: 'mdi:web' },
+      {
+        id: 'launcher-commands',
+        labelKey: 'settings.launcherCommandsTab',
+        icon: 'mdi:console',
+      },
+      {
+        id: 'commands',
+        labelKey: 'settings.commandsTab',
+        icon: 'mdi:console-line',
+      },
+    ],
   },
   {
-    id: 'plugins',
-    labelKey: 'settings.pluginsTab',
-    icon: 'mdi:puzzle-outline',
+    id: 'profiles',
+    labelKey: 'settings.profilesCategory',
+    sections: [
+      {
+        id: 'ai-profiles',
+        labelKey: 'settings.aiProfilesTab',
+        icon: 'mdi:account-group-outline',
+      },
+    ],
   },
   {
-    id: 'ai-profiles',
-    labelKey: 'settings.aiProfilesTab',
-    icon: 'mdi:account-group-outline',
+    id: 'extensions',
+    labelKey: 'settings.extensionsCategory',
+    sections: [
+      {
+        id: 'plugins',
+        labelKey: 'settings.pluginsTab',
+        icon: 'mdi:puzzle-outline',
+      },
+    ],
   },
 ] as const
 
-export const SETTINGS_ACTION_SECTIONS = [
-  {
-    id: 'main-actions',
-    labelKey: 'settings.mainActionsTab',
-    icon: 'mdi:gesture-tap-button',
-  },
-  { id: 'tasks', labelKey: 'settings.tasksTab', icon: 'mdi:robot-outline' },
-  { id: 'languages', labelKey: 'settings.languagesTab', icon: 'mdi:web' },
-  {
-    id: 'launcher-commands',
-    labelKey: 'settings.launcherCommandsTab',
-    icon: 'mdi:console',
-  },
-  {
-    id: 'commands',
-    labelKey: 'settings.commandsTab',
-    icon: 'mdi:console-line',
-  },
-] as const
+type SettingsSection =
+  (typeof SETTINGS_NAVIGATION_GROUPS)[number]['sections'][number]
 
-export type SettingsSectionId =
-  | (typeof SETTINGS_PRIMARY_SECTIONS)[number]['id']
-  | (typeof SETTINGS_ACTION_SECTIONS)[number]['id']
+export type SettingsSectionId = SettingsSection['id']
 
 /** A section shown by its own tab; the AI profiles section opens the overview */
 export type SettingsPageSectionId = Exclude<SettingsSectionId, 'ai-profiles'>
@@ -67,7 +108,9 @@ export const AI_OVERVIEW_TAB = 'ai-profiles:overview'
 /** The id part of a profile or project tab that creates a new one */
 export const NEW_ENTITY_ID = 'new'
 
-const SECTIONS = [...SETTINGS_PRIMARY_SECTIONS, ...SETTINGS_ACTION_SECTIONS]
+const SECTIONS = SETTINGS_NAVIGATION_GROUPS.flatMap(
+  (group): readonly SettingsSection[] => group.sections
+)
 const SECTION_IDS = new Set<string>(SECTIONS.map((section) => section.id))
 
 /** What a settings tab id names; detail pages carry their entity id */
@@ -113,93 +156,47 @@ export interface SettingsNavigationSources {
   plugins: readonly { pluginId: string; label: string; isEnabled: boolean }[]
 }
 
-const projectIcon = (isExternal: boolean) =>
-  isExternal ? 'mdi:folder-open-outline' : 'mdi:folder-table-outline'
-
-function aiNavigationItems(
-  sources: SettingsNavigationSources
-): NavigationItem[] {
-  const { translate } = sources
-  return [
-    {
-      id: AI_OVERVIEW_TAB,
-      name: translate('settings.aiProfilesOverview'),
-      icon: 'mdi:folder-outline',
-      nested: true,
-    },
-    ...sources.profiles.map((profile) => ({
-      id: profileTab(profile.id),
-      name: profile.name,
-      icon: profileIcon(profile),
-      nested: true,
-    })),
-    {
-      id: profileTab(NEW_ENTITY_ID),
-      name: `+ ${translate('settings.newProfile')}`,
-      icon: 'mdi:plus',
-      nested: true,
-    },
-    ...sources.projects.map((project) => ({
-      id: projectTab(project.id),
-      name: project.name,
-      icon: projectIcon(project.isExternal),
-      nested: true,
-    })),
-    {
-      id: projectTab(NEW_ENTITY_ID),
-      name: `+ ${translate('settings.newProject')}`,
-      icon: 'mdi:plus',
-      nested: true,
-    },
-  ]
+/** The navigation section a tab belongs to; detail pages mark their list */
+export function settingsNavigationSection(
+  tab: string
+): SettingsSectionId | undefined {
+  const parsed = parseSettingsTab(tab)
+  switch (parsed.kind) {
+    case 'section':
+      return parsed.id
+    case 'ai-overview':
+    case 'ai-profile':
+    case 'ai-project':
+      return 'ai-profiles'
+    case 'plugin':
+      return 'plugins'
+    default:
+      return undefined
+  }
 }
 
-function pluginNavigationItems(
-  sources: SettingsNavigationSources
-): NavigationItem[] {
-  return sources.plugins.map((plugin) => ({
-    id: pluginTab(plugin.pluginId),
-    name: plugin.label,
-    icon: 'mdi:puzzle-outline',
-    nested: true,
-    status: sources.translate(
-      plugin.isEnabled ? 'settings.pluginStatusOn' : 'settings.pluginStatusOff'
-    ),
-    isEnabled: plugin.isEnabled,
-  }))
+export interface SettingsNavigationGroup {
+  id: string
+  label?: string
+  items: NavigationItem[]
 }
-
-const isAiTab = (tab: SettingsTab) =>
-  tab.kind === 'ai-overview' ||
-  tab.kind === 'ai-profile' ||
-  tab.kind === 'ai-project'
 
 /**
- * The two navigation lists. Plugins are always listed; the profiles and
- * projects only while one of their pages is open
+ * The navigation groups. Plugins, profiles and projects are not listed: their
+ * sections open a page that lists them
  */
 export function buildSettingsNavigation(
-  currentTab: string,
-  sources: SettingsNavigationSources
-) {
-  const current = parseSettingsTab(currentTab)
-  const sectionItem = (section: (typeof SECTIONS)[number]) => ({
-    id: section.id,
-    name: sources.translate(section.labelKey),
-    icon: section.icon,
-  })
-  const primary = SETTINGS_PRIMARY_SECTIONS.flatMap((section) => {
-    const item = sectionItem(section)
-    if (section.id === 'plugins')
-      return [item, ...pluginNavigationItems(sources)]
-    if (section.id === 'ai-profiles' && isAiTab(current))
-      return [item, ...aiNavigationItems(sources)]
-    return [item]
-  })
-  return {
-    primary: primary as NavigationItem[],
-    actions: SETTINGS_ACTION_SECTIONS.map(sectionItem) as NavigationItem[],
-  }
+  translate: (key: string) => string
+): SettingsNavigationGroup[] {
+  return SETTINGS_NAVIGATION_GROUPS.map((group) => ({
+    id: group.id,
+    label: 'labelKey' in group ? translate(group.labelKey) : undefined,
+    items: group.sections.map((section) => ({
+      id: section.id,
+      name: translate(section.labelKey),
+      icon: section.icon,
+    })),
+  }))
 }
 
 /**

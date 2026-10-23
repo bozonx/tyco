@@ -2,19 +2,17 @@
   <div class="settings-panel">
     <aside class="settings-nav">
       <div class="settings-nav-title">{{ t('nav.settings') }}</div>
-      <NavigationList
-        :label="t('nav.settings')"
-        :items="navigation.primary"
-        v-model="currentTab"
-      />
-      <div class="settings-nav-category">
-        {{ t('settings.actionsCategory') }}
-      </div>
-      <NavigationList
-        :label="t('settings.actionsCategory')"
-        :items="navigation.actions"
-        v-model="currentTab"
-      />
+      <template v-for="group in navigation" :key="group.id">
+        <div v-if="group.label" class="settings-nav-category">
+          {{ group.label }}
+        </div>
+        <NavigationList
+          :label="group.label ?? t('nav.settings')"
+          :items="group.items"
+          :model-value="currentSection ?? ''"
+          @update:model-value="currentTab = String($event)"
+        />
+      </template>
     </aside>
 
     <div class="settings-content">
@@ -101,6 +99,7 @@ import {
   buildSettingsNavigation,
   isSettingsTabAvailable,
   parseSettingsTab,
+  settingsNavigationSection,
   settingsTabTitle,
 } from '../../lib/settings/settings-navigation'
 import { createSettingsOperations } from '../../lib/settings/settings-operations'
@@ -222,8 +221,9 @@ const navigationSources = computed(() => ({
   })),
 }))
 
-const navigation = computed(() =>
-  buildSettingsNavigation(currentTab.value, navigationSources.value)
+const navigation = computed(() => buildSettingsNavigation(t))
+const currentSection = computed(() =>
+  settingsNavigationSection(currentTab.value)
 )
 
 const isAvailable = (tab: string) =>

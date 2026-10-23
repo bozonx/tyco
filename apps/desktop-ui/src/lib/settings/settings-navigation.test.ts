@@ -4,6 +4,7 @@ import {
   buildSettingsNavigation,
   isSettingsTabAvailable,
   parseSettingsTab,
+  settingsNavigationSection,
   settingsTabTitle,
 } from './settings-navigation'
 
@@ -37,37 +38,34 @@ describe('settings navigation', () => {
     expect(parseSettingsTab('nope')).toEqual({ kind: 'unknown' })
   })
 
-  it('lists plugins always and the vault only while it is open', () => {
-    const closed = buildSettingsNavigation('general', sources)
-    expect(closed.primary.map((item) => item.id)).toContain('plugin:case')
-    expect(closed.primary.map((item) => item.id)).not.toContain(
-      'ai-profile:writer'
-    )
+  it('groups the sections without listing plugins or profiles', () => {
+    const groups = buildSettingsNavigation((key) => key)
     expect(
-      closed.primary.find((item) => item.id === 'plugin:case')
-    ).toMatchObject({
-      status: 'settings.pluginStatusOff',
-      isEnabled: false,
-      nested: true,
-    })
+      groups.map((group) => [group.label, group.items.map((item) => item.id)])
+    ).toEqual([
+      [
+        undefined,
+        ['general', 'editor', 'history', 'global-actions', 'accessibility'],
+      ],
+      ['settings.modelsCategory', ['stt', 'llm', 'translations']],
+      [
+        'settings.actionsCategory',
+        ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],
+      ],
+      ['settings.profilesCategory', ['ai-profiles']],
+      ['settings.extensionsCategory', ['plugins']],
+    ])
+  })
 
-    const open = buildSettingsNavigation('ai-project:notes', sources)
-    const ids = open.primary.map((item) => item.id)
-    expect(ids.slice(ids.indexOf('ai-profiles'))).toEqual([
-      'ai-profiles',
-      'ai-profiles:overview',
-      'ai-profile:writer',
-      'ai-profile:new',
-      'ai-project:notes',
-      'ai-project:new',
-    ])
-    expect(open.actions.map((item) => item.id)).toEqual([
-      'main-actions',
-      'tasks',
-      'languages',
-      'launcher-commands',
-      'commands',
-    ])
+  it('marks the list section of a detail page', () => {
+    expect(settingsNavigationSection('llm')).toBe('llm')
+    expect(settingsNavigationSection('plugin:case')).toBe('plugins')
+    expect(settingsNavigationSection('ai-profiles:overview')).toBe(
+      'ai-profiles'
+    )
+    expect(settingsNavigationSection('ai-profile:new')).toBe('ai-profiles')
+    expect(settingsNavigationSection('ai-project:notes')).toBe('ai-profiles')
+    expect(settingsNavigationSection('nope')).toBeUndefined()
   })
 
   it('accepts vault pages before the vault is read', () => {

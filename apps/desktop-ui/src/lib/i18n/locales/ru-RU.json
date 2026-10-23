@@ -507,7 +507,6 @@
     "accessDeny": "Запрещено",
     "accessRead": "Чтение",
     "accessWrite": "Запись",
-    "aiProfilesOverview": "Обзор",
     "aiProfilesTab": "Профили ИИ",
     "aiVaultPath": "Путь к рабочей папке профилей",
     "aiVaultPathHint": "Директория для хранения профилей, системных промптов SOUL.md, сессий и файлов проектов.",
@@ -750,8 +749,6 @@
       "error": "Ошибка",
       "incompatible": "Несовместим"
     },
-    "pluginStatusOff": "Выкл",
-    "pluginStatusOn": "Вкл",
     "pluginTrustNotice": "Код плагина выполняется в изолированном Worker. Устанавливайте пакеты из доверенных источников: заявленные сервисы могут читать или изменять ваши данные.",
     "pluginsTab": "Плагины",
     "primaryModel": "Основная",
@@ -920,7 +917,10 @@
     "profileWorkspaceAccess": "Чтение и запись — всегда",
     "profileFilesAskAll": "Для «Файлов» выбрано «Спрашивать»: каждый вызов ждёт подтверждения, даже там, где проект разрешён.",
     "profileModelDefaultNamed": "Первая доступная ({model})",
-    "deleteProfileConfirmUncounted": "Удалить профиль «{name}»? SOUL.md, рабочая папка и все чаты профиля будут удалены безвозвратно."
+    "deleteProfileConfirmUncounted": "Удалить профиль «{name}»? SOUL.md, рабочая папка и все чаты профиля будут удалены безвозвратно.",
+    "modelsCategory": "Модели",
+    "profilesCategory": "Профили",
+    "extensionsCategory": "Расширения"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
