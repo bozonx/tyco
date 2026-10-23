@@ -104,6 +104,9 @@ describe('project editor', () => {
     await vi.advanceTimersByTimeAsync(100)
     await nextTick()
     expect(editor.saveStatus.value).toBe('error')
-    expect(deps.reportError).toHaveBeenCalledWith('disk full')
+    expect(deps.reportError).toHaveBeenCalledWith(
+      'disk full',
+      expect.any(Function)
+    )
   })
 })

@@ -1,20 +1,21 @@
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import type { AiProject } from '@tyco/shared'
 
-import { createAutosave, summarizeAutosave } from '../settings/autosave'
+import {
+  createAutosave,
+  createAutosaveGroup,
+  type AutosaveTimers,
+} from '../settings/autosave'
 
 export type ProjectFields = Pick<
   AiProject,
   'name' | 'description' | 'isExternal' | 'targetPath'
 >
 
-export interface ProjectEditorDependencies {
+export interface ProjectEditorDependencies extends AutosaveTimers {
   saveProject: (fields: ProjectFields) => Promise<void>
-  reportError: (message: string) => void
-  /** Autosave waits this long after the last keystroke */
-  delayMs: number
-  setTimer?: (run: () => void, delayMs: number) => unknown
-  clearTimer?: (timer: unknown) => void
+  /** `retry` saves the fields again */
+  reportError: (message: string, retry: () => void) => void
 }
 
 /**
@@ -46,6 +47,10 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     delayMs: deps.delayMs,
     save: () => deps.saveProject(fields()),
   })
+  const autosaves = createAutosaveGroup({
+    parts: [autosave],
+    reportError: deps.reportError,
+  })
 
   /** Fills the fields from a stored project, or clears them for a new one */
   const load = (project?: AiProject) => {
@@ -62,10 +67,6 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     else autosave.cancel()
   }
 
-  watch(autosave.error, (message) => {
-    if (message) deps.reportError(message)
-  })
-
   return {
     name,
     description,
@@ -73,10 +74,10 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     targetPath,
     isValid,
     fields,
-    saveStatus: computed(() => summarizeAutosave([autosave.status.value])),
+    saveStatus: autosaves.status,
     load,
     change,
-    flush: autosave.flush,
-    cancel: autosave.cancel,
+    flush: autosaves.flush,
+    cancel: autosaves.cancel,
   }
 }

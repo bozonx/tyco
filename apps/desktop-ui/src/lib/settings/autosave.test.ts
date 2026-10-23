@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  AUTOSAVE_DELAY_MS,
   createAutosave,
+  createAutosaveGroup,
   createSaveTracker,
   summarizeAutosave,
 } from './autosave'
@@ -23,6 +25,22 @@ describe('createAutosave', () => {
 
       expect(save).toHaveBeenCalledOnce()
       expect(autosave.status.value).toBe('saved')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('waits the shared delay by default', async () => {
+    vi.useFakeTimers()
+    try {
+      const save = vi.fn(async () => {})
+      const autosave = createAutosave({ save })
+
+      autosave.schedule()
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS - 1)
+      expect(save).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(1)
+      expect(save).toHaveBeenCalledOnce()
     } finally {
       vi.useRealTimers()
     }
@@ -162,8 +180,8 @@ describe('autosave summary', () => {
 })
 
 describe('save tracker', () => {
-  it('shows saving until every save ends, then the last outcome', async () => {
-    const tracker = createSaveTracker()
+  it('shows saving until every save ends, then keeps a failure', async () => {
+    const tracker = createSaveTracker({ resave: async () => {} })
     let failFirst!: (error: Error) => void
     const first = tracker.track(
       new Promise((_, reject) => {
@@ -177,12 +195,90 @@ describe('save tracker', () => {
 
     failFirst(new Error('disk full'))
     expect(await first).toBe(false)
-    expect(await tracker.flush()).toBe(false)
     expect(tracker.status.value).toBe('error')
     expect(tracker.error.value).toBe('disk full')
 
+    // a later save does not hide the failed one
     await tracker.track(Promise.resolve())
+    expect(tracker.status.value).toBe('error')
+  })
+
+  it('stores the current value again on flush after a failure', async () => {
+    const resave = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('still full'))
+      .mockResolvedValue(undefined)
+    const tracker = createSaveTracker({ resave })
+    await tracker.track(Promise.reject(new Error('disk full')))
+
+    expect(await tracker.flush()).toBe(false)
+    expect(tracker.error.value).toBe('still full')
     expect(await tracker.flush()).toBe(true)
+    expect(resave).toHaveBeenCalledTimes(2)
     expect(tracker.status.value).toBe('saved')
+    expect(tracker.error.value).toBe('')
+
+    expect(await tracker.flush()).toBe(true)
+    expect(resave).toHaveBeenCalledTimes(2)
+  })
+
+  it('forgets a failure on cancel', async () => {
+    const resave = vi.fn(async () => {})
+    const tracker = createSaveTracker({ resave })
+    await tracker.track(Promise.reject(new Error('disk full')))
+
+    tracker.cancel()
+
+    expect(tracker.status.value).toBe('idle')
+    expect(await tracker.flush()).toBe(true)
+    expect(resave).not.toHaveBeenCalled()
+  })
+})
+
+describe('autosave group', () => {
+  it('reports every failure with a retry of the waiting changes', async () => {
+    const save = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('disk full'))
+      .mockRejectedValueOnce(new Error('disk full'))
+      .mockResolvedValue(undefined)
+    const autosave = createAutosave({ save, delayMs: 10_000 })
+    const reportError = vi.fn()
+    const group = createAutosaveGroup({ parts: [autosave], reportError })
+
+    autosave.schedule()
+    expect(await group.flush()).toBe(false)
+    expect(group.status.value).toBe('error')
+    expect(reportError).toHaveBeenCalledWith('disk full', expect.any(Function))
+
+    const [, retry] = reportError.mock.calls[0] as [string, () => void]
+    retry()
+    await vi.waitFor(() => expect(reportError).toHaveBeenCalledTimes(2))
+
+    retry()
+    await vi.waitFor(() => expect(group.status.value).toBe('saved'))
+    expect(save).toHaveBeenCalledTimes(3)
+  })
+
+  it('saves and forgets its parts together', async () => {
+    const first = createAutosave({ save: async () => {}, delayMs: 10_000 })
+    const secondSave = vi.fn(async () => {})
+    const second = createAutosave({ save: secondSave, delayMs: 10_000 })
+    const group = createAutosaveGroup({
+      parts: [first, second],
+      reportError: vi.fn(),
+    })
+
+    first.schedule()
+    second.schedule()
+    expect(group.status.value).toBe('saving')
+    expect(await group.flush()).toBe(true)
+    expect(group.status.value).toBe('saved')
+
+    second.schedule()
+    group.cancel()
+    await group.flush()
+    expect(secondSave).toHaveBeenCalledOnce()
+    expect(group.status.value).toBe('')
   })
 })

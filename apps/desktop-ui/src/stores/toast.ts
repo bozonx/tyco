@@ -2,9 +2,13 @@ import { translate } from '../lib/i18n/index'
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
-import { type ToastType, createToastModel } from '../lib/toast/toast-model'
+import {
+  type ToastOptions,
+  type ToastType,
+  createToastModel,
+} from '../lib/toast/toast-model'
 
-export type { ToastType }
+export type { ToastOptions, ToastType }
 
 export const useToastStore = defineStore('toast', () => {
   const model = createToastModel()
@@ -28,9 +32,9 @@ export const useToastStore = defineStore('toast', () => {
   const toastText = (
     text: string,
     type: ToastType = 'info',
-    durationMs?: number
+    options: ToastOptions = {}
   ): void => {
-    useToastStore().addToast(text, type, { durationMs })
+    useToastStore().addToast(text, type, options)
   }
 
   return { ...model, toastKey, toastText }

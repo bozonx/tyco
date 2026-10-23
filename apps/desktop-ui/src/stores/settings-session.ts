@@ -4,6 +4,7 @@ import { CONFIG_VERSION } from '@tyco/shared'
 
 import { useToastStore } from './toast'
 import { translate } from '../lib/i18n'
+import { AUTOSAVE_DELAY_MS } from '../lib/settings/autosave'
 import { createSettingsConfig } from '../lib/settings/settings-config'
 import { createSettingsSession } from '../lib/settings/settings-session'
 import { usePluginRuntimeStore } from './plugin-runtime'
@@ -41,7 +42,7 @@ export const useSettingsSessionStore = defineStore('settingsSession', () => {
           : translate('toast.settingsSaveFailed'),
         'error'
       ),
-    debounceMs: 500,
+    debounceMs: AUTOSAVE_DELAY_MS,
   })
   watch(() => desktop.userConfig, session.applyIncoming)
   watch(session.draft, session.schedule, { deep: true, flush: 'sync' })

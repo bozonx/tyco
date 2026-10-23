@@ -66,6 +66,36 @@ describe('createToastModel', () => {
     expect(store.toasts.value).toHaveLength(0)
   })
 
+  it('runs the action of a toast and closes it', () => {
+    const store = createToastModel()
+    const run = vi.fn()
+    const id = store.addToast('Not saved', 'error', {
+      action: { label: 'Retry', run },
+    })
+
+    store.runToastAction(id)
+
+    expect(run).toHaveBeenCalledOnce()
+    expect(store.toasts.value).toHaveLength(0)
+  })
+
+  it('takes the latest action of a repeated toast', () => {
+    const store = createToastModel()
+    const first = vi.fn()
+    const second = vi.fn()
+    store.addToast('Not saved', 'error', {
+      action: { label: 'Retry', run: first },
+    })
+    const id = store.addToast('Not saved', 'error', {
+      action: { label: 'Retry', run: second },
+    })
+
+    store.runToastAction(id)
+
+    expect(first).not.toHaveBeenCalled()
+    expect(second).toHaveBeenCalledOnce()
+  })
+
   it('pauses and resumes countdown on hover', () => {
     let currentTime = 1000
     const now = () => currentTime

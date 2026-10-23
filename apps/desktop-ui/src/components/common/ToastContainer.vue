@@ -39,6 +39,15 @@
           >
             {{ item.message }}
           </div>
+          <Button
+            v-if="item.action"
+            class="toast-action"
+            variant="ghost"
+            size="sm"
+            @click="toastStore.runToastAction(item.id)"
+          >
+            {{ item.action.label }}
+          </Button>
         </div>
 
         <IconButton
@@ -57,6 +66,7 @@
 import { translate } from '../../lib/i18n'
 import { type ToastType, useToastStore } from '../../stores/toast'
 import AppIcon from './AppIcon.vue'
+import Button from './Button.vue'
 import IconButton from './IconButton.vue'
 
 const toastStore = useToastStore()
@@ -118,6 +128,11 @@ function getToastIconClass(type: ToastType): string {
 </script>
 
 <style scoped>
+.toast-action {
+  margin-top: var(--space-xs);
+  margin-left: calc(-1 * var(--space-sm));
+}
+
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);

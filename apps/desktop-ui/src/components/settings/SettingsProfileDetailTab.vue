@@ -257,8 +257,6 @@ import {
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
 
-/** Autosave waits this long after the last keystroke */
-const AUTOSAVE_DELAY_MS = 600
 /** The select value of an unset model: the first usable one */
 const DEFAULT_MODEL_OPTION = ''
 
@@ -324,13 +322,15 @@ async function handleDuplicate() {
 // ---------------------------------------------------------------------------
 
 const editor = createProfileEditor({
-  delayMs: AUTOSAVE_DELAY_MS,
   getProfile: () => aiProfilesStore.getProfile(props.profileId),
   updateProfile: (patch) =>
     aiProfilesStore.updateProfile(props.profileId, patch),
   readSoul: () => aiProfilesStore.readSoul(props.profileId),
   writeSoul: (content) => aiProfilesStore.writeSoul(props.profileId, content),
-  reportError: (message) => toastText(message, 'error'),
+  reportError: (message, retry) =>
+    toastText(message, 'error', {
+      action: { label: t('common.retry'), run: retry },
+    }),
 })
 const {
   name,

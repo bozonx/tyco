@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useToastStore } from '../../stores/toast'
 import ToastContainer from './ToastContainer.vue'
@@ -34,6 +34,21 @@ describe('ToastContainer', () => {
     expect(closeBtn.attributes('tabindex')).toBeUndefined()
     await closeBtn.trigger('click')
 
+    expect(toastStore.toasts).toHaveLength(0)
+  })
+
+  it('runs the action of a toast from its button', async () => {
+    const toastStore = useToastStore()
+    const run = vi.fn()
+    toastStore.addToast('Not saved', 'error', {
+      durationMs: 0,
+      action: { label: 'Retry', run },
+    })
+
+    const wrapper = mount(ToastContainer, { global: { stubs: { Icon: true } } })
+    await wrapper.find('.toast-action').trigger('click')
+
+    expect(run).toHaveBeenCalledOnce()
     expect(toastStore.toasts).toHaveLength(0)
   })
 

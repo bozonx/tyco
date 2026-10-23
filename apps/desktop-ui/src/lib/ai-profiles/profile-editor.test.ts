@@ -70,7 +70,7 @@ describe('profile editor', () => {
       readSoul: vi.fn().mockRejectedValue(new Error('gone')),
     })
     await editor.load(profile)
-    expect(deps.reportError).toHaveBeenCalledWith('Error: gone')
+    expect(deps.reportError).toHaveBeenCalledWith('gone', expect.any(Function))
     editor.soulPrompt.value = 'New'
     editor.changeSoul()
     await editor.flush()
@@ -123,7 +123,10 @@ describe('profile editor', () => {
     await editor.flush()
     await nextTick()
     expect(editor.saveStatus.value).toBe('error')
-    expect(deps.reportError).toHaveBeenCalledWith('disk full')
+    expect(deps.reportError).toHaveBeenCalledWith(
+      'disk full',
+      expect.any(Function)
+    )
 
     editor.changeTemperature('0.2')
     editor.cancel()
@@ -170,7 +173,34 @@ describe('profile editor', () => {
     )
     await nextTick()
     expect(editor.saveStatus.value).toBe('error')
-    expect(deps.reportError).toHaveBeenCalledWith('disk full')
+    expect(deps.reportError).toHaveBeenCalledWith(
+      'disk full',
+      expect.any(Function)
+    )
+  })
+
+  it('retries a failed pick by storing the profile again', async () => {
+    const { deps, editor } = setup()
+    await editor.load(profile)
+    deps.updateProfile.mockRejectedValueOnce(new Error('disk full'))
+    await editor.changeSettings({ icon: 'mdi:robot-outline' })
+    const [, retry] = deps.reportError.mock.calls[0] as [string, () => void]
+
+    retry()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(deps.updateProfile).toHaveBeenLastCalledWith({})
+    expect(editor.saveStatus.value).toBe('saved')
+  })
+
+  it('reports a failure again when the retry fails too', async () => {
+    const { deps, editor } = setup()
+    await editor.load(profile)
+    deps.updateProfile.mockRejectedValue(new Error('disk full'))
+    editor.changeTemperature('1')
+    await editor.flush()
+    expect(await editor.flush()).toBe(false)
+    expect(deps.reportError).toHaveBeenCalledTimes(2)
   })
 
   it('takes changes made on disk, but not over typed text', async () => {

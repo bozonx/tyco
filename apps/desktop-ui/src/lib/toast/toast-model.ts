@@ -2,15 +2,23 @@ import { ref, type Ref } from 'vue'
 
 export type ToastType = 'success' | 'error' | 'warn' | 'info'
 
+/** A button on the toast; pressing it also closes the toast */
+export interface ToastAction {
+  label: string
+  run: () => void
+}
+
 export interface ToastOptions {
   title?: string
   durationMs?: number
+  action?: ToastAction
 }
 
 export interface ToastItem {
   id: string
   message: string
   title?: string
+  action?: ToastAction
   type: ToastType
   durationMs: number
   createdAt: number
@@ -91,6 +99,7 @@ export function createToastModel(deps: ToastDependencies = {}) {
       existing.durationMs = durationMs
       existing.remainingMs = durationMs
       existing.isPaused = false
+      existing.action = options.action
       if (durationMs > 0) {
         scheduleDismiss(existing)
       } else {
@@ -105,6 +114,7 @@ export function createToastModel(deps: ToastDependencies = {}) {
       id,
       message,
       title: options.title,
+      action: options.action,
       type,
       durationMs,
       createdAt: now(),
@@ -151,6 +161,13 @@ export function createToastModel(deps: ToastDependencies = {}) {
     scheduleDismiss(item)
   }
 
+  /** Runs the toast's action and closes it */
+  const runToastAction = (id: string) => {
+    const action = toasts.value.find((t) => t.id === id)?.action
+    removeToast(id)
+    action?.run()
+  }
+
   const clearToasts = () => {
     for (const item of toasts.value) {
       clearItemTimer(item)
@@ -158,5 +175,13 @@ export function createToastModel(deps: ToastDependencies = {}) {
     toasts.value = []
   }
 
-  return { toasts, addToast, removeToast, pauseToast, resumeToast, clearToasts }
+  return {
+    toasts,
+    addToast,
+    removeToast,
+    runToastAction,
+    pauseToast,
+    resumeToast,
+    clearToasts,
+  }
 }

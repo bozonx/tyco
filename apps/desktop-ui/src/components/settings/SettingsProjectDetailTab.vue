@@ -148,9 +148,6 @@ import {
 const props = defineProps<{ projectId: string }>()
 const { navigate } = useSettingsContext()
 
-/** Autosave waits this long after the last keystroke */
-const AUTOSAVE_DELAY_MS = 600
-
 const { t } = useI18n()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
@@ -166,12 +163,14 @@ const projectTypeOptions = computed(() => [
 ])
 
 const editor = createProjectEditor({
-  delayMs: AUTOSAVE_DELAY_MS,
   saveProject: async (fields) => {
     const current = aiProfilesStore.getProject(props.projectId)
     if (current) await aiProfilesStore.saveProject({ ...current, ...fields })
   },
-  reportError: (message) => toastText(message, 'error'),
+  reportError: (message, retry) =>
+    toastText(message, 'error', {
+      action: { label: t('common.retry'), run: retry },
+    }),
 })
 const { name, description, isExternal, targetPath, isValid, saveStatus } =
   editor

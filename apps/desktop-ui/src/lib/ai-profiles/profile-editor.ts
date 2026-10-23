@@ -1,4 +1,5 @@
-import { computed, ref, watch } from 'vue'
+import { errorMessage } from '@tyco/shared/value-guards'
+import { computed, ref } from 'vue'
 import type { AiProfile } from '@tyco/shared'
 
 import {
@@ -7,10 +8,11 @@ import {
 } from '../chat-tools/chat-tool-groups'
 import {
   createAutosave,
+  createAutosaveGroup,
   createSaveTracker,
-  summarizeAutosave,
   type AutosaveStatus,
   type AutosaveSummary,
+  type AutosaveTimers,
 } from '../settings/autosave'
 import type { AiProfilePatch } from './ai-profiles-model'
 import {
@@ -18,17 +20,14 @@ import {
   parseProfileTemperature,
 } from './profile-generation'
 
-export interface ProfileEditorDependencies {
+export interface ProfileEditorDependencies extends AutosaveTimers {
   /** The profile as the app holds it now */
   getProfile: () => AiProfile | undefined
   updateProfile: (patch: AiProfilePatch) => Promise<void>
   readSoul: () => Promise<string>
   writeSoul: (content: string) => Promise<void>
-  reportError: (message: string) => void
-  /** Autosave waits this long after the last keystroke */
-  delayMs: number
-  setTimer?: (run: () => void, delayMs: number) => unknown
-  clearTimer?: (timer: unknown) => void
+  /** `retry` repeats what failed */
+  reportError: (message: string, retry: () => void) => void
 }
 
 /** A field with nothing waiting to be saved may take the stored value */
@@ -54,11 +53,14 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
   const soulLoadError = ref('')
   let hasLoadedProfile = false
   let soulRead: Promise<void> | null = null
-  const timers = { setTimer: deps.setTimer, clearTimer: deps.clearTimer }
+  const timers: AutosaveTimers = {
+    delayMs: deps.delayMs,
+    setTimer: deps.setTimer,
+    clearTimer: deps.clearTimer,
+  }
 
   const profileAutosave = createAutosave({
     ...timers,
-    delayMs: deps.delayMs,
     save: async () => {
       const temperature = parseProfileTemperature(temperatureText.value)
       const maxOutputTokens = parseProfileMaxOutputTokens(
@@ -81,7 +83,6 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
 
   const soulAutosave = createAutosave({
     ...timers,
-    delayMs: deps.delayMs,
     save: async () => {
       // the field shows the file only once it has been read
       if (!isSoulLoaded.value) return
@@ -89,7 +90,16 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     },
   })
 
-  const pickedSaves = createSaveTracker()
+  // the profile in the app already holds a failed pick: storing it again
+  // stores the pick
+  const pickedSaves = createSaveTracker({
+    resave: () => deps.updateProfile({}),
+  })
+
+  const autosaves = createAutosaveGroup({
+    parts: [profileAutosave, soulAutosave, pickedSaves],
+    reportError: deps.reportError,
+  })
 
   const loadSoul = (): Promise<void> => {
     if (soulRead) return soulRead
@@ -104,8 +114,8 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
           isSoulLoaded.value = true
         },
         (error: unknown) => {
-          soulLoadError.value = String(error)
-          deps.reportError(soulLoadError.value)
+          soulLoadError.value = errorMessage(error)
+          deps.reportError(soulLoadError.value, () => void loadSoul())
         }
       )
       .finally(() => {
@@ -187,40 +197,11 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     pickedSaves.track(deps.updateProfile(patch))
 
   const saveStatus = computed<AutosaveSummary>(() =>
-    soulLoadError.value
-      ? 'error'
-      : summarizeAutosave([
-          profileAutosave.status.value,
-          soulAutosave.status.value,
-          pickedSaves.status.value,
-        ])
-  )
-
-  watch(
-    () =>
-      profileAutosave.error.value ||
-      soulAutosave.error.value ||
-      pickedSaves.error.value,
-    (message) => {
-      if (message) deps.reportError(message)
-    }
+    soulLoadError.value ? 'error' : autosaves.status.value
   )
 
   /** Saves the waiting changes now, e.g. when the page is left */
-  const flush = async () => {
-    const saved = await Promise.all([
-      profileAutosave.flush(),
-      soulAutosave.flush(),
-      pickedSaves.flush(),
-    ])
-    return saved.every(Boolean) && !soulLoadError.value
-  }
-
-  /** Forgets the waiting changes of a profile about to be removed */
-  const cancel = () => {
-    profileAutosave.cancel()
-    soulAutosave.cancel()
-  }
+  const flush = async () => (await autosaves.flush()) && !soulLoadError.value
 
   return {
     name,
@@ -245,6 +226,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     changeSoul,
     changeSettings,
     flush,
-    cancel,
+    /** Forgets the waiting changes of a profile about to be removed */
+    cancel: autosaves.cancel,
   }
 }
