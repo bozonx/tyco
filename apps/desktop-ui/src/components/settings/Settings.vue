@@ -9,7 +9,7 @@
         <NavigationList
           :label="group.label ?? t('nav.settings')"
           :items="group.items"
-          :model-value="currentSection ?? ''"
+          :model-value="currentNavigationItemId ?? ''"
           @update:model-value="currentTab = String($event)"
         />
       </template>
@@ -99,7 +99,7 @@ import {
   buildSettingsNavigation,
   isSettingsTabAvailable,
   parseSettingsTab,
-  settingsNavigationSection,
+  settingsNavigationItemId,
   settingsTabTitle,
 } from '../../lib/settings/settings-navigation'
 import { createSettingsOperations } from '../../lib/settings/settings-operations'
@@ -221,9 +221,11 @@ const navigationSources = computed(() => ({
   })),
 }))
 
-const navigation = computed(() => buildSettingsNavigation(t))
-const currentSection = computed(() =>
-  settingsNavigationSection(currentTab.value)
+const navigation = computed(() =>
+  buildSettingsNavigation(navigationSources.value)
+)
+const currentNavigationItemId = computed(() =>
+  settingsNavigationItemId(currentTab.value)
 )
 
 const isAvailable = (tab: string) =>

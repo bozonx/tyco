@@ -4,7 +4,7 @@ import {
   buildSettingsNavigation,
   isSettingsTabAvailable,
   parseSettingsTab,
-  settingsNavigationSection,
+  settingsNavigationItemId,
   settingsTabTitle,
 } from './settings-navigation'
 
@@ -38,8 +38,8 @@ describe('settings navigation', () => {
     expect(parseSettingsTab('nope')).toEqual({ kind: 'unknown' })
   })
 
-  it('groups the sections without listing plugins or profiles', () => {
-    const groups = buildSettingsNavigation((key) => key)
+  it('groups the sections and lists each plugin after all plugins', () => {
+    const groups = buildSettingsNavigation(sources)
     expect(
       groups.map((group) => [group.label, group.items.map((item) => item.id)])
     ).toEqual([
@@ -47,25 +47,41 @@ describe('settings navigation', () => {
         undefined,
         ['general', 'editor', 'history', 'global-actions', 'accessibility'],
       ],
-      ['settings.modelsCategory', ['stt', 'llm', 'translations']],
+      [
+        'settings.modelsCategory',
+        ['stt', 'llm', 'translations', 'ai-profiles'],
+      ],
       [
         'settings.actionsCategory',
         ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],
       ],
-      ['settings.profilesCategory', ['ai-profiles']],
-      ['settings.extensionsCategory', ['plugins']],
+      ['settings.pluginsTab', ['plugins', 'plugin:case']],
     ])
+    const [allPlugins, plugin] = groups.at(-1)!.items
+    expect(allPlugins.name).toBe('settings.allPluginsTab')
+    expect(plugin).toMatchObject({
+      name: 'Text case',
+      status: 'settings.pluginStatusOff',
+      isEnabled: false,
+    })
+    expect(plugin.nested).toBeUndefined()
   })
 
-  it('marks the list section of a detail page', () => {
-    expect(settingsNavigationSection('llm')).toBe('llm')
-    expect(settingsNavigationSection('plugin:case')).toBe('plugins')
-    expect(settingsNavigationSection('ai-profiles:overview')).toBe(
-      'ai-profiles'
-    )
-    expect(settingsNavigationSection('ai-profile:new')).toBe('ai-profiles')
-    expect(settingsNavigationSection('ai-project:notes')).toBe('ai-profiles')
-    expect(settingsNavigationSection('nope')).toBeUndefined()
+  it('leaves an enabled plugin without a status', () => {
+    const [, plugin] = buildSettingsNavigation({
+      ...sources,
+      plugins: [{ pluginId: 'case', label: 'Text case', isEnabled: true }],
+    }).at(-1)!.items
+    expect(plugin.status).toBeUndefined()
+  })
+
+  it('marks the navigation item of a page', () => {
+    expect(settingsNavigationItemId('llm')).toBe('llm')
+    expect(settingsNavigationItemId('plugin:case')).toBe('plugin:case')
+    expect(settingsNavigationItemId('ai-profiles:overview')).toBe('ai-profiles')
+    expect(settingsNavigationItemId('ai-profile:new')).toBe('ai-profiles')
+    expect(settingsNavigationItemId('ai-project:notes')).toBe('ai-profiles')
+    expect(settingsNavigationItemId('nope')).toBeUndefined()
   })
 
   it('accepts vault pages before the vault is read', () => {
@@ -86,6 +102,7 @@ describe('settings navigation', () => {
 
   it('titles a page by its section or entity', () => {
     expect(settingsTabTitle('llm', sources)).toBe('settings.llmTab')
+    expect(settingsTabTitle('plugins', sources)).toBe('settings.pluginsTab')
     expect(settingsTabTitle('plugin:case', sources)).toBe('Text case')
     expect(settingsTabTitle('ai-profile:writer', sources)).toBe('Writer')
     expect(settingsTabTitle('ai-profile:new', sources)).toBe(

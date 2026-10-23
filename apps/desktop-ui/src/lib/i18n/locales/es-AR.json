@@ -922,8 +922,8 @@
     "profileModelDefaultNamed": "Primero disponible ({model})",
     "deleteProfileConfirmUncounted": "¿Eliminar el perfil «{name}»? Su SOUL.md, su carpeta de trabajo y todos sus chats se eliminarán para siempre.",
     "modelsCategory": "Modelos",
-    "profilesCategory": "Perfiles",
-    "extensionsCategory": "Extensiones"
+    "allPluginsTab": "Todos los plugins",
+    "pluginStatusOff": "Desactivado"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

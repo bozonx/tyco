@@ -225,8 +225,7 @@ describe('Settings.vue', () => {
     ).toEqual([
       'settings.modelsCategory',
       'settings.actionsCategory',
-      'settings.profilesCategory',
-      'settings.extensionsCategory',
+      'settings.pluginsTab',
     ])
     expect(
       wrapper
@@ -236,10 +235,9 @@ describe('Settings.vue', () => {
         )
     ).toEqual([
       ['general', 'editor', 'history', 'global-actions', 'accessibility'],
-      ['stt', 'llm', 'translations'],
+      ['stt', 'llm', 'translations', 'ai-profiles'],
       ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],
-      ['ai-profiles'],
-      ['plugins'],
+      ['plugins', 'plugin:PluginA', 'plugin:PluginB'],
     ])
   })
 
@@ -387,7 +385,25 @@ describe('Settings.vue', () => {
     expect(motionRow.find('.field-select-stub').exists()).toBe(true)
   })
 
-  it('keeps the plugins section active on a plugin page and returns to the list', async () => {
+  it('lists each plugin with a status only when it is disabled', () => {
+    const wrapper = mount(Settings, {
+      global: { stubs: { NavigationList: false } },
+    })
+
+    const pluginItems = wrapper
+      .findAll('.navigation-item')
+      .filter((item) => /plugin\.a\.label|Plugin B/.test(item.text()))
+    expect(pluginItems).toHaveLength(2)
+    expect(pluginItems[0].find('.navigation-status').exists()).toBe(false)
+    expect(pluginItems[1].text()).toContain('settings.pluginStatusOff')
+    expect(
+      wrapper
+        .findAll('.navigation-item')
+        .some((item) => item.text() === 'settings.allPluginsTab')
+    ).toBe(true)
+  })
+
+  it('opens a plugin from its navigation item and returns to all plugins', async () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
@@ -400,16 +416,18 @@ describe('Settings.vue', () => {
         },
       },
     })
-    expect(wrapper.findAll('.navigation-item.is-nested')).toHaveLength(0)
+    const item = (text: string) =>
+      wrapper.findAll('.navigation-item').find((node) => node.text() === text)!
 
+    await item('plugin.a.label').trigger('click')
     const vm = wrapper.vm as any
-    vm.currentTab = 'plugin:PluginA'
-    await wrapper.vm.$nextTick()
+    expect(vm.currentTab).toBe('plugin:PluginA')
     expect(wrapper.get('.plugin-detail-stub').text()).toBe('PluginA')
-    const active = wrapper.get('.navigation-item.is-active')
-    expect(active.text()).toBe('settings.pluginsTab')
+    expect(wrapper.get('.navigation-item.is-active').text()).toBe(
+      'plugin.a.label'
+    )
 
-    await active.trigger('click')
+    await item('settings.allPluginsTab').trigger('click')
     expect(vm.currentTab).toBe('plugins')
     expect(wrapper.find('.plugin-detail-stub').exists()).toBe(false)
   })

@@ -46,6 +46,11 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.translationsTab',
         icon: 'mdi:translate',
       },
+      {
+        id: 'ai-profiles',
+        labelKey: 'settings.aiProfilesTab',
+        icon: 'mdi:account-group-outline',
+      },
     ],
   },
   {
@@ -72,24 +77,14 @@ export const SETTINGS_NAVIGATION_GROUPS = [
     ],
   },
   {
-    id: 'profiles',
-    labelKey: 'settings.profilesCategory',
-    sections: [
-      {
-        id: 'ai-profiles',
-        labelKey: 'settings.aiProfilesTab',
-        icon: 'mdi:account-group-outline',
-      },
-    ],
-  },
-  {
-    id: 'extensions',
-    labelKey: 'settings.extensionsCategory',
+    id: 'plugins',
+    labelKey: 'settings.pluginsTab',
     sections: [
       {
         id: 'plugins',
         labelKey: 'settings.pluginsTab',
-        icon: 'mdi:puzzle-outline',
+        navigationLabelKey: 'settings.allPluginsTab',
+        icon: 'mdi:view-grid-outline',
       },
     ],
   },
@@ -156,10 +151,11 @@ export interface SettingsNavigationSources {
   plugins: readonly { pluginId: string; label: string; isEnabled: boolean }[]
 }
 
-/** The navigation section a tab belongs to; detail pages mark their list */
-export function settingsNavigationSection(
-  tab: string
-): SettingsSectionId | undefined {
+/**
+ * The navigation item a tab marks: a plugin page has its own item, a profile or
+ * project page marks the AI profiles section
+ */
+export function settingsNavigationItemId(tab: string): string | undefined {
   const parsed = parseSettingsTab(tab)
   switch (parsed.kind) {
     case 'section':
@@ -169,7 +165,7 @@ export function settingsNavigationSection(
     case 'ai-project':
       return 'ai-profiles'
     case 'plugin':
-      return 'plugins'
+      return pluginTab(parsed.pluginId)
     default:
       return undefined
   }
@@ -182,22 +178,46 @@ export interface SettingsNavigationGroup {
 }
 
 /**
- * The navigation groups. Plugins, profiles and projects are not listed: their
- * sections open a page that lists them
+ * The navigation groups. Each plugin follows the page listing all plugins;
+ * profiles and projects are listed only on their own page
  */
 export function buildSettingsNavigation(
-  translate: (key: string) => string
+  sources: Pick<SettingsNavigationSources, 'translate' | 'plugins'>
 ): SettingsNavigationGroup[] {
-  return SETTINGS_NAVIGATION_GROUPS.map((group) => ({
-    id: group.id,
-    label: 'labelKey' in group ? translate(group.labelKey) : undefined,
-    items: group.sections.map((section) => ({
+  const { translate } = sources
+  return SETTINGS_NAVIGATION_GROUPS.map((group) => {
+    const items: NavigationItem[] = group.sections.map((section) => ({
       id: section.id,
-      name: translate(section.labelKey),
+      name: translate(navigationLabelKey(section)),
       icon: section.icon,
-    })),
-  }))
+    }))
+    if (group.id === 'plugins')
+      items.push(...sources.plugins.map(pluginNavigationItem(translate)))
+    return {
+      id: group.id,
+      label: 'labelKey' in group ? translate(group.labelKey) : undefined,
+      items,
+    }
+  })
 }
+
+/** A section may name itself in the navigation unlike its page heading */
+const navigationLabelKey = (section: {
+  labelKey: string
+  navigationLabelKey?: string
+}) => section.navigationLabelKey ?? section.labelKey
+
+/** Only a disabled plugin carries a status, as the exception to note */
+const pluginNavigationItem =
+  (translate: (key: string) => string) =>
+  (plugin: SettingsNavigationSources['plugins'][number]): NavigationItem => ({
+    id: pluginTab(plugin.pluginId),
+    name: plugin.label,
+    icon: 'mdi:puzzle-outline',
+    ...(plugin.isEnabled
+      ? {}
+      : { status: translate('settings.pluginStatusOff'), isEnabled: false }),
+  })
 
 /**
  * Whether a tab can be shown. A profile or project tab is accepted while the

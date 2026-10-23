@@ -919,8 +919,8 @@
     "profileModelDefaultNamed": "İlk kullanılabilir ({model})",
     "deleteProfileConfirmUncounted": "«{name}» profili silinsin mi? SOUL.md, çalışma klasörü ve tüm sohbetleri kalıcı olarak silinecek.",
     "modelsCategory": "Modeller",
-    "profilesCategory": "Profiller",
-    "extensionsCategory": "Uzantılar"
+    "allPluginsTab": "Tüm eklentiler",
+    "pluginStatusOff": "Kapalı"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

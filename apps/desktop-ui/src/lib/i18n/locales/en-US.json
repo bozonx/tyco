@@ -922,8 +922,8 @@
     "profileModelDefaultNamed": "First available ({model})",
     "deleteProfileConfirmUncounted": "Delete the profile “{name}”? Its SOUL.md, workspace and all its chats will be deleted for good.",
     "modelsCategory": "Models",
-    "profilesCategory": "Profiles",
-    "extensionsCategory": "Extensions"
+    "allPluginsTab": "All plugins",
+    "pluginStatusOff": "Off"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

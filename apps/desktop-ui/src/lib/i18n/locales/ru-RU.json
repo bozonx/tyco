@@ -919,8 +919,8 @@
     "profileModelDefaultNamed": "Первая доступная ({model})",
     "deleteProfileConfirmUncounted": "Удалить профиль «{name}»? SOUL.md, рабочая папка и все чаты профиля будут удалены безвозвратно.",
     "modelsCategory": "Модели",
-    "profilesCategory": "Профили",
-    "extensionsCategory": "Расширения"
+    "allPluginsTab": "Все плагины",
+    "pluginStatusOff": "Выкл"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
