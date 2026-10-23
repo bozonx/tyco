@@ -3,7 +3,7 @@
     :title="
       t(props.replaceEditor ? 'editor.conflict.title' : 'menu.compareResult')
     "
-    esc-mode="back"
+    :esc-mode="props.replaceEditor ? 'back' : 'close'"
   >
     <template #header-extra>
       <ResultViewModeToggle preset="diff" v-model="diffMode" />
@@ -24,6 +24,7 @@
         :left-letter-keys="props.replaceEditor ? [] : leftLetterKeys"
         :space-key="props.replaceEditor ? replaceEditorAction : spaceKey"
         :is-editor-button-visible="!props.replaceEditor"
+        :esc-mode="props.replaceEditor ? 'back' : 'close'"
       />
     </template>
   </ActionOverlayLayout>

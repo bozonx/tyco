@@ -132,6 +132,36 @@ describe('PreviewMenu', () => {
     ).toBe(false)
     expect(wrapper.findComponent({ name: 'TextPreview' }).exists()).toBe(true)
   })
+
+  it('configures escape mode to close the window on Escape', () => {
+    const wrapper = mount(PreviewMenu, {
+      props: { text: 'Some result' },
+      global: {
+        stubs: {
+          Icon: true,
+          ShortcutList: {
+            props: ['escMode'],
+            template: '<div class="shortcut-list" :data-esc-mode="escMode" />',
+          },
+          ActionOverlayLayout: {
+            props: ['escMode'],
+            template: `
+              <div class="action-overlay-layout" :data-esc-mode="escMode">
+                <slot name="actions" />
+              </div>
+            `,
+          },
+        },
+      },
+    })
+
+    expect(
+      wrapper.find('.action-overlay-layout').attributes('data-esc-mode')
+    ).toBe('close')
+    expect(wrapper.find('.shortcut-list').attributes('data-esc-mode')).toBe(
+      'close'
+    )
+  })
 })
 
 afterEach(() => {

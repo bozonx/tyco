@@ -24,8 +24,9 @@ const mountMenu = (replaceEditor?: () => void) =>
         Diff: true,
         ResultViewModeToggle: true,
         ActionOverlayLayout: {
-          props: ['title'],
-          template: '<div :data-title="title"><slot name="actions" /></div>',
+          props: ['title', 'escMode'],
+          template:
+            '<div :data-title="title" :data-esc-mode="escMode"><slot name="actions" /></div>',
         },
       },
     },
@@ -36,9 +37,11 @@ describe('editor transfer review', () => {
     const replace = vi.fn()
     const wrapper = mountMenu(replace)
     expect(wrapper.attributes('data-title')).toBe('editor.conflict.title')
+    expect(wrapper.attributes('data-esc-mode')).toBe('back')
     const list = wrapper.findComponent(ShortcutList)
     expect(list.props('isEditorButtonVisible')).toBe(false)
     expect(list.props('leftLetterKeys')).toEqual([])
+    expect(list.props('escMode')).toBe('back')
     expect(list.props('spaceKey')).toMatchObject({
       id: 'replaceEditor',
       labelKey: 'editor.conflict.replace',
@@ -49,15 +52,14 @@ describe('editor transfer review', () => {
     wrapper.unmount()
   })
 
-  it('retains the normal result actions when there is no editor conflict', () => {
+  it('retains the normal result actions and closes window on Escape when there is no editor conflict', () => {
     const wrapper = mountMenu()
     expect(wrapper.attributes('data-title')).toBe('menu.compareResult')
-    expect(
-      wrapper.findComponent(ShortcutList).props('isEditorButtonVisible')
-    ).toBe(true)
-    expect(wrapper.findComponent(ShortcutList).props('spaceKey')?.id).not.toBe(
-      'replaceEditor'
-    )
+    expect(wrapper.attributes('data-esc-mode')).toBe('close')
+    const list = wrapper.findComponent(ShortcutList)
+    expect(list.props('isEditorButtonVisible')).toBe(true)
+    expect(list.props('escMode')).toBe('close')
+    expect(list.props('spaceKey')?.id).not.toBe('replaceEditor')
     wrapper.unmount()
   })
 })
