@@ -1,11 +1,11 @@
 //! Linux GlobalShortcuts portal session lifecycle and event streams.
 use crate::errors::AppError;
 use crate::locks::RwLockExt;
+use crate::services::hotkeys::voice_gesture;
 use crate::services::hotkeys::{
     bindings_from_config, global_target, HotkeyBinding, PortalShortcutBindings, ProviderState,
 };
 use crate::services::platform::hotkeys::ProviderKind;
-use crate::services::selection_replace;
 use crate::state::AppState;
 use std::sync::RwLock;
 #[cfg(target_os = "linux")]
@@ -169,10 +169,11 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
 
     // selection actions press keys of their own, and wait for the hotkey
     // to be released first
+    let release_app = app.clone();
     app.state::<crate::services::background::BackgroundServices>()
         .spawn_async(async move {
             while let Some(event) = deactivated.next().await {
-                selection_replace::hotkey_released(event.shortcut_id());
+                voice_gesture::released(&release_app, event.shortcut_id());
             }
         })?;
     let changed_app = app.clone();
@@ -189,7 +190,7 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
             log::warn!("Unknown portal hotkey: {}", event.shortcut_id());
             continue;
         };
-        if let Err(error) = target.trigger(&app, event.shortcut_id()) {
+        if let Err(error) = voice_gesture::pressed(&app, &target, event.shortcut_id()) {
             log::error!("Portal hotkey activation failed: {error}");
         }
     }

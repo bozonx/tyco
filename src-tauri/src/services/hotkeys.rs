@@ -5,6 +5,7 @@ mod config_transaction;
 pub use config_transaction::with_config_changes;
 mod global_shortcut;
 mod status;
+pub(crate) mod voice_gesture;
 pub use status::{provider_info, HotkeyApplyResult, HotkeyApplyStatus, HotkeyProviderInfo};
 
 use crate::errors::AppError;
@@ -61,6 +62,7 @@ pub fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri
         builder
             .manage(ProviderState::new(provider_kind(session::current())))
             .manage(HotkeyRegistry::default())
+            .manage(voice_gesture::VoiceGesture::default())
             .manage(PortalShortcutBindings::default()),
     )
 }

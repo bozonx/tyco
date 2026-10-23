@@ -3,7 +3,6 @@ use super::bindings::{HotkeyBinding, HotkeyTarget};
 use super::{HotkeyApplyResult, HotkeyApplyStatus, ProviderKind};
 use crate::errors::AppError;
 use crate::locks::RwLockExt;
-use crate::services::selection_replace;
 use std::collections::HashMap;
 use std::sync::RwLock;
 use tauri::{App, AppHandle, Manager};
@@ -178,7 +177,7 @@ impl GlobalShortcutProvider {
                 .with_handler(move |app, shortcut, event| {
                     let hotkey_id = shortcut.id().to_string();
                     if event.state == ShortcutState::Released {
-                        selection_replace::hotkey_released(&hotkey_id);
+                        super::voice_gesture::released(app, &hotkey_id);
                         return;
                     }
                     let target = app
@@ -188,7 +187,8 @@ impl GlobalShortcutProvider {
                         .get(&shortcut.id())
                         .cloned();
                     if let Some(target) = target {
-                        if let Err(error) = target.trigger(app, &hotkey_id) {
+                        if let Err(error) = super::voice_gesture::pressed(app, &target, &hotkey_id)
+                        {
                             log::error!("Hotkey activation failed: {error}");
                         }
                     }
