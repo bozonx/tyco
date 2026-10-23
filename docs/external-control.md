@@ -14,6 +14,14 @@ Tyco must already be running. Install `tyco-ctl` in `PATH` (on Windows,
 cargo build --manifest-path src-tauri/Cargo.toml -p tyco-ctl --release
 ```
 
+The binary is written to `src-tauri/target/release/tyco-ctl` (with `.exe` on
+Windows), unless Cargo's target directory is overridden. Building does not
+install it in `PATH`. To build and install the client in Cargo's binary directory:
+
+```sh
+cargo install --path src-tauri/tyco-ctl --locked
+```
+
 There is no TCP listener and no network fallback.
 
 | Platform | CLI transport | Access boundary                            |
@@ -81,8 +89,8 @@ busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
 ```
 
 Selection capture requires **Allow external selection capture and replacement**.
-Executing an external library command also requires the master command grant
-and that command's individual grant. Supplied text is visible in process
+Executing an external library command requires that command's individual
+grant; there is no global command-execution grant. Supplied text is visible in process
 arguments; use `tyco-ctl run --stdin` for private scripted input.
 
 ## Permissions
@@ -117,7 +125,7 @@ Hyprland and Sway, run `tyco-ctl open voice` and rely on that.
 The corresponding user configuration is:
 
 ```json
-{ "externalAccess": { "selection": false } }
+{ "externalAccess": { "canAccessSelection": false } }
 ```
 
 A command's external grant does not bypass its tool's availability or permission
@@ -145,6 +153,28 @@ with `ConfigurationChanged` instead of executing a stale configuration.
 `status` prints a JSON object with `apiVersion`, the app `version`, and the
 `externalAccess` capabilities that are currently allowed.
 
+Choose the command by the result you need:
+
+| Need                                                  | Command                      |
+| ----------------------------------------------------- | ---------------------------- |
+| Check whether Tyco is reachable                       | `status`                     |
+| Open a visible Tyco window                            | `open`                       |
+| Find callable library command IDs                     | `commands list`              |
+| Inspect a command's accepted input                    | `commands describe`          |
+| Execute a library command and obtain its output       | `run ... --wait`             |
+| Submit work and collect the result later              | `run`, then `jobs wait`      |
+| Inspect or cancel a submitted invocation              | `jobs status`, `jobs cancel` |
+| Correct the current selection from a desktop shortcut | `replace correction`         |
+| Request that the entire Tyco application exits        | `quit`                       |
+
+`open`, `replace correction`, and `quit` return no stdout on success. They
+acknowledge a request, rather than return a job or wait for the operation to
+finish. `status`, descriptions, and non-waiting job operations return JSON.
+Errors go to stderr as `Code: message`; local argument/transport errors may
+contain only a message. `--json` does not make errors JSON.
+Only top-level `--help` / `-h` is implemented; `run --help`, for example, is not
+subcommand help.
+
 ### Open the UI
 
 ```sh
@@ -154,7 +184,7 @@ tyco-ctl open chat --text 'Explain this paragraph'
 tyco-ctl open editor --selection
 ```
 
-Modes: `editor`, `write`, `chat`, `voice-chat`, `voice`, `select`, `ai-tasks`,
+Modes: `editor`, `write`, `chat`, `voice-chat`, `voice-commands`, `voice`, `select`, `ai-tasks`,
 `command-launcher`, `correction`, `translate`, `history`, `settings`.
 The old camelCase spellings and `config` remain valid aliases.
 
@@ -173,11 +203,44 @@ tyco-ctl commands describe --name 'My command'
 `commands list` prints one `id<TAB>name` line per command; `--json` prints the
 full list instead. Descriptions are always JSON. The list includes the commands
 that are currently callable, with `id`, `name`, `input`,
-`canReplaceSelection`, and `afterRun`. A structured input is marked `structured`; a description also
+`canReplaceSelection`, and `output` (`"return"`). A structured input is marked `structured`; a description also
 includes `textAccepted` and the tool's `inputSchema` when the catalog provides
 one. Command-specific schema overrides are validated by the executing tool
 registry. Disabled, denied, missing, or unavailable commands return a coded
 error when described.
+
+`commands describe` inspects a command; it does not execute it. Use it before
+writing a script to determine whether to send text, a JSON object, or no input.
+For example, a text command description can look like:
+
+```json
+{
+  "id": "my-fix",
+  "name": "My fix",
+  "input": "text",
+  "textAccepted": true,
+  "canReplaceSelection": true,
+  "output": "return",
+  "inputSchema": null
+}
+```
+
+- `input: "none"`: omit input flags.
+- `input: "text"`: use `--text`, `--stdin`, or an explicit selection.
+- `input: "structured"`: use `--input-json` with an object matching the tool's
+  schema. Text is also accepted when `textAccepted` is true (LLM argument
+  parsing is enabled). Selection input is not supported for structured commands.
+- `canReplaceSelection` describes command compatibility, not the current
+  selection permission or platform support.
+- `output: "return"` means external runs return tool output instead of applying
+  the library command's configured `afterRun` action.
+- `inputSchema` is the catalog's tool schema, or `null`. It is not necessarily
+  the effective schema after command-specific overrides.
+
+An empty list does not prove the library is empty: commands without grants,
+disabled commands, and unavailable tools are omitted. During startup the tool
+catalog may still be loading; execution can return `NotReady` even when a
+backend-known script or webhook appears in the list.
 
 Use stable IDs in scripts. Without `--name` the target is only ever an ID.
 `--name` explicitly selects a display name, ignoring case and redundant
@@ -267,6 +330,32 @@ tyco-ctl jobs wait job-1234-1 --timeout 60 --json
 tyco-ctl jobs cancel job-1234-1
 ```
 
+A job is one invocation of a library command, not the command definition, an
+OS process, or a scheduled task. Two runs of the same command have different
+job IDs. Jobs are created by `run` (and the corresponding D-Bus library command
+calls), not by `open`, `replace correction`, or `quit`.
+
+| Operation             | stdout                                                | Exit status                                   |
+| --------------------- | ----------------------------------------------------- | --------------------------------------------- |
+| `jobs status ID`      | Current job JSON, including any retained output/error | 0 if found, even if the job failed            |
+| `jobs cancel ID`      | Job JSON after the cancellation request               | 0 if found, including an already terminal job |
+| `jobs wait ID`        | Successful output, with no added newline              | The job's completion code                     |
+| `jobs wait ID --json` | Full terminal job JSON, also on failure/cancellation  | The job's completion code                     |
+
+`--json` on `jobs status` and `jobs cancel` is accepted but redundant: their
+output is already JSON. `--timeout` is only valid for `jobs wait`.
+`jobs wait` polls the server; it neither reruns nor claims the command.
+There is no `jobs list`: keep the ID returned by submission. For example,
+with the optional external `jq` utility:
+
+```sh
+job_id=$(tyco-ctl run my-fix --stdin < draft.txt | jq -er '.id')
+tyco-ctl jobs status "$job_id"
+tyco-ctl jobs wait "$job_id" --timeout 60 > corrected.txt
+# If waiting times out, explicitly cancel if the result is no longer needed:
+# tyco-ctl jobs cancel "$job_id"
+```
+
 States: `accepted`, `running`, `succeeded`, `failed`, `cancelled`. `accepted`
 means dispatch succeeded, not that the tool completed. A job has optional
 `output`, `error`, and `code` fields. Completion is single-use; late results
@@ -286,6 +375,29 @@ accepted only together with waiting, like `run --json`. A client
 wait timeout does not itself cancel the job; use `jobs cancel` explicitly. Local
 IPC frames have a 10-second read/write deadline and a 1 MiB limit. Idle clients
 do not block the listener; connections are bounded.
+
+### Quit the application
+
+```sh
+tyco-ctl quit
+```
+
+This requests normal application shutdown, like the tray's Quit action. It is
+useful for desktop/session scripts, maintenance, or stopping Tyco before
+starting another build. Ordinary command execution does not need it: the CLI
+exits after each request while Tyco keeps running.
+
+The request is acknowledged before shutdown. The normal exit handler asks both
+webviews to save pending settings, then stops background services. A failed
+save or a webview that does not acknowledge within 10 seconds cancels shutdown;
+`quit` may already have returned 0. There is no `quit --wait`, restart, or force
+option. In-memory jobs disappear on exit; shutdown does not wait for their
+successful completion.
+
+No separate external-access permission protects `quit`. Any process allowed
+through the local transport boundary can request it, even with selection
+access disabled and no library commands granted. This is part of the current
+API's session-level trust model.
 
 ### Exit codes
 
