@@ -9,6 +9,7 @@
       nested,
       'field-row--compact': density === 'compact',
       'field-row--no-divider': separator === false,
+      'field-row--inline': inline,
     }"
   >
     <div class="field-row-label">
@@ -59,6 +60,7 @@ const props = withDefaults(
     info?: string
     vertical?: boolean
     nested?: boolean
+    inline?: boolean
   }>(),
   { separator: true }
 )
@@ -138,8 +140,17 @@ const { errors, warnings, labelId, hintId, errorId, warningId, controlId } =
   font-size: var(--text-control);
 }
 
+.field-row--inline {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.field-row--inline .field-row-control {
+  justify-content: flex-end;
+}
+
 @container (max-width: 40rem) {
-  .field-row {
+  .field-row:not(.field-row--inline) {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-sm);
   }

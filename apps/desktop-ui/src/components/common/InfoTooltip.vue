@@ -7,5 +7,5 @@
 import type { InfoBubbleProps } from '../../lib/ui/info-bubble'
 import InfoBubble from './InfoBubble.vue'
 
-const props = defineProps<InfoBubbleProps>()
+const props = withDefaults(defineProps<InfoBubbleProps>(), { teleport: true })
 </script>

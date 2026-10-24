@@ -125,4 +125,20 @@ describe('InfoTooltip', () => {
 
     wrapper.unmount()
   })
+
+  it('teleports popover to document.body by default', async () => {
+    const wrapper = mount(InfoTooltip, {
+      props: { text: 'Default teleport' },
+      attachTo: document.body,
+      global: { stubs: { Icon: true } },
+    })
+
+    await wrapper.find('.info-tooltip-trigger').trigger('click')
+    expect(wrapper.find('.info-tooltip-popover').exists()).toBe(false)
+    const popover = document.body.querySelector('.info-tooltip-popover')
+    expect(popover).not.toBeNull()
+    expect(popover?.textContent).toContain('Default teleport')
+
+    wrapper.unmount()
+  })
 })

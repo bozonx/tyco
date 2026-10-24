@@ -59,6 +59,7 @@ describe('FieldRow', () => {
         info: 'Explanation',
         vertical: true,
         nested: true,
+        inline: true,
       },
     })
     expect(wrapper.get('label').text()).toBe('Setting')
@@ -66,6 +67,7 @@ describe('FieldRow', () => {
     expect(wrapper.find('.info-tooltip-trigger').exists()).toBe(true)
     expect(wrapper.classes()).toContain('vertical')
     expect(wrapper.classes()).toContain('nested')
+    expect(wrapper.classes()).toContain('field-row--inline')
     expect(wrapper.classes()).not.toContain('field-row--no-divider')
     expect(
       mount(FieldRow, {

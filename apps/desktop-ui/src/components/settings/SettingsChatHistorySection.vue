@@ -1,41 +1,41 @@
 <template>
   <SettingsSection :title="t('settings.sectionChatHistory')">
-    <template #actions>
+    <FieldRow
+      :label="t('settings.chatHistoryEnabled')"
+      :hint="t('settings.chatHistoryEnabledHint')"
+      inline
+    >
+      <FieldSwitch
+        :model-value="isHistoryChecked"
+        @update:model-value="setHistoryEnabled"
+      />
+    </FieldRow>
+
+    <FieldRow
+      v-if="isHistoryChecked"
+      :label="t('settings.chatHistoryRetentionDays')"
+      :hint="t('settings.chatHistoryRetentionDaysHint')"
+      inline
+    >
+      <FieldSelect
+        size="sm"
+        class="w-44 shrink-0"
+        :model-value="history.retentionDays ?? 0"
+        :options="retentionOptions"
+        @update:model-value="setRetentionDays"
+      />
+    </FieldRow>
+
+    <FieldRow :label="t('history.clear')" inline>
       <Button
-        size="xs"
-        variant="ghost"
+        size="sm"
+        variant="danger-ghost"
         icon="mdi:trash-can-outline"
         @click="showClearModal = true"
       >
         {{ t('history.clear') }}
       </Button>
-    </template>
-
-    <div>
-      <FieldRow
-        :label="t('settings.chatHistoryEnabled')"
-        :info="t('settings.chatHistoryEnabledHint')"
-      >
-        <FieldSwitch
-          :model-value="isHistoryChecked"
-          @update:model-value="setHistoryEnabled"
-        />
-      </FieldRow>
-      <div v-if="isHistoryChecked" class="history-nested">
-        <FieldRow
-          :label="t('settings.chatHistoryRetentionDays')"
-          :info="t('settings.chatHistoryRetentionDaysHint')"
-          nested
-          :separator="false"
-        >
-          <FieldSelect
-            :model-value="history.retentionDays ?? 0"
-            :options="retentionOptions"
-            @update:model-value="setRetentionDays"
-          />
-        </FieldRow>
-      </div>
-    </div>
+    </FieldRow>
 
     <ConfirmModal
       :open="showDisableModal"
@@ -130,11 +130,3 @@ const retentionOptions = computed(() =>
   )
 )
 </script>
-
-<style scoped>
-.history-nested {
-  background-color: var(--app-surface-sunken);
-  border-top: 1px solid var(--app-border-subtle);
-  border-left: 2px solid var(--app-border-strong);
-}
-</style>
