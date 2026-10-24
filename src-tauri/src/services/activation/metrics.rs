@@ -15,6 +15,12 @@ use crate::services::runtime;
 
 const ENABLE_ENV: &str = "TYCO_ACTIVATION_BENCH";
 const CSV_ENV: &str = "TYCO_METRICS_CSV";
+/// How often the idle socket checks for a client and for a stop.
+const ACCEPT_POLL_INTERVAL: Duration = Duration::from_millis(20);
+/// A benchmark client that stalls longer is dropped.
+const CLIENT_IO_TIMEOUT: Duration = Duration::from_millis(100);
+/// A request line longer than this ends the connection.
+const MAX_REQUEST_LINE_BYTES: usize = 4096;
 
 pub use crate::services::clock::now_ns;
 
@@ -247,7 +253,7 @@ fn spawn_socket(app: AppHandle) -> Result<(), AppError> {
             let stream = match listener.accept() {
                 Ok((stream, _)) => stream,
                 Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-                    if stop.wait(Duration::from_millis(20)) {
+                    if stop.wait(ACCEPT_POLL_INTERVAL) {
                         break;
                     }
                     continue;
@@ -257,22 +263,22 @@ fn spawn_socket(app: AppHandle) -> Result<(), AppError> {
                     break;
                 }
             };
-            let _ = stream.set_read_timeout(Some(Duration::from_millis(100)));
-            let _ = stream.set_write_timeout(Some(Duration::from_millis(100)));
+            let _ = stream.set_read_timeout(Some(CLIENT_IO_TIMEOUT));
+            let _ = stream.set_write_timeout(Some(CLIENT_IO_TIMEOUT));
             let Ok(mut writer) = stream.try_clone() else {
                 continue;
             };
             let mut reader = BufReader::new(stream);
             let mut line = String::new();
             while !stop.is_stopped() {
-                let remaining_bytes = 4097usize.saturating_sub(line.len());
+                let remaining_bytes = (MAX_REQUEST_LINE_BYTES + 1).saturating_sub(line.len());
                 match (&mut reader)
                     .take(remaining_bytes as u64)
                     .read_line(&mut line)
                 {
                     Ok(0) => break,
                     Ok(_) => {
-                        if line.len() > 4096 {
+                        if line.len() > MAX_REQUEST_LINE_BYTES {
                             break;
                         }
                         let response = handle_request(&app, line.trim());
@@ -290,7 +296,7 @@ fn spawn_socket(app: AppHandle) -> Result<(), AppError> {
                             std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
                         ) =>
                     {
-                        if line.len() > 4096 {
+                        if line.len() > MAX_REQUEST_LINE_BYTES {
                             break;
                         }
                     }

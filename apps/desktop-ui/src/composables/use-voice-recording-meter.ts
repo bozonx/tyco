@@ -3,6 +3,9 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { desktopClient } from '../lib/desktop/client'
 
+/** How often the shown recording duration is updated */
+const DURATION_TICK_MS = 250
+
 /** Tracks audio level, peak, and elapsed recording duration for a voice session. */
 export function useVoiceRecordingMeter(isRecording: () => boolean) {
   const audioLevel = ref(0)
@@ -20,7 +23,7 @@ export function useVoiceRecordingMeter(isRecording: () => boolean) {
       recordingDurationMs.value = 0
       durationTimer = setInterval(() => {
         recordingDurationMs.value = Date.now() - startedAt
-      }, 250)
+      }, DURATION_TICK_MS)
     },
     { immediate: true }
   )

@@ -85,9 +85,9 @@ export function textFileAttachment(
   try {
     // A BOM selects UTF-16; otherwise require valid UTF-8 instead of corrupting text.
     const encoding =
-      bytes[0] === 255 && bytes[1] === 254
+      bytes[0] === 0xff && bytes[1] === 0xfe
         ? 'utf-16le'
-        : bytes[0] === 254 && bytes[1] === 255
+        : bytes[0] === 0xfe && bytes[1] === 0xff
           ? 'utf-16be'
           : 'utf-8'
     text = new TextDecoder(encoding, { fatal: true }).decode(bytes)

@@ -23,12 +23,14 @@ use std::process::{Command, Stdio};
 use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
+use super::backoff::DISPLAY_RECONNECT;
+
 use crate::services::platform::window_tracker::tracker;
 
-const RETRY_DELAY: Duration = Duration::from_secs(2);
-const MAX_RETRY_DELAY: Duration = Duration::from_secs(60);
 /// A watch that keeps failing is not supported by the compositor.
 const MAX_FAILURES: u32 = 5;
+/// How often an idle watcher checks for output and for a stop.
+const READ_POLL_INTERVAL: Duration = Duration::from_millis(20);
 
 #[derive(Debug, Default)]
 struct SelectionOriginState {
@@ -116,7 +118,7 @@ pub fn spawn_watcher(
                 }
             }
             update(SelectionOriginState::watch_stopped);
-            if stop.wait(retry_delay(failures)) { return; }
+            if stop.wait(DISPLAY_RECONNECT.delay(failures)) { return; }
         }
     })
 }
@@ -160,7 +162,7 @@ fn watch(stop: &crate::services::background::StopToken) -> std::io::Result<()> {
                     }
                 }
                 Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-                    if stop.wait(Duration::from_millis(20)) {
+                    if stop.wait(READ_POLL_INTERVAL) {
                         break;
                     }
                 }
@@ -178,12 +180,6 @@ fn watch(stop: &crate::services::background::StopToken) -> std::io::Result<()> {
         return Err(std::io::Error::other(format!("wl-paste exited: {status}")));
     }
     Ok(())
-}
-
-fn retry_delay(failures: u32) -> Duration {
-    RETRY_DELAY
-        .saturating_mul(2u32.saturating_pow(failures.saturating_sub(1)))
-        .min(MAX_RETRY_DELAY)
 }
 
 #[cfg(test)]

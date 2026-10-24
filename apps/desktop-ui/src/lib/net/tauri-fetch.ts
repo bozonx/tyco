@@ -1,5 +1,6 @@
 import type { FetchFunction } from '@bozonx/ai-kit'
 
+import { DEFAULT_MAX_QUEUED_BYTES } from './async-queue'
 import { bytesToBase64 } from './base64'
 import {
   abortReason,
@@ -129,7 +130,7 @@ export function createTauriFetch(
 
         if (isArrayBuffer(message)) {
           queuedBytes += message.byteLength
-          if (queuedBytes > 1024 * 1024) {
+          if (queuedBytes > DEFAULT_MAX_QUEUED_BYTES) {
             finish()
             cancelRemote()
             fail(new TypeError('HTTP receive queue limit exceeded'))

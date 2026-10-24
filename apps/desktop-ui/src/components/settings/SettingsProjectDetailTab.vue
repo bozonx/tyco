@@ -150,7 +150,7 @@ const props = defineProps<{ projectId: string }>()
 const { navigate } = useSettingsContext()
 
 const { t } = useI18n()
-const { toastText } = useToast()
+const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
 const isNew = computed(() => props.projectId === NEW_ENTITY_ID)
@@ -217,7 +217,7 @@ async function handlePickFolder() {
       change()
     }
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   }
 }
 
@@ -227,7 +227,7 @@ async function handleCreate() {
     const created = await aiProfilesStore.createProject(editor.fields())
     navigate(projectTab(created.id))
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   }
 }
 
@@ -239,7 +239,7 @@ async function handleDelete() {
     showDeleteConfirm.value = false
     navigate(AI_OVERVIEW_TAB)
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   }
 }
 </script>

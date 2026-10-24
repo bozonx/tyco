@@ -7,10 +7,11 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
 
+use super::backoff::Backoff;
+use super::dbus::KWIN_SERVICE;
 use crate::errors::AppError;
 use crate::services::platform::window_tracker::{finish_startup, new_session, tracker};
 
-const KWIN_SERVICE: &str = "org.kde.KWin";
 const SCRIPTING_PATH: &str = "/Scripting";
 const SCRIPTING_INTERFACE: &str = "org.kde.kwin.Scripting";
 const SCRIPT_INTERFACE: &str = "org.kde.kwin.Script";
@@ -22,9 +23,8 @@ const ACTIVATION_TIMEOUT: Duration = Duration::from_secs(2);
 const TRACKER_START_TIMEOUT: Duration = Duration::from_secs(2);
 /// How often the supervisor checks that KWin still runs the tracker script.
 const TRACKER_CHECK_INTERVAL: Duration = Duration::from_secs(30);
-/// The first retry after a failed start; each next one waits twice as long.
-const TRACKER_RETRY_DELAY: Duration = Duration::from_secs(5);
-const TRACKER_MAX_RETRY_DELAY: Duration = Duration::from_secs(120);
+/// Retries after a failed start.
+const TRACKER_RESTART: Backoff = Backoff::new(Duration::from_secs(5), Duration::from_secs(120));
 /// Failed starts logged as warnings; later ones are logged at debug level.
 const TRACKER_LOGGED_FAILURES: u32 = 3;
 
@@ -106,18 +106,12 @@ pub fn supervise_tracker(own_class: &str, stop: &crate::services::background::St
         if stop.wait(if failures == 0 {
             TRACKER_CHECK_INTERVAL
         } else {
-            retry_delay(failures)
+            TRACKER_RESTART.delay(failures)
         }) {
             break;
         }
     }
     stop_tracker();
-}
-
-fn retry_delay(failures: u32) -> Duration {
-    TRACKER_RETRY_DELAY
-        .saturating_mul(2u32.saturating_pow(failures.saturating_sub(1)))
-        .min(TRACKER_MAX_RETRY_DELAY)
 }
 
 /// Whether the tracker runs as far as KWin can tell. A failed check counts
@@ -372,14 +366,6 @@ mod tests {
         assert!(is_class_name("com.tyco.app"));
         assert!(!is_class_name(""));
         assert!(!is_class_name("a\"; workspace.activeWindow = null; \""));
-    }
-
-    #[test]
-    fn retries_with_a_growing_but_bounded_delay() {
-        assert_eq!(retry_delay(1), TRACKER_RETRY_DELAY);
-        assert_eq!(retry_delay(2), TRACKER_RETRY_DELAY * 2);
-        assert_eq!(retry_delay(3), TRACKER_RETRY_DELAY * 4);
-        assert_eq!(retry_delay(40), TRACKER_MAX_RETRY_DELAY);
     }
 
     #[test]

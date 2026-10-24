@@ -6,17 +6,29 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::Instant;
+
+use crate::MAX_LOG_FILE_BYTES;
+
 const MAX_LOGGED_OUTPUT_BYTES: usize = 4 << 10;
-const MAX_LOG_FILE_BYTES: u64 = 5 << 20;
 const LOG_FILE_NAME: &str = "actions.log";
+const SECS_PER_MINUTE: u64 = 60;
+const SECS_PER_HOUR: u64 = 60 * SECS_PER_MINUTE;
+const SECS_PER_DAY: u64 = 24 * SECS_PER_HOUR;
+
+/// The current UTC time as `YYYY-MM-DD hh:mm:ss UTC`.
+///
+/// The date comes from Howard Hinnant's `civil_from_days`
+/// (<https://howardhinnant.github.io/date_algorithms.html#civil_from_days>):
+/// its numbers are the days from 0000-03-01 to 1970-01-01 (719468) and the
+/// length of a 400-year era in days (146097) and of its parts.
 pub fn format_timestamp() -> String {
     let secs = crate::services::clock::since_epoch().as_secs();
 
-    let days = secs / 86400;
-    let rem = secs % 86400;
-    let hh = rem / 3600;
-    let mm = (rem % 3600) / 60;
-    let ss = rem % 60;
+    let days = secs / SECS_PER_DAY;
+    let rem = secs % SECS_PER_DAY;
+    let hh = rem / SECS_PER_HOUR;
+    let mm = (rem % SECS_PER_HOUR) / SECS_PER_MINUTE;
+    let ss = rem % SECS_PER_MINUTE;
 
     let z = days + 719468;
     let era = z / 146097;

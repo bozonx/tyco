@@ -260,14 +260,14 @@ export const editorSearch = (t: (key: string) => string): Extension => [
     // The host models a single selection; selecting every match is not supported.
     '.cm-search button[name="select"]': { display: 'none' },
     '.cm-searchMatch': {
-      backgroundColor: '#facc15',
-      color: '#1c1917',
-      outline: '1px solid #eab308',
+      backgroundColor: 'var(--app-search-match-bg)',
+      color: 'var(--app-search-match-fg)',
+      outline: '1px solid var(--app-search-match-border)',
     },
     '.cm-searchMatch-selected': {
-      backgroundColor: '#fb923c',
-      color: '#1c1917',
-      outline: '2px solid #f97316',
+      backgroundColor: 'var(--app-search-match-current-bg)',
+      color: 'var(--app-search-match-fg)',
+      outline: '2px solid var(--app-search-match-current-border)',
     },
   }),
 ]

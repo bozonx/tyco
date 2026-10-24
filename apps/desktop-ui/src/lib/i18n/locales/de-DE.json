@@ -440,6 +440,22 @@
     "toolsUnsupported": "Das Modell kann keine Werkzeuge verwenden. Schalten Sie „Werkzeugaufrufe“ in seinen Einstellungen aus oder wählen Sie ein anderes Modell.",
     "stepLimit": "Das Modell hat seine Werkzeugschritte aufgebraucht, ohne die Antwort abzuschließen. Bitten Sie es fortzufahren oder erhöhen Sie das Schrittlimit des Profils."
   },
+  "desktopErrors": {
+    "operationFailed": "Der Vorgang ist fehlgeschlagen",
+    "configConflict": "Die Einstellungen wurden anderswo geändert, bitte erneut versuchen",
+    "serviceUnavailable": "Ein benötigter Dienst ist gerade nicht verfügbar",
+    "busy": "Ein anderer Vorgang läuft, bitte später erneut versuchen",
+    "permissionDenied": "Zugriff verweigert",
+    "resourceLimit": "Ein Limit wurde erreicht",
+    "invalidInput": "Die Anfrage ist ungültig",
+    "notFound": "Nicht gefunden",
+    "fileTooLarge": "Die Datei ist zu groß",
+    "unsupportedConfig": "Die Einstellungen stammen von einer neueren App-Version",
+    "stale": "Der Zustand hat sich inzwischen geändert, bitte erneut versuchen",
+    "runtimeError": "In der App ist ein interner Fehler aufgetreten",
+    "ioError": "Eine Datei konnte nicht gelesen oder geschrieben werden",
+    "invalidData": "Die Daten sind beschädigt oder ungültig"
+  },
   "menu": {
     "actions": "Aktionen",
     "aiCustomPrompt": "Eigene Anfrage",
@@ -938,7 +954,8 @@
     "featuresCategory": "Funktionen",
     "aiCategory": "KI",
     "allPluginsTab": "Alle Plugins",
-    "pluginStatusOff": "Aus"
+    "pluginStatusOff": "Aus",
+    "developmentFeatures": "Funktionen in Entwicklung"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

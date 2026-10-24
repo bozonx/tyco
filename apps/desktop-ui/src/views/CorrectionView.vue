@@ -33,7 +33,7 @@ const desktopStore = useDesktopStore()
 const navPanelStore = useNavPanelStore()
 const isStarting = ref(false)
 const { t } = useI18n()
-const { toastText } = useToast()
+const { toastError } = useToast()
 const viewActivationId = desktopStore.desktopState.activationId
 let unmounted = false
 const isCurrent = () =>
@@ -78,7 +78,7 @@ watch(
   ([text, activationId]) => {
     if (!isCurrent()) return
     void correctionMode.consume(text, activationId).catch((error: unknown) => {
-      if (isCurrent()) toastText(String(error), 'error')
+      if (isCurrent()) toastError(error)
     })
   },
   { immediate: true }

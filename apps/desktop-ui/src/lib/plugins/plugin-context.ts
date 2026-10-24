@@ -15,6 +15,7 @@ import {
   type PluginContext,
   type ToolDefinition,
   type EditorInputSnapshot,
+  MAX_CONTRIBUTION_BATCH,
 } from '@tyco/plugin-sdk'
 
 import type { ActionItem, EditItem, ToolbarItem } from '../../types/plugins'
@@ -27,7 +28,6 @@ import {
   scopeConfigFields,
 } from './plugin-resources'
 
-const MAX_CONTRIBUTION_BATCH = 256
 const MAX_TOTAL_CONTRIBUTIONS = 1024
 
 export interface PluginContextDependencies {
@@ -341,7 +341,7 @@ export function createPluginContext(
         deps.registerToolbarItems
       ),
     registerTools: (items) => {
-      if (!Array.isArray(items) || items.length > 256)
+      if (!Array.isArray(items) || items.length > MAX_CONTRIBUTION_BATCH)
         throw new Error('Too many plugin contributions')
       for (const definition of items) {
         validateContribution(definition, 'tool')

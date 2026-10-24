@@ -1,5 +1,6 @@
 import type { ChatImage } from '@tyco/shared'
 
+import { ESTIMATED_CHARACTERS_PER_TOKEN } from '../llm/token-estimate'
 import { ChatFileError } from './chat-file-error'
 import {
   imageFormat,
@@ -9,6 +10,7 @@ import {
 
 /** Mirrored by `MAX_MESSAGE_IMAGES` in `src-tauri/src/services/chat_images.rs` */
 export const MAX_CHAT_IMAGES_COUNT = 4
+/** A picked or pasted image file, before it is converted */
 const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
 /**
  * The lossless PNG handed to Rust, which keeps it as a WebP; mirrors
@@ -17,16 +19,29 @@ const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
 const MAX_CHAT_IMAGE_BYTES = 64 * 1024 * 1024
 /** The largest side providers accept (Anthropic rejects anything above) */
 const MAX_OUTPUT_DIMENSION = 8000
-/** Conservative request allowance; provider-specific estimates can replace it. */
-const IMAGE_BUDGET_CHARACTERS = 4096 * 3
+/** The longest side of an image sent at the economy and balanced qualities */
+const ECONOMY_IMAGE_DIMENSION = 1024
+const BALANCED_IMAGE_DIMENSION = 1568
+/**
+ * The context an image takes, estimated conservatively: tiles of this size,
+ * each worth some tokens, plus a fixed part, and never less than the minimum.
+ * Provider-specific estimates can replace it.
+ */
+const IMAGE_TILE_PX = 512
+const IMAGE_TILE_TOKENS = 256
+const IMAGE_BASE_TOKENS = 256
+const MIN_IMAGE_TOKENS = 4096
 export function imageBudgetCharacters(
   image: Pick<ChatImage, 'width' | 'height'>
 ): number {
-  return Math.max(
-    IMAGE_BUDGET_CHARACTERS,
-    (Math.ceil(image.width / 512) * Math.ceil(image.height / 512) * 256 + 256) *
-      3
+  const tiles =
+    Math.ceil(image.width / IMAGE_TILE_PX) *
+    Math.ceil(image.height / IMAGE_TILE_PX)
+  const tokens = Math.max(
+    MIN_IMAGE_TOKENS,
+    tiles * IMAGE_TILE_TOKENS + IMAGE_BASE_TOKENS
   )
+  return tokens * ESTIMATED_CHARACTERS_PER_TOKEN
 }
 export interface PreparedChatImage {
   /** Lossless PNG, the first frame of an animated image */
@@ -60,10 +75,11 @@ export async function prepareChatImage(
     const scale = Math.min(
       1,
       (quality === 'economy'
-        ? 1024
+        ? ECONOMY_IMAGE_DIMENSION
         : quality === 'original'
           ? MAX_OUTPUT_DIMENSION
-          : 1568) / Math.max(image.naturalWidth, image.naturalHeight)
+          : BALANCED_IMAGE_DIMENSION) /
+        Math.max(image.naturalWidth, image.naturalHeight)
     )
     const canvas = document.createElement('canvas')
     canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))

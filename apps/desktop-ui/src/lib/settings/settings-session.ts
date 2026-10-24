@@ -3,6 +3,19 @@ import { isRecord as object } from '@tyco/shared/value-guards'
 import { computed, ref } from 'vue'
 import type { DesktopErrorCode, IpcResult, UserConfig } from '@tyco/shared'
 
+import { backoffDelayMs } from '../timers/backoff'
+
+/** A failed save is retried a few times, waiting longer each time */
+const MAX_SAVE_RETRIES = 3
+const FIRST_SAVE_RETRY_MS = 1000
+/** Failures that may pass by themselves; the others need the user */
+const RETRYABLE_SAVE_ERRORS: readonly DesktopErrorCode[] = [
+  'ioError',
+  'serviceUnavailable',
+  'runtimeError',
+  'operationFailed',
+]
+
 export interface SettingsSessionDependencies {
   initialConfig: UserConfig
   prepare: (config: unknown) => UserConfig
@@ -98,22 +111,16 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
     deps.notifyError(message)
     if (
       active &&
-      retryCount < 3 &&
+      retryCount < MAX_SAVE_RETRIES &&
       !conflicts.value.length &&
-      (!code ||
-        [
-          'ioError',
-          'serviceUnavailable',
-          'runtimeError',
-          'operationFailed',
-        ].includes(code))
+      (!code || RETRYABLE_SAVE_ERRORS.includes(code))
     ) {
       timer = setTimeout(
         () => {
           timer = undefined
           void persist()
         },
-        1000 * 2 ** retryCount++
+        backoffDelayMs(retryCount++, { firstMs: FIRST_SAVE_RETRY_MS })
       )
     }
   }

@@ -1,5 +1,6 @@
 import type { LlmConfig } from '@tyco/shared'
 import { buildLlmPrompt, type LlmPromptOptions } from '../llm/llm-prompt'
+import { ESTIMATED_CHARACTERS_PER_TOKEN } from '../llm/token-estimate'
 
 import {
   modelContextWindowTokens,
@@ -90,7 +91,9 @@ export function contextBudgetCharacters(
   const reservedTokens = Math.max(contextWindowTokens / 4, maxOutputTokens)
   return Math.max(
     0,
-    Math.floor((contextWindowTokens - reservedTokens) * 3) - systemCharacters
+    Math.floor(
+      (contextWindowTokens - reservedTokens) * ESTIMATED_CHARACTERS_PER_TOKEN
+    ) - systemCharacters
   )
 }
 

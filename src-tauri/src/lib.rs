@@ -17,7 +17,8 @@ use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 use tauri_plugin_single_instance::init as single_instance;
 
 const LOG_FILE_NAME: &str = "tyco";
-const MAX_LOG_FILE_BYTES: u128 = 5 * 1024 * 1024;
+/// A log file larger than this is rotated; the app log and the command log alike.
+pub(crate) const MAX_LOG_FILE_BYTES: u64 = 5 * 1024 * 1024;
 const LOG_ROTATION_KEEP_FILES: usize = 5;
 
 /// Writes to stdout during development and to the platform log directory in a
@@ -49,7 +50,7 @@ fn logger_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         .level_for("hyper", log::LevelFilter::Info)
         .level_for("h2", log::LevelFilter::Info)
         .level_for("tracing", log::LevelFilter::Info)
-        .max_file_size(MAX_LOG_FILE_BYTES)
+        .max_file_size(u128::from(MAX_LOG_FILE_BYTES))
         .rotation_strategy(RotationStrategy::KeepSome(LOG_ROTATION_KEEP_FILES))
         .targets([Target::new(TargetKind::Stdout), Target::new(file_target)])
         .build()

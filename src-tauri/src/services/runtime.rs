@@ -272,6 +272,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn window_labels_match_the_webview() {
+        let labels = include_str!("../../../packages/shared/src/desktop/windows.ts");
+        assert!(labels.contains(&format!("MAIN: '{MAIN_WINDOW_LABEL}'")));
+        assert!(labels.contains(&format!("QUICK: '{QUICK_WINDOW_LABEL}'")));
+    }
+
+    #[test]
     fn quick_modes_use_the_quick_window_and_main_modes_use_the_main_window() {
         for mode in [
             ActivationMode::QuickInput,

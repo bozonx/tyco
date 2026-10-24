@@ -8,6 +8,11 @@ import type { LlmConfig, LlmModel, LlmProvider } from '@tyco/shared'
 
 /** Assumed when a model does not say; the provider refuses what does not fit */
 export const DEFAULT_CONTEXT_WINDOW_TOKENS = 4096
+/** Assumed for a model of a hosted provider, which all offer at least this */
+const HOSTED_CONTEXT_WINDOW_TOKENS = 128_000
+/** The output reserved when a model does not say: a share of its context, capped */
+const DEFAULT_MAX_OUTPUT_TOKENS = 4096
+const DEFAULT_OUTPUT_CONTEXT_SHARE = 1 / 4
 
 export function modelContextWindowTokens(
   model: LlmModel,
@@ -17,7 +22,7 @@ export function modelContextWindowTokens(
   return providers.find((provider) => provider.id === model.providerId)
     ?.type === 'openaiCompatible'
     ? DEFAULT_CONTEXT_WINDOW_TOKENS
-    : 128_000
+    : HOSTED_CONTEXT_WINDOW_TOKENS
 }
 /** The output reservation shared by prompt budgeting and actual requests. */
 export function modelMaxOutputTokens(
@@ -26,7 +31,13 @@ export function modelMaxOutputTokens(
 ): number {
   return (
     model.maxOutputTokens ??
-    Math.min(4096, Math.floor(modelContextWindowTokens(model, providers) / 4))
+    Math.min(
+      DEFAULT_MAX_OUTPUT_TOKENS,
+      Math.floor(
+        modelContextWindowTokens(model, providers) *
+          DEFAULT_OUTPUT_CONTEXT_SHARE
+      )
+    )
   )
 }
 /**

@@ -8,6 +8,9 @@ import {
 import type { VoiceFinishIntent } from './voice-finish-intent'
 import { createVoiceSession } from './voice-session'
 
+/** How often the shown recording duration is updated */
+const DURATION_TICK_MS = 100
+
 export interface VoiceRecognitionDependencies {
   startDictation: (
     handlers: Pick<LiveDictationStart, 'onText' | 'onError'>
@@ -79,7 +82,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     }
     recordingTimer = setInterval(() => {
       recordingDurationMs.value = Date.now() - startTime
-    }, 100)
+    }, DURATION_TICK_MS)
   }
 
   function stopRecordingTimer() {

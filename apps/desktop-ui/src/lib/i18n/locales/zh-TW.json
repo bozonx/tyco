@@ -440,6 +440,22 @@
     "toolsUnsupported": "此模型無法使用工具。請在其設定中關閉「工具呼叫」，或選擇其他模型。",
     "stepLimit": "模型已用盡工具呼叫步數，但尚未完成回覆。您可以要求其繼續，或提高該設定檔的步數限制。"
   },
+  "desktopErrors": {
+    "operationFailed": "操作失敗",
+    "configConflict": "設定已在別處變更，請重試",
+    "serviceUnavailable": "所需服務目前無法使用",
+    "busy": "另一項操作正在進行，請稍後重試",
+    "permissionDenied": "權限遭拒",
+    "resourceLimit": "已達上限",
+    "invalidInput": "請求無效",
+    "notFound": "找不到",
+    "fileTooLarge": "檔案過大",
+    "unsupportedConfig": "設定是由較新版本的應用程式儲存",
+    "stale": "狀態已有變化，請重試",
+    "runtimeError": "應用程式發生內部錯誤",
+    "ioError": "無法讀取或寫入檔案",
+    "invalidData": "資料已損毀或無效"
+  },
   "menu": {
     "actions": "動作",
     "aiCustomPrompt": "自訂提示詞",
@@ -932,7 +948,8 @@
     "featuresCategory": "功能",
     "aiCategory": "AI",
     "allPluginsTab": "所有外掛程式",
-    "pluginStatusOff": "關閉"
+    "pluginStatusOff": "關閉",
+    "developmentFeatures": "開發中的功能"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

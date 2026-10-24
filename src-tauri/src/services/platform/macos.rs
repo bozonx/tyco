@@ -8,6 +8,10 @@ use crate::errors::AppError;
 type CFTypeRef = *const c_void;
 const UTF8_ENCODING: u32 = 0x0800_0100;
 const MAX_SELECTION_BYTES: isize = 16 * 1024 * 1024;
+/// How long `osascript` may take to name the frontmost application.
+const FRONT_APP_QUERY_TIMEOUT: Duration = Duration::from_secs(2);
+/// How long `osascript` may take to activate an application and paste.
+const PASTE_SCRIPT_TIMEOUT: Duration = Duration::from_secs(3);
 
 #[link(name = "ApplicationServices", kind = "framework")]
 extern "C" {
@@ -79,7 +83,7 @@ function run() {
     let (status, output) = super::process::run(
         super::process::command("osascript", &["-l", "JavaScript", "-e", SCRIPT]),
         None,
-        Duration::from_secs(2),
+        FRONT_APP_QUERY_TIMEOUT,
     )
     .ok()?;
     if !status.success() {
@@ -160,7 +164,7 @@ function run(argv) {
             &["-l", "JavaScript", "-e", SCRIPT, &process_id.to_string()],
         ),
         None,
-        Duration::from_secs(3),
+        PASTE_SCRIPT_TIMEOUT,
     )?;
     if !status.success() {
         return Err(AppError::PermissionDenied("Could not paste into the target application; check Accessibility and Automation permissions".into()));

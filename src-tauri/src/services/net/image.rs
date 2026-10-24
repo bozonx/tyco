@@ -7,6 +7,11 @@ use super::request::{prepare, PreparedRequest, Protocol};
 use crate::errors::AppError;
 use crate::services::secrets::Secrets;
 
+/// Limits of fetching an image a chat shows.
+const DNS_TIMEOUT: Duration = Duration::from_secs(10);
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+
 fn is_public_address(address: IpAddr) -> bool {
     match address {
         IpAddr::V4(address) => {
@@ -61,14 +66,11 @@ pub async fn prepare_image(
         .ok_or_else(|| AppError::InvalidInput("Image URL has no host".into()))?;
     let host = host.trim_start_matches('[').trim_end_matches(']');
     let port = prepared.url.port_or_known_default().unwrap_or(443);
-    let addresses = tokio::time::timeout(
-        Duration::from_secs(10),
-        tokio::net::lookup_host((host, port)),
-    )
-    .await
-    .map_err(|_| AppError::InvalidInput("Image host resolution timed out".into()))?
-    .map_err(|_| AppError::InvalidInput("Could not resolve image host".into()))?
-    .collect::<Vec<_>>();
+    let addresses = tokio::time::timeout(DNS_TIMEOUT, tokio::net::lookup_host((host, port)))
+        .await
+        .map_err(|_| AppError::InvalidInput("Image host resolution timed out".into()))?
+        .map_err(|_| AppError::InvalidInput("Could not resolve image host".into()))?
+        .collect::<Vec<_>>();
     if addresses.is_empty()
         || addresses
             .iter()
@@ -83,8 +85,8 @@ pub async fn prepare_image(
         .no_proxy()
         .resolve_to_addrs(host, &addresses)
         .redirect(reqwest::redirect::Policy::none())
-        .timeout(Duration::from_secs(30))
-        .connect_timeout(Duration::from_secs(10))
+        .timeout(REQUEST_TIMEOUT)
+        .connect_timeout(CONNECT_TIMEOUT)
         .build()
         .map_err(|error| AppError::Failed(format!("Image client: {error}")))?;
     Ok((prepared, client))

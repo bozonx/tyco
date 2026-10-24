@@ -3,7 +3,7 @@ import { onScopeDispose } from 'vue'
 
 import { translate } from '../lib/i18n/index'
 import { resultOrThrow } from '../lib/ipc/ipc-model'
-import { describeError } from '../lib/llm/llm-errors'
+import { describeError } from '../lib/errors/describe-error'
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { createSelectionReplace } from '../lib/selection-replace/selection-replace'
 import {

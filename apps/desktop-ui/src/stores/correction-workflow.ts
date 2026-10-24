@@ -5,7 +5,7 @@ import { useToastStore } from './toast'
 import { createCorrectionStep } from '../lib/correction/correction-step'
 import { translate } from '../lib/i18n'
 import { toolResultMessage } from '../lib/invocation/invocation-result'
-import { describeError } from '../lib/llm/llm-errors'
+import { describeError } from '../lib/errors/describe-error'
 import {
   CorrectionAbortedError,
   isCorrectionAborted,

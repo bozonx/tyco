@@ -1,6 +1,7 @@
 import { errorMessage } from '@tyco/shared/value-guards'
 import {
   PLUGIN_API_VERSION,
+  hasPluginIdFormat,
   validatePluginManifest,
   type PluginManifest,
   SUPPORTED_PLUGIN_LOCALES,
@@ -48,7 +49,7 @@ export function createPluginPackageLoader(
         deps.reportError(manifest.id, error)
         if (
           !reservedIds.includes(manifest.id) &&
-          /^[A-Za-z0-9][A-Za-z0-9 _-]{0,127}$/.test(manifest.id)
+          hasPluginIdFormat(manifest.id)
         ) {
           const message = errorMessage(error)
           factories.push(() => ({

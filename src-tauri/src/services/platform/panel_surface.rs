@@ -225,6 +225,13 @@ pub fn apply_panel_surface(
     Ok(())
 }
 
+/// The sheet keeps at least this much space above it.
+#[cfg(target_os = "linux")]
+const MIN_SHEET_MARGIN_TOP: f64 = 40.0;
+/// The top margin when the monitor is unknown.
+#[cfg(target_os = "linux")]
+const FALLBACK_SHEET_MARGIN_TOP: i32 = 200;
+
 /// Top margin that centers the sheet vertically on the current monitor.
 #[cfg(target_os = "linux")]
 fn sheet_margin_top(window: &WebviewWindow) -> i32 {
@@ -236,9 +243,9 @@ fn sheet_margin_top(window: &WebviewWindow) -> i32 {
         .map(|m| {
             let scale = m.scale_factor();
             let screen_h = m.size().height as f64 / scale;
-            ((screen_h - height) / 2.0).max(40.0) as i32
+            ((screen_h - height) / 2.0).max(MIN_SHEET_MARGIN_TOP) as i32
         })
-        .unwrap_or(200)
+        .unwrap_or(FALLBACK_SHEET_MARGIN_TOP)
 }
 
 #[cfg(target_os = "windows")]

@@ -25,6 +25,8 @@ const CLOSE_GRACE: Duration = Duration::from_secs(10);
 const WRITE_TIMEOUT: Duration = Duration::from_secs(20);
 pub const SOCKET_QUEUE_CAPACITY: usize = 32;
 pub const MAX_FRAME_BYTES: usize = 256 * 1024;
+/// Close code for a connection closed as asked.
+const NORMAL_CLOSE: u16 = 1000;
 /// Close code for a connection that ended without a close frame.
 const ABNORMAL_CLOSE: u16 = 1006;
 /// Close code for a close frame that carried no status.
@@ -166,7 +168,7 @@ async fn run_socket_with<S: EventSink>(
                     // We asked to close; a server that drops the connection
                     // instead of answering has still closed it.
                     Some(Err(_)) | None if closing_deadline.is_some() && !awaiting_results => {
-                        sink.send_event(&SocketEvent::Close { code: 1000, reason: String::new() });
+                        sink.send_event(&SocketEvent::Close { code: NORMAL_CLOSE, reason: String::new() });
                         return;
                     }
                     Some(Err(error)) => {
@@ -186,7 +188,7 @@ async fn run_socket_with<S: EventSink>(
                 if awaiting_results {
                     sink.send_event(&SocketEvent::Error { message: "Timed out waiting for the final speech recognition result".into() });
                 } else {
-                    sink.send_event(&SocketEvent::Close { code: 1000, reason: String::new() });
+                    sink.send_event(&SocketEvent::Close { code: NORMAL_CLOSE, reason: String::new() });
                 }
                 return;
             }

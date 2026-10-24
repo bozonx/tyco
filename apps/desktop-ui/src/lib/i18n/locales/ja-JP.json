@@ -440,6 +440,22 @@
     "toolsUnsupported": "モデルがツールを使用できません。モデル設定で「ツール呼び出し」を無効にするか、別のモデルを選択してください。",
     "stepLimit": "モデルが回答を完了する前にツールのステップ制限に達しました。続行を指示するか、プロファイルのステップ制限を引き上げてください。"
   },
+  "desktopErrors": {
+    "operationFailed": "操作に失敗しました",
+    "configConflict": "設定が別の場所で変更されました。もう一度お試しください",
+    "serviceUnavailable": "必要なサービスが現在利用できません",
+    "busy": "別の操作を実行中です。後でもう一度お試しください",
+    "permissionDenied": "アクセスが拒否されました",
+    "resourceLimit": "上限に達しました",
+    "invalidInput": "リクエストが無効です",
+    "notFound": "見つかりません",
+    "fileTooLarge": "ファイルが大きすぎます",
+    "unsupportedConfig": "設定は新しいバージョンのアプリで保存されています",
+    "stale": "その間に状態が変わりました。もう一度お試しください",
+    "runtimeError": "アプリで内部エラーが発生しました",
+    "ioError": "ファイルの読み書きができませんでした",
+    "invalidData": "データが破損しているか無効です"
+  },
   "menu": {
     "actions": "アクション",
     "aiCustomPrompt": "カスタムリクエスト",
@@ -935,7 +951,8 @@
     "featuresCategory": "機能",
     "aiCategory": "AI",
     "allPluginsTab": "すべてのプラグイン",
-    "pluginStatusOff": "無効"
+    "pluginStatusOff": "無効",
+    "developmentFeatures": "開発中の機能"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

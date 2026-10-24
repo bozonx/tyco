@@ -1,5 +1,9 @@
 import { computed, ref } from 'vue'
-import type { ChatAttachment, ChatAttachmentSource } from '@tyco/shared'
+import {
+  DESKTOP_WINDOW_LABELS,
+  type ChatAttachment,
+  type ChatAttachmentSource,
+} from '@tyco/shared'
 
 import { imageBudgetCharacters } from './chat-image-input'
 import { attachmentTexts, inferAttachmentSource } from './chat-attachment'
@@ -107,7 +111,7 @@ export function createChatController(deps: ChatControllerDependencies) {
   )
   /** Runs in the main window; the quick window hands the text over to it */
   const inMainWindow = async (attachment: ChatAttachment | undefined) => {
-    if (deps.windowLabel() !== 'quick') return true
+    if (deps.windowLabel() !== DESKTOP_WINDOW_LABELS.QUICK) return true
     await deps.openMainChat(attachment)
     return false
   }

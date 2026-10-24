@@ -12,6 +12,11 @@ import {
 } from './chat-file-input'
 
 const MAX_PDF_PAGES = 100
+/** A page with less text that also draws an image is sent as a picture too */
+const SPARSE_PAGE_MAX_CHARACTERS = 100
+/** A page drawn as a picture: its longer side, and the most it is enlarged */
+const PAGE_IMAGE_MAX_DIMENSION = 3072
+const PAGE_IMAGE_MAX_SCALE = 2
 
 export interface PdfContents {
   text?: ReturnType<typeof extractedTextAttachment>
@@ -69,7 +74,7 @@ export async function readChatPdf(
         if (text) textParts.push(`[Page ${index}]\n${text}`)
         const sparseImagePage =
           text.length > 0 &&
-          text.length < 100 &&
+          text.length < SPARSE_PAGE_MAX_CHARACTERS &&
           (await page.getOperatorList()).fnArray.some((operation) =>
             [OPS.paintImageXObject, OPS.paintInlineImageXObject].includes(
               operation
@@ -87,7 +92,10 @@ export async function readChatPdf(
           )
             throw new ChatFileError('invalid')
           const viewport = page.getViewport({
-            scale: Math.min(2, 3072 / Math.max(base.width, base.height)),
+            scale: Math.min(
+              PAGE_IMAGE_MAX_SCALE,
+              PAGE_IMAGE_MAX_DIMENSION / Math.max(base.width, base.height)
+            ),
           })
           const canvas = document.createElement('canvas')
           canvas.width = Math.max(1, Math.ceil(viewport.width))

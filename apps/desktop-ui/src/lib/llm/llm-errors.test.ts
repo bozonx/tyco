@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { LlmError, type LlmErrorKind } from './llm-client'
-import { describeError, formatLlmError, llmErrorKey } from './llm-errors'
+import { formatLlmError, llmErrorKey } from './llm-errors'
 
 describe('error descriptions', () => {
   it.each<[LlmErrorKind, string]>([
@@ -25,10 +25,7 @@ describe('error descriptions', () => {
   })
   it('formats provider errors with a localized summary and bounded detail', () => {
     const error = new LlmError('auth', 'x'.repeat(600))
-    expect(describeError(error, (key) => key)).toBe(
-      formatLlmError(error, (key) => key)
-    )
-    expect(describeError(error, (key) => key)).toBe(
+    expect(formatLlmError(error, (key) => key)).toBe(
       `llmErrors.auth\n${'x'.repeat(500)}…`
     )
   })
@@ -39,11 +36,5 @@ describe('error descriptions', () => {
     expect(formatLlmError(new LlmError('timeout', '  '), (key) => key)).toBe(
       'llmErrors.timeout'
     )
-  })
-  it('preserves ordinary errors and unknown failures', () => {
-    expect(describeError(new Error('Unavailable'), (key) => key)).toBe(
-      'Unavailable'
-    )
-    expect(describeError('Failed', (key) => key)).toBe('Failed')
   })
 })

@@ -66,7 +66,11 @@ function isoBrands(bytes: Uint8Array): string[] {
 export function chatImageType(bytes: Uint8Array): ChatImageType | null {
   if (bytes.length >= 8 && ascii(bytes, 0, 8) === '\x89PNG\r\n\x1a\n')
     return 'image/png'
-  if (bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216)
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === JPEG_MARKER_PREFIX &&
+    bytes[1] === JPEG_START_OF_IMAGE
+  )
     return 'image/jpeg'
   if (
     bytes.length >= 12 &&
@@ -109,20 +113,34 @@ function pngSize(bytes: Uint8Array): Size | null {
   return { width: view.getUint32(16), height: view.getUint32(20), isAnimated }
 }
 
+/** JPEG markers are 0xFF followed by the marker code */
+const JPEG_MARKER_PREFIX = 0xff
+const JPEG_START_OF_IMAGE = 0xd8
+const JPEG_END_OF_IMAGE = 0xd9
+const JPEG_START_OF_SCAN = 0xda
+/** Markers that stand alone, without a length: TEM and RST0–RST7 */
+const JPEG_TEM = 0x01
+const JPEG_RST_FIRST = 0xd0
+const JPEG_RST_LAST = 0xd7
 /** Every start-of-frame marker except DHT (C4), JPG (C8) and DAC (CC) */
 const JPEG_FRAME_MARKERS = new Set([
-  192, 193, 194, 195, 197, 198, 199, 201, 202, 203, 205, 206, 207,
+  0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
 ])
 
 function jpegSize(bytes: Uint8Array): Size | null {
   const view = viewOf(bytes)
   let offset = 2
   while (offset + 4 <= bytes.length) {
-    if (bytes[offset] !== 255) return null
-    while (bytes[offset] === 255) offset++
+    if (bytes[offset] !== JPEG_MARKER_PREFIX) return null
+    while (bytes[offset] === JPEG_MARKER_PREFIX) offset++
     const marker = bytes[offset++]
-    if (marker === 217 || marker === 218) return null
-    if (marker === 1 || (marker >= 208 && marker <= 215)) continue
+    if (marker === JPEG_END_OF_IMAGE || marker === JPEG_START_OF_SCAN)
+      return null
+    if (
+      marker === JPEG_TEM ||
+      (marker >= JPEG_RST_FIRST && marker <= JPEG_RST_LAST)
+    )
+      continue
     if (offset + 2 > bytes.length) return null
     const length = view.getUint16(offset)
     if (length < 2 || offset + length > bytes.length) return null
@@ -136,6 +154,9 @@ function jpegSize(bytes: Uint8Array): Size | null {
   return null
 }
 
+/** The first byte of a lossless WebP bitstream */
+const VP8L_SIGNATURE = 0x2f
+
 function webpSize(bytes: Uint8Array): Size | null {
   const view = viewOf(bytes)
   const chunk = ascii(bytes, 12, 4)
@@ -148,15 +169,16 @@ function webpSize(bytes: Uint8Array): Size | null {
   if (
     chunk === 'VP8 ' &&
     bytes.length >= 30 &&
-    bytes[23] === 157 &&
-    bytes[24] === 1 &&
-    bytes[25] === 42
+    // the start code of a VP8 key frame
+    bytes[23] === 0x9d &&
+    bytes[24] === 0x01 &&
+    bytes[25] === 0x2a
   )
     return {
       width: view.getUint16(26, true) & 0x3fff,
       height: view.getUint16(28, true) & 0x3fff,
     }
-  if (chunk === 'VP8L' && bytes.length >= 25 && bytes[20] === 47) {
+  if (chunk === 'VP8L' && bytes.length >= 25 && bytes[20] === VP8L_SIGNATURE) {
     const bits = view.getUint32(21, true)
     return { width: (bits & 0x3fff) + 1, height: ((bits >>> 14) & 0x3fff) + 1 }
   }
@@ -202,6 +224,10 @@ function bmpSize(bytes: Uint8Array): Size | null {
   }
 }
 
+/** Tags of the image size in a TIFF directory */
+const TIFF_IMAGE_WIDTH_TAG = 0x0100
+const TIFF_IMAGE_LENGTH_TAG = 0x0101
+
 function tiffSize(bytes: Uint8Array): Size | null {
   const view = viewOf(bytes)
   const little = bytes[0] === 0x49
@@ -222,8 +248,8 @@ function tiffSize(bytes: Uint8Array): Size | null {
         : type === 4
           ? view.getUint32(entry + 8, little)
           : 0
-    if (tag === 256) width = value
-    else if (tag === 257) height = value
+    if (tag === TIFF_IMAGE_WIDTH_TAG) width = value
+    else if (tag === TIFF_IMAGE_LENGTH_TAG) height = value
   }
   return { width, height }
 }

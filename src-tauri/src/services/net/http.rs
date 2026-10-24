@@ -10,6 +10,10 @@ use super::{EventSink, HTTP_CHUNK_SIZE, READ_TIMEOUT};
 
 const MAX_REQUEST_BODY_BYTES: usize = 128 * 1024 * 1024;
 pub const MAX_RESPONSE_BODY_BYTES: usize = 128 * 1024 * 1024;
+/// Images shown in a chat; matches `MAX_IMAGE_BYTES` of the webview's chat images.
+pub const MAX_CHAT_IMAGE_RESPONSE_BYTES: usize = 10 * 1024 * 1024;
+/// A webhook answers with a short status, not a payload.
+pub const MAX_WEBHOOK_RESPONSE_BYTES: usize = 1024 * 1024;
 
 #[derive(Debug, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -62,13 +66,17 @@ fn decode_body_with_limit(
     body.map(|body| {
         let max_encoded_bytes = max_decoded_body_bytes.div_ceil(3) * 4;
         if body.len() > max_encoded_bytes {
-            return Err(String::from("Request body exceeds the 128 MiB limit"));
+            return Err(format!(
+                "Request body exceeds the {max_decoded_body_bytes} byte limit"
+            ));
         }
         let decoded = base64::engine::general_purpose::STANDARD
             .decode(body)
             .map_err(|error| format!("Invalid request body: {error}"))?;
         if decoded.len() > max_decoded_body_bytes {
-            return Err(String::from("Request body exceeds the 128 MiB limit"));
+            return Err(format!(
+                "Request body exceeds the {max_decoded_body_bytes} byte limit"
+            ));
         }
         Ok(decoded)
     })

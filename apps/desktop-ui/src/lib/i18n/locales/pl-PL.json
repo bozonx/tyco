@@ -440,6 +440,22 @@
     "toolsUnsupported": "Model nie może używać narzędzi. Wyłącz „Wywoływanie narzędzi” w jego ustawieniach lub wybierz inny model.",
     "stepLimit": "Model wyczerpał kroki narzędzi, nie kończąc odpowiedzi. Poproś go o kontynuowanie lub zwiększ limit kroków profilu."
   },
+  "desktopErrors": {
+    "operationFailed": "Operacja nie powiodła się",
+    "configConflict": "Ustawienia zostały zmienione w innym miejscu, spróbuj ponownie",
+    "serviceUnavailable": "Potrzebna usługa jest teraz niedostępna",
+    "busy": "Trwa inna operacja, spróbuj później",
+    "permissionDenied": "Odmowa dostępu",
+    "resourceLimit": "Osiągnięto limit",
+    "invalidInput": "Żądanie jest nieprawidłowe",
+    "notFound": "Nie znaleziono",
+    "fileTooLarge": "Plik jest za duży",
+    "unsupportedConfig": "Ustawienia zapisała nowsza wersja aplikacji",
+    "stale": "Stan zdążył się zmienić, spróbuj ponownie",
+    "runtimeError": "W aplikacji wystąpił błąd wewnętrzny",
+    "ioError": "Nie udało się odczytać ani zapisać pliku",
+    "invalidData": "Dane są uszkodzone lub nieprawidłowe"
+  },
   "menu": {
     "actions": "Akcje",
     "aiCustomPrompt": "Własne zapytanie",
@@ -938,7 +954,8 @@
     "featuresCategory": "Funkcje",
     "aiCategory": "AI",
     "allPluginsTab": "Wszystkie wtyczki",
-    "pluginStatusOff": "Wyłączona"
+    "pluginStatusOff": "Wyłączona",
+    "developmentFeatures": "Funkcje w fazie rozwoju"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

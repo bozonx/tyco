@@ -440,6 +440,22 @@
     "toolsUnsupported": "A modell nem tud eszközöket használni. Kapcsolja ki a beállításaiban az „Eszközhívás” opciót, vagy válasszon másik modellt.",
     "stepLimit": "A modell elhasználta az eszközlépéseit, mielőtt befejezte volna a választ. Kérje meg, hogy folytassa, vagy növelje a profil lépéskorlátját."
   },
+  "desktopErrors": {
+    "operationFailed": "A művelet sikertelen",
+    "configConflict": "A beállítások máshol megváltoztak, próbálja újra",
+    "serviceUnavailable": "Egy szükséges szolgáltatás most nem érhető el",
+    "busy": "Egy másik művelet fut, próbálja később",
+    "permissionDenied": "Hozzáférés megtagadva",
+    "resourceLimit": "Elérte a korlátot",
+    "invalidInput": "A kérés érvénytelen",
+    "notFound": "Nem található",
+    "fileTooLarge": "A fájl túl nagy",
+    "unsupportedConfig": "A beállításokat az alkalmazás egy újabb verziója mentette",
+    "stale": "Az állapot közben megváltozott, próbálja újra",
+    "runtimeError": "Belső hiba történt az alkalmazásban",
+    "ioError": "Nem sikerült fájlt olvasni vagy írni",
+    "invalidData": "Az adatok sérültek vagy érvénytelenek"
+  },
   "menu": {
     "actions": "Műveletek",
     "aiCustomPrompt": "Saját kérés",
@@ -935,7 +951,8 @@
     "featuresCategory": "Funkciók",
     "aiCategory": "MI",
     "allPluginsTab": "Minden bővítmény",
-    "pluginStatusOff": "Ki"
+    "pluginStatusOff": "Ki",
+    "developmentFeatures": "Fejlesztés alatt álló funkciók"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

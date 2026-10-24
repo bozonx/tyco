@@ -1,6 +1,11 @@
 import { ref } from 'vue'
 import { resolveScrollBehavior } from '../ui/scroll-behavior'
 
+/** Closer to the bottom than this, new content keeps the view at the bottom */
+const PINNED_DISTANCE_PX = 80
+/** Farther from the bottom than this, a button offers to jump back */
+const SCROLL_BUTTON_DISTANCE_PX = 160
+
 export interface ChatScrollElement {
   scrollHeight: number
   scrollTop: number
@@ -23,8 +28,8 @@ export function createChatScroll(deps: {
     if (!element || disposed) return
     const distance =
       element.scrollHeight - element.scrollTop - element.clientHeight
-    pinnedToBottom.value = distance < 80
-    showScrollButton.value = distance > 160
+    pinnedToBottom.value = distance < PINNED_DISTANCE_PX
+    showScrollButton.value = distance > SCROLL_BUTTON_DISTANCE_PX
   }
 
   async function scrollToBottom(behavior: 'instant' | 'smooth' = 'instant') {

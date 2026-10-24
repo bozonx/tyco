@@ -166,6 +166,13 @@
   --app-syntax-string: var(--color-green-700);
   --app-syntax-number: var(--color-amber-700);
   --app-syntax-comment: var(--color-gray-500);
+
+  /* Editor search matches: a highlighter, the same in every theme */
+  --app-search-match-bg: var(--color-yellow-400);
+  --app-search-match-border: var(--color-yellow-500);
+  --app-search-match-current-bg: var(--color-orange-400);
+  --app-search-match-current-border: var(--color-orange-500);
+  --app-search-match-fg: var(--color-stone-900);
 }
 
 [data-theme='dark'] {

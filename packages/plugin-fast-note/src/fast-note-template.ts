@@ -1,3 +1,6 @@
+const MS_PER_SECOND = 1000
+const MS_PER_WEEK = 7 * 24 * 60 * 60 * MS_PER_SECOND
+
 export type FastNoteSaveMode = 'create' | 'append'
 
 export type FastNoteFolderPreset =
@@ -87,7 +90,7 @@ export function getIsoWeekNumber(date: Date): number {
   if (target.getUTCDay() !== 4) {
     target.setUTCMonth(0, 1 + ((4 - target.getUTCDay() + 7) % 7))
   }
-  return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000)
+  return 1 + Math.ceil((firstThursday - target.valueOf()) / MS_PER_WEEK)
 }
 
 export function getDateTokens(date: Date) {
@@ -107,7 +110,7 @@ export function getDateTokens(date: Date) {
   )
   const GGGG = String(weekDate.getUTCFullYear())
   const zettel = `${YYYY}${MM}${DD}${HH}${mm}${ss}${String(date.getMilliseconds()).padStart(3, '0')}`
-  const timestamp = String(Math.floor(date.getTime() / 1000))
+  const timestamp = String(Math.floor(date.getTime() / MS_PER_SECOND))
 
   return { YYYY, YY, MM, DD, HH, mm, ss, WW, GGGG, zettel, timestamp }
 }

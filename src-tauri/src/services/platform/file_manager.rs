@@ -6,6 +6,9 @@ use std::process::Command;
 
 use crate::errors::AppError;
 
+/// How long the system opener may take before it is stopped.
+const OPEN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+
 /// Opens `dir` in the file manager.
 pub fn open_dir(dir: &Path) -> Result<(), AppError> {
     if !dir.is_dir() {
@@ -33,7 +36,7 @@ fn open_path(path: &Path) -> Result<(), AppError> {
     command.arg(path);
     // Explorer may exit with 1 even when the path opened successfully.
     // Ignore its exit code, but still bound execution and reap the child.
-    super::process::status(command, None, std::time::Duration::from_secs(10))?;
+    super::process::status(command, None, OPEN_TIMEOUT)?;
     Ok(())
 }
 
@@ -57,7 +60,7 @@ pub fn open_web_url(url: &url::Url) -> Result<(), AppError> {
         Command::new(opener())
     };
     command.arg(url.as_str());
-    let status = super::process::status(command, None, std::time::Duration::from_secs(10))?;
+    let status = super::process::status(command, None, OPEN_TIMEOUT)?;
     if !status.success() {
         return Err(AppError::Failed(format!(
             "URL opener failed with status {status}"

@@ -50,12 +50,16 @@ fn copy_to_clipboard_linux(text: &str) -> Result<(), AppError> {
     )))
 }
 
+/// How long a clipboard tool may take to take the text.
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+pub(super) const CLIPBOARD_WRITE_TIMEOUT: Duration = Duration::from_secs(5);
+
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 fn write_to_clipboard_command(binary: &str, args: &[&str], text: &str) -> Result<(), AppError> {
     let status = super::process::status(
         super::process::command(binary, args),
         Some(text.as_bytes()),
-        Duration::from_secs(5),
+        CLIPBOARD_WRITE_TIMEOUT,
     )?;
     if !status.success() {
         return Err(AppError::Failed(format!(

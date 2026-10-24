@@ -123,7 +123,7 @@ pub fn clear() {
         Some(Backend::WlClipboard) => super::super::process::status(
             super::super::process::command("wl-copy", &["--clear"]),
             None,
-            Duration::from_secs(5),
+            super::super::clipboard::CLIPBOARD_WRITE_TIMEOUT,
         )
         .map(drop)
         .map_err(Into::into),
@@ -163,7 +163,7 @@ fn write(snapshot: &ClipboardSnapshot) -> std::io::Result<()> {
     let status = super::super::process::status(
         super::super::process::command(binary, &args),
         Some(&snapshot.data),
-        Duration::from_secs(5),
+        super::super::clipboard::CLIPBOARD_WRITE_TIMEOUT,
     )?;
     if status.success() {
         Ok(())

@@ -1,6 +1,11 @@
 import type { ChatMessage } from '@tyco/shared'
 
+/** The draft title, cut from the first message */
 const DRAFT_TITLE_LENGTH = 60
+/**
+ * A generated title is cut at this length; a title the user types may be
+ * longer, up to `MAX_CHAT_TITLE_LENGTH` in `ChatSidebar.vue`
+ */
 const TITLE_MAX_LENGTH = 80
 
 /** The start of the first message, on one line, cut at a word */

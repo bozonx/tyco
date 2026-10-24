@@ -255,7 +255,7 @@ const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
 
 const { t } = useI18n()
-const { toastText } = useToast()
+const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
 const isNew = computed(() => props.profileId === NEW_ENTITY_ID)
@@ -282,7 +282,7 @@ async function handleCreate() {
     })
     navigate(profileTab(created.id))
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   } finally {
     isCreating.value = false
   }
@@ -302,7 +302,7 @@ async function handleDuplicate() {
     )
     navigate(profileTab(copy.id))
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   } finally {
     isDuplicating.value = false
   }
@@ -405,7 +405,7 @@ async function handleOpenFolder() {
   try {
     await aiProfilesStore.openVaultDir(props.profileId)
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   }
 }
 
@@ -436,7 +436,7 @@ async function handleDelete() {
     showDeleteConfirm.value = false
     navigate(AI_OVERVIEW_TAB)
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   }
 }
 </script>

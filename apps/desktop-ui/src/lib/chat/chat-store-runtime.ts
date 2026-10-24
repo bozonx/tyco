@@ -15,6 +15,7 @@ import type { createChatHistoryModel } from '../history/chat-history'
 import type { createLlmActions } from '../llm/llm-actions'
 import { LlmError } from '../llm/llm-client'
 import { normalizeLlmConfig } from '../llm/llm-config'
+import { describeError } from '../errors/describe-error'
 import { formatLlmError } from '../llm/llm-errors'
 import type { AppRoutePath } from '../navigation/routes'
 import {
@@ -298,7 +299,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
           await deps.updateProfileModel(profileId, id)
         } catch (error) {
           toastText(
-            `${translate('toast.desktopCommandFailed')}: ${String(error)}`,
+            `${translate('toast.desktopCommandFailed')}\n${describeError(error, translate)}`,
             'error'
           )
         }

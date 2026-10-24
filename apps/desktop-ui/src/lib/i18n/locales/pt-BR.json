@@ -440,6 +440,22 @@
     "toolsUnsupported": "O modelo não pode usar ferramentas. Desative “Chamada de ferramentas” nas configurações dele ou escolha outro modelo.",
     "stepLimit": "O modelo esgotou seus passos de ferramentas sem terminar a resposta. Peça para ele continuar ou aumente o limite de passos do perfil."
   },
+  "desktopErrors": {
+    "operationFailed": "A operação falhou",
+    "configConflict": "As configurações foram alteradas em outro lugar, tente novamente",
+    "serviceUnavailable": "Um serviço necessário está indisponível no momento",
+    "busy": "Outra operação está em andamento, tente mais tarde",
+    "permissionDenied": "Permissão negada",
+    "resourceLimit": "Um limite foi atingido",
+    "invalidInput": "A solicitação não é válida",
+    "notFound": "Não encontrado",
+    "fileTooLarge": "O arquivo é grande demais",
+    "unsupportedConfig": "As configurações foram salvas por uma versão mais nova do app",
+    "stale": "O estado mudou nesse meio-tempo, tente novamente",
+    "runtimeError": "O app encontrou um erro interno",
+    "ioError": "Não foi possível ler ou gravar um arquivo",
+    "invalidData": "Os dados estão corrompidos ou inválidos"
+  },
   "menu": {
     "actions": "Ações",
     "aiCustomPrompt": "Solicitação própria",
@@ -938,7 +954,8 @@
     "featuresCategory": "Recursos",
     "aiCategory": "IA",
     "allPluginsTab": "Todos os plugins",
-    "pluginStatusOff": "Desativado"
+    "pluginStatusOff": "Desativado",
+    "developmentFeatures": "Recursos em desenvolvimento"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

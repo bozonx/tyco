@@ -440,6 +440,22 @@
     "toolsUnsupported": "Model araç kullanamıyor. Ayarlarında “Araç çağırma”yı kapatın veya başka bir model seçin.",
     "stepLimit": "Model, yanıtı bitirmeden araç adımlarını tüketti. Devam etmesini isteyin veya profilin adım sınırını artırın."
   },
+  "desktopErrors": {
+    "operationFailed": "İşlem başarısız oldu",
+    "configConflict": "Ayarlar başka bir yerde değiştirildi, tekrar deneyin",
+    "serviceUnavailable": "Gerekli bir hizmet şu anda kullanılamıyor",
+    "busy": "Başka bir işlem sürüyor, daha sonra tekrar deneyin",
+    "permissionDenied": "İzin reddedildi",
+    "resourceLimit": "Bir sınıra ulaşıldı",
+    "invalidInput": "İstek geçerli değil",
+    "notFound": "Bulunamadı",
+    "fileTooLarge": "Dosya çok büyük",
+    "unsupportedConfig": "Ayarlar uygulamanın daha yeni bir sürümüyle kaydedilmiş",
+    "stale": "Durum bu arada değişti, tekrar deneyin",
+    "runtimeError": "Uygulamada dahili bir hata oluştu",
+    "ioError": "Bir dosya okunamadı veya yazılamadı",
+    "invalidData": "Veriler bozuk veya geçersiz"
+  },
   "menu": {
     "actions": "Eylemler",
     "aiCustomPrompt": "Kendi isteğin",
@@ -935,7 +951,8 @@
     "featuresCategory": "Özellikler",
     "aiCategory": "Yapay zekâ",
     "allPluginsTab": "Tüm eklentiler",
-    "pluginStatusOff": "Kapalı"
+    "pluginStatusOff": "Kapalı",
+    "developmentFeatures": "Geliştirme aşamasındaki özellikler"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

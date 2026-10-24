@@ -3,6 +3,9 @@ import {
   createSingleTimer,
 } from '../timers/single-timer'
 
+/** A pause in typing this long starts a correction ahead of time, by default */
+const DEFAULT_PRECORRECTION_DELAY_MS = 1000
+
 export interface QuickCorrectionDependencies extends TimerDependencies {
   correct: (text: string, signal: AbortSignal) => Promise<string>
   /** Idle time after the last edit before a speculative correction starts */
@@ -32,7 +35,8 @@ interface CorrectionRun {
  */
 export function createQuickCorrection(deps: QuickCorrectionDependencies) {
   const timer = createSingleTimer(deps)
-  const precorrectionDelayMs = deps.precorrectionDelayMs ?? 1000
+  const precorrectionDelayMs =
+    deps.precorrectionDelayMs ?? DEFAULT_PRECORRECTION_DELAY_MS
 
   let isDisposed = false
   let activeRun: CorrectionRun | null = null

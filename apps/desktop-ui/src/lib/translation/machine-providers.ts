@@ -5,6 +5,9 @@ import {
   type TranslationProviderFactory,
 } from '@bozonx/ai-kit/translate'
 
+/** DeepL answers this when the character quota of the plan is used up */
+const DEEPL_QUOTA_EXCEEDED_STATUS = 456
+
 /** A depleted subscription is permanent until the user changes its quota. */
 export const createDeepLProvider: TranslationProviderFactory = (init) => ({
   async translate(request) {
@@ -26,7 +29,7 @@ export const createDeepLProvider: TranslationProviderFactory = (init) => ({
           ...options,
           body: JSON.stringify(body),
         })
-        quotaExhausted = response.status === 456
+        quotaExhausted = response.status === DEEPL_QUOTA_EXCEEDED_STATUS
         return response
       },
     })
@@ -37,7 +40,11 @@ export const createDeepLProvider: TranslationProviderFactory = (init) => ({
         throw new AiError(
           'invalid_request',
           'DeepL translation quota is exhausted; increase the subscription limit before retrying',
-          { provider: 'deepl', status: 456, cause: error }
+          {
+            provider: 'deepl',
+            status: DEEPL_QUOTA_EXCEEDED_STATUS,
+            cause: error,
+          }
         )
       throw error
     }

@@ -8,9 +8,9 @@ import WebhookActionFields from './WebhookActionFields.vue'
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
-const { toastKey, toastText, secrets, session } = vi.hoisted(() => ({
+const { toastKey, toastError, secrets, session } = vi.hoisted(() => ({
   toastKey: vi.fn(),
-  toastText: vi.fn(),
+  toastError: vi.fn(),
   secrets: {
     secrets: {} as Record<string, { origins: string[] }>,
     setSecret: vi.fn(async () => {}),
@@ -20,7 +20,7 @@ const { toastKey, toastText, secrets, session } = vi.hoisted(() => ({
   session: { persist: vi.fn(async () => {}), isSaved: vi.fn(() => true) },
 }))
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toastKey, toastText }),
+  default: () => ({ toastKey, toastError }),
 }))
 vi.mock('../../stores/secrets', () => ({ useSecretsStore: () => secrets }))
 vi.mock('../../stores/settings-session', () => ({
@@ -138,9 +138,9 @@ describe('WebhookActionFields.vue', () => {
     await wrapper.findAll('input[type="password"]').at(-1)!.setValue('token')
     await button(wrapper, 'common.save').trigger('click')
     await flushPromises()
-    expect(toastText).toHaveBeenCalledWith(
-      'settings.keySaveFailed\nError: Locked',
-      'error'
+    expect(toastError).toHaveBeenCalledWith(
+      new Error('Locked'),
+      'settings.keySaveFailed'
     )
   })
 })

@@ -184,7 +184,7 @@ function update(field: string, value: unknown) {
 
 const webhook = computed(() => webhookToolConfig(props.command))
 const secretsStore = useSecretsStore()
-const { toastKey, toastText } = useToast()
+const { toastKey, toastError } = useToast()
 const headerRows = computed<WebhookHeaderRow[]>(() =>
   props.command.toolId === 'webhook'
     ? webhookHeaderRows(webhook.value.headers)
@@ -236,8 +236,7 @@ const { authDraft, saveAuth, removeAuth } = createWebhookAuthModel({
   persist: session.persist,
   isSaved: session.isSaved,
   notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
-  reportError: (error) =>
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+  reportError: (error) => toastError(error, 'settings.keySaveFailed'),
 })
 
 onMounted(() => {

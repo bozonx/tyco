@@ -9,6 +9,10 @@ use std::time::{Duration, Instant};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 const MAX_UTILITY_OUTPUT: u64 = 16 * 1024 * 1024;
+/// How often an idle pipe reader checks for output and for a stop.
+const PIPE_POLL_INTERVAL: Duration = Duration::from_millis(5);
+/// What a pipe reader takes in one read.
+const PIPE_CHUNK_BYTES: usize = 8192;
 
 pub fn command(program: &str, args: &[&str]) -> Command {
     let mut command = Command::new(program);
@@ -199,11 +203,11 @@ impl PipeReader {
         let stop = Arc::new(AtomicBool::new(false));
         let flag = stop.clone();
         let thread = thread::spawn(move || {
-            let mut chunk = [0; 8192];
+            let mut chunk = [0; PIPE_CHUNK_BYTES];
             while !flag.load(Ordering::Relaxed) {
                 match pipe.is_ready() {
                     Ok(false) => {
-                        thread::sleep(Duration::from_millis(5));
+                        thread::sleep(PIPE_POLL_INTERVAL);
                         continue;
                     }
                     Err(_) => break,
@@ -214,7 +218,7 @@ impl PipeReader {
                     Ok(size) => consume(&chunk[..size]),
                     Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
                     Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
-                        thread::sleep(Duration::from_millis(5))
+                        thread::sleep(PIPE_POLL_INTERVAL)
                     }
                     Err(_) => break,
                 }
@@ -232,7 +236,7 @@ impl PipeReader {
             .is_some_and(|thread| !thread.is_finished())
             && Instant::now() < deadline
         {
-            thread::sleep(Duration::from_millis(5));
+            thread::sleep(PIPE_POLL_INTERVAL);
         }
     }
 }

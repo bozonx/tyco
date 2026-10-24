@@ -14,7 +14,7 @@ use crate::services::{external::api, runtime};
 
 const MESSAGE_PATH: &str = "/org/tyco/Object";
 const MESSAGE_DEST: &str = "org.tyco.Service";
-const KWIN_SERVICE: &str = "org.kde.KWin";
+pub(super) const KWIN_SERVICE: &str = "org.kde.KWin";
 /// Errors are named after the machine codes of the API, e.g.
 /// `org.tyco.Error.AccessDenied`.
 const ERROR_PREFIX: &str = "org.tyco.Error";

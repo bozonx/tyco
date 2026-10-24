@@ -440,6 +440,22 @@
     "toolsUnsupported": "Modelul nu poate folosi instrumente. Dezactivați „Apelarea instrumentelor” în setările lui sau alegeți alt model.",
     "stepLimit": "Modelul și-a epuizat pașii de instrumente fără să termine răspunsul. Cereți-i să continue sau măriți limita de pași a profilului."
   },
+  "desktopErrors": {
+    "operationFailed": "Operația a eșuat",
+    "configConflict": "Setările au fost modificate în altă parte, încercați din nou",
+    "serviceUnavailable": "Un serviciu necesar nu este disponibil acum",
+    "busy": "Altă operație este în curs, încercați mai târziu",
+    "permissionDenied": "Permisiune refuzată",
+    "resourceLimit": "A fost atinsă o limită",
+    "invalidInput": "Cererea nu este validă",
+    "notFound": "Nu a fost găsit",
+    "fileTooLarge": "Fișierul este prea mare",
+    "unsupportedConfig": "Setările au fost salvate de o versiune mai nouă a aplicației",
+    "stale": "Starea s-a schimbat între timp, încercați din nou",
+    "runtimeError": "Aplicația a întâmpinat o eroare internă",
+    "ioError": "Nu s-a putut citi sau scrie un fișier",
+    "invalidData": "Datele sunt deteriorate sau nevalide"
+  },
   "menu": {
     "actions": "Acțiuni",
     "aiCustomPrompt": "Cerere proprie",
@@ -938,7 +954,8 @@
     "featuresCategory": "Funcții",
     "aiCategory": "AI",
     "allPluginsTab": "Toate pluginurile",
-    "pluginStatusOff": "Dezactivat"
+    "pluginStatusOff": "Dezactivat",
+    "developmentFeatures": "Funcții în dezvoltare"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

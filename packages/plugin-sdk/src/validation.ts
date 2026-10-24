@@ -1,3 +1,11 @@
+import {
+  MAX_CONFIG_FIELDS,
+  MAX_ICON_BODY_BYTES,
+  MAX_ICON_DIMENSION,
+  MAX_ICONS,
+  RESERVED_PLUGIN_ID,
+  hasPluginIdFormat,
+} from './package-format.js'
 import { validateSettingsMigrations } from './settings-migrations.js'
 import { isRecord as record } from './value-guards.js'
 import {
@@ -105,8 +113,8 @@ export function validatePluginManifest(
     fail('Unknown plugin manifest field')
   if (
     typeof value.id !== 'string' ||
-    !/^[A-Za-z0-9][A-Za-z0-9 _-]{0,127}$/.test(value.id) ||
-    value.id === 'core'
+    !hasPluginIdFormat(value.id) ||
+    value.id === RESERVED_PLUGIN_ID
   )
     fail('Invalid plugin ID')
   if (
@@ -223,7 +231,7 @@ export function validatePluginManifest(
       typeof value.icons.prefix !== 'string' ||
       !/^[a-z][a-z0-9-]*$/.test(value.icons.prefix) ||
       !record(value.icons.icons) ||
-      Object.keys(value.icons.icons).length > 4096
+      Object.keys(value.icons.icons).length > MAX_ICONS
     )
       fail('Invalid plugin icons')
     for (const [name, icon] of Object.entries(value.icons.icons)) {
@@ -231,7 +239,7 @@ export function validatePluginManifest(
         !/^[a-z0-9-]+$/.test(name) ||
         !record(icon) ||
         typeof icon.body !== 'string' ||
-        new TextEncoder().encode(icon.body).length > 128 * 1024
+        new TextEncoder().encode(icon.body).length > MAX_ICON_BODY_BYTES
       )
         fail('Invalid plugin icon')
       for (const dimension of [
@@ -245,7 +253,7 @@ export function validatePluginManifest(
           (typeof dimension !== 'number' ||
             !Number.isFinite(dimension) ||
             dimension <= 0 ||
-            dimension > 4096)
+            dimension > MAX_ICON_DIMENSION)
         )
           fail('Invalid plugin icon dimensions')
       // SVG inserted by the host must not contain active or external content.
@@ -260,7 +268,7 @@ export function validatePluginManifest(
 }
 
 export function validatePluginFields(fields: unknown): void {
-  if (!Array.isArray(fields) || fields.length > 256)
+  if (!Array.isArray(fields) || fields.length > MAX_CONFIG_FIELDS)
     fail('Invalid plugin fields')
   const names = new Set<string>()
   for (const field of fields) {

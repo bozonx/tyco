@@ -6,6 +6,24 @@ import {
 
 const ERROR_CODES: ReadonlySet<string> = new Set(DESKTOP_ERROR_CODES)
 
+/** The i18n key of the summary the user sees for each error code */
+export const DESKTOP_ERROR_KEYS: Readonly<Record<DesktopErrorCode, string>> = {
+  operationFailed: 'desktopErrors.operationFailed',
+  configConflict: 'desktopErrors.configConflict',
+  serviceUnavailable: 'desktopErrors.serviceUnavailable',
+  busy: 'desktopErrors.busy',
+  permissionDenied: 'desktopErrors.permissionDenied',
+  resourceLimit: 'desktopErrors.resourceLimit',
+  invalidInput: 'desktopErrors.invalidInput',
+  notFound: 'desktopErrors.notFound',
+  fileTooLarge: 'desktopErrors.fileTooLarge',
+  unsupportedConfig: 'desktopErrors.unsupportedConfig',
+  stale: 'desktopErrors.stale',
+  runtimeError: 'desktopErrors.runtimeError',
+  ioError: 'desktopErrors.ioError',
+  invalidData: 'desktopErrors.invalidData',
+}
+
 export function isDesktopError(error: unknown): error is DesktopErrorPayload {
   return (
     typeof error === 'object' &&

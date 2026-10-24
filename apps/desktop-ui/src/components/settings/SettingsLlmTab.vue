@@ -109,6 +109,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
+import { describeError } from '../../lib/errors/describe-error'
 import { modelLabel } from '../../lib/llm/llm-config'
 import { createLlmConnectionChecker } from '../../lib/llm/llm-connection'
 import { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
@@ -135,7 +136,7 @@ const TASK_LABEL_KEYS = {
 const { t } = useI18n()
 const { draft: userConfig, operations } = useSettingsContext()
 const llm = computed(() => userConfig.value.llm)
-const { toastKey, toastText } = useToast()
+const { toastKey, toastError } = useToast()
 const secretsStore = useSecretsStore()
 const checkLlmConnection = createLlmConnectionChecker({
   fetch: createTauriTransport(tauriNetIpc).fetch,
@@ -150,11 +151,10 @@ const settings = createLlmSettingsModel({
   setSecret: (id, value, origins) => secretsStore.setSecret(id, value, origins),
   removeSecret: (id) => secretsStore.removeSecret(id),
   checkConnection: checkLlmConnection,
-  notifyKeyError: (error) =>
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+  notifyKeyError: (error) => toastError(error, 'settings.keySaveFailed'),
   notifyInvalidUrl: () => toastKey('settings.invalidBaseUrl', 'error'),
   formatConnectionError: (error) =>
-    `${t('settings.connectionFailed')}: ${String(error)}`,
+    `${t('settings.connectionFailed')}\n${describeError(error, t)}`,
   providerRemoved: (id) => void operations.finishProviderRemoval(id),
 })
 const { addProvider, removeProviderById, nextFallback, addFallback, dispose } =
@@ -203,7 +203,7 @@ function hasKey(providerId: string) {
 }
 onMounted(() => {
   secretsStore.refreshSecrets().catch((error: unknown) => {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
+    toastError(error, 'settings.keySaveFailed')
   })
 })
 </script>

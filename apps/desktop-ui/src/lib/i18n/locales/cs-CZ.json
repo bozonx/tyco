@@ -440,6 +440,22 @@
     "toolsUnsupported": "Model neumí používat nástroje. Vypněte v jeho nastavení „Volání nástrojů“ nebo vyberte jiný model.",
     "stepLimit": "Model vyčerpal kroky nástrojů a odpověď nedokončil. Požádejte ho, ať pokračuje, nebo zvyšte limit kroků profilu."
   },
+  "desktopErrors": {
+    "operationFailed": "Operace se nezdařila",
+    "configConflict": "Nastavení bylo změněno jinde, zkuste to znovu",
+    "serviceUnavailable": "Potřebná služba je teď nedostupná",
+    "busy": "Probíhá jiná operace, zkuste to později",
+    "permissionDenied": "Přístup odepřen",
+    "resourceLimit": "Byl dosažen limit",
+    "invalidInput": "Požadavek není platný",
+    "notFound": "Nenalezeno",
+    "fileTooLarge": "Soubor je příliš velký",
+    "unsupportedConfig": "Nastavení uložila novější verze aplikace",
+    "stale": "Stav se mezitím změnil, zkuste to znovu",
+    "runtimeError": "V aplikaci došlo k vnitřní chybě",
+    "ioError": "Soubor nelze přečíst ani zapsat",
+    "invalidData": "Data jsou poškozená nebo neplatná"
+  },
   "menu": {
     "actions": "Akce",
     "aiCustomPrompt": "Vlastní požadavek",
@@ -932,7 +948,8 @@
     "featuresCategory": "Funkce",
     "aiCategory": "AI",
     "allPluginsTab": "Všechny pluginy",
-    "pluginStatusOff": "Vypnuto"
+    "pluginStatusOff": "Vypnuto",
+    "developmentFeatures": "Funkce ve vývoji"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

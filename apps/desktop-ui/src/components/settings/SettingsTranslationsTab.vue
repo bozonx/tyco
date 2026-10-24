@@ -119,7 +119,7 @@ import SettingsTaskModel from './SettingsTaskModel.vue'
 
 const { t } = useI18n()
 const { draft: userConfig, navigate } = useSettingsContext()
-const { toastText } = useToast()
+const { toastError } = useToast()
 const secretsStore = useSecretsStore()
 const {
   translation,
@@ -141,8 +141,7 @@ const {
   hasSecret: (id) => Object.hasOwn(secretsStore.secrets, id),
   setSecret: (id, value) => secretsStore.setSecret(id, value),
   removeSecret: (id) => secretsStore.removeSecret(id),
-  notifyKeyError: (error) =>
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+  notifyKeyError: (error) => toastError(error, 'settings.keySaveFailed'),
 })
 // An empty prompt starts collapsed each time the page opens.
 const qualityGatePromptOpen = ref(

@@ -10,9 +10,9 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const toastText = vi.hoisted(() => vi.fn())
+const toastError = vi.hoisted(() => vi.fn())
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toastText }),
+  default: () => ({ toastError }),
 }))
 
 const vault = vi.hoisted(() => ({ store: null as unknown }))
@@ -59,7 +59,7 @@ describe('SettingsAiProfilesTab.vue', () => {
     vault.store = store
     context = createTestSettingsContext()
   })
-  afterEach(() => toastText.mockReset())
+  afterEach(() => toastError.mockReset())
 
   const mountTab = () =>
     mount(SettingsAiProfilesTab, { global: { provide: context.provide } })
@@ -114,9 +114,9 @@ describe('SettingsAiProfilesTab.vue', () => {
     await button(wrapper, 'settings.openInFileManager').trigger('click')
     await button(wrapper, 'settings.selectFolder').trigger('click')
     await flushPromises()
-    expect(toastText.mock.calls).toEqual([
-      ['Error: Missing', 'error'],
-      ['Error: Denied', 'error'],
+    expect(toastError.mock.calls).toEqual([
+      [new Error('Missing')],
+      [new Error('Denied')],
     ])
   })
 })

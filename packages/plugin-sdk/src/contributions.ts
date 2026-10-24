@@ -1,3 +1,7 @@
+import {
+  MAX_TOOL_SCHEMA_PROPERTIES,
+  hasContributionIdFormat,
+} from './package-format.js'
 import { isRecord } from './value-guards.js'
 import type { ToolResult, ParseResult } from './tools.js'
 
@@ -9,7 +13,7 @@ export function validateContribution(
   if (
     !isRecord(value) ||
     typeof value.id !== 'string' ||
-    !/^[A-Za-z0-9_-]{1,128}$/.test(value.id)
+    !hasContributionIdFormat(value.id)
   )
     throw new Error(`Invalid ${kind} ID`)
   for (const field of [
@@ -49,7 +53,7 @@ export function validateContribution(
     if (value.toolId !== undefined) {
       if (
         typeof value.toolId !== 'string' ||
-        !/^[A-Za-z0-9_-]{1,128}$/.test(value.toolId) ||
+        !hasContributionIdFormat(value.toolId) ||
         value.action !== undefined
       )
         throw new Error('Invalid toolbar tool reference')
@@ -105,7 +109,7 @@ export function validateToolSchema(value: unknown, depth = 0): void {
   if (value.properties !== undefined) {
     if (
       !isRecord(value.properties) ||
-      Object.keys(value.properties).length > 256
+      Object.keys(value.properties).length > MAX_TOOL_SCHEMA_PROPERTIES
     )
       throw new Error('Invalid tool schema properties')
     for (const schema of Object.values(value.properties))

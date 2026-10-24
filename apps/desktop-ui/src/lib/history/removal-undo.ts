@@ -1,5 +1,8 @@
 import { shallowRef } from 'vue'
 
+/** How long a removed item can be restored, unless told otherwise */
+const DEFAULT_UNDO_TIMEOUT_MS = 8000
+
 export interface RemovalUndoDependencies<T> {
   remove: (id: string) => Promise<T | null>
   restore: (item: T) => Promise<void>
@@ -43,7 +46,7 @@ export function createRemovalUndo<T>(deps: RemovalUndoDependencies<T>) {
     if (disposed || removed.value === null) return
     timer = setTimeout(() => {
       void enqueue(discard)
-    }, deps.timeoutMs ?? 8000)
+    }, deps.timeoutMs ?? DEFAULT_UNDO_TIMEOUT_MS)
   }
 
   return {

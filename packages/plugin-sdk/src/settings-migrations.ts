@@ -1,5 +1,6 @@
 import type { PluginConfig } from './plugin.js'
 import { clonePluginValue } from './config.js'
+import { MAX_SETTINGS_RENAMES, hasSettingNameFormat } from './package-format.js'
 import { isRecord } from './value-guards.js'
 
 /**
@@ -25,14 +26,14 @@ export function validateSettingsMigrations(
       !isRecord(migration) ||
       migration.fromVersion !== index ||
       !isRecord(migration.rename) ||
-      Object.keys(migration.rename).length > 256
+      Object.keys(migration.rename).length > MAX_SETTINGS_RENAMES
     )
       throw new Error('Invalid plugin settings migration')
     const targets = new Set<string>()
     for (const [source, target] of Object.entries(migration.rename)) {
       const validName = (name: unknown): name is string =>
         typeof name === 'string' &&
-        /^[A-Za-z][A-Za-z0-9_-]{0,127}$/.test(name) &&
+        hasSettingNameFormat(name) &&
         !['__proto__', 'constructor', 'prototype'].includes(name)
       if (
         !validName(source) ||

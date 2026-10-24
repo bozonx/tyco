@@ -4,6 +4,11 @@ import type { CommandConfig, ToolCatalogEntry } from '@tyco/shared'
 
 import { schemaShape, toolCallConfig, toolInputSchema } from './tool-input'
 import type { RegisteredTool } from './tool-types'
+import { backoffDelayMs } from '../timers/backoff'
+
+/** Waits between failed deliveries of the catalog */
+const DEFAULT_RETRY_MS = 1000
+const MAX_RETRY_MS = 30_000
 
 /** The tools as the backend checks external calls against them */
 export function buildToolCatalog(
@@ -94,10 +99,10 @@ export function createToolCatalogSync(deps: ToolCatalogSyncDependencies) {
           if (run !== generation || !active) return
           deps.reportError(error)
           if (desired !== json) continue
-          const delay = Math.min(
-            (deps.retryMs ?? 1000) * 2 ** failures++,
-            30000
-          )
+          const delay = backoffDelayMs(failures++, {
+            firstMs: deps.retryMs ?? DEFAULT_RETRY_MS,
+            maxMs: MAX_RETRY_MS,
+          })
           retryTimer = setTimeout(() => {
             retryTimer = undefined
             void flush()

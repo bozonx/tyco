@@ -153,7 +153,7 @@ const { pluginFactories, pluginRuntimeStates } = usePluginRuntimeStore()
 const secretsStore = useSecretsStore()
 const aiProfilesStore = useAiProfilesStore()
 const { t } = useI18n()
-const { toastText } = useToast()
+const { toastError } = useToast()
 
 onMounted(() => {
   void aiProfilesStore.loadAll()
@@ -183,7 +183,7 @@ async function reloadSettings() {
   try {
     await session.reload()
   } catch (error) {
-    toastText(`${t('toast.settingsSaveFailed')}: ${String(error)}`, 'error')
+    toastError(error, 'toast.settingsSaveFailed')
   } finally {
     isReloading.value = false
   }
@@ -268,8 +268,7 @@ const operations = createSettingsOperations({
   isSaved: session.isSaved,
   hasSecret: (id) => Object.hasOwn(secretsStore.secrets, id),
   removeSecret: (id) => secretsStore.removeSecret(id),
-  notifySecretError: (error) =>
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+  notifySecretError: (error) => toastError(error, 'settings.keySaveFailed'),
 })
 
 /** The command the commands tab opens with */
@@ -310,7 +309,7 @@ const configIsNewer = computed(
 
 onMounted(() => {
   void Promise.resolve(secretsStore.refreshSecrets()).catch((error: unknown) =>
-    toastText(`${t('settings.keySaveFailed')}: ${String(error)}`, 'error')
+    toastError(error, 'settings.keySaveFailed')
   )
 })
 onUnmounted(() => {

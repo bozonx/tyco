@@ -7,6 +7,9 @@ use super::{emit_state, RuntimeWindows, MAIN_WINDOW_LABEL};
 use crate::errors::AppError;
 use crate::state::AppState;
 
+/// How often the wait checks whether the target lost the focus.
+const FOCUS_POLL_INTERVAL: Duration = Duration::from_millis(10);
+
 /// Waits until no Tyco window has keyboard focus. Once the compositor takes
 /// it away, it has handed it to another window, so input can follow. Gives up
 /// silently after `timeout`: the caller still waits for its target window.
@@ -27,7 +30,7 @@ fn wait_until_unfocused_with(
 ) {
     let deadline = now() + timeout;
     while focused() && now() < deadline {
-        pause(Duration::from_millis(10));
+        pause(FOCUS_POLL_INTERVAL);
     }
 }
 

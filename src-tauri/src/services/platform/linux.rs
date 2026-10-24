@@ -2,6 +2,7 @@
 //! `super::session`: X11 has the tools to find, activate and type into any
 //! window, while on Wayland only KDE Plasma lets Tyco do that, via KWin scripts.
 
+mod backoff;
 mod binary_paths;
 pub mod clipboard_restore;
 pub(crate) mod command;

@@ -1,8 +1,9 @@
-import { errorMessage } from '@tyco/shared/value-guards'
 import { clientLogger } from '../lib/logger'
 import { defineStore } from 'pinia'
 import { readonly, ref, watch } from 'vue'
 
+import { describeError } from '../lib/errors/describe-error'
+import { translate } from '../lib/i18n'
 import { createAiProfilesModel } from '../lib/ai-profiles/ai-profiles-model'
 import { createAiProjectsModel } from '../lib/ai-profiles/ai-projects-model'
 import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-storage'
@@ -76,7 +77,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       if (request !== loadRequest) return
       profilesModel.profiles.value = []
       projectsModel.projects.value = []
-      vaultError.value = errorMessage(error)
+      vaultError.value = describeError(error, translate)
     } finally {
       active = false
       if (request === loadRequest) isLoaded.value = true

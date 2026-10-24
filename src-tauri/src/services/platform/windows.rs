@@ -14,6 +14,9 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
 
 use crate::errors::AppError;
 
+/// How long PowerShell may take to read the selection of a window.
+const SELECTION_SCRIPT_TIMEOUT: Duration = Duration::from_secs(3);
+
 pub(crate) fn focused_foreground_target() -> Option<String> {
     let window_handle = unsafe { GetForegroundWindow() };
     if window_handle.is_null() {
@@ -78,7 +81,7 @@ foreach ($element in $elements) {
         &["-NoProfile", "-NonInteractive", "-Command", SCRIPT],
     );
     command.env("TYCO_SELECTION_WINDOW", window_handle.to_string());
-    let (status, output) = super::process::run(command, None, Duration::from_secs(3)).ok()?;
+    let (status, output) = super::process::run(command, None, SELECTION_SCRIPT_TIMEOUT).ok()?;
     status
         .success()
         .then(|| super::native_selection::decode_selected_text(&output))

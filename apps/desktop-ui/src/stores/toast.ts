@@ -1,3 +1,4 @@
+import { describeError } from '../lib/errors/describe-error'
 import { translate } from '../lib/i18n/index'
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
@@ -37,5 +38,17 @@ export const useToastStore = defineStore('toast', () => {
     useToastStore().addToast(text, type, options)
   }
 
-  return { ...model, toastKey, toastText }
+  /**
+   * A failure, described for the user; `contextKey` names what was being done,
+   * e.g. saving a key, and leads the message
+   */
+  const toastError = (error: unknown, contextKey?: string): void => {
+    const description = describeError(error, translate)
+    useToastStore().addToast(
+      contextKey ? `${translate(contextKey)}\n${description}` : description,
+      'error'
+    )
+  }
+
+  return { ...model, toastKey, toastText, toastError }
 })

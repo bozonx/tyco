@@ -39,6 +39,7 @@ struct CliInvocation {
 }
 
 const DEFAULT_JOB_WAIT_TIMEOUT_SECS: u64 = 300;
+const MAX_JOB_WAIT_TIMEOUT_SECS: u64 = 3600;
 
 fn canonical_activation_mode(value: &str) -> String {
     tyco_activation_protocol::canonical_mode(value).into()
@@ -221,9 +222,11 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
     }
     if command
         .timeout_secs
-        .is_some_and(|timeout| timeout == 0 || timeout > 3600)
+        .is_some_and(|timeout| timeout == 0 || timeout > MAX_JOB_WAIT_TIMEOUT_SECS)
     {
-        return Err("Timeout must be between 1 and 3600 seconds".into());
+        return Err(format!(
+            "Timeout must be between 1 and {MAX_JOB_WAIT_TIMEOUT_SECS} seconds"
+        ));
     }
     Ok(command)
 }

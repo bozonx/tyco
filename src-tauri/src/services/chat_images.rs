@@ -19,6 +19,8 @@ pub const MAX_IMAGE_BYTES: usize = 5 * 1024 * 1024;
 /// Images saved before WebP were PNGs of up to 20 MB.
 const MAX_STORED_BYTES: usize = 20 * 1024 * 1024;
 const MAX_SESSION_BYTES: usize = 128 * 1024 * 1024;
+/// Memory the PNG decoder may use for one image.
+const MAX_DECODER_BYTES: usize = 128 * 1024 * 1024;
 /// The webview scales images down to this; providers reject larger ones.
 const MAX_DIMENSION: u32 = 8_000;
 const MAX_PIXELS: u64 = 24_000_000;
@@ -66,7 +68,7 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
     }
     let mut decoder = png::Decoder::new(Cursor::new(bytes));
     decoder.set_limits(png::Limits {
-        bytes: 128 * 1024 * 1024,
+        bytes: MAX_DECODER_BYTES,
     });
     let mut reader = decoder
         .read_info()

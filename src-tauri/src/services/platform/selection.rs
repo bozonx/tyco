@@ -66,7 +66,7 @@ fn active_target() -> Option<SelectionTarget> {
     let output = super::linux::command::output_with_timeout(
         "xdotool",
         &["getactivewindow"],
-        Duration::from_secs(2),
+        ACTIVE_WINDOW_QUERY_TIMEOUT,
     )?;
     let id = String::from_utf8(output).ok()?.trim().to_owned();
     (!id.is_empty()).then_some(SelectionTarget {
@@ -204,6 +204,8 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
 /// How long the copy keys have to change the clipboard.
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 const COPY_TIMEOUT: Duration = Duration::from_millis(700);
+/// How long `xdotool` may take to name the active window.
+const ACTIVE_WINDOW_QUERY_TIMEOUT: Duration = Duration::from_secs(2);
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 const COPY_POLL_INTERVAL: Duration = Duration::from_millis(25);
 

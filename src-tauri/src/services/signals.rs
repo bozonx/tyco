@@ -4,6 +4,9 @@
 use crate::errors::AppError;
 use tauri::{AppHandle, Manager};
 
+/// The exit status of a process stopped by Ctrl+C (128 + SIGINT).
+const EXIT_CODE_INTERRUPTED: i32 = 130;
+
 pub fn spawn_signal_watcher(app: AppHandle) -> Result<(), AppError> {
     let services = app.state::<super::background::BackgroundServices>();
     let handle = app.clone();
@@ -61,7 +64,7 @@ pub fn spawn_signal_watcher(app: AppHandle) -> Result<(), AppError> {
         }
 
         log::warn!("Received a second termination signal; exiting at once");
-        std::process::exit(130);
+        std::process::exit(EXIT_CODE_INTERRUPTED);
     })
 }
 

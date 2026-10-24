@@ -1,5 +1,12 @@
 import type { LlmConfig, LlmTask } from '@tyco/shared'
-import { modelContextWindowTokens } from './llm-catalog'
+import {
+  DEFAULT_CONTEXT_WINDOW_TOKENS,
+  modelContextWindowTokens,
+  modelMaxOutputTokens,
+} from './llm-catalog'
+
+/** The output reserved when a task has no model at all */
+const NO_MODEL_MAX_OUTPUT_TOKENS = 1024
 
 /**
  * Budget against the smallest fallback, so a long input can use the whole
@@ -10,7 +17,10 @@ export function taskModelLimits(config: LlmConfig, task: LlmTask) {
     .map((id) => config.models.find((model) => model.id === id))
     .filter((model) => model !== undefined)
   if (!models.length)
-    return { contextWindowTokens: 4096, maxOutputTokens: 1024 }
+    return {
+      contextWindowTokens: DEFAULT_CONTEXT_WINDOW_TOKENS,
+      maxOutputTokens: NO_MODEL_MAX_OUTPUT_TOKENS,
+    }
   return {
     contextWindowTokens: Math.min(
       ...models.map((model) =>
@@ -18,14 +28,7 @@ export function taskModelLimits(config: LlmConfig, task: LlmTask) {
       )
     ),
     maxOutputTokens: Math.min(
-      ...models.map(
-        (model) =>
-          model.maxOutputTokens ??
-          Math.min(
-            4096,
-            Math.floor(modelContextWindowTokens(model, config.providers) / 4)
-          )
-      )
+      ...models.map((model) => modelMaxOutputTokens(model, config.providers))
     ),
   }
 }

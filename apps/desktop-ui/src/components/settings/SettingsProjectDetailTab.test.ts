@@ -10,9 +10,9 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const toastText = vi.hoisted(() => vi.fn())
+const toastError = vi.hoisted(() => vi.fn())
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toastText }),
+  default: () => ({ toastError }),
 }))
 
 const projects = vi.hoisted(() => ({ store: null as unknown }))
@@ -58,7 +58,7 @@ describe('SettingsProjectDetailTab.vue', () => {
     projects.store = store
     context = createTestSettingsContext()
   })
-  afterEach(() => toastText.mockReset())
+  afterEach(() => toastError.mockReset())
 
   const mountTab = (projectId = 'notes') =>
     mount(SettingsProjectDetailTab, {
@@ -128,7 +128,7 @@ describe('SettingsProjectDetailTab.vue', () => {
     const wrapper = mountTab()
     await button(wrapper, 'settings.selectFolder').trigger('click')
     await flushPromises()
-    expect(toastText).toHaveBeenCalledWith('Error: Denied', 'error')
+    expect(toastError).toHaveBeenCalledWith(new Error('Denied'))
   })
 
   it('deletes the project and returns to the overview', async () => {
@@ -150,7 +150,7 @@ describe('SettingsProjectDetailTab.vue', () => {
       .vm.$emit('action')
     await wrapper.get('.confirm-yes').trigger('click')
     await flushPromises()
-    expect(toastText).toHaveBeenCalledWith('Error: Busy', 'error')
+    expect(toastError).toHaveBeenCalledWith(new Error('Busy'))
   })
 
   it('tells when the project does not exist', () => {

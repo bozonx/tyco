@@ -20,6 +20,10 @@ import { clientLogger } from '../logger'
 import { createPluginRpc, type PluginTransport } from './plugin-rpc'
 
 const SANDBOX_STARTUP_TIMEOUT_MS = 5000
+/** A plugin callback, e.g. a tool run, that takes longer is abandoned */
+const CALLBACK_TIMEOUT_MS = 120_000
+/** How long a plugin may clean up before its sandbox is closed */
+const DISPOSE_TIMEOUT_MS = 1500
 
 const pluginResourceUrl = (id: string, path: string) =>
   createPluginResourceUrl(id, path, convertFileSrc)
@@ -131,7 +135,7 @@ export async function activatePluginSandbox(
               messages: snapshot(manifest),
             },
             signal?.signal ?? ctx.signal,
-            120000,
+            CALLBACK_TIMEOUT_MS,
             { fatalTimeout: false }
           )
         )
@@ -198,7 +202,9 @@ export async function activatePluginSandbox(
     stopMessages()
     ctx.signal.removeEventListener('abort', stop)
     try {
-      await rpc.request('dispose', {}, undefined, 1500, { fatalTimeout: false })
+      await rpc.request('dispose', {}, undefined, DISPOSE_TIMEOUT_MS, {
+        fatalTimeout: false,
+      })
     } finally {
       rpc.close()
       hostCallbacks.clear()

@@ -8,6 +8,10 @@ export interface AsyncQueue<T> {
   readonly values: AsyncIterable<T>
 }
 
+/** What a queue holds unread before it fails, unless told otherwise */
+export const DEFAULT_MAX_QUEUED_COUNT = 1024
+export const DEFAULT_MAX_QUEUED_BYTES = 1024 * 1024
+
 export function createAsyncQueue<T>(
   options: {
     maxCount?: number
@@ -33,8 +37,8 @@ export function createAsyncQueue<T>(
       if (done) return false
       const size = sizeOf(value)
       if (
-        queue.length >= (options.maxCount ?? 1024) ||
-        queuedBytes + size > (options.maxBytes ?? 1024 * 1024)
+        queue.length >= (options.maxCount ?? DEFAULT_MAX_QUEUED_COUNT) ||
+        queuedBytes + size > (options.maxBytes ?? DEFAULT_MAX_QUEUED_BYTES)
       ) {
         failure = new Error('Receive queue limit exceeded')
         done = true

@@ -440,6 +440,22 @@
     "toolsUnsupported": "The model cannot use tools. Turn off “Tool calling” in its settings or pick another model.",
     "stepLimit": "The model used up its tool steps without finishing the answer. Ask it to continue or raise the step limit of the profile."
   },
+  "desktopErrors": {
+    "operationFailed": "The operation failed",
+    "configConflict": "The settings were changed elsewhere, try again",
+    "serviceUnavailable": "A required service is unavailable right now",
+    "busy": "Busy with another operation, try again later",
+    "permissionDenied": "Permission denied",
+    "resourceLimit": "A limit was reached",
+    "invalidInput": "The request is not valid",
+    "notFound": "Not found",
+    "fileTooLarge": "The file is too large",
+    "unsupportedConfig": "The settings were saved by a newer version of the app",
+    "stale": "The state has changed meanwhile, try again",
+    "runtimeError": "The app ran into an internal error",
+    "ioError": "Could not read or write a file",
+    "invalidData": "The data is damaged or not valid"
+  },
   "menu": {
     "actions": "Actions",
     "aiCustomPrompt": "Own request",
@@ -938,7 +954,8 @@
     "featuresCategory": "Features",
     "aiCategory": "AI",
     "allPluginsTab": "All plugins",
-    "pluginStatusOff": "Off"
+    "pluginStatusOff": "Off",
+    "developmentFeatures": "Features in development"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

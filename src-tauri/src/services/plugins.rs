@@ -1,5 +1,6 @@
 //! Self-contained JavaScript packages. Installation never evaluates code.
 mod inspection;
+mod package_format;
 pub mod protocol;
 mod validation;
 pub use inspection::PluginInspection;
@@ -21,6 +22,8 @@ const MAX_PACKAGE_BYTES: u64 = 32 * 1024 * 1024;
 const MAX_STORED_BYTES: u64 = MAX_PACKAGE_BYTES * 2 + 65_536;
 const API_VERSION: u32 = 2;
 const FORMAT_VERSION: u32 = 1;
+/// Package keys are hex digests; a longer one is not ours.
+const MAX_PACKAGE_KEY_LENGTH: usize = 256;
 const BUNDLED_IDS: &[&str] = &[
     "FastNote",
     "Diacritics",
@@ -82,12 +85,12 @@ pub struct PluginStore {
 }
 fn is_valid_plugin_id(id: &str) -> bool {
     !id.is_empty()
-        && id.len() <= 128
+        && id.len() <= package_format::MAX_PLUGIN_ID_LENGTH
         && id.as_bytes()[0].is_ascii_alphanumeric()
         && id
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || b" _-".contains(&byte))
-        && id != "core"
+        && id != package_format::RESERVED_PLUGIN_ID
 }
 fn read_bounded(path: &Path) -> Result<String, AppError> {
     read_with_limit(path, MAX_PACKAGE_BYTES)
@@ -309,7 +312,10 @@ impl PluginStore {
             .trim_start_matches('/')
             .split_once('/')
             .ok_or_else(|| AppError::InvalidInput("Invalid plugin module path".into()))?;
-        if key.is_empty() || key.len() > 256 || !key.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        if key.is_empty()
+            || key.len() > MAX_PACKAGE_KEY_LENGTH
+            || !key.bytes().all(|byte| byte.is_ascii_hexdigit())
+        {
             return Err(AppError::InvalidInput("Invalid plugin module key".into()));
         }
         let installed: InstalledPackage =

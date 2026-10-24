@@ -10,10 +10,10 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const mockToastText = vi.fn()
+const mockToastError = vi.fn()
 
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toastKey: vi.fn(), toastText: mockToastText }),
+  default: () => ({ toastKey: vi.fn(), toastError: mockToastError }),
 }))
 
 const mockSetSecret = vi.fn().mockResolvedValue(undefined)
@@ -203,9 +203,9 @@ describe('SettingsTranslationsTab.vue', () => {
     await flushPromises()
 
     expect(userConfig.translation.providers.deepl.endpoint).toBe('free')
-    expect(mockToastText).toHaveBeenCalledWith(
-      expect.stringContaining('keychain unavailable'),
-      'error'
+    expect(mockToastError).toHaveBeenCalledWith(
+      new Error('keychain unavailable'),
+      'settings.keySaveFailed'
     )
   })
 

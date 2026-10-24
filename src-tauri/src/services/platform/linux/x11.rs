@@ -9,6 +9,8 @@ use std::fmt::Display;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
+use super::backoff::DISPLAY_RECONNECT;
+
 use x11rb::connection::Connection;
 use x11rb::properties::WmClass;
 use x11rb::protocol::xproto::{
@@ -42,10 +44,9 @@ pub(crate) fn is_terminal_window(id: &str) -> bool {
         })
 }
 
-/// The first retry after a lost connection; each next one waits twice as long.
-const RETRY_DELAY: Duration = Duration::from_secs(2);
-const MAX_RETRY_DELAY: Duration = Duration::from_secs(60);
 const LOGGED_FAILURES: u32 = 3;
+/// How often an idle event loop checks for new events and for a stop.
+const EVENT_POLL_INTERVAL: Duration = Duration::from_millis(20);
 
 /// Window types that text can be inserted into. A window without a type is a
 /// normal one, as EWMH says for managed windows.
@@ -88,16 +89,10 @@ fn supervise(
         } else {
             log::debug!("X11 window tracker is still unavailable: {error}");
         }
-        if stop.wait(retry_delay(failures)) {
+        if stop.wait(DISPLAY_RECONNECT.delay(failures)) {
             return;
         }
     }
-}
-
-fn retry_delay(failures: u32) -> Duration {
-    RETRY_DELAY
-        .saturating_mul(2u32.saturating_pow(failures.saturating_sub(1)))
-        .min(MAX_RETRY_DELAY)
 }
 
 /// Reports windows until the connection fails; returns why it did.
@@ -138,7 +133,7 @@ fn run(
         let event = match connection.poll_for_event() {
             Ok(Some(event)) => event,
             Ok(None) => {
-                stop.wait(Duration::from_millis(20));
+                stop.wait(EVENT_POLL_INTERVAL);
                 continue;
             }
             Err(error) => return x11_error(error),
@@ -346,12 +341,5 @@ mod tests {
         let before = BTreeSet::from([1, 2, 3]);
         let after = BTreeSet::from([1, 3, 4]);
         assert_eq!(closed_windows(&before, &after).collect::<Vec<_>>(), [2]);
-    }
-
-    #[test]
-    fn retries_with_a_growing_but_bounded_delay() {
-        assert_eq!(retry_delay(1), RETRY_DELAY);
-        assert_eq!(retry_delay(2), RETRY_DELAY * 2);
-        assert_eq!(retry_delay(40), MAX_RETRY_DELAY);
     }
 }

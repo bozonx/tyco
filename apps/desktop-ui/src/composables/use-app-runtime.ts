@@ -33,7 +33,7 @@ import { useSelectionReplaceStore } from '../stores/selection-replace'
 import { useSettingsSessionStore } from '../stores/settings-session'
 import { useThemeStore } from '../stores/theme'
 import { useToolCatalogStore } from '../stores/tool-catalog'
-import { DESKTOP_EVENTS } from '@tyco/shared'
+import { DESKTOP_EVENTS, DESKTOP_WINDOW_LABELS } from '@tyco/shared'
 
 /** Wires application services to the lifetime of the root component. */
 export function useAppRuntime() {
@@ -103,7 +103,9 @@ export function useAppRuntime() {
     eventTarget: document,
   })
   if (typeof document !== 'undefined') {
-    document.documentElement.dataset.window = isQuickWindow ? 'quick' : 'main'
+    document.documentElement.dataset.window = isQuickWindow
+      ? DESKTOP_WINDOW_LABELS.QUICK
+      : DESKTOP_WINDOW_LABELS.MAIN
   }
   const mainWindowReset = createMainWindowReset({
     closeAllModals: () => menuModalsStore.cancelAndCloseAll(),

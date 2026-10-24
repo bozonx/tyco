@@ -440,6 +440,22 @@
     "toolsUnsupported": "Model ne može koristiti alate. Isključite „Pozivanje alata” u njegovim postavkama ili odaberite drugi model.",
     "stepLimit": "Model je potrošio korake alata, a nije dovršio odgovor. Zamolite ga da nastavi ili povećajte ograničenje koraka profila."
   },
+  "desktopErrors": {
+    "operationFailed": "Operacija nije uspjela",
+    "configConflict": "Postavke su promijenjene na drugom mjestu, pokušajte ponovno",
+    "serviceUnavailable": "Potrebna usluga trenutačno nije dostupna",
+    "busy": "U tijeku je druga operacija, pokušajte kasnije",
+    "permissionDenied": "Pristup odbijen",
+    "resourceLimit": "Dosegnuto je ograničenje",
+    "invalidInput": "Zahtjev nije valjan",
+    "notFound": "Nije pronađeno",
+    "fileTooLarge": "Datoteka je prevelika",
+    "unsupportedConfig": "Postavke je spremila novija verzija aplikacije",
+    "stale": "Stanje se u međuvremenu promijenilo, pokušajte ponovno",
+    "runtimeError": "U aplikaciji je došlo do interne pogreške",
+    "ioError": "Nije moguće pročitati ili zapisati datoteku",
+    "invalidData": "Podaci su oštećeni ili nisu valjani"
+  },
   "menu": {
     "actions": "Radnje",
     "aiCustomPrompt": "Vlastiti zahtjev",
@@ -938,7 +954,8 @@
     "featuresCategory": "Značajke",
     "aiCategory": "AI",
     "allPluginsTab": "Svi dodaci",
-    "pluginStatusOff": "Isključen"
+    "pluginStatusOff": "Isključen",
+    "developmentFeatures": "Značajke u razvoju"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

@@ -1,5 +1,9 @@
 import { errorMessage } from '@tyco/shared/value-guards'
-import { clonePluginValue } from '@tyco/plugin-sdk'
+import {
+  RESERVED_PLUGIN_ID,
+  clonePluginValue,
+  hasPluginIdFormat,
+} from '@tyco/plugin-sdk'
 import {
   pluginManifest,
   type PluginCapability,
@@ -8,6 +12,10 @@ import {
 
 import type { PluginFactory } from '../../types/plugins'
 import { getPluginState, pluginId, resolvePluginConfig } from './plugin-config'
+
+/** Time limits of a plugin's code, unless told otherwise */
+const DEFAULT_CLEANUP_TIMEOUT_MS = 2000
+const DEFAULT_ACTIVATION_TIMEOUT_MS = 10_000
 
 export interface PluginLifecycle {
   signal: AbortSignal
@@ -76,7 +84,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     try {
       await bounded(
         Promise.resolve().then(cleanup),
-        deps.cleanupTimeoutMs ?? 2000,
+        deps.cleanupTimeoutMs ?? DEFAULT_CLEANUP_TIMEOUT_MS,
         'Plugin cleanup timed out'
       )
     } catch (error) {
@@ -119,7 +127,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
           try {
             const plugin = factory()
             const id = pluginId(plugin)
-            if (!/^[A-Za-z0-9][A-Za-z0-9 _-]{0,127}$/.test(id) || id === 'core')
+            if (!hasPluginIdFormat(id) || id === RESERVED_PLUGIN_ID)
               throw new Error(`Invalid plugin ID: ${id}`)
             if (definitions.has(id) || duplicates.has(id)) {
               definitions.delete(id)
@@ -223,7 +231,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
                       )
                   }),
                 ]),
-                deps.activationTimeoutMs ?? 10000,
+                deps.activationTimeoutMs ?? DEFAULT_ACTIVATION_TIMEOUT_MS,
                 'Plugin activation timed out'
               )
               instance.initializing = false

@@ -7,6 +7,10 @@ use serde_json::{json, Value};
 
 use crate::errors::AppError;
 
+/// The largest integer a JavaScript number holds exactly
+/// (`Number.MAX_SAFE_INTEGER`).
+pub(crate) const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
+
 static SCHEMA: LazyLock<Value> = LazyLock::new(|| {
     serde_json::from_str(include_str!(
         "../../../../packages/shared/src/user-config-schema.json"
@@ -156,7 +160,7 @@ fn repair(value: &Value, schema: &Value, defaults: &Value) -> Value {
             number.is_finite()
                 && number.fract() == 0.0
                 && *number >= 0.0
-                && *number <= 9_007_199_254_740_991.0
+                && *number <= MAX_SAFE_INTEGER
         }) {
             let canonical = json!(number as u64);
             if validate(&canonical, schema, "").is_ok() {

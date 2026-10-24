@@ -70,14 +70,14 @@
       <FieldCheckbox
         v-if="userConfig.isInDevelopment"
         :model-value="true"
-        label="In development features"
+        :label="t('settings.developmentFeatures')"
         @update:model-value="delete userConfig.isInDevelopment"
       />
       <button
         v-else
         type="button"
         class="development-features-trigger"
-        aria-label="In development features"
+        :aria-label="t('settings.developmentFeatures')"
         @click="userConfig.isInDevelopment = true"
       />
     </div>

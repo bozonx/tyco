@@ -94,7 +94,7 @@ describe('SettingsGeneralTab.vue', () => {
     expect(Object.hasOwn(config, 'isInDevelopment')).toBe(false)
     await wrapper.get('.development-features-trigger').trigger('click')
     expect(config.isInDevelopment).toBe(true)
-    expect(wrapper.text()).toContain('In development features')
+    expect(wrapper.text()).toContain('settings.developmentFeatures')
     await wrapper.get('input[type="checkbox"]').setValue(false)
     expect(Object.hasOwn(config, 'isInDevelopment')).toBe(false)
     expect(wrapper.find('.development-features-trigger').exists()).toBe(true)

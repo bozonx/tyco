@@ -13,9 +13,9 @@ vi.mock('../../composables/use-i18n', () => ({
   }),
 }))
 
-const toastText = vi.hoisted(() => vi.fn())
+const toastError = vi.hoisted(() => vi.fn())
 vi.mock('../../composables/use-toast', () => ({
-  default: () => ({ toastText }),
+  default: () => ({ toastError }),
 }))
 
 const profiles = vi.hoisted(() => ({ store: null as unknown }))
@@ -70,7 +70,7 @@ describe('SettingsProfileDetailTab.vue', () => {
     profiles.store = store
     context = createTestSettingsContext()
   })
-  afterEach(() => toastText.mockReset())
+  afterEach(() => toastError.mockReset())
 
   const mountTab = (profileId = 'writer') =>
     mount(SettingsProfileDetailTab, {
@@ -111,7 +111,7 @@ describe('SettingsProfileDetailTab.vue', () => {
     await wrapper.get('input').setValue('Editor')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
-    expect(toastText).toHaveBeenCalledWith('Error: Disk full', 'error')
+    expect(toastError).toHaveBeenCalledWith(new Error('Disk full'))
     expect(context.navigate).not.toHaveBeenCalled()
   })
 
@@ -178,7 +178,7 @@ describe('SettingsProfileDetailTab.vue', () => {
     await button(wrapper, 'settings.openProfileFolder').trigger('click')
     await flushPromises()
     expect(store.openVaultDir).toHaveBeenCalledWith('writer')
-    expect(toastText).toHaveBeenCalledWith('Error: No folder', 'error')
+    expect(toastError).toHaveBeenCalledWith(new Error('No folder'))
   })
 
   it('rereads the profile when the window comes back', async () => {

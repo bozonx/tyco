@@ -1,5 +1,6 @@
 //! The `tyco-plugin://` scheme: the runtime of plugin frames and the modules
 //! of installed plugins, each plugin on an origin of its own.
+use tauri::http::StatusCode;
 use tauri::Manager;
 
 /// Requests reach it as `tyco-plugin://<plugin key>.localhost/...`.
@@ -15,7 +16,7 @@ pub fn respond(
     let host = request.uri().host().unwrap_or_default();
     let plugin_key = host.strip_suffix(".localhost").unwrap_or_default();
     let valid_key = !plugin_key.is_empty()
-        && plugin_key.len() <= 256
+        && plugin_key.len() <= super::MAX_PACKAGE_KEY_LENGTH
         && plugin_key.len().is_multiple_of(2)
         && plugin_key.bytes().all(|byte| byte.is_ascii_hexdigit());
     let static_asset = if !valid_key {
@@ -42,23 +43,31 @@ pub fn respond(
         }
     };
     let (status, content_type, body) = if !valid_key {
-        (404, "text/plain", b"Plugin origin is unavailable".to_vec())
+        (
+            StatusCode::NOT_FOUND,
+            "text/plain",
+            b"Plugin origin is unavailable".to_vec(),
+        )
     } else if let Some((content_type, asset)) = static_asset {
-        (200, content_type, asset.as_bytes().to_vec())
+        (StatusCode::OK, content_type, asset.as_bytes().to_vec())
     } else if path.trim_start_matches('/').split('/').next() != Some(plugin_key) {
         (
-            404,
+            StatusCode::NOT_FOUND,
             "text/plain",
             b"Plugin origin does not match package".to_vec(),
         )
     } else {
         match app.state::<super::PluginStore>().module(path) {
             Ok(module) => (
-                200,
+                StatusCode::OK,
                 "application/javascript; charset=utf-8",
                 module.into_bytes(),
             ),
-            Err(_) => (404, "text/plain", b"Plugin module is unavailable".to_vec()),
+            Err(_) => (
+                StatusCode::NOT_FOUND,
+                "text/plain",
+                b"Plugin module is unavailable".to_vec(),
+            ),
         }
     };
     // Workers receive their own policy and cannot reach the app's IPC origin.

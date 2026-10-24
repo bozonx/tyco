@@ -24,6 +24,11 @@ const CF_DSP_LAST: u32 = 0x008E;
 const CF_GDIOBJ_FIRST: u32 = 0x0300;
 const CF_GDIOBJ_LAST: u32 = 0x03FF;
 const UNICODE_TEXT: u32 = CF_UNICODETEXT;
+/// How long to wait for another application to release the clipboard.
+const OPEN_TIMEOUT: Duration = Duration::from_millis(250);
+const OPEN_RETRY_INTERVAL: Duration = Duration::from_millis(10);
+/// The pasting application reads the clipboard within this time.
+const RESTORE_DELAY: Duration = Duration::from_millis(500);
 const MAX_SNAPSHOT_BYTES: usize = 16 * 1024 * 1024;
 
 fn is_non_global_memory_format(format: u32) -> bool {
@@ -61,7 +66,7 @@ impl WindowsClipboardLock {
         if window.is_null() {
             return Err(std::io::Error::last_os_error().into());
         }
-        let deadline = Instant::now() + Duration::from_millis(250);
+        let deadline = Instant::now() + OPEN_TIMEOUT;
         loop {
             if unsafe { OpenClipboard(window) } != 0 {
                 return Ok(Self(window));
@@ -72,7 +77,7 @@ impl WindowsClipboardLock {
                 }
                 return Err(AppError::Busy("Clipboard is busy".into()));
             }
-            std::thread::sleep(Duration::from_millis(10));
+            std::thread::sleep(OPEN_RETRY_INTERVAL);
         }
     }
 }
@@ -219,7 +224,7 @@ pub fn read_text() -> Option<String> {
 pub fn restore_later(snapshot: ClipboardSnapshot) {
     let sequence = unsafe { GetClipboardSequenceNumber() };
     std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(500));
+        std::thread::sleep(RESTORE_DELAY);
         if unsafe { GetClipboardSequenceNumber() } == sequence {
             let _ = restore(&snapshot);
         }

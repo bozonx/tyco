@@ -6,6 +6,8 @@ use crate::errors::AppError;
 
 /// How many numbered variants of a file name are tried before giving up.
 const MAX_NAME_ATTEMPTS: u32 = 1000;
+/// The largest note a plugin may write at once.
+const MAX_NOTE_BYTES: usize = 8 * 1024 * 1024;
 
 /// Writes `text` into a new file inside `dir` and returns the path of that file.
 ///
@@ -92,7 +94,7 @@ pub fn write_scoped_note(
     append: bool,
 ) -> Result<PathBuf, AppError> {
     validate_file_name(file_name)?;
-    if text.len() > 8 * 1024 * 1024 {
+    if text.len() > MAX_NOTE_BYTES {
         return Err(AppError::ResourceLimit(
             "Plugin note exceeds the size limit".into(),
         ));

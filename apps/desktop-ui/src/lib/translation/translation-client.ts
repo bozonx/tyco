@@ -38,8 +38,23 @@ import {
 } from './translation-languages'
 
 const MT_CHUNK_LIMIT_CHARACTERS = 4_500
+/** The machine translation models asked for */
+const DEEPL_MODEL = 'quality_optimized'
+const GOOGLE_TRANSLATE_MODEL = 'nmt'
+/** DeepL serves the keys of its free plan from a separate host */
+const DEEPL_FREE_ENDPOINT = 'https://api-free.deepl.com/v2/translate'
 const LLM_CHUNK_LIMIT_CHARACTERS = 36_000
 const LLM_REPAIR_COMBINED_LIMIT = 48_000
+/**
+ * A chunk gets a character per this many tokens of context, less the
+ * instructions and a margin, and a character per this many output tokens: room
+ * for the instructions, an expanded translation and its review
+ */
+const CONTEXT_TOKENS_PER_CHUNK_CHARACTER = 3
+const OUTPUT_TOKENS_PER_CHUNK_CHARACTER = 2
+const CHUNK_MARGIN_CHARACTERS = 512
+/** A smaller chunk means the instructions leave no room for the text */
+const MIN_LLM_CHUNK_CHARACTERS = 128
 
 export interface TranslationClientDependencies {
   getConfig: () => TranslationConfig
@@ -184,10 +199,10 @@ async function translateWithMachine(
   options: TranslationRunOptions
 ): Promise<FirstPass> {
   const provider = config.provider === 'deepl' ? 'deepl' : 'google-translate'
-  const model = provider === 'deepl' ? 'quality_optimized' : 'nmt'
+  const model = provider === 'deepl' ? DEEPL_MODEL : GOOGLE_TRANSLATE_MODEL
   const baseUrl =
     provider === 'deepl' && config.providers.deepl.endpoint === 'free'
-      ? 'https://api-free.deepl.com/v2/translate'
+      ? DEEPL_FREE_ENDPOINT
       : undefined
   const catalog = Catalog.fromObject({
     requirePricing: false,
@@ -445,13 +460,16 @@ function llmChunkLimit(
   if (!deps.getLlmLimits) return LLM_CHUNK_LIMIT_CHARACTERS
   const { contextWindowTokens: context, maxOutputTokens } = deps.getLlmLimits()
   const instructions = translationSystem(options, glossary).length
-  const characters = Math.floor(context / 3) - instructions - 512
+  const characters =
+    Math.floor(context / CONTEXT_TOKENS_PER_CHUNK_CHARACTER) -
+    instructions -
+    CHUNK_MARGIN_CHARACTERS
   const limit = Math.min(
     LLM_CHUNK_LIMIT_CHARACTERS,
     characters,
-    Math.floor(maxOutputTokens / 2)
+    Math.floor(maxOutputTokens / OUTPUT_TOKENS_PER_CHUNK_CHARACTER)
   )
-  if (limit < 128)
+  if (limit < MIN_LLM_CHUNK_CHARACTERS)
     throw new AiError(
       'context_length',
       'The translation instructions exceed the language model context'

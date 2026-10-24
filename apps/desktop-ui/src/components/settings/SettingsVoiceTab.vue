@@ -99,7 +99,7 @@ import { STT_PROVIDERS, type SttProvider } from '@tyco/shared'
 const { draft: userConfig } = useSettingsContext()
 const { t } = useI18n()
 const secretsStore = useSecretsStore()
-const { toastText } = useToast()
+const { toastError } = useToast()
 const sttKeyDraft = ref('')
 const currentSttModel = computed(() => activeSttModel(userConfig.value.stt))
 
@@ -141,8 +141,7 @@ const keyEditor = createSecretKeyEditor({
   },
   setSecret: secretsStore.setSecret,
   removeSecret: secretsStore.removeSecret,
-  reportError: (error) =>
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+  reportError: (error) => toastError(error, 'settings.keySaveFailed'),
 })
 const saveSttKey = () => keyEditor.save()
 const removeSttKey = keyEditor.remove

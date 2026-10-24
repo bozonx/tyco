@@ -34,8 +34,8 @@ pub async fn fetch<S: EventSink>(
     let id = task.id();
     let chunk_permits = task.response_chunk_permits();
     let response_limit_bytes = match request.purpose {
-        Some(http::FetchPurpose::ChatImage) => 10 * 1024 * 1024,
-        Some(http::FetchPurpose::Webhook) => 1024 * 1024,
+        Some(http::FetchPurpose::ChatImage) => http::MAX_CHAT_IMAGE_RESPONSE_BYTES,
+        Some(http::FetchPurpose::Webhook) => http::MAX_WEBHOOK_RESPONSE_BYTES,
         None => http::MAX_RESPONSE_BODY_BYTES,
     };
 

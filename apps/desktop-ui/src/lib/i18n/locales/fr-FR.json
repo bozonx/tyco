@@ -440,6 +440,22 @@
     "toolsUnsupported": "Le modèle ne peut pas utiliser d’outils. Désactivez « Appel d’outils » dans ses paramètres ou choisissez un autre modèle.",
     "stepLimit": "Le modèle a épuisé ses étapes d’outils sans terminer la réponse. Demandez-lui de continuer ou augmentez la limite d’étapes du profil."
   },
+  "desktopErrors": {
+    "operationFailed": "L’opération a échoué",
+    "configConflict": "Les paramètres ont été modifiés ailleurs, réessayez",
+    "serviceUnavailable": "Un service requis est indisponible pour le moment",
+    "busy": "Une autre opération est en cours, réessayez plus tard",
+    "permissionDenied": "Accès refusé",
+    "resourceLimit": "Une limite a été atteinte",
+    "invalidInput": "La requête n’est pas valide",
+    "notFound": "Introuvable",
+    "fileTooLarge": "Le fichier est trop volumineux",
+    "unsupportedConfig": "Les paramètres ont été enregistrés par une version plus récente de l’application",
+    "stale": "L’état a changé entre-temps, réessayez",
+    "runtimeError": "L’application a rencontré une erreur interne",
+    "ioError": "Impossible de lire ou d’écrire un fichier",
+    "invalidData": "Les données sont endommagées ou non valides"
+  },
   "menu": {
     "actions": "Actions",
     "aiCustomPrompt": "Demande personnalisée",
@@ -938,7 +954,8 @@
     "featuresCategory": "Fonctionnalités",
     "aiCategory": "IA",
     "allPluginsTab": "Tous les plugins",
-    "pluginStatusOff": "Désactivé"
+    "pluginStatusOff": "Désactivé",
+    "developmentFeatures": "Fonctionnalités en développement"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

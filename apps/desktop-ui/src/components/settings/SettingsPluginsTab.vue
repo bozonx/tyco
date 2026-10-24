@@ -109,6 +109,7 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
+import { describeError } from '../../lib/errors/describe-error'
 import { builtinPluginIds } from '../../lib/plugins/builtin-plugins'
 import { createPluginInstallation } from '../../lib/plugins/plugin-installation'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
@@ -134,7 +135,7 @@ const installation = createPluginInstallation({
   reservedIds: builtinPluginIds ?? [],
   reportError: (error) =>
     toastKey('settings.pluginPackageFailed', 'error', {
-      detail: error instanceof Error ? error.message : String(error),
+      detail: describeError(error, t),
     }),
 })
 

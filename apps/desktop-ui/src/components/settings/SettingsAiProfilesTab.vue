@@ -144,7 +144,7 @@ import type { AiProfile } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig, operations, navigate } = useSettingsContext()
-const { toastText } = useToast()
+const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
 const profiles = computed(() => aiProfilesStore.profiles)
@@ -171,7 +171,7 @@ async function handleOpenVault() {
   try {
     await aiProfilesStore.openVaultDir()
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   }
 }
 
@@ -181,7 +181,7 @@ async function handlePickVaultFolder() {
     const selected = await aiProfilesStore.pickFolder()
     if (selected) operations.updateVaultPath(selected)
   } catch (error) {
-    toastText(String(error), 'error')
+    toastError(error)
   }
 }
 

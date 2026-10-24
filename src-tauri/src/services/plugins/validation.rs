@@ -1,6 +1,11 @@
 //! Validates plugin metadata and bundled assets without executing code.
+use super::package_format::{
+    MAX_CONFIG_FIELDS, MAX_ICONS, MAX_ICON_BODY_BYTES, MAX_ICON_DIMENSION, MAX_SETTINGS_RENAMES,
+    MAX_SETTING_NAME_LENGTH,
+};
 use super::{is_valid_plugin_id, PluginManifest, API_VERSION};
 use crate::errors::AppError;
+use crate::services::settings::schema::MAX_SAFE_INTEGER;
 
 /// A manifest that breaks a rule of the package format.
 /// Every plugin ships these dictionaries; matches `SUPPORTED_PLUGIN_LOCALES` of the SDK.
@@ -98,7 +103,7 @@ fn validate_settings_migrations(
     }
     let valid_name = |name: &str| {
         !name.is_empty()
-            && name.len() <= 128
+            && name.len() <= MAX_SETTING_NAME_LENGTH
             && name.as_bytes()[0].is_ascii_alphabetic()
             && name
                 .bytes()
@@ -117,7 +122,7 @@ fn validate_settings_migrations(
             .get("rename")
             .and_then(serde_json::Value::as_object)
             .ok_or_else(|| invalid("Invalid plugin settings renames"))?;
-        if renames.len() > 256 {
+        if renames.len() > MAX_SETTINGS_RENAMES {
             return Err(invalid("Too many plugin settings renames"));
         }
         let mut targets = std::collections::HashSet::new();
@@ -259,7 +264,7 @@ fn validate_icons(manifest: &PluginManifest) -> Result<(), AppError> {
             .get("icons")
             .and_then(serde_json::Value::as_object)
             .ok_or_else(|| invalid("Invalid plugin icons"))?;
-        if map.len() > 4096 {
+        if map.len() > MAX_ICONS {
             return Err(invalid("Too many plugin icons"));
         }
         let prefix = icons
@@ -285,7 +290,7 @@ fn validate_icons(manifest: &PluginManifest) -> Result<(), AppError> {
                 || !name
                     .bytes()
                     .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
-                || body.len() > 128 * 1024
+                || body.len() > MAX_ICON_BODY_BYTES
                 || unsafe_svg.is_match(body)
             {
                 return Err(invalid("Unsafe plugin icon"));
@@ -299,10 +304,9 @@ fn validate_icons(manifest: &PluginManifest) -> Result<(), AppError> {
             .into_iter()
             .flatten()
             {
-                if !dimension
-                    .as_f64()
-                    .is_some_and(|number| number.is_finite() && number > 0.0 && number <= 4096.0)
-                {
+                if !dimension.as_f64().is_some_and(|number| {
+                    number.is_finite() && number > 0.0 && number <= MAX_ICON_DIMENSION
+                }) {
                     return Err(invalid("Invalid plugin icon dimensions"));
                 }
             }
@@ -316,7 +320,7 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
         .get("fields")
         .and_then(serde_json::Value::as_array)
         .ok_or_else(|| invalid("Invalid plugin config"))?;
-    if fields.len() > 256 {
+    if fields.len() > MAX_CONFIG_FIELDS {
         return Err(invalid("Too many plugin fields"));
     }
     let mut names = std::collections::HashSet::new();
@@ -356,7 +360,7 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
                     .ok_or_else(|| invalid("Invalid plugin option"))?;
                 if !(id.is_string()
                     || id.as_f64().is_some_and(|number| {
-                        number.fract() == 0.0 && number.abs() <= 9_007_199_254_740_991.0
+                        number.fract() == 0.0 && number.abs() <= MAX_SAFE_INTEGER
                     }))
                     || !option_ids.insert(format!("{}:{}", id.is_string(), option_identity(id)))
                 {
