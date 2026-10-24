@@ -10,9 +10,7 @@
     "translationMenu": "Traducere",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Raționament",
     "footnotes": "Note de subsol",
@@ -950,9 +948,7 @@
     "windowInsertionAuto": "Automat",
     "windowInsertionHint": "Instrumentul cu care Tyco apasă taste în alte aplicații pentru a lipi rezultatul sau a prelua textul selectat. xdotool funcționează pe X11, ydotool pe Wayland: are nevoie de serviciul ydotoold pornit, iar inserarea pe Wayland este acceptată doar în KDE Plasma 6. „Automat” alege instrumentul după sesiunea curentă. Un câmp de cale gol înseamnă că instrumentul este căutat în PATH."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserează în editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1024,9 +1020,7 @@
     "truncation": "rezultat trunchiat",
     "untranslated": "fragment netradus"
   },
-  "window": {
-    "clickToFocus": "Faceți clic pentru a continua"
-  },
+  "window": { "clickToFocus": "Faceți clic pentru a continua" },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",
     "cancel": "Anulează",
@@ -1066,9 +1060,7 @@
   },
   "voiceGrammar": {
     "translate": "tradu în",
-    "actions": {
-      "askInChat": "întreabă în chat"
-    },
+    "actions": { "askInChat": "întreabă în chat" },
     "languages": {
       "en-US": "engleză;engleză americană",
       "en-GB": "engleză britanică",
@@ -1086,8 +1078,5 @@
       "ja-JP": "japoneză"
     }
   },
-  "tray": {
-    "show": "Afișează Tyco",
-    "quit": "Ieșire"
-  }
+  "tray": { "show": "Afișează Tyco", "quit": "Ieșire" }
 }

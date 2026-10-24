@@ -10,9 +10,7 @@
     "translationMenu": "Prijevod",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Razmišljanje",
     "footnotes": "Fusnote",
@@ -950,9 +948,7 @@
     "windowInsertionAuto": "Automatski",
     "windowInsertionHint": "Alat kojim Tyco pritišće tipke u drugim aplikacijama da bi zalijepio rezultat ili preuzeo odabrani tekst. xdotool radi na X11, ydotool na Waylandu: treba mu pokrenut servis ydotoold, a umetanje na Waylandu podržano je samo u KDE Plasmi 6. „Automatski” bira alat prema trenutačnoj sesiji. Prazno polje putanje znači da se alat traži u PATH-u."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Umetni u uređivač"
-  },
+  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1024,9 +1020,7 @@
     "truncation": "skraćeni rezultat",
     "untranslated": "neprevedeni dio"
   },
-  "window": {
-    "clickToFocus": "Kliknite za nastavak"
-  },
+  "window": { "clickToFocus": "Kliknite za nastavak" },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1066,9 +1060,7 @@
   },
   "voiceGrammar": {
     "translate": "prevedi na",
-    "actions": {
-      "askInChat": "pitaj u chatu"
-    },
+    "actions": { "askInChat": "pitaj u chatu" },
     "languages": {
       "en-US": "engleski;američki engleski",
       "en-GB": "britanski engleski",
@@ -1086,8 +1078,5 @@
       "ja-JP": "japanski"
     }
   },
-  "tray": {
-    "show": "Prikaži Tyco",
-    "quit": "Izađi"
-  }
+  "tray": { "show": "Prikaži Tyco", "quit": "Izađi" }
 }

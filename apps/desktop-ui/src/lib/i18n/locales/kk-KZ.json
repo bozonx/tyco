@@ -10,9 +10,7 @@
     "translationMenu": "Аударма",
     "webhook": "Вебхук"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Пайымдау",
     "footnotes": "Сілтемелер",
@@ -524,10 +522,7 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": {
-      "command": "Команда орындалуда…",
-      "correction": "Түзетілуде…"
-    }
+    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -950,9 +945,7 @@
     "windowInsertionAuto": "Автоматты",
     "windowInsertionHint": "Tyco басқа қолданбаларда нәтижені қою немесе белгіленген мәтінді алу үшін перне басатын құрал. xdotool X11-де, ydotool Wayland-та жұмыс істейді: оған іске қосылған ydotoold қызметі керек, ал Wayland-та кірістіру тек KDE Plasma 6-да қолдау көрсетіледі. «Автоматты» құралды ағымдағы сеанс бойынша таңдайды. Жол өрісі бос болса, құрал PATH ішінен ізделеді."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Редакторға кірістіру"
-  },
+  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1024,9 +1017,7 @@
     "truncation": "қиылған нәтиже",
     "untranslated": "аударылмаған үзінді"
   },
-  "window": {
-    "clickToFocus": "Жалғастыру үшін басыңыз"
-  },
+  "window": { "clickToFocus": "Жалғастыру үшін басыңыз" },
   "write": {
     "alreadyCorrected": "Мәтін бұрыннан түзетілген",
     "cancel": "Бас тарту",
@@ -1066,9 +1057,7 @@
   },
   "voiceGrammar": {
     "translate": "аудар",
-    "actions": {
-      "askInChat": "чатта сұра"
-    },
+    "actions": { "askInChat": "чатта сұра" },
     "languages": {
       "en-US": "ағылшын тіліне;ағылшынша;америкалық ағылшын тіліне",
       "en-GB": "британдық ағылшын тіліне",
@@ -1086,8 +1075,5 @@
       "ja-JP": "жапон тіліне;жапонша"
     }
   },
-  "tray": {
-    "show": "Tyco-ны көрсету",
-    "quit": "Шығу"
-  }
+  "tray": { "show": "Tyco-ны көрсету", "quit": "Шығу" }
 }

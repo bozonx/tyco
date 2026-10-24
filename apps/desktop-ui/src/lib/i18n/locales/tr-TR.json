@@ -10,9 +10,7 @@
     "translationMenu": "Çeviri",
     "webhook": "Web kancası"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Akıl yürütme",
     "footnotes": "Dipnotlar",
@@ -524,10 +522,7 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": {
-      "command": "Komut çalışıyor…",
-      "correction": "Düzeltiliyor…"
-    }
+    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -950,9 +945,7 @@
     "windowInsertionAuto": "Otomatik",
     "windowInsertionHint": "Tyco’nun sonucu yapıştırmak veya seçili metni almak için diğer uygulamalarda tuşlara bastığı araç. xdotool X11’de, ydotool Wayland’de çalışır: ydotoold arka plan hizmetinin çalışıyor olması gerekir ve Wayland’de ekleme yalnızca KDE Plasma 6’da desteklenir. “Otomatik” aracı geçerli oturuma göre seçer. Yol alanı boşsa araç PATH içinde aranır."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Editöre ekle"
-  },
+  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1024,9 +1017,7 @@
     "truncation": "kesilmiş sonuç",
     "untranslated": "çevrilmemiş bölüm"
   },
-  "window": {
-    "clickToFocus": "Devam etmek için tıklayın"
-  },
+  "window": { "clickToFocus": "Devam etmek için tıklayın" },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",
     "cancel": "İptal",
@@ -1066,9 +1057,7 @@
   },
   "voiceGrammar": {
     "translate": "çevir",
-    "actions": {
-      "askInChat": "sohbette sor"
-    },
+    "actions": { "askInChat": "sohbette sor" },
     "languages": {
       "en-US": "İngilizce;Amerikan İngilizcesi",
       "en-GB": "Britanya İngilizcesi",
@@ -1086,8 +1075,5 @@
       "ja-JP": "Japonca"
     }
   },
-  "tray": {
-    "show": "Tyco’yu göster",
-    "quit": "Çıkış"
-  }
+  "tray": { "show": "Tyco’yu göster", "quit": "Çıkış" }
 }

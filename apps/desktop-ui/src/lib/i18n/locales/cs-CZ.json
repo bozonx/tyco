@@ -10,9 +10,7 @@
     "translationMenu": "Překlad",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Uvažování",
     "footnotes": "Poznámky pod čarou",
@@ -512,10 +510,7 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": {
-      "command": "Příkaz selhal",
-      "correction": "Oprava selhala"
-    },
+    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -524,10 +519,7 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": {
-      "command": "Spouští se příkaz…",
-      "correction": "Opravuje se…"
-    }
+    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -950,9 +942,7 @@
     "windowInsertionAuto": "Automaticky",
     "windowInsertionHint": "Nástroj, kterým Tyco v jiných aplikacích mačká klávesy, aby vložil výsledek nebo převzal vybraný text. xdotool funguje v X11, ydotool ve Waylandu: vyžaduje spuštěného démona ydotoold a vkládání ve Waylandu je podporováno jen v KDE Plasma 6. „Automaticky“ vybere nástroj podle aktuální relace. Prázdné pole cesty znamená, že se nástroj hledá v PATH."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Vložit do editoru"
-  },
+  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1024,9 +1014,7 @@
     "truncation": "zkrácený výsledek",
     "untranslated": "nepřeložený úsek"
   },
-  "window": {
-    "clickToFocus": "Klikněte pro pokračování"
-  },
+  "window": { "clickToFocus": "Klikněte pro pokračování" },
   "write": {
     "alreadyCorrected": "Text je již opraven",
     "cancel": "Zrušit",
@@ -1066,9 +1054,7 @@
   },
   "voiceGrammar": {
     "translate": "přelož do",
-    "actions": {
-      "askInChat": "zeptej se v chatu"
-    },
+    "actions": { "askInChat": "zeptej se v chatu" },
     "languages": {
       "en-US": "angličtiny;americké angličtiny",
       "en-GB": "britské angličtiny",
@@ -1086,8 +1072,5 @@
       "ja-JP": "japonštiny"
     }
   },
-  "tray": {
-    "show": "Zobrazit Tyco",
-    "quit": "Ukončit"
-  }
+  "tray": { "show": "Zobrazit Tyco", "quit": "Ukončit" }
 }

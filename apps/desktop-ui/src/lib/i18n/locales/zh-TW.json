@@ -10,9 +10,7 @@
     "translationMenu": "翻譯",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "思考過程",
     "footnotes": "註腳",
@@ -512,10 +510,7 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": {
-      "command": "命令執行失敗",
-      "correction": "校對失敗"
-    },
+    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
@@ -524,10 +519,7 @@
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
     },
-    "working": {
-      "command": "正在執行命令…",
-      "correction": "正在校對…"
-    }
+    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
   },
   "settings": {
     "accessAllow": "允許",
@@ -950,9 +942,7 @@
     "windowInsertionAuto": "自動",
     "windowInsertionHint": "Tyco 在其他應用程式中按下按鍵以貼上結果或擷取選取文字的工具。xdotool 適用於 X11，ydotool 適用於 Wayland：需要執行 ydotoold 守護行程，且 Wayland 插入僅在 KDE Plasma 6 上受支援。「自動」會根據目前工作階段選取工具。若路徑欄位留空，則會在 PATH 中搜尋該工具。"
   },
-  "shortcuts": {
-    "insertIntoEditor": "插入至編輯器"
-  },
+  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1024,9 +1014,7 @@
     "truncation": "結果遭截斷",
     "untranslated": "存在未翻譯片段"
   },
-  "window": {
-    "clickToFocus": "按一下以繼續"
-  },
+  "window": { "clickToFocus": "按一下以繼續" },
   "write": {
     "alreadyCorrected": "文字已經過校對",
     "cancel": "取消",
@@ -1066,9 +1054,7 @@
   },
   "voiceGrammar": {
     "translate": "翻譯成;翻譯為;翻譯到",
-    "actions": {
-      "askInChat": "在聊天中提問;在對話中提問"
-    },
+    "actions": { "askInChat": "在聊天中提問;在對話中提問" },
     "languages": {
       "en-US": "英文;美式英文;英語;美式英語",
       "en-GB": "英式英文;英國英文;英式英語",
@@ -1086,8 +1072,5 @@
       "ja-JP": "日文;日語"
     }
   },
-  "tray": {
-    "show": "顯示 Tyco",
-    "quit": "結束"
-  }
+  "tray": { "show": "顯示 Tyco", "quit": "結束" }
 }

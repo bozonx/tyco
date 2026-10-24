@@ -10,9 +10,7 @@
     "translationMenu": "Traduzione",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Ragionamento",
     "footnotes": "Note a piè di pagina",
@@ -950,9 +948,7 @@
     "windowInsertionAuto": "Automatico",
     "windowInsertionHint": "Lo strumento con cui Tyco preme tasti in altre app per incollare il risultato o prendere il testo selezionato. xdotool funziona su X11, ydotool su Wayland: richiede il demone ydotoold in esecuzione, e l’inserimento su Wayland è supportato solo su KDE Plasma 6. «Automatico» sceglie lo strumento in base alla sessione corrente. Un campo percorso vuoto significa che lo strumento viene cercato nel PATH."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserisci nell’editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1024,9 +1020,7 @@
     "truncation": "risultato troncato",
     "untranslated": "frammento non tradotto"
   },
-  "window": {
-    "clickToFocus": "Fai clic per continuare"
-  },
+  "window": { "clickToFocus": "Fai clic per continuare" },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",
     "cancel": "Annulla",
@@ -1066,9 +1060,7 @@
   },
   "voiceGrammar": {
     "translate": "traduci in",
-    "actions": {
-      "askInChat": "chiedi nella chat"
-    },
+    "actions": { "askInChat": "chiedi nella chat" },
     "languages": {
       "en-US": "inglese;inglese americano",
       "en-GB": "inglese britannico",
@@ -1086,8 +1078,5 @@
       "ja-JP": "giapponese"
     }
   },
-  "tray": {
-    "show": "Mostra Tyco",
-    "quit": "Esci"
-  }
+  "tray": { "show": "Mostra Tyco", "quit": "Esci" }
 }

@@ -10,9 +10,7 @@
     "translationMenu": "Перевод",
     "webhook": "Вебхук"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Рассуждения",
     "footnotes": "Сноски",
@@ -524,10 +522,7 @@
       "command": "Команда оставила текст без изменений",
       "correction": "Ошибок не найдено"
     },
-    "working": {
-      "command": "Выполняю команду…",
-      "correction": "Исправляю…"
-    }
+    "working": { "command": "Выполняю команду…", "correction": "Исправляю…" }
   },
   "settings": {
     "accessAllow": "Разрешено",
@@ -950,9 +945,7 @@
     "windowInsertionAuto": "Авто",
     "windowInsertionHint": "Утилита, которой Tyco нажимает клавиши в других приложениях, чтобы вставить результат или забрать выделенный текст. xdotool работает в X11, ydotool — в Wayland: для него нужен запущенный демон ydotoold, а вставка в Wayland поддерживается только в KDE Plasma 6. «Авто» выбирает утилиту по текущей сессии. Пустое поле пути — утилита ищется в PATH."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Вставить в редактор"
-  },
+  "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
     "auto": "Как в системе",
     "dark": "Темная",
@@ -1024,9 +1017,7 @@
     "truncation": "оборванный результат",
     "untranslated": "непереведённый фрагмент"
   },
-  "window": {
-    "clickToFocus": "Нажмите, чтобы продолжить"
-  },
+  "window": { "clickToFocus": "Нажмите, чтобы продолжить" },
   "write": {
     "alreadyCorrected": "Текст уже корректирован",
     "cancel": "Отмена",
@@ -1066,9 +1057,7 @@
   },
   "voiceGrammar": {
     "translate": "переведи на",
-    "actions": {
-      "askInChat": "спроси в чате"
-    },
+    "actions": { "askInChat": "спроси в чате" },
     "languages": {
       "en-US": "английский;американский английский",
       "en-GB": "британский английский",
@@ -1086,8 +1075,5 @@
       "ja-JP": "японский"
     }
   },
-  "tray": {
-    "show": "Показать Tyco",
-    "quit": "Выйти"
-  }
+  "tray": { "show": "Показать Tyco", "quit": "Выйти" }
 }

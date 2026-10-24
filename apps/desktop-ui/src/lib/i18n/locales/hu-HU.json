@@ -10,9 +10,7 @@
     "translationMenu": "Fordítás",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Gondolatmenet",
     "footnotes": "Lábjegyzetek",
@@ -524,10 +522,7 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": {
-      "command": "A parancs fut…",
-      "correction": "Javítás…"
-    }
+    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -950,9 +945,7 @@
     "windowInsertionAuto": "Automatikus",
     "windowInsertionHint": "Az eszköz, amellyel a Tyco billentyűket nyom le más alkalmazásokban az eredmény beillesztéséhez vagy a kijelölt szöveg átvételéhez. Az xdotool X11-en, az ydotool Waylanden működik: utóbbihoz futnia kell az ydotoold szolgáltatásnak, és a Wayland alatti beillesztés csak KDE Plasma 6-on támogatott. Az „Automatikus” az aktuális munkamenet alapján választ eszközt. Üres útvonalmező esetén az eszközt a PATH-ban keresi."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Beillesztés a szerkesztőbe"
-  },
+  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1024,9 +1017,7 @@
     "truncation": "csonka eredmény",
     "untranslated": "lefordítatlan részlet"
   },
-  "window": {
-    "clickToFocus": "Kattintson a folytatáshoz"
-  },
+  "window": { "clickToFocus": "Kattintson a folytatáshoz" },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
     "cancel": "Mégse",
@@ -1066,9 +1057,7 @@
   },
   "voiceGrammar": {
     "translate": "fordítsd le",
-    "actions": {
-      "askInChat": "kérdezd meg a csevegésben"
-    },
+    "actions": { "askInChat": "kérdezd meg a csevegésben" },
     "languages": {
       "en-US": "angolra;amerikai angolra",
       "en-GB": "brit angolra",
@@ -1086,8 +1075,5 @@
       "ja-JP": "japánra"
     }
   },
-  "tray": {
-    "show": "Tyco megjelenítése",
-    "quit": "Kilépés"
-  }
+  "tray": { "show": "Tyco megjelenítése", "quit": "Kilépés" }
 }
