@@ -9,6 +9,9 @@ describe('chat-desktop-files', () => {
   it('saves dropped text files to workspace uploads when profile file tools are enabled', async () => {
     const draft = ref<ChatParams>({})
     const invoke = vi.fn(async (command: string) => {
+      if (command === 'read_dropped_file') {
+        return [...new TextEncoder().encode('hello world')]
+      }
       if (command === 'save_ai_upload') {
         return 'workspace/uploads/notes.txt'
       }
@@ -38,9 +41,11 @@ describe('chat-desktop-files', () => {
       warn: vi.fn(),
     })
 
-    await files.addFiles([
-      new File(['hello world'], 'notes.txt', { type: 'text/plain' }),
-    ])
+    await files.addDroppedFiles(['/tmp/notes.txt'])
+
+    expect(invoke).toHaveBeenCalledWith('read_dropped_file', {
+      path: '/tmp/notes.txt',
+    })
 
     expect(invoke).toHaveBeenCalledWith('save_ai_upload', {
       bytes: expect.any(Uint8Array),

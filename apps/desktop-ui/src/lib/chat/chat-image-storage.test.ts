@@ -67,3 +67,23 @@ it('keeps completed imports isolated between storage instances', async () => {
     importIds: ['import-1'],
   })
 })
+
+it('loads profile image bytes through the injected transport', async () => {
+  const invoke = vi.fn().mockResolvedValue([1, 2, 255])
+  const storage = createChatImageStorage({
+    invoke: invoke as DesktopInvoke,
+    createId: () => 'import',
+    profileId: 'writer',
+  })
+  expect(await storage.loadImage('image-1')).toEqual(
+    new Uint8Array([1, 2, 255])
+  )
+  expect(invoke).toHaveBeenCalledWith('read_chat_image', {
+    id: 'image-1',
+    profileId: 'writer',
+  })
+  invoke.mockRejectedValueOnce(new Error('Image unavailable'))
+  await expect(storage.loadImage('missing')).rejects.toThrow(
+    'Image unavailable'
+  )
+})

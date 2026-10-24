@@ -2,6 +2,7 @@ import {
   DEFAULT_SESSION_STATE,
   DEFAULT_USER_CONFIG,
   type AiProfile,
+  type SessionState,
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 import { reactive, ref } from 'vue'
@@ -11,6 +12,7 @@ import { createChatInputModel } from './chat-input-model'
 import {
   createChatStoreRuntime,
   type ChatStoreHistory,
+  type ChatStoreRuntimeDependencies,
 } from './chat-store-runtime'
 import { chatAnswer } from './testing'
 
@@ -28,7 +30,112 @@ function createFakeHistory(): ChatStoreHistory {
   }
 }
 
+function runtimeDependencies(profileId: string): ChatStoreRuntimeDependencies {
+  const profile: AiProfile = {
+    id: profileId,
+    name: profileId,
+    projectPermissions: {},
+    createdAt: 1,
+    updatedAt: 1,
+  }
+  return {
+    profileId,
+    invoke: vi.fn() as unknown as typeof invokeDesktop,
+    history: createFakeHistory(),
+    llmActions: {
+      sendChatMessage: vi.fn(async () => chatAnswer('reply')),
+      generateChatTitle: vi.fn(async () => ''),
+    },
+    editor: { value: '', selectedText: '' },
+    input: reactive(createChatInputModel()),
+    getProfile: () => profile,
+    refreshProfile: vi.fn(async () => profile),
+    readSoul: vi.fn(async () => '# Soul'),
+    updateProfileModel: vi.fn(async () => {}),
+    getUserConfig: () => structuredClone(DEFAULT_USER_CONFIG),
+    getSessionState: () => structuredClone(DEFAULT_SESSION_STATE),
+    saveSessionState: vi.fn(async () => ({ success: true })),
+    hasSecret: () => true,
+    externalSelection: () => '',
+    windowLabel: () => 'main',
+    openMainChat: vi.fn(async () => {}),
+    closeModals: vi.fn(),
+    afterRender: vi.fn(async () => {}),
+    navigateTo: vi.fn(async () => {}),
+    translate: (key) => key,
+    toastText: vi.fn(),
+    toastKey: vi.fn(),
+    warn: vi.fn(),
+  }
+}
+
 describe('chat-store-runtime', () => {
+  it('sends independent profile patches when two chats open before either save completes', async () => {
+    const saved: Partial<SessionState>[] = []
+    let finish!: () => void
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve
+    })
+    const saveSessionState: ChatStoreRuntimeDependencies['saveSessionState'] =
+      async (patch) => {
+        saved.push(patch)
+        await pending
+        return { success: true }
+      }
+    const runtimes = ['writer', 'reviewer'].map((id) => {
+      const deps = runtimeDependencies(id)
+      deps.saveSessionState = saveSessionState
+      vi.mocked(deps.invoke).mockResolvedValue({
+        id: `chat-${id}`,
+        title: id,
+        lastMessageAt: 1,
+        messages: [],
+      })
+      return createChatStoreRuntime(deps)
+    })
+    try {
+      const opens = runtimes.map((runtime, index) =>
+        runtime.openChat(`chat-${index}`)
+      )
+      await vi.waitFor(() => expect(saved).toHaveLength(2))
+      expect(saved).toEqual([
+        { lastProfileChatIds: { writer: 'chat-writer' } },
+        { lastProfileChatIds: { reviewer: 'chat-reviewer' } },
+      ])
+      finish()
+      await Promise.all(opens)
+    } finally {
+      finish()
+      runtimes.forEach((runtime) => runtime.dispose())
+    }
+  })
+
+  it('wires profile image loading through the injected transport', async () => {
+    const deps = runtimeDependencies('writer')
+    const invoke = vi.fn(async () => [1, 2, 255])
+    deps.invoke = invoke as unknown as typeof invokeDesktop
+    const sendChatMessage = vi.fn<
+      ChatStoreRuntimeDependencies['llmActions']['sendChatMessage']
+    >(async (_message, _previous, _instructions, options) => {
+      expect(await options?.loadImage?.('image-1')).toEqual(
+        new Uint8Array([1, 2, 255])
+      )
+      return chatAnswer('reply')
+    })
+    deps.llmActions.sendChatMessage = sendChatMessage
+    const runtime = createChatStoreRuntime(deps)
+    try {
+      expect(await runtime.sendMessage('Question')).toBe('reply')
+      expect(sendChatMessage).toHaveBeenCalledOnce()
+      expect(deps.invoke).toHaveBeenCalledWith('read_chat_image', {
+        id: 'image-1',
+        profileId: 'writer',
+      })
+    } finally {
+      runtime.dispose()
+    }
+  })
+
   it('reports toast error when saving chat history fails', async () => {
     const history = createFakeHistory()
     vi.mocked(history.saveChat).mockRejectedValueOnce(new Error('disk full'))
@@ -186,7 +293,7 @@ describe('chat-store-runtime', () => {
 
     await runtime.openChat('chat-3')
     expect(saveSessionState).toHaveBeenCalledWith({
-      lastProfileChatIds: { other: 'chat-9', writer: 'chat-3' },
+      lastProfileChatIds: { writer: 'chat-3' },
     })
     runtime.dispose()
   })

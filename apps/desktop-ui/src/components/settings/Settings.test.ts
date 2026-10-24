@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useRoute } from 'vue-router'
@@ -119,6 +119,10 @@ vi.mock('../../stores/plugin-runtime', () => ({
   }),
 }))
 
+async function selectTab(wrapper: VueWrapper, label: string) {
+  await wrapper.get(`.navigation-item[aria-label="${label}"]`).trigger('click')
+}
+
 describe('Settings.vue', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -128,22 +132,28 @@ describe('Settings.vue', () => {
   it('falls back from unknown routes and reacts to query changes', async () => {
     useRoute().query.tab = 'unknown'
     const wrapper = mount(Settings, {
-      global: { stubs: { NavigationList: true, SettingsHistoryTab: true } },
+      global: { stubs: { NavigationList: false, SettingsHistoryTab: true } },
     })
-    expect((wrapper.vm as any).currentTab).toBe('general')
+    expect(wrapper.get('.navigation-item.is-active').text()).toBe(
+      'settings.generalTab'
+    )
     useRoute().query.tab = 'history'
     await wrapper.vm.$nextTick()
-    expect((wrapper.vm as any).currentTab).toBe('history')
+    expect(wrapper.get('.navigation-item.is-active').text()).toBe(
+      'settings.historyTab'
+    )
     useRoute().query.tab = 'plugin:missing'
     await wrapper.vm.$nextTick()
-    expect((wrapper.vm as any).currentTab).toBe('general')
+    expect(wrapper.get('.navigation-item.is-active').text()).toBe(
+      'settings.generalTab'
+    )
     wrapper.unmount()
   })
 
   it('disables settings written by a newer version', () => {
     settingsMocks.configVersion = CONFIG_VERSION + 1
     const wrapper = mount(Settings, {
-      global: { stubs: { NavigationList: true, Button: true } },
+      global: { stubs: { NavigationList: false, Button: true } },
     })
     expect(wrapper.get('fieldset').attributes('disabled')).toBeDefined()
     expect(wrapper.get('[role="alert"]').text()).toContain(
@@ -156,7 +166,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          NavigationList: true,
+          NavigationList: false,
           Button: { template: '<button><slot /></button>' },
         },
       },
@@ -183,7 +193,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          NavigationList: true,
+          NavigationList: false,
           SettingsLlmTab: {
             data: () => ({ keyDraft: '' }),
             template: '<input class="key-draft" v-model="keyDraft" />',
@@ -191,8 +201,7 @@ describe('Settings.vue', () => {
         },
       },
     })
-    ;(wrapper.vm as any).currentTab = 'llm'
-    await wrapper.vm.$nextTick()
+    await selectTab(wrapper, 'settings.llmTab')
     await wrapper.get('.key-draft').setValue('unfinished key')
     useSettingsSessionStore().resolveConflicts(false)
     await wrapper.vm.$nextTick()
@@ -308,7 +317,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          NavigationList: true,
+          NavigationList: false,
           SettingsHistoryTab: {
             props: ['userConfig', 'effectiveAppLanguage'],
             template: '<div class="history-tab-stub" />',
@@ -317,9 +326,7 @@ describe('Settings.vue', () => {
       },
     })
 
-    const vm = wrapper.vm as any
-    vm.currentTab = 'history'
-    await wrapper.vm.$nextTick()
+    await selectTab(wrapper, 'settings.historyTab')
 
     expect(wrapper.find('.history-tab-stub').exists()).toBe(true)
   })
@@ -353,7 +360,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          NavigationList: true,
+          NavigationList: false,
           SettingsSection: {
             props: ['title'],
             template:
@@ -374,9 +381,7 @@ describe('Settings.vue', () => {
     })
 
     // Switch to accessibility tab
-    const vm = wrapper.vm as any
-    vm.currentTab = 'accessibility'
-    await wrapper.vm.$nextTick()
+    await selectTab(wrapper, 'settings.sectionAccessibility')
 
     const contrastRow = wrapper.find('[data-label="settings.contrast"]')
     const motionRow = wrapper.find('[data-label="settings.motion"]')
@@ -420,33 +425,30 @@ describe('Settings.vue', () => {
       wrapper.findAll('.navigation-item').find((node) => node.text() === text)!
 
     await item('plugin.a.label').trigger('click')
-    const vm = wrapper.vm as any
-    expect(vm.currentTab).toBe('plugin:PluginA')
     expect(wrapper.get('.plugin-detail-stub').text()).toBe('PluginA')
     expect(wrapper.get('.navigation-item.is-active').text()).toBe(
       'plugin.a.label'
     )
 
     await item('settings.allPluginsTab').trigger('click')
-    expect(vm.currentTab).toBe('plugins')
+    expect(wrapper.get('.navigation-item.is-active').text()).toBe(
+      'settings.allPluginsTab'
+    )
     expect(wrapper.find('.plugin-detail-stub').exists()).toBe(false)
   })
 
   it('remounts SettingsPluginDetailTab with pluginId key when switching plugins', async () => {
     const wrapper = mount(Settings, {
-      global: { stubs: { NavigationList: true } },
+      global: { stubs: { NavigationList: false } },
     })
 
-    const vm = wrapper.vm as any
-    vm.currentTab = 'plugin:PluginA'
-    await wrapper.vm.$nextTick()
+    await selectTab(wrapper, 'plugin.a.label')
 
     const detailCardA = wrapper.find('[data-plugin="PluginA"]')
     expect(detailCardA.exists()).toBe(true)
     expect(detailCardA.classes()).not.toContain('is-disabled')
 
-    vm.currentTab = 'plugin:PluginB'
-    await wrapper.vm.$nextTick()
+    await selectTab(wrapper, 'Plugin B')
 
     const detailCardB = wrapper.find('[data-plugin="PluginB"]')
     expect(detailCardB.exists()).toBe(true)
@@ -455,7 +457,7 @@ describe('Settings.vue', () => {
 
   it('renders a row per storage root when storage info is loaded', async () => {
     const wrapper = mount(Settings, {
-      global: { stubs: { NavigationList: true } },
+      global: { stubs: { NavigationList: false } },
     })
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 0))
@@ -490,7 +492,7 @@ describe('Settings.vue', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
-          NavigationList: true,
+          NavigationList: false,
           SettingsSection: {
             props: ['title'],
             template:
@@ -510,9 +512,7 @@ describe('Settings.vue', () => {
       },
     })
 
-    const vm = wrapper.vm as any
-    vm.currentTab = 'stt'
-    await wrapper.vm.$nextTick()
+    await selectTab(wrapper, 'settings.sttTab')
 
     const sections = wrapper.findAll('.settings-section-stub')
     expect(sections).toHaveLength(2)

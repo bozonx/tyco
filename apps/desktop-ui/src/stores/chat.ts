@@ -44,10 +44,10 @@ function createChatStoreSetup(profileId: string | null) {
     const aiProfilesStore = useAiProfilesStore()
     if (profileId) {
       const pinia = getActivePinia()
-      // a removed profile takes its chat and draft along, before its files go
-      aiProfilesStore.$onAction(({ name, args }) => {
+      // Keep drafts and generation intact if removing the profile fails.
+      aiProfilesStore.$onAction(({ name, args, after }) => {
         if (name === 'deleteProfile' && args[0] === profileId)
-          disposeProfileChatStore(profileId, pinia)
+          after(() => disposeProfileChatStore(profileId, pinia))
       })
     }
     const editorInputStore = useEditorInputStore()
@@ -163,7 +163,7 @@ export function disposeProfileChatStore(profileId: string, pinia?: Pinia) {
   // a store only exists once something used it
   if (!(id in active.state.value)) return
   const store = definition(active)
-  store.stopGeneration()
+  store.abandonChat()
   store.$dispose()
   delete active.state.value[id]
 }

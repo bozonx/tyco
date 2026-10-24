@@ -62,7 +62,7 @@ export function createChatDesktopFiles(deps: ChatDesktopFilesDependencies) {
       }
     ),
     addAttachment: deps.addAttachment,
-    readDroppedFile: readDroppedChatFile,
+    readDroppedFile: (path) => readDroppedChatFile(path, deps.invoke),
     syncImages: deps.syncImages,
     report: (name, kind) =>
       deps.toastText(

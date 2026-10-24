@@ -226,7 +226,14 @@ export class FakeDesktop {
       return this.snapshot()
     })
     this.handle('patch_session_state', ({ patch }) => {
-      this.sessionState = { ...this.sessionState, ...patch }
+      this.sessionState = {
+        ...this.sessionState,
+        ...patch,
+        lastProfileChatIds: {
+          ...this.sessionState.lastProfileChatIds,
+          ...patch.lastProfileChatIds,
+        },
+      }
       this.revision++
       return this.snapshot()
     })

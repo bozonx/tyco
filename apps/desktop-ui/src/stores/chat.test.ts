@@ -286,6 +286,64 @@ describe('profile chats', () => {
     expect(useProfileChatInputStore('writer').value).toBe('')
   })
 
+  it('preserves the draft and running answer when deleting a profile fails', async () => {
+    const call = mockVault({ soul: '', profile: writer })
+    await useAiProfilesStore().loadAll()
+    const store = useProfileChatStore('writer')
+    const input = useProfileChatInputStore('writer')
+    let finish!: (text: string) => void
+    ai.sendChatMessage.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => (finish = (text) => resolve(chatAnswer(text))))
+    )
+    input.setValue('Question')
+    await store.sendInput()
+    await vi.waitFor(() => expect(ai.sendChatMessage).toHaveBeenCalled())
+    input.setValue('Unsent follow-up')
+    call.mockResolvedValueOnce({ success: false, error: 'Permission denied' })
+
+    await expect(useAiProfilesStore().deleteProfile('writer')).rejects.toThrow(
+      'Permission denied'
+    )
+
+    expect(useProfileChatStore('writer')).toBe(store)
+    expect(input.value).toBe('Unsent follow-up')
+    expect(store.isGenerating).toBe(true)
+    finish('Completed answer')
+    await vi.waitFor(() => expect(store.isGenerating).toBe(false))
+    expect(store.messages.at(-1)?.content).toBe('Completed answer')
+  })
+
+  it('discards a running answer without writing into a deleted profile', async () => {
+    const call = mockVault({ soul: '', profile: writer })
+    await useAiProfilesStore().loadAll()
+    let finish!: (text: string) => void
+    ai.sendChatMessage.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => (finish = (text) => resolve(chatAnswer(text))))
+    )
+    const store = useProfileChatStore('writer')
+    useProfileChatInputStore('writer').setValue('Question')
+    await store.sendInput()
+    await vi.waitFor(() => expect(ai.sendChatMessage).toHaveBeenCalled())
+    store.messages.at(-1)!.content = 'Partial answer'
+    await store.whenSaved()
+    const writesBeforeDelete = call.mock.calls.filter(
+      ([name]) => name === 'save_chat'
+    ).length
+
+    await useAiProfilesStore().deleteProfile('writer')
+    finish('Late answer')
+    await nextTick()
+    await store.whenSaved()
+
+    expect(store.isGenerating).toBe(false)
+    expect(store.messages).toEqual([])
+    expect(
+      call.mock.calls.filter(([name]) => name === 'save_chat')
+    ).toHaveLength(writesBeforeDelete)
+  })
+
   it('forgets the chat of a profile once the profile is removed', async () => {
     mockVault({ soul: '', profile: writer })
     await useAiProfilesStore().loadAll()

@@ -23,7 +23,7 @@ import {
 } from './chat-controller'
 import { createChatDesktopFiles } from './chat-desktop-files'
 import { isChatHistoryEnabled } from './chat-history-settings'
-import { createChatImageStorage, getChatImage } from './chat-image-storage'
+import { createChatImageStorage } from './chat-image-storage'
 import {
   chatModelOptions,
   chatRequestBudgetCharacters,
@@ -77,7 +77,7 @@ export interface ChatStoreRuntimeDependencies {
  */
 export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   const { profileId, history, translate, toastKey, toastText, warn } = deps
-  const { storeChatImage, syncChatImages, loadChatWithImages } =
+  const { storeChatImage, syncChatImages, loadChatWithImages, loadImage } =
     createChatImageStorage({
       invoke: deps.invoke,
       createId: () => crypto.randomUUID(),
@@ -169,7 +169,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
           )),
           temperature: stored?.temperature,
           maxOutputTokens: stored?.maxOutputTokens,
-          loadImage: (id) => getChatImage(id, profileId),
+          loadImage,
         }
       )
     },
@@ -220,7 +220,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
         const stored = deps.getSessionState()?.lastProfileChatIds ?? {}
         if (stored[profileId] === patch.lastChatId) return
         const result = await deps.saveSessionState({
-          lastProfileChatIds: { ...stored, [profileId]: patch.lastChatId },
+          lastProfileChatIds: { [profileId]: patch.lastChatId },
         })
         if (!result.success)
           warn(`Could not save the last profile chat: ${result.error}`)
