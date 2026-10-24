@@ -81,6 +81,7 @@ const DYNAMIC_KEYS = new Set([
     'ru-RU',
     'en-US',
     'en-GB',
+    'es',
     'es-ES',
     'es-AR',
     'pt-BR',
@@ -92,6 +93,13 @@ const DYNAMIC_KEYS = new Set([
     'pl-PL',
     'uk-UA',
     'tr-TR',
+    'cs-CZ',
+    'hu-HU',
+    'ro-RO',
+    'el-GR',
+    'hr-HR',
+    'ka-GE',
+    'kk-KZ',
     'ar-SA',
     'hi-IN',
     'bn-BD',
@@ -294,7 +302,9 @@ describe('i18n messages', () => {
     const testCases: { locale: UiLocale; key: string; expected: string }[] = [
       { locale: 'en-US', key: 'common.confirm', expected: 'Confirm' },
       { locale: 'ru-RU', key: 'common.confirm', expected: 'Подтвердить' },
-      { locale: 'es-AR', key: 'common.confirm', expected: 'Confirmar' },
+      { locale: 'es', key: 'common.confirm', expected: 'Confirmar' },
+      { locale: 'de-DE', key: 'common.confirm', expected: 'Bestätigen' },
+      { locale: 'ja-JP', key: 'common.confirm', expected: '確認' },
       { locale: 'tr-TR', key: 'common.confirm', expected: 'Onayla' },
     ]
 

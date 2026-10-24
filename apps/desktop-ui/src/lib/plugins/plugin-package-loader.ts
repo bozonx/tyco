@@ -2,8 +2,7 @@ import { errorMessage } from '@tyco/shared/value-guards'
 import {
   PLUGIN_API_VERSION,
   validatePluginManifest,
-  type PluginManifest,
-} from '@tyco/plugin-sdk'
+  type PluginManifest, SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import type { InstalledPlugin } from '@tyco/shared'
 
 import type { PluginFactory } from '../../types/plugins'
@@ -56,7 +55,7 @@ export function createPluginPackageLoader(
             apiVersion: PLUGIN_API_VERSION,
             capabilities: [],
             defaultLocale: 'en-US',
-            locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+            locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
             name: manifest.id,
             _revision: modulePath,
             _external: true,

@@ -1,3 +1,4 @@
+import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -97,7 +98,7 @@ vi.mock('../../stores/plugin-runtime', () => ({
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
         labelKey: 'plugin.a.label',
         defaultConfig: { fields: [] },
         init: vi.fn(),
@@ -109,7 +110,7 @@ vi.mock('../../stores/plugin-runtime', () => ({
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
         label: 'Plugin B',
         defaultConfig: { fields: [] },
         init: vi.fn(),

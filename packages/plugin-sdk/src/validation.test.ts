@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { validatePluginManifest, validatePluginFields } from './validation.js'
+import {
+  SUPPORTED_PLUGIN_LOCALES,
+  validatePluginManifest,
+  validatePluginFields,
+} from './validation.js'
 const manifest = {
   id: 'Example',
   version: '1.0.0',
@@ -7,7 +11,7 @@ const manifest = {
   capabilities: ['editor'],
   defaultLocale: 'en-US',
   locales: Object.fromEntries(
-    ['en-US', 'ru-RU', 'es-AR', 'tr-TR'].map((locale) => [
+    SUPPORTED_PLUGIN_LOCALES.map((locale) => [
       locale,
       { label: 'Example' },
     ])
@@ -43,7 +47,7 @@ describe('plugin manifest validation', () => {
 describe('plugin locale completeness', () => {
   it('rejects missing locales, keys, changed types and interpolation arguments', () => {
     const dictionaries = Object.fromEntries(
-      ['en-US', 'ru-RU', 'es-AR', 'tr-TR'].map((locale) => [
+      SUPPORTED_PLUGIN_LOCALES.map((locale) => [
         locale,
         { nested: { label: 'Hello {name}' } },
       ])
@@ -51,10 +55,10 @@ describe('plugin locale completeness', () => {
     for (const invalid of [
       { ...dictionaries, 'tr-TR': undefined },
       {
-        'en-US': { label: 'Text' },
+        ...Object.fromEntries(
+          SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, { label: 'Text' }])
+        ),
         'ru-RU': { label: {} },
-        'es-AR': { label: 'Text' },
-        'tr-TR': { label: 'Text' },
       },
       { ...dictionaries, 'ru-RU': { nested: {} } },
       { ...dictionaries, 'ru-RU': { nested: 'Hello {name}' } },

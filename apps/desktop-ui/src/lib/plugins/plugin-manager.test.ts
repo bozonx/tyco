@@ -1,3 +1,4 @@
+import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import type { PluginContext } from '@tyco/plugin-sdk'
 import { describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
@@ -44,7 +45,7 @@ const plugin =
     apiVersion: 2,
     capabilities: [],
     defaultLocale: 'en-US',
-    locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+    locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
     defaultConfig: {
       fields: [{ name: 'value', type: 'text', defaultValue: 0 }],
     },

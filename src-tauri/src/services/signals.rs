@@ -66,5 +66,5 @@ pub fn spawn_signal_watcher(app: AppHandle) -> Result<(), AppError> {
 }
 
 fn request_exit(app: &AppHandle) {
-    app.exit(0);
+    super::runtime::request_exit(app);
 }

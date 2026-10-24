@@ -1,3 +1,4 @@
+import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createPluginInstallation } from './plugin-installation'
@@ -9,7 +10,7 @@ const preview = {
     version: '1.0.0',
     apiVersion: 2,
     defaultLocale: 'en-US',
-    locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+    locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
     capabilities: [],
   },
 }

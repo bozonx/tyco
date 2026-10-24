@@ -3,6 +3,12 @@ use super::{is_valid_plugin_id, PluginManifest, API_VERSION};
 use crate::errors::AppError;
 
 /// A manifest that breaks a rule of the package format.
+/// Every plugin ships these dictionaries; matches `SUPPORTED_PLUGIN_LOCALES` of the SDK.
+pub(crate) const SUPPORTED_PLUGIN_LOCALES: [&str; 21] = [
+    "en-US", "ru-RU", "de-DE", "fr-FR", "es", "it-IT", "pt-BR", "pl-PL", "tr-TR", "uk-UA", "cs-CZ",
+    "hu-HU", "ro-RO", "el-GR", "hr-HR", "ka-GE", "kk-KZ", "zh-CN", "zh-TW", "ja-JP", "ko-KR",
+];
+
 fn invalid(message: impl Into<String>) -> AppError {
     AppError::InvalidData(message.into())
 }
@@ -203,16 +209,18 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
     }
     for (locale, dictionary) in dictionaries {
         let bytes = locale.as_bytes();
-        if bytes.len() != 5
-            || !bytes[..2].iter().all(u8::is_ascii_lowercase)
-            || bytes[2] != b'-'
-            || !bytes[3..].iter().all(u8::is_ascii_uppercase)
-        {
+        let is_language = bytes.len() >= 2 && bytes[..2].iter().all(u8::is_ascii_lowercase);
+        let is_region = match bytes.len() {
+            2 => true,
+            5 => bytes[2] == b'-' && bytes[3..].iter().all(u8::is_ascii_uppercase),
+            _ => false,
+        };
+        if !is_language || !is_region {
             return Err(invalid("Invalid plugin locale"));
         }
         validate_messages(dictionary, 0)?;
     }
-    for locale in ["en-US", "ru-RU", "es-AR", "tr-TR"] {
+    for locale in SUPPORTED_PLUGIN_LOCALES {
         if !dictionaries.contains_key(locale) {
             return Err(invalid(format!("Missing plugin locale: {locale}")));
         }
@@ -486,7 +494,14 @@ mod tests {
     use super::*;
 
     fn manifest() -> PluginManifest {
-        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en-US", "locales":{"en-US":{},"ru-RU":{},"es-AR":{},"tr-TR":{}}})).unwrap()
+        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en-US", "locales":locales(serde_json::json!({}))})).unwrap()
+    }
+    fn locales(dictionary: serde_json::Value) -> serde_json::Value {
+        SUPPORTED_PLUGIN_LOCALES
+            .iter()
+            .map(|locale| (locale.to_string(), dictionary.clone()))
+            .collect::<serde_json::Map<_, _>>()
+            .into()
     }
     #[test]
     fn matches_sdk_manifest_fixtures() {
@@ -512,10 +527,8 @@ mod tests {
         missing.locales.as_object_mut().unwrap().remove("tr-TR");
         assert!(validate_manifest(&missing).is_err());
         let mut mismatched = manifest();
-        mismatched.locales = serde_json::json!({
-            "en-US":{"label":"Hello {name}"}, "ru-RU":{"label":"Hello {user}"},
-            "es-AR":{"label":"Hello {name}"}, "tr-TR":{"label":"Hello {name}"}
-        });
+        mismatched.locales = locales(serde_json::json!({"label":"Hello {name}"}));
+        mismatched.locales["ru-RU"] = serde_json::json!({"label":"Hello {user}"});
         assert!(validate_manifest(&mismatched).is_err());
         mismatched.locales["ru-RU"] = serde_json::json!({"label":"{name}, hello {name}"});
         assert!(validate_manifest(&mismatched).is_ok());

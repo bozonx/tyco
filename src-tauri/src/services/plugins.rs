@@ -391,7 +391,11 @@ mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
     pub(super) fn manifest() -> PluginManifest {
-        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en-US", "locales":{"en-US":{},"ru-RU":{},"es-AR":{},"tr-TR":{}}})).unwrap()
+        let locales = validation::SUPPORTED_PLUGIN_LOCALES
+            .iter()
+            .map(|locale| (locale.to_string(), serde_json::json!({})))
+            .collect::<serde_json::Map<_, _>>();
+        serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en-US", "locales":locales})).unwrap()
     }
     pub(super) fn write_package(file: &Path, module: &str) {
         let package = PluginPackage {

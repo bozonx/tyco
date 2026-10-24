@@ -11,7 +11,9 @@ const manifest = {
   apiVersion: 2,
   capabilities: ['editor'],
   defaultLocale: 'en-US',
-  locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+  locales: Object.fromEntries(
+    ['en-US', 'ru-RU', 'de-DE', 'fr-FR', 'es', 'it-IT', 'pt-BR', 'pl-PL', 'tr-TR', 'uk-UA', 'cs-CZ', 'hu-HU', 'ro-RO', 'el-GR', 'hr-HR', 'ka-GE', 'kk-KZ', 'zh-CN', 'zh-TW', 'ja-JP', 'ko-KR'].map((locale) => [locale, {}])
+  ),
 }
 /** @param {string} code */
 const dataUrl = (code) =>

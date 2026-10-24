@@ -12,7 +12,8 @@ import {
 
 describe('language helpers', () => {
   it('resolves auto language from navigator languages', () => {
-    expect(resolveAutoLanguage(['es-MX', 'en-US'])).toBe('es-ES')
+    expect(resolveAutoLanguage(['es-MX', 'en-US'])).toBe('es')
+    expect(resolveAutoLanguage(['de-AT', 'en-US'])).toBe('de-DE')
   })
 
   it('falls back to default language when auto detection misses', () => {
@@ -46,18 +47,24 @@ describe('language helpers', () => {
   })
 
   it('falls back to english ui locale when no ui language matches', () => {
-    expect(resolveUiLanguageFromUserLanguage('de-DE')).toBe('en-US')
+    expect(resolveUiLanguageFromUserLanguage('nl-NL')).toBe('en-US')
+  })
+
+  it('maps a regional user language to a bare ui locale', () => {
+    expect(resolveUiLanguageFromUserLanguage('es-AR')).toBe('es')
   })
 
   it('uses manual ui language when it is explicitly selected', () => {
-    expect(resolveUiLanguagePreference('es-AR', 'ru-RU', ['ru-RU'])).toBe(
-      'es-AR'
+    expect(resolveUiLanguagePreference('ka-GE', 'ru-RU', ['ru-RU'])).toBe(
+      'ka-GE'
     )
   })
 
+  it('moves a saved removed regional ui locale to its language', () => {
+    expect(resolveUiLanguagePreference('es-AR', 'ru-RU', ['ru-RU'])).toBe('es')
+  })
+
   it('resolves auto ui language from the resolved user language', () => {
-    expect(resolveUiLanguagePreference('auto', 'es-ES', ['ru-RU'])).toBe(
-      'es-AR'
-    )
+    expect(resolveUiLanguagePreference('auto', 'es-ES', ['ru-RU'])).toBe('es')
   })
 })

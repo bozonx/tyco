@@ -1,4 +1,4 @@
-//! Exit only after both trusted webviews have flushed their settings drafts.
+//! Give trusted webviews a bounded opportunity to flush their settings drafts.
 use crate::locks::MutexExt;
 use std::collections::HashSet;
 use std::sync::Mutex;
@@ -55,6 +55,13 @@ impl ShutdownState {
         ShutdownFlushOutcome::Pending
     }
 
+    fn expire(&mut self, generation: u64) -> Option<HashSet<String>> {
+        if self.generation != generation {
+            return None;
+        }
+        self.pending.take()
+    }
+
     fn cancel(&mut self, generation: u64) -> bool {
         if self.generation == generation && self.pending.is_some() {
             self.pending = None;
@@ -108,17 +115,22 @@ pub fn request(app: &AppHandle) {
     if let Err(error) = services.spawn_async(async move {
         let app = handle;
         tokio::time::sleep(Duration::from_secs(10)).await;
-        let cancelled = app
+        let pending = app
             .state::<SettingsShutdown>()
             .0
             .locked()
-            .cancel(request_id);
-        if cancelled {
-            log::warn!("Shutdown cancelled: a webview did not confirm saved settings");
-            cancel_exit(&app);
+            .expire(request_id);
+        if let Some(windows) = pending {
+            log::warn!("Settings flush deadline expired for {windows:?}; continuing shutdown");
+            super::request_exit(&app);
         }
     }) {
         log::warn!("Could not watch settings shutdown: {error}");
+        app.state::<SettingsShutdown>()
+            .0
+            .locked()
+            .expire(request_id);
+        super::request_exit(&app);
     }
 }
 
@@ -172,7 +184,27 @@ mod tests {
     }
 
     #[test]
-    fn failed_write_or_timeout_cancels_exit_and_allows_another_request() {
+    fn timeout_releases_unresponsive_windows_and_ignores_late_replies() {
+        let mut state = ShutdownState::default();
+        let id = state.start(windows()).unwrap();
+        assert_eq!(
+            state.acknowledge(id, "main", true),
+            ShutdownFlushOutcome::Pending
+        );
+        assert!(state.expire(id + 1).is_none());
+        assert_eq!(
+            state.expire(id),
+            Some(["quick".into()].into_iter().collect())
+        );
+        assert_eq!(
+            state.acknowledge(id, "quick", true),
+            ShutdownFlushOutcome::Ignored
+        );
+        assert!(state.expire(id).is_none());
+    }
+
+    #[test]
+    fn failed_write_cancels_exit_and_allows_another_request() {
         let mut state = ShutdownState::default();
         let id = state.start(windows()).unwrap();
         assert_eq!(

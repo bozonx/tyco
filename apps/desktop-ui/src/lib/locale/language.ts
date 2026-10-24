@@ -6,6 +6,7 @@ export const SUPPORTED_USER_LANGUAGE_OPTIONS = [
   { id: 'ru-RU', name: 'Русский' },
   { id: 'en-US', name: 'English (US)' },
   { id: 'en-GB', name: 'English (UK)' },
+  { id: 'es', name: 'Español' },
   { id: 'es-ES', name: 'Español (España)' },
   { id: 'es-AR', name: 'Español (Argentina)' },
   { id: 'pt-BR', name: 'Português (Brasil)' },
@@ -17,6 +18,13 @@ export const SUPPORTED_USER_LANGUAGE_OPTIONS = [
   { id: 'pl-PL', name: 'Polski' },
   { id: 'uk-UA', name: 'Українська' },
   { id: 'tr-TR', name: 'Türkçe (Türkiye)' },
+  { id: 'cs-CZ', name: 'Čeština' },
+  { id: 'hu-HU', name: 'Magyar' },
+  { id: 'ro-RO', name: 'Română' },
+  { id: 'el-GR', name: 'Ελληνικά' },
+  { id: 'hr-HR', name: 'Hrvatski' },
+  { id: 'ka-GE', name: 'ქართული' },
+  { id: 'kk-KZ', name: 'Қазақ тілі' },
   { id: 'ar-SA', name: 'العربية' },
   { id: 'hi-IN', name: 'हिन्दी' },
   { id: 'bn-BD', name: 'বাংলা' },
@@ -34,10 +42,27 @@ export const SUPPORTED_USER_LANGUAGE_OPTIONS = [
 ] as const
 
 export const SUPPORTED_UI_LANGUAGE_OPTIONS = [
-  { id: 'ru-RU', name: 'Русский' },
   { id: 'en-US', name: 'English (US)' },
-  { id: 'es-AR', name: 'Español (Argentina)' },
+  { id: 'ru-RU', name: 'Русский' },
+  { id: 'de-DE', name: 'Deutsch' },
+  { id: 'fr-FR', name: 'Français' },
+  { id: 'es', name: 'Español' },
+  { id: 'it-IT', name: 'Italiano' },
+  { id: 'pt-BR', name: 'Português (Brasil)' },
+  { id: 'pl-PL', name: 'Polski' },
   { id: 'tr-TR', name: 'Türkçe (Türkiye)' },
+  { id: 'uk-UA', name: 'Українська' },
+  { id: 'cs-CZ', name: 'Čeština' },
+  { id: 'hu-HU', name: 'Magyar' },
+  { id: 'ro-RO', name: 'Română' },
+  { id: 'el-GR', name: 'Ελληνικά' },
+  { id: 'hr-HR', name: 'Hrvatski' },
+  { id: 'ka-GE', name: 'ქართული' },
+  { id: 'kk-KZ', name: 'Қазақ тілі' },
+  { id: 'zh-CN', name: '中文 (简体)' },
+  { id: 'zh-TW', name: '中文 (繁體)' },
+  { id: 'ja-JP', name: '日本語' },
+  { id: 'ko-KR', name: '한국어' },
 ] as const
 
 const SUPPORTED_USER_LANGUAGE_CODES: readonly string[] =
@@ -78,7 +103,19 @@ function findSupportedLocale(
     return normalized
   }
 
-  const [language] = normalized.split('-')
+  return findLanguageMatch(normalized, supportedLocales)
+}
+
+/** A bare language tag (`es`) first, then the first one of the same language */
+function findLanguageMatch(
+  normalizedLocale: string,
+  supportedLocales: readonly string[]
+): string | null {
+  const [language = ''] = normalizedLocale.split('-')
+
+  if (supportedLocales.includes(language)) {
+    return language
+  }
 
   return (
     supportedLocales.find((supportedLocale) =>
@@ -142,12 +179,10 @@ export function resolveUiLanguageFromUserLanguage(
     return normalizedUserLanguage
   }
 
-  const [language] = normalizedUserLanguage.split('-')
-  const partialMatch = SUPPORTED_UI_LANGUAGE_CODES.find((supportedLocale) =>
-    supportedLocale.startsWith(`${language}-`)
+  return (
+    findLanguageMatch(normalizedUserLanguage, SUPPORTED_UI_LANGUAGE_CODES) ||
+    fallbackLanguage
   )
-
-  return partialMatch || fallbackLanguage
 }
 
 export function resolveUiLanguagePreference(

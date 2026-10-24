@@ -1,3 +1,4 @@
+import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import { describe, expect, it } from 'vitest'
 
 import type { PluginFactory } from '../../types/plugins'
@@ -12,7 +13,7 @@ describe('plugin-settings', () => {
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en-US',
-      locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+      locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
       labelKey: 'plugin.alpha.label',
       defaultConfig: {
         fields: [{ type: 'text', name: 'apiKey', defaultValue: 'default-key' }],
@@ -26,7 +27,7 @@ describe('plugin-settings', () => {
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en-US',
-      locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+      locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
       label: 'Beta Plugin',
       description: 'Beta description',
       init: () => {},

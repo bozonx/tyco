@@ -1,3 +1,4 @@
+import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import { describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_USER_CONFIG,
@@ -142,7 +143,7 @@ describe('settings operations', () => {
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
         init: () => {},
         defaultConfig: {
           fields: [],

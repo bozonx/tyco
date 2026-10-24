@@ -15,8 +15,25 @@ function fail(message: string): never {
 export const SUPPORTED_PLUGIN_LOCALES = [
   'en-US',
   'ru-RU',
-  'es-AR',
+  'de-DE',
+  'fr-FR',
+  'es',
+  'it-IT',
+  'pt-BR',
+  'pl-PL',
   'tr-TR',
+  'uk-UA',
+  'cs-CZ',
+  'hu-HU',
+  'ro-RO',
+  'el-GR',
+  'hr-HR',
+  'ka-GE',
+  'kk-KZ',
+  'zh-CN',
+  'zh-TW',
+  'ja-JP',
+  'ko-KR',
 ] as const
 
 /** Requires identical dictionary structure and interpolation arguments. */
@@ -58,7 +75,8 @@ export function validatePluginLocales(
   }
   const expected = JSON.stringify(signature(value['en-US']))
   for (const [locale, dictionary] of Object.entries(value)) {
-    if (!/^[a-z]{2}-[A-Z]{2}$/.test(locale)) fail('Invalid plugin locale')
+    if (!/^[a-z]{2}(?:-[A-Z]{2})?$/.test(locale))
+      fail('Invalid plugin locale')
     if (JSON.stringify(signature(dictionary)) !== expected)
       fail(`Plugin locale structure or placeholders differ: ${locale}`)
   }

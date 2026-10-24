@@ -1,3 +1,4 @@
+import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -28,7 +29,7 @@ vi.mock('../../stores/plugin-runtime', () => ({
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
         labelKey: 'plugin.withConfig.label',
         defaultConfig: {
           fields: [
@@ -40,7 +41,7 @@ vi.mock('../../stores/plugin-runtime', () => ({
               apiVersion: 2,
               capabilities: [],
               defaultLocale: 'en-US',
-              locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+              locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
               labelKey: 'key',
               defaultValue: 'default-key',
             },
@@ -55,7 +56,7 @@ vi.mock('../../stores/plugin-runtime', () => ({
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: { 'en-US': {}, 'ru-RU': {}, 'es-AR': {}, 'tr-TR': {} },
+        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
         labelKey: 'plugin.withoutConfig.label',
         init: vi.fn(),
       }),
