@@ -699,7 +699,7 @@
     "launcherCommandsTab": "სწრაფი ბრძანებები",
     "llmConnections": "კავშირები",
     "llmConnectionsHint": "სად აგზავნის Tyco AI მოთხოვნებს: Google, OpenRouter, DeepSeek ან ნებისმიერი სერვერი OpenAI-თან თავსებადი API-ით, მაგალითად ლოკალური Ollama ან LM Studio. მოდელები თავიანთ კავშირში ემატება. შენახული გასაღები დაცულ საცავში ხვდება და აღარასდროს ჩანს.",
-    "llmTab": "კავშირები და მოდელები",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "ძირითადი",
       "translation": "თარგმანი",
@@ -744,7 +744,7 @@
     "modelsCount": "მოდელები: {count}",
     "modelsForFeatures": "მოდელები ფუნქციებისთვის",
     "taskModel": "მოდელი",
-    "taskModelInfo": "მოდელები და სარეზერვო მოდელები ინიშნება გვერდზე „კავშირები და მოდელები“.",
+    "taskModelInfo": "მოდელები და სარეზერვო მოდელები ინიშნება გვერდზე „LLM“.",
     "taskModelNone": "არ არის არჩეული",
     "taskModelFallbacks": "სარეზერვო: {count}",
     "taskModelChange": "შეცვლა",
@@ -828,7 +828,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (საკუთარი სერვერი)",
     "sttServerUrl": "სერვერის მისამართი",
     "sttServerUrlHint": "sherpa-onnx სტრიმინგის სერვერის WebSocket მისამართი ამ კომპიუტერზე ან ლოკალურ ქსელში. ამოცნობის მოდელი ის არის, რომელსაც სერვერი უშვებს.",
-    "sttTab": "ხმა",
+    "sttTab": "ხმის ამოცნობა",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — ახალი ხაზი)",
       "enter": "Enter (Shift+Enter — ახალი ხაზი)",
@@ -949,7 +949,6 @@
     "profileModelDefaultNamed": "პირველი ხელმისაწვდომი ({model})",
     "deleteProfileConfirmUncounted": "წაიშალოს პროფილი „{name}“? მისი SOUL.md, სამუშაო სივრცე და ყველა ჩატი სამუდამოდ წაიშლება.",
     "featuresCategory": "შესაძლებლობები",
-    "aiCategory": "AI",
     "allPluginsTab": "ყველა დანამატი",
     "pluginStatusOff": "გამორთულია",
     "developmentFeatures": "შემუშავების პროცესში მყოფი ფუნქციები"

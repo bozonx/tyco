@@ -827,7 +827,7 @@
     "launcherCommandsTab": "빠른 명령",
     "llmConnections": "연결",
     "llmConnectionsHint": "Tyco가 AI 요청을 보낼 위치: Google, OpenRouter, DeepSeek 또는 로컬 Ollama, LM Studio와 같이 OpenAI 호환 API를 지원하는 서버입니다. 모델은 각 연결 내에서 추가됩니다. 저장된 키는 보안 저장소로 이동하며 다시 표시되지 않습니다.",
-    "llmTab": "연결 및 모델",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "기본",
       "translation": "번역",
@@ -872,7 +872,7 @@
     "modelsCount": "{count}개 모델",
     "modelsForFeatures": "기능별 모델",
     "taskModel": "모델",
-    "taskModelInfo": "모델과 대체 모델은 \"연결 및 모델\" 페이지에서 지정합니다.",
+    "taskModelInfo": "모델과 대체 모델은 \"LLM\" 페이지에서 지정합니다.",
     "taskModelNone": "선택 안 됨",
     "taskModelFallbacks": "대체: {count}",
     "taskModelChange": "변경",
@@ -956,7 +956,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (자체 호스팅)",
     "sttServerUrl": "서버 주소",
     "sttServerUrlHint": "이 컴퓨터 또는 로컬 네트워크에 있는 sherpa-onnx 스트리밍 서버의 WebSocket 주소입니다. 인식 모델은 서버가 실행하는 모델을 따릅니다.",
-    "sttTab": "음성",
+    "sttTab": "음성 인식",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (줄 바꿈은 Enter)",
       "enter": "Enter (줄 바꿈은 Shift+Enter)",
@@ -1077,7 +1077,6 @@
     "profileModelDefaultNamed": "첫 번째 사용 가능 ({model})",
     "deleteProfileConfirmUncounted": "“{name}” 프로필을 삭제하시겠습니까? SOUL.md, 작업 공간 및 모든 채팅이 영구적으로 삭제됩니다.",
     "featuresCategory": "기능",
-    "aiCategory": "AI",
     "allPluginsTab": "모든 플러그인",
     "pluginStatusOff": "꺼짐",
     "developmentFeatures": "개발 중인 기능"

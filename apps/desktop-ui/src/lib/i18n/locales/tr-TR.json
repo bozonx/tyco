@@ -699,7 +699,7 @@
     "launcherCommandsTab": "Hızlı komutlar",
     "llmConnections": "Bağlantılar",
     "llmConnectionsHint": "Tyco’nun yapay zekâ isteklerini gönderdiği yer: Google, OpenRouter, DeepSeek ya da yerel Ollama veya LM Studio gibi OpenAI uyumlu API’ye sahip herhangi bir sunucu. Modeller kendi bağlantılarının içine eklenir. Kaydedilen anahtar güvenli depolamaya alınır ve bir daha gösterilmez.",
-    "llmTab": "Bağlantılar ve modeller",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Temel",
       "translation": "Çeviri",
@@ -744,7 +744,7 @@
     "modelsCount": "{count} model",
     "modelsForFeatures": "Özellik modelleri",
     "taskModel": "Model",
-    "taskModelInfo": "Modeller ve yedekleri \"Bağlantılar ve modeller\" sayfasında atanır.",
+    "taskModelInfo": "Modeller ve yedekleri \"LLM\" sayfasında atanır.",
     "taskModelNone": "Seçilmedi",
     "taskModelFallbacks": "yedek: {count}",
     "taskModelChange": "Değiştir",
@@ -828,7 +828,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (kendi sunucunuz)",
     "sttServerUrl": "Sunucu adresi",
     "sttServerUrlHint": "Bu bilgisayarda veya yerel ağda çalışan bir sherpa-onnx akış sunucusunun WebSocket adresi. Tanıma modeli, sunucunun çalıştırdığı modeldir.",
-    "sttTab": "Ses",
+    "sttTab": "Ses tanıma",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (yeni satır için Enter)",
       "enter": "Enter (yeni satır için Shift+Enter)",
@@ -949,7 +949,6 @@
     "profileModelDefaultNamed": "İlk kullanılabilir ({model})",
     "deleteProfileConfirmUncounted": "«{name}» profili silinsin mi? SOUL.md, çalışma klasörü ve tüm sohbetleri kalıcı olarak silinecek.",
     "featuresCategory": "Özellikler",
-    "aiCategory": "Yapay zekâ",
     "allPluginsTab": "Tüm eklentiler",
     "pluginStatusOff": "Kapalı",
     "developmentFeatures": "Geliştirme aşamasındaki özellikler"

@@ -696,7 +696,7 @@
     "launcherCommandsTab": "快捷命令",
     "llmConnections": "连接",
     "llmConnectionsHint": "Tyco 发送 AI 请求的目标：Google、OpenRouter、DeepSeek 或任何具有兼容 OpenAI API 的服务器，例如本地的 Ollama 或 LM Studio。模型添加在其连接内部。保存的密钥将存入安全存储区，不再显示。",
-    "llmTab": "连接与模型",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "基础",
       "translation": "翻译",
@@ -741,7 +741,7 @@
     "modelsCount": "{count} 个模型",
     "modelsForFeatures": "功能模型分配",
     "taskModel": "模型",
-    "taskModelInfo": "模型及其备用模型在“连接与模型”页面中分配。",
+    "taskModelInfo": "模型及其备用模型在“LLM”页面中分配。",
     "taskModelNone": "未选择",
     "taskModelFallbacks": "备用：{count}",
     "taskModelChange": "更改",
@@ -825,7 +825,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (自托管)",
     "sttServerUrl": "服务器地址",
     "sttServerUrlHint": "本台计算机或局域网中 sherpa-onnx 流式服务器的 WebSocket 地址。识别模型即为该服务器运行的模型。",
-    "sttTab": "语音",
+    "sttTab": "语音识别",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (按 Enter 换行)",
       "enter": "Enter (按 Shift+Enter 换行)",
@@ -946,7 +946,6 @@
     "profileModelDefaultNamed": "首个可用 ({model})",
     "deleteProfileConfirmUncounted": "删除配置文件“{name}”？其 SOUL.md、工作区以及所有聊天都将被永久删除。",
     "featuresCategory": "功能",
-    "aiCategory": "AI",
     "allPluginsTab": "所有插件",
     "pluginStatusOff": "关闭",
     "developmentFeatures": "开发中的功能"

@@ -702,7 +702,7 @@
     "launcherCommandsTab": "Quick commands",
     "llmConnections": "Connections",
     "llmConnectionsHint": "Where Tyco sends AI requests: Google, OpenRouter, DeepSeek or any server with an OpenAI-compatible API, such as a local Ollama or LM Studio. Models are added inside their connection. A saved key goes to secure storage and is never shown again.",
-    "llmTab": "Connections & models",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Basic",
       "translation": "Translation",
@@ -747,7 +747,7 @@
     "modelsCount": "{count} models",
     "modelsForFeatures": "Models for features",
     "taskModel": "Model",
-    "taskModelInfo": "Models and their fallbacks are assigned on the Connections & models page.",
+    "taskModelInfo": "Models and their fallbacks are assigned on the LLM page.",
     "taskModelNone": "Not selected",
     "taskModelFallbacks": "fallbacks: {count}",
     "taskModelChange": "Change",
@@ -831,7 +831,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (self-hosted)",
     "sttServerUrl": "Server address",
     "sttServerUrlHint": "WebSocket address of a sherpa-onnx streaming server, on this computer or in the local network. The recognition model is the one the server runs.",
-    "sttTab": "Voice",
+    "sttTab": "Speech recognition",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter for a new line)",
       "enter": "Enter (Shift+Enter for a new line)",
@@ -952,7 +952,6 @@
     "profileModelDefaultNamed": "First available ({model})",
     "deleteProfileConfirmUncounted": "Delete the profile “{name}”? Its SOUL.md, workspace and all its chats will be deleted for good.",
     "featuresCategory": "Features",
-    "aiCategory": "AI",
     "allPluginsTab": "All plugins",
     "pluginStatusOff": "Off",
     "developmentFeatures": "Features in development"

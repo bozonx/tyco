@@ -699,7 +699,7 @@
     "launcherCommandsTab": "クイックコマンド",
     "llmConnections": "接続",
     "llmConnectionsHint": "APIキーとローカルサーバーの設定。",
-    "llmTab": "接続とモデル",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "基本",
       "translation": "翻訳",
@@ -744,7 +744,7 @@
     "modelsCount": "{count} 個のモデル",
     "modelsForFeatures": "機能ごとのモデル",
     "taskModel": "モデル",
-    "taskModelInfo": "モデルと予備モデルは「接続とモデル」ページで割り当てます。",
+    "taskModelInfo": "モデルと予備モデルは「LLM」ページで割り当てます。",
     "taskModelNone": "未選択",
     "taskModelFallbacks": "予備: {count}",
     "taskModelChange": "変更",
@@ -828,7 +828,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (セルフホスト)",
     "sttServerUrl": "サーバーアドレス",
     "sttServerUrlHint": "ローカルまたはネットワーク上のsherpa-onnxストリーミングサーバーのWebSocketアドレス。",
-    "sttTab": "音声",
+    "sttTab": "音声認識",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter（改行はEnter）",
       "enter": "Enter（改行はShift+Enter）",
@@ -949,7 +949,6 @@
     "profileModelDefaultNamed": "最初に利用可能なモデル ({model})",
     "deleteProfileConfirmUncounted": "プロファイル「{name}」を削除しますか？SOUL.md、ワークスペース、およびすべてのチャットが完全に削除されます。",
     "featuresCategory": "機能",
-    "aiCategory": "AI",
     "allPluginsTab": "すべてのプラグイン",
     "pluginStatusOff": "無効",
     "developmentFeatures": "開発中の機能"

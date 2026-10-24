@@ -10,6 +10,7 @@
       'field-row--compact': density === 'compact',
       'field-row--no-divider': separator === false,
       'field-row--inline': inline,
+      'field-row--flow': flow,
     }"
   >
     <div class="field-row-label">
@@ -61,6 +62,7 @@ const props = withDefaults(
     vertical?: boolean
     nested?: boolean
     inline?: boolean
+    flow?: boolean
   }>(),
   { separator: true }
 )
@@ -149,8 +151,26 @@ const { errors, warnings, labelId, hintId, errorId, warningId, controlId } =
   justify-content: flex-end;
 }
 
+.field-row--flow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+}
+
+.field-row--flow .field-row-label {
+  min-height: 0;
+  flex-direction: row;
+  align-items: center;
+}
+
+.field-row--flow .field-row-control {
+  min-height: 0;
+}
+
 @container (max-width: 40rem) {
-  .field-row:not(.field-row--inline) {
+  .field-row:not(.field-row--inline):not(.field-row--flow) {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-sm);
   }

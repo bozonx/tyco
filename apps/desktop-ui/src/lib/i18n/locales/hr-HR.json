@@ -702,7 +702,7 @@
     "launcherCommandsTab": "Brze naredbe",
     "llmConnections": "Veze",
     "llmConnectionsHint": "Kamo Tyco šalje AI zahtjeve: Google, OpenRouter, DeepSeek ili bilo koji poslužitelj s API-jem kompatibilnim s OpenAI-jem, npr. lokalni Ollama ili LM Studio. Modeli se dodaju unutar svoje veze. Spremljeni ključ ide u sigurnu pohranu i više se nikad ne prikazuje.",
-    "llmTab": "Veze i modeli",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Osnovne",
       "translation": "Prijevod",
@@ -747,7 +747,7 @@
     "modelsCount": "Modela: {count}",
     "modelsForFeatures": "Modeli za funkcije",
     "taskModel": "Model",
-    "taskModelInfo": "Modeli i rezervni modeli dodjeljuju se na stranici „Veze i modeli”.",
+    "taskModelInfo": "Modeli i rezervni modeli dodjeljuju se na stranici „LLM”.",
     "taskModelNone": "Nije odabrano",
     "taskModelFallbacks": "rezervni: {count}",
     "taskModelChange": "Promijeni",
@@ -831,7 +831,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (vlastiti poslužitelj)",
     "sttServerUrl": "Adresa poslužitelja",
     "sttServerUrlHint": "WebSocket adresa sherpa-onnx poslužitelja za strujanje, na ovom računalu ili u lokalnoj mreži. Model prepoznavanja je onaj koji pokreće poslužitelj.",
-    "sttTab": "Glas",
+    "sttTab": "Prepoznavanje glasa",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter za novi redak)",
       "enter": "Enter (Shift+Enter za novi redak)",
@@ -952,7 +952,6 @@
     "profileModelDefaultNamed": "Prvi dostupni ({model})",
     "deleteProfileConfirmUncounted": "Izbrisati profil „{name}”? Njegov SOUL.md, radni prostor i svi chatovi bit će trajno izbrisani.",
     "featuresCategory": "Značajke",
-    "aiCategory": "AI",
     "allPluginsTab": "Svi dodaci",
     "pluginStatusOff": "Isključen",
     "developmentFeatures": "Značajke u razvoju"

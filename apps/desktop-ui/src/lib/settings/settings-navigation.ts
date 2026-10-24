@@ -50,12 +50,6 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.sttTab',
         icon: 'mdi:microphone-outline',
       },
-    ],
-  },
-  {
-    id: 'ai',
-    labelKey: 'settings.aiCategory',
-    sections: [
       { id: 'llm', labelKey: 'settings.llmTab', icon: 'mdi:cube-outline' },
       {
         id: 'ai-profiles',

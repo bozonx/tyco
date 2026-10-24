@@ -699,7 +699,7 @@
     "launcherCommandsTab": "Жылдам командалар",
     "llmConnections": "Қосылымдар",
     "llmConnectionsHint": "Tyco ЖИ сұрауларын қайда жібереді: Google, OpenRouter, DeepSeek немесе OpenAI-мен үйлесімді API бар кез келген сервер, мысалы жергілікті Ollama не LM Studio. Модельдер өз қосылымының ішінде қосылады. Сақталған кілт қорғалған қоймаға түседі және енді ешқашан көрсетілмейді.",
-    "llmTab": "Қосылымдар мен модельдер",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Негізгі",
       "translation": "Аударма",
@@ -744,7 +744,7 @@
     "modelsCount": "Модельдер: {count}",
     "modelsForFeatures": "Функцияларға арналған модельдер",
     "taskModel": "Модель",
-    "taskModelInfo": "Модельдер мен резервтік модельдер «Қосылымдар мен модельдер» бетінде тағайындалады.",
+    "taskModelInfo": "Модельдер мен резервтік модельдер «LLM» бетінде тағайындалады.",
     "taskModelNone": "Таңдалмаған",
     "taskModelFallbacks": "резервтік: {count}",
     "taskModelChange": "Өзгерту",
@@ -828,7 +828,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (өз сервері)",
     "sttServerUrl": "Сервер мекенжайы",
     "sttServerUrlHint": "Осы компьютердегі немесе жергілікті желідегі sherpa-onnx ағындық серверінің WebSocket мекенжайы. Тану моделі — сервер іске қосқан модель.",
-    "sttTab": "Дауыс",
+    "sttTab": "Дауысты тану",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — жаңа жол)",
       "enter": "Enter (Shift+Enter — жаңа жол)",
@@ -949,7 +949,6 @@
     "profileModelDefaultNamed": "Бірінші қолжетімді ({model})",
     "deleteProfileConfirmUncounted": "«{name}» профилін жою керек пе? Оның SOUL.md файлы, жұмыс кеңістігі және барлық чаты біржола жойылады.",
     "featuresCategory": "Мүмкіндіктер",
-    "aiCategory": "ЖИ",
     "allPluginsTab": "Барлық плагиндер",
     "pluginStatusOff": "Өшірулі",
     "developmentFeatures": "Әзірленіп жатқан функциялар"

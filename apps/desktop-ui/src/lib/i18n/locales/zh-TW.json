@@ -696,7 +696,7 @@
     "launcherCommandsTab": "快速命令",
     "llmConnections": "連線",
     "llmConnectionsHint": "Tyco 發送 AI 請求的端點：Google、OpenRouter、DeepSeek 或任何具有 OpenAI 相容 API 的伺服器，例如本機的 Ollama 或 LM Studio。模型會在各連線內部新增。儲存的金鑰將存入安全存放區，不再顯示。",
-    "llmTab": "連線與模型",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "基本",
       "translation": "翻譯",
@@ -741,7 +741,7 @@
     "modelsCount": "{count} 個模型",
     "modelsForFeatures": "功能指定模型",
     "taskModel": "模型",
-    "taskModelInfo": "模型及其備用模型在「連線與模型」頁面中指派。",
+    "taskModelInfo": "模型及其備用模型在「LLM」頁面中指派。",
     "taskModelNone": "未選擇",
     "taskModelFallbacks": "備用：{count}",
     "taskModelChange": "變更",
@@ -825,7 +825,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx（自行託管）",
     "sttServerUrl": "伺服器位址",
     "sttServerUrlHint": "本機或區域網路中 sherpa-onnx 串流伺服器的 WebSocket 位址。辨識模型取決於伺服器所執行的模型。",
-    "sttTab": "語音",
+    "sttTab": "語音辨識",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter（Enter 用於換行）",
       "enter": "Enter（Shift+Enter 用於換行）",
@@ -946,7 +946,6 @@
     "profileModelDefaultNamed": "第一個可用模型 ({model})",
     "deleteProfileConfirmUncounted": "要刪除設定檔「{name}」嗎？其 SOUL.md、工作區和所有聊天記錄將被永久刪除。",
     "featuresCategory": "功能",
-    "aiCategory": "AI",
     "allPluginsTab": "所有外掛程式",
     "pluginStatusOff": "關閉",
     "developmentFeatures": "開發中的功能"

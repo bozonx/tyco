@@ -696,7 +696,7 @@
     "launcherCommandsTab": "Rychlé příkazy",
     "llmConnections": "Připojení",
     "llmConnectionsHint": "Kam Tyco posílá požadavky na AI: Google, OpenRouter, DeepSeek nebo libovolný server s API kompatibilním s OpenAI, třeba místní Ollama či LM Studio. Modely se přidávají uvnitř svého připojení. Uložený klíč jde do zabezpečeného úložiště a už se nikdy nezobrazí.",
-    "llmTab": "Připojení a modely",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Základní",
       "translation": "Překlad",
@@ -741,7 +741,7 @@
     "modelsCount": "Modelů: {count}",
     "modelsForFeatures": "Modely pro funkce",
     "taskModel": "Model",
-    "taskModelInfo": "Modely a záložní modely se přiřazují na stránce „Připojení a modely“.",
+    "taskModelInfo": "Modely a záložní modely se přiřazují na stránce «LLM».",
     "taskModelNone": "Nevybráno",
     "taskModelFallbacks": "záložní: {count}",
     "taskModelChange": "Změnit",
@@ -825,7 +825,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (vlastní server)",
     "sttServerUrl": "Adresa serveru",
     "sttServerUrlHint": "Adresa WebSocket streamovacího serveru sherpa-onnx na tomto počítači nebo v místní síti. Model rozpoznávání je ten, který server spouští.",
-    "sttTab": "Hlas",
+    "sttTab": "Rozpoznávání hlasu",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter pro nový řádek)",
       "enter": "Enter (Shift+Enter pro nový řádek)",
@@ -946,7 +946,6 @@
     "profileModelDefaultNamed": "První dostupný ({model})",
     "deleteProfileConfirmUncounted": "Smazat profil „{name}“? Jeho SOUL.md, pracovní prostor a všechny chaty budou smazány navždy.",
     "featuresCategory": "Funkce",
-    "aiCategory": "AI",
     "allPluginsTab": "Všechny pluginy",
     "pluginStatusOff": "Vypnuto",
     "developmentFeatures": "Funkce ve vývoji"

@@ -699,7 +699,7 @@
     "launcherCommandsTab": "Γρήγορες εντολές",
     "llmConnections": "Συνδέσεις",
     "llmConnectionsHint": "Πού στέλνει το Tyco τα αιτήματα ΤΝ: Google, OpenRouter, DeepSeek ή οποιονδήποτε διακομιστή με API συμβατό με OpenAI, όπως τοπικό Ollama ή LM Studio. Τα μοντέλα προστίθενται μέσα στη σύνδεσή τους. Ένα αποθηκευμένο κλειδί πηγαίνει στον ασφαλή χώρο αποθήκευσης και δεν εμφανίζεται ποτέ ξανά.",
-    "llmTab": "Συνδέσεις και μοντέλα",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Βασικές",
       "translation": "Μετάφραση",
@@ -744,7 +744,7 @@
     "modelsCount": "Μοντέλα: {count}",
     "modelsForFeatures": "Μοντέλα για λειτουργίες",
     "taskModel": "Μοντέλο",
-    "taskModelInfo": "Τα μοντέλα και τα εφεδρικά τους ορίζονται στη σελίδα «Συνδέσεις και μοντέλα».",
+    "taskModelInfo": "Τα μοντέλα και τα εφεδρικά τους ορίζονται στη σελίδα «LLM».",
     "taskModelNone": "Δεν έχει επιλεγεί",
     "taskModelFallbacks": "εφεδρικά: {count}",
     "taskModelChange": "Αλλαγή",
@@ -828,7 +828,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (ιδιόκτητος διακομιστής)",
     "sttServerUrl": "Διεύθυνση διακομιστή",
     "sttServerUrlHint": "Διεύθυνση WebSocket ενός διακομιστή ροής sherpa-onnx, σε αυτόν τον υπολογιστή ή στο τοπικό δίκτυο. Το μοντέλο αναγνώρισης είναι αυτό που εκτελεί ο διακομιστής.",
-    "sttTab": "Φωνή",
+    "sttTab": "Αναγνώριση φωνής",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter για νέα γραμμή)",
       "enter": "Enter (Shift+Enter για νέα γραμμή)",
@@ -949,7 +949,6 @@
     "profileModelDefaultNamed": "Πρώτο διαθέσιμο ({model})",
     "deleteProfileConfirmUncounted": "Διαγραφή του προφίλ «{name}»; Το SOUL.md, ο χώρος εργασίας και όλες οι συνομιλίες του θα διαγραφούν οριστικά.",
     "featuresCategory": "Λειτουργίες",
-    "aiCategory": "ΤΝ",
     "allPluginsTab": "Όλες οι προσθήκες",
     "pluginStatusOff": "Ανενεργή",
     "developmentFeatures": "Λειτουργίες υπό ανάπτυξη"

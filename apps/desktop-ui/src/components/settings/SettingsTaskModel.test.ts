@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { modelLabel } from '../../lib/llm/llm-config'
 import { createTestSettingsContext } from '../../test/settings-context'
+import FieldRow from '../common/FieldRow.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -41,5 +42,10 @@ describe('SettingsTaskModel.vue', () => {
     const { context, wrapper } = setup(() => [])
     await wrapper.get('.inline-action').trigger('click')
     expect(context.navigate).toHaveBeenCalledWith('llm')
+  })
+
+  it('renders a flow field row so label, tooltip and model stay on one line', () => {
+    const { wrapper } = setup(() => [])
+    expect(wrapper.findComponent(FieldRow).props('flow')).toBe(true)
   })
 })

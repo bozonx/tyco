@@ -1,5 +1,6 @@
 <template>
   <FieldRow
+    flow
     :label="t('settings.taskModel')"
     :info="t('settings.taskModelInfo')"
   >
@@ -42,7 +43,7 @@ const summary = computed(() =>
 .task-model {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-xs) var(--space-sm);
   min-width: 0;
 }

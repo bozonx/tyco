@@ -702,7 +702,7 @@
     "launcherCommandsTab": "Comenzi rapide",
     "llmConnections": "Conexiuni",
     "llmConnectionsHint": "Unde trimite Tyco cererile AI: Google, OpenRouter, DeepSeek sau orice server cu un API compatibil OpenAI, cum ar fi Ollama sau LM Studio local. Modelele se adaugă în cadrul conexiunii lor. O cheie salvată ajunge în stocarea securizată și nu mai este afișată niciodată.",
-    "llmTab": "Conexiuni și modele",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "De bază",
       "translation": "Traducere",
@@ -747,7 +747,7 @@
     "modelsCount": "Modele: {count}",
     "modelsForFeatures": "Modele pentru funcții",
     "taskModel": "Model",
-    "taskModelInfo": "Modelele și modelele de rezervă se atribuie pe pagina „Conexiuni și modele”.",
+    "taskModelInfo": "Modelele și modelele de rezervă se atribuie pe pagina „LLM”.",
     "taskModelNone": "Neselectat",
     "taskModelFallbacks": "de rezervă: {count}",
     "taskModelChange": "Schimbă",
@@ -831,7 +831,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (găzduit propriu)",
     "sttServerUrl": "Adresa serverului",
     "sttServerUrlHint": "Adresa WebSocket a unui server de streaming sherpa-onnx, pe acest computer sau în rețeaua locală. Modelul de recunoaștere este cel rulat de server.",
-    "sttTab": "Voce",
+    "sttTab": "Recunoaștere vocală",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter pentru un rând nou)",
       "enter": "Enter (Shift+Enter pentru un rând nou)",
@@ -952,7 +952,6 @@
     "profileModelDefaultNamed": "Primul disponibil ({model})",
     "deleteProfileConfirmUncounted": "Ștergeți profilul „{name}”? Fișierul său SOUL.md, spațiul de lucru și toate chaturile vor fi șterse definitiv.",
     "featuresCategory": "Funcții",
-    "aiCategory": "AI",
     "allPluginsTab": "Toate pluginurile",
     "pluginStatusOff": "Dezactivat",
     "developmentFeatures": "Funcții în dezvoltare"

@@ -702,7 +702,7 @@
     "launcherCommandsTab": "Comandos rápidos",
     "llmConnections": "Conexões",
     "llmConnectionsHint": "Para onde o Tyco envia as solicitações de IA: Google, OpenRouter, DeepSeek ou qualquer servidor com API compatível com OpenAI, como um Ollama ou LM Studio local. Os modelos são adicionados dentro da conexão. Uma chave salva vai para o armazenamento seguro e nunca mais é exibida.",
-    "llmTab": "Conexões e modelos",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Básicas",
       "translation": "Tradução",
@@ -747,7 +747,7 @@
     "modelsCount": "Modelos: {count}",
     "modelsForFeatures": "Modelos por função",
     "taskModel": "Modelo",
-    "taskModelInfo": "Os modelos e seus reservas são atribuídos na página \"Conexões e modelos\".",
+    "taskModelInfo": "Os modelos e seus reservas são atribuídos na página \"LLM\".",
     "taskModelNone": "Não selecionado",
     "taskModelFallbacks": "reservas: {count}",
     "taskModelChange": "Alterar",
@@ -831,7 +831,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (auto-hospedado)",
     "sttServerUrl": "Endereço do servidor",
     "sttServerUrlHint": "Endereço WebSocket de um servidor de streaming sherpa-onnx, neste computador ou na rede local. O modelo de reconhecimento é o que o servidor executa.",
-    "sttTab": "Voz",
+    "sttTab": "Reconhecimento de voz",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter para nova linha)",
       "enter": "Enter (Shift+Enter para nova linha)",
@@ -952,7 +952,6 @@
     "profileModelDefaultNamed": "Primeiro disponível ({model})",
     "deleteProfileConfirmUncounted": "Excluir o perfil “{name}”? O SOUL.md, o espaço de trabalho e todos os chats dele serão excluídos para sempre.",
     "featuresCategory": "Recursos",
-    "aiCategory": "IA",
     "allPluginsTab": "Todos os plugins",
     "pluginStatusOff": "Desativado",
     "developmentFeatures": "Recursos em desenvolvimento"

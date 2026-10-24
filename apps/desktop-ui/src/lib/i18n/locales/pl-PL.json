@@ -702,7 +702,7 @@
     "launcherCommandsTab": "Szybkie polecenia",
     "llmConnections": "Połączenia",
     "llmConnectionsHint": "Dokąd Tyco wysyła zapytania AI: Google, OpenRouter, DeepSeek lub dowolny serwer z API zgodnym z OpenAI, np. lokalna Ollama lub LM Studio. Modele dodaje się wewnątrz połączenia. Zapisany klucz trafia do bezpiecznego magazynu i nigdy więcej nie jest wyświetlany.",
-    "llmTab": "Połączenia i modele",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Podstawowe",
       "translation": "Tłumaczenie",
@@ -747,7 +747,7 @@
     "modelsCount": "Modele: {count}",
     "modelsForFeatures": "Modele dla funkcji",
     "taskModel": "Model",
-    "taskModelInfo": "Modele i modele zapasowe przypisuje się na stronie „Połączenia i modele”.",
+    "taskModelInfo": "Modele i modele zapasowe przypisuje się na stronie „LLM”.",
     "taskModelNone": "Nie wybrano",
     "taskModelFallbacks": "zapasowe: {count}",
     "taskModelChange": "Zmień",
@@ -831,7 +831,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (własny serwer)",
     "sttServerUrl": "Adres serwera",
     "sttServerUrlHint": "Adres WebSocket serwera strumieniowego sherpa-onnx na tym komputerze lub w sieci lokalnej. Model rozpoznawania to ten, który uruchamia serwer.",
-    "sttTab": "Głos",
+    "sttTab": "Rozpoznawanie mowy",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — nowy wiersz)",
       "enter": "Enter (Shift+Enter — nowy wiersz)",
@@ -952,7 +952,6 @@
     "profileModelDefaultNamed": "Pierwszy dostępny ({model})",
     "deleteProfileConfirmUncounted": "Usunąć profil „{name}”? Jego SOUL.md, przestrzeń robocza i wszystkie czaty zostaną usunięte na zawsze.",
     "featuresCategory": "Funkcje",
-    "aiCategory": "AI",
     "allPluginsTab": "Wszystkie wtyczki",
     "pluginStatusOff": "Wyłączona",
     "developmentFeatures": "Funkcje w fazie rozwoju"

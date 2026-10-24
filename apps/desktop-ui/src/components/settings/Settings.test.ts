@@ -237,7 +237,6 @@ describe('Settings.vue', () => {
       wrapper.findAll('.settings-nav-category').map((node) => node.text())
     ).toEqual([
       'settings.featuresCategory',
-      'settings.aiCategory',
       'settings.actionsCategory',
       'settings.pluginsTab',
     ])
@@ -249,8 +248,7 @@ describe('Settings.vue', () => {
         )
     ).toEqual([
       ['general', 'editor', 'global-actions', 'accessibility'],
-      ['chat', 'correction', 'translations', 'stt'],
-      ['llm', 'ai-profiles'],
+      ['chat', 'correction', 'translations', 'stt', 'llm', 'ai-profiles'],
       ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],
       ['plugins', 'plugin:PluginA', 'plugin:PluginB'],
     ])

@@ -80,9 +80,8 @@ describe('settings navigation', () => {
       [undefined, ['general', 'editor', 'global-actions', 'accessibility']],
       [
         'settings.featuresCategory',
-        ['chat', 'correction', 'translations', 'stt'],
+        ['chat', 'correction', 'translations', 'stt', 'llm', 'ai-profiles'],
       ],
-      ['settings.aiCategory', ['llm', 'ai-profiles']],
       [
         'settings.actionsCategory',
         ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],

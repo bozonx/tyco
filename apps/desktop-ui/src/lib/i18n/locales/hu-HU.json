@@ -699,7 +699,7 @@
     "launcherCommandsTab": "Gyorsparancsok",
     "llmConnections": "Kapcsolatok",
     "llmConnectionsHint": "Hova küldi a Tyco az MI-kéréseket: Google, OpenRouter, DeepSeek vagy bármely OpenAI-kompatibilis API-val rendelkező szerver, például helyi Ollama vagy LM Studio. A modelleket a saját kapcsolatukon belül kell hozzáadni. A mentett kulcs a biztonságos tárolóba kerül, és soha többé nem jelenik meg.",
-    "llmTab": "Kapcsolatok és modellek",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Alapvető",
       "translation": "Fordítás",
@@ -744,7 +744,7 @@
     "modelsCount": "Modellek: {count}",
     "modelsForFeatures": "Modellek a funkciókhoz",
     "taskModel": "Modell",
-    "taskModelInfo": "A modellek és tartalékaik a „Kapcsolatok és modellek” oldalon rendelhetők hozzá.",
+    "taskModelInfo": "A modellek és tartalékaik a „LLM” oldalon rendelhetők hozzá.",
     "taskModelNone": "Nincs kiválasztva",
     "taskModelFallbacks": "tartalék: {count}",
     "taskModelChange": "Módosítás",
@@ -828,7 +828,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (saját szerveren)",
     "sttServerUrl": "Szervercím",
     "sttServerUrlHint": "Egy sherpa-onnx streamingszerver WebSocket-címe ezen a számítógépen vagy a helyi hálózaton. A felismerési modell az, amelyet a szerver futtat.",
-    "sttTab": "Hang",
+    "sttTab": "Beszédfelismerés",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter: új sor)",
       "enter": "Enter (Shift+Enter: új sor)",
@@ -949,7 +949,6 @@
     "profileModelDefaultNamed": "Első elérhető ({model})",
     "deleteProfileConfirmUncounted": "Törli a(z) „{name}” profilt? A SOUL.md fájlja, a munkaterülete és az összes csevegése végleg törlődik.",
     "featuresCategory": "Funkciók",
-    "aiCategory": "MI",
     "allPluginsTab": "Minden bővítmény",
     "pluginStatusOff": "Ki",
     "developmentFeatures": "Fejlesztés alatt álló funkciók"

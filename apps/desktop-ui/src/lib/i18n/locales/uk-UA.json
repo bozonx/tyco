@@ -699,7 +699,7 @@
     "launcherCommandsTab": "Швидкі команди",
     "llmConnections": "Підключення",
     "llmConnectionsHint": "Куди Tyco надсилає ШІ-запити: Google, OpenRouter, DeepSeek або будь-який сервер з OpenAI-сумісним API, наприклад локальний Ollama чи LM Studio. Моделі додаються всередині свого підключення. Збережений ключ потрапляє в захищене сховище й більше ніколи не показується.",
-    "llmTab": "Підключення та моделі",
+    "llmTab": "LLM",
     "mainActionGroups": {
       "basic": "Основні",
       "translation": "Переклад",
@@ -744,7 +744,7 @@
     "modelsCount": "Моделей: {count}",
     "modelsForFeatures": "Моделі для функцій",
     "taskModel": "Модель",
-    "taskModelInfo": "Моделі та резервні моделі призначаються на сторінці «Підключення та моделі».",
+    "taskModelInfo": "Моделі та резервні моделі призначаються на сторінці «LLM».",
     "taskModelNone": "Не вибрано",
     "taskModelFallbacks": "резервних: {count}",
     "taskModelChange": "Змінити",
@@ -828,7 +828,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (власний сервер)",
     "sttServerUrl": "Адреса сервера",
     "sttServerUrlHint": "WebSocket-адреса потокового сервера sherpa-onnx на цьому комп’ютері або в локальній мережі. Модель розпізнавання — та, що запущена на сервері.",
-    "sttTab": "Голос",
+    "sttTab": "Розпізнавання голосу",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — новий рядок)",
       "enter": "Enter (Shift+Enter — новий рядок)",
@@ -949,7 +949,6 @@
     "profileModelDefaultNamed": "Перша доступна ({model})",
     "deleteProfileConfirmUncounted": "Видалити профіль «{name}»? Його SOUL.md, робочу теку й усі чати буде видалено назавжди.",
     "featuresCategory": "Можливості",
-    "aiCategory": "ШІ",
     "allPluginsTab": "Усі плагіни",
     "pluginStatusOff": "Вимкнено",
     "developmentFeatures": "Функції в розробці"
