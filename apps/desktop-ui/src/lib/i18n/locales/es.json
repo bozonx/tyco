@@ -586,6 +586,7 @@
     "appHotkeysHint": "La tecla que envía el texto en la entrada rápida y en el chat; la otra tecla del par inserta una nueva línea. Las demás teclas son fijas: en la entrada rápida, Tab abre el menú de acciones y Esc cancela; en el editor, Ctrl+Enter abre las acciones rápidas.",
     "appHotkeysTitle": "Atajos de la aplicación",
     "appLanguage": "Idioma de la interfaz",
+    "appLanguageSystem": "Como en el sistema",
     "backToPlugins": "Volver a los plugins",
     "baseUrl": "URL base",
     "browseWorkingDir": "Seleccionar el directorio de trabajo…",

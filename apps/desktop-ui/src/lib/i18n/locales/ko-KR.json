@@ -711,6 +711,7 @@
     "appHotkeysHint": "빠른 입력과 채팅에서 텍스트를 전송하는 키입니다. 쌍을 이루는 다른 키는 줄 바꿈을 삽입합니다. 다른 키는 고정되어 있습니다. 빠른 입력에서 Tab은 작업 메뉴를 열고 Esc는 취소하며, 편집기에서 Ctrl+Enter는 빠른 작업을 엽니다.",
     "appHotkeysTitle": "애플리케이션 단축키",
     "appLanguage": "인터페이스 언어",
+    "appLanguageSystem": "시스템 설정 따르기",
     "backToPlugins": "플러그인 목록으로 돌아가기",
     "baseUrl": "기본 URL",
     "browseWorkingDir": "작업 디렉터리 선택…",

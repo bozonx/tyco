@@ -89,6 +89,7 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import {
+  AUTO_LANGUAGE_VALUE,
   SUPPORTED_UI_LANGUAGE_OPTIONS,
   buildLanguageOptions,
 } from '../../lib/locale/language'
@@ -149,12 +150,15 @@ const updateTerminalPasteShortcut = (value: string | number | undefined) => {
 }
 
 const appLanguageOptions = computed(() => {
-  return buildLanguageOptions(
-    [userConfig.value.language.ui],
-    true,
-    t,
-    SUPPORTED_UI_LANGUAGE_OPTIONS
-  )
+  return [
+    { id: AUTO_LANGUAGE_VALUE, name: t('settings.appLanguageSystem') },
+    ...buildLanguageOptions(
+      [userConfig.value.language.ui],
+      false,
+      t,
+      SUPPORTED_UI_LANGUAGE_OPTIONS
+    ),
+  ]
 })
 
 const updateWindowInsertionMethod = (value: string | number) => {

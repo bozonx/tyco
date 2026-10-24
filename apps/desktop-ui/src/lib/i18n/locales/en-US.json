@@ -586,6 +586,7 @@
     "appHotkeysHint": "The key that sends text in the quick input and the chat; the other key of the pair inserts a new line. The other keys are fixed: in the quick input Tab opens the actions menu and Esc cancels; in the editor Ctrl+Enter opens the quick actions.",
     "appHotkeysTitle": "Application hotkeys",
     "appLanguage": "Interface language",
+    "appLanguageSystem": "System default",
     "backToPlugins": "Back to plugins",
     "baseUrl": "Base URL",
     "browseWorkingDir": "Select working directory…",

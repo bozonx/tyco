@@ -583,6 +583,7 @@
     "appHotkeysHint": "A billentyű, amely elküldi a szöveget a gyorsbevitelben és a csevegésben; a pár másik billentyűje új sort szúr be. A többi billentyű rögzített: a gyorsbevitelben a Tab megnyitja a műveletmenüt, az Esc megszakít; a szerkesztőben a Ctrl+Enter megnyitja a gyorsműveleteket.",
     "appHotkeysTitle": "Az alkalmazás billentyűparancsai",
     "appLanguage": "A felület nyelve",
+    "appLanguageSystem": "Rendszer szerint",
     "backToPlugins": "Vissza a bővítményekhez",
     "baseUrl": "Alap-URL",
     "browseWorkingDir": "Munkakönyvtár kiválasztása…",

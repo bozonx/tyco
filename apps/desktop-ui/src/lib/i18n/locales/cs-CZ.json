@@ -580,6 +580,7 @@
     "appHotkeysHint": "Klávesa, která odesílá text v rychlém zadávání a v chatu; druhá klávesa z dvojice vkládá nový řádek. Ostatní klávesy jsou pevné: v rychlém zadávání Tab otevře nabídku akcí a Esc zruší; v editoru Ctrl+Enter otevře rychlé akce.",
     "appHotkeysTitle": "Klávesové zkratky aplikace",
     "appLanguage": "Jazyk rozhraní",
+    "appLanguageSystem": "Podle systému",
     "backToPlugins": "Zpět na pluginy",
     "baseUrl": "Základní URL",
     "browseWorkingDir": "Vybrat pracovní adresář…",

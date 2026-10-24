@@ -586,6 +586,7 @@
     "appHotkeysHint": "Il tasto che invia il testo nell’input rapido e nella chat; l’altro tasto della coppia va a capo. Gli altri tasti sono fissi: nell’input rapido Tab apre il menu azioni ed Esc annulla; nell’editor Ctrl+Invio apre le azioni rapide.",
     "appHotkeysTitle": "Scorciatoie dell’applicazione",
     "appLanguage": "Lingua dell’interfaccia",
+    "appLanguageSystem": "Come nel sistema",
     "backToPlugins": "Torna ai plugin",
     "baseUrl": "URL di base",
     "browseWorkingDir": "Seleziona la cartella di lavoro…",

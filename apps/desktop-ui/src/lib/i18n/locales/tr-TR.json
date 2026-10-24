@@ -583,6 +583,7 @@
     "appHotkeysHint": "Hızlı girişte ve sohbette metni gönderen tuş; çiftin diğer tuşu yeni satır ekler. Diğer tuşlar sabittir: hızlı girişte Tab eylemler menüsünü açar, Esc iptal eder; düzenleyicide Ctrl+Enter hızlı eylemleri açar.",
     "appHotkeysTitle": "Uygulama kısayolları",
     "appLanguage": "Arayüz dili",
+    "appLanguageSystem": "Sistem dili",
     "backToPlugins": "Eklentilere dön",
     "baseUrl": "Temel URL",
     "browseWorkingDir": "Çalışma klasörü seç…",

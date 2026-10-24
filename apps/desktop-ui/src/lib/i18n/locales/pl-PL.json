@@ -586,6 +586,7 @@
     "appHotkeysHint": "Klawisz wysyłający tekst w szybkim wprowadzaniu i na czacie; drugi klawisz z pary wstawia nowy wiersz. Pozostałe klawisze są stałe: w szybkim wprowadzaniu Tab otwiera menu akcji, a Esc anuluje; w edytorze Ctrl+Enter otwiera szybkie akcje.",
     "appHotkeysTitle": "Skróty aplikacji",
     "appLanguage": "Język interfejsu",
+    "appLanguageSystem": "Jak w systemie",
     "backToPlugins": "Wróć do wtyczek",
     "baseUrl": "Bazowy URL",
     "browseWorkingDir": "Wybierz katalog roboczy…",

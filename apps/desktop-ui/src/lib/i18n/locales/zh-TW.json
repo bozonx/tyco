@@ -580,6 +580,7 @@
     "appHotkeysHint": "在快速輸入與聊天中用於發送文字的按鍵；配對的另一個按鍵則用於插入新行。其他按鍵為固定設定：在快速輸入中 Tab 開啟動作選單、Esc 取消；在編輯器中 Ctrl+Enter 開啟快速動作。",
     "appHotkeysTitle": "應用程式快捷鍵",
     "appLanguage": "介面語言",
+    "appLanguageSystem": "跟隨系統",
     "backToPlugins": "返回外掛程式",
     "baseUrl": "基礎 URL",
     "browseWorkingDir": "選取工作目錄…",

@@ -586,6 +586,7 @@
     "appHotkeysHint": "Tasta care trimite textul în introducerea rapidă și în chat; cealaltă tastă din pereche inserează un rând nou. Celelalte taste sunt fixe: în introducerea rapidă, Tab deschide meniul de acțiuni și Esc anulează; în editor, Ctrl+Enter deschide acțiunile rapide.",
     "appHotkeysTitle": "Comenzi rapide ale aplicației",
     "appLanguage": "Limba interfeței",
+    "appLanguageSystem": "Ca în sistem",
     "backToPlugins": "Înapoi la pluginuri",
     "baseUrl": "URL de bază",
     "browseWorkingDir": "Selectați directorul de lucru…",
