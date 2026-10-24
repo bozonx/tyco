@@ -586,8 +586,6 @@
     "appHotkeysHint": "Die Taste, die Text in der Schnelleingabe und im Chat sendet; die andere Taste des Paars fügt eine neue Zeile ein. Die übrigen Tasten sind fest: In der Schnelleingabe öffnet Tab das Aktionsmenü und Esc bricht ab; im Editor öffnet Strg+Enter die Schnellaktionen.",
     "appHotkeysTitle": "Tastenkürzel der App",
     "appLanguage": "Sprache der Oberfläche",
-    "appLanguageAuto": "Automatisch",
-    "appLanguageManual": "Ändern",
     "backToPlugins": "Zurück zu den Plugins",
     "baseUrl": "Basis-URL",
     "browseWorkingDir": "Arbeitsverzeichnis auswählen…",

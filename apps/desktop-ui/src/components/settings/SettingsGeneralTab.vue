@@ -9,25 +9,11 @@
         />
       </FieldRow>
       <FieldRow :label="t('settings.appLanguage')">
-        <div class="flex items-center gap-2 w-full">
-          <FieldSelect
-            v-if="isAppLanguageManual"
-            class="flex-1"
-            :model-value="effectiveAppLanguage"
-            :options="appLanguageOptions"
-            @update:model-value="updateAppLanguage"
-          />
-          <span v-else class="flex-1 text-sm text-muted">
-            {{ getLanguageName(effectiveAppLanguage) }}
-          </span>
-          <Button size="sm" variant="ghost" @click="toggleAppLanguageMode">
-            {{
-              isAppLanguageManual
-                ? t('settings.appLanguageAuto')
-                : t('settings.appLanguageManual')
-            }}
-          </Button>
-        </div>
+        <FieldSelect
+          :model-value="userConfig.language.ui"
+          :options="appLanguageOptions"
+          @update:model-value="updateAppLanguage"
+        />
       </FieldRow>
     </SettingsSection>
 
@@ -103,11 +89,9 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import {
-  AUTO_LANGUAGE_VALUE,
   SUPPORTED_UI_LANGUAGE_OPTIONS,
   buildLanguageOptions,
 } from '../../lib/locale/language'
-import Button from '../common/Button.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -123,7 +107,7 @@ import {
 } from '@tyco/shared'
 
 const { t } = useI18n()
-const { draft: userConfig, effectiveAppLanguage } = useSettingsContext()
+const { draft: userConfig } = useSettingsContext()
 const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
   () => [
     { id: 'auto', name: t('theme.auto'), icon: 'mdi:theme-light-dark' },
@@ -138,10 +122,6 @@ const windowInsertionOptions = computed(() => [
   { id: 'xdotool', name: 'xdotool' },
   { id: 'ydotool', name: 'ydotool' },
 ])
-
-const isAppLanguageManual = computed(
-  () => userConfig.value.language.ui !== AUTO_LANGUAGE_VALUE
-)
 
 const pasteShortcutOptions = computed(() => {
   return [
@@ -170,16 +150,12 @@ const updateTerminalPasteShortcut = (value: string | number | undefined) => {
 
 const appLanguageOptions = computed(() => {
   return buildLanguageOptions(
-    [effectiveAppLanguage.value, userConfig.value.language.ui],
-    false,
+    [userConfig.value.language.ui],
+    true,
     t,
     SUPPORTED_UI_LANGUAGE_OPTIONS
   )
 })
-
-const getLanguageName = (language: string) =>
-  appLanguageOptions.value.find((option) => option.id === language)?.name ||
-  language
 
 const updateWindowInsertionMethod = (value: string | number) => {
   if (!LINUX_INSERTION_METHODS.includes(value as LinuxInsertionMethod)) return
@@ -192,15 +168,6 @@ const updateAppLanguage = (value: number | string | undefined) => {
   }
 
   userConfig.value.language.ui = value
-}
-
-const toggleAppLanguageMode = () => {
-  if (isAppLanguageManual.value) {
-    userConfig.value.language.ui = AUTO_LANGUAGE_VALUE
-    return
-  }
-
-  userConfig.value.language.ui = effectiveAppLanguage.value
 }
 </script>
 

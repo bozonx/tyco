@@ -583,8 +583,6 @@
     "appHotkeysHint": "クイック入力やチャットでテキストを送信するキー、および結果を挿入する際のキーボードレイアウト。",
     "appHotkeysTitle": "アプリケーションのショートカット",
     "appLanguage": "UI表示言語",
-    "appLanguageAuto": "自動",
-    "appLanguageManual": "変更",
     "backToPlugins": "プラグイン一覧に戻る",
     "baseUrl": "ベースURL",
     "browseWorkingDir": "作業ディレクトリを選択…",

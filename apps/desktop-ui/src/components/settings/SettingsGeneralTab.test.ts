@@ -110,18 +110,21 @@ describe('SettingsGeneralTab.vue', () => {
     expect(config.appearance.theme).toBe('dark')
   })
 
-  it('toggles app language mode between auto and manual', async () => {
+  it('keeps the interface language select visible for automatic and explicit choices', async () => {
     const config = createConfig({ language: { ui: AUTO_LANGUAGE_VALUE } })
     const wrapper = mountTab(config)
+    const row = wrapper.get('[data-label="settings.appLanguage"]')
+    const select = row.get('.field-select-stub')
+    expect(select.element).toHaveProperty('value', AUTO_LANGUAGE_VALUE)
+    expect(row.find('button').exists()).toBe(false)
 
-    const toggleBtn = wrapper.find('button.btn')
-    expect(toggleBtn.text()).toBe('settings.appLanguageManual')
+    await select.setValue('ru-RU')
+    expect(config.language.ui).toBe('ru-RU')
+    expect(row.find('.field-select-stub').exists()).toBe(true)
 
-    await toggleBtn.trigger('click')
-    expect(config.language.ui).not.toBe(AUTO_LANGUAGE_VALUE)
-
-    await toggleBtn.trigger('click')
+    await select.setValue(AUTO_LANGUAGE_VALUE)
     expect(config.language.ui).toBe(AUTO_LANGUAGE_VALUE)
+    expect(row.find('.field-select-stub').exists()).toBe(true)
   })
 
   it('sets a separate terminal paste shortcut or follows the regular shortcut', async () => {

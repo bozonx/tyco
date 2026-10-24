@@ -580,8 +580,6 @@
     "appHotkeysHint": "用于在快捷输入和聊天中发送文本的按键；该键对中的另一个按键用于换行。其他按键固定：在快捷输入中 Tab 打开操作菜单，Esc 取消；在编辑器中 Ctrl+Enter 打开快捷操作。",
     "appHotkeysTitle": "应用程序快捷键",
     "appLanguage": "界面语言",
-    "appLanguageAuto": "跟随系统",
-    "appLanguageManual": "更改",
     "backToPlugins": "返回插件列表",
     "baseUrl": "基础 URL",
     "browseWorkingDir": "选择工作目录…",

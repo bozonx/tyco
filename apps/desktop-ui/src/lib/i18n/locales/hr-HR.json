@@ -586,8 +586,6 @@
     "appHotkeysHint": "Tipka koja šalje tekst u brzom unosu i chatu; druga tipka iz para umeće novi redak. Ostale tipke su fiksne: u brzom unosu Tab otvara izbornik radnji, a Esc odustaje; u uređivaču Ctrl+Enter otvara brze radnje.",
     "appHotkeysTitle": "Tipkovnički prečaci aplikacije",
     "appLanguage": "Jezik sučelja",
-    "appLanguageAuto": "Automatski",
-    "appLanguageManual": "Promijeni",
     "backToPlugins": "Natrag na dodatke",
     "baseUrl": "Osnovni URL",
     "browseWorkingDir": "Odaberi radni direktorij…",
