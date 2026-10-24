@@ -1,8 +1,7 @@
 {
   "retrievedAt": "2026-10-24",
-  "registryDate": "2026-09-17",
   "sources": {
-    "registry": "https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry",
+    "qwen35": "https://qwen.ai/blog?id=qwen3.5",
     "deepl": "https://raw.githubusercontent.com/DeepL/api-docs/main/snippets/language-table.jsx",
     "google": "https://docs.cloud.google.com/translate/docs/languages"
   }

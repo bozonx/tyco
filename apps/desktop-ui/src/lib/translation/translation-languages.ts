@@ -4,24 +4,37 @@ import { messages } from '../i18n/messages'
 import { COMMON_LANGUAGE_OPTIONS, normalizeLocale } from '../locale/language'
 import deepl from './languages/deepl.json'
 import google from './languages/google.json'
-import iana from './languages/iana.json'
+import qwen35 from './languages/qwen35.json'
 
 export type TranslationProvider = TranslationConfig['provider']
 export type TranslationDirection = 'source' | 'target'
 
+/** Qwen3.5's published catalog plus existing regional and script preferences. */
 const llm: Record<string, string> = {
-  ...iana,
+  ...qwen35,
   ...Object.fromEntries(
-    COMMON_LANGUAGE_OPTIONS.map(({ id, name }) => [id, name])
+    COMMON_LANGUAGE_OPTIONS.filter(({ id }) => id.includes('-')).map(
+      ({ id, name }) => [id, name]
+    )
   ),
-  ...deepl.target,
-  ...google.target,
+  ...Object.fromEntries(
+    Object.entries({ ...deepl.target, ...google.target }).filter(
+      ([id]) =>
+        id.includes('-') &&
+        (Object.hasOwn(qwen35, id.split('-')[0]) || id.startsWith('zh-'))
+    )
+  ),
 }
 const catalogs: Record<
   TranslationProvider,
   Record<TranslationDirection, Record<string, string>>
 > = { llm: { source: llm, target: llm }, deepl, google }
-const names: Record<string, string | undefined> = { ...llm, ...iana }
+const names: Record<string, string | undefined> = {
+  ...deepl.source,
+  ...deepl.target,
+  ...google.target,
+  ...llm,
+}
 const nativeNames = new Map(
   COMMON_LANGUAGE_OPTIONS.map(({ id, name }) => [id as string, name])
 )
@@ -30,7 +43,7 @@ const messageNames: Record<string, string | undefined> =
 const displayNames = new Map<string, Intl.DisplayNames>()
 const labels = new Map<string, Map<string, string>>()
 
-/** Registry and provider names are data, not missing application messages. */
+/** Model and provider language names are data, not missing application messages. */
 export function translationLanguageLabel(id: string, locale: string): string {
   let localized = labels.get(locale)
   if (!localized) {
@@ -49,9 +62,12 @@ export function translationLanguageLabel(id: string, locale: string): string {
   }
   let name = names[id] ?? id
   try {
-    name = formatter.of(id) ?? name
+    // CLDR merges some dialect codes into a broader language (dhd -> mwr).
+    // Keep the published name so separate entries remain distinguishable.
+    if (!Object.hasOwn(qwen35, id) || Intl.getCanonicalLocales(id)[0] === id)
+      name = formatter.of(id) ?? name
   } catch {
-    /* Preserve registry names for tags unknown to the runtime. */
+    /* Preserve published names for tags unknown to the runtime. */
   }
   localized.set(id, name)
   return name

@@ -8,19 +8,19 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('TranslationLanguageSelect', () => {
-  it('finds a rare registry code without rendering thousands of options', async () => {
+  it('keeps the selection visible and finds a less common Qwen language code', async () => {
     const wrapper = mount(TranslationLanguageSelect, {
-      props: { provider: 'llm', modelValue: 'zzj' },
+      props: { provider: 'llm', modelValue: 'mhr' },
     })
     expect(wrapper.findAll('option').length).toBeLessThanOrEqual(101)
     expect(
       (wrapper.get('select').element as HTMLSelectElement).selectedOptions[0]
         ?.textContent
-    ).toContain('zzj')
-    await wrapper.get('input').setValue('zzj')
+    ).toContain('mhr')
+    await wrapper.get('input').setValue('mhr')
     expect(wrapper.findAll('option')).toHaveLength(1)
     await wrapper.get('select').setValue('0')
-    expect(wrapper.emitted('update:modelValue')).toEqual([['zzj']])
+    expect(wrapper.emitted('update:modelValue')).toEqual([['mhr']])
     expect((wrapper.get('input').element as HTMLInputElement).value).toBe('')
   })
 
