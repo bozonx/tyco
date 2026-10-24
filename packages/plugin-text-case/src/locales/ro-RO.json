@@ -1,0 +1,12 @@
+{
+  "label": "Formatare litere",
+  "description": "Convertește textul între camelCase, snake_case, PascalCase, MAJUSCULE și alte stiluri",
+  "capitalizeFirst": "Prima literă majusculă",
+  "sentenceCase": "Litere ca în propoziție",
+  "identifierToText": "Identificator în text",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

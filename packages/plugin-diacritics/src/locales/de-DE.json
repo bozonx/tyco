@@ -1,0 +1,14 @@
+{
+  "label": "Diakritische Zeichen",
+  "description": "Gilt nur für ausgewählte Buchstaben. Alles löschen wandelt auch ё → е, й → и und ñ → n um.",
+  "actions": "Symbolleisten-Schaltflächen",
+  "acute": "Akut / Betonung ◌́",
+  "grave": "Gravis ◌̀",
+  "circumflex": "Zirkumflex ◌̂",
+  "diaeresis": "Trema / Umlaut ◌̈",
+  "tilde": "Tilde ◌̃",
+  "caron": "Hatschek / Caron ◌̌",
+  "macron": "Makron ◌̄",
+  "clearAcute": "Akut / Betonung entfernen",
+  "clear": "Alle diakritischen Zeichen entfernen"
+}

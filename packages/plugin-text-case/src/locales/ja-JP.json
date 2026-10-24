@@ -1,0 +1,12 @@
+{
+  "label": "テキストの大文字・小文字",
+  "description": "テキストを camelCase、snake_case、PascalCase、UPPERCASE などのスタイル間で変換します",
+  "capitalizeFirst": "先頭文字を大文字にする",
+  "sentenceCase": "文の先頭を大文字",
+  "identifierToText": "識別子をテキストに変換",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

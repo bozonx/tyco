@@ -1,0 +1,14 @@
+{
+  "label": "Diacritiques",
+  "description": "S'applique uniquement aux lettres sélectionnées. Tout effacer transforme également ё → е, й → и et ñ → n.",
+  "actions": "Boutons de la barre d'outils",
+  "acute": "Accent aigu / accent tonique ◌́",
+  "grave": "Accent grave ◌̀",
+  "circumflex": "Accent circonflexe ◌̂",
+  "diaeresis": "Tréma ◌̈",
+  "tilde": "Tilde ◌̃",
+  "caron": "Caron ◌̌",
+  "macron": "Macron ◌̄",
+  "clearAcute": "Supprimer l'accent aigu / l'accent tonique",
+  "clear": "Supprimer tous les diacritiques"
+}

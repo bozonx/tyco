@@ -1,0 +1,16 @@
+{
+  "label": "Webes kód formázása",
+  "description": "Automatikusan formázza a HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript és JSON kódokat",
+  "invalidCode": "A kód feldolgozása nem sikerült. A szöveg változatlan maradt.",
+  "tabWidth": "Behúzás mérete",
+  "useTabs": "Tabulátorok használata",
+  "printWidth": "Cél sorszélesség",
+  "singleQuote": "Egyszeres idézőjelek előnyben részesítése JS / TS-ben",
+  "semi": "Pontosvesszők használata JS / TS-ben",
+  "xmlWhitespace": "XML szóközök kezelése",
+  "xmlStrict": "Szigorú: jelentős szóközök megőrzése",
+  "xmlPreserve": "Szöveg megőrzése, elemek elrendezésének formázása",
+  "xmlIgnore": "Figyelmen kívül hagyás: a szóközök módosulhatnak",
+  "formatCode": "Webes kód / XML formázása",
+  "unsupportedLanguage": "Nem sikerült megbízhatóan azonosítani a támogatott nyelvet. A szöveg változatlan maradt."
+}

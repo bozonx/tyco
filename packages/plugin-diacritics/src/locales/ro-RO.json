@@ -1,0 +1,14 @@
+{
+  "label": "Diacritice",
+  "description": "Se aplică doar literelor selectate. Ștergerea tuturor transformă de asemenea ё → е, й → и și ñ → n.",
+  "actions": "Butoane bară de instrumente",
+  "acute": "Accent ascuțit ◌́",
+  "grave": "Accent grav ◌̀",
+  "circumflex": "Accent circumflex ◌̂",
+  "diaeresis": "Trema ◌̈",
+  "tilde": "Tildă ◌̃",
+  "caron": "Caron ◌̌",
+  "macron": "Macron ◌̄",
+  "clearAcute": "Elimină accentul ascuțit",
+  "clear": "Elimină toate diacriticele"
+}

@@ -1,0 +1,16 @@
+{
+  "label": "網頁程式碼格式化",
+  "description": "自動格式化 HTML、XML、CSS、SCSS、Less、JavaScript、TypeScript 和 JSON",
+  "invalidCode": "無法解析此程式碼。文字保持未變更。",
+  "tabWidth": "縮排大小",
+  "useTabs": "使用定位點 (Tab)",
+  "printWidth": "目標行寬",
+  "singleQuote": "在 JS / TS 中優先使用單引號",
+  "semi": "在 JS / TS 中使用分號",
+  "xmlWhitespace": "XML 空白字元處理",
+  "xmlStrict": "嚴格：保留有意義的空白字元",
+  "xmlPreserve": "保留文字，格式化元素版面配置",
+  "xmlIgnore": "忽略：空白字元可能會變更",
+  "formatCode": "格式化網頁程式碼 / XML",
+  "unsupportedLanguage": "無法可靠地偵測支援的語言。文字保持未變更。"
+}

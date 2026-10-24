@@ -1,0 +1,14 @@
+{
+  "label": "Segni diacritici",
+  "description": "Si applica solo alle lettere selezionate. Rimuovi tutto converte anche ё → е, й → и e ñ → n.",
+  "actions": "Pulsanti della barra degli strumenti",
+  "acute": "Accento acuto ◌́",
+  "grave": "Accento grave ◌̀",
+  "circumflex": "Accento circonflesso ◌̂",
+  "diaeresis": "Dieresi ◌̈",
+  "tilde": "Tilde ◌̃",
+  "caron": "Caron ◌̌",
+  "macron": "Macron ◌̄",
+  "clearAcute": "Rimuovi accento acuto",
+  "clear": "Rimuovi tutti i segni diacritici"
+}

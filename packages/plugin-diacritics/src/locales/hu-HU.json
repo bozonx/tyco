@@ -1,0 +1,14 @@
+{
+  "label": "Mellékjelek",
+  "description": "Csak a kijelölt betűkre vonatkozik. Az összes törlése a ё → е, й → и és ñ → n átalakítást is elvégzi.",
+  "actions": "Eszköztár gombok",
+  "acute": "Éles ékezet ◌́",
+  "grave": "Tompa ékezet ◌̀",
+  "circumflex": "Kúpos ékezet / cirkumflex ◌̂",
+  "diaeresis": "Két pont / tréma ◌̈",
+  "tilde": "Tilde ◌̃",
+  "caron": "Hacsek / caron ◌̌",
+  "macron": "Makron ◌̄",
+  "clearAcute": "Éles ékezet eltávolítása",
+  "clear": "Összes mellékjel eltávolítása"
+}

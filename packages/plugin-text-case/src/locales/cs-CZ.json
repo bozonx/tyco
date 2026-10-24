@@ -1,0 +1,12 @@
+{
+  "label": "Velikost písmen",
+  "description": "Převádí text mezi styly camelCase, snake_case, PascalCase, UPPERCASE a dalšími",
+  "capitalizeFirst": "První písmeno velké",
+  "sentenceCase": "Velikost písmen věty",
+  "identifierToText": "Identifikátor na text",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

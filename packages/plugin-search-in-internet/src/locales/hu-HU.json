@@ -1,0 +1,8 @@
+{
+  "label": "Keresés az interneten",
+  "url": "Internetes keresési URL",
+  "description": "Internetes keresést indít a szövegre a böngészőben",
+  "noSearchBaseUrl": "Nincs beállítva alapértelmezett URL az internetes kereséshez",
+  "textTooLongForSearch": "A szöveg túl hosszú a kereséshez: jelöljön ki egy részletet",
+  "openInBrowserFailed": "Nem sikerült megnyitni a böngészőt"
+}

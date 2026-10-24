@@ -1,0 +1,12 @@
+{
+  "label": "Wielkość liter",
+  "description": "Konwertuje tekst między camelCase, snake_case, PascalCase, WIELKIMI LITERAMI i innymi stylami",
+  "capitalizeFirst": "Pierwsza litera wielka",
+  "sentenceCase": "Jak w zdaniu",
+  "identifierToText": "Identyfikator na tekst",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

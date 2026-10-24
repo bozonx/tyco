@@ -1,0 +1,14 @@
+{
+  "label": "Dijakritički znakovi",
+  "description": "Primjenjuje se samo na odabrana slova. Brisanje svega također pretvara ё → е, й → и i ñ → n.",
+  "actions": "Gumbi na alatnoj traci",
+  "acute": "Oštri naglasak / akut ◌́",
+  "grave": "Teški naglasak / gravis ◌̀",
+  "circumflex": "Cirkumfleks ◌̂",
+  "diaeresis": "Dijereza ◌̈",
+  "tilde": "Tilda ◌̃",
+  "caron": "Kvačica / caron ◌̌",
+  "macron": "Makron ◌̄",
+  "clearAcute": "Ukloni akut / naglasak",
+  "clear": "Ukloni sve dijakritičke znakove"
+}

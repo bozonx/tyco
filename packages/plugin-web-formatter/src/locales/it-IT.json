@@ -1,0 +1,16 @@
+{
+  "label": "Formattazione del codice web",
+  "description": "Formatta automaticamente HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript e JSON",
+  "invalidCode": "Impossibile analizzare questo codice. Il testo è rimasto invariato.",
+  "tabWidth": "Dimensione del rientro",
+  "useTabs": "Usa le tabulazioni",
+  "printWidth": "Larghezza riga di destinazione",
+  "singleQuote": "Preferisci virgolette singole in JS / TS",
+  "semi": "Punti e virgola in JS / TS",
+  "xmlWhitespace": "Gestione degli spazi vuoti XML",
+  "xmlStrict": "Rigoroso: preserva gli spazi significativi",
+  "xmlPreserve": "Preserva il testo, formatta il layout degli elementi",
+  "xmlIgnore": "Ignora: gli spazi possono cambiare",
+  "formatCode": "Formatta codice web / XML",
+  "unsupportedLanguage": "Impossibile rilevare in modo affidabile un linguaggio supportato. Il testo è rimasto invariato."
+}

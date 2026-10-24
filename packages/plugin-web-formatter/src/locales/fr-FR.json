@@ -1,0 +1,16 @@
+{
+  "label": "Formatage de code web",
+  "description": "Formate automatiquement HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript et JSON",
+  "invalidCode": "Impossible d'analyser ce code. Le texte est resté inchangé.",
+  "tabWidth": "Taille de l'indentation",
+  "useTabs": "Utiliser des tabulations",
+  "printWidth": "Largeur de ligne cible",
+  "singleQuote": "Préférer les guillemets simples en JS / TS",
+  "semi": "Points-virgules en JS / TS",
+  "xmlWhitespace": "Gestion des espaces XML",
+  "xmlStrict": "Strict : préserver les espaces significatifs",
+  "xmlPreserve": "Préserver le texte, formater la disposition des éléments",
+  "xmlIgnore": "Ignorer : les espaces peuvent changer",
+  "formatCode": "Formater le code web / XML",
+  "unsupportedLanguage": "Impossible de détecter de manière fiable un langage pris en charge. Le texte est resté inchangé."
+}

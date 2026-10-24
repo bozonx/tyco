@@ -1,0 +1,16 @@
+{
+  "label": "ウェブコードのフォーマット",
+  "description": "HTML、XML、CSS、SCSS、Less、JavaScript、TypeScript、JSON を自動的にフォーマットします",
+  "invalidCode": "このコードを解析できません。テキストは変更されませんでした。",
+  "tabWidth": "インデントサイズ",
+  "useTabs": "タブを使用",
+  "printWidth": "目標行幅",
+  "singleQuote": "JS / TS でシングルクォートを優先",
+  "semi": "JS / TS でセミコロンを付加",
+  "xmlWhitespace": "XML 空白の処理",
+  "xmlStrict": "厳格: 意味のある空白を保持",
+  "xmlPreserve": "テキストを保持し、要素の配置を整形",
+  "xmlIgnore": "無視: 空白が変更される場合があります",
+  "formatCode": "ウェブコード / XML をフォーマット",
+  "unsupportedLanguage": "対応言語を確実に検出できませんでした。テキストは変更されませんでした。"
+}

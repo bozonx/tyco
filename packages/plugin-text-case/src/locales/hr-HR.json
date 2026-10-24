@@ -1,0 +1,12 @@
+{
+  "label": "Veličina slova",
+  "description": "Pretvara tekst između camelCase, snake_case, PascalCase, VELIKIH SLOVA i drugih stilova",
+  "capitalizeFirst": "Prvo slovo veliko",
+  "sentenceCase": "Format rečenice",
+  "identifierToText": "Identifikator u tekst",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

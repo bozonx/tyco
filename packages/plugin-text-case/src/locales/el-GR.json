@@ -1,0 +1,12 @@
+{
+  "label": "Πεζά-κεφαλαία κειμένου",
+  "description": "Μετατρέπει κείμενο μεταξύ camelCase, snake_case, PascalCase, UPPERCASE και άλλων μορφών",
+  "capitalizeFirst": "Πρώτο γράμμα κεφαλαίο",
+  "sentenceCase": "Πεζά-κεφαλαία πρότασης",
+  "identifierToText": "Αναγνωριστικό σε κείμενο",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

@@ -1,0 +1,12 @@
+{
+  "label": "텍스트 대소문자",
+  "description": "텍스트를 camelCase, snake_case, PascalCase, 대문자 및 기타 스타일 간에 변환합니다",
+  "capitalizeFirst": "첫 글자를 대문자로",
+  "sentenceCase": "문장 대소문자",
+  "identifierToText": "식별자를 텍스트로",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

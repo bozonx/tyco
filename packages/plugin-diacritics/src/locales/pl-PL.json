@@ -1,0 +1,14 @@
+{
+  "label": "Znaki diakrytyczne",
+  "description": "Dotyczy tylko zaznaczonych liter. Wyczyść wszystko zamienia także ё → е, й → и oraz ñ → n.",
+  "actions": "Przyciski paska narzędzi",
+  "acute": "Akut / akcent ostry ◌́",
+  "grave": "Gravis / akcent ciężki ◌̀",
+  "circumflex": "Cyrkumfleks ◌̂",
+  "diaeresis": "Diereza ◌̈",
+  "tilde": "Tylda ◌̃",
+  "caron": "Daszek / haczyk ◌̌",
+  "macron": "Makron ◌̄",
+  "clearAcute": "Usuń akut / akcent ostry",
+  "clear": "Usuń wszystkie znaki diakrytyczne"
+}

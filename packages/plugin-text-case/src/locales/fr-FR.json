@@ -1,0 +1,12 @@
+{
+  "label": "Casse du texte",
+  "description": "Convertit le texte entre camelCase, snake_case, PascalCase, MAJUSCULES et d'autres styles",
+  "capitalizeFirst": "Première lettre en majuscule",
+  "sentenceCase": "Casse de phrase",
+  "identifierToText": "Identifiant en texte",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

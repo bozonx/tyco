@@ -1,0 +1,8 @@
+{
+  "label": "在互联网上搜索",
+  "url": "互联网搜索 URL",
+  "description": "在浏览器中打开针对该文本的网页搜索",
+  "noSearchBaseUrl": "未配置互联网搜索的基础 URL",
+  "textTooLongForSearch": "文本过长无法搜索：请选择一个片段",
+  "openInBrowserFailed": "无法打开浏览器"
+}

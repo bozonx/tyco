@@ -1,0 +1,16 @@
+{
+  "label": "网页代码格式化",
+  "description": "自动格式化 HTML、XML、CSS、SCSS、Less、JavaScript、TypeScript 和 JSON",
+  "invalidCode": "无法解析此代码。文本保持未更改。",
+  "tabWidth": "缩进大小",
+  "useTabs": "使用制表符",
+  "printWidth": "目标行宽",
+  "singleQuote": "在 JS / TS 中优先使用单引号",
+  "semi": "在 JS / TS 中使用分号",
+  "xmlWhitespace": "XML 空白字符处理",
+  "xmlStrict": "严格：保留有意义的空白字符",
+  "xmlPreserve": "保留文本，格式化元素布局",
+  "xmlIgnore": "忽略：空白字符可能会更改",
+  "formatCode": "格式化网页代码 / XML",
+  "unsupportedLanguage": "无法可靠地检测到受支持的语言。文本保持未更改。"
+}

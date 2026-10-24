@@ -1,0 +1,8 @@
+{
+  "label": "インターネットで検索",
+  "url": "インターネット検索URL",
+  "description": "ブラウザでテキストのウェブ検索を開きます",
+  "noSearchBaseUrl": "インターネット検索のベースURLが設定されていません",
+  "textTooLongForSearch": "テキストが長すぎて検索できません。範囲を選択してください",
+  "openInBrowserFailed": "ブラウザを開けませんでした"
+}

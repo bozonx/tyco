@@ -1,0 +1,14 @@
+{
+  "label": "Diakritika",
+  "description": "Platí pouze pro vybraná písmena. Úplné vyčištění také převede ё → е, й → и a ñ → n.",
+  "actions": "Tlačítka na panelu",
+  "acute": "Čárka / akut ◌́",
+  "grave": "Grave ◌̀",
+  "circumflex": "Stříška / cirkumflex ◌̂",
+  "diaeresis": "Přehláska / trema ◌̈",
+  "tilde": "Tilda ◌̃",
+  "caron": "Háček / caron ◌̌",
+  "macron": "Vodorovná čárka / macron ◌̄",
+  "clearAcute": "Odstranit čárku / akut",
+  "clear": "Odstranit veškerou diakritiku"
+}

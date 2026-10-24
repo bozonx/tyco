@@ -1,0 +1,8 @@
+{
+  "label": "Pretraži internet",
+  "url": "URL za pretraživanje interneta",
+  "description": "Otvara web pretraživanje teksta u pregledniku",
+  "noSearchBaseUrl": "Osnovni URL za pretraživanje interneta nije konfiguriran",
+  "textTooLongForSearch": "Tekst je predug za pretraživanje: odaberite fragment",
+  "openInBrowserFailed": "Otvaranje preglednika nije uspjelo"
+}

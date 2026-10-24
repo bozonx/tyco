@@ -1,0 +1,16 @@
+{
+  "label": "Formatowanie kodu webowego",
+  "description": "Automatycznie formatuje HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript oraz JSON",
+  "invalidCode": "Nie można przetworzyć tego kodu. Tekst pozostał bez zmian.",
+  "tabWidth": "Rozmiar wcięcia",
+  "useTabs": "Użyj tabulatorów",
+  "printWidth": "Docelowa szerokość wiersza",
+  "singleQuote": "Preferuj pojedyncze cudzysłowy w JS / TS",
+  "semi": "Średniki w JS / TS",
+  "xmlWhitespace": "Obsługa białych znaków w XML",
+  "xmlStrict": "Ścisłe: zachowaj znaczące białe znaki",
+  "xmlPreserve": "Zachowaj tekst, sformatuj układ elementów",
+  "xmlIgnore": "Ignoruj: białe znaki mogą ulec zmianie",
+  "formatCode": "Formatuj kod webowy / XML",
+  "unsupportedLanguage": "Nie można wiarygodnie wykryć obsługiwanego języka. Tekst pozostał bez zmian."
+}

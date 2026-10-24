@@ -1,0 +1,16 @@
+{
+  "label": "Formatare cod web",
+  "description": "Formatează automat HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript și JSON",
+  "invalidCode": "Acest cod nu a putut fi analizat. Textul a rămas neschimbat.",
+  "tabWidth": "Dimensiune indentare",
+  "useTabs": "Utilizează tabulatori",
+  "printWidth": "Lățimea dorită a liniei",
+  "singleQuote": "Preferă ghilimele simple în JS / TS",
+  "semi": "Punct și virgulă în JS / TS",
+  "xmlWhitespace": "Gestionare spații albe în XML",
+  "xmlStrict": "Strict: păstrează spațiile albe semnificative",
+  "xmlPreserve": "Păstrează textul, formatează aranjarea elementelor",
+  "xmlIgnore": "Ignoră: spațiile albe se pot modifica",
+  "formatCode": "Formatează cod web / XML",
+  "unsupportedLanguage": "Nu se poate detecta cu siguranță o limbă acceptată. Textul a rămas neschimbat."
+}

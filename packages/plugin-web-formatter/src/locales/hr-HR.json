@@ -1,0 +1,16 @@
+{
+  "label": "Formatiranje web koda",
+  "description": "Automatski formatira HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript i JSON",
+  "invalidCode": "Nije moguće parsirati ovaj kod. Tekst je ostao nepromijenjen.",
+  "tabWidth": "Veličina uvlake",
+  "useTabs": "Koristi tabulatore",
+  "printWidth": "Ciljana širina retka",
+  "singleQuote": "Prednost jednostrukim navodnicima u JS / TS",
+  "semi": "Točke sa zarezom u JS / TS",
+  "xmlWhitespace": "Obrada razmaka u XML-u",
+  "xmlStrict": "Strogo: sačuvaj značajne razmake",
+  "xmlPreserve": "Sačuvaj tekst, formatiraj raspored elemenata",
+  "xmlIgnore": "Zanemari: razmaci se mogu promijeniti",
+  "formatCode": "Formatiraj web kod / XML",
+  "unsupportedLanguage": "Nije moguće pouzdano otkriti podržani jezik. Tekst je ostao nepromijenjen."
+}

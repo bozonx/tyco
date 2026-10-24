@@ -1,0 +1,12 @@
+{
+  "label": "ტექსტის რეგისტრი",
+  "description": "ტექსტის გარდაქმნა camelCase, snake_case, PascalCase, UPPERCASE და სხვა სტილებს შორის",
+  "capitalizeFirst": "პირველი ასო დიდი",
+  "sentenceCase": "წინადადების რეგისტრი",
+  "identifierToText": "იდენტიფიკატორი ტექსტად",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

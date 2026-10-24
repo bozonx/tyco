@@ -1,0 +1,8 @@
+{
+  "label": "在網際網路上搜尋",
+  "url": "網際網路搜尋 URL",
+  "description": "在瀏覽器中開啟該文字的網路搜尋",
+  "noSearchBaseUrl": "未設定網際網路搜尋的基礎 URL",
+  "textTooLongForSearch": "文字過長無法搜尋：請選取一個片段",
+  "openInBrowserFailed": "無法開啟瀏覽器"
+}

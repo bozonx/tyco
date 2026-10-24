@@ -1,0 +1,12 @@
+{
+  "label": "Мәтін регистрі",
+  "description": "Мәтінді camelCase, snake_case, PascalCase, UPPERCASE және басқа стильдер арасында түрлендіреді",
+  "capitalizeFirst": "Бірінші әріп бас әріп",
+  "sentenceCase": "Сөйлем регистрі",
+  "identifierToText": "Идентификаторды мәтінге",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

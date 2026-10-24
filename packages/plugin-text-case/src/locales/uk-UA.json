@@ -1,0 +1,12 @@
+{
+  "label": "Регістр тексту",
+  "description": "Перетворює регістр тексту: camelCase, snake_case, PascalCase, UPPERCASE та інші стилі",
+  "capitalizeFirst": "Перша літера велика",
+  "sentenceCase": "Регістр речення",
+  "identifierToText": "Ідентифікатор у текст",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

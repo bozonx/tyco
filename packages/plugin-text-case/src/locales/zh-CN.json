@@ -1,0 +1,12 @@
+{
+  "label": "文本大小写",
+  "description": "在 camelCase、snake_case、PascalCase、UPPERCASE 和其他样式之间转换文本",
+  "capitalizeFirst": "首字母大写",
+  "sentenceCase": "句首字母大写",
+  "identifierToText": "标识符转换为文本",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

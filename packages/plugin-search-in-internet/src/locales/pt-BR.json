@@ -1,0 +1,8 @@
+{
+  "label": "Pesquisar na internet",
+  "url": "URL de pesquisa na internet",
+  "description": "Abre uma pesquisa na web para o texto no navegador",
+  "noSearchBaseUrl": "Nenhum URL base configurado para pesquisa na internet",
+  "textTooLongForSearch": "O texto é muito longo para pesquisa: selecione um fragmento",
+  "openInBrowserFailed": "Não foi possível abrir o navegador"
+}

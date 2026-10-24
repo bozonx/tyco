@@ -1,0 +1,8 @@
+{
+  "label": "Caută pe internet",
+  "url": "URL căutare pe internet",
+  "description": "Deschide o căutare web pentru text în browser",
+  "noSearchBaseUrl": "Nu este configurat niciun URL de bază pentru căutarea pe internet",
+  "textTooLongForSearch": "Textul este prea lung pentru căutare: selectează un fragment",
+  "openInBrowserFailed": "Nu s-a putut deschide browserul"
+}

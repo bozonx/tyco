@@ -1,0 +1,8 @@
+{
+  "label": "Szukaj w internecie",
+  "url": "URL wyszukiwania w internecie",
+  "description": "Otwiera wyszukiwanie tekstu w przeglądarce internetowej",
+  "noSearchBaseUrl": "Brak skonfigurowanego bazowego adresu URL dla wyszukiwania w internecie",
+  "textTooLongForSearch": "Tekst jest zbyt długi do wyszukania: zaznacz fragment",
+  "openInBrowserFailed": "Nie udało się otworzyć przeglądarki"
+}

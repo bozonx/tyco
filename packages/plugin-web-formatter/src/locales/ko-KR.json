@@ -1,0 +1,16 @@
+{
+  "label": "웹 코드 서식 지정",
+  "description": "HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript 및 JSON의 서식을 자동으로 지정합니다",
+  "invalidCode": "이 코드를 구문 분석할 수 없습니다. 텍스트가 변경되지 않았습니다.",
+  "tabWidth": "들여쓰기 크기",
+  "useTabs": "탭 사용",
+  "printWidth": "목표 줄 너비",
+  "singleQuote": "JS / TS에서 작은따옴표 선호",
+  "semi": "JS / TS에서 세미콜론 사용",
+  "xmlWhitespace": "XML 공백 처리",
+  "xmlStrict": "엄격: 유의미한 공백 유지",
+  "xmlPreserve": "텍스트 유지, 요소 레이아웃 서식 지정",
+  "xmlIgnore": "무시: 공백이 변경될 수 있음",
+  "formatCode": "웹 코드 / XML 서식 지정",
+  "unsupportedLanguage": "지원되는 언어를 안정적으로 감지할 수 없습니다. 텍스트가 변경되지 않았습니다."
+}

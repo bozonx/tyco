@@ -1,0 +1,12 @@
+{
+  "label": "Kis- és nagybetűk",
+  "description": "Szöveg átalakítása camelCase, snake_case, PascalCase, NAGYBETŰS és egyéb stílusok között",
+  "capitalizeFirst": "Első betű nagybetűvé",
+  "sentenceCase": "Mondatkezdő nagybetű",
+  "identifierToText": "Azonosító szöveggé",
+  "camelCase": "camelCase",
+  "pascalCase": "PascalCase",
+  "snakeCase": "snake_case",
+  "constantCase": "CONSTANT_CASE",
+  "kebabCase": "kebab-case"
+}

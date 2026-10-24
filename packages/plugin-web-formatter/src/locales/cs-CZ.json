@@ -1,0 +1,16 @@
+{
+  "label": "Formátování webového kódu",
+  "description": "Automaticky formátuje HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript a JSON",
+  "invalidCode": "Tento kód nelze analyzovat. Text zůstal nezměněn.",
+  "tabWidth": "Velikost odsazení",
+  "useTabs": "Použít tabulátory",
+  "printWidth": "Cílová šířka řádku",
+  "singleQuote": "Preferovat jednoduché uvozovky v JS / TS",
+  "semi": "Středníky v JS / TS",
+  "xmlWhitespace": "Zpracování mezer v XML",
+  "xmlStrict": "Striktní: zachovat významné mezery",
+  "xmlPreserve": "Zachovat text, formátovat rozvržení prvků",
+  "xmlIgnore": "Ignorovat: mezery se mohou změnit",
+  "formatCode": "Formátovat webový kód / XML",
+  "unsupportedLanguage": "Nelze spolehlivě rozpoznat podporovaný jazyk. Text zůstal nezměněn."
+}

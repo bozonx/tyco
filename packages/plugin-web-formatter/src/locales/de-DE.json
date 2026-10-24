@@ -1,0 +1,16 @@
+{
+  "label": "Webcode-Formatierung",
+  "description": "Formatiert automatisch HTML, XML, CSS, SCSS, Less, JavaScript, TypeScript und JSON",
+  "invalidCode": "Dieser Code kann nicht analysiert werden. Der Text wurde nicht geändert.",
+  "tabWidth": "Einzugsgröße",
+  "useTabs": "Tabulatoren verwenden",
+  "printWidth": "Ziel-Zeilenbreite",
+  "singleQuote": "Einfache Anführungszeichen in JS / TS bevorzugen",
+  "semi": "Semikolons in JS / TS",
+  "xmlWhitespace": "XML-Leerzeichenbehandlung",
+  "xmlStrict": "Strikt: bedeutungsvolle Leerzeichen beibehalten",
+  "xmlPreserve": "Text beibehalten, Elementlayout formatieren",
+  "xmlIgnore": "Ignorieren: Leerzeichen können sich ändern",
+  "formatCode": "Webcode / XML formatieren",
+  "unsupportedLanguage": "Unterstützte Sprache kann nicht zuverlässig erkannt werden. Der Text wurde nicht geändert."
+}
