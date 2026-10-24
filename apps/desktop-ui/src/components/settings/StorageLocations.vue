@@ -59,6 +59,7 @@ import StateMessage from '../common/StateMessage.vue'
 import type { StorageInfo, StorageKind } from '@tyco/shared'
 
 const { t } = useI18n()
+const props = defineProps<{ isInDevelopment?: boolean }>()
 const ipcStore = useIpcStore()
 const storageInfo = ref<StorageInfo | null>(null)
 const STORAGE_KIND_LABELS: Record<StorageKind, string> = {
@@ -79,9 +80,10 @@ const storageInfoItems = computed(() =>
     label: location.kinds
       .map((kind) => t(STORAGE_KIND_LABELS[kind]))
       .join(' · '),
-    hint: location.kinds.includes('data')
-      ? t('settings.storageDataHint')
-      : undefined,
+    hint:
+      location.kinds.includes('data') && props.isInDevelopment
+        ? t('settings.storageDataHint')
+        : undefined,
     value: location.path,
   }))
 )

@@ -3,6 +3,7 @@
   "title": "Tyco user configuration",
   "type": "object",
   "properties": {
+    "isInDevelopment": { "type": "boolean" },
     "configVersion": {
       "type": "integer",
       "minimum": 0,

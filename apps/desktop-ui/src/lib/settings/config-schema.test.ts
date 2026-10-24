@@ -7,6 +7,23 @@ import {
 import cases from '../../../../../packages/shared/fixtures/config-normalization.json'
 
 describe('portable user config schema', () => {
+  it('keeps the development flag optional across serialization', () => {
+    const config = normalizeUserConfig({
+      ...DEFAULT_USER_CONFIG,
+      isInDevelopment: true,
+    })
+    expect(
+      normalizeUserConfig(JSON.parse(JSON.stringify(config))).isInDevelopment
+    ).toBe(true)
+    delete config.isInDevelopment
+    expect(
+      Object.hasOwn(
+        normalizeUserConfig(JSON.parse(JSON.stringify(config))),
+        'isInDevelopment'
+      )
+    ).toBe(false)
+  })
+
   it('validates the authoritative portable defaults', () => {
     expect(DEFAULT_USER_CONFIG.configVersion).toBe(CONFIG_VERSION)
     expect(normalizeUserConfig(DEFAULT_USER_CONFIG)).toEqual(

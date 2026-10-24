@@ -210,6 +210,7 @@ const currentPlugin = computed(() => {
 
 const navigationSources = computed(() => ({
   translate: t,
+  isInDevelopment: userConfig.value.isInDevelopment,
   profiles: aiProfilesStore.profiles,
   projects: aiProfilesStore.projects,
   plugins: installedPlugins.value.map((plugin) => ({

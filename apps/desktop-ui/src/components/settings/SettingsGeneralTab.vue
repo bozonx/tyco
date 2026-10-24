@@ -85,7 +85,22 @@
       </FieldRow>
     </SettingsSection>
 
-    <StorageLocations />
+    <StorageLocations :is-in-development="userConfig.isInDevelopment" />
+    <div class="development-features-row">
+      <FieldCheckbox
+        v-if="userConfig.isInDevelopment"
+        :model-value="true"
+        label="In development features"
+        @update:model-value="delete userConfig.isInDevelopment"
+      />
+      <button
+        v-else
+        type="button"
+        class="development-features-trigger"
+        aria-label="In development features"
+        @click="userConfig.isInDevelopment = true"
+      />
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -99,6 +114,7 @@ import {
   buildLanguageOptions,
 } from '../../lib/locale/language'
 import Button from '../common/Button.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -197,3 +213,22 @@ const toggleAppLanguageMode = () => {
   userConfig.value.language.ui = effectiveAppLanguage.value
 }
 </script>
+
+<style scoped>
+.development-features-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: calc(2.25rem + 2 * var(--space-md));
+}
+.development-features-trigger {
+  width: calc(2.25rem + 2 * var(--space-md));
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.development-features-trigger:focus-visible {
+  box-shadow: var(--app-focus-ring);
+}
+</style>

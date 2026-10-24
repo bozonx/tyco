@@ -6,6 +6,7 @@ import { reactive } from 'vue'
 import ChatView from './ChatView.vue'
 
 const mocks = vi.hoisted(() => ({
+  userConfig: { isInDevelopment: true },
   startNewChat: vi.fn(),
   openLastOrNewChat: vi.fn(),
   mediaMatches: false,
@@ -34,6 +35,10 @@ function chatFor(profileId: string | null) {
 }
 const chatState = chatFor(null)
 const profileChatState = chatFor('writer')
+
+vi.mock('../stores/desktop', () => ({
+  useDesktopStore: () => ({ userConfig: mocks.userConfig }),
+}))
 
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -91,6 +96,7 @@ describe('ChatView.vue', () => {
     pinia = createPinia()
     setActivePinia(pinia)
     vi.clearAllMocks()
+    mocks.userConfig.isInDevelopment = true
     chatState.isGenerating = false
     mocks.mediaMatches = false
     mocks.profileId = null
@@ -107,6 +113,14 @@ describe('ChatView.vue', () => {
     }))
   })
   afterEach(() => disposePinia(pinia))
+
+  it('hides a profile route outside development mode', () => {
+    mocks.userConfig.isInDevelopment = false
+    mocks.profileId = 'writer'
+    const wrapper = mount(ChatView)
+    expect(wrapper.find('.profile-header').exists()).toBe(false)
+    expect(mocks.goToChat).toHaveBeenCalled()
+  })
 
   it('shows the sidebar and the chat on mount', async () => {
     const wrapper = mount(ChatView)

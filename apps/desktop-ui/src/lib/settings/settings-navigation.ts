@@ -145,6 +145,7 @@ export const profileTab = (profileId: string) => `ai-profile:${profileId}`
 export const projectTab = (projectId: string) => `ai-project:${projectId}`
 
 export interface SettingsNavigationSources {
+  isInDevelopment?: boolean
   translate: (key: string) => string
   profiles: readonly { id: string; name: string; icon?: string }[]
   projects: readonly { id: string; name: string; isExternal: boolean }[]
@@ -182,15 +183,22 @@ export interface SettingsNavigationGroup {
  * profiles and projects are listed only on their own page
  */
 export function buildSettingsNavigation(
-  sources: Pick<SettingsNavigationSources, 'translate' | 'plugins'>
+  sources: Pick<
+    SettingsNavigationSources,
+    'translate' | 'plugins' | 'isInDevelopment'
+  >
 ): SettingsNavigationGroup[] {
   const { translate } = sources
   return SETTINGS_NAVIGATION_GROUPS.map((group) => {
-    const items: NavigationItem[] = group.sections.map((section) => ({
-      id: section.id,
-      name: translate(navigationLabelKey(section)),
-      icon: section.icon,
-    }))
+    const items: NavigationItem[] = group.sections
+      .filter(
+        (section) => section.id !== 'ai-profiles' || sources.isInDevelopment
+      )
+      .map((section) => ({
+        id: section.id,
+        name: translate(navigationLabelKey(section)),
+        icon: section.icon,
+      }))
     if (group.id === 'plugins')
       items.push(...sources.plugins.map(pluginNavigationItem(translate)))
     return {
@@ -230,6 +238,11 @@ export function isSettingsTabAvailable(
   }
 ): boolean {
   const parsed = parseSettingsTab(tab)
+  if (
+    ['ai-overview', 'ai-profile', 'ai-project'].includes(parsed.kind) &&
+    !sources.isInDevelopment
+  )
+    return false
   switch (parsed.kind) {
     case 'section':
     case 'ai-overview':

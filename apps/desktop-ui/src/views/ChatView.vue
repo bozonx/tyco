@@ -62,13 +62,28 @@ import { profileIcon } from '../lib/ai-profiles/profile-icons'
 import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useChatLayoutStore } from '../stores/chat-layout'
+import { useDesktopStore } from '../stores/desktop'
 
+const desktopStore = useDesktopStore()
 const aiProfilesStore = useAiProfilesStore()
 const { isSidebarOpen } = storeToRefs(useChatLayoutStore())
 const { t } = useI18n()
 
 /** "Ask AI" without a profile in the route, that profile's chat with one */
-const profileId = computed(() => appNavigation.currentProfileId())
+const profileId = computed(() =>
+  desktopStore.userConfig.isInDevelopment
+    ? appNavigation.currentProfileId()
+    : null
+)
+watch(
+  () =>
+    !desktopStore.userConfig.isInDevelopment &&
+    Boolean(appNavigation.currentProfileId()),
+  (isHidden) => {
+    if (isHidden) void appNavigation.goToChat()
+  },
+  { immediate: true }
+)
 const scope = computed(() => resolveChatScope(profileId.value))
 const scopeKey = computed(() => profileId.value ?? 'ask-ai')
 const chatStore = computed(() => scope.value.chat)

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import NavPanel from './NavPanel.vue'
 
 const mocks = vi.hoisted(() => ({
+  userConfig: { isInDevelopment: true },
   currentRoute: {
     value: { path: '/chat', query: {} as Record<string, string> },
   },
@@ -28,6 +29,10 @@ const mocks = vi.hoisted(() => ({
     isLoaded: true,
     loadAll: vi.fn(),
   },
+}))
+
+vi.mock('../../stores/desktop', () => ({
+  useDesktopStore: () => ({ userConfig: mocks.userConfig }),
 }))
 
 vi.mock('vue-router', () => ({ useRoute: () => mocks.currentRoute.value }))
@@ -65,11 +70,20 @@ vi.mock('../../stores/ai-profiles', () => ({
 describe('NavPanel.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.userConfig.isInDevelopment = true
     mocks.currentRoute.value = { path: '/chat', query: {} }
     mocks.aiProfilesStore.profiles = []
     mocks.appNavigation.isCurrent.mockImplementation(
       (path: string) => path === '/chat'
     )
+  })
+
+  it('hides profile tabs and creation outside development mode', () => {
+    mocks.userConfig.isInDevelopment = false
+    mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
+    const wrapper = shallowMount(NavPanel)
+    expect(wrapper.find('.profiles-tabs-container').exists()).toBe(false)
+    expect(wrapper.find('[label="nav.newProfile"]').exists()).toBe(false)
   })
 
   it('renders editor and ask AI tabs', () => {

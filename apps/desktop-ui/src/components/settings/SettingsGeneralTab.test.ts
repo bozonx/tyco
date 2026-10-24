@@ -88,6 +88,18 @@ describe('SettingsGeneralTab.vue', () => {
     expect(wrapper.find('.storage-locations-stub').exists()).toBe(true)
   })
 
+  it('reveals development features and deletes the flag when unchecked', async () => {
+    const config = createConfig()
+    const wrapper = mountTab(config)
+    expect(Object.hasOwn(config, 'isInDevelopment')).toBe(false)
+    await wrapper.get('.development-features-trigger').trigger('click')
+    expect(config.isInDevelopment).toBe(true)
+    expect(wrapper.text()).toContain('In development features')
+    await wrapper.get('input[type="checkbox"]').setValue(false)
+    expect(Object.hasOwn(config, 'isInDevelopment')).toBe(false)
+    expect(wrapper.find('.development-features-trigger').exists()).toBe(true)
+  })
+
   it('updates theme when segmented control option is clicked', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)

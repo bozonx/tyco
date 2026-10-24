@@ -141,6 +141,7 @@ export interface AiTasksConfig {
 
 /** Complete, normalized configuration used throughout the application. */
 export interface UserConfig {
+  isInDevelopment?: boolean
   configVersion: number
   appearance: AppearanceSettings
   language: {

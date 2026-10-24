@@ -10,12 +10,37 @@ import {
 
 const sources = {
   translate: (key: string) => key,
+  isInDevelopment: true,
   profiles: [{ id: 'writer', name: 'Writer' }],
   projects: [{ id: 'notes', name: 'Notes', isExternal: true }],
   plugins: [{ pluginId: 'case', label: 'Text case', isEnabled: false }],
 }
 
 describe('settings navigation', () => {
+  it('hides profile navigation and rejects profile and project pages outside development mode', () => {
+    const hiddenSources = {
+      ...sources,
+      isInDevelopment: false,
+      isVaultLoaded: false,
+    }
+    expect(
+      buildSettingsNavigation(hiddenSources)
+        .flatMap((group) => group.items)
+        .some((item) => item.id === 'ai-profiles')
+    ).toBe(false)
+    for (const tab of [
+      'ai-profiles',
+      'ai-profiles:overview',
+      'ai-profile:new',
+      'ai-profile:writer',
+      'ai-project:new',
+      'ai-project:notes',
+    ]) {
+      expect(isSettingsTabAvailable(tab, hiddenSources)).toBe(false)
+    }
+    expect(isSettingsTabAvailable('general', hiddenSources)).toBe(true)
+  })
+
   it('parses sections and detail pages', () => {
     expect(parseSettingsTab('llm')).toEqual({ kind: 'section', id: 'llm' })
     expect(parseSettingsTab('ai-profiles')).toEqual({ kind: 'ai-overview' })

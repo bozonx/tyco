@@ -66,6 +66,7 @@ vi.mock('../../stores/desktop', () => ({
   useDesktopStore: () => ({
     userConfig: {
       configVersion: settingsMocks.configVersion,
+      isInDevelopment: true,
       appearance: { theme: 'auto', contrast: 'normal', motion: 'auto' },
       plugins: {
         PluginA: { isEnabled: true, settings: {} },

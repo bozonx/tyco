@@ -25,7 +25,7 @@
         <AppIcon icon="mdi:chat-processing-outline" size="md" />
         {{ t('nav.aiChat') }}
       </button>
-      <div class="topbar-divider" aria-hidden="true" />
+      <div v-if="isInDevelopment" class="topbar-divider" aria-hidden="true" />
       <template v-if="profiles.length > 0">
         <div
           ref="profilesContainerRef"
@@ -53,6 +53,7 @@
         </div>
       </template>
       <IconButton
+        v-if="isInDevelopment"
         class="shrink-0"
         icon="mdi:account-plus-outline"
         :label="t('nav.newProfile')"
@@ -120,6 +121,7 @@ import {
 import { appNavigation } from '../../navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useChatStore, useProfileChatStore } from '../../stores/chat'
+import { useDesktopStore } from '../../stores/desktop'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useNavPanelStore } from '../../stores/nav-panel'
 import AppIcon from '../common/AppIcon.vue'
@@ -133,7 +135,11 @@ const navPanelStore = useNavPanelStore()
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 
-const profiles = computed(() => aiProfilesStore.profiles)
+const desktopStore = useDesktopStore()
+const isInDevelopment = computed(() => desktopStore.userConfig.isInDevelopment)
+const profiles = computed(() =>
+  isInDevelopment.value ? aiProfilesStore.profiles : []
+)
 
 const profilesContainerRef = ref<HTMLElement | null>(null)
 /** Which edges of the profile tabs hide tabs behind them */
