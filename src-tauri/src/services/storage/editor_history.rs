@@ -77,6 +77,7 @@ impl EditorHistoryTarget<'_> {
 struct EditorHistorySession<'a> {
     store: EditorHistoryTarget<'a>,
     policy: EditorHistoryPolicy,
+    is_in_development: bool,
 }
 
 impl<'a> EditorHistorySession<'a> {
@@ -93,16 +94,27 @@ impl<'a> EditorHistorySession<'a> {
             EditorHistoryTarget::File(editor_history_path(app)?)
         };
 
-        Ok(Self { store, policy })
+        Ok(Self {
+            store,
+            policy,
+            is_in_development: user_config.get("isInDevelopment").and_then(Value::as_bool)
+                == Some(true),
+        })
     }
 
     fn load(&self) -> Result<Vec<EditorHistoryItem>, AppError> {
+        if !self.is_in_development {
+            return Ok(Vec::new());
+        }
         let mut items = self.store.read()?;
         self.policy.enforce(&mut items, now_ms());
         Ok(items)
     }
 
     fn save(&mut self, items: Vec<EditorHistoryItem>) -> Result<(), AppError> {
+        if !self.is_in_development {
+            return Ok(());
+        }
         self.store.write(items)
     }
 }
@@ -135,7 +147,7 @@ fn save_editor_history_entry(
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
 
-    if entry.text.trim().is_empty() || policy.max_entries == 0 {
+    if !history.is_in_development || entry.text.trim().is_empty() || policy.max_entries == 0 {
         return Ok(None);
     }
 
@@ -193,7 +205,7 @@ pub fn restore_editor_history_item(
     let mut history = EditorHistorySession::open(app, user_config, memory)?;
     let policy = history.policy;
 
-    if policy.max_entries == 0 {
+    if !history.is_in_development || policy.max_entries == 0 {
         return Ok(());
     }
 
@@ -535,10 +547,37 @@ mod tests {
     }
 
     #[test]
+    fn development_mode_blocks_disk_and_memory_writes_without_removing_existing_history() {
+        let dir = TestDir::new("development-disabled");
+        let path = dir.join(EDITOR_HISTORY_FILE);
+        let existing = vec![history_item("existing", "saved", EditorHistoryKind::Draft)];
+        let mut file_store = EditorHistoryTarget::File(path.clone());
+        file_store.write(existing.clone()).unwrap();
+        let original = fs::read(&path).unwrap();
+        let mut memory = existing.clone();
+        for store in [file_store, EditorHistoryTarget::Memory(&mut memory)] {
+            let mut history = EditorHistorySession {
+                store,
+                policy: policy(),
+                is_in_development: false,
+            };
+            assert_eq!(
+                save_editor_history_entry(&mut history, entry("new")).unwrap(),
+                None
+            );
+            assert!(history.load().unwrap().is_empty());
+            history.save(Vec::new()).unwrap();
+        }
+        assert_eq!(fs::read(&path).unwrap(), original);
+        assert_eq!(memory, existing);
+    }
+
+    #[test]
     fn save_editor_history_entry_masks_secrets_when_enabled() {
         let dir = TestDir::new("save-secrets");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let mut history = EditorHistorySession {
+            is_in_development: true,
             store: EditorHistoryTarget::File(path.clone()),
             policy: EditorHistoryPolicy {
                 should_redact_secrets: true,
@@ -562,6 +601,7 @@ mod tests {
         let dir = TestDir::new("save-off");
         let path = dir.join(EDITOR_HISTORY_FILE);
         let mut history = EditorHistorySession {
+            is_in_development: true,
             store: EditorHistoryTarget::File(path.clone()),
             policy: EditorHistoryPolicy {
                 max_entries: 0,
@@ -581,6 +621,7 @@ mod tests {
         let dir = TestDir::new("memory-store");
         let mut memory = Vec::new();
         let mut history = EditorHistorySession {
+            is_in_development: true,
             store: EditorHistoryTarget::Memory(&mut memory),
             policy: EditorHistoryPolicy {
                 is_memory_only: true,

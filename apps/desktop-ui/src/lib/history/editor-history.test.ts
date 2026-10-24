@@ -41,3 +41,26 @@ describe('editor history failure semantics', () => {
     expect(model.editorHistory.value).toHaveLength(1)
   })
 })
+
+it('does not record editor history or results outside development mode', async () => {
+  const call = vi
+    .fn<DesktopCall>()
+    .mockResolvedValue({ success: true, result: 'saved' })
+  let isInDevelopment = false
+  const model = createEditorHistoryModel({ call }, () => isInDevelopment)
+  expect(await model.saveOutput('Output')).toBeNull()
+  expect(await model.saveSource('Source', 'correction')).toBeNull()
+  await model.saveSourceResult('existing', 'Result')
+  await model.restoreEditorItem({
+    id: 'existing',
+    text: 'Text',
+    kind: 'draft',
+    createdAt: 1,
+  })
+  expect(call).not.toHaveBeenCalled()
+  isInDevelopment = true
+  expect(await model.saveOutput('Output')).toBe('saved')
+  isInDevelopment = false
+  await model.saveSourceResult('saved', 'Late result')
+  expect(call).toHaveBeenCalledTimes(1)
+})

@@ -109,6 +109,9 @@ describe('SettingsHistoryTab.vue', () => {
     expect(
       wrapper.find('[data-title="settings.sectionChatHistory"]').exists()
     ).toBe(false)
+    expect(
+      wrapper.find('[data-title="settings.sectionEditorHistory"]').exists()
+    ).toBe(false)
     expect(config.chat.history.storage).toBe('disk')
   })
 

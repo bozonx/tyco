@@ -80,6 +80,7 @@
         ></Button
       >
       <IconButton
+        v-if="isInDevelopment"
         size="sm"
         variant="ghost"
         :active="appNavigation.isCurrent(APP_ROUTES.HISTORY.path)"

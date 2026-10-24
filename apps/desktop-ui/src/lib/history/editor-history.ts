@@ -7,7 +7,10 @@ import type {
 import type { HistoryApi } from './history-call'
 import { createHistoryCall } from './history-call'
 
-export function createEditorHistoryModel(historyApi: HistoryApi) {
+export function createEditorHistoryModel(
+  historyApi: HistoryApi,
+  canRecord: () => boolean = () => true
+) {
   const call = createHistoryCall(historyApi)
 
   const editorHistory = ref<EditorHistoryItem[]>([])
@@ -37,7 +40,7 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
   const saveEditorHistory = async (
     entry: EditorHistoryEntry
   ): Promise<string | null> => {
-    if (!entry.text.trim()) return null
+    if (!canRecord() || !entry.text.trim()) return null
 
     const saved = await track(call('add_editor_history_item', { entry }))
 
@@ -57,7 +60,7 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
     id: string | null,
     result: string
   ): Promise<void> => {
-    if (!id) return
+    if (!canRecord() || !id) return
 
     await track(call('set_editor_history_item_result', { id, result }))
   }
@@ -77,6 +80,7 @@ export function createEditorHistoryModel(historyApi: HistoryApi) {
 
   /** Puts a removed entry back to its place. */
   const restoreEditorItem = async (item: EditorHistoryItem): Promise<void> => {
+    if (!canRecord()) return
     await track(call('restore_editor_history_item', { item }))
     await loadEditorHistory()
   }

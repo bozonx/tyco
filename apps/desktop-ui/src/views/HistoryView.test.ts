@@ -7,6 +7,9 @@ import { useHistoryStore } from '../stores/history'
 import { useDesktopStore } from '../stores/desktop'
 
 const mockToEditor = vi.fn()
+vi.mock('../navigation', () => ({
+  appNavigation: { goToEditor: () => mockToEditor() },
+}))
 vi.mock('../composables/use-editor-navigation', () => ({
   useEditorNavigation: () => ({ toEditor: mockToEditor }),
 }))
@@ -24,6 +27,14 @@ describe('HistoryView.vue', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    useDesktopStore().desktopState.userConfig.isInDevelopment = true
+  })
+
+  it('redirects to the editor when development mode is disabled', () => {
+    delete useDesktopStore().desktopState.userConfig.isInDevelopment
+    vi.spyOn(useHistoryStore(), 'loadEditorHistory').mockResolvedValue()
+    mount(HistoryView, { global: { stubs: { HistoryList: true } } })
+    expect(mockToEditor).toHaveBeenCalledOnce()
   })
 
   it('loads editor history on mount and displays items', async () => {

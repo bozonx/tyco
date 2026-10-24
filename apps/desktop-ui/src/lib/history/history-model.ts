@@ -5,10 +5,11 @@ export type { HistoryApi } from './history-call'
 
 export function createHistoryModel(
   historyApi: HistoryApi,
-  reportError: (error: unknown) => void
+  reportError: (error: unknown) => void,
+  canRecordEditorHistory?: () => boolean
 ) {
   return {
-    ...createEditorHistoryModel(historyApi),
+    ...createEditorHistoryModel(historyApi, canRecordEditorHistory),
     ...createChatHistoryModel(historyApi, reportError),
   }
 }

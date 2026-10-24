@@ -84,6 +84,7 @@ describe('NavPanel.vue', () => {
     const wrapper = shallowMount(NavPanel)
     expect(wrapper.find('.profiles-tabs-container').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('nav.aiChat')
+    expect(wrapper.find('[label="nav.history"]').exists()).toBe(false)
     expect(wrapper.find('[label="nav.newProfile"]').exists()).toBe(false)
   })
 

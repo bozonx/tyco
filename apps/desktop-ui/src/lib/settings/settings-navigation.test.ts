@@ -37,6 +37,7 @@ describe('settings navigation', () => {
       'ai-project:notes',
       'commands',
       'launcher-commands',
+      'history',
     ]) {
       expect(isSettingsTabAvailable(tab, hiddenSources)).toBe(false)
     }

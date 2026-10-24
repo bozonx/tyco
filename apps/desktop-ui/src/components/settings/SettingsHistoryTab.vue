@@ -1,6 +1,9 @@
 <template>
   <div class="settings-stack">
-    <SettingsSection :title="t('settings.sectionEditorHistory')">
+    <SettingsSection
+      v-if="userConfig.isInDevelopment"
+      :title="t('settings.sectionEditorHistory')"
+    >
       <template #actions>
         <Button
           size="xs"

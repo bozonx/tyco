@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import Button from '../components/common/Button.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
@@ -86,6 +86,7 @@ import useToast from '../composables/use-toast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import { createRemovalUndo } from '../lib/history/removal-undo'
+import { appNavigation } from '../navigation'
 import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
 import type { EditorHistoryItem } from '@tyco/shared'
@@ -94,6 +95,13 @@ const { toastKey } = useToast()
 const { t } = useI18n()
 const historyStore = useHistoryStore()
 const desktopStore = useDesktopStore()
+watch(
+  () => desktopStore.userConfig.isInDevelopment,
+  (isInDevelopment) => {
+    if (!isInDevelopment) void appNavigation.goToEditor()
+  },
+  { immediate: true }
+)
 // the text is already in the history and the window stays open
 const copyText = useCopyText({ saveOutput: false })
 const editorNavigation = useEditorNavigation()
