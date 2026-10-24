@@ -105,6 +105,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
       'chat',
       'voiceChat',
       'voiceCommands',
+      'correction',
       'selectionCorrection',
     ]) {
       expect(wrapper.text()).not.toContain(`settings.hotkeyActions.${key}`)

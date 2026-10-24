@@ -97,21 +97,6 @@
             :label="t('settings.resetToDefault')"
             @click="setShortcut(row.id, row.defaultValue)"
           />
-          <p v-if="row.inline && injection.ok === false" class="hotkey-error">
-            {{
-              t('settings.textInjection.unavailable', {
-                error: injection.error,
-              })
-            }}
-            <Button
-              size="sm"
-              variant="ghost"
-              icon="mdi:refresh"
-              @click="checkInjection"
-            >
-              {{ t('settings.textInjection.recheck') }}
-            </Button>
-          </p>
           <div
             v-if="providerState.statuses[row.id]?.externalCommand"
             class="external-command"
@@ -211,13 +196,11 @@ interface HotkeyRow {
   command: string
   externalHint: string
   description?: string
-  /** Replaces the selection in place and needs text injection */
-  inline?: boolean
 }
 
 const hotkeysStore = useGlobalHotkeysStore()
 const { portalError, isRebinding } = storeToRefs(hotkeysStore)
-const { providerState, injection } = hotkeysStore
+const { providerState } = hotkeysStore
 const canConfigure = computed(() => providerState.canConfigure)
 const isEditable = computed(() => checkIsEditable(providerState))
 const isSystemManaged = computed(() => checkIsSystemManaged(providerState))
@@ -270,7 +253,6 @@ const allRows = computed<HotkeyRow[]>(() => [
     command: 'tyco-ctl replace correction',
     externalHint: t('settings.inlineCorrectionExternalHint'),
     description: t('settings.inlineCorrectionHint'),
-    inline: true,
   },
   ...userConfig.value.launcherPages.map((page, index) => {
     const id = launcherPageHotkeyId(page.id)
@@ -289,7 +271,9 @@ const rows = computed(() =>
   allRows.value.filter(
     (row) =>
       userConfig.value.isInDevelopment ||
-      (!['chat', 'voiceChat', 'voiceCommands', inlineId].includes(row.id) &&
+      (!['chat', 'voiceChat', 'voiceCommands', 'correction', inlineId].includes(
+        row.id
+      ) &&
         !userConfig.value.launcherPages.some(
           (page) => launcherPageHotkeyId(page.id) === row.id
         ))
@@ -304,10 +288,6 @@ function setShortcut(mode: string, shortcut: string) {
 // pressing a bound shortcut must reach the field, not run its action
 function suspendHotkeys(suspended: boolean) {
   hotkeysStore.suspendHotkeys(suspended)
-}
-
-async function checkInjection() {
-  await hotkeysStore.checkTextInjection()
 }
 
 const missing = computed(() =>
@@ -327,7 +307,6 @@ async function rebindHotkeys() {
 }
 
 onMounted(async () => {
-  void checkInjection()
   await hotkeysStore.reload()
 })
 </script>
@@ -344,16 +323,6 @@ onMounted(async () => {
   align-items: center;
   gap: var(--space-sm);
   width: 100%;
-}
-
-.hotkey-error {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-basis: 100%;
-  margin: 0;
-  color: var(--app-error);
-  font-size: var(--text-caption);
 }
 
 .hotkey-info {

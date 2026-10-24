@@ -10,9 +10,7 @@
     "translationMenu": "Çeviri",
     "webhook": "Web kancası"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Akıl yürütme",
     "footnotes": "Dipnotlar",
@@ -524,10 +522,7 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": {
-      "command": "Komut çalışıyor…",
-      "correction": "Düzeltiliyor…"
-    }
+    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -948,9 +943,7 @@
     "aiCategory": "Yapay Zekâ",
     "sttLlmRulesInfo": "Tanınan konuşmanın işlenmesi için yapay zekâ modeline ek talimatlar. Örneğin dolgu sözcükleri kaldırma, noktalama işaretlerini koyma, listeleri biçimlendirme veya belirli bir üslubu koruma gibi kurallar belirtebilirsiniz."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Editöre ekle"
-  },
+  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1022,9 +1015,7 @@
     "truncation": "kesilmiş sonuç",
     "untranslated": "çevrilmemiş bölüm"
   },
-  "window": {
-    "clickToFocus": "Devam etmek için tıklayın"
-  },
+  "window": { "clickToFocus": "Devam etmek için tıklayın" },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",
     "cancel": "İptal",
@@ -1064,9 +1055,7 @@
   },
   "voiceGrammar": {
     "translate": "çevir",
-    "actions": {
-      "askInChat": "sohbette sor"
-    },
+    "actions": { "askInChat": "sohbette sor" },
     "languages": {
       "en-US": "İngilizce;Amerikan İngilizcesi",
       "en-GB": "Britanya İngilizcesi",
@@ -1084,8 +1073,5 @@
       "ja-JP": "Japonca"
     }
   },
-  "tray": {
-    "show": "Tyco’yu göster",
-    "quit": "Çıkış"
-  }
+  "tray": { "show": "Tyco’yu göster", "quit": "Çıkış" }
 }

@@ -10,9 +10,7 @@
     "translationMenu": "번역",
     "webhook": "웹후크"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chatTools": {
     "files": {
       "group": "파일",
@@ -177,10 +175,7 @@
     "cancelled": "취소됨",
     "done": "완료",
     "emptyResult": "모델이 빈 결과를 반환했습니다",
-    "failed": {
-      "command": "명령 실패",
-      "correction": "교정 실패"
-    },
+    "failed": { "command": "명령 실패", "correction": "교정 실패" },
     "focusChanged": "그 사이에 활성 창이 변경되어 결과가 클립보드에 복사되었습니다",
     "noSelection": "선택된 내용이 없습니다",
     "noTarget": "포커스가 있는 애플리케이션 창이 없습니다",
@@ -189,14 +184,9 @@
       "command": "명령 실행 후에도 텍스트가 변경되지 않았습니다",
       "correction": "오류를 찾지 못했습니다"
     },
-    "working": {
-      "command": "명령 실행 중…",
-      "correction": "교정 중…"
-    }
+    "working": { "command": "명령 실행 중…", "correction": "교정 중…" }
   },
-  "shortcuts": {
-    "insertIntoEditor": "편집기에 삽입"
-  },
+  "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
     "auto": "시스템 설정 따르기",
     "dark": "다크",
@@ -232,9 +222,7 @@
     "truncation": "잘린 결과",
     "untranslated": "번역되지 않은 부분"
   },
-  "window": {
-    "clickToFocus": "계속하려면 클릭하세요"
-  },
+  "window": { "clickToFocus": "계속하려면 클릭하세요" },
   "write": {
     "alreadyCorrected": "텍스트가 이미 교정되었습니다",
     "cancel": "취소",
@@ -248,15 +236,10 @@
     "nothingToCorrect": "교정할 내용이 없습니다",
     "textTooShortForCorrection": "교정하기에 텍스트가 너무 짧습니다"
   },
-  "tray": {
-    "show": "Tyco 표시",
-    "quit": "종료"
-  },
+  "tray": { "show": "Tyco 표시", "quit": "종료" },
   "voiceGrammar": {
     "translate": "~로 번역",
-    "actions": {
-      "askInChat": "채팅에서 질문"
-    },
+    "actions": { "askInChat": "채팅에서 질문" },
     "languages": {
       "en-US": "영어;미국 영어",
       "en-GB": "영국 영어",

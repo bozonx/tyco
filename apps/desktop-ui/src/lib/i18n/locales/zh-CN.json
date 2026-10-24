@@ -10,9 +10,7 @@
     "translationMenu": "翻译",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "思考过程",
     "footnotes": "脚注",
@@ -512,10 +510,7 @@
     "cancelled": "已取消",
     "done": "已完成",
     "emptyResult": "模型返回了空结果",
-    "failed": {
-      "command": "命令执行失败",
-      "correction": "纠错失败"
-    },
+    "failed": { "command": "命令执行失败", "correction": "纠错失败" },
     "focusChanged": "在此期间活动窗口已更改，结果已复制到剪贴板",
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
@@ -524,10 +519,7 @@
       "command": "命令未对文本做任何更改",
       "correction": "未发现错误"
     },
-    "working": {
-      "command": "正在运行命令…",
-      "correction": "正在纠错…"
-    }
+    "working": { "command": "正在运行命令…", "correction": "正在纠错…" }
   },
   "settings": {
     "accessAllow": "允许",
@@ -948,9 +940,7 @@
     "aiCategory": "AI",
     "sttLlmRulesInfo": "用于处理识别语音的 AI 模型附加说明。例如可以指定：去除口头禅、添加标点、设置列表格式或保持特定风格。"
   },
-  "shortcuts": {
-    "insertIntoEditor": "插入到编辑器"
-  },
+  "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
     "auto": "跟随系统",
     "dark": "深色",
@@ -1022,9 +1012,7 @@
     "truncation": "结果被截断",
     "untranslated": "未翻译的片段"
   },
-  "window": {
-    "clickToFocus": "点击以继续"
-  },
+  "window": { "clickToFocus": "点击以继续" },
   "write": {
     "alreadyCorrected": "文本已完成纠错",
     "cancel": "取消",
@@ -1064,9 +1052,7 @@
   },
   "voiceGrammar": {
     "translate": "翻译成;翻译为",
-    "actions": {
-      "askInChat": "在聊天中询问;在对话中提问"
-    },
+    "actions": { "askInChat": "在聊天中询问;在对话中提问" },
     "languages": {
       "en-US": "英语;美式英语",
       "en-GB": "英式英语",
@@ -1084,8 +1070,5 @@
       "ja-JP": "日语"
     }
   },
-  "tray": {
-    "show": "显示 Tyco",
-    "quit": "退出"
-  }
+  "tray": { "show": "显示 Tyco", "quit": "退出" }
 }

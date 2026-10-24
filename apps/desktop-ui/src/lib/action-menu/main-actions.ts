@@ -18,6 +18,9 @@ export function isMainActionVisible(
     Boolean(isInDevelopment) ||
     (action.type !== 'command' &&
       action.type !== 'launcherPage' &&
-      !(action.type === 'standard' && action.actionId === 'askInChat'))
+      !(
+        action.type === 'standard' &&
+        (action.actionId === 'askInChat' || action.actionId === 'correction')
+      ))
   )
 }

@@ -40,6 +40,7 @@ describe('SettingsGeneralTab.vue', () => {
       global: {
         provide: createTestSettingsContext(userConfig).provide,
         stubs: {
+          TextInsertionStatus: true,
           SettingsSection: {
             props: ['title'],
             template:

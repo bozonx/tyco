@@ -202,9 +202,11 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       ] satisfies ActionItem[]
     ).filter(
       (action) =>
-        action.id !== 'askInChat' ||
         !deps.isMainActionVisible ||
-        deps.isMainActionVisible({ type: 'standard', actionId: 'askInChat' })
+        deps.isMainActionVisible({
+          type: 'standard',
+          actionId: action.id as StandardActionId,
+        })
     )
 
   const getRegisteredActions = registry.list

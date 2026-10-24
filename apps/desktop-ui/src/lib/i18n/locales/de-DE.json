@@ -10,9 +10,7 @@
     "translationMenu": "Übersetzung",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Denkprozess",
     "footnotes": "Fußnoten",
@@ -948,9 +946,7 @@
     "aiCategory": "KI",
     "sttLlmRulesInfo": "Zusätzliche Anweisungen für das KI-Modell zur Verarbeitung der erkannten Sprache. Du kannst z. B. angeben: Füllwörter entfernen, Zeichensetzung ergänzen, Listen formatieren oder einen bestimmten Stil einhalten."
   },
-  "shortcuts": {
-    "insertIntoEditor": "In den Editor einfügen"
-  },
+  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1022,9 +1018,7 @@
     "truncation": "abgeschnittenes Ergebnis",
     "untranslated": "nicht übersetzter Abschnitt"
   },
-  "window": {
-    "clickToFocus": "Zum Fortfahren klicken"
-  },
+  "window": { "clickToFocus": "Zum Fortfahren klicken" },
   "write": {
     "alreadyCorrected": "Der Text ist bereits korrigiert",
     "cancel": "Abbrechen",
@@ -1064,9 +1058,7 @@
   },
   "voiceGrammar": {
     "translate": "übersetze auf",
-    "actions": {
-      "askInChat": "frage im chat"
-    },
+    "actions": { "askInChat": "frage im chat" },
     "languages": {
       "en-US": "Englisch;amerikanisches Englisch",
       "en-GB": "britisches Englisch",
@@ -1084,8 +1076,5 @@
       "ja-JP": "Japanisch"
     }
   },
-  "tray": {
-    "show": "Tyco anzeigen",
-    "quit": "Beenden"
-  }
+  "tray": { "show": "Tyco anzeigen", "quit": "Beenden" }
 }

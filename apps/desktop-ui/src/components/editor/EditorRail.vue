@@ -19,6 +19,7 @@
         icon="mdi:microphone-outline"
       />
       <IconButton
+        v-if="isInDevelopment"
         size="sm"
         variant="ghost"
         tone="accent"
@@ -59,8 +60,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useI18n } from '../../composables/use-i18n'
 import { scopedActionLabel } from '../../lib/editor/editor-toolbar-item'
+import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
@@ -73,8 +77,11 @@ const emit = defineEmits<{
   copy: []
 }>()
 
+const desktopStore = useDesktopStore()
 const editorInputStore = useEditorInputStore()
 const { t } = useI18n()
+
+const isInDevelopment = computed(() => desktopStore.userConfig.isInDevelopment)
 
 const scoped = (label: string) =>
   scopedActionLabel(label, editorInputStore.hasSelection, t)

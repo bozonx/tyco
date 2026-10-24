@@ -18,6 +18,7 @@
     </SettingsSection>
 
     <SettingsSection :title="t('settings.sectionWindowInsertion')">
+      <TextInsertionStatus />
       <FieldRow
         group
         :label="t('settings.windowInsertion')"
@@ -100,6 +101,7 @@ import FieldSelect from '../common/FieldSelect.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsSection from './SettingsSection.vue'
 import StorageLocations from './StorageLocations.vue'
+import TextInsertionStatus from './TextInsertionStatus.vue'
 import {
   LINUX_INSERTION_METHODS,
   type LinuxInsertionMethod,

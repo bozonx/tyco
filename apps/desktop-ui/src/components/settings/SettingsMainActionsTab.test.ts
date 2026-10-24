@@ -82,7 +82,7 @@ describe('SettingsMainActionsTab.vue', () => {
     })
     const wrapper = mountTab()
     expect(optionTexts(wrapper)).not.toContain('action.askInChat')
-    expect(optionTexts(wrapper)).toContain('action.correction')
+    expect(optionTexts(wrapper)).not.toContain('action.correction')
     expect(context.draft.value.mainActions.q).toEqual({
       type: 'standard',
       actionId: 'askInChat',

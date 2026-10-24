@@ -52,6 +52,7 @@ describe('isMainActionVisible', () => {
     { type: 'command', commandId: 'script' },
     { type: 'launcherPage', pageId: 'page' },
     { type: 'standard', actionId: 'askInChat' },
+    { type: 'standard', actionId: 'correction' },
   ])('shows development action %j only with the flag', (action) => {
     expect(isMainActionVisible(action, undefined)).toBe(false)
     expect(isMainActionVisible(action, false)).toBe(false)
@@ -59,7 +60,10 @@ describe('isMainActionVisible', () => {
   })
   it('keeps regular actions visible', () => {
     expect(
-      isMainActionVisible({ type: 'standard', actionId: 'correction' }, false)
+      isMainActionVisible(
+        { type: 'standard', actionId: 'copyToClipboard' },
+        false
+      )
     ).toBe(true)
   })
 })

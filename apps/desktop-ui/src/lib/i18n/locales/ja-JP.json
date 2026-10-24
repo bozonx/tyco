@@ -10,9 +10,7 @@
     "translationMenu": "翻訳",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "思考プロセス",
     "footnotes": "脚注",
@@ -524,10 +522,7 @@
       "command": "コマンドによるテキストの変更はありませんでした",
       "correction": "修正箇所は見つかりませんでした"
     },
-    "working": {
-      "command": "コマンドを実行中…",
-      "correction": "校正中…"
-    }
+    "working": { "command": "コマンドを実行中…", "correction": "校正中…" }
   },
   "settings": {
     "accessAllow": "許可",
@@ -948,9 +943,7 @@
     "aiCategory": "AI",
     "sttLlmRulesInfo": "認識された音声の処理に関するAIモデルへの追加指示。例えば、つなぎ言葉の削除、句読点の付与、箇条書きの整形、特定のスタイルの維持などを指定できます。"
   },
-  "shortcuts": {
-    "insertIntoEditor": "エディターに挿入"
-  },
+  "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
     "auto": "システム設定に従う",
     "dark": "ダーク",
@@ -1022,9 +1015,7 @@
     "truncation": "結果が途切れています",
     "untranslated": "未翻訳の箇所があります"
   },
-  "window": {
-    "clickToFocus": "クリックして続行"
-  },
+  "window": { "clickToFocus": "クリックして続行" },
   "write": {
     "alreadyCorrected": "テキストはすでに修正済みです",
     "cancel": "キャンセル",
@@ -1064,9 +1055,7 @@
   },
   "voiceGrammar": {
     "translate": "翻訳",
-    "actions": {
-      "askInChat": "チャットで質問"
-    },
+    "actions": { "askInChat": "チャットで質問" },
     "languages": {
       "en-US": "英語;アメリカ英語",
       "en-GB": "イギリス英語",
@@ -1084,8 +1073,5 @@
       "ja-JP": "日本語"
     }
   },
-  "tray": {
-    "show": "Tycoを表示",
-    "quit": "終了"
-  }
+  "tray": { "show": "Tycoを表示", "quit": "終了" }
 }

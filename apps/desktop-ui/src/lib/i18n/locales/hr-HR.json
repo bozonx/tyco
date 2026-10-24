@@ -10,9 +10,7 @@
     "translationMenu": "Prijevod",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Razmišljanje",
     "footnotes": "Fusnote",
@@ -948,9 +946,7 @@
     "aiCategory": "AI",
     "sttLlmRulesInfo": "Dodatne upute za AI model o obradi prepoznatog govora. Možete navesti npr.: uklanjanje poštapalica, interpunkciju, oblikovanje popisa ili određeni stil."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Umetni u uređivač"
-  },
+  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1022,9 +1018,7 @@
     "truncation": "skraćeni rezultat",
     "untranslated": "neprevedeni dio"
   },
-  "window": {
-    "clickToFocus": "Kliknite za nastavak"
-  },
+  "window": { "clickToFocus": "Kliknite za nastavak" },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1064,9 +1058,7 @@
   },
   "voiceGrammar": {
     "translate": "prevedi na",
-    "actions": {
-      "askInChat": "pitaj u chatu"
-    },
+    "actions": { "askInChat": "pitaj u chatu" },
     "languages": {
       "en-US": "engleski;američki engleski",
       "en-GB": "britanski engleski",
@@ -1084,8 +1076,5 @@
       "ja-JP": "japanski"
     }
   },
-  "tray": {
-    "show": "Prikaži Tyco",
-    "quit": "Izađi"
-  }
+  "tray": { "show": "Prikaži Tyco", "quit": "Izađi" }
 }

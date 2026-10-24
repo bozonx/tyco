@@ -10,9 +10,7 @@
     "translationMenu": "Translation",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Reasoning",
     "footnotes": "Footnotes",
@@ -840,7 +838,7 @@
     "correctionPrompt": "Prompt",
     "correctionPromptInfo": "Added to the built-in correction instructions.",
     "textInjection": {
-      "recheck": "Check again",
+      "recheck": "Check text insertion availability",
       "unavailable": "Text insertion is unavailable: {error}"
     },
     "theme": "Theme",
@@ -948,9 +946,7 @@
     "aiCategory": "AI",
     "sttLlmRulesInfo": "Additional instructions for the AI model on processing recognized speech. You can specify, for example: remove filler words, format punctuation, create lists, maintain a specific style, or apply custom term spelling."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Insert into editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1022,9 +1018,7 @@
     "truncation": "truncated result",
     "untranslated": "untranslated fragment"
   },
-  "window": {
-    "clickToFocus": "Click to continue"
-  },
+  "window": { "clickToFocus": "Click to continue" },
   "write": {
     "alreadyCorrected": "Text is already corrected",
     "cancel": "Cancel",
@@ -1064,9 +1058,7 @@
   },
   "voiceGrammar": {
     "translate": "translate to",
-    "actions": {
-      "askInChat": "ask in chat"
-    },
+    "actions": { "askInChat": "ask in chat" },
     "languages": {
       "en-US": "English;American English",
       "en-GB": "British English",
@@ -1084,8 +1076,5 @@
       "ja-JP": "Japanese"
     }
   },
-  "tray": {
-    "show": "Show Tyco",
-    "quit": "Quit"
-  }
+  "tray": { "show": "Show Tyco", "quit": "Quit" }
 }

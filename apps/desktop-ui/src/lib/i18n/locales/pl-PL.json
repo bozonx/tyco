@@ -10,9 +10,7 @@
     "translationMenu": "Tłumaczenie",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Rozumowanie",
     "footnotes": "Przypisy",
@@ -948,9 +946,7 @@
     "aiCategory": "AI",
     "sttLlmRulesInfo": "Dodatkowe instrukcje dla modelu AI dotyczące przetwarzania rozpoznanej mowy. Możesz na przykład określić: usuwanie wtrąceń, interpunkcję, formatowanie list lub zachowanie określonego stylu."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Wstaw do edytora"
-  },
+  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1022,9 +1018,7 @@
     "truncation": "obcięty wynik",
     "untranslated": "nieprzetłumaczony fragment"
   },
-  "window": {
-    "clickToFocus": "Kliknij, aby kontynuować"
-  },
+  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1064,9 +1058,7 @@
   },
   "voiceGrammar": {
     "translate": "przetłumacz na",
-    "actions": {
-      "askInChat": "zapytaj na czacie"
-    },
+    "actions": { "askInChat": "zapytaj na czacie" },
     "languages": {
       "en-US": "angielski;amerykański angielski",
       "en-GB": "brytyjski angielski",
@@ -1084,8 +1076,5 @@
       "ja-JP": "japoński"
     }
   },
-  "tray": {
-    "show": "Pokaż Tyco",
-    "quit": "Zakończ"
-  }
+  "tray": { "show": "Pokaż Tyco", "quit": "Zakończ" }
 }

@@ -10,9 +10,7 @@
     "translationMenu": "Tradução",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Raciocínio",
     "footnotes": "Notas de rodapé",
@@ -948,9 +946,7 @@
     "aiCategory": "IA",
     "sttLlmRulesInfo": "Instruções adicionais para o modelo de IA sobre o processamento da fala reconhecida. Você pode especificar, por exemplo: remover palavras de preenchimento, pontuar, formatar listas ou manter um estilo específico."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Inserir no editor"
-  },
+  "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
     "auto": "Seguir o sistema",
     "dark": "Escuro",
@@ -1022,9 +1018,7 @@
     "truncation": "resultado truncado",
     "untranslated": "trecho não traduzido"
   },
-  "window": {
-    "clickToFocus": "Clique para continuar"
-  },
+  "window": { "clickToFocus": "Clique para continuar" },
   "write": {
     "alreadyCorrected": "O texto já está corrigido",
     "cancel": "Cancelar",
@@ -1064,9 +1058,7 @@
   },
   "voiceGrammar": {
     "translate": "traduza para",
-    "actions": {
-      "askInChat": "pergunte no chat"
-    },
+    "actions": { "askInChat": "pergunte no chat" },
     "languages": {
       "en-US": "inglês;inglês americano",
       "en-GB": "inglês britânico",
@@ -1084,8 +1076,5 @@
       "ja-JP": "japonês"
     }
   },
-  "tray": {
-    "show": "Mostrar o Tyco",
-    "quit": "Sair"
-  }
+  "tray": { "show": "Mostrar o Tyco", "quit": "Sair" }
 }

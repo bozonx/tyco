@@ -10,9 +10,7 @@
     "translationMenu": "Fordítás",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Gondolatmenet",
     "footnotes": "Lábjegyzetek",
@@ -524,10 +522,7 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": {
-      "command": "A parancs fut…",
-      "correction": "Javítás…"
-    }
+    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -948,9 +943,7 @@
     "aiCategory": "MI",
     "sttLlmRulesInfo": "További utasítások az MI-modell számára a felismert beszéd feldolgozásához. Megadhatja például: töltelékszavak eltávolítása, központozás, listák formázása vagy adott stílus követése."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Beillesztés a szerkesztőbe"
-  },
+  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1022,9 +1015,7 @@
     "truncation": "csonka eredmény",
     "untranslated": "lefordítatlan részlet"
   },
-  "window": {
-    "clickToFocus": "Kattintson a folytatáshoz"
-  },
+  "window": { "clickToFocus": "Kattintson a folytatáshoz" },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
     "cancel": "Mégse",
@@ -1064,9 +1055,7 @@
   },
   "voiceGrammar": {
     "translate": "fordítsd le",
-    "actions": {
-      "askInChat": "kérdezd meg a csevegésben"
-    },
+    "actions": { "askInChat": "kérdezd meg a csevegésben" },
     "languages": {
       "en-US": "angolra;amerikai angolra",
       "en-GB": "brit angolra",
@@ -1084,8 +1073,5 @@
       "ja-JP": "japánra"
     }
   },
-  "tray": {
-    "show": "Tyco megjelenítése",
-    "quit": "Kilépés"
-  }
+  "tray": { "show": "Tyco megjelenítése", "quit": "Kilépés" }
 }

@@ -10,9 +10,7 @@
     "translationMenu": "Překlad",
     "webhook": "Webhook"
   },
-  "app": {
-    "title": "TyCo"
-  },
+  "app": { "title": "TyCo" },
   "chat": {
     "reasoning": "Uvažování",
     "footnotes": "Poznámky pod čarou",
@@ -512,10 +510,7 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": {
-      "command": "Příkaz selhal",
-      "correction": "Oprava selhala"
-    },
+    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -524,10 +519,7 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": {
-      "command": "Spouští se příkaz…",
-      "correction": "Opravuje se…"
-    }
+    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -948,9 +940,7 @@
     "aiCategory": "AI",
     "sttLlmRulesInfo": "Dodatečné pokyny pro model AI ke zpracování rozpoznané řeči. Můžete například uvést: odstranit vycpávková slova, doplnit interpunkci, formátovat seznamy nebo dodržovat určitý styl."
   },
-  "shortcuts": {
-    "insertIntoEditor": "Vložit do editoru"
-  },
+  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1022,9 +1012,7 @@
     "truncation": "zkrácený výsledek",
     "untranslated": "nepřeložený úsek"
   },
-  "window": {
-    "clickToFocus": "Klikněte pro pokračování"
-  },
+  "window": { "clickToFocus": "Klikněte pro pokračování" },
   "write": {
     "alreadyCorrected": "Text je již opraven",
     "cancel": "Zrušit",
@@ -1064,9 +1052,7 @@
   },
   "voiceGrammar": {
     "translate": "přelož do",
-    "actions": {
-      "askInChat": "zeptej se v chatu"
-    },
+    "actions": { "askInChat": "zeptej se v chatu" },
     "languages": {
       "en-US": "angličtiny;americké angličtiny",
       "en-GB": "britské angličtiny",
@@ -1084,8 +1070,5 @@
       "ja-JP": "japonštiny"
     }
   },
-  "tray": {
-    "show": "Zobrazit Tyco",
-    "quit": "Ukončit"
-  }
+  "tray": { "show": "Zobrazit Tyco", "quit": "Ukončit" }
 }

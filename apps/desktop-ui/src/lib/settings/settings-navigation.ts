@@ -113,6 +113,7 @@ const DEVELOPMENT_SECTION_IDS: readonly string[] = [
   'ai-profiles',
   'chat',
   'commands',
+  'correction',
   'launcher-commands',
 ]
 
