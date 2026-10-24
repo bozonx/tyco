@@ -7,6 +7,7 @@ import {
   type PluginManagerDependencies,
   type PluginRuntimeState,
 } from './plugin-manager'
+import { runtimePluginConfig } from './development-plugins'
 import { pluginId } from './plugin-config'
 
 export interface PluginRuntimeDependencies extends Omit<
@@ -41,7 +42,9 @@ export function createPluginRuntime(deps: PluginRuntimeDependencies) {
     })
   )
   const reloadPlugins = (config = deps.getConfig()) =>
-    disposed ? Promise.resolve() : manager.loadPlugins(config)
+    disposed
+      ? Promise.resolve()
+      : manager.loadPlugins(runtimePluginConfig(config))
 
   const refreshInstalledPlugins = (): Promise<void> => {
     if (disposed) return Promise.resolve()

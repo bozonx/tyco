@@ -42,7 +42,10 @@ export function createAppStateSync(deps: AppStateSyncDependencies) {
     scope = effectScope(true)
     scope.run(() => {
       watch(
-        () => deps.getDesktopState().userConfig.plugins,
+        [
+          () => deps.getDesktopState().userConfig.plugins,
+          () => deps.getDesktopState().userConfig.isInDevelopment,
+        ],
         () => {
           void deps
             .reloadPlugins(deps.getDesktopState().userConfig)

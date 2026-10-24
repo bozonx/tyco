@@ -33,6 +33,29 @@ describe('plugin-settings', () => {
     }),
   ]
 
+  it('hides development plugins from settings and restores them with the flag', () => {
+    const ids = [
+      'Diacritics',
+      'TextCase',
+      'WebFormatter',
+      'FastNote',
+      'SearchInInternet',
+    ]
+    const factories = ids.map((id) => () => ({
+      ...samplePlugins[0](),
+      id,
+      name: id,
+    }))
+    expect(
+      resolveInstalledPlugins(factories).map((item) => item.pluginId)
+    ).toEqual(['SearchInInternet'])
+    expect(
+      resolveInstalledPlugins(factories, { isInDevelopment: true }).map(
+        (item) => item.pluginId
+      )
+    ).toEqual(ids)
+  })
+
   it('resolves installed plugins with defaults when no userConfig provided', () => {
     const plugins = resolveInstalledPlugins(samplePlugins)
 

@@ -33,6 +33,31 @@ function setup(extra: Partial<PluginRuntimeDependencies> = {}) {
 }
 
 describe('application plugin runtime', () => {
+  it('deactivates development plugins and restores them without changing their configuration', async () => {
+    const config = structuredClone(DEFAULT_USER_CONFIG)
+    config.isInDevelopment = true
+    config.plugins.FastNote = { isEnabled: true, settings: {} }
+    const init = vi.fn()
+    const { runtime, deps } = setup({
+      builtinPlugins: [() => ({ ...index('FastNote')(), init })],
+      getConfig: () => config,
+    })
+    try {
+      await runtime.reloadPlugins()
+      expect(init).toHaveBeenCalledOnce()
+      delete config.isInDevelopment
+      await runtime.reloadPlugins()
+      expect(deps.unregisterPlugin).toHaveBeenCalledWith('FastNote')
+      expect(runtime.pluginRuntimeStates.FastNote.status).toBe('disabled')
+      expect(config.plugins.FastNote.isEnabled).toBe(true)
+      config.isInDevelopment = true
+      await runtime.reloadPlugins()
+      expect(init).toHaveBeenCalledTimes(2)
+    } finally {
+      await runtime.dispose()
+    }
+  })
+
   it('isolates catalogs and managers between application instances', async () => {
     const first = setup()
     const second = setup()

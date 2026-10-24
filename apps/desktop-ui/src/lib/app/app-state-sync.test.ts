@@ -33,6 +33,22 @@ function fixture(isQuickWindow = false) {
 }
 
 describe('application state synchronization', () => {
+  it('reloads plugin contributions when development mode changes', async () => {
+    const f = fixture()
+    try {
+      f.state.value.userConfig.isInDevelopment = true
+      await nextTick()
+      expect(f.deps.reloadPlugins).toHaveBeenCalledExactlyOnceWith(
+        f.state.value.userConfig
+      )
+      delete f.state.value.userConfig.isInDevelopment
+      await nextTick()
+      expect(f.deps.reloadPlugins).toHaveBeenCalledTimes(2)
+    } finally {
+      f.sync.stop()
+    }
+  })
+
   it('reacts only to language inputs and locale changes when updating document language', async () => {
     const f = fixture()
     vi.mocked(f.deps.syncDocumentLanguage).mockClear()
