@@ -1,8 +1,7 @@
 export const AUTO_LANGUAGE_VALUE = 'auto'
-export const DEFAULT_LANGUAGE = 'ru-RU'
 const DEFAULT_UI_LANGUAGE = 'en-US'
 
-export const SUPPORTED_USER_LANGUAGE_OPTIONS = [
+export const COMMON_LANGUAGE_OPTIONS = [
   { id: 'ru-RU', name: 'Русский' },
   { id: 'en-US', name: 'English (US)' },
   { id: 'en-GB', name: 'English (UK)' },
@@ -65,159 +64,61 @@ export const SUPPORTED_UI_LANGUAGE_OPTIONS = [
   { id: 'ko-KR', name: '한국어' },
 ] as const
 
-const SUPPORTED_USER_LANGUAGE_CODES: readonly string[] =
-  SUPPORTED_USER_LANGUAGE_OPTIONS.map((option) => option.id)
-
 const SUPPORTED_UI_LANGUAGE_CODES: readonly string[] =
   SUPPORTED_UI_LANGUAGE_OPTIONS.map((option) => option.id)
 
-function splitLocale(locale: string) {
-  return locale.trim().split(/[-_]/).filter(Boolean)
-}
-
 export function normalizeLocale(locale?: string | null): string {
-  if (!locale) {
-    return DEFAULT_LANGUAGE
+  if (!locale) return DEFAULT_UI_LANGUAGE
+  try {
+    return (
+      Intl.getCanonicalLocales(locale.trim().replaceAll('_', '-'))[0] ??
+      DEFAULT_UI_LANGUAGE
+    )
+  } catch {
+    return locale.trim()
   }
-
-  const [language = '', region = ''] = splitLocale(locale)
-
-  if (!language) {
-    return DEFAULT_LANGUAGE
-  }
-
-  if (!region) {
-    return language.toLowerCase()
-  }
-
-  return `${language.toLowerCase()}-${region.toUpperCase()}`
 }
 
-function findSupportedLocale(
-  locale: string,
-  supportedLocales: readonly string[]
-): string | null {
+function findSupportedLocale(locale: string): string | undefined {
   const normalized = normalizeLocale(locale)
-
-  if (supportedLocales.includes(normalized)) {
-    return normalized
-  }
-
-  return findLanguageMatch(normalized, supportedLocales)
-}
-
-/** A bare language tag (`es`) first, then the first one of the same language */
-function findLanguageMatch(
-  normalizedLocale: string,
-  supportedLocales: readonly string[]
-): string | null {
-  const [language = ''] = normalizedLocale.split('-')
-
-  if (supportedLocales.includes(language)) {
-    return language
-  }
-
+  if (SUPPORTED_UI_LANGUAGE_CODES.includes(normalized)) return normalized
+  const language = normalized.split('-')[0]
   return (
-    supportedLocales.find((supportedLocale) =>
-      supportedLocale.startsWith(`${language}-`)
-    ) || null
+    SUPPORTED_UI_LANGUAGE_CODES.find((id) => id === language) ??
+    SUPPORTED_UI_LANGUAGE_CODES.find((id) => id.split('-')[0] === language)
   )
 }
 
 export function getNavigatorLanguages(): string[] {
-  if (typeof navigator === 'undefined') {
-    return []
-  }
-
-  if (Array.isArray(navigator.languages) && navigator.languages.length > 0) {
-    return navigator.languages
-  }
-
-  return navigator.language ? [navigator.language] : []
+  if (typeof navigator === 'undefined') return []
+  return navigator.languages?.length
+    ? [...navigator.languages]
+    : navigator.language
+      ? [navigator.language]
+      : []
 }
 
-export function resolveAutoLanguage(
-  navigatorLanguages: readonly string[],
-  fallbackLanguage = DEFAULT_LANGUAGE
+/** Interface preferences never influence speech recognition. */
+export function resolveUiLanguagePreference(
+  configuredAppLanguage?: string | null,
+  navigatorLanguages: readonly string[] = getNavigatorLanguages(),
+  fallbackLanguage = DEFAULT_UI_LANGUAGE
 ): string {
-  for (const navigatorLanguage of navigatorLanguages) {
-    const matchedLanguage = findSupportedLocale(
-      navigatorLanguage,
-      SUPPORTED_USER_LANGUAGE_CODES
-    )
-
-    if (matchedLanguage) {
-      return matchedLanguage
-    }
+  if (configuredAppLanguage && configuredAppLanguage !== AUTO_LANGUAGE_VALUE)
+    return findSupportedLocale(configuredAppLanguage) ?? fallbackLanguage
+  for (const locale of navigatorLanguages) {
+    const match = findSupportedLocale(locale)
+    if (match) return match
   }
-
   return fallbackLanguage
 }
 
-export function resolveLanguagePreference(
-  configuredLanguage?: string | null,
-  navigatorLanguages: readonly string[] = getNavigatorLanguages(),
-  fallbackLanguage = DEFAULT_LANGUAGE
-): string {
-  if (!configuredLanguage || configuredLanguage === AUTO_LANGUAGE_VALUE) {
-    return resolveAutoLanguage(navigatorLanguages, fallbackLanguage)
-  }
-
-  return (
-    findSupportedLocale(configuredLanguage, SUPPORTED_USER_LANGUAGE_CODES) ||
-    normalizeLocale(configuredLanguage)
-  )
-}
-
-export function resolveUiLanguageFromUserLanguage(
-  userLanguage: string,
-  fallbackLanguage = DEFAULT_UI_LANGUAGE
-): string {
-  const normalizedUserLanguage = normalizeLocale(userLanguage)
-
-  if (SUPPORTED_UI_LANGUAGE_CODES.includes(normalizedUserLanguage)) {
-    return normalizedUserLanguage
-  }
-
-  return (
-    findLanguageMatch(normalizedUserLanguage, SUPPORTED_UI_LANGUAGE_CODES) ||
-    fallbackLanguage
-  )
-}
-
-export function resolveUiLanguagePreference(
-  configuredAppLanguage?: string | null,
-  configuredUserLanguage?: string | null,
-  navigatorLanguages: readonly string[] = getNavigatorLanguages(),
-  fallbackLanguage = DEFAULT_UI_LANGUAGE
-): string {
-  if (configuredAppLanguage && configuredAppLanguage !== AUTO_LANGUAGE_VALUE) {
-    return (
-      findSupportedLocale(configuredAppLanguage, SUPPORTED_UI_LANGUAGE_CODES) ||
-      fallbackLanguage
-    )
-  }
-
-  const resolvedUserLanguage = resolveLanguagePreference(
-    configuredUserLanguage,
-    navigatorLanguages
-  )
-
-  return resolveUiLanguageFromUserLanguage(
-    resolvedUserLanguage,
-    fallbackLanguage
-  )
-}
-
-/** Locales are BCP 47 tags already; this only normalizes the case */
 export function toHtmlLang(locale: string): string {
   return normalizeLocale(locale)
 }
 
 export function getLanguageLabelKey(locale: string): string {
-  const normalized = normalizeLocale(locale)
-  const key = locale === AUTO_LANGUAGE_VALUE ? AUTO_LANGUAGE_VALUE : normalized
-  return `language.${key}`
+  return `language.${normalizeLocale(locale)}`
 }
 
 export function buildLanguageOptions(
@@ -227,67 +128,27 @@ export function buildLanguageOptions(
   supportedOptions: readonly {
     id: string
     name: string
-  }[] = SUPPORTED_USER_LANGUAGE_OPTIONS
+  }[] = SUPPORTED_UI_LANGUAGE_OPTIONS
 ): { id: string; name: string }[] {
-  const translateLabel = (value: string, fallbackName: string) => {
-    if (!translate) {
-      return fallbackName
-    }
-
-    const translationKey = getLanguageLabelKey(value)
-    const translatedValue = translate(translationKey)
-
-    return translatedValue === translationKey ? fallbackName : translatedValue
-  }
-
-  const options: { id: string; name: string }[] = includeAuto
-    ? [{ id: AUTO_LANGUAGE_VALUE, name: 'Auto' }, ...supportedOptions].map(
-        (option) => ({
-          id: option.id,
-          name: translateLabel(option.id, option.name),
-        })
-      )
-    : supportedOptions.map((option) => ({
-        id: option.id,
-        name: translateLabel(option.id, option.name),
-      }))
-
+  const options = includeAuto
+    ? [{ id: AUTO_LANGUAGE_VALUE, name: 'Auto' }, ...supportedOptions]
+    : [...supportedOptions]
   for (const value of values) {
-    if (!value || value === AUTO_LANGUAGE_VALUE) {
-      continue
-    }
-
-    const normalizedValue = normalizeLocale(value)
-
-    if (options.some((option) => option.id === normalizedValue)) {
-      continue
-    }
-
-    options.push({
-      id: normalizedValue,
-      name: translateLabel(normalizedValue, toHtmlLang(normalizedValue)),
-    })
+    if (!value || value === AUTO_LANGUAGE_VALUE) continue
+    const id = normalizeLocale(value)
+    if (!options.some((option) => option.id === id))
+      options.push({ id, name: id })
   }
-
-  return options
+  return options.map(({ id, name }) => ({
+    id,
+    name: translate ? translate(getLanguageLabelKey(id)) : name,
+  }))
 }
 
 export function syncDocumentLanguageAttributes(language?: {
   ui?: string | null
-  user?: string | null
 }) {
-  const navigatorLanguages = getNavigatorLanguages()
-  const appLanguage = resolveUiLanguagePreference(
-    language?.ui,
-    language?.user,
-    navigatorLanguages
-  )
-  const userLanguage = resolveLanguagePreference(
-    language?.user,
-    navigatorLanguages
-  )
-
+  const appLanguage = resolveUiLanguagePreference(language?.ui)
   document.documentElement.setAttribute('lang', toHtmlLang(appLanguage))
   document.documentElement.setAttribute('data-app-language', appLanguage)
-  document.documentElement.setAttribute('data-user-language', userLanguage)
 }

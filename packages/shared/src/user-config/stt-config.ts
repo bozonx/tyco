@@ -10,8 +10,8 @@ export interface DeepgramSttSettings {
   /** The Deepgram model, e.g. `nova-3` */
   modelId: string
   /**
-   * `auto` (the default) follows the user language, `multi` lets the
-   * multilingual model guess; anything else is a locale such as `de-DE`
+   * `auto` (the default) lets the provider detect the spoken language; anything
+   * else is a locale such as `de-DE`
    */
   language: string
 }

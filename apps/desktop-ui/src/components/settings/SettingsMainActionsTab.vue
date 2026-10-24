@@ -49,13 +49,13 @@ import {
 } from '../../lib/action-menu/main-actions'
 import { normalizeCommands } from '../../lib/commands/command-config'
 import { commandLabel, isMenuCommand } from '../../lib/commands/command-runtime'
-import { getLanguageLabelKey } from '../../lib/locale/language'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
 import {
   moveShortcutSlot,
   slotList,
   slotsFromList,
 } from '../../lib/shortcut-slots/shortcut-slots'
+import { translationLanguageLabel } from '../../lib/translation/translation-languages'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import { useToolsStore } from '../../stores/tools'
@@ -72,7 +72,7 @@ import {
 
 const { pluginFactories } = usePluginRuntimeStore()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { draft: userConfig, editCommand } = useSettingsContext()
 const actionMenuStore = useActionMenuStore()
 const toolsStore = useToolsStore()
@@ -144,7 +144,7 @@ const availableActions = computed((): MainActionChoice[] => [
   })),
   ...languages.value.map((language) => ({
     config: { type: 'translation' as const, language },
-    name: t(getLanguageLabelKey(language)),
+    name: translationLanguageLabel(language, locale.value),
     group: { kind: 'translation' as const },
   })),
   ...aiTasks.value.map((task) => ({

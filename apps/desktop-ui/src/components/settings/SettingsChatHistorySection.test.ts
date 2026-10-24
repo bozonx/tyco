@@ -1,8 +1,4 @@
-import type {
-  ChatHistoryConfig,
-  EditorHistoryConfig,
-  UserConfig,
-} from '@tyco/shared'
+import type { ChatHistoryConfig, UserConfig } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -11,7 +7,6 @@ import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 
 const mockToast = vi.fn()
 const mockClearChatHistory = vi.fn().mockResolvedValue(undefined)
-const mockClearEditorHistory = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -22,10 +17,7 @@ vi.mock('../../composables/use-toast', () => ({
 }))
 
 vi.mock('../../stores/history', () => ({
-  useHistoryStore: () => ({
-    clearChats: mockClearChatHistory,
-    clearEditorHistory: mockClearEditorHistory,
-  }),
+  useHistoryStore: () => ({ clearChats: mockClearChatHistory }),
 }))
 
 describe('SettingsChatHistorySection.vue', () => {
@@ -33,25 +25,9 @@ describe('SettingsChatHistorySection.vue', () => {
     vi.clearAllMocks()
   })
 
-  const createConfig = ({
-    editorHistory = {},
-    chatHistory = {},
-  }: {
-    editorHistory?: Partial<EditorHistoryConfig>
-    chatHistory?: Partial<ChatHistoryConfig>
-  } = {}): Pick<UserConfig, 'editor' | 'chat' | 'isInDevelopment'> => ({
-    isInDevelopment: true,
-    editor: {
-      submitKey: 'Enter',
-      diffViewMode: 'unified',
-      history: {
-        storage: 'disk',
-        maxItems: 100,
-        retentionDays: 30,
-        isSecretSanitizingEnabled: true,
-        ...editorHistory,
-      },
-    },
+  const createConfig = (
+    chatHistory: Partial<ChatHistoryConfig> = {}
+  ): Pick<UserConfig, 'chat'> => ({
     chat: {
       imageQuality: 'balanced',
       history: { storage: 'disk', ...chatHistory },
@@ -77,11 +53,6 @@ describe('SettingsChatHistorySection.vue', () => {
             props: ['modelValue', 'options'],
             template:
               '<select class="field-select-stub" :data-val="modelValue" />',
-          },
-          FieldNumber: {
-            props: ['modelValue'],
-            template:
-              '<input class="field-input-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
           FieldSwitch: {
             props: ['modelValue'],
@@ -161,7 +132,7 @@ describe('SettingsChatHistorySection.vue', () => {
   })
 
   it('turns the chat history on without asking', async () => {
-    const config = createConfig({ chatHistory: { storage: 'off' } })
+    const config = createConfig({ storage: 'off' })
     const wrapper = mountTab(config)
 
     const chatSection = wrapper.get('.section-stub')

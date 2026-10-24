@@ -1,8 +1,4 @@
-import type {
-  ChatHistoryConfig,
-  EditorHistoryConfig,
-  UserConfig,
-} from '@tyco/shared'
+import type { EditorHistoryConfig, UserConfig } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -10,7 +6,6 @@ import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsEditorHistorySection from './SettingsEditorHistorySection.vue'
 
 const mockToast = vi.fn()
-const mockClearChatHistory = vi.fn().mockResolvedValue(undefined)
 const mockClearEditorHistory = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -22,10 +17,7 @@ vi.mock('../../composables/use-toast', () => ({
 }))
 
 vi.mock('../../stores/history', () => ({
-  useHistoryStore: () => ({
-    clearChats: mockClearChatHistory,
-    clearEditorHistory: mockClearEditorHistory,
-  }),
+  useHistoryStore: () => ({ clearEditorHistory: mockClearEditorHistory }),
 }))
 
 describe('SettingsEditorHistorySection.vue', () => {
@@ -33,14 +25,9 @@ describe('SettingsEditorHistorySection.vue', () => {
     vi.clearAllMocks()
   })
 
-  const createConfig = ({
-    editorHistory = {},
-    chatHistory = {},
-  }: {
-    editorHistory?: Partial<EditorHistoryConfig>
-    chatHistory?: Partial<ChatHistoryConfig>
-  } = {}): Pick<UserConfig, 'editor' | 'chat' | 'isInDevelopment'> => ({
-    isInDevelopment: true,
+  const createConfig = (
+    editorHistory: Partial<EditorHistoryConfig> = {}
+  ): Pick<UserConfig, 'editor'> => ({
     editor: {
       submitKey: 'Enter',
       diffViewMode: 'unified',
@@ -51,10 +38,6 @@ describe('SettingsEditorHistorySection.vue', () => {
         isSecretSanitizingEnabled: true,
         ...editorHistory,
       },
-    },
-    chat: {
-      imageQuality: 'balanced',
-      history: { storage: 'disk', ...chatHistory },
     },
   })
 
@@ -103,9 +86,7 @@ describe('SettingsEditorHistorySection.vue', () => {
   }
 
   it('renders editor history rows when storage is disk', () => {
-    const wrapper = mountTab(
-      createConfig({ editorHistory: { storage: 'disk' } })
-    )
+    const wrapper = mountTab(createConfig({ storage: 'disk' }))
 
     const editorSection = wrapper.get('.section-stub')
     expect(
@@ -131,9 +112,7 @@ describe('SettingsEditorHistorySection.vue', () => {
   })
 
   it('hides retention and secret masking when storage is session', () => {
-    const wrapper = mountTab(
-      createConfig({ editorHistory: { storage: 'session' } })
-    )
+    const wrapper = mountTab(createConfig({ storage: 'session' }))
 
     const editorSection = wrapper.get('.section-stub')
     expect(
@@ -159,9 +138,7 @@ describe('SettingsEditorHistorySection.vue', () => {
   })
 
   it('hides all nested options when storage is off', () => {
-    const wrapper = mountTab(
-      createConfig({ editorHistory: { storage: 'off' } })
-    )
+    const wrapper = mountTab(createConfig({ storage: 'off' }))
 
     const editorSection = wrapper.get('.section-stub')
     expect(

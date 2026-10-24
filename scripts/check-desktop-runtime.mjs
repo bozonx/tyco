@@ -185,14 +185,14 @@ try {
   assert.equal(first.settings.userConfig.appearance.theme, 'dark')
   const second = await invoke('save_user_config', {
     baseConfig: initial,
-    userConfig: { ...initial, language: { ui: 'en-US', user: 'en-US' } },
+    userConfig: { ...initial, language: { ui: 'en-US' } },
   })
   assert.equal(
     second.settings.userConfig.appearance.theme,
     'dark',
     "Stale snapshots must preserve another window's changes"
   )
-  assert.equal(second.settings.userConfig.language.user, 'en-US')
+  assert.equal(second.settings.userConfig.language.ui, 'en-US')
 
   const historyId = await invoke('add_editor_history_item', {
     entry: {

@@ -10,20 +10,22 @@
     <template v-for="(section, index) in sections" :key="index">
       <optgroup v-if="section.label" :label="section.label">
         <option
-          v-for="option in section.options"
-          :key="option.id"
-          :value="props.options.indexOf(option)"
+          v-for="entry in section.options"
+          :key="entry.index"
+          :value="entry.index"
+          :disabled="entry.option.disabled"
         >
-          {{ option.name }}
+          {{ entry.option.name }}
         </option>
       </optgroup>
       <template v-else>
         <option
-          v-for="option in section.options"
-          :key="option.id"
-          :value="props.options.indexOf(option)"
+          v-for="entry in section.options"
+          :key="entry.index"
+          :value="entry.index"
+          :disabled="entry.option.disabled"
         >
-          {{ option.name }}
+          {{ entry.option.name }}
         </option>
       </template>
     </template>
@@ -40,7 +42,7 @@ import type { ControlSize } from '../../lib/ui/control-types'
 defineOptions({ inheritAttrs: false })
 const controlAttrs = useFieldControl()
 
-type Option = ControlOption & { group?: string }
+type Option = ControlOption & { group?: string; disabled?: boolean }
 
 const props = defineProps<{
   size?: ControlSize
@@ -55,11 +57,15 @@ const emit = defineEmits<{
 }>()
 
 const sections = computed(() => {
-  const result: { label?: string; options: Option[] }[] = []
-  for (const option of props.options) {
+  const result: {
+    label?: string
+    options: { option: Option; index: number }[]
+  }[] = []
+  for (const [index, option] of props.options.entries()) {
     const last = result.at(-1)
-    if (last && last.label === option.group) last.options.push(option)
-    else result.push({ label: option.group, options: [option] })
+    if (last && last.label === option.group)
+      last.options.push({ option, index })
+    else result.push({ label: option.group, options: [{ option, index }] })
   }
   return result
 })

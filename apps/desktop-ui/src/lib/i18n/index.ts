@@ -27,14 +27,8 @@ type GlobalI18n = {
 
 const globalI18n = i18n.global as GlobalI18n
 
-function resolveUiLocale(
-  configuredAppLanguage?: string | null,
-  configuredUserLanguage?: string | null
-): UiLocale {
-  const resolved = resolveUiLanguagePreference(
-    configuredAppLanguage,
-    configuredUserLanguage
-  )
+function resolveUiLocale(configuredAppLanguage?: string | null): UiLocale {
+  const resolved = resolveUiLanguagePreference(configuredAppLanguage)
   return (resolved in messages ? resolved : DEFAULT_UI_LOCALE) as UiLocale
 }
 
@@ -47,10 +41,9 @@ export function setI18nLocale(locale: UiLocale) {
 }
 
 export function syncI18nLocale(
-  configuredAppLanguage?: string | null,
-  configuredUserLanguage?: string | null
+  configuredAppLanguage?: string | null
 ): UiLocale {
-  const locale = resolveUiLocale(configuredAppLanguage, configuredUserLanguage)
+  const locale = resolveUiLocale(configuredAppLanguage)
   setI18nLocale(locale)
   return locale
 }

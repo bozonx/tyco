@@ -16,10 +16,9 @@
         @remove="removeLanguage"
       >
         <template #item="{ item, index }">
-          <FieldSelect
-            class="w-full"
+          <TranslationLanguageSelect
             :model-value="item"
-            :options="translateLanguageOptions"
+            :provider="userConfig.translation.provider"
             @update:model-value="updateLanguage(index, $event)"
           />
         </template>
@@ -34,31 +33,27 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import {
-  DEFAULT_LANGUAGE,
-  buildLanguageOptions,
-} from '../../lib/locale/language'
-import {
   moveShortcutSlot,
   slotList,
   slotsFromList,
 } from '../../lib/shortcut-slots/shortcut-slots'
-import FieldSelect from '../common/FieldSelect.vue'
+import {
+  resolveTranslationLanguage,
+  translationLanguageOptions,
+} from '../../lib/translation/translation-languages'
 import InlineAction from '../common/InlineAction.vue'
 import SettingsSection from './SettingsSection.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
+import TranslationLanguageSelect from './TranslationLanguageSelect.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { draft: userConfig, navigate } = useSettingsContext()
 
 const translateLanguageOptions = computed(() => {
-  return buildLanguageOptions(
-    Object.values(userConfig.value.translation.targetLanguages ?? {}),
-    false,
-    t
-  ).map((option) => ({
-    id: option.id,
-    name: option.id ? `${option.name} (${option.id})` : option.name,
-  }))
+  return translationLanguageOptions(
+    userConfig.value.translation.provider,
+    locale.value
+  ).map((option) => ({ id: option.id, name: `${option.name} (${option.id})` }))
 })
 
 const translateLanguageSlots = computed(() =>
@@ -76,9 +71,19 @@ function moveLanguage(from: number, to: number) {
 /** A language is in one slot only: a new slot takes the first one not used yet */
 function addLanguage(index: number) {
   const slots = [...translateLanguageSlots.value]
-  const used = new Set(slots)
+  const used = new Set(
+    slots.flatMap((id) =>
+      id
+        ? (resolveTranslationLanguage(
+            id,
+            userConfig.value.translation.provider,
+            'target'
+          ) ?? id)
+        : []
+    )
+  )
   const language = [
-    DEFAULT_LANGUAGE,
+    'en',
     ...translateLanguageOptions.value.map((option) => String(option.id)),
   ].find((id) => id && !used.has(id))
   if (!language) return
@@ -96,7 +101,14 @@ function updateLanguage(index: number, value: string | number | undefined) {
   if (typeof value !== 'string') return
   // a language chosen again leaves the slot it was in
   const slots = translateLanguageSlots.value.map((language) =>
-    language === value ? null : language
+    language &&
+    resolveTranslationLanguage(
+      language,
+      userConfig.value.translation.provider,
+      'target'
+    ) === value
+      ? null
+      : language
   )
   slots[index] = value
   setSlots(slots)

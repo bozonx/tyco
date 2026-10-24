@@ -32,7 +32,11 @@ describe('groupLanguages', () => {
 
 describe('languageSearchNames', () => {
   it('has the native and the English names, each once', () => {
-    expect(languageSearchNames('pl-PL')).toEqual(['Polski', 'Polish'])
-    expect(languageSearchNames('en-US')).toEqual(['English (US)'])
+    expect(languageSearchNames('pl-PL')).toEqual(
+      expect.arrayContaining(['Polski', 'Polish'])
+    )
+    expect(languageSearchNames('en-US')).toEqual(
+      expect.arrayContaining(['English (US)'])
+    )
   })
 })

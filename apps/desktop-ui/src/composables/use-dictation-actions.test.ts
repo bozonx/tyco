@@ -19,7 +19,7 @@ vi.mock('../stores/desktop', () => ({
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
         },
       },
-      language: { ui: 'auto', user: 'en-US' },
+      language: { ui: 'auto' },
     },
   }),
 }))

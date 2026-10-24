@@ -1,34 +1,13 @@
-/** Follow the user's own language, from the general settings */
-export const DICTATION_LANGUAGE_USER = 'auto'
-/**
- * Deepgram's multilingual model: follows several languages, switching
- * mid-sentence included, but mistakes one language for another far more often
- * than a model told what to expect.
- */
-export const DICTATION_LANGUAGE_MULTI = 'multi'
+/** The provider determines the spoken language from the audio. */
+export const DICTATION_LANGUAGE_AUTO = 'auto'
 
-/**
- * The language tag to ask a live session for. `setting` is the dictation
- * language from the speech settings, `userLocale` the resolved user language
- * (`ru-RU`). `undefined` means the multilingual model.
- */
-export function dictationLanguageFor(
-  setting: string | undefined,
-  userLocale: string | undefined
-): string | undefined {
-  if (setting === DICTATION_LANGUAGE_MULTI) return undefined
-  const locale =
-    !setting || setting === DICTATION_LANGUAGE_USER ? userLocale : setting
-  return toProviderTag(locale)
-}
-
-/** `ru-RU` → `ru`; Chinese keeps its script region, the only one that matters */
-function toProviderTag(locale: string | undefined): string | undefined {
-  const [language, region] = (locale ?? '')
-    .trim()
-    .split('-')
-    .map((part) => part.toLowerCase())
+/** `multi` is accepted only for compatibility with saved settings. */
+export function dictationLanguageFor(setting?: string): string | undefined {
+  if (!setting || setting === DICTATION_LANGUAGE_AUTO || setting === 'multi')
+    return undefined
+  const [language, region] = setting.trim().split('-')
   if (!language) return undefined
-  if (language === 'zh' && region) return `zh-${region.toUpperCase()}`
-  return language
+  if (language.toLowerCase() === 'zh' && region)
+    return `zh-${region.toUpperCase()}`
+  return language.toLowerCase()
 }

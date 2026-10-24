@@ -6,7 +6,7 @@ import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsLanguagesTab from './SettingsLanguagesTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
-  useI18n: () => ({ t: (key: string) => key }),
+  useI18n: () => ({ t: (key: string) => key, locale: { value: 'en-US' } }),
 }))
 
 describe('SettingsLanguagesTab.vue', () => {

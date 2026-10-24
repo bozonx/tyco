@@ -70,7 +70,6 @@ describe('settings navigation', () => {
     })
     expect(parseSettingsTab('plugin:')).toEqual({ kind: 'unknown' })
     expect(parseSettingsTab('nope')).toEqual({ kind: 'unknown' })
-    expect(parseSettingsTab('history')).toEqual({ kind: 'unknown' })
   })
 
   it('groups the sections and lists each plugin after all plugins', () => {

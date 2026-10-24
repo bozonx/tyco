@@ -86,9 +86,7 @@ import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { syncI18nLocale } from '../../lib/i18n'
 import {
-  AUTO_LANGUAGE_VALUE,
   getNavigatorLanguages,
-  normalizeLocale,
   resolveUiLanguagePreference,
 } from '../../lib/locale/language'
 import { resolveInstalledPlugins } from '../../lib/plugins/plugin-settings'
@@ -259,7 +257,6 @@ const currentTabTitle = computed(() =>
 const effectiveAppLanguage = computed(() =>
   resolveUiLanguagePreference(
     userConfig.value.language.ui,
-    userConfig.value.language.user,
     getNavigatorLanguages()
   )
 )
@@ -296,9 +293,9 @@ provide(SETTINGS_CONTEXT_KEY, {
 })
 
 watch(
-  () => [userConfig.value.language.ui, userConfig.value.language.user],
-  ([appLanguage, userLanguage]) => {
-    syncI18nLocale(appLanguage, userLanguage)
+  () => userConfig.value.language.ui,
+  (appLanguage) => {
+    syncI18nLocale(appLanguage)
   }
 )
 
@@ -309,16 +306,6 @@ const configIsNewer = computed(
       userConfig.value.configVersion ?? 0,
       session.latestConfig.configVersion ?? 0
     ) > CONFIG_VERSION
-)
-
-watch(
-  () => userConfig.value.language.user,
-  (userLanguage) => {
-    const normalized = normalizeLocale(userLanguage || AUTO_LANGUAGE_VALUE)
-    if (userConfig.value.language.user !== normalized) {
-      userConfig.value.language.user = normalized
-    }
-  }
 )
 
 onMounted(() => {

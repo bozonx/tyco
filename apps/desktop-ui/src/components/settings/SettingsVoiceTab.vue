@@ -33,8 +33,10 @@
       >
         <FieldSelect
           :model-value="
-            userConfig.stt.providers.deepgram.language ||
-            DICTATION_LANGUAGE_USER
+            userConfig.stt.providers.deepgram.language === 'multi'
+              ? DICTATION_LANGUAGE_AUTO
+              : userConfig.stt.providers.deepgram.language ||
+                DICTATION_LANGUAGE_AUTO
           "
           :options="sttLanguageOptions"
           @update:model-value="setSttLanguage"
@@ -75,12 +77,12 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
-import { buildLanguageOptions } from '../../lib/locale/language'
-import { createSecretKeyEditor } from '../../lib/settings/secret-key-editor'
 import {
-  DICTATION_LANGUAGE_MULTI,
-  DICTATION_LANGUAGE_USER,
-} from '../../lib/stt/dictation-language'
+  COMMON_LANGUAGE_OPTIONS,
+  buildLanguageOptions,
+} from '../../lib/locale/language'
+import { createSecretKeyEditor } from '../../lib/settings/secret-key-editor'
+import { DICTATION_LANGUAGE_AUTO } from '../../lib/stt/dictation-language'
 import { isKeyRequiredForSttProvider, secretId } from '../../lib/stt/stt-client'
 import { activeSttModel } from '../../lib/stt/stt-config'
 import { useSecretsStore } from '../../stores/secrets'
@@ -147,15 +149,14 @@ const removeSttKey = keyEditor.remove
 
 const setSttLanguage = (value: string | number | undefined) => {
   userConfig.value.stt.providers.deepgram.language = String(
-    value || DICTATION_LANGUAGE_USER
+    value || DICTATION_LANGUAGE_AUTO
   )
 }
 
 const sttLanguageOptions = computed(() => {
   return [
-    { id: DICTATION_LANGUAGE_USER, name: t('settings.sttLanguageUser') },
-    { id: DICTATION_LANGUAGE_MULTI, name: t('settings.sttLanguageMulti') },
-    ...buildLanguageOptions([], false, t),
+    { id: DICTATION_LANGUAGE_AUTO, name: t('language.auto') },
+    ...buildLanguageOptions([], false, t, COMMON_LANGUAGE_OPTIONS),
   ]
 })
 

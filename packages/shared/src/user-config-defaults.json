@@ -5,7 +5,7 @@
     "motion": "auto",
     "uiScalePercent": 100
   },
-  "language": { "ui": "auto", "user": "auto" },
+  "language": { "ui": "auto" },
   "editor": {
     "submitKey": "Enter",
     "diffViewMode": "unified",

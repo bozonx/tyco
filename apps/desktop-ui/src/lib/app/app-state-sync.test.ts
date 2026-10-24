@@ -58,10 +58,7 @@ describe('application state synchronization', () => {
     expect(f.deps.syncDocumentLanguage).not.toHaveBeenCalled()
     f.state.value.userConfig.language.ui = 'tr-TR'
     await nextTick()
-    expect(f.deps.syncLocale).toHaveBeenLastCalledWith(
-      'tr-TR',
-      f.state.value.userConfig.language.user
-    )
+    expect(f.deps.syncLocale).toHaveBeenLastCalledWith('tr-TR')
     expect(f.deps.syncDocumentLanguage).toHaveBeenCalledOnce()
     f.locale.value = 'tr-TR'
     await nextTick()

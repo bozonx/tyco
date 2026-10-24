@@ -10,7 +10,7 @@ import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import TranslateMenu from './TranslateMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
-  useI18n: () => ({ t: (key: string) => key }),
+  useI18n: () => ({ t: (key: string) => key, locale: { value: 'en-US' } }),
 }))
 
 const transform = vi.hoisted(() => vi.fn())
@@ -126,9 +126,9 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it-IT')
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it')
     expect(desktop.patchSessionState).toHaveBeenCalledWith({
-      recentTranslateLanguages: ['it-IT'],
+      recentTranslateLanguages: ['it'],
     })
   })
 
@@ -139,7 +139,7 @@ describe('TranslateMenu', () => {
     await nextTick()
     const input = wrapper.find('input')
     await wrapper.find('.language-field').trigger('click')
-    await input.setValue('pol')
+    await input.setValue('polish')
     await input.trigger('keydown', { key: 'Enter' })
     await input.setValue('ital')
     await input.trigger('keydown', { key: 'Enter' })
@@ -149,7 +149,7 @@ describe('TranslateMenu', () => {
       'core.translate',
       'Hello world',
       expect.objectContaining({
-        toolConfig: { language: 'it-IT', sourceLanguage: 'pl-PL' },
+        toolConfig: { language: 'it', sourceLanguage: 'pl' },
       })
     )
   })
@@ -184,7 +184,7 @@ describe('TranslateMenu', () => {
     await input.trigger('keydown', { key: 'Enter' })
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
-    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('de-DE')
+    expect(transform.mock.calls[0]![2].toolConfig.language).toBe('de')
   })
 
   it('translates the highlighted language by clicking the Enter hint', async () => {

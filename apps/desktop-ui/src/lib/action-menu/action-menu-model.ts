@@ -17,7 +17,9 @@ import {
   isMenuCommand,
 } from '../commands/command-runtime'
 import { createCommandRunner } from '../commands/command-runner'
-import { translate } from '../i18n'
+import { i18n, translate } from '../i18n'
+import { messages } from '../i18n/messages'
+import { translationLanguageLabel } from '../translation/translation-languages'
 import {
   createInvocationRunner,
   type InvocationRunnerDependencies,
@@ -112,7 +114,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
 
   const createTranslationActionItem = (language: string): ActionItem => ({
     id: `translation:${language}`,
-    labelKey: getLanguageLabelKey(language),
+    ...(Object.hasOwn(messages['en-US'].language, language)
+      ? { labelKey: getLanguageLabelKey(language) }
+      : { name: translationLanguageLabel(language, i18n.global.locale.value) }),
     icon: 'mdi:translate',
     action: withText((text) => deps.openTranslateModal(text, language)),
   })

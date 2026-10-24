@@ -21,7 +21,7 @@ describe('SettingsGeneralTab.vue', () => {
         motion: 'auto',
         uiScalePercent: 100,
       },
-      language: { ui: AUTO_LANGUAGE_VALUE, user: 'en-US' },
+      language: { ui: AUTO_LANGUAGE_VALUE },
       windowInsertion: {
         linux: {
           pasteShortcut: 'Ctrl+V',
@@ -111,9 +111,7 @@ describe('SettingsGeneralTab.vue', () => {
   })
 
   it('toggles app language mode between auto and manual', async () => {
-    const config = createConfig({
-      language: { ui: AUTO_LANGUAGE_VALUE, user: 'auto' },
-    })
+    const config = createConfig({ language: { ui: AUTO_LANGUAGE_VALUE } })
     const wrapper = mountTab(config)
 
     const toggleBtn = wrapper.find('button.btn')

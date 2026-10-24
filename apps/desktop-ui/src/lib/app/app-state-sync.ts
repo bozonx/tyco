@@ -13,7 +13,7 @@ export interface AppStateSyncDependencies {
   getLocale: () => string
   getRoutePath: () => string
   reloadPlugins: (config: UserConfig) => Promise<void>
-  syncLocale: (uiLanguage?: string, userLanguage?: string) => void
+  syncLocale: (uiLanguage?: string) => void
   syncDocumentLanguage: (language: UserConfig['language']) => void
   updateTitle: () => void
   patchLastMode: (mode: ActivationMode) => Promise<unknown>
@@ -54,13 +54,10 @@ export function createAppStateSync(deps: AppStateSyncDependencies) {
         { deep: true }
       )
       watch(
-        [
-          () => deps.getDesktopState().userConfig.language.ui,
-          () => deps.getDesktopState().userConfig.language.user,
-        ],
-        ([ui, user]) => {
-          deps.syncLocale(ui, user)
-          deps.syncDocumentLanguage({ ui, user })
+        () => deps.getDesktopState().userConfig.language.ui,
+        (ui) => {
+          deps.syncLocale(ui)
+          deps.syncDocumentLanguage({ ui })
         },
         { immediate: true }
       )

@@ -147,8 +147,6 @@ export interface UserConfig {
   language: {
     /** The interface locale, or `auto` for the system one */
     ui: string
-    /** The locale the user speaks and writes, or `auto` */
-    user: string
   }
   editor: EditorConfig
   quickWindow: { isHiddenOnBlur: boolean; isCorrectionPrefetchEnabled: boolean }

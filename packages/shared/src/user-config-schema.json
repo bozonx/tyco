@@ -32,10 +32,10 @@
     "language": {
       "type": "object",
       "properties": {
-        "ui": { "type": "string", "default": "auto", "minLength": 1 },
-        "user": { "type": "string", "default": "auto", "minLength": 1 }
+        "ui": { "type": "string", "default": "auto", "minLength": 1 }
       },
-      "required": ["ui", "user"],
+      "required": ["ui"],
+      "additionalProperties": false,
       "defaultPath": "language"
     },
     "editor": {

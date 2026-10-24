@@ -28,7 +28,14 @@ import {
 
 import type { LlmPrompt } from '../llm/llm-prompt'
 import { protectTranslationText } from './protected-text'
-import { createDeepLProvider } from './machine-providers'
+import {
+  createDeepLProvider,
+  createGoogleTranslationProvider,
+} from './machine-providers'
+import {
+  resolveTranslationLanguage,
+  translationLanguageLabel,
+} from './translation-languages'
 
 const MT_CHUNK_LIMIT_CHARACTERS = 4_500
 const LLM_CHUNK_LIMIT_CHARACTERS = 36_000
@@ -82,6 +89,33 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
     async translate(text, options) {
       options.signal?.throwIfAborted()
       const config = deps.getConfig()
+      if (config.provider !== 'llm') {
+        const targetLanguage = resolveTranslationLanguage(
+          options.targetLanguage,
+          config.provider,
+          'target'
+        )
+        const sourceLanguage =
+          options.sourceLanguage && options.sourceLanguage !== 'auto'
+            ? resolveTranslationLanguage(
+                options.sourceLanguage,
+                config.provider,
+                'source'
+              )
+            : undefined
+        if (
+          !targetLanguage ||
+          (options.sourceLanguage &&
+            options.sourceLanguage !== 'auto' &&
+            !sourceLanguage)
+        )
+          throw new AiError(
+            'invalid_request',
+            'The translation provider does not support the selected language',
+            { provider: config.provider }
+          )
+        options = { ...options, targetLanguage, sourceLanguage }
+      }
       const glossary = toKitGlossary(config.glossary)
       options.onStage?.('translating')
       const pipeline = await runTranslationPipeline({
@@ -174,7 +208,10 @@ async function translateWithMachine(
     catalog,
     keys: deps.keys,
     transport: deps.transport,
-    mtProviders: { deepl: createDeepLProvider },
+    mtProviders: {
+      deepl: createDeepLProvider,
+      'google-translate': createGoogleTranslationProvider,
+    },
   })
   const applicableGlossary = selectGlossaryForText(
     toKitGlossary(config.glossary),
@@ -301,7 +338,7 @@ function translateWithLlm(
       source: chunk,
       glossary: applicable,
       system: prompt.system,
-      user: `Translate the source_text block to ${normalizeLanguage(options.targetLanguage)}. Preserve Markdown, line breaks, URLs, placeholders and emoji. Return only the translation.\n\n${prompt.data}`,
+      user: `Translate the source_text block to ${translationLanguageLabel(options.targetLanguage, 'en')} (${normalizeLanguage(options.targetLanguage)}). Preserve Markdown, line breaks, URLs, placeholders and emoji. Return only the translation.\n\n${prompt.data}`,
     }
   })
 }
@@ -341,7 +378,7 @@ function repairWithLlm(
       source: pair.source,
       glossary: applicable,
       system: prompt.system,
-      user: `The translation block is a translation of the source_text block into ${normalizeLanguage(options.targetLanguage)}. ${repairInstruction(problems)} Preserve everything that is already correct and return only the repaired translation.\n\n${prompt.data}`,
+      user: `The translation block is a translation of the source_text block into ${translationLanguageLabel(options.targetLanguage, 'en')} (${normalizeLanguage(options.targetLanguage)}). ${repairInstruction(problems)} Preserve everything that is already correct and return only the repaired translation.\n\n${prompt.data}`,
     }
   })
 }
@@ -352,6 +389,9 @@ function translationSystem(
 ): string {
   return [
     'Translate faithfully while preserving meaning, tone, structure and formatting.',
+    options.sourceLanguage && options.sourceLanguage !== 'auto'
+      ? `Source language: ${translationLanguageLabel(options.sourceLanguage, 'en')} (${options.sourceLanguage}).`
+      : '',
     options.rules?.trim() ? `User instructions:\n${options.rules.trim()}` : '',
     renderGlossaryForPrompt(
       glossary,

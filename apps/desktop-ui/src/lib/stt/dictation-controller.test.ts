@@ -9,7 +9,7 @@ import { createLiveTranscriptState } from './live-transcript'
 function setup(stt: Partial<SttConfig> = {}) {
   const config = structuredClone(DEFAULT_USER_CONFIG)
   config.stt = { ...config.stt, ...stt }
-  config.language.user = 'es-AR'
+  config.language.ui = 'es'
   const secrets: SecretsStatus = {
     'stt.deepgram': { origins: [], available: true },
   }
@@ -52,7 +52,7 @@ describe('dictation controller', () => {
     await starting
     expect(deps.dictation.start).not.toHaveBeenCalled()
   })
-  it('checks credentials before opening the microphone and resolves the user language', async () => {
+  it('checks credentials before opening the microphone and lets the provider detect the language', async () => {
     const { deps, handlers, controller } = setup()
     await controller.startDictation(handlers)
     expect(deps.refreshSecrets.mock.invocationCallOrder[0]).toBeLessThan(
@@ -61,7 +61,7 @@ describe('dictation controller', () => {
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({
         model: { provider: 'deepgram', modelId: 'nova-3', language: 'auto' },
-        language: 'es',
+        language: undefined,
         hasApiKey: true,
         onText: handlers.onText,
       })
@@ -90,7 +90,7 @@ describe('dictation controller', () => {
     expect(deps.dictation.start).not.toHaveBeenCalled()
   })
 
-  it('allows a keyless provider and follows an explicitly selected language', async () => {
+  it('leaves language recognition to a keyless server', async () => {
     const { deps, handlers, controller } = setup({
       provider: 'sherpaOnnx',
       providers: {
@@ -100,9 +100,9 @@ describe('dictation controller', () => {
     })
     await controller.startDictation(handlers)
     expect(deps.refreshSecrets).not.toHaveBeenCalled()
-    // a server without a language choice follows the user language
+    // A server without a language choice uses its own model.
     expect(deps.dictation.start).toHaveBeenCalledWith(
-      expect.objectContaining({ language: 'es', hasApiKey: false })
+      expect.objectContaining({ language: undefined, hasApiKey: false })
     )
   })
 

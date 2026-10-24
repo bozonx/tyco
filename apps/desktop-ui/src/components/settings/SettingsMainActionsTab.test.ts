@@ -7,6 +7,7 @@ import SettingsMainActionsTab from './SettingsMainActionsTab.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({
+    locale: { value: 'en-US' },
     t: (key: string, params?: Record<string, unknown>) =>
       params ? `${key}:${JSON.stringify(params)}` : key,
   }),

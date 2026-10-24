@@ -83,7 +83,7 @@ describe('settings config preparation', () => {
       DEFAULT_USER_CONFIG.translation.targetLanguages
     )
     expect(result.chat.history).toEqual(DEFAULT_USER_CONFIG.chat.history)
-    expect(result.language).toEqual({ ui: 'auto', user: 'auto' })
+    expect(result.language).toEqual({ ui: 'auto' })
     expect(result.editor.history.maxItems).toBe(
       DEFAULT_USER_CONFIG.editor.history.maxItems
     )

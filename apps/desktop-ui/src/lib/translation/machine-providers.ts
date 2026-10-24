@@ -1,6 +1,7 @@
 import { AiError } from '@bozonx/ai-kit'
 import {
   deeplTranslationProvider,
+  googleCloudTranslationProvider,
   type TranslationProviderFactory,
 } from '@bozonx/ai-kit/translate'
 
@@ -12,7 +13,19 @@ export const createDeepLProvider: TranslationProviderFactory = (init) => ({
       ...init,
       fetch: async (input, options) => {
         if (!init.fetch) throw new Error('DeepL requires the desktop transport')
-        const response = await init.fetch(input, options)
+        // The SDK strips newer regional variants; the local catalog already
+        // resolves and validates the exact provider codes.
+        const body = JSON.parse(String(options?.body)) as Record<
+          string,
+          unknown
+        >
+        body.target_lang = request.targetLanguage.toUpperCase()
+        if (request.sourceLanguage && request.sourceLanguage !== 'auto')
+          body.source_lang = request.sourceLanguage.toUpperCase()
+        const response = await init.fetch(input, {
+          ...options,
+          body: JSON.stringify(body),
+        })
         quotaExhausted = response.status === 456
         return response
       },
@@ -28,5 +41,28 @@ export const createDeepLProvider: TranslationProviderFactory = (init) => ({
         )
       throw error
     }
+  },
+})
+
+/** Preserve the NMT language variants that the SDK reduces to base languages. */
+export const createGoogleTranslationProvider: TranslationProviderFactory = (
+  init
+) => ({
+  async translate(request) {
+    return googleCloudTranslationProvider({
+      ...init,
+      fetch: async (input, options) => {
+        if (!init.fetch)
+          throw new Error('Google Translation requires the desktop transport')
+        const body = JSON.parse(String(options?.body)) as Record<
+          string,
+          unknown
+        >
+        body.target = request.targetLanguage
+        if (request.sourceLanguage && request.sourceLanguage !== 'auto')
+          body.source = request.sourceLanguage
+        return init.fetch(input, { ...options, body: JSON.stringify(body) })
+      },
+    }).translate(request)
   },
 })

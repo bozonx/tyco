@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
@@ -70,14 +70,15 @@ import { useMenuStartup } from '../../composables/use-menu-startup'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import useToast from '../../composables/use-toast'
 import { toolResultMessage } from '../../lib/invocation/invocation-result'
-import {
-  AUTO_LANGUAGE_VALUE,
-  buildLanguageOptions,
-  getLanguageLabelKey,
-} from '../../lib/locale/language'
+import { AUTO_LANGUAGE_VALUE } from '../../lib/locale/language'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import type { TranslateMenuParams } from '../../lib/modals/menu-modal-params'
 import { slotList } from '../../lib/shortcut-slots/shortcut-slots'
+import {
+  resolveTranslationLanguage,
+  translationLanguageIds,
+  translationLanguageLabel,
+} from '../../lib/translation/translation-languages'
 import { translationMetaOf } from '../../lib/translation/translation-meta'
 import {
   type LanguageGroup,
@@ -112,7 +113,7 @@ const invocations = useInvocationsStore()
 const menuModalsStore = useMenuModalsStore()
 const runStep = useMenuStepRun()
 const { toastKey, toastText } = useToast()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const MIN_TRANSLATE_LENGTH = 2
 
@@ -124,11 +125,18 @@ const query = ref('')
 /** Picked anew each time the menu opens: an old pick is easily forgotten */
 const sourceLanguage = ref(AUTO_LANGUAGE_VALUE)
 
-const languageLabel = (id: string): string => {
-  const key = getLanguageLabelKey(id)
-  const label = t(key)
-  return label === key ? (nativeLanguageName(id) ?? id) : label
-}
+const languageLabel = (id: string): string =>
+  translationLanguageLabel(id, locale.value)
+const provider = computed(() => desktopStore.userConfig.translation.provider)
+const languageIds = (direction: 'source' | 'target') =>
+  translationLanguageIds(provider.value, direction)
+const recentFor = (direction: 'source' | 'target') =>
+  recentLanguages.value.flatMap(
+    (id) => resolveTranslationLanguage(id, provider.value, direction) ?? []
+  )
+watch(provider, () => {
+  sourceLanguage.value = AUTO_LANGUAGE_VALUE
+})
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   slotList(desktopStore.userConfig.translation.targetLanguages).map((lang) =>
@@ -161,8 +169,6 @@ const recentLanguages = computed(
   () => desktopStore.sessionState?.recentTranslateLanguages ?? []
 )
 
-const ALL_LANGUAGES = buildLanguageOptions([], false).map((option) => option.id)
-
 const AUTO_ICON = 'mdi:auto-fix'
 
 const GROUP_LABELS: Record<LanguageGroup, string> = {
@@ -194,8 +200,8 @@ const toOption = (
 const fieldOptions = computed<QueryPanelOption[]>(() => {
   if (field.value === 'target') {
     return groupLanguages(
-      recentLanguages.value,
-      ALL_LANGUAGES,
+      recentFor('target'),
+      languageIds('target'),
       languageLabel,
       sourceLanguage.value
     ).map(({ id, group }) => toOption(id, group))
@@ -209,20 +215,23 @@ const fieldOptions = computed<QueryPanelOption[]>(() => {
       keywords: ['auto'],
       selected: sourceLanguage.value === AUTO_LANGUAGE_VALUE,
     },
-    ...groupLanguages(recentLanguages.value, ALL_LANGUAGES, languageLabel).map(
-      ({ id, group }) => toOption(id, group, id === sourceLanguage.value)
-    ),
+    ...groupLanguages(
+      recentFor('source'),
+      languageIds('source'),
+      languageLabel
+    ).map(({ id, group }) => toOption(id, group, id === sourceLanguage.value)),
   ]
 })
 
 /** While searching, the matches are ordered by relevance, so not grouped */
 const pickerOptions = computed(() =>
-  query.value.trim()
+  (query.value.trim()
     ? filterOptions(fieldOptions.value, query.value).map((option) => ({
         ...option,
         group: undefined,
       }))
     : fieldOptions.value
+  ).slice(0, 100)
 )
 
 const isAutoSource = computed(

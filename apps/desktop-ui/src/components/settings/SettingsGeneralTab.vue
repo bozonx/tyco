@@ -8,12 +8,6 @@
           :options="themeOptions"
         />
       </FieldRow>
-      <FieldRow :label="t('settings.userLanguage')">
-        <FieldSelect
-          v-model="userConfig.language.user"
-          :options="userLanguageOptions"
-        />
-      </FieldRow>
       <FieldRow :label="t('settings.appLanguage')">
         <div class="flex items-center gap-2 w-full">
           <FieldSelect
@@ -181,10 +175,6 @@ const appLanguageOptions = computed(() => {
     t,
     SUPPORTED_UI_LANGUAGE_OPTIONS
   )
-})
-
-const userLanguageOptions = computed(() => {
-  return buildLanguageOptions([userConfig.value.language.user], true, t)
 })
 
 const getLanguageName = (language: string) =>

@@ -1,5 +1,4 @@
 import type { UserConfig } from '@tyco/shared'
-import { resolveLanguagePreference } from '../locale/language'
 import type { SecretsStatus } from '../net/secrets'
 import { assertSttKeyAvailable } from './stt-readiness'
 import { dictationLanguageFor } from './dictation-language'
@@ -14,7 +13,7 @@ export interface DictationHandlers {
 }
 
 export interface DictationControllerDependencies {
-  getConfig: () => Pick<UserConfig, 'stt' | 'language'>
+  getConfig: () => Pick<UserConfig, 'stt'>
   dictation: LiveDictation
   refreshSecrets: () => Promise<unknown>
   getSecrets: () => SecretsStatus
@@ -29,13 +28,8 @@ export function createDictationController(
   const shouldFormatRecognizedText = () =>
     deps.getConfig().stt.isVoiceCorrectionEnabled
 
-  // naming the language matters: the multilingual model takes Russian for
-  // Spanish and the like, so it is used only when chosen explicitly
   const currentDictationLanguage = (model: SttModel) =>
-    dictationLanguageFor(
-      model.language,
-      resolveLanguagePreference(deps.getConfig().language.user)
-    )
+    dictationLanguageFor(model.language)
 
   const startDictation = async (handlers: DictationHandlers) => {
     const runGeneration = ++generation

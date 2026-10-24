@@ -28,7 +28,7 @@ describe('SettingsVoiceTab.vue', () => {
         provider: 'sherpaOnnx',
         isVoiceCorrectionEnabled: false,
         providers: {
-          deepgram: { modelId: 'nova-3', language: 'user' },
+          deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
         },
       },

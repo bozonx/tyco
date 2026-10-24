@@ -1,6 +1,3 @@
-import { messages } from '../i18n/messages'
-import { SUPPORTED_USER_LANGUAGE_OPTIONS } from '../locale/language'
-
 /** Where a language comes from in the picker list */
 export type LanguageGroup = 'recent' | 'all'
 
@@ -9,31 +6,10 @@ export interface GroupedLanguage {
   group: LanguageGroup
 }
 
-const NATIVE_NAMES = new Map<string, string>(
-  SUPPORTED_USER_LANGUAGE_OPTIONS.map((option) => [option.id, option.name])
-)
-
-const ENGLISH_NAMES: Record<string, string | undefined> =
-  messages['en-US'].language
-
-/** The name of a language in itself, e.g. `Polski` */
-export function nativeLanguageName(id: string): string | undefined {
-  return NATIVE_NAMES.get(id)
-}
-
-/**
- * Names a language is found by besides its label in the interface language: its
- * native and English names, so it is found whatever the interface language
- */
-export function languageSearchNames(id: string): string[] {
-  return [
-    ...new Set(
-      [NATIVE_NAMES.get(id), ENGLISH_NAMES[id]].filter((name): name is string =>
-        Boolean(name)
-      )
-    ),
-  ]
-}
+export {
+  translationLanguageNativeName as nativeLanguageName,
+  translationLanguageSearchNames as languageSearchNames,
+} from './translation-languages'
 
 /**
  * The picker list: the recent picks, then all the other languages in the order
