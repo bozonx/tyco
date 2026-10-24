@@ -10,7 +10,9 @@
     "translationMenu": "Translation",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Reasoning",
     "footnotes": "Footnotes",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Delete page",
     "launcherPageTakesText": "Take the selected text",
     "launcherPageTakesTextInfo": "Disable for pages whose commands do not process text: the launcher will open without capturing highlighted text, preventing previous selections from leaking into commands.",
-    "chatAttachments": "Chat attachments",
     "chatImageQuality": "Image quality",
     "chatImageQualityHint": "Applies to new attachments. Higher quality uses more memory and context. Images are sent as WebP without metadata; limits are 24 MP and 5 MB after compression.",
     "imageQualityEconomy": "Economy — up to 1024 px",
     "imageQualityBalanced": "Balanced — up to 1568 px",
     "imageQualityOriginal": "Maximum — up to 8000 px",
-    "saveSaving": "Saving…",
-    "savePending": "Unsaved changes",
     "saveFailed": "Settings could not be saved",
     "saveConflict": "Settings changed in another window: {fields}. Choose which changes to keep.",
     "saveKeepLocal": "Save my changes over the latest settings",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "“Files” is set to “Ask”: every call waits for confirmation, even where the project allows it.",
     "profileModelDefaultNamed": "First available ({model})",
     "deleteProfileConfirmUncounted": "Delete the profile “{name}”? Its SOUL.md, workspace and all its chats will be deleted for good.",
-    "featuresCategory": "Features",
     "allPluginsTab": "All plugins",
     "pluginStatusOff": "Off",
-    "developmentFeatures": "Features in development"
+    "developmentFeatures": "Features in development",
+    "aiCategory": "AI",
+    "sttLlmRulesInfo": "Additional instructions for the AI model on processing recognized speech. You can specify, for example: remove filler words, format punctuation, create lists, maintain a specific style, or apply custom term spelling."
   },
-  "shortcuts": { "insertIntoEditor": "Insert into editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insert into editor"
+  },
   "theme": {
     "auto": "System default",
     "dark": "Dark",
@@ -1020,7 +1022,9 @@
     "truncation": "truncated result",
     "untranslated": "untranslated fragment"
   },
-  "window": { "clickToFocus": "Click to continue" },
+  "window": {
+    "clickToFocus": "Click to continue"
+  },
   "write": {
     "alreadyCorrected": "Text is already corrected",
     "cancel": "Cancel",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "translate to",
-    "actions": { "askInChat": "ask in chat" },
+    "actions": {
+      "askInChat": "ask in chat"
+    },
     "languages": {
       "en-US": "English;American English",
       "en-GB": "British English",
@@ -1078,5 +1084,8 @@
       "ja-JP": "Japanese"
     }
   },
-  "tray": { "show": "Show Tyco", "quit": "Quit" }
+  "tray": {
+    "show": "Show Tyco",
+    "quit": "Quit"
+  }
 }

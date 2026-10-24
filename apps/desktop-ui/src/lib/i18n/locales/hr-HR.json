@@ -10,7 +10,9 @@
     "translationMenu": "Prijevod",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Razmišljanje",
     "footnotes": "Fusnote",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Izbriši stranicu",
     "launcherPageTakesText": "Preuzmi odabrani tekst",
     "launcherPageTakesTextInfo": "Isključite za stranice čije naredbe ne obrađuju tekst: pokretač će se otvoriti bez preuzimanja označenog teksta, pa raniji odabiri neće dospjeti u naredbe.",
-    "chatAttachments": "Privitci chata",
     "chatImageQuality": "Kvaliteta slike",
     "chatImageQualityHint": "Vrijedi za nove privitke. Viša kvaliteta troši više memorije i konteksta. Slike se šalju kao WebP bez metapodataka; ograničenja su 24 MP i 5 MB nakon sažimanja.",
     "imageQualityEconomy": "Štedljiva – do 1024 px",
     "imageQualityBalanced": "Uravnotežena – do 1568 px",
     "imageQualityOriginal": "Najviša – do 8000 px",
-    "saveSaving": "Spremanje…",
-    "savePending": "Nespremljene promjene",
     "saveFailed": "Postavke se nisu mogle spremiti",
     "saveConflict": "Postavke su promijenjene u drugom prozoru: {fields}. Odaberite koje promjene zadržati.",
     "saveKeepLocal": "Spremi moje promjene preko najnovijih postavki",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "„Datoteke” su postavljene na „Pitaj”: svaki poziv čeka potvrdu, čak i ondje gdje ga projekt dopušta.",
     "profileModelDefaultNamed": "Prvi dostupni ({model})",
     "deleteProfileConfirmUncounted": "Izbrisati profil „{name}”? Njegov SOUL.md, radni prostor i svi chatovi bit će trajno izbrisani.",
-    "featuresCategory": "Značajke",
     "allPluginsTab": "Svi dodaci",
     "pluginStatusOff": "Isključen",
-    "developmentFeatures": "Značajke u razvoju"
+    "developmentFeatures": "Značajke u razvoju",
+    "aiCategory": "AI",
+    "sttLlmRulesInfo": "Dodatne upute za AI model o obradi prepoznatog govora. Možete navesti npr.: uklanjanje poštapalica, interpunkciju, oblikovanje popisa ili određeni stil."
   },
-  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
+  "shortcuts": {
+    "insertIntoEditor": "Umetni u uređivač"
+  },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1020,7 +1022,9 @@
     "truncation": "skraćeni rezultat",
     "untranslated": "neprevedeni dio"
   },
-  "window": { "clickToFocus": "Kliknite za nastavak" },
+  "window": {
+    "clickToFocus": "Kliknite za nastavak"
+  },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "prevedi na",
-    "actions": { "askInChat": "pitaj u chatu" },
+    "actions": {
+      "askInChat": "pitaj u chatu"
+    },
     "languages": {
       "en-US": "engleski;američki engleski",
       "en-GB": "britanski engleski",
@@ -1078,5 +1084,8 @@
       "ja-JP": "japanski"
     }
   },
-  "tray": { "show": "Prikaži Tyco", "quit": "Izađi" }
+  "tray": {
+    "show": "Prikaži Tyco",
+    "quit": "Izađi"
+  }
 }

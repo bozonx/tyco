@@ -27,7 +27,6 @@
           :is-reloading="isReloading"
           :save-error="saveError"
           :conflicts="conflicts"
-          :has-unsaved-changes="hasUnsavedChanges"
           @reload="reloadSettings"
           @keep-local="keepLocalChanges"
           @retry="session.persist()"
@@ -175,7 +174,6 @@ const {
   isSaving,
   saveError,
   conflicts,
-  hasUnsavedChanges,
 } = storeToRefs(session)
 const isReloading = ref(false)
 async function reloadSettings() {

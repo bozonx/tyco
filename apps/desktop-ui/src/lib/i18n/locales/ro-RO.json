@@ -10,7 +10,9 @@
     "translationMenu": "Traducere",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Raționament",
     "footnotes": "Note de subsol",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Șterge pagina",
     "launcherPageTakesText": "Preia textul selectat",
     "launcherPageTakesTextInfo": "Dezactivați pentru paginile ale căror comenzi nu procesează text: lansatorul se va deschide fără a captura textul evidențiat, astfel încât selecțiile anterioare să nu ajungă în comenzi.",
-    "chatAttachments": "Atașamente chat",
     "chatImageQuality": "Calitatea imaginilor",
     "chatImageQualityHint": "Se aplică atașamentelor noi. O calitate mai mare folosește mai multă memorie și context. Imaginile sunt trimise ca WebP fără metadate; limitele sunt 24 MP și 5 MB după comprimare.",
     "imageQualityEconomy": "Economică – până la 1024 px",
     "imageQualityBalanced": "Echilibrată – până la 1568 px",
     "imageQualityOriginal": "Maximă – până la 8000 px",
-    "saveSaving": "Se salvează…",
-    "savePending": "Modificări nesalvate",
     "saveFailed": "Setările nu au putut fi salvate",
     "saveConflict": "Setările s-au schimbat în altă fereastră: {fields}. Alegeți ce modificări să păstrați.",
     "saveKeepLocal": "Salvează modificările mele peste cele mai recente setări",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "„Fișiere” este setat pe „Întreabă”: fiecare apel așteaptă confirmare, chiar și acolo unde proiectul îl permite.",
     "profileModelDefaultNamed": "Primul disponibil ({model})",
     "deleteProfileConfirmUncounted": "Ștergeți profilul „{name}”? Fișierul său SOUL.md, spațiul de lucru și toate chaturile vor fi șterse definitiv.",
-    "featuresCategory": "Funcții",
     "allPluginsTab": "Toate pluginurile",
     "pluginStatusOff": "Dezactivat",
-    "developmentFeatures": "Funcții în dezvoltare"
+    "developmentFeatures": "Funcții în dezvoltare",
+    "aiCategory": "IA",
+    "sttLlmRulesInfo": "Instrucțiuni suplimentare pentru modelul IA privind procesarea vorbirii recunoscute. Puteți specifica de exemplu: eliminarea cuvintelor de umplutură, punctuația, formatarea listelor sau menținerea unui anumit stil."
   },
-  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserează în editor"
+  },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1020,7 +1022,9 @@
     "truncation": "rezultat trunchiat",
     "untranslated": "fragment netradus"
   },
-  "window": { "clickToFocus": "Faceți clic pentru a continua" },
+  "window": {
+    "clickToFocus": "Faceți clic pentru a continua"
+  },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",
     "cancel": "Anulează",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "tradu în",
-    "actions": { "askInChat": "întreabă în chat" },
+    "actions": {
+      "askInChat": "întreabă în chat"
+    },
     "languages": {
       "en-US": "engleză;engleză americană",
       "en-GB": "engleză britanică",
@@ -1078,5 +1084,8 @@
       "ja-JP": "japoneză"
     }
   },
-  "tray": { "show": "Afișează Tyco", "quit": "Ieșire" }
+  "tray": {
+    "show": "Afișează Tyco",
+    "quit": "Ieșire"
+  }
 }

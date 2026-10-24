@@ -10,7 +10,9 @@
     "translationMenu": "Çeviri",
     "webhook": "Web kancası"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Akıl yürütme",
     "footnotes": "Dipnotlar",
@@ -522,7 +524,10 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
+    "working": {
+      "command": "Komut çalışıyor…",
+      "correction": "Düzeltiliyor…"
+    }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -876,14 +881,11 @@
     "removeLauncherPage": "Sayfayı sil",
     "launcherPageTakesText": "Seçili metni al",
     "launcherPageTakesTextInfo": "Komutları metin işlemeyen sayfalar için kapatın: başlatıcı seçili metni yakalamadan açılır ve önceki seçimlerin yanlışlıkla komutlara iletilmesini önler.",
-    "chatAttachments": "Sohbet ekleri",
     "chatImageQuality": "Görsel kalitesi",
     "chatImageQualityHint": "Yeni eklere uygulanır. Daha yüksek kalite daha fazla bellek ve bağlam kullanır. Görseller meta veri olmadan WebP olarak gönderilir; sınırlar sıkıştırma sonrası 24 MP ve 5 MB.",
     "imageQualityEconomy": "Ekonomik — en fazla 1024 px",
     "imageQualityBalanced": "Dengeli — en fazla 1568 px",
     "imageQualityOriginal": "En yüksek — 8000 px’e kadar",
-    "saveSaving": "Kaydediliyor…",
-    "savePending": "Kaydedilmemiş değişiklikler",
     "saveFailed": "Ayarlar kaydedilemedi",
     "saveConflict": "Ayarlar başka bir pencerede değişti: {fields}. Hangi değişikliklerin korunacağını seçin.",
     "saveKeepLocal": "Değişikliklerimi güncel ayarların üzerine kaydet",
@@ -940,12 +942,15 @@
     "profileFilesAskAll": "«Dosyalar» için «Sor» seçili: proje izin verse bile her çağrı onay bekler.",
     "profileModelDefaultNamed": "İlk kullanılabilir ({model})",
     "deleteProfileConfirmUncounted": "«{name}» profili silinsin mi? SOUL.md, çalışma klasörü ve tüm sohbetleri kalıcı olarak silinecek.",
-    "featuresCategory": "Özellikler",
     "allPluginsTab": "Tüm eklentiler",
     "pluginStatusOff": "Kapalı",
-    "developmentFeatures": "Geliştirme aşamasındaki özellikler"
+    "developmentFeatures": "Geliştirme aşamasındaki özellikler",
+    "aiCategory": "Yapay Zekâ",
+    "sttLlmRulesInfo": "Tanınan konuşmanın işlenmesi için yapay zekâ modeline ek talimatlar. Örneğin dolgu sözcükleri kaldırma, noktalama işaretlerini koyma, listeleri biçimlendirme veya belirli bir üslubu koruma gibi kurallar belirtebilirsiniz."
   },
-  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
+  "shortcuts": {
+    "insertIntoEditor": "Editöre ekle"
+  },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1017,7 +1022,9 @@
     "truncation": "kesilmiş sonuç",
     "untranslated": "çevrilmemiş bölüm"
   },
-  "window": { "clickToFocus": "Devam etmek için tıklayın" },
+  "window": {
+    "clickToFocus": "Devam etmek için tıklayın"
+  },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",
     "cancel": "İptal",
@@ -1057,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "çevir",
-    "actions": { "askInChat": "sohbette sor" },
+    "actions": {
+      "askInChat": "sohbette sor"
+    },
     "languages": {
       "en-US": "İngilizce;Amerikan İngilizcesi",
       "en-GB": "Britanya İngilizcesi",
@@ -1075,5 +1084,8 @@
       "ja-JP": "Japonca"
     }
   },
-  "tray": { "show": "Tyco’yu göster", "quit": "Çıkış" }
+  "tray": {
+    "show": "Tyco’yu göster",
+    "quit": "Çıkış"
+  }
 }

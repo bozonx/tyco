@@ -10,7 +10,9 @@
     "translationMenu": "Traducción",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Razonamiento",
     "footnotes": "Notas al pie",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Eliminar página",
     "launcherPageTakesText": "Tomar el texto seleccionado",
     "launcherPageTakesTextInfo": "Desactívalo en las páginas cuyos comandos no procesan texto: el lanzador se abrirá sin capturar el texto resaltado, para que las selecciones anteriores no lleguen a los comandos.",
-    "chatAttachments": "Adjuntos del chat",
     "chatImageQuality": "Calidad de imagen",
     "chatImageQualityHint": "Se aplica a los adjuntos nuevos. Más calidad usa más memoria y contexto. Las imágenes se envían como WebP sin metadatos; los límites son 24 MP y 5 MB tras la compresión.",
     "imageQualityEconomy": "Económica: hasta 1024 px",
     "imageQualityBalanced": "Equilibrada: hasta 1568 px",
     "imageQualityOriginal": "Máxima: hasta 8000 px",
-    "saveSaving": "Guardando…",
-    "savePending": "Cambios sin guardar",
     "saveFailed": "No se pudo guardar la configuración",
     "saveConflict": "La configuración cambió en otra ventana: {fields}. Elige qué cambios conservar.",
     "saveKeepLocal": "Guardar mis cambios sobre la configuración más reciente",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "«Archivos» está configurado como «Preguntar»: cada llamada espera confirmación, incluso donde el proyecto la permite.",
     "profileModelDefaultNamed": "Primero disponible ({model})",
     "deleteProfileConfirmUncounted": "¿Eliminar el perfil «{name}»? Su SOUL.md, su espacio de trabajo y todos sus chats se eliminarán para siempre.",
-    "featuresCategory": "Funciones",
     "allPluginsTab": "Todos los plugins",
     "pluginStatusOff": "Desactivado",
-    "developmentFeatures": "Funciones en desarrollo"
+    "developmentFeatures": "Funciones en desarrollo",
+    "aiCategory": "IA",
+    "sttLlmRulesInfo": "Instrucciones adicionales para el modelo de IA sobre el procesamiento del habla reconocida. Podés indicar, por ejemplo: eliminar muletillas, puntuar, formatear listas o mantener un estilo específico."
   },
-  "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insertar en el editor"
+  },
   "theme": {
     "auto": "Como en el sistema",
     "dark": "Oscuro",
@@ -1020,7 +1022,9 @@
     "truncation": "resultado truncado",
     "untranslated": "fragmento sin traducir"
   },
-  "window": { "clickToFocus": "Haz clic para continuar" },
+  "window": {
+    "clickToFocus": "Haz clic para continuar"
+  },
   "write": {
     "alreadyCorrected": "El texto ya está corregido",
     "cancel": "Cancelar",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "traduce al",
-    "actions": { "askInChat": "pregunta en el chat" },
+    "actions": {
+      "askInChat": "pregunta en el chat"
+    },
     "languages": {
       "en-US": "inglés;inglés americano",
       "en-GB": "inglés británico",
@@ -1078,5 +1084,8 @@
       "ja-JP": "japonés"
     }
   },
-  "tray": { "show": "Mostrar Tyco", "quit": "Salir" }
+  "tray": {
+    "show": "Mostrar Tyco",
+    "quit": "Salir"
+  }
 }

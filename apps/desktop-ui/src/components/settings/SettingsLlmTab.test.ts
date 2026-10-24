@@ -218,9 +218,7 @@ describe('SettingsLlmTab.vue', () => {
       },
     })
 
-    expect(
-      wrapper.find('[data-title="settings.chatAttachments"]').exists()
-    ).toBe(false)
+    expect(wrapper.find('[data-title="settings.chat"]').exists()).toBe(false)
     expect(wrapper.findAll('.textarea-stub')).toHaveLength(0)
     expect(
       wrapper

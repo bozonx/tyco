@@ -10,7 +10,9 @@
     "translationMenu": "Traduzione",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Ragionamento",
     "footnotes": "Note a piè di pagina",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Elimina pagina",
     "launcherPageTakesText": "Prendi il testo selezionato",
     "launcherPageTakesTextInfo": "Disattiva per le pagine i cui comandi non elaborano testo: il launcher si aprirà senza catturare il testo evidenziato, così le selezioni precedenti non finiscono nei comandi.",
-    "chatAttachments": "Allegati della chat",
     "chatImageQuality": "Qualità delle immagini",
     "chatImageQualityHint": "Si applica ai nuovi allegati. Una qualità più alta usa più memoria e contesto. Le immagini vengono inviate come WebP senza metadati; i limiti sono 24 MP e 5 MB dopo la compressione.",
     "imageQualityEconomy": "Economica: fino a 1024 px",
     "imageQualityBalanced": "Bilanciata: fino a 1568 px",
     "imageQualityOriginal": "Massima: fino a 8000 px",
-    "saveSaving": "Salvataggio…",
-    "savePending": "Modifiche non salvate",
     "saveFailed": "Impossibile salvare le impostazioni",
     "saveConflict": "Le impostazioni sono cambiate in un’altra finestra: {fields}. Scegli quali modifiche mantenere.",
     "saveKeepLocal": "Salva le mie modifiche sopra le impostazioni più recenti",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "«File» è impostato su «Chiedi»: ogni chiamata attende conferma, anche dove il progetto la consente.",
     "profileModelDefaultNamed": "Primo disponibile ({model})",
     "deleteProfileConfirmUncounted": "Eliminare il profilo «{name}»? Il suo SOUL.md, lo spazio di lavoro e tutte le sue chat verranno eliminati definitivamente.",
-    "featuresCategory": "Funzionalità",
     "allPluginsTab": "Tutti i plugin",
     "pluginStatusOff": "Disattivato",
-    "developmentFeatures": "Funzioni in sviluppo"
+    "developmentFeatures": "Funzioni in sviluppo",
+    "aiCategory": "IA",
+    "sttLlmRulesInfo": "Istruzioni aggiuntive per il modello IA sull'elaborazione del parlato riconosciuto. Puoi specificare ad esempio: rimuovere intercalari, punteggiare, formattare elenchi o seguire uno stile particolare."
   },
-  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserisci nell’editor"
+  },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1020,7 +1022,9 @@
     "truncation": "risultato troncato",
     "untranslated": "frammento non tradotto"
   },
-  "window": { "clickToFocus": "Fai clic per continuare" },
+  "window": {
+    "clickToFocus": "Fai clic per continuare"
+  },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",
     "cancel": "Annulla",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "traduci in",
-    "actions": { "askInChat": "chiedi nella chat" },
+    "actions": {
+      "askInChat": "chiedi nella chat"
+    },
     "languages": {
       "en-US": "inglese;inglese americano",
       "en-GB": "inglese britannico",
@@ -1078,5 +1084,8 @@
       "ja-JP": "giapponese"
     }
   },
-  "tray": { "show": "Mostra Tyco", "quit": "Esci" }
+  "tray": {
+    "show": "Mostra Tyco",
+    "quit": "Esci"
+  }
 }

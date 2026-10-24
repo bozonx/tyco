@@ -10,7 +10,9 @@
     "translationMenu": "Fordítás",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Gondolatmenet",
     "footnotes": "Lábjegyzetek",
@@ -522,7 +524,10 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
+    "working": {
+      "command": "A parancs fut…",
+      "correction": "Javítás…"
+    }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -876,14 +881,11 @@
     "removeLauncherPage": "Oldal törlése",
     "launcherPageTakesText": "Kijelölt szöveg átvétele",
     "launcherPageTakesTextInfo": "Kapcsolja ki azoknál az oldalaknál, amelyek parancsai nem dolgoznak fel szöveget: az indító a kijelölt szöveg átvétele nélkül nyílik meg, így a korábbi kijelölések nem kerülnek a parancsokba.",
-    "chatAttachments": "Csevegési mellékletek",
     "chatImageQuality": "Képminőség",
     "chatImageQualityHint": "Az új mellékletekre vonatkozik. A jobb minőség több memóriát és kontextust használ. A képek metaadatok nélküli WebP formátumban kerülnek elküldésre; a korlát 24 MP és tömörítés után 5 MB.",
     "imageQualityEconomy": "Takarékos – legfeljebb 1024 px",
     "imageQualityBalanced": "Kiegyensúlyozott – legfeljebb 1568 px",
     "imageQualityOriginal": "Maximális – legfeljebb 8000 px",
-    "saveSaving": "Mentés…",
-    "savePending": "Nem mentett módosítások",
     "saveFailed": "A beállításokat nem sikerült menteni",
     "saveConflict": "A beállítások egy másik ablakban módosultak: {fields}. Válassza ki, mely módosítások maradjanak meg.",
     "saveKeepLocal": "Saját módosítások mentése a legújabb beállítások fölé",
@@ -940,12 +942,15 @@
     "profileFilesAskAll": "A „Fájlok” beállítása „Kérdés”: minden hívás megerősítésre vár, ott is, ahol a projekt engedélyezi.",
     "profileModelDefaultNamed": "Első elérhető ({model})",
     "deleteProfileConfirmUncounted": "Törli a(z) „{name}” profilt? A SOUL.md fájlja, a munkaterülete és az összes csevegése végleg törlődik.",
-    "featuresCategory": "Funkciók",
     "allPluginsTab": "Minden bővítmény",
     "pluginStatusOff": "Ki",
-    "developmentFeatures": "Fejlesztés alatt álló funkciók"
+    "developmentFeatures": "Fejlesztés alatt álló funkciók",
+    "aiCategory": "MI",
+    "sttLlmRulesInfo": "További utasítások az MI-modell számára a felismert beszéd feldolgozásához. Megadhatja például: töltelékszavak eltávolítása, központozás, listák formázása vagy adott stílus követése."
   },
-  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
+  "shortcuts": {
+    "insertIntoEditor": "Beillesztés a szerkesztőbe"
+  },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1017,7 +1022,9 @@
     "truncation": "csonka eredmény",
     "untranslated": "lefordítatlan részlet"
   },
-  "window": { "clickToFocus": "Kattintson a folytatáshoz" },
+  "window": {
+    "clickToFocus": "Kattintson a folytatáshoz"
+  },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
     "cancel": "Mégse",
@@ -1057,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "fordítsd le",
-    "actions": { "askInChat": "kérdezd meg a csevegésben" },
+    "actions": {
+      "askInChat": "kérdezd meg a csevegésben"
+    },
     "languages": {
       "en-US": "angolra;amerikai angolra",
       "en-GB": "brit angolra",
@@ -1075,5 +1084,8 @@
       "ja-JP": "japánra"
     }
   },
-  "tray": { "show": "Tyco megjelenítése", "quit": "Kilépés" }
+  "tray": {
+    "show": "Tyco megjelenítése",
+    "quit": "Kilépés"
+  }
 }

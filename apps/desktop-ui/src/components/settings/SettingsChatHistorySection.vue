@@ -14,7 +14,7 @@
     <FieldRow
       v-if="isHistoryChecked"
       :label="t('settings.chatHistoryRetentionDays')"
-      :hint="t('settings.chatHistoryRetentionDaysHint')"
+      :info="t('settings.chatHistoryRetentionDaysHint')"
       inline
     >
       <FieldSelect
@@ -29,7 +29,7 @@
     <FieldRow :label="t('history.clear')" inline>
       <Button
         size="sm"
-        variant="danger-ghost"
+        variant="ghost"
         icon="mdi:trash-can-outline"
         @click="showClearModal = true"
       >

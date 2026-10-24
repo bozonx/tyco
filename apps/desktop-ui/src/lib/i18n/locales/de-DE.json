@@ -10,7 +10,9 @@
     "translationMenu": "Übersetzung",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Denkprozess",
     "footnotes": "Fußnoten",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Seite löschen",
     "launcherPageTakesText": "Ausgewählten Text übernehmen",
     "launcherPageTakesTextInfo": "Für Seiten deaktivieren, deren Befehle keinen Text verarbeiten: Der Starter öffnet sich dann, ohne markierten Text zu erfassen, sodass frühere Auswahlen nicht in Befehle gelangen.",
-    "chatAttachments": "Chat-Anhänge",
     "chatImageQuality": "Bildqualität",
     "chatImageQualityHint": "Gilt für neue Anhänge. Höhere Qualität braucht mehr Speicher und Kontext. Bilder werden als WebP ohne Metadaten gesendet; die Grenzen sind 24 MP und 5 MB nach der Komprimierung.",
     "imageQualityEconomy": "Sparsam – bis 1024 px",
     "imageQualityBalanced": "Ausgewogen – bis 1568 px",
     "imageQualityOriginal": "Maximal – bis 8000 px",
-    "saveSaving": "Wird gespeichert…",
-    "savePending": "Ungespeicherte Änderungen",
     "saveFailed": "Die Einstellungen konnten nicht gespeichert werden",
     "saveConflict": "Die Einstellungen wurden in einem anderen Fenster geändert: {fields}. Wählen Sie, welche Änderungen behalten werden.",
     "saveKeepLocal": "Meine Änderungen über die neuesten Einstellungen speichern",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "„Dateien“ steht auf „Fragen“: Jeder Aufruf wartet auf Bestätigung, auch wo das Projekt ihn erlaubt.",
     "profileModelDefaultNamed": "Erstes verfügbares ({model})",
     "deleteProfileConfirmUncounted": "Profil „{name}“ löschen? Seine SOUL.md, sein Arbeitsbereich und alle seine Chats werden endgültig gelöscht.",
-    "featuresCategory": "Funktionen",
     "allPluginsTab": "Alle Plugins",
     "pluginStatusOff": "Aus",
-    "developmentFeatures": "Funktionen in Entwicklung"
+    "developmentFeatures": "Funktionen in Entwicklung",
+    "aiCategory": "KI",
+    "sttLlmRulesInfo": "Zusätzliche Anweisungen für das KI-Modell zur Verarbeitung der erkannten Sprache. Du kannst z. B. angeben: Füllwörter entfernen, Zeichensetzung ergänzen, Listen formatieren oder einen bestimmten Stil einhalten."
   },
-  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
+  "shortcuts": {
+    "insertIntoEditor": "In den Editor einfügen"
+  },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1020,7 +1022,9 @@
     "truncation": "abgeschnittenes Ergebnis",
     "untranslated": "nicht übersetzter Abschnitt"
   },
-  "window": { "clickToFocus": "Zum Fortfahren klicken" },
+  "window": {
+    "clickToFocus": "Zum Fortfahren klicken"
+  },
   "write": {
     "alreadyCorrected": "Der Text ist bereits korrigiert",
     "cancel": "Abbrechen",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "übersetze auf",
-    "actions": { "askInChat": "frage im chat" },
+    "actions": {
+      "askInChat": "frage im chat"
+    },
     "languages": {
       "en-US": "Englisch;amerikanisches Englisch",
       "en-GB": "britisches Englisch",
@@ -1078,5 +1084,8 @@
       "ja-JP": "Japanisch"
     }
   },
-  "tray": { "show": "Tyco anzeigen", "quit": "Beenden" }
+  "tray": {
+    "show": "Tyco anzeigen",
+    "quit": "Beenden"
+  }
 }

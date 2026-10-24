@@ -10,7 +10,9 @@
     "translationMenu": "翻訳",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "思考プロセス",
     "footnotes": "脚注",
@@ -522,7 +524,10 @@
       "command": "コマンドによるテキストの変更はありませんでした",
       "correction": "修正箇所は見つかりませんでした"
     },
-    "working": { "command": "コマンドを実行中…", "correction": "校正中…" }
+    "working": {
+      "command": "コマンドを実行中…",
+      "correction": "校正中…"
+    }
   },
   "settings": {
     "accessAllow": "許可",
@@ -876,14 +881,11 @@
     "removeLauncherPage": "ページを削除",
     "launcherPageTakesText": "選択テキストを受け取る",
     "launcherPageTakesTextInfo": "有効にすると、このページのコマンドは選択テキストまたはクイック入力のテキストを操作します。無効にすると、独立した操作として実行されます。",
-    "chatAttachments": "チャットの添付ファイル",
     "chatImageQuality": "画質",
     "chatImageQualityHint": "新しい添付ファイルに適用されます。高画質にすると、より多くのメモリとコンテキストトークンを消費します。",
     "imageQualityEconomy": "エコノミー（最大800px、高圧縮）",
     "imageQualityBalanced": "バランス（最大1280px、圧縮）",
     "imageQualityOriginal": "オリジナル（最大2048px、低圧縮）",
-    "saveSaving": "保存中…",
-    "savePending": "未保存の変更があります",
     "saveFailed": "設定を保存できませんでした",
     "saveConflict": "別のウィンドウで設定が変更されました: {fields}。保持する変更を選択してください。",
     "saveKeepLocal": "ローカルの変更で上書き保存する",
@@ -940,12 +942,15 @@
     "profileFilesAskAll": "すべての操作で確認",
     "profileModelDefaultNamed": "最初に利用可能なモデル ({model})",
     "deleteProfileConfirmUncounted": "プロファイル「{name}」を削除しますか？SOUL.md、ワークスペース、およびすべてのチャットが完全に削除されます。",
-    "featuresCategory": "機能",
     "allPluginsTab": "すべてのプラグイン",
     "pluginStatusOff": "無効",
-    "developmentFeatures": "開発中の機能"
+    "developmentFeatures": "開発中の機能",
+    "aiCategory": "AI",
+    "sttLlmRulesInfo": "認識された音声の処理に関するAIモデルへの追加指示。例えば、つなぎ言葉の削除、句読点の付与、箇条書きの整形、特定のスタイルの維持などを指定できます。"
   },
-  "shortcuts": { "insertIntoEditor": "エディターに挿入" },
+  "shortcuts": {
+    "insertIntoEditor": "エディターに挿入"
+  },
   "theme": {
     "auto": "システム設定に従う",
     "dark": "ダーク",
@@ -1017,7 +1022,9 @@
     "truncation": "結果が途切れています",
     "untranslated": "未翻訳の箇所があります"
   },
-  "window": { "clickToFocus": "クリックして続行" },
+  "window": {
+    "clickToFocus": "クリックして続行"
+  },
   "write": {
     "alreadyCorrected": "テキストはすでに修正済みです",
     "cancel": "キャンセル",
@@ -1057,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "翻訳",
-    "actions": { "askInChat": "チャットで質問" },
+    "actions": {
+      "askInChat": "チャットで質問"
+    },
     "languages": {
       "en-US": "英語;アメリカ英語",
       "en-GB": "イギリス英語",
@@ -1075,5 +1084,8 @@
       "ja-JP": "日本語"
     }
   },
-  "tray": { "show": "Tycoを表示", "quit": "終了" }
+  "tray": {
+    "show": "Tycoを表示",
+    "quit": "終了"
+  }
 }

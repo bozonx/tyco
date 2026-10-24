@@ -56,15 +56,12 @@ const props = defineProps<{
   isReloading: boolean
   saveError: string | null
   conflicts: string[]
-  hasUnsavedChanges: boolean
 }>()
 const emit = defineEmits<{ reload: []; keepLocal: []; retry: [] }>()
 const { t } = useI18n()
 
 const statusMessage = computed(() => {
-  if (props.isSaving) return t('settings.saveSaving')
   if (props.saveError || props.conflicts.length) return t('settings.saveFailed')
-  if (props.hasUnsavedChanges) return t('settings.savePending')
   return null
 })
 </script>

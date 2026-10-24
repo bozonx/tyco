@@ -10,7 +10,9 @@
     "translationMenu": "Tradução",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Raciocínio",
     "footnotes": "Notas de rodapé",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Excluir página",
     "launcherPageTakesText": "Pegar o texto selecionado",
     "launcherPageTakesTextInfo": "Desative em páginas cujos comandos não processam texto: o inicializador abrirá sem capturar o texto destacado, evitando que seleções anteriores vazem para os comandos.",
-    "chatAttachments": "Anexos do chat",
     "chatImageQuality": "Qualidade da imagem",
     "chatImageQualityHint": "Aplica-se a novos anexos. Qualidade maior usa mais memória e contexto. As imagens são enviadas como WebP sem metadados; os limites são 24 MP e 5 MB após a compressão.",
     "imageQualityEconomy": "Econômica — até 1024 px",
     "imageQualityBalanced": "Equilibrada — até 1568 px",
     "imageQualityOriginal": "Máxima — até 8000 px",
-    "saveSaving": "Salvando…",
-    "savePending": "Alterações não salvas",
     "saveFailed": "Não foi possível salvar as configurações",
     "saveConflict": "As configurações mudaram em outra janela: {fields}. Escolha quais alterações manter.",
     "saveKeepLocal": "Salvar minhas alterações sobre as configurações mais recentes",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "“Arquivos” está definido como “Perguntar”: cada chamada aguarda confirmação, mesmo onde o projeto permite.",
     "profileModelDefaultNamed": "Primeiro disponível ({model})",
     "deleteProfileConfirmUncounted": "Excluir o perfil “{name}”? O SOUL.md, o espaço de trabalho e todos os chats dele serão excluídos para sempre.",
-    "featuresCategory": "Recursos",
     "allPluginsTab": "Todos os plugins",
     "pluginStatusOff": "Desativado",
-    "developmentFeatures": "Recursos em desenvolvimento"
+    "developmentFeatures": "Recursos em desenvolvimento",
+    "aiCategory": "IA",
+    "sttLlmRulesInfo": "Instruções adicionais para o modelo de IA sobre o processamento da fala reconhecida. Você pode especificar, por exemplo: remover palavras de preenchimento, pontuar, formatar listas ou manter um estilo específico."
   },
-  "shortcuts": { "insertIntoEditor": "Inserir no editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserir no editor"
+  },
   "theme": {
     "auto": "Seguir o sistema",
     "dark": "Escuro",
@@ -1020,7 +1022,9 @@
     "truncation": "resultado truncado",
     "untranslated": "trecho não traduzido"
   },
-  "window": { "clickToFocus": "Clique para continuar" },
+  "window": {
+    "clickToFocus": "Clique para continuar"
+  },
   "write": {
     "alreadyCorrected": "O texto já está corrigido",
     "cancel": "Cancelar",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "traduza para",
-    "actions": { "askInChat": "pergunte no chat" },
+    "actions": {
+      "askInChat": "pergunte no chat"
+    },
     "languages": {
       "en-US": "inglês;inglês americano",
       "en-GB": "inglês britânico",
@@ -1078,5 +1084,8 @@
       "ja-JP": "japonês"
     }
   },
-  "tray": { "show": "Mostrar o Tyco", "quit": "Sair" }
+  "tray": {
+    "show": "Mostrar o Tyco",
+    "quit": "Sair"
+  }
 }

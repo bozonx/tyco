@@ -47,7 +47,7 @@ describe('SettingsVoiceTab.vue', () => {
               '<section class="section-stub" :data-title="title"><slot /></section>',
           },
           FieldRow: {
-            props: ['label', 'hint'],
+            props: ['label', 'hint', 'info'],
             template:
               '<div class="field-row-stub" :data-label="label"><slot /></div>',
           },

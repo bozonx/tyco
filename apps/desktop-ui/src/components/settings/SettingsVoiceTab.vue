@@ -29,7 +29,7 @@
       <FieldRow
         v-if="sttNeedsKey"
         :label="t('settings.sttLanguage')"
-        :hint="t('settings.sttLanguageHint')"
+        :info="t('settings.sttLanguageHint')"
       >
         <FieldSelect
           :model-value="
@@ -64,6 +64,7 @@
       <FieldRow
         v-if="userConfig.stt.isVoiceCorrectionEnabled"
         :label="t('settings.sttLlmRules')"
+        :info="t('settings.sttLlmRulesInfo')"
         vertical
       >
         <FieldTextArea v-model="userConfig.llm.tasks.voiceCorrection.rule" />

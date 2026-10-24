@@ -79,8 +79,8 @@ describe('settings navigation', () => {
     ).toEqual([
       [undefined, ['general', 'editor', 'global-actions', 'accessibility']],
       [
-        'settings.featuresCategory',
-        ['chat', 'correction', 'translations', 'stt', 'llm', 'ai-profiles'],
+        'settings.aiCategory',
+        ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],
       ],
       [
         'settings.actionsCategory',

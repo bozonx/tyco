@@ -31,26 +31,26 @@ export const SETTINGS_NAVIGATION_GROUPS = [
     ],
   },
   {
-    id: 'features',
-    labelKey: 'settings.featuresCategory',
+    id: 'ai',
+    labelKey: 'settings.aiCategory',
     sections: [
-      { id: 'chat', labelKey: 'settings.chat', icon: 'mdi:chat-outline' },
+      { id: 'llm', labelKey: 'settings.llmTab', icon: 'mdi:cube-outline' },
       {
-        id: 'correction',
-        labelKey: 'settings.correctionTab',
-        icon: 'mdi:spellcheck',
+        id: 'stt',
+        labelKey: 'settings.sttTab',
+        icon: 'mdi:microphone-outline',
       },
+      { id: 'chat', labelKey: 'settings.chat', icon: 'mdi:chat-outline' },
       {
         id: 'translations',
         labelKey: 'settings.translationsTab',
         icon: 'mdi:translate',
       },
       {
-        id: 'stt',
-        labelKey: 'settings.sttTab',
-        icon: 'mdi:microphone-outline',
+        id: 'correction',
+        labelKey: 'settings.correctionTab',
+        icon: 'mdi:spellcheck',
       },
-      { id: 'llm', labelKey: 'settings.llmTab', icon: 'mdi:cube-outline' },
       {
         id: 'ai-profiles',
         labelKey: 'settings.aiProfilesTab',

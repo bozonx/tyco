@@ -10,7 +10,9 @@
     "translationMenu": "翻譯",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "思考過程",
     "footnotes": "註腳",
@@ -510,7 +512,10 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
+    "failed": {
+      "command": "命令執行失敗",
+      "correction": "校對失敗"
+    },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
@@ -519,7 +524,10 @@
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
     },
-    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
+    "working": {
+      "command": "正在執行命令…",
+      "correction": "正在校對…"
+    }
   },
   "settings": {
     "accessAllow": "允許",
@@ -873,14 +881,11 @@
     "removeLauncherPage": "刪除分頁",
     "launcherPageTakesText": "擷取選取的文字",
     "launcherPageTakesTextInfo": "針對命令不處理文字的分頁停用此項：啟動器開啟時將不會擷取反白文字，以防止先前選取的內容洩漏至命令中。",
-    "chatAttachments": "聊天附件",
     "chatImageQuality": "圖片品質",
     "chatImageQualityHint": "套用至新附件。較高的品質會消耗更多記憶體與上下文。圖片發送為不帶中繼資料的 WebP；限制為 24 MP 以及壓縮後 5 MB。",
     "imageQualityEconomy": "省流 — 最高 1024 像素",
     "imageQualityBalanced": "均衡 — 最高 1568 像素",
     "imageQualityOriginal": "最高品質 — 最高 8000 像素",
-    "saveSaving": "正在儲存…",
-    "savePending": "未儲存的變更",
     "saveFailed": "無法儲存設定",
     "saveConflict": "設定已在另一個視窗中被修改：{fields}。請選擇要保留哪些變更。",
     "saveKeepLocal": "使用我的變更覆寫最新設定",
@@ -937,12 +942,15 @@
     "profileFilesAskAll": "「檔案」已設為「詢問」：即使專案允許，每次呼叫仍會等待確認。",
     "profileModelDefaultNamed": "第一個可用模型 ({model})",
     "deleteProfileConfirmUncounted": "要刪除設定檔「{name}」嗎？其 SOUL.md、工作區和所有聊天記錄將被永久刪除。",
-    "featuresCategory": "功能",
     "allPluginsTab": "所有外掛程式",
     "pluginStatusOff": "關閉",
-    "developmentFeatures": "開發中的功能"
+    "developmentFeatures": "開發中的功能",
+    "aiCategory": "AI",
+    "sttLlmRulesInfo": "用於處理辨識語音的 AI 模型附加指示。例如可以指定：去除贅字、添加標點、設定清單格式或維持特定風格。"
   },
-  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入至編輯器"
+  },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1014,7 +1022,9 @@
     "truncation": "結果遭截斷",
     "untranslated": "存在未翻譯片段"
   },
-  "window": { "clickToFocus": "按一下以繼續" },
+  "window": {
+    "clickToFocus": "按一下以繼續"
+  },
   "write": {
     "alreadyCorrected": "文字已經過校對",
     "cancel": "取消",
@@ -1054,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "翻譯成;翻譯為;翻譯到",
-    "actions": { "askInChat": "在聊天中提問;在對話中提問" },
+    "actions": {
+      "askInChat": "在聊天中提問;在對話中提問"
+    },
     "languages": {
       "en-US": "英文;美式英文;英語;美式英語",
       "en-GB": "英式英文;英國英文;英式英語",
@@ -1072,5 +1084,8 @@
       "ja-JP": "日文;日語"
     }
   },
-  "tray": { "show": "顯示 Tyco", "quit": "結束" }
+  "tray": {
+    "show": "顯示 Tyco",
+    "quit": "結束"
+  }
 }

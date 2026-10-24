@@ -10,7 +10,9 @@
     "translationMenu": "Traduction",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Raisonnement",
     "footnotes": "Notes de bas de page",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Supprimer la page",
     "launcherPageTakesText": "Récupérer le texte sélectionné",
     "launcherPageTakesTextInfo": "Désactivez pour les pages dont les commandes ne traitent pas de texte : le lanceur s’ouvrira sans capturer le texte surligné, pour que d’anciennes sélections ne se retrouvent pas dans les commandes.",
-    "chatAttachments": "Pièces jointes du chat",
     "chatImageQuality": "Qualité des images",
     "chatImageQualityHint": "S’applique aux nouvelles pièces jointes. Une qualité plus élevée consomme plus de mémoire et de contexte. Les images sont envoyées en WebP sans métadonnées ; les limites sont de 24 Mpx et 5 Mo après compression.",
     "imageQualityEconomy": "Économique : jusqu’à 1024 px",
     "imageQualityBalanced": "Équilibrée : jusqu’à 1568 px",
     "imageQualityOriginal": "Maximale : jusqu’à 8000 px",
-    "saveSaving": "Enregistrement…",
-    "savePending": "Modifications non enregistrées",
     "saveFailed": "Impossible d’enregistrer les paramètres",
     "saveConflict": "Les paramètres ont été modifiés dans une autre fenêtre : {fields}. Choisissez les modifications à conserver.",
     "saveKeepLocal": "Enregistrer mes modifications par-dessus les derniers paramètres",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "« Fichiers » est réglé sur « Demander » : chaque appel attend une confirmation, même là où le projet l’autorise.",
     "profileModelDefaultNamed": "Premier disponible ({model})",
     "deleteProfileConfirmUncounted": "Supprimer le profil « {name} » ? Son SOUL.md, son espace de travail et tous ses chats seront supprimés définitivement.",
-    "featuresCategory": "Fonctionnalités",
     "allPluginsTab": "Tous les plugins",
     "pluginStatusOff": "Désactivé",
-    "developmentFeatures": "Fonctionnalités en développement"
+    "developmentFeatures": "Fonctionnalités en développement",
+    "aiCategory": "IA",
+    "sttLlmRulesInfo": "Instructions supplémentaires pour le modèle IA concernant le traitement de la parole reconnue. Vous pouvez par exemple spécifier : supprimer les tics de langage, ponctuer, formater des listes ou conserver un style particulier."
   },
-  "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
+  "shortcuts": {
+    "insertIntoEditor": "Insérer dans l’éditeur"
+  },
   "theme": {
     "auto": "Comme le système",
     "dark": "Sombre",
@@ -1020,7 +1022,9 @@
     "truncation": "résultat tronqué",
     "untranslated": "fragment non traduit"
   },
-  "window": { "clickToFocus": "Cliquez pour continuer" },
+  "window": {
+    "clickToFocus": "Cliquez pour continuer"
+  },
   "write": {
     "alreadyCorrected": "Le texte est déjà corrigé",
     "cancel": "Annuler",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "traduis en",
-    "actions": { "askInChat": "demande dans le chat" },
+    "actions": {
+      "askInChat": "demande dans le chat"
+    },
     "languages": {
       "en-US": "anglais;anglais américain",
       "en-GB": "anglais britannique",
@@ -1078,5 +1084,8 @@
       "ja-JP": "japonais"
     }
   },
-  "tray": { "show": "Afficher Tyco", "quit": "Quitter" }
+  "tray": {
+    "show": "Afficher Tyco",
+    "quit": "Quitter"
+  }
 }

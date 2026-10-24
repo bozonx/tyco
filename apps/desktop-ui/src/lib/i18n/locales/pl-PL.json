@@ -10,7 +10,9 @@
     "translationMenu": "Tłumaczenie",
     "webhook": "Webhook"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "reasoning": "Rozumowanie",
     "footnotes": "Przypisy",
@@ -879,14 +881,11 @@
     "removeLauncherPage": "Usuń stronę",
     "launcherPageTakesText": "Pobieraj zaznaczony tekst",
     "launcherPageTakesTextInfo": "Wyłącz dla stron, których polecenia nie przetwarzają tekstu: program uruchamiający otworzy się bez przechwytywania zaznaczonego tekstu, dzięki czemu wcześniejsze zaznaczenia nie trafią do poleceń.",
-    "chatAttachments": "Załączniki czatu",
     "chatImageQuality": "Jakość obrazów",
     "chatImageQualityHint": "Dotyczy nowych załączników. Wyższa jakość zużywa więcej pamięci i kontekstu. Obrazy są wysyłane jako WebP bez metadanych; limity to 24 MP i 5 MB po kompresji.",
     "imageQualityEconomy": "Oszczędna — do 1024 px",
     "imageQualityBalanced": "Zrównoważona — do 1568 px",
     "imageQualityOriginal": "Maksymalna — do 8000 px",
-    "saveSaving": "Zapisywanie…",
-    "savePending": "Niezapisane zmiany",
     "saveFailed": "Nie udało się zapisać ustawień",
     "saveConflict": "Ustawienia zmieniono w innym oknie: {fields}. Wybierz, które zmiany zachować.",
     "saveKeepLocal": "Zapisz moje zmiany na najnowszych ustawieniach",
@@ -943,12 +942,15 @@
     "profileFilesAskAll": "„Pliki” ustawiono na „Pytaj”: każde wywołanie czeka na potwierdzenie, nawet tam, gdzie projekt na nie zezwala.",
     "profileModelDefaultNamed": "Pierwszy dostępny ({model})",
     "deleteProfileConfirmUncounted": "Usunąć profil „{name}”? Jego SOUL.md, przestrzeń robocza i wszystkie czaty zostaną usunięte na zawsze.",
-    "featuresCategory": "Funkcje",
     "allPluginsTab": "Wszystkie wtyczki",
     "pluginStatusOff": "Wyłączona",
-    "developmentFeatures": "Funkcje w fazie rozwoju"
+    "developmentFeatures": "Funkcje w fazie rozwoju",
+    "aiCategory": "AI",
+    "sttLlmRulesInfo": "Dodatkowe instrukcje dla modelu AI dotyczące przetwarzania rozpoznanej mowy. Możesz na przykład określić: usuwanie wtrąceń, interpunkcję, formatowanie list lub zachowanie określonego stylu."
   },
-  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
+  "shortcuts": {
+    "insertIntoEditor": "Wstaw do edytora"
+  },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1020,7 +1022,9 @@
     "truncation": "obcięty wynik",
     "untranslated": "nieprzetłumaczony fragment"
   },
-  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
+  "window": {
+    "clickToFocus": "Kliknij, aby kontynuować"
+  },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1060,7 +1064,9 @@
   },
   "voiceGrammar": {
     "translate": "przetłumacz na",
-    "actions": { "askInChat": "zapytaj na czacie" },
+    "actions": {
+      "askInChat": "zapytaj na czacie"
+    },
     "languages": {
       "en-US": "angielski;amerykański angielski",
       "en-GB": "brytyjski angielski",
@@ -1078,5 +1084,8 @@
       "ja-JP": "japoński"
     }
   },
-  "tray": { "show": "Pokaż Tyco", "quit": "Zakończ" }
+  "tray": {
+    "show": "Pokaż Tyco",
+    "quit": "Zakończ"
+  }
 }

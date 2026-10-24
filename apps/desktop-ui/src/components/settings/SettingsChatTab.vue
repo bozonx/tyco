@@ -8,13 +8,9 @@
       >
         <FieldTextArea v-model="userConfig.llm.tasks.chat.rule" />
       </FieldRow>
-    </SettingsSection>
-
-    <SettingsSection :title="t('settings.chatAttachments')">
       <FieldRow
         :label="t('settings.chatImageQuality')"
-        :hint="t('settings.chatImageQualityHint')"
-        vertical
+        :info="t('settings.chatImageQualityHint')"
       >
         <FieldSelect
           :model-value="userConfig.chat.imageQuality || 'balanced'"
