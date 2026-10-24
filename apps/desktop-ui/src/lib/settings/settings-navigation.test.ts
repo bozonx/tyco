@@ -39,10 +39,16 @@ describe('settings navigation', () => {
       'launcher-commands',
       'chat',
       'correction',
+      'editor',
     ]) {
       expect(isSettingsTabAvailable(tab, hiddenSources)).toBe(false)
     }
     expect(isSettingsTabAvailable('general', hiddenSources)).toBe(true)
+    expect(
+      buildSettingsNavigation(hiddenSources)
+        .flatMap((group) => group.items)
+        .some((item) => item.id === 'editor')
+    ).toBe(false)
     expect(
       buildSettingsNavigation(hiddenSources)
         .flatMap((group) => group.items)

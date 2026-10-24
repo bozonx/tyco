@@ -295,3 +295,10 @@ permission prompts, global shortcuts, tray behavior and installer verification.
 Windows/macOS adapters require their own OS; a VM is one way to provide it, not
 a requirement of integration testing. Real audio capture, full Wayland desktop
 behavior and hardware/GPU compatibility remain outside the deterministic smoke.
+
+## Full desktop sessions in virtual machines
+
+The [VM testing plan](vm-testing.md) defines the Windows/Linux OS matrix, reuse of
+local Left Hand Control base images, native acceptance scenarios and the planned
+runner. VM automation is not implemented yet; the document distinguishes existing
+commands from the proposed interface.

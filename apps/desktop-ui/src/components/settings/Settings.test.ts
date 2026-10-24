@@ -10,6 +10,7 @@ import Settings from './Settings.vue'
 
 const settingsMocks = vi.hoisted(() => ({
   configVersion: 0,
+  isInDevelopment: true,
   query: {} as Record<string, string>,
 }))
 
@@ -67,7 +68,7 @@ vi.mock('../../stores/desktop', () => ({
   useDesktopStore: () => ({
     userConfig: {
       configVersion: settingsMocks.configVersion,
-      isInDevelopment: true,
+      isInDevelopment: settingsMocks.isInDevelopment,
       appearance: { theme: 'auto', contrast: 'normal', motion: 'auto' },
       plugins: {
         PluginA: { isEnabled: true, settings: {} },
@@ -133,6 +134,7 @@ describe('Settings.vue', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     settingsMocks.configVersion = 0
+    settingsMocks.isInDevelopment = true
     delete useRoute().query.tab
   })
   it('falls back from unknown routes and reacts to query changes', async () => {
@@ -282,6 +284,36 @@ describe('Settings.vue', () => {
     expect(generalIdx).toBeGreaterThan(-1)
     expect(editorIdx).toBeGreaterThan(-1)
     expect(editorIdx).toBe(generalIdx + 1)
+  })
+
+  it('hides editor tab and rejects editor route outside development mode', () => {
+    settingsMocks.isInDevelopment = false
+    useRoute().query.tab = 'editor'
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: {
+          NavigationList: {
+            props: ['items'],
+            template: `
+              <div class="tabs-stub">
+                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
+                  {{ tab.name }}
+                </button>
+              </div>
+            `,
+          },
+        },
+      },
+    })
+
+    const tabKeys = wrapper
+      .findAll('.tabs-stub button')
+      .map((btn) => btn.attributes('data-key'))
+
+    expect(tabKeys).not.toContain('editor')
+    expect(wrapper.get('.settings-page-title').text()).toBe(
+      'settings.generalTab'
+    )
   })
 
   it('renders the chat and correction pages from their navigation items', async () => {

@@ -115,6 +115,7 @@ const DEVELOPMENT_SECTION_IDS: readonly string[] = [
   'chat',
   'commands',
   'correction',
+  'editor',
   'launcher-commands',
 ]
 
