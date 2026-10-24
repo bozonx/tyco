@@ -25,6 +25,7 @@ describe('SettingsGeneralTab.vue', () => {
       windowInsertion: {
         linux: {
           pasteShortcut: 'Ctrl+V',
+          terminalPasteShortcut: 'Ctrl+Shift+V',
           method: 'xdotool',
           xdotoolPath: '',
           ydotoolPath: '',
@@ -113,11 +114,30 @@ describe('SettingsGeneralTab.vue', () => {
     expect(config.language.ui).toBe(AUTO_LANGUAGE_VALUE)
   })
 
+  it('sets a separate terminal paste shortcut or follows the regular shortcut', async () => {
+    const config = createConfig()
+    const wrapper = mountTab(config)
+    const field = wrapper.find(
+      '[data-label="settings.terminalPasteShortcut"] input'
+    )
+    expect(field.element).toHaveProperty('value', 'Ctrl+Shift+V')
+
+    await field.setValue('Shift+Insert')
+    expect(config.windowInsertion.linux.terminalPasteShortcut).toBe(
+      'Shift+Insert'
+    )
+    expect(config.windowInsertion.linux.pasteShortcut).toBe('Ctrl+V')
+
+    await field.setValue('same')
+    expect(config.windowInsertion.linux.terminalPasteShortcut).toBeNull()
+  })
+
   it('shows the path of the tool of the chosen insertion method', async () => {
     const config = createConfig({
       windowInsertion: {
         linux: {
           pasteShortcut: 'Ctrl+V',
+          terminalPasteShortcut: 'Ctrl+Shift+V',
           method: 'xdotool',
           xdotoolPath: '',
           ydotoolPath: '',

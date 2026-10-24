@@ -212,6 +212,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""
@@ -570,6 +571,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""
@@ -919,6 +921,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""
@@ -1264,6 +1267,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""
@@ -1611,6 +1615,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""
@@ -1949,6 +1954,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""
@@ -2292,6 +2298,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""
@@ -2646,6 +2653,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
           "method": "xdotool",
           "xdotoolPath": "",
           "ydotoolPath": ""

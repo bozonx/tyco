@@ -37,6 +37,7 @@
   "windowInsertion": {
     "linux": {
       "pasteShortcut": "Ctrl+V",
+      "terminalPasteShortcut": "Ctrl+Shift+V",
       "method": "auto",
       "xdotoolPath": "",
       "ydotoolPath": ""

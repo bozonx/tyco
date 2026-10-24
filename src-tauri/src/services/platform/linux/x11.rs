@@ -22,6 +22,26 @@ use crate::services::platform::window_tracker::{
     finish_startup, new_session, tracker, TrackerChange, WindowKind,
 };
 
+/// Read the target's class before activation, while Tyco may still have focus.
+pub(crate) fn is_terminal_window(id: &str) -> bool {
+    let Some(window) = id.parse::<Window>().ok() else {
+        return false;
+    };
+    let Ok((connection, _)) = x11rb::connect(None) else {
+        return false;
+    };
+    WmClass::get(&connection, window)
+        .ok()
+        .and_then(|cookie| cookie.reply().ok().flatten())
+        .is_some_and(|class| {
+            crate::services::platform::selection::is_terminal_class(&String::from_utf8_lossy(
+                class.class(),
+            )) || crate::services::platform::selection::is_terminal_class(&String::from_utf8_lossy(
+                class.instance(),
+            ))
+        })
+}
+
 /// The first retry after a lost connection; each next one waits twice as long.
 const RETRY_DELAY: Duration = Duration::from_secs(2);
 const MAX_RETRY_DELAY: Duration = Duration::from_secs(60);

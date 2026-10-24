@@ -157,6 +157,7 @@ export interface UserConfig {
   windowInsertion: {
     linux: {
       pasteShortcut: PasteShortcut
+      terminalPasteShortcut: PasteShortcut | null
       method: LinuxInsertionMethod
       /** Empty: found on `PATH` */
       xdotoolPath: string

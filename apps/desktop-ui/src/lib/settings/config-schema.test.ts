@@ -14,6 +14,21 @@ describe('portable user config schema', () => {
     )
   })
 
+  it('adds terminal paste defaults to older configs and preserves explicit choices', () => {
+    const config = structuredClone(DEFAULT_USER_CONFIG)
+    const linux: Record<string, unknown> = config.windowInsertion.linux
+    delete linux.terminalPasteShortcut
+    expect(
+      normalizeUserConfig(config).windowInsertion.linux.terminalPasteShortcut
+    ).toBe('Ctrl+Shift+V')
+    for (const choice of [null, 'Ctrl+V', 'Ctrl+Shift+V', 'Shift+Insert']) {
+      linux.terminalPasteShortcut = choice
+      expect(
+        normalizeUserConfig(config).windowInsertion.linux.terminalPasteShortcut
+      ).toBe(choice)
+    }
+  })
+
   it.each(cases)(
     'repairs $name identically to the Rust reader',
     ({ input, expected }) => {

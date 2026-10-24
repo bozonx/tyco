@@ -71,6 +71,18 @@
           :options="pasteShortcutOptions"
         />
       </FieldRow>
+      <FieldRow
+        :label="t('settings.terminalPasteShortcut')"
+        :info="t('settings.terminalPasteShortcutHint')"
+      >
+        <FieldSelect
+          :model-value="
+            userConfig.windowInsertion.linux.terminalPasteShortcut ?? 'same'
+          "
+          :options="terminalPasteShortcutOptions"
+          @update:model-value="updateTerminalPasteShortcut"
+        />
+      </FieldRow>
     </SettingsSection>
 
     <StorageLocations />
@@ -96,6 +108,7 @@ import StorageLocations from './StorageLocations.vue'
 import {
   LINUX_INSERTION_METHODS,
   type LinuxInsertionMethod,
+  type PasteShortcut,
   type ThemeMode,
 } from '@tyco/shared'
 
@@ -133,6 +146,17 @@ const pasteShortcutOptions = computed(() => {
     },
   ]
 })
+
+const terminalPasteShortcutOptions = computed(() => [
+  { id: 'same', name: t('settings.terminalPasteShortcutSame') },
+  ...pasteShortcutOptions.value,
+])
+
+const updateTerminalPasteShortcut = (value: string | number | undefined) => {
+  if (value === undefined) return
+  userConfig.value.windowInsertion.linux.terminalPasteShortcut =
+    value === 'same' ? null : (value as PasteShortcut)
+}
 
 const appLanguageOptions = computed(() => {
   return buildLanguageOptions(

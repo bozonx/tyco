@@ -51,6 +51,18 @@ impl PasteShortcut {
         }
     }
 
+    fn for_target(linux: Option<&Value>, terminal: bool) -> Self {
+        if !terminal {
+            return Self::from_config(linux);
+        }
+        match linux.and_then(|value| value.get("terminalPasteShortcut")) {
+            Some(Value::Null) => Self::from_config(linux),
+            Some(Value::String(value)) if value == "Ctrl+V" => Self::CtrlV,
+            Some(Value::String(value)) if value == "Shift+Insert" => Self::ShiftInsert,
+            _ => Self::CtrlShiftV,
+        }
+    }
+
     fn xdotool_keys(self) -> &'static str {
         match self {
             Self::CtrlV => "ctrl+v",
@@ -86,6 +98,18 @@ impl PasteShortcut {
             Self::ShiftInsert => &[KEY_LEFT_CTRL, KEY_INSERT],
         };
         press_and_release(keys)
+    }
+}
+
+fn focused_shortcut(
+    linux: Option<&Value>,
+    action: FocusedKeyAction,
+    terminal: bool,
+) -> PasteShortcut {
+    if terminal && matches!(action, FocusedKeyAction::Copy) {
+        PasteShortcut::CtrlShiftV
+    } else {
+        PasteShortcut::for_target(linux, terminal)
     }
 }
 
@@ -179,7 +203,24 @@ impl SystemTextInjector {
     ) -> Result<(), AppError> {
         let insertion = user_config.get("windowInsertion");
         let method = select_method(self.session, configured_method(insertion))?;
-        let shortcut = PasteShortcut::from_config(linux_settings(insertion));
+        let terminal = target_window_id.is_some_and(|id| {
+            if self.session == InjectionSessionKind::X11 {
+                super::x11::is_terminal_window(id)
+            } else {
+                false
+            }
+        });
+        let mut shortcut = PasteShortcut::for_target(linux_settings(insertion), terminal);
+        if self.session == InjectionSessionKind::Wayland {
+            let window_id = target_window_id.ok_or_else(missing_wayland_target)?;
+            super::kwin::activate_window(window_id)?;
+            thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
+            let terminal = tracker().active_window().is_some_and(|window| {
+                window.id == window_id
+                    && crate::services::platform::selection::is_terminal_class(&window.class)
+            });
+            shortcut = PasteShortcut::for_target(linux_settings(insertion), terminal);
+        }
         let mut command = command_spec(method, insertion, target_window_id, shortcut)?;
 
         if method == InjectionMethod::Ydotool {
@@ -188,13 +229,6 @@ impl SystemTextInjector {
             command
                 .env
                 .push((String::from("YDOTOOL_SOCKET"), ydotool_socket()?));
-        }
-        if self.session == InjectionSessionKind::Wayland {
-            // Wayland has no generic way to activate a foreign window; only
-            // KWin windows reported by the tracker script can be targeted
-            let window_id = target_window_id.ok_or_else(missing_wayland_target)?;
-            super::kwin::activate_window(window_id)?;
-            thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
         }
         run_spec(&command)
     }
@@ -210,10 +244,7 @@ impl SystemTextInjector {
     ) -> Result<(), AppError> {
         let insertion = user_config.get("windowInsertion");
         let method = select_method(self.session, configured_method(insertion))?;
-        let mut shortcut = PasteShortcut::from_config(linux_settings(insertion));
-        if terminal && shortcut == PasteShortcut::CtrlV {
-            shortcut = PasteShortcut::CtrlShiftV;
-        }
+        let shortcut = focused_shortcut(linux_settings(insertion), action, terminal);
         let command = match method {
             InjectionMethod::Ydotool => CommandSpec {
                 binary: linux_binary(insertion, YDOTOOL),
@@ -530,6 +561,39 @@ mod tests {
         assert_eq!(find_on_path("ydotool", Some(&path)), None);
         assert_eq!(find_on_path("xdotool", None), None);
         std::fs::remove_dir_all(&directory).unwrap();
+    }
+
+    #[test]
+    fn terminal_paste_is_explicit_and_does_not_change_copy_keys() {
+        for (setting, expected) in [
+            (json!("Ctrl+V"), PasteShortcut::CtrlV),
+            (json!("Ctrl+Shift+V"), PasteShortcut::CtrlShiftV),
+            (json!("Shift+Insert"), PasteShortcut::ShiftInsert),
+            (Value::Null, PasteShortcut::ShiftInsert),
+            (json!("invalid"), PasteShortcut::CtrlShiftV),
+        ] {
+            let config = json!({
+                "pasteShortcut": "Shift+Insert",
+                "terminalPasteShortcut": setting,
+            });
+            assert_eq!(PasteShortcut::for_target(Some(&config), true), expected);
+            assert_eq!(
+                focused_shortcut(Some(&config), FocusedKeyAction::Paste, true),
+                expected
+            );
+            assert_eq!(
+                PasteShortcut::for_target(Some(&config), false),
+                PasteShortcut::ShiftInsert
+            );
+            assert_eq!(
+                focused_shortcut(Some(&config), FocusedKeyAction::Copy, true),
+                PasteShortcut::CtrlShiftV
+            );
+        }
+        assert_eq!(
+            PasteShortcut::for_target(None, true),
+            PasteShortcut::CtrlShiftV
+        );
     }
 
     #[test]

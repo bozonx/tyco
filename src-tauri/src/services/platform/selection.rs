@@ -70,8 +70,8 @@ fn active_target() -> Option<SelectionTarget> {
     )?;
     let id = String::from_utf8(output).ok()?.trim().to_owned();
     (!id.is_empty()).then_some(SelectionTarget {
+        is_terminal: super::linux::x11::is_terminal_window(&id),
         id,
-        is_terminal: false,
     })
 }
 
