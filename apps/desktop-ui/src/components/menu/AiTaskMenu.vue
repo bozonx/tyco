@@ -147,7 +147,7 @@ const promptHints = computed<QueryPanelHint[]>(() => [
   },
   // the quick window hands the text to the main one, and the request would
   // be lost on the way
-  ...(isQuickWindow
+  ...(isQuickWindow || !desktopStore.userConfig.isInDevelopment
     ? []
     : [
         {
@@ -178,7 +178,7 @@ async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {
 
   rememberPrompt(value)
 
-  if (ctrl && !isQuickWindow) {
+  if (ctrl && !isQuickWindow && desktopStore.userConfig.isInDevelopment) {
     menuModalsStore.closeAll()
     await chatStore.attachToChat(props.text)
     chatInputStore.setValue(value)

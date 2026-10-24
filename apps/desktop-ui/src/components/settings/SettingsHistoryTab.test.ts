@@ -39,7 +39,8 @@ describe('SettingsHistoryTab.vue', () => {
   }: {
     editorHistory?: Partial<EditorHistoryConfig>
     chatHistory?: Partial<ChatHistoryConfig>
-  } = {}): Pick<UserConfig, 'editor' | 'chat'> => ({
+  } = {}): Pick<UserConfig, 'editor' | 'chat' | 'isInDevelopment'> => ({
+    isInDevelopment: true,
     editor: {
       submitKey: 'Enter',
       diffViewMode: 'unified',
@@ -100,6 +101,16 @@ describe('SettingsHistoryTab.vue', () => {
       },
     })
   }
+
+  it('hides chat history outside development mode', () => {
+    const config = createConfig()
+    delete config.isInDevelopment
+    const wrapper = mountTab(config)
+    expect(
+      wrapper.find('[data-title="settings.sectionChatHistory"]').exists()
+    ).toBe(false)
+    expect(config.chat.history.storage).toBe('disk')
+  })
 
   it('renders two blocks: editor history and chat history', () => {
     const wrapper = mountTab()

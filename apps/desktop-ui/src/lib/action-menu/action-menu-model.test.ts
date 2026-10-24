@@ -46,6 +46,30 @@ describe('createActionMenuModel', () => {
     return { store, deps, services }
   }
 
+  it('hides development actions without moving other shortcuts or changing saved slots', () => {
+    const { deps } = setup()
+    const mainActions = {
+      q: { type: 'standard' as const, actionId: 'askInChat' as const },
+      w: { type: 'standard' as const, actionId: 'correction' as const },
+    }
+    const store = createActionMenuModel({
+      ...deps,
+      mainActions: () => mainActions,
+      isMainActionVisible: (action) =>
+        !(action.type === 'standard' && action.actionId === 'askInChat'),
+    })
+    expect(store.resolveMainActions().slice(0, 2)).toEqual([
+      null,
+      mainActions.w,
+    ])
+    expect(
+      store.getDefaultActions().some((action) => action.id === 'askInChat')
+    ).toBe(false)
+    expect(store.getShortcutActions()[0]).toBeUndefined()
+    expect(store.getShortcutActions()[1]?.id).toBe('correction')
+    expect(mainActions.q.actionId).toBe('askInChat')
+  })
+
   it('opens command pages beyond the global shortcut range with the current text', async () => {
     const { deps } = setup()
     const openLauncherPage = vi.fn(async () => {})

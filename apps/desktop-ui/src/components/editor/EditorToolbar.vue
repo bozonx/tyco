@@ -31,6 +31,7 @@
     <div data-testid="editor-toolbar-right" class="flex items-center gap-1">
       <EditorToolbarItems :items="rightToolbarItems" />
       <IconButton
+        v-if="desktopStore.userConfig.isInDevelopment"
         size="sm"
         variant="ghost"
         class="ask-ai"

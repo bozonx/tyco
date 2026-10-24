@@ -1,8 +1,8 @@
-import { DEFAULT_MAIN_ACTIONS } from '@tyco/shared'
+import { DEFAULT_MAIN_ACTIONS, type MainActionConfig } from '@tyco/shared'
 import { describe, expect, it } from 'vitest'
 
 import { slotList } from '../shortcut-slots/shortcut-slots'
-import { normalizeMainActions } from './main-actions'
+import { isMainActionVisible, normalizeMainActions } from './main-actions'
 
 describe('normalizeMainActions', () => {
   it('creates the standard actions for a missing config', () => {
@@ -44,5 +44,22 @@ describe('normalizeMainActions', () => {
       { type: 'translation', language: 'en-US' },
       null,
     ])
+  })
+})
+
+describe('isMainActionVisible', () => {
+  it.each<MainActionConfig>([
+    { type: 'command', commandId: 'script' },
+    { type: 'launcherPage', pageId: 'page' },
+    { type: 'standard', actionId: 'askInChat' },
+  ])('shows development action %j only with the flag', (action) => {
+    expect(isMainActionVisible(action, undefined)).toBe(false)
+    expect(isMainActionVisible(action, false)).toBe(false)
+    expect(isMainActionVisible(action, true)).toBe(true)
+  })
+  it('keeps regular actions visible', () => {
+    expect(
+      isMainActionVisible({ type: 'standard', actionId: 'correction' }, false)
+    ).toBe(true)
   })
 })

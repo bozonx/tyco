@@ -71,7 +71,10 @@
       </div>
     </SettingsSection>
 
-    <SettingsSection :title="t('settings.sectionChatHistory')">
+    <SettingsSection
+      v-if="userConfig.isInDevelopment"
+      :title="t('settings.sectionChatHistory')"
+    >
       <template #actions>
         <Button
           size="xs"

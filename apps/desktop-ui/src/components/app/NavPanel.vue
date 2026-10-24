@@ -16,6 +16,7 @@
         {{ t('nav.editor') }}
       </button>
       <button
+        v-if="isInDevelopment"
         type="button"
         class="topbar-tab"
         :aria-current="isBaseChatActive ? 'page' : undefined"

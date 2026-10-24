@@ -41,6 +41,13 @@ function setup() {
 describe('LLM settings cards', () => {
   beforeEach(() => vi.clearAllMocks())
 
+  it('hides chat settings outside development mode', () => {
+    const { wrapper } = setup()
+    expect(wrapper.text()).not.toContain('settings.chatAttachments')
+    expect(wrapper.text()).not.toContain('settings.chatRules')
+    expect(wrapper.text()).not.toContain('settings.chat')
+  })
+
   it('edits the shared provider draft and updates the card summary', async () => {
     const { llm, localCard } = setup()
     const card = localCard()
@@ -167,6 +174,7 @@ describe('SettingsLlmTab.vue', () => {
     const wrapper = mount(SettingsLlmTab, {
       global: {
         provide: createTestSettingsContext({
+          isInDevelopment: true,
           llm: llm as unknown as UserConfig['llm'],
         }).provide,
         stubs: {

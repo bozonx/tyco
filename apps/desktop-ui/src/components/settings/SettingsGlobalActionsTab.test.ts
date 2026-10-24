@@ -50,6 +50,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
   beforeEach(() => {
     context = createTestSettingsContext({
       ...structuredClone(DEFAULT_USER_CONFIG),
+      isInDevelopment: true,
       editor: { ...DEFAULT_USER_CONFIG.editor, submitKey: 'Enter' },
     })
   })
@@ -94,6 +95,24 @@ describe('SettingsGlobalActionsTab.vue', () => {
     Button: true,
     Icon: true,
   }
+
+  it('hides development hotkeys without changing their saved values', () => {
+    delete context.draft.value.isInDevelopment
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+    for (const key of [
+      'chat',
+      'voiceChat',
+      'voiceCommands',
+      'selectionCorrection',
+    ]) {
+      expect(wrapper.text()).not.toContain(`settings.hotkeyActions.${key}`)
+    }
+    expect(context.draft.value.hotkeys.selectionCorrection).toBe(
+      DEFAULT_USER_CONFIG.hotkeys.selectionCorrection
+    )
+  })
 
   it('renders global hotkeys and application hotkeys sections with titles', () => {
     const wrapper = mount(SettingsGlobalActionsTab, {

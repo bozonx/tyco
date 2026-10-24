@@ -237,7 +237,7 @@ const modes = (Object.keys(DEFAULT_USER_CONFIG.hotkeys) as HotkeyId[])
   )
 const inlineId = INLINE_CORRECTION_HOTKEY_ID
 
-const rows = computed<HotkeyRow[]>(() => [
+const allRows = computed<HotkeyRow[]>(() => [
   ...modes.map((mode) => ({
     id: mode,
     label: t(`settings.hotkeyActions.${mode}`),
@@ -284,6 +284,17 @@ const rows = computed<HotkeyRow[]>(() => [
     }
   }),
 ])
+
+const rows = computed(() =>
+  allRows.value.filter(
+    (row) =>
+      userConfig.value.isInDevelopment ||
+      (!['chat', 'voiceChat', 'voiceCommands', inlineId].includes(row.id) &&
+        !userConfig.value.launcherPages.some(
+          (page) => launcherPageHotkeyId(page.id) === row.id
+        ))
+  )
+)
 
 function setShortcut(mode: string, shortcut: string) {
   // Native registration and persistence are one backend transaction.

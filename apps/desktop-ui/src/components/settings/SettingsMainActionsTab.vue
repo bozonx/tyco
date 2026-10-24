@@ -1,7 +1,7 @@
 <template>
   <SettingsSection :description="t('settings.mainActionsHint')" bare>
     <ShortcutSlots
-      :items="actionSlots"
+      :items="visibleActionSlots"
       @move="moveAction"
       @add="addAction"
       @remove="removeAction"
@@ -43,7 +43,10 @@ import {
   pluginActionGroup,
   standardActionGroup,
 } from '../../lib/action-menu/main-action-options'
-import { normalizeMainActions } from '../../lib/action-menu/main-actions'
+import {
+  isMainActionVisible,
+  normalizeMainActions,
+} from '../../lib/action-menu/main-actions'
 import { normalizeCommands } from '../../lib/commands/command-config'
 import { commandLabel, isMenuCommand } from '../../lib/commands/command-runtime'
 import { getLanguageLabelKey } from '../../lib/locale/language'
@@ -76,6 +79,14 @@ const toolsStore = useToolsStore()
 
 const actionSlots = computed(() =>
   normalizeMainActions(userConfig.value.mainActions)
+)
+
+const isVisible = (action: MainActionConfig) =>
+  isMainActionVisible(action, userConfig.value.isInDevelopment)
+const visibleActionSlots = computed(() =>
+  actionSlots.value.map((action) =>
+    action && isVisible(action) ? action : null
+  )
 )
 
 const commands = computed(() => normalizeCommands(userConfig.value.commands))
@@ -220,8 +231,10 @@ function unavailableName(slot: MainActionConfig): string {
 
 const actionOptions = computed(() =>
   buildMainActionOptions({
-    choices: availableActions.value,
-    slots: actionSlots.value,
+    choices: availableActions.value.filter((choice) =>
+      isVisible(choice.config)
+    ),
+    slots: visibleActionSlots.value,
     unavailableName,
     groupLabel,
   })

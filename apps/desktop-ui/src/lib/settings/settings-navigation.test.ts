@@ -35,6 +35,8 @@ describe('settings navigation', () => {
       'ai-profile:writer',
       'ai-project:new',
       'ai-project:notes',
+      'commands',
+      'launcher-commands',
     ]) {
       expect(isSettingsTabAvailable(tab, hiddenSources)).toBe(false)
     }

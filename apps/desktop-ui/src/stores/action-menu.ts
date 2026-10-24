@@ -5,6 +5,7 @@ import {
   type ActionItem,
   createActionMenuModel,
 } from '../lib/action-menu/action-menu-model'
+import { isMainActionVisible } from '../lib/action-menu/main-actions'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useCorrectionWorkflowStore } from './correction-workflow'
 import { useHistoryStore } from './history'
@@ -46,6 +47,8 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       })
     },
     launcherPages: () => desktopStore.userConfig.launcherPages,
+    isMainActionVisible: (action) =>
+      isMainActionVisible(action, desktopStore.userConfig.isInDevelopment),
     mainActions: () => desktopStore.userConfig.mainActions,
     commands: () => desktopStore.userConfig.commands,
     aiTasks: () => desktopStore.userConfig.aiTasks.items,

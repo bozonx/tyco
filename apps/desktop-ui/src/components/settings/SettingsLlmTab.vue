@@ -1,6 +1,9 @@
 <template>
   <div class="settings-stack">
-    <SettingsSection :title="t('settings.chatAttachments')">
+    <SettingsSection
+      v-if="userConfig.isInDevelopment"
+      :title="t('settings.chatAttachments')"
+    >
       <FieldRow
         :label="t('settings.chatImageQuality')"
         :hint="t('settings.chatImageQualityHint')"
@@ -113,7 +116,11 @@
     </SettingsSection>
 
     <SettingsSection :title="t('settings.aiRules')">
-      <FieldRow :label="t('settings.chatRules')" vertical>
+      <FieldRow
+        v-if="userConfig.isInDevelopment"
+        :label="t('settings.chatRules')"
+        vertical
+      >
         <FieldTextArea v-model="llm.tasks.chat.rule" />
       </FieldRow>
       <FieldRow :label="t('settings.textCorrection')" vertical>

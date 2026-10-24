@@ -38,6 +38,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   minCorrectionLength?: () => number
   openLauncherPage?: (pageId: string, text: string) => Promise<void>
   launcherPages?: () => readonly { id: string }[]
+  isMainActionVisible?: (action: MainActionConfig) => boolean
   mainActions?: () => ShortcutSlots<MainActionConfig> | undefined
   /** The command library the menu items of the `command` type refer to */
   commands?: () => readonly CommandConfig[] | undefined
@@ -134,70 +135,82 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     await deps.startCorrection(text, extra)
   }
 
-  const getDefaultActions = (): ActionItem[] => [
-    createBuiltinActionItem(
-      {
-        id: 'insertIntoWindow',
-        labelKey: 'action.insertIntoWindow',
-        icon: 'mdi:application-export',
-      },
-      'core.insert',
-      true
-    ),
-    createBuiltinActionItem(
-      {
-        id: 'copyToClipboard',
-        labelKey: 'action.copyToClipboard',
-        icon: 'mdi:clipboard-arrow-right-outline',
-      },
-      'core.copy',
-      true
-    ),
-    {
-      id: 'aiTaskMenu',
-      labelKey: 'action.aiTaskMenu',
-      icon: 'mdi:robot-outline',
-      action: async (text: string) => {
-        if (!text?.trim()) {
-          deps.showToast('toast.textNotSelected', 'error')
-          return
-        }
-        deps.openAiTaskModal(text)
-      },
-    },
-    {
-      id: 'correction',
-      labelKey: 'action.correction',
-      icon: 'mdi:auto-fix',
-      action: (text: string) => correct(text),
-    },
-    {
-      id: 'translationMenu',
-      labelKey: 'action.translationMenu',
-      icon: 'mdi:translate',
-      action: async (text: string) => {
-        if (!text?.trim()) {
-          deps.showToast('toast.textNotSelected', 'error')
-          return
-        }
-        deps.openTranslateModal(text)
-      },
-    },
-    createBuiltinActionItem(
-      {
-        id: 'askInChat',
-        labelKey: 'action.askInChat',
-        icon: 'mdi:chat-outline',
-      },
-      'core.askInChat',
-      false
-    ),
-  ]
+  const getDefaultActions = (): ActionItem[] =>
+    (
+      [
+        createBuiltinActionItem(
+          {
+            id: 'insertIntoWindow',
+            labelKey: 'action.insertIntoWindow',
+            icon: 'mdi:application-export',
+          },
+          'core.insert',
+          true
+        ),
+        createBuiltinActionItem(
+          {
+            id: 'copyToClipboard',
+            labelKey: 'action.copyToClipboard',
+            icon: 'mdi:clipboard-arrow-right-outline',
+          },
+          'core.copy',
+          true
+        ),
+        {
+          id: 'aiTaskMenu',
+          labelKey: 'action.aiTaskMenu',
+          icon: 'mdi:robot-outline',
+          action: async (text: string) => {
+            if (!text?.trim()) {
+              deps.showToast('toast.textNotSelected', 'error')
+              return
+            }
+            deps.openAiTaskModal(text)
+          },
+        },
+        {
+          id: 'correction',
+          labelKey: 'action.correction',
+          icon: 'mdi:auto-fix',
+          action: (text: string) => correct(text),
+        },
+        {
+          id: 'translationMenu',
+          labelKey: 'action.translationMenu',
+          icon: 'mdi:translate',
+          action: async (text: string) => {
+            if (!text?.trim()) {
+              deps.showToast('toast.textNotSelected', 'error')
+              return
+            }
+            deps.openTranslateModal(text)
+          },
+        },
+        createBuiltinActionItem(
+          {
+            id: 'askInChat',
+            labelKey: 'action.askInChat',
+            icon: 'mdi:chat-outline',
+          },
+          'core.askInChat',
+          false
+        ),
+      ] satisfies ActionItem[]
+    ).filter(
+      (action) =>
+        action.id !== 'askInChat' ||
+        !deps.isMainActionVisible ||
+        deps.isMainActionVisible({ type: 'standard', actionId: 'askInChat' })
+    )
 
   const getRegisteredActions = registry.list
 
   const resolveMainActions = (config: unknown = deps.mainActions?.()) =>
-    normalizeMainActions(config)
+    normalizeMainActions(config).map((action) =>
+      action && deps.isMainActionVisible && !deps.isMainActionVisible(action)
+        ? null
+        : action
+    )
 
   const getShortcutActions = (): (ActionItem | undefined)[] => {
     const defaults = new Map(

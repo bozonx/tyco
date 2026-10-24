@@ -76,11 +76,9 @@ const profileId = computed(() =>
     : null
 )
 watch(
-  () =>
-    !desktopStore.userConfig.isInDevelopment &&
-    Boolean(appNavigation.currentProfileId()),
+  () => !desktopStore.userConfig.isInDevelopment,
   (isHidden) => {
-    if (isHidden) void appNavigation.goToChat()
+    if (isHidden) void appNavigation.goToEditor()
   },
   { immediate: true }
 )

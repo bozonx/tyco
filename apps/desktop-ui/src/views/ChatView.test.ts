@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   openLastOrNewChat: vi.fn(),
   mediaMatches: false,
   profileId: null as string | null,
+  goToEditor: vi.fn(),
   goToChat: vi.fn(),
   goToConfig: vi.fn(),
   aiProfiles: {
@@ -59,6 +60,7 @@ vi.mock('../stores/ai-profiles', () => ({
 vi.mock('../navigation', () => ({
   appNavigation: {
     currentProfileId: () => mocks.profileId,
+    goToEditor: mocks.goToEditor,
     goToChat: mocks.goToChat,
     goToConfig: mocks.goToConfig,
   },
@@ -119,7 +121,7 @@ describe('ChatView.vue', () => {
     mocks.profileId = 'writer'
     const wrapper = mount(ChatView)
     expect(wrapper.find('.profile-header').exists()).toBe(false)
-    expect(mocks.goToChat).toHaveBeenCalled()
+    expect(mocks.goToEditor).toHaveBeenCalled()
   })
 
   it('shows the sidebar and the chat on mount', async () => {

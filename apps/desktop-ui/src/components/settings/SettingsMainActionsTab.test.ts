@@ -47,6 +47,7 @@ describe('SettingsMainActionsTab.vue', () => {
   const configure = (patch: Partial<UserConfig>) => {
     context = createTestSettingsContext({
       ...structuredClone(DEFAULT_USER_CONFIG),
+      isInDevelopment: true,
       ...patch,
     })
   }
@@ -69,6 +70,23 @@ describe('SettingsMainActionsTab.vue', () => {
     })
   const optionTexts = (wrapper: ReturnType<typeof mountTab>) =>
     wrapper.findAll('option').map((option) => option.text())
+
+  it('hides development choices and keeps saved actions', () => {
+    configure({
+      isInDevelopment: false,
+      mainActions: {
+        q: { type: 'standard', actionId: 'askInChat' },
+        w: { type: 'standard', actionId: 'correction' },
+      },
+    })
+    const wrapper = mountTab()
+    expect(optionTexts(wrapper)).not.toContain('action.askInChat')
+    expect(optionTexts(wrapper)).toContain('action.correction')
+    expect(context.draft.value.mainActions.q).toEqual({
+      type: 'standard',
+      actionId: 'askInChat',
+    })
+  })
 
   it('offers standard actions, named tasks and plugin actions', () => {
     const texts = optionTexts(mountTab())

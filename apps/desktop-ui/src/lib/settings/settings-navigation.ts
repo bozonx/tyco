@@ -192,7 +192,10 @@ export function buildSettingsNavigation(
   return SETTINGS_NAVIGATION_GROUPS.map((group) => {
     const items: NavigationItem[] = group.sections
       .filter(
-        (section) => section.id !== 'ai-profiles' || sources.isInDevelopment
+        (section) =>
+          !['ai-profiles', 'commands', 'launcher-commands'].includes(
+            section.id
+          ) || sources.isInDevelopment
       )
       .map((section) => ({
         id: section.id,
@@ -245,6 +248,10 @@ export function isSettingsTabAvailable(
     return false
   switch (parsed.kind) {
     case 'section':
+      return (
+        !['commands', 'launcher-commands'].includes(parsed.id) ||
+        Boolean(sources.isInDevelopment)
+      )
     case 'ai-overview':
       return true
     case 'plugin':
