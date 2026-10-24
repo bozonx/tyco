@@ -936,7 +936,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
-    "auto": "Automaticky",
+    "auto": "Podle systému",
     "dark": "Tmavý",
     "eInk": "E-ink",
     "light": "Světlý"

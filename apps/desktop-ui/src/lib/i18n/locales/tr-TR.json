@@ -939,7 +939,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
-    "auto": "Otomatik",
+    "auto": "Sistem dili",
     "dark": "Koyu",
     "eInk": "E-ink",
     "light": "Açık"

@@ -939,7 +939,7 @@
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
-    "auto": "ავტომატური",
+    "auto": "სისტემის მიხედვით",
     "dark": "მუქი",
     "eInk": "E-ink",
     "light": "ღია"

@@ -172,7 +172,7 @@
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
-    "auto": "자동",
+    "auto": "시스템 설정 따르기",
     "dark": "다크",
     "eInk": "전자잉크",
     "light": "라이트"

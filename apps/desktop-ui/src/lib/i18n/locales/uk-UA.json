@@ -939,7 +939,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
-    "auto": "Авто",
+    "auto": "Як у системі",
     "dark": "Темна",
     "eInk": "E-ink",
     "light": "Світла"

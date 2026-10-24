@@ -939,7 +939,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {
-    "auto": "Αυτόματα",
+    "auto": "Όπως στο σύστημα",
     "dark": "Σκούρο",
     "eInk": "E-ink",
     "light": "Φωτεινό"

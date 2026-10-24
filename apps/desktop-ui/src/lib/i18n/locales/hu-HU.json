@@ -939,7 +939,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
-    "auto": "Automatikus",
+    "auto": "Rendszer szerint",
     "dark": "Sötét",
     "eInk": "E-ink",
     "light": "Világos"

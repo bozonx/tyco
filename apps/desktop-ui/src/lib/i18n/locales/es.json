@@ -942,7 +942,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
-    "auto": "Automático",
+    "auto": "Como en el sistema",
     "dark": "Oscuro",
     "eInk": "Tinta electrónica",
     "light": "Claro"

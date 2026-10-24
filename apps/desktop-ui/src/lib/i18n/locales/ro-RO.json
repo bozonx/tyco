@@ -942,7 +942,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
-    "auto": "Automat",
+    "auto": "Ca în sistem",
     "dark": "Întunecată",
     "eInk": "E-ink",
     "light": "Luminoasă"

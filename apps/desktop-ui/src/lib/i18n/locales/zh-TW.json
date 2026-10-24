@@ -936,7 +936,7 @@
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
-    "auto": "自動",
+    "auto": "跟隨系統",
     "dark": "深色",
     "eInk": "電子墨水",
     "light": "淺色"

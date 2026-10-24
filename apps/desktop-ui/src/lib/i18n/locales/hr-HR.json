@@ -942,7 +942,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
-    "auto": "Automatski",
+    "auto": "Kao u sustavu",
     "dark": "Tamna",
     "eInk": "E-ink",
     "light": "Svijetla"

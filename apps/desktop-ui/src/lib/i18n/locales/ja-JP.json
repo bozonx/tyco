@@ -939,7 +939,7 @@
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
-    "auto": "自動",
+    "auto": "システム設定に従う",
     "dark": "ダーク",
     "eInk": "E-Ink",
     "light": "ライト"

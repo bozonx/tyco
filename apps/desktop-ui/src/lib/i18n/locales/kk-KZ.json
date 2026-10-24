@@ -939,7 +939,7 @@
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
-    "auto": "Автоматты",
+    "auto": "Жүйедегідей",
     "dark": "Қараңғы",
     "eInk": "E-ink",
     "light": "Ашық"
