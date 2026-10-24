@@ -1,13 +1,9 @@
 import type { RegisteredTool, ToolResult } from '../tools/tool-types'
 import type { ChatToolDefinition } from './chat-tool-registry'
 
-/** Characters the providers do not accept in a tool name */
-const UNSAFE_NAME_CHARACTERS = /[^a-zA-Z0-9_-]/g
+import { chatToolName } from './tool-name'
 
-/** The name a registry tool goes by for the model: `core.copy` → `core_copy` */
-export function chatToolName(toolId: string): string {
-  return toolId.replace(UNSAFE_NAME_CHARACTERS, '_').slice(0, 64)
-}
+export { chatToolName } from './tool-name'
 
 /**
  * What the model gets back from a tool's result: its text, or a short
@@ -30,12 +26,12 @@ export interface RegisteredToolAdapterOptions {
  * A tool of the registry as the chat offers it: its LLM description and JSON
  * Schema, called the way a command calls it
  */
-export function adaptRegisteredTool(
+export async function adaptRegisteredTool(
   tool: RegisteredTool,
   options: RegisteredToolAdapterOptions
-): ChatToolDefinition {
+): Promise<ChatToolDefinition> {
   return {
-    name: chatToolName(tool.id),
+    name: await chatToolName(tool.id),
     groupId: options.groupId,
     ...(tool.labelKey ? { labelKey: tool.labelKey } : {}),
     ...(tool.label ? { label: tool.label } : {}),

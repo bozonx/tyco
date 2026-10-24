@@ -1,4 +1,8 @@
-import type { ChatAttachment, ChatImage } from '@tyco/shared'
+import {
+  MAX_CHAT_FILE_BYTES,
+  type ChatAttachment,
+  type ChatImage,
+} from '@tyco/shared'
 
 import {
   ChatFileError,
@@ -9,7 +13,8 @@ import {
 import { chatImageType } from './chat-image-format'
 import { MAX_CHAT_IMAGES_COUNT } from './chat-image-input'
 
-export const MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024
+export { MAX_CHAT_FILE_BYTES } from '@tyco/shared'
+
 export const MAX_CHAT_FILE_CHARACTERS = 500_000
 const MAX_CHAT_FILES_COUNT = 16
 export { ChatFileError, type ChatFileErrorKind } from './chat-file-error'

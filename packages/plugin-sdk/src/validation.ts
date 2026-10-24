@@ -1,3 +1,5 @@
+import supportedLocales from './locales.json' with { type: 'json' }
+
 import {
   MAX_CONFIG_FIELDS,
   MAX_ICON_BODY_BYTES,
@@ -20,29 +22,7 @@ function fail(message: string): never {
   throw new Error(message)
 }
 
-export const SUPPORTED_PLUGIN_LOCALES = [
-  'en-US',
-  'ru-RU',
-  'de-DE',
-  'fr-FR',
-  'es',
-  'it-IT',
-  'pt-BR',
-  'pl-PL',
-  'tr-TR',
-  'uk-UA',
-  'cs-CZ',
-  'hu-HU',
-  'ro-RO',
-  'el-GR',
-  'hr-HR',
-  'ka-GE',
-  'kk-KZ',
-  'zh-CN',
-  'zh-TW',
-  'ja-JP',
-  'ko-KR',
-] as const
+export const SUPPORTED_PLUGIN_LOCALES: readonly string[] = supportedLocales
 
 /** Requires identical dictionary structure and interpolation arguments. */
 export function validatePluginLocales(

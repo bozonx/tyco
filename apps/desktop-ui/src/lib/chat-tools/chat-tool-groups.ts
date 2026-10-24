@@ -1,5 +1,6 @@
 import {
   DEFAULT_TOOL_STEP_COUNT,
+  FILES_TOOL_GROUP_ID,
   MAX_TOOL_STEP_COUNT,
   type ProfileToolSettings,
   type ProjectAccessMode,
@@ -21,8 +22,7 @@ export interface ChatToolGroup {
   defaultAccess: ProjectAccessMode
 }
 
-/** The file tools; mirrors FILES_TOOL_GROUP in Rust, which checks it too */
-export const FILES_TOOL_GROUP_ID = 'files'
+export { FILES_TOOL_GROUP_ID } from '@tyco/shared'
 
 /** The groups the profile settings offer */
 export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [

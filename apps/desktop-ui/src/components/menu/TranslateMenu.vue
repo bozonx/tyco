@@ -225,13 +225,12 @@ const fieldOptions = computed<QueryPanelOption[]>(() => {
 
 /** While searching, the matches are ordered by relevance, so not grouped */
 const pickerOptions = computed(() =>
-  (query.value.trim()
+  query.value.trim()
     ? filterOptions(fieldOptions.value, query.value).map((option) => ({
         ...option,
         group: undefined,
       }))
     : fieldOptions.value
-  ).slice(0, 100)
 )
 
 const isAutoSource = computed(

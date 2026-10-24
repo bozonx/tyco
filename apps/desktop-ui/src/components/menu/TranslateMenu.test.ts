@@ -1,3 +1,6 @@
+import QueryPanel from './QueryPanel.vue'
+import { translationLanguageIds } from '../../lib/translation/translation-languages'
+
 import { DEFAULT_SESSION_STATE } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -113,6 +116,18 @@ describe('TranslateMenu', () => {
       'language',
       undefined
     )
+  })
+
+  it('offers the whole provider catalog without requiring a search', async () => {
+    useDesktopStore().desktopState.userConfig.translation.provider = 'google'
+    const wrapper = mountMenu()
+    await shortcutListProps.spaceKey.action()
+    await nextTick()
+    const options = wrapper.findComponent(QueryPanel).props('options')!
+    expect(options.map((option) => option.id).sort()).toEqual(
+      translationLanguageIds('google', 'target').sort()
+    )
+    expect(options.length).toBeGreaterThan(100)
   })
 
   it('translates into any language picked from the full list', async () => {

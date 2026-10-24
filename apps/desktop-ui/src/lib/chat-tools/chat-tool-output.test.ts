@@ -16,15 +16,22 @@ describe('chat-tool-output', () => {
     )
   })
 
-  it('cuts a long output and tells the model how to read on', () => {
-    const output = normalizeToolOutput('x'.repeat(30), 10)
-
+  it('includes the continuation note in the output limit', () => {
+    const output = normalizeToolOutput('x'.repeat(3000), 2000)
     expect(output.isTruncated).toBe(true)
-    expect(output.totalCharacters).toBe(30)
-    expect(
-      output.text.startsWith('x'.repeat(10) + '\n\n[Output truncated')
-    ).toBe(true)
-    expect(output.text).toContain('first 10 of 30 characters')
-    expect(output.text).toContain('offset 10')
+    expect(output.totalCharacters).toBe(3000)
+    expect(output.text.length).toBeLessThanOrEqual(2000)
+    const shown = output.text.indexOf('\n\n[Output truncated')
+    expect(output.text).toContain(`first ${shown} of 3000 characters`)
+    expect(output.text).toContain(`offset ${shown}`)
   })
+
+  it.each([0, 1, 10, 100, 2000])(
+    'respects a limit of %i characters',
+    (limit) => {
+      expect(
+        normalizeToolOutput('x'.repeat(3000), limit).text.length
+      ).toBeLessThanOrEqual(limit)
+    }
+  )
 })

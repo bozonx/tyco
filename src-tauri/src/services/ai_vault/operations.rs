@@ -12,10 +12,9 @@ pub const PROJECT_FILE: &str = "project.json";
 const SOUL_FILE: &str = "SOUL.md";
 /// The chats of a profile, laid out as the app's own `chats` folder.
 const PROFILE_CHATS_DIR: &str = "chats";
-/// Mirrors MAX_PROFILE_TEMPERATURE in shared.
-pub(super) const MAX_TEMPERATURE: f64 = 2.0;
-/// Mirrors MAX_TOOL_STEP_COUNT in shared.
-pub(super) const MAX_TOOL_STEP_COUNT: u32 = 50;
+pub(super) use crate::desktop_contract::{
+    MAX_PROFILE_TEMPERATURE as MAX_TEMPERATURE, MAX_TOOL_STEP_COUNT,
+};
 /// Icon names are short `mdi:` identifiers; the webview picks from its set.
 const MAX_ICON_LEN: usize = 64;
 

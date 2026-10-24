@@ -10,8 +10,7 @@ use super::{EventSink, HTTP_CHUNK_SIZE, READ_TIMEOUT};
 
 const MAX_REQUEST_BODY_BYTES: usize = 128 * 1024 * 1024;
 pub const MAX_RESPONSE_BODY_BYTES: usize = 128 * 1024 * 1024;
-/// Images shown in a chat; matches `MAX_IMAGE_BYTES` of the webview's chat images.
-pub const MAX_CHAT_IMAGE_RESPONSE_BYTES: usize = 10 * 1024 * 1024;
+pub use crate::desktop_contract::MAX_CHAT_IMAGE_RESPONSE_BYTES;
 /// A webhook answers with a short status, not a payload.
 pub const MAX_WEBHOOK_RESPONSE_BYTES: usize = 1024 * 1024;
 

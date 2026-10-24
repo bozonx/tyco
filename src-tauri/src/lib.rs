@@ -1,6 +1,9 @@
 #[cfg(test)]
 mod bindings;
 mod commands;
+mod desktop_contract {
+    include!(concat!(env!("OUT_DIR"), "/desktop_contract.rs"));
+}
 mod errors;
 mod events;
 mod ipc;

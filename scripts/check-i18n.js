@@ -13,7 +13,7 @@ const desktopUiSrcDir = path.join(desktopUiDir, 'src')
 const desktopUiLocalesDir = path.join(desktopUiSrcDir, 'lib/i18n/locales')
 const packagesDir = path.join(root, 'packages')
 
-const localesJsonPath = path.join(packagesDir, 'shared/src/locales.json')
+const localesJsonPath = path.join(packagesDir, 'plugin-sdk/src/locales.json')
 /** @type {string[]} */
 const CANONICAL_LOCALES = JSON.parse(fs.readFileSync(localesJsonPath, 'utf8'))
 const REQUIRED_UI_LOCALES = CANONICAL_LOCALES.map((locale) => `${locale}.json`)
@@ -444,35 +444,7 @@ for (const pluginDir of pluginDirs) {
   }
 }
 
-// Verify that packages/plugin-sdk and src-tauri keep the same supported plugin locales
-const pluginSdkValidationPath = path.join(
-  packagesDir,
-  'plugin-sdk/src/validation.ts'
-)
-const rustValidationPath = path.join(
-  root,
-  'src-tauri/src/services/plugins/validation.rs'
-)
-const pluginSdkValidationContent = fs.readFileSync(
-  pluginSdkValidationPath,
-  'utf8'
-)
-const rustValidationContent = fs.readFileSync(rustValidationPath, 'utf8')
-
-for (const locale of CANONICAL_LOCALES) {
-  if (!pluginSdkValidationContent.includes(`'${locale}'`)) {
-    hasErrors = true
-    console.error(
-      `\n❌ Missing locale "${locale}" in packages/plugin-sdk/src/validation.ts`
-    )
-  }
-  if (!rustValidationContent.includes(`"${locale}"`)) {
-    hasErrors = true
-    console.error(
-      `\n❌ Missing locale "${locale}" in src-tauri/src/services/plugins/validation.rs`
-    )
-  }
-}
+// The SDK and Rust build consume the canonical locale catalog directly.
 
 if (hasErrors) {
   console.error('\n❌ Locale validation failed.')

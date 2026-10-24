@@ -11,15 +11,12 @@ import type {
 } from '@tyco/shared'
 import type { JsonSchema } from '@tyco/plugin-sdk'
 
-import {
-  MIN_TOOL_OUTPUT_CHARACTERS,
-  normalizeToolOutput,
-  TOOL_OUTPUT_CHARACTERS,
-} from './chat-tool-output'
+import { normalizeToolOutput, TOOL_OUTPUT_CHARACTERS } from './chat-tool-output'
 import { chatToolApprovalKey, type ChatToolPolicy } from './chat-tool-policy'
+import { MAX_TOOL_NAME_LENGTH } from './tool-name'
 
 /** Names the AI providers accept for a tool */
-const TOOL_NAME = /^[a-zA-Z0-9_-]{1,64}$/
+const TOOL_NAME = new RegExp(`^[a-zA-Z0-9_-]{1,${MAX_TOOL_NAME_LENGTH}}$`)
 
 export interface ChatToolExecuteOptions {
   signal: AbortSignal
@@ -164,7 +161,7 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
     if (definitions.size === 0) return null
 
     const truncatedCallIds = new Set<string>()
-    // what the outputs of the turn may still add; each call takes from it
+    // Reserve before awaiting so parallel calls cannot spend the same budget.
     let remainingCharacters =
       context.outputBudgetCharacters ?? Number.POSITIVE_INFINITY
     const tools: ToolSet = {}
@@ -175,24 +172,32 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
           tool.inputSchema as Parameters<typeof jsonSchema>[0]
         ),
         execute: async (input, { abortSignal, toolCallId }) => {
-          const limitCharacters = Math.min(
-            tool.outputLimitCharacters ?? TOOL_OUTPUT_CHARACTERS,
-            Math.max(MIN_TOOL_OUTPUT_CHARACTERS, remainingCharacters)
-          )
-          const output = normalizeToolOutput(
-            await tool.execute(input, {
-              signal: abortSignal ?? new AbortController().signal,
-              toolCallId,
-              outputLimitCharacters: limitCharacters,
-            }),
-            limitCharacters
-          )
-          remainingCharacters = Math.max(
+          const limitCharacters = Math.max(
             0,
-            remainingCharacters - output.text.length
+            Math.floor(
+              Math.min(
+                tool.outputLimitCharacters ?? TOOL_OUTPUT_CHARACTERS,
+                remainingCharacters
+              )
+            )
           )
-          if (output.isTruncated) truncatedCallIds.add(toolCallId)
-          return output.text
+          remainingCharacters -= limitCharacters
+          let usedCharacters = 0
+          try {
+            const output = normalizeToolOutput(
+              await tool.execute(input, {
+                signal: abortSignal ?? new AbortController().signal,
+                toolCallId,
+                outputLimitCharacters: limitCharacters,
+              }),
+              limitCharacters
+            )
+            usedCharacters = output.text.length
+            if (output.isTruncated) truncatedCallIds.add(toolCallId)
+            return output.text
+          } finally {
+            remainingCharacters += limitCharacters - usedCharacters
+          }
         },
       })
     }

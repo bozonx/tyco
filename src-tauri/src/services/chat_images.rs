@@ -13,7 +13,7 @@ use crate::errors::AppError;
 use crate::models::{Chat, ChatImage};
 
 /// The lossless PNG the webview hands over before it becomes a WebP.
-pub const MAX_SOURCE_BYTES: usize = 64 * 1024 * 1024;
+pub use crate::desktop_contract::MAX_CHAT_IMAGE_SOURCE_BYTES as MAX_SOURCE_BYTES;
 /// A stored image; the strictest provider (Anthropic) accepts 5 MB per image.
 pub const MAX_IMAGE_BYTES: usize = 5 * 1024 * 1024;
 /// Images saved before WebP were PNGs of up to 20 MB.
@@ -21,11 +21,10 @@ const MAX_STORED_BYTES: usize = 20 * 1024 * 1024;
 const MAX_SESSION_BYTES: usize = 128 * 1024 * 1024;
 /// Memory the PNG decoder may use for one image.
 const MAX_DECODER_BYTES: usize = 128 * 1024 * 1024;
+use crate::desktop_contract::MAX_CHAT_IMAGES_COUNT as MAX_MESSAGE_IMAGES;
 /// The webview scales images down to this; providers reject larger ones.
-const MAX_DIMENSION: u32 = 8_000;
-const MAX_PIXELS: u64 = 24_000_000;
-/// Mirrors `MAX_CHAT_IMAGES_COUNT` in `apps/desktop-ui/src/lib/chat/chat-image-input.ts`.
-const MAX_MESSAGE_IMAGES: usize = 4;
+use crate::desktop_contract::MAX_CHAT_IMAGE_DIMENSION as MAX_DIMENSION;
+use crate::desktop_contract::MAX_CHAT_IMAGE_PIXELS as MAX_PIXELS;
 /// Lower qualities are tried only while the image exceeds `MAX_IMAGE_BYTES`.
 const WEBP_QUALITIES: [f32; 4] = [85.0, 75.0, 60.0, 45.0];
 const FORMATS: [(&str, &str); 1] = [("webp", "image/webp")];

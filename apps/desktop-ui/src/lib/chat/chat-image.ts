@@ -1,10 +1,7 @@
+import { MAX_CHAT_IMAGE_RESPONSE_BYTES as MAX_IMAGE_BYTES } from '@tyco/shared'
+
 import { isChatWebUrl } from './chat-markdown'
 
-/**
- * Mirrors `MAX_CHAT_IMAGE_RESPONSE_BYTES` in
- * `src-tauri/src/services/net/http.rs`
- */
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024
 const IMAGE_TYPES = new Set([
   'image/png',
   'image/jpeg',

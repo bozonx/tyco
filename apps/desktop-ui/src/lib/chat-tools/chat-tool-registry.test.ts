@@ -1,7 +1,6 @@
 import type { ProfileToolSettings } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
-import { MIN_TOOL_OUTPUT_CHARACTERS } from './chat-tool-output'
 import { createChatToolPolicy } from './chat-tool-policy'
 import {
   createChatToolRegistry,
@@ -105,9 +104,7 @@ describe('chat-tool-registry', () => {
 
     const output = String(await run(set, 'read_note', {}))
 
-    expect(output.startsWith('x'.repeat(10) + '\n\n[Output truncated')).toBe(
-      true
-    )
+    expect(output.length).toBeLessThanOrEqual(10)
     expect(set.truncatedCallIds.has('c1')).toBe(true)
   })
 
@@ -133,10 +130,67 @@ describe('chat-tool-registry', () => {
 
     await run(set, 'read_note', {})
     const second = String(await run(set, 'read_note', {}))
-    await run(set, 'read_note', {})
+    const third = String(await run(set, 'read_note', {}))
 
-    expect(limits).toEqual([7_000, 3_000, MIN_TOOL_OUTPUT_CHARACTERS])
+    expect(limits).toEqual([7_000, 3_000, 0])
+    expect(4000 + second.length + third.length).toBeLessThanOrEqual(7000)
     expect(second).toContain('[Output truncated')
+  })
+
+  it('reserves the budget before parallel calls and refunds unused output', async () => {
+    let finish: (text: string) => void = () => {}
+    const pending = new Promise<string>((resolve) => {
+      finish = resolve
+    })
+    const limits: number[] = []
+    let calls = 0
+    const registry = createChatToolRegistry({
+      providers: () => [
+        provider([
+          tool({
+            outputLimitCharacters: 2000,
+            execute: async (_input, { outputLimitCharacters }) => {
+              limits.push(outputLimitCharacters)
+              return ++calls === 1 ? pending : 'x'.repeat(2000)
+            },
+          }),
+        ]),
+      ],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const set = (await registry.resolve({
+      ...context(settings({ notes: { isEnabled: true, access: 'allow' } })),
+      outputBudgetCharacters: 3000,
+    }))!
+    const first = run(set, 'read_note', {})
+    const second = await run(set, 'read_note', {})
+    finish('short')
+    const firstOutput = await first
+    const third = await run(set, 'read_note', {})
+    expect(limits[0]).toBe(2000)
+    expect(limits[1]).toBe(1000)
+    expect(limits[2]).toBe(3000 - 5 - String(second).length)
+    expect(
+      String(firstOutput).length + String(second).length + String(third).length
+    ).toBeLessThanOrEqual(3000)
+  })
+
+  it('refunds reserved output when a tool fails', async () => {
+    const execute = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Failed'))
+      .mockResolvedValue('ok')
+    const registry = createChatToolRegistry({
+      providers: () => [provider([tool({ execute })])],
+      policy: createChatToolPolicy({ canAsk: true }),
+    })
+    const set = (await registry.resolve({
+      ...context(settings({ notes: { isEnabled: true, access: 'allow' } })),
+      outputBudgetCharacters: 100,
+    }))!
+    await expect(run(set, 'read_note', {})).rejects.toThrow('Failed')
+    expect(await run(set, 'read_note', {})).toBe('ok')
+    expect(execute.mock.calls[1][1].outputLimitCharacters).toBe(100)
   })
 
   it('remembers a session permission within the scope of the call', async () => {

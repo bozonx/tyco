@@ -1,4 +1,43 @@
+fn generate_desktop_contract() {
+    let limits_path = "../packages/shared/src/desktop-limits.json";
+    let locales_path = "../packages/plugin-sdk/src/locales.json";
+    println!("cargo:rerun-if-changed={limits_path}");
+    println!("cargo:rerun-if-changed={locales_path}");
+    let limits: serde_json::Map<String, serde_json::Value> =
+        serde_json::from_str(&std::fs::read_to_string(limits_path).expect("Read desktop limits"))
+            .expect("Parse desktop limits");
+    let mut source = String::new();
+    for (name, value) in limits {
+        assert!(name.chars().all(|c| c.is_ascii_uppercase() || c == '_'));
+        let rust_type = match name.as_str() {
+            "MAX_PROFILE_TEMPERATURE" => "f64",
+            "MAX_TOOL_STEP_COUNT" | "MAX_CHAT_IMAGE_DIMENSION" => "u32",
+            "MAX_CHAT_IMAGE_PIXELS" => "u64",
+            _ if value.is_string() => "&str",
+            _ => "usize",
+        };
+        let literal = if rust_type == "f64" {
+            format!("{:?}", value.as_f64().expect("Numeric desktop limit"))
+        } else {
+            value.to_string()
+        };
+        source.push_str(&format!("pub const {name}: {rust_type} = {literal};\n"));
+    }
+    let locales: Vec<String> =
+        serde_json::from_str(&std::fs::read_to_string(locales_path).expect("Read plugin locales"))
+            .expect("Parse plugin locales");
+    source.push_str(&format!(
+        "pub const SUPPORTED_PLUGIN_LOCALES: [&str; {}] = {:?};\n",
+        locales.len(),
+        locales
+    ));
+    let out =
+        std::path::PathBuf::from(std::env::var_os("OUT_DIR").expect("Build output directory"));
+    std::fs::write(out.join("desktop_contract.rs"), source).expect("Write desktop contract");
+}
+
 fn main() {
+    generate_desktop_contract();
     // the target, not the host this script runs on, decides; they differ
     // when cross-compiling
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {

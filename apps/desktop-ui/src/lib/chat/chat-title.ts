@@ -7,6 +7,9 @@ const DRAFT_TITLE_LENGTH = 60
  * longer, up to `MAX_CHAT_TITLE_LENGTH` in `ChatSidebar.vue`
  */
 const TITLE_MAX_LENGTH = 80
+/** Favor the user's topic over the answer when bounding title generation input. */
+const TITLE_QUESTION_CHARACTERS = 2_000
+const TITLE_ANSWER_CHARACTERS = 1_000
 
 /** The start of the first message, on one line, cut at a word */
 export function draftChatTitle(message: string): string {
@@ -66,7 +69,7 @@ export const CHAT_TITLE_INSTRUCTIONS = [
 /** The conversation as one text for the title request, kept short */
 export function chatTitleSource(question: string, answer: string): string {
   return [
-    `User: ${question.slice(0, 2_000)}`,
-    `Assistant: ${answer.slice(0, 1_000)}`,
+    `User: ${question.slice(0, TITLE_QUESTION_CHARACTERS)}`,
+    `Assistant: ${answer.slice(0, TITLE_ANSWER_CHARACTERS)}`,
   ].join('\n\n')
 }

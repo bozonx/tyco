@@ -27,16 +27,14 @@ pub(super) use self::sandbox::{is_forbidden, virtual_path, Resolved};
 #[cfg(test)]
 pub(super) use self::writer::apply_edit;
 
-/// The tool group of the file tools; mirrors FILES_TOOL_GROUP_ID in the webview.
-pub const FILES_TOOL_GROUP: &str = "files";
+pub use crate::desktop_contract::FILES_TOOL_GROUP_ID as FILES_TOOL_GROUP;
 pub const WORKSPACE_ROOT: &str = "workspace";
 pub const PROJECTS_ROOT: &str = "projects";
 
 /// Larger files are not read whole: the model searches them instead.
 pub const MAX_READ_BYTES: u64 = 10 * 1024 * 1024;
 pub const MAX_WRITE_BYTES: usize = 5 * 1024 * 1024;
-/// Mirrors MAX_CHAT_FILE_BYTES: a dropped file is kept as it was attached.
-pub const MAX_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
+pub use crate::desktop_contract::MAX_CHAT_FILE_BYTES as MAX_UPLOAD_BYTES;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Access {

@@ -1,3 +1,5 @@
+import { chatToolName } from './tool-name'
+
 import { describe, expect, it, vi } from 'vitest'
 
 import {
@@ -49,7 +51,7 @@ describe('desktop-chat-tools', () => {
     const active = await chatTools.turnTools('gpt-4', 5000)
     expect(active.canUseTools).toBe(true)
     expect(Object.keys(active.tools!.tools!.tools)).toContain(
-      'get_current_time'
+      await chatToolName('get_current_time')
     )
 
     supported = false

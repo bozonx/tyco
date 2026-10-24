@@ -2,7 +2,7 @@
 //! profiles: letters, digits, `-` and `_` only, so that none can leave its
 //! directory or clash with a name the platform reserves for paths.
 
-pub const MAX_FILE_ID_LEN: usize = 64;
+pub use crate::desktop_contract::MAX_VAULT_ID_LENGTH as MAX_FILE_ID_LEN;
 
 pub fn is_file_id_char(c: char) -> bool {
     c.is_ascii_alphanumeric() || c == '-' || c == '_'

@@ -2,14 +2,18 @@ import mermaid from 'mermaid'
 
 import { createChatSvgImage } from './chat-svg'
 
+/** Bound the size and rendering work of diagrams received from a model. */
+const MAX_DIAGRAM_CHARACTERS = 50_000
+const MAX_DIAGRAM_EDGES = 500
+
 mermaid.initialize({
   startOnLoad: false,
   securityLevel: 'strict',
   htmlLabels: false,
   theme: 'neutral',
   suppressErrorRendering: true,
-  maxTextSize: 50_000,
-  maxEdges: 500,
+  maxTextSize: MAX_DIAGRAM_CHARACTERS,
+  maxEdges: MAX_DIAGRAM_EDGES,
   secure: [
     'secure',
     'securityLevel',
@@ -32,7 +36,7 @@ export async function renderChatMermaid(source: string): Promise<Blob> {
   if (
     /%%\s*\{/.test(source) ||
     /^\s*---/.test(source) ||
-    source.length > 50_000
+    source.length > MAX_DIAGRAM_CHARACTERS
   ) {
     throw new Error('Diagram configuration directives are not allowed')
   }

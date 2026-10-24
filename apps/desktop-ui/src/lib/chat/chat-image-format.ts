@@ -1,3 +1,5 @@
+import { MAX_CHAT_IMAGE_PIXELS } from '@tyco/shared'
+
 /**
  * Image formats told by their bytes, not by the file name: pasted files often
  * have no extension, and a wrong one must not decide how a file is read.
@@ -30,7 +32,7 @@ export const PLATFORM_IMAGE_TYPES: ReadonlySet<ChatImageType> = new Set([
   'image/heic',
 ])
 
-const MAX_SOURCE_PIXELS = 24_000_000
+const MAX_SOURCE_PIXELS = MAX_CHAT_IMAGE_PIXELS
 const MAX_SOURCE_DIMENSION = 16_384
 
 const AVIF_BRANDS = new Set(['avif', 'avis'])

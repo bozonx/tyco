@@ -55,8 +55,10 @@ export const CURRENT_TIME_TOOL: RegisteredTool = {
 export function createDebugChatToolProvider(): ChatToolProvider {
   return {
     id: 'debug',
-    tools: () => [
-      adaptRegisteredTool(CURRENT_TIME_TOOL, { groupId: DEBUG_TOOL_GROUP_ID }),
+    tools: async () => [
+      await adaptRegisteredTool(CURRENT_TIME_TOOL, {
+        groupId: DEBUG_TOOL_GROUP_ID,
+      }),
     ],
   }
 }

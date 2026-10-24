@@ -16,11 +16,19 @@ import {
 const signal = new AbortController().signal
 
 describe('registered-tool-adapter', () => {
-  it('names tools the way providers accept', () => {
-    expect(chatToolName('core.copy')).toBe('core_copy')
-    expect(chatToolName('my-plugin.translate text')).toBe(
-      'my-plugin_translate_text'
-    )
+  it('keeps sanitized and truncated tool IDs distinct and provider-compatible', async () => {
+    const ids = [
+      'core.copy',
+      'core_copy',
+      'a'.repeat(100) + 'x',
+      'a'.repeat(100) + 'y',
+      '',
+      '工具',
+    ]
+    const names = await Promise.all(ids.map(chatToolName))
+    expect(new Set(names).size).toBe(ids.length)
+    for (const name of names) expect(name).toMatch(/^[a-zA-Z0-9_-]{1,64}$/)
+    expect(await chatToolName(ids[0])).toBe(names[0])
   })
 
   it('turns a tool result into what the model reads', () => {
@@ -51,13 +59,13 @@ describe('registered-tool-adapter', () => {
       run,
     }
 
-    const definition = adaptRegisteredTool(tool, {
+    const definition = await adaptRegisteredTool(tool, {
       groupId: 'commands',
       config: { strict: true },
     })
 
     expect(definition).toMatchObject({
-      name: 'text_upper',
+      name: await chatToolName('text.upper'),
       groupId: 'commands',
       labelKey: 'tools.upper',
       icon: 'mdi:format-letter-case-upper',
@@ -97,7 +105,7 @@ describe('debug-chat-tools', () => {
       modelId: 'm',
       settings: undefined,
     })
-    expect(tool.name).toBe('get_current_time')
+    expect(tool.name).toBe(await chatToolName('get_current_time'))
     expect(
       await tool.execute(
         { timeZone: 'UTC' },

@@ -1,4 +1,8 @@
-import type { ChatImage } from '@tyco/shared'
+import {
+  MAX_CHAT_IMAGE_SOURCE_BYTES as MAX_CHAT_IMAGE_BYTES,
+  MAX_CHAT_IMAGE_DIMENSION as MAX_OUTPUT_DIMENSION,
+  type ChatImage,
+} from '@tyco/shared'
 
 import { ESTIMATED_CHARACTERS_PER_TOKEN } from '../llm/token-estimate'
 import { ChatFileError } from './chat-file-error'
@@ -8,17 +12,10 @@ import {
   PLATFORM_IMAGE_TYPES,
 } from './chat-image-format'
 
-/** Mirrored by `MAX_MESSAGE_IMAGES` in `src-tauri/src/services/chat_images.rs` */
-export const MAX_CHAT_IMAGES_COUNT = 4
+export { MAX_CHAT_IMAGES_COUNT } from '@tyco/shared'
+
 /** A picked or pasted image file, before it is converted */
 const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024
-/**
- * The lossless PNG handed to Rust, which keeps it as a WebP; mirrors
- * `MAX_SOURCE_BYTES` there
- */
-const MAX_CHAT_IMAGE_BYTES = 64 * 1024 * 1024
-/** The largest side providers accept (Anthropic rejects anything above) */
-const MAX_OUTPUT_DIMENSION = 8000
 /** The longest side of an image sent at the economy and balanced qualities */
 const ECONOMY_IMAGE_DIMENSION = 1024
 const BALANCED_IMAGE_DIMENSION = 1568

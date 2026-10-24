@@ -1,3 +1,5 @@
+import { chatToolName } from './tool-name'
+
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ChatToolDefinition, ChatToolProvider } from './chat-tool-registry'
@@ -61,7 +63,9 @@ describe('chat-tools-session', () => {
       settings: undefined,
     })
 
-    expect(Object.keys(tools!.tools!.tools)).toEqual(['get_current_time'])
+    expect(Object.keys(tools!.tools!.tools)).toEqual([
+      await chatToolName('get_current_time'),
+    ])
     expect(tools!.maxStepCount).toBe(8)
   })
 

@@ -14,6 +14,8 @@ import type { PluginFactory } from '../../types/plugins'
 import { getPluginState, pluginId, resolvePluginConfig } from './plugin-config'
 
 /** Time limits of a plugin's code, unless told otherwise */
+/** Bound lifecycle bookkeeping even when a plugin registers handlers in a loop. */
+const MAX_PLUGIN_CLEANUP_HANDLERS = 64
 const DEFAULT_CLEANUP_TIMEOUT_MS = 2000
 const DEFAULT_ACTIVATION_TIMEOUT_MS = 10_000
 
@@ -198,7 +200,7 @@ export function createPluginManager(deps: PluginManagerDependencies) {
                 onDispose: (cleanup) => {
                   if (instance.controller.signal.aborted)
                     throw new Error('Plugin is disposed')
-                  if (instance.cleanups.length >= 64)
+                  if (instance.cleanups.length >= MAX_PLUGIN_CLEANUP_HANDLERS)
                     throw new Error('Too many plugin cleanup handlers')
                   instance.cleanups.push(cleanup)
                 },

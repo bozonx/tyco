@@ -1,12 +1,6 @@
 /** How much of a tool's output the model is given by default */
 export const TOOL_OUTPUT_CHARACTERS = 20_000
 
-/**
- * The least a call is given however little of the turn's budget is left: too
- * little to be of use would only make the model call again
- */
-export const MIN_TOOL_OUTPUT_CHARACTERS = 2_000
-
 export interface ToolOutput {
   /** What the model and the chat get: the output, cut to the limit */
   text: string
@@ -37,16 +31,20 @@ export function normalizeToolOutput(
   limitCharacters = TOOL_OUTPUT_CHARACTERS
 ): ToolOutput {
   const full = toolOutputText(value)
-  if (full.length <= limitCharacters) {
+  const limit = Math.max(0, Math.floor(limitCharacters))
+  if (full.length <= limit) {
     return { text: full, isTruncated: false, totalCharacters: full.length }
   }
-  const head = full.slice(0, limitCharacters)
-  return {
-    text:
-      `${head}\n\n[Output truncated: showing the first ${limitCharacters} ` +
-      `of ${full.length} characters. If the tool takes offset and limit, ` +
-      `call it again with offset ${limitCharacters} for the rest.]`,
-    isTruncated: true,
-    totalCharacters: full.length,
-  }
+  const noteFor = (shown: number) =>
+    `\n\n[Output truncated: showing the first ${shown} ` +
+    `of ${full.length} characters. If the tool takes offset and limit, ` +
+    `call it again with offset ${shown} for the rest.]`
+  // Reserve the longest possible note before cutting; digit counts may shrink.
+  const shown = Math.max(0, limit - noteFor(limit).length)
+  const note = noteFor(shown)
+  const text =
+    note.length <= limit
+      ? full.slice(0, shown) + note
+      : '[Output truncated]'.slice(0, limit)
+  return { text, isTruncated: true, totalCharacters: full.length }
 }

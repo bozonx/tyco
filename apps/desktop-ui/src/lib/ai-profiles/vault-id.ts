@@ -1,5 +1,4 @@
-/** Mirrors `validate_id` in `src-tauri/src/services/ai_vault/operations.rs` */
-const MAX_ID_LENGTH = 64
+import { MAX_VAULT_ID_LENGTH as MAX_ID_LENGTH } from '@tyco/shared'
 
 const defaultRandomSuffix = () => crypto.randomUUID().slice(0, 8)
 

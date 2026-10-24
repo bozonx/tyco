@@ -7,12 +7,7 @@ use super::{is_valid_plugin_id, PluginManifest, API_VERSION};
 use crate::errors::AppError;
 use crate::services::settings::schema::MAX_SAFE_INTEGER;
 
-/// A manifest that breaks a rule of the package format.
-/// Every plugin ships these dictionaries; matches `SUPPORTED_PLUGIN_LOCALES` of the SDK.
-pub(crate) const SUPPORTED_PLUGIN_LOCALES: [&str; 21] = [
-    "en-US", "ru-RU", "de-DE", "fr-FR", "es", "it-IT", "pt-BR", "pl-PL", "tr-TR", "uk-UA", "cs-CZ",
-    "hu-HU", "ro-RO", "el-GR", "hr-HR", "ka-GE", "kk-KZ", "zh-CN", "zh-TW", "ja-JP", "ko-KR",
-];
+pub(crate) use crate::desktop_contract::SUPPORTED_PLUGIN_LOCALES;
 
 fn invalid(message: impl Into<String>) -> AppError {
     AppError::InvalidData(message.into())

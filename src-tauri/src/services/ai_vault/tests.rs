@@ -196,26 +196,17 @@ fn profile_settings_round_trip_and_are_validated() {
     assert!(save_profile(&vault_root, unnamed).is_err());
 }
 
-/// The limits are checked on both sides of the IPC boundary.
 #[test]
-fn profile_limits_match_the_shared_package() {
-    let shared = include_str!("../../../../packages/shared/src/ai-profiles.ts");
-    let declared = |name: &str| {
-        shared
-            .lines()
-            .find_map(|line| line.strip_prefix(&format!("export const {name} = ")))
-            .unwrap_or_else(|| panic!("{name} is not declared in @tyco/shared"))
-            .trim()
-            .to_owned()
-    };
-    assert_eq!(
-        declared("MAX_PROFILE_TEMPERATURE").parse::<f64>().unwrap(),
-        operations::MAX_TEMPERATURE
-    );
-    assert_eq!(
-        declared("MAX_TOOL_STEP_COUNT").parse::<u32>().unwrap(),
-        operations::MAX_TOOL_STEP_COUNT
-    );
+fn profile_temperature_accepts_the_contract_boundary_and_rejects_larger_values() {
+    let test_dir = TestDir::new("ai_vault_temperature_boundary");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+    let mut updated = profile("writer", 1000);
+    updated.temperature = Some(operations::MAX_TEMPERATURE);
+    save_profile(&vault_root, updated.clone()).unwrap();
+    assert_eq!(get_profile(&vault_root, "writer").unwrap(), updated);
+    updated.temperature = Some(operations::MAX_TEMPERATURE + 0.1);
+    assert!(save_profile(&vault_root, updated).is_err());
 }
 
 #[test]
@@ -246,7 +237,11 @@ fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
         serde_json::json!({"groups": {"debug": {"isEnabled": true, "access": "ask"}}, "maxStepCount": 8})
     );
 
-    for count in [0, 51] {
+    updated.tools.as_mut().unwrap().max_step_count = Some(operations::MAX_TOOL_STEP_COUNT);
+    save_profile(&vault_root, updated.clone()).unwrap();
+    assert_eq!(get_profile(&vault_root, "writer").unwrap(), updated);
+
+    for count in [0, operations::MAX_TOOL_STEP_COUNT + 1] {
         let mut invalid = updated.clone();
         invalid.tools.as_mut().unwrap().max_step_count = Some(count);
         assert!(save_profile(&vault_root, invalid).is_err());
