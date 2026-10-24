@@ -495,10 +495,7 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": {
-      "command": "Příkaz selhal",
-      "correction": "Oprava selhala"
-    },
+    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -507,10 +504,7 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": {
-      "command": "Spouští se příkaz…",
-      "correction": "Opravuje se…"
-    }
+    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
   },
   "settings": {
     "accessAllow": "Povolit",

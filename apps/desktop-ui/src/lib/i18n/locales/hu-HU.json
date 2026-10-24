@@ -507,10 +507,7 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": {
-      "command": "A parancs fut…",
-      "correction": "Javítás…"
-    }
+    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
   },
   "settings": {
     "accessAllow": "Engedélyezés",

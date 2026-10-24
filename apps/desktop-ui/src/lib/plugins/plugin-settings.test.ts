@@ -13,7 +13,9 @@ describe('plugin-settings', () => {
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en-US',
-      locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+      locales: Object.fromEntries(
+        SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+      ),
       labelKey: 'plugin.alpha.label',
       defaultConfig: {
         fields: [{ type: 'text', name: 'apiKey', defaultValue: 'default-key' }],
@@ -27,7 +29,9 @@ describe('plugin-settings', () => {
       apiVersion: 2,
       capabilities: [],
       defaultLocale: 'en-US',
-      locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+      locales: Object.fromEntries(
+        SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+      ),
       label: 'Beta Plugin',
       description: 'Beta description',
       init: () => {},

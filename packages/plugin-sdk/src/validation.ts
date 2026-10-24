@@ -75,8 +75,7 @@ export function validatePluginLocales(
   }
   const expected = JSON.stringify(signature(value['en-US']))
   for (const [locale, dictionary] of Object.entries(value)) {
-    if (!/^[a-z]{2}(?:-[A-Z]{2})?$/.test(locale))
-      fail('Invalid plugin locale')
+    if (!/^[a-z]{2}(?:-[A-Z]{2})?$/.test(locale)) fail('Invalid plugin locale')
     if (JSON.stringify(signature(dictionary)) !== expected)
       fail(`Plugin locale structure or placeholders differ: ${locale}`)
   }

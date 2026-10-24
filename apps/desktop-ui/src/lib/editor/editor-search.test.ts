@@ -189,7 +189,7 @@ describe('editor search and replace', () => {
     expect(view.state.doc.toString()).toBe('cat Cat cat\nscatter')
   })
 
-  it.each(['en-US', 'ru-RU', 'es-AR', 'tr-TR'] as const)(
+  it.each(['en-US', 'ru-RU', 'es', 'tr-TR'] as const)(
     'localizes the panel in %s and preserves its query when language changes',
     (locale) => {
       mount()

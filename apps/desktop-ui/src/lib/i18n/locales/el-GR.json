@@ -507,10 +507,7 @@
       "command": "Η εντολή άφησε το κείμενο αμετάβλητο",
       "correction": "Δεν βρέθηκαν λάθη"
     },
-    "working": {
-      "command": "Εκτέλεση εντολής…",
-      "correction": "Διόρθωση…"
-    }
+    "working": { "command": "Εκτέλεση εντολής…", "correction": "Διόρθωση…" }
   },
   "settings": {
     "accessAllow": "Να επιτρέπεται",

@@ -23,7 +23,7 @@ afterEach(() => {
 })
 
 describe('code block clipboard feedback', () => {
-  it.each(['en-US', 'ru-RU', 'es-AR', 'tr-TR'] as const)(
+  it.each(['en-US', 'ru-RU', 'es', 'tr-TR'] as const)(
     'localizes the copy button in %s',
     (locale) => {
       setI18nLocale(locale)

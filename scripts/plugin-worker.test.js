@@ -12,7 +12,29 @@ const manifest = {
   capabilities: ['editor'],
   defaultLocale: 'en-US',
   locales: Object.fromEntries(
-    ['en-US', 'ru-RU', 'de-DE', 'fr-FR', 'es', 'it-IT', 'pt-BR', 'pl-PL', 'tr-TR', 'uk-UA', 'cs-CZ', 'hu-HU', 'ro-RO', 'el-GR', 'hr-HR', 'ka-GE', 'kk-KZ', 'zh-CN', 'zh-TW', 'ja-JP', 'ko-KR'].map((locale) => [locale, {}])
+    [
+      'en-US',
+      'ru-RU',
+      'de-DE',
+      'fr-FR',
+      'es',
+      'it-IT',
+      'pt-BR',
+      'pl-PL',
+      'tr-TR',
+      'uk-UA',
+      'cs-CZ',
+      'hu-HU',
+      'ro-RO',
+      'el-GR',
+      'hr-HR',
+      'ka-GE',
+      'kk-KZ',
+      'zh-CN',
+      'zh-TW',
+      'ja-JP',
+      'ko-KR',
+    ].map((locale) => [locale, {}])
   ),
 }
 /** @param {string} code */

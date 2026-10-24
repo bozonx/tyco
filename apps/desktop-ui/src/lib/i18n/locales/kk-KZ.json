@@ -507,10 +507,7 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": {
-      "command": "Команда орындалуда…",
-      "correction": "Түзетілуде…"
-    }
+    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",

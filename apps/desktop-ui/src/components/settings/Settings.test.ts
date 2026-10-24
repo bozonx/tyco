@@ -98,7 +98,9 @@ vi.mock('../../stores/plugin-runtime', () => ({
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+        locales: Object.fromEntries(
+          SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+        ),
         labelKey: 'plugin.a.label',
         defaultConfig: { fields: [] },
         init: vi.fn(),
@@ -110,7 +112,9 @@ vi.mock('../../stores/plugin-runtime', () => ({
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+        locales: Object.fromEntries(
+          SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+        ),
         label: 'Plugin B',
         defaultConfig: { fields: [] },
         init: vi.fn(),

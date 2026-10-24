@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Editor from './Editor.vue'
 import Icon from '../common/AppIcon.vue'
+import { useDesktopStore } from '../../stores/desktop'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -13,6 +14,7 @@ describe('Editor.vue toolbar', () => {
   beforeEach(() => {
     const pinia = createPinia()
     setActivePinia(pinia)
+    useDesktopStore().userConfig.isInDevelopment = true
     config.global.plugins = [pinia]
     vi.clearAllMocks()
   })

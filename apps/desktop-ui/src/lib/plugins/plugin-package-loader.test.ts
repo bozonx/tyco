@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import { createPluginPackageLoader } from './plugin-package-loader'
 const manifest = {
   id: 'Example',
@@ -7,10 +8,7 @@ const manifest = {
   capabilities: [],
   defaultLocale: 'en-US',
   locales: Object.fromEntries(
-    ['en-US', 'ru-RU', 'es-AR', 'tr-TR'].map((locale) => [
-      locale,
-      { label: 'Example' },
-    ])
+    SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, { label: 'Example' }])
   ),
 }
 const entry = {

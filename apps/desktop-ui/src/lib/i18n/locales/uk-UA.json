@@ -507,10 +507,7 @@
       "command": "Команда залишила текст без змін",
       "correction": "Помилок не знайдено"
     },
-    "working": {
-      "command": "Виконання команди…",
-      "correction": "Виправлення…"
-    }
+    "working": { "command": "Виконання команди…", "correction": "Виправлення…" }
   },
   "settings": {
     "accessAllow": "Дозволити",

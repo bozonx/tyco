@@ -80,7 +80,7 @@ describe('ChatMarkdown.vue', () => {
     expect(wrapper.find('button').text()).toBe('Copy code')
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('copy-code')?.[0]).toEqual(['const x = 1\n'])
-    setI18nLocale('es-AR')
+    setI18nLocale('es')
     await settle()
     expect(wrapper.find('button').text()).toBe(i18n.global.t('chat.copyCode'))
     expect(wrapper.findAll('button')).toHaveLength(1)

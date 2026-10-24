@@ -507,10 +507,7 @@
       "command": "ბრძანებამ ტექსტი უცვლელად დატოვა",
       "correction": "შეცდომები ვერ მოიძებნა"
     },
-    "working": {
-      "command": "ბრძანება სრულდება…",
-      "correction": "სწორდება…"
-    }
+    "working": { "command": "ბრძანება სრულდება…", "correction": "სწორდება…" }
   },
   "settings": {
     "accessAllow": "დაშვება",

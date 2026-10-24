@@ -27,7 +27,9 @@ describe('plugin resources', () => {
       { label: 'First:ru-RU' }
     )
     resources.remove('First')
-    expect(host.removeMessages).toHaveBeenCalledTimes(4)
+    expect(host.removeMessages).toHaveBeenCalledTimes(
+      SUPPORTED_PLUGIN_LOCALES.length
+    )
     expect(host.removeMessages).not.toHaveBeenCalledWith(
       'en-US',
       pluginNamespace('Second')

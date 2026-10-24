@@ -29,7 +29,9 @@ vi.mock('../../stores/plugin-runtime', () => ({
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+        locales: Object.fromEntries(
+          SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+        ),
         labelKey: 'plugin.withConfig.label',
         defaultConfig: {
           fields: [
@@ -41,7 +43,9 @@ vi.mock('../../stores/plugin-runtime', () => ({
               apiVersion: 2,
               capabilities: [],
               defaultLocale: 'en-US',
-              locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+              locales: Object.fromEntries(
+                SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+              ),
               labelKey: 'key',
               defaultValue: 'default-key',
             },
@@ -56,7 +60,9 @@ vi.mock('../../stores/plugin-runtime', () => ({
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+        locales: Object.fromEntries(
+          SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+        ),
         labelKey: 'plugin.withoutConfig.label',
         init: vi.fn(),
       }),

@@ -313,8 +313,30 @@ try {
     label: 'Desktop smoke',
     defaultLocale: 'en-US',
     locales: Object.fromEntries(
-    ['en-US', 'ru-RU', 'de-DE', 'fr-FR', 'es', 'it-IT', 'pt-BR', 'pl-PL', 'tr-TR', 'uk-UA', 'cs-CZ', 'hu-HU', 'ro-RO', 'el-GR', 'hr-HR', 'ka-GE', 'kk-KZ', 'zh-CN', 'zh-TW', 'ja-JP', 'ko-KR'].map((locale) => [locale, {}])
-  ),
+      [
+        'en-US',
+        'ru-RU',
+        'de-DE',
+        'fr-FR',
+        'es',
+        'it-IT',
+        'pt-BR',
+        'pl-PL',
+        'tr-TR',
+        'uk-UA',
+        'cs-CZ',
+        'hu-HU',
+        'ro-RO',
+        'el-GR',
+        'hr-HR',
+        'ka-GE',
+        'kk-KZ',
+        'zh-CN',
+        'zh-TW',
+        'ja-JP',
+        'ko-KR',
+      ].map((locale) => [locale, {}])
+    ),
   }
   const module = `export default () => ({ ...${JSON.stringify(manifest)}, async init(ctx) {
     if (typeof window !== 'undefined' || typeof document !== 'undefined' || typeof globalThis.__TAURI_INTERNALS__ !== 'undefined') throw new Error('Host globals exposed');

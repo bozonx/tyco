@@ -143,7 +143,9 @@ describe('settings operations', () => {
         apiVersion: 2,
         capabilities: [],
         defaultLocale: 'en-US',
-        locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+        locales: Object.fromEntries(
+          SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+        ),
         init: () => {},
         defaultConfig: {
           fields: [],

@@ -11,10 +11,7 @@ const manifest = {
   capabilities: ['editor'],
   defaultLocale: 'en-US',
   locales: Object.fromEntries(
-    SUPPORTED_PLUGIN_LOCALES.map((locale) => [
-      locale,
-      { label: 'Example' },
-    ])
+    SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, { label: 'Example' }])
   ),
 }
 describe('plugin manifest validation', () => {

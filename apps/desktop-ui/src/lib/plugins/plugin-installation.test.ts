@@ -10,7 +10,9 @@ const preview = {
     version: '1.0.0',
     apiVersion: 2,
     defaultLocale: 'en-US',
-    locales: Object.fromEntries(SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])),
+    locales: Object.fromEntries(
+      SUPPORTED_PLUGIN_LOCALES.map((locale) => [locale, {}])
+    ),
     capabilities: [],
   },
 }
