@@ -6,7 +6,7 @@ use tokio::sync::Semaphore;
 use ts_rs::TS;
 
 use super::request::PreparedRequest;
-use super::EventSink;
+use super::{EventSink, HTTP_CHUNK_SIZE, READ_TIMEOUT};
 
 const MAX_REQUEST_BODY_BYTES: usize = 128 * 1024 * 1024;
 pub const MAX_RESPONSE_BODY_BYTES: usize = 128 * 1024 * 1024;
@@ -146,13 +146,10 @@ pub async fn run_fetch_controlled<S: EventSink>(
                     });
                     return;
                 }
-                for chunk in bytes.chunks(64 * 1024) {
+                for chunk in bytes.chunks(HTTP_CHUNK_SIZE) {
                     if let Some(chunk_permits) = &chunk_permits {
-                        let Ok(Ok(permit)) = tokio::time::timeout(
-                            std::time::Duration::from_secs(180),
-                            chunk_permits.acquire(),
-                        )
-                        .await
+                        let Ok(Ok(permit)) =
+                            tokio::time::timeout(READ_TIMEOUT, chunk_permits.acquire()).await
                         else {
                             sink.send_event(&FetchEvent::Error {
                                 message: "HTTP response consumption timed out".into(),

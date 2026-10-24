@@ -1,16 +1,12 @@
 //! Inserting text from a quick window into the window it was opened from.
-use std::time::Duration;
-
 use tauri::{AppHandle, Manager};
 
-use super::{hide_window, wait_until_unfocused};
+use super::{hide_window, wait_until_unfocused, FOCUS_RELEASE_TIMEOUT};
 use crate::errors::AppError;
 use crate::services::platform::{
     self, ClipboardSnapshot, ForegroundTarget, SystemTextInjector, TextInjector,
 };
 use crate::state::AppState;
-
-const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
 
 /// The effects of an insertion, so that its order and its handling of a newer
 /// activation can be tested without windows or a clipboard.

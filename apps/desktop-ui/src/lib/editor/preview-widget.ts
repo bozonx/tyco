@@ -84,6 +84,8 @@ const COPY_ICON_SVG =
 const CHECK_ICON_SVG =
   '<svg class="cm-preview-check-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M21 7L9 19l-5.5-5.5l1.41-1.41L9 16.17L19.59 5.59z"/></svg>'
 
+const COPY_FEEDBACK_DURATION_MS = 1500
+
 export class CodeBlockHeaderWidget extends WidgetType {
   constructor(
     readonly info: string,
@@ -146,7 +148,7 @@ export class CodeBlockHeaderWidget extends WidgetType {
           copyBtn.innerHTML = COPY_ICON_SVG
           copyBtn.classList.remove('copied')
           status.textContent = ''
-        }, 1500)
+        }, COPY_FEEDBACK_DURATION_MS)
       } catch {
         status.textContent = view.state.phrase('Clipboard is not available')
       } finally {

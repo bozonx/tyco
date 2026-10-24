@@ -1,7 +1,6 @@
 //! Asks the user whether an external call may use the selection while
 //! `externalAccess.canAccessSelection` is off: once, from now on, or not at all.
 use std::sync::Mutex;
-use std::time::Duration;
 
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -11,10 +10,9 @@ use crate::errors::AppError;
 use crate::services::activation::{Activation, ActivationMode, ActivationSource};
 use crate::services::external::api;
 use crate::services::external::jobs::ExternalJobs;
+use crate::services::runtime::FOCUS_RELEASE_TIMEOUT;
 use crate::services::{runtime, settings};
 use crate::state::AppState;
-
-const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
 
 pub use crate::models::AccessRequest;
 

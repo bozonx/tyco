@@ -71,7 +71,7 @@
               <input
                 ref="renameInputs"
                 v-model="renameValue"
-                maxlength="120"
+                :maxlength="MAX_CHAT_TITLE_LENGTH"
                 :aria-label="t('chat.renameChat')"
                 @keydown.esc="cancelRename"
                 @blur="finishRename(item)"
@@ -157,6 +157,9 @@ import SearchInput from '../common/SearchInput.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { Chat, ChatSummary } from '@tyco/shared'
 
+const MAX_CHAT_TITLE_LENGTH = 120
+const CHAT_SEARCH_DEBOUNCE_MS = 200
+
 const emit = defineEmits<{ (e: 'collapse'): void; (e: 'navigate'): void }>()
 const { t } = useI18n()
 const { toastKey } = useToast()
@@ -236,7 +239,7 @@ watch(
       } catch {
         // the titles are still matched
       }
-    }, 200)
+    }, CHAT_SEARCH_DEBOUNCE_MS)
   },
   { deep: true }
 )

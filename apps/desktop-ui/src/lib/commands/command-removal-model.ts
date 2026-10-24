@@ -8,6 +8,7 @@ import {
 } from '@tyco/shared'
 
 import { webhookToolConfig } from './command-config'
+import { secretIdFromRef } from '../net/secrets'
 
 interface RemovedCommand {
   command: CommandConfig
@@ -52,11 +53,10 @@ export function createCommandRemovalModel(deps: {
       return
     const tool = webhookToolConfig(command)
     const ids = new Set(
-      Object.values(tool.headers ?? {}).flatMap((value) =>
-        value.startsWith('tyco-secret:')
-          ? [value.slice('tyco-secret:'.length)]
-          : []
-      )
+      Object.values(tool.headers ?? {}).flatMap((value) => {
+        const id = secretIdFromRef(value)
+        return id ? [id] : []
+      })
     )
     if (tool.authSecretId) ids.add(tool.authSecretId)
     for (const id of ids) await deps.removeSecret(id)

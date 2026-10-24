@@ -18,7 +18,7 @@ use crate::models::{EditorHistoryEntry, EditorHistoryItem};
 use crate::services::clock::now_ms;
 
 const EDITOR_HISTORY_FILE: &str = "editor-history.jsonl";
-pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 100;
+pub(super) const DEFAULT_EDITOR_HISTORY_LIMIT: usize = 1000;
 
 fn editor_history_path(app: &AppHandle) -> Result<PathBuf, AppError> {
     Ok(app_data_dir(app)?.join(EDITOR_HISTORY_FILE))

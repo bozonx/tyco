@@ -65,10 +65,10 @@
         <FieldInput
           class="flex-1"
           :aria-label="t('settings.actionWebhookHeaderValue')"
-          :type="header[1].includes('tyco-secret:') ? 'password' : 'text'"
-          :model-value="header[1].includes('tyco-secret:') ? '' : header[1]"
+          :type="hasSecretRef(header[1]) ? 'password' : 'text'"
+          :model-value="hasSecretRef(header[1]) ? '' : header[1]"
           :placeholder="
-            header[1].includes('tyco-secret:')
+            hasSecretRef(header[1])
               ? t('settings.actionWebhookAuthReplacePlaceholder')
               : t('settings.actionWebhookHeaderValue')
           "
@@ -158,7 +158,7 @@ import {
   webhookHeadersFromRows,
 } from '../../lib/commands/webhook-header-rows'
 import { clientLogger } from '../../lib/logger'
-import { httpOrigin } from '../../lib/net/secrets'
+import { SECRET_REF_PREFIX, httpOrigin } from '../../lib/net/secrets'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import Button from '../common/Button.vue'
@@ -170,6 +170,9 @@ import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
 import type { CommandConfig } from '@tyco/shared'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
+
+const hasSecretRef = (value: string): boolean =>
+  value.includes(SECRET_REF_PREFIX)
 
 const props = defineProps<{ command: CommandConfig }>()
 const emit = defineEmits<{ update: [field: string, value: unknown] }>()

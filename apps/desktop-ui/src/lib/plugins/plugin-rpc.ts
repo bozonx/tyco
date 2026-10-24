@@ -188,7 +188,7 @@ export function createPluginRpc(deps: PluginRpcDependencies) {
     method: PluginRequestMethod,
     args: unknown,
     signal?: AbortSignal,
-    timeoutMs = deps.timeoutMs ?? 10000,
+    timeoutMs = deps.timeoutMs ?? PLUGIN_RPC_LIMITS.hostTimeoutMs,
     options: { fatalTimeout?: boolean } = {}
   ): Promise<unknown> {
     if (closed || signal?.aborted)

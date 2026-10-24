@@ -42,6 +42,7 @@ const markdownLabels = computed(() => ({
 }))
 /** A streamed answer is rendered at most this often, not on every piece */
 const STREAM_RENDER_MS = 120
+const STREAM_ENHANCE_DELAY_MS = 100
 function render(): string {
   try {
     return renderChatMarkdown(props.content, markdownLabels.value, scope)
@@ -117,7 +118,7 @@ watch(
       () => {
         if (root.value) void view.enhance(root.value, Boolean(props.streaming))
       },
-      props.streaming ? 100 : 0
+      props.streaming ? STREAM_ENHANCE_DELAY_MS : 0
     )
   },
   { immediate: true, flush: 'post' }

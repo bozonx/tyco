@@ -24,6 +24,7 @@ use tauri::ipc::{Channel, InvokeResponseBody};
 use tokio::sync::{mpsc::Sender, OwnedSemaphorePermit, Semaphore};
 
 pub const FETCH_WINDOW_CHUNKS: usize = 8;
+pub const HTTP_CHUNK_SIZE: usize = 64 * 1024;
 const MAX_ACTIVE_OPERATIONS: usize = 32;
 
 use crate::errors::AppError;
@@ -32,7 +33,7 @@ use socket::SocketCommand;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(20);
 /// Silence on an open response longer than this is a dead connection. Long
 /// enough for a reasoning model that thinks before its first token.
-const READ_TIMEOUT: Duration = Duration::from_secs(180);
+pub const READ_TIMEOUT: Duration = Duration::from_secs(180);
 
 /// Where a request's events go. A trait so the loops run in tests without a
 /// webview.
@@ -293,8 +294,9 @@ mod tests {
     use tokio::net::TcpListener;
 
     use super::*;
+    use crate::services::runtime::{MAIN_WINDOW_LABEL, QUICK_WINDOW_LABEL};
 
-    const OWNER: &str = "main";
+    const OWNER: &str = MAIN_WINDOW_LABEL;
     use crate::services::net::request::{prepare, Protocol};
     use crate::services::secrets::Secrets;
 
@@ -381,10 +383,10 @@ mod tests {
         let (sender, _receiver) = tokio::sync::mpsc::channel(1);
         task.register_socket(sender);
         assert!(matches!(
-            net.socket_command("quick", task.id(), SocketCommand::Close(None)),
+            net.socket_command(QUICK_WINDOW_LABEL, task.id(), SocketCommand::Close(None)),
             Err(AppError::Stale(_))
         ));
-        net.cancel_task("quick", task.id());
+        net.cancel_task(QUICK_WINDOW_LABEL, task.id());
         assert_eq!(net.task_abort_handles.lock().unwrap().len(), 1);
         net.cancel_task(OWNER, task.id());
         assert!(net.task_abort_handles.lock().unwrap().is_empty());

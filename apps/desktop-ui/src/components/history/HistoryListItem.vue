@@ -129,11 +129,16 @@ const emit = defineEmits<{
 const { t, locale } = useI18n()
 const textId = useId()
 const originalId = useId()
+const LONG_ENTRY_CHAR_LIMIT = 200
+const LONG_ENTRY_LINE_LIMIT = 3
+
 const visibleActions = computed(() =>
   props.actions.filter((action) => action.isVisible?.(props.item) ?? true)
 )
 const isLong = computed(
-  () => props.item.value.length > 200 || props.item.value.split('\n').length > 3
+  () =>
+    props.item.value.length > LONG_ENTRY_CHAR_LIMIT ||
+    props.item.value.split('\n').length > LONG_ENTRY_LINE_LIMIT
 )
 </script>
 <style scoped>

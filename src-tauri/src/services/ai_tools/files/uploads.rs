@@ -8,6 +8,7 @@ use crate::errors::AppError;
 
 /// Where the files dropped into a profile chat are kept, inside the workspace.
 const UPLOADS_DIR: &str = "uploads";
+const MAX_UPLOAD_FILENAME_LENGTH: usize = 120;
 
 impl ProfileFiles {
     /// Keeps a file dropped into the chat in `workspace/uploads/`, under a
@@ -65,7 +66,7 @@ fn upload_file_name(name: &str) -> String {
         })
         .collect();
     let cleaned = cleaned.trim().trim_start_matches('.').trim();
-    let cleaned: String = cleaned.chars().take(120).collect();
+    let cleaned: String = cleaned.chars().take(MAX_UPLOAD_FILENAME_LENGTH).collect();
     if cleaned.is_empty() || cleaned.eq_ignore_ascii_case(".git") {
         "file".into()
     } else {

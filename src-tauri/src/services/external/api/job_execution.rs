@@ -234,7 +234,7 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             if let Some(window) = app.get_webview_window(runtime::QUICK_WINDOW_LABEL) {
                 if window.is_focused().unwrap_or(false) {
                     let _ = window.hide();
-                    runtime::wait_until_unfocused(app, std::time::Duration::from_millis(300));
+                    runtime::wait_until_unfocused(app, runtime::FOCUS_RELEASE_TIMEOUT);
                 }
             }
         }

@@ -25,6 +25,7 @@ use crate::{
 };
 
 const MAX_DROPPED_FILE_BYTES: u64 = 10 * 1024 * 1024;
+const MAX_IMPORT_ID_LENGTH: usize = 64;
 
 #[derive(Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -38,7 +39,7 @@ pub struct ChatImageMeta {
 /// The holder of the images a window imported under `import_id`.
 pub fn import_owner(window: &WebviewWindow, import_id: &str) -> Result<String, AppError> {
     if import_id.is_empty()
-        || import_id.len() > 64
+        || import_id.len() > MAX_IMPORT_ID_LENGTH
         || !import_id
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')

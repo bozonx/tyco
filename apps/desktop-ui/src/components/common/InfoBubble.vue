@@ -70,6 +70,8 @@ import { focusAfterTrigger } from '../../lib/ui/focus-navigation'
 import type { IconSize } from '../../lib/ui/icon-size'
 import AppIcon from './AppIcon.vue'
 
+const TOOLTIP_CLOSE_DELAY_MS = 150
+
 const props = withDefaults(
   defineProps<{
     interactive?: boolean
@@ -147,7 +149,7 @@ function onMouseLeave() {
   if (!isPinned.value && document.activeElement !== triggerRef.value) {
     closeTimeout = setTimeout(() => {
       isOpen.value = false
-    }, 150)
+    }, TOOLTIP_CLOSE_DELAY_MS)
   }
 }
 
@@ -159,7 +161,7 @@ function onPopoverMouseLeave() {
   if (!isPinned.value && document.activeElement !== triggerRef.value) {
     closeTimeout = setTimeout(() => {
       isOpen.value = false
-    }, 150)
+    }, TOOLTIP_CLOSE_DELAY_MS)
   }
 }
 

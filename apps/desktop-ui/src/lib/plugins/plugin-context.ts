@@ -27,6 +27,9 @@ import {
   scopeConfigFields,
 } from './plugin-resources'
 
+const MAX_CONTRIBUTION_BATCH = 256
+const MAX_TOTAL_CONTRIBUTIONS = 1024
+
 export interface PluginContextDependencies {
   registerActionsItems(items: ActionItem[]): PluginDisposer | void
   registerEditItems(items: EditItem[]): PluginDisposer | void
@@ -108,8 +111,8 @@ export function createPluginContext(
     check()
     if (
       !Array.isArray(items) ||
-      items.length > 256 ||
-      ids.size + items.length > 1024
+      items.length > MAX_CONTRIBUTION_BATCH ||
+      ids.size + items.length > MAX_TOTAL_CONTRIBUTIONS
     )
       throw new Error('Too many plugin contributions')
     const next = new Set(ids)

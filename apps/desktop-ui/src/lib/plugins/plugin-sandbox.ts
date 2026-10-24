@@ -19,6 +19,8 @@ import { messages } from '../i18n/messages'
 import { clientLogger } from '../logger'
 import { createPluginRpc, type PluginTransport } from './plugin-rpc'
 
+const SANDBOX_STARTUP_TIMEOUT_MS = 5000
+
 const pluginResourceUrl = (id: string, path: string) =>
   createPluginResourceUrl(id, path, convertFileSrc)
 
@@ -42,7 +44,7 @@ function openPluginTransport(id: string): Promise<PluginTransport> {
     const timer = setTimeout(() => {
       close()
       reject(new Error('Plugin sandbox failed to start'))
-    }, 5000)
+    }, SANDBOX_STARTUP_TIMEOUT_MS)
     channel.port1.onmessage = (event) => {
       if (event.data?.type !== 'ready') return
       clearTimeout(timer)

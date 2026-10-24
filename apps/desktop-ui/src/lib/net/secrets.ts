@@ -4,7 +4,15 @@ import type { KeyProvider } from '@bozonx/ai-kit'
 import type { NetIpc } from './net-ipc'
 
 /** Stands in for a key; the Rust proxy substitutes the value on the way out */
-const SECRET_REF_PREFIX = 'tyco-secret:'
+export const SECRET_REF_PREFIX = 'tyco-secret:'
+
+export function isSecretRef(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith(SECRET_REF_PREFIX)
+}
+
+export function secretIdFromRef(value: string): string | null {
+  return isSecretRef(value) ? value.slice(SECRET_REF_PREFIX.length) : null
+}
 
 /** Provider ids that may be called without a key by default */
 const KEYLESS_PROVIDERS: readonly string[] = ['openai-compatible']

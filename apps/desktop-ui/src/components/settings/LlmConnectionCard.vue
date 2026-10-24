@@ -163,9 +163,9 @@ const {
   checkConnection,
 } = props.settings
 const MODEL_PLACEHOLDERS: Record<string, string> = {
-  google: 'gemini-2.5-flash',
+  google: 'gemini-3.8-flash',
   openrouter: 'openai/gpt-4.1-mini',
-  deepseek: 'deepseek-chat',
+  deepseek: 'deepseek-flash',
 }
 const PROVIDER_ICONS: Record<string, string> = {
   google: 'mdi:google',

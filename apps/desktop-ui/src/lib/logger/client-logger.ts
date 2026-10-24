@@ -2,11 +2,24 @@ import type { App } from 'vue'
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
 
+export type ClientLogScope =
+  | 'router'
+  | 'chat'
+  | 'ai-profiles'
+  | 'translation'
+  | 'stt'
+  | 'llm'
+  | 'ipc'
+  | 'history'
+  | 'bootstrap'
+  | 'external-commands'
+  | (string & {})
+
 export interface ClientLoggerSender {
   send: (
     level: LogLevel,
     message: string,
-    context?: string
+    context?: ClientLogScope
   ) => Promise<void> | void
 }
 
@@ -28,7 +41,7 @@ export function formatErrorMessage(error: unknown): string {
 }
 
 export function createClientLogger(sender: ClientLoggerSender) {
-  function log(level: LogLevel, message: string, context?: string) {
+  function log(level: LogLevel, message: string, context?: ClientLogScope) {
     try {
       void sender.send(level, message, context)
     } catch {
@@ -36,21 +49,21 @@ export function createClientLogger(sender: ClientLoggerSender) {
     }
   }
 
-  function error(message: string, err?: unknown, context?: string) {
+  function error(message: string, err?: unknown, context?: ClientLogScope) {
     const fullMessage =
       err !== undefined ? `${message}: ${formatErrorMessage(err)}` : message
     log('error', fullMessage, context)
   }
 
-  function warn(message: string, context?: string) {
+  function warn(message: string, context?: ClientLogScope) {
     log('warn', message, context)
   }
 
-  function info(message: string, context?: string) {
+  function info(message: string, context?: ClientLogScope) {
     log('info', message, context)
   }
 
-  function debug(message: string, context?: string) {
+  function debug(message: string, context?: ClientLogScope) {
     log('debug', message, context)
   }
 

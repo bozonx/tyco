@@ -17,3 +17,4 @@ export * from './ai-profiles'
 
 export * from './value-guards'
 export * from './text-whitespace'
+export { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'

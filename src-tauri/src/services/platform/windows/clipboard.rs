@@ -14,8 +14,29 @@ use windows_sys::Win32::System::Memory::{
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{CreateWindowExW, DestroyWindow, HWND_MESSAGE};
 
-const UNICODE_TEXT: u32 = 13;
+const CF_BITMAP: u32 = 2;
+const CF_METAFILEPICT: u32 = 3;
+const CF_PALETTE: u32 = 9;
+const CF_UNICODETEXT: u32 = 13;
+const CF_ENHMETAFILE: u32 = 14;
+const CF_DSP_FIRST: u32 = 0x0080;
+const CF_DSP_LAST: u32 = 0x008E;
+const CF_GDIOBJ_FIRST: u32 = 0x0300;
+const CF_GDIOBJ_LAST: u32 = 0x03FF;
+const UNICODE_TEXT: u32 = CF_UNICODETEXT;
 const MAX_SNAPSHOT_BYTES: usize = 16 * 1024 * 1024;
+
+fn is_non_global_memory_format(format: u32) -> bool {
+    matches!(
+        format,
+        CF_BITMAP
+            | CF_METAFILEPICT
+            | CF_PALETTE
+            | CF_ENHMETAFILE
+            | CF_DSP_FIRST..=CF_DSP_LAST
+            | CF_GDIOBJ_FIRST..=CF_GDIOBJ_LAST
+    )
+}
 
 struct WindowsClipboardLock(HWND);
 impl WindowsClipboardLock {
@@ -78,7 +99,7 @@ pub fn snapshot() -> Result<ClipboardSnapshot, AppError> {
             break;
         }
         // These formats use GDI/metafile handles rather than global memory.
-        if matches!(format, 2 | 3 | 9 | 14 | 0x80..=0x8e | 0x300..=0x3ff) {
+        if is_non_global_memory_format(format) {
             continue;
         }
         let handle = unsafe { GetClipboardData(format) };

@@ -13,29 +13,10 @@ const desktopUiSrcDir = path.join(desktopUiDir, 'src')
 const desktopUiLocalesDir = path.join(desktopUiSrcDir, 'lib/i18n/locales')
 const packagesDir = path.join(root, 'packages')
 
-const REQUIRED_UI_LOCALES = [
-  'cs-CZ.json',
-  'de-DE.json',
-  'el-GR.json',
-  'en-US.json',
-  'es.json',
-  'fr-FR.json',
-  'hr-HR.json',
-  'hu-HU.json',
-  'it-IT.json',
-  'ja-JP.json',
-  'ka-GE.json',
-  'kk-KZ.json',
-  'ko-KR.json',
-  'pl-PL.json',
-  'pt-BR.json',
-  'ro-RO.json',
-  'ru-RU.json',
-  'tr-TR.json',
-  'uk-UA.json',
-  'zh-CN.json',
-  'zh-TW.json',
-]
+const localesJsonPath = path.join(packagesDir, 'shared/src/locales.json')
+/** @type {string[]} */
+const CANONICAL_LOCALES = JSON.parse(fs.readFileSync(localesJsonPath, 'utf8'))
+const REQUIRED_UI_LOCALES = CANONICAL_LOCALES.map((locale) => `${locale}.json`)
 
 const localeDirectories = [
   desktopUiLocalesDir,
@@ -459,6 +440,36 @@ for (const pluginDir of pluginDirs) {
         )
       }
     }
+  }
+}
+
+// Verify that packages/plugin-sdk and src-tauri keep the same supported plugin locales
+const pluginSdkValidationPath = path.join(
+  packagesDir,
+  'plugin-sdk/src/validation.ts'
+)
+const rustValidationPath = path.join(
+  root,
+  'src-tauri/src/services/plugins/validation.rs'
+)
+const pluginSdkValidationContent = fs.readFileSync(
+  pluginSdkValidationPath,
+  'utf8'
+)
+const rustValidationContent = fs.readFileSync(rustValidationPath, 'utf8')
+
+for (const locale of CANONICAL_LOCALES) {
+  if (!pluginSdkValidationContent.includes(`'${locale}'`)) {
+    hasErrors = true
+    console.error(
+      `\n❌ Missing locale "${locale}" in packages/plugin-sdk/src/validation.ts`
+    )
+  }
+  if (!rustValidationContent.includes(`"${locale}"`)) {
+    hasErrors = true
+    console.error(
+      `\n❌ Missing locale "${locale}" in src-tauri/src/services/plugins/validation.rs`
+    )
   }
 }
 

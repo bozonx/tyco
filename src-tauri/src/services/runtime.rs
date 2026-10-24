@@ -36,6 +36,7 @@ use crate::state::AppState;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 pub const QUICK_WINDOW_LABEL: &str = "quick";
+pub const FOCUS_RELEASE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(300);
 
 pub fn emit_state(app: &AppHandle, state: &AppState) -> Result<(), AppError> {
     let snapshot = state.snapshot();

@@ -1,13 +1,9 @@
 use tauri::{AppHandle, State};
 
-use std::time::Duration;
-
 use crate::errors::AppError;
-use crate::services::runtime;
+use crate::services::runtime::{self, FOCUS_RELEASE_TIMEOUT};
 use crate::services::selection_replace::{self, SelectionFinishStatus, COMMAND_ACTION_PREFIX};
 use crate::state::AppState;
-
-const FOCUS_RELEASE_TIMEOUT: Duration = Duration::from_millis(300);
 
 /// Pastes the result of a selection run over the selection; `text` is `None`
 /// when there is nothing to insert. Async so that waiting for the paste does
