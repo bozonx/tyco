@@ -207,6 +207,7 @@ mod tests {
         fail_save: bool,
         fail_rollback: bool,
         conflict: bool,
+        fail_history: bool,
     }
     impl SettingsHost for Host {
         type Secrets = FakeSecrets;
@@ -241,6 +242,9 @@ mod tests {
             commit: impl FnOnce() -> Result<T, AppError>,
         ) -> Result<T, AppError> {
             self.calls.borrow_mut().push("prepare");
+            if self.fail_history {
+                return Err(AppError::Failed("Could not prepare editor history".into()));
+            }
             let result = commit()?;
             self.calls.borrow_mut().push("cleanup");
             Ok(result)
@@ -343,6 +347,20 @@ mod tests {
         assert!(save_with(&state, &host, changed(&base), base).is_err());
         assert!(host.calls.borrow().is_empty());
     }
+    #[test]
+    fn a_failed_history_preparation_saves_and_publishes_nothing() {
+        let state = state();
+        let base = Value::clone(&state.user_config());
+        let host = Host {
+            fail_history: true,
+            ..Host::default()
+        };
+        assert!(save_with(&state, &host, changed(&base), base.clone()).is_err());
+        assert_eq!(*host.calls.borrow(), ["prepare"]);
+        assert_eq!(state.snapshot().revision, 0);
+        assert_eq!(*state.user_config(), base);
+    }
+
     #[test]
     fn stale_independent_edit_preserves_the_committed_language() {
         let state = state();

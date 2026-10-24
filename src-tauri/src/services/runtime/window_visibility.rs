@@ -5,6 +5,7 @@ use super::panel_layer::{settle_quick_keyboard, PanelLayerState};
 use super::{emit_state, on_main_thread, RuntimeWindows, MAIN_WINDOW_LABEL, QUICK_WINDOW_LABEL};
 use crate::errors::AppError;
 use crate::events::{self, DesktopEvent};
+use crate::services::activation::coordinator::ActivationCoordinator;
 use crate::services::activation::{ActivationMode, WindowProfile};
 use crate::state::AppState;
 
@@ -84,7 +85,7 @@ where
 {
     on_main_thread(app, move |app| {
         if app.state::<AppState>().snapshot().activation.activation_id != activation_id {
-            return Err(AppError::InvalidInput(
+            return Err(AppError::Stale(
                 "The window activation is no longer current".into(),
             ));
         }
@@ -105,6 +106,9 @@ fn show_application_mode_on_main_thread(
     app: &AppHandle,
     mode: ActivationMode,
 ) -> Result<(), AppError> {
+    // a capture started for an earlier activation must not put its text
+    // into the view shown now
+    app.state::<ActivationCoordinator>().invalidate();
     app.state::<RuntimeWindows>()
         .set_active_label(MAIN_WINDOW_LABEL);
     hide_inactive_window(app, MAIN_WINDOW_LABEL)?;
@@ -235,7 +239,7 @@ pub fn hide_window(app: &AppHandle, label: String, activation_id: u64) -> Result
             &label,
             activation_id,
         ) {
-            return Err(AppError::InvalidInput(
+            return Err(AppError::Stale(
                 "The window activation is no longer current".into(),
             ));
         }

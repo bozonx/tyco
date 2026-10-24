@@ -1,7 +1,7 @@
 //! System clipboard and focused-window adapters for selection replacement.
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
 use std::thread;
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
 use std::time::{Duration, Instant};
 
 use serde_json::Value;
@@ -106,16 +106,32 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), Sel
         clipboard_snapshot: snapshot,
     };
 
-    match copy_selection(&injector, user_config, &run.target) {
-        Ok(Some(text)) => {
+    let probe = format!(
+        "{SELECTION_PROBE_PREFIX}{}",
+        crate::services::clock::now_ns()
+    );
+    let io = LinuxCopyProbe {
+        injector: &injector,
+        user_config,
+        is_terminal: run.target.is_terminal,
+    };
+    match copy_with_probe(&io, &run.target.id, &probe) {
+        Ok(CopyOutcome::Copied(text)) => {
             run.started_at = Instant::now();
             Ok((text, run))
         }
-        Ok(None) => {
+        Ok(CopyOutcome::Nothing) => {
             restore_clipboard(run);
             Err(SelectionRunError::new(
                 SelectionRunErrorCode::NoSelection,
                 "Nothing is selected in the focused window",
+            ))
+        }
+        Ok(CopyOutcome::FocusChanged) => {
+            restore_clipboard(run);
+            Err(SelectionRunError::new(
+                SelectionRunErrorCode::NoTarget,
+                "Focus changed before capture",
             ))
         }
         Err(error) => {
@@ -157,35 +173,25 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
         clipboard_snapshot: snapshot,
     };
     let probe = format!("{SELECTION_PROBE_PREFIX}{}", std::process::id());
-    let result = (|| {
-        windows::clipboard::write_text(&probe).map_err(|error| {
-            SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string())
-        })?;
-        if windows::focused_foreground_target().as_deref() != Some(run.target.id.as_str()) {
-            return Err(SelectionRunError::new(
-                SelectionRunErrorCode::NoTarget,
-                "Focus changed before capture",
-            ));
-        }
-        windows::press_copy_or_paste(true, run.target.is_terminal).map_err(|error| {
-            SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string())
-        })?;
-        let deadline = Instant::now() + Duration::from_millis(700);
-        loop {
-            if let Some(text) = clipboard::read_text() {
-                if text != probe && !text.trim().is_empty() {
-                    return Ok(text);
-                }
-            }
-            if Instant::now() >= deadline {
-                return Err(SelectionRunError::new(
-                    SelectionRunErrorCode::NoSelection,
-                    "Nothing is selected in the foreground window",
-                ));
-            }
-            thread::sleep(Duration::from_millis(25));
-        }
-    })();
+    let result = copy_with_probe(
+        &WindowsCopyProbe {
+            is_terminal: run.target.is_terminal,
+        },
+        &run.target.id,
+        &probe,
+    )
+    .map_err(|error| SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string()))
+    .and_then(|outcome| match outcome {
+        CopyOutcome::Copied(text) => Ok(text),
+        CopyOutcome::FocusChanged => Err(SelectionRunError::new(
+            SelectionRunErrorCode::NoTarget,
+            "Focus changed before capture",
+        )),
+        CopyOutcome::Nothing => Err(SelectionRunError::new(
+            SelectionRunErrorCode::NoSelection,
+            "Nothing is selected in the foreground window",
+        )),
+    });
     match result {
         Ok(text) => Ok((text, run)),
         Err(error) => {
@@ -195,38 +201,63 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
     }
 }
 
-/// Presses the copy keys and waits for the clipboard to change. A probe
-/// text put there first tells a copied selection from an unchanged clipboard,
-/// so `None` means nothing was selected.
-#[cfg(target_os = "linux")]
-fn copy_selection(
-    injector: &super::linux::text_injector::SystemTextInjector,
-    user_config: &Value,
-    target: &SelectionTarget,
-) -> Result<Option<String>, AppError> {
-    use super::linux::text_injector::FocusedKeyAction;
+/// How long the copy keys have to change the clipboard.
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
+const COPY_TIMEOUT: Duration = Duration::from_millis(700);
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
+const COPY_POLL_INTERVAL: Duration = Duration::from_millis(25);
 
-    const COPY_TIMEOUT: Duration = Duration::from_millis(700);
-    const POLL_INTERVAL: Duration = Duration::from_millis(25);
+/// The system effects of copying a selection out of the focused window.
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
+trait CopyProbe {
+    fn write_probe(&self, probe: &str) -> Result<(), AppError>;
+    fn focused_target_id(&self) -> Option<String>;
+    fn press_copy(&self) -> Result<(), AppError>;
+    fn read_text(&self) -> Option<String>;
+    fn now(&self) -> Instant {
+        Instant::now()
+    }
+    fn pause(&self, duration: Duration) {
+        thread::sleep(duration);
+    }
+}
 
-    let probe = format!(
-        "{SELECTION_PROBE_PREFIX}{}",
-        crate::services::clock::now_ns()
-    );
-    super::clipboard::copy_to_clipboard(&probe)?;
-    injector.press_in_focused(user_config, FocusedKeyAction::Copy, target.is_terminal)?;
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
+#[derive(Debug, PartialEq, Eq)]
+enum CopyOutcome {
+    Copied(String),
+    /// Nothing, or only whitespace, is selected.
+    Nothing,
+    /// Another window took the focus: its copy keys must not be pressed,
+    /// e.g. Ctrl+C in a terminal stops the running program.
+    FocusChanged,
+}
 
-    let deadline = Instant::now() + COPY_TIMEOUT;
+/// Presses the copy keys in `target_id` and waits for the clipboard to
+/// change. A probe text put there first tells a copied selection from an
+/// unchanged clipboard.
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
+fn copy_with_probe(
+    io: &impl CopyProbe,
+    target_id: &str,
+    probe: &str,
+) -> Result<CopyOutcome, AppError> {
+    io.write_probe(probe)?;
+    if io.focused_target_id().as_deref() != Some(target_id) {
+        return Ok(CopyOutcome::FocusChanged);
+    }
+    io.press_copy()?;
+    let deadline = io.now() + COPY_TIMEOUT;
     loop {
-        let read = super::clipboard::read_text();
+        let read = io.read_text();
         match read {
-            Some(ref text) if *text == probe => {}
-            Some(ref text) if text.trim().is_empty() => return Ok(None),
-            Some(text) => return Ok(Some(text)),
+            Some(ref text) if text == probe => {}
+            Some(ref text) if text.trim().is_empty() => return Ok(CopyOutcome::Nothing),
+            Some(text) => return Ok(CopyOutcome::Copied(text)),
             // not text, e.g. an image, or not answered yet
             None => {}
         }
-        if Instant::now() >= deadline {
+        if io.now() >= deadline {
             log::debug!(
                 "The copy keys changed nothing in the clipboard: {}",
                 match read {
@@ -234,9 +265,55 @@ fn copy_selection(
                     None => "it holds no text",
                 }
             );
-            return Ok(None);
+            return Ok(CopyOutcome::Nothing);
         }
-        thread::sleep(POLL_INTERVAL);
+        io.pause(COPY_POLL_INTERVAL);
+    }
+}
+
+#[cfg(target_os = "linux")]
+struct LinuxCopyProbe<'a> {
+    injector: &'a super::linux::text_injector::SystemTextInjector,
+    user_config: &'a Value,
+    is_terminal: bool,
+}
+
+#[cfg(target_os = "linux")]
+impl CopyProbe for LinuxCopyProbe<'_> {
+    fn write_probe(&self, probe: &str) -> Result<(), AppError> {
+        super::clipboard::copy_to_clipboard(probe)
+    }
+    fn focused_target_id(&self) -> Option<String> {
+        active_target().map(|target| target.id)
+    }
+    fn press_copy(&self) -> Result<(), AppError> {
+        use super::linux::text_injector::FocusedKeyAction;
+        self.injector
+            .press_in_focused(self.user_config, FocusedKeyAction::Copy, self.is_terminal)
+    }
+    fn read_text(&self) -> Option<String> {
+        super::clipboard::read_text()
+    }
+}
+
+#[cfg(target_os = "windows")]
+struct WindowsCopyProbe {
+    is_terminal: bool,
+}
+
+#[cfg(target_os = "windows")]
+impl CopyProbe for WindowsCopyProbe {
+    fn write_probe(&self, probe: &str) -> Result<(), AppError> {
+        super::windows::clipboard::write_text(probe)
+    }
+    fn focused_target_id(&self) -> Option<String> {
+        super::windows::focused_foreground_target()
+    }
+    fn press_copy(&self) -> Result<(), AppError> {
+        super::windows::press_copy_or_paste(true, self.is_terminal)
+    }
+    fn read_text(&self) -> Option<String> {
+        super::clipboard::read_text()
     }
 }
 
@@ -386,6 +463,95 @@ mod tests {
         }
         fn restore_later(&self, _run: SelectionRun, _text: String) {
             self.calls.borrow_mut().push("restore");
+        }
+    }
+
+    struct Probe {
+        calls: RefCell<Vec<String>>,
+        focused: Option<&'static str>,
+        /// What the clipboard reads, one value per poll; the last one repeats
+        reads: RefCell<Vec<Option<&'static str>>>,
+        elapsed: std::cell::Cell<Duration>,
+        start: Instant,
+    }
+
+    fn probe(focused: Option<&'static str>, reads: Vec<Option<&'static str>>) -> Probe {
+        Probe {
+            calls: RefCell::new(Vec::new()),
+            focused,
+            reads: RefCell::new(reads),
+            elapsed: std::cell::Cell::new(Duration::ZERO),
+            start: Instant::now(),
+        }
+    }
+
+    impl CopyProbe for Probe {
+        fn write_probe(&self, probe: &str) -> Result<(), AppError> {
+            self.calls.borrow_mut().push(format!("probe:{probe}"));
+            Ok(())
+        }
+        fn focused_target_id(&self) -> Option<String> {
+            self.focused.map(str::to_owned)
+        }
+        fn press_copy(&self) -> Result<(), AppError> {
+            self.calls.borrow_mut().push("copy".into());
+            Ok(())
+        }
+        fn read_text(&self) -> Option<String> {
+            let mut reads = self.reads.borrow_mut();
+            let read = if reads.len() > 1 {
+                reads.remove(0)
+            } else {
+                reads[0]
+            };
+            read.map(|text| text.replace("PROBE", "p"))
+        }
+        fn now(&self) -> Instant {
+            self.start + self.elapsed.get()
+        }
+        fn pause(&self, duration: Duration) {
+            self.elapsed.set(self.elapsed.get() + duration);
+        }
+    }
+
+    #[test]
+    fn copy_keys_are_never_pressed_once_the_focus_moved() {
+        for focused in [None, Some("terminal")] {
+            let io = probe(focused, vec![Some("selected")]);
+            assert_eq!(
+                copy_with_probe(&io, "target", "p").unwrap(),
+                CopyOutcome::FocusChanged
+            );
+            assert_eq!(*io.calls.borrow(), ["probe:p"]);
+        }
+    }
+
+    #[test]
+    fn the_copied_text_replaces_the_probe() {
+        let io = probe(Some("target"), vec![Some("PROBE"), None, Some("selected")]);
+        assert_eq!(
+            copy_with_probe(&io, "target", "p").unwrap(),
+            CopyOutcome::Copied("selected".into())
+        );
+        assert_eq!(*io.calls.borrow(), ["probe:p", "copy"]);
+        assert_eq!(io.elapsed.get(), COPY_POLL_INTERVAL * 2);
+    }
+
+    #[test]
+    fn whitespace_or_an_unchanged_clipboard_is_no_selection() {
+        let io = probe(Some("target"), vec![Some(" \n")]);
+        assert_eq!(
+            copy_with_probe(&io, "target", "p").unwrap(),
+            CopyOutcome::Nothing
+        );
+        assert_eq!(io.elapsed.get(), Duration::ZERO);
+        for read in [Some("PROBE"), None] {
+            let io = probe(Some("target"), vec![read]);
+            assert_eq!(
+                copy_with_probe(&io, "target", "p").unwrap(),
+                CopyOutcome::Nothing
+            );
+            assert!(io.elapsed.get() >= COPY_TIMEOUT);
         }
     }
 

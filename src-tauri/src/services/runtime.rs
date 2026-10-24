@@ -158,7 +158,8 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
     if let Some(request) = request {
         let handle = app.clone();
         let services = app.state::<super::background::BackgroundServices>();
-        services.spawn_thread("activation-selection", move |stop| {
+        // the window is shown already: the activation stands without a context
+        let spawned = services.spawn_thread("activation-selection", move |stop| {
             if stop.is_stopped() {
                 return;
             }
@@ -179,7 +180,10 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
             }) {
                 log::warn!("Could not publish captured foreground context: {error}");
             }
-        })?;
+        });
+        if let Err(error) = spawned {
+            log::warn!("Could not capture the foreground context: {error}");
+        }
     }
     Ok(())
 }
@@ -208,8 +212,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
         // a region left by the previous session must not hide the new content
         super::platform::set_panel_input_region(&window, None)?;
         super::platform::apply_panel_surface(&window, activation.mode.profile(), layer)?;
-    } else if !(activation.mode == ActivationMode::VoiceChat && window.is_visible()?) {
-        // a follow-up voice question must not move the chat the user placed
+    } else {
         window.set_size(tauri::LogicalSize::new(width, height))?;
         window.set_decorations(true)?;
         window.set_resizable(true)?;

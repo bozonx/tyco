@@ -38,6 +38,7 @@ pub async fn replace_selection_with_command(
             &app,
             &format!("{COMMAND_ACTION_PREFIX}{command_id}"),
             selection_replace::TriggerWait::Now,
+            selection_replace::TriggerKind::Replace,
         )
     })
     .await?

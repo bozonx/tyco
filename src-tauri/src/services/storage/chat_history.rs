@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::AppHandle;
 
-use super::json_files::{read_json, remove_file_if_exists, write_json};
+use super::json_files::{remove_file_if_exists, write_json};
 use super::paths::app_data_sub_dir;
 use super::DAY_MS;
 use crate::errors::AppError;
@@ -179,8 +179,11 @@ pub fn save_chat(
         .locked()
         .persist(&chat_image_directory(chats_dir), &chat)?;
 
-    upsert_chat_index(&mut history, &chat);
+    // the chat being saved stays, whatever date its last message has: its
+    // file is written either way, and dropping it from the index would
+    // have the orphan cleanup delete it right away
     policy.drop_expired(&mut history, now_ms());
+    upsert_chat_index(&mut history, &chat);
     commit_chat_transaction(
         chats_dir,
         PendingChatTransaction {
@@ -200,23 +203,58 @@ fn upsert_chat_index(history: &mut Vec<ChatSummary>, chat: &Chat) {
 }
 
 pub fn read_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError> {
-    let chat_file_path = chats_dir.join(format!("{}.json", validate_chat_id(&id)?));
-
-    if !chat_file_path.exists() {
+    let path = chats_dir.join(format!("{}.json", validate_chat_id(&id)?));
+    let Some(raw) = read_chat_bytes(&path)? else {
         return Ok(None);
-    }
+    };
+    parse_stored_chat(&path, &raw).map(Some)
+}
 
-    let chat = read_json(
-        &chat_file_path,
-        Chat {
-            id,
-            title: String::new(),
-            last_message_at_ms: 0,
-            messages: Vec::new(),
-        },
-    )?;
-    validate_stored_chat_id(&chat_file_path, &chat)?;
-    Ok(Some(chat))
+/// The bytes of a chat file; `None` when there is none.
+fn read_chat_bytes(path: &Path) -> Result<Option<Vec<u8>>, AppError> {
+    match fs::read(path) {
+        Ok(raw) => Ok(Some(raw)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error.into()),
+    }
+}
+
+fn parse_stored_chat(path: &Path, raw: &[u8]) -> Result<Chat, AppError> {
+    let chat: Chat = serde_json::from_slice(raw)?;
+    validate_stored_chat_id(path, &chat)?;
+    Ok(chat)
+}
+
+/// Reads a chat to open it. A file that cannot be parsed, or holds another
+/// chat, is set aside the way a rebuild of the index sets it aside, and its
+/// chat leaves the index: it would otherwise stay listed without ever
+/// opening. Changes the index, so it runs under the chat history lock.
+pub(super) fn open_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError> {
+    let path = chats_dir.join(format!("{}.json", validate_chat_id(&id)?));
+    let Some(raw) = read_chat_bytes(&path)? else {
+        return Ok(None);
+    };
+    match parse_stored_chat(&path, &raw) {
+        Ok(chat) => Ok(Some(chat)),
+        Err(error) => {
+            let copy = crate::services::atomic_file::quarantine(&path)?;
+            log::warn!(
+                "Chat file {} is unreadable ({error}); moved it to {}",
+                path.display(),
+                copy.display()
+            );
+            let mut history = list_chats(chats_dir)?;
+            history.retain(|item| item.id != id);
+            commit_chat_transaction(
+                chats_dir,
+                PendingChatTransaction {
+                    history,
+                    chat: None,
+                },
+            )?;
+            Ok(None)
+        }
+    }
 }
 
 /// Gives a stored chat another title. Neither its messages nor its place in
@@ -611,6 +649,46 @@ mod tests {
         fs::write(dir.join(CHAT_TRANSACTION_FILE), "{").unwrap();
         assert!(load_chat_index(&dir).is_err());
         assert!(dir.join("kept.json").exists());
+    }
+
+    #[test]
+    fn an_unreadable_chat_is_set_aside_and_leaves_the_index() {
+        let dir = TestDir::new("open-broken-chat");
+        let images = Mutex::new(ChatImageStore::default());
+        for id in ["kept", "broken"] {
+            save_chat(&dir, enabled_policy(), &images, chat_item(id)).unwrap();
+        }
+        fs::write(dir.join("broken.json"), b"{\"id\": ").unwrap();
+        assert!(read_chat(&dir, "broken".into()).is_err());
+
+        assert!(open_chat(&dir, "broken".into()).unwrap().is_none());
+
+        let ids: Vec<_> = list_chats(&dir)
+            .unwrap()
+            .into_iter()
+            .map(|item| item.id)
+            .collect();
+        assert_eq!(ids, ["kept"]);
+        let kept_aside = fs::read_dir(&*dir).unwrap().any(|entry| {
+            let name = entry.unwrap().file_name();
+            name.to_string_lossy().starts_with("broken.json.broken-")
+        });
+        assert!(kept_aside);
+        assert_eq!(open_chat(&dir, "kept".into()).unwrap().unwrap().id, "kept");
+    }
+
+    #[test]
+    fn saving_a_chat_past_the_retention_period_keeps_it() {
+        let dir = TestDir::new("save-expired-chat");
+        let images = Mutex::new(ChatImageStore::default());
+        let policy = ChatHistoryPolicy {
+            is_enabled: true,
+            retention_days: 30,
+        };
+        // a chat whose last message is from 1970, e.g. one only renamed
+        save_chat(&dir, policy, &images, chat_item("old")).unwrap();
+        assert_eq!(list_chats(&dir).unwrap().len(), 1);
+        assert!(dir.join("old.json").exists());
     }
 
     #[test]

@@ -8,16 +8,6 @@ use serde::Serialize;
 use crate::errors::AppError;
 use crate::services::atomic_file::write_private;
 
-/// The value in `path`, or `fallback` when there is no such file.
-pub(super) fn read_json<T: DeserializeOwned>(path: &Path, fallback: T) -> Result<T, AppError> {
-    let raw = match fs::read_to_string(path) {
-        Ok(raw) => raw,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(fallback),
-        Err(error) => return Err(error.into()),
-    };
-    Ok(serde_json::from_str(&raw)?)
-}
-
 pub(super) fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), AppError> {
     write_private(path, &serde_json::to_string_pretty(value)?)
 }
@@ -73,7 +63,6 @@ pub(super) fn remove_file_if_exists(path: &Path) -> Result<(), AppError> {
 mod tests {
     use super::*;
     use crate::services::storage::test_support::TestDir;
-    use serde_json::{json, Value};
     use std::path::PathBuf;
 
     #[test]
@@ -116,12 +105,5 @@ mod tests {
         let items: Vec<String> = read_jsonl(&PathBuf::from("/nonexistent/history.jsonl")).unwrap();
 
         assert!(items.is_empty());
-    }
-
-    #[test]
-    fn read_json_returns_the_fallback_for_a_missing_file() {
-        let value: Value = read_json(&PathBuf::from("/nonexistent/state.json"), json!({})).unwrap();
-
-        assert_eq!(value, json!({}));
     }
 }

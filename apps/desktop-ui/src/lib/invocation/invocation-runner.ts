@@ -158,7 +158,9 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
           ? finish(result)
           : showOutput(result.content, result.sourceText ?? '')
       case 'copyToClipboard':
-        return copyOutput(result.content ?? '', result.keepWindow)
+        return result.content === undefined
+          ? finish(result)
+          : copyOutput(result.content, result.keepWindow)
       case 'none':
         return finish(result)
     }

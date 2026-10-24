@@ -19,6 +19,7 @@ export interface AppStateSyncDependencies {
   patchLastMode: (mode: ActivationMode) => Promise<unknown>
   replaceEditorValue: (text: string) => void
   focusEditor: () => void
+  getEditorValue: () => string
   startChatWithAttachment: CapturedChatSelectionDependencies['startChatWithAttachment']
   getEditorSelection: () => string | undefined
   reportError: (error: unknown) => void
@@ -29,6 +30,7 @@ export function createAppStateSync(deps: AppStateSyncDependencies) {
   const capturedSelection = createCapturedSelection({
     replaceValue: deps.replaceEditorValue,
     focus: deps.focusEditor,
+    getValue: deps.getEditorValue,
   })
   const capturedChat = createCapturedChatSelection({
     startChatWithAttachment: deps.startChatWithAttachment,

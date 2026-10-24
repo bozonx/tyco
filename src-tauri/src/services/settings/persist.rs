@@ -9,7 +9,9 @@ use super::defaults::default_user_config;
 use super::{schema, version};
 use crate::errors::AppError;
 use crate::models::CONFIG_FILE_NAME;
-use crate::services::atomic_file::{preserve_copy, read_or_quarantine, write_private};
+use crate::services::atomic_file::{
+    preserve_broken_copy, preserve_copy, read_or_quarantine, write_private,
+};
 use crate::services::storage::app_config_dir;
 
 /// The user config the app starts with.
@@ -119,18 +121,30 @@ pub fn save_user_config(app: &AppHandle, user_config: &Value) -> Result<(), AppE
 }
 
 /// Writes the config unless a newer Tyco wrote the file on the disk. Edits
-/// made by hand are not kept: the file belongs to the app.
+/// made by hand are not kept: the file belongs to the app. A file broken
+/// meanwhile, e.g. by a hand edit, is kept aside and replaced: the config in
+/// memory is valid, and refusing every save, rollbacks included, would not
+/// get the file fixed.
 fn write_user_config(path: &Path, user_config: &Value) -> Result<(), AppError> {
     debug_assert!(schema::validate_user_config(user_config).is_ok());
-    let previous = match fs::read_to_string(path) {
+    let previous = match fs::read(path) {
         Ok(raw) => Some(raw),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => return Err(error.into()),
     };
     if let Some(raw) = previous {
-        let original: Value = serde_json::from_str(&raw)?;
-        if version::is_newer_than_supported(&original) {
-            return Err(newer_config_error());
+        match serde_json::from_slice::<Value>(&raw) {
+            Ok(original) if version::is_newer_than_supported(&original) => {
+                return Err(newer_config_error());
+            }
+            Ok(_) => {}
+            Err(error) => {
+                let copy = preserve_broken_copy(path, &raw)?;
+                log::warn!(
+                    "The config on the disk is unreadable ({error}); kept it at {} and wrote the current one",
+                    copy.display()
+                );
+            }
         }
     }
     write_json(path, user_config)
@@ -228,6 +242,24 @@ mod tests {
         fs::write(&path, &raw).unwrap();
         assert!(load_user_config_at(&path).is_err());
         assert_eq!(fs::read_to_string(&path).unwrap(), raw);
+    }
+
+    #[test]
+    fn a_file_broken_while_running_is_kept_aside_and_replaced() {
+        let dir = TestDir::new("config-broken-on-save");
+        let path = dir.join(CONFIG_FILE_NAME);
+        let config = default_user_config();
+        for broken in [&b"{\"appearance\": "[..], &[0xff, 0xfe][..]] {
+            fs::write(&path, broken).unwrap();
+            write_user_config(&path, &config).unwrap();
+            let saved: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+            assert_eq!(saved, config);
+            let kept = fs::read_dir(&*dir)
+                .unwrap()
+                .map(|entry| entry.unwrap().path())
+                .any(|copy| copy != path && fs::read(&copy).unwrap() == broken);
+            assert!(kept, "the broken bytes are kept");
+        }
     }
 
     #[test]

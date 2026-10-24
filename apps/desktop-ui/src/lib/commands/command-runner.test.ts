@@ -575,6 +575,25 @@ describe('the output of a command', () => {
     )
   })
 
+  it('reports a tool without output instead of an empty copy', async () => {
+    const copyText = vi.fn(async () => {})
+    const tool: ToolDefinition = {
+      ...echo('unused'),
+      run: vi.fn(async () => ({ ok: true, messageKey: 'toast.saved' })),
+    }
+    const { deps, runner } = setup({ copyText }, [tool])
+    expect(await runner.run(command('copyToClipboard'), 'x')).toEqual({
+      success: true,
+    })
+    expect(copyText).not.toHaveBeenCalled()
+    expect(deps.showToast).toHaveBeenCalledWith('toast.saved', 'success')
+    expect(deps.showToast).not.toHaveBeenCalledWith(
+      'toast.actionEmptyOutput',
+      'warn'
+    )
+    expect(deps.hideWindow).toHaveBeenCalled()
+  })
+
   it('returns the output for a selection run and reports nothing', async () => {
     const { deps, runner } = setup({}, [echo('Hello')])
     expect(

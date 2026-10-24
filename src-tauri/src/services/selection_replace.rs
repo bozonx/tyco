@@ -9,7 +9,7 @@ mod hotkey_release;
 #[cfg(test)]
 mod tests;
 
-pub use coordinator::SelectionRunCoordinator;
+pub use coordinator::{SelectionRunCoordinator, TriggerKind};
 pub use hotkey_release::{hotkey_released, HotkeyPress};
 
 use self::coordinator::{cancel_with, SelectionBackend, TriggerDecision};
@@ -184,41 +184,53 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
     }
 }
 
-/// Starts an action, or cancels the current hotkey run on a second trigger.
-pub fn trigger(app: &AppHandle, action: &str, wait: TriggerWait) -> Result<(), AppError> {
+/// Starts an action. A run already in progress is cancelled: by a hotkey
+/// pressed again, which starts nothing, see `TriggerKind`.
+pub fn trigger(
+    app: &AppHandle,
+    action: &str,
+    wait: TriggerWait,
+    kind: TriggerKind,
+) -> Result<(), AppError> {
     if app.state::<AppState>().is_quitting() {
         return Err(AppError::ServiceUnavailable(
             "Selection service is stopping".into(),
         ));
     }
-    let decision = app
-        .state::<SelectionRunCoordinator>()
-        .begin_trigger(action, Instant::now())?;
-    match decision {
+    let decision =
+        app.state::<SelectionRunCoordinator>()
+            .begin_trigger(action, kind, Instant::now())?;
+    let (guard, abandoned) = match decision {
         TriggerDecision::Busy => {
-            log::debug!("Ignoring the {action} trigger: a selection is being captured")
+            log::debug!("Ignoring the {action} trigger: a selection is being captured");
+            return Ok(());
         }
-        TriggerDecision::Cancel(run, _guard) => cancel_with(&SystemSelectionBackend(app), run),
-        TriggerDecision::Capture(guard, abandoned) => {
-            let app = app.clone();
-            let action = action.to_owned();
-            let services = app.state::<super::background::BackgroundServices>();
-            let handle = app.clone();
-            services.spawn_thread("selection-run", move |stop| {
-                if stop.is_stopped() {
-                    return;
-                }
-                let app = handle;
-                app.state::<SelectionRunCoordinator>().capture_and_publish(
-                    &SystemSelectionBackend(&app),
-                    action,
-                    wait,
-                    guard,
-                    abandoned,
-                );
-            })?;
+        TriggerDecision::Cancel(run, _guard) => {
+            cancel_with(&SystemSelectionBackend(app), run);
+            return Ok(());
         }
-    }
+        TriggerDecision::Replace(run, guard) => {
+            cancel_with(&SystemSelectionBackend(app), run);
+            (guard, None)
+        }
+        TriggerDecision::Capture(guard, abandoned) => (guard, abandoned),
+    };
+    let action = action.to_owned();
+    let handle = app.clone();
+    app.state::<super::background::BackgroundServices>()
+        .spawn_thread("selection-run", move |stop| {
+            if stop.is_stopped() {
+                return;
+            }
+            let app = handle;
+            app.state::<SelectionRunCoordinator>().capture_and_publish(
+                &SystemSelectionBackend(&app),
+                action,
+                wait,
+                guard,
+                abandoned,
+            );
+        })?;
     Ok(())
 }
 
@@ -231,7 +243,7 @@ pub fn shutdown(app: &AppHandle) {
 
 pub fn prepare_external(app: &AppHandle) -> Result<(u64, String), AppError> {
     app.state::<SelectionRunCoordinator>()
-        .prepare_external_with(&SystemSelectionBackend(app))
+        .prepare_external_with(&SystemSelectionBackend(app), Instant::now())
 }
 
 pub fn finish(

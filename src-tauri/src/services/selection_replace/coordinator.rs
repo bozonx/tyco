@@ -88,9 +88,21 @@ impl Drop for CapturingGuard {
     }
 }
 
+/// What a trigger does to a run already in progress.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TriggerKind {
+    /// A hotkey: pressing it again cancels the run it started.
+    Toggle,
+    /// A request for this action, e.g. a command picked in the overlay: it
+    /// takes the place of a run in progress.
+    Replace,
+}
+
 pub(super) enum TriggerDecision {
     Busy,
     Cancel(SelectionRun, CapturingGuard),
+    /// Cancel this run, then capture anew.
+    Replace(SelectionRun, CapturingGuard),
     /// With a run the webview abandoned, whose clipboard goes back first.
     Capture(CapturingGuard, Option<SelectionRun>),
 }
@@ -104,6 +116,7 @@ impl SelectionRunCoordinator {
     pub(super) fn begin_trigger(
         &self,
         action: &str,
+        kind: TriggerKind,
         now: Instant,
     ) -> Result<TriggerDecision, AppError> {
         if !is_selection_action(action) {
@@ -121,7 +134,10 @@ impl SelectionRunCoordinator {
             ));
         }
         match self.take_active_at(now) {
-            SelectionRunTakeOutcome::Active(run) => Ok(TriggerDecision::Cancel(run, guard)),
+            SelectionRunTakeOutcome::Active(run) => Ok(match kind {
+                TriggerKind::Toggle => TriggerDecision::Cancel(run, guard),
+                TriggerKind::Replace => TriggerDecision::Replace(run, guard),
+            }),
             SelectionRunTakeOutcome::Empty => Ok(TriggerDecision::Capture(guard, None)),
             SelectionRunTakeOutcome::Abandoned(run) => {
                 Ok(TriggerDecision::Capture(guard, Some(run)))
@@ -183,12 +199,31 @@ impl SelectionRunCoordinator {
     pub(super) fn prepare_external_with(
         &self,
         backend: &impl SelectionBackend,
+        now: Instant,
     ) -> Result<(u64, String), AppError> {
         let _guard = self
             .reserve()
             .ok_or_else(|| AppError::Busy("A selection is being captured".into()))?;
-        if self.lock().is_some() {
-            return Err(AppError::Busy("A selection run is already active".into()));
+        // a run the webview abandoned must not keep external jobs out for good
+        let abandoned = {
+            let mut current = self.lock();
+            match current.as_ref() {
+                None => None,
+                Some(run)
+                    if !run.is_external
+                        && now.saturating_duration_since(run.started_at) >= ABANDONED_RUN_AGE =>
+                {
+                    log::warn!(
+                        "Dropping selection run {} the webview never finished",
+                        run.id
+                    );
+                    current.take()
+                }
+                Some(_) => return Err(AppError::Busy("A selection run is already active".into())),
+            }
+        };
+        if let Some(run) = abandoned {
+            backend.restore(run);
         }
         let (text, mut run) = backend
             .capture(&backend.user_config())

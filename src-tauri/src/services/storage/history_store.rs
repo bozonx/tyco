@@ -233,7 +233,7 @@ pub fn read_chat(
 ) -> Result<Option<Chat>, AppError> {
     with_chats(app, scope, |_, chats_dir| {
         chats::recover_chat_transaction(chats_dir)?;
-        let chat = chats::read_chat(chats_dir, id)?;
+        let chat = chats::open_chat(chats_dir, id)?;
         if let Some(chat) = &chat {
             load_chat_images(
                 &app.state::<ChatImages>(),

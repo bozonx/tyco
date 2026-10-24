@@ -54,6 +54,13 @@ impl ActivationCoordinator {
         }))
     }
 
+    /// Discards the captures still running: the window now shows something
+    /// other than what they were started for, e.g. the main window opened
+    /// from the tray or with a transferred text.
+    pub fn invalidate(&self) {
+        *self.generation.locked() += 1;
+    }
+
     /// Serialize publication with invalidation by a newer activation.
     pub fn publish(
         &self,
@@ -241,6 +248,19 @@ mod tests {
             .publish(&old, || {
                 panic!("failed activation left an old capture valid")
             })
+            .unwrap();
+    }
+
+    #[test]
+    fn showing_another_view_discards_a_running_capture() {
+        let coordinator = ActivationCoordinator::default();
+        let request = coordinator
+            .begin(&Host::default(), activation(ActivationMode::QuickInput))
+            .unwrap()
+            .unwrap();
+        coordinator.invalidate();
+        coordinator
+            .publish(&request, || panic!("stale capture published"))
             .unwrap();
     }
 

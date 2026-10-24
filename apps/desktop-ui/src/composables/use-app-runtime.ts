@@ -159,6 +159,7 @@ export function useAppRuntime() {
     patchLastMode: (lastMode) => desktopStore.patchSessionState({ lastMode }),
     replaceEditorValue: editorInputStore.replaceValue,
     focusEditor: editorInputStore.requestFocus,
+    getEditorValue: () => editorInputStore.value,
     startChatWithAttachment: (attachment) =>
       chatStore
         .startChat({ attachments: [attachment] })

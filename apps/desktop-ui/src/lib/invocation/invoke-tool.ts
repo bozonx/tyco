@@ -145,7 +145,11 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
       if (signal.aborted || isPluginCancellation(error))
         return { ok: false, cancelled: true }
       if (isPluginError(error))
-        return { ok: false, messageKey: error.messageKey }
+        return {
+          ok: false,
+          messageKey: error.messageKey,
+          failure: error.messageKey,
+        }
       const message = errorMessage(error)
       return {
         ok: false,

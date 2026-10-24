@@ -5,7 +5,8 @@ use std::time::{Duration, Instant};
 use serde_json::Value;
 
 use super::coordinator::{
-    cancel_with, SelectionBackend, SelectionRunTakeOutcome, TriggerDecision, ABANDONED_RUN_AGE,
+    cancel_with, SelectionBackend, SelectionRunTakeOutcome, TriggerDecision, TriggerKind,
+    ABANDONED_RUN_AGE,
 };
 use super::*;
 use crate::services::platform::selection::is_terminal_class;
@@ -168,8 +169,9 @@ impl SelectionBackend for Backend {
 }
 
 fn start(runs: &SelectionRunCoordinator, backend: &Backend) -> u64 {
-    let TriggerDecision::Capture(guard, None) =
-        runs.begin_trigger("correction", Instant::now()).unwrap()
+    let TriggerDecision::Capture(guard, None) = runs
+        .begin_trigger("correction", TriggerKind::Toggle, Instant::now())
+        .unwrap()
     else {
         panic!("capture expected");
     };
@@ -220,7 +222,8 @@ fn failed_publication_restores_only_its_capture_and_releases_the_reservation() {
         ["wait", "capture", "publish", "restore:1"]
     );
     assert!(matches!(
-        runs.begin_trigger("correction", Instant::now()).unwrap(),
+        runs.begin_trigger("correction", TriggerKind::Toggle, Instant::now())
+            .unwrap(),
         TriggerDecision::Capture(..)
     ));
 }
@@ -248,32 +251,40 @@ fn a_second_trigger_cancels_and_keeps_capture_reserved_until_restoration_finishe
     let runs = SelectionRunCoordinator::default();
     let backend = Backend::default();
     start(&runs, &backend);
-    let TriggerDecision::Cancel(run, guard) =
-        runs.begin_trigger("correction", Instant::now()).unwrap()
+    let TriggerDecision::Cancel(run, guard) = runs
+        .begin_trigger("correction", TriggerKind::Toggle, Instant::now())
+        .unwrap()
     else {
         panic!("cancel expected");
     };
     assert!(matches!(
-        runs.begin_trigger("correction", Instant::now()).unwrap(),
+        runs.begin_trigger("correction", TriggerKind::Toggle, Instant::now())
+            .unwrap(),
         TriggerDecision::Busy
     ));
-    assert!(runs.prepare_external_with(&backend).is_err());
+    assert!(runs
+        .prepare_external_with(&backend, Instant::now())
+        .is_err());
     cancel_with(&backend, run);
     drop(guard);
     assert_eq!(
         &backend.operations.lock().unwrap()[3..],
         ["restore:1", "cancel:1"]
     );
-    assert!(runs.prepare_external_with(&backend).is_ok());
+    assert!(runs.prepare_external_with(&backend, Instant::now()).is_ok());
 }
 
 #[test]
 fn external_capture_is_never_cancelled_and_empty_results_restore_the_clipboard() {
     let runs = SelectionRunCoordinator::default();
     let backend = Backend::default();
-    let (id, text) = runs.prepare_external_with(&backend).unwrap();
+    let (id, text) = runs
+        .prepare_external_with(&backend, Instant::now())
+        .unwrap();
     assert_eq!(text, "selected");
-    assert!(runs.begin_trigger("correction", Instant::now()).is_err());
+    assert!(runs
+        .begin_trigger("correction", TriggerKind::Toggle, Instant::now())
+        .is_err());
     assert!(!runs.capturing.load(Ordering::SeqCst));
     assert_eq!(
         runs.finish_with(&backend, id, None).unwrap(),
@@ -299,11 +310,68 @@ fn paste_failure_consumes_the_run_and_is_returned_to_the_caller() {
 #[test]
 fn unwinding_releases_capture_and_invalid_actions_do_not_reserve_it() {
     let runs = SelectionRunCoordinator::default();
-    assert!(runs.begin_trigger("invalid", Instant::now()).is_err());
+    assert!(runs
+        .begin_trigger("invalid", TriggerKind::Toggle, Instant::now())
+        .is_err());
     let result = std::panic::catch_unwind(|| {
         let _guard = runs.reserve().unwrap();
         panic!("capture panic");
     });
     assert!(result.is_err());
     assert!(runs.reserve().is_some());
+}
+
+#[test]
+fn a_requested_action_replaces_the_run_in_progress_instead_of_only_cancelling_it() {
+    let runs = SelectionRunCoordinator::default();
+    let backend = Backend::default();
+    let first = start(&runs, &backend);
+    let TriggerDecision::Replace(run, guard) = runs
+        .begin_trigger("command:fix", TriggerKind::Replace, Instant::now())
+        .unwrap()
+    else {
+        panic!("replace expected");
+    };
+    assert_eq!(run.id, first);
+    cancel_with(&backend, run);
+    runs.capture_and_publish(
+        &backend,
+        "command:fix".into(),
+        TriggerWait::Now,
+        guard,
+        None,
+    );
+    let events = backend.events.lock().unwrap();
+    assert_eq!(events.last().unwrap().action, "command:fix");
+    assert_eq!(runs.lock().as_ref().map(|run| run.id), Some(first + 1));
+    assert_eq!(
+        &backend.operations.lock().unwrap()[3..],
+        ["restore:1", "cancel:1", "wait", "capture", "publish"]
+    );
+}
+
+#[test]
+fn an_abandoned_run_does_not_keep_external_jobs_out() {
+    let runs = SelectionRunCoordinator::default();
+    let backend = Backend::default();
+    let started = Instant::now();
+    runs.lock().replace(run_at(4, started));
+    assert!(runs
+        .prepare_external_with(
+            &backend,
+            started + ABANDONED_RUN_AGE - Duration::from_secs(1)
+        )
+        .is_err());
+    let (id, _) = runs
+        .prepare_external_with(&backend, started + ABANDONED_RUN_AGE)
+        .unwrap();
+    assert_eq!(
+        *backend.operations.lock().unwrap(),
+        ["restore:4", "capture"]
+    );
+    // a long external job is never taken for an abandoned one
+    assert!(runs
+        .prepare_external_with(&backend, started + ABANDONED_RUN_AGE * 10)
+        .is_err());
+    assert_eq!(runs.lock().as_ref().map(|run| run.id), Some(id));
 }

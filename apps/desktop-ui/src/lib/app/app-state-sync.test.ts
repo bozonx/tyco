@@ -21,6 +21,7 @@ function fixture(isQuickWindow = false) {
     updateTitle: vi.fn(),
     patchLastMode: vi.fn(async () => {}),
     replaceEditorValue: vi.fn(),
+    getEditorValue: () => '',
     focusEditor: vi.fn(),
     startChatWithAttachment: vi.fn(),
     getEditorSelection: () => '',

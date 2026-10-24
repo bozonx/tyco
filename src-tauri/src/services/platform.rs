@@ -41,7 +41,7 @@ pub use panel_surface::{
 };
 pub use shortcut_settings::{has_shortcut_settings, open_shortcut_settings};
 pub use text_injector::check_text_injection;
-pub(crate) use text_injector::{paste_after_focus, SystemTextInjector, TextInjector};
+pub(crate) use text_injector::{SystemTextInjector, TextInjector};
 pub use titlebar::enable_titlebar_buttons;
 pub use webview::allow_clipboard_read;
 

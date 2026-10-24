@@ -7,11 +7,18 @@ import {
 } from './captured-selection'
 
 function setup() {
-  const replaceValue = vi.fn()
+  const editor = { value: 'Earlier text' }
+  const replaceValue = vi.fn((text: string) => {
+    editor.value = text
+  })
   const focus = vi.fn()
-  const selection = createCapturedSelection({ replaceValue, focus })
+  const selection = createCapturedSelection({
+    replaceValue,
+    focus,
+    getValue: () => editor.value,
+  })
 
-  return { selection, replaceValue, focus }
+  return { selection, replaceValue, focus, editor }
 }
 
 const activation = (
@@ -61,5 +68,17 @@ describe('createCapturedSelection', () => {
     selection.apply(activation({ activationId: 3, selectedText: '  \n' }))
 
     expect(replaceValue).not.toHaveBeenCalled()
+  })
+
+  it('never overwrites what was typed while the selection was captured', () => {
+    const { selection, replaceValue, editor } = setup()
+
+    selection.apply(activation({ selectedText: null }))
+    editor.value = 'Earlier text, and more'
+    expect(selection.apply(activation())).toBe(false)
+    // the next activation starts from the edited text
+    expect(selection.apply(activation({ activationId: 2 }))).toBe(true)
+
+    expect(replaceValue.mock.calls).toEqual([['Selected elsewhere']])
   })
 })
