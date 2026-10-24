@@ -263,7 +263,7 @@ describe('SettingsTranslationsTab.vue', () => {
     expect(context.navigate).toHaveBeenCalledWith('languages')
   })
 
-  it('shows rules only when an AI model reads them and hints glossary limits', async () => {
+  it('shows rules only when an AI model translates and hints glossary limits', async () => {
     const context = createTestSettingsContext(createConfig())
     const wrapper = mount(SettingsTranslationsTab, {
       global: {
@@ -274,7 +274,11 @@ describe('SettingsTranslationsTab.vue', () => {
             template:
               '<section class="section-stub" :data-title="title" :data-info="info" :data-desc="description"><slot /></section>',
           },
-          FieldRow: true,
+          FieldRow: {
+            props: ['label', 'info'],
+            template:
+              '<div class="field-row-stub" :data-label="label" :data-info="info"><slot /></div>',
+          },
           FieldSelect: true,
           FieldInput: true,
           FieldTextArea: true,
@@ -282,15 +286,15 @@ describe('SettingsTranslationsTab.vue', () => {
       },
     })
 
-    const titles = () =>
-      wrapper.findAll('.section-stub').map((s) => s.attributes('data-title'))
     const section = (title: string) =>
       wrapper
         .findAll('.section-stub')
         .find((s) => s.attributes('data-title') === title)
+    const rulesRow = () =>
+      wrapper.find('[data-label="settings.translationRules"]')
 
-    // DeepL without correction never reads the translation instructions.
-    expect(titles()).not.toContain('settings.translationRules')
+    // DeepL without correction never reads translation instructions.
+    expect(rulesRow().exists()).toBe(false)
     const glossarySection = section('settings.translationGlossary')
     expect(glossarySection?.attributes('data-info')).toBe(
       'settings.translationGlossaryInfo'
@@ -299,13 +303,12 @@ describe('SettingsTranslationsTab.vue', () => {
       'settings.translationGlossaryMachineHint'
     )
 
+    // DeepL with correction still does not show translation rules (rules are for LLM translation).
     context.draft.value.translation = createConfig({
       qualityGate: 'onProblems',
     }).translation
     await nextTick()
-    expect(section('settings.translationRules')?.attributes('data-info')).toBe(
-      'settings.translationRulesInfo'
-    )
+    expect(rulesRow().exists()).toBe(false)
     expect(
       section('settings.translationGlossary')?.attributes('data-desc')
     ).toBeFalsy()
@@ -314,7 +317,10 @@ describe('SettingsTranslationsTab.vue', () => {
       provider: 'llm',
     }).translation
     await nextTick()
-    expect(titles()).toContain('settings.translationRules')
+    expect(rulesRow().exists()).toBe(true)
+    expect(rulesRow().attributes('data-info')).toBe(
+      'settings.translationRulesInfo'
+    )
   })
 
   it('hides deepl plan and api key when llm provider is selected', () => {

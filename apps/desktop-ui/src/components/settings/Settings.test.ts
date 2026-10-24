@@ -484,14 +484,12 @@ describe('Settings.vue', () => {
       },
     })
 
-    await selectTab(wrapper, 'settings.sttTab')
+    await selectTab(wrapper, 'settings.sttNavTab')
 
     const sections = wrapper.findAll('.settings-section-stub')
     expect(sections).toHaveLength(2)
     expect(sections[0].attributes('data-title')).toBeFalsy()
-    expect(sections[1].attributes('data-title')).toBe(
-      'settings.sttLlmFormatting'
-    )
+    expect(sections[1].attributes('data-title')).toBeFalsy()
     expect(
       sections[1].find('[data-label="settings.formatWithLlm"]').exists()
     ).toBe(true)

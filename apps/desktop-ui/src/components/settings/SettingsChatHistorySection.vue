@@ -2,7 +2,7 @@
   <SettingsSection :title="t('settings.sectionChatHistory')">
     <FieldRow
       :label="t('settings.chatHistoryEnabled')"
-      :hint="t('settings.chatHistoryEnabledHint')"
+      :info="t('settings.chatHistoryEnabledInfo')"
       inline
     >
       <FieldSwitch
@@ -26,26 +26,20 @@
       />
     </FieldRow>
 
-    <FieldRow :label="t('history.clear')" inline>
+    <FieldRow
+      :label="t('history.clear')"
+      :hint="t('settings.chatCount', { count: chatCount })"
+      inline
+    >
       <Button
         size="sm"
         variant="ghost"
         icon="mdi:trash-can-outline"
         @click="showClearModal = true"
       >
-        {{ t('history.clear') }}
+        {{ t('settings.deleteAllChats') }}
       </Button>
     </FieldRow>
-
-    <ConfirmModal
-      :open="showDisableModal"
-      :title="t('settings.disableChatHistoryConfirmTitle')"
-      :message="t('settings.disableChatHistoryConfirmDialog')"
-      :confirm-text="t('settings.disableChatHistoryConfirmButton')"
-      danger
-      @confirm="onDisable"
-      @cancel="showDisableModal = false"
-    />
 
     <ConfirmModal
       :open="showClearModal"
@@ -60,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, unref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -86,6 +80,12 @@ const historyStore = useHistoryStore()
 
 const history = computed(() => userConfig.value.chat.history)
 
+onMounted(() => {
+  void historyStore.loadChatHistory?.()
+})
+
+const chatCount = computed(() => unref(historyStore.chatHistory)?.length ?? 0)
+
 const showClearModal = ref(false)
 
 async function onClear() {
@@ -94,25 +94,10 @@ async function onClear() {
   toastKey('history.cleared', 'info')
 }
 
-const showDisableModal = ref(false)
+const isHistoryChecked = computed(() => isChatHistoryEnabled(userConfig.value))
 
-/** Shown off while the user confirms turning it off */
-const isHistoryChecked = computed(
-  () => isChatHistoryEnabled(userConfig.value) && !showDisableModal.value
-)
-
-/** Turning it off deletes the saved chats, so it asks first */
 function setHistoryEnabled(isEnabled: boolean) {
-  if (isEnabled) {
-    history.value.storage = 'disk'
-    return
-  }
-  showDisableModal.value = true
-}
-
-function onDisable() {
-  showDisableModal.value = false
-  history.value.storage = 'off'
+  history.value.storage = isEnabled ? 'disk' : 'off'
 }
 
 function setRetentionDays(value: number | string | undefined) {

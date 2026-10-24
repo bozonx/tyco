@@ -85,7 +85,7 @@ describe('translation settings model', () => {
     expect(model.providerSecretId.value).toBe('translation.google')
     expect(model.hasProviderKey.value).toBe(true)
     expect(deps.hasSecret).toHaveBeenCalledWith('translation.google')
-    model.updateQualityGate('off')
+    model.updateQualityGate('always')
     expect(model.usesTranslationRules.value).toBe(false)
     model.updateGlossary('!TyCo')
     expect(model.glossaryText.value).toBe('!TyCo')

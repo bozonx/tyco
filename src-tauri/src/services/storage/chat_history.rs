@@ -367,14 +367,13 @@ impl ChatHistoryPolicy {
     }
 }
 
-/// Brings the stored chats in line with the settings: all of them go when the
-/// history is off, the expired ones otherwise.
+/// Brings the stored chats in line with the settings: expired ones are dropped.
 pub(super) fn enforce_chat_history_policy(
     chats_dir: &Path,
     policy: ChatHistoryPolicy,
 ) -> Result<(), AppError> {
     if !policy.is_enabled {
-        return clear_chats(chats_dir);
+        return Ok(());
     }
 
     let mut history = list_chats(chats_dir)?;
@@ -788,6 +787,21 @@ mod tests {
         policy(30).drop_expired(&mut history, now);
         let ids: Vec<_> = history.iter().map(|item| item.id.as_str()).collect();
         assert_eq!(ids, ["fresh", "recent"]);
+    }
+
+    #[test]
+    fn chat_history_policy_disabled_does_not_clear_chats() {
+        let dir = TestDir::new("policy-disabled-keeps-chats");
+        let chat = chat_item("chat-1");
+        write_json(&dir.join(format!("{}.json", chat.id)), &chat).unwrap();
+        write_json(&dir.join(CHAT_INDEX_FILE), &[ChatSummary::from(&chat)]).unwrap();
+
+        let policy = ChatHistoryPolicy {
+            is_enabled: false,
+            retention_days: 0,
+        };
+        enforce_chat_history_policy(&dir, policy).unwrap();
+        assert_eq!(list_chats(&dir).unwrap().len(), 1);
     }
 
     #[cfg(unix)]

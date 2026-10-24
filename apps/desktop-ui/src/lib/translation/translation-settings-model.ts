@@ -102,9 +102,7 @@ export function createTranslationSettingsModel(deps: {
     }
   )
   const usesTranslationRules = computed(
-    () =>
-      translation.value.provider === 'llm' ||
-      translation.value.qualityGate !== 'off'
+    () => translation.value.provider === 'llm'
   )
   function updateProvider(value: string | number | undefined) {
     deps.setConfig(

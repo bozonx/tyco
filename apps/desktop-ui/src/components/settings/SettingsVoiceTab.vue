@@ -53,7 +53,7 @@
       </FieldRow>
     </SettingsSection>
 
-    <SettingsSection :title="t('settings.sttLlmFormatting')">
+    <SettingsSection>
       <FieldRow :label="t('settings.formatWithLlm')">
         <FieldSwitch v-model="userConfig.stt.isVoiceCorrectionEnabled" />
       </FieldRow>

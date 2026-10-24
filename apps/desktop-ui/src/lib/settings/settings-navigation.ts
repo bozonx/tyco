@@ -38,6 +38,7 @@ export const SETTINGS_NAVIGATION_GROUPS = [
       {
         id: 'stt',
         labelKey: 'settings.sttTab',
+        navigationLabelKey: 'settings.sttNavTab',
         icon: 'mdi:microphone-outline',
       },
       { id: 'chat', labelKey: 'settings.chat', icon: 'mdi:chat-outline' },

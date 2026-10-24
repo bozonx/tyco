@@ -33,12 +33,16 @@
         <SecretStorageNotice class="mt-2" />
       </FieldRow>
 
-      <SettingsTaskModel
-        v-if="
-          translation.provider === 'llm' || translation.qualityGate !== 'off'
-        "
-        task="translation"
-      />
+      <template v-if="usesTranslationRules">
+        <SettingsTaskModel task="translation" />
+        <FieldRow
+          :label="t('settings.translationRules')"
+          :info="t('settings.translationRulesInfo')"
+          vertical
+        >
+          <FieldTextArea v-model="userConfig.llm.tasks.translation.rule" />
+        </FieldRow>
+      </template>
 
       <FieldRow
         :label="t('settings.translationCorrection')"
@@ -65,6 +69,11 @@
         </div>
       </FieldRow>
 
+      <SettingsTaskModel
+        v-if="!usesTranslationRules && translation.qualityGate !== 'off'"
+        task="translation"
+      />
+
       <FieldRow
         v-if="translation.qualityGate === 'always' && qualityGatePromptOpen"
         :label="t('settings.translationCorrectionPrompt')"
@@ -75,14 +84,6 @@
           v-model="userConfig.llm.tasks.translation.qualityGateRule"
         />
       </FieldRow>
-    </SettingsSection>
-
-    <SettingsSection
-      v-if="usesTranslationRules"
-      :title="t('settings.translationRules')"
-      :info="t('settings.translationRulesInfo')"
-    >
-      <FieldTextArea v-model="userConfig.llm.tasks.translation.rule" />
     </SettingsSection>
 
     <SettingsSection

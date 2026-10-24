@@ -94,6 +94,9 @@ describe('settings navigation', () => {
       ['settings.pluginsTab', ['plugins', 'plugin:case']],
     ])
     const [allPlugins, plugin] = groups.at(-1)!.items
+    expect(groups[1].items.find((item) => item.id === 'stt')?.name).toBe(
+      'settings.sttNavTab'
+    )
     expect(allPlugins.name).toBe('settings.allPluginsTab')
     expect(plugin).toMatchObject({
       name: 'Text case',
@@ -138,6 +141,7 @@ describe('settings navigation', () => {
 
   it('titles a page by its section or entity', () => {
     expect(settingsTabTitle('llm', sources)).toBe('settings.llmTab')
+    expect(settingsTabTitle('stt', sources)).toBe('settings.sttTab')
     expect(settingsTabTitle('plugins', sources)).toBe('settings.pluginsTab')
     expect(settingsTabTitle('plugin:case', sources)).toBe('Text case')
     expect(settingsTabTitle('ai-profile:writer', sources)).toBe('Writer')
