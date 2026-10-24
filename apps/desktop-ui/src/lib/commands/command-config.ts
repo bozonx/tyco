@@ -62,6 +62,10 @@ export function webhookToolConfigOf(
   }
 }
 
+/** A text setting of the command's tool, or an empty string */
+export const toolConfigText = (command: CommandConfig, key: string): string =>
+  stringOr(command.toolConfig[key])
+
 export const scriptToolConfig = (command: CommandConfig): ScriptToolConfig =>
   scriptToolConfigOf(command.toolConfig)
 

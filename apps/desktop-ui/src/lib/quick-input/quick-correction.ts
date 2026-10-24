@@ -1,9 +1,12 @@
-export interface QuickCorrectionDependencies {
+import {
+  type TimerDependencies,
+  createSingleTimer,
+} from '../timers/single-timer'
+
+export interface QuickCorrectionDependencies extends TimerDependencies {
   correct: (text: string, signal: AbortSignal) => Promise<string>
   /** Idle time after the last edit before a speculative correction starts */
   precorrectionDelayMs?: number
-  setTimer?: (callback: () => void, ms: number) => unknown
-  clearTimer?: (timer: unknown) => void
 }
 
 export class CorrectionAbortedError extends Error {
@@ -28,22 +31,12 @@ interface CorrectionRun {
  * text shares it, or gets the finished result right away
  */
 export function createQuickCorrection(deps: QuickCorrectionDependencies) {
-  const setTimer = deps.setTimer ?? ((cb, ms) => setTimeout(cb, ms))
-  const clearTimer =
-    deps.clearTimer ??
-    ((timer) => clearTimeout(timer as ReturnType<typeof setTimeout>))
+  const timer = createSingleTimer(deps)
   const precorrectionDelayMs = deps.precorrectionDelayMs ?? 1000
 
   let isDisposed = false
   let activeRun: CorrectionRun | null = null
   let cachedCorrection: { text: string; result: string } | null = null
-  let timer: unknown = null
-
-  const stopTimer = () => {
-    if (timer === null) return
-    clearTimer(timer)
-    timer = null
-  }
 
   const abort = () => {
     activeRun?.controller.abort()
@@ -53,7 +46,7 @@ export function createQuickCorrection(deps: QuickCorrectionDependencies) {
   /** Resolves to the corrected text; rejects when aborted or failed. */
   const request = (text: string): Promise<string> => {
     if (isDisposed) return Promise.reject(new CorrectionAbortedError())
-    stopTimer()
+    timer.stop()
     if (cachedCorrection?.text === text)
       return Promise.resolve(cachedCorrection.result)
     if (activeRun?.text === text) return activeRun.promise
@@ -113,7 +106,7 @@ export function createQuickCorrection(deps: QuickCorrectionDependencies) {
    */
   const schedulePrecorrection = (text: string | null) => {
     if (isDisposed) return
-    stopTimer()
+    timer.stop()
     if (activeRun && activeRun.text !== text) abort()
     if (
       text === null ||
@@ -122,8 +115,7 @@ export function createQuickCorrection(deps: QuickCorrectionDependencies) {
     )
       return
 
-    timer = setTimer(() => {
-      timer = null
+    timer.start(() => {
       // failures are reported by the request that needs the result
       request(text).catch(() => {})
     }, precorrectionDelayMs)
@@ -131,7 +123,7 @@ export function createQuickCorrection(deps: QuickCorrectionDependencies) {
 
   /** Aborts the running correction; a finished one stays reusable. */
   const cancel = () => {
-    stopTimer()
+    timer.stop()
     abort()
   }
 

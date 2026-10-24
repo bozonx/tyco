@@ -9,7 +9,7 @@ import {
   isVoiceCommand,
   voiceInputIssue,
 } from '../lib/voice-commands/voice-resolver'
-import { commandLabel } from '../lib/commands/command-runtime'
+import { commandRunRecord } from '../lib/commands/command-run-record'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
@@ -49,14 +49,7 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
       })
       await ipc
         .call('log_command_run', {
-          record: {
-            commandId: command.id,
-            name: commandLabel(command),
-            source: 'voice',
-            text,
-            success: outcome.success,
-            message: outcome.message,
-          },
+          record: commandRunRecord(command, 'voice', text, outcome),
         })
         .catch(() => undefined)
       return outcome

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
 import { translate } from '../lib/i18n/index'
+import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { describeError } from '../lib/llm/llm-errors'
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { createSelectionReplace } from '../lib/selection-replace/selection-replace'
@@ -31,8 +32,7 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
     transform: (command, text, signal) =>
       runner.transform(command, text, { signal, source: 'selection' }),
     logRun: async (record) => {
-      const result = await ipcStore.call('log_command_run', { record })
-      if (!result.success) throw new Error(result.error ?? 'Command log failed')
+      resultOrThrow(await ipcStore.call('log_command_run', { record }))
     },
     history: historyStore,
     t: translate,
@@ -44,11 +44,11 @@ export const useSelectionReplaceStore = defineStore('selectionReplace', () => {
     runId: number,
     text: string | null
   ): Promise<SelectionFinishStatus> => {
-    const result = await ipcStore.call('finish_selection_run', { runId, text })
-    if (!result.success || !result.result) {
-      throw new Error(result.error || 'finish_selection_run')
-    }
-    return result.result
+    const status = resultOrThrow(
+      await ipcStore.call('finish_selection_run', { runId, text })
+    )
+    if (!status) throw new Error('finish_selection_run')
+    return status
   }
 
   const model = createSelectionReplace({

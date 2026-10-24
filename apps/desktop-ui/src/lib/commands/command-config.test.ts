@@ -27,6 +27,7 @@ import {
   normalizeCommands,
   normalizeLauncherCommands,
   scriptToolConfigOf,
+  toolConfigText,
 } from './command-config'
 import {
   removeCommandReferences,
@@ -438,5 +439,17 @@ describe('commandAfterRun', () => {
     expect(commandAfterRun(command, 'launcher')).toBe('insertIntoWindow')
     expect(commandAfterRun(command, 'menu')).toBe('showMenu')
     expect(commandAfterRun(command, 'external')).toBe('return')
+  })
+})
+
+describe('toolConfigText', () => {
+  it('reads a text setting and takes anything else as empty', () => {
+    const command = {
+      ...createCommand('core.translateTo', 'id1'),
+      toolConfig: { language: 'de-DE', count: 3 },
+    }
+    expect(toolConfigText(command, 'language')).toBe('de-DE')
+    expect(toolConfigText(command, 'count')).toBe('')
+    expect(toolConfigText(command, 'missing')).toBe('')
   })
 })

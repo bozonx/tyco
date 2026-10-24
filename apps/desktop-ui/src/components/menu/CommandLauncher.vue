@@ -23,7 +23,7 @@
         </p>
         <code
           v-if="target"
-          class="launcher-target"
+          class="command-target"
           :title="t('commandLauncher.targetHint')"
         >
           {{ target }}
@@ -360,19 +360,6 @@ onUnmounted(() => {
 
 .launcher-pages-tab {
   margin-left: var(--space-xs);
-}
-
-.launcher-target {
-  flex-shrink: 0;
-  max-height: 4.5rem;
-  overflow: auto;
-  padding: 0.375rem 0.5rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--app-surface-sunken);
-  color: var(--app-text-muted);
-  font-size: var(--text-caption);
-  white-space: pre-wrap;
-  word-break: break-all;
 }
 
 .launcher-prepare {

@@ -6,6 +6,7 @@ import { useLlmStore } from './llm'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
 import { translate } from '../lib/i18n'
 import { createDesktopInsertion } from '../lib/ipc/desktop-insertion'
+import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { describeError } from '../lib/llm/llm-errors'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
@@ -58,8 +59,7 @@ export const useToolsStore = defineStore('tools', () => {
   const coreTools = createCoreTools({
     insertText: pasteIntoTargetAndHide,
     copyText: async (text) => {
-      const result = await ipcStore.call('copy_text', { text })
-      if (!result.success) throw new Error(result.error ?? 'copy_text')
+      resultOrThrow(await ipcStore.call('copy_text', { text }), 'copy_text')
     },
     askInChat: async (text) => {
       if (!askInChatHandler) throw new Error('The chat is not available')

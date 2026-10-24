@@ -34,6 +34,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { findAiTask } from '../../lib/ai-tasks/ai-task-library'
+import { toolConfigText } from '../../lib/commands/command-config'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
@@ -46,11 +47,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ update: [field: string, value: unknown] }>()
 const { t } = useI18n()
-const prompt = computed(() =>
-  typeof props.command.toolConfig.prompt === 'string'
-    ? props.command.toolConfig.prompt
-    : ''
-)
+const prompt = computed(() => toolConfigText(props.command, 'prompt'))
 const aiTaskOptions = computed(() =>
   (props.userConfig?.aiTasks.items ?? []).flatMap((task, index) =>
     task.rule.trim()

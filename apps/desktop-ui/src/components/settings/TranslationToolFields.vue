@@ -17,6 +17,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { toolConfigText } from '../../lib/commands/command-config'
 import { buildLanguageOptions } from '../../lib/locale/language'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -29,11 +30,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ update: [field: string, value: unknown] }>()
 const { t } = useI18n()
-const language = computed(() =>
-  typeof props.command.toolConfig.language === 'string'
-    ? props.command.toolConfig.language
-    : ''
-)
+const language = computed(() => toolConfigText(props.command, 'language'))
 const languageOptions = computed(() => {
   const slots = Object.values(
     props.userConfig?.translation.targetLanguages ?? {}

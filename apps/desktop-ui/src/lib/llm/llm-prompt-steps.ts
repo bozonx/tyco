@@ -1,6 +1,8 @@
 import type { ModelMessage } from '@bozonx/ai-kit'
 import type { ChatMessage, ChatMessagePart } from '@tyco/shared'
 
+import { toolResultsByCallId } from '../chat-tools/chat-message-steps'
+
 type AssistantContent = Exclude<
   Extract<ModelMessage, { role: 'assistant' }>['content'],
   string
@@ -48,11 +50,7 @@ function resultOutput(call: ToolCallPart, result: ToolResultPart | undefined) {
  */
 function toolRounds(message: ChatMessage): ModelMessage[] {
   const parts = message.parts ?? []
-  const results = new Map(
-    parts
-      .filter((part) => part.type === 'tool-result')
-      .map((part) => [part.toolCallId, part])
-  )
+  const results = toolResultsByCallId(parts)
   const rounds: ModelMessage[] = []
   let assistant: AssistantContent = []
   let calls: ToolCallPart[] = []

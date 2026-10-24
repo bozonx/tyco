@@ -1,32 +1,26 @@
-export interface FocusSettleOptions {
+import {
+  type TimerDependencies,
+  createSingleTimer,
+} from '../timers/single-timer'
+
+export interface FocusSettleOptions extends TimerDependencies {
   settleMs?: number
-  setTimer?: (callback: () => void, ms: number) => unknown
-  clearTimer?: (timer: unknown) => void
 }
 
 export function createFocusSettle(options: FocusSettleOptions) {
-  const setTimer =
-    options.setTimer ?? ((callback, ms) => setTimeout(callback, ms))
-  const clearTimer =
-    options.clearTimer ??
-    ((timer) => clearTimeout(timer as ReturnType<typeof setTimeout>))
+  const timer = createSingleTimer(options)
   let generation = 0
-  let timer: unknown = null
 
   const cancel = () => {
     generation += 1
-    if (timer !== null) clearTimer(timer)
-    timer = null
+    timer.stop()
     const currentGeneration = generation
     return () => currentGeneration === generation
   }
 
   const schedule = (run: (isCurrent: () => boolean) => void) => {
     const isCurrent = cancel()
-    timer = setTimer(() => {
-      timer = null
-      run(isCurrent)
-    }, options.settleMs ?? 150)
+    timer.start(() => run(isCurrent), options.settleMs ?? 150)
   }
 
   return { cancel, schedule }

@@ -9,6 +9,7 @@ import { useToastStore } from './toast'
 import { createCommandLauncherModel } from '../lib/command-launcher/launcher-model'
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { translate } from '../lib/i18n/index'
+import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useHistoryStore } from './history'
 import { useDesktopStore } from './desktop'
@@ -43,8 +44,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       await historyStore.saveOutput(text)
     },
     logRun: async (record) => {
-      const result = await ipcStore.call('log_command_run', { record })
-      if (!result.success) throw new Error(result.error)
+      resultOrThrow(await ipcStore.call('log_command_run', { record }))
     },
     replaceSelection: async (command) => {
       const result = await ipcStore.call('replace_selection_with_command', {

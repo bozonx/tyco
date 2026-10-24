@@ -118,6 +118,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { profileIcon } from '../../lib/ai-profiles/profile-icons'
@@ -167,10 +168,7 @@ const editor = createProjectEditor({
     const current = aiProfilesStore.getProject(props.projectId)
     if (current) await aiProfilesStore.saveProject({ ...current, ...fields })
   },
-  reportError: (message, retry) =>
-    toastText(message, 'error', {
-      action: { label: t('common.retry'), run: retry },
-    }),
+  reportError: useRetryToast(),
 })
 const { name, description, isExternal, targetPath, isValid, saveStatus } =
   editor

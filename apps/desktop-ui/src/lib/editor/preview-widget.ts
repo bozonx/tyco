@@ -13,6 +13,13 @@ const renderer = unified()
   .use(remarkRehype)
   .use(rehypeStringify)
 
+/** Puts the cursor at `from` instead of selecting inside a rendered block */
+function moveCursorTo(view: EditorView, from: number, event: Event) {
+  event.preventDefault()
+  view.dispatch({ selection: { anchor: from }, scrollIntoView: true })
+  view.focus()
+}
+
 /** Render complex blocks without creating a second editable document. */
 export class PreviewWidget extends WidgetType {
   constructor(
@@ -60,11 +67,9 @@ export class PreviewWidget extends WidgetType {
       }
     }
     dom.addEventListener('click', (event) => event.preventDefault())
-    dom.addEventListener('mousedown', (event) => {
-      event.preventDefault()
-      view.dispatch({ selection: { anchor: this.from }, scrollIntoView: true })
-      view.focus()
-    })
+    dom.addEventListener('mousedown', (event) =>
+      moveCursorTo(view, this.from, event)
+    )
     return dom
   }
 
@@ -156,9 +161,7 @@ export class CodeBlockHeaderWidget extends WidgetType {
       if (event.target === copyBtn || copyBtn.contains(event.target as Node)) {
         return
       }
-      event.preventDefault()
-      view.dispatch({ selection: { anchor: this.from }, scrollIntoView: true })
-      view.focus()
+      moveCursorTo(view, this.from, event)
     })
 
     return dom

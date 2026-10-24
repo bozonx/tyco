@@ -15,6 +15,7 @@ import {
   commandTakesText,
   isCommandAvailable,
 } from '../commands/command-runtime'
+import { commandRunRecord, logCommandRun } from '../commands/command-run-record'
 import type {
   InvocationOptions,
   InvocationOutcome,
@@ -244,17 +245,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     input: string | null,
     outcome: InvocationOutcome
   ) => {
-    const record: CommandRunRecord = {
-      commandId: command.id,
-      name: commandLabel(command),
-      source,
-      success: outcome.success,
-    }
-    if (input !== null) record.text = input
-    if (outcome.message) record.message = outcome.message
-    void Promise.resolve()
-      .then(() => deps.logRun?.(record))
-      .catch((error: unknown) => deps.reportError?.(error))
+    logCommandRun(deps, commandRunRecord(command, source, input, outcome))
   }
 
   const execute = async (

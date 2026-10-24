@@ -118,10 +118,11 @@ import { useChatScope } from '../../composables/use-chat-scope'
 import { useChatScroll } from '../../composables/use-chat-scroll'
 import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
+import { useInlineVoiceStep } from '../../composables/use-inline-voice-step'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
 import { appNavigation } from '../../navigation'
-import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useSecretsStore } from '../../stores/secrets'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -141,11 +142,7 @@ const { toastKey } = useToast()
 const copyValue = useCopyValue()
 const { t } = useI18n()
 
-const voiceParams = computed(() => {
-  const step = menuModalsStore.currentStep
-  return step?.modal === MenuModals.VOICE_RECOGNITION ? step.params : undefined
-})
-const isInlineVoice = computed(() => Boolean(voiceParams.value?.inline))
+const { voiceParams, isInlineVoice } = useInlineVoiceStep()
 
 const {
   scroller,

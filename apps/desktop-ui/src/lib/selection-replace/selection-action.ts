@@ -5,7 +5,7 @@ import type {
 } from '@tyco/shared'
 
 import { normalizeCommands } from '../commands/command-config'
-import { commandLabel } from '../commands/command-runtime'
+import { commandRunRecord, logCommandRun } from '../commands/command-run-record'
 import type { createHistoryModel } from '../history/history-model'
 import { toolResultMessage } from '../invocation/invocation-result'
 import type { ToolResult } from '../tools/tool-types'
@@ -48,16 +48,13 @@ export function createSelectionAction(deps: SelectionActionDependencies) {
           deps.t('commandLauncher.commandMissing', { id: action.commandId })
         )
       result = await deps.transform(command, text, signal)
-      const record: CommandRunRecord = {
-        commandId: command.id,
-        name: commandLabel(command),
-        source: 'selection',
-        text,
-        success: result.ok,
-      }
-      const message = toolResultMessage(result, deps.t)
-      if (message) record.message = message
-      void deps.logRun(record).catch(deps.reportError)
+      logCommandRun(
+        deps,
+        commandRunRecord(command, 'selection', text, {
+          success: result.ok,
+          message: toolResultMessage(result, deps.t),
+        })
+      )
     }
     if (result.cancelled) throw new SelectionActionAbortedError()
     if (!result.ok)

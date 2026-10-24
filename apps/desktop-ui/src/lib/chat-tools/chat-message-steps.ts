@@ -45,6 +45,17 @@ export function settleUnfinishedToolCalls(message: ChatMessage) {
 type ToolCallPart = Extract<ChatMessagePart, { type: 'tool-call' }>
 type ToolResultPart = Extract<ChatMessagePart, { type: 'tool-result' }>
 
+/** The tool results among the parts, by the id of the call they answer */
+export function toolResultsByCallId(
+  parts: readonly ChatMessagePart[]
+): Map<string, ToolResultPart> {
+  return new Map(
+    parts
+      .filter((part) => part.type === 'tool-result')
+      .map((part) => [part.toolCallId, part])
+  )
+}
+
 /** One block of an answer on screen: its text, or a tool call with its result */
 export type ChatMessageStep =
   | { type: 'text'; text: string }
@@ -57,11 +68,7 @@ export type ChatMessageStep =
 export function messageSteps(message: ChatMessage): ChatMessageStep[] | null {
   const parts = message.parts
   if (!parts?.some((part) => part.type === 'tool-call')) return null
-  const results = new Map(
-    parts
-      .filter((part) => part.type === 'tool-result')
-      .map((part) => [part.toolCallId, part])
-  )
+  const results = toolResultsByCallId(parts)
   return parts.flatMap((part): ChatMessageStep[] => {
     if (part.type === 'text') return part.text ? [part] : []
     if (part.type === 'tool-call')

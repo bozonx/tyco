@@ -105,6 +105,6 @@ describe('selection action', () => {
       'Text',
       'Result'
     )
-    expect(deps.reportError).toHaveBeenCalledTimes(2)
+    await vi.waitFor(() => expect(deps.reportError).toHaveBeenCalledTimes(2))
   })
 })

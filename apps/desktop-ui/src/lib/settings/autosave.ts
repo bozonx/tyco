@@ -1,17 +1,20 @@
 import { errorMessage } from '@tyco/shared/value-guards'
 import { computed, ref, watch, type Ref } from 'vue'
 
+import {
+  type TimerDependencies,
+  createSingleTimer,
+} from '../timers/single-timer'
+
 export type AutosaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error'
 
 /** An autosave waits this long after the last keystroke */
 export const AUTOSAVE_DELAY_MS = 600
 
 /** When an autosave runs; tests pass their own timers */
-export interface AutosaveTimers {
+export interface AutosaveTimers extends TimerDependencies {
   /** Defaults to `AUTOSAVE_DELAY_MS` */
   delayMs?: number
-  setTimer?: (run: () => void, delayMs: number) => unknown
-  clearTimer?: (timer: unknown) => void
 }
 
 export interface AutosaveDependencies extends AutosaveTimers {
@@ -24,17 +27,12 @@ export interface AutosaveDependencies extends AutosaveTimers {
  * made during one is saved after it
  */
 export function createAutosave(deps: AutosaveDependencies) {
-  const setTimer =
-    deps.setTimer ?? ((run, delayMs) => globalThis.setTimeout(run, delayMs))
-  const clearTimer =
-    deps.clearTimer ??
-    ((timer) => globalThis.clearTimeout(timer as ReturnType<typeof setTimeout>))
+  const timer = createSingleTimer(deps)
   const delayMs = deps.delayMs ?? AUTOSAVE_DELAY_MS
   // a save that throws at once fails the way a rejected one does
   const save = async () => deps.save()
   const status = ref<AutosaveStatus>('idle')
   const error = ref('')
-  let timer: unknown = null
   let running: Promise<boolean> | null = null
   let revision = 0
   let changeCount = 0
@@ -76,7 +74,7 @@ export function createAutosave(deps: AutosaveDependencies) {
     }
     if (
       isDirty &&
-      timer === null &&
+      !timer.isPending() &&
       (saved || savingChangeCount !== changeCount)
     )
       return run()
@@ -88,26 +86,18 @@ export function createAutosave(deps: AutosaveDependencies) {
     changeCount += 1
     isDirty = true
     status.value = 'pending'
-    if (timer !== null) clearTimer(timer)
-    timer = setTimer(() => {
-      timer = null
-      void run()
-    }, delayMs)
+    timer.start(() => void run(), delayMs)
   }
 
   /** Saves a waiting change now, e.g. when the page is left */
   const flush = async () => {
-    if (timer !== null) {
-      clearTimer(timer)
-      timer = null
-    }
+    timer.stop()
     return await run()
   }
 
   /** Forgets a waiting change, e.g. of a removed item */
   const cancel = () => {
-    if (timer !== null) clearTimer(timer)
-    timer = null
+    timer.stop()
     isDirty = false
     revision += 1
     status.value = 'idle'

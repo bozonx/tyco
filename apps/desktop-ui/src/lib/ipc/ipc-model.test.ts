@@ -2,7 +2,11 @@ import { DEFAULT_DESKTOP_VIEW_STATE, desktopViewToSnapshot } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createDesktopStateModel } from './desktop-state'
-import { createIpcModel, type IpcModelDependencies } from './ipc-model'
+import {
+  type IpcModelDependencies,
+  createIpcModel,
+  resultOrThrow,
+} from './ipc-model'
 
 function createDeps(
   overrides: Partial<IpcModelDependencies> = {}
@@ -283,4 +287,19 @@ it('keeps the invoking activation while waiting for held keys to release', async
     'paste_into_target_and_hide',
     { text: 'Result', activationId: 10 }
   )
+})
+
+describe('resultOrThrow', () => {
+  it('returns the result of a successful call', () => {
+    expect(resultOrThrow({ success: true, result: 'path' })).toBe('path')
+  })
+
+  it('throws the failure, or the fallback for one without a message', () => {
+    expect(() => resultOrThrow({ success: false, error: 'no vault' })).toThrow(
+      'no vault'
+    )
+    expect(() =>
+      resultOrThrow({ success: false, error: '' }, 'Vault failed')
+    ).toThrow('Vault failed')
+  })
 })

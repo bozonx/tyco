@@ -13,6 +13,7 @@ import type {
 } from '@tyco/shared'
 
 import { commandLabel } from './command-runtime'
+import { commandRunRecord, logCommandRun } from './command-run-record'
 import { normalizeCommands } from './command-config'
 import type {
   InvocationOptions,
@@ -177,17 +178,7 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       else failed(name, outcome.message ?? deps.t('externalCommand.unknown'))
     }
 
-    const record: CommandRunRecord = {
-      commandId: command.id,
-      name,
-      source: 'external',
-      success: outcome.success,
-    }
-    if (input !== null) record.text = input
-    if (outcome.message) record.message = outcome.message
-    void Promise.resolve()
-      .then(() => deps.logRun?.(record))
-      .catch((error: unknown) => deps.reportError?.(error))
+    logCommandRun(deps, commandRunRecord(command, 'external', input, outcome))
     return outcome
   }
 

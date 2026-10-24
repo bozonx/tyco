@@ -86,6 +86,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useQuickWindowSession } from '../../composables/use-quick-window-session'
 import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
+import { resultOrThrow } from '../../lib/ipc/ipc-model'
 import { createFocusLossWatcher } from '../../lib/quick-panel/focus-loss'
 import {
   type InputRegion,
@@ -149,8 +150,7 @@ const INPUT_PARTS = '.write-frame, .write-hint, .voice-bar'
 // lets clicks through to the windows below
 const regionSync = createInputRegionSync({
   apply: async (region) => {
-    const result = await ipcStore.call('set_quick_input_region', { region })
-    if (!result.success) throw new Error(result.error)
+    resultOrThrow(await ipcStore.call('set_quick_input_region', { region }))
   },
 })
 

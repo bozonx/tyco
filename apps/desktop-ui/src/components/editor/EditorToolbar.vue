@@ -24,44 +24,12 @@
       />
       <DropdownMenu :label="t('editor.case')" :items="caseDropdownItems" />
       <DropdownMenu :label="t('editor.format')" :items="formatDropdownItems" />
-      <Button
-        v-for="item in leftToolbarItems"
-        :key="item.id"
-        size="sm"
-        :square="isToolbarItemSquare(labelOf(item))"
-        variant="ghost"
-        :disabled="isToolbarItemDisabled(item, editorInputStore.hasSelection)"
-        :title="scoped(tooltipOf(item))"
-        :aria-label="scoped(tooltipOf(item))"
-        :aria-busy="item.isRunning || undefined"
-        @click="item.action"
-      >
-        <AppIcon v-if="item.icon" :icon="item.icon" size="lg" />
-        <span v-if="labelOf(item)" class="text-sm font-medium leading-none">{{
-          labelOf(item)
-        }}</span>
-      </Button>
+      <EditorToolbarItems :items="leftToolbarItems" />
     </div>
 
     <!-- Right column: plugin items, then Ask AI, AI task, Translation & Insert to window -->
     <div data-testid="editor-toolbar-right" class="flex items-center gap-1">
-      <Button
-        v-for="item in rightToolbarItems"
-        :key="item.id"
-        size="sm"
-        :square="isToolbarItemSquare(labelOf(item))"
-        variant="ghost"
-        :disabled="isToolbarItemDisabled(item, editorInputStore.hasSelection)"
-        :title="scoped(tooltipOf(item))"
-        :aria-label="scoped(tooltipOf(item))"
-        :aria-busy="item.isRunning || undefined"
-        @click="item.action"
-      >
-        <AppIcon v-if="item.icon" :icon="item.icon" size="lg" />
-        <span v-if="labelOf(item)" class="text-sm font-medium leading-none">{{
-          labelOf(item)
-        }}</span>
-      </Button>
+      <EditorToolbarItems :items="rightToolbarItems" />
       <IconButton
         size="sm"
         variant="ghost"
@@ -103,23 +71,15 @@ import { computed } from 'vue'
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
 import { useMarkupMode } from '../../composables/use-markup-mode'
-import {
-  getToolbarLabel,
-  getToolbarTooltip,
-  isToolbarItemDisabled,
-  isToolbarItemSquare,
-  scopedActionLabel,
-} from '../../lib/editor/editor-toolbar-item'
+import { scopedActionLabel } from '../../lib/editor/editor-toolbar-item'
 import { useDesktopStore } from '../../stores/desktop'
 import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useToolbarStore } from '../../stores/toolbar'
-import type { ToolbarItem } from '../../types/plugins'
-import AppIcon from '../common/AppIcon.vue'
-import Button from '../common/Button.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
+import EditorToolbarItems from './EditorToolbarItems.vue'
 
 const emit = defineEmits<{
   'ask-ai': []
@@ -144,24 +104,16 @@ const viewModeTitle = computed(() =>
   )
 )
 
-const caseDropdownItems = computed<DropdownMenuItem[]>(() =>
-  editMenuStore
-    .getCaseItems()
-    .map((item: EditItem) => ({
-      label: getLabel(item),
-      icon: item.icon,
-      action: () => doEdit(item),
-    }))
+const toDropdownItem = (item: EditItem): DropdownMenuItem => ({
+  label: getLabel(item),
+  icon: item.icon,
+  action: () => doEdit(item),
+})
+const caseDropdownItems = computed(() =>
+  editMenuStore.getCaseItems().map(toDropdownItem)
 )
-
-const formatDropdownItems = computed<DropdownMenuItem[]>(() =>
-  editMenuStore
-    .getFormatItems()
-    .map((item: EditItem) => ({
-      label: getLabel(item),
-      icon: item.icon,
-      action: () => doEdit(item),
-    }))
+const formatDropdownItems = computed(() =>
+  editMenuStore.getFormatItems().map(toDropdownItem)
 )
 
 const leftToolbarItems = computed(() => toolbarStore.getLeftToolbarItems())
@@ -169,8 +121,6 @@ const rightToolbarItems = computed(() => toolbarStore.getRightToolbarItems())
 
 const scoped = (label: string) =>
   scopedActionLabel(label, editorInputStore.hasSelection, t)
-const tooltipOf = (item: ToolbarItem) => getToolbarTooltip(item, t)
-const labelOf = (item: ToolbarItem) => getToolbarLabel(item, t)
 </script>
 
 <style scoped>

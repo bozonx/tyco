@@ -71,6 +71,18 @@ export function createPluginManager(deps: PluginManagerDependencies) {
       clearTimeout(timer)
     }
   }
+  /** Runs a cleanup of the plugin `id` within its time limit; reports a failure */
+  async function runCleanup(id: string, cleanup: () => unknown) {
+    try {
+      await bounded(
+        Promise.resolve().then(cleanup),
+        deps.cleanupTimeoutMs ?? 2000,
+        'Plugin cleanup timed out'
+      )
+    } catch (error) {
+      report(id, error)
+    }
+  }
   const isPluginEnabled = (
     id: string,
     userConfig?: { plugins?: Record<string, unknown> }
@@ -89,17 +101,8 @@ export function createPluginManager(deps: PluginManagerDependencies) {
     active.delete(id)
     instance.controller.abort()
     deps.unregisterPlugin(id)
-    for (const cleanup of instance.cleanups.reverse()) {
-      try {
-        await bounded(
-          Promise.resolve().then(cleanup),
-          deps.cleanupTimeoutMs ?? 2000,
-          'Plugin cleanup timed out'
-        )
-      } catch (error) {
-        report(id, error)
-      }
-    }
+    for (const cleanup of instance.cleanups.reverse())
+      await runCleanup(id, cleanup)
   }
   function loadPlugins(userConfig?: { plugins?: Record<string, unknown> }) {
     if (disposed) return Promise.resolve()
@@ -201,17 +204,8 @@ export function createPluginManager(deps: PluginManagerDependencies) {
               // Late completion cannot resurrect a cancelled activation.
               void activation
                 .then(async (cleanup) => {
-                  if (instance.controller.signal.aborted && cleanup) {
-                    try {
-                      await bounded(
-                        Promise.resolve().then(cleanup),
-                        deps.cleanupTimeoutMs ?? 2000,
-                        'Plugin cleanup timed out'
-                      )
-                    } catch (error) {
-                      report(id, error)
-                    }
-                  }
+                  if (instance.controller.signal.aborted && cleanup)
+                    await runCleanup(id, cleanup)
                 })
                 .catch(() => {})
               const cleanup = await bounded(

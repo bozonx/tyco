@@ -209,7 +209,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useChatModelOptions } from '../../composables/use-chat-model-options'
 import { useI18n } from '../../composables/use-i18n'
+import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
@@ -225,17 +227,12 @@ import {
   CHAT_TOOL_GROUPS,
   FILES_TOOL_GROUP_ID,
 } from '../../lib/chat-tools/chat-tool-groups'
-import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
-import { normalizeLlmConfig } from '../../lib/llm/llm-config'
-import { isSecretUsable } from '../../lib/net/secrets'
 import {
   AI_OVERVIEW_TAB,
   NEW_ENTITY_ID,
   profileTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
-import { useDesktopStore } from '../../stores/desktop'
-import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldInput from '../common/FieldInput.vue'
@@ -252,11 +249,7 @@ import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
-import {
-  MAX_PROFILE_TEMPERATURE,
-  type ProjectPermission,
-  llmSecretId,
-} from '@tyco/shared'
+import { MAX_PROFILE_TEMPERATURE, type ProjectPermission } from '@tyco/shared'
 
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
@@ -264,8 +257,6 @@ const { navigate } = useSettingsContext()
 const { t } = useI18n()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
-const desktopStore = useDesktopStore()
-const secretsStore = useSecretsStore()
 
 const isNew = computed(() => props.profileId === NEW_ENTITY_ID)
 const profile = computed(() => aiProfilesStore.getProfile(props.profileId))
@@ -328,10 +319,7 @@ const editor = createProfileEditor({
     aiProfilesStore.updateProfile(props.profileId, patch),
   readSoul: () => aiProfilesStore.readSoul(props.profileId),
   writeSoul: (content) => aiProfilesStore.writeSoul(props.profileId, content),
-  reportError: (message, retry) =>
-    toastText(message, 'error', {
-      action: { label: t('common.retry'), run: retry },
-    }),
+  reportError: useRetryToast(),
 })
 const {
   name,
@@ -399,11 +387,7 @@ function setPermission(projectId: string, permission: ProjectPermission) {
   })
 }
 
-const availableModels = computed(() =>
-  chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
-    isSecretUsable(secretsStore.secrets, llmSecretId(id))
-  )
-)
+const availableModels = useChatModelOptions()
 
 const modelOptions = computed(() =>
   profileModelOptions(availableModels.value, profile.value?.modelId, t)

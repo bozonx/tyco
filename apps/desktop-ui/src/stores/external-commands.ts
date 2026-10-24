@@ -7,6 +7,7 @@ import { onScopeDispose } from 'vue'
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { createExternalRun } from '../lib/commands/external-run'
 import { translate } from '../lib/i18n/index'
+import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useHistoryStore } from './history'
 import { useDesktopStore } from './desktop'
@@ -60,8 +61,7 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
     applyUserConfig: (userConfig) =>
       desktopStore.setExecutionConfig(userConfig),
     logRun: async (record) => {
-      const result = await ipcStore.call('log_command_run', { record })
-      if (!result.success) throw new Error(result.error)
+      resultOrThrow(await ipcStore.call('log_command_run', { record }))
     },
     saveOutput: async (text) => {
       await historyStore.saveOutput(text)
@@ -70,11 +70,9 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
   })
   onScopeDispose(model.dispose)
   const answerAccess = async (jobId: string, decision: AccessDecision) => {
-    const result = await ipcStore.call('answer_external_access', {
-      jobId,
-      decision,
-    })
-    if (!result.success) throw new Error(result.error)
+    resultOrThrow(
+      await ipcStore.call('answer_external_access', { jobId, decision })
+    )
   }
   return { ...model, answerAccess }
 })

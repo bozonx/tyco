@@ -9,22 +9,23 @@ export interface ParsedModelNumber {
   isValid: boolean
 }
 
-export function parseModelTemperature(text: string): ParsedModelNumber {
+/** A number typed in a setting that may be left empty */
+export function parseOptionalNumber(
+  text: string,
+  isAllowed: (value: number) => boolean
+): ParsedModelNumber {
   const trimmed = text.trim()
   if (!trimmed) return { isValid: true }
   const value = Number(trimmed)
-  return Number.isFinite(value) &&
-    value >= 0 &&
-    value <= MAX_PROFILE_TEMPERATURE
-    ? { value, isValid: true }
-    : { isValid: false }
+  return isAllowed(value) ? { value, isValid: true } : { isValid: false }
 }
 
-export function parseModelTokenCount(text: string): ParsedModelNumber {
-  const trimmed = text.trim()
-  if (!trimmed) return { isValid: true }
-  const value = Number(trimmed)
-  return Number.isSafeInteger(value) && value > 0
-    ? { value, isValid: true }
-    : { isValid: false }
-}
+export const parseModelTemperature = (text: string): ParsedModelNumber =>
+  parseOptionalNumber(
+    text,
+    (value) =>
+      Number.isFinite(value) && value >= 0 && value <= MAX_PROFILE_TEMPERATURE
+  )
+
+export const parseModelTokenCount = (text: string): ParsedModelNumber =>
+  parseOptionalNumber(text, (value) => Number.isSafeInteger(value) && value > 0)

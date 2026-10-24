@@ -70,13 +70,21 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
     }
   }
 
+  /** The output without its trailing line breaks, or null when it is empty */
+  const outputText = (output: string): string | null => {
+    const text = output.replace(/[\r\n]+$/, '')
+    return text.trim() ? text : null
+  }
+
+  const emptyOutput = (): InvocationOutcome => {
+    deps.showToast('toast.actionEmptyOutput', 'warn')
+    return failed('Empty output')
+  }
+
   /** Opens the action menu on the output, or warns that there is none */
   const showOutput = (output: string, source: string): InvocationOutcome => {
-    const text = output.replace(/[\r\n]+$/, '')
-    if (!text.trim()) {
-      deps.showToast('toast.actionEmptyOutput', 'warn')
-      return failed('Empty output')
-    }
+    const text = outputText(output)
+    if (text === null) return emptyOutput()
     deps.showResultMenu?.(text, source)
     return succeeded
   }
@@ -86,11 +94,8 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
     output: string,
     keepWindow?: boolean
   ): Promise<InvocationOutcome> => {
-    const text = output.replace(/[\r\n]+$/, '')
-    if (!text.trim()) {
-      deps.showToast('toast.actionEmptyOutput', 'warn')
-      return failed('Empty output')
-    }
+    const text = outputText(output)
+    if (text === null) return emptyOutput()
     const result = await invoke(copyInvocation, text, { output: 'return' })
     if (result.cancelled) return cancelled
     report(result)
@@ -106,11 +111,8 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
    * none
    */
   const insertOutput = async (output: string): Promise<InvocationOutcome> => {
-    const text = output.replace(/[\r\n]+$/, '')
-    if (!text.trim()) {
-      deps.showToast('toast.actionEmptyOutput', 'warn')
-      return failed('Empty output')
-    }
+    const text = outputText(output)
+    if (text === null) return emptyOutput()
     const result = await invoke(insertInvocation, text, { output: 'return' })
     if (result.cancelled) return cancelled
     // the insertion hides the window and reports a failure on the desktop

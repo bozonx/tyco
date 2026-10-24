@@ -76,13 +76,14 @@ import { computed } from 'vue'
 import { useCopyText } from '../../composables/use-copy-text'
 import { useEditorActions } from '../../composables/use-editor-actions'
 import { useI18n } from '../../composables/use-i18n'
+import { useInlineVoiceStep } from '../../composables/use-inline-voice-step'
 import { provideMarkupMode } from '../../composables/use-markup-mode'
 import type { ActionItem } from '../../stores/action-menu'
 import { useActionMenuStore } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
-import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import VoiceRecognitionMenu from '../menu/VoiceRecognitionMenu.vue'
@@ -105,12 +106,7 @@ provideMarkupMode()
 
 const isDev = import.meta.env.DEV
 
-/** The voice input runs in a bar under the editor, which stays in view */
-const voiceParams = computed(() => {
-  const step = menuModalsStore.currentStep
-  return step?.modal === MenuModals.VOICE_RECOGNITION ? step.params : undefined
-})
-const isInlineVoice = computed(() => Boolean(voiceParams.value?.inline))
+const { voiceParams, isInlineVoice } = useInlineVoiceStep()
 const copyText = useCopyText({ saveOutput: true })
 
 const otherEditItems = computed(() => editMenuStore.getOtherEditItems())

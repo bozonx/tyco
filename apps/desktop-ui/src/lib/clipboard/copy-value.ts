@@ -1,15 +1,18 @@
 import { ref } from 'vue'
 
+import {
+  type TimerDependencies,
+  createSingleTimer,
+} from '../timers/single-timer'
+
 /** How long a copy button shows that it copied */
 export const COPIED_FEEDBACK_MS = 2000
 
-export interface CopyValueDependencies {
+export interface CopyValueDependencies extends TimerDependencies {
   writeText: (text: string) => Promise<void>
   /** Tells that the clipboard refused the text */
   reportFailure: () => void
   feedbackMs?: number
-  setTimer?: (run: () => void, delayMs: number) => unknown
-  clearTimer?: (timer: unknown) => void
 }
 
 /**
@@ -17,18 +20,8 @@ export interface CopyValueDependencies {
  * moment which one was copied, so its button can show it
  */
 export function createCopyValue(deps: CopyValueDependencies) {
-  const setTimer =
-    deps.setTimer ?? ((run, delayMs) => globalThis.setTimeout(run, delayMs))
-  const clearTimer =
-    deps.clearTimer ??
-    ((timer) => globalThis.clearTimeout(timer as ReturnType<typeof setTimeout>))
+  const timer = createSingleTimer(deps)
   const copiedKey = ref<string | null>(null)
-  let timer: unknown = null
-
-  const reset = () => {
-    if (timer !== null) clearTimer(timer)
-    timer = null
-  }
 
   /** `key` tells apart the values one view copies */
   const copy = async (value: string, key = 'value'): Promise<boolean> => {
@@ -38,10 +31,8 @@ export function createCopyValue(deps: CopyValueDependencies) {
       deps.reportFailure()
       return false
     }
-    reset()
     copiedKey.value = key
-    timer = setTimer(() => {
-      timer = null
+    timer.start(() => {
       copiedKey.value = null
     }, deps.feedbackMs ?? COPIED_FEEDBACK_MS)
     return true
@@ -51,7 +42,7 @@ export function createCopyValue(deps: CopyValueDependencies) {
 
   /** Stops the pending reset, e.g. when the view goes away */
   const dispose = () => {
-    reset()
+    timer.stop()
     copiedKey.value = null
   }
 

@@ -119,6 +119,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 
+import { useChatModelOptions } from '../../composables/use-chat-model-options'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
@@ -128,41 +129,30 @@ import {
   CHAT_TOOL_GROUPS,
   toolGroupSettings,
 } from '../../lib/chat-tools/chat-tool-groups'
-import { chatModelOptions } from '../../lib/chat/chat-llm-selection'
-import { normalizeLlmConfig } from '../../lib/llm/llm-config'
-import { isSecretUsable } from '../../lib/net/secrets'
 import {
   NEW_ENTITY_ID,
   profileTab,
   projectTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
-import { useDesktopStore } from '../../stores/desktop'
-import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
-import { type AiProfile, llmSecretId } from '@tyco/shared'
+import type { AiProfile } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig, operations, navigate } = useSettingsContext()
 const { toastText } = useToast()
 const aiProfilesStore = useAiProfilesStore()
-const desktopStore = useDesktopStore()
-const secretsStore = useSecretsStore()
 
 const profiles = computed(() => aiProfilesStore.profiles)
 const projects = computed(() => aiProfilesStore.projects)
 const vaultPath = computed(() => aiProfilesStore.vaultPath)
 const vaultError = computed(() => aiProfilesStore.vaultError)
 
-const availableModels = computed(() =>
-  chatModelOptions(normalizeLlmConfig(desktopStore.userConfig?.llm), (id) =>
-    isSecretUsable(secretsStore.secrets, llmSecretId(id))
-  )
-)
+const availableModels = useChatModelOptions()
 
 /** The model of a profile and the tools it may use, in one line */
 function describeProfile(profile: AiProfile): string {

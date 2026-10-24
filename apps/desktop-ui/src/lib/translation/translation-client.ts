@@ -224,32 +224,36 @@ async function translateWithMachine(
   }
 }
 
-async function translateWithLlm(
-  deps: TranslationClientDependencies,
-  text: string,
-  options: TranslationRunOptions,
+/** One LLM call of a pass over a text cut into chunks */
+interface LlmChunkRequest {
+  /** The source text of the chunk */
+  source: string
+  /** The glossary entries that apply to the chunk */
   glossary: GlossaryEntry[]
+  system: string
+  user: string
+}
+
+/**
+ * Sends one request per chunk and joins the answers, with the chunk whitespace
+ * and the kept glossary terms restored
+ */
+async function runLlmChunks<T>(
+  deps: TranslationClientDependencies,
+  options: TranslationRunOptions,
+  chunks: T[],
+  requestOf: (chunk: T) => LlmChunkRequest
 ): Promise<FirstPass> {
-  const translated: string[] = []
+  const output: string[] = []
   let detectedProvider = 'llm'
   let detectedModel: string | undefined
-  const chunks = chunkText(text, llmChunkLimit(deps, options, glossary))
   for (const chunk of chunks) {
     options.signal?.throwIfAborted()
-    const applicable = selectGlossaryForText(glossary, chunk)
-    const prompt = buildPrompt({
-      system: translationSystem(options, applicable),
-      data: [{ source: 'source_text', content: chunk }],
-    })
+    const request = requestOf(chunk)
     const result = await deps.runLlm(
       {
-        system: prompt.system,
-        messages: [
-          {
-            role: 'user',
-            content: `Translate the source_text block to ${normalizeLanguage(options.targetLanguage)}. Preserve Markdown, line breaks, URLs, placeholders and emoji. Return only the translation.\n\n${prompt.data}`,
-          },
-        ],
+        system: request.system,
+        messages: [{ role: 'user', content: request.user }],
       },
       options.signal,
       {
@@ -260,27 +264,49 @@ async function translateWithLlm(
       }
     )
     options.signal?.throwIfAborted()
-    ensureTranslationOutput(result, chunk)
-    translated.push(
+    ensureTranslationOutput(result, request.source)
+    output.push(
       restoreTranslationChunkWhitespace(
         chunks.length,
-        chunk,
+        request.source,
         restoreKeptTerms({
-          source: chunk,
+          source: request.source,
           translated: result,
-          entries: applicable,
+          entries: request.glossary,
         }).text
       )
     )
   }
   return {
-    translation: translated.join(''),
+    translation: output.join(''),
     provider: detectedProvider,
     ...(detectedModel ? { model: detectedModel } : {}),
   }
 }
 
-async function repairWithLlm(
+function translateWithLlm(
+  deps: TranslationClientDependencies,
+  text: string,
+  options: TranslationRunOptions,
+  glossary: GlossaryEntry[]
+): Promise<FirstPass> {
+  const chunks = chunkText(text, llmChunkLimit(deps, options, glossary))
+  return runLlmChunks(deps, options, chunks, (chunk) => {
+    const applicable = selectGlossaryForText(glossary, chunk)
+    const prompt = buildPrompt({
+      system: translationSystem(options, applicable),
+      data: [{ source: 'source_text', content: chunk }],
+    })
+    return {
+      source: chunk,
+      glossary: applicable,
+      system: prompt.system,
+      user: `Translate the source_text block to ${normalizeLanguage(options.targetLanguage)}. Preserve Markdown, line breaks, URLs, placeholders and emoji. Return only the translation.\n\n${prompt.data}`,
+    }
+  })
+}
+
+function repairWithLlm(
   deps: TranslationClientDependencies,
   source: string,
   translation: string,
@@ -289,16 +315,12 @@ async function repairWithLlm(
   glossary: GlossaryEntry[],
   qualityGateRules: string
 ): Promise<FirstPass> {
-  const repaired: string[] = []
-  let detectedProvider = 'llm'
-  let detectedModel: string | undefined
   const pairs = splitParallelText(
     source,
     translation,
     Math.min(LLM_REPAIR_COMBINED_LIMIT, llmChunkLimit(deps, options, glossary))
   )
-  for (const pair of pairs) {
-    options.signal?.throwIfAborted()
+  return runLlmChunks(deps, options, pairs, (pair) => {
     const applicable = selectGlossaryForText(glossary, pair.source)
     const prompt = buildPrompt({
       system: [
@@ -315,43 +337,13 @@ async function repairWithLlm(
         { source: 'translation', content: pair.translated },
       ],
     })
-    const result = await deps.runLlm(
-      {
-        system: prompt.system,
-        messages: [
-          {
-            role: 'user',
-            content: `The translation block is a translation of the source_text block into ${normalizeLanguage(options.targetLanguage)}. ${repairInstruction(problems)} Preserve everything that is already correct and return only the repaired translation.\n\n${prompt.data}`,
-          },
-        ],
-      },
-      options.signal,
-      {
-        onModel: (info) => {
-          detectedProvider = info.provider
-          detectedModel = info.model
-        },
-      }
-    )
-    options.signal?.throwIfAborted()
-    ensureTranslationOutput(result, pair.source)
-    repaired.push(
-      restoreTranslationChunkWhitespace(
-        pairs.length,
-        pair.source,
-        restoreKeptTerms({
-          source: pair.source,
-          translated: result,
-          entries: applicable,
-        }).text
-      )
-    )
-  }
-  return {
-    translation: repaired.join(''),
-    provider: detectedProvider,
-    ...(detectedModel ? { model: detectedModel } : {}),
-  }
+    return {
+      source: pair.source,
+      glossary: applicable,
+      system: prompt.system,
+      user: `The translation block is a translation of the source_text block into ${normalizeLanguage(options.targetLanguage)}. ${repairInstruction(problems)} Preserve everything that is already correct and return only the repaired translation.\n\n${prompt.data}`,
+    }
+  })
 }
 
 function translationSystem(

@@ -47,6 +47,17 @@ export type DesktopCall = <K extends DesktopCommandName>(
 ) => Promise<IpcResult<DesktopCommandResult<K>>>
 
 /**
+ * The result of a desktop call for a caller that handles a failure as a thrown
+ * error, e.g. a model that reports it itself. `fallback` stands in for a
+ * failure without a message
+ */
+export function resultOrThrow<T>(response: IpcResult<T>, fallback?: string): T {
+  if (!response.success)
+    throw new Error(response.error || fallback || 'Desktop command failed')
+  return response.result as T
+}
+
+/**
  * Commands that press keys in the window Tyco hides: keys the user still holds
  * would mix in with them
  */

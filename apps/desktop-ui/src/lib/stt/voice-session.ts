@@ -1,8 +1,11 @@
-export interface VoiceSessionDependencies {
+import {
+  type TimerDependencies,
+  createSingleTimer,
+} from '../timers/single-timer'
+
+export interface VoiceSessionDependencies extends TimerDependencies {
   maxRecordingMs: number
   onLimit: () => void
-  setTimer?: typeof setTimeout
-  clearTimer?: typeof clearTimeout
 }
 
 export interface VoiceSession {
@@ -17,16 +20,9 @@ export interface VoiceSession {
 export function createVoiceSession(
   deps: VoiceSessionDependencies
 ): VoiceSession {
-  const setTimer = deps.setTimer ?? setTimeout
-  const clearTimer = deps.clearTimer ?? clearTimeout
+  const limitTimer = createSingleTimer(deps)
   let controller: AbortController | undefined
-  let limitTimer: ReturnType<typeof setTimeout> | undefined
-
-  const stopTimer = () => {
-    if (limitTimer === undefined) return
-    clearTimer(limitTimer)
-    limitTimer = undefined
-  }
+  const stopTimer = limitTimer.stop
 
   const abort = () => {
     stopTimer()
@@ -40,10 +36,7 @@ export function createVoiceSession(
     begin() {
       abort()
       controller = new AbortController()
-      limitTimer = setTimer(() => {
-        limitTimer = undefined
-        deps.onLimit()
-      }, deps.maxRecordingMs)
+      limitTimer.start(deps.onLimit, deps.maxRecordingMs)
       return controller.signal
     },
     stopTimer,

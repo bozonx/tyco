@@ -1,8 +1,9 @@
-import type { PluginPackagePreview } from '@tyco/shared'
+import type { IpcResult, PluginPackagePreview } from '@tyco/shared'
 import { defineStore } from 'pinia'
 import { onScopeDispose } from 'vue'
 
 import { desktopClient } from '../lib/desktop/client'
+import { resultOrThrow } from '../lib/ipc/ipc-model'
 import usePluginContext from '../composables/use-plugin-context'
 import { activatePluginSandbox } from '../lib/plugins/plugin-sandbox'
 import {
@@ -45,10 +46,11 @@ export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
     getConfig: () => desktopStore.userConfig,
     loadInstalled: async () => {
       if (!desktopClient.isAvailable()) return []
-      const result = await ipc.call('list_installed_plugins')
-      if (!result.success)
-        throw new Error(result.error ?? 'Plugin catalog load failed')
-      return loader.load(result.result ?? [], builtinPluginIds)
+      const installed = resultOrThrow(
+        await ipc.call('list_installed_plugins'),
+        'Plugin catalog load failed'
+      )
+      return loader.load(installed ?? [], builtinPluginIds)
     },
     createPluginContext: createContext,
     unregisterPlugin: (id) => {
@@ -66,15 +68,8 @@ export const usePluginRuntimeStore = defineStore('pluginRuntime', () => {
   onScopeDispose(() => {
     void model.dispose()
   })
-  const requireResult = <T>(result: {
-    success: boolean
-    result?: T
-    error?: string
-  }): T | undefined => {
-    if (!result.success)
-      throw new Error(result.error ?? 'Plugin operation failed')
-    return result.result
-  }
+  const requireResult = <T>(result: IpcResult<T>): T =>
+    resultOrThrow(result, 'Plugin operation failed')
   return {
     ...model,
     inspectPackage: async () =>

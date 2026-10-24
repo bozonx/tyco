@@ -6,6 +6,11 @@ import {
   type ToolGroupSettings,
 } from '@tyco/shared'
 
+import {
+  type ParsedModelNumber,
+  parseOptionalNumber,
+} from '../llm/model-number'
+
 /** A group of tools a profile switches on as a whole */
 export interface ChatToolGroup {
   id: string
@@ -74,18 +79,12 @@ export function withToolStepCount(
 }
 
 /** A step limit typed in the settings; empty is the default */
-export function parseToolStepCount(text: string): {
-  value?: number
-  isValid: boolean
-} {
-  const trimmed = text.trim()
-  if (!trimmed) return { isValid: true }
-  const value = Number(trimmed)
-  return Number.isSafeInteger(value) &&
-    value >= 1 &&
-    value <= MAX_TOOL_STEP_COUNT
-    ? { value, isValid: true }
-    : { isValid: false }
+export function parseToolStepCount(text: string): ParsedModelNumber {
+  return parseOptionalNumber(
+    text,
+    (value) =>
+      Number.isSafeInteger(value) && value >= 1 && value <= MAX_TOOL_STEP_COUNT
+  )
 }
 
 export { DEFAULT_TOOL_STEP_COUNT, MAX_TOOL_STEP_COUNT }
