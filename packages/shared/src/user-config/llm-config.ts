@@ -50,7 +50,7 @@ export interface LlmModel {
   isThinkingEnabled?: boolean
 }
 
-/** The LLM tasks that run on a model chain */
+/** The LLM tasks that run on a model of their own */
 export const LLM_TASKS = [
   'translation',
   'voiceCorrection',
@@ -61,18 +61,18 @@ export const LLM_TASKS = [
 export type LlmTask = (typeof LLM_TASKS)[number]
 
 /**
- * How the LLM does one task. `modelChain` holds model ids: the first answers,
- * the rest are its fallbacks. `rule` is what the user adds to the app
- * instructions of the task
+ * How the LLM does one task. `modelId` is the model that answers, empty when
+ * none is picked. `rule` is what the user adds to the app instructions of the
+ * task
  */
 export interface LlmTaskConfig {
-  modelChain: string[]
+  modelId: string
   rule: string
 }
 
 /** The settings of each LLM task */
 export interface LlmTasksConfig {
-  /** The chat has no chain: it runs on the model picked in it */
+  /** The chat has no model of its own: it runs on the model picked in it */
   chat: Pick<LlmTaskConfig, 'rule'>
   correction: LlmTaskConfig
   translation: LlmTaskConfig & {
@@ -81,7 +81,7 @@ export interface LlmTasksConfig {
   }
   voiceCorrection: LlmTaskConfig
   /** Each AI task has its own rule, see `AiTaskConfig` */
-  aiTask: Pick<LlmTaskConfig, 'modelChain'>
+  aiTask: Pick<LlmTaskConfig, 'modelId'>
 }
 
 export interface LlmConfig {

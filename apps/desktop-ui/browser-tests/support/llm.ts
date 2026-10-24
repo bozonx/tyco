@@ -23,7 +23,7 @@ export function installLlm(desktop: FakeDesktop, seedConfig = true) {
       },
     ]
     for (const task of LLM_TASKS) {
-      desktop.userConfig.llm.tasks[task].modelChain = ['browser-model']
+      desktop.userConfig.llm.tasks[task].modelId = 'browser-model'
     }
     desktop.sessionState.lastChatModelId = 'browser-model'
   }

@@ -70,7 +70,7 @@ describe('settings config preparation', () => {
     })
     expect(result.llm.tasks).toEqual({
       ...DEFAULT_USER_CONFIG.llm.tasks,
-      correction: { modelChain: [], rule: '' },
+      correction: { modelId: '', rule: '' },
     })
     expect(result.windowInsertion).toEqual(DEFAULT_USER_CONFIG.windowInsertion)
     expect(result.hotkeys.editor).toBe(DEFAULT_USER_CONFIG.hotkeys.editor)

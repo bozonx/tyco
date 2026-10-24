@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ConfirmModal from '../common/ConfirmModal.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsLlmTab from './SettingsLlmTab.vue'
 
@@ -141,16 +142,37 @@ describe('LLM settings cards', () => {
   })
 })
 
+describe('feature models', () => {
+  it('picks one model per feature, or none', async () => {
+    const { llm, wrapper } = setup()
+    const selects = wrapper.findAllComponents(FieldSelect)
+    const translation = selects.at(-4)!
+    const options = translation.props('options') as { id: string }[]
+    expect(options[0]).toEqual({ id: '', name: 'settings.taskModelNone' })
+    expect(options.map((option) => option.id)).toContain('gemini-flash')
+    expect(translation.props('modelValue')).toBe('ollama-qwen')
+
+    translation.vm.$emit('update:modelValue', 'gemini-flash')
+    await flushPromises()
+    expect(llm.tasks.translation.modelId).toBe('gemini-flash')
+
+    translation.vm.$emit('update:modelValue', '')
+    await flushPromises()
+    expect(llm.tasks.translation.modelId).toBe('')
+    expect(wrapper.text()).not.toContain('settings.addFallback')
+  })
+})
+
 describe('SettingsLlmTab.vue', () => {
   const baseLlmConfig = {
     providers: [],
     models: [],
     tasks: {
       chat: { rule: '' },
-      correction: { modelChain: [], rule: '' },
-      translation: { modelChain: [], rule: '', qualityGateRule: '' },
-      voiceCorrection: { modelChain: [], rule: '' },
-      aiTask: { modelChain: [] },
+      correction: { modelId: '', rule: '' },
+      translation: { modelId: '', rule: '', qualityGateRule: '' },
+      voiceCorrection: { modelId: '', rule: '' },
+      aiTask: { modelId: '' },
     },
   }
 
@@ -160,7 +182,7 @@ describe('SettingsLlmTab.vue', () => {
       tasks: {
         ...baseLlmConfig.tasks,
         chat: { rule: 'Chat rule text' },
-        correction: { modelChain: [], rule: 'Correction rule text' },
+        correction: { modelId: '', rule: 'Correction rule text' },
       },
     }
 

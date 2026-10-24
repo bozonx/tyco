@@ -125,14 +125,14 @@
     ],
     "tasks": {
       "chat": { "rule": "" },
-      "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+      "correction": { "modelId": "ollama-qwen", "rule": "" },
       "translation": {
-        "modelChain": ["ollama-qwen"],
+        "modelId": "ollama-qwen",
         "rule": "",
         "qualityGateRule": ""
       },
-      "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-      "aiTask": { "modelChain": ["ollama-qwen"] }
+      "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+      "aiTask": { "modelId": "ollama-qwen" }
     }
   },
   "aiTasks": {

@@ -38,20 +38,17 @@ describe('llm-catalog', () => {
     expect(catalog.require('ollama-qwen').capabilities.tools).toBe(false)
   })
 
-  it('turns task chains into task classes', () => {
+  it('turns task models into task classes', () => {
     const catalog = buildLlmCatalog(
       config({
         tasks: {
           ...DEFAULT_LLM_CONFIG.tasks,
-          aiTask: { modelChain: ['gemini-flash', 'deepseek-chat'] },
+          aiTask: { modelId: 'gemini-flash' },
         },
       })
     )!
 
-    expect(names(catalog.candidatesFor('aiTask'))).toEqual([
-      'gemini-flash',
-      'deepseek-chat',
-    ])
+    expect(names(catalog.candidatesFor('aiTask'))).toEqual(['gemini-flash'])
     expect(names(catalog.candidatesFor('translation'))).toEqual(['ollama-qwen'])
   })
 
@@ -74,15 +71,12 @@ describe('llm-catalog', () => {
           canUseTools: false,
         },
       ],
-      tasks: {
-        ...base.tasks,
-        aiTask: { modelChain: ['blank', 'gemini-flash'] },
-      },
+      tasks: { ...base.tasks, aiTask: { modelId: 'blank' } },
     })!
 
     expect(catalog.find('ollama-qwen')).toBeUndefined()
     expect(catalog.find('blank')).toBeUndefined()
-    expect(names(catalog.candidatesFor('aiTask'))).toEqual(['gemini-flash'])
+    expect(catalog.taskClasses).not.toContain('aiTask')
     expect(catalog.taskClasses).not.toContain('translation')
   })
 
@@ -108,7 +102,7 @@ describe('llm-catalog', () => {
           canUseTools: false,
         },
       ],
-      tasks: { ...base.tasks, aiTask: { modelChain: ['a'] } },
+      tasks: { ...base.tasks, aiTask: { modelId: 'a' } },
     })!
 
     expect(catalog.require('a').maxOutputTokens).toBe(1024)

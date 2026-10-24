@@ -71,7 +71,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `mainActions`     | the action menu (a shortcut grid)                                                                                  |
 | `launcherPages`   | `id`, `inputMode`, `hotkey`, `slots` (a shortcut grid of command ids)                                              |
 | `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, …                 |
-| `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelChain` and `rule` (see below)                       |
+| `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                          |
 | `aiTasks`         | `items`, the task library (`id`, `name`, `rule`); `slots`, the AI task menu (a shortcut grid of task ids)          |
 | `aiVault`         | `path`, empty for the default location                                                                             |
 | `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                              |
@@ -104,10 +104,11 @@ to them through `pageId`, and a page opens with the activation mode
 hotkey belongs to the page that it opens. At least one page is required.
 
 `llm.tasks` holds what each LLM task needs: `chat` (`rule`; the chat runs on
-the model picked in it), `correction`, `voiceCorrection` (`modelChain`,
-`rule`; on when `stt.isVoiceCorrectionEnabled`), `translation` (`modelChain`, `rule`, `qualityGateRule` for the review
-pass) and `aiTask` (`modelChain`; every AI task has its own rule). A model
-chain lists model ids: the first answers, the rest are its fallbacks.
+the model picked in it), `correction`, `voiceCorrection` (`modelId`,
+`rule`; on when `stt.isVoiceCorrectionEnabled`), `translation` (`modelId`, `rule`, `qualityGateRule` for the review
+pass) and `aiTask` (`modelId`; every AI task has its own rule). `modelId` is
+the one model that answers the task, empty when none is picked; a call that
+fails is not retried on another model.
 
 The standard items of the action menu (`type: "standard"`) are not the core
 tools under another name: they are menu behaviors (the correction opens its

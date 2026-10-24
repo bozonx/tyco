@@ -29,9 +29,8 @@ describe('corrector configuration ownership', () => {
       if (setting === 'rules')
         desktop.desktopState.userConfig.llm.tasks.correction.rule = 'New rules'
       if (setting === 'models')
-        desktop.desktopState.userConfig.llm.tasks.correction.modelChain = [
-          'another-model',
-        ]
+        desktop.desktopState.userConfig.llm.tasks.correction.modelId =
+          'another-model'
       expect(store.getCachedCorrection('Sample')).toBeUndefined()
       expect(await store.correct('Sample', signal)).toBe('Updated result')
       expect(mocks.correctText).toHaveBeenCalledTimes(2)

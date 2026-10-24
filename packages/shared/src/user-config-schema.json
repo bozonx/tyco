@@ -527,58 +527,36 @@
             "correction": {
               "type": "object",
               "properties": {
-                "modelChain": {
-                  "type": "array",
-                  "items": { "type": "string", "default": "" },
-                  "default": [],
-                  "uniqueItems": true
-                },
+                "modelId": { "type": "string", "default": "" },
                 "rule": { "type": "string", "default": "" }
               },
-              "required": ["modelChain", "rule"],
-              "default": { "modelChain": [], "rule": "" }
+              "required": ["modelId", "rule"],
+              "default": { "modelId": "", "rule": "" }
             },
             "translation": {
               "type": "object",
               "properties": {
-                "modelChain": {
-                  "type": "array",
-                  "items": { "type": "string", "default": "" },
-                  "default": [],
-                  "uniqueItems": true
-                },
+                "modelId": { "type": "string", "default": "" },
                 "rule": { "type": "string", "default": "" },
                 "qualityGateRule": { "type": "string", "default": "" }
               },
-              "required": ["modelChain", "rule", "qualityGateRule"],
-              "default": { "modelChain": [], "rule": "", "qualityGateRule": "" }
+              "required": ["modelId", "rule", "qualityGateRule"],
+              "default": { "modelId": "", "rule": "", "qualityGateRule": "" }
             },
             "voiceCorrection": {
               "type": "object",
               "properties": {
-                "modelChain": {
-                  "type": "array",
-                  "items": { "type": "string", "default": "" },
-                  "default": [],
-                  "uniqueItems": true
-                },
+                "modelId": { "type": "string", "default": "" },
                 "rule": { "type": "string", "default": "" }
               },
-              "required": ["modelChain", "rule"],
-              "default": { "modelChain": [], "rule": "" }
+              "required": ["modelId", "rule"],
+              "default": { "modelId": "", "rule": "" }
             },
             "aiTask": {
               "type": "object",
-              "properties": {
-                "modelChain": {
-                  "type": "array",
-                  "items": { "type": "string", "default": "" },
-                  "default": [],
-                  "uniqueItems": true
-                }
-              },
-              "required": ["modelChain"],
-              "default": { "modelChain": [] }
+              "properties": { "modelId": { "type": "string", "default": "" } },
+              "required": ["modelId"],
+              "default": { "modelId": "" }
             }
           },
           "required": [

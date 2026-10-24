@@ -356,21 +356,14 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             return Err(invalid("llm.models.providerId"));
         }
     }
-    for chain in config["llm"]["tasks"]
+    for id in config["llm"]["tasks"]
         .as_object()
         .into_iter()
         .flat_map(|tasks| tasks.values())
-        .map(|task| &task["modelChain"])
+        .filter_map(|task| task["modelId"].as_str())
     {
-        for id in chain
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter_map(Value::as_str)
-        {
-            if !models.contains(id) {
-                return Err(invalid("llm.tasks.modelChain"));
-            }
+        if !id.is_empty() && !models.contains(id) {
+            return Err(invalid("llm.tasks.modelId"));
         }
     }
     for slot in slot_values(&config["mainActions"]) {
@@ -548,11 +541,13 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         .map(str::to_owned)
         .collect();
     if let Some(tasks) = config["llm"]["tasks"].as_object_mut() {
-        for chain in tasks
+        for model_id in tasks
             .values_mut()
-            .filter_map(|task| task.get_mut("modelChain").and_then(Value::as_array_mut))
+            .filter_map(|task| task.get_mut("modelId"))
         {
-            chain.retain(|id| model_ids.contains(id.as_str().unwrap_or_default()));
+            if !model_ids.contains(model_id.as_str().unwrap_or_default()) {
+                *model_id = Value::String(String::new());
+            }
         }
     }
     let command_ids: HashSet<String> = ids(config, "/commands")

@@ -65,9 +65,9 @@ export function buildLlmCatalog(config: LlmConfig): Catalog | null {
     Object.entries(config.tasks)
       .map(([task, settings]) => [
         task,
-        ('modelChain' in settings ? settings.modelChain : []).filter(
-          (id: string) => usableIds.has(id)
-        ),
+        'modelId' in settings && usableIds.has(settings.modelId)
+          ? [settings.modelId]
+          : [],
       ])
       .filter(([, chain]) => chain.length > 0)
   )

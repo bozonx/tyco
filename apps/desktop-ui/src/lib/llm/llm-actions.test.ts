@@ -66,7 +66,7 @@ describe('LLM application actions', () => {
     expect(f.aiRequest.chatTurn).toHaveBeenCalledWith(
       [...history, { role: 'user', content: 'Question' }],
       {
-        models: ['chosen'],
+        modelId: 'chosen',
         onUpdate,
         notifyError: false,
         instructions: APP_CONFIG.aiInstructions.chat,
@@ -98,7 +98,7 @@ describe('LLM application actions', () => {
       await f.actions.generateChatTitle('Question', 'Answer', 'model', signal)
     ).toBe('A useful title')
     expect(f.aiRequest).toHaveBeenCalledWith('chat', expect.any(String), {
-      models: ['model'],
+      modelId: 'model',
       notifyError: false,
       instructions: CHAT_TITLE_INSTRUCTIONS,
       signal,

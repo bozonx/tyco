@@ -4,31 +4,21 @@ import {
   modelContextWindowTokens,
   modelMaxOutputTokens,
 } from './llm-catalog'
+import { taskModel } from './llm-config'
 
 /** The output reserved when a task has no model at all */
 const NO_MODEL_MAX_OUTPUT_TOKENS = 1024
 
-/**
- * Budget against the smallest fallback, so a long input can use the whole
- * chain.
- */
+/** The budget of the model a task answers with */
 export function taskModelLimits(config: LlmConfig, task: LlmTask) {
-  const models = config.tasks[task].modelChain
-    .map((id) => config.models.find((model) => model.id === id))
-    .filter((model) => model !== undefined)
-  if (!models.length)
+  const model = taskModel(config, task)
+  if (!model)
     return {
       contextWindowTokens: DEFAULT_CONTEXT_WINDOW_TOKENS,
       maxOutputTokens: NO_MODEL_MAX_OUTPUT_TOKENS,
     }
   return {
-    contextWindowTokens: Math.min(
-      ...models.map((model) =>
-        modelContextWindowTokens(model, config.providers)
-      )
-    ),
-    maxOutputTokens: Math.min(
-      ...models.map((model) => modelMaxOutputTokens(model, config.providers))
-    ),
+    contextWindowTokens: modelContextWindowTokens(model, config.providers),
+    maxOutputTokens: modelMaxOutputTokens(model, config.providers),
   }
 }

@@ -14,9 +14,9 @@ vi.mock('../../composables/use-i18n', () => ({
   }),
 }))
 
-function setup(modelChain: (llm: typeof DEFAULT_LLM_CONFIG) => string[]) {
+function setup(modelId: (llm: typeof DEFAULT_LLM_CONFIG) => string) {
   const llm = structuredClone(DEFAULT_LLM_CONFIG)
-  llm.tasks.correction.modelChain = modelChain(llm)
+  llm.tasks.correction.modelId = modelId(llm)
   const context = createTestSettingsContext({ llm })
   const wrapper = mount(SettingsTaskModel, {
     props: { task: 'correction' },
@@ -26,26 +26,25 @@ function setup(modelChain: (llm: typeof DEFAULT_LLM_CONFIG) => string[]) {
 }
 
 describe('SettingsTaskModel.vue', () => {
-  it('shows the primary model with its fallback count', () => {
-    const { llm, wrapper } = setup(({ models }) => [models[0].id, models[1].id])
-    expect(wrapper.text()).toContain(modelLabel(llm.models[0]))
-    expect(wrapper.text()).toContain('settings.taskModelFallbacks:{"count":1}')
+  it('shows the task model', () => {
+    const { llm, wrapper } = setup(({ models }) => models[1].id)
+    expect(wrapper.text()).toContain(modelLabel(llm.models[1]))
+    expect(wrapper.text()).not.toContain('settings.taskModelNone')
   })
 
   it('says when no model is assigned', () => {
-    const { wrapper } = setup(() => [])
+    const { wrapper } = setup(() => '')
     expect(wrapper.text()).toContain('settings.taskModelNone')
-    expect(wrapper.text()).not.toContain('settings.taskModelFallbacks')
   })
 
   it('opens the connections and models page to change it', async () => {
-    const { context, wrapper } = setup(() => [])
+    const { context, wrapper } = setup(() => '')
     await wrapper.get('.inline-action').trigger('click')
     expect(context.navigate).toHaveBeenCalledWith('llm')
   })
 
   it('renders a flow field row so label, tooltip and model stay on one line', () => {
-    const { wrapper } = setup(() => [])
+    const { wrapper } = setup(() => '')
     expect(wrapper.findComponent(FieldRow).props('flow')).toBe(true)
   })
 })

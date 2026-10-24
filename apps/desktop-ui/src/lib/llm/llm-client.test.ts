@@ -118,7 +118,7 @@ describe('llm-client', () => {
     })
 
     const text = await client.run('chat', prompt, {
-      models: ['deepseek-chat'],
+      modelId: 'deepseek-chat',
       onChunk: () => undefined,
     })
 
@@ -156,29 +156,24 @@ describe('llm-client', () => {
     await expect(client.run('correction', prompt)).resolves.toBe('Fixed text')
   })
 
-  it('falls back to the next model when a key is missing', async () => {
+  it('fails without a key instead of trying another model', async () => {
     const fetch = vi.fn<FetchFunction>(async () =>
       streamResponse(sse(['from local']))
     )
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.tasks.aiTask.modelChain = ['gemini-flash', 'ollama-qwen']
+    llm.tasks.aiTask.modelId = 'gemini-flash'
     const { client } = setup(fetch, llm)
 
-    const text = await client.run('aiTask', prompt, {
-      onChunk: () => undefined,
-    })
-
-    expect(text).toBe('from local')
-    expect(fetch).toHaveBeenCalledTimes(1)
+    await expect(
+      client.run('aiTask', prompt, { onChunk: () => undefined })
+    ).rejects.toBeInstanceOf(LlmError)
+    expect(fetch).not.toHaveBeenCalled()
   })
 
-  it('uses each fallback model own generation settings', async () => {
-    const fetch = vi.fn<FetchFunction>(async (_url, init) => {
-      const body = JSON.parse(String(init?.body)) as { model: string }
-      return body.model === 'first-model'
-        ? jsonResponse(503, { error: { message: 'busy' } })
-        : streamResponse(sse(['fallback']))
-    })
+  it('uses the task model own generation settings', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      streamResponse(sse(['answer']))
+    )
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
     llm.models = [
       {
@@ -200,22 +195,15 @@ describe('llm-client', () => {
         maxOutputTokens: 200,
       },
     ]
-    llm.tasks.aiTask.modelChain = ['first', 'second']
+    llm.tasks.aiTask.modelId = 'second'
     const { client } = setup(fetch, llm)
 
     await expect(
       client.run('aiTask', prompt, { onChunk: () => undefined })
-    ).resolves.toBe('fallback')
+    ).resolves.toBe('answer')
 
-    const bodies = fetch.mock.calls.map((call) =>
-      JSON.parse(String(call[1]?.body))
-    )
-    expect(bodies[0]).toMatchObject({
-      model: 'first-model',
-      temperature: 0.9,
-      max_tokens: 100,
-    })
-    expect(bodies.at(-1)).toMatchObject({
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(JSON.parse(String(fetch.mock.calls[0]?.[1]?.body))).toMatchObject({
       model: 'second-model',
       temperature: 0.1,
       max_tokens: 200,
@@ -239,13 +227,13 @@ describe('llm-client', () => {
     const { client } = setup(fetch, llm)
 
     await client.run('chat', prompt, {
-      models: ['chosen'],
+      modelId: 'chosen',
       onChunk: () => undefined,
       temperature: 0.2,
       maxOutputTokens: 100,
     })
     await client.run('chat', prompt, {
-      models: ['chosen'],
+      modelId: 'chosen',
       onChunk: () => undefined,
       maxOutputTokens: 5000,
     })
@@ -260,7 +248,7 @@ describe('llm-client', () => {
   it('sends a key reference to a provider that has a key', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
-    llm.tasks.aiTask.modelChain = ['deepseek-chat']
+    llm.tasks.aiTask.modelId = 'deepseek-chat'
     const { client } = setup(fetch, llm, {
       'llm.deepseek': {
         origins: ['https://api.deepseek.com'],
@@ -365,7 +353,7 @@ describe('vision transport', () => {
     const { client } = setup(fetch, llm)
     expect(
       await client.run('chat', imagePrompt, {
-        models: ['ollama-qwen'],
+        modelId: 'ollama-qwen',
         onChunk: () => undefined,
       })
     ).toBe('Image reply')
@@ -390,7 +378,7 @@ describe('vision transport', () => {
     llm.models[0].canUseImages = true
     const { client } = setup(fetch, llm)
     await expect(
-      client.run('chat', imagePrompt, { models: ['ollama-qwen'] })
+      client.run('chat', imagePrompt, { modelId: 'ollama-qwen' })
     ).rejects.toMatchObject({
       kind: 'image_unsupported',
       message: expect.stringContaining('does not support images'),
@@ -400,7 +388,7 @@ describe('vision transport', () => {
     const fetch = vi.fn<FetchFunction>()
     const { client } = setup(fetch)
     await expect(
-      client.run('chat', imagePrompt, { models: ['ollama-qwen'] })
+      client.run('chat', imagePrompt, { modelId: 'ollama-qwen' })
     ).rejects.toMatchObject({ kind: 'no_model' })
     expect(fetch).not.toHaveBeenCalled()
   })
@@ -444,7 +432,7 @@ describe('built-in vision adapters', () => {
       },
     })
     expect(
-      await client.run('chat', imagePrompt, { models: ['gemini-flash'] })
+      await client.run('chat', imagePrompt, { modelId: 'gemini-flash' })
     ).toBe('Image reply')
     const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))
     expect(body.contents[0].parts).toContainEqual({
@@ -460,7 +448,7 @@ describe('built-in vision adapters', () => {
     })
     expect(
       await client.run('chat', imagePrompt, {
-        models: ['openrouter-gpt-4-1-mini'],
+        modelId: 'openrouter-gpt-4-1-mini',
         onChunk: () => undefined,
       })
     ).toBe('Image reply')
@@ -472,7 +460,7 @@ describe('built-in vision adapters', () => {
   })
 })
 
-it('rejects truncated streamed output without switching models and retains the text', async () => {
+it('rejects truncated streamed output and retains the text', async () => {
   const fetch = vi.fn<FetchFunction>(async () =>
     streamResponse(
       sse(['partial']).map((part) =>
@@ -481,7 +469,6 @@ it('rejects truncated streamed output without switching models and retains the t
     )
   )
   const config = structuredClone(DEFAULT_LLM_CONFIG)
-  config.tasks.aiTask.modelChain = ['ollama-qwen', 'gemini-flash']
   const { client } = setup(fetch, config)
   const chunks: string[] = []
   await expect(
@@ -515,16 +502,8 @@ it('rejects truncated non-streamed output and preserves its partial text', async
   })
 })
 
-it('shares one deadline across the entire fallback chain', async () => {
+it('times out a model that does not answer', async () => {
   const config = structuredClone(DEFAULT_LLM_CONFIG)
-  config.models.push({
-    id: 'fallback',
-    providerId: 'ollama',
-    providerModelId: 'fallback',
-    canUseImages: false,
-    canUseTools: false,
-  })
-  config.tasks.aiTask.modelChain = ['ollama-qwen', 'fallback']
   const fetch = vi.fn<FetchFunction>(
     async (_url, options) =>
       new Promise((_resolve, reject) => {
@@ -559,7 +538,7 @@ it('sends the preserved DeepSeek thinking mode to the provider', async () => {
     'llm.deepseek': { origins: ['https://api.deepseek.com'], available: true },
   })
   await client.run('chat', prompt, {
-    models: ['deepseek-chat'],
+    modelId: 'deepseek-chat',
     onChunk: () => undefined,
   })
   const body = JSON.parse(String(fetch.mock.calls[0][1]?.body))

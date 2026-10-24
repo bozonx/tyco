@@ -8,7 +8,7 @@ import {
   normalizeLlmConfig,
   removeModel,
   removeProvider,
-  taskModelSummary,
+  taskModel,
   uniqueLlmId,
 } from './llm-config'
 
@@ -103,21 +103,18 @@ describe('llm-config', () => {
     ])
   })
 
-  it('keeps task chains to known models without silently assigning defaults', () => {
+  it('keeps task models that exist without silently assigning defaults', () => {
     const config = normalizeLlmConfig({
       models: [
         { id: 'a', providerId: 'google', providerModelId: 'g' },
         { id: 'b', providerId: 'deepseek', providerModelId: 'd' },
       ],
-      tasks: {
-        aiTask: { modelChain: ['b', 'gone', 'b', 'a'] },
-        translation: { modelChain: [] },
-      },
+      tasks: { aiTask: { modelId: 'b' }, translation: { modelId: 'gone' } },
     })
 
-    expect(config.tasks.aiTask.modelChain).toEqual(['b', 'a'])
-    expect(config.tasks.translation.modelChain).toEqual([])
-    expect(config.tasks.correction.modelChain).toEqual([])
+    expect(config.tasks.aiTask.modelId).toBe('b')
+    expect(config.tasks.translation.modelId).toBe('')
+    expect(config.tasks.correction.modelId).toBe('')
   })
 
   it('generates unique ids', () => {
@@ -137,7 +134,8 @@ describe('llm-config', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
     const provider = addCompatibleProvider(config)
     const model = addModel(config, provider.id)
-    config.tasks.aiTask.modelChain = [model.id, 'ollama-qwen']
+    config.tasks.aiTask.modelId = model.id
+    config.tasks.translation.modelId = 'ollama-qwen'
 
     expect(provider.id).toMatch(/^custom-[a-f0-9-]{36}$/)
     expect(model.id).toBe(`${provider.id}-model`)
@@ -145,7 +143,8 @@ describe('llm-config', () => {
     removeProvider(config, provider.id)
     expect(config.providers.some((item) => item.id === provider.id)).toBe(false)
     expect(config.models.some((item) => item.id === model.id)).toBe(false)
-    expect(config.tasks.aiTask.modelChain).toEqual(['ollama-qwen'])
+    expect(config.tasks.aiTask.modelId).toBe('')
+    expect(config.tasks.translation.modelId).toBe('ollama-qwen')
   })
 
   it('never removes a built-in provider', () => {
@@ -158,10 +157,12 @@ describe('llm-config', () => {
 
   it('removes a model from every task', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
-    config.tasks.translation.modelChain = ['gemini-flash', 'ollama-qwen']
+    config.tasks.translation.modelId = 'gemini-flash'
+    config.tasks.correction.modelId = 'ollama-qwen'
     removeModel(config, 'gemini-flash')
 
-    expect(config.tasks.translation.modelChain).toEqual(['ollama-qwen'])
+    expect(config.tasks.translation.modelId).toBe('')
+    expect(config.tasks.correction.modelId).toBe('ollama-qwen')
   })
 
   it('labels a model by name, then model id', () => {
@@ -170,18 +171,14 @@ describe('llm-config', () => {
     expect(modelLabel({ id: 'x', providerModelId: '' })).toBe('x')
   })
 
-  it('summarizes the model chain of a task, skipping unknown models', () => {
+  it('finds the model of a task, skipping unknown and empty ids', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
-    const [first, second] = config.models
-    config.tasks.correction.modelChain = [first.id, 'gone', second.id]
-    expect(taskModelSummary(config, 'correction')).toEqual({
-      primaryModelLabel: modelLabel(first),
-      fallbackCount: 1,
-    })
-    config.tasks.correction.modelChain = ['gone']
-    expect(taskModelSummary(config, 'correction')).toEqual({
-      primaryModelLabel: undefined,
-      fallbackCount: 0,
-    })
+    const second = config.models[1]
+    config.tasks.correction.modelId = second.id
+    expect(taskModel(config, 'correction')).toBe(second)
+    config.tasks.correction.modelId = 'gone'
+    expect(taskModel(config, 'correction')).toBeUndefined()
+    config.tasks.correction.modelId = ''
+    expect(taskModel(config, 'correction')).toBeUndefined()
   })
 })

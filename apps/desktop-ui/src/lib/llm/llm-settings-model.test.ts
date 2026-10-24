@@ -20,7 +20,6 @@ describe('LLM settings model', () => {
     const providerRemoved = vi.fn()
     const model = createLlmSettingsModel({
       getConfig: () => config,
-      getUsableModelIds: () => ['model'],
       setSecret,
       removeSecret: vi.fn().mockResolvedValue(undefined),
       checkConnection,
@@ -111,8 +110,5 @@ describe('LLM settings model', () => {
     expect(model.contextWindowTokens).toBe(11)
     f.model.setNumber(model, 'contextWindowTokens', '')
     expect(model.contextWindowTokens).toBeUndefined()
-    f.model.addFallback('aiTask')
-    f.model.addFallback('aiTask')
-    expect(f.config.tasks.aiTask.modelChain).toEqual(['model'])
   })
 })

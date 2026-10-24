@@ -240,7 +240,7 @@ export function normalizeConfigValue<T>(path: string, value: unknown): T {
 
 /**
  * The LLM section: built-in providers first, each once and of its own type,
- * models of existing providers, task chains of existing models
+ * models of existing providers, task models that exist
  */
 export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
   const llm = repair(value, schemaAt('llm')) as UserConfig['llm']
@@ -269,9 +269,7 @@ export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
   )
   const models = new Set(llm.models.map((model) => model.id))
   for (const task of LLM_TASKS)
-    llm.tasks[task].modelChain = llm.tasks[task].modelChain.filter((id) =>
-      models.has(id)
-    )
+    if (!models.has(llm.tasks[task].modelId)) llm.tasks[task].modelId = ''
   return llm
 }
 

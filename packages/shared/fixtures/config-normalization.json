@@ -122,14 +122,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -295,14 +295,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -481,14 +481,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["missing", "ollama-qwen", "ollama-qwen"],
+            "modelId": "missing",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -654,14 +654,10 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "translation": {
-            "modelChain": ["ollama-qwen"],
-            "rule": "",
-            "qualityGateRule": ""
-          },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "translation": { "modelId": "", "rule": "", "qualityGateRule": "" },
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -831,14 +827,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -997,14 +993,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -1172,14 +1168,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -1350,14 +1346,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -1525,14 +1521,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -1691,14 +1687,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -1864,14 +1860,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -2031,14 +2027,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -2207,14 +2203,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -2381,14 +2377,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -2564,14 +2560,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -2731,14 +2727,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -2910,14 +2906,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {
@@ -3080,14 +3076,14 @@
         ],
         "tasks": {
           "chat": { "rule": "" },
-          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": {
-            "modelChain": ["ollama-qwen"],
+            "modelId": "ollama-qwen",
             "rule": "",
             "qualityGateRule": ""
           },
-          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
-          "aiTask": { "modelChain": ["ollama-qwen"] }
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
         }
       },
       "aiTasks": {

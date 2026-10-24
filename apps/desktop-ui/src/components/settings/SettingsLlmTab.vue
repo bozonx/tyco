@@ -34,61 +34,17 @@
       </div>
     </SettingsSection>
 
-    <SettingsSection
-      :title="t('settings.modelsForFeatures')"
-      :description="t('settings.aiModelUsageHint')"
-    >
+    <SettingsSection :title="t('settings.modelsForFeatures')">
       <FieldRow
         v-for="task in LLM_TASKS"
         :key="task"
         :label="t(TASK_LABEL_KEYS[task])"
-        vertical
       >
-        <div class="flex flex-col gap-2 w-full">
-          <div
-            v-for="(modelId, index) in llm.tasks[task].modelChain"
-            :key="`${task}-${index}`"
-            class="assignment-row"
-          >
-            <span class="assignment-label text-muted">
-              {{
-                index === 0
-                  ? t('settings.primaryModel')
-                  : t('settings.fallbackModel', { index })
-              }}
-            </span>
-            <FieldSelect
-              class="flex-1"
-              :model-value="modelId"
-              :options="modelOptions"
-              @update:model-value="
-                llm.tasks[task].modelChain[index] = String($event)
-              "
-            />
-            <IconButton
-              size="sm"
-              variant="ghost"
-              icon="mdi:close"
-              :label="t('settings.removeFallback')"
-              @click="llm.tasks[task].modelChain.splice(index, 1)"
-            />
-          </div>
-          <div>
-            <Button
-              size="xs"
-              variant="ghost"
-              icon="mdi:plus"
-              :disabled="!nextFallback(task)"
-              @click="addFallback(task)"
-            >
-              {{
-                llm.tasks[task].modelChain.length
-                  ? t('settings.addFallback')
-                  : t('settings.addPrimaryModel')
-              }}
-            </Button>
-          </div>
-        </div>
+        <FieldSelect
+          :model-value="llm.tasks[task].modelId"
+          :options="taskModelOptions"
+          @update:model-value="llm.tasks[task].modelId = String($event ?? '')"
+        />
       </FieldRow>
     </SettingsSection>
 
@@ -120,7 +76,6 @@ import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import IconButton from '../common/IconButton.vue'
 import LlmConnectionCard from './LlmConnectionCard.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
@@ -147,7 +102,6 @@ const checkLlmConnection = createLlmConnectionChecker({
 })
 const settings = createLlmSettingsModel({
   getConfig: () => llm.value,
-  getUsableModelIds: () => modelOptions.value.map((option) => option.id),
   setSecret: (id, value, origins) => secretsStore.setSecret(id, value, origins),
   removeSecret: (id) => secretsStore.removeSecret(id),
   checkConnection: checkLlmConnection,
@@ -157,8 +111,7 @@ const settings = createLlmSettingsModel({
     `${t('settings.connectionFailed')}\n${describeError(error, t)}`,
   providerRemoved: (id) => void operations.finishProviderRemoval(id),
 })
-const { addProvider, removeProviderById, nextFallback, addFallback, dispose } =
-  settings
+const { addProvider, removeProviderById, dispose } = settings
 onBeforeUnmount(dispose)
 const pendingProviderId = ref<string | null>(null)
 function toggleProvider(providerId: string) {
@@ -191,6 +144,11 @@ const modelOptions = computed(() =>
     }))
 )
 
+const taskModelOptions = computed(() => [
+  { id: '', name: t('settings.taskModelNone') },
+  ...modelOptions.value,
+])
+
 function providerLabel(provider: LlmProvider) {
   return provider.name?.trim() || provider.baseUrl?.trim() || provider.id
 }
@@ -207,23 +165,3 @@ onMounted(() => {
   })
 })
 </script>
-
-<style scoped>
-.assignment-label {
-  font-size: var(--text-caption);
-}
-.assignment-row {
-  display: grid;
-  grid-template-columns: 7rem minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-sm);
-}
-@container (max-width: 40rem) {
-  .assignment-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .assignment-label {
-    grid-column: 1 / -1;
-  }
-}
-</style>

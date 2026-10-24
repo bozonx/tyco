@@ -36,7 +36,7 @@ describe('LLM request', () => {
       await request('chat', 'question', {
         instructions: 'Answer briefly',
         rules: 'Use plain text',
-        models: ['chosen-model'],
+        modelId: 'chosen-model',
         signal,
         onChunk,
         onModel,
@@ -48,7 +48,7 @@ describe('LLM request', () => {
         system: 'Answer briefly\n\nRules:\n\nUse plain text',
         messages: [{ role: 'user', content: 'question' }],
       },
-      { models: ['chosen-model'], signal, onChunk, onModel }
+      { modelId: 'chosen-model', signal, onChunk, onModel }
     )
   })
 

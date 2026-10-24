@@ -166,9 +166,7 @@ describe('llm-client stream parts', () => {
     kit.scripts.push(new AiError('unknown', 'Vision is not supported here'))
     await expect(
       collect(
-        setup().stream('chat', imagePrompt as never, {
-          models: ['ollama-qwen'],
-        })
+        setup().stream('chat', imagePrompt as never, { modelId: 'ollama-qwen' })
       )
     ).rejects.toMatchObject({ kind: 'image_unsupported' })
   })

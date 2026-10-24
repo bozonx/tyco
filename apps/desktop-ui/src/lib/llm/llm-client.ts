@@ -73,15 +73,12 @@ export function isKeylessProvider(config: LlmConfig, providerId: string) {
 export type LlmRunName = LlmTask | 'chat'
 
 interface LlmCallOptions {
-  /**
-   * Model ids to try in order instead of the task's chain; the chat passes the
-   * one model picked in it
-   */
-  models?: string[]
+  /** The model id to use instead of the task's model; the chat passes its pick */
+  modelId?: string
   signal?: AbortSignal
-  /** Replaces the temperature of every model tried */
+  /** Replaces the temperature of the model */
   temperature?: number
-  /** Caps the answer below each model's own output limit */
+  /** Caps the answer below the model's own output limit */
   maxOutputTokens?: number
 }
 
@@ -143,8 +140,8 @@ export type LlmStreamEvent =
 
 export interface LlmClient {
   /**
-   * Runs a task on its model chain, or on `options.models`. Resolves with the
-   * text produced so far when aborted
+   * Runs a task on its model, or on `options.modelId`. Resolves with the text
+   * produced so far when aborted
    *
    * @throws LlmError
    */
@@ -154,8 +151,7 @@ export interface LlmClient {
     options?: LlmRunOptions
   ) => Promise<string>
   /**
-   * The same call as events, with tools. Ends without `finish` when aborted. A
-   * model is replaced by the next one only before it has shown anything
+   * The same call as events, with tools. Ends without `finish` when aborted
    *
    * @throws LlmError
    */
@@ -175,11 +171,8 @@ const hasImages = (prompt: LlmPrompt) =>
       )
   )
 
-/**
- * The failure to report when no model answers: the first one's, which is the
- * one the user picked, named as an image refusal when that is what it was
- */
-function candidateFailure(error: LlmError, prompt: LlmPrompt): LlmError {
+/** The failure of a model, named as an image refusal when that is what it was */
+function modelFailure(error: LlmError, prompt: LlmPrompt): LlmError {
   if (
     hasImages(prompt) &&
     (error.kind === 'invalid_request' ||
@@ -218,17 +211,15 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
     return kit
   }
 
-  /** The models a call tries, in order, and the time it has for all of them */
+  /** The model a call uses and the time it has */
   const startCall = (task: LlmRunName, options: LlmCallOptions) => {
     const config = deps.getConfig()
-    const chain =
-      options.models ??
-      (task === 'chat' ? [] : config.tasks[task].modelChain) ??
-      []
-    const candidates = chain
-      .map((id) => config.models.find((model) => model.id === id))
-      .filter((model) => model !== undefined)
-    if (candidates.length === 0) {
+    const modelId =
+      options.modelId ?? (task === 'chat' ? '' : config.tasks[task].modelId)
+    const model = modelId
+      ? config.models.find((item) => item.id === modelId)
+      : undefined
+    if (!model) {
       throw new LlmError(
         'no_model',
         `No language model is configured for ${task}`
@@ -240,11 +231,7 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
     const signal = options.signal
       ? AbortSignal.any([options.signal, timeoutSignal])
       : timeoutSignal
-    const checkTime = () => {
-      if (signal.aborted || Date.now() >= deadline)
-        throw new LlmError('timeout', 'The language model request timed out')
-    }
-    return { config, candidates, deadline, signal, checkTime }
+    return { config, model, deadline, signal }
   }
 
   /** The request for one model, with the kit that sends it */
@@ -257,12 +244,12 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
     signal: AbortSignal,
     deadline: number
   ) => {
-    // the catalog's task classes come from the model chains; the chat is one too
+    // the catalog's task classes come from the task models; the chat is one too
     const scopedConfig = {
       ...config,
       tasks: {
         ...config.tasks,
-        [task]: { ...config.tasks[task], modelChain: [model.id] },
+        [task]: { ...config.tasks[task], modelId: model.id },
       },
     } as LlmConfig
     const kit = kitFor(scopedConfig)
@@ -306,167 +293,151 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
     options: LlmStreamOptions = {}
   ): AsyncGenerator<LlmStreamEvent, void, undefined> {
     if (options.signal?.aborted) return
-    const { config, candidates, deadline, signal, checkTime } = startCall(
-      task,
-      options
-    )
+    const { config, model, deadline, signal } = startCall(task, options)
     const hasTools = Boolean(options.tools && Object.keys(options.tools).length)
-    let firstError: LlmError | undefined
-    for (const model of candidates) {
-      if (options.signal?.aborted) return
-      checkTime()
-      // anything but the model's name reached the reader: no other model may
-      // answer in its place
-      let hasEmitted = false
-      let text = ''
-      let pendingApprovalCount = 0
-      try {
-        const { kit, request } = requestFor(
-          config,
-          task,
-          model,
-          prompt,
-          options,
-          signal,
-          deadline
-        )
-        if (hasTools) {
-          request.tools = options.tools
-          if (options.toolApproval) request.toolApproval = options.toolApproval
-          if (options.maxSteps !== undefined)
-            request.maxSteps = options.maxSteps
-          if (options.activeTools) request.activeTools = options.activeTools
-          if (options.prepareStep) request.prepareStep = options.prepareStep
-        }
-
-        let isCompleted = false
-        for await (const part of kit.stream(request)) {
-          switch (part.type) {
-            case 'model':
-              yield {
-                type: 'model',
-                provider: part.provider,
-                model: part.model,
-              }
-              break
-            case 'text-delta':
-              hasEmitted = true
-              text += part.text
-              yield { type: 'text', text: part.text }
-              break
-            case 'reasoning-delta':
-              hasEmitted = true
-              yield { type: 'reasoning', text: part.text }
-              break
-            case 'tool-call':
-              hasEmitted = true
-              yield {
-                type: 'tool-call',
-                toolCallId: part.toolCallId,
-                toolName: part.toolName,
-                input: part.args,
-              }
-              break
-            case 'tool-result':
-              hasEmitted = true
-              yield {
-                type: 'tool-result',
-                toolCallId: part.toolCallId,
-                toolName: part.toolName,
-                output: part.result,
-                isError: part.isError === true,
-              }
-              break
-            case 'tool-denied':
-              hasEmitted = true
-              yield {
-                type: 'tool-denied',
-                toolCallId: part.toolCallId,
-                toolName: part.toolName,
-              }
-              break
-            case 'tool-approval-request':
-              hasEmitted = true
-              // a decision the approval rule made itself is not asked about
-              if (part.isAutomatic) break
-              pendingApprovalCount += 1
-              yield {
-                type: 'approval-request',
-                approvalId: part.approvalId,
-                toolCallId: part.toolCallId,
-                toolName: part.toolName,
-                input: part.args,
-              }
-              break
-            case 'step-finish':
-              yield {
-                type: 'step-finish',
-                step: part.step,
-                finishReason: part.finishReason,
-              }
-              break
-            case 'file':
-              hasEmitted = true
-              yield { type: 'file', mediaType: part.mediaType, data: part.data }
-              break
-            case 'sources':
-              hasEmitted = true
-              yield { type: 'sources', sources: part.sources }
-              break
-            case 'error': {
-              if (options.signal?.aborted) return
-              const error = new LlmError(errorKind(part.kind), part.message)
-              error.partialText = text
-              throw error
-            }
-            case 'finish':
-              if (part.finishReason === 'tool-calls') {
-                // without a request to answer, the steps simply ran out
-                if (pendingApprovalCount === 0) {
-                  const error = new LlmError(
-                    'step_limit',
-                    'The model used up its tool steps without answering'
-                  )
-                  error.partialText = text
-                  throw error
-                }
-              } else {
-                ensureCompleteAnswer(part.finishReason, text)
-              }
-              isCompleted = true
-              yield {
-                type: 'finish',
-                finishReason:
-                  part.finishReason === 'tool-calls' ? 'tool-calls' : 'stop',
-                text,
-                responseMessages: part.responseMessages,
-              }
-              break
-            default:
-              break
-          }
-        }
-        if (!isCompleted) {
-          if (options.signal?.aborted) return
-          ensureCompleteAnswer('unknown', text)
-        }
-        return
-      } catch (error) {
-        if (options.signal?.aborted) return
-        if (signal.aborted) {
-          const timeout = new LlmError(
-            'timeout',
-            'The language model request timed out'
-          )
-          timeout.partialText = text
-          throw timeout
-        }
-        const llmError = toLlmError(error)
-        if (hasEmitted || llmError.partialText) throw llmError
-        firstError ??= candidateFailure(llmError, prompt)
+    let hasEmitted = false
+    let text = ''
+    let pendingApprovalCount = 0
+    try {
+      const { kit, request } = requestFor(
+        config,
+        task,
+        model,
+        prompt,
+        options,
+        signal,
+        deadline
+      )
+      if (hasTools) {
+        request.tools = options.tools
+        if (options.toolApproval) request.toolApproval = options.toolApproval
+        if (options.maxSteps !== undefined) request.maxSteps = options.maxSteps
+        if (options.activeTools) request.activeTools = options.activeTools
+        if (options.prepareStep) request.prepareStep = options.prepareStep
       }
+
+      let isCompleted = false
+      for await (const part of kit.stream(request)) {
+        switch (part.type) {
+          case 'model':
+            yield { type: 'model', provider: part.provider, model: part.model }
+            break
+          case 'text-delta':
+            hasEmitted = true
+            text += part.text
+            yield { type: 'text', text: part.text }
+            break
+          case 'reasoning-delta':
+            hasEmitted = true
+            yield { type: 'reasoning', text: part.text }
+            break
+          case 'tool-call':
+            hasEmitted = true
+            yield {
+              type: 'tool-call',
+              toolCallId: part.toolCallId,
+              toolName: part.toolName,
+              input: part.args,
+            }
+            break
+          case 'tool-result':
+            hasEmitted = true
+            yield {
+              type: 'tool-result',
+              toolCallId: part.toolCallId,
+              toolName: part.toolName,
+              output: part.result,
+              isError: part.isError === true,
+            }
+            break
+          case 'tool-denied':
+            hasEmitted = true
+            yield {
+              type: 'tool-denied',
+              toolCallId: part.toolCallId,
+              toolName: part.toolName,
+            }
+            break
+          case 'tool-approval-request':
+            hasEmitted = true
+            // a decision the approval rule made itself is not asked about
+            if (part.isAutomatic) break
+            pendingApprovalCount += 1
+            yield {
+              type: 'approval-request',
+              approvalId: part.approvalId,
+              toolCallId: part.toolCallId,
+              toolName: part.toolName,
+              input: part.args,
+            }
+            break
+          case 'step-finish':
+            yield {
+              type: 'step-finish',
+              step: part.step,
+              finishReason: part.finishReason,
+            }
+            break
+          case 'file':
+            hasEmitted = true
+            yield { type: 'file', mediaType: part.mediaType, data: part.data }
+            break
+          case 'sources':
+            hasEmitted = true
+            yield { type: 'sources', sources: part.sources }
+            break
+          case 'error': {
+            if (options.signal?.aborted) return
+            const error = new LlmError(errorKind(part.kind), part.message)
+            error.partialText = text
+            throw error
+          }
+          case 'finish':
+            if (part.finishReason === 'tool-calls') {
+              // without a request to answer, the steps simply ran out
+              if (pendingApprovalCount === 0) {
+                const error = new LlmError(
+                  'step_limit',
+                  'The model used up its tool steps without answering'
+                )
+                error.partialText = text
+                throw error
+              }
+            } else {
+              ensureCompleteAnswer(part.finishReason, text)
+            }
+            isCompleted = true
+            yield {
+              type: 'finish',
+              finishReason:
+                part.finishReason === 'tool-calls' ? 'tool-calls' : 'stop',
+              text,
+              responseMessages: part.responseMessages,
+            }
+            break
+          default:
+            break
+        }
+      }
+      if (!isCompleted) {
+        if (options.signal?.aborted) return
+        ensureCompleteAnswer('unknown', text)
+      }
+      return
+    } catch (error) {
+      if (options.signal?.aborted) return
+      if (signal.aborted) {
+        const timeout = new LlmError(
+          'timeout',
+          'The language model request timed out'
+        )
+        timeout.partialText = text
+        throw timeout
+      }
+      const llmError = toLlmError(error)
+      if (hasEmitted || llmError.partialText) throw llmError
+      throw modelFailure(llmError, prompt)
     }
-    throw firstError ?? new LlmError('unknown', 'All language models failed')
   }
 
   /** A whole answer without streaming: nothing reaches anybody until it is over */
@@ -475,39 +446,30 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
     prompt: LlmPrompt,
     options: LlmRunOptions
   ) {
-    const { config, candidates, deadline, signal, checkTime } = startCall(
-      task,
-      options
-    )
-    let firstError: LlmError | undefined
-    for (const model of candidates) {
+    const { config, model, deadline, signal } = startCall(task, options)
+    try {
+      const { kit, request } = requestFor(
+        config,
+        task,
+        model,
+        prompt,
+        options,
+        signal,
+        deadline
+      )
+      const result = await kit.generate(request)
+      options.onModel?.({ provider: result.provider, model: result.model })
+      ensureCompleteAnswer(result.finishReason, result.text)
+      return result.text
+    } catch (error) {
       if (options.signal?.aborted) return ''
-      checkTime()
-      try {
-        const { kit, request } = requestFor(
-          config,
-          task,
-          model,
-          prompt,
-          options,
-          signal,
-          deadline
-        )
-        const result = await kit.generate(request)
-        options.onModel?.({ provider: result.provider, model: result.model })
-        ensureCompleteAnswer(result.finishReason, result.text)
-        return result.text
-      } catch (error) {
-        if (options.signal?.aborted) return ''
-        if (signal.aborted) {
-          throw new LlmError('timeout', 'The language model request timed out')
-        }
-        const llmError = toLlmError(error)
-        if (llmError.partialText) throw llmError
-        firstError ??= candidateFailure(llmError, prompt)
+      if (signal.aborted) {
+        throw new LlmError('timeout', 'The language model request timed out')
       }
+      const llmError = toLlmError(error)
+      if (llmError.partialText) throw llmError
+      throw modelFailure(llmError, prompt)
     }
-    throw firstError ?? new LlmError('unknown', 'All language models failed')
   }
 
   return {

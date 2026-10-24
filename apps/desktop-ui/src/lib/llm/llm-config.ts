@@ -75,9 +75,7 @@ export function removeModel(config: LlmConfig, modelId: string) {
   config.models = config.models.filter((model) => model.id !== modelId)
 
   for (const task of LLM_TASKS) {
-    config.tasks[task].modelChain = config.tasks[task].modelChain.filter(
-      (id) => id !== modelId
-    )
+    if (config.tasks[task].modelId === modelId) config.tasks[task].modelId = ''
   }
 }
 
@@ -87,18 +85,13 @@ export function modelLabel(
   return model.name?.trim() || model.providerModelId.trim() || model.id
 }
 
-/** The model a task answers with and how many fallbacks back it up */
-export function taskModelSummary(
+/** The model a task answers with, undefined when none is picked */
+export function taskModel(
   config: Pick<LlmConfig, 'models' | 'tasks'>,
   task: LlmTask
-): { primaryModelLabel?: string; fallbackCount: number } {
-  const models = config.tasks[task].modelChain.flatMap((id) => {
-    const model = config.models.find((item) => item.id === id)
-    return model ? [model] : []
-  })
-  const [primary, ...fallbacks] = models
-  return {
-    primaryModelLabel: primary && modelLabel(primary),
-    fallbackCount: fallbacks.length,
-  }
+): LlmModel | undefined {
+  const { modelId } = config.tasks[task]
+  return modelId
+    ? config.models.find((model) => model.id === modelId)
+    : undefined
 }

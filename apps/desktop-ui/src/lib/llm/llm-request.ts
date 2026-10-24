@@ -23,8 +23,8 @@ export interface AiRequestOptions {
   signal?: AbortSignal
   onModel?: (model: { provider: string; model: string }) => void
   notifyError?: boolean
-  /** Models to run on instead of the task's chain */
-  models?: string[]
+  /** The model to run on instead of the task's own */
+  modelId?: string
   temperature?: number
   maxOutputTokens?: number
   /** Reads the bytes of a message image; the "Ask AI" images by default */
@@ -117,7 +117,7 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
       if (!prompt) return ''
 
       return await deps.client.run(taskName, prompt, {
-        models: options.models,
+        modelId: options.modelId,
         onChunk: options.onChunk,
         signal: options.signal,
         onModel: options.onModel,
@@ -167,7 +167,7 @@ export function createLlmRequest(deps: LlmRequestDependencies) {
           maxStepCount: tools.maxStepCount,
           signal: options.signal ?? new AbortController().signal,
           options: {
-            models: options.models,
+            modelId: options.modelId,
             temperature: options.temperature,
             maxOutputTokens: options.maxOutputTokens,
           },

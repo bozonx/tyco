@@ -41,8 +41,7 @@ export const useToolsStore = defineStore('tools', () => {
   })
 
   const getLlmUnavailableReasonKey = (task: LlmTask) =>
-    normalizeLlmConfig(desktopStore.userConfig?.llm).tasks[task].modelChain
-      ?.length
+    normalizeLlmConfig(desktopStore.userConfig?.llm).tasks[task].modelId
       ? undefined
       : 'tools.noLlm'
 

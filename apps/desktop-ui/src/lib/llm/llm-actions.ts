@@ -54,7 +54,7 @@ export function createLlmActions(deps: LlmActionsDependencies) {
       ],
       {
         ...rest,
-        models: [modelId],
+        modelId,
         notifyError: false,
         instructions:
           devInstructions ??
@@ -75,7 +75,7 @@ export function createLlmActions(deps: LlmActionsDependencies) {
       LlmInstructionKind.CHAT,
       chatTitleSource(question, answer),
       {
-        models: [modelId],
+        modelId,
         notifyError: false,
         instructions: CHAT_TITLE_INSTRUCTIONS,
         signal,

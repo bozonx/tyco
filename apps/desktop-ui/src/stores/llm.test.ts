@@ -51,7 +51,7 @@ describe('LLM store service wiring', () => {
       expect(mocks.stream).toHaveBeenLastCalledWith(
         'chat',
         expect.objectContaining({ messages: expect.any(Array) }),
-        expect.objectContaining({ models: ['chosen'] })
+        expect.objectContaining({ modelId: 'chosen' })
       )
       expect(mocks.dictation).not.toHaveBeenCalled()
       expect(mocks.translation).not.toHaveBeenCalled()

@@ -5,7 +5,6 @@ import {
   type LlmConfig,
   type LlmModel,
   type LlmProvider,
-  type LlmTask,
 } from '@tyco/shared'
 
 import { createSecretKeyEditor } from '../settings/secret-key-editor'
@@ -18,7 +17,6 @@ export type LlmConnectionCheckStatus = 'checking' | 'success' | 'error'
 
 export function createLlmSettingsModel(deps: {
   getConfig: () => LlmConfig
-  getUsableModelIds: () => string[]
   setSecret: (id: string, value: string, origins?: string[]) => Promise<void>
   removeSecret: (id: string) => Promise<void>
   checkConnection: (provider: LlmProvider) => Promise<unknown>
@@ -126,19 +124,6 @@ export function createLlmSettingsModel(deps: {
     numberErrors[key] = !parsed.isValid
     if (parsed.isValid) model[field] = parsed.value
   }
-  function nextFallback(task: LlmTask) {
-    const usable = new Set(deps.getUsableModelIds())
-    const config = deps.getConfig()
-    return config.models.find(
-      (model) =>
-        usable.has(model.id) &&
-        !config.tasks[task].modelChain.includes(model.id)
-    )
-  }
-  function addFallback(task: LlmTask) {
-    const model = nextFallback(task)
-    if (model) deps.getConfig().tasks[task].modelChain.push(model.id)
-  }
   function dispose() {
     requests.clear()
   }
@@ -157,8 +142,6 @@ export function createLlmSettingsModel(deps: {
     addModelToProvider,
     checkConnection,
     setNumber,
-    nextFallback,
-    addFallback,
     dispose,
   }
 }
