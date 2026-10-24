@@ -578,7 +578,6 @@
     "addPrimaryModel": "Assign model",
     "aiModelUsage": "AI Model Usage",
     "aiModelUsageHint": "Requests are sent to the first available model. If a provider fails or is unreachable, requests automatically fall back to the next models in order.",
-    "aiRules": "AI rules",
     "apiKey": "API Key",
     "apiKeyBoundTo": "The saved key only goes to {origin}. Save it again to use it with this address.",
     "apiKeyOptional": "Most local servers need no key.",
@@ -598,7 +597,8 @@
     "chatHistoryRetentionDays": "Delete old chats",
     "chatHistoryRetentionDaysHint": "A chat is deleted when it has had no new messages for this long. Older chats are deleted right away.",
     "chatHistoryRetentionNever": "Never",
-    "chatRules": "Chat",
+    "chatPrompt": "Main prompt",
+    "chatPromptInfo": "Added to the chat instructions when no profile is selected in the chat.",
     "checkConnection": "Check connection",
     "checkingConnection": "Checking…",
     "clearChatsConfirmDialog": "Are you sure you want to delete all saved chats? This cannot be undone.",
@@ -674,7 +674,6 @@
     "hotkeyStatus": {
       "conflict": "Could not assign it: the shortcut is most likely taken by another app. Choose another one."
     },
-    "historyTab": "History",
     "hotkeysMissing": "Some hotkeys were removed in the system settings and do not work. Use “Register again” to bring them back.",
     "hotkeysTab": "Hotkeys",
     "inlineCorrectionExternalHint": "Run this command from a script or a system shortcut. D-Bus: method CorrectSelection of org.tyco.Interface.",
@@ -688,7 +687,7 @@
     "launcherCommandsTab": "Quick commands",
     "llmConnections": "Connections",
     "llmConnectionsHint": "Where Tyco sends AI requests: Google, OpenRouter, DeepSeek or any server with an OpenAI-compatible API, such as a local Ollama or LM Studio. Models are added inside their connection. A saved key goes to secure storage and is never shown again.",
-    "llmTab": "LLM",
+    "llmTab": "Connections & models",
     "mainActionGroups": {
       "basic": "Basic",
       "translation": "Translation",
@@ -732,6 +731,11 @@
     "modelId": "Model ID",
     "modelsCount": "{count} models",
     "modelsForFeatures": "Models for features",
+    "taskModel": "Model",
+    "taskModelInfo": "Models and their fallbacks are assigned on the Connections & models page.",
+    "taskModelNone": "Not selected",
+    "taskModelFallbacks": "fallbacks: {count}",
+    "taskModelChange": "Change",
     "motion": "Animations",
     "motionAuto": "System",
     "motionNormal": "On",
@@ -814,7 +818,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (self-hosted)",
     "sttServerUrl": "Server address",
     "sttServerUrlHint": "WebSocket address of a sherpa-onnx streaming server, on this computer or in the local network. The recognition model is the one the server runs.",
-    "sttTab": "STT",
+    "sttTab": "Voice",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter for a new line)",
       "enter": "Enter (Shift+Enter for a new line)",
@@ -825,6 +829,9 @@
     "temperature": "Temperature",
     "voiceTextCorrection": "Voice text correction",
     "textCorrection": "Text correction",
+    "correctionPageHint": "Fixes mistakes in text with AI. The hotkey for correcting selected text is set on the page",
+    "correctionPrompt": "Prompt",
+    "correctionPromptInfo": "Added to the built-in correction instructions.",
     "textInjection": {
       "recheck": "Check again",
       "unavailable": "Text insertion is unavailable: {error}"
@@ -852,6 +859,7 @@
     "translationProviderLlm": "AI model",
     "translationsHint": "Quick translation languages: in the translation menu each one is picked with its own key. Drag the cards to change their keys.",
     "translationsTab": "Translation",
+    "correctionTab": "Correction",
     "uiScale": "Interface scale",
     "unassignHotkey": "Remove shortcut",
     "userLanguage": "User language",
@@ -931,7 +939,8 @@
     "profileFilesAskAll": "“Files” is set to “Ask”: every call waits for confirmation, even where the project allows it.",
     "profileModelDefaultNamed": "First available ({model})",
     "deleteProfileConfirmUncounted": "Delete the profile “{name}”? Its SOUL.md, workspace and all its chats will be deleted for good.",
-    "modelsCategory": "Models",
+    "featuresCategory": "Features",
+    "aiCategory": "AI",
     "allPluginsTab": "All plugins",
     "pluginStatusOff": "Off"
   },

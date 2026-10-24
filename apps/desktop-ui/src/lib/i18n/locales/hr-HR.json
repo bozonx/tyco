@@ -578,7 +578,6 @@
     "addPrimaryModel": "Dodijeli model",
     "aiModelUsage": "Upotreba AI modela",
     "aiModelUsageHint": "Zahtjevi se šalju prvom dostupnom modelu. Ako pružatelj zakaže ili nije dostupan, zahtjevi automatski prelaze na sljedeće modele redom.",
-    "aiRules": "AI pravila",
     "apiKey": "API ključ",
     "apiKeyBoundTo": "Spremljeni ključ šalje se samo na {origin}. Spremite ga ponovno da biste ga koristili s ovom adresom.",
     "apiKeyOptional": "Većina lokalnih poslužitelja ne treba ključ.",
@@ -598,7 +597,8 @@
     "chatHistoryRetentionDays": "Briši stare chatove",
     "chatHistoryRetentionDaysHint": "Chat se briše kad toliko dugo nema novih poruka. Stariji chatovi brišu se odmah.",
     "chatHistoryRetentionNever": "Nikad",
-    "chatRules": "Chat",
+    "chatPrompt": "Glavni prompt",
+    "chatPromptInfo": "Dodaje se uputama chata ako u njemu nije odabran profil.",
     "checkConnection": "Provjeri vezu",
     "checkingConnection": "Provjera…",
     "clearChatsConfirmDialog": "Jeste li sigurni da želite izbrisati sve spremljene chatove? To se ne može poništiti.",
@@ -674,7 +674,6 @@
     "hotkeyStatus": {
       "conflict": "Dodjela nije uspjela: prečac najvjerojatnije koristi druga aplikacija. Odaberite drugi."
     },
-    "historyTab": "Povijest",
     "hotkeysMissing": "Neki su prečaci uklonjeni u postavkama sustava i ne rade. Upotrijebite „Ponovno registriraj” da biste ih vratili.",
     "hotkeysTab": "Prečaci",
     "inlineCorrectionExternalHint": "Pokrenite ovu naredbu iz skripte ili prečaca sustava. D-Bus: metoda CorrectSelection sučelja org.tyco.Interface.",
@@ -688,7 +687,7 @@
     "launcherCommandsTab": "Brze naredbe",
     "llmConnections": "Veze",
     "llmConnectionsHint": "Kamo Tyco šalje AI zahtjeve: Google, OpenRouter, DeepSeek ili bilo koji poslužitelj s API-jem kompatibilnim s OpenAI-jem, npr. lokalni Ollama ili LM Studio. Modeli se dodaju unutar svoje veze. Spremljeni ključ ide u sigurnu pohranu i više se nikad ne prikazuje.",
-    "llmTab": "LLM",
+    "llmTab": "Veze i modeli",
     "mainActionGroups": {
       "basic": "Osnovne",
       "translation": "Prijevod",
@@ -732,6 +731,11 @@
     "modelId": "ID modela",
     "modelsCount": "Modela: {count}",
     "modelsForFeatures": "Modeli za funkcije",
+    "taskModel": "Model",
+    "taskModelInfo": "Modeli i rezervni modeli dodjeljuju se na stranici „Veze i modeli”.",
+    "taskModelNone": "Nije odabrano",
+    "taskModelFallbacks": "rezervni: {count}",
+    "taskModelChange": "Promijeni",
     "motion": "Animacije",
     "motionAuto": "Sustav",
     "motionNormal": "Uključeno",
@@ -814,7 +818,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (vlastiti poslužitelj)",
     "sttServerUrl": "Adresa poslužitelja",
     "sttServerUrlHint": "WebSocket adresa sherpa-onnx poslužitelja za strujanje, na ovom računalu ili u lokalnoj mreži. Model prepoznavanja je onaj koji pokreće poslužitelj.",
-    "sttTab": "STT",
+    "sttTab": "Glas",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter za novi redak)",
       "enter": "Enter (Shift+Enter za novi redak)",
@@ -825,6 +829,9 @@
     "temperature": "Temperatura",
     "voiceTextCorrection": "Ispravak izdiktiranog teksta",
     "textCorrection": "Ispravak teksta",
+    "correctionPageHint": "Ispravlja pogreške u tekstu pomoću AI-ja. Prečac za ispravak odabranog teksta postavlja se na stranici",
+    "correctionPrompt": "Prompt",
+    "correctionPromptInfo": "Dodaje se ugrađenim uputama za ispravak.",
     "textInjection": {
       "recheck": "Provjeri ponovno",
       "unavailable": "Umetanje teksta nije dostupno: {error}"
@@ -852,6 +859,7 @@
     "translationProviderLlm": "AI model",
     "translationsHint": "Jezici brzog prijevoda: u izborniku prijevoda svaki se bira vlastitom tipkom. Povucite kartice da biste promijenili njihove tipke.",
     "translationsTab": "Prijevod",
+    "correctionTab": "Ispravak",
     "uiScale": "Veličina sučelja",
     "unassignHotkey": "Ukloni prečac",
     "userLanguage": "Jezik korisnika",
@@ -931,7 +939,8 @@
     "profileFilesAskAll": "„Datoteke” su postavljene na „Pitaj”: svaki poziv čeka potvrdu, čak i ondje gdje ga projekt dopušta.",
     "profileModelDefaultNamed": "Prvi dostupni ({model})",
     "deleteProfileConfirmUncounted": "Izbrisati profil „{name}”? Njegov SOUL.md, radni prostor i svi chatovi bit će trajno izbrisani.",
-    "modelsCategory": "Modeli",
+    "featuresCategory": "Značajke",
+    "aiCategory": "AI",
     "allPluginsTab": "Svi dodaci",
     "pluginStatusOff": "Isključen"
   },

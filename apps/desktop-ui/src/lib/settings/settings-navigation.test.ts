@@ -37,11 +37,17 @@ describe('settings navigation', () => {
       'ai-project:notes',
       'commands',
       'launcher-commands',
-      'history',
+      'chat',
     ]) {
       expect(isSettingsTabAvailable(tab, hiddenSources)).toBe(false)
     }
     expect(isSettingsTabAvailable('general', hiddenSources)).toBe(true)
+    expect(isSettingsTabAvailable('correction', hiddenSources)).toBe(true)
+    expect(
+      buildSettingsNavigation(hiddenSources)
+        .flatMap((group) => group.items)
+        .some((item) => item.id === 'chat')
+    ).toBe(false)
   })
 
   it('parses sections and detail pages', () => {
@@ -64,6 +70,7 @@ describe('settings navigation', () => {
     })
     expect(parseSettingsTab('plugin:')).toEqual({ kind: 'unknown' })
     expect(parseSettingsTab('nope')).toEqual({ kind: 'unknown' })
+    expect(parseSettingsTab('history')).toEqual({ kind: 'unknown' })
   })
 
   it('groups the sections and lists each plugin after all plugins', () => {
@@ -71,14 +78,12 @@ describe('settings navigation', () => {
     expect(
       groups.map((group) => [group.label, group.items.map((item) => item.id)])
     ).toEqual([
+      [undefined, ['general', 'editor', 'global-actions', 'accessibility']],
       [
-        undefined,
-        ['general', 'editor', 'history', 'global-actions', 'accessibility'],
+        'settings.featuresCategory',
+        ['chat', 'correction', 'translations', 'stt'],
       ],
-      [
-        'settings.modelsCategory',
-        ['stt', 'llm', 'translations', 'ai-profiles'],
-      ],
+      ['settings.aiCategory', ['llm', 'ai-profiles']],
       [
         'settings.actionsCategory',
         ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],

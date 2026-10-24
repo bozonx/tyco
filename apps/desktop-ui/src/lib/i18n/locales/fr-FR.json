@@ -578,7 +578,6 @@
     "addPrimaryModel": "Attribuer un modèle",
     "aiModelUsage": "Utilisation des modèles IA",
     "aiModelUsageHint": "Les requêtes sont envoyées au premier modèle disponible. Si un fournisseur échoue ou est injoignable, les requêtes basculent automatiquement vers les modèles suivants, dans l’ordre.",
-    "aiRules": "Règles IA",
     "apiKey": "Clé d’API",
     "apiKeyBoundTo": "La clé enregistrée n’est envoyée qu’à {origin}. Enregistrez-la de nouveau pour l’utiliser avec cette adresse.",
     "apiKeyOptional": "La plupart des serveurs locaux n’ont pas besoin de clé.",
@@ -598,7 +597,8 @@
     "chatHistoryRetentionDays": "Supprimer les anciens chats",
     "chatHistoryRetentionDaysHint": "Un chat est supprimé lorsqu’il n’a reçu aucun nouveau message pendant cette durée. Les chats plus anciens sont supprimés immédiatement.",
     "chatHistoryRetentionNever": "Jamais",
-    "chatRules": "Chat",
+    "chatPrompt": "Prompt principal",
+    "chatPromptInfo": "Ajouté aux instructions du chat lorsqu’aucun profil n’y est sélectionné.",
     "checkConnection": "Vérifier la connexion",
     "checkingConnection": "Vérification…",
     "clearChatsConfirmDialog": "Voulez-vous vraiment supprimer tous les chats enregistrés ? Cette action est irréversible.",
@@ -674,7 +674,6 @@
     "hotkeyStatus": {
       "conflict": "Attribution impossible : le raccourci est très probablement utilisé par une autre application. Choisissez-en un autre."
     },
-    "historyTab": "Historique",
     "hotkeysMissing": "Certains raccourcis ont été supprimés dans les paramètres du système et ne fonctionnent pas. Utilisez « Réenregistrer » pour les rétablir.",
     "hotkeysTab": "Raccourcis",
     "inlineCorrectionExternalHint": "Lancez cette commande depuis un script ou un raccourci système. D-Bus : méthode CorrectSelection de org.tyco.Interface.",
@@ -688,7 +687,7 @@
     "launcherCommandsTab": "Commandes rapides",
     "llmConnections": "Connexions",
     "llmConnectionsHint": "Où Tyco envoie les requêtes IA : Google, OpenRouter, DeepSeek ou tout serveur doté d’une API compatible OpenAI, comme un Ollama ou un LM Studio local. Les modèles s’ajoutent dans leur connexion. Une clé enregistrée va dans le stockage sécurisé et n’est plus jamais affichée.",
-    "llmTab": "LLM",
+    "llmTab": "Connexions et modèles",
     "mainActionGroups": {
       "basic": "Base",
       "translation": "Traduction",
@@ -732,6 +731,11 @@
     "modelId": "ID du modèle",
     "modelsCount": "Modèles : {count}",
     "modelsForFeatures": "Modèles par fonction",
+    "taskModel": "Modèle",
+    "taskModelInfo": "Les modèles et leurs modèles de secours s’attribuent sur la page « Connexions et modèles ».",
+    "taskModelNone": "Non sélectionné",
+    "taskModelFallbacks": "de secours : {count}",
+    "taskModelChange": "Modifier",
     "motion": "Animations",
     "motionAuto": "Système",
     "motionNormal": "Activées",
@@ -814,7 +818,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (auto-hébergé)",
     "sttServerUrl": "Adresse du serveur",
     "sttServerUrlHint": "Adresse WebSocket d’un serveur de streaming sherpa-onnx, sur cet ordinateur ou sur le réseau local. Le modèle de reconnaissance est celui qu’exécute le serveur.",
-    "sttTab": "STT",
+    "sttTab": "Voix",
     "submitKey": {
       "ctrlEnter": "Ctrl+Entrée (Entrée pour une nouvelle ligne)",
       "enter": "Entrée (Maj+Entrée pour une nouvelle ligne)",
@@ -825,6 +829,9 @@
     "temperature": "Température",
     "voiceTextCorrection": "Correction du texte dicté",
     "textCorrection": "Correction de texte",
+    "correctionPageHint": "Corrige les erreurs du texte avec l’IA. Le raccourci pour corriger le texte sélectionné se configure sur la page",
+    "correctionPrompt": "Prompt",
+    "correctionPromptInfo": "Ajouté aux instructions de correction intégrées.",
     "textInjection": {
       "recheck": "Vérifier à nouveau",
       "unavailable": "L’insertion de texte n’est pas disponible : {error}"
@@ -852,6 +859,7 @@
     "translationProviderLlm": "Modèle IA",
     "translationsHint": "Langues de traduction rapide : dans le menu de traduction, chacune se choisit avec sa propre touche. Faites glisser les cartes pour changer leurs touches.",
     "translationsTab": "Traduction",
+    "correctionTab": "Correction",
     "uiScale": "Échelle de l’interface",
     "unassignHotkey": "Retirer le raccourci",
     "userLanguage": "Langue de l’utilisateur",
@@ -931,7 +939,8 @@
     "profileFilesAskAll": "« Fichiers » est réglé sur « Demander » : chaque appel attend une confirmation, même là où le projet l’autorise.",
     "profileModelDefaultNamed": "Premier disponible ({model})",
     "deleteProfileConfirmUncounted": "Supprimer le profil « {name} » ? Son SOUL.md, son espace de travail et tous ses chats seront supprimés définitivement.",
-    "modelsCategory": "Modèles",
+    "featuresCategory": "Fonctionnalités",
+    "aiCategory": "IA",
     "allPluginsTab": "Tous les plugins",
     "pluginStatusOff": "Désactivé"
   },

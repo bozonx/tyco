@@ -575,7 +575,6 @@
     "addPrimaryModel": "Назначить модель",
     "aiModelUsage": "Использование моделей ИИ",
     "aiModelUsageHint": "Запросы отправляются первой доступной модели. При ошибке или недоступности провайдера запрос автоматически передаётся следующим моделям по порядку (резервные модели).",
-    "aiRules": "Правила ИИ",
     "apiKey": "API-ключ",
     "apiKeyBoundTo": "Сохранённый ключ отправляется только на {origin}. Сохраните его заново, чтобы использовать с этим адресом.",
     "apiKeyOptional": "Большинству локальных серверов ключ не нужен.",
@@ -595,7 +594,8 @@
     "chatHistoryRetentionDays": "Удалять старые чаты",
     "chatHistoryRetentionDaysHint": "Чат удаляется, если в нём не было новых сообщений дольше этого срока. Более старые чаты удаляются сразу.",
     "chatHistoryRetentionNever": "Никогда",
-    "chatRules": "Чат",
+    "chatPrompt": "Основной промпт",
+    "chatPromptInfo": "Добавляется к инструкциям чата, если в нём не выбран профиль.",
     "checkConnection": "Проверить подключение",
     "checkingConnection": "Проверяем…",
     "clearChatsConfirmDialog": "Вы уверены, что хотите удалить все сохранённые чаты? Это действие нельзя отменить.",
@@ -671,7 +671,6 @@
     "hotkeyStatus": {
       "conflict": "Не удалось назначить: сочетание, скорее всего, уже занято другим приложением. Выберите другое."
     },
-    "historyTab": "История",
     "hotkeysMissing": "Часть хоткеев удалена в системных настройках и не работает. Нажмите «Зарегистрировать заново», чтобы вернуть их.",
     "hotkeysTab": "Хоткеи",
     "inlineCorrectionExternalHint": "Запустите эту команду из скрипта или системного сочетания клавиш. D-Bus: метод CorrectSelection интерфейса org.tyco.Interface.",
@@ -685,7 +684,7 @@
     "launcherCommandsTab": "Быстрые команды",
     "llmConnections": "Подключения",
     "llmConnectionsHint": "Куда Tyco отправляет запросы к ИИ: Google, OpenRouter, DeepSeek или любой сервер с API, совместимым с OpenAI, например локальные Ollama и LM Studio. Модели добавляются внутри своего подключения. Сохранённый ключ хранится в защищённом хранилище и больше не показывается.",
-    "llmTab": "LLM",
+    "llmTab": "Подключения и модели",
     "mainActionGroups": {
       "basic": "Основные",
       "translation": "Перевод",
@@ -729,6 +728,11 @@
     "modelId": "ID модели",
     "modelsCount": "Моделей: {count}",
     "modelsForFeatures": "Модели для функций",
+    "taskModel": "Модель",
+    "taskModelInfo": "Модели и резервные модели назначаются на странице «Подключения и модели».",
+    "taskModelNone": "Не выбрана",
+    "taskModelFallbacks": "резервных: {count}",
+    "taskModelChange": "Изменить",
     "motion": "Анимации",
     "motionAuto": "Как в системе",
     "motionNormal": "Включены",
@@ -811,7 +815,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (свой сервер)",
     "sttServerUrl": "Адрес сервера",
     "sttServerUrlHint": "WebSocket-адрес потокового сервера sherpa-onnx на этом компьютере или в локальной сети. Модель распознавания — та, с которой запущен сервер.",
-    "sttTab": "STT",
+    "sttTab": "Голос",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — новая строка)",
       "enter": "Enter (Shift+Enter — новая строка)",
@@ -822,6 +826,9 @@
     "temperature": "Температура",
     "voiceTextCorrection": "Исправление распознанного текста",
     "textCorrection": "Коррекция текста",
+    "correctionPageHint": "Исправляет ошибки в тексте с помощью ИИ. Горячая клавиша для коррекции выделенного текста настраивается на странице",
+    "correctionPrompt": "Промпт",
+    "correctionPromptInfo": "Добавляется к встроенным инструкциям коррекции.",
     "textInjection": {
       "recheck": "Проверить снова",
       "unavailable": "Вставка текста недоступна: {error}"
@@ -849,6 +856,7 @@
     "translationProviderLlm": "ИИ-модель",
     "translationsHint": "Языки быстрого перевода: в меню перевода каждый выбирается своей клавишей. Перетаскивайте карточки, чтобы сменить клавишу.",
     "translationsTab": "Перевод",
+    "correctionTab": "Коррекция",
     "uiScale": "Масштаб интерфейса",
     "unassignHotkey": "Убрать сочетание",
     "userLanguage": "Язык пользователя",
@@ -928,7 +936,8 @@
     "profileFilesAskAll": "Для «Файлов» выбрано «Спрашивать»: каждый вызов ждёт подтверждения, даже там, где проект разрешён.",
     "profileModelDefaultNamed": "Первая доступная ({model})",
     "deleteProfileConfirmUncounted": "Удалить профиль «{name}»? SOUL.md, рабочая папка и все чаты профиля будут удалены безвозвратно.",
-    "modelsCategory": "Модели",
+    "featuresCategory": "Возможности",
+    "aiCategory": "ИИ",
     "allPluginsTab": "Все плагины",
     "pluginStatusOff": "Выкл"
   },

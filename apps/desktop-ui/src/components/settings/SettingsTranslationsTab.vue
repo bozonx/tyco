@@ -33,6 +33,13 @@
         <SecretStorageNotice class="mt-2" />
       </FieldRow>
 
+      <SettingsTaskModel
+        v-if="
+          translation.provider === 'llm' || translation.qualityGate !== 'off'
+        "
+        task="translation"
+      />
+
       <FieldRow
         :label="t('settings.translationCorrection')"
         :info="t('settings.translationCorrectionInfo')"
@@ -108,6 +115,7 @@ import InlineAction from '../common/InlineAction.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
+import SettingsTaskModel from './SettingsTaskModel.vue'
 
 const { t } = useI18n()
 const { draft: userConfig, navigate } = useSettingsContext()

@@ -575,7 +575,6 @@
     "addPrimaryModel": "モデルを割り当て",
     "aiModelUsage": "AIモデルの使用状況",
     "aiModelUsageHint": "リクエストは最初に利用可能なモデルに送信されます。プロバイダーが利用できない場合は、フォールバックモデルが順番に使用されます。",
-    "aiRules": "AIルール",
     "apiKey": "APIキー",
     "apiKeyBoundTo": "保存されたキーは {origin} にのみ送信されます。このアドレスで使用するには再保存してください。",
     "apiKeyOptional": "ほとんどのローカルサーバーではキーは不要です。",
@@ -595,7 +594,8 @@
     "chatHistoryRetentionDays": "古いチャットを削除",
     "chatHistoryRetentionDaysHint": "指定した日数以上新しいメッセージがないチャットは削除されます。",
     "chatHistoryRetentionNever": "削除しない",
-    "chatRules": "チャット",
+    "chatPrompt": "メインプロンプト",
+    "chatPromptInfo": "チャットでプロフィールが選択されていない場合に、チャットの指示に追加されます。",
     "checkConnection": "接続を確認",
     "checkingConnection": "確認中…",
     "clearChatsConfirmDialog": "保存されているすべてのチャットを削除してもよろしいですか？この操作は元に戻せません。",
@@ -671,7 +671,6 @@
     "hotkeyStatus": {
       "conflict": "ショートカットを割り当てられませんでした。他のアプリによって既に使用されている可能性があります。別のキーを選択してください。"
     },
-    "historyTab": "履歴",
     "hotkeysMissing": "一部のショートカットがシステム設定で削除されたため動作しません。「再登録」を使用して復元してください。",
     "hotkeysTab": "ショートカット",
     "inlineCorrectionExternalHint": "スクリプトまたはシステムのショートカットからこのコマンドを実行します。D-Bus: org.tyco.Interface の CorrectSelection メソッド。",
@@ -685,7 +684,7 @@
     "launcherCommandsTab": "クイックコマンド",
     "llmConnections": "接続",
     "llmConnectionsHint": "APIキーとローカルサーバーの設定。",
-    "llmTab": "LLM",
+    "llmTab": "接続とモデル",
     "mainActionGroups": {
       "basic": "基本",
       "translation": "翻訳",
@@ -729,6 +728,11 @@
     "modelId": "モデルID",
     "modelsCount": "{count} 個のモデル",
     "modelsForFeatures": "機能ごとのモデル",
+    "taskModel": "モデル",
+    "taskModelInfo": "モデルと予備モデルは「接続とモデル」ページで割り当てます。",
+    "taskModelNone": "未選択",
+    "taskModelFallbacks": "予備: {count}",
+    "taskModelChange": "変更",
     "motion": "アニメーション",
     "motionAuto": "システム設定に従う",
     "motionNormal": "オン",
@@ -811,7 +815,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (セルフホスト)",
     "sttServerUrl": "サーバーアドレス",
     "sttServerUrlHint": "ローカルまたはネットワーク上のsherpa-onnxストリーミングサーバーのWebSocketアドレス。",
-    "sttTab": "STT",
+    "sttTab": "音声",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter（改行はEnter）",
       "enter": "Enter（改行はShift+Enter）",
@@ -822,6 +826,9 @@
     "temperature": "温度 (Temperature)",
     "voiceTextCorrection": "音声テキストの校正",
     "textCorrection": "テキスト校正",
+    "correctionPageHint": "AI でテキストの誤りを修正します。選択テキストを校正するショートカットは次のページで設定します:",
+    "correctionPrompt": "プロンプト",
+    "correctionPromptInfo": "組み込みの校正指示に追加されます。",
     "textInjection": {
       "recheck": "再確認",
       "unavailable": "テキストの挿入が利用できません: {error}"
@@ -849,6 +856,7 @@
     "translationProviderLlm": "AIモデル",
     "translationsHint": "クイック翻訳言語: 翻訳メニューの各キーに言語を割り当てます。",
     "translationsTab": "翻訳",
+    "correctionTab": "校正",
     "uiScale": "インターフェースの拡大率",
     "unassignHotkey": "ショートカットを解除",
     "userLanguage": "ユーザー言語",
@@ -928,7 +936,8 @@
     "profileFilesAskAll": "すべての操作で確認",
     "profileModelDefaultNamed": "最初に利用可能なモデル ({model})",
     "deleteProfileConfirmUncounted": "プロファイル「{name}」を削除しますか？SOUL.md、ワークスペース、およびすべてのチャットが完全に削除されます。",
-    "modelsCategory": "モデル",
+    "featuresCategory": "機能",
+    "aiCategory": "AI",
     "allPluginsTab": "すべてのプラグイン",
     "pluginStatusOff": "無効"
   },

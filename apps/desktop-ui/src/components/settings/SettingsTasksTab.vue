@@ -1,28 +1,33 @@
 <template>
-  <SettingsSection :description="t('settings.tasksHint')" bare>
-    <ShortcutSlots
-      :items="taskSlots"
-      @move="moveTask"
-      @add="addTask"
-      @remove="removeTask"
-    >
-      <template #item="{ item, index }">
-        <div class="flex flex-col gap-2 w-full">
-          <FieldInput
-            :model-value="item.name"
-            :placeholder="t('settings.name')"
-            class="font-medium"
-            @update:model-value="updateTask(index, 'name', $event)"
-          />
-          <FieldTextArea
-            :model-value="item.rule"
-            :placeholder="t('settings.rule')"
-            @update:model-value="updateTask(index, 'rule', $event)"
-          />
-        </div>
-      </template>
-    </ShortcutSlots>
-  </SettingsSection>
+  <div class="settings-stack">
+    <SettingsSection :description="t('settings.tasksHint')">
+      <SettingsTaskModel task="aiTask" />
+    </SettingsSection>
+    <SettingsSection bare>
+      <ShortcutSlots
+        :items="taskSlots"
+        @move="moveTask"
+        @add="addTask"
+        @remove="removeTask"
+      >
+        <template #item="{ item, index }">
+          <div class="flex flex-col gap-2 w-full">
+            <FieldInput
+              :model-value="item.name"
+              :placeholder="t('settings.name')"
+              class="font-medium"
+              @update:model-value="updateTask(index, 'name', $event)"
+            />
+            <FieldTextArea
+              :model-value="item.rule"
+              :placeholder="t('settings.rule')"
+              @update:model-value="updateTask(index, 'rule', $event)"
+            />
+          </div>
+        </template>
+      </ShortcutSlots>
+    </SettingsSection>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -46,6 +51,7 @@ import {
 import FieldInput from '../common/FieldInput.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from './SettingsSection.vue'
+import SettingsTaskModel from './SettingsTaskModel.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
 
 const { t } = useI18n()

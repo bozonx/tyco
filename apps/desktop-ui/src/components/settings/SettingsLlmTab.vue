@@ -1,29 +1,6 @@
 <template>
   <div class="settings-stack">
     <SettingsSection
-      v-if="userConfig.isInDevelopment"
-      :title="t('settings.chatAttachments')"
-    >
-      <FieldRow
-        :label="t('settings.chatImageQuality')"
-        :hint="t('settings.chatImageQualityHint')"
-        vertical
-      >
-        <FieldSelect
-          :model-value="userConfig.chat.imageQuality || 'balanced'"
-          :options="[
-            { id: 'economy', name: t('settings.imageQualityEconomy') },
-            { id: 'balanced', name: t('settings.imageQualityBalanced') },
-            { id: 'original', name: t('settings.imageQualityOriginal') },
-          ]"
-          @update:model-value="
-            userConfig.chat.imageQuality =
-              $event as UserConfig['chat']['imageQuality']
-          "
-        />
-      </FieldRow>
-    </SettingsSection>
-    <SettingsSection
       :title="t('settings.llmConnections')"
       :description="t('settings.llmConnectionsHint')"
       bare
@@ -115,18 +92,6 @@
       </FieldRow>
     </SettingsSection>
 
-    <SettingsSection :title="t('settings.aiRules')">
-      <FieldRow
-        v-if="userConfig.isInDevelopment"
-        :label="t('settings.chatRules')"
-        vertical
-      >
-        <FieldTextArea v-model="llm.tasks.chat.rule" />
-      </FieldRow>
-      <FieldRow :label="t('settings.textCorrection')" vertical>
-        <FieldTextArea v-model="llm.tasks.correction.rule" />
-      </FieldRow>
-    </SettingsSection>
     <ConfirmModal
       :open="pendingProviderId !== null"
       :title="t('common.delete')"
@@ -154,20 +119,13 @@ import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import LlmConnectionCard from './LlmConnectionCard.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
-import {
-  LLM_TASKS,
-  type LlmProvider,
-  type UserConfig,
-  llmSecretId,
-} from '@tyco/shared'
+import { LLM_TASKS, type LlmProvider, llmSecretId } from '@tyco/shared'
 
 const TASK_LABEL_KEYS = {
-  chat: 'settings.chat',
   translation: 'action.translationMenu',
   voiceCorrection: 'settings.voiceTextCorrection',
   correction: 'settings.textCorrection',

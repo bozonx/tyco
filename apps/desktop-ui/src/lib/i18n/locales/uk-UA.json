@@ -575,7 +575,6 @@
     "addPrimaryModel": "Призначити модель",
     "aiModelUsage": "Використання ШІ-моделей",
     "aiModelUsageHint": "Запити надсилаються першій доступній моделі. Якщо провайдер дає збій або недоступний, запити автоматично переходять до наступних моделей за порядком.",
-    "aiRules": "Правила ШІ",
     "apiKey": "API-ключ",
     "apiKeyBoundTo": "Збережений ключ надсилається лише на {origin}. Збережіть його знову, щоб використовувати з цією адресою.",
     "apiKeyOptional": "Більшості локальних серверів ключ не потрібен.",
@@ -595,7 +594,8 @@
     "chatHistoryRetentionDays": "Видаляти старі чати",
     "chatHistoryRetentionDaysHint": "Чат видаляється, якщо в ньому стільки часу не було нових повідомлень. Давніші чати видаляються одразу.",
     "chatHistoryRetentionNever": "Ніколи",
-    "chatRules": "Чат",
+    "chatPrompt": "Основний промпт",
+    "chatPromptInfo": "Додається до інструкцій чату, якщо в ньому не вибрано профіль.",
     "checkConnection": "Перевірити підключення",
     "checkingConnection": "Перевірка…",
     "clearChatsConfirmDialog": "Справді видалити всі збережені чати? Цю дію не можна скасувати.",
@@ -671,7 +671,6 @@
     "hotkeyStatus": {
       "conflict": "Не вдалося призначити: найімовірніше, це сполучення зайняте іншим застосунком. Виберіть інше."
     },
-    "historyTab": "Історія",
     "hotkeysMissing": "Деякі гарячі клавіші видалено в системних налаштуваннях, і вони не працюють. Скористайтеся «Зареєструвати знову», щоб повернути їх.",
     "hotkeysTab": "Гарячі клавіші",
     "inlineCorrectionExternalHint": "Запускайте цю команду зі скрипту або системного сполучення клавіш. D-Bus: метод CorrectSelection інтерфейсу org.tyco.Interface.",
@@ -685,7 +684,7 @@
     "launcherCommandsTab": "Швидкі команди",
     "llmConnections": "Підключення",
     "llmConnectionsHint": "Куди Tyco надсилає ШІ-запити: Google, OpenRouter, DeepSeek або будь-який сервер з OpenAI-сумісним API, наприклад локальний Ollama чи LM Studio. Моделі додаються всередині свого підключення. Збережений ключ потрапляє в захищене сховище й більше ніколи не показується.",
-    "llmTab": "LLM",
+    "llmTab": "Підключення та моделі",
     "mainActionGroups": {
       "basic": "Основні",
       "translation": "Переклад",
@@ -729,6 +728,11 @@
     "modelId": "ID моделі",
     "modelsCount": "Моделей: {count}",
     "modelsForFeatures": "Моделі для функцій",
+    "taskModel": "Модель",
+    "taskModelInfo": "Моделі та резервні моделі призначаються на сторінці «Підключення та моделі».",
+    "taskModelNone": "Не вибрано",
+    "taskModelFallbacks": "резервних: {count}",
+    "taskModelChange": "Змінити",
     "motion": "Анімації",
     "motionAuto": "Системні",
     "motionNormal": "Увімкнено",
@@ -811,7 +815,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (власний сервер)",
     "sttServerUrl": "Адреса сервера",
     "sttServerUrlHint": "WebSocket-адреса потокового сервера sherpa-onnx на цьому комп’ютері або в локальній мережі. Модель розпізнавання — та, що запущена на сервері.",
-    "sttTab": "STT",
+    "sttTab": "Голос",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — новий рядок)",
       "enter": "Enter (Shift+Enter — новий рядок)",
@@ -822,6 +826,9 @@
     "temperature": "Температура",
     "voiceTextCorrection": "Виправлення надиктованого тексту",
     "textCorrection": "Виправлення тексту",
+    "correctionPageHint": "Виправляє помилки в тексті за допомогою ШІ. Гарячу клавішу для корекції виділеного тексту налаштовують на сторінці",
+    "correctionPrompt": "Промпт",
+    "correctionPromptInfo": "Додається до вбудованих інструкцій корекції.",
     "textInjection": {
       "recheck": "Перевірити знову",
       "unavailable": "Вставлення тексту недоступне: {error}"
@@ -849,6 +856,7 @@
     "translationProviderLlm": "ШІ-модель",
     "translationsHint": "Мови швидкого перекладу: у меню перекладу кожна вибирається своєю клавішею. Перетягуйте картки, щоб змінити їхні клавіші.",
     "translationsTab": "Переклад",
+    "correctionTab": "Корекція",
     "uiScale": "Масштаб інтерфейсу",
     "unassignHotkey": "Прибрати сполучення",
     "userLanguage": "Мова користувача",
@@ -928,7 +936,8 @@
     "profileFilesAskAll": "«Файли» встановлено на «Питати»: кожен виклик чекає на підтвердження, навіть там, де проєкт його дозволяє.",
     "profileModelDefaultNamed": "Перша доступна ({model})",
     "deleteProfileConfirmUncounted": "Видалити профіль «{name}»? Його SOUL.md, робочу теку й усі чати буде видалено назавжди.",
-    "modelsCategory": "Моделі",
+    "featuresCategory": "Можливості",
+    "aiCategory": "ШІ",
     "allPluginsTab": "Усі плагіни",
     "pluginStatusOff": "Вимкнено"
   },

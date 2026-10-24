@@ -110,11 +110,12 @@ import { useSettingsSessionStore } from '../../stores/settings-session'
 import NavigationList from '../common/NavigationList.vue'
 import SettingsAccessibilityTab from './SettingsAccessibilityTab.vue'
 import SettingsAiProfilesTab from './SettingsAiProfilesTab.vue'
+import SettingsChatTab from './SettingsChatTab.vue'
 import SettingsCommandsTab from './SettingsCommandsTab.vue'
+import SettingsCorrectionTab from './SettingsCorrectionTab.vue'
 import SettingsEditorTab from './SettingsEditorTab.vue'
 import SettingsGeneralTab from './SettingsGeneralTab.vue'
 import SettingsGlobalActionsTab from './SettingsGlobalActionsTab.vue'
-import SettingsHistoryTab from './SettingsHistoryTab.vue'
 import SettingsLanguagesTab from './SettingsLanguagesTab.vue'
 import SettingsLauncherTab from './SettingsLauncherTab.vue'
 import SettingsLlmTab from './SettingsLlmTab.vue'
@@ -136,9 +137,10 @@ const SECTION_TABS: Record<
 > = {
   general: SettingsGeneralTab,
   editor: SettingsEditorTab,
-  history: SettingsHistoryTab,
   'global-actions': SettingsGlobalActionsTab,
   stt: SettingsVoiceTab,
+  chat: SettingsChatTab,
+  correction: SettingsCorrectionTab,
   llm: SettingsLlmTab,
   translations: SettingsTranslationsTab,
   accessibility: SettingsAccessibilityTab,

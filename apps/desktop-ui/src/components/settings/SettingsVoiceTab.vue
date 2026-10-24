@@ -55,6 +55,10 @@
       <FieldRow :label="t('settings.formatWithLlm')">
         <FieldSwitch v-model="userConfig.stt.isVoiceCorrectionEnabled" />
       </FieldRow>
+      <SettingsTaskModel
+        v-if="userConfig.stt.isVoiceCorrectionEnabled"
+        task="voiceCorrection"
+      />
       <FieldRow
         v-if="userConfig.stt.isVoiceCorrectionEnabled"
         :label="t('settings.sttLlmRules')"
@@ -87,6 +91,7 @@ import FieldSwitch from '../common/FieldSwitch.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SettingsSection from './SettingsSection.vue'
+import SettingsTaskModel from './SettingsTaskModel.vue'
 import { STT_PROVIDERS, type SttProvider } from '@tyco/shared'
 
 const { draft: userConfig } = useSettingsContext()

@@ -572,7 +572,6 @@
     "addPrimaryModel": "Přiřadit model",
     "aiModelUsage": "Použití modelů AI",
     "aiModelUsageHint": "Požadavky se posílají prvnímu dostupnému modelu. Pokud poskytovatel selže nebo je nedostupný, požadavky automaticky přejdou na další modely v pořadí.",
-    "aiRules": "Pravidla AI",
     "apiKey": "Klíč API",
     "apiKeyBoundTo": "Uložený klíč se posílá jen na {origin}. Uložte ho znovu, chcete-li ho použít s touto adresou.",
     "apiKeyOptional": "Většina místních serverů klíč nepotřebuje.",
@@ -592,7 +591,8 @@
     "chatHistoryRetentionDays": "Mazat staré chaty",
     "chatHistoryRetentionDaysHint": "Chat se smaže, když v něm takto dlouho nepřibyla nová zpráva. Starší chaty se smažou ihned.",
     "chatHistoryRetentionNever": "Nikdy",
-    "chatRules": "Chat",
+    "chatPrompt": "Hlavní prompt",
+    "chatPromptInfo": "Přidává se k instrukcím chatu, pokud v něm není vybrán profil.",
     "checkConnection": "Ověřit připojení",
     "checkingConnection": "Ověřování…",
     "clearChatsConfirmDialog": "Opravdu chcete smazat všechny uložené chaty? Tuto akci nelze vrátit.",
@@ -668,7 +668,6 @@
     "hotkeyStatus": {
       "conflict": "Přiřazení se nepodařilo: zkratku nejspíš používá jiná aplikace. Vyberte jinou."
     },
-    "historyTab": "Historie",
     "hotkeysMissing": "Některé zkratky byly odstraněny v nastavení systému a nefungují. Vraťte je tlačítkem „Znovu zaregistrovat“.",
     "hotkeysTab": "Klávesové zkratky",
     "inlineCorrectionExternalHint": "Spouštějte tento příkaz ze skriptu nebo systémové zkratky. D-Bus: metoda CorrectSelection rozhraní org.tyco.Interface.",
@@ -682,7 +681,7 @@
     "launcherCommandsTab": "Rychlé příkazy",
     "llmConnections": "Připojení",
     "llmConnectionsHint": "Kam Tyco posílá požadavky na AI: Google, OpenRouter, DeepSeek nebo libovolný server s API kompatibilním s OpenAI, třeba místní Ollama či LM Studio. Modely se přidávají uvnitř svého připojení. Uložený klíč jde do zabezpečeného úložiště a už se nikdy nezobrazí.",
-    "llmTab": "LLM",
+    "llmTab": "Připojení a modely",
     "mainActionGroups": {
       "basic": "Základní",
       "translation": "Překlad",
@@ -726,6 +725,11 @@
     "modelId": "ID modelu",
     "modelsCount": "Modelů: {count}",
     "modelsForFeatures": "Modely pro funkce",
+    "taskModel": "Model",
+    "taskModelInfo": "Modely a záložní modely se přiřazují na stránce „Připojení a modely“.",
+    "taskModelNone": "Nevybráno",
+    "taskModelFallbacks": "záložní: {count}",
+    "taskModelChange": "Změnit",
     "motion": "Animace",
     "motionAuto": "Systémové",
     "motionNormal": "Zapnuto",
@@ -808,7 +812,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (vlastní server)",
     "sttServerUrl": "Adresa serveru",
     "sttServerUrlHint": "Adresa WebSocket streamovacího serveru sherpa-onnx na tomto počítači nebo v místní síti. Model rozpoznávání je ten, který server spouští.",
-    "sttTab": "STT",
+    "sttTab": "Hlas",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter pro nový řádek)",
       "enter": "Enter (Shift+Enter pro nový řádek)",
@@ -819,6 +823,9 @@
     "temperature": "Teplota",
     "voiceTextCorrection": "Oprava nadiktovaného textu",
     "textCorrection": "Oprava textu",
+    "correctionPageHint": "Opravuje chyby v textu pomocí AI. Klávesová zkratka pro opravu vybraného textu se nastavuje na stránce",
+    "correctionPrompt": "Prompt",
+    "correctionPromptInfo": "Přidává se k vestavěným instrukcím korekce.",
     "textInjection": {
       "recheck": "Zkontrolovat znovu",
       "unavailable": "Vkládání textu není dostupné: {error}"
@@ -846,6 +853,7 @@
     "translationProviderLlm": "Model AI",
     "translationsHint": "Jazyky rychlého překladu: v nabídce překladu se každý vybírá vlastní klávesou. Přetažením karet změníte jejich klávesy.",
     "translationsTab": "Překlad",
+    "correctionTab": "Korekce",
     "uiScale": "Měřítko rozhraní",
     "unassignHotkey": "Odebrat zkratku",
     "userLanguage": "Jazyk uživatele",
@@ -925,7 +933,8 @@
     "profileFilesAskAll": "„Soubory“ jsou nastaveny na „Ptát se“: každé volání čeká na potvrzení, i tam, kde ho projekt povoluje.",
     "profileModelDefaultNamed": "První dostupný ({model})",
     "deleteProfileConfirmUncounted": "Smazat profil „{name}“? Jeho SOUL.md, pracovní prostor a všechny chaty budou smazány navždy.",
-    "modelsCategory": "Modely",
+    "featuresCategory": "Funkce",
+    "aiCategory": "AI",
     "allPluginsTab": "Všechny pluginy",
     "pluginStatusOff": "Vypnuto"
   },

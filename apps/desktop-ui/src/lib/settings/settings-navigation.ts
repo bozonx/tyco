@@ -18,7 +18,6 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.editorTab',
         icon: 'mdi:pencil-outline',
       },
-      { id: 'history', labelKey: 'settings.historyTab', icon: 'mdi:history' },
       {
         id: 'global-actions',
         labelKey: 'settings.hotkeysTab',
@@ -32,20 +31,32 @@ export const SETTINGS_NAVIGATION_GROUPS = [
     ],
   },
   {
-    id: 'models',
-    labelKey: 'settings.modelsCategory',
+    id: 'features',
+    labelKey: 'settings.featuresCategory',
     sections: [
+      { id: 'chat', labelKey: 'settings.chat', icon: 'mdi:chat-outline' },
       {
-        id: 'stt',
-        labelKey: 'settings.sttTab',
-        icon: 'mdi:microphone-outline',
+        id: 'correction',
+        labelKey: 'settings.correctionTab',
+        icon: 'mdi:spellcheck',
       },
-      { id: 'llm', labelKey: 'settings.llmTab', icon: 'mdi:cube-outline' },
       {
         id: 'translations',
         labelKey: 'settings.translationsTab',
         icon: 'mdi:translate',
       },
+      {
+        id: 'stt',
+        labelKey: 'settings.sttTab',
+        icon: 'mdi:microphone-outline',
+      },
+    ],
+  },
+  {
+    id: 'ai',
+    labelKey: 'settings.aiCategory',
+    sections: [
+      { id: 'llm', labelKey: 'settings.llmTab', icon: 'mdi:cube-outline' },
       {
         id: 'ai-profiles',
         labelKey: 'settings.aiProfilesTab',
@@ -102,6 +113,14 @@ export const DEFAULT_SETTINGS_TAB: SettingsPageSectionId = 'general'
 export const AI_OVERVIEW_TAB = 'ai-profiles:overview'
 /** The id part of a profile or project tab that creates a new one */
 export const NEW_ENTITY_ID = 'new'
+
+/** Sections shown only in development mode */
+const DEVELOPMENT_SECTION_IDS: readonly string[] = [
+  'ai-profiles',
+  'chat',
+  'commands',
+  'launcher-commands',
+]
 
 const SECTIONS = SETTINGS_NAVIGATION_GROUPS.flatMap(
   (group): readonly SettingsSection[] => group.sections
@@ -193,9 +212,8 @@ export function buildSettingsNavigation(
     const items: NavigationItem[] = group.sections
       .filter(
         (section) =>
-          !['ai-profiles', 'commands', 'launcher-commands', 'history'].includes(
-            section.id
-          ) || sources.isInDevelopment
+          !DEVELOPMENT_SECTION_IDS.includes(section.id) ||
+          sources.isInDevelopment
       )
       .map((section) => ({
         id: section.id,
@@ -249,7 +267,7 @@ export function isSettingsTabAvailable(
   switch (parsed.kind) {
     case 'section':
       return (
-        !['commands', 'launcher-commands', 'history'].includes(parsed.id) ||
+        !DEVELOPMENT_SECTION_IDS.includes(parsed.id) ||
         Boolean(sources.isInDevelopment)
       )
     case 'ai-overview':

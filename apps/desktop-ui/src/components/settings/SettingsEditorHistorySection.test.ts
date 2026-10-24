@@ -7,7 +7,7 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createTestSettingsContext } from '../../test/settings-context'
-import SettingsHistoryTab from './SettingsHistoryTab.vue'
+import SettingsEditorHistorySection from './SettingsEditorHistorySection.vue'
 
 const mockToast = vi.fn()
 const mockClearChatHistory = vi.fn().mockResolvedValue(undefined)
@@ -28,7 +28,7 @@ vi.mock('../../stores/history', () => ({
   }),
 }))
 
-describe('SettingsHistoryTab.vue', () => {
+describe('SettingsEditorHistorySection.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -59,7 +59,7 @@ describe('SettingsHistoryTab.vue', () => {
   })
 
   const mountTab = (userConfig = createConfig()) => {
-    return mount(SettingsHistoryTab, {
+    return mount(SettingsEditorHistorySection, {
       global: {
         provide: createTestSettingsContext(userConfig).provide,
         stubs: {
@@ -102,38 +102,12 @@ describe('SettingsHistoryTab.vue', () => {
     })
   }
 
-  it('hides chat history outside development mode', () => {
-    const config = createConfig()
-    delete config.isInDevelopment
-    const wrapper = mountTab(config)
-    expect(
-      wrapper.find('[data-title="settings.sectionChatHistory"]').exists()
-    ).toBe(false)
-    expect(
-      wrapper.find('[data-title="settings.sectionEditorHistory"]').exists()
-    ).toBe(false)
-    expect(config.chat.history.storage).toBe('disk')
-  })
-
-  it('renders two blocks: editor history and chat history', () => {
-    const wrapper = mountTab()
-
-    const sections = wrapper.findAll('.section-stub')
-    expect(sections).toHaveLength(2)
-    expect(sections[0].attributes('data-title')).toBe(
-      'settings.sectionEditorHistory'
-    )
-    expect(sections[1].attributes('data-title')).toBe(
-      'settings.sectionChatHistory'
-    )
-  })
-
   it('renders editor history rows when storage is disk', () => {
     const wrapper = mountTab(
       createConfig({ editorHistory: { storage: 'disk' } })
     )
 
-    const editorSection = wrapper.findAll('.section-stub')[0]
+    const editorSection = wrapper.get('.section-stub')
     expect(
       editorSection
         .find('[data-label="settings.editorHistoryStorage"]')
@@ -161,7 +135,7 @@ describe('SettingsHistoryTab.vue', () => {
       createConfig({ editorHistory: { storage: 'session' } })
     )
 
-    const editorSection = wrapper.findAll('.section-stub')[0]
+    const editorSection = wrapper.get('.section-stub')
     expect(
       editorSection
         .find('[data-label="settings.editorHistoryStorage"]')
@@ -189,7 +163,7 @@ describe('SettingsHistoryTab.vue', () => {
       createConfig({ editorHistory: { storage: 'off' } })
     )
 
-    const editorSection = wrapper.findAll('.section-stub')[0]
+    const editorSection = wrapper.get('.section-stub')
     expect(
       editorSection
         .find('[data-label="settings.editorHistoryStorage"]')
@@ -202,25 +176,10 @@ describe('SettingsHistoryTab.vue', () => {
     ).toBe(false)
   })
 
-  it('renders chat history controls in chat history block', () => {
-    const wrapper = mountTab()
-
-    const chatSection = wrapper.findAll('.section-stub')[1]
-    expect(
-      chatSection.find('[data-label="settings.chatHistoryEnabled"]').exists()
-    ).toBe(true)
-    expect(
-      chatSection
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
-    ).toBe(true)
-    expect(chatSection.find('.btn-stub').exists()).toBe(true)
-  })
-
   it('opens confirm modal on clear editor history button click and clears on confirmation', async () => {
     const wrapper = mountTab()
 
-    const editorSection = wrapper.findAll('.section-stub')[0]
+    const editorSection = wrapper.get('.section-stub')
     const clearButton = editorSection.find('.btn-stub')
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
 
@@ -230,60 +189,6 @@ describe('SettingsHistoryTab.vue', () => {
     await wrapper.find('.confirm-btn').trigger('click')
     expect(mockClearEditorHistory).toHaveBeenCalledTimes(1)
     expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
-  })
-
-  it('opens confirm modal on clear chat history button click and clears on confirmation', async () => {
-    const wrapper = mountTab()
-
-    const chatSection = wrapper.findAll('.section-stub')[1]
-    const clearButton = chatSection.find('.btn-stub')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
-
-    await clearButton.trigger('click')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
-
-    await wrapper.find('.confirm-btn').trigger('click')
-    expect(mockClearChatHistory).toHaveBeenCalledTimes(1)
-    expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
-  })
-
-  it('turns the chat history off only after the confirmation', async () => {
-    const config = createConfig()
-    const wrapper = mountTab(config)
-
-    const chatSection = wrapper.findAll('.section-stub')[1]
-    await chatSection.find('.field-checkbox-stub').setValue(false)
-    expect(config.chat.history.storage).toBe('disk')
-    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
-
-    await wrapper.find('.cancel-btn').trigger('click')
-    expect(config.chat.history.storage).toBe('disk')
-    expect(
-      (chatSection.find('.field-checkbox-stub').element as HTMLInputElement)
-        .checked
-    ).toBe(true)
-
-    await chatSection.find('.field-checkbox-stub').setValue(false)
-    await wrapper.find('.confirm-btn').trigger('click')
-    expect(config.chat.history.storage).toBe('off')
-    expect(
-      wrapper
-        .findAll('.section-stub')[1]
-        .find('[data-label="settings.chatHistoryRetentionDays"]')
-        .exists()
-    ).toBe(false)
-  })
-
-  it('turns the chat history on without asking', async () => {
-    const config = createConfig({ chatHistory: { storage: 'off' } })
-    const wrapper = mountTab(config)
-
-    const chatSection = wrapper.findAll('.section-stub')[1]
-    await chatSection.find('.field-checkbox-stub').setValue(true)
-
-    expect(config.chat.history.storage).toBe('disk')
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 })

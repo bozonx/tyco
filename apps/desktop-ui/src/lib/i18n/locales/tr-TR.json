@@ -575,7 +575,6 @@
     "addPrimaryModel": "Model ata",
     "aiModelUsage": "Yapay zekâ modeli kullanımı",
     "aiModelUsageHint": "İstekler ilk uygun modele gönderilir. Bir sağlayıcı başarısız olursa veya ulaşılamazsa istekler sırayla sonraki modellere otomatik olarak aktarılır.",
-    "aiRules": "Yapay zekâ kuralları",
     "apiKey": "API anahtarı",
     "apiKeyBoundTo": "Kayıtlı anahtar yalnızca {origin} adresine gönderilir. Bu adresle kullanmak için yeniden kaydedin.",
     "apiKeyOptional": "Çoğu yerel sunucu anahtar gerektirmez.",
@@ -595,7 +594,8 @@
     "chatHistoryRetentionDays": "Eski sohbetleri sil",
     "chatHistoryRetentionDaysHint": "Bu süre boyunca yeni mesaj gelmeyen sohbet silinir. Daha eski sohbetler hemen silinir.",
     "chatHistoryRetentionNever": "Asla",
-    "chatRules": "Sohbet",
+    "chatPrompt": "Ana istem",
+    "chatPromptInfo": "Sohbette profil seçilmediğinde sohbet talimatlarına eklenir.",
     "checkConnection": "Bağlantıyı denetle",
     "checkingConnection": "Denetleniyor…",
     "clearChatsConfirmDialog": "Kaydedilen tüm sohbetleri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
@@ -671,7 +671,6 @@
     "hotkeyStatus": {
       "conflict": "Atanamadı: kısayol büyük olasılıkla başka bir uygulama tarafından kullanılıyor. Başka bir kısayol seçin."
     },
-    "historyTab": "Geçmiş",
     "hotkeysMissing": "Bazı kısayollar sistem ayarlarında silindi ve çalışmıyor. Geri getirmek için «Yeniden kaydet»i kullanın.",
     "hotkeysTab": "Kısayollar",
     "inlineCorrectionExternalHint": "Bu komutu bir betikten veya sistem kısayolundan çalıştırın. D-Bus: org.tyco.Interface arayüzünün CorrectSelection yöntemi.",
@@ -685,7 +684,7 @@
     "launcherCommandsTab": "Hızlı komutlar",
     "llmConnections": "Bağlantılar",
     "llmConnectionsHint": "Tyco’nun yapay zekâ isteklerini gönderdiği yer: Google, OpenRouter, DeepSeek ya da yerel Ollama veya LM Studio gibi OpenAI uyumlu API’ye sahip herhangi bir sunucu. Modeller kendi bağlantılarının içine eklenir. Kaydedilen anahtar güvenli depolamaya alınır ve bir daha gösterilmez.",
-    "llmTab": "LLM",
+    "llmTab": "Bağlantılar ve modeller",
     "mainActionGroups": {
       "basic": "Temel",
       "translation": "Çeviri",
@@ -729,6 +728,11 @@
     "modelId": "Model kimliği",
     "modelsCount": "{count} model",
     "modelsForFeatures": "Özellik modelleri",
+    "taskModel": "Model",
+    "taskModelInfo": "Modeller ve yedekleri \"Bağlantılar ve modeller\" sayfasında atanır.",
+    "taskModelNone": "Seçilmedi",
+    "taskModelFallbacks": "yedek: {count}",
+    "taskModelChange": "Değiştir",
     "motion": "Animasyonlar",
     "motionAuto": "Sistem",
     "motionNormal": "Açık",
@@ -811,7 +815,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (kendi sunucunuz)",
     "sttServerUrl": "Sunucu adresi",
     "sttServerUrlHint": "Bu bilgisayarda veya yerel ağda çalışan bir sherpa-onnx akış sunucusunun WebSocket adresi. Tanıma modeli, sunucunun çalıştırdığı modeldir.",
-    "sttTab": "STT",
+    "sttTab": "Ses",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (yeni satır için Enter)",
       "enter": "Enter (yeni satır için Shift+Enter)",
@@ -822,6 +826,9 @@
     "temperature": "Sıcaklık",
     "voiceTextCorrection": "Tanınan metni düzeltme",
     "textCorrection": "Metin düzeltme",
+    "correctionPageHint": "Metindeki hataları yapay zekâ ile düzeltir. Seçili metni düzeltme kısayolu şu sayfada yapılandırılır:",
+    "correctionPrompt": "İstem",
+    "correctionPromptInfo": "Yerleşik düzeltme talimatlarına eklenir.",
     "textInjection": {
       "recheck": "Yeniden denetle",
       "unavailable": "Metin ekleme kullanılamıyor: {error}"
@@ -849,6 +856,7 @@
     "translationProviderLlm": "Yapay zekâ modeli",
     "translationsHint": "Hızlı çeviri dilleri: çeviri menüsünde her biri kendi tuşuyla seçilir. Tuşları değiştirmek için kartları sürükleyin.",
     "translationsTab": "Çeviri",
+    "correctionTab": "Düzeltme",
     "uiScale": "Arayüz ölçeği",
     "unassignHotkey": "Kısayolu kaldır",
     "userLanguage": "Kullanıcı dili",
@@ -928,7 +936,8 @@
     "profileFilesAskAll": "«Dosyalar» için «Sor» seçili: proje izin verse bile her çağrı onay bekler.",
     "profileModelDefaultNamed": "İlk kullanılabilir ({model})",
     "deleteProfileConfirmUncounted": "«{name}» profili silinsin mi? SOUL.md, çalışma klasörü ve tüm sohbetleri kalıcı olarak silinecek.",
-    "modelsCategory": "Modeller",
+    "featuresCategory": "Özellikler",
+    "aiCategory": "Yapay zekâ",
     "allPluginsTab": "Tüm eklentiler",
     "pluginStatusOff": "Kapalı"
   },

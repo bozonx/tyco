@@ -138,15 +138,15 @@ describe('Settings.vue', () => {
   it('falls back from unknown routes and reacts to query changes', async () => {
     useRoute().query.tab = 'unknown'
     const wrapper = mount(Settings, {
-      global: { stubs: { NavigationList: false, SettingsHistoryTab: true } },
+      global: { stubs: { NavigationList: false, SettingsChatTab: true } },
     })
     expect(wrapper.get('.navigation-item.is-active').text()).toBe(
       'settings.generalTab'
     )
-    useRoute().query.tab = 'history'
+    useRoute().query.tab = 'chat'
     await wrapper.vm.$nextTick()
     expect(wrapper.get('.navigation-item.is-active').text()).toBe(
-      'settings.historyTab'
+      'settings.chat'
     )
     useRoute().query.tab = 'plugin:missing'
     await wrapper.vm.$nextTick()
@@ -236,7 +236,8 @@ describe('Settings.vue', () => {
     expect(
       wrapper.findAll('.settings-nav-category').map((node) => node.text())
     ).toEqual([
-      'settings.modelsCategory',
+      'settings.featuresCategory',
+      'settings.aiCategory',
       'settings.actionsCategory',
       'settings.pluginsTab',
     ])
@@ -247,8 +248,9 @@ describe('Settings.vue', () => {
           list.findAll('button').map((btn) => btn.attributes('data-key'))
         )
     ).toEqual([
-      ['general', 'editor', 'history', 'global-actions', 'accessibility'],
-      ['stt', 'llm', 'translations', 'ai-profiles'],
+      ['general', 'editor', 'global-actions', 'accessibility'],
+      ['chat', 'correction', 'translations', 'stt'],
+      ['llm', 'ai-profiles'],
       ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],
       ['plugins', 'plugin:PluginA', 'plugin:PluginB'],
     ])
@@ -284,55 +286,23 @@ describe('Settings.vue', () => {
     expect(editorIdx).toBe(generalIdx + 1)
   })
 
-  it('places history tab in primary tabs right after editor tab', () => {
-    const wrapper = mount(Settings, {
-      global: {
-        stubs: {
-          NavigationList: {
-            props: ['items'],
-            template: `
-              <div class="tabs-stub">
-                <button v-for="tab in items" :key="tab.id" :data-key="tab.id">
-                  {{ tab.name }}
-                </button>
-              </div>
-            `,
-          },
-        },
-      },
-    })
-
-    const tabKeys = wrapper
-      .findAll('.tabs-stub button')
-      .map((btn) => btn.attributes('data-key'))
-
-    const editorIdx = tabKeys.indexOf('editor')
-    const historyIdx = tabKeys.indexOf('history')
-
-    expect(editorIdx).toBeGreaterThan(-1)
-    expect(historyIdx).toBeGreaterThan(-1)
-    expect(historyIdx).toBe(editorIdx + 1)
-
-    const historyTab = wrapper.find('.tabs-stub button[data-key="history"]')
-    expect(historyTab.text()).toBe('settings.historyTab')
-  })
-
-  it('renders SettingsHistoryTab when history tab is active', async () => {
+  it('renders the chat and correction pages from their navigation items', async () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
           NavigationList: false,
-          SettingsHistoryTab: {
-            props: ['userConfig', 'effectiveAppLanguage'],
-            template: '<div class="history-tab-stub" />',
+          SettingsChatTab: { template: '<div class="chat-tab-stub" />' },
+          SettingsCorrectionTab: {
+            template: '<div class="correction-tab-stub" />',
           },
         },
       },
     })
 
-    await selectTab(wrapper, 'settings.historyTab')
-
-    expect(wrapper.find('.history-tab-stub').exists()).toBe(true)
+    await selectTab(wrapper, 'settings.chat')
+    expect(wrapper.find('.chat-tab-stub').exists()).toBe(true)
+    await selectTab(wrapper, 'settings.correctionTab')
+    expect(wrapper.find('.correction-tab-stub').exists()).toBe(true)
   })
 
   it('includes hotkeys tab in primary tabs with settings.hotkeysTab text', () => {

@@ -575,7 +575,6 @@
     "addPrimaryModel": "მოდელის მინიჭება",
     "aiModelUsage": "AI მოდელების გამოყენება",
     "aiModelUsageHint": "მოთხოვნები პირველ ხელმისაწვდომ მოდელს ეგზავნება. თუ პროვაიდერი ვერ მუშაობს ან მიუწვდომელია, მოთხოვნები ავტომატურად გადადის შემდეგ მოდელებზე რიგის მიხედვით.",
-    "aiRules": "AI წესები",
     "apiKey": "API გასაღები",
     "apiKeyBoundTo": "შენახული გასაღები მხოლოდ {origin}-ზე იგზავნება. ამ მისამართთან გამოსაყენებლად ხელახლა შეინახეთ.",
     "apiKeyOptional": "ლოკალური სერვერების უმეტესობას გასაღები არ სჭირდება.",
@@ -595,7 +594,8 @@
     "chatHistoryRetentionDays": "ძველი ჩატების წაშლა",
     "chatHistoryRetentionDaysHint": "ჩატი წაიშლება, თუ ამდენი ხნის განმავლობაში ახალი შეტყობინება არ ჰქონია. უფრო ძველი ჩატები დაუყოვნებლივ წაიშლება.",
     "chatHistoryRetentionNever": "არასდროს",
-    "chatRules": "ჩატი",
+    "chatPrompt": "მთავარი პრომპტი",
+    "chatPromptInfo": "ემატება ჩატის ინსტრუქციებს, თუ მასში პროფილი არ არის არჩეული.",
     "checkConnection": "კავშირის შემოწმება",
     "checkingConnection": "მოწმდება…",
     "clearChatsConfirmDialog": "ნამდვილად გსურთ ყველა შენახული ჩატის წაშლა? ამის დაბრუნება შეუძლებელია.",
@@ -671,7 +671,6 @@
     "hotkeyStatus": {
       "conflict": "მინიჭება ვერ მოხერხდა: კომბინაციას, სავარაუდოდ, სხვა აპი იყენებს. აირჩიეთ სხვა."
     },
-    "historyTab": "ისტორია",
     "hotkeysMissing": "ზოგი კომბინაცია სისტემის პარამეტრებში წაიშალა და არ მუშაობს. დასაბრუნებლად გამოიყენეთ „ხელახლა რეგისტრაცია“.",
     "hotkeysTab": "კომბინაციები",
     "inlineCorrectionExternalHint": "გაუშვით ეს ბრძანება სკრიპტიდან ან სისტემური კომბინაციიდან. D-Bus: org.tyco.Interface-ის მეთოდი CorrectSelection.",
@@ -685,7 +684,7 @@
     "launcherCommandsTab": "სწრაფი ბრძანებები",
     "llmConnections": "კავშირები",
     "llmConnectionsHint": "სად აგზავნის Tyco AI მოთხოვნებს: Google, OpenRouter, DeepSeek ან ნებისმიერი სერვერი OpenAI-თან თავსებადი API-ით, მაგალითად ლოკალური Ollama ან LM Studio. მოდელები თავიანთ კავშირში ემატება. შენახული გასაღები დაცულ საცავში ხვდება და აღარასდროს ჩანს.",
-    "llmTab": "LLM",
+    "llmTab": "კავშირები და მოდელები",
     "mainActionGroups": {
       "basic": "ძირითადი",
       "translation": "თარგმანი",
@@ -729,6 +728,11 @@
     "modelId": "მოდელის ID",
     "modelsCount": "მოდელები: {count}",
     "modelsForFeatures": "მოდელები ფუნქციებისთვის",
+    "taskModel": "მოდელი",
+    "taskModelInfo": "მოდელები და სარეზერვო მოდელები ინიშნება გვერდზე „კავშირები და მოდელები“.",
+    "taskModelNone": "არ არის არჩეული",
+    "taskModelFallbacks": "სარეზერვო: {count}",
+    "taskModelChange": "შეცვლა",
     "motion": "ანიმაციები",
     "motionAuto": "სისტემური",
     "motionNormal": "ჩართული",
@@ -811,7 +815,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (საკუთარი სერვერი)",
     "sttServerUrl": "სერვერის მისამართი",
     "sttServerUrlHint": "sherpa-onnx სტრიმინგის სერვერის WebSocket მისამართი ამ კომპიუტერზე ან ლოკალურ ქსელში. ამოცნობის მოდელი ის არის, რომელსაც სერვერი უშვებს.",
-    "sttTab": "STT",
+    "sttTab": "ხმა",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — ახალი ხაზი)",
       "enter": "Enter (Shift+Enter — ახალი ხაზი)",
@@ -822,6 +826,9 @@
     "temperature": "ტემპერატურა",
     "voiceTextCorrection": "ნაკარნახევი ტექსტის შესწორება",
     "textCorrection": "ტექსტის შესწორება",
+    "correctionPageHint": "ასწორებს ტექსტის შეცდომებს AI-ის დახმარებით. მონიშნული ტექსტის შესწორების კომბინაცია იმართება გვერდზე",
+    "correctionPrompt": "პრომპტი",
+    "correctionPromptInfo": "ემატება ჩაშენებულ შესწორების ინსტრუქციებს.",
     "textInjection": {
       "recheck": "ხელახლა შემოწმება",
       "unavailable": "ტექსტის ჩასმა მიუწვდომელია: {error}"
@@ -849,6 +856,7 @@
     "translationProviderLlm": "AI მოდელი",
     "translationsHint": "სწრაფი თარგმანის ენები: თარგმანის მენიუში თითოეული საკუთარი კლავიშით აირჩევა. გადაათრიეთ ბარათები მათი კლავიშების შესაცვლელად.",
     "translationsTab": "თარგმანი",
+    "correctionTab": "შესწორება",
     "uiScale": "ინტერფეისის მასშტაბი",
     "unassignHotkey": "კომბინაციის მოცილება",
     "userLanguage": "მომხმარებლის ენა",
@@ -928,7 +936,8 @@
     "profileFilesAskAll": "„ფაილები“ დაყენებულია „კითხვაზე“: ყოველი გამოძახება დადასტურებას ელოდება, იქაც კი, სადაც პროექტი მას უშვებს.",
     "profileModelDefaultNamed": "პირველი ხელმისაწვდომი ({model})",
     "deleteProfileConfirmUncounted": "წაიშალოს პროფილი „{name}“? მისი SOUL.md, სამუშაო სივრცე და ყველა ჩატი სამუდამოდ წაიშლება.",
-    "modelsCategory": "მოდელები",
+    "featuresCategory": "შესაძლებლობები",
+    "aiCategory": "AI",
     "allPluginsTab": "ყველა დანამატი",
     "pluginStatusOff": "გამორთულია"
   },

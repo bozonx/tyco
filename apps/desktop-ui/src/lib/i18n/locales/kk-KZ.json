@@ -575,7 +575,6 @@
     "addPrimaryModel": "Модель тағайындау",
     "aiModelUsage": "ЖИ модельдерін пайдалану",
     "aiModelUsageHint": "Сұраулар бірінші қолжетімді модельге жіберіледі. Провайдер істен шықса немесе қолжетімсіз болса, сұраулар автоматты түрде ретімен келесі модельдерге ауысады.",
-    "aiRules": "ЖИ ережелері",
     "apiKey": "API кілті",
     "apiKeyBoundTo": "Сақталған кілт тек {origin} мекенжайына жіберіледі. Оны осы мекенжаймен қолдану үшін қайта сақтаңыз.",
     "apiKeyOptional": "Жергілікті серверлердің көбіне кілт қажет емес.",
@@ -595,7 +594,8 @@
     "chatHistoryRetentionDays": "Ескі чаттарды жою",
     "chatHistoryRetentionDaysHint": "Чатта осынша уақыт жаңа хабарлама болмаса, ол жойылады. Одан ескі чаттар бірден жойылады.",
     "chatHistoryRetentionNever": "Ешқашан",
-    "chatRules": "Чат",
+    "chatPrompt": "Негізгі промпт",
+    "chatPromptInfo": "Чатта профиль таңдалмаса, чат нұсқаулықтарына қосылады.",
     "checkConnection": "Қосылымды тексеру",
     "checkingConnection": "Тексерілуде…",
     "clearChatsConfirmDialog": "Барлық сақталған чатты шынымен жойғыңыз келе ме? Бұл әрекетті қайтару мүмкін емес.",
@@ -671,7 +671,6 @@
     "hotkeyStatus": {
       "conflict": "Тағайындау мүмкін болмады: тіркесімді басқа қолданба пайдаланып жатқан болуы мүмкін. Басқасын таңдаңыз."
     },
-    "historyTab": "Тарих",
     "hotkeysMissing": "Кейбір жылдам пернелер жүйе параметрлерінде жойылып, жұмыс істемейді. Оларды қайтару үшін «Қайта тіркеу» батырмасын қолданыңыз.",
     "hotkeysTab": "Жылдам пернелер",
     "inlineCorrectionExternalHint": "Бұл команданы скрипттен немесе жүйелік перне тіркесімінен іске қосыңыз. D-Bus: org.tyco.Interface интерфейсінің CorrectSelection әдісі.",
@@ -685,7 +684,7 @@
     "launcherCommandsTab": "Жылдам командалар",
     "llmConnections": "Қосылымдар",
     "llmConnectionsHint": "Tyco ЖИ сұрауларын қайда жібереді: Google, OpenRouter, DeepSeek немесе OpenAI-мен үйлесімді API бар кез келген сервер, мысалы жергілікті Ollama не LM Studio. Модельдер өз қосылымының ішінде қосылады. Сақталған кілт қорғалған қоймаға түседі және енді ешқашан көрсетілмейді.",
-    "llmTab": "LLM",
+    "llmTab": "Қосылымдар мен модельдер",
     "mainActionGroups": {
       "basic": "Негізгі",
       "translation": "Аударма",
@@ -729,6 +728,11 @@
     "modelId": "Модель ID",
     "modelsCount": "Модельдер: {count}",
     "modelsForFeatures": "Функцияларға арналған модельдер",
+    "taskModel": "Модель",
+    "taskModelInfo": "Модельдер мен резервтік модельдер «Қосылымдар мен модельдер» бетінде тағайындалады.",
+    "taskModelNone": "Таңдалмаған",
+    "taskModelFallbacks": "резервтік: {count}",
+    "taskModelChange": "Өзгерту",
     "motion": "Анимациялар",
     "motionAuto": "Жүйелік",
     "motionNormal": "Қосулы",
@@ -811,7 +815,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (өз сервері)",
     "sttServerUrl": "Сервер мекенжайы",
     "sttServerUrlHint": "Осы компьютердегі немесе жергілікті желідегі sherpa-onnx ағындық серверінің WebSocket мекенжайы. Тану моделі — сервер іске қосқан модель.",
-    "sttTab": "STT",
+    "sttTab": "Дауыс",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — жаңа жол)",
       "enter": "Enter (Shift+Enter — жаңа жол)",
@@ -822,6 +826,9 @@
     "temperature": "Температура",
     "voiceTextCorrection": "Айтылған мәтінді түзету",
     "textCorrection": "Мәтінді түзету",
+    "correctionPageHint": "Мәтіндегі қателерді ЖИ көмегімен түзетеді. Белгіленген мәтінді түзету пернесі мына бетте бапталады:",
+    "correctionPrompt": "Промпт",
+    "correctionPromptInfo": "Кірістірілген түзету нұсқаулықтарына қосылады.",
     "textInjection": {
       "recheck": "Қайта тексеру",
       "unavailable": "Мәтінді кірістіру қолжетімсіз: {error}"
@@ -849,6 +856,7 @@
     "translationProviderLlm": "ЖИ моделі",
     "translationsHint": "Жылдам аударма тілдері: аударма мәзірінде әрқайсысы өз пернесімен таңдалады. Пернелерін өзгерту үшін карталарды сүйреңіз.",
     "translationsTab": "Аударма",
+    "correctionTab": "Түзету",
     "uiScale": "Интерфейс масштабы",
     "unassignHotkey": "Тіркесімді алып тастау",
     "userLanguage": "Пайдаланушы тілі",
@@ -928,7 +936,8 @@
     "profileFilesAskAll": "«Файлдар» «Сұрау» режимінде: жоба рұқсат етсе де, әр шақыру растауды күтеді.",
     "profileModelDefaultNamed": "Бірінші қолжетімді ({model})",
     "deleteProfileConfirmUncounted": "«{name}» профилін жою керек пе? Оның SOUL.md файлы, жұмыс кеңістігі және барлық чаты біржола жойылады.",
-    "modelsCategory": "Модельдер",
+    "featuresCategory": "Мүмкіндіктер",
+    "aiCategory": "ЖИ",
     "allPluginsTab": "Барлық плагиндер",
     "pluginStatusOff": "Өшірулі"
   },

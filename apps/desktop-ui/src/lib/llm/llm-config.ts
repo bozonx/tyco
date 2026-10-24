@@ -5,6 +5,7 @@ import {
   type LlmConfig,
   type LlmModel,
   type LlmProvider,
+  type LlmTask,
 } from '@tyco/shared'
 
 export { normalizeLlmConfig }
@@ -84,4 +85,20 @@ export function modelLabel(
   model: Pick<LlmModel, 'id' | 'name' | 'providerModelId'>
 ): string {
   return model.name?.trim() || model.providerModelId.trim() || model.id
+}
+
+/** The model a task answers with and how many fallbacks back it up */
+export function taskModelSummary(
+  config: Pick<LlmConfig, 'models' | 'tasks'>,
+  task: LlmTask
+): { primaryModelLabel?: string; fallbackCount: number } {
+  const models = config.tasks[task].modelChain.flatMap((id) => {
+    const model = config.models.find((item) => item.id === id)
+    return model ? [model] : []
+  })
+  const [primary, ...fallbacks] = models
+  return {
+    primaryModelLabel: primary && modelLabel(primary),
+    fallbackCount: fallbacks.length,
+  }
 }

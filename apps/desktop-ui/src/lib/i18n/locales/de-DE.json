@@ -578,7 +578,6 @@
     "addPrimaryModel": "Modell zuweisen",
     "aiModelUsage": "Verwendung der KI-Modelle",
     "aiModelUsageHint": "Anfragen gehen an das erste verfügbare Modell. Fällt ein Anbieter aus oder ist er nicht erreichbar, wechseln Anfragen automatisch der Reihe nach zu den nächsten Modellen.",
-    "aiRules": "KI-Regeln",
     "apiKey": "API-Schlüssel",
     "apiKeyBoundTo": "Der gespeicherte Schlüssel wird nur an {origin} gesendet. Speichern Sie ihn erneut, um ihn mit dieser Adresse zu verwenden.",
     "apiKeyOptional": "Die meisten lokalen Server brauchen keinen Schlüssel.",
@@ -598,7 +597,8 @@
     "chatHistoryRetentionDays": "Alte Chats löschen",
     "chatHistoryRetentionDaysHint": "Ein Chat wird gelöscht, wenn er so lange keine neuen Nachrichten hatte. Ältere Chats werden sofort gelöscht.",
     "chatHistoryRetentionNever": "Nie",
-    "chatRules": "Chat",
+    "chatPrompt": "Haupt-Prompt",
+    "chatPromptInfo": "Wird den Chat-Anweisungen hinzugefügt, wenn im Chat kein Profil ausgewählt ist.",
     "checkConnection": "Verbindung prüfen",
     "checkingConnection": "Wird geprüft…",
     "clearChatsConfirmDialog": "Möchten Sie wirklich alle gespeicherten Chats löschen? Dies kann nicht rückgängig gemacht werden.",
@@ -674,7 +674,6 @@
     "hotkeyStatus": {
       "conflict": "Zuweisung nicht möglich: Das Kürzel wird höchstwahrscheinlich von einer anderen App verwendet. Wählen Sie ein anderes."
     },
-    "historyTab": "Verlauf",
     "hotkeysMissing": "Einige Tastenkürzel wurden in den Systemeinstellungen entfernt und funktionieren nicht. Mit „Erneut registrieren“ holen Sie sie zurück.",
     "hotkeysTab": "Tastenkürzel",
     "inlineCorrectionExternalHint": "Führen Sie diesen Befehl aus einem Skript oder über ein Systemkürzel aus. D-Bus: Methode CorrectSelection von org.tyco.Interface.",
@@ -688,7 +687,7 @@
     "launcherCommandsTab": "Schnellbefehle",
     "llmConnections": "Verbindungen",
     "llmConnectionsHint": "Wohin Tyco KI-Anfragen sendet: Google, OpenRouter, DeepSeek oder ein beliebiger Server mit OpenAI-kompatibler API, etwa ein lokales Ollama oder LM Studio. Modelle werden innerhalb ihrer Verbindung hinzugefügt. Ein gespeicherter Schlüssel kommt in den sicheren Speicher und wird nie wieder angezeigt.",
-    "llmTab": "LLM",
+    "llmTab": "Verbindungen & Modelle",
     "mainActionGroups": {
       "basic": "Grundlegend",
       "translation": "Übersetzung",
@@ -732,6 +731,11 @@
     "modelId": "Modell-ID",
     "modelsCount": "Modelle: {count}",
     "modelsForFeatures": "Modelle für Funktionen",
+    "taskModel": "Modell",
+    "taskModelInfo": "Modelle und ihre Ersatzmodelle werden auf der Seite „Verbindungen & Modelle“ zugewiesen.",
+    "taskModelNone": "Nicht ausgewählt",
+    "taskModelFallbacks": "Ersatzmodelle: {count}",
+    "taskModelChange": "Ändern",
     "motion": "Animationen",
     "motionAuto": "System",
     "motionNormal": "Ein",
@@ -814,7 +818,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (selbst gehostet)",
     "sttServerUrl": "Serveradresse",
     "sttServerUrlHint": "WebSocket-Adresse eines sherpa-onnx-Streaming-Servers auf diesem Computer oder im lokalen Netzwerk. Das Erkennungsmodell ist dasjenige, das der Server ausführt.",
-    "sttTab": "STT",
+    "sttTab": "Sprache",
     "submitKey": {
       "ctrlEnter": "Strg+Enter (Enter für eine neue Zeile)",
       "enter": "Enter (Umschalt+Enter für eine neue Zeile)",
@@ -825,6 +829,9 @@
     "temperature": "Temperatur",
     "voiceTextCorrection": "Korrektur von Sprachtext",
     "textCorrection": "Textkorrektur",
+    "correctionPageHint": "Korrigiert Fehler im Text mit KI. Das Tastenkürzel für die Korrektur von markiertem Text wird auf der folgenden Seite eingerichtet:",
+    "correctionPrompt": "Prompt",
+    "correctionPromptInfo": "Wird den integrierten Korrekturanweisungen hinzugefügt.",
     "textInjection": {
       "recheck": "Erneut prüfen",
       "unavailable": "Texteinfügung ist nicht verfügbar: {error}"
@@ -852,6 +859,7 @@
     "translationProviderLlm": "KI-Modell",
     "translationsHint": "Sprachen der Schnellübersetzung: Im Übersetzungsmenü wird jede mit ihrer eigenen Taste gewählt. Ziehen Sie die Karten, um ihre Tasten zu ändern.",
     "translationsTab": "Übersetzung",
+    "correctionTab": "Korrektur",
     "uiScale": "Skalierung der Oberfläche",
     "unassignHotkey": "Kürzel entfernen",
     "userLanguage": "Benutzersprache",
@@ -931,7 +939,8 @@
     "profileFilesAskAll": "„Dateien“ steht auf „Fragen“: Jeder Aufruf wartet auf Bestätigung, auch wo das Projekt ihn erlaubt.",
     "profileModelDefaultNamed": "Erstes verfügbares ({model})",
     "deleteProfileConfirmUncounted": "Profil „{name}“ löschen? Seine SOUL.md, sein Arbeitsbereich und alle seine Chats werden endgültig gelöscht.",
-    "modelsCategory": "Modelle",
+    "featuresCategory": "Funktionen",
+    "aiCategory": "KI",
     "allPluginsTab": "Alle Plugins",
     "pluginStatusOff": "Aus"
   },

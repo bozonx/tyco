@@ -142,4 +142,22 @@ describe('SettingsEditorTab.vue', () => {
     expect(userConfig.markdown.strip.codeBlockIndent).toBe('none')
     expect(userConfig.markdown.strip.hasThematicBreaks).toBe(true)
   })
+
+  it('shows the editor history only in development mode', () => {
+    const mountTab = (isInDevelopment: boolean) =>
+      mount(SettingsEditorTab, {
+        global: {
+          provide: createTestSettingsContext({ isInDevelopment }).provide,
+          stubs: {
+            SettingsSection: true,
+            SettingsEditorHistorySection: {
+              template: '<div class="editor-history-stub" />',
+            },
+          },
+        },
+      })
+
+    expect(mountTab(true).find('.editor-history-stub').exists()).toBe(true)
+    expect(mountTab(false).find('.editor-history-stub').exists()).toBe(false)
+  })
 })

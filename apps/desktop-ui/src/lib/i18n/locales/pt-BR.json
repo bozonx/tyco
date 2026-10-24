@@ -578,7 +578,6 @@
     "addPrimaryModel": "Atribuir modelo",
     "aiModelUsage": "Uso dos modelos de IA",
     "aiModelUsageHint": "As solicitações vão para o primeiro modelo disponível. Se um provedor falhar ou estiver inacessível, as solicitações passam automaticamente para os próximos modelos, em ordem.",
-    "aiRules": "Regras de IA",
     "apiKey": "Chave de API",
     "apiKeyBoundTo": "A chave salva só é enviada para {origin}. Salve-a de novo para usá-la com este endereço.",
     "apiKeyOptional": "A maioria dos servidores locais não precisa de chave.",
@@ -598,7 +597,8 @@
     "chatHistoryRetentionDays": "Excluir chats antigos",
     "chatHistoryRetentionDaysHint": "Um chat é excluído quando fica sem novas mensagens por esse tempo. Chats mais antigos são excluídos imediatamente.",
     "chatHistoryRetentionNever": "Nunca",
-    "chatRules": "Chat",
+    "chatPrompt": "Prompt principal",
+    "chatPromptInfo": "Adicionado às instruções do chat quando nenhum perfil está selecionado nele.",
     "checkConnection": "Verificar conexão",
     "checkingConnection": "Verificando…",
     "clearChatsConfirmDialog": "Tem certeza de que deseja excluir todos os chats salvos? Isso não pode ser desfeito.",
@@ -674,7 +674,6 @@
     "hotkeyStatus": {
       "conflict": "Não foi possível atribuir: o atalho provavelmente já está em uso por outro aplicativo. Escolha outro."
     },
-    "historyTab": "Histórico",
     "hotkeysMissing": "Alguns atalhos foram removidos nas configurações do sistema e não funcionam. Use “Registrar novamente” para recuperá-los.",
     "hotkeysTab": "Atalhos",
     "inlineCorrectionExternalHint": "Execute este comando a partir de um script ou atalho do sistema. D-Bus: método CorrectSelection de org.tyco.Interface.",
@@ -688,7 +687,7 @@
     "launcherCommandsTab": "Comandos rápidos",
     "llmConnections": "Conexões",
     "llmConnectionsHint": "Para onde o Tyco envia as solicitações de IA: Google, OpenRouter, DeepSeek ou qualquer servidor com API compatível com OpenAI, como um Ollama ou LM Studio local. Os modelos são adicionados dentro da conexão. Uma chave salva vai para o armazenamento seguro e nunca mais é exibida.",
-    "llmTab": "LLM",
+    "llmTab": "Conexões e modelos",
     "mainActionGroups": {
       "basic": "Básicas",
       "translation": "Tradução",
@@ -732,6 +731,11 @@
     "modelId": "ID do modelo",
     "modelsCount": "Modelos: {count}",
     "modelsForFeatures": "Modelos por função",
+    "taskModel": "Modelo",
+    "taskModelInfo": "Os modelos e seus reservas são atribuídos na página \"Conexões e modelos\".",
+    "taskModelNone": "Não selecionado",
+    "taskModelFallbacks": "reservas: {count}",
+    "taskModelChange": "Alterar",
     "motion": "Animações",
     "motionAuto": "Sistema",
     "motionNormal": "Ativadas",
@@ -814,7 +818,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (auto-hospedado)",
     "sttServerUrl": "Endereço do servidor",
     "sttServerUrlHint": "Endereço WebSocket de um servidor de streaming sherpa-onnx, neste computador ou na rede local. O modelo de reconhecimento é o que o servidor executa.",
-    "sttTab": "STT",
+    "sttTab": "Voz",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter para nova linha)",
       "enter": "Enter (Shift+Enter para nova linha)",
@@ -825,6 +829,9 @@
     "temperature": "Temperatura",
     "voiceTextCorrection": "Correção do texto ditado",
     "textCorrection": "Correção de texto",
+    "correctionPageHint": "Corrige erros no texto com IA. O atalho para corrigir o texto selecionado é configurado na página",
+    "correctionPrompt": "Prompt",
+    "correctionPromptInfo": "Adicionado às instruções de correção integradas.",
     "textInjection": {
       "recheck": "Verificar de novo",
       "unavailable": "A inserção de texto está indisponível: {error}"
@@ -852,6 +859,7 @@
     "translationProviderLlm": "Modelo de IA",
     "translationsHint": "Idiomas de tradução rápida: no menu de tradução, cada um é escolhido com sua própria tecla. Arraste os cartões para mudar as teclas.",
     "translationsTab": "Tradução",
+    "correctionTab": "Correção",
     "uiScale": "Escala da interface",
     "unassignHotkey": "Remover atalho",
     "userLanguage": "Idioma do usuário",
@@ -931,7 +939,8 @@
     "profileFilesAskAll": "“Arquivos” está definido como “Perguntar”: cada chamada aguarda confirmação, mesmo onde o projeto permite.",
     "profileModelDefaultNamed": "Primeiro disponível ({model})",
     "deleteProfileConfirmUncounted": "Excluir o perfil “{name}”? O SOUL.md, o espaço de trabalho e todos os chats dele serão excluídos para sempre.",
-    "modelsCategory": "Modelos",
+    "featuresCategory": "Recursos",
+    "aiCategory": "IA",
     "allPluginsTab": "Todos os plugins",
     "pluginStatusOff": "Desativado"
   },

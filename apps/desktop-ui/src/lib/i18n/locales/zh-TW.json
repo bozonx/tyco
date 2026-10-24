@@ -572,7 +572,6 @@
     "addPrimaryModel": "指定模型",
     "aiModelUsage": "AI 模型使用方式",
     "aiModelUsageHint": "請求會發送給第一個可用的模型。如果某個提供者失敗或無法連線，請求會自動依序遞補至後續的備用模型。",
-    "aiRules": "AI 規則",
     "apiKey": "API 金鑰",
     "apiKeyBoundTo": "儲存的金鑰僅發送至 {origin}。若要用於此位址，請重新儲存金鑰。",
     "apiKeyOptional": "大多數本機伺服器不需要金鑰。",
@@ -592,7 +591,8 @@
     "chatHistoryRetentionDays": "刪除舊聊天記錄",
     "chatHistoryRetentionDaysHint": "若聊天記錄在此時間內未有新訊息，將予以刪除。更早的聊天記錄會立即刪除。",
     "chatHistoryRetentionNever": "永不",
-    "chatRules": "聊天",
+    "chatPrompt": "主要提示詞",
+    "chatPromptInfo": "聊天中未選擇設定檔時，會加入聊天指示中。",
     "checkConnection": "檢查連線",
     "checkingConnection": "正在檢查…",
     "clearChatsConfirmDialog": "確定要刪除所有已儲存的聊天記錄嗎？此操作無法復原。",
@@ -668,7 +668,6 @@
     "hotkeyStatus": {
       "conflict": "無法指派：該快捷鍵很可能已被其他應用程式占用。請選擇其他快捷鍵。"
     },
-    "historyTab": "歷史記錄",
     "hotkeysMissing": "部分快捷鍵已在系統設定中被移除，無法正常運作。請使用「重新註冊」予以還原。",
     "hotkeysTab": "快捷鍵",
     "inlineCorrectionExternalHint": "從指令碼或系統快捷鍵執行此命令。D-Bus：org.tyco.Interface 的 CorrectSelection 方法。",
@@ -682,7 +681,7 @@
     "launcherCommandsTab": "快速命令",
     "llmConnections": "連線",
     "llmConnectionsHint": "Tyco 發送 AI 請求的端點：Google、OpenRouter、DeepSeek 或任何具有 OpenAI 相容 API 的伺服器，例如本機的 Ollama 或 LM Studio。模型會在各連線內部新增。儲存的金鑰將存入安全存放區，不再顯示。",
-    "llmTab": "LLM",
+    "llmTab": "連線與模型",
     "mainActionGroups": {
       "basic": "基本",
       "translation": "翻譯",
@@ -726,6 +725,11 @@
     "modelId": "模型 ID",
     "modelsCount": "{count} 個模型",
     "modelsForFeatures": "功能指定模型",
+    "taskModel": "模型",
+    "taskModelInfo": "模型及其備用模型在「連線與模型」頁面中指派。",
+    "taskModelNone": "未選擇",
+    "taskModelFallbacks": "備用：{count}",
+    "taskModelChange": "變更",
     "motion": "動畫效果",
     "motionAuto": "隨系統",
     "motionNormal": "開啟",
@@ -808,7 +812,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx（自行託管）",
     "sttServerUrl": "伺服器位址",
     "sttServerUrlHint": "本機或區域網路中 sherpa-onnx 串流伺服器的 WebSocket 位址。辨識模型取決於伺服器所執行的模型。",
-    "sttTab": "STT",
+    "sttTab": "語音",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter（Enter 用於換行）",
       "enter": "Enter（Shift+Enter 用於換行）",
@@ -819,6 +823,9 @@
     "temperature": "溫度",
     "voiceTextCorrection": "語音文字校對",
     "textCorrection": "文字校對",
+    "correctionPageHint": "使用 AI 修正文字中的錯誤。校對所選文字的快捷鍵在該頁面進行設定",
+    "correctionPrompt": "提示詞",
+    "correctionPromptInfo": "加入內建的校對指示中。",
     "textInjection": {
       "recheck": "重新檢查",
       "unavailable": "文字插入功能無法使用：{error}"
@@ -846,6 +853,7 @@
     "translationProviderLlm": "AI 模型",
     "translationsHint": "快速翻譯語言：在翻譯選單中，每種語言均可透過專屬按鍵選取。拖曳卡片以變更其按鍵。",
     "translationsTab": "翻譯",
+    "correctionTab": "校對",
     "uiScale": "介面縮放",
     "unassignHotkey": "移除快捷鍵",
     "userLanguage": "使用者語言",
@@ -925,7 +933,8 @@
     "profileFilesAskAll": "「檔案」已設為「詢問」：即使專案允許，每次呼叫仍會等待確認。",
     "profileModelDefaultNamed": "第一個可用模型 ({model})",
     "deleteProfileConfirmUncounted": "要刪除設定檔「{name}」嗎？其 SOUL.md、工作區和所有聊天記錄將被永久刪除。",
-    "modelsCategory": "模型",
+    "featuresCategory": "功能",
+    "aiCategory": "AI",
     "allPluginsTab": "所有外掛程式",
     "pluginStatusOff": "關閉"
   },

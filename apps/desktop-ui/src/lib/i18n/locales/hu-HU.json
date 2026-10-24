@@ -575,7 +575,6 @@
     "addPrimaryModel": "Modell hozzárendelése",
     "aiModelUsage": "MI-modellek használata",
     "aiModelUsageHint": "A kérések az első elérhető modellhez kerülnek. Ha egy szolgáltató hibázik vagy nem érhető el, a kérések automatikusan sorban a következő modellekre váltanak.",
-    "aiRules": "MI-szabályok",
     "apiKey": "API-kulcs",
     "apiKeyBoundTo": "A mentett kulcs csak ide kerül elküldésre: {origin}. Mentse el újra, ha ezzel a címmel szeretné használni.",
     "apiKeyOptional": "A legtöbb helyi szervernek nincs szüksége kulcsra.",
@@ -595,7 +594,8 @@
     "chatHistoryRetentionDays": "Régi csevegések törlése",
     "chatHistoryRetentionDaysHint": "Egy csevegés akkor törlődik, ha ennyi ideig nem érkezett bele új üzenet. A régebbi csevegések azonnal törlődnek.",
     "chatHistoryRetentionNever": "Soha",
-    "chatRules": "Csevegés",
+    "chatPrompt": "Fő prompt",
+    "chatPromptInfo": "A csevegés utasításaihoz adódik, ha nincs kiválasztva profil a csevegésben.",
     "checkConnection": "Kapcsolat ellenőrzése",
     "checkingConnection": "Ellenőrzés…",
     "clearChatsConfirmDialog": "Biztosan törli az összes mentett csevegést? Ez nem vonható vissza.",
@@ -671,7 +671,6 @@
     "hotkeyStatus": {
       "conflict": "Nem sikerült hozzárendelni: a billentyűparancsot valószínűleg egy másik alkalmazás használja. Válasszon másikat."
     },
-    "historyTab": "Előzmények",
     "hotkeysMissing": "Néhány billentyűparancsot eltávolítottak a rendszerbeállításokban, ezért nem működnek. Az „Újraregisztrálás” gombbal visszaállíthatja őket.",
     "hotkeysTab": "Billentyűparancsok",
     "inlineCorrectionExternalHint": "Futtassa ezt a parancsot szkriptből vagy rendszerszintű billentyűparancsból. D-Bus: az org.tyco.Interface CorrectSelection metódusa.",
@@ -685,7 +684,7 @@
     "launcherCommandsTab": "Gyorsparancsok",
     "llmConnections": "Kapcsolatok",
     "llmConnectionsHint": "Hova küldi a Tyco az MI-kéréseket: Google, OpenRouter, DeepSeek vagy bármely OpenAI-kompatibilis API-val rendelkező szerver, például helyi Ollama vagy LM Studio. A modelleket a saját kapcsolatukon belül kell hozzáadni. A mentett kulcs a biztonságos tárolóba kerül, és soha többé nem jelenik meg.",
-    "llmTab": "LLM",
+    "llmTab": "Kapcsolatok és modellek",
     "mainActionGroups": {
       "basic": "Alapvető",
       "translation": "Fordítás",
@@ -729,6 +728,11 @@
     "modelId": "Modellazonosító",
     "modelsCount": "Modellek: {count}",
     "modelsForFeatures": "Modellek a funkciókhoz",
+    "taskModel": "Modell",
+    "taskModelInfo": "A modellek és tartalékaik a „Kapcsolatok és modellek” oldalon rendelhetők hozzá.",
+    "taskModelNone": "Nincs kiválasztva",
+    "taskModelFallbacks": "tartalék: {count}",
+    "taskModelChange": "Módosítás",
     "motion": "Animációk",
     "motionAuto": "Rendszer",
     "motionNormal": "Be",
@@ -811,7 +815,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (saját szerveren)",
     "sttServerUrl": "Szervercím",
     "sttServerUrlHint": "Egy sherpa-onnx streamingszerver WebSocket-címe ezen a számítógépen vagy a helyi hálózaton. A felismerési modell az, amelyet a szerver futtat.",
-    "sttTab": "STT",
+    "sttTab": "Hang",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter: új sor)",
       "enter": "Enter (Shift+Enter: új sor)",
@@ -822,6 +826,9 @@
     "temperature": "Hőmérséklet",
     "voiceTextCorrection": "Diktált szöveg javítása",
     "textCorrection": "Szövegjavítás",
+    "correctionPageHint": "MI segítségével javítja a szöveg hibáit. A kijelölt szöveg javításának billentyűparancsa ezen az oldalon állítható be:",
+    "correctionPrompt": "Prompt",
+    "correctionPromptInfo": "A beépített javítási utasításokhoz adódik.",
     "textInjection": {
       "recheck": "Újraellenőrzés",
       "unavailable": "A szövegbeillesztés nem érhető el: {error}"
@@ -849,6 +856,7 @@
     "translationProviderLlm": "MI-modell",
     "translationsHint": "Gyorsfordítási nyelvek: a fordítási menüben mindegyik saját billentyűvel választható. Húzza a kártyákat a billentyűik módosításához.",
     "translationsTab": "Fordítás",
+    "correctionTab": "Javítás",
     "uiScale": "A felület mérete",
     "unassignHotkey": "Billentyűparancs eltávolítása",
     "userLanguage": "Felhasználó nyelve",
@@ -928,7 +936,8 @@
     "profileFilesAskAll": "A „Fájlok” beállítása „Kérdés”: minden hívás megerősítésre vár, ott is, ahol a projekt engedélyezi.",
     "profileModelDefaultNamed": "Első elérhető ({model})",
     "deleteProfileConfirmUncounted": "Törli a(z) „{name}” profilt? A SOUL.md fájlja, a munkaterülete és az összes csevegése végleg törlődik.",
-    "modelsCategory": "Modellek",
+    "featuresCategory": "Funkciók",
+    "aiCategory": "MI",
     "allPluginsTab": "Minden bővítmény",
     "pluginStatusOff": "Ki"
   },

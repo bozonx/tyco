@@ -380,4 +380,34 @@ describe('SettingsTranslationsTab.vue', () => {
       { term: 'KeepThis', translation: 'KeepThis' },
     ])
   })
+
+  it('shows the translation model only when an AI model translates or reviews', async () => {
+    const context = createTestSettingsContext(createConfig())
+    const { translation } = context.draft.value
+    const wrapper = mount(SettingsTranslationsTab, {
+      global: {
+        provide: context.provide,
+        stubs: {
+          SettingsTaskModel: {
+            props: ['task'],
+            template: '<div class="task-model-stub" :data-task="task" />',
+          },
+          SecretKeyField: true,
+          SecretStorageNotice: true,
+        },
+      },
+    })
+    expect(wrapper.find('.task-model-stub').exists()).toBe(false)
+
+    translation.qualityGate = 'onProblems'
+    await nextTick()
+    expect(wrapper.get('.task-model-stub').attributes('data-task')).toBe(
+      'translation'
+    )
+
+    translation.qualityGate = 'off'
+    translation.provider = 'llm'
+    await nextTick()
+    expect(wrapper.find('.task-model-stub').exists()).toBe(true)
+  })
 })

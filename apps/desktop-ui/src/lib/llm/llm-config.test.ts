@@ -8,6 +8,7 @@ import {
   normalizeLlmConfig,
   removeModel,
   removeProvider,
+  taskModelSummary,
   uniqueLlmId,
 } from './llm-config'
 
@@ -167,5 +168,20 @@ describe('llm-config', () => {
     expect(modelLabel({ id: 'x', providerModelId: 'm', name: ' N ' })).toBe('N')
     expect(modelLabel({ id: 'x', providerModelId: 'm', name: '' })).toBe('m')
     expect(modelLabel({ id: 'x', providerModelId: '' })).toBe('x')
+  })
+
+  it('summarizes the model chain of a task, skipping unknown models', () => {
+    const config = clone(DEFAULT_LLM_CONFIG)
+    const [first, second] = config.models
+    config.tasks.correction.modelChain = [first.id, 'gone', second.id]
+    expect(taskModelSummary(config, 'correction')).toEqual({
+      primaryModelLabel: modelLabel(first),
+      fallbackCount: 1,
+    })
+    config.tasks.correction.modelChain = ['gone']
+    expect(taskModelSummary(config, 'correction')).toEqual({
+      primaryModelLabel: undefined,
+      fallbackCount: 0,
+    })
   })
 })

@@ -41,13 +41,6 @@ function setup() {
 describe('LLM settings cards', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('hides chat settings outside development mode', () => {
-    const { wrapper } = setup()
-    expect(wrapper.text()).not.toContain('settings.chatAttachments')
-    expect(wrapper.text()).not.toContain('settings.chatRules')
-    expect(wrapper.text()).not.toContain('settings.chat')
-  })
-
   it('edits the shared provider draft and updates the card summary', async () => {
     const { llm, localCard } = setup()
     const card = localCard()
@@ -161,7 +154,7 @@ describe('SettingsLlmTab.vue', () => {
     },
   }
 
-  it('renders AI rules section with chat and correction fields', () => {
+  it('leaves prompts and chat settings to their feature pages', () => {
     const llm = {
       ...baseLlmConfig,
       tasks: {
@@ -203,16 +196,19 @@ describe('SettingsLlmTab.vue', () => {
       },
     })
 
-    const rulesSection = wrapper.find('[data-title="settings.aiRules"]')
-    expect(rulesSection.exists()).toBe(true)
-
-    const chatRow = wrapper.find('[data-label="settings.chatRules"]')
-    expect(chatRow.exists()).toBe(true)
-
-    const correctionRow = wrapper.find('[data-label="settings.textCorrection"]')
-    expect(correctionRow.exists()).toBe(true)
-
-    // Translation rules live on the translation settings page.
-    expect(wrapper.findAll('.textarea-stub')).toHaveLength(2)
+    expect(
+      wrapper.find('[data-title="settings.chatAttachments"]').exists()
+    ).toBe(false)
+    expect(wrapper.findAll('.textarea-stub')).toHaveLength(0)
+    expect(
+      wrapper
+        .findAll('.field-row-stub')
+        .map((row) => row.attributes('data-label'))
+    ).toEqual([
+      'action.translationMenu',
+      'settings.voiceTextCorrection',
+      'settings.textCorrection',
+      'settings.tasksTab',
+    ])
   })
 })

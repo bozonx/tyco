@@ -578,7 +578,6 @@
     "addPrimaryModel": "Przypisz model",
     "aiModelUsage": "Użycie modeli AI",
     "aiModelUsageHint": "Zapytania trafiają do pierwszego dostępnego modelu. Jeśli dostawca zawiedzie lub jest nieosiągalny, zapytania automatycznie przechodzą do kolejnych modeli po kolei.",
-    "aiRules": "Zasady AI",
     "apiKey": "Klucz API",
     "apiKeyBoundTo": "Zapisany klucz jest wysyłany tylko do {origin}. Zapisz go ponownie, aby używać go z tym adresem.",
     "apiKeyOptional": "Większość serwerów lokalnych nie wymaga klucza.",
@@ -598,7 +597,8 @@
     "chatHistoryRetentionDays": "Usuwaj stare czaty",
     "chatHistoryRetentionDaysHint": "Czat jest usuwany, gdy przez tyle czasu nie miał nowych wiadomości. Starsze czaty są usuwane od razu.",
     "chatHistoryRetentionNever": "Nigdy",
-    "chatRules": "Czat",
+    "chatPrompt": "Główny prompt",
+    "chatPromptInfo": "Dodawany do instrukcji czatu, gdy nie wybrano w nim profilu.",
     "checkConnection": "Sprawdź połączenie",
     "checkingConnection": "Sprawdzanie…",
     "clearChatsConfirmDialog": "Czy na pewno chcesz usunąć wszystkie zapisane czaty? Tej operacji nie można cofnąć.",
@@ -674,7 +674,6 @@
     "hotkeyStatus": {
       "conflict": "Nie udało się przypisać: skrót najpewniej zajmuje inna aplikacja. Wybierz inny."
     },
-    "historyTab": "Historia",
     "hotkeysMissing": "Niektóre skróty zostały usunięte w ustawieniach systemu i nie działają. Użyj „Zarejestruj ponownie”, aby je przywrócić.",
     "hotkeysTab": "Skróty",
     "inlineCorrectionExternalHint": "Uruchamiaj to polecenie ze skryptu lub skrótu systemowego. D-Bus: metoda CorrectSelection interfejsu org.tyco.Interface.",
@@ -688,7 +687,7 @@
     "launcherCommandsTab": "Szybkie polecenia",
     "llmConnections": "Połączenia",
     "llmConnectionsHint": "Dokąd Tyco wysyła zapytania AI: Google, OpenRouter, DeepSeek lub dowolny serwer z API zgodnym z OpenAI, np. lokalna Ollama lub LM Studio. Modele dodaje się wewnątrz połączenia. Zapisany klucz trafia do bezpiecznego magazynu i nigdy więcej nie jest wyświetlany.",
-    "llmTab": "LLM",
+    "llmTab": "Połączenia i modele",
     "mainActionGroups": {
       "basic": "Podstawowe",
       "translation": "Tłumaczenie",
@@ -732,6 +731,11 @@
     "modelId": "ID modelu",
     "modelsCount": "Modele: {count}",
     "modelsForFeatures": "Modele dla funkcji",
+    "taskModel": "Model",
+    "taskModelInfo": "Modele i modele zapasowe przypisuje się na stronie „Połączenia i modele”.",
+    "taskModelNone": "Nie wybrano",
+    "taskModelFallbacks": "zapasowe: {count}",
+    "taskModelChange": "Zmień",
     "motion": "Animacje",
     "motionAuto": "Systemowe",
     "motionNormal": "Włączone",
@@ -814,7 +818,7 @@
     "sttProviderSherpaOnnx": "sherpa-onnx (własny serwer)",
     "sttServerUrl": "Adres serwera",
     "sttServerUrlHint": "Adres WebSocket serwera strumieniowego sherpa-onnx na tym komputerze lub w sieci lokalnej. Model rozpoznawania to ten, który uruchamia serwer.",
-    "sttTab": "STT",
+    "sttTab": "Głos",
     "submitKey": {
       "ctrlEnter": "Ctrl+Enter (Enter — nowy wiersz)",
       "enter": "Enter (Shift+Enter — nowy wiersz)",
@@ -825,6 +829,9 @@
     "temperature": "Temperatura",
     "voiceTextCorrection": "Korekta tekstu z dyktowania",
     "textCorrection": "Korekta tekstu",
+    "correctionPageHint": "Poprawia błędy w tekście za pomocą AI. Skrót do korekty zaznaczonego tekstu konfiguruje się na stronie",
+    "correctionPrompt": "Prompt",
+    "correctionPromptInfo": "Dodawany do wbudowanych instrukcji korekty.",
     "textInjection": {
       "recheck": "Sprawdź ponownie",
       "unavailable": "Wstawianie tekstu jest niedostępne: {error}"
@@ -852,6 +859,7 @@
     "translationProviderLlm": "Model AI",
     "translationsHint": "Języki szybkiego tłumaczenia: w menu tłumaczenia każdy wybiera się własnym klawiszem. Przeciągaj karty, aby zmienić ich klawisze.",
     "translationsTab": "Tłumaczenie",
+    "correctionTab": "Korekta",
     "uiScale": "Skala interfejsu",
     "unassignHotkey": "Usuń skrót",
     "userLanguage": "Język użytkownika",
@@ -931,7 +939,8 @@
     "profileFilesAskAll": "„Pliki” ustawiono na „Pytaj”: każde wywołanie czeka na potwierdzenie, nawet tam, gdzie projekt na nie zezwala.",
     "profileModelDefaultNamed": "Pierwszy dostępny ({model})",
     "deleteProfileConfirmUncounted": "Usunąć profil „{name}”? Jego SOUL.md, przestrzeń robocza i wszystkie czaty zostaną usunięte na zawsze.",
-    "modelsCategory": "Modele",
+    "featuresCategory": "Funkcje",
+    "aiCategory": "AI",
     "allPluginsTab": "Wszystkie wtyczki",
     "pluginStatusOff": "Wyłączona"
   },

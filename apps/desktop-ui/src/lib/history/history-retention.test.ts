@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { historyRetentionChoices } from './history-retention'
+import {
+  historyRetentionChoices,
+  historyRetentionOptions,
+} from './history-retention'
 
 describe('history retention choices', () => {
   const defaults = [0, 7, 30, 90] as const
@@ -13,4 +16,13 @@ describe('history retention choices', () => {
       expect(historyRetentionChoices(defaults, saved)).toEqual(defaults)
     }
   )
+})
+
+describe('history retention options', () => {
+  it('names each period in days and 0 by the forever label', () => {
+    expect(historyRetentionOptions([0, 7], 'en-US', 'Forever')).toEqual([
+      { id: 0, name: 'Forever' },
+      { id: 7, name: '7 days' },
+    ])
+  })
 })

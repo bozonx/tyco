@@ -11,3 +11,20 @@ export function historyRetentionChoices(
   }
   return choices
 }
+
+/** Select options for retention periods; 0 days keeps the history forever */
+export function historyRetentionOptions(
+  choices: readonly number[],
+  locale: string,
+  foreverLabel: string
+): { id: number; name: string }[] {
+  const format = new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: 'day',
+    unitDisplay: 'long',
+  })
+  return choices.map((days) => ({
+    id: days,
+    name: days === 0 ? foreverLabel : format.format(days),
+  }))
+}
