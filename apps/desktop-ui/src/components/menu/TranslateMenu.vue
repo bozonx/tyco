@@ -62,10 +62,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
+import { useMenuStartup } from '../../composables/use-menu-startup'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import useToast from '../../composables/use-toast'
 import { toolResultMessage } from '../../lib/invocation/invocation-result'
@@ -324,17 +325,17 @@ const translate = async (targetLanguage: string, source?: string) => {
   })
 }
 
-// once: back on this step from the result, the menu waits for a choice
-onMounted(() => {
-  const language = props.language
-  if (!language) return
-  const stepId = menuModalsStore.currentStepId
-  if (stepId !== undefined) {
-    menuModalsStore.updateStep(stepId, MenuModals.TRANSLATE, {
-      language: undefined,
-    })
-  }
-  void translate(language)
+useMenuStartup({
+  getValue: () => props.language,
+  consume: () => {
+    const stepId = menuModalsStore.currentStepId
+    if (stepId !== undefined) {
+      menuModalsStore.updateStep(stepId, MenuModals.TRANSLATE, {
+        language: undefined,
+      })
+    }
+  },
+  run: translate,
 })
 </script>
 

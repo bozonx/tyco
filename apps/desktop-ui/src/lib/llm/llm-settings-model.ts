@@ -8,9 +8,11 @@ import {
   type LlmTask,
 } from '@tyco/shared'
 
+import { createSecretKeyEditor } from '../settings/secret-key-editor'
 import { httpOrigin } from '../net/secrets'
 import { addCompatibleProvider, addModel, removeProvider } from './llm-config'
 import { InvalidLlmBaseUrlError } from './llm-connection'
+import { parseModelTemperature, parseModelTokenCount } from './model-number'
 
 export type LlmConnectionCheckStatus = 'checking' | 'success' | 'error'
 
@@ -36,39 +38,38 @@ export function createLlmSettingsModel(deps: {
   const numberErrors = reactive<Record<string, boolean>>({})
   const requests = new Map<string, symbol>()
 
+  function clearConnectionCheck(id: string) {
+    requests.delete(id)
+    delete connectionCheckStatusByProviderId[id]
+    delete connectionErrors[id]
+  }
+  const keyEditor = (id: string) =>
+    createSecretKeyEditor({
+      getSecretId: () =>
+        deps.getConfig().providers.some((provider) => provider.id === id)
+          ? llmSecretId(id)
+          : undefined,
+      getDraft: () => keyDrafts[id] ?? '',
+      setDraft: (value) => {
+        keyDrafts[id] = value
+      },
+      setSecret: deps.setSecret,
+      removeSecret: deps.removeSecret,
+      reportError: deps.notifyKeyError,
+      onSaved: () => clearConnectionCheck(id),
+      onRemoved: () => clearConnectionCheck(id),
+    })
   async function saveKey(provider: LlmProvider) {
-    const value = keyDrafts[provider.id]?.trim()
-    if (!value) return
+    if (!keyDrafts[provider.id]?.trim()) return
     const origin =
       provider.type === 'openaiCompatible' ? httpOrigin(provider.baseUrl) : null
     if (provider.type === 'openaiCompatible' && !origin) {
       deps.notifyInvalidUrl()
       return
     }
-    try {
-      await deps.setSecret(
-        llmSecretId(provider.id),
-        value,
-        origin ? [origin] : undefined
-      )
-      requests.delete(provider.id)
-      keyDrafts[provider.id] = ''
-      delete connectionCheckStatusByProviderId[provider.id]
-      delete connectionErrors[provider.id]
-    } catch (error) {
-      deps.notifyKeyError(error)
-    }
+    await keyEditor(provider.id).save(origin ? [origin] : undefined)
   }
-  async function removeKey(id: string) {
-    try {
-      await deps.removeSecret(llmSecretId(id))
-      requests.delete(id)
-      delete connectionCheckStatusByProviderId[id]
-      delete connectionErrors[id]
-    } catch (error) {
-      deps.notifyKeyError(error)
-    }
-  }
+  const removeKey = (id: string) => keyEditor(id).remove()
   function addProvider() {
     const provider = addCompatibleProvider(deps.getConfig())
     expandedProviderIds.add(provider.id)
@@ -113,19 +114,17 @@ export function createLlmSettingsModel(deps: {
   ) {
     const key = `${model.id}:${field}`
     numberDrafts[key] = value
-    if (value.trim() === '') {
+    const parsed =
+      field === 'temperature'
+        ? parseModelTemperature(value)
+        : parseModelTokenCount(value)
+    if (parsed.isValid && parsed.value === undefined) {
       delete model[field]
       delete numberErrors[key]
       return
     }
-    const parsed = Number(value)
-    const invalid =
-      !Number.isFinite(parsed) ||
-      (field === 'temperature'
-        ? parsed < 0 || parsed > 2
-        : parsed < 1 || !Number.isSafeInteger(parsed))
-    numberErrors[key] = invalid
-    if (!invalid) model[field] = parsed
+    numberErrors[key] = !parsed.isValid
+    if (parsed.isValid) model[field] = parsed.value
   }
   function nextFallback(task: LlmTask) {
     const usable = new Set(deps.getUsableModelIds())

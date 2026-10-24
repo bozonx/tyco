@@ -72,9 +72,9 @@ describe('SettingsVoiceTab.vue', () => {
               '<textarea class="field-textarea-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
           SecretKeyField: {
-            props: ['hasKey', 'save', 'remove'],
+            props: ['hasKey', 'save', 'remove', 'modelValue'],
             template:
-              '<div class="secret-key-stub" :data-has-key="hasKey"><button class="save-key-btn" @click="save?.()">Save</button><button class="remove-key-btn" @click="remove?.()">Remove</button></div>',
+              '<div class="secret-key-stub" :data-has-key="hasKey"><input class="secret-draft" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" /><button class="save-key-btn" @click="save?.()">Save</button><button class="remove-key-btn" @click="remove?.()">Remove</button></div>',
           },
         },
       },
@@ -140,9 +140,10 @@ describe('SettingsVoiceTab.vue', () => {
     })
     const wrapper = mountTab(config)
 
+    await wrapper.get('.secret-draft').setValue(' key ')
     const saveBtn = wrapper.find('.save-key-btn')
     await saveBtn.trigger('click')
-    expect(setSecretSpy).toHaveBeenCalled()
+    expect(setSecretSpy).toHaveBeenCalledWith('stt.deepgram', 'key')
 
     const removeBtn = wrapper.find('.remove-key-btn')
     await removeBtn.trigger('click')

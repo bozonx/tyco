@@ -72,6 +72,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { buildLanguageOptions } from '../../lib/locale/language'
+import { createSecretKeyEditor } from '../../lib/settings/secret-key-editor'
 import {
   DICTATION_LANGUAGE_MULTI,
   DICTATION_LANGUAGE_USER,
@@ -124,25 +125,20 @@ const hasSttKey = computed(() =>
   )
 )
 
-async function saveSttKey() {
-  try {
-    await secretsStore.setSecret(
-      secretId(currentSttModel.value),
-      sttKeyDraft.value.trim()
-    )
-    sttKeyDraft.value = ''
-  } catch (error) {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-  }
-}
-
-async function removeSttKey() {
-  try {
-    await secretsStore.removeSecret(secretId(currentSttModel.value))
-  } catch (error) {
-    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error')
-  }
-}
+const keyEditor = createSecretKeyEditor({
+  getSecretId: () =>
+    sttNeedsKey.value ? secretId(currentSttModel.value) : undefined,
+  getDraft: () => sttKeyDraft.value,
+  setDraft: (value) => {
+    sttKeyDraft.value = value
+  },
+  setSecret: secretsStore.setSecret,
+  removeSecret: secretsStore.removeSecret,
+  reportError: (error) =>
+    toastText(`${t('settings.keySaveFailed')}\n${String(error)}`, 'error'),
+})
+const saveSttKey = () => keyEditor.save()
+const removeSttKey = keyEditor.remove
 
 const setSttLanguage = (value: string | number | undefined) => {
   userConfig.value.stt.providers.deepgram.language = String(

@@ -7,6 +7,7 @@ import {
   type TranslationGlossaryEntry,
 } from '@tyco/shared'
 
+import { createSecretKeyEditor } from '../settings/secret-key-editor'
 import { normalizeTranslationConfig } from './translation-config'
 
 export function parseTranslationGlossary(
@@ -82,16 +83,18 @@ export function createTranslationSettingsModel(deps: {
       glossary: parseTranslationGlossary(value),
     })
   }
-  async function saveProviderKey() {
-    const value = keyDraft.value.trim()
-    if (!value || translation.value.provider === 'llm') return
-    const providerId = translation.value.provider
-    const secretId = providerSecretId.value
-    const draft = keyDraft.value
-    try {
-      await deps.setSecret(secretId, value)
-      if (translation.value.provider !== providerId) return
-      if (secretId === TRANSLATION_SECRET_IDS.deepl)
+  const keyEditor = createSecretKeyEditor({
+    getSecretId: () =>
+      translation.value.provider === 'llm' ? undefined : providerSecretId.value,
+    getDraft: () => keyDraft.value,
+    setDraft: (value) => {
+      keyDraft.value = value
+    },
+    setSecret: deps.setSecret,
+    removeSecret: deps.removeSecret,
+    reportError: deps.notifyKeyError,
+    onSaved: (value) => {
+      if (translation.value.provider === 'deepl')
         deps.setConfig(
           normalizeTranslationConfig({
             ...translation.value,
@@ -101,19 +104,11 @@ export function createTranslationSettingsModel(deps: {
             },
           })
         )
-      if (keyDraft.value === draft) keyDraft.value = ''
-    } catch (error) {
-      deps.notifyKeyError(error)
-    }
-  }
-  async function removeProviderKey() {
-    if (translation.value.provider === 'llm') return
-    try {
-      await deps.removeSecret(providerSecretId.value)
-    } catch (error) {
-      deps.notifyKeyError(error)
-    }
-  }
+    },
+  })
+  const saveProviderKey = () => keyEditor.save()
+  const removeProviderKey = keyEditor.remove
+
   return {
     translation,
     keyDraft,

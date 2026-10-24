@@ -1,13 +1,11 @@
-export interface FocusLossDependencies {
+import { createFocusSettle, type FocusSettleOptions } from './focus-settle'
+
+export interface FocusLossDependencies extends FocusSettleOptions {
   /** Asks the window system whether the window has focus right now. */
   isFocused: () => Promise<boolean>
   /** Whether losing focus may dismiss the window at this moment. */
   canDismiss: () => boolean
   onLost: () => void
-  /** A blur shorter than this is not a loss: the focus is coming back. */
-  settleMs?: number
-  setTimer?: (callback: () => void, ms: number) => unknown
-  clearTimer?: (timer: unknown) => void
 }
 
 /**
@@ -15,23 +13,9 @@ export interface FocusLossDependencies {
  * blurs the window system causes by itself
  */
 export function createFocusLossWatcher(deps: FocusLossDependencies) {
-  const setTimer = deps.setTimer ?? ((cb, ms) => setTimeout(cb, ms))
-  const clearTimer =
-    deps.clearTimer ??
-    ((timer) => clearTimeout(timer as ReturnType<typeof setTimeout>))
-  const settleMs = deps.settleMs ?? 150
+  const settle = createFocusSettle(deps)
 
-  let generation = 0
-  let timer: unknown = null
-
-  const stopTimer = () => {
-    if (timer === null) return
-    clearTimer(timer)
-    timer = null
-  }
-
-  const check = async (checkGeneration: number) => {
-    const current = () => checkGeneration === generation
+  const check = async (current: () => boolean) => {
     if (!current() || !deps.canDismiss()) return
     // when the question cannot be answered, keeping the window is safer
     const focused = await deps.isFocused().catch(() => true)
@@ -40,21 +24,9 @@ export function createFocusLossWatcher(deps: FocusLossDependencies) {
   }
 
   const handleFocusChange = (focused: boolean) => {
-    generation += 1
-    stopTimer()
-    if (focused) return
-
-    const checkGeneration = generation
-    timer = setTimer(() => {
-      timer = null
-      void check(checkGeneration)
-    }, settleMs)
+    if (focused) settle.cancel()
+    else settle.schedule((isCurrent) => void check(isCurrent))
   }
 
-  const dispose = () => {
-    generation += 1
-    stopTimer()
-  }
-
-  return { handleFocusChange, dispose }
+  return { handleFocusChange, dispose: settle.cancel }
 }

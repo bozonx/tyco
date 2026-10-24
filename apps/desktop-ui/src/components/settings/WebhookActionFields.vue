@@ -144,10 +144,10 @@
 import { computed } from 'vue'
 import { nextTick, onMounted } from 'vue'
 
+import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { webhookToolConfig } from '../../lib/commands/command-config'
-import { validateCommand } from '../../lib/commands/command-runtime'
 import { createWebhookAuthModel } from '../../lib/commands/webhook-auth-model'
 import {
   type WebhookHeaderRow,
@@ -161,7 +161,6 @@ import { clientLogger } from '../../lib/logger'
 import { httpOrigin } from '../../lib/net/secrets'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
-import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -175,12 +174,7 @@ import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 const props = defineProps<{ command: CommandConfig }>()
 const emit = defineEmits<{ update: [field: string, value: unknown] }>()
 const { t } = useI18n()
-const toolsStore = useToolsStore()
-const issues = computed(() => validateCommand(props.command, toolsStore))
-const warningsOf = (field: string) =>
-  issues.value
-    .filter((issue) => issue.field === field)
-    .map((issue) => t(issue.messageKey, { placeholder: TEXT }))
+const warningsOf = useCommandValidation(() => props.command)
 function update(field: string, value: unknown) {
   emit('update', field, value)
 }
@@ -257,20 +251,6 @@ onMounted(() => {
 })
 </script>
 <style scoped>
-.custom-action-fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md, 0.75rem);
-  width: 100%;
-}
-
-.action-field-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm, 0.5rem);
-  width: 100%;
-}
-
 .action-field-warning {
   font-size: var(--text-caption);
   color: var(--color-warning);

@@ -16,9 +16,9 @@ import {
 } from '../settings/autosave'
 import type { AiProfilePatch } from './ai-profiles-model'
 import {
-  parseProfileMaxOutputTokens,
-  parseProfileTemperature,
-} from './profile-generation'
+  parseModelTokenCount,
+  parseModelTemperature,
+} from '../llm/model-number'
 
 export interface ProfileEditorDependencies extends AutosaveTimers {
   /** The profile as the app holds it now */
@@ -62,10 +62,8 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
   const profileAutosave = createAutosave({
     ...timers,
     save: async () => {
-      const temperature = parseProfileTemperature(temperatureText.value)
-      const maxOutputTokens = parseProfileMaxOutputTokens(
-        maxOutputTokensText.value
-      )
+      const temperature = parseModelTemperature(temperatureText.value)
+      const maxOutputTokens = parseModelTokenCount(maxOutputTokensText.value)
       const stepCount = parseToolStepCount(stepCountText.value)
       const tools = deps.getProfile()?.tools
       await deps.updateProfile({
@@ -172,13 +170,13 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
 
   const changeTemperature = (value: string) => {
     temperatureText.value = value
-    temperatureError.value = !parseProfileTemperature(value).isValid
+    temperatureError.value = !parseModelTemperature(value).isValid
     if (!temperatureError.value) profileAutosave.schedule()
   }
 
   const changeMaxOutputTokens = (value: string) => {
     maxOutputTokensText.value = value
-    maxOutputTokensError.value = !parseProfileMaxOutputTokens(value).isValid
+    maxOutputTokensError.value = !parseModelTokenCount(value).isValid
     if (!maxOutputTokensError.value) profileAutosave.schedule()
   }
 

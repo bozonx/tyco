@@ -62,11 +62,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
 import { scriptToolConfig } from '../../lib/commands/command-config'
-import { validateCommand } from '../../lib/commands/command-runtime'
 import { useIpcStore } from '../../stores/ipc'
-import { useToolsStore } from '../../stores/tools'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
@@ -78,12 +77,7 @@ import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 const props = defineProps<{ command: CommandConfig }>()
 const emit = defineEmits<{ update: [field: string, value: unknown] }>()
 const { t } = useI18n()
-const toolsStore = useToolsStore()
-const issues = computed(() => validateCommand(props.command, toolsStore))
-const warningsOf = (field: string) =>
-  issues.value
-    .filter((issue) => issue.field === field)
-    .map((issue) => t(issue.messageKey, { placeholder: TEXT }))
+const warningsOf = useCommandValidation(() => props.command)
 function update(field: string, value: unknown) {
   emit('update', field, value)
 }
@@ -101,28 +95,3 @@ async function browseWorkingDir() {
   if (typeof res.result === 'string') update('workingDirectory', res.result)
 }
 </script>
-<style scoped>
-.custom-action-fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md, 0.75rem);
-  width: 100%;
-}
-
-.action-field-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm, 0.5rem);
-  width: 100%;
-}
-
-.action-field-warning {
-  font-size: var(--text-caption);
-  color: var(--color-warning);
-}
-
-.header-name {
-  width: 10rem;
-  flex: none;
-}
-</style>

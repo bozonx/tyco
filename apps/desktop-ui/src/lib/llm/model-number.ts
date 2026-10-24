@@ -1,15 +1,15 @@
 import { MAX_PROFILE_TEMPERATURE } from '@tyco/shared'
 
 /**
- * A number typed in a profile setting: empty leaves the setting to the model,
+ * A number typed in a model setting: empty leaves the setting to the model,
  * `isValid` is false for anything the setting cannot take
  */
-export interface ParsedProfileNumber {
+export interface ParsedModelNumber {
   value?: number
   isValid: boolean
 }
 
-export function parseProfileTemperature(text: string): ParsedProfileNumber {
+export function parseModelTemperature(text: string): ParsedModelNumber {
   const trimmed = text.trim()
   if (!trimmed) return { isValid: true }
   const value = Number(trimmed)
@@ -20,7 +20,7 @@ export function parseProfileTemperature(text: string): ParsedProfileNumber {
     : { isValid: false }
 }
 
-export function parseProfileMaxOutputTokens(text: string): ParsedProfileNumber {
+export function parseModelTokenCount(text: string): ParsedModelNumber {
   const trimmed = text.trim()
   if (!trimmed) return { isValid: true }
   const value = Number(trimmed)

@@ -251,3 +251,18 @@
   outline: var(--app-focus-outline-width) solid var(--color-primary);
   outline-offset: -2px;
 }
+
+/* Shared script and webhook command fields. */
+.custom-action-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md, 0.75rem);
+  width: 100%;
+}
+
+.action-field-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 0.5rem);
+  width: 100%;
+}

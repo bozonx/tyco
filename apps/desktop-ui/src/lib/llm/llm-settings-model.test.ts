@@ -52,6 +52,29 @@ describe('LLM settings model', () => {
     expect(f.notifyInvalidUrl).toHaveBeenCalledOnce()
     expect(f.setSecret).toHaveBeenCalledOnce()
   })
+  it('keeps a newer key draft and does not restore drafts for removed providers', async () => {
+    const f = fixture()
+    let finish!: () => void
+    f.setSecret.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        })
+    )
+    f.model.keyDrafts.local = 'old'
+    const pending = f.model.saveKey(f.provider)
+    f.model.keyDrafts.local = 'new'
+    finish()
+    await pending
+    expect(f.model.keyDrafts.local).toBe('new')
+
+    const another = f.model.saveKey(f.provider)
+    f.model.removeProviderById('local')
+    finish()
+    await another
+    expect(f.model.keyDrafts.local).toBeUndefined()
+    expect(f.model.connectionCheckStatusByProviderId.local).toBeUndefined()
+  })
   it('does not resurrect connection state after provider removal or disposal', async () => {
     let resolve!: () => void
     const f = fixture(

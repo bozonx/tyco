@@ -34,10 +34,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
+import { useMenuStartup } from '../../composables/use-menu-startup'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import useToast from '../../composables/use-toast'
 import { findAiTask, taskSlotList } from '../../lib/ai-tasks/ai-task-library'
@@ -113,17 +114,17 @@ async function runTask(taskId: string) {
   await makeDiff(task.rule)
 }
 
-// once: back on this step from the result, the menu waits for a choice
-onMounted(() => {
-  const taskId = props.taskId
-  if (!taskId) return
-  const stepId = menuModalsStore.currentStepId
-  if (stepId !== undefined) {
-    menuModalsStore.updateStep(stepId, MenuModals.AI_TASK, {
-      taskId: undefined,
-    })
-  }
-  void runTask(taskId)
+useMenuStartup({
+  getValue: () => props.taskId,
+  consume: () => {
+    const stepId = menuModalsStore.currentStepId
+    if (stepId !== undefined) {
+      menuModalsStore.updateStep(stepId, MenuModals.AI_TASK, {
+        taskId: undefined,
+      })
+    }
+  },
+  run: runTask,
 })
 
 const recentPrompts = computed(
