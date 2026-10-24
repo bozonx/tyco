@@ -92,6 +92,7 @@
         <IconButton
           v-if="!chatStore.isGenerating"
           size="sm"
+          variant="primary"
           :disabled="!canSend"
           @click="emit('send')"
           :label="t('chat.sendMessage')"

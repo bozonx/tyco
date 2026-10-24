@@ -488,8 +488,7 @@
     "editor": "Szerkesztő",
     "history": "Előzmények",
     "menu": "Menü",
-    "settings": "Beállítások",
-    "newProfile": "Új profil"
+    "settings": "Beállítások"
   },
   "selection": {
     "cancelled": "Megszakítva",
@@ -872,7 +871,6 @@
     "imageQualityBalanced": "Kiegyensúlyozott – legfeljebb 1568 px",
     "imageQualityOriginal": "Maximális – legfeljebb 8000 px",
     "saveSaving": "Mentés…",
-    "saveSaved": "Mentve",
     "savePending": "Nem mentett módosítások",
     "saveFailed": "A beállításokat nem sikerült menteni",
     "saveConflict": "A beállítások egy másik ablakban módosultak: {fields}. Válassza ki, mely módosítások maradjanak meg.",
@@ -896,7 +894,6 @@
     "profileModelUnavailable": "nem érhető el",
     "autosaveFailed": "Nincs mentve",
     "autosaveSaving": "Mentés…",
-    "autosaveSaved": "Mentve",
     "fastNote": {
       "template": "Beállítássablon alkalmazása",
       "apply": "Sablon alkalmazása",
@@ -904,9 +901,8 @@
       "browse": "Mappa kiválasztása",
       "pathHint": "Használjon abszolút útvonalat vagy a ~/notes formát. Logseq esetén a gráf gyökerét válassza; a journals automatikusan hozzáadódik.",
       "sampleText": "Példajegyzet\nTovábbi részletek",
-      "preview": "Előnézet: cél és tartalom",
+      "preview": "Előnézet",
       "errors": {
-        "noNotesPath": "A jegyzetmappa nincs beállítva.",
         "invalidNotesPath": "Használjon abszolút jegyzetútvonalat vagy ~/ kezdetű útvonalat.",
         "invalidSubfolder": "Az almappának relatívnak kell lennie, .. és érvénytelen útvonal-karakterek nélkül.",
         "unknownTemplateToken": "Ismeretlen sablonváltozó. Ellenőrizze a támogatott változókat.",

@@ -488,8 +488,7 @@
     "editor": "编辑器",
     "history": "历史记录",
     "menu": "菜单",
-    "settings": "设置",
-    "newProfile": "新建配置文件"
+    "settings": "设置"
   },
   "selection": {
     "cancelled": "已取消",
@@ -869,7 +868,6 @@
     "imageQualityBalanced": "均衡 — 最高 1568 像素",
     "imageQualityOriginal": "最高 — 最高 8000 像素",
     "saveSaving": "正在保存…",
-    "saveSaved": "已保存",
     "savePending": "未保存的更改",
     "saveFailed": "无法保存设置",
     "saveConflict": "设置已在另一个窗口中更改：{fields}。请选择保留哪些更改。",
@@ -893,7 +891,6 @@
     "profileModelUnavailable": "不可用",
     "autosaveFailed": "未保存",
     "autosaveSaving": "正在保存…",
-    "autosaveSaved": "已保存",
     "fastNote": {
       "template": "应用设置模板",
       "apply": "应用模板",
@@ -901,9 +898,8 @@
       "browse": "选择文件夹",
       "pathHint": "使用绝对路径或 ~/notes。对于 Logseq，请选择图谱根目录；系统会自动添加 journals。",
       "sampleText": "示例笔记\n更多详情",
-      "preview": "预览：目标路径与内容",
+      "preview": "预览",
       "errors": {
-        "noNotesPath": "未配置笔记文件夹。",
         "invalidNotesPath": "请使用绝对路径或以 ~/ 开头的路径。",
         "invalidSubfolder": "子文件夹必须是相对路径，且不能包含 .. 或无效的路径字符。",
         "unknownTemplateToken": "未知的模板占位符。请查看受支持的占位符。",

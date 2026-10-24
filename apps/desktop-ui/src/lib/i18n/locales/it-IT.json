@@ -488,8 +488,7 @@
     "editor": "Editor",
     "history": "Cronologia",
     "menu": "Menu",
-    "settings": "Impostazioni",
-    "newProfile": "Nuovo profilo"
+    "settings": "Impostazioni"
   },
   "selection": {
     "cancelled": "Annullato",
@@ -875,7 +874,6 @@
     "imageQualityBalanced": "Bilanciata: fino a 1568 px",
     "imageQualityOriginal": "Massima: fino a 8000 px",
     "saveSaving": "Salvataggio…",
-    "saveSaved": "Salvato",
     "savePending": "Modifiche non salvate",
     "saveFailed": "Impossibile salvare le impostazioni",
     "saveConflict": "Le impostazioni sono cambiate in un’altra finestra: {fields}. Scegli quali modifiche mantenere.",
@@ -899,7 +897,6 @@
     "profileModelUnavailable": "non disponibile",
     "autosaveFailed": "Non salvato",
     "autosaveSaving": "Salvataggio…",
-    "autosaveSaved": "Salvato",
     "fastNote": {
       "template": "Applica un modello di impostazioni",
       "apply": "Applica il modello",
@@ -907,9 +904,8 @@
       "browse": "Scegli cartella",
       "pathHint": "Usa un percorso assoluto o ~/notes. Per Logseq, scegli la radice del grafo; journals viene aggiunto automaticamente.",
       "sampleText": "Nota di esempio\nAltri dettagli",
-      "preview": "Anteprima: destinazione e contenuto",
+      "preview": "Anteprima",
       "errors": {
-        "noNotesPath": "La cartella delle note non è configurata.",
         "invalidNotesPath": "Usa un percorso assoluto per le note o un percorso che inizia con ~/.",
         "invalidSubfolder": "La sottocartella deve essere relativa, senza .. né caratteri non validi nei percorsi.",
         "unknownTemplateToken": "Variabile di modello sconosciuta. Controlla le variabili supportate.",

@@ -488,8 +488,7 @@
     "editor": "Edytor",
     "history": "Historia",
     "menu": "Menu",
-    "settings": "Ustawienia",
-    "newProfile": "Nowy profil"
+    "settings": "Ustawienia"
   },
   "selection": {
     "cancelled": "Anulowano",
@@ -875,7 +874,6 @@
     "imageQualityBalanced": "Zrównoważona — do 1568 px",
     "imageQualityOriginal": "Maksymalna — do 8000 px",
     "saveSaving": "Zapisywanie…",
-    "saveSaved": "Zapisano",
     "savePending": "Niezapisane zmiany",
     "saveFailed": "Nie udało się zapisać ustawień",
     "saveConflict": "Ustawienia zmieniono w innym oknie: {fields}. Wybierz, które zmiany zachować.",
@@ -899,7 +897,6 @@
     "profileModelUnavailable": "niedostępny",
     "autosaveFailed": "Nie zapisano",
     "autosaveSaving": "Zapisywanie…",
-    "autosaveSaved": "Zapisano",
     "fastNote": {
       "template": "Zastosuj szablon ustawień",
       "apply": "Zastosuj szablon",
@@ -907,9 +904,8 @@
       "browse": "Wybierz folder",
       "pathHint": "Użyj ścieżki bezwzględnej lub ~/notes. Dla Logseq wybierz katalog główny grafu; journals zostanie dodany automatycznie.",
       "sampleText": "Przykładowa notatka\nWięcej szczegółów",
-      "preview": "Podgląd: miejsce docelowe i treść",
+      "preview": "Podgląd",
       "errors": {
-        "noNotesPath": "Folder notatek nie jest skonfigurowany.",
         "invalidNotesPath": "Użyj bezwzględnej ścieżki notatek lub ścieżki zaczynającej się od ~/.",
         "invalidSubfolder": "Podfolder musi być względny, bez .. i niedozwolonych znaków ścieżki.",
         "unknownTemplateToken": "Nieznana zmienna szablonu. Sprawdź obsługiwane zmienne.",

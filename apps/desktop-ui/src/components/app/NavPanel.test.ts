@@ -78,33 +78,19 @@ describe('NavPanel.vue', () => {
     )
   })
 
-  it('hides profile tabs and creation outside development mode', () => {
+  it('hides profile tabs outside development mode', () => {
     mocks.userConfig.isInDevelopment = false
     mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
     const wrapper = shallowMount(NavPanel)
     expect(wrapper.find('.profiles-tabs-container').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('nav.aiChat')
     expect(wrapper.find('[label="nav.history"]').exists()).toBe(false)
-    expect(wrapper.find('[label="nav.newProfile"]').exists()).toBe(false)
   })
 
   it('renders editor and ask AI tabs', () => {
     const wrapper = shallowMount(NavPanel)
     expect(wrapper.text()).toContain('nav.editor')
     expect(wrapper.text()).toContain('nav.aiChat')
-  })
-
-  it('offers to create a profile when there is none yet', async () => {
-    const wrapper = shallowMount(NavPanel)
-    expect(wrapper.find('.profiles-tabs-container').exists()).toBe(false)
-
-    const create = wrapper.findComponent({ name: 'IconButton' })
-    expect(create.attributes('label')).toBe('nav.newProfile')
-    create.vm.$emit('click')
-    expect(mocks.menuModalsStore.closeAll).toHaveBeenCalled()
-    expect(mocks.appNavigation.goToConfig).toHaveBeenCalledWith(
-      'ai-profile:new'
-    )
   })
 
   it('renders divider and profile tabs when profiles are provided', async () => {

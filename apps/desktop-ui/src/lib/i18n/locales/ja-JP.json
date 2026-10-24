@@ -488,8 +488,7 @@
     "editor": "エディター",
     "history": "履歴",
     "menu": "メニュー",
-    "settings": "設定",
-    "newProfile": "新規プロファイル"
+    "settings": "設定"
   },
   "selection": {
     "cancelled": "キャンセルされました",
@@ -872,7 +871,6 @@
     "imageQualityBalanced": "バランス（最大1280px、圧縮）",
     "imageQualityOriginal": "オリジナル（最大2048px、低圧縮）",
     "saveSaving": "保存中…",
-    "saveSaved": "保存完了",
     "savePending": "未保存の変更があります",
     "saveFailed": "設定を保存できませんでした",
     "saveConflict": "別のウィンドウで設定が変更されました: {fields}。保持する変更を選択してください。",
@@ -896,7 +894,6 @@
     "profileModelUnavailable": "割り当てられたモデルが利用できません",
     "autosaveFailed": "保存されていません",
     "autosaveSaving": "保存中…",
-    "autosaveSaved": "保存完了",
     "fastNote": {
       "template": "設定テンプレートを適用",
       "apply": "テンプレートを適用",
@@ -904,9 +901,8 @@
       "browse": "フォルダーを選択",
       "pathHint": "絶対パスまたは ~/notes を使用してください。Logseqの場合はグラフのルートを選択してください。journalsは自動的に追加されます。",
       "sampleText": "サンプルノート\n詳細情報",
-      "preview": "プレビュー: 保存先と内容",
+      "preview": "プレビュー",
       "errors": {
-        "noNotesPath": "ノートフォルダーが設定されていません。",
         "invalidNotesPath": "絶対パスまたは ~/ で始まるパスを使用してください。",
         "invalidSubfolder": "サブフォルダーは相対パスで、.. や無効なパス文字を含まないようにしてください。",
         "unknownTemplateToken": "不明なテンプレートトークンです。サポートされているトークンを確認してください。",

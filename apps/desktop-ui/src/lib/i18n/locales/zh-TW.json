@@ -488,8 +488,7 @@
     "editor": "編輯器",
     "history": "歷史記錄",
     "menu": "選單",
-    "settings": "設定",
-    "newProfile": "新增設定檔"
+    "settings": "設定"
   },
   "selection": {
     "cancelled": "已取消",
@@ -869,7 +868,6 @@
     "imageQualityBalanced": "均衡 — 最高 1568 像素",
     "imageQualityOriginal": "最高品質 — 最高 8000 像素",
     "saveSaving": "正在儲存…",
-    "saveSaved": "已儲存",
     "savePending": "未儲存的變更",
     "saveFailed": "無法儲存設定",
     "saveConflict": "設定已在另一個視窗中被修改：{fields}。請選擇要保留哪些變更。",
@@ -893,7 +891,6 @@
     "profileModelUnavailable": "無法使用",
     "autosaveFailed": "未儲存",
     "autosaveSaving": "正在儲存…",
-    "autosaveSaved": "已儲存",
     "fastNote": {
       "template": "套用設定範本",
       "apply": "套用範本",
@@ -901,9 +898,8 @@
       "browse": "選取資料夾",
       "pathHint": "使用絕對路徑或 ~/notes。若使用 Logseq，請選擇知識庫根目錄；journals 會自動附加。",
       "sampleText": "筆記範例\n更多詳細資訊",
-      "preview": "預覽：目的地與內容",
+      "preview": "預覽",
       "errors": {
-        "noNotesPath": "未設定筆記資料夾。",
         "invalidNotesPath": "請使用絕對筆記路徑或以 ~/ 開頭的路徑。",
         "invalidSubfolder": "子資料夾必須為相對路徑，不能包含 .. 或無效的路徑字元。",
         "unknownTemplateToken": "未知的範本 Token。請檢查支援的 Token。",

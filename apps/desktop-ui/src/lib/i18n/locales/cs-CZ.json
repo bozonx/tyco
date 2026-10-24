@@ -488,8 +488,7 @@
     "editor": "Editor",
     "history": "Historie",
     "menu": "Nabídka",
-    "settings": "Nastavení",
-    "newProfile": "Nový profil"
+    "settings": "Nastavení"
   },
   "selection": {
     "cancelled": "Zrušeno",
@@ -869,7 +868,6 @@
     "imageQualityBalanced": "Vyvážená – do 1568 px",
     "imageQualityOriginal": "Maximální – do 8000 px",
     "saveSaving": "Ukládání…",
-    "saveSaved": "Uloženo",
     "savePending": "Neuložené změny",
     "saveFailed": "Nastavení se nepodařilo uložit",
     "saveConflict": "Nastavení se změnilo v jiném okně: {fields}. Vyberte, které změny zachovat.",
@@ -893,7 +891,6 @@
     "profileModelUnavailable": "nedostupný",
     "autosaveFailed": "Neuloženo",
     "autosaveSaving": "Ukládání…",
-    "autosaveSaved": "Uloženo",
     "fastNote": {
       "template": "Použít šablonu nastavení",
       "apply": "Použít šablonu",
@@ -901,9 +898,8 @@
       "browse": "Vybrat složku",
       "pathHint": "Použijte absolutní cestu nebo ~/notes. Pro Logseq vyberte kořen grafu; journals se doplní automaticky.",
       "sampleText": "Ukázková poznámka\nDalší podrobnosti",
-      "preview": "Náhled: cíl a obsah",
+      "preview": "Náhled",
       "errors": {
-        "noNotesPath": "Složka poznámek není nastavena.",
         "invalidNotesPath": "Použijte absolutní cestu k poznámkám nebo cestu začínající ~/.",
         "invalidSubfolder": "Podsložka musí být relativní, bez .. a neplatných znaků cesty.",
         "unknownTemplateToken": "Neznámá proměnná šablony. Zkontrolujte podporované proměnné.",

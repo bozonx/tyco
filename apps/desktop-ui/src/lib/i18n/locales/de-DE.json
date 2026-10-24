@@ -488,8 +488,7 @@
     "editor": "Editor",
     "history": "Verlauf",
     "menu": "Menü",
-    "settings": "Einstellungen",
-    "newProfile": "Neues Profil"
+    "settings": "Einstellungen"
   },
   "selection": {
     "cancelled": "Abgebrochen",
@@ -875,7 +874,6 @@
     "imageQualityBalanced": "Ausgewogen – bis 1568 px",
     "imageQualityOriginal": "Maximal – bis 8000 px",
     "saveSaving": "Wird gespeichert…",
-    "saveSaved": "Gespeichert",
     "savePending": "Ungespeicherte Änderungen",
     "saveFailed": "Die Einstellungen konnten nicht gespeichert werden",
     "saveConflict": "Die Einstellungen wurden in einem anderen Fenster geändert: {fields}. Wählen Sie, welche Änderungen behalten werden.",
@@ -899,7 +897,6 @@
     "profileModelUnavailable": "nicht verfügbar",
     "autosaveFailed": "Nicht gespeichert",
     "autosaveSaving": "Wird gespeichert…",
-    "autosaveSaved": "Gespeichert",
     "fastNote": {
       "template": "Einstellungsvorlage anwenden",
       "apply": "Vorlage anwenden",
@@ -907,9 +904,8 @@
       "browse": "Ordner wählen",
       "pathHint": "Verwenden Sie einen absoluten Pfad oder ~/notes. Für Logseq wählen Sie das Stammverzeichnis des Graphen; journals wird automatisch ergänzt.",
       "sampleText": "Beispielnotiz\nWeitere Details",
-      "preview": "Vorschau: Ziel und Inhalt",
+      "preview": "Vorschau",
       "errors": {
-        "noNotesPath": "Der Notizordner ist nicht eingerichtet.",
         "invalidNotesPath": "Verwenden Sie einen absoluten Notizpfad oder einen Pfad, der mit ~/ beginnt.",
         "invalidSubfolder": "Der Unterordner muss relativ sein, ohne .. oder ungültige Pfadzeichen.",
         "unknownTemplateToken": "Unbekannter Vorlagenplatzhalter. Prüfen Sie die unterstützten Platzhalter.",

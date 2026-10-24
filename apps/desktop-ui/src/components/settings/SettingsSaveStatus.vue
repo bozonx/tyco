@@ -10,18 +10,13 @@
     >
   </p>
 
-  <div v-else class="settings-save-status" role="status" aria-live="polite">
-    <span>{{
-      t(
-        isSaving
-          ? 'settings.saveSaving'
-          : saveError || conflicts.length
-            ? 'settings.saveFailed'
-            : hasUnsavedChanges
-              ? 'settings.savePending'
-              : 'settings.saveSaved'
-      )
-    }}</span>
+  <div
+    v-else-if="statusMessage"
+    class="settings-save-status"
+    role="status"
+    aria-live="polite"
+  >
+    <span>{{ statusMessage }}</span>
     <template v-if="conflicts.length">
       <p>
         {{ t('settings.saveConflict', { fields: conflicts.join(', ') }) }}
@@ -49,11 +44,13 @@
   </div>
 </template>
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useI18n } from '../../composables/use-i18n'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 
-defineProps<{
+const props = defineProps<{
   configIsNewer: boolean
   isSaving: boolean
   isReloading: boolean
@@ -63,6 +60,13 @@ defineProps<{
 }>()
 const emit = defineEmits<{ reload: []; keepLocal: []; retry: [] }>()
 const { t } = useI18n()
+
+const statusMessage = computed(() => {
+  if (props.isSaving) return t('settings.saveSaving')
+  if (props.saveError || props.conflicts.length) return t('settings.saveFailed')
+  if (props.hasUnsavedChanges) return t('settings.savePending')
+  return null
+})
 </script>
 <style scoped>
 .settings-save-status {

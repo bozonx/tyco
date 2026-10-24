@@ -153,8 +153,7 @@
     "editor": "편집기",
     "history": "기록",
     "menu": "메뉴",
-    "settings": "설정",
-    "newProfile": "새 프로필"
+    "settings": "설정"
   },
   "selection": {
     "cancelled": "취소됨",
@@ -1000,7 +999,6 @@
     "imageQualityBalanced": "균형 — 최대 1568 px",
     "imageQualityOriginal": "최대 — 최대 8000 px",
     "saveSaving": "저장 중…",
-    "saveSaved": "저장됨",
     "savePending": "저장되지 않은 변경 사항",
     "saveFailed": "설정을 저장할 수 없습니다",
     "saveConflict": "다른 창에서 설정이 변경되었습니다: {fields}. 유지할 변경 사항을 선택하세요.",
@@ -1024,7 +1022,6 @@
     "profileModelUnavailable": "사용 불가",
     "autosaveFailed": "저장되지 않음",
     "autosaveSaving": "저장 중…",
-    "autosaveSaved": "저장됨",
     "fastNote": {
       "template": "설정 템플릿 적용",
       "apply": "템플릿 적용",
@@ -1032,9 +1029,8 @@
       "browse": "폴더 선택",
       "pathHint": "절대 경로 또는 ~/notes를 사용하세요. Logseq의 경우 그래프 루트를 선택하면 journals가 자동으로 추가됩니다.",
       "sampleText": "예시 메모\n자세한 내용",
-      "preview": "미리보기: 대상 및 내용",
+      "preview": "미리보기",
       "errors": {
-        "noNotesPath": "메모 폴더가 구성되지 않았습니다.",
         "invalidNotesPath": "절대 경로 또는 ~/로 시작하는 경로를 사용하세요.",
         "invalidSubfolder": "하위 폴더는 .. 또는 잘못된 경로 문자가 없는 상대 경로여야 합니다.",
         "unknownTemplateToken": "알 수 없는 템플릿 토큰입니다. 지원되는 토큰을 확인하세요.",

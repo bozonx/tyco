@@ -488,8 +488,7 @@
     "editor": "Editor",
     "history": "History",
     "menu": "Menu",
-    "settings": "Settings",
-    "newProfile": "New profile"
+    "settings": "Settings"
   },
   "selection": {
     "cancelled": "Cancelled",
@@ -875,7 +874,6 @@
     "imageQualityBalanced": "Balanced — up to 1568 px",
     "imageQualityOriginal": "Maximum — up to 8000 px",
     "saveSaving": "Saving…",
-    "saveSaved": "Saved",
     "savePending": "Unsaved changes",
     "saveFailed": "Settings could not be saved",
     "saveConflict": "Settings changed in another window: {fields}. Choose which changes to keep.",
@@ -899,7 +897,6 @@
     "profileModelUnavailable": "unavailable",
     "autosaveFailed": "Not saved",
     "autosaveSaving": "Saving…",
-    "autosaveSaved": "Saved",
     "fastNote": {
       "template": "Apply settings template",
       "apply": "Apply template",
@@ -907,9 +904,8 @@
       "browse": "Choose folder",
       "pathHint": "Use an absolute path or ~/notes. For Logseq, choose the graph root; journals is added automatically.",
       "sampleText": "Example note\nMore details",
-      "preview": "Preview: destination and content",
+      "preview": "Preview",
       "errors": {
-        "noNotesPath": "Notes folder is not configured.",
         "invalidNotesPath": "Use an absolute notes path or a path starting with ~/.",
         "invalidSubfolder": "Subfolder must be relative, without .. or invalid path characters.",
         "unknownTemplateToken": "Unknown template token. Check the supported tokens.",

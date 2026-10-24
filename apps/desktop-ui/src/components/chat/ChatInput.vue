@@ -102,9 +102,14 @@ function handleKeydown(event: KeyboardEvent) {
   resize: none;
   overflow-y: auto;
   border: 0;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--color-base-content);
   font: inherit;
   line-height: 1.5;
+}
+.main-input:focus {
+  border-radius: var(--radius-lg);
+  outline: var(--app-focus-outline-width) solid var(--color-primary);
 }
 </style>

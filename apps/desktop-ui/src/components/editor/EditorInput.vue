@@ -52,7 +52,7 @@ import { useDesktopStore } from '../../stores/desktop'
 import type { EditItem } from '../../stores/edit-menu'
 import { useEditMenuStore } from '../../stores/edit-menu'
 import { useEditorInputStore } from '../../stores/editor-input'
-import { useMenuModalsStore } from '../../stores/menu-modals'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import EditorContextMenu from './EditorContextMenu.vue'
 import { redo, redoDepth, undo, undoDepth } from '@codemirror/commands'
 import { EditorView } from '@codemirror/view'
@@ -193,6 +193,14 @@ const openContextMenu = (request: ContextMenuRequest): void => {
   }
 }
 
+function openInsertMenu(): void {
+  if (menuModalsStore.hasOpenModal || menuModalsStore.pendingModal) return
+  editorInputStore.captureResultSource(editorInputStore.actionText())
+  menuModalsStore.nextModal(MenuModals.INSERT, {
+    text: editorInputStore.actionText(),
+  })
+}
+
 onMounted(() => {
   if (!hostRef.value) return
 
@@ -208,6 +216,7 @@ onMounted(() => {
       onPastePlain: () => void commands.pastePlain(),
       markdownPreview: !isMarkupShown.value,
       onToggleMarkup: toggleShowMarkup,
+      onOpenActions: openInsertMenu,
       onContextMenu: openContextMenu,
       onDocChange: (value) => editorInputStore.setValue(value),
       onSelectionChange: (text, start, end) =>

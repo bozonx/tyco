@@ -60,7 +60,20 @@ export interface CreateEditorStateOptions
   markdownPreview?: boolean
   /** Switch between the formatted look and the raw Markdown (Mod-Shift-m) */
   onToggleMarkup?: () => void
+  /** Open quick actions panel (Mod-Enter) */
+  onOpenActions?: () => void
 }
+
+const actionsKeymap = (onActions: () => void): Extension =>
+  keymap.of([
+    {
+      key: 'Mod-Enter',
+      run: () => {
+        onActions()
+        return true
+      },
+    },
+  ])
 
 const toggleMarkupKeymap = (onToggle: () => void): Extension =>
   keymap.of([
@@ -80,6 +93,7 @@ export const createEditorExtensions = (
   history(),
   historyKeysExtension(),
   editorSearch(options.t ?? translate),
+  ...(options.onOpenActions ? [actionsKeymap(options.onOpenActions)] : []),
   // before the default keymap: Mod-i selects the parent syntax node there
   keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
   ...(options.onToggleMarkup

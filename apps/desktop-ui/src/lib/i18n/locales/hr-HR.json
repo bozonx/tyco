@@ -488,8 +488,7 @@
     "editor": "Uređivač",
     "history": "Povijest",
     "menu": "Izbornik",
-    "settings": "Postavke",
-    "newProfile": "Novi profil"
+    "settings": "Postavke"
   },
   "selection": {
     "cancelled": "Otkazano",
@@ -875,7 +874,6 @@
     "imageQualityBalanced": "Uravnotežena – do 1568 px",
     "imageQualityOriginal": "Najviša – do 8000 px",
     "saveSaving": "Spremanje…",
-    "saveSaved": "Spremljeno",
     "savePending": "Nespremljene promjene",
     "saveFailed": "Postavke se nisu mogle spremiti",
     "saveConflict": "Postavke su promijenjene u drugom prozoru: {fields}. Odaberite koje promjene zadržati.",
@@ -899,7 +897,6 @@
     "profileModelUnavailable": "nedostupno",
     "autosaveFailed": "Nije spremljeno",
     "autosaveSaving": "Spremanje…",
-    "autosaveSaved": "Spremljeno",
     "fastNote": {
       "template": "Primijeni predložak postavki",
       "apply": "Primijeni predložak",
@@ -907,9 +904,8 @@
       "browse": "Odaberi mapu",
       "pathHint": "Koristite apsolutnu putanju ili ~/notes. Za Logseq odaberite korijen grafa; journals se dodaje automatski.",
       "sampleText": "Primjer bilješke\nViše pojedinosti",
-      "preview": "Pregled: odredište i sadržaj",
+      "preview": "Pregled",
       "errors": {
-        "noNotesPath": "Mapa bilješki nije postavljena.",
         "invalidNotesPath": "Koristite apsolutnu putanju bilješki ili putanju koja počinje s ~/.",
         "invalidSubfolder": "Podmapa mora biti relativna, bez .. i nevaljanih znakova putanje.",
         "unknownTemplateToken": "Nepoznata varijabla predloška. Provjerite podržane varijable.",

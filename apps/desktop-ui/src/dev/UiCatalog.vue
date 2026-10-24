@@ -121,7 +121,7 @@
         back-label="Back to the overview"
         @back="detailBacks++"
       >
-        <SettingsAutosaveStatus status="saved" />
+        <SettingsAutosaveStatus status="saving" />
       </SettingsDetailHeader>
       <div class="settings-entity-list">
         <SettingsEntityItem

@@ -17,7 +17,7 @@
         {{ t('settings.addLauncherPage') }}
       </Button>
     </div>
-    <div class="flex flex-wrap items-center gap-4 mb-3">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-3">
       <div class="flex items-center gap-2">
         <FieldSwitch
           :key="userConfig.launcherPages[page]?.id ?? page"
@@ -28,9 +28,11 @@
         <InfoTooltip :text="t('settings.launcherPageTakesTextInfo')" />
       </div>
       <Button
-        variant="danger-ghost"
+        variant="ghost"
+        class="ml-auto"
         :disabled="pagesCount <= 1"
         size="sm"
+        icon="mdi:trash-can-outline"
         @click="removePage"
         >{{ t('settings.removeLauncherPage') }}</Button
       >

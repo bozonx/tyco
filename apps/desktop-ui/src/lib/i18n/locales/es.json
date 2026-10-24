@@ -488,8 +488,7 @@
     "editor": "Editor",
     "history": "Historial",
     "menu": "Menú",
-    "settings": "Configuración",
-    "newProfile": "Nuevo perfil"
+    "settings": "Configuración"
   },
   "selection": {
     "cancelled": "Cancelado",
@@ -875,7 +874,6 @@
     "imageQualityBalanced": "Equilibrada: hasta 1568 px",
     "imageQualityOriginal": "Máxima: hasta 8000 px",
     "saveSaving": "Guardando…",
-    "saveSaved": "Guardado",
     "savePending": "Cambios sin guardar",
     "saveFailed": "No se pudo guardar la configuración",
     "saveConflict": "La configuración cambió en otra ventana: {fields}. Elige qué cambios conservar.",
@@ -899,7 +897,6 @@
     "profileModelUnavailable": "no disponible",
     "autosaveFailed": "No guardado",
     "autosaveSaving": "Guardando…",
-    "autosaveSaved": "Guardado",
     "fastNote": {
       "template": "Aplicar una plantilla de configuración",
       "apply": "Aplicar la plantilla",
@@ -907,9 +904,8 @@
       "browse": "Elegir carpeta",
       "pathHint": "Usa una ruta absoluta o ~/notes. Para Logseq, elige la raíz del grafo; journals se agrega automáticamente.",
       "sampleText": "Nota de ejemplo\nMás detalles",
-      "preview": "Vista previa: destino y contenido",
+      "preview": "Vista previa",
       "errors": {
-        "noNotesPath": "La carpeta de notas no está configurada.",
         "invalidNotesPath": "Usa una ruta absoluta para las notas o una ruta que empiece por ~/.",
         "invalidSubfolder": "La subcarpeta debe ser relativa, sin .. ni caracteres no válidos en rutas.",
         "unknownTemplateToken": "Variable de plantilla desconocida. Revisa las variables admitidas.",

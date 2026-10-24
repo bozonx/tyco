@@ -27,14 +27,18 @@ const now = new Date()
 const effective = computed(() => getEffectiveConfig(props.config))
 const text = computed(() => t('settings.fastNote.sampleText'))
 const issueMessages = computed(() => ({
-  noNotesPath: t('settings.fastNote.errors.noNotesPath'),
   invalidNotesPath: t('settings.fastNote.errors.invalidNotesPath'),
   invalidSubfolder: t('settings.fastNote.errors.invalidSubfolder'),
   unknownTemplateToken: t('settings.fastNote.errors.unknownTemplateToken'),
   missingContentToken: t('settings.fastNote.errors.missingContentToken'),
   invalidFileName: t('settings.fastNote.errors.invalidFileName'),
 }))
-const issues = computed(() => validateFastNoteConfig(props.config))
+const issues = computed(() =>
+  validateFastNoteConfig(props.config).filter(
+    (issue): issue is keyof typeof issueMessages.value =>
+      issue !== 'noNotesPath'
+  )
+)
 const previewPath = computed(() => {
   const settings = effective.value
   const dir = resolveNoteDir(

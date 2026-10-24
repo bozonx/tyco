@@ -488,8 +488,7 @@
     "editor": "Editor",
     "history": "Istoric",
     "menu": "Meniu",
-    "settings": "Setări",
-    "newProfile": "Profil nou"
+    "settings": "Setări"
   },
   "selection": {
     "cancelled": "Anulat",
@@ -875,7 +874,6 @@
     "imageQualityBalanced": "Echilibrată – până la 1568 px",
     "imageQualityOriginal": "Maximă – până la 8000 px",
     "saveSaving": "Se salvează…",
-    "saveSaved": "Salvat",
     "savePending": "Modificări nesalvate",
     "saveFailed": "Setările nu au putut fi salvate",
     "saveConflict": "Setările s-au schimbat în altă fereastră: {fields}. Alegeți ce modificări să păstrați.",
@@ -899,7 +897,6 @@
     "profileModelUnavailable": "indisponibil",
     "autosaveFailed": "Nesalvat",
     "autosaveSaving": "Se salvează…",
-    "autosaveSaved": "Salvat",
     "fastNote": {
       "template": "Aplică un șablon de setări",
       "apply": "Aplică șablonul",
@@ -907,9 +904,8 @@
       "browse": "Alege dosarul",
       "pathHint": "Folosiți o cale absolută sau ~/notes. Pentru Logseq, alegeți rădăcina grafului; journals se adaugă automat.",
       "sampleText": "Notiță exemplu\nMai multe detalii",
-      "preview": "Previzualizare: destinație și conținut",
+      "preview": "Previzualizare",
       "errors": {
-        "noNotesPath": "Dosarul notițelor nu este configurat.",
         "invalidNotesPath": "Folosiți o cale absolută pentru notițe sau o cale care începe cu ~/.",
         "invalidSubfolder": "Subdosarul trebuie să fie relativ, fără .. sau caractere de cale nevalide.",
         "unknownTemplateToken": "Variabilă de șablon necunoscută. Verificați variabilele acceptate.",

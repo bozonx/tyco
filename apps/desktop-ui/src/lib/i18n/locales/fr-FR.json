@@ -488,8 +488,7 @@
     "editor": "Éditeur",
     "history": "Historique",
     "menu": "Menu",
-    "settings": "Paramètres",
-    "newProfile": "Nouveau profil"
+    "settings": "Paramètres"
   },
   "selection": {
     "cancelled": "Annulé",
@@ -875,7 +874,6 @@
     "imageQualityBalanced": "Équilibrée : jusqu’à 1568 px",
     "imageQualityOriginal": "Maximale : jusqu’à 8000 px",
     "saveSaving": "Enregistrement…",
-    "saveSaved": "Enregistré",
     "savePending": "Modifications non enregistrées",
     "saveFailed": "Impossible d’enregistrer les paramètres",
     "saveConflict": "Les paramètres ont été modifiés dans une autre fenêtre : {fields}. Choisissez les modifications à conserver.",
@@ -899,7 +897,6 @@
     "profileModelUnavailable": "indisponible",
     "autosaveFailed": "Non enregistré",
     "autosaveSaving": "Enregistrement…",
-    "autosaveSaved": "Enregistré",
     "fastNote": {
       "template": "Appliquer un modèle de paramètres",
       "apply": "Appliquer le modèle",
@@ -907,9 +904,8 @@
       "browse": "Choisir un dossier",
       "pathHint": "Utilisez un chemin absolu ou ~/notes. Pour Logseq, choisissez la racine du graphe ; journals est ajouté automatiquement.",
       "sampleText": "Exemple de note\nPlus de détails",
-      "preview": "Aperçu : destination et contenu",
+      "preview": "Aperçu",
       "errors": {
-        "noNotesPath": "Le dossier des notes n’est pas configuré.",
         "invalidNotesPath": "Utilisez un chemin absolu pour les notes ou un chemin commençant par ~/.",
         "invalidSubfolder": "Le sous-dossier doit être relatif, sans .. ni caractères de chemin invalides.",
         "unknownTemplateToken": "Variable de modèle inconnue. Vérifiez les variables prises en charge.",

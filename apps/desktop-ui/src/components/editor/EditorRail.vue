@@ -3,7 +3,7 @@
     <template v-if="compact">
       <IconButton
         size="sm"
-        variant="danger-ghost"
+        variant="ghost"
         @click="editorInputStore.clear"
         :label="t('editor.clear')"
         icon="mdi:eraser"
@@ -43,7 +43,7 @@
       />
       <IconButton
         size="sm"
-        variant="danger-ghost"
+        variant="ghost"
         @click="editorInputStore.clear"
         :label="t('editor.clear')"
         icon="mdi:eraser"

@@ -488,8 +488,7 @@
     "editor": "Editör",
     "history": "Geçmiş",
     "menu": "Menü",
-    "settings": "Ayarlar",
-    "newProfile": "Yeni profil"
+    "settings": "Ayarlar"
   },
   "selection": {
     "cancelled": "İptal edildi",
@@ -872,7 +871,6 @@
     "imageQualityBalanced": "Dengeli — en fazla 1568 px",
     "imageQualityOriginal": "En yüksek — 8000 px’e kadar",
     "saveSaving": "Kaydediliyor…",
-    "saveSaved": "Kaydedildi",
     "savePending": "Kaydedilmemiş değişiklikler",
     "saveFailed": "Ayarlar kaydedilemedi",
     "saveConflict": "Ayarlar başka bir pencerede değişti: {fields}. Hangi değişikliklerin korunacağını seçin.",
@@ -896,7 +894,6 @@
     "profileModelUnavailable": "kullanılamıyor",
     "autosaveFailed": "Kaydedilmedi",
     "autosaveSaving": "Kaydediliyor…",
-    "autosaveSaved": "Kaydedildi",
     "fastNote": {
       "template": "Ayar şablonu uygula",
       "apply": "Şablonu uygula",
@@ -904,9 +901,8 @@
       "browse": "Klasör seç",
       "pathHint": "Mutlak yol veya ~/notes kullanın. Logseq için grafiğin kökünü seçin; journals otomatik eklenir.",
       "sampleText": "Örnek not\nDiğer ayrıntılar",
-      "preview": "Önizleme: hedef ve içerik",
+      "preview": "Önizleme",
       "errors": {
-        "noNotesPath": "Not klasörü ayarlanmamış.",
         "invalidNotesPath": "Mutlak bir not yolu veya ~/ ile başlayan bir yol kullanın.",
         "invalidSubfolder": "Alt klasör göreli olmalı; .. veya geçersiz yol karakterleri içermemeli.",
         "unknownTemplateToken": "Bilinmeyen şablon belirteci. Desteklenen belirteçleri kontrol edin.",

@@ -54,3 +54,18 @@ describe('toggle markup shortcut', () => {
     view.destroy()
   })
 })
+
+describe('open actions shortcut', () => {
+  it('calls onOpenActions on Ctrl+Enter', () => {
+    const onOpenActions = vi.fn()
+    const view = new EditorView({
+      parent: document.body,
+      state: createEditorState({ doc: 'text', onOpenActions }),
+    })
+
+    press(view, { key: 'Enter', code: 'Enter', ctrlKey: true, keyCode: 13 })
+
+    expect(onOpenActions).toHaveBeenCalledTimes(1)
+    view.destroy()
+  })
+})
