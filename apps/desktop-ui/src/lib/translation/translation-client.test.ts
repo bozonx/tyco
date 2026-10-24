@@ -123,6 +123,40 @@ describe('createTranslationClient', () => {
     }
   })
 
+  it('gives the LLM the glossary translation into the target language only', async () => {
+    const runLlm = vi.fn().mockResolvedValue('Translated.')
+    const client = createTranslationClient({
+      getConfig: () =>
+        config({
+          glossary: [
+            {
+              term: 'workspace',
+              translation: '',
+              translations: { ru: 'рабочее пространство', es: 'espacio' },
+            },
+            { term: 'board', translation: '', translations: { ru: 'доска' } },
+            { term: 'TyCo', translation: 'TyCo' },
+          ],
+        }),
+      keys: { get: vi.fn() },
+      transport: { fetch: vi.fn(), openSocket: vi.fn() },
+      runLlm,
+    })
+    const source = 'The TyCo workspace board.'
+
+    await client.translate(source, { targetLanguage: 'es-AR' })
+    await client.translate(source, { targetLanguage: 'ru-RU' })
+
+    const spanish = runLlm.mock.calls[0]?.[0].system as string
+    expect(spanish).toContain('- workspace: espacio')
+    expect(spanish).toContain('- TyCo: keep exactly as written')
+    expect(spanish).not.toContain('board')
+    expect(spanish).not.toContain('рабочее')
+    const russian = runLlm.mock.calls[1]?.[0].system as string
+    expect(russian).toContain('- workspace: рабочее пространство')
+    expect(russian).toContain('- board: доска')
+  })
+
   it('rejects an empty LLM result', async () => {
     const client = createTranslationClient({
       getConfig: () => config(),

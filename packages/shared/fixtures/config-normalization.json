@@ -2776,5 +2776,354 @@
       },
       "aiVault": { "path": "" }
     }
+  },
+  {
+    "name": "trims glossary rows and keeps per-language translations",
+    "input": {
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto" },
+      "editor": {
+        "submitKey": "Enter",
+        "diffViewMode": "unified",
+        "history": {
+          "storage": "disk",
+          "maxItems": 1000,
+          "retentionDays": 30,
+          "isSecretSanitizingEnabled": true
+        }
+      },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
+      "hotkeys": {
+        "editor": "",
+        "quickInput": "",
+        "chat": "",
+        "voiceChat": "",
+        "voice": "Ctrl+Alt+V",
+        "selectionActions": "Ctrl+Alt+S",
+        "aiTasks": "",
+        "correction": "",
+        "translation": "",
+        "selectionCorrection": "Ctrl+Alt+F",
+        "voiceCommands": ""
+      },
+      "externalAccess": { "canAccessSelection": false },
+      "windowInsertion": {
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
+      },
+      "translation": {
+        "provider": "llm",
+        "qualityGate": "off",
+        "glossary": [
+          { "term": " TyCo ", "translation": "TyCo" },
+          {
+            "term": "workspace",
+            "translation": " ",
+            "translations": {
+              "es": " espacio de trabajo ",
+              "pt-BR": " ",
+              "EN": "x"
+            }
+          },
+          { "term": "empty", "translation": "", "translations": { "es": " " } },
+          { "term": "bare", "translation": "" }
+        ],
+        "targetLanguages": { "q": "en-US", "w": "ru-RU" },
+        "viewMode": "split",
+        "providers": { "deepl": { "endpoint": "free" } }
+      },
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" }
+      },
+      "launcherPages": [
+        { "id": "main", "inputMode": "selection", "slots": {}, "hotkey": "" }
+      ],
+      "commands": [],
+      "llm": {
+        "providers": [
+          { "id": "google", "type": "google", "name": "Google Gemini" },
+          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
+          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "ollama",
+            "type": "openaiCompatible",
+            "name": "Ollama",
+            "baseUrl": "http://localhost:11434/v1"
+          }
+        ],
+        "models": [
+          {
+            "id": "ollama-qwen",
+            "providerId": "ollama",
+            "providerModelId": "qwen2.5:7b",
+            "name": "Qwen 2.5 7B",
+            "temperature": 0.2,
+            "contextWindowTokens": 4096,
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
+          },
+          {
+            "id": "gemini-flash",
+            "providerId": "google",
+            "providerModelId": "gemini-3.8-flash",
+            "name": "Gemini 3.8 Flash",
+            "temperature": 1,
+            "contextWindowTokens": 128000,
+            "canUseImages": true,
+            "canUseTools": true
+          },
+          {
+            "id": "deepseek-chat",
+            "providerId": "deepseek",
+            "providerModelId": "deepseek-flash",
+            "name": "DeepSeek Flash",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
+          },
+          {
+            "id": "openrouter-gpt-4-1-mini",
+            "providerId": "openrouter",
+            "providerModelId": "openai/gpt-4.1-mini",
+            "name": "GPT-4.1 mini",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": true,
+            "canUseTools": true
+          }
+        ],
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
+        }
+      },
+      "aiTasks": {
+        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "slots": { "q": "a" }
+      },
+      "markdown": {
+        "format": {
+          "bullet": "-",
+          "emphasis": "*",
+          "strong": "*",
+          "headingStyle": "atx",
+          "isListMarkerIncremented": true
+        },
+        "strip": {
+          "bullet": "-",
+          "codeBlockIndent": "none",
+          "blockquoteIndent": "none",
+          "linkFormat": "text",
+          "imageFormat": "alt",
+          "hasInlineCode": false,
+          "hasThematicBreaks": true,
+          "hasTaskCheckboxes": true
+        }
+      },
+      "plugins": {},
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
+      "stt": {
+        "provider": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isVoiceCorrectionEnabled": false
+      },
+      "aiVault": { "path": "" }
+    },
+    "expected": {
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto" },
+      "editor": {
+        "submitKey": "Enter",
+        "diffViewMode": "unified",
+        "history": {
+          "storage": "disk",
+          "maxItems": 1000,
+          "retentionDays": 30,
+          "isSecretSanitizingEnabled": true
+        }
+      },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
+      "hotkeys": {
+        "editor": "",
+        "quickInput": "",
+        "chat": "",
+        "voiceChat": "",
+        "voice": "Ctrl+Alt+V",
+        "selectionActions": "Ctrl+Alt+S",
+        "aiTasks": "",
+        "correction": "",
+        "translation": "",
+        "selectionCorrection": "Ctrl+Alt+F",
+        "voiceCommands": ""
+      },
+      "externalAccess": { "canAccessSelection": false },
+      "windowInsertion": {
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
+      },
+      "translation": {
+        "provider": "llm",
+        "qualityGate": "off",
+        "glossary": [
+          { "term": "TyCo", "translation": "TyCo" },
+          {
+            "term": "workspace",
+            "translation": "",
+            "translations": { "es": "espacio de trabajo" }
+          }
+        ],
+        "targetLanguages": { "q": "en-US", "w": "ru-RU" },
+        "viewMode": "split",
+        "providers": { "deepl": { "endpoint": "free" } }
+      },
+      "mainActions": {
+        "q": { "type": "standard", "actionId": "insertIntoWindow" }
+      },
+      "launcherPages": [
+        { "id": "main", "inputMode": "selection", "slots": {}, "hotkey": "" }
+      ],
+      "commands": [],
+      "llm": {
+        "providers": [
+          { "id": "google", "type": "google", "name": "Google Gemini" },
+          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
+          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "ollama",
+            "type": "openaiCompatible",
+            "name": "Ollama",
+            "baseUrl": "http://localhost:11434/v1"
+          }
+        ],
+        "models": [
+          {
+            "id": "ollama-qwen",
+            "providerId": "ollama",
+            "providerModelId": "qwen2.5:7b",
+            "name": "Qwen 2.5 7B",
+            "temperature": 0.2,
+            "contextWindowTokens": 4096,
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
+          },
+          {
+            "id": "gemini-flash",
+            "providerId": "google",
+            "providerModelId": "gemini-3.8-flash",
+            "name": "Gemini 3.8 Flash",
+            "temperature": 1,
+            "contextWindowTokens": 128000,
+            "canUseImages": true,
+            "canUseTools": true
+          },
+          {
+            "id": "deepseek-chat",
+            "providerId": "deepseek",
+            "providerModelId": "deepseek-flash",
+            "name": "DeepSeek Flash",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
+          },
+          {
+            "id": "openrouter-gpt-4-1-mini",
+            "providerId": "openrouter",
+            "providerModelId": "openai/gpt-4.1-mini",
+            "name": "GPT-4.1 mini",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": true,
+            "canUseTools": true
+          }
+        ],
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "translation": {
+            "modelChain": ["ollama-qwen"],
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelChain": ["ollama-qwen"], "rule": "" },
+          "aiTask": { "modelChain": ["ollama-qwen"] }
+        }
+      },
+      "aiTasks": {
+        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "slots": { "q": "a" }
+      },
+      "markdown": {
+        "format": {
+          "bullet": "-",
+          "emphasis": "*",
+          "strong": "*",
+          "headingStyle": "atx",
+          "isListMarkerIncremented": true
+        },
+        "strip": {
+          "bullet": "-",
+          "codeBlockIndent": "none",
+          "blockquoteIndent": "none",
+          "linkFormat": "text",
+          "imageFormat": "alt",
+          "hasInlineCode": false,
+          "hasThematicBreaks": true,
+          "hasTaskCheckboxes": true
+        }
+      },
+      "plugins": {},
+      "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
+      "stt": {
+        "provider": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isVoiceCorrectionEnabled": false
+      },
+      "aiVault": { "path": "" }
+    }
   }
 ]

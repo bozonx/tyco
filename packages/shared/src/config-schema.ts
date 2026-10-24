@@ -5,6 +5,7 @@ import configVersion from './config-version.json' with { type: 'json' }
 import {
   BUILTIN_LLM_PROVIDERS,
   LLM_TASKS,
+  normalizeGlossaryEntry,
   SHORTCUT_SLOT_KEYS,
   type ShortcutSlots,
   type UserConfig,
@@ -306,13 +307,9 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   config.configVersion = configVersion
   config.commands = normalizeCommands(config.commands)
   config.llm = normalizeLlmConfig(config.llm)
-  config.translation.glossary = config.translation.glossary
-    .map((entry) => ({
-      ...entry,
-      term: entry.term.trim(),
-      translation: entry.translation.trim(),
-    }))
-    .filter((entry) => entry.term.length > 0 && entry.translation.length > 0)
+  config.translation.glossary = config.translation.glossary.flatMap(
+    (entry) => normalizeGlossaryEntry(entry) ?? []
+  )
   config.translation.targetLanguages = distinctSlots(
     config.translation.targetLanguages
   )

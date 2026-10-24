@@ -8,18 +8,92 @@ export const TRANSLATION_QUALITY_GATES = [
 ] as const
 export type TranslationQualityGate = (typeof TRANSLATION_QUALITY_GATES)[number]
 
-/**
- * How a term is translated into every target language; a term kept as it is has
- * itself as its translation
- */
+/** How a term is translated; a term kept as it is has itself as its translation */
 export interface TranslationGlossaryEntry {
   term: string
+  /**
+   * The translation into a target language without one of its own in
+   * `translations`; empty when the term has only per-language translations
+   */
   translation: string
+  /**
+   * Translations into particular languages, by a lowercase language code with
+   * an optional region or script (`es`, `pt-BR`, `zh-Hant`)
+   */
+  translations?: Record<string, string>
 }
 
-/** Whether the glossary keeps the term untranslated */
+/** Language codes accepted as keys of `TranslationGlossaryEntry.translations` */
+export const GLOSSARY_LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/
+
+/**
+ * The canonical spelling of a glossary language code (`ES_ar` → `es-AR`), or
+ * undefined when the text is not a language code
+ */
+export function normalizeGlossaryLanguage(code: string): string | undefined {
+  const [language = '', ...subtags] = code.trim().split(/[-_]/)
+  const canonical = [
+    language.toLowerCase(),
+    ...subtags.map((subtag) =>
+      subtag.length === 2
+        ? subtag.toUpperCase()
+        : subtag.length === 4
+          ? subtag[0]!.toUpperCase() + subtag.slice(1).toLowerCase()
+          : subtag.toLowerCase()
+    ),
+  ].join('-')
+  return GLOSSARY_LANGUAGE_PATTERN.test(canonical) ? canonical : undefined
+}
+
+/**
+ * The entry with its texts trimmed and its language codes canonical, or
+ * undefined when it has no term or no translation at all
+ */
+export function normalizeGlossaryEntry(
+  entry: TranslationGlossaryEntry
+): TranslationGlossaryEntry | undefined {
+  const term = entry.term.trim()
+  const translation = entry.translation.trim()
+  const translations: Record<string, string> = {}
+  for (const [code, text] of Object.entries(entry.translations ?? {})) {
+    const language = normalizeGlossaryLanguage(code)
+    if (language && text.trim()) translations[language] = text.trim()
+  }
+  const hasTranslations = Object.keys(translations).length > 0
+  if (!term || (!translation && !hasTranslations)) return undefined
+  const { translations: _translations, ...rest } = entry
+  return {
+    ...rest,
+    term,
+    translation,
+    ...(hasTranslations ? { translations } : {}),
+  }
+}
+
+/** Whether the glossary keeps the term untranslated in every language */
 export const isGlossaryTermKept = (entry: TranslationGlossaryEntry) =>
-  entry.translation === entry.term
+  entry.translation === entry.term &&
+  Object.keys(entry.translations ?? {}).length === 0
+
+/**
+ * How the term is translated into the target language: its own translation,
+ * else that of its base language (`es` for `es-AR`), else the default one;
+ * undefined when the entry does not cover the language
+ */
+export function glossaryTranslationFor(
+  entry: TranslationGlossaryEntry,
+  targetLanguage: string
+): string | undefined {
+  const language = normalizeGlossaryLanguage(targetLanguage)
+  const translations = entry.translations ?? {}
+  const base = language?.split('-')[0]
+  return (
+    (language && translations[language]) ||
+    (base && translations[base]) ||
+    entry.translation ||
+    undefined
+  )
+}
 
 /**
  * The keys of the shortcut grids (menu, launcher pages, AI tasks, translation

@@ -21,7 +21,7 @@ import {
 } from '@bozonx/ai-kit/translate'
 import {
   TRANSLATION_SECRET_IDS,
-  isGlossaryTermKept,
+  glossaryTranslationFor,
   type TranslationConfig,
   type TranslationGlossaryEntry,
 } from '@tyco/shared'
@@ -104,6 +104,8 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
     async translate(text, options) {
       options.signal?.throwIfAborted()
       const config = deps.getConfig()
+      // Looked up by the language the user picked, before a provider renames it
+      const glossary = toKitGlossary(config.glossary, options.targetLanguage)
       if (config.provider !== 'llm') {
         const targetLanguage = resolveTranslationLanguage(
           options.targetLanguage,
@@ -131,7 +133,6 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
           )
         options = { ...options, targetLanguage, sourceLanguage }
       }
-      const glossary = toKitGlossary(config.glossary)
       options.onStage?.('translating')
       const pipeline = await runTranslationPipeline({
         source: text,
@@ -147,7 +148,13 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
           const result =
             config.provider === 'llm'
               ? await translateWithLlm(deps, text, options, glossary)
-              : await translateWithMachine(deps, config, text, options)
+              : await translateWithMachine(
+                  deps,
+                  config,
+                  text,
+                  options,
+                  glossary
+                )
           options.onStage?.('checking')
           return result
         },
@@ -196,7 +203,8 @@ async function translateWithMachine(
   deps: TranslationClientDependencies,
   config: TranslationConfig,
   text: string,
-  options: TranslationRunOptions
+  options: TranslationRunOptions,
+  glossary: GlossaryEntry[]
 ): Promise<FirstPass> {
   const provider = config.provider === 'deepl' ? 'deepl' : 'google-translate'
   const model = provider === 'deepl' ? DEEPL_MODEL : GOOGLE_TRANSLATE_MODEL
@@ -228,10 +236,7 @@ async function translateWithMachine(
       'google-translate': createGoogleTranslationProvider,
     },
   })
-  const applicableGlossary = selectGlossaryForText(
-    toKitGlossary(config.glossary),
-    text
-  )
+  const applicableGlossary = selectGlossaryForText(glossary, text)
   const protectedText = protectTranslationText(
     text,
     applicableGlossary
@@ -477,11 +482,17 @@ function llmChunkLimit(
   return limit
 }
 
-/** The glossary as ai-kit spells it */
-function toKitGlossary(entries: TranslationGlossaryEntry[]): GlossaryEntry[] {
-  return entries.map((entry) => ({
-    term: entry.term,
-    use: entry.translation,
-    doNotTranslate: isGlossaryTermKept(entry),
-  }))
+/**
+ * The glossary for one target language as ai-kit spells it; entries without a
+ * translation into that language are left out
+ */
+function toKitGlossary(
+  entries: TranslationGlossaryEntry[],
+  targetLanguage: string
+): GlossaryEntry[] {
+  return entries.flatMap((entry) => {
+    const use = glossaryTranslationFor(entry, targetLanguage)
+    if (!use) return []
+    return [{ term: entry.term, use, doNotTranslate: use === entry.term }]
+  })
 }

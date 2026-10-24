@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { nextTick, reactive } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 
 import { normalizeTranslationConfig } from './translation-config'
@@ -39,6 +39,41 @@ describe('translation glossary', () => {
       parseTranslationGlossary(formatTranslationGlossary(entries))
     ).toEqual(entries)
   })
+
+  it('reads per-language translations with or without a default one', () => {
+    const entries = parseTranslationGlossary(
+      [
+        'workspace = espacio de trabajo; RU: рабочее пространство; pt_br: espaço',
+        'board = ru: доска',
+        'TyCo = TyCo; ru: ТайКо',
+        'note = a; b',
+        'empty = ru: ',
+      ].join('\n')
+    )
+    expect(entries).toEqual([
+      {
+        term: 'workspace',
+        translation: 'espacio de trabajo',
+        translations: { ru: 'рабочее пространство', 'pt-BR': 'espaço' },
+      },
+      { term: 'board', translation: '', translations: { ru: 'доска' } },
+      { term: 'TyCo', translation: 'TyCo', translations: { ru: 'ТайКо' } },
+      { term: 'note', translation: 'a; b' },
+      { term: 'empty', translation: 'ru:' },
+    ])
+    expect(formatTranslationGlossary(entries)).toBe(
+      [
+        'workspace = espacio de trabajo; ru: рабочее пространство; pt-BR: espaço',
+        'board = ru: доска',
+        'TyCo = TyCo; ru: ТайКо',
+        'note = a; b',
+        'empty = ru:',
+      ].join('\n')
+    )
+    expect(
+      parseTranslationGlossary(formatTranslationGlossary(entries))
+    ).toEqual(entries)
+  })
 })
 
 describe('translation settings model', () => {
@@ -56,6 +91,30 @@ describe('translation settings model', () => {
     expect(model.glossaryText.value).toBe('!TyCo')
     model.updateProvider('llm')
     expect(model.usesTranslationRules.value).toBe(true)
+  })
+
+  it('keeps the typed glossary text until it is committed', async () => {
+    const { model, state } = setup()
+    model.updateGlossary('workspace = workspace')
+    model.updateGlossary('workspace = workspaces\nunfinished')
+    await nextTick()
+    expect(model.glossaryText.value).toBe('workspace = workspaces\nunfinished')
+    expect(state.config.glossary).toEqual([
+      { term: 'workspace', translation: 'workspaces' },
+    ])
+    model.commitGlossary()
+    expect(model.glossaryText.value).toBe('workspace = workspaces')
+  })
+
+  it('shows a glossary changed elsewhere', async () => {
+    const { model, state } = setup()
+    model.updateGlossary('cat = gato')
+    state.config = {
+      ...state.config,
+      glossary: [{ term: 'X', translation: 'X' }],
+    }
+    await nextTick()
+    expect(model.glossaryText.value).toBe('!X')
   })
 
   it('selects the DeepL endpoint after a successful save and clears the draft', async () => {

@@ -94,6 +94,7 @@
         :model-value="glossaryText"
         :placeholder="t('settings.translationGlossaryPlaceholder')"
         @update:model-value="updateGlossary"
+        @blur="commitGlossary"
       />
     </SettingsSection>
   </div>
@@ -131,6 +132,7 @@ const {
   updateProvider,
   updateQualityGate,
   updateGlossary,
+  commitGlossary,
   saveProviderKey,
   removeProviderKey,
 } = createTranslationSettingsModel({

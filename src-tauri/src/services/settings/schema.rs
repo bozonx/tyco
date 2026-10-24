@@ -487,11 +487,28 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             for key in ["term", "translation"] {
                 entry[key] = json!(entry[key].as_str().unwrap_or_default().trim());
             }
+            let Some(fields) = entry.as_object_mut() else {
+                continue;
+            };
+            if let Some(translations) = fields
+                .get_mut("translations")
+                .and_then(Value::as_object_mut)
+            {
+                for text in translations.values_mut() {
+                    *text = json!(text.as_str().unwrap_or_default().trim());
+                }
+                translations.retain(|_, text| text.as_str().is_some_and(|text| !text.is_empty()));
+            }
+            if fields.get("translations").is_some_and(|translations| {
+                translations.as_object().is_none_or(|map| map.is_empty())
+            }) {
+                fields.shift_remove("translations");
+            }
         }
+        // A term needs a translation for every language or for some of them.
         glossary.retain(|entry| {
-            ["term", "translation"]
-                .iter()
-                .all(|key| entry[key].as_str().is_some_and(|text| !text.is_empty()))
+            let has_text = |key: &str| entry[key].as_str().is_some_and(|text| !text.is_empty());
+            has_text("term") && (has_text("translation") || entry.get("translations").is_some())
         });
     }
     let mut languages = HashSet::new();

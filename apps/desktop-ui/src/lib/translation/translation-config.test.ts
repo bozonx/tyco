@@ -37,4 +37,24 @@ describe('normalizeTranslationConfig', () => {
       ],
     })
   })
+  it('keeps per-language glossary translations and drops invalid ones', () => {
+    expect(
+      normalizeTranslationConfig({
+        glossary: [
+          {
+            term: 'workspace',
+            translation: '',
+            translations: { es: ' espacio de trabajo ', 'pt-BR': ' ', EN: 'x' },
+          },
+          { term: 'empty', translation: '', translations: { es: ' ' } },
+        ],
+      }).glossary
+    ).toEqual([
+      {
+        term: 'workspace',
+        translation: '',
+        translations: { es: 'espacio de trabajo' },
+      },
+    ])
+  })
 })
