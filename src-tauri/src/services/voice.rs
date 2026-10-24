@@ -20,6 +20,7 @@ use serde::Serialize;
 use tauri::AppHandle;
 
 use crate::errors::AppError;
+use crate::locks::MutexExt;
 use crate::services::net::EventSink;
 use crate::services::voice::session::VoiceCaptureSession;
 use crate::services::voice::session::VoiceSessionState;
@@ -271,11 +272,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
 
         if runtime.now().saturating_duration_since(last_level) >= LEVEL_INTERVAL {
             last_level = runtime.now();
-            let (level, peak) = context
-                .current_level
-                .lock()
-                .map(|level| *level)
-                .unwrap_or((0.0, 0.0));
+            let (level, peak) = *context.current_level.locked();
             levels.publish(VoiceAudioLevelPayload { level, peak });
         }
     }
@@ -287,11 +284,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         peak: 0.0,
     });
 
-    let stream_error = context
-        .stream_error
-        .lock()
-        .ok()
-        .and_then(|mut error| error.take());
+    let stream_error = context.stream_error.locked().take();
     if let Some(message) = stream_error {
         sink.send_event(&CaptureEvent::Error { message });
         return Ok(());

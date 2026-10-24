@@ -127,15 +127,11 @@ impl NetState {
                 })?;
         let id = self.next_id();
         let (handle, registration) = AbortHandle::new_pair();
-        self.task_abort_handles
-            .lock()
-            .expect("task abort handles lock")
-            .insert(id, handle);
+        self.task_abort_handles.locked().insert(id, handle);
         self.task_owners.locked().insert(id, owner.to_owned());
         let chunk_permits = Arc::new(Semaphore::new(FETCH_WINDOW_CHUNKS));
         self.response_chunk_permits
-            .lock()
-            .expect("response chunk permits lock")
+            .locked()
             .insert(id, chunk_permits.clone());
         *self.activity.active_count.locked() += 1;
         Ok((
@@ -166,12 +162,7 @@ impl NetState {
         if !self.is_owned_by(id, owner) {
             return;
         }
-        if let Some(handle) = self
-            .task_abort_handles
-            .lock()
-            .expect("task abort handles lock")
-            .remove(&id)
-        {
+        if let Some(handle) = self.task_abort_handles.locked().remove(&id) {
             handle.abort();
         }
     }
@@ -181,12 +172,7 @@ impl NetState {
         if !self.is_owned_by(id, owner) {
             return;
         }
-        if let Some(chunk_permits) = self
-            .response_chunk_permits
-            .lock()
-            .expect("response chunk permits lock")
-            .get(&id)
-        {
+        if let Some(chunk_permits) = self.response_chunk_permits.locked().get(&id) {
             if chunk_permits.available_permits() < FETCH_WINDOW_CHUNKS {
                 chunk_permits.add_permits(1);
             }
@@ -202,7 +188,7 @@ impl NetState {
         if !self.is_owned_by(id, owner) {
             return Err(AppError::Stale(format!("Socket {id} is closed")));
         }
-        let sockets = self.sockets.lock().expect("sockets lock");
+        let sockets = self.sockets.locked();
         let sender = sockets
             .get(&id)
             .ok_or_else(|| AppError::Stale(format!("Socket {id} is closed")))?;
@@ -233,16 +219,11 @@ impl crate::services::background::StoppableService for NetState {
         let mut is_stopping = self.admission.locked();
         *is_stopping = true;
         self.operation_permits.close();
-        let sockets = std::mem::take(&mut *self.sockets.lock().expect("sockets lock"));
+        let sockets = std::mem::take(&mut *self.sockets.locked());
         for sender in sockets.into_values() {
             let _ = sender.try_send(SocketCommand::Close(None));
         }
-        let task_abort_handles = std::mem::take(
-            &mut *self
-                .task_abort_handles
-                .lock()
-                .expect("task abort handles lock"),
-        );
+        let task_abort_handles = std::mem::take(&mut *self.task_abort_handles.locked());
         for handle in task_abort_handles.into_values() {
             handle.abort();
         }
@@ -287,27 +268,16 @@ impl NetTaskRegistration {
         if *is_stopping {
             return false;
         }
-        self.sockets
-            .lock()
-            .expect("sockets lock")
-            .insert(self.id, sender);
+        self.sockets.locked().insert(self.id, sender);
         true
     }
 }
 impl Drop for NetTaskRegistration {
     fn drop(&mut self) {
-        self.response_chunk_permits
-            .lock()
-            .expect("response chunk permits lock")
-            .remove(&self.id);
-        self.sockets.lock().expect("sockets lock").remove(&self.id);
+        self.response_chunk_permits.locked().remove(&self.id);
+        self.sockets.locked().remove(&self.id);
         self.task_owners.locked().remove(&self.id);
-        if let Some(handle) = self
-            .task_abort_handles
-            .lock()
-            .expect("task abort handles lock")
-            .remove(&self.id)
-        {
+        if let Some(handle) = self.task_abort_handles.locked().remove(&self.id) {
             handle.abort();
         }
         *self.activity.active_count.locked() -= 1;

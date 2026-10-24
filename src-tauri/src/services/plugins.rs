@@ -1,6 +1,8 @@
 //! Self-contained JavaScript packages. Installation never evaluates code.
+mod inspection;
 pub mod protocol;
 mod validation;
+pub use inspection::PluginInspection;
 pub use validation::validate_manifest;
 
 use std::fs;
@@ -12,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::errors::AppError;
+use crate::locks::MutexExt;
 use crate::services::atomic_file;
 
 const MAX_PACKAGE_BYTES: u64 = 32 * 1024 * 1024;
@@ -159,10 +162,7 @@ impl PluginStore {
                 "Plugin has no notes capability".into(),
             ));
         }
-        let _guard = self
-            .lock
-            .lock()
-            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
+        let _guard = self.lock.locked();
         let installed: InstalledPackage = serde_json::from_str(&read_stored(
             &self.root.join(format!("{}.json", storage_key(id))),
         )?)?;
@@ -191,10 +191,7 @@ impl PluginStore {
         expected: &PluginManifest,
         digest: &str,
     ) -> Result<InstalledPlugin, AppError> {
-        let _guard = self
-            .lock
-            .lock()
-            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
+        let _guard = self.lock.locked();
         let raw = read_bounded(path)?;
         if format!("{:x}", Sha256::digest(raw.as_bytes())) != digest {
             return Err(AppError::Stale(
@@ -235,10 +232,7 @@ impl PluginStore {
         Ok(result)
     }
     pub fn list(&self) -> Result<Vec<InstalledPlugin>, AppError> {
-        let _guard = self
-            .lock
-            .lock()
-            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
+        let _guard = self.lock.locked();
         let mut result = Vec::new();
         for entry in fs::read_dir(&self.root)? {
             let path = entry?.path();
@@ -267,10 +261,7 @@ impl PluginStore {
         Ok(result)
     }
     pub fn restore(&self, id: &str) -> Result<(), AppError> {
-        let _guard = self
-            .lock
-            .lock()
-            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
+        let _guard = self.lock.locked();
         if !is_valid_plugin_id(id) || BUNDLED_IDS.contains(&id) {
             return Err(AppError::InvalidInput(
                 "Invalid or bundled plugin ID".into(),
@@ -291,10 +282,7 @@ impl PluginStore {
         Ok(())
     }
     pub fn remove(&self, id: &str) -> Result<(), AppError> {
-        let _guard = self
-            .lock
-            .lock()
-            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
+        let _guard = self.lock.locked();
         if !is_valid_plugin_id(id) {
             return Err(AppError::InvalidInput("Invalid plugin ID".into()));
         }
@@ -316,10 +304,7 @@ impl PluginStore {
     }
     /// Only an installed entry point can be served; arbitrary paths are rejected.
     pub fn module(&self, path: &str) -> Result<String, AppError> {
-        let _guard = self
-            .lock
-            .lock()
-            .map_err(|_| AppError::Failed("Plugin storage lock failed".into()))?;
+        let _guard = self.lock.locked();
         let (key, revision) = path
             .trim_start_matches('/')
             .split_once('/')
@@ -338,6 +323,24 @@ impl PluginStore {
             ));
         }
         Ok(installed.package.module)
+    }
+}
+
+impl PluginStore {
+    /// Writes a note of the plugin `id`, only under a notes root the user saved
+    /// for it.
+    pub fn write_note(
+        &self,
+        config: &serde_json::Value,
+        id: &str,
+        dir: &str,
+        file_name: &str,
+        text: &str,
+        append: bool,
+    ) -> Result<PathBuf, AppError> {
+        let field = self.notes_directory_field(id)?;
+        let roots = approved_note_roots(config, id, &field)?;
+        crate::services::notes::write_scoped_note(&roots, dir, file_name, text, append)
     }
 }
 
@@ -387,8 +390,69 @@ pub fn approved_note_roots(
 mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
-    fn manifest() -> PluginManifest {
+    pub(super) fn manifest() -> PluginManifest {
         serde_json::from_value(serde_json::json!({"id":"example", "version":"1.0.0", "apiVersion":2, "capabilities":["editor"], "defaultLocale":"en-US", "locales":{"en-US":{},"ru-RU":{},"es-AR":{},"tr-TR":{}}})).unwrap()
+    }
+    pub(super) fn write_package(file: &Path, module: &str) {
+        let package = PluginPackage {
+            format_version: FORMAT_VERSION,
+            manifest: manifest(),
+            module: module.into(),
+        };
+        fs::write(file, serde_json::to_string(&package).unwrap()).unwrap();
+    }
+    fn write_note(
+        store: &PluginStore,
+        config: &serde_json::Value,
+        id: &str,
+        dir: &str,
+    ) -> Result<PathBuf, AppError> {
+        store.write_note(config, id, dir, "note.md", "text", false)
+    }
+    #[test]
+    fn notes_are_written_only_under_roots_saved_for_a_notes_plugin() {
+        let dir = TestDir::new("tyco-plugin-notes-");
+        let store = PluginStore::new(dir.join("installed"));
+        let root = dir.join("notes");
+        let root_text = root.to_str().unwrap();
+        let mut config = serde_json::json!({"plugins": {"FastNote": {"isEnabled": true, "settings": {"pathToNotes": root_text}}}});
+        let path = write_note(
+            &store,
+            &config,
+            "FastNote",
+            root.join("day").to_str().unwrap(),
+        )
+        .unwrap();
+        assert_eq!(fs::read_to_string(path).unwrap(), "text");
+        assert!(write_note(&store, &config, "FastNote", dir.to_str().unwrap()).is_err());
+        config["plugins"]["FastNote"]["isEnabled"] = false.into();
+        assert!(matches!(
+            write_note(&store, &config, "FastNote", root_text),
+            Err(AppError::PermissionDenied(_))
+        ));
+    }
+    #[test]
+    fn plugins_without_the_notes_capability_cannot_write_notes() {
+        let dir = TestDir::new("tyco-plugin-no-notes-");
+        let file = dir.join("example.tyco-plugin");
+        write_package(&file, "export default () => ({})");
+        let store = PluginStore::new(dir.join("installed"));
+        store
+            .install(&file, &manifest(), &package_digest(&file).unwrap())
+            .unwrap();
+        let root = dir.join("notes");
+        let root_text = root.to_str().unwrap();
+        let config = serde_json::json!({"plugins": {
+            "example": {"isEnabled": true, "settings": {"pathToNotes": root_text}},
+            "TextCase": {"isEnabled": true, "settings": {"pathToNotes": root_text}}
+        }});
+        for id in ["example", "TextCase", "missing", "../escape"] {
+            assert!(
+                write_note(&store, &config, id, root_text).is_err(),
+                "{id} must not write notes"
+            );
+        }
+        assert!(!root.exists());
     }
     #[test]
     fn only_saved_enabled_plugin_and_command_settings_grant_note_roots() {

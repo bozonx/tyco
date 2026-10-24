@@ -17,30 +17,12 @@ impl ForegroundTarget {
     }
 }
 
-#[allow(async_fn_in_trait)]
-pub(crate) trait ForegroundContext {
-    fn capture_foreground_target(&self) -> Option<ForegroundTarget>;
-    async fn capture_selection(&self, target: Option<ForegroundTarget>) -> Option<String>;
-}
-
-struct SystemForegroundContext;
-
-impl ForegroundContext for SystemForegroundContext {
-    fn capture_foreground_target(&self) -> Option<ForegroundTarget> {
-        capture_foreground_target_impl().map(ForegroundTarget::from_platform_id)
-    }
-
-    async fn capture_selection(&self, target: Option<ForegroundTarget>) -> Option<String> {
-        capture_selection_impl(target.map(ForegroundTarget::into_platform_id)).await
-    }
-}
-
 pub fn capture_foreground_target() -> Option<ForegroundTarget> {
-    SystemForegroundContext.capture_foreground_target()
+    capture_foreground_target_impl().map(ForegroundTarget::from_platform_id)
 }
 
 pub async fn capture_selection(target: Option<ForegroundTarget>) -> Option<String> {
-    SystemForegroundContext.capture_selection(target).await
+    capture_selection_impl(target.map(ForegroundTarget::into_platform_id)).await
 }
 
 #[cfg(target_os = "linux")]

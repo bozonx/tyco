@@ -26,6 +26,27 @@ pub trait StoppableService {
     fn wait_until(&self, deadline: Instant) -> bool;
 }
 
+/// Stops every service before waiting for any, so that they wind down
+/// together; runs `meanwhile`, work that shares the deadline; then waits for
+/// the services in reverse order. Returns the services the deadline came
+/// first for.
+pub fn stop_then_wait<'a>(
+    services: &[(&'a str, &dyn StoppableService)],
+    deadline: Instant,
+    meanwhile: impl FnOnce(),
+) -> Vec<&'a str> {
+    for (_, service) in services {
+        service.stop();
+    }
+    meanwhile();
+    services
+        .iter()
+        .rev()
+        .filter(|(_, service)| !service.wait_until(deadline))
+        .map(|(name, _)| *name)
+        .collect()
+}
+
 #[derive(Clone)]
 pub struct StopToken(Arc<StopState>);
 struct StopState {
@@ -181,6 +202,54 @@ impl StoppableService for BackgroundServices {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct Recorded<'a> {
+        name: &'static str,
+        log: &'a Mutex<Vec<String>>,
+        finishes: bool,
+    }
+    impl StoppableService for Recorded<'_> {
+        fn stop(&self) {
+            self.log.locked().push(format!("stop {}", self.name));
+        }
+        fn wait_until(&self, _deadline: Instant) -> bool {
+            self.log.locked().push(format!("wait {}", self.name));
+            self.finishes
+        }
+    }
+
+    #[test]
+    fn every_service_stops_before_any_wait_and_waits_run_in_reverse() {
+        let log = Mutex::new(Vec::new());
+        let service = |name, finishes| Recorded {
+            name,
+            log: &log,
+            finishes,
+        };
+        let (first, second, third) = (
+            service("first", true),
+            service("second", false),
+            service("third", true),
+        );
+        let expired = stop_then_wait(
+            &[("first", &first), ("second", &second), ("third", &third)],
+            Instant::now(),
+            || log.locked().push("meanwhile".into()),
+        );
+        assert_eq!(expired, ["second"]);
+        assert_eq!(
+            *log.locked(),
+            [
+                "stop first",
+                "stop second",
+                "stop third",
+                "meanwhile",
+                "wait third",
+                "wait second",
+                "wait first"
+            ]
+        );
+    }
     #[test]
     fn stop_interrupts_threads_and_rejects_new_work() {
         let services = BackgroundServices::default();

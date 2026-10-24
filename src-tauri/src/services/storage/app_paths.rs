@@ -136,7 +136,7 @@ pub fn dev_paths_from_env(_identifier: &str) -> Result<Option<AppPaths>, AppErro
 #[cfg(any(debug_assertions, test))]
 fn dev_paths(home: &Path, identifier: &str) -> AppPaths {
     #[cfg(target_os = "macos")]
-    return AppPaths {
+    let paths = AppPaths {
         config_dir: home.join("Library/Application Support").join(identifier),
         data_dir: home.join("Library/Application Support").join(identifier),
         state_dir: home.join("Library/Application Support").join(identifier),
@@ -145,7 +145,7 @@ fn dev_paths(home: &Path, identifier: &str) -> AppPaths {
     };
 
     #[cfg(target_os = "windows")]
-    return AppPaths {
+    let paths = AppPaths {
         config_dir: home.join("AppData/Roaming").join(identifier),
         data_dir: home.join("AppData/Roaming").join(identifier),
         state_dir: home.join("AppData/Local").join(identifier),
@@ -153,14 +153,16 @@ fn dev_paths(home: &Path, identifier: &str) -> AppPaths {
         log_dir: home.join("AppData/Local").join(identifier).join("logs"),
     };
 
-    #[allow(unreachable_code)]
-    AppPaths {
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    let paths = AppPaths {
         config_dir: home.join(".config").join(identifier),
         data_dir: home.join(".local/share").join(identifier),
         state_dir: home.join(".local/state").join(identifier),
         cache_dir: home.join(".cache").join(identifier),
         log_dir: home.join(".local/state").join(identifier).join("logs"),
-    }
+    };
+
+    paths
 }
 
 #[cfg(test)]

@@ -1,6 +1,3 @@
-use std::path::PathBuf;
-use std::sync::Mutex;
-
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
@@ -8,8 +5,7 @@ use ts_rs::TS;
 
 use super::run_blocking;
 use crate::errors::AppError;
-use crate::locks::MutexExt;
-use crate::services::plugins::{self, InstalledPlugin, PluginManifest, PluginStore};
+use crate::services::plugins::{InstalledPlugin, PluginInspection, PluginManifest, PluginStore};
 
 // The dialog waits for the user and the store reads packages of up to tens of
 // megabytes, so every command runs on the blocking pool.
@@ -23,18 +19,6 @@ pub struct PluginPackagePreview {
     #[ts(type = "PluginManifest")]
     manifest: PluginManifest,
 }
-
-struct Inspection {
-    id: String,
-    path: PathBuf,
-    digest: String,
-    manifest: PluginManifest,
-}
-
-/// The package picked last; the webview confirms it by its id and never
-/// names a file to install.
-#[derive(Default)]
-pub struct PluginInspection(Mutex<Option<Inspection>>);
 
 /// Lets the user pick a package and reads its manifest without running it.
 #[tauri::command]
@@ -51,19 +35,11 @@ pub async fn pick_plugin_package(app: AppHandle) -> Result<Option<PluginPackageP
         let path = file
             .into_path()
             .map_err(|reason| AppError::InvalidInput(reason.to_string()))?;
-        let (package, digest) = plugins::inspect(&path)?;
-        let id = format!("{digest}-{}", crate::services::clock::now_ns());
-        let preview = PluginPackagePreview {
-            inspection_id: id.clone(),
-            manifest: package.manifest.clone(),
-        };
-        *app.state::<PluginInspection>().0.locked() = Some(Inspection {
-            id,
-            path,
-            digest,
-            manifest: package.manifest,
-        });
-        Ok(Some(preview))
+        let (inspection_id, manifest) = app.state::<PluginInspection>().inspect(path)?;
+        Ok(Some(PluginPackagePreview {
+            inspection_id,
+            manifest,
+        }))
     })
     .await?
 }
@@ -81,17 +57,9 @@ pub async fn install_plugin_package(
     inspection_id: String,
 ) -> Result<InstalledPlugin, AppError> {
     run_blocking(move || {
-        let inspection = app
+        let result = app
             .state::<PluginInspection>()
-            .0
-            .locked()
-            .take_if(|inspection| inspection.id == inspection_id)
-            .ok_or_else(|| AppError::Stale("The plugin package is no longer picked".into()))?;
-        let result = app.state::<PluginStore>().install(
-            &inspection.path,
-            &inspection.manifest,
-            &inspection.digest,
-        )?;
+            .install(&app.state::<PluginStore>(), &inspection_id)?;
         publish_plugins_changed(&app);
         Ok(result)
     })
@@ -136,13 +104,10 @@ pub async fn write_plugin_note(
     append: bool,
 ) -> Result<String, AppError> {
     run_blocking(move || {
-        let field = app
-            .state::<PluginStore>()
-            .notes_directory_field(&plugin_id)?;
         let config = app.state::<crate::state::AppState>().user_config();
-        let roots = plugins::approved_note_roots(&config, &plugin_id, &field)?;
-        let path =
-            crate::services::notes::write_scoped_note(&roots, &dir, &file_name, &text, append)?;
+        let path = app
+            .state::<PluginStore>()
+            .write_note(&config, &plugin_id, &dir, &file_name, &text, append)?;
         Ok(path.to_string_lossy().into_owned())
     })
     .await?

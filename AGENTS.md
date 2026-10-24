@@ -45,6 +45,11 @@ Always use `pnpm`; do not introduce npm or Yarn lockfiles.
   - Strict zero-warning policy on `cargo clippy -- -D warnings`.
   - Code must be formatted via `cargo fmt --check`.
   - Accompany core commands with unit tests in `src-tauri`.
+  - Keep service logic testable without a Tauri runtime: pass it state, paths
+    or a host trait (e.g. `SelectionBackend`, `ActivationHost`) instead of an
+    `AppHandle`. Commands and thin facades such as `history_store` resolve
+    managed state and hand it in; `#[tauri::command]` bodies hold no logic of
+    their own.
   - Keep OS- and session-specific code in `src-tauri/src/services/platform/`; ask
     `platform::session::current()` instead of reading `XDG_SESSION_TYPE` and the
     like. Supported platforms and test setups: `dev_docs/cross-platform.md`.

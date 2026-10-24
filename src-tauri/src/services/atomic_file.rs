@@ -14,6 +14,17 @@ pub const KEPT_COPY_COUNT: usize = 3;
 /// What the name of a broken copy adds to the name of its file.
 const BROKEN_COPY_MARKER: &str = ".broken-";
 
+/// `<pid>-<n>`, a part of a file name no other temporary file of this process
+/// has had; another process has another pid.
+pub(crate) fn unique_file_suffix() -> String {
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    format!(
+        "{}-{}",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    )
+}
+
 /// Writes a temporary file next to `path` and renames it over: a crash in the
 /// middle of the write leaves the previous content intact instead of a torn
 /// file. The file is readable by its owner only, as it may hold user texts or
@@ -35,14 +46,9 @@ fn write_atomic(
     #[cfg_attr(not(unix), allow(unused_variables))] mode: u32,
     permissions: Option<fs::Permissions>,
 ) -> Result<(), AppError> {
-    static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
     let (temporary, mut file) = loop {
         let mut name = path.file_name().unwrap_or_default().to_os_string();
-        name.push(format!(
-            ".tmp-{}-{}",
-            std::process::id(),
-            NEXT_TEMP.fetch_add(1, Ordering::Relaxed)
-        ));
+        name.push(format!(".tmp-{}", unique_file_suffix()));
         let temporary_path = path.with_file_name(name);
         let mut options = fs::OpenOptions::new();
         options.write(true).create_new(true);
@@ -114,14 +120,12 @@ pub fn create_private_dir(path: &Path) -> Result<(), AppError> {
 /// defaults, keeping the original for the user to recover. Returns where it
 /// went.
 pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
-    static NEXT_QUARANTINE: AtomicU64 = AtomicU64::new(0);
     let stamp = crate::services::clock::now_ns();
     let target = loop {
         let mut name = path.file_name().unwrap_or_default().to_os_string();
         name.push(format!(
-            "{BROKEN_COPY_MARKER}{stamp}-{}-{}",
-            std::process::id(),
-            NEXT_QUARANTINE.fetch_add(1, Ordering::Relaxed)
+            "{BROKEN_COPY_MARKER}{stamp}-{}",
+            unique_file_suffix()
         ));
         let target = path.with_file_name(name);
         match fs::OpenOptions::new()

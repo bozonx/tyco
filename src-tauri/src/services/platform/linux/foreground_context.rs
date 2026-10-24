@@ -6,14 +6,6 @@ use crate::services::platform::window_tracker::tracker;
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
 
-#[allow(async_fn_in_trait)]
-pub trait ForegroundContext {
-    type Target: Send + 'static;
-
-    fn capture_foreground_target(&self) -> Option<Self::Target>;
-    async fn capture_selection(&self, target: Option<Self::Target>) -> Option<String>;
-}
-
 #[derive(Clone, Copy, Debug)]
 pub struct SystemForegroundContext {
     display: DisplayServer,
@@ -34,14 +26,10 @@ impl SystemForegroundContext {
         let value = value.trim_end_matches(['\r', '\n']);
         (!value.is_empty()).then(|| value.to_owned())
     }
-}
-
-impl ForegroundContext for SystemForegroundContext {
-    type Target = String;
 
     /// The tracker knows the window focused before a Tyco one; without it
     /// X11 can still tell the focused window.
-    fn capture_foreground_target(&self) -> Option<Self::Target> {
+    pub fn capture_foreground_target(&self) -> Option<String> {
         if tracker().is_running() {
             return tracker().target();
         }
@@ -55,7 +43,7 @@ impl ForegroundContext for SystemForegroundContext {
     /// window. On Wayland, only when it was made in `target`, as far as that
     /// is known, see `primary_selection`. Never the clipboard: a copied text
     /// is not a selection.
-    async fn capture_selection(&self, target: Option<Self::Target>) -> Option<String> {
+    pub async fn capture_selection(&self, target: Option<String>) -> Option<String> {
         match self.display {
             DisplayServer::X11 => Self::command_output("xclip", &["-selection", "primary", "-o"]),
             DisplayServer::Wayland => {

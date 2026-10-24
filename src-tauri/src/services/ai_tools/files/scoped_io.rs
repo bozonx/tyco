@@ -1,7 +1,6 @@
 //! Mutations relative to open directory handles, never re-opened absolute paths.
 use std::ffi::{OsStr, OsString};
 use std::io::{self, Read, Write};
-use std::sync::atomic::{AtomicU64, Ordering};
 
 use cap_std::fs::{Dir, File, OpenOptions};
 
@@ -14,12 +13,10 @@ pub(super) struct TemporaryFile<'a> {
 
 impl<'a> TemporaryFile<'a> {
     fn create(dir: &'a Dir) -> io::Result<(Self, File)> {
-        static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
         loop {
             let name = OsString::from(format!(
-                ".tyco-tmp-{}-{}",
-                std::process::id(),
-                NEXT_TEMP.fetch_add(1, Ordering::Relaxed)
+                ".tyco-tmp-{}",
+                crate::services::atomic_file::unique_file_suffix()
             ));
             match dir.open_with(&name, OpenOptions::new().write(true).create_new(true)) {
                 Ok(file) => return Ok((Self { dir, name }, file)),

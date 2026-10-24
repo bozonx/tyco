@@ -18,7 +18,7 @@ pub mod x11;
 use serde_json::Value;
 
 use crate::errors::AppError;
-use foreground_context::{ForegroundContext, SystemForegroundContext};
+use foreground_context::SystemForegroundContext;
 
 pub fn capture_foreground_target() -> Option<String> {
     SystemForegroundContext::detect().capture_foreground_target()

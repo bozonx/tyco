@@ -654,3 +654,241 @@ fn a_permission_denied_rename_does_not_fall_back_to_copying() {
     );
     assert!(!directory.join("workspace/moved.txt").exists());
 }
+
+fn read_content(files: &ProfileFiles, path: &str) -> String {
+    match run(
+        files,
+        serde_json::json!({"operation": "readFile", "path": path}),
+    )
+    .unwrap()
+    {
+        AiFileToolOutput::ReadFile { content, .. } => content,
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn text_is_read_without_a_bom_and_with_invalid_bytes_replaced() {
+    let (dir, files) = fixture("ai_files_text");
+    fs::write(dir.join("workspace/bom.txt"), "\u{feff}hello\n").unwrap();
+    fs::write(
+        dir.join("workspace/latin1.txt"),
+        [b'c', b'a', b'f', 0xe9, b'\n'],
+    )
+    .unwrap();
+    fs::write(dir.join("workspace/empty.txt"), "").unwrap();
+    fs::write(dir.join("workspace/letter.DOCX"), "PK").unwrap();
+
+    assert_eq!(read_content(&files, "workspace/bom.txt"), "hello\n");
+    assert_eq!(
+        read_content(&files, "workspace/latin1.txt"),
+        "caf\u{fffd}\n"
+    );
+    assert_eq!(
+        run(
+            &files,
+            serde_json::json!({"operation": "readFile", "path": "workspace/empty.txt"})
+        )
+        .unwrap(),
+        AiFileToolOutput::ReadFile {
+            path: "workspace/empty.txt".into(),
+            content: String::new(),
+            start_line: 0,
+            end_line: 0,
+            total_lines: 0,
+            next_offset: None,
+        }
+    );
+    assert!(matches!(
+        run(
+            &files,
+            serde_json::json!({"operation": "readFile", "path": "workspace/letter.DOCX"})
+        )
+        .unwrap(),
+        AiFileToolOutput::ReadDocument { media_type, .. } if media_type.ends_with("wordprocessingml.document")
+    ));
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "readFile", "path": "workspace"}),
+    ));
+    assert!(error.contains("folder"), "{error}");
+    assert!(files.read_bytes("workspace").is_err());
+}
+
+#[test]
+fn pages_of_lines_handle_the_ends_of_a_file() {
+    let page = page_lines("a\nb", 2, 10, usize::MAX).unwrap();
+    assert_eq!(
+        (page.content.as_str(), page.start_line, page.end_line),
+        ("b", 2, 2)
+    );
+    assert_eq!(page.next_offset, None);
+    // offset 0 and limit 0 are read as the first line and one line
+    let page = page_lines("a\nb\n", 0, 0, usize::MAX).unwrap();
+    assert_eq!((page.content.as_str(), page.next_offset), ("a\n", Some(2)));
+    // characters are counted, not bytes
+    let page = page_lines("äö\nü\n", 1, 10, 3).unwrap();
+    assert_eq!(page.content, "äö\n");
+    assert!(page_lines("a\n", 2, 10, usize::MAX).is_err());
+}
+
+#[test]
+fn listings_are_filtered_by_pattern_and_bounded() {
+    use crate::services::ai_tools::file_search::{MAX_LIST_DEPTH, MAX_LIST_ENTRIES};
+    let (dir, files) = fixture("ai_files_list_bounds");
+    let mut deep = dir.join("workspace");
+    for level in 0..=MAX_LIST_DEPTH {
+        deep.push(format!("d{level}"));
+    }
+    fs::create_dir_all(&deep).unwrap();
+    fs::write(dir.join("workspace/a.md"), "").unwrap();
+    fs::write(dir.join("workspace/b.txt"), "").unwrap();
+    let list = |request: serde_json::Value| match run(&files, request).unwrap() {
+        AiFileToolOutput::ListDir {
+            entries,
+            is_truncated,
+            ..
+        } => (
+            entries.into_iter().map(|e| e.path).collect::<Vec<_>>(),
+            is_truncated,
+        ),
+        other => panic!("{other:?}"),
+    };
+
+    let (paths, _) = list(serde_json::json!({
+        "operation": "listDir", "path": "workspace", "pattern": "*.md"
+    }));
+    assert_eq!(paths, ["workspace/a.md"]);
+    // a deeper listing than allowed stops at the limit
+    let (paths, _) = list(serde_json::json!({
+        "operation": "listDir", "path": "workspace", "depth": 100
+    }));
+    let deepest = paths.iter().map(|path| path.matches('/').count()).max();
+    assert_eq!(deepest, Some(MAX_LIST_DEPTH + 1));
+
+    for index in 0..MAX_LIST_ENTRIES {
+        fs::write(dir.join(format!("workspace/f{index:04}.txt")), "").unwrap();
+    }
+    let (paths, is_truncated) = list(serde_json::json!({
+        "operation": "listDir", "path": "workspace"
+    }));
+    assert_eq!(paths.len(), MAX_LIST_ENTRIES);
+    assert!(is_truncated);
+
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "listDir", "path": "workspace", "pattern": "[unclosed"}),
+    ));
+    assert!(error.contains("Invalid pattern"), "{error}");
+}
+
+#[test]
+fn searches_skip_binary_files_cut_long_lines_and_stop_at_the_limit() {
+    use crate::services::ai_tools::file_search::MAX_SEARCH_MATCHES;
+    let (dir, files) = fixture("ai_files_search_bounds");
+    fs::write(dir.join("workspace/blob.bin"), b"needle\0needle").unwrap();
+    fs::write(
+        dir.join("workspace/long.txt"),
+        format!("needle{}\n", "x".repeat(1000)),
+    )
+    .unwrap();
+    let search = |request: serde_json::Value| match run(&files, request).unwrap() {
+        AiFileToolOutput::SearchFiles {
+            matches,
+            is_truncated,
+        } => (matches, is_truncated),
+        other => panic!("{other:?}"),
+    };
+
+    let (matches, is_truncated) = search(serde_json::json!({
+        "operation": "searchFiles", "path": "workspace", "query": "needle"
+    }));
+    assert!(!is_truncated);
+    assert_eq!(matches.len(), 1);
+    assert_eq!(matches[0].path, "workspace/long.txt");
+    assert_eq!(matches[0].text.as_ref().unwrap().chars().count(), 300);
+
+    // a name search lists files without lines, in every readable root
+    let (matches, _) = search(serde_json::json!({
+        "operation": "searchFiles", "namePattern": "*.md"
+    }));
+    assert_eq!(
+        matches,
+        vec![SearchMatch {
+            path: "projects/docs/readme.md".into(),
+            line: None,
+            text: None,
+        }]
+    );
+
+    fs::write(
+        dir.join("workspace/many.txt"),
+        "needle\n".repeat(MAX_SEARCH_MATCHES + 10),
+    )
+    .unwrap();
+    let (matches, is_truncated) = search(serde_json::json!({
+        "operation": "searchFiles", "path": "workspace", "query": "needle"
+    }));
+    assert_eq!(matches.len(), MAX_SEARCH_MATCHES);
+    assert!(is_truncated);
+
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "searchFiles", "query": "(", "isRegex": true}),
+    ));
+    assert!(error.contains("Invalid query"), "{error}");
+    // a plain query is not a regular expression
+    let (matches, _) = search(serde_json::json!({
+        "operation": "searchFiles", "path": "workspace", "query": "("
+    }));
+    assert!(matches.is_empty());
+}
+
+#[test]
+fn writes_report_overwrites_and_refuse_folders_and_binary_edits() {
+    let (dir, files) = fixture("ai_files_overwrite");
+    fs::write(dir.join("workspace/note.md"), "old").unwrap();
+    fs::create_dir(dir.join("workspace/folder")).unwrap();
+    fs::write(dir.join("workspace/blob.bin"), [b'a', 0, b'b']).unwrap();
+
+    assert_eq!(
+        run(
+            &files,
+            serde_json::json!({"operation": "writeFile", "path": "workspace/note.md", "content": "new"})
+        )
+        .unwrap(),
+        AiFileToolOutput::WriteFile {
+            path: "workspace/note.md".into(),
+            is_created: false,
+            bytes: 3,
+        }
+    );
+    assert_eq!(
+        fs::read_to_string(dir.join("workspace/note.md")).unwrap(),
+        "new"
+    );
+
+    for path in ["workspace", "workspace/folder"] {
+        let error = message(run(
+            &files,
+            serde_json::json!({"operation": "writeFile", "path": path, "content": "x"}),
+        ));
+        assert!(error.contains("folder"), "{path}: {error}");
+    }
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "editFile", "path": "workspace/blob.bin", "oldText": "a", "newText": "c"}),
+    ));
+    assert!(error.contains("binary"), "{error}");
+    let error = message(run(
+        &files,
+        serde_json::json!({"operation": "movePath", "from": "workspace", "to": "projects/site/workspace"}),
+    ));
+    assert!(error.contains("root"), "{error}");
+    assert!(files
+        .preview(AiFileToolRequest::MovePath {
+            from: "workspace/note.md".into(),
+            to: "workspace/moved.md".into(),
+        })
+        .is_err());
+}

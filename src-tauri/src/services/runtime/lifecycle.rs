@@ -108,23 +108,20 @@ pub fn shutdown(app: &AppHandle) {
     .into_iter()
     .flatten()
     .collect();
-    for (_, service) in &stoppable {
-        service.stop();
-    }
-    if let Some(voice) = app.try_state::<crate::services::voice::session::VoiceSessionState>() {
-        crate::services::voice::stop_capture_on_shutdown(&voice, deadline);
-    }
-    let remaining = deadline.saturating_duration_since(std::time::Instant::now());
-    let portal = tauri::async_runtime::block_on(async {
-        tokio::time::timeout(remaining, crate::services::platform::hotkeys::shutdown(app)).await
-    });
-    if portal.is_err() {
-        log::warn!("Hotkey portal shutdown deadline expired");
-    }
-    for (name, service) in stoppable.iter().rev() {
-        if !service.wait_until(deadline) {
-            log::warn!("{name} shutdown deadline expired");
+    let expired = crate::services::background::stop_then_wait(&stoppable, deadline, || {
+        if let Some(voice) = app.try_state::<crate::services::voice::session::VoiceSessionState>() {
+            crate::services::voice::stop_capture_on_shutdown(&voice, deadline);
         }
+        let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+        let portal = tauri::async_runtime::block_on(async {
+            tokio::time::timeout(remaining, crate::services::platform::hotkeys::shutdown(app)).await
+        });
+        if portal.is_err() {
+            log::warn!("Hotkey portal shutdown deadline expired");
+        }
+    });
+    for name in expired {
+        log::warn!("{name} shutdown deadline expired");
     }
     log::info!("Application service shutdown finished");
 }

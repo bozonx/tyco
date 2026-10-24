@@ -53,8 +53,6 @@ pub(super) fn checked_secret<'a>(
     Ok((value, dedup(origins)))
 }
 
-/// Writes the value and reads it back: the copy in the file is dropped only
-/// once the vault is known to hold it.
 /// The app identifier, and for a development home a suffix of its own: the
 /// system store is one per user, and a test setup must not read or delete
 /// the real keys.
@@ -137,4 +135,117 @@ fn dedup(origins: Vec<String>) -> Vec<String> {
         }
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn origins_keep_only_scheme_host_and_explicit_port() {
+        let origin = |url: &str| origin_of(&Url::parse(url).unwrap());
+        assert_eq!(
+            origin("https://user:pass@API.Example.com/v1?key=1#x").as_deref(),
+            Some("https://api.example.com")
+        );
+        assert_eq!(
+            origin("http://localhost:11434/api").as_deref(),
+            Some("http://localhost:11434")
+        );
+        // the default port is not part of the origin
+        assert_eq!(
+            origin("https://api.example.com:443/").as_deref(),
+            Some("https://api.example.com")
+        );
+        assert_eq!(
+            origin("ws://127.0.0.1:8080").as_deref(),
+            Some("http://127.0.0.1:8080")
+        );
+        assert_eq!(origin("ftp://example.com"), None);
+        assert_eq!(origin("data:text/plain,secret"), None);
+    }
+
+    #[test]
+    fn invalid_origins_are_rejected() {
+        assert!(normalize_origin("not a url").is_err());
+        assert!(normalize_origin("").is_err());
+        assert!(normalize_origin("javascript:alert(1)").is_err());
+        assert_eq!(
+            normalize_origin("  https://api.example.com/path  ").unwrap(),
+            "https://api.example.com"
+        );
+    }
+
+    #[test]
+    fn ids_are_lowercase_names_starting_with_a_letter_or_digit() {
+        for id in ["llm.openai", "a", "custom_1-x", &"a".repeat(MAX_ID_LEN)] {
+            assert!(is_valid_id(id), "{id} is valid");
+        }
+        for id in [
+            "",
+            ".hidden",
+            "-dash",
+            "Upper",
+            "with space",
+            "../escape",
+            "tyco-secret:x",
+            &"a".repeat(MAX_ID_LEN + 1),
+        ] {
+            assert!(!is_valid_id(id), "{id} is invalid");
+        }
+    }
+
+    #[test]
+    fn checked_secrets_are_trimmed_and_bound_to_deduplicated_origins() {
+        let (value, origins) = checked_secret(
+            "custom",
+            "  key  ",
+            Some(vec![
+                "https://api.example.com/v1".into(),
+                "wss://api.example.com/live".into(),
+                "https://other.example.com".into(),
+            ]),
+        )
+        .unwrap();
+        assert_eq!(value, "key");
+        assert_eq!(
+            origins,
+            ["https://api.example.com", "https://other.example.com"]
+        );
+    }
+
+    #[test]
+    fn named_origins_override_the_builtin_ones() {
+        let (_, origins) = checked_secret(
+            "llm.openai",
+            "key",
+            Some(vec!["http://localhost:1234".into()]),
+        )
+        .unwrap();
+        assert_eq!(origins, ["http://localhost:1234"]);
+        let (_, origins) = checked_secret("llm.openai", "key", Some(Vec::new())).unwrap();
+        assert_eq!(origins, ["https://api.openai.com"]);
+    }
+
+    #[test]
+    fn checked_secret_rejects_blank_values_bad_ids_and_bad_origins() {
+        assert!(checked_secret("llm.openai", " \n\t ", None).is_err());
+        assert!(checked_secret("Bad Id", "key", None).is_err());
+        assert!(checked_secret("custom", "key", None).is_err());
+        assert!(checked_secret("custom", "key", Some(vec!["file:///etc".into()])).is_err());
+    }
+
+    #[test]
+    fn development_homes_get_their_own_vault_namespace() {
+        let real = vault_namespace("com.tyco.app", None);
+        let first = vault_namespace("com.tyco.app", Some(std::path::Path::new("/dev/one")));
+        let second = vault_namespace("com.tyco.app", Some(std::path::Path::new("/dev/two")));
+        assert_eq!(real, "com.tyco.app");
+        assert!(first.starts_with("com.tyco.app.dev-"));
+        assert_ne!(first, second);
+        assert_eq!(
+            first,
+            vault_namespace("com.tyco.app", Some(std::path::Path::new("/dev/one")))
+        );
+    }
 }

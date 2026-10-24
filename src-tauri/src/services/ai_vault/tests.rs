@@ -377,3 +377,77 @@ fn deleting_a_project_removes_the_permissions_for_it() {
         .project_permissions
         .is_empty());
 }
+
+#[test]
+fn profile_folders_exist_only_for_existing_profiles_with_valid_ids() {
+    let test_dir = TestDir::new("ai_vault_profile_dirs");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+
+    let chats = profile_chats_dir(&vault_root, "writer").unwrap();
+    let workspace = profile_workspace_dir(&vault_root, "writer").unwrap();
+    assert!(chats.is_dir() && chats.starts_with(vault_root.join("profiles/writer")));
+    assert!(workspace.is_dir() && workspace.starts_with(vault_root.join("profiles/writer")));
+
+    for result in [
+        profile_chats_dir(&vault_root, "missing"),
+        profile_workspace_dir(&vault_root, "missing"),
+    ] {
+        assert!(matches!(result, Err(AppError::NotFound(_))));
+    }
+    assert!(!vault_root.join("profiles/missing").exists());
+    assert!(matches!(
+        write_profile_soul(&vault_root, "missing", "soul"),
+        Err(AppError::NotFound(_))
+    ));
+    for id in ["../escape", "a/b", ".", ""] {
+        assert!(get_profile(&vault_root, id).is_err(), "{id}");
+        assert!(profile_chats_dir(&vault_root, id).is_err(), "{id}");
+        assert!(delete_project(&vault_root, id).is_err(), "{id}");
+    }
+}
+
+#[test]
+fn project_files_are_in_the_vault_or_the_linked_folder() {
+    let test_dir = TestDir::new("ai_vault_project_files");
+    let vault_root = test_dir.join("vault");
+    assert_eq!(
+        project_files_dir(&vault_root, &project("docs", 1)).unwrap(),
+        vault_root.join("projects/docs")
+    );
+
+    let mut external = project("site", 1);
+    external.is_external = true;
+    external.target_path = Some(format!("  {}  ", test_dir.display()));
+    assert_eq!(
+        project_files_dir(&vault_root, &external).unwrap(),
+        test_dir.to_path_buf()
+    );
+    external.target_path = Some("   ".into());
+    assert!(project_files_dir(&vault_root, &external).is_err());
+    external.target_path = None;
+    assert!(project_files_dir(&vault_root, &external).is_err());
+}
+
+#[test]
+fn projects_need_a_name_and_an_absolute_existing_external_folder() {
+    let test_dir = TestDir::new("ai_vault_project_validation");
+    let vault_root = test_dir.join("vault");
+    let mut blank = project("blank", 1);
+    blank.name = "  ".into();
+    assert!(create_project(&vault_root, blank).is_err());
+
+    let file = test_dir.join("file.txt");
+    std::fs::write(&file, "").unwrap();
+    for target in [
+        None,
+        Some("relative".to_string()),
+        Some(file.display().to_string()),
+    ] {
+        let mut external = project("external", 1);
+        external.is_external = true;
+        external.target_path = target.clone();
+        assert!(create_project(&vault_root, external).is_err(), "{target:?}");
+    }
+    assert!(list_projects(&vault_root).unwrap().is_empty());
+}

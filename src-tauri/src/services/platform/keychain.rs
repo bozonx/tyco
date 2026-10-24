@@ -95,10 +95,8 @@ fn describe(error: Error) -> String {
 mod tests {
     use super::*;
 
-    /// Talks to the real store of the session, so it runs only on request:
-    /// `cargo test keychain -- --ignored`.
     #[test]
-    #[ignore]
+    #[ignore = "Talks to the real system store; run with `cargo test keychain -- --ignored`"]
     fn round_trips_through_the_system_store() {
         let vault = SystemKeychain::new("com.tyco.app.test");
         vault.delete("round-trip").unwrap();
