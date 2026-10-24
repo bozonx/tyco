@@ -828,7 +828,7 @@
     "temperature": "溫度",
     "voiceTextCorrection": "語音文字校對",
     "textCorrection": "文字校對",
-    "correctionPageHint": "使用 AI 修正文字中的錯誤。校對所選文字的快捷鍵在該頁面進行設定",
+    "correctionPageHint": "用於文字校對的模型與提示詞設定。同時適用於原地快速校對與帶預覽的校對。",
     "correctionPrompt": "提示詞",
     "correctionPromptInfo": "加入內建的校對指示中。",
     "textInjection": {
@@ -938,7 +938,10 @@
     "pluginStatusOff": "關閉",
     "developmentFeatures": "開發中的功能",
     "aiCategory": "AI",
-    "sttLlmRulesInfo": "用於處理辨識語音的 AI 模型附加指示。例如可以指定：去除贅字、添加標點、設定清單格式或維持特定風格。"
+    "sttLlmRulesInfo": "用於處理辨識語音的 AI 模型附加指示。例如可以指定：去除贅字、添加標點、設定清單格式或維持特定風格。",
+    "correctionHotkeysHint": "用於從任何應用程式執行文字校對的通用快速鍵。所有快速鍵在該頁面進行設定",
+    "correctionPreviewHint": "在插入之前開啟顯示變更差異的 Tyco 視窗。",
+    "correctionPromptPlaceholder": "例如：保持原有的語氣，修正錯字和標點"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

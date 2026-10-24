@@ -834,7 +834,7 @@
     "temperature": "Temperatură",
     "voiceTextCorrection": "Corectarea textului dictat",
     "textCorrection": "Corectarea textului",
-    "correctionPageHint": "Corectează greșelile din text cu AI. Comanda rapidă pentru corectarea textului selectat se configurează pe pagina",
+    "correctionPageHint": "Setările modelului și instrucțiunilor pentru corectarea textului. Utilizat atât pentru corectarea rapidă pe loc, cât și pentru corectarea cu previzualizare.",
     "correctionPrompt": "Prompt",
     "correctionPromptInfo": "Se adaugă la instrucțiunile de corectare integrate.",
     "textInjection": {
@@ -944,7 +944,10 @@
     "pluginStatusOff": "Dezactivat",
     "developmentFeatures": "Funcții în dezvoltare",
     "aiCategory": "IA",
-    "sttLlmRulesInfo": "Instrucțiuni suplimentare pentru modelul IA privind procesarea vorbirii recunoscute. Puteți specifica de exemplu: eliminarea cuvintelor de umplutură, punctuația, formatarea listelor sau menținerea unui anumit stil."
+    "sttLlmRulesInfo": "Instrucțiuni suplimentare pentru modelul IA privind procesarea vorbirii recunoscute. Puteți specifica de exemplu: eliminarea cuvintelor de umplutură, punctuația, formatarea listelor sau menținerea unui anumit stil.",
+    "correctionHotkeysHint": "Comenzi rapide globale pentru lansarea corectării textului din orice aplicație. Toate comenzile rapide se configurează pe pagina",
+    "correctionPreviewHint": "Deschide fereastra Tyco cu o vizualizare a modificărilor înainte de inserare.",
+    "correctionPromptPlaceholder": "de ex. păstrează tonul original, corectează greșelile de tipar și punctuația"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

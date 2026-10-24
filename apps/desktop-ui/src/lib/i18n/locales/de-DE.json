@@ -834,7 +834,7 @@
     "temperature": "Temperatur",
     "voiceTextCorrection": "Korrektur von Sprachtext",
     "textCorrection": "Textkorrektur",
-    "correctionPageHint": "Korrigiert Fehler im Text mit KI. Das Tastenkürzel für die Korrektur von markiertem Text wird auf der folgenden Seite eingerichtet:",
+    "correctionPageHint": "Modell- und Prompt-Einstellungen für die Textkorrektur. Gilt sowohl für die direkte Schnellkorrektur als auch für die Korrektur mit Vorschau.",
     "correctionPrompt": "Prompt",
     "correctionPromptInfo": "Wird den integrierten Korrekturanweisungen hinzugefügt.",
     "textInjection": {
@@ -944,7 +944,10 @@
     "pluginStatusOff": "Aus",
     "developmentFeatures": "Funktionen in Entwicklung",
     "aiCategory": "KI",
-    "sttLlmRulesInfo": "Zusätzliche Anweisungen für das KI-Modell zur Verarbeitung der erkannten Sprache. Du kannst z. B. angeben: Füllwörter entfernen, Zeichensetzung ergänzen, Listen formatieren oder einen bestimmten Stil einhalten."
+    "sttLlmRulesInfo": "Zusätzliche Anweisungen für das KI-Modell zur Verarbeitung der erkannten Sprache. Du kannst z. B. angeben: Füllwörter entfernen, Zeichensetzung ergänzen, Listen formatieren oder einen bestimmten Stil einhalten.",
+    "correctionHotkeysHint": "Globale Tastenkürzel zum Starten der Textkorrektur aus jeder Anwendung. Alle Tastenkürzel werden eingerichtet auf der Seite",
+    "correctionPreviewHint": "Öffnet das Tyco-Fenster mit einem Diff der Änderungen vor dem Einfügen.",
+    "correctionPromptPlaceholder": "z. B. Tonfall beibehalten, Tippfehler und Zeichensetzung korrigieren"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

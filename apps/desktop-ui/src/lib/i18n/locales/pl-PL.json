@@ -834,7 +834,7 @@
     "temperature": "Temperatura",
     "voiceTextCorrection": "Korekta tekstu z dyktowania",
     "textCorrection": "Korekta tekstu",
-    "correctionPageHint": "Poprawia błędy w tekście za pomocą AI. Skrót do korekty zaznaczonego tekstu konfiguruje się na stronie",
+    "correctionPageHint": "Ustawienia modelu i instrukcji do korekty tekstu. Używane zarówno do szybkiej korekty w miejscu, jak i korekty z podglądem.",
     "correctionPrompt": "Prompt",
     "correctionPromptInfo": "Dodawany do wbudowanych instrukcji korekty.",
     "textInjection": {
@@ -944,7 +944,10 @@
     "pluginStatusOff": "Wyłączona",
     "developmentFeatures": "Funkcje w fazie rozwoju",
     "aiCategory": "AI",
-    "sttLlmRulesInfo": "Dodatkowe instrukcje dla modelu AI dotyczące przetwarzania rozpoznanej mowy. Możesz na przykład określić: usuwanie wtrąceń, interpunkcję, formatowanie list lub zachowanie określonego stylu."
+    "sttLlmRulesInfo": "Dodatkowe instrukcje dla modelu AI dotyczące przetwarzania rozpoznanej mowy. Możesz na przykład określić: usuwanie wtrąceń, interpunkcję, formatowanie list lub zachowanie określonego stylu.",
+    "correctionHotkeysHint": "Globalne skróty klawiszowe do uruchamiania korekty tekstu z dowolnej aplikacji. Wszystkie skróty konfiguruje się na stronie",
+    "correctionPreviewHint": "Otwiera okno Tyco z podglądem różnic przed wstawieniem.",
+    "correctionPromptPlaceholder": "np. zachowaj oryginalny ton, popraw literówki i interpunkcję"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

@@ -16,9 +16,7 @@ const state = reactive({
 
 vi.mock('../../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () => mockDesktopStore(() => state),
-  }
+  return { useDesktopStore: () => mockDesktopStore(() => state) }
 })
 
 describe('EditorRail.vue', () => {
@@ -40,7 +38,9 @@ describe('EditorRail.vue', () => {
         },
       },
     })
-    expect(wrapper.find('button[data-icon="mdi:auto-fix"]').exists()).toBe(false)
+    expect(wrapper.find('button[data-icon="mdi:auto-fix"]').exists()).toBe(
+      false
+    )
   })
 
   it('shows correction button when in development mode', () => {

@@ -831,7 +831,7 @@
     "temperature": "Sıcaklık",
     "voiceTextCorrection": "Tanınan metni düzeltme",
     "textCorrection": "Metin düzeltme",
-    "correctionPageHint": "Metindeki hataları yapay zekâ ile düzeltir. Seçili metni düzeltme kısayolu şu sayfada yapılandırılır:",
+    "correctionPageHint": "Metin düzeltme için model ve talimat ayarları. Hem yerinde hızlı düzeltme hem de önizlemeli düzeltme için kullanılır.",
     "correctionPrompt": "İstem",
     "correctionPromptInfo": "Yerleşik düzeltme talimatlarına eklenir.",
     "textInjection": {
@@ -941,7 +941,10 @@
     "pluginStatusOff": "Kapalı",
     "developmentFeatures": "Geliştirme aşamasındaki özellikler",
     "aiCategory": "Yapay Zekâ",
-    "sttLlmRulesInfo": "Tanınan konuşmanın işlenmesi için yapay zekâ modeline ek talimatlar. Örneğin dolgu sözcükleri kaldırma, noktalama işaretlerini koyma, listeleri biçimlendirme veya belirli bir üslubu koruma gibi kurallar belirtebilirsiniz."
+    "sttLlmRulesInfo": "Tanınan konuşmanın işlenmesi için yapay zekâ modeline ek talimatlar. Örneğin dolgu sözcükleri kaldırma, noktalama işaretlerini koyma, listeleri biçimlendirme veya belirli bir üslubu koruma gibi kurallar belirtebilirsiniz.",
+    "correctionHotkeysHint": "Herhangi bir uygulamadan metin düzeltmeyi çalıştırmak için genel kısayollar. Tüm kısayollar şu sayfada yapılandırılır:",
+    "correctionPreviewHint": "Eklemenden önce değişikliklerin farkını gösteren Tyco penceresini açar.",
+    "correctionPromptPlaceholder": "ör. orijinal üslubu koru, yazım ve noktalama hatalarını düzelt"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

@@ -834,7 +834,7 @@
     "temperature": "Temperatura",
     "voiceTextCorrection": "Corrección del texto dictado",
     "textCorrection": "Corrección de texto",
-    "correctionPageHint": "Corrige errores en el texto con IA. El atajo para corregir el texto seleccionado se configura en la página",
+    "correctionPageHint": "Configuración del modelo e instrucciones para la corrección de texto. Se utiliza tanto para la corrección rápida en el lugar como para la corrección con vista previa.",
     "correctionPrompt": "Prompt",
     "correctionPromptInfo": "Se añade a las instrucciones de corrección integradas.",
     "textInjection": {
@@ -944,7 +944,10 @@
     "pluginStatusOff": "Desactivado",
     "developmentFeatures": "Funciones en desarrollo",
     "aiCategory": "IA",
-    "sttLlmRulesInfo": "Instrucciones adicionales para el modelo de IA sobre el procesamiento del habla reconocida. Podés indicar, por ejemplo: eliminar muletillas, puntuar, formatear listas o mantener un estilo específico."
+    "sttLlmRulesInfo": "Instrucciones adicionales para el modelo de IA sobre el procesamiento del habla reconocida. Podés indicar, por ejemplo: eliminar muletillas, puntuar, formatear listas o mantener un estilo específico.",
+    "correctionHotkeysHint": "Atajos globales para ejecutar la corrección de texto desde cualquier aplicación. Todos los atajos se configuran en la página",
+    "correctionPreviewHint": "Abre la ventana de Tyco con una vista previa de cambios antes de insertar.",
+    "correctionPromptPlaceholder": "ej. conserva el tono original, corrige erratas y puntuación"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

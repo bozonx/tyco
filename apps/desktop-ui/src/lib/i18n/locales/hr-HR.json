@@ -834,7 +834,7 @@
     "temperature": "Temperatura",
     "voiceTextCorrection": "Ispravak izdiktiranog teksta",
     "textCorrection": "Ispravak teksta",
-    "correctionPageHint": "Ispravlja pogreške u tekstu pomoću AI-ja. Prečac za ispravak odabranog teksta postavlja se na stranici",
+    "correctionPageHint": "Postavke modela i uputa za ispravak teksta. Koristi se i za brzi ispravak na mjestu i za ispravak s pregledom.",
     "correctionPrompt": "Prompt",
     "correctionPromptInfo": "Dodaje se ugrađenim uputama za ispravak.",
     "textInjection": {
@@ -944,7 +944,10 @@
     "pluginStatusOff": "Isključen",
     "developmentFeatures": "Značajke u razvoju",
     "aiCategory": "AI",
-    "sttLlmRulesInfo": "Dodatne upute za AI model o obradi prepoznatog govora. Možete navesti npr.: uklanjanje poštapalica, interpunkciju, oblikovanje popisa ili određeni stil."
+    "sttLlmRulesInfo": "Dodatne upute za AI model o obradi prepoznatog govora. Možete navesti npr.: uklanjanje poštapalica, interpunkciju, oblikovanje popisa ili određeni stil.",
+    "correctionHotkeysHint": "Globalni prečaci za pokretanje ispravka teksta iz bilo koje aplikacije. Svi se prečaci konfiguriraju na stranici",
+    "correctionPreviewHint": "Otvara Tyco prozor s prikazom izmjena prije umetanja.",
+    "correctionPromptPlaceholder": "npr. zadrži izvorni ton, ispravi tipfelere i interpunkciju"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

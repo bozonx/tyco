@@ -828,7 +828,7 @@
     "temperature": "Teplota",
     "voiceTextCorrection": "Oprava nadiktovaného textu",
     "textCorrection": "Oprava textu",
-    "correctionPageHint": "Opravuje chyby v textu pomocí AI. Klávesová zkratka pro opravu vybraného textu se nastavuje na stránce",
+    "correctionPageHint": "Nastavení modelu a instrukcí pro opravu textu. Používá se jak pro rychlou opravu na místě, tak pro opravu s náhledem.",
     "correctionPrompt": "Prompt",
     "correctionPromptInfo": "Přidává se k vestavěným instrukcím korekce.",
     "textInjection": {
@@ -938,7 +938,10 @@
     "pluginStatusOff": "Vypnuto",
     "developmentFeatures": "Funkce ve vývoji",
     "aiCategory": "AI",
-    "sttLlmRulesInfo": "Dodatečné pokyny pro model AI ke zpracování rozpoznané řeči. Můžete například uvést: odstranit vycpávková slova, doplnit interpunkci, formátovat seznamy nebo dodržovat určitý styl."
+    "sttLlmRulesInfo": "Dodatečné pokyny pro model AI ke zpracování rozpoznané řeči. Můžete například uvést: odstranit vycpávková slova, doplnit interpunkci, formátovat seznamy nebo dodržovat určitý styl.",
+    "correctionHotkeysHint": "Globální klávesové zkratky pro spuštění opravy textu z jakékoli aplikace. Všechny zkratky se konfigurují na stránce",
+    "correctionPreviewHint": "Otevře okno Tyco se zobrazením změn před vložením.",
+    "correctionPromptPlaceholder": "např. zachovej původní tón, oprav překlepy a interpunkci"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

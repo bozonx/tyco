@@ -8,6 +8,7 @@ import {
   type CoreToolId,
   type MainActionConfig,
   type ShortcutSlots,
+  type StandardActionId,
 } from '@tyco/shared'
 
 import {

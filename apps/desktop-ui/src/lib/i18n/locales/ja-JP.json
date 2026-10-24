@@ -831,7 +831,7 @@
     "temperature": "温度 (Temperature)",
     "voiceTextCorrection": "音声テキストの校正",
     "textCorrection": "テキスト校正",
-    "correctionPageHint": "AI でテキストの誤りを修正します。選択テキストを校正するショートカットは次のページで設定します:",
+    "correctionPageHint": "テキスト校正用のモデルと指示の設定です。その場でのクイック校正とプレビュー付き校正の両方に適用されます。",
     "correctionPrompt": "プロンプト",
     "correctionPromptInfo": "組み込みの校正指示に追加されます。",
     "textInjection": {
@@ -941,7 +941,10 @@
     "pluginStatusOff": "無効",
     "developmentFeatures": "開発中の機能",
     "aiCategory": "AI",
-    "sttLlmRulesInfo": "認識された音声の処理に関するAIモデルへの追加指示。例えば、つなぎ言葉の削除、句読点の付与、箇条書きの整形、特定のスタイルの維持などを指定できます。"
+    "sttLlmRulesInfo": "認識された音声の処理に関するAIモデルへの追加指示。例えば、つなぎ言葉の削除、句読点の付与、箇条書きの整形、特定のスタイルの維持などを指定できます。",
+    "correctionHotkeysHint": "任意のアプリからテキスト校正を実行するグローバルショートカットです。すべてのショートカットは次のページで設定します:",
+    "correctionPreviewHint": "挿入前に変更箇所の差分を表示する Tyco ウィンドウを開きます。",
+    "correctionPromptPlaceholder": "例: 元のトーンを維持し、誤字や句読点を修正する"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

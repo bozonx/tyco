@@ -828,7 +828,7 @@
     "temperature": "温度 (Temperature)",
     "voiceTextCorrection": "语音文本纠错",
     "textCorrection": "文本纠错",
-    "correctionPageHint": "使用 AI 纠正文本中的错误。纠正所选文本的快捷键在此页面上配置",
+    "correctionPageHint": "用于文本纠错的模型和提示词设置。同时适用于原位快速纠错和带预览的纠错。",
     "correctionPrompt": "提示词",
     "correctionPromptInfo": "添加到内置的纠错指令中。",
     "textInjection": {
@@ -938,7 +938,10 @@
     "pluginStatusOff": "关闭",
     "developmentFeatures": "开发中的功能",
     "aiCategory": "AI",
-    "sttLlmRulesInfo": "用于处理识别语音的 AI 模型附加说明。例如可以指定：去除口头禅、添加标点、设置列表格式或保持特定风格。"
+    "sttLlmRulesInfo": "用于处理识别语音的 AI 模型附加说明。例如可以指定：去除口头禅、添加标点、设置列表格式或保持特定风格。",
+    "correctionHotkeysHint": "用于从任何应用程序运行文本纠错的全局快捷键。所有快捷键在此页面上配置",
+    "correctionPreviewHint": "在插入之前打开显示更改差异的 Tyco 窗口。",
+    "correctionPromptPlaceholder": "例如：保持原有的语气，修正错别字和标点"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

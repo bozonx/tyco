@@ -834,7 +834,7 @@
     "temperature": "Temperature",
     "voiceTextCorrection": "Voice text correction",
     "textCorrection": "Text correction",
-    "correctionPageHint": "Fixes mistakes in text with AI. The hotkey for correcting selected text is set on the page",
+    "correctionPageHint": "Model and prompt instructions for text correction. Used for both quick in-place correction and correction with preview.",
     "correctionPrompt": "Prompt",
     "correctionPromptInfo": "Added to the built-in correction instructions.",
     "textInjection": {
@@ -944,7 +944,10 @@
     "pluginStatusOff": "Off",
     "developmentFeatures": "Features in development",
     "aiCategory": "AI",
-    "sttLlmRulesInfo": "Additional instructions for the AI model on processing recognized speech. You can specify, for example: remove filler words, format punctuation, create lists, maintain a specific style, or apply custom term spelling."
+    "sttLlmRulesInfo": "Additional instructions for the AI model on processing recognized speech. You can specify, for example: remove filler words, format punctuation, create lists, maintain a specific style, or apply custom term spelling.",
+    "correctionHotkeysHint": "Global hotkeys to run text correction from any application. All hotkeys are configured on the page",
+    "correctionPreviewHint": "Opens the Tyco window with a diff of changes before inserting.",
+    "correctionPromptPlaceholder": "e.g. preserve the original tone, fix typos and punctuation"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
