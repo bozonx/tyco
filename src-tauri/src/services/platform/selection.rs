@@ -63,13 +63,8 @@ fn active_target() -> Option<SelectionTarget> {
     if !session::current().is_x11() {
         return None;
     }
-    let output = super::linux::command::output_with_timeout(
-        "xdotool",
-        &["getactivewindow"],
-        ACTIVE_WINDOW_QUERY_TIMEOUT,
-    )?;
-    let id = String::from_utf8(output).ok()?.trim().to_owned();
-    (!id.is_empty()).then_some(SelectionTarget {
+    let id = super::linux::x11::active_window()?;
+    Some(SelectionTarget {
         is_terminal: super::linux::x11::is_terminal_window(&id),
         id,
     })
@@ -87,7 +82,7 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), Sel
         let message = if super::session::current().is_kde_wayland()
             && !super::window_tracker::tracker().is_running()
         {
-            "The KWin window tracker is not running; KDE Plasma 6 is required"
+            "Replacing a selection needs the KWin window tracker, which is not running"
         } else {
             "No application window has the focus"
         };
@@ -204,8 +199,6 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
 /// How long the copy keys have to change the clipboard.
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 const COPY_TIMEOUT: Duration = Duration::from_millis(700);
-/// How long `xdotool` may take to name the active window.
-const ACTIVE_WINDOW_QUERY_TIMEOUT: Duration = Duration::from_secs(2);
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 const COPY_POLL_INTERVAL: Duration = Duration::from_millis(25);
 

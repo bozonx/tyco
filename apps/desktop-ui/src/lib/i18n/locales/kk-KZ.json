@@ -580,7 +580,6 @@
     "autosaveSaving": "Сақталуда…",
     "backToPlugins": "Плагиндерге оралу",
     "baseUrl": "Негізгі URL",
-    "binaryPathPlaceholder": "PATH ішінен табылды",
     "browseWorkingDir": "Жұмыс каталогын таңдау…",
     "chat": "Чат",
     "chatCount": "Чаттар: {count}",
@@ -908,9 +907,22 @@
     "terminalPasteShortcutHint": "Танылған терминал терезелерінде нәтижелерді кірістіру және белгіленген мәтінді ауыстыру үшін қолданылады. Белгіленген мәтінді көшіру үшін Ctrl+Shift+C қолданылады.",
     "terminalPasteShortcutSame": "Кәдімгі қолданбалардағыдай",
     "textCorrection": "Мәтінді түзету",
-    "textInjection": {
-      "recheck": "Қайта тексеру",
-      "unavailable": "Мәтінді кірістіру қолжетімсіз: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Tyco-ға рұқсатты «Жүйе параметрлері → Құпиялылық және қауіпсіздік → Арнайы мүмкіндіктер» бөлімінде беріңіз.",
+      "allowKeyboardControl": "Рұқсат ету",
+      "checkFailed": "Мәтін қоюды тексеру мүмкін болмады: {error}",
+      "keysReadyPortal": "Пернелер жұмыс үстелінің қашықтан басқару порталы арқылы басылады",
+      "keysReadySystem": "Пернелер жүйелік енгізу арқылы басылады",
+      "keysReadyYdotool": "Пернелерді ydotool басады",
+      "keysUnavailable": "Мәтін қою қолжетімсіз: пернелерді басатын құрал жоқ",
+      "portalNeedsPermission": "Мәтін қою үшін Tyco-ға пернетақтаны басқаруға рұқсат беріңіз. Жұмыс үстелі бір рет сұрайды.",
+      "portalUnavailable": "Оқшау ортада (Flatpak) Tyco пернелерді тек қашықтан басқару порталы арқылы баса алады, ал бұл жұмыс үстелі оны ұсынбайды.",
+      "targetFocusReturn": "Tyco бұл жұмыс үстелінде терезелерді бақылай алмайды: мәтін Tyco жабылғанда фокус алатын терезеге қойылады. Белгіленгенді ауыстыру қолжетімсіз.",
+      "targetTracked": "Tyco өзі ашылған терезені есте сақтап, соған қояды",
+      "unsupportedSession": "Мәтін қою тек X11 немесе Wayland графикалық сеансында жұмыс істейді",
+      "ydotoolMissing": "ydotool орнатылмаған. ydotool 1.x орнатып, ydotoold іске қосыңыз немесе Tyco пернелерді жүйелік портал арқылы басатын KDE Plasma 6 не GNOME пайдаланыңыз.",
+      "ydotoolOutdated": "Орнатылған ydotool ескірген (0.1.x). 1.0 немесе жаңарақ нұсқа қажет.",
+      "ydotooldNotRunning": "ydotoold қызметі іске қосылмаған. Іске қосыңыз: systemctl --user enable --now ydotool"
     },
     "theme": "Тақырып",
     "toolUse": "Құралдарды шақыру",
@@ -940,10 +952,7 @@
     "uiScale": "Интерфейс масштабы",
     "unassignHotkey": "Тіркесімді алып тастау",
     "vision": "Сурет енгізу",
-    "voiceTextCorrection": "Айтылған мәтінді түзету",
-    "windowInsertion": "Кірістіру әдісі",
-    "windowInsertionAuto": "Автоматты",
-    "windowInsertionHint": "Tyco басқа қолданбаларда нәтижені қою немесе белгіленген мәтінді алу үшін перне басатын құрал. xdotool X11-де, ydotool Wayland-та жұмыс істейді: оған іске қосылған ydotoold қызметі керек, ал Wayland-та кірістіру тек KDE Plasma 6-да қолдау көрсетіледі. «Автоматты» құралды ағымдағы сеанс бойынша таңдайды. Жол өрісі бос болса, құрал PATH ішінен ізделеді."
+    "voiceTextCorrection": "Айтылған мәтінді түзету"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

@@ -25,7 +25,6 @@ export const useGlobalHotkeysStore = defineStore('globalHotkeys', () => {
       desktopClient.listen(DESKTOP_EVENTS.HOTKEYS_CHANGED, handler),
     getConfiguredHotkey: (id) => configuredHotkey(desktopStore.userConfig, id),
     suspendHotkeys: (suspended) => ipc.call('suspend_hotkeys', { suspended }),
-    checkTextInjection: () => ipc.call('check_text_injection'),
     configureHotkeys: () => ipc.call('open_system_hotkey_settings'),
     rebindHotkeys: () => ipc.call('rebind_hotkeys'),
   })

@@ -580,7 +580,6 @@
     "autosaveSaving": "保存中…",
     "backToPlugins": "プラグイン一覧に戻る",
     "baseUrl": "ベースURL",
-    "binaryPathPlaceholder": "PATH上に見つかりました",
     "browseWorkingDir": "作業ディレクトリを選択…",
     "chat": "チャット",
     "chatCount": "{count} 件のチャット",
@@ -908,9 +907,22 @@
     "terminalPasteShortcutHint": "ターミナルウィンドウでの結果の挿入や選択テキストの置換に使用されます。",
     "terminalPasteShortcutSame": "通常のアプリと同じ",
     "textCorrection": "テキスト校正",
-    "textInjection": {
-      "recheck": "再確認",
-      "unavailable": "テキストの挿入が利用できません: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "システム設定 → プライバシーとセキュリティ → アクセシビリティ で Tyco を許可してください。",
+      "allowKeyboardControl": "許可",
+      "checkFailed": "テキスト挿入を確認できませんでした: {error}",
+      "keysReadyPortal": "キーはデスクトップのリモート操作ポータル経由で押されます",
+      "keysReadySystem": "キーはシステムの入力で押されます",
+      "keysReadyYdotool": "キーは ydotool で押されます",
+      "keysUnavailable": "テキスト挿入は利用できません: キーを押す手段がありません",
+      "portalNeedsPermission": "テキストを挿入するには、Tyco にキーボード操作を許可してください。確認は一度だけです。",
+      "portalUnavailable": "サンドボックス (Flatpak) 内では、Tyco はリモート操作ポータル経由でしかキーを押せませんが、このデスクトップはそれを提供していません。",
+      "targetFocusReturn": "このデスクトップでは Tyco はウィンドウを追跡できません。テキストは Tyco を閉じたときにフォーカスを得るウィンドウに挿入されます。選択範囲の置換は利用できません。",
+      "targetTracked": "Tyco は開かれた元のウィンドウを記憶し、そこに挿入します",
+      "unsupportedSession": "テキスト挿入は X11 または Wayland のグラフィカルセッションでのみ動作します",
+      "ydotoolMissing": "ydotool がインストールされていません。ydotool 1.x をインストールして ydotoold を起動するか、Tyco がシステムポータル経由でキーを押せる KDE Plasma 6 または GNOME を使用してください。",
+      "ydotoolOutdated": "インストールされている ydotool は古い (0.1.x) です。バージョン 1.0 以降が必要です。",
+      "ydotooldNotRunning": "ydotoold デーモンが動作していません。起動してください: systemctl --user enable --now ydotool"
     },
     "theme": "テーマ",
     "toolUse": "ツール呼び出し",
@@ -940,10 +952,7 @@
     "uiScale": "インターフェースの拡大率",
     "unassignHotkey": "ショートカットを解除",
     "vision": "画像入力",
-    "voiceTextCorrection": "音声テキストの校正",
-    "windowInsertion": "テキスト挿入方法",
-    "windowInsertionAuto": "自動",
-    "windowInsertionHint": "結果を貼り付けるために他のアプリでキー操作を行うツール。"
+    "voiceTextCorrection": "音声テキストの校正"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

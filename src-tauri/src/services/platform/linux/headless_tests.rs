@@ -128,18 +128,14 @@ fn copy(text: &str, x11: bool) {
 
 fn activate(id: &str, x11: bool) {
     if x11 {
-        assert!(Command::new("xdotool")
-            .args(["windowactivate", "--sync", id])
-            .status()
-            .unwrap()
-            .success());
+        x11::activate_window(id).unwrap();
     } else {
         kwin::activate_window(id).unwrap();
     }
 }
 
-// xdotool switches back to XTest for focused windows. Virtual KWin has no
-// physical input backend, so send core X11 events explicitly in this fixture.
+// Neither Xvfb nor virtual KWin reads input devices, so ydotool cannot reach
+// them: this fixture sends core X11 key events to the window instead.
 fn paste_xwayland(window: u32) {
     use x11rb::connection::Connection;
     use x11rb::protocol::xproto::{
@@ -253,17 +249,18 @@ fn integration_headless_platform() {
     foreign.action("clear");
 
     let injector = text_injector::SystemTextInjector::detect();
-    let config = json!({"windowInsertion": {"method": if is_x11 { "xdotool" } else { "ydotool" }}});
+    let config = json!({"windowInsertion": {"linux": {"pasteShortcut": "Ctrl+V"}}});
     if session == "sway" {
         assert!(!tracker().is_running());
         assert!(super::capture_foreground_target().is_none());
         assert!(clipboard_restore::snapshot().is_none());
-        assert!(injector.check_text_injection(&config).is_err());
-        assert!(injector.inject_paste(&config, None).is_err());
+        assert_eq!(
+            text_injector::status().target,
+            crate::services::platform::text_injector::TargetTracking::FocusReturn
+        );
+        // without a tracker the paste goes to the focused window
         copy("Focused ydotool paste", false);
-        injector
-            .press_in_focused(&config, text_injector::FocusedKeyAction::Paste, false)
-            .unwrap();
+        injector.inject_paste(&config, None).unwrap();
         eventually("real ydotool paste in foreign Wayland client", || {
             foreign.text().as_deref() == Some("Focused ydotool paste")
         });
@@ -287,8 +284,9 @@ fn integration_headless_platform() {
         );
         copy("Inserted platform text", is_x11);
         if is_x11 {
-            injector.check_text_injection(&config).unwrap();
-            injector.inject_paste(&config, target.as_deref()).unwrap();
+            let target = target.as_deref().unwrap();
+            x11::activate_window(target).unwrap();
+            paste_xwayland(target.parse().unwrap());
         } else {
             // Virtual KWin has no libinput backend. Exercise its production
             // activation, then send X11 key events directly to the XWayland fixture.

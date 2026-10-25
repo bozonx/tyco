@@ -583,7 +583,6 @@
     "autosaveSaving": "Spremanje…",
     "backToPlugins": "Natrag na dodatke",
     "baseUrl": "Osnovni URL",
-    "binaryPathPlaceholder": "Pronađeno u PATH-u",
     "browseWorkingDir": "Odaberi radni direktorij…",
     "chat": "Chat",
     "chatCount": "Chatova: {count}",
@@ -911,9 +910,22 @@
     "terminalPasteShortcutHint": "Koristi se za umetanje rezultata i zamjenu odabranog teksta u prepoznatim prozorima terminala. Za kopiranje odabranog teksta koristi se Ctrl+Shift+C.",
     "terminalPasteShortcutSame": "Isto kao u običnim aplikacijama",
     "textCorrection": "Ispravak teksta",
-    "textInjection": {
-      "recheck": "Provjeri ponovno",
-      "unavailable": "Umetanje teksta nije dostupno: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Dopustite Tyco u Postavkama sustava → Privatnost i sigurnost → Pristupačnost.",
+      "allowKeyboardControl": "Dopusti",
+      "checkFailed": "Umetanje teksta nije moguće provjeriti: {error}",
+      "keysReadyPortal": "Tipke se pritišću putem portala za daljinsko upravljanje radne površine",
+      "keysReadySystem": "Tipke se pritišću sistemskim unosom",
+      "keysReadyYdotool": "Tipke pritišće ydotool",
+      "keysUnavailable": "Umetanje teksta nije dostupno: ništa ne može pritisnuti tipke",
+      "portalNeedsPermission": "Za umetanje teksta dopustite Tycu upravljanje tipkovnicom. Radna površina pita samo jednom.",
+      "portalUnavailable": "U izoliranom okruženju (Flatpak) Tyco može pritiskati tipke samo putem portala za daljinsko upravljanje, a ova ga radna površina ne nudi.",
+      "targetFocusReturn": "Tyco ne može pratiti prozore na ovoj radnoj površini: tekst ide u prozor koji dobije fokus kad se Tyco zatvori. Zamjena odabira nije dostupna.",
+      "targetTracked": "Tyco pamti prozor iz kojeg je otvoren i umeće u njega",
+      "unsupportedSession": "Umetanje teksta radi samo u grafičkoj sesiji X11 ili Wayland",
+      "ydotoolMissing": "ydotool nije instaliran. Instalirajte ydotool 1.x i pokrenite ydotoold ili koristite KDE Plasma 6 ili GNOME, gdje Tyco pritišće tipke putem sistemskog portala.",
+      "ydotoolOutdated": "Instalirani ydotool je zastario (0.1.x). Potrebna je verzija 1.0 ili novija.",
+      "ydotooldNotRunning": "Pozadinski servis ydotoold ne radi. Pokrenite ga: systemctl --user enable --now ydotool"
     },
     "theme": "Tema",
     "toolUse": "Pozivanje alata",
@@ -943,10 +955,7 @@
     "uiScale": "Veličina sučelja",
     "unassignHotkey": "Ukloni prečac",
     "vision": "Unos slika",
-    "voiceTextCorrection": "Ispravak izdiktiranog teksta",
-    "windowInsertion": "Način umetanja",
-    "windowInsertionAuto": "Automatski",
-    "windowInsertionHint": "Alat kojim Tyco pritišće tipke u drugim aplikacijama da bi zalijepio rezultat ili preuzeo odabrani tekst. xdotool radi na X11, ydotool na Waylandu: treba mu pokrenut servis ydotoold, a umetanje na Waylandu podržano je samo u KDE Plasmi 6. „Automatski” bira alat prema trenutačnoj sesiji. Prazno polje putanje znači da se alat traži u PATH-u."
+    "voiceTextCorrection": "Ispravak izdiktiranog teksta"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

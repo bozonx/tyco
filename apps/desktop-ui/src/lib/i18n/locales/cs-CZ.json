@@ -577,7 +577,6 @@
     "autosaveSaving": "Ukládání…",
     "backToPlugins": "Zpět na pluginy",
     "baseUrl": "Základní URL",
-    "binaryPathPlaceholder": "Nalezeno v PATH",
     "browseWorkingDir": "Vybrat pracovní adresář…",
     "chat": "Chat",
     "chatCount": "Chatů: {count}",
@@ -905,9 +904,22 @@
     "terminalPasteShortcutHint": "Používá se pro vkládání výsledků a nahrazování vybraného textu v rozpoznaných oknech terminálu. Ke kopírování vybraného textu slouží Ctrl+Shift+C.",
     "terminalPasteShortcutSame": "Stejná jako v běžných aplikacích",
     "textCorrection": "Oprava textu",
-    "textInjection": {
-      "recheck": "Zkontrolovat znovu",
-      "unavailable": "Vkládání textu není dostupné: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Povolte Tyco v Nastavení systému → Soukromí a zabezpečení → Zpřístupnění.",
+      "allowKeyboardControl": "Povolit",
+      "checkFailed": "Vkládání textu se nepodařilo ověřit: {error}",
+      "keysReadyPortal": "Klávesy se stisknou přes portál vzdáleného ovládání plochy",
+      "keysReadySystem": "Klávesy se stisknou systémovým vstupem",
+      "keysReadyYdotool": "Klávesy stiskne ydotool",
+      "keysUnavailable": "Vkládání textu není dostupné: nic nemůže stisknout klávesy",
+      "portalNeedsPermission": "Chcete-li vkládat text, povolte Tyco ovládat klávesnici. Plocha se zeptá jen jednou.",
+      "portalUnavailable": "V izolovaném prostředí (Flatpak) může Tyco stisknout klávesy jen přes portál vzdáleného ovládání a tato plocha jej nenabízí.",
+      "targetFocusReturn": "Tyco nemůže na této ploše sledovat okna: text se vloží do okna, které po zavření Tyco získá fokus. Nahrazení výběru není dostupné.",
+      "targetTracked": "Tyco si pamatuje okno, ze kterého bylo otevřeno, a vkládá do něj",
+      "unsupportedSession": "Vkládání textu funguje jen v grafické relaci X11 nebo Wayland",
+      "ydotoolMissing": "ydotool není nainstalován. Nainstalujte ydotool 1.x a spusťte ydotoold, nebo použijte KDE Plasma 6 či GNOME, kde Tyco stiskne klávesy přes systémový portál.",
+      "ydotoolOutdated": "Nainstalovaný ydotool je zastaralý (0.1.x). Je potřeba verze 1.0 nebo novější.",
+      "ydotooldNotRunning": "Démon ydotoold neběží. Spusťte jej: systemctl --user enable --now ydotool"
     },
     "theme": "Motiv",
     "toolUse": "Volání nástrojů",
@@ -937,10 +949,7 @@
     "uiScale": "Měřítko rozhraní",
     "unassignHotkey": "Odebrat zkratku",
     "vision": "Vstup obrázků",
-    "voiceTextCorrection": "Oprava nadiktovaného textu",
-    "windowInsertion": "Způsob vkládání",
-    "windowInsertionAuto": "Automaticky",
-    "windowInsertionHint": "Nástroj, kterým Tyco v jiných aplikacích mačká klávesy, aby vložil výsledek nebo převzal vybraný text. xdotool funguje v X11, ydotool ve Waylandu: vyžaduje spuštěného démona ydotoold a vkládání ve Waylandu je podporováno jen v KDE Plasma 6. „Automaticky“ vybere nástroj podle aktuální relace. Prázdné pole cesty znamená, že se nástroj hledá v PATH."
+    "voiceTextCorrection": "Oprava nadiktovaného textu"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

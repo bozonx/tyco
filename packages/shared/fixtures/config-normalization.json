@@ -212,10 +212,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {
@@ -571,10 +568,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {
@@ -917,10 +911,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {
@@ -1263,10 +1254,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {
@@ -1611,10 +1599,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {
@@ -1950,10 +1935,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {
@@ -2294,10 +2276,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {
@@ -2649,10 +2628,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {
@@ -2991,10 +2967,7 @@
       "windowInsertion": {
         "linux": {
           "pasteShortcut": "Ctrl+V",
-          "terminalPasteShortcut": "Ctrl+Shift+V",
-          "method": "xdotool",
-          "xdotoolPath": "",
-          "ydotoolPath": ""
+          "terminalPasteShortcut": "Ctrl+Shift+V"
         }
       },
       "translation": {

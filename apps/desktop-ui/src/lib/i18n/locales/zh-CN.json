@@ -577,7 +577,6 @@
     "autosaveSaving": "正在保存…",
     "backToPlugins": "返回插件列表",
     "baseUrl": "基础 URL",
-    "binaryPathPlaceholder": "从 PATH 中找到",
     "browseWorkingDir": "选择工作目录…",
     "chat": "聊天",
     "chatCount": "{count} 个对话",
@@ -905,9 +904,22 @@
     "terminalPasteShortcutHint": "用于在已识别的终端窗口中插入结果和替换选中文本。复制选中文本使用 Ctrl+Shift+C。",
     "terminalPasteShortcutSame": "与普通应用相同",
     "textCorrection": "文本纠错",
-    "textInjection": {
-      "recheck": "重新检查",
-      "unavailable": "文本插入不可用：{error}"
+    "textInsertion": {
+      "accessibilityDenied": "请在“系统设置 → 隐私与安全性 → 辅助功能”中允许 Tyco。",
+      "allowKeyboardControl": "允许",
+      "checkFailed": "无法检查文本插入：{error}",
+      "keysReadyPortal": "通过桌面的远程控制门户按键",
+      "keysReadySystem": "通过系统输入按键",
+      "keysReadyYdotool": "通过 ydotool 按键",
+      "keysUnavailable": "文本插入不可用：没有可以按键的工具",
+      "portalNeedsPermission": "要插入文本，请允许 Tyco 控制键盘。桌面只会询问一次。",
+      "portalUnavailable": "在沙盒 (Flatpak) 中，Tyco 只能通过远程控制门户按键，而此桌面不提供该门户。",
+      "targetFocusReturn": "Tyco 无法在此桌面上跟踪窗口：文本会插入到 Tyco 关闭时获得焦点的窗口。替换选中内容不可用。",
+      "targetTracked": "Tyco 会记住打开它的窗口并插入到其中",
+      "unsupportedSession": "文本插入仅在 X11 或 Wayland 图形会话中可用",
+      "ydotoolMissing": "未安装 ydotool。请安装 ydotool 1.x 并启动 ydotoold，或使用 KDE Plasma 6 或 GNOME，Tyco 可在其中通过系统门户按键。",
+      "ydotoolOutdated": "已安装的 ydotool 版本过旧 (0.1.x)，需要 1.0 或更高版本。",
+      "ydotooldNotRunning": "ydotoold 守护进程未运行。请启动它：systemctl --user enable --now ydotool"
     },
     "theme": "主题",
     "toolUse": "工具调用",
@@ -937,10 +949,7 @@
     "uiScale": "界面缩放",
     "unassignHotkey": "移除快捷键",
     "vision": "图像输入",
-    "voiceTextCorrection": "语音文本纠错",
-    "windowInsertion": "文本插入方式",
-    "windowInsertionAuto": "自动",
-    "windowInsertionHint": "Tyco 用于在其他应用中模拟按键以粘贴结果或获取选中文本的工具。X11 上使用 xdotool，Wayland 上使用 ydotool（需要运行 ydotoold 守护进程，且 Wayland 插入仅在 KDE Plasma 6 上受支持）。“自动”根据当前会话自动选择工具。路径字段留空表示从 PATH 环境变量中查找工具。"
+    "voiceTextCorrection": "语音文本纠错"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

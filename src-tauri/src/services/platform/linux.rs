@@ -1,6 +1,7 @@
 //! Linux backends. Which one serves a call depends on the session, see
-//! `super::session`: X11 has the tools to find, activate and type into any
-//! window, while on Wayland only KDE Plasma lets Tyco do that, via KWin scripts.
+//! `super::session`: X11 lets Tyco find and activate any window, while on
+//! Wayland only KDE Plasma does, via KWin scripts. Keys are pressed the same
+//! way in both, see `text_injector`.
 
 mod backoff;
 mod binary_paths;
@@ -12,6 +13,7 @@ pub(crate) mod hotkeys_portal;
 pub mod kwin;
 pub mod layer_shell;
 pub mod primary_selection;
+pub mod remote_desktop;
 pub(crate) mod status_overlay;
 pub mod text_injector;
 pub mod x11;
@@ -45,6 +47,10 @@ pub fn start_session_services(
 ) -> Result<(), AppError> {
     use tauri::Manager;
 
+    match crate::services::storage::app_paths::AppPaths::resolve(app) {
+        Ok(paths) => remote_desktop::init(paths.state_dir, app.config().identifier.clone()),
+        Err(error) => log::warn!("No state directory for the RemoteDesktop token: {error}"),
+    }
     dbus::spawn_dbus_server(app.clone())?;
     let session = super::session::current();
     let services = app.state::<crate::services::background::BackgroundServices>();

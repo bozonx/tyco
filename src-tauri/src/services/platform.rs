@@ -40,7 +40,9 @@ pub use panel_surface::{
     PanelKeyboardMode,
 };
 pub use shortcut_settings::{has_shortcut_settings, open_shortcut_settings};
-pub use text_injector::check_text_injection;
+pub use text_injector::{
+    request_text_insertion_permission, text_insertion_status, TextInsertionStatus,
+};
 pub(crate) use text_injector::{SystemTextInjector, TextInjector};
 pub use titlebar::enable_titlebar_buttons;
 pub use webview::allow_clipboard_read;

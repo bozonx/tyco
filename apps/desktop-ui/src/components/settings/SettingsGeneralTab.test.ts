@@ -26,9 +26,6 @@ describe('SettingsGeneralTab.vue', () => {
         linux: {
           pasteShortcut: 'Ctrl+V',
           terminalPasteShortcut: 'Ctrl+Shift+V',
-          method: 'xdotool',
-          xdotoolPath: '',
-          ydotoolPath: '',
         },
       },
       ...overrides,
@@ -144,28 +141,5 @@ describe('SettingsGeneralTab.vue', () => {
 
     await field.setValue('same')
     expect(config.windowInsertion.linux.terminalPasteShortcut).toBeNull()
-  })
-
-  it('shows the path of the tool of the chosen insertion method', async () => {
-    const config = createConfig({
-      windowInsertion: {
-        linux: {
-          pasteShortcut: 'Ctrl+V',
-          terminalPasteShortcut: 'Ctrl+Shift+V',
-          method: 'xdotool',
-          xdotoolPath: '',
-          ydotoolPath: '',
-        },
-      },
-    })
-    const wrapper = mountTab(config)
-
-    expect(wrapper.find('.field-input-stub').exists()).toBe(true)
-
-    const ydotoolBtn = wrapper.find('.seg-ydotool')
-    await ydotoolBtn.trigger('click')
-
-    expect(config.windowInsertion.linux.method).toBe('ydotool')
-    expect(wrapper.find('.field-input-stub').exists()).toBe(true)
   })
 })

@@ -583,7 +583,6 @@
     "autosaveSaving": "Enregistrement…",
     "backToPlugins": "Retour aux plugins",
     "baseUrl": "URL de base",
-    "binaryPathPlaceholder": "Trouvé dans le PATH",
     "browseWorkingDir": "Choisir le répertoire de travail…",
     "chat": "Chat",
     "chatCount": "Chats : {count}",
@@ -911,9 +910,22 @@
     "terminalPasteShortcutHint": "Utilisé pour insérer des résultats et remplacer le texte sélectionné dans les fenêtres de terminal reconnues. La copie du texte sélectionné utilise Ctrl+Maj+C.",
     "terminalPasteShortcutSame": "Comme dans les applications ordinaires",
     "textCorrection": "Correction de texte",
-    "textInjection": {
-      "recheck": "Vérifier à nouveau",
-      "unavailable": "L’insertion de texte n’est pas disponible : {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Autorisez Tyco dans Réglages Système → Confidentialité et sécurité → Accessibilité.",
+      "allowKeyboardControl": "Autoriser",
+      "checkFailed": "Impossible de vérifier l'insertion de texte : {error}",
+      "keysReadyPortal": "Les touches sont pressées via le portail de contrôle à distance du bureau",
+      "keysReadySystem": "Les touches sont pressées avec la saisie du système",
+      "keysReadyYdotool": "Les touches sont pressées avec ydotool",
+      "keysUnavailable": "Insertion de texte indisponible : rien ne peut presser les touches",
+      "portalNeedsPermission": "Pour insérer du texte, autorisez Tyco à contrôler le clavier. Le bureau ne le demande qu'une fois.",
+      "portalUnavailable": "Dans un bac à sable (Flatpak), Tyco ne peut presser les touches que via le portail de contrôle à distance, et ce bureau ne le propose pas.",
+      "targetFocusReturn": "Tyco ne peut pas suivre les fenêtres sur ce bureau : le texte va dans la fenêtre qui reçoit le focus à la fermeture de Tyco. Le remplacement de la sélection est indisponible.",
+      "targetTracked": "Tyco mémorise la fenêtre depuis laquelle il a été ouvert et y insère le texte",
+      "unsupportedSession": "L'insertion de texte ne fonctionne que dans une session graphique X11 ou Wayland",
+      "ydotoolMissing": "ydotool n'est pas installé. Installez ydotool 1.x et lancez ydotoold, ou utilisez KDE Plasma 6 ou GNOME, où Tyco presse les touches via le portail du système.",
+      "ydotoolOutdated": "Le ydotool installé est obsolète (0.1.x). La version 1.0 ou ultérieure est requise.",
+      "ydotooldNotRunning": "Le démon ydotoold ne tourne pas. Lancez-le : systemctl --user enable --now ydotool"
     },
     "theme": "Thème",
     "toolUse": "Appel d’outils",
@@ -943,10 +955,7 @@
     "uiScale": "Échelle de l’interface",
     "unassignHotkey": "Retirer le raccourci",
     "vision": "Entrée d’images",
-    "voiceTextCorrection": "Correction du texte dicté",
-    "windowInsertion": "Méthode d’insertion",
-    "windowInsertionAuto": "Auto",
-    "windowInsertionHint": "L’outil qu’utilise Tyco pour appuyer sur des touches dans d’autres applications, coller le résultat ou récupérer le texte sélectionné. xdotool fonctionne sous X11, ydotool sous Wayland : il nécessite le démon ydotoold en cours d’exécution, et l’insertion sous Wayland n’est prise en charge que sur KDE Plasma 6. « Auto » choisit l’outil selon la session en cours. Si le champ du chemin est vide, l’outil est recherché dans le PATH."
+    "voiceTextCorrection": "Correction du texte dicté"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

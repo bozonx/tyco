@@ -34,7 +34,7 @@ impl SystemForegroundContext {
             return tracker().target();
         }
         match self.display {
-            DisplayServer::X11 => Self::command_output("xdotool", &["getactivewindow"]),
+            DisplayServer::X11 => super::x11::active_window(),
             _ => None,
         }
     }

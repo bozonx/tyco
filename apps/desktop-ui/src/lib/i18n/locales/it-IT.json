@@ -583,7 +583,6 @@
     "autosaveSaving": "Salvataggio…",
     "backToPlugins": "Torna ai plugin",
     "baseUrl": "URL di base",
-    "binaryPathPlaceholder": "Trovato nel PATH",
     "browseWorkingDir": "Seleziona la cartella di lavoro…",
     "chat": "Chat",
     "chatCount": "Chat: {count}",
@@ -911,9 +910,22 @@
     "terminalPasteShortcutHint": "Usata per inserire i risultati e sostituire il testo selezionato nelle finestre di terminale riconosciute. Per copiare il testo selezionato si usa Ctrl+Maiusc+C.",
     "terminalPasteShortcutSame": "Come nelle app normali",
     "textCorrection": "Correzione del testo",
-    "textInjection": {
-      "recheck": "Verifica di nuovo",
-      "unavailable": "L’inserimento di testo non è disponibile: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Consenti Tyco in Impostazioni di Sistema → Privacy e sicurezza → Accessibilità.",
+      "allowKeyboardControl": "Consenti",
+      "checkFailed": "Impossibile verificare l'inserimento del testo: {error}",
+      "keysReadyPortal": "I tasti vengono premuti tramite il portale di controllo remoto del desktop",
+      "keysReadySystem": "I tasti vengono premuti con l'input di sistema",
+      "keysReadyYdotool": "I tasti vengono premuti con ydotool",
+      "keysUnavailable": "Inserimento del testo non disponibile: nulla può premere i tasti",
+      "portalNeedsPermission": "Per inserire testo, consenti a Tyco di controllare la tastiera. Il desktop lo chiede una sola volta.",
+      "portalUnavailable": "In una sandbox (Flatpak), Tyco può premere i tasti solo tramite il portale di controllo remoto, e questo desktop non lo offre.",
+      "targetFocusReturn": "Tyco non può tracciare le finestre su questo desktop: il testo va nella finestra che riceve il focus alla chiusura di Tyco. La sostituzione della selezione non è disponibile.",
+      "targetTracked": "Tyco ricorda la finestra da cui è stato aperto e inserisce lì il testo",
+      "unsupportedSession": "L'inserimento del testo funziona solo in una sessione grafica X11 o Wayland",
+      "ydotoolMissing": "ydotool non è installato. Installa ydotool 1.x e avvia ydotoold, oppure usa KDE Plasma 6 o GNOME, dove Tyco preme i tasti tramite il portale di sistema.",
+      "ydotoolOutdated": "Il ydotool installato è obsoleto (0.1.x). Serve la versione 1.0 o successiva.",
+      "ydotooldNotRunning": "Il demone ydotoold non è in esecuzione. Avvialo: systemctl --user enable --now ydotool"
     },
     "theme": "Tema",
     "toolUse": "Chiamata di strumenti",
@@ -943,10 +955,7 @@
     "uiScale": "Scala dell’interfaccia",
     "unassignHotkey": "Rimuovi la scorciatoia",
     "vision": "Input di immagini",
-    "voiceTextCorrection": "Correzione del testo dettato",
-    "windowInsertion": "Metodo di inserimento",
-    "windowInsertionAuto": "Automatico",
-    "windowInsertionHint": "Lo strumento con cui Tyco preme tasti in altre app per incollare il risultato o prendere il testo selezionato. xdotool funziona su X11, ydotool su Wayland: richiede il demone ydotoold in esecuzione, e l’inserimento su Wayland è supportato solo su KDE Plasma 6. «Automatico» sceglie lo strumento in base alla sessione corrente. Un campo percorso vuoto significa che lo strumento viene cercato nel PATH."
+    "voiceTextCorrection": "Correzione del testo dettato"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

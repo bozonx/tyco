@@ -580,7 +580,6 @@
     "autosaveSaving": "Kaydediliyor…",
     "backToPlugins": "Eklentilere dön",
     "baseUrl": "Temel URL",
-    "binaryPathPlaceholder": "PATH içinde aranır",
     "browseWorkingDir": "Çalışma klasörü seç…",
     "chat": "Sohbet",
     "chatCount": "{count} sohbet",
@@ -908,9 +907,22 @@
     "terminalPasteShortcutHint": "Tanınan terminal pencerelerinde sonuç eklemek ve seçili metni değiştirmek için kullanılır. Seçili metin Ctrl+Shift+C ile kopyalanır.",
     "terminalPasteShortcutSame": "Normal uygulamalarla aynı",
     "textCorrection": "Metin düzeltme",
-    "textInjection": {
-      "recheck": "Yeniden denetle",
-      "unavailable": "Metin ekleme kullanılamıyor: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik bölümünde Tyco'ya izin verin.",
+      "allowKeyboardControl": "İzin ver",
+      "checkFailed": "Metin ekleme denetlenemedi: {error}",
+      "keysReadyPortal": "Tuşlar masaüstünün uzaktan denetim portalı üzerinden basılıyor",
+      "keysReadySystem": "Tuşlar sistem girdisiyle basılıyor",
+      "keysReadyYdotool": "Tuşlar ydotool ile basılıyor",
+      "keysUnavailable": "Metin ekleme kullanılamıyor: tuşlara basabilecek bir araç yok",
+      "portalNeedsPermission": "Metin eklemek için Tyco'nun klavyeyi denetlemesine izin verin. Masaüstü bunu bir kez sorar.",
+      "portalUnavailable": "Korumalı alanda (Flatpak) Tyco tuşlara yalnızca uzaktan denetim portalı üzerinden basabilir ve bu masaüstü onu sunmuyor.",
+      "targetFocusReturn": "Tyco bu masaüstünde pencereleri izleyemiyor: metin, Tyco kapandığında odağı alan pencereye eklenir. Seçimi değiştirme kullanılamaz.",
+      "targetTracked": "Tyco açıldığı pencereyi hatırlar ve metni oraya ekler",
+      "unsupportedSession": "Metin ekleme yalnızca X11 veya Wayland grafik oturumunda çalışır",
+      "ydotoolMissing": "ydotool yüklü değil. ydotool 1.x yükleyip ydotoold'u başlatın ya da Tyco'nun tuşlara sistem portalı üzerinden bastığı KDE Plasma 6 veya GNOME kullanın.",
+      "ydotoolOutdated": "Yüklü ydotool eski (0.1.x). 1.0 veya daha yeni bir sürüm gerekir.",
+      "ydotooldNotRunning": "ydotoold arka plan hizmeti çalışmıyor. Başlatın: systemctl --user enable --now ydotool"
     },
     "theme": "Tema",
     "toolUse": "Araç çağırma",
@@ -940,10 +952,7 @@
     "uiScale": "Arayüz ölçeği",
     "unassignHotkey": "Kısayolu kaldır",
     "vision": "Görsel desteği",
-    "voiceTextCorrection": "Tanınan metni düzeltme",
-    "windowInsertion": "Ekleme yöntemi",
-    "windowInsertionAuto": "Otomatik",
-    "windowInsertionHint": "Tyco’nun sonucu yapıştırmak veya seçili metni almak için diğer uygulamalarda tuşlara bastığı araç. xdotool X11’de, ydotool Wayland’de çalışır: ydotoold arka plan hizmetinin çalışıyor olması gerekir ve Wayland’de ekleme yalnızca KDE Plasma 6’da desteklenir. “Otomatik” aracı geçerli oturuma göre seçer. Yol alanı boşsa araç PATH içinde aranır."
+    "voiceTextCorrection": "Tanınan metni düzeltme"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

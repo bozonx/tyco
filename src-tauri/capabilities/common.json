@@ -9,7 +9,6 @@
     "allow-acknowledge-settings-shutdown",
     "allow-activate-mode",
     "allow-cancel-script-action",
-    "allow-check-text-injection",
     "allow-clear-chats",
     "allow-clear-editor-history",
     "allow-hide-window",

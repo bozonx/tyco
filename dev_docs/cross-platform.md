@@ -15,8 +15,8 @@ Updated: 2026-10-13.
 | Платформа                       | Статус         | Комментарий                                                                     |
 | ------------------------------- | -------------- | ------------------------------------------------------------------------------- |
 | Linux, KDE Plasma 6, Wayland    | основная       | трекинг окон через KWin-скрипты, layer-shell, портал хоткеев                    |
-| Linux, X11 (любой EWMH-WM)      | поддерживается | трекинг окон по событиям корневого окна, xdotool, xclip                         |
-| Linux, GNOME / wlroots, Wayland | частично       | хоткеи через портал или конфиг композитора; вставка в чужое окно недоступна     |
+| Linux, X11 (любой EWMH-WM)      | поддерживается | трекинг окон по событиям корневого окна, ydotool или портал, xclip              |
+| Linux, GNOME / wlroots, Wayland | частично       | хоткеи через портал или конфиг композитора; вставка в окно, получившее фокус    |
 | Windows 10 22H2+, 11            | partial        | UI Automation selection capture, HWND target, native clipboard, `SendInput`     |
 | macOS 13+                       | partial        | Accessibility selection capture, PID target, verified paste through `osascript` |
 
@@ -41,7 +41,7 @@ Cinnamon, i3, LXQt и LTS-дистрибутивы (Ubuntu 22.04, RHEL 9, Debian
 
 ```
 platform.rs           фасад: capture_foreground_target, capture_selection, inject_paste,
-                      check_text_injection, panel surface, titlebar, status overlay,
+                      text_insertion_status, panel surface, titlebar, status overlay,
                       start_session_services
 platform/
   session.rs          определение сессии один раз за процесс
@@ -55,7 +55,8 @@ platform/
     dbus.rs           D-Bus API и колбэки KWin-трекера
     kwin.rs           бэкенд трекера: KWin-скрипты (KDE Wayland)
     x11.rs            бэкенд трекера: события _NET_ACTIVE_WINDOW (X11)
-    text_injector.rs  xdotool / ydotool
+    text_injector.rs  нажатие клавиш: ydotool или портал RemoteDesktop
+    remote_desktop.rs сессия портала RemoteDesktop и её restore token
     clipboard_restore.rs  снимок и восстановление буфера: wl-clipboard / xclip
     foreground_context.rs исходное окно и PRIMARY-выделение
     layer_shell.rs    gtk-layer-shell
@@ -93,12 +94,13 @@ platform/
   `PropertyNotify` корневого окна: `_NET_ACTIVE_WINDOW` даёт активацию,
   разница `_NET_CLIENT_LIST` — закрытие. Своё окно узнаётся по `_NET_WM_PID`
   или `WM_CLASS`, чужое — по `_NET_WM_WINDOW_TYPE` NORMAL/DIALOG. Id окна
-  десятичный, как у xdotool. При потере соединения перезапускается с растущей
+  десятичный. При потере соединения перезапускается с растущей
   паузой.
 - **Windows / macOS** — пока нет (см. §4).
 
-Если трекер не запущен (WM без EWMH), X11 откатывается на
-`xdotool getactivewindow`.
+Если трекер не запущен (WM без EWMH), X11 читает `_NET_ACTIVE_WINDOW`
+напрямую. Окно активируется запросом `_NET_ACTIVE_WINDOW` к оконному
+менеджеру (`x11::activate_window`).
 
 ### Что дал трекер на X11
 
@@ -115,16 +117,56 @@ platform/
 возвращается после неё — через `xclip -t TARGETS` и `xclip -t <type>`, как на
 KDE через `wl-paste`.
 
+### Вставка в другие окна (Linux)
+
+Вставка — это два независимых шага:
+
+1. **Окно-цель.** Трекер (KWin-скрипт или x11rb) знает окно, из которого
+   открыли Tyco, и возвращает ему фокус. Без трекера (GNOME, wlroots,
+   сломанный KWin) Tyco прячет своё окно и вставляет в окно, которое
+   получило фокус; настройки показывают это предупреждением. Замена
+   выделения без трекера недоступна: нельзя проверить, что фокус остался в
+   том же окне, а Ctrl+C в терминале прерывает программу.
+2. **Нажатие клавиш** (`linux/text_injector.rs`). Нужны только сочетания
+   вставки и копирования, символы не печатаются. Порядок выбора:
+   - **ydotool 1.x**, если найден в `PATH` и отвечает сокет `ydotoold`;
+     работает и в X11, и в Wayland. 0.1.x распознаётся по справке
+     `ydotool key --help` и считается неподходящим;
+   - иначе **портал RemoteDesktop** (`linux/remote_desktop.rs`,
+     `NotifyKeyboardKeycode`): KDE Plasma 6, GNOME. Первый запуск
+     показывает диалог; restore token (`state_dir/remote-desktop.token`)
+     даёт следующим сессиям стартовать без вопроса. Сессия живёт, пока
+     идут нажатия, и закрывается через минуту простоя — рабочий стол
+     показывает открытую сессию как удалённое управление.
+
+Настройки получают статус командой `get_text_insertion_status` при каждом
+открытии вкладки и могут запросить разрешение портала
+(`request_text_insertion_permission`).
+
+**Flatpak.** В песочнице нет `/dev/uinput` и программ хоста, поэтому
+клавиши нажимаются только через портал (`session::is_sandboxed`). Сборке
+нужны:
+
+- `--socket=wayland`, `--socket=fallback-x11`, `--share=ipc`;
+- `--own-name=org.tyco.Service` — D-Bus API и отчёты KWin-трекера;
+- `--talk-name=org.kde.KWin` — KWin-скрипты. Файлы скриптов пишутся в
+  `$XDG_RUNTIME_DIR/app/$FLATPAK_ID/tyco`: только этот каталог песочницы
+  виден хосту по тому же пути;
+- `wl-clipboard` и `xclip` внутри пакета: инструменты хоста недоступны.
+
+Порталы (RemoteDesktop, GlobalShortcuts) доступны без отдельных прав.
+Сам манифест Flatpak пока не написан.
+
 ## 3. Linux: особенности окружений
 
-| Возможность        | KDE Wayland            | GNOME Wayland                  | wlroots (Sway, Hyprland)                | X11                      |
-| ------------------ | ---------------------- | ------------------------------ | --------------------------------------- | ------------------------ |
-| Глобальные хоткеи  | портал GlobalShortcuts | портал (GNOME 48+)             | конфиг композитора + `tyco-ctl`         | tauri global-shortcut    |
-| Трекинг окон       | KWin-скрипт            | нет API                        | нет (Hyprland: IPC-сокет, Sway: i3-IPC) | x11rb                    |
-| Активация окна     | KWin-скрипт            | нет                            | IPC композитора                         | `xdotool windowactivate` |
-| Нажатие клавиш     | ydotool                | ydotool / портал RemoteDesktop | ydotool / `wtype`                       | xdotool                  |
-| Панель поверх окон | gtk-layer-shell        | нет layer-shell                | gtk-layer-shell                         | обычное окно             |
-| PRIMARY-выделение  | wl-paste               | wl-paste*                      | wl-paste                                | xclip                    |
+| Возможность        | KDE Wayland            | GNOME Wayland                  | wlroots (Sway, Hyprland)                | X11                   |
+| ------------------ | ---------------------- | ------------------------------ | --------------------------------------- | --------------------- |
+| Глобальные хоткеи  | портал GlobalShortcuts | портал (GNOME 48+)             | конфиг композитора + `tyco-ctl`         | tauri global-shortcut |
+| Трекинг окон       | KWin-скрипт            | нет API                        | нет (Hyprland: IPC-сокет, Sway: i3-IPC) | x11rb                 |
+| Активация окна     | KWin-скрипт            | нет                            | IPC композитора                         | `_NET_ACTIVE_WINDOW`  |
+| Нажатие клавиш     | ydotool / портал       | ydotool / портал RemoteDesktop | ydotool                                 | ydotool / портал      |
+| Панель поверх окон | gtk-layer-shell        | нет layer-shell                | gtk-layer-shell                         | обычное окно          |
+| PRIMARY-выделение  | wl-paste               | wl-paste*                      | wl-paste                                | xclip                 |
 
 \* Без протокола data-control GNOME не отдаёт буфер фоновому клиенту:
 `wl-paste` открывает своё окно и забирает фокус. Поэтому снимок буфера на
@@ -132,14 +174,11 @@ Wayland делается только в KDE.
 
 Направления на будущее:
 
-1. **Портал RemoteDesktop (libei)** вместо ydotool — стандартная инъекция
-   ввода на Wayland: GNOME 45+, KDE 6.1+. ydotool требует ydotoold и доступа к
-   `/dev/uinput`, для пользователя это тяжело. `ashpd` уже в зависимостях.
-2. **wlroots** — бэкенды трекера на IPC Hyprland и i3-IPC Sway; ввод через
+1. **wlroots** — бэкенды трекера на IPC Hyprland и i3-IPC Sway; ввод через
    `wtype` (virtual-keyboard).
-3. **GNOME** — чужие окна недоступны без расширения Shell. Остаётся честная
+2. **GNOME** — чужие окна недоступны без расширения Shell. Остаётся честная
    деградация: вставка через буфер обмена и уведомление.
-4. **UI по возможностям**: отдавать во фронтенд набор доступных функций
+3. **UI по возможностям**: отдавать во фронтенд набор доступных функций
    (сессия, наличие трекера, способ ввода), чтобы UI скрывал недоступное, а не
    показывал ошибку.
 
@@ -148,8 +187,7 @@ Wayland делается только в KDE.
 - NVIDIA + WebKitGTK: артефакты отрисовки, обход —
   `WEBKIT_DISABLE_DMABUF_RENDERER=1`.
 - AppImage на Wayland иногда ломается из-за вшитых библиотек (EGL, Mesa).
-- Flatpak ломает xdotool, ydotool и KWin-скрипты; совместимы с ним только
-  порталы. Если Flatpak понадобится — сначала порталы.
+- Flatpak: см. «Вставка в другие окна» ниже.
 
 ## 4. Windows и macOS: что сделать
 
@@ -234,11 +272,11 @@ Rust-зависимости, запуск контейнера использу�
 и сохраняет логи композитора, ввода и тестов. Обычный `cargo test` пропускает
 эти тесты (`#[ignore]`); запуск требует явно выбранной изолированной сессии.
 
-| Сессия                   | Автоматические проверки                                                                                                                                                 |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Xvfb + Openbox           | Настоящий x11rb-трекер, своё/чужое окно, xdotool-вставка, xclip и PRIMARY, восстановление буфера, сохранение новой пользовательской копии, закрытие цели                |
-| KWin virtual + XWayland  | Production KWin-скрипты и D-Bus-отчёты, выбор и активация цели, вставка через XSendEvent в XWayland-клиент, wl-clipboard/PRIMARY, восстановление буфера и закрытие цели |
-| Sway headless + libinput | wl-clipboard/PRIMARY, настоящий ydotool в сфокусированный Wayland-клиент, отказ целевой вставки без KWin-трекера и отказ снимка буфера вне KDE                          |
+| Сессия                   | Автоматические проверки                                                                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Xvfb + Openbox           | Настоящий x11rb-трекер, своё/чужое окно, активация через x11rb и вставка XSendEvent, xclip и PRIMARY, восстановление буфера, новая пользовательская копия, закрытие цели |
+| KWin virtual + XWayland  | Production KWin-скрипты и D-Bus-отчёты, выбор и активация цели, вставка через XSendEvent в XWayland-клиент, wl-clipboard/PRIMARY, восстановление буфера и закрытие цели  |
+| Sway headless + libinput | wl-clipboard/PRIMARY, настоящий ydotool: вставка без трекера в окно с фокусом, отказ снимка буфера вне KDE                                                               |
 
 Тестовый редактор — отдельный GTK-процесс; он записывает содержимое поля в
 файл, поэтому проверяется текст, действительно полученный чужим окном.
@@ -253,7 +291,9 @@ Sway использует `/dev/uinput`, `/dev/input`, seatd и привилег
 доступ к input-устройствам предназначен для изолированного CI-раннера.
 GNOME/Mutter и Weston в автоматическую матрицу пока не входят.
 
-Native smoke (`pnpm test:desktop`) automates the full Linux/X11 path: a
+Native smoke (`pnpm test:desktop`) automates the full Linux/X11 path (Xvfb
+reads no input devices, so `scripts/linux-platform/ydotool-xtest.py` stands in
+for ydotool and its daemon and replays the keys through XTest): a
 separate GTK editor → CLI quick-input activation → typing in the real Tyco
 webview → insertion through the actions menu → checking the text recorded by
 the foreign process. It also checks theme and history restoration after a native

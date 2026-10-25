@@ -7,6 +7,7 @@ import {
   readFile,
   readdir,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises'
 import { createServer } from 'node:http'
@@ -26,6 +27,15 @@ const binary = resolve(
 )
 const runtimeDir = resolve(home, 'runtime')
 await mkdir(runtimeDir, { mode: 0o700 })
+// Xvfb reads no input devices: a stand-in ydotool replays the keys through
+// XTest, so the quick insertion runs Tyco's whole path
+const toolsDir = resolve(home, 'bin')
+const ydotoolSocket = resolve(runtimeDir, 'ydotool.sock')
+const ydotoolStandIn = resolve(root, 'scripts/linux-platform/ydotool-xtest.py')
+if (!isWindows) {
+  await mkdir(toolsDir)
+  await symlink(ydotoolStandIn, resolve(toolsDir, 'ydotool'))
+}
 const endpoint = 'http://127.0.0.1:4444'
 const appEnv = {
   ...process.env,
@@ -33,6 +43,8 @@ const appEnv = {
   ...(!isWindows
     ? {
         XDG_RUNTIME_DIR: runtimeDir,
+        PATH: `${toolsDir}:${process.env.PATH}`,
+        YDOTOOL_SOCKET: ydotoolSocket,
         XDG_SESSION_TYPE: 'x11',
         XDG_CURRENT_DESKTOP: 'Openbox',
         XDG_SESSION_DESKTOP: 'openbox',
@@ -48,6 +60,11 @@ const server = createServer((_request, response) => {
   response.writeHead(204)
   response.end()
 })
+const ydotoold = isWindows
+  ? undefined
+  : spawn('python3', [ydotoolStandIn, '--daemon', ydotoolSocket], {
+      stdio: 'ignore',
+    })
 const driver = spawn(process.env.TYCO_TEST_DRIVER ?? 'tauri-driver', [], {
   env: appEnv,
   stdio: ['ignore', 'pipe', 'pipe'],
@@ -594,6 +611,7 @@ try {
     await Promise.race([stopped, delay(3000)])
     if (driver.exitCode === null) driver.kill('SIGKILL')
   }
+  ydotoold?.kill('SIGKILL')
   await rm(home, {
     recursive: true,
     force: true,

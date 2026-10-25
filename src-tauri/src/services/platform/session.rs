@@ -68,6 +68,15 @@ impl Session {
     }
 }
 
+/// Whether Tyco runs in a Flatpak or Snap sandbox, where only desktop
+/// portals reach outside: no `/dev/uinput`, and no tools of the host.
+pub fn is_sandboxed() -> bool {
+    #[cfg(target_os = "linux")]
+    return ashpd::is_sandboxed();
+    #[cfg(not(target_os = "linux"))]
+    false
+}
+
 /// The session of this process. The environment does not change while it
 /// runs, so it is read once.
 pub fn current() -> Session {

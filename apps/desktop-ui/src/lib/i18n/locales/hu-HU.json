@@ -580,7 +580,6 @@
     "autosaveSaving": "Mentés…",
     "backToPlugins": "Vissza a bővítményekhez",
     "baseUrl": "Alap-URL",
-    "binaryPathPlaceholder": "A PATH-ban található",
     "browseWorkingDir": "Munkakönyvtár kiválasztása…",
     "chat": "Csevegés",
     "chatCount": "Csevegések: {count}",
@@ -908,9 +907,22 @@
     "terminalPasteShortcutHint": "Az eredmények beillesztésére és a kijelölt szöveg cseréjére szolgál a felismert terminálablakokban. A kijelölt szöveg másolása Ctrl+Shift+C-vel történik.",
     "terminalPasteShortcutSame": "Ugyanaz, mint a szokásos alkalmazásokban",
     "textCorrection": "Szövegjavítás",
-    "textInjection": {
-      "recheck": "Újraellenőrzés",
-      "unavailable": "A szövegbeillesztés nem érhető el: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Engedélyezze a Tycót: Rendszerbeállítások → Adatvédelem és biztonság → Kisegítő lehetőségek.",
+      "allowKeyboardControl": "Engedélyezés",
+      "checkFailed": "Nem sikerült ellenőrizni a szövegbeillesztést: {error}",
+      "keysReadyPortal": "A billentyűket az asztal távvezérlési portálja nyomja le",
+      "keysReadySystem": "A billentyűket a rendszer bevitele nyomja le",
+      "keysReadyYdotool": "A billentyűket a ydotool nyomja le",
+      "keysUnavailable": "A szövegbeillesztés nem érhető el: semmi sem tud billentyűt lenyomni",
+      "portalNeedsPermission": "Szöveg beillesztéséhez engedélyezze, hogy a Tyco vezérelje a billentyűzetet. Az asztal csak egyszer kérdez.",
+      "portalUnavailable": "Homokozóban (Flatpak) a Tyco csak a távvezérlési portálon keresztül tud billentyűt lenyomni, ez az asztal pedig nem kínálja.",
+      "targetFocusReturn": "A Tyco ezen az asztalon nem tudja követni az ablakokat: a szöveg abba az ablakba kerül, amely a Tyco bezárásakor megkapja a fókuszt. A kijelölés cseréje nem érhető el.",
+      "targetTracked": "A Tyco megjegyzi az ablakot, ahonnan megnyitották, és oda illeszt be",
+      "unsupportedSession": "A szövegbeillesztés csak X11 vagy Wayland grafikus munkamenetben működik",
+      "ydotoolMissing": "A ydotool nincs telepítve. Telepítse a ydotool 1.x-et, és indítsa el a ydotoold-ot, vagy használja a KDE Plasma 6-ot vagy a GNOME-ot, ahol a Tyco a rendszerportálon át nyomja le a billentyűket.",
+      "ydotoolOutdated": "A telepített ydotool elavult (0.1.x). 1.0-s vagy újabb verzió szükséges.",
+      "ydotooldNotRunning": "A ydotoold démon nem fut. Indítsa el: systemctl --user enable --now ydotool"
     },
     "theme": "Téma",
     "toolUse": "Eszközhívás",
@@ -940,10 +952,7 @@
     "uiScale": "A felület mérete",
     "unassignHotkey": "Billentyűparancs eltávolítása",
     "vision": "Képbevitel",
-    "voiceTextCorrection": "Diktált szöveg javítása",
-    "windowInsertion": "Beillesztési mód",
-    "windowInsertionAuto": "Automatikus",
-    "windowInsertionHint": "Az eszköz, amellyel a Tyco billentyűket nyom le más alkalmazásokban az eredmény beillesztéséhez vagy a kijelölt szöveg átvételéhez. Az xdotool X11-en, az ydotool Waylanden működik: utóbbihoz futnia kell az ydotoold szolgáltatásnak, és a Wayland alatti beillesztés csak KDE Plasma 6-on támogatott. Az „Automatikus” az aktuális munkamenet alapján választ eszközt. Üres útvonalmező esetén az eszközt a PATH-ban keresi."
+    "voiceTextCorrection": "Diktált szöveg javítása"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

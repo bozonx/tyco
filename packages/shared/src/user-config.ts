@@ -51,10 +51,6 @@ export const SUBMIT_KEYS = ['Enter', 'Ctrl+Enter'] as const
 export type SubmitKey = (typeof SUBMIT_KEYS)[number]
 export const DEFAULT_SUBMIT_KEY: SubmitKey = 'Enter'
 
-/** How the Linux insertion presses the keys; `auto` picks by the session */
-export const LINUX_INSERTION_METHODS = ['auto', 'xdotool', 'ydotool'] as const
-export type LinuxInsertionMethod = (typeof LINUX_INSERTION_METHODS)[number]
-
 /**
  * What local applications may do through tyco-ctl and D-Bus besides running the
  * commands granted one by one
@@ -157,10 +153,6 @@ export interface UserConfig {
     linux: {
       pasteShortcut: PasteShortcut
       terminalPasteShortcut: PasteShortcut | null
-      method: LinuxInsertionMethod
-      /** Empty: found on `PATH` */
-      xdotoolPath: string
-      ydotoolPath: string
     }
   }
   translation: TranslationConfig

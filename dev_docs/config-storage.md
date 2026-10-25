@@ -66,7 +66,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `quickWindow`     | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`                                                                    |
 | `hotkeys`         | one shortcut per activation mode a hotkey opens, named as the mode, and `selectionCorrection`                      |
 | `externalAccess`  | `canAccessSelection`; each command allows external calls with `isAvailableExternally`                              |
-| `windowInsertion` | per platform; `linux`: `pasteShortcut`, `method` (`auto`, `xdotool`, `ydotool`), `xdotoolPath`, `ydotoolPath`      |
+| `windowInsertion` | per platform; `linux`: `pasteShortcut`, `terminalPasteShortcut`                                                    |
 | `translation`     | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode` |
 | `mainActions`     | the action menu (a shortcut grid)                                                                                  |
 | `launcherPages`   | `id`, `inputMode`, `hotkey`, `slots` (a shortcut grid of command ids)                                              |

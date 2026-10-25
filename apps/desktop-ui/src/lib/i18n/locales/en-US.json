@@ -583,7 +583,6 @@
     "autosaveSaving": "Saving…",
     "backToPlugins": "Back to plugins",
     "baseUrl": "Base URL",
-    "binaryPathPlaceholder": "Found on PATH",
     "browseWorkingDir": "Select working directory…",
     "chat": "Chat",
     "chatCount": "{count} chats",
@@ -911,9 +910,22 @@
     "terminalPasteShortcutHint": "Used for inserting results and replacing selected text in recognized terminal windows. Copying selected text uses Ctrl+Shift+C.",
     "terminalPasteShortcutSame": "Same as regular apps",
     "textCorrection": "Text correction",
-    "textInjection": {
-      "recheck": "Check text insertion availability",
-      "unavailable": "Text insertion is unavailable: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Allow Tyco in System Settings → Privacy & Security → Accessibility.",
+      "allowKeyboardControl": "Allow",
+      "checkFailed": "Could not check text insertion: {error}",
+      "keysReadyPortal": "Keys are pressed through the desktop's remote control portal",
+      "keysReadySystem": "Keys are pressed with the system input",
+      "keysReadyYdotool": "Keys are pressed with ydotool",
+      "keysUnavailable": "Text insertion is unavailable: nothing can press keys",
+      "portalNeedsPermission": "To insert text, allow Tyco to control the keyboard. The desktop asks once.",
+      "portalUnavailable": "Inside a sandbox (Flatpak), Tyco can press keys only through the remote control portal, and this desktop does not offer it.",
+      "targetFocusReturn": "Tyco cannot track windows on this desktop: text goes to the window that gets the focus when Tyco closes. Replacing a selection is unavailable.",
+      "targetTracked": "Tyco remembers the window it was opened from and inserts into it",
+      "unsupportedSession": "Text insertion works only in an X11 or Wayland graphical session",
+      "ydotoolMissing": "ydotool is not installed. Install ydotool 1.x and start ydotoold, or use KDE Plasma 6 or GNOME, where Tyco presses keys through the system portal.",
+      "ydotoolOutdated": "The installed ydotool is outdated (0.1.x). Version 1.0 or newer is required.",
+      "ydotooldNotRunning": "The ydotoold daemon is not running. Start it: systemctl --user enable --now ydotool"
     },
     "theme": "Theme",
     "toolUse": "Tool calling",
@@ -943,10 +955,7 @@
     "uiScale": "Interface scale",
     "unassignHotkey": "Remove shortcut",
     "vision": "Image input",
-    "voiceTextCorrection": "Voice text correction",
-    "windowInsertion": "Insertion method",
-    "windowInsertionAuto": "Auto",
-    "windowInsertionHint": "The tool Tyco uses to press keys in other apps, to paste the result or take the selected text. xdotool works on X11, ydotool on Wayland: it needs the ydotoold daemon running, and Wayland insertion is supported on KDE Plasma 6 only. “Auto” picks the tool by the current session. An empty path field means the tool is looked up in PATH."
+    "voiceTextCorrection": "Voice text correction"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

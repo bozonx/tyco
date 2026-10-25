@@ -12,7 +12,6 @@ export interface GlobalHotkeysModelDependencies {
   listenHotkeysChanged: (handler: () => void) => Promise<() => void>
   getConfiguredHotkey: (mode: string) => string
   suspendHotkeys: (suspended: boolean) => Promise<IpcResult<void>>
-  checkTextInjection: () => Promise<IpcResult<void>>
   configureHotkeys: () => Promise<IpcResult<void>>
   rebindHotkeys: () => Promise<IpcResult<void>>
 }
@@ -21,10 +20,6 @@ export function createGlobalHotkeysModel(deps: GlobalHotkeysModelDependencies) {
   const providerState = reactive(createHotkeySettingsState())
   const portalError = ref('')
   const isRebinding = ref(false)
-  const injection = reactive<{ ok: boolean | null; error: string }>({
-    ok: null,
-    error: '',
-  })
 
   let loading: Promise<void> | undefined
   let unlisten: (() => void) | undefined
@@ -72,13 +67,6 @@ export function createGlobalHotkeysModel(deps: GlobalHotkeysModelDependencies) {
     void deps.suspendHotkeys(suspended)
   }
 
-  const checkTextInjection = async () => {
-    injection.ok = null
-    const result = await deps.checkTextInjection()
-    injection.ok = result.success
-    injection.error = result.error ?? ''
-  }
-
   const configureHotkeys = async (fallbackError: string) => {
     portalError.value = ''
     const result = await deps.configureHotkeys()
@@ -107,13 +95,11 @@ export function createGlobalHotkeysModel(deps: GlobalHotkeysModelDependencies) {
     providerState,
     portalError,
     isRebinding,
-    injection,
     load,
     reload,
     refresh,
     shortcutLabel,
     suspendHotkeys,
-    checkTextInjection,
     configureHotkeys,
     rebindHotkeys,
     dispose,

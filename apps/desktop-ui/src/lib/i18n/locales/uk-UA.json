@@ -580,7 +580,6 @@
     "autosaveSaving": "Збереження…",
     "backToPlugins": "Назад до плагінів",
     "baseUrl": "Базовий URL",
-    "binaryPathPlaceholder": "Знайдено в PATH",
     "browseWorkingDir": "Вибрати робочу теку…",
     "chat": "Чат",
     "chatCount": "Чатів: {count}",
@@ -908,9 +907,22 @@
     "terminalPasteShortcutHint": "Використовується для вставлення результатів і заміни виділеного тексту в розпізнаних вікнах терміналів. Для копіювання виділеного тексту використовується Ctrl+Shift+C.",
     "terminalPasteShortcutSame": "Як у звичайних застосунках",
     "textCorrection": "Виправлення тексту",
-    "textInjection": {
-      "recheck": "Перевірити знову",
-      "unavailable": "Вставлення тексту недоступне: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Дозвольте Tyco доступ у «Системні параметри → Приватність і безпека → Доступність».",
+      "allowKeyboardControl": "Дозволити",
+      "checkFailed": "Не вдалося перевірити вставлення: {error}",
+      "keysReadyPortal": "Клавіші натискаються через портал віддаленого керування робочого столу",
+      "keysReadySystem": "Клавіші натискаються засобами системи",
+      "keysReadyYdotool": "Клавіші натискає ydotool",
+      "keysUnavailable": "Вставлення недоступне: нічим натиснути клавіші",
+      "portalNeedsPermission": "Щоб вставляти текст, дозвольте Tyco керувати клавіатурою. Система запитає один раз.",
+      "portalUnavailable": "У пісочниці (Flatpak) Tyco натискає клавіші лише через портал віддаленого керування, а цей робочий стіл його не надає.",
+      "targetFocusReturn": "Tyco не може відстежувати вікна на цьому робочому столі: текст вставляється у вікно, яке отримає фокус після закриття Tyco. Заміна виділення недоступна.",
+      "targetTracked": "Tyco запам'ятовує вікно, з якого його відкрили, і вставляє в нього",
+      "unsupportedSession": "Вставлення працює лише в графічному сеансі X11 або Wayland",
+      "ydotoolMissing": "ydotool не встановлено. Встановіть ydotool 1.x і запустіть ydotoold — або використовуйте KDE Plasma 6 чи GNOME, де Tyco натискає клавіші через системний портал.",
+      "ydotoolOutdated": "Встановлено застарілий ydotool (0.1.x). Потрібна версія 1.0 або новіша.",
+      "ydotooldNotRunning": "Демон ydotoold не запущено. Запустіть його: systemctl --user enable --now ydotool"
     },
     "theme": "Тема",
     "toolUse": "Виклик інструментів",
@@ -940,10 +952,7 @@
     "uiScale": "Масштаб інтерфейсу",
     "unassignHotkey": "Прибрати сполучення",
     "vision": "Введення зображень",
-    "voiceTextCorrection": "Виправлення надиктованого тексту",
-    "windowInsertion": "Спосіб вставлення",
-    "windowInsertionAuto": "Авто",
-    "windowInsertionHint": "Інструмент, яким Tyco натискає клавіші в інших застосунках, щоб вставити результат або взяти виділений текст. xdotool працює в X11, ydotool — у Wayland: потрібна запущена служба ydotoold, а вставлення у Wayland підтримується лише в KDE Plasma 6. «Авто» вибирає інструмент за поточним сеансом. Порожнє поле шляху означає пошук інструмента в PATH."
+    "voiceTextCorrection": "Виправлення надиктованого тексту"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

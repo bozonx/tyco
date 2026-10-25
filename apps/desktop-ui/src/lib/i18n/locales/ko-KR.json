@@ -708,7 +708,6 @@
     "autosaveSaving": "저장 중…",
     "backToPlugins": "플러그인 목록으로 돌아가기",
     "baseUrl": "기본 URL",
-    "binaryPathPlaceholder": "PATH에서 발견됨",
     "browseWorkingDir": "작업 디렉터리 선택…",
     "chat": "채팅",
     "chatCount": "{count}개 채팅",
@@ -1036,9 +1035,22 @@
     "terminalPasteShortcutHint": "인식된 터미널 창에서 결과를 삽입하고 선택한 텍스트를 바꿀 때 사용됩니다. 선택한 텍스트 복사는 Ctrl+Shift+C를 사용합니다.",
     "terminalPasteShortcutSame": "일반 앱과 동일",
     "textCorrection": "텍스트 교정",
-    "textInjection": {
-      "recheck": "다시 확인",
-      "unavailable": "텍스트 삽입을 사용할 수 없음: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용에서 Tyco를 허용하세요.",
+      "allowKeyboardControl": "허용",
+      "checkFailed": "텍스트 삽입을 확인하지 못했습니다: {error}",
+      "keysReadyPortal": "데스크톱의 원격 제어 포털을 통해 키를 누릅니다",
+      "keysReadySystem": "시스템 입력으로 키를 누릅니다",
+      "keysReadyYdotool": "ydotool로 키를 누릅니다",
+      "keysUnavailable": "텍스트 삽입을 사용할 수 없습니다: 키를 누를 수단이 없습니다",
+      "portalNeedsPermission": "텍스트를 삽입하려면 Tyco가 키보드를 제어하도록 허용하세요. 데스크톱이 한 번만 묻습니다.",
+      "portalUnavailable": "샌드박스(Flatpak) 안에서는 Tyco가 원격 제어 포털을 통해서만 키를 누를 수 있는데, 이 데스크톱은 이를 제공하지 않습니다.",
+      "targetFocusReturn": "이 데스크톱에서는 Tyco가 창을 추적할 수 없습니다. 텍스트는 Tyco가 닫힐 때 포커스를 받는 창에 삽입됩니다. 선택 영역 바꾸기는 사용할 수 없습니다.",
+      "targetTracked": "Tyco는 자신을 연 창을 기억하고 그 창에 삽입합니다",
+      "unsupportedSession": "텍스트 삽입은 X11 또는 Wayland 그래픽 세션에서만 작동합니다",
+      "ydotoolMissing": "ydotool이 설치되어 있지 않습니다. ydotool 1.x를 설치하고 ydotoold를 시작하거나, Tyco가 시스템 포털로 키를 누르는 KDE Plasma 6 또는 GNOME을 사용하세요.",
+      "ydotoolOutdated": "설치된 ydotool이 오래되었습니다(0.1.x). 1.0 이상 버전이 필요합니다.",
+      "ydotooldNotRunning": "ydotoold 데몬이 실행 중이 아닙니다. 시작하세요: systemctl --user enable --now ydotool"
     },
     "theme": "테마",
     "toolUse": "도구 호출",
@@ -1068,9 +1080,6 @@
     "uiScale": "인터페이스 배율",
     "unassignHotkey": "단축키 제거",
     "vision": "이미지 입력",
-    "voiceTextCorrection": "음성 텍스트 교정",
-    "windowInsertion": "삽입 방식",
-    "windowInsertionAuto": "자동",
-    "windowInsertionHint": "Tyco가 다른 앱에서 키를 눌러 결과를 붙여넣거나 선택한 텍스트를 가져오는 데 사용하는 도구입니다. xdotool은 X11에서 작동하고 ydotool은 Wayland에서 작동합니다. ydotoold 데몬이 실행 중이어야 하며 Wayland 삽입은 KDE Plasma 6에서만 지원됩니다. “자동”은 현재 세션에 따라 도구를 선택합니다. 빈 경로 필드는 PATH에서 도구를 찾음을 의미합니다."
+    "voiceTextCorrection": "음성 텍스트 교정"
   }
 }

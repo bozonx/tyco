@@ -1,9 +1,9 @@
-use tauri::{AppHandle, State};
+use tauri::AppHandle;
 
 use crate::errors::AppError;
+use crate::services::platform::{self, TextInsertionStatus};
 use crate::services::runtime::{self, FOCUS_RELEASE_TIMEOUT};
 use crate::services::selection_replace::{self, SelectionFinishStatus, COMMAND_ACTION_PREFIX};
-use crate::state::AppState;
 
 /// Pastes the result of a selection run over the selection; `text` is `None`
 /// when there is nothing to insert. Async so that waiting for the paste does
@@ -40,8 +40,21 @@ pub async fn replace_selection_with_command(
     .await?
 }
 
-/// Fails with what is missing for pressing keys in other windows.
+/// What text insertion into other windows can do now and what it lacks.
 #[tauri::command]
-pub fn check_text_injection(state: State<'_, AppState>) -> Result<(), AppError> {
-    crate::services::platform::check_text_injection(&state.user_config())
+pub async fn get_text_insertion_status() -> Result<TextInsertionStatus, AppError> {
+    super::run_blocking(platform::text_insertion_status).await
+}
+
+/// Asks the user to allow keyboard control where the desktop shows a dialog
+/// for it, and tells the status after.
+#[tauri::command]
+pub async fn request_text_insertion_permission() -> Result<TextInsertionStatus, AppError> {
+    super::run_blocking(|| {
+        if let Err(error) = platform::request_text_insertion_permission() {
+            log::warn!("Keyboard control was not allowed: {error}");
+        }
+        platform::text_insertion_status()
+    })
+    .await
 }

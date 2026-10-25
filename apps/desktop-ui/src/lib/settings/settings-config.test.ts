@@ -49,7 +49,7 @@ describe('settings config preparation', () => {
         },
       },
       plugins: [],
-      windowInsertion: { linux: { xdotoolPath: 42, pasteShortcut: {} } },
+      windowInsertion: { linux: { method: 42, pasteShortcut: {} } },
       hotkeys: {
         editor: 123,
         quickInput: 'Ctrl+W',
@@ -99,7 +99,8 @@ describe('settings config preparation', () => {
   ])('accepts incomplete or malformed settings: %j', (value) => {
     const result = model().prepare(value)
     expect(result.llm.tasks.chat.rule).toBeTypeOf('string')
-    expect(result.windowInsertion.linux.xdotoolPath).toBeTypeOf('string')
+    expect(result.windowInsertion.linux.pasteShortcut).toBeTypeOf('string')
+    expect(result.windowInsertion.linux).not.toHaveProperty('method')
     expect(Array.isArray(result.llm.models)).toBe(true)
     expect(model().prepare(result)).toEqual(result)
   })

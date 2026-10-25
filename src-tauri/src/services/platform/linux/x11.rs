@@ -14,10 +14,12 @@ use super::backoff::DISPLAY_RECONNECT;
 use x11rb::connection::Connection;
 use x11rb::properties::WmClass;
 use x11rb::protocol::xproto::{
-    Atom, AtomEnum, ChangeWindowAttributesAux, ConnectionExt as _, EventMask, Window,
+    Atom, AtomEnum, ChangeWindowAttributesAux, ClientMessageEvent, ConnectionExt as _, EventMask,
+    Window,
 };
 use x11rb::protocol::Event;
 use x11rb::rust_connection::RustConnection;
+use x11rb::CURRENT_TIME;
 
 use crate::errors::AppError;
 use crate::services::platform::window_tracker::{
@@ -42,6 +44,76 @@ pub(crate) fn is_terminal_window(id: &str) -> bool {
                 class.instance(),
             ))
         })
+}
+
+/// How long a window manager may take to focus a window it was asked to.
+const ACTIVATION_TIMEOUT: Duration = Duration::from_secs(1);
+const ACTIVATION_POLL_INTERVAL: Duration = Duration::from_millis(10);
+/// `_NET_ACTIVE_WINDOW` source indication of a pager: window managers that
+/// prevent focus stealing honour a request from one, as from the user.
+const SOURCE_PAGER: u32 = 2;
+
+/// The focused window, as the window manager publishes it.
+pub(crate) fn active_window() -> Option<String> {
+    let (connection, screen) = x11rb::connect(None).ok()?;
+    let root = connection.setup().roots[screen].root;
+    let atom = intern(&connection, "_NET_ACTIVE_WINDOW").ok()?;
+    read_active_window(&connection, root, atom).map(|window| window.to_string())
+}
+
+/// Asks the window manager to focus `id` and waits until it has, as
+/// `xdotool windowactivate --sync` does.
+pub(crate) fn activate_window(id: &str) -> Result<(), AppError> {
+    let window = id
+        .parse::<Window>()
+        .map_err(|_| AppError::InvalidInput(format!("Invalid X11 window id: {id}")))?;
+    let (connection, screen) = x11rb::connect(None).map_err(x11_error)?;
+    let root = connection.setup().roots[screen].root;
+    let atom = intern(&connection, "_NET_ACTIVE_WINDOW")?;
+    if read_active_window(&connection, root, atom) == Some(window) {
+        return Ok(());
+    }
+    let event = ClientMessageEvent::new(32, window, atom, [SOURCE_PAGER, CURRENT_TIME, 0, 0, 0]);
+    connection
+        .send_event(
+            false,
+            root,
+            EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
+            event,
+        )
+        .map_err(x11_error)?
+        .check()
+        .map_err(x11_error)?;
+    let deadline = std::time::Instant::now() + ACTIVATION_TIMEOUT;
+    while std::time::Instant::now() < deadline {
+        if read_active_window(&connection, root, atom) == Some(window) {
+            return Ok(());
+        }
+        std::thread::sleep(ACTIVATION_POLL_INTERVAL);
+    }
+    Err(AppError::Stale(String::from(
+        "The target window did not get the focus back",
+    )))
+}
+
+fn intern(connection: &RustConnection, name: &str) -> Result<Atom, AppError> {
+    Ok(connection
+        .intern_atom(false, name.as_bytes())
+        .map_err(x11_error)?
+        .reply()
+        .map_err(x11_error)?
+        .atom)
+}
+
+fn read_active_window(connection: &RustConnection, root: Window, atom: Atom) -> Option<Window> {
+    connection
+        .get_property(false, root, atom, AtomEnum::WINDOW, 0, 1)
+        .ok()?
+        .reply()
+        .ok()?
+        .value32()?
+        .next()
+        .filter(|window| *window != x11rb::NONE)
 }
 
 const LOGGED_FAILURES: u32 = 3;
@@ -175,14 +247,7 @@ impl<'a> Watcher<'a> {
         root: Window,
         own_class: &str,
     ) -> Result<Self, AppError> {
-        let intern = |name: &str| -> Result<Atom, AppError> {
-            Ok(connection
-                .intern_atom(false, name.as_bytes())
-                .map_err(x11_error)?
-                .reply()
-                .map_err(x11_error)?
-                .atom)
-        };
+        let intern = |name: &str| intern(connection, name);
         let atoms = Atoms {
             active_window: intern("_NET_ACTIVE_WINDOW")?,
             client_list: intern("_NET_CLIENT_LIST")?,

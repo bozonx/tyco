@@ -583,7 +583,6 @@
     "autosaveSaving": "Zapisywanie…",
     "backToPlugins": "Wróć do wtyczek",
     "baseUrl": "Bazowy URL",
-    "binaryPathPlaceholder": "Znaleziono w PATH",
     "browseWorkingDir": "Wybierz katalog roboczy…",
     "chat": "Czat",
     "chatCount": "Czatów: {count}",
@@ -911,9 +910,22 @@
     "terminalPasteShortcutHint": "Służy do wstawiania wyników i zastępowania zaznaczonego tekstu w rozpoznanych oknach terminala. Kopiowanie zaznaczonego tekstu używa Ctrl+Shift+C.",
     "terminalPasteShortcutSame": "Jak w zwykłych aplikacjach",
     "textCorrection": "Korekta tekstu",
-    "textInjection": {
-      "recheck": "Sprawdź ponownie",
-      "unavailable": "Wstawianie tekstu jest niedostępne: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Zezwól Tyco w Ustawieniach systemowych → Prywatność i ochrona → Dostępność.",
+      "allowKeyboardControl": "Zezwól",
+      "checkFailed": "Nie udało się sprawdzić wstawiania tekstu: {error}",
+      "keysReadyPortal": "Klawisze są naciskane przez portal zdalnego sterowania pulpitu",
+      "keysReadySystem": "Klawisze są naciskane za pomocą wejścia systemowego",
+      "keysReadyYdotool": "Klawisze naciska ydotool",
+      "keysUnavailable": "Wstawianie tekstu jest niedostępne: nic nie może naciskać klawiszy",
+      "portalNeedsPermission": "Aby wstawiać tekst, zezwól Tyco na sterowanie klawiaturą. Pulpit zapyta tylko raz.",
+      "portalUnavailable": "W piaskownicy (Flatpak) Tyco może naciskać klawisze tylko przez portal zdalnego sterowania, a ten pulpit go nie udostępnia.",
+      "targetFocusReturn": "Tyco nie może śledzić okien na tym pulpicie: tekst trafia do okna, które otrzyma fokus po zamknięciu Tyco. Zastępowanie zaznaczenia jest niedostępne.",
+      "targetTracked": "Tyco zapamiętuje okno, z którego został otwarty, i wstawia do niego tekst",
+      "unsupportedSession": "Wstawianie tekstu działa tylko w sesji graficznej X11 lub Wayland",
+      "ydotoolMissing": "ydotool nie jest zainstalowany. Zainstaluj ydotool 1.x i uruchom ydotoold albo użyj KDE Plasma 6 lub GNOME, gdzie Tyco naciska klawisze przez portal systemowy.",
+      "ydotoolOutdated": "Zainstalowany ydotool jest przestarzały (0.1.x). Wymagana jest wersja 1.0 lub nowsza.",
+      "ydotooldNotRunning": "Demon ydotoold nie działa. Uruchom go: systemctl --user enable --now ydotool"
     },
     "theme": "Motyw",
     "toolUse": "Wywoływanie narzędzi",
@@ -943,10 +955,7 @@
     "uiScale": "Skala interfejsu",
     "unassignHotkey": "Usuń skrót",
     "vision": "Wejście obrazów",
-    "voiceTextCorrection": "Korekta tekstu z dyktowania",
-    "windowInsertion": "Metoda wstawiania",
-    "windowInsertionAuto": "Automatycznie",
-    "windowInsertionHint": "Narzędzie, którym Tyco naciska klawisze w innych aplikacjach, aby wkleić wynik lub pobrać zaznaczony tekst. xdotool działa w X11, ydotool w Wayland: wymaga działającej usługi ydotoold, a wstawianie w Wayland jest obsługiwane tylko w KDE Plasma 6. „Automatycznie” wybiera narzędzie na podstawie bieżącej sesji. Puste pole ścieżki oznacza, że narzędzie jest szukane w PATH."
+    "voiceTextCorrection": "Korekta tekstu z dyktowania"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

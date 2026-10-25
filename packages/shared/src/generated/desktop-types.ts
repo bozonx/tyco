@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 8db7abfaab7c25d5ffd369ea41ed581d365c96a148b70ccd8fa6169264519ec3
+// Source hash: 8ce2e94772c153cb5c099fe0fecf59f9fe845fd7e5b84cab35b5718106a139e5
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -475,6 +475,11 @@ export type JobCompletion = {
   code?: string | null
 }
 
+/** What presses the paste and copy keys in other windows. */
+export type KeySender = 'ydotool' | 'portal' | 'system'
+
+export type KeysState = 'ready' | 'needsPermission' | 'unavailable'
+
 /** A command the overlay opens with, see `Activation::launcher_request`. */
 export type LauncherRequest = {
   commandId: string
@@ -629,6 +634,28 @@ export type StorageKind = 'config' | 'data' | 'cache' | 'logs'
  * may put several kinds into one directory.
  */
 export type StorageLocation = { kinds: Array<StorageKind>; path: string }
+
+/** How Tyco finds the window to insert into. */
+export type TargetTracking = 'tracked' | 'focusReturn'
+
+/** Why keys cannot be pressed, for the settings to tell how to fix it. */
+export type TextInsertionProblem =
+  | 'unsupportedSession'
+  | 'ydotoolMissing'
+  | 'ydotoolOutdated'
+  | 'ydotooldNotRunning'
+  | 'portalUnavailable'
+  | 'accessibilityDenied'
+
+export type TextInsertionStatus = {
+  /** What presses the keys; none when nothing can. */
+  keySender?: KeySender
+  keys: KeysState
+  problem?: TextInsertionProblem
+  /** What the system reported, in English. */
+  detail?: string
+  target: TargetTracking
+}
 
 /** A tool as the webview registry describes it, see `set_tool_catalog`. */
 export type ToolCatalogEntry = {

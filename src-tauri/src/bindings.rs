@@ -104,6 +104,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::secrets::SecretStatus>();
     visitor.visit::<services::secrets::VaultState>();
     visitor.visit::<services::selection_replace::SelectionFinishStatus>();
+    visitor.visit::<services::platform::TextInsertionStatus>();
     visitor.visit::<services::status_overlay::StatusOverlayRequest>();
     visitor.visit::<services::voice::CaptureEvent>();
     visitor.visit::<services::voice::VoiceCaptureInfo>();

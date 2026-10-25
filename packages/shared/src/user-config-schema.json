@@ -141,27 +141,13 @@
             "terminalPasteShortcut": {
               "enum": [null, "Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"],
               "default": "Ctrl+Shift+V"
-            },
-            "method": {
-              "enum": ["auto", "xdotool", "ydotool"],
-              "default": "auto"
-            },
-            "xdotoolPath": { "type": "string", "default": "" },
-            "ydotoolPath": { "type": "string", "default": "" }
+            }
           },
-          "required": [
-            "pasteShortcut",
-            "terminalPasteShortcut",
-            "method",
-            "xdotoolPath",
-            "ydotoolPath"
-          ],
+          "required": ["pasteShortcut", "terminalPasteShortcut"],
+          "additionalProperties": false,
           "default": {
             "pasteShortcut": "Ctrl+V",
-            "terminalPasteShortcut": "Ctrl+Shift+V",
-            "method": "auto",
-            "xdotoolPath": "",
-            "ydotoolPath": ""
+            "terminalPasteShortcut": "Ctrl+Shift+V"
           }
         }
       },

@@ -236,10 +236,11 @@ fn scripts_dir() -> Result<PathBuf, AppError> {
 
     // SAFETY: plain system call without arguments
     let uid = unsafe { libc::geteuid() };
-    let directory = match std::env::var_os("XDG_RUNTIME_DIR") {
-        Some(runtime) => PathBuf::from(runtime).join("tyco"),
-        None => std::env::temp_dir().join(format!("tyco-{uid}")),
-    };
+    let directory = scripts_dir_in(
+        std::env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from),
+        std::env::var("FLATPAK_ID").ok(),
+    )
+    .unwrap_or_else(|| std::env::temp_dir().join(format!("tyco-{uid}")));
     match std::fs::DirBuilder::new()
         .recursive(false)
         .mode(0o700)
@@ -257,6 +258,16 @@ fn scripts_dir() -> Result<PathBuf, AppError> {
         )));
     }
     Ok(directory)
+}
+
+/// KWin reads the script from the host. A Flatpak shares only its own
+/// directory of the runtime one with the host, under the same path.
+fn scripts_dir_in(runtime: Option<PathBuf>, flatpak_id: Option<String>) -> Option<PathBuf> {
+    let runtime = runtime?;
+    Some(match flatpak_id.filter(|id| !id.is_empty()) {
+        Some(id) => runtime.join("app").join(id).join("tyco"),
+        None => runtime.join("tyco"),
+    })
 }
 
 fn is_script_loaded(connection: &zbus::blocking::Connection, name: &str) -> Result<bool, AppError> {
@@ -366,6 +377,20 @@ mod tests {
         assert!(is_class_name("com.tyco.app"));
         assert!(!is_class_name(""));
         assert!(!is_class_name("a\"; workspace.activeWindow = null; \""));
+    }
+
+    #[test]
+    fn a_flatpak_writes_scripts_where_the_host_sees_them() {
+        let runtime = Some(PathBuf::from("/run/user/1000"));
+        assert_eq!(
+            scripts_dir_in(runtime.clone(), None),
+            Some(PathBuf::from("/run/user/1000/tyco"))
+        );
+        assert_eq!(
+            scripts_dir_in(runtime, Some(String::from("com.tyco.app"))),
+            Some(PathBuf::from("/run/user/1000/app/com.tyco.app/tyco"))
+        );
+        assert_eq!(scripts_dir_in(None, None), None);
     }
 
     #[test]

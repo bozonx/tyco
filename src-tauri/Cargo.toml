@@ -66,7 +66,8 @@ evdev = "0.13"
 [target.'cfg(target_os = "linux")'.dependencies]
 # the Secret Service over zbus, like the rest of the D-Bus code
 zbus-secret-service-keyring-store = { version = "1", features = ["rt-async-io-crypto-rust"] }
-ashpd = { version = "0.13.13", features = ["global_shortcuts"] }
+# remote_desktop does not build without screencast
+ashpd = { version = "0.13.13", features = ["global_shortcuts", "remote_desktop", "screencast"] }
 gtk = "0.18"
 gtk-sys = "0.18"
 x11rb = "0.13"

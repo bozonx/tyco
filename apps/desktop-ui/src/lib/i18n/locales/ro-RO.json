@@ -583,7 +583,6 @@
     "autosaveSaving": "Se salvează…",
     "backToPlugins": "Înapoi la pluginuri",
     "baseUrl": "URL de bază",
-    "binaryPathPlaceholder": "Găsit în PATH",
     "browseWorkingDir": "Selectați directorul de lucru…",
     "chat": "Chat",
     "chatCount": "Chaturi: {count}",
@@ -911,9 +910,22 @@
     "terminalPasteShortcutHint": "Folosită pentru inserarea rezultatelor și înlocuirea textului selectat în ferestrele de terminal recunoscute. Copierea textului selectat folosește Ctrl+Shift+C.",
     "terminalPasteShortcutSame": "La fel ca în aplicațiile obișnuite",
     "textCorrection": "Corectarea textului",
-    "textInjection": {
-      "recheck": "Verifică din nou",
-      "unavailable": "Inserarea textului nu este disponibilă: {error}"
+    "textInsertion": {
+      "accessibilityDenied": "Permite Tyco în Configurări sistem → Confidențialitate și securitate → Accesibilitate.",
+      "allowKeyboardControl": "Permite",
+      "checkFailed": "Inserarea textului nu a putut fi verificată: {error}",
+      "keysReadyPortal": "Tastele sunt apăsate prin portalul de control la distanță al desktopului",
+      "keysReadySystem": "Tastele sunt apăsate cu intrarea sistemului",
+      "keysReadyYdotool": "Tastele sunt apăsate cu ydotool",
+      "keysUnavailable": "Inserarea textului nu este disponibilă: nimic nu poate apăsa taste",
+      "portalNeedsPermission": "Pentru a insera text, permite-i lui Tyco să controleze tastatura. Desktopul întreabă o singură dată.",
+      "portalUnavailable": "Într-un mediu izolat (Flatpak), Tyco poate apăsa taste doar prin portalul de control la distanță, iar acest desktop nu îl oferă.",
+      "targetFocusReturn": "Tyco nu poate urmări ferestrele pe acest desktop: textul ajunge în fereastra care primește focusul la închiderea lui Tyco. Înlocuirea selecției nu este disponibilă.",
+      "targetTracked": "Tyco ține minte fereastra din care a fost deschis și inserează în ea",
+      "unsupportedSession": "Inserarea textului funcționează doar într-o sesiune grafică X11 sau Wayland",
+      "ydotoolMissing": "ydotool nu este instalat. Instalează ydotool 1.x și pornește ydotoold sau folosește KDE Plasma 6 ori GNOME, unde Tyco apasă tastele prin portalul sistemului.",
+      "ydotoolOutdated": "ydotool instalat este învechit (0.1.x). Este necesară versiunea 1.0 sau mai nouă.",
+      "ydotooldNotRunning": "Serviciul ydotoold nu rulează. Pornește-l: systemctl --user enable --now ydotool"
     },
     "theme": "Temă",
     "toolUse": "Apelarea instrumentelor",
@@ -943,10 +955,7 @@
     "uiScale": "Scala interfeței",
     "unassignHotkey": "Elimină comanda rapidă",
     "vision": "Intrare de imagini",
-    "voiceTextCorrection": "Corectarea textului dictat",
-    "windowInsertion": "Metoda de inserare",
-    "windowInsertionAuto": "Automat",
-    "windowInsertionHint": "Instrumentul cu care Tyco apasă taste în alte aplicații pentru a lipi rezultatul sau a prelua textul selectat. xdotool funcționează pe X11, ydotool pe Wayland: are nevoie de serviciul ydotoold pornit, iar inserarea pe Wayland este acceptată doar în KDE Plasma 6. „Automat” alege instrumentul după sesiunea curentă. Un câmp de cale gol înseamnă că instrumentul este căutat în PATH."
+    "voiceTextCorrection": "Corectarea textului dictat"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

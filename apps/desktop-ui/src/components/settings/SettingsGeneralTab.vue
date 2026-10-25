@@ -20,30 +20,6 @@
     <SettingsSection :title="t('settings.sectionWindowInsertion')">
       <TextInsertionStatus />
       <FieldRow
-        group
-        :label="t('settings.windowInsertion')"
-        :info="t('settings.windowInsertionHint')"
-      >
-        <div class="flex flex-col gap-2 w-full">
-          <SegmentedControl
-            :label="t('settings.windowInsertion')"
-            :options="windowInsertionOptions"
-            :model-value="userConfig.windowInsertion.linux.method"
-            @update:model-value="updateWindowInsertionMethod"
-          />
-          <FieldInput
-            v-if="userConfig.windowInsertion.linux.method !== 'ydotool'"
-            v-model="userConfig.windowInsertion.linux.xdotoolPath"
-            :placeholder="t('settings.binaryPathPlaceholder')"
-          />
-          <FieldInput
-            v-if="userConfig.windowInsertion.linux.method !== 'xdotool'"
-            v-model="userConfig.windowInsertion.linux.ydotoolPath"
-            :placeholder="t('settings.binaryPathPlaceholder')"
-          />
-        </div>
-      </FieldRow>
-      <FieldRow
         :label="t('settings.pasteShortcut')"
         :info="t('settings.pasteShortcutHint')"
       >
@@ -95,19 +71,13 @@ import {
   buildLanguageOptions,
 } from '../../lib/locale/language'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
-import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsSection from './SettingsSection.vue'
 import StorageLocations from './StorageLocations.vue'
 import TextInsertionStatus from './TextInsertionStatus.vue'
-import {
-  LINUX_INSERTION_METHODS,
-  type LinuxInsertionMethod,
-  type PasteShortcut,
-  type ThemeMode,
-} from '@tyco/shared'
+import { type PasteShortcut, type ThemeMode } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
@@ -119,12 +89,6 @@ const themeOptions = computed<{ id: ThemeMode; name: string; icon: string }[]>(
     { id: 'eInk', name: t('theme.eInk'), icon: 'mdi:book-open-page-variant' },
   ]
 )
-
-const windowInsertionOptions = computed(() => [
-  { id: 'auto', name: t('settings.windowInsertionAuto') },
-  { id: 'xdotool', name: 'xdotool' },
-  { id: 'ydotool', name: 'ydotool' },
-])
 
 const pasteShortcutOptions = computed(() => {
   return [
@@ -162,11 +126,6 @@ const appLanguageOptions = computed(() => {
     ),
   ]
 })
-
-const updateWindowInsertionMethod = (value: string | number) => {
-  if (!LINUX_INSERTION_METHODS.includes(value as LinuxInsertionMethod)) return
-  userConfig.value.windowInsertion.linux.method = value as LinuxInsertionMethod
-}
 
 const updateAppLanguage = (value: number | string | undefined) => {
   if (typeof value !== 'string') {

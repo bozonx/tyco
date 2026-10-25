@@ -40,6 +40,7 @@ import type {
   StatusOverlayRequest,
   StorageInfo,
   StorageKind,
+  TextInsertionStatus,
   ToolCatalogEntry,
   VaultState,
   VoiceCaptureInfo,
@@ -89,7 +90,6 @@ export interface DesktopCommands {
   }
   cancel_net_task: { args: { id: number }; result: void }
   cancel_script_action: { args: { runId: string }; result: boolean }
-  check_text_injection: { args: undefined; result: void }
   claim_external_job: { args: { id: string }; result: boolean }
   clear_chats: { args: { profileId?: string | null }; result: void }
   clear_editor_history: { args: undefined; result: void }
@@ -132,6 +132,7 @@ export interface DesktopCommands {
   get_secret_statuses: { args: undefined; result: Record<string, SecretStatus> }
   get_secret_vault_state: { args: undefined; result: VaultState }
   get_storage_info: { args: undefined; result: StorageInfo }
+  get_text_insertion_status: { args: undefined; result: TextInsertionStatus }
   hide_quick_window_on_blur: { args: { activationId: number }; result: void }
   hide_window: { args: { activationId: number }; result: void }
   install_plugin_package: {
@@ -218,6 +219,10 @@ export interface DesktopCommands {
     result: void
   }
   replace_selection_with_command: { args: { commandId: string }; result: void }
+  request_text_insertion_permission: {
+    args: undefined
+    result: TextInsertionStatus
+  }
   restore_editor_history_item: {
     args: { item: EditorHistoryItem }
     result: void

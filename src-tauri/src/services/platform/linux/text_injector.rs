@@ -1,3 +1,15 @@
+//! Pressing the paste and copy keys in other windows. Two senders can do it
+//! on Linux, both in X11 and in Wayland sessions:
+//!
+//! - ydotool, whose daemon writes to `/dev/uinput`, below any display server;
+//! - the RemoteDesktop portal, which needs no tools but asks the user once,
+//!   and is the only one available inside a Flatpak.
+//!
+//! ydotool goes first when it is set up; otherwise the portal. The window to
+//! paste into gets the focus back from the window tracker (KWin on Plasma,
+//! x11rb on X11). Without a tracker the paste goes to the window the desktop
+//! focuses once Tyco hides its own.
+
 use std::path::PathBuf;
 use std::process::{Child, Command, ExitStatus};
 use std::thread;
@@ -6,8 +18,12 @@ use std::time::{Duration, Instant};
 use serde_json::Value;
 
 use super::binary_paths::default_binary_path;
+use super::remote_desktop::{self, KeyEvent, PortalState};
 use crate::errors::AppError;
 use crate::services::platform::session::{self, DisplayServer};
+use crate::services::platform::text_injector::{
+    KeySender, KeysState, TargetTracking, TextInsertionProblem, TextInsertionStatus,
+};
 use crate::services::platform::window_tracker::tracker;
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
@@ -15,19 +31,10 @@ const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(10);
 /// KWin reports the activation before the client gets keyboard focus, so the
 /// paste waits a moment longer.
 const WAYLAND_FOCUS_SETTLE_DELAY: Duration = Duration::from_millis(80);
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum InjectionSessionKind {
-    X11,
-    Wayland,
-    Unsupported,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum InjectionMethod {
-    Xdotool,
-    Ydotool,
-}
+const YDOTOOL: &str = "ydotool";
+/// How `ydotool key --help` of 1.x describes its arguments; 0.1.x takes key
+/// names instead.
+const YDOTOOL_KEYCODE_SYNTAX: &str = "<keycode>:<pressed>";
 
 /// The key combination that makes the target window paste. Ctrl+V is bound
 /// to a key position, so it breaks on layouts like Dvorak and in terminals.
@@ -63,41 +70,22 @@ impl PasteShortcut {
         }
     }
 
-    fn xdotool_keys(self) -> &'static str {
+    fn paste_keys(self) -> &'static [u16] {
         match self {
-            Self::CtrlV => "ctrl+v",
-            Self::CtrlShiftV => "ctrl+shift+v",
-            Self::ShiftInsert => "shift+Insert",
+            Self::CtrlV => &[KEY_LEFT_CTRL, KEY_V],
+            Self::CtrlShiftV => &[KEY_LEFT_CTRL, KEY_LEFT_SHIFT, KEY_V],
+            Self::ShiftInsert => &[KEY_LEFT_SHIFT, KEY_INSERT],
         }
     }
 
     /// The copy combination of the same family: a terminal that pastes with
     /// Ctrl+Shift+V copies with Ctrl+Shift+C.
-    fn copy_xdotool_keys(self) -> &'static str {
+    fn copy_keys(self) -> &'static [u16] {
         match self {
-            Self::CtrlV => "ctrl+c",
-            Self::CtrlShiftV => "ctrl+shift+c",
-            Self::ShiftInsert => "ctrl+Insert",
-        }
-    }
-
-    /// Linux input event codes: presses in order, releases in reverse.
-    fn ydotool_keys(self) -> Vec<String> {
-        let keys: &[u16] = match self {
-            Self::CtrlV => &[KEY_LEFT_CTRL, KEY_V],
-            Self::CtrlShiftV => &[KEY_LEFT_CTRL, KEY_LEFT_SHIFT, KEY_V],
-            Self::ShiftInsert => &[KEY_LEFT_SHIFT, KEY_INSERT],
-        };
-        press_and_release(keys)
-    }
-
-    fn copy_ydotool_keys(self) -> Vec<String> {
-        let keys: &[u16] = match self {
             Self::CtrlV => &[KEY_LEFT_CTRL, KEY_C],
             Self::CtrlShiftV => &[KEY_LEFT_CTRL, KEY_LEFT_SHIFT, KEY_C],
             Self::ShiftInsert => &[KEY_LEFT_CTRL, KEY_INSERT],
-        };
-        press_and_release(keys)
+        }
     }
 }
 
@@ -106,7 +94,7 @@ fn focused_shortcut(
     action: FocusedKeyAction,
     terminal: bool,
 ) -> PasteShortcut {
-    if terminal && matches!(action, FocusedKeyAction::Copy) {
+    if terminal && action == FocusedKeyAction::Copy {
         PasteShortcut::CtrlShiftV
     } else {
         PasteShortcut::for_target(linux, terminal)
@@ -136,11 +124,25 @@ const MODIFIER_KEYS: [u16; 8] = [
     KEY_RIGHT_META,
 ];
 
-/// Presses in order, releases in reverse.
-fn press_and_release(keys: &[u16]) -> Vec<String> {
-    let presses = keys.iter().map(|key| format!("{key}:1"));
-    let releases = keys.iter().rev().map(|key| format!("{key}:0"));
-    presses.chain(releases).collect()
+/// Presses `keys` in order and releases them in reverse. The modifiers of the
+/// hotkey that started the action may still be held, and would turn Ctrl+C
+/// into Ctrl+Alt+C. The compositor keeps a single keyboard state for all
+/// devices, so releasing them from the virtual keyboard first clears them.
+fn combo_events(keys: &[u16]) -> Vec<KeyEvent> {
+    let releases = MODIFIER_KEYS.iter().map(|&key| (key, false));
+    let presses = keys.iter().map(|&key| (key, true));
+    let combo_releases = keys.iter().rev().map(|&key| (key, false));
+    releases.chain(presses).chain(combo_releases).collect()
+}
+
+fn ydotool_args(events: &[KeyEvent]) -> Vec<String> {
+    std::iter::once(String::from("key"))
+        .chain(
+            events
+                .iter()
+                .map(|&(key, pressed)| format!("{key}:{}", u8::from(pressed))),
+        )
+        .collect()
 }
 
 /// A key combination pressed in the window that has the keyboard focus.
@@ -151,35 +153,19 @@ pub enum FocusedKeyAction {
 }
 
 impl FocusedKeyAction {
-    fn xdotool_keys(self, shortcut: PasteShortcut) -> &'static str {
+    fn keys(self, shortcut: PasteShortcut) -> &'static [u16] {
         match self {
-            Self::Copy => shortcut.copy_xdotool_keys(),
-            Self::Paste => shortcut.xdotool_keys(),
+            Self::Copy => shortcut.copy_keys(),
+            Self::Paste => shortcut.paste_keys(),
         }
-    }
-
-    /// The modifiers of the hotkey that started the action may still be held,
-    /// and would turn Ctrl+C into Ctrl+Alt+C. The compositor keeps a single
-    /// keyboard state for all devices, so releasing them from the virtual
-    /// keyboard clears them, like `xdotool --clearmodifiers` does on X11.
-    fn ydotool_keys(self, shortcut: PasteShortcut) -> Vec<String> {
-        let combo = match self {
-            Self::Copy => shortcut.copy_ydotool_keys(),
-            Self::Paste => shortcut.ydotool_keys(),
-        };
-        MODIFIER_KEYS
-            .iter()
-            .map(|key| format!("{key}:0"))
-            .chain(combo)
-            .collect()
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-struct CommandSpec {
-    binary: String,
-    args: Vec<String>,
-    env: Vec<(String, PathBuf)>,
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum InjectionSessionKind {
+    X11,
+    Wayland,
+    Unsupported,
 }
 
 pub struct SystemTextInjector {
@@ -196,137 +182,203 @@ impl SystemTextInjector {
         Self { session }
     }
 
+    /// Gives `target_window_id` the focus back and pastes into it. Without a
+    /// window tracker there is no id: the paste goes to the focused window.
     pub fn inject_paste(
         &self,
         user_config: &Value,
         target_window_id: Option<&str>,
     ) -> Result<(), AppError> {
-        let insertion = user_config.get("windowInsertion");
-        let method = select_method(self.session, configured_method(insertion))?;
-        let terminal = target_window_id.is_some_and(|id| {
-            if self.session == InjectionSessionKind::X11 {
-                super::x11::is_terminal_window(id)
-            } else {
+        self.ensure_supported()?;
+        let linux = linux_settings(user_config.get("windowInsertion"));
+        let terminal = match (self.session, target_window_id) {
+            (_, None) => {
+                if tracker().is_running() {
+                    return Err(AppError::ServiceUnavailable(String::from(
+                        "No target window: Tyco was opened while no application window had focus",
+                    )));
+                }
+                log::debug!("No window tracker: pasting into the focused window");
                 false
             }
-        });
-        let mut shortcut = PasteShortcut::for_target(linux_settings(insertion), terminal);
-        if self.session == InjectionSessionKind::Wayland {
-            let window_id = target_window_id.ok_or_else(missing_wayland_target)?;
-            super::kwin::activate_window(window_id)?;
-            thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
-            let terminal = tracker().active_window().is_some_and(|window| {
-                window.id == window_id
-                    && crate::services::platform::selection::is_terminal_class(&window.class)
-            });
-            shortcut = PasteShortcut::for_target(linux_settings(insertion), terminal);
-        }
-        let mut command = command_spec(method, insertion, target_window_id, shortcut)?;
-
-        if method == InjectionMethod::Ydotool {
-            // the client knows a single default path, which differs between
-            // ydotool versions, so it gets the socket that actually answers
-            command
-                .env
-                .push((String::from("YDOTOOL_SOCKET"), ydotool_socket()?));
-        }
-        run_spec(&command)
+            (InjectionSessionKind::X11, Some(window_id)) => {
+                let terminal = super::x11::is_terminal_window(window_id);
+                super::x11::activate_window(window_id)?;
+                terminal
+            }
+            (_, Some(window_id)) => {
+                super::kwin::activate_window(window_id)?;
+                thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
+                tracker().active_window().is_some_and(|window| {
+                    window.id == window_id
+                        && crate::services::platform::selection::is_terminal_class(&window.class)
+                })
+            }
+        };
+        let shortcut = PasteShortcut::for_target(linux, terminal);
+        send_keys(combo_events(shortcut.paste_keys()))
     }
 
-    /// Presses `keys` in whatever window has the keyboard focus, without
-    /// activating any window first. A terminal gets the Ctrl+Shift family,
-    /// where Ctrl+C would interrupt the running program.
+    /// Presses the keys of `action` in whatever window has the keyboard
+    /// focus, without activating any window first. A terminal gets the
+    /// Ctrl+Shift family, where Ctrl+C would interrupt the running program.
     pub fn press_in_focused(
         &self,
         user_config: &Value,
         action: FocusedKeyAction,
         terminal: bool,
     ) -> Result<(), AppError> {
-        let insertion = user_config.get("windowInsertion");
-        let method = select_method(self.session, configured_method(insertion))?;
-        let shortcut = focused_shortcut(linux_settings(insertion), action, terminal);
-        let command = match method {
-            InjectionMethod::Ydotool => CommandSpec {
-                binary: linux_binary(insertion, YDOTOOL),
-                args: std::iter::once(String::from("key"))
-                    .chain(action.ydotool_keys(shortcut))
-                    .collect(),
-                env: vec![(String::from("YDOTOOL_SOCKET"), ydotool_socket()?)],
-            },
-            InjectionMethod::Xdotool => CommandSpec {
-                binary: linux_binary(insertion, XDOTOOL),
-                args: ["key", "--clearmodifiers", action.xdotool_keys(shortcut)]
-                    .into_iter()
-                    .map(String::from)
-                    .collect(),
-                env: Vec::new(),
-            },
-        };
-        run_spec(&command)
+        self.ensure_supported()?;
+        let linux = linux_settings(user_config.get("windowInsertion"));
+        let shortcut = focused_shortcut(linux, action, terminal);
+        send_keys(combo_events(action.keys(shortcut)))
     }
 
-    /// Checks everything text insertion needs, so that settings can tell what
-    /// is missing before the first attempt fails.
-    pub fn check_text_injection(&self, user_config: &Value) -> Result<(), AppError> {
-        let insertion = user_config.get("windowInsertion");
-        let method = select_method(self.session, configured_method(insertion))?;
-        match method {
-            InjectionMethod::Ydotool => {
-                let binary = linux_binary(insertion, YDOTOOL);
-                ensure_binary(&binary, "ydotool")?;
-                ydotool_socket()?;
-            }
-            InjectionMethod::Xdotool => {
-                ensure_binary(&linux_binary(insertion, XDOTOOL), "xdotool")?;
-            }
-        }
-        if self.session == InjectionSessionKind::Wayland && !tracker().is_running() {
+    fn ensure_supported(&self) -> Result<(), AppError> {
+        if self.session == InjectionSessionKind::Unsupported {
             return Err(AppError::ServiceUnavailable(String::from(
-                "Text insertion on Wayland needs KDE Plasma 6: the KWin window tracker is not running",
+                "Text insertion is unavailable outside an X11 or Wayland session",
             )));
         }
         Ok(())
     }
 }
 
-/// The Linux part of `windowInsertion`.
-fn linux_settings(insertion: Option<&Value>) -> Option<&Value> {
-    insertion.and_then(|value| value.get("linux"))
+/// See `crate::services::platform::text_insertion_status`.
+pub fn status() -> TextInsertionStatus {
+    let target = if tracker().is_running() {
+        TargetTracking::Tracked
+    } else {
+        TargetTracking::FocusReturn
+    };
+    let mut status = if SystemTextInjector::detect().ensure_supported().is_err() {
+        keys_status(
+            None,
+            KeysState::Unavailable,
+            Some(TextInsertionProblem::UnsupportedSession),
+            None,
+        )
+    } else {
+        let sandboxed = session::is_sandboxed();
+        let ydotool = if sandboxed {
+            Err(sandboxed_ydotool())
+        } else {
+            ydotool_ready(true).map(|_| ())
+        };
+        choose_sender(sandboxed, ydotool, remote_desktop::state)
+    };
+    status.target = target;
+    status
 }
 
-fn configured_method(insertion: Option<&Value>) -> &str {
-    linux_settings(insertion)
-        .and_then(|value| value.get("method"))
-        .and_then(Value::as_str)
-        .unwrap_or("auto")
+fn keys_status(
+    key_sender: Option<KeySender>,
+    keys: KeysState,
+    problem: Option<TextInsertionProblem>,
+    detail: Option<String>,
+) -> TextInsertionStatus {
+    TextInsertionStatus {
+        key_sender,
+        keys,
+        problem,
+        detail,
+        target: TargetTracking::Tracked,
+    }
 }
 
-/// A key injection tool and the setting with its path.
-struct InjectionBinary {
-    name: &'static str,
-    path_key: &'static str,
+type YdotoolFailure = (TextInsertionProblem, String);
+
+fn sandboxed_ydotool() -> YdotoolFailure {
+    (
+        TextInsertionProblem::PortalUnavailable,
+        String::from("ydotool cannot reach /dev/uinput from a sandbox"),
+    )
 }
 
-const XDOTOOL: InjectionBinary = InjectionBinary {
-    name: "xdotool",
-    path_key: "xdotoolPath",
-};
-const YDOTOOL: InjectionBinary = InjectionBinary {
-    name: "ydotool",
-    path_key: "ydotoolPath",
-};
+/// ydotool when it is set up, otherwise the portal. Inside a sandbox only
+/// the portal can work. `portal` is asked only when ydotool cannot help.
+fn choose_sender(
+    sandboxed: bool,
+    ydotool: Result<(), YdotoolFailure>,
+    portal: impl FnOnce() -> PortalState,
+) -> TextInsertionStatus {
+    let failure = match ydotool {
+        Ok(()) if !sandboxed => {
+            return keys_status(Some(KeySender::Ydotool), KeysState::Ready, None, None)
+        }
+        Ok(()) => sandboxed_ydotool(),
+        Err(failure) => failure,
+    };
+    match portal() {
+        PortalState::Ready => keys_status(Some(KeySender::Portal), KeysState::Ready, None, None),
+        PortalState::NeedsPermission => keys_status(
+            Some(KeySender::Portal),
+            KeysState::NeedsPermission,
+            None,
+            None,
+        ),
+        PortalState::Unavailable(reason) if sandboxed => keys_status(
+            None,
+            KeysState::Unavailable,
+            Some(TextInsertionProblem::PortalUnavailable),
+            Some(reason),
+        ),
+        PortalState::Unavailable(reason) => keys_status(
+            None,
+            KeysState::Unavailable,
+            Some(failure.0),
+            Some(format!(
+                "{}; the RemoteDesktop portal is unavailable too: {reason}",
+                failure.1
+            )),
+        ),
+    }
+}
 
-/// The configured path of the tool; without one the tool found on `PATH`,
-/// or where the distribution installs it.
-fn linux_binary(insertion: Option<&Value>, binary: InjectionBinary) -> String {
-    linux_settings(insertion)
-        .and_then(|value| value.get(binary.path_key))
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|path| !path.is_empty())
-        .map(str::to_owned)
-        .or_else(|| find_on_path(binary.name, std::env::var_os("PATH").as_deref()))
-        .unwrap_or_else(|| default_binary_path(binary.name))
+/// Presses `events` with ydotool when it is set up, otherwise through the
+/// portal, which may first ask the user.
+fn send_keys(events: Vec<KeyEvent>) -> Result<(), AppError> {
+    let ydotool = if session::is_sandboxed() {
+        Err(sandboxed_ydotool())
+    } else {
+        ydotool_ready(false)
+    };
+    match ydotool {
+        Ok((binary, socket)) => run_ydotool(&binary, &socket, &events),
+        Err((_, ydotool_error)) => remote_desktop::press(events).map_err(|error| match error {
+            AppError::PermissionDenied(message) => AppError::PermissionDenied(message),
+            error => AppError::ServiceUnavailable(format!(
+                "{ydotool_error}; the RemoteDesktop portal cannot press keys either: {error}"
+            )),
+        }),
+    }
+}
+
+/// The ydotool binary and the socket of its daemon. `check_version` runs the
+/// tool to tell a 0.1.x one, which would fail on every press.
+fn ydotool_ready(check_version: bool) -> Result<(String, PathBuf), YdotoolFailure> {
+    let binary = ydotool_binary();
+    if !PathBuf::from(&binary).is_file() {
+        return Err((
+            TextInsertionProblem::YdotoolMissing,
+            format!("ydotool is not installed: {binary} does not exist"),
+        ));
+    }
+    if check_version && !is_ydotool_1x(&binary) {
+        return Err((
+            TextInsertionProblem::YdotoolOutdated,
+            format!("{binary} is older than ydotool 1.0"),
+        ));
+    }
+    let socket = ydotool_socket()
+        .map_err(|error| (TextInsertionProblem::YdotooldNotRunning, error.to_string()))?;
+    Ok((binary, socket))
+}
+
+/// The tool found on `PATH`, or where the distribution installs it.
+fn ydotool_binary() -> String {
+    find_on_path(YDOTOOL, std::env::var_os("PATH").as_deref())
+        .unwrap_or_else(|| default_binary_path(YDOTOOL))
 }
 
 fn find_on_path(name: &str, path: Option<&std::ffi::OsStr>) -> Option<String> {
@@ -336,77 +388,13 @@ fn find_on_path(name: &str, path: Option<&std::ffi::OsStr>) -> Option<String> {
         .map(|candidate| candidate.to_string_lossy().into_owned())
 }
 
-fn ensure_binary(binary: &str, name: &str) -> Result<(), AppError> {
-    if PathBuf::from(binary).is_file() {
-        Ok(())
-    } else {
-        Err(AppError::ServiceUnavailable(format!(
-            "{name} is not installed: {binary} does not exist"
-        )))
-    }
+fn is_ydotool_1x(binary: &str) -> bool {
+    super::command::output_with_timeout(binary, &["key", "--help"], COMMAND_TIMEOUT)
+        .is_some_and(|output| has_keycode_syntax(&output))
 }
 
-fn missing_wayland_target() -> AppError {
-    let message = if tracker().is_running() {
-        "No target window: Tyco was opened while no application window had focus"
-    } else {
-        "Text insertion on Wayland needs KDE Plasma 6: the KWin window tracker is not running"
-    };
-    AppError::ServiceUnavailable(String::from(message))
-}
-
-/// `auto` and `xdotool` press the keys with xdotool on X11; Wayland has
-/// only ydotool.
-fn select_method(
-    session: InjectionSessionKind,
-    configured: &str,
-) -> Result<InjectionMethod, AppError> {
-    match (session, configured) {
-        (InjectionSessionKind::Wayland, _) | (_, "ydotool") => Ok(InjectionMethod::Ydotool),
-        (InjectionSessionKind::X11, _) => Ok(InjectionMethod::Xdotool),
-        (InjectionSessionKind::Unsupported, _) => Err(AppError::ServiceUnavailable(String::from(
-            "Text insertion is unavailable outside an X11 or Wayland session",
-        ))),
-    }
-}
-
-fn command_spec(
-    method: InjectionMethod,
-    insertion: Option<&Value>,
-    target_window_id: Option<&str>,
-    shortcut: PasteShortcut,
-) -> Result<CommandSpec, AppError> {
-    match method {
-        InjectionMethod::Ydotool => Ok(CommandSpec {
-            binary: linux_binary(insertion, YDOTOOL),
-            args: std::iter::once(String::from("key"))
-                .chain(shortcut.ydotool_keys())
-                .collect(),
-            env: Vec::new(),
-        }),
-        InjectionMethod::Xdotool => {
-            let window_id = target_window_id.ok_or_else(|| {
-                AppError::Stale(String::from(
-                    "Target window is not available for text insertion",
-                ))
-            })?;
-            Ok(CommandSpec {
-                binary: linux_binary(insertion, XDOTOOL),
-                args: [
-                    "windowactivate",
-                    "--sync",
-                    window_id,
-                    "key",
-                    "--clearmodifiers",
-                    shortcut.xdotool_keys(),
-                ]
-                .into_iter()
-                .map(String::from)
-                .collect(),
-                env: Vec::new(),
-            })
-        }
-    }
+fn has_keycode_syntax(help: &[u8]) -> bool {
+    String::from_utf8_lossy(help).contains(YDOTOOL_KEYCODE_SYNTAX)
 }
 
 fn ydotool_socket_paths() -> Vec<PathBuf> {
@@ -432,24 +420,30 @@ fn ydotool_socket() -> Result<PathBuf, AppError> {
         return Ok(path);
     }
     Err(AppError::ServiceUnavailable(String::from(
-        "ydotool cannot insert text: ydotoold is not running. Start it, for example with `systemctl --user enable --now ydotool`, and make sure it can access /dev/uinput",
+        "ydotoold is not running. Start it, for example with `systemctl --user enable --now ydotool`, and make sure it can access /dev/uinput",
     )))
 }
 
-fn run_spec(spec: &CommandSpec) -> Result<(), AppError> {
-    let child = Command::new(&spec.binary)
-        .args(&spec.args)
-        .envs(spec.env.iter().map(|(key, value)| (key, value)))
+/// The client knows a single default socket path, which differs between
+/// ydotool versions, so it gets the socket that actually answers.
+fn run_ydotool(binary: &str, socket: &PathBuf, events: &[KeyEvent]) -> Result<(), AppError> {
+    let child = Command::new(binary)
+        .args(ydotool_args(events))
+        .env("YDOTOOL_SOCKET", socket)
         .spawn()?;
-    let status = wait_with_timeout(child, &spec.binary, COMMAND_TIMEOUT)?;
+    let status = wait_with_timeout(child, binary, COMMAND_TIMEOUT)?;
     if status.success() {
         Ok(())
     } else {
         Err(AppError::Failed(format!(
-            "Command `{}` failed with status {status}",
-            spec.binary
+            "Command `{binary}` failed with status {status}"
         )))
     }
+}
+
+/// The Linux part of `windowInsertion`.
+fn linux_settings(insertion: Option<&Value>) -> Option<&Value> {
+    insertion.and_then(|value| value.get("linux"))
 }
 
 fn wait_with_timeout(
@@ -479,88 +473,93 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn wayland_always_uses_ydotool() {
-        assert_eq!(
-            select_method(InjectionSessionKind::Wayland, "xdotool").unwrap(),
-            InjectionMethod::Ydotool
-        );
+    fn missing() -> Result<(), YdotoolFailure> {
+        Err((
+            TextInsertionProblem::YdotoolMissing,
+            String::from("no ydotool"),
+        ))
     }
 
     #[test]
-    fn x11_uses_the_configured_method() {
-        assert_eq!(
-            select_method(InjectionSessionKind::X11, "xdotool").unwrap(),
-            InjectionMethod::Xdotool
-        );
-        assert_eq!(
-            select_method(InjectionSessionKind::X11, "ydotool").unwrap(),
-            InjectionMethod::Ydotool
-        );
-        assert_eq!(
-            select_method(InjectionSessionKind::X11, "auto").unwrap(),
-            InjectionMethod::Xdotool
-        );
-        assert_eq!(
-            select_method(InjectionSessionKind::Wayland, "auto").unwrap(),
-            InjectionMethod::Ydotool
-        );
+    fn ydotool_goes_first_and_the_portal_is_not_asked() {
+        let status = choose_sender(false, Ok(()), || unreachable!("portal asked"));
+        assert_eq!(status.key_sender, Some(KeySender::Ydotool));
+        assert_eq!(status.keys, KeysState::Ready);
     }
 
     #[test]
-    fn xdotool_waits_for_focus_before_pasting() {
-        let config = json!({
-            "windowInsertion": { "linux": { "xdotoolPath": "/custom/xdotool" } }
+    fn the_portal_stands_in_for_a_missing_ydotool() {
+        let status = choose_sender(false, missing(), || PortalState::NeedsPermission);
+        assert_eq!(status.key_sender, Some(KeySender::Portal));
+        assert_eq!(status.keys, KeysState::NeedsPermission);
+        assert_eq!(status.problem, None);
+        let status = choose_sender(false, missing(), || PortalState::Ready);
+        assert_eq!(status.keys, KeysState::Ready);
+    }
+
+    #[test]
+    fn without_both_the_ydotool_problem_is_reported() {
+        let status = choose_sender(false, missing(), || {
+            PortalState::Unavailable(String::from("no portal"))
         });
-        let spec = command_spec(
-            InjectionMethod::Xdotool,
-            config.get("windowInsertion"),
-            Some("42"),
-            PasteShortcut::CtrlV,
-        )
-        .unwrap();
-        assert_eq!(spec.binary, "/custom/xdotool");
+        assert_eq!(status.key_sender, None);
+        assert_eq!(status.keys, KeysState::Unavailable);
+        assert_eq!(status.problem, Some(TextInsertionProblem::YdotoolMissing));
+        assert!(status.detail.unwrap().contains("no portal"));
+    }
+
+    #[test]
+    fn a_sandbox_uses_only_the_portal() {
+        let status = choose_sender(true, Ok(()), || PortalState::Ready);
+        assert_eq!(status.key_sender, Some(KeySender::Portal));
+        let status = choose_sender(true, Ok(()), || {
+            PortalState::Unavailable(String::from("no portal"))
+        });
         assert_eq!(
-            spec.args,
-            [
-                "windowactivate",
-                "--sync",
-                "42",
-                "key",
-                "--clearmodifiers",
-                "ctrl+v"
-            ]
+            status.problem,
+            Some(TextInsertionProblem::PortalUnavailable)
         );
     }
 
     #[test]
-    fn ydotool_presses_and_releases_paste_keys() {
-        let config = json!({ "linux": { "ydotoolPath": " /custom/ydotool " } });
-        let spec = command_spec(
-            InjectionMethod::Ydotool,
-            Some(&config),
-            None,
-            PasteShortcut::CtrlV,
-        )
-        .unwrap();
-        assert_eq!(spec.binary, "/custom/ydotool");
-        assert_eq!(spec.args, ["key", "29:1", "47:1", "47:0", "29:0"]);
+    fn ydotool_presses_and_releases_paste_keys_after_clearing_modifiers() {
+        let events = combo_events(PasteShortcut::CtrlV.paste_keys());
+        let args = ydotool_args(&events);
+        assert_eq!(args[0], "key");
+        assert_eq!(args.len(), 1 + MODIFIER_KEYS.len() + 4);
+        assert!(args[1..=MODIFIER_KEYS.len()]
+            .iter()
+            .all(|key| key.ends_with(":0")));
+        assert_eq!(
+            args[MODIFIER_KEYS.len() + 1..],
+            ["29:1", "47:1", "47:0", "29:0"]
+        );
     }
 
     #[test]
     fn an_unset_path_finds_the_tool_on_path() {
         let directory = std::env::temp_dir().join(format!("tyco-path-{}", std::process::id()));
         std::fs::create_dir_all(&directory).unwrap();
-        std::fs::write(directory.join("xdotool"), "").unwrap();
+        std::fs::write(directory.join("ydotool"), "").unwrap();
         let path =
             std::env::join_paths([std::path::Path::new("/nonexistent"), &directory]).unwrap();
         assert_eq!(
-            find_on_path("xdotool", Some(&path)),
-            Some(directory.join("xdotool").to_string_lossy().into_owned())
+            find_on_path("ydotool", Some(&path)),
+            Some(directory.join("ydotool").to_string_lossy().into_owned())
         );
-        assert_eq!(find_on_path("ydotool", Some(&path)), None);
-        assert_eq!(find_on_path("xdotool", None), None);
+        assert_eq!(find_on_path("xclip", Some(&path)), None);
+        assert_eq!(find_on_path("ydotool", None), None);
         std::fs::remove_dir_all(&directory).unwrap();
+    }
+
+    #[test]
+    fn tells_ydotool_1x_by_its_keycode_syntax() {
+        assert!(has_keycode_syntax(
+            b"Syntax: <keycode>:<pressed>\ne.g. 28:1 28:0 means pressing on the Enter button"
+        ));
+        assert!(!has_keycode_syntax(
+            b"Usage: key [--up] [--down] [--delay <ms>] <key sequence>"
+        ));
     }
 
     #[test]
@@ -615,50 +614,42 @@ mod tests {
     }
 
     #[test]
-    fn paste_shortcuts_release_keys_in_reverse_order() {
+    fn combos_release_keys_in_reverse_order() {
+        let tail = |keys: &[u16]| combo_events(keys)[MODIFIER_KEYS.len()..].to_vec();
         assert_eq!(
-            PasteShortcut::CtrlShiftV.ydotool_keys(),
-            ["29:1", "42:1", "47:1", "47:0", "42:0", "29:0"]
+            tail(PasteShortcut::CtrlShiftV.paste_keys()),
+            [
+                (29, true),
+                (42, true),
+                (47, true),
+                (47, false),
+                (42, false),
+                (29, false)
+            ]
         );
         assert_eq!(
-            PasteShortcut::ShiftInsert.ydotool_keys(),
-            ["42:1", "110:1", "110:0", "42:0"]
-        );
-        assert_eq!(PasteShortcut::ShiftInsert.xdotool_keys(), "shift+Insert");
-    }
-
-    #[test]
-    fn focused_keys_release_held_modifiers_first() {
-        let keys = FocusedKeyAction::Copy.ydotool_keys(PasteShortcut::CtrlV);
-        assert_eq!(keys.len(), MODIFIER_KEYS.len() + 4);
-        assert!(keys[..MODIFIER_KEYS.len()]
-            .iter()
-            .all(|key| key.ends_with(":0")));
-        assert_eq!(
-            keys[MODIFIER_KEYS.len()..],
-            ["29:1", "46:1", "46:0", "29:0"]
-        );
-    }
-
-    #[test]
-    fn copy_follows_the_paste_shortcut_family() {
-        assert_eq!(
-            FocusedKeyAction::Copy.xdotool_keys(PasteShortcut::CtrlShiftV),
-            "ctrl+shift+c"
+            tail(PasteShortcut::ShiftInsert.copy_keys()),
+            [(29, true), (110, true), (110, false), (29, false)]
         );
         assert_eq!(
-            FocusedKeyAction::Copy.xdotool_keys(PasteShortcut::ShiftInsert),
-            "ctrl+Insert"
-        );
-        assert_eq!(
-            PasteShortcut::CtrlShiftV.copy_ydotool_keys(),
-            ["29:1", "42:1", "46:1", "46:0", "42:0", "29:0"]
+            tail(PasteShortcut::CtrlShiftV.copy_keys()),
+            [
+                (29, true),
+                (42, true),
+                (46, true),
+                (46, false),
+                (42, false),
+                (29, false)
+            ]
         );
     }
 
     #[test]
     fn unsupported_sessions_fail_with_a_clear_error() {
-        let error = select_method(InjectionSessionKind::Unsupported, "xdotool").unwrap_err();
+        let injector = SystemTextInjector {
+            session: InjectionSessionKind::Unsupported,
+        };
+        let error = injector.ensure_supported().unwrap_err();
         assert!(error.to_string().contains("X11 or Wayland"));
     }
 }

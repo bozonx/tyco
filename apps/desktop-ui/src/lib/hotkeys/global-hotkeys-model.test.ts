@@ -31,10 +31,6 @@ function fixture() {
       success: true as const,
       result: undefined,
     })),
-    checkTextInjection: vi.fn(async () => ({
-      success: false as const,
-      error: 'Missing uinput permission',
-    })),
     configureHotkeys: vi.fn(async () => ({
       success: false as const,
       error: 'Portal unavailable',
@@ -61,14 +57,8 @@ describe('createGlobalHotkeysModel', () => {
     expect(f.unlisten).toHaveBeenCalledOnce()
   })
 
-  it('tracks text injection, configure, and rebind errors', async () => {
+  it('tracks configure and rebind errors', async () => {
     const f = fixture()
-    await f.model.checkTextInjection()
-    expect(f.model.injection).toEqual({
-      ok: false,
-      error: 'Missing uinput permission',
-    })
-
     await f.model.configureHotkeys('Fallback configure error')
     expect(f.model.portalError.value).toBe('Portal unavailable')
 
