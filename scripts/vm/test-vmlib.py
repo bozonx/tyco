@@ -329,5 +329,60 @@ class RequestedScopeTests(unittest.TestCase):
         )
 
 
+class LlmStubTests(unittest.TestCase):
+    """The loopback model answers what the scenario set, in both API modes."""
+
+    def setUp(self):
+        import socket
+        import time
+        import urllib.request
+
+        self.urlopen = urllib.request.urlopen
+        self.Request = urllib.request.Request
+        self.work = Path(tempfile.mkdtemp())
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            self.port = probe.getsockname()[1]
+        (self.work / "llm-stub-reply.json").write_text(json.dumps({"text": "Fixed"}))
+        self.server = subprocess.Popen(
+            [sys.executable, str(Path(__file__).with_name("llm-stub.py")), str(self.work), str(self.port)]
+        )
+        self.addCleanup(self.server.kill)
+        for _ in range(100):
+            try:
+                self.urlopen(self.url("/v1/models"), timeout=1)
+                return
+            except OSError:
+                time.sleep(0.05)
+        self.fail("LLM stub did not start")
+
+    def url(self, path):
+        return f"http://127.0.0.1:{self.port}{path}"
+
+    def post(self, body):
+        request = self.Request(
+            self.url("/v1/chat/completions"),
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        return self.urlopen(request, timeout=5).read().decode()
+
+    def test_plain_and_streamed_answers_are_logged(self):
+        plain = json.loads(self.post({"model": "m", "messages": [{"role": "user", "content": "Ths"}]}))
+        self.assertEqual(plain["choices"][0]["message"]["content"], "Fixed")
+        stream = self.post({"model": "m", "stream": True, "messages": []})
+        chunks = [
+            json.loads(line[len("data: "):])
+            for line in stream.splitlines()
+            if line.startswith("data: {")
+        ]
+        self.assertEqual("".join(c["choices"][0]["delta"].get("content", "") for c in chunks), "Fixed")
+        self.assertEqual(chunks[-1]["choices"][0]["finish_reason"], "stop")
+        self.assertTrue(stream.rstrip().endswith("data: [DONE]"))
+        requests = (self.work / "llm-stub-requests.jsonl").read_text().splitlines()
+        self.assertEqual(len(requests), 2)
+        self.assertIn("Ths", requests[0])
+
+
 if __name__ == "__main__":
     unittest.main()

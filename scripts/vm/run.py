@@ -453,6 +453,7 @@ def main():
             "browser.py",
             "desktop-session.py",
             "secret-read.py",
+            "llm-stub.py",
         ):
             vm.ssh(f"test ! -e tyco-vm/{name} || chmod u+w tyco-vm/{name}")
             vm.copy_to(scripts / name, "tyco-vm/")
@@ -582,6 +583,7 @@ def main():
                 config["editor"]["submitKey"] = "Ctrl+Enter"
                 config["hotkeys"] = dict.fromkeys(config["hotkeys"], "")
                 config["hotkeys"]["quickInput"] = "Ctrl+Alt+I"
+                config["hotkeys"]["selectionCorrection"] = "Ctrl+Alt+K"
                 for page in config["launcherPages"]:
                     page["hotkey"] = ""
                 config_path = vm.run_dir / "fixture-config.json"

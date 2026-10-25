@@ -1033,8 +1033,169 @@ def run_scenarios(
             "Closed target rejected; independently observed other document is unchanged"
         )
 
+    llm_stub_started = False
+
+    def llm_stub(text, delay=0.0):
+        """Starts the loopback model once and sets its next answer."""
+        nonlocal llm_stub_started
+        reply = json.dumps({"text": text, "delaySeconds": delay})
+        vm.ssh(
+            f"printf %s {shlex.quote(reply)} > tyco-vm/llm-stub-reply.json.tmp && mv tyco-vm/llm-stub-reply.json.tmp tyco-vm/llm-stub-reply.json && : > tyco-vm/llm-stub-requests.jsonl"
+        )
+        if not llm_stub_started:
+            vm.ssh(
+                "setsid -f python3 tyco-vm/llm-stub.py tyco-vm >>tyco-vm/llm-stub.log 2>&1 </dev/null"
+            )
+            wait_for(
+                "loopback model endpoint",
+                lambda: vm.ssh(
+                    "python3 -c "
+                    + shlex.quote(
+                        "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:11434/v1/models', timeout=2).status)"
+                    )
+                    + " 2>/dev/null || true"
+                ).strip()
+                == "200",
+            )
+            llm_stub_started = True
+
+    def llm_requests():
+        lines = vm.ssh("cat tyco-vm/llm-stub-requests.jsonl 2>/dev/null || true")
+        return [json.loads(line) for line in lines.splitlines() if line.strip()]
+
+    def active_window_id():
+        return json.loads(vm.ssh("cat tyco-vm/windows.json"))["activeWindowId"]
+
+    def tyco_windows():
+        windows = json.loads(vm.ssh("cat tyco-vm/windows.json"))["windows"]
+        return {
+            window["id"]
+            for window in windows
+            if window["resourceClass"] == "tyco"
+            and window["normalWindow"]
+            # the untitled status bubble is by design; the focus check covers it
+            and window["title"]
+        }
+
+    def inline_correction(backend, trigger):
+        """Hotkey/CLI correction: no Tyco window, result in the foreign one."""
+        ensure_receiver(backend)
+        original = update_config(
+            lambda config: config["externalAccess"].update(canAccessSelection=True)
+        )
+        source = "keep Ths is wrng tail"
+        llm_stub("This is wrong")
+        clipboard_fixture = b"User clipboard before correction"
+        try:
+            # Selected only once focused, as a user does: GTK drops a selection
+            # made in an unfocused Wayland window when it loses PRIMARY.
+            focus_receiver(backend)
+            receiver_command(
+                backend, "reset", text=source, select=True, selectStart=5, selectEnd=16
+            )
+            clipboard_set("text/plain", clipboard_fixture)
+            target = active_window_id()
+            # The WebDriver session keeps main open; only a new window counts.
+            tyco_before = tyco_windows()
+            trigger()
+            deadline = time.monotonic() + 30
+            while True:
+                observed = read_receiver(backend)
+                require(
+                    tyco_windows() == tyco_before,
+                    "Inline correction opened a Tyco window",
+                )
+                require(
+                    active_window_id() == target,
+                    "Inline correction moved the focus away from the foreign window",
+                )
+                if observed.get("text") == "keep This is wrong tail":
+                    break
+                require(
+                    observed.get("text") == source,
+                    f"Foreign document changed unexpectedly: {observed.get('text')!r}",
+                )
+                require(
+                    time.monotonic() < deadline,
+                    f"Correction never reached the foreign window; model requests: {len(llm_requests())}",
+                )
+                time.sleep(0.1)
+            requests = llm_requests()
+            require(len(requests) == 1, f"Expected one model request, got {len(requests)}")
+            require(
+                "Ths is wrng" in json.dumps(requests[0]["body"], ensure_ascii=False),
+                "The model did not receive the captured selection",
+            )
+            expect_received(backend, "keep This is wrong tail")
+            wait_for(
+                "user clipboard restored after correction",
+                lambda: clipboard_read("text/plain") == clipboard_fixture,
+                timeout=10,
+            )
+            return "Captured only the selected fragment, one model request, replaced in place; no Tyco window, focus and user clipboard kept"
+        finally:
+            update_config(
+                lambda config: config["externalAccess"].update(
+                    original["externalAccess"]
+                )
+            )
+
+    def correction_hotkey():
+        vm.qmp.tap("ctrl", "alt", "k")
+
+    def correction_cli():
+        guest(f"env-run {prefix}/tyco-ctl replace correction")
+
+    def inline_correction_cancel():
+        ensure_receiver("wayland")
+        source = "keep Ths is wrng tail"
+        llm_stub("Must never be inserted", delay=6)
+        focus_receiver("wayland")
+        receiver_command(
+            "wayland", "reset", text=source, select=True, selectStart=5, selectEnd=16
+        )
+        clipboard_fixture = b"Clipboard kept on cancel"
+        clipboard_set("text/plain", clipboard_fixture)
+        correction_hotkey()
+        wait_for("model request in progress", lambda: len(llm_requests()) == 1)
+        correction_hotkey()
+        deadline = time.monotonic() + 9
+        while time.monotonic() < deadline:
+            require(
+                read_receiver("wayland").get("text") == source,
+                "Cancelled correction changed the foreign document",
+            )
+            time.sleep(0.2)
+        require(len(llm_requests()) == 1, "Second press started another correction")
+        require(
+            clipboard_read("text/plain") == clipboard_fixture,
+            "Cancelled correction did not restore the user clipboard",
+        )
+        return "Second hotkey press during the model request cancelled it; document and clipboard unchanged"
+
     def run_native_checks():
         for identifier, function in (
+            (
+                "VM-05.inline-correction.wayland",
+                lambda: inline_correction("wayland", correction_hotkey),
+            ),
+            (
+                "VM-05.inline-correction.x11",
+                lambda: inline_correction("x11", correction_hotkey),
+            ),
+            (
+                "VM-05.inline-correction.cli",
+                lambda: inline_correction("wayland", correction_cli),
+            ),
+            (
+                "VM-05.inline-correction.app-switch",
+                lambda: [
+                    inline_correction(backend, correction_hotkey)
+                    for backend in ("wayland", "x11", "wayland")
+                ]
+                and "Three corrections in a row, Wayland, XWayland and Wayland again, each replaced in place",
+            ),
+            ("VM-05.inline-correction.cancel", inline_correction_cancel),
             ("VM-05.selection-replace-cancel", selection),
             ("VM-05.empty-selection", empty_selection),
             ("VM-13.selection-grant-revoke", selection_permissions),
