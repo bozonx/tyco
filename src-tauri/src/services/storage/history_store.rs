@@ -13,11 +13,12 @@ use crate::services::chat_images::ChatImages;
 use crate::state::AppState;
 
 /// Typed history policies are parsed once at the serialized config boundary.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct HistorySettings {
     pub editor: editor::EditorHistoryPolicy,
     pub chat: chats::ChatHistoryPolicy,
     pub profile_chat: chats::ChatHistoryPolicy,
+    pub vault_path: String,
 }
 
 impl HistorySettings {
@@ -26,6 +27,7 @@ impl HistorySettings {
             editor: editor::EditorHistoryPolicy::from_config(config),
             chat: chats::ChatHistoryPolicy::from_config(config),
             profile_chat: chats::ChatHistoryPolicy::for_profiles(config),
+            vault_path: crate::models::user_config::ai_vault(config).path,
         }
     }
 }
@@ -60,7 +62,7 @@ impl HistoryStorageCoordinator {
         if self.cleanup_pending.load(Ordering::SeqCst) {
             // Complete the already committed cleanup before accepting another
             // policy; turning history on must not resurrect data pending deletion.
-            enforce_history_policies(app, before)?;
+            enforce_history_policies(app, &before)?;
             self.cleanup_pending.store(false, Ordering::SeqCst);
         }
         let result = editor::commit_history_settings(
@@ -72,7 +74,7 @@ impl HistoryStorageCoordinator {
         )?;
         // Retry on every settings save, even if the policy itself is unchanged.
         // A previous cleanup may have failed after its config was committed.
-        let chat_cleanup = enforce_chat_history_policies(app, after);
+        let chat_cleanup = enforce_chat_history_policies(app, &after);
         self.cleanup_pending.store(
             result.is_cleanup_pending || chat_cleanup.is_err(),
             Ordering::SeqCst,
@@ -94,7 +96,7 @@ impl HistoryStorageCoordinator {
         let _editor = self.lock_editor_history();
         let _chats = self.lock_chat_history();
         let policy = HistorySettings::from_config(&state.user_config());
-        if enforce_history_policies(app, policy).is_ok() {
+        if enforce_history_policies(app, &policy).is_ok() {
             self.cleanup_pending.store(false, Ordering::SeqCst);
         }
     }
@@ -106,12 +108,12 @@ pub fn apply_history_settings_on_startup(
     app: &AppHandle,
     user_config: &serde_json::Value,
 ) -> Result<(), AppError> {
-    enforce_history_policies(app, HistorySettings::from_config(user_config))
+    enforce_history_policies(app, &HistorySettings::from_config(user_config))
 }
 
 /// Deletes what the policies no longer keep, from the editor history file and
 /// from every chat history.
-fn enforce_history_policies(app: &AppHandle, settings: HistorySettings) -> Result<(), AppError> {
+fn enforce_history_policies(app: &AppHandle, settings: &HistorySettings) -> Result<(), AppError> {
     editor::enforce_editor_history_policy(app, &settings.editor)?;
     enforce_chat_history_policies(app, settings)
 }
@@ -120,14 +122,16 @@ fn enforce_history_policies(app: &AppHandle, settings: HistorySettings) -> Resul
 /// settings. Each history is tried; the first failure is returned.
 fn enforce_chat_history_policies(
     app: &AppHandle,
-    settings: HistorySettings,
+    settings: &HistorySettings,
 ) -> Result<(), AppError> {
     let ask_ai = chats::app_chats_dir(app)
         .and_then(|chats_dir| chats::enforce_chat_history_policy(&chats_dir, settings.chat));
-    let state = app.state::<AppState>();
     // an unavailable vault has no chats to clean up now; they are trimmed once
     // a profile chat is saved there again
-    let profiles = match crate::services::ai_vault::resolve_vault_path(app, &state.user_config()) {
+    let profiles = match crate::services::ai_vault::resolve_vault_path_from_config(
+        Some(&settings.vault_path),
+        || crate::services::storage::app_data_sub_dir(app, "ai-vault"),
+    ) {
         Ok(vault_root) => enforce_profile_chat_history_policy(&vault_root, settings.profile_chat),
         Err(error) => {
             log::warn!("Skipping the profile chat cleanup: {error}");
