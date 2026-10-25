@@ -809,7 +809,6 @@
     "profileDefaultSoul": "# Rol\nDescrieți cine este acest asistent și la ce ajută.\n\n# Reguli\n- Răspunde în limba întrebării.\n",
     "profileFilesAskAll": "„Fișiere” este setat pe „Întreabă”: fiecare apel așteaptă confirmare, chiar și acolo unde proiectul îl permite.",
     "profileGenerationHint": "Modelul și parametrii chaturilor acestui profil. Câmpurile goale folosesc valorile modelului.",
-    "profileIcon": "Pictogramă",
     "profileModel": "Model",
     "profileModelDefault": "Primul model disponibil",
     "profileModelDefaultNamed": "Primul disponibil ({model})",

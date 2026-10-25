@@ -803,7 +803,6 @@
     "profileDefaultSoul": "# Role\nPopište, kdo je tento asistent a s čím pomáhá.\n\n# Pravidla\n- Odpovídej v jazyce otázky.\n",
     "profileFilesAskAll": "„Soubory“ jsou nastaveny na „Ptát se“: každé volání čeká na potvrzení, i tam, kde ho projekt povoluje.",
     "profileGenerationHint": "Model a parametry chatů tohoto profilu. Prázdná pole použijí hodnoty modelu.",
-    "profileIcon": "Ikona",
     "profileModel": "Model",
     "profileModelDefault": "První dostupný model",
     "profileModelDefaultNamed": "První dostupný ({model})",

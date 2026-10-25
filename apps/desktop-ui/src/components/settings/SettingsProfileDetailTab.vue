@@ -6,15 +6,6 @@
     >
       <template v-if="profile && !isNew">
         <SettingsAutosaveStatus :status="editor.saveStatus.value" />
-        <Button
-          size="sm"
-          variant="neutral"
-          icon="mdi:content-copy"
-          :disabled="isDuplicating"
-          @click="handleDuplicate"
-        >
-          {{ t('settings.duplicateProfile') }}
-        </Button>
       </template>
     </SettingsDetailHeader>
 
@@ -22,13 +13,7 @@
       <SettingsSection :title="t('settings.newProfile')">
         <form class="profile-create-form" @submit.prevent="handleCreate">
           <FieldRow :label="t('settings.profileName')">
-            <FieldInput v-model="newName" />
-          </FieldRow>
-          <FieldRow :label="t('settings.profileIcon')">
-            <ProfileIconPicker
-              v-model="newIcon"
-              :label="t('settings.profileIcon')"
-            />
+            <FieldInput ref="nameInputRef" v-model="newName" autofocus />
           </FieldRow>
           <div class="profile-form-actions">
             <Button
@@ -56,54 +41,61 @@
         >
           <FieldInput v-model="name" @update:model-value="changeName" />
         </FieldRow>
-        <FieldRow :label="t('settings.profileIcon')">
-          <ProfileIconPicker
-            :model-value="profileIcon(profile)"
-            :label="t('settings.profileIcon')"
-            @update:model-value="changeSettings({ icon: $event })"
+
+        <div class="advanced-toggle">
+          <DisclosureHeader
+            density="compact"
+            icon="mdi:tune-variant"
+            icon-size="md"
+            :expanded="isAdvancedExpanded"
+            :controls="advancedId"
+            :title="
+              isAdvancedExpanded
+                ? t('settings.hideAdvanced')
+                : t('settings.showAdvanced')
+            "
+            @toggle="isAdvancedExpanded = !isAdvancedExpanded"
           />
-        </FieldRow>
-        <FieldRow :label="t('settings.profileModel')">
-          <FieldSelect
-            :model-value="profile.modelId ?? DEFAULT_PROFILE_MODEL_OPTION"
-            :options="modelOptions"
-            @update:model-value="changeModel"
-          />
-        </FieldRow>
-        <FieldRow
-          :label="t('settings.temperature')"
-          :error="
-            temperatureError
-              ? t('settings.numberTemperatureInvalid')
-              : undefined
-          "
-        >
-          <FieldNumber
-            min="0"
-            :max="MAX_PROFILE_TEMPERATURE"
-            step="0.1"
-            :model-value="temperatureText"
-            :placeholder="t('settings.profileUseModelValue')"
-            :aria-invalid="temperatureError || undefined"
-            @update:model-value="changeTemperature"
-            @invalid-input="temperatureError = true"
-          />
-        </FieldRow>
-        <FieldRow
-          :label="t('settings.maxTokens')"
-          :error="
-            maxOutputTokensError ? t('settings.numberTokensInvalid') : undefined
-          "
-        >
-          <FieldNumber
-            min="1"
-            :model-value="maxOutputTokensText"
-            :placeholder="t('settings.profileUseModelValue')"
-            :aria-invalid="maxOutputTokensError || undefined"
-            @update:model-value="changeMaxOutputTokens"
-            @invalid-input="maxOutputTokensError = true"
-          />
-        </FieldRow>
+        </div>
+
+        <div v-if="isAdvancedExpanded" :id="advancedId">
+          <FieldRow
+            :label="t('settings.temperature')"
+            :error="
+              temperatureError
+                ? t('settings.numberTemperatureInvalid')
+                : undefined
+            "
+          >
+            <FieldNumber
+              min="0"
+              :max="MAX_PROFILE_TEMPERATURE"
+              step="0.1"
+              :model-value="temperatureText"
+              :placeholder="t('settings.profileUseModelValue')"
+              :aria-invalid="temperatureError || undefined"
+              @update:model-value="changeTemperature"
+              @invalid-input="temperatureError = true"
+            />
+          </FieldRow>
+          <FieldRow
+            :label="t('settings.maxTokens')"
+            :error="
+              maxOutputTokensError
+                ? t('settings.numberTokensInvalid')
+                : undefined
+            "
+          >
+            <FieldNumber
+              min="1"
+              :model-value="maxOutputTokensText"
+              :placeholder="t('settings.profileUseModelValue')"
+              :aria-invalid="maxOutputTokensError || undefined"
+              @update:model-value="changeMaxOutputTokens"
+              @invalid-input="maxOutputTokensError = true"
+            />
+          </FieldRow>
+        </div>
       </SettingsSection>
 
       <SettingsProfileToolsSection
@@ -207,22 +199,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useId,
+  watch,
+} from 'vue'
 
-import { useChatModelOptions } from '../../composables/use-chat-model-options'
 import { useI18n } from '../../composables/use-i18n'
 import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
-import {
-  DEFAULT_PROFILE_ICON,
-  profileIcon,
-} from '../../lib/ai-profiles/profile-icons'
-import {
-  DEFAULT_PROFILE_MODEL_OPTION,
-  profileModelOptions,
-} from '../../lib/ai-profiles/profile-model-options'
 import {
   CHAT_TOOL_GROUPS,
   FILES_TOOL_GROUP_ID,
@@ -230,19 +221,17 @@ import {
 import {
   AI_OVERVIEW_TAB,
   NEW_ENTITY_ID,
-  profileTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
+import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
-import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
-import ProfileIconPicker from './ProfileIconPicker.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDangerZone from './SettingsDangerZone.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
@@ -267,8 +256,16 @@ const projects = computed(() => aiProfilesStore.projects)
 // ---------------------------------------------------------------------------
 
 const newName = ref('')
-const newIcon = ref(DEFAULT_PROFILE_ICON)
+const nameInputRef = ref<{ focus?: () => void } | null>(null)
 const isCreating = ref(false)
+
+onMounted(() => {
+  if (isNew.value) {
+    void nextTick(() => {
+      nameInputRef.value?.focus?.()
+    })
+  }
+})
 
 async function handleCreate() {
   if (!newName.value.trim() || isCreating.value) return
@@ -277,10 +274,9 @@ async function handleCreate() {
     const created = await aiProfilesStore.createProfile({
       name: newName.value,
       soul: t('settings.profileDefaultSoul'),
-      settings:
-        newIcon.value === DEFAULT_PROFILE_ICON ? {} : { icon: newIcon.value },
+      settings: {},
     })
-    navigate(profileTab(created.id))
+    navigate(`ai-profile:${created.id}`)
   } catch (error) {
     toastError(error)
   } finally {
@@ -288,25 +284,12 @@ async function handleCreate() {
   }
 }
 
-const isDuplicating = ref(false)
+// ---------------------------------------------------------------------------
+// Advanced settings toggle
+// ---------------------------------------------------------------------------
 
-async function handleDuplicate() {
-  if (!profile.value || isDuplicating.value) return
-  isDuplicating.value = true
-  try {
-    // the copy takes the instruction as typed, not only as stored
-    await editor.flush()
-    const copy = await aiProfilesStore.duplicateProfile(
-      props.profileId,
-      t('settings.profileCopyName', { name: profile.value.name })
-    )
-    navigate(profileTab(copy.id))
-  } catch (error) {
-    toastError(error)
-  } finally {
-    isDuplicating.value = false
-  }
-}
+const isAdvancedExpanded = ref(false)
+const advancedId = useId()
 
 // ---------------------------------------------------------------------------
 // Settings: typed ones are stored a moment after they change, picked ones
@@ -373,10 +356,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', syncWhenVisible)
 })
 
-function changeModel(value: string | number | undefined) {
-  void changeSettings({ modelId: value ? String(value) : undefined })
-}
-
 function setPermission(projectId: string, permission: ProjectPermission) {
   if (!profile.value) return
   void changeSettings({
@@ -386,12 +365,6 @@ function setPermission(projectId: string, permission: ProjectPermission) {
     },
   })
 }
-
-const availableModels = useChatModelOptions()
-
-const modelOptions = computed(() =>
-  profileModelOptions(availableModels.value, profile.value?.modelId, t)
-)
 
 onBeforeUnmount(() => {
   void editor.flush()
@@ -451,5 +424,12 @@ async function handleDelete() {
 .profile-form-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.advanced-toggle {
+  display: flex;
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-control);
+  color: var(--app-text-muted);
 }
 </style>

@@ -809,7 +809,6 @@
     "profileDefaultSoul": "# Papel\nDescreva quem é este assistente e em que ele ajuda.\n\n# Regras\n- Responda no idioma da pergunta.\n",
     "profileFilesAskAll": "“Arquivos” está definido como “Perguntar”: cada chamada aguarda confirmação, mesmo onde o projeto permite.",
     "profileGenerationHint": "O modelo e os parâmetros dos chats deste perfil. Campos vazios usam os valores do modelo.",
-    "profileIcon": "Ícone",
     "profileModel": "Modelo",
     "profileModelDefault": "Primeiro modelo disponível",
     "profileModelDefaultNamed": "Primeiro disponível ({model})",

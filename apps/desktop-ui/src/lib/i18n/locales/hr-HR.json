@@ -809,7 +809,6 @@
     "profileDefaultSoul": "# Uloga\nOpišite tko je ovaj asistent i u čemu pomaže.\n\n# Pravila\n- Odgovaraj na jeziku pitanja.\n",
     "profileFilesAskAll": "„Datoteke” su postavljene na „Pitaj”: svaki poziv čeka potvrdu, čak i ondje gdje ga projekt dopušta.",
     "profileGenerationHint": "Model i parametri chatova ovog profila. Prazna polja koriste vrijednosti modela.",
-    "profileIcon": "Ikona",
     "profileModel": "Model",
     "profileModelDefault": "Prvi dostupni model",
     "profileModelDefaultNamed": "Prvi dostupni ({model})",

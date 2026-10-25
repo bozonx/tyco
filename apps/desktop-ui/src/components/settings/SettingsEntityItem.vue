@@ -1,12 +1,30 @@
 <template>
-  <component
-    :is="openable ? 'button' : 'div'"
-    :type="openable ? 'button' : undefined"
+  <div
     class="settings-entity"
     :class="{ 'is-openable': openable }"
-    @click="openable && emit('open')"
+    @click="handleCardClick"
   >
-    <span class="settings-entity-main">
+    <button
+      v-if="openable"
+      type="button"
+      class="settings-entity-target"
+      @click="emit('open')"
+    >
+      <AppIcon
+        :icon="icon"
+        size="lg"
+        class="settings-entity-icon"
+        :class="`is-${iconTone}`"
+        aria-hidden="true"
+      />
+      <span class="settings-entity-copy">
+        <span class="settings-entity-title">{{ title }}</span>
+        <span v-if="description" class="settings-entity-description">
+          {{ description }}
+        </span>
+      </span>
+    </button>
+    <span v-else class="settings-entity-main">
       <AppIcon
         :icon="icon"
         size="lg"
@@ -21,9 +39,16 @@
         </span>
       </span>
     </span>
-    <span v-if="$slots.default" class="settings-entity-trailing">
+
+    <div
+      v-if="$slots.default || $slots.actions"
+      class="settings-entity-trailing"
+      @click.stop
+    >
       <slot />
-    </span>
+      <slot name="actions" />
+    </div>
+
     <AppIcon
       v-if="openable"
       icon="mdi:chevron-right"
@@ -31,49 +56,62 @@
       class="settings-entity-chevron"
       aria-hidden="true"
     />
-  </component>
+  </div>
 </template>
 
 <script setup lang="ts">
 import AppIcon from '../common/AppIcon.vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     icon: string
     title: string
     description?: string
     iconTone?: 'primary' | 'secondary'
-    /** The row opens the entity; trailing content must not be interactive */
+    /**
+     * The row opens the entity; trailing content is placed in the actions or
+     * default slot
+     */
     openable?: boolean
   }>(),
   { iconTone: 'primary' }
 )
 const emit = defineEmits<{ open: [] }>()
+
+function handleCardClick(event: MouseEvent) {
+  if (!props.openable) return
+  const target = event.target as HTMLElement | null
+  if (
+    target?.closest('.settings-entity-trailing') ||
+    target?.closest('.settings-entity-target')
+  ) {
+    return
+  }
+  emit('open')
+}
 </script>
 
 <style scoped>
 .settings-entity {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
   width: 100%;
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-md);
   background-color: var(--app-surface-raised);
   font: inherit;
   text-align: start;
   color: inherit;
-}
-
-.settings-entity.is-openable {
-  flex-wrap: nowrap;
-  cursor: pointer;
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast);
+}
+
+.settings-entity.is-openable {
+  cursor: pointer;
 }
 
 .settings-entity.is-openable:hover {
@@ -81,22 +119,38 @@ const emit = defineEmits<{ open: [] }>()
   border-color: var(--app-border);
 }
 
-.settings-entity.is-openable:focus-visible {
+.settings-entity.is-openable:has(.settings-entity-target:focus-visible) {
   outline: none;
+  border-color: var(--color-primary);
   box-shadow: var(--app-focus-ring);
 }
 
-.settings-entity-main {
+.settings-entity-main,
+.settings-entity-target {
   display: flex;
   flex: 1;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-sm);
   min-width: 0;
+  text-align: start;
+}
+
+.settings-entity-target {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.settings-entity-target:focus-visible {
+  outline: none;
 }
 
 .settings-entity-icon {
   flex-shrink: 0;
-  margin-top: var(--space-2xs);
 }
 
 .settings-entity-icon.is-primary {
@@ -111,6 +165,7 @@ const emit = defineEmits<{ open: [] }>()
   display: flex;
   min-width: 0;
   flex-direction: column;
+  gap: 2px;
 }
 
 .settings-entity-title {
@@ -124,17 +179,21 @@ const emit = defineEmits<{ open: [] }>()
 .settings-entity-description {
   font-size: var(--text-caption);
   color: var(--app-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .settings-entity-trailing {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  flex-shrink: 0;
 }
 
 .settings-entity-chevron {
   flex-shrink: 0;
   color: var(--app-text-faint);
+  pointer-events: none;
 }
 </style>

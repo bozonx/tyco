@@ -4,13 +4,24 @@
       :title="t('settings.aiProfilesTab')"
       :info="t('settings.aiProfilesHint')"
     >
+      <template #actions>
+        <Button
+          size="sm"
+          variant="primary"
+          icon="mdi:plus"
+          @click="navigate(profileTab(NEW_ENTITY_ID))"
+        >
+          {{ t('settings.newProfile') }}
+        </Button>
+      </template>
+
       <div class="settings-section-content">
         <StateMessage
           v-if="profiles.length === 0"
           density="compact"
           :message="t('settings.noProfilesYet')"
         />
-        <div v-else class="entity-grid">
+        <div v-else class="settings-entity-list">
           <SettingsEntityItem
             v-for="profile in profiles"
             :key="profile.id"
@@ -20,17 +31,19 @@
             :description="describeProfile(profile)"
             openable
             @open="navigate(profileTab(profile.id))"
-          />
-        </div>
-        <div>
-          <Button
-            size="sm"
-            variant="primary"
-            icon="mdi:plus"
-            @click="navigate(profileTab(NEW_ENTITY_ID))"
           >
-            {{ t('settings.newProfile') }}
-          </Button>
+            <template #actions>
+              <DropdownMenu
+                size="xs"
+                square
+                hide-chevron
+                align="right"
+                icon="mdi:dots-vertical"
+                :title="t('commands.moreActions')"
+                :items="profileMenuItems(profile)"
+              />
+            </template>
+          </SettingsEntityItem>
         </div>
       </div>
     </SettingsSection>
@@ -39,13 +52,24 @@
       :title="t('settings.projectsTitle')"
       :info="t('settings.projectsHint')"
     >
+      <template #actions>
+        <Button
+          size="sm"
+          variant="primary"
+          icon="mdi:plus"
+          @click="navigate(projectTab(NEW_ENTITY_ID))"
+        >
+          {{ t('settings.newProject') }}
+        </Button>
+      </template>
+
       <div class="settings-section-content">
         <StateMessage
           v-if="projects.length === 0"
           density="compact"
           :message="t('settings.noProjectsYet')"
         />
-        <div v-else class="entity-grid">
+        <div v-else class="settings-entity-list">
           <SettingsEntityItem
             v-for="project in projects"
             :key="project.id"
@@ -59,17 +83,19 @@
             :description="project.description || undefined"
             openable
             @open="navigate(projectTab(project.id))"
-          />
-        </div>
-        <div>
-          <Button
-            size="sm"
-            variant="neutral"
-            icon="mdi:plus"
-            @click="navigate(projectTab(NEW_ENTITY_ID))"
           >
-            {{ t('settings.newProject') }}
-          </Button>
+            <template #actions>
+              <DropdownMenu
+                size="xs"
+                square
+                hide-chevron
+                align="right"
+                icon="mdi:dots-vertical"
+                :title="t('commands.moreActions')"
+                :items="projectMenuItems(project)"
+              />
+            </template>
+          </SettingsEntityItem>
         </div>
       </div>
     </SettingsSection>
@@ -82,19 +108,15 @@
     >
       <FieldRow
         :label="t('settings.aiVaultPath')"
-        :hint="t('settings.aiVaultPathNotMoved')"
+        :info="t('settings.aiVaultPathNotMoved')"
         :error="vaultError || undefined"
-        :info="vaultPath"
       >
-        <div class="vault-actions">
-          <Button
-            size="sm"
-            variant="neutral"
-            icon="mdi:folder-open-outline"
-            @click="handleOpenVault"
-          >
-            {{ t('settings.openInFileManager') }}
-          </Button>
+        <div class="vault-path-control">
+          <FieldInput
+            class="vault-path-input"
+            readonly
+            :model-value="vaultPath"
+          />
           <Button
             size="sm"
             variant="neutral"
@@ -104,10 +126,19 @@
             {{ t('settings.selectFolder') }}
           </Button>
           <Button
+            size="sm"
+            variant="neutral"
+            icon="mdi:folder-open-outline"
+            @click="handleOpenVault"
+          >
+            {{ t('settings.openInFileManager') }}
+          </Button>
+          <Button
             v-if="userConfig.aiVault.path"
             size="sm"
             variant="ghost"
             icon="mdi:restore"
+            :title="t('settings.resetToDefault')"
             @click="handleResetVaultFolder"
           >
             {{ t('settings.resetToDefault') }}
@@ -115,11 +146,31 @@
         </div>
       </FieldRow>
     </SettingsSection>
+
+    <ConfirmModal
+      :open="showDeleteProfileConfirm"
+      :title="t('settings.deleteProfile')"
+      :message="deleteProfileMessage"
+      :confirm-text="t('settings.deleteProfile')"
+      danger
+      @confirm="handleDeleteProfile"
+      @cancel="showDeleteProfileConfirm = false"
+    />
+
+    <ConfirmModal
+      :open="showDeleteProjectConfirm"
+      :title="t('settings.deleteProject')"
+      :message="t('settings.deleteProjectConfirm')"
+      :confirm-text="t('settings.deleteProject')"
+      danger
+      @confirm="handleDeleteProject"
+      @cancel="showDeleteProjectConfirm = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { useChatModelOptions } from '../../composables/use-chat-model-options'
 import { useI18n } from '../../composables/use-i18n'
@@ -138,12 +189,15 @@ import {
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
+import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
+import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
-import type { AiProfile } from '@tyco/shared'
+import type { AiProfile, AiProject } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig, operations, navigate } = useSettingsContext()
@@ -170,6 +224,111 @@ onMounted(() => {
   void aiProfilesStore.loadAll()
 })
 
+// ---------------------------------------------------------------------------
+// Actions menu for profile
+// ---------------------------------------------------------------------------
+
+function profileMenuItems(profile: AiProfile): DropdownMenuItem[] {
+  return [
+    {
+      label: t('settings.duplicateProfile'),
+      icon: 'mdi:content-copy',
+      action: () => handleDuplicateProfile(profile),
+    },
+    {
+      label: t('common.delete'),
+      icon: 'mdi:trash-can-outline',
+      danger: true,
+      action: () => askDeleteProfile(profile),
+    },
+  ]
+}
+
+async function handleDuplicateProfile(profile: AiProfile) {
+  try {
+    const copy = await aiProfilesStore.duplicateProfile(
+      profile.id,
+      t('settings.profileCopyName', { name: profile.name })
+    )
+    navigate(profileTab(copy.id))
+  } catch (error) {
+    toastError(error)
+  }
+}
+
+const showDeleteProfileConfirm = ref(false)
+const profileToDelete = ref<AiProfile | null>(null)
+const chatCount = ref<number | null>(null)
+
+const deleteProfileMessage = computed(() => {
+  const profileName = profileToDelete.value?.name ?? ''
+  return chatCount.value === null
+    ? t('settings.deleteProfileConfirmUncounted', { name: profileName })
+    : t('settings.deleteProfileConfirm', {
+        name: profileName,
+        count: chatCount.value,
+      })
+})
+
+async function askDeleteProfile(profile: AiProfile) {
+  profileToDelete.value = profile
+  chatCount.value = await aiProfilesStore
+    .countChats(profile.id)
+    .catch(() => null)
+  showDeleteProfileConfirm.value = true
+}
+
+async function handleDeleteProfile() {
+  if (!profileToDelete.value) return
+  try {
+    await aiProfilesStore.deleteProfile(profileToDelete.value.id)
+  } catch (error) {
+    toastError(error)
+  } finally {
+    showDeleteProfileConfirm.value = false
+    profileToDelete.value = null
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Actions menu for project
+// ---------------------------------------------------------------------------
+
+function projectMenuItems(project: AiProject): DropdownMenuItem[] {
+  return [
+    {
+      label: t('common.delete'),
+      icon: 'mdi:trash-can-outline',
+      danger: true,
+      action: () => askDeleteProject(project),
+    },
+  ]
+}
+
+const showDeleteProjectConfirm = ref(false)
+const projectToDelete = ref<AiProject | null>(null)
+
+function askDeleteProject(project: AiProject) {
+  projectToDelete.value = project
+  showDeleteProjectConfirm.value = true
+}
+
+async function handleDeleteProject() {
+  if (!projectToDelete.value) return
+  try {
+    await aiProfilesStore.deleteProject(projectToDelete.value.id)
+  } catch (error) {
+    toastError(error)
+  } finally {
+    showDeleteProjectConfirm.value = false
+    projectToDelete.value = null
+  }
+}
+
+// ---------------------------------------------------------------------------
+// AI Vault Folder
+// ---------------------------------------------------------------------------
+
 async function handleOpenVault() {
   try {
     await aiProfilesStore.openVaultDir()
@@ -178,7 +337,6 @@ async function handleOpenVault() {
   }
 }
 
-// the store reads the vault anew once the settings with the path are stored
 async function handlePickVaultFolder() {
   try {
     const selected = await aiProfilesStore.pickFolder()
@@ -194,16 +352,16 @@ function handleResetVaultFolder() {
 </script>
 
 <style scoped>
-.vault-actions {
+.vault-path-control {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
+  width: 100%;
 }
 
-.entity-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: var(--space-sm);
+.vault-path-input {
+  flex: 1 1 14rem;
+  min-width: 0;
 }
 </style>

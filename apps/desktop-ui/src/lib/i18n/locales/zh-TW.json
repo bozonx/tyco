@@ -803,7 +803,6 @@
     "profileDefaultSoul": "# 角色\n描述此助手的身分以及它能提供的協助。\n\n# 規則\n- 使用提問的語言回覆。\n",
     "profileFilesAskAll": "「檔案」已設為「詢問」：即使專案允許，每次呼叫仍會等待確認。",
     "profileGenerationHint": "此設定檔聊天的模型與參數。留空的欄位將使用模型的預設值。",
-    "profileIcon": "圖示",
     "profileModel": "模型",
     "profileModelDefault": "第一個可用的模型",
     "profileModelDefaultNamed": "第一個可用模型 ({model})",

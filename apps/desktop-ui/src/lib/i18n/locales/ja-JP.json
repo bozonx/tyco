@@ -806,7 +806,6 @@
     "profileDefaultSoul": "あなたは親切で有能なAIアシスタントです。",
     "profileFilesAskAll": "すべての操作で確認",
     "profileGenerationHint": "モデル固有の生成パラメーター。",
-    "profileIcon": "アイコン",
     "profileModel": "プロファイルモデル",
     "profileModelDefault": "デフォルトモデル",
     "profileModelDefaultNamed": "最初に利用可能なモデル ({model})",

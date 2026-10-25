@@ -806,7 +806,6 @@
     "profileDefaultSoul": "# Rol\nBu asistanın kim olduğunu ve neye yardım ettiğini yazın.\n\n# Kurallar\n- Sorunun dilinde yanıt ver.\n",
     "profileFilesAskAll": "«Dosyalar» için «Sor» seçili: proje izin verse bile her çağrı onay bekler.",
     "profileGenerationHint": "Bu profilin sohbetlerinin modeli ve parametreleri. Boş alanlar modelin değerlerini kullanır.",
-    "profileIcon": "Simge",
     "profileModel": "Model",
     "profileModelDefault": "İlk kullanılabilir model",
     "profileModelDefaultNamed": "İlk kullanılabilir ({model})",

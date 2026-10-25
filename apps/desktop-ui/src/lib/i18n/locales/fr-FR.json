@@ -809,7 +809,6 @@
     "profileDefaultSoul": "# Rôle\nDécrivez qui est cet assistant et en quoi il aide.\n\n# Règles\n- Réponds dans la langue de la question.\n",
     "profileFilesAskAll": "« Fichiers » est réglé sur « Demander » : chaque appel attend une confirmation, même là où le projet l’autorise.",
     "profileGenerationHint": "Le modèle et les paramètres des chats de ce profil. Les champs vides utilisent les valeurs du modèle.",
-    "profileIcon": "Icône",
     "profileModel": "Modèle",
     "profileModelDefault": "Premier modèle disponible",
     "profileModelDefaultNamed": "Premier disponible ({model})",

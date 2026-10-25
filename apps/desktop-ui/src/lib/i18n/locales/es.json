@@ -809,7 +809,6 @@
     "profileDefaultSoul": "# Rol\nDescribe quién es este asistente y en qué ayuda.\n\n# Reglas\n- Responde en el idioma de la pregunta.\n",
     "profileFilesAskAll": "«Archivos» está configurado como «Preguntar»: cada llamada espera confirmación, incluso donde el proyecto la permite.",
     "profileGenerationHint": "El modelo y los parámetros de los chats de este perfil. Los campos vacíos usan los valores del modelo.",
-    "profileIcon": "Icono",
     "profileModel": "Modelo",
     "profileModelDefault": "Primer modelo disponible",
     "profileModelDefaultNamed": "Primero disponible ({model})",

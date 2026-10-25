@@ -48,6 +48,10 @@ function createStore() {
     loadAll: vi.fn(async () => {}),
     openVaultDir: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/elsewhere'),
+    duplicateProfile: vi.fn(async () => ({ id: 'writer-copy' })),
+    countChats: vi.fn(async () => 5),
+    deleteProfile: vi.fn(async () => {}),
+    deleteProject: vi.fn(async () => {}),
   })
 }
 
@@ -62,7 +66,19 @@ describe('SettingsAiProfilesTab.vue', () => {
   afterEach(() => toastError.mockReset())
 
   const mountTab = () =>
-    mount(SettingsAiProfilesTab, { global: { provide: context.provide } })
+    mount(SettingsAiProfilesTab, {
+      global: {
+        provide: context.provide,
+        stubs: {
+          ConfirmModal: {
+            name: 'ConfirmModal',
+            props: ['open', 'message', 'title'],
+            template:
+              '<div class="confirm-modal" :data-title="title" :data-open="open"><button class="confirm-yes" @click="$emit(\'confirm\')" /></div>',
+          },
+        },
+      },
+    })
   const button = (wrapper: ReturnType<typeof mountTab>, label: string) =>
     wrapper.findAll('button').find((item) => item.text().includes(label))!
 
@@ -118,5 +134,58 @@ describe('SettingsAiProfilesTab.vue', () => {
       [new Error('Missing')],
       [new Error('Denied')],
     ])
+  })
+
+  it('duplicates and deletes a profile through its menu', async () => {
+    store.profiles.push(profile({ id: 'writer', name: 'Writer' }))
+    const wrapper = mountTab()
+    const item = wrapper.findComponent({ name: 'SettingsEntityItem' })
+    const menu = item.findComponent({ name: 'DropdownMenu' })
+    const items = menu.props('items') as Array<{
+      label: string
+      action: () => void
+    }>
+    expect(items.map((i) => i.label)).toEqual([
+      'settings.duplicateProfile',
+      'common.delete',
+    ])
+
+    await items[0]!.action()
+    await flushPromises()
+    expect(store.duplicateProfile).toHaveBeenCalledWith(
+      'writer',
+      expect.any(String)
+    )
+    expect(context.navigate).toHaveBeenCalledWith('ai-profile:writer-copy')
+
+    await items[1]!.action()
+    await flushPromises()
+    expect(store.countChats).toHaveBeenCalledWith('writer')
+    const confirm = wrapper.get('[data-title="settings.deleteProfile"]')
+    expect(confirm.attributes('data-open')).toBe('true')
+    await confirm.get('.confirm-yes').trigger('click')
+    await flushPromises()
+    expect(store.deleteProfile).toHaveBeenCalledWith('writer')
+  })
+
+  it('deletes a project through its menu', async () => {
+    store.projects.push({ id: 'proj-1', name: 'Project 1' })
+    const wrapper = mountTab()
+    const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
+    const projectItem = items[0]!
+    const menu = projectItem.findComponent({ name: 'DropdownMenu' })
+    const menuItems = menu.props('items') as Array<{
+      label: string
+      action: () => void
+    }>
+    expect(menuItems.map((i) => i.label)).toEqual(['common.delete'])
+
+    await menuItems[0]!.action()
+    await flushPromises()
+    const confirm = wrapper.get('[data-title="settings.deleteProject"]')
+    expect(confirm.attributes('data-open')).toBe('true')
+    await confirm.get('.confirm-yes').trigger('click')
+    await flushPromises()
+    expect(store.deleteProject).toHaveBeenCalledWith('proj-1')
   })
 })

@@ -809,7 +809,6 @@
     "profileDefaultSoul": "# Rola\nOpisz, kim jest ten asystent i w czym pomaga.\n\n# Zasady\n- Odpowiadaj w języku pytania.\n",
     "profileFilesAskAll": "„Pliki” ustawiono na „Pytaj”: każde wywołanie czeka na potwierdzenie, nawet tam, gdzie projekt na nie zezwala.",
     "profileGenerationHint": "Model i parametry czatów tego profilu. Puste pola używają wartości modelu.",
-    "profileIcon": "Ikona",
     "profileModel": "Model",
     "profileModelDefault": "Pierwszy dostępny model",
     "profileModelDefaultNamed": "Pierwszy dostępny ({model})",

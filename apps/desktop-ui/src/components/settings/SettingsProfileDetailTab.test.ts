@@ -78,7 +78,6 @@ describe('SettingsProfileDetailTab.vue', () => {
       global: {
         provide: context.provide,
         stubs: {
-          ProfileIconPicker: true,
           SettingsProfileToolsSection: true,
           ConfirmModal: {
             props: ['open', 'message'],
@@ -115,31 +114,13 @@ describe('SettingsProfileDetailTab.vue', () => {
     expect(context.navigate).not.toHaveBeenCalled()
   })
 
-  it('duplicates the profile under a copy name', async () => {
+  it('toggles advanced settings for temperature and max tokens', async () => {
     const wrapper = mountTab()
     await flushPromises()
-    await button(wrapper, 'settings.duplicateProfile').trigger('click')
+    expect(wrapper.find('input[type="number"]').exists()).toBe(false)
+    await button(wrapper, 'settings.showAdvanced').trigger('click')
     await flushPromises()
-    expect(store.duplicateProfile).toHaveBeenCalledWith(
-      'writer',
-      'settings.profileCopyName:{"name":"Writer"}'
-    )
-    expect(context.navigate).toHaveBeenCalledWith('ai-profile:copy')
-  })
-
-  it('keeps a removed model visible and resets it to the default', async () => {
-    const wrapper = mountTab()
-    await flushPromises()
-    const select = wrapper.get('select')
-    expect(select.text()).toContain(
-      'removed-model (settings.profileModelUnavailable)'
-    )
-    const options = select.findAll('option')
-    await select.setValue(options[0]!.element.value)
-    await flushPromises()
-    expect(store.updateProfile).toHaveBeenCalledWith('writer', {
-      modelId: undefined,
-    })
+    expect(wrapper.findAll('input[type="number"]').length).toBe(2)
   })
 
   it('counts the chats before deleting the profile', async () => {
