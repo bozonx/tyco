@@ -217,6 +217,32 @@ pub fn profile_chats_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppErro
     Ok(dir)
 }
 
+/// The chat folders of every profile in the vault, for the history settings
+/// all profiles share. Nothing is created: a vault or a profile without one
+/// has no chats to keep.
+pub fn all_profile_chats_dirs(vault_root: &Path) -> Result<Vec<PathBuf>, AppError> {
+    let entries = match fs::read_dir(vault_root.join("profiles")) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(error.into()),
+    };
+    let mut dirs = Vec::new();
+    for entry in entries {
+        let dir = entry?.path();
+        let is_profile = dir
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(is_file_id)
+            && dir.join(PROFILE_FILE).is_file();
+        let chats = dir.join(PROFILE_CHATS_DIR);
+        if is_profile && chats.is_dir() {
+            dirs.push(chats);
+        }
+    }
+    dirs.sort();
+    Ok(dirs)
+}
+
 /// The folder of the profile's own files, the one its file tools always reach.
 pub fn profile_workspace_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
     let dir = existing_profile_dir(vault_root, id)?.join("workspace");

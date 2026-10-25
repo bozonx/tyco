@@ -552,9 +552,13 @@
             "voiceCorrection",
             "aiTask"
           ]
+        },
+        "imageQuality": {
+          "enum": ["economy", "balanced", "original"],
+          "default": "balanced"
         }
       },
-      "required": ["providers", "models", "tasks"],
+      "required": ["providers", "models", "tasks", "imageQuality"],
       "defaultPath": "llm"
     },
     "aiTasks": {
@@ -612,6 +616,26 @@
       "properties": { "path": { "type": "string", "default": "" } },
       "required": ["path"],
       "defaultPath": "aiVault"
+    },
+    "aiProfiles": {
+      "type": "object",
+      "properties": {
+        "chatHistory": {
+          "type": "object",
+          "properties": {
+            "storage": { "enum": ["off", "disk"], "default": "disk" },
+            "retentionDays": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": ["storage"],
+          "default": { "storage": "disk" }
+        }
+      },
+      "required": ["chatHistory"],
+      "defaultPath": "aiProfiles"
     },
     "markdown": {
       "type": "object",
@@ -718,10 +742,6 @@
     "chat": {
       "type": "object",
       "properties": {
-        "imageQuality": {
-          "enum": ["economy", "balanced", "original"],
-          "default": "balanced"
-        },
         "history": {
           "type": "object",
           "properties": {
@@ -736,7 +756,7 @@
           "default": { "storage": "disk" }
         }
       },
-      "required": ["imageQuality", "history"],
+      "required": ["history"],
       "defaultPath": "chat"
     },
     "stt": {
@@ -801,7 +821,8 @@
     "plugins",
     "chat",
     "stt",
-    "aiVault"
+    "aiVault",
+    "aiProfiles"
   ],
   "$defs": {
     "scriptToolConfig": {

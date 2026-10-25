@@ -84,10 +84,15 @@ export interface LlmTasksConfig {
   aiTask: Pick<LlmTaskConfig, 'modelId'>
 }
 
+/** How much attached images are scaled down before a request */
+export type LlmImageQuality = 'economy' | 'balanced' | 'original'
+
 export interface LlmConfig {
   providers: LlmProvider[]
   models: LlmModel[]
   tasks: LlmTasksConfig
+  /** Applies to every chat, the profile chats included */
+  imageQuality: LlmImageQuality
 }
 
 export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig

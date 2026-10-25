@@ -83,9 +83,15 @@ export interface ChatHistoryConfig {
   retentionDays?: number
 }
 
+/** The settings of the "Ask AI" chat */
 export interface ChatConfig {
-  imageQuality: 'economy' | 'balanced' | 'original'
   history: ChatHistoryConfig
+}
+
+/** The settings all AI profiles share */
+export interface AiProfilesConfig {
+  /** The history of every profile chat; "Ask AI" keeps its own */
+  chatHistory: ChatHistoryConfig
 }
 
 export interface EditorConfig {
@@ -162,6 +168,7 @@ export interface UserConfig {
   llm: LlmConfig
   aiTasks: AiTasksConfig
   aiVault: AiVaultLocationConfig
+  aiProfiles: AiProfilesConfig
   markdown: MarkdownConfig
   plugins: Record<string, PluginEntryConfig>
   chat: ChatConfig

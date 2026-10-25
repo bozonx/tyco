@@ -344,14 +344,25 @@ pub struct ChatHistoryPolicy {
 }
 
 impl ChatHistoryPolicy {
+    /// The policy of the chats of "Ask AI".
     pub fn from_config(user_config: &Value) -> Self {
+        Self::at(user_config, "/chat/history")
+    }
+
+    /// The policy every profile chat follows.
+    pub fn for_profiles(user_config: &Value) -> Self {
+        Self::at(user_config, "/aiProfiles/chatHistory")
+    }
+
+    fn at(user_config: &Value, pointer: &str) -> Self {
+        let history = user_config.pointer(pointer);
         Self {
-            is_enabled: user_config
-                .pointer("/chat/history/storage")
+            is_enabled: history
+                .and_then(|history| history.get("storage"))
                 .and_then(Value::as_str)
                 != Some("off"),
-            retention_days: user_config
-                .pointer("/chat/history/retentionDays")
+            retention_days: history
+                .and_then(|history| history.get("retentionDays"))
                 .and_then(Value::as_u64)
                 .unwrap_or(0),
         }
@@ -759,6 +770,35 @@ mod tests {
             ChatHistoryPolicy {
                 is_enabled: false,
                 retention_days: 30,
+            }
+        );
+    }
+
+    #[test]
+    fn profile_chats_follow_their_own_settings() {
+        let config = json!({
+            "chat": {"history": {"storage": "off"}},
+            "aiProfiles": {"chatHistory": {"storage": "disk", "retentionDays": 7}}
+        });
+        assert_eq!(
+            ChatHistoryPolicy::from_config(&config),
+            ChatHistoryPolicy {
+                is_enabled: false,
+                retention_days: 0,
+            }
+        );
+        assert_eq!(
+            ChatHistoryPolicy::for_profiles(&config),
+            ChatHistoryPolicy {
+                is_enabled: true,
+                retention_days: 7,
+            }
+        );
+        assert_eq!(
+            ChatHistoryPolicy::for_profiles(&json!({})),
+            ChatHistoryPolicy {
+                is_enabled: true,
+                retention_days: 0,
             }
         );
     }

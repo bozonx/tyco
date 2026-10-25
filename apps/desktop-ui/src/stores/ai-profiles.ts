@@ -6,6 +6,7 @@ import { describeError } from '../lib/errors/describe-error'
 import { translate } from '../lib/i18n'
 import { createAiProfilesModel } from '../lib/ai-profiles/ai-profiles-model'
 import { createAiProjectsModel } from '../lib/ai-profiles/ai-projects-model'
+import { createProfileChatsModel } from '../lib/ai-profiles/profile-chats'
 import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-storage'
 import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { useDesktopStore } from './desktop'
@@ -100,6 +101,12 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   const countChats = async (id: string): Promise<number> =>
     (await createIpcChatSessionStorageDriver(ipcStore, id).listChats()).length
 
+  /** The chats of all profiles, which share one history setting */
+  const profileChats = createProfileChatsModel({
+    listProfileIds: () => profilesModel.profiles.value.map(({ id }) => id),
+    storageFor: (id) => createIpcChatSessionStorageDriver(ipcStore, id),
+  })
+
   /** Removing a project removes the profiles' permissions for it as well */
   const deleteProject = async (id: string): Promise<void> => {
     await projectsModel.deleteProject(id)
@@ -123,6 +130,8 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     duplicateProfile: profilesModel.duplicateProfile,
     deleteProfile: profilesModel.deleteProfile,
     countChats,
+    countAllProfileChats: profileChats.countAll,
+    clearAllProfileChats: profileChats.clearAll,
     setProjectPermission: profilesModel.setProjectPermission,
     readSoul: profilesModel.readSoul,
     writeSoul: profilesModel.writeSoul,

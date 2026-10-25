@@ -9,14 +9,15 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('SettingsChatTab.vue', () => {
-  it('holds the chat prompt, attachments and chat history', async () => {
+  it('holds the prompt and the chat history of Ask AI', async () => {
     const context = createTestSettingsContext()
     const wrapper = mount(SettingsChatTab, {
       global: {
         provide: context.provide,
         stubs: {
           SettingsChatHistorySection: {
-            template: '<div class="chat-history-stub" />',
+            props: ['scope'],
+            template: '<div class="chat-history-stub" :data-scope="scope" />',
           },
           FieldRow: {
             props: ['label'],
@@ -29,8 +30,10 @@ describe('SettingsChatTab.vue', () => {
 
     expect(
       wrapper.findAll('.row').map((row) => row.attributes('data-label'))
-    ).toEqual(['settings.chatPrompt', 'settings.chatImageQuality'])
-    expect(wrapper.find('.chat-history-stub').exists()).toBe(true)
+    ).toEqual(['settings.chatPrompt'])
+    expect(wrapper.get('.chat-history-stub').attributes('data-scope')).toBe(
+      'askAi'
+    )
 
     await wrapper.get('textarea').setValue('Answer briefly')
     expect(context.draft.value.llm.tasks.chat.rule).toBe('Answer briefly')

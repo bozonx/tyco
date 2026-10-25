@@ -48,6 +48,19 @@
       </FieldRow>
     </SettingsSection>
 
+    <SettingsSection :title="t('settings.sectionLlmImages')">
+      <FieldRow
+        :label="t('settings.chatImageQuality')"
+        :info="t('settings.chatImageQualityHint')"
+      >
+        <FieldSelect
+          :model-value="llm.imageQuality"
+          :options="imageQualityOptions"
+          @update:model-value="llm.imageQuality = $event as LlmImageQuality"
+        />
+      </FieldRow>
+    </SettingsSection>
+
     <ConfirmModal
       :open="pendingProviderId !== null"
       :title="t('common.delete')"
@@ -79,7 +92,12 @@ import FieldSelect from '../common/FieldSelect.vue'
 import LlmConnectionCard from './LlmConnectionCard.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
-import { LLM_TASKS, type LlmProvider, llmSecretId } from '@tyco/shared'
+import {
+  LLM_TASKS,
+  type LlmImageQuality,
+  type LlmProvider,
+  llmSecretId,
+} from '@tyco/shared'
 
 const TASK_LABEL_KEYS = {
   translation: 'action.translationMenu',
@@ -114,6 +132,11 @@ const settings = createLlmSettingsModel({
 const { addProvider, removeProviderById, dispose } = settings
 onBeforeUnmount(dispose)
 const pendingProviderId = ref<string | null>(null)
+const imageQualityOptions = computed(() => [
+  { id: 'economy', name: t('settings.imageQualityEconomy') },
+  { id: 'balanced', name: t('settings.imageQualityBalanced') },
+  { id: 'original', name: t('settings.imageQualityOriginal') },
+])
 function toggleProvider(providerId: string) {
   const expanded = settings.expandedProviderIds
   if (expanded.has(providerId)) expanded.delete(providerId)

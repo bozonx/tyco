@@ -217,7 +217,7 @@ const removedChat = removal.removed
 const undoRemoveChat = removal.undo
 
 const chatHistoryDisabled = computed(
-  () => !isChatHistoryEnabled(desktopStore.userConfig)
+  () => !isChatHistoryEnabled(desktopStore.userConfig, chatStore.profileId)
 )
 
 /** Chats whose messages match the query, found in storage */

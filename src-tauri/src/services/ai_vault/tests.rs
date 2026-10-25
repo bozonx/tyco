@@ -403,6 +403,30 @@ fn profile_folders_exist_only_for_existing_profiles_with_valid_ids() {
 }
 
 #[test]
+fn every_profile_chat_folder_is_listed_without_creating_any() {
+    let test_dir = TestDir::new("ai_vault_all_profile_chats");
+    let vault_root = test_dir.join("vault");
+    assert!(all_profile_chats_dirs(&vault_root).unwrap().is_empty());
+    assert!(!vault_root.exists());
+
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+    create_profile(&vault_root, profile("coder", 2000), "").unwrap();
+    // a folder that is no profile, and a profile whose chats were never made
+    fs::create_dir_all(vault_root.join("profiles/stray/chats")).unwrap();
+    create_profile(&vault_root, profile("bare", 3000), "").unwrap();
+    fs::remove_dir_all(vault_root.join("profiles/bare/chats")).unwrap();
+
+    assert_eq!(
+        all_profile_chats_dirs(&vault_root).unwrap(),
+        vec![
+            vault_root.join("profiles/coder/chats"),
+            vault_root.join("profiles/writer/chats"),
+        ]
+    );
+    assert!(!vault_root.join("profiles/bare/chats").exists());
+}
+
+#[test]
 fn project_files_are_in_the_vault_or_the_linked_folder() {
     let test_dir = TestDir::new("ai_vault_project_files");
     let vault_root = test_dir.join("vault");

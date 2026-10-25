@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import type { ChatHistoryConfig, UserConfig } from '@tyco/shared'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createTestSettingsContext } from '../../test/settings-context'
@@ -10,6 +10,9 @@ const mockToast = vi.fn()
 const mockClearChatHistory = vi.fn().mockResolvedValue(undefined)
 const mockLoadChatHistory = vi.fn().mockResolvedValue(undefined)
 const mockChatHistory = ref<Array<{ id: string; title: string }>>([])
+const mockProfiles = ref<Array<{ id: string }>>([])
+const mockCountAllProfileChats = vi.fn().mockResolvedValue(0)
+const mockClearAllProfileChats = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({
@@ -20,6 +23,16 @@ vi.mock('../../composables/use-i18n', () => ({
 
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: mockToast, toastText: vi.fn() }),
+}))
+
+vi.mock('../../stores/ai-profiles', () => ({
+  useAiProfilesStore: () => ({
+    get profiles() {
+      return mockProfiles.value
+    },
+    countAllProfileChats: mockCountAllProfileChats,
+    clearAllProfileChats: mockClearAllProfileChats,
+  }),
 }))
 
 vi.mock('../../stores/history', () => ({
@@ -34,26 +47,31 @@ describe('SettingsChatHistorySection.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockChatHistory.value = []
+    mockProfiles.value = []
+    mockCountAllProfileChats.mockResolvedValue(0)
   })
 
   const createConfig = (
-    chatHistory: Partial<ChatHistoryConfig> = {}
-  ): Pick<UserConfig, 'chat'> => ({
-    chat: {
-      imageQuality: 'balanced',
-      history: { storage: 'disk', ...chatHistory },
-    },
+    chatHistory: Partial<ChatHistoryConfig> = {},
+    profileChatHistory: Partial<ChatHistoryConfig> = {}
+  ): Pick<UserConfig, 'chat' | 'aiProfiles'> => ({
+    chat: { history: { storage: 'disk', ...chatHistory } },
+    aiProfiles: { chatHistory: { storage: 'disk', ...profileChatHistory } },
   })
 
-  const mountTab = (userConfig = createConfig()) => {
+  const mountTab = (
+    userConfig = createConfig(),
+    scope: 'askAi' | 'profiles' = 'askAi'
+  ) => {
     return mount(SettingsChatHistorySection, {
+      props: { scope },
       global: {
         provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
-            props: ['title'],
+            props: ['title', 'info'],
             template:
-              '<section class="section-stub" :data-title="title"><slot name="actions" /><slot /></section>',
+              '<section class="section-stub" :data-title="title" :data-info="info"><slot name="actions" /><slot /></section>',
           },
           FieldRow: {
             props: ['label', 'info', 'hint', 'nested'],
@@ -75,9 +93,9 @@ describe('SettingsChatHistorySection.vue', () => {
               '<button class="btn-stub" @click="$emit(\'click\')"><slot /></button>',
           },
           ConfirmModal: {
-            props: ['open'],
+            props: ['open', 'message'],
             template:
-              '<div v-if="open" class="confirm-modal-stub"><button class="confirm-btn" @click="$emit(\'confirm\')">Confirm</button><button class="cancel-btn" @click="$emit(\'cancel\')">Cancel</button></div>',
+              '<div v-if="open" class="confirm-modal-stub" :data-message="message"><button class="confirm-btn" @click="$emit(\'confirm\')">Confirm</button><button class="cancel-btn" @click="$emit(\'cancel\')">Cancel</button></div>',
           },
         },
       },
@@ -160,5 +178,73 @@ describe('SettingsChatHistorySection.vue', () => {
 
     expect(config.chat.history.storage).toBe('disk')
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+  })
+
+  describe('for the profiles', () => {
+    it('edits the settings all profiles share', async () => {
+      const config = createConfig({ storage: 'disk' }, { storage: 'disk' })
+      const wrapper = mountTab(config, 'profiles')
+
+      const section = wrapper.get('.section-stub')
+      expect(section.attributes('data-title')).toBe(
+        'settings.sectionProfileChatHistory'
+      )
+      expect(section.attributes('data-info')).toBe(
+        'settings.profileChatHistoryHint'
+      )
+      await section.find('.field-checkbox-stub').setValue(false)
+      expect(config.aiProfiles.chatHistory.storage).toBe('off')
+      expect(config.chat.history.storage).toBe('disk')
+      expect(mockLoadChatHistory).not.toHaveBeenCalled()
+    })
+
+    it('counts the chats of all profiles and recounts for new profiles', async () => {
+      mockCountAllProfileChats.mockResolvedValue(3)
+      const wrapper = mountTab(createConfig(), 'profiles')
+      await flushPromises()
+      const clearRow = () =>
+        wrapper
+          .findAll('.field-row-stub')
+          .find((row) => row.attributes('data-label') === 'history.clear')
+      expect(clearRow()?.attributes('data-hint')).toBe(
+        'settings.chatCount:{"count":3}'
+      )
+
+      mockCountAllProfileChats.mockResolvedValue(5)
+      mockProfiles.value = [{ id: 'writer' }]
+      await flushPromises()
+      expect(clearRow()?.attributes('data-hint')).toBe(
+        'settings.chatCount:{"count":5}'
+      )
+    })
+
+    it('clears the chats of every profile after confirmation', async () => {
+      mockCountAllProfileChats.mockResolvedValue(2)
+      const wrapper = mountTab(createConfig(), 'profiles')
+      await flushPromises()
+
+      await wrapper.get('.btn-stub').trigger('click')
+      expect(
+        wrapper.get('.confirm-modal-stub').attributes('data-message')
+      ).toBe('settings.clearProfileChatsConfirmDialog')
+      mockCountAllProfileChats.mockResolvedValue(0)
+      await wrapper.get('.confirm-btn').trigger('click')
+      await flushPromises()
+
+      expect(mockClearAllProfileChats).toHaveBeenCalledTimes(1)
+      expect(mockClearChatHistory).not.toHaveBeenCalled()
+      expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
+    })
+
+    it('reports a failed clear', async () => {
+      mockClearAllProfileChats.mockRejectedValueOnce(new Error('denied'))
+      const wrapper = mountTab(createConfig(), 'profiles')
+
+      await wrapper.get('.btn-stub').trigger('click')
+      await wrapper.get('.confirm-btn').trigger('click')
+      await flushPromises()
+
+      expect(mockToast).toHaveBeenCalledWith('history.operationFailed', 'error')
+    })
   })
 })

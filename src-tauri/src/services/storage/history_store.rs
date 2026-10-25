@@ -17,6 +17,7 @@ use crate::state::AppState;
 pub struct HistorySettings {
     pub editor: editor::EditorHistoryPolicy,
     pub chat: chats::ChatHistoryPolicy,
+    pub profile_chat: chats::ChatHistoryPolicy,
 }
 
 impl HistorySettings {
@@ -24,6 +25,7 @@ impl HistorySettings {
         Self {
             editor: editor::EditorHistoryPolicy::from_config(config),
             chat: chats::ChatHistoryPolicy::from_config(config),
+            profile_chat: chats::ChatHistoryPolicy::for_profiles(config),
         }
     }
 }
@@ -70,8 +72,7 @@ impl HistoryStorageCoordinator {
         )?;
         // Retry on every settings save, even if the policy itself is unchanged.
         // A previous cleanup may have failed after its config was committed.
-        let chat_cleanup = chats::app_chats_dir(app)
-            .and_then(|chats_dir| chats::enforce_chat_history_policy(&chats_dir, after.chat));
+        let chat_cleanup = enforce_chat_history_policies(app, after);
         self.cleanup_pending.store(
             result.is_cleanup_pending || chat_cleanup.is_err(),
             Ordering::SeqCst,
@@ -109,10 +110,52 @@ pub fn apply_history_settings_on_startup(
 }
 
 /// Deletes what the policies no longer keep, from the editor history file and
-/// from the chats of "Ask AI"; a profile's chats are the profile's own.
+/// from every chat history.
 fn enforce_history_policies(app: &AppHandle, settings: HistorySettings) -> Result<(), AppError> {
     editor::enforce_editor_history_policy(app, &settings.editor)?;
-    chats::enforce_chat_history_policy(&chats::app_chats_dir(app)?, settings.chat)
+    enforce_chat_history_policies(app, settings)
+}
+
+/// Brings the chats of "Ask AI" and of every profile in line with their
+/// settings. Each history is tried; the first failure is returned.
+fn enforce_chat_history_policies(
+    app: &AppHandle,
+    settings: HistorySettings,
+) -> Result<(), AppError> {
+    let ask_ai = chats::app_chats_dir(app)
+        .and_then(|chats_dir| chats::enforce_chat_history_policy(&chats_dir, settings.chat));
+    let state = app.state::<AppState>();
+    // an unavailable vault has no chats to clean up now; they are trimmed once
+    // a profile chat is saved there again
+    let profiles = match crate::services::ai_vault::resolve_vault_path(app, &state.user_config()) {
+        Ok(vault_root) => enforce_profile_chat_history_policy(&vault_root, settings.profile_chat),
+        Err(error) => {
+            log::warn!("Skipping the profile chat cleanup: {error}");
+            Ok(())
+        }
+    };
+    ask_ai.and(profiles)
+}
+
+/// Applies the policy all profiles share to the chats of each of them.
+fn enforce_profile_chat_history_policy(
+    vault_root: &Path,
+    policy: chats::ChatHistoryPolicy,
+) -> Result<(), AppError> {
+    if !policy.is_enabled {
+        return Ok(());
+    }
+    let mut result = Ok(());
+    for chats_dir in crate::services::ai_vault::all_profile_chats_dirs(vault_root)? {
+        if let Err(error) = chats::enforce_chat_history_policy(&chats_dir, policy) {
+            log::warn!(
+                "Could not clean up the chats in {}: {error}",
+                chats_dir.display()
+            );
+            result = result.and(Err(error));
+        }
+    }
+    result
 }
 
 fn with_editor<T>(
@@ -248,7 +291,11 @@ pub fn read_chat(
 
 pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), AppError> {
     with_chats(app, scope, |state, chats_dir| {
-        let policy = chats::ChatHistoryPolicy::from_config(&state.user_config());
+        let config = state.user_config();
+        let policy = match scope {
+            ChatScope::AskAi => chats::ChatHistoryPolicy::from_config(&config),
+            ChatScope::Profile(_) => chats::ChatHistoryPolicy::for_profiles(&config),
+        };
         chats::save_chat(chats_dir, policy, app.state::<ChatImages>().store(), item)
     })
 }

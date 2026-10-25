@@ -1,4 +1,4 @@
-import { type ChatConfig, type ProfileToolSettings } from '@tyco/shared'
+import { type LlmImageQuality, type ProfileToolSettings } from '@tyco/shared'
 
 import { FILES_TOOL_GROUP_ID } from '../chat-tools/chat-tool-groups'
 import type { invokeDesktop } from '../desktop/invoke'
@@ -19,7 +19,7 @@ export interface ChatDesktopFilesDependencies {
   invoke: typeof invokeDesktop
   storeImage: ChatFileReaderDependencies['storeImage']
   syncImages: ChatFileControllerDependencies['syncImages']
-  imageQuality: () => ChatConfig['imageQuality'] | undefined
+  imageQuality: () => LlmImageQuality | undefined
   profileTools: () => ProfileToolSettings | undefined
   getDraft: ChatFileControllerDependencies['getDraft']
   getMessages: ChatFileControllerDependencies['getMessages']

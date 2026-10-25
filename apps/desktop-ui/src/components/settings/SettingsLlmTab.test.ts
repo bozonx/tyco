@@ -146,7 +146,7 @@ describe('feature models', () => {
   it('picks one model per feature, or none', async () => {
     const { llm, wrapper } = setup()
     const selects = wrapper.findAllComponents(FieldSelect)
-    const translation = selects.at(-4)!
+    const translation = selects.at(-5)!
     const options = translation.props('options') as { id: string }[]
     expect(options[0]).toEqual({ id: '', name: 'settings.taskModelNone' })
     expect(options.map((option) => option.id)).toContain('gemini-flash')
@@ -174,6 +174,7 @@ describe('SettingsLlmTab.vue', () => {
       voiceCorrection: { modelId: '', rule: '' },
       aiTask: { modelId: '' },
     },
+    imageQuality: 'balanced',
   }
 
   it('leaves prompts and chat settings to their feature pages', () => {
@@ -229,6 +230,22 @@ describe('SettingsLlmTab.vue', () => {
       'settings.voiceTextCorrection',
       'settings.textCorrection',
       'settings.tasksTab',
+      'settings.chatImageQuality',
     ])
+  })
+})
+
+describe('image quality', () => {
+  it('is set once for every chat', async () => {
+    const { llm, wrapper } = setup()
+    const quality = wrapper.findAllComponents(FieldSelect).at(-1)!
+    expect(quality.props('modelValue')).toBe('balanced')
+    expect(
+      (quality.props('options') as { id: string }[]).map(({ id }) => id)
+    ).toEqual(['economy', 'balanced', 'original'])
+
+    quality.vm.$emit('update:modelValue', 'original')
+    await flushPromises()
+    expect(llm.imageQuality).toBe('original')
   })
 })

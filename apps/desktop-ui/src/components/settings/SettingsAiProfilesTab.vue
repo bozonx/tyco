@@ -74,6 +74,8 @@
       </div>
     </SettingsSection>
 
+    <SettingsChatHistorySection scope="profiles" />
+
     <SettingsSection
       :title="t('settings.aiVaultTitle')"
       :info="t('settings.aiVaultPathHint')"
@@ -138,6 +140,7 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import StateMessage from '../common/StateMessage.vue'
+import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
 import type { AiProfile } from '@tyco/shared'

@@ -1,5 +1,8 @@
 <template>
-  <SettingsSection :title="t('settings.sectionChatHistory')">
+  <SettingsSection
+    :title="t(texts.titleKey)"
+    :info="texts.infoKey && t(texts.infoKey)"
+  >
     <FieldRow
       :label="t('settings.chatHistoryEnabled')"
       :info="t('settings.chatHistoryEnabledInfo')"
@@ -44,7 +47,7 @@
     <ConfirmModal
       :open="showClearModal"
       :title="t('history.clearConfirmTitle')"
-      :message="t('settings.clearChatsConfirmDialog')"
+      :message="t(texts.confirmKey)"
       :confirm-text="t('history.clearConfirmButton')"
       danger
       @confirm="onClear"
@@ -54,17 +57,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, unref } from 'vue'
+import { computed, onMounted, ref, unref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import {
+  type ChatHistoryScope,
+  chatHistoryConfig,
   chatHistoryRetentionChoices,
-  isChatHistoryEnabled,
 } from '../../lib/chat/chat-history-settings'
 import { historyRetentionOptions } from '../../lib/history/history-retention'
 import { toHtmlLang } from '../../lib/locale/language'
+import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useHistoryStore } from '../../stores/history'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -73,28 +78,94 @@ import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import SettingsSection from './SettingsSection.vue'
 
+const props = withDefaults(defineProps<{ scope?: ChatHistoryScope }>(), {
+  scope: 'askAi',
+})
+
+const TEXTS = {
+  askAi: {
+    titleKey: 'settings.sectionChatHistory',
+    infoKey: '',
+    confirmKey: 'settings.clearChatsConfirmDialog',
+  },
+  profiles: {
+    titleKey: 'settings.sectionProfileChatHistory',
+    infoKey: 'settings.profileChatHistoryHint',
+    confirmKey: 'settings.clearProfileChatsConfirmDialog',
+  },
+} as const
+
 const { t } = useI18n()
 const { draft: userConfig, effectiveAppLanguage } = useSettingsContext()
 const { toastKey } = useToast()
-const historyStore = useHistoryStore()
 
-const history = computed(() => userConfig.value.chat.history)
+const texts = computed(() => TEXTS[props.scope])
+const history = computed(() => chatHistoryConfig(userConfig.value, props.scope))
+
+/** What the chats of the scope are counted and cleared with */
+function useScopeChats(scope: ChatHistoryScope) {
+  if (scope === 'profiles') {
+    const aiProfilesStore = useAiProfilesStore()
+    const count = ref(0)
+    let countRequest = 0
+    const refresh = async () => {
+      const request = ++countRequest
+      try {
+        const total = await aiProfilesStore.countAllProfileChats()
+        if (request === countRequest) count.value = total
+      } catch {
+        // the count stays as last read
+      }
+    }
+    // the profiles are listed once the vault is read
+    watch(
+      () => aiProfilesStore.profiles.map(({ id }) => id).join('\n'),
+      () => void refresh()
+    )
+    return {
+      count,
+      load: refresh,
+      clear: async () => {
+        countRequest += 1
+        try {
+          await aiProfilesStore.clearAllProfileChats()
+        } finally {
+          void refresh()
+        }
+      },
+    }
+  }
+  const historyStore = useHistoryStore()
+  return {
+    count: computed(() => unref(historyStore.chatHistory)?.length ?? 0),
+    load: async () => {
+      await historyStore.loadChatHistory?.()
+    },
+    clear: () => historyStore.clearChats(),
+  }
+}
+
+const scopeChats = useScopeChats(props.scope)
 
 onMounted(() => {
-  void historyStore.loadChatHistory?.()
+  void scopeChats.load()
 })
 
-const chatCount = computed(() => unref(historyStore.chatHistory)?.length ?? 0)
+const chatCount = computed(() => scopeChats.count.value)
 
 const showClearModal = ref(false)
 
 async function onClear() {
   showClearModal.value = false
-  await historyStore.clearChats()
-  toastKey('history.cleared', 'info')
+  try {
+    await scopeChats.clear()
+    toastKey('history.cleared', 'info')
+  } catch {
+    toastKey('history.operationFailed', 'error')
+  }
 }
 
-const isHistoryChecked = computed(() => isChatHistoryEnabled(userConfig.value))
+const isHistoryChecked = computed(() => history.value.storage !== 'off')
 
 function setHistoryEnabled(isEnabled: boolean) {
   history.value.storage = isEnabled ? 'disk' : 'off'

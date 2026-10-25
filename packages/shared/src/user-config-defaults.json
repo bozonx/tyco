@@ -130,7 +130,8 @@
       },
       "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
       "aiTask": { "modelId": "ollama-qwen" }
-    }
+    },
+    "imageQuality": "balanced"
   },
   "aiTasks": {
     "items": [
@@ -143,6 +144,7 @@
     "slots": { "q": "deep-edit" }
   },
   "aiVault": { "path": "" },
+  "aiProfiles": { "chatHistory": { "storage": "disk" } },
   "markdown": {
     "format": {
       "bullet": "-",
@@ -163,7 +165,7 @@
     }
   },
   "plugins": {},
-  "chat": { "imageQuality": "balanced", "history": { "storage": "disk" } },
+  "chat": { "history": { "storage": "disk" } },
   "stt": {
     "provider": "deepgram",
     "isVoiceCorrectionEnabled": false,

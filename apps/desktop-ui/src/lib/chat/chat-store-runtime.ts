@@ -238,7 +238,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
         : deps.getSessionState()?.lastChatId,
     isHistoryEnabled: () => {
       const config = deps.getUserConfig()
-      return config ? isChatHistoryEnabled(config) : false
+      return config ? isChatHistoryEnabled(config, profileId) : false
     },
     getChatModel: () => {
       const picked = selectedModel.value
@@ -267,7 +267,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     invoke: deps.invoke,
     storeImage: storeChatImage,
     syncImages: syncChatImages,
-    imageQuality: () => deps.getUserConfig()?.chat.imageQuality,
+    imageQuality: () => deps.getUserConfig()?.llm.imageQuality,
     profileTools: () => profile.value?.tools,
     getDraft: () => model.currentChatParams.value,
     getMessages: () => model.messages.value,
