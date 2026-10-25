@@ -1,0 +1,12 @@
+{
+  "name": "fedora44-kde",
+  "base": "/mnt/disk2/vm/lhc-fedora-kde/base.qcow2",
+  "user": "tester",
+  "ssh_key": "~/.ssh/lhc-vm",
+  "ssh_port": 2253,
+  "cpus": 4,
+  "memory": 4096,
+  "vga": "VGA",
+  "session": "wayland",
+  "desktop": "KDE"
+}

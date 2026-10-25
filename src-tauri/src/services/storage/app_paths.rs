@@ -15,7 +15,9 @@
 //! The state directory holds logs and platform webview state. `SessionState`
 //! lives only in memory; persistent preview preferences belong to the config.
 
-use std::path::{Path, PathBuf};
+#[cfg(any(debug_assertions, test))]
+use std::path::Path;
+use std::path::PathBuf;
 
 use tauri::{AppHandle, Manager};
 

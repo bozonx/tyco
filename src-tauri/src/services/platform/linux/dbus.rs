@@ -198,7 +198,9 @@ struct TycoKwin {
     app: AppHandle,
 }
 
-#[interface(name = "org.tyco.KwinTracker")]
+// KWin sends activation and close reports in order. Concurrent handlers can
+// apply a close first and discard the preceding activation as an old sequence.
+#[interface(name = "org.tyco.KwinTracker", spawn = false)]
 impl TycoKwin {
     /// Reported by the KWin tracker script, see `platform::linux::kwin`.
     #[zbus(name = "KwinWindowActivated")]

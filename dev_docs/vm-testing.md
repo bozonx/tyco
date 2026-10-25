@@ -1,8 +1,9 @@
 # План нативного тестирования в виртуальных машинах
 
 Дата инвентаризации: 2026-10-24. Это план внедрения, а не отчёт о пройденных
-проверках Tyco. Образы обнаружены на хосте; их загрузка и готовность для Tyco ещё
-не проверялись. Соседний проект и существующие VM не изменялись.
+проверках всей матрицы Tyco. Fedora KDE подготовлена и проверяется автоматическим
+runner; остальные профили пока не реализованы. Исходные диски соседнего проекта
+используются read-only, изменения выполняются только в отдельных Tyco-overlay.
 
 ## Границы проверки
 
@@ -162,16 +163,54 @@ msedgedriver той же версии, что Edge, на Windows. Запуска
 пользователю через scheduled task. `pnpm test:desktop` — существующий smoke;
 он не реализует всю VM-матрицу и не доказывает Wayland-вставку.
 
-### Планируемый runner
+### Автоматический runner Fedora KDE
 
-Добавить `scripts/vm/` с независимой инфраструктурой и гостевыми сценариями,
-а затем команды ниже. **Сейчас этих файлов/команд нет; это целевой интерфейс.**
+Реализован `scripts/vm/`: независимый lifecycle QEMU/KVM, подготовленный Tyco-overlay,
+одноразовые диски, блокировки ресурсов, QMP-ввод, управление Tyco через WebDriver,
+отдельные GTK-получатели Wayland/XWayland и независимый наблюдатель окон KWin.
+Исходная база LHC остаётся read-only. По умолчанию профиль Fedora использует порт
+2253, а диски и подробные артефакты находятся в игнорируемом `dev_files/vm/`.
 
 ```sh
-python3 scripts/vm/run.py --vm /mnt/disk2/vm/tyco-debian13-kde --suite smoke --show --keep
-python3 scripts/vm/run.py --vm /mnt/disk2/vm/tyco-windows11 --suite native --keep
-python3 scripts/vm/run.py --vm /mnt/disk2/vm/tyco-fedora44-kde --suite package --artifact /path/to/TyCo.AppImage
+# Extract tools from the existing local desktop-test Docker image.
+python3 scripts/vm/prepare-tools.py
+# Prepare a separate Tyco base with dependencies once.
+pnpm test:vm --suite prepare
+# Build the embedded application and CLI.
+pnpm tauri:build --debug --no-bundle
+cargo build --manifest-path src-tauri/Cargo.toml --locked -p tyco-ctl
+# Fully automated offline smoke without manual input.
+pnpm test:vm --suite smoke --artifact src-tauri/target/debug/tyco --ctl src-tauri/target/debug/tyco-ctl
+pnpm test:vm:unit
 ```
+
+Для AppImage использовать `python3 scripts/vm/build-appimage.py`: сборка идёт
+в Ubuntu 24.04 с отдельным persistent build cache. Пакет, собранный на более
+новом хосте, может требовать отсутствующую в Fedora glibc. Передать полученный
+`src-tauri/target/container/debug/bundle/appimage/*.AppImage` в `--artifact`,
+а `src-tauri/target/container/debug/tyco-ctl` — в `--ctl`.
+
+В `--artifact` также можно передать собранный debug AppImage. Внутри VM не нужны
+Node/Rust. Разрешение GlobalShortcuts выдаётся настоящему диалогу KDE через QMP;
+для Qt-диалогов и WebKit в виртуальной VGA-среде явно настроен программный
+рендеринг. Его переменные записываются в отчёт. Desktop-запись тестовой установки
+создаётся перед запуском для идентификации приложения порталом. Тестовый config
+включает историю разработки, английский интерфейс, Ctrl+Alt+I и Ctrl+Enter.
+
+Подробные инструкции: [scripts/vm/README.md](../scripts/vm/README.md).
+Точное покрытие и ограничения: [scripts/vm/coverage.md](../scripts/vm/coverage.md).
+Наличие runner не означает успешную приёмку: FAIL/BLOCKED сохраняются в отчётах,
+а не заменяются ручной проверкой. Реализованы реальные системные диалоги,
+конфликты хоткеев, выбор и перетаскивание файлов, секреты, аудио, DPI и смены
+сессии. Повторный сон, удаление микрофона и сохранность байтов секрета после
+перезагрузки обнаружили FAIL. Установка release AppImage проверяется отдельно;
+обновление BLOCKED без реального предыдущего релиза. Другие ОС ещё не имеют
+реализованных профилей. См. [результаты Fedora](testing-results/2026-10-25-fedora44-kde-automation.md).
+
+### Требования runner и расширение матрицы
+
+Ниже — требования к полному runner и полной матрице; выполненные подслучаи smoke
+не заменяют их.
 
 1. Проверить QEMU, qemu-img, KVM, SSH/SCP, свободные порты, место и память;
    Windows дополнительно OVMF/swtpm. Брать 4 vCPU/6 GiB для запуска Linux,
@@ -188,13 +227,16 @@ python3 scripts/vm/run.py --vm /mnt/disk2/vm/tyco-fedora44-kde --suite package -
 5. Выполнить сценарии с ожиданием наблюдаемого состояния и ограниченным timeout,
    без фиксированных sleep как критерия успеха. При отказе сохранить диагностику;
    teardown выполняется независимо от результата. Автоматических повторов нет.
-6. Собрать отчёт, выключить VM и удалить overlay, если нет `--keep`.
+6. Собрать отчёт, выключить VM и удалить успешный overlay, если нет `--keep`.
    При неудаче сохранять диск по явной политике runner, не терять логи.
 
 Наборы: `smoke` — VM-01/02/04 либо VM-10 для GNOME;
 `native` — все применимые VM-01–17; `package` — VM-18 и smoke установленного
-артефакта в чистом госте без Node/Rust. Sleep/audio/DPI можно первоначально
-выполнять вручную с теми же ID и артефактами; отсутствие автоматизации не даёт PASS.
+артефакта в чистом госте без Node/Rust. Sleep/audio/DPI и системные диалоги также подлежат автоматизации. Пока сценарий
+не реализован или среда не даёт надёжного наблюдения, его статус — BLOCKED с
+причиной. Ручными остаются только свойства, которые нельзя воспроизвести и
+проверить автоматически; отсутствие автоматизации само по себе не основание
+переносить проверку в ручную и не даёт PASS.
 
 В production config сейчас только DEB/AppImage. Fedora сначала проверяет AppImage;
 RPM не объявляем готовым. Windows debug binary можно проверять уже сейчас,
@@ -218,7 +260,7 @@ smoke с тестовыми ключами; он не заменяет offline-�
 3. Закрыть VM-04–09/17: это наиболее опасные ошибки доставки текста. Затем хоткеи,
    порталы, keychain, tray, dialogs и остальные native-сценарии на обязательных ОС.
 4. Добавить чистую package-приёмку, Windows installer, upgrade и Kubuntu.
-   После стабильных ручных прогонов автоматизировать lock/resume и audio fixture.
+   Автоматизировать lock/resume и audio fixture с независимыми наблюдениями.
 5. Запускать native smoke после изменений platform/activation/hotkeys/clipboard/
    selection/window lifecycle; targeted сценарии — по изменённой подсистеме.
    Полный native прогон обязательных ОС и package-набор с Kubuntu — перед выпуском.

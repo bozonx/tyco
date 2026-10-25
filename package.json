@@ -50,7 +50,9 @@
     "test:unit:rust": "cargo test --manifest-path src-tauri/Cargo.toml --workspace --locked --lib --bins -- --skip integration_",
     "test:integration:rust": "cargo test --manifest-path src-tauri/Cargo.toml --workspace --locked --lib --bins integration_ && cargo test --manifest-path src-tauri/Cargo.toml --workspace --locked --test '*'",
     "test:cov:rust": "node -e \"require('node:fs').mkdirSync('coverage/rust', { recursive: true })\" && cargo llvm-cov --manifest-path src-tauri/Cargo.toml --workspace --locked --lib --bins --lcov --output-path coverage/rust/lcov.info -- --skip integration_",
-    "test:unit:models": "pnpm build:plugins && pnpm --filter @tyco/desktop-ui exec vitest run --project unit-node"
+    "test:unit:models": "pnpm build:plugins && pnpm --filter @tyco/desktop-ui exec vitest run --project unit-node",
+    "test:vm": "python3 scripts/vm/run.py",
+    "test:vm:unit": "python3 scripts/vm/test-vmlib.py"
   },
   "author": "Ivan K",
   "license": "MIT",
