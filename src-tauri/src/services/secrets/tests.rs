@@ -101,6 +101,28 @@ fn a_key_left_locked_is_read_on_the_next_retry() {
 }
 
 #[test]
+fn an_empty_native_secret_is_unavailable_and_can_be_repaired() {
+    let (_directory, path) = temp_secrets_path("empty-native-secret");
+    let vault = Arc::new(FakeVault::default());
+    load_with(&path, &vault)
+        .set("llm.google", "key", None)
+        .unwrap();
+    for empty in ["", "   "] {
+        vault
+            .values
+            .lock()
+            .unwrap()
+            .insert("llm.google".into(), empty.into());
+        let store = load_with(&path, &vault);
+        assert!(!store.status()["llm.google"].is_available);
+        assert!(!store.snapshot().contains_key("llm.google"));
+        store.set("llm.google", "replacement", None).unwrap();
+        assert!(store.status()["llm.google"].is_available);
+        assert_eq!(store.snapshot()["llm.google"].value, "replacement");
+    }
+}
+
+#[test]
 fn builtin_id_gets_provider_origins() {
     let store = in_memory();
     store.set("llm.google", " key ", None).unwrap();

@@ -19,6 +19,7 @@ from webdriver import WebDriver
 SCRIPTS = Path(__file__).resolve().parent
 ISOLATED_CASES = (
     "VM-03.cancel",
+    "VM-11.multi-monitor",
     "VM-16.lock-unlock",
     "VM-16.suspend-resume",
     "VM-16.logout-login",
@@ -155,6 +156,11 @@ def main():
         prepare=args.suite == "prepare",
         resume_prepare=args.resume_prepare,
     )
+    # QEMU 11.1.1/Q35 repeats S3 entry/exit without exposing a second actual
+    # suspended state, including without Tyco. Use the working i440fx fixture.
+    if args.isolated_case == "VM-16.suspend-resume":
+        vm.machine = "pc"
+    vm.extra_display = args.isolated_case == "VM-11.multi-monitor"
     scripts = vm.run_dir / "runner"
     runner_hashes = snapshot_runner(SCRIPTS, scripts)
     # Later imports and guest fixtures use these immutable per-run copies.
@@ -164,6 +170,8 @@ def main():
         "scope": "targeted" if args.only else "suite",
         "requestedChecks": args.only,
         "profile": vm.config,
+        "machine": vm.machine,
+        "extraDisplay": vm.extra_display,
         "source": source_identity(),
         "runnerSha256": runner_hashes,
         "command": sys.argv,
@@ -259,7 +267,7 @@ def main():
                 stdout=log,
                 stderr=log,
             )
-        driver = WebDriver(port)
+        driver = WebDriver(port, report.setdefault("webdriverReadDisconnects", []))
 
         def driver_ready():
             try:
@@ -422,7 +430,7 @@ def main():
                     + str(child_report_path),
                 )
             if args.only and all(
-                request == "VM-03.cancel"
+                request in ("VM-03.cancel", "VM-11.multi-monitor")
                 or request == "VM-16"
                 or request.startswith("VM-16.")
                 for request in args.only.split(",")
@@ -444,6 +452,8 @@ def main():
         vm.ssh("mkdir -p tyco-vm")
         for name in (
             "guest.py",
+            "accessibility.py",
+            "clipboard-owner.py",
             "receiver.py",
             "native-ui.py",
             "native-control.py",

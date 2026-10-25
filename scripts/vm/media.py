@@ -200,6 +200,23 @@ ipc.invoke('start_voice_capture', {onAudio:'__CHANNEL__:'+callback})
                     reacted,
                     timeout=15,
                 )
+            if remove_device and driver.execute(
+                "return window.vmAudio.ended || Boolean(window.vmAudio.error)"
+            ):
+                wait_for(
+                    "recording client released automatically after device loss",
+                    lambda: (
+                        not capture_client_indexes(
+                            json.loads(
+                                guest("env-run pactl --format=json list source-outputs")
+                            ),
+                            preexisting_indexes,
+                            fixture_module_ids,
+                        )
+                    ),
+                    timeout=5,
+                )
+                report["audioRemoval"]["automaticallyReleased"] = True
             outputs = json.loads(
                 guest("env-run pactl --format=json list source-outputs")
             )
@@ -363,9 +380,14 @@ ipc.invoke('start_voice_capture', {onAudio:'__CHANNEL__:'+callback})
             + recovered
         )
 
+    def device_removal():
+        removed = capture(remove_device=True)
+        recovered = capture()
+        return removed + "; fresh recording after device restoration: " + recovered
+
     if selected("VM-15.capture-stop"):
         check("VM-15.capture-stop", capture)
     if selected("VM-15.audio-unavailable"):
         check("VM-15.audio-unavailable", unavailable)
     if selected("VM-15.device-removal"):
-        check("VM-15.device-removal", lambda: capture(remove_device=True))
+        check("VM-15.device-removal", device_removal)

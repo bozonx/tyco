@@ -93,6 +93,7 @@ pub(super) fn on_main_thread(
 struct RuntimeActivationHost<'a> {
     app: &'a AppHandle,
     foreground_target: Option<super::platform::ForegroundTarget>,
+    monitor_point: Option<(i32, i32)>,
 }
 
 impl ActivationHost for RuntimeActivationHost<'_> {
@@ -109,13 +110,24 @@ impl ActivationHost for RuntimeActivationHost<'_> {
     }
 
     fn activate(&self, activation: Activation) -> Result<(), AppError> {
-        activate_on_main_thread(self.app, activation)
+        activate_on_main_thread(self.app, activation, self.monitor_point)
     }
 }
 
 pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
     let foreground_target = if activation.target_window_id.is_none() {
         super::platform::capture_foreground_target()
+    } else {
+        None
+    };
+    let monitor_point = if window_label_for_mode(activation.mode) == QUICK_WINDOW_LABEL {
+        super::platform::target_monitor_point(activation.target_window_id.as_deref().or_else(
+            || {
+                foreground_target
+                    .as_ref()
+                    .map(|target| target.as_platform_id())
+            },
+        ))
     } else {
         None
     };
@@ -148,6 +160,7 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
             &RuntimeActivationHost {
                 app: &handle,
                 foreground_target,
+                monitor_point,
             },
             activation,
         );
@@ -189,7 +202,11 @@ pub fn activate(app: &AppHandle, activation: Activation) -> Result<(), AppError>
     Ok(())
 }
 
-fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<(), AppError> {
+fn activate_on_main_thread(
+    app: &AppHandle,
+    activation: Activation,
+    monitor_point: Option<(i32, i32)>,
+) -> Result<(), AppError> {
     let window_label = window_label_for_mode(activation.mode);
     let is_quick_window = window_label == QUICK_WINDOW_LABEL;
     app.state::<RuntimeWindows>().set_active_label(window_label);
@@ -205,6 +222,7 @@ fn activate_on_main_thread(app: &AppHandle, activation: Activation) -> Result<()
     let (width, height) = WINDOW_SIZE;
     if is_quick_window {
         let layer = panel_layer(app);
+        super::platform::select_panel_monitor(&window, monitor_point, layer)?;
         // a layer surface takes its size from `apply_panel_surface`
         if layer.is_none() {
             window.set_size(tauri::LogicalSize::new(width, height))?;

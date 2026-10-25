@@ -211,6 +211,65 @@ pub fn activate_window(id: &str) -> Result<(), AppError> {
     result
 }
 
+/// Logical center of a target window, before Tyco changes desktop focus.
+pub fn window_center(id: &str) -> Option<(i32, i32)> {
+    if !is_window_id(id) {
+        return None;
+    }
+    query_off_runtime(|| query_window_center(id))
+}
+
+fn query_off_runtime(query: impl FnOnce() -> Option<(i32, i32)> + Send) -> Option<(i32, i32)> {
+    // Hotkeys may arrive on Tokio workers. zbus's blocking facade must not
+    // start its runtime inside that executor or on GTK's main thread.
+    std::thread::scope(|scope| scope.spawn(query).join().ok().flatten())
+}
+
+fn query_window_center(id: &str) -> Option<(i32, i32)> {
+    let connection = zbus::blocking::connection::Builder::session()
+        .ok()?
+        .method_timeout(Duration::from_millis(500))
+        .build()
+        .ok()?;
+    let reply = connection
+        .call_method(
+            Some(KWIN_SERVICE),
+            "/KWin",
+            Some(KWIN_SERVICE),
+            "getWindowInfo",
+            &(id,),
+        )
+        .ok()?;
+    let fields: std::collections::HashMap<String, zbus::zvariant::OwnedValue> =
+        reply.body().deserialize().ok()?;
+    center_from_fields(&fields)
+}
+
+fn center_from_fields(
+    fields: &std::collections::HashMap<String, zbus::zvariant::OwnedValue>,
+) -> Option<(i32, i32)> {
+    let number = |name: &str| {
+        let value = fields.get(name)?;
+        f64::try_from(value)
+            .ok()
+            .or_else(|| i32::try_from(value).ok().map(f64::from))
+    };
+    let (x, y, width, height) = (
+        number("x")?,
+        number("y")?,
+        number("width")?,
+        number("height")?,
+    );
+    if ![x, y, width, height].iter().all(|value| value.is_finite()) || width <= 0.0 || height <= 0.0
+    {
+        return None;
+    }
+    Some((
+        (x + width / 2.0).round() as i32,
+        (y + height / 2.0).round() as i32,
+    ))
+}
+
 /// KWin window ids are UUIDs in braces; anything else must not reach a script.
 fn is_window_id(id: &str) -> bool {
     !id.is_empty()
@@ -403,5 +462,39 @@ mod tests {
         assert!(!ACTIVATOR_SCRIPT
             .replace("__ID__", WINDOW)
             .contains("__ID__"));
+    }
+}
+
+#[cfg(test)]
+mod monitor_tests {
+    use super::*;
+    #[test]
+    fn target_center_supports_negative_and_fractional_logical_coordinates() {
+        let fields = [
+            ("x", -1280.5),
+            ("y", 100.0),
+            ("width", 640.0),
+            ("height", 400.0),
+        ]
+        .into_iter()
+        .map(|(key, value)| (key.to_owned(), zbus::zvariant::OwnedValue::from(value)))
+        .collect();
+        assert_eq!(center_from_fields(&fields), Some((-961, 300)));
+    }
+    #[tokio::test]
+    async fn hotkey_monitor_queries_run_outside_the_async_executor() {
+        assert_eq!(
+            query_off_runtime(|| {
+                assert!(tokio::runtime::Handle::try_current().is_err());
+                Some((100, 200))
+            }),
+            Some((100, 200))
+        );
+    }
+
+    #[test]
+    fn a_closed_or_invalid_target_has_no_monitor_point() {
+        assert_eq!(center_from_fields(&std::collections::HashMap::new()), None);
+        assert_eq!(window_center("invalid target"), None);
     }
 }

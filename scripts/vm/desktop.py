@@ -70,7 +70,7 @@ def run_desktop_checks(
             )
         )
 
-    def insert(window, text):
+    def insert(window, text, observe_quick=None):
         focus(window)
         before = driver.invoke("get_desktop_state")["activation"]["activationId"]
         vm.qmp.tap("ctrl", "alt", "i")
@@ -87,6 +87,8 @@ def run_desktop_checks(
             state["windowId"] == window["id"],
             "Native insertion captured a different window",
         )
+        if observe_quick is not None:
+            observe_quick()
         driver.invoke(
             "paste_into_target_and_hide",
             {"activationId": state["activationId"], "text": text},
@@ -447,6 +449,20 @@ def run_desktop_checks(
                     "save_user_config",
                     {"baseConfig": current, "userConfig": before_config},
                 )
+
+    def multi_monitor():
+        from monitors import run_monitor_check
+
+        return run_monitor_check(
+            vm=vm,
+            driver=driver,
+            guest=guest,
+            report=report,
+            start=start,
+            window_for=window_for,
+            windows=windows,
+            insert=insert,
+        )
 
     def dpi():
         def output():
@@ -865,6 +881,7 @@ def run_desktop_checks(
         ("VM-12.unavailable-wallet", unavailable_wallet),
         ("VM-11.tray-show-quit", tray),
         ("VM-11.dpi", dpi),
+        ("VM-11.multi-monitor", multi_monitor),
     ):
         if selected(identifier):
             check(identifier, function)

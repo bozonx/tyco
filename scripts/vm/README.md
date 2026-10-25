@@ -145,3 +145,31 @@ they are automated failures, not manual checklist items. Unsupported
 suites are not silently replaced by smoke or a manual checklist.
 
 Latest verification: [9d5b3b64 results](../../dev_docs/testing-results/2026-10-25-fedora44-kde-current-head.md).
+
+## Native executable follow-up
+
+AppImage packaging can be excluded while testing the real Fedora desktop.
+Build an embedded debug executable with `pnpm tauri:build --debug --no-bundle`
+inside the existing Ubuntu build container (the same source mount, user,
+`CARGO_HOME` and persistent target directory used by `build-appimage.py`).
+Pass the resulting `src-tauri/target/container/debug/tyco` to `--artifact` and
+its `tyco-ctl` sibling to `--ctl`. No AppImage is built or installed. This uses
+Fedora's system WebKitGTK; record that runtime distinction when comparing reports.
+Copy/strip binaries to a separate artifact path before a long run so a later
+build cannot replace the tested executable.
+
+`VM-11.multi-monitor` runs in its own disposable Q35 VM with a second VGA device.
+It tests two actual connected outputs, mixed DPI, primary changes, negative
+coordinates and disabling an output while Quick is visible. The normal VM
+retains one output for the single-output DPI case.
+
+`VM-16.suspend-resume` uses the i440fx (`pc`) machine because QEMU 11.1.1/Q35
+fails repeated S3 even without Tyco. Both the chosen machine and extra display
+are recorded alongside the profile and in the QEMU command. Sleep is observed
+in QMP before waking; no reboot or immediate wake substitutes for suspended state.
+
+Lifecycle secret fixtures cross a real collection lock/unlock boundary before
+transitions. This verifies existing durable credentials, not a new key followed
+immediately by reboot: KWallet's deferred-write loss window remains a separately
+reproduced native dependency defect. Empty values returned by the vault are not
+usable Tyco credentials. See the [follow-up report](../../dev_docs/testing-results/2026-10-25-fedora44-kde-followup.md).

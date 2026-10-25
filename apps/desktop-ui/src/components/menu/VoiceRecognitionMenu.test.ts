@@ -39,6 +39,17 @@ vi.mock('../../composables/use-toast', () => ({
 vi.mock('../../lib/desktop/client', () => ({
   desktopClient: {
     isAvailable: vi.fn().mockReturnValue(false),
+    invoke: vi
+      .fn()
+      .mockResolvedValue({
+        provider: 'portal',
+        canConfigure: true,
+        registered: false,
+        actions: {},
+        defaults: {},
+        systemTriggers: {},
+        platform: 'linux',
+      }),
     listen: vi.fn().mockResolvedValue(() => {}),
   },
 }))

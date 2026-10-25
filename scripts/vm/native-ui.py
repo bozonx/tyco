@@ -5,6 +5,8 @@ import sys
 
 import gi
 
+from accessibility import application_nodes
+
 gi.require_version("Atspi", "2.0")
 from gi.repository import Atspi  # noqa: E402
 
@@ -46,9 +48,7 @@ def visit(node, application, depth=0):
 
 
 desktop = Atspi.get_desktop(0)
-for index in range(desktop.get_child_count()):
-    application = desktop.get_child_at_index(index)
-    name = application.get_name() or ""
+for application, name in application_nodes(desktop):
     if len(sys.argv) == 3 and sys.argv[1] == "--application":
         if name == sys.argv[2]:
             visit(application, name)

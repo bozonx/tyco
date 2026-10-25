@@ -341,9 +341,10 @@ fn read_missing(vault: &dyn SecretVault, state: &mut StoreState) {
         .collect();
     for id in missing {
         match vault.get(&id) {
-            Ok(Some(value)) => {
+            Ok(Some(value)) if !value.trim().is_empty() => {
                 state.vault_values.insert(id, value);
             }
+            Ok(Some(_)) => log::warn!("Secret \"{id}\" is empty in the vault"),
             Ok(None) => log::warn!("Secret \"{id}\" is missing from the vault"),
             Err(error) => log::warn!("Secret \"{id}\" could not be read: {error}"),
         }

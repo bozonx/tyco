@@ -1,7 +1,9 @@
 """Regression tests for VM isolation and protocol handling; no VM required."""
 
+import http.client
 import io
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -12,6 +14,38 @@ from unittest.mock import Mock, patch
 from vmlib import Qmp, ResourceLock, StepFailed, Vm, wait_for
 from webdriver import WebDriver
 from media import capture_client_indexes
+from accessibility import application_nodes
+from wallet import WalletFixture
+
+
+class AccessibilityTests(unittest.TestCase):
+    def test_disconnected_applications_do_not_hide_live_controls(self):
+        stale = Mock()
+        stale.get_name.side_effect = RuntimeError("Application disconnected")
+        live = Mock()
+        live.get_name.return_value = "ksecretd"
+        desktop = Mock()
+        desktop.get_child_count.return_value = 3
+        desktop.get_child_at_index.side_effect = [None, stale, live]
+        self.assertEqual(list(application_nodes(desktop)), [(live, "ksecretd")])
+
+
+class WalletFixtureTests(unittest.TestCase):
+    def test_checkpoint_locks_the_provider_before_unlock_and_independent_read(self):
+        guest = Mock(
+            side_effect=[
+                json.dumps({"data": ["/collection/test"]}),
+                "",
+                json.dumps({"data": True}),
+            ]
+        )
+        wallet = WalletFixture(guest)
+        wallet.assert_available = Mock(return_value={"byteCount": 37})
+        self.assertEqual(
+            wallet.checkpoint(Mock(), "fixture", "value"), {"byteCount": 37}
+        )
+        self.assertIn(" Lock ao 1 /collection/test", guest.call_args_list[1].args[0])
+        wallet.assert_available.assert_called_once()
 
 
 class AudioClientTests(unittest.TestCase):
@@ -132,6 +166,21 @@ class PreflightTests(unittest.TestCase):
 
 
 class WebDriverTests(unittest.TestCase):
+    def test_window_discovery_polls_a_disconnected_read_without_restarting(self):
+        driver = WebDriver(4444)
+        driver.session = "existing-session"
+        driver.call = Mock(
+            side_effect=[http.client.RemoteDisconnected("closed"), ["main"], None]
+        )
+        driver.execute = Mock(return_value=True)
+        self.assertEqual(driver.window("main", ".cm-editor"), "main")
+        self.assertEqual(driver.session, "existing-session")
+        self.assertEqual(len(driver.read_disconnects), 1)
+        self.assertEqual(
+            [call.args[0] for call in driver.call.call_args_list],
+            ["GET", "GET", "POST"],
+        )
+
     def test_application_error_payload_is_not_a_webdriver_protocol_error(self):
         payload = {"value": {"ok": False, "error": "AccessDenied"}}
         response = io.BytesIO(json.dumps(payload).encode())
@@ -345,9 +394,15 @@ class LlmStubTests(unittest.TestCase):
             self.port = probe.getsockname()[1]
         (self.work / "llm-stub-reply.json").write_text(json.dumps({"text": "Fixed"}))
         self.server = subprocess.Popen(
-            [sys.executable, str(Path(__file__).with_name("llm-stub.py")), str(self.work), str(self.port)]
+            [
+                sys.executable,
+                str(Path(__file__).with_name("llm-stub.py")),
+                str(self.work),
+                str(self.port),
+            ]
         )
-        self.addCleanup(self.server.kill)
+        self.addCleanup(shutil.rmtree, self.work)
+        self.addCleanup(self.stop_server)
         for _ in range(100):
             try:
                 self.urlopen(self.url("/v1/models"), timeout=1)
@@ -355,6 +410,14 @@ class LlmStubTests(unittest.TestCase):
             except OSError:
                 time.sleep(0.05)
         self.fail("LLM stub did not start")
+
+    def stop_server(self):
+        self.server.terminate()
+        try:
+            self.server.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.server.kill()
+            self.server.wait(timeout=5)
 
     def url(self, path):
         return f"http://127.0.0.1:{self.port}{path}"
@@ -368,15 +431,20 @@ class LlmStubTests(unittest.TestCase):
         return self.urlopen(request, timeout=5).read().decode()
 
     def test_plain_and_streamed_answers_are_logged(self):
-        plain = json.loads(self.post({"model": "m", "messages": [{"role": "user", "content": "Ths"}]}))
+        plain = json.loads(
+            self.post({"model": "m", "messages": [{"role": "user", "content": "Ths"}]})
+        )
         self.assertEqual(plain["choices"][0]["message"]["content"], "Fixed")
         stream = self.post({"model": "m", "stream": True, "messages": []})
         chunks = [
-            json.loads(line[len("data: "):])
+            json.loads(line[len("data: ") :])
             for line in stream.splitlines()
             if line.startswith("data: {")
         ]
-        self.assertEqual("".join(c["choices"][0]["delta"].get("content", "") for c in chunks), "Fixed")
+        self.assertEqual(
+            "".join(c["choices"][0]["delta"].get("content", "") for c in chunks),
+            "Fixed",
+        )
         self.assertEqual(chunks[-1]["choices"][0]["finish_reason"], "stop")
         self.assertTrue(stream.rstrip().endswith("data: [DONE]"))
         requests = (self.work / "llm-stub-requests.jsonl").read_text().splitlines()

@@ -183,6 +183,8 @@ class Vm:
         self.qmp = None
         self.sockets = None
         self.locks = []
+        self.machine = self.config.get("machine", "q35")
+        self.extra_display = False
         self.prepare = prepare
         self.resume_prepare = resume_prepare
 
@@ -280,7 +282,7 @@ class Vm:
             "-name",
             f"tyco-test-{self.config['name']}",
             "-machine",
-            "q35,accel=kvm",
+            f"{self.machine},accel=kvm",
             "-cpu",
             "host",
             "-smp",
@@ -310,6 +312,8 @@ class Vm:
             "-display",
             "gtk,gl=off" if show else "none",
         ]
+        if self.extra_display:
+            argv.extend(["-device", "secondary-vga,id=tyco-vm-secondary"])
         (self.run_dir / "qemu-command.json").write_text(
             json.dumps(argv, indent=2) + "\n"
         )

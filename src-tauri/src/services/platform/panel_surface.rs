@@ -175,12 +175,50 @@ pub fn set_panel_input_region(
 thread_local! {
     /// Geometry last applied to the layer surface. GTK windows live on the main
     /// thread, and so does this value.
-    static APPLIED_GEOMETRY: std::cell::Cell<Option<(WindowProfile, i32)>> =
+    static APPLIED_GEOMETRY: std::cell::Cell<Option<(WindowProfile, i32, i32, i32)>> =
         const { std::cell::Cell::new(None) };
 }
 
 #[cfg(target_os = "linux")]
 const PANEL_MARGIN_BOTTOM: i32 = 48;
+
+/// Capture target geometry off the GTK thread, before hiding or focusing windows.
+pub fn target_monitor_point(id: Option<&str>) -> Option<(i32, i32)> {
+    #[cfg(target_os = "linux")]
+    if super::session::current().is_kde_wayland() {
+        return super::linux::kwin::window_center(id?);
+    }
+    let _ = id;
+    None
+}
+
+/// Bind a layer panel to the recipient's monitor instead of a previous output.
+pub fn select_panel_monitor(
+    window: &WebviewWindow,
+    point: Option<(i32, i32)>,
+    layer: Option<PanelKeyboardMode>,
+) -> Result<(), AppError> {
+    #[cfg(target_os = "linux")]
+    if let (Some((x, y)), Some(_)) = (point, layer) {
+        let gtk_window = window.gtk_window()?;
+        if let Some(display) = gtk::gdk::Display::default() {
+            if let Some(monitor) = display.monitor_at_point(x, y) {
+                super::linux::layer_shell::set_monitor(&gtk_window, &monitor);
+            }
+        }
+    }
+    let _ = (window, point, layer);
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn fitted_panel_size(width: i32, height: i32) -> (i32, i32) {
+    let (default_width, default_height) = WINDOW_SIZE;
+    (
+        (default_width as i32).min((width - 32).max(1)),
+        (default_height as i32).min((height - 96).max(1)),
+    )
+}
 
 /// Places the quick window before it is shown. `layer` is the keyboard mode of
 /// the layer-shell surface, or `None` when the window is a regular one.
@@ -196,24 +234,29 @@ pub fn apply_panel_surface(
         return position_regular_panel(window, profile);
     };
     let gtk_window = window.gtk_window()?;
+    let (width, height) = layer_shell::monitor(&gtk_window)
+        .map(|monitor| {
+            let geometry = monitor.geometry();
+            fitted_panel_size(geometry.width(), geometry.height())
+        })
+        .unwrap_or((WINDOW_SIZE.0 as i32, WINDOW_SIZE.1 as i32));
     let margin = match profile {
         WindowProfile::Panel => PANEL_MARGIN_BOTTOM,
-        WindowProfile::Sheet => sheet_margin_top(window),
+        WindowProfile::Sheet => sheet_margin_top(window, height),
     };
     // Anchors and size only change with the profile; reapplying them on every
     // show costs a relayout and a configure round trip before the first frame
-    if APPLIED_GEOMETRY.get() != Some((profile, margin)) {
-        let (width, height) = WINDOW_SIZE;
+    if APPLIED_GEOMETRY.get() != Some((profile, margin, width, height)) {
         // Layer-shell remaps use the default size; resize alone can retain the
         // previous allocation while the surface is hidden.
-        gtk_window.set_default_size(width as i32, height as i32);
-        gtk_window.resize(width as i32, height as i32);
+        gtk_window.set_default_size(width, height);
+        gtk_window.resize(width, height);
         match profile {
             WindowProfile::Panel => layer_shell::set_panel_profile(&gtk_window, margin),
             WindowProfile::Sheet => layer_shell::set_sheet_profile(&gtk_window, margin),
         }
         gtk_window.queue_resize();
-        APPLIED_GEOMETRY.set(Some((profile, margin)));
+        APPLIED_GEOMETRY.set(Some((profile, margin, width, height)));
     }
     layer_shell::set_keyboard(
         &gtk_window,
@@ -234,8 +277,12 @@ const FALLBACK_SHEET_MARGIN_TOP: i32 = 200;
 
 /// Top margin that centers the sheet vertically on the current monitor.
 #[cfg(target_os = "linux")]
-fn sheet_margin_top(window: &WebviewWindow) -> i32 {
-    let (_, height) = WINDOW_SIZE;
+fn sheet_margin_top(window: &WebviewWindow, height: i32) -> i32 {
+    if let Ok(gtk_window) = window.gtk_window() {
+        if let Some(monitor) = super::linux::layer_shell::monitor(&gtk_window) {
+            return ((monitor.geometry().height() - height) / 2).max(MIN_SHEET_MARGIN_TOP as i32);
+        }
+    }
     window
         .current_monitor()
         .ok()
@@ -243,7 +290,7 @@ fn sheet_margin_top(window: &WebviewWindow) -> i32 {
         .map(|m| {
             let scale = m.scale_factor();
             let screen_h = m.size().height as f64 / scale;
-            ((screen_h - height) / 2.0).max(MIN_SHEET_MARGIN_TOP) as i32
+            ((screen_h - f64::from(height)) / 2.0).max(MIN_SHEET_MARGIN_TOP) as i32
         })
         .unwrap_or(FALLBACK_SHEET_MARGIN_TOP)
 }
@@ -316,6 +363,13 @@ mod tests {
             width,
             height,
         }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn panel_fits_small_high_dpi_outputs() {
+        assert_eq!(fitted_panel_size(1920, 1080), (930, 600));
+        assert_eq!(fitted_panel_size(960, 540), (928, 444));
     }
 
     #[test]

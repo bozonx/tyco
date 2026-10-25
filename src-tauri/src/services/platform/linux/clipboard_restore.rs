@@ -14,7 +14,7 @@ const RESTORE_DELAY: Duration = Duration::from_secs(1);
 const TEXT_TYPES: [&str; 3] = ["text/plain;charset=utf-8", "text/plain", "UTF8_STRING"];
 
 /// One representation of the clipboard content. The tools offer a single
-/// type, so rich content comes back as its plain text or image only.
+/// type, so rich content comes back as its plain text, HTML or image only.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ClipboardSnapshot {
     mime_type: String,
@@ -153,6 +153,12 @@ fn preferred_type<'a>(types: impl Iterator<Item = &'a str>) -> Option<String> {
                 .find(|mime_type| mime_type.starts_with("image/"))
                 .copied()
         })
+        .or_else(|| {
+            types
+                .iter()
+                .find(|mime_type| **mime_type == "text/html")
+                .copied()
+        })
         .map(str::to_owned)
 }
 
@@ -199,6 +205,14 @@ mod tests {
         assert_eq!(
             preferred_type(types.into_iter()).as_deref(),
             Some("image/png")
+        );
+    }
+
+    #[test]
+    fn preserves_html_when_no_text_or_image_is_offered() {
+        assert_eq!(
+            preferred_type(["text/html"].into_iter()).as_deref(),
+            Some("text/html")
         );
     }
 

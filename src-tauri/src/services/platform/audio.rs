@@ -1,5 +1,5 @@
 //! CPAL device adapter. Capture policy and delivery live in the voice service.
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Arc, Mutex};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -28,6 +28,7 @@ impl AudioSource for SystemAudioSource {
             pending_pcm_samples: Arc::new(Mutex::new(Vec::new())),
             stream_error: Arc::new(Mutex::new(None)),
             current_level: Arc::new(Mutex::new((0.0, 0.0))),
+            callback_count: Arc::new(AtomicU64::new(0)),
             stop_flag: Arc::clone(stop_flag),
             device_sample_rate_hz,
             output_sample_rate_hz,

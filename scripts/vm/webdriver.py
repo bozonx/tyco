@@ -1,5 +1,6 @@
 """Small W3C WebDriver client; only drives Tyco, never asserts foreign text."""
 
+import http.client
 import json
 import urllib.error
 import urllib.request
@@ -8,9 +9,10 @@ from vmlib import StepFailed, wait_for
 
 
 class WebDriver:
-    def __init__(self, port):
+    def __init__(self, port, read_disconnects=None):
         self.endpoint = f"http://127.0.0.1:{port}"
         self.session = None
+        self.read_disconnects = [] if read_disconnects is None else read_disconnects
 
     def request(self, method, path, body=None):
         data = None if body is None else json.dumps(body).encode()
@@ -88,7 +90,20 @@ class WebDriver:
 
     def window(self, name, selector=None, exclude=()):
         def find():
-            for handle in self.call("GET", "/window/handles"):
+            try:
+                handles = self.call("GET", "/window/handles")
+            except (http.client.RemoteDisconnected, ConnectionResetError) as error:
+                # Only repeat observation, retaining the same app/session. Never
+                # replay clicks, IPC commands, or application startup here.
+                self.read_disconnects.append(
+                    {
+                        "sessionId": self.session,
+                        "path": "/window/handles",
+                        "error": str(error),
+                    }
+                )
+                return None
+            for handle in handles:
                 if handle in exclude:
                     continue
                 self.call("POST", "/window", {"handle": handle})

@@ -3,6 +3,7 @@
 import json
 import shlex
 import subprocess
+import time
 
 from vmlib import StepFailed, wait_for
 
@@ -37,9 +38,12 @@ def run_lifecycle_checks(
         },
     )
     report["lifecycleSecretEvidence"] = [
-        wallet.assert_available(get_driver(), secret_id, secret_value)
+        wallet.checkpoint(get_driver(), secret_id, secret_value)
     ]
     report["lifecycleSecretChecks"] = 1
+    report["lifecycleFixtureCheckpoint"] = (
+        "Native collection lock/unlock before transitions; checks existing durable credentials, not immediate-write durability"
+    )
 
     def boot_id():
         return vm.ssh("cat /proc/sys/kernel/random/boot_id", timeout=10).strip()
@@ -208,16 +212,22 @@ def run_lifecycle_checks(
         modes = vm.ssh("cat /sys/power/mem_sleep").strip()
         require("deep" in modes, f"Guest has no ACPI deep sleep mode: {modes}")
         vm.ssh("printf deep | sudo tee /sys/power/mem_sleep > /dev/null")
-        # QMP controls the wake event. Queued virtual USB/network activity must
-        # not wake the guest before the suspended state can be observed.
-        vm.ssh(
-            "sudo sh -c "
-            + shlex.quote(
-                'for p in /sys/bus/pci/devices/*/power/wakeup /sys/bus/usb/devices/*/power/wakeup; do test ! -f "$p" || echo disabled > "$p"; done'
-            )
-        )
-        for _ in range(3):
+        report["suspends"] = evidence
+        for cycle in range(3):
             before = boot_id()
+            # USB devices are reset on resume and can regain wake permission.
+            # Reapply the fixture before each sleep, leaving QMP as wake source.
+            wake_sources = vm.ssh(
+                "sudo sh -c "
+                + shlex.quote(
+                    'for p in /sys/bus/pci/devices/*/power/wakeup /sys/bus/usb/devices/*/power/wakeup; do test ! -f "$p" || echo disabled > "$p"; done; '
+                    "test ! -f /sys/class/rtc/rtc0/wakealarm || echo 0 > /sys/class/rtc/rtc0/wakealarm; "
+                    "cat /proc/acpi/wakeup"
+                )
+            )
+            evidence.append(
+                {"cycle": cycle + 1, "bootId": before, "wakeSources": wake_sources}
+            )
             vm.ssh(
                 "sudo systemd-run --quiet --on-active=1 --timer-property=AccuracySec=100ms systemctl suspend"
             )
@@ -226,6 +236,16 @@ def run_lifecycle_checks(
                 lambda: vm.qmp.execute("query-status")["status"] == "suspended",
                 timeout=30,
             )
+            suspended_since = time.monotonic()
+
+            def held_suspended():
+                require(
+                    vm.qmp.execute("query-status")["status"] == "suspended",
+                    "Guest woke without the requested QMP wake event",
+                )
+                return time.monotonic() - suspended_since >= 2
+
+            wait_for("stable ACPI suspension", held_suspended, timeout=5)
             vm.qmp.execute("system_wakeup")
             wait_for(
                 "guest SSH after ACPI wake",
@@ -253,7 +273,7 @@ def run_lifecycle_checks(
                 "Kernel suspend/resume evidence is missing",
             )
             verify_hotkey()
-            evidence.append({"bootId": before, "kernelEvents": journal})
+            evidence[-1]["kernelEvents"] = journal
         report["suspends"] = evidence
         return "Three ACPI deep sleep/QMP wake cycles, kernel entry/exit evidence and unchanged boot ID; physical hotkeys recovered"
 

@@ -10,7 +10,7 @@ pub mod session;
 pub use audio_processing::compute_audio_level;
 use audio_processing::{mix_frame, pcm16_to_le_bytes, Downsampler};
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc as std_mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -32,6 +32,7 @@ const CHUNK_MS: usize = 100;
 const POLL_INTERVAL: Duration = Duration::from_millis(20);
 const LEVEL_INTERVAL: Duration = Duration::from_millis(40);
 const SETUP_TIMEOUT: Duration = Duration::from_secs(10);
+const CALLBACK_TIMEOUT: Duration = Duration::from_secs(5);
 const STOP_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Clone, Serialize, Debug, PartialEq, ts_rs::TS)]
@@ -261,8 +262,24 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
 
     let chunk_samples = output_sample_rate_hz as usize * CHUNK_MS / 1_000;
     let mut last_level = runtime.now();
+    let mut last_callback = last_level;
+    let mut callback_count = context.callback_count.load(Ordering::Relaxed);
     while !stop_flag.load(Ordering::SeqCst) {
         runtime.sleep_poll_interval();
+
+        let received = context.callback_count.load(Ordering::Relaxed);
+        if received != callback_count {
+            callback_count = received;
+            last_callback = runtime.now();
+        } else if !stop_flag.load(Ordering::SeqCst)
+            && runtime.now().saturating_duration_since(last_callback) >= CALLBACK_TIMEOUT
+        {
+            // Some audio backends cork a disconnected device without invoking
+            // CPAL's error callback. Silence still produces callbacks.
+            *context.stream_error.locked() = Some("Audio input stopped delivering samples".into());
+            stop_flag.store(true, Ordering::SeqCst);
+            break;
+        }
 
         if !flush_pending(&context.pending_pcm_samples, sink, chunk_samples) {
             // nobody is listening any more: the webview went away
@@ -316,6 +333,7 @@ pub(crate) struct StreamContext {
     pub pending_pcm_samples: Arc<Mutex<Vec<i16>>>,
     pub stream_error: Arc<Mutex<Option<String>>>,
     pub current_level: Arc<Mutex<(f32, f32)>>,
+    pub callback_count: Arc<AtomicU64>,
     pub stop_flag: Arc<AtomicBool>,
     pub device_sample_rate_hz: u32,
     pub output_sample_rate_hz: u32,
@@ -331,6 +349,7 @@ where
     f32: cpal::FromSample<T>,
 {
     let channels = usize::from(config.channels);
+    let callback_count = Arc::clone(&context.callback_count);
     let pending_pcm_samples = Arc::clone(&context.pending_pcm_samples);
     let level_monitor = Arc::clone(&context.current_level);
     let stream_error = Arc::clone(&context.stream_error);
@@ -349,6 +368,9 @@ where
         .build_input_stream(
             config,
             move |data: &[T], _| {
+                if !data.is_empty() {
+                    callback_count.fetch_add(1, Ordering::Relaxed);
+                }
                 converted.clear();
                 for frame in data.chunks(channels) {
                     if !frame.is_empty() {
@@ -478,6 +500,7 @@ mod tests {
                     pending_pcm_samples,
                     stream_error: Arc::new(Mutex::new(self.stream_error.clone())),
                     current_level: Arc::new(Mutex::new((0.5, 0.75))),
+                    callback_count: Arc::new(AtomicU64::new(0)),
                     stop_flag: Arc::clone(stop_flag),
                     device_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
                     output_sample_rate_hz: TARGET_SAMPLE_RATE_HZ,
@@ -555,6 +578,95 @@ mod tests {
                 r#"{"type":"error","message":"stream failed"}"#
             ]
         );
+    }
+
+    #[test]
+    fn a_device_that_stops_callbacks_emits_error_and_releases_the_stream() {
+        struct StalledRuntime(std::cell::Cell<Instant>);
+        impl CaptureRuntime for StalledRuntime {
+            fn now(&self) -> Instant {
+                self.0.get()
+            }
+            fn sleep_poll_interval(&self) {
+                self.0.set(self.0.get() + CALLBACK_TIMEOUT);
+            }
+        }
+        let trace = Trace::default();
+        let source = TestSource {
+            trace: trace.clone(),
+            ..TestSource::default()
+        };
+        let stop = Arc::new(AtomicBool::new(false));
+        let (tx, _rx) = std_mpsc::sync_channel(1);
+        run_capture_thread(
+            &source,
+            &trace,
+            &StalledRuntime(std::cell::Cell::new(Instant::now())),
+            &trace,
+            &stop,
+            &tx,
+        )
+        .unwrap();
+        assert!(stop.load(Ordering::SeqCst));
+        assert_eq!(
+            trace.values(),
+            [
+                "open",
+                "drop-stream",
+                "level:0",
+                r#"{"type":"error","message":"Audio input stopped delivering samples"}"#
+            ]
+        );
+    }
+
+    #[test]
+    fn recurring_callbacks_keep_capture_alive_even_when_samples_are_silent() {
+        struct SilentSource(Arc<AtomicU64>);
+        impl AudioSource for SilentSource {
+            type Stream = TestStream;
+            fn open(&self, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
+                let mut opened = TestSource::default().open(stop)?;
+                opened.context.callback_count = Arc::clone(&self.0);
+                opened.context.pending_pcm_samples.locked().fill(0);
+                Ok(opened)
+            }
+        }
+        struct SilentRuntime {
+            now: std::cell::Cell<Instant>,
+            callbacks: Arc<AtomicU64>,
+            stop: Arc<AtomicBool>,
+        }
+        impl CaptureRuntime for SilentRuntime {
+            fn now(&self) -> Instant {
+                self.now.get()
+            }
+            fn sleep_poll_interval(&self) {
+                self.now.set(self.now.get() + CALLBACK_TIMEOUT);
+                if self.callbacks.fetch_add(1, Ordering::Relaxed) == 3 {
+                    self.stop.store(true, Ordering::SeqCst);
+                }
+            }
+        }
+        let callbacks = Arc::new(AtomicU64::new(0));
+        let stop = Arc::new(AtomicBool::new(false));
+        let runtime = SilentRuntime {
+            now: std::cell::Cell::new(Instant::now()),
+            callbacks: Arc::clone(&callbacks),
+            stop: Arc::clone(&stop),
+        };
+        let sink = RecordingSink::default();
+        let (tx, _rx) = std_mpsc::sync_channel(1);
+        run_capture_thread(
+            &SilentSource(callbacks),
+            &Trace::default(),
+            &runtime,
+            &sink,
+            &stop,
+            &tx,
+        )
+        .unwrap();
+        assert_eq!(*sink.events.locked(), [r#"{"type":"end"}"#]);
+        assert!(sink.chunks.locked()[0].iter().all(|byte| *byte == 0));
     }
 
     #[test]

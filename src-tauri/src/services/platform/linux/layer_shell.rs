@@ -26,6 +26,11 @@ pub enum KeyboardMode {
 
 #[link(name = "gtk-layer-shell")]
 unsafe extern "C" {
+    fn gtk_layer_set_monitor(
+        window: *mut gtk_sys::GtkWindow,
+        monitor: *mut gtk::gdk::ffi::GdkMonitor,
+    );
+    fn gtk_layer_get_monitor(window: *mut gtk_sys::GtkWindow) -> *mut gtk::gdk::ffi::GdkMonitor;
     fn gtk_layer_is_supported() -> i32;
     fn gtk_layer_init_for_window(window: *mut gtk_sys::GtkWindow);
     fn gtk_layer_set_layer(window: *mut gtk_sys::GtkWindow, layer: u32);
@@ -56,6 +61,18 @@ pub fn attach(window: &impl IsA<gtk::Window>) {
         gtk_layer_set_exclusive_zone(pointer, 0);
         gtk_layer_set_keyboard_mode(pointer, KEYBOARD_NONE);
     }
+}
+
+pub fn set_monitor(window: &impl IsA<gtk::Window>, monitor: &gtk::gdk::Monitor) {
+    // SAFETY: both objects are live, and the initialized layer window retains the monitor.
+    unsafe {
+        gtk_layer_set_monitor(raw(window), monitor.as_ptr());
+    }
+}
+
+pub fn monitor(window: &impl IsA<gtk::Window>) -> Option<gtk::gdk::Monitor> {
+    // SAFETY: the returned borrowed monitor is referenced before leaving this call.
+    unsafe { gtk::glib::translate::from_glib_none(gtk_layer_get_monitor(raw(window))) }
 }
 
 pub fn set_panel_profile(window: &impl IsA<gtk::Window>, margin_bottom: i32) {

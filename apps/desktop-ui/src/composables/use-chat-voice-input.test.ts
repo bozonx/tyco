@@ -17,10 +17,8 @@ const mocks = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('../stores/chat', () => ({ useChatStore: () => mocks.chatStore }))
-
-vi.mock('../stores/chat-input', () => ({
-  useChatInputStore: () => mocks.chatInputStore,
+vi.mock('./use-chat-scope', () => ({
+  useChatScope: () => ({ chat: mocks.chatStore, input: mocks.chatInputStore }),
 }))
 
 vi.mock('../stores/menu-modals', () => ({

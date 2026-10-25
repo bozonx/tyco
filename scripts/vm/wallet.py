@@ -116,8 +116,30 @@ class WalletFixture:
             self.native_action("click", buttons[0])
         wait_for("authenticated native wallet unlock", lambda: not locked(), timeout=15)
 
+    def checkpoint(self, driver, identifier, value):
+        """Persist a lifecycle fixture through the provider's native lock boundary."""
+        collection = self.collection()
+        self.guest(
+            f"env-run busctl --user call org.freedesktop.secrets /org/freedesktop/secrets org.freedesktop.Secret.Service Lock ao 1 {collection}"
+        )
+
+        def locked():
+            return (
+                json.loads(
+                    self.guest(
+                        f"env-run busctl --user --json=short get-property org.freedesktop.secrets {collection} org.freedesktop.Secret.Collection Locked"
+                    )
+                )["data"]
+                is True
+            )
+
+        wait_for("locked persisted lifecycle fixture", locked, timeout=15)
+        return self.assert_available(driver, identifier, value)
+
     def assert_available(self, driver, identifier, value):
         self.unlock()
+        if driver.invoke("get_secret_vault_state") != "available":
+            raise StepFailed("Native credential store did not recover after unlock")
         statuses = driver.invoke("get_secret_statuses")
         if not statuses.get(identifier, {}).get("available") or value in json.dumps(
             statuses

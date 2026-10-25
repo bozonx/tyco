@@ -1,5 +1,7 @@
 """Independent multiline GTK receiver: records actual text, focus and keys."""
 
+import base64
+from importlib import import_module
 import json
 import os
 from pathlib import Path
@@ -56,6 +58,10 @@ def poll():
                         data.get("selectEnd", buffer.get_char_count())
                     ),
                 )
+        elif data["action"] == "clipboard":
+            import_module("clipboard-owner").offer(
+                data["mime"], base64.b64decode(data["data"])
+            )
         elif data["action"] == "title":
             window.set_title(data["title"])
         elif data["action"] == "present":

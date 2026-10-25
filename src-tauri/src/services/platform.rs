@@ -36,8 +36,8 @@ pub use file_manager::{open_dir, open_file, open_web_url};
 pub use foreground_context::{capture_foreground_target, capture_selection, ForegroundTarget};
 pub use panel_surface::{
     apply_panel_surface, attach_panel_surface, disable_panel_keyboard, is_layer_shell_supported,
-    set_panel_input_region, set_window_opacity, settle_panel_keyboard, InputRegion,
-    PanelKeyboardMode,
+    select_panel_monitor, set_panel_input_region, set_window_opacity, settle_panel_keyboard,
+    target_monitor_point, InputRegion, PanelKeyboardMode,
 };
 pub use shortcut_settings::{has_shortcut_settings, open_shortcut_settings};
 pub use text_injector::{

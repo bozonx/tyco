@@ -369,7 +369,9 @@ def run_scenarios(
         return "CLI and session D-Bus reachable; selection denied without grant"
 
     def selected(identifier):
-        if identifier.startswith("VM-16.") and not args.isolated_case:
+        if (
+            identifier.startswith("VM-16.") or identifier == "VM-11.multi-monitor"
+        ) and not args.isolated_case:
             return False
         return not args.only or any(
             identifier == requested or identifier.startswith(requested + ".")
@@ -618,6 +620,10 @@ def run_scenarios(
         fixtures = [
             ("text/plain", b"Original clipboard fixture"),
             (
+                "text/html",
+                "<p>HTML-only fixture &amp; <b>Unicode: \u03a9</b></p>".encode(),
+            ),
+            (
                 "image/png",
                 base64.b64decode(
                     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1cAAAAASUVORK5CYII="
@@ -627,12 +633,34 @@ def run_scenarios(
         primary = b"Original PRIMARY fixture"
         for mime, data in fixtures:
             receiver_command("wayland", "reset")
-            clipboard_set(mime, data)
+            if mime == "text/html":
+                # wl-copy adds generic plain-text MIME types even with --type
+                # text/html, so it cannot create an HTML-only fixture.
+                focus_receiver("wayland")
+                receiver_command(
+                    "wayland",
+                    "clipboard",
+                    mime=mime,
+                    data=base64.b64encode(data).decode(),
+                )
+            else:
+                clipboard_set(mime, data)
             clipboard_set("text/plain", primary, primary=True)
             wait_for(
                 "seeded clipboard format",
                 lambda mime=mime, data=data: clipboard_read(mime) == data,
             )
+            if mime == "text/html":
+                offered = guest("env-run wl-paste --list-types").splitlines()
+                require(
+                    "text/html" in offered
+                    and not any(
+                        item.startswith("text/plain") or item == "UTF8_STRING"
+                        for item in offered
+                    ),
+                    f"HTML-only fixture also offers plain text: {offered}",
+                )
+                report["htmlOnlyClipboardTypes"] = offered
             identifier = activate_quick("wayland")
             driver.invoke(
                 "paste_into_target_and_hide",
@@ -649,7 +677,7 @@ def run_scenarios(
                 lambda: clipboard_read("text/plain", primary=True) == primary,
                 timeout=10,
             )
-        return "Byte-exact text/PNG restoration and PRIMARY preservation after native paste"
+        return "Byte-exact text/HTML-only/PNG restoration and PRIMARY preservation after native paste"
 
     def clipboard_new_owner():
         ensure_receiver("wayland")
@@ -1048,14 +1076,16 @@ def run_scenarios(
             )
             wait_for(
                 "loopback model endpoint",
-                lambda: vm.ssh(
-                    "python3 -c "
-                    + shlex.quote(
-                        "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:11434/v1/models', timeout=2).status)"
-                    )
-                    + " 2>/dev/null || true"
-                ).strip()
-                == "200",
+                lambda: (
+                    vm.ssh(
+                        "python3 -c "
+                        + shlex.quote(
+                            "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:11434/v1/models', timeout=2).status)"
+                        )
+                        + " 2>/dev/null || true"
+                    ).strip()
+                    == "200"
+                ),
             )
             llm_stub_started = True
 
@@ -1121,7 +1151,9 @@ def run_scenarios(
                 )
                 time.sleep(0.1)
             requests = llm_requests()
-            require(len(requests) == 1, f"Expected one model request, got {len(requests)}")
+            require(
+                len(requests) == 1, f"Expected one model request, got {len(requests)}"
+            )
             require(
                 "Ths is wrng" in json.dumps(requests[0]["body"], ensure_ascii=False),
                 "The model did not receive the captured selection",
@@ -1189,11 +1221,13 @@ def run_scenarios(
             ),
             (
                 "VM-05.inline-correction.app-switch",
-                lambda: [
-                    inline_correction(backend, correction_hotkey)
-                    for backend in ("wayland", "x11", "wayland")
-                ]
-                and "Three corrections in a row, Wayland, XWayland and Wayland again, each replaced in place",
+                lambda: (
+                    [
+                        inline_correction(backend, correction_hotkey)
+                        for backend in ("wayland", "x11", "wayland")
+                    ]
+                    and "Three corrections in a row, Wayland, XWayland and Wayland again, each replaced in place"
+                ),
             ),
             ("VM-05.inline-correction.cancel", inline_correction_cancel),
             ("VM-05.selection-replace-cancel", selection),
