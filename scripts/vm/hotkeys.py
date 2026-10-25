@@ -111,6 +111,7 @@ def run_hotkey_checks(
         return "Actual compositor shortcut removed; physical key inactive and refreshed portal trigger empty; desired app setting retained; system assignment restored and key activated once"
 
     def conflict():
+        driver.window("main", ".cm-editor")
         occupied = None
         for label, value, keys in (
             ("Alt+F2", 0x08000000 | 0x01000031, ("alt", "f2")),

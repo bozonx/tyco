@@ -104,6 +104,12 @@ then the remaining cases run in a fresh VM. Each run freezes its Python/JS runne
 files and records their hashes; later source edits cannot alter that running
 snapshot.
 
+Input dependency tests deny actual KDE Remote Control requests when the
+RemoteDesktop fallback is offered. `VM-09.portal-fallback` separately removes
+ydotool, approves that native permission and checks exact insertion/focus. Main-only
+IPC status/settings commands stay in the main webview; test capabilities are not
+broadened.
+
 `--only` limits the acceptance scope recorded in the report. Its success does
 not certify the whole native suite. VM-16 fixtures change only the disposable
 guest account password and auto-login configuration, then reboot that guest
@@ -137,3 +143,5 @@ failed or blocked check makes the suite exit nonzero. Current native findings
 include repeated suspend, secret bytes after cold reboot, and microphone removal;
 they are automated failures, not manual checklist items. Unsupported
 suites are not silently replaced by smoke or a manual checklist.
+
+Latest verification: [9d5b3b64 results](../../dev_docs/testing-results/2026-10-25-fedora44-kde-current-head.md).

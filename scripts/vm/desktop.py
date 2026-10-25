@@ -279,9 +279,9 @@ def run_desktop_checks(
                 ),
                 timeout=10,
             )
-            report["directoryPlaceAction"] = json.loads(
+            report["directoryLocationAction"] = json.loads(
                 guest(
-                    "env-run python3 tyco-vm/native-control.py activate-place tyco Home"
+                    "env-run python3 tyco-vm/native-control.py show-folder-location tyco"
                 )
             )
 
@@ -327,7 +327,7 @@ def run_desktop_checks(
             )
             vm.ssh("test -d " + shlex.quote(selected_path))
             report["selectedDirectory"] = selected_path
-            return "Actual native GTK folder picker selected the exact existing home directory through its native Home place and confirmation controls"
+            return "Actual native GTK folder picker selected the exact existing home directory through its native location and confirmation controls"
         finally:
             executor.shutdown(wait=False, cancel_futures=True)
             try:

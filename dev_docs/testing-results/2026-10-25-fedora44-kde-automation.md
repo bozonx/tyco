@@ -1,5 +1,7 @@
 # Fedora 44 KDE automation: 2026-10-25
 
+This is a historical baseline report. See [current source validation](2026-10-25-fedora44-kde-current-head.md) for later commits.
+
 This is a Fedora KDE automation report, not acceptance of the entire platform
 matrix. The original LHC disk is frozen read-only. Each run uses a disposable
 Tyco overlay, real unlocked Plasma Wayland, the user's actual session bus,
@@ -22,7 +24,7 @@ Wayland and 20 XWayland insertion cycles. Earlier diagnostics are described in
 
 | Build              | AppImage SHA-256                                                   |
 | ------------------ | ------------------------------------------------------------------ |
-| Current debug      | `51baa2049ccf93149b1359a91c463130218e990bf693fafe8e8bf439e0e755dd` |
+| Baseline debug     | `51baa2049ccf93149b1359a91c463130218e990bf693fafe8e8bf439e0e755dd` |
 | Production release | `6017ddb418e8b83f935d8a174816bcbe52bbb124ac3123fba95547e135a25a11` |
 
 Both artifacts were built against the Ubuntu 24.04 container baseline, separately
@@ -52,11 +54,14 @@ scope, rather than attributed to the current build.
 | `20261025-100616-aa505f` | Repeated suspend FAIL: first recovery checked, later QMP ACPI suspended state not observed                                                                                                                                     |
 | `20261025-101032-b13dd8` | Cold reboot FAIL: native secret item exists but GetSecret returns zero bytes, independently hashed through Gio Secret Service                                                                                                  |
 | `20261025-102111-155a72` | Microphone removal FAIL: nonzero PCM before removal, then corked capture on source `4294967295`, no end/error/live reroute; explicit stop releases recording clients. Audio fixture fallback-source restoration also timed out |
-| `20261025-103403-a7c848` | Native folder selection PASS: Home place and enabled native confirmation, exact `/home/tester` result                                                                                                                          |
+| `20261025-103403-a7c848` | Native folder selection PASS: native location field and enabled confirmation, exact `/home/tester` result                                                                                                                      |
 | `20261025-102807-f48a64` | Microphone-removal failure reproduced; explicit stop releases clients and configured audio-source policy restored without cleanup errors                                                                                       |
 | `20261025-001456-9cfe9b` | Release install/offline native copy/reinstall/restart/uninstall PASS; upgrade BLOCKED                                                                                                                                          |
 
-The folder test selects the actual home directory. Arbitrary typed Unicode-folder
+The folder test selects the actual home directory. Its native accessibility action
+is GTK `show_location`, followed by the enabled confirmation control; the earlier
+controller label "Home place" was inaccurate. The action is described by the
+[GTK implementation](https://github.com/GNOME/gtk/blob/gtk-3-24/gtk/a11y/gtkfilechooserwidgetaccessible.c). Arbitrary typed Unicode-folder
 navigation was not certified; plugin file selection and native file drop cover
 Unicode/spaced paths separately.
 

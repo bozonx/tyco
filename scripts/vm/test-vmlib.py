@@ -11,6 +11,29 @@ from unittest.mock import Mock, patch
 
 from vmlib import Qmp, ResourceLock, StepFailed, Vm, wait_for
 from webdriver import WebDriver
+from media import capture_client_indexes
+
+
+class AudioClientTests(unittest.TestCase):
+    def test_loopback_and_existing_clients_are_not_app_capture_leaks(self):
+        outputs = [
+            {"index": 12, "owner_module": None},
+            {"index": 80, "owner_module": "536870917"},
+            {"index": 81, "properties": {"pulse.module.id": "536870917"}},
+            {"index": 91, "owner_module": None},
+        ]
+        self.assertEqual(capture_client_indexes(outputs, {12}, {"536870917"}), {91})
+        self.assertEqual(
+            capture_client_indexes(outputs[:-1], {12}, {"536870917"}), set()
+        )
+
+    def test_a_new_recorder_without_a_module_still_counts_as_a_leak(self):
+        self.assertEqual(
+            capture_client_indexes(
+                [{"index": 92, "owner_module": None}], set(), {"536870917"}
+            ),
+            {92},
+        )
 
 
 class ResourceLockTests(unittest.TestCase):

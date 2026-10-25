@@ -38,6 +38,9 @@ def run_scenarios(
 ):
     main_handle = driver.call("GET", "/window")
     prefix = f"/home/{vm.user}/tyco-vm"
+    from importlib import import_module
+
+    portal_invoke = import_module("input-portal").invoke_with_remote_desktop_decision
 
     def check(identifier, function):
         try:
@@ -681,7 +684,10 @@ def run_scenarios(
         identifier = activate_quick("wayland")
         try:
             guest("env-run sudo systemctl stop tyco-vm-ydotool.service")
-            result = driver.invoke_result(
+            result = portal_invoke(
+                driver,
+                guest,
+                report,
                 "paste_into_target_and_hide",
                 {"activationId": identifier, "text": "Must not be delivered"},
             )
@@ -698,7 +704,7 @@ def run_scenarios(
             {"activationId": identifier, "text": "Recovered input fixture"},
         )
         expect_received("wayland", "Recovered input fixture")
-        return "Stopped ydotoold produces an explicit error without insertion; restart restores native delivery"
+        return "Stopped input daemon and denied RemoteDesktop requests (when present) fail explicitly without insertion; daemon restart restores native delivery"
 
     def input_dependency_fault(kind):
         ensure_receiver("wayland")
@@ -739,7 +745,10 @@ def run_scenarios(
                     ),
                     timeout=15,
                 )
-            result = driver.invoke_result(
+            result = portal_invoke(
+                driver,
+                guest,
+                report,
                 "paste_into_target_and_hide",
                 {"activationId": identifier, "text": "Must not be delivered"},
             )
@@ -757,7 +766,39 @@ def run_scenarios(
             {"activationId": identifier, "text": "Restored dependency fixture"},
         )
         expect_received("wayland", "Restored dependency fixture")
-        return f"Actual {kind} access/executable removed; explicit error and unchanged foreign text; restored dependency delivers exact text"
+        return f"Actual {kind} access/executable removed; RemoteDesktop denied when requested; explicit error and unchanged foreign text; restored dependency delivers exact text"
+
+    def portal_fallback():
+        ensure_receiver("wayland")
+        receiver_command("wayland", "reset")
+        identifier = activate_quick("wayland")
+        binary = "/usr/bin/ydotool"
+        guest(f"env-run sudo mv {binary} {binary}.tyco-vm-disabled")
+        try:
+            result = portal_invoke(
+                driver,
+                guest,
+                report,
+                "paste_into_target_and_hide",
+                {
+                    "activationId": identifier,
+                    "text": "Native RemoteDesktop fallback fixture",
+                },
+                approve=True,
+                require_dialog=True,
+            )
+            require(result["ok"], f"Approved native input portal failed: {result}")
+            expect_received("wayland", "Native RemoteDesktop fallback fixture")
+            driver.window("main", ".cm-editor")
+            status = driver.invoke("get_text_insertion_status")
+            report["remoteDesktopFallbackStatus"] = status
+            require(
+                status.get("keySender") == "portal" and status.get("keys") == "ready",
+                f"Unavailable ydotool did not select a ready native portal: {status}",
+            )
+        finally:
+            guest(f"env-run sudo mv {binary}.tyco-vm-disabled {binary}")
+        return "Actual ydotool executable absent; native Remote Control permission approved; portal sent exact text to the independently observed target and restored focus"
 
     def same_title_focus_race():
         for backend in ("wayland", "x11"):
@@ -1004,6 +1045,7 @@ def run_scenarios(
             ("VM-09.clipboard-tool", lambda: input_dependency_fault("clipboard")),
             ("VM-09.input-tool", lambda: input_dependency_fault("ydotool")),
             ("VM-09.uinput-unavailable", lambda: input_dependency_fault("uinput")),
+            ("VM-09.portal-fallback", portal_fallback),
             ("VM-06.closed-target", closed_target),
             ("VM-06.same-title-focus-race", same_title_focus_race),
             ("VM-06.desktop-target", desktop_target),
@@ -1060,9 +1102,12 @@ def run_scenarios(
     if not check("VM-03.allow", register_hotkey):
         record("VM-02", "BLOCKED", "GlobalShortcuts registration failed")
         record("VM-04", "BLOCKED", "GlobalShortcuts registration failed")
-    elif not args.only:
+    elif not args.only or any(
+        selected(f"VM-02-04.{backend}") for backend in ("wayland", "x11")
+    ):
         for backend in ("wayland", "x11"):
-            check(f"VM-02-04.{backend}", lambda backend=backend: insertion(backend))
+            if not args.only or selected(f"VM-02-04.{backend}"):
+                check(f"VM-02-04.{backend}", lambda backend=backend: insertion(backend))
     if args.ctl:
         check("VM-13.default-deny", external_permissions)
     if args.suite in ("native", "package"):
@@ -1111,8 +1156,6 @@ def run_scenarios(
             report=report,
             main_handle=main_handle,
         )
-        from importlib import import_module
-
         import_module("command-grants").run_command_grant_checks(
             vm=vm, driver=driver, guest=guest, check=check, selected=selected, args=args
         )

@@ -13,6 +13,18 @@ def require(condition, message):
         raise StepFailed(message)
 
 
+def capture_client_indexes(outputs, preexisting_indexes, fixture_module_ids):
+    """Distinguish app recorders from the virtual microphone's own loopback."""
+    return {
+        item["index"]
+        for item in outputs
+        if item["index"] not in preexisting_indexes
+        and str(item.get("owner_module")) not in fixture_module_ids
+        and str(item.get("properties", {}).get("pulse.module.id"))
+        not in fixture_module_ids
+    }
+
+
 def run_media_checks(*, vm, driver, guest, check, selected, report):
     if not any(
         selected(identifier)
@@ -25,6 +37,16 @@ def run_media_checks(*, vm, driver, guest, check, selected, report):
         return
 
     def capture(remove_device=False):
+        driver.window("main", ".cm-editor")
+        preexisting_outputs = json.loads(
+            guest("env-run pactl --format=json list source-outputs")
+        )
+        preexisting_indexes = {item["index"] for item in preexisting_outputs}
+        evidence = {
+            "removeDevice": remove_device,
+            "preexistingOutputs": preexisting_outputs,
+        }
+        report.setdefault("audioSessions", []).append(evidence)
         prefix = f"/home/{vm.user}/tyco-vm"
         # This is a real guest audio source. Only its input signal is a fixture;
         # CPAL device opening, PCM capture, IPC delivery and teardown are native.
@@ -42,11 +64,13 @@ def run_media_checks(*, vm, driver, guest, check, selected, report):
             "env-run pactl load-module module-null-sink sink_name=tyco_vm_audio"
         ).strip()
         source = None
+        fixture_module_ids = {sink}
         session_id = None
         try:
             source = guest(
                 "env-run pactl load-module module-remap-source master=tyco_vm_audio.monitor source_name=tyco_vm_microphone"
             ).strip()
+            fixture_module_ids.add(source)
             guest("env-run pactl set-default-source tyco_vm_microphone")
             wave_script = (
                 "import math,struct,wave; p="
@@ -80,6 +104,7 @@ ipc.invoke('start_voice_capture', {onAudio:'__CHANNEL__:'+callback})
             if not result["ok"]:
                 raise StepFailed(f"Native capture failed: {result['error']}")
             session_id = result["info"]["sessionId"]
+            evidence["sessionId"] = session_id
             guest(
                 "env-run "
                 + shlex.join(
@@ -105,8 +130,14 @@ ipc.invoke('start_voice_capture', {onAudio:'__CHANNEL__:'+callback})
             initial_outputs = json.loads(
                 guest("env-run pactl --format=json list source-outputs")
             )
+            evidence["outputsDuringCapture"] = initial_outputs
             require(
-                bool(initial_outputs), "No native audio recording client is registered"
+                bool(
+                    capture_client_indexes(
+                        initial_outputs, preexisting_indexes, fixture_module_ids
+                    )
+                ),
+                "No new native audio recording client is registered",
             )
             if remove_device:
                 sources = json.loads(guest("env-run pactl --format=json list sources"))
@@ -146,11 +177,17 @@ ipc.invoke('start_voice_capture', {onAudio:'__CHANNEL__:'+callback})
                         "sourceOutputsAfterRemoval": routed,
                         "availableSourceIndexes": sorted(available_indexes),
                     }
-                    valid_route = bool(routed) and all(
+                    routed_indexes = capture_client_indexes(
+                        routed, preexisting_indexes, fixture_module_ids
+                    )
+                    app_routes = [
+                        item for item in routed if item["index"] in routed_indexes
+                    ]
+                    valid_route = bool(app_routes) and all(
                         item["source"] in available_indexes
                         and item["source"] != removed_index
                         and not item["corked"]
-                        for item in routed
+                        for item in app_routes
                     )
                     return (
                         after["ended"]
@@ -192,13 +229,20 @@ ipc.invoke('start_voice_capture', {onAudio:'__CHANNEL__:'+callback})
                 ),
                 timeout=5,
             )
-            captured_indexes = {item["index"] for item in initial_outputs + outputs}
+            captured_indexes = capture_client_indexes(
+                initial_outputs + outputs, preexisting_indexes, fixture_module_ids
+            )
+            evidence["capturedIndexes"] = sorted(captured_indexes)
+            evidence["outputsBeforeStop"] = outputs
             wait_for(
                 "native recording clients released after stop",
-                lambda: all(
-                    item["index"] not in captured_indexes
-                    for item in json.loads(
-                        guest("env-run pactl --format=json list source-outputs")
+                lambda: (
+                    not capture_client_indexes(
+                        json.loads(
+                            guest("env-run pactl --format=json list source-outputs")
+                        ),
+                        preexisting_indexes,
+                        fixture_module_ids,
                     )
                 ),
                 timeout=10,
@@ -236,6 +280,12 @@ ipc.invoke('start_voice_capture', {onAudio:'__CHANNEL__:'+callback})
                     report["audioOutputsAfterCleanupStop"] = json.loads(
                         guest("env-run pactl --format=json list source-outputs")
                     )
+                    evidence["outputsAfterCleanupStop"] = report[
+                        "audioOutputsAfterCleanupStop"
+                    ]
+                    evidence["captureAfterCleanupStop"] = report[
+                        "audioAfterCleanupStop"
+                    ]
                 except Exception as error:
                     cleanup_errors.append(str(error))
             for module in (source, sink):

@@ -69,34 +69,23 @@ if action == "locate-name":
                 }
             )
     print(json.dumps(locations))
-elif action == "activate-place":
-    targets = set()
+elif action == "show-folder-location":
+    matches = []
     for node in found:
-        if node.get_role_name() != "label" or node.get_name() != argument:
+        if node.get_role_name() != "file chooser":
             continue
-        parent = node.get_parent()
-        chain = set()
-        while parent and parent not in chain:
-            chain.add(parent)
-            interface = parent.get_action_iface()
-            if interface and interface.get_n_actions():
-                targets.add(parent)
-                break
-            parent = parent.get_parent()
-    if len(targets) != 1:
-        raise RuntimeError(f"Expected one native place action: {len(targets)}")
-    target = next(iter(targets))
-    if not target.get_action_iface().do_action(0):
-        raise RuntimeError("Native place activation failed")
-    print(
-        json.dumps(
-            {
-                "activated": argument,
-                "role": target.get_role_name(),
-                "name": target.get_name(),
-            }
-        )
-    )
+        interface = node.get_action_iface()
+        if not interface:
+            continue
+        for index in range(interface.get_n_actions()):
+            if interface.get_action_name(index) == "show_location":
+                matches.append((node, index))
+    if len(matches) != 1:
+        raise RuntimeError(f"Expected one native file location action: {len(matches)}")
+    node, index = matches[0]
+    if not node.get_action_iface().do_action(index):
+        raise RuntimeError("Native file location action failed")
+    print(json.dumps({"action": "show_location", "role": node.get_role_name()}))
 elif action == "expand-row":
     rows = {
         node

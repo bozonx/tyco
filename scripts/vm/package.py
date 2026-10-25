@@ -182,6 +182,34 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
             "production process exits",
             lambda: vm.ssh("pgrep -xc tyco || true").strip() == "0",
         )
+        runtime_probe = (
+            "import json,pathlib; target=pathlib.Path("
+            + repr(installed)
+            + ").stat(); active=[]\n"
+            "for process in pathlib.Path('/proc').iterdir():\n"
+            " if not process.name.isdigit(): continue\n"
+            " try:\n"
+            "  image=(process/'exe').stat()\n"
+            "  if (image.st_dev,image.st_ino)==(target.st_dev,target.st_ino): active.append(int(process.name))\n"
+            " except (OSError,PermissionError): pass\n"
+            "print(json.dumps(active))"
+        )
+        observation = {"activeRuntimePids": []}
+        report.setdefault("productionRuntimeExitChecks", []).append(observation)
+
+        def runtime_exited():
+            active = json.loads(vm.ssh("python3 -c " + shlex.quote(runtime_probe)))
+            observation["activeRuntimePids"] = active
+            return not active
+
+        wait_for(
+            "AppImage runtime exits after native tray Quit", runtime_exited, timeout=20
+        )
+
+    def replace_installed_image():
+        vm.ssh(
+            "cp tyco-vm/Tyco.AppImage .local/lib/tyco/Tyco.AppImage.next && chmod 755 .local/lib/tyco/Tyco.AppImage.next && mv -f .local/lib/tyco/Tyco.AppImage.next .local/lib/tyco/Tyco.AppImage"
+        )
 
     upgraded = False
     try:
@@ -199,9 +227,7 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
             saved = vm.run_dir / "previous-release-config.json"
             saved.write_text(json.dumps(previous_config))
             vm.copy_to(saved, ".config/com.tyco.app/config.json")
-            vm.ssh(
-                "cp tyco-vm/Tyco.AppImage .local/lib/tyco/Tyco.AppImage && chmod 755 .local/lib/tyco/Tyco.AppImage"
-            )
+            replace_installed_image()
             current_status = launch()
             if current_status.get("version") != current_version:
                 raise StepFailed(
@@ -286,9 +312,17 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
         vm.qmp.tap("ctrl", "c")
 
         def copied_text():
-            text = guest("env-run wl-paste --no-newline --type text/plain")
-            report["productionCopiedText"] = text
-            return text == "VM production package text"
+            probe = (
+                "import json,subprocess; result=subprocess.run(['wl-paste','--no-newline','--type','text/plain'],capture_output=True,text=True,timeout=3); "
+                "print(json.dumps({'exitCode':result.returncode,'text':result.stdout,'error':result.stderr}))"
+            )
+            observed = json.loads(guest("env-run python3 -c " + shlex.quote(probe)))
+            report.setdefault("productionClipboardObservations", []).append(observed)
+            report["productionCopiedText"] = observed["text"]
+            return (
+                observed["exitCode"] == 0
+                and observed["text"] == "VM production package text"
+            )
 
         wait_for("exact production editor copy", copied_text, timeout=20)
         record(
@@ -300,9 +334,7 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
         before_reinstall = vm.ssh(
             "sha256sum .config/com.tyco.app/config.json .local/share/com.tyco.app/vm-preserved.txt"
         )
-        vm.ssh(
-            "cp tyco-vm/Tyco.AppImage .local/lib/tyco/Tyco.AppImage && chmod 755 .local/lib/tyco/Tyco.AppImage"
-        )
+        replace_installed_image()
         require_preserved = vm.ssh(
             "sha256sum .config/com.tyco.app/config.json .local/share/com.tyco.app/vm-preserved.txt"
         )
