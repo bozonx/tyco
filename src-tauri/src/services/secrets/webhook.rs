@@ -1,24 +1,21 @@
 //! Custom webhook headers are persisted only as origin-bound secret references.
 use serde_json::Value;
-use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 
 use crate::errors::AppError;
 use crate::services::secrets::{normalize_origin, SecretStore, SECRET_REF_PREFIX};
+use crate::services::sha256::sha256_hex;
 
 /// The secrets the app makes for webhooks; it removes them once unused.
 const WEBHOOK_HEADER_PREFIX: &str = "webhook.header.";
 const WEBHOOK_AUTH_PREFIX: &str = "webhook.auth.";
 
 fn header_secret_id(command_id: &str, header: &str, value: &str, origin: &str) -> String {
-    let digest = Sha256::digest(
-        format!(
-            "{command_id}\0{}\0{value}\0{origin}",
-            header.to_ascii_lowercase()
-        )
-        .as_bytes(),
-    );
-    format!("{WEBHOOK_HEADER_PREFIX}{:x}", digest)[..63].to_owned()
+    let digest = sha256_hex(format!(
+        "{command_id}\0{}\0{value}\0{origin}",
+        header.to_ascii_lowercase()
+    ));
+    format!("{WEBHOOK_HEADER_PREFIX}{digest}")[..63].to_owned()
 }
 
 fn protect_headers(

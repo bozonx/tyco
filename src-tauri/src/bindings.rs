@@ -10,7 +10,6 @@ use std::any::TypeId;
 use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
-use sha2::{Digest, Sha256};
 use ts_rs::{Config, TypeVisitor, TS};
 
 use crate::errors::{ErrorCode, ErrorPayload};
@@ -153,7 +152,7 @@ fn bindings_are_current() {
     }
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(OUTPUT);
     let current = std::fs::read_to_string(&path).unwrap_or_default();
-    let hash = format!("{:x}", Sha256::digest(rendered.as_bytes()));
+    let hash = crate::services::sha256::sha256_hex(&rendered);
     assert!(
         current
             .lines()

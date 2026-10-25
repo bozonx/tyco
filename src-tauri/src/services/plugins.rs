@@ -11,8 +11,8 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
+use crate::services::sha256::sha256_hex;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 use crate::errors::AppError;
 use crate::locks::MutexExt;
@@ -118,7 +118,7 @@ fn read_with_limit(path: &Path, limit: u64) -> Result<String, AppError> {
 }
 pub fn inspect(path: &Path) -> Result<(PluginPackage, String), AppError> {
     let raw = read_bounded(path)?;
-    let digest = format!("{:x}", Sha256::digest(raw.as_bytes()));
+    let digest = sha256_hex(&raw);
     let package: PluginPackage = serde_json::from_str(&raw)?;
     if package.format_version != FORMAT_VERSION {
         return Err(AppError::InvalidData(
@@ -133,10 +133,7 @@ pub fn inspect(path: &Path) -> Result<(PluginPackage, String), AppError> {
 }
 #[cfg(test)]
 fn package_digest(path: &Path) -> Result<String, AppError> {
-    Ok(format!(
-        "{:x}",
-        Sha256::digest(read_bounded(path)?.as_bytes())
-    ))
+    Ok(sha256_hex(read_bounded(path)?))
 }
 /// The file name of a plugin: ids may differ only in case, which a
 /// case-insensitive file system would not tell apart.
@@ -196,7 +193,7 @@ impl PluginStore {
     ) -> Result<InstalledPlugin, AppError> {
         let _guard = self.lock.locked();
         let raw = read_bounded(path)?;
-        if format!("{:x}", Sha256::digest(raw.as_bytes())) != digest {
+        if sha256_hex(&raw) != digest {
             return Err(AppError::Stale(
                 "Plugin package changed after inspection".into(),
             ));

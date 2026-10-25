@@ -81,7 +81,7 @@ pub async fn prepare_image(
         ));
     }
     // Pin the checked addresses to prevent DNS rebinding, and bypass ambient proxies.
-    let client = reqwest::Client::builder()
+    let client = super::client_builder()
         .no_proxy()
         .resolve_to_addrs(host, &addresses)
         .redirect(reqwest::redirect::Policy::none())

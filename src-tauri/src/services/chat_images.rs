@@ -6,7 +6,7 @@ use std::fs;
 use std::io::{Cursor, Read};
 use std::path::{Path, PathBuf};
 
-use sha2::{Digest, Sha256};
+use crate::services::sha256::sha256_hex;
 
 use super::atomic_file::write_private_bytes;
 use crate::errors::AppError;
@@ -101,7 +101,7 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
             continue;
         }
         let image = ChatImage {
-            id: format!("{:x}", Sha256::digest(&*encoded)),
+            id: sha256_hex(&*encoded),
             media_type: crate::models::ChatImageMediaType::Webp,
             width_px: output.width,
             height_px: output.height,
@@ -276,7 +276,7 @@ impl ChatImageStore {
         fs::File::open(path)?
             .take((MAX_STORED_BYTES + 1) as u64)
             .read_to_end(&mut bytes)?;
-        if bytes.len() > MAX_STORED_BYTES || format!("{:x}", Sha256::digest(&bytes)) != id {
+        if bytes.len() > MAX_STORED_BYTES || sha256_hex(&bytes) != id {
             return Err(AppError::InvalidData("Corrupted chat image".into()));
         }
         let (width, height) = stored_dimensions(&bytes)?;

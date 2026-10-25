@@ -35,6 +35,14 @@ const CONNECT_TIMEOUT: Duration = Duration::from_secs(20);
 /// enough for a reasoning model that thinks before its first token.
 pub const READ_TIMEOUT: Duration = Duration::from_secs(180);
 
+/// A reqwest builder with the process TLS crypto provider in place: reqwest
+/// is built without a bundled one and panics if none is installed.
+pub fn client_builder() -> reqwest::ClientBuilder {
+    // Fails only when a provider is already installed, which is fine.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+    reqwest::Client::builder()
+}
+
 /// Where a request's events go. A trait so the loops run in tests without a
 /// webview.
 pub trait EventSink: Send + Sync + 'static {
@@ -80,7 +88,7 @@ pub struct NetState {
 
 impl NetState {
     pub fn new() -> Result<Self, AppError> {
-        let client = reqwest::Client::builder()
+        let client = client_builder()
             .connect_timeout(CONNECT_TIMEOUT)
             .read_timeout(READ_TIMEOUT)
             .redirect(reqwest::redirect::Policy::none())

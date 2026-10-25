@@ -21,6 +21,7 @@ pub mod runtime;
 pub mod secrets;
 pub mod selection_replace;
 pub mod settings;
+pub mod sha256;
 pub mod signals;
 pub mod status_overlay;
 pub mod storage;

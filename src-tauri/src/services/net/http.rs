@@ -310,7 +310,7 @@ mod tests {
         let task_flow = chunk_permits.clone();
         let task = tokio::spawn(async move {
             run_fetch_controlled(
-                &reqwest::Client::new(),
+                &crate::services::net::client_builder().build().unwrap(),
                 reqwest::Method::GET,
                 prepared,
                 None,
@@ -366,7 +366,7 @@ mod tests {
         .unwrap();
         let sink = RecordingSink::default();
         run_fetch_controlled(
-            &reqwest::Client::new(),
+            &crate::services::net::client_builder().build().unwrap(),
             reqwest::Method::GET,
             prepared,
             None,
@@ -471,7 +471,7 @@ mod tests {
         )
         .unwrap();
 
-        let client = reqwest::Client::new();
+        let client = crate::services::net::client_builder().build().unwrap();
         run_fetch(
             &client,
             parse_method("post").unwrap(),
@@ -530,7 +530,7 @@ mod tests {
         .unwrap();
         let sink = RecordingSink::default();
         run_fetch(
-            &reqwest::Client::new(),
+            &crate::services::net::client_builder().build().unwrap(),
             reqwest::Method::GET,
             prepared,
             None,

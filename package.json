@@ -32,7 +32,7 @@
     "validate": "pnpm check && pnpm test && pnpm build",
     "validate:all": "pnpm validate && pnpm test:browser && pnpm check:rust && pnpm test:rust",
     "tauri": "tauri",
-    "tauri:dev": "dotenv -e .env -- node scripts/tauri-dev.mjs",
+    "tauri:dev": "node --env-file-if-exists=.env scripts/tauri-dev.mjs",
     "tauri:build": "cross-env NO_STRIP=true tauri build",
     "check:plugins": "pnpm build:plugins && node scripts/check-plugin-packages.mjs",
     "build:plugins": "turbo run build --filter=\"./packages/plugin-*\"",
@@ -62,7 +62,7 @@
   "packageManager": "pnpm@11.21.0",
   "devDependencies": {
     "@eslint/js": "catalog:",
-    "@tauri-apps/cli": "^2.12.3",
+    "@tauri-apps/cli": "^2.12.4",
     "@trivago/prettier-plugin-sort-imports": "catalog:",
     "@types/node": "catalog:",
     "cross-env": "^10.1.0",
