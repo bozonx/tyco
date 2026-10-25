@@ -619,7 +619,7 @@
     "contrastNormal": "Normal",
     "copyActivationCommand": "Copier la commande",
     "copyHotkeyCommand": "Copier l’association",
-    "correctionHotkeysHint": "Raccourcis globaux pour lancer la correction de texte depuis n’importe quelle application. Tous les raccourcis sont configurés sur la page",
+    "correctionHotkeysHint": "Lancent la correction depuis n’importe quelle application. Vous pouvez modifier ces raccourcis sur la page",
     "correctionPageHint": "Paramètres du modèle et instructions pour la correction de texte. Utilisé à la fois pour la correction rapide sur place et pour la correction avec aperçu.",
     "correctionPreviewHint": "Ouvre la fenêtre Tyco avec un comparatif des modifications avant insertion.",
     "correctionPrompt": "Prompt",

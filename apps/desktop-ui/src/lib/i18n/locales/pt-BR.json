@@ -619,7 +619,7 @@
     "contrastNormal": "Normal",
     "copyActivationCommand": "Copiar comando",
     "copyHotkeyCommand": "Copiar associação",
-    "correctionHotkeysHint": "Atalhos globais para executar a correção de texto de qualquer aplicativo. Todos os atalhos são configurados na página",
+    "correctionHotkeysHint": "Executam a correção de qualquer aplicativo. Você pode alterar esses atalhos na página",
     "correctionPageHint": "Configurações de modelo e instruções para correção de texto. Usado tanto para correção rápida no local quanto para correção com visualização.",
     "correctionPreviewHint": "Abre a janela do Tyco com uma visualização das alterações antes de inserir.",
     "correctionPrompt": "Prompt",

@@ -32,18 +32,6 @@ function setup() {
           props: ['task'],
           template: '<div class="task-model-stub" :data-task="task" />',
         },
-        HotkeyInput: {
-          props: ['modelValue', 'ariaLabel'],
-          emits: ['update:modelValue'],
-          template: `
-            <input
-              class="hotkey-input-stub"
-              :aria-label="ariaLabel"
-              :value="modelValue"
-              @input="$emit('update:modelValue', $event.target.value)"
-            />
-          `,
-        },
       },
     },
   })
@@ -66,15 +54,19 @@ describe('SettingsCorrectionTab.vue', () => {
     expect(context.navigate).toHaveBeenCalledWith('global-actions')
   })
 
-  it('configures hotkeys for both preview and inline correction', async () => {
+  it('shows the correction hotkeys without editing them', async () => {
     const { context, wrapper } = setup()
-    const inputs = wrapper.findAll('.hotkey-input-stub')
-    expect(inputs).toHaveLength(2)
-
-    await inputs[0].setValue('Ctrl+Shift+C')
-    expect(context.draft.value.hotkeys.correction).toBe('Ctrl+Shift+C')
-
-    await inputs[1].setValue('Ctrl+Alt+C')
-    expect(context.draft.value.hotkeys.selectionCorrection).toBe('Ctrl+Alt+C')
+    context.draft.value.hotkeys.correction = 'Ctrl+Shift+C'
+    context.draft.value.hotkeys.selectionCorrection = ''
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('button.hotkey-input').exists()).toBe(false)
+    const displays = wrapper.findAll('.hotkey-display')
+    expect(displays).toHaveLength(2)
+    expect(displays[0].findAll('kbd').map((key) => key.text())).toEqual([
+      'Ctrl',
+      'Shift',
+      'C',
+    ])
+    expect(displays[1].text()).toBe('settings.hotkeyNotAssigned')
   })
 })

@@ -613,7 +613,7 @@
     "contrastNormal": "標準",
     "copyActivationCommand": "複製命令",
     "copyHotkeyCommand": "複製快捷鍵繫結",
-    "correctionHotkeysHint": "用於從任何應用程式執行文字校對的通用快速鍵。所有快速鍵在該頁面進行設定",
+    "correctionHotkeysHint": "可從任何應用程式執行校對。快捷鍵可在該頁面中變更",
     "correctionPageHint": "用於文字校對的模型與提示詞設定。同時適用於原地快速校對與帶預覽的校對。",
     "correctionPreviewHint": "在插入之前開啟顯示變更差異的 Tyco 視窗。",
     "correctionPrompt": "提示詞",

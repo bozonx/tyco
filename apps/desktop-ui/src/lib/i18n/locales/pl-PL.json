@@ -619,7 +619,7 @@
     "contrastNormal": "Normalny",
     "copyActivationCommand": "Kopiuj polecenie",
     "copyHotkeyCommand": "Kopiuj przypisanie",
-    "correctionHotkeysHint": "Globalne skróty klawiszowe do uruchamiania korekty tekstu z dowolnej aplikacji. Wszystkie skróty konfiguruje się na stronie",
+    "correctionHotkeysHint": "Uruchamiają korektę z dowolnej aplikacji. Skróty można zmienić na stronie",
     "correctionPageHint": "Ustawienia modelu i instrukcji do korekty tekstu. Używane zarówno do szybkiej korekty w miejscu, jak i korekty z podglądem.",
     "correctionPreviewHint": "Otwiera okno Tyco z podglądem różnic przed wstawieniem.",
     "correctionPrompt": "Prompt",

@@ -616,7 +616,7 @@
     "contrastNormal": "標準",
     "copyActivationCommand": "コマンドをコピー",
     "copyHotkeyCommand": "コマンドをコピー",
-    "correctionHotkeysHint": "任意のアプリからテキスト校正を実行するグローバルショートカットです。すべてのショートカットは次のページで設定します:",
+    "correctionHotkeysHint": "任意のアプリから校正を実行します。ショートカットは次のページで変更できます:",
     "correctionPageHint": "テキスト校正用のモデルと指示の設定です。その場でのクイック校正とプレビュー付き校正の両方に適用されます。",
     "correctionPreviewHint": "挿入前に変更箇所の差分を表示する Tyco ウィンドウを開きます。",
     "correctionPrompt": "プロンプト",

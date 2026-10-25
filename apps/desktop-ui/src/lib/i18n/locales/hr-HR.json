@@ -619,7 +619,7 @@
     "contrastNormal": "Normalan",
     "copyActivationCommand": "Kopiraj naredbu",
     "copyHotkeyCommand": "Kopiraj dodjelu",
-    "correctionHotkeysHint": "Globalni prečaci za pokretanje ispravka teksta iz bilo koje aplikacije. Svi se prečaci konfiguriraju na stranici",
+    "correctionHotkeysHint": "Pokreću ispravak iz bilo koje aplikacije. Prečace možete promijeniti na stranici",
     "correctionPageHint": "Postavke modela i uputa za ispravak teksta. Koristi se i za brzi ispravak na mjestu i za ispravak s pregledom.",
     "correctionPreviewHint": "Otvara Tyco prozor s prikazom izmjena prije umetanja.",
     "correctionPrompt": "Prompt",

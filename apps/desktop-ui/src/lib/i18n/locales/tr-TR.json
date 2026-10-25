@@ -616,7 +616,7 @@
     "contrastNormal": "Normal",
     "copyActivationCommand": "Komutu kopyala",
     "copyHotkeyCommand": "Bağlamayı kopyala",
-    "correctionHotkeysHint": "Herhangi bir uygulamadan metin düzeltmeyi çalıştırmak için genel kısayollar. Tüm kısayollar şu sayfada yapılandırılır:",
+    "correctionHotkeysHint": "Düzeltmeyi herhangi bir uygulamadan başlatır. Kısayolları şu sayfada değiştirebilirsiniz:",
     "correctionPageHint": "Metin düzeltme için model ve talimat ayarları. Hem yerinde hızlı düzeltme hem de önizlemeli düzeltme için kullanılır.",
     "correctionPreviewHint": "Eklemenden önce değişikliklerin farkını gösteren Tyco penceresini açar.",
     "correctionPrompt": "İstem",

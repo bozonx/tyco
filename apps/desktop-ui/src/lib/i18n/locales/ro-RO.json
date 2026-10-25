@@ -619,7 +619,7 @@
     "contrastNormal": "Normal",
     "copyActivationCommand": "Copiază comanda",
     "copyHotkeyCommand": "Copiază asocierea",
-    "correctionHotkeysHint": "Comenzi rapide globale pentru lansarea corectării textului din orice aplicație. Toate comenzile rapide se configurează pe pagina",
+    "correctionHotkeysHint": "Lansează corectarea din orice aplicație. Puteți modifica aceste comenzi rapide pe pagina",
     "correctionPageHint": "Setările modelului și instrucțiunilor pentru corectarea textului. Utilizat atât pentru corectarea rapidă pe loc, cât și pentru corectarea cu previzualizare.",
     "correctionPreviewHint": "Deschide fereastra Tyco cu o vizualizare a modificărilor înainte de inserare.",
     "correctionPrompt": "Prompt",

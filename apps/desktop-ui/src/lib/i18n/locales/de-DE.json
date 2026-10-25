@@ -619,7 +619,7 @@
     "contrastNormal": "Normal",
     "copyActivationCommand": "Befehl kopieren",
     "copyHotkeyCommand": "Zuweisung kopieren",
-    "correctionHotkeysHint": "Globale Tastenkürzel zum Starten der Textkorrektur aus jeder Anwendung. Alle Tastenkürzel werden eingerichtet auf der Seite",
+    "correctionHotkeysHint": "Starten die Korrektur aus jeder Anwendung. Ändern lassen sich die Tastenkürzel auf der Seite",
     "correctionPageHint": "Modell- und Prompt-Einstellungen für die Textkorrektur. Gilt sowohl für die direkte Schnellkorrektur als auch für die Korrektur mit Vorschau.",
     "correctionPreviewHint": "Öffnet das Tyco-Fenster mit einem Diff der Änderungen vor dem Einfügen.",
     "correctionPrompt": "Prompt",

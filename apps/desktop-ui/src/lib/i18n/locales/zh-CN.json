@@ -613,7 +613,7 @@
     "contrastNormal": "普通",
     "copyActivationCommand": "复制命令",
     "copyHotkeyCommand": "复制绑定",
-    "correctionHotkeysHint": "用于从任何应用程序运行文本纠错的全局快捷键。所有快捷键在此页面上配置",
+    "correctionHotkeysHint": "可从任何应用程序运行纠错。快捷键可在此页面中更改",
     "correctionPageHint": "用于文本纠错的模型和提示词设置。同时适用于原位快速纠错和带预览的纠错。",
     "correctionPreviewHint": "在插入之前打开显示更改差异的 Tyco 窗口。",
     "correctionPrompt": "提示词",

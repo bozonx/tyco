@@ -613,7 +613,7 @@
     "contrastNormal": "Normální",
     "copyActivationCommand": "Kopírovat příkaz",
     "copyHotkeyCommand": "Kopírovat přiřazení",
-    "correctionHotkeysHint": "Globální klávesové zkratky pro spuštění opravy textu z jakékoli aplikace. Všechny zkratky se konfigurují na stránce",
+    "correctionHotkeysHint": "Spouštějí opravu z jakékoli aplikace. Zkratky můžete změnit na stránce",
     "correctionPageHint": "Nastavení modelu a instrukcí pro opravu textu. Používá se jak pro rychlou opravu na místě, tak pro opravu s náhledem.",
     "correctionPreviewHint": "Otevře okno Tyco se zobrazením změn před vložením.",
     "correctionPrompt": "Prompt",
