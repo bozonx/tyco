@@ -29,6 +29,8 @@ pub fn merge_session_state(
         let mut merged_ids = serde_json::to_value(&current.last_profile_chat_ids)?;
         if let Some(current_ids) = merged_ids.as_object_mut() {
             current_ids.extend(std::mem::take(ids));
+            // an empty id forgets the profile's last chat
+            current_ids.retain(|_, id| id.as_str().is_some_and(|id| !id.is_empty()));
             *ids = std::mem::take(current_ids);
         }
     }
@@ -43,6 +45,25 @@ pub fn merge_session_state(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn an_empty_profile_chat_id_forgets_the_last_chat() {
+        let state: SessionState = serde_json::from_value(
+            json!({ "lastProfileChatIds": { "writer": "chat-1", "reviewer": "chat-2" } }),
+        )
+        .unwrap();
+        let merged = merge_session_state(
+            &state,
+            json!({ "lastProfileChatIds": { "writer": "" } })
+                .as_object()
+                .unwrap()
+                .clone(),
+        )
+        .unwrap();
+
+        assert!(!merged.last_profile_chat_ids.contains_key("writer"));
+        assert_eq!(merged.last_profile_chat_ids["reviewer"], "chat-2");
+    }
 
     #[test]
     fn session_state_without_the_menu_history_reads_with_defaults() {

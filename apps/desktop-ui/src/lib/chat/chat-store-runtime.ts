@@ -34,6 +34,10 @@ import {
 import { createChatModel } from './chat-model'
 import { createChatProfileRuntime } from './chat-profile-runtime'
 
+type SendChatOptions = NonNullable<
+  Parameters<ChatStoreRuntimeDependencies['llmActions']['sendChatMessage']>[3]
+>
+
 export type ChatStoreHistory = Omit<
   ReturnType<typeof createChatHistoryModel>,
   'chatHistory'
@@ -112,10 +116,92 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     })
   )
 
-  const getChatInstructions = () =>
-    profileId ? soul.value : APP_CONFIG.aiInstructions[LlmInstructionKind.CHAT]
-  const getChatRules = () =>
-    profileId ? undefined : deps.getUserConfig()?.llm?.tasks.chat.rule
+  const chatTools = createDesktopChatTools({
+    profileId,
+    invoke: deps.invoke,
+    canUseTools: () => selectedModel.value?.canUseTools ?? false,
+    warn,
+  })
+
+  /** What differs between "Ask AI" and a profile chat */
+  interface ChatScope {
+    instructions: () => string
+    rules: () => string | undefined
+    /** The call settings of one turn besides the model and the stream */
+    turnOptions: (
+      modelId: string,
+      toolOutputBudgetCharacters: number | undefined
+    ) => Promise<Partial<SendChatOptions>>
+    saveLastChatId: (id: string | null) => Promise<void>
+    getLastChatId: () => string | null | undefined
+    /** Remembers the picked model; a failure is told to the user */
+    selectModel: (id: string) => Promise<void>
+  }
+
+  const commandFailed = (detail: string) =>
+    toastText(`${translate('toast.desktopCommandFailed')}${detail}`, 'error')
+
+  const createAskAiScope = (): ChatScope => ({
+    instructions: () => APP_CONFIG.aiInstructions[LlmInstructionKind.CHAT],
+    rules: () => deps.getUserConfig()?.llm?.tasks.chat.rule,
+    turnOptions: async (modelId, toolOutputBudgetCharacters) => ({
+      ...(await chatTools.turnTools(modelId, toolOutputBudgetCharacters)),
+      rules: deps.getUserConfig()?.llm?.tasks.chat.rule,
+    }),
+    saveLastChatId: async (lastChatId) => {
+      const result = await deps.saveSessionState({ lastChatId })
+      if (!result.success) warn(`Could not save the last chat: ${result.error}`)
+    },
+    getLastChatId: () => deps.getSessionState()?.lastChatId,
+    selectModel: async (id) => {
+      const result = await deps.saveSessionState({ lastChatModelId: id })
+      if (!result.success) commandFailed(`: ${result.error ?? ''}`)
+    },
+  })
+
+  const createProfileScope = (id: string): ChatScope => ({
+    instructions: () => soul.value,
+    rules: () => undefined,
+    turnOptions: async (modelId, toolOutputBudgetCharacters) => {
+      const stored = await refreshProfile()
+      return {
+        ...(await chatTools.turnTools(
+          modelId,
+          toolOutputBudgetCharacters,
+          stored?.tools
+        )),
+        temperature: stored?.temperature,
+        maxOutputTokens: stored?.maxOutputTokens,
+      }
+    },
+    saveLastChatId: async (lastChatId) => {
+      // an empty id forgets the profile's last chat
+      const value = lastChatId ?? ''
+      lastProfileChatId.value = value || null
+      const stored = deps.getSessionState()?.lastProfileChatIds ?? {}
+      if ((stored[id] ?? '') === value) return
+      const result = await deps.saveSessionState({
+        lastProfileChatIds: { [id]: value },
+      })
+      if (!result.success)
+        warn(`Could not save the last profile chat: ${result.error}`)
+    },
+    getLastChatId: () =>
+      lastProfileChatId.value ||
+      deps.getSessionState()?.lastProfileChatIds?.[id] ||
+      deps.getFallbackProfileChatId?.(),
+    selectModel: async (modelId) => {
+      try {
+        await deps.updateProfileModel(id, modelId)
+      } catch (error) {
+        commandFailed(`\n${describeError(error, translate)}`)
+      }
+    },
+  })
+
+  const scope = profileId ? createProfileScope(profileId) : createAskAiScope()
+  const getChatInstructions = scope.instructions
+  const getChatRules = scope.rules
 
   const requestBudgetCharacters = () => {
     const picked = selectedModel.value
@@ -127,51 +213,24 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     })
   }
 
-  const chatTools = createDesktopChatTools({
-    profileId,
-    invoke: deps.invoke,
-    canUseTools: () => selectedModel.value?.canUseTools ?? false,
-    warn,
-  })
-
   const model = createChatModel({
     sendChatMessage: async (
       message,
       prevMessages,
-      instructions,
+      _instructions,
       { toolOutputBudgetCharacters, ...options }
     ) => {
-      if (!profileId) {
-        return deps.llmActions.sendChatMessage(
-          message,
-          prevMessages,
-          instructions,
-          {
-            ...options,
-            ...(await chatTools.turnTools(
-              options.modelId,
-              toolOutputBudgetCharacters
-            )),
-            rules: getChatRules(),
-          }
-        )
-      }
-      const stored = await refreshProfile()
+      // a profile reads its SOUL.md and settings here, so the instructions
+      // are taken after them
+      const turnOptions = await scope.turnOptions(
+        options.modelId,
+        toolOutputBudgetCharacters
+      )
       return deps.llmActions.sendChatMessage(
         message,
         prevMessages,
-        soul.value,
-        {
-          ...options,
-          ...(await chatTools.turnTools(
-            options.modelId,
-            toolOutputBudgetCharacters,
-            stored?.tools
-          )),
-          temperature: stored?.temperature,
-          maxOutputTokens: stored?.maxOutputTokens,
-          loadImage,
-        }
+        scope.instructions(),
+        { ...options, ...turnOptions, loadImage }
       )
     },
     generateChatTitle: deps.llmActions.generateChatTitle,
@@ -196,10 +255,10 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     notifyError: (message) => {
       toastText(message, 'error')
     },
-    emptyMessageError: () => translate('toast.textNotSelected'),
+    emptyMessageError: () => translate('chat.emptyMessage'),
     emptyResponseError: () => translate('selection.emptyResult'),
-    chatNotFoundError: () => translate('history.empty'),
-    chatLoadError: () => translate('history.operationFailed'),
+    chatNotFoundError: () => translate('chat.notFound'),
+    chatLoadError: () => translate('chat.loadFailed'),
     messageTooLongError: () => translate('llmErrors.contextLength'),
     noModelError: () => translate('chat.noModels'),
     imageModelError: () => translate('chat.imageModelRequired'),
@@ -215,27 +274,10 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     nowMs: () => Date.now(),
     // which chat to reopen is a convenience: a failure is only logged
     saveSessionState: async (patch) => {
-      if (profileId) {
-        if (!patch.lastChatId) return
-        lastProfileChatId.value = patch.lastChatId
-        const stored = deps.getSessionState()?.lastProfileChatIds ?? {}
-        if (stored[profileId] === patch.lastChatId) return
-        const result = await deps.saveSessionState({
-          lastProfileChatIds: { [profileId]: patch.lastChatId },
-        })
-        if (!result.success)
-          warn(`Could not save the last profile chat: ${result.error}`)
-        return
-      }
-      const result = await deps.saveSessionState(patch)
-      if (!result.success) warn(`Could not save the last chat: ${result.error}`)
+      if (patch.lastChatId !== undefined)
+        await scope.saveLastChatId(patch.lastChatId)
     },
-    getLastChatId: () =>
-      profileId
-        ? (lastProfileChatId.value ??
-          deps.getSessionState()?.lastProfileChatIds?.[profileId] ??
-          deps.getFallbackProfileChatId?.())
-        : deps.getSessionState()?.lastChatId,
+    getLastChatId: scope.getLastChatId,
     isHistoryEnabled: () => {
       const config = deps.getUserConfig()
       return config ? isChatHistoryEnabled(config, profileId) : false
@@ -293,25 +335,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     closeModals: deps.closeModals,
     afterRender: deps.afterRender,
     // the picked model is read back from the state: unsaved, it is not picked
-    selectModel: async (id) => {
-      if (profileId) {
-        try {
-          await deps.updateProfileModel(profileId, id)
-        } catch (error) {
-          toastText(
-            `${translate('toast.desktopCommandFailed')}\n${describeError(error, translate)}`,
-            'error'
-          )
-        }
-        return
-      }
-      const result = await deps.saveSessionState({ lastChatModelId: id })
-      if (!result.success)
-        toastText(
-          `${translate('toast.desktopCommandFailed')}: ${result.error ?? ''}`,
-          'error'
-        )
-    },
+    selectModel: scope.selectModel,
   })
 
   const dispose = () => {

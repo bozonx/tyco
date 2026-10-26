@@ -122,7 +122,10 @@
       "denied": "İzin verilmedi",
       "done": "Tamamlandı",
       "error": "Başarısız"
-    }
+    },
+    "emptyMessage": "Bir mesaj yazın veya dosya ekleyin",
+    "notFound": "Sohbet bulunamadı. Silinmiş olabilir.",
+    "loadFailed": "Sohbet yüklenemedi."
   },
   "chatTools": {
     "files": {

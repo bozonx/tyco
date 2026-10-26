@@ -122,7 +122,10 @@
       "denied": "Non autorisé",
       "done": "Terminé",
       "error": "Échec"
-    }
+    },
+    "emptyMessage": "Saisissez un message ou joignez un fichier",
+    "notFound": "Discussion introuvable. Elle a peut-être été supprimée.",
+    "loadFailed": "Impossible de charger la discussion."
   },
   "chatTools": {
     "files": {

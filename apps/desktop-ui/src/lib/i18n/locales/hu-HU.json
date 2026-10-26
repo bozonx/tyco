@@ -122,7 +122,10 @@
       "denied": "Nem engedélyezett",
       "done": "Kész",
       "error": "Sikertelen"
-    }
+    },
+    "emptyMessage": "Írjon üzenetet, vagy csatoljon fájlt",
+    "notFound": "A csevegés nem található. Lehet, hogy törölték.",
+    "loadFailed": "A csevegést nem sikerült betölteni."
   },
   "chatTools": {
     "files": {

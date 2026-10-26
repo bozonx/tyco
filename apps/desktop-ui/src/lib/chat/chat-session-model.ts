@@ -150,6 +150,9 @@ export function createChatSessionModel(
     if (request !== openRequest) return false
 
     if (!chat) {
+      // a removed chat is not looked for again on the next start
+      if (id === deps.getLastChatId())
+        await deps.saveSessionState({ lastChatId: null })
       if (!options.silent) deps.notifyError(deps.chatNotFoundError())
       return false
     }

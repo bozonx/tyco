@@ -36,6 +36,7 @@ impl HistorySettings {
 pub struct HistoryStorageCoordinator {
     editor_history: Mutex<Vec<EditorHistoryItem>>,
     chat_history_lock: Mutex<()>,
+    chat_search: chats::ChatSearchCache,
     cleanup_pending: AtomicBool,
 }
 
@@ -325,7 +326,8 @@ pub fn search_chats(
     let (chats_dir, history) = with_chats(app, scope, |_, chats_dir| {
         Ok((chats_dir.to_path_buf(), chats::list_chats(chats_dir)?))
     })?;
-    chats::search_chats(&chats_dir, history, query)
+    let state = app.state::<AppState>();
+    chats::search_chats(&chats_dir, history, query, &state.history.chat_search)
 }
 
 pub fn delete_chat(

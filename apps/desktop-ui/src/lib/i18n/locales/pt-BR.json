@@ -122,7 +122,10 @@
       "denied": "Não permitido",
       "done": "Concluído",
       "error": "Falhou"
-    }
+    },
+    "emptyMessage": "Digite uma mensagem ou anexe um arquivo",
+    "notFound": "Chat não encontrado. Ele pode ter sido excluído.",
+    "loadFailed": "Não foi possível carregar o chat."
   },
   "chatTools": {
     "files": {

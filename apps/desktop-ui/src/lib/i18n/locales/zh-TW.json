@@ -122,7 +122,10 @@
       "denied": "不允許",
       "done": "完成",
       "error": "失敗"
-    }
+    },
+    "emptyMessage": "請輸入訊息或附加檔案",
+    "notFound": "找不到聊天，可能已被刪除。",
+    "loadFailed": "無法載入聊天。"
   },
   "chatTools": {
     "files": {

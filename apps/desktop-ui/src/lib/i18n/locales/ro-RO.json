@@ -122,7 +122,10 @@
       "denied": "Nepermis",
       "done": "Gata",
       "error": "Eșuat"
-    }
+    },
+    "emptyMessage": "Scrieți un mesaj sau atașați un fișier",
+    "notFound": "Conversația nu a fost găsită. Este posibil să fi fost ștearsă.",
+    "loadFailed": "Conversația nu a putut fi încărcată."
   },
   "chatTools": {
     "files": {

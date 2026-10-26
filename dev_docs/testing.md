@@ -304,7 +304,6 @@ runner. Fedora KDE automation and initial Ubuntu GNOME checks are implemented in
 `scripts/vm/`; other profiles and acceptance gaps remain explicit. See its
 [README](../scripts/vm/README.md) for executable commands.
 
-
 ## Native desktop sessions and virtual machines
 
 Use [vm-testing.md](vm-testing.md) for the current platform matrix and acceptance

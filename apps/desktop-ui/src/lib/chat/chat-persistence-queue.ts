@@ -8,7 +8,14 @@ export function createChatPersistenceQueue(
   state: Pick<ChatState, 'currentChatParams'>
 ) {
   const { currentChatParams } = state
+  // a rename reaches the writes queued before it; once the queue is empty the
+  // chat params carry the new title, so the map is dropped
   const renamedTitles = new Map<string, string>()
+  let pendingWriteCount = 0
+  const settle = () => {
+    pendingWriteCount -= 1
+    if (pendingWriteCount === 0) renamedTitles.clear()
+  }
   // writes go one after another, so that an older state never lands last
   let lastWrite: Promise<unknown> = Promise.resolve()
   const savingImages = ref<ChatImage[]>([])
@@ -28,6 +35,7 @@ export function createChatPersistenceQueue(
     })
     const held = chatMessages.flatMap((message) => message.images || [])
     savingImages.value.push(...held)
+    pendingWriteCount += 1
     const write = lastWrite.then(async () => {
       try {
         entry.title = renamedTitles.get(id) ?? entry.title
@@ -40,6 +48,7 @@ export function createChatPersistenceQueue(
           const index = savingImages.value.indexOf(image)
           if (index >= 0) savingImages.value.splice(index, 1)
         }
+        settle()
       }
     })
     lastWrite = write
@@ -47,11 +56,17 @@ export function createChatPersistenceQueue(
   }
 
   const renameChat = (id: string, title: string): Promise<void> => {
+    pendingWriteCount += 1
     const write = lastWrite.then(async () => {
-      await deps.renameChat(id, title)
-      renamedTitles.set(id, title)
-      if (currentChatParams.value.id === id)
-        currentChatParams.value.title = title
+      try {
+        await deps.renameChat(id, title)
+        if (currentChatParams.value.id === id)
+          currentChatParams.value.title = title
+        // a write queued meanwhile still carries the old title
+        if (pendingWriteCount > 1) renamedTitles.set(id, title)
+      } finally {
+        settle()
+      }
     })
     // A failed rename must not block subsequent saves.
     lastWrite = write.catch(() => undefined)

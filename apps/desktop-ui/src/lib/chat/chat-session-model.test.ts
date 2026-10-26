@@ -171,6 +171,17 @@ describe('createChatSessionModel', () => {
       expect(deps.notifyError).not.toHaveBeenCalled()
     })
 
+    it('forgets a last chat that is gone', async () => {
+      const { model, deps, state } = setup()
+      deps.getLastChatId.mockReturnValue('removed')
+
+      await model.openLastOrNewChat()
+
+      expect(deps.saveSessionState).toHaveBeenCalledWith({ lastChatId: null })
+      expect(deps.notifyError).not.toHaveBeenCalled()
+      expect(state.currentChatParams.value.id).toBe('chat-1')
+    })
+
     it('opens last chat or falls back to new chat', async () => {
       const { model, deps, state } = setup()
       deps.getLastChatId.mockReturnValueOnce('chat-99')

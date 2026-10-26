@@ -122,7 +122,10 @@
       "denied": "Nepovoleno",
       "done": "Hotovo",
       "error": "Selhalo"
-    }
+    },
+    "emptyMessage": "Napište zprávu nebo připojte soubor",
+    "notFound": "Chat nebyl nalezen. Mohl být smazán.",
+    "loadFailed": "Chat se nepodařilo načíst."
   },
   "chatTools": {
     "files": {

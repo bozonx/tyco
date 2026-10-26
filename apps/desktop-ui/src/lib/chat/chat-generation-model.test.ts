@@ -211,6 +211,30 @@ describe('createChatGenerationModel', () => {
       expect(res).toBe('Hello world!')
       expect(state.messages.value[1].content).toBe('Hello world!')
     })
+
+    it('keeps the stored later turns until a regenerated answer arrives', async () => {
+      const state = createState()
+      state.messages.value = [
+        { role: 'user', content: 'First' },
+        { role: 'assistant', content: 'Old' },
+        { role: 'user', content: 'Second' },
+        { role: 'assistant', content: 'Later' },
+      ]
+      const { generation, deps, persist } = setup(state)
+      deps.sendChatMessage.mockRejectedValueOnce(new Error('offline'))
+
+      expect(await generation.regenerateMessage(1)).toBe('')
+      expect(persist).not.toHaveBeenCalled()
+      expect(state.messages.value).toHaveLength(4)
+      expect(deps.notifyError).toHaveBeenCalledWith('offline')
+
+      expect(await generation.regenerateMessage(1)).toBe('Hello world!')
+      expect(persist).toHaveBeenCalledTimes(1)
+      expect(persist).toHaveBeenCalledWith([
+        expect.objectContaining({ content: 'First' }),
+        expect.objectContaining({ content: 'Hello world!' }),
+      ])
+    })
   })
 
   describe('tool steps', () => {

@@ -122,7 +122,10 @@
       "denied": "Niedozwolone",
       "done": "Gotowe",
       "error": "Błąd"
-    }
+    },
+    "emptyMessage": "Wpisz wiadomość lub dołącz plik",
+    "notFound": "Nie znaleziono czatu. Mógł zostać usunięty.",
+    "loadFailed": "Nie udało się wczytać czatu."
   },
   "chatTools": {
     "files": {

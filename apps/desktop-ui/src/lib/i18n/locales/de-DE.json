@@ -122,7 +122,10 @@
       "denied": "Nicht zugelassen",
       "done": "Fertig",
       "error": "Fehlgeschlagen"
-    }
+    },
+    "emptyMessage": "Schreiben Sie eine Nachricht oder hängen Sie eine Datei an",
+    "notFound": "Chat nicht gefunden. Er wurde möglicherweise gelöscht.",
+    "loadFailed": "Der Chat konnte nicht geladen werden."
   },
   "chatTools": {
     "files": {

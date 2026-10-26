@@ -92,7 +92,6 @@ tray callbacks, dialogs/drag/drop, display topology, session lifecycle and
 production package acceptance remain unverified. These gaps prevent full native
 platform acceptance. Unsupported package/lifecycle suites do not run KDE code.
 
-
 ## Acceptance policy and run levels (2026-10-26)
 
 External OS/dependency/hypervisor defects independently reproduced without Tyco

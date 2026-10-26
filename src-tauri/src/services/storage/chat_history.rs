@@ -1,8 +1,10 @@
 use crate::locks::MutexExt;
 use std::sync::Mutex;
 
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -21,18 +23,49 @@ use crate::services::chat_images::ChatImageStore;
 const CHAT_INDEX_FILE: &str = "index.json";
 const CHAT_TRANSACTION_FILE: &str = "chat-transaction.pending";
 
+const STAGED_CHAT_SUFFIX: &str = ".json.staged";
+
 /// The index and optional chat replacement are committed together. The journal
 /// remains until cleanup finishes, so interrupted saves and deletes are replayed.
+///
+/// A saved chat is written once, to `<id>.json.staged`, and the journal names
+/// it; the replay moves it into place. Journals of older versions carry the
+/// whole chat in `chat` and are still replayed.
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct PendingChatTransaction {
     history: Vec<ChatSummary>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     chat: Option<Chat>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    staged_chat_id: Option<String>,
+}
+
+impl PendingChatTransaction {
+    fn index_only(history: Vec<ChatSummary>) -> Self {
+        Self {
+            history,
+            chat: None,
+            staged_chat_id: None,
+        }
+    }
+}
+
+fn staged_chat_path(chats_dir: &Path, id: &str) -> PathBuf {
+    chats_dir.join(format!("{id}{STAGED_CHAT_SUFFIX}"))
 }
 
 fn commit_chat_transaction(
     chats_dir: &Path,
-    transaction: PendingChatTransaction,
+    history: Vec<ChatSummary>,
+    chat: Option<Chat>,
 ) -> Result<(), AppError> {
+    let mut transaction = PendingChatTransaction::index_only(history);
+    if let Some(chat) = chat {
+        let id = validate_chat_id(&chat.id)?;
+        write_json(&staged_chat_path(chats_dir, &id), &chat)?;
+        transaction.staged_chat_id = Some(id);
+    }
     validate_chat_transaction(&transaction)?;
     write_json(&chats_dir.join(CHAT_TRANSACTION_FILE), &transaction)?;
     recover_chat_transaction(chats_dir)
@@ -44,6 +77,9 @@ fn validate_chat_transaction(transaction: &PendingChatTransaction) -> Result<(),
     }
     if let Some(chat) = &transaction.chat {
         validate_chat_id(&chat.id)?;
+    }
+    if let Some(id) = &transaction.staged_chat_id {
+        validate_chat_id(id)?;
     }
     Ok(())
 }
@@ -61,6 +97,15 @@ pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError>
     if let Some(chat) = transaction.chat {
         let id = validate_chat_id(&chat.id)?;
         write_json(&chats_dir.join(format!("{id}.json")), &chat)?;
+    }
+    if let Some(id) = &transaction.staged_chat_id {
+        let target = chats_dir.join(format!("{id}.json"));
+        match fs::rename(staged_chat_path(chats_dir, id), &target) {
+            Ok(()) => crate::services::atomic_file::sync_parent(&target)?,
+            // moved already by a replay that stopped later
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
     }
     write_json(&chats_dir.join(CHAT_INDEX_FILE), &transaction.history)?;
     remove_orphan_chat_files(chats_dir, &transaction.history)?;
@@ -184,13 +229,7 @@ pub fn save_chat(
     // have the orphan cleanup delete it right away
     policy.drop_expired(&mut history, now_ms());
     upsert_chat_index(&mut history, &chat);
-    commit_chat_transaction(
-        chats_dir,
-        PendingChatTransaction {
-            history,
-            chat: Some(chat),
-        },
-    )
+    commit_chat_transaction(chats_dir, history, Some(chat))
 }
 
 /// Puts the chat on top of the index, without its messages to keep the index
@@ -245,13 +284,7 @@ pub(super) fn open_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, Ap
             );
             let mut history = list_chats(chats_dir)?;
             history.retain(|item| item.id != id);
-            commit_chat_transaction(
-                chats_dir,
-                PendingChatTransaction {
-                    history,
-                    chat: None,
-                },
-            )?;
+            commit_chat_transaction(chats_dir, history, None)?;
             Ok(None)
         }
     }
@@ -266,13 +299,7 @@ pub fn rename_chat(chats_dir: &Path, id: String, title: String) -> Result<(), Ap
     };
     chat.title = title;
     rename_in_chat_index(&mut history, &id, &chat.title);
-    commit_chat_transaction(
-        chats_dir,
-        PendingChatTransaction {
-            history,
-            chat: Some(chat),
-        },
-    )
+    commit_chat_transaction(chats_dir, history, Some(chat))
 }
 
 fn rename_in_chat_index(history: &mut [ChatSummary], id: &str, title: &str) {
@@ -283,19 +310,76 @@ fn rename_in_chat_index(history: &mut [ChatSummary], id: &str, title: &str) {
 
 /// Ids of the chats whose title or messages contain `query`, in index order.
 /// The index holds no messages, so each chat file is read.
+/// The lowercase searchable text of chat files, reused while a file keeps its
+/// modification time and size, so a search does not parse every chat again.
+#[derive(Default)]
+pub struct ChatSearchCache {
+    entries: Mutex<HashMap<PathBuf, CachedChatText>>,
+}
+
+struct CachedChatText {
+    modified: SystemTime,
+    size_bytes: u64,
+    text: String,
+}
+
+impl ChatSearchCache {
+    /// The text of a chat file; `None` when there is no file.
+    fn text(&self, chats_dir: &Path, id: &str) -> Result<Option<String>, AppError> {
+        let path = chats_dir.join(format!("{}.json", validate_chat_id(id)?));
+        let metadata = match fs::metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(error.into()),
+        };
+        let modified = metadata.modified()?;
+        let size_bytes = metadata.len();
+        if let Some(cached) = self.entries.locked().get(&path) {
+            if cached.modified == modified && cached.size_bytes == size_bytes {
+                return Ok(Some(cached.text.clone()));
+            }
+        }
+        let Some(chat) = read_chat(chats_dir, id.to_string())? else {
+            return Ok(None);
+        };
+        let text = chat_search_text(&chat);
+        self.entries.locked().insert(
+            path,
+            CachedChatText {
+                modified,
+                size_bytes,
+                text: text.clone(),
+            },
+        );
+        Ok(Some(text))
+    }
+
+    /// Drops the chats of `chats_dir` the index no longer lists.
+    fn retain_listed(&self, chats_dir: &Path, history: &[ChatSummary]) {
+        self.entries.locked().retain(|path, _| {
+            path.parent() != Some(chats_dir)
+                || history
+                    .iter()
+                    .any(|item| path.file_stem().and_then(|stem| stem.to_str()) == Some(&item.id))
+        });
+    }
+}
+
 pub(super) fn search_chats(
     chats_dir: &Path,
     history: Vec<ChatSummary>,
     query: String,
+    cache: &ChatSearchCache,
 ) -> Result<Vec<String>, AppError> {
     let query = query.trim().to_lowercase();
     if query.is_empty() {
         return Ok(history.into_iter().map(|item| item.id).collect());
     }
+    cache.retain_listed(chats_dir, &history);
     let mut found = Vec::new();
     for item in history {
-        let matches = match read_chat(chats_dir, item.id.clone()) {
-            Ok(Some(chat)) => chat_matches(&chat, &query),
+        let matches = match cache.text(chats_dir, &item.id) {
+            Ok(Some(text)) => text.contains(&query),
             // a chat the index lists without a file can still match by title
             Ok(None) => item.title.to_lowercase().contains(&query),
             Err(error) => {
@@ -311,26 +395,32 @@ pub(super) fn search_chats(
     Ok(found)
 }
 
-/// `query` is trimmed, lowercase and not empty.
-fn chat_matches(chat: &Chat, query: &str) -> bool {
-    chat.title.to_lowercase().contains(query)
-        || chat
-            .messages
-            .iter()
-            .any(|message| message.content.to_lowercase().contains(query))
+/// Everything a search looks in, lowercase: the title, the messages, the text
+/// and names of their attachments and the names of their images. Pieces are
+/// split by a line break so a query does not match across two of them.
+fn chat_search_text(chat: &Chat) -> String {
+    let mut pieces = vec![chat.title.as_str()];
+    for message in &chat.messages {
+        pieces.push(&message.content);
+        for attachment in &message.attachments {
+            pieces.push(&attachment.text);
+            pieces.extend(attachment.name.as_deref());
+        }
+        pieces.extend(
+            message
+                .images
+                .iter()
+                .filter_map(|image| image.name.as_deref()),
+        );
+    }
+    pieces.join("\n").to_lowercase()
 }
 
 pub fn delete_chat(chats_dir: &Path, id: String) -> Result<(), AppError> {
     validate_chat_id(&id)?;
     let mut history = list_chats(chats_dir)?;
     history.retain(|item| item.id != id);
-    commit_chat_transaction(
-        chats_dir,
-        PendingChatTransaction {
-            history,
-            chat: None,
-        },
-    )
+    commit_chat_transaction(chats_dir, history, None)
 }
 
 /// What the settings say about the chat history.
@@ -394,25 +484,13 @@ pub(super) fn enforce_chat_history_policy(
         return Ok(());
     }
 
-    commit_chat_transaction(
-        chats_dir,
-        PendingChatTransaction {
-            history,
-            chat: None,
-        },
-    )
+    commit_chat_transaction(chats_dir, history, None)
 }
 
 /// Removes the index, chat files, and persisted image bytes.
 pub fn clear_chats(chats_dir: &Path) -> Result<(), AppError> {
     recover_chat_transaction(chats_dir)?;
-    commit_chat_transaction(
-        chats_dir,
-        PendingChatTransaction {
-            history: Vec::new(),
-            chat: None,
-        },
-    )?;
+    commit_chat_transaction(chats_dir, Vec::new(), None)?;
     let images_dir = chats_dir.join("images");
     if images_dir.exists() {
         fs::remove_dir_all(images_dir)?;
@@ -449,7 +527,12 @@ fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatSummary]) -> Result
 
     for entry in fs::read_dir(chats_dir)? {
         let path = entry?.path();
-        let orphan = chat_file_id(&path).is_some_and(|id| !active_ids.contains(id));
+        // a staged chat left by a save that never wrote its journal
+        let staged = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.ends_with(STAGED_CHAT_SUFFIX));
+        let orphan = staged || chat_file_id(&path).is_some_and(|id| !active_ids.contains(id));
         if orphan && path.is_file() {
             fs::remove_file(&path)?;
         }
@@ -510,7 +593,8 @@ mod tests {
             search_chats(
                 &profile_dir,
                 list_chats(&profile_dir).unwrap(),
-                "renamed".into()
+                "renamed".into(),
+                &ChatSearchCache::default()
             )
             .unwrap(),
             vec!["profile"]
@@ -529,14 +613,50 @@ mod tests {
         trip.title = String::from("Trip plan");
         save_chat(&dir, enabled_policy(), &images, trip).unwrap();
         save_chat(&dir, enabled_policy(), &images, chat_item("other")).unwrap();
+        let cache = ChatSearchCache::default();
         let search = |query: &str| {
-            let mut found = search_chats(&dir, list_chats(&dir).unwrap(), query.into()).unwrap();
+            let mut found =
+                search_chats(&dir, list_chats(&dir).unwrap(), query.into(), &cache).unwrap();
             found.sort();
             found
         };
 
         assert_eq!(search("  TRIP "), vec!["trip"]);
         assert_eq!(search("   "), vec!["other", "trip"]);
+    }
+
+    #[test]
+    fn search_finds_attachments_and_sees_a_changed_chat() {
+        let dir = TestDir::new("chat-search-attachments");
+        let images = Mutex::new(ChatImageStore::default());
+        let cache = ChatSearchCache::default();
+        let mut chat = chat_item("doc");
+        chat.messages = vec![crate::models::ChatMessage {
+            role: crate::models::ChatRole::User,
+            content: String::from("Look at this"),
+            attachments: vec![crate::models::ChatAttachment {
+                text: String::from("Quarterly revenue"),
+                source: None,
+                name: Some(String::from("report.pdf")),
+                media_type: None,
+                workspace_path: None,
+            }],
+            images: Vec::new(),
+            parts: vec![],
+            status: None,
+        }];
+        save_chat(&dir, enabled_policy(), &images, chat.clone()).unwrap();
+        let search = |query: &str| {
+            search_chats(&dir, list_chats(&dir).unwrap(), query.into(), &cache).unwrap()
+        };
+
+        assert_eq!(search("revenue"), vec!["doc"]);
+        assert_eq!(search("REPORT.PDF"), vec!["doc"]);
+        assert!(search("budget").is_empty());
+
+        chat.messages[0].content = String::from("The budget is approved and final");
+        save_chat(&dir, enabled_policy(), &images, chat).unwrap();
+        assert_eq!(search("budget"), vec!["doc"]);
     }
 
     #[test]
@@ -564,6 +684,7 @@ mod tests {
         let journal = PendingChatTransaction {
             history: vec![ChatSummary::from(&new), ChatSummary::from(&old)],
             chat: Some(new.clone()),
+            staged_chat_id: None,
         };
         write_json(&dir.join(CHAT_TRANSACTION_FILE), &journal).unwrap();
         // The process stopped after the chat was written but before the index.
@@ -589,14 +710,7 @@ mod tests {
         write_json(&dir.join(CHAT_INDEX_FILE), &vec![ChatSummary::from(&chat)]).unwrap();
         // An invalid image directory fails cleanup after the new index is durable.
         fs::write(dir.join("images"), "blocked").unwrap();
-        assert!(commit_chat_transaction(
-            &dir,
-            PendingChatTransaction {
-                history: Vec::new(),
-                chat: None
-            }
-        )
-        .is_err());
+        assert!(commit_chat_transaction(&dir, Vec::new(), None).is_err());
         assert!(!dir.join("removed.json").exists());
         assert!(dir.join(CHAT_TRANSACTION_FILE).exists());
         let index: Vec<ChatSummary> =
@@ -617,6 +731,7 @@ mod tests {
             &PendingChatTransaction {
                 history: Vec::new(),
                 chat: None,
+                staged_chat_id: None,
             },
         )
         .unwrap();
@@ -627,13 +742,59 @@ mod tests {
     #[test]
     fn an_invalid_save_cannot_leave_a_journal_that_blocks_other_chats() {
         let dir = TestDir::new("invalid-save");
-        let transaction = PendingChatTransaction {
-            history: vec![ChatSummary::from(&chat_item("../invalid"))],
-            chat: None,
-        };
-        assert!(commit_chat_transaction(&dir, transaction).is_err());
+        let history = vec![ChatSummary::from(&chat_item("../invalid"))];
+        assert!(commit_chat_transaction(&dir, history, None).is_err());
         assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
         assert!(load_chat_index(&dir).unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_staged_save_replays_once_and_drops_staged_leftovers() {
+        let dir = TestDir::new("staged-save");
+        let chat = chat_item("new");
+        write_json(&staged_chat_path(&dir, "new"), &chat).unwrap();
+        write_json(
+            &staged_chat_path(&dir, "abandoned"),
+            &chat_item("abandoned"),
+        )
+        .unwrap();
+        write_json(
+            &dir.join(CHAT_TRANSACTION_FILE),
+            &PendingChatTransaction {
+                history: vec![ChatSummary::from(&chat)],
+                chat: None,
+                staged_chat_id: Some(String::from("new")),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(load_chat_index(&dir).unwrap()[0].id, "new");
+        assert!(dir.join("new.json").exists());
+        assert!(!staged_chat_path(&dir, "new").exists());
+        assert!(!staged_chat_path(&dir, "abandoned").exists());
+        assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
+    }
+
+    #[test]
+    fn a_save_writes_no_chat_into_the_journal() {
+        let dir = TestDir::new("staged-commit");
+        commit_chat_transaction(
+            &dir,
+            vec![ChatSummary::from(&chat_item("a"))],
+            Some(chat_item("a")),
+        )
+        .unwrap();
+        assert_eq!(read_chat(&dir, "a".into()).unwrap().unwrap().id, "a");
+        assert!(!staged_chat_path(&dir, "a").exists());
+        let journal = PendingChatTransaction {
+            history: Vec::new(),
+            chat: None,
+            staged_chat_id: Some(String::from("a")),
+        };
+        assert!(serde_json::to_value(&journal)
+            .unwrap()
+            .get("chat")
+            .is_none());
     }
 
     #[test]
@@ -645,6 +806,7 @@ mod tests {
             &PendingChatTransaction {
                 history: vec![ChatSummary::from(&chat)],
                 chat: Some(chat),
+                staged_chat_id: None,
             },
         )
         .unwrap();
@@ -716,7 +878,7 @@ mod tests {
     }
 
     #[test]
-    fn chat_matches_the_title_and_the_messages_ignoring_case() {
+    fn search_text_holds_the_title_and_the_messages_ignoring_case() {
         let mut chat = chat_item("a");
         chat.title = String::from("Trip plan");
         chat.messages = vec![crate::models::ChatMessage {
@@ -728,9 +890,10 @@ mod tests {
             status: None,
         }];
 
-        assert!(chat_matches(&chat, "trip"));
-        assert!(chat_matches(&chat, "билеты"));
-        assert!(!chat_matches(&chat, "hotel"));
+        let text = chat_search_text(&chat);
+        assert!(text.contains("trip"));
+        assert!(text.contains("билеты"));
+        assert!(!text.contains("hotel"));
     }
 
     #[test]

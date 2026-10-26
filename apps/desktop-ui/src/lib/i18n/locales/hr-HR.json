@@ -122,7 +122,10 @@
       "denied": "Nije dopušteno",
       "done": "Gotovo",
       "error": "Neuspjelo"
-    }
+    },
+    "emptyMessage": "Upišite poruku ili priložite datoteku",
+    "notFound": "Razgovor nije pronađen. Možda je izbrisan.",
+    "loadFailed": "Razgovor nije moguće učitati."
   },
   "chatTools": {
     "files": {

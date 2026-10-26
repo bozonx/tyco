@@ -218,7 +218,6 @@ silently replace the UI action with IPC.
 python3 scripts/vm/run.py --profile scripts/vm/profiles/ubuntu2604-gnome.json --vm dev_files/vm/ubuntu2604-gnome-v2 --suite native --only VM-02.register,VM-12,VM-13,VM-15 --artifact /path/to/tyco --ctl /path/to/tyco-ctl
 ```
 
-
 ## Run levels and acceptance policy
 
 - `--suite smoke`: three insertion cycles and the essential startup/input path.

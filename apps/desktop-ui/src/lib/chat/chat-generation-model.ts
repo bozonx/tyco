@@ -16,6 +16,18 @@ import {
   hasAnswer,
   settleUnfinishedToolCalls,
 } from '../chat-tools/chat-message-steps'
+type TurnResult =
+  | { status: 'answered'; content: string }
+  /** No answer, or one an error cut short */
+  | { status: 'failed'; content: string }
+  /** Stopped, or replaced by another turn */
+  | { status: 'aborted' }
+  /** Never started: nothing to send, no model, too long */
+  | { status: 'rejected' }
+const REJECTED: TurnResult = { status: 'rejected' }
+const ABORTED: TurnResult = { status: 'aborted' }
+const FAILED: TurnResult = { status: 'failed', content: '' }
+
 export function createChatGenerationModel(
   deps: Pick<
     ChatModelDependencies,
@@ -48,6 +60,12 @@ export function createChatGenerationModel(
     trimmedTurnCount,
     lastFailedTurn,
   } = state
+  /** The question of a turn, as a retry sends it again */
+  const failedTurnOf = (user: ChatMessage) => ({
+    message: user.content,
+    attachments: user.attachments,
+    images: user.images,
+  })
   let abortController: AbortController | null = null
   let generationId = 0
   /** Stops the answer; `save` keeps what came of it in the history */
@@ -62,26 +80,13 @@ export function createChatGenerationModel(
     isGenerating.value = false
     isStopped.value = true
     const last = messages.value.at(-1)
-    if (last?.role === 'assistant') settleUnfinishedToolCalls(last)
-    if (last?.role === 'assistant' && !hasAnswer(last)) {
-      messages.value.pop()
-      const user = messages.value.at(-1)
-      if (user?.role === 'user') {
-        lastFailedTurn.value = {
-          message: user.content,
-          attachments: user.attachments,
-          images: user.images,
-        }
-      }
-    } else if (last?.role === 'assistant') {
-      const user = messages.value.at(-2)
-      if (user?.role === 'user') {
-        lastFailedTurn.value = {
-          message: user.content,
-          attachments: user.attachments,
-          images: user.images,
-        }
-      }
+    if (last?.role !== 'assistant') return
+    settleUnfinishedToolCalls(last)
+    const answered = hasAnswer(last)
+    if (!answered) messages.value.pop()
+    const user = messages.value.at(answered ? -2 : -1)
+    if (user?.role === 'user') lastFailedTurn.value = failedTurnOf(user)
+    if (answered) {
       last.status = 'stopped'
       if (save) void persist(messages.value)
     }
@@ -89,18 +94,23 @@ export function createChatGenerationModel(
 
   const stopGeneration = () => halt(true)
 
-  const sendMessage = async (
+  /**
+   * One question and its answer. `saveQuestion: false` keeps the stored chat as
+   * it is until the answer comes, for a turn that replaces later ones
+   */
+  const runTurn = async (
     message: string,
-    attachments: ChatAttachment[] = [],
-    images: ChatImage[] = []
-  ) => {
+    attachments: ChatAttachment[],
+    images: ChatImage[],
+    { saveQuestion = true }: { saveQuestion?: boolean } = {}
+  ): Promise<TurnResult> => {
     if (!message?.trim() && !images.length && !attachments.length) {
       deps.notifyError(deps.emptyMessageError())
-      return ''
+      return REJECTED
     }
 
     if (isGenerating.value) {
-      return ''
+      return REJECTED
     }
 
     const request = prepareGenerationRequest(
@@ -110,7 +120,7 @@ export function createChatGenerationModel(
       attachments,
       images
     )
-    if (!request) return ''
+    if (!request) return REJECTED
     const { model, retrying, prevMessages, toolOutputBudgetCharacters } =
       request
     attachments = request.attachments
@@ -155,13 +165,14 @@ export function createChatGenerationModel(
 
     // the question is kept even when no answer comes
     const chatId = currentChatParams.value.id
-    void persist(messages.value.slice(0, userMessageIndex + 1)).then(
-      (saved) => {
-        if (saved && chatId && currentChatParams.value.id === chatId) {
-          void deps.saveSessionState({ lastChatId: chatId })
+    if (saveQuestion)
+      void persist(messages.value.slice(0, userMessageIndex + 1)).then(
+        (saved) => {
+          if (saved && chatId && currentChatParams.value.id === chatId) {
+            void deps.saveSessionState({ lastChatId: chatId })
+          }
         }
-      }
-    )
+      )
 
     let result: Awaited<ReturnType<typeof deps.sendChatMessage>>
 
@@ -184,7 +195,7 @@ export function createChatGenerationModel(
         }
       )
 
-      if (currentGenerationId !== generationId) return ''
+      if (currentGenerationId !== generationId) return ABORTED
 
       if (!hasAnswer(assistantMessage) && hasAnswer(result)) {
         // Fallback if streamer wasn't used but we got a full text result
@@ -205,7 +216,7 @@ export function createChatGenerationModel(
           lastFailedTurn.value = { message, attachments, images }
           isGenerating.value = false
           abortController = null
-          return ''
+          return FAILED
         }
         assistantMessage.status = 'stopped'
         lastFailedTurn.value = { message, attachments, images }
@@ -217,20 +228,39 @@ export function createChatGenerationModel(
       }
     }
 
-    if (currentGenerationId !== generationId) return ''
+    if (currentGenerationId !== generationId) return ABORTED
 
     settleUnfinishedToolCalls(assistantMessage)
     if (!hasAnswer(assistantMessage)) {
       messages.value.splice(userMessageIndex, 2)
-      return ''
+      return FAILED
     }
 
-    if (await persist(messages.value)) {
-      if (currentGenerationId === generationId)
-        void maybeGenerateTitle(model.id)
-    }
+    const saved = await persist(messages.value)
+    if (
+      saved &&
+      !saveQuestion &&
+      chatId &&
+      currentChatParams.value.id === chatId
+    )
+      void deps.saveSessionState({ lastChatId: chatId })
+    if (currentGenerationId !== generationId) return ABORTED
+    if (saved) void maybeGenerateTitle(model.id)
+    // an answer cut by an error is kept, but the turn still failed
+    if (error.value)
+      return { status: 'failed', content: assistantMessage.content }
+    return { status: 'answered', content: assistantMessage.content }
+  }
 
-    return currentGenerationId === generationId ? assistantMessage.content : ''
+  const sendMessage = async (
+    message: string,
+    attachments: ChatAttachment[] = [],
+    images: ChatImage[] = []
+  ) => {
+    const result = await runTurn(message, attachments, images)
+    return result.status === 'aborted' || result.status === 'rejected'
+      ? ''
+      : result.content
   }
 
   const retryLastTurn = async () => {
@@ -274,24 +304,29 @@ export function createChatGenerationModel(
 
     const previousMessages = [...messages.value]
     messages.value = messages.value.slice(0, userIndex)
-    const pending = sendMessage(
+    // the stored chat keeps the later turns until the new answer replaces them
+    const result = await runTurn(
       userMessage.content,
-      userMessage.attachments,
-      userMessage.images
+      userMessage.attachments ?? [],
+      userMessage.images ?? [],
+      { saveQuestion: false }
     )
-    const currentGenerationId = generationId
-    const result = await pending
-    if (!result && currentGenerationId === generationId) {
+    // a partial answer cut by an error is already stored and stays
+    if (
+      result.status === 'rejected' ||
+      (result.status === 'failed' && !result.content)
+    ) {
       // the old answer comes back; a retry would ask the question once more
       // after it, so the failure is only told
       const failure = error.value
       messages.value = previousMessages
       lastFailedTurn.value = null
       error.value = ''
+      isStopped.value = false
       if (failure) deps.notifyError(failure)
-      await persist(messages.value)
+      return ''
     }
-    return result
+    return result.status === 'aborted' ? '' : result.content
   }
 
   return { halt, stopGeneration, sendMessage, retryLastTurn, regenerateMessage }
