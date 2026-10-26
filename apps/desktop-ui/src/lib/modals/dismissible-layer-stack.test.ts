@@ -112,3 +112,45 @@ it('lets focused controls consume Escape before the base navigation layer', () =
     stack.clear()
   }
 })
+
+it('accepts a fresh Escape press when hiding the native window lost its keyup', () => {
+  const stack = createDismissibleLayerStack()
+  const layer = {
+    isOpen: () => true,
+    elements: () => [],
+    dismiss: vi.fn(() => stack.remove(layer)),
+  }
+  stack.sync(layer, true)
+  try {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(layer.dismiss).toHaveBeenCalledOnce()
+    // The native window hid before keyup/blur reached this webview.
+    stack.sync(layer, true)
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', repeat: false })
+    )
+    expect(layer.dismiss).toHaveBeenCalledTimes(2)
+  } finally {
+    stack.clear()
+  }
+})
+
+it('accepts WebKit stale repeat on a new native activation and suppresses its autorepeat', () => {
+  const stack = createDismissibleLayerStack()
+  const layer = { isOpen: () => true, elements: () => [], dismiss: vi.fn() }
+  stack.sync(layer, true)
+  try {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    // Hiding lost keyup; WebKit marks the next physical press as a repeat.
+    stack.resetKeyboardState()
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', repeat: true })
+    )
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', repeat: true })
+    )
+    expect(layer.dismiss).toHaveBeenCalledTimes(2)
+  } finally {
+    stack.clear()
+  }
+})

@@ -13,7 +13,7 @@ import sys
 import time
 import traceback
 
-from vmlib import ROOT, StepFailed, Vm, run, sha256, wait_for
+from vmlib import ROOT, StepFailed, Vm, run, run_isolated, sha256, wait_for
 from webdriver import WebDriver
 
 SCRIPTS = Path(__file__).resolve().parent
@@ -383,9 +383,8 @@ def main():
                     command.extend(["--ctl", str(args.ctl.resolve())])
                 if args.keep:
                     command.append("--keep")
-                child = subprocess.run(command, capture_output=True, text=True)
                 log_name = "isolated-" + identifier + ".log"
-                (vm.run_dir / log_name).write_text(child.stdout + child.stderr)
+                child = run_isolated(command, vm.run_dir / log_name)
                 directories = [
                     line.removeprefix("Artifacts: ")
                     for line in child.stdout.splitlines()

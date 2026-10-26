@@ -25,6 +25,16 @@ class WebDriver:
         try:
             with urllib.request.urlopen(request, timeout=40) as response:
                 result = json.load(response)
+        except (http.client.RemoteDisconnected, ConnectionResetError) as error:
+            self.read_disconnects.append(
+                {
+                    "sessionId": self.session,
+                    "method": method,
+                    "path": path,
+                    "error": str(error),
+                }
+            )
+            raise
         except urllib.error.HTTPError as error:
             raise StepFailed(
                 f"WebDriver {path}: {error.read().decode()[-4000:]}"
@@ -57,8 +67,10 @@ class WebDriver:
             },
         )
         self.session = created["sessionId"]
-        self.call("POST", "/timeouts", {"script": 20000, "implicit": 0})
+        # A new session can precede WebKit's first usable connection. Observe
+        # window readiness before sending configuration; never replay startup.
         self.window("main", ".cm-editor")
+        self.call("POST", "/timeouts", {"script": 20000, "implicit": 0})
         origin = self.execute("return location.origin")
         if origin not in (
             "tauri://localhost",

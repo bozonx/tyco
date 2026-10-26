@@ -139,12 +139,12 @@ pnpm test:vm:unit
 ```
 
 See [coverage.md](coverage.md) for exact assertions and acceptance gaps. Any
-failed or blocked check makes the suite exit nonzero. Current native findings
+failed or blocked check makes the suite exit nonzero. Historical native findings
 include repeated suspend, secret bytes after cold reboot, and microphone removal;
-they are automated failures, not manual checklist items. Unsupported
+the follow-up report distinguishes fixes from native dependency defects. Unsupported
 suites are not silently replaced by smoke or a manual checklist.
 
-Latest verification: [9d5b3b64 results](../../dev_docs/testing-results/2026-10-25-fedora44-kde-current-head.md).
+Historical baseline: [9d5b3b64 results](../../dev_docs/testing-results/2026-10-25-fedora44-kde-current-head.md).
 
 ## Native executable follow-up
 
@@ -159,8 +159,10 @@ Copy/strip binaries to a separate artifact path before a long run so a later
 build cannot replace the tested executable.
 
 `VM-11.multi-monitor` runs in its own disposable Q35 VM with a second VGA device.
-It tests two actual connected outputs, mixed DPI, primary changes, negative
-coordinates and disabling an output while Quick is visible. The normal VM
+It tests two actual connected outputs, mixed DPI, primary changes, left/right
+layouts and disabling an output while Quick is visible. Requested KScreen
+positions, scales and priorities must match independently observed state before
+input is sent. The draft and activation survive output removal. The normal VM
 retains one output for the single-output DPI case.
 
 `VM-16.suspend-resume` uses the i440fx (`pc`) machine because QEMU 11.1.1/Q35
@@ -173,3 +175,13 @@ transitions. This verifies existing durable credentials, not a new key followed
 immediately by reboot: KWallet's deferred-write loss window remains a separately
 reproduced native dependency defect. Empty values returned by the vault are not
 usable Tyco credentials. See the [follow-up report](../../dev_docs/testing-results/2026-10-25-fedora44-kde-followup.md).
+
+Interrupting a parent run forwards SIGINT to its owned isolated child and waits
+for guest teardown. Escalation is restricted to that child process group; other
+VMs are never targeted. Frozen runner copies and original failed reports remain
+available for diagnostics.
+
+After creating a WebDriver session, the controller observes a usable main
+window before configuring timeouts. Process-persistence checks also observe
+the previous native process exit before starting the next session. Transport
+failures retain the HTTP method/path; application operations are not replayed.

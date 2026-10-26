@@ -1,5 +1,7 @@
 import { watch } from 'vue'
 
+import { resetDismissibleKeyboardState } from './use-dismissible-layer'
+
 import { createQuickWindowSession } from '../lib/quick-panel/quick-window-session'
 import { useCommandLauncherStore } from '../stores/command-launcher'
 import { useDesktopStore } from '../stores/desktop'
@@ -34,7 +36,8 @@ export function useQuickWindowSession(
     markInputDismissed: quickInputStore.markDismissed,
     cancelAndCloseModals: menuModalsStore.cancelAndCloseAll,
     // a failed dismissal leaves the window shown, which tells enough
-    dismissWindow: () => void ipcStore.call('hide_quick_window_on_blur'),
+    dismissWindow: () => void ipcStore.call('hide_window'),
+    dismissWindowOnBlur: () => void ipcStore.call('hide_quick_window_on_blur'),
   })
 
   watch(
@@ -46,6 +49,7 @@ export function useQuickWindowSession(
   watch(
     () => desktopStore.desktopState.activationId,
     () => {
+      resetDismissibleKeyboardState()
       session.endActivation()
       options.onActivation?.()
     },

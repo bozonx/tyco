@@ -431,6 +431,23 @@ def run_scenarios(
             activation["windowId"] == expected_target,
             "Quick activation retained a stale or different native target",
         )
+
+        def ready_for_physical_input():
+            observed = json.loads(vm.ssh("cat tyco-vm/windows.json"))
+            owns_focus = any(
+                window["id"] == observed["activeWindowId"]
+                and window["resourceClass"] == "tyco"
+                for window in observed["windows"]
+            )
+            return owns_focus and driver.execute(
+                "return document.activeElement === document.querySelector('textarea')"
+            )
+
+        wait_for(
+            "native Quick focus and active input before physical keys",
+            ready_for_physical_input,
+            timeout=20,
+        )
         return activation["activationId"]
 
     def expect_received(backend, text):
@@ -637,6 +654,9 @@ def run_scenarios(
                 # wl-copy adds generic plain-text MIME types even with --type
                 # text/html, so it cannot create an HTML-only fixture.
                 focus_receiver("wayland")
+                # Wayland selection ownership requires a fresh input serial
+                # delivered to the GTK owner, not just programmatic focus.
+                vm.qmp.tap("shift")
                 receiver_command(
                     "wayland",
                     "clipboard",
@@ -1268,6 +1288,11 @@ def run_scenarios(
         )
         for _ in range(3):
             driver.stop()
+            wait_for(
+                "previous native application process exited before restart",
+                lambda: vm.ssh("pgrep -xc tyco || true").strip() == "0",
+                timeout=30,
+            )
             driver.start(application)
             main_handle = driver.call("GET", "/window")
             state = driver.invoke("get_desktop_state")

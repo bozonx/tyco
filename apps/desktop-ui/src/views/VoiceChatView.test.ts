@@ -170,7 +170,7 @@ describe('VoiceChatView', () => {
 
     menu.vm.$emit('cancelled')
 
-    expect(mocks.call).toHaveBeenCalledWith('hide_quick_window_on_blur')
+    expect(mocks.call).toHaveBeenCalledWith('hide_window')
     expect(mocks.call).not.toHaveBeenCalledWith(
       'open_main_chat',
       expect.anything()

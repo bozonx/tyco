@@ -83,7 +83,9 @@ export function createDismissibleLayerStack() {
 
   function handleKeydown(event: KeyboardEvent, phase: 'capture' | 'bubble') {
     if (event.defaultPrevented) return
-    if (event.key === 'Escape' && (isEscapeHeld || event.repeat)) {
+    // WebKit can retain its repeat flag after a hidden window loses keyup.
+    // Only suppress repeats from a press observed in this native activation.
+    if (event.key === 'Escape' && event.repeat && isEscapeHeld) {
       event.preventDefault()
       event.stopImmediatePropagation()
       return
@@ -148,5 +150,16 @@ export function createDismissibleLayerStack() {
     removeKeyboardListeners()
   }
 
-  return { layers, isWithinDismissibleLayer, remove, sync, clear }
+  const resetKeyboardState = () => {
+    isEscapeHeld = false
+  }
+
+  return {
+    layers,
+    isWithinDismissibleLayer,
+    remove,
+    sync,
+    clear,
+    resetKeyboardState,
+  }
 }

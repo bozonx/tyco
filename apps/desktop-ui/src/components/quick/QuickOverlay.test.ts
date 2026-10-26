@@ -189,7 +189,7 @@ describe('quick overlay keyboard ownership', () => {
     const wrapper = mount(QuickOverlay)
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
-      expect(mocks.call).toHaveBeenCalledWith('hide_quick_window_on_blur')
+      expect(mocks.call).toHaveBeenCalledWith('hide_window')
       expect(mocks.markDismissed).toHaveBeenCalledOnce()
     } finally {
       wrapper.unmount()
@@ -334,6 +334,7 @@ describe('quick overlay menus', () => {
     async (mode) => {
       await loseFocus(mode)
       expect(mocks.call).toHaveBeenCalledWith('hide_quick_window_on_blur')
+      expect(mocks.call).not.toHaveBeenCalledWith('hide_window')
     }
   )
 

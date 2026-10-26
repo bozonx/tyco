@@ -67,13 +67,50 @@ impl PanelKeyboardMode {
 }
 
 #[cfg(target_os = "linux")]
-pub fn attach_panel_surface(window: &WebviewWindow) -> Result<(), AppError> {
-    crate::services::platform::linux::layer_shell::attach(&window.gtk_window()?);
+pub fn attach_panel_surface(
+    window: &WebviewWindow,
+    should_recover: impl Fn() -> bool + Send + Sync + 'static,
+) -> Result<(), AppError> {
+    let gtk_window = window.gtk_window()?;
+    crate::services::platform::linux::layer_shell::attach(&gtk_window);
+    window.with_webview(move |webview| {
+        let view = webview.inner();
+        let Some(window) = view
+            .toplevel()
+            .and_then(|widget| widget.downcast::<gtk::ApplicationWindow>().ok())
+        else {
+            return;
+        };
+        let weak_window = window.downgrade();
+        let weak_view = view.downgrade();
+        if let Some(display) = gtk::gdk::Display::default() {
+            display.connect_monitor_removed(move |display, removed| {
+                if let (Some(window), Some(view)) = (weak_window.upgrade(), weak_view.upgrade()) {
+                    if should_recover() {
+                        recover_removed_monitor(&window, &view, display, removed);
+                    }
+                }
+            });
+        }
+    })?;
+    gtk_window.connect_focus_in_event(|window, _| {
+        if PANEL_RELOCATING.replace(false) {
+            clear_relocation_timer();
+            super::linux::layer_shell::set_keyboard(
+                window,
+                super::linux::layer_shell::KeyboardMode::OnDemand,
+            );
+        }
+        gtk::glib::Propagation::Proceed
+    });
     Ok(())
 }
 
 #[cfg(any(target_os = "windows", target_os = "macos"))]
-pub fn attach_panel_surface(_window: &WebviewWindow) -> Result<(), AppError> {
+pub fn attach_panel_surface(
+    _window: &WebviewWindow,
+    _should_recover: impl Fn() -> bool + Send + Sync + 'static,
+) -> Result<(), AppError> {
     Ok(())
 }
 
@@ -182,6 +219,90 @@ thread_local! {
 #[cfg(target_os = "linux")]
 const PANEL_MARGIN_BOTTOM: i32 = 48;
 
+#[cfg(target_os = "linux")]
+thread_local! {
+    static SELECTED_PANEL_MONITOR: std::cell::RefCell<Option<gtk::gdk::Monitor>> = const { std::cell::RefCell::new(None) };
+    static PANEL_RELOCATING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    static RELOCATION_TIMER: std::cell::RefCell<Option<gtk::glib::SourceId>> = const { std::cell::RefCell::new(None) };
+}
+
+pub fn is_panel_relocating() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        PANEL_RELOCATING.get()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        false
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn clear_relocation_timer() {
+    RELOCATION_TIMER.with_borrow_mut(|timer| {
+        if let Some(timer) = timer.take() {
+            timer.remove();
+        }
+    });
+}
+
+#[cfg(target_os = "linux")]
+fn recover_removed_monitor(
+    window: &gtk::ApplicationWindow,
+    view: &impl IsA<gtk::Widget>,
+    display: &gtk::gdk::Display,
+    removed: &gtk::gdk::Monitor,
+) {
+    use super::linux::layer_shell::{self, KeyboardMode};
+    if !SELECTED_PANEL_MONITOR.with_borrow(|monitor| monitor.as_ref() == Some(removed)) {
+        return;
+    }
+    let Some(monitor) = (0..display.n_monitors())
+        .filter_map(|index| display.monitor(index))
+        .find(|monitor| monitor != removed)
+    else {
+        return;
+    };
+    let Some((profile, _, _, _)) = APPLIED_GEOMETRY.get() else {
+        return;
+    };
+    PANEL_RELOCATING.set(true);
+    clear_relocation_timer();
+    window.hide();
+    layer_shell::set_monitor(window, &monitor);
+    SELECTED_PANEL_MONITOR.with_borrow_mut(|selected| *selected = Some(monitor.clone()));
+    let geometry = monitor.geometry();
+    let (width, height) = fitted_panel_size(geometry.width(), geometry.height());
+    let margin = match profile {
+        WindowProfile::Panel => PANEL_MARGIN_BOTTOM,
+        WindowProfile::Sheet => ((geometry.height() - height) / 2).max(MIN_SHEET_MARGIN_TOP as i32),
+    };
+    view.set_size_request(width, height);
+    window.set_default_size(width, height);
+    window.resize(width, height);
+    match profile {
+        WindowProfile::Panel => layer_shell::set_panel_profile(window, margin),
+        WindowProfile::Sheet => layer_shell::set_sheet_profile(window, margin),
+    }
+    APPLIED_GEOMETRY.set(Some((profile, margin, width, height)));
+    // The old output's closed event is not a user dismissal. Reacquire the
+    // keyboard while remapping, then return to on-demand on native focus.
+    layer_shell::set_keyboard(window, KeyboardMode::Exclusive);
+    window.show();
+    window.present();
+    let weak_window = window.downgrade();
+    let timer = gtk::glib::timeout_add_local_once(std::time::Duration::from_secs(2), move || {
+        RELOCATION_TIMER.with_borrow_mut(|timer| {
+            timer.take();
+        });
+        PANEL_RELOCATING.set(false);
+        if let Some(window) = weak_window.upgrade() {
+            layer_shell::set_keyboard(&window, KeyboardMode::OnDemand);
+        }
+    });
+    RELOCATION_TIMER.with_borrow_mut(|slot| *slot = Some(timer));
+}
+
 /// Capture target geometry off the GTK thread, before hiding or focusing windows.
 pub fn target_monitor_point(id: Option<&str>) -> Option<(i32, i32)> {
     #[cfg(target_os = "linux")]
@@ -204,6 +325,7 @@ pub fn select_panel_monitor(
         if let Some(display) = gtk::gdk::Display::default() {
             if let Some(monitor) = display.monitor_at_point(x, y) {
                 super::linux::layer_shell::set_monitor(&gtk_window, &monitor);
+                SELECTED_PANEL_MONITOR.with_borrow_mut(|selected| *selected = Some(monitor));
             }
         }
     }
@@ -249,6 +371,11 @@ pub fn apply_panel_surface(
     if APPLIED_GEOMETRY.get() != Some((profile, margin, width, height)) {
         // Layer-shell remaps use the default size; resize alone can retain the
         // previous allocation while the surface is hidden.
+        // Wry's GtkFixed child retains a minimum size from its previous bounds.
+        // Shrink that request as well, otherwise GTK cannot fit a smaller output.
+        window.with_webview(move |webview| {
+            webview.inner().set_size_request(width, height);
+        })?;
         gtk_window.set_default_size(width, height);
         gtk_window.resize(width, height);
         match profile {

@@ -178,7 +178,7 @@ const focusLoss = createFocusLossWatcher({
     return !(await window.isVisible()) || (await window.isFocused())
   },
   canDismiss: session.canDismissOnFocusLoss,
-  onLost: session.dismiss,
+  onLost: session.dismissOnBlur,
 })
 let removeFocusListener: (() => void) | undefined
 

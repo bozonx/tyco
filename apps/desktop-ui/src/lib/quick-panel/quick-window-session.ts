@@ -21,6 +21,7 @@ export interface QuickWindowSessionDependencies {
   markInputDismissed: () => void
   cancelAndCloseModals: () => void
   dismissWindow: () => void
+  dismissWindowOnBlur: () => void
 }
 
 /**
@@ -47,10 +48,10 @@ export function createQuickWindowSession(deps: QuickWindowSessionDependencies) {
     !deps.isDismissHeld()
 
   /** The user clicked elsewhere: drop what is in progress, keep the text. */
-  const dismiss = (): void => {
+  const dismissWith = (hide: () => void): void => {
     if (deps.mode() === 'quickInput') deps.markInputDismissed()
     deps.cancelAndCloseModals()
-    deps.dismissWindow()
+    hide()
   }
 
   /**
@@ -60,5 +61,11 @@ export function createQuickWindowSession(deps: QuickWindowSessionDependencies) {
    */
   const endActivation = (): void => deps.cancelAndCloseModals()
 
-  return { keepsOnFocusLoss, canDismissOnFocusLoss, dismiss, endActivation }
+  return {
+    keepsOnFocusLoss,
+    canDismissOnFocusLoss,
+    dismiss: () => dismissWith(deps.dismissWindow),
+    dismissOnBlur: () => dismissWith(deps.dismissWindowOnBlur),
+    endActivation,
+  }
 }

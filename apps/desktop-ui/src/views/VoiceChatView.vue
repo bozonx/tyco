@@ -91,6 +91,6 @@ async function handleCorrected(
 }
 
 async function handleCancelled() {
-  await ipcStore.call('hide_quick_window_on_blur')
+  await ipcStore.call('hide_window')
 }
 </script>

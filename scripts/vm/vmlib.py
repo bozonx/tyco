@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -32,6 +33,45 @@ def run(argv, **kwargs):
             f"{argv[0]} exited {result.returncode}: {result.stderr[-4000:]}"
         )
     return result.stdout
+
+
+def run_isolated(argv, log):
+    """Keep an interrupted parent alive until its disposable child is stopped."""
+    with subprocess.Popen(
+        argv,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.DEVNULL,
+        text=True,
+        start_new_session=True,
+    ) as process:
+        interrupted = False
+        try:
+            stdout, stderr = process.communicate()
+        except KeyboardInterrupt:
+            interrupted = True
+            process.send_signal(signal.SIGINT)
+            try:
+                stdout, stderr = process.communicate(timeout=180)
+            except subprocess.TimeoutExpired:
+                # The child owns this process group, including its QEMU/SSH
+                # descendants. Never signal the parent's or user's group.
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    stdout, stderr = process.communicate(timeout=10)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    stdout, stderr = process.communicate()
+        log.write_text(stdout + stderr)
+        if interrupted:
+            raise KeyboardInterrupt("Isolated VM run interrupted after child teardown")
+        return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
 
 
 def wait_for(label, probe, timeout=60, interval=0.25):

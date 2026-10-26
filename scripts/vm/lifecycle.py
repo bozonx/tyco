@@ -90,13 +90,32 @@ def run_lifecycle_checks(
             "Desktop recovery lost native history",
         )
         activate_quick("wayland")
+        get_driver().execute("""
+            window.__vmLifecycleKeys = [];
+            if (!window.__vmLifecycleKeyObserver) {
+                window.__vmLifecycleKeyObserver = event => {
+                    window.__vmLifecycleKeys.push({type: event.type, key: event.key,
+                        repeat: event.repeat, prevented: event.defaultPrevented,
+                        focused: document.hasFocus(), target: event.target.tagName});
+                };
+                for (const type of ['keydown', 'keyup'])
+                    window.addEventListener(type, window.__vmLifecycleKeyObserver, true);
+            }
+        """)
         vm.qmp.tap("esc")
-        wait_for(
-            "dismissed lifecycle quick window",
-            lambda: (
-                not get_driver().invoke("get_desktop_state")["window"]["isWindowShown"]
-            ),
-        )
+        try:
+            wait_for(
+                "dismissed lifecycle quick window",
+                lambda: (
+                    not get_driver().invoke("get_desktop_state")["window"][
+                        "isWindowShown"
+                    ]
+                ),
+            )
+        finally:
+            report.setdefault("lifecycleKeyEvents", []).append(
+                get_driver().execute("return window.__vmLifecycleKeys")
+            )
 
     def locked():
         result = vm.ssh(

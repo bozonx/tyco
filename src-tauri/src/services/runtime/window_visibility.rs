@@ -152,8 +152,21 @@ pub fn hide_quick_window_on_blur(app: &AppHandle, activation_id: u64) -> Result<
         ) {
             return Ok(());
         }
+        let window = app
+            .get_webview_window(QUICK_WINDOW_LABEL)
+            .ok_or_else(|| AppError::ServiceUnavailable("Quick window not found".into()))?;
+        if !should_dismiss_after_blur(
+            window.is_focused()?,
+            crate::services::platform::is_panel_relocating(),
+        ) {
+            return Ok(());
+        }
         hide_on_main_thread(app)
     })
+}
+
+fn should_dismiss_after_blur(is_focused: bool, is_relocating: bool) -> bool {
+    !is_focused && !is_relocating
 }
 
 /// Hides whichever Tyco window is active.
@@ -258,7 +271,14 @@ fn matches_window_activation(
 
 #[cfg(test)]
 mod window_command_tests {
-    use super::matches_window_activation;
+    use super::{matches_window_activation, should_dismiss_after_blur};
+
+    #[test]
+    fn output_relocation_and_delayed_blur_cannot_dismiss_a_recovered_panel() {
+        assert!(!should_dismiss_after_blur(false, true));
+        assert!(!should_dismiss_after_blur(true, false));
+        assert!(should_dismiss_after_blur(false, false));
+    }
 
     #[test]
     fn delayed_operations_cannot_hide_a_different_window_or_activation() {

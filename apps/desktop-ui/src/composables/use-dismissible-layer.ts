@@ -9,6 +9,7 @@ const defaultStack = createDismissibleLayerStack()
 
 export const isWithinDismissibleLayer = defaultStack.isWithinDismissibleLayer
 export const clearDismissibleLayers = defaultStack.clear
+export const resetDismissibleKeyboardState = defaultStack.resetKeyboardState
 
 /**
  * Only the top open layer handles outside interaction and global keyboard

@@ -2,6 +2,7 @@
 
 import json
 import shlex
+import uuid
 
 from vmlib import StepFailed, wait_for
 
@@ -22,6 +23,17 @@ def contains(outer, inner):
     )
 
 
+def output_settings_match(outputs, desired):
+    observed = {str(output["id"]): output for output in outputs}
+    return all(
+        identifier in observed
+        and all(
+            observed[identifier].get(key) == value for key, value in settings.items()
+        )
+        for identifier, settings in desired.items()
+    )
+
+
 def run_monitor_check(*, vm, driver, guest, report, start, window_for, windows, insert):
     prefix = f"/home/{vm.user}/tyco-vm"
 
@@ -31,9 +43,30 @@ def run_monitor_check(*, vm, driver, guest, report, start, window_for, windows, 
     connected = [output for output in outputs() if output["connected"]]
     require(len(connected) == 2, f"Expected two real connected outputs: {connected}")
     ids = [str(output["id"]) for output in connected]
+
+    def configure(options, desired):
+        evidence = {
+            "options": options,
+            "desired": desired,
+            "response": guest("env-run kscreen-doctor " + options),
+        }
+        report.setdefault("monitorConfigurations", []).append(evidence)
+
+        def applied():
+            actual = outputs()
+            evidence["observed"] = actual
+            return actual if output_settings_match(actual, desired) else None
+
+        return wait_for(
+            "actual KScreen configuration, not just CLI success", applied, timeout=20
+        )
+
     for identifier in ids:
-        guest(
-            f"env-run kscreen-doctor output.{identifier}.enable output.{identifier}.mode.1920x1080@60"
+        output = next(output for output in connected if str(output["id"]) == identifier)
+        mode = next(mode for mode in output["modes"] if mode["name"] == "1920x1080@60")
+        configure(
+            f"output.{identifier}.enable output.{identifier}.mode.1920x1080@60",
+            {identifier: {"enabled": True, "currentModeId": mode["id"]}},
         )
     observations = report.setdefault("monitorObservations", [])
     document = prefix + "/monitor document.txt"
@@ -47,21 +80,35 @@ def run_monitor_check(*, vm, driver, guest, report, start, window_for, windows, 
     )
 
     def move(identifier, x, y):
-        path = vm.run_dir / "monitor-move.js"
+        name = "tyco-vm-monitor-move-" + uuid.uuid4().hex
+        path = vm.run_dir / (name + ".js")
         path.write_text(
             f"const w=workspace.windowList().find(w=>w.internalId.toString()==={json.dumps(identifier)});"
-            f"if(w) {{w.frameGeometry={{x:{x},y:{y},width:640,height:400}}; workspace.activeWindow=w;}}"
+            f"if(w) {{const output=workspace.screenAt({{x:{x + 320},y:{y + 200}}});"
+            "if(output) workspace.sendClientToScreen(w,output);"
+            f"w.frameGeometry={{x:{x},y:{y},width:640,height:400}}; workspace.activeWindow=w;}}"
         )
-        vm.copy_to(path, "tyco-vm/monitor-move.js")
-        guest(
-            "env-run busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting unloadScript s tyco-vm-monitor-move"
-        )
+        vm.copy_to(path, "tyco-vm/" + path.name)
         loaded = guest(
-            f"env-run busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting loadScript ss {prefix}/monitor-move.js tyco-vm-monitor-move"
+            f"env-run busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting loadScript ss {prefix}/{path.name} {name}"
         )
-        guest(
-            f"env-run busctl --user call org.kde.KWin /Scripting/Script{int(loaded.split()[-1])} org.kde.kwin.Script run"
-        )
+        try:
+            guest(
+                f"env-run busctl --user call org.kde.KWin /Scripting/Script{int(loaded.split()[-1])} org.kde.kwin.Script run"
+            )
+            wait_for(
+                "native window moved to requested coordinates",
+                lambda: any(
+                    window["id"] == identifier
+                    and abs(window["geometry"]["x"] - x) <= 1
+                    and abs(window["geometry"]["y"] - y) <= 1
+                    for window in windows()["windows"]
+                ),
+            )
+        finally:
+            guest(
+                f"env-run busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting unloadScript s {name}"
+            )
 
     def geometry(output):
         mode = next(
@@ -74,18 +121,34 @@ def run_monitor_check(*, vm, driver, guest, report, start, window_for, windows, 
         }
 
     expected = ""
-    for cycle, (scale, primary, second_x) in enumerate(
+    for cycle, (scale, primary, first_x, second_x) in enumerate(
         (
-            (1, ids[0], 1920),
-            (1.5, ids[1], 1920),
-            (2, ids[0], 1920),
-            (1.5, ids[1], -1280),
+            (1, ids[0], 0, 1920),
+            (1.5, ids[1], 0, 1920),
+            (2, ids[0], 0, 1920),
+            (1.5, ids[1], 1280, 0),
         )
     ):
-        guest(
-            f"env-run kscreen-doctor output.{ids[0]}.scale.1 output.{ids[0]}.position.0,0 output.{ids[1]}.scale.{scale} output.{ids[1]}.position.{second_x},0 output.{primary}.priority.1"
+        first_priority = 1 if primary == ids[0] else 2
+        second_priority = 1 if primary == ids[1] else 2
+        actual = configure(
+            f"output.{ids[0]}.scale.1 output.{ids[0]}.position.{first_x},0 output.{ids[0]}.priority.{first_priority} output.{ids[1]}.scale.{scale} output.{ids[1]}.position.{second_x},0 output.{ids[1]}.priority.{second_priority}",
+            {
+                ids[0]: {
+                    "enabled": True,
+                    "scale": 1,
+                    "pos": {"x": first_x, "y": 0},
+                    "priority": first_priority,
+                },
+                ids[1]: {
+                    "enabled": True,
+                    "scale": scale,
+                    "pos": {"x": second_x, "y": 0},
+                    "priority": second_priority,
+                },
+            },
         )
-        actual = outputs()
+
         screens = [
             geometry(
                 next(output for output in actual if str(output["id"]) == identifier)
@@ -106,22 +169,45 @@ def run_monitor_check(*, vm, driver, guest, report, start, window_for, windows, 
             text = f"Monitor cycle {cycle + 1} screen {int(screen['x'])};|"
 
             def quick_visible():
-                observed = windows()
-                quick = next(
-                    (
-                        window
-                        for window in observed["windows"]
-                        if window["id"] == observed["activeWindowId"]
-                    ),
-                    None,
+                def located():
+                    observed = windows()
+                    quick = next(
+                        (
+                            window
+                            for window in observed["windows"]
+                            if window["id"] == observed["activeWindowId"]
+                        ),
+                        None,
+                    )
+                    observations[-1]["lastQuickGeometry"] = quick
+                    return (
+                        quick
+                        if quick is not None
+                        and quick["resourceClass"] == "tyco"
+                        and contains(screen, quick["geometry"])
+                        else None
+                    )
+
+                quick = wait_for(
+                    "configured quick geometry on target display", located, timeout=15
+                )
+                viewport = driver.execute(
+                    "const r=document.querySelector('textarea').getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height,viewportWidth:innerWidth,viewportHeight:innerHeight,pixelRatio:devicePixelRatio};"
                 )
                 require(
-                    quick is not None
-                    and quick["resourceClass"] == "tyco"
-                    and contains(screen, quick["geometry"]),
-                    f"Quick window is outside target screen: {quick}; {screen}",
+                    viewport["width"] > 0
+                    and viewport["height"] > 0
+                    and viewport["x"] >= 0
+                    and viewport["y"] >= 0
+                    and viewport["x"] + viewport["width"]
+                    <= viewport["viewportWidth"] + 1
+                    and viewport["y"] + viewport["height"]
+                    <= viewport["viewportHeight"] + 1,
+                    f"Quick input is clipped at this DPI: {viewport}",
                 )
-                observations[-1]["windows"].append({"screen": screen, "quick": quick})
+                observations[-1]["windows"].append(
+                    {"screen": screen, "quick": quick, "viewport": viewport}
+                )
 
             insert(target, text, observe_quick=quick_visible)
             expected += text
@@ -145,38 +231,104 @@ def run_monitor_check(*, vm, driver, guest, report, start, window_for, windows, 
     )
     move(main["id"], int(second["x"] + 20), 40)
 
-    def remove_output():
-        guest(
-            f"env-run kscreen-doctor output.{ids[0]}.priority.1 output.{ids[1]}.disable"
+    def disable_output():
+        actual = configure(
+            f"output.{ids[0]}.position.0,0 output.{ids[0]}.priority.1 output.{ids[1]}.disable",
+            {
+                ids[0]: {"enabled": True, "priority": 1, "pos": {"x": 0, "y": 0}},
+                ids[1]: {"enabled": False},
+            },
         )
-        remaining = geometry(
-            next(output for output in outputs() if str(output["id"]) == ids[0])
+        return geometry(
+            next(output for output in actual if str(output["id"]) == ids[0])
         )
-        for identifier in (target["id"], main["id"]):
-            wait_for(
-                "window recovered to remaining display",
-                lambda identifier=identifier: any(
-                    window["id"] == identifier
-                    and contains(remaining, window["geometry"])
-                    for window in windows()["windows"]
-                ),
-            )
+
+    remaining = disable_output()
+    for identifier in (target["id"], main["id"]):
         wait_for(
-            "visible quick panel recovered after output removal",
-            lambda: any(
+            "visible main/recipient moved off disabled output",
+            lambda identifier=identifier: any(
+                window["id"] == identifier and contains(remaining, window["geometry"])
+                for window in windows()["windows"]
+            ),
+        )
+    wait_for(
+        "main keeps native focus after output removal",
+        lambda: windows()["activeWindowId"] == main["id"],
+    )
+    visible = windows()
+    require(
+        [
+            window["id"]
+            for window in visible["windows"]
+            if window["resourceClass"] == "tyco"
+        ]
+        == [main["id"]],
+        "Output removal resurrected a hidden Quick panel",
+    )
+    observations.append({"mainAfterRemoval": visible, "outputs": outputs()})
+    actual = configure(
+        f"output.{ids[0]}.position.0,0 output.{ids[0]}.scale.1 output.{ids[1]}.enable output.{ids[1]}.scale.1.5 output.{ids[1]}.position.1920,0",
+        {
+            ids[0]: {"enabled": True, "pos": {"x": 0, "y": 0}, "scale": 1},
+            ids[1]: {"enabled": True, "pos": {"x": 1920, "y": 0}, "scale": 1.5},
+        },
+    )
+    second = geometry(next(output for output in actual if str(output["id"]) == ids[1]))
+    move(target["id"], int(second["x"] + 20), 40)
+
+    def remove_output():
+        def owns_focus():
+            observed = windows()
+            return any(
                 window["resourceClass"] == "tyco"
-                and window["id"] == windows()["activeWindowId"]
-                and contains(remaining, window["geometry"])
+                and window["id"] == observed["activeWindowId"]
+                for window in observed["windows"]
+            )
+
+        wait_for("Quick owns native focus before draft input", owns_focus)
+        for key in "draft":
+            vm.qmp.tap(key)
+        wait_for(
+            "physical draft typed into Quick",
+            lambda: (
+                driver.execute("return document.querySelector('textarea').value")
+                == "draft"
+            ),
+        )
+        remaining = disable_output()
+        wait_for(
+            "recipient recovered to remaining display",
+            lambda: any(
+                window["id"] == target["id"] and contains(remaining, window["geometry"])
                 for window in windows()["windows"]
             ),
         )
 
-    insert(target, "After output removal", observe_quick=remove_output)
-    expected += "After output removal"
+        def visible_quick():
+            observed = windows()
+            return any(
+                window["resourceClass"] == "tyco"
+                and window["id"] == observed["activeWindowId"]
+                and contains(remaining, window["geometry"])
+                for window in observed["windows"]
+            )
+
+        wait_for("visible quick panel recovered after output removal", visible_quick)
+        driver.window("quick", "textarea")
+        require(
+            driver.execute("return document.querySelector('textarea').value")
+            == "draft",
+            "Output removal lost the user's draft",
+        )
+        report["monitorDraftPreserved"] = True
+
+    insert(target, "draft", observe_quick=remove_output)
+    expected += "draft"
     vm.qmp.tap("ctrl", "s")
     wait_for(
         "exact bytes after output removal",
         lambda: vm.ssh("cat " + shlex.quote(document)) in (expected, expected + "\n"),
     )
     observations.append({"afterRemoval": outputs(), "windows": windows()})
-    return "Two actual outputs, mixed 100/150/200 percent DPI, primary/negative-origin changes, quick placement and exact Kate delivery on both; disabled output relocates main/target/visible quick and preserves native insertion"
+    return "Two actual outputs, mixed 100/150/200 percent DPI, primary and left/right layouts, quick placement and exact Kate delivery on both; disabled output relocates visible main/recipient/quick and preserves native insertion"

@@ -19,10 +19,10 @@ The dated reports in `dev_docs/testing-results/` identify actual executions.
 | VM-04–05 | Real Kate saved bytes and Firefox textarea; native selection replacement/cancellation, explicit empty-selection error                                                                                                                                                           |
 | VM-05    | Inline correction without a Tyco window: physical hotkey in Wayland and XWayland GTK windows, `tyco-ctl replace correction`, three corrections across both window kinds, repeat press cancels; loopback model gets exactly the selected fragment, focus and user clipboard kept |
 | VM-06    | Closed target, two same-title windows and focus race, actual desktop target rejected without editing another window                                                                                                                                                             |
-| VM-07    | Plain text and PNG clipboard restoration, preserved PRIMARY, newer concurrent clipboard owner retained                                                                                                                                                                          |
+| VM-07    | Plain text, HTML-only and PNG clipboard restoration, preserved PRIMARY, newer concurrent clipboard owner retained                                                                                                                                                               |
 | VM-08    | Actual Konsole raw TTY/bracketed paste, exact payload, no synthetic Enter                                                                                                                                                                                                       |
 | VM-09    | Real daemon stop, socket permissions, absent clipboard/input tools and unavailable uinput; native RemoteDesktop denial/error and recovery; separate approved portal fallback with ydotool absent                                                                                |
-| VM-11    | Main-window close hides to native tray; real Show/Quit callbacks; fullscreen overlay; KScreen scales 1/1.5/2 with actual click/clipboard checks                                                                                                                                 |
+| VM-11    | Main-window close hides to native tray; real Show/Quit callbacks; fullscreen overlay; KScreen scales 1/1.5/2 with actual click/clipboard checks; separate two-output mixed-DPI/primary/left-right/hotplug checks                                                                |
 | VM-12    | Native KWallet wizard, independent secret lookup and redaction/deletion; locked and unavailable service errors and recovery                                                                                                                                                     |
 | VM-13    | Actual CLI/D-Bus, default denial, selection grant/revoke, quoted multiline command grant/execute/revoke                                                                                                                                                                         |
 | VM-14    | Actual GTK folder selection/cancel, Unicode/spaced plugin picker/install/worker/removal, native Dolphin drag/drop and denied ungranted sibling read                                                                                                                             |
@@ -40,9 +40,12 @@ SSH transport reattachment preserves the app/session and is recorded separately.
 
 ## Current failures and limits
 
-Repeated ACPI suspension, native secret contents after cold reboot, and capture
-after microphone removal have produced FAIL. These remain automated failures;
-they are not moved into manual acceptance. Package upgrade is BLOCKED because no
+The historical baseline failed repeated ACPI suspension, native secret contents
+after cold reboot and capture after microphone removal. Original reports remain
+unchanged. The follow-up fixes stalled capture and uses i440fx for observed
+repeated sleep, since Q35 fails independently without Tyco. KWallet immediate
+write/reboot durability remains a reproduced native dependency defect; lifecycle
+tests explicitly checkpoint existing durable credentials before transitions. Package upgrade is BLOCKED because no
 previous published/local release artifact is available. The upgrade execution
 branch is implemented but has not been verified against a real older release.
 Any failed or blocked check causes a nonzero suite exit.
@@ -51,10 +54,11 @@ The debug AppImage supports WebDriver diagnostics; production package acceptance
 uses a separately built release AppImage. Both bundle Ubuntu WebKitGTK; the
 Fedora system library version alone does not describe their loaded runtime.
 
-HTML-only clipboard preservation is not covered: the backend snapshots text or
-image formats. Virtual multi-monitor topology and other OS/desktop profiles are
-not certified by these runs. Their missing automation remains follow-up work,
-not a reason to mark them manual or passed.
+The native executable follow-up adds HTML-only clipboard and virtual
+multi-monitor checks, including exact inserted bytes and draft preservation
+after output removal. See the [follow-up report](../../dev_docs/testing-results/2026-10-25-fedora44-kde-followup.md)
+for executed results and artifact identity. Other OS/desktop profiles remain
+unimplemented. AppImage acceptance is excluded from that follow-up.
 
 Manual acceptance is limited to physical properties the stand cannot reproduce:
 physical microphone/Bluetooth behavior, GPU/driver behavior, hardware sleep, and

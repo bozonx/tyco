@@ -45,7 +45,14 @@ pub fn setup(app: &mut App) -> Result<(), AppError> {
         let window = app
             .get_webview_window(QUICK_WINDOW_LABEL)
             .ok_or_else(|| AppError::ServiceUnavailable("Quick window not found".into()))?;
-        crate::services::platform::attach_panel_surface(&window)?;
+        let handle = app.handle().clone();
+        crate::services::platform::attach_panel_surface(&window, move || {
+            let snapshot = handle.state::<AppState>().snapshot();
+            super::is_quick_window_shown(
+                handle.state::<RuntimeWindows>().active_label(),
+                snapshot.window.is_window_shown,
+            )
+        })?;
         log::info!("The quick window is a layer-shell surface");
     } else {
         log::info!("The quick window is a regular window");

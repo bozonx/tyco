@@ -24,6 +24,7 @@ function setup(state: Partial<Record<string, unknown>> = {}) {
     markInputDismissed: vi.fn(),
     cancelAndCloseModals: vi.fn(),
     dismissWindow: vi.fn(),
+    dismissWindowOnBlur: vi.fn(),
   }
   return { current, deps, session: createQuickWindowSession(deps) }
 }
@@ -71,6 +72,15 @@ describe('quick window session', () => {
     const menu = setup({ mode: 'selectionActions' })
     menu.session.dismiss()
     expect(menu.deps.markInputDismissed).not.toHaveBeenCalled()
+  })
+
+  it('routes focus loss separately from an explicit dismissal', () => {
+    const { deps, session } = setup()
+    session.dismissOnBlur()
+    expect(deps.dismissWindowOnBlur).toHaveBeenCalledOnce()
+    expect(deps.dismissWindow).not.toHaveBeenCalled()
+    expect(deps.markInputDismissed).toHaveBeenCalledOnce()
+    expect(deps.cancelAndCloseModals).toHaveBeenCalledOnce()
   })
 
   it('drops the work of an ended activation', () => {

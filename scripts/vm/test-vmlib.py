@@ -4,6 +4,7 @@ import http.client
 import io
 import json
 import shutil
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -11,9 +12,10 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from vmlib import Qmp, ResourceLock, StepFailed, Vm, wait_for
+from vmlib import Qmp, ResourceLock, StepFailed, Vm, run_isolated, wait_for
 from webdriver import WebDriver
 from media import capture_client_indexes
+from monitors import output_settings_match
 from accessibility import application_nodes
 from wallet import WalletFixture
 
@@ -48,6 +50,26 @@ class WalletFixtureTests(unittest.TestCase):
         wallet.assert_available.assert_called_once()
 
 
+class MonitorConfigurationTests(unittest.TestCase):
+    def test_successful_cli_exit_does_not_certify_an_ignored_layout(self):
+        stale = [
+            {"id": 1, "scale": 1, "pos": {"x": 0, "y": 0}, "priority": 1},
+            {"id": 2, "scale": 2, "pos": {"x": 1920, "y": 0}, "priority": 2},
+        ]
+        desired = {
+            "1": {"scale": 1, "pos": {"x": 1280, "y": 0}, "priority": 2},
+            "2": {"scale": 1.5, "pos": {"x": 0, "y": 0}, "priority": 1},
+        }
+        self.assertFalse(output_settings_match(stale, desired))
+        actual = [
+            {"id": int(identifier), **settings}
+            for identifier, settings in desired.items()
+        ]
+        self.assertTrue(output_settings_match(actual, desired))
+        actual[1]["priority"] = 2
+        self.assertFalse(output_settings_match(actual, desired))
+
+
 class AudioClientTests(unittest.TestCase):
     def test_loopback_and_existing_clients_are_not_app_capture_leaks(self):
         outputs = [
@@ -68,6 +90,102 @@ class AudioClientTests(unittest.TestCase):
             ),
             {92},
         )
+
+
+class IsolatedRunTests(unittest.TestCase):
+    def child(self, responses):
+        process = Mock()
+        process.pid = 88123
+        process.returncode = 0
+        process.communicate.side_effect = responses
+        context = Mock()
+        context.__enter__ = Mock(return_value=process)
+        context.__exit__ = Mock(return_value=False)
+        return process, context
+
+    def test_normal_child_keeps_output_and_exit_status(self):
+        process, context = self.child([("output", "diagnostics")])
+        process.returncode = 1
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch("vmlib.subprocess.Popen", return_value=context) as start,
+        ):
+            path = Path(directory) / "child.log"
+            result = run_isolated(["child"], path)
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(path.read_text(), "outputdiagnostics")
+            self.assertTrue(start.call_args.kwargs["start_new_session"])
+
+    def test_interrupt_waits_for_teardown_before_propagating(self):
+        process, context = self.child([KeyboardInterrupt(), ("child teardown", "")])
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch("vmlib.subprocess.Popen", return_value=context),
+        ):
+            path = Path(directory) / "child.log"
+            with self.assertRaisesRegex(KeyboardInterrupt, "after child teardown"):
+                run_isolated(["child"], path)
+            process.send_signal.assert_called_once_with(signal.SIGINT)
+            self.assertEqual(process.communicate.call_count, 2)
+            self.assertEqual(path.read_text(), "child teardown")
+
+    def test_real_interrupt_reaps_the_isolated_process(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ready = root / "ready"
+            log = root / "child.log"
+            child = (
+                "import os,signal,sys,time; from pathlib import Path; signal.signal(signal.SIGINT,lambda *_:(print('child stopped',flush=True),sys.exit(0))); Path("
+                + repr(str(ready))
+                + ").write_text(str(os.getpid())); time.sleep(60)"
+            )
+            helper = (
+                "import sys; sys.path.insert(0,"
+                + repr(str(Path(__file__).parent))
+                + "); from pathlib import Path; from vmlib import run_isolated; run_isolated([sys.executable,'-c',"
+                + repr(child)
+                + "],Path("
+                + repr(str(log))
+                + "))"
+            )
+            process = subprocess.Popen(
+                [sys.executable, "-c", helper],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=True,
+            )
+            try:
+                wait_for("isolated child ready", ready.exists, timeout=5, interval=0.02)
+                child_pid = int(ready.read_text())
+                process.send_signal(signal.SIGINT)
+                process.communicate(timeout=10)
+                self.assertNotEqual(process.returncode, 0)
+                self.assertIn("child stopped", log.read_text())
+                with self.assertRaises(ProcessLookupError):
+                    import os
+
+                    os.kill(child_pid, 0)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate(timeout=5)
+
+    def test_hung_cleanup_terminates_only_the_child_process_group(self):
+        process, context = self.child(
+            [
+                KeyboardInterrupt(),
+                subprocess.TimeoutExpired("child", 180),
+                ("terminated", ""),
+            ]
+        )
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch("vmlib.subprocess.Popen", return_value=context),
+            patch("vmlib.os.killpg") as terminate,
+        ):
+            with self.assertRaises(KeyboardInterrupt):
+                run_isolated(["child"], Path(directory) / "child.log")
+            terminate.assert_called_once_with(process.pid, signal.SIGTERM)
 
 
 class ResourceLockTests(unittest.TestCase):
@@ -166,6 +284,17 @@ class PreflightTests(unittest.TestCase):
 
 
 class WebDriverTests(unittest.TestCase):
+    def test_start_observes_window_readiness_before_configuring_timeouts(self):
+        driver = WebDriver(4444)
+        observed = []
+        driver.request = Mock(return_value={"sessionId": "fixture"})
+        driver.window = Mock(side_effect=lambda *args: observed.append("ready"))
+        driver.call = Mock(side_effect=lambda *args: observed.append("timeouts"))
+        driver.execute = Mock(return_value="tauri://localhost")
+        driver.start("/fixture/tyco")
+        self.assertEqual(observed, ["ready", "timeouts"])
+        driver.request.assert_called_once()
+
     def test_window_discovery_polls_a_disconnected_read_without_restarting(self):
         driver = WebDriver(4444)
         driver.session = "existing-session"

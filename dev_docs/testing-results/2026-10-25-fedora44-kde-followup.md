@@ -16,8 +16,16 @@ The original LHC base remains read-only; every run uses a disposable Tyco disk.
   paste/restore checks and an assertion that no plain-text type was offered.
 - Quick panels select the recipient's monitor on KDE using its independently
   captured window geometry, and fit within small high-DPI output bounds.
-  A separate two-output VM exercises mixed DPI, primary changes, negative
-  coordinates and output removal while Quick is visible.
+  A separate two-output VM exercises mixed DPI, primary changes, left/right
+  layouts and output removal while Quick is visible. It verifies actual KScreen
+  state before input, native bounds and exact insertion. The same WebView, draft
+  and activation survive unplugging the selected output.
+- Escape accepts the next press after a hidden WebView loses keyup, including
+  WebKit incorrectly marking that press as autorepeat. Native activation resets
+  keyboard state; actual repeats within an activation remain suppressed.
+  Regression tests reproduce both the stale latch and stale repeat flag.
+  Explicit dismissals use `hide_window`; blur requests ignore regained focus
+  and monitor relocation. Native input focus is observed before physical keys.
 - Native accessibility enumeration tolerates null and disconnected application
   nodes, without treating a missing required control as success.
 - The runner's LLM fixture is terminated and reaped. Frontend fixtures provide
@@ -69,6 +77,74 @@ usable credential. The original failed reports remain unchanged.
 
 ## Verification and native results
 
-Final run results and artifact identity are recorded below after verification.
+Local verification passed: `pnpm check`, `pnpm test` (2617 desktop UI tests;
+all eight workspace tasks), `pnpm test:vm:unit` (30 tests), Python fatal-error
+lint and `cargo fmt --check`. Rust clippy with warnings denied and all Rust
+tests passed (570 passed, two intentionally ignored) before the final
+frontend-only Escape activation fix. The no-bundle build passed.
+
+Artifact `tyco-native-repeat` SHA-256:
+`dd73a5394444645ab1edca61468dc119e1f1158bf7b47bbe8d2ae9767d176ad6`.
+Source commit: `3c562046ac48f0a3ff2932882d876098ddc7aabc` plus production diff
+`d90c979945543d8ec0c0930442d1186762d5329ebab01d69bd1b0f53b3f9ae39`.
+The `.build.json` and `.source.diff` artifact sidecars retain build identity.
+
+Targeted run `20261025-200352-a7292b` passed all six checks, including three
+real PAM lock/unlock cycles with fresh Escape dismissal after each recovery.
+
+Full native run `20261025-200636-43e308` finished with 51 PASS and two FAIL:
+Escape after the second sleep and a WebDriver disconnect during process
+restart. Diagnostic run `20261025-202504-4c09ea` proved WebKit marked the next
+physical Escape as `repeat=true` after losing the previous keyup. Keyboard
+state now resets at a new native activation; autorepeat is suppressed only for
+an observed held key in that activation. The regression test includes the
+actual stale-repeat event sequence.
+
+Targeted persistence run `20261025-202834-461b67` passed three restarts after
+the controller waited for the old native process to exit before creating its
+next WebDriver session. Transport failures now retain their method/path in the
+report without replaying application actions.
 Detailed reports are under `dev_files/vm/fedora44-kde/runs/`; the diagnostic
 scripts/logs and build logs remain under `dev_files/vm/`.
+
+Targeted final-binary sleep run `20261025-203134-493f12` passed three actual
+S3 cycles and physical Escape dismissal after each recovery.
+
+Final complete run `20261025-203334-bae536` finished with **52 PASS, 1 FAIL**.
+Every application/desktop case passed, including three-cycle lock, sleep,
+logout and reboot, mixed-DPI/hotplug, HTML-only clipboard and microphone removal.
+The remaining failure was the controller's first `POST /timeouts` immediately
+after a new WebDriver session; its method/path was captured in
+`webdriverReadDisconnects`. Waiting for native process exit alone had not
+eliminated this startup transport race.
+
+The controller now observes a usable main window before configuring timeouts.
+Only disconnected window-handle observations are polled; startup, configuration,
+IPC and user actions are never automatically replayed. A focused regression test
+checks readiness precedes configuration. Final targeted run
+`20261025-204830-94f7a3` passed all five checks, including three native process
+restarts and single-instance checks, using the **same final artifact**.
+The complete run's original FAIL remains unchanged; a new complete green suite
+has not been claimed from the targeted rerun.
+
+| Final-artifact scope                 | Evidence                             | Result                               |
+| ------------------------------------ | ------------------------------------ | ------------------------------------ |
+| Complete native suite                | `20261025-203334-bae536/report.json` | 52 PASS, controller persistence FAIL |
+| Corrected persistence controller     | `20261025-204830-94f7a3/report.json` | 5 PASS; three restarts               |
+| Additional repeat-sleep verification | `20261025-203134-493f12/report.json` | 6 PASS; three real S3 cycles         |
+
+## Remaining acceptance boundaries
+
+- KWallet 6.31.0 immediate-write/reboot value loss is independently reproduced
+  without Tyco. Existing durable secrets pass lifecycle recovery, and empty
+  values are rejected, but newly saved-key durability remains unresolved.
+- Repeated Q35 sleep remains a VM-platform defect; observed repeated sleep is
+  certified only on the recorded i440fx fixture.
+- AppImage build, packaging and upgrade acceptance were excluded by request.
+- Physical GPU, microphone/Bluetooth, sleep and monitor hardware remain outside
+  virtual-device evidence. Other OS/desktop profiles are not implemented yet.
+
+The remaining Fedora-specific product acceptance blocker is KWallet immediate
+write durability. The implemented native scenarios now have passing evidence
+across the complete run and the corrected targeted persistence run. Moving to
+other OS profiles can proceed with this dependency limitation explicitly tracked.
