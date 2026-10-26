@@ -4,13 +4,110 @@ use tauri::{AppHandle, State};
 use super::run_blocking;
 use crate::{
     errors::AppError,
-    services::ai_vault::{self, AiProfile, AiProject},
-    services::storage,
+    services::ai_vault::{
+        self,
+        relocation::{self, VaultTarget, VaultTargetKind},
+        AiProfile, AiProject,
+    },
+    services::{settings, storage},
     state::AppState,
 };
 
 fn vault_dir(app: &AppHandle, state: &AppState) -> Result<PathBuf, AppError> {
     ai_vault::resolve_vault_path(app, &state.user_config())
+}
+
+/// The folder the vault is configured to be in, whether it is usable or not.
+fn configured_vault_dir(app: &AppHandle, state: &AppState) -> Result<PathBuf, AppError> {
+    let configured = crate::models::user_config::ai_vault(&state.user_config()).path;
+    match configured.trim() {
+        "" => storage::app_data_sub_dir(app, "ai-vault"),
+        path => Ok(PathBuf::from(path)),
+    }
+}
+
+/// A chosen folder, or the default one for `None`, and whether it is the default.
+fn target_dir(app: &AppHandle, path: Option<&str>) -> Result<(PathBuf, bool), AppError> {
+    let default = storage::app_data_sub_dir(app, "ai-vault")?;
+    match path.map(str::trim).filter(|path| !path.is_empty()) {
+        Some(path) => {
+            let path = PathBuf::from(path);
+            let is_default = path == default;
+            Ok((path, is_default))
+        }
+        None => Ok((default, true)),
+    }
+}
+
+/// What the folder the vault may go to holds; `None` is the default folder.
+#[tauri::command]
+pub async fn inspect_ai_vault_target(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    path: Option<String>,
+) -> Result<VaultTarget, AppError> {
+    let current = configured_vault_dir(&app, &state)?;
+    let (target, is_default) = target_dir(&app, path.as_deref())?;
+    run_blocking(move || {
+        Ok(VaultTarget {
+            contents: relocation::inspect_target(&current, &target)?,
+            path: target.to_string_lossy().into_owned(),
+            is_default,
+        })
+    })
+    .await?
+}
+
+/// Points the vault at another folder, `None` for the default one. With
+/// `move_data` the current vault moves there first; the folder must be empty.
+/// Without it the folder must be empty or hold a vault already.
+#[tauri::command]
+pub async fn relocate_ai_vault(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    path: Option<String>,
+    move_data: bool,
+) -> Result<(), AppError> {
+    let current = configured_vault_dir(&app, &state)?;
+    let (target, is_default) = target_dir(&app, path.as_deref())?;
+    let configured_path = if is_default {
+        String::new()
+    } else {
+        target.to_string_lossy().into_owned()
+    };
+    run_blocking(move || {
+        let kind = relocation::inspect_target(&current, &target)?;
+        let moves = match kind {
+            VaultTargetKind::Current => false,
+            VaultTargetKind::Empty => move_data,
+            VaultTargetKind::Vault { .. } if !move_data => false,
+            _ => {
+                return Err(AppError::InvalidInput(format!(
+                    "The AI vault cannot go to {}",
+                    target.display()
+                )))
+            }
+        };
+        // the settings save takes the chat lock itself: the move holds it alone
+        if moves {
+            storage::while_chats_locked(&app, || relocation::move_vault(&current, &target))?;
+        }
+        let saved = settings::update_user_config(&app, |config| {
+            config["aiVault"] = serde_json::json!({ "path": configured_path });
+        });
+        if let Err(error) = saved {
+            if moves {
+                let back =
+                    storage::while_chats_locked(&app, || relocation::move_vault(&target, &current));
+                if let Err(back) = back {
+                    log::error!("Could not move the AI vault back: {back}");
+                }
+            }
+            return Err(error);
+        }
+        Ok(())
+    })
+    .await?
 }
 
 #[tauri::command]

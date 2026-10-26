@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue'
-import type { AiProfile, ProjectPermission } from '@tyco/shared'
+import type { AiProfile } from '@tyco/shared'
 
+import { type ProjectAccessLevel, withProjectAccess } from './project-access'
 import { createVaultId } from './vault-id'
 
 export interface AiProfilesModelDependencies {
@@ -34,6 +35,8 @@ export type AiProfilePatch = Partial<
 
 export interface CreateProfileData {
   name: string
+  /** The folder; one is made from the name when unset */
+  id?: string
   /** The root instruction the profile starts with */
   soul: string
   /** Settings the profile starts with instead of the defaults */
@@ -68,12 +71,14 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   const createProfile = async (data: CreateProfileData): Promise<AiProfile> => {
     const timestamp = now()
     const newProfile: AiProfile = {
-      id: createVaultId(
-        data.name,
-        'profile',
-        profiles.value.map((p) => p.id),
-        deps.randomSuffix
-      ),
+      id:
+        data.id ||
+        createVaultId(
+          data.name,
+          'profile',
+          profiles.value.map((p) => p.id),
+          deps.randomSuffix
+        ),
       name: data.name.trim(),
       projectPermissions: {},
       // a plain copy: the source may be another profile's reactive state
@@ -159,18 +164,20 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     profiles.value = profiles.value.filter((p) => p.id !== id)
   }
 
-  const setProjectPermission = (
+  /** Connects the profile to a project at `level`, or disconnects it */
+  const setProjectAccess = (
     profileId: string,
     projectId: string,
-    permission: ProjectPermission
+    level: ProjectAccessLevel | undefined
   ): Promise<void> => {
     const profile = getProfile(profileId)
     if (!profile) return Promise.resolve()
     return updateProfile(profileId, {
-      projectPermissions: {
-        ...profile.projectPermissions,
-        [projectId]: permission,
-      },
+      projectPermissions: withProjectAccess(
+        profile.projectPermissions,
+        projectId,
+        level
+      ),
     })
   }
 
@@ -187,7 +194,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     refreshProfile,
     duplicateProfile,
     deleteProfile,
-    setProjectPermission,
+    setProjectAccess,
     readSoul,
     writeSoul,
   }

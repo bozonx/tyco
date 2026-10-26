@@ -84,16 +84,10 @@ export function createSettingsOperations(deps: {
     resolveHotkeyTarget(deps.getConfig(), id)?.set(shortcut)
   }
 
-  /** An empty path stands for the default vault location */
-  const updateVaultPath = (path: string | undefined) => {
-    deps.getConfig().aiVault = { path: path ?? '' }
-  }
-
   return {
     finishProviderRemoval,
     updateLauncherPages,
     updateHotkey,
-    updateVaultPath,
     updatePluginEnabled,
     updatePluginConfig,
   }

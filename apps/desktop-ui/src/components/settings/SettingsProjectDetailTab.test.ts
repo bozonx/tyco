@@ -47,6 +47,7 @@ function createStore() {
     createProject: vi.fn(async () => ({ id: 'created' })),
     deleteProject: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/work'),
+    setProjectAccess: vi.fn(async () => {}),
   })
 }
 
@@ -91,12 +92,17 @@ describe('SettingsProjectDetailTab.vue', () => {
     expect(store.createProject).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Docs',
+        id: 'docs',
         isExternal: true,
         targetPath: '/work',
       })
     )
     expect(store.saveProject).not.toHaveBeenCalled()
     expect(context.navigate).toHaveBeenCalledWith('ai-project:created')
+  })
+
+  it('shows the folder of an existing project', () => {
+    expect(mountTab().text()).toContain('projects/notes')
   })
 
   it('stores an edited project', async () => {
@@ -109,17 +115,50 @@ describe('SettingsProjectDetailTab.vue', () => {
     )
   })
 
-  it('shows the access of each profile', () => {
+  it('lists the profiles with access and offers the others', async () => {
     store.profiles.push(profile({ notes: { read: 'allow', write: 'ask' } }), {
       ...profile({}),
       id: 'reader',
       name: 'Reader',
     })
     const wrapper = mountTab()
-    const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
-    expect(items[0]!.text()).toContain('settings.accessAllow')
-    expect(items[0]!.text()).toContain('settings.accessAsk')
-    expect(items[1]!.text()).toContain('settings.accessDeny')
+    const list = wrapper.findComponent({ name: 'SettingsAccessList' })
+    expect(list.props('entries')).toEqual([
+      expect.objectContaining({
+        id: 'writer',
+        level: 'readWriteAsk',
+        warning: 'settings.projectAccessFileToolsOff',
+      }),
+    ])
+    expect(list.props('candidates')).toEqual([
+      expect.objectContaining({ id: 'reader' }),
+    ])
+    await list.vm.$emit('change', 'reader', 'full')
+    await list.vm.$emit('change', 'writer', undefined)
+    expect(store.setProjectAccess.mock.calls).toEqual([
+      ['reader', 'notes', 'full'],
+      ['writer', 'notes', undefined],
+    ])
+  })
+
+  it('grants the chosen access when a new project is created', async () => {
+    store.profiles.push(profile({}))
+    const wrapper = mountTab('new')
+    await wrapper.get('input').setValue('Docs')
+    const list = wrapper.findComponent({ name: 'SettingsAccessList' })
+    await list.vm.$emit('change', 'writer', 'read')
+    expect(list.props('entries')).toEqual([
+      expect.objectContaining({ id: 'writer', level: 'read' }),
+    ])
+    expect(store.setProjectAccess).not.toHaveBeenCalled()
+    await button(wrapper, 'settings.saveProject').trigger('click')
+    await flushPromises()
+    expect(store.setProjectAccess).toHaveBeenCalledWith(
+      'writer',
+      'created',
+      'read'
+    )
+    expect(context.navigate).toHaveBeenCalledWith('ai-project:created')
   })
 
   it('reports a folder that could not be picked', async () => {

@@ -15,6 +15,8 @@ export interface AiProjectsModelDependencies {
 
 export interface CreateProjectData {
   name: string
+  /** The folder; one is made from the name when unset */
+  id?: string
   description?: string
   isExternal: boolean
   targetPath?: string
@@ -38,12 +40,14 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
   }
 
   const createProject = async (data: CreateProjectData): Promise<AiProject> => {
-    const id = createVaultId(
-      data.name,
-      'project',
-      projects.value.map((p) => p.id),
-      deps.randomSuffix
-    )
+    const id =
+      data.id ||
+      createVaultId(
+        data.name,
+        'project',
+        projects.value.map((p) => p.id),
+        deps.randomSuffix
+      )
     const timestamp = now()
     const newProject: AiProject = {
       id,

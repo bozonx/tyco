@@ -1,3 +1,5 @@
+import type { VaultTarget } from '@tyco/shared'
+
 import { clientLogger } from '../lib/logger'
 import { defineStore } from 'pinia'
 import { readonly, ref, watch } from 'vue'
@@ -93,6 +95,19 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     }
   )
 
+  /** What a folder holds as a place for the vault; no path: the default one */
+  const inspectVaultTarget = async (path?: string): Promise<VaultTarget> =>
+    resultOrThrow(await call('inspect_ai_vault_target', { path }))
+
+  /** Points the vault at a folder, moving the current one there with `moveData` */
+  const relocateVault = async (
+    path: string | undefined,
+    moveData: boolean
+  ): Promise<void> => {
+    resultOrThrow(await call('relocate_ai_vault', { path, moveData }))
+    await loadAll()
+  }
+
   const openVaultDir = async (profileId?: string): Promise<void> => {
     resultOrThrow(await call('open_ai_vault_location', { profileId }))
   }
@@ -121,6 +136,8 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     isLoaded: readonly(isLoaded),
     loadAll,
     openVaultDir,
+    inspectVaultTarget,
+    relocateVault,
     pickFolder: projectsModel.pickExternalFolder,
     // Profiles
     getProfile: profilesModel.getProfile,
@@ -132,7 +149,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     countChats,
     countAllProfileChats: profileChats.countAll,
     clearAllProfileChats: profileChats.clearAll,
-    setProjectPermission: profilesModel.setProjectPermission,
+    setProjectAccess: profilesModel.setProjectAccess,
     readSoul: profilesModel.readSoul,
     writeSoul: profilesModel.writeSoul,
     // Projects

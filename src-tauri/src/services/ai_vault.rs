@@ -1,7 +1,10 @@
 #[cfg(test)]
+mod relocation_tests;
+#[cfg(test)]
 mod tests;
 
 pub mod operations;
+pub mod relocation;
 pub mod types;
 
 pub use operations::*;

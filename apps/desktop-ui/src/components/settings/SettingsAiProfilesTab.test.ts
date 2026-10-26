@@ -70,6 +70,11 @@ describe('SettingsAiProfilesTab.vue', () => {
       global: {
         provide: context.provide,
         stubs: {
+          SettingsVaultLocationModal: {
+            name: 'SettingsVaultLocationModal',
+            props: ['open', 'currentPath', 'isCustom'],
+            template: '<div />',
+          },
           ConfirmModal: {
             name: 'ConfirmModal',
             props: ['open', 'message', 'title'],
@@ -114,26 +119,24 @@ describe('SettingsAiProfilesTab.vue', () => {
     ])
   })
 
-  it('moves the vault to a picked folder and back to the default', async () => {
+  it('changes the vault folder in a dialog, never in the draft', async () => {
     const wrapper = mountTab()
-    await button(wrapper, 'settings.selectFolder').trigger('click')
-    await flushPromises()
-    expect(context.draft.value.aiVault.path).toBe('/elsewhere')
-    await button(wrapper, 'settings.resetToDefault').trigger('click')
+    const modal = wrapper.findComponent({ name: 'SettingsVaultLocationModal' })
+    expect(modal.props('open')).toBe(false)
+    await button(wrapper, 'settings.vaultChange').trigger('click')
+    expect(modal.props('open')).toBe(true)
+    expect(modal.props('currentPath')).toBe('/vault')
+    await modal.vm.$emit('close')
+    expect(modal.props('open')).toBe(false)
     expect(context.draft.value.aiVault.path).toBe('')
   })
 
-  it('reports vault folder failures', async () => {
+  it('reports a vault folder that cannot be opened', async () => {
     store.openVaultDir.mockRejectedValueOnce(new Error('Missing'))
-    store.pickFolder.mockRejectedValueOnce(new Error('Denied'))
     const wrapper = mountTab()
     await button(wrapper, 'settings.openInFileManager').trigger('click')
-    await button(wrapper, 'settings.selectFolder').trigger('click')
     await flushPromises()
-    expect(toastError.mock.calls).toEqual([
-      [new Error('Missing')],
-      [new Error('Denied')],
-    ])
+    expect(toastError.mock.calls).toEqual([[new Error('Missing')]])
   })
 
   it('duplicates and deletes a profile through its menu', async () => {

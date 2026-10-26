@@ -92,13 +92,27 @@ describe('ai-profiles-model', () => {
     expect(model.profiles.value).toContainEqual(created)
   })
 
-  it('gives a profile named in another script an id of its own', async () => {
+  it('spells the folder of a profile named in another script', async () => {
     const deps = createDeps()
     const model = createAiProfilesModel(deps)
 
     const created = await model.createProfile({ name: 'Писатель', soul: '' })
+    expect(created.id).toBe('pisatel')
 
-    expect(created.id).toBe('profile-abcd1234')
+    const chinese = await model.createProfile({ name: '作家', soul: '' })
+    expect(chinese.id).toBe('profile-abcd1234')
+  })
+
+  it('takes the folder the user chose', async () => {
+    const deps = createDeps()
+    const model = createAiProfilesModel(deps)
+
+    const created = await model.createProfile({
+      name: 'Writer',
+      id: 'my-writer',
+      soul: '',
+    })
+    expect(created.id).toBe('my-writer')
   })
 
   it('keeps a profile out of the state when it cannot be created', async () => {
@@ -185,22 +199,25 @@ describe('ai-profiles-model', () => {
     expect(model.getProfile('tech-writer')?.name).toBe('Senior')
   })
 
-  it('sets a project permission', async () => {
+  it('connects and disconnects a project', async () => {
     const deps = createDeps()
     const model = createAiProfilesModel(deps)
     model.profiles.value = [mockProfile]
 
-    await model.setProjectPermission('tech-writer', 'new-proj', {
-      read: 'deny',
-      write: 'deny',
-    })
-
-    expect(deps.saveProfile).toHaveBeenCalledWith(
+    await model.setProjectAccess('tech-writer', 'new-proj', 'full')
+    expect(deps.saveProfile).toHaveBeenLastCalledWith(
       expect.objectContaining({
         projectPermissions: {
           'docs-proj': { read: 'allow', write: 'ask' },
-          'new-proj': { read: 'deny', write: 'deny' },
+          'new-proj': { read: 'allow', write: 'allow' },
         },
+      })
+    )
+
+    await model.setProjectAccess('tech-writer', 'docs-proj', undefined)
+    expect(deps.saveProfile).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        projectPermissions: { 'new-proj': { read: 'allow', write: 'allow' } },
       })
     )
   })

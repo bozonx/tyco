@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 8ce2e94772c153cb5c099fe0fecf59f9fe845fd7e5b84cab35b5718106a139e5
+// Source hash: 3bfbf571ab190a0bc5f351f3fd3fe697b951bc5cf9b340c907a2e551515dda00
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -680,6 +680,21 @@ export type ToolGroupSettings = {
 
 /** Whether the system credential store can be reached. */
 export type VaultState = 'available' | 'unavailable'
+
+export type VaultTarget = {
+  path: string
+  /** The app data folder the vault is in by default. */
+  isDefault: boolean
+  contents: VaultTargetKind
+}
+
+/** What a folder the vault may go to holds. */
+export type VaultTargetKind =
+  | { kind: 'current' }
+  | { kind: 'empty' }
+  | { kind: 'vault'; profileCount: number; projectCount: number }
+  | { kind: 'occupied'; subfolderPath: string }
+  | { kind: 'nested' }
 
 export type VoiceAudioLevelPayload = { level: number; peak: number }
 

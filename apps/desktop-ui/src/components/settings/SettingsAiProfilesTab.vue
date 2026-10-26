@@ -73,11 +73,7 @@
           <SettingsEntityItem
             v-for="project in projects"
             :key="project.id"
-            :icon="
-              project.isExternal
-                ? 'mdi:folder-open-outline'
-                : 'mdi:folder-table-outline'
-            "
+            :icon="projectIcon(project)"
             icon-tone="secondary"
             :title="project.name"
             :description="project.description || undefined"
@@ -108,44 +104,41 @@
     >
       <FieldRow
         :label="t('settings.aiVaultPath')"
-        :info="t('settings.aiVaultPathNotMoved')"
         :error="vaultError || undefined"
       >
         <div class="vault-path-control">
           <FieldInput
             class="vault-path-input"
             readonly
-            :model-value="vaultPath"
+            :model-value="vaultPath || userConfig.aiVault.path"
           />
           <Button
             size="sm"
             variant="neutral"
             icon="mdi:folder-edit-outline"
-            @click="handlePickVaultFolder"
+            @click="showVaultModal = true"
           >
-            {{ t('settings.selectFolder') }}
+            {{ t('settings.vaultChange') }}
           </Button>
           <Button
             size="sm"
             variant="neutral"
             icon="mdi:folder-open-outline"
+            :disabled="Boolean(vaultError)"
             @click="handleOpenVault"
           >
             {{ t('settings.openInFileManager') }}
           </Button>
-          <Button
-            v-if="userConfig.aiVault.path"
-            size="sm"
-            variant="ghost"
-            icon="mdi:restore"
-            :title="t('settings.resetToDefault')"
-            @click="handleResetVaultFolder"
-          >
-            {{ t('settings.resetToDefault') }}
-          </Button>
         </div>
       </FieldRow>
     </SettingsSection>
+
+    <SettingsVaultLocationModal
+      :open="showVaultModal"
+      :current-path="vaultPath || userConfig.aiVault.path"
+      :is-custom="Boolean(userConfig.aiVault.path)"
+      @close="showVaultModal = false"
+    />
 
     <ConfirmModal
       :open="showDeleteProfileConfirm"
@@ -176,7 +169,7 @@ import { useChatModelOptions } from '../../composables/use-chat-model-options'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
-import { profileIcon } from '../../lib/ai-profiles/profile-icons'
+import { profileIcon, projectIcon } from '../../lib/ai-profiles/profile-icons'
 import { profileModelName } from '../../lib/ai-profiles/profile-model-options'
 import {
   CHAT_TOOL_GROUPS,
@@ -197,10 +190,11 @@ import StateMessage from '../common/StateMessage.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
+import SettingsVaultLocationModal from './SettingsVaultLocationModal.vue'
 import type { AiProfile, AiProject } from '@tyco/shared'
 
 const { t } = useI18n()
-const { draft: userConfig, operations, navigate } = useSettingsContext()
+const { draft: userConfig, navigate } = useSettingsContext()
 const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
@@ -337,18 +331,7 @@ async function handleOpenVault() {
   }
 }
 
-async function handlePickVaultFolder() {
-  try {
-    const selected = await aiProfilesStore.pickFolder()
-    if (selected) operations.updateVaultPath(selected)
-  } catch (error) {
-    toastError(error)
-  }
-}
-
-function handleResetVaultFolder() {
-  operations.updateVaultPath(undefined)
-}
+const showVaultModal = ref(false)
 </script>
 
 <style scoped>

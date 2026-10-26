@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createVaultId } from './vault-id'
+import { createVaultId, slugifyVaultName } from './vault-id'
 
 describe('createVaultId', () => {
   it('takes the id from a Latin name', () => {
@@ -13,10 +13,23 @@ describe('createVaultId', () => {
     ).toBe('writer-2')
   })
 
-  it('gives a name without Latin letters a random id', () => {
-    expect(
-      createVaultId('Технический писатель', 'profile', [], () => 'a1b2c3d4')
-    ).toBe('profile-a1b2c3d4')
+  it('spells other alphabets in Latin letters', () => {
+    expect(createVaultId('Технический писатель', 'profile', [])).toBe(
+      'tekhnicheskiy-pisatel'
+    )
+    expect(slugifyVaultName('Мой помощник №1')).toBe('moy-pomoshchnik-1')
+    expect(slugifyVaultName('Їжак і ґанок')).toBe('yizhak-i-ganok')
+    expect(slugifyVaultName('Çeviri Yardımcısı')).toBe('ceviri-yardimcisi')
+    expect(slugifyVaultName('Español: corrección')).toBe('espanol-correccion')
+    expect(slugifyVaultName('Straße')).toBe('strasse')
+    expect(slugifyVaultName('Βοηθός')).toBe('voithos')
+    expect(slugifyVaultName('თარჯიმანი')).toBe('tarjimani')
+  })
+
+  it('gives a name with no Latin spelling a random id', () => {
+    expect(createVaultId('翻译助手', 'profile', [], () => 'a1b2c3d4')).toBe(
+      'profile-a1b2c3d4'
+    )
   })
 
   it('keeps a long name within the id limit', () => {

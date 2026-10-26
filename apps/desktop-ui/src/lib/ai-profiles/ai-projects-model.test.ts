@@ -71,6 +71,18 @@ describe('ai-projects-model', () => {
     expect(model.projects.value).toContainEqual(created)
   })
 
+  it('takes the folder the user chose', async () => {
+    const deps = createDeps()
+    const model = createAiProjectsModel(deps)
+
+    const created = await model.createProject({
+      name: 'Backend API',
+      id: 'api',
+      isExternal: false,
+    })
+    expect(created.id).toBe('api')
+  })
+
   it('creates an external project with target path', async () => {
     const deps = createDeps()
     const model = createAiProjectsModel(deps)

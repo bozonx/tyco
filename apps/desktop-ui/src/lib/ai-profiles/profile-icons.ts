@@ -1,4 +1,4 @@
-import type { AiProfile } from '@tyco/shared'
+import type { AiProfile, AiProject } from '@tyco/shared'
 
 export const DEFAULT_PROFILE_ICON = 'mdi:account-outline'
 
@@ -28,4 +28,11 @@ const KNOWN_ICONS = new Set(PROFILE_ICONS)
 export function profileIcon(profile: Pick<AiProfile, 'icon'> | undefined) {
   const icon = profile?.icon
   return icon && KNOWN_ICONS.has(icon) ? icon : DEFAULT_PROFILE_ICON
+}
+
+/** The icon of a project: a linked folder or one of the vault's own */
+export function projectIcon(project: Pick<AiProject, 'isExternal'>): string {
+  return project.isExternal
+    ? 'mdi:folder-open-outline'
+    : 'mdi:folder-table-outline'
 }

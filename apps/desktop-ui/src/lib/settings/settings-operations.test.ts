@@ -125,14 +125,6 @@ describe('settings operations', () => {
     expect(f.config.hotkeys).not.toHaveProperty('unknown')
   })
 
-  it('sets and resets the vault path', () => {
-    const f = fixture()
-    f.model.updateVaultPath('/vault')
-    expect(f.config.aiVault).toEqual({ path: '/vault' })
-    f.model.updateVaultPath(undefined)
-    expect(f.config.aiVault).toEqual({ path: '' })
-  })
-
   it('applies plugin presets and preserves unrelated settings', () => {
     const f = fixture()
     f.deps.pluginFactories = () => [

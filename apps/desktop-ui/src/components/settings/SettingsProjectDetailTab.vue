@@ -9,7 +9,7 @@
         size="sm"
         variant="primary"
         icon="mdi:content-save"
-        :disabled="!isValid"
+        :disabled="!isValid || Boolean(folderError)"
         @click="handleCreate"
       >
         {{ t('settings.saveProject') }}
@@ -21,6 +21,25 @@
       <SettingsSection :title="t('settings.aiEntityGeneral')">
         <FieldRow :label="t('settings.projectName')">
           <FieldInput v-model="name" @update:model-value="change" />
+        </FieldRow>
+        <FieldRow
+          v-if="isNew"
+          :label="t('settings.vaultFolder')"
+          :info="t('settings.projectFolderHint')"
+          :hint="`projects/${folder.folderId.value}`"
+          :error="folderError"
+        >
+          <FieldInput
+            v-model="folder.typedId.value"
+            :placeholder="folder.suggestedId.value"
+          />
+        </FieldRow>
+        <FieldRow
+          v-else
+          :label="t('settings.vaultFolder')"
+          :info="t('settings.projectFolderFixedHint')"
+        >
+          <code class="vault-folder">projects/{{ projectId }}</code>
         </FieldRow>
         <FieldRow :label="t('settings.projectDescription')">
           <FieldInput v-model="description" @update:model-value="change" />
@@ -50,32 +69,24 @@
         </FieldRow>
       </SettingsSection>
 
-      <SettingsSection v-if="!isNew" :title="t('settings.aiProfilesTab')">
+      <SettingsSection
+        :title="t('settings.projectProfileAccess')"
+        :info="t('settings.projectProfileAccessHint')"
+      >
         <div class="settings-section-content">
-          <StateMessage
-            v-if="profiles.length === 0"
-            density="compact"
-            :message="t('settings.noProfilesYet')"
+          <SettingsAccessList
+            :entries="accessEntries"
+            :candidates="accessCandidates"
+            :add-label="t('settings.grantProfileAccess')"
+            :empty-message="
+              profiles.length === 0
+                ? t('settings.noProfilesYet')
+                : t('settings.noProfilesWithAccess')
+            "
+            :openable="!isNew"
+            @change="changeAccess"
+            @open="(profileId) => navigate(profileTab(profileId))"
           />
-          <div v-else class="settings-entity-list">
-            <SettingsEntityItem
-              v-for="profile in profiles"
-              :key="profile.id"
-              :icon="profileIcon(profile)"
-              :title="profile.name"
-              openable
-              @open="navigate(profileTab(profile.id))"
-            >
-              <span class="settings-entity-meta">
-                {{ t('settings.accessRead') }}:
-                {{ formatAccess(profile.projectPermissions[projectId]?.read) }}
-              </span>
-              <span class="settings-entity-meta">
-                {{ t('settings.accessWrite') }}:
-                {{ formatAccess(profile.projectPermissions[projectId]?.write) }}
-              </span>
-            </SettingsEntityItem>
-          </div>
         </div>
       </SettingsSection>
 
@@ -122,7 +133,13 @@ import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { profileIcon } from '../../lib/ai-profiles/profile-icons'
+import {
+  type ProjectAccessLevel,
+  hasFileToolsOff,
+  projectAccessLevelOf,
+} from '../../lib/ai-profiles/project-access'
 import { createProjectEditor } from '../../lib/ai-profiles/project-editor'
+import { createVaultFolderField } from '../../lib/ai-profiles/vault-folder-field'
 import {
   AI_OVERVIEW_TAB,
   NEW_ENTITY_ID,
@@ -136,15 +153,15 @@ import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
+import SettingsAccessList, {
+  type AccessListCandidate,
+  type AccessListEntry,
+} from './SettingsAccessList.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDangerZone from './SettingsDangerZone.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
-import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
-import {
-  DEFAULT_PROJECT_PERMISSION,
-  type ProjectAccessMode,
-} from '@tyco/shared'
+import type { AiProfile } from '@tyco/shared'
 
 const props = defineProps<{ projectId: string }>()
 const { navigate } = useSettingsContext()
@@ -200,13 +217,55 @@ function changeType(external: boolean) {
   change()
 }
 
-/** A profile without an entry for the project has no access to it */
-function formatAccess(
-  mode: ProjectAccessMode = DEFAULT_PROJECT_PERMISSION.read
-): string {
-  if (mode === 'allow') return t('settings.accessAllow')
-  if (mode === 'ask') return t('settings.accessAsk')
-  return t('settings.accessDeny')
+/** The access a new project gives on creation, by profile */
+const pendingAccess = ref<Record<string, ProjectAccessLevel>>({})
+
+function accessLevelOf(profile: AiProfile): ProjectAccessLevel | undefined {
+  return isNew.value
+    ? pendingAccess.value[profile.id]
+    : projectAccessLevelOf(profile.projectPermissions[props.projectId])
+}
+
+const accessEntries = computed<AccessListEntry[]>(() =>
+  profiles.value.flatMap((profile) => {
+    const level = accessLevelOf(profile)
+    if (!level) return []
+    return [
+      {
+        id: profile.id,
+        icon: profileIcon(profile),
+        title: profile.name,
+        level,
+        warning: hasFileToolsOff(profile)
+          ? t('settings.projectAccessFileToolsOff')
+          : undefined,
+      },
+    ]
+  })
+)
+
+const accessCandidates = computed<AccessListCandidate[]>(() =>
+  profiles.value
+    .filter((profile) => !accessLevelOf(profile))
+    .map((profile) => ({
+      id: profile.id,
+      icon: profileIcon(profile),
+      label: profile.name,
+    }))
+)
+
+function changeAccess(
+  profileId: string,
+  level: ProjectAccessLevel | undefined
+) {
+  if (isNew.value) {
+    const { [profileId]: _removed, ...rest } = pendingAccess.value
+    pendingAccess.value = level ? { ...rest, [profileId]: level } : rest
+    return
+  }
+  void aiProfilesStore
+    .setProjectAccess(profileId, props.projectId, level)
+    .catch(toastError)
 }
 
 async function handlePickFolder() {
@@ -221,10 +280,32 @@ async function handlePickFolder() {
   }
 }
 
+const folder = createVaultFolderField({
+  name: () => name.value,
+  fallback: 'project',
+  takenIds: () => aiProfilesStore.projects.map(({ id }) => id),
+})
+const folderError = computed(() =>
+  folder.errorKey.value ? t(folder.errorKey.value) : undefined
+)
+
 async function handleCreate() {
-  if (!isValid.value) return
+  if (!isValid.value || folderError.value) return
   try {
-    const created = await aiProfilesStore.createProject(editor.fields())
+    const created = await aiProfilesStore.createProject({
+      ...editor.fields(),
+      id: folder.folderId.value,
+    })
+    // the project is there either way: a failed grant is reported, not undone
+    const grants = await Promise.allSettled(
+      Object.entries(pendingAccess.value).map(([profileId, level]) =>
+        aiProfilesStore.setProjectAccess(profileId, created.id, level)
+      )
+    )
+    for (const grant of grants) {
+      if (grant.status === 'rejected') toastError(grant.reason)
+    }
+    pendingAccess.value = {}
     navigate(projectTab(created.id))
   } catch (error) {
     toastError(error)
@@ -243,3 +324,10 @@ async function handleDelete() {
   }
 }
 </script>
+
+<style scoped>
+.vault-folder {
+  overflow-wrap: anywhere;
+  font-size: var(--text-control);
+}
+</style>

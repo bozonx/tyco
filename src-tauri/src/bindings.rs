@@ -86,6 +86,8 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::ai_tools::files::AiFileToolRequest>();
     visitor.visit::<services::ai_vault::AiProfile>();
     visitor.visit::<services::ai_vault::AiProject>();
+    visitor.visit::<services::ai_vault::relocation::VaultTarget>();
+    visitor.visit::<services::ai_vault::relocation::VaultTargetKind>();
     visitor.visit::<services::custom_actions::CommandRunRecord>();
     visitor.visit::<services::custom_actions::ScriptExecutionResult>();
     visitor.visit::<services::external::access::AccessDecision>();

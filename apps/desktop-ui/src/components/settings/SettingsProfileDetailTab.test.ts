@@ -1,5 +1,9 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { DEFAULT_USER_CONFIG, type AiProfile } from '@tyco/shared'
+import {
+  DEFAULT_USER_CONFIG,
+  type AiProfile,
+  type AiProject,
+} from '@tyco/shared'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
@@ -45,7 +49,7 @@ const profile = (): AiProfile => ({
 function createStore() {
   const state = reactive({
     profiles: [profile()] as AiProfile[],
-    projects: [],
+    projects: [] as AiProject[],
     isLoaded: true,
   })
   return Object.assign(state, {
@@ -96,12 +100,65 @@ describe('SettingsProfileDetailTab.vue', () => {
     await wrapper.get('input').setValue('Editor')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
+    expect(wrapper.text()).toContain('profiles/editor')
     expect(store.createProfile).toHaveBeenCalledWith({
       name: 'Editor',
+      id: 'editor',
       soul: 'settings.profileDefaultSoul',
       settings: {},
     })
     expect(context.navigate).toHaveBeenCalledWith('ai-profile:created')
+  })
+
+  it('connects projects and warns while the file tools are off', async () => {
+    store.projects.push(
+      {
+        id: 'docs',
+        name: 'Docs',
+        isExternal: false,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+      { id: 'site', name: 'Site', isExternal: true, createdAt: 1, updatedAt: 1 }
+    )
+    store.profiles[0]!.projectPermissions = {
+      docs: { read: 'allow', write: 'deny' },
+    }
+    const wrapper = mountTab()
+    await flushPromises()
+    expect(wrapper.text()).toContain('settings.profileFileToolsOff')
+    const list = wrapper.findComponent({ name: 'SettingsAccessList' })
+    expect(list.props('entries')).toEqual([
+      expect.objectContaining({ id: 'docs', level: 'read' }),
+    ])
+    expect(list.props('candidates')).toEqual([
+      expect.objectContaining({ id: 'site' }),
+    ])
+    await list.vm.$emit('change', 'site', 'full')
+    expect(store.updateProfile).toHaveBeenLastCalledWith('writer', {
+      projectPermissions: {
+        docs: { read: 'allow', write: 'deny' },
+        site: { read: 'allow', write: 'allow' },
+      },
+    })
+    await list.vm.$emit('open', 'docs')
+    expect(context.navigate).toHaveBeenCalledWith('ai-project:docs')
+  })
+
+  it('refuses a folder another profile has', async () => {
+    const wrapper = mountTab('new')
+    const [nameInput, folderInput] = wrapper.findAll('input')
+    await nameInput!.setValue('Editor')
+    await folderInput!.setValue('Writer')
+    expect(wrapper.text()).toContain('settings.vaultFolderTaken')
+    await wrapper.get('form').trigger('submit')
+    expect(store.createProfile).not.toHaveBeenCalled()
+  })
+
+  it('shows the folder of an existing profile', async () => {
+    const wrapper = mountTab()
+    await flushPromises()
+    expect(wrapper.text()).toContain('profiles/writer')
   })
 
   it('reports a failed creation', async () => {

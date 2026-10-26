@@ -43,6 +43,7 @@ import type {
   TextInsertionStatus,
   ToolCatalogEntry,
   VaultState,
+  VaultTarget,
   VoiceCaptureInfo,
 } from './desktop-types'
 import type { UserConfig } from '../user-config'
@@ -135,6 +136,10 @@ export interface DesktopCommands {
   get_text_insertion_status: { args: undefined; result: TextInsertionStatus }
   hide_quick_window_on_blur: { args: { activationId: number }; result: void }
   hide_window: { args: { activationId: number }; result: void }
+  inspect_ai_vault_target: {
+    args: { path?: string | null }
+    result: VaultTarget
+  }
   install_plugin_package: {
     args: { inspectionId: string }
     result: InstalledPlugin
@@ -214,6 +219,10 @@ export interface DesktopCommands {
   read_dropped_file: { args: { path: string }; result: ArrayBuffer }
   rebind_hotkeys: { args: undefined; result: void }
   release_deleted_chat_images: { args: { id: string }; result: void }
+  relocate_ai_vault: {
+    args: { path?: string | null; moveData: boolean }
+    result: void
+  }
   rename_chat: {
     args: { id: string; title: string; profileId?: string | null }
     result: void

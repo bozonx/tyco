@@ -173,7 +173,17 @@ in `services/storage/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage
 | User-selected paths                   | Plugin note files; `aiVault.path`                                                                                                                                          |
 
 A profile of the AI vault keeps `profile.json`, `SOUL.md`, its chats in `chats/`
-(laid out as the app's own `chats/`) and its files in `workspace/`. Timestamps
+(laid out as the app's own `chats/`) and its files in `workspace/`. Profile and
+project folders are named by their ids, made once from the name (transliterated
+to Latin) and never changed by a rename: chats, project permissions and the
+`projects/<id>/` paths the model sees refer to them.
+
+`aiVault.path` is changed only by `relocate_ai_vault`, never by a settings save.
+It moves the vault into an empty folder, or points the app at an empty folder or
+an existing vault without moving anything; a folder holding other files is
+refused (the settings offer a `tyco-vault` subfolder of it). A move renames each
+top-level entry, or copies, checks and then removes it across disks, and moves
+the entries back when it fails. Timestamps
 in the stored files are Unix milliseconds (`createdAt`, `updatedAt`,
 `lastMessageAt`). A plugin file is named by the hex of its id, because ids that
 differ only in case collide on a case-insensitive file system.

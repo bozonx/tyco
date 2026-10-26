@@ -15,13 +15,24 @@
           <FieldRow :label="t('settings.profileName')">
             <FieldInput ref="nameInputRef" v-model="newName" autofocus />
           </FieldRow>
+          <FieldRow
+            :label="t('settings.vaultFolder')"
+            :info="t('settings.vaultFolderHint')"
+            :hint="`profiles/${folder.folderId.value}`"
+            :error="folderError"
+          >
+            <FieldInput
+              v-model="folder.typedId.value"
+              :placeholder="folder.suggestedId.value"
+            />
+          </FieldRow>
           <div class="profile-form-actions">
             <Button
               type="submit"
               size="sm"
               variant="primary"
               icon="mdi:plus"
-              :disabled="!newName.trim() || isCreating"
+              :disabled="!newName.trim() || Boolean(folderError) || isCreating"
             >
               {{ t('settings.createProfile') }}
             </Button>
@@ -40,6 +51,12 @@
           :error="name.trim() ? undefined : t('settings.profileNameRequired')"
         >
           <FieldInput v-model="name" @update:model-value="changeName" />
+        </FieldRow>
+        <FieldRow
+          :label="t('settings.vaultFolder')"
+          :info="t('settings.vaultFolderFixedHint')"
+        >
+          <code class="vault-folder">profiles/{{ profile.id }}</code>
         </FieldRow>
 
         <div class="advanced-toggle">
@@ -109,24 +126,35 @@
         @invalid-step-count="stepCountError = true"
       >
         <template #group="{ group, settings }">
-          <template v-if="group.id === FILES_TOOL_GROUP_ID">
-            <p class="settings-entity-meta">
-              {{ t('settings.projectPermissionsHint') }}
-            </p>
-            <InlineNotice
-              v-if="settings.access === 'ask'"
-              density="compact"
-              icon="mdi:information-outline"
-              :message="t('settings.profileFilesAskAll')"
-            />
-            <SettingsProfileProjectAccess
-              :projects="projects"
-              :permissions="profile.projectPermissions"
-              @change="setPermission"
-            />
-          </template>
+          <InlineNotice
+            v-if="group.id === FILES_TOOL_GROUP_ID && settings.access === 'ask'"
+            density="compact"
+            icon="mdi:information-outline"
+            :message="t('settings.profileFilesAskAll')"
+          />
         </template>
       </SettingsProfileToolsSection>
+
+      <SettingsSection
+        :title="t('settings.projectsTitle')"
+        :info="t('settings.projectPermissionsHint')"
+      >
+        <div class="settings-section-content">
+          <InlineNotice
+            v-if="hasFileToolsOff(profile)"
+            density="compact"
+            kind="warning"
+            icon="mdi:alert-outline"
+            :message="t('settings.profileFileToolsOff')"
+          />
+          <SettingsProfileProjectAccess
+            :projects="projects"
+            :permissions="profile.projectPermissions"
+            @change="setProjectAccess"
+            @open="(projectId) => navigate(projectTab(projectId))"
+          />
+        </div>
+      </SettingsSection>
 
       <SettingsSection
         :title="t('settings.profileSoulPrompt')"
@@ -215,12 +243,19 @@ import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
 import {
+  type ProjectAccessLevel,
+  hasFileToolsOff,
+  withProjectAccess,
+} from '../../lib/ai-profiles/project-access'
+import { createVaultFolderField } from '../../lib/ai-profiles/vault-folder-field'
+import {
   CHAT_TOOL_GROUPS,
   FILES_TOOL_GROUP_ID,
 } from '../../lib/chat-tools/chat-tool-groups'
 import {
   AI_OVERVIEW_TAB,
   NEW_ENTITY_ID,
+  projectTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
@@ -238,7 +273,7 @@ import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
-import { MAX_PROFILE_TEMPERATURE, type ProjectPermission } from '@tyco/shared'
+import { MAX_PROFILE_TEMPERATURE } from '@tyco/shared'
 
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
@@ -267,12 +302,22 @@ onMounted(() => {
   }
 })
 
+const folder = createVaultFolderField({
+  name: () => newName.value,
+  fallback: 'profile',
+  takenIds: () => aiProfilesStore.profiles.map(({ id }) => id),
+})
+const folderError = computed(() =>
+  folder.errorKey.value ? t(folder.errorKey.value) : undefined
+)
+
 async function handleCreate() {
-  if (!newName.value.trim() || isCreating.value) return
+  if (!newName.value.trim() || folderError.value || isCreating.value) return
   isCreating.value = true
   try {
     const created = await aiProfilesStore.createProfile({
       name: newName.value,
+      id: folder.folderId.value,
       soul: t('settings.profileDefaultSoul'),
       settings: {},
     })
@@ -356,13 +401,17 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', syncWhenVisible)
 })
 
-function setPermission(projectId: string, permission: ProjectPermission) {
+function setProjectAccess(
+  projectId: string,
+  level: ProjectAccessLevel | undefined
+) {
   if (!profile.value) return
   void changeSettings({
-    projectPermissions: {
-      ...profile.value.projectPermissions,
-      [projectId]: permission,
-    },
+    projectPermissions: withProjectAccess(
+      profile.value.projectPermissions,
+      projectId,
+      level
+    ),
   })
 }
 
@@ -424,6 +473,11 @@ async function handleDelete() {
 .profile-form-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.vault-folder {
+  overflow-wrap: anywhere;
+  font-size: var(--text-control);
 }
 
 .advanced-toggle {
