@@ -1,94 +1,136 @@
 # Repository Guidelines
 
+TyCo is an offline-first desktop AI typing companion: a Tauri 2 shell with a
+Rust backend and a Vue 3 frontend, organized as a pnpm + Turborepo monorepo.
+
 ## Communication
 
-- Communicate with the user in Russian, including plans and explanations.
-- Write all code-related content in English: code, identifiers, comments, commit messages, logs, and non-i18n strings. Do not use Russian or any other language in code-related content; i18n locales are the only exception.
-- Keep changes focused. Do not refactor unrelated code unless it is necessary for the task.
+- Talk to the user in Russian, including plans and explanations.
+- Everything code-related is in English: code, identifiers, comments, logs,
+  commit messages, non-i18n strings. Locale files are the only exception.
+- Keep changes focused; do not refactor unrelated code unless the task needs it.
 
-## Monorepo Layout and Stack
+## Layout
 
-- `apps/desktop-ui/` — Vue 3 + Vite + Tailwind CSS + CodeMirror 6 frontend (`@tyco/desktop-ui`).
-- `packages/shared/` — shared TypeScript contracts and data structures (`@tyco/shared`).
-- `src-tauri/` — Rust backend (Tauri 2, local storage, D-Bus IPC, Whisper/LLM models management).
-- `scripts/` — development, automation, and verification scripts (`check-i18n.js`, `tauri-dev.mjs`).
+- `apps/desktop-ui/` — Vue 3 + Vite + Tailwind CSS + CodeMirror 6 frontend
+  (`@tyco/desktop-ui`). `src/lib/` models, `src/stores/` Pinia stores,
+  `src/composables/`, `src/components/` grouped by feature, `build/` Vite plugins.
+- `packages/shared/` — wire contracts, config types, generated desktop bindings
+  (`@tyco/shared`).
+- `packages/plugin-sdk/` — framework-independent plugin contract;
+  `packages/plugin-build/` — plugin bundler; `packages/plugin-*/` — bundled plugins.
+- `src-tauri/` — Rust backend: `commands/` (IPC adapters), `models/` (wire
+  types), `services/` (domain logic), `crates/`, `tyco-ctl/` (external CLI).
+- `scripts/` — dev launcher, code generation, checks, container and VM tests.
+- `dev_docs/` — design notes; read the relevant one before changing an area:
+  `architecture.md`, `state-management.md`, `desktop-api.md`,
+  `config-storage.md`, `plugin-packages.md`, `cross-platform.md`, `testing.md`,
+  `ui-system.md`, `ui-components.md`. `docs/external-control.md` — CLI/D-Bus API.
 
-The root workspace uses Node.js 24+, pnpm 11, TypeScript, Turborepo, ESLint (flat config), and Prettier.
-Always use `pnpm`; do not introduce npm or Yarn lockfiles.
+Toolchain: Node.js 24 (`.node-version`), pnpm 11, Rust pinned by
+`rust-toolchain.toml`. Always use `pnpm`; never add npm or Yarn lockfiles.
+Run the desktop app with `pnpm tauri:dev`, not `pnpm tauri dev`.
 
-## Working Approach & Architecture Principles
+## Frontend Architecture
 
-- **Thin Pinia Stores + DI Models**:
-  - Keep Pinia stores minimal and focused on reactivity and dependency wiring.
-  - Extract pure business and state logic into decoupled models inside `apps/desktop-ui/src/lib/` (e.g. `history/`, `ipc/`, `action-menu/`, `editor-input/`, `modals/`).
-  - Accompany every DI model with focused unit tests.
-  - Place state by its lifetime and audience: a Pinia store for state shared across components or that outlives a page; `provide`/`inject` for state of one component subtree (e.g. `use-markup-mode`); a composable for per-component wiring and lifecycle reactions (e.g. `use-quick-window-session`).
-  - Desktop state (settings, session, activation, window) is read from `useDesktopStore`; `useIpcStore` only calls desktop commands, by their Rust names (`call('copy_text', { text })`). Change the settings with `updateUserConfig(patch)` rather than spreading the whole config.
-  - Composables called from a store setup must not use lifecycle hooks or `inject`.
-  - A lower-level store does not import a feature store; the feature hands itself in instead (e.g. the chat provides `core.askInChat` to the tool registry).
-- **Naming Conventions**:
-  - Use kebab-case for filenames across all TypeScript and utility modules (e.g., `context-menu.ts`, `editor-sync.ts`).
-  - Rust module filenames use snake_case to match their module identifiers; Cargo example and integration test target filenames may use kebab-case.
-  - Vue components use PascalCase (`EditorInput.vue`, `SettingsTranslationsTab.vue`).
-  - Types and enums use PascalCase; constant collections use SCREAMING_SNAKE_CASE.
-  - Distinguish identifiers, display labels, state, and call parameters in names (`providerId`, `providerLabel`, `desktopState`).
-  - Use `can*` for capabilities and `is*` / `has*` for state predicates; include units or counts where ambiguous (`contextWindowTokens`, `pendingSaveCount`).
-  - Prefer domain-specific modules over generic `helpers` collections; keep SDK and legacy serialized names at explicit compatibility boundaries.
-- **I18n & Locales**:
-  - Core locale messages live in `apps/desktop-ui/src/lib/i18n/locales/*.json`; plugin messages live in their own `packages/plugin-*/src/locales/*.json`.
-  - **No Fallbacks**: Translation fallbacks are prohibited (`fallbackLocale: false`). Every supported locale (`ru-RU`, `en-US`, `es-AR`, `tr-TR`) must provide 100% of all keys. A missing key is an error, never a silent fallback to English.
-  - **Completeness & Hygiene**: Every key referenced in application code (templates, scripts, `*Key` properties) must exist across all supported locales. Conversely, dead/unused localization keys must not remain in locale dictionaries.
-  - All keys, placeholders (`{param}`), types, and structure across locales within each package must stay synchronized. Run `pnpm check:i18n` to validate.
-- **IPC & System Contracts**:
-  - Linux D-Bus contract uses `org.tyco.Service`, `/org/tyco/Object`, and `org.tyco.Interface`.
-- **Rust Layer**:
-  - Strict zero-warning policy on `cargo clippy -- -D warnings`.
-  - Code must be formatted via `cargo fmt --check`.
-  - Accompany core commands with unit tests in `src-tauri`.
-  - Keep service logic testable without a Tauri runtime: pass it state, paths
-    or a host trait (e.g. `SelectionBackend`, `ActivationHost`) instead of an
-    `AppHandle`. Commands and thin facades such as `history_store` resolve
-    managed state and hand it in; `#[tauri::command]` bodies hold no logic of
-    their own.
-  - Keep OS- and session-specific code in `src-tauri/src/services/platform/`; ask
-    `platform::session::current()` instead of reading `XDG_SESSION_TYPE` and the
-    like. Supported platforms and test setups: `dev_docs/cross-platform.md`.
+- **Thin stores, injected models.** Business and state logic lives in
+  `apps/desktop-ui/src/lib/<feature>/` models with injected dependencies, each
+  with focused unit tests. Pinia stores only wire dependencies and expose
+  reactive state. Models must not import stores, components, views,
+  composables or `@tauri-apps/*` (ESLint enforces it); native APIs go through
+  `lib/desktop/` and `lib/net/tauri-net.ts`.
+- **Place state by lifetime and audience:** a Pinia store for state shared
+  across components or outliving a page; `provide`/`inject` for one component
+  subtree (e.g. `use-markup-mode`); a composable for per-component wiring and
+  lifecycle (e.g. `use-quick-window-session`). See `dev_docs/state-management.md`.
+- Read desktop state (settings, session, activation, window) from
+  `useDesktopStore`. `useIpcStore` only calls desktop commands by their Rust
+  names (`call('copy_text', { text })`). Change settings with
+  `updateUserConfig(patch)`, never by spreading the whole config.
+- Composables called from a store setup must not use lifecycle hooks or `inject`.
+- A lower-level store never imports a feature store; the feature hands itself
+  in (e.g. the chat provides `core.askInChat` to the tool registry).
 
-## Verification Commands
+## Naming
 
-- `pnpm check` — version sync, i18n validator, ESLint, TypeScript type-check, Prettier check.
-- `pnpm test` — runs all Vitest test suites.
-- `pnpm validate` — `pnpm check && pnpm test && pnpm build`.
-- `pnpm check:rust` / `pnpm test:rust` — `cargo fmt --check` + `cargo clippy --all-targets -D warnings`, and `cargo test`.
-- `pnpm validate:all` — everything above in one go.
+- Filenames: kebab-case for TS/JS modules, stores and composables
+  (`editor-sync.ts`); PascalCase for Vue components and their adjacent tests
+  (`EditorInput.vue`); snake_case for Rust modules (Cargo example and
+  integration-test targets may use kebab-case).
+- Types and enums are PascalCase; constant collections are SCREAMING_SNAKE_CASE.
+- Separate identifiers, labels, state and parameters in names (`providerId`,
+  `providerLabel`, `desktopState`).
+- `can*` for capabilities, `is*` / `has*` for state predicates; include units
+  or counts when ambiguous (`contextWindowTokens`, `pendingSaveCount`).
+- Prefer domain modules over generic `helpers`; keep SDK and legacy serialized
+  names at explicit compatibility boundaries.
 
-## Offline Constraint
+## I18n
 
-The app must work without network access. Do not add fonts, icons, stylesheets
-or scripts loaded from a CDN. Plugin icons are bundled in their packages by `@tyco/plugin-build`. Core icons come from `@iconify-json/mdi` and are
-subsetted at build time by `apps/desktop-ui/build/offline-icons-plugin.ts`,
-which scans the sources for `mdi:*` names; referencing a new icon is enough.
+- Core messages: `apps/desktop-ui/src/lib/i18n/locales/*.json`; plugin
+  messages: `packages/plugin-*/src/locales/*.json`.
+- The supported locales are listed in `packages/plugin-sdk/src/locales.json`.
+  Every locale must contain every key: there are no fallbacks
+  (`fallbackLocale: false`), and a missing key is an error.
+- When adding or renaming a key, update all locale files with real
+  translations, keeping keys, `{param}` placeholders and structure in sync.
+  Remove keys that are no longer used.
+- `pnpm check:i18n` validates all of this.
 
-## CSP
+## Rust Backend
 
-`src-tauri/tauri.conf.json` holds the production CSP. `scripts/tauri-dev.mjs`
-overrides only `devUrl` and the CSP entries needed to reach the dev server —
-keep it that way, so that anything working in dev also works in a bundle. In
-particular, never rely on inline scripts: `script-src` does not allow them.
+- Zero warnings under Clippy with `-D warnings`; code formatted by `cargo fmt`.
+- `#[tauri::command]` bodies hold no logic. Keep service logic testable
+  without a Tauri runtime: pass state, paths or a host trait (e.g.
+  `SelectionBackend`, `ActivationHost`) instead of an `AppHandle`. Commands
+  and thin facades such as `history_store` resolve managed state and hand it in.
+- Cover core commands and services with unit tests.
+- After changing a command, an IPC type or an event, run
+  `pnpm generate:desktop` (see `dev_docs/desktop-api.md`).
+- OS- and session-specific code lives in `src-tauri/src/services/platform/`.
+  Ask `platform::session::current()` instead of reading `XDG_SESSION_TYPE` and
+  the like. Linux, Windows and macOS are all targets (`dev_docs/cross-platform.md`).
+- The Linux D-Bus contract is `org.tyco.Service`, `/org/tyco/Object`,
+  `org.tyco.Interface`.
 
-The webview does not reach the network itself: `connect-src` allows only IPC.
-HTTP and WebSocket requests go through the Rust proxy
-(`src-tauri/src/services/net`) via `apps/desktop-ui/src/lib/net`. Provider API
-keys live in the Rust secret store (`services/secrets.rs`), bound to their
-provider's origin; the webview only ever handles `tyco-secret:<id>` references.
+## Security and Offline Constraints
+
+- **Offline.** The app must work without network access. Never load fonts,
+  icons, styles or scripts from a CDN. Core icons come from
+  `@iconify-json/mdi` and are subsetted at build time by
+  `apps/desktop-ui/build/offline-icons-plugin.ts`; referencing a new `mdi:*`
+  name is enough. Plugin icons are bundled by `@tyco/plugin-build`.
+- **CSP.** The production CSP is in `src-tauri/tauri.conf.json`.
+  `scripts/tauri-dev.mjs` overrides only `devUrl` and the entries needed to
+  reach the dev server — keep it that way so dev behaves like a bundle. Never
+  rely on inline scripts: `script-src` forbids them.
+- **Network.** The webview never reaches the network itself (`connect-src`
+  allows only IPC). HTTP and WebSocket go through the Rust proxy
+  (`src-tauri/src/services/net`) via `apps/desktop-ui/src/lib/net`.
+- **Secrets.** Provider API keys live in the Rust secret store
+  (`src-tauri/src/services/secrets`), bound to their provider's origin. The
+  webview handles only `tyco-secret:<id>` references, never raw keys.
 
 ## Versioning
 
-The root `package.json` is the single source of truth. `pnpm sync:version`
-propagates it to `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, and
-`pnpm check` fails when they drift apart.
+The root `package.json` version is the single source of truth.
+`pnpm sync:version` propagates it to `src-tauri/tauri.conf.json` and
+`src-tauri/Cargo.toml`; `pnpm check` fails when they drift apart.
 
-<!-- BEGIN:turborepo-agent-rules -->
+## Verification
+
+Run the checks that cover your change before finishing:
+
+- `pnpm check` — version sync, i18n, plugin packages, generated contracts,
+  ESLint, type-check, Prettier.
+- `pnpm test` — tooling, frontend and plugin tests. A single file:
+  `pnpm --filter @tyco/desktop-ui exec vitest run <path>`.
+- `pnpm check:rust` — `cargo fmt --check` and Clippy.
+- `pnpm test:rust` — all Rust tests; `pnpm test:unit:rust` for unit tests only.
+- `pnpm validate` — `check`, `test` and `build`; `pnpm validate:all` also runs
+  browser tests and the Rust checks.
+
+Formatting fixes: `pnpm format`, `pnpm lint:fix`, `pnpm rust:fmt`.
 
 # This is NOT the Turborepo you know
 
@@ -97,4 +139,3 @@ Turborepo configuration, task behavior, and CLI commands can vary between instal
 Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
 
 This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
-<!-- END:turborepo-agent-rules -->
