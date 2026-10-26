@@ -1,4 +1,4 @@
-"""Fedora KDE guest preparation and probes. Runs only in a disposable VM."""
+"""Linux desktop guest preparation and probes. Runs only in a disposable VM."""
 
 import argparse
 import json
@@ -26,11 +26,12 @@ def session_environment():
     for key in ("DISPLAY", "WAYLAND_DISPLAY", "XDG_CURRENT_DESKTOP", "XDG_SESSION_TYPE", "XDG_SESSION_DESKTOP", "XAUTHORITY"):
         if key in environment:
             os.environ[key] = environment[key]
-    if os.environ.get("XDG_SESSION_TYPE") != "wayland" or "KDE" not in os.environ.get("XDG_CURRENT_DESKTOP", ""):
-        raise RuntimeError(f"Expected KDE Wayland, got {environment}")
+    expected = (WORK / "expected-desktop").read_text().strip() if (WORK / "expected-desktop").exists() else "KDE"
+    if os.environ.get("XDG_SESSION_TYPE") != "wayland" or expected not in os.environ.get("XDG_CURRENT_DESKTOP", ""):
+        raise RuntimeError(f"Expected {expected} Wayland, got {environment}")
     if not (Path(os.environ["XDG_RUNTIME_DIR"]) / os.environ.get("WAYLAND_DISPLAY", "missing")).is_socket():
         raise RuntimeError("The desktop Wayland socket is not ready")
-    locked = command(["gdbus", "call", "--session", "--dest", "org.freedesktop.ScreenSaver", "--object-path", "/ScreenSaver", "--method", "org.freedesktop.ScreenSaver.GetActive"]).stdout
+    locked = command(["gdbus", "call", "--session", "--dest", "org.gnome.ScreenSaver" if expected == "GNOME" else "org.freedesktop.ScreenSaver", "--object-path", "/org/gnome/ScreenSaver" if expected == "GNOME" else "/ScreenSaver", "--method", "org.gnome.ScreenSaver.GetActive" if expected == "GNOME" else "org.freedesktop.ScreenSaver.GetActive"]).stdout
     if "false" not in locked:
         raise RuntimeError("The desktop session is locked")
     return {key: os.environ.get(key) for key in ("XDG_SESSION_TYPE", "XDG_CURRENT_DESKTOP", "WAYLAND_DISPLAY", "DISPLAY", "XDG_RUNTIME_DIR")}
@@ -58,7 +59,18 @@ def prepare():
                 "libayatana-appindicator-gtk3", "gtk-layer-shell", "alsa-lib", "libxdo",
                 "wl-clipboard", "xclip", "xdotool", "ydotool", "nftables", "kate", "konsole",
                 "xdg-desktop-portal-kde", "libsecret", "fuse-libs", "at-spi2-core"]
-    result = command(["sudo", "dnf", "install", "-y", *packages], timeout=1200)
+    if "GNOME" in os.environ["XDG_CURRENT_DESKTOP"]:
+        packages = ["python3-gi", "gir1.2-gtk-3.0", "gir1.2-atspi-2.0", "libwebkit2gtk-4.1-0", "libayatana-appindicator3-1", "libgtk-layer-shell0", "libasound2t64", "libxdo3", "wl-clipboard", "xclip", "xdotool", "ydotool", "nftables", "gnome-text-editor", "libsecret-tools", "libfuse2t64", "at-spi2-core", "desktop-file-utils", "pulseaudio-utils", "pipewire-bin"]
+        command(["sudo", "apt-get", "update"], timeout=600)
+        result = command(["sudo", "env", "DEBIAN_FRONTEND=noninteractive", "apt-get", "install", "-y", *packages], timeout=1200)
+        command(["gsettings", "set", "org.gnome.desktop.session", "idle-delay", "0"])
+        command(["gsettings", "set", "org.gnome.desktop.screensaver", "lock-enabled", "false"])
+        extensions = command(["gnome-extensions", "list", "--enabled"]).stdout.splitlines()
+        for extension in extensions:
+            if "lhc" in extension.lower() or "left-hand" in extension.lower():
+                command(["gnome-extensions", "disable", extension])
+    else:
+        result = command(["sudo", "dnf", "install", "-y", *packages], timeout=1200)
     (WORK / "packages-install.log").write_text(result.stdout + result.stderr)
     # The daemon alone owns uinput; Tyco receives just its private socket.
     command(["sudo", "modprobe", "uinput"])
@@ -101,12 +113,14 @@ def prepare():
 
 def inventory():
     environment = session_environment()
-    packages = command(["rpm", "-q", "fedora-release", "plasma-workspace", "kwin", "webkit2gtk4.1", "xdg-desktop-portal", "xdg-desktop-portal-kde", "kate", "konsole", "ydotool"], check=False).stdout
+    packages = command((["rpm", "-q", "fedora-release", "plasma-workspace", "kwin", "webkit2gtk4.1", "xdg-desktop-portal", "xdg-desktop-portal-kde", "kate", "konsole", "ydotool"] if shutil.which("rpm") else ["true"]), check=False).stdout
+    if "GNOME" in os.environ["XDG_CURRENT_DESKTOP"]:
+        packages = command(["dpkg-query", "-W", "gnome-shell", "mutter", "libwebkit2gtk-4.1-0", "xdg-desktop-portal", "xdg-desktop-portal-gnome", "gnome-text-editor", "ydotool"], check=False).stdout
     services = command(["busctl", "--user", "list", "--no-pager"], check=False).stdout
     return {"session": environment, "os": Path("/etc/os-release").read_text(),
             "kernel": os.uname().release, "packages": packages,
             "services": services, "bootId": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
-            "selinux": command(["getenforce"], check=False).stdout.strip(),
+            "selinux": command(["getenforce"], check=False).stdout.strip() if shutil.which("getenforce") else "unavailable",
             "uinput": Path("/dev/uinput").exists(),
             "ydotoolSocket": (Path(os.environ["XDG_RUNTIME_DIR"]) / ".ydotool_socket").is_socket()}
 

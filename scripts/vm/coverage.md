@@ -2,7 +2,7 @@
 
 The stand uses the original LHC disk read-only, a separate immutable prepared
 Tyco overlay, and disposable per-run disks. It never starts an LHC runner or
-attaches its cache disk. Fedora 44 KDE Wayland is the only implemented profile;
+attaches its cache disk. Fedora 44 KDE Wayland is the main profile;
 XWayland recipients are tested inside that session, not a full X11 login.
 
 ## Automated observations
@@ -57,10 +57,37 @@ Fedora system library version alone does not describe their loaded runtime.
 The native executable follow-up adds HTML-only clipboard and virtual
 multi-monitor checks, including exact inserted bytes and draft preservation
 after output removal. See the [follow-up report](../../dev_docs/testing-results/2026-10-25-fedora44-kde-followup.md)
-for executed results and artifact identity. Other OS/desktop profiles remain
-unimplemented. AppImage acceptance is excluded from that follow-up.
+for executed results and artifact identity. Initial Ubuntu GNOME coverage is described below; other OS/desktop profiles
+remain unimplemented. AppImage acceptance is excluded from that follow-up.
 
 Manual acceptance is limited to physical properties the stand cannot reproduce:
 physical microphone/Bluetooth behavior, GPU/driver behavior, hardware sleep, and
 physical monitor connections. VM audio, suspend, DPI, virtual display topology
 and native dialogs are automation candidates.
+
+## Initial Ubuntu GNOME coverage
+
+The GNOME runner uses its own session check, Ubuntu preparation recipe and
+scenarios. It never loads a KWin observer or enables an LHC Shell extension.
+It checks native GlobalShortcuts approval and physical activation/dismissal,
+process persistence, CLI/D-Bus/default selection denial, command grant and
+revocation, GNOME Keyring and real PCM capture/recovery/device removal.
+
+`VM-10.insertion` requires an enabled UI insertion action and exact receiver
+contents. `VM-10.backend-insertion` is a separate diagnostic: it explicitly
+invokes the native paste command from the quick webview and independently checks
+text/focus under Wayland and XWayland. It does not pass the disabled UI action.
+The receiver wraps long lines to avoid GTK/Cairo surface-size limits.
+
+GlobalShortcuts repetition observes the native quick-window focus, focused
+textarea, exact activation increments, foreign focus on dismissal and released
+modifiers. DOM focus alone is insufficient to establish compositor focus.
+GNOME Keyring creation retains the D-Bus connection that owns its native prompt;
+collection passwords are entered through native controls. Detailed results,
+including failed preliminary runs, are in the [GNOME report](../../dev_docs/testing-results/2026-10-26-ubuntu2604-gnome.md).
+
+GNOME RemoteDesktop approval/denial without ydotool, selection replacement
+failure behavior, browser and terminal recipients, clipboard restoration,
+tray callbacks, dialogs/drag/drop, display topology, session lifecycle and
+production package acceptance remain unverified. These gaps prevent full native
+platform acceptance. Unsupported package/lifecycle suites do not run KDE code.

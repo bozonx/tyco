@@ -4,7 +4,7 @@ Run from the Tyco repository root on a Linux KVM host. Python 3.11+, QEMU,
 qemu-img, SSH/SCP and access to `/dev/kvm` are required. Keep the original base
 read-only. The example profile references the existing Fedora 44 KDE base at
 `/mnt/disk2/vm/lhc-fedora-kde/base.qcow2` and its SSH identity; change a **copy**
-of this profile for another machine. No other platform profile is implemented.
+of this profile for another machine. An initial Ubuntu GNOME profile is described below; its coverage is partial.
 
 All generated images, binaries, known hosts and detailed results live in the
 ignored `dev_files/vm/` directory. `--vm` selects another Tyco-owned directory.
@@ -185,3 +185,35 @@ After creating a WebDriver session, the controller observes a usable main
 window before configuring timeouts. Process-persistence checks also observe
 the previous native process exit before starting the next session. Transport
 failures retain the HTTP method/path; application operations are not replayed.
+
+## Ubuntu GNOME stand
+
+`profiles/ubuntu2604-gnome.json` uses port 2254 and a separate read-only Tyco
+copy of the local Ubuntu source. Create it once, without changing the LHC disk:
+
+```sh
+mkdir -p dev_files/vm/ubuntu2604-gnome
+cp --reflink=auto /mnt/disk2/vm/lhc-ubuntu2604-gnome/base.qcow2 dev_files/vm/ubuntu2604-gnome/source.qcow2
+chmod 444 dev_files/vm/ubuntu2604-gnome/source.qcow2
+python3 scripts/vm/run.py --profile scripts/vm/profiles/ubuntu2604-gnome.json --vm dev_files/vm/ubuntu2604-gnome-v2 --suite prepare
+```
+
+Always pass both `--profile` and `--vm`: the default stand remains Fedora.
+Preparation installs Ubuntu packages and disables only LHC Shell extensions in
+the disposable guest; it keeps the real GNOME session and native portals.
+Use a fresh stand directory after changing the preparation recipe.
+
+GNOME scenarios are separate from the KWin scenarios. The runner currently
+checks startup, process persistence, reported focus-return capability, native
+GlobalShortcuts approval, CLI/D-Bus and command grants, GNOME Keyring and PCM
+capture. Physical shortcut input uses QMP. Clipboard insertion observes a separate
+GTK receiver under Wayland and XWayland. `VM-10.insertion` exercises the UI;
+`VM-10.backend-insertion` explicitly exercises the native IPC path and cannot
+certify that the UI exposes it. GNOME package/lifecycle controls and the rest of
+the full native matrix remain unimplemented; partial results never certify the
+whole platform. A disabled insertion button is a failure, not permission to
+silently replace the UI action with IPC.
+
+```sh
+python3 scripts/vm/run.py --profile scripts/vm/profiles/ubuntu2604-gnome.json --vm dev_files/vm/ubuntu2604-gnome-v2 --suite native --only VM-02.register,VM-12,VM-13,VM-15 --artifact /path/to/tyco --ctl /path/to/tyco-ctl
+```

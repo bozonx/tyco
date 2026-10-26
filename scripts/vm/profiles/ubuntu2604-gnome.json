@@ -1,0 +1,12 @@
+{
+  "name": "ubuntu2604-gnome",
+  "base": "/mnt/disk2/codeWorkspace/tyco/dev_files/vm/ubuntu2604-gnome/source.qcow2",
+  "user": "tester",
+  "ssh_key": "~/.ssh/lhc-vm",
+  "ssh_port": 2254,
+  "cpus": 4,
+  "memory": 4096,
+  "vga": "VGA",
+  "session": "wayland",
+  "desktop": "GNOME"
+}

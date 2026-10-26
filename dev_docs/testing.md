@@ -300,5 +300,6 @@ behavior and hardware/GPU compatibility remain outside the deterministic smoke.
 
 The [VM testing plan](vm-testing.md) defines the Windows/Linux OS matrix, reuse of
 local Left Hand Control base images, native acceptance scenarios and the planned
-runner. VM automation is not implemented yet; the document distinguishes existing
-commands from the proposed interface.
+runner. Fedora KDE automation and initial Ubuntu GNOME checks are implemented in
+`scripts/vm/`; other profiles and acceptance gaps remain explicit. See its
+[README](../scripts/vm/README.md) for executable commands.

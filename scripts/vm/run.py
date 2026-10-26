@@ -160,6 +160,7 @@ def main():
     # suspended state, including without Tyco. Use the working i440fx fixture.
     if args.isolated_case == "VM-16.suspend-resume":
         vm.machine = "pc"
+    is_gnome = vm.config["desktop"] == "GNOME"
     vm.extra_display = args.isolated_case == "VM-11.multi-monitor"
     scripts = vm.run_dir / "runner"
     runner_hashes = snapshot_runner(SCRIPTS, scripts)
@@ -224,7 +225,13 @@ def main():
             "env-run systemctl --user set-environment QT_QUICK_BACKEND=software LIBGL_ALWAYS_SOFTWARE=1 QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1"
         )
         guest(
-            "env-run systemctl --user restart plasma-xdg-desktop-portal-kde.service xdg-desktop-portal.service"
+            "env-run systemctl --user restart "
+            + (
+                "xdg-desktop-portal-gnome.service"
+                if is_gnome
+                else "plasma-xdg-desktop-portal-kde.service"
+            )
+            + " xdg-desktop-portal.service"
         )
         vm.ssh(
             "sudo systemctl reset-failed tyco-vm-ydotool.service && sudo systemctl restart tyco-vm-ydotool.service"
@@ -359,7 +366,7 @@ def main():
 
     try:
         print(f"Artifacts: {vm.run_dir}", flush=True)
-        if args.suite == "native" and not args.isolated_case:
+        if args.suite == "native" and not args.isolated_case and not is_gnome:
             for identifier in requested_isolated_cases(args.only):
                 command = [
                     sys.executable,
@@ -446,9 +453,18 @@ def main():
                     and all(case["status"] == "PASS" for case in report["checks"])
                     else 1
                 )
+        if is_gnome and (args.suite == "package" or args.isolated_case):
+            raise StepFailed(
+                "GNOME package and isolated lifecycle suites are not implemented"
+            )
         vm.start(show=args.show)
         vm.wait_ssh()
         vm.ssh("mkdir -p tyco-vm")
+        vm.ssh(
+            "printf %s "
+            + shlex.quote(vm.config["desktop"])
+            + " > tyco-vm/expected-desktop"
+        )
         for name in (
             "guest.py",
             "accessibility.py",
@@ -462,6 +478,7 @@ def main():
             "browser.py",
             "desktop-session.py",
             "secret-read.py",
+            "secret-collection.py",
             "llm-stub.py",
         ):
             vm.ssh(f"test ! -e tyco-vm/{name} || chmod u+w tyco-vm/{name}")
@@ -507,7 +524,7 @@ def main():
                 "fixture bootstrap reboot", bootstrap_rebooted, timeout=180, interval=2
             )
         report["session"] = wait_for(
-            "unlocked KDE Wayland session", session_ready, timeout=120, interval=2
+            "unlocked desktop Wayland session", session_ready, timeout=120, interval=2
         )
         if args.suite != "prepare":
             report["preparedBase"] = json.loads(
@@ -537,7 +554,7 @@ def main():
             record(
                 "ENVIRONMENT",
                 "PASS",
-                "Real unlocked KDE Wayland session; external egress blocked",
+                "Real unlocked desktop Wayland session; external egress blocked",
             )
             # Artifact names and guest paths stay fixed and shell-safe.
             application = (
@@ -606,9 +623,13 @@ def main():
                 vm.ssh("mkdir -p .local/share/applications")
                 vm.copy_to(desktop, ".local/share/applications/com.tyco.app.desktop")
                 vm.ssh("update-desktop-database .local/share/applications")
-                setup_observer()
+                if not is_gnome:
+                    setup_observer()
                 driver.start(f"/home/{vm.user}/tyco-vm/{application}")
-                from scenarios import run_scenarios
+                if is_gnome:
+                    from gnome import run_scenarios
+                else:
+                    from scenarios import run_scenarios
 
                 run_scenarios(
                     vm,

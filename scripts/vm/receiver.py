@@ -20,6 +20,7 @@ GLib.set_prgname(name)
 window = Gtk.Window(title=name)
 window.set_default_size(620, 340)
 view = Gtk.TextView()
+view.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
 window.add(view)
 buffer = view.get_buffer()
 changes = 0
