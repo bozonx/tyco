@@ -6,6 +6,7 @@ import {
   type DesktopViewState,
   type UserConfig,
   type SessionState,
+  type TextInsertionStatus,
 } from '@tyco/shared'
 import { computed, ref } from 'vue'
 import type { DesktopCall, DesktopInvoker } from './ipc-model'
@@ -20,6 +21,12 @@ export interface DesktopStateDependencies {
 export function createDesktopStateModel(deps: DesktopStateDependencies) {
   const desktopState = ref<DesktopViewState>(
     structuredClone(DEFAULT_DESKTOP_VIEW_STATE)
+  )
+  const insertionStatus = ref<TextInsertionStatus | null>(null)
+  const canInsertIntoWindow = computed(
+    () =>
+      Boolean(desktopState.value.windowId) ||
+      insertionStatus.value?.target === 'focusReturn'
   )
   let loaded = !deps.desktopClient.isAvailable()
   let sessionStateWrites: Promise<unknown> = Promise.resolve()
@@ -51,6 +58,10 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
       throw error
     }
     applySnapshot(response.result)
+    const insertion = await deps.desktopClient.invoke(
+      'get_text_insertion_status'
+    )
+    insertionStatus.value = insertion.success ? insertion.result : null
     return desktopState.value
   }
 
@@ -109,6 +120,7 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
 
   return {
     setExecutionConfig,
+    canInsertIntoWindow,
     desktopState,
     userConfig: computed(() => desktopState.value.userConfig),
     sessionState: computed(() => desktopState.value.sessionState),

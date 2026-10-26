@@ -243,7 +243,7 @@ fn activate_on_main_thread(
     if let Err(error) = window.unminimize() {
         log::warn!("Could not unminimize window: {error}");
     }
-    if let Err(error) = window.set_focus() {
+    if let Err(error) = crate::services::platform::focus_window(&window) {
         log::warn!("Could not focus window: {error}");
     }
 

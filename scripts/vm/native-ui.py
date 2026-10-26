@@ -33,8 +33,9 @@ def visit(node, application, depth=0):
             "showing": showing,
             "focused": states.contains(Atspi.StateType.FOCUSED),
             "sensitive": states.contains(Atspi.StateType.SENSITIVE),
+            "checked": states.contains(Atspi.StateType.CHECKED),
         }
-        if role in ("push button", "button") and showing:
+        if role in ("push button", "button", "toggle button", "label") and showing:
             box = node.get_component_iface().get_extents(Atspi.CoordType.SCREEN)
             entry["bounds"] = [box.x, box.y, box.width, box.height]
         if name or role in ("dialog", "frame", "text", "entry", "password text"):

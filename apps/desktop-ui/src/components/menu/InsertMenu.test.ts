@@ -2,6 +2,7 @@ import { config, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import ShortcutList from '../overlay/ShortcutList.vue'
@@ -82,6 +83,19 @@ describe('InsertMenu correction step', () => {
     expect(list.props('spaceKey')?.id).not.toBe('applyToEditor')
     expect(list.props('altText')).toBe('Original text')
     expect(list.props('isEditorButtonVisible')).toBe(true)
+  })
+
+  it('enables insertion without a window ID when the desktop supports focus return', () => {
+    mocks.editorPage = false
+    const desktop = useDesktopStore()
+    vi.spyOn(desktop, 'canInsertIntoWindow', 'get').mockReturnValue(true)
+    expect(desktop.desktopState.windowId).toBeNull()
+    const list = mountMenu({
+      text: 'GNOME text',
+      insertOnly: true,
+    }).findComponent(ShortcutList)
+    expect(list.props('spaceKey')?.id).toBe('insertIntoWindow')
+    expect(list.props('spaceKey')?.disabled).toBe(false)
   })
 
   it('uses menu.actions title by default and menu.correction when isCorrecting', () => {

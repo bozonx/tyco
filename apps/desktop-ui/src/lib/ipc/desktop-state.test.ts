@@ -251,3 +251,39 @@ describe('desktop state revision ordering', () => {
     expect(invoke).toHaveBeenCalledWith('get_desktop_state')
   })
 })
+
+describe('insertion capability', () => {
+  it('allows untracked focus return while keeping a tracked desktop without a target disabled', async () => {
+    for (const target of ['focusReturn', 'tracked'] as const) {
+      const { model, invoke } = setup()
+      invoke
+        .mockResolvedValueOnce(response(1))
+        .mockResolvedValueOnce({
+          success: true,
+          result: {
+            target,
+            keys: 'ready',
+            keySender: 'ydotool',
+            problem: null,
+            detail: null,
+          },
+        } as never)
+      await model.loadDesktopState()
+      expect(model.desktopState.value.windowId).toBeNull()
+      expect(model.canInsertIntoWindow.value).toBe(target === 'focusReturn')
+    }
+  })
+
+  it('keeps a known target usable when the status request fails', async () => {
+    const { model, invoke } = setup()
+    invoke
+      .mockResolvedValueOnce(response(1, { windowId: 'native-window' }))
+      .mockResolvedValueOnce({
+        success: false,
+        error: 'Unavailable',
+        errorCode: 'serviceUnavailable',
+      })
+    await model.loadDesktopState()
+    expect(model.canInsertIntoWindow.value).toBe(true)
+  })
+})

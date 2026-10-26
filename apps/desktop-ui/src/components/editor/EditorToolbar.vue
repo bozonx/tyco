@@ -57,7 +57,7 @@
       <IconButton
         size="sm"
         variant="ghost"
-        :disabled="!desktopStore.desktopState.windowId"
+        :disabled="!desktopStore.canInsertIntoWindow"
         @click="emit('insert-to-window')"
         :label="scoped(t('action.insertIntoWindow'))"
         icon="mdi:application-export"

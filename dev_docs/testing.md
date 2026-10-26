@@ -1,4 +1,4 @@
-# Unit tests
+# Testing
 
 ## Commands
 
@@ -303,3 +303,32 @@ local Left Hand Control base images, native acceptance scenarios and the planned
 runner. Fedora KDE automation and initial Ubuntu GNOME checks are implemented in
 `scripts/vm/`; other profiles and acceptance gaps remain explicit. See its
 [README](../scripts/vm/README.md) for executable commands.
+
+
+## Native desktop sessions and virtual machines
+
+Use [vm-testing.md](vm-testing.md) for the current platform matrix and acceptance
+criteria, [the runner README](../scripts/vm/README.md) for commands, and
+[coverage.md](../scripts/vm/coverage.md) for implemented assertions. Dated reports
+record executions of specific binaries; an implemented case is not automatically
+a passed case, and a targeted run does not certify the full platform.
+
+Keep deterministic state, configuration/history CRUD, command authorization,
+quoting, plugin sandbox and text-transformation combinations in unit, browser,
+desktop-smoke or platform-container tests. In each VM retain a short integration
+smoke for those boundaries. Native VM coverage concentrates on compositor focus,
+physical shortcuts, native permission dialogs, clipboard recipients, tray,
+keychain, devices, display topology and session transitions.
+
+VM smoke uses three insertion cycles; the full native suite defaults to five.
+Use `--stress` for at least twenty physical activation/insertion cycles. Lifecycle
+checks retain three actual transitions independently of this repetition setting.
+Full functional acceptance and production package acceptance are separate scopes.
+A real upgrade requires a genuinely older release artifact.
+
+A defect independently reproduced without Tyco in the OS, desktop, dependency or
+VM platform is an external limitation, not a Tyco acceptance blocker. Preserve the
+failed evidence, verify Tyco's error/degradation behavior, and document the exact
+scope. Do not change a failed execution into PASS or count an unsupported path as
+a supported feature. Physical GPU, Bluetooth, microphones, monitor connections
+and hardware sleep require separate hardware evidence.

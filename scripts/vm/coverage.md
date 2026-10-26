@@ -91,3 +91,26 @@ failure behavior, browser and terminal recipients, clipboard restoration,
 tray callbacks, dialogs/drag/drop, display topology, session lifecycle and
 production package acceptance remain unverified. These gaps prevent full native
 platform acceptance. Unsupported package/lifecycle suites do not run KDE code.
+
+
+## Acceptance policy and run levels (2026-10-26)
+
+External OS/dependency/hypervisor defects independently reproduced without Tyco
+are recorded limitations, not product blockers. Original FAIL reports remain
+unchanged. Tyco must still handle the unavailable capability/credential correctly.
+Functional acceptance, production packaging/upgrades and physical hardware
+validation are separate scopes.
+
+Smoke defaults to three physical insertion cycles; native to five; `--stress`
+requires at least twenty. Lifecycle cases retain three real transitions. Detailed
+configuration/history CRUD, quoting/authorization and plugin sandbox matrices
+belong to lower-level suites; native integration smoke remains in each VM.
+GNOME backend insertion is an explicitly selected diagnostic, not a second default
+copy of the UI insertion matrix.
+
+The follow-up runner adds guest-kernel USB delivery observation, native background
+failure notifications, GNOME portal cancellation and RemoteDesktop decisions,
+selection degradation/cancellation, focused-client clipboard observation,
+locked/unavailable GNOME Keyring, native chooser, AppIndicator absence/recovery,
+Mutter display configuration and session-transition checks. Implementation alone
+is not passing evidence; see the new dated follow-up report for actual results.

@@ -141,6 +141,23 @@ pub fn is_layer_shell_supported() -> bool {
     }
 }
 
+/// Presents on the UI thread without Tao's queued-show/visibility race.
+/// Tao skips set_focus while the queued show has not made GTK visible yet.
+pub fn focus_window(window: &WebviewWindow) -> Result<(), AppError> {
+    #[cfg(target_os = "linux")]
+    {
+        let native = window.gtk_window()?;
+        native.show_all();
+        native.deiconify();
+        native.present();
+        Ok(())
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        window.set_focus().map_err(Into::into)
+    }
+}
+
 /// Fades the window in or out without unmapping it; only GTK can.
 pub fn set_window_opacity(window: &WebviewWindow, opacity: f64) -> Result<(), AppError> {
     #[cfg(target_os = "linux")]

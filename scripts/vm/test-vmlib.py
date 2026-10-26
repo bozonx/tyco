@@ -232,6 +232,19 @@ class QmpTests(unittest.TestCase):
         )
         self.assertEqual(calls[-1].kwargs["events"][0]["data"]["key"]["data"], "ctrl")
 
+    def test_unobserved_guest_delivery_fails_and_releases_the_chord(self):
+        qmp = Qmp.__new__(Qmp)
+        qmp.execute = Mock()
+        qmp.observe_keys = Mock(side_effect=StepFailed("No guest key event"))
+        with self.assertRaisesRegex(StepFailed, "No guest key event"):
+            qmp.tap("ctrl", "i")
+        transitions = [
+            call.kwargs["events"][0]["data"]["down"]
+            for call in qmp.execute.call_args_list
+        ]
+        self.assertEqual(transitions, [True, True, False, False])
+        qmp.observe_keys.assert_called_once_with(("ctrl", "i"), True)
+
     def test_invalid_key_release_does_not_leave_control_pressed(self):
         qmp = Qmp.__new__(Qmp)
         qmp.execute = Mock(

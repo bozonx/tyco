@@ -4,6 +4,7 @@
   "description": "Shared application commands for trusted desktop windows",
   "windows": ["main", "quick"],
   "permissions": [
+    "allow-get-text-insertion-status",
     "core:event:allow-listen",
     "core:event:allow-unlisten",
     "allow-acknowledge-settings-shutdown",

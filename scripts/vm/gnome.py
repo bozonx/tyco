@@ -289,9 +289,11 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             driver.window("quick", "textarea")
             wait_for(
                 "quick native keyboard focus",
-                lambda: driver.invoke("plugin:window|is_focused", {"label": "quick"})
-                and driver.execute(
-                    "return document.hasFocus() && document.activeElement === document.querySelector('textarea')"
+                lambda: (
+                    driver.invoke("plugin:window|is_focused", {"label": "quick"})
+                    and driver.execute(
+                        "return document.hasFocus() && document.activeElement === document.querySelector('textarea')"
+                    )
                 ),
             )
             after = driver.invoke("get_desktop_state")["activation"]["activationId"]
@@ -305,7 +307,12 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             vm.qmp.tap("esc")
             wait_for(
                 "native receiver focus after dismissal",
-                lambda: receiver().get("focused"),
+                lambda: (
+                    receiver().get("focused")
+                    and not driver.invoke(
+                        "plugin:window|is_visible", {"label": "quick"}
+                    )
+                ),
             )
             activations.append(
                 {
@@ -326,6 +333,49 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
         vm.ssh(f"kill {receiver()['pid']}")
         driver.window("main", ".cm-editor")
         return f"Native GNOME GlobalShortcuts approval; {args.cycles} physical Ctrl+Alt+I activations from a foreign Wayland receiver, exact activation increments, focus return and released modifiers"
+
+    def cancel_shortcuts():
+        application = "gnome-control-center-global-shortcuts-provider"
+        guest(f"env-run python3 tyco-vm/native-control.py click {application} Cancel")
+        wait_for(
+            "canceled GNOME shortcut registration",
+            lambda: not driver.invoke("get_hotkey_provider_info")["registered"],
+        )
+        guest("receiver wayland")
+
+        def receiver_focused():
+            try:
+                return json.loads(vm.ssh("cat tyco-vm/receiver-wayland.json")).get(
+                    "focused"
+                )
+            except StepFailed:
+                return False
+
+        wait_for("receiver after portal cancellation", receiver_focused)
+        before = driver.invoke("get_desktop_state")["activation"]["activationId"]
+        vm.qmp.tap("ctrl", "alt", "i")
+        import time
+
+        deadline = time.monotonic() + 1
+        while time.monotonic() < deadline:
+            require(
+                driver.invoke("get_desktop_state")["activation"]["activationId"]
+                == before,
+                "Canceled shortcut activated Tyco",
+            )
+            time.sleep(0.1)
+        pid = json.loads(vm.ssh("cat tyco-vm/receiver-wayland.json"))["pid"]
+        vm.ssh(f"kill {pid}")
+        driver.stop()
+        wait_for(
+            "old process exit after portal cancellation",
+            lambda: not vm.ssh("pgrep -x tyco || true").strip(),
+        )
+        driver.start(
+            f"/home/{vm.user}/tyco-vm/"
+            + ("Tyco.AppImage" if args.artifact.suffix == ".AppImage" else "tyco")
+        )
+        return "Native GlobalShortcuts cancellation leaves the shortcut inactive; restart offers registration again"
 
     def insertion(native_command=False):
         from scenarios import CORPUS
@@ -354,21 +404,23 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
                 )
                 wait_for(
                     "receiver reset",
-                    lambda: vm.ssh(
-                        f"cat tyco-vm/receiver-{backend}.ack 2>/dev/null || true"
-                    ).strip()
-                    == identifier,
+                    lambda: (
+                        vm.ssh(
+                            f"cat tyco-vm/receiver-{backend}.ack 2>/dev/null || true"
+                        ).strip()
+                        == identifier
+                    ),
                 )
                 require(receiver()["focused"], "Receiver lost focus before activation")
                 guest(f"env-run {prefix}/tyco-ctl open quick-input")
                 driver.window("quick", "textarea")
                 wait_for(
                     "native Quick focus before insertion",
-                    lambda: driver.invoke(
-                        "plugin:window|is_focused", {"label": "quick"}
-                    )
-                    and driver.execute(
-                        "return document.hasFocus() && document.activeElement === document.querySelector('textarea')"
+                    lambda: (
+                        driver.invoke("plugin:window|is_focused", {"label": "quick"})
+                        and driver.execute(
+                            "return document.hasFocus() && document.activeElement === document.querySelector('textarea')"
+                        )
                     ),
                     timeout=20,
                 )
@@ -398,10 +450,12 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
                     )
                     wait_for(
                         "native action-menu focus",
-                        lambda: driver.invoke(
-                            "plugin:window|is_focused", {"label": "quick"}
-                        )
-                        and driver.execute("return document.hasFocus()"),
+                        lambda: (
+                            driver.invoke(
+                                "plugin:window|is_focused", {"label": "quick"}
+                            )
+                            and driver.execute("return document.hasFocus()")
+                        ),
                         timeout=20,
                     )
                     enabled = driver.execute(
@@ -416,8 +470,9 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
                     )
                 wait_for(
                     "exact foreign text and returned focus",
-                    lambda: receiver().get("text") == text
-                    and receiver().get("focused"),
+                    lambda: (
+                        receiver().get("text") == text and receiver().get("focused")
+                    ),
                 )
                 observed = receiver()
                 evidence.append(
@@ -441,34 +496,91 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             driver.window("main", ".cm-editor")
         return f"Exact Unicode/multiline/long text and focus return in {args.cycles} CLI activations per Wayland/XWayland receiver; hotkeys tested separately"
 
+    def selected(identifier):
+        isolated = (
+            "VM-03.cancel",
+            "VM-11.multi-monitor",
+            "VM-16.lock-unlock",
+            "VM-16.reboot",
+            "VM-16.suspend-resume",
+            "VM-16.logout-login",
+        )
+        if identifier in isolated and not args.isolated_case:
+            return False
+        return not args.only or any(
+            identifier == request or identifier.startswith(request + ".")
+            for request in args.only.split(",")
+        )
+
     checks = [
         ("VM-01.startup", startup),
         ("VM-10.capabilities", degradation),
+        ("VM-03.cancel", cancel_shortcuts),
+        ("VM-02.register", hotkeys),
         ("VM-01.persistence", persistence),
         ("VM-10.insertion", insertion),
         ("VM-10.backend-insertion", lambda: insertion(True)),
-        ("VM-02.register", hotkeys),
         ("VM-13.external-control", external_control),
         ("VM-12.secrets", secrets),
     ]
     for identifier, action in checks:
-        if not args.only or any(
-            identifier == request or identifier.startswith(request + ".")
-            for request in args.only.split(",")
+        if identifier == "VM-10.backend-insertion" and not args.only:
+            continue
+        if args.suite == "smoke" and identifier not in (
+            "VM-01.startup",
+            "VM-10.capabilities",
+            "VM-10.insertion",
         ):
+            continue
+        if selected(identifier):
             check(identifier, action)
     if args.suite == "native":
         from importlib import import_module
         from media import run_media_checks
 
-        def selected(identifier):
-            return not args.only or any(
-                identifier == request or identifier.startswith(request + ".")
-                for request in args.only.split(",")
-            )
-
         import_module("command-grants").run_command_grant_checks(
             vm=vm, driver=driver, guest=guest, check=check, selected=selected, args=args
+        )
+        from notifications import run_notification_checks
+
+        run_notification_checks(
+            vm=vm, driver=driver, guest=guest, check=check, selected=selected, args=args
+        )
+        import_module("gnome-hotkeys").run_checks(
+            vm=vm,
+            driver=driver,
+            guest=guest,
+            check=check,
+            selected=selected,
+            report=report,
+        )
+        import_module("gnome-tray").run_checks(
+            vm=vm,
+            driver=driver,
+            args=args,
+            guest=guest,
+            check=check,
+            selected=selected,
+            report=report,
+        )
+        import_module("gnome-keyring").run_checks(
+            vm=vm,
+            driver=driver,
+            args=args,
+            guest=guest,
+            check=check,
+            selected=selected,
+            report=report,
+            provision=secrets,
+        )
+        import_module("gnome-native").run_checks(
+            vm=vm,
+            driver=driver,
+            args=args,
+            guest=guest,
+            check=check,
+            selected=selected,
+            report=report,
         )
         run_media_checks(
             vm=vm,
@@ -477,6 +589,24 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             check=check,
             selected=selected,
             report=report,
+        )
+    if args.suite == "native":
+
+        def recover():
+            nonlocal driver
+            driver = _controls["recover_controls"]()
+            return driver
+
+        import_module("gnome-lifecycle").run_checks(
+            vm=vm,
+            args=args,
+            guest=guest,
+            check=check,
+            selected=selected,
+            report=report,
+            get_driver=lambda: driver,
+            recover=recover,
+            provision=secrets,
         )
     if not args.only:
         if args.suite == "native":

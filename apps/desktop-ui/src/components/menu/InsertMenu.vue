@@ -193,7 +193,7 @@ function shouldDisableAction(item?: ActionItem) {
   if (!item) return false
   if (item.id === 'insertIntoWindow') {
     return !(
-      desktopStore.desktopState?.windowId &&
+      desktopStore.canInsertIntoWindow &&
       props.text &&
       props.allowInsertButton
     )
@@ -209,10 +209,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
       if (item.id === 'correction' && correctionBlocker.value) {
         return { ...item, disabled: true, hint: correctionBlocker.value }
       }
-      if (
-        item.id === 'insertIntoWindow' &&
-        !desktopStore.desktopState?.windowId
-      ) {
+      if (item.id === 'insertIntoWindow' && !desktopStore.canInsertIntoWindow) {
         return { ...item, disabled: true, hint: t('selection.noTarget') }
       }
       return { ...item, disabled: item.disabled || shouldDisableAction(item) }
@@ -231,7 +228,7 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 
   const disabled = firstItem.disabled || shouldDisableAction(firstItem)
   const hint =
-    firstItem.id === 'insertIntoWindow' && !desktopStore.desktopState?.windowId
+    firstItem.id === 'insertIntoWindow' && !desktopStore.canInsertIntoWindow
       ? t('selection.noTarget')
       : firstItem.hint
 

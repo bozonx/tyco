@@ -217,3 +217,30 @@ silently replace the UI action with IPC.
 ```sh
 python3 scripts/vm/run.py --profile scripts/vm/profiles/ubuntu2604-gnome.json --vm dev_files/vm/ubuntu2604-gnome-v2 --suite native --only VM-02.register,VM-12,VM-13,VM-15 --artifact /path/to/tyco --ctl /path/to/tyco-ctl
 ```
+
+
+## Run levels and acceptance policy
+
+- `--suite smoke`: three insertion cycles and the essential startup/input path.
+- `--suite native`: the applicable native matrix, five insertion/hotkey cycles.
+- `--suite native --stress`: the same matrix with at least twenty cycles.
+- `--suite native --only ID`: targeted diagnosis; never full-platform acceptance.
+- `--suite package`: production installation lifecycle, separately from functionality.
+
+`--cycles N` overrides insertion/activation repetitions (positive, at least twenty
+with `--stress`). Session lifecycle cases still perform three real transitions.
+Isolated child runners receive the parent's repetition settings.
+
+Build an embedded executable with `python3 scripts/vm/build-appimage.py --no-bundle`.
+The build records a provenance sidecar for that executable. Copy/strip a dedicated
+artifact before launching a long run; do not overwrite a running suite's binary.
+
+Input observation reads the guest USB keyboard without grabbing it and confirms
+kernel delivery before QMP releases a chord. This is fixture evidence; native
+focus, exact received text, activation count and released modifiers are still
+required application assertions. No failed application action is replayed.
+
+Confirmed OS/dependency/hypervisor defects are recorded external limitations,
+not product acceptance blockers. Their original FAIL evidence remains unchanged.
+The suite must not silently convert a failure into PASS. Functional acceptance,
+package acceptance and hardware validation have separate status.

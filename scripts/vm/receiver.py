@@ -63,6 +63,26 @@ def poll():
             import_module("clipboard-owner").offer(
                 data["mime"], base64.b64decode(data["data"])
             )
+        elif data["action"] == "read-clipboard":
+            from gi.repository import Gdk
+
+            clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            identifier = data["id"]
+
+            def received(_clipboard, selection, _user):
+                payload = selection.get_data()
+                (root / "clipboard-read.json").write_text(
+                    json.dumps(
+                        {
+                            "id": identifier,
+                            "data": base64.b64encode(payload or b"").decode(),
+                        }
+                    )
+                )
+
+            clipboard.request_contents(
+                Gdk.Atom.intern(data["mime"], False), received, None
+            )
         elif data["action"] == "title":
             window.set_title(data["title"])
         elif data["action"] == "present":

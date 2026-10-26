@@ -144,6 +144,48 @@ elif action == "click":
     if not interface or not interface.do_action(0):
         raise RuntimeError(f"Native action failed: {argument}")
     print(json.dumps({"clicked": argument}))
+elif action == "enable-switch":
+    matches = [
+        node
+        for node in found
+        if node.get_role_name() == "switch" and node.get_name() == argument
+    ]
+
+    def descends_from(other, ancestor):
+        parent = other.get_parent()
+        visited = set()
+        while parent and parent not in visited:
+            if parent == ancestor:
+                return True
+            visited.add(parent)
+            parent = parent.get_parent()
+        return False
+
+    leaves = [
+        node
+        for node in matches
+        if not any(descends_from(other, node) for other in matches if other != node)
+    ]
+    if len(leaves) != 1:
+        raise RuntimeError(f"Expected one native switch: {len(leaves)}")
+    node = leaves[0]
+    if not node.get_state_set().contains(Atspi.StateType.CHECKED):
+        interface = node.get_action_iface()
+        if not interface or not interface.do_action(0):
+            raise RuntimeError("Native switch action failed")
+    print(json.dumps({"enabled": True}))
+elif action == "fill-focused-entry":
+    matches = [
+        node
+        for node in found
+        if node.get_state_set().contains(Atspi.StateType.FOCUSED)
+        and node.get_role_name() in ("text", "entry")
+    ]
+    if len(matches) != 1 or not matches[0].get_editable_text_iface().set_text_contents(
+        argument
+    ):
+        raise RuntimeError("Could not fill the unique focused native entry")
+    print(json.dumps({"filled": True}))
 elif action == "focus-password":
     matches = [node for node in found if node.get_role_name() == "password text"]
     if len(matches) != 1 or not matches[0].get_component_iface().grab_focus():

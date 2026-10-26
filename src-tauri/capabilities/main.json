@@ -15,7 +15,6 @@
     "allow-inspect-ai-vault-target",
     "allow-relocate-ai-vault",
     "allow-get-storage-info",
-    "allow-get-text-insertion-status",
     "allow-pick-plugin-package",
     "allow-install-plugin-package",
     "allow-list-ai-profiles",

@@ -167,8 +167,10 @@ class Qmp:
                         }
                     ],
                 )
-            # Let the virtual USB keyboard report a held chord to the guest.
-            time.sleep(0.05)
+            # A guest observer confirms USB delivery before release when available.
+            if getattr(self, "observe_keys", None):
+                self.observe_keys(keys, True)
+            time.sleep(0.12)
         finally:
             had_failure = sys.exc_info()[0] is not None
             release_errors = []
@@ -190,7 +192,10 @@ class Qmp:
                     release_errors.append(error)
             if release_errors and not had_failure:
                 raise release_errors[0]
-            time.sleep(0.05)
+            if getattr(self, "observe_keys", None) and not had_failure:
+                self.observe_keys(keys, False)
+            else:
+                time.sleep(0.12)
 
     def screenshot(self, path):
         self.execute("screendump", filename=str(path), format="png")

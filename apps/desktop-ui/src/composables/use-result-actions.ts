@@ -11,7 +11,7 @@ export function useResultActions() {
   const model = createResultActions({
     getShortcutActions: () => actionMenuStore.getShortcutActions(),
     getDefaultActions: () => actionMenuStore.getDefaultActions(),
-    hasTargetWindow: () => Boolean(desktopStore.desktopState?.windowId),
+    hasTargetWindow: () => desktopStore.canInsertIntoWindow,
     noTargetHint: () => t('selection.noTarget'),
   })
   return {

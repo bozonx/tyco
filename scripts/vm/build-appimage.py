@@ -25,6 +25,11 @@ def main():
         action="store_true",
         help="Build the production profile without WebDriver automation",
     )
+    parser.add_argument(
+        "--no-bundle",
+        action="store_true",
+        help="Build an embedded executable without packaging",
+    )
     args = parser.parse_args()
     profile = "release" if args.release else "debug"
     home = ROOT / "dev_files/vm/build-home"
@@ -39,7 +44,7 @@ def main():
             + (" --release" if args.release else ""),
             "pnpm tauri:build "
             + ("" if args.release else "--debug ")
-            + "--bundles appimage",
+            + ("--no-bundle" if args.no_bundle else "--bundles appimage"),
         ]
     )
     source_commit = run(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
@@ -78,7 +83,12 @@ def main():
         ],
         check=True,
     )
-    for artifact in (target / profile / "bundle/appimage").glob("*.AppImage"):
+    artifacts = (
+        [target / profile / "tyco"]
+        if args.no_bundle
+        else (target / profile / "bundle/appimage").glob("*.AppImage")
+    )
+    for artifact in artifacts:
         metadata = {
             "profile": profile,
             "artifactSha256": sha256(artifact),

@@ -101,7 +101,14 @@ def main():
         "--only",
         help="Comma-separated native subcase IDs; targeted run, not full acceptance",
     )
-    parser.add_argument("--cycles", type=int, default=20)
+    parser.add_argument(
+        "--cycles", type=int, help="Physical activation/insertion repetitions"
+    )
+    parser.add_argument(
+        "--stress",
+        action="store_true",
+        help="Run at least 20 repetitions; native suite by default",
+    )
     parser.add_argument(
         "--resume-prepare",
         type=Path,
@@ -119,6 +126,10 @@ def main():
     parser.add_argument("--show", action="store_true")
     parser.add_argument("--keep", action="store_true")
     args = parser.parse_args()
+    if args.stress and args.suite == "smoke":
+        args.suite = "native"
+    if args.cycles is None:
+        args.cycles = 20 if args.stress else (3 if args.suite == "smoke" else 5)
     if args.only and args.suite != "native":
         parser.error(
             "--only requires native suite; package installation/removal runs as one lifecycle"
@@ -136,8 +147,8 @@ def main():
     args.isolated_portal_cancel = args.isolated_case == "VM-03.cancel"
     if args.resume_prepare and args.suite != "prepare":
         parser.error("--resume-prepare requires --suite prepare")
-    if args.cycles < 20:
-        parser.error("--cycles must be at least 20 for hotkey/focus acceptance")
+    if args.cycles < (20 if args.stress else 1):
+        parser.error("--cycles must be positive (at least 20 with --stress)")
     if args.suite != "prepare" and (not args.artifact or not args.artifact.is_file()):
         parser.error("--artifact must name an embedded-assets executable or AppImage")
     if args.previous_artifact and (
@@ -168,6 +179,8 @@ def main():
     sys.path.insert(0, str(scripts))
     report = {
         "suite": args.suite,
+        "stress": args.stress,
+        "cycles": args.cycles,
         "scope": "targeted" if args.only else "suite",
         "requestedChecks": args.only,
         "profile": vm.config,
@@ -236,6 +249,71 @@ def main():
         vm.ssh(
             "sudo systemctl reset-failed tyco-vm-ydotool.service && sudo systemctl restart tyco-vm-ydotool.service"
         )
+        vm.ssh("sudo systemctl stop tyco-vm-input-observer.service 2>/dev/null || true")
+        vm.ssh(
+            "sudo systemd-run --quiet --collect --unit=tyco-vm-input-observer python3 /home/"
+            + vm.user
+            + "/tyco-vm/input-observer.py"
+        )
+        key_codes = {
+            "esc": 1,
+            "ctrl": 29,
+            "ctrl_r": 97,
+            "alt": 56,
+            "alt_r": 100,
+            "meta_l": 125,
+            "meta_r": 126,
+            "shift": 42,
+            "ret": 28,
+            "tab": 15,
+            "spc": 57,
+            "backspace": 14,
+            "delete": 111,
+            "left": 105,
+            "right": 106,
+            "up": 103,
+            "down": 108,
+            "home": 102,
+            "end": 107,
+        }
+        key_codes.update(dict(zip("1234567890", range(2, 12))))
+        key_codes.update(dict(zip("qwertyuiop", range(16, 26))))
+        key_codes.update(dict(zip("asdfghjkl", range(30, 39))))
+        key_codes.update(dict(zip("zxcvbnm", range(44, 51))))
+
+        key_codes.update({f"f{index}": 58 + index for index in range(1, 11)})
+        key_codes.update({"f11": 87, "f12": 88})
+
+        def observe_keys(keys, down):
+            unknown = set(keys) - key_codes.keys()
+            if unknown:
+                raise StepFailed(f"No guest keyboard mapping for {sorted(unknown)}")
+            codes = [key_codes[key] for key in keys]
+
+            def observed():
+                try:
+                    state = json.loads(
+                        vm.ssh("cat tyco-vm/input-state.json", timeout=5)
+                    )
+                    return (
+                        state
+                        if all((code in state["pressed"]) == down for code in codes)
+                        else None
+                    )
+                except (StepFailed, json.JSONDecodeError):
+                    return None
+
+            state = wait_for(
+                "guest kernel keyboard delivery " + str(keys),
+                observed,
+                timeout=10,
+                interval=0.05,
+            )
+            report.setdefault("physicalInputObservations", []).append(
+                {"keys": keys, "down": down, "state": state}
+            )
+
+        vm.qmp.observe_keys = observe_keys
         report["environment"] = json.loads(guest("inventory"))
         if not report["environment"]["ydotoolSocket"]:
             raise StepFailed("The private ydotoold socket is not ready")
@@ -349,7 +427,7 @@ def main():
     def recover_controls():
         vm.wait_ssh()
         wait_for(
-            "restored unlocked KDE Wayland session",
+            "restored unlocked desktop Wayland session",
             session_ready,
             timeout=180,
             interval=2,
@@ -357,7 +435,8 @@ def main():
         guest("offline")
         setup_services()
         connect_driver()
-        setup_observer()
+        if not is_gnome:
+            setup_observer()
         driver.start(f"/home/{vm.user}/tyco-vm/{application}")
         report.setdefault("restoredEnvironments", []).append(
             json.loads(guest("inventory"))
@@ -366,7 +445,7 @@ def main():
 
     try:
         print(f"Artifacts: {vm.run_dir}", flush=True)
-        if args.suite == "native" and not args.isolated_case and not is_gnome:
+        if args.suite == "native" and not args.isolated_case:
             for identifier in requested_isolated_cases(args.only):
                 command = [
                     sys.executable,
@@ -386,6 +465,9 @@ def main():
                     "--driver",
                     str(args.driver.resolve()),
                 ]
+                command.extend(["--cycles", str(args.cycles)])
+                if args.stress:
+                    command.append("--stress")
                 if args.ctl:
                     command.extend(["--ctl", str(args.ctl.resolve())])
                 if args.keep:
@@ -453,7 +535,7 @@ def main():
                     and all(case["status"] == "PASS" for case in report["checks"])
                     else 1
                 )
-        if is_gnome and (args.suite == "package" or args.isolated_case):
+        if is_gnome and args.suite == "package":
             raise StepFailed(
                 "GNOME package and isolated lifecycle suites are not implemented"
             )
@@ -467,6 +549,9 @@ def main():
         )
         for name in (
             "guest.py",
+            "input-observer.py",
+            "gnome-display.py",
+            "gnome-shortcuts.py",
             "accessibility.py",
             "clipboard-owner.py",
             "receiver.py",
@@ -476,6 +561,7 @@ def main():
             "observer.js",
             "terminal.py",
             "browser.py",
+            "web-browser.py",
             "desktop-session.py",
             "secret-read.py",
             "secret-collection.py",
@@ -491,6 +577,7 @@ def main():
             args.suite == "native"
             and args.isolated_case
             and args.isolated_case.startswith("VM-16.")
+            and not is_gnome
         ):
             graphics_content = "export QT_QUICK_BACKEND=software\nexport LIBGL_ALWAYS_SOFTWARE=1\nexport QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1\n"
             graphics_fixture = (

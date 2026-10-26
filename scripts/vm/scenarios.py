@@ -1346,6 +1346,11 @@ def run_scenarios(
             focus_receiver=focus_receiver,
             hotkey_count=hotkey_count,
         )
+        from notifications import run_notification_checks
+
+        run_notification_checks(
+            vm=vm, driver=driver, guest=guest, check=check, selected=selected, args=args
+        )
         from media import run_media_checks
 
         run_media_checks(
