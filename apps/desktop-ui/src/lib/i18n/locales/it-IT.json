@@ -734,7 +734,8 @@
       "portalNoSettings": "Le scorciatoie globali sono assegnate dal sistema: queste sono quelle che ha associato a Tyco. Cambiale nelle impostazioni di sistema."
     },
     "hotkeyStatus": {
-      "conflict": "Impossibile assegnarla: molto probabilmente la scorciatoia è già usata da un’altra app. Scegline un’altra."
+      "conflict": "Impossibile assegnarla: molto probabilmente la scorciatoia è già usata da un’altra app. Scegline un’altra.",
+      "duplicate": "Questa scorciatoia è già assegnata a «{action}»."
     },
     "hotkeysMissing": "Alcune scorciatoie sono state rimosse nelle impostazioni di sistema e non funzionano. Usa «Registra di nuovo» per ripristinarle.",
     "hotkeysTab": "Scorciatoie",

@@ -734,7 +734,8 @@
       "portalNoSettings": "Globale Tastenkürzel vergibt das System, daher sind dies die Kürzel, die es für Tyco belegt hat. Ändern Sie sie in den Systemeinstellungen."
     },
     "hotkeyStatus": {
-      "conflict": "Zuweisung nicht möglich: Das Kürzel wird höchstwahrscheinlich von einer anderen App verwendet. Wählen Sie ein anderes."
+      "conflict": "Zuweisung nicht möglich: Das Kürzel wird höchstwahrscheinlich von einer anderen App verwendet. Wählen Sie ein anderes.",
+      "duplicate": "Diese Tastenkombination ist bereits „{action}“ zugewiesen."
     },
     "hotkeysMissing": "Einige Tastenkürzel wurden in den Systemeinstellungen entfernt und funktionieren nicht. Mit „Erneut registrieren“ holen Sie sie zurück.",
     "hotkeysTab": "Tastenkürzel",

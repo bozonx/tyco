@@ -734,7 +734,8 @@
       "portalNoSettings": "Comenzile rapide globale sunt atribuite de sistem, deci acestea sunt cele pe care le-a atribuit pentru Tyco. Schimbați-le în setările sistemului."
     },
     "hotkeyStatus": {
-      "conflict": "Nu a putut fi atribuită: cel mai probabil comanda rapidă este folosită de altă aplicație. Alegeți alta."
+      "conflict": "Nu a putut fi atribuită: cel mai probabil comanda rapidă este folosită de altă aplicație. Alegeți alta.",
+      "duplicate": "Această combinație este deja atribuită acțiunii „{action}”."
     },
     "hotkeysMissing": "Unele comenzi rapide au fost eliminate în setările sistemului și nu funcționează. Folosiți „Înregistrează din nou” pentru a le recupera.",
     "hotkeysTab": "Comenzi rapide",

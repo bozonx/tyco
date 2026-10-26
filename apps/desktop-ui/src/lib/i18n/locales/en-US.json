@@ -734,7 +734,8 @@
       "portalNoSettings": "Global hotkeys are assigned by the system, so these are the shortcuts it bound for Tyco. Change them in the system settings."
     },
     "hotkeyStatus": {
-      "conflict": "Could not assign it: the shortcut is most likely taken by another app. Choose another one."
+      "conflict": "Could not assign it: the shortcut is most likely taken by another app. Choose another one.",
+      "duplicate": "This shortcut is already assigned to “{action}”."
     },
     "hotkeysMissing": "Some hotkeys were removed in the system settings and do not work. Use “Register again” to bring them back.",
     "hotkeysTab": "Hotkeys",

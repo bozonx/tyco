@@ -3,52 +3,29 @@ import type { Extension } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 
 /**
- * Checks whether an event matches Undo:
- *
- * - Mod+Z (Latin)
- * - Mod+я (Cyrillic)
- * - Physical KeyZ with Mod modifier without Shift
+ * The letter a shortcut means: the one the layout types when it is Latin, so
+ * that Ctrl+Y of a QWERTZ keyboard is not taken for Ctrl+Z; the QWERTY letter
+ * at the same position otherwise, e.g. under a Cyrillic layout.
  */
+export const shortcutLetter = (event: KeyboardEvent): string | null => {
+  if (/^[a-z]$/i.test(event.key)) return event.key.toLowerCase()
+  const physical = /^Key([A-Z])$/.exec(event.code)
+  return physical ? physical[1].toLowerCase() : null
+}
+
+/** Mod+Z on any layout */
 export const isUndoEvent = (event: KeyboardEvent): boolean => {
   const isMod = event.ctrlKey || event.metaKey
   if (!isMod || event.altKey || event.shiftKey) return false
-
-  return (
-    event.code === 'KeyZ' ||
-    event.key === 'z' ||
-    event.key === 'Z' ||
-    event.key === 'я' ||
-    event.key === 'Я'
-  )
+  return shortcutLetter(event) === 'z'
 }
 
-/**
- * Checks whether an event matches Redo:
- *
- * - Mod+Shift+Z (Latin) / Mod+Shift+я (Cyrillic) / physical KeyZ with Mod+Shift
- * - Mod+Y (Latin) / Mod+н (Cyrillic) / physical KeyY with Mod
- */
+/** Mod+Shift+Z or Mod+Y on any layout */
 export const isRedoEvent = (event: KeyboardEvent): boolean => {
   const isMod = event.ctrlKey || event.metaKey
   if (!isMod || event.altKey) return false
-
-  if (event.shiftKey) {
-    return (
-      event.code === 'KeyZ' ||
-      event.key === 'z' ||
-      event.key === 'Z' ||
-      event.key === 'я' ||
-      event.key === 'Я'
-    )
-  }
-
-  return (
-    event.code === 'KeyY' ||
-    event.key === 'y' ||
-    event.key === 'Y' ||
-    event.key === 'н' ||
-    event.key === 'Н'
-  )
+  const letter = shortcutLetter(event)
+  return event.shiftKey ? letter === 'z' : letter === 'y'
 }
 
 /**

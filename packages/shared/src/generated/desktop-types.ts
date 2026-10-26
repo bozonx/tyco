@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 3bfbf571ab190a0bc5f351f3fd3fe697b951bc5cf9b340c907a2e551515dda00
+// Source hash: 8435f1887a7ed3287de079984a9235d07abf761f6c8c1080b647c91c5de58966
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -439,6 +439,8 @@ export type HotkeyProviderInfo = {
   registered: boolean
   /** The default shortcut of every hotkey id on this platform */
   defaults: { [key in string]: string }
+  /** The shell line that runs each hotkey id, as `tyco-ctl --help` spells it */
+  commands: { [key in string]: string }
   platform: 'linux' | 'windows' | 'macos'
 }
 

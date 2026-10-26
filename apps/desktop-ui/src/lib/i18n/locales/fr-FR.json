@@ -734,7 +734,8 @@
       "portalNoSettings": "Les raccourcis globaux sont attribués par le système : voici ceux qu’il a définis pour Tyco. Modifiez-les dans les paramètres du système."
     },
     "hotkeyStatus": {
-      "conflict": "Attribution impossible : le raccourci est très probablement utilisé par une autre application. Choisissez-en un autre."
+      "conflict": "Attribution impossible : le raccourci est très probablement utilisé par une autre application. Choisissez-en un autre.",
+      "duplicate": "Ce raccourci est déjà attribué à « {action} »."
     },
     "hotkeysMissing": "Certains raccourcis ont été supprimés dans les paramètres du système et ne fonctionnent pas. Utilisez « Réenregistrer » pour les rétablir.",
     "hotkeysTab": "Raccourcis",

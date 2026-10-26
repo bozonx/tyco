@@ -32,11 +32,12 @@ trait SettingsHost {
     type Secrets: HeaderSecrets;
     fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError>;
     fn write_config(&self, config: &Value) -> Result<(), AppError>;
+    /// `commit` gets `next` with the shortcuts the system refused put back.
     fn with_hotkeys<T>(
         &self,
         previous: &Value,
-        next: &Value,
-        commit: impl FnOnce() -> Result<T, AppError>,
+        next: &mut Value,
+        commit: impl FnOnce(&Value) -> Result<T, AppError>,
     ) -> Result<T, AppError>;
     fn with_history<T>(
         &self,
@@ -64,8 +65,8 @@ impl<'a> SettingsHost for AppSettingsHost<'a> {
     fn with_hotkeys<T>(
         &self,
         previous: &Value,
-        next: &Value,
-        commit: impl FnOnce() -> Result<T, AppError>,
+        next: &mut Value,
+        commit: impl FnOnce(&Value) -> Result<T, AppError>,
     ) -> Result<T, AppError> {
         hotkeys::with_config_changes(self.app, previous, next, commit)
     }
@@ -163,9 +164,9 @@ fn save_with(
     let mut pending = Some(host.protect(&mut next)?);
     let before = HistorySettings::from_config(&previous);
     let after = HistorySettings::from_config(&next);
-    let snapshot = host.with_hotkeys(&previous, &next, || {
+    let snapshot = host.with_hotkeys(&previous, &mut next, |next| {
         host.with_history(before, after, || {
-            if let Err(error) = host.write_config(&next) {
+            if let Err(error) = host.write_config(next) {
                 // A directory sync can fail after rename, so restore the old file.
                 if let Err(rollback) = host.write_config(&previous) {
                     pending.take().expect("pending header secrets").retain();
@@ -227,13 +228,13 @@ mod tests {
         fn with_hotkeys<T>(
             &self,
             _: &Value,
-            _: &Value,
-            commit: impl FnOnce() -> Result<T, AppError>,
+            next: &mut Value,
+            commit: impl FnOnce(&Value) -> Result<T, AppError>,
         ) -> Result<T, AppError> {
             if self.conflict {
                 return Err(AppError::InvalidInput("Shortcut conflict".into()));
             }
-            commit()
+            commit(next)
         }
         fn with_history<T>(
             &self,

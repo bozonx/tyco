@@ -731,7 +731,8 @@
       "portalNoSettings": "Genel kısayolları sistem atar; burada sistemin Tyco için bağladığı kısayollar gösterilir. Bunları sistem ayarlarında değiştirin."
     },
     "hotkeyStatus": {
-      "conflict": "Atanamadı: kısayol büyük olasılıkla başka bir uygulama tarafından kullanılıyor. Başka bir kısayol seçin."
+      "conflict": "Atanamadı: kısayol büyük olasılıkla başka bir uygulama tarafından kullanılıyor. Başka bir kısayol seçin.",
+      "duplicate": "Bu kısayol zaten “{action}” işlemine atanmış."
     },
     "hotkeysMissing": "Bazı kısayollar sistem ayarlarında silindi ve çalışmıyor. Geri getirmek için «Yeniden kaydet»i kullanın.",
     "hotkeysTab": "Kısayollar",

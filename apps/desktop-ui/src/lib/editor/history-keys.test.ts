@@ -23,8 +23,12 @@ describe('isUndoEvent', () => {
   })
 
   it('recognizes Ctrl+Z on Russian layout', () => {
-    expect(isUndoEvent(keyEvent({ key: 'я', ctrlKey: true }))).toBe(true)
-    expect(isUndoEvent(keyEvent({ key: 'Я', ctrlKey: true }))).toBe(true)
+    expect(
+      isUndoEvent(keyEvent({ key: 'я', code: 'KeyZ', ctrlKey: true }))
+    ).toBe(true)
+    expect(
+      isUndoEvent(keyEvent({ key: 'Я', code: 'KeyZ', ctrlKey: true }))
+    ).toBe(true)
     expect(isUndoEvent(keyEvent({ code: 'KeyZ', ctrlKey: true }))).toBe(true)
   })
 
@@ -37,7 +41,25 @@ describe('isUndoEvent', () => {
       isUndoEvent(keyEvent({ key: 'z', ctrlKey: true, altKey: true }))
     ).toBe(false)
     expect(
-      isUndoEvent(keyEvent({ key: 'я', ctrlKey: true, shiftKey: true }))
+      isUndoEvent(
+        keyEvent({ key: 'я', code: 'KeyZ', ctrlKey: true, shiftKey: true })
+      )
+    ).toBe(false)
+  })
+})
+
+describe('layouts with other Latin letters', () => {
+  it('follows the letter a QWERTZ or AZERTY keyboard types', () => {
+    // QWERTZ: Z sits where QWERTY has Y
+    const qwertzZ = keyEvent({ key: 'z', code: 'KeyY', ctrlKey: true })
+    const qwertzY = keyEvent({ key: 'y', code: 'KeyZ', ctrlKey: true })
+    expect(isUndoEvent(qwertzZ)).toBe(true)
+    expect(isRedoEvent(qwertzZ)).toBe(false)
+    expect(isUndoEvent(qwertzY)).toBe(false)
+    expect(isRedoEvent(qwertzY)).toBe(true)
+    // AZERTY: W sits where QWERTY has Z
+    expect(
+      isUndoEvent(keyEvent({ key: 'w', code: 'KeyZ', ctrlKey: true }))
     ).toBe(false)
   })
 })
@@ -64,18 +86,26 @@ describe('isRedoEvent', () => {
   it('recognizes Redo on Russian layout', () => {
     // Ctrl+Shift+я
     expect(
-      isRedoEvent(keyEvent({ key: 'я', ctrlKey: true, shiftKey: true }))
+      isRedoEvent(
+        keyEvent({ key: 'я', code: 'KeyZ', ctrlKey: true, shiftKey: true })
+      )
     ).toBe(true)
     expect(
-      isRedoEvent(keyEvent({ key: 'Я', ctrlKey: true, shiftKey: true }))
+      isRedoEvent(
+        keyEvent({ key: 'Я', code: 'KeyZ', ctrlKey: true, shiftKey: true })
+      )
     ).toBe(true)
     expect(
       isRedoEvent(keyEvent({ code: 'KeyZ', ctrlKey: true, shiftKey: true }))
     ).toBe(true)
 
     // Ctrl+н
-    expect(isRedoEvent(keyEvent({ key: 'н', ctrlKey: true }))).toBe(true)
-    expect(isRedoEvent(keyEvent({ key: 'Н', ctrlKey: true }))).toBe(true)
+    expect(
+      isRedoEvent(keyEvent({ key: 'н', code: 'KeyY', ctrlKey: true }))
+    ).toBe(true)
+    expect(
+      isRedoEvent(keyEvent({ key: 'Н', code: 'KeyY', ctrlKey: true }))
+    ).toBe(true)
     expect(isRedoEvent(keyEvent({ code: 'KeyY', ctrlKey: true }))).toBe(true)
   })
 

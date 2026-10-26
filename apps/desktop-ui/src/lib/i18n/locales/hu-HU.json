@@ -731,7 +731,8 @@
       "portalNoSettings": "A globális billentyűparancsokat a rendszer rendeli hozzá, így ezek azok, amelyeket a Tycónak kiosztott. A rendszerbeállításokban módosíthatja őket."
     },
     "hotkeyStatus": {
-      "conflict": "Nem sikerült hozzárendelni: a billentyűparancsot valószínűleg egy másik alkalmazás használja. Válasszon másikat."
+      "conflict": "Nem sikerült hozzárendelni: a billentyűparancsot valószínűleg egy másik alkalmazás használja. Válasszon másikat.",
+      "duplicate": "Ez a billentyűparancs már ehhez van rendelve: „{action}”."
     },
     "hotkeysMissing": "Néhány billentyűparancsot eltávolítottak a rendszerbeállításokban, ezért nem működnek. Az „Újraregisztrálás” gombbal visszaállíthatja őket.",
     "hotkeysTab": "Billentyűparancsok",

@@ -175,23 +175,20 @@ impl GlobalShortcutProvider {
         app.handle().plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |app, shortcut, event| {
-                    let hotkey_id = shortcut.id().to_string();
-                    if event.state == ShortcutState::Released {
-                        super::voice_gesture::released(app, &hotkey_id);
-                        return;
-                    }
                     let target = app
                         .state::<HotkeyRegistry>()
                         .targets
                         .read_locked()
                         .get(&shortcut.id())
                         .cloned();
-                    if let Some(target) = target {
-                        if let Err(error) = super::voice_gesture::pressed(app, &target, &hotkey_id)
-                        {
-                            log::error!("Hotkey activation failed: {error}");
-                        }
-                    }
+                    let Some(target) = target else {
+                        return;
+                    };
+                    let event = match event.state {
+                        ShortcutState::Pressed => super::HotkeyEvent::Pressed(target),
+                        ShortcutState::Released => super::HotkeyEvent::Released(target.id()),
+                    };
+                    super::dispatch(app, event);
                 })
                 .build(),
         )?;

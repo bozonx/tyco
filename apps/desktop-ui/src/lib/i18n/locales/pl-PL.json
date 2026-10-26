@@ -734,7 +734,8 @@
       "portalNoSettings": "Skróty globalne przypisuje system, więc to są skróty, które przypisał dla Tyco. Zmień je w ustawieniach systemu."
     },
     "hotkeyStatus": {
-      "conflict": "Nie udało się przypisać: skrót najpewniej zajmuje inna aplikacja. Wybierz inny."
+      "conflict": "Nie udało się przypisać: skrót najpewniej zajmuje inna aplikacja. Wybierz inny.",
+      "duplicate": "Ten skrót jest już przypisany do „{action}”."
     },
     "hotkeysMissing": "Niektóre skróty zostały usunięte w ustawieniach systemu i nie działają. Użyj „Zarejestruj ponownie”, aby je przywrócić.",
     "hotkeysTab": "Skróty",

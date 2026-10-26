@@ -42,11 +42,7 @@
         v-for="row in rows"
         :key="row.id"
         :label="row.label"
-        :error="
-          hasConflict(providerState, row.id)
-            ? t('settings.hotkeyStatus.conflict')
-            : undefined
-        "
+        :error="rowError(row.id)"
       >
         <template #info>
           <InfoPopover
@@ -130,18 +126,19 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import {
+  activationCommand,
   isEditable as checkIsEditable,
   isSystemManaged as checkIsSystemManaged,
   defaultShortcut,
   displayedShortcut,
+  duplicateHotkey,
   hasConflict,
   missingHotkeys,
-  modeCliCall,
   providerNoteKey,
 } from '../../lib/hotkeys/hotkey-settings'
 import { resolveSubmitKey } from '../../lib/input-keys/input-keys'
@@ -174,17 +171,17 @@ const submitKeyOptions = computed((): { id: SubmitKey; name: string }[] => [
 ])
 
 /** Display order of the activation modes; unknown modes go last. */
-const MODE_ORDER = [
-  'write',
+const MODE_ORDER: HotkeyId[] = [
+  'quickInput',
   'voice',
   'editor',
   'chat',
   'voiceChat',
   'voiceCommands',
-  'select',
+  'selectionActions',
   'aiTasks',
   'correction',
-  'translate',
+  'translation',
 ]
 
 interface HotkeyRow {
@@ -234,7 +231,7 @@ const allRows = computed<HotkeyRow[]>(() => [
       mode,
       DEFAULT_USER_CONFIG.hotkeys[mode]
     ),
-    command: modeCliCall(mode),
+    command: activationCommand(providerState, mode, `tyco-ctl open ${mode}`),
     externalHint: t('settings.externalMethodsHint'),
   })),
   {
@@ -250,7 +247,11 @@ const allRows = computed<HotkeyRow[]>(() => [
       inlineId,
       DEFAULT_USER_CONFIG.hotkeys.selectionCorrection
     ),
-    command: 'tyco-ctl replace correction',
+    command: activationCommand(
+      providerState,
+      inlineId,
+      'tyco-ctl replace correction'
+    ),
     externalHint: t('settings.inlineCorrectionExternalHint'),
     description: t('settings.inlineCorrectionHint'),
   },
@@ -261,7 +262,11 @@ const allRows = computed<HotkeyRow[]>(() => [
       label: t('settings.launcherPage', { page: index + 1 }),
       value: displayedShortcut(providerState, id, page.hotkey),
       defaultValue: defaultShortcut(providerState, id, ''),
-      command: `tyco --mode=${launcherPageMode(page.id)}`,
+      command: activationCommand(
+        providerState,
+        id,
+        `tyco --mode=${launcherPageMode(page.id)}`
+      ),
       externalHint: t('settings.externalMethodsHint'),
     }
   }),
@@ -280,9 +285,33 @@ const rows = computed(() =>
   )
 )
 
-function setShortcut(mode: string, shortcut: string) {
+/** Rows whose new shortcut was refused here, with the reason */
+const rowErrors = ref<Record<string, string>>({})
+
+function rowError(id: string): string | undefined {
+  if (rowErrors.value[id]) return rowErrors.value[id]
+  return hasConflict(providerState, id)
+    ? t('settings.hotkeyStatus.conflict')
+    : undefined
+}
+
+function setShortcut(id: string, shortcut: string) {
+  // every hotkey counts, those of hidden rows too
+  const duplicate = duplicateHotkey(allRows.value, id, shortcut)
+  if (duplicate) {
+    const action = allRows.value.find((row) => row.id === duplicate)
+    rowErrors.value = {
+      ...rowErrors.value,
+      [id]: t('settings.hotkeyStatus.duplicate', {
+        action: action?.label ?? duplicate,
+      }),
+    }
+    return
+  }
+  const { [id]: _cleared, ...rest } = rowErrors.value
+  rowErrors.value = rest
   // Native registration and persistence are one backend transaction.
-  operations.updateHotkey(mode, shortcut)
+  operations.updateHotkey(id, shortcut)
 }
 
 // pressing a bound shortcut must reach the field, not run its action

@@ -734,7 +734,8 @@
       "portalNoSettings": "Los atajos globales los asigna el sistema, así que estos son los que asignó a Tyco. Cámbialos en la configuración del sistema."
     },
     "hotkeyStatus": {
-      "conflict": "No se pudo asignar: lo más probable es que otra aplicación ya use el atajo. Elige otro."
+      "conflict": "No se pudo asignar: lo más probable es que otra aplicación ya use el atajo. Elige otro.",
+      "duplicate": "Este atajo ya está asignado a «{action}»."
     },
     "hotkeysMissing": "Algunos atajos se eliminaron en la configuración del sistema y no funcionan. Usa «Registrar de nuevo» para recuperarlos.",
     "hotkeysTab": "Atajos",

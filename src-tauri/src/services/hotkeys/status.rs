@@ -45,6 +45,8 @@ pub struct HotkeyProviderInfo {
     /// The default shortcut of every hotkey id on this platform
     #[serde(rename = "defaults")]
     pub default_shortcuts: HashMap<String, String>,
+    /// The shell line that runs each hotkey id, as `tyco-ctl --help` spells it
+    pub commands: HashMap<String, String>,
     #[serde(rename = "platform")]
     #[ts(type = r#""linux" | "windows" | "macos""#)]
     pub platform_name: &'static str,
@@ -107,6 +109,10 @@ pub async fn provider_info(app: &AppHandle) -> HotkeyProviderInfo {
             .into_iter()
             .map(|binding| (binding.target.id(), binding.shortcut.unwrap_or_default()))
             .collect(),
+        commands: bindings_from_config(&config)
+            .into_iter()
+            .map(|binding| (binding.target.id(), binding.target.cli_command()))
+            .collect(),
         platform_name: platform_name(),
     }
 }
@@ -146,6 +152,7 @@ mod tests {
             system_triggers: HashMap::new(),
             is_registered: true,
             default_shortcuts: defaults,
+            commands: HashMap::new(),
             platform_name: "linux",
         };
 

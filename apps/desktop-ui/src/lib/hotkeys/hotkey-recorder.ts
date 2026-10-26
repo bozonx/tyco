@@ -15,7 +15,7 @@ export type HotkeyRecordStep =
   | { kind: 'cancel' }
   /** Only modifiers are held so far */
   | { kind: 'pending'; keys: string[] }
-  /** A key without modifiers, which global shortcuts do not accept */
+  /** A key without modifiers or one global shortcuts cannot bind */
   | { kind: 'invalid'; keys: string[] }
   | { kind: 'done'; shortcut: string }
 
@@ -34,7 +34,10 @@ function keyLabel(event: HotkeyKeyEvent): string {
   return event.key.length === 1 ? event.key.toUpperCase() : event.key
 }
 
-export function recordKeyDown(event: HotkeyKeyEvent): HotkeyRecordStep {
+export function recordKeyDown(
+  event: HotkeyKeyEvent,
+  platform: HotkeyPlatform = 'linux'
+): HotkeyRecordStep {
   const modifiers = heldModifiers(event)
   if (MODIFIER_KEYS.includes(event.key)) {
     return { kind: 'pending', keys: modifiers }
@@ -42,7 +45,10 @@ export function recordKeyDown(event: HotkeyKeyEvent): HotkeyRecordStep {
   if (event.key === 'Escape' && modifiers.length === 0) {
     return { kind: 'cancel' }
   }
-  const shortcut = hotkeyFromKeyboardEvent(event)
+  // macOS binds keys by position, the others by the letter of the layout
+  const shortcut = hotkeyFromKeyboardEvent(event, {
+    isPhysical: platform === 'macos',
+  })
   return shortcut
     ? { kind: 'done', shortcut }
     : { kind: 'invalid', keys: [...modifiers, keyLabel(event)] }

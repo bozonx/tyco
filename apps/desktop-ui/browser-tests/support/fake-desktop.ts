@@ -315,6 +315,7 @@ export class FakeDesktop {
       systemTriggers: {},
       registered: true,
       defaults: {},
+      commands: {},
       platform: 'linux',
     }))
     this.handle('get_storage_info', () => ({

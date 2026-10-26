@@ -13,6 +13,7 @@ function fixture() {
     systemTriggers: {},
     registered: false,
     defaults: {},
+    commands: {},
     platform: 'linux',
   }
   const deps = {

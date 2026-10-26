@@ -1,9 +1,9 @@
 //! Linux GlobalShortcuts portal session lifecycle and event streams.
 use crate::errors::AppError;
 use crate::locks::RwLockExt;
-use crate::services::hotkeys::voice_gesture;
 use crate::services::hotkeys::{
-    bindings_from_config, global_target, HotkeyBinding, PortalShortcutBindings, ProviderState,
+    self, bindings_from_config, global_target, HotkeyBinding, HotkeyEvent, PortalShortcutBindings,
+    ProviderState,
 };
 use crate::services::platform::hotkeys::ProviderKind;
 use crate::state::AppState;
@@ -137,11 +137,11 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     let portal = GlobalShortcuts::new()
         .await
         .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
-    let mut activated = portal
+    let activated = portal
         .receive_activated()
         .await
         .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
-    let mut deactivated = portal
+    let deactivated = portal
         .receive_deactivated()
         .await
         .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
@@ -153,8 +153,15 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     {
         let state = app.state::<PortalState>();
         let _binding = state.binding.lock().await;
-        bind_session(&app, &portal, &bindings).await?;
-        let _ = state.portal.set(portal);
+        let _ = state.portal.set(Arc::clone(&portal));
+        match bind_session(&app, &portal, &bindings).await {
+            Ok(()) => {}
+            // the portal works: the settings offer to bind the hotkeys again
+            Err(AppError::PermissionDenied(message)) => {
+                log::warn!("The hotkeys were not bound: {message}");
+            }
+            Err(error) => return Err(error),
+        }
     }
     // the settings may already show the shortcuts the desktop had not bound
     notify_hotkeys_changed(&app);
@@ -167,15 +174,6 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
             }
         })?;
 
-    // selection actions press keys of their own, and wait for the hotkey
-    // to be released first
-    let release_app = app.clone();
-    app.state::<crate::services::background::BackgroundServices>()
-        .spawn_async(async move {
-            while let Some(event) = deactivated.next().await {
-                voice_gesture::released(&release_app, event.shortcut_id());
-            }
-        })?;
     let changed_app = app.clone();
     app.state::<crate::services::background::BackgroundServices>()
         .spawn_async(async move {
@@ -184,15 +182,23 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
                 notify_hotkeys_changed(&changed_app);
             }
         })?;
-    while let Some(event) = activated.next().await {
+    // one stream keeps a release after its press; selection actions press
+    // keys of their own and wait for the hotkey to be released first
+    let mut events = futures_util::stream::select(
+        activated.map(|event| (true, event.shortcut_id().to_owned())),
+        deactivated.map(|event| (false, event.shortcut_id().to_owned())),
+    );
+    while let Some((is_pressed, id)) = events.next().await {
+        if !is_pressed {
+            hotkeys::dispatch(&app, HotkeyEvent::Released(id));
+            continue;
+        }
         // the desktop may still keep hotkeys of older versions
-        let Some(target) = global_target(event.shortcut_id()) else {
-            log::warn!("Unknown portal hotkey: {}", event.shortcut_id());
+        let Some(target) = global_target(&id) else {
+            log::warn!("Unknown portal hotkey: {id}");
             continue;
         };
-        if let Err(error) = voice_gesture::pressed(&app, &target, event.shortcut_id()) {
-            log::error!("Portal hotkey activation failed: {error}");
-        }
+        hotkeys::dispatch(&app, HotkeyEvent::Pressed(target));
     }
     log::warn!("The hotkey portal stopped reporting hotkeys");
     Ok(())
@@ -261,7 +267,14 @@ async fn bind_session(
         .bind_shortcuts(&session, &shortcuts, None, BindShortcutsOptions::default())
         .await
         .and_then(|request| request.response())
-        .map_err(|error| AppError::ServiceUnavailable(error.to_string()))?;
+        .map_err(|error| match error {
+            ashpd::Error::Response(ashpd::desktop::ResponseError::Cancelled) => {
+                AppError::PermissionDenied(String::from(
+                    "The user declined the hotkeys in the desktop dialog",
+                ))
+            }
+            error => AppError::ServiceUnavailable(error.to_string()),
+        })?;
     store_system_triggers(app, bound.shortcuts());
     app.state::<PortalState>()
         .session
@@ -318,11 +331,10 @@ fn to_portal_trigger(shortcut: &str) -> String {
             _ => "",
         })
         .collect::<String>();
-    let key = match key.to_ascii_lowercase().as_str() {
-        "comma" => "comma".to_owned(),
-        value => value.to_owned(),
-    };
-    format!("{modifiers}{key}")
+    format!(
+        "{modifiers}{}",
+        crate::services::platform::hotkeys::xkb_key_name(key)
+    )
 }
 
 #[cfg(test)]
@@ -333,5 +345,7 @@ mod tests {
     fn converts_shortcuts_to_xdg_trigger_syntax() {
         assert_eq!(to_portal_trigger("Ctrl+Alt+E"), "CTRL+ALT+e");
         assert_eq!(to_portal_trigger("Super+Shift+Comma"), "LOGO+SHIFT+comma");
+        assert_eq!(to_portal_trigger("Ctrl+Alt+F5"), "CTRL+ALT+F5");
+        assert_eq!(to_portal_trigger("Ctrl+ArrowUp"), "CTRL+Up");
     }
 }

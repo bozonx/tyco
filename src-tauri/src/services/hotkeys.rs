@@ -4,7 +4,9 @@ mod bindings;
 mod config_transaction;
 pub use config_transaction::with_config_changes;
 mod global_shortcut;
+mod queue;
 mod status;
+pub(crate) use queue::{dispatch, HotkeyEvent};
 pub(crate) mod voice_gesture;
 pub use status::{provider_info, HotkeyApplyResult, HotkeyApplyStatus, HotkeyProviderInfo};
 
@@ -20,6 +22,7 @@ use global_shortcut::{
 };
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::RwLock;
 use tauri::{App, AppHandle, Manager};
 use tauri_plugin_global_shortcut::Shortcut;
@@ -63,11 +66,14 @@ pub fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri
             .manage(ProviderState::new(provider_kind(session::current())))
             .manage(HotkeyRegistry::default())
             .manage(voice_gesture::VoiceGesture::default())
-            .manage(PortalShortcutBindings::default()),
+            .manage(PortalShortcutBindings::default())
+            .manage(queue::HotkeyQueue::default())
+            .manage(SuspendGeneration::default()),
     )
 }
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {
+    queue::start(app.handle())?;
     let user_config = app.state::<AppState>().user_config();
     let bindings = bindings_from_config(&user_config);
 
@@ -115,13 +121,44 @@ pub async fn rebind(app: &AppHandle) -> Result<(), AppError> {
 /// shortcuts and compositor bindings.
 /// A shortcut that cannot be suspended or resumed is logged and skipped.
 pub fn set_suspended(app: &AppHandle, suspended: bool) {
+    let generation = app
+        .state::<SuspendGeneration>()
+        .0
+        .fetch_add(1, Ordering::SeqCst)
+        + 1;
     suspend_with(
         app.state::<ProviderState>().kind(),
         &app.state::<HotkeyRegistry>(),
         &SystemHotkeyProvider(app),
         suspended,
     );
+    if !suspended {
+        return;
+    }
+    // a settings window that reloads or crashes while recording never
+    // resumes the hotkeys itself
+    let handle = app.clone();
+    let spawned = std::thread::Builder::new()
+        .name(String::from("hotkey-resume"))
+        .spawn(move || {
+            std::thread::sleep(MAX_SUSPENSION);
+            if handle.state::<SuspendGeneration>().0.load(Ordering::SeqCst) == generation {
+                log::warn!("Hotkeys were suspended too long; resuming them");
+                set_suspended(&handle, false);
+            }
+        });
+    if let Err(error) = spawned {
+        log::warn!("Could not watch the hotkey suspension: {error}");
+    }
 }
+
+/// Recording a shortcut takes seconds; a longer suspension was abandoned.
+const MAX_SUSPENSION: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// Counts suspensions and resumptions, so that a timed resumption only
+/// applies when nothing changed since.
+#[derive(Default)]
+struct SuspendGeneration(AtomicU64);
 
 pub fn apply(app: &AppHandle, request: HotkeyApplyRequest) -> Result<HotkeyApplyResult, AppError> {
     let target = HotkeyTarget::parse(&request.mode)?;

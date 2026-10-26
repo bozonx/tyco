@@ -6,7 +6,9 @@ use std::time::Duration;
 
 use windows_sys::Win32::Foundation::HWND;
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
-    SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VK_CONTROL, VK_SHIFT,
+    GetAsyncKeyState, SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
+    VK_CONTROL, VK_LCONTROL, VK_LMENU, VK_LSHIFT, VK_LWIN, VK_RCONTROL, VK_RMENU, VK_RSHIFT,
+    VK_RWIN, VK_SHIFT,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     GetClassNameW, GetForegroundWindow, GetWindowThreadProcessId, IsWindow, SetForegroundWindow,
@@ -131,8 +133,8 @@ fn is_terminal_class(class: &str) -> bool {
     )
 }
 
-fn copy_or_paste_inputs(copy: bool, terminal: bool) -> Vec<INPUT> {
-    let key = |virtual_key: u16, flags| INPUT {
+fn key_input(virtual_key: u16, flags: u32) -> INPUT {
+    INPUT {
         r#type: INPUT_KEYBOARD,
         Anonymous: INPUT_0 {
             ki: KEYBDINPUT {
@@ -143,7 +145,33 @@ fn copy_or_paste_inputs(copy: bool, terminal: bool) -> Vec<INPUT> {
                 dwExtraInfo: 0,
             },
         },
-    };
+    }
+}
+
+/// The modifiers to release first: the user may still hold those of the
+/// hotkey that started the action, and Ctrl+C would become Ctrl+Alt+C, which
+/// is AltGr+C on many layouts.
+const RELEASED_MODIFIERS: [u16; 8] = [
+    VK_LSHIFT,
+    VK_RSHIFT,
+    VK_LMENU,
+    VK_RMENU,
+    VK_LWIN,
+    VK_RWIN,
+    VK_LCONTROL,
+    VK_RCONTROL,
+];
+
+fn held_modifier_releases(is_held: impl Fn(u16) -> bool) -> Vec<INPUT> {
+    RELEASED_MODIFIERS
+        .into_iter()
+        .filter(|&key| is_held(key))
+        .map(|key| key_input(key, KEYEVENTF_KEYUP))
+        .collect()
+}
+
+fn copy_or_paste_inputs(copy: bool, terminal: bool) -> Vec<INPUT> {
+    let key = key_input;
     let mut inputs = vec![key(VK_CONTROL, 0)];
     if terminal {
         inputs.push(key(VK_SHIFT, 0));
@@ -160,7 +188,8 @@ fn copy_or_paste_inputs(copy: bool, terminal: bool) -> Vec<INPUT> {
 
 /// Sends keys only to the foreground window; callers validate its identity.
 pub fn press_copy_or_paste(copy: bool, terminal: bool) -> Result<(), AppError> {
-    let inputs = copy_or_paste_inputs(copy, terminal);
+    let mut inputs = held_modifier_releases(|key| unsafe { GetAsyncKeyState(i32::from(key)) } < 0);
+    inputs.extend(copy_or_paste_inputs(copy, terminal));
     let sent = unsafe {
         SendInput(
             inputs.len() as u32,
@@ -178,6 +207,19 @@ pub fn press_copy_or_paste(copy: bool, terminal: bool) -> Result<(), AppError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn releases_only_the_modifiers_still_held() {
+        let releases = held_modifier_releases(|key| key == VK_LMENU || key == VK_RSHIFT);
+        let keys = releases
+            .iter()
+            .map(|input| unsafe { (input.Anonymous.ki.wVk, input.Anonymous.ki.dwFlags) })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            keys,
+            [(VK_RSHIFT, KEYEVENTF_KEYUP), (VK_LMENU, KEYEVENTF_KEYUP)]
+        );
+    }
     #[test]
     fn terminal_copy_uses_shift_instead_of_interrupting_the_process() {
         assert!(is_terminal_class("CASCADIA_HOSTING_WINDOW_CLASS"));

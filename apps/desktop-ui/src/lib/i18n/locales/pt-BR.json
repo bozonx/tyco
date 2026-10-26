@@ -734,7 +734,8 @@
       "portalNoSettings": "Os atalhos globais são atribuídos pelo sistema, então estes são os que ele associou ao Tyco. Altere-os nas configurações do sistema."
     },
     "hotkeyStatus": {
-      "conflict": "Não foi possível atribuir: o atalho provavelmente já está em uso por outro aplicativo. Escolha outro."
+      "conflict": "Não foi possível atribuir: o atalho provavelmente já está em uso por outro aplicativo. Escolha outro.",
+      "duplicate": "Este atalho já está atribuído a “{action}”."
     },
     "hotkeysMissing": "Alguns atalhos foram removidos nas configurações do sistema e não funcionam. Use “Registrar novamente” para recuperá-los.",
     "hotkeysTab": "Atalhos",

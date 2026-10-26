@@ -10,7 +10,8 @@ import {
   isEditable,
   isSystemManaged,
   missingHotkeys,
-  modeCliCall,
+  activationCommand,
+  duplicateHotkey,
   providerNoteKey,
 } from './hotkey-settings'
 
@@ -27,6 +28,7 @@ describe('hotkey settings', () => {
       systemTriggers: {},
       registered: false,
       defaults: {},
+      commands: {},
       platform: 'linux',
     })
 
@@ -44,6 +46,7 @@ describe('hotkey settings', () => {
       systemTriggers: { editor: 'Meta+E', voice: 'Meta+V, Ctrl+F12' },
       registered: true,
       defaults: {},
+      commands: {},
       platform: 'linux',
     })
 
@@ -66,6 +69,7 @@ describe('hotkey settings', () => {
       systemTriggers: {},
       registered: false,
       defaults: {},
+      commands: {},
       platform: 'linux',
     })
 
@@ -85,6 +89,7 @@ describe('hotkey settings', () => {
       systemTriggers: { editor: 'Ctrl+Alt+E', voice: '' },
       registered: false,
       defaults: {},
+      commands: {},
       platform: 'linux' as const,
     }
     applyProviderInfo(state, info)
@@ -121,6 +126,7 @@ describe('hotkey settings', () => {
       systemTriggers: {},
       registered: false,
       defaults: { editor: 'Ctrl+Shift+Alt+E' },
+      commands: {},
       platform: 'windows',
     })
 
@@ -142,10 +148,20 @@ describe('hotkey settings', () => {
     expect(hasConflict(state, 'voice')).toBe(true)
   })
 
-  it('spells modes the way the CLI documents them', () => {
-    expect(modeCliCall('editor')).toBe('tyco-ctl open editor')
-    expect(modeCliCall('voiceChat')).toBe('tyco-ctl open voice-chat')
-    expect(modeCliCall('config')).toBe('tyco-ctl open settings')
+  it('takes commands from the backend and finds duplicates', () => {
+    const state = createHotkeySettingsState()
+    state.commands = { voiceChat: 'tyco-ctl open voice-chat' }
+    expect(activationCommand(state, 'voiceChat', 'x')).toBe(
+      'tyco-ctl open voice-chat'
+    )
+    expect(activationCommand(state, 'editor', 'fallback')).toBe('fallback')
+    const rows = [
+      { id: 'voice', value: 'Ctrl+Alt+V' },
+      { id: 'chat', value: '' },
+    ]
+    expect(duplicateHotkey(rows, 'chat', 'Ctrl+Alt+V')).toBe('voice')
+    expect(duplicateHotkey(rows, 'voice', 'Ctrl+Alt+V')).toBeNull()
+    expect(duplicateHotkey(rows, 'chat', '')).toBeNull()
   })
 
   it('labels the shortcut that opens a mode once the provider is known', () => {
@@ -159,6 +175,7 @@ describe('hotkey settings', () => {
       systemTriggers: {},
       registered: false,
       defaults: {},
+      commands: {},
       platform: 'linux' as const,
     }
     applyProviderInfo(state, info)

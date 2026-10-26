@@ -150,7 +150,7 @@ fn selection_binding(config: &Value) -> HotkeyBinding {
             config
                 .get(HOTKEYS_CONFIG_KEY)
                 .and_then(|values| values.get(SELECTION_CORRECTION_CONFIG_KEY)),
-            || Some(default_correction_shortcut()),
+            default_correction_shortcut,
         ),
         description: CORRECTION_DESCRIPTION.to_owned(),
     }
@@ -165,6 +165,50 @@ fn configured_shortcut(
             .filter(|shortcut| !shortcut.is_empty())
             .map(str::to_owned),
         None => default(),
+    }
+}
+
+/// Puts back the shortcut `target` has in `source` into `config`: a
+/// shortcut the system refused must not be saved as if it were bound.
+pub(crate) fn restore_config_shortcut(config: &mut Value, source: &Value, target: &HotkeyTarget) {
+    match target {
+        HotkeyTarget::LauncherPage(page_id) => {
+            let previous = source
+                .get("launcherPages")
+                .and_then(Value::as_array)
+                .and_then(|pages| {
+                    pages
+                        .iter()
+                        .find(|page| page.get("id").and_then(Value::as_str) == Some(page_id))
+                })
+                .and_then(|page| page.get("hotkey").cloned())
+                .unwrap_or_else(|| Value::String(String::new()));
+            let page = config
+                .get_mut("launcherPages")
+                .and_then(Value::as_array_mut)
+                .and_then(|pages| {
+                    pages
+                        .iter_mut()
+                        .find(|page| page.get("id").and_then(Value::as_str) == Some(page_id))
+                });
+            if let Some(Value::Object(page)) = page {
+                page.insert(String::from("hotkey"), previous);
+            }
+        }
+        HotkeyTarget::Mode(_) | HotkeyTarget::InlineCorrection => {
+            let id = target.id();
+            let previous = source
+                .get(HOTKEYS_CONFIG_KEY)
+                .and_then(|hotkeys| hotkeys.get(&id))
+                .cloned();
+            let Some(Value::Object(hotkeys)) = config.get_mut(HOTKEYS_CONFIG_KEY) else {
+                return;
+            };
+            match previous {
+                Some(previous) => hotkeys.insert(id, previous),
+                None => hotkeys.remove(&id),
+            };
+        }
     }
 }
 
@@ -205,8 +249,9 @@ fn default_shortcut(mode: ActivationMode) -> Option<String> {
     default_key(mode).map(|key| format!("{DEFAULT_MODIFIERS}+{key}"))
 }
 
-fn default_correction_shortcut() -> String {
-    format!("{DEFAULT_MODIFIERS}+{DEFAULT_CORRECTION_KEY}")
+/// None on macOS, where the selection cannot be replaced in place yet.
+fn default_correction_shortcut() -> Option<String> {
+    (!cfg!(target_os = "macos")).then(|| format!("{DEFAULT_MODIFIERS}+{DEFAULT_CORRECTION_KEY}"))
 }
 
 /// The shortcut of the first page of the default `launcherPages`.
@@ -237,7 +282,7 @@ pub fn default_hotkeys_config() -> Value {
         .collect::<Map<_, _>>();
     hotkeys.insert(
         SELECTION_CORRECTION_CONFIG_KEY.to_owned(),
-        Value::String(default_correction_shortcut()),
+        Value::String(default_correction_shortcut().unwrap_or_default()),
     );
     Value::Object(hotkeys)
 }
@@ -281,7 +326,7 @@ mod tests {
             default_hotkeys_config()
                 .get(SELECTION_CORRECTION_CONFIG_KEY)
                 .and_then(Value::as_str),
-            Some(default_correction_shortcut().as_str())
+            Some(default_correction_shortcut().unwrap_or_default().as_str())
         );
     }
 
@@ -292,17 +337,17 @@ mod tests {
             .filter(|binding| binding.shortcut.is_some())
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(
-            assigned,
-            [
-                "quickInput",
-                "voiceCommands",
-                "voice",
-                "selectionActions",
-                "launcherPage.main",
-                "selectionCorrection"
-            ]
-        );
+        let mut expected = vec![
+            "quickInput",
+            "voiceCommands",
+            "voice",
+            "selectionActions",
+            "launcherPage.main",
+        ];
+        if !cfg!(target_os = "macos") {
+            expected.push("selectionCorrection");
+        }
+        assert_eq!(assigned, expected);
         assert_eq!(
             default_hotkeys_config().get("editor"),
             Some(&Value::String(String::new()))
@@ -357,7 +402,7 @@ mod tests {
             selection(json!({})),
             (
                 String::from("selectionCorrection"),
-                Some(default_correction_shortcut())
+                default_correction_shortcut()
             )
         );
         assert_eq!(
@@ -384,6 +429,32 @@ mod tests {
         assert!(bindings.iter().all(|binding| binding.target
             != HotkeyTarget::Mode(ActivationMode::History)
             && binding.target != HotkeyTarget::Mode(ActivationMode::Config)));
+    }
+
+    #[test]
+    fn restores_refused_shortcuts_from_the_previous_config() {
+        let previous = json!({
+            "hotkeys": { "voice": "Ctrl+Alt+V" },
+            "launcherPages": [{ "id": "main", "hotkey": "Ctrl+Alt+Q" }]
+        });
+        let mut next = json!({
+            "hotkeys": { "voice": "Ctrl+Alt+X", "chat": "Ctrl+Alt+C" },
+            "launcherPages": [
+                { "id": "main", "hotkey": "Ctrl+Alt+W" },
+                { "id": "new", "hotkey": "Ctrl+Alt+N" }
+            ]
+        });
+        for target in [
+            HotkeyTarget::Mode(ActivationMode::Voice),
+            HotkeyTarget::Mode(ActivationMode::Chat),
+            HotkeyTarget::LauncherPage(String::from("main")),
+            HotkeyTarget::LauncherPage(String::from("new")),
+        ] {
+            restore_config_shortcut(&mut next, &previous, &target);
+        }
+        assert_eq!(next["hotkeys"], json!({ "voice": "Ctrl+Alt+V" }));
+        assert_eq!(next["launcherPages"][0]["hotkey"], "Ctrl+Alt+Q");
+        assert_eq!(next["launcherPages"][1]["hotkey"], "");
     }
 
     #[test]

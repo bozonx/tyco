@@ -144,7 +144,7 @@ function onKeyDown(event: KeyboardEvent) {
   if (!isRecording.value) return
   event.preventDefault()
   event.stopPropagation()
-  const step = recordKeyDown(event)
+  const step = recordKeyDown(event, props.platform)
   switch (step.kind) {
     case 'cancel':
       buttonRef.value?.blur()

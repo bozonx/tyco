@@ -734,7 +734,8 @@
       "portalNoSettings": "Globalne prečace dodjeljuje sustav, pa su ovo prečaci koje je dodijelio Tycu. Promijenite ih u postavkama sustava."
     },
     "hotkeyStatus": {
-      "conflict": "Dodjela nije uspjela: prečac najvjerojatnije koristi druga aplikacija. Odaberite drugi."
+      "conflict": "Dodjela nije uspjela: prečac najvjerojatnije koristi druga aplikacija. Odaberite drugi.",
+      "duplicate": "Ovaj je prečac već dodijeljen radnji „{action}”."
     },
     "hotkeysMissing": "Neki su prečaci uklonjeni u postavkama sustava i ne rade. Upotrijebite „Ponovno registriraj” da biste ih vratili.",
     "hotkeysTab": "Prečaci",

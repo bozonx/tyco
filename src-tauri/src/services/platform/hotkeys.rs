@@ -65,17 +65,73 @@ fn external_command_for(desktop: Desktop, target: &HotkeyTarget, shortcut: &str)
     }
 }
 
+/// The XKB keysym name of a key as Tyco spells it (`Comma`, `F5`,
+/// `ArrowUp`, `Numpad1`), the name the portal, Sway and Hyprland expect.
+pub(crate) fn xkb_key_name(key: &str) -> String {
+    let name = match key.to_ascii_lowercase().as_str() {
+        "space" => "space",
+        "comma" => "comma",
+        "period" => "period",
+        "minus" => "minus",
+        "equal" => "equal",
+        "slash" => "slash",
+        "backslash" => "backslash",
+        "semicolon" => "semicolon",
+        "quote" => "apostrophe",
+        "bracketleft" => "bracketleft",
+        "bracketright" => "bracketright",
+        "backquote" => "grave",
+        "enter" => "Return",
+        "escape" | "esc" => "Escape",
+        "tab" => "Tab",
+        "backspace" => "BackSpace",
+        "delete" => "Delete",
+        "insert" => "Insert",
+        "home" => "Home",
+        "end" => "End",
+        "pageup" => "Prior",
+        "pagedown" => "Next",
+        "arrowup" | "up" => "Up",
+        "arrowdown" | "down" => "Down",
+        "arrowleft" | "left" => "Left",
+        "arrowright" | "right" => "Right",
+        "printscreen" => "Print",
+        "pause" => "Pause",
+        "numpadadd" => "KP_Add",
+        "numpadsubtract" => "KP_Subtract",
+        "numpadmultiply" => "KP_Multiply",
+        "numpaddivide" => "KP_Divide",
+        "numpaddecimal" => "KP_Decimal",
+        "numpadenter" => "KP_Enter",
+        lower => {
+            if let Some(digit) = lower.strip_prefix("numpad") {
+                return format!("KP_{digit}");
+            }
+            let is_function_key = lower.len() > 1
+                && lower.starts_with('f')
+                && lower[1..].chars().all(|char| char.is_ascii_digit());
+            if is_function_key {
+                return lower.to_ascii_uppercase();
+            }
+            return lower.to_owned();
+        }
+    };
+    name.to_owned()
+}
+
 fn sway_shortcut(shortcut: &str) -> String {
-    shortcut
-        .split('+')
+    let mut parts = shortcut.split('+').collect::<Vec<_>>();
+    let key = parts.pop().unwrap_or_default();
+    parts
+        .into_iter()
         .map(|part| match part.to_ascii_lowercase().as_str() {
             "ctrl" | "control" => String::from("Control"),
             "alt" => String::from("Mod1"),
             "super" | "meta" | "cmd" | "command" => String::from("Mod4"),
             "shift" => String::from("Shift"),
-            "comma" => String::from("comma"),
-            _ => part.to_ascii_lowercase(),
+            _ => part.to_owned(),
         })
+        .chain([xkb_key_name(key)])
         .collect::<Vec<_>>()
         .join("+")
 }
@@ -94,11 +150,7 @@ fn hyprland_shortcut(shortcut: &str) -> (String, String) {
         })
         .collect::<Vec<_>>()
         .join(" ");
-    let key = match key.to_ascii_lowercase().as_str() {
-        "comma" => "comma".to_owned(),
-        _ => key.to_owned(),
-    };
-    (modifiers, key)
+    (modifiers, xkb_key_name(key))
 }
 
 pub(crate) async fn shutdown(app: &tauri::AppHandle) {
@@ -244,7 +296,7 @@ mod tests {
     fn converts_shortcuts_to_hyprland_syntax() {
         assert_eq!(
             hyprland_shortcut("Ctrl+Alt+E"),
-            (String::from("CTRL ALT"), String::from("E"))
+            (String::from("CTRL ALT"), String::from("e"))
         );
         assert_eq!(
             hyprland_shortcut("Super+Shift+Comma"),
@@ -253,9 +305,27 @@ mod tests {
     }
 
     #[test]
+    fn names_keys_as_xkb_does() {
+        assert_eq!(xkb_key_name("E"), "e");
+        assert_eq!(xkb_key_name("7"), "7");
+        assert_eq!(xkb_key_name("F5"), "F5");
+        assert_eq!(xkb_key_name("F12"), "F12");
+        assert_eq!(xkb_key_name("Space"), "space");
+        assert_eq!(xkb_key_name("ArrowUp"), "Up");
+        assert_eq!(xkb_key_name("Enter"), "Return");
+        assert_eq!(xkb_key_name("Escape"), "Escape");
+        assert_eq!(xkb_key_name("Backquote"), "grave");
+        assert_eq!(xkb_key_name("Quote"), "apostrophe");
+        assert_eq!(xkb_key_name("PageDown"), "Next");
+        assert_eq!(xkb_key_name("Numpad1"), "KP_1");
+        assert_eq!(xkb_key_name("NumpadAdd"), "KP_Add");
+    }
+
+    #[test]
     fn converts_shortcuts_to_sway_syntax() {
         assert_eq!(sway_shortcut("Ctrl+Alt+E"), "Control+Mod1+e");
         assert_eq!(sway_shortcut("Super+Shift+Comma"), "Mod4+Shift+comma");
+        assert_eq!(sway_shortcut("Ctrl+F5"), "Control+F5");
     }
 
     #[test]

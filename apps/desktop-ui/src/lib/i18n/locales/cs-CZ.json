@@ -728,7 +728,8 @@
       "portalNoSettings": "Globální zkratky přiřazuje systém, takže toto jsou zkratky, které přiřadil Tyco. Změňte je v nastavení systému."
     },
     "hotkeyStatus": {
-      "conflict": "Přiřazení se nepodařilo: zkratku nejspíš používá jiná aplikace. Vyberte jinou."
+      "conflict": "Přiřazení se nepodařilo: zkratku nejspíš používá jiná aplikace. Vyberte jinou.",
+      "duplicate": "Tuto zkratku již používá akce „{action}“."
     },
     "hotkeysMissing": "Některé zkratky byly odstraněny v nastavení systému a nefungují. Vraťte je tlačítkem „Znovu zaregistrovat“.",
     "hotkeysTab": "Klávesové zkratky",

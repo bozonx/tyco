@@ -74,4 +74,36 @@ describe('hotkeys', () => {
       })
     ).toBe('Ctrl+Shift+1')
   })
+
+  const press = (key: string, code: string) => ({
+    key,
+    code,
+    ctrlKey: true,
+    altKey: true,
+    shiftKey: false,
+    metaKey: false,
+  })
+
+  it('takes a Latin letter as the layout types it', () => {
+    // Z of a QWERTZ keyboard sits where QWERTY has Y
+    expect(hotkeyFromKeyboardEvent(press('z', 'KeyY'))).toBe('Ctrl+Alt+Z')
+    // macOS binds the key position
+    expect(
+      hotkeyFromKeyboardEvent(press('z', 'KeyY'), { isPhysical: true })
+    ).toBe('Ctrl+Alt+Y')
+  })
+
+  it('keeps numpad keys apart from the digit row', () => {
+    expect(hotkeyFromKeyboardEvent(press('1', 'Numpad1'))).toBe(
+      'Ctrl+Alt+Numpad1'
+    )
+    expect(hotkeyFromKeyboardEvent(press('F5', 'F5'))).toBe('Ctrl+Alt+F5')
+    expect(hotkeyFromKeyboardEvent(press('ArrowUp', 'ArrowUp'))).toBe(
+      'Ctrl+Alt+ArrowUp'
+    )
+  })
+
+  it('refuses keys the global shortcuts cannot bind', () => {
+    expect(hotkeyFromKeyboardEvent(press('ё', 'IntlBackslash'))).toBeNull()
+  })
 })
