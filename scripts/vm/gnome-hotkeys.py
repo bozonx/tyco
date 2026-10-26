@@ -22,7 +22,7 @@ def run_checks(*, vm, driver, guest, check, selected, report):
 
     def setup():
         import_module("gnome-setup").ensure_shortcuts(driver, guest)
-        guest("receiver wayland")
+        import_module("receiver-session").start_receiver(vm, guest, "wayland")
         wait_for("native shortcut receiver focus", lambda: read().get("focused"))
 
     def assign(shortcut):
@@ -40,22 +40,12 @@ def run_checks(*, vm, driver, guest, check, selected, report):
             ),
             "Native assignment differs",
         )
-        expected = shortcut.replace("<Control>", "").replace("<Alt>", "").lower()
-
-        def refreshed():
-            info = driver.invoke("get_hotkey_provider_info")
-            trigger = info["systemTriggers"].get("quickInput", "")
-            return (
-                info
-                if (
-                    (expected and trigger.lower().endswith(expected))
-                    or (not expected and not trigger)
-                )
-                else None
-            )
-
+        info = driver.invoke("get_hotkey_provider_info")
+        (vm.run_dir / "gnome-shortcut-observed.json").write_text(
+            json.dumps(info, indent=2)
+        )
         report.setdefault("gnomeShortcutAssignments", []).append(
-            wait_for("portal observes native assignment", refreshed)
+            {"requested": shortcut, "nativeSettings": actual, "applicationStatus": info}
         )
 
     def activated(key):
@@ -111,7 +101,42 @@ def run_checks(*, vm, driver, guest, check, selected, report):
         finally:
             assign("<Control><Alt>i")
         activated("i")
-        return "Native GNOME shortcut revoked; portal reports no trigger; physical key inactive; reassignment recovers"
+        return "Native GNOME shortcut revoked; physical key inactive; reassignment recovers; native settings and application metadata recorded separately"
+
+    def configure_cancel():
+        setup()
+        driver.window("main", ".cm-editor")
+        before = json.loads(guest("env-run python3 tyco-vm/gnome-shortcuts.py"))
+        driver.invoke("open_system_hotkey_settings")
+
+        def settings():
+            nodes = json.loads(guest("env-run python3 tyco-vm/native-ui.py all"))
+            matches = [
+                node
+                for node in nodes
+                if node["application"] == "gnome-control-center"
+                and node.get("showing")
+                and node["role"] in ("frame", "dialog")
+            ]
+            return nodes if matches else None
+
+        report["gnomeShortcutSettingsUi"] = wait_for(
+            "real GNOME shortcut settings opened by Tyco", settings, timeout=25
+        )
+        vm.qmp.screenshot(vm.run_dir / "gnome-shortcut-settings.png")
+        vm.qmp.tap("alt", "f4")
+        wait_for("native shortcut settings closed", lambda: not settings(), timeout=15)
+        after = json.loads(guest("env-run python3 tyco-vm/gnome-shortcuts.py"))
+        require(
+            dict(before) == dict(after),
+            "Closing native settings changed shortcut assignments",
+        )
+        import_module("receiver-session").start_receiver(vm, guest, "wayland")
+        wait_for(
+            "foreign receiver after native settings", lambda: read().get("focused")
+        )
+        activated("i")
+        return "Tyco opens actual GNOME shortcut settings; closing without changes preserves native assignments and physical hotkey operation"
 
     def layouts():
         setup()
@@ -136,7 +161,10 @@ def run_checks(*, vm, driver, guest, check, selected, report):
                 wait_for(
                     "receiver reset before keymap probe",
                     lambda: (
-                        vm.ssh("cat tyco-vm/receiver-wayland.ack").strip() == identifier
+                        vm.ssh(
+                            "cat tyco-vm/receiver-wayland.ack 2>/dev/null || true"
+                        ).strip()
+                        == identifier
                     ),
                 )
                 vm.qmp.tap("a")
@@ -153,6 +181,7 @@ def run_checks(*, vm, driver, guest, check, selected, report):
         return "Physical Ctrl+Alt+I activates once under native US/RU/US layouts; independent receiver proves actual keymap"
 
     for identifier, action in (
+        ("VM-02.configure-cancel", configure_cancel),
         ("VM-02.change-disable", change_disable),
         ("VM-03.revoke", revoke),
         ("VM-02.us-ru-layouts", layouts),

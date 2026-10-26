@@ -38,7 +38,14 @@ def visit(node, application, depth=0):
         if role in ("push button", "button", "toggle button", "label") and showing:
             box = node.get_component_iface().get_extents(Atspi.CoordType.SCREEN)
             entry["bounds"] = [box.x, box.y, box.width, box.height]
-        if name or role in ("dialog", "frame", "text", "entry", "password text"):
+        if name or role in (
+            "dialog",
+            "frame",
+            "text",
+            "entry",
+            "password text",
+            "terminal",
+        ):
             result.append(entry)
         for index in range(node.get_child_count()):
             child = node.get_child_at_index(index)

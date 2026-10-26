@@ -126,3 +126,13 @@ Run `pnpm validate:all` after changing the cross-language API. Contract tests co
 serialization, removed command names, required arguments and list/detail separation.
 State tests cover delayed reads and writes, concurrent revisions, queued patches,
 focus recovery and event handler failures.
+
+Linux desktop notifications retain their D-Bus sender in an application-owned
+`NotificationService`; a short-lived connection can make the desktop remove a
+notification immediately. The command resolves the service and delegates the native
+call. The service bounds native waits, rejects queued work on shutdown and shares
+the runtime shutdown deadline. A failed notification is never automatically resent.
+
+The read-only `get_text_insertion_status` command is shared by `main` and `quick`.
+UI insertion capability accepts tracked targets and the backend's untracked
+`focusReturn` path; `windowId` alone is not a cross-platform capability check.

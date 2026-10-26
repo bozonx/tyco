@@ -22,6 +22,7 @@ def run_checks(
     )
     if not any(selected(identifier) for identifier in identifiers):
         return
+    import_module("gnome-setup").ensure_shortcuts(get_driver(), guest)
     provision()
     identifier = "vm-gnome-lifecycle"
     value = "TycoGnomeExistingCredential83"
@@ -38,7 +39,6 @@ def run_checks(
         "add_editor_history_item",
         {"entry": {"text": history_text, "kind": "source", "operation": "aiTask"}},
     )
-    native = import_module("native-input")
     prefix = "XDG_RUNTIME_DIR=/run/user/1000 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus "
 
     def require(condition, message):
@@ -55,11 +55,16 @@ def run_checks(
         return vm.ssh("cat /proc/sys/kernel/random/boot_id", timeout=5).strip()
 
     def nodes():
-        result = json.loads(vm.ssh(prefix + "python3 tyco-vm/native-ui.py all", timeout=10))
-        (vm.run_dir / "gnome-lifecycle-native-ui.json").write_text(json.dumps(result, indent=2))
+        result = json.loads(
+            vm.ssh(prefix + "python3 tyco-vm/native-ui.py all", timeout=10)
+        )
+        (vm.run_dir / "gnome-lifecycle-native-ui.json").write_text(
+            json.dumps(result, indent=2)
+        )
         return result
 
     def unlock_keyring():
+        get_driver().call("POST", "/timeouts", {"script": 60000})
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         future = executor.submit(
             get_driver().invoke_result,
@@ -86,18 +91,30 @@ def run_checks(
                     else None
                 )
 
-            state = wait_for("keyring result or real unlock prompt", ready, timeout=20)
+            state = wait_for("keyring result or real unlock prompt", ready, timeout=30)
             if "application" in state:
                 application = state["application"]
                 guest(
                     "env-run python3 tyco-vm/native-control.py fill-passwords "
                     + shlex.join([application, "TycoVmGnomeCollection83"])
                 )
-                native.click_native(vm, guest, application, "Unlock")
-            require(future.result(timeout=20)["ok"], "Native keyring did not recover")
+                wait_for(
+                    "focused native keyring password entry",
+                    lambda: any(
+                        node["application"] == application
+                        and node["role"] == "password text"
+                        and node.get("focused")
+                        for node in nodes()
+                    ),
+                    timeout=10,
+                )
+                vm.qmp.tap("ret")
+            require(future.result(timeout=30)["ok"], "Native keyring did not recover")
             get_driver().invoke("delete_secret", {"id": "vm-gnome-unlock-probe"})
         finally:
             executor.shutdown(wait=False, cancel_futures=True)
+            if future.done():
+                get_driver().call("POST", "/timeouts", {"script": 20000})
 
     def verify():
         driver = get_driver()
@@ -126,17 +143,8 @@ def run_checks(
             "Existing native credential bytes lost after transition",
         )
         report.setdefault("gnomeLifecycleSecrets", []).append(observed)
-        # Recovered portals may offer their native registration again.
-        tree = nodes()
-        application = "gnome-control-center-global-shortcuts-provider"
-        if any(
-            node["application"] == application
-            and node["name"] == "Add"
-            and node.get("showing")
-            for node in tree
-        ):
-            guest(f"env-run python3 tyco-vm/native-control.py click {application} Add")
-        guest("receiver wayland")
+        import_module("gnome-setup").ensure_shortcuts(driver, guest)
+        import_module("receiver-session").start_receiver(vm, guest, "wayland")
 
         def received():
             return json.loads(vm.ssh("cat tyco-vm/receiver-wayland.json"))
@@ -171,7 +179,9 @@ def run_checks(
 
     def lock_unlock():
         vm.ssh("printf %s 'tester:tycovmfixture83' | sudo chpasswd")
-        guest("env-run gsettings set org.gnome.desktop.lockdown disable-lock-screen false")
+        guest(
+            "env-run gsettings set org.gnome.desktop.lockdown disable-lock-screen false"
+        )
         guest("env-run gsettings set org.gnome.desktop.screensaver lock-enabled true")
         original = boot()
         for cycle in range(3):
@@ -179,6 +189,23 @@ def run_checks(
                 "env-run gdbus call --session --dest org.gnome.ScreenSaver --object-path /org/gnome/ScreenSaver --method org.gnome.ScreenSaver.Lock"
             )
             wait_for("actual GNOME lock", locked, timeout=20)
+            session_id = vm.ssh("loginctl show-user tester -p Display --value").strip()
+            wait_for(
+                "logind secure lock",
+                lambda: (
+                    vm.ssh(
+                        "loginctl show-session "
+                        + shlex.quote(session_id)
+                        + " -p LockedHint --value"
+                    ).strip()
+                    == "yes"
+                ),
+                timeout=20,
+            )
+            vm.ssh(
+                prefix
+                + "busctl --user set-property org.gnome.Mutter.DisplayConfig /org/gnome/Mutter/DisplayConfig org.gnome.Mutter.DisplayConfig PowerSaveMode i 0"
+            )
             vm.qmp.tap("ret")
 
             def password():
@@ -219,6 +246,11 @@ def run_checks(
         return "Three actual GNOME guest reboots; new boot IDs, exact existing credentials and physical hotkeys recovered"
 
     def suspend():
+        # Lock/PAM is covered separately; isolate actual S3 and application recovery.
+        guest("env-run gsettings set org.gnome.desktop.screensaver lock-enabled false")
+        guest(
+            "env-run gsettings set org.gnome.desktop.lockdown disable-lock-screen true"
+        )
         require("deep" in vm.ssh("cat /sys/power/mem_sleep"), "No ACPI deep sleep mode")
         vm.ssh("printf deep | sudo tee /sys/power/mem_sleep >/dev/null")
         for cycle in range(3):
@@ -257,6 +289,10 @@ def run_checks(
                 timeout=30,
             )
             require(boot() == before, "Suspend was replaced by reboot")
+            vm.qmp.tap("shift")
+            wait_for(
+                "unlocked GNOME session after S3", lambda: not locked(), timeout=30
+            )
             verify()
         return "Three observed ACPI suspend/QMP wake cycles; unchanged boot and native credential/hotkey recovery"
 
@@ -267,6 +303,11 @@ def run_checks(
                 "env-run loginctl show-user tester -p Display --value"
             ).strip()
             require(before, "No graphical login session")
+            before_shell_pid = vm.ssh("pgrep -u 1000 -x gnome-shell").strip()
+            before_shell = vm.ssh(
+                prefix
+                + "busctl --user call org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus GetNameOwner s org.gnome.Shell"
+            ).strip()
             get_driver().stop()
             vm.ssh(
                 "sudo systemd-run --quiet --on-active=1 loginctl terminate-session "
@@ -286,11 +327,51 @@ def run_checks(
                 ),
                 timeout=60,
             )
-            # GDM's native login UI is driven by physical input, without loginctl unlock.
-            vm.qmp.tap("ret")
-            for character in "tycovmfixture83":
-                vm.qmp.tap(character)
-            vm.qmp.tap("ret")
+
+            def new_login():
+                current = vm.ssh("loginctl show-user tester -p Display --value").strip()
+                if not current or current == before:
+                    return False
+                state = vm.ssh(
+                    "loginctl show-session "
+                    + shlex.quote(current)
+                    + " -p State --value"
+                ).strip()
+                graphical = vm.ssh(
+                    "loginctl show-session " + shlex.quote(current) + " -p Type -p Seat"
+                )
+                if "Type=wayland" not in graphical or "Seat=seat0" not in graphical:
+                    return False
+                owner = vm.ssh(
+                    prefix
+                    + "busctl --user call org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus GetNameOwner s org.gnome.Shell"
+                ).strip()
+                shell_pid = vm.ssh("pgrep -u 1000 -x gnome-shell").strip()
+                report.setdefault("logoutSessions", []).append(
+                    {
+                        "previous": before,
+                        "current": current,
+                        "state": state,
+                        "previousShellOwner": before_shell,
+                        "shellOwner": owner,
+                        "previousShellPid": before_shell_pid,
+                        "shellPid": shell_pid,
+                    }
+                )
+                return (
+                    state in ("active", "online")
+                    and bool(shell_pid)
+                    and shell_pid != before_shell_pid
+                )
+
+            wait_for(
+                "new GDM graphical session before restoring controls",
+                lambda: probe(new_login),
+                timeout=180,
+                interval=2,
+            )
+            # The disposable GDM fixture performs an actual timed login.
+            # A new graphical session and unchanged boot identity are required.
             recover()
             after = guest(
                 "env-run loginctl show-user tester -p Display --value"

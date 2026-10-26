@@ -174,6 +174,11 @@ elif action == "enable-switch":
         if not interface or not interface.do_action(0):
             raise RuntimeError("Native switch action failed")
     print(json.dumps({"enabled": True}))
+elif action == "focus-terminal":
+    matches = [node for node in found if node.get_role_name() == "terminal"]
+    if len(matches) != 1 or not matches[0].get_component_iface().grab_focus():
+        raise RuntimeError("Could not focus the unique native terminal widget")
+    print(json.dumps({"focused": True}))
 elif action == "fill-focused-entry":
     matches = [
         node

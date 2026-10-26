@@ -153,6 +153,8 @@ class Qmp:
         # Explicit releases also run when an injection fails partway through.
         attempted = []
         try:
+            if getattr(self, "begin_keys", None):
+                self.begin_keys(keys)
             for key in keys:
                 attempted.append(key)
                 self.execute(
@@ -167,9 +169,8 @@ class Qmp:
                         }
                     ],
                 )
-            # A guest observer confirms USB delivery before release when available.
-            if getattr(self, "observe_keys", None):
-                self.observe_keys(keys, True)
+            # Keep a bounded physical chord; observe edges after release so
+            # observer/SSH latency cannot turn it into an autorepeating hold.
             time.sleep(0.12)
         finally:
             had_failure = sys.exc_info()[0] is not None
@@ -192,8 +193,8 @@ class Qmp:
                     release_errors.append(error)
             if release_errors and not had_failure:
                 raise release_errors[0]
-            if getattr(self, "observe_keys", None) and not had_failure:
-                self.observe_keys(keys, False)
+            if getattr(self, "verify_keys", None) and not had_failure:
+                self.verify_keys(keys)
             else:
                 time.sleep(0.12)
 

@@ -70,8 +70,45 @@ class WebDriver:
         # A new session can precede WebKit's first usable connection. Observe
         # window readiness before sending configuration; never replay startup.
         self.window("main", ".cm-editor")
-        self.call("POST", "/timeouts", {"script": 20000, "implicit": 0})
-        origin = self.execute("return location.origin")
+
+        def configure_driver():
+            try:
+                self.call("POST", "/timeouts", {"script": 20000, "implicit": 0})
+                return True
+            except (http.client.RemoteDisconnected, ConnectionResetError) as error:
+                self.read_disconnects.append(
+                    {
+                        "sessionId": self.session,
+                        "method": "POST",
+                        "path": "/timeouts",
+                        "kind": "idempotent driver configuration",
+                        "error": str(error),
+                    }
+                )
+                return False
+
+        wait_for(
+            "driver timeouts on the same native session", configure_driver, timeout=30
+        )
+
+        def embedded_origin():
+            try:
+                return self.execute("return location.origin")
+            except (http.client.RemoteDisconnected, ConnectionResetError) as error:
+                self.read_disconnects.append(
+                    {
+                        "sessionId": self.session,
+                        "method": "POST",
+                        "path": "/execute/sync",
+                        "observation": "location.origin",
+                        "error": str(error),
+                    }
+                )
+                return None
+
+        origin = wait_for(
+            "embedded origin on the same native session", embedded_origin, timeout=30
+        )
         if origin not in (
             "tauri://localhost",
             "http://tauri.localhost",
@@ -102,28 +139,32 @@ class WebDriver:
 
     def window(self, name, selector=None, exclude=()):
         def find():
+            phase = ("GET", "/window/handles")
             try:
-                handles = self.call("GET", "/window/handles")
+                handles = self.call(*phase)
+                for handle in handles:
+                    if handle in exclude:
+                        continue
+                    phase = ("POST", "/window")
+                    self.call(*phase, {"handle": handle})
+                    phase = ("POST", "/execute/sync")
+                    if self.execute(
+                        "return document.documentElement.dataset.window === arguments[0] && (!arguments[1] || Boolean(document.querySelector(arguments[1])))",
+                        [name, selector],
+                    ):
+                        return handle
             except (http.client.RemoteDisconnected, ConnectionResetError) as error:
-                # Only repeat observation, retaining the same app/session. Never
-                # replay clicks, IPC commands, or application startup here.
+                # Context selection and DOM identification are idempotent driver
+                # observations. Never replay clicks, IPC, startup or user input.
                 self.read_disconnects.append(
                     {
                         "sessionId": self.session,
-                        "path": "/window/handles",
+                        "method": phase[0],
+                        "path": phase[1],
+                        "kind": "window observation",
                         "error": str(error),
                     }
                 )
-                return None
-            for handle in handles:
-                if handle in exclude:
-                    continue
-                self.call("POST", "/window", {"handle": handle})
-                if self.execute(
-                    "return document.documentElement.dataset.window === arguments[0] && (!arguments[1] || Boolean(document.querySelector(arguments[1])))",
-                    [name, selector],
-                ):
-                    return handle
             return None
 
         return wait_for(f"Tyco {name} window", find, timeout=30)
@@ -134,6 +175,16 @@ class WebDriver:
         )
         identifier = element["element-6066-11e4-a52e-4f735466cecf"]
         self.call("POST", f"/element/{identifier}/value", {"text": text})
+
+    def click_text(self, text):
+        element = self.execute(
+            "return [...document.querySelectorAll('button')].find(button => button.textContent.includes(arguments[0]) && !button.disabled)",
+            [text],
+        )
+        if not element:
+            raise StepFailed("No enabled button: " + text)
+        identifier = element["element-6066-11e4-a52e-4f735466cecf"]
+        self.call("POST", f"/element/{identifier}/click", {})
 
     def stop(self):
         if self.session:

@@ -1,6 +1,6 @@
 //! What the webview asks of the system rather than of a window.
 
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 use super::run_blocking;
 use crate::errors::AppError;
@@ -21,8 +21,16 @@ pub async fn open_in_browser(url: String) -> Result<(), AppError> {
 }
 
 #[tauri::command]
-pub async fn show_desktop_notification(summary: String, body: String) -> Result<(), AppError> {
-    run_blocking(move || crate::services::platform::notifications::notify(&summary, &body)).await?
+pub async fn show_desktop_notification(
+    app: AppHandle,
+    summary: String,
+    body: String,
+) -> Result<(), AppError> {
+    let service = app
+        .state::<std::sync::Arc<crate::services::platform::notifications::NotificationService>>()
+        .inner()
+        .clone();
+    run_blocking(move || service.notify(&summary, &body)).await?
 }
 
 /// Shows the status bubble as `request` says, or hides it for `None`.

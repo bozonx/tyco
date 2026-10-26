@@ -4,7 +4,7 @@ Run from the Tyco repository root on a Linux KVM host. Python 3.11+, QEMU,
 qemu-img, SSH/SCP and access to `/dev/kvm` are required. Keep the original base
 read-only. The example profile references the existing Fedora 44 KDE base at
 `/mnt/disk2/vm/lhc-fedora-kde/base.qcow2` and its SSH identity; change a **copy**
-of this profile for another machine. An initial Ubuntu GNOME profile is described below; its coverage is partial.
+of this profile for another machine. The Ubuntu GNOME profile and its capability limits are described below.
 
 All generated images, binaries, known hosts and detailed results live in the
 ignored `dev_files/vm/` directory. `--vm` selects another Tyco-owned directory.
@@ -184,7 +184,10 @@ available for diagnostics.
 After creating a WebDriver session, the controller observes a usable main
 window before configuring timeouts. Process-persistence checks also observe
 the previous native process exit before starting the next session. Transport
-failures retain the HTTP method/path; application operations are not replayed.
+failures retain the HTTP method/path. Only pure window/origin observations and
+idempotent WebDriver context/timeout configuration are polled on the same session;
+each disconnect is recorded. Application startup, IPC, clicks and physical input
+are not replayed.
 
 ## Ubuntu GNOME stand
 
@@ -203,16 +206,26 @@ Preparation installs Ubuntu packages and disables only LHC Shell extensions in
 the disposable guest; it keeps the real GNOME session and native portals.
 Use a fresh stand directory after changing the preparation recipe.
 
-GNOME scenarios are separate from the KWin scenarios. The runner currently
-checks startup, process persistence, reported focus-return capability, native
-GlobalShortcuts approval, CLI/D-Bus and command grants, GNOME Keyring and PCM
-capture. Physical shortcut input uses QMP. Clipboard insertion observes a separate
-GTK receiver under Wayland and XWayland. `VM-10.insertion` exercises the UI;
-`VM-10.backend-insertion` explicitly exercises the native IPC path and cannot
-certify that the UI exposes it. GNOME package/lifecycle controls and the rest of
-the full native matrix remain unimplemented; partial results never certify the
-whole platform. A disabled insertion button is a failure, not permission to
-silently replace the UI action with IPC.
+GNOME scenarios are separate from KWin controls. The native runner covers the
+supported focus-return path through the actual UI, physical shortcuts, native
+permission decisions, clipboard/selection degradation, CLI/D-Bus, keyring/audio,
+tray, GTK dialogs, native file drops, Mutter display configuration and session
+transitions. See [coverage.md](coverage.md) and the dated follow-up report for
+actual execution status; implementation alone is not acceptance.
+
+GNOME cannot track/classify or reactivate arbitrary foreign windows. Terminal
+insertion is tested with an explicitly configured paste shortcut. Clipboard
+snapshots/restoration are intentionally unavailable; the inserted text remains
+in the clipboard. No full addressed-target guarantee is inferred from ydotool.
+`VM-10.backend-insertion` is a targeted diagnostic and is excluded from default
+coverage; `VM-10.insertion` must use an enabled UI action.
+
+Portal cancellation, display topology and each lifecycle transition use disposable
+isolated VMs. Lifecycle fixtures configure actual GDM timed login before a
+bootstrap reboot; logout requires a new graphical session before controls are
+restored. Lock/unlock uses the real password prompt and PAM. Privileged session
+unlock is never a successful test. GNOME package acceptance remains a separate,
+unimplemented suite.
 
 ```sh
 python3 scripts/vm/run.py --profile scripts/vm/profiles/ubuntu2604-gnome.json --vm dev_files/vm/ubuntu2604-gnome-v2 --suite native --only VM-02.register,VM-12,VM-13,VM-15 --artifact /path/to/tyco --ctl /path/to/tyco-ctl
@@ -235,7 +248,8 @@ The build records a provenance sidecar for that executable. Copy/strip a dedicat
 artifact before launching a long run; do not overwrite a running suite's binary.
 
 Input observation reads the guest USB keyboard without grabbing it and confirms
-kernel delivery before QMP releases a chord. This is fixture evidence; native
+new kernel press/release edges after each bounded QMP chord. SSH/observer latency
+cannot extend the held chord or introduce autorepeat. This is fixture evidence; native
 focus, exact received text, activation count and released modifiers are still
 required application assertions. No failed application action is replayed.
 
@@ -243,3 +257,9 @@ Confirmed OS/dependency/hypervisor defects are recorded external limitations,
 not product acceptance blockers. Their original FAIL evidence remains unchanged.
 The suite must not silently convert a failure into PASS. Functional acceptance,
 package acceptance and hardware validation have separate status.
+
+GNOME hotkey stress observes WebKit modifier release before testing plain Escape.
+A single physical Shift probe changes no text and covers shortcut releases consumed
+by the portal before Quick focus; key-up observation excludes the modifier being
+released. Raw events and exception diagnostics remain available on failure. This
+is not a certification of zero-gap modifier chords.

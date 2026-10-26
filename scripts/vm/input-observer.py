@@ -15,6 +15,7 @@ streams = [os.open(path, os.O_RDONLY | os.O_NONBLOCK) for path in paths]
 packet = struct.Struct("@llHHI")
 pressed = set()
 events = []
+sequence = 0
 while True:
     for fd in select.select(streams, [], [], 0.1)[0]:
         data = os.read(fd, packet.size * 64)
@@ -26,12 +27,23 @@ while True:
                 pressed.add(code)
             else:
                 pressed.discard(code)
-            events.append({"code": code, "value": value, "at": seconds + micros / 1e6})
+            sequence += 1
+            events.append(
+                {
+                    "sequence": sequence,
+                    "observerPid": os.getpid(),
+                    "code": code,
+                    "value": value,
+                    "at": seconds + micros / 1e6,
+                }
+            )
     temporary = root / "input-state.tmp"
     temporary.write_text(
         json.dumps(
             {
                 "pressed": sorted(pressed),
+                "sequence": sequence,
+                "observerPid": os.getpid(),
                 "events": events[-100:],
                 "observedAt": time.monotonic(),
                 "devices": [str(path) for path in paths],

@@ -9,6 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 import tempfile
+import threading
+from importlib import import_module
 import unittest
 from unittest.mock import Mock, patch
 
@@ -18,6 +20,40 @@ from media import capture_client_indexes
 from monitors import output_settings_match
 from accessibility import application_nodes
 from wallet import WalletFixture
+
+
+class GnomeSetupTests(unittest.TestCase):
+    def test_answers_the_native_dialog_while_status_waits_for_binding(self):
+        approved = threading.Event()
+        driver = Mock()
+
+        def status(command):
+            self.assertEqual(command, "get_hotkey_provider_info")
+            if not approved.wait(2):
+                raise RuntimeError("Binding blocked on unanswered native prompt")
+            return {"registered": True}
+
+        driver.invoke.side_effect = status
+
+        def guest(command):
+            if "native-ui.py" in command:
+                return json.dumps(
+                    [
+                        {
+                            "application": "gnome-control-center-global-shortcuts-provider",
+                            "name": "Add",
+                            "showing": True,
+                            "sensitive": True,
+                        }
+                    ]
+                )
+            self.assertIn("native-control.py click", command)
+            approved.set()
+            return ""
+
+        import_module("gnome-setup").ensure_shortcuts(driver, guest)
+        driver.invoke.assert_called_once_with("get_hotkey_provider_info")
+        self.assertTrue(approved.is_set())
 
 
 class AccessibilityTests(unittest.TestCase):
@@ -235,7 +271,7 @@ class QmpTests(unittest.TestCase):
     def test_unobserved_guest_delivery_fails_and_releases_the_chord(self):
         qmp = Qmp.__new__(Qmp)
         qmp.execute = Mock()
-        qmp.observe_keys = Mock(side_effect=StepFailed("No guest key event"))
+        qmp.verify_keys = Mock(side_effect=StepFailed("No guest key event"))
         with self.assertRaisesRegex(StepFailed, "No guest key event"):
             qmp.tap("ctrl", "i")
         transitions = [
@@ -243,7 +279,7 @@ class QmpTests(unittest.TestCase):
             for call in qmp.execute.call_args_list
         ]
         self.assertEqual(transitions, [True, True, False, False])
-        qmp.observe_keys.assert_called_once_with(("ctrl", "i"), True)
+        qmp.verify_keys.assert_called_once_with(("ctrl", "i"))
 
     def test_invalid_key_release_does_not_leave_control_pressed(self):
         qmp = Qmp.__new__(Qmp)
@@ -308,6 +344,27 @@ class WebDriverTests(unittest.TestCase):
         self.assertEqual(observed, ["ready", "timeouts"])
         driver.request.assert_called_once()
 
+    def test_origin_read_disconnect_does_not_restart_or_reconfigure_the_app(self):
+        driver = WebDriver(4444)
+        driver.request = Mock(return_value={"sessionId": "fixture"})
+        driver.window = Mock()
+        driver.call = Mock(
+            side_effect=[
+                None,
+                http.client.RemoteDisconnected("closed"),
+                "tauri://localhost",
+            ]
+        )
+        driver.start("/fixture/tyco")
+        driver.request.assert_called_once()
+        driver.window.assert_called_once()
+        self.assertEqual(len(driver.read_disconnects), 1)
+        self.assertEqual(driver.read_disconnects[0]["observation"], "location.origin")
+        self.assertEqual(
+            [call.args[1] for call in driver.call.call_args_list],
+            ["/timeouts", "/execute/sync", "/execute/sync"],
+        )
+
     def test_window_discovery_polls_a_disconnected_read_without_restarting(self):
         driver = WebDriver(4444)
         driver.session = "existing-session"
@@ -321,6 +378,43 @@ class WebDriverTests(unittest.TestCase):
         self.assertEqual(
             [call.args[0] for call in driver.call.call_args_list],
             ["GET", "GET", "POST"],
+        )
+
+    def test_disconnected_context_selection_only_repeats_window_observation(self):
+        driver = WebDriver(4444)
+        driver.session = "existing-session"
+        driver.call = Mock(
+            side_effect=[
+                ["main"],
+                http.client.RemoteDisconnected("closed"),
+                ["main"],
+                None,
+            ]
+        )
+        driver.execute = Mock(return_value=True)
+        self.assertEqual(driver.window("main"), "main")
+        self.assertEqual(driver.session, "existing-session")
+        self.assertEqual(driver.read_disconnects[0]["path"], "/window")
+
+    def test_start_repeats_only_idempotent_driver_configuration(self):
+        driver = WebDriver(4444)
+        driver.request = Mock(return_value={"sessionId": "fixture"})
+        driver.window = Mock()
+        driver.call = Mock(
+            side_effect=[
+                http.client.RemoteDisconnected("closed"),
+                None,
+                "tauri://localhost",
+            ]
+        )
+        driver.start("/fixture/tyco")
+        driver.request.assert_called_once()
+        self.assertEqual(
+            [call.args[1] for call in driver.call.call_args_list],
+            ["/timeouts", "/timeouts", "/execute/sync"],
+        )
+        self.assertEqual(
+            driver.read_disconnects[0]["kind"], "idempotent driver configuration"
         )
 
     def test_application_error_payload_is_not_a_webdriver_protocol_error(self):

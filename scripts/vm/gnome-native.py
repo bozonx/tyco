@@ -10,6 +10,23 @@ from vmlib import StepFailed, wait_for
 
 
 def run_checks(*, vm, driver, args, guest, check, selected, report):
+    from importlib import import_module
+
+    cases = (
+        "VM-04.browser",
+        "VM-08.gnome-terminal",
+        "VM-11.dpi",
+        "VM-11.multi-monitor",
+        "VM-09.portal-fallback",
+        "VM-05.cancel",
+        "VM-10.selection-degradation",
+        "VM-07.gnome-clipboard",
+        "VM-14.dialog-cancel",
+        "VM-14.directory-select",
+    )
+    if not any(selected(identifier) for identifier in cases):
+        return
+    import_module("gnome-setup").ensure_shortcuts(driver, guest)
     prefix = f"/home/{vm.user}/tyco-vm"
 
     def require(condition, message):
@@ -40,10 +57,8 @@ def run_checks(*, vm, driver, args, guest, check, selected, report):
         return identifier
 
     def receiver():
-        guest("receiver wayland")
+        import_module("receiver-session").start_receiver(vm, guest, "wayland")
         wait_for("independent receiver", lambda: read().get("pid"))
-        if not read().get("focused"):
-            vm.qmp.tap("alt", "tab")
         wait_for("foreign receiver focus", lambda: read().get("focused"))
         command("reset", text="")
 
@@ -70,9 +85,7 @@ def run_checks(*, vm, driver, args, guest, check, selected, report):
                 "return [...document.querySelectorAll('button')].some(b=>b.textContent.includes('Insert into window')&&!b.disabled)"
             ),
         )
-        driver.execute(
-            "[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Insert into window')&&!b.disabled).click()"
-        )
+        driver.click_text("Insert into window")
 
     def cleanup_receiver():
         pid = read().get("pid")
@@ -318,6 +331,45 @@ def run_checks(*, vm, driver, args, guest, check, selected, report):
                 return json.loads(raw) if raw else None
 
             wait_for("native VTE raw terminal receiver", observed)
+
+            def terminal_widget():
+                nodes = json.loads(guest("env-run python3 tyco-vm/native-ui.py all"))
+                terminals = [
+                    node
+                    for node in nodes
+                    if node["role"] == "terminal" and node.get("showing")
+                ]
+                return (
+                    {"application": terminals[0]["application"], "nodes": nodes}
+                    if len(terminals) == 1
+                    else None
+                )
+
+            native = wait_for("actual VTE widget", terminal_widget)
+            application = native["application"]
+            if any(
+                node["application"] == application
+                and node["name"] == "No"
+                and node.get("showing")
+                for node in native["nodes"]
+            ):
+                guest(
+                    "env-run python3 tyco-vm/native-control.py click "
+                    + shlex.join([application, "No"])
+                )
+            guest(
+                "env-run python3 tyco-vm/native-control.py focus-terminal "
+                + shlex.quote(application)
+            )
+            wait_for(
+                "native VTE keyboard focus",
+                lambda: any(
+                    node["application"] == application
+                    and node["role"] == "terminal"
+                    and node.get("focused")
+                    for node in terminal_widget()["nodes"]
+                ),
+            )
             text = "GNOME terminal clipboard Кириллица"
             quick(text)
             insert()
@@ -388,7 +440,10 @@ def run_checks(*, vm, driver, args, guest, check, selected, report):
             candidates = [
                 item
                 for item in monitor[1]
-                if 2.0 in item[5] and item[1] <= 2560 and item[2] <= 1600
+                if 2.0 in item[5]
+                and 1.5 in item[5]
+                and item[1] <= 2560
+                and item[2] <= 1600
             ]
             return (
                 min(candidates, key=lambda item: item[1] * item[2])
@@ -436,12 +491,31 @@ def run_checks(*, vm, driver, args, guest, check, selected, report):
                 "primary": primary,
             }
 
+        original_layout = []
+        for row in initial["logical"]:
+            for specification in row[5]:
+                monitor = next(
+                    monitor for monitor in monitors if monitor[0][0] == specification[0]
+                )
+                current_mode = next(
+                    value for value in monitor[1] if value[6].get("is-current")
+                )
+                original_layout.append(
+                    {
+                        "connector": specification[0],
+                        "mode": current_mode[0],
+                        "x": row[0],
+                        "y": row[1],
+                        "scale": row[2],
+                        "primary": row[4],
+                    }
+                )
         receiver()
         try:
             supported = mode(monitors[0])[5]
             scales = [scale for scale in (1.0, 1.5, 2.0) if scale in supported]
             require(
-                1.0 in scales and 2.0 in scales,
+                all(scale in scales for scale in (1.0, 1.5, 2.0)),
                 f"Missing native DPI modes: {supported}",
             )
             for scale in scales:
@@ -503,10 +577,10 @@ def run_checks(*, vm, driver, args, guest, check, selected, report):
             )
         finally:
             cleanup_receiver()
+            if not multiple:
+                apply(original_layout)
 
     def portal():
-        from importlib import import_module
-
         driver.window("main", ".cm-editor")
         binary = guest("env-run sh -c 'command -v ydotool'").strip()
         require(binary.startswith("/usr/"), "Unexpected ydotool path")

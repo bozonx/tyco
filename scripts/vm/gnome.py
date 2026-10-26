@@ -1,5 +1,7 @@
 """GNOME acceptance with independent receiver observations and explicit gaps."""
 
+from importlib import import_module
+
 import base64
 import hashlib
 import json
@@ -15,7 +17,7 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
         try:
             record(identifier, "PASS", action())
         except Exception as error:
-            record(identifier, "FAIL", str(error))
+            record(identifier, "FAIL", str(error) or type(error).__name__)
             (vm.run_dir / f"{identifier}-exception.txt").write_text(
                 traceback.format_exc()
             )
@@ -96,7 +98,15 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             "GNOME persistence fixture" in json.dumps(history),
             "History was lost after restart",
         )
-        return "Theme and editor history survived a native process restart"
+        application = f"/home/{vm.user}/tyco-vm/" + (
+            "Tyco.AppImage" if args.artifact.suffix == ".AppImage" else "tyco"
+        )
+        guest("env-run " + application + " editor")
+        require(
+            vm.ssh("pgrep -xc tyco").strip() == "1",
+            "Second launch created multiple native owners",
+        )
+        return "Theme/history survived native process exit/restart; second launch retained one application owner"
 
     def secrets():
         driver.window("main", ".cm-editor")
@@ -253,8 +263,26 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
 
     def hotkeys():
         application = "gnome-control-center-global-shortcuts-provider"
-        nodes = json.loads(
-            guest(f"env-run python3 tyco-vm/native-ui.py --application {application}")
+
+        def approval_ready():
+            nodes = json.loads(
+                guest(
+                    f"env-run python3 tyco-vm/native-ui.py --application {application}"
+                )
+            )
+            return (
+                nodes
+                if any(
+                    node["name"] == "Add"
+                    and node.get("showing")
+                    and node.get("sensitive")
+                    for node in nodes
+                )
+                else None
+            )
+
+        nodes = wait_for(
+            "native GNOME shortcut approval controls", approval_ready, timeout=30
         )
         (vm.run_dir / "gnome-shortcuts-before.json").write_text(
             json.dumps(nodes, indent=2)
@@ -268,7 +296,11 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             info["provider"] == "portal" and info["registered"],
             f"GNOME shortcuts not registered: {info}",
         )
-        guest("receiver wayland")
+        driver.window("quick", "textarea")
+        driver.execute(
+            "if (!window.vmKeyEvents) { window.vmKeyEvents = []; for (const type of ['keydown','keyup']) window.addEventListener(type, event => { const item = {type, key:event.key, code:event.code, composing:event.isComposing, repeat:event.repeat, ctrl:event.ctrlKey, alt:event.altKey, shift:event.shiftKey, meta:event.metaKey, time:performance.now()}; queueMicrotask(() => { item.prevented = event.defaultPrevented; window.vmKeyEvents.push(item); }); }, true); }"
+        )
+        import_module("receiver-session").start_receiver(vm, guest, "wayland")
 
         def receiver():
             try:
@@ -277,14 +309,13 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
                 return {}
 
         wait_for("hotkey receiver startup", lambda: receiver().get("pid"))
-        if not receiver().get("focused"):
-            vm.qmp.tap("alt", "tab")
         wait_for(
             "foreign focus before physical hotkey", lambda: receiver().get("focused")
         )
         before = driver.invoke("get_desktop_state")["activation"]["activationId"]
         activations = []
         for cycle in range(args.cycles):
+            key_event_count = driver.execute("return window.vmKeyEvents.length")
             vm.qmp.tap("ctrl", "alt", "i")
             driver.window("quick", "textarea")
             wait_for(
@@ -301,8 +332,16 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
                 after == before + 1,
                 f"Expected one physical hotkey activation: {before} -> {after}",
             )
-            driver.execute(
-                "if (!window.vmKeyEvents) { window.vmKeyEvents = []; for (const type of ['keydown','keyup']) window.addEventListener(type, event => { const item = {type, key:event.key, repeat:event.repeat, time:performance.now()}; queueMicrotask(() => { item.prevented = event.defaultPrevented; window.vmKeyEvents.push(item); }); }, true); }"
+            # A non-editing physical probe observes WebKit's actual modifier state.
+            # Portal-consumed releases may finish before the Quick window is focused.
+            vm.qmp.tap("shift")
+            wait_for(
+                "WebKit observed released activation modifiers before plain Escape",
+                lambda: driver.execute(
+                    "return window.vmKeyEvents.slice(arguments[0]).some(e => e.type === 'keyup' && (!e.ctrl || e.key === 'Control') && (!e.alt || e.key === 'Alt') && (!e.shift || e.key === 'Shift') && (!e.meta || e.key === 'Meta'))",
+                    [key_event_count],
+                ),
+                timeout=10,
             )
             vm.qmp.tap("esc")
             wait_for(
@@ -341,7 +380,7 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             "canceled GNOME shortcut registration",
             lambda: not driver.invoke("get_hotkey_provider_info")["registered"],
         )
-        guest("receiver wayland")
+        import_module("receiver-session").start_receiver(vm, guest, "wayland")
 
         def receiver_focused():
             try:
@@ -378,12 +417,13 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
         return "Native GlobalShortcuts cancellation leaves the shortcut inactive; restart offers registration again"
 
     def insertion(native_command=False):
+        import_module("gnome-setup").ensure_shortcuts(driver, guest)
         from scenarios import CORPUS
 
         prefix = f"/home/{vm.user}/tyco-vm"
         evidence = []
         for backend in ("wayland", "x11"):
-            guest(f"receiver {backend}")
+            import_module("receiver-session").start_receiver(vm, guest, backend)
 
             def receiver():
                 try:
@@ -392,8 +432,6 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
                     return {}
 
             wait_for("native receiver startup", lambda: receiver().get("pid"))
-            if not receiver().get("focused"):
-                vm.qmp.tap("alt", "tab")
             wait_for("native receiver focus", lambda: receiver().get("focused"))
             for cycle in range(args.cycles):
                 text = CORPUS[cycle % len(CORPUS)]
@@ -465,9 +503,7 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
                         enabled,
                         "Insert into window is disabled despite ready focusReturn backend (GNOME has no windowId)",
                     )
-                    driver.execute(
-                        "[...document.querySelectorAll('button')].find(b => b.textContent.includes('Insert into window') && !b.disabled).click()"
-                    )
+                    driver.click_text("Insert into window")
                 wait_for(
                     "exact foreign text and returned focus",
                     lambda: (
@@ -494,7 +530,8 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
                 ).write_text(json.dumps(evidence, indent=2))
             vm.ssh(f"kill {receiver()['pid']}")
             driver.window("main", ".cm-editor")
-        return f"Exact Unicode/multiline/long text and focus return in {args.cycles} CLI activations per Wayland/XWayland receiver; hotkeys tested separately"
+        method = "backend command" if native_command else "enabled UI Insert action"
+        return f"Exact Unicode/multiline/long text and focus return through {method} in {args.cycles} CLI-opened Quick sessions per Wayland/XWayland receiver; physical hotkeys tested separately"
 
     def selected(identifier):
         isolated = (
@@ -529,13 +566,13 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
         if args.suite == "smoke" and identifier not in (
             "VM-01.startup",
             "VM-10.capabilities",
+            "VM-02.register",
             "VM-10.insertion",
         ):
             continue
         if selected(identifier):
             check(identifier, action)
     if args.suite == "native":
-        from importlib import import_module
         from media import run_media_checks
 
         import_module("command-grants").run_command_grant_checks(
@@ -573,6 +610,15 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             report=report,
             provision=secrets,
         )
+        import_module("gnome-drag").run_checks(
+            vm=vm,
+            driver=driver,
+            args=args,
+            guest=guest,
+            check=check,
+            selected=selected,
+            report=report,
+        )
         import_module("gnome-native").run_checks(
             vm=vm,
             driver=driver,
@@ -608,10 +654,49 @@ def run_scenarios(vm, driver, args, guest, record, report, **_controls):
             recover=recover,
             provision=secrets,
         )
-    if not args.only:
-        if args.suite == "native":
+    if not args.only and args.suite == "native":
+        required = {
+            "VM-01.startup",
+            "VM-01.persistence",
+            "VM-10.capabilities",
+            "VM-10.insertion",
+            "VM-10.selection-degradation",
+            "VM-02.register",
+            "VM-02.configure-cancel",
+            "VM-02.change-disable",
+            "VM-02.us-ru-layouts",
+            "VM-03.cancel",
+            "VM-03.revoke",
+            "VM-04.browser",
+            "VM-05.cancel",
+            "VM-07.gnome-clipboard",
+            "VM-08.gnome-terminal",
+            "VM-09.portal-fallback",
+            "VM-11.notification",
+            "VM-11.tray-show-quit",
+            "VM-11.dpi",
+            "VM-11.multi-monitor",
+            "VM-12.secrets",
+            "VM-12.locked-keyring",
+            "VM-12.unavailable-keyring",
+            "VM-13.external-control",
+            "VM-13.command-grants",
+            "VM-14.dialog-cancel",
+            "VM-14.directory-select",
+            "VM-14.file-drop",
+            "VM-15.capture-stop",
+            "VM-15.audio-unavailable",
+            "VM-15.device-removal",
+            "VM-16.lock-unlock",
+            "VM-16.suspend-resume",
+            "VM-16.logout-login",
+            "VM-16.reboot",
+        }
+        observed = {item["id"] for item in report["checks"]}
+        missing = sorted(required - observed)
+        if missing:
             record(
                 "GNOME.native",
                 "BLOCKED",
-                "Remaining applicable native cases require GNOME-specific controls; KDE checks are not substituted",
+                "Applicable native checks did not run: " + ", ".join(missing),
             )

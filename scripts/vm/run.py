@@ -284,36 +284,92 @@ def main():
         key_codes.update({f"f{index}": 58 + index for index in range(1, 11)})
         key_codes.update({"f11": 87, "f12": 88})
 
-        def observe_keys(keys, down):
+        input_sequence = 0
+
+        def key_state():
+            return json.loads(vm.ssh("cat tyco-vm/input-state.json", timeout=5))
+
+        observer_pid = int(
+            vm.ssh(
+                "sudo systemctl show tyco-vm-input-observer.service -p MainPID --value"
+            ).strip()
+        )
+
+        def input_observer_ready():
+            try:
+                return (
+                    key_state().get("observerPid") == observer_pid and observer_pid > 0
+                )
+            except (StepFailed, json.JSONDecodeError):
+                return False
+
+        wait_for("fresh guest kernel input observer", input_observer_ready, timeout=10)
+
+        def begin_keys(keys):
+            nonlocal input_sequence
             unknown = set(keys) - key_codes.keys()
             if unknown:
                 raise StepFailed(f"No guest keyboard mapping for {sorted(unknown)}")
-            codes = [key_codes[key] for key in keys]
+            state = key_state()
+            if any(key_codes[key] in state["pressed"] for key in keys):
+                raise StepFailed(
+                    f"Guest USB key already pressed before injection: {keys}"
+                )
+            input_sequence = state["sequence"]
 
+        def verify_keys(keys):
             def observed():
                 try:
-                    state = json.loads(
-                        vm.ssh("cat tyco-vm/input-state.json", timeout=5)
-                    )
-                    return (
-                        state
-                        if all((code in state["pressed"]) == down for code in codes)
-                        else None
-                    )
+                    state = key_state()
+                    if state.get("observerPid") != observer_pid:
+                        raise StepFailed(
+                            "Guest kernel input observer changed during injection"
+                        )
+                    events = [
+                        event
+                        for event in state["events"]
+                        if event["sequence"] > input_sequence
+                    ]
+                    for key in keys:
+                        code = key_codes[key]
+                        presses = [
+                            event["sequence"]
+                            for event in events
+                            if event["code"] == code and event["value"] == 1
+                        ]
+                        releases = [
+                            event["sequence"]
+                            for event in events
+                            if event["code"] == code and event["value"] == 0
+                        ]
+                        if (
+                            not presses
+                            or not releases
+                            or min(presses) >= max(releases)
+                            or code in state["pressed"]
+                        ):
+                            return None
+                    return state
                 except (StepFailed, json.JSONDecodeError):
                     return None
 
             state = wait_for(
-                "guest kernel keyboard delivery " + str(keys),
+                "guest kernel key press/release edges " + str(keys),
                 observed,
                 timeout=10,
                 interval=0.05,
             )
             report.setdefault("physicalInputObservations", []).append(
-                {"keys": keys, "down": down, "state": state}
+                {
+                    "keys": keys,
+                    "fromSequence": input_sequence,
+                    "released": True,
+                    "state": state,
+                }
             )
 
-        vm.qmp.observe_keys = observe_keys
+        vm.qmp.begin_keys = begin_keys
+        vm.qmp.verify_keys = verify_keys
         report["environment"] = json.loads(guest("inventory"))
         if not report["environment"]["ydotoolSocket"]:
             raise StepFailed("The private ydotoold socket is not ready")
@@ -577,22 +633,32 @@ def main():
             args.suite == "native"
             and args.isolated_case
             and args.isolated_case.startswith("VM-16.")
-            and not is_gnome
         ):
-            graphics_content = "export QT_QUICK_BACKEND=software\nexport LIBGL_ALWAYS_SOFTWARE=1\nexport QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1\n"
-            graphics_fixture = (
-                "from pathlib import Path; d=Path.home()/'.config/plasma-workspace/env'; d.mkdir(parents=True,exist_ok=True); (d/'tyco-vm.sh').write_text("
-                + repr(graphics_content)
-                + ")"
-            )
-            vm.ssh("python3 -c " + shlex.quote(graphics_fixture))
-            fixture_content = "[Autologin]\nUser=tester\nSession=plasma\nRelogin=true\n"
-            fixture = (
-                "from pathlib import Path; d=Path('/etc/plasmalogin.conf.d') if Path('/usr/lib/systemd/system/plasmalogin.service').exists() else Path('/etc/sddm.conf.d'); d.mkdir(exist_ok=True); (d/'zz-tyco-vm-autologin.conf').write_text("
-                + repr(fixture_content)
-                + ")"
-            )
-            vm.ssh("sudo python3 -c " + shlex.quote(fixture))
+            if is_gnome:
+                fixture = "import configparser; from pathlib import Path; p=Path('/etc/gdm3/custom.conf'); c=configparser.ConfigParser(); c.optionxform=str; c.read(p); c.add_section('daemon') if not c.has_section('daemon') else None; values={'AutomaticLoginEnable':'true','AutomaticLogin':'tester','TimedLoginEnable':'true','TimedLogin':'tester','TimedLoginDelay':'1'}; [c.set('daemon',k,v) for k,v in values.items()]; f=p.open('w'); c.write(f); f.close()"
+                vm.ssh("sudo python3 -c " + shlex.quote(fixture))
+                report["lifecycleFixture"] = {
+                    "desktop": "GNOME",
+                    "automaticLogin": True,
+                    "timedLoginDelaySeconds": 1,
+                }
+            else:
+                graphics_content = "export QT_QUICK_BACKEND=software\nexport LIBGL_ALWAYS_SOFTWARE=1\nexport QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1\n"
+                graphics_fixture = (
+                    "from pathlib import Path; d=Path.home()/'.config/plasma-workspace/env'; d.mkdir(parents=True,exist_ok=True); (d/'tyco-vm.sh').write_text("
+                    + repr(graphics_content)
+                    + ")"
+                )
+                vm.ssh("python3 -c " + shlex.quote(graphics_fixture))
+                fixture_content = (
+                    "[Autologin]\nUser=tester\nSession=plasma\nRelogin=true\n"
+                )
+                fixture = (
+                    "from pathlib import Path; d=Path('/etc/plasmalogin.conf.d') if Path('/usr/lib/systemd/system/plasmalogin.service').exists() else Path('/etc/sddm.conf.d'); d.mkdir(exist_ok=True); (d/'zz-tyco-vm-autologin.conf').write_text("
+                    + repr(fixture_content)
+                    + ")"
+                )
+                vm.ssh("sudo python3 -c " + shlex.quote(fixture))
             previous_boot = vm.ssh("cat /proc/sys/kernel/random/boot_id").strip()
             vm.ssh(
                 "sudo systemd-run --quiet --on-active=1 --timer-property=AccuracySec=100ms systemctl reboot"

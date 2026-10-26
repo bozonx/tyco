@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build an embedded AppImage against the Ubuntu 24.04 glibc baseline."""
+"""Build an embedded executable or AppImage against the Ubuntu glibc baseline."""
 
 import argparse
 import hashlib
@@ -106,7 +106,10 @@ def main():
         artifact.with_name(artifact.name + ".build.json").write_text(
             json.dumps(metadata, indent=2) + "\n"
         )
-    print(f"AppImage directory: {target / profile / 'bundle/appimage'}")
+    if args.no_bundle:
+        print(f"Executable: {target / profile / 'tyco'}")
+    else:
+        print(f"AppImage directory: {target / profile / 'bundle/appimage'}")
     print(f"CLI: {target / profile / 'tyco-ctl'}")
 
 

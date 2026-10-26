@@ -33,6 +33,9 @@ pub fn manage_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri
         .manage(ActivationCoordinator::default())
         .manage(crate::services::selection_replace::SelectionRunCoordinator::default())
         .manage(RuntimeWindows::default())
+        .manage(std::sync::Arc::new(
+            crate::services::platform::notifications::NotificationService::default(),
+        ))
 }
 
 pub fn setup(app: &mut App) -> Result<(), AppError> {
@@ -104,7 +107,13 @@ pub fn shutdown(app: &AppHandle) {
     // a start that failed halfway may not have managed every service
     let scripts = app.try_state::<ScriptRuns>();
     let net = app.try_state::<NetState>();
+    let notifications = app
+        .try_state::<std::sync::Arc<crate::services::platform::notifications::NotificationService>>(
+        );
     let stoppable: Vec<(&str, &dyn StoppableService)> = [
+        notifications
+            .as_ref()
+            .map(|service| ("Notifications", &***service as &dyn StoppableService)),
         Some(("Background service", &*services as &dyn StoppableService)),
         scripts
             .as_ref()

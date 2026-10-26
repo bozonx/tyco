@@ -3,6 +3,7 @@
 import re
 import json
 import struct
+import time
 
 from vmlib import StepFailed, wait_for
 
@@ -47,9 +48,11 @@ def click_native(
             },
         ],
     )
+    time.sleep(0.12)
     for down in (True, False):
         vm.qmp.execute(
             "input-send-event",
             events=[{"type": "btn", "data": {"down": down, "button": "left"}}],
         )
+        time.sleep(0.12)
     return node
