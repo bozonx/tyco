@@ -24,7 +24,10 @@ export function modelContextWindowTokens(
     ? DEFAULT_CONTEXT_WINDOW_TOKENS
     : HOSTED_CONTEXT_WINDOW_TOKENS
 }
-/** The output reservation shared by prompt budgeting and actual requests. */
+/**
+ * The output a prompt budget reserves. Requests send only a limit the model has
+ * configured
+ */
 export function modelMaxOutputTokens(
   model: LlmModel,
   providers: LlmProvider[]
@@ -41,8 +44,8 @@ export function modelMaxOutputTokens(
   )
 }
 /**
- * The catalog's ceiling for a model's output. Only a cap: a request sends a
- * limit only when the model has one configured
+ * The catalog's ceiling for a model's output. Only a cap: requests send a limit
+ * only when the model or the call has one
  */
 export const OUTPUT_TOKENS_CEILING = 65_536
 

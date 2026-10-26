@@ -245,6 +245,19 @@ describe('llm-client', () => {
     expect(bodies[1]).toMatchObject({ temperature: 0.9, max_tokens: 300 })
   })
 
+  it('leaves the output length to a model without a limit', async () => {
+    const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
+    const llm = structuredClone(DEFAULT_LLM_CONFIG)
+    delete llm.models[0].maxOutputTokens
+    const { client } = setup(fetch, llm)
+
+    await client.run('aiTask', prompt, { onChunk: () => undefined })
+
+    expect(
+      JSON.parse(String(fetch.mock.calls[0]?.[1]?.body))
+    ).not.toHaveProperty('max_tokens')
+  })
+
   it('sends a key reference to a provider that has a key', async () => {
     const fetch = vi.fn<FetchFunction>(async () => streamResponse(sse(['ok'])))
     const llm = structuredClone(DEFAULT_LLM_CONFIG)
@@ -384,6 +397,23 @@ describe('vision transport', () => {
       message: expect.stringContaining('does not support images'),
     })
   })
+  it('does not blame the images for an unrelated rejection', async () => {
+    const fetch = vi.fn<FetchFunction>(async () =>
+      jsonResponse(400, {
+        error: {
+          message: 'Unknown parameter: foo',
+          type: 'invalid_request_error',
+        },
+      })
+    )
+    const llm = structuredClone(DEFAULT_LLM_CONFIG)
+    llm.models[0].canUseImages = true
+    const { client } = setup(fetch, llm)
+    await expect(
+      client.run('chat', imagePrompt, { modelId: 'ollama-qwen' })
+    ).rejects.toMatchObject({ kind: 'invalid_request' })
+  })
+
   it('refuses image input before transport when the model is text-only', async () => {
     const fetch = vi.fn<FetchFunction>()
     const { client } = setup(fetch)

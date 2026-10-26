@@ -38,6 +38,19 @@ describe('LLM connection checker', () => {
     })
   })
 
+  it('explains a server that does not answer with JSON', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response('<html>nope</html>'))
+    const check = createLlmConnectionChecker({ fetch, hasKey: () => false })
+
+    await expect(
+      check({
+        id: 'local',
+        type: 'openaiCompatible',
+        baseUrl: 'http://localhost:8080',
+      })
+    ).rejects.toThrow('did not return an OpenAI-compatible model list')
+  })
+
   it('rejects invalid and non-http addresses before making a request', async () => {
     const fetch = vi.fn()
     const check = createLlmConnectionChecker({ fetch, hasKey: () => false })

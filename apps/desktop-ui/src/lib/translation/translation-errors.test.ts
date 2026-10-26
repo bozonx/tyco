@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { AiError } from '@bozonx/ai-kit'
+import { LlmError } from '../llm/llm-client'
 import {
   formatTranslationError,
   translationErrorKey,
@@ -31,5 +32,43 @@ describe('translation errors', () => {
     const error = new AiError('auth', 'Key rejected')
     const formatted = formatTranslationError(error, (key) => `[${key}]`)
     expect(formatted).toBe('[translationErrors.auth]\nKey rejected')
+  })
+
+  it('explains an LLM translator failure like any other LLM task', () => {
+    expect(
+      translationErrorKey(
+        new LlmError('no_model', 'No language model is configured')
+      )
+    ).toBe('llmErrors.noModel')
+    expect(
+      translationErrorKey(new LlmError('timeout', 'The request timed out'))
+    ).toBe('llmErrors.timeout')
+  })
+
+  it('does not take a token or context limit for a quota or a language', () => {
+    expect(
+      translationErrorKey(
+        new AiError(
+          'context_length',
+          'The translation instructions exceed the language model context'
+        )
+      )
+    ).toBe('llmErrors.contextLength')
+    expect(
+      translationErrorKey(
+        new AiError('invalid_request', 'Request size limit reached')
+      )
+    ).toBe('translationErrors.invalidRequest')
+  })
+
+  it('names a language the provider refuses', () => {
+    expect(
+      translationErrorKey(
+        new AiError(
+          'invalid_request',
+          'The translation provider does not support the selected language'
+        )
+      )
+    ).toBe('translationErrors.unsupportedLanguage')
   })
 })

@@ -17,11 +17,7 @@ import {
 } from '@bozonx/ai-kit'
 import type { LlmConfig, LlmModel, LlmTask } from '@tyco/shared'
 
-import {
-  buildLlmCatalog,
-  buildProviderFactories,
-  modelMaxOutputTokens,
-} from './llm-catalog'
+import { buildLlmCatalog, buildProviderFactories } from './llm-catalog'
 import type { LlmPrompt } from './llm-prompt'
 
 /**
@@ -171,15 +167,16 @@ const hasImages = (prompt: LlmPrompt) =>
       )
   )
 
+/** Words a provider uses when it refuses images */
+const IMAGE_REFUSAL_PATTERN =
+  /\b(?:image|images|vision|multimodal|image_url)\b/i
+
 /** The failure of a model, named as an image refusal when that is what it was */
 function modelFailure(error: LlmError, prompt: LlmPrompt): LlmError {
   if (
     hasImages(prompt) &&
-    (error.kind === 'invalid_request' ||
-      (error.kind === 'unknown' &&
-        /(?:unsupported|not support).*(?:image|vision)|(?:image|vision).*(?:unsupported|not support)/i.test(
-          error.message
-        )))
+    (error.kind === 'invalid_request' || error.kind === 'unknown') &&
+    IMAGE_REFUSAL_PATTERN.test(error.message)
   ) {
     return new LlmError('image_unsupported', error.message, { cause: error })
   }
@@ -252,12 +249,17 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
         [task]: { ...config.tasks[task], modelId: model.id },
       },
     } as LlmConfig
-    const kit = kitFor(scopedConfig)
+    const kit = kitFor(scopedConfig, deps.timeoutMs)
     const isDeepSeek =
       config.providers.find((provider) => provider.id === model.providerId)
         ?.type === 'deepseek'
     const temperature = options.temperature ?? model.temperature
-    const modelOutputTokens = modelMaxOutputTokens(model, config.providers)
+    // Without a limit of its own a model answers as long as it needs; a
+    // default here would cut long answers and the reasoning of thinking models
+    const outputTokenCaps = [
+      options.maxOutputTokens,
+      model.maxOutputTokens,
+    ].filter((value): value is number => value !== undefined)
     const isThinkingEnabled =
       model.isThinkingEnabled === true ||
       model.providerModelId === 'deepseek-reasoner'
@@ -277,10 +279,9 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
       ...(temperature === undefined || (isDeepSeek && isThinkingEnabled)
         ? {}
         : { temperature }),
-      maxOutputTokens:
-        options.maxOutputTokens === undefined
-          ? modelOutputTokens
-          : Math.min(options.maxOutputTokens, modelOutputTokens),
+      ...(outputTokenCaps.length
+        ? { maxOutputTokens: Math.min(...outputTokenCaps) }
+        : {}),
       abortSignal: signal,
       totalTimeoutMs: Math.max(1, deadline - Date.now()),
     }

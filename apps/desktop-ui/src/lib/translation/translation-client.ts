@@ -3,6 +3,7 @@ import {
   Catalog,
   AiError,
   buildPrompt,
+  isAiError,
   chunkText,
   createAiKit,
   type KeyProvider,
@@ -27,6 +28,7 @@ import {
 } from '@tyco/shared'
 
 import type { LlmPrompt } from '../llm/llm-prompt'
+import { ESTIMATED_CHARACTERS_PER_TOKEN } from '../llm/token-estimate'
 import { protectTranslationText } from './protected-text'
 import {
   createDeepLProvider,
@@ -46,13 +48,17 @@ const DEEPL_FREE_ENDPOINT = 'https://api-free.deepl.com/v2/translate'
 const LLM_CHUNK_LIMIT_CHARACTERS = 36_000
 const LLM_REPAIR_COMBINED_LIMIT = 48_000
 /**
- * A chunk gets a character per this many tokens of context, less the
- * instructions and a margin, and a character per this many output tokens: room
- * for the instructions, an expanded translation and its review
+ * Tokens a character of a chunk may take, at worst (a script like Chinese is
+ * near a token per character). A translation pass holds the source and its
+ * translation in its context, a repair pass also the earlier translation; the
+ * answer holds one translation
  */
-const CONTEXT_TOKENS_PER_CHUNK_CHARACTER = 3
-const OUTPUT_TOKENS_PER_CHUNK_CHARACTER = 2
-const CHUNK_MARGIN_CHARACTERS = 512
+const TRANSLATE_CONTEXT_TOKENS_PER_CHUNK_CHARACTER = 2
+const REPAIR_CONTEXT_TOKENS_PER_CHUNK_CHARACTER = 3
+const OUTPUT_TOKENS_PER_CHUNK_CHARACTER = 1
+const CHUNK_MARGIN_TOKENS = 512
+/** The end of the previous chunk a chunk is sent with, for its context */
+const PRECEDING_CONTEXT_CHARACTERS = 400
 /** A smaller chunk means the instructions leave no room for the text */
 const MIN_LLM_CHUNK_CHARACTERS = 128
 
@@ -257,7 +263,9 @@ async function translateWithMachine(
       ...(options.sourceLanguage && options.sourceLanguage !== 'auto'
         ? { sourceLanguage: normalizeLanguage(options.sourceLanguage) }
         : {}),
-      format: 'html',
+      // Tags, code and placeholders are protected already; HTML mode would
+      // fold the line breaks and decode entities of a plain text
+      format: 'text',
       ...(options.signal ? { abortSignal: options.signal } : {}),
     })
     options.signal?.throwIfAborted()
@@ -289,6 +297,10 @@ interface LlmChunkRequest {
   glossary: GlossaryEntry[]
   system: string
   user: string
+  /** Puts back what the request kept out of the model's reach */
+  restore?: (translated: string) => string
+  /** The same request without that protection, tried when the model broke it */
+  unprotected?: () => LlmChunkRequest
 }
 
 /**
@@ -299,14 +311,13 @@ async function runLlmChunks<T>(
   deps: TranslationClientDependencies,
   options: TranslationRunOptions,
   chunks: T[],
-  requestOf: (chunk: T) => LlmChunkRequest
+  requestOf: (chunk: T, index: number) => LlmChunkRequest
 ): Promise<FirstPass> {
   const output: string[] = []
   let detectedProvider = 'llm'
   let detectedModel: string | undefined
-  for (const chunk of chunks) {
+  const send = async (request: LlmChunkRequest): Promise<string> => {
     options.signal?.throwIfAborted()
-    const request = requestOf(chunk)
     const result = await deps.runLlm(
       {
         system: request.system,
@@ -322,6 +333,17 @@ async function runLlmChunks<T>(
     )
     options.signal?.throwIfAborted()
     ensureTranslationOutput(result, request.source)
+    if (!request.restore) return result
+    try {
+      return request.restore(result)
+    } catch (error) {
+      if (!request.unprotected || !isAiError(error)) throw error
+      return send(request.unprotected())
+    }
+  }
+  for (const [index, chunk] of chunks.entries()) {
+    const request = requestOf(chunk, index)
+    const result = await send(request)
     output.push(
       restoreTranslationChunkWhitespace(
         chunks.length,
@@ -347,20 +369,59 @@ function translateWithLlm(
   options: TranslationRunOptions,
   glossary: GlossaryEntry[]
 ): Promise<FirstPass> {
-  const chunks = chunkText(text, llmChunkLimit(deps, options))
-  return runLlmChunks(deps, options, chunks, (chunk) => {
+  const chunks = chunkText(
+    text,
+    llmChunkLimit(deps, options, TRANSLATE_CONTEXT_TOKENS_PER_CHUNK_CHARACTER)
+  )
+  return runLlmChunks(deps, options, chunks, (chunk, index) => {
     const applicable = selectGlossaryForText(glossary, chunk)
-    const prompt = buildPrompt({
-      system: translationSystem(options, applicable),
-      data: [{ source: 'source_text', content: chunk }],
-    })
+    const preceding =
+      index > 0 ? precedingContext(chunks[index - 1]!) : undefined
+    const requestFor = (content: string, isProtected: boolean) => {
+      const prompt = buildPrompt({
+        system: translationSystem(options, applicable),
+        data: [
+          ...(preceding
+            ? [{ source: 'preceding_text', content: preceding }]
+            : []),
+          { source: 'source_text', content },
+        ],
+      })
+      const notes = [
+        preceding
+          ? 'The preceding_text block is the end of the text before it, given only for context: do not translate it.'
+          : '',
+        isProtected
+          ? 'Copy every token like __TYCO_PROTECTED_0__ unchanged, where it belongs in the translation.'
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      return {
+        source: chunk,
+        glossary: applicable,
+        system: prompt.system,
+        user: `Translate the source_text block to ${translationLanguageLabel(options.targetLanguage, 'en')} (${normalizeLanguage(options.targetLanguage)}). Preserve Markdown, line breaks, URLs, placeholders and emoji.${notes ? ` ${notes}` : ''} Return only the translation.\n\n${prompt.data}`,
+      }
+    }
+    // Code and links are kept out of the model's reach, like a machine
+    // translator's; a model that breaks a token gets the plain chunk instead
+    const protectedChunk = protectTranslationText(chunk)
+    if (protectedChunk.text === chunk) return requestFor(chunk, false)
     return {
-      source: chunk,
-      glossary: applicable,
-      system: prompt.system,
-      user: `Translate the source_text block to ${translationLanguageLabel(options.targetLanguage, 'en')} (${normalizeLanguage(options.targetLanguage)}). Preserve Markdown, line breaks, URLs, placeholders and emoji. Return only the translation.\n\n${prompt.data}`,
+      ...requestFor(protectedChunk.text, true),
+      restore: protectedChunk.restore,
+      unprotected: () => requestFor(chunk, false),
     }
   })
+}
+
+/** The end of a chunk, cut at a word, that the next chunk is sent with */
+function precedingContext(chunk: string): string {
+  if (chunk.length <= PRECEDING_CONTEXT_CHARACTERS) return chunk.trim()
+  const tail = chunk.slice(-PRECEDING_CONTEXT_CHARACTERS)
+  const wordStart = tail.search(/\s/)
+  return (wordStart === -1 ? tail : tail.slice(wordStart)).trim()
 }
 
 function repairWithLlm(
@@ -375,7 +436,10 @@ function repairWithLlm(
   const pairs = splitParallelText(
     source,
     translation,
-    Math.min(LLM_REPAIR_COMBINED_LIMIT, llmChunkLimit(deps, options))
+    Math.min(
+      LLM_REPAIR_COMBINED_LIMIT,
+      llmChunkLimit(deps, options, REPAIR_CONTEXT_TOKENS_PER_CHUNK_CHARACTER)
+    )
   )
   return runLlmChunks(deps, options, pairs, (pair) => {
     const applicable = selectGlossaryForText(glossary, pair.source)
@@ -459,18 +523,21 @@ function repairInstruction(problems: TranslationProblem[]): string {
 /** Reserve context for instructions and an expanded translation, conservatively. */
 function llmChunkLimit(
   deps: TranslationClientDependencies,
-  options: TranslationRunOptions
+  options: TranslationRunOptions,
+  contextTokensPerCharacter: number
 ): number {
   if (!deps.getLlmLimits) return LLM_CHUNK_LIMIT_CHARACTERS
   const { contextWindowTokens: context, maxOutputTokens } = deps.getLlmLimits()
   const baseInstructions = translationSystem(options, []).length
-  const estimatedInstructionTokens = Math.ceil(baseInstructions / 3) + 200
-  const marginTokens =
-    CHUNK_MARGIN_CHARACTERS * CONTEXT_TOKENS_PER_CHUNK_CHARACTER
+  const estimatedInstructionTokens =
+    Math.ceil(
+      (baseInstructions + PRECEDING_CONTEXT_CHARACTERS) /
+        ESTIMATED_CHARACTERS_PER_TOKEN
+    ) + 200
   const availableContextTokens =
-    context - estimatedInstructionTokens - marginTokens
+    context - estimatedInstructionTokens - CHUNK_MARGIN_TOKENS
   const characters = Math.floor(
-    availableContextTokens / CONTEXT_TOKENS_PER_CHUNK_CHARACTER
+    availableContextTokens / contextTokensPerCharacter
   )
   const limit = Math.min(
     LLM_CHUNK_LIMIT_CHARACTERS,

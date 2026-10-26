@@ -26,7 +26,10 @@ export function createLlmConnectionChecker(options: {
       await response.body?.cancel()
       throw new Error(`HTTP ${response.status}`)
     }
-    const payload: unknown = await response.json()
+    const payload = await readJson(
+      response,
+      'The server did not return an OpenAI-compatible model list'
+    )
     if (
       !payload ||
       typeof payload !== 'object' ||
@@ -53,7 +56,10 @@ export function createLlmConnectionChecker(options: {
       await generated.body?.cancel()
       throw new Error(`Model ${modelId}: HTTP ${generated.status}`)
     }
-    const result = (await generated.json()) as {
+    const result = (await readJson(
+      generated,
+      `Model ${modelId} did not produce a text response`
+    )) as {
       choices?: { message?: { content?: unknown }; finish_reason?: string }[]
     }
     if (
@@ -65,6 +71,15 @@ export function createLlmConnectionChecker(options: {
     ) {
       throw new Error(`Model ${modelId} did not produce a text response`)
     }
+  }
+}
+
+/** The JSON body, or a failure that says what the server should have sent */
+async function readJson(response: Response, failure: string): Promise<unknown> {
+  try {
+    return await response.json()
+  } catch (error) {
+    throw new Error(failure, { cause: error })
   }
 }
 
