@@ -45,7 +45,7 @@ import ChatImageAttachment from './ChatImageAttachment.vue'
 
 /** What goes to the next chat message along with it: images and texts in one row */
 const { chat: chatStore } = useChatScope()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const attachments = computed(
   () => chatStore.currentChatParams?.attachments || []
@@ -61,8 +61,8 @@ const budgetWarning = computed(() => {
     text:
       budget.level === 'over'
         ? t('chat.contextBudgetOver', {
-            used: budget.usedCharacters.toLocaleString(),
-            budget: budget.budgetCharacters.toLocaleString(),
+            used: budget.usedCharacters.toLocaleString(locale.value),
+            budget: budget.budgetCharacters.toLocaleString(locale.value),
           })
         : t('chat.contextBudgetHigh', { percent: budget.usagePercent }),
   }

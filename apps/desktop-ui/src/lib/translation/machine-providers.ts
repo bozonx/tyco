@@ -25,6 +25,7 @@ export const createDeepLProvider: TranslationProviderFactory = (init) => ({
         body.target_lang = request.targetLanguage.toUpperCase()
         if (request.sourceLanguage && request.sourceLanguage !== 'auto')
           body.source_lang = request.sourceLanguage.toUpperCase()
+        if (request.format === 'html') body.tag_handling = 'html'
         const response = await init.fetch(input, {
           ...options,
           body: JSON.stringify(body),
@@ -68,6 +69,7 @@ export const createGoogleTranslationProvider: TranslationProviderFactory = (
         body.target = request.targetLanguage
         if (request.sourceLanguage && request.sourceLanguage !== 'auto')
           body.source = request.sourceLanguage
+        if (request.format) body.format = request.format
         return init.fetch(input, { ...options, body: JSON.stringify(body) })
       },
     }).translate(request)

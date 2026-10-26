@@ -201,7 +201,16 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
             {
                 return Err(invalid("Invalid plugin dictionary key"));
             }
-            if !entry.is_string() {
+            if let Some(text) = entry.as_str() {
+                let stripped = text
+                    .replace("{'@'}", "")
+                    .replace("{\"@\"}", "")
+                    .replace("{'|'}", "")
+                    .replace("{\"|\"}", "");
+                if stripped.contains('@') || stripped.contains('|') {
+                    return Err(invalid("Unescaped '@' or '|' in plugin message"));
+                }
+            } else {
                 validate_messages(entry, depth + 1)?;
             }
         }
@@ -531,6 +540,14 @@ mod tests {
         assert!(validate_manifest(&mismatched).is_err());
         mismatched.locales["ru-RU"] = serde_json::json!({"label":"{name}, hello {name}"});
         assert!(validate_manifest(&mismatched).is_ok());
+
+        let mut invalid_chars = manifest();
+        invalid_chars.locales = locales(serde_json::json!({"label":"me@example.com"}));
+        assert!(validate_manifest(&invalid_chars).is_err());
+        invalid_chars.locales = locales(serde_json::json!({"label":"Yes | No"}));
+        assert!(validate_manifest(&invalid_chars).is_err());
+        invalid_chars.locales = locales(serde_json::json!({"label":"me{'@'}example.com {'|'} ok"}));
+        assert!(validate_manifest(&invalid_chars).is_ok());
     }
 
     #[test]

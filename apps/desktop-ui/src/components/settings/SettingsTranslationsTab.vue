@@ -2,11 +2,13 @@
   <div class="settings-stack">
     <SettingsSection>
       <template #description>
-        <span>{{ t('settings.translationsPageHint') }}</span
-        >{{ ' ' }}
-        <InlineAction @click="navigate('languages')">
-          {{ t('settings.languagesTab') }}</InlineAction
-        >.
+        <I18nText keypath="settings.translationsPageHint">
+          <template #tab>
+            <InlineAction @click="navigate('languages')">{{
+              t('settings.languagesTab')
+            }}</InlineAction>
+          </template>
+        </I18nText>
       </template>
 
       <FieldRow :label="t('settings.translationProvider')">
@@ -113,6 +115,7 @@ import Button from '../common/Button.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
+import I18nText from '../common/I18nText.vue'
 import InlineAction from '../common/InlineAction.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'

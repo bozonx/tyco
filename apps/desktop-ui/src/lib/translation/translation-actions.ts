@@ -1,9 +1,8 @@
 import type { UserConfig } from '@tyco/shared'
 
-import {
-  handleLlmRequestError,
-  type LlmRequestErrorDependencies,
-} from '../llm/llm-request-error'
+import { LlmError, toLlmError } from '../llm/llm-client'
+import type { LlmRequestErrorDependencies } from '../llm/llm-request-error'
+import { formatTranslationError } from './translation-errors'
 import type { createTranslationClient } from './translation-client'
 
 export interface TranslateActionOptions {
@@ -43,12 +42,13 @@ export function createTranslationActions(deps: TranslationActionsDependencies) {
           deps.getUserConfig().llm?.tasks.translation.qualityGateRule,
       })
     } catch (error) {
-      return handleLlmRequestError(
-        error,
-        'Translation request failed',
-        options,
-        deps
-      )
+      if (options.signal?.aborted) return ''
+      const llmError = error instanceof LlmError ? error : toLlmError(error)
+      deps.logError('Translation request failed', llmError)
+      if (options.notifyError !== false) {
+        deps.notifyError(formatTranslationError(error, deps.translate))
+      }
+      throw llmError
     }
   }
 

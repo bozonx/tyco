@@ -650,7 +650,7 @@
     "contrastNormal": "Normál",
     "copyActivationCommand": "Parancs másolása",
     "copyHotkeyCommand": "Hozzárendelés másolása",
-    "correctionHotkeysHint": "A javítást bármely alkalmazásból elindítják. A billentyűparancsok itt módosíthatók:",
+    "correctionHotkeysHint": "Javítás futtatása bármely alkalmazásból. Ezeket a billentyűparancsokat a(z) {tab} fülön módosíthatja.",
     "correctionPageHint": "Modell- és utasításbeállítások a szövegjavításhoz. A helyben történő gyorsjavításhoz és az előnézetes javításhoz egyaránt érvényes.",
     "correctionPreviewHint": "Megnyitja a Tyco ablakot a módosítások előnézetével a beillesztés előtt.",
     "correctionPrompt": "Prompt",
@@ -981,12 +981,13 @@
     "translationRulesInfo": "További utasítások az MI-modell számára: stílus, hangnem, formalitás stb. MI-modellel végzett fordításnál és a fordítás utáni javításnál érvényesülnek. A DeepL és a Google nem használja őket, így ezeknél a szolgáltatásoknál az utasítások csak bekapcsolt javítással működnek.",
     "translationsHint": "Gyorsfordítási nyelvek: a fordítási menüben mindegyik saját billentyűvel választható. Húzza a kártyákat a billentyűik módosításához.",
     "translationsMethodHint": "A fordítási mód beállításához lépjen ide:",
-    "translationsPageHint": "Fordítási mód, az eredmény javítása, MI-utasítások és szójegyzék. A nyelvek és a gyorsfordítási gombok ezen az oldalon állíthatók be:",
+    "translationsPageHint": "Fordítási módszer, eredményjavítás, AI utasítások és szószedet. A nyelvek és a gyorsfordítás gombjai a(z) {tab} fülön állíthatók be.",
     "translationsTab": "Fordítás",
     "uiScale": "A felület mérete",
     "unassignHotkey": "Billentyűparancs eltávolítása",
     "vision": "Képbevitel",
-    "voiceTextCorrection": "Diktált szöveg javítása"
+    "voiceTextCorrection": "Diktált szöveg javítása",
+    "translationLanguageUnavailable": "nem érhető el"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1115,8 +1116,31 @@
       "pt-PT": "portugálra;európai portugálra",
       "uk-UA": "ukránra",
       "zh-CN": "kínaira",
-      "ja-JP": "japánra"
+      "ja-JP": "japánra",
+      "cs-CZ": "Cseh",
+      "el-GR": "Görög",
+      "es": "Spanyol",
+      "hr-HR": "Horvát",
+      "hu-HU": "Magyar",
+      "ka-GE": "Grúz",
+      "kk-KZ": "Kazah",
+      "ko-KR": "Koreai",
+      "pl-PL": "Lengyel",
+      "ro-RO": "Román",
+      "zh-TW": "Hagyományos kínai"
     }
   },
-  "tray": { "show": "Tyco megjelenítése", "quit": "Kilépés" }
+  "tray": {
+    "show": "TyCo megjelenítése",
+    "quit": "Kilépés",
+    "tooltip": "TyCo — gépelési segéd"
+  },
+  "translationErrors": {
+    "auth": "A hitelesítés nem sikerült. Ellenőrizze az API-kulcsot.",
+    "quotaExceeded": "A fordítási keret kimerült. Ellenőrizze előfizetését vagy keretét.",
+    "unsupportedLanguage": "Ezt a nyelvet a kiválasztott fordítási szolgáltató nem támogatja.",
+    "unavailable": "A fordítási szolgáltatás jelenleg nem érhető el. Próbálja újra később.",
+    "invalidRequest": "A fordítási kérelem érvénytelen, vagy a szolgáltató elutasította.",
+    "unknown": "Nem sikerült lefordítani a szöveget."
+  }
 }

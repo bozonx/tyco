@@ -74,6 +74,19 @@ describe('translation glossary', () => {
       parseTranslationGlossary(formatTranslationGlossary(entries))
     ).toEqual(entries)
   })
+
+  it('parses acronym default translations and multi-part language translations without distortion', () => {
+    const entries = parseTranslationGlossary(
+      'API = API: интерфейс\nterm = x; ru: a; b'
+    )
+    expect(entries).toEqual([
+      { term: 'API', translation: 'API: интерфейс' },
+      { term: 'term', translation: 'x', translations: { ru: 'a; b' } },
+    ])
+    expect(formatTranslationGlossary(entries)).toBe(
+      'API = API: интерфейс\nterm = x; ru: a; b'
+    )
+  })
 })
 
 describe('translation settings model', () => {
@@ -103,7 +116,7 @@ describe('translation settings model', () => {
       { term: 'workspace', translation: 'workspaces' },
     ])
     model.commitGlossary()
-    expect(model.glossaryText.value).toBe('workspace = workspaces')
+    expect(model.glossaryText.value).toBe('workspace = workspaces\nunfinished')
   })
 
   it('shows a glossary changed elsewhere', async () => {

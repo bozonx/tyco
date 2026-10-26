@@ -31,6 +31,24 @@ describe('protectTranslationText', () => {
       'Translation changed 1 protected token(s)'
     )
   })
+
+  it('protects binding terms with case sensitivity', () => {
+    const protectedText = protectTranslationText('Use Apple and apple.', [
+      'Apple',
+    ])
+    expect(protectedText.text).toContain('apple')
+    expect(protectedText.text).not.toContain('Apple')
+    expect(
+      protectedText.restore(protectedText.text.replace('Use', 'Используйте'))
+    ).toBe('Используйте Apple and apple.')
+  })
+
+  it('tolerates casing and whitespace variations in protected tokens from MT', () => {
+    const protectedText = protectTranslationText('Hello {{name}}')
+    expect(protectedText.restore('Привет __ tyco_protected_0 __')).toBe(
+      'Привет {{name}}'
+    )
+  })
 })
 
 it('round-trips source text that already contains a marker prefix', () => {

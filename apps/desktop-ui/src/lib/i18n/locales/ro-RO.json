@@ -653,7 +653,7 @@
     "contrastNormal": "Normal",
     "copyActivationCommand": "Copiază comanda",
     "copyHotkeyCommand": "Copiază asocierea",
-    "correctionHotkeysHint": "Lansează corectarea din orice aplicație. Puteți modifica aceste comenzi rapide pe pagina",
+    "correctionHotkeysHint": "Rulați corectarea din orice aplicație. Puteți modifica aceste comenzi rapide în fila {tab}.",
     "correctionPageHint": "Setările modelului și instrucțiunilor pentru corectarea textului. Utilizat atât pentru corectarea rapidă pe loc, cât și pentru corectarea cu previzualizare.",
     "correctionPreviewHint": "Deschide fereastra Tyco cu o vizualizare a modificărilor înainte de inserare.",
     "correctionPrompt": "Prompt",
@@ -984,12 +984,13 @@
     "translationRulesInfo": "Instrucțiuni suplimentare pentru modelul AI: stil, ton, formalitate etc. Se aplică la traducerea cu un model AI și la corectarea după traducere. DeepL și Google nu le folosesc, așa că, la aceste servicii, instrucțiunile funcționează doar cu corectarea activată.",
     "translationsHint": "Limbi de traducere rapidă: în meniul de traducere, fiecare se alege cu propria tastă. Trageți cardurile pentru a le schimba tastele.",
     "translationsMethodHint": "Pentru a configura metoda de traducere, accesați",
-    "translationsPageHint": "Metoda de traducere, corectarea rezultatului, instrucțiunile pentru AI și glosarul. Limbile și butoanele de traducere rapidă se configurează pe pagina",
+    "translationsPageHint": "Metoda de traducere, corectarea rezultatelor, instrucțiunile AI și glosarul. Limbile și butoanele de traducere rapidă sunt configurate în fila {tab}.",
     "translationsTab": "Traducere",
     "uiScale": "Scala interfeței",
     "unassignHotkey": "Elimină comanda rapidă",
     "vision": "Intrare de imagini",
-    "voiceTextCorrection": "Corectarea textului dictat"
+    "voiceTextCorrection": "Corectarea textului dictat",
+    "translationLanguageUnavailable": "indisponibil"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1118,8 +1119,31 @@
       "pt-PT": "portugheză;portugheză europeană",
       "uk-UA": "ucraineană",
       "zh-CN": "chineză",
-      "ja-JP": "japoneză"
+      "ja-JP": "japoneză",
+      "cs-CZ": "Cehă",
+      "el-GR": "Greacă",
+      "es": "Spaniolă",
+      "hr-HR": "Croată",
+      "hu-HU": "Maghiară",
+      "ka-GE": "Georgiană",
+      "kk-KZ": "Kazahă",
+      "ko-KR": "Coreeană",
+      "pl-PL": "Poloneză",
+      "ro-RO": "Română",
+      "zh-TW": "Chineză tradițională"
     }
   },
-  "tray": { "show": "Afișează Tyco", "quit": "Ieșire" }
+  "tray": {
+    "show": "Afișează TyCo",
+    "quit": "Ieșire",
+    "tooltip": "TyCo — asistent de tastare"
+  },
+  "translationErrors": {
+    "auth": "Autentificarea a eșuat. Verificați cheia API.",
+    "quotaExceeded": "Cota de traducere a fost depășită. Verificați planul sau limitele.",
+    "unsupportedLanguage": "Această limbă nu este acceptată de furnizorul de traducere selectat.",
+    "unavailable": "Serviciul de traducere nu este disponibil în prezent. Încercați din nou mai târziu.",
+    "invalidRequest": "Cererea de traducere este nevalidă sau a fost respinsă de furnizor.",
+    "unknown": "Nu s-a putut traduce textul."
+  }
 }

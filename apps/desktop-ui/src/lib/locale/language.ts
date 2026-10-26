@@ -145,10 +145,22 @@ export function buildLanguageOptions(
   }))
 }
 
+const RTL_LANGUAGES = new Set(['ar', 'fa', 'ur', 'he', 'ps', 'yi', 'ug'])
+
+export function isRtlLanguage(code?: string | null): boolean {
+  if (!code) return false
+  const base = code.split(/[-_]/)[0]?.toLowerCase() ?? ''
+  return RTL_LANGUAGES.has(base)
+}
+
 export function syncDocumentLanguageAttributes(language?: {
   ui?: string | null
 }) {
   const appLanguage = resolveUiLanguagePreference(language?.ui)
   document.documentElement.setAttribute('lang', toHtmlLang(appLanguage))
   document.documentElement.setAttribute('data-app-language', appLanguage)
+  document.documentElement.setAttribute(
+    'dir',
+    isRtlLanguage(appLanguage) ? 'rtl' : 'ltr'
+  )
 }

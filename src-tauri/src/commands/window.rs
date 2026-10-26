@@ -67,6 +67,7 @@ pub fn set_tray_menu_labels(
     app: AppHandle,
     show_label: String,
     quit_label: String,
+    tooltip_label: Option<String>,
 ) -> Result<(), AppError> {
-    runtime::set_tray_menu_labels(&app, &show_label, &quit_label)
+    runtime::set_tray_menu_labels(&app, &show_label, &quit_label, tooltip_label.as_deref())
 }

@@ -75,24 +75,54 @@ export const isGlossaryTermKept = (entry: TranslationGlossaryEntry) =>
   entry.translation === entry.term &&
   Object.keys(entry.translations ?? {}).length === 0
 
+export function candidateGlossaryLanguages(targetLanguage: string): string[] {
+  const lang = normalizeGlossaryLanguage(targetLanguage)
+  if (!lang) return []
+  const candidates: string[] = [lang]
+  const [base = '', ...parts] = lang.split('-')
+
+  if (base === 'zh') {
+    const isHant =
+      parts.includes('Hant') ||
+      ['TW', 'HK', 'MO'].some((region) => parts.includes(region))
+    if (isHant) {
+      if (!candidates.includes('zh-Hant')) candidates.push('zh-Hant')
+    } else {
+      if (!candidates.includes('zh-Hans')) candidates.push('zh-Hans')
+      if (!candidates.includes('zh')) candidates.push('zh')
+    }
+  } else if (base === 'sr') {
+    // Serbian: do not fall back from Latin script to Cyrillic base
+    if (!parts.includes('Latn') && !candidates.includes('sr')) {
+      candidates.push('sr')
+    }
+  } else {
+    if (base === 'en' && parts.includes('AU')) {
+      if (!candidates.includes('en-GB')) candidates.push('en-GB')
+    } else if (base === 'pt' && parts.includes('AO')) {
+      if (!candidates.includes('pt-PT')) candidates.push('pt-PT')
+    }
+    if (!candidates.includes(base)) {
+      candidates.push(base)
+    }
+  }
+  return candidates
+}
+
 /**
  * How the term is translated into the target language: its own translation,
- * else that of its base language (`es` for `es-AR`), else the default one;
- * undefined when the entry does not cover the language
+ * else that of its script/dialect variants, else the default one; undefined
+ * when the entry does not cover the language
  */
 export function glossaryTranslationFor(
   entry: TranslationGlossaryEntry,
   targetLanguage: string
 ): string | undefined {
-  const language = normalizeGlossaryLanguage(targetLanguage)
   const translations = entry.translations ?? {}
-  const base = language?.split('-')[0]
-  return (
-    (language && translations[language]) ||
-    (base && translations[base]) ||
-    entry.translation ||
-    undefined
-  )
+  for (const candidate of candidateGlossaryLanguages(targetLanguage)) {
+    if (translations[candidate]) return translations[candidate]
+  }
+  return entry.translation || undefined
 }
 
 /**

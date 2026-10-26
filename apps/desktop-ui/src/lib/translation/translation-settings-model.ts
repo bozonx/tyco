@@ -13,7 +13,8 @@ import { createSecretKeyEditor } from '../settings/secret-key-editor'
 import { normalizeTranslationConfig } from './translation-config'
 
 /** A `code: text` part of a glossary line, e.g. `pt-BR: espaço` */
-const LANGUAGE_PART = /^([A-Za-z]{2,3}(?:[-_][A-Za-z0-9]{2,8})*)\s*:\s*(.+)$/
+const LANGUAGE_PART =
+  /^([a-z]{2,3}(?:[-_][A-Za-z0-9]{2,8})*|[A-Z]{2}(?:[-_][A-Za-z0-9]{2,8})*)\s*:\s*(.+)$/
 
 /**
  * Reads glossary lines: `!term` keeps a term, `term = text` translates it into
@@ -35,15 +36,23 @@ export function parseTranslationGlossary(
     const [termPart, ...translationParts] = trimmed.split('=')
     const defaultParts: string[] = []
     const translations: Record<string, string> = {}
+    let currentLanguage: string | undefined
     for (const part of translationParts.join('=').split(';')) {
       const match = LANGUAGE_PART.exec(part.trim())
       const language = match && normalizeGlossaryLanguage(match[1]!)
-      if (language) translations[language] = match[2]!.trim()
-      else defaultParts.push(part)
+      if (language) {
+        currentLanguage = language
+        translations[language] = match[2]!.trim()
+      } else if (currentLanguage) {
+        translations[currentLanguage] =
+          `${translations[currentLanguage]}; ${part.trim()}`
+      } else {
+        defaultParts.push(part.trim())
+      }
     }
     const entry = normalizeGlossaryEntry({
       term: termPart ?? '',
-      translation: defaultParts.join(';'),
+      translation: defaultParts.join('; '),
       translations,
     })
     if (entry) entries.push(entry)
@@ -122,9 +131,16 @@ export function createTranslationSettingsModel(deps: {
       glossary: parseTranslationGlossary(value),
     })
   }
-  /** Shows the saved glossary, without the lines that are not rules */
+  /** Shows the saved glossary and retains unfinished lines without rules */
   function commitGlossary() {
-    glossaryText.value = formatTranslationGlossary(translation.value.glossary)
+    const formatted = formatTranslationGlossary(translation.value.glossary)
+    const incompleteLines = glossaryText.value
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('!') && !line.includes('='))
+    glossaryText.value = incompleteLines.length
+      ? [formatted, ...incompleteLines].filter(Boolean).join('\n')
+      : formatted
   }
   const keyEditor = createSecretKeyEditor({
     getSecretId: () =>

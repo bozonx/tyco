@@ -257,7 +257,7 @@ async function translateWithMachine(
       ...(options.sourceLanguage && options.sourceLanguage !== 'auto'
         ? { sourceLanguage: normalizeLanguage(options.sourceLanguage) }
         : {}),
-      format: 'text',
+      format: 'html',
       ...(options.signal ? { abortSignal: options.signal } : {}),
     })
     options.signal?.throwIfAborted()
@@ -347,7 +347,7 @@ function translateWithLlm(
   options: TranslationRunOptions,
   glossary: GlossaryEntry[]
 ): Promise<FirstPass> {
-  const chunks = chunkText(text, llmChunkLimit(deps, options, glossary))
+  const chunks = chunkText(text, llmChunkLimit(deps, options))
   return runLlmChunks(deps, options, chunks, (chunk) => {
     const applicable = selectGlossaryForText(glossary, chunk)
     const prompt = buildPrompt({
@@ -375,7 +375,7 @@ function repairWithLlm(
   const pairs = splitParallelText(
     source,
     translation,
-    Math.min(LLM_REPAIR_COMBINED_LIMIT, llmChunkLimit(deps, options, glossary))
+    Math.min(LLM_REPAIR_COMBINED_LIMIT, llmChunkLimit(deps, options))
   )
   return runLlmChunks(deps, options, pairs, (pair) => {
     const applicable = selectGlossaryForText(glossary, pair.source)
@@ -459,16 +459,19 @@ function repairInstruction(problems: TranslationProblem[]): string {
 /** Reserve context for instructions and an expanded translation, conservatively. */
 function llmChunkLimit(
   deps: TranslationClientDependencies,
-  options: TranslationRunOptions,
-  glossary: GlossaryEntry[]
+  options: TranslationRunOptions
 ): number {
   if (!deps.getLlmLimits) return LLM_CHUNK_LIMIT_CHARACTERS
   const { contextWindowTokens: context, maxOutputTokens } = deps.getLlmLimits()
-  const instructions = translationSystem(options, glossary).length
-  const characters =
-    Math.floor(context / CONTEXT_TOKENS_PER_CHUNK_CHARACTER) -
-    instructions -
-    CHUNK_MARGIN_CHARACTERS
+  const baseInstructions = translationSystem(options, []).length
+  const estimatedInstructionTokens = Math.ceil(baseInstructions / 3) + 200
+  const marginTokens =
+    CHUNK_MARGIN_CHARACTERS * CONTEXT_TOKENS_PER_CHUNK_CHARACTER
+  const availableContextTokens =
+    context - estimatedInstructionTokens - marginTokens
+  const characters = Math.floor(
+    availableContextTokens / CONTEXT_TOKENS_PER_CHUNK_CHARACTER
+  )
   const limit = Math.min(
     LLM_CHUNK_LIMIT_CHARACTERS,
     characters,

@@ -103,9 +103,12 @@ const problemCodes = computed(() => {
   const problems = quality?.remainingProblems.length
     ? quality.remainingProblems
     : (quality?.problems ?? [])
-  return problems
-    .map((problem) => t(`translationProblems.${problem.code}`))
-    .join(', ')
+  const uniqueLabels = [
+    ...new Set(
+      problems.map((problem) => t(`translationProblems.${problem.code}`))
+    ),
+  ]
+  return uniqueLabels.join(', ')
 })
 
 const qualityStatusText = computed(() => {

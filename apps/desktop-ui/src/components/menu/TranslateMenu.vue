@@ -203,7 +203,8 @@ const fieldOptions = computed<QueryPanelOption[]>(() => {
       recentFor('target'),
       languageIds('target'),
       languageLabel,
-      sourceLanguage.value
+      sourceLanguage.value,
+      locale.value
     ).map(({ id, group }) => toOption(id, group))
   }
 
@@ -218,7 +219,9 @@ const fieldOptions = computed<QueryPanelOption[]>(() => {
     ...groupLanguages(
       recentFor('source'),
       languageIds('source'),
-      languageLabel
+      languageLabel,
+      undefined,
+      locale.value
     ).map(({ id, group }) => toOption(id, group, id === sourceLanguage.value)),
   ]
 })
@@ -294,7 +297,12 @@ const translate = async (targetLanguage: string, source?: string) => {
     return
   }
 
-  if (sourceText.trim().length < MIN_TRANSLATE_LENGTH) {
+  const trimmed = sourceText.trim()
+  const isCjk =
+    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(
+      trimmed
+    )
+  if (!isCjk && trimmed.length < MIN_TRANSLATE_LENGTH) {
     toastKey('toast.textTooShortToTranslate', 'warn')
     return
   }
@@ -312,7 +320,7 @@ const translate = async (targetLanguage: string, source?: string) => {
       invocations.call('core.translate', sourceText, {
         signal,
         onProgress: (stage) => {
-          if (stage in stageLabels)
+          if (Object.hasOwn(stageLabels, stage))
             updatePending({
               label: t(stageLabels[stage as keyof typeof stageLabels]),
             })

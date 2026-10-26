@@ -258,3 +258,108 @@ it('does not add hidden phrases to user commands', () => {
       .candidates[0]?.commandId
   ).toBe('core.copy')
 })
+
+describe('voice resolver CJK and SOV languages', () => {
+  it('resolves continuous Chinese voice command without spaces', () => {
+    const routes: VoiceRoute[] = [
+      {
+        commandId: 'translate-en',
+        phrase: '翻译成',
+        parameters: [{ name: 'language', value: 'en-US', variants: ['英语'] }],
+      },
+    ]
+    const result = resolveVoice(routes, '翻译成英语你好')
+    expect(result.kind).toBe('match')
+    expect(result.candidates[0]).toMatchObject({
+      commandId: 'translate-en',
+      parameters: { language: 'en-US' },
+      text: '你好',
+    })
+  })
+
+  it('resolves Japanese SOV voice command with suffix', () => {
+    const routes: VoiceRoute[] = [
+      {
+        commandId: 'translate-en',
+        phrase: '',
+        suffix: 'に翻訳して',
+        parameters: [{ name: 'language', value: 'en-US', variants: ['英語'] }],
+      },
+    ]
+    const result = resolveVoice(routes, '英語に翻訳してこんにちは')
+    expect(result.kind).toBe('match')
+    expect(result.candidates[0]).toMatchObject({
+      commandId: 'translate-en',
+      parameters: { language: 'en-US' },
+      text: 'こんにちは',
+    })
+  })
+
+  it('resolves Korean SOV voice command', () => {
+    const routes: VoiceRoute[] = [
+      {
+        commandId: 'translate-en',
+        phrase: '',
+        suffix: '번역해',
+        parameters: [
+          { name: 'language', value: 'en-US', variants: ['영어로', '영어'] },
+        ],
+      },
+    ]
+    const result = resolveVoice(routes, '영어로 번역해 안녕하세요')
+    expect(result.kind).toBe('match')
+    expect(result.candidates[0]).toMatchObject({
+      commandId: 'translate-en',
+      parameters: { language: 'en-US' },
+      text: '안녕하세요',
+    })
+  })
+
+  it('resolves Turkish SOV voice command', () => {
+    const routes: VoiceRoute[] = [
+      {
+        commandId: 'translate-en',
+        phrase: '',
+        suffix: 'çevir',
+        parameters: [
+          {
+            name: 'language',
+            value: 'en-US',
+            variants: ['İngilizceye', 'İngilizce'],
+          },
+        ],
+      },
+    ]
+    const result = resolveVoice(routes, 'İngilizceye çevir Merhaba dünya')
+    expect(result.kind).toBe('match')
+    expect(result.candidates[0]).toMatchObject({
+      commandId: 'translate-en',
+      parameters: { language: 'en-US' },
+      text: 'Merhaba dünya',
+    })
+  })
+
+  it('resolves Kazakh SOV voice command', () => {
+    const routes: VoiceRoute[] = [
+      {
+        commandId: 'translate-en',
+        phrase: '',
+        suffix: 'аудар',
+        parameters: [
+          {
+            name: 'language',
+            value: 'en-US',
+            variants: ['ағылшын тіліне', 'ағылшынша'],
+          },
+        ],
+      },
+    ]
+    const result = resolveVoice(routes, 'ағылшын тіліне аудар Сәлем әлем')
+    expect(result.kind).toBe('match')
+    expect(result.candidates[0]).toMatchObject({
+      commandId: 'translate-en',
+      parameters: { language: 'en-US' },
+      text: 'Сәлем әлем',
+    })
+  })
+})

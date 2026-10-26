@@ -33,7 +33,7 @@ describe('TranslationLanguageSelect', () => {
       .selectedOptions[0]!
     expect(selected.disabled).toBe(true)
     expect(selected.textContent).toContain(
-      'settings.mainActionGroups.unavailable'
+      'settings.translationLanguageUnavailable'
     )
     await wrapper.get('input').setValue('zh-Hant')
     expect(wrapper.findAll('option')).toHaveLength(1)

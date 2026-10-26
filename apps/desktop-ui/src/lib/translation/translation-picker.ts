@@ -19,16 +19,18 @@ export function groupLanguages(
   recent: readonly string[],
   all: readonly string[],
   label: (id: string) => string,
-  exclude?: string
+  exclude?: string,
+  locale?: string
 ): GroupedLanguage[] {
   const known = new Set(all)
   const recentIds = [...new Set(recent)].filter(
     (id) => id !== exclude && known.has(id)
   )
   const taken = new Set([...recentIds, exclude])
+  const collator = new Intl.Collator(locale, { sensitivity: 'base' })
   const others = all
     .filter((id) => !taken.has(id))
-    .sort((a, b) => label(a).localeCompare(label(b)))
+    .sort((a, b) => collator.compare(label(a), label(b)))
 
   return [
     ...recentIds.map((id) => ({ id, group: 'recent' as const })),

@@ -647,7 +647,7 @@
     "contrastNormal": "普通",
     "copyActivationCommand": "复制命令",
     "copyHotkeyCommand": "复制绑定",
-    "correctionHotkeysHint": "可从任何应用程序运行纠错。快捷键可在此页面中更改",
+    "correctionHotkeysHint": "从任意应用程序运行文本校对。您可以在 {tab} 标签页中更改这些快捷键。",
     "correctionPageHint": "用于文本纠错的模型和提示词设置。同时适用于原位快速纠错和带预览的纠错。",
     "correctionPreviewHint": "在插入之前打开显示更改差异的 Tyco 窗口。",
     "correctionPrompt": "提示词",
@@ -978,12 +978,13 @@
     "translationRulesInfo": "给 AI 模型的附加指令：风格、语气、正式程度等。在使用 AI 模型翻译以及翻译后纠错期间应用。DeepL 和 Google 不使用这些指令，因此在这两个服务中，指令仅在启用纠错时生效。",
     "translationsHint": "快捷翻译语言：在翻译菜单中，每种语言使用独立的按键选择。拖动卡片可更改其按键。",
     "translationsMethodHint": "如需配置翻译方式，请前往",
-    "translationsPageHint": "翻译方式、结果纠错、AI 指令和术语表。语言和快捷翻译按钮在此页面上配置",
+    "translationsPageHint": "翻译方式、结果校对、AI 指令及术语表。语言与快速翻译按钮可在 {tab} 标签页中配置。",
     "translationsTab": "翻译",
     "uiScale": "界面缩放",
     "unassignHotkey": "移除快捷键",
     "vision": "图像输入",
-    "voiceTextCorrection": "语音文本纠错"
+    "voiceTextCorrection": "语音文本纠错",
+    "translationLanguageUnavailable": "不可用"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1112,8 +1113,31 @@
       "pt-PT": "葡萄牙语;欧洲葡萄牙语",
       "uk-UA": "乌克兰语",
       "zh-CN": "中文;汉语",
-      "ja-JP": "日语"
+      "ja-JP": "日语",
+      "cs-CZ": "捷克语",
+      "el-GR": "希腊语",
+      "es": "西班牙语",
+      "hr-HR": "克罗地亚语",
+      "hu-HU": "匈牙利语",
+      "ka-GE": "格鲁吉亚语",
+      "kk-KZ": "哈萨克语",
+      "ko-KR": "韩语;朝鲜语",
+      "pl-PL": "波兰语",
+      "ro-RO": "罗马尼亚语",
+      "zh-TW": "繁体中文"
     }
   },
-  "tray": { "show": "显示 Tyco", "quit": "退出" }
+  "tray": {
+    "show": "显示 TyCo",
+    "quit": "退出",
+    "tooltip": "TyCo — 智能输入伴侣"
+  },
+  "translationErrors": {
+    "auth": "身份验证失败。请检查您的 API 密钥或访问凭据。",
+    "quotaExceeded": "已超出翻译配额。请检查您的套餐或用量限制。",
+    "unsupportedLanguage": "所选翻译提供商不支持此语言。",
+    "unavailable": "翻译服务目前不可用。请稍后重试。",
+    "invalidRequest": "翻译请求无效或被提供商拒绝。",
+    "unknown": "翻译文本失败。"
+  }
 }

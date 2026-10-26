@@ -148,6 +148,7 @@ export function useAppRuntime() {
           .call('set_tray_menu_labels', {
             showLabel: t('tray.show'),
             quitLabel: t('tray.quit'),
+            tooltipLabel: t('tray.tooltip'),
           })
           .catch((error: unknown) =>
             clientLogger.error(

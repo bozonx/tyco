@@ -616,7 +616,7 @@
     "baseUrl": "Base URL",
     "browseWorkingDir": "Select working directory…",
     "chat": "Ask AI",
-    "chatCount": "{count} chats",
+    "chatCount": "Chats: {count}",
     "chatHistoryEnabled": "Save chats",
     "chatHistoryEnabledInfo": "Chats are stored locally without encryption.",
     "chatHistoryRetentionDays": "Delete old chats",
@@ -653,7 +653,7 @@
     "contrastNormal": "Normal",
     "copyActivationCommand": "Copy command",
     "copyHotkeyCommand": "Copy binding",
-    "correctionHotkeysHint": "Run correction from any application. You can change these shortcuts on the page",
+    "correctionHotkeysHint": "Run correction from any application. You can change these shortcuts on the {tab} tab.",
     "correctionPageHint": "Model and prompt instructions for text correction. Used for both quick in-place correction and correction with preview.",
     "correctionPreviewHint": "Opens the Tyco window with a diff of changes before inserting.",
     "correctionPrompt": "Prompt",
@@ -794,7 +794,7 @@
     "maxTokens": "Max tokens",
     "model": "Model",
     "modelId": "Model ID",
-    "modelsCount": "{count} models",
+    "modelsCount": "Models: {count}",
     "modelsForFeatures": "Models for features",
     "motion": "Animations",
     "motionAuto": "System",
@@ -984,12 +984,13 @@
     "translationRulesInfo": "Extra instructions for the AI model: style, tone, formality and so on. Applied when translating with an AI model and during post-translation correction. DeepL and Google do not use them, so with these services the instructions only work when correction is enabled.",
     "translationsHint": "Quick translation languages: in the translation menu each one is picked with its own key. Drag the cards to change their keys.",
     "translationsMethodHint": "To configure the translation method, go to",
-    "translationsPageHint": "Translation method, result correction, AI instructions and glossary. Languages and quick translation buttons are configured on the page",
+    "translationsPageHint": "Translation method, result correction, AI instructions and glossary. Languages and quick translation buttons are configured on the {tab} tab.",
     "translationsTab": "Translation",
     "uiScale": "Interface scale",
     "unassignHotkey": "Remove shortcut",
     "vision": "Image input",
-    "voiceTextCorrection": "Voice text correction"
+    "voiceTextCorrection": "Voice text correction",
+    "translationLanguageUnavailable": "unavailable"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1118,8 +1119,31 @@
       "pt-PT": "Portuguese;European Portuguese",
       "uk-UA": "Ukrainian",
       "zh-CN": "Chinese",
-      "ja-JP": "Japanese"
+      "ja-JP": "Japanese",
+      "cs-CZ": "Czech",
+      "el-GR": "Greek",
+      "es": "Spanish",
+      "hr-HR": "Croatian",
+      "hu-HU": "Hungarian",
+      "ka-GE": "Georgian",
+      "kk-KZ": "Kazakh",
+      "ko-KR": "Korean",
+      "pl-PL": "Polish",
+      "ro-RO": "Romanian",
+      "zh-TW": "Traditional Chinese"
     }
   },
-  "tray": { "show": "Show Tyco", "quit": "Quit" }
+  "tray": {
+    "show": "Show TyCo",
+    "quit": "Quit",
+    "tooltip": "TyCo — typing companion"
+  },
+  "translationErrors": {
+    "auth": "Authentication failed. Check your API key or service credentials.",
+    "quotaExceeded": "Translation quota exceeded. Check your plan or billing limits.",
+    "unsupportedLanguage": "This language is not supported by the selected translation provider.",
+    "unavailable": "The translation service is currently unavailable. Try again later.",
+    "invalidRequest": "Translation request is invalid or rejected by the provider.",
+    "unknown": "Failed to translate the text."
+  }
 }

@@ -647,7 +647,7 @@
     "contrastNormal": "Normální",
     "copyActivationCommand": "Kopírovat příkaz",
     "copyHotkeyCommand": "Kopírovat přiřazení",
-    "correctionHotkeysHint": "Spouštějí opravu z jakékoli aplikace. Zkratky můžete změnit na stránce",
+    "correctionHotkeysHint": "Spouštění opravy z libovolné aplikace. Tyto zkratky můžete změnit na záložce {tab}.",
     "correctionPageHint": "Nastavení modelu a instrukcí pro opravu textu. Používá se jak pro rychlou opravu na místě, tak pro opravu s náhledem.",
     "correctionPreviewHint": "Otevře okno Tyco se zobrazením změn před vložením.",
     "correctionPrompt": "Prompt",
@@ -978,12 +978,13 @@
     "translationRulesInfo": "Dodatečné instrukce pro model AI: styl, tón, míra formálnosti a podobně. Použijí se při překladu modelem AI a při opravě po překladu. DeepL a Google je nepoužívají, takže u těchto služeb instrukce fungují jen se zapnutou opravou.",
     "translationsHint": "Jazyky rychlého překladu: v nabídce překladu se každý vybírá vlastní klávesou. Přetažením karet změníte jejich klávesy.",
     "translationsMethodHint": "Chcete-li nastavit způsob překladu, přejděte na",
-    "translationsPageHint": "Způsob překladu, oprava výsledku, instrukce pro AI a glosář. Jazyky a tlačítka rychlého překladu se nastavují na stránce",
+    "translationsPageHint": "Způsob překladu, oprava výsledků, instrukce pro AI a glosář. Jazyky a tlačítka rychlého překladu se nastavují na záložce {tab}.",
     "translationsTab": "Překlad",
     "uiScale": "Měřítko rozhraní",
     "unassignHotkey": "Odebrat zkratku",
     "vision": "Vstup obrázků",
-    "voiceTextCorrection": "Oprava nadiktovaného textu"
+    "voiceTextCorrection": "Oprava nadiktovaného textu",
+    "translationLanguageUnavailable": "nedostupný"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1112,8 +1113,31 @@
       "pt-PT": "portugalštiny;evropské portugalštiny",
       "uk-UA": "ukrajinštiny",
       "zh-CN": "čínštiny",
-      "ja-JP": "japonštiny"
+      "ja-JP": "japonštiny",
+      "cs-CZ": "Czech",
+      "el-GR": "Řečtina",
+      "es": "Španělština",
+      "hr-HR": "Chorvatština",
+      "hu-HU": "Maďarština",
+      "ka-GE": "Gruzínština",
+      "kk-KZ": "Kazaština",
+      "ko-KR": "Korejština",
+      "pl-PL": "Polština",
+      "ro-RO": "Rumunština",
+      "zh-TW": "Tradiční čínština"
     }
   },
-  "tray": { "show": "Zobrazit Tyco", "quit": "Ukončit" }
+  "tray": {
+    "show": "Zobrazit TyCo",
+    "quit": "Ukončit",
+    "tooltip": "TyCo — společník pro psaní"
+  },
+  "translationErrors": {
+    "auth": "Ověření selhalo. Zkontrolujte svůj klíč API nebo přístupové údaje.",
+    "quotaExceeded": "Překročen limit překladů. Zkontrolujte svůj tarif nebo kredit.",
+    "unsupportedLanguage": "Tento jazyk není vybraným poskytovatelem překladu podporován.",
+    "unavailable": "Překladatelská služba je v současné době nedostupná. Zkuste to znovu později.",
+    "invalidRequest": "Požadavek na překlad je neplatný nebo byl zamítnut poskytovatelem.",
+    "unknown": "Text se nepodařilo přeložit."
+  }
 }

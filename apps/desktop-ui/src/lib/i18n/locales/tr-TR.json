@@ -650,7 +650,7 @@
     "contrastNormal": "Normal",
     "copyActivationCommand": "Komutu kopyala",
     "copyHotkeyCommand": "Bağlamayı kopyala",
-    "correctionHotkeysHint": "Düzeltmeyi herhangi bir uygulamadan başlatır. Kısayolları şu sayfada değiştirebilirsiniz:",
+    "correctionHotkeysHint": "Herhangi bir uygulamadan düzeltmeyi çalıştırın. Bu kısayolları {tab} sekmesinden değiştirebilirsiniz.",
     "correctionPageHint": "Metin düzeltme için model ve talimat ayarları. Hem yerinde hızlı düzeltme hem de önizlemeli düzeltme için kullanılır.",
     "correctionPreviewHint": "Eklemenden önce değişikliklerin farkını gösteren Tyco penceresini açar.",
     "correctionPrompt": "İstem",
@@ -981,12 +981,13 @@
     "translationRulesInfo": "Yapay zekâ modeli için ek talimatlar: üslup, ton, hitap şekli vb. Yapay zekâ modeliyle çeviride ve çeviri sonrası düzeltmede uygulanır. DeepL ve Google bunları kullanmaz; bu hizmetlerle talimatlar yalnızca düzeltme açıkken çalışır.",
     "translationsHint": "Hızlı çeviri dilleri: çeviri menüsünde her biri kendi tuşuyla seçilir. Tuşları değiştirmek için kartları sürükleyin.",
     "translationsMethodHint": "Çeviri yöntemini yapılandırmak için şu sayfaya gidin:",
-    "translationsPageHint": "Çeviri yöntemi, sonuç düzeltmesi, yapay zekâ talimatları ve sözlük. Diller ve hızlı çeviri düğmeleri şu sayfada yapılandırılır:",
+    "translationsPageHint": "Çeviri yöntemi, sonuç düzeltme, yapay zeka talimatları ve sözlük. Diller ve hızlı çeviri düğmeleri {tab} sekmesinden yapılandırılır.",
     "translationsTab": "Çeviri",
     "uiScale": "Arayüz ölçeği",
     "unassignHotkey": "Kısayolu kaldır",
     "vision": "Görsel desteği",
-    "voiceTextCorrection": "Tanınan metni düzeltme"
+    "voiceTextCorrection": "Tanınan metni düzeltme",
+    "translationLanguageUnavailable": "kullanılamıyor"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1099,24 +1100,47 @@
     "nothingHeard": "Konuşma tanınmadı. Yeniden kaydedin."
   },
   "voiceGrammar": {
-    "translate": "çevir",
+    "translate": "{language} çevir;{language}ye çevir;{language}e çevir;çevir",
     "actions": { "askInChat": "sohbette sor" },
     "languages": {
-      "en-US": "İngilizce;Amerikan İngilizcesi",
-      "en-GB": "Britanya İngilizcesi",
+      "en-US": "İngilizceye;İngilizce;Amerikan İngilizcesi;Amerikan İngilizcesine",
+      "en-GB": "İngiliz İngilizcesi;İngiliz İngilizcesine",
       "es-AR": "İspanyolca;Arjantin İspanyolcası",
       "es-ES": "İspanyolca;Avrupa İspanyolcası",
-      "ru-RU": "Rusça",
+      "ru-RU": "Rusçaya;Rusça",
       "tr-TR": "Türkçe",
-      "de-DE": "Almanca",
-      "fr-FR": "Fransızca",
+      "de-DE": "Almancaya;Almanca",
+      "fr-FR": "Fransızcaya;Fransızca",
       "it-IT": "İtalyanca",
       "pt-BR": "Portekizce;Brezilya Portekizcesi",
       "pt-PT": "Portekizce;Avrupa Portekizcesi",
       "uk-UA": "Ukraynaca",
       "zh-CN": "Çince",
-      "ja-JP": "Japonca"
+      "ja-JP": "Japonca",
+      "cs-CZ": "Çekçe;Çekçeye",
+      "el-GR": "Yunanca;Yunancaya",
+      "es": "İspanyolca;İspanyolcaya",
+      "hr-HR": "Hırvatça;Hırvatçaya",
+      "hu-HU": "Macarca;Macarcaya",
+      "ka-GE": "Gürcüce;Gürcüceye",
+      "kk-KZ": "Kazakça;Kazakçaya",
+      "ko-KR": "Korece;Koreceye",
+      "pl-PL": "Lehçe;Lehçeye;Polonyaca",
+      "ro-RO": "Romence;Romenceye;Rumence",
+      "zh-TW": "Geleneksel Çince;Geleneksel Çinceye"
     }
   },
-  "tray": { "show": "Tyco’yu göster", "quit": "Çıkış" }
+  "tray": {
+    "show": "TyCo’yu göster",
+    "quit": "Çıkış",
+    "tooltip": "TyCo — yazma yardımcısı"
+  },
+  "translationErrors": {
+    "auth": "Kimlik doğrulama başarısız oldu. API anahtarınızı kontrol edin.",
+    "quotaExceeded": "Çeviri kotası aşıldı. Planınızı veya faturalandırma limitlerinizi kontrol edin.",
+    "unsupportedLanguage": "Bu dil, seçilen çeviri sağlayıcısı tarafından desteklenmiyor.",
+    "unavailable": "Çeviri hizmeti şu anda kullanılamıyor. Daha sonra tekrar deneyin.",
+    "invalidRequest": "Çeviri isteği geçersiz veya sağlayıcı tarafından reddedildi.",
+    "unknown": "Metin çevrilemedi."
+  }
 }

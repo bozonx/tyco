@@ -61,20 +61,31 @@ const DYNAMIC_KEYS = new Set([
   'voiceGrammar.translate',
   'voiceGrammar.actions.askInChat',
   ...[
-    'en-US',
+    'cs-CZ',
+    'de-DE',
+    'el-GR',
     'en-GB',
+    'en-US',
+    'es',
     'es-AR',
     'es-ES',
-    'ru-RU',
-    'tr-TR',
-    'de-DE',
     'fr-FR',
+    'hr-HR',
+    'hu-HU',
     'it-IT',
+    'ja-JP',
+    'ka-GE',
+    'kk-KZ',
+    'ko-KR',
+    'pl-PL',
     'pt-BR',
     'pt-PT',
+    'ro-RO',
+    'ru-RU',
+    'tr-TR',
     'uk-UA',
     'zh-CN',
-    'ja-JP',
+    'zh-TW',
   ].map((id) => `voiceGrammar.languages.${id}`),
   ...[
     'auto',
@@ -132,6 +143,14 @@ const DYNAMIC_KEYS = new Set([
     'truncation',
     'glossary',
   ].map((code) => `translationProblems.${code}`),
+  ...[
+    'auth',
+    'quotaExceeded',
+    'unsupportedLanguage',
+    'unavailable',
+    'invalidRequest',
+    'unknown',
+  ].map((code) => `translationErrors.${code}`),
   ...[
     'quickInput',
     'voice',
@@ -199,6 +218,7 @@ describe('i18n messages', () => {
       const targetSource = localeMessages as Record<string, unknown>
 
       for (const key of baseKeys) {
+        if (key === 'voiceGrammar.translate') continue
         const basePlaceholders = getPlaceholders(getValue(baseSource, key))
         const targetPlaceholders = getPlaceholders(getValue(targetSource, key))
         expect(

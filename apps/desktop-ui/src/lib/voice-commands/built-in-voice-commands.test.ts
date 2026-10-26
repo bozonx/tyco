@@ -42,16 +42,20 @@ describe('built-in voice commands', () => {
         resolveVoice(routes, `${locale.voiceGrammar.actions.askInChat} Hello!`)
           .candidates[0]
       ).toMatchObject({ commandId: 'builtin:voice:askInChat', text: 'Hello!' })
-      expect(
-        resolveVoice(
-          routes,
-          `${locale.voiceGrammar.translate} ${locale.voiceGrammar.languages['en-US'].split(';')[0]} Hello!`
-        ).candidates[0]
-      ).toMatchObject({
-        commandId: 'builtin:voice:translate:en-US',
-        parameters: { language: 'en-US' },
-        text: 'Hello!',
-      })
+
+      const firstTemplate = locale.voiceGrammar.translate.split(';')[0]!
+      const lang = locale.voiceGrammar.languages['en-US'].split(';')[0]!
+      const translatePhrase = firstTemplate.includes('{language}')
+        ? `${firstTemplate.replace('{language}', lang)} Hello!`
+        : `${firstTemplate} ${lang} Hello!`
+
+      expect(resolveVoice(routes, translatePhrase).candidates[0]).toMatchObject(
+        {
+          commandId: 'builtin:voice:translate:en-US',
+          parameters: { language: 'en-US' },
+          text: 'Hello!',
+        }
+      )
     }
   )
   it('runs after final dictation with the built-in language config even with a disabled saved command', async () => {

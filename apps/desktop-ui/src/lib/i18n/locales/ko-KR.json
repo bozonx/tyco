@@ -236,25 +236,40 @@
     "nothingToCorrect": "교정할 내용이 없습니다",
     "textTooShortForCorrection": "교정하기에 텍스트가 너무 짧습니다"
   },
-  "tray": { "show": "Tyco 표시", "quit": "종료" },
+  "tray": {
+    "show": "TyCo 표시",
+    "quit": "종료",
+    "tooltip": "TyCo — 타이핑 컴패니언"
+  },
   "voiceGrammar": {
-    "translate": "~로 번역",
+    "translate": "{language}로 번역;{language}로 번역해;{language} 번역;번역",
     "actions": { "askInChat": "채팅에서 질문" },
     "languages": {
-      "en-US": "영어;미국 영어",
-      "en-GB": "영국 영어",
+      "en-US": "영어;영어로;미국 영어;미국 영어로",
+      "en-GB": "영국 영어;영국 영어로",
       "es-AR": "스페인어;아르헨티나 스페인어",
       "es-ES": "스페인어;유럽 스페인어",
-      "ru-RU": "러시아어",
+      "ru-RU": "러시아어;러시아어로",
       "tr-TR": "튀르키예어;터키어",
-      "de-DE": "독일어",
-      "fr-FR": "프랑스어",
+      "de-DE": "독일어;독일어로",
+      "fr-FR": "프랑스어;프랑스어로",
       "it-IT": "이탈리아어",
       "pt-BR": "포르투갈어;브라질 포르투갈어",
       "pt-PT": "포르투갈어;유럽 포르투갈어",
       "uk-UA": "우크라이나어",
-      "zh-CN": "중국어",
-      "ja-JP": "일본어"
+      "zh-CN": "중국어;중국어로",
+      "ja-JP": "일본어;일본어로",
+      "cs-CZ": "체코어;체코어로",
+      "el-GR": "그리스어;그리스어로",
+      "es": "스페인어;스페인어로",
+      "hr-HR": "크로아티아어;크로아티아어로",
+      "hu-HU": "헝가리어;헝가리어로",
+      "ka-GE": "조지아어;조지아어로",
+      "kk-KZ": "카자흐어;카자흐어로",
+      "ko-KR": "한국어;한국어로",
+      "pl-PL": "폴란드어;폴란드어로",
+      "ro-RO": "루마니아어;루마니아어로",
+      "zh-TW": "번체 중국어;번체 중국어로;대만어"
     }
   },
   "voiceCommands": {
@@ -778,7 +793,7 @@
     "contrastNormal": "보통",
     "copyActivationCommand": "명령 복사",
     "copyHotkeyCommand": "바인딩 복사",
-    "correctionHotkeysHint": "모든 앱에서 교정을 실행합니다. 단축키는 다음 페이지에서 변경할 수 있습니다:",
+    "correctionHotkeysHint": "모든 애플리케이션에서 교정을 실행합니다. 바로가기는 {tab} 탭에서 변경할 수 있습니다.",
     "correctionPageHint": "텍스트 교정을 위한 모델 및 프롬프트 설정입니다. 즉각적인 빠른 교정과 미리보기가 포함된 교정 모두에 사용됩니다.",
     "correctionPreviewHint": "삽입하기 전에 변경 사항의 차이점을 보여주는 Tyco 창을 엽니다.",
     "correctionPrompt": "프롬프트",
@@ -1109,11 +1124,20 @@
     "translationRulesInfo": "AI 모델을 위한 추가 지시 사항: 스타일, 어조, 격식 등입니다. AI 모델로 번역할 때 및 번역 후 교정 중에 적용됩니다. DeepL과 Google은 이를 사용하지 않으므로 이러한 서비스에서는 교정이 활성화된 경우에만 지시 사항이 적용됩니다.",
     "translationsHint": "빠른 번역 언어: 번역 메뉴에서 각각 고유한 키로 선택됩니다. 카드를 드래그하여 키를 변경할 수 있습니다.",
     "translationsMethodHint": "번역 방식을 구성하려면 다음으로 이동하세요:",
-    "translationsPageHint": "번역 방식, 결과 교정, AI 지시 사항 및 용어집입니다. 언어 및 빠른 번역 버튼은 다음 페이지에서 구성합니다:",
+    "translationsPageHint": "번역 방식, 결과 교정, AI 지침 및 용어집입니다. 언어 및 빠른 번역 버튼은 {tab} 탭에서 설정합니다.",
     "translationsTab": "번역",
     "uiScale": "인터페이스 배율",
     "unassignHotkey": "단축키 제거",
     "vision": "이미지 입력",
-    "voiceTextCorrection": "음성 텍스트 교정"
+    "voiceTextCorrection": "음성 텍스트 교정",
+    "translationLanguageUnavailable": "사용 불가"
+  },
+  "translationErrors": {
+    "auth": "인증에 실패했습니다. API 키 또는 접근 권한을 확인하세요.",
+    "quotaExceeded": "번역 할당량이 초과되었습니다. 요금제 또는 결제 한도를 확인하세요.",
+    "unsupportedLanguage": "이 언어는 선택한 번역 제공업체에서 지원하지 않습니다.",
+    "unavailable": "번역 서비스를 현재 사용할 수 없습니다. 나중에 다시 시도하세요.",
+    "invalidRequest": "번역 요청이 유효하지 않거나 제공업체에서 거부되었습니다.",
+    "unknown": "텍스트를 번역하지 못했습니다."
   }
 }

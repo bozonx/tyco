@@ -73,7 +73,7 @@ const visibleOptions = computed(() => {
   if (selectedLanguage.value && !selected)
     filtered.unshift({
       id: selectedLanguage.value,
-      name: `${translationLanguageLabel(selectedLanguage.value, locale.value)} (${t('settings.mainActionGroups.unavailable')})`,
+      name: `${translationLanguageLabel(selectedLanguage.value, locale.value)} (${t('settings.translationLanguageUnavailable')})`,
       label: '',
       keywords: [],
       disabled: true,

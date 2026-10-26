@@ -40,6 +40,14 @@ export function validatePluginLocales(
         )
           fail('Invalid plugin dictionary key')
         const entry = dictionary[key]
+        if (typeof entry === 'string') {
+          const stripped = entry
+            .replace(/\{['"]@['"]\}/g, '')
+            .replace(/\{['"]\|['"]\}/g, '')
+          if (stripped.includes('@') || stripped.includes('|')) {
+            fail(`Unescaped '@' or '|' in plugin message: ${key}`)
+          }
+        }
         return [
           key,
           typeof entry === 'string'

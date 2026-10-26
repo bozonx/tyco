@@ -653,7 +653,7 @@
     "contrastNormal": "Normalny",
     "copyActivationCommand": "Kopiuj polecenie",
     "copyHotkeyCommand": "Kopiuj przypisanie",
-    "correctionHotkeysHint": "Uruchamiają korektę z dowolnej aplikacji. Skróty można zmienić na stronie",
+    "correctionHotkeysHint": "Uruchamiaj korektę z dowolnej aplikacji. Możesz zmienić te skróty na karcie {tab}.",
     "correctionPageHint": "Ustawienia modelu i instrukcji do korekty tekstu. Używane zarówno do szybkiej korekty w miejscu, jak i korekty z podglądem.",
     "correctionPreviewHint": "Otwiera okno Tyco z podglądem różnic przed wstawieniem.",
     "correctionPrompt": "Prompt",
@@ -984,12 +984,13 @@
     "translationRulesInfo": "Dodatkowe instrukcje dla modelu AI: styl, ton, poziom formalności itp. Stosowane przy tłumaczeniu modelem AI i podczas korekty po tłumaczeniu. DeepL i Google ich nie używają, więc przy tych usługach instrukcje działają tylko z włączoną korektą.",
     "translationsHint": "Języki szybkiego tłumaczenia: w menu tłumaczenia każdy wybiera się własnym klawiszem. Przeciągaj karty, aby zmienić ich klawisze.",
     "translationsMethodHint": "Aby skonfigurować metodę tłumaczenia, przejdź do",
-    "translationsPageHint": "Metoda tłumaczenia, korekta wyniku, instrukcje dla AI i słowniczek. Języki i przyciski szybkiego tłumaczenia konfiguruje się na stronie",
+    "translationsPageHint": "Metoda tłumaczenia, korekta wyników, instrukcje AI i glosariusz. Języki i przyciski szybkiego tłumaczenia konfiguruje się na karcie {tab}.",
     "translationsTab": "Tłumaczenie",
     "uiScale": "Skala interfejsu",
     "unassignHotkey": "Usuń skrót",
     "vision": "Wejście obrazów",
-    "voiceTextCorrection": "Korekta tekstu z dyktowania"
+    "voiceTextCorrection": "Korekta tekstu z dyktowania",
+    "translationLanguageUnavailable": "niedostępny"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1118,8 +1119,31 @@
       "pt-PT": "portugalski;europejski portugalski",
       "uk-UA": "ukraiński",
       "zh-CN": "chiński",
-      "ja-JP": "japoński"
+      "ja-JP": "japoński",
+      "cs-CZ": "Czeski",
+      "el-GR": "Grecki",
+      "es": "Hiszpański",
+      "hr-HR": "Chorwacki",
+      "hu-HU": "Węgierski",
+      "ka-GE": "Gruziński",
+      "kk-KZ": "Kazachski",
+      "ko-KR": "Koreański",
+      "pl-PL": "Polski",
+      "ro-RO": "Rumuński",
+      "zh-TW": "Chiński tradycyjny"
     }
   },
-  "tray": { "show": "Pokaż Tyco", "quit": "Zakończ" }
+  "tray": {
+    "show": "Pokaż TyCo",
+    "quit": "Zakończ",
+    "tooltip": "TyCo — asystent pisania"
+  },
+  "translationErrors": {
+    "auth": "Błąd uwierzytelniania. Sprawdź swój klucz API.",
+    "quotaExceeded": "Przekroczono limit tłumaczeń. Sprawdź swój plan lub saldo.",
+    "unsupportedLanguage": "Ten język nie jest obsługiwany przez wybranego dostawcę tłumaczeń.",
+    "unavailable": "Usługa tłumaczenia jest obecnie niedostępna. Spróbuj ponownie później.",
+    "invalidRequest": "Żądanie tłumaczenia jest nieprawidłowe lub zostało odrzucone przez dostawcę.",
+    "unknown": "Nie udało się przetłumaczyć tekstu."
+  }
 }

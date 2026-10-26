@@ -64,7 +64,7 @@ const props = defineProps<{
   announce?: boolean
 }>()
 const emit = defineEmits<{ (e: 'remove'): void }>()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const previewId = useId()
 const isOpen = ref(false)
 const isArriving = ref(false)
@@ -72,7 +72,9 @@ const isArriving = ref(false)
 const label = computed(() => props.name || t(attachmentLabelKey(props.source)))
 const excerpt = computed(() => attachmentExcerpt(props.text))
 const size = computed(() =>
-  t('chat.attachmentSize', { count: props.text.length.toLocaleString() })
+  t('chat.attachmentSize', {
+    count: props.text.length.toLocaleString(locale.value),
+  })
 )
 const toggleTitle = computed(() =>
   attachmentTitle(t('chat.showAttachment'), props.text)

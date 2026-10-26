@@ -1,6 +1,11 @@
 import { createI18n } from 'vue-i18n'
 
-import { resolveUiLanguagePreference, toHtmlLang } from '../locale/language'
+import { adaptModShortcuts } from '../hotkeys/mod-shortcuts'
+import {
+  isRtlLanguage,
+  resolveUiLanguagePreference,
+  toHtmlLang,
+} from '../locale/language'
 import { DEFAULT_UI_LOCALE, type UiLocale, messages } from './messages'
 
 export const i18n = createI18n({
@@ -37,6 +42,10 @@ export function setI18nLocale(locale: UiLocale) {
 
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('lang', toHtmlLang(locale))
+    document.documentElement.setAttribute(
+      'dir',
+      isRtlLanguage(locale) ? 'rtl' : 'ltr'
+    )
   }
 }
 
@@ -52,5 +61,5 @@ export function translate(
   key: string,
   params?: Record<string, string | number>
 ): string {
-  return globalI18n.t(key, params)
+  return adaptModShortcuts(globalI18n.t(key, params))
 }

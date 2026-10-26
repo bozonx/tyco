@@ -27,7 +27,7 @@ export function protectTranslationText(
     .sort((a, b) => b.length - a.length)) {
     const pattern = new RegExp(
       `(?<![\\p{L}\\p{N}_])${escapeForRegExp(term)}(?![\\p{L}\\p{N}_])`,
-      'giu'
+      'gu'
     )
     text = text.replace(pattern, protect)
   }
@@ -35,16 +35,26 @@ export function protectTranslationText(
   return {
     text,
     restore(translated) {
+      // Tolerate whitespace variations and casing shifts introduced by MT providers
+      const leading = prefix.match(/^_+/)?.[0] ?? '__'
+      const clean = prefix.replace(/^_+/g, '')
+      const normalized = translated.replace(
+        new RegExp(
+          `${escapeForRegExp(leading)}(?:\\s*${escapeForRegExp(clean)})(\\d+)\\s*__`,
+          'gi'
+        ),
+        `${prefix}$1__`
+      )
       const missing = values
         .map((_, index) => `${prefix}${index}__`)
-        .filter((token) => translated.split(token).length !== 2)
+        .filter((token) => normalized.split(token).length !== 2)
       if (missing.length > 0) {
         throw new AiError(
           'invalid_output',
           `Translation changed ${missing.length} protected token(s)`
         )
       }
-      return translated.replace(
+      return normalized.replace(
         new RegExp(`${escapeForRegExp(prefix)}(\\d+)__`, 'g'),
         (token, index: string) => values[Number(index)] ?? token
       )

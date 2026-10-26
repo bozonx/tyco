@@ -73,6 +73,34 @@ describe('plugin locale completeness', () => {
         },
       })
     ).not.toThrow()
+    for (const invalidMessage of [
+      'me@example.com',
+      'Yes | No',
+      'hello @ world',
+    ]) {
+      expect(() =>
+        validatePluginManifest({
+          ...manifest,
+          locales: Object.fromEntries(
+            SUPPORTED_PLUGIN_LOCALES.map((locale) => [
+              locale,
+              { nested: { label: invalidMessage } },
+            ])
+          ),
+        })
+      ).toThrow()
+    }
+    expect(() =>
+      validatePluginManifest({
+        ...manifest,
+        locales: Object.fromEntries(
+          SUPPORTED_PLUGIN_LOCALES.map((locale) => [
+            locale,
+            { nested: { label: "me{'@'}example.com {'|'} test" } },
+          ])
+        ),
+      })
+    ).not.toThrow()
   })
 })
 

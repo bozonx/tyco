@@ -16,6 +16,7 @@ export interface VoiceParameter {
 export interface VoiceRoute {
   commandId: string
   phrase: string
+  suffix?: string
   parameters: readonly VoiceParameter[]
 }
 
@@ -45,8 +46,29 @@ interface Token {
   end: number
 }
 
+const segmenter =
+  typeof Intl !== 'undefined' && 'Segmenter' in Intl
+    ? new Intl.Segmenter(undefined, { granularity: 'word' })
+    : undefined
+
 /** Comparison never changes the original text or its UTF-16 offsets. */
 function tokenize(text: string): Token[] {
+  if (segmenter) {
+    const tokens: Token[] = []
+    for (const seg of segmenter.segment(text)) {
+      if (seg.isWordLike && /[\p{L}\p{M}\p{N}]/u.test(seg.segment)) {
+        tokens.push({
+          word: seg.segment
+            .toLowerCase()
+            .replace(/\u0307/g, '')
+            .replace(/\u0451/g, '\u0435'),
+          start: seg.index,
+          end: seg.index + seg.segment.length,
+        })
+      }
+    }
+    return tokens
+  }
   return [...text.matchAll(/[\p{L}\p{M}\p{N}]+/gu)].map((match) => ({
     word: match[0]
       .toLowerCase()
@@ -127,14 +149,23 @@ function resolveFrom(
   let parameterErrorDepth = 0
   for (const route of routes) {
     const phrase = words(route.phrase)
-    if (!phrase.length) continue
-    if (input.length < phrase.length && startsWith(phrase, input)) {
-      incomplete = true
-      incompleteDepth = Math.max(incompleteDepth, input.length)
-      continue
+    const suffixWords = route.suffix ? words(route.suffix) : []
+    if (!phrase.length && !route.parameters.length) continue
+    if (!phrase.length && !input.length) continue
+    if (phrase.length) {
+      if (
+        input.length > 0 &&
+        input.length < phrase.length &&
+        startsWith(phrase, input)
+      ) {
+        incomplete = true
+        incompleteDepth = Math.max(incompleteDepth, input.length)
+        continue
+      }
+      if (!startsWith(input, phrase)) continue
     }
-    if (!startsWith(input, phrase)) continue
     let offsets = [phrase.length]
+    let failedToMatchLeadingParameter = false
     const parameters: Record<string, string> = {}
     for (const parameter of route.parameters) {
       const next: number[] = []
@@ -143,7 +174,11 @@ function resolveFrom(
         for (const variant of parameter.variants) {
           const valueWords = words(variant)
           if (!valueWords.length) continue
-          if (tail.length < valueWords.length && startsWith(valueWords, tail)) {
+          if (
+            tail.length > 0 &&
+            tail.length < valueWords.length &&
+            startsWith(valueWords, tail)
+          ) {
             incomplete = true
             incompleteDepth = Math.max(incompleteDepth, offset + tail.length)
           }
@@ -152,6 +187,10 @@ function resolveFrom(
         }
       }
       if (!next.length) {
+        if (!phrase.length) {
+          failedToMatchLeadingParameter = true
+          break
+        }
         for (const offset of offsets) {
           const textOffset = argumentOffset(
             transcript,
@@ -176,6 +215,33 @@ function resolveFrom(
       }
       offsets = [...new Set(next)]
       parameters[parameter.name] = parameter.value
+    }
+    if (failedToMatchLeadingParameter) continue
+    if (suffixWords.length) {
+      const next: number[] = []
+      for (const offset of offsets) {
+        const tail = input.slice(offset)
+        if (
+          tail.length > 0 &&
+          tail.length < suffixWords.length &&
+          startsWith(suffixWords, tail)
+        ) {
+          incomplete = true
+          incompleteDepth = Math.max(incompleteDepth, offset + tail.length)
+        }
+        if (startsWith(tail, suffixWords))
+          next.push(offset + suffixWords.length)
+      }
+      if (!next.length && offsets.length) {
+        if (offsets.some((offset) => input.length > offset)) {
+          parameterError = true
+          parameterErrorDepth = Math.max(parameterErrorDepth, ...offsets)
+        } else {
+          incomplete = true
+          incompleteDepth = Math.max(incompleteDepth, ...offsets)
+        }
+      }
+      offsets = [...new Set(next)]
     }
     for (const offset of offsets) {
       const end = tokens[offset - 1]?.end ?? commandOffset
@@ -267,18 +333,40 @@ export function compileVoiceRoutes(
         const language = String(command.toolConfig.language ?? '')
         const variants =
           grammar.languages[language as keyof typeof grammar.languages]
-        if (variants)
-          routes.push({
-            commandId: command.id,
-            phrase: grammar.translate,
-            parameters: [
-              {
-                name: 'language',
-                value: language,
-                variants: variants.split(';'),
-              },
-            ],
-          })
+        if (variants) {
+          for (const template of grammar.translate.split(';')) {
+            const trimmed = template.trim()
+            if (!trimmed) continue
+            if (trimmed.includes('{language}') || trimmed.includes('~')) {
+              const [prefix = '', suffix = ''] =
+                trimmed.split(/\{language\}|~/u)
+              routes.push({
+                commandId: command.id,
+                phrase: prefix.trim(),
+                suffix: suffix.trim(),
+                parameters: [
+                  {
+                    name: 'language',
+                    value: language,
+                    variants: variants.split(';'),
+                  },
+                ],
+              })
+            } else {
+              routes.push({
+                commandId: command.id,
+                phrase: trimmed,
+                parameters: [
+                  {
+                    name: 'language',
+                    value: language,
+                    variants: variants.split(';'),
+                  },
+                ],
+              })
+            }
+          }
+        }
       } else if (command.toolId === 'core.askInChat') {
         routes.push({
           commandId: command.id,
@@ -302,6 +390,10 @@ export function findVoiceConflicts(
       prefixes = prefixes.flatMap((prefix) =>
         parameter.variants.map((variant) => [...prefix, ...words(variant)])
       )
+    }
+    const suffixWords = route.suffix ? words(route.suffix) : []
+    if (suffixWords.length) {
+      prefixes = prefixes.map((prefix) => [...prefix, ...suffixWords])
     }
     return prefixes
   }

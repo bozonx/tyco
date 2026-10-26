@@ -269,7 +269,7 @@ export interface DesktopCommands {
   }
   set_tool_catalog: { args: { tools: Array<ToolCatalogEntry> }; result: void }
   set_tray_menu_labels: {
-    args: { showLabel: string; quitLabel: string }
+    args: { showLabel: string; quitLabel: string; tooltipLabel?: string | null }
     result: void
   }
   show_desktop_notification: {

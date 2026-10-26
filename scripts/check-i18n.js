@@ -112,20 +112,31 @@ const DYNAMIC_KEYS = new Set([
   'voiceGrammar.translate',
   'voiceGrammar.actions.askInChat',
   ...[
-    'en-US',
+    'cs-CZ',
+    'de-DE',
+    'el-GR',
     'en-GB',
+    'en-US',
+    'es',
     'es-AR',
     'es-ES',
-    'ru-RU',
-    'tr-TR',
-    'de-DE',
     'fr-FR',
+    'hr-HR',
+    'hu-HU',
     'it-IT',
+    'ja-JP',
+    'ka-GE',
+    'kk-KZ',
+    'ko-KR',
+    'pl-PL',
     'pt-BR',
     'pt-PT',
+    'ro-RO',
+    'ru-RU',
+    'tr-TR',
     'uk-UA',
     'zh-CN',
-    'ja-JP',
+    'zh-TW',
   ].map((id) => `voiceGrammar.languages.${id}`),
   ...[
     'auto',
@@ -183,6 +194,14 @@ const DYNAMIC_KEYS = new Set([
     'truncation',
     'glossary',
   ].map((code) => `translationProblems.${code}`),
+  ...[
+    'auth',
+    'quotaExceeded',
+    'unsupportedLanguage',
+    'unavailable',
+    'invalidRequest',
+    'unknown',
+  ].map((code) => `translationErrors.${code}`),
   ...[
     'quickInput',
     'voice',
@@ -318,10 +337,20 @@ for (const localesDir of localeDirectories) {
             `\n❌ Unbalanced braces in ${relDir}/${file} at ${key}: "${value}"`
           )
         }
+        const stripped = value
+          .replace(/\{['"]@['"]\}/g, '')
+          .replace(/\{['"]\|['"]\}/g, '')
+        if (stripped.includes('@') || stripped.includes('|')) {
+          hasErrors = true
+          console.error(
+            `\n❌ Unescaped '@' or '|' in ${relDir}/${file} at ${key}: "${value}". Escape as {'@'} or {'|'}.`
+          )
+        }
       }
       if (
+        key !== 'voiceGrammar.translate' &&
         JSON.stringify(getPlaceholders(value)) !==
-        JSON.stringify(getPlaceholders(baseValue))
+          JSON.stringify(getPlaceholders(baseValue))
       ) {
         hasErrors = true
         console.error(

@@ -31,15 +31,21 @@ pub fn set_tray_menu_labels(
     app: &tauri::AppHandle,
     show_label: &str,
     quit_label: &str,
+    tooltip: Option<&str>,
 ) -> Result<(), AppError> {
     let menu = app.state::<TrayMenu>();
     menu.show_item.set_text(show_label)?;
     menu.quit_item.set_text(quit_label)?;
+    if let Some(tooltip) = tooltip {
+        if let Some(tray) = app.tray_by_id("main-tray") {
+            let _ = tray.set_tooltip(Some(tooltip));
+        }
+    }
     Ok(())
 }
 
 pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
-    let show_item = MenuItemBuilder::with_id(TRAY_SHOW_ID, "Show Tyco").build(app)?;
+    let show_item = MenuItemBuilder::with_id(TRAY_SHOW_ID, "Show TyCo").build(app)?;
     let quit_item = MenuItemBuilder::with_id(TRAY_QUIT_ID, "Quit").build(app)?;
     let menu = MenuBuilder::new(app)
         .items(&[&show_item])
@@ -62,7 +68,7 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
 
     builder
         .menu(&menu)
-        .tooltip("TyCo - typing companion")
+        .tooltip("TyCo — typing companion")
         .on_menu_event(move |app, event| {
             if app.try_state::<AppState>().is_some() {
                 match event.id.as_ref() {

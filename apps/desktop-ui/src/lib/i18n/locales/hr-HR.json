@@ -653,7 +653,7 @@
     "contrastNormal": "Normalan",
     "copyActivationCommand": "Kopiraj naredbu",
     "copyHotkeyCommand": "Kopiraj dodjelu",
-    "correctionHotkeysHint": "Pokreću ispravak iz bilo koje aplikacije. Prečace možete promijeniti na stranici",
+    "correctionHotkeysHint": "Pokrenite ispravak iz bilo koje aplikacije. Ove prečace možete promijeniti na kartici {tab}.",
     "correctionPageHint": "Postavke modela i uputa za ispravak teksta. Koristi se i za brzi ispravak na mjestu i za ispravak s pregledom.",
     "correctionPreviewHint": "Otvara Tyco prozor s prikazom izmjena prije umetanja.",
     "correctionPrompt": "Prompt",
@@ -984,12 +984,13 @@
     "translationRulesInfo": "Dodatne upute za AI model: stil, ton, razina formalnosti i slično. Primjenjuju se pri prevođenju AI modelom i pri ispravku nakon prijevoda. DeepL i Google ih ne koriste, pa s tim uslugama upute rade samo uz uključen ispravak.",
     "translationsHint": "Jezici brzog prijevoda: u izborniku prijevoda svaki se bira vlastitom tipkom. Povucite kartice da biste promijenili njihove tipke.",
     "translationsMethodHint": "Da biste postavili način prevođenja, idite na",
-    "translationsPageHint": "Način prevođenja, ispravak rezultata, AI upute i pojmovnik. Jezici i gumbi za brzi prijevod postavljaju se na stranici",
+    "translationsPageHint": "Način prijevoda, ispravak rezultata, AI upute i rječnik. Jezici i gumbi za brzi prijevod konfiguriraju se na kartici {tab}.",
     "translationsTab": "Prijevod",
     "uiScale": "Veličina sučelja",
     "unassignHotkey": "Ukloni prečac",
     "vision": "Unos slika",
-    "voiceTextCorrection": "Ispravak izdiktiranog teksta"
+    "voiceTextCorrection": "Ispravak izdiktiranog teksta",
+    "translationLanguageUnavailable": "nedostupno"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1118,8 +1119,31 @@
       "pt-PT": "portugalski;europski portugalski",
       "uk-UA": "ukrajinski",
       "zh-CN": "kineski",
-      "ja-JP": "japanski"
+      "ja-JP": "japanski",
+      "cs-CZ": "Češki",
+      "el-GR": "Grčki",
+      "es": "Španjolski",
+      "hr-HR": "Hrvatski",
+      "hu-HU": "Mađarski",
+      "ka-GE": "Gruzijski",
+      "kk-KZ": "Kazaški",
+      "ko-KR": "Korejski",
+      "pl-PL": "Poljski",
+      "ro-RO": "Rumunjski",
+      "zh-TW": "Tradicionalni kineski"
     }
   },
-  "tray": { "show": "Prikaži Tyco", "quit": "Izađi" }
+  "tray": {
+    "show": "Prikaži TyCo",
+    "quit": "Izađi",
+    "tooltip": "TyCo — pomoćnik pri tipkanju"
+  },
+  "translationErrors": {
+    "auth": "Provjera autentičnosti nije uspjela. Provjerite API ključ.",
+    "quotaExceeded": "Premašena je kvota prijevoda. Provjerite svoj plan ili limite.",
+    "unsupportedLanguage": "Ovaj jezik nije podržan od strane odabranog pružatelja prijevoda.",
+    "unavailable": "Usluga prevođenja trenutno nije dostupna. Pokušajte ponovno kasnije.",
+    "invalidRequest": "Zahtjev za prijevod nije valjan ili ga je pružatelj odbio.",
+    "unknown": "Prijevod teksta nije uspio."
+  }
 }

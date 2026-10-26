@@ -647,7 +647,7 @@
     "contrastNormal": "標準",
     "copyActivationCommand": "複製命令",
     "copyHotkeyCommand": "複製快捷鍵繫結",
-    "correctionHotkeysHint": "可從任何應用程式執行校對。快捷鍵可在該頁面中變更",
+    "correctionHotkeysHint": "從任何應用程式執行文字校對。您可以在 {tab} 分頁中變更這些快捷鍵。",
     "correctionPageHint": "用於文字校對的模型與提示詞設定。同時適用於原地快速校對與帶預覽的校對。",
     "correctionPreviewHint": "在插入之前開啟顯示變更差異的 Tyco 視窗。",
     "correctionPrompt": "提示詞",
@@ -978,12 +978,13 @@
     "translationRulesInfo": "給 AI 模型的額外指示：風格、語氣、正式程度等。在使用 AI 模型翻譯以及翻譯後校對期間套用。DeepL 與 Google 不使用這些指示，因此使用這些服務時，只有在啟用校對時指示才會生效。",
     "translationsHint": "快速翻譯語言：在翻譯選單中，每種語言均可透過專屬按鍵選取。拖曳卡片以變更其按鍵。",
     "translationsMethodHint": "若要設定翻譯方式，請前往",
-    "translationsPageHint": "翻譯方式、結果校對、AI 指示與術語表。語言與快速翻譯按鈕在該頁面進行設定",
+    "translationsPageHint": "翻譯方式、結果校對、AI 指令及術語表。語言與快速翻譯按鈕可在 {tab} 分頁中設定。",
     "translationsTab": "翻譯",
     "uiScale": "介面縮放",
     "unassignHotkey": "移除快捷鍵",
     "vision": "圖片輸入",
-    "voiceTextCorrection": "語音文字校對"
+    "voiceTextCorrection": "語音文字校對",
+    "translationLanguageUnavailable": "無法使用"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1112,8 +1113,31 @@
       "pt-PT": "葡萄牙文;歐洲葡萄牙文;葡萄牙語;歐洲葡萄牙語",
       "uk-UA": "烏克蘭文;烏克蘭語",
       "zh-CN": "中文;簡體中文;國語;華語",
-      "ja-JP": "日文;日語"
+      "ja-JP": "日文;日語",
+      "cs-CZ": "捷克語",
+      "el-GR": "希臘語",
+      "es": "西班牙語",
+      "hr-HR": "克羅埃西亞語",
+      "hu-HU": "匈牙利語",
+      "ka-GE": "喬治亞語",
+      "kk-KZ": "哈薩克語",
+      "ko-KR": "韓語;韓文",
+      "pl-PL": "波蘭語",
+      "ro-RO": "羅馬尼亞語",
+      "zh-TW": "繁體中文"
     }
   },
-  "tray": { "show": "顯示 Tyco", "quit": "結束" }
+  "tray": {
+    "show": "顯示 TyCo",
+    "quit": "結束",
+    "tooltip": "TyCo — 智慧輸入伴侶"
+  },
+  "translationErrors": {
+    "auth": "身分驗證失敗。請檢查您的 API 金鑰或存取憑證。",
+    "quotaExceeded": "已超出翻譯配額。請檢查您的方案或用量限制。",
+    "unsupportedLanguage": "所選翻譯提供商不支援此語言。",
+    "unavailable": "翻譯服務目前無法使用。請稍後再試。",
+    "invalidRequest": "翻譯請求無效或被提供商拒絕。",
+    "unknown": "翻譯文字失敗。"
+  }
 }
