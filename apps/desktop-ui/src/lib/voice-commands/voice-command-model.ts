@@ -49,6 +49,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   const selected = shallowRef<VoiceCandidate>()
   const error = ref('')
   let generation = 0
+  /** Why the session broke while `finish` was waiting for its last words */
+  let interruption: string | undefined
   let disposed = false
   let starting: Promise<void> | undefined
   let stopping = Promise.resolve()
@@ -185,6 +187,41 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     error.value = ''
   }
 
+  /**
+   * Settles a recording on its text and picks the command it names. A session
+   * that broke is never run on its own: its text may be cut short.
+   */
+  const review = async (
+    text: string,
+    intent: VoiceCommandFinishIntent,
+    brokenBy?: string
+  ) => {
+    transcript.value = text
+    liveTranscript.value = { committed: text, draft: '' }
+    inputText.value = text
+    stage.value = 'review'
+    const result = resolveVoice(
+      compileVoiceRoutes(commands.value, deps.tools),
+      text
+    )
+    if (result.kind === 'match') {
+      const candidate = result.candidates[0]!
+      choose(candidate)
+      // dropped speech is shown for review before anything runs
+      if (
+        !brokenBy &&
+        intent === 'run' &&
+        !candidate.commandOffset &&
+        canRun.value
+      )
+        await run()
+    } else if (result.parameterChoices?.[0]) {
+      choose(result.parameterChoices[0])
+    }
+    // after `choose`, which clears the error
+    if (brokenBy) error.value = brokenBy
+  }
+
   const finish = async (intent: VoiceCommandFinishIntent = 'run') => {
     if (stage.value !== 'recording') return
     stage.value = 'finishing'
@@ -196,27 +233,11 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       const finalText = await deps.finishDictation()
       if (current !== generation || disposed) return
       if (!finalText.trim()) {
-        error.value = 'voiceCommands.nothingHeard'
+        error.value = interruption ?? 'voiceCommands.nothingHeard'
         stage.value = 'review'
         return
       }
-      transcript.value = finalText
-      liveTranscript.value = { committed: finalText, draft: '' }
-      inputText.value = finalText
-      stage.value = 'review'
-      const result = resolveVoice(
-        compileVoiceRoutes(commands.value, deps.tools),
-        finalText
-      )
-      if (result.kind === 'match') {
-        const candidate = result.candidates[0]!
-        choose(candidate)
-        // dropped speech is shown for review before anything runs
-        if (intent === 'run' && !candidate.commandOffset && canRun.value)
-          await run()
-      } else if (result.parameterChoices?.[0]) {
-        choose(result.parameterChoices[0])
-      }
+      await review(finalText, intent, interruption)
     } catch (cause) {
       if (current !== generation || disposed) return
       error.value = cause instanceof Error ? cause.message : String(cause)
@@ -235,6 +256,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     const current = ++generation
     stage.value = 'recording'
     error.value = ''
+    interruption = undefined
     // Preserve the previous text until new recognition explicitly replaces it.
     selected.value = undefined
     liveTranscript.value = createLiveTranscriptState()
@@ -254,12 +276,22 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
         },
         onError: (cause) => {
           if (current !== generation || disposed) return
+          // `finish` still gets what was heard before the failure
+          if (stage.value === 'finishing') {
+            interruption = cause.message
+            return
+          }
           generation += 1
-          error.value = cause.message
-          stage.value = 'review'
           stopping = stopping
             .then(() => deps.cancelDictation())
             .catch(() => undefined)
+          const heard = liveTranscriptText(liveTranscript.value)
+          if (heard.trim()) {
+            void review(heard, 'review', cause.message)
+            return
+          }
+          error.value = cause.message
+          stage.value = 'review'
         },
       })
     })()

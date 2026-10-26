@@ -379,3 +379,49 @@ it('clears previous session transcript on cancel so reopening starts without act
   expect(model.canRunLive.value).toBe(false)
   expect(model.recordingPhase.value).toBe('awaiting-command')
 })
+
+it('keeps what was heard when the session breaks while recording', async () => {
+  const { model, deps } = setup()
+  let handlers!: Parameters<VoiceCommandDependencies['startDictation']>[0]
+  deps.startDictation = vi.fn(async (next) => {
+    handlers = next
+  })
+  await model.start()
+  handlers.onText({ committed: 'save note Keep', draft: 'this' })
+  handlers.onError(new Error('Connection lost'))
+  await Promise.resolve()
+
+  expect(model.stage.value).toBe('review')
+  expect(model.inputText.value).toBe('Keep this')
+  expect(model.command.value?.id).toBe('note')
+  expect(model.error.value).toBe('Connection lost')
+  expect(deps.cancelDictation).toHaveBeenCalled()
+  expect(deps.run).not.toHaveBeenCalled()
+})
+
+it('settles the text of a session that broke while finishing without running it', async () => {
+  const { model, deps } = setup()
+  let handlers!: Parameters<VoiceCommandDependencies['startDictation']>[0]
+  deps.startDictation = vi.fn(async (next) => {
+    handlers = next
+  })
+  let release!: (text: string) => void
+  deps.finishDictation = vi.fn(
+    () =>
+      new Promise<string>((resolve) => {
+        release = resolve
+      })
+  )
+  await model.start()
+  const finishing = model.finish('run')
+  await Promise.resolve()
+  await Promise.resolve()
+  handlers.onError(new Error('Timed out'))
+  release('save note Hello')
+  await finishing
+
+  expect(model.stage.value).toBe('review')
+  expect(model.inputText.value).toBe('Hello')
+  expect(model.error.value).toBe('Timed out')
+  expect(deps.run).not.toHaveBeenCalled()
+})

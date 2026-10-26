@@ -31,6 +31,7 @@ import { desktopClient } from '../../lib/desktop/client'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
+import { createKeyPressTracker } from '../../lib/ui/key-press-tracker'
 import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { useLlmStore } from '../../stores/llm'
@@ -136,7 +137,14 @@ useDismissibleLayer({
   },
 })
 
+// Enter on the button that opened this input, or a hotkey with Space, ends
+// with a keyup here that must not finish the dictation it just started
+const keyPresses = createKeyPressTracker()
+const trackKeyDown = (event: KeyboardEvent) => keyPresses.press(event.code)
+const forgetKeys = () => keyPresses.clear()
+
 function handleKeyUp(event: KeyboardEvent) {
+  if (!keyPresses.release(event.code)) return
   if (event.defaultPrevented) return
 
   if ((event.ctrlKey || event.metaKey) && event.code === 'Enter') {
@@ -214,7 +222,10 @@ watch(
 onMounted(async () => {
   // on the document, so it runs before the nav panel's Esc handler on the window
   document.addEventListener('keyup', handleKeyUp)
+  // capture: a handler that stops the keydown must not hide it from tracking
+  document.addEventListener('keydown', trackKeyDown, true)
   window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('blur', forgetKeys)
 
   // the level meter is decoration: the dictation must not wait for it, nor
   // fail with it
@@ -242,6 +253,8 @@ onUnmounted(() => {
   unlistenAudioLevel?.()
 
   document.removeEventListener('keyup', handleKeyUp)
+  document.removeEventListener('keydown', trackKeyDown, true)
   window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('blur', forgetKeys)
 })
 </script>

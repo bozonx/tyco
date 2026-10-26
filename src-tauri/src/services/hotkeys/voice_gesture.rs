@@ -12,9 +12,15 @@ use tauri::{AppHandle, Manager};
 use super::HotkeyTarget;
 
 const HOLD_DURATION: Duration = Duration::from_millis(400);
+/// Keyboard repeat presses again well within this (the longest repeat delay
+/// Windows offers is 1 s); a press after a longer silence is a new one, and
+/// the release of the old one was lost.
+const STALE_PRESS_GAP: Duration = Duration::from_millis(1_500);
 
 struct Press {
     started: Instant,
+    /// The last press event of this hold, keyboard repeat included
+    last_pressed: Instant,
     activation_id: Option<u64>,
     is_ready: bool,
     released_at: Option<Instant>,
@@ -26,13 +32,21 @@ pub(crate) struct VoiceGesture(Mutex<HashMap<String, Press>>);
 impl VoiceGesture {
     fn press(&self, id: &str, now: Instant) -> bool {
         let mut presses = self.0.locked();
-        if presses.contains_key(id) {
-            return false;
+        if let Some(press) = presses.get_mut(id) {
+            // an activation still in progress is never replaced
+            let is_stale = press.is_ready
+                && now.saturating_duration_since(press.last_pressed) >= STALE_PRESS_GAP;
+            if !is_stale {
+                press.last_pressed = now;
+                return false;
+            }
+            log::debug!("Voice hotkey {id} was released without a release event");
         }
         presses.insert(
             id.to_owned(),
             Press {
                 started: now,
+                last_pressed: now,
                 activation_id: None,
                 is_ready: false,
                 released_at: None,
@@ -156,6 +170,42 @@ mod tests {
         );
         assert_eq!(gesture.complete("voice", Some(9)), None);
         assert!(gesture.press("voice", now + HOLD_DURATION));
+    }
+
+    #[test]
+    fn keyboard_repeat_during_a_long_hold_is_not_a_new_press() {
+        let gesture = VoiceGesture::default();
+        let now = Instant::now();
+        assert!(gesture.press("voice", now));
+        gesture.complete("voice", Some(7));
+        // repeats keep the hold alive far past the stale gap
+        for step in 1..=10 {
+            assert!(!gesture.press("voice", now + STALE_PRESS_GAP / 2 * step));
+        }
+        assert_eq!(gesture.release("voice", now + STALE_PRESS_GAP * 5), Some(7));
+    }
+
+    #[test]
+    fn a_lost_release_does_not_disable_the_hotkey() {
+        let gesture = VoiceGesture::default();
+        let now = Instant::now();
+        assert!(gesture.press("voice", now));
+        gesture.complete("voice", Some(7));
+        // no release arrives; the next press after a pause starts afresh
+        assert!(gesture.press("voice", now + STALE_PRESS_GAP));
+        gesture.complete("voice", Some(8));
+        assert_eq!(
+            gesture.release("voice", now + STALE_PRESS_GAP + HOLD_DURATION),
+            Some(8)
+        );
+    }
+
+    #[test]
+    fn a_slow_activation_is_never_replaced() {
+        let gesture = VoiceGesture::default();
+        let now = Instant::now();
+        assert!(gesture.press("voice", now));
+        assert!(!gesture.press("voice", now + STALE_PRESS_GAP * 2));
     }
 
     #[test]

@@ -6,6 +6,29 @@ import {
 
 import { confirmedSocket } from './confirmed-socket'
 
+interface DeepgramLiveMessage {
+  type?: string
+  description?: string
+  message?: string
+  channel?: { alternatives?: { transcript?: string }[] }
+}
+
+/**
+ * The kit skips a result without text, yet an empty one is how Deepgram drops
+ * its previous guess: noise it heard as words and then settled as nothing.
+ * Skipped, that guess would stay on screen and end up in the text. A single
+ * space reaches the transcript as a result that clears the guess and adds no
+ * words.
+ */
+export function keepEmptyDeepgramResult(message: string): string {
+  const event = JSON.parse(message) as DeepgramLiveMessage
+  const alternative = event.channel?.alternatives?.[0]
+  if (event.type !== 'Results' || !alternative || alternative.transcript)
+    return message
+  alternative.transcript = ' '
+  return JSON.stringify(event)
+}
+
 /** Deepgram's terminal Metadata confirms that CloseStream flushed the audio. */
 export const createDeepgramProvider: SttProviderFactory = (init) =>
   deepgramSttProvider({
@@ -14,11 +37,7 @@ export const createDeepgramProvider: SttProviderFactory = (init) =>
       providerName: 'Deepgram',
       providerId: 'deepgram',
       confirmsFinal: (message) => {
-        const event = JSON.parse(message) as {
-          type?: string
-          description?: string
-          message?: string
-        }
+        const event = JSON.parse(message) as DeepgramLiveMessage
         if (event.type === 'Error')
           throw new AiError(
             'provider_unavailable',
@@ -29,5 +48,6 @@ export const createDeepgramProvider: SttProviderFactory = (init) =>
           )
         return event.type === 'Metadata'
       },
+      rewrite: keepEmptyDeepgramResult,
     }),
   })

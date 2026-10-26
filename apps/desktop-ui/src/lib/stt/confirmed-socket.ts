@@ -14,6 +14,8 @@ export interface ConfirmedSocketOptions {
    * the message confirms that the final audio was transcribed
    */
   confirmsFinal: (message: string) => boolean
+  /** Adapts one message before the provider reads it */
+  rewrite?: (message: string) => string
 }
 
 /**
@@ -37,7 +39,7 @@ export function confirmedSocket(
           let finalized = false
           for await (const message of session.messages) {
             if (options.confirmsFinal(message)) finalized = true
-            yield message
+            yield options.rewrite ? options.rewrite(message) : message
           }
           if (!finalized)
             throw new AiError(

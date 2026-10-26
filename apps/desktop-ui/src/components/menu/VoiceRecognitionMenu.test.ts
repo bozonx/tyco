@@ -220,9 +220,26 @@ describe('VoiceRecognitionMenu', () => {
       })
 
     const keyUp = async (init: KeyboardEventInit) => {
+      document.dispatchEvent(new KeyboardEvent('keydown', init))
       document.dispatchEvent(new KeyboardEvent('keyup', init))
       await flushPromises()
     }
+
+    it.each(['Enter', 'Space'])(
+      'ignores a %s release whose press opened the input',
+      async (code) => {
+        const wrapper = mountVoiceInput('insertIntoTarget')
+        await flushPromises()
+
+        document.dispatchEvent(new KeyboardEvent('keyup', { code }))
+        await flushPromises()
+
+        expect(mocks.finishDictation).not.toHaveBeenCalled()
+        await keyUp({ code })
+        expect(wrapper.emitted('corrected')?.[0]?.[3]).toBe('insert')
+        wrapper.unmount()
+      }
+    )
 
     it.each([
       ['submitToChat', { code: 'Enter' }, 'submit'],
