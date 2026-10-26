@@ -1101,7 +1101,8 @@
     "noMatch": "Nem sikerült parancsot felismerni. Válasszon a listából.",
     "ambiguous": "Több parancs is egyezik. Válassza ki a megfelelőt a listából.",
     "languageMissing": "A nyelv nem lett felismerve. Válassza a fordítást a listából, és adjon meg egy nyelvet.",
-    "nothingHeard": "Nem sikerült beszédet felismerni. Vegye fel újra."
+    "nothingHeard": "Nem sikerült beszédet felismerni. Vegye fel újra.",
+    "recordingLimitReached": "Elérte az egyórás felvételi korlátot"
   },
   "voiceGrammar": {
     "translate": "fordítsd le",

@@ -19,5 +19,6 @@ export const useDictationStore = defineStore('dictation', () => {
       clientLogger.error('Could not cancel the dictation session', error, 'stt')
     })
   })
-  return { ...model, ...createDictationOwnership(model) }
+  // inputs reach the microphone only through a session of their own
+  return createDictationOwnership(model)
 })

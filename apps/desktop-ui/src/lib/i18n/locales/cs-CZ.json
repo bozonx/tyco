@@ -1098,7 +1098,8 @@
     "noMatch": "Příkaz nebyl rozpoznán. Vyberte ho ze seznamu.",
     "ambiguous": "Odpovídá více příkazů. Vyberte ze seznamu ten správný.",
     "languageMissing": "Jazyk nebyl rozpoznán. Vyberte ze seznamu překlad a zvolte jazyk.",
-    "nothingHeard": "Nebyla rozpoznána žádná řeč. Nahrajte znovu."
+    "nothingHeard": "Nebyla rozpoznána žádná řeč. Nahrajte znovu.",
+    "recordingLimitReached": "Byl dosažen hodinový limit nahrávání"
   },
   "voiceGrammar": {
     "translate": "přelož do",

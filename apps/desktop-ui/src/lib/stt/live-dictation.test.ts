@@ -109,6 +109,26 @@ describe('createLiveDictation', () => {
     expect(t.requests[0].signal?.aborted).toBe(true)
   })
 
+  it('does not let a provider that ignores the abort block the next start', async () => {
+    const t = setup()
+    const dictation = createLiveDictation({
+      capture: t.capture,
+      // the parts never end, whatever the abort signal says
+      stt: { transcribeLive: () => t.parts.values },
+      cancelTimeoutMs: 10,
+    })
+    const request = {
+      model,
+      hasApiKey: true,
+      onText: vi.fn(),
+      onError: vi.fn(),
+    }
+    await dictation.start(request)
+    await dictation.cancel()
+    await dictation.start(request)
+    expect(t.capture.start).toHaveBeenCalledTimes(2)
+  })
+
   it('cancels quietly', async () => {
     const t = setup()
     await t.start()

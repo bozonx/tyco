@@ -56,6 +56,35 @@ function setup() {
 }
 
 describe('voice command session', () => {
+  it('stops a forgotten recording at the limit and waits for review', async () => {
+    vi.useFakeTimers()
+    try {
+      const { model, deps } = setup()
+      await model.start()
+      await vi.advanceTimersByTimeAsync(3_600_000)
+      expect(deps.finishDictation).toHaveBeenCalledOnce()
+      expect(model.stage.value).toBe('review')
+      expect(model.error.value).toBe('voiceCommands.recordingLimitReached')
+      expect(deps.run).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('clears the limit when the recording is finished or cancelled', async () => {
+    vi.useFakeTimers()
+    try {
+      const { model } = setup()
+      await model.start()
+      await model.finish('review')
+      await model.cancel()
+      expect(vi.getTimerCount()).toBe(0)
+      expect(model.error.value).toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('previews revised partials, waits for final STT and requires confirmation when finished for review', async () => {
     const { model, deps, partial } = setup()
     await model.start()

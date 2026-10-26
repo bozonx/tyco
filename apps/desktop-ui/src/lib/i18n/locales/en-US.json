@@ -1104,7 +1104,8 @@
     "noMatch": "No command recognized. Pick one from the list.",
     "ambiguous": "Several commands match. Pick the right one from the list.",
     "languageMissing": "Language not recognized. Pick translation from the list and choose a language.",
-    "nothingHeard": "No speech recognized. Record again."
+    "nothingHeard": "No speech recognized. Record again.",
+    "recordingLimitReached": "The one hour recording limit was reached"
   },
   "voiceGrammar": {
     "translate": "translate to",

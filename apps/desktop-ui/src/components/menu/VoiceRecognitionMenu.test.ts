@@ -347,7 +347,7 @@ describe('VoiceRecognitionMenu', () => {
     expect(wrapper.emitted('corrected')).toBeUndefined()
   })
 
-  it('does not save a partial correction after cancellation or clear a new operation', async () => {
+  it('keeps the raw text when its correction is cancelled, ignoring a late reply', async () => {
     let resolve!: (text: string) => void
     mocks.shouldFormatRecognizedText.mockReturnValue(true)
     mocks.voiceCorrection.mockReturnValue(
@@ -368,8 +368,9 @@ describe('VoiceRecognitionMenu', () => {
     resolve('Partial correction')
     await flushPromises()
     expect(save).not.toHaveBeenCalled()
-    expect(wrapper.emitted('corrected')).toBeUndefined()
-    expect(wrapper.emitted('cancelled')).toHaveLength(1)
+    expect(wrapper.emitted('corrected')).toHaveLength(1)
+    expect(wrapper.emitted('corrected')![0]![2]).toBeUndefined()
+    expect(wrapper.emitted('cancelled')).toBeUndefined()
     expect(menu.pendingModal).toEqual({ label: 'New operation' })
     wrapper.unmount()
   })

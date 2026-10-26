@@ -23,11 +23,33 @@ export class DictationError extends Error {
 
 /** How long the provider may take for its last words once the audio ends */
 const FINISH_TIMEOUT_MS = 10_000
+/**
+ * How long an aborted session may take to wind down. A provider stream that
+ * ignores the abort must not block every later dictation.
+ */
+const CANCEL_TIMEOUT_MS = 5_000
+
+/** Waits for `promise`, but no longer than `ms` */
+async function settleWithin(
+  promise: Promise<unknown> | undefined,
+  ms: number
+): Promise<void> {
+  if (!promise) return
+  let timer: ReturnType<typeof setTimeout> | undefined
+  await Promise.race([
+    promise.catch(() => undefined),
+    new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, ms)
+    }),
+  ])
+  clearTimeout(timer)
+}
 
 export interface LiveDictationDependencies {
   capture: VoiceCaptureControl
   stt: SttClient
   finishTimeoutMs?: number
+  cancelTimeoutMs?: number
 }
 
 export interface LiveDictationStart {
@@ -64,11 +86,13 @@ export function createLiveDictation(
   let onError: ((error: Error) => void) | undefined
 
   const stopCapture = () => deps.capture.stop().catch(() => undefined)
+  const settleSession = () =>
+    settleWithin(session, deps.cancelTimeoutMs ?? CANCEL_TIMEOUT_MS)
 
   return {
     async start(request) {
       controller?.abort()
-      await session
+      await settleSession()
       const current = new AbortController()
       controller = current
       state = createLiveTranscriptState()
@@ -152,7 +176,7 @@ export function createLiveDictation(
     async cancel() {
       controller?.abort()
       await stopCapture()
-      await session
+      await settleSession()
     },
   }
 }

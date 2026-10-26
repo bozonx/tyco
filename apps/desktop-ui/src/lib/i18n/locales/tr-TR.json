@@ -1101,7 +1101,8 @@
     "noMatch": "Komut tanınmadı. Listeden birini seçin.",
     "ambiguous": "Birden fazla komut eşleşiyor. Listeden doğru olanı seçin.",
     "languageMissing": "Dil tanınmadı. Listeden çeviriyi seçin ve dili belirtin.",
-    "nothingHeard": "Konuşma tanınmadı. Yeniden kaydedin."
+    "nothingHeard": "Konuşma tanınmadı. Yeniden kaydedin.",
+    "recordingLimitReached": "Bir saatlik kayıt sınırına ulaşıldı"
   },
   "voiceGrammar": {
     "translate": "{language} çevir;{language}ye çevir;{language}e çevir;çevir",

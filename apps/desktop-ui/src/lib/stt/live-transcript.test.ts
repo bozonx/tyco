@@ -57,4 +57,16 @@ describe('live transcript', () => {
 
     expect(state).toEqual({ committed: 'Hello.', draft: '' })
   })
+
+  it('joins segments of unspaced scripts without a space', () => {
+    expect(liveTranscriptText({ committed: '你好。', draft: '世界' })).toBe(
+      '你好。世界'
+    )
+    expect(liveTranscriptText({ committed: 'สวัสดี', draft: 'ครับ' })).toBe(
+      'สวัสดีครับ'
+    )
+    expect(liveTranscriptText({ committed: '你好', draft: 'world' })).toBe(
+      '你好 world'
+    )
+  })
 })

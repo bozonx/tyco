@@ -11,6 +11,10 @@ import {
 } from '../stt/live-transcript'
 import type { ToolLookup } from '../tools/tool-types'
 import {
+  createSingleTimer,
+  type TimerDependencies,
+} from '../timers/single-timer'
+import {
   compileVoiceRoutes,
   isVoiceCommand,
   resolveVoice,
@@ -18,7 +22,7 @@ import {
   type VoiceCandidate,
 } from './voice-resolver'
 
-export interface VoiceCommandDependencies {
+export interface VoiceCommandDependencies extends TimerDependencies {
   commands: () => readonly CommandConfig[]
   builtInCommands?: () => readonly CommandConfig[]
   tools: ToolLookup
@@ -30,7 +34,12 @@ export interface VoiceCommandDependencies {
     text: string,
     signal: AbortSignal
   ) => Promise<InvocationOutcome>
+  /** Silence is billed too: a forgotten recording must not run all day */
+  maxRecordingMs?: number
 }
+
+const MAX_RECORDING_MS = 3_600_000
+const RECORDING_LIMIT_ERROR = 'voiceCommands.recordingLimitReached'
 
 /** Whether a finished recording runs its command at once or waits for review */
 export type VoiceCommandFinishIntent = 'run' | 'review'
@@ -55,6 +64,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   let starting: Promise<void> | undefined
   let stopping = Promise.resolve()
   let controller: AbortController | undefined
+  const limitTimer = createSingleTimer(deps)
   const commands = computed(() => [
     ...(deps.builtInCommands?.() ?? []),
     ...deps.commands().filter((item) => !isBuiltInVoiceCommand(item)),
@@ -224,6 +234,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
 
   const finish = async (intent: VoiceCommandFinishIntent = 'run') => {
     if (stage.value !== 'recording') return
+    limitTimer.stop()
     stage.value = 'finishing'
     const current = generation
     try {
@@ -260,6 +271,12 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     // Preserve the previous text until new recognition explicitly replaces it.
     selected.value = undefined
     liveTranscript.value = createLiveTranscriptState()
+    limitTimer.start(() => {
+      if (current !== generation || stage.value !== 'recording') return
+      // the text is kept for review: it is not run on its own
+      interruption = RECORDING_LIMIT_ERROR
+      void finish('review')
+    }, deps.maxRecordingMs ?? MAX_RECORDING_MS)
     const pending = (async () => {
       await stopping
       if (current !== generation || disposed) return
@@ -282,6 +299,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
             return
           }
           generation += 1
+          limitTimer.stop()
           stopping = stopping
             .then(() => deps.cancelDictation())
             .catch(() => undefined)
@@ -297,6 +315,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     })()
       .catch((cause: unknown) => {
         if (current !== generation || disposed) return
+        limitTimer.stop()
         error.value = cause instanceof Error ? cause.message : String(cause)
         stage.value = 'review'
       })
@@ -309,8 +328,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
 
   const cancel = () => {
     generation += 1
+    limitTimer.stop()
     controller?.abort()
     stage.value = 'idle'
+    error.value = ''
     transcript.value = ''
     inputText.value = ''
     selected.value = undefined

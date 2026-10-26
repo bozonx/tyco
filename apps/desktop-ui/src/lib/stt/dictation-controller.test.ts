@@ -114,7 +114,7 @@ describe('dictation controller', () => {
     expect(controller.shouldFormatRecognizedText()).toBe(true)
     await controller.startDictation(handlers)
     expect(deps.dictation.start).toHaveBeenCalledWith(
-      expect.objectContaining({ language: 'en' })
+      expect.objectContaining({ language: 'en-US' })
     )
     config.stt.isVoiceCorrectionEnabled = false
     expect(controller.shouldFormatRecognizedText()).toBe(false)

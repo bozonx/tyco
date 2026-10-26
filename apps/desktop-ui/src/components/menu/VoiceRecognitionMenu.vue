@@ -27,7 +27,7 @@ import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
-import { desktopClient } from '../../lib/desktop/client'
+import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
@@ -39,7 +39,6 @@ import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
 import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
 import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
-import { DESKTOP_EVENTS } from '@tyco/shared'
 
 const props = defineProps<VoiceMenuParams>()
 const emit = defineEmits<{
@@ -65,9 +64,10 @@ const { toastKey, toastText } = useToast()
 const { t } = useI18n()
 const desktopStore = useDesktopStore()
 let sessionActivationId = desktopStore.desktopState.activationId
+const isSameActivation = () =>
+  sessionActivationId === desktopStore.desktopState.activationId
 const ownsActivation = () =>
-  sessionActivationId === desktopStore.desktopState.activationId &&
-  desktopStore.desktopState.isWindowShown
+  isSameActivation() && desktopStore.desktopState.isWindowShown
 const historyStore = useHistoryStore()
 const menuModalsStore = useMenuModalsStore()
 // a click elsewhere must not cut a dictation short
@@ -96,8 +96,10 @@ const model = createVoiceRecognition({
     invokeCallback(props.onCancel)
     emit('cancelled')
   },
+  // the text is delivered even if the window was hidden while it was being
+  // transcribed or corrected: it cannot be dictated the same way twice
   onCorrected: (result, recognized, corrected, intent) => {
-    if (ownsActivation())
+    if (isSameActivation())
       emit('corrected', result, recognized, corrected, intent)
   },
   t,
@@ -109,9 +111,6 @@ const {
   isFinishing,
   isStarted,
   isTranscribing,
-  audioLevel,
-  audioPeak,
-  recordingDurationMs,
   cancel,
   finish,
   startSession,
@@ -125,8 +124,9 @@ const finishHotkey = useVoiceFinishSignal(
     if (ownsActivation()) void finish(primaryIntent())
   }
 )
-let unlistenAudioLevel: (() => void) | undefined
-let unmounted = false
+const { audioLevel, audioPeak, recordingDurationMs } = useVoiceRecordingMeter(
+  () => isStarted.value
+)
 
 useDismissibleLayer({
   isOpen: ownsActivation,
@@ -227,30 +227,14 @@ onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('blur', forgetKeys)
 
-  // the level meter is decoration: the dictation must not wait for it, nor
-  // fail with it
-  void desktopClient
-    .listen(DESKTOP_EVENTS.VOICE_AUDIO_LEVEL, (payload) => {
-      audioLevel.value = payload.level
-      audioPeak.value = payload.peak
-    })
-    .then((unlisten) => {
-      if (unmounted) unlisten()
-      else unlistenAudioLevel = unlisten
-    })
-    .catch(() => undefined)
-
   if (desktopStore.desktopState?.isWindowShown !== false) {
     await startSession()
   }
 })
 
 onUnmounted(() => {
-  unmounted = true
   releaseDismissHold()
   model.dispose()
-
-  unlistenAudioLevel?.()
 
   document.removeEventListener('keyup', handleKeyUp)
   document.removeEventListener('keydown', trackKeyDown, true)

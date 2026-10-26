@@ -1104,7 +1104,8 @@
     "noMatch": "Nicio comandă recunoscută. Alegeți una din listă.",
     "ambiguous": "Se potrivesc mai multe comenzi. Alegeți-o pe cea corectă din listă.",
     "languageMissing": "Limba nu a fost recunoscută. Alegeți traducerea din listă și selectați o limbă.",
-    "nothingHeard": "Nu s-a recunoscut vorbire. Înregistrați din nou."
+    "nothingHeard": "Nu s-a recunoscut vorbire. Înregistrați din nou.",
+    "recordingLimitReached": "S-a atins limita de înregistrare de o oră"
   },
   "voiceGrammar": {
     "translate": "tradu în",

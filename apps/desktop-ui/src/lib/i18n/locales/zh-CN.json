@@ -1098,7 +1098,8 @@
     "noMatch": "未识别出命令。请从列表中选择。",
     "ambiguous": "匹配到多个命令。请从列表中选择正确的命令。",
     "languageMissing": "未识别出语言。请从列表中选择翻译并选择一种语言。",
-    "nothingHeard": "未识别到语音。请重新录制。"
+    "nothingHeard": "未识别到语音。请重新录制。",
+    "recordingLimitReached": "已达到 1 小时录音上限"
   },
   "voiceGrammar": {
     "translate": "翻译成;翻译为",

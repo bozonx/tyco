@@ -1101,7 +1101,8 @@
     "noMatch": "認識されたコマンドがありません。一覧から選択してください。",
     "ambiguous": "複数のコマンドが一致しました。一覧から適切なものを選択してください。",
     "languageMissing": "言語が認識されませんでした。一覧から翻訳を選択し、言語を指定してください。",
-    "nothingHeard": "音声が認識されませんでした。もう一度録音してください。"
+    "nothingHeard": "音声が認識されませんでした。もう一度録音してください。",
+    "recordingLimitReached": "1時間の録音制限に達しました"
   },
   "voiceGrammar": {
     "translate": "{language}に翻訳して;{language}に翻訳;翻訳",

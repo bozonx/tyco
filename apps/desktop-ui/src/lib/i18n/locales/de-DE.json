@@ -1104,7 +1104,8 @@
     "noMatch": "Kein Befehl erkannt. Wählen Sie einen aus der Liste.",
     "ambiguous": "Mehrere Befehle passen. Wählen Sie den richtigen aus der Liste.",
     "languageMissing": "Sprache nicht erkannt. Wählen Sie die Übersetzung in der Liste und eine Sprache.",
-    "nothingHeard": "Keine Sprache erkannt. Nehmen Sie erneut auf."
+    "nothingHeard": "Keine Sprache erkannt. Nehmen Sie erneut auf.",
+    "recordingLimitReached": "Das Aufnahmelimit von einer Stunde wurde erreicht"
   },
   "voiceGrammar": {
     "translate": "übersetze auf",

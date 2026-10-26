@@ -16,6 +16,9 @@ const HOLD_DURATION: Duration = Duration::from_millis(400);
 /// Windows offers is 1 s); a press after a longer silence is a new one, and
 /// the release of the old one was lost.
 const STALE_PRESS_GAP: Duration = Duration::from_millis(1_500);
+/// An activation that has not completed by then never will (it failed before
+/// reporting back): the hotkey must not stay dead until a restart.
+const ACTIVATION_TIMEOUT: Duration = Duration::from_secs(30);
 
 struct Press {
     started: Instant,
@@ -33,9 +36,12 @@ impl VoiceGesture {
     fn press(&self, id: &str, now: Instant) -> bool {
         let mut presses = self.0.locked();
         if let Some(press) = presses.get_mut(id) {
-            // an activation still in progress is never replaced
-            let is_stale = press.is_ready
-                && now.saturating_duration_since(press.last_pressed) >= STALE_PRESS_GAP;
+            // an activation still in progress is not replaced, unless it is lost
+            let is_stale = if press.is_ready {
+                now.saturating_duration_since(press.last_pressed) >= STALE_PRESS_GAP
+            } else {
+                now.saturating_duration_since(press.started) >= ACTIVATION_TIMEOUT
+            };
             if !is_stale {
                 press.last_pressed = now;
                 return false;
@@ -206,6 +212,15 @@ mod tests {
         let now = Instant::now();
         assert!(gesture.press("voice", now));
         assert!(!gesture.press("voice", now + STALE_PRESS_GAP * 2));
+    }
+
+    #[test]
+    fn a_lost_activation_does_not_disable_the_hotkey() {
+        let gesture = VoiceGesture::default();
+        let now = Instant::now();
+        assert!(gesture.press("voice", now));
+        // `complete` never comes
+        assert!(gesture.press("voice", now + ACTIVATION_TIMEOUT));
     }
 
     #[test]

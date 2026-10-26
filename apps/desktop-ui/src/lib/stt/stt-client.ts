@@ -62,8 +62,13 @@ export function buildSttCatalog(model: SttModel): Catalog {
     throw new Error('The speech recognition model name is empty')
   }
   const baseUrl = model.baseUrl?.trim()
-  if (!isKeyRequiredForSttProvider(model.provider) && !baseUrl) {
-    throw new Error('The speech recognition server address is empty')
+  if (!isKeyRequiredForSttProvider(model.provider)) {
+    if (!baseUrl)
+      throw new Error('The speech recognition server address is empty')
+    if (!/^wss?:\/\/[^/\s]+/i.test(baseUrl))
+      throw new Error(
+        'The speech recognition server address must start with ws:// or wss://'
+      )
   }
 
   return Catalog.fromObject({
@@ -124,6 +129,12 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
 
   return {
     transcribeLive(request) {
+      // `multi` is Deepgram's; a self-hosted server runs its one model
+      const language =
+        request.language ??
+        (request.model.provider === 'deepgram'
+          ? MULTILINGUAL_LANGUAGE
+          : undefined)
       return kitFor(request.model).transcribeStream({
         audio: request.audio,
         sampleRate: request.sampleRate,
@@ -132,10 +143,7 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
           taskClass: TRANSCRIPTION_TASK,
           requestedModel: request.model.provider,
         },
-        options: {
-          language: request.language ?? MULTILINGUAL_LANGUAGE,
-          punctuation: true,
-        },
+        options: { ...(language ? { language } : {}), punctuation: true },
         ...(request.hasApiKey
           ? {
               keys: {

@@ -31,7 +31,6 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
     tools,
     ...useDictationActions(),
     run: async (command, text, signal) => {
-      await history.saveOutput(text).catch(() => undefined)
       if (signal.aborted) return { success: false, cancelled: true }
       const current = [
         ...builtInCommands.value,
@@ -43,13 +42,15 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
         voiceInputIssue(current, text, tools)
       )
         return { success: false }
+      await history.saveOutput(text).catch(() => undefined)
+      if (signal.aborted) return { success: false, cancelled: true }
       const outcome = await runner.run(current, text, {
         source: 'voice',
         signal,
       })
       await ipc
         .call('log_command_run', {
-          record: commandRunRecord(command, 'voice', text, outcome),
+          record: commandRunRecord(current, 'voice', text, outcome),
         })
         .catch(() => undefined)
       return outcome

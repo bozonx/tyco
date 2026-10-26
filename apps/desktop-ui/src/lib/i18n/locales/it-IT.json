@@ -1104,7 +1104,8 @@
     "noMatch": "Nessun comando riconosciuto. Scegline uno dall’elenco.",
     "ambiguous": "Corrispondono più comandi. Scegli quello giusto dall’elenco.",
     "languageMissing": "Lingua non riconosciuta. Scegli la traduzione dall’elenco e seleziona una lingua.",
-    "nothingHeard": "Nessun parlato riconosciuto. Registra di nuovo."
+    "nothingHeard": "Nessun parlato riconosciuto. Registra di nuovo.",
+    "recordingLimitReached": "È stato raggiunto il limite di registrazione di un’ora"
   },
   "voiceGrammar": {
     "translate": "traduci in",

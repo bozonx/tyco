@@ -13,6 +13,25 @@ interface DeepgramLiveMessage {
   channel?: { alternatives?: { transcript?: string }[] }
 }
 
+/** The last message read: each one is checked and then rewritten */
+let lastParsed: { message: string; event: DeepgramLiveMessage } | undefined
+
+function parseDeepgramMessage(message: string): DeepgramLiveMessage {
+  if (lastParsed?.message === message) return lastParsed.event
+  let event: DeepgramLiveMessage
+  try {
+    event = JSON.parse(message) as DeepgramLiveMessage
+  } catch {
+    throw new AiError(
+      'provider_unavailable',
+      'Deepgram sent a message that is not JSON',
+      { provider: 'deepgram' }
+    )
+  }
+  lastParsed = { message, event }
+  return event
+}
+
 /**
  * The kit skips a result without text, yet an empty one is how Deepgram drops
  * its previous guess: noise it heard as words and then settled as nothing.
@@ -21,12 +40,20 @@ interface DeepgramLiveMessage {
  * words.
  */
 export function keepEmptyDeepgramResult(message: string): string {
-  const event = JSON.parse(message) as DeepgramLiveMessage
+  const event = parseDeepgramMessage(message)
   const alternative = event.channel?.alternatives?.[0]
   if (event.type !== 'Results' || !alternative || alternative.transcript)
     return message
-  alternative.transcript = ' '
-  return JSON.stringify(event)
+  return JSON.stringify({
+    ...event,
+    channel: {
+      ...event.channel,
+      alternatives: [
+        { ...alternative, transcript: ' ' },
+        ...(event.channel?.alternatives?.slice(1) ?? []),
+      ],
+    },
+  })
 }
 
 /** Deepgram's terminal Metadata confirms that CloseStream flushed the audio. */
@@ -37,7 +64,7 @@ export const createDeepgramProvider: SttProviderFactory = (init) =>
       providerName: 'Deepgram',
       providerId: 'deepgram',
       confirmsFinal: (message) => {
-        const event = JSON.parse(message) as DeepgramLiveMessage
+        const event = parseDeepgramMessage(message)
         if (event.type === 'Error')
           throw new AiError(
             'provider_unavailable',

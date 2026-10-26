@@ -85,12 +85,17 @@ const startsWith = (input: readonly string[], prefix: readonly string[]) =>
 
 /**
  * Only whitespace and separator punctuation are removed at the boundary.
- * Quotes, brackets, signs and the punctuation inside the argument survive.
+ * Quotes, brackets, signs and the punctuation inside the argument survive. A
+ * dash set off by spaces is a separator too, unless it is a hyphen, which may
+ * start a list item.
  */
 function argumentOffset(text: string, end: number): number {
   const separator =
-    text.slice(end).match(/^(?:[,.:;!?…]+(?=\s|$)|[—–-](?=\s|$))?\s*/u)?.[0] ??
-    ''
+    text
+      .slice(end)
+      .match(
+        /^(?:[,.:;!?…]+(?=\s|$)|[—–-](?=\s|$)|\s+[—–](?=\s|$))?\s*/u
+      )?.[0] ?? ''
   return end + separator.length
 }
 
@@ -102,7 +107,8 @@ function sentenceStarts(
   const starts = [0]
   for (let index = 1; index < tokens.length; index++) {
     const gap = transcript.slice(tokens[index - 1]!.end, tokens[index]!.start)
-    if (/[.!?…]/u.test(gap)) starts.push(index)
+    // a sentence ends with its mark and a space: `3.5` or `v1.2` goes on
+    if (/[.!?…]/u.test(gap) && /\s/u.test(gap)) starts.push(index)
   }
   return starts
 }

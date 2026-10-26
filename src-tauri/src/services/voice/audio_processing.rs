@@ -1,8 +1,9 @@
 //! Pure conversion and metering of microphone samples.
 use cpal::Sample;
 
-/// Averages each window of input samples into one output sample: a box
-/// filter, enough to keep hiss above 8 kHz from folding into speech.
+/// Averages each window of input samples into one output sample. This box
+/// filter only damps what lies above the new Nyquist rate, it does not remove
+/// it; for speech recognition that is enough, for playback it would not be.
 pub(super) struct Downsampler {
     /// Input samples per output sample, at least 1.
     step: f64,

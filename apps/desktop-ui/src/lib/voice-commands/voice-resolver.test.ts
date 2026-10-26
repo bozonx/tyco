@@ -22,6 +22,24 @@ const script = (id: string, phrases: string[]) => ({
 })
 
 describe('voice resolver', () => {
+  it('drops a spaced dash between the command and its text', () => {
+    const routes = [route('note', 'save note')]
+    expect(
+      resolveVoice(routes, 'save note — buy milk').candidates[0]?.text
+    ).toBe('buy milk')
+    expect(
+      resolveVoice(routes, 'save note -5 degrees').candidates[0]?.text
+    ).toBe('-5 degrees')
+  })
+
+  it('does not split a sentence at a point inside a number', () => {
+    const result = resolveVoice(
+      [route('note', 'save note')],
+      'version 3.save note text'
+    )
+    expect(result.kind).toBe('none')
+  })
+
   it('preserves original argument spelling, quotes, punctuation and numbers', () => {
     const result = resolveVoice(
       [route('copy', 'copy this')],

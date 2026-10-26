@@ -38,8 +38,15 @@ export function liveTranscriptText(state: LiveTranscriptState): string {
   return joinWords(state.committed, state.draft)
 }
 
+/** Scripts written without spaces between words */
+const UNSPACED_SCRIPT =
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}\u3000-\u303f\uff00-\uffef]/u
+
 function joinWords(head: string, tail: string): string {
   const next = tail.trim()
   if (!next) return head
-  return head ? `${head} ${next}` : next
+  if (!head) return next
+  const isUnspaced =
+    UNSPACED_SCRIPT.test(head.at(-1) ?? '') && UNSPACED_SCRIPT.test(next[0]!)
+  return isUnspaced ? `${head}${next}` : `${head} ${next}`
 }

@@ -1098,7 +1098,8 @@
     "noMatch": "無法辨識命令。請從清單中選擇。",
     "ambiguous": "有多個相符的命令。請從清單中選擇正確的命令。",
     "languageMissing": "無法辨識語言。請從清單中選擇翻譯並選取語言。",
-    "nothingHeard": "未辨識到語音。請重新錄音。"
+    "nothingHeard": "未辨識到語音。請重新錄音。",
+    "recordingLimitReached": "已達到一小時錄音上限"
   },
   "voiceGrammar": {
     "translate": "翻譯成;翻譯為;翻譯到",

@@ -64,6 +64,25 @@ describe('editor actions', () => {
     expect(editor.selectionStart).toBe(6)
   })
 
+  it('keeps a space between the dictated text and the word before it', () => {
+    const { actions, editor, openVoice } = setup()
+    editor.setValue('Hello')
+    editor.setSelection('', 5, 5)
+    actions.voiceRecognition()
+    openVoice.mock.calls[0]![0].onCorrected('world')
+    expect(editor.value).toBe('Hello world')
+    expect(editor.selectionStart).toBe(11)
+  })
+
+  it('keeps changes made to the editor while dictating', () => {
+    const { actions, editor, openVoice } = setup()
+    actions.voiceRecognition()
+    editor.setValue('synced text')
+    editor.setSelection('', 11, 11)
+    openVoice.mock.calls[0]![0].onCorrected('spoken')
+    expect(editor.value).toBe('synced text spoken')
+  })
+
   it.each(['empty', 'cancel'] as const)(
     'closes voice input without editing on %s',
     (kind) => {

@@ -8,9 +8,6 @@ import {
 import type { VoiceFinishIntent } from './voice-finish-intent'
 import { createVoiceSession } from './voice-session'
 
-/** How often the shown recording duration is updated */
-const DURATION_TICK_MS = 100
-
 export interface VoiceRecognitionDependencies {
   startDictation: (
     handlers: Pick<LiveDictationStart, 'onText' | 'onError'>
@@ -29,7 +26,7 @@ export interface VoiceRecognitionDependencies {
     onCancel: () => void
   }) => number
   clearPendingModal: (owner: number) => void
-  options: () => { chat?: boolean; prefix?: string }
+  options: () => { chat?: boolean; prefix?: string; suffix?: string }
   onCorrected: (
     result: string,
     recognized: string,
@@ -59,10 +56,6 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   const isCancelling = ref(false)
   const isStarted = ref(false)
   const isTranscribing = ref(false)
-  const audioLevel = ref(0)
-  const audioPeak = ref(0)
-  const recordingDurationMs = ref(0)
-  let recordingTimer: ReturnType<typeof setInterval> | undefined
   let sessionGeneration = 0
   let starting: Promise<void> | undefined
   let cancelling: Promise<void> | undefined
@@ -73,26 +66,6 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   let hasSession = false
   // Silence is billed too: a forgotten dictation must not run all day
   const MAX_RECORDING_MS = 3_600_000
-
-  function startRecordingTimer() {
-    recordingDurationMs.value = 0
-    const startTime = Date.now()
-    if (recordingTimer !== undefined) {
-      clearInterval(recordingTimer)
-    }
-    recordingTimer = setInterval(() => {
-      recordingDurationMs.value = Date.now() - startTime
-    }, DURATION_TICK_MS)
-  }
-
-  function stopRecordingTimer() {
-    if (recordingTimer !== undefined) {
-      clearInterval(recordingTimer)
-      recordingTimer = undefined
-    }
-    audioLevel.value = 0
-    audioPeak.value = 0
-  }
 
   const voiceSession = createVoiceSession({
     maxRecordingMs: MAX_RECORDING_MS,
@@ -124,7 +97,6 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     isCancelling.value = true
     sessionGeneration += 1
     hasSession = false
-    stopRecordingTimer()
     voiceSession.abort()
 
     cancelling = (async () => {
@@ -164,11 +136,12 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     let signal = voiceSession.signal
     const isCurrent = () => generation === sessionGeneration && !signal?.aborted
     isFinishing.value = true
-    stopRecordingTimer()
     voiceSession.stopTimer()
 
     try {
       await starting
+      // a start that was still running has armed the recording limit again
+      voiceSession.stopTimer()
       signal = voiceSession.signal
       if (!isCurrent()) return
       if (!hasSession || signal?.aborted) {
@@ -184,11 +157,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       isTranscribing.value = false
 
       if (!recognizedText.trim()) {
-        if (
-          deps.options().chat &&
-          intent === 'submit' &&
-          deps.options().prefix?.trim()
-        ) {
+        const { chat, prefix = '', suffix = '' } = deps.options()
+        if (chat && intent === 'submit' && `${prefix}${suffix}`.trim()) {
           deps.onCorrected('', '', undefined, 'submit')
           return
         }
@@ -211,16 +181,24 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           toastKey('history.operationFailed', 'error')
         }
         if (!isCurrent()) return
+        // cancelling the correction keeps the recognized text as it is
+        const correction = new AbortController()
+        const abortCorrection = () => correction.abort()
+        signal?.addEventListener('abort', abortCorrection)
         const owner = deps.setPendingModal({
           correction: true,
-          onCancel: () => voiceSession.abort(),
+          onCancel: abortCorrection,
         })
 
         try {
-          const formattedText = await voiceCorrection(recognizedText, signal)
+          const formattedText = await voiceCorrection(
+            recognizedText,
+            correction.signal
+          )
 
           if (!isCurrent()) return
-          if (formattedText.trim()) {
+          // a reply that arrived after the user cancelled it is not used
+          if (!correction.signal.aborted && formattedText.trim()) {
             resultText = formattedText
             correctedText = formattedText
             await deps.saveSourceResult(sourceId, formattedText).catch(() => {
@@ -231,6 +209,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           // the request has told the failure; the raw text goes on
           if (!isCurrent()) return
         } finally {
+          signal?.removeEventListener('abort', abortCorrection)
           deps.clearPendingModal(owner)
         }
       }
@@ -261,7 +240,6 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
    */
   function handleSessionError(error: Error) {
     if (voiceSession.signal?.aborted) return
-    stopRecordingTimer()
     voiceSession.stopTimer()
     isStarted.value = false
 
@@ -310,7 +288,6 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           return
         }
         voiceSession.begin()
-        startRecordingTimer()
         hasSession = true
         isStarted.value = true
       } catch (error) {
@@ -331,7 +308,6 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     disposed = true
     restartGeneration += 1
     sessionGeneration += 1
-    stopRecordingTimer()
     voiceSession.dispose()
     const stopping = cancelDictation()
     void (async () => {
@@ -353,9 +329,6 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     isFinishing,
     isStarted,
     isTranscribing,
-    audioLevel,
-    audioPeak,
-    recordingDurationMs,
     cancel,
     finish,
     startSession,

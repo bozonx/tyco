@@ -1104,7 +1104,8 @@
     "noMatch": "Naredba nije prepoznata. Odaberite je s popisa.",
     "ambiguous": "Podudara se više naredbi. Odaberite pravu s popisa.",
     "languageMissing": "Jezik nije prepoznat. Odaberite prijevod s popisa i navedite jezik.",
-    "nothingHeard": "Govor nije prepoznat. Snimite ponovno."
+    "nothingHeard": "Govor nije prepoznat. Snimite ponovno.",
+    "recordingLimitReached": "Dosegnuto je ograničenje snimanja od jednog sata"
   },
   "voiceGrammar": {
     "translate": "prevedi na",

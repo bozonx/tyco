@@ -19,7 +19,12 @@ describe('dictationLanguageFor', () => {
 
   it('uses only the language explicitly chosen for dictation', () => {
     expect(dictationLanguageFor('de-DE')).toBe('de')
-    expect(dictationLanguageFor('en-GB')).toBe('en')
     expect(dictationLanguageFor('zh-TW')).toBe('zh-TW')
+  })
+
+  it('keeps a region the provider tells apart', () => {
+    expect(dictationLanguageFor('en-GB')).toBe('en-GB')
+    expect(dictationLanguageFor('pt-pt')).toBe('pt-PT')
+    expect(dictationLanguageFor('es-AR')).toBe('es')
   })
 })

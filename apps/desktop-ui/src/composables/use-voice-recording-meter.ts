@@ -18,7 +18,11 @@ export function useVoiceRecordingMeter(isRecording: () => boolean) {
     (recording) => {
       if (durationTimer) clearInterval(durationTimer)
       durationTimer = undefined
-      if (!recording) return
+      if (!recording) {
+        audioLevel.value = 0
+        audioPeak.value = 0
+        return
+      }
       const startedAt = Date.now()
       recordingDurationMs.value = 0
       durationTimer = setInterval(() => {
@@ -39,6 +43,8 @@ export function useVoiceRecordingMeter(isRecording: () => boolean) {
     // the level meter is decoration: the recording must not wait for it
     void desktopClient
       .listen(DESKTOP_EVENTS.VOICE_AUDIO_LEVEL, (payload) => {
+        // the microphone may be recording for another window
+        if (!isRecording()) return
         audioLevel.value = payload.level
         audioPeak.value = payload.peak
       })

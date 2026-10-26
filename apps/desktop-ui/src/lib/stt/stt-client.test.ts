@@ -81,6 +81,12 @@ describe('buildSttCatalog', () => {
     )
   })
 
+  it('rejects a self-hosted server address that is not a WebSocket', () => {
+    expect(() =>
+      buildSttCatalog({ ...sherpa, baseUrl: 'http://speech.lan:6006' })
+    ).toThrow('ws:// or wss://')
+  })
+
   it('rejects an empty model name', () => {
     expect(() => buildSttCatalog({ ...model, modelId: ' ' })).toThrow(
       'model name is empty'

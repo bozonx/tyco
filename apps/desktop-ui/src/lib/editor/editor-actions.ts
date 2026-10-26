@@ -8,6 +8,7 @@ import type { ActionItem } from '../action-menu/action-menu-model'
 import type { EditItem } from '../edit-menu/edit-menu-model'
 import type { EditSource } from './edit-source'
 import { createTextEditModel } from '../edit-menu/text-edit'
+import { insertAtCursor } from '../chat/insert-at-cursor'
 
 export interface EditorActionsDependencies {
   editor: {
@@ -62,14 +63,20 @@ export function createEditorActions(deps: EditorActionsDependencies) {
           return
         }
 
-        const newValue =
-          initialValue.substring(0, selectionStart) +
-          resultText +
-          initialValue.substring(selectionEnd)
-        const newCursorPosition = selectionStart + resultText.length
+        // the editor may have changed meanwhile, e.g. synced from another
+        // window: then the text goes to its current caret, not the old one
+        const currentValue = editorInputStore.value
+        const range =
+          currentValue === initialValue
+            ? { start: selectionStart, end: selectionEnd }
+            : {
+                start: editorInputStore.selectionStart,
+                end: editorInputStore.selectionEnd,
+              }
+        const inserted = insertAtCursor(currentValue, range, resultText)
 
-        editorInputStore.setValue(newValue, 'voice')
-        editorInputStore.setSelection('', newCursorPosition, newCursorPosition)
+        editorInputStore.setValue(inserted.value, 'voice')
+        editorInputStore.setSelection('', inserted.caret, inserted.caret)
         deps.closeVoice()
         editorInputStore.requestFocus()
       },

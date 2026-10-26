@@ -1104,7 +1104,8 @@
     "noMatch": "Nie rozpoznano polecenia. Wybierz je z listy.",
     "ambiguous": "Pasuje kilka poleceń. Wybierz właściwe z listy.",
     "languageMissing": "Nie rozpoznano języka. Wybierz tłumaczenie z listy i wskaż język.",
-    "nothingHeard": "Nie rozpoznano mowy. Nagraj ponownie."
+    "nothingHeard": "Nie rozpoznano mowy. Nagraj ponownie.",
+    "recordingLimitReached": "Osiągnięto limit nagrywania wynoszący godzinę"
   },
   "voiceGrammar": {
     "translate": "przetłumacz na",

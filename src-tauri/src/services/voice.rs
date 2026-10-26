@@ -32,7 +32,8 @@ const CHUNK_MS: usize = 100;
 const POLL_INTERVAL: Duration = Duration::from_millis(20);
 const LEVEL_INTERVAL: Duration = Duration::from_millis(40);
 const SETUP_TIMEOUT: Duration = Duration::from_secs(10);
-const CALLBACK_TIMEOUT: Duration = Duration::from_secs(5);
+/// Generous: a Bluetooth headset switching profiles pauses for seconds.
+const CALLBACK_TIMEOUT: Duration = Duration::from_secs(10);
 const STOP_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Clone, Serialize, Debug, PartialEq, ts_rs::TS)]
@@ -289,7 +290,8 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
 
         if runtime.now().saturating_duration_since(last_level) >= LEVEL_INTERVAL {
             last_level = runtime.now();
-            let (level, peak) = *context.current_level.locked();
+            // the loudest moment since the last publish, not just the latest
+            let (level, peak) = std::mem::take(&mut *context.current_level.locked());
             levels.publish(VoiceAudioLevelPayload { level, peak });
         }
     }
@@ -349,6 +351,11 @@ where
     f32: cpal::FromSample<T>,
 {
     let channels = usize::from(config.channels);
+    if channels == 0 {
+        return Err(AppError::ServiceUnavailable(
+            "The input device reports no channels".into(),
+        ));
+    }
     let callback_count = Arc::clone(&context.callback_count);
     let pending_pcm_samples = Arc::clone(&context.pending_pcm_samples);
     let level_monitor = Arc::clone(&context.current_level);
@@ -381,7 +388,9 @@ where
                     return;
                 }
                 if let Ok(mut level) = level_monitor.lock() {
-                    *level = compute_audio_level(&converted);
+                    // kept until published: a short loud callback must show
+                    let (rms, peak) = compute_audio_level(&converted);
+                    *level = (level.0.max(rms), level.1.max(peak));
                 }
                 if let Ok(mut pending_pcm_samples) = pending_pcm_samples.lock() {
                     pending_pcm_samples.extend_from_slice(&converted);

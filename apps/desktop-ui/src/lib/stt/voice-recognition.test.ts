@@ -299,14 +299,67 @@ describe('voice recognition failures', () => {
     expect(model.isStarted.value).toBe(false)
   })
 
-  it('counts the recording time and stops at the limit', async () => {
+  it('leaves no recording limit behind when finished while starting', async () => {
     vi.useFakeTimers()
-    const { deps, model } = await started({
+    let resolveStart!: () => void
+    const { deps, model } = setup({
       shouldFormatRecognizedText: () => false,
+      startDictation: vi.fn(
+        () =>
+          new Promise<void>((done) => {
+            resolveStart = done
+          })
+      ),
     })
-    await vi.advanceTimersByTimeAsync(1000)
-    expect(model.recordingDurationMs.value).toBeGreaterThanOrEqual(900)
-    await vi.advanceTimersByTimeAsync(3_600_000)
+    const starting = model.startSession()
+    const finishing = model.finish()
+    resolveStart()
+    await Promise.all([starting, finishing])
+    expect(deps.onCorrected).toHaveBeenCalledOnce()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('keeps the recognized text when the user cancels its correction', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = setup({
+      voiceCorrection: vi.fn(
+        (_text: string, signal?: AbortSignal) =>
+          new Promise<string>((_resolve, reject) => {
+            signal?.addEventListener('abort', () =>
+              reject(new Error('aborted'))
+            )
+          })
+      ),
+    })
+    await model.startSession()
+    const finishing = model.finish()
+    await vi.waitFor(() => expect(deps.setPendingModal).toHaveBeenCalled())
+    vi.mocked(deps.setPendingModal).mock.calls[0]![0].onCancel()
+    await finishing
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Raw words',
+      'Raw words',
+      undefined,
+      'insert'
+    )
+    expect(deps.onCancelled).not.toHaveBeenCalled()
+  })
+
+  it('submits chat input that is only after the caret', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = setup({
+      finishDictation: vi.fn().mockResolvedValue(''),
+      options: () => ({ chat: true, prefix: '', suffix: 'question' }),
+    })
+    await model.startSession()
+    await model.finish('submit')
+    expect(deps.onCorrected).toHaveBeenCalledWith('', '', undefined, 'submit')
+  })
+
+  it('stops at the recording limit', async () => {
+    vi.useFakeTimers()
+    const { deps } = await started({ shouldFormatRecognizedText: () => false })
+    await vi.advanceTimersByTimeAsync(3_601_000)
     expect(deps.toastKey).toHaveBeenCalledWith(
       'toast.recordingLimitReached',
       'warn'
