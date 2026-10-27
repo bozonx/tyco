@@ -15,14 +15,20 @@ describe('SettingsEntityItem.vue', () => {
     expect(wrapper.text()).toContain('Custom Bot')
     expect(wrapper.text()).toContain('Assists with code')
     expect(wrapper.find('.is-primary').exists()).toBe(true)
-    expect(wrapper.find('.settings-entity-chevron').exists()).toBe(false)
+  })
+
+  it('renders without icon when icon prop is omitted', () => {
+    const wrapper = mount(SettingsEntityItem, {
+      props: { title: 'Custom Bot', description: 'Assists with code' },
+    })
+    expect(wrapper.text()).toContain('Custom Bot')
+    expect(wrapper.find('.settings-entity-icon').exists()).toBe(false)
   })
 
   it('emits open on card click and target button click when openable', async () => {
     const wrapper = mount(SettingsEntityItem, {
-      props: { icon: 'mdi:folder', title: 'Project A', openable: true },
+      props: { title: 'Project A', openable: true },
     })
-    expect(wrapper.find('.settings-entity-chevron').exists()).toBe(true)
 
     await wrapper.get('.settings-entity-target').trigger('click')
     expect(wrapper.emitted('open')).toHaveLength(1)

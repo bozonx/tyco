@@ -666,7 +666,6 @@
     "deleteProfile": "Izbriši profil",
     "deleteProfileConfirm": "Izbrisati profil „{name}”? Njegov SOUL.md, radna mapa i chatovi (chatova: {count}) bit će trajno izbrisani.",
     "deleteProfileConfirmUncounted": "Izbrisati profil „{name}”? Njegov SOUL.md, radni prostor i svi chatovi bit će trajno izbrisani.",
-    "deleteProfileHint": "Briše mapu profila: SOUL.md, sve chatove i radni prostor.",
     "deleteProject": "Izbriši projekt",
     "deleteProjectConfirm": "Jeste li sigurni da želite izbrisati ovaj projekt? Datoteke u vanjskoj mapi neće se dirati.",
     "developmentFeatures": "Značajke u razvoju",
@@ -992,7 +991,9 @@
     "unassignHotkey": "Ukloni prečac",
     "vision": "Unos slika",
     "voiceTextCorrection": "Ispravak izdiktiranog teksta",
-    "translationLanguageUnavailable": "nedostupno"
+    "translationLanguageUnavailable": "nedostupno",
+    "duplicateProfileConfirm": "Stvoriti kopiju profila „{name}”?",
+    "profileNoTools": "Nema omogućenih alata"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

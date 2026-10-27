@@ -180,35 +180,6 @@ describe('SettingsProfileDetailTab.vue', () => {
     expect(wrapper.findAll('input[type="number"]').length).toBe(2)
   })
 
-  it('counts the chats before deleting the profile', async () => {
-    const wrapper = mountTab()
-    await flushPromises()
-    await wrapper
-      .findComponent({ name: 'SettingsDangerZone' })
-      .vm.$emit('action')
-    await flushPromises()
-    expect(wrapper.get('.confirm').text()).toContain(
-      'settings.deleteProfileConfirm:{"name":"Writer","count":3}'
-    )
-    await wrapper.get('.confirm-yes').trigger('click')
-    await flushPromises()
-    expect(store.deleteProfile).toHaveBeenCalledWith('writer')
-    expect(context.navigate).toHaveBeenCalledWith('ai-profiles:overview')
-  })
-
-  it('warns when the chats could not be counted', async () => {
-    store.countChats.mockRejectedValueOnce(new Error('Locked'))
-    const wrapper = mountTab()
-    await flushPromises()
-    await wrapper
-      .findComponent({ name: 'SettingsDangerZone' })
-      .vm.$emit('action')
-    await flushPromises()
-    expect(wrapper.get('.confirm').text()).toContain(
-      'settings.deleteProfileConfirmUncounted'
-    )
-  })
-
   it('opens the profile folder and reports failures', async () => {
     store.openVaultDir.mockRejectedValueOnce(new Error('No folder'))
     const wrapper = mountTab()

@@ -660,7 +660,6 @@
     "deleteProfile": "删除配置文件",
     "deleteProfileConfirm": "删除配置文件“{name}”？其 SOUL.md、工作区文件夹和所有聊天记录（聊天数：{count}）将被永久删除。",
     "deleteProfileConfirmUncounted": "删除配置文件“{name}”？其 SOUL.md、工作区以及所有聊天都将被永久删除。",
-    "deleteProfileHint": "删除配置文件文件夹：SOUL.md、所有聊天和工作区。",
     "deleteProject": "删除项目",
     "deleteProjectConfirm": "确定要删除此项目吗？外部文件夹中的文件不会受到影响。",
     "developmentFeatures": "开发中的功能",
@@ -986,7 +985,9 @@
     "unassignHotkey": "移除快捷键",
     "vision": "图像输入",
     "voiceTextCorrection": "语音文本纠错",
-    "translationLanguageUnavailable": "不可用"
+    "translationLanguageUnavailable": "不可用",
+    "duplicateProfileConfirm": "创建配置文件“{name}”的副本？",
+    "profileNoTools": "未启用任何工具"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

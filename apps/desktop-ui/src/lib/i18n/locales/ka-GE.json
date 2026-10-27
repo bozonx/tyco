@@ -663,7 +663,6 @@
     "deleteProfile": "პროფილის წაშლა",
     "deleteProfileConfirm": "წაიშალოს პროფილი „{name}“? მისი SOUL.md, სამუშაო საქაღალდე და ჩატები (ჩატები: {count}) სამუდამოდ წაიშლება.",
     "deleteProfileConfirmUncounted": "წაიშალოს პროფილი „{name}“? მისი SOUL.md, სამუშაო სივრცე და ყველა ჩატი სამუდამოდ წაიშლება.",
-    "deleteProfileHint": "შლის პროფილის საქაღალდეს: SOUL.md-ს, ყველა ჩატს და სამუშაო სივრცეს.",
     "deleteProject": "პროექტის წაშლა",
     "deleteProjectConfirm": "ნამდვილად გსურთ ამ პროექტის წაშლა? გარე საქაღალდის ფაილები ხელუხლებელი დარჩება.",
     "developmentFeatures": "შემუშავების პროცესში მყოფი ფუნქციები",
@@ -989,7 +988,9 @@
     "unassignHotkey": "კომბინაციის მოცილება",
     "vision": "სურათების შეყვანა",
     "voiceTextCorrection": "ნაკარნახევი ტექსტის შესწორება",
-    "translationLanguageUnavailable": "მიუწვდომელია"
+    "translationLanguageUnavailable": "მიუწვდომელია",
+    "duplicateProfileConfirm": "შევქმნათ პროფილის „{name}“ ასლი?",
+    "profileNoTools": "ჩართული ინსტრუმენტები არ არის"
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {

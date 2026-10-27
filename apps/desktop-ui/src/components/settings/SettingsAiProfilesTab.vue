@@ -25,8 +25,6 @@
           <SettingsEntityItem
             v-for="profile in profiles"
             :key="profile.id"
-            :icon="profileIcon(profile)"
-            icon-tone="primary"
             :title="profile.name"
             :description="describeProfile(profile)"
             openable
@@ -73,10 +71,8 @@
           <SettingsEntityItem
             v-for="project in projects"
             :key="project.id"
-            :icon="projectIcon(project)"
-            icon-tone="secondary"
             :title="project.name"
-            :description="project.description || undefined"
+            :description="describeProject(project)"
             openable
             @open="navigate(projectTab(project.id))"
           >
@@ -141,6 +137,19 @@
     />
 
     <ConfirmModal
+      :open="showDuplicateProfileConfirm"
+      :title="t('settings.duplicateProfile')"
+      :message="
+        t('settings.duplicateProfileConfirm', {
+          name: profileToDuplicate?.name ?? '',
+        })
+      "
+      :confirm-text="t('settings.duplicateProfile')"
+      @confirm="handleDuplicateProfile"
+      @cancel="showDuplicateProfileConfirm = false"
+    />
+
+    <ConfirmModal
       :open="showDeleteProfileConfirm"
       :title="t('settings.deleteProfile')"
       :message="deleteProfileMessage"
@@ -165,12 +174,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { useChatModelOptions } from '../../composables/use-chat-model-options'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
-import { profileIcon, projectIcon } from '../../lib/ai-profiles/profile-icons'
-import { profileModelName } from '../../lib/ai-profiles/profile-model-options'
+import { projectAccessLevelOf } from '../../lib/ai-profiles/project-access'
 import {
   CHAT_TOOL_GROUPS,
   toolGroupSettings,
@@ -203,15 +210,23 @@ const projects = computed(() => aiProfilesStore.projects)
 const vaultPath = computed(() => aiProfilesStore.vaultPath)
 const vaultError = computed(() => aiProfilesStore.vaultError)
 
-const availableModels = useChatModelOptions()
-
-/** The model of a profile and the tools it may use, in one line */
+/** The tools a profile may use, in one line */
 function describeProfile(profile: AiProfile): string {
-  const model = profileModelName(availableModels.value, profile.modelId, t)
   const tools = CHAT_TOOL_GROUPS.filter(
     (group) => toolGroupSettings(profile.tools, group).isEnabled
   ).map((group) => t(group.labelKey))
-  return [model, ...tools].join(' · ')
+  return tools.length > 0 ? tools.join(' · ') : t('settings.profileNoTools')
+}
+
+/** The profiles assigned to the project, or a fallback when none are connected */
+function describeProject(project: AiProject): string {
+  const assigned = profiles.value.filter(
+    (profile) =>
+      projectAccessLevelOf(profile.projectPermissions[project.id]) !== undefined
+  )
+  return assigned.length > 0
+    ? assigned.map((p) => p.name).join(', ')
+    : t('settings.noProfilesWithAccess')
 }
 
 onMounted(() => {
@@ -227,18 +242,28 @@ function profileMenuItems(profile: AiProfile): DropdownMenuItem[] {
     {
       label: t('settings.duplicateProfile'),
       icon: 'mdi:content-copy',
-      action: () => handleDuplicateProfile(profile),
+      action: () => askDuplicateProfile(profile),
     },
     {
       label: t('common.delete'),
       icon: 'mdi:trash-can-outline',
-      danger: true,
       action: () => askDeleteProfile(profile),
     },
   ]
 }
 
-async function handleDuplicateProfile(profile: AiProfile) {
+const showDuplicateProfileConfirm = ref(false)
+const profileToDuplicate = ref<AiProfile | null>(null)
+
+function askDuplicateProfile(profile: AiProfile) {
+  profileToDuplicate.value = profile
+  showDuplicateProfileConfirm.value = true
+}
+
+async function handleDuplicateProfile() {
+  if (!profileToDuplicate.value) return
+  const profile = profileToDuplicate.value
+  showDuplicateProfileConfirm.value = false
   try {
     const copy = await aiProfilesStore.duplicateProfile(
       profile.id,
@@ -247,6 +272,8 @@ async function handleDuplicateProfile(profile: AiProfile) {
     navigate(profileTab(copy.id))
   } catch (error) {
     toastError(error)
+  } finally {
+    profileToDuplicate.value = null
   }
 }
 
@@ -293,7 +320,6 @@ function projectMenuItems(project: AiProject): DropdownMenuItem[] {
     {
       label: t('common.delete'),
       icon: 'mdi:trash-can-outline',
-      danger: true,
       action: () => askDeleteProject(project),
     },
   ]

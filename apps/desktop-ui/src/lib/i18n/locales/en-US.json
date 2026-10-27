@@ -666,7 +666,6 @@
     "deleteProfile": "Delete Profile",
     "deleteProfileConfirm": "Delete the profile \"{name}\"? Its SOUL.md, its workspace folder and its chats (chats: {count}) are deleted for good.",
     "deleteProfileConfirmUncounted": "Delete the profile “{name}”? Its SOUL.md, workspace and all its chats will be deleted for good.",
-    "deleteProfileHint": "Deletes the profile folder: SOUL.md, all chats and the workspace.",
     "deleteProject": "Delete Project",
     "deleteProjectConfirm": "Are you sure you want to delete this project? External folder files will not be touched.",
     "developmentFeatures": "Features in development",
@@ -992,7 +991,9 @@
     "unassignHotkey": "Remove shortcut",
     "vision": "Image input",
     "voiceTextCorrection": "Voice text correction",
-    "translationLanguageUnavailable": "unavailable"
+    "translationLanguageUnavailable": "unavailable",
+    "duplicateProfileConfirm": "Create a copy of profile “{name}”?",
+    "profileNoTools": "No tools enabled"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

@@ -501,7 +501,6 @@ fn profile(tools: Option<ProfileToolSettings>) -> AiProfile {
     AiProfile {
         id: "writer".into(),
         name: "Writer".into(),
-        icon: None,
         model_id: None,
         temperature: None,
         max_output_tokens: None,

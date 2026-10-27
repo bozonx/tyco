@@ -94,19 +94,39 @@ describe('SettingsAiProfilesTab.vue', () => {
     expect(wrapper.text()).toContain('settings.noProjectsYet')
   })
 
-  it('describes each profile by its model and opens it', async () => {
+  it('describes each profile by its tools and opens it', async () => {
     store.profiles.push(
       profile({}),
-      profile({ id: 'gone', name: 'Gone', modelId: 'removed' })
+      profile({
+        id: 'coder',
+        name: 'Coder',
+        tools: { groups: { files: { isEnabled: true, access: 'allow' } } },
+      })
     )
     const wrapper = mountTab()
     const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
-    expect(items[0]!.text()).toContain('settings.profileModelDefault')
-    expect(items[1]!.text()).toContain(
-      'removed (settings.profileModelUnavailable)'
-    )
+    expect(items[0]!.text()).toContain('settings.profileNoTools')
+    expect(items[1]!.text()).toContain('chatTools.files')
     await items[0]!.vm.$emit('open')
     expect(context.navigate).toHaveBeenCalledWith('ai-profile:writer')
+  })
+
+  it('describes each project by its assigned profiles', () => {
+    store.profiles.push(
+      profile({
+        id: 'writer',
+        name: 'Writer',
+        projectPermissions: { 'proj-1': { read: 'allow', write: 'allow' } },
+      })
+    )
+    store.projects.push(
+      { id: 'proj-1', name: 'Project 1' },
+      { id: 'proj-2', name: 'Project 2' }
+    )
+    const wrapper = mountTab()
+    const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
+    expect(items[1]!.text()).toContain('Writer')
+    expect(items[2]!.text()).toContain('settings.noProfilesWithAccess')
   })
 
   it('opens new profiles and projects', async () => {
@@ -152,8 +172,14 @@ describe('SettingsAiProfilesTab.vue', () => {
       'settings.duplicateProfile',
       'common.delete',
     ])
+    expect((items[1] as { danger?: boolean }).danger).toBeFalsy()
 
     await items[0]!.action()
+    const duplicateConfirm = wrapper.get(
+      '[data-title="settings.duplicateProfile"]'
+    )
+    expect(duplicateConfirm.attributes('data-open')).toBe('true')
+    await duplicateConfirm.get('.confirm-yes').trigger('click')
     await flushPromises()
     expect(store.duplicateProfile).toHaveBeenCalledWith(
       'writer',
@@ -182,6 +208,7 @@ describe('SettingsAiProfilesTab.vue', () => {
       action: () => void
     }>
     expect(menuItems.map((i) => i.label)).toEqual(['common.delete'])
+    expect((menuItems[0] as { danger?: boolean }).danger).toBeFalsy()
 
     await menuItems[0]!.action()
     await flushPromises()

@@ -48,7 +48,6 @@
             :title="profile.name"
             @click="openProfileChat(profile.id)"
           >
-            <AppIcon :icon="profileIcon(profile)" size="md" />
             <span class="truncate max-w-[120px]">{{ profile.name }}</span>
           </button>
         </div>
@@ -106,7 +105,6 @@ import {
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
-import { profileIcon } from '../../lib/ai-profiles/profile-icons'
 import { EDITOR_ACTIONS_SHORTCUT } from '../../lib/input-keys/input-keys'
 import { APP_ROUTES } from '../../lib/navigation/routes'
 import { appNavigation } from '../../navigation'

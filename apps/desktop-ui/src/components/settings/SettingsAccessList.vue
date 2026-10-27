@@ -74,7 +74,7 @@ import SettingsEntityItem from './SettingsEntityItem.vue'
 
 export interface AccessListEntry {
   id: string
-  icon: string
+  icon?: string
   title: string
   description?: string
   level: ProjectAccessLevel
@@ -84,7 +84,7 @@ export interface AccessListEntry {
 
 export interface AccessListCandidate {
   id: string
-  icon: string
+  icon?: string
   label: string
 }
 

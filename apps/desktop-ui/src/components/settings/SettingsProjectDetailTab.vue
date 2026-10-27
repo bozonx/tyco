@@ -89,16 +89,6 @@
           />
         </div>
       </SettingsSection>
-
-      <SettingsSection v-if="!isNew" :title="t('settings.deleteProject')">
-        <div class="settings-section-content">
-          <SettingsDangerZone
-            :message="t('settings.deleteProjectConfirm')"
-            :action-label="t('settings.deleteProject')"
-            @action="showDeleteConfirm = true"
-          />
-        </div>
-      </SettingsSection>
     </template>
 
     <StateMessage
@@ -112,16 +102,6 @@
       </Button>
     </StateMessage>
     <StateMessage v-else kind="loading" />
-
-    <ConfirmModal
-      :open="showDeleteConfirm"
-      :title="t('settings.deleteProject')"
-      :message="t('settings.deleteProjectConfirm')"
-      :confirm-text="t('settings.deleteProject')"
-      danger
-      @confirm="handleDelete"
-      @cancel="showDeleteConfirm = false"
-    />
   </div>
 </template>
 
@@ -132,7 +112,6 @@ import { useI18n } from '../../composables/use-i18n'
 import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
-import { profileIcon } from '../../lib/ai-profiles/profile-icons'
 import {
   type ProjectAccessLevel,
   hasFileToolsOff,
@@ -148,7 +127,6 @@ import {
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
-import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
@@ -158,7 +136,6 @@ import SettingsAccessList, {
   type AccessListEntry,
 } from './SettingsAccessList.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
-import SettingsDangerZone from './SettingsDangerZone.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsSection from './SettingsSection.vue'
 import type { AiProfile } from '@tyco/shared'
@@ -171,7 +148,6 @@ const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
 const isNew = computed(() => props.projectId === NEW_ENTITY_ID)
-const showDeleteConfirm = ref(false)
 
 const profiles = computed(() => aiProfilesStore.profiles)
 
@@ -233,7 +209,6 @@ const accessEntries = computed<AccessListEntry[]>(() =>
     return [
       {
         id: profile.id,
-        icon: profileIcon(profile),
         title: profile.name,
         level,
         warning: hasFileToolsOff(profile)
@@ -247,11 +222,7 @@ const accessEntries = computed<AccessListEntry[]>(() =>
 const accessCandidates = computed<AccessListCandidate[]>(() =>
   profiles.value
     .filter((profile) => !accessLevelOf(profile))
-    .map((profile) => ({
-      id: profile.id,
-      icon: profileIcon(profile),
-      label: profile.name,
-    }))
+    .map((profile) => ({ id: profile.id, label: profile.name }))
 )
 
 function changeAccess(
@@ -307,18 +278,6 @@ async function handleCreate() {
     }
     pendingAccess.value = {}
     navigate(projectTab(created.id))
-  } catch (error) {
-    toastError(error)
-  }
-}
-
-async function handleDelete() {
-  if (isNew.value) return
-  editor.cancel()
-  try {
-    await aiProfilesStore.deleteProject(props.projectId)
-    showDeleteConfirm.value = false
-    navigate(AI_OVERVIEW_TAB)
   } catch (error) {
     toastError(error)
   }

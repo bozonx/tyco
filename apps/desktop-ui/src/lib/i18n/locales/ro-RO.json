@@ -666,7 +666,6 @@
     "deleteProfile": "Șterge profilul",
     "deleteProfileConfirm": "Ștergeți profilul „{name}”? Fișierul său SOUL.md, dosarul de lucru și chaturile (chaturi: {count}) vor fi șterse definitiv.",
     "deleteProfileConfirmUncounted": "Ștergeți profilul „{name}”? Fișierul său SOUL.md, spațiul de lucru și toate chaturile vor fi șterse definitiv.",
-    "deleteProfileHint": "Șterge dosarul profilului: SOUL.md, toate chaturile și spațiul de lucru.",
     "deleteProject": "Șterge proiectul",
     "deleteProjectConfirm": "Sigur doriți să ștergeți acest proiect? Fișierele din dosarul extern nu vor fi atinse.",
     "developmentFeatures": "Funcții în dezvoltare",
@@ -992,7 +991,9 @@
     "unassignHotkey": "Elimină comanda rapidă",
     "vision": "Intrare de imagini",
     "voiceTextCorrection": "Corectarea textului dictat",
-    "translationLanguageUnavailable": "indisponibil"
+    "translationLanguageUnavailable": "indisponibil",
+    "duplicateProfileConfirm": "Creați o copie a profilului „{name}”?",
+    "profileNoTools": "Niciun instrument activat"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

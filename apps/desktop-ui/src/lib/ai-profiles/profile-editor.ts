@@ -190,7 +190,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     if (isSoulLoaded.value) soulAutosave.schedule()
   }
 
-  /** A picked value: the model, the icon, a switch or an access mode */
+  /** A picked value: the model, a switch or an access mode */
   const changeSettings = (patch: AiProfilePatch): Promise<boolean> =>
     pickedSaves.track(deps.updateProfile(patch))
 

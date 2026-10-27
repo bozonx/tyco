@@ -663,7 +663,6 @@
     "deleteProfile": "Видалити профіль",
     "deleteProfileConfirm": "Видалити профіль «{name}»? Його SOUL.md, робочу теку й чати (чатів: {count}) буде видалено назавжди.",
     "deleteProfileConfirmUncounted": "Видалити профіль «{name}»? Його SOUL.md, робочу теку й усі чати буде видалено назавжди.",
-    "deleteProfileHint": "Видаляє теку профілю: SOUL.md, усі чати й робочу теку.",
     "deleteProject": "Видалити проєкт",
     "deleteProjectConfirm": "Справді видалити цей проєкт? Файли зовнішньої теки не буде зачеплено.",
     "developmentFeatures": "Функції в розробці",
@@ -989,7 +988,9 @@
     "unassignHotkey": "Прибрати сполучення",
     "vision": "Введення зображень",
     "voiceTextCorrection": "Виправлення надиктованого тексту",
-    "translationLanguageUnavailable": "недоступний"
+    "translationLanguageUnavailable": "недоступний",
+    "duplicateProfileConfirm": "Створити копію профілю «{name}»?",
+    "profileNoTools": "Інструменти вимкнено"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

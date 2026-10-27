@@ -31,7 +31,6 @@
     />
     <div class="chat-main">
       <div v-if="profile" class="profile-header">
-        <AppIcon :icon="profileIcon(profile)" size="md" class="shrink-0" />
         <span class="profile-name">{{ profile.name }}</span>
         <IconButton
           class="profile-settings"
@@ -51,14 +50,12 @@ import { computed, onMounted, watch } from 'vue'
 
 import AiChat from '../components/chat/AiChat.vue'
 import ChatSidebar from '../components/chat/ChatSidebar.vue'
-import AppIcon from '../components/common/AppIcon.vue'
 import IconButton from '../components/common/IconButton.vue'
 import {
   provideChatScope,
   resolveChatScope,
 } from '../composables/use-chat-scope'
 import { useI18n } from '../composables/use-i18n'
-import { profileIcon } from '../lib/ai-profiles/profile-icons'
 import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useChatLayoutStore } from '../stores/chat-layout'

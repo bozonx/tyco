@@ -663,7 +663,6 @@
     "deleteProfile": "Profili Sil",
     "deleteProfileConfirm": "\"{name}\" profili silinsin mi? SOUL.md dosyası, çalışma klasörü ve sohbetleri (sohbet sayısı: {count}) kalıcı olarak silinir.",
     "deleteProfileConfirmUncounted": "«{name}» profili silinsin mi? SOUL.md, çalışma klasörü ve tüm sohbetleri kalıcı olarak silinecek.",
-    "deleteProfileHint": "Profil klasörünü siler: SOUL.md, tüm sohbetler ve çalışma alanı.",
     "deleteProject": "Projeyi Sil",
     "deleteProjectConfirm": "Bu projeyi silmek istediğinizden emin misiniz? Harici klasör dosyalarına dokunulmayacaktır.",
     "developmentFeatures": "Geliştirme aşamasındaki özellikler",
@@ -989,7 +988,9 @@
     "unassignHotkey": "Kısayolu kaldır",
     "vision": "Görsel desteği",
     "voiceTextCorrection": "Tanınan metni düzeltme",
-    "translationLanguageUnavailable": "kullanılamıyor"
+    "translationLanguageUnavailable": "kullanılamıyor",
+    "duplicateProfileConfirm": "“{name}” profilinin bir kopyası oluşturulsun mu?",
+    "profileNoTools": "Etkin araç yok"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

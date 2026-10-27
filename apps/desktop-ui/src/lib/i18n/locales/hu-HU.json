@@ -663,7 +663,6 @@
     "deleteProfile": "Profil törlése",
     "deleteProfileConfirm": "Törli a(z) „{name}” profilt? A SOUL.md fájlja, a munkamappája és a csevegései (csevegések: {count}) végleg törlődnek.",
     "deleteProfileConfirmUncounted": "Törli a(z) „{name}” profilt? A SOUL.md fájlja, a munkaterülete és az összes csevegése végleg törlődik.",
-    "deleteProfileHint": "Törli a profil mappáját: a SOUL.md fájlt, az összes csevegést és a munkaterületet.",
     "deleteProject": "Projekt törlése",
     "deleteProjectConfirm": "Biztosan törli ezt a projektet? A külső mappa fájljai érintetlenek maradnak.",
     "developmentFeatures": "Fejlesztés alatt álló funkciók",
@@ -989,7 +988,9 @@
     "unassignHotkey": "Billentyűparancs eltávolítása",
     "vision": "Képbevitel",
     "voiceTextCorrection": "Diktált szöveg javítása",
-    "translationLanguageUnavailable": "nem érhető el"
+    "translationLanguageUnavailable": "nem érhető el",
+    "duplicateProfileConfirm": "Létrehozza a(z) „{name}” profil másolatát?",
+    "profileNoTools": "Nincsenek engedélyezett eszközök"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

@@ -11,6 +11,7 @@
       @click="emit('open')"
     >
       <AppIcon
+        v-if="icon"
         :icon="icon"
         size="lg"
         class="settings-entity-icon"
@@ -26,6 +27,7 @@
     </button>
     <span v-else class="settings-entity-main">
       <AppIcon
+        v-if="icon"
         :icon="icon"
         size="lg"
         class="settings-entity-icon"
@@ -48,14 +50,6 @@
       <slot />
       <slot name="actions" />
     </div>
-
-    <AppIcon
-      v-if="openable"
-      icon="mdi:chevron-right"
-      size="lg"
-      class="settings-entity-chevron"
-      aria-hidden="true"
-    />
   </div>
 </template>
 
@@ -64,7 +58,7 @@ import AppIcon from '../common/AppIcon.vue'
 
 const props = withDefaults(
   defineProps<{
-    icon: string
+    icon?: string
     title: string
     description?: string
     iconTone?: 'primary' | 'secondary'
@@ -189,11 +183,5 @@ function handleCardClick(event: MouseEvent) {
   align-items: center;
   gap: var(--space-sm);
   flex-shrink: 0;
-}
-
-.settings-entity-chevron {
-  flex-shrink: 0;
-  color: var(--app-text-faint);
-  pointer-events: none;
 }
 </style>

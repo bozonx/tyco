@@ -663,7 +663,6 @@
     "deleteProfile": "Профильді жою",
     "deleteProfileConfirm": "«{name}» профилін жою керек пе? Оның SOUL.md файлы, жұмыс қалтасы және чаттары (чаттар: {count}) біржола жойылады.",
     "deleteProfileConfirmUncounted": "«{name}» профилін жою керек пе? Оның SOUL.md файлы, жұмыс кеңістігі және барлық чаты біржола жойылады.",
-    "deleteProfileHint": "Профиль қалтасын жояды: SOUL.md, барлық чаттар және жұмыс кеңістігі.",
     "deleteProject": "Жобаны жою",
     "deleteProjectConfirm": "Бұл жобаны шынымен жойғыңыз келе ме? Сыртқы қалтадағы файлдарға тиіспейді.",
     "developmentFeatures": "Әзірленіп жатқан функциялар",
@@ -989,7 +988,9 @@
     "unassignHotkey": "Тіркесімді алып тастау",
     "vision": "Сурет енгізу",
     "voiceTextCorrection": "Айтылған мәтінді түзету",
-    "translationLanguageUnavailable": "қолжетімсіз"
+    "translationLanguageUnavailable": "қолжетімсіз",
+    "duplicateProfileConfirm": "«{name}» профилінің көшірмесін жасау керек пе?",
+    "profileNoTools": "Қосылған құралдар жоқ"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

@@ -170,28 +170,6 @@ describe('SettingsProjectDetailTab.vue', () => {
     expect(toastError).toHaveBeenCalledWith(new Error('Denied'))
   })
 
-  it('deletes the project and returns to the overview', async () => {
-    const wrapper = mountTab()
-    await wrapper
-      .findComponent({ name: 'SettingsDangerZone' })
-      .vm.$emit('action')
-    await wrapper.get('.confirm-yes').trigger('click')
-    await flushPromises()
-    expect(store.deleteProject).toHaveBeenCalledWith('notes')
-    expect(context.navigate).toHaveBeenCalledWith('ai-profiles:overview')
-  })
-
-  it('reports a failed deletion', async () => {
-    store.deleteProject.mockRejectedValueOnce(new Error('Busy'))
-    const wrapper = mountTab()
-    await wrapper
-      .findComponent({ name: 'SettingsDangerZone' })
-      .vm.$emit('action')
-    await wrapper.get('.confirm-yes').trigger('click')
-    await flushPromises()
-    expect(toastError).toHaveBeenCalledWith(new Error('Busy'))
-  })
-
   it('tells when the project does not exist', () => {
     expect(mountTab('missing').text()).toContain('settings.projectNotFound')
   })

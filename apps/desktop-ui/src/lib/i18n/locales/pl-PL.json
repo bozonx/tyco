@@ -666,7 +666,6 @@
     "deleteProfile": "Usuń profil",
     "deleteProfileConfirm": "Usunąć profil „{name}”? Jego SOUL.md, folder roboczy i czaty (czaty: {count}) zostaną usunięte na zawsze.",
     "deleteProfileConfirmUncounted": "Usunąć profil „{name}”? Jego SOUL.md, przestrzeń robocza i wszystkie czaty zostaną usunięte na zawsze.",
-    "deleteProfileHint": "Usuwa folder profilu: SOUL.md, wszystkie czaty i przestrzeń roboczą.",
     "deleteProject": "Usuń projekt",
     "deleteProjectConfirm": "Czy na pewno chcesz usunąć ten projekt? Pliki w folderze zewnętrznym nie zostaną naruszone.",
     "developmentFeatures": "Funkcje w fazie rozwoju",
@@ -992,7 +991,9 @@
     "unassignHotkey": "Usuń skrót",
     "vision": "Wejście obrazów",
     "voiceTextCorrection": "Korekta tekstu z dyktowania",
-    "translationLanguageUnavailable": "niedostępny"
+    "translationLanguageUnavailable": "niedostępny",
+    "duplicateProfileConfirm": "Utworzyć kopię profilu „{name}”?",
+    "profileNoTools": "Brak włączonych narzędzi"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

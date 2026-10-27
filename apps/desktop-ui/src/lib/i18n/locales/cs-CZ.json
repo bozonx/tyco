@@ -660,7 +660,6 @@
     "deleteProfile": "Smazat profil",
     "deleteProfileConfirm": "Smazat profil „{name}“? Jeho SOUL.md, pracovní složka a chaty (chatů: {count}) budou smazány navždy.",
     "deleteProfileConfirmUncounted": "Smazat profil „{name}“? Jeho SOUL.md, pracovní prostor a všechny chaty budou smazány navždy.",
-    "deleteProfileHint": "Smaže složku profilu: SOUL.md, všechny chaty a pracovní prostor.",
     "deleteProject": "Smazat projekt",
     "deleteProjectConfirm": "Opravdu chcete tento projekt smazat? Soubory v externí složce zůstanou nedotčeny.",
     "developmentFeatures": "Funkce ve vývoji",
@@ -986,7 +985,9 @@
     "unassignHotkey": "Odebrat zkratku",
     "vision": "Vstup obrázků",
     "voiceTextCorrection": "Oprava nadiktovaného textu",
-    "translationLanguageUnavailable": "nedostupný"
+    "translationLanguageUnavailable": "nedostupný",
+    "duplicateProfileConfirm": "Vytvořit kopii profilu „{name}“?",
+    "profileNoTools": "Žádné povolené nástroje"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

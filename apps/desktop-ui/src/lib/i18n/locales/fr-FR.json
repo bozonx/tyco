@@ -666,7 +666,6 @@
     "deleteProfile": "Supprimer le profil",
     "deleteProfileConfirm": "Supprimer le profil « {name} » ? Son SOUL.md, son dossier de travail et ses chats (chats : {count}) seront supprimés définitivement.",
     "deleteProfileConfirmUncounted": "Supprimer le profil « {name} » ? Son SOUL.md, son espace de travail et tous ses chats seront supprimés définitivement.",
-    "deleteProfileHint": "Supprime le dossier du profil : SOUL.md, tous les chats et l’espace de travail.",
     "deleteProject": "Supprimer le projet",
     "deleteProjectConfirm": "Voulez-vous vraiment supprimer ce projet ? Les fichiers du dossier externe ne seront pas touchés.",
     "developmentFeatures": "Fonctionnalités en développement",
@@ -992,7 +991,9 @@
     "unassignHotkey": "Retirer le raccourci",
     "vision": "Entrée d’images",
     "voiceTextCorrection": "Correction du texte dicté",
-    "translationLanguageUnavailable": "non disponible"
+    "translationLanguageUnavailable": "non disponible",
+    "duplicateProfileConfirm": "Créer une copie du profil « {name} » ?",
+    "profileNoTools": "Aucun outil activé"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

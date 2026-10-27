@@ -227,7 +227,6 @@ describe('ai-profiles-model', () => {
     const model = createAiProfilesModel(deps)
     await model.loadProfiles()
     await model.updateProfile('tech-writer', {
-      icon: 'mdi:robot-outline',
       temperature: 0.3,
       tools: { groups: { files: { isEnabled: true, access: 'ask' } } },
     })
@@ -238,7 +237,6 @@ describe('ai-profiles-model', () => {
     expect(copy).toEqual({
       id: 'tech-writer-2',
       name: 'Tech Writer 2',
-      icon: 'mdi:robot-outline',
       modelId: 'gpt-4o',
       temperature: 0.3,
       projectPermissions: mockProfile.projectPermissions,

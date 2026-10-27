@@ -56,7 +56,17 @@
           :label="t('settings.vaultFolder')"
           :info="t('settings.vaultFolderFixedHint')"
         >
-          <code class="vault-folder">profiles/{{ profile.id }}</code>
+          <div class="profile-folder-row">
+            <code class="vault-folder">profiles/{{ profile.id }}</code>
+            <Button
+              size="sm"
+              variant="neutral"
+              icon="mdi:folder-open-outline"
+              @click="handleOpenFolder"
+            >
+              {{ t('settings.openProfileFolder') }}
+            </Button>
+          </div>
         </FieldRow>
 
         <div class="advanced-toggle">
@@ -170,34 +180,15 @@
             :aria-label="t('settings.profileSoulPrompt')"
             @update:model-value="changeSoul"
           />
-          <div class="profile-form-actions">
+          <div v-if="editor.soulLoadError.value" class="profile-form-actions">
             <Button
-              v-if="editor.soulLoadError.value"
               size="sm"
               :disabled="editor.isSoulLoading.value"
               @click="editor.loadSoul()"
             >
               {{ t('common.retry') }}
             </Button>
-            <Button
-              size="sm"
-              variant="neutral"
-              icon="mdi:folder-open-outline"
-              @click="handleOpenFolder"
-            >
-              {{ t('settings.openProfileFolder') }}
-            </Button>
           </div>
-        </div>
-      </SettingsSection>
-
-      <SettingsSection :title="t('settings.deleteProfile')">
-        <div class="settings-section-content">
-          <SettingsDangerZone
-            :message="t('settings.deleteProfileHint')"
-            :action-label="t('settings.deleteProfile')"
-            @action="askDelete"
-          />
         </div>
       </SettingsSection>
     </template>
@@ -213,16 +204,6 @@
       </Button>
     </StateMessage>
     <StateMessage v-else kind="loading" />
-
-    <ConfirmModal
-      :open="showDeleteConfirm"
-      :title="t('settings.deleteProfile')"
-      :message="deleteMessage"
-      :confirm-text="t('settings.deleteProfile')"
-      danger
-      @confirm="handleDelete"
-      @cancel="showDeleteConfirm = false"
-    />
   </div>
 </template>
 
@@ -259,7 +240,6 @@ import {
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
-import ConfirmModal from '../common/ConfirmModal.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
@@ -268,7 +248,6 @@ import FieldTextArea from '../common/FieldTextArea.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
-import SettingsDangerZone from './SettingsDangerZone.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
@@ -420,43 +399,12 @@ onBeforeUnmount(() => {
 })
 
 // ---------------------------------------------------------------------------
-// Folder and removal
+// Folder
 // ---------------------------------------------------------------------------
 
 async function handleOpenFolder() {
   try {
     await aiProfilesStore.openVaultDir(props.profileId)
-  } catch (error) {
-    toastError(error)
-  }
-}
-
-const showDeleteConfirm = ref(false)
-/** Unknown when the chats could not be counted */
-const chatCount = ref<number | null>(null)
-const deleteMessage = computed(() => {
-  const profileName = profile.value?.name ?? ''
-  return chatCount.value === null
-    ? t('settings.deleteProfileConfirmUncounted', { name: profileName })
-    : t('settings.deleteProfileConfirm', {
-        name: profileName,
-        count: chatCount.value,
-      })
-})
-
-async function askDelete() {
-  chatCount.value = await aiProfilesStore
-    .countChats(props.profileId)
-    .catch(() => null)
-  showDeleteConfirm.value = true
-}
-
-async function handleDelete() {
-  try {
-    editor.cancel()
-    await aiProfilesStore.deleteProfile(props.profileId)
-    showDeleteConfirm.value = false
-    navigate(AI_OVERVIEW_TAB)
   } catch (error) {
     toastError(error)
   }
@@ -478,6 +426,14 @@ async function handleDelete() {
 .vault-folder {
   overflow-wrap: anywhere;
   font-size: var(--text-control);
+}
+
+.profile-folder-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
 }
 
 .advanced-toggle {

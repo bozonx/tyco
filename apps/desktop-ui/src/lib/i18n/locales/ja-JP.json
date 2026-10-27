@@ -663,7 +663,6 @@
     "deleteProfile": "プロファイルを削除",
     "deleteProfileConfirm": "プロファイル「{name}」を削除しますか？SOUL.md、ワークスペースフォルダー、およびチャット（チャット数: {count}）が完全に削除されます。",
     "deleteProfileConfirmUncounted": "プロファイル「{name}」を削除しますか？SOUL.md、ワークスペース、およびすべてのチャットが完全に削除されます。",
-    "deleteProfileHint": "プロファイルのフォルダーとそのすべてのチャットがディスクから削除されます。",
     "deleteProject": "プロジェクトを削除",
     "deleteProjectConfirm": "このプロジェクトをプロファイルから削除しますか？ディスク上のファイルは変更されません。",
     "developmentFeatures": "開発中の機能",
@@ -989,7 +988,9 @@
     "unassignHotkey": "ショートカットを解除",
     "vision": "画像入力",
     "voiceTextCorrection": "音声テキストの校正",
-    "translationLanguageUnavailable": "利用不可"
+    "translationLanguageUnavailable": "利用不可",
+    "duplicateProfileConfirm": "プロファイル「{name}」のコピーを作成しますか？",
+    "profileNoTools": "有効なツールはありません"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

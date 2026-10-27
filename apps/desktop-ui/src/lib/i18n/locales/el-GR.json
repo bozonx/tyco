@@ -663,7 +663,6 @@
     "deleteProfile": "Διαγραφή προφίλ",
     "deleteProfileConfirm": "Διαγραφή του προφίλ «{name}»; Το SOUL.md, ο φάκελος εργασίας και οι συνομιλίες του (συνομιλίες: {count}) θα διαγραφούν οριστικά.",
     "deleteProfileConfirmUncounted": "Διαγραφή του προφίλ «{name}»; Το SOUL.md, ο χώρος εργασίας και όλες οι συνομιλίες του θα διαγραφούν οριστικά.",
-    "deleteProfileHint": "Διαγράφει τον φάκελο του προφίλ: το SOUL.md, όλες τις συνομιλίες και τον χώρο εργασίας.",
     "deleteProject": "Διαγραφή έργου",
     "deleteProjectConfirm": "Θέλετε σίγουρα να διαγράψετε αυτό το έργο; Τα αρχεία του εξωτερικού φακέλου δεν θα αγγιχτούν.",
     "developmentFeatures": "Λειτουργίες υπό ανάπτυξη",
@@ -989,7 +988,9 @@
     "unassignHotkey": "Αφαίρεση συντόμευσης",
     "vision": "Είσοδος εικόνων",
     "voiceTextCorrection": "Διόρθωση υπαγορευμένου κειμένου",
-    "translationLanguageUnavailable": "μη διαθέσιμο"
+    "translationLanguageUnavailable": "μη διαθέσιμο",
+    "duplicateProfileConfirm": "Δημιουργία αντιγράφου του προφίλ «{name}»;",
+    "profileNoTools": "Δεν έχουν ενεργοποιηθεί εργαλεία"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {

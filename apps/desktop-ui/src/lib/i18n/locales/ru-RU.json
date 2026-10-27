@@ -663,7 +663,6 @@
     "deleteProfile": "Удалить профиль",
     "deleteProfileConfirm": "Удалить профиль «{name}»? SOUL.md, рабочая папка и чаты профиля (чатов: {count}) будут удалены безвозвратно.",
     "deleteProfileConfirmUncounted": "Удалить профиль «{name}»? SOUL.md, рабочая папка и все чаты профиля будут удалены безвозвратно.",
-    "deleteProfileHint": "Удаляет папку профиля: SOUL.md, все чаты и рабочую папку.",
     "deleteProject": "Удалить проект",
     "deleteProjectConfirm": "Вы уверены, что хотите удалить этот проект? Файлы внешних папок не будут затронуты.",
     "developmentFeatures": "Функции в разработке",
@@ -989,7 +988,9 @@
     "unassignHotkey": "Убрать сочетание",
     "vision": "Поддержка изображений",
     "voiceTextCorrection": "Исправление распознанного текста",
-    "translationLanguageUnavailable": "недоступен"
+    "translationLanguageUnavailable": "недоступен",
+    "duplicateProfileConfirm": "Создать копию профиля «{name}»?",
+    "profileNoTools": "Инструменты отключены"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

@@ -168,9 +168,7 @@ describe('profile editor', () => {
     expect(editor.saveStatus.value).toBe('saved')
 
     deps.updateProfile.mockRejectedValueOnce(new Error('disk full'))
-    expect(await editor.changeSettings({ icon: 'mdi:robot-outline' })).toBe(
-      false
-    )
+    expect(await editor.changeSettings({ modelId: 'model-b' })).toBe(false)
     await nextTick()
     expect(editor.saveStatus.value).toBe('error')
     expect(deps.reportError).toHaveBeenCalledWith(
@@ -183,7 +181,7 @@ describe('profile editor', () => {
     const { deps, editor } = setup()
     await editor.load(profile)
     deps.updateProfile.mockRejectedValueOnce(new Error('disk full'))
-    await editor.changeSettings({ icon: 'mdi:robot-outline' })
+    await editor.changeSettings({ modelId: 'model-a' })
     const [, retry] = deps.reportError.mock.calls[0] as [string, () => void]
 
     retry()

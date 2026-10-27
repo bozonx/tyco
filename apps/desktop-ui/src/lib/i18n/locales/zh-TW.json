@@ -660,7 +660,6 @@
     "deleteProfile": "刪除設定檔",
     "deleteProfileConfirm": "要刪除設定檔「{name}」嗎？其 SOUL.md、工作區資料夾和聊天記錄（對話數：{count}）將被永久刪除。",
     "deleteProfileConfirmUncounted": "要刪除設定檔「{name}」嗎？其 SOUL.md、工作區和所有聊天記錄將被永久刪除。",
-    "deleteProfileHint": "刪除設定檔資料夾：SOUL.md、所有聊天記錄與工作區。",
     "deleteProject": "刪除專案",
     "deleteProjectConfirm": "確定要刪除此專案嗎？外部資料夾檔案將不受影響。",
     "developmentFeatures": "開發中的功能",
@@ -986,7 +985,9 @@
     "unassignHotkey": "移除快捷鍵",
     "vision": "圖片輸入",
     "voiceTextCorrection": "語音文字校對",
-    "translationLanguageUnavailable": "無法使用"
+    "translationLanguageUnavailable": "無法使用",
+    "duplicateProfileConfirm": "建立設定檔「{name}」的副本？",
+    "profileNoTools": "未啟用任何工具"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
