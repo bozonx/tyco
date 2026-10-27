@@ -252,6 +252,8 @@ function openHistory() {
   font-size: var(--text-body);
   font-weight: 500;
   color: var(--app-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition:
     color var(--transition-fast),
