@@ -290,6 +290,20 @@ export function isSettingsTabAvailable(
   }
 }
 
+/**
+ * Whether a settings tab renders a page title heading. Top-level sections and
+ * overviews rely on their section headings and navigation item; plugin pages
+ * and entity detail subpages show their title.
+ */
+export function hasSettingsPageTitle(tab: string): boolean {
+  const parsed = parseSettingsTab(tab)
+  return (
+    parsed.kind === 'plugin' ||
+    parsed.kind === 'ai-profile' ||
+    parsed.kind === 'ai-project'
+  )
+}
+
 /** The page heading of a tab */
 export function settingsTabTitle(
   tab: string,

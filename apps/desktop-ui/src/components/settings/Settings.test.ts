@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useRoute } from 'vue-router'
 import { CONFIG_VERSION } from '@tyco/shared'
 import { useSettingsSessionStore } from '../../stores/settings-session'
+import SettingsGeneralTab from './SettingsGeneralTab.vue'
 import Settings from './Settings.vue'
 
 const settingsMocks = vi.hoisted(() => ({
@@ -311,9 +312,8 @@ describe('Settings.vue', () => {
       .map((btn) => btn.attributes('data-key'))
 
     expect(tabKeys).not.toContain('editor')
-    expect(wrapper.get('.settings-page-title').text()).toBe(
-      'settings.generalTab'
-    )
+    expect(wrapper.find('.settings-page-title').exists()).toBe(false)
+    expect(wrapper.findComponent(SettingsGeneralTab).exists()).toBe(true)
   })
 
   it('renders the chat and correction pages from their navigation items', async () => {
@@ -428,8 +428,11 @@ describe('Settings.vue', () => {
     const item = (text: string) =>
       wrapper.findAll('.navigation-item').find((node) => node.text() === text)!
 
+    expect(wrapper.find('.settings-page-title').exists()).toBe(false)
+
     await item('plugin.a.label').trigger('click')
     expect(wrapper.get('.plugin-detail-stub').text()).toBe('PluginA')
+    expect(wrapper.get('.settings-page-title').text()).toBe('plugin.a.label')
     expect(wrapper.get('.navigation-item.is-active').text()).toBe(
       'plugin.a.label'
     )
@@ -439,6 +442,7 @@ describe('Settings.vue', () => {
       'settings.allPluginsTab'
     )
     expect(wrapper.find('.plugin-detail-stub').exists()).toBe(false)
+    expect(wrapper.find('.settings-page-title').exists()).toBe(false)
   })
 
   it('remounts SettingsPluginDetailTab with pluginId key when switching plugins', async () => {
@@ -525,5 +529,19 @@ describe('Settings.vue', () => {
     expect(
       sections[1].find('[data-label="settings.formatWithLlm"]').exists()
     ).toBe(true)
+  })
+
+  it('renders a heading for new profile and new project subpages', () => {
+    settingsMocks.isInDevelopment = true
+    useRoute().query.tab = 'ai-profile:new'
+    const wrapper = mount(Settings, {
+      global: {
+        stubs: { NavigationList: false, SettingsProfileDetailTab: true },
+      },
+    })
+
+    expect(wrapper.get('.settings-page-title').text()).toBe(
+      'settings.newProfile'
+    )
   })
 })

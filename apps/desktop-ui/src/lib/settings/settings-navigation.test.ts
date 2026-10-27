@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildSettingsNavigation,
+  hasSettingsPageTitle,
   isSettingsTabAvailable,
   parseSettingsTab,
   settingsNavigationItemId,
@@ -160,5 +161,23 @@ describe('settings navigation', () => {
     expect(settingsTabTitle('ai-profiles', sources)).toBe(
       'settings.aiProfilesTab'
     )
+  })
+
+  it('renders a heading only for plugin and entity subpages', () => {
+    expect(hasSettingsPageTitle('general')).toBe(false)
+    expect(hasSettingsPageTitle('editor')).toBe(false)
+    expect(hasSettingsPageTitle('global-actions')).toBe(false)
+    expect(hasSettingsPageTitle('llm')).toBe(false)
+    expect(hasSettingsPageTitle('plugins')).toBe(false)
+    expect(hasSettingsPageTitle('ai-profiles')).toBe(false)
+    expect(hasSettingsPageTitle('ai-profiles:overview')).toBe(false)
+    expect(hasSettingsPageTitle('commands')).toBe(false)
+    expect(hasSettingsPageTitle('nope')).toBe(false)
+
+    expect(hasSettingsPageTitle('plugin:case')).toBe(true)
+    expect(hasSettingsPageTitle('ai-profile:writer')).toBe(true)
+    expect(hasSettingsPageTitle('ai-profile:new')).toBe(true)
+    expect(hasSettingsPageTitle('ai-project:notes')).toBe(true)
+    expect(hasSettingsPageTitle('ai-project:new')).toBe(true)
   })
 })

@@ -17,7 +17,7 @@
 
     <div class="settings-content">
       <div class="settings-content-inner">
-        <h1 v-if="currentTab !== 'global-actions'" class="settings-page-title">
+        <h1 v-if="showPageTitle" class="settings-page-title">
           <span>{{ currentTabTitle }}</span>
         </h1>
 
@@ -94,6 +94,7 @@ import {
   DEFAULT_SETTINGS_TAB,
   type SettingsPageSectionId,
   buildSettingsNavigation,
+  hasSettingsPageTitle,
   isSettingsTabAvailable,
   parseSettingsTab,
   settingsNavigationItemId,
@@ -251,6 +252,7 @@ watch(
 const currentTabTitle = computed(() =>
   settingsTabTitle(currentTab.value, navigationSources.value)
 )
+const showPageTitle = computed(() => hasSettingsPageTitle(currentTab.value))
 
 const effectiveAppLanguage = computed(() =>
   resolveUiLanguagePreference(
