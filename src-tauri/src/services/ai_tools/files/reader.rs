@@ -130,7 +130,14 @@ fn read_text(target: &Resolved<'_>, shown: &str, max_bytes: u64) -> Result<Strin
 }
 
 pub(super) fn read_existing_text(target: &Resolved<'_>, shown: &str) -> Result<String, AppError> {
-    read_text(target, shown, MAX_WRITE_BYTES as u64)
+    let bytes = read_scoped_bytes(target, shown, MAX_WRITE_BYTES as u64)?;
+    if bytes.contains(&0) {
+        return Err(invalid(format!("{shown} is a binary file")));
+    }
+    // Editing must never replace undecodable bytes elsewhere in the file.
+    // Keep a UTF-8 BOM so that an unrelated edit preserves the encoding marker.
+    String::from_utf8(bytes)
+        .map_err(|_| invalid(format!("{shown} is not UTF-8 and cannot be edited safely")))
 }
 
 /// Bound the actual read as well as metadata: another writer may grow the file.

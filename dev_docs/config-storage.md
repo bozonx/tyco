@@ -183,7 +183,12 @@ It moves the vault into an empty folder, or points the app at an empty folder or
 an existing vault without moving anything; a folder holding other files is
 refused (the settings offer a `tyco-vault` subfolder of it). A move renames each
 top-level entry, or copies, checks and then removes it across disks, and moves
-the entries back when it fails. Timestamps
+the entries back when it fails. Vault operations acquire shared access before
+resolving the current path; relocation holds exclusive access through settings
+publication or rollback. Settings saves and history maintenance acquire vault
+access before the settings and history locks. Cross-disk copies are staged in
+an exclusively created temporary directory and published without replacing an
+existing destination. Failed rollback reports the remaining data locations. Timestamps
 in the stored files are Unix milliseconds (`createdAt`, `updatedAt`,
 `lastMessageAt`). A plugin file is named by the hex of its id, because ids that
 differ only in case collide on a case-insensitive file system.

@@ -91,6 +91,17 @@ pub fn save_user_config(
     base: Value,
 ) -> Result<DesktopSnapshot, AppError> {
     let state = app.state::<AppState>();
+    let _vault = state.read_vault();
+    save_user_config_in_vault(app, next, base)
+}
+
+/// The caller holds vault access, including when relocation owns it exclusively.
+pub(crate) fn save_user_config_in_vault(
+    app: &AppHandle,
+    next: Value,
+    base: Value,
+) -> Result<DesktopSnapshot, AppError> {
+    let state = app.state::<AppState>();
     let secrets = app.state::<SecretStore>();
     save_with(
         &state,

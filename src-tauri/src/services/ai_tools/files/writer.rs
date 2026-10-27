@@ -72,8 +72,12 @@ impl ProfileFiles {
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error.into()),
         }
-        if let Err(error) = source_parent.rename(source_name, &destination_parent, destination_name)
-        {
+        if let Err(error) = crate::services::platform::filesystem::rename_no_replace(
+            &source_parent,
+            source_name,
+            &destination_parent,
+            destination_name,
+        ) {
             if error.kind() != io::ErrorKind::CrossesDevices || !meta.is_file() {
                 return Err(error.into());
             }

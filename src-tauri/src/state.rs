@@ -1,6 +1,6 @@
-use crate::locks::MutexExt;
+use crate::locks::{MutexExt, RwLockExt};
 use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use serde_json::Value;
 
@@ -14,6 +14,7 @@ pub struct AppState {
     snapshot: Mutex<DesktopSnapshot>,
     pub(crate) history: crate::services::storage::HistoryStorageCoordinator,
     settings_update_lock: Mutex<()>,
+    vault_access: RwLock<()>,
     phase: AtomicU8,
 }
 
@@ -23,6 +24,7 @@ impl AppState {
             snapshot: Mutex::new(initial_snapshot),
             history: crate::services::storage::HistoryStorageCoordinator::default(),
             settings_update_lock: Mutex::new(()),
+            vault_access: RwLock::new(()),
             phase: AtomicU8::new(PHASE_RUNNING),
         }
     }
@@ -30,6 +32,16 @@ impl AppState {
     /// Serializes config writes and session updates to keep snapshots coherent.
     pub fn lock_settings_update(&self) -> std::sync::MutexGuard<'_, ()> {
         self.settings_update_lock.locked()
+    }
+
+    /// Acquire before settings/history locks and before resolving the vault path.
+    pub fn read_vault(&self) -> RwLockReadGuard<'_, ()> {
+        self.vault_access.read_locked()
+    }
+
+    /// Relocation retains exclusive access through config publication or rollback.
+    pub fn write_vault(&self) -> RwLockWriteGuard<'_, ()> {
+        self.vault_access.write_locked()
     }
 
     pub fn snapshot(&self) -> DesktopSnapshot {
@@ -83,6 +95,31 @@ mod tests {
     use super::*;
     use crate::models::SessionState;
     use crate::services::settings::defaults::default_desktop_snapshot;
+
+    #[test]
+    fn vault_relocation_excludes_io_until_the_new_path_is_published() {
+        let state = AppState::new(default_desktop_snapshot(
+            serde_json::json!({"aiVault": {"path": "/old"}}),
+            SessionState::default(),
+        ));
+        let operation = state.read_vault();
+        assert!(state.vault_access.try_write().is_err());
+        drop(operation);
+        let relocating = state.write_vault();
+        assert!(state.vault_access.try_read().is_err());
+        std::thread::scope(|scope| {
+            let reader = scope.spawn(|| {
+                let _access = state.read_vault();
+                state.user_config()["aiVault"]["path"].clone()
+            });
+            state.update_snapshot(|snapshot| {
+                snapshot.settings.user_config =
+                    std::sync::Arc::new(serde_json::json!({"aiVault": {"path": "/new"}}));
+            });
+            drop(relocating);
+            assert_eq!(reader.join().unwrap(), "/new");
+        });
+    }
 
     #[test]
     fn snapshots_order_settings_and_activation_changes_with_the_same_revision() {

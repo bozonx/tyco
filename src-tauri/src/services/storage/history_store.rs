@@ -93,6 +93,7 @@ impl HistoryStorageCoordinator {
         if !self.cleanup_pending.load(Ordering::SeqCst) {
             return;
         }
+        let _vault = state.read_vault();
         let _settings = state.lock_settings_update();
         let _editor = self.lock_editor_history();
         let _chats = self.lock_chat_history();
@@ -208,6 +209,16 @@ fn with_chats<T>(
     operation: impl FnOnce(&AppState, &Path) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
+    let _vault = state.read_vault();
+    with_chats_in_vault(app, scope, operation)
+}
+
+fn with_chats_in_vault<T>(
+    app: &AppHandle,
+    scope: &ChatScope,
+    operation: impl FnOnce(&AppState, &Path) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let state = app.state::<AppState>();
     let _guard = state.history.lock_chat_history();
     let chats_dir = scope_chats_dir(app, &state, scope)?;
     operation(&state, &chats_dir)
@@ -215,7 +226,7 @@ fn with_chats<T>(
 
 /// Runs `operation` while no chat history is written, e.g. to remove a profile
 /// together with its chats.
-pub fn while_chats_locked<T>(
+pub fn while_chats_locked_in_vault<T>(
     app: &AppHandle,
     operation: impl FnOnce() -> Result<T, AppError>,
 ) -> Result<T, AppError> {
@@ -323,10 +334,11 @@ pub fn search_chats(
 ) -> Result<Vec<String>, AppError> {
     // The index is a snapshot. Atomic file replacements allow searching each
     // chat without holding up unrelated saves or editor history operations.
-    let (chats_dir, history) = with_chats(app, scope, |_, chats_dir| {
+    let state = app.state::<AppState>();
+    let _vault = state.read_vault();
+    let (chats_dir, history) = with_chats_in_vault(app, scope, |_, chats_dir| {
         Ok((chats_dir.to_path_buf(), chats::list_chats(chats_dir)?))
     })?;
-    let state = app.state::<AppState>();
     chats::search_chats(&chats_dir, history, query, &state.history.chat_search)
 }
 

@@ -3,6 +3,7 @@ mod relocation_tests;
 #[cfg(test)]
 mod tests;
 
+pub mod location;
 pub mod operations;
 pub mod relocation;
 pub mod types;
@@ -13,7 +14,7 @@ pub use types::*;
 use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 use crate::services::storage::app_data_sub_dir;
@@ -48,4 +49,16 @@ pub fn resolve_vault_path(app: &AppHandle, user_config: &Value) -> Result<PathBu
     let configured = crate::models::user_config::ai_vault(user_config).path;
 
     resolve_vault_path_from_config(Some(&configured), || app_data_sub_dir(app, "ai-vault"))
+}
+
+/// Resolve the active vault only after relocation has finished; retain access
+/// until all I/O using this path has completed.
+pub fn with_vault<T>(
+    app: &AppHandle,
+    operation: impl FnOnce(&std::path::Path) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let state = app.state::<crate::state::AppState>();
+    let _access = state.read_vault();
+    let path = resolve_vault_path(app, &state.user_config())?;
+    operation(&path)
 }

@@ -891,3 +891,36 @@ fn writes_report_overwrites_and_refuse_folders_and_binary_edits() {
         })
         .is_err());
 }
+
+#[test]
+fn editing_invalid_utf8_rejects_without_modifying_any_bytes() {
+    let (dir, files) = fixture("ai-edit-invalid-utf8");
+    let path = dir.join("workspace/legacy.txt");
+    let original = b"ASCII target\n\xcf\xf0\xe8\xe2\xe5\xf2\n";
+    fs::write(&path, original).unwrap();
+    let result = run(
+        &files,
+        serde_json::json!({
+            "operation": "editFile", "path": "workspace/legacy.txt",
+            "oldText": "target", "newText": "changed", "replaceAll": false
+        }),
+    );
+    assert!(result.unwrap_err().to_string().contains("UTF-8"));
+    assert_eq!(fs::read(&path).unwrap(), original);
+}
+
+#[test]
+fn editing_utf8_preserves_the_bom() {
+    let (dir, files) = fixture("ai-edit-utf8-bom");
+    let path = dir.join("workspace/bom.txt");
+    fs::write(&path, "\u{feff}target\r\n").unwrap();
+    run(
+        &files,
+        serde_json::json!({
+            "operation": "editFile", "path": "workspace/bom.txt",
+            "oldText": "target", "newText": "changed", "replaceAll": false
+        }),
+    )
+    .unwrap();
+    assert_eq!(fs::read_to_string(path).unwrap(), "\u{feff}changed\r\n");
+}
