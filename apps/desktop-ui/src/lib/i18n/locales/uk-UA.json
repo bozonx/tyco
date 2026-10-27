@@ -659,6 +659,7 @@
     "correctionPromptPlaceholder": "наприклад: зберігай вихідний тон, виправляй пунктуацію та одруки",
     "correctionTab": "Корекція",
     "createProfile": "Створити профіль",
+    "createProject": "Створити проєкт",
     "deleteAllChats": "Видалити всі чати",
     "deleteProfile": "Видалити профіль",
     "deleteProfileConfirm": "Видалити профіль «{name}»? Його SOUL.md, робочу теку й чати (чатів: {count}) буде видалено назавжди.",

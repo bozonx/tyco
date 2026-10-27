@@ -803,6 +803,7 @@
     "correctionPromptPlaceholder": "예: 원본 톤 유지, 오타 및 문장 부호 수정",
     "correctionTab": "교정",
     "createProfile": "프로필 만들기",
+    "createProject": "프로젝트 만들기",
     "deleteAllChats": "모든 채팅 삭제",
     "deleteProfile": "프로필 삭제",
     "deleteProfileConfirm": "“{name}” 프로필을 삭제하시겠습니까? SOUL.md, 작업 공간 폴더 및 채팅(채팅: {count}개)이 영구적으로 삭제됩니다.",

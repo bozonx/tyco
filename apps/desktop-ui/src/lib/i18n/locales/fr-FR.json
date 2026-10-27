@@ -662,6 +662,7 @@
     "correctionPromptPlaceholder": "ex. conserver le ton d’origine, corriger les fautes et la ponctuation",
     "correctionTab": "Correction",
     "createProfile": "Créer un profil",
+    "createProject": "Créer un projet",
     "deleteAllChats": "Supprimer tous les chats",
     "deleteProfile": "Supprimer le profil",
     "deleteProfileConfirm": "Supprimer le profil « {name} » ? Son SOUL.md, son dossier de travail et ses chats (chats : {count}) seront supprimés définitivement.",

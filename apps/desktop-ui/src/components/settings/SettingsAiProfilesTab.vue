@@ -9,7 +9,7 @@
           size="sm"
           variant="primary"
           icon="mdi:plus"
-          @click="navigate(profileTab(NEW_ENTITY_ID))"
+          @click="showCreateProfileModal = true"
         >
           {{ t('settings.newProfile') }}
         </Button>
@@ -55,7 +55,7 @@
           size="sm"
           variant="primary"
           icon="mdi:plus"
-          @click="navigate(projectTab(NEW_ENTITY_ID))"
+          @click="showCreateProjectModal = true"
         >
           {{ t('settings.newProject') }}
         </Button>
@@ -136,6 +136,26 @@
       @close="showVaultModal = false"
     />
 
+    <SettingsCreateEntityModal
+      :open="showCreateProfileModal"
+      :title="t('settings.newProfile')"
+      :label="t('settings.profileName')"
+      :confirm-text="t('settings.createProfile')"
+      :is-submitting="isCreatingProfile"
+      @submit="handleCreateProfile"
+      @close="showCreateProfileModal = false"
+    />
+
+    <SettingsCreateEntityModal
+      :open="showCreateProjectModal"
+      :title="t('settings.newProject')"
+      :label="t('settings.projectName')"
+      :confirm-text="t('settings.createProject')"
+      :is-submitting="isCreatingProject"
+      @submit="handleCreateProject"
+      @close="showCreateProjectModal = false"
+    />
+
     <ConfirmModal
       :open="showDuplicateProfileConfirm"
       :title="t('settings.duplicateProfile')"
@@ -182,11 +202,7 @@ import {
   CHAT_TOOL_GROUPS,
   toolGroupSettings,
 } from '../../lib/chat-tools/chat-tool-groups'
-import {
-  NEW_ENTITY_ID,
-  profileTab,
-  projectTab,
-} from '../../lib/settings/settings-navigation'
+import { profileTab, projectTab } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -195,6 +211,7 @@ import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
+import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsVaultLocationModal from './SettingsVaultLocationModal.vue'
@@ -342,6 +359,49 @@ async function handleDeleteProject() {
   } finally {
     showDeleteProjectConfirm.value = false
     projectToDelete.value = null
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Create profile & project
+// ---------------------------------------------------------------------------
+
+const showCreateProfileModal = ref(false)
+const isCreatingProfile = ref(false)
+
+async function handleCreateProfile(name: string) {
+  isCreatingProfile.value = true
+  try {
+    const created = await aiProfilesStore.createProfile({
+      name,
+      soul: t('settings.profileDefaultSoul'),
+      settings: {},
+    })
+    showCreateProfileModal.value = false
+    navigate(profileTab(created.id))
+  } catch (error) {
+    toastError(error)
+  } finally {
+    isCreatingProfile.value = false
+  }
+}
+
+const showCreateProjectModal = ref(false)
+const isCreatingProject = ref(false)
+
+async function handleCreateProject(name: string) {
+  isCreatingProject.value = true
+  try {
+    const created = await aiProfilesStore.createProject({
+      name,
+      isExternal: false,
+    })
+    showCreateProjectModal.value = false
+    navigate(projectTab(created.id))
+  } catch (error) {
+    toastError(error)
+  } finally {
+    isCreatingProject.value = false
   }
 }
 

@@ -659,6 +659,7 @@
     "correctionPromptPlaceholder": "мысалы: бастапқы стильді сақта, қателер мен тыныс белгілерін түзе",
     "correctionTab": "Түзету",
     "createProfile": "Профиль жасау",
+    "createProject": "Жоба жасау",
     "deleteAllChats": "Барлық чатты жою",
     "deleteProfile": "Профильді жою",
     "deleteProfileConfirm": "«{name}» профилін жою керек пе? Оның SOUL.md файлы, жұмыс қалтасы және чаттары (чаттар: {count}) біржола жойылады.",

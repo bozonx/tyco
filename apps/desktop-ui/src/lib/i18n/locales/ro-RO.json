@@ -662,6 +662,7 @@
     "correctionPromptPlaceholder": "de ex. păstrează tonul original, corectează greșelile de tipar și punctuația",
     "correctionTab": "Corectare",
     "createProfile": "Creează profil",
+    "createProject": "Creează proiect",
     "deleteAllChats": "Șterge toate chaturile",
     "deleteProfile": "Șterge profilul",
     "deleteProfileConfirm": "Ștergeți profilul „{name}”? Fișierul său SOUL.md, dosarul de lucru și chaturile (chaturi: {count}) vor fi șterse definitiv.",

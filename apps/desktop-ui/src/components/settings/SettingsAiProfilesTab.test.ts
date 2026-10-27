@@ -50,6 +50,14 @@ function createStore() {
     pickFolder: vi.fn(async (): Promise<string | null> => '/elsewhere'),
     duplicateProfile: vi.fn(async () => ({ id: 'writer-copy' })),
     countChats: vi.fn(async () => 5),
+    createProfile: vi.fn(async ({ name }: { name: string }) => ({
+      id: 'created-profile',
+      name,
+    })),
+    createProject: vi.fn(async ({ name }: { name: string }) => ({
+      id: 'created-project',
+      name,
+    })),
     deleteProfile: vi.fn(async () => {}),
     deleteProject: vi.fn(async () => {}),
   })
@@ -74,6 +82,13 @@ describe('SettingsAiProfilesTab.vue', () => {
             name: 'SettingsVaultLocationModal',
             props: ['open', 'currentPath', 'isCustom'],
             template: '<div />',
+          },
+          SettingsCreateEntityModal: {
+            name: 'SettingsCreateEntityModal',
+            props: ['open', 'title', 'label', 'confirmText', 'isSubmitting'],
+            emits: ['close', 'submit'],
+            template:
+              '<div class="create-entity-modal" :data-title="title" :data-open="open" />',
           },
           ConfirmModal: {
             name: 'ConfirmModal',
@@ -129,14 +144,69 @@ describe('SettingsAiProfilesTab.vue', () => {
     expect(items[2]!.text()).toContain('settings.noProfilesWithAccess')
   })
 
-  it('opens new profiles and projects', async () => {
+  it('creates and opens a new profile through the modal', async () => {
     const wrapper = mountTab()
+    const modals = wrapper.findAllComponents({
+      name: 'SettingsCreateEntityModal',
+    })
+    const profileModal = modals[0]!
+    expect(profileModal.props('open')).toBe(false)
+
     await button(wrapper, 'settings.newProfile').trigger('click')
+    expect(profileModal.props('open')).toBe(true)
+
+    await profileModal.vm.$emit('submit', 'New Writer')
+    await flushPromises()
+
+    expect(store.createProfile).toHaveBeenCalledWith({
+      name: 'New Writer',
+      soul: expect.any(String),
+      settings: {},
+    })
+    expect(context.navigate).toHaveBeenCalledWith('ai-profile:created-profile')
+    expect(profileModal.props('open')).toBe(false)
+  })
+
+  it('creates and opens a new project through the modal', async () => {
+    const wrapper = mountTab()
+    const modals = wrapper.findAllComponents({
+      name: 'SettingsCreateEntityModal',
+    })
+    const projectModal = modals[1]!
+    expect(projectModal.props('open')).toBe(false)
+
     await button(wrapper, 'settings.newProject').trigger('click')
-    expect(vi.mocked(context.navigate).mock.calls).toEqual([
-      ['ai-profile:new'],
-      ['ai-project:new'],
+    expect(projectModal.props('open')).toBe(true)
+
+    await projectModal.vm.$emit('submit', 'New Workspace')
+    await flushPromises()
+
+    expect(store.createProject).toHaveBeenCalledWith({
+      name: 'New Workspace',
+      isExternal: false,
+    })
+    expect(context.navigate).toHaveBeenCalledWith('ai-project:created-project')
+    expect(projectModal.props('open')).toBe(false)
+  })
+
+  it('reports creation errors without closing modal', async () => {
+    store.createProfile.mockRejectedValueOnce(
+      new Error('Profile creation failed')
+    )
+    const wrapper = mountTab()
+    const modals = wrapper.findAllComponents({
+      name: 'SettingsCreateEntityModal',
+    })
+    const profileModal = modals[0]!
+
+    await button(wrapper, 'settings.newProfile').trigger('click')
+    await profileModal.vm.$emit('submit', 'Bad Profile')
+    await flushPromises()
+
+    expect(toastError.mock.calls).toEqual([
+      [new Error('Profile creation failed')],
     ])
+    expect(profileModal.props('open')).toBe(true)
   })
 
   it('changes the vault folder in a dialog, never in the draft', async () => {

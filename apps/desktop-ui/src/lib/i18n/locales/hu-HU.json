@@ -659,6 +659,7 @@
     "correctionPromptPlaceholder": "pl. tartsd meg az eredeti hangnemet, javítsd az elgépeléseket és az írásjeleket",
     "correctionTab": "Javítás",
     "createProfile": "Profil létrehozása",
+    "createProject": "Projekt létrehozása",
     "deleteAllChats": "Összes csevegés törlése",
     "deleteProfile": "Profil törlése",
     "deleteProfileConfirm": "Törli a(z) „{name}” profilt? A SOUL.md fájlja, a munkamappája és a csevegései (csevegések: {count}) végleg törlődnek.",

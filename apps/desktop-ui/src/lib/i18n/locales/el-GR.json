@@ -659,6 +659,7 @@
     "correctionPromptPlaceholder": "π.χ. διατήρησε το αρχικό ύφος, διόρθωσε ορθογραφικά και στίξη",
     "correctionTab": "Διόρθωση",
     "createProfile": "Δημιουργία προφίλ",
+    "createProject": "Δημιουργία έργου",
     "deleteAllChats": "Διαγραφή όλων των συνομιλιών",
     "deleteProfile": "Διαγραφή προφίλ",
     "deleteProfileConfirm": "Διαγραφή του προφίλ «{name}»; Το SOUL.md, ο φάκελος εργασίας και οι συνομιλίες του (συνομιλίες: {count}) θα διαγραφούν οριστικά.",

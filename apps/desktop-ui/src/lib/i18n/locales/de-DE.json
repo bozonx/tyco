@@ -662,6 +662,7 @@
     "correctionPromptPlaceholder": "z. B. Tonfall beibehalten, Tippfehler und Zeichensetzung korrigieren",
     "correctionTab": "Korrektur",
     "createProfile": "Profil erstellen",
+    "createProject": "Projekt erstellen",
     "deleteAllChats": "Alle Chats löschen",
     "deleteProfile": "Profil löschen",
     "deleteProfileConfirm": "Profil „{name}“ löschen? Seine SOUL.md, sein Arbeitsordner und seine Chats (Chats: {count}) werden endgültig gelöscht.",

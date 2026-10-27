@@ -659,6 +659,7 @@
     "correctionPromptPlaceholder": "ör. orijinal üslubu koru, yazım ve noktalama hatalarını düzelt",
     "correctionTab": "Düzeltme",
     "createProfile": "Profil oluştur",
+    "createProject": "Proje oluştur",
     "deleteAllChats": "Tüm sohbetleri sil",
     "deleteProfile": "Profili Sil",
     "deleteProfileConfirm": "\"{name}\" profili silinsin mi? SOUL.md dosyası, çalışma klasörü ve sohbetleri (sohbet sayısı: {count}) kalıcı olarak silinir.",

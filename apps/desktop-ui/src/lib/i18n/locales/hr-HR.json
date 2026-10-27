@@ -662,6 +662,7 @@
     "correctionPromptPlaceholder": "npr. zadrži izvorni ton, ispravi tipfelere i interpunkciju",
     "correctionTab": "Ispravak",
     "createProfile": "Stvori profil",
+    "createProject": "Stvori projekt",
     "deleteAllChats": "Izbriši sve chatove",
     "deleteProfile": "Izbriši profil",
     "deleteProfileConfirm": "Izbrisati profil „{name}”? Njegov SOUL.md, radna mapa i chatovi (chatova: {count}) bit će trajno izbrisani.",

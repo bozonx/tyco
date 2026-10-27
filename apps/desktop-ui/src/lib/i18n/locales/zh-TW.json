@@ -656,6 +656,7 @@
     "correctionPromptPlaceholder": "例如：保持原有的語氣，修正錯字和標點",
     "correctionTab": "校對",
     "createProfile": "建立設定檔",
+    "createProject": "建立專案",
     "deleteAllChats": "刪除所有聊天記錄",
     "deleteProfile": "刪除設定檔",
     "deleteProfileConfirm": "要刪除設定檔「{name}」嗎？其 SOUL.md、工作區資料夾和聊天記錄（對話數：{count}）將被永久刪除。",

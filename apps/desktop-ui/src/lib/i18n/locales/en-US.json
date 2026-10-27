@@ -662,6 +662,7 @@
     "correctionPromptPlaceholder": "e.g. preserve the original tone, fix typos and punctuation",
     "correctionTab": "Correction",
     "createProfile": "Create Profile",
+    "createProject": "Create Project",
     "deleteAllChats": "Delete all chats",
     "deleteProfile": "Delete Profile",
     "deleteProfileConfirm": "Delete the profile \"{name}\"? Its SOUL.md, its workspace folder and its chats (chats: {count}) are deleted for good.",

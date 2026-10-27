@@ -659,6 +659,7 @@
     "correctionPromptPlaceholder": "例: 元のトーンを維持し、誤字や句読点を修正する",
     "correctionTab": "校正",
     "createProfile": "プロファイルを作成",
+    "createProject": "プロジェクトを作成",
     "deleteAllChats": "すべてのチャットを削除",
     "deleteProfile": "プロファイルを削除",
     "deleteProfileConfirm": "プロファイル「{name}」を削除しますか？SOUL.md、ワークスペースフォルダー、およびチャット（チャット数: {count}）が完全に削除されます。",

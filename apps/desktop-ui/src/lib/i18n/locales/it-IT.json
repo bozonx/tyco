@@ -662,6 +662,7 @@
     "correctionPromptPlaceholder": "es. mantieni il tono originale, correggi refusi e punteggiatura",
     "correctionTab": "Correzione",
     "createProfile": "Crea profilo",
+    "createProject": "Crea progetto",
     "deleteAllChats": "Elimina tutte le chat",
     "deleteProfile": "Elimina profilo",
     "deleteProfileConfirm": "Eliminare il profilo «{name}»? Il suo SOUL.md, la sua cartella di lavoro e le sue chat (chat: {count}) verranno eliminati definitivamente.",

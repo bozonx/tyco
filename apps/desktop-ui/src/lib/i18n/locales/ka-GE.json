@@ -659,6 +659,7 @@
     "correctionPromptPlaceholder": "მაგ: შეინარჩუნე პირვანდელი ტონი, გაასწორე ორთოგრაფია და პუნქტუაცია",
     "correctionTab": "შესწორება",
     "createProfile": "პროფილის შექმნა",
+    "createProject": "პროექტის შექმნა",
     "deleteAllChats": "ყველა ჩატის წაშლა",
     "deleteProfile": "პროფილის წაშლა",
     "deleteProfileConfirm": "წაიშალოს პროფილი „{name}“? მისი SOUL.md, სამუშაო საქაღალდე და ჩატები (ჩატები: {count}) სამუდამოდ წაიშლება.",

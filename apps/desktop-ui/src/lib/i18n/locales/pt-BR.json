@@ -662,6 +662,7 @@
     "correctionPromptPlaceholder": "ex: preserve o tom original, corrija erros de digitação e pontuação",
     "correctionTab": "Correção",
     "createProfile": "Criar perfil",
+    "createProject": "Criar projeto",
     "deleteAllChats": "Excluir todos os chats",
     "deleteProfile": "Excluir perfil",
     "deleteProfileConfirm": "Excluir o perfil “{name}”? O SOUL.md, a pasta de trabalho e os chats dele (chats: {count}) serão excluídos para sempre.",

@@ -656,6 +656,7 @@
     "correctionPromptPlaceholder": "např. zachovej původní tón, oprav překlepy a interpunkci",
     "correctionTab": "Korekce",
     "createProfile": "Vytvořit profil",
+    "createProject": "Vytvořit projekt",
     "deleteAllChats": "Smazat všechny chaty",
     "deleteProfile": "Smazat profil",
     "deleteProfileConfirm": "Smazat profil „{name}“? Jeho SOUL.md, pracovní složka a chaty (chatů: {count}) budou smazány navždy.",
