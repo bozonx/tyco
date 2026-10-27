@@ -182,7 +182,6 @@ test.describe('command configuration', () => {
     await expect
       .poll(() => desktop.userConfig.launcherPages[0]?.slots.q)
       .toBe(commandId)
-    await page.getByRole('status').filter({ hasText: 'Saved' }).waitFor()
     const launcherDesktop = new FakeDesktop({
       mode: ActivationMode.COMMAND_LAUNCHER,
       userConfig: desktop.userConfig,

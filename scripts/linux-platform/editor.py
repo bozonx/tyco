@@ -1,6 +1,9 @@
 """Foreign GTK client for platform tests; no Tyco code runs in this process."""
 import sys
+import warnings
 from pathlib import Path
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import gi
 

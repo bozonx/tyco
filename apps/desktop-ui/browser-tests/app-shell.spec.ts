@@ -23,9 +23,7 @@ test('navigates between the main pages', async ({ page }) => {
   ).toBeVisible()
 
   await banner.getByRole('button', { name: 'Settings' }).click()
-  await expect(
-    page.getByRole('heading', { name: 'General', level: 1 })
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Appearance' })).toBeVisible()
 
   await banner.getByRole('button', { name: 'Editor' }).click()
   await expect(page.getByRole('textbox', { name: 'Text editor' })).toBeVisible()

@@ -202,7 +202,11 @@ try {
   assert.equal(first.settings.userConfig.appearance.theme, 'dark')
   const second = await invoke('save_user_config', {
     baseConfig: initial,
-    userConfig: { ...initial, language: { ui: 'en-US' } },
+    userConfig: {
+      ...initial,
+      language: { ui: 'en-US' },
+      isInDevelopment: true,
+    },
   })
   assert.equal(
     second.settings.userConfig.appearance.theme,

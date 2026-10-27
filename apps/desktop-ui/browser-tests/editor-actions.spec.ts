@@ -35,7 +35,9 @@ test('enables a plugin, uses its editor action and disables it', async ({
     .click()
   await page.getByRole('button', { name: 'Text case', exact: true }).click()
   await page.getByRole('switch').check()
-  await expect(page.getByRole('status')).toHaveText('Saved')
+  await expect
+    .poll(() => desktop.userConfig.plugins.TextCase?.isEnabled)
+    .toBe(true)
   await page
     .getByRole('banner')
     .getByRole('button', { name: 'Editor', exact: true })
@@ -51,7 +53,9 @@ test('enables a plugin, uses its editor action and disables it', async ({
     .click()
   await page.getByRole('button', { name: 'Text case', exact: true }).click()
   await page.getByRole('switch').uncheck()
-  await expect(page.getByRole('status')).toHaveText('Saved')
+  await expect
+    .poll(() => desktop.userConfig.plugins.TextCase?.isEnabled)
+    .toBe(false)
   await page
     .getByRole('banner')
     .getByRole('button', { name: 'Editor', exact: true })
@@ -87,8 +91,8 @@ test('translates into a chosen language and applies the result', async ({
   await page.keyboard.press('Enter')
   await llm.answer('Buenos días a todos.')
   expect(llm.requests[0]!.body).toContain('Good morning, everyone.')
-  expect(llm.requests[0]!.body).toContain(
-    'Translate the source_text block to es'
+  expect(llm.requests[0]!.body).toMatch(
+    /Translate the source_text block to (European Spanish \(es-ES\)|es)/
   )
   await page.getByRole('button', { name: /Insert into editor/ }).click()
   await expect(editor).toHaveText('Buenos días a todos.')

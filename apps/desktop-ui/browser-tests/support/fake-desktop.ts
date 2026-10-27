@@ -71,7 +71,9 @@ export class FakeDesktop {
   private page: Page | null = null
 
   constructor(options: FakeDesktopOptions = {}) {
-    this.userConfig = structuredClone(options.userConfig ?? DEFAULT_USER_CONFIG)
+    this.userConfig = structuredClone(
+      options.userConfig ?? { ...DEFAULT_USER_CONFIG, isInDevelopment: true }
+    )
     this.sessionState = structuredClone(
       options.sessionState ?? DEFAULT_SESSION_STATE
     )
@@ -327,6 +329,10 @@ export class FakeDesktop {
       ],
     }))
 
+    this.handle('get_text_insertion_status', () => ({
+      keys: 'ready',
+      target: 'tracked',
+    }))
     this.handle('log_client_message', noop)
     this.handle('mark_activation_metric', noop)
     this.handle('submit_activation_metric_value', noop)

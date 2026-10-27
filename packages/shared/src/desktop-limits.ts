@@ -1,4 +1,4 @@
-import limits from './desktop-limits.json'
+import limits from './desktop-limits.json' with { type: 'json' }
 
 /** Contract limits shared with Rust through its build script. */
 export const {

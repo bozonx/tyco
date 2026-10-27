@@ -35,6 +35,8 @@ wait_for() {
 case "$session" in
   x11)
     export XDG_SESSION_TYPE=x11 XDG_CURRENT_DESKTOP=Openbox GDK_BACKEND=x11 DISPLAY=:99
+    # Direct XSendEvent in the test fixture requires GTK core events.
+    export GDK_CORE_DEVICE_EVENTS=1
     unset WAYLAND_DISPLAY
     Xvfb "$DISPLAY" -screen 0 1280x800x24 -nolisten tcp >"$log_dir/xvfb.log" 2>&1 &
     pids+=("$!")

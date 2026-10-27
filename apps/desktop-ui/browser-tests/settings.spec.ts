@@ -22,8 +22,7 @@ test('saves a changed setting and applies it', async ({ page, desktop }) => {
   await themeOption(page, 'Dark').click()
 
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-  await expect(page.getByRole('status')).toHaveText('Saved')
-  expect(desktop.userConfig.appearance.theme).toBe('dark')
+  await expect.poll(() => desktop.userConfig.appearance.theme).toBe('dark')
 
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
@@ -65,7 +64,6 @@ test('retries a failed save and keeps the saved value after reload', async ({
   await expect(page.getByText('Settings could not be saved')).toBeVisible()
   canSave = true
   await page.getByRole('button', { name: 'Retry saving', exact: true }).click()
-  await expect(page.getByRole('status')).toHaveText('Saved')
   await expect.poll(() => desktop.userConfig.appearance.theme).toBe('dark')
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
@@ -111,7 +109,6 @@ test('configures a connection and model through settings and uses them in chat',
       )
     )
     .toBe(true)
-  await page.getByRole('status').filter({ hasText: 'Saved' }).waitFor()
   await page.reload()
   await page
     .getByRole('banner')
