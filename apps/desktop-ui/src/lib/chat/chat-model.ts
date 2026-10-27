@@ -27,19 +27,30 @@ export function createChatModel(deps: ChatModelDependencies) {
     generation.halt,
     persistence.persist
   )
+  let disposed = false
   return {
     ...state,
     savingImages: persistence.savingImages,
     renameChat: (id: string, newTitle: string) => {
+      if (disposed) return Promise.resolve()
       if (currentChatParams.value.id === id) title.cancel()
       return persistence.renameChat(id, newTitle)
     },
-    sendMessage: generation.sendMessage,
+    sendMessage: (...args: Parameters<typeof generation.sendMessage>) =>
+      disposed ? Promise.resolve('') : generation.sendMessage(...args),
     stopGeneration: generation.stopGeneration,
-    retryLastTurn: generation.retryLastTurn,
-    regenerateMessage: generation.regenerateMessage,
+    retryLastTurn: () =>
+      disposed ? Promise.resolve('') : generation.retryLastTurn(),
+    regenerateMessage: (index: number) =>
+      disposed ? Promise.resolve('') : generation.regenerateMessage(index),
     ...session,
+    dispose: () => {
+      if (disposed) return
+      disposed = true
+      session.dispose()
+    },
     removeAttachment: (index: number) => {
+      if (disposed) return
       const current = currentChatParams.value.attachments || []
       if (index >= 0 && index < current.length) {
         currentChatParams.value.attachments = current.filter(

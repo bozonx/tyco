@@ -338,9 +338,13 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     selectModel: scope.selectModel,
   })
 
+  let disposed = false
   const dispose = () => {
+    if (disposed) return
+    disposed = true
+    controller.dispose()
     chatTools.dispose()
-    model.stopGeneration()
+    model.dispose()
     files.dispose()
   }
 
@@ -349,7 +353,9 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     ...controller,
     /** The chat reopened in a profile is its last one, or a new one */
     async openLastOrNewChat() {
+      if (disposed) return
       if (profileId) await prepareProfile()
+      if (disposed) return
       await controller.openLastOrNewChat()
     },
     addFiles: files.addFiles,

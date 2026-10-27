@@ -35,6 +35,8 @@ export function createChatSessionModel(
     lastFailedTurn,
   } = state
   let openRequest = 0
+  let disposed = false
+  const isCurrent = (request: number) => !disposed && request === openRequest
   const stopGeneration = () => halt(true)
   const reset = (chatParams: ChatParams = {}) => {
     messages.value = []
@@ -47,6 +49,7 @@ export function createChatSessionModel(
   }
 
   const clearChat = () => {
+    if (disposed) return
     openRequest += 1
     stopGeneration()
     reset()
@@ -55,6 +58,7 @@ export function createChatSessionModel(
   const branchChat = async (messageIndex: number): Promise<boolean> => {
     // an answer still coming is stopped first: the branch takes it as it was
     // left, or without it when nothing of it came
+    if (disposed) return false
     if (messageIndex < 0 || messageIndex >= messages.value.length) return false
     const request = ++openRequest
     stopGeneration()
@@ -71,7 +75,7 @@ export function createChatSessionModel(
     const params = { id, title, attachments: [] }
     if (
       !(await persist(slice, params)) ||
-      request !== openRequest ||
+      !isCurrent(request) ||
       messages.value !== originalMessages ||
       messages.value.length !== originalMessageCount ||
       isGenerating.value
@@ -80,17 +84,20 @@ export function createChatSessionModel(
     reset(params)
     messages.value = slice
     await deps.saveSessionState({ lastChatId: id })
+    if (!isCurrent(request)) return false
     await deps.navigateTo(APP_ROUTES.CHAT.path)
-    return true
+    return isCurrent(request)
   }
 
   const startChat = async (chatParams: ChatParams) => {
+    if (disposed) return
     clearChat()
     currentChatParams.value = { ...chatParams, id: deps.createId() }
     await deps.navigateTo(APP_ROUTES.CHAT.path)
   }
 
   const addAttachment = (attachment: ChatAttachment) => {
+    if (disposed) return
     const text = attachment.text?.trim()
     if (!text) return
     const current = currentChatParams.value.attachments || []
@@ -111,6 +118,8 @@ export function createChatSessionModel(
    * a new one otherwise
    */
   const attachToChat = async (attachment: ChatAttachment) => {
+    if (disposed) return
+    openRequest += 1
     const text = attachment.text?.trim()
     if (!text) return
     if (messages.value.length > 0 || isGenerating.value) {
@@ -128,18 +137,25 @@ export function createChatSessionModel(
    * being removed from the history
    */
   const abandonChat = () => {
+    if (disposed) return
     openRequest += 1
     halt(false)
     reset({ id: deps.createId() })
   }
 
   const openChat = async (id: string, options: { silent?: boolean } = {}) => {
+    if (disposed) return false
     const request = ++openRequest
+    // The open conversation is authoritative while writes are pending or failed.
+    if (currentChatParams.value.id === id) {
+      await deps.navigateTo(APP_ROUTES.CHAT.path)
+      return isCurrent(request)
+    }
     let chat: Chat | null
     try {
       chat = await deps.loadChat(id)
     } catch (loadError) {
-      if (request === openRequest && !options.silent)
+      if (isCurrent(request) && !options.silent)
         deps.notifyError(
           deps.chatLoadError?.() ||
             (loadError instanceof Error ? loadError.message : String(loadError))
@@ -147,12 +163,13 @@ export function createChatSessionModel(
       return false
     }
     // a chat opened later wins, whichever loads first
-    if (request !== openRequest) return false
+    if (!isCurrent(request)) return false
 
     if (!chat) {
       // a removed chat is not looked for again on the next start
       if (id === deps.getLastChatId())
         await deps.saveSessionState({ lastChatId: null })
+      if (!isCurrent(request)) return false
       if (!options.silent) deps.notifyError(deps.chatNotFoundError())
       return false
     }
@@ -161,11 +178,13 @@ export function createChatSessionModel(
     reset({ id: chat.id, title: chat.title, attachments: [] })
     messages.value = [...chat.messages]
     await deps.saveSessionState({ lastChatId: chat.id })
+    if (!isCurrent(request)) return false
     await deps.navigateTo(APP_ROUTES.CHAT.path)
-    return true
+    return isCurrent(request)
   }
 
   const openLastOrNewChat = async () => {
+    if (disposed) return
     if (currentChatParams.value.id) {
       await deps.navigateTo(APP_ROUTES.CHAT.path)
       return
@@ -173,10 +192,22 @@ export function createChatSessionModel(
 
     const lastId = deps.getLastChatId()
     // the last chat may be gone: removed, or the history is off
-    if (lastId && (await openChat(lastId, { silent: true }))) return
+    if (lastId) {
+      // openChat owns the next request; superseded loads must not create a chat.
+      const request = openRequest + 1
+      if (await openChat(lastId, { silent: true })) return
+      if (!isCurrent(request)) return
+    }
     await startChat({})
   }
+  const dispose = () => {
+    if (disposed) return
+    disposed = true
+    openRequest += 1
+    stopGeneration()
+  }
   return {
+    dispose,
     branchChat,
     startChat,
     openChat,

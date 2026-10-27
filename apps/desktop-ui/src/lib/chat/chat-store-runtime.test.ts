@@ -298,3 +298,42 @@ describe('chat-store-runtime', () => {
     runtime.dispose()
   })
 })
+
+it('suppresses state, navigation and focus from a load completed after disposal', async () => {
+  const deps = runtimeDependencies('writer')
+  let finish!: (value: unknown) => void
+  deps.invoke = vi.fn(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve
+      })
+  ) as unknown as typeof invokeDesktop
+  const runtime = createChatStoreRuntime(deps)
+  const opening = runtime.openChat('old')
+  runtime.dispose()
+  runtime.dispose()
+  finish({ id: 'old', title: 'Old', lastMessageAt: 0, messages: [] })
+  expect(await opening).toBe(false)
+  expect(runtime.currentChatParams.value).toEqual({})
+  expect(deps.saveSessionState).not.toHaveBeenCalled()
+  expect(deps.navigateTo).not.toHaveBeenCalled()
+  expect(deps.afterRender).not.toHaveBeenCalled()
+  expect(deps.input.value).toBe('')
+})
+
+it('does not reopen a profile after disposal during preparation', async () => {
+  const deps = runtimeDependencies('writer')
+  let finish!: () => void
+  deps.history.loadChatHistory = () =>
+    new Promise((resolve) => {
+      finish = resolve
+    })
+  const runtime = createChatStoreRuntime(deps)
+  const opening = runtime.openLastOrNewChat()
+  runtime.dispose()
+  finish()
+  await opening
+  expect(deps.navigateTo).not.toHaveBeenCalled()
+  expect(deps.afterRender).not.toHaveBeenCalled()
+  expect(runtime.currentChatParams.value).toEqual({})
+})

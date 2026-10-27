@@ -319,3 +319,20 @@ it('uses the request budget for both the composer and history image eligibility'
   })
   expect(controller.imageModelRequired.value).toBe(false)
 })
+
+it('does not restore focus when disposed while rendering an opened chat', async () => {
+  const { controller, deps, input } = setup()
+  let finish!: () => void
+  deps.afterRender.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve
+      })
+  )
+  const opening = controller.openLastOrNewChat()
+  await vi.waitFor(() => expect(deps.afterRender).toHaveBeenCalledOnce())
+  controller.dispose()
+  finish()
+  await opening
+  expect(input.requestFocus).not.toHaveBeenCalled()
+})

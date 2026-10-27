@@ -1,3 +1,4 @@
+import type { IpcResult } from '@tyco/shared'
 import { ref, watch, type Ref } from 'vue'
 
 import {
@@ -9,6 +10,7 @@ import {
   type ParallelViewMode,
 } from '../lib/diff/diff-model'
 import { useDesktopStore } from '../stores/desktop'
+import useToast from './use-toast'
 
 /**
  * A view mode kept in the settings: the picked mode shows at once and is
@@ -16,16 +18,30 @@ import { useDesktopStore } from '../stores/desktop'
  */
 function usePersistedMode<T extends string>(
   stored: () => T,
-  store: (mode: T) => void
+  store: (mode: T) => Promise<IpcResult<unknown>>
 ) {
+  const { toastKey } = useToast()
   const mode = ref(stored()) as Ref<T>
   watch(stored, (next) => {
     mode.value = next
   })
   watch(
     () => mode.value,
-    (next) => {
-      if (next !== stored()) store(next)
+    async (next, _previous, onCleanup) => {
+      if (next === stored()) return
+      let current = true
+      onCleanup(() => {
+        current = false
+      })
+      try {
+        const result = await store(next)
+        if (result.success) return
+      } catch {
+        // Transport failures use the same recovery as a rejected settings save.
+      }
+      if (!current) return
+      mode.value = stored()
+      toastKey('settings.saveFailed', 'error')
     }
   )
   return mode
@@ -36,7 +52,7 @@ export function usePersistedDiffMode() {
   const diffMode = usePersistedMode<DiffViewMode>(
     () => resolveDiffMode(desktopStore.userConfig.editor.diffViewMode),
     (diffViewMode) =>
-      void desktopStore.updateUserConfig({
+      desktopStore.updateUserConfig({
         editor: { ...desktopStore.userConfig.editor, diffViewMode },
       })
   )
@@ -56,7 +72,7 @@ export function usePersistedTranslationViewMode(hasSourceText: () => boolean) {
         ? resolveParallelViewMode(desktopStore.userConfig.translation.viewMode)
         : 'result',
     (mode) =>
-      void desktopStore.updateUserConfig({
+      desktopStore.updateUserConfig({
         translation: { ...desktopStore.userConfig.translation, viewMode: mode },
       })
   )

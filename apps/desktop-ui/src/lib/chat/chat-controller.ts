@@ -42,6 +42,7 @@ export interface ChatControllerDependencies {
 
 /** Coordinates chat input, attached context, and window transitions. */
 export function createChatController(deps: ChatControllerDependencies) {
+  let disposed = false
   const { model, files, editor: editorInputStore, input: chatInputStore } = deps
   const selectedModel = computed(deps.selectedModel)
   const pendingImages = files.pendingImages
@@ -52,6 +53,7 @@ export function createChatController(deps: ChatControllerDependencies) {
    */
   const staleEditorSelection = ref<string | null>(null)
   const markEditorSelectionStale = () => {
+    if (disposed) return
     staleEditorSelection.value = editorInputStore.selectedText.trim() || null
   }
 
@@ -116,17 +118,26 @@ export function createChatController(deps: ChatControllerDependencies) {
     return false
   }
 
+  const focusAfterRender = async () => {
+    if (disposed) return
+    await deps.afterRender()
+    if (!disposed) chatInputStore.requestFocus()
+  }
+
   const startChat = async (params: Parameters<typeof model.startChat>[0]) => {
+    if (disposed) return
     deps.closeModals()
     if (!(await inMainWindow(params.attachments?.[0]))) return
     await model.startChat(params)
-    await deps.afterRender()
-    chatInputStore.requestFocus()
+    await focusAfterRender()
   }
 
   let inputSubmission = 0
 
   return {
+    dispose: () => {
+      disposed = true
+    },
     staleEditorSelection,
     attachedContext,
     contextBudget,
@@ -134,6 +145,7 @@ export function createChatController(deps: ChatControllerDependencies) {
     imageModelRequired,
     markEditorSelectionStale,
     async selectModel(id: string) {
+      if (disposed) return
       await deps.selectModel(id)
     },
     startChat,
@@ -142,6 +154,7 @@ export function createChatController(deps: ChatControllerDependencies) {
      * `inferAttachmentSource`
      */
     async attachToChat(text: string, source?: ChatAttachmentSource) {
+      if (disposed) return
       const attachment: ChatAttachment = {
         text,
         source:
@@ -155,14 +168,13 @@ export function createChatController(deps: ChatControllerDependencies) {
       deps.closeModals()
       if (!(await inMainWindow(attachment))) return
       await model.attachToChat(attachment)
-      await deps.afterRender()
-      chatInputStore.requestFocus()
+      await focusAfterRender()
     },
     async openLastOrNewChat() {
+      if (disposed) return
       deps.closeModals()
       await files.whileOpening(() => model.openLastOrNewChat())
-      await deps.afterRender()
-      chatInputStore.requestFocus()
+      await focusAfterRender()
     },
     /** A new empty chat started from the chat itself */
     async startNewChat() {
@@ -170,24 +182,27 @@ export function createChatController(deps: ChatControllerDependencies) {
       markEditorSelectionStale()
     },
     async openChat(id: string, options?: { silent?: boolean }) {
+      if (disposed) return false
       deps.closeModals()
       const result = await files.whileOpening(() => model.openChat(id, options))
+      if (disposed) return false
       // the editor selection has nothing to do with the opened conversation
       markEditorSelectionStale()
-      await deps.afterRender()
-      chatInputStore.requestFocus()
+      await focusAfterRender()
       return result
     },
     async branchChat(index: number) {
+      if (disposed) return false
       deps.closeModals()
       const result = await model.branchChat(index)
+      if (disposed) return false
       markEditorSelectionStale()
-      await deps.afterRender()
-      chatInputStore.requestFocus()
+      await focusAfterRender()
       return result
     },
     /** Sends the input; false when there is nothing to send or a reply runs */
     async sendInput(): Promise<boolean> {
+      if (disposed) return false
       const message = chatInputStore.value.trim()
       if (
         (!message &&
@@ -217,6 +232,7 @@ export function createChatController(deps: ChatControllerDependencies) {
       if (!dispatched) {
         await pending
         if (
+          !disposed &&
           submission === inputSubmission &&
           model.currentChatParams.value.id === chatId &&
           model.messages.value === messages &&

@@ -920,3 +920,109 @@ it('sends the configured chat instructions used by request budgeting', async () 
     expect.any(Object)
   )
 })
+
+it.each(['missing', 'failed'] as const)(
+  'preserves a new draft when automatic reopening is superseded (%s)',
+  async (outcome) => {
+    let finish!: () => void
+    const deps = createDeps({
+      getLastChatId: () => 'old',
+      loadChat: () =>
+        new Promise((resolve, reject) => {
+          finish = () =>
+            outcome === 'missing' ? resolve(null) : reject(new Error('io'))
+        }),
+    })
+    const model = createChatModel(deps)
+    const reopening = model.openLastOrNewChat()
+    await model.startChat({ attachments: [{ text: 'New draft' }] })
+    finish()
+    await reopening
+    expect(model.currentChatParams.value.attachments).toEqual([
+      { text: 'New draft' },
+    ])
+    expect(deps.createId).toHaveBeenCalledOnce()
+  }
+)
+
+it('preserves the open conversation while its response is awaiting persistence', async () => {
+  let finish!: () => void
+  let saveCount = 0
+  const deps = createDeps({
+    saveChat: () =>
+      ++saveCount === 1
+        ? new Promise<void>((resolve) => {
+            finish = resolve
+          })
+        : Promise.resolve(),
+    loadChat: vi.fn(async () => ({
+      id: 'chat-id-1',
+      title: 'Old',
+      lastMessageAt: 0,
+      messages: [],
+    })),
+  })
+  const model = createChatModel(deps)
+  const sending = model.sendMessage('Question')
+  await vi.waitFor(() => {
+    expect(model.isGenerating.value).toBe(false)
+    expect(saveCount).toBe(1)
+  })
+  try {
+    expect(await model.openChat('chat-id-1')).toBe(true)
+    expect(model.messages.value).toHaveLength(2)
+    expect(model.messages.value[1]?.content).toBe('Assistant reply')
+    expect(deps.loadChat).not.toHaveBeenCalled()
+  } finally {
+    finish()
+    await sending
+  }
+})
+
+it('ignores pending loads and new work after disposal', async () => {
+  let finish!: (chat: null) => void
+  const deps = createDeps({
+    getLastChatId: () => 'old',
+    loadChat: () =>
+      new Promise((resolve) => {
+        finish = resolve
+      }),
+  })
+  const model = createChatModel(deps)
+  const reopening = model.openLastOrNewChat()
+  model.dispose()
+  model.dispose()
+  finish(null)
+  await reopening
+  await model.startChat({})
+  await model.sendMessage('Late question')
+  expect(model.currentChatParams.value).toEqual({})
+  expect(deps.navigateTo).not.toHaveBeenCalled()
+  expect(deps.saveSessionState).not.toHaveBeenCalled()
+  expect(deps.sendChatMessage).not.toHaveBeenCalled()
+})
+
+it('does not navigate when disposed during session-state persistence', async () => {
+  let finish!: () => void
+  const deps = createDeps({
+    loadChat: async () => ({
+      id: 'old',
+      title: 'Old',
+      lastMessageAt: 0,
+      messages: [],
+    }),
+    saveSessionState: vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        })
+    ),
+  })
+  const model = createChatModel(deps)
+  const opening = model.openChat('old')
+  await vi.waitFor(() => expect(deps.saveSessionState).toHaveBeenCalledOnce())
+  model.dispose()
+  finish()
+  expect(await opening).toBe(false)
+  expect(deps.navigateTo).not.toHaveBeenCalled()
+})
