@@ -15,8 +15,6 @@ const PROFILE_CHATS_DIR: &str = "chats";
 pub(super) use crate::desktop_contract::{
     MAX_PROFILE_TEMPERATURE as MAX_TEMPERATURE, MAX_TOOL_STEP_COUNT,
 };
-/// Icon names are short `mdi:` identifiers; the webview picks from its set.
-const MAX_ICON_LEN: usize = 64;
 
 pub fn validate_id(id: &str) -> Result<(), AppError> {
     if id.is_empty() {
@@ -113,19 +111,6 @@ fn validate_profile(profile: &AiProfile) -> Result<(), AppError> {
         return Err(AppError::InvalidInput(format!(
             "Tool step count must be between 1 and {MAX_TOOL_STEP_COUNT}"
         )));
-    }
-    if profile.icon.as_deref().is_some_and(|icon| {
-        icon.len() > MAX_ICON_LEN
-            || !icon.strip_prefix("mdi:").is_some_and(|name| {
-                !name.is_empty()
-                    && name
-                        .chars()
-                        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
-            })
-    }) {
-        return Err(AppError::InvalidInput(
-            "Profile icon must be an mdi: icon name".into(),
-        ));
     }
     if profile.max_output_tokens == Some(0) {
         return Err(AppError::InvalidInput(

@@ -8,7 +8,6 @@ fn vault_with_profile(root: &std::path::Path) {
     let profile = AiProfile {
         id: "writer".into(),
         name: "Writer".into(),
-        icon: None,
         model_id: None,
         temperature: None,
         max_output_tokens: None,
