@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 4fc26c0cffeffb40f0ee8f0281023c2a3a4e7952f3863caef4dc28b26e7f75e1
+// Source hash: 1d1284db8a2bb32b035f6219979124dfa3750c4b98ccee7a3765b9864e9bbd01
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -89,6 +89,8 @@ export type AiFileToolOutput =
       totalLines: number
       /** The offset to read on from; none at the end of the file. */
       nextOffset?: number
+      /** Characters to skip when continuing a partially read line. */
+      nextCharacterOffset?: number
     }
   | { operation: 'readDocument'; path: string; mediaType: string }
   | {
@@ -116,6 +118,8 @@ export type AiFileToolRequest =
       path: string
       /** The first line to read, from 1. */
       offset?: number | null
+      /** Characters to skip in the first line, from 0 (Unicode scalar values). */
+      characterOffset?: number | null
       /** How many lines to read. */
       limit?: number | null
       /** Whole lines are read up to this many characters. */

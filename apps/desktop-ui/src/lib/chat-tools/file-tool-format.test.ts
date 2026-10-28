@@ -26,6 +26,42 @@ describe('file-tool-format', () => {
     expect(() => pageText('a\n', 5)).toThrow('past the end')
   })
 
+  it.each(['abcdef', '😀é文xyz', 'abcdef\nx\n'])(
+    'reads long lines without losing characters: %s',
+    (text) => {
+      let offset = 1
+      let characterOffset = 0
+      let result = ''
+      for (let pageCount = 0; pageCount < 10; pageCount++) {
+        const page = pageText(text, offset, 10, 3, characterOffset)
+        result += page.content
+        if (page.nextOffset === undefined) break
+        if (page.nextCharacterOffset !== undefined) {
+          expect(formatTextPage(page, 'workspace/a.txt')).toContain(
+            `offset ${page.nextOffset} and characterOffset ${page.nextCharacterOffset}`
+          )
+        }
+        offset = page.nextOffset
+        characterOffset = page.nextCharacterOffset ?? 0
+      }
+      expect(result).toBe(text)
+    }
+  )
+
+  it.each([-1, 0.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects invalid character cursors: %s',
+    (characterOffset) => {
+      expect(() => pageText('abc', 1, 10, 3, characterOffset)).toThrow(
+        'non-negative safe integer'
+      )
+    }
+  )
+
+  it('rejects cursors past the line and non-progressing page sizes', () => {
+    expect(() => pageText('abc', 1, 10, 3, 3)).toThrow('past the end')
+    expect(() => pageText('abc', 1, 10, 0)).toThrow('greater than zero')
+  })
+
   it('gives a whole file as it is and notes a page', () => {
     expect(formatTextPage(pageText('a\nb\n'), 'workspace/a.md')).toBe('a\nb\n')
     expect(formatTextPage(pageText(''), 'workspace/a.md')).toBe(

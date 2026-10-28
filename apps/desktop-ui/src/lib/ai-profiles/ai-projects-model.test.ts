@@ -43,6 +43,76 @@ describe('ai-projects-model', () => {
     expect(model.projects.value).toBe(current)
   })
 
+  it.each(['create', 'update', 'delete'] as const)(
+    'keeps a %s over an older list response',
+    async (operation) => {
+      const deps = createDeps()
+      const model = createAiProjectsModel(deps)
+      await model.loadProjects()
+      let resolveList!: (items: AiProject[]) => void
+      deps.listProjects.mockImplementationOnce(
+        () =>
+          new Promise<AiProject[]>((resolve) => {
+            resolveList = resolve
+          })
+      )
+      const load = model.loadProjects()
+      if (operation === 'create') {
+        await model.createProject({ name: 'New', isExternal: false })
+      } else if (operation === 'update') {
+        await model.saveProject({ ...mockProject, name: 'Updated' })
+      } else {
+        await model.deleteProject('docs-app')
+      }
+      resolveList([mockProject])
+      await load
+      if (operation === 'create')
+        expect(model.projects.value.map((item) => item.name)).toContain('New')
+      else if (operation === 'update')
+        expect(model.getProject('docs-app')?.name).toBe('Updated')
+      else expect(model.projects.value).toEqual([])
+    }
+  )
+
+  it('does not apply a list read during creation', async () => {
+    const deps = createDeps()
+    const model = createAiProjectsModel(deps)
+    await model.loadProjects()
+    let finishCreate!: () => void
+    deps.createProject.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishCreate = resolve
+        })
+    )
+    const creating = model.createProject({ name: 'New', isExternal: false })
+    const created = { ...mockProject, id: 'new', name: 'New' }
+    let resolveList!: (items: AiProject[]) => void
+    deps.listProjects.mockImplementationOnce(
+      () =>
+        new Promise<AiProject[]>((resolve) => {
+          resolveList = resolve
+        })
+    )
+    const loading = model.loadProjects()
+    resolveList([mockProject, created])
+    await loading
+    finishCreate()
+    await creating
+    expect(
+      model.projects.value.filter((item) => item.id === 'new')
+    ).toHaveLength(1)
+  })
+
+  it('allows loading again after a failed mutation', async () => {
+    const deps = createDeps()
+    const model = createAiProjectsModel(deps)
+    deps.deleteProject.mockRejectedValueOnce(new Error('disk error'))
+    await expect(model.deleteProject('docs-app')).rejects.toThrow('disk error')
+    await model.loadProjects()
+    expect(model.projects.value).toEqual([mockProject])
+  })
+
   it('loads projects into state', async () => {
     const deps = createDeps()
     const model = createAiProjectsModel(deps)

@@ -61,6 +61,78 @@ describe('ai-profiles-model', () => {
     expect(model.profiles.value).toBe(current)
   })
 
+  it.each(['create', 'update', 'delete'] as const)(
+    'keeps a %s over an older list response',
+    async (operation) => {
+      const deps = createDeps()
+      const model = createAiProfilesModel(deps)
+      await model.loadProfiles()
+      let resolveList!: (items: AiProfile[]) => void
+      deps.listProfiles.mockImplementationOnce(
+        () =>
+          new Promise<AiProfile[]>((resolve) => {
+            resolveList = resolve
+          })
+      )
+      const load = model.loadProfiles()
+      if (operation === 'create') {
+        await model.createProfile({ name: 'New', soul: '' })
+      } else if (operation === 'update') {
+        await model.updateProfile('tech-writer', { name: 'Updated' })
+      } else {
+        await model.deleteProfile('tech-writer')
+      }
+      resolveList([mockProfile])
+      await load
+      if (operation === 'create')
+        expect(model.profiles.value.map((item) => item.name)).toContain('New')
+      else if (operation === 'update')
+        expect(model.getProfile('tech-writer')?.name).toBe('Updated')
+      else expect(model.profiles.value).toEqual([])
+    }
+  )
+
+  it('does not apply a list read during creation', async () => {
+    const deps = createDeps()
+    const model = createAiProfilesModel(deps)
+    await model.loadProfiles()
+    let finishCreate!: () => void
+    deps.createProfile.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishCreate = resolve
+        })
+    )
+    const creating = model.createProfile({ name: 'New', soul: '' })
+    const created = { ...mockProfile, id: 'new', name: 'New' }
+    let resolveList!: (items: AiProfile[]) => void
+    deps.listProfiles.mockImplementationOnce(
+      () =>
+        new Promise<AiProfile[]>((resolve) => {
+          resolveList = resolve
+        })
+    )
+    const loading = model.loadProfiles()
+    resolveList([mockProfile, created])
+    await loading
+    finishCreate()
+    await creating
+    expect(
+      model.profiles.value.filter((item) => item.id === 'new')
+    ).toHaveLength(1)
+  })
+
+  it('allows loading again after a failed mutation', async () => {
+    const deps = createDeps()
+    const model = createAiProfilesModel(deps)
+    deps.deleteProfile.mockRejectedValueOnce(new Error('disk error'))
+    await expect(model.deleteProfile('tech-writer')).rejects.toThrow(
+      'disk error'
+    )
+    await model.loadProfiles()
+    expect(model.profiles.value).toEqual([mockProfile])
+  })
+
   it('loads profiles into state', async () => {
     const deps = createDeps()
     const model = createAiProfilesModel(deps)
@@ -172,6 +244,47 @@ describe('ai-profiles-model', () => {
     expect(
       JSON.parse(JSON.stringify(model.getProfile('tech-writer')))
     ).not.toHaveProperty('modelId')
+  })
+
+  it('keeps a completed edit over an earlier profile refresh', async () => {
+    const deps = createDeps()
+    const model = createAiProfilesModel(deps)
+    await model.loadProfiles()
+    let resolveRead!: (profile: AiProfile) => void
+    deps.getProfile.mockImplementationOnce(
+      () =>
+        new Promise<AiProfile>((resolve) => {
+          resolveRead = resolve
+        })
+    )
+    const refresh = model.refreshProfile('tech-writer')
+    await model.updateProfile('tech-writer', { name: 'Saved edit' })
+    resolveRead(mockProfile)
+    expect((await refresh)?.name).toBe('Saved edit')
+    expect(model.getProfile('tech-writer')?.name).toBe('Saved edit')
+    await model.updateProfile('tech-writer', { temperature: 0.7 })
+    expect(deps.saveProfile).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: 'Saved edit', temperature: 0.7 })
+    )
+  })
+
+  it('keeps the latest refresh when reads finish out of order', async () => {
+    const deps = createDeps()
+    const model = createAiProfilesModel(deps)
+    await model.loadProfiles()
+    let resolveRead!: (profile: AiProfile) => void
+    deps.getProfile.mockImplementationOnce(
+      () =>
+        new Promise<AiProfile>((resolve) => {
+          resolveRead = resolve
+        })
+    )
+    const oldRefresh = model.refreshProfile('tech-writer')
+    deps.getProfile.mockResolvedValueOnce({ ...mockProfile, name: 'Latest' })
+    await model.refreshProfile('tech-writer')
+    resolveRead(mockProfile)
+    await oldRefresh
+    expect(model.getProfile('tech-writer')?.name).toBe('Latest')
   })
 
   it('reads a profile edited on disk', async () => {

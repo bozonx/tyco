@@ -116,6 +116,9 @@ pub enum AiFileToolRequest {
         /// The first line to read, from 1.
         #[ts(optional = nullable)]
         offset: Option<usize>,
+        /// Characters to skip in the first line, from 0 (Unicode scalar values).
+        #[ts(optional = nullable)]
+        character_offset: Option<usize>,
         /// How many lines to read.
         #[ts(optional = nullable)]
         limit: Option<usize>,
@@ -216,6 +219,10 @@ pub enum AiFileToolOutput {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         next_offset: Option<usize>,
+        /// Characters to skip when continuing a partially read line.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        next_character_offset: Option<usize>,
     },
     /// A PDF or DOCX: the webview reads its text from the bytes.
     ReadDocument {
@@ -297,7 +304,8 @@ impl ProfileFiles {
                 offset,
                 limit,
                 max_characters,
-            } => self.read_file(&path, offset, limit, max_characters),
+                character_offset,
+            } => self.read_file(&path, offset, limit, max_characters, character_offset),
             AiFileToolRequest::SearchFiles {
                 path,
                 query,

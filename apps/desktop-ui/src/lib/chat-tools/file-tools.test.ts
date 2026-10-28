@@ -161,7 +161,7 @@ describe('file-tools', () => {
       operation: 'readFile',
       path: 'workspace/a.md',
       limit: 1,
-      maxCharacters: 19_800,
+      maxCharacters: 9_900,
     })
     expect(output).toBe(
       'one\n\n\n[Lines 1-1 of 3 of workspace/a.md. Call read_file with offset 2 for more.]'
@@ -188,6 +188,62 @@ describe('file-tools', () => {
       'application/pdf'
     )
     expect(output).toBe('page two\n\n\n[Lines 2-2 of 2 of workspace/r.pdf.]')
+  })
+
+  it('forwards a partial-line cursor to Rust', async () => {
+    const { provider, deps } = setup()
+    deps.run.mockResolvedValue({
+      operation: 'readFile',
+      path: 'workspace/a.md',
+      content: 'def',
+      startLine: 1,
+      endLine: 1,
+      totalLines: 1,
+    })
+    const tools = await toolsOf(provider)
+    await execute(tools.get('read_file'), {
+      path: 'workspace/a.md',
+      offset: 1,
+      characterOffset: 3,
+    })
+    expect(deps.run).toHaveBeenCalledWith(
+      'writer',
+      expect.objectContaining({ characterOffset: 3 })
+    )
+  })
+
+  it('continues within a document line using Unicode characters', async () => {
+    const { provider, deps } = setup()
+    deps.run.mockResolvedValue({
+      operation: 'readDocument',
+      path: 'workspace/r.pdf',
+      mediaType: 'application/pdf',
+    })
+    deps.readDocumentText.mockResolvedValue('😀é文xyz')
+    const tools = await toolsOf(provider)
+    expect(
+      await execute(tools.get('read_file'), {
+        path: 'workspace/r.pdf',
+        characterOffset: 3,
+      })
+    ).toBe('xyz')
+  })
+
+  it('keeps the continuation note within the output budget for emoji', async () => {
+    const { provider, deps } = setup()
+    deps.run.mockResolvedValue({
+      operation: 'readDocument',
+      path: 'workspace/r.pdf',
+      mediaType: 'application/pdf',
+    })
+    deps.readDocumentText.mockResolvedValue('😀'.repeat(20_000))
+    const tools = await toolsOf(provider)
+    const output = await execute(tools.get('read_file'), {
+      path: 'workspace/r.pdf',
+    })
+    if (typeof output !== 'string') throw new Error('Expected text output')
+    expect(output.length).toBeLessThanOrEqual(20_000)
+    expect(output).toContain('offset 1 and characterOffset 9900 for more.')
   })
 
   it('previews a write or an edit, nothing else', async () => {

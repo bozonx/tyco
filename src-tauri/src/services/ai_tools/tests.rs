@@ -243,10 +243,54 @@ fn files_are_read_by_lines() {
 }
 
 #[test]
-fn a_long_first_line_is_cut_to_the_limit() {
+fn a_long_first_line_has_a_continuation_cursor() {
     let page = page_lines("abcdef\nx\n", 1, 10, 3).unwrap();
     assert_eq!(page.content, "abc");
-    assert_eq!(page.next_offset, Some(2));
+    assert_eq!(page.next_offset, Some(1));
+    assert_eq!(page.next_character_offset, Some(3));
+}
+
+#[test]
+fn long_lines_can_be_read_completely_with_unicode_cursors() {
+    let (dir, files) = fixture("ai_files_continuation");
+    for text in ["abcdef", "😀é文xyz", "abcdef\nx\n"] {
+        fs::write(dir.join("workspace/long.txt"), text).unwrap();
+        let mut offset = 1;
+        let mut character_offset = 0;
+        let mut result = String::new();
+        for _ in 0..10 {
+            let output = run(
+                &files,
+                serde_json::json!({
+                    "operation": "readFile", "path": "workspace/long.txt",
+                    "offset": offset, "characterOffset": character_offset, "maxCharacters": 3
+                }),
+            )
+            .unwrap();
+            let AiFileToolOutput::ReadFile {
+                content,
+                next_offset,
+                next_character_offset,
+                ..
+            } = output
+            else {
+                panic!("not a text page")
+            };
+            result.push_str(&content);
+            let Some(next) = next_offset else { break };
+            offset = next;
+            character_offset = next_character_offset.unwrap_or(0);
+        }
+        assert_eq!(result, text);
+    }
+    assert!(run(
+        &files,
+        serde_json::json!({
+            "operation": "readFile", "path": "workspace/long.txt", "characterOffset": 7
+        })
+    )
+    .is_err());
+    assert!(page_lines("abc", 1, 10, 0).is_err());
 }
 
 #[test]
@@ -696,6 +740,7 @@ fn text_is_read_without_a_bom_and_with_invalid_bytes_replaced() {
             end_line: 0,
             total_lines: 0,
             next_offset: None,
+            next_character_offset: None,
         }
     );
     assert!(matches!(

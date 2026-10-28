@@ -107,6 +107,11 @@ interface FileToolSpec {
   hasPreview?: boolean
 }
 
+// The output limiter counts UTF-16 units; one Unicode scalar may take two.
+// Keep the continuation note within that budget even for non-BMP text.
+const pageCharacterLimit = (outputLimitCharacters: number) =>
+  Math.max(1, Math.floor((outputLimitCharacters - PAGE_NOTE_CHARACTERS) / 2))
+
 const FILE_TOOLS: readonly FileToolSpec[] = [
   {
     name: 'list_files',
@@ -157,6 +162,12 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
           minimum: 1,
           description: 'The first line to read, from 1',
         },
+        characterOffset: {
+          type: 'integer',
+          minimum: 0,
+          description:
+            'Unicode characters to skip in the first line, from 0; use the continuation cursor from the output',
+        },
         limit: {
           type: 'integer',
           minimum: 1,
@@ -172,7 +183,10 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
       path: text(input.path),
       ...(count(input.offset) ? { offset: count(input.offset) } : {}),
       ...(count(input.limit) ? { limit: count(input.limit) } : {}),
-      maxCharacters: Math.max(1, outputLimitCharacters - PAGE_NOTE_CHARACTERS),
+      ...(count(input.characterOffset)
+        ? { characterOffset: count(input.characterOffset) }
+        : {}),
+      maxCharacters: pageCharacterLimit(outputLimitCharacters),
     }),
   },
   {
@@ -349,7 +363,9 @@ export function createFileToolProvider(
             undefined,
           (request.operation === 'readFile' ? request.limit : null) ??
             undefined,
-          Math.max(1, options.outputLimitCharacters - PAGE_NOTE_CHARACTERS)
+          pageCharacterLimit(options.outputLimitCharacters),
+          (request.operation === 'readFile' ? request.characterOffset : null) ??
+            undefined
         ),
         output.path
       )

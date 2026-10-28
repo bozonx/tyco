@@ -48,13 +48,33 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   /** Writes of each profile, one after another, so the last change wins */
   const pendingSaves = new Map<string, Promise<void>>()
 
+  const refreshRequests = new Map<string, number>()
   let loadRequest = 0
+  let pendingMutationCount = 0
+  const persistChange = async (persist: () => Promise<void>): Promise<void> => {
+    ++loadRequest
+    ++pendingMutationCount
+    try {
+      await persist()
+    } finally {
+      --pendingMutationCount
+      ++loadRequest
+    }
+  }
   const loadProfiles = async (
     isCurrent: () => boolean = () => true
   ): Promise<void> => {
     const request = ++loadRequest
+    const wasIdle = pendingMutationCount === 0
     const loaded = (await deps.listProfiles()) ?? []
-    if (request === loadRequest && isCurrent()) profiles.value = loaded
+    if (
+      wasIdle &&
+      !pendingMutationCount &&
+      request === loadRequest &&
+      !pendingSaves.size &&
+      isCurrent()
+    )
+      profiles.value = loaded
   }
 
   const getProfile = (id: string): AiProfile | undefined => {
@@ -88,7 +108,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
       updatedAt: timestamp,
     }
 
-    await deps.createProfile(newProfile, data.soul)
+    await persistChange(() => deps.createProfile(newProfile, data.soul))
     profiles.value = [...profiles.value, newProfile]
     return newProfile
   }
@@ -100,13 +120,18 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
   const updateProfile = (id: string, patch: AiProfilePatch): Promise<void> => {
     const current = getProfile(id)
     if (!current) return Promise.resolve()
+    ++loadRequest
     replace({ ...current, ...patch, updatedAt: now() })
     const previous = pendingSaves.get(id) ?? Promise.resolve()
     const save = previous
       .catch(() => {})
       .then(async () => {
         const latest = getProfile(id)
-        if (latest) await deps.saveProfile(latest)
+        try {
+          if (latest) await deps.saveProfile(latest)
+        } finally {
+          ++loadRequest
+        }
       })
     pendingSaves.set(id, save)
     const cleanup = () => {
@@ -125,8 +150,18 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
    */
   const refreshProfile = async (id: string): Promise<AiProfile | undefined> => {
     if (pendingSaves.has(id)) return getProfile(id)
+    const current = getProfile(id)
+    const request = (refreshRequests.get(id) ?? 0) + 1
+    refreshRequests.set(id, request)
     const stored = await deps.getProfile(id)
-    if (pendingSaves.has(id) || !getProfile(id)) return getProfile(id)
+    if (
+      refreshRequests.get(id) !== request ||
+      pendingSaves.has(id) ||
+      getProfile(id) !== current ||
+      !current
+    )
+      return getProfile(id)
+    ++loadRequest
     replace(stored)
     return stored
   }
@@ -158,7 +193,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
 
   const deleteProfile = async (id: string): Promise<void> => {
     await pendingSaves.get(id)?.catch(() => {})
-    await deps.deleteProfile(id)
+    await persistChange(() => deps.deleteProfile(id))
     profiles.value = profiles.value.filter((p) => p.id !== id)
   }
 

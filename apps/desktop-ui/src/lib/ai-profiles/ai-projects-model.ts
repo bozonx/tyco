@@ -27,12 +27,30 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
   const now = deps.now ?? (() => Date.now())
 
   let loadRequest = 0
+  let pendingMutationCount = 0
+  const persistChange = async (persist: () => Promise<void>): Promise<void> => {
+    ++loadRequest
+    ++pendingMutationCount
+    try {
+      await persist()
+    } finally {
+      --pendingMutationCount
+      ++loadRequest
+    }
+  }
   const loadProjects = async (
     isCurrent: () => boolean = () => true
   ): Promise<void> => {
     const request = ++loadRequest
+    const wasIdle = pendingMutationCount === 0
     const loaded = (await deps.listProjects()) ?? []
-    if (request === loadRequest && isCurrent()) projects.value = loaded
+    if (
+      wasIdle &&
+      !pendingMutationCount &&
+      request === loadRequest &&
+      isCurrent()
+    )
+      projects.value = loaded
   }
 
   const getProject = (id: string): AiProject | undefined => {
@@ -59,21 +77,21 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
       updatedAt: timestamp,
     }
 
-    await deps.createProject(newProject)
+    await persistChange(() => deps.createProject(newProject))
     projects.value = [...projects.value, newProject]
     return newProject
   }
 
   const saveProject = async (project: AiProject): Promise<void> => {
     const updated: AiProject = { ...project, updatedAt: now() }
-    await deps.saveProject(updated)
+    await persistChange(() => deps.saveProject(updated))
     projects.value = projects.value.map((p) =>
       p.id === updated.id ? updated : p
     )
   }
 
   const deleteProject = async (id: string): Promise<void> => {
-    await deps.deleteProject(id)
+    await persistChange(() => deps.deleteProject(id))
     projects.value = projects.value.filter((p) => p.id !== id)
   }
 

@@ -66,6 +66,7 @@ impl ProfileFiles {
         offset: Option<usize>,
         limit: Option<usize>,
         max_characters: Option<usize>,
+        character_offset: Option<usize>,
     ) -> Result<AiFileToolOutput, AppError> {
         let target = self.resolve(path, Access::Read, true)?;
         let meta = target.directory.metadata(target.relative_path())?;
@@ -87,11 +88,12 @@ impl ProfileFiles {
             });
         }
         let text = read_text(&target, path, MAX_READ_BYTES)?;
-        let page = page_lines(
+        let page = page_lines_from(
             &text,
             offset.unwrap_or(1),
             limit.unwrap_or(DEFAULT_READ_LINES),
             max_characters.unwrap_or(usize::MAX),
+            character_offset.unwrap_or(0),
         )?;
         Ok(AiFileToolOutput::ReadFile {
             path: target.virtual_path(),
@@ -100,6 +102,7 @@ impl ProfileFiles {
             end_line: page.end_line,
             total_lines: page.total_lines,
             next_offset: page.next_offset,
+            next_character_offset: page.next_character_offset,
         })
     }
 }
@@ -172,16 +175,31 @@ pub(in crate::services::ai_tools) struct LinePage {
     pub end_line: usize,
     pub total_lines: usize,
     pub next_offset: Option<usize>,
+    pub next_character_offset: Option<usize>,
 }
 
 /// Whole lines from `offset` (from 1), at most `limit` of them and
-/// `max_characters` in all; a first line longer than that is cut.
+/// `max_characters` in all; a partial line has a continuation cursor.
+#[cfg(test)]
 pub(in crate::services::ai_tools) fn page_lines(
     text: &str,
     offset: usize,
     limit: usize,
     max_characters: usize,
 ) -> Result<LinePage, AppError> {
+    page_lines_from(text, offset, limit, max_characters, 0)
+}
+
+pub(in crate::services::ai_tools) fn page_lines_from(
+    text: &str,
+    offset: usize,
+    limit: usize,
+    max_characters: usize,
+    character_offset: usize,
+) -> Result<LinePage, AppError> {
+    if max_characters == 0 {
+        return Err(invalid("maxCharacters must be greater than zero"));
+    }
     let lines: Vec<&str> = text.split_inclusive('\n').collect();
     let total_lines = lines.len();
     let start = offset.max(1) - 1;
@@ -192,6 +210,7 @@ pub(in crate::services::ai_tools) fn page_lines(
             end_line: 0,
             total_lines,
             next_offset: None,
+            next_character_offset: None,
         });
     }
     if start >= total_lines {
@@ -199,27 +218,37 @@ pub(in crate::services::ai_tools) fn page_lines(
             "Offset {offset} is past the end: the file has {total_lines} lines"
         )));
     }
+    if character_offset > 0 && character_offset >= lines[start].chars().count() {
+        return Err(invalid("characterOffset is past the end of the line"));
+    }
+    let mut next_character_offset = None;
     let mut content = String::new();
     let mut characters = 0;
     let mut end = start;
-    for line in lines.iter().skip(start).take(limit.max(1)) {
-        let count = line.chars().count();
+    for (index, line) in lines.iter().skip(start).take(limit.max(1)).enumerate() {
+        let skipped = if index == 0 { character_offset } else { 0 };
+        let count = line.chars().count() - skipped;
         if characters + count > max_characters {
             if end == start {
-                content = line.chars().take(max_characters).collect();
-                end += 1;
+                content = line.chars().skip(skipped).take(max_characters).collect();
+                next_character_offset = Some(skipped + max_characters);
             }
             break;
         }
-        content.push_str(line);
+        content.extend(line.chars().skip(skipped));
         characters += count;
         end += 1;
     }
     Ok(LinePage {
         content,
         start_line: start + 1,
-        end_line: end,
+        end_line: if next_character_offset.is_some() {
+            end + 1
+        } else {
+            end
+        },
         total_lines,
         next_offset: (end < total_lines).then_some(end + 1),
+        next_character_offset,
     })
 }

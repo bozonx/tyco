@@ -11,19 +11,26 @@ export interface TextPage {
   totalLines: number
   /** The offset to read on from; absent at the end */
   nextOffset?: number
+  /** Unicode scalar values to skip in a partially read line */
+  nextCharacterOffset?: number
 }
 
 /**
  * Whole lines from `offset` (from 1), at most `limit` of them and
- * `maxCharacters` in all; a first line longer than that is cut. The same paging
- * as Rust's for text files, for the text of a document read here
+ * `maxCharacters` in all; a partial line has a continuation cursor. The same
+ * paging as Rust's for text files, for the text of a document read here
  */
 export function pageText(
   text: string,
   offset = 1,
   limit = Number.POSITIVE_INFINITY,
-  maxCharacters = Number.POSITIVE_INFINITY
+  maxCharacters = Number.POSITIVE_INFINITY,
+  characterOffset = 0
 ): TextPage {
+  if (!Number.isSafeInteger(characterOffset) || characterOffset < 0)
+    throw new Error('characterOffset must be a non-negative safe integer')
+  if (maxCharacters <= 0)
+    throw new Error('maxCharacters must be greater than zero')
   const lines = text.match(/[^\n]*\n|[^\n]+$/g) ?? []
   const totalLines = lines.length
   if (totalLines === 0)
@@ -33,25 +40,36 @@ export function pageText(
     throw new Error(
       `Offset ${offset} is past the end: the text has ${totalLines} lines`
     )
+  if (
+    characterOffset > 0 &&
+    characterOffset >= Array.from(lines[start]!).length
+  )
+    throw new Error('characterOffset is past the end of the line')
+  let nextCharacterOffset: number | undefined
   let content = ''
   let end = start
+  let characters = 0
   for (const line of lines.slice(start, start + Math.max(1, limit))) {
-    if (content.length + line.length > maxCharacters) {
+    const skipped = end === start ? characterOffset : 0
+    const remaining = Array.from(line).slice(skipped)
+    if (characters + remaining.length > maxCharacters) {
       if (end === start) {
-        content = line.slice(0, maxCharacters)
-        end += 1
+        content = remaining.slice(0, maxCharacters).join('')
+        nextCharacterOffset = skipped + maxCharacters
       }
       break
     }
-    content += line
+    content += remaining.join('')
+    characters += remaining.length
     end += 1
   }
   return {
     content,
     startLine: start + 1,
-    endLine: end,
+    endLine: nextCharacterOffset === undefined ? end : end + 1,
     totalLines,
     ...(end < totalLines ? { nextOffset: end + 1 } : {}),
+    ...(nextCharacterOffset === undefined ? {} : { nextCharacterOffset }),
   }
 }
 
@@ -60,9 +78,13 @@ export function formatTextPage(page: TextPage, path: string): string {
   if (page.totalLines === 0) return `${path} is empty.`
   if (page.startLine === 1 && page.nextOffset === undefined) return page.content
   const range = `Lines ${page.startLine}-${page.endLine} of ${page.totalLines} of ${path}.`
+  const continuation =
+    page.nextCharacterOffset === undefined
+      ? ''
+      : ` and characterOffset ${page.nextCharacterOffset}`
   return page.nextOffset === undefined
     ? `${page.content}\n\n[${range}]`
-    : `${page.content}\n\n[${range} Call read_file with offset ${page.nextOffset} for more.]`
+    : `${page.content}\n\n[${range} Call read_file with offset ${page.nextOffset}${continuation} for more.]`
 }
 
 const plural = (count: number, word: string) =>
