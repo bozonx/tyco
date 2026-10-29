@@ -238,6 +238,8 @@ mod tests {
             ActivationMode::CommandLauncher,
             ActivationMode::Correction,
             ActivationMode::Translation,
+            ActivationMode::Styling,
+            ActivationMode::Transformation,
             ActivationMode::Chat,
             ActivationMode::VoiceChat,
             ActivationMode::History,

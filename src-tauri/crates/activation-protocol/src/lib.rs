@@ -17,6 +17,8 @@ pub const START_MODES: &[&str] = &[
     "commandLauncher",
     "correction",
     "translation",
+    "styling",
+    "transformation",
     "history",
     "config",
 ];

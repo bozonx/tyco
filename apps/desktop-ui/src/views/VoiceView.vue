@@ -96,11 +96,7 @@ function handleCorrected(
     .getDefaultActions()
     .find((action) => action.id === 'insertIntoWindow')
   // without a target window the text stays in the actions step, not lost
-  if (
-    intent !== 'next' &&
-    insertAction &&
-    desktopStore.desktopState?.windowId
-  ) {
+  if (intent !== 'next' && insertAction && desktopStore.canInsertIntoWindow) {
     void insertAction.action(resultText)
     return
   }

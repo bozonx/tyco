@@ -120,7 +120,7 @@ describe('VoiceView.vue', () => {
     expect(voiceMenu.props('variant')).toBe('bar')
   })
 
-  it('inserts into target window directly when windowId is present and intent is not next', async () => {
+  it('inserts into target window directly when canInsertIntoWindow is true and intent is not next', async () => {
     const wrapper = mount(VoiceView, { props: { bar: false } })
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
 
@@ -129,7 +129,7 @@ describe('VoiceView.vue', () => {
       'Dictated text',
       'Dictated text',
       undefined,
-      'done'
+      'insert'
     )
     await flushPromises()
 
@@ -137,7 +137,29 @@ describe('VoiceView.vue', () => {
     expect(wrapper.findComponent({ name: 'InsertMenu' }).exists()).toBe(false)
   })
 
-  it('shows InsertMenu when intent is next or no target windowId exists', async () => {
+  it('shows InsertMenu when canInsertIntoWindow is false', async () => {
+    desktopState.windowId = undefined
+    const wrapper = mount(VoiceView, { props: { bar: false } })
+    const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+
+    voiceMenu.vm.$emit(
+      'corrected',
+      'Review text',
+      'Review text',
+      undefined,
+      'insert'
+    )
+    await flushPromises()
+
+    expect(mocks.insertAction).not.toHaveBeenCalled()
+    const insertMenu = wrapper.findComponent({ name: 'InsertMenu' })
+    expect(insertMenu.exists()).toBe(true)
+    expect(insertMenu.props('text')).toBe('Review text')
+    expect(insertMenu.props('allowInsertButton')).toBe(true)
+    expect(wrapper.emitted('result-shown')?.at(-1)).toEqual([true])
+  })
+
+  it('shows InsertMenu when intent is next even if canInsertIntoWindow is true', async () => {
     const wrapper = mount(VoiceView, { props: { bar: false } })
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
 
@@ -153,9 +175,6 @@ describe('VoiceView.vue', () => {
     expect(mocks.insertAction).not.toHaveBeenCalled()
     const insertMenu = wrapper.findComponent({ name: 'InsertMenu' })
     expect(insertMenu.exists()).toBe(true)
-    expect(insertMenu.props('text')).toBe('Review text')
-    expect(insertMenu.props('allowInsertButton')).toBe(true)
-    expect(wrapper.emitted('result-shown')?.at(-1)).toEqual([true])
   })
 
   it('starts a new dictation when its hotkey comes again in the actions step', async () => {

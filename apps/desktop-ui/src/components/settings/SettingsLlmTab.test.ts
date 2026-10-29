@@ -143,8 +143,23 @@ describe('LLM settings cards', () => {
 })
 
 describe('feature models', () => {
-  it('picks one model per feature, or none', async () => {
+  it('sets one model for all features', async () => {
     const { llm, wrapper } = setup()
+    const allSelect = wrapper.findAllComponents(FieldSelect).at(-2)!
+    expect(allSelect.props('modelValue')).toBe('ollama-qwen')
+
+    allSelect.vm.$emit('update:modelValue', 'gemini-flash')
+    await flushPromises()
+    expect(llm.tasks.translation.modelId).toBe('gemini-flash')
+    expect(llm.tasks.correction.modelId).toBe('gemini-flash')
+    expect(llm.tasks.aiTask.modelId).toBe('gemini-flash')
+  })
+
+  it('customizes per feature when expanded', async () => {
+    const { llm, wrapper } = setup()
+    await wrapper.get('.advanced-toggle button').trigger('click')
+    await flushPromises()
+
     const selects = wrapper.findAllComponents(FieldSelect)
     const translation = selects.at(-7)!
     const options = translation.props('options') as { id: string }[]
@@ -155,6 +170,10 @@ describe('feature models', () => {
     translation.vm.$emit('update:modelValue', 'gemini-flash')
     await flushPromises()
     expect(llm.tasks.translation.modelId).toBe('gemini-flash')
+    expect(llm.tasks.correction.modelId).toBe('ollama-qwen')
+
+    const allSelect = wrapper.findAllComponents(FieldSelect).at(-8)!
+    expect(allSelect.props('modelValue')).toBe('__custom__')
 
     translation.vm.$emit('update:modelValue', '')
     await flushPromises()
@@ -179,7 +198,7 @@ describe('SettingsLlmTab.vue', () => {
     imageQuality: 'balanced',
   }
 
-  it('leaves prompts and chat settings to their feature pages', () => {
+  it('leaves prompts and chat settings to their feature pages', async () => {
     const llm = {
       ...baseLlmConfig,
       tasks: {
@@ -227,7 +246,17 @@ describe('SettingsLlmTab.vue', () => {
       wrapper
         .findAll('.field-row-stub')
         .map((row) => row.attributes('data-label'))
+    ).toEqual(['settings.allFeaturesModel', 'settings.chatImageQuality'])
+
+    await wrapper.get('.advanced-toggle button').trigger('click')
+    await flushPromises()
+
+    expect(
+      wrapper
+        .findAll('.field-row-stub')
+        .map((row) => row.attributes('data-label'))
     ).toEqual([
+      'settings.allFeaturesModel',
       'action.translationMenu',
       'settings.voiceTextCorrection',
       'settings.textCorrection',

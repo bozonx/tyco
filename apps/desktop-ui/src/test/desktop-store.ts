@@ -20,6 +20,13 @@ export function mockDesktopStore<T extends object>(
     get sessionState() {
       return state().sessionState
     },
+    get canInsertIntoWindow() {
+      const current = state() as {
+        canInsertIntoWindow?: boolean
+        windowId?: unknown
+      }
+      return current.canInsertIntoWindow ?? Boolean(current.windowId)
+    },
     ...methods,
   }
 }
