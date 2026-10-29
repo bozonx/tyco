@@ -184,9 +184,7 @@ describe('Settings.vue', () => {
     const session = useSettingsSessionStore()
     session.isSaving = true
     await wrapper.vm.$nextTick()
-    expect(wrapper.get('[role="status"]').text()).toContain(
-      'settings.autosaveSaving'
-    )
+    expect(wrapper.find('[role="status"]').exists()).toBe(false)
     session.isSaving = false
     await wrapper.vm.$nextTick()
     expect(wrapper.find('[role="status"]').exists()).toBe(false)

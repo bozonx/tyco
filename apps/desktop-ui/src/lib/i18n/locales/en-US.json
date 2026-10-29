@@ -601,7 +601,6 @@
     "appLanguage": "Interface language",
     "appLanguageSystem": "System default",
     "autosaveFailed": "Not saved",
-    "autosaveSaving": "Saving…",
     "backToPlugins": "Back to plugins",
     "baseUrl": "Base URL",
     "browseWorkingDir": "Select working directory…",

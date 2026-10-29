@@ -595,7 +595,6 @@
     "appLanguage": "界面语言",
     "appLanguageSystem": "跟随系统",
     "autosaveFailed": "未保存",
-    "autosaveSaving": "正在保存…",
     "backToPlugins": "返回插件列表",
     "baseUrl": "基础 URL",
     "browseWorkingDir": "选择工作目录…",

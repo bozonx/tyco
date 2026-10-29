@@ -1,11 +1,10 @@
 <template>
   <span
-    v-if="status && status !== 'saved'"
-    class="settings-autosave-status"
-    :class="{ 'is-error': status === 'error' }"
+    v-if="status === 'error'"
+    class="settings-autosave-status is-error"
     role="status"
   >
-    {{ t(AUTOSAVE_STATUS_KEYS[status]) }}
+    {{ t('settings.autosaveFailed') }}
   </span>
 </template>
 
@@ -15,21 +14,12 @@ import type { AutosaveSummary } from '../../lib/settings/autosave'
 
 defineProps<{ status: AutosaveSummary }>()
 
-const AUTOSAVE_STATUS_KEYS = {
-  error: 'settings.autosaveFailed',
-  saving: 'settings.autosaveSaving',
-} as const
-
 const { t } = useI18n()
 </script>
 
 <style scoped>
 .settings-autosave-status {
   font-size: var(--text-caption);
-  color: var(--app-text-muted);
-}
-
-.settings-autosave-status.is-error {
   color: var(--color-error);
 }
 </style>

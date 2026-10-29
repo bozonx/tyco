@@ -598,7 +598,6 @@
     "appLanguage": "UI表示言語",
     "appLanguageSystem": "システム設定に従う",
     "autosaveFailed": "保存されていません",
-    "autosaveSaving": "保存中…",
     "backToPlugins": "プラグイン一覧に戻る",
     "baseUrl": "ベースURL",
     "browseWorkingDir": "作業ディレクトリを選択…",
