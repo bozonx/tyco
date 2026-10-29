@@ -12,6 +12,18 @@
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
+    <TransformationMenu
+      v-else-if="
+        menuModalsStore.currentStep?.modal === MenuModals.TRANSFORMATION
+      "
+      :key="menuModalsStore.currentStepId"
+      v-bind="menuModalsStore.currentStep.params"
+    />
+    <StylingMenu
+      v-else-if="menuModalsStore.currentStep?.modal === MenuModals.STYLING"
+      :key="menuModalsStore.currentStepId"
+      v-bind="menuModalsStore.currentStep.params"
+    />
     <DiffMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.DIFF"
       :key="menuModalsStore.currentStepId"
@@ -61,6 +73,8 @@ import DiffMenu from './DiffMenu.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import InsertMenu from './InsertMenu.vue'
 import PreviewMenu from './PreviewMenu.vue'
+import StylingMenu from './StylingMenu.vue'
+import TransformationMenu from './TransformationMenu.vue'
 import TranslateMenu from './TranslateMenu.vue'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
 

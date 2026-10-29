@@ -288,10 +288,12 @@ const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
 const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 
 /// The entity collections, each with distinct ids.
-const ENTITY_COLLECTIONS: [&str; 5] = [
+const ENTITY_COLLECTIONS: [&str; 7] = [
     "/commands",
     "/launcherPages",
     "/aiTasks/items",
+    "/transformations/items",
+    "/styling/items",
     "/llm/providers",
     "/llm/models",
 ];
@@ -319,8 +321,12 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
         }
     }
     let tasks = ids(config, "/aiTasks/items");
+    let transformations = ids(config, "/transformations/items");
+    let stylings = ids(config, "/styling/items");
     for (slots, key) in [
         (&config["aiTasks"]["slots"], "aiTasks.slots"),
+        (&config["transformations"]["slots"], "transformations.slots"),
+        (&config["styling"]["slots"], "styling.slots"),
         (
             &config["translation"]["targetLanguages"],
             "translation.targetLanguages",
@@ -336,6 +342,16 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     for id in slot_values(&config["aiTasks"]["slots"]).filter_map(Value::as_str) {
         if !tasks.contains(id) {
             return Err(invalid("aiTasks.slots"));
+        }
+    }
+    for id in slot_values(&config["transformations"]["slots"]).filter_map(Value::as_str) {
+        if !transformations.contains(id) {
+            return Err(invalid("transformations.slots"));
+        }
+    }
+    for id in slot_values(&config["styling"]["slots"]).filter_map(Value::as_str) {
+        if !stylings.contains(id) {
+            return Err(invalid("styling.slots"));
         }
     }
     let providers = ids(config, "/llm/providers");
@@ -375,6 +391,17 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             }
             Some("aiTask") if !tasks.contains(slot["taskId"].as_str().unwrap_or_default()) => {
                 return Err(invalid("mainActions.taskId"))
+            }
+            Some("transformation")
+                if !transformations
+                    .contains(slot["transformationId"].as_str().unwrap_or_default()) =>
+            {
+                return Err(invalid("mainActions.transformationId"))
+            }
+            Some("styling")
+                if !stylings.contains(slot["stylingId"].as_str().unwrap_or_default()) =>
+            {
+                return Err(invalid("mainActions.stylingId"))
             }
             Some("launcherPage")
                 if !pages.contains(slot["pageId"].as_str().unwrap_or_default()) =>
@@ -527,6 +554,24 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         let id = id.as_str().unwrap_or_default();
         task_ids.contains(id) && slotted_tasks.insert(id.to_owned())
     });
+    let transformation_ids: HashSet<String> = ids(config, "/transformations/items")
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+    let mut slotted_transformations = HashSet::new();
+    retain_slots(&mut config["transformations"]["slots"], |id| {
+        let id = id.as_str().unwrap_or_default();
+        transformation_ids.contains(id) && slotted_transformations.insert(id.to_owned())
+    });
+    let styling_ids: HashSet<String> = ids(config, "/styling/items")
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+    let mut slotted_stylings = HashSet::new();
+    retain_slots(&mut config["styling"]["slots"], |id| {
+        let id = id.as_str().unwrap_or_default();
+        styling_ids.contains(id) && slotted_stylings.insert(id.to_owned())
+    });
     let provider_ids: HashSet<String> = ids(config, "/llm/providers")
         .into_iter()
         .map(str::to_owned)
@@ -562,6 +607,10 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         match slot["type"].as_str() {
             Some("command") => command_ids.contains(slot["commandId"].as_str().unwrap_or_default()),
             Some("aiTask") => task_ids.contains(slot["taskId"].as_str().unwrap_or_default()),
+            Some("transformation") => {
+                transformation_ids.contains(slot["transformationId"].as_str().unwrap_or_default())
+            }
+            Some("styling") => styling_ids.contains(slot["stylingId"].as_str().unwrap_or_default()),
             Some("launcherPage") => page_ids.contains(slot["pageId"].as_str().unwrap_or_default()),
             _ => true,
         }

@@ -10,6 +10,8 @@ export const STANDARD_ACTION_IDS = [
   'insertIntoWindow',
   'copyToClipboard',
   'aiTaskMenu',
+  'transformationMenu',
+  'stylingMenu',
   'correction',
   'translationMenu',
   'askInChat',
@@ -54,6 +56,8 @@ export const CORE_TOOL_IDS = [
   'core.correct',
   'core.translate',
   'core.aiTask',
+  'core.transformation',
+  'core.styling',
   'core.askInChat',
 ] as const
 export type CoreToolId = (typeof CORE_TOOL_IDS)[number]
@@ -160,6 +164,18 @@ export interface AiTaskMainAction {
   taskId: string
 }
 
+/** A transformation of `transformations`, by its `id` */
+export interface TransformationMainAction {
+  type: 'transformation'
+  transformationId: string
+}
+
+/** A style of `styling`, by its `id` */
+export interface StylingMainAction {
+  type: 'styling'
+  stylingId: string
+}
+
 /** A translation into one of `translation.targetLanguages` */
 export interface TranslationMainAction {
   type: 'translation'
@@ -172,6 +188,8 @@ export type MainActionConfig =
   | PluginMainAction
   | CommandMainAction
   | AiTaskMainAction
+  | TransformationMainAction
+  | StylingMainAction
   | TranslationMainAction
 
 export const DEFAULT_MAIN_ACTIONS =

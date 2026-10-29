@@ -252,7 +252,15 @@ describe('Settings.vue', () => {
     ).toEqual([
       ['general', 'editor', 'global-actions', 'accessibility'],
       ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],
-      ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],
+      [
+        'main-actions',
+        'tasks',
+        'transformations',
+        'styling',
+        'languages',
+        'launcher-commands',
+        'commands',
+      ],
       ['plugins', 'plugin:PluginA', 'plugin:PluginB'],
     ])
   })

@@ -141,6 +141,34 @@ export interface AiTasksConfig {
   slots: ShortcutSlots<string>
 }
 
+/** A named text transformation rule of the transformation library */
+export interface TransformationConfig {
+  id: string
+  name: string
+  rule: string
+}
+
+export interface TransformationsConfig {
+  /** The transformation library, in the order the settings list it */
+  items: TransformationConfig[]
+  /** The transformation menu: transformation ids by shortcut key */
+  slots: ShortcutSlots<string>
+}
+
+/** A named styling rule of the styling library */
+export interface StylingConfig {
+  id: string
+  name: string
+  rule: string
+}
+
+export interface StylingsConfig {
+  /** The styling library, in the order the settings list it */
+  items: StylingConfig[]
+  /** The styling menu: styling ids by shortcut key */
+  slots: ShortcutSlots<string>
+}
+
 /** Complete, normalized configuration used throughout the application. */
 export interface UserConfig {
   isInDevelopment?: boolean
@@ -167,6 +195,8 @@ export interface UserConfig {
   commands: CommandConfig[]
   llm: LlmConfig
   aiTasks: AiTasksConfig
+  transformations: TransformationsConfig
+  styling: StylingsConfig
   aiVault: AiVaultLocationConfig
   aiProfiles: AiProfilesConfig
   markdown: MarkdownConfig

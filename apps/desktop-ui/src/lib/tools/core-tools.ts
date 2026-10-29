@@ -38,6 +38,16 @@ export interface CoreToolDependencies {
     text: string,
     signal: AbortSignal
   ) => Promise<string>
+  transformationPrompt: (
+    prompt: string,
+    text: string,
+    signal: AbortSignal
+  ) => Promise<string>
+  stylingPrompt: (
+    prompt: string,
+    text: string,
+    signal: AbortSignal
+  ) => Promise<string>
   /** Why the task cannot run on the LLM, as an i18n key */
   getLlmUnavailableReasonKey: (task: LlmTask) => string | undefined
   /** Why the translator cannot run, as an i18n key */
@@ -209,5 +219,50 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     }
   )
 
-  return [insert, copy, correct, translate, aiTask, askInChat]
+  const transformation = transformTool(
+    deps,
+    {
+      id: 'core.transformation' satisfies CoreToolId,
+      labelKey: 'tools.transformation',
+      descriptionKey: 'tools.transformationDescription',
+      icon: 'mdi:auto-fix',
+      description:
+        'Applies the transformation instruction to the text with the LLM',
+      getUnavailableReasonKey: () =>
+        deps.getLlmUnavailableReasonKey('transformation'),
+    },
+    (call, text) => {
+      const prompt = stringOf(call.config.prompt)
+      if (!prompt) return { ok: false, messageKey: 'commands.errorNoPrompt' }
+      return deps.transformationPrompt(prompt, text, call.signal)
+    }
+  )
+
+  const styling = transformTool(
+    deps,
+    {
+      id: 'core.styling' satisfies CoreToolId,
+      labelKey: 'tools.styling',
+      descriptionKey: 'tools.stylingDescription',
+      icon: 'mdi:palette-outline',
+      description: 'Rewrites the text in the requested style with the LLM',
+      getUnavailableReasonKey: () => deps.getLlmUnavailableReasonKey('styling'),
+    },
+    (call, text) => {
+      const prompt = stringOf(call.config.prompt)
+      if (!prompt) return { ok: false, messageKey: 'commands.errorNoPrompt' }
+      return deps.stylingPrompt(prompt, text, call.signal)
+    }
+  )
+
+  return [
+    insert,
+    copy,
+    correct,
+    translate,
+    aiTask,
+    transformation,
+    styling,
+    askInChat,
+  ]
 }

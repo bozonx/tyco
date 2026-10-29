@@ -1,3 +1,4 @@
+import type { StylingConfig } from '@tyco/shared'
 import type { LiveTranscriptState } from '../../lib/stt/live-transcript'
 import type {
   VoiceFinishBehavior,
@@ -18,6 +19,8 @@ export interface VoiceRecordingProps {
   prefix?: string
   suffix?: string
   context?: string
+  stylingPresets?: (StylingConfig | null)[]
   finish: (intent?: VoiceFinishIntent) => Promise<void>
+  finishWithStyle?: (rule: string) => Promise<void>
   cancel: () => Promise<void>
 }

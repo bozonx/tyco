@@ -69,6 +69,12 @@
       >
         <FieldTextArea v-model="userConfig.llm.tasks.voiceCorrection.rule" />
       </FieldRow>
+      <FieldRow
+        :label="t('settings.showStylingBar')"
+        :hint="t('settings.showStylingBarHint')"
+      >
+        <FieldSwitch v-model="userConfig.stt.isStylingBarEnabled" />
+      </FieldRow>
     </SettingsSection>
   </div>
 </template>

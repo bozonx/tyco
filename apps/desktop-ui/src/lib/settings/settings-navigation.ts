@@ -69,6 +69,16 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         icon: 'mdi:gesture-tap-button',
       },
       { id: 'tasks', labelKey: 'settings.tasksTab', icon: 'mdi:robot-outline' },
+      {
+        id: 'transformations',
+        labelKey: 'settings.transformationsTab',
+        icon: 'mdi:auto-fix',
+      },
+      {
+        id: 'styling',
+        labelKey: 'settings.stylingTab',
+        icon: 'mdi:palette-outline',
+      },
       { id: 'languages', labelKey: 'settings.languagesTab', icon: 'mdi:web' },
       {
         id: 'launcher-commands',

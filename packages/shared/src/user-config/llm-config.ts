@@ -56,6 +56,8 @@ export const LLM_TASKS = [
   'voiceCorrection',
   'correction',
   'aiTask',
+  'transformation',
+  'styling',
 ] as const
 
 export type LlmTask = (typeof LLM_TASKS)[number]
@@ -82,6 +84,10 @@ export interface LlmTasksConfig {
   voiceCorrection: LlmTaskConfig
   /** Each AI task has its own rule, see `AiTaskConfig` */
   aiTask: Pick<LlmTaskConfig, 'modelId'>
+  /** Each transformation has its own rule, see `TransformationConfig` */
+  transformation: Pick<LlmTaskConfig, 'modelId'>
+  /** Each styling preset has its own rule, see `StylingConfig` */
+  styling: Pick<LlmTaskConfig, 'modelId'>
 }
 
 /** How much attached images are scaled down before a request */

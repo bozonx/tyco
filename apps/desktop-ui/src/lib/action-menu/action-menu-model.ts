@@ -34,6 +34,8 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   saveOutput: (text: string) => Promise<void>
   /** With `taskId` the dialog runs that AI task at once */
   openAiTaskModal: (text: string, taskId?: string) => void
+  openTransformationModal?: (text: string, transformationId?: string) => void
+  openStylingModal?: (text: string, stylingId?: string) => void
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
@@ -47,6 +49,8 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   commands?: () => readonly CommandConfig[] | undefined
   /** The AI tasks the menu items of the `aiTask` type refer to by id */
   aiTasks?: () => readonly { id: string; name: string }[] | undefined
+  transformations?: () => readonly { id: string; name: string }[] | undefined
+  styling?: () => readonly { id: string; name: string }[] | undefined
 }
 
 export function createActionMenuModel(deps: ActionMenuDependencies) {
@@ -113,6 +117,36 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     }
   }
 
+  const createTransformationActionItem = (
+    transformationId: string
+  ): ActionItem | undefined => {
+    const item = deps
+      .transformations?.()
+      ?.find((t) => t.id === transformationId)
+    if (!item?.name) return undefined
+    return {
+      id: `transformation:${transformationId}`,
+      name: item.name,
+      icon: 'mdi:auto-fix',
+      action: withText((text) =>
+        deps.openTransformationModal?.(text, transformationId)
+      ),
+    }
+  }
+
+  const createStylingActionItem = (
+    stylingId: string
+  ): ActionItem | undefined => {
+    const item = deps.styling?.()?.find((s) => s.id === stylingId)
+    if (!item?.name) return undefined
+    return {
+      id: `styling:${stylingId}`,
+      name: item.name,
+      icon: 'mdi:palette-outline',
+      action: withText((text) => deps.openStylingModal?.(text, stylingId)),
+    }
+  }
+
   const createTranslationActionItem = (language: string): ActionItem => ({
     id: `translation:${language}`,
     ...(Object.hasOwn(messages['en-US'].language, language)
@@ -171,6 +205,30 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               return
             }
             deps.openAiTaskModal(text)
+          },
+        },
+        {
+          id: 'transformationMenu',
+          labelKey: 'action.transformationMenu',
+          icon: 'mdi:auto-fix',
+          action: async (text: string) => {
+            if (!text?.trim()) {
+              deps.showToast('toast.textNotSelected', 'error')
+              return
+            }
+            deps.openTransformationModal?.(text)
+          },
+        },
+        {
+          id: 'stylingMenu',
+          labelKey: 'action.stylingMenu',
+          icon: 'mdi:palette-outline',
+          action: async (text: string) => {
+            if (!text?.trim()) {
+              deps.showToast('toast.textNotSelected', 'error')
+              return
+            }
+            deps.openStylingModal?.(text)
           },
         },
         {
@@ -254,6 +312,12 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           : undefined
       }
       if (item.type === 'aiTask') return createAiTaskActionItem(item.taskId)
+      if (item.type === 'transformation') {
+        return createTransformationActionItem(item.transformationId)
+      }
+      if (item.type === 'styling') {
+        return createStylingActionItem(item.stylingId)
+      }
       if (item.type === 'translation') {
         return createTranslationActionItem(item.language)
       }

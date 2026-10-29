@@ -13,14 +13,16 @@
     :prefix="props.prefix"
     :suffix="props.suffix"
     :context="props.context"
+    :styling-presets="activeStylingPresets"
     :finish="finish"
+    :finish-with-style="finishWithStyle"
     :cancel="cancel"
     @remove-context="emit('removeContext')"
   />
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 
 import { useDictationActions } from '../../composables/use-dictation-actions'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
@@ -31,6 +33,7 @@ import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-me
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
+import { stylingSlotList } from '../../lib/styling/styling-library'
 import { createKeyPressTracker } from '../../lib/ui/key-press-tracker'
 import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
@@ -39,6 +42,7 @@ import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickDismissStore } from '../../stores/quick-dismiss'
 import VoiceRecordingBar from '../voice/VoiceRecordingBar.vue'
 import VoiceRecordingSheet from '../voice/VoiceRecordingSheet.vue'
+import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const props = defineProps<VoiceMenuParams>()
 const emit = defineEmits<{
@@ -59,7 +63,7 @@ const {
   shouldFormatRecognizedText,
   startDictation,
 } = useDictationActions()
-const { voiceCorrection } = useLlmStore().actions
+const { voiceCorrection, stylingPrompt } = useLlmStore().actions
 const { toastKey, toastText } = useToast()
 const { t } = useI18n()
 const desktopStore = useDesktopStore()
@@ -86,6 +90,7 @@ const model = createVoiceRecognition({
   cancelDictation,
   shouldFormatRecognizedText,
   voiceCorrection,
+  voiceStyling: (text, rule, signal) => stylingPrompt(rule, text, { signal }),
   saveSource: (text, action) => historyStore.saveSource(text, action),
   saveSourceResult: (id, text) => historyStore.saveSourceResult(id, text),
   setPendingModal: (options) => menuModalsStore.setPendingModal(options),
@@ -113,8 +118,25 @@ const {
   isTranscribing,
   cancel,
   finish,
+  finishWithStyle,
   startSession,
 } = model
+const isVoiceActivation = computed(() => props.activationMode === 'voice')
+const isStylingBarEnabled = computed(
+  () => desktopStore.userConfig.stt?.isStylingBarEnabled ?? false
+)
+const stylingPresets = computed(() =>
+  stylingSlotList(desktopStore.userConfig.styling)
+)
+const hasStylingBar = computed(
+  () =>
+    props.variant === 'bar' &&
+    isVoiceActivation.value &&
+    isStylingBarEnabled.value
+)
+const activeStylingPresets = computed(() =>
+  hasStylingBar.value ? stylingPresets.value : undefined
+)
 /** What Space and Enter do: send the question to the chat, or insert the text */
 const primaryIntent = (): VoiceFinishIntent =>
   props.finishBehavior === 'submitToChat' ? 'submit' : 'insert'
@@ -143,9 +165,33 @@ const keyPresses = createKeyPressTracker()
 const trackKeyDown = (event: KeyboardEvent) => keyPresses.press(event.code)
 const forgetKeys = () => keyPresses.clear()
 
+function findMatchingStyle(event: KeyboardEvent) {
+  if (!hasStylingBar.value || event.ctrlKey || event.altKey || event.metaKey) {
+    return undefined
+  }
+  let codeLetter: string | undefined
+  if (event.code.length === 4 && event.code.startsWith('Key')) {
+    codeLetter = event.code.slice(3).toLowerCase()
+  }
+  const eventKey = event.key.toLowerCase()
+  const index = SHORTCUT_SLOT_KEYS.findIndex(
+    (slotKey) => slotKey === eventKey || slotKey === codeLetter
+  )
+  if (index === -1) return undefined
+  const item = stylingPresets.value[index]
+  return item && item.rule.trim() ? item : undefined
+}
+
 function handleKeyUp(event: KeyboardEvent) {
   if (!keyPresses.release(event.code)) return
   if (event.defaultPrevented) return
+
+  const matchingStyle = findMatchingStyle(event)
+  if (matchingStyle) {
+    event.preventDefault()
+    void finishWithStyle(matchingStyle.rule)
+    return
+  }
 
   if ((event.ctrlKey || event.metaKey) && event.code === 'Enter') {
     event.preventDefault()
@@ -180,6 +226,12 @@ function handleKeyUp(event: KeyboardEvent) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
+  const matchingStyle = findMatchingStyle(event)
+  if (matchingStyle) {
+    event.preventDefault()
+    return
+  }
+
   if ((event.ctrlKey || event.metaKey) && event.code === 'Enter') {
     event.preventDefault()
     void finish('submit')

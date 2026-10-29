@@ -96,7 +96,15 @@ describe('settings navigation', () => {
       ],
       [
         'settings.actionsCategory',
-        ['main-actions', 'tasks', 'languages', 'launcher-commands', 'commands'],
+        [
+          'main-actions',
+          'tasks',
+          'transformations',
+          'styling',
+          'languages',
+          'launcher-commands',
+          'commands',
+        ],
       ],
       ['settings.pluginsTab', ['plugins', 'plugin:case']],
     ])

@@ -316,12 +316,27 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   config.aiTasks.slots = distinctSlots(
     filterSlots(config.aiTasks.slots, (id) => taskIds.has(id))
   )
+  config.transformations.items = deduplicate(config.transformations.items)
+  const transformationIds = new Set(
+    config.transformations.items.map((item) => item.id)
+  )
+  config.transformations.slots = distinctSlots(
+    filterSlots(config.transformations.slots, (id) => transformationIds.has(id))
+  )
+  config.styling.items = deduplicate(config.styling.items)
+  const stylingIds = new Set(config.styling.items.map((item) => item.id))
+  config.styling.slots = distinctSlots(
+    filterSlots(config.styling.slots, (id) => stylingIds.has(id))
+  )
   const commands = new Set(config.commands.map((command) => command.id))
   config.launcherPages = deduplicate(config.launcherPages)
   const pageIds = new Set(config.launcherPages.map((page) => page.id))
   config.mainActions = filterSlots(config.mainActions, (slot) => {
     if (slot.type === 'command') return commands.has(slot.commandId)
     if (slot.type === 'aiTask') return taskIds.has(slot.taskId)
+    if (slot.type === 'transformation')
+      return transformationIds.has(slot.transformationId)
+    if (slot.type === 'styling') return stylingIds.has(slot.stylingId)
     if (slot.type === 'launcherPage') return pageIds.has(slot.pageId)
     return true
   })

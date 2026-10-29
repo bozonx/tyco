@@ -21,6 +21,8 @@ function coreTools() {
       correctText: vi.fn(),
       translateTo: vi.fn(),
       aiCustomPrompt: vi.fn(),
+      transformationPrompt: vi.fn(),
+      stylingPrompt: vi.fn(),
       getLlmUnavailableReasonKey: () => undefined,
       getTranslatorUnavailableReasonKey: () => undefined,
       describeError: String,
@@ -36,6 +38,8 @@ describe('createActionMenuModel', () => {
       saveOutput: vi.fn().mockResolvedValue(undefined),
       openAiTaskModal: vi.fn(),
       openTranslateModal: vi.fn(),
+      openTransformationModal: vi.fn(),
+      openStylingModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
       hideWindow: vi.fn(),
@@ -125,6 +129,21 @@ describe('createActionMenuModel', () => {
     expect(deps.hideWindow).toHaveBeenCalled()
   })
 
+  it('triggers transformation and styling modals when valid text provided', async () => {
+    const { store, deps } = setup()
+    const actions = store.getDefaultActions()
+
+    const transformation = actions.find((a) => a.id === 'transformationMenu')
+    await transformation?.action('some text to transform')
+    expect(deps.openTransformationModal).toHaveBeenCalledWith(
+      'some text to transform'
+    )
+
+    const styling = actions.find((a) => a.id === 'stylingMenu')
+    await styling?.action('some text to restyle')
+    expect(deps.openStylingModal).toHaveBeenCalledWith('some text to restyle')
+  })
+
   it('saves the text to history before it leaves the app', async () => {
     const { store, deps, services } = setup()
     const order: string[] = []
@@ -211,15 +230,14 @@ describe('createActionMenuModel', () => {
   it('allows disposing registered action items', () => {
     const { store } = setup()
 
+    const initialCount = store.getActionsMenu().length
     const customAction = { name: 'custom', action: vi.fn() }
     const dispose = store.registerActionsItems([customAction])
     expect(store.getActionsMenu()).toContain(customAction)
 
     dispose()
     expect(store.getActionsMenu()).not.toContain(customAction)
-    expect(store.getActionsMenu()).toHaveLength(
-      store.getDefaultActions().length
-    )
+    expect(store.getActionsMenu()).toHaveLength(initialCount)
   })
 
   it('updates reactive menus and replaces duplicate registrations', async () => {

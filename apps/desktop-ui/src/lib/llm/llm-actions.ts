@@ -123,6 +123,44 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     })
   }
 
+  const transformationPrompt = async (
+    prompt: string,
+    text?: string,
+    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
+  ) => {
+    if (!text?.trim()) {
+      deps.notifyEmptyText()
+      return ''
+    }
+    if (!prompt.trim()) return ''
+
+    return await aiRequest(LlmInstructionKind.TRANSFORMATION, text, {
+      ...options,
+      instructions:
+        deps.getAppConfig().aiInstructions[LlmInstructionKind.TRANSFORMATION],
+      rules: prompt.trim(),
+    })
+  }
+
+  const stylingPrompt = async (
+    prompt: string,
+    text?: string,
+    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
+  ) => {
+    if (!text?.trim()) {
+      deps.notifyEmptyText()
+      return ''
+    }
+    if (!prompt.trim()) return ''
+
+    return await aiRequest(LlmInstructionKind.STYLING, text, {
+      ...options,
+      instructions:
+        deps.getAppConfig().aiInstructions[LlmInstructionKind.STYLING],
+      rules: prompt.trim(),
+    })
+  }
+
   return {
     aiRequest,
     voiceCorrection,
@@ -130,5 +168,7 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     generateChatTitle,
     correctText,
     aiCustomPrompt,
+    transformationPrompt,
+    stylingPrompt,
   }
 }

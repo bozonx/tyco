@@ -123,7 +123,9 @@ import SettingsPluginsTab from './SettingsPluginsTab.vue'
 import SettingsProfileDetailTab from './SettingsProfileDetailTab.vue'
 import SettingsProjectDetailTab from './SettingsProjectDetailTab.vue'
 import SettingsSaveStatus from './SettingsSaveStatus.vue'
+import SettingsStylingTab from './SettingsStylingTab.vue'
 import SettingsTasksTab from './SettingsTasksTab.vue'
+import SettingsTransformationsTab from './SettingsTransformationsTab.vue'
 import SettingsTranslationsTab from './SettingsTranslationsTab.vue'
 import SettingsVoiceTab from './SettingsVoiceTab.vue'
 import { CONFIG_VERSION } from '@tyco/shared'
@@ -145,6 +147,8 @@ const SECTION_TABS: Record<
   plugins: SettingsPluginsTab,
   'main-actions': SettingsMainActionsTab,
   tasks: SettingsTasksTab,
+  transformations: SettingsTransformationsTab,
+  styling: SettingsStylingTab,
   languages: SettingsLanguagesTab,
   'launcher-commands': SettingsLauncherTab,
 }

@@ -16,6 +16,11 @@ export interface VoiceRecognitionDependencies {
   cancelDictation: () => Promise<void>
   shouldFormatRecognizedText: () => boolean
   voiceCorrection: (text: string, signal?: AbortSignal) => Promise<string>
+  voiceStyling?: (
+    text: string,
+    rule: string,
+    signal?: AbortSignal
+  ) => Promise<string>
   saveSource: (
     text: string,
     action: 'voiceCorrection'
@@ -127,7 +132,10 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     return cancelSession(true)
   }
 
-  const finish = async (intent: VoiceFinishIntent = 'insert') => {
+  const finish = async (
+    intent: VoiceFinishIntent = 'insert',
+    options?: { styleRule?: string }
+  ) => {
     if (isFinishing.value || isCancelling.value) {
       return
     }
@@ -170,7 +178,35 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       let resultText = recognizedText
       let correctedText: string | undefined
 
-      if (shouldFormatRecognizedText()) {
+      if (options?.styleRule && deps.voiceStyling) {
+        if (!isCurrent()) return
+        const styling = new AbortController()
+        const abortStyling = () => styling.abort()
+        signal?.addEventListener('abort', abortStyling)
+        const owner = deps.setPendingModal({
+          correction: true,
+          onCancel: abortStyling,
+        })
+
+        try {
+          const styledText = await deps.voiceStyling(
+            recognizedText,
+            options.styleRule,
+            styling.signal
+          )
+
+          if (!isCurrent()) return
+          if (!styling.signal.aborted && styledText.trim()) {
+            resultText = styledText
+            correctedText = styledText
+          }
+        } catch {
+          if (!isCurrent()) return
+        } finally {
+          signal?.removeEventListener('abort', abortStyling)
+          deps.clearPendingModal(owner)
+        }
+      } else if (shouldFormatRecognizedText()) {
         // the raw transcript is the only copy of what was said: the LLM may
         // distort it, and it cannot be dictated the same way twice
         let sourceId: string | null = null
@@ -324,6 +360,9 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     if (disposed || restart !== restartGeneration) return
     await startSession()
   }
+  const finishWithStyle = (rule: string) =>
+    finish('insert', { styleRule: rule })
+
   return {
     transcript,
     isFinishing,
@@ -331,6 +370,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     isTranscribing,
     cancel,
     finish,
+    finishWithStyle,
     startSession,
     restartSession,
     dispose,

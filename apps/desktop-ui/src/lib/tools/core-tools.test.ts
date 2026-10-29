@@ -22,6 +22,12 @@ function setup(extra: Partial<CoreToolDependencies> = {}) {
     aiCustomPrompt: vi.fn(
       async (prompt: string, text: string) => `${prompt} → ${text}`
     ),
+    transformationPrompt: vi.fn(
+      async (prompt: string, text: string) => `${prompt} → ${text}`
+    ),
+    stylingPrompt: vi.fn(
+      async (prompt: string, text: string) => `${prompt} → ${text}`
+    ),
     getLlmUnavailableReasonKey: vi.fn(() => undefined),
     getTranslatorUnavailableReasonKey: vi.fn(() => undefined),
     describeError: (error) => errorMessage(error),
@@ -60,6 +66,8 @@ describe('createCoreTools', () => {
       'core.correct',
       'core.translate',
       'core.aiTask',
+      'core.transformation',
+      'core.styling',
       'core.askInChat',
     ])
     expect(tools.get('core.correct')?.defaultOutputAction).toBe(
@@ -200,9 +208,26 @@ describe('createCoreTools', () => {
     expect(tools.get('core.aiTask')?.getUnavailableReasonKey?.()).toBe(
       'tools.noLlm'
     )
+    expect(
+      tools.get('core.transformation')?.getUnavailableReasonKey?.()
+    ).toBeUndefined()
+    expect(
+      tools.get('core.styling')?.getUnavailableReasonKey?.()
+    ).toBeUndefined()
     expect(tools.get('core.translate')?.getUnavailableReasonKey?.()).toBe(
       'tools.noLlm'
     )
     expect(tools.get('core.copy')?.getUnavailableReasonKey).toBeUndefined()
+  })
+
+  it('runs core.transformation and core.styling', async () => {
+    const { run } = setup()
+    expect(
+      await run('core.transformation', 'hello', { prompt: 'uppercase' })
+    ).toEqual({ ok: true, content: 'uppercase → hello' })
+    expect(await run('core.styling', 'hello', { prompt: 'formal' })).toEqual({
+      ok: true,
+      content: 'formal → hello',
+    })
   })
 })

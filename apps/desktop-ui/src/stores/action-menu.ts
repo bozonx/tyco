@@ -29,6 +29,15 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     openAiTaskModal: (text: string, taskId?: string) => {
       menuModalsStore.nextModal(MenuModals.AI_TASK, { text, taskId })
     },
+    openTransformationModal: (text: string, transformationId?: string) => {
+      menuModalsStore.nextModal(MenuModals.TRANSFORMATION, {
+        text,
+        transformationId,
+      })
+    },
+    openStylingModal: (text: string, stylingId?: string) => {
+      menuModalsStore.nextModal(MenuModals.STYLING, { text, stylingId })
+    },
     openTranslateModal: (text: string, language?: string) => {
       menuModalsStore.nextModal(MenuModals.TRANSLATE, { text, language })
     },
@@ -52,6 +61,8 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     mainActions: () => desktopStore.userConfig.mainActions,
     commands: () => desktopStore.userConfig.commands,
     aiTasks: () => desktopStore.userConfig.aiTasks.items,
+    transformations: () => desktopStore.userConfig.transformations?.items,
+    styling: () => desktopStore.userConfig.styling?.items,
     ...useInvocationRunnerDependencies(),
   })
 })

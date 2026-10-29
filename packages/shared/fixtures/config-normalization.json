@@ -300,7 +300,9 @@
             "qualityGateRule": ""
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -341,8 +343,11 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -655,7 +660,9 @@
           "correction": { "modelId": "ollama-qwen", "rule": "" },
           "translation": { "modelId": "", "rule": "", "qualityGateRule": "" },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -696,8 +703,11 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -998,7 +1008,9 @@
             "qualityGateRule": ""
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -1039,8 +1051,11 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -1351,7 +1366,9 @@
             "qualityGateRule": ""
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -1397,8 +1414,11 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -1692,7 +1712,9 @@
             "qualityGateRule": ""
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -1733,8 +1755,11 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -2032,7 +2057,9 @@
             "qualityGateRule": ""
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -2073,8 +2100,11 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -2287,9 +2317,9 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "unknownAction": "Ctrl+Alt+U"
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2382,7 +2412,9 @@
             "qualityGateRule": ""
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -2423,8 +2455,11 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -2732,7 +2767,9 @@
             "qualityGateRule": ""
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -2767,9 +2804,12 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
       "aiVault": { "path": "" },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
   },
@@ -3081,7 +3121,9 @@
             "qualityGateRule": ""
           },
           "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-          "aiTask": { "modelId": "ollama-qwen" }
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
         },
         "imageQuality": "balanced"
       },
@@ -3116,9 +3158,12 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isStylingBarEnabled": false
       },
       "aiVault": { "path": "" },
+      "transformations": { "items": [], "slots": {} },
+      "styling": { "items": [], "slots": {} },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
   }

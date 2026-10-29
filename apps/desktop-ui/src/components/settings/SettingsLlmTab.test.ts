@@ -146,7 +146,7 @@ describe('feature models', () => {
   it('picks one model per feature, or none', async () => {
     const { llm, wrapper } = setup()
     const selects = wrapper.findAllComponents(FieldSelect)
-    const translation = selects.at(-5)!
+    const translation = selects.at(-7)!
     const options = translation.props('options') as { id: string }[]
     expect(options[0]).toEqual({ id: '', name: 'settings.taskModelNone' })
     expect(options.map((option) => option.id)).toContain('gemini-flash')
@@ -173,6 +173,8 @@ describe('SettingsLlmTab.vue', () => {
       translation: { modelId: '', rule: '', qualityGateRule: '' },
       voiceCorrection: { modelId: '', rule: '' },
       aiTask: { modelId: '' },
+      transformation: { modelId: '' },
+      styling: { modelId: '' },
     },
     imageQuality: 'balanced',
   }
@@ -230,6 +232,8 @@ describe('SettingsLlmTab.vue', () => {
       'settings.voiceTextCorrection',
       'settings.textCorrection',
       'settings.tasksTab',
+      'settings.transformationsTab',
+      'settings.stylingTab',
       'settings.chatImageQuality',
     ])
   })

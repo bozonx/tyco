@@ -129,7 +129,9 @@
         "qualityGateRule": ""
       },
       "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
-      "aiTask": { "modelId": "ollama-qwen" }
+      "aiTask": { "modelId": "ollama-qwen" },
+      "transformation": { "modelId": "ollama-qwen" },
+      "styling": { "modelId": "ollama-qwen" }
     },
     "imageQuality": "balanced"
   },
@@ -143,6 +145,8 @@
     ],
     "slots": { "q": "deep-edit" }
   },
+  "transformations": { "items": [], "slots": {} },
+  "styling": { "items": [], "slots": {} },
   "aiVault": { "path": "" },
   "aiProfiles": { "chatHistory": { "storage": "disk" } },
   "markdown": {
@@ -169,6 +173,7 @@
   "stt": {
     "provider": "deepgram",
     "isVoiceCorrectionEnabled": false,
+    "isStylingBarEnabled": false,
     "providers": {
       "deepgram": { "modelId": "nova-3", "language": "auto" },
       "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }

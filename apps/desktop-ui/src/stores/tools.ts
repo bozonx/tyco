@@ -29,7 +29,8 @@ import { useIpcStore } from './ipc'
 export const useToolsStore = defineStore('tools', () => {
   const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
-  const { aiCustomPrompt } = useLlmStore().actions
+  const { aiCustomPrompt, transformationPrompt, stylingPrompt } =
+    useLlmStore().actions
   const { translateTo } = useTranslationStore().actions
   const textCorrectionStore = useTextCorrectionStore()
   const { pasteIntoTargetAndHide } = createDesktopInsertion({
@@ -79,6 +80,10 @@ export const useToolsStore = defineStore('tools', () => {
     },
     aiCustomPrompt: (prompt, text, signal) =>
       aiCustomPrompt(prompt, text, { signal, notifyError: false }),
+    transformationPrompt: (prompt, text, signal) =>
+      transformationPrompt(prompt, text, { signal, notifyError: false }),
+    stylingPrompt: (prompt, text, signal) =>
+      stylingPrompt(prompt, text, { signal, notifyError: false }),
     getLlmUnavailableReasonKey,
     getTranslatorUnavailableReasonKey: () =>
       desktopStore.userConfig?.translation?.provider === 'llm'

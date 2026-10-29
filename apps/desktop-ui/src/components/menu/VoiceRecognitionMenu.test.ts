@@ -10,12 +10,18 @@ const mocks = vi.hoisted(() => ({
   cancelDictation: vi.fn().mockResolvedValue(undefined),
   shouldFormatRecognizedText: vi.fn().mockReturnValue(false),
   voiceCorrection: vi.fn(),
+  stylingPrompt: vi.fn(),
   toastKey: vi.fn(),
   toastText: vi.fn(),
 }))
 
 vi.mock('../../stores/llm', () => ({
-  useLlmStore: () => ({ actions: { voiceCorrection: mocks.voiceCorrection } }),
+  useLlmStore: () => ({
+    actions: {
+      voiceCorrection: mocks.voiceCorrection,
+      stylingPrompt: mocks.stylingPrompt,
+    },
+  }),
 }))
 
 vi.mock('../../composables/use-dictation-actions', () => ({
@@ -372,6 +378,153 @@ describe('VoiceRecognitionMenu', () => {
     expect(wrapper.emitted('corrected')![0]![2]).toBeUndefined()
     expect(wrapper.emitted('cancelled')).toBeUndefined()
     expect(menu.pendingModal).toEqual({ label: 'New operation' })
+    wrapper.unmount()
+  })
+
+  it('renders styling keyboard when isStylingBarEnabled is true and activationMode is voice', async () => {
+    const desktopStore = useDesktopStore()
+    desktopStore.desktopState.userConfig.stt.isStylingBarEnabled = true
+    desktopStore.desktopState.userConfig.styling = {
+      slots: { q: 'style-1' },
+      items: [
+        {
+          id: 'style-1',
+          name: 'Professional',
+          rule: 'Make it sound professional',
+        },
+      ],
+    }
+
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: {
+        variant: 'bar',
+        activationMode: 'voice',
+        finishBehavior: 'insertIntoTarget',
+      },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    const styleButtons = wrapper.findAll('.voice-bar-styling-grid button')
+    expect(styleButtons.length).toBeGreaterThan(0)
+    expect(wrapper.text()).toContain('Professional')
+
+    wrapper.unmount()
+  })
+
+  it('finishes with style and bypasses voice correction when a style key is pressed', async () => {
+    const desktopStore = useDesktopStore()
+    desktopStore.desktopState.userConfig.stt.isStylingBarEnabled = true
+    desktopStore.desktopState.userConfig.styling = {
+      slots: { q: 'style-1' },
+      items: [
+        {
+          id: 'style-1',
+          name: 'Professional',
+          rule: 'Make it sound professional',
+        },
+      ],
+    }
+    mocks.shouldFormatRecognizedText.mockReturnValue(true)
+    mocks.finishDictation.mockResolvedValue('raw dictated text')
+    mocks.stylingPrompt.mockResolvedValue('Styled professional text')
+
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: {
+        variant: 'bar',
+        activationMode: 'voice',
+        finishBehavior: 'insertIntoTarget',
+      },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'KeyQ', key: 'q' })
+    )
+    document.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'KeyQ', key: 'q' })
+    )
+    await flushPromises()
+
+    expect(mocks.stylingPrompt).toHaveBeenCalledWith(
+      'Make it sound professional',
+      'raw dictated text',
+      expect.anything()
+    )
+    expect(mocks.voiceCorrection).not.toHaveBeenCalled()
+    expect(wrapper.emitted('corrected')).toEqual([
+      [
+        'Styled professional text',
+        'raw dictated text',
+        'Styled professional text',
+        'insert',
+      ],
+    ])
+
+    wrapper.unmount()
+  })
+
+  it('finishes with style when a style button is clicked', async () => {
+    const desktopStore = useDesktopStore()
+    desktopStore.desktopState.userConfig.stt.isStylingBarEnabled = true
+    desktopStore.desktopState.userConfig.styling = {
+      slots: { q: 'style-1' },
+      items: [
+        {
+          id: 'style-1',
+          name: 'Professional',
+          rule: 'Make it sound professional',
+        },
+      ],
+    }
+    mocks.shouldFormatRecognizedText.mockReturnValue(true)
+    mocks.finishDictation.mockResolvedValue('raw dictated text')
+    mocks.stylingPrompt.mockResolvedValue('Styled professional text')
+
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: {
+        variant: 'bar',
+        activationMode: 'voice',
+        finishBehavior: 'insertIntoTarget',
+      },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    const styleButton = wrapper.find('.voice-bar-styling-grid button')
+    await styleButton.trigger('click')
+    await flushPromises()
+
+    expect(mocks.stylingPrompt).toHaveBeenCalledWith(
+      'Make it sound professional',
+      'raw dictated text',
+      expect.anything()
+    )
+    expect(mocks.voiceCorrection).not.toHaveBeenCalled()
+    expect(wrapper.emitted('corrected')).toHaveLength(1)
+
     wrapper.unmount()
   })
 })

@@ -127,7 +127,17 @@ const isOffered = (command: CommandConfig) =>
 const OPENS_DIALOG = new Set<StandardActionId>([
   'translationMenu',
   'aiTaskMenu',
+  'transformationMenu',
+  'stylingMenu',
 ])
+
+const transformations = computed(() =>
+  userConfig.value.transformations.items.filter((item) => item.name.trim())
+)
+
+const styling = computed(() =>
+  userConfig.value.styling.items.filter((item) => item.name.trim())
+)
 
 const availableActions = computed((): MainActionChoice[] => [
   ...userConfig.value.launcherPages.map((page, index) => ({
@@ -151,6 +161,16 @@ const availableActions = computed((): MainActionChoice[] => [
     config: { type: 'aiTask' as const, taskId: task.id },
     name: task.name,
     group: { kind: 'aiTask' as const },
+  })),
+  ...transformations.value.map((item) => ({
+    config: { type: 'transformation' as const, transformationId: item.id },
+    name: item.name,
+    group: { kind: 'transformation' as const },
+  })),
+  ...styling.value.map((item) => ({
+    config: { type: 'styling' as const, stylingId: item.id },
+    name: item.name,
+    group: { kind: 'styling' as const },
   })),
   // plugins offer only the actions they register for this menu
   ...actionMenuStore
@@ -202,6 +222,10 @@ function groupLabel(group: MainActionGroup): string {
       return t('settings.mainActionGroups.translation')
     case 'aiTask':
       return t('settings.mainActionGroups.aiTask')
+    case 'transformation':
+      return t('settings.mainActionGroups.transformation')
+    case 'styling':
+      return t('settings.mainActionGroups.styling')
     case 'commands':
       return t('settings.mainActionGroups.commands')
     case 'unavailable':
@@ -221,6 +245,9 @@ function unavailableName(slot: MainActionConfig): string {
         ) + 1,
     })
   if (slot.type === 'aiTask') return t('settings.mainActionTaskRemoved')
+  if (slot.type === 'transformation')
+    return t('settings.mainActionTransformationRemoved')
+  if (slot.type === 'styling') return t('settings.mainActionStylingRemoved')
   if (slot.type === 'translation') return slot.language
   if (slot.type !== 'command') return slot.actionId
   const command = commands.value.find((item) => item.id === slot.commandId)

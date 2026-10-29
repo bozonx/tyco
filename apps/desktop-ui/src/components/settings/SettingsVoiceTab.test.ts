@@ -27,6 +27,7 @@ describe('SettingsVoiceTab.vue', () => {
       stt: {
         provider: 'sherpaOnnx',
         isVoiceCorrectionEnabled: false,
+        isStylingBarEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
@@ -121,6 +122,18 @@ describe('SettingsVoiceTab.vue', () => {
     expect(config.stt.isVoiceCorrectionEnabled).toBe(true)
   })
 
+  it('toggles the styling bar setting', async () => {
+    const config = createConfig()
+    const wrapper = mountTab(config)
+
+    const switches = wrapper.findAll('.field-switch-stub')
+    const stylingSwitch = switches.at(1)
+    expect(stylingSwitch).toBeDefined()
+    await stylingSwitch!.setValue(true)
+
+    expect(config.stt.isStylingBarEnabled).toBe(true)
+  })
+
   it('calls secretsStore when saving and removing API key', async () => {
     const secretsStore = useSecretsStore()
     const setSecretSpy = vi.spyOn(secretsStore, 'setSecret').mockResolvedValue()
@@ -132,6 +145,7 @@ describe('SettingsVoiceTab.vue', () => {
       stt: {
         provider: 'deepgram',
         isVoiceCorrectionEnabled: false,
+        isStylingBarEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: '' },

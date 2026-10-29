@@ -13,7 +13,16 @@ import type { ToolLookup } from '../tools/tool-types'
  * translation, a plugin tool with the other actions of its plugin
  */
 export type MainActionGroup =
-  | { kind: 'basic' | 'translation' | 'aiTask' | 'commands' | 'unavailable' }
+  | {
+      kind:
+        | 'basic'
+        | 'translation'
+        | 'aiTask'
+        | 'transformation'
+        | 'styling'
+        | 'commands'
+        | 'unavailable'
+    }
   | { kind: 'plugin'; plugin: string }
 
 /** An action that can go to a slot of the main menu */
@@ -33,6 +42,8 @@ const GROUP_ORDER: MainActionGroup['kind'][] = [
   'basic',
   'translation',
   'aiTask',
+  'transformation',
+  'styling',
   'commands',
   'plugin',
   'unavailable',
@@ -45,6 +56,9 @@ export function mainActionOptionId(
   if (item.type === 'launcherPage') return `launcherPage:${item.pageId}`
   if (item.type === 'command') return `command:${item.commandId}`
   if (item.type === 'aiTask') return `aiTask:${item.taskId}`
+  if (item.type === 'transformation')
+    return `transformation:${item.transformationId}`
+  if (item.type === 'styling') return `styling:${item.stylingId}`
   if (item.type === 'translation') return `translation:${item.language}`
   return `${item.type}:${item.actionId}`
 }
@@ -52,6 +66,8 @@ export function mainActionOptionId(
 export function standardActionGroup(id: StandardActionId): MainActionGroup {
   if (id === 'translationMenu') return { kind: 'translation' }
   if (id === 'aiTaskMenu') return { kind: 'aiTask' }
+  if (id === 'transformationMenu') return { kind: 'transformation' }
+  if (id === 'stylingMenu') return { kind: 'styling' }
   return { kind: 'basic' }
 }
 
@@ -77,6 +93,9 @@ export function commandGroup(
 ): MainActionGroup {
   if (command.toolId === 'core.translate') return { kind: 'translation' }
   if (command.toolId === 'core.aiTask') return { kind: 'aiTask' }
+  if (command.toolId === 'core.transformation')
+    return { kind: 'transformation' }
+  if (command.toolId === 'core.styling') return { kind: 'styling' }
   const owner = commandTool(command, tools)?.owner
   if (owner?.kind === 'plugin')
     return { kind: 'plugin', plugin: owner.pluginId }

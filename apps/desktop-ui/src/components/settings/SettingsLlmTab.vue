@@ -41,9 +41,9 @@
         :label="t(TASK_LABEL_KEYS[task])"
       >
         <FieldSelect
-          :model-value="llm.tasks[task].modelId"
+          :model-value="llm.tasks[task]?.modelId"
           :options="taskModelOptions"
-          @update:model-value="llm.tasks[task].modelId = String($event ?? '')"
+          @update:model-value="setTaskModel(task, String($event ?? ''))"
         />
       </FieldRow>
     </SettingsSection>
@@ -104,6 +104,8 @@ const TASK_LABEL_KEYS = {
   voiceCorrection: 'settings.voiceTextCorrection',
   correction: 'settings.textCorrection',
   aiTask: 'settings.tasksTab',
+  transformation: 'settings.transformationsTab',
+  styling: 'settings.stylingTab',
 } as const
 
 const { t } = useI18n()
@@ -141,6 +143,12 @@ function toggleProvider(providerId: string) {
   const expanded = settings.expandedProviderIds
   if (expanded.has(providerId)) expanded.delete(providerId)
   else expanded.add(providerId)
+}
+function setTaskModel(task: (typeof LLM_TASKS)[number], modelId: string) {
+  const taskConfig = llm.value.tasks[task]
+  if (taskConfig) {
+    taskConfig.modelId = modelId
+  }
 }
 function confirmProviderRemoval() {
   if (pendingProviderId.value) removeProviderById(pendingProviderId.value)
