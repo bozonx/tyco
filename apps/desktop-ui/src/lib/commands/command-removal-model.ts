@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import {
   SHORTCUT_SLOT_KEYS,
   type CommandConfig,
+  type LauncherPageConfig,
   type MainActionConfig,
   type ShortcutSlots,
 } from '@tyco/shared'
@@ -14,6 +15,7 @@ interface RemovedCommand {
   command: CommandConfig
   index: number
   mainActions?: MenuSlots
+  launcherPages?: LauncherPageConfig[]
 }
 
 type MenuSlots = ShortcutSlots<MainActionConfig>
@@ -27,8 +29,10 @@ const isCommandItem = (
 export function createCommandRemovalModel(deps: {
   getCommands: () => CommandConfig[]
   getMainActions: () => MenuSlots
+  getLauncherPages?: () => LauncherPageConfig[]
   updateCommands: (commands: CommandConfig[]) => void
   updateMainActions: (actions: MenuSlots) => void
+  updateLauncherPages?: (pages: LauncherPageConfig[]) => void
   removeSecret: (id: string) => Promise<void>
   persist: () => Promise<unknown>
   isSaved: () => boolean
@@ -65,17 +69,27 @@ export function createCommandRemovalModel(deps: {
     finishRemoval()
     const commands = deps.getCommands()
     const mainActions = deps.getMainActions()
-    const referenced = Object.values(mainActions).some((slot) =>
+    const referencedInMenu = Object.values(mainActions).some((slot) =>
       isCommandItem(slot, command.id)
+    )
+    const launcherPages = deps.getLauncherPages?.()
+    const referencedInPages = launcherPages?.some((page) =>
+      Object.values(page.slots).includes(command.id)
     )
     removed.value = {
       command,
       index: commands.findIndex((item) => item.id === command.id),
-      mainActions: referenced ? { ...mainActions } : undefined,
+      mainActions: referencedInMenu ? { ...mainActions } : undefined,
+      launcherPages:
+        referencedInPages && launcherPages ? [...launcherPages] : undefined,
     }
     deps.updateCommands(commands.filter((item) => item.id !== command.id))
-    if (referenced)
+    if (referencedInMenu)
       deps.updateMainActions(removeCommandReferences(mainActions, command.id))
+    if (referencedInPages && launcherPages && deps.updateLauncherPages)
+      deps.updateLauncherPages(
+        removeCommandFromLauncherPages(launcherPages, command.id)
+      )
   }
   function undoRemove() {
     const entry = removed.value
@@ -89,6 +103,18 @@ export function createCommandRemovalModel(deps: {
         restoreCommandReferences(
           deps.getMainActions(),
           entry.mainActions,
+          entry.command.id
+        )
+      )
+    if (
+      entry.launcherPages &&
+      deps.getLauncherPages &&
+      deps.updateLauncherPages
+    )
+      deps.updateLauncherPages(
+        restoreCommandInLauncherPages(
+          deps.getLauncherPages(),
+          entry.launcherPages,
           entry.command.id
         )
       )
@@ -134,4 +160,37 @@ export function removeCommandReferences(
   return Object.fromEntries(
     Object.entries(slots).filter(([, slot]) => !isCommandItem(slot, commandId))
   )
+}
+
+/** The launcher pages without the slots that refer to the command */
+export function removeCommandFromLauncherPages(
+  pages: readonly LauncherPageConfig[],
+  commandId: string
+): LauncherPageConfig[] {
+  return pages.map((page) => ({
+    ...page,
+    slots: Object.fromEntries(
+      Object.entries(page.slots).filter(([, id]) => id !== commandId)
+    ),
+  }))
+}
+
+/** The launcher pages with restored command slots where still unassigned */
+export function restoreCommandInLauncherPages(
+  currentPages: readonly LauncherPageConfig[],
+  previousPages: readonly LauncherPageConfig[],
+  commandId: string
+): LauncherPageConfig[] {
+  const previousMap = new Map(previousPages.map((page) => [page.id, page]))
+  return currentPages.map((page) => {
+    const before = previousMap.get(page.id)
+    if (!before) return page
+    const nextSlots = { ...page.slots }
+    for (const key of SHORTCUT_SLOT_KEYS) {
+      if (!nextSlots[key] && before.slots[key] === commandId) {
+        nextSlots[key] = commandId
+      }
+    }
+    return { ...page, slots: nextSlots }
+  })
 }

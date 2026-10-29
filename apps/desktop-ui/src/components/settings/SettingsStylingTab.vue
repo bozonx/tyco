@@ -53,6 +53,7 @@ import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
+import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
@@ -78,7 +79,16 @@ function addStyling(index: number) {
 }
 
 function removeStyling(index: number) {
+  const stylingId = userConfig.value.styling.slots[SHORTCUT_SLOT_KEYS[index]!]
   setLibrary(removeStylingAt(userConfig.value.styling, index))
+  if (stylingId && userConfig.value.mainActions) {
+    userConfig.value.mainActions = Object.fromEntries(
+      Object.entries(userConfig.value.mainActions).filter(
+        ([, action]) =>
+          action?.type !== 'styling' || action.stylingId !== stylingId
+      )
+    )
+  }
 }
 
 function updateItem(index: number, field: keyof StylingConfig, value: unknown) {

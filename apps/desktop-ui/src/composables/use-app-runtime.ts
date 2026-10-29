@@ -64,9 +64,15 @@ export function useAppRuntime() {
   const { toastKey } = useToast()
   const settingsShutdown = createSettingsShutdown({
     flush: async () => {
-      await desktopStore.loadDesktopState()
       const session = useSettingsSessionStore()
       await session.persist()
+      if (!session.hasUnsavedChanges) {
+        try {
+          await desktopStore.loadDesktopState()
+        } catch {
+          // Keep saved status if desktop state query fails on shutdown
+        }
+      }
       return session.isSaved()
     },
     acknowledge: async (requestId, saved) => {

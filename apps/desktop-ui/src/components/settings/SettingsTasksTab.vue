@@ -53,6 +53,7 @@ import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
+import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
@@ -78,7 +79,15 @@ function addTask(index: number) {
 }
 
 function removeTask(index: number) {
+  const taskId = userConfig.value.aiTasks.slots[SHORTCUT_SLOT_KEYS[index]!]
   setLibrary(removeTaskAt(userConfig.value.aiTasks, index))
+  if (taskId && userConfig.value.mainActions) {
+    userConfig.value.mainActions = Object.fromEntries(
+      Object.entries(userConfig.value.mainActions).filter(
+        ([, action]) => action?.type !== 'aiTask' || action.taskId !== taskId
+      )
+    )
+  }
 }
 
 function updateTask(index: number, field: keyof AiTaskConfig, value: unknown) {

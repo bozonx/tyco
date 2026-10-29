@@ -31,9 +31,47 @@ const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
 const equal = (a: unknown, b: unknown) =>
   JSON.stringify(a) === JSON.stringify(b)
 
-/** Reapplies local edits over a newer config; arrays are indivisible fields. */
+function asEntities(
+  value: unknown
+): Map<string, Record<string, unknown>> | null {
+  if (!Array.isArray(value)) return null
+  const map = new Map<string, Record<string, unknown>>()
+  for (const item of value) {
+    if (!object(item) || typeof item.id !== 'string' || map.has(item.id)) {
+      return null
+    }
+    map.set(item.id, item as Record<string, unknown>)
+  }
+  return map
+}
+
+/** Reapplies local edits over a newer config; entity collections merge by id. */
 function rebase(saved: unknown, submitted: unknown, draft: unknown): unknown {
   if (equal(submitted, draft)) return saved
+  const savedEntities = asEntities(saved)
+  const submittedEntities = asEntities(submitted)
+  const draftEntities = asEntities(draft)
+  if (savedEntities && submittedEntities && draftEntities) {
+    const draftArray = draft as Record<string, unknown>[]
+    const savedArray = saved as Record<string, unknown>[]
+    const draftIds = new Set(draftArray.map((item) => String(item.id)))
+    const merged = draftArray.map((item) => {
+      const id = String(item.id)
+      const savedItem = savedEntities.get(id)
+      const submittedItem = submittedEntities.get(id)
+      if (savedItem && submittedItem) {
+        return rebase(savedItem, submittedItem, item)
+      }
+      return item
+    })
+    for (const savedItem of savedArray) {
+      const id = String(savedItem.id)
+      if (!draftIds.has(id) && !submittedEntities.has(id)) {
+        merged.push(savedItem)
+      }
+    }
+    return merged
+  }
   if (!object(saved) || !object(submitted) || !object(draft)) return draft
   const result = { ...saved }
   for (const key of new Set([
@@ -55,6 +93,29 @@ function findConflicts(
 ): string[] {
   if (equal(base, next) || equal(current, base) || equal(current, next))
     return []
+  const currentEntities = asEntities(current)
+  const baseEntities = asEntities(base)
+  const nextEntities = asEntities(next)
+  if (currentEntities && baseEntities && nextEntities) {
+    const allIds = new Set([
+      ...currentEntities.keys(),
+      ...baseEntities.keys(),
+      ...nextEntities.keys(),
+    ])
+    const conflicts: string[] = []
+    for (const id of allIds) {
+      const cur = currentEntities.get(id)
+      const b = baseEntities.get(id)
+      const n = nextEntities.get(id)
+      const itemPath = path ? `${path}[${id}]` : `[${id}]`
+      if (cur && b && n) {
+        conflicts.push(...findConflicts(cur, b, n, itemPath))
+      } else if (!equal(cur, b) && !equal(n, b) && !equal(cur, n)) {
+        conflicts.push(itemPath)
+      }
+    }
+    return conflicts
+  }
   if (!object(current) || !object(base) || !object(next)) return [path]
   return [
     ...new Set([

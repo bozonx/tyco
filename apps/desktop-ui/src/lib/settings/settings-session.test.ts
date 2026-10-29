@@ -355,4 +355,25 @@ describe('settings concurrency and recovery', () => {
       expect.anything()
     )
   })
+
+  it('merges independent entity collection edits without conflict', async () => {
+    const { model } = setup()
+    const cmd1 = { ...config().commands[0]!, id: 'cmd1', name: 'First' }
+    const cmd2 = { ...config().commands[0]!, id: 'cmd2', name: 'Second' }
+    model.draft.value.commands = [cmd1, cmd2]
+    await model.persist()
+    // Local edit: modify cmd1
+    model.draft.value.commands = [{ ...cmd1, name: 'First Modified' }, cmd2]
+    // Remote edit arrived from another window: modify cmd2
+    model.applyIncoming({
+      ...config(),
+      commands: [cmd1, { ...cmd2, name: 'Second Remote' }],
+    })
+    expect(model.conflicts.value).toEqual([])
+    model.resolveConflicts(true)
+    expect(model.draft.value.commands).toEqual([
+      expect.objectContaining({ id: 'cmd1', name: 'First Modified' }),
+      expect.objectContaining({ id: 'cmd2', name: 'Second Remote' }),
+    ])
+  })
 })

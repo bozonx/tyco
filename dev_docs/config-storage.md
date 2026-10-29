@@ -73,7 +73,10 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, …                 |
 | `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                          |
 | `aiTasks`         | `items`, the task library (`id`, `name`, `rule`); `slots`, the AI task menu (a shortcut grid of task ids)          |
+| `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)      |
+| `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                           |
 | `aiVault`         | `path`, empty for the default location                                                                             |
+| `aiProfiles`      | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                        |
 | `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                              |
 | `plugins`         | per plugin id: `isEnabled` and the plugin-owned `settings`                                                         |
 | `chat`            | `imageQuality`, `history` (`storage`: `off` or `disk`, `retentionDays`)                                            |

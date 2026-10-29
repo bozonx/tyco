@@ -42,6 +42,16 @@
       }}</Button>
     </template>
   </div>
+
+  <div
+    v-else-if="isSaving"
+    class="settings-save-status settings-save-status--saving"
+    role="status"
+    aria-live="polite"
+  >
+    <AppIcon icon="mdi:loading" size="sm" class="settings-save-spinner" />
+    <span>{{ t('settings.autosaveSaving') }}</span>
+  </div>
 </template>
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -78,6 +88,23 @@ const statusMessage = computed(() => {
 .settings-save-status p {
   flex-basis: 100%;
   overflow-wrap: anywhere;
+}
+.settings-save-status--saving {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--app-text-muted);
+}
+.settings-save-spinner {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .settings-config-warning {
   display: flex;

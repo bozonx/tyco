@@ -53,6 +53,7 @@ import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
+import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
@@ -80,7 +81,18 @@ function addTransformation(index: number) {
 }
 
 function removeTransformation(index: number) {
+  const transformationId =
+    userConfig.value.transformations.slots[SHORTCUT_SLOT_KEYS[index]!]
   setLibrary(removeTransformationAt(userConfig.value.transformations, index))
+  if (transformationId && userConfig.value.mainActions) {
+    userConfig.value.mainActions = Object.fromEntries(
+      Object.entries(userConfig.value.mainActions).filter(
+        ([, action]) =>
+          action?.type !== 'transformation' ||
+          action.transformationId !== transformationId
+      )
+    )
+  }
 }
 
 function updateItem(

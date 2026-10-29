@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { type MainActionConfig, type ShortcutSlots } from '@tyco/shared'
+import {
+  type LauncherPageConfig,
+  type MainActionConfig,
+  type ShortcutSlots,
+} from '@tyco/shared'
 
 import { createCommand } from './command-config'
 import { createCommandRemovalModel } from './command-removal-model'
@@ -19,15 +23,27 @@ describe('command removal model', () => {
     let actions: ShortcutSlots<MainActionConfig> = {
       q: { type: 'command', commandId: command.id },
     }
+    let pages: LauncherPageConfig[] = [
+      {
+        id: 'main',
+        inputMode: 'selection',
+        hotkey: '',
+        slots: { q: command.id },
+      },
+    ]
     const removeSecret = vi.fn().mockResolvedValue(undefined)
     const model = createCommandRemovalModel({
       getCommands: () => commands,
       getMainActions: () => actions,
+      getLauncherPages: () => pages,
       updateCommands: (value) => {
         commands = value as typeof commands
       },
       updateMainActions: (value) => {
         actions = value
+      },
+      updateLauncherPages: (value) => {
+        pages = value
       },
       removeSecret,
       persist: vi.fn().mockResolvedValue(undefined),
@@ -40,8 +56,12 @@ describe('command removal model', () => {
       removeSecret,
       getCommands: () => commands,
       getActions: () => actions,
+      getPages: () => pages,
       setActions: (value: ShortcutSlots<MainActionConfig>) => {
         actions = value
+      },
+      setPages: (value: LauncherPageConfig[]) => {
+        pages = value
       },
     }
   }
@@ -115,5 +135,13 @@ describe('command removal model', () => {
     expect(f.getCommands()).toEqual([f.command])
     expect(f.getActions()).toEqual({ q: replacement })
     expect(f.removeSecret).not.toHaveBeenCalled()
+  })
+
+  it('removes and restores command references in launcher pages', () => {
+    const f = fixture()
+    f.model.removeCommand(f.command)
+    expect(f.getPages()[0]?.slots).toEqual({})
+    f.model.undoRemove()
+    expect(f.getPages()[0]?.slots).toEqual({ q: f.command.id })
   })
 })

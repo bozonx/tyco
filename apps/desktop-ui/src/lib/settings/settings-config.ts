@@ -37,7 +37,14 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
       ),
     })
     // a task being typed in is not a change until it has a name or a rule
-    return { ...config, aiTasks: withoutEmptyTasks(config.aiTasks) }
+    const aiTasks = withoutEmptyTasks(config.aiTasks)
+    const taskIds = new Set(aiTasks.items.map((task) => task.id))
+    const mainActions = Object.fromEntries(
+      Object.entries(config.mainActions).filter(
+        ([, slot]) => slot.type !== 'aiTask' || taskIds.has(slot.taskId)
+      )
+    )
+    return { ...config, aiTasks, mainActions }
   }
   return { prepare }
 }

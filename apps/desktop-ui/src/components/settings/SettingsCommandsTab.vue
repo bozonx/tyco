@@ -301,9 +301,13 @@ const { removed, removeCommand, undoRemove, finishRemoval } =
   createCommandRemovalModel({
     getCommands: () => commands.value,
     getMainActions: () => userConfig.value.mainActions ?? {},
+    getLauncherPages: () => userConfig.value.launcherPages ?? [],
     updateCommands: setCommands,
     updateMainActions: (actions) => {
       userConfig.value.mainActions = actions
+    },
+    updateLauncherPages: (pages) => {
+      userConfig.value.launcherPages = pages
     },
     removeSecret: (id) => secretsStore.removeSecret(id),
     persist: settingsSession.persist,

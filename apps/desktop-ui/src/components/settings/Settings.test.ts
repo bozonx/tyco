@@ -182,6 +182,14 @@ describe('Settings.vue', () => {
     })
     expect(wrapper.find('[role="status"]').exists()).toBe(false)
     const session = useSettingsSessionStore()
+    session.isSaving = true
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      'settings.autosaveSaving'
+    )
+    session.isSaving = false
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[role="status"]').exists()).toBe(false)
     session.saveError = 'Unavailable'
     await wrapper.vm.$nextTick()
     expect(wrapper.get('[role="status"]').text()).toContain('Unavailable')
