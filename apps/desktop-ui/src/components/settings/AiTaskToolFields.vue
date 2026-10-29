@@ -50,7 +50,7 @@ const { t } = useI18n()
 const prompt = computed(() => toolConfigText(props.command, 'prompt'))
 const aiTaskOptions = computed(() =>
   (props.userConfig?.aiTasks.items ?? []).flatMap((task, index) =>
-    task.rule.trim()
+    task.prompt.trim()
       ? [{ id: task.id, name: task.name || `#${index + 1}` }]
       : []
   )
@@ -62,6 +62,6 @@ function takeTaskRule(value: string | number | undefined) {
     typeof value === 'string'
       ? findAiTask(props.userConfig?.aiTasks.items, value)
       : undefined
-  if (task) emit('update', 'prompt', task.rule)
+  if (task) emit('update', 'prompt', task.prompt)
 }
 </script>

@@ -32,15 +32,38 @@ describe('addTaskFromPrompt', () => {
     expect(
       addTaskFromPrompt(
         {
-          items: [{ id: 'task-1', name: 'a', rule: 'A' }],
+          items: [
+            {
+              id: 'task-1',
+              name: 'a',
+              prompt: 'A',
+              allowedTools: [],
+              outputAction: 'replace',
+              maxSteps: 5,
+            },
+          ],
           slots: { w: 'task-1' },
         },
         'Be brief'
       )
     ).toEqual({
       items: [
-        { id: 'task-1', name: 'a', rule: 'A' },
-        { id: 'task-2', name: 'Be brief', rule: 'Be brief' },
+        {
+          id: 'task-1',
+          name: 'a',
+          prompt: 'A',
+          allowedTools: [],
+          outputAction: 'replace',
+          maxSteps: 5,
+        },
+        {
+          id: 'task-2',
+          name: 'Be brief',
+          prompt: 'Be brief',
+          allowedTools: [],
+          outputAction: 'replace',
+          maxSteps: 5,
+        },
       ],
       slots: { q: 'task-2', w: 'task-1' },
     })
@@ -50,7 +73,10 @@ describe('addTaskFromPrompt', () => {
     const aiTasks = SHORTCUT_SLOT_KEYS.map((key, index) => ({
       id: `task-${index}`,
       name: key,
-      rule: key,
+      prompt: key,
+      allowedTools: [],
+      outputAction: 'replace' as const,
+      maxSteps: 5,
     }))
     const aiTaskSlots = Object.fromEntries(
       SHORTCUT_SLOT_KEYS.map((key, index) => [key, `task-${index}`])
@@ -62,7 +88,16 @@ describe('addTaskFromPrompt', () => {
 
   it('does not save the same request twice', () => {
     const library = {
-      items: [{ id: 'task-1', name: 'Be brief', rule: 'Be brief' }],
+      items: [
+        {
+          id: 'task-1',
+          name: 'Be brief',
+          prompt: 'Be brief',
+          allowedTools: [],
+          outputAction: 'replace' as const,
+          maxSteps: 5,
+        },
+      ],
       slots: { q: 'task-1' },
     }
     expect(addTaskFromPrompt(library, ' Be brief ')).toEqual(library)

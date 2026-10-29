@@ -142,7 +142,10 @@
       {
         "id": "deep-edit",
         "name": "Deep edit",
-        "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+        "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+        "allowedTools": [],
+        "outputAction": "replace",
+        "maxSteps": 5
       }
     ],
     "slots": { "q": "deep-edit" }

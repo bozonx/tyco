@@ -129,11 +129,19 @@ export interface PluginEntryConfig {
   settings: Record<string, unknown>
 }
 
-/** A named AI rule of the task library */
+export type AiTaskOutputAction =
+  'replace' | 'insert' | 'show' | 'notify_and_close'
+
+/** A functional AI task of the task library */
 export interface AiTaskConfig {
   id: string
   name: string
-  rule: string
+  icon?: string
+  prompt: string
+  modelId?: string
+  allowedTools: string[]
+  outputAction: AiTaskOutputAction
+  maxSteps: number
 }
 
 export interface AiTasksConfig {

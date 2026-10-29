@@ -140,7 +140,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -315,7 +318,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -509,7 +515,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -680,7 +689,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -865,7 +877,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -1033,7 +1048,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -1216,7 +1234,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -1396,7 +1417,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -1579,7 +1603,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -1747,7 +1774,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -1928,7 +1958,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -2097,7 +2130,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -2281,7 +2317,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -2457,7 +2496,10 @@
           {
             "id": "deep-edit",
             "name": "deepEdit",
-            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
           }
         ],
         "slots": { "q": "deep-edit" }
@@ -2645,8 +2687,22 @@
       },
       "aiTasks": {
         "items": [
-          { "id": "a", "name": "A", "rule": "x" },
-          { "id": "a", "name": "Copy", "rule": "y" },
+          {
+            "id": "a",
+            "name": "A",
+            "prompt": "x",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
+          },
+          {
+            "id": "a",
+            "name": "Copy",
+            "prompt": "y",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
+          },
           "bogus"
         ],
         "slots": { "q": "a", "w": "a" }
@@ -2813,7 +2869,16 @@
         "imageQuality": "balanced"
       },
       "aiTasks": {
-        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "items": [
+          {
+            "id": "a",
+            "name": "A",
+            "prompt": "x",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
+          }
+        ],
         "slots": { "q": "a" }
       },
       "markdown": {
@@ -3000,7 +3065,16 @@
         "imageQuality": "balanced"
       },
       "aiTasks": {
-        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "items": [
+          {
+            "id": "a",
+            "name": "A",
+            "prompt": "x",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
+          }
+        ],
         "slots": { "q": "a" }
       },
       "markdown": {
@@ -3172,7 +3246,16 @@
         "imageQuality": "balanced"
       },
       "aiTasks": {
-        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "items": [
+          {
+            "id": "a",
+            "name": "A",
+            "prompt": "x",
+            "allowedTools": [],
+            "outputAction": "replace",
+            "maxSteps": 5
+          }
+        ],
         "slots": { "q": "a" }
       },
       "markdown": {

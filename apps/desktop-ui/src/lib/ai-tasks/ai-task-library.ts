@@ -92,10 +92,10 @@ export function updateAiTask(
   }
 }
 
-/** Drops the tasks with neither a name nor a rule, with their slots */
+/** Drops the tasks with neither a name nor a prompt, with their slots */
 export function withoutEmptyTasks(library: AiTaskLibrary): AiTaskLibrary {
-  const kept = library.items.filter(
-    (task) => task.name.trim() || task.rule.trim()
+  const kept = library.items.filter((task) =>
+    Boolean(task.name?.trim() || task.prompt?.trim())
   )
   const ids = new Set(kept.map((task) => task.id))
   return {

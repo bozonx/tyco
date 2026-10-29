@@ -1,15 +1,47 @@
 <template>
-  <ActionOverlayLayout
-    :title="t('menu.aiTask')"
-    :on-esc="isPromptMode ? closePromptMode : undefined"
+  <div
+    v-if="currentMode === 'running' && currentTask"
+    class="ai-task-menu-running"
   >
+    <AiTaskProgress
+      :task="currentTask"
+      :state="taskRunState"
+      @decide="handleApprovalDecision"
+      @cancel="cancelTask"
+    />
+  </div>
+
+  <AiTaskResult
+    v-else-if="currentMode === 'result' && currentTask"
+    :task="currentTask"
+    :result-text="resultText"
+    :source-text="inputText"
+    :was-focus-guard-triggered="wasFocusGuardTriggered"
+    @close="closeResult"
+  />
+
+  <ActionOverlayLayout v-else :title="layoutTitle" :on-esc="handleEsc">
     <template #preview>
-      <TextPreview :text="props.text" />
+      <TextPreview :text="displayPreviewText" />
     </template>
 
     <template #actions>
+      <!-- Manual text input when selection was empty -->
       <QueryPanel
-        v-if="isPromptMode"
+        v-if="currentMode === 'manual-input'"
+        :disabled="
+          props.shortcutsDisabled || Boolean(menuModalsStore.pendingModal)
+        "
+        v-model="manualInputText"
+        :placeholder="t('input.textPlaceholder')"
+        :hints="manualInputHints"
+        @submit="submitManualInput"
+        @back="currentMode = 'tasks'"
+      />
+
+      <!-- Custom prompt mode -->
+      <QueryPanel
+        v-else-if="currentMode === 'custom-prompt'"
         :disabled="
           props.shortcutsDisabled || Boolean(menuModalsStore.pendingModal)
         "
@@ -17,10 +49,12 @@
         :placeholder="t('menu.aiPromptPlaceholder')"
         :options="recentOptions"
         :hints="promptHints"
-        @submit="submitPrompt"
+        @submit="submitCustomPrompt"
         @save="savePromptAsTask"
-        @back="closePromptMode"
+        @back="currentMode = 'tasks'"
       />
+
+      <!-- Tasks list mode -->
       <ShortcutList
         v-else
         :text="props.text"
@@ -39,28 +73,40 @@ import { computed, ref } from 'vue'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStartup } from '../../composables/use-menu-startup'
-import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import useToast from '../../composables/use-toast'
 import { findAiTask, taskSlotList } from '../../lib/ai-tasks/ai-task-library'
-import { addTaskFromPrompt } from '../../lib/ai-tasks/custom-prompt'
+import {
+  addTaskFromPrompt,
+  taskNameFromPrompt,
+} from '../../lib/ai-tasks/custom-prompt'
+import {
+  type TaskApprovalRequest,
+  type TaskRunState,
+  createTaskRunner,
+} from '../../lib/ai-tasks/task-runner'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import type { AiTaskMenuParams } from '../../lib/modals/menu-modal-params'
-import { type ActionItem } from '../../stores/action-menu'
+import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
 import { useDesktopStore } from '../../stores/desktop'
-import { useInvocationsStore } from '../../stores/invocations'
+import { useHistoryStore } from '../../stores/history'
+import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useToolsStore } from '../../stores/tools'
+import { useWindowStore } from '../../stores/window'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
+import AiTaskProgress from './AiTaskProgress.vue'
+import AiTaskResult from './AiTaskResult.vue'
 import QueryPanel, {
   type QueryPanelHint,
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
-import { APP_CONFIG } from '@tyco/shared'
+import type { AiTaskConfig } from '@tyco/shared'
 
 const props = withDefaults(defineProps<AiTaskMenuParams>(), {
   text: '',
@@ -71,47 +117,135 @@ const props = withDefaults(defineProps<AiTaskMenuParams>(), {
 const editorNavigation = useEditorNavigation()
 const menuModalsStore = useMenuModalsStore()
 const desktopStore = useDesktopStore()
-const invocations = useInvocationsStore()
-const { toastKey } = useToast()
-const runStep = useMenuStepRun()
+const toolsStore = useToolsStore()
+const llmStore = useLlmStore()
+const historyStore = useHistoryStore()
+const actionMenuStore = useActionMenuStore()
+const windowStore = useWindowStore()
+const { toastKey, toastText } = useToast()
 const { t } = useI18n()
 const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
 
-/** The own request mode: an input instead of the task keys */
-const isPromptMode = ref(false)
+type ViewMode =
+  'tasks' | 'custom-prompt' | 'manual-input' | 'running' | 'result'
+const currentMode = ref<ViewMode>('tasks')
+
 const prompt = ref('')
+const manualInputText = ref('')
+const selectedTask = ref<AiTaskConfig | null>(null)
+const currentTask = ref<AiTaskConfig | null>(null)
+const inputText = ref('')
+const resultText = ref('')
+const wasFocusGuardTriggered = ref(false)
+
+const taskRunState = ref<TaskRunState>({
+  status: 'running',
+  reasoning: '',
+  text: '',
+  toolCalls: [],
+})
+
+let abortController: AbortController | null = null
+let pendingApprovalResolver: ((approved: boolean) => void) | null = null
 
 const isQuickWindow = isInQuickWindow()
+
+const requestApproval = async (
+  _request: TaskApprovalRequest,
+  signal: AbortSignal
+): Promise<boolean> => {
+  return new Promise<boolean>((resolve) => {
+    pendingApprovalResolver = resolve
+    signal.addEventListener(
+      'abort',
+      () => {
+        resolve(false)
+        pendingApprovalResolver = null
+      },
+      { once: true }
+    )
+  })
+}
+
+function handleApprovalDecision(approved: boolean) {
+  pendingApprovalResolver?.(approved)
+  pendingApprovalResolver = null
+}
+
+const runner = createTaskRunner({
+  stream: (task, promptObj, options) =>
+    llmStore.client.stream(task, promptObj, options),
+  getTool: (toolId) => toolsStore.get(toolId),
+  canInsertIntoTarget: () => desktopStore.canInsertIntoWindow,
+  requestApproval,
+})
+
+const layoutTitle = computed(() => {
+  if (currentMode.value === 'manual-input' && selectedTask.value) {
+    return selectedTask.value.name || t('menu.aiTask')
+  }
+  return t('menu.aiTask')
+})
+
+const displayPreviewText = computed(() => {
+  if (currentMode.value === 'manual-input') {
+    return manualInputText.value
+  }
+  return props.text
+})
 
 const customPromptAction: ActionItem = {
   labelKey: 'menu.aiCustomPrompt',
   icon: 'mdi:pencil-outline',
   action: async () => {
     prompt.value = ''
-    isPromptMode.value = true
+    currentMode.value = 'custom-prompt'
   },
 }
 
-const closePromptMode = () => {
-  isPromptMode.value = false
+function handleEsc() {
+  if (
+    currentMode.value === 'custom-prompt' ||
+    currentMode.value === 'manual-input'
+  ) {
+    currentMode.value = 'tasks'
+    return
+  }
+}
+
+function cancelTask() {
+  abortController?.abort()
+  pendingApprovalResolver?.(false)
+  pendingApprovalResolver = null
+  currentMode.value = 'tasks'
+}
+
+function closeResult() {
+  currentMode.value = 'tasks'
 }
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   taskSlotList(desktopStore.userConfig?.aiTasks).map((item) =>
     item && item.name
-      ? { name: item.name, action: () => runTask(item.id) }
+      ? { name: item.name, action: () => onTaskSelect(item.id) }
       : undefined
   )
 )
 
-async function runTask(taskId: string) {
+async function onTaskSelect(taskId: string) {
   const task = findAiTask(desktopStore.userConfig?.aiTasks.items, taskId)
-  if (!task || !task.rule?.trim()) {
+  if (!task || !task.prompt.trim()) {
     toastKey('toast.desktopCommandFailed', 'error')
     return
   }
-  await makeDiff(task.rule)
+  if (props.text.trim()) {
+    await executeTask(task, props.text)
+  } else {
+    selectedTask.value = task
+    manualInputText.value = ''
+    currentMode.value = 'manual-input'
+  }
 }
 
 useMenuStartup({
@@ -124,7 +258,18 @@ useMenuStartup({
       })
     }
   },
-  run: runTask,
+  run: async (taskId) => {
+    const task = findAiTask(desktopStore.userConfig?.aiTasks.items, taskId)
+    if (task) {
+      if (props.text.trim()) {
+        await executeTask(task, props.text)
+      } else {
+        selectedTask.value = task
+        manualInputText.value = ''
+        currentMode.value = 'manual-input'
+      }
+    }
+  },
 })
 
 const recentPrompts = computed(
@@ -143,10 +288,8 @@ const promptHints = computed<QueryPanelHint[]>(() => [
     keys: ['Enter'],
     label: t('menu.aiPromptRun'),
     disabled: !prompt.value.trim(),
-    action: () => submitPrompt({ ctrl: false }),
+    action: () => submitCustomPrompt({ ctrl: false }),
   },
-  // the quick window hands the text to the main one, and the request would
-  // be lost on the way
   ...(isQuickWindow || !desktopStore.userConfig.isInDevelopment
     ? []
     : [
@@ -154,7 +297,7 @@ const promptHints = computed<QueryPanelHint[]>(() => [
           keys: ['Ctrl', 'Enter'],
           label: t('action.askInChat'),
           disabled: !prompt.value.trim(),
-          action: () => submitPrompt({ ctrl: true }),
+          action: () => submitCustomPrompt({ ctrl: true }),
         },
       ]),
   {
@@ -163,7 +306,25 @@ const promptHints = computed<QueryPanelHint[]>(() => [
     disabled: !prompt.value.trim(),
     action: savePromptAsTask,
   },
-  { keys: ['Esc'], label: t('common.back'), action: closePromptMode },
+  {
+    keys: ['Esc'],
+    label: t('common.back'),
+    action: () => (currentMode.value = 'tasks'),
+  },
+])
+
+const manualInputHints = computed<QueryPanelHint[]>(() => [
+  {
+    keys: ['Enter'],
+    label: t('menu.aiPromptRun'),
+    disabled: !manualInputText.value.trim(),
+    action: submitManualInput,
+  },
+  {
+    keys: ['Esc'],
+    label: t('common.back'),
+    action: () => (currentMode.value = 'tasks'),
+  },
 ])
 
 const rememberPrompt = (value: string) => {
@@ -172,7 +333,13 @@ const rememberPrompt = (value: string) => {
   })
 }
 
-async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {
+async function submitManualInput() {
+  const text = manualInputText.value.trim()
+  if (!text || !selectedTask.value) return
+  await executeTask(selectedTask.value, text)
+}
+
+async function submitCustomPrompt({ option, ctrl }: QueryPanelSubmit) {
   const value = (option?.label ?? prompt.value).trim()
   if (!value) return
 
@@ -186,7 +353,22 @@ async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {
     return
   }
 
-  await makeDiff(value)
+  const customTask: AiTaskConfig = {
+    id: 'custom-prompt',
+    name: taskNameFromPrompt(value),
+    prompt: value,
+    allowedTools: [],
+    outputAction: 'replace',
+    maxSteps: 5,
+  }
+
+  if (props.text.trim()) {
+    await executeTask(customTask, props.text)
+  } else {
+    selectedTask.value = customTask
+    manualInputText.value = ''
+    currentMode.value = 'manual-input'
+  }
 }
 
 async function savePromptAsTask() {
@@ -204,40 +386,93 @@ async function savePromptAsTask() {
   if (!result.success) toastKey('toast.desktopCommandFailed', 'error')
 }
 
-/** Applies `prompt` to the text with the `core.aiTask` tool, then the diff */
-async function makeDiff(prompt: string) {
-  const trimmedText = props.text.trim()
-
-  if (!trimmedText) {
+async function executeTask(task: AiTaskConfig, textToProcess: string) {
+  const trimmed = textToProcess.trim()
+  if (!trimmed) {
     toastKey('toast.noTextToProcess', 'warn')
     return
   }
 
-  if (trimmedText.length < APP_CONFIG.minAiTaskLength) {
-    toastKey('toast.textTooShortToProcess', 'warn')
-    return
+  currentTask.value = task
+  inputText.value = trimmed
+  currentMode.value = 'running'
+
+  abortController = new AbortController()
+  const signal = abortController.signal
+
+  let sourceId: string | null = null
+  try {
+    sourceId = await historyStore.saveSource(trimmed, 'aiTask')
+  } catch {
+    // history error must not prevent execution
   }
 
-  await runStep({
-    text: trimmedText,
-    operation: 'aiTask',
-    pending: { ai: true },
-    invoke: (signal) =>
-      invocations.call('core.aiTask', trimmedText, {
-        signal,
-        toolConfig: { prompt },
-      }),
-    read: (result) => {
-      const newText = result.content ?? ''
-      if (newText.trim()) return newText
-      toastKey('toast.desktopCommandFailed', 'error')
-      return null
-    },
-    show: (newText) =>
-      menuModalsStore.nextModal(MenuModals.DIFF, {
-        oldText: props.text,
-        newText,
-      }),
-  })
+  try {
+    const result = await runner.run(task, trimmed, {
+      signal,
+      onUpdate: (state) => {
+        taskRunState.value = state
+      },
+    })
+
+    if (sourceId && result.content) {
+      await historyStore
+        .saveSourceResult(sourceId, result.content)
+        .catch(() => {})
+    }
+
+    if (
+      result.effectiveOutputAction === 'replace' ||
+      result.effectiveOutputAction === 'insert'
+    ) {
+      const insertAction = actionMenuStore
+        .getDefaultActions()
+        .find((action) => action.id === 'insertIntoWindow')
+
+      if (insertAction && desktopStore.canInsertIntoWindow) {
+        await insertAction.action(result.content)
+        await historyStore.saveOutput(result.content).catch(() => {})
+        if (isQuickWindow) {
+          await windowStore.hide()
+        }
+        return
+      }
+
+      // Target was lost or Focus Loss Guard triggered: fall back to show
+      resultText.value = result.content
+      wasFocusGuardTriggered.value = true
+      currentMode.value = 'result'
+      return
+    }
+
+    if (result.effectiveOutputAction === 'notify_and_close') {
+      toastText(result.content || t('selection.done'), 'success')
+      await historyStore.saveOutput(result.content).catch(() => {})
+      if (isQuickWindow) {
+        await windowStore.hide()
+      }
+      return
+    }
+
+    // Default 'show' action
+    resultText.value = result.content
+    wasFocusGuardTriggered.value = result.wasFocusGuardTriggered
+    currentMode.value = 'result'
+  } catch (_error) {
+    if (signal.aborted) {
+      currentMode.value = 'tasks'
+      return
+    }
+    toastKey('toast.desktopCommandFailed', 'error')
+    currentMode.value = 'tasks'
+  } finally {
+    abortController = null
+  }
 }
 </script>
+
+<style scoped>
+.ai-task-menu-running {
+  width: 100%;
+}
+</style>

@@ -12,7 +12,16 @@ describe('SettingsTasksTab.vue', () => {
   it('adds and updates task slots', async () => {
     const context = createTestSettingsContext({
       aiTasks: {
-        items: [{ id: 'task-1', name: 'Existing', rule: 'Do this' }],
+        items: [
+          {
+            id: 'task-1',
+            name: 'Existing',
+            prompt: 'Do this',
+            allowedTools: [],
+            outputAction: 'replace',
+            maxSteps: 5,
+          },
+        ],
         slots: { q: 'task-1' },
       },
     })
@@ -37,7 +46,10 @@ describe('SettingsTasksTab.vue', () => {
     expect(slots.props('items')[0]).toEqual({
       id: 'task-1',
       name: 'Existing',
-      rule: 'Do this',
+      prompt: 'Do this',
+      allowedTools: [],
+      outputAction: 'replace',
+      maxSteps: 5,
     })
 
     await slots.vm.$emit('add', 1)
@@ -46,7 +58,10 @@ describe('SettingsTasksTab.vue', () => {
     expect(context.draft.value.aiTasks.items[1]).toEqual({
       id: 'task-2',
       name: '',
-      rule: '',
+      prompt: '',
+      allowedTools: [],
+      outputAction: 'replace',
+      maxSteps: 5,
     })
   })
 
@@ -54,8 +69,22 @@ describe('SettingsTasksTab.vue', () => {
     const context = createTestSettingsContext({
       aiTasks: {
         items: [
-          { id: 'keep', name: 'Keep', rule: 'Rule' },
-          { id: 'empty', name: '', rule: '   ' },
+          {
+            id: 'keep',
+            name: 'Keep',
+            prompt: 'Rule',
+            allowedTools: [],
+            outputAction: 'replace',
+            maxSteps: 5,
+          },
+          {
+            id: 'empty',
+            name: '',
+            prompt: '   ',
+            allowedTools: [],
+            outputAction: 'replace',
+            maxSteps: 5,
+          },
         ],
         slots: { q: 'keep', w: 'empty' },
       },
@@ -79,7 +108,16 @@ describe('SettingsTasksTab.vue', () => {
     wrapper.unmount()
 
     expect(context.draft.value.aiTasks).toEqual({
-      items: [{ id: 'keep', name: 'Keep', rule: 'Rule' }],
+      items: [
+        {
+          id: 'keep',
+          name: 'Keep',
+          prompt: 'Rule',
+          allowedTools: [],
+          outputAction: 'replace',
+          maxSteps: 5,
+        },
+      ],
       slots: { q: 'keep' },
     })
   })

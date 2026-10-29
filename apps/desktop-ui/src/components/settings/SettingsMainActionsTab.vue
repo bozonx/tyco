@@ -120,7 +120,7 @@ const isOffered = (command: CommandConfig) =>
   slotIds.value.has(optionId({ type: 'command', commandId: command.id })) ||
   !duplicatesDirectChoice(command, {
     languages: languages.value,
-    rules: aiTasks.value.map((task) => task.rule),
+    rules: aiTasks.value.map((task) => task.prompt),
   })
 
 /** Actions that open a dialog to pick what to do are marked as such */

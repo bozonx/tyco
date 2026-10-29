@@ -57,8 +57,22 @@ describe('SettingsMainActionsTab.vue', () => {
       mainActions: { q: { type: 'standard', actionId: 'correction' } },
       aiTasks: {
         items: [
-          { id: 'shorten', name: 'Shorten', rule: 'Make it short' },
-          { id: 'unnamed', name: ' ', rule: 'Hidden' },
+          {
+            id: 'shorten',
+            name: 'Shorten',
+            prompt: 'Make it short',
+            allowedTools: [],
+            outputAction: 'replace',
+            maxSteps: 5,
+          },
+          {
+            id: 'unnamed',
+            name: ' ',
+            prompt: 'Hidden',
+            allowedTools: [],
+            outputAction: 'replace',
+            maxSteps: 5,
+          },
         ],
         slots: {},
       },

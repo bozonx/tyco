@@ -35,8 +35,8 @@ describe('settings config preparation', () => {
           42,
           { name: 123, rule: {} },
           { name: 123, rule: 'Translate', id: [] },
-          { id: 'empty', name: ' ', rule: '' },
-          { id: 'kept', name: '', rule: 'Shorten' },
+          { id: 'empty', name: ' ', prompt: '' },
+          { id: 'kept', name: '', prompt: 'Shorten' },
         ],
         slots: { q: 'empty', t: 'kept', w: 'missing' },
       },
@@ -65,7 +65,16 @@ describe('settings config preparation', () => {
     const result = model().prepare(input)
     expect(input).toEqual(original)
     expect(result.aiTasks).toEqual({
-      items: [{ id: 'kept', name: '', rule: 'Shorten' }],
+      items: [
+        {
+          id: 'kept',
+          name: '',
+          prompt: 'Shorten',
+          allowedTools: [],
+          outputAction: 'replace',
+          maxSteps: 5,
+        },
+      ],
       slots: { t: 'kept' },
     })
     expect(result.llm.tasks).toEqual({

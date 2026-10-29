@@ -13,8 +13,22 @@ import {
 
 const library = (): AiTaskLibrary => ({
   items: [
-    { id: 'a', name: 'A', rule: 'x' },
-    { id: 'b', name: 'B', rule: 'y' },
+    {
+      id: 'a',
+      name: 'A',
+      prompt: 'x',
+      allowedTools: [],
+      outputAction: 'replace',
+      maxSteps: 5,
+    },
+    {
+      id: 'b',
+      name: 'B',
+      prompt: 'y',
+      allowedTools: [],
+      outputAction: 'replace',
+      maxSteps: 5,
+    },
   ],
   slots: { q: 'a', e: 'b' },
 })
@@ -33,7 +47,14 @@ describe('AI task library', () => {
   })
 
   it('adds a task into a slot and removes it with its slot', () => {
-    const added = placeNewTask(library(), 1, { id: 'c', name: 'C', rule: '' })
+    const added = placeNewTask(library(), 1, {
+      id: 'c',
+      name: 'C',
+      prompt: '',
+      allowedTools: [],
+      outputAction: 'replace',
+      maxSteps: 5,
+    })
     expect(added.slots).toEqual({ q: 'a', w: 'c', e: 'b' })
     expect(findAiTask(added.items, 'c')?.name).toBe('C')
 
@@ -49,16 +70,26 @@ describe('AI task library', () => {
   })
 
   it('updates a task by its id', () => {
-    expect(updateAiTask(library(), 'b', { rule: 'z' }).items[1]).toEqual({
+    expect(updateAiTask(library(), 'b', { prompt: 'z' }).items[1]).toEqual({
       id: 'b',
       name: 'B',
-      rule: 'z',
+      prompt: 'z',
+      allowedTools: [],
+      outputAction: 'replace',
+      maxSteps: 5,
     })
   })
 
-  it('drops tasks with neither a name nor a rule', () => {
+  it('drops tasks with neither a name nor a prompt', () => {
     const cleaned = withoutEmptyTasks(
-      placeNewTask(library(), 1, { id: 'c', name: ' ', rule: '' })
+      placeNewTask(library(), 1, {
+        id: 'c',
+        name: ' ',
+        prompt: '',
+        allowedTools: [],
+        outputAction: 'replace',
+        maxSteps: 5,
+      })
     )
     expect(cleaned).toEqual(library())
   })

@@ -19,9 +19,9 @@
               @update:model-value="updateTask(index, 'name', $event)"
             />
             <FieldTextArea
-              :model-value="item.rule"
+              :model-value="item.prompt"
               :placeholder="t('settings.rule')"
-              @update:model-value="updateTask(index, 'rule', $event)"
+              @update:model-value="updateTask(index, 'prompt', $event)"
             />
           </div>
         </template>
@@ -73,7 +73,10 @@ function addTask(index: number) {
     placeNewTask(userConfig.value.aiTasks, index, {
       id: newAiTaskId(userConfig.value.aiTasks.items),
       name: '',
-      rule: '',
+      prompt: '',
+      allowedTools: [],
+      outputAction: 'replace',
+      maxSteps: 5,
     })
   )
 }

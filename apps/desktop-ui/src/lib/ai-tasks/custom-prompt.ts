@@ -41,10 +41,10 @@ export function addTaskFromPrompt(
   library: AiTaskLibrary,
   prompt: string
 ): AiTaskLibrary | null {
-  const rule = prompt.trim()
+  const cleanPrompt = prompt.trim()
 
-  if (!rule) return null
-  if (library.items.some((task) => task.rule.trim() === rule))
+  if (!cleanPrompt) return null
+  if (library.items.some((task) => task.prompt?.trim() === cleanPrompt))
     return cloneLibrary(library)
 
   const index = SHORTCUT_SLOT_KEYS.findIndex((key) => !library.slots[key])
@@ -52,7 +52,10 @@ export function addTaskFromPrompt(
 
   return placeNewTask(library, index, {
     id: newAiTaskId(library.items),
-    name: taskNameFromPrompt(rule),
-    rule,
+    name: taskNameFromPrompt(cleanPrompt),
+    prompt: cleanPrompt,
+    allowedTools: [],
+    outputAction: 'replace',
+    maxSteps: 5,
   })
 }
