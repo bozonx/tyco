@@ -1,0 +1,200 @@
+import { mount } from '@vue/test-utils'
+import { describe, expect, it, vi } from 'vitest'
+import type { AiProfile, ProfileMemoryTopic } from '@tyco/shared'
+
+import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
+
+const mocks = vi.hoisted(() => ({
+  listMemoryTopics: vi.fn().mockResolvedValue([]),
+  readMemory: vi.fn(),
+  writeMemory: vi.fn(),
+  clearMemory: vi.fn(),
+  runLlm: vi.fn(),
+  toastKey: vi.fn(),
+  toastError: vi.fn(),
+}))
+
+vi.mock('../../stores/ai-profiles', () => ({
+  useAiProfilesStore: () => ({
+    listMemoryTopics: mocks.listMemoryTopics,
+    readMemory: mocks.readMemory,
+    writeMemory: mocks.writeMemory,
+    clearMemory: mocks.clearMemory,
+  }),
+}))
+
+vi.mock('../../stores/llm', () => ({
+  useLlmStore: () => ({ client: { run: mocks.runLlm } }),
+}))
+
+vi.mock('../../composables/use-toast', () => ({
+  default: () => ({ toastKey: mocks.toastKey, toastError: mocks.toastError }),
+}))
+
+vi.mock('../../composables/use-i18n', () => ({
+  useI18n: () => ({
+    t: (key: string, params?: Record<string, string>) => {
+      if (params?.tokens) return `${key}:${params.tokens}`
+      if (params?.file) return `${key}:${params.file}`
+      return key
+    },
+  }),
+}))
+
+const baseProfile: AiProfile = {
+  id: 'test-profile',
+  name: 'Test Profile',
+  memoryMode: 'auto',
+  projectPermissions: {},
+  createdAt: 1000,
+  updatedAt: 1000,
+}
+
+describe('SettingsProfileMemorySection', () => {
+  it('renders disabled notice when memoryMode is off', () => {
+    const wrapper = mount(SettingsProfileMemorySection, {
+      props: { profile: { ...baseProfile, memoryMode: 'off' } },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<div><slot /></div>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: true,
+          InlineNotice: {
+            props: ['message'],
+            template: '<div class="notice">{{ message }}</div>',
+          },
+          Button: true,
+        },
+      },
+    })
+
+    expect(wrapper.find('.notice').text()).toBe(
+      'settings.profileMemoryDisabledNotice'
+    )
+  })
+
+  it('loads and lists memory topics', async () => {
+    const topics: ProfileMemoryTopic[] = [
+      { file: 'core.md', title: 'Core facts', bytes: 120, updatedAt: 1000 },
+      {
+        file: 'preferences.md',
+        title: 'User style',
+        bytes: 400,
+        updatedAt: 1000,
+      },
+    ]
+    mocks.listMemoryTopics.mockResolvedValue(topics)
+
+    const wrapper = mount(SettingsProfileMemorySection, {
+      props: { profile: baseProfile },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<div><slot /></div>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: true,
+          SettingsEntityItem: {
+            props: ['title', 'description'],
+            template: `
+              <div class="entity-item">
+                <span class="title">{{ title }}</span>
+                <span class="desc">{{ description }}</span>
+                <slot name="actions" />
+              </div>
+            `,
+          },
+          Badge: true,
+          IconButton: true,
+          Button: true,
+          BaseDialog: true,
+          ConfirmModal: true,
+          Diff: true,
+        },
+      },
+    })
+
+    await vi.waitFor(() => {
+      expect(wrapper.findAll('.entity-item')).toHaveLength(2)
+    })
+
+    expect(wrapper.text()).toContain('core.md (Core facts)')
+    expect(wrapper.text()).toContain('preferences.md — User style')
+  })
+
+  it('emits update:memoryMode when mode changes', () => {
+    const wrapper = mount(SettingsProfileMemorySection, {
+      props: { profile: baseProfile },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<div><slot /></div>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: {
+            props: ['modelValue', 'options'],
+            template: `
+              <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
+                <option value="auto">auto</option>
+                <option value="ask">ask</option>
+              </select>
+            `,
+          },
+          Button: true,
+          BaseDialog: true,
+          ConfirmModal: true,
+        },
+      },
+    })
+
+    const select = wrapper.find('select')
+    select.setValue('ask')
+
+    expect(wrapper.emitted('update:memoryMode')?.[0]).toEqual(['ask'])
+  })
+
+  it('opens confirm modal on clear button click and clears memory', async () => {
+    mocks.listMemoryTopics.mockResolvedValue([
+      { file: 'core.md', title: 'Core', bytes: 10, updatedAt: 1000 },
+    ])
+
+    const wrapper = mount(SettingsProfileMemorySection, {
+      props: { profile: baseProfile },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<div><slot /></div>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: true,
+          SettingsEntityItem: true,
+          Button: {
+            props: ['disabled'],
+            template:
+              '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+          },
+          ConfirmModal: {
+            props: ['open'],
+            template:
+              '<div v-if="open" class="confirm-modal"><button class="confirm" @click="$emit(\'confirm\')">OK</button></div>',
+          },
+          BaseDialog: true,
+        },
+      },
+    })
+
+    await vi.waitFor(() => {
+      expect(mocks.listMemoryTopics).toHaveBeenCalled()
+    })
+
+    // Find clear button
+    const clearBtn = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('settings.profileMemoryClear'))
+    await clearBtn?.trigger('click')
+
+    expect(wrapper.find('.confirm-modal').exists()).toBe(true)
+
+    // Confirm clear
+    await wrapper.find('.confirm').trigger('click')
+    expect(mocks.clearMemory).toHaveBeenCalledWith('test-profile')
+    expect(mocks.toastKey).toHaveBeenCalledWith(
+      'settings.profileMemoryClearSuccess',
+      'info'
+    )
+  })
+})

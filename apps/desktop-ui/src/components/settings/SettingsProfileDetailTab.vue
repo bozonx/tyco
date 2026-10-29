@@ -191,6 +191,11 @@
           </div>
         </div>
       </SettingsSection>
+
+      <SettingsProfileMemorySection
+        :profile="profile"
+        @update:memory-mode="changeMemoryMode"
+      />
     </template>
 
     <StateMessage
@@ -249,6 +254,7 @@ import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
+import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
@@ -342,6 +348,7 @@ const {
   changeMaxOutputTokens,
   changeStepCount,
   changeSoul,
+  changeMemoryMode,
   changeSettings,
 } = editor
 

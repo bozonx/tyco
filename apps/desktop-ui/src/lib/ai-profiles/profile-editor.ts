@@ -1,6 +1,6 @@
 import { errorMessage } from '@tyco/shared/value-guards'
 import { computed, ref } from 'vue'
-import type { AiProfile } from '@tyco/shared'
+import type { AiProfile, ProfileMemoryMode } from '@tyco/shared'
 
 import {
   parseToolStepCount,
@@ -47,6 +47,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
   const temperatureError = ref(false)
   const maxOutputTokensError = ref(false)
   const stepCountError = ref(false)
+  const memoryMode = ref<ProfileMemoryMode>('auto')
   const soulPrompt = ref('')
   const isSoulLoaded = ref(false)
   const isSoulLoading = ref(false)
@@ -128,6 +129,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     temperatureText.value = String(profile.temperature ?? '')
     maxOutputTokensText.value = String(profile.maxOutputTokens ?? '')
     stepCountText.value = String(profile.tools?.maxStepCount ?? '')
+    memoryMode.value = profile.memoryMode ?? 'auto'
     temperatureError.value = false
     maxOutputTokensError.value = false
     stepCountError.value = false
@@ -198,6 +200,11 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     soulLoadError.value ? 'error' : autosaves.status.value
   )
 
+  const changeMemoryMode = (mode: ProfileMemoryMode) => {
+    memoryMode.value = mode
+    void changeSettings({ memoryMode: mode })
+  }
+
   /** Saves the waiting changes now, e.g. when the page is left */
   const flush = async () => (await autosaves.flush()) && !soulLoadError.value
 
@@ -209,6 +216,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     temperatureError,
     maxOutputTokensError,
     stepCountError,
+    memoryMode,
     soulPrompt,
     isSoulLoaded,
     isSoulLoading,
@@ -221,6 +229,7 @@ export function createProfileEditor(deps: ProfileEditorDependencies) {
     changeTemperature,
     changeMaxOutputTokens,
     changeStepCount,
+    changeMemoryMode,
     changeSoul,
     changeSettings,
     flush,

@@ -220,4 +220,14 @@ describe('profile editor', () => {
     expect(synced.editor.temperatureText.value).toBe('0.1')
     expect(synced.editor.soulPrompt.value).toBe('Typed')
   })
+
+  it('updates memory mode and saves it immediately', async () => {
+    const { deps, editor } = setup()
+    await editor.load({ ...profile, memoryMode: 'auto' })
+    expect(editor.memoryMode.value).toBe('auto')
+
+    editor.changeMemoryMode('ask')
+    expect(editor.memoryMode.value).toBe('ask')
+    expect(deps.updateProfile).toHaveBeenCalledWith({ memoryMode: 'ask' })
+  })
 })

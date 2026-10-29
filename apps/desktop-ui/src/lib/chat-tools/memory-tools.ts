@@ -79,6 +79,7 @@ const text = (value: unknown): string =>
 interface MemoryToolSpec {
   name: string
   label: string
+  labelKey?: string
   icon: string
   description: string
   inputSchema: JsonSchema
@@ -90,6 +91,7 @@ const MEMORY_TOOLS: readonly MemoryToolSpec[] = [
   {
     name: 'memory_read',
     label: 'Read memory',
+    labelKey: 'chatTools.memory.readLabel',
     icon: 'mdi:brain',
     description:
       'Reads core.md or a topic file from the profile long-term memory.',
@@ -109,6 +111,7 @@ const MEMORY_TOOLS: readonly MemoryToolSpec[] = [
   {
     name: 'memory_search',
     label: 'Search memory',
+    labelKey: 'chatTools.memory.searchLabel',
     icon: 'mdi:magnify',
     description:
       'Searches the profile long-term memory for lines matching the query.',
@@ -127,6 +130,7 @@ const MEMORY_TOOLS: readonly MemoryToolSpec[] = [
   {
     name: 'memory_add',
     label: 'Add to memory',
+    labelKey: 'chatTools.memory.addLabel',
     icon: 'mdi:plus-circle-outline',
     description:
       'Appends a fact, thesis or rule to a memory file. Creates the topic file if it does not exist.',
@@ -148,6 +152,7 @@ const MEMORY_TOOLS: readonly MemoryToolSpec[] = [
   {
     name: 'memory_replace',
     label: 'Update memory',
+    labelKey: 'chatTools.memory.replaceLabel',
     icon: 'mdi:file-replace-outline',
     description:
       'Replaces an outdated thesis in a memory file with a new one. Leave new empty to remove the fact.',
@@ -172,6 +177,7 @@ const MEMORY_TOOLS: readonly MemoryToolSpec[] = [
   {
     name: 'memory_rewrite',
     label: 'Rewrite memory',
+    labelKey: 'chatTools.memory.rewriteLabel',
     icon: 'mdi:file-document-edit-outline',
     description:
       'Completely rewrites a memory file. Used for compacting and reorganizing memory.',
@@ -347,6 +353,7 @@ export function createMemoryToolProvider(
       name: spec.name,
       groupId: MEMORY_TOOL_GROUP_ID,
       label: spec.label,
+      labelKey: spec.labelKey,
       icon: spec.icon,
       description: spec.description,
       inputSchema: spec.inputSchema,

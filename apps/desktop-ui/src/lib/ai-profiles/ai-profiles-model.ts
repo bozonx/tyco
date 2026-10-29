@@ -29,6 +29,7 @@ export type AiProfilePatch = Partial<
     | 'maxOutputTokens'
     | 'projectPermissions'
     | 'tools'
+    | 'memoryMode'
   >
 >
 

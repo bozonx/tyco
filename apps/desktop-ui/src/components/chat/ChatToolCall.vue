@@ -1,5 +1,10 @@
 <template>
-  <div class="tool-call" :class="`is-${call.state}`">
+  <ChatMemoryChangeCard
+    v-if="isMemoryWriteDone"
+    :call="call"
+    :result="result"
+  />
+  <div v-else class="tool-call" :class="`is-${call.state}`">
     <DisclosureHeader
       :expanded="isExpanded"
       :controls="detailsId"
@@ -60,6 +65,7 @@ import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
 import type { ChatToolPreview } from '../../lib/chat-tools/chat-tool-registry'
 import AppIcon from '../common/AppIcon.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
+import ChatMemoryChangeCard from './ChatMemoryChangeCard.vue'
 import ChatToolApproval from './ChatToolApproval.vue'
 import ChatToolChange from './ChatToolChange.vue'
 import type { ChatMessagePart } from '@tyco/shared'
@@ -79,6 +85,16 @@ const emit = defineEmits<{ decide: [decision: ChatToolDecision] }>()
 const { t } = useI18n()
 const isExpanded = ref(false)
 const detailsId = useId()
+
+const MEMORY_WRITE_TOOLS = new Set([
+  'memory_add',
+  'memory_replace',
+  'memory_rewrite',
+])
+const isMemoryWriteDone = computed(
+  () =>
+    props.call.state === 'done' && MEMORY_WRITE_TOOLS.has(props.call.toolName)
+)
 // the user decides on what the call does, so its arguments are in view
 watch(
   () => props.isAwaitingAnswer,

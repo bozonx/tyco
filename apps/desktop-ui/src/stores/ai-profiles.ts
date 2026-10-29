@@ -128,6 +128,40 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     await profilesModel.loadProfiles()
   }
 
+  const listMemoryTopics = async (profileId: string) =>
+    resultOrThrow(await call('list_ai_profile_memory_topics', { profileId }))
+
+  const readMemory = async (profileId: string, file: string) =>
+    resultOrThrow(await call('read_ai_profile_memory', { profileId, file }))
+
+  const writeMemory = async (
+    profileId: string,
+    file: string,
+    content: string,
+    chatId?: string | null
+  ) =>
+    resultOrThrow(
+      await call('rewrite_ai_profile_memory', {
+        profileId,
+        file,
+        content,
+        chatId,
+      })
+    )
+
+  const clearMemory = async (profileId: string) => {
+    resultOrThrow(await call('clear_ai_profile_memory', { profileId }))
+  }
+
+  const undoMemory = async (
+    profileId: string,
+    file: string,
+    chatId?: string | null
+  ) =>
+    resultOrThrow(
+      await call('undo_ai_profile_memory', { profileId, file, chatId })
+    )
+
   return {
     profiles: readonly(profilesModel.profiles),
     projects: readonly(projectsModel.projects),
@@ -152,6 +186,12 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     setProjectAccess: profilesModel.setProjectAccess,
     readSoul: profilesModel.readSoul,
     writeSoul: profilesModel.writeSoul,
+    // Memory
+    listMemoryTopics,
+    readMemory,
+    writeMemory,
+    clearMemory,
+    undoMemory,
     // Projects
     getProject: projectsModel.getProject,
     createProject: projectsModel.createProject,

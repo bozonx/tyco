@@ -32,12 +32,21 @@
     <div class="chat-main">
       <div v-if="profile" class="profile-header">
         <span class="profile-name">{{ profile.name }}</span>
-        <IconButton
-          class="profile-settings"
-          :label="t('chat.profileSettings')"
-          icon="mdi:cog-outline"
-          @click="openProfileSettings"
-        />
+        <div class="profile-header-actions">
+          <IconButton
+            class="profile-memory-indicator"
+            :icon="memoryModeIcon"
+            :label="memoryModeTooltip"
+            :title="memoryModeTooltip"
+            @click="openProfileSettings"
+          />
+          <IconButton
+            class="profile-settings"
+            :label="t('chat.profileSettings')"
+            icon="mdi:cog-outline"
+            @click="openProfileSettings"
+          />
+        </div>
       </div>
       <AiChat :key="scopeKey" class="chat-body" />
     </div>
@@ -60,6 +69,7 @@ import { appNavigation } from '../navigation'
 import { useAiProfilesStore } from '../stores/ai-profiles'
 import { useChatLayoutStore } from '../stores/chat-layout'
 import { useDesktopStore } from '../stores/desktop'
+import type { ProfileMemoryMode } from '@tyco/shared'
 
 const desktopStore = useDesktopStore()
 const aiProfilesStore = useAiProfilesStore()
@@ -87,6 +97,27 @@ provideChatScope(() => scope.value)
 const profile = computed(() =>
   profileId.value ? aiProfilesStore.getProfile(profileId.value) : undefined
 )
+
+const MEMORY_MODE_ICONS: Record<ProfileMemoryMode, string> = {
+  auto: 'mdi:brain',
+  ask: 'mdi:shield-check',
+  'read-only': 'mdi:eye-outline',
+  off: 'mdi:database-off-outline',
+}
+
+const memoryModeIcon = computed(
+  () => MEMORY_MODE_ICONS[profile.value?.memoryMode ?? 'auto']
+)
+
+const memoryModeTooltip = computed(() => {
+  const mode = profile.value?.memoryMode ?? 'auto'
+  return t(`settings.profileMemoryMode${capitalizeMode(mode)}`)
+})
+
+function capitalizeMode(mode: string) {
+  if (mode === 'read-only') return 'ReadOnly'
+  return mode.charAt(0).toUpperCase() + mode.slice(1)
+}
 
 function closeMobileSidebar() {
   if (window.matchMedia('(max-width: 47.5rem)').matches)
@@ -162,7 +193,10 @@ onMounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.profile-settings {
+.profile-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
   margin-left: auto;
 }
 .sidebar-closed-tools {

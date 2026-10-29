@@ -84,6 +84,7 @@ describe('SettingsProfileDetailTab.vue', () => {
         provide: context.provide,
         stubs: {
           SettingsProfileToolsSection: true,
+          SettingsProfileMemorySection: true,
           ConfirmModal: {
             props: ['open', 'message'],
             template:

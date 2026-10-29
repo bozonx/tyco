@@ -42,6 +42,24 @@
         <div v-else-if="chatStore.isGenerating" class="stream-cursor" />
 
         <InlineNotice
+          v-if="chatStore.isCoreClipped"
+          class="chat-memory-clipped"
+          kind="warning"
+          icon="mdi:brain"
+          :message="t('chat.coreMemoryClippedWarning')"
+        >
+          <Button
+            v-if="chatStore.profileId"
+            size="xs"
+            variant="ghost"
+            icon="mdi:cog-outline"
+            @click="openProfileMemorySettings"
+          >
+            {{ t('chat.profileSettings') }}
+          </Button>
+        </InlineNotice>
+
+        <InlineNotice
           v-if="chatStore.isStopped && !chatStore.error"
           class="chat-error"
           kind="info"
@@ -207,6 +225,12 @@ function messageKey(message: ChatMessage) {
 
 function openModelSettings() {
   void appNavigation.goToConfig('llm')
+}
+
+function openProfileMemorySettings() {
+  if (chatStore.profileId) {
+    void appNavigation.goToConfig(`ai-profile:${chatStore.profileId}`)
+  }
 }
 
 async function sendMessage() {
