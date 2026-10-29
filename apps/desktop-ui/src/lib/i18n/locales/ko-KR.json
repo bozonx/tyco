@@ -251,7 +251,12 @@
     "undo": "실행 취소",
     "unknownTool": "“{tool}” 도구는 이 버전의 Tyco에서 사용할 수 없습니다.",
     "unnamed": "제목 없는 명령",
-    "warningExternalNameTwins": "동일한 이름을 가진 다른 명령이 있습니다: {names}. 이름으로 호출하면 모호하여 거부되므로 ID를 사용하세요."
+    "warningExternalNameTwins": "동일한 이름을 가진 다른 명령이 있습니다: {names}. 이름으로 호출하면 모호하여 거부되므로 ID를 사용하세요.",
+    "llmPreTransform": "LLM으로 사전 텍스트 변환",
+    "llmPreTransformInfo": "명령에 전달하기 전에 LLM 프롬프트로 텍스트를 변환합니다.",
+    "llmPreTransformPromptLabel": "변환 프롬프트",
+    "llmPreTransformPromptPlaceholder": "명령이 받기 전에 텍스트를 변환하는 프롬프트",
+    "llmPreTransformPromptInfo": "명령으로 보내기 전에 입력 텍스트를 변환하기 위한 LLM 지침입니다."
   },
   "common": {
     "add": "추가",
@@ -699,6 +704,8 @@
       "quickInput": "빠른 텍스트 입력",
       "selectionActions": "선택 영역 작업",
       "selectionCorrection": "선택한 텍스트를 그 자리에서 교정",
+      "styling": "텍스트 스타일 지정",
+      "transformation": "텍스트 변환",
       "translation": "선택한 텍스트 번역",
       "voice": "음성 입력",
       "voiceChat": "선택한 텍스트에 대해 AI 채팅에 음성으로 질문",

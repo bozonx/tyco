@@ -251,7 +251,12 @@
     "undo": "Cofnij",
     "unknownTool": "Narzędzie „{tool}” nie jest dostępne w tej wersji Tyco.",
     "unnamed": "Polecenie bez nazwy",
-    "warningExternalNameTwins": "Inne polecenia mają tę samą nazwę: {names}. Wywołanie po tej nazwie jest odrzucane jako niejednoznaczne; użyj ID."
+    "warningExternalNameTwins": "Inne polecenia mają tę samą nazwę: {names}. Wywołanie po tej nazwie jest odrzucane jako niejednoznaczne; użyj ID.",
+    "llmPreTransform": "Wstępna transformacja za pomocą LLM",
+    "llmPreTransformInfo": "Przekształca tekst za pomocą promptu LLM przed przekazaniem go do polecenia.",
+    "llmPreTransformPromptLabel": "Prompt transformacji",
+    "llmPreTransformPromptPlaceholder": "Prompt przekształcający tekst przed przekazaniem do polecenia",
+    "llmPreTransformPromptInfo": "Instrukcja dla LLM służąca do przekształcenia tekstu wejściowego przed wysłaniem do polecenia."
   },
   "common": {
     "add": "Dodaj",
@@ -705,6 +710,8 @@
       "quickInput": "Szybkie wprowadzanie tekstu",
       "selectionActions": "Akcje na zaznaczeniu",
       "selectionCorrection": "Popraw zaznaczony tekst w miejscu",
+      "styling": "Stylizacja tekstu",
+      "transformation": "Transformacja tekstu",
       "translation": "Przetłumacz zaznaczony tekst",
       "voice": "Wprowadzanie głosowe",
       "voiceChat": "Pytanie głosowe o zaznaczony tekst w czacie AI",

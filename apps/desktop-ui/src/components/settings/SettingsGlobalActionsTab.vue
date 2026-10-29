@@ -182,6 +182,8 @@ const MODE_ORDER: HotkeyId[] = [
   'aiTasks',
   'correction',
   'translation',
+  'styling',
+  'transformation',
 ]
 
 interface HotkeyRow {

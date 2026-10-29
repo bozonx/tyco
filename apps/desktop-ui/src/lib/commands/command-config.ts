@@ -136,6 +136,8 @@ export function createCommand(
     toolId,
     toolConfig: defaultToolConfig(toolId),
     isLlmArgumentParsingEnabled: false,
+    isLlmPreTransformEnabled: false,
+    llmPreTransformPrompt: '',
     outputAction: outputActionOf(tool?.defaultOutputAction),
     isOutputLogged: false,
     isAvailableExternally: false,

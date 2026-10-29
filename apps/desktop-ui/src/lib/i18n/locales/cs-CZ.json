@@ -251,7 +251,12 @@
     "undo": "Zpět",
     "unknownTool": "Nástroj „{tool}“ není v této verzi Tyco k dispozici.",
     "unnamed": "Příkaz bez názvu",
-    "warningExternalNameTwins": "Jiné příkazy mají stejný název: {names}. Volání tímto názvem se odmítne jako nejednoznačné; použijte ID."
+    "warningExternalNameTwins": "Jiné příkazy mají stejný název: {names}. Volání tímto názvem se odmítne jako nejednoznačné; použijte ID.",
+    "llmPreTransform": "Předběžná transformace pomocí LLM",
+    "llmPreTransformInfo": "Před předáním do příkazu transformuje text pomocí dotazu pro LLM.",
+    "llmPreTransformPromptLabel": "Instrukce pro transformaci",
+    "llmPreTransformPromptPlaceholder": "Instrukce, která transformuje text před odesláním do příkazu",
+    "llmPreTransformPromptInfo": "Instrukce pro LLM k transformaci vstupního textu před odesláním do příkazu."
   },
   "common": {
     "add": "Přidat",
@@ -699,6 +704,8 @@
       "quickInput": "Rychlé zadání textu",
       "selectionActions": "Akce s výběrem",
       "selectionCorrection": "Opravit vybraný text na místě",
+      "styling": "Stylizace textu",
+      "transformation": "Transformace textu",
       "translation": "Přeložit vybraný text",
       "voice": "Hlasové zadávání",
       "voiceChat": "Hlasová otázka k vybranému textu v chatu AI",

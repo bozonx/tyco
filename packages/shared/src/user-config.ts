@@ -114,6 +114,8 @@ export interface HotkeysConfig {
   aiTasks: string
   correction: string
   translation: string
+  styling: string
+  transformation: string
   voiceCommands: string
   selectionCorrection: string
 }

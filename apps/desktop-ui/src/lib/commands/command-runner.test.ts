@@ -697,3 +697,184 @@ it('opens a result menu for a voice translation without inserting or copying the
   expect(copyText).not.toHaveBeenCalled()
   expect(deps.hideWindow).not.toHaveBeenCalled()
 })
+
+describe('LLM pre-transformation', () => {
+  it('transforms input text with LLM prompt before running the command', async () => {
+    const executeScriptAction = vi.fn().mockResolvedValue(result({ stdout: 'ok' }))
+    const transformTextWithLlm = vi.fn().mockResolvedValue('pre-transformed text')
+    const { runner } = setup({ executeScriptAction, transformTextWithLlm })
+
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: 'Fix errors',
+        outputAction: 'none',
+      }
+    )
+
+    const outcome = await runner.run(cmd, 'raw text')
+    expect(outcome.success).toBe(true)
+    expect(transformTextWithLlm).toHaveBeenCalledWith(
+      'Fix errors',
+      'raw text',
+      expect.anything()
+    )
+    expect(executeScriptAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: 'pre-transformed text',
+      })
+    )
+  })
+
+  it('runs core.transformation tool when transformTextWithLlm is not provided', async () => {
+    const executeScriptAction = vi.fn().mockResolvedValue(result({ stdout: 'ok' }))
+    const runTransformation = vi.fn().mockResolvedValue({
+      ok: true,
+      content: 'transformed via tool',
+    })
+    const { runner } = setup(
+      { executeScriptAction },
+      [
+        {
+          id: 'core.transformation',
+          labelKey: 'tools.transformation',
+          description: 'Transform',
+          inputSchema: TEXT_INPUT_SCHEMA,
+          run: runTransformation,
+        },
+      ]
+    )
+
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: 'Summarize',
+        outputAction: 'none',
+      }
+    )
+
+    const outcome = await runner.run(cmd, 'original text')
+    expect(outcome.success).toBe(true)
+    expect(runTransformation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: { text: 'original text' },
+        config: { prompt: 'Summarize' },
+      })
+    )
+    expect(executeScriptAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: 'transformed via tool',
+      })
+    )
+  })
+
+  it('does not transform text when isLlmPreTransformEnabled is false', async () => {
+    const executeScriptAction = vi.fn().mockResolvedValue(result({ stdout: 'ok' }))
+    const transformTextWithLlm = vi.fn()
+    const { runner } = setup({ executeScriptAction, transformTextWithLlm })
+
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: false,
+        llmPreTransformPrompt: 'Fix errors',
+        outputAction: 'none',
+      }
+    )
+
+    await runner.run(cmd, 'raw text')
+    expect(transformTextWithLlm).not.toHaveBeenCalled()
+    expect(executeScriptAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: 'raw text',
+      })
+    )
+  })
+
+  it('skips transformation when input text is empty', async () => {
+    const executeScriptAction = vi.fn().mockResolvedValue(result({ stdout: 'ok' }))
+    const transformTextWithLlm = vi.fn()
+    const { runner } = setup({ executeScriptAction, transformTextWithLlm })
+
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: 'Fix errors',
+        outputAction: 'none',
+      }
+    )
+
+    await runner.run(cmd, '   ')
+    expect(transformTextWithLlm).not.toHaveBeenCalled()
+  })
+
+  it('fails when isLlmPreTransformEnabled is true but prompt is empty', async () => {
+    const executeScriptAction = vi.fn()
+    const { runner, deps } = setup({ executeScriptAction })
+
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: '   ',
+        outputAction: 'none',
+      }
+    )
+
+    const outcome = await runner.run(cmd, 'raw text')
+    expect(outcome.success).toBe(false)
+    expect(executeScriptAction).not.toHaveBeenCalled()
+    expect(deps.showToast).toHaveBeenCalledWith('commands.errorNoPrompt', 'error')
+  })
+
+  it('stops and reports error when LLM transformation fails', async () => {
+    const executeScriptAction = vi.fn()
+    const transformTextWithLlm = vi.fn().mockRejectedValue(new Error('LLM model failed'))
+    const { runner, deps } = setup({ executeScriptAction, transformTextWithLlm })
+
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: 'Fix errors',
+        outputAction: 'none',
+      }
+    )
+
+    const outcome = await runner.run(cmd, 'raw text')
+    expect(outcome.success).toBe(false)
+    expect(executeScriptAction).not.toHaveBeenCalled()
+    expect(deps.showText).toHaveBeenCalledWith('LLM model failed', 'error')
+  })
+
+  it('pre-transforms text before transform() replaces selection', async () => {
+    const executeScriptAction = vi.fn().mockResolvedValue(result({ stdout: 'final-result' }))
+    const transformTextWithLlm = vi.fn().mockResolvedValue('pre-transformed')
+    const { runner } = setup({ executeScriptAction, transformTextWithLlm })
+
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: 'Translate',
+      }
+    )
+
+    const res = await runner.transform(cmd, 'selection-text')
+    expect(res.ok).toBe(true)
+    expect(res.content).toBe('final-result')
+    expect(transformTextWithLlm).toHaveBeenCalledWith(
+      'Translate',
+      'selection-text',
+      expect.anything()
+    )
+    expect(executeScriptAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: 'pre-transformed',
+      })
+    )
+  })
+})

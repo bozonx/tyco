@@ -186,6 +186,33 @@
             })
           }}
         </p>
+        <div class="command-field-row">
+          <FieldSwitch
+            :model-value="command.isLlmPreTransformEnabled ?? false"
+            :label="t('commands.llmPreTransform')"
+            @update:model-value="update({ isLlmPreTransformEnabled: $event })"
+          />
+          <InfoTooltip :text="t('commands.llmPreTransformInfo')" />
+        </div>
+        <FieldRow
+          v-if="command.isLlmPreTransformEnabled"
+          class="command-field"
+          vertical
+          density="compact"
+          :label="t('commands.llmPreTransformPromptLabel')"
+          :warning="preTransformWarnings"
+        >
+          <FieldTextArea
+            class="command-llm-pre-transform-prompt"
+            :model-value="command.llmPreTransformPrompt ?? ''"
+            :placeholder="t('commands.llmPreTransformPromptPlaceholder')"
+            auto-resize
+            @update:model-value="update({ llmPreTransformPrompt: $event })"
+          />
+          <template #info>
+            <InfoTooltip :text="t('commands.llmPreTransformPromptInfo')" />
+          </template>
+        </FieldRow>
         <p v-if="origin" class="command-hint command-origin">{{ origin }}</p>
       </div>
     </section>
@@ -275,6 +302,11 @@ const nameWarnings = computed(() =>
     .filter((issue) => issue.field === 'name')
     .map((issue) => t(issue.messageKey))
 )
+const preTransformWarnings = computed(() =>
+  validateCommand(props.command, toolsStore)
+    .filter((issue) => issue.field === 'llmPreTransformPrompt')
+    .map((issue) => t(issue.messageKey))
+)
 
 const {
   update,
@@ -320,11 +352,12 @@ const origin = computed(() =>
 const isTestOpen = ref(false)
 const testBodyId = useId()
 const advancedBodyId = useId()
-const isAdvancedOpen = ref(
+const isAdvancedOpen = ref<boolean>(
   Boolean(props.command.description) ||
     Boolean(scriptConfig.value.timeoutSec) ||
-    props.command.isOutputLogged ||
-    props.command.isAvailableExternally
+    Boolean(props.command.isOutputLogged) ||
+    Boolean(props.command.isAvailableExternally) ||
+    Boolean(props.command.isLlmPreTransformEnabled)
 )
 
 /** By the name, which reads better, while it is unique; otherwise by the id */
@@ -407,6 +440,10 @@ async function openLog() {
 }
 
 .command-description {
+  min-height: 4rem;
+}
+
+.command-llm-pre-transform-prompt {
   min-height: 4rem;
 }
 

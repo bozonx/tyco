@@ -251,7 +251,12 @@
     "undo": "Rückgängig",
     "unknownTool": "Das Werkzeug „{tool}“ ist in dieser Version von Tyco nicht verfügbar.",
     "unnamed": "Unbenannter Befehl",
-    "warningExternalNameTwins": "Andere Befehle haben denselben Namen: {names}. Ein Aufruf mit diesem Namen wird als mehrdeutig abgelehnt; verwenden Sie die ID."
+    "warningExternalNameTwins": "Andere Befehle haben denselben Namen: {names}. Ein Aufruf mit diesem Namen wird als mehrdeutig abgelehnt; verwenden Sie die ID.",
+    "llmPreTransform": "Vorab-Transformation mit LLM",
+    "llmPreTransformInfo": "Transformiert den Text mit einem LLM-Prompt, bevor er an den Befehl übergeben wird.",
+    "llmPreTransformPromptLabel": "Transformations-Prompt",
+    "llmPreTransformPromptPlaceholder": "Prompt, der den Text transformiert, bevor der Befehl ihn erhält",
+    "llmPreTransformPromptInfo": "Anweisung an das LLM, um den Eingabetext vor dem Senden an den Befehl zu transformieren."
   },
   "common": {
     "add": "Hinzufügen",
@@ -705,6 +710,8 @@
       "quickInput": "Schnelle Texteingabe",
       "selectionActions": "Aktionen für die Auswahl",
       "selectionCorrection": "Ausgewählten Text direkt korrigieren",
+      "styling": "Textstilisierung",
+      "transformation": "Texttransformation",
       "translation": "Ausgewählten Text übersetzen",
       "voice": "Spracheingabe",
       "voiceChat": "Sprachfrage zum ausgewählten Text im KI-Chat",

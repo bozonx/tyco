@@ -251,7 +251,12 @@
     "undo": "Annulla",
     "unknownTool": "Lo strumento «{tool}» non è disponibile in questa versione di Tyco.",
     "unnamed": "Comando senza titolo",
-    "warningExternalNameTwins": "Altri comandi hanno lo stesso nome: {names}. Una chiamata con questo nome viene rifiutata perché ambigua; usa l’ID."
+    "warningExternalNameTwins": "Altri comandi hanno lo stesso nome: {names}. Una chiamata con questo nome viene rifiutata perché ambigua; usa l’ID.",
+    "llmPreTransform": "Pre-trasformazione con LLM",
+    "llmPreTransformInfo": "Trasforma il testo con un prompt LLM prima di passarlo al comando.",
+    "llmPreTransformPromptLabel": "Prompt di trasformazione",
+    "llmPreTransformPromptPlaceholder": "Prompt che trasforma il testo prima che venga ricevuto dal comando",
+    "llmPreTransformPromptInfo": "Istruzione per l’LLM con cui trasformare il testo di input prima di inviarlo al comando."
   },
   "common": {
     "add": "Aggiungi",
@@ -705,6 +710,8 @@
       "quickInput": "Inserimento rapido di testo",
       "selectionActions": "Azioni sulla selezione",
       "selectionCorrection": "Correggi il testo selezionato sul posto",
+      "styling": "Stilizzazione del testo",
+      "transformation": "Trasformazione del testo",
       "translation": "Traduci il testo selezionato",
       "voice": "Input vocale",
       "voiceChat": "Domanda vocale sul testo selezionato nella chat IA",

@@ -141,6 +141,10 @@ export interface CommandConfig {
    * structured input and do not parse text themselves
    */
   isLlmArgumentParsingEnabled: boolean
+  /** Pre-transform the text with LLM before it is passed to the command */
+  isLlmPreTransformEnabled?: boolean
+  /** Prompt for the LLM pre-transformation */
+  llmPreTransformPrompt?: string
   /**
    * What the command launcher does with the returned text; the other places a
    * command runs from handle it their own way

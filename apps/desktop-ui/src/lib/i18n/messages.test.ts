@@ -163,6 +163,8 @@ const DYNAMIC_KEYS = new Set([
     'selectionCorrection',
     'correction',
     'translation',
+    'styling',
+    'transformation',
   ].map((mode) => `settings.hotkeyActions.${mode}`),
   ...['editor', 'browser', 'notes', 'none'].map(
     (cap) => `settings.pluginCapability.${cap}`

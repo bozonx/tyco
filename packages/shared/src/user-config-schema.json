@@ -99,6 +99,8 @@
         "aiTasks": { "type": "string", "default": "" },
         "correction": { "type": "string", "default": "" },
         "translation": { "type": "string", "default": "" },
+        "styling": { "type": "string", "default": "" },
+        "transformation": { "type": "string", "default": "" },
         "voiceCommands": { "type": "string", "default": "Ctrl+Alt+Shift+X" },
         "selectionCorrection": {
           "type": "string",
@@ -115,6 +117,8 @@
         "aiTasks",
         "correction",
         "translation",
+        "styling",
+        "transformation",
         "voiceCommands",
         "selectionCorrection"
       ],
@@ -415,6 +419,8 @@
             "type": "boolean",
             "default": false
           },
+          "isLlmPreTransformEnabled": { "type": "boolean", "default": false },
+          "llmPreTransformPrompt": { "type": "string", "default": "" },
           "outputAction": {
             "enum": ["none", "showMenu", "insertIntoWindow", "copyToClipboard"],
             "default": "none"
@@ -432,6 +438,8 @@
           "toolId",
           "toolConfig",
           "isLlmArgumentParsingEnabled",
+          "isLlmPreTransformEnabled",
+          "llmPreTransformPrompt",
           "outputAction",
           "isOutputLogged",
           "isAvailableExternally",

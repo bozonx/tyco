@@ -1,4 +1,5 @@
 import type { CommandConfig, CommandRunSource } from '@tyco/shared'
+import { errorMessage } from '@tyco/shared/value-guards'
 import type { Invocation, ResultSink } from '../invocation/invocation-types'
 import { invocationUnavailableReason } from '../invocation/invoke-tool'
 import { resolveSink } from '../invocation/result-sinks'
@@ -161,6 +162,15 @@ export function validateCommand(
   if (!command.name.trim()) {
     issues.push({ field: 'name', messageKey: 'commands.errorNoName' })
   }
+  if (
+    command.isLlmPreTransformEnabled &&
+    !stringOr(command.llmPreTransformPrompt).trim()
+  ) {
+    issues.push({
+      field: 'llmPreTransformPrompt',
+      messageKey: 'commands.errorNoPrompt',
+    })
+  }
   if (command.toolId === 'script') {
     const config = scriptToolConfig(command)
     if (!config.command.trim()) {
@@ -183,4 +193,80 @@ export function validateCommand(
     issues.push({ field: 'toolId', messageKey: 'commands.errorUnknownTool' })
   }
   return issues
+}
+
+export interface PreTransformResult {
+  ok: boolean
+  text?: string
+  cancelled?: boolean
+  messageKey?: string
+  message?: string
+}
+
+/**
+ * Pre-transforms the text using LLM if the command has pre-transformation
+ * enabled.
+ */
+export async function preTransformCommandText(
+  command: CommandConfig,
+  text: string,
+  tools: ToolLookup,
+  options: {
+    signal?: AbortSignal
+    source?: CommandRunSource
+    transformTextWithLlm?: (
+      prompt: string,
+      text: string,
+      options?: { signal?: AbortSignal }
+    ) => Promise<string>
+  } = {}
+): Promise<PreTransformResult> {
+  if (!command.isLlmPreTransformEnabled) {
+    return { ok: true, text }
+  }
+  const prompt = stringOr(command.llmPreTransformPrompt).trim()
+  if (!prompt) {
+    return { ok: false, messageKey: 'commands.errorNoPrompt' }
+  }
+  if (!text.trim()) {
+    return { ok: true, text }
+  }
+  if (options.signal?.aborted) {
+    return { ok: false, cancelled: true }
+  }
+  if (options.transformTextWithLlm) {
+    try {
+      const result = await options.transformTextWithLlm(prompt, text, {
+        signal: options.signal,
+      })
+      if (options.signal?.aborted) return { ok: false, cancelled: true }
+      return { ok: true, text: result }
+    } catch (error) {
+      if (options.signal?.aborted) return { ok: false, cancelled: true }
+      return { ok: false, message: errorMessage(error) }
+    }
+  }
+  const tool = tools.get('core.transformation')
+  if (!tool) {
+    return { ok: false, messageKey: 'commands.toolMissing' }
+  }
+  const reason = tool.getUnavailableReasonKey?.()
+  if (reason) {
+    return { ok: false, messageKey: reason }
+  }
+  const res = await tool.run({
+    input: { text },
+    config: { prompt },
+    source: options.source ?? 'menu',
+    signal: options.signal ?? new AbortController().signal,
+    isOutputRequested: true,
+    wantsOutput: true,
+  })
+  if (res.cancelled || options.signal?.aborted) {
+    return { ok: false, cancelled: true }
+  }
+  if (!res.ok) {
+    return { ok: false, messageKey: res.messageKey, message: res.message }
+  }
+  return { ok: true, text: res.content ?? text }
 }

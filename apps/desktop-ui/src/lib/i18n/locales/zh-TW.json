@@ -251,7 +251,12 @@
     "undo": "復原",
     "unknownTool": "此版本的 Tyco 無法使用「{tool}」工具。",
     "unnamed": "未命名命令",
-    "warningExternalNameTwins": "其他命令具有相同名稱：{names}。依此名稱呼叫會因不明確而遭拒；請改用 ID。"
+    "warningExternalNameTwins": "其他命令具有相同名稱：{names}。依此名稱呼叫會因不明確而遭拒；請改用 ID。",
+    "llmPreTransform": "使用 LLM 進行文字預處理",
+    "llmPreTransformInfo": "在傳遞給命令之前，使用 LLM 提示詞對文字進行轉換。",
+    "llmPreTransformPromptLabel": "預處理提示詞",
+    "llmPreTransformPromptPlaceholder": "在命令接收之前轉換文字的提示詞",
+    "llmPreTransformPromptInfo": "用於在將輸入文字發送到命令之前由 LLM 進行轉換的指示。"
   },
   "common": {
     "add": "新增",
@@ -699,6 +704,8 @@
       "quickInput": "快速文字輸入",
       "selectionActions": "選取文字動作",
       "selectionCorrection": "在原地校對選取的文字",
+      "styling": "文字風格化",
+      "transformation": "文字轉換",
       "translation": "翻譯選取的文字",
       "voice": "語音輸入",
       "voiceChat": "在 AI 聊天中針對選取的文字進行語音提問",

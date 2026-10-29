@@ -166,6 +166,57 @@ describe('runCommandTest', () => {
     )
   })
 
+  it('pre-transforms text before testing a webhook', async () => {
+    const executeWebhook = vi.fn().mockResolvedValue('done')
+    const webhook: CommandConfig = {
+      ...createCommand('webhook', 'wh1'),
+      name: 'Hook',
+      toolConfig: { url: 'https://x.test/?q={{TEXT}}' },
+      isLlmPreTransformEnabled: true,
+      llmPreTransformPrompt: 'Uppercase',
+    }
+    const transformTextWithLlm = vi.fn().mockResolvedValue('HI')
+    const result = await runCommandTest(
+      webhook,
+      'hi',
+      testTools({ executeWebhook }),
+      { ...deps(), transformTextWithLlm },
+      new AbortController().signal
+    )
+    expect(result).toEqual({ kind: 'output', output: 'done' })
+    expect(transformTextWithLlm).toHaveBeenCalledWith(
+      'Uppercase',
+      'hi',
+      expect.anything()
+    )
+    expect(executeWebhook).toHaveBeenCalledWith(
+      expect.anything(),
+      'HI',
+      expect.anything()
+    )
+  })
+
+  it('fails test run when pre-transformation prompt is missing', async () => {
+    const webhook: CommandConfig = {
+      ...createCommand('webhook', 'wh1'),
+      name: 'Hook',
+      toolConfig: { url: 'https://x.test/?q={{TEXT}}' },
+      isLlmPreTransformEnabled: true,
+      llmPreTransformPrompt: '   ',
+    }
+    const result = await runCommandTest(
+      webhook,
+      'hi',
+      testTools(),
+      deps(),
+      new AbortController().signal
+    )
+    expect(result).toEqual({
+      kind: 'error',
+      messageKey: 'commands.errorNoPrompt',
+    })
+  })
+
   it('reports a failed webhook', async () => {
     const executeWebhook = vi.fn().mockRejectedValue(new Error('HTTP 500'))
     const webhook: CommandConfig = {

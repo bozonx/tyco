@@ -73,6 +73,8 @@ describe('normalizeCommands for one command', () => {
       toolId: 'script',
       toolConfig: { command: 'echo' },
       isLlmArgumentParsingEnabled: false,
+      isLlmPreTransformEnabled: false,
+      llmPreTransformPrompt: '',
       isVoiceEnabled: false,
       outputAction: 'none',
       isOutputLogged: false,

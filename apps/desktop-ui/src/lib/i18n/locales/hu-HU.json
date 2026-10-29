@@ -251,7 +251,12 @@
     "undo": "Visszavonás",
     "unknownTool": "A(z) „{tool}” eszköz nem érhető el a Tyco ezen verziójában.",
     "unnamed": "Névtelen parancs",
-    "warningExternalNameTwins": "Más parancsoknak is ez a neve: {names}. Az ezzel a névvel történő hívás kétértelműként elutasításra kerül; használja az azonosítót."
+    "warningExternalNameTwins": "Más parancsoknak is ez a neve: {names}. Az ezzel a névvel történő hívás kétértelműként elutasításra kerül; használja az azonosítót.",
+    "llmPreTransform": "Előzetes átalakítás LLM-mel",
+    "llmPreTransformInfo": "Átalakítja a szöveget az LLM-utasítással, mielőtt átadná a parancsnak.",
+    "llmPreTransformPromptLabel": "Átalakítási utasítás",
+    "llmPreTransformPromptPlaceholder": "Utasítás, amely átalakítja a szöveget, mielőtt a parancs megkapná",
+    "llmPreTransformPromptInfo": "Utasítás az LLM számára a bemeneti szöveg átalakításához, mielőtt a parancsnak elküldené."
   },
   "common": {
     "add": "Hozzáadás",
@@ -702,6 +707,8 @@
       "quickInput": "Gyors szövegbevitel",
       "selectionActions": "Műveletek a kijelöléssel",
       "selectionCorrection": "Kijelölt szöveg helyben javítása",
+      "styling": "Szövegstilizálás",
+      "transformation": "Szövegátalakítás",
       "translation": "Kijelölt szöveg fordítása",
       "voice": "Hangbevitel",
       "voiceChat": "Hangos kérdés a kijelölt szövegről az MI-csevegésben",

@@ -11,6 +11,8 @@ import HistoryView from '../views/HistoryView.vue'
 import HomeView from '../views/HomeView.vue'
 import SelectionView from '../views/SelectionView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import StylingView from '../views/StylingView.vue'
+import TransformationView from '../views/TransformationView.vue'
 import TranslateView from '../views/TranslateView.vue'
 import VoiceCommandsView from '../views/VoiceCommandsView.vue'
 import VoiceView from '../views/VoiceView.vue'
@@ -74,6 +76,16 @@ const router = createRouter({
       path: APP_ROUTES.TRANSLATE.path,
       name: APP_ROUTES.TRANSLATE.name,
       component: TranslateView,
+    },
+    {
+      path: APP_ROUTES.STYLING.path,
+      name: APP_ROUTES.STYLING.name,
+      component: StylingView,
+    },
+    {
+      path: APP_ROUTES.TRANSFORMATION.path,
+      name: APP_ROUTES.TRANSFORMATION.name,
+      component: TransformationView,
     },
     {
       path: APP_ROUTES.SELECT.path,

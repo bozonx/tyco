@@ -194,4 +194,20 @@ describe('SettingsGlobalActionsTab.vue', () => {
       false
     )
   })
+
+  it('renders styling and transformation hotkey rows', () => {
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+
+    const stylingRow = wrapper.find(
+      '[data-label="settings.hotkeyActions.styling"]'
+    )
+    expect(stylingRow.exists()).toBe(true)
+
+    const transformationRow = wrapper.find(
+      '[data-label="settings.hotkeyActions.transformation"]'
+    )
+    expect(transformationRow.exists()).toBe(true)
+  })
 })

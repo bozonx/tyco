@@ -251,7 +251,12 @@
     "undo": "Anulează",
     "unknownTool": "Instrumentul „{tool}” nu este disponibil în această versiune Tyco.",
     "unnamed": "Comandă fără nume",
-    "warningExternalNameTwins": "Alte comenzi au același nume: {names}. Un apel cu acest nume este refuzat ca ambiguu; folosiți ID-ul."
+    "warningExternalNameTwins": "Alte comenzi au același nume: {names}. Un apel cu acest nume este refuzat ca ambiguu; folosiți ID-ul.",
+    "llmPreTransform": "Pretransformare cu LLM",
+    "llmPreTransformInfo": "Transformă textul cu o instrucțiune LLM înainte de a-l trimite la comandă.",
+    "llmPreTransformPromptLabel": "Prompt de transformare",
+    "llmPreTransformPromptPlaceholder": "Prompt care transformă textul înainte de a fi primit de comandă",
+    "llmPreTransformPromptInfo": "Instrucțiune pentru LLM de transformare a textului de intrare înainte de a fi trimis comenzii."
   },
   "common": {
     "add": "Adaugă",
@@ -705,6 +710,8 @@
       "quickInput": "Introducere rapidă de text",
       "selectionActions": "Acțiuni pentru selecție",
       "selectionCorrection": "Corectează textul selectat pe loc",
+      "styling": "Stilizare text",
+      "transformation": "Transformare text",
       "translation": "Tradu textul selectat",
       "voice": "Introducere vocală",
       "voiceChat": "Întrebare vocală despre textul selectat în chatul AI",

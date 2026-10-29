@@ -34,6 +34,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -206,6 +208,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "Ctrl+Alt+Shift+X"
       },
@@ -387,6 +391,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -570,6 +576,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "Ctrl+Alt+Shift+X"
       },
@@ -747,6 +755,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -921,6 +931,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "Ctrl+Alt+Shift+X"
       },
@@ -1095,6 +1107,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -1272,6 +1286,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "Ctrl+Alt+Shift+X"
       },
@@ -1458,6 +1474,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -1625,6 +1643,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "Ctrl+Alt+Shift+X"
       },
@@ -1799,6 +1819,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
@@ -1969,6 +1991,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "Ctrl+Alt+Shift+X"
       },
@@ -2144,6 +2168,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F"
       },
@@ -2317,6 +2343,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "Ctrl+Alt+Shift+X"
@@ -2499,6 +2527,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -2678,6 +2708,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -2848,6 +2880,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },
@@ -3025,6 +3059,8 @@
         "aiTasks": "",
         "correction": "",
         "translation": "",
+        "styling": "",
+        "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": ""
       },

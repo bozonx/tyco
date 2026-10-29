@@ -19,6 +19,8 @@ export const ActivationMode = {
   COMMAND_LAUNCHER: 'commandLauncher',
   CORRECTION: 'correction',
   TRANSLATION: 'translation',
+  STYLING: 'styling',
+  TRANSFORMATION: 'transformation',
   EDITOR: 'editor',
   QUICK_INPUT: 'quickInput',
   CHAT: 'chat',

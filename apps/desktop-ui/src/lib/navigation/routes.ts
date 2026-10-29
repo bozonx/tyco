@@ -14,6 +14,8 @@ const APP_ROUTE_NAMES = {
   VOICE_COMMANDS: 'voiceCommands',
   CORRECTION: 'correction',
   TRANSLATE: 'translate',
+  STYLING: 'styling',
+  TRANSFORMATION: 'transformation',
 } as const
 
 export const APP_ROUTES = {
@@ -36,6 +38,11 @@ export const APP_ROUTES = {
   },
   CORRECTION: { name: APP_ROUTE_NAMES.CORRECTION, path: '/correction' },
   TRANSLATE: { name: APP_ROUTE_NAMES.TRANSLATE, path: '/translate' },
+  STYLING: { name: APP_ROUTE_NAMES.STYLING, path: '/styling' },
+  TRANSFORMATION: {
+    name: APP_ROUTE_NAMES.TRANSFORMATION,
+    path: '/transformation',
+  },
 } as const
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
@@ -48,6 +55,8 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
   [ActivationMode.CORRECTION]: APP_ROUTES.CORRECTION.path,
   [ActivationMode.TRANSLATION]: APP_ROUTES.TRANSLATE.path,
+  [ActivationMode.STYLING]: APP_ROUTES.STYLING.path,
+  [ActivationMode.TRANSFORMATION]: APP_ROUTES.TRANSFORMATION.path,
   [ActivationMode.EDITOR]: APP_ROUTES.EDITOR.path,
   [ActivationMode.QUICK_INPUT]: APP_ROUTES.WRITE.path,
   [ActivationMode.CHAT]: APP_ROUTES.CHAT.path,
@@ -72,6 +81,8 @@ const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
   ActivationMode.CORRECTION,
   ActivationMode.VOICE_CHAT,
   ActivationMode.TRANSLATION,
+  ActivationMode.STYLING,
+  ActivationMode.TRANSFORMATION,
   ActivationMode.EXTERNAL_ACCESS,
 ])
 

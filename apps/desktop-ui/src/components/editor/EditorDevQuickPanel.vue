@@ -81,6 +81,18 @@ const QUICK_MODES: ReadonlyArray<{
     title: 'Open Quick Correction',
     icon: 'mdi:text-box-edit-outline',
   },
+  {
+    mode: ActivationMode.STYLING,
+    label: 'Styling',
+    title: 'Open Quick Styling',
+    icon: 'mdi:palette-outline',
+  },
+  {
+    mode: ActivationMode.TRANSFORMATION,
+    label: 'Transform',
+    title: 'Open Quick Transform',
+    icon: 'mdi:auto-fix',
+  },
 ]
 
 const editorInputStore = useEditorInputStore()

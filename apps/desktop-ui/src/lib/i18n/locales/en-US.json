@@ -251,7 +251,12 @@
     "undo": "Undo",
     "unknownTool": "The tool “{tool}” is not available in this version of Tyco.",
     "unnamed": "Untitled command",
-    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID."
+    "warningExternalNameTwins": "Other commands have the same name: {names}. A call by this name is refused as ambiguous; use the ID.",
+    "llmPreTransform": "Pre-transform text with LLM",
+    "llmPreTransformInfo": "Transforms the text with an LLM prompt before passing it to the command.",
+    "llmPreTransformPromptLabel": "Transformation prompt",
+    "llmPreTransformPromptPlaceholder": "Prompt that transforms the text before the command receives it",
+    "llmPreTransformPromptInfo": "Instruction for the LLM to transform the input text before sending it to the command."
   },
   "common": {
     "add": "Add",
@@ -705,6 +710,8 @@
       "quickInput": "Quick text input",
       "selectionActions": "Selection actions",
       "selectionCorrection": "Correct selected text in place",
+      "styling": "Text styling",
+      "transformation": "Text transformation",
       "translation": "Translate selected text",
       "voice": "Voice input",
       "voiceChat": "Voice question about selected text in AI chat",

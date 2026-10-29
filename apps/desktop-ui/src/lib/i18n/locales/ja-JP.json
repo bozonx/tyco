@@ -251,7 +251,12 @@
     "undo": "元に戻す",
     "unknownTool": "ツール「{tool}」はこのバージョンのTycoでは利用できません。",
     "unnamed": "無題のコマンド",
-    "warningExternalNameTwins": "同じ名前のコマンドが他に存在します: {names}。この名前での呼び出しは曖昧なため拒否されます。IDを使用してください。"
+    "warningExternalNameTwins": "同じ名前のコマンドが他に存在します: {names}。この名前での呼び出しは曖昧なため拒否されます。IDを使用してください。",
+    "llmPreTransform": "LLMによる事前テキスト変換",
+    "llmPreTransformInfo": "コマンドに渡す前にLLMプロンプトでテキストを変換します。",
+    "llmPreTransformPromptLabel": "変換プロンプト",
+    "llmPreTransformPromptPlaceholder": "コマンドに渡す前にテキストを変換するプロンプト",
+    "llmPreTransformPromptInfo": "コマンドに送信する前に入力テキストを変換するためのLLM指示。"
   },
   "common": {
     "add": "追加",
@@ -702,6 +707,8 @@
       "quickInput": "クイックテキスト入力",
       "selectionActions": "選択テキストのアクション",
       "selectionCorrection": "選択テキストを直接校正",
+      "styling": "テキストスタイリング",
+      "transformation": "テキスト変換",
       "translation": "選択テキストを翻訳",
       "voice": "音声入力",
       "voiceChat": "選択テキストについてAIチャットで音声質問",

@@ -11,7 +11,12 @@ import {
   cancelScriptRun,
 } from '../custom-actions/script-executor'
 import type { ToolLookup } from '../tools/tool-types'
-import { commandLabel, commandTakesText, commandTool } from './command-runtime'
+import {
+  commandLabel,
+  commandTakesText,
+  commandTool,
+  preTransformCommandText,
+} from './command-runtime'
 import { scriptToolConfig } from './command-config'
 
 export interface CommandTestDependencies {
@@ -62,10 +67,26 @@ export async function runCommandTest(
   command: CommandConfig,
   text: string,
   tools: ToolLookup,
-  deps: CommandTestDependencies,
+  deps: CommandTestDependencies & {
+    transformTextWithLlm?: (
+      prompt: string,
+      text: string,
+      options?: { signal?: AbortSignal }
+    ) => Promise<string>
+  },
   signal: AbortSignal
 ): Promise<CommandTestResult> {
-  const input = commandTakesText(command, tools) ? text : null
+  const pre = await preTransformCommandText(command, text, tools, {
+    signal,
+    source: 'menu',
+    transformTextWithLlm: deps.transformTextWithLlm,
+  })
+  if (pre.cancelled || signal.aborted) return { kind: 'cancelled' }
+  if (!pre.ok) {
+    return { kind: 'error', messageKey: pre.messageKey, message: pre.message }
+  }
+  const resolvedText = pre.text ?? text
+  const input = commandTakesText(command, tools) ? resolvedText : null
   if (command.toolId === 'script') {
     const config = scriptToolConfig(command)
     if (!config.command.trim()) {

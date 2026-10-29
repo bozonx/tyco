@@ -251,7 +251,12 @@
     "undo": "Geri al",
     "unknownTool": "“{tool}” aracı Tyco'nun bu sürümünde kullanılamıyor.",
     "unnamed": "Adsız komut",
-    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın."
+    "warningExternalNameTwins": "Aynı ada sahip başka komutlar var: {names}. Bu adla yapılan çağrı belirsiz olduğu için reddedilir; kimliği kullanın.",
+    "llmPreTransform": "LLM ile ön metin dönüştürme",
+    "llmPreTransformInfo": "Metni komuta iletmeden önce bir LLM istemiyle dönüştürür.",
+    "llmPreTransformPromptLabel": "Dönüştürme istemi",
+    "llmPreTransformPromptPlaceholder": "Metni komuta iletilmeden önce dönüştüren istem",
+    "llmPreTransformPromptInfo": "Girdi metnini komuta göndermeden önce dönüştürmek için LLM talimatı."
   },
   "common": {
     "add": "Ekle",
@@ -702,6 +707,8 @@
       "quickInput": "Hızlı metin girişi",
       "selectionActions": "Seçim eylemleri",
       "selectionCorrection": "Seçili metni yerinde düzelt",
+      "styling": "Metin stillendirme",
+      "transformation": "Metin dönüştürme",
       "translation": "Seçili metni çevir",
       "voice": "Sesli giriş",
       "voiceChat": "Seçili metin hakkında yapay zekâ sohbetinde sesli soru",

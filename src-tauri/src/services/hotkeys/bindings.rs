@@ -102,7 +102,7 @@ pub(crate) struct HotkeyBinding {
 }
 
 /// The command overlay opens by the hotkeys of its pages, see `launcherPages`.
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 10] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 12] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
@@ -113,6 +113,8 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 10] = [
     ActivationMode::AiTasks,
     ActivationMode::Correction,
     ActivationMode::Translation,
+    ActivationMode::Styling,
+    ActivationMode::Transformation,
 ];
 
 /// Every global hotkey, assigned or not: a configured shortcut wins, an
@@ -239,6 +241,8 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         | ActivationMode::CommandLauncher
         | ActivationMode::Correction
         | ActivationMode::Translation
+        | ActivationMode::Styling
+        | ActivationMode::Transformation
         | ActivationMode::History
         | ActivationMode::Config
         | ActivationMode::ExternalAccess => None,
@@ -300,6 +304,8 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::CommandLauncher => "Run a command",
         ActivationMode::Correction => "Correct selected text with review",
         ActivationMode::Translation => "Translate selected text",
+        ActivationMode::Styling => "Open text styling",
+        ActivationMode::Transformation => "Open text transformation",
         ActivationMode::History => "Open history",
         ActivationMode::Config => "Open settings",
         ActivationMode::ExternalAccess => "Answer a request for the selection",
@@ -512,6 +518,14 @@ mod tests {
         assert_eq!(
             global_target("translation"),
             Some(HotkeyTarget::Mode(ActivationMode::Translation))
+        );
+        assert_eq!(
+            global_target("styling"),
+            Some(HotkeyTarget::Mode(ActivationMode::Styling))
+        );
+        assert_eq!(
+            global_target("transformation"),
+            Some(HotkeyTarget::Mode(ActivationMode::Transformation))
         );
         assert_eq!(
             global_target("selectionCorrection"),

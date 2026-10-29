@@ -251,7 +251,12 @@
     "undo": "Poništi",
     "unknownTool": "Alat „{tool}” nije dostupan u ovoj verziji Tyca.",
     "unnamed": "Naredba bez naziva",
-    "warningExternalNameTwins": "Druge naredbe imaju isti naziv: {names}. Poziv tim nazivom odbija se kao dvosmislen; koristite ID."
+    "warningExternalNameTwins": "Druge naredbe imaju isti naziv: {names}. Poziv tim nazivom odbija se kao dvosmislen; koristite ID.",
+    "llmPreTransform": "Prethodna transformacija pomoću LLM-a",
+    "llmPreTransformInfo": "Transformira tekst upitom za LLM prije prosljeđivanja naredbi.",
+    "llmPreTransformPromptLabel": "Uputa za transformaciju",
+    "llmPreTransformPromptPlaceholder": "Uputa koja transformira tekst prije nego što ga primi naredba",
+    "llmPreTransformPromptInfo": "Uputa za LLM kojom se ulazni tekst transformira prije slanja naredbi."
   },
   "common": {
     "add": "Dodaj",
@@ -705,6 +710,8 @@
       "quickInput": "Brzi unos teksta",
       "selectionActions": "Radnje nad odabirom",
       "selectionCorrection": "Ispravi odabrani tekst na mjestu",
+      "styling": "Stiliziranje teksta",
+      "transformation": "Transformacija teksta",
       "translation": "Prevedi odabrani tekst",
       "voice": "Glasovni unos",
       "voiceChat": "Glasovno pitanje o odabranom tekstu u AI chatu",
