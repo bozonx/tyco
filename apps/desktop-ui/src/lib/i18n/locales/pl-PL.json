@@ -595,7 +595,6 @@
     "aiVaultPath": "Ścieżka sejfu profili AI",
     "aiVaultPathHint": "Folder profili AI (ich SOUL.md, czatów i przestrzeni roboczych) oraz projektów wewnętrznych. Domyślnie folder ai-vault w danych aplikacji.",
     "aiVaultTitle": "Sejf",
-    "allFeaturesModel": "Wszystkie funkcje",
     "allPluginsTab": "Wszystkie wtyczki",
     "apiKey": "Klucz API",
     "apiKeyBoundTo": "Zapisany klucz jest wysyłany tylko do {origin}. Zapisz go ponownie, aby używać go z tym adresem.",
@@ -654,7 +653,6 @@
     "correctionTab": "Korekta",
     "createProfile": "Utwórz profil",
     "createProject": "Utwórz projekt",
-    "customizePerTask": "Dostosuj dla każdej funkcji",
     "deleteAllChats": "Usuń wszystkie czaty",
     "deleteProfile": "Usuń profil",
     "deleteProfileConfirm": "Usunąć profil „{name}”? Jego SOUL.md, folder roboczy i czaty (czaty: {count}) zostaną usunięte na zawsze.",
@@ -700,7 +698,6 @@
     "globalHotkeysTitle": "Skróty globalne",
     "grantProfileAccess": "Daj dostęp profilowi",
     "hideAdvanced": "Ukryj ustawienia zaawansowane",
-    "hidePerTaskSettings": "Ukryj ustawienia dla poszczególnych funkcji",
     "hotkey": "Skrót",
     "hotkeyActions": {
       "aiTasks": "Zadania AI",
@@ -795,9 +792,10 @@
     "markdownIncrementListMarkerInfo": "Gdy włączone, elementy listy są numerowane kolejno (1., 2., 3.). Gdy wyłączone, numery pozostają jednakowe (1., 1., 1.), co ułatwia zmianę kolejności elementów i upraszcza diffy w Git.",
     "markdownStrong": "Znacznik pogrubienia",
     "maxTokens": "Maks. tokenów",
-    "mixedTaskModels": "Różne modele",
     "model": "Model",
     "modelId": "ID modelu",
+    "modelModeAll": "Jeden dla wszystkich",
+    "modelModePerTask": "Dla każdej funkcji",
     "modelsCount": "Modele: {count}",
     "modelsForFeatures": "Modele dla funkcji",
     "motion": "Animacje",
@@ -968,6 +966,8 @@
     "sttServerUrl": "Adres serwera",
     "sttServerUrlHint": "Adres WebSocket serwera strumieniowego sherpa-onnx na tym komputerze lub w sieci lokalnej. Model rozpoznawania to ten, który uruchamia serwer.",
     "sttTab": "Rozpoznawanie mowy",
+    "stylingBarDirectInsert": "Wstawiaj bez podglądu",
+    "stylingBarDirectInsertHint": "Natychmiast wstawia wynik stylu bez pokazywania podglądu.",
     "stylingHint": "Style (prompty), które sztuczna inteligencja stosuje do tekstu. W menu stylizacji oraz na pasku nagrywania głosu każdy styl uruchamia się osobnym klawiszem; przeciągaj karty, aby zmienić przypisane klawisze.",
     "stylingTab": "Stylizacja tekstu",
     "submitKey": {
@@ -1054,9 +1054,7 @@
     "vaultUseDefault": "Użyj folderu domyślnego",
     "vaultUseSubfolder": "Użyj podfolderu tyco-vault",
     "vision": "Wejście obrazów",
-    "voiceTextCorrection": "Korekta tekstu z dyktowania",
-    "stylingBarDirectInsert": "Wstawiaj bez podglądu",
-    "stylingBarDirectInsertHint": "Natychmiast wstawia wynik stylu bez pokazywania podglądu."
+    "voiceTextCorrection": "Korekta tekstu z dyktowania"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

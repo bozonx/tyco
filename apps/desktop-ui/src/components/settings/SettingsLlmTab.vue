@@ -35,35 +35,24 @@
     </SettingsSection>
 
     <SettingsSection :title="t('settings.modelsForFeatures')">
-      <FieldRow :label="t('settings.allFeaturesModel')">
-        <FieldSelect
-          :model-value="commonModelId"
-          :options="commonModelOptions"
-          @update:model-value="setAllTasksModel(String($event ?? ''))"
-        />
-      </FieldRow>
-
-      <div class="advanced-toggle">
-        <DisclosureHeader
-          density="compact"
-          icon="mdi:tune-variant"
-          icon-size="md"
-          :expanded="isCustomizingTasks"
-          :controls="customTasksId"
-          :title="
-            isCustomizingTasks
-              ? t('settings.hidePerTaskSettings')
-              : t('settings.customizePerTask')
-          "
-          @toggle="isCustomizingTasks = !isCustomizingTasks"
+      <div class="model-mode-switch">
+        <SegmentedControl
+          :model-value="modelMode"
+          :label="t('settings.modelsForFeatures')"
+          :options="modelModeOptions"
+          @update:model-value="setModelMode($event as LlmModelMode)"
         />
       </div>
 
-      <div
-        v-if="isCustomizingTasks"
-        :id="customTasksId"
-        class="per-task-fields"
-      >
+      <div v-if="modelMode === 'all'" class="single-model-field">
+        <FieldSelect
+          :model-value="commonModelId"
+          :options="taskModelOptions"
+          @update:model-value="setCommonModel(String($event ?? ''))"
+        />
+      </div>
+
+      <div v-else class="per-task-fields">
         <FieldRow
           v-for="task in LLM_TASKS"
           :key="task"
@@ -103,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useId } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -117,15 +106,16 @@ import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
 import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
-import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import SegmentedControl from '../common/SegmentedControl.vue'
 import LlmConnectionCard from './LlmConnectionCard.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
   LLM_TASKS,
   type LlmImageQuality,
+  type LlmModelMode,
   type LlmProvider,
   llmSecretId,
 } from '@tyco/shared'
@@ -165,21 +155,84 @@ const settings = createLlmSettingsModel({
 const { addProvider, removeProviderById, dispose } = settings
 onBeforeUnmount(dispose)
 const pendingProviderId = ref<string | null>(null)
-const customTasksId = useId()
 
 const areAllTaskModelsSame = computed(() => {
   const modelIds = LLM_TASKS.map((task) => llm.value.tasks[task]?.modelId ?? '')
   return modelIds.every((id) => id === modelIds[0])
 })
 
-const commonModelId = computed(() => {
-  if (areAllTaskModelsSame.value) {
-    return llm.value.tasks[LLM_TASKS[0]]?.modelId ?? ''
-  }
-  return '__custom__'
+const modelMode = computed<LlmModelMode>(() => {
+  if (llm.value.modelMode) return llm.value.modelMode
+  return areAllTaskModelsSame.value ? 'all' : 'perTask'
 })
 
-const isCustomizingTasks = ref(!areAllTaskModelsSame.value)
+const modelModeOptions = computed(() => [
+  { id: 'all' as const, name: t('settings.modelModeAll') },
+  { id: 'perTask' as const, name: t('settings.modelModePerTask') },
+])
+
+const commonModelId = computed(() => {
+  if (llm.value.commonModelId !== undefined) {
+    return llm.value.commonModelId
+  }
+  return llm.value.tasks[LLM_TASKS[0]]?.modelId || llm.value.models[0]?.id || ''
+})
+
+if (llm.value.commonModelId === undefined) {
+  llm.value.commonModelId = commonModelId.value
+}
+
+function setModelMode(mode: LlmModelMode) {
+  llm.value.modelMode = mode
+  if (mode === 'all') {
+    if (!llm.value.customTaskModels) {
+      llm.value.customTaskModels = {}
+    }
+    for (const task of LLM_TASKS) {
+      llm.value.customTaskModels[task] = llm.value.tasks[task]?.modelId ?? ''
+    }
+
+    const commonId = commonModelId.value
+    llm.value.commonModelId = commonId
+    for (const task of LLM_TASKS) {
+      const taskConfig = llm.value.tasks[task]
+      if (taskConfig) {
+        taskConfig.modelId = commonId
+      }
+    }
+  } else {
+    const saved = llm.value.customTaskModels
+    const fallback = commonModelId.value
+    for (const task of LLM_TASKS) {
+      const taskConfig = llm.value.tasks[task]
+      if (taskConfig) {
+        const savedId = saved?.[task]
+        taskConfig.modelId = savedId !== undefined ? savedId : fallback
+      }
+    }
+  }
+}
+
+function setCommonModel(modelId: string) {
+  llm.value.commonModelId = modelId
+  for (const task of LLM_TASKS) {
+    const taskConfig = llm.value.tasks[task]
+    if (taskConfig) {
+      taskConfig.modelId = modelId
+    }
+  }
+}
+
+function setTaskModel(task: (typeof LLM_TASKS)[number], modelId: string) {
+  const taskConfig = llm.value.tasks[task]
+  if (taskConfig) {
+    taskConfig.modelId = modelId
+  }
+  if (!llm.value.customTaskModels) {
+    llm.value.customTaskModels = {}
+  }
+  llm.value.customTaskModels[task] = modelId
+}
 
 const imageQualityOptions = computed(() => [
   { id: 'economy', name: t('settings.imageQualityEconomy') },
@@ -190,21 +243,6 @@ function toggleProvider(providerId: string) {
   const expanded = settings.expandedProviderIds
   if (expanded.has(providerId)) expanded.delete(providerId)
   else expanded.add(providerId)
-}
-function setAllTasksModel(modelId: string) {
-  if (modelId === '__custom__') return
-  for (const task of LLM_TASKS) {
-    const taskConfig = llm.value.tasks[task]
-    if (taskConfig) {
-      taskConfig.modelId = modelId
-    }
-  }
-}
-function setTaskModel(task: (typeof LLM_TASKS)[number], modelId: string) {
-  const taskConfig = llm.value.tasks[task]
-  if (taskConfig) {
-    taskConfig.modelId = modelId
-  }
 }
 function confirmProviderRemoval() {
   if (pendingProviderId.value) removeProviderById(pendingProviderId.value)
@@ -236,14 +274,6 @@ const taskModelOptions = computed(() => [
   ...modelOptions.value,
 ])
 
-const commonModelOptions = computed(() => {
-  const options = [...taskModelOptions.value]
-  if (!areAllTaskModelsSame.value) {
-    options.unshift({ id: '__custom__', name: t('settings.mixedTaskModels') })
-  }
-  return options
-})
-
 function providerLabel(provider: LlmProvider) {
   return provider.name?.trim() || provider.baseUrl?.trim() || provider.id
 }
@@ -262,15 +292,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.advanced-toggle {
+.model-mode-switch {
   display: flex;
-  padding: var(--space-xs) var(--space-lg);
-  font-size: var(--text-control);
-  color: var(--app-text-muted);
-  border-top: 1px solid var(--app-border-subtle);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--app-border-subtle);
 }
 
-.per-task-fields {
-  border-top: 1px solid var(--app-border-subtle);
+.single-model-field {
+  padding: var(--space-md) var(--space-lg);
 }
 </style>

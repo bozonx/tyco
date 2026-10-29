@@ -157,12 +157,20 @@ describe('llm-config', () => {
 
   it('removes a model from every task', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
+    config.commonModelId = 'gemini-flash'
+    config.customTaskModels = {
+      translation: 'gemini-flash',
+      correction: 'ollama-qwen',
+    }
     config.tasks.translation.modelId = 'gemini-flash'
     config.tasks.correction.modelId = 'ollama-qwen'
     removeModel(config, 'gemini-flash')
 
     expect(config.tasks.translation.modelId).toBe('')
     expect(config.tasks.correction.modelId).toBe('ollama-qwen')
+    expect(config.commonModelId).toBe('')
+    expect(config.customTaskModels.translation).toBe('')
+    expect(config.customTaskModels.correction).toBe('ollama-qwen')
   })
 
   it('labels a model by name, then model id', () => {

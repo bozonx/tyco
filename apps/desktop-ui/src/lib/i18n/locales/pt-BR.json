@@ -595,7 +595,6 @@
     "aiVaultPath": "Caminho do cofre de perfis de IA",
     "aiVaultPathHint": "A pasta dos perfis de IA (seus SOUL.md, chats e espaços de trabalho) e dos projetos internos. Por padrão, a pasta ai-vault nos dados do aplicativo.",
     "aiVaultTitle": "Cofre",
-    "allFeaturesModel": "Todas as funções",
     "allPluginsTab": "Todos os plugins",
     "apiKey": "Chave de API",
     "apiKeyBoundTo": "A chave salva só é enviada para {origin}. Salve-a de novo para usá-la com este endereço.",
@@ -654,7 +653,6 @@
     "correctionTab": "Correção",
     "createProfile": "Criar perfil",
     "createProject": "Criar projeto",
-    "customizePerTask": "Personalizar por função",
     "deleteAllChats": "Excluir todos os chats",
     "deleteProfile": "Excluir perfil",
     "deleteProfileConfirm": "Excluir o perfil “{name}”? O SOUL.md, a pasta de trabalho e os chats dele (chats: {count}) serão excluídos para sempre.",
@@ -700,7 +698,6 @@
     "globalHotkeysTitle": "Atalhos globais",
     "grantProfileAccess": "Dar acesso a um perfil",
     "hideAdvanced": "Ocultar configurações avançadas",
-    "hidePerTaskSettings": "Ocultar configurações por função",
     "hotkey": "Atalho",
     "hotkeyActions": {
       "aiTasks": "Tarefas de IA",
@@ -795,9 +792,10 @@
     "markdownIncrementListMarkerInfo": "Quando ativado, numera os itens da lista em sequência (1., 2., 3.). Quando desativado, mantém números iguais (1., 1., 1.), o que facilita reordenar os itens e deixa os diffs do Git mais limpos.",
     "markdownStrong": "Marcador de negrito",
     "maxTokens": "Máx. de tokens",
-    "mixedTaskModels": "Modelos diferentes",
     "model": "Modelo",
     "modelId": "ID do modelo",
+    "modelModeAll": "Uma para todas",
+    "modelModePerTask": "Por função",
     "modelsCount": "Modelos: {count}",
     "modelsForFeatures": "Modelos por função",
     "motion": "Animações",
@@ -968,6 +966,8 @@
     "sttServerUrl": "Endereço do servidor",
     "sttServerUrlHint": "Endereço WebSocket de um servidor de streaming sherpa-onnx, neste computador ou na rede local. O modelo de reconhecimento é o que o servidor executa.",
     "sttTab": "Reconhecimento de voz",
+    "stylingBarDirectInsert": "Inserir sem pré-visualização",
+    "stylingBarDirectInsertHint": "Insere imediatamente o resultado do estilo sem exibir a tela de pré-visualização.",
     "stylingHint": "Estilos (prompts) que a IA aplica ao texto. No menu de estilos e na barra de gravação de voz, cada estilo é executado com sua própria tecla; arraste os cartões para alterar suas teclas.",
     "stylingTab": "Estilização de texto",
     "submitKey": {
@@ -1054,9 +1054,7 @@
     "vaultUseDefault": "Usar a pasta padrão",
     "vaultUseSubfolder": "Usar uma subpasta tyco-vault",
     "vision": "Entrada de imagens",
-    "voiceTextCorrection": "Correção do texto ditado",
-    "stylingBarDirectInsert": "Inserir sem pré-visualização",
-    "stylingBarDirectInsertHint": "Insere imediatamente o resultado do estilo sem exibir a tela de pré-visualização."
+    "voiceTextCorrection": "Correção do texto ditado"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

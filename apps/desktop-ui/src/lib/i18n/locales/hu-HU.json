@@ -592,7 +592,6 @@
     "aiVaultPath": "Az MI-profilok tárolójának útvonala",
     "aiVaultPathHint": "Az MI-profilok (SOUL.md fájljaik, csevegéseik és munkaterületeik) és a belső projektek mappája. Alapértelmezés szerint az alkalmazásadatokban lévő ai-vault mappa.",
     "aiVaultTitle": "Tároló",
-    "allFeaturesModel": "Minden funkció",
     "allPluginsTab": "Minden bővítmény",
     "apiKey": "API-kulcs",
     "apiKeyBoundTo": "A mentett kulcs csak ide kerül elküldésre: {origin}. Mentse el újra, ha ezzel a címmel szeretné használni.",
@@ -651,7 +650,6 @@
     "correctionTab": "Javítás",
     "createProfile": "Profil létrehozása",
     "createProject": "Projekt létrehozása",
-    "customizePerTask": "Testreszabás funkciónként",
     "deleteAllChats": "Összes csevegés törlése",
     "deleteProfile": "Profil törlése",
     "deleteProfileConfirm": "Törli a(z) „{name}” profilt? A SOUL.md fájlja, a munkamappája és a csevegései (csevegések: {count}) végleg törlődnek.",
@@ -697,7 +695,6 @@
     "globalHotkeysTitle": "Globális billentyűparancsok",
     "grantProfileAccess": "Hozzáférés adása egy profilnak",
     "hideAdvanced": "Speciális beállítások elrejtése",
-    "hidePerTaskSettings": "Funkciónkénti beállítások elrejtése",
     "hotkey": "Billentyűparancs",
     "hotkeyActions": {
       "aiTasks": "MI-feladatok",
@@ -792,9 +789,10 @@
     "markdownIncrementListMarkerInfo": "Ha be van kapcsolva, a listaelemek sorban számozódnak (1., 2., 3.). Ha ki van kapcsolva, a számok egyformák maradnak (1., 1., 1.), ami megkönnyíti az elemek átrendezését, és tisztábbá teszi a Git-diffeket.",
     "markdownStrong": "Félkövér jele",
     "maxTokens": "Max. tokenszám",
-    "mixedTaskModels": "Különböző modellek",
     "model": "Modell",
     "modelId": "Modellazonosító",
+    "modelModeAll": "Egy mindegyikhez",
+    "modelModePerTask": "Funkciónként",
     "modelsCount": "Modellek: {count}",
     "modelsForFeatures": "Modellek a funkciókhoz",
     "motion": "Animációk",
@@ -965,6 +963,8 @@
     "sttServerUrl": "Szervercím",
     "sttServerUrlHint": "Egy sherpa-onnx streamingszerver WebSocket-címe ezen a számítógépen vagy a helyi hálózaton. A felismerési modell az, amelyet a szerver futtat.",
     "sttTab": "Beszédfelismerés",
+    "stylingBarDirectInsert": "Beillesztés előnézet nélkül",
+    "stylingBarDirectInsertHint": "Azonnal beilleszti a stílus eredményét az előnézet megjelenítése nélkül.",
     "stylingHint": "Stílusok (promptek), amelyeket az MI alkalmaz a szövegre. A stílus menüben és a hangrögzítő sávon mindegyik saját billentyűvel fut; húzza a kártyákat a billentyűk módosításához.",
     "stylingTab": "Szövegstilizálás",
     "submitKey": {
@@ -1051,9 +1051,7 @@
     "vaultUseDefault": "Alapértelmezett mappa használata",
     "vaultUseSubfolder": "tyco-vault almappa használata",
     "vision": "Képbevitel",
-    "voiceTextCorrection": "Diktált szöveg javítása",
-    "stylingBarDirectInsert": "Beillesztés előnézet nélkül",
-    "stylingBarDirectInsertHint": "Azonnal beilleszti a stílus eredményét az előnézet megjelenítése nélkül."
+    "voiceTextCorrection": "Diktált szöveg javítása"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

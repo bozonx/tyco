@@ -589,7 +589,6 @@
     "aiVaultPath": "Cesta k trezoru profilů AI",
     "aiVaultPathHint": "Složka profilů AI (jejich SOUL.md, chatů a pracovních prostorů) a interních projektů. Výchozí je složka ai-vault v datech aplikace.",
     "aiVaultTitle": "Trezor",
-    "allFeaturesModel": "Všechny funkce",
     "allPluginsTab": "Všechny pluginy",
     "apiKey": "Klíč API",
     "apiKeyBoundTo": "Uložený klíč se posílá jen na {origin}. Uložte ho znovu, chcete-li ho použít s touto adresou.",
@@ -648,7 +647,6 @@
     "correctionTab": "Korekce",
     "createProfile": "Vytvořit profil",
     "createProject": "Vytvořit projekt",
-    "customizePerTask": "Přizpůsobit pro každou funkci",
     "deleteAllChats": "Smazat všechny chaty",
     "deleteProfile": "Smazat profil",
     "deleteProfileConfirm": "Smazat profil „{name}“? Jeho SOUL.md, pracovní složka a chaty (chatů: {count}) budou smazány navždy.",
@@ -694,7 +692,6 @@
     "globalHotkeysTitle": "Globální klávesové zkratky",
     "grantProfileAccess": "Dát profilu přístup",
     "hideAdvanced": "Skrýt pokročilá nastavení",
-    "hidePerTaskSettings": "Skrýt nastavení pro jednotlivé funkce",
     "hotkey": "Klávesová zkratka",
     "hotkeyActions": {
       "aiTasks": "Úlohy AI",
@@ -789,9 +786,10 @@
     "markdownIncrementListMarkerInfo": "Je-li zapnuto, položky seznamu se číslují postupně (1., 2., 3.). Je-li vypnuto, čísla zůstávají stejná (1., 1., 1.), což usnadňuje přeskupování položek a zpřehledňuje diffy v Gitu.",
     "markdownStrong": "Značka tučného písma",
     "maxTokens": "Max. tokenů",
-    "mixedTaskModels": "Různé modely",
     "model": "Model",
     "modelId": "ID modelu",
+    "modelModeAll": "Jedna pro všechny",
+    "modelModePerTask": "Pro každou funkci",
     "modelsCount": "Modelů: {count}",
     "modelsForFeatures": "Modely pro funkce",
     "motion": "Animace",
@@ -962,6 +960,8 @@
     "sttServerUrl": "Adresa serveru",
     "sttServerUrlHint": "Adresa WebSocket streamovacího serveru sherpa-onnx na tomto počítači nebo v místní síti. Model rozpoznávání je ten, který server spouští.",
     "sttTab": "Rozpoznávání hlasu",
+    "stylingBarDirectInsert": "Vložit bez náhledu",
+    "stylingBarDirectInsertHint": "Okamžitě vloží výsledek stylu bez zobrazení náhledu.",
     "stylingHint": "Styly (prompty), které AI aplikuje na text. V nabídce stylů a na liště hlasového zadávání se každý styl spouští vlastní klávesou; přetažením karet změníte jejich klávesy.",
     "stylingTab": "Stylizace textu",
     "submitKey": {
@@ -1048,9 +1048,7 @@
     "vaultUseDefault": "Použít výchozí složku",
     "vaultUseSubfolder": "Použít podsložku tyco-vault",
     "vision": "Vstup obrázků",
-    "voiceTextCorrection": "Oprava nadiktovaného textu",
-    "stylingBarDirectInsert": "Vložit bez náhledu",
-    "stylingBarDirectInsertHint": "Okamžitě vloží výsledek stylu bez zobrazení náhledu."
+    "voiceTextCorrection": "Oprava nadiktovaného textu"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

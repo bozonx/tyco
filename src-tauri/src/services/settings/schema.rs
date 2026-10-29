@@ -595,6 +595,21 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             }
         }
     }
+    if let Some(common_id) = config["llm"].get_mut("commonModelId") {
+        if !model_ids.contains(common_id.as_str().unwrap_or_default()) {
+            *common_id = Value::String(String::new());
+        }
+    }
+    if let Some(custom_tasks) = config["llm"]
+        .get_mut("customTaskModels")
+        .and_then(Value::as_object_mut)
+    {
+        for model_id in custom_tasks.values_mut() {
+            if !model_ids.contains(model_id.as_str().unwrap_or_default()) {
+                *model_id = Value::String(String::new());
+            }
+        }
+    }
     let command_ids: HashSet<String> = ids(config, "/commands")
         .into_iter()
         .map(str::to_owned)

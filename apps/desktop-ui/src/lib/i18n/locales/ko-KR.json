@@ -589,7 +589,6 @@
     "aiVaultPath": "AI 프로필 보관함 경로",
     "aiVaultPathHint": "AI 프로필(SOUL.md, 채팅 및 작업 공간)과 내부 프로젝트가 저장되는 폴더입니다. 기본값은 앱 데이터 내 ai-vault 폴더입니다.",
     "aiVaultTitle": "보관함",
-    "allFeaturesModel": "모든 기능",
     "allPluginsTab": "모든 플러그인",
     "apiKey": "API 키",
     "apiKeyBoundTo": "저장된 키는 {origin}에만 전송됩니다. 이 주소에서 사용하려면 다시 저장하세요.",
@@ -648,7 +647,6 @@
     "correctionTab": "교정",
     "createProfile": "프로필 만들기",
     "createProject": "프로젝트 만들기",
-    "customizePerTask": "기능별 사용자 지정",
     "deleteAllChats": "모든 채팅 삭제",
     "deleteProfile": "프로필 삭제",
     "deleteProfileConfirm": "“{name}” 프로필을 삭제하시겠습니까? SOUL.md, 작업 공간 폴더 및 채팅(채팅: {count}개)이 영구적으로 삭제됩니다.",
@@ -694,7 +692,6 @@
     "globalHotkeysTitle": "전역 단축키",
     "grantProfileAccess": "프로필에 접근 권한 부여",
     "hideAdvanced": "고급 설정 숨기기",
-    "hidePerTaskSettings": "기능별 설정 숨기기",
     "hotkey": "단축키",
     "hotkeyActions": {
       "aiTasks": "AI 작업",
@@ -789,9 +786,10 @@
     "markdownIncrementListMarkerInfo": "활성화하면 목록 항목의 번호가 순차적으로 매겨집니다 (1., 2., 3.). 비활성화하면 동일한 번호를 유지하여 (1., 1., 1.) 항목 재정렬 및 Git diff 비교가 더 깔끔해집니다.",
     "markdownStrong": "굵게 마커",
     "maxTokens": "최대 토큰 수",
-    "mixedTaskModels": "여러 모델",
     "model": "모델",
     "modelId": "모델 ID",
+    "modelModeAll": "모두 동일",
+    "modelModePerTask": "기능별",
     "modelsCount": "{count}개 모델",
     "modelsForFeatures": "기능별 모델",
     "motion": "애니메이션",
@@ -962,6 +960,8 @@
     "sttServerUrl": "서버 주소",
     "sttServerUrlHint": "이 컴퓨터 또는 로컬 네트워크에 있는 sherpa-onnx 스트리밍 서버의 WebSocket 주소입니다. 인식 모델은 서버가 실행하는 모델을 따릅니다.",
     "sttTab": "음성 인식",
+    "stylingBarDirectInsert": "미리보기 없이 삽입",
+    "stylingBarDirectInsertHint": "미리보기 화면을 표시하지 않고 스타일 결과를 즉시 삽입합니다.",
     "stylingHint": "AI가 텍스트에 적용하는 스타일(프롬프트)입니다. 스타일 메뉴 및 음성 녹음 바에서 각 스타일이 지정된 키로 실행되며, 카드를 드래그하여 키를 변경할 수 있습니다.",
     "stylingTab": "텍스트 스타일 지정",
     "submitKey": {
@@ -1048,9 +1048,7 @@
     "vaultUseDefault": "기본 폴더 사용",
     "vaultUseSubfolder": "tyco-vault 하위 폴더 사용",
     "vision": "이미지 입력",
-    "voiceTextCorrection": "음성 텍스트 교정",
-    "stylingBarDirectInsert": "미리보기 없이 삽입",
-    "stylingBarDirectInsertHint": "미리보기 화면을 표시하지 않고 스타일 결과를 즉시 삽입합니다."
+    "voiceTextCorrection": "음성 텍스트 교정"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

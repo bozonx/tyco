@@ -45,9 +45,14 @@ describe('Editor.vue toolbar', () => {
     expect(dropdowns[0].attributes('data-label')).toBe('editor.case')
     expect(dropdowns[1].attributes('data-label')).toBe('editor.format')
 
-    // Check top right buttons: Ask AI, AI task, translation and insertIntoWindow
-    const aiTaskBtn = wrapper.find('button[title="action.aiTaskMenu"]')
-    expect(aiTaskBtn.exists()).toBe(true)
+    // Check top right buttons: Ask AI, styling, transformation, translation and insertIntoWindow
+    const stylingBtn = wrapper.find('button[title="action.stylingMenu"]')
+    expect(stylingBtn.exists()).toBe(true)
+
+    const transformationBtn = wrapper.find(
+      'button[title="action.transformationMenu"]'
+    )
+    expect(transformationBtn.exists()).toBe(true)
 
     const translateBtn = wrapper.find('button[title="action.translationMenu"]')
     expect(translateBtn.exists()).toBe(true)
@@ -60,7 +65,8 @@ describe('Editor.vue toolbar', () => {
     const titles = rightButtons.map((btn) => btn.attributes('title'))
     expect(titles).toEqual([
       'editor.askAi',
-      'action.aiTaskMenu',
+      'action.stylingMenu',
+      'action.transformationMenu',
       'action.translationMenu',
       'action.insertIntoWindow',
     ])
@@ -155,7 +161,8 @@ describe('Editor.vue toolbar', () => {
     ).toEqual([
       'tool.right',
       'editor.askAi',
-      'action.aiTaskMenu',
+      'action.stylingMenu',
+      'action.transformationMenu',
       'action.translationMenu',
       'action.insertIntoWindow',
     ])
@@ -400,6 +407,48 @@ describe('Editor.vue toolbar', () => {
     await wrapper.vm.$nextTick()
     await askAi().trigger('click')
     expect(attachToChat).toHaveBeenLastCalledWith('foo', 'editorSelection')
+  })
+
+  it('opens styling and transformation modals from the toolbar', async () => {
+    const { useEditorInputStore } = await import('../../stores/editor-input')
+    const { MenuModals, useMenuModalsStore } =
+      await import('../../stores/menu-modals')
+    const editorInputStore = useEditorInputStore()
+    const menuModalsStore = useMenuModalsStore()
+    const nextModalSpy = vi.spyOn(menuModalsStore, 'nextModal')
+
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Icon: true,
+          EditorInput: true,
+          DropdownMenu: true,
+          Button: {
+            props: ['title', 'disabled'],
+            template:
+              '<button class="btn-stub" :title="title" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    editorInputStore.setValue('Sample text')
+
+    const stylingBtn = wrapper.find('button[title="action.stylingMenu"]')
+    await stylingBtn.trigger('click')
+    expect(nextModalSpy).toHaveBeenCalledWith(MenuModals.STYLING, {
+      text: 'Sample text',
+      stylingId: undefined,
+    })
+
+    const transformationBtn = wrapper.find(
+      'button[title="action.transformationMenu"]'
+    )
+    await transformationBtn.trigger('click')
+    expect(nextModalSpy).toHaveBeenCalledWith(MenuModals.TRANSFORMATION, {
+      text: 'Sample text',
+      transformationId: undefined,
+    })
   })
 
   it('tells that the buttons act on the selection while there is one', async () => {

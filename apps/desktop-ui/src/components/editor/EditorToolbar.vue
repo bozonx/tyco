@@ -27,7 +27,7 @@
       <EditorToolbarItems :items="leftToolbarItems" />
     </div>
 
-    <!-- Right column: plugin items, then Ask AI, AI task, Translation & Insert to window -->
+    <!-- Right column: plugin items, then Ask AI, Styling, Transformation, Translation & Insert to window -->
     <div data-testid="editor-toolbar-right" class="flex items-center gap-1">
       <EditorToolbarItems :items="rightToolbarItems" />
       <IconButton
@@ -43,9 +43,16 @@
       <IconButton
         size="sm"
         variant="ghost"
-        @click="emit('ai-task')"
-        :label="scoped(t('action.aiTaskMenu'))"
-        icon="mdi:robot-outline"
+        @click="emit('styling')"
+        :label="scoped(t('action.stylingMenu'))"
+        icon="mdi:palette-outline"
+      />
+      <IconButton
+        size="sm"
+        variant="ghost"
+        @click="emit('transformation')"
+        :label="scoped(t('action.transformationMenu'))"
+        icon="mdi:auto-fix"
       />
       <IconButton
         size="sm"
@@ -84,7 +91,8 @@ import EditorToolbarItems from './EditorToolbarItems.vue'
 
 const emit = defineEmits<{
   'ask-ai': []
-  'ai-task': []
+  styling: []
+  transformation: []
   translation: []
   'insert-to-window': []
 }>()

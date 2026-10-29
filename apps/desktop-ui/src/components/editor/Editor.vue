@@ -5,7 +5,8 @@
       <EditorToolbar
         v-show="!compact"
         @ask-ai="handleAskAi"
-        @ai-task="handleAiTask"
+        @styling="handleStyling"
+        @transformation="handleTransformation"
         @translation="handleTranslation"
         @insert-to-window="handleInsertToWindow"
       />
@@ -112,15 +113,20 @@ const copyText = useCopyText({ saveOutput: true })
 const otherEditItems = computed(() => editMenuStore.getOtherEditItems())
 
 const runMenuAction = async (labelKey: string) => {
-  const item = actionMenuStore
-    .getActionsMenu()
-    .find((action: ActionItem) => action.labelKey === labelKey)
+  const item =
+    actionMenuStore
+      .getActionsMenu()
+      .find((action: ActionItem) => action.labelKey === labelKey) ??
+    actionMenuStore
+      .getDefaultActions()
+      .find((action: ActionItem) => action.labelKey === labelKey)
   if (item) {
     await doAction(item)
   }
 }
 
-const handleAiTask = () => runMenuAction('action.aiTaskMenu')
+const handleStyling = () => runMenuAction('action.stylingMenu')
+const handleTransformation = () => runMenuAction('action.transformationMenu')
 
 /** Opens the chat with the selection, or the whole text, attached */
 const handleAskAi = async () => {

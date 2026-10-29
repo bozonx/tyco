@@ -595,7 +595,6 @@
     "aiVaultPath": "Pfad zum Tresor der KI-Profile",
     "aiVaultPathHint": "Der Ordner der KI-Profile (ihre SOUL.md, Chats und Arbeitsbereiche) und der internen Projekte. Standardmäßig der Ordner ai-vault in den App-Daten.",
     "aiVaultTitle": "Tresor",
-    "allFeaturesModel": "Alle Funktionen",
     "allPluginsTab": "Alle Plugins",
     "apiKey": "API-Schlüssel",
     "apiKeyBoundTo": "Der gespeicherte Schlüssel wird nur an {origin} gesendet. Speichern Sie ihn erneut, um ihn mit dieser Adresse zu verwenden.",
@@ -654,7 +653,6 @@
     "correctionTab": "Korrektur",
     "createProfile": "Profil erstellen",
     "createProject": "Projekt erstellen",
-    "customizePerTask": "Für jede Funktion anpassen",
     "deleteAllChats": "Alle Chats löschen",
     "deleteProfile": "Profil löschen",
     "deleteProfileConfirm": "Profil „{name}“ löschen? Seine SOUL.md, sein Arbeitsordner und seine Chats (Chats: {count}) werden endgültig gelöscht.",
@@ -700,7 +698,6 @@
     "globalHotkeysTitle": "Globale Tastenkürzel",
     "grantProfileAccess": "Einem Profil Zugriff geben",
     "hideAdvanced": "Erweiterte Einstellungen ausblenden",
-    "hidePerTaskSettings": "Einstellungen pro Funktion ausblenden",
     "hotkey": "Tastenkürzel",
     "hotkeyActions": {
       "aiTasks": "KI-Aufgaben",
@@ -795,9 +792,10 @@
     "markdownIncrementListMarkerInfo": "Wenn aktiviert, werden Listeneinträge fortlaufend nummeriert (1., 2., 3.). Wenn deaktiviert, bleiben die Nummern gleich (1., 1., 1.), was das Umsortieren und Git-Diffs übersichtlicher macht.",
     "markdownStrong": "Zeichen für Fett",
     "maxTokens": "Max. Tokens",
-    "mixedTaskModels": "Unterschiedliche Modelle",
     "model": "Modell",
     "modelId": "Modell-ID",
+    "modelModeAll": "Eine für alle",
+    "modelModePerTask": "Für jede Funktion",
     "modelsCount": "Modelle: {count}",
     "modelsForFeatures": "Modelle für Funktionen",
     "motion": "Animationen",
@@ -968,6 +966,8 @@
     "sttServerUrl": "Serveradresse",
     "sttServerUrlHint": "WebSocket-Adresse eines sherpa-onnx-Streaming-Servers auf diesem Computer oder im lokalen Netzwerk. Das Erkennungsmodell ist dasjenige, das der Server ausführt.",
     "sttTab": "Spracherkennung",
+    "stylingBarDirectInsert": "Ohne Vorschau einfügen",
+    "stylingBarDirectInsertHint": "Fügt das Stilergebnis sofort ohne Vorschaufenster ein.",
     "stylingHint": "Stile (Prompts), die die KI auf den Text anwendet. Im Stilmenü und in der Sprachaufnahmeliste wird jeder Stil mit einer eigenen Taste ausgeführt; ziehen Sie die Karten, um die Tasten zu ändern.",
     "stylingTab": "Textstilisierung",
     "submitKey": {
@@ -1054,9 +1054,7 @@
     "vaultUseDefault": "Standardordner verwenden",
     "vaultUseSubfolder": "Unterordner tyco-vault verwenden",
     "vision": "Bildeingabe",
-    "voiceTextCorrection": "Korrektur von Sprachtext",
-    "stylingBarDirectInsert": "Ohne Vorschau einfügen",
-    "stylingBarDirectInsertHint": "Fügt das Stilergebnis sofort ohne Vorschaufenster ein."
+    "voiceTextCorrection": "Korrektur von Sprachtext"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

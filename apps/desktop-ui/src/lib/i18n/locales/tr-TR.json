@@ -592,7 +592,6 @@
     "aiVaultPath": "Yapay Zekâ Profil Kasa Yolu",
     "aiVaultPathHint": "Yapay zekâ profillerinin (SOUL.md dosyaları, sohbetleri ve çalışma klasörleri) ve dahili projelerin klasörü. Varsayılan olarak uygulama verilerindeki ai-vault klasörü.",
     "aiVaultTitle": "Kasa",
-    "allFeaturesModel": "Tüm özellikler",
     "allPluginsTab": "Tüm eklentiler",
     "apiKey": "API anahtarı",
     "apiKeyBoundTo": "Kayıtlı anahtar yalnızca {origin} adresine gönderilir. Bu adresle kullanmak için yeniden kaydedin.",
@@ -651,7 +650,6 @@
     "correctionTab": "Düzeltme",
     "createProfile": "Profil oluştur",
     "createProject": "Proje oluştur",
-    "customizePerTask": "Her özellik için özelleştir",
     "deleteAllChats": "Tüm sohbetleri sil",
     "deleteProfile": "Profili Sil",
     "deleteProfileConfirm": "\"{name}\" profili silinsin mi? SOUL.md dosyası, çalışma klasörü ve sohbetleri (sohbet sayısı: {count}) kalıcı olarak silinir.",
@@ -697,7 +695,6 @@
     "globalHotkeysTitle": "Genel kısayollar",
     "grantProfileAccess": "Bir profile erişim ver",
     "hideAdvanced": "Gelişmiş ayarları gizle",
-    "hidePerTaskSettings": "Özellik ayarlarını gizle",
     "hotkey": "Kısayol tuşu",
     "hotkeyActions": {
       "aiTasks": "Yapay zekâ görevleri",
@@ -792,9 +789,10 @@
     "markdownIncrementListMarkerInfo": "Etkinleştirildiğinde sıralı liste numaralarını ardışık biçimlendirir (1., 2., 3.). Devre dışı bırakıldığında aynı numarayı (1., 1., 1.) korur; bu da satırların yerini değiştirmeyi ve Git farklarını daha temiz hale getirir.",
     "markdownStrong": "Kalın yazı işareti",
     "maxTokens": "En fazla token",
-    "mixedTaskModels": "Farklı modeller",
     "model": "Model",
     "modelId": "Model kimliği",
+    "modelModeAll": "Hepsi için bir",
+    "modelModePerTask": "Her özellik için",
     "modelsCount": "{count} model",
     "modelsForFeatures": "Özellik modelleri",
     "motion": "Animasyonlar",
@@ -965,6 +963,8 @@
     "sttServerUrl": "Sunucu adresi",
     "sttServerUrlHint": "Bu bilgisayarda veya yerel ağda çalışan bir sherpa-onnx akış sunucusunun WebSocket adresi. Tanıma modeli, sunucunun çalıştırdığı modeldir.",
     "sttTab": "Ses tanıma",
+    "stylingBarDirectInsert": "Önizlemesiz ekle",
+    "stylingBarDirectInsertHint": "Önizleme ekranını göstermeden stil sonucunu hemen ekler.",
     "stylingHint": "Yapay zekanın metne uyguladığı stiller (istemler). Stillendirme menüsünde ve ses kayıt çubuğunda her biri kendi tuşuyla çalışır; tuşlarını değiştirmek için kartları sürükleyin.",
     "stylingTab": "Metin stillendirme",
     "submitKey": {
@@ -1051,9 +1051,7 @@
     "vaultUseDefault": "Varsayılan klasörü kullan",
     "vaultUseSubfolder": "tyco-vault alt klasörünü kullan",
     "vision": "Görsel desteği",
-    "voiceTextCorrection": "Tanınan metni düzeltme",
-    "stylingBarDirectInsert": "Önizlemesiz ekle",
-    "stylingBarDirectInsertHint": "Önizleme ekranını göstermeden stil sonucunu hemen ekler."
+    "voiceTextCorrection": "Tanınan metni düzeltme"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

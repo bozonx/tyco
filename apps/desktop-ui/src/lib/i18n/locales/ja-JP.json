@@ -592,7 +592,6 @@
     "aiVaultPath": "AIプロファイル保管場所のパス",
     "aiVaultPathHint": "AIプロファイルのフォルダー（SOUL.md、チャット、ワークスペース）。空のままにすると、Tycoのデータフォルダー内の「vault」が使用されます。",
     "aiVaultTitle": "保管場所",
-    "allFeaturesModel": "すべての機能",
     "allPluginsTab": "すべてのプラグイン",
     "apiKey": "APIキー",
     "apiKeyBoundTo": "保存されたキーは {origin} にのみ送信されます。このアドレスで使用するには再保存してください。",
@@ -651,7 +650,6 @@
     "correctionTab": "校正",
     "createProfile": "プロファイルを作成",
     "createProject": "プロジェクトを作成",
-    "customizePerTask": "機能ごとにカスタマイズ",
     "deleteAllChats": "すべてのチャットを削除",
     "deleteProfile": "プロファイルを削除",
     "deleteProfileConfirm": "プロファイル「{name}」を削除しますか？SOUL.md、ワークスペースフォルダー、およびチャット（チャット数: {count}）が完全に削除されます。",
@@ -697,7 +695,6 @@
     "globalHotkeysTitle": "グローバルショートカット",
     "grantProfileAccess": "プロファイルにアクセスを付与",
     "hideAdvanced": "高度な設定を非表示",
-    "hidePerTaskSettings": "機能ごとの設定を非表示",
     "hotkey": "ショートカット",
     "hotkeyActions": {
       "aiTasks": "AIタスク",
@@ -792,9 +789,10 @@
     "markdownIncrementListMarkerInfo": "有効にすると、リスト項目を順番に番号付けします（1., 2., 3.）。無効にすると、均一な番号（1., 1., 1.）を保持するため、行の入れ替えやGitの差分がシンプルになります。",
     "markdownStrong": "太字マーカー",
     "maxTokens": "最大出力トークン",
-    "mixedTaskModels": "複数のモデル",
     "model": "モデル",
     "modelId": "モデルID",
+    "modelModeAll": "すべて共通",
+    "modelModePerTask": "機能ごと",
     "modelsCount": "{count} 個のモデル",
     "modelsForFeatures": "機能ごとのモデル",
     "motion": "アニメーション",
@@ -965,6 +963,8 @@
     "sttServerUrl": "サーバーアドレス",
     "sttServerUrlHint": "ローカルまたはネットワーク上のsherpa-onnxストリーミングサーバーのWebSocketアドレス。",
     "sttTab": "音声認識",
+    "stylingBarDirectInsert": "プレビューなしで挿入",
+    "stylingBarDirectInsertHint": "プレビュー画面を表示せずに、スタイルの結果をすぐに挿入します。",
     "stylingHint": "AIがテキストに適用するスタイル（プロンプト）。スタイリングメニューおよび音声録音バーでは各スタイルが固有のキーで実行されます。カードをドラッグしてキーを変更できます。",
     "stylingTab": "テキストスタイリング",
     "submitKey": {
@@ -1051,9 +1051,7 @@
     "vaultUseDefault": "既定のフォルダーを使う",
     "vaultUseSubfolder": "tyco-vault サブフォルダーを使う",
     "vision": "画像入力",
-    "voiceTextCorrection": "音声テキストの校正",
-    "stylingBarDirectInsert": "プレビューなしで挿入",
-    "stylingBarDirectInsertHint": "プレビュー画面を表示せずに、スタイルの結果をすぐに挿入します。"
+    "voiceTextCorrection": "音声テキストの校正"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

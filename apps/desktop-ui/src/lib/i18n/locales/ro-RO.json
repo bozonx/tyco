@@ -595,7 +595,6 @@
     "aiVaultPath": "Calea seifului de profiluri AI",
     "aiVaultPathHint": "Dosarul profilurilor AI (fișierele lor SOUL.md, chaturile și spațiile de lucru) și al proiectelor interne. Implicit, dosarul ai-vault din datele aplicației.",
     "aiVaultTitle": "Seif",
-    "allFeaturesModel": "Toate funcțiile",
     "allPluginsTab": "Toate pluginurile",
     "apiKey": "Cheie API",
     "apiKeyBoundTo": "Cheia salvată este trimisă doar către {origin}. Salvați-o din nou pentru a o folosi cu această adresă.",
@@ -654,7 +653,6 @@
     "correctionTab": "Corectare",
     "createProfile": "Creează profil",
     "createProject": "Creează proiect",
-    "customizePerTask": "Personalizează pentru fiecare funcție",
     "deleteAllChats": "Șterge toate chaturile",
     "deleteProfile": "Șterge profilul",
     "deleteProfileConfirm": "Ștergeți profilul „{name}”? Fișierul său SOUL.md, dosarul de lucru și chaturile (chaturi: {count}) vor fi șterse definitiv.",
@@ -700,7 +698,6 @@
     "globalHotkeysTitle": "Comenzi rapide globale",
     "grantProfileAccess": "Dă acces unui profil",
     "hideAdvanced": "Ascunde setările avansate",
-    "hidePerTaskSettings": "Ascunde setările pentru fiecare funcție",
     "hotkey": "Comandă rapidă",
     "hotkeyActions": {
       "aiTasks": "Sarcini AI",
@@ -795,9 +792,10 @@
     "markdownIncrementListMarkerInfo": "Când este activat, elementele listei sunt numerotate succesiv (1., 2., 3.). Când este dezactivat, numerele rămân identice (1., 1., 1.), ceea ce ușurează reordonarea elementelor și face diferențele Git mai curate.",
     "markdownStrong": "Marcator pentru aldin",
     "maxTokens": "Tokeni maximi",
-    "mixedTaskModels": "Modele diferite",
     "model": "Model",
     "modelId": "ID-ul modelului",
+    "modelModeAll": "Unul pentru toate",
+    "modelModePerTask": "Pentru fiecare funcție",
     "modelsCount": "Modele: {count}",
     "modelsForFeatures": "Modele pentru funcții",
     "motion": "Animații",
@@ -968,6 +966,8 @@
     "sttServerUrl": "Adresa serverului",
     "sttServerUrlHint": "Adresa WebSocket a unui server de streaming sherpa-onnx, pe acest computer sau în rețeaua locală. Modelul de recunoaștere este cel rulat de server.",
     "sttTab": "Recunoaștere vocală",
+    "stylingBarDirectInsert": "Introduce fără previzualizare",
+    "stylingBarDirectInsertHint": "Introduce imediat rezultatul stilului fără a afișa ecranul de previzualizare.",
     "stylingHint": "Stiluri (prompturi) pe care IA le aplică textului. În meniul de stiluri și pe bara de înregistrare vocală, fiecare stil se execută cu propria tastă; trageți cardurile pentru a le schimba tastele.",
     "stylingTab": "Stilizare text",
     "submitKey": {
@@ -1054,9 +1054,7 @@
     "vaultUseDefault": "Folosește dosarul implicit",
     "vaultUseSubfolder": "Folosește un subdosar tyco-vault",
     "vision": "Intrare de imagini",
-    "voiceTextCorrection": "Corectarea textului dictat",
-    "stylingBarDirectInsert": "Introduce fără previzualizare",
-    "stylingBarDirectInsertHint": "Introduce imediat rezultatul stilului fără a afișa ecranul de previzualizare."
+    "voiceTextCorrection": "Corectarea textului dictat"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

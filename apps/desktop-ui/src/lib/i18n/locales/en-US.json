@@ -595,7 +595,6 @@
     "aiVaultPath": "AI Profiles Vault Path",
     "aiVaultPathHint": "The folder of AI profiles (their SOUL.md, chats and workspaces) and internal projects. By default, the ai-vault folder in the app data.",
     "aiVaultTitle": "Vault",
-    "allFeaturesModel": "All features",
     "allPluginsTab": "All plugins",
     "apiKey": "API Key",
     "apiKeyBoundTo": "The saved key only goes to {origin}. Save it again to use it with this address.",
@@ -654,7 +653,6 @@
     "correctionTab": "Correction",
     "createProfile": "Create Profile",
     "createProject": "Create Project",
-    "customizePerTask": "Customize per feature",
     "deleteAllChats": "Delete all chats",
     "deleteProfile": "Delete Profile",
     "deleteProfileConfirm": "Delete the profile \"{name}\"? Its SOUL.md, its workspace folder and its chats (chats: {count}) are deleted for good.",
@@ -700,7 +698,6 @@
     "globalHotkeysTitle": "Global hotkeys",
     "grantProfileAccess": "Give a profile access",
     "hideAdvanced": "Hide advanced settings",
-    "hidePerTaskSettings": "Hide per-feature settings",
     "hotkey": "Hotkey",
     "hotkeyActions": {
       "aiTasks": "AI tasks",
@@ -795,9 +792,10 @@
     "markdownIncrementListMarkerInfo": "When enabled, numbers list items sequentially (1., 2., 3.). When disabled, keeps uniform numbers (1., 1., 1.), making item reordering and Git diffs cleaner.",
     "markdownStrong": "Bold marker",
     "maxTokens": "Max tokens",
-    "mixedTaskModels": "Different models",
     "model": "Model",
     "modelId": "Model ID",
+    "modelModeAll": "One for all",
+    "modelModePerTask": "Per feature",
     "modelsCount": "Models: {count}",
     "modelsForFeatures": "Models for features",
     "motion": "Animations",
@@ -968,6 +966,8 @@
     "sttServerUrl": "Server address",
     "sttServerUrlHint": "WebSocket address of a sherpa-onnx streaming server, on this computer or in the local network. The recognition model is the one the server runs.",
     "sttTab": "Speech recognition",
+    "stylingBarDirectInsert": "Insert without preview",
+    "stylingBarDirectInsertHint": "Immediately inserts the styled result without showing the preview screen.",
     "stylingHint": "Styles (prompts) the AI applies to the text. In the styling menu and voice recording bar each one runs with its own key; drag the cards to change their keys.",
     "stylingTab": "Text styling",
     "submitKey": {
@@ -1054,9 +1054,7 @@
     "vaultUseDefault": "Use the default folder",
     "vaultUseSubfolder": "Use a tyco-vault subfolder",
     "vision": "Image input",
-    "voiceTextCorrection": "Voice text correction",
-    "stylingBarDirectInsert": "Insert without preview",
-    "stylingBarDirectInsertHint": "Immediately inserts the styled result without showing the preview screen."
+    "voiceTextCorrection": "Voice text correction"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

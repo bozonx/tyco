@@ -589,7 +589,6 @@
     "aiVaultPath": "AI 設定檔保存庫路徑",
     "aiVaultPathHint": "儲存 AI 設定檔（其 SOUL.md、聊天記錄與工作區）和內部專案的資料夾。預設為應用程式資料中的 ai-vault 資料夾。",
     "aiVaultTitle": "保存庫",
-    "allFeaturesModel": "所有功能",
     "allPluginsTab": "所有外掛程式",
     "apiKey": "API 金鑰",
     "apiKeyBoundTo": "儲存的金鑰僅發送至 {origin}。若要用於此位址，請重新儲存金鑰。",
@@ -648,7 +647,6 @@
     "correctionTab": "校對",
     "createProfile": "建立設定檔",
     "createProject": "建立專案",
-    "customizePerTask": "依功能自訂",
     "deleteAllChats": "刪除所有聊天記錄",
     "deleteProfile": "刪除設定檔",
     "deleteProfileConfirm": "要刪除設定檔「{name}」嗎？其 SOUL.md、工作區資料夾和聊天記錄（對話數：{count}）將被永久刪除。",
@@ -694,7 +692,6 @@
     "globalHotkeysTitle": "全域快捷鍵",
     "grantProfileAccess": "授予設定檔存取",
     "hideAdvanced": "隱藏進階設定",
-    "hidePerTaskSettings": "隱藏各功能設定",
     "hotkey": "快捷鍵",
     "hotkeyActions": {
       "aiTasks": "AI 任務",
@@ -789,9 +786,10 @@
     "markdownIncrementListMarkerInfo": "啟用時，清單項目會循序編號 (1., 2., 3.)。停用時，保持相同的編號 (1., 1., 1.)，有助於重新排序項目與保持簡潔的 Git diff。",
     "markdownStrong": "粗體標記",
     "maxTokens": "Token 上限",
-    "mixedTaskModels": "不同模型",
     "model": "模型",
     "modelId": "模型 ID",
+    "modelModeAll": "統一模型",
+    "modelModePerTask": "依功能設定",
     "modelsCount": "{count} 個模型",
     "modelsForFeatures": "功能指定模型",
     "motion": "動畫效果",
@@ -962,6 +960,8 @@
     "sttServerUrl": "伺服器位址",
     "sttServerUrlHint": "本機或區域網路中 sherpa-onnx 串流伺服器的 WebSocket 位址。辨識模型取決於伺服器所執行的模型。",
     "sttTab": "語音辨識",
+    "stylingBarDirectInsert": "無預覽直接插入",
+    "stylingBarDirectInsertHint": "立即插入風格化結果，無需顯示預覽畫面。",
     "stylingHint": "AI 套用於文字的風格（提示詞）。在風格選單和語音錄製列中，每個風格都有對應的按鍵；拖曳卡片可變更其按鍵。",
     "stylingTab": "文字風格化",
     "submitKey": {
@@ -1048,9 +1048,7 @@
     "vaultUseDefault": "使用預設資料夾",
     "vaultUseSubfolder": "使用 tyco-vault 子資料夾",
     "vision": "圖片輸入",
-    "voiceTextCorrection": "語音文字校對",
-    "stylingBarDirectInsert": "無預覽直接插入",
-    "stylingBarDirectInsertHint": "立即插入風格化結果，無需顯示預覽畫面。"
+    "voiceTextCorrection": "語音文字校對"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

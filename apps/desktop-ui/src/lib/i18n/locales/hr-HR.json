@@ -595,7 +595,6 @@
     "aiVaultPath": "Putanja trezora AI profila",
     "aiVaultPathHint": "Mapa AI profila (njihovih SOUL.md datoteka, chatova i radnih prostora) i internih projekata. Zadano je mapa ai-vault u podacima aplikacije.",
     "aiVaultTitle": "Trezor",
-    "allFeaturesModel": "Sve funkcije",
     "allPluginsTab": "Svi dodaci",
     "apiKey": "API ključ",
     "apiKeyBoundTo": "Spremljeni ključ šalje se samo na {origin}. Spremite ga ponovno da biste ga koristili s ovom adresom.",
@@ -654,7 +653,6 @@
     "correctionTab": "Ispravak",
     "createProfile": "Stvori profil",
     "createProject": "Stvori projekt",
-    "customizePerTask": "Prilagodi za svaku funkciju",
     "deleteAllChats": "Izbriši sve chatove",
     "deleteProfile": "Izbriši profil",
     "deleteProfileConfirm": "Izbrisati profil „{name}”? Njegov SOUL.md, radna mapa i chatovi (chatova: {count}) bit će trajno izbrisani.",
@@ -700,7 +698,6 @@
     "globalHotkeysTitle": "Globalni prečaci",
     "grantProfileAccess": "Daj pristup profilu",
     "hideAdvanced": "Sakrij napredne postavke",
-    "hidePerTaskSettings": "Sakrij postavke po funkciji",
     "hotkey": "Prečac",
     "hotkeyActions": {
       "aiTasks": "AI zadaci",
@@ -795,9 +792,10 @@
     "markdownIncrementListMarkerInfo": "Kad je uključeno, stavke popisa numeriraju se redom (1., 2., 3.). Kad je isključeno, brojevi ostaju jednaki (1., 1., 1.), što olakšava promjenu redoslijeda stavki i čini Git diffove preglednijima.",
     "markdownStrong": "Oznaka podebljanog",
     "maxTokens": "Najviše tokena",
-    "mixedTaskModels": "Različiti modeli",
     "model": "Model",
     "modelId": "ID modela",
+    "modelModeAll": "Jedan za sve",
+    "modelModePerTask": "Po funkciji",
     "modelsCount": "Modela: {count}",
     "modelsForFeatures": "Modeli za funkcije",
     "motion": "Animacije",
@@ -968,6 +966,8 @@
     "sttServerUrl": "Adresa poslužitelja",
     "sttServerUrlHint": "WebSocket adresa sherpa-onnx poslužitelja za strujanje, na ovom računalu ili u lokalnoj mreži. Model prepoznavanja je onaj koji pokreće poslužitelj.",
     "sttTab": "Prepoznavanje glasa",
+    "stylingBarDirectInsert": "Umetni bez pretpregleda",
+    "stylingBarDirectInsertHint": "Odmah umeće rezultat stila bez prikaza pretpregleda.",
     "stylingHint": "Stilovi (upiti) koje AI primjenjuje na tekst. U izborniku stilova i na traci za snimanje glasa svaki stil se pokreće vlastitom tipkom; povucite kartice da promijenite njihove tipke.",
     "stylingTab": "Stiliziranje teksta",
     "submitKey": {
@@ -1054,9 +1054,7 @@
     "vaultUseDefault": "Koristi zadanu mapu",
     "vaultUseSubfolder": "Koristi podmapu tyco-vault",
     "vision": "Unos slika",
-    "voiceTextCorrection": "Ispravak izdiktiranog teksta",
-    "stylingBarDirectInsert": "Umetni bez pretpregleda",
-    "stylingBarDirectInsertHint": "Odmah umeće rezultat stila bez prikaza pretpregleda."
+    "voiceTextCorrection": "Ispravak izdiktiranog teksta"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

@@ -93,9 +93,14 @@ export interface LlmTasksConfig {
 /** How much attached images are scaled down before a request */
 export type LlmImageQuality = 'economy' | 'balanced' | 'original'
 
+export type LlmModelMode = 'all' | 'perTask'
+
 export interface LlmConfig {
   providers: LlmProvider[]
   models: LlmModel[]
+  modelMode?: LlmModelMode
+  commonModelId?: string
+  customTaskModels?: Partial<Record<LlmTask, string>>
   tasks: LlmTasksConfig
   /** Applies to every chat, the profile chats included */
   imageQuality: LlmImageQuality

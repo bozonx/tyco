@@ -268,6 +268,19 @@ export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
     providers.has(model.providerId)
   )
   const models = new Set(llm.models.map((model) => model.id))
+  if (llm.commonModelId && !models.has(llm.commonModelId)) {
+    llm.commonModelId = ''
+  }
+  if (llm.customTaskModels) {
+    for (const task of LLM_TASKS) {
+      if (
+        llm.customTaskModels[task] &&
+        !models.has(llm.customTaskModels[task]!)
+      ) {
+        llm.customTaskModels[task] = ''
+      }
+    }
+  }
   for (const task of LLM_TASKS)
     if (!models.has(llm.tasks[task].modelId)) llm.tasks[task].modelId = ''
   return llm

@@ -595,7 +595,6 @@
     "aiVaultPath": "Ruta del almacén de perfiles de IA",
     "aiVaultPathHint": "La carpeta de los perfiles de IA (sus SOUL.md, chats y espacios de trabajo) y de los proyectos internos. De forma predeterminada, la carpeta ai-vault en los datos de la aplicación.",
     "aiVaultTitle": "Almacén",
-    "allFeaturesModel": "Todas las funciones",
     "allPluginsTab": "Todos los plugins",
     "apiKey": "Clave de API",
     "apiKeyBoundTo": "La clave guardada solo se envía a {origin}. Guárdala de nuevo para usarla con esta dirección.",
@@ -654,7 +653,6 @@
     "correctionTab": "Corrección",
     "createProfile": "Crear perfil",
     "createProject": "Crear proyecto",
-    "customizePerTask": "Personalizar por función",
     "deleteAllChats": "Eliminar todos los chats",
     "deleteProfile": "Eliminar perfil",
     "deleteProfileConfirm": "¿Eliminar el perfil «{name}»? Su SOUL.md, su carpeta de trabajo y sus chats (chats: {count}) se eliminarán para siempre.",
@@ -700,7 +698,6 @@
     "globalHotkeysTitle": "Atajos globales",
     "grantProfileAccess": "Dar acceso a un perfil",
     "hideAdvanced": "Ocultar la configuración avanzada",
-    "hidePerTaskSettings": "Ocultar configuración por función",
     "hotkey": "Atajo",
     "hotkeyActions": {
       "aiTasks": "Tareas de IA",
@@ -795,9 +792,10 @@
     "markdownIncrementListMarkerInfo": "Si está activado, numera los elementos de la lista en orden (1., 2., 3.). Si está desactivado, mantiene números iguales (1., 1., 1.), lo que facilita reordenar los elementos y limpia los diffs de Git.",
     "markdownStrong": "Marcador de negrita",
     "maxTokens": "Máximo de tokens",
-    "mixedTaskModels": "Diferentes modelos",
     "model": "Modelo",
     "modelId": "ID del modelo",
+    "modelModeAll": "Una para todas",
+    "modelModePerTask": "Por función",
     "modelsCount": "Modelos: {count}",
     "modelsForFeatures": "Modelos para funciones",
     "motion": "Animaciones",
@@ -968,6 +966,8 @@
     "sttServerUrl": "Dirección del servidor",
     "sttServerUrlHint": "Dirección WebSocket de un servidor de streaming sherpa-onnx, en este equipo o en la red local. El modelo de reconocimiento es el que ejecuta el servidor.",
     "sttTab": "Reconocimiento de voz",
+    "stylingBarDirectInsert": "Insertar sin vista previa",
+    "stylingBarDirectInsertHint": "Inserta inmediatamente el resultado del estilo sin mostrar la pantalla de vista previa.",
     "stylingHint": "Estilos (prompts) que la IA aplica al texto. En el menú de estilos y en la barra de grabación de voz, cada estilo se ejecuta con su propia tecla; arrastre las tarjetas para cambiar sus teclas.",
     "stylingTab": "Estilización de texto",
     "submitKey": {
@@ -1054,9 +1054,7 @@
     "vaultUseDefault": "Usar la carpeta predeterminada",
     "vaultUseSubfolder": "Usar una subcarpeta tyco-vault",
     "vision": "Entrada de imágenes",
-    "voiceTextCorrection": "Corrección del texto dictado",
-    "stylingBarDirectInsert": "Insertar sin vista previa",
-    "stylingBarDirectInsertHint": "Inserta inmediatamente el resultado del estilo sin mostrar la pantalla de vista previa."
+    "voiceTextCorrection": "Corrección del texto dictado"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

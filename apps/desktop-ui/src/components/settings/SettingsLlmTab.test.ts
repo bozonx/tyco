@@ -153,11 +153,16 @@ describe('feature models', () => {
     expect(llm.tasks.translation.modelId).toBe('gemini-flash')
     expect(llm.tasks.correction.modelId).toBe('gemini-flash')
     expect(llm.tasks.aiTask.modelId).toBe('gemini-flash')
+    expect(llm.commonModelId).toBe('gemini-flash')
   })
 
-  it('customizes per feature when expanded', async () => {
+  it('switches between all and per-feature mode while preserving choices', async () => {
     const { llm, wrapper } = setup()
-    await wrapper.get('.advanced-toggle button').trigger('click')
+    const modeControl = wrapper.findComponent({ name: 'SegmentedControl' })
+    expect(modeControl.props()['modelValue']).toBe('all')
+
+    // Switch to per-feature
+    modeControl.vm.$emit('update:modelValue', 'perTask')
     await flushPromises()
 
     const selects = wrapper.findAllComponents(FieldSelect)
@@ -167,18 +172,34 @@ describe('feature models', () => {
     expect(options.map((option) => option.id)).toContain('gemini-flash')
     expect(translation.props('modelValue')).toBe('ollama-qwen')
 
+    // Change translation model in per-task mode
     translation.vm.$emit('update:modelValue', 'gemini-flash')
     await flushPromises()
     expect(llm.tasks.translation.modelId).toBe('gemini-flash')
     expect(llm.tasks.correction.modelId).toBe('ollama-qwen')
+    expect(llm.customTaskModels?.translation).toBe('gemini-flash')
 
-    const allSelect = wrapper.findAllComponents(FieldSelect).at(-8)!
-    expect(allSelect.props('modelValue')).toBe('__custom__')
-
-    translation.vm.$emit('update:modelValue', '')
+    // Switch back to all
+    modeControl.vm.$emit('update:modelValue', 'all')
     await flushPromises()
-    expect(llm.tasks.translation.modelId).toBe('')
-    expect(wrapper.text()).not.toContain('settings.addFallback')
+    expect(llm.tasks.translation.modelId).toBe('ollama-qwen')
+    expect(llm.tasks.correction.modelId).toBe('ollama-qwen')
+    expect(llm.commonModelId).toBe('ollama-qwen')
+
+    // Change common model to deepseek-flash in all mode
+    const allSelect = wrapper.findAllComponents(FieldSelect).at(-2)!
+    allSelect.vm.$emit('update:modelValue', 'deepseek-flash')
+    await flushPromises()
+    expect(llm.tasks.translation.modelId).toBe('deepseek-flash')
+    expect(llm.tasks.correction.modelId).toBe('deepseek-flash')
+    expect(llm.commonModelId).toBe('deepseek-flash')
+    expect(llm.customTaskModels?.translation).toBe('gemini-flash')
+
+    // Switch back to per-task: translation restores to gemini-flash!
+    modeControl.vm.$emit('update:modelValue', 'perTask')
+    await flushPromises()
+    expect(llm.tasks.translation.modelId).toBe('gemini-flash')
+    expect(llm.tasks.correction.modelId).toBe('ollama-qwen')
   })
 })
 
@@ -234,6 +255,12 @@ describe('SettingsLlmTab.vue', () => {
           },
           FieldInput: true,
           FieldSelect: true,
+          SegmentedControl: {
+            name: 'SegmentedControl',
+            props: ['modelValue'],
+            template:
+              '<div class="segmented-control-stub" :data-value="modelValue" />',
+          },
           Button: true,
           Icon: true,
         },
@@ -246,9 +273,10 @@ describe('SettingsLlmTab.vue', () => {
       wrapper
         .findAll('.field-row-stub')
         .map((row) => row.attributes('data-label'))
-    ).toEqual(['settings.allFeaturesModel', 'settings.chatImageQuality'])
+    ).toEqual(['settings.chatImageQuality'])
 
-    await wrapper.get('.advanced-toggle button').trigger('click')
+    const modeControl = wrapper.findComponent({ name: 'SegmentedControl' })
+    modeControl.vm.$emit('update:modelValue', 'perTask')
     await flushPromises()
 
     expect(
@@ -256,7 +284,6 @@ describe('SettingsLlmTab.vue', () => {
         .findAll('.field-row-stub')
         .map((row) => row.attributes('data-label'))
     ).toEqual([
-      'settings.allFeaturesModel',
       'action.translationMenu',
       'settings.voiceTextCorrection',
       'settings.textCorrection',

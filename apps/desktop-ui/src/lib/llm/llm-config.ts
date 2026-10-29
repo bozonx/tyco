@@ -74,6 +74,18 @@ export function addModel(config: LlmConfig, providerId: string): LlmModel {
 export function removeModel(config: LlmConfig, modelId: string) {
   config.models = config.models.filter((model) => model.id !== modelId)
 
+  if (config.commonModelId === modelId) {
+    config.commonModelId = ''
+  }
+
+  if (config.customTaskModels) {
+    for (const task of LLM_TASKS) {
+      if (config.customTaskModels[task] === modelId) {
+        config.customTaskModels[task] = ''
+      }
+    }
+  }
+
   for (const task of LLM_TASKS) {
     if (config.tasks[task].modelId === modelId) config.tasks[task].modelId = ''
   }
