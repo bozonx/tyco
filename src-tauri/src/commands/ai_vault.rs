@@ -3,7 +3,10 @@ use tauri::AppHandle;
 use super::run_blocking;
 use crate::{
     errors::AppError,
-    services::ai_vault::{self, relocation::VaultTarget, AiProfile, AiProject},
+    services::ai_vault::{
+        self, relocation::VaultTarget, AiProfile, AiProject, ProfileMemoryChange,
+        ProfileMemorySearchResult, ProfileMemoryTopic,
+    },
     services::storage,
 };
 
@@ -129,4 +132,132 @@ pub async fn save_ai_project(app: AppHandle, project: AiProject) -> Result<(), A
 pub async fn delete_ai_project(app: AppHandle, id: String) -> Result<(), AppError> {
     run_blocking(move || ai_vault::with_vault(&app, |dir| ai_vault::delete_project(dir, &id)))
         .await?
+}
+
+/// Lists all memory topics and core summary for a profile.
+#[tauri::command]
+pub async fn list_ai_profile_memory_topics(
+    app: AppHandle,
+    profile_id: String,
+) -> Result<Vec<ProfileMemoryTopic>, AppError> {
+    run_blocking(move || {
+        ai_vault::with_vault(&app, |dir| {
+            ai_vault::list_profile_memory_topics(dir, &profile_id)
+        })
+    })
+    .await?
+}
+
+/// Reads a profile memory file (`core.md` or a topic file).
+#[tauri::command]
+pub async fn read_ai_profile_memory(
+    app: AppHandle,
+    profile_id: String,
+    file: String,
+) -> Result<String, AppError> {
+    run_blocking(move || {
+        ai_vault::with_vault(&app, |dir| {
+            ai_vault::read_profile_memory(dir, &profile_id, &file)
+        })
+    })
+    .await?
+}
+
+/// Searches the profile's memory for matching lines.
+#[tauri::command]
+pub async fn search_ai_profile_memory(
+    app: AppHandle,
+    profile_id: String,
+    query: String,
+) -> Result<Vec<ProfileMemorySearchResult>, AppError> {
+    run_blocking(move || {
+        ai_vault::with_vault(&app, |dir| {
+            ai_vault::search_profile_memory(dir, &profile_id, &query)
+        })
+    })
+    .await?
+}
+
+/// Appends a fact or thesis to a memory file.
+#[tauri::command]
+pub async fn add_ai_profile_memory_fact(
+    app: AppHandle,
+    profile_id: String,
+    chat_id: Option<String>,
+    file: String,
+    fact: String,
+) -> Result<ProfileMemoryChange, AppError> {
+    run_blocking(move || {
+        ai_vault::with_vault(&app, |dir| {
+            ai_vault::add_profile_memory_fact(dir, &profile_id, chat_id.as_deref(), &file, &fact)
+        })
+    })
+    .await?
+}
+
+/// Replaces an outdated fact or thesis with a new one.
+#[tauri::command]
+pub async fn replace_ai_profile_memory(
+    app: AppHandle,
+    profile_id: String,
+    chat_id: Option<String>,
+    file: String,
+    old_text: String,
+    new_text: String,
+) -> Result<ProfileMemoryChange, AppError> {
+    run_blocking(move || {
+        ai_vault::with_vault(&app, |dir| {
+            ai_vault::replace_profile_memory(
+                dir,
+                &profile_id,
+                chat_id.as_deref(),
+                &file,
+                &old_text,
+                &new_text,
+            )
+        })
+    })
+    .await?
+}
+
+/// Completely rewrites a memory file (e.g. for compaction).
+#[tauri::command]
+pub async fn rewrite_ai_profile_memory(
+    app: AppHandle,
+    profile_id: String,
+    chat_id: Option<String>,
+    file: String,
+    content: String,
+) -> Result<ProfileMemoryChange, AppError> {
+    run_blocking(move || {
+        ai_vault::with_vault(&app, |dir| {
+            ai_vault::rewrite_profile_memory(dir, &profile_id, chat_id.as_deref(), &file, &content)
+        })
+    })
+    .await?
+}
+
+/// Restores a memory file to its snapshot taken prior to changes in the chat.
+#[tauri::command]
+pub async fn undo_ai_profile_memory(
+    app: AppHandle,
+    profile_id: String,
+    chat_id: Option<String>,
+    file: String,
+) -> Result<ProfileMemoryChange, AppError> {
+    run_blocking(move || {
+        ai_vault::with_vault(&app, |dir| {
+            ai_vault::undo_profile_memory(dir, &profile_id, chat_id.as_deref(), &file)
+        })
+    })
+    .await?
+}
+
+/// Clears all memory topics and resets `core.md` to default for a profile.
+#[tauri::command]
+pub async fn clear_ai_profile_memory(app: AppHandle, profile_id: String) -> Result<(), AppError> {
+    run_blocking(move || {
+        ai_vault::with_vault(&app, |dir| ai_vault::clear_profile_memory(dir, &profile_id))
+    })
+    .await?
 }

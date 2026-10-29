@@ -33,6 +33,7 @@ vi.mock('../../stores/desktop', async () => {
 const profile = (fields: Partial<AiProfile>): AiProfile => ({
   id: 'writer',
   name: 'Writer',
+  memoryMode: 'auto',
   projectPermissions: {},
   createdAt: 1,
   updatedAt: 1,

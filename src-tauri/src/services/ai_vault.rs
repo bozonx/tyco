@@ -4,10 +4,12 @@ mod relocation_tests;
 mod tests;
 
 pub mod location;
+pub mod memory;
 pub mod operations;
 pub mod relocation;
 pub mod types;
 
+pub use memory::*;
 pub use operations::*;
 pub use types::*;
 

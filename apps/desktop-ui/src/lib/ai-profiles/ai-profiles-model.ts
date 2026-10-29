@@ -99,6 +99,7 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
           deps.randomSuffix
         ),
       name: data.name.trim(),
+      memoryMode: 'auto',
       projectPermissions: {},
       // a plain copy: the source may be another profile's reactive state
       ...(data.settings

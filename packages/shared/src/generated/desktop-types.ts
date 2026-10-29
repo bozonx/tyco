@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 1d1284db8a2bb32b035f6219979124dfa3750c4b98ccee7a3765b9864e9bbd01
+// Source hash: 1fb4ea7e4e98f0f9d396c0f84736a8f1c90091886d029c38c16f3761bd903578
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -162,6 +162,8 @@ export type AiProfile = {
   projectPermissions: { [key in string]: ProjectPermission }
   /** No tools when unset. */
   tools?: ProfileToolSettings
+  /** Long-term memory mode; defaults to `auto`. */
+  memoryMode: ProfileMemoryMode
   createdAt: number
   updatedAt: number
 }
@@ -505,6 +507,32 @@ export type PluginPackagePreview = {
   /** What `install_plugin_package` takes to install this package. */
   inspectionId: string
   manifest: PluginManifest
+}
+
+/** The change applied to a profile memory file. */
+export type ProfileMemoryChange = {
+  file: string
+  before?: string
+  after: string
+}
+
+/** The memory mode of a profile. */
+export type ProfileMemoryMode = 'auto' | 'ask' | 'read-only' | 'off'
+
+/** A line matching a memory text search. */
+export type ProfileMemorySearchResult = {
+  file: string
+  lineNumber: number
+  text: string
+}
+
+/** Summary of a memory file or topic in a profile's memory. */
+export type ProfileMemoryTopic = {
+  file: string
+  title: string
+  description?: string
+  bytes: number
+  updatedAt: number
 }
 
 /** The tools a profile's chat may use. */

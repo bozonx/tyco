@@ -565,6 +565,7 @@ fn profile(tools: Option<ProfileToolSettings>) -> AiProfile {
             ),
         ]),
         tools,
+        memory_mode: ai_vault::ProfileMemoryMode::Auto,
         created_at: 1,
         updated_at: 1,
     }

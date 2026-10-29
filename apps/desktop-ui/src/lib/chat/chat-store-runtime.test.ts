@@ -34,6 +34,7 @@ function runtimeDependencies(profileId: string): ChatStoreRuntimeDependencies {
   const profile: AiProfile = {
     id: profileId,
     name: profileId,
+    memoryMode: 'auto',
     projectPermissions: {},
     createdAt: 1,
     updatedAt: 1,
@@ -186,6 +187,7 @@ describe('chat-store-runtime', () => {
     const profile: AiProfile = {
       id: 'writer',
       name: 'Writer',
+      memoryMode: 'auto',
       projectPermissions: {},
       createdAt: 1,
       updatedAt: 1,
@@ -236,6 +238,7 @@ describe('chat-store-runtime', () => {
     const profile: AiProfile = {
       id: 'writer',
       name: 'Writer',
+      memoryMode: 'auto',
       projectPermissions: {},
       createdAt: 1,
       updatedAt: 1,

@@ -79,7 +79,7 @@ fn profile_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
 }
 
 /// The folder of a profile that exists; nothing is created for an unknown id.
-fn existing_profile_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+pub(super) fn existing_profile_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
     let dir = profile_dir(vault_root, id)?;
     if !dir.join(PROFILE_FILE).is_file() {
         return Err(not_found("Profile", id));
@@ -137,6 +137,10 @@ pub fn list_profiles(vault_root: &Path) -> Result<Vec<AiProfile>, AppError> {
 /// The profile as it is on disk now: the user may edit the file by hand.
 pub fn get_profile(vault_root: &Path, id: &str) -> Result<AiProfile, AppError> {
     let dir = existing_profile_dir(vault_root, id)?;
+    let memory_dir = dir.join(super::memory::PROFILE_MEMORY_DIR);
+    if !memory_dir.exists() {
+        let _ = super::memory::ensure_memory_dir_initialized(&memory_dir);
+    }
     Ok(serde_json::from_str(&fs::read_to_string(
         dir.join(PROFILE_FILE),
     )?)?)
@@ -161,6 +165,8 @@ pub fn create_profile(vault_root: &Path, profile: AiProfile, soul: &str) -> Resu
     for sub in ["uploads", "generated", "downloads"] {
         create_private_dir(&workspace.join(sub))?;
     }
+    let memory = dir.join(super::memory::PROFILE_MEMORY_DIR);
+    super::memory::ensure_memory_dir_initialized(&memory)?;
     write_private(&dir.join(SOUL_FILE), soul)?;
     write_profile_file(&dir, &profile)
 }
@@ -175,6 +181,7 @@ pub fn save_profile(vault_root: &Path, profile: AiProfile) -> Result<(), AppErro
 pub fn delete_profile(vault_root: &Path, id: &str) -> Result<(), AppError> {
     let dir = profile_dir(vault_root, id)?;
     if dir.exists() {
+        super::memory::clear_read_versions(id);
         fs::remove_dir_all(&dir)?;
     }
     Ok(())

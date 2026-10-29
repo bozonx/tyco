@@ -40,6 +40,7 @@ vi.mock('../../stores/desktop', async () => {
 const profile = (): AiProfile => ({
   id: 'writer',
   name: 'Writer',
+  memoryMode: 'auto',
   modelId: 'removed-model',
   projectPermissions: {},
   createdAt: 1,

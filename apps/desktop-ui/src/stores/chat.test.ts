@@ -122,6 +122,7 @@ describe('profile chats', () => {
   const writer: AiProfile = {
     id: 'writer',
     name: 'Writer',
+    memoryMode: 'auto',
     temperature: 0.3,
     maxOutputTokens: 500,
     projectPermissions: {},

@@ -13,6 +13,7 @@ fn vault_with_profile(root: &std::path::Path) {
         max_output_tokens: None,
         project_permissions: Default::default(),
         tools: None,
+        memory_mode: ProfileMemoryMode::Auto,
         created_at: 1,
         updated_at: 1,
     };

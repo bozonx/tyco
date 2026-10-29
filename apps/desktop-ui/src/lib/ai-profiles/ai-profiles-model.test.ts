@@ -6,6 +6,7 @@ describe('ai-profiles-model', () => {
   const mockProfile: AiProfile = {
     id: 'tech-writer',
     name: 'Tech Writer',
+    memoryMode: 'auto',
     modelId: 'gpt-4o',
     projectPermissions: { 'docs-proj': { read: 'allow', write: 'ask' } },
     createdAt: 1000,
@@ -156,6 +157,7 @@ describe('ai-profiles-model', () => {
     expect(created).toEqual({
       id: 'code-reviewer',
       name: 'Code Reviewer',
+      memoryMode: 'auto',
       projectPermissions: {},
       createdAt: 2000,
       updatedAt: 2000,
@@ -350,6 +352,7 @@ describe('ai-profiles-model', () => {
     expect(copy).toEqual({
       id: 'tech-writer-2',
       name: 'Tech Writer 2',
+      memoryMode: 'auto',
       modelId: 'gpt-4o',
       temperature: 0.3,
       projectPermissions: mockProfile.projectPermissions,

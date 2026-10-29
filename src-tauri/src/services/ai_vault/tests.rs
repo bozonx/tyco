@@ -12,6 +12,7 @@ fn profile(id: &str, created_at: u64) -> AiProfile {
         max_output_tokens: None,
         project_permissions: HashMap::new(),
         tools: None,
+        memory_mode: ProfileMemoryMode::Auto,
         created_at,
         updated_at: created_at,
     }
@@ -462,4 +463,310 @@ fn projects_need_a_name_and_an_absolute_existing_external_folder() {
         assert!(create_project(&vault_root, external).is_err(), "{target:?}");
     }
     assert!(list_projects(&vault_root).unwrap().is_empty());
+}
+
+#[test]
+fn memory_directories_and_core_are_created_with_profile_and_lazily_for_existing() {
+    let test_dir = TestDir::new("ai_vault_memory_init");
+    let vault_root = test_dir.join("vault");
+
+    // 1. New profile gets memory/ and core.md
+    create_profile(&vault_root, profile("assistant", 1000), "soul instruction").unwrap();
+    let memory_dir = vault_root.join("profiles/assistant/memory");
+    let core_file = memory_dir.join("core.md");
+    let topics_dir = memory_dir.join("topics");
+
+    assert!(memory_dir.is_dir());
+    assert!(topics_dir.is_dir());
+    assert!(core_file.is_file());
+    assert_eq!(fs::read_to_string(&core_file).unwrap(), DEFAULT_MEMORY_CORE);
+
+    // 2. Existing profile without memory directory gets it lazily on get_profile / profile_memory_dir
+    let legacy_profile_dir = vault_root.join("profiles/legacy");
+    fs::create_dir_all(&legacy_profile_dir).unwrap();
+    // Legacy profile.json without memoryMode field
+    fs::write(
+        legacy_profile_dir.join("profile.json"),
+        r#"{"id":"legacy","name":"Legacy","projectPermissions":{},"createdAt":500,"updatedAt":500}"#,
+    )
+    .unwrap();
+    fs::write(legacy_profile_dir.join("SOUL.md"), "legacy soul").unwrap();
+
+    let legacy = get_profile(&vault_root, "legacy").unwrap();
+    assert_eq!(legacy.memory_mode, ProfileMemoryMode::Auto);
+
+    let legacy_mem = profile_memory_dir(&vault_root, "legacy").unwrap();
+    assert!(legacy_mem.join("core.md").is_file());
+    assert_eq!(
+        fs::read_to_string(legacy_mem.join("core.md")).unwrap(),
+        DEFAULT_MEMORY_CORE
+    );
+}
+
+#[test]
+fn memory_path_isolation_and_file_name_validation() {
+    let test_dir = TestDir::new("ai_vault_memory_validation");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
+
+    // Valid file names
+    for valid in ["core.md", "health.md", "my_notes-1.md", "topics/diet.md"] {
+        assert!(normalize_and_validate_memory_file(valid).is_ok(), "{valid}");
+    }
+
+    // Invalid file names: path traversal, nested folders, upper case, invalid extensions
+    for invalid in [
+        "",
+        "   ",
+        "../core.md",
+        "topics/../core.md",
+        "nested/topic.md",
+        "topics/nested/file.md",
+        "Health.md",
+        "CORE.MD",
+        "notes.txt",
+        "notes",
+        "bad$char.md",
+        ".md",
+    ] {
+        assert!(
+            normalize_and_validate_memory_file(invalid).is_err(),
+            "{invalid}"
+        );
+        assert!(
+            read_profile_memory(&vault_root, "writer", invalid).is_err(),
+            "{invalid}"
+        );
+        assert!(
+            add_profile_memory_fact(&vault_root, "writer", None, invalid, "fact").is_err(),
+            "{invalid}"
+        );
+    }
+}
+
+#[test]
+fn memory_crud_add_replace_rewrite_and_search() {
+    let test_dir = TestDir::new("ai_vault_memory_crud");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("doc", 1000), "").unwrap();
+
+    // 1. Read core
+    let core = read_profile_memory(&vault_root, "doc", "core.md").unwrap();
+    assert_eq!(core, DEFAULT_MEMORY_CORE);
+
+    // 2. Add fact to core
+    let change = add_profile_memory_fact(
+        &vault_root,
+        "doc",
+        Some("chat-1"),
+        "core.md",
+        "User prefers concise answers",
+    )
+    .unwrap();
+    assert_eq!(change.file, "core.md");
+    assert!(change.after.contains("- User prefers concise answers"));
+
+    // 3. Add fact to a new topic file (creates health.md)
+    let topic_change = add_profile_memory_fact(
+        &vault_root,
+        "doc",
+        Some("chat-1"),
+        "health.md",
+        "Lactose intolerance",
+    )
+    .unwrap();
+    assert_eq!(topic_change.file, "health.md");
+    assert!(topic_change.after.starts_with("# Health\n\n"));
+    assert!(topic_change.after.contains("- Lactose intolerance"));
+
+    // 4. List memory topics
+    let topics = list_profile_memory_topics(&vault_root, "doc").unwrap();
+    assert_eq!(topics.len(), 2);
+    assert_eq!(topics[0].file, "core.md");
+    assert_eq!(topics[0].title, "Ядро памяти");
+    assert_eq!(topics[1].file, "health.md");
+    assert_eq!(topics[1].title, "Health");
+
+    // 5. Search
+    let search_results = search_profile_memory(&vault_root, "doc", "lactose").unwrap();
+    assert_eq!(search_results.len(), 1);
+    assert_eq!(search_results[0].file, "health.md");
+    assert!(search_results[0].text.contains("Lactose intolerance"));
+
+    // 6. Replace fact in health.md
+    let replaced = replace_profile_memory(
+        &vault_root,
+        "doc",
+        Some("chat-1"),
+        "health.md",
+        "- Lactose intolerance",
+        "- Severe lactose intolerance (2026-10)",
+    )
+    .unwrap();
+    assert!(replaced
+        .after
+        .contains("- Severe lactose intolerance (2026-10)"));
+    assert!(!replaced.after.contains("- Lactose intolerance\n"));
+
+    // 7. Delete fact via replace with empty string
+    let deleted = replace_profile_memory(
+        &vault_root,
+        "doc",
+        Some("chat-1"),
+        "health.md",
+        "- Severe lactose intolerance (2026-10)",
+        "",
+    )
+    .unwrap();
+    assert!(!deleted.after.contains("lactose"));
+
+    // 8. Rewrite health.md
+    let compacted = "# Health\nMedical history\n\n- No allergies\n";
+    let rewritten =
+        rewrite_profile_memory(&vault_root, "doc", Some("chat-1"), "health.md", compacted).unwrap();
+    assert_eq!(rewritten.after, compacted);
+
+    // List topics again: description is parsed from line 2
+    let updated_topics = list_profile_memory_topics(&vault_root, "doc").unwrap();
+    let health_topic = updated_topics
+        .iter()
+        .find(|t| t.file == "health.md")
+        .unwrap();
+    assert_eq!(health_topic.description.as_deref(), Some("Medical history"));
+
+    // 9. Clear memory
+    clear_profile_memory(&vault_root, "doc").unwrap();
+    let cleared_topics = list_profile_memory_topics(&vault_root, "doc").unwrap();
+    assert_eq!(cleared_topics.len(), 1);
+    assert_eq!(cleared_topics[0].file, "core.md");
+    assert_eq!(
+        read_profile_memory(&vault_root, "doc", "core.md").unwrap(),
+        DEFAULT_MEMORY_CORE
+    );
+}
+
+#[test]
+fn memory_limits_are_enforced() {
+    let test_dir = TestDir::new("ai_vault_memory_limits");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("limited", 1000), "").unwrap();
+
+    // 1. Fact exceeds MAX_MEMORY_FACT_LEN
+    let oversized_fact = "a".repeat(MAX_MEMORY_FACT_LEN + 1);
+    assert!(
+        add_profile_memory_fact(&vault_root, "limited", None, "core.md", &oversized_fact).is_err()
+    );
+
+    // 2. File size exceeds MAX_MEMORY_FILE_BYTES
+    let huge_content = "a".repeat(MAX_MEMORY_FILE_BYTES + 1);
+    assert!(
+        rewrite_profile_memory(&vault_root, "limited", None, "health.md", &huge_content).is_err()
+    );
+
+    // 3. Max topic files limit
+    for i in 0..MAX_MEMORY_TOPIC_FILES {
+        let file = format!("topic_{i}.md");
+        assert!(add_profile_memory_fact(&vault_root, "limited", None, &file, "fact").is_ok());
+    }
+    // 51st topic file is rejected
+    assert!(
+        add_profile_memory_fact(&vault_root, "limited", None, "topic_extra.md", "fact").is_err()
+    );
+}
+
+#[test]
+fn memory_optimistic_locking_rejects_concurrent_edits() {
+    let test_dir = TestDir::new("ai_vault_memory_lock");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("locked", 1000), "").unwrap();
+
+    // 1. Read file to record its current version
+    let _ = read_profile_memory(&vault_root, "locked", "core.md").unwrap();
+
+    // 2. User modifies file directly on disk
+    let core_path = vault_root.join("profiles/locked/memory/core.md");
+    fs::write(&core_path, "# Modified by user in editor\n").unwrap();
+
+    // 3. Model attempts to modify: rejected because disk != recorded hash
+    let add_result = add_profile_memory_fact(
+        &vault_root,
+        "locked",
+        None,
+        "core.md",
+        "Should fail due to conflict",
+    );
+    assert!(add_result.is_err());
+
+    // 4. Model re-reads file to update its recorded version
+    let re_read = read_profile_memory(&vault_root, "locked", "core.md").unwrap();
+    assert_eq!(re_read, "# Modified by user in editor\n");
+
+    // 5. Subsequent write succeeds
+    assert!(
+        add_profile_memory_fact(&vault_root, "locked", None, "core.md", "Now succeeds",).is_ok()
+    );
+}
+
+#[test]
+fn memory_undo_restores_snapshots_per_chat() {
+    let test_dir = TestDir::new("ai_vault_memory_undo");
+    let vault_root = test_dir.join("vault");
+    create_profile(&vault_root, profile("undo_prof", 1000), "").unwrap();
+
+    // Case 1: Modification of existing file (core.md)
+    add_profile_memory_fact(
+        &vault_root,
+        "undo_prof",
+        Some("chat-1"),
+        "core.md",
+        "First fact",
+    )
+    .unwrap();
+    add_profile_memory_fact(
+        &vault_root,
+        "undo_prof",
+        Some("chat-1"),
+        "core.md",
+        "Second fact",
+    )
+    .unwrap();
+
+    let current_core = read_profile_memory(&vault_root, "undo_prof", "core.md").unwrap();
+    assert!(current_core.contains("First fact") && current_core.contains("Second fact"));
+
+    // Undo chat-1: restores core.md to pre-chat state (DEFAULT_MEMORY_CORE)
+    let undone = undo_profile_memory(&vault_root, "undo_prof", Some("chat-1"), "core.md").unwrap();
+    assert_eq!(undone.after, DEFAULT_MEMORY_CORE);
+    assert_eq!(
+        read_profile_memory(&vault_root, "undo_prof", "core.md").unwrap(),
+        DEFAULT_MEMORY_CORE
+    );
+
+    // Case 2: Creation of a new topic file in chat-2
+    add_profile_memory_fact(
+        &vault_root,
+        "undo_prof",
+        Some("chat-2"),
+        "allergies.md",
+        "Pollen allergy",
+    )
+    .unwrap();
+    assert!(read_profile_memory(&vault_root, "undo_prof", "allergies.md").is_ok());
+
+    // Undo chat-2: deletes the newly created allergies.md
+    let undone_topic =
+        undo_profile_memory(&vault_root, "undo_prof", Some("chat-2"), "allergies.md").unwrap();
+    assert_eq!(undone_topic.after, "");
+    assert!(read_profile_memory(&vault_root, "undo_prof", "allergies.md").is_err());
+
+    // Case 3: Undo when no snapshot exists returns NotFound
+    assert!(matches!(
+        undo_profile_memory(
+            &vault_root,
+            "undo_prof",
+            Some("chat-nonexistent"),
+            "core.md"
+        ),
+        Err(AppError::NotFound(_))
+    ));
 }

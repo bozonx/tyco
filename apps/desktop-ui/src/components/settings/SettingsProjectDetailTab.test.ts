@@ -30,6 +30,7 @@ const project = (): AiProject => ({
 const profile = (permissions: AiProfile['projectPermissions']): AiProfile => ({
   id: 'writer',
   name: 'Writer',
+  memoryMode: 'auto',
   projectPermissions: permissions,
   createdAt: 1,
   updatedAt: 1,

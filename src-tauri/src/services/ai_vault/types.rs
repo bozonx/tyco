@@ -39,6 +39,50 @@ pub struct ProfileToolSettings {
     pub max_step_count: Option<u32>,
 }
 
+/// The memory mode of a profile.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default, ts_rs::TS)]
+#[serde(rename_all = "kebab-case")]
+pub enum ProfileMemoryMode {
+    #[default]
+    Auto,
+    Ask,
+    ReadOnly,
+    Off,
+}
+
+/// Summary of a memory file or topic in a profile's memory.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileMemoryTopic {
+    pub file: String,
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub description: Option<String>,
+    pub bytes: u64,
+    pub updated_at: u64,
+}
+
+/// A line matching a memory text search.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileMemorySearchResult {
+    pub file: String,
+    pub line_number: usize,
+    pub text: String,
+}
+
+/// The change applied to a profile memory file.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileMemoryChange {
+    pub file: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub before: Option<String>,
+    pub after: String,
+}
+
 /// A profile; its root instruction lives next to it in `SOUL.md`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -68,6 +112,9 @@ pub struct AiProfile {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub tools: Option<ProfileToolSettings>,
+    /// Long-term memory mode; defaults to `auto`.
+    #[serde(default)]
+    pub memory_mode: ProfileMemoryMode,
     pub created_at: u64,
     pub updated_at: u64,
 }

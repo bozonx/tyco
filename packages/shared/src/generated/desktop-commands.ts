@@ -30,6 +30,9 @@ import type {
   InstalledPlugin,
   JobCompletion,
   PluginPackagePreview,
+  ProfileMemoryChange,
+  ProfileMemorySearchResult,
+  ProfileMemoryTopic,
   ScriptActionRequest,
   ScriptExecutionResult,
   SecretStatus,
@@ -77,6 +80,15 @@ export interface DesktopCommands {
     }
     result: void
   }
+  add_ai_profile_memory_fact: {
+    args: {
+      profileId: string
+      chatId?: string | null
+      file: string
+      fact: string
+    }
+    result: ProfileMemoryChange
+  }
   add_editor_history_item: {
     args: { entry: EditorHistoryEntry }
     result: string | null
@@ -92,6 +104,7 @@ export interface DesktopCommands {
   cancel_net_task: { args: { id: number }; result: void }
   cancel_script_action: { args: { runId: string }; result: boolean }
   claim_external_job: { args: { id: string }; result: boolean }
+  clear_ai_profile_memory: { args: { profileId: string }; result: void }
   clear_chats: { args: { profileId?: string | null }; result: void }
   clear_editor_history: { args: undefined; result: void }
   close_socket: {
@@ -145,6 +158,10 @@ export interface DesktopCommands {
     result: InstalledPlugin
   }
   list_ai_file_roots: { args: { profileId: string }; result: Array<AiFileRoot> }
+  list_ai_profile_memory_topics: {
+    args: { profileId: string }
+    result: Array<ProfileMemoryTopic>
+  }
   list_ai_profiles: { args: undefined; result: Array<AiProfile> }
   list_ai_projects: { args: undefined; result: Array<AiProject> }
   list_chats: {
@@ -211,6 +228,10 @@ export interface DesktopCommands {
     args: { profileId: string; path: string }
     result: ArrayBuffer
   }
+  read_ai_profile_memory: {
+    args: { profileId: string; file: string }
+    result: string
+  }
   read_ai_profile_soul: { args: { id: string }; result: string }
   read_chat_image: {
     args: { id: string; profileId?: string | null }
@@ -227,6 +248,16 @@ export interface DesktopCommands {
     args: { id: string; title: string; profileId?: string | null }
     result: void
   }
+  replace_ai_profile_memory: {
+    args: {
+      profileId: string
+      chatId?: string | null
+      file: string
+      oldText: string
+      newText: string
+    }
+    result: ProfileMemoryChange
+  }
   replace_selection_with_command: { args: { commandId: string }; result: void }
   request_text_insertion_permission: {
     args: undefined
@@ -237,6 +268,15 @@ export interface DesktopCommands {
     result: void
   }
   restore_previous_plugin_package: { args: { id: string }; result: void }
+  rewrite_ai_profile_memory: {
+    args: {
+      profileId: string
+      chatId?: string | null
+      file: string
+      content: string
+    }
+    result: ProfileMemoryChange
+  }
   run_ai_file_tool: {
     args: { profileId: string; request: AiFileToolRequest }
     result: AiFileToolOutput
@@ -248,6 +288,10 @@ export interface DesktopCommands {
   save_user_config: {
     args: { userConfig: UserConfig; baseConfig: UserConfig }
     result: DesktopSnapshot
+  }
+  search_ai_profile_memory: {
+    args: { profileId: string; query: string }
+    result: Array<ProfileMemorySearchResult>
   }
   search_chats: {
     args: { query: string; profileId?: string | null }
@@ -302,6 +346,10 @@ export interface DesktopCommands {
       profileId?: string | null
     }
     result: void
+  }
+  undo_ai_profile_memory: {
+    args: { profileId: string; chatId?: string | null; file: string }
+    result: ProfileMemoryChange
   }
   uninstall_plugin_package: { args: { id: string }; result: void }
   write_ai_profile_soul: { args: { id: string; content: string }; result: void }

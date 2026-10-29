@@ -160,6 +160,7 @@ for (const decision of ['Allow', 'Deny'] as const) {
       id: 'browser-profile',
       name: 'Browser profile',
       modelId: 'browser-model',
+      memoryMode: 'auto' as const,
       projectPermissions: {},
       createdAt: 1,
       updatedAt: 1,
