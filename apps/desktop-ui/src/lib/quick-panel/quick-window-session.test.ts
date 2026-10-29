@@ -42,6 +42,10 @@ describe('quick window session', () => {
     expect(setup({ mode: 'commandLauncher' }).session.keepsOnFocusLoss()).toBe(
       false
     )
+    expect(setup({ mode: 'styling' }).session.keepsOnFocusLoss()).toBe(false)
+    expect(setup({ mode: 'transformation' }).session.keepsOnFocusLoss()).toBe(
+      false
+    )
     expect(
       setup({
         mode: 'commandLauncher',

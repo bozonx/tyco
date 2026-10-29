@@ -98,6 +98,12 @@ vi.mock('../../views/CorrectionView.vue', () => ({
 vi.mock('../../views/TranslateView.vue', () => ({
   default: { template: '<div />' },
 }))
+vi.mock('../../views/StylingView.vue', () => ({
+  default: { template: '<div class="styling-view" />' },
+}))
+vi.mock('../../views/TransformationView.vue', () => ({
+  default: { template: '<div class="transformation-view" />' },
+}))
 vi.mock('../../views/VoiceView.vue', () => ({
   default: defineComponent({
     setup() {
@@ -293,6 +299,23 @@ describe('quick overlay menus', () => {
       }
     )
 
+  it('renders styling and transformation views in quick overlay', async () => {
+    stubResizeObserver()
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.mode = 'styling'
+    desktopState.isWindowShown = true
+    const wrapper = mount(QuickOverlay)
+    try {
+      expect(wrapper.find('.styling-view').exists()).toBe(true)
+      desktopState.mode = 'transformation'
+      await nextTick()
+      expect(wrapper.find('.transformation-view').exists()).toBe(true)
+    } finally {
+      wrapper.unmount()
+      desktopState.mode = 'quickInput'
+    }
+  })
+
   it('keeps the menus of the other modes when clicking outside the card', async () => {
     stubResizeObserver()
     const desktopState = reactive(mocks.desktopState)
@@ -329,14 +352,18 @@ describe('quick overlay menus', () => {
     }
   }
 
-  it.each(['selectionActions', 'aiTasks', 'commandLauncher', 'translation'])(
-    'dismisses the %s menu when the focus goes elsewhere',
-    async (mode) => {
-      await loseFocus(mode)
-      expect(mocks.call).toHaveBeenCalledWith('hide_quick_window_on_blur')
-      expect(mocks.call).not.toHaveBeenCalledWith('hide_window')
-    }
-  )
+  it.each([
+    'selectionActions',
+    'aiTasks',
+    'commandLauncher',
+    'translation',
+    'styling',
+    'transformation',
+  ])('dismisses the %s menu when the focus goes elsewhere', async (mode) => {
+    await loseFocus(mode)
+    expect(mocks.call).toHaveBeenCalledWith('hide_quick_window_on_blur')
+    expect(mocks.call).not.toHaveBeenCalledWith('hide_window')
+  })
 
   it('keeps the step after the menu when the focus goes elsewhere', async () => {
     await loseFocus('selectionActions', 'translate')

@@ -64,6 +64,15 @@
           :key="activationId"
         />
       </div>
+      <div v-show="currentMode === 'styling'" class="quick-mode-layer">
+        <StylingView v-if="currentMode === 'styling'" :key="activationId" />
+      </div>
+      <div v-show="currentMode === 'transformation'" class="quick-mode-layer">
+        <TransformationView
+          v-if="currentMode === 'transformation'"
+          :key="activationId"
+        />
+      </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView v-if="currentMode === 'voiceChat'" />
       </div>
@@ -104,6 +113,8 @@ import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionView from '../../views/CorrectionView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import SelectionView from '../../views/SelectionView.vue'
+import StylingView from '../../views/StylingView.vue'
+import TransformationView from '../../views/TransformationView.vue'
 import TranslateView from '../../views/TranslateView.vue'
 import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
