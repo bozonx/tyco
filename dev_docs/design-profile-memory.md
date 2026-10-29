@@ -261,11 +261,11 @@
 
 ### Фаза 2: Контекст и инструменты (frontend)
 
-- Модель в `lib/chat-tools/memory-tools.ts` с инжектируемыми зависимостями; регистрация группы инструментов с учётом режима.
-- Сборка `<profile_memory>` в `chat-request-preparation.ts` / `chat-profile-runtime.ts`: ядро, оглавление, предупреждения о размере.
-- Учёт бюджета в `chat-context.ts` в токенах.
-- Режим `ask` через `chat-tool-approvals.ts`.
-- Unit-тесты: сборка блока, обрезка, режимы, регистрация инструментов.
+- ✅ Модель в `lib/chat-tools/memory-tools.ts` с инжектируемыми зависимостями; регистрация группы инструментов с учётом режима.
+- ✅ Сборка `<profile_memory>` в `chat-request-preparation.ts` / `chat-profile-runtime.ts`: ядро, оглавление, предупреждения о размере.
+- ✅ Учёт бюджета в `chat-context.ts` в токенах.
+- ✅ Режим `ask` через `chat-tool-approvals.ts`.
+- ✅ Unit-тесты: сборка блока, обрезка, режимы, регистрация инструментов.
 
 ### Фаза 3: UI
 

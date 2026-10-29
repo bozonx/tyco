@@ -5,6 +5,7 @@ import {
   type ToolSet,
 } from '@bozonx/ai-kit'
 import type {
+  ProfileMemoryMode,
   ProfileToolSettings,
   ProjectAccessMode,
   ToolGroupSettings,
@@ -83,6 +84,8 @@ export interface ChatToolContext {
   profileId: string | null
   modelId: string
   settings: ProfileToolSettings | undefined
+  /** Profile long-term memory mode */
+  memoryMode?: ProfileMemoryMode
   /**
    * How much the outputs of the turn's tools may add to the request in all;
    * unlimited when absent

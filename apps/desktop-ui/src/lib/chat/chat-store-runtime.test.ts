@@ -300,6 +300,29 @@ describe('chat-store-runtime', () => {
     })
     runtime.dispose()
   })
+
+  it('incorporates memory into instructions and reserves tool steps for active memory', async () => {
+    const deps = runtimeDependencies('writer')
+    vi.mocked(deps.invoke).mockImplementation(async (command) => {
+      if (command === 'read_ai_profile_memory') return '# Core Memory\n- Fact'
+      if (command === 'list_ai_profile_memory_topics') return []
+      return []
+    })
+    const runtime = createChatStoreRuntime(deps)
+    await runtime.openLastOrNewChat()
+
+    deps.input.setValue('Hello')
+    await runtime.sendInput()
+    await vi.waitFor(() => expect(runtime.isGenerating.value).toBe(false))
+
+    expect(deps.llmActions.sendChatMessage).toHaveBeenCalledWith(
+      'Hello',
+      [],
+      expect.stringContaining('<profile_memory>'),
+      expect.objectContaining({ modelId: 'ollama-qwen' })
+    )
+    runtime.dispose()
+  })
 })
 
 it('suppresses state, navigation and focus from a load completed after disposal', async () => {

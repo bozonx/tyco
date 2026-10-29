@@ -92,14 +92,26 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   const profile = computed(() =>
     profileId ? deps.getProfile(profileId) : undefined
   )
-  const { soul, lastProfileChatId, refreshProfile, prepareProfile } =
-    createChatProfileRuntime({
-      profileId,
-      loadChatHistory: () => history.loadChatHistory(),
-      refreshProfile: (id) => deps.refreshProfile(id),
-      readSoul: (id) => deps.readSoul(id),
-      warn,
-    })
+  const {
+    soul,
+    lastProfileChatId,
+    memoryBlock,
+    isCoreClipped,
+    memoryWarnings,
+    fullInstructions,
+    refreshProfile,
+    prepareProfile,
+  } = createChatProfileRuntime({
+    profileId,
+    loadChatHistory: () => history.loadChatHistory(),
+    refreshProfile: (id) => deps.refreshProfile(id),
+    readSoul: (id) => deps.readSoul(id),
+    readCoreMemory: (id) =>
+      deps.invoke('read_ai_profile_memory', { profileId: id, file: 'core.md' }),
+    listMemoryTopics: (id) =>
+      deps.invoke('list_ai_profile_memory_topics', { profileId: id }),
+    warn,
+  })
 
   const modelOptions = computed(() =>
     chatModelOptions(
@@ -120,6 +132,8 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     profileId,
     invoke: deps.invoke,
     canUseTools: () => selectedModel.value?.canUseTools ?? false,
+    getMemoryMode: () => profile.value?.memoryMode,
+    getChatId: () => model.currentChatParams.value.id,
     warn,
   })
 
@@ -160,7 +174,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   })
 
   const createProfileScope = (id: string): ChatScope => ({
-    instructions: () => soul.value,
+    instructions: () => fullInstructions.value,
     rules: () => undefined,
     turnOptions: async (modelId, toolOutputBudgetCharacters) => {
       const stored = await refreshProfile()
@@ -168,7 +182,8 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
         ...(await chatTools.turnTools(
           modelId,
           toolOutputBudgetCharacters,
-          stored?.tools
+          stored?.tools,
+          stored?.memoryMode
         )),
         temperature: stored?.temperature,
         maxOutputTokens: stored?.maxOutputTokens,
@@ -292,6 +307,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
             reservesToolSteps: chatTools.mayOfferTools({
               canUseTools: picked.canUseTools,
               settings: profileId ? profile.value?.tools : undefined,
+              memoryMode: profileId ? profile.value?.memoryMode : undefined,
             }),
           }
         : null
@@ -370,6 +386,10 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     answerToolApproval: chatTools.answerApproval,
     /** The profile this chat belongs to; null for "Ask AI" */
     profileId,
+    soul,
+    memoryBlock,
+    isCoreClipped,
+    memoryWarnings,
     /** The chats listed in the sidebar */
     history,
     dispose,

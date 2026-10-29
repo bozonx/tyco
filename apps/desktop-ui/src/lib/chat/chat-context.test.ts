@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { OMITTED_TOOL_RESULT, trimChatContext } from './chat-context'
+import {
+  CORE_MEMORY_HARD_LIMIT_TOKENS,
+  CORE_MEMORY_WARN_TOKENS,
+  estimateMemoryTokens,
+  memoryBudgetInCharacters,
+  OMITTED_TOOL_RESULT,
+  tokensToCharacters,
+  TOPIC_MEMORY_HARD_LIMIT_TOKENS,
+  TOPIC_MEMORY_WARN_TOKENS,
+  trimChatContext,
+} from './chat-context'
 
 describe('trimChatContext', () => {
   it('keeps complete recent turns within the context budget', () => {
@@ -114,5 +124,20 @@ describe('tool steps in the context', () => {
     expect(trimChatContext(messages, 10_000)[1].parts?.[1]).toMatchObject({
       output: 'result',
     })
+  })
+})
+
+describe('memory token limits and budget', () => {
+  it('exposes memory limits in tokens', () => {
+    expect(CORE_MEMORY_WARN_TOKENS).toBe(1000)
+    expect(CORE_MEMORY_HARD_LIMIT_TOKENS).toBe(1500)
+    expect(TOPIC_MEMORY_WARN_TOKENS).toBe(2500)
+    expect(TOPIC_MEMORY_HARD_LIMIT_TOKENS).toBe(4000)
+  })
+
+  it('converts tokens and estimates memory budget', () => {
+    expect(tokensToCharacters(1000)).toBe(3000)
+    expect(estimateMemoryTokens('x'.repeat(300))).toBe(100)
+    expect(memoryBudgetInCharacters(450)).toBe(450)
   })
 })

@@ -4,8 +4,22 @@ import {
   imageBudgetCharacters,
   MAX_CHAT_IMAGES_COUNT,
 } from './chat-image-input'
+import {
+  buildProfileMemoryBlock,
+  clipCoreMemory,
+  formatTopicsList,
+  type ProfileMemoryContext,
+} from './chat-profile-memory'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
+
+export {
+  buildProfileMemoryBlock,
+  clipCoreMemory,
+  formatTopicsList,
+  type ProfileMemoryContext,
+}
+
 /**
  * The share of the history budget kept for the results of the turn's own tool
  * steps, which arrive after the request is sized

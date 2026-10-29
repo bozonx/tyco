@@ -1,4 +1,8 @@
-import { DEFAULT_TOOL_STEP_COUNT, type ProfileToolSettings } from '@tyco/shared'
+import {
+  DEFAULT_TOOL_STEP_COUNT,
+  type ProfileMemoryMode,
+  type ProfileToolSettings,
+} from '@tyco/shared'
 
 import type { AiChatTools } from '../llm/llm-request'
 import { createChatToolApprovals } from './chat-tool-approvals'
@@ -8,6 +12,7 @@ import {
   type ChatToolProvider,
 } from './chat-tool-registry'
 import { withDebugToolGroup } from './debug-chat-tools'
+import { withMemoryToolGroup } from './memory-tools'
 
 export interface ChatToolsSessionDependencies {
   providers: () => readonly ChatToolProvider[]
@@ -25,6 +30,8 @@ export interface ChatToolsRequest {
   canUseTools: boolean
   /** The profile's settings; "Ask AI" has none, and so no tools */
   settings: ProfileToolSettings | undefined
+  /** The profile's long-term memory mode */
+  memoryMode?: ProfileMemoryMode
   /** How much the outputs of the turn's tools may add to the request */
   outputBudgetCharacters?: number
 }
@@ -47,13 +54,15 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     request: ChatToolsRequest
   ): Promise<AiChatTools | undefined> => {
     if (!request.canUseTools) return undefined
-    const settings = deps.isDebugEnabled?.()
+    const baseSettings = deps.isDebugEnabled?.()
       ? withDebugToolGroup(request.settings)
       : request.settings
+    const settings = withMemoryToolGroup(baseSettings, request.memoryMode)
     const tools = await registry.resolve({
       profileId: request.profileId,
       modelId: request.modelId,
       settings,
+      memoryMode: request.memoryMode,
       outputBudgetCharacters: request.outputBudgetCharacters,
     })
     if (!tools) return undefined
@@ -80,10 +89,11 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
    * enough to keep part of the context for the steps
    */
   const mayOfferTools = (
-    request: Pick<ChatToolsRequest, 'canUseTools' | 'settings'>
+    request: Pick<ChatToolsRequest, 'canUseTools' | 'settings' | 'memoryMode'>
   ) =>
     request.canUseTools &&
     (deps.isDebugEnabled?.() === true ||
+      (request.memoryMode !== undefined && request.memoryMode !== 'off') ||
       Object.values(request.settings?.groups ?? {}).some(
         (group) => group.isEnabled && group.access !== 'deny'
       ))

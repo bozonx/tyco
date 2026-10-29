@@ -59,4 +59,32 @@ describe('desktop-chat-tools', () => {
     expect(disabled.canUseTools).toBe(false)
     expect(disabled.tools).toBeUndefined()
   })
+
+  it('resolves memory tools and delegates memory operations to invoke', async () => {
+    const invoke = vi.fn(async (command: string) => {
+      if (command === 'read_ai_profile_memory') return '# Core'
+      if (command === 'list_ai_profile_memory_topics') return []
+      return []
+    }) as unknown as DesktopChatToolsInvoke
+
+    const chatTools = createDesktopChatTools({
+      profileId: 'writer',
+      invoke,
+      canUseTools: () => true,
+      getMemoryMode: () => 'auto',
+      getChatId: () => 'chat-456',
+      warn: vi.fn(),
+      isDebugEnabled: () => false,
+    })
+
+    expect(
+      chatTools.mayOfferTools({ canUseTools: true, memoryMode: 'auto' })
+    ).toBe(true)
+
+    const result = await chatTools.turnTools('gpt-4', 5000, undefined, 'auto')
+    expect(result.canUseTools).toBe(true)
+    const toolNames = Object.keys(result.tools!.tools!.tools)
+    expect(toolNames).toContain('memory_read')
+    expect(toolNames).toContain('memory_add')
+  })
 })
