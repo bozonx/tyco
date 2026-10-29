@@ -390,6 +390,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     memoryBlock,
     isCoreClipped,
     memoryWarnings,
+    refreshProfile,
     /** The chats listed in the sidebar */
     history,
     dispose,

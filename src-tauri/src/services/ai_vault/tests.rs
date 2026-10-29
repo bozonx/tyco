@@ -769,4 +769,23 @@ fn memory_undo_restores_snapshots_per_chat() {
         ),
         Err(AppError::NotFound(_))
     ));
+
+    // Case 4: Search results are bounded by MAX_MEMORY_SEARCH_RESULTS
+    let mut large_topic_content = String::new();
+    for i in 0..150 {
+        large_topic_content.push_str(&format!("- repeated entry {}\n", i));
+    }
+    rewrite_profile_memory(
+        &vault_root,
+        "undo_prof",
+        None,
+        "large_topic.md",
+        &large_topic_content,
+    )
+    .unwrap();
+    let search_capped = search_profile_memory(&vault_root, "undo_prof", "repeated entry").unwrap();
+    assert_eq!(
+        search_capped.len(),
+        crate::services::ai_vault::memory::MAX_MEMORY_SEARCH_RESULTS
+    );
 }

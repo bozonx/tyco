@@ -18,6 +18,7 @@ pub const DEFAULT_MEMORY_CORE: &str =
 pub const MAX_MEMORY_FACT_LEN: usize = 4_000;
 pub const MAX_MEMORY_FILE_BYTES: usize = 64 * 1024;
 pub const MAX_MEMORY_TOPIC_FILES: usize = 50;
+pub const MAX_MEMORY_SEARCH_RESULTS: usize = 100;
 
 static LAST_READ_VERSIONS: LazyLock<RwLock<HashMap<(String, String), String>>> =
     LazyLock::new(Default::default);
@@ -560,7 +561,7 @@ pub fn search_profile_memory(
         files_to_search.extend(topic_entries);
     }
 
-    for (file_name, path) in files_to_search {
+    'search_loop: for (file_name, path) in files_to_search {
         if let Ok(content) = fs::read_to_string(&path) {
             for (line_idx, line) in content.lines().enumerate() {
                 if line.to_lowercase().contains(&query_lower) {
@@ -569,6 +570,9 @@ pub fn search_profile_memory(
                         line_number: line_idx + 1,
                         text: line.to_string(),
                     });
+                    if results.len() >= MAX_MEMORY_SEARCH_RESULTS {
+                        break 'search_loop;
+                    }
                 }
             }
         }

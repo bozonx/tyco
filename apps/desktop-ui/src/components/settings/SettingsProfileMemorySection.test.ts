@@ -27,6 +27,30 @@ vi.mock('../../stores/llm', () => ({
   useLlmStore: () => ({ client: { run: mocks.runLlm } }),
 }))
 
+vi.mock('../../stores/desktop', () => ({
+  useDesktopStore: () => ({
+    userConfig: {
+      llm: {
+        providers: [
+          {
+            id: 'p1',
+            type: 'openaiCompatible',
+            name: 'Local',
+            baseUrl: 'http://localhost:11434/v1',
+          },
+        ],
+        models: [
+          { id: 'fallback-model', providerId: 'p1', providerModelId: 'm1' },
+        ],
+      },
+    },
+  }),
+}))
+
+vi.mock('../../stores/secrets', () => ({
+  useSecretsStore: () => ({ secrets: {} }),
+}))
+
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: mocks.toastKey, toastError: mocks.toastError }),
 }))
@@ -195,6 +219,51 @@ describe('SettingsProfileMemorySection', () => {
     expect(mocks.toastKey).toHaveBeenCalledWith(
       'settings.profileMemoryClearSuccess',
       'info'
+    )
+  })
+
+  it('compacts memory using fallback model when profile.modelId is undefined', async () => {
+    mocks.listMemoryTopics.mockResolvedValue([
+      { file: 'core.md', title: 'Core', bytes: 100, updatedAt: 1000 },
+    ])
+    mocks.readMemory.mockResolvedValue('# Core\n- Fact 1\n- Fact 1\n')
+    mocks.runLlm.mockResolvedValue('# Core\n- Fact 1\n')
+
+    const wrapper = mount(SettingsProfileMemorySection, {
+      props: { profile: { ...baseProfile, modelId: undefined } },
+      global: {
+        stubs: {
+          SettingsSection: { template: '<div><slot /></div>' },
+          FieldRow: { template: '<div><slot /></div>' },
+          FieldSelect: true,
+          SettingsEntityItem: {
+            template: '<div><slot name="actions" /></div>',
+          },
+          Badge: true,
+          IconButton: {
+            props: ['disabled'],
+            template:
+              '<button class="icon-btn" :disabled="disabled" @click="$emit(\'click\')"></button>',
+          },
+          Button: true,
+          BaseDialog: true,
+          ConfirmModal: true,
+          Diff: true,
+        },
+      },
+    })
+
+    await vi.waitFor(() => {
+      expect(wrapper.findAll('.icon-btn').length).toBeGreaterThan(0)
+    })
+
+    const compactBtn = wrapper.findAll('.icon-btn')[0]
+    await compactBtn.trigger('click')
+
+    expect(mocks.runLlm).toHaveBeenCalledWith(
+      'chat',
+      expect.anything(),
+      expect.objectContaining({ modelId: 'fallback-model' })
     )
   })
 })

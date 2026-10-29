@@ -333,6 +333,18 @@ describe('memory-tools', () => {
         after: '# Health\n- Allergy to dust\n- Lactose intolerance\n',
       })
 
+      // When fact already starts with a bullet dash
+      const bulletPreview = await addTool.preview!(
+        { file: 'health.md', fact: '- Already has dash' },
+        new AbortController().signal
+      )
+      expect(bulletPreview).toEqual({
+        kind: 'file-change',
+        path: 'memory/health.md',
+        before: '# Health\n- Allergy to dust',
+        after: '# Health\n- Allergy to dust\n- Already has dash\n',
+      })
+
       // When file is new
       vi.mocked(deps.readMemory).mockRejectedValueOnce(new Error('not found'))
       const newFilePreview = await addTool.preview!(

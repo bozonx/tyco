@@ -293,9 +293,14 @@ export function createMemoryToolProvider(
                 const before = await deps
                   .readMemory(profileId, file)
                   .catch(() => null)
+                const trimmedFact = fact.trim()
+                const formattedFact =
+                  trimmedFact.startsWith('-') || trimmedFact.startsWith('*')
+                    ? trimmedFact
+                    : `- ${trimmedFact}`
                 const after = before
-                  ? `${before.trimEnd()}\n- ${fact}\n`
-                  : `# ${file.replace(/\.md$/, '')}\n\n- ${fact}\n`
+                  ? `${before.trimEnd()}\n${formattedFact}\n`
+                  : `# ${file.replace(/\.md$/, '')}\n\n${formattedFact}\n`
                 return {
                   kind: 'file-change',
                   path: `memory/${file}`,

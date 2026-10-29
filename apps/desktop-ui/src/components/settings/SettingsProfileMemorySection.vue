@@ -200,6 +200,10 @@ import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { compactMemoryContent } from '../../lib/ai-profiles/memory-compaction'
 import {
+  chatModelOptions,
+  pickScopedChatModel,
+} from '../../lib/chat/chat-llm-selection'
+import {
   CORE_MEMORY_HARD_LIMIT_TOKENS,
   CORE_MEMORY_WARN_TOKENS,
   TOPIC_MEMORY_HARD_LIMIT_TOKENS,
@@ -207,8 +211,11 @@ import {
   estimateMemoryTokens,
   formatMemoryTopicSize,
 } from '../../lib/chat/chat-profile-memory'
+import { normalizeLlmConfig } from '../../lib/llm/llm-config'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
+import { useDesktopStore } from '../../stores/desktop'
 import { useLlmStore } from '../../stores/llm'
+import { useSecretsStore } from '../../stores/secrets'
 import AppIcon from '../common/AppIcon.vue'
 import Badge from '../common/Badge.vue'
 import BaseDialog from '../common/BaseDialog.vue'
@@ -223,10 +230,11 @@ import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
-import type {
-  AiProfile,
-  ProfileMemoryMode,
-  ProfileMemoryTopic,
+import {
+  type AiProfile,
+  type ProfileMemoryMode,
+  type ProfileMemoryTopic,
+  llmSecretId,
 } from '@tyco/shared'
 
 const props = defineProps<{ profile: AiProfile }>()
@@ -239,6 +247,8 @@ const { t } = useI18n()
 const { toastKey, toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 const llmStore = useLlmStore()
+const desktopStore = useDesktopStore()
+const secretsStore = useSecretsStore()
 
 const modeOptions = computed(() => [
   { id: 'auto', name: t('settings.profileMemoryModeAuto') },
@@ -404,14 +414,27 @@ async function compactCurrentEditor() {
   }
 }
 
+function resolveCompactionModelId(): string | undefined {
+  if (props.profile.modelId) return props.profile.modelId
+  const config = normalizeLlmConfig(desktopStore.userConfig?.llm)
+  const options = chatModelOptions(config, (id) =>
+    Boolean(secretsStore.secrets[llmSecretId(id)])
+  )
+  return (
+    pickScopedChatModel(options, {
+      profileId: props.profile.id,
+      profileModelId: props.profile.modelId,
+    })?.id ?? options[0]?.id
+  )
+}
+
 async function runCompactionFlow(file: string, content: string) {
+  const modelId = resolveCompactionModelId()
   const result = await compactMemoryContent({
     file,
     content,
     runModel: async (prompt) => {
-      return await llmStore.client.run('chat', prompt, {
-        modelId: props.profile.modelId,
-      })
+      return await llmStore.client.run('chat', prompt, { modelId })
     },
   })
 
