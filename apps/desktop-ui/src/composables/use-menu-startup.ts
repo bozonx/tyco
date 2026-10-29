@@ -1,10 +1,15 @@
 import { onMounted } from 'vue'
 
-import { runMenuStartup } from '../lib/modals/menu-startup'
-
 /** Clears the startup parameter before running so returning to the step waits. */
-export function useMenuStartup(deps: Parameters<typeof runMenuStartup>[0]) {
+export function useMenuStartup(deps: {
+  getValue: () => string | undefined
+  consume: () => void
+  run: (value: string) => Promise<void>
+}) {
   onMounted(() => {
-    void runMenuStartup(deps)
+    const value = deps.getValue()
+    if (!value) return
+    deps.consume()
+    void deps.run(value)
   })
 }

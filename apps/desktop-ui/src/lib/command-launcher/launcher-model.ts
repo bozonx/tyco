@@ -1,45 +1,29 @@
-import { errorMessage } from '@tyco/shared/value-guards'
 import { computed, ref, shallowRef } from 'vue'
 
 import type {
   CommandConfig,
   LauncherPageConfig,
-  CommandRunRecord,
-  CommandRunSource,
   LauncherRequest,
 } from '@tyco/shared'
 
 import {
-  commandAfterRun,
   commandLabel,
   commandTakesText,
   isCommandAvailable,
 } from '../commands/command-runtime'
-import { commandRunRecord, logCommandRun } from '../commands/command-run-record'
-import type {
-  InvocationOptions,
-  InvocationOutcome,
-} from '../invocation/invocation-types'
 import { moveHighlight } from '../menu-query/menu-query'
 import { SHORTCUT_SLOT_COUNT, slotList } from '../shortcut-slots/shortcut-slots'
 import type { ToolLookup } from '../tools/tool-types'
+import {
+  createLauncherExecution,
+  type LauncherExecutionDependencies,
+  type LauncherStage,
+} from './launcher-execution'
+
+export type { LauncherStage } from './launcher-execution'
 
 /** The first commands of the list are run with the keys `1`–`9` */
 const LAUNCHER_KEY_COUNT = 9
-
-/**
- * What the overlay shows:
- *
- * - `list` — the commands, with the search;
- * - `prepare` — one command before it runs: the text it takes, typed or taken
- *   from the selection. `autoRun`: the command runs as soon as the selection
- *   comes; not after a failed run, whose text stays for another try;
- * - `running` — the command is on its way.
- */
-export type LauncherStage =
-  | { kind: 'list' }
-  | { kind: 'prepare'; command: CommandConfig; autoRun: boolean }
-  | { kind: 'running'; command: CommandConfig }
 
 /** Whether the overlay offers the command */
 export function isLauncherCommand(
@@ -100,37 +84,17 @@ export function searchCommands(
     .map((item) => item.command)
 }
 
-export interface CommandLauncherDependencies {
-  reportError?: (error: unknown) => void
+export interface CommandLauncherDependencies extends LauncherExecutionDependencies {
   /** The tools the commands run */
   tools: ToolLookup
-  claimJob?: (id: string) => Promise<boolean>
-  finishJob?: (
-    id: string,
-    outcome: InvocationOutcome
-  ) => Promise<InvocationOutcome | void>
   /** The command library, in the order the user gave it */
   commands: () => readonly CommandConfig[] | undefined
   /** The 15 slots of the command overlay */
   launcherPages: () => readonly LauncherPageConfig[]
   /** The text selected in the window the overlay was opened over */
   selectedText: () => string | null | undefined
-  /** Runs the command and tells the user how it went */
-  run: (
-    command: CommandConfig,
-    text: string,
-    options?: InvocationOptions
-  ) => Promise<InvocationOutcome>
-  /**
-   * Hands a command whose output replaces the selection over to a selection
-   * run: the overlay hides, and the selection is replaced where it is
-   */
-  replaceSelection?: (command: CommandConfig) => Promise<void>
   /** Tells that a command of an external call is gone from the library */
   commandMissing?: (commandId: string) => void
-  /** Records a text that leaves the app with a command */
-  saveOutput?: (text: string) => Promise<void>
-  logRun?: (record: CommandRunRecord) => Promise<void> | void
 }
 
 /** The command overlay opened from the keyboard: list, search, keys, input */
@@ -166,11 +130,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const currentSelection = () =>
     selectionAllowed() ? (deps.selectedText() ?? '') : ''
   const selection = computed(currentSelection)
-  /** Where the current command came from: the list or an external call */
-  let source: CommandRunSource = 'launcher'
-  let controller: AbortController | null = null
-  let externalCall: LauncherRequest | null = null
-
   const commands = computed(() =>
     (deps.commands() ?? []).filter((command) =>
       isLauncherCommand(command, deps.tools)
@@ -202,16 +161,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   }
 
   const reset = () => {
-    if (externalCall?.jobId)
-      void deps.finishJob?.(externalCall.jobId, {
-        success: false,
-        cancelled: true,
-        message: 'Cancelled',
-      })
-    externalCall = null
-    controller?.abort()
-    controller = null
-    source = 'launcher'
+    execution.reset()
     pageIndex.value = 0
     query.value = ''
     highlightedCommandIndex.value = 0
@@ -221,6 +171,14 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     selectionDropped.value = false
     stage.value = { kind: 'list' }
   }
+
+  const execution = createLauncherExecution(deps, {
+    stage,
+    inputText,
+    fromSelection: () => fromSelection,
+    reset,
+  })
+  const execute = execution.execute
 
   /** The commands run without the selection until the next activation */
   const dropSelection = () => {
@@ -238,93 +196,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       delta,
       filteredCommands.value.length
     )
-  }
-
-  const log = (
-    command: CommandConfig,
-    input: string | null,
-    outcome: InvocationOutcome
-  ) => {
-    logCommandRun(deps, commandRunRecord(command, source, input, outcome))
-  }
-
-  const execute = async (
-    command: CommandConfig,
-    input: string | null
-  ): Promise<InvocationOutcome> => {
-    if (
-      source === 'launcher' &&
-      commandAfterRun(command, source) === 'insertIntoWindow' &&
-      input !== null &&
-      fromSelection &&
-      deps.replaceSelection
-    ) {
-      // the selection run reports and logs the outcome itself
-      reset()
-      await deps.replaceSelection(command)
-      return { success: true }
-    }
-    const call = externalCall
-    const running: LauncherStage = { kind: 'running', command }
-    stage.value = running
-    const runController = new AbortController()
-    controller = runController
-    if (call?.jobId && deps.claimJob && !(await deps.claimJob(call.jobId))) {
-      // another window has the job, or it is over: not ours to finish
-      if (externalCall === call) externalCall = null
-      reset()
-      return { success: false, cancelled: true }
-    }
-    if (disposed || runController.signal.aborted)
-      return { success: false, cancelled: true }
-    if (input !== null) {
-      // the history keeps the text even when the command fails
-      await deps
-        .saveOutput?.(input)
-        .catch((error: unknown) => deps.reportError?.(error))
-    }
-    if (disposed || runController.signal.aborted)
-      return { success: false, cancelled: true }
-    let outcome: InvocationOutcome
-    try {
-      outcome = await deps.run(command, input ?? '', {
-        signal: runController.signal,
-        source,
-        input: call?.input,
-      })
-    } catch (error) {
-      outcome = runController.signal.aborted
-        ? { success: false, cancelled: true, message: 'Cancelled' }
-        : { success: false, message: errorMessage(error) }
-    }
-    if (disposed) return { success: false, cancelled: true }
-    if (controller === runController) controller = null
-    if (call?.jobId) {
-      // a reset meanwhile has finished the job as cancelled already
-      if (externalCall === call) {
-        externalCall = null
-        outcome = (await deps.finishJob?.(call.jobId, outcome)) ?? outcome
-      } else {
-        outcome = { success: false, cancelled: true, message: 'Cancelled' }
-      }
-      if (disposed) return { success: false, cancelled: true }
-      log(command, input, outcome)
-      if (stage.value === running) reset()
-      return outcome
-    }
-    log(command, input, outcome)
-    // a new activation started over meanwhile
-    if (stage.value !== running) return outcome
-    if (outcome.success) {
-      reset()
-    } else if (input !== null) {
-      // the text stays for another try
-      inputText.value = input
-      stage.value = { kind: 'prepare', command, autoRun: false }
-    } else {
-      stage.value = { kind: 'list' }
-    }
-    return outcome
   }
 
   /** Runs the command on `given`, or first asks for its text when there is none */
@@ -348,7 +219,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   /** Runs a command of the list on the selection */
   const pick = async (command: CommandConfig): Promise<void> => {
     if (disposed || stage.value.kind === 'running') return
-    source = 'launcher'
+    execution.useLauncher()
     await start(command, currentSelection(), true)
   }
 
@@ -371,14 +242,13 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       if (!disposed) deps.commandMissing?.(call.commandId)
       return
     }
-    source = 'external'
-    externalCall = call
+    execution.prepare(call)
     await start(command, call.text ?? '', false)
   }
 
   /** Stops the running command; it is reported as cancelled */
   const cancel = () => {
-    if (stage.value.kind === 'running') controller?.abort()
+    if (stage.value.kind === 'running') execution.cancel()
   }
 
   const pickHighlighted = () => {
@@ -423,12 +293,11 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   /** Esc: from a prepared command back to the list; `false` at the list */
   const back = (): boolean => {
     if (stage.value.kind !== 'prepare') return false
-    if (externalCall?.jobId) {
+    if (execution.externalCall?.jobId) {
       reset()
       return true
     }
-    externalCall = null
-    source = 'launcher'
+    execution.prepare(null)
     stage.value = { kind: 'list' }
     return true
   }
@@ -442,7 +311,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const selectionArrived = async (arrived: string | null | undefined) => {
     const current = stage.value
     if (
-      source === 'launcher' &&
+      execution.source === 'launcher' &&
       selectionAllowed() &&
       current.kind === 'prepare' &&
       commandTakesText(current.command, deps.tools) &&
@@ -459,6 +328,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const dispose = () => {
     if (disposed) return
     disposed = true
+    execution.dispose()
     reset()
   }
   return {
@@ -486,10 +356,10 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     request,
     cancel,
     cancelExternal: (id: string) => {
-      if (externalCall?.jobId === id) reset()
+      if (execution.externalCall?.jobId === id) reset()
     },
     dismissExternal: () => {
-      if (externalCall?.jobId) reset()
+      if (execution.externalCall?.jobId) reset()
     },
     pickHighlighted,
     pickByKey,

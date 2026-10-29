@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createChatScroll } from './chat-scroll'
 
-function fixture() {
+function fixture(motion: string | undefined) {
   const element = {
     scrollHeight: 1000.4,
     scrollTop: 0,
@@ -10,7 +10,7 @@ function fixture() {
   }
   const scroll = createChatScroll({
     getElement: () => element,
-    getMotion: () => 'reduce',
+    getMotion: () => motion,
     afterRender: async () => {},
   })
   return { element, scroll }
@@ -18,7 +18,7 @@ function fixture() {
 
 describe('chat scrolling', () => {
   it('preserves the reading position and resumes following near the bottom', async () => {
-    const { element, scroll } = fixture()
+    const { element, scroll } = fixture('reduce')
     scroll.handleScroll()
     expect(scroll.pinnedToBottom.value).toBe(false)
     expect(scroll.showScrollButton.value).toBe(true)
@@ -38,13 +38,25 @@ describe('chat scrolling', () => {
   })
 
   it('respects reduced motion for an explicit scroll', async () => {
-    const { element, scroll } = fixture()
+    const { element, scroll } = fixture('reduce')
     await scroll.scrollToBottom('smooth')
     expect(element.scrollTo).toHaveBeenCalledWith({
       top: 600,
       behavior: 'instant',
     })
   })
+
+  it.each(['full', undefined])(
+    'keeps smooth scrolling when motion is %s',
+    async (motion) => {
+      const { element, scroll } = fixture(motion)
+      await scroll.scrollToBottom('smooth')
+      expect(element.scrollTo).toHaveBeenCalledWith({
+        top: 600,
+        behavior: 'smooth',
+      })
+    }
+  )
 
   it('does not touch a detached element after rendering finishes', async () => {
     let finish!: () => void

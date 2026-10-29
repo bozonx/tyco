@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import { resolveScrollBehavior } from '../ui/scroll-behavior'
 
 /** Closer to the bottom than this, new content keeps the view at the bottom */
 const PINNED_DISTANCE_PX = 80
@@ -38,7 +37,7 @@ export function createChatScroll(deps: {
     if (!element || disposed) return
     element.scrollTo({
       top: Math.round(Math.max(0, element.scrollHeight - element.clientHeight)),
-      behavior: resolveScrollBehavior(behavior, deps.getMotion()),
+      behavior: deps.getMotion() === 'reduce' ? 'instant' : behavior,
     })
   }
 

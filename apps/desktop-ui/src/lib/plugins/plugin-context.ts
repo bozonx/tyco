@@ -1,34 +1,23 @@
 import {
   clonePluginValue,
-  validateContribution,
-  validateToolResult,
-  validateToolSchema,
-  validateParseResult,
   type PluginDisposer,
   type ToolbarContribution,
   type ToolResult,
-  validatePluginFields,
   isPluginError,
   PluginError,
   PluginCancellation,
   type PluginCapability,
   type PluginContext,
-  type ToolDefinition,
   type EditorInputSnapshot,
-  MAX_CONTRIBUTION_BATCH,
 } from '@tyco/plugin-sdk'
 
 import type { ActionItem, EditItem, ToolbarItem } from '../../types/plugins'
 import { createPluginAction } from './plugin-action'
 import type { ToolDefinition as HostToolDefinition } from '../tools/tool-types'
 import type { PluginLifecycle } from './plugin-manager'
-import {
-  pluginIconName,
-  pluginMessageKey,
-  scopeConfigFields,
-} from './plugin-resources'
-
-const MAX_TOTAL_CONTRIBUTIONS = 1024
+import { pluginMessageKey } from './plugin-resources'
+import { createPluginRegistration } from './plugin-registration'
+import { createPluginToolAdapter } from './plugin-tool-adapter'
 
 export interface PluginContextDependencies {
   registerActionsItems(items: ActionItem[]): PluginDisposer | void
@@ -87,7 +76,6 @@ export function createPluginContext(
   lifecycle: PluginLifecycle,
   deps: PluginContextDependencies
 ): PluginContext {
-  const ids = new Set<string>()
   const key = (value: string) => pluginMessageKey(id, value)!
   const check = (capability?: PluginCapability) => {
     if (lifecycle.signal.aborted)
@@ -104,70 +92,9 @@ export function createPluginContext(
       check(capability)
       return fn(...args)
     }
-  function scope<T extends { id?: string; labelKey?: string }>(
-    kind: 'action' | 'edit' | 'toolbar' | 'tool',
-    items: T[]
-  ): T[] {
-    check()
-    if (
-      !Array.isArray(items) ||
-      items.length > MAX_CONTRIBUTION_BATCH ||
-      ids.size + items.length > MAX_TOTAL_CONTRIBUTIONS
-    )
-      throw new Error('Too many plugin contributions')
-    const next = new Set(ids)
-    const result = items.map((item) => {
-      validateContribution(item, kind)
-      const local = `${kind}:${item.id}`
-      if (next.has(local)) throw new Error(`Duplicate ${kind} ID: ${item.id}`)
-      next.add(local)
-      return {
-        ...item,
-        ownerPluginId: id,
-        id: `${id}:${item.id}`,
-        labelKey: item.labelKey ? key(item.labelKey) : undefined,
-        icon: pluginIconName(
-          id,
-          (item as { icon?: string }).icon,
-          lifecycle.iconPrefix
-        ),
-      }
-    })
-    for (const value of next) ids.add(value)
-    return result
-  }
-  function registration<T extends { id?: string; labelKey?: string }, R>(
-    kind: 'action' | 'edit' | 'toolbar' | 'tool',
-    items: T[],
-    build: (scoped: T[]) => R[],
-    register: (items: R[]) => PluginDisposer | void
-  ): PluginDisposer {
-    const scoped = scope(kind, items)
-    const reserved = items.map((item) => `${kind}:${item.id}`)
-    const releaseIds = () => {
-      for (const localId of reserved) ids.delete(localId)
-    }
-    try {
-      const dispose = register(build(scoped))
-      let released = false
-      return () => {
-        if (released || lifecycle.signal.aborted) return undefined
-        released = true
-        try {
-          const result = dispose?.()
-          if (result) return Promise.resolve(result).finally(releaseIds)
-          releaseIds()
-          return undefined
-        } catch (error) {
-          releaseIds()
-          throw error
-        }
-      }
-    } catch (error) {
-      releaseIds()
-      throw error
-    }
-  }
+  const registration = createPluginRegistration(id, lifecycle, check)
+  const tools = createPluginToolAdapter(id, lifecycle, check)
+
   function uiAction<A extends unknown[]>(
     action: (...args: A) => void | Promise<void>,
     scopedErrors = false
@@ -213,65 +140,6 @@ export function createPluginContext(
         })),
       register
     )
-  }
-  function tool(definition: ToolDefinition): HostToolDefinition {
-    return {
-      ...definition,
-      icon: pluginIconName(id, definition.icon, lifecycle.iconPrefix),
-      labelKey: definition.labelKey ? key(definition.labelKey) : undefined,
-      descriptionKey: definition.descriptionKey
-        ? key(definition.descriptionKey)
-        : undefined,
-      defaultPhrasesKey: definition.defaultPhrasesKey
-        ? key(definition.defaultPhrasesKey)
-        : undefined,
-      configFields: scopeConfigFields(id, definition.configFields),
-      configPresets: lifecycle.configPresets,
-      getUnavailableReasonKey: () =>
-        lifecycle.signal.aborted ? 'toast.commandUnavailable' : undefined,
-      parseText: definition.parseText
-        ? async (text, context) => {
-            check()
-            try {
-              const result = await definition.parseText!(text, {
-                ...context,
-                signal: AbortSignal.any([context.signal, lifecycle.signal]),
-              })
-              check()
-              validateParseResult(result)
-              return result.ok
-                ? result
-                : {
-                    ...result,
-                    messageKey: pluginMessageKey(id, result.messageKey),
-                  }
-            } catch (error) {
-              check()
-              if (isPluginError(error))
-                throw new PluginError(key(error.messageKey))
-              throw error
-            }
-          }
-        : undefined,
-      run: async (call) => {
-        check()
-        const signal = AbortSignal.any([call.signal, lifecycle.signal])
-        try {
-          const result = await definition.run({ ...call, signal })
-          if (signal.aborted) return { ok: false, cancelled: true }
-          validateToolResult(result)
-          return {
-            ...result,
-            messageKey: pluginMessageKey(id, result.messageKey),
-          }
-        } catch (error) {
-          if (signal.aborted) return { ok: false, cancelled: true }
-          if (isPluginError(error))
-            return { ok: false, messageKey: key(error.messageKey) }
-          throw error
-        }
-      },
-    }
   }
   return {
     signal: lifecycle.signal,
@@ -341,44 +209,12 @@ export function createPluginContext(
         deps.registerToolbarItems
       ),
     registerTools: (items) => {
-      if (!Array.isArray(items) || items.length > MAX_CONTRIBUTION_BATCH)
-        throw new Error('Too many plugin contributions')
-      for (const definition of items) {
-        validateContribution(definition, 'tool')
-        if (
-          typeof definition.run !== 'function' ||
-          typeof definition.description !== 'string' ||
-          !definition.inputSchema ||
-          typeof definition.inputSchema !== 'object'
-        )
-          throw new Error('Invalid plugin tool')
-        validateToolSchema(definition.inputSchema)
-        if (
-          definition.parseText !== undefined &&
-          typeof definition.parseText !== 'function'
-        )
-          throw new Error('Invalid plugin parser')
-        if (definition.configFields)
-          validatePluginFields(definition.configFields)
-        if (lifecycle.capabilities.includes('notes')) {
-          const directoryField = lifecycle.notesDirectoryField ?? 'pathToNotes'
-          const field = definition.configFields?.find(
-            (field) => field.name === directoryField
-          )
-          if (
-            field &&
-            (field.type !== 'text' ||
-              field.defaultValue !== '' ||
-              (field.value !== undefined && field.value !== ''))
-          )
-            throw new Error('Plugin tools cannot grant notes access')
-        }
-      }
+      tools.validate(items)
       // Tools use dot-separated IDs; reserve them in the same owned registry.
       return registration(
         'tool',
         items,
-        () => items.map(tool),
+        () => items.map(tools.adapt),
         (definitions) => deps.registerTools(definitions, config)
       )
     },

@@ -1,19 +1,30 @@
+import { mount } from '@vue/test-utils'
+import { defineComponent } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 
-import { runMenuStartup } from './menu-startup'
+import { useMenuStartup } from './use-menu-startup'
+
+function mountMenu(deps: Parameters<typeof useMenuStartup>[0]) {
+  return mount(
+    defineComponent({
+      setup() {
+        useMenuStartup(deps)
+        return () => null
+      },
+    })
+  )
+}
 
 describe('menu startup', () => {
   it('does nothing without a startup parameter', () => {
     const consume = vi.fn()
     const run = vi.fn(async () => {})
-    expect(
-      runMenuStartup({ getValue: () => undefined, consume, run })
-    ).toBeUndefined()
+    mountMenu({ getValue: () => undefined, consume, run })
     expect(consume).not.toHaveBeenCalled()
     expect(run).not.toHaveBeenCalled()
   })
 
-  it('consumes the parameter before starting so returning to the step does not repeat it', async () => {
+  it('consumes the parameter before running and does not repeat it on remount', () => {
     let value: string | undefined = 'task'
     const run = vi.fn(async (submitted: string) => {
       expect(submitted).toBe('task')
@@ -26,8 +37,8 @@ describe('menu startup', () => {
       },
       run,
     }
-    await runMenuStartup(deps)
-    await runMenuStartup(deps)
+    mountMenu(deps).unmount()
+    mountMenu(deps)
     expect(run).toHaveBeenCalledOnce()
   })
 })
