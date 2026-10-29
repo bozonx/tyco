@@ -30,7 +30,11 @@ for (const match of deepl.matchAll(
   /\{ code: '([^']+)', name: '([^']+)', translation: true, isVariant: (true|false)/g
 )) {
   const id = canonical(match[1])
-  deeplTarget[id] = match[2]
+  // DeepL target_lang requires regional codes for English, Portuguese and Chinese.
+  // Bare base codes are deprecated and rejected by the v2 translation API.
+  if (!['en', 'pt', 'zh'].includes(id)) {
+    deeplTarget[id] = match[2]
+  }
   if (match[3] === 'false') deeplSource[id] = match[2]
 }
 /** @type {Record<string, string>} */

@@ -1055,6 +1055,7 @@
     "defaultTranslate": "Přeložit: {language}",
     "insert": "Vložit do okna",
     "insertDescription": "Napíše text do dříve aktivního okna",
+    "noApiKey": "Pro poskytovatele překladu není nakonfigurován žádný klíč API",
     "noLlm": "V nastavení AI není této úloze přiřazen žádný model LLM",
     "scriptDescription": "Spustí příkaz shellu nebo váš skript",
     "styling": "Stylizace textu",

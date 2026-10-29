@@ -1061,6 +1061,7 @@
     "defaultTranslate": "Translate into {language}",
     "insert": "Insert into the window",
     "insertDescription": "Types the text into the window you were working in",
+    "noApiKey": "No API key configured for the translation provider",
     "noLlm": "No LLM model is assigned to this task in the AI settings",
     "scriptDescription": "Runs a shell command or a script of yours",
     "styling": "Text styling",

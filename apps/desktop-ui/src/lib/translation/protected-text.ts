@@ -1,7 +1,7 @@
 import { AiError } from '@bozonx/ai-kit'
 
 const PROTECTED_PATTERN =
-  /```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]+`|https?:\/\/[^\s<>()]+|<\/?[A-Za-z][^<>]*>|\{\{[^{}]+\}\}|\$\{[^{}]+\}|\{[A-Za-z_][A-Za-z0-9_.-]*\}|%(?:\d+\$)?[A-Za-z]|%[A-Za-z0-9_]+%/g
+  /```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]+`|https?:\/\/[^\s<>()]+|<\/?(?:[a-zA-Z][a-zA-Z0-9:-]*)(?:\s+[a-zA-Z_:][a-zA-Z0-9_:.-]*=(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))*\s*\/?>|\{\{[^{}]+\}\}|\$\{[^{}]+\}|\{[A-Za-z_][A-Za-z0-9_.-]*\}|(?<![\p{L}\p{N}])%(?:\d+\$)?[A-Za-z](?![A-Za-z])|%[A-Za-z0-9_]+%/gu
 
 export interface ProtectedText {
   text: string
@@ -37,14 +37,11 @@ export function protectTranslationText(
     restore(translated) {
       // Tolerate whitespace variations and casing shifts introduced by MT providers
       const leading = prefix.match(/^_+/)?.[0] ?? '__'
-      const clean = prefix.replace(/^_+/g, '')
-      const normalized = translated.replace(
-        new RegExp(
-          `${escapeForRegExp(leading)}(?:\\s*${escapeForRegExp(clean)})(\\d+)\\s*__`,
-          'gi'
-        ),
-        `${prefix}$1__`
+      const tokenPattern = new RegExp(
+        `${escapeForRegExp(leading)}\\s*TYCO[\\s_]*PROTECTED[\\s_]*(\\d+)\\s*(?:__|_[\\s]*_)`,
+        'gi'
       )
+      const normalized = translated.replace(tokenPattern, `${prefix}$1__`)
       const missing = values
         .map((_, index) => `${prefix}${index}__`)
         .filter((token) => normalized.split(token).length !== 2)

@@ -1055,6 +1055,7 @@
     "defaultTranslate": "翻譯為 {language}",
     "insert": "插入至視窗",
     "insertDescription": "將文字輸入至您剛才操作的視窗中",
+    "noApiKey": "未為翻譯提供商設定 API 金鑰",
     "noLlm": "在 AI 設定中尚未為此任務指定 LLM 模型",
     "scriptDescription": "執行 Shell 命令或您自己的指令碼",
     "styling": "文字風格化",

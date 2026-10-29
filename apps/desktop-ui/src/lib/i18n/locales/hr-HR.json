@@ -1061,6 +1061,7 @@
     "defaultTranslate": "Prevedi: {language}",
     "insert": "Umetni u prozor",
     "insertDescription": "Upisuje tekst u prethodno aktivni prozor",
+    "noApiKey": "Nije konfiguriran API ključ za pružatelja prijevoda",
     "noLlm": "U AI postavkama ovom zadatku nije dodijeljen LLM model",
     "scriptDescription": "Pokreće naredbu ljuske ili vašu skriptu",
     "styling": "Stiliziranje teksta",

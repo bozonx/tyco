@@ -1058,6 +1058,7 @@
     "defaultTranslate": "Fordítás: {language}",
     "insert": "Beillesztés az ablakba",
     "insertDescription": "Begépeli a szöveget az előzőleg aktív ablakba",
+    "noApiKey": "Nincs konfigurálva API-kulcs a fordítási szolgáltatóhoz",
     "noLlm": "Az MI-beállításokban ehhez a feladathoz nincs LLM-modell rendelve",
     "scriptDescription": "Shellparancsot vagy saját szkriptet futtat",
     "styling": "Szövegstilizálás",

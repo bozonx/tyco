@@ -1055,6 +1055,7 @@
     "defaultTranslate": "{language}(으)로 번역",
     "insert": "창에 삽입",
     "insertDescription": "작업 중이던 창에 텍스트를 입력합니다",
+    "noApiKey": "번역 공급자에 대한 API 키가 구성되지 않았습니다",
     "noLlm": "AI 설정에서 이 작업에 할당된 LLM 모델이 없습니다",
     "scriptDescription": "셸 명령이나 사용자의 스크립트를 실행합니다",
     "styling": "텍스트 스타일 지정",

@@ -48,6 +48,21 @@ describe('protectTranslationText', () => {
     expect(protectedText.restore('Привет __ tyco_protected_0 __')).toBe(
       'Привет {{name}}'
     )
+    expect(protectedText.restore('Привет __TYCO_PROTECTED_ 0 __')).toBe(
+      'Привет {{name}}'
+    )
+    expect(protectedText.restore('Привет __ TYCO _ PROTECTED _ 0 __')).toBe(
+      'Привет {{name}}'
+    )
+    expect(protectedText.restore('Привет __TYCO_PROTECTED_0 _ _')).toBe(
+      'Привет {{name}}'
+    )
+  })
+
+  it('does not protect percentage in normal words or angle bracket comparisons', () => {
+    const text = 'Get 20%off and 100%sure if a <b or c> d'
+    const protectedText = protectTranslationText(text)
+    expect(protectedText.text).toBe(text)
   })
 })
 

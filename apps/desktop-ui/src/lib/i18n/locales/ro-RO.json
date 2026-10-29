@@ -1061,6 +1061,7 @@
     "defaultTranslate": "Tradu: {language}",
     "insert": "Inserează în fereastră",
     "insertDescription": "Tastează textul în fereastra activă anterior",
+    "noApiKey": "Nu este configurată nicio cheie API pentru furnizorul de traducere",
     "noLlm": "În setările AI nu este atribuit niciun model LLM acestei sarcini",
     "scriptDescription": "Rulează o comandă shell sau un script propriu",
     "styling": "Stilizare text",

@@ -18,7 +18,11 @@ export interface InvocationRunnerDependencies extends ToolInvokerDependencies {
   /** A toast with a text that needs no translation */
   showText?: (text: string, type?: ToastKind) => void
   /** Opens the action menu on `text`, the result of a run on `sourceText` */
-  showResultMenu?: (text: string, sourceText: string) => void
+  showResultMenu?: (
+    text: string,
+    sourceText: string,
+    meta?: Record<string, unknown>
+  ) => void
   hideWindow?: () => void
 }
 
@@ -82,10 +86,18 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
   }
 
   /** Opens the action menu on the output, or warns that there is none */
-  const showOutput = (output: string, source: string): InvocationOutcome => {
+  const showOutput = (
+    output: string,
+    source: string,
+    meta?: Record<string, unknown>
+  ): InvocationOutcome => {
     const text = outputText(output)
     if (text === null) return emptyOutput()
-    deps.showResultMenu?.(text, source)
+    if (meta !== undefined) {
+      deps.showResultMenu?.(text, source, meta)
+    } else {
+      deps.showResultMenu?.(text, source)
+    }
     return succeeded
   }
 
@@ -156,7 +168,7 @@ export function createInvocationRunner(deps: InvocationRunnerDependencies) {
       case 'showMenu':
         return result.content === undefined
           ? finish(result)
-          : showOutput(result.content, result.sourceText ?? '')
+          : showOutput(result.content, result.sourceText ?? '', result.meta)
       case 'copyToClipboard':
         return result.content === undefined
           ? finish(result)

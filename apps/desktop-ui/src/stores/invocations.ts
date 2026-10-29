@@ -10,6 +10,7 @@ import {
   type InvocationRunnerDependencies,
 } from '../lib/invocation/invocation-runner'
 import type { InvocationOptions } from '../lib/invocation/invocation-types'
+import { translationMetaOf } from '../lib/translation/translation-meta'
 import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
 import { useToolsStore } from './tools'
@@ -42,8 +43,12 @@ export function useInvocationRunnerDependencies(): InvocationRunnerDependencies 
         'error'
       )
     },
-    showResultMenu: (text, sourceText) => {
-      menuModalsStore.nextModal(MenuModals.PREVIEW, { text, sourceText })
+    showResultMenu: (text, sourceText, meta) => {
+      menuModalsStore.nextModal(MenuModals.PREVIEW, {
+        text,
+        sourceText,
+        translationMeta: translationMetaOf(meta),
+      })
     },
   }
 }

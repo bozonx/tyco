@@ -1061,6 +1061,7 @@
     "defaultTranslate": "Tłumacz: {language}",
     "insert": "Wstaw do okna",
     "insertDescription": "Wpisuje tekst w poprzednio aktywnym oknie",
+    "noApiKey": "Brak skonfigurowanego klucza API dla dostawcy tłumaczeń",
     "noLlm": "W ustawieniach AI nie przypisano modelu LLM do tego zadania",
     "scriptDescription": "Uruchamia polecenie powłoki lub Twój skrypt",
     "styling": "Stylizacja tekstu",

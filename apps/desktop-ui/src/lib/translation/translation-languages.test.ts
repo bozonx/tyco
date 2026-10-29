@@ -49,6 +49,10 @@ describe('translation language catalogs', () => {
     expect(resolveTranslationLanguage('ru-RU', 'deepl', 'target')).toBe('ru')
     expect(resolveTranslationLanguage('en-US', 'google', 'target')).toBe('en')
     expect(resolveTranslationLanguage('en-GB', 'deepl', 'source')).toBe('en')
+    expect(resolveTranslationLanguage('en', 'deepl', 'target')).toBe('en-US')
+    expect(resolveTranslationLanguage('pt', 'deepl', 'target')).toBe('pt-PT')
+    expect(resolveTranslationLanguage('zh', 'deepl', 'target')).toBe('zh-Hans')
+    expect(resolveTranslationLanguage('es-MX', 'llm', 'target')).toBe('es')
     expect(resolveTranslationLanguage('es-AR', 'deepl', 'target')).toBe(
       'es-419'
     )

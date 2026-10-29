@@ -107,8 +107,10 @@ export function resolveTranslationLanguage(
   if (Object.hasOwn(catalog, id.trim())) return id.trim()
   const normalized = normalizeLocale(id)
   if (Object.hasOwn(catalog, normalized)) return normalized
-  if (provider === 'llm') return undefined
   const [base, region] = normalized.split('-')
+  if (provider === 'llm') {
+    return base && Object.hasOwn(catalog, base) ? base : undefined
+  }
   if (base === 'zh') {
     const traditional = region === 'TW' || region === 'HK' || region === 'Hant'
     const chinese =
@@ -123,14 +125,11 @@ export function resolveTranslationLanguage(
           : 'zh-CN'
     if (Object.hasOwn(catalog, chinese)) return chinese
   }
-  if (
-    provider === 'deepl' &&
-    direction === 'target' &&
-    base === 'es' &&
-    region &&
-    region !== 'ES'
-  )
-    return 'es-419'
+  if (provider === 'deepl' && direction === 'target') {
+    if (base === 'en') return region === 'GB' ? 'en-GB' : 'en-US'
+    if (base === 'pt') return region === 'BR' ? 'pt-BR' : 'pt-PT'
+    if (base === 'es' && region && region !== 'ES') return 'es-419'
+  }
   return base && Object.hasOwn(catalog, base) ? base : undefined
 }
 

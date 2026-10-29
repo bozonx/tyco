@@ -1061,6 +1061,7 @@
     "defaultTranslate": "Traduci: {language}",
     "insert": "Inserisci nella finestra",
     "insertDescription": "Digita il testo nella finestra in cui stavi lavorando",
+    "noApiKey": "Nessuna chiave API configurata per il provider di traduzione",
     "noLlm": "Nessun modello LLM è assegnato a questa attività nelle impostazioni IA",
     "scriptDescription": "Esegue un comando shell o un tuo script",
     "styling": "Stilizzazione del testo",

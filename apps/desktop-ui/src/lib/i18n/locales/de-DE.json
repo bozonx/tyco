@@ -1061,6 +1061,7 @@
     "defaultTranslate": "Übersetzen: {language}",
     "insert": "In das Fenster einfügen",
     "insertDescription": "Tippt den Text in das Fenster, in dem Sie gearbeitet haben",
+    "noApiKey": "Kein API-Schlüssel für den Übersetzungsanbieter konfiguriert",
     "noLlm": "In den KI-Einstellungen ist dieser Aufgabe kein LLM-Modell zugewiesen",
     "scriptDescription": "Führt einen Shell-Befehl oder ein eigenes Skript aus",
     "styling": "Textstilisierung",

@@ -1058,6 +1058,7 @@
     "defaultTranslate": "Çevir: {language}",
     "insert": "Pencereye ekle",
     "insertDescription": "Metni çalıştığınız pencereye yazar",
+    "noApiKey": "Çeviri sağlayıcısı için yapılandırılmış bir API anahtarı yok",
     "noLlm": "Yapay zekâ ayarlarında bu göreve bir LLM modeli atanmamış",
     "scriptDescription": "Bir kabuk komutunuzu veya betiğinizi çalıştırır",
     "styling": "Metin stillendirme",

@@ -83,6 +83,7 @@ function addLanguage(index: number) {
     )
   )
   const language = [
+    'en-US',
     'en',
     ...translateLanguageOptions.value.map((option) => String(option.id)),
   ].find((id) => id && !used.has(id))

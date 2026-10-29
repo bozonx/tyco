@@ -10,6 +10,7 @@ import {
   type Transport,
 } from '@bozonx/ai-kit'
 import {
+  detectTranslationProblems,
   renderGlossaryForPrompt,
   renderProblemsForPrompt,
   restoreKeptTerms,
@@ -243,22 +244,19 @@ async function translateWithMachine(
     },
   })
   const applicableGlossary = selectGlossaryForText(glossary, text)
-  const protectedText = protectTranslationText(
-    text,
-    applicableGlossary
-      .filter((entry) => entry.doNotTranslate)
-      .map((entry) => entry.term)
-  )
-  const chunks = chunkText(protectedText.text, MT_CHUNK_LIMIT_CHARACTERS)
+  const keptTerms = applicableGlossary
+    .filter((entry) => entry.doNotTranslate)
+    .map((entry) => entry.term)
+  const chunks = chunkText(text, MT_CHUNK_LIMIT_CHARACTERS)
   const translated: string[] = []
   let detectedSourceLanguage: string | undefined
   let resultProvider = provider
   let resultModel = model
-  for (const chunk of chunks) {
-    options.signal?.throwIfAborted()
-    const result = await kit.translate({
+
+  const translateChunk = async (chunkTextToSend: string) =>
+    kit.translate({
       policy: { taskClass: 'machineTranslate' },
-      texts: [chunk],
+      texts: [chunkTextToSend],
       targetLanguage: normalizeLanguage(options.targetLanguage),
       ...(options.sourceLanguage && options.sourceLanguage !== 'auto'
         ? { sourceLanguage: normalizeLanguage(options.sourceLanguage) }
@@ -268,21 +266,36 @@ async function translateWithMachine(
       format: 'text',
       ...(options.signal ? { abortSignal: options.signal } : {}),
     })
+
+  for (const chunk of chunks) {
     options.signal?.throwIfAborted()
-    translated.push(
-      restoreTranslationChunkWhitespace(
-        chunks.length,
-        chunk,
-        result.translations[0] ?? ''
-      )
-    )
+    const protectedChunk = protectTranslationText(chunk, keptTerms)
+    const result = await translateChunk(protectedChunk.text)
+    options.signal?.throwIfAborted()
     detectedSourceLanguage ??= result.detectedSourceLanguage
     resultProvider = result.provider
     resultModel = result.model
+
+    let restored: string
+    try {
+      restored = protectedChunk.restore(result.translations[0] ?? '')
+    } catch (error) {
+      if (isAiError(error) && protectedChunk.text !== chunk) {
+        // Fallback: provider corrupted protected tokens, retry this chunk unprotected
+        const fallbackResult = await translateChunk(chunk)
+        restored = fallbackResult.translations[0] ?? ''
+      } else {
+        throw error
+      }
+    }
+
+    translated.push(
+      restoreTranslationChunkWhitespace(chunks.length, chunk, restored)
+    )
   }
 
   return {
-    translation: protectedText.restore(translated.join('')),
+    translation: translated.join(''),
     provider: resultProvider,
     model: resultModel,
     ...(detectedSourceLanguage ? { detectedSourceLanguage } : {}),
@@ -332,10 +345,11 @@ async function runLlmChunks<T>(
       }
     )
     options.signal?.throwIfAborted()
-    ensureTranslationOutput(result, request.source)
-    if (!request.restore) return result
+    const cleaned = cleanLlmOutput(result, request.source)
+    ensureTranslationOutput(cleaned, request.source)
+    if (!request.restore) return cleaned
     try {
-      return request.restore(result)
+      return request.restore(cleaned)
     } catch (error) {
       if (!request.unprotected || !isAiError(error)) throw error
       return send(request.unprotected())
@@ -371,7 +385,12 @@ function translateWithLlm(
 ): Promise<FirstPass> {
   const chunks = chunkText(
     text,
-    llmChunkLimit(deps, options, TRANSLATE_CONTEXT_TOKENS_PER_CHUNK_CHARACTER)
+    llmChunkLimit(
+      deps,
+      options,
+      TRANSLATE_CONTEXT_TOKENS_PER_CHUNK_CHARACTER,
+      glossary
+    )
   )
   return runLlmChunks(deps, options, chunks, (chunk, index) => {
     const applicable = selectGlossaryForText(glossary, chunk)
@@ -438,18 +457,33 @@ function repairWithLlm(
     translation,
     Math.min(
       LLM_REPAIR_COMBINED_LIMIT,
-      llmChunkLimit(deps, options, REPAIR_CONTEXT_TOKENS_PER_CHUNK_CHARACTER)
+      llmChunkLimit(
+        deps,
+        options,
+        REPAIR_CONTEXT_TOKENS_PER_CHUNK_CHARACTER,
+        glossary
+      )
     )
   )
   return runLlmChunks(deps, options, pairs, (pair) => {
     const applicable = selectGlossaryForText(glossary, pair.source)
+    const chunkProblems =
+      pairs.length > 1
+        ? detectTranslationProblems({
+            source: pair.source,
+            translated: pair.translated,
+            sourceLang: options.sourceLanguage,
+            targetLang: options.targetLanguage,
+            glossary: applicable,
+          })
+        : problems
     const prompt = buildPrompt({
       system: [
         translationSystem(options, applicable),
         qualityGateRules.trim()
           ? `User instructions for the correction pass:\n${qualityGateRules.trim()}`
           : '',
-        renderProblemsForPrompt(problems),
+        renderProblemsForPrompt(chunkProblems),
       ]
         .filter(Boolean)
         .join('\n\n'),
@@ -462,7 +496,7 @@ function repairWithLlm(
       source: pair.source,
       glossary: applicable,
       system: prompt.system,
-      user: `The translation block is a translation of the source_text block into ${translationLanguageLabel(options.targetLanguage, 'en')} (${normalizeLanguage(options.targetLanguage)}). ${repairInstruction(problems)} Preserve everything that is already correct and return only the repaired translation.\n\n${prompt.data}`,
+      user: `The translation block is a translation of the source_text block into ${translationLanguageLabel(options.targetLanguage, 'en')} (${normalizeLanguage(options.targetLanguage)}). ${repairInstruction(chunkProblems)} Preserve everything that is already correct and return only the repaired translation.\n\n${prompt.data}`,
     }
   })
 }
@@ -492,17 +526,45 @@ function translationSystem(
  * output, and the joined pieces would run together
  */
 function restoreTranslationChunkWhitespace(
-  count: number,
+  _count: number,
   source: string,
   translated: string
 ) {
-  if (count < 2) return translated
   if (!source.trim()) return source
   return keepSurroundingWhitespace(source, translated)
 }
 
 function normalizeLanguage(language: string): string {
   return language.trim()
+}
+
+export function cleanLlmOutput(output: string, source: string): string {
+  let cleaned = output.trim()
+
+  const untrustedMatch = cleaned.match(
+    /^<(?:untrusted_content|translation|source_text)[^>]*>\s*([\s\S]*?)\s*<\/(?:untrusted_content|translation|source_text)>$/i
+  )
+  if (
+    untrustedMatch &&
+    !source.includes('<untrusted_content') &&
+    !source.includes('<translation')
+  ) {
+    cleaned = untrustedMatch[1]!.trim()
+  }
+
+  const fenceMatch = cleaned.match(/^```[a-zA-Z0-9_-]*\r?\n([\s\S]*?)\r?\n```$/)
+  if (fenceMatch && !source.trim().startsWith('```')) {
+    cleaned = fenceMatch[1]!.trim()
+  }
+
+  const prefixMatch = cleaned.match(
+    /^(?:Here(?:'s| is) (?:the )?(?:repaired |corrected )?translation:\s*|Translation:\s*)/i
+  )
+  if (prefixMatch && !source.match(/^(?:Here(?:'s| is)|Translation:)/i)) {
+    cleaned = cleaned.slice(prefixMatch[0].length).trim()
+  }
+
+  return cleaned
 }
 
 function ensureTranslationOutput(result: string, source: string): void {
@@ -524,11 +586,12 @@ function repairInstruction(problems: TranslationProblem[]): string {
 function llmChunkLimit(
   deps: TranslationClientDependencies,
   options: TranslationRunOptions,
-  contextTokensPerCharacter: number
+  contextTokensPerCharacter: number,
+  glossary: GlossaryEntry[] = []
 ): number {
   if (!deps.getLlmLimits) return LLM_CHUNK_LIMIT_CHARACTERS
   const { contextWindowTokens: context, maxOutputTokens } = deps.getLlmLimits()
-  const baseInstructions = translationSystem(options, []).length
+  const baseInstructions = translationSystem(options, glossary).length
   const estimatedInstructionTokens =
     Math.ceil(
       (baseInstructions + PRECEDING_CONTEXT_CHARACTERS) /

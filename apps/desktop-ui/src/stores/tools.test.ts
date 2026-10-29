@@ -1,11 +1,14 @@
+import { DEFAULT_USER_CONFIG, TRANSLATION_SECRET_IDS } from '@tyco/shared'
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createInvocationRunner } from '../lib/invocation/invocation-runner'
+import { useDesktopStore } from './desktop'
 import { useInvocationRunnerDependencies } from './invocations'
 import { useIpcStore } from './ipc'
 import { appNavigation } from '../navigation'
 import { useChatStore } from './chat'
+import { useSecretsStore } from './secrets'
 import { useToolsStore } from './tools'
 import { useToastStore } from './toast'
 
@@ -67,5 +70,28 @@ describe('ask in chat', () => {
     const release = useToolsStore().provideAskInChat(async () => {})
     release()
     await expect(askInChat()).rejects.toThrow('The chat is not available')
+  })
+})
+
+describe('translator availability', () => {
+  it('reports missing API key when machine provider is active without a usable secret', () => {
+    const desktop = useDesktopStore()
+    desktop.applyViewState({
+      ...desktop.desktopState,
+      userConfig: {
+        ...DEFAULT_USER_CONFIG,
+        translation: { ...DEFAULT_USER_CONFIG.translation, provider: 'deepl' },
+      },
+    })
+    const secrets = useSecretsStore()
+    secrets.secrets = {}
+
+    const tool = useToolsStore().get('core.translate')
+    expect(tool?.getUnavailableReasonKey?.()).toBe('tools.noApiKey')
+
+    secrets.secrets = {
+      [TRANSLATION_SECRET_IDS.deepl]: { available: true, origins: [] },
+    }
+    expect(tool?.getUnavailableReasonKey?.()).toBeUndefined()
   })
 })

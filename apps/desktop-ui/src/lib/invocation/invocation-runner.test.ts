@@ -54,6 +54,15 @@ describe('built-in invocations', () => {
     expect(deps.showResultMenu).toHaveBeenCalledWith('ECHO', 'hello')
   })
 
+  it('forwards tool metadata to showResultMenu', async () => {
+    const meta = { provider: 'deepl', kind: 'machine' }
+    const { runner, deps } = setup(
+      echoTool({}, { ok: true, content: 'ECHO', meta })
+    )
+    await runner.run(builtin, 'hello')
+    expect(deps.showResultMenu).toHaveBeenCalledWith('ECHO', 'hello', meta)
+  })
+
   it('names the invocation when its tool is unavailable', async () => {
     const { tool, runner, deps } = setup(
       echoTool({ getUnavailableReasonKey: () => 'commands.noLlm' })

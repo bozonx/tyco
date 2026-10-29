@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  cleanLlmOutput,
   createTranslationClient,
   type TranslationClientDependencies,
 } from './translation-client'
@@ -330,4 +331,73 @@ it('sends a machine translator plain text, not HTML', async () => {
 
   expect(JSON.parse(String(send.mock.calls[0]?.[1]?.body)).format).toBe('text')
   expect(result.text).toBe('One\nTwo & three')
+})
+
+describe('cleanLlmOutput', () => {
+  it('strips untrusted_content tags when not in source', () => {
+    expect(
+      cleanLlmOutput(
+        '<untrusted_content source="source_text">\nПривет мир\n</untrusted_content>',
+        'Hello world'
+      )
+    ).toBe('Привет мир')
+  })
+
+  it('strips markdown code fence when source has no fences', () => {
+    expect(cleanLlmOutput('```markdown\nПривет мир\n```', 'Hello world')).toBe(
+      'Привет мир'
+    )
+  })
+
+  it('strips conversational prefixes', () => {
+    expect(
+      cleanLlmOutput('Here is the translation: Привет мир', 'Hello world')
+    ).toBe('Привет мир')
+    expect(cleanLlmOutput('Translation: Привет мир', 'Hello world')).toBe(
+      'Привет мир'
+    )
+  })
+})
+
+it('falls back to unprotected chunk if machine translator corrupts protected tokens', async () => {
+  let callCount = 0
+  const send = vi.fn((_url: URL | RequestInfo, _init?: RequestInit) => {
+    callCount++
+    // First call has protected token, provider returns mangled tokens that cannot be restored
+    if (callCount === 1) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: {
+              translations: [{ translatedText: 'Corrupted completely' }],
+            },
+          })
+        )
+      )
+    }
+    // Fallback call returns plain translated text
+    return Promise.resolve(
+      new Response(
+        JSON.stringify({
+          data: {
+            translations: [{ translatedText: 'Привет https://example.com' }],
+          },
+        })
+      )
+    )
+  })
+
+  const client = createTranslationClient({
+    getConfig: () => config({ provider: 'google' }),
+    keys: { get: () => Promise.resolve('secret') },
+    transport: { fetch: send, openSocket: vi.fn() },
+    runLlm: vi.fn(),
+  })
+
+  const result = await client.translate('Hello https://example.com', {
+    targetLanguage: 'ru',
+  })
+
+  expect(send).toHaveBeenCalledTimes(2)
+  expect(result.text).toBe('Привет https://example.com')
 })

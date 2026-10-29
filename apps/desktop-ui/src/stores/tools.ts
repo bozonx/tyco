@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import type { LlmTask } from '@tyco/shared'
+import { TRANSLATION_SECRET_IDS, type LlmTask } from '@tyco/shared'
 
 import { useLlmStore } from './llm'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
@@ -9,12 +9,14 @@ import { createDesktopInsertion } from '../lib/ipc/desktop-insertion'
 import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
 import { describeError } from '../lib/errors/describe-error'
+import { isSecretUsable } from '../lib/net/secrets'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { createScriptAndWebhookTools } from '../lib/tools/script-and-webhook-tools'
 import { createCoreTools } from '../lib/tools/core-tools'
 import { createToolRegistry } from '../lib/tools/tool-registry'
 import type { TranslationMeta } from '../lib/translation/translation-meta'
+import { useSecretsStore } from './secrets'
 import { useTextCorrectionStore } from './text-correction'
 import { useTranslationStore } from './translation'
 import { createScriptActionClient } from '../lib/custom-actions/script-action-client'
@@ -29,6 +31,7 @@ import { useIpcStore } from './ipc'
 export const useToolsStore = defineStore('tools', () => {
   const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
+  const secretsStore = useSecretsStore()
   const { aiCustomPrompt, transformationPrompt, stylingPrompt } =
     useLlmStore().actions
   const { translateTo } = useTranslationStore().actions
@@ -85,10 +88,29 @@ export const useToolsStore = defineStore('tools', () => {
     stylingPrompt: (prompt, text, signal) =>
       stylingPrompt(prompt, text, { signal, notifyError: false }),
     getLlmUnavailableReasonKey,
-    getTranslatorUnavailableReasonKey: () =>
-      desktopStore.userConfig?.translation?.provider === 'llm'
-        ? getLlmUnavailableReasonKey('translation')
-        : undefined,
+    getTranslatorUnavailableReasonKey: () => {
+      const provider = desktopStore.userConfig?.translation?.provider
+      if (provider === 'llm') {
+        return getLlmUnavailableReasonKey('translation')
+      }
+      if (provider === 'deepl') {
+        return isSecretUsable(
+          secretsStore.secrets,
+          TRANSLATION_SECRET_IDS.deepl
+        )
+          ? undefined
+          : 'tools.noApiKey'
+      }
+      if (provider === 'google') {
+        return isSecretUsable(
+          secretsStore.secrets,
+          TRANSLATION_SECRET_IDS.google
+        )
+          ? undefined
+          : 'tools.noApiKey'
+      }
+      return undefined
+    },
     describeError: (error) => describeError(error, translate),
   })
 

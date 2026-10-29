@@ -1058,6 +1058,7 @@
     "defaultTranslate": "{language}に翻訳",
     "insert": "ウィンドウに挿入",
     "insertDescription": "作業していたウィンドウにテキストを入力します",
+    "noApiKey": "翻訳プロバイダーのAPIキーが設定されていません",
     "noLlm": "AI設定でこのタスクにLLMモデルが割り当てられていません",
     "scriptDescription": "シェルコマンドまたはスクリプトを実行します",
     "styling": "テキストスタイリング",
