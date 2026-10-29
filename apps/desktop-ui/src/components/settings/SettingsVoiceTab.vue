@@ -75,6 +75,13 @@
       >
         <FieldSwitch v-model="userConfig.stt.isStylingBarEnabled" />
       </FieldRow>
+      <FieldRow
+        v-if="userConfig.stt.isStylingBarEnabled"
+        :label="t('settings.stylingBarDirectInsert')"
+        :hint="t('settings.stylingBarDirectInsertHint')"
+      >
+        <FieldSwitch v-model="userConfig.stt.isStylingBarDirectInsertEnabled" />
+      </FieldRow>
     </SettingsSection>
   </div>
 </template>

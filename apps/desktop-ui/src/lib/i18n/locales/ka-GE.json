@@ -1051,7 +1051,9 @@
     "vaultUseDefault": "ნაგულისხმევი საქაღალდის გამოყენება",
     "vaultUseSubfolder": "tyco-vault ქვესაქაღალდის გამოყენება",
     "vision": "სურათების შეყვანა",
-    "voiceTextCorrection": "ნაკარნახევი ტექსტის შესწორება"
+    "voiceTextCorrection": "ნაკარნახევი ტექსტის შესწორება",
+    "stylingBarDirectInsert": "ჩასმა წინასწარი გადახედვის გარეშე",
+    "stylingBarDirectInsertHint": "სტილის შედეგს მყისიერად სვამს წინასწარი გადახედვის ეკრანის ჩვენების გარეშე."
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
@@ -1206,7 +1208,6 @@
     "correct": "შესწორება",
     "correctAndInsert": "შესწორება და ჩასმა",
     "correctionFailed": "ტექსტის შესწორება ვერ მოხერხდა",
-    "insertOriginal": "ორიგინალი",
     "insertWhenCorrected": "შესწორების შემდეგ ჩასმა",
     "newLine": "ახალი ხაზი",
     "next": "შემდეგი",

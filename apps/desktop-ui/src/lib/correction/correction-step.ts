@@ -12,7 +12,7 @@ export interface CorrectionStepParams {
   text: string
   /** The text before correction; empty while there is no diff to show */
   oldText: string
-  /** The text before correction, still insertable with Shift+Space */
+  /** The text before correction */
   originalText: string
   /** The correction is on its way and will replace `text` */
   isCorrecting: boolean

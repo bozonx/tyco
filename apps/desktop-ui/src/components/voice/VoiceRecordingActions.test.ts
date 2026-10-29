@@ -32,4 +32,13 @@ describe('VoiceRecordingActions', () => {
       ])
     }
   })
+
+  it('shows Shift, Space, Enter for voice-to-input when submitting to chat', () => {
+    const wrapper = mountActions({ finishBehavior: 'submitToChat' })
+    const buttons = wrapper.findAll('.shortcut')
+    const secondaryKeyTexts = buttons[1]
+      ?.findAll('kbd')
+      .map((key) => key.text())
+    expect(secondaryKeyTexts).toEqual(['Shift', 'Space', 'Enter'])
+  })
 })

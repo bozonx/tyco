@@ -30,6 +30,8 @@ export interface SttConfig {
   isVoiceCorrectionEnabled: boolean
   /** Whether to show the 15-key styling keyboard during hotkey voice input */
   isStylingBarEnabled: boolean
+  /** Whether pressing a style key inserts the result directly without preview */
+  isStylingBarDirectInsertEnabled: boolean
   providers: {
     deepgram: DeepgramSttSettings
     sherpaOnnx: SherpaOnnxSttSettings

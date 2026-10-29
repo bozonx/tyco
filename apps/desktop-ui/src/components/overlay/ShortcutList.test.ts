@@ -289,42 +289,4 @@ describe('ShortcutList', () => {
     expect(spaceAction).toHaveBeenCalledWith('corrected')
     wrapper.unmount()
   })
-
-  it('runs the primary action on the alternative text with Shift+Space', () => {
-    const spaceAction = vi.fn()
-    const wrapper = mount(ShortcutList, {
-      props: {
-        text: 'corrected',
-        altText: 'original',
-        spaceKey: { name: 'Insert', action: spaceAction },
-      },
-    })
-
-    expect(wrapper.text()).toContain('write.insertOriginal')
-    press('Space', { shiftKey: true })
-
-    expect(spaceAction).toHaveBeenCalledWith('original')
-    wrapper.unmount()
-  })
-
-  it('runs its own action on Shift+Space, even on the same text', () => {
-    const spaceAction = vi.fn()
-    const altAction = vi.fn()
-    const wrapper = mount(ShortcutList, {
-      props: {
-        text: 'typed',
-        altText: 'typed',
-        altAlwaysVisible: true,
-        spaceKey: { name: 'Queue', action: spaceAction },
-        altAction: { name: 'Insert', action: altAction },
-      },
-    })
-
-    expect(wrapper.text()).toContain('write.insertOriginal')
-    press('Space', { shiftKey: true })
-
-    expect(altAction).toHaveBeenCalledWith('typed')
-    expect(spaceAction).not.toHaveBeenCalled()
-    wrapper.unmount()
-  })
 })

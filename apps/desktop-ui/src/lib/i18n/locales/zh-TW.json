@@ -1048,7 +1048,9 @@
     "vaultUseDefault": "使用預設資料夾",
     "vaultUseSubfolder": "使用 tyco-vault 子資料夾",
     "vision": "圖片輸入",
-    "voiceTextCorrection": "語音文字校對"
+    "voiceTextCorrection": "語音文字校對",
+    "stylingBarDirectInsert": "無預覽直接插入",
+    "stylingBarDirectInsertHint": "立即插入風格化結果，無需顯示預覽畫面。"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1203,7 +1205,6 @@
     "correct": "校對",
     "correctAndInsert": "校對並插入",
     "correctionFailed": "無法校對文字",
-    "insertOriginal": "插入原文",
     "insertWhenCorrected": "校對完成後插入",
     "newLine": "換行",
     "next": "下一步",

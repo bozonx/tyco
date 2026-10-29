@@ -1051,7 +1051,9 @@
     "vaultUseDefault": "Alapértelmezett mappa használata",
     "vaultUseSubfolder": "tyco-vault almappa használata",
     "vision": "Képbevitel",
-    "voiceTextCorrection": "Diktált szöveg javítása"
+    "voiceTextCorrection": "Diktált szöveg javítása",
+    "stylingBarDirectInsert": "Beillesztés előnézet nélkül",
+    "stylingBarDirectInsertHint": "Azonnal beilleszti a stílus eredményét az előnézet megjelenítése nélkül."
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1206,7 +1208,6 @@
     "correct": "Javítás",
     "correctAndInsert": "Javítás és beillesztés",
     "correctionFailed": "A szöveget nem sikerült kijavítani",
-    "insertOriginal": "Eredeti",
     "insertWhenCorrected": "Beillesztés a javítás után",
     "newLine": "Új sor",
     "next": "Tovább",

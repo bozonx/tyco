@@ -1054,7 +1054,9 @@
     "vaultUseDefault": "Usar a pasta padrão",
     "vaultUseSubfolder": "Usar uma subpasta tyco-vault",
     "vision": "Entrada de imagens",
-    "voiceTextCorrection": "Correção do texto ditado"
+    "voiceTextCorrection": "Correção do texto ditado",
+    "stylingBarDirectInsert": "Inserir sem pré-visualização",
+    "stylingBarDirectInsertHint": "Insere imediatamente o resultado do estilo sem exibir a tela de pré-visualização."
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
@@ -1209,7 +1211,6 @@
     "correct": "Corrigir",
     "correctAndInsert": "Corrigir e inserir",
     "correctionFailed": "Não foi possível corrigir o texto",
-    "insertOriginal": "Original",
     "insertWhenCorrected": "Inserir quando corrigido",
     "newLine": "Nova linha",
     "next": "Próximo",

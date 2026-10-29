@@ -348,7 +348,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "transformations": { "items": [], "slots": {} },
       "styling": { "items": [], "slots": {} },
@@ -712,7 +713,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "transformations": { "items": [], "slots": {} },
       "styling": { "items": [], "slots": {} },
@@ -1064,7 +1066,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "transformations": { "items": [], "slots": {} },
       "styling": { "items": [], "slots": {} },
@@ -1431,7 +1434,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "transformations": { "items": [], "slots": {} },
       "styling": { "items": [], "slots": {} },
@@ -1776,7 +1780,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "transformations": { "items": [], "slots": {} },
       "styling": { "items": [], "slots": {} },
@@ -2125,7 +2130,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "transformations": { "items": [], "slots": {} },
       "styling": { "items": [], "slots": {} },
@@ -2484,7 +2490,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "transformations": { "items": [], "slots": {} },
       "styling": { "items": [], "slots": {} },
@@ -2837,7 +2844,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "aiVault": { "path": "" },
       "transformations": { "items": [], "slots": {} },
@@ -3195,7 +3203,8 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
-        "isStylingBarEnabled": false
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
       },
       "aiVault": { "path": "" },
       "transformations": { "items": [], "slots": {} },

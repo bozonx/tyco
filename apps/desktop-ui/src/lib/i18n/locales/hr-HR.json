@@ -1054,7 +1054,9 @@
     "vaultUseDefault": "Koristi zadanu mapu",
     "vaultUseSubfolder": "Koristi podmapu tyco-vault",
     "vision": "Unos slika",
-    "voiceTextCorrection": "Ispravak izdiktiranog teksta"
+    "voiceTextCorrection": "Ispravak izdiktiranog teksta",
+    "stylingBarDirectInsert": "Umetni bez pretpregleda",
+    "stylingBarDirectInsertHint": "Odmah umeće rezultat stila bez prikaza pretpregleda."
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1209,7 +1211,6 @@
     "correct": "Ispravi",
     "correctAndInsert": "Ispravi i umetni",
     "correctionFailed": "Tekst se nije mogao ispraviti",
-    "insertOriginal": "Izvornik",
     "insertWhenCorrected": "Umetni nakon ispravka",
     "newLine": "Novi redak",
     "next": "Dalje",

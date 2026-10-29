@@ -1051,7 +1051,9 @@
     "vaultUseDefault": "既定のフォルダーを使う",
     "vaultUseSubfolder": "tyco-vault サブフォルダーを使う",
     "vision": "画像入力",
-    "voiceTextCorrection": "音声テキストの校正"
+    "voiceTextCorrection": "音声テキストの校正",
+    "stylingBarDirectInsert": "プレビューなしで挿入",
+    "stylingBarDirectInsertHint": "プレビュー画面を表示せずに、スタイルの結果をすぐに挿入します。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1206,7 +1208,6 @@
     "correct": "校正",
     "correctAndInsert": "校正して挿入",
     "correctionFailed": "テキストを校正できませんでした",
-    "insertOriginal": "元のテキスト",
     "insertWhenCorrected": "校正後に挿入",
     "newLine": "改行",
     "next": "次へ",

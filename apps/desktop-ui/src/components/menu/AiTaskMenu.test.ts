@@ -37,11 +37,6 @@ describe('AiTaskMenu', () => {
       props: [
         'text',
         'spaceKey',
-        'altText',
-        'altAlwaysVisible',
-        'altAction',
-        'altLabel',
-        'altIcon',
         'leftLetterKeys',
         'shortcutsDisabled',
         'isEditorButtonVisible',
@@ -53,16 +48,13 @@ describe('AiTaskMenu', () => {
     },
   })
 
-  it('does not bind chat to Shift+Space and binds the own request to Space/Enter', async () => {
+  it('binds the own request to Space/Enter', async () => {
     let shortcutListProps: Record<string, any> = {}
 
     const wrapper = mount(AiTaskMenu, {
       props: { text: 'Some task text' },
       global: { stubs: stubs((props) => (shortcutListProps = props)) },
     })
-
-    expect(shortcutListProps.altAction).toBeUndefined()
-    expect(shortcutListProps.altText).toBeUndefined()
 
     expect(shortcutListProps.spaceKey.labelKey).toBe('menu.aiCustomPrompt')
     await shortcutListProps.spaceKey.action('Some task text')

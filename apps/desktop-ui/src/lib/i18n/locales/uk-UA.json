@@ -1051,7 +1051,9 @@
     "vaultUseDefault": "Папка за замовчуванням",
     "vaultUseSubfolder": "Використати підпапку tyco-vault",
     "vision": "Введення зображень",
-    "voiceTextCorrection": "Виправлення надиктованого тексту"
+    "voiceTextCorrection": "Виправлення надиктованого тексту",
+    "stylingBarDirectInsert": "Вставляти без попереднього перегляду",
+    "stylingBarDirectInsertHint": "Одразу вставляє результат застосування стилю без попереднього перегляду."
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
@@ -1206,7 +1208,6 @@
     "correct": "Виправити",
     "correctAndInsert": "Виправити й вставити",
     "correctionFailed": "Не вдалося виправити текст",
-    "insertOriginal": "Оригінал",
     "insertWhenCorrected": "Вставити після виправлення",
     "newLine": "Новий рядок",
     "next": "Далі",

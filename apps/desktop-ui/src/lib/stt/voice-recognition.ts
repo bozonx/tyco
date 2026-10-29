@@ -15,6 +15,7 @@ export interface VoiceRecognitionDependencies {
   finishDictation: () => Promise<string>
   cancelDictation: () => Promise<void>
   shouldFormatRecognizedText: () => boolean
+  shouldInsertStyleDirectly?: () => boolean
   voiceCorrection: (text: string, signal?: AbortSignal) => Promise<string>
   voiceStyling?: (
     text: string,
@@ -360,8 +361,12 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     if (disposed || restart !== restartGeneration) return
     await startSession()
   }
-  const finishWithStyle = (rule: string) =>
-    finish('insert', { styleRule: rule })
+  const finishWithStyle = (rule: string) => {
+    const intent: VoiceFinishIntent = deps.shouldInsertStyleDirectly?.()
+      ? 'insert'
+      : 'next'
+    return finish(intent, { styleRule: rule })
+  }
 
   return {
     transcript,

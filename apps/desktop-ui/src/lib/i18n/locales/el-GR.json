@@ -1051,7 +1051,9 @@
     "vaultUseDefault": "Χρήση του προεπιλεγμένου φακέλου",
     "vaultUseSubfolder": "Χρήση υποφακέλου tyco-vault",
     "vision": "Είσοδος εικόνων",
-    "voiceTextCorrection": "Διόρθωση υπαγορευμένου κειμένου"
+    "voiceTextCorrection": "Διόρθωση υπαγορευμένου κειμένου",
+    "stylingBarDirectInsert": "Εισαγωγή χωρίς προεπισκόπηση",
+    "stylingBarDirectInsertHint": "Εισάγει αμέσως το αποτέλεσμα του στυλ χωρίς προβολή προεπισκόπησης."
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {
@@ -1206,7 +1208,6 @@
     "correct": "Διόρθωση",
     "correctAndInsert": "Διόρθωση και εισαγωγή",
     "correctionFailed": "Δεν ήταν δυνατή η διόρθωση του κειμένου",
-    "insertOriginal": "Αρχικό",
     "insertWhenCorrected": "Εισαγωγή μετά τη διόρθωση",
     "newLine": "Νέα γραμμή",
     "next": "Επόμενο",

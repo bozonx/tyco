@@ -1048,7 +1048,9 @@
     "vaultUseDefault": "使用默认文件夹",
     "vaultUseSubfolder": "使用 tyco-vault 子文件夹",
     "vision": "图像输入",
-    "voiceTextCorrection": "语音文本纠错"
+    "voiceTextCorrection": "语音文本纠错",
+    "stylingBarDirectInsert": "无预览直接插入",
+    "stylingBarDirectInsertHint": "立即插入风格化结果，无需显示预览界面。"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1203,7 +1205,6 @@
     "correct": "纠错",
     "correctAndInsert": "纠错并插入",
     "correctionFailed": "无法纠错文本",
-    "insertOriginal": "原始内容",
     "insertWhenCorrected": "纠错完成后插入",
     "newLine": "换行",
     "next": "下一步",

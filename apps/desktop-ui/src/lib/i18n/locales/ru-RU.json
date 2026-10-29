@@ -1051,7 +1051,9 @@
     "vaultUseDefault": "Папка по умолчанию",
     "vaultUseSubfolder": "Использовать подпапку tyco-vault",
     "vision": "Поддержка изображений",
-    "voiceTextCorrection": "Исправление распознанного текста"
+    "voiceTextCorrection": "Исправление распознанного текста",
+    "stylingBarDirectInsert": "Вставлять без предпросмотра",
+    "stylingBarDirectInsertHint": "Сразу вставляет результат применения стиля без предварительного просмотра."
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
@@ -1206,7 +1208,6 @@
     "correct": "Исправить",
     "correctAndInsert": "Исправить и вставить",
     "correctionFailed": "Не удалось исправить текст",
-    "insertOriginal": "Оригинал",
     "insertWhenCorrected": "Вставить после исправления",
     "newLine": "Новая строка",
     "next": "Далее",

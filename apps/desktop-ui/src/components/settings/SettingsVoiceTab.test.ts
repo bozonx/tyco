@@ -25,9 +25,11 @@ describe('SettingsVoiceTab.vue', () => {
     return reactive({
       ...structuredClone(DEFAULT_USER_CONFIG),
       stt: {
+        ...structuredClone(DEFAULT_USER_CONFIG.stt),
         provider: 'sherpaOnnx',
         isVoiceCorrectionEnabled: false,
         isStylingBarEnabled: false,
+        isStylingBarDirectInsertEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
@@ -122,16 +124,25 @@ describe('SettingsVoiceTab.vue', () => {
     expect(config.stt.isVoiceCorrectionEnabled).toBe(true)
   })
 
-  it('toggles the styling bar setting', async () => {
+  it('toggles the styling bar setting and shows direct insert toggle', async () => {
     const config = createConfig()
     const wrapper = mountTab(config)
 
     const switches = wrapper.findAll('.field-switch-stub')
     const stylingSwitch = switches.at(1)
     expect(stylingSwitch).toBeDefined()
-    await stylingSwitch!.setValue(true)
+    expect(wrapper.findAll('.field-switch-stub')).toHaveLength(2)
 
+    await stylingSwitch!.setValue(true)
     expect(config.stt.isStylingBarEnabled).toBe(true)
+
+    const updatedSwitches = wrapper.findAll('.field-switch-stub')
+    expect(updatedSwitches).toHaveLength(3)
+    const directInsertSwitch = updatedSwitches.at(2)
+    expect(directInsertSwitch).toBeDefined()
+
+    await directInsertSwitch!.setValue(true)
+    expect(config.stt.isStylingBarDirectInsertEnabled).toBe(true)
   })
 
   it('calls secretsStore when saving and removing API key', async () => {
@@ -143,9 +154,11 @@ describe('SettingsVoiceTab.vue', () => {
 
     const config = createConfig({
       stt: {
+        ...structuredClone(DEFAULT_USER_CONFIG.stt),
         provider: 'deepgram',
         isVoiceCorrectionEnabled: false,
         isStylingBarEnabled: false,
+        isStylingBarDirectInsertEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: '' },

@@ -1048,7 +1048,9 @@
     "vaultUseDefault": "기본 폴더 사용",
     "vaultUseSubfolder": "tyco-vault 하위 폴더 사용",
     "vision": "이미지 입력",
-    "voiceTextCorrection": "음성 텍스트 교정"
+    "voiceTextCorrection": "음성 텍스트 교정",
+    "stylingBarDirectInsert": "미리보기 없이 삽입",
+    "stylingBarDirectInsertHint": "미리보기 화면을 표시하지 않고 스타일 결과를 즉시 삽입합니다."
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
@@ -1203,7 +1205,6 @@
     "correct": "교정",
     "correctAndInsert": "교정 후 삽입",
     "correctionFailed": "텍스트를 교정할 수 없습니다",
-    "insertOriginal": "원본",
     "insertWhenCorrected": "교정 완료 시 삽입",
     "newLine": "줄 바꿈",
     "next": "다음",

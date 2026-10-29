@@ -377,4 +377,45 @@ describe('voice recognition failures', () => {
     await model.startSession()
     expect(deps.startDictation).toHaveBeenCalledOnce()
   })
+
+  it('finishes with style and uses next intent by default', async () => {
+    const stylingFn = vi.fn().mockResolvedValue('Styled words')
+    const { deps, model } = setup({ voiceStyling: stylingFn })
+    await model.startSession()
+    await model.finishWithStyle('make it punchy')
+    expect(stylingFn).toHaveBeenCalledWith(
+      'Raw words',
+      'make it punchy',
+      expect.anything()
+    )
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Styled words',
+      'Raw words',
+      'Styled words',
+      'next'
+    )
+    model.dispose()
+  })
+
+  it('finishes with style and uses insert intent when shouldInsertStyleDirectly returns true', async () => {
+    const stylingFn = vi.fn().mockResolvedValue('Styled words')
+    const { deps, model } = setup({
+      voiceStyling: stylingFn,
+      shouldInsertStyleDirectly: () => true,
+    })
+    await model.startSession()
+    await model.finishWithStyle('make it punchy')
+    expect(stylingFn).toHaveBeenCalledWith(
+      'Raw words',
+      'make it punchy',
+      expect.anything()
+    )
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Styled words',
+      'Raw words',
+      'Styled words',
+      'insert'
+    )
+    model.dispose()
+  })
 })

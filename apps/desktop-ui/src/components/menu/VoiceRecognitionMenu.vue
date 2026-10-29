@@ -89,6 +89,8 @@ const model = createVoiceRecognition({
   finishDictation,
   cancelDictation,
   shouldFormatRecognizedText,
+  shouldInsertStyleDirectly: () =>
+    desktopStore.userConfig.stt?.isStylingBarDirectInsertEnabled ?? false,
   voiceCorrection,
   voiceStyling: (text, rule, signal) => stylingPrompt(rule, text, { signal }),
   saveSource: (text, action) => historyStore.saveSource(text, action),
@@ -199,11 +201,11 @@ function handleKeyUp(event: KeyboardEvent) {
     return
   }
 
-  // as in a chat input, Shift+Enter keeps the text without sending it
+  // as in a chat input, Shift+Enter or Shift+Space keeps the text without sending it
   if (
     props.finishBehavior === 'submitToChat' &&
     event.shiftKey &&
-    event.code === 'Enter'
+    (event.code === 'Enter' || event.code === 'Space')
   ) {
     event.preventDefault()
     void finish('insert')
@@ -243,6 +245,16 @@ function handleKeyDown(event: KeyboardEvent) {
     (props.finishBehavior === 'submitToChat' ||
       props.finishBehavior === 'insertIntoTarget') &&
     event.code === 'Tab'
+  ) {
+    event.preventDefault()
+  }
+
+  // Prevent default scroll when Space or Shift+Space is pressed
+  if (
+    event.code === 'Space' ||
+    (props.finishBehavior === 'submitToChat' &&
+      event.shiftKey &&
+      (event.code === 'Enter' || event.code === 'Space'))
   ) {
     event.preventDefault()
   }

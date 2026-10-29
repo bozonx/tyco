@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ActivationMode } from '@tyco/shared'
-import {
-  APP_ROUTES,
-  isQuickWindowMode,
-  resolveModeRoute,
-} from './routes'
+import { APP_ROUTES, isQuickWindowMode, resolveModeRoute } from './routes'
 
 describe('routes', () => {
   it('resolves routes for styling and transformation modes', () => {

@@ -912,6 +912,10 @@
         },
         "isVoiceCorrectionEnabled": { "type": "boolean", "default": false },
         "isStylingBarEnabled": { "type": "boolean", "default": false },
+        "isStylingBarDirectInsertEnabled": {
+          "type": "boolean",
+          "default": false
+        },
         "providers": {
           "type": "object",
           "properties": {
@@ -947,6 +951,7 @@
         "provider",
         "isVoiceCorrectionEnabled",
         "isStylingBarEnabled",
+        "isStylingBarDirectInsertEnabled",
         "providers"
       ],
       "defaultPath": "stt"

@@ -1054,7 +1054,9 @@
     "vaultUseDefault": "Folosește dosarul implicit",
     "vaultUseSubfolder": "Folosește un subdosar tyco-vault",
     "vision": "Intrare de imagini",
-    "voiceTextCorrection": "Corectarea textului dictat"
+    "voiceTextCorrection": "Corectarea textului dictat",
+    "stylingBarDirectInsert": "Introduce fără previzualizare",
+    "stylingBarDirectInsertHint": "Introduce imediat rezultatul stilului fără a afișa ecranul de previzualizare."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1209,7 +1211,6 @@
     "correct": "Corectează",
     "correctAndInsert": "Corectează și inserează",
     "correctionFailed": "Textul nu a putut fi corectat",
-    "insertOriginal": "Original",
     "insertWhenCorrected": "Inserează după corectare",
     "newLine": "Rând nou",
     "next": "Înainte",

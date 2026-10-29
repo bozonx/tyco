@@ -48,11 +48,6 @@
         :source-text="props.oldText"
         :left-letter-keys="leftLetterKeys"
         :space-key="spaceKey"
-        :alt-text="
-          props.insertOnly || editorTarget ? undefined : props.originalText
-        "
-        :alt-always-visible="props.isCorrecting"
-        :alt-action="primaryAction"
         :shortcuts-disabled="props.shortcutsDisabled"
         :is-editor-button-visible="
           !props.isCorrecting &&

@@ -8,15 +8,10 @@ const { call } = vi.hoisted(() => ({
   call: vi.fn().mockResolvedValue({ success: true }),
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ call }),
-}))
+vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call }) }))
 
 vi.mock('../../stores/editor-input', () => ({
-  useEditorInputStore: () => ({
-    selectedText: 'sample text',
-    value: '',
-  }),
+  useEditorInputStore: () => ({ selectedText: 'sample text', value: '' }),
 }))
 
 describe('EditorDevQuickPanel.vue', () => {
@@ -32,7 +27,8 @@ describe('EditorDevQuickPanel.vue', () => {
           AppIcon: true,
           Button: {
             props: ['title'],
-            template: '<button class="dev-btn" :title="title"><slot /></button>',
+            template:
+              '<button class="dev-btn" :title="title"><slot /></button>',
           },
         },
       },
@@ -54,7 +50,8 @@ describe('EditorDevQuickPanel.vue', () => {
           AppIcon: true,
           Button: {
             props: ['title'],
-            template: '<button class="dev-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
+            template:
+              '<button class="dev-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
           },
         },
       },
@@ -76,7 +73,8 @@ describe('EditorDevQuickPanel.vue', () => {
           AppIcon: true,
           Button: {
             props: ['title'],
-            template: '<button class="dev-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
+            template:
+              '<button class="dev-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
           },
         },
       },

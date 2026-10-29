@@ -1051,7 +1051,9 @@
     "vaultUseDefault": "Varsayılan klasörü kullan",
     "vaultUseSubfolder": "tyco-vault alt klasörünü kullan",
     "vision": "Görsel desteği",
-    "voiceTextCorrection": "Tanınan metni düzeltme"
+    "voiceTextCorrection": "Tanınan metni düzeltme",
+    "stylingBarDirectInsert": "Önizlemesiz ekle",
+    "stylingBarDirectInsertHint": "Önizleme ekranını göstermeden stil sonucunu hemen ekler."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1206,7 +1208,6 @@
     "correct": "Düzelt",
     "correctAndInsert": "Düzelt ve ekle",
     "correctionFailed": "Metin düzeltilemedi",
-    "insertOriginal": "Orijinal",
     "insertWhenCorrected": "Düzeltince ekle",
     "newLine": "Yeni satır",
     "next": "Devam",

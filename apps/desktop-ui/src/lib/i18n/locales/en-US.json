@@ -1054,7 +1054,9 @@
     "vaultUseDefault": "Use the default folder",
     "vaultUseSubfolder": "Use a tyco-vault subfolder",
     "vision": "Image input",
-    "voiceTextCorrection": "Voice text correction"
+    "voiceTextCorrection": "Voice text correction",
+    "stylingBarDirectInsert": "Insert without preview",
+    "stylingBarDirectInsertHint": "Immediately inserts the styled result without showing the preview screen."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1209,7 +1211,6 @@
     "correct": "Correct",
     "correctAndInsert": "Correct and insert",
     "correctionFailed": "Could not correct the text",
-    "insertOriginal": "Original",
     "insertWhenCorrected": "Insert when corrected",
     "newLine": "New line",
     "next": "Next",

@@ -27,7 +27,7 @@ export interface InsertMenuParams {
   isEditorButtonVisible?: boolean
   /** Esc returns from a correction step to its original text. */
   correction?: boolean
-  /** Shift+Space inserts the uncorrected text. */
+  /** The text before correction. */
   originalText?: string
   /** A pending correction will replace the displayed text. */
   isCorrecting?: boolean

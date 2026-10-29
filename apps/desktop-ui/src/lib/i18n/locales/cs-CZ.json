@@ -1048,7 +1048,9 @@
     "vaultUseDefault": "Použít výchozí složku",
     "vaultUseSubfolder": "Použít podsložku tyco-vault",
     "vision": "Vstup obrázků",
-    "voiceTextCorrection": "Oprava nadiktovaného textu"
+    "voiceTextCorrection": "Oprava nadiktovaného textu",
+    "stylingBarDirectInsert": "Vložit bez náhledu",
+    "stylingBarDirectInsertHint": "Okamžitě vloží výsledek stylu bez zobrazení náhledu."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1203,7 +1205,6 @@
     "correct": "Opravit",
     "correctAndInsert": "Opravit a vložit",
     "correctionFailed": "Text se nepodařilo opravit",
-    "insertOriginal": "Originál",
     "insertWhenCorrected": "Vložit po opravě",
     "newLine": "Nový řádek",
     "next": "Další",

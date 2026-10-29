@@ -19,7 +19,8 @@ describe('StylingView.vue', () => {
           },
           StylingMenu: {
             props: ['text', 'shortcutsDisabled'],
-            template: '<div class="styling-menu" :data-text="text">StylingMenu</div>',
+            template:
+              '<div class="styling-menu" :data-text="text">StylingMenu</div>',
           },
         },
       },

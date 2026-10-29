@@ -15,6 +15,7 @@ vi.mock('../stores/desktop', () => ({
         provider: mocks.provider,
         isVoiceCorrectionEnabled: false,
         isStylingBarEnabled: false,
+        isStylingBarDirectInsertEnabled: false,
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },

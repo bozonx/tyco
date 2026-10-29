@@ -251,6 +251,7 @@ describe('VoiceRecognitionMenu', () => {
       ['submitToChat', { code: 'Enter' }, 'submit'],
       ['submitToChat', { code: 'Space' }, 'submit'],
       ['submitToChat', { code: 'Enter', shiftKey: true }, 'insert'],
+      ['submitToChat', { code: 'Space', shiftKey: true }, 'insert'],
       ['submitToChat', { code: 'Tab' }, 'next'],
       ['insertIntoTarget', { code: 'Enter' }, 'insert'],
       ['insertIntoTarget', { code: 'Space' }, 'insert'],
@@ -472,6 +473,61 @@ describe('VoiceRecognitionMenu', () => {
         'Styled professional text',
         'raw dictated text',
         'Styled professional text',
+        'next',
+      ],
+    ])
+
+    wrapper.unmount()
+  })
+
+  it('finishes with insert intent when isStylingBarDirectInsertEnabled is true', async () => {
+    const desktopStore = useDesktopStore()
+    desktopStore.desktopState.userConfig.stt.isStylingBarEnabled = true
+    desktopStore.desktopState.userConfig.stt.isStylingBarDirectInsertEnabled = true
+    desktopStore.desktopState.userConfig.styling = {
+      slots: { q: 'style-1' },
+      items: [
+        {
+          id: 'style-1',
+          name: 'Professional',
+          rule: 'Make it sound professional',
+        },
+      ],
+    }
+    mocks.shouldFormatRecognizedText.mockReturnValue(true)
+    mocks.finishDictation.mockResolvedValue('raw dictated text')
+    mocks.stylingPrompt.mockResolvedValue('Styled professional text')
+
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: {
+        variant: 'bar',
+        activationMode: 'voice',
+        finishBehavior: 'insertIntoTarget',
+      },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'KeyQ', key: 'q' })
+    )
+    document.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'KeyQ', key: 'q' })
+    )
+    await flushPromises()
+
+    expect(wrapper.emitted('corrected')).toEqual([
+      [
+        'Styled professional text',
+        'raw dictated text',
+        'Styled professional text',
         'insert',
       ],
     ])
@@ -523,7 +579,14 @@ describe('VoiceRecognitionMenu', () => {
       expect.anything()
     )
     expect(mocks.voiceCorrection).not.toHaveBeenCalled()
-    expect(wrapper.emitted('corrected')).toHaveLength(1)
+    expect(wrapper.emitted('corrected')).toEqual([
+      [
+        'Styled professional text',
+        'raw dictated text',
+        'Styled professional text',
+        'next',
+      ],
+    ])
 
     wrapper.unmount()
   })

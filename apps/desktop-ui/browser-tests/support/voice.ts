@@ -9,6 +9,7 @@ export function installVoice(desktop: FakeDesktop) {
     provider: 'sherpaOnnx',
     isVoiceCorrectionEnabled: false,
     isStylingBarEnabled: false,
+    isStylingBarDirectInsertEnabled: false,
     providers: {
       deepgram: { modelId: 'nova-3', language: 'auto' },
       sherpaOnnx: { baseUrl: 'ws://speech.invalid:6006' },

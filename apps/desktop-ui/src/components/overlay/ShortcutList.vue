@@ -17,16 +17,6 @@
       </ShortcutButton>
 
       <ShortcutButton
-        v-if="altVisible"
-        :keys="['Shift', 'Space']"
-        :icon="props.altIcon"
-        :disabled="altKey?.disabled"
-        @click="altKey?.action(props.altText || '')"
-      >
-        {{ props.altLabel ?? t('write.insertOriginal') }}
-      </ShortcutButton>
-
-      <ShortcutButton
         v-if="props.isEditorButtonVisible"
         :keys="['Tab']"
         icon="mdi:pencil-outline"
@@ -78,15 +68,6 @@ const props = withDefaults(
     /** What `text` was transformed from, see `routeParams.toEditor`. */
     sourceText?: string
     spaceKey?: ActionItem
-    /** Another version of the text, run through Shift+Space: the original */
-    altText?: string
-    /** Offer `altText` even when it equals `text` */
-    altAlwaysVisible?: boolean
-    /** What Shift+Space runs on `altText`; `spaceKey` by default */
-    altAction?: ActionItem
-    /** Label of the Shift+Space button; "insert the original" by default */
-    altLabel?: string
-    altIcon?: string
     isEditorButtonVisible?: boolean
     escVisible?: boolean
     escAction?: () => void
@@ -98,11 +79,6 @@ const props = withDefaults(
     text: '',
     sourceText: '',
     spaceKey: undefined,
-    altText: undefined,
-    altAlwaysVisible: false,
-    altAction: undefined,
-    altLabel: undefined,
-    altIcon: 'mdi:undo-variant',
     isEditorButtonVisible: false,
     escVisible: true,
     escAction: undefined,
@@ -133,15 +109,6 @@ const slots = computed<ShortcutSlotItem[]>(() =>
       label: label || undefined,
     }
   })
-)
-
-const altKey = computed(() => props.altAction ?? props.spaceKey)
-
-const altVisible = computed(
-  () =>
-    Boolean(props.spaceKey) &&
-    props.altText !== undefined &&
-    (props.altAlwaysVisible || props.altText !== props.text)
 )
 
 /**
@@ -196,14 +163,6 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
   if (event.ctrlKey || event.altKey || event.metaKey) return
 
   if (
-    (event.code === 'Space' || event.code === 'Enter') &&
-    event.shiftKey &&
-    altVisible.value
-  ) {
-    if (altKey.value && !altKey.value.disabled) {
-      void altKey.value.action(props.altText || '')
-    }
-  } else if (
     (event.code === 'Space' || event.code === 'Enter') &&
     props.spaceKey &&
     !props.spaceKey.disabled

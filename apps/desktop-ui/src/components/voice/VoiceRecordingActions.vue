@@ -43,7 +43,7 @@
         </ShortcutButton>
         <ShortcutButton
           :size="compact ? 'sm' : 'md'"
-          :keys="['Shift', 'Enter']"
+          :keys="secondaryKeys"
           icon="mdi:form-textbox"
           :disabled="isFinishing"
           @click="() => finish('insert')"
@@ -131,4 +131,5 @@ const primaryKeys = computed(() =>
     ? ['Space', 'Enter', props.finishHotkey]
     : ['Space', 'Enter']
 )
+const secondaryKeys = ['Shift', 'Space', 'Enter']
 </script>

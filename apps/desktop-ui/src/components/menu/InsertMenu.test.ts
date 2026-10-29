@@ -66,7 +66,6 @@ describe('InsertMenu correction step', () => {
     const list = wrapper.findComponent(ShortcutList)
 
     expect(list.props('leftLetterKeys')).toEqual([])
-    expect(list.props('altText')).toBeUndefined()
     expect(list.props('isEditorButtonVisible')).toBe(false)
     const space = list.props('spaceKey')
     expect(space?.id).toBe('applyToEditor')
@@ -76,12 +75,11 @@ describe('InsertMenu correction step', () => {
     expect(closeAll).toHaveBeenCalled()
   })
 
-  it('elsewhere, keeps inserting into the window and the original text', () => {
+  it('elsewhere, keeps inserting into the window', () => {
     mocks.editorPage = false
     const list = mountMenu(correctionStep).findComponent(ShortcutList)
 
     expect(list.props('spaceKey')?.id).not.toBe('applyToEditor')
-    expect(list.props('altText')).toBe('Original text')
     expect(list.props('isEditorButtonVisible')).toBe(true)
   })
 

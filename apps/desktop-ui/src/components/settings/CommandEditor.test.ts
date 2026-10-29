@@ -131,13 +131,15 @@ describe('CommandEditor.vue', () => {
   it('toggles LLM pre-transformation and shows the prompt textarea', async () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'List' }))
     const advanced = wrapper.get('.command-group-advanced')
-    expect(advanced.find('.command-llm-pre-transform-prompt').exists()).toBe(false)
+    expect(advanced.find('.command-llm-pre-transform-prompt').exists()).toBe(
+      false
+    )
 
     // Toggle on
-    const preTransformSwitch = advanced
-      .findAllComponents({ name: 'FieldSwitch' })
-      .find((comp) => comp.props('label') === 'commands.llmPreTransform')!
-    await preTransformSwitch.find('input[type="checkbox"]').setValue(true)
+    const preTransformSwitch = advanced.get(
+      'input[type="checkbox"][aria-label="commands.llmPreTransform"]'
+    )
+    await preTransformSwitch.setValue(true)
 
     expect(lastUpdate(wrapper).isLlmPreTransformEnabled).toBe(true)
 
@@ -149,12 +151,16 @@ describe('CommandEditor.vue', () => {
         llmPreTransformPrompt: '',
       },
     })
-    expect(advanced.find('.command-llm-pre-transform-prompt').exists()).toBe(true)
+    expect(advanced.find('.command-llm-pre-transform-prompt').exists()).toBe(
+      true
+    )
     expect(advanced.text()).toContain('commands.errorNoPrompt')
 
     const textarea = advanced.get('textarea.command-llm-pre-transform-prompt')
     await textarea.setValue('Translate to French')
-    expect(lastUpdate(wrapper).llmPreTransformPrompt).toBe('Translate to French')
+    expect(lastUpdate(wrapper).llmPreTransformPrompt).toBe(
+      'Translate to French'
+    )
   })
 
   it('explains how the insertion treats a selection', () => {

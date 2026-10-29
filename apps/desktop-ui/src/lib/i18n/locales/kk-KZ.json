@@ -1051,7 +1051,9 @@
     "vaultUseDefault": "Әдепкі қалта",
     "vaultUseSubfolder": "tyco-vault ішкі қалтасын пайдалану",
     "vision": "Сурет енгізу",
-    "voiceTextCorrection": "Айтылған мәтінді түзету"
+    "voiceTextCorrection": "Айтылған мәтінді түзету",
+    "stylingBarDirectInsert": "Алдын ала қараусыз кірістіру",
+    "stylingBarDirectInsertHint": "Алдын ала қарау терезесін көрсетпей, стиль нәтижесін бірден кірістіреді."
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
@@ -1206,7 +1208,6 @@
     "correct": "Түзету",
     "correctAndInsert": "Түзетіп, кірістіру",
     "correctionFailed": "Мәтінді түзету мүмкін болмады",
-    "insertOriginal": "Түпнұсқа",
     "insertWhenCorrected": "Түзеткеннен кейін кірістіру",
     "newLine": "Жаңа жол",
     "next": "Келесі",
