@@ -10,6 +10,8 @@ export interface VoiceRecordingProps {
   audioLevel: number
   audioPeak: number
   recordingDurationMs: number
+  /** When the recording stops by itself, once that is near */
+  autoStopDeadlineMs?: number
   isTranscribing: boolean
   isFinishing: boolean
   finishBehavior?: VoiceFinishBehavior

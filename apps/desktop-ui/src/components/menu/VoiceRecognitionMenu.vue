@@ -5,6 +5,7 @@
     :audio-level="audioLevel"
     :audio-peak="audioPeak"
     :recording-duration-ms="recordingDurationMs"
+    :auto-stop-deadline-ms="autoStopWarning?.deadlineMs"
     :is-transcribing="isTranscribing"
     :is-finishing="isFinishing"
     :finish-behavior="props.finishBehavior"
@@ -116,6 +117,7 @@ const model = createVoiceRecognition({
 })
 const {
   transcript,
+  autoStopWarning,
   isFinishing,
   isStarted,
   isTranscribing,

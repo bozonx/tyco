@@ -10,13 +10,20 @@ import {
   liveTranscriptText,
 } from './live-transcript'
 import type { VoiceFinishIntent } from './voice-finish-intent'
-import { createVoiceSession } from './voice-session'
+import { type AutoStopWarning, createVoiceSession } from './voice-session'
 
 /**
  * How long the LLM may format or style a dictation; then the raw transcript
  * goes on as it is
  */
 export const DEFAULT_POST_PROCESS_TIMEOUT_MS = 30_000
+
+// Silence is billed too: a forgotten dictation must not run all day
+export const MAX_RECORDING_MS = 3_600_000
+/** A dictation with no recognized speech for this long was left running */
+export const SILENCE_TIMEOUT_MS = 180_000
+/** How long the countdown before an automatic stop is shown */
+export const AUTO_STOP_WARNING_MS = 20_000
 
 /**
  * `promise`, or a rejection as soon as `signal` aborts: a hung request may
@@ -64,6 +71,7 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
   clearPendingModal: (owner: number) => void
   consumeBufferedIntent?: () => 'insert' | 'copy' | null
   postProcessTimeoutMs?: number
+  now?: () => number
   options: () => { chat?: boolean; prefix?: string; suffix?: string }
   onCorrected: (
     result: string,
@@ -104,13 +112,26 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   let disposed = false
   /** Set once a dictation started; it stays finishable after a failure */
   let hasSession = false
-  // Silence is billed too: a forgotten dictation must not run all day
-  const MAX_RECORDING_MS = 3_600_000
+  let lastTranscriptText = ''
+  const autoStopWarning = ref<AutoStopWarning>()
 
   const voiceSession = createVoiceSession({
+    setTimer: deps.setTimer,
+    clearTimer: deps.clearTimer,
+    now: deps.now,
     maxRecordingMs: MAX_RECORDING_MS,
-    onLimit: () => {
-      toastKey('toast.recordingLimitReached', 'warn')
+    silenceTimeoutMs: SILENCE_TIMEOUT_MS,
+    warningLeadMs: AUTO_STOP_WARNING_MS,
+    onWarning: (warning) => {
+      autoStopWarning.value = warning
+    },
+    onAutoStop: (reason) => {
+      toastKey(
+        reason === 'silence'
+          ? 'toast.recordingSilenceStop'
+          : 'toast.recordingLimitReached',
+        'warn'
+      )
       void finish()
     },
   })
@@ -351,12 +372,20 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     )
       return
     transcript.value = createLiveTranscriptState()
+    lastTranscriptText = ''
     const generation = ++sessionGeneration
     starting = (async () => {
       try {
         await startDictation({
           onText: (state) => {
-            if (generation === sessionGeneration) transcript.value = state
+            if (generation !== sessionGeneration) return
+            transcript.value = state
+            // empty results come in silence too: only new words are speech
+            const text = liveTranscriptText(state)
+            if (text !== lastTranscriptText) {
+              lastTranscriptText = text
+              voiceSession.markActivity()
+            }
           },
           // a fast failure must not overtake the start it belongs to
           onError: (error) => {
@@ -415,6 +444,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
 
   return {
     transcript,
+    autoStopWarning,
     isFinishing,
     isStarted,
     isTranscribing,

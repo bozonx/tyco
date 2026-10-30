@@ -24,6 +24,7 @@
         :duration-ms="recordingDurationMs"
         :is-transcribing="isTranscribing"
       />
+      <VoiceAutoStopNotice :deadline-ms="autoStopDeadlineMs" />
       <LiveTranscript
         :committed="transcript.committed"
         :draft="transcript.draft"
@@ -50,6 +51,7 @@ import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import SelectionContextPreview from '../overlay/SelectionContextPreview.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
+import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 

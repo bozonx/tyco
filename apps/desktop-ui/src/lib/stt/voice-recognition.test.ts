@@ -358,14 +358,66 @@ describe('voice recognition failures', () => {
 
   it('stops at the recording limit', async () => {
     vi.useFakeTimers()
-    const { deps } = await started({ shouldFormatRecognizedText: () => false })
-    await vi.advanceTimersByTimeAsync(3_601_000)
+    const { deps, handlers } = await started({
+      shouldFormatRecognizedText: () => false,
+    })
+    // speech every two minutes keeps the silence stop away
+    for (let minute = 2; minute <= 60; minute += 2) {
+      await vi.advanceTimersByTimeAsync(120_000)
+      handlers.onText({ committed: `word ${minute}`, draft: '' })
+    }
+    await vi.advanceTimersByTimeAsync(1_000)
     expect(deps.toastKey).toHaveBeenCalledWith(
       'toast.recordingLimitReached',
       'warn'
     )
     await vi.waitFor(() => expect(deps.onCorrected).toHaveBeenCalled())
     expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('stops after three minutes without recognized speech', async () => {
+    vi.useFakeTimers()
+    const { deps, handlers } = await started({
+      shouldFormatRecognizedText: () => false,
+    })
+    await vi.advanceTimersByTimeAsync(100_000)
+    handlers.onText({ committed: '', draft: 'Heard' })
+    // empty results arrive in silence too and do not count as speech
+    await vi.advanceTimersByTimeAsync(100_000)
+    handlers.onText({ committed: 'Heard', draft: '' })
+    handlers.onText({ committed: 'Heard', draft: '' })
+    // the silence counts from the last new words, at 100 s
+    await vi.advanceTimersByTimeAsync(79_000)
+    expect(deps.toastKey).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(1_000)
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'toast.recordingSilenceStop',
+      'warn'
+    )
+    await vi.waitFor(() => expect(deps.onCorrected).toHaveBeenCalled())
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('warns twenty seconds before an automatic stop', async () => {
+    vi.useFakeTimers()
+    const { model, handlers } = await started()
+    const startedAt = Date.now()
+    await vi.advanceTimersByTimeAsync(159_999)
+    expect(model.autoStopWarning.value).toBeUndefined()
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect(model.autoStopWarning.value).toEqual({
+      reason: 'silence',
+      deadlineMs: startedAt + 180_000,
+    })
+
+    // speech pushes the stop away and hides the countdown
+    handlers.onText({ committed: 'Back', draft: '' })
+    expect(model.autoStopWarning.value).toBeUndefined()
+
+    await model.finish()
+    expect(model.autoStopWarning.value).toBeUndefined()
   })
 
   it('ignores a second start while one is running', async () => {

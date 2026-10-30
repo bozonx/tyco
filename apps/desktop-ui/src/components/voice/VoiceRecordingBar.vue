@@ -41,6 +41,7 @@
           :is-transcribing="isTranscribing"
         />
       </div>
+      <VoiceAutoStopNotice :deadline-ms="autoStopDeadlineMs" />
       <VoiceRecordingActions
         class="voice-bar-actions"
         compact
@@ -61,6 +62,7 @@ import { useI18n } from '../../composables/use-i18n'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
 import AudioWaveform from './AudioWaveform.vue'
 import LiveTranscript from './LiveTranscript.vue'
+import VoiceAutoStopNotice from './VoiceAutoStopNotice.vue'
 import VoiceRecordingActions from './VoiceRecordingActions.vue'
 import type { VoiceRecordingProps } from './voice-recording-props'
 import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
