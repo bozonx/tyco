@@ -119,6 +119,13 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       const message = deps.t('externalCommand.missing')
       failed(event.commandId, message)
       const outcome = { success: false, message }
+      logCommandRun(deps, {
+        commandId: event.commandId,
+        name: event.commandId,
+        source: 'external',
+        success: false,
+        message,
+      })
       if (event.jobId) {
         controllers.delete(event.jobId)
         await complete(run, outcome)
@@ -127,18 +134,23 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     }
 
     const name = commandLabel(command)
-    let reported = false
+    // what the run has told the user already: a failure is told once, and an
+    // earlier progress message does not stand for it
+    let hasReported = false
+    let hasReportedFailure = false
     const report: RunReport = (kind, message) => {
       if (disposed || controller.signal.aborted) return
-      reported = true
-      if (kind === 'error' || kind === 'warn') {
+      hasReported = true
+      if (kind === 'error') {
+        hasReportedFailure = true
         failed(name, message)
         return
       }
       deps.showOverlay({
         kind: kind === 'success' ? 'success' : 'info',
         text: `${name}: ${message}`,
-        hideAfterMs: SUCCESS_HIDE_MS,
+        // a warning stays as long as an error, but is not a failure
+        hideAfterMs: kind === 'warn' ? ERROR_HIDE_MS : SUCCESS_HIDE_MS,
       })
     }
 
@@ -172,13 +184,15 @@ export function createExternalRun(deps: ExternalRunDependencies) {
       controllers.delete(event.jobId)
       outcome = await complete(run, outcome)
     }
+    // a disposed window neither shows nor logs what is left of its runs
     if (disposed) return cancelled
-    if (!reported) {
-      if (outcome.success || outcome.cancelled) deps.showOverlay(null)
-      else failed(name, outcome.message ?? deps.t('externalCommand.unknown'))
-    }
-
     logCommandRun(deps, commandRunRecord(command, 'external', input, outcome))
+    if (!outcome.success && !outcome.cancelled) {
+      if (!hasReportedFailure)
+        failed(name, outcome.message ?? deps.t('externalCommand.unknown'))
+    } else if (!hasReported) {
+      deps.showOverlay(null)
+    }
     return outcome
   }
 

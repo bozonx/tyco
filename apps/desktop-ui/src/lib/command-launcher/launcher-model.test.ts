@@ -566,6 +566,65 @@ describe('external job requests', () => {
     expect(finishJob).not.toHaveBeenCalled()
   })
 
+  it('treats a failed claim as a job that is not ours', async () => {
+    const { deps } = setup([note])
+    const finishJob = vi.fn(async () => {})
+    const model = createCommandLauncherModel({
+      ...deps,
+      claimJob: vi.fn(async () => {
+        throw new Error('ipc down')
+      }),
+      finishJob,
+    })
+    await model.request({ commandId: note.id, jobId: 'job-err', text: 'x' })
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(deps.reportError).toHaveBeenCalled()
+    expect(finishJob).not.toHaveBeenCalled()
+    expect(model.stage.value.kind).not.toBe('running')
+  })
+
+  it('finishes a job cancelled before its command starts', async () => {
+    const { deps } = setup([note])
+    let claimed!: (value: boolean) => void
+    const finishJob = vi.fn(async () => {})
+    const model = createCommandLauncherModel({
+      ...deps,
+      claimJob: vi.fn(
+        () => new Promise<boolean>((resolve) => (claimed = resolve))
+      ),
+      finishJob,
+    })
+    const running = model.request({
+      commandId: note.id,
+      jobId: 'job-early',
+      text: 'x',
+    })
+    await vi.waitFor(() => expect(claimed).toBeDefined())
+    model.cancel()
+    claimed(true)
+    await running
+    expect(deps.run).not.toHaveBeenCalled()
+    expect(finishJob).toHaveBeenCalledOnce()
+    expect(finishJob).toHaveBeenCalledWith(
+      'job-early',
+      expect.objectContaining({ cancelled: true })
+    )
+    expect(model.stage.value.kind).not.toBe('running')
+  })
+
+  it('reports a failure to finish a job instead of throwing', async () => {
+    const { deps } = setup([note])
+    const model = createCommandLauncherModel({
+      ...deps,
+      finishJob: vi.fn(async () => {
+        throw new Error('ipc down')
+      }),
+    })
+    await model.request({ commandId: note.id, jobId: 'job-x' })
+    model.reset()
+    await vi.waitFor(() => expect(deps.reportError).toHaveBeenCalled())
+  })
+
   it('finishes a job cancelled while running only once', async () => {
     const { deps } = setup([note])
     let finishRun!: () => void

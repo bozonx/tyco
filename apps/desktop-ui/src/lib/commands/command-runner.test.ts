@@ -775,6 +775,30 @@ describe('LLM pre-transformation', () => {
     )
   })
 
+  it('reports a transformation tool that threw instead of failing the run', async () => {
+    const executeScriptAction = vi.fn()
+    const { runner } = setup({ executeScriptAction }, [
+      {
+        id: 'core.transformation',
+        labelKey: 'tools.transformation',
+        description: 'Transform',
+        inputSchema: TEXT_INPUT_SCHEMA,
+        run: vi.fn().mockRejectedValue(new Error('model offline')),
+      },
+    ])
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: 'Summarize',
+        outputAction: 'none',
+      }
+    )
+    const outcome = await runner.run(cmd, 'original text')
+    expect(outcome).toEqual({ success: false, message: 'model offline' })
+    expect(executeScriptAction).not.toHaveBeenCalled()
+  })
+
   it('does not transform text when isLlmPreTransformEnabled is false', async () => {
     const executeScriptAction = vi
       .fn()

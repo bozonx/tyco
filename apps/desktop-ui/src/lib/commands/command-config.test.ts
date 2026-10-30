@@ -1,3 +1,4 @@
+import commandNames from '../../../../../packages/shared/fixtures/command-names.json'
 import { describe, expect, it } from 'vitest'
 
 import type {
@@ -19,6 +20,7 @@ import {
 } from './command-runtime'
 import {
   commandCliCall,
+  platformCliShell,
   findExternalCommandNameConflicts,
   normalizeCommandName,
 } from './command-external'
@@ -274,6 +276,17 @@ describe('validateCommand', () => {
     ])
   })
 
+  it('requires an http(s) URL, placeholder allowed', () => {
+    const hook = (url: string) =>
+      validateCommand(withConfig(namedCommand('webhook', 'a'), { url }), tools)
+    expect(hook('ftp://x.test')).toEqual([
+      { field: 'url', messageKey: 'commands.errorInvalidUrl' },
+    ])
+    expect(hook('not a url')).toHaveLength(1)
+    expect(hook('https://x.test/?q={{TEXT}}')).toEqual([])
+    expect(hook('{{TEXT}}')).toHaveLength(1)
+  })
+
   it('allows the placeholder in a command that takes text', () => {
     expect(
       validateCommand(
@@ -311,6 +324,8 @@ describe('external names', () => {
 
   it('compares names regardless of case, ё and spaces', () => {
     expect(normalizeCommandName('  Ёлка   ЗАПИСЬ ')).toBe('елка запись')
+    for (const [name, expected] of commandNames.cases)
+      expect(normalizeCommandName(name)).toBe(expected)
   })
 
   it('finds the other callable commands of the same name', () => {
@@ -441,6 +456,19 @@ describe('commandCliCall', () => {
     expect(commandCliCall('Work note', true)).toBe(
       "tyco-ctl run --name 'Work note'"
     )
+  })
+
+  it('quotes for PowerShell on Windows', () => {
+    expect(commandCliCall("it's mine", true, 'powershell')).toBe(
+      "tyco-ctl run --name 'it''s mine'"
+    )
+    expect(commandCliCall('$HOME', false, 'powershell')).toBe(
+      "tyco-ctl run '$HOME'"
+    )
+    expect(platformCliShell('Mozilla/5.0 (Windows NT 10.0; Win64)')).toBe(
+      'powershell'
+    )
+    expect(platformCliShell('Mozilla/5.0 (X11; Linux x86_64)')).toBe('posix')
   })
 })
 

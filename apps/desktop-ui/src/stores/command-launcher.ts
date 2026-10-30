@@ -39,6 +39,12 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       call: ipcStore.call,
       selectionFailed: (message) =>
         toastText(message ?? translate('toast.commandFailed'), 'error'),
+      reportError: (error) =>
+        clientLogger.error(
+          'Could not finish external job',
+          error,
+          'command-launcher'
+        ),
     }),
     saveOutput: async (text) => {
       await historyStore.saveOutput(text)

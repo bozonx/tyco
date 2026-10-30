@@ -2,6 +2,7 @@ mod activation;
 mod chat;
 mod desktop_state;
 mod editor_history;
+mod script_action;
 mod session_state;
 mod storage;
 pub mod user_config;
@@ -10,6 +11,7 @@ pub use activation::*;
 pub use chat::*;
 pub use desktop_state::*;
 pub use editor_history::*;
+pub use script_action::*;
 pub use session_state::*;
 pub use storage::*;
 

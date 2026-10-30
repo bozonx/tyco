@@ -17,18 +17,20 @@ describe('external job adapter', () => {
     expect(call).toHaveBeenCalledWith('claim_external_job', { id: 'job' })
   })
 
-  it('preserves completion when no job is returned and propagates IPC failures', async () => {
+  it('preserves completion when no job is returned or finishing fails', async () => {
     const call = vi
       .fn<DesktopCall>()
       .mockResolvedValueOnce({ success: true, result: null })
       .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
-    const adapter = createExternalJobAdapter({ call: call as DesktopCall })
+    const reportError = vi.fn()
+    const adapter = createExternalJobAdapter({
+      call: call as DesktopCall,
+      reportError,
+    })
     const completion = { success: true, output: 'Output' }
     expect(await adapter.finishJob('job', completion)).toBe(completion)
-    expect(await adapter.finishJob('job', completion)).toEqual({
-      success: false,
-      message: 'Unavailable',
-    })
+    expect(await adapter.finishJob('job', completion)).toBe(completion)
+    expect(reportError).toHaveBeenCalledWith(new Error('Unavailable'))
   })
 
   it.each(['succeeded', 'cancelled', 'failed'] as const)(

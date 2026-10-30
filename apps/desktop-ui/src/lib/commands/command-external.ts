@@ -10,7 +10,7 @@ export function normalizeCommandName(name: string): string {
   return name
     .toLowerCase()
     .replace(/ё/g, 'е')
-    .split(/\s+/)
+    .split(/\p{White_Space}+/u)
     .filter(Boolean)
     .join(' ')
 }
@@ -46,13 +46,30 @@ export function findExternalCommandNameConflicts(
   )
 }
 
-const shellQuote = (value: string): string =>
-  /^[\w:.@-]+$/.test(value) ? value : `'${value.replaceAll("'", "'\\''")}'`
+/** The shell the copied line is for: POSIX sh or Windows PowerShell */
+export type CliShell = 'posix' | 'powershell'
+
+/** The value as one word of the shell; plain words stay as they are */
+function shellQuote(value: string, shell: CliShell): string {
+  if (/^[\w:.@-]+$/.test(value)) return value
+  return shell === 'powershell'
+    ? `'${value.replace(/['\u2018\u2019\u201a\u201b]/g, '$&$&')}'`
+    : `'${value.replaceAll("'", "'\\''")}'`
+}
+
+/** The shell of the platform the app runs on */
+export function platformCliShell(userAgent: string): CliShell {
+  return /Windows/i.test(userAgent) ? 'powershell' : 'posix'
+}
 
 /**
  * The shell line that runs the command from another application: by its name
  * when `byName`, otherwise by its id
  */
-export function commandCliCall(target: string, byName = false): string {
-  return `tyco-ctl run ${byName ? '--name ' : ''}${shellQuote(target)}`
+export function commandCliCall(
+  target: string,
+  byName = false,
+  shell: CliShell = 'posix'
+): string {
+  return `tyco-ctl run ${byName ? '--name ' : ''}${shellQuote(target, shell)}`
 }

@@ -1,8 +1,6 @@
-import {
-  type CommandConfig,
-  type CommandOutputAction,
-  SCRIPT_MAX_TIMEOUT_SEC,
-} from '@tyco/shared'
+import type { CommandConfig, CommandOutputAction } from '@tyco/shared'
+
+import { scriptTimeoutOf } from './command-config'
 
 export function createCommandEditorModel(deps: {
   getCommand: () => CommandConfig
@@ -22,13 +20,9 @@ export function createCommandEditorModel(deps: {
     })
   }
   function updateTimeout(value: string) {
-    const seconds = Number.parseInt(value, 10)
-    updateToolConfig(
-      'timeoutSec',
-      Number.isFinite(seconds) && seconds > 0
-        ? Math.min(seconds, SCRIPT_MAX_TIMEOUT_SEC)
-        : undefined
-    )
+    // the text must be a number as a whole: `10abc` is no timeout
+    const seconds = /^\s*\d+(\.\d+)?\s*$/.test(value) ? Number(value) : NaN
+    updateToolConfig('timeoutSec', scriptTimeoutOf(seconds))
   }
   function updateOutputAction(outputAction: CommandOutputAction) {
     update({ outputAction })

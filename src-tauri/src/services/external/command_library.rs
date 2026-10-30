@@ -153,7 +153,7 @@ impl From<CommandLookupError> for AppError {
 }
 
 /// A name as calls compare it: case, `ё`, and spaces do not matter. Keep in
-/// sync with `normalizeCommandName` in `lib/commands/command-config.ts`.
+/// sync with `normalizeCommandName` in `lib/commands/command-external.ts`.
 pub fn normalize_name(name: &str) -> String {
     name.to_lowercase()
         .replace('ё', "е")
@@ -283,7 +283,7 @@ fn resolve_callable_command(
         id,
         can_take_text,
         has_structured_input: catalog
-            .and_then(|catalog| catalog.get(str_field(command, "toolId")))
+            .and_then(|catalog| catalog.get(str_field(command, "toolId").trim()))
             .map(|tool| input_kind(command, tool))
             .transpose()?
             .is_some_and(|input| input == ToolInputKind::Structured),

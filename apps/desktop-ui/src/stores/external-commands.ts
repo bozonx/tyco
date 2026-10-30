@@ -30,7 +30,15 @@ export const useExternalCommandsStore = defineStore('externalCommands', () => {
         error,
         'external-commands'
       ),
-    ...createExternalJobAdapter({ call: ipcStore.call }),
+    ...createExternalJobAdapter({
+      call: ipcStore.call,
+      reportError: (error) =>
+        clientLogger.error(
+          'Could not finish external job',
+          error,
+          'external-commands'
+        ),
+    }),
     run: (command, text, report, options) =>
       createCommandRunner({
         ...runnerDeps,

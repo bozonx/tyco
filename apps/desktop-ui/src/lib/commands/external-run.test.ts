@@ -151,6 +151,42 @@ describe('createExternalRun', () => {
   })
 })
 
+describe('reports during a run', () => {
+  it('still reports a failure after a progress message', async () => {
+    const { deps, external } = setup(async (_c, _t, report) => {
+      report('info', 'sending')
+      return { success: false, message: 'refused' }
+    })
+    await external.handleRun(event({ jobId: undefined }))
+    expect(deps.notify).toHaveBeenCalledOnce()
+    expect(deps.showOverlay).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: 'error', text: 'Lamp: refused' })
+    )
+  })
+
+  it('shows a warning without calling it a failure', async () => {
+    const { deps, external } = setup(async (_c, _t, report) => {
+      report('warn', 'nothing to send')
+      return { success: true }
+    })
+    await external.handleRun(event({ jobId: undefined }))
+    expect(deps.notify).not.toHaveBeenCalled()
+    expect(deps.showOverlay).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: 'info', text: 'Lamp: nothing to send' })
+    )
+  })
+
+  it('logs a call for a command gone from the library', async () => {
+    const { deps, external } = setup(async () => ({ success: true }))
+    await external.handleRun(event({ commandId: 'gone', jobId: undefined }))
+    await vi.waitFor(() =>
+      expect(deps.logRun).toHaveBeenCalledWith(
+        expect.objectContaining({ commandId: 'gone', success: false })
+      )
+    )
+  })
+})
+
 describe('external jobs', () => {
   it('does not execute a cancelled or denied job', async () => {
     const { deps } = setup(async () => ({ success: true, result: undefined }))

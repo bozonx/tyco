@@ -4,6 +4,8 @@ import type { InvocationOutcome } from '../invocation/invocation-types'
 export interface ExternalJobAdapterDependencies {
   call: DesktopCall
   selectionFailed?: (message: string | undefined) => void
+  /** A job the backend could not finish: the run itself went as it went */
+  reportError?: (error: unknown) => void
 }
 
 /** Maps desktop job responses to the outcome understood by both runners. */
@@ -18,7 +20,12 @@ export function createExternalJobAdapter(deps: ExternalJobAdapterDependencies) {
       completion: InvocationOutcome
     ): Promise<InvocationOutcome> {
       const result = await deps.call('finish_external_job', { id, completion })
-      if (!result.success) return { success: false, message: result.error }
+      if (!result.success) {
+        deps.reportError?.(
+          new Error(result.error ?? 'Could not finish the job')
+        )
+        return completion
+      }
       const job = result.result
       if (!job) return completion
       if (job.state === 'failed' && job.code === 'SelectionFailed') {

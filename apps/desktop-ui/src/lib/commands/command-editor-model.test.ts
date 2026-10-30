@@ -24,6 +24,10 @@ describe('command editor model', () => {
     expect(command.toolConfig.timeoutSec).toBe(SCRIPT_MAX_TIMEOUT_SEC)
     model.updateTimeout('')
     expect(command.toolConfig).not.toHaveProperty('timeoutSec')
+    model.updateTimeout('1.6')
+    expect(command.toolConfig.timeoutSec).toBe(2)
+    model.updateTimeout('10abc')
+    expect(command.toolConfig).not.toHaveProperty('timeoutSec')
     expect(command.toolConfig.command).toBe('echo test')
   })
   it('sets the output action of quick commands', () => {

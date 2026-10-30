@@ -11,6 +11,9 @@ import type {
 import type { ToolResult } from '../tools/tool-types'
 import { commandInvocation, preTransformCommandText } from './command-runtime'
 
+/** Shown when a pre-transformation fails without saying why */
+const FAILED_KEY = 'commands.preTransformFailed'
+
 const disabled: ToolResult = {
   ok: false,
   level: 'warn',
@@ -40,38 +43,33 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
       transformTextWithLlm: deps.transformTextWithLlm,
     })
     if (pre.cancelled) {
-      return {
-        ok: false as const,
-        outcome: {
-          success: false,
-          cancelled: true,
-          message: 'Cancelled',
-        } as InvocationOutcome,
-        result: { ok: false, cancelled: true } as ToolResult,
+      const outcome: InvocationOutcome = {
+        success: false,
+        cancelled: true,
+        message: 'Cancelled',
       }
+      const result: ToolResult = { ok: false, cancelled: true }
+      return { ok: false as const, outcome, result }
     }
     if (!pre.ok) {
-      if (pre.messageKey) {
-        if (deps.showError) {
-          deps.showError(pre.messageKey, pre.message)
-        } else {
-          deps.showToast(pre.messageKey, 'error')
-        }
-      } else if (pre.message) {
-        deps.showText?.(pre.message, 'error')
+      const messageKey =
+        pre.messageKey ?? (pre.message ? undefined : FAILED_KEY)
+      if (messageKey) {
+        if (deps.showError) deps.showError(messageKey, pre.message)
+        else deps.showToast(messageKey, 'error')
+      } else if (pre.message && deps.showText) {
+        deps.showText(pre.message, 'error')
+      } else if (deps.showError) {
+        deps.showError(FAILED_KEY, pre.message)
+      } else {
+        deps.showToast(FAILED_KEY, 'error')
       }
-      return {
-        ok: false as const,
-        outcome: {
-          success: false,
-          message: pre.message ?? pre.messageKey ?? 'Pre-transformation failed',
-        } as InvocationOutcome,
-        result: {
-          ok: false,
-          messageKey: pre.messageKey,
-          message: pre.message,
-        } as ToolResult,
+      const outcome: InvocationOutcome = {
+        success: false,
+        message: pre.message ?? messageKey ?? 'Pre-transformation failed',
       }
+      const result: ToolResult = { ok: false, messageKey, message: pre.message }
+      return { ok: false as const, outcome, result }
     }
     const nextText = pre.text ?? text
     const nextOptions =

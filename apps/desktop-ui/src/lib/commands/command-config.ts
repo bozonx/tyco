@@ -11,7 +11,8 @@ import {
 } from '@tyco/shared'
 import type { RegisteredTool } from '../tools/tool-types'
 
-const stringOr = (value: unknown): string =>
+/** The value if it is a string, otherwise an empty string */
+export const stringOr = (value: unknown): string =>
   typeof value === 'string' ? value : ''
 
 /** The output action of a tool, or `none` */
@@ -30,7 +31,7 @@ function headersOf(value: unknown): Record<string, string> {
 }
 
 /** A whole number of seconds the script may run, or `undefined` for none */
-function timeoutOf(value: unknown): number | undefined {
+export function scriptTimeoutOf(value: unknown): number | undefined {
   if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
   const seconds = Math.round(value)
   return seconds >= 1 ? Math.min(seconds, SCRIPT_MAX_TIMEOUT_SEC) : undefined
@@ -39,7 +40,7 @@ function timeoutOf(value: unknown): number | undefined {
 export function scriptToolConfigOf(
   config: Record<string, unknown>
 ): ScriptToolConfig {
-  const timeoutSec = timeoutOf(config.timeoutSec)
+  const timeoutSec = scriptTimeoutOf(config.timeoutSec)
   return {
     command: stringOr(config.command),
     workingDirectory: stringOr(config.workingDirectory),
@@ -91,9 +92,10 @@ export function normalizeLauncherCommands(
 }
 
 function newCommandId(): string {
-  return typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `command-${Date.now()}`
+  if (typeof crypto !== 'undefined' && crypto.randomUUID)
+    return crypto.randomUUID()
+  // without crypto, the time alone repeats for commands made at once
+  return `command-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 /** The settings a new command of the tool starts with */

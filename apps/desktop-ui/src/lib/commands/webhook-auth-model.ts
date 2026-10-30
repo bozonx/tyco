@@ -5,6 +5,10 @@ import { httpOrigin } from '../net/secrets'
 export interface WebhookAuthDependencies {
   getUrl: () => string
   getSecretId: () => string
+  /** The origins a stored secret is bound to; empty when unknown */
+  getSecretOrigins?: (id: string) => string[]
+  /** Whether the saved config still refers to the secret anywhere */
+  isSecretReferenced?: (id: string) => boolean
   createId: () => string
   setSecret: (id: string, value: string, origins: string[]) => Promise<void>
   removeSecret: (id: string) => Promise<void>
@@ -13,15 +17,26 @@ export interface WebhookAuthDependencies {
   persist: () => Promise<unknown>
   isSaved: () => boolean
   notifyInvalidOrigin: () => void
-  reportError: (error: unknown) => void
+  reportSaveError: (error: unknown) => void
+  reportRemoveError: (error: unknown) => void
 }
 
 /**
- * Keeps credentials behind the secret store and removes them only after
- * persistence.
+ * Keeps credentials behind the secret store and removes them only after the
+ * config that no longer refers to them is saved
  */
 export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
   const authDraft = ref('')
+
+  /** Removes a secret once the saved config no longer refers to it */
+  async function removeUnusedSecret(id: string) {
+    if (!id) return
+    await deps.afterRender()
+    await deps.persist()
+    if (!deps.isSaved() || deps.isSecretReferenced?.(id)) return
+    await deps.removeSecret(id)
+  }
+
   async function saveAuth() {
     const value = authDraft.value.trim()
     if (!value) return
@@ -30,6 +45,7 @@ export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
       deps.notifyInvalidOrigin()
       return
     }
+    const previousId = deps.getSecretId()
     try {
       const id = `${WEBHOOK_AUTH_SECRET_PREFIX}${deps.createId()}`
       await deps.setSecret(id, value, [origin])
@@ -38,19 +54,55 @@ export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
       authDraft.value = ''
       deps.update('isAuthEnabled', true)
     } catch (error) {
-      deps.reportError(error)
+      deps.reportSaveError(error)
+      return
+    }
+    if (previousId) {
+      await removeUnusedSecret(previousId).catch(deps.reportRemoveError)
     }
   }
+
   async function removeAuth() {
+    const id = deps.getSecretId()
     try {
-      const id = deps.getSecretId()
       deps.update('isAuthEnabled', false)
       await deps.afterRender()
-      await deps.persist()
-      if (deps.isSaved() && id) await deps.removeSecret(id)
+      deps.update('authSecretId', undefined)
+      await removeUnusedSecret(id)
     } catch (error) {
-      deps.reportError(error)
+      deps.reportRemoveError(error)
     }
   }
-  return { authDraft, saveAuth, removeAuth }
+
+  /**
+   * Puts a new value under a stored secret, keeping its id and origins, so a
+   * secret header never turns into plain text in the config
+   */
+  async function replaceSecret(id: string, value: string) {
+    const trimmed = value.trim()
+    if (!id || !trimmed) return false
+    const known = deps.getSecretOrigins?.(id) ?? []
+    const origin = httpOrigin(deps.getUrl())
+    const origins = known.length ? known : origin ? [origin] : []
+    if (!origins.length) {
+      deps.notifyInvalidOrigin()
+      return false
+    }
+    try {
+      await deps.setSecret(id, trimmed, origins)
+      return true
+    } catch (error) {
+      deps.reportSaveError(error)
+      return false
+    }
+  }
+
+  return {
+    authDraft,
+    saveAuth,
+    removeAuth,
+    replaceSecret,
+    removeUnusedSecret: (id: string) =>
+      removeUnusedSecret(id).catch(deps.reportRemoveError),
+  }
 }

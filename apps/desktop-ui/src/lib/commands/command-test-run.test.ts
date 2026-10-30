@@ -100,6 +100,26 @@ describe('runCommandTest', () => {
     }
   })
 
+  it('does not ask the LLM for a script it cannot save', async () => {
+    const transformTextWithLlm = vi.fn().mockResolvedValue('HI')
+    const command = script(
+      {},
+      { isLlmPreTransformEnabled: true, llmPreTransformPrompt: 'upper' }
+    )
+    const result = await runCommandTest(
+      command,
+      'hi',
+      testTools(),
+      {
+        ...deps(undefined, undefined, vi.fn().mockResolvedValue(undefined)),
+        transformTextWithLlm,
+      },
+      new AbortController().signal
+    )
+    expect(result).toMatchObject({ messageKey: 'commands.testNeedsSave' })
+    expect(transformTextWithLlm).not.toHaveBeenCalled()
+  })
+
   it('does not run a script without a command', async () => {
     const d = deps()
     const result = await runCommandTest(

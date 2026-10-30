@@ -63,16 +63,53 @@ describe('WebhookActionFields.vue', () => {
 
   it('edits headers as rows', async () => {
     const wrapper = mountFields(webhook({ headers: { Accept: 'text/plain' } }))
+    // the editor hands each change back, as the settings do
+    await wrapper.setProps({
+      onUpdate: (field: string, value: unknown) => {
+        const command = wrapper.props('command')
+        void wrapper.setProps({
+          command: {
+            ...command,
+            toolConfig: { ...command.toolConfig, [field]: value },
+          },
+        })
+      },
+    } as never)
     await wrapper.get('input.header-name').setValue('Content-Type')
     await button(wrapper, 'common.add').trigger('click')
     await wrapper
       .findComponent({ name: 'IconButton' })
       .vm.$emit('click', new MouseEvent('click'))
+    // the empty row stays in the editor until it gets a name
     expect(updates(wrapper)).toEqual([
       ['headers', { 'Content-Type': 'text/plain' }],
-      ['headers', { Accept: 'text/plain', '': '' }],
       ['headers', {}],
     ])
+  })
+
+  it('keeps a row with a repeated name in the editor only', async () => {
+    const wrapper = mountFields(webhook({ headers: { Accept: 'a' } }))
+    await button(wrapper, 'common.add').trigger('click')
+    await wrapper.findAll('input.header-name').at(1)!.setValue('accept')
+    expect(updates(wrapper)).toEqual([])
+    expect(wrapper.findAll('input.header-name')).toHaveLength(2)
+    expect(wrapper.text()).toContain('settings.actionWebhookHeaderDuplicate')
+  })
+
+  it('replaces a secret header value in the secret store', async () => {
+    secrets.secrets = { abc: { origins: ['https://hooks.example.com'] } }
+    const wrapper = mountFields(
+      webhook({ headers: { Authorization: 'tyco-secret:abc' } })
+    )
+    await wrapper
+      .get('input[aria-label="settings.actionWebhookHeaderValue"]')
+      .setValue('Bearer new')
+    await button(wrapper, 'common.save').trigger('click')
+    await flushPromises()
+    expect(secrets.setSecret).toHaveBeenCalledWith('abc', 'Bearer new', [
+      'https://hooks.example.com',
+    ])
+    expect(updates(wrapper)).toEqual([])
   })
 
   it('does not add a second empty header', async () => {
@@ -127,7 +164,10 @@ describe('WebhookActionFields.vue', () => {
     expect(wrapper.text()).toContain('settings.apiKeyBoundTo')
     await button(wrapper, 'common.remove').trigger('click')
     await flushPromises()
-    expect(updates(wrapper)).toEqual([['isAuthEnabled', false]])
+    expect(updates(wrapper)).toEqual([
+      ['isAuthEnabled', false],
+      ['authSecretId', undefined],
+    ])
     expect(session.persist).toHaveBeenCalledOnce()
     expect(secrets.removeSecret).toHaveBeenCalledWith('webhook-1')
   })

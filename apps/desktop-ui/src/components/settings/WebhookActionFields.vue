@@ -62,16 +62,30 @@
           :placeholder="t('settings.actionWebhookHeaderName')"
           @update:model-value="updateHeader(headerIndex, 0, $event)"
         />
+        <template v-if="secretIdOf(header[1])">
+          <FieldInput
+            class="flex-1"
+            type="password"
+            :aria-label="t('settings.actionWebhookHeaderValue')"
+            :model-value="secretDrafts[headerIndex] ?? ''"
+            :placeholder="t('settings.actionWebhookAuthReplacePlaceholder')"
+            @update:model-value="secretDrafts[headerIndex] = $event"
+          />
+          <Button
+            variant="primary"
+            size="sm"
+            :disabled="!secretDrafts[headerIndex]?.trim()"
+            @click="replaceHeaderSecret(headerIndex)"
+          >
+            {{ t('common.save') }}
+          </Button>
+        </template>
         <FieldInput
+          v-else
           class="flex-1"
           :aria-label="t('settings.actionWebhookHeaderValue')"
-          :type="hasSecretRef(header[1]) ? 'password' : 'text'"
-          :model-value="hasSecretRef(header[1]) ? '' : header[1]"
-          :placeholder="
-            hasSecretRef(header[1])
-              ? t('settings.actionWebhookAuthReplacePlaceholder')
-              : t('settings.actionWebhookHeaderValue')
-          "
+          :model-value="header[1]"
+          :placeholder="t('settings.actionWebhookHeaderValue')"
           @update:model-value="updateHeader(headerIndex, 1, $event)"
         />
         <IconButton
@@ -82,6 +96,9 @@
           icon="mdi:close"
         />
       </div>
+      <p v-if="duplicateHeaders.size" class="action-field-warning">
+        {{ t('settings.actionWebhookHeaderDuplicate') }}
+      </p>
       <div>
         <Button
           type="button"
@@ -141,8 +158,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
-import { nextTick, onMounted } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 
 import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
@@ -152,13 +168,15 @@ import { createWebhookAuthModel } from '../../lib/commands/webhook-auth-model'
 import {
   type WebhookHeaderRow,
   addWebhookHeaderRow,
+  duplicateWebhookHeaderRows,
+  isSameWebhookHeaders,
   removeWebhookHeaderRow,
   updateWebhookHeaderRow,
   webhookHeaderRows,
   webhookHeadersFromRows,
 } from '../../lib/commands/webhook-header-rows'
 import { clientLogger } from '../../lib/logger'
-import { SECRET_REF_PREFIX, httpOrigin } from '../../lib/net/secrets'
+import { httpOrigin, secretIdFromRef } from '../../lib/net/secrets'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import Button from '../common/Button.vue'
@@ -171,9 +189,6 @@ import ActionTemplateField from './ActionTemplateField.vue'
 import type { CommandConfig } from '@tyco/shared'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 
-const hasSecretRef = (value: string): boolean =>
-  value.includes(SECRET_REF_PREFIX)
-
 const props = defineProps<{ command: CommandConfig }>()
 const emit = defineEmits<{ update: [field: string, value: unknown] }>()
 const { t } = useI18n()
@@ -185,14 +200,39 @@ function update(field: string, value: unknown) {
 const webhook = computed(() => webhookToolConfig(props.command))
 const secretsStore = useSecretsStore()
 const { toastKey, toastError } = useToast()
-const headerRows = computed<WebhookHeaderRow[]>(() =>
-  props.command.toolId === 'webhook'
-    ? webhookHeaderRows(webhook.value.headers)
-    : []
+// the rows live here, so a row without a name or with a repeated one is kept
+// while it is edited; the config gets the valid headers only
+const headerRows = ref<WebhookHeaderRow[]>([])
+const secretDrafts = reactive<Record<number, string>>({})
+const configHeaders = computed(() =>
+  props.command.toolId === 'webhook' ? (webhook.value.headers ?? {}) : {}
 )
+watch(
+  [() => props.command.id, configHeaders],
+  ([id], [previousId]) => {
+    if (
+      id === previousId &&
+      isSameWebhookHeaders(
+        webhookHeadersFromRows(headerRows.value),
+        configHeaders.value
+      )
+    )
+      return
+    headerRows.value = webhookHeaderRows(configHeaders.value)
+    for (const key of Object.keys(secretDrafts)) delete secretDrafts[+key]
+  },
+  { immediate: true }
+)
+const duplicateHeaders = computed(() =>
+  duplicateWebhookHeaderRows(headerRows.value)
+)
+const secretIdOf = (value: string): string | null => secretIdFromRef(value)
 
 function setHeaders(rows: WebhookHeaderRow[]) {
-  update('headers', webhookHeadersFromRows(rows))
+  headerRows.value = rows
+  const headers = webhookHeadersFromRows(rows)
+  if (!isSameWebhookHeaders(headers, configHeaders.value))
+    update('headers', headers)
 }
 
 function updateHeader(index: number, part: 0 | 1, value: string) {
@@ -205,7 +245,18 @@ function addHeader() {
 }
 
 function removeHeader(index: number) {
+  const id = secretIdOf(headerRows.value[index]?.[1] ?? '')
+  for (const key of Object.keys(secretDrafts)) delete secretDrafts[+key]
   setHeaders(removeWebhookHeaderRow(headerRows.value, index))
+  if (id) void removeUnusedSecret(id)
+}
+
+async function replaceHeaderSecret(index: number) {
+  const id = secretIdOf(headerRows.value[index]?.[1] ?? '')
+  if (!id) return
+  if (await replaceSecret(id, secretDrafts[index] ?? '')) {
+    delete secretDrafts[index]
+  }
 }
 
 const session = useSettingsSessionStore()
@@ -225,19 +276,24 @@ const authBoundElsewhere = computed(() => {
   return Boolean(origin) && !authOrigins.value.includes(origin!)
 })
 
-const { authDraft, saveAuth, removeAuth } = createWebhookAuthModel({
-  getUrl: () => webhook.value.url,
-  getSecretId: () => secretId.value,
-  createId: () => crypto.randomUUID(),
-  setSecret: secretsStore.setSecret,
-  removeSecret: secretsStore.removeSecret,
-  update,
-  afterRender: nextTick,
-  persist: session.persist,
-  isSaved: session.isSaved,
-  notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
-  reportError: (error) => toastError(error, 'settings.keySaveFailed'),
-})
+const { authDraft, saveAuth, removeAuth, replaceSecret, removeUnusedSecret } =
+  createWebhookAuthModel({
+    getUrl: () => webhook.value.url,
+    getSecretId: () => secretId.value,
+    getSecretOrigins: (id) => secretsStore.secrets[id]?.origins ?? [],
+    isSecretReferenced: (id) =>
+      JSON.stringify(session.draft?.commands ?? []).includes(id),
+    createId: () => crypto.randomUUID(),
+    setSecret: secretsStore.setSecret,
+    removeSecret: secretsStore.removeSecret,
+    update,
+    afterRender: nextTick,
+    persist: session.persist,
+    isSaved: session.isSaved,
+    notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
+    reportSaveError: (error) => toastError(error, 'settings.keySaveFailed'),
+    reportRemoveError: (error) => toastError(error, 'settings.keyRemoveFailed'),
+  })
 
 onMounted(() => {
   if (webhook.value.isAuthEnabled)

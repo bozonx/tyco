@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   addWebhookHeaderRow,
+  duplicateWebhookHeaderRows,
+  isSameWebhookHeaders,
   removeWebhookHeaderRow,
   updateWebhookHeaderRow,
   webhookHeaderRows,
@@ -48,5 +50,23 @@ describe('webhook header rows', () => {
         0
       )
     ).toEqual([['B', '2']])
+  })
+  it('keeps the first of rows with the same name and skips unnamed rows', () => {
+    const rows: [string, string][] = [
+      ['Accept', '1'],
+      ['', 'x'],
+      ['accept ', '2'],
+      [' X-Id ', '3'],
+    ]
+    expect(webhookHeadersFromRows(rows)).toEqual({ Accept: '1', 'X-Id': '3' })
+    expect([...duplicateWebhookHeaderRows(rows)]).toEqual([2])
+  })
+
+  it('compares header sets in order', () => {
+    expect(isSameWebhookHeaders({ A: '1' }, { A: '1' })).toBe(true)
+    expect(isSameWebhookHeaders({ A: '1' }, { A: '2' })).toBe(false)
+    expect(isSameWebhookHeaders({ A: '1', B: '2' }, { B: '2', A: '1' })).toBe(
+      false
+    )
   })
 })

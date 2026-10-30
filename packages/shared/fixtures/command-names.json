@@ -1,0 +1,11 @@
+{
+  "_comment": "Command names as external calls compare them; shared by normalizeCommandName (TS) and normalize_name (Rust)",
+  "cases": [
+    ["  Ёлка   ЗАПИСЬ ", "елка запись"],
+    ["Work \tNote", "work note"],
+    ["ΟΔΟΣ", "οδος"],
+    ["a b　c", "a b c"],
+    ["", ""],
+    ["   ", ""]
+  ]
+}

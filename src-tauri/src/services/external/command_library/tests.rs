@@ -355,3 +355,15 @@ fn lists_the_callable_commands() {
     );
     assert_eq!(list(&json!({}), None), json!([]));
 }
+
+#[test]
+fn names_normalize_as_the_webview_does() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../packages/shared/fixtures/command-names.json"
+    ))
+    .unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let [name, expected] = [&case[0], &case[1]].map(|value| value.as_str().unwrap());
+        assert_eq!(normalize_name(name), expected, "{name:?}");
+    }
+}

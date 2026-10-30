@@ -65,15 +65,43 @@ export function createLauncherExecution(
   let source: CommandRunSource = 'launcher'
   let controller: AbortController | null = null
   let externalCall: LauncherRequest | null = null
+  const cancelled: InvocationOutcome = {
+    success: false,
+    cancelled: true,
+    message: 'Cancelled',
+  }
+
+  // the backend may refuse or fail to hand a job over: then it is not ours
+  const claimJob = (id: string): Promise<boolean> =>
+    deps.claimJob
+      ? deps.claimJob(id).catch((error: unknown) => {
+          deps.reportError?.(error)
+          return false
+        })
+      : Promise.resolve(true)
+  const finishJob = (
+    id: string,
+    outcome: InvocationOutcome
+  ): Promise<InvocationOutcome | void> => {
+    try {
+      return Promise.resolve(deps.finishJob?.(id, outcome)).catch(
+        (error: unknown) => deps.reportError?.(error)
+      )
+    } catch (error) {
+      deps.reportError?.(error)
+      return Promise.resolve()
+    }
+  }
+
+  /** Finishes the job of the external call this launcher was opened for */
+  const releaseJob = (outcome: InvocationOutcome) => {
+    const id = externalCall?.jobId
+    externalCall = null
+    return id ? finishJob(id, outcome) : Promise.resolve()
+  }
 
   const reset = () => {
-    if (externalCall?.jobId)
-      void deps.finishJob?.(externalCall.jobId, {
-        success: false,
-        cancelled: true,
-        message: 'Cancelled',
-      })
-    externalCall = null
+    void releaseJob(cancelled)
     controller?.abort()
     controller = null
     source = 'launcher'
@@ -100,30 +128,56 @@ export function createLauncherExecution(
     ) {
       // the selection run reports and logs the outcome itself
       ui.reset()
-      await deps.replaceSelection(command)
-      return { success: true }
+      try {
+        await deps.replaceSelection(command)
+        return { success: true }
+      } catch (error) {
+        deps.reportError?.(error)
+        return { success: false, message: errorMessage(error) }
+      }
     }
     const call = externalCall
     const running: LauncherStage = { kind: 'running', command }
     ui.stage.value = running
     const runController = new AbortController()
     controller = runController
-    if (call?.jobId && deps.claimJob && !(await deps.claimJob(call.jobId))) {
-      // another window has the job, or it is over: not ours to finish
-      if (externalCall === call) externalCall = null
-      ui.reset()
-      return { success: false, cancelled: true }
+    if (call?.jobId) {
+      if (!(await claimJob(call.jobId))) {
+        // another window has the job, or it is over: not ours to finish
+        if (externalCall === call) externalCall = null
+        if (ui.stage.value === running) ui.reset()
+        return { success: false, cancelled: true }
+      }
+      // a reset while the job was being claimed has finished it already
+      if (externalCall !== call) return cancelled
     }
-    if (disposed || runController.signal.aborted)
-      return { success: false, cancelled: true }
-    if (input !== null) {
+    /** Ends a run cancelled before the command started */
+    const stopEarly = async (): Promise<InvocationOutcome> => {
+      if (controller === runController) controller = null
+      if (call?.jobId) {
+        if (externalCall === call) await releaseJob(cancelled)
+        if (!disposed && ui.stage.value === running) ui.reset()
+      } else if (!disposed && ui.stage.value === running) {
+        // as after a cancelled run: the text stays for another try
+        if (input !== null) {
+          ui.inputText.value = input
+          ui.stage.value = { kind: 'prepare', command, autoRun: false }
+        } else {
+          ui.stage.value = { kind: 'list' }
+        }
+      }
+      return cancelled
+    }
+    if (disposed || runController.signal.aborted) return stopEarly()
+    if (input !== null && deps.saveOutput) {
       // the history keeps the text even when the command fails
-      await deps
-        .saveOutput?.(input)
-        .catch((error: unknown) => deps.reportError?.(error))
+      try {
+        await deps.saveOutput(input)
+      } catch (error) {
+        deps.reportError?.(error)
+      }
     }
-    if (disposed || runController.signal.aborted)
-      return { success: false, cancelled: true }
+    if (disposed || runController.signal.aborted) return stopEarly()
     let outcome: InvocationOutcome
     try {
       outcome = await deps.run(command, input ?? '', {
@@ -133,7 +187,7 @@ export function createLauncherExecution(
       })
     } catch (error) {
       outcome = runController.signal.aborted
-        ? { success: false, cancelled: true, message: 'Cancelled' }
+        ? cancelled
         : { success: false, message: errorMessage(error) }
     }
     if (disposed) return { success: false, cancelled: true }
@@ -141,10 +195,9 @@ export function createLauncherExecution(
     if (call?.jobId) {
       // a reset meanwhile has finished the job as cancelled already
       if (externalCall === call) {
-        externalCall = null
-        outcome = (await deps.finishJob?.(call.jobId, outcome)) ?? outcome
+        outcome = (await releaseJob(outcome)) ?? outcome
       } else {
-        outcome = { success: false, cancelled: true, message: 'Cancelled' }
+        outcome = cancelled
       }
       if (disposed) return { success: false, cancelled: true }
       log(command, input, outcome)

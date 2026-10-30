@@ -1,4 +1,8 @@
-import type { CommandConfig, CommandRunSource } from '@tyco/shared'
+import {
+  ACTION_TEXT_PLACEHOLDER,
+  type CommandConfig,
+  type CommandRunSource,
+} from '@tyco/shared'
 import { errorMessage } from '@tyco/shared/value-guards'
 import type { Invocation, ResultSink } from '../invocation/invocation-types'
 import { invocationUnavailableReason } from '../invocation/invoke-tool'
@@ -9,7 +13,8 @@ import type {
   ToolInputKind,
   ToolLookup,
 } from '../tools/tool-types'
-import { scriptToolConfig, webhookToolConfig } from './command-config'
+import { httpOrigin } from '../net/secrets'
+import { scriptToolConfig, stringOr, webhookToolConfig } from './command-config'
 
 /** Output handling belongs to the invocation context, not the tool. */
 export function commandAfterRun(
@@ -115,7 +120,8 @@ export function commandLabel(command: CommandConfig): string {
     return scriptToolConfig(command).command.trim() || 'Command'
   }
   if (command.toolId === 'webhook') return 'Webhook'
-  return command.id
+  // the tool says more than the generated id of the command
+  return command.toolId.trim() || command.id
 }
 
 /** The invocation that runs the command */
@@ -143,9 +149,6 @@ export function commandTarget(command: CommandConfig): string {
   }
   return ''
 }
-
-const stringOr = (value: unknown): string =>
-  typeof value === 'string' ? value : ''
 
 export interface CommandIssue {
   /** The tool config field the issue is about */
@@ -180,6 +183,10 @@ export function validateCommand(
     const config = webhookToolConfig(command)
     if (!config.url.trim()) {
       issues.push({ field: 'url', messageKey: 'commands.errorNoUrl' })
+    } else if (
+      !httpOrigin(config.url.replaceAll(ACTION_TEXT_PLACEHOLDER, 'x'))
+    ) {
+      issues.push({ field: 'url', messageKey: 'commands.errorInvalidUrl' })
     }
   } else if (command.toolId === 'core.translate') {
     if (!stringOr(command.toolConfig.language).trim()) {
@@ -258,19 +265,24 @@ export async function preTransformCommandText(
   if (reason) {
     return { ok: false, messageKey: reason }
   }
-  const res = await tool.run({
-    input: { text },
-    config: { prompt },
-    source: options.source ?? 'menu',
-    signal: options.signal ?? new AbortController().signal,
-    isOutputRequested: true,
-    wantsOutput: true,
-  })
-  if (res.cancelled || options.signal?.aborted) {
-    return { ok: false, cancelled: true }
+  try {
+    const res = await tool.run({
+      input: { text },
+      config: { prompt },
+      source: options.source ?? 'menu',
+      signal: options.signal ?? new AbortController().signal,
+      isOutputRequested: true,
+      wantsOutput: true,
+    })
+    if (res.cancelled || options.signal?.aborted) {
+      return { ok: false, cancelled: true }
+    }
+    if (!res.ok) {
+      return { ok: false, messageKey: res.messageKey, message: res.message }
+    }
+    return { ok: true, text: res.content ?? text }
+  } catch (error) {
+    if (options.signal?.aborted) return { ok: false, cancelled: true }
+    return { ok: false, message: errorMessage(error) }
   }
-  if (!res.ok) {
-    return { ok: false, messageKey: res.messageKey, message: res.message }
-  }
-  return { ok: true, text: res.content ?? text }
 }

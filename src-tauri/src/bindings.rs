@@ -67,7 +67,7 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<commands::chat_images::ChatImageMeta>();
     visitor.visit::<commands::net::SocketFrameMeta>();
     visitor.visit::<commands::plugins::PluginPackagePreview>();
-    visitor.visit::<commands::script_actions::ScriptActionRequest>();
+    visitor.visit::<models::ScriptActionRequest>();
     visitor.visit::<models::Chat>();
     visitor.visit::<models::ChatAttachment>();
     visitor.visit::<models::ChatImage>();

@@ -229,6 +229,7 @@ import { createCommandEditorModel } from '../../lib/commands/command-editor-mode
 import {
   commandCliCall,
   normalizeCommandName,
+  platformCliShell,
 } from '../../lib/commands/command-external'
 import {
   commandLabel,
@@ -361,10 +362,13 @@ const isAdvancedOpen = ref<boolean>(
 )
 
 /** By the name, which reads better, while it is unique; otherwise by the id */
+const cliShell = platformCliShell(
+  typeof navigator === 'undefined' ? '' : navigator.userAgent
+)
 const cliCommand = computed(() =>
   normalizeCommandName(props.command.name) && !props.nameConflicts.length
-    ? commandCliCall(props.command.name.trim(), true)
-    : commandCliCall(props.command.id)
+    ? commandCliCall(props.command.name.trim(), true, cliShell)
+    : commandCliCall(props.command.id, false, cliShell)
 )
 
 async function openLog() {

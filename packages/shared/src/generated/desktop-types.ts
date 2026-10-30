@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 8d650d8370c4452eda062aa0afa605be85316cb47286774d566ccf1524341f36
+// Source hash: bc84facad1d073bb5cdaa35173699488b7ada0aca9325fd4d3adea3140f4bafb
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -555,6 +555,7 @@ export type ProjectPermission = {
   write: ProjectAccessMode
 }
 
+/** A request of the webview to run a saved script. */
 export type ScriptActionRequest = {
   /**
    * The saved command to run; its shell command, working directory and timeout

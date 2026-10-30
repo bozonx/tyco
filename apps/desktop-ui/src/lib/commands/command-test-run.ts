@@ -76,6 +76,17 @@ export async function runCommandTest(
   },
   signal: AbortSignal
 ): Promise<CommandTestResult> {
+  // a script is checked and saved before the LLM is asked to prepare its text
+  if (command.toolId === 'script') {
+    if (!scriptToolConfig(command).command.trim()) {
+      return { kind: 'error', messageKey: 'commands.errorNoCommand' }
+    }
+    const saved = await deps.saveCommand(command.id)
+    if (signal.aborted) return { kind: 'cancelled' }
+    if (!saved || !isSameScript(saved, command)) {
+      return { kind: 'error', messageKey: 'commands.testNeedsSave' }
+    }
+  }
   const pre = await preTransformCommandText(command, text, tools, {
     signal,
     source: 'menu',
@@ -88,15 +99,6 @@ export async function runCommandTest(
   const resolvedText = pre.text ?? text
   const input = commandTakesText(command, tools) ? resolvedText : null
   if (command.toolId === 'script') {
-    const config = scriptToolConfig(command)
-    if (!config.command.trim()) {
-      return { kind: 'error', messageKey: 'commands.errorNoCommand' }
-    }
-    const saved = await deps.saveCommand(command.id)
-    if (signal.aborted) return { kind: 'cancelled' }
-    if (!saved || !isSameScript(saved, command)) {
-      return { kind: 'error', messageKey: 'commands.testNeedsSave' }
-    }
     const runId = deps.newRunId()
     let over = false
     const cancel = () => {

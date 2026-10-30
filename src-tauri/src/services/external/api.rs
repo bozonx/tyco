@@ -77,6 +77,50 @@ fn replace_selection(app: &AppHandle, action: &str) -> ApiResult<()> {
     })
 }
 
+/// Whether the window may run external jobs: only the quick window does.
+pub fn is_job_window(window_label: &str) -> bool {
+    window_label == runtime::QUICK_WINDOW_LABEL
+}
+
+fn ensure_job_window(window_label: &str, action: &str) -> Result<(), crate::errors::AppError> {
+    if is_job_window(window_label) {
+        Ok(())
+    } else {
+        Err(crate::errors::AppError::InvalidInput(format!(
+            "Only the quick window {action}"
+        )))
+    }
+}
+
+/// Hands the job over to the window; `false` when it is not the job window
+/// or the job is gone, taken or over.
+pub fn claim_for_window(app: &AppHandle, window_label: &str, id: &str) -> bool {
+    is_job_window(window_label) && claim(app, id)
+}
+
+/// Finishes the job the window ran and returns it as it ended up.
+pub fn finish_for_window(
+    app: &AppHandle,
+    window_label: &str,
+    id: &str,
+    completion: JobCompletion,
+) -> Result<Option<tyco_activation_protocol::Job>, crate::errors::AppError> {
+    ensure_job_window(window_label, "finishes external jobs")?;
+    complete(app, id, completion);
+    Ok(app.state::<ExternalJobs>().get(id))
+}
+
+/// Answers an access request of a job from the window.
+pub fn answer_access_for_window(
+    app: &AppHandle,
+    window_label: &str,
+    job_id: &str,
+    decision: crate::services::external::access::AccessDecision,
+) -> Result<(), crate::errors::AppError> {
+    ensure_job_window(window_label, "answers access requests")?;
+    crate::services::external::access::answer(app, job_id, decision)
+}
+
 pub fn dispatch(app: &AppHandle, request: Request, source: ActivationSource) -> Response {
     let response = dispatch_inner(app, request, source);
     if serde_json::to_vec(&response).map_or(true, |bytes| {
