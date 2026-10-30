@@ -91,11 +91,14 @@ describe('diff-model', () => {
     expect(resolveDiffMode(null)).toBe(DEFAULT_DIFF_VIEW_MODE)
     expect(resolveDiffMode('split')).toBe('split')
     expect(resolveDiffMode('result')).toBe('result')
+    expect(resolveDiffMode('original')).toBe('original')
+    expect(isDiffViewMode('original')).toBe(true)
     expect(isDiffViewMode('other')).toBe(false)
 
     expect(cycleDiffMode('unified')).toBe('split')
     expect(cycleDiffMode('split')).toBe('result')
-    expect(cycleDiffMode('result')).toBe('unified')
+    expect(cycleDiffMode('result')).toBe('original')
+    expect(cycleDiffMode('original')).toBe('unified')
 
     expect(resolveParallelViewMode()).toBe('split')
     expect(resolveParallelViewMode('result')).toBe('result')

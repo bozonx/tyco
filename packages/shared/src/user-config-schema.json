@@ -43,7 +43,7 @@
       "properties": {
         "submitKey": { "enum": ["Enter", "Ctrl+Enter"], "default": "Enter" },
         "diffViewMode": {
-          "enum": ["unified", "split", "result"],
+          "enum": ["unified", "split", "result", "original"],
           "default": "unified"
         },
         "history": {

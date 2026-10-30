@@ -292,6 +292,7 @@
     "unsupportedConfig": "설정이 더 새로운 버전의 앱으로 저장되었습니다"
   },
   "diff": {
+    "modeOriginal": "원본만",
     "modeResult": "결과만",
     "modeSplit": "나란히 보기",
     "modeUnified": "인라인",

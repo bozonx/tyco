@@ -171,6 +171,21 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
+  it('renders custom editorButtonLabel when provided', () => {
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'test',
+        isEditorButtonVisible: true,
+        editorButtonLabel: 'Put original into editor',
+      },
+    })
+    const tabButton = wrapper
+      .findAllComponents({ name: 'ShortcutButton' })
+      .find((b) => b.text().includes('Tab'))
+    expect(tabButton?.text()).toContain('Put original into editor')
+    wrapper.unmount()
+  })
+
   it('resolves Esc to close mode on root screen without breadcrumbs and closes quick window', () => {
     mocks.currentWindowLabel = 'quick'
     mocks.currentModal = 'insert'

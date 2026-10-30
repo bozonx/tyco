@@ -41,7 +41,7 @@ pub async fn open_in_browser_and_hide(
 ) -> Result<(), AppError> {
     run_blocking(move || {
         super::system::open_url(&url)?;
-        runtime::hide_window(&app, window.label().into(), activation_id)
+        runtime::hide_window_without_refocus(&app, window.label().into(), activation_id)
     })
     .await?
 }

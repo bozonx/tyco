@@ -33,7 +33,9 @@ pub mod windows;
 
 pub(crate) use clipboard::ClipboardSnapshot;
 pub use file_manager::{open_dir, open_file, open_web_url};
-pub use foreground_context::{capture_foreground_target, capture_selection, ForegroundTarget};
+pub use foreground_context::{
+    capture_foreground_target, capture_selection, restore_foreground_target, ForegroundTarget,
+};
 pub use panel_surface::{
     apply_panel_surface, attach_panel_surface, disable_panel_keyboard, focus_window,
     is_layer_shell_supported, is_panel_relocating, select_panel_monitor, set_panel_input_region,

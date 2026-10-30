@@ -3,11 +3,7 @@
     :title="props.correction ? t('menu.correction') : t('menu.actions')"
   >
     <template
-      v-if="
-        statusVisible ||
-        (hasDiff && !props.correctionError) ||
-        (props.text && !props.isCorrecting)
-      "
+      v-if="statusVisible || (hasDiff && !props.correctionError)"
       #header-extra
     >
       <ResultViewModeToggle
@@ -29,12 +25,6 @@
         <AppIcon v-else icon="mdi:check" size="sm" />
         {{ statusText }}
       </span>
-      <CopyButton
-        v-if="props.text && !props.isCorrecting"
-        :value="props.text"
-        :label="t('action.copy')"
-        size="sm"
-      />
     </template>
 
     <template #preview>
@@ -43,19 +33,29 @@
         correction
         :on-cancel="menuModalsStore.back"
       />
-      <Diff
-        v-else-if="props.oldText && !props.correctionError"
-        :old-text="props.oldText"
-        :new-text="props.text"
-        :mode="diffMode"
-      />
-      <TextPreview v-else :text="props.text" />
+      <div v-else class="preview-area">
+        <Diff
+          v-if="props.oldText && !props.correctionError"
+          :old-text="props.oldText"
+          :new-text="props.text"
+          :mode="diffMode"
+        />
+        <TextPreview v-else :text="props.text" />
+        <CopyButton
+          v-if="activeActionText"
+          class="preview-copy-btn"
+          :value="activeActionText"
+          :label="t('action.copy')"
+          size="sm"
+        />
+      </div>
     </template>
 
     <template #actions>
       <ShortcutList
-        :text="props.text"
-        :source-text="props.oldText"
+        :text="activeActionText"
+        :source-text="activeSourceText"
+        :editor-button-label="editorButtonLabel"
         :left-letter-keys="leftLetterKeys"
         :space-key="spaceKey"
         :shortcuts-disabled="props.shortcutsDisabled"
@@ -182,6 +182,24 @@ usePreviewModeShortcut(() => {
   if (hasDiff.value) cycleMode()
 })
 
+const isShowingOriginal = computed(
+  () => diffMode.value === 'original' && Boolean(props.oldText)
+)
+
+const activeActionText = computed(() =>
+  isShowingOriginal.value ? props.oldText : props.text
+)
+
+const activeSourceText = computed(() =>
+  isShowingOriginal.value ? undefined : props.oldText
+)
+
+const editorButtonLabel = computed(() =>
+  isShowingOriginal.value
+    ? t('history.originalToEditor')
+    : t('shortcuts.insertIntoEditor')
+)
+
 const minCorrectionLength = APP_CONFIG.minCorrectionLength
 
 /** Why the correction action is off for this text, if it is. */
@@ -189,7 +207,7 @@ const correctionBlocker = computed(() => {
   if (props.correction && !props.correctionError) {
     return t('write.alreadyCorrected')
   }
-  if (props.text.length < minCorrectionLength) {
+  if (activeActionText.value.length < minCorrectionLength) {
     return t('write.textTooShortForCorrection')
   }
   return undefined
@@ -200,7 +218,7 @@ function shouldDisableAction(item?: ActionItem) {
   if (item.id === 'insertIntoWindow') {
     return !(
       desktopStore.canInsertIntoWindow &&
-      props.text &&
+      activeActionText.value &&
       props.allowInsertButton
     )
   }
@@ -271,5 +289,33 @@ const spaceKey = computed<ActionItem | undefined>(() => {
 
 .correction-status.is-error {
   color: var(--color-warning);
+}
+
+.preview-area {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+.preview-copy-btn {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  z-index: 5;
+  background-color: var(--app-surface-raised);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  opacity: 0.85;
+  transition:
+    opacity var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.preview-copy-btn:hover {
+  opacity: 1;
 }
 </style>

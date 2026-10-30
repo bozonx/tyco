@@ -292,6 +292,7 @@
     "unsupportedConfig": "設定是由較新版本的應用程式儲存"
   },
   "diff": {
+    "modeOriginal": "僅原始內容",
     "modeResult": "僅顯示結果",
     "modeSplit": "並排比較",
     "modeUnified": "內嵌比較",

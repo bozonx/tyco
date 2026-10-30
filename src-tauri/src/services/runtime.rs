@@ -15,7 +15,7 @@ pub use target_paste::paste_into_target;
 pub use tray::set_tray_menu_labels;
 pub use window_visibility::{
     handle_window_event, hide_active_window, hide_quick_window_on_blur, hide_window,
-    open_main_chat, open_main_editor, show_application,
+    hide_window_without_refocus, open_main_chat, open_main_editor, show_application,
 };
 
 use self::panel_layer::{is_quick_window_shown, panel_layer, PanelLayerState};

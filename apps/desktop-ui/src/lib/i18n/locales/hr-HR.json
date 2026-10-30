@@ -292,6 +292,7 @@
     "unsupportedConfig": "Postavke je spremila novija verzija aplikacije"
   },
   "diff": {
+    "modeOriginal": "Samo izvornik",
     "modeResult": "Samo rezultat",
     "modeSplit": "Jedno uz drugo",
     "modeUnified": "Objedinjeno",

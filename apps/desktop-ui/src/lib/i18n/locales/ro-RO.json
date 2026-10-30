@@ -292,6 +292,7 @@
     "unsupportedConfig": "Setările au fost salvate de o versiune mai nouă a aplicației"
   },
   "diff": {
+    "modeOriginal": "Doar original",
     "modeResult": "Doar rezultatul",
     "modeSplit": "Alăturat",
     "modeUnified": "Unificat",

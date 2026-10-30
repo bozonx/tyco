@@ -27,6 +27,10 @@ pub fn capture_foreground_target() -> Option<String> {
     SystemForegroundContext::detect().capture_foreground_target()
 }
 
+pub fn restore_foreground_target(target: &str) {
+    SystemForegroundContext::detect().restore_foreground_target(target)
+}
+
 pub async fn capture_selection(target: Option<String>) -> Option<String> {
     SystemForegroundContext::detect()
         .capture_selection(target)

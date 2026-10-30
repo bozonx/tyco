@@ -292,6 +292,7 @@
     "unsupportedConfig": "Ayarlar uygulamanın daha yeni bir sürümüyle kaydedilmiş"
   },
   "diff": {
+    "modeOriginal": "Yalnızca orijinal",
     "modeResult": "Yalnızca sonuç",
     "modeSplit": "İki sütun",
     "modeUnified": "Tek satır",

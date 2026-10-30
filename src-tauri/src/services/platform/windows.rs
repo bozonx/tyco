@@ -11,7 +11,8 @@ use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
     VK_RWIN, VK_SHIFT,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    GetClassNameW, GetForegroundWindow, GetWindowThreadProcessId, IsWindow, SetForegroundWindow,
+    GetClassNameW, GetForegroundWindow, GetWindowThreadProcessId, IsIconic, IsWindow,
+    IsWindowVisible, SetForegroundWindow,
 };
 
 use crate::errors::AppError;
@@ -106,6 +107,33 @@ pub fn inject_paste(target_window_handle: Option<&str>) -> Result<(), AppError> 
         ));
     }
     press_copy_or_paste(false, is_foreground_terminal())
+}
+
+/// Gives keyboard focus back to `target_window_handle` when it is still a live,
+/// visible, non-minimized window of another process.
+pub fn restore_foreground_target(target_window_handle: &str) {
+    let Some(window_handle) = target_window_handle
+        .parse::<isize>()
+        .ok()
+        .filter(|&value| value != 0)
+        .map(|value| value as HWND)
+    else {
+        return;
+    };
+    if unsafe { IsWindow(window_handle) } == 0
+        || unsafe { IsWindowVisible(window_handle) } == 0
+        || unsafe { IsIconic(window_handle) } != 0
+    {
+        return;
+    }
+    let mut process_id = 0;
+    unsafe { GetWindowThreadProcessId(window_handle, &mut process_id) };
+    if process_id == std::process::id() || unsafe { GetForegroundWindow() } == window_handle {
+        return;
+    }
+    unsafe {
+        SetForegroundWindow(window_handle);
+    }
 }
 
 pub fn is_foreground_terminal() -> bool {

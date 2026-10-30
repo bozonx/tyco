@@ -121,6 +121,25 @@ describe('InsertMenu correction step', () => {
     const copyButton = wrapper.findComponent(CopyButton)
     expect(copyButton.exists()).toBe(false)
   })
+
+  it('switches to original text and updates actions when diff mode is original', async () => {
+    const wrapper = mountMenu({ text: 'Result text', oldText: 'Original text' })
+    const list = wrapper.findComponent(ShortcutList)
+    expect(list.props('text')).toBe('Result text')
+    expect(list.props('sourceText')).toBe('Original text')
+    expect(list.props('editorButtonLabel')).toBe('shortcuts.insertIntoEditor')
+
+    const toggle = wrapper.findComponent({ name: 'ResultViewModeToggle' })
+    toggle.vm.$emit('update:modelValue', 'original')
+    await wrapper.vm.$nextTick()
+
+    expect(list.props('text')).toBe('Original text')
+    expect(list.props('sourceText')).toBe('')
+    expect(list.props('editorButtonLabel')).toBe('history.originalToEditor')
+
+    const copyButton = wrapper.findComponent(CopyButton)
+    expect(copyButton.props('value')).toBe('Original text')
+  })
 })
 
 afterEach(() => {

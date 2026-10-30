@@ -1,6 +1,6 @@
 import { Diff } from 'diff'
 
-export type DiffViewMode = 'unified' | 'split' | 'result'
+export type DiffViewMode = 'unified' | 'split' | 'result' | 'original'
 
 export interface DiffPart {
   value: string
@@ -15,7 +15,12 @@ export interface SplitDiffResult {
 
 export const DEFAULT_DIFF_VIEW_MODE: DiffViewMode = 'unified'
 
-const VALID_MODES = new Set<DiffViewMode>(['unified', 'split', 'result'])
+const VALID_MODES = new Set<DiffViewMode>([
+  'unified',
+  'split',
+  'result',
+  'original',
+])
 
 export function isDiffViewMode(value: unknown): value is DiffViewMode {
   return typeof value === 'string' && VALID_MODES.has(value as DiffViewMode)
@@ -26,7 +31,7 @@ export function resolveDiffMode(preferred?: DiffViewMode | null): DiffViewMode {
 }
 
 export function cycleDiffMode(current: DiffViewMode): DiffViewMode {
-  const modes: DiffViewMode[] = ['unified', 'split', 'result']
+  const modes: DiffViewMode[] = ['unified', 'split', 'result', 'original']
   return modes[(modes.indexOf(current) + 1) % modes.length]
 }
 

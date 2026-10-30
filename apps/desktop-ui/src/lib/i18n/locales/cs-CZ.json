@@ -292,6 +292,7 @@
     "unsupportedConfig": "Nastavení uložila novější verze aplikace"
   },
   "diff": {
+    "modeOriginal": "Pouze originál",
     "modeResult": "Jen výsledek",
     "modeSplit": "Vedle sebe",
     "modeUnified": "V jednom",

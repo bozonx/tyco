@@ -32,6 +32,7 @@ const MODE_OPTIONS = {
   unified: { labelKey: 'diff.modeUnified', icon: 'mdi:view-agenda-outline' },
   split: { labelKey: 'diff.modeSplit', icon: 'mdi:view-split-vertical' },
   result: { labelKey: 'diff.modeResult', icon: 'mdi:file-document-outline' },
+  original: { labelKey: 'diff.modeOriginal', icon: 'mdi:history' },
 } as const
 
 const resolvedLabel = computed(
@@ -47,7 +48,7 @@ const resolvedModes = computed<T[]>(
     props.modes ??
     (props.preset === 'parallel'
       ? (['split', 'result'] as T[])
-      : (['unified', 'split', 'result'] as T[]))
+      : (['unified', 'split', 'result', 'original'] as T[]))
 )
 
 const options = computed(() =>

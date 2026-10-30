@@ -209,12 +209,18 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
                         ) {
                             log::warn!("Could not report the closed main window: {error}");
                         }
+                        if let Err(error) = hide_active_window(app) {
+                            log::error!("Could not hide the {window_label} window: {error}");
+                        }
                     } else if window_label == QUICK_WINDOW_LABEL {
                         app.state::<RuntimeWindows>()
                             .set_active_label(QUICK_WINDOW_LABEL);
-                    }
-                    if let Err(error) = hide_active_window(app) {
-                        log::error!("Could not hide the {window_label} window: {error}");
+                        let activation_id = state.snapshot().activation.activation_id;
+                        if let Err(error) =
+                            hide_window(app, QUICK_WINDOW_LABEL.into(), activation_id)
+                        {
+                            log::error!("Could not hide the {window_label} window: {error}");
+                        }
                     }
                 }
             }
@@ -241,8 +247,28 @@ pub fn handle_window_event(app: &AppHandle, window_label: &str, event: &WindowEv
     }
 }
 
-/// Hides only the requesting window, never a window activated while waiting.
+/// Hides only the requesting window, never a window activated while waiting,
+/// and returns focus to the target window when the quick overlay is dismissed.
 pub fn hide_window(app: &AppHandle, label: String, activation_id: u64) -> Result<(), AppError> {
+    hide_window_with_refocus(app, label, activation_id, true)
+}
+
+/// Hides only the requesting window without restoring focus to the target
+/// window, for flows that immediately activate another window or paste.
+pub fn hide_window_without_refocus(
+    app: &AppHandle,
+    label: String,
+    activation_id: u64,
+) -> Result<(), AppError> {
+    hide_window_with_refocus(app, label, activation_id, false)
+}
+
+fn hide_window_with_refocus(
+    app: &AppHandle,
+    label: String,
+    activation_id: u64,
+    restore_focus: bool,
+) -> Result<(), AppError> {
     on_main_thread(app, move |app| {
         let state = app.state::<AppState>();
         let snapshot = state.snapshot();
@@ -256,8 +282,38 @@ pub fn hide_window(app: &AppHandle, label: String, activation_id: u64) -> Result
                 "The window activation is no longer current".into(),
             ));
         }
-        hide_on_main_thread(app)
+        let target = if should_restore_target_focus(
+            restore_focus,
+            &label,
+            app.state::<PanelLayerState>().supported,
+        ) {
+            snapshot
+                .activation
+                .target_window_id
+                .map(crate::services::platform::ForegroundTarget::from_platform_id)
+        } else {
+            None
+        };
+        hide_on_main_thread(app)?;
+        if let Some(target) = target {
+            let _ = app
+                .state::<crate::services::background::BackgroundServices>()
+                .spawn_thread("restore-target-focus", move |stop| {
+                    if !stop.is_stopped() {
+                        crate::services::platform::restore_foreground_target(&target);
+                    }
+                });
+        }
+        Ok(())
     })
+}
+
+fn should_restore_target_focus(
+    restore_focus: bool,
+    label: &str,
+    layer_shell_supported: bool,
+) -> bool {
+    restore_focus && label == QUICK_WINDOW_LABEL && !layer_shell_supported
 }
 
 fn matches_window_activation(
@@ -271,7 +327,9 @@ fn matches_window_activation(
 
 #[cfg(test)]
 mod window_command_tests {
-    use super::{matches_window_activation, should_dismiss_after_blur};
+    use super::{
+        matches_window_activation, should_dismiss_after_blur, should_restore_target_focus,
+    };
 
     #[test]
     fn output_relocation_and_delayed_blur_cannot_dismiss_a_recovered_panel() {
@@ -285,5 +343,13 @@ mod window_command_tests {
         assert!(matches_window_activation("quick", 4, "quick", 4));
         assert!(!matches_window_activation("main", 4, "quick", 4));
         assert!(!matches_window_activation("quick", 5, "quick", 4));
+    }
+
+    #[test]
+    fn restores_target_focus_only_for_non_layer_quick_window_dismissal() {
+        assert!(should_restore_target_focus(true, "quick", false));
+        assert!(!should_restore_target_focus(false, "quick", false));
+        assert!(!should_restore_target_focus(true, "main", false));
+        assert!(!should_restore_target_focus(true, "quick", true));
     }
 }

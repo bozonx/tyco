@@ -292,6 +292,7 @@
     "unsupportedConfig": "Die Einstellungen stammen von einer neueren App-Version"
   },
   "diff": {
+    "modeOriginal": "Nur Original",
     "modeResult": "Nur Ergebnis",
     "modeSplit": "Nebeneinander",
     "modeUnified": "Inline",

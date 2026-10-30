@@ -292,6 +292,7 @@
     "unsupportedConfig": "設定は新しいバージョンのアプリで保存されています"
   },
   "diff": {
+    "modeOriginal": "元のテキストのみ",
     "modeResult": "結果のみ",
     "modeSplit": "左右に並べて表示",
     "modeUnified": "インライン表示",

@@ -292,6 +292,7 @@
     "unsupportedConfig": "Баптауларды қолданбаның жаңа нұсқасы сақтаған"
   },
   "diff": {
+    "modeOriginal": "Тек түпнұсқа",
     "modeResult": "Тек нәтиже",
     "modeSplit": "Қатар",
     "modeUnified": "Біріктірілген",

@@ -292,6 +292,7 @@
     "unsupportedConfig": "Les paramètres ont été enregistrés par une version plus récente de l’application"
   },
   "diff": {
+    "modeOriginal": "Original uniquement",
     "modeResult": "Résultat seul",
     "modeSplit": "Côte à côte",
     "modeUnified": "En ligne",

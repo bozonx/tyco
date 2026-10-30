@@ -65,6 +65,21 @@ describe('Diff', () => {
     expect(wrapper.find('.removed').exists()).toBe(false)
   })
 
+  it('renders clean original in original mode', () => {
+    const wrapper = mount(Diff, {
+      props: {
+        oldText: 'Only original text',
+        newText: 'Modified result',
+        mode: 'original',
+      },
+    })
+
+    expect(wrapper.find('.diff-result-view').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Only original text')
+    expect(wrapper.find('.added').exists()).toBe(false)
+    expect(wrapper.find('.removed').exists()).toBe(false)
+  })
+
   it('shows no-diff message when texts are identical', () => {
     const wrapper = mount(Diff, {
       props: {

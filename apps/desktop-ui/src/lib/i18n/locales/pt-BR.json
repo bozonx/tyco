@@ -292,6 +292,7 @@
     "unsupportedConfig": "As configurações foram salvas por uma versão mais nova do app"
   },
   "diff": {
+    "modeOriginal": "Apenas original",
     "modeResult": "Só o resultado",
     "modeSplit": "Lado a lado",
     "modeUnified": "Em linha",

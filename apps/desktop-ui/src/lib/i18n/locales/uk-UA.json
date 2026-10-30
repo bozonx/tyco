@@ -292,6 +292,7 @@
     "unsupportedConfig": "Налаштування збережено новішою версією застосунку"
   },
   "diff": {
+    "modeOriginal": "Лише оригінал",
     "modeResult": "Лише результат",
     "modeSplit": "Поруч",
     "modeUnified": "Суміщено",

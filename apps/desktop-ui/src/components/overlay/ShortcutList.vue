@@ -22,7 +22,7 @@
         icon="mdi:pencil-outline"
         @click="goToEditor"
       >
-        {{ t('shortcuts.insertIntoEditor') }}
+        {{ props.editorButtonLabel ?? t('shortcuts.insertIntoEditor') }}
       </ShortcutButton>
     </div>
 
@@ -69,6 +69,7 @@ const props = withDefaults(
     sourceText?: string
     spaceKey?: ActionItem
     isEditorButtonVisible?: boolean
+    editorButtonLabel?: string
     escVisible?: boolean
     escAction?: () => void
     escMode?: 'close' | 'back' | 'auto'
@@ -80,6 +81,7 @@ const props = withDefaults(
     sourceText: '',
     spaceKey: undefined,
     isEditorButtonVisible: false,
+    editorButtonLabel: undefined,
     escVisible: true,
     escAction: undefined,
     escMode: 'auto',

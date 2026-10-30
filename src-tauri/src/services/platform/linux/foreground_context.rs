@@ -39,6 +39,15 @@ impl SystemForegroundContext {
         }
     }
 
+    /// Gives keyboard focus back to `target` when X11 is used. Under Wayland,
+    /// disabling the layer-shell panel keyboard returns focus to the underlying
+    /// window without composer round-trips or workspace switches.
+    pub fn restore_foreground_target(&self, target: &str) {
+        if self.display == DisplayServer::X11 {
+            super::x11::restore_window_focus(target);
+        }
+    }
+
     /// The primary selection, which holds what was selected last in any
     /// window. On Wayland, only when it was made in `target`, as far as that
     /// is known, see `primary_selection`. Never the clipboard: a copied text

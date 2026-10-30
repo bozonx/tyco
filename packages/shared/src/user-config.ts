@@ -96,7 +96,7 @@ export interface AiProfilesConfig {
 
 export interface EditorConfig {
   submitKey: SubmitKey
-  diffViewMode: 'unified' | 'split' | 'result'
+  diffViewMode: 'unified' | 'split' | 'result' | 'original'
   history: EditorHistoryConfig
 }
 

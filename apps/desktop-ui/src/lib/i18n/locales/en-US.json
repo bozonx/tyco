@@ -292,6 +292,7 @@
     "unsupportedConfig": "The settings were saved by a newer version of the app"
   },
   "diff": {
+    "modeOriginal": "Original only",
     "modeResult": "Result only",
     "modeSplit": "Side by side",
     "modeUnified": "Inline",

@@ -1,7 +1,7 @@
 //! Inserting text from a quick window into the window it was opened from.
 use tauri::{AppHandle, Manager};
 
-use super::{hide_window, wait_until_unfocused, FOCUS_RELEASE_TIMEOUT};
+use super::{hide_window_without_refocus, wait_until_unfocused, FOCUS_RELEASE_TIMEOUT};
 use crate::errors::AppError;
 use crate::services::platform::{
     self, ClipboardSnapshot, ForegroundTarget, SystemTextInjector, TextInjector,
@@ -91,7 +91,7 @@ impl TargetPasteHost for AppPasteHost<'_> {
         platform::clipboard::snapshot()
     }
     fn hide(&self) -> Result<(), AppError> {
-        hide_window(self.app, self.window_label.clone(), self.activation_id)
+        hide_window_without_refocus(self.app, self.window_label.clone(), self.activation_id)
     }
     fn copy(&self, text: &str) -> Result<(), AppError> {
         platform::clipboard::copy_to_clipboard(text)

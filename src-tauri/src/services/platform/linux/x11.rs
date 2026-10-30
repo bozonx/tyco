@@ -73,17 +73,7 @@ pub(crate) fn activate_window(id: &str) -> Result<(), AppError> {
     if read_active_window(&connection, root, atom) == Some(window) {
         return Ok(());
     }
-    let event = ClientMessageEvent::new(32, window, atom, [SOURCE_PAGER, CURRENT_TIME, 0, 0, 0]);
-    connection
-        .send_event(
-            false,
-            root,
-            EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
-            event,
-        )
-        .map_err(x11_error)?
-        .check()
-        .map_err(x11_error)?;
+    request_window_activation(&connection, root, atom, window)?;
     let deadline = std::time::Instant::now() + ACTIVATION_TIMEOUT;
     while std::time::Instant::now() < deadline {
         if read_active_window(&connection, root, atom) == Some(window) {
@@ -94,6 +84,134 @@ pub(crate) fn activate_window(id: &str) -> Result<(), AppError> {
     Err(AppError::Stale(String::from(
         "The target window did not get the focus back",
     )))
+}
+
+/// Asks the window manager to focus `id` when it is still on the current
+/// desktop, without waiting or switching workspaces.
+pub(crate) fn restore_window_focus(id: &str) {
+    let Ok(window) = id.parse::<Window>() else {
+        return;
+    };
+    let Ok((connection, screen)) = x11rb::connect(None) else {
+        return;
+    };
+    let root = connection.setup().roots[screen].root;
+    let Ok(active_atom) = intern(&connection, "_NET_ACTIVE_WINDOW") else {
+        return;
+    };
+    if read_active_window(&connection, root, active_atom) == Some(window) {
+        return;
+    }
+    if let (Ok(current_atom), Ok(window_atom)) = (
+        intern(&connection, "_NET_CURRENT_DESKTOP"),
+        intern(&connection, "_NET_WM_DESKTOP"),
+    ) {
+        let current = read_cardinal(&connection, root, current_atom);
+        let target = read_cardinal(&connection, window, window_atom);
+        if !stays_on_current_desktop(current, target) {
+            return;
+        }
+    }
+    let _ = request_window_activation(&connection, root, active_atom, window);
+}
+
+fn request_window_activation(
+    connection: &RustConnection,
+    root: Window,
+    active_atom: Atom,
+    window: Window,
+) -> Result<(), AppError> {
+    let event = ClientMessageEvent::new(
+        32,
+        window,
+        active_atom,
+        [SOURCE_PAGER, CURRENT_TIME, 0, 0, 0],
+    );
+    connection
+        .send_event(
+            false,
+            root,
+            EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
+            event,
+        )
+        .map_err(x11_error)?
+        .check()
+        .map_err(x11_error)
+}
+
+fn read_cardinal(connection: &RustConnection, window: Window, atom: Atom) -> Option<u32> {
+    connection
+        .get_property(false, window, atom, AtomEnum::CARDINAL, 0, 1)
+        .ok()?
+        .reply()
+        .ok()?
+        .value32()?
+        .next()
+}
+
+/// `0xFFFF_FFFF` is EWMH's sticky desktop value (visible on all desktops).
+fn stays_on_current_desktop(current: Option<u32>, target: Option<u32>) -> bool {
+    match (current, target) {
+        (Some(current), Some(target)) => target == current || target == u32::MAX,
+        _ => true,
+    }
+}
+
+/// Moves Tyco's normal window to the active desktop and focuses it.
+pub(crate) fn activate_own_window() -> Result<(), AppError> {
+    let Ok((connection, screen)) = x11rb::connect(None) else {
+        return Ok(());
+    };
+    let root = connection.setup().roots[screen].root;
+    let atoms = Atoms {
+        active_window: intern(&connection, "_NET_ACTIVE_WINDOW")?,
+        client_list: intern(&connection, "_NET_CLIENT_LIST")?,
+        wm_pid: intern(&connection, "_NET_WM_PID")?,
+        window_type: intern(&connection, "_NET_WM_WINDOW_TYPE")?,
+        text_types: [
+            intern(&connection, TEXT_WINDOW_TYPES[0])?,
+            intern(&connection, TEXT_WINDOW_TYPES[1])?,
+        ],
+    };
+    let current_desktop_atom = intern(&connection, "_NET_CURRENT_DESKTOP")?;
+    let wm_desktop_atom = intern(&connection, "_NET_WM_DESKTOP")?;
+    let own_class = gtk::glib::prgname()
+        .map(|name| name.to_string())
+        .unwrap_or_default();
+    let watcher = Watcher {
+        connection: &connection,
+        root,
+        atoms,
+        own_class,
+        pid: std::process::id(),
+    };
+    let Some(own_window) = watcher.clients().into_iter().find(|&w| {
+        let class = watcher.class(w);
+        watcher.kind(w, &class) == WindowKind::Own
+    }) else {
+        return Ok(());
+    };
+    if let Ok(cookie) =
+        connection.get_property(false, root, current_desktop_atom, AtomEnum::CARDINAL, 0, 1)
+    {
+        if let Ok(reply) = cookie.reply() {
+            if let Some(current_desktop) = reply.value32().and_then(|mut iter| iter.next()) {
+                let event = ClientMessageEvent::new(
+                    32,
+                    own_window,
+                    wm_desktop_atom,
+                    [current_desktop, SOURCE_PAGER, 0, 0, 0],
+                );
+                let _ = connection.send_event(
+                    false,
+                    root,
+                    EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
+                    event,
+                );
+            }
+        }
+    }
+    request_window_activation(&connection, root, watcher.atoms.active_window, own_window)
 }
 
 fn intern(connection: &RustConnection, name: &str) -> Result<Atom, AppError> {
@@ -406,5 +524,14 @@ mod tests {
         let before = BTreeSet::from([1, 2, 3]);
         let after = BTreeSet::from([1, 3, 4]);
         assert_eq!(closed_windows(&before, &after).collect::<Vec<_>>(), [2]);
+    }
+
+    #[test]
+    fn restores_focus_only_on_the_current_or_sticky_desktop() {
+        assert!(stays_on_current_desktop(Some(1), Some(1)));
+        assert!(stays_on_current_desktop(Some(1), Some(u32::MAX)));
+        assert!(!stays_on_current_desktop(Some(1), Some(2)));
+        assert!(stays_on_current_desktop(None, Some(2)));
+        assert!(stays_on_current_desktop(Some(1), None));
     }
 }

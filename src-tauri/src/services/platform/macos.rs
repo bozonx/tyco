@@ -172,6 +172,36 @@ function run(argv) {
     Ok(())
 }
 
+/// Gives keyboard focus back to `target_process_id` when it is still a live
+/// application of another process, without forcing a Space switch.
+pub fn restore_foreground_target(target_process_id: &str) {
+    let Some(process_id) = target_process_id
+        .parse::<i32>()
+        .ok()
+        .filter(|&process_id| process_id > 0 && process_id as u32 != std::process::id())
+    else {
+        return;
+    };
+    const SCRIPT: &str = r#"
+ObjC.import('AppKit');
+function run(argv) {
+    var pid = Number(argv[0]);
+    var target = $.NSRunningApplication.runningApplicationWithProcessIdentifier(pid);
+    if (target && !target.terminated) {
+        target.activateWithOptions(0);
+    }
+}
+"#;
+    let _ = super::process::run(
+        super::process::command(
+            "osascript",
+            &["-l", "JavaScript", "-e", SCRIPT, &process_id.to_string()],
+        ),
+        None,
+        FRONT_APP_QUERY_TIMEOUT,
+    );
+}
+
 pub(super) fn check_text_injection() -> Result<(), AppError> {
     if unsafe { AXIsProcessTrusted() } {
         return Ok(());

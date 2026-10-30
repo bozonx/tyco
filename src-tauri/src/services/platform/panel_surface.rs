@@ -150,6 +150,31 @@ pub fn focus_window(window: &WebviewWindow) -> Result<(), AppError> {
         native.show_all();
         native.deiconify();
         native.present();
+        if window.label() == "main" {
+            if super::session::current().is_kde_wayland() {
+                if let Err(error) = std::thread::Builder::new()
+                    .name("kwin-own-activator".into())
+                    .spawn(|| {
+                        if let Err(error) = super::linux::kwin::activate_own_window() {
+                            log::debug!("Could not activate TyCo window via KWin script: {error}");
+                        }
+                    })
+                {
+                    log::warn!("Could not spawn KWin activator thread: {error}");
+                }
+            } else if super::session::current().is_x11() {
+                if let Err(error) = std::thread::Builder::new()
+                    .name("x11-own-activator".into())
+                    .spawn(|| {
+                        if let Err(error) = super::linux::x11::activate_own_window() {
+                            log::debug!("Could not activate TyCo window via X11: {error}");
+                        }
+                    })
+                {
+                    log::warn!("Could not spawn X11 activator thread: {error}");
+                }
+            }
+        }
         Ok(())
     }
     #[cfg(not(target_os = "linux"))]

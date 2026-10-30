@@ -292,6 +292,7 @@
     "unsupportedConfig": "设置由更新版本的应用保存"
   },
   "diff": {
+    "modeOriginal": "仅原始内容",
     "modeResult": "仅结果",
     "modeSplit": "双栏对照",
     "modeUnified": "单栏内联",

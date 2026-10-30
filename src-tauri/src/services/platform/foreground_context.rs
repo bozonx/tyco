@@ -21,6 +21,12 @@ pub fn capture_foreground_target() -> Option<ForegroundTarget> {
     capture_foreground_target_impl().map(ForegroundTarget::from_platform_id)
 }
 
+/// Best-effort return of keyboard focus to `target` after a quick overlay is
+/// explicitly dismissed without pasting.
+pub fn restore_foreground_target(target: &ForegroundTarget) {
+    restore_foreground_target_impl(target.as_platform_id());
+}
+
 pub async fn capture_selection(target: Option<ForegroundTarget>) -> Option<String> {
     capture_selection_impl(target.map(ForegroundTarget::into_platform_id)).await
 }
@@ -28,6 +34,11 @@ pub async fn capture_selection(target: Option<ForegroundTarget>) -> Option<Strin
 #[cfg(target_os = "linux")]
 fn capture_foreground_target_impl() -> Option<String> {
     super::linux::capture_foreground_target()
+}
+
+#[cfg(target_os = "linux")]
+fn restore_foreground_target_impl(target: &str) {
+    super::linux::restore_foreground_target(target);
 }
 
 #[cfg(target_os = "linux")]
@@ -41,6 +52,11 @@ fn capture_foreground_target_impl() -> Option<String> {
 }
 
 #[cfg(target_os = "windows")]
+fn restore_foreground_target_impl(target: &str) {
+    super::windows::restore_foreground_target(target);
+}
+
+#[cfg(target_os = "windows")]
 async fn capture_selection_impl(target: Option<String>) -> Option<String> {
     super::windows::capture_selection(target).await
 }
@@ -48,6 +64,11 @@ async fn capture_selection_impl(target: Option<String>) -> Option<String> {
 #[cfg(target_os = "macos")]
 fn capture_foreground_target_impl() -> Option<String> {
     super::macos::capture_foreground_target()
+}
+
+#[cfg(target_os = "macos")]
+fn restore_foreground_target_impl(target: &str) {
+    super::macos::restore_foreground_target(target);
 }
 
 #[cfg(target_os = "macos")]

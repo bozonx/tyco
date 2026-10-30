@@ -17,6 +17,7 @@ const SCRIPTING_INTERFACE: &str = "org.kde.kwin.Scripting";
 const SCRIPT_INTERFACE: &str = "org.kde.kwin.Script";
 const TRACKER_SCRIPT_NAME: &str = "tyco-window-tracker";
 const ACTIVATOR_SCRIPT_NAME: &str = "tyco-window-activator";
+const OWN_ACTIVATOR_SCRIPT_NAME: &str = "tyco-own-window-activator";
 const ACTIVATION_TIMEOUT: Duration = Duration::from_secs(2);
 /// The tracker reports the active window right away; silence means the
 /// script failed, e.g. on Plasma 5 whose scripting API differs.
@@ -71,6 +72,45 @@ const ACTIVATOR_SCRIPT: &str = r#"
         }
     }
     callDBus("org.tyco.Service", "/org/tyco/Object", "org.tyco.KwinTracker", "KwinWindowMissing", target);
+})();
+"#;
+
+const OWN_ACTIVATOR_SCRIPT: &str = r#"
+(function () {
+    const pid = __PID__;
+    const ownClass = "__CLASS__";
+    function activate() {
+        const windows = workspace.windowList();
+        for (let i = 0; i < windows.length; i++) {
+            const w = windows[i];
+            if (w.normalWindow && (w.pid === pid || (ownClass !== "" && w.resourceClass === ownClass))) {
+                if (!w.onAllDesktops && workspace.currentDesktop) {
+                    if (w.desktops !== undefined) {
+                        w.desktops = [workspace.currentDesktop];
+                    } else if (w.desktop !== undefined) {
+                        w.desktop = workspace.currentDesktop;
+                    }
+                }
+                w.minimized = false;
+                workspace.activeWindow = w;
+                return true;
+            }
+        }
+        return false;
+    }
+    if (!activate()) {
+        let tries = 0;
+        const timer = new QTimer();
+        timer.interval = 50;
+        timer.repeat = true;
+        timer.triggered.connect(function () {
+            tries += 1;
+            if (activate() || tries > 10) {
+                timer.stop();
+            }
+        });
+        timer.start();
+    }
 })();
 "#;
 
@@ -209,6 +249,24 @@ pub fn activate_window(id: &str) -> Result<(), AppError> {
         log::warn!("Could not unload the KWin window activator: {error}");
     }
     result
+}
+
+/// Moves Tyco's normal window to the active desktop and focuses it.
+pub fn activate_own_window() -> Result<(), AppError> {
+    static ACTIVATION: Mutex<()> = Mutex::new(());
+    let _activation = ACTIVATION.lock().unwrap_or_else(|error| error.into_inner());
+    let own_class = gtk::glib::prgname().unwrap_or_default();
+    let source = OWN_ACTIVATOR_SCRIPT
+        .replace("__PID__", &std::process::id().to_string())
+        .replace(
+            "__CLASS__",
+            if is_class_name(&own_class) {
+                &own_class
+            } else {
+                ""
+            },
+        );
+    run_script(OWN_ACTIVATOR_SCRIPT_NAME, &source)
 }
 
 /// Logical center of a target window, before Tyco changes desktop focus.
@@ -436,6 +494,17 @@ mod tests {
         assert!(is_class_name("com.tyco.app"));
         assert!(!is_class_name(""));
         assert!(!is_class_name("a\"; workspace.activeWindow = null; \""));
+    }
+
+    #[test]
+    fn own_activator_script_substitutes_pid_and_class() {
+        let source = OWN_ACTIVATOR_SCRIPT
+            .replace("__PID__", "12345")
+            .replace("__CLASS__", "tyco");
+        assert!(source.contains("const pid = 12345;"));
+        assert!(source.contains("const ownClass = \"tyco\";"));
+        assert!(source.contains("w.desktops = [workspace.currentDesktop]"));
+        assert!(source.contains("workspace.activeWindow = w;"));
     }
 
     #[test]

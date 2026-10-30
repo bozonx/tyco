@@ -292,6 +292,7 @@
     "unsupportedConfig": "პარამეტრები აპის უფრო ახალმა ვერსიამ შეინახა"
   },
   "diff": {
+    "modeOriginal": "მხოლოდ ორიგინალი",
     "modeResult": "მხოლოდ შედეგი",
     "modeSplit": "გვერდიგვერდ",
     "modeUnified": "გაერთიანებული",

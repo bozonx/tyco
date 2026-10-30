@@ -292,6 +292,7 @@
     "unsupportedConfig": "Ustawienia zapisała nowsza wersja aplikacji"
   },
   "diff": {
+    "modeOriginal": "Tylko oryginał",
     "modeResult": "Tylko wynik",
     "modeSplit": "Obok siebie",
     "modeUnified": "W jednym widoku",

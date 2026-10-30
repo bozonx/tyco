@@ -292,6 +292,7 @@
     "unsupportedConfig": "A beállításokat az alkalmazás egy újabb verziója mentette"
   },
   "diff": {
+    "modeOriginal": "Csak eredeti",
     "modeResult": "Csak az eredmény",
     "modeSplit": "Egymás mellett",
     "modeUnified": "Egyesítve",
