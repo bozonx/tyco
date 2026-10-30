@@ -702,7 +702,7 @@
       "template": "Zastosuj szablon ustawień"
     },
     "forcedByEInk": "Z motywem e-ink zawsze wysoki kontrast i brak animacji",
-    "formatWithLlm": "Przetwarzaj tekst przez LLM po rozpoznaniu mowy",
+    "formatWithLlm": "Automatycznie poprawiaj dyktowanie przed wklejeniem do zewnętrznej aplikacji",
     "generalTab": "Ogólne",
     "globalActionsHint": "Globalne skróty klawiszowe wywołujące Tyco z dowolnej aplikacji. Kliknij pole i naciśnij wybraną kombinację klawiszy; Esc anuluje wprowadzanie.",
     "globalHotkeysTitle": "Skróty globalne",

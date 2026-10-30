@@ -702,7 +702,7 @@
       "template": "Apply settings template"
     },
     "forcedByEInk": "Always high contrast and no animations with the e-ink theme",
-    "formatWithLlm": "Process text with LLM after speech recognition",
+    "formatWithLlm": "Automatically correct dictation before inserting into external application",
     "generalTab": "General",
     "globalActionsHint": "Global keyboard shortcuts that invoke Tyco from any application. Click a field and press the desired key combination; Esc cancels input.",
     "globalHotkeysTitle": "Global hotkeys",

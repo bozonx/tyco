@@ -702,7 +702,7 @@
       "template": "Aplicar modelo de configurações"
     },
     "forcedByEInk": "Com o tema e-ink, sempre alto contraste e sem animações",
-    "formatWithLlm": "Processar o texto com LLM após o reconhecimento de voz",
+    "formatWithLlm": "Corrigir o ditado automaticamente antes de inseri-lo em um aplicativo externo",
     "generalTab": "Geral",
     "globalActionsHint": "Atalhos de teclado globais que chamam o Tyco de qualquer aplicativo. Clique em um campo e pressione a combinação de teclas desejada; Esc cancela a entrada.",
     "globalHotkeysTitle": "Atalhos globais",

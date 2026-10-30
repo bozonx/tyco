@@ -702,7 +702,7 @@
       "template": "Aplicar una plantilla de configuración"
     },
     "forcedByEInk": "Con el tema de tinta electrónica siempre hay contraste alto y no hay animaciones",
-    "formatWithLlm": "Procesar el texto con LLM tras el reconocimiento de voz",
+    "formatWithLlm": "Corregir automáticamente el dictado antes de insertarlo en una aplicación externa",
     "generalTab": "General",
     "globalActionsHint": "Atajos de teclado globales que invocan Tyco desde cualquier aplicación. Haz clic en un campo y pulsa la combinación de teclas deseada; Esc cancela la entrada.",
     "globalHotkeysTitle": "Atajos globales",

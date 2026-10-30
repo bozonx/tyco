@@ -696,7 +696,7 @@
       "template": "Použít šablonu nastavení"
     },
     "forcedByEInk": "S motivem e-ink vždy vysoký kontrast a žádné animace",
-    "formatWithLlm": "Zpracovat text pomocí LLM po rozpoznání hlasu",
+    "formatWithLlm": "Automaticky opravit diktování před vložením do externí aplikace",
     "generalTab": "Obecné",
     "globalActionsHint": "Globální klávesové zkratky, které vyvolají Tyco z libovolné aplikace. Klikněte do pole a stiskněte požadovanou kombinaci kláves; Esc zadávání zruší.",
     "globalHotkeysTitle": "Globální klávesové zkratky",

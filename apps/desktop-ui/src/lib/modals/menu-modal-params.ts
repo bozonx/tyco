@@ -1,4 +1,5 @@
 import type { ActionItem } from '@tyco/plugin-sdk'
+import type { DictationTarget } from '../stt/dictation-target'
 import type {
   VoiceFinishBehavior,
   VoiceFinishIntent,
@@ -65,6 +66,8 @@ type VoiceCorrectedHandler = (
   intent: VoiceFinishIntent
 ) => void
 export interface VoiceMenuParams {
+  /** The destination of the dictated text: external app, chat, or editor. */
+  target?: DictationTarget
   onCorrected?: VoiceCorrectedHandler | VoiceCorrectedHandler[]
   onCancel?: (() => void) | (() => void)[]
   /** Chooses the primary completion action and its shortcuts. */

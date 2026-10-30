@@ -702,7 +702,7 @@
       "template": "Aplică un șablon de setări"
     },
     "forcedByEInk": "Cu tema e-ink, întotdeauna contrast ridicat și fără animații",
-    "formatWithLlm": "Procesează textul cu LLM după recunoașterea vocală",
+    "formatWithLlm": "Corectează automat dictarea înainte de inserarea într-o aplicație externă",
     "generalTab": "General",
     "globalActionsHint": "Comenzi rapide globale care apelează Tyco din orice aplicație. Faceți clic pe un câmp și apăsați combinația de taste dorită; Esc anulează introducerea.",
     "globalHotkeysTitle": "Comenzi rapide globale",

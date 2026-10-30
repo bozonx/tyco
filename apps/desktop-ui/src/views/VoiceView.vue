@@ -3,6 +3,7 @@
   <div v-if="props.bar && !isInsertMenuVisible" class="voice-bar-layer">
     <VoiceRecognitionMenu
       variant="bar"
+      target="external"
       finish-behavior="insertIntoTarget"
       :activation-mode="activationMode"
       @corrected="handleCorrected"
@@ -12,6 +13,7 @@
   <ContentPadding v-else>
     <VoiceRecognitionMenu
       v-if="!isInsertMenuVisible"
+      target="external"
       finish-behavior="insertIntoTarget"
       :activation-mode="activationMode"
       @corrected="handleCorrected"

@@ -702,7 +702,7 @@
       "template": "Primijeni predložak postavki"
     },
     "forcedByEInk": "S temom e-ink uvijek visok kontrast i bez animacija",
-    "formatWithLlm": "Obradi tekst LLM-om nakon prepoznavanja glasa",
+    "formatWithLlm": "Automatski ispravi diktat prije umetanja u vanjsku aplikaciju",
     "generalTab": "Općenito",
     "globalActionsHint": "Globalni tipkovnički prečaci koji pozivaju Tyco iz bilo koje aplikacije. Kliknite polje i pritisnite željenu kombinaciju tipki; Esc prekida unos.",
     "globalHotkeysTitle": "Globalni prečaci",

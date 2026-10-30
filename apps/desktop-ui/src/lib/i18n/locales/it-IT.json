@@ -702,7 +702,7 @@
       "template": "Applica un modello di impostazioni"
     },
     "forcedByEInk": "Con il tema e-ink, sempre contrasto alto e nessuna animazione",
-    "formatWithLlm": "Elabora il testo con un LLM dopo il riconoscimento vocale",
+    "formatWithLlm": "Correggi automaticamente la dettatura prima di inserirla in un'applicazione esterna",
     "generalTab": "Generale",
     "globalActionsHint": "Scorciatoie da tastiera globali che richiamano Tyco da qualsiasi applicazione. Fai clic su un campo e premi la combinazione di tasti desiderata; Esc annulla l’inserimento.",
     "globalHotkeysTitle": "Scorciatoie globali",

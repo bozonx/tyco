@@ -696,7 +696,7 @@
       "template": "应用设置模板"
     },
     "forcedByEInk": "使用电子墨水主题时始终开启高对比度并禁用动画",
-    "formatWithLlm": "语音识别后使用 LLM 处理文本",
+    "formatWithLlm": "在插入外部应用程序前自动更正听写",
     "generalTab": "通用",
     "globalActionsHint": "可从任何应用程序调用 Tyco 的全局键盘快捷键。点击输入框并按下所需的按键组合；按 Esc 可取消输入。",
     "globalHotkeysTitle": "全局快捷键",

@@ -109,15 +109,22 @@ describe('dictation controller', () => {
   it('uses the latest configuration for each session and formatting preference', async () => {
     const { config, deps, handlers, controller } = setup()
     expect(controller.shouldFormatRecognizedText()).toBe(false)
+    expect(controller.shouldFormatRecognizedText('external')).toBe(false)
+    expect(controller.shouldFormatRecognizedText('chat')).toBe(false)
+    expect(controller.shouldFormatRecognizedText('editor')).toBe(false)
     config.stt.isVoiceCorrectionEnabled = true
     config.stt.providers.deepgram.language = 'en-US'
     expect(controller.shouldFormatRecognizedText()).toBe(true)
+    expect(controller.shouldFormatRecognizedText('external')).toBe(true)
+    expect(controller.shouldFormatRecognizedText('chat')).toBe(false)
+    expect(controller.shouldFormatRecognizedText('editor')).toBe(false)
     await controller.startDictation(handlers)
     expect(deps.dictation.start).toHaveBeenCalledWith(
       expect.objectContaining({ language: 'en-US' })
     )
     config.stt.isVoiceCorrectionEnabled = false
     expect(controller.shouldFormatRecognizedText()).toBe(false)
+    expect(controller.shouldFormatRecognizedText('external')).toBe(false)
   })
 
   it('rejects an incomplete provider configuration before checking credentials', async () => {

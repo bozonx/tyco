@@ -699,7 +699,7 @@
       "template": "Beállítássablon alkalmazása"
     },
     "forcedByEInk": "Az e-ink témánál mindig magas kontraszt és nincsenek animációk",
-    "formatWithLlm": "Szöveg feldolgozása LLM-mel a beszédfelismerés után",
+    "formatWithLlm": "Diktálás automatikus javítása a külső alkalmazásba való beillesztés előtt",
     "generalTab": "Általános",
     "globalActionsHint": "Globális billentyűparancsok, amelyek bármely alkalmazásból előhívják a Tycót. Kattintson egy mezőbe, és nyomja meg a kívánt billentyűkombinációt; az Esc megszakítja a bevitelt.",
     "globalHotkeysTitle": "Globális billentyűparancsok",

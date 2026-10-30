@@ -702,7 +702,7 @@
       "template": "Appliquer un modèle de paramètres"
     },
     "forcedByEInk": "Avec le thème encre électronique, toujours un contraste élevé et pas d’animations",
-    "formatWithLlm": "Traiter le texte avec un LLM après la reconnaissance vocale",
+    "formatWithLlm": "Corriger automatiquement la dictée avant de l'insérer dans une application externe",
     "generalTab": "Général",
     "globalActionsHint": "Raccourcis clavier globaux qui appellent Tyco depuis n’importe quelle application. Cliquez sur un champ et appuyez sur la combinaison voulue ; Échap annule la saisie.",
     "globalHotkeysTitle": "Raccourcis globaux",

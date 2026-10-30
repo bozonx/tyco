@@ -9,6 +9,7 @@ import type { EditItem } from '../edit-menu/edit-menu-model'
 import type { EditSource } from './edit-source'
 import { createTextEditModel } from '../edit-menu/text-edit'
 import { insertAtCursor } from '../chat/insert-at-cursor'
+import type { DictationTarget } from '../stt/dictation-target'
 
 export interface EditorActionsDependencies {
   editor: {
@@ -31,6 +32,7 @@ export interface EditorActionsDependencies {
   }
   openVoice: (params: {
     inline: boolean
+    target?: DictationTarget
     onCorrected: (text: string) => void
     onCancel: () => void
   }) => void
@@ -57,6 +59,7 @@ export function createEditorActions(deps: EditorActionsDependencies) {
     deps.openVoice({
       // a bar under the editor instead of a screen over it, see `Editor`
       inline: true,
+      target: 'editor',
       onCorrected: (resultText: string) => {
         if (!resultText?.trim()) {
           deps.closeVoice()

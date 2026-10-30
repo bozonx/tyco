@@ -696,7 +696,7 @@
       "template": "설정 템플릿 적용"
     },
     "forcedByEInk": "전자잉크 테마에서는 항상 높은 대비와 애니메이션 끄기가 적용됩니다",
-    "formatWithLlm": "음성 인식 후 LLM으로 텍스트 처리",
+    "formatWithLlm": "외부 애플리케이션에 삽입하기 전에 받아쓰기 자동 수정",
     "generalTab": "일반",
     "globalActionsHint": "어떤 애플리케이션에서든 Tyco를 호출하는 전역 단축키입니다. 필드를 클릭하고 원하는 키 조합을 누르세요. Esc를 누르면 입력이 취소됩니다.",
     "globalHotkeysTitle": "전역 단축키",

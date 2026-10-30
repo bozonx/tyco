@@ -696,7 +696,7 @@
       "template": "套用設定範本"
     },
     "forcedByEInk": "電子墨水主題下始終採用高對比且無動畫",
-    "formatWithLlm": "語音辨識後使用 LLM 處理文字",
+    "formatWithLlm": "在插入外部應用程式前自動修正聽寫",
     "generalTab": "一般",
     "globalActionsHint": "從任何應用程式喚醒 Tyco 的全域鍵盤快捷鍵。按一下欄位並按下所需的組合鍵；按 Esc 取消輸入。",
     "globalHotkeysTitle": "全域快捷鍵",

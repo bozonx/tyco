@@ -6,6 +6,7 @@ import type { LiveTranscriptState } from './live-transcript'
 import type { LiveDictation } from './live-dictation'
 import { buildSttCatalog, isKeyRequiredForSttProvider } from './stt-client'
 import { activeSttModel, type SttModel } from './stt-config'
+import type { DictationTarget } from './dictation-target'
 
 export interface DictationHandlers {
   onText: (state: LiveTranscriptState) => void
@@ -25,8 +26,8 @@ export function createDictationController(
   deps: DictationControllerDependencies
 ) {
   let generation = 0
-  const shouldFormatRecognizedText = () =>
-    deps.getConfig().stt.isVoiceCorrectionEnabled
+  const shouldFormatRecognizedText = (target: DictationTarget = 'external') =>
+    target === 'external' && deps.getConfig().stt.isVoiceCorrectionEnabled
 
   const currentDictationLanguage = (model: SttModel) =>
     dictationLanguageFor(model.language)

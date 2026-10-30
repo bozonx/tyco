@@ -588,4 +588,113 @@ describe('VoiceRecognitionMenu', () => {
 
     wrapper.unmount()
   })
+
+  it('queries shouldFormatRecognizedText with external target and formats text', async () => {
+    mocks.shouldFormatRecognizedText.mockImplementation(
+      (target) => target === 'external'
+    )
+    mocks.finishDictation.mockResolvedValue('raw dictated text')
+    mocks.voiceCorrection.mockResolvedValue('corrected text')
+
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: {
+        variant: 'bar',
+        target: 'external',
+        finishBehavior: 'insertIntoTarget',
+      },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          ShortcutButton: true,
+        },
+      },
+    })
+    await flushPromises()
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Enter', key: 'Enter' })
+    )
+    document.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'Enter', key: 'Enter' })
+    )
+    await flushPromises()
+
+    expect(mocks.shouldFormatRecognizedText).toHaveBeenCalledWith('external')
+    expect(mocks.voiceCorrection).toHaveBeenCalledWith(
+      'raw dictated text',
+      expect.anything()
+    )
+    expect(wrapper.emitted('corrected')?.[0]?.[0]).toBe('corrected text')
+    wrapper.unmount()
+  })
+
+  it('bypasses voice correction for chat and editor dictation', async () => {
+    mocks.shouldFormatRecognizedText.mockImplementation(
+      (target) => target === 'external'
+    )
+    mocks.finishDictation.mockResolvedValue('raw dictated text')
+
+    const chatWrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', chat: true },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix', 'placeholder'],
+            template: '<div />',
+          },
+          AudioWaveform: true,
+          ShortcutButton: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button :title="title" @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+    await chatWrapper
+      .find('button[title="chat.voiceSendHint"]')
+      .trigger('click')
+    await flushPromises()
+
+    expect(mocks.shouldFormatRecognizedText).toHaveBeenCalledWith('chat')
+    expect(mocks.voiceCorrection).not.toHaveBeenCalled()
+    expect(chatWrapper.emitted('corrected')?.[0]?.[0]).toBe('raw dictated text')
+    chatWrapper.unmount()
+
+    const editorWrapper = mount(VoiceRecognitionMenu, {
+      props: { variant: 'bar', inline: true, target: 'editor' },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+          AudioWaveform: true,
+          ShortcutButton: true,
+        },
+      },
+    })
+    await flushPromises()
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Enter', key: 'Enter' })
+    )
+    document.dispatchEvent(
+      new KeyboardEvent('keyup', { code: 'Enter', key: 'Enter' })
+    )
+    await flushPromises()
+
+    expect(mocks.shouldFormatRecognizedText).toHaveBeenCalledWith('editor')
+    expect(mocks.voiceCorrection).not.toHaveBeenCalled()
+    expect(editorWrapper.emitted('corrected')?.[0]?.[0]).toBe(
+      'raw dictated text'
+    )
+    editorWrapper.unmount()
+  })
 })

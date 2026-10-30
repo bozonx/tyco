@@ -24,7 +24,7 @@ vi.mock('../components/common/ContentPadding.vue', () => ({
 vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
   default: {
     name: 'VoiceRecognitionMenu',
-    props: ['variant', 'finishBehavior', 'context'],
+    props: ['variant', 'finishBehavior', 'context', 'target'],
     emits: ['corrected', 'cancelled', 'removeContext'],
     template: '<div class="voice-menu" />',
   },
@@ -90,6 +90,7 @@ describe('VoiceChatView', () => {
     })
     const menu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
 
+    expect(menu.props('target')).toBe('chat')
     expect(menu.props('context')).toBe('Selected context')
   })
 

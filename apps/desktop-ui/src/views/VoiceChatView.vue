@@ -3,6 +3,7 @@
     <VoiceRecognitionMenu
       v-if="!isInsertMenuVisible"
       variant="sheet"
+      target="chat"
       finish-behavior="submitToChat"
       activation-mode="voiceChat"
       :context="context?.text"

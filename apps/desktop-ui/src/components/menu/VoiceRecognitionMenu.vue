@@ -32,6 +32,7 @@ import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
+import { resolveDictationTarget } from '../../lib/stt/dictation-target'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
 import { stylingSlotList } from '../../lib/styling/styling-library'
@@ -85,11 +86,13 @@ function invokeCallback<Args extends unknown[]>(
   if (typeof callback === 'function') callback(...args)
   else if (Array.isArray(callback)) callback.forEach((fn) => fn(...args))
 }
+const dictationTarget = computed(() => resolveDictationTarget(props))
 const model = createVoiceRecognition({
   startDictation,
   finishDictation,
   cancelDictation,
-  shouldFormatRecognizedText,
+  shouldFormatRecognizedText: () =>
+    shouldFormatRecognizedText(dictationTarget.value),
   shouldInsertStyleDirectly: () =>
     desktopStore.userConfig.stt?.isStylingBarDirectInsertEnabled ?? false,
   voiceCorrection,

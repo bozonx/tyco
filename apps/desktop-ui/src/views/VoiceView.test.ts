@@ -34,7 +34,7 @@ vi.mock('../components/common/ContentPadding.vue', () => ({
 vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
   default: {
     name: 'VoiceRecognitionMenu',
-    props: ['variant', 'finishBehavior', 'activationMode'],
+    props: ['variant', 'finishBehavior', 'activationMode', 'target'],
     emits: ['corrected', 'cancelled'],
     template: '<div class="voice-menu-stub" :data-variant="variant" />',
   },
@@ -98,6 +98,7 @@ describe('VoiceView.vue', () => {
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
     expect(voiceMenu.exists()).toBe(true)
     expect(voiceMenu.props('finishBehavior')).toBe('insertIntoTarget')
+    expect(voiceMenu.props('target')).toBe('external')
     expect(voiceMenu.props('variant')).toBeUndefined()
     expect(wrapper.emitted('result-shown')?.[0]).toEqual([false])
   })

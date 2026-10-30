@@ -55,6 +55,7 @@ describe('useChatVoiceInput', () => {
       expect.objectContaining({
         inline: true,
         chat: true,
+        target: 'chat',
         prefix: 'Hello',
         suffix: ' world',
         finishBehavior: 'confirm',

@@ -699,7 +699,7 @@
       "template": "Ayar şablonu uygula"
     },
     "forcedByEInk": "E-ink temasında kontrast her zaman yüksektir ve animasyonlar kapalıdır",
-    "formatWithLlm": "Ses tanıma sonrasında metni LLM ile işle",
+    "formatWithLlm": "Harici uygulamaya eklemeden önce dikteyi otomatik olarak düzelt",
     "generalTab": "Genel",
     "globalActionsHint": "Tyco'yu herhangi bir uygulamadan çağıran genel klavye kısayolları. Bir alana tıklayın ve istediğiniz tuş kombinasyonuna basın; Esc girişi iptal eder.",
     "globalHotkeysTitle": "Genel kısayollar",

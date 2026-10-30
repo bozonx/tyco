@@ -702,7 +702,7 @@
       "template": "Einstellungsvorlage anwenden"
     },
     "forcedByEInk": "Mit dem E-Ink-Design immer hoher Kontrast und keine Animationen",
-    "formatWithLlm": "Text nach der Spracherkennung mit LLM verarbeiten",
+    "formatWithLlm": "Diktat vor dem Einfügen in externe Anwendung automatisch korrigieren",
     "generalTab": "Allgemein",
     "globalActionsHint": "Globale Tastenkürzel, die Tyco aus jeder Anwendung aufrufen. Klicken Sie in ein Feld und drücken Sie die gewünschte Tastenkombination; Esc bricht die Eingabe ab.",
     "globalHotkeysTitle": "Globale Tastenkürzel",

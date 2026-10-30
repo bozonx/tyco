@@ -31,6 +31,7 @@ export function useChatVoiceInput() {
     menuModalsStore.nextModal(MenuModals.VOICE_RECOGNITION, {
       inline: true,
       chat: true,
+      target: 'chat',
       prefix,
       suffix,
       finishBehavior: options.finishBehavior,
