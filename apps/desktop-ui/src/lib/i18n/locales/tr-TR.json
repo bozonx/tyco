@@ -918,6 +918,7 @@
     "removeKey": "Anahtarı kaldır",
     "removeLauncherPage": "Sayfayı sil",
     "removeModel": "Modeli sil",
+    "removeModelConfirm": "Bu model kaldırılsın mı?",
     "removePluginPackage": "Paketi kaldır",
     "removeProvider": "Sunucuyu kaldır",
     "removeProviderConfirm": "Bu bağlantı, modelleri, atamaları ve kayıtlı anahtar kaldırılsın mı?",

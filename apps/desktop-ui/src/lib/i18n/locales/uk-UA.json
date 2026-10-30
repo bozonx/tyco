@@ -918,6 +918,7 @@
     "removeKey": "Видалити ключ",
     "removeLauncherPage": "Видалити сторінку",
     "removeModel": "Прибрати модель",
+    "removeModelConfirm": "Видалити цю модель?",
     "removePluginPackage": "Видалити пакет",
     "removeProvider": "Видалити сервер",
     "removeProviderConfirm": "Видалити це підключення, його моделі, призначення й збережений ключ?",

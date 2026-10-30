@@ -66,7 +66,7 @@ export function addModel(config: LlmConfig, providerId: string): LlmModel {
     canUseImages: false,
     canUseTools: provider?.type !== 'openaiCompatible',
   }
-  config.models.push(model)
+  config.models.unshift(model)
   return model
 }
 

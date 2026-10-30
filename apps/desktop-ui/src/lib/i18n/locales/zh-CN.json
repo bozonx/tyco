@@ -915,6 +915,7 @@
     "removeKey": "移除密钥",
     "removeLauncherPage": "删除页面",
     "removeModel": "移除模型",
+    "removeModelConfirm": "确定要移除此模型吗？",
     "removePluginPackage": "移除扩展包",
     "removeProvider": "移除服务器",
     "removeProviderConfirm": "确定要移除此连接及其模型、功能分配和保存的密钥吗？",

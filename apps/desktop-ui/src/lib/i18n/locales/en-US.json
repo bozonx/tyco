@@ -921,6 +921,7 @@
     "removeKey": "Remove key",
     "removeLauncherPage": "Delete page",
     "removeModel": "Remove model",
+    "removeModelConfirm": "Remove this model?",
     "removePluginPackage": "Remove package",
     "removeProvider": "Remove server",
     "removeProviderConfirm": "Remove this connection, its models, assignments, and saved key?",

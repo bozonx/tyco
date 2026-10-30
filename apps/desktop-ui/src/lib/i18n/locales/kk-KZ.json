@@ -918,6 +918,7 @@
     "removeKey": "Кілтті жою",
     "removeLauncherPage": "Бетті жою",
     "removeModel": "Модельді алып тастау",
+    "removeModelConfirm": "Бұл модельді жою керек пе?",
     "removePluginPackage": "Буманы жою",
     "removeProvider": "Серверді жою",
     "removeProviderConfirm": "Бұл қосылымды, оның модельдерін, тағайындауларын және сақталған кілтін жою керек пе?",

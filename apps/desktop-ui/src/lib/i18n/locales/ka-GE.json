@@ -918,6 +918,7 @@
     "removeKey": "გასაღების მოცილება",
     "removeLauncherPage": "გვერდის წაშლა",
     "removeModel": "მოდელის მოცილება",
+    "removeModelConfirm": "მოცილდეს ეს მოდელი?",
     "removePluginPackage": "პაკეტის მოცილება",
     "removeProvider": "სერვერის მოცილება",
     "removeProviderConfirm": "მოცილდეს ეს კავშირი, მისი მოდელები, მინიჭებები და შენახული გასაღები?",

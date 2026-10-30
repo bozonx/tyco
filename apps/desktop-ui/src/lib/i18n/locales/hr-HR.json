@@ -921,6 +921,7 @@
     "removeKey": "Ukloni ključ",
     "removeLauncherPage": "Izbriši stranicu",
     "removeModel": "Ukloni model",
+    "removeModelConfirm": "Ukloniti ovaj model?",
     "removePluginPackage": "Ukloni paket",
     "removeProvider": "Ukloni poslužitelj",
     "removeProviderConfirm": "Ukloniti ovu vezu, njezine modele, dodjele i spremljeni ključ?",

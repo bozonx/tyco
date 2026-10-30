@@ -921,6 +921,7 @@
     "removeKey": "Retirer la clé",
     "removeLauncherPage": "Supprimer la page",
     "removeModel": "Retirer le modèle",
+    "removeModelConfirm": "Retirer ce modèle ?",
     "removePluginPackage": "Retirer le paquet",
     "removeProvider": "Retirer le serveur",
     "removeProviderConfirm": "Retirer cette connexion, ses modèles, ses attributions et la clé enregistrée ?",

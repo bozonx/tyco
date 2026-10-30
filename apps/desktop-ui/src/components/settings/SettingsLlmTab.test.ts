@@ -3,7 +3,9 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ConfirmModal from '../common/ConfirmModal.vue'
+import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsLlmTab from './SettingsLlmTab.vue'
 
@@ -76,6 +78,11 @@ describe('LLM settings cards', () => {
     await row.get('.advanced-toggle button').trigger('click')
     await row.get('input[type="checkbox"]').setValue(true)
     expect(model.canUseImages).toBe(true)
+    const toolUseRow = wrapper
+      .findAllComponents(FieldRow)
+      .find((field) => field.props('label') === 'settings.toolUse')!
+    expect(toolUseRow.props('info')).toBe('settings.toolUseHint')
+    expect(toolUseRow.props('hint')).toBeUndefined()
     const temperature = row.get('input[type="number"]')
     const previousTemperature = model.temperature
     await temperature.setValue('3')
@@ -110,10 +117,15 @@ describe('LLM settings cards', () => {
     const { context, llm, wrapper, localCard } = setup()
     const card = localCard()
     await card.get('.disclosure-header').trigger('click')
+    const headerTooltip = card.get('.models-header').findComponent(InfoTooltip)
+    expect(headerTooltip.props('text')).toBe('settings.connectionModelsHint')
     const count = llm.models.length
-    await card.get('.models-header button').trigger('click')
+    const addButton = card
+      .findAll('.models-header button')
+      .find((button) => button.text().includes('settings.addModel'))!
+    await addButton.trigger('click')
     expect(llm.models).toHaveLength(count + 1)
-    expect(llm.models.at(-1)?.providerId).toBe('ollama')
+    expect(llm.models[0]?.providerId).toBe('ollama')
     expect(card.findAll('.model-row')).toHaveLength(2)
     const remove = card
       .findAll('.connection-actions button')
@@ -122,7 +134,7 @@ describe('LLM settings cards', () => {
     expect(llm.providers.some((provider) => provider.id === 'ollama')).toBe(
       true
     )
-    const confirmation = wrapper.getComponent(ConfirmModal)
+    const confirmation = wrapper.findAllComponents(ConfirmModal).at(-1)!
     expect(confirmation.props('open')).toBe(true)
     confirmation.vm.$emit('cancel')
     await flushPromises()
@@ -139,6 +151,40 @@ describe('LLM settings cards', () => {
       false
     )
     expect(context.deps.persist).toHaveBeenCalled()
+  })
+
+  it('confirms model removal before deleting it from the card', async () => {
+    const { llm, localCard } = setup()
+    const card = localCard()
+    await card.get('.disclosure-header').trigger('click')
+    const initialModelsCount = card.findAll('.model-row').length
+    expect(initialModelsCount).toBeGreaterThan(0)
+
+    const modelRow = card.get('.model-row')
+    const trashButton = modelRow.get(
+      'button[aria-label="settings.removeModel"]'
+    )
+    expect(trashButton.classes()).toContain('btn-ghost')
+    expect(trashButton.classes()).not.toContain('btn-danger-ghost')
+
+    await trashButton.trigger('click')
+
+    const modelConfirm = card.getComponent(ConfirmModal)
+    expect(modelConfirm.props('open')).toBe(true)
+    expect(modelConfirm.props('title')).toBe('settings.removeModel')
+    expect(modelConfirm.props('message')).toBe('settings.removeModelConfirm')
+
+    modelConfirm.vm.$emit('cancel')
+    await flushPromises()
+    expect(card.findAll('.model-row')).toHaveLength(initialModelsCount)
+
+    await trashButton.trigger('click')
+    expect(modelConfirm.props('open')).toBe(true)
+
+    modelConfirm.vm.$emit('confirm')
+    await flushPromises()
+    expect(card.findAll('.model-row')).toHaveLength(initialModelsCount - 1)
+    expect(llm.models.some((model) => model.id === 'ollama-qwen')).toBe(false)
   })
 })
 

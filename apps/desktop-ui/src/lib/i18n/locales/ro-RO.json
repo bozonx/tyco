@@ -921,6 +921,7 @@
     "removeKey": "Elimină cheia",
     "removeLauncherPage": "Șterge pagina",
     "removeModel": "Elimină modelul",
+    "removeModelConfirm": "Eliminați acest model?",
     "removePluginPackage": "Elimină pachetul",
     "removeProvider": "Elimină serverul",
     "removeProviderConfirm": "Eliminați această conexiune, modelele ei, atribuirile și cheia salvată?",

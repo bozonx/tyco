@@ -7,7 +7,7 @@
       </div>
       <IconButton
         size="sm"
-        variant="danger-ghost"
+        variant="ghost"
         icon="mdi:trash-can-outline"
         :label="t('settings.removeModel')"
         @click="emit('remove', model.id)"
@@ -50,7 +50,7 @@
       </FieldRow>
       <FieldRow
         :label="t('settings.toolUse')"
-        :hint="t('settings.toolUseHint')"
+        :info="t('settings.toolUseHint')"
       >
         <FieldSwitch
           :model-value="model.canUseTools"

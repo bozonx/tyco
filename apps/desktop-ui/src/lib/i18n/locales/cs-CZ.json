@@ -915,6 +915,7 @@
     "removeKey": "Odebrat klíč",
     "removeLauncherPage": "Smazat stránku",
     "removeModel": "Odebrat model",
+    "removeModelConfirm": "Odebrat tento model?",
     "removePluginPackage": "Odebrat balíček",
     "removeProvider": "Odebrat server",
     "removeProviderConfirm": "Odebrat toto připojení, jeho modely, přiřazení a uložený klíč?",

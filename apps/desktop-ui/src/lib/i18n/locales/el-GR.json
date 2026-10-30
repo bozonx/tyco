@@ -918,6 +918,7 @@
     "removeKey": "Αφαίρεση κλειδιού",
     "removeLauncherPage": "Διαγραφή σελίδας",
     "removeModel": "Αφαίρεση μοντέλου",
+    "removeModelConfirm": "Αφαίρεση αυτού του μοντέλου;",
     "removePluginPackage": "Αφαίρεση πακέτου",
     "removeProvider": "Αφαίρεση διακομιστή",
     "removeProviderConfirm": "Αφαίρεση αυτής της σύνδεσης, των μοντέλων της, των αναθέσεων και του αποθηκευμένου κλειδιού;",

@@ -921,6 +921,7 @@
     "removeKey": "Usuń klucz",
     "removeLauncherPage": "Usuń stronę",
     "removeModel": "Usuń model",
+    "removeModelConfirm": "Usunąć ten model?",
     "removePluginPackage": "Usuń pakiet",
     "removeProvider": "Usuń serwer",
     "removeProviderConfirm": "Usunąć to połączenie, jego modele, przypisania i zapisany klucz?",

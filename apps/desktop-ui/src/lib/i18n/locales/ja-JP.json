@@ -918,6 +918,7 @@
     "removeKey": "キーを削除",
     "removeLauncherPage": "ページを削除",
     "removeModel": "モデルを削除",
+    "removeModelConfirm": "このモデルを削除しますか？",
     "removePluginPackage": "パッケージを削除",
     "removeProvider": "サーバーを削除",
     "removeProviderConfirm": "この接続、モデル、割り当て、および保存されたキーを削除しますか？",

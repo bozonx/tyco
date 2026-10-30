@@ -918,6 +918,7 @@
     "removeKey": "Kulcs eltávolítása",
     "removeLauncherPage": "Oldal törlése",
     "removeModel": "Modell eltávolítása",
+    "removeModelConfirm": "Eltávolítja ezt a modellt?",
     "removePluginPackage": "Csomag eltávolítása",
     "removeProvider": "Szerver eltávolítása",
     "removeProviderConfirm": "Eltávolítja ezt a kapcsolatot, a modelljeit, a hozzárendeléseit és a mentett kulcsot?",

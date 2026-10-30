@@ -915,6 +915,7 @@
     "removeKey": "키 제거",
     "removeLauncherPage": "페이지 삭제",
     "removeModel": "모델 제거",
+    "removeModelConfirm": "이 모델을 제거하시겠습니까?",
     "removePluginPackage": "패키지 제거",
     "removeProvider": "서버 제거",
     "removeProviderConfirm": "이 연결과 해당 모델, 할당 및 저장된 키를 제거하시겠습니까?",

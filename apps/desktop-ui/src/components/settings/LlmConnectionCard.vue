@@ -46,13 +46,9 @@
 
       <div class="models-block">
         <div class="models-header">
-          <div>
-            <div class="models-title">
-              {{ t('settings.connectionModels') }}
-            </div>
-            <div class="models-hint text-muted">
-              {{ t('settings.connectionModelsHint') }}
-            </div>
+          <div class="models-title">
+            <span>{{ t('settings.connectionModels') }}</span>
+            <InfoTooltip :text="t('settings.connectionModelsHint')" />
           </div>
           <Button
             size="sm"
@@ -75,7 +71,7 @@
           :providers="llm.providers"
           :placeholder="modelPlaceholder(model.providerId)"
           :settings="settings"
-          @remove="removeModel(llm, $event)"
+          @remove="pendingModelId = $event"
           @update="Object.assign(model, $event)"
         />
       </div>
@@ -121,18 +117,32 @@
         </Button>
       </div>
     </div>
+
+    <ConfirmModal
+      :open="pendingModelId !== null"
+      :title="t('settings.removeModel')"
+      :message="t('settings.removeModelConfirm')"
+      :confirm-text="t('common.delete')"
+      danger
+      @confirm="confirmModelRemoval"
+      @cancel="pendingModelId = null"
+    />
   </DisclosurePanel>
 </template>
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import { useI18n } from '../../composables/use-i18n'
 import { removeModel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { type SecretsStatus, httpOrigin } from '../../lib/net/secrets'
 import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
+import ConfirmModal from '../common/ConfirmModal.vue'
 import DisclosurePanel from '../common/DisclosurePanel.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import LlmModelEditor from './LlmModelEditor.vue'
@@ -162,6 +172,13 @@ const {
   addModelToProvider,
   checkConnection,
 } = props.settings
+const pendingModelId = ref<string | null>(null)
+function confirmModelRemoval() {
+  if (pendingModelId.value) {
+    removeModel(props.llm, pendingModelId.value)
+    pendingModelId.value = null
+  }
+}
 const MODEL_PLACEHOLDERS: Record<string, string> = {
   google: 'gemini-3.8-flash',
   openrouter: 'openai/gpt-4.1-mini',
@@ -217,10 +234,6 @@ function keyHint(provider: LlmProvider) {
 }
 </script>
 <style scoped>
-.models-hint {
-  font-size: var(--text-caption);
-  line-height: 1.35;
-}
 .models-block {
   padding: var(--space-lg);
   border-top: 1px solid var(--app-border-subtle);
@@ -233,6 +246,9 @@ function keyHint(provider: LlmProvider) {
   gap: var(--space-md);
 }
 .models-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: var(--text-body);
   font-weight: 600;
 }
