@@ -2,20 +2,13 @@ import { defineConfig, mergeConfig } from 'vitest/config'
 
 import { createUiConfig } from './build/ui-config.ts'
 
-// Only modules independent of DOM APIs belong in the Node project.
-const NODE_TEST_PATTERNS = [
-  'build/**/*.test.ts',
-  'src/test/offline-assets.test.ts',
-  'src/lib/{history,llm,commands,invocation,tools,plugins,settings,translation,selection-replace,correction,ai-tasks,logger,diff,locale,input-keys,command-launcher,voice-commands,shortcut-slots,sortable,toast,toolbar,menu-query,external-access,ai-profiles,custom-actions,chat-tools}/**/*.test.ts',
-  'src/lib/theme/{appearance,theme-controller}.test.ts',
-  'src/lib/desktop/ipc-error.test.ts',
-  'src/lib/quick-input/{draft-restore,quick-insert}.test.ts',
-  'src/lib/editor/{strip-markdown,format-markdown,html-to-markdown}.test.ts',
-  'src/lib/net/{async-queue,base64,provider-fetch,secrets,secrets-state}.test.ts',
-  'src/lib/chat/{context-budget,chat-title,chat-request,chat-history-entry,chat-context,chat-attachment,chat-export,chat-history-list,chat-history-settings,chat-persistence-queue,chat-session-model,chat-generation-model}.test.ts',
-  'src/lib/stt/{stt-config,sherpa-provider,deepgram-provider,dictation-language,dictation-ownership,stt-readiness}.test.ts',
-  'src/lib/clipboard/copy-text.test.ts',
-  'src/lib/i18n/messages.test.ts',
+// Tests run in Node by default. jsdom is reserved for Vue code (components,
+// views, composables, stores) and for modules that need browser APIs, whose
+// tests are named `*.dom.test.ts`. A model test that touches the DOM by
+// mistake therefore fails instead of silently getting a browser environment.
+const DOM_TEST_PATTERNS = [
+  'src/{components,views,composables,stores}/**/*.test.ts',
+  'src/**/*.dom.test.ts',
 ]
 
 const MODEL_COVERAGE_THRESHOLDS = {
@@ -44,7 +37,8 @@ export default defineConfig((configEnv) =>
               name: 'unit-node',
               environment: 'node',
               setupFiles: ['./src/test/setup-node.ts'],
-              include: NODE_TEST_PATTERNS,
+              include: ['build/**/*.test.ts', 'src/**/*.test.ts'],
+              exclude: DOM_TEST_PATTERNS,
             },
           },
           {
@@ -53,8 +47,7 @@ export default defineConfig((configEnv) =>
               name: 'unit-dom',
               environment: 'jsdom',
               setupFiles: ['./src/test/setup.ts'],
-              include: ['src/**/*.test.ts'],
-              exclude: NODE_TEST_PATTERNS,
+              include: DOM_TEST_PATTERNS,
             },
           },
         ],

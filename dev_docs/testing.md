@@ -9,7 +9,7 @@ pinned in `rust-toolchain.toml`.
 | ---------------------------- | --------------------------------------------------------------------------- |
 | `pnpm test:unit`             | Tooling, frontend, plugins, and Rust unit tests                             |
 | `pnpm test:unit:ui`          | All desktop UI unit and component tests                                     |
-| `pnpm test:unit:models`      | The DOM-independent desktop UI project                                      |
+| `pnpm test:unit:models`      | The Node (DOM-independent) desktop UI project                               |
 | `pnpm test:unit:rust`        | Workspace library/binary tests, excluding `integration_` tests              |
 | `pnpm test:integration:rust` | Local socket/process tests and all integration test targets                 |
 | `pnpm test`                  | Tooling, frontend, and plugin tests                                         |
@@ -27,12 +27,15 @@ src/components/common/Button.test.ts`.
 
 `apps/desktop-ui/vitest.config.ts` defines two projects with disjoint file sets:
 
-- `unit-node` runs explicitly selected DOM-independent models and build tooling.
-- `unit-dom` runs components and modules requiring browser APIs in jsdom.
+- `unit-node` is the default: build tooling and every test under `src/` that
+  is not listed below.
+- `unit-dom` runs in jsdom: tests under `src/components`, `src/views`,
+  `src/composables` and `src/stores`, and any `*.dom.test.ts`.
 
-Add a file to the Node patterns only after confirming that neither it nor its
-imports require DOM APIs. Vue reactivity alone does not require jsdom. Both
-projects use the same application transforms and aliases. File isolation remains
+A model test therefore gets no DOM unless it asks for one. When a module needs
+browser APIs (`document`, `window`, CodeMirror views, canvas, clipboard), name
+its test `<module>.dom.test.ts`. Vue reactivity alone does not require jsdom.
+Both projects use the same application transforms and aliases. File isolation remains
 enabled; the desktop runner caps workers at four to bound memory use.
 
 The DOM setup automatically unmounts Vue Test Utils wrappers, clears storage and
@@ -56,6 +59,33 @@ All plugin/SDK test files and Vitest configurations are type-checked through
 `tsconfig.test.json`; test sources stay out of published build output. Desktop
 tests are checked by `tsconfig.tooling.json`.
 
+## Component tests and the desktop boundary
+
+Component, view and composable tests mount the real Pinia stores. Replace the
+native side, not the stores: `installFakeDesktop()` from
+`src/test/install-fake-desktop.ts` puts the shared in-memory backend
+(`src/test/fake-desktop-backend.ts`, the same one the browser tests use)
+behind `@tauri-apps/api`, so the IPC store, desktop state model and client run
+as in the app.
+
+```ts
+let desktop: TestDesktop
+beforeEach(async () => {
+  desktop = installFakeDesktop({ userConfig })
+  await desktop.load() // only when the component reads the desktop state
+})
+afterEach(() => desktop.dispose()) // fails on commands without a handler
+
+desktop.backend.handle('get_text_insertion_status', () => status)
+mount(Component, { global: { plugins: [desktop.pinia] } })
+expect(desktop.backend.callsOf('copy_text')).toEqual([{ text: 'Hi' }])
+```
+
+Do not mock `stores/desktop` or `stores/ipc`, and do not write a new store
+stand-in like `mockDesktopStore`: a copy of store logic drifts from the store.
+Mocking a heavy feature store (LLM, chat) or `use-i18n` to isolate a component
+is still fine. Older tests that mock the desktop stores are being migrated.
+
 ## Rust isolation
 
 Keep unit tests in `#[cfg(test)]` modules. Inject platform/session inputs into pure
@@ -71,12 +101,31 @@ directory guard drops, especially on Windows.
 Tests that launch actual child processes or bind local sockets have an
 `integration_` name prefix, even when colocated in a source module to access
 private APIs. The default full suite still runs them; the fast unit command skips
-them. Pure tests of protocol encoding, validation, queues, and process control
+them. `scripts/check-rust-test-tiers.mjs` (part of `pnpm check`) fails when a
+test body binds or connects a socket or starts a process without the prefix;
+it does not follow helpers, so keep such calls visible in the test or name the
+test correctly yourself. Cargo integration targets under `tests/` need no
+prefix. Pure tests of protocol encoding, validation, queues, and process control
 state remain in the unit suite. Local transport tests use ephemeral ports.
 
 The real system keychain test remains ignored and is only run explicitly with
 `cargo test --manifest-path src-tauri/Cargo.toml keychain -- --ignored`. It requires
 a working, unlocked session keychain; unit tests use the in-memory vault instead.
+
+## Desktop commands
+
+`#[tauri::command]` functions are adapters without logic and have no unit
+tests of their own; the services they call do. Their wiring is checked
+statically and end to end:
+
+- `scripts/check-desktop-contracts.mjs` requires every registered command to
+  be in the `AppManifest` of `build.rs` and in the generated bindings, and
+  checks the capability files.
+- `node scripts/generate-desktop-commands.mjs --check` (in `pnpm check`) keeps argument names and types in sync with
+  the frontend.
+- The native smoke runs real commands under the production permissions.
+
+A command that grows logic moves it into a service with unit tests.
 
 ## Coverage
 
@@ -100,7 +149,7 @@ pnpm test:cov:rust
 With a distribution-managed Rust toolchain, matching LLVM binaries can instead be
 provided through `LLVM_COV` and `LLVM_PROFDATA`.
 
-CI runs the full Rust suite and uploads a separate Rust unit LCOV report. Rust coverage is initially informational: platform adapters cannot be
+CI runs the full Rust suite with all features on Linux and uploads a separate Rust unit LCOV report. Rust coverage is initially informational: platform adapters cannot be
 fully exercised by a Linux unit runner. Reports exclude tagged integration tests,
 while all platforms continue to run the full Rust test suite across CI jobs.
 
@@ -225,8 +274,8 @@ Windows runs `pnpm test:desktop` directly after the same builds, with
 `tauri-driver.exe` and a matching `msedgedriver.exe` on `PATH`. CI downloads the
 Edge driver matching the installed Edge version. `TYCO_TEST_APP` and
 `TYCO_TEST_DRIVER` can override the application and driver paths.
-The standard Tauri driver does not support WKWebView on macOS; keep unit tests
-and manual native verification there. Failure screenshots and driver/application
+macOS is not a supported platform for now; CI only keeps its backend
+compiling. Failure screenshots and driver/application
 logs are uploaded separately for each smoke platform.
 
 Keep timing combinations, queues, normalization and business-rule matrices in
@@ -245,7 +294,9 @@ production. An expected console error must be registered with
 unrelated errors.
 
 The application fixture installs `window.__TAURI_INTERNALS__` before page scripts
-run. Each test owns a fresh `FakeDesktop` and browser context. Commands preserve
+run. Each test owns a fresh `FakeDesktop` (a page adapter over the backend in
+`src/test/fake-desktop-backend.ts`, shared with jsdom tests) and browser
+context. Commands preserve
 the real argument serialization and Tauri Channel envelope, including binary
 stream data. Unknown commands return errors and independently fail teardown even
 if application code catches the error. Unexpected `log_client_message` errors

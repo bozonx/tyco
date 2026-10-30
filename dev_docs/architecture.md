@@ -117,7 +117,8 @@ CI additionally runs:
 
 - `pnpm test:plugin-runtime` in Chromium for isolated worker behavior.
 - Actual Linux AppImage/deb packaging and artifact upload.
-- Required compilation and unit tests on Windows and macOS.
+- Required compilation and unit tests on Windows, and on macOS only to keep
+  its unsupported backend compiling.
 - `pnpm test:desktop` against a built debug app in WebKitGTK using Tauri WebDriver,
   Xvfb and a dedicated temporary `TYCO_DEV_HOME`.
 

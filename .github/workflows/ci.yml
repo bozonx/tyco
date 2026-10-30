@@ -125,7 +125,7 @@ jobs:
         working-directory: src-tauri
 
       - name: Run Rust tests
-        run: cargo test --locked --workspace
+        run: cargo test --locked --workspace --all-features
         working-directory: src-tauri
 
       - name: Install coverage tools

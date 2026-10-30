@@ -84,12 +84,16 @@ Run the desktop app with `pnpm tauri:dev`, not `pnpm tauri dev`.
   without a Tauri runtime: pass state, paths or a host trait (e.g.
   `SelectionBackend`, `ActivationHost`) instead of an `AppHandle`. Commands
   and thin facades such as `history_store` resolve managed state and hand it in.
-- Cover core commands and services with unit tests.
+- Cover services with unit tests. Commands stay adapters without tests of
+  their own; contract checks and the native smoke cover their wiring
+  (`dev_docs/testing.md`).
 - After changing a command, an IPC type or an event, run
   `pnpm generate:desktop` (see `dev_docs/desktop-api.md`).
 - OS- and session-specific code lives in `src-tauri/src/services/platform/`.
   Ask `platform::session::current()` instead of reading `XDG_SESSION_TYPE` and
-  the like. Linux, Windows and macOS are all targets (`dev_docs/cross-platform.md`).
+  the like. Linux and Windows are the supported targets; macOS is not
+  supported for now, CI only keeps its backend compiling
+  (`dev_docs/cross-platform.md`).
 - The Linux D-Bus contract is `org.tyco.Service`, `/org/tyco/Object`,
   `org.tyco.Interface`.
 
@@ -116,6 +120,18 @@ Run the desktop app with `pnpm tauri:dev`, not `pnpm tauri dev`.
 The root `package.json` version is the single source of truth.
 `pnpm sync:version` propagates it to `src-tauri/tauri.conf.json` and
 `src-tauri/Cargo.toml`; `pnpm check` fails when they drift apart.
+
+## Tests
+
+See `dev_docs/testing.md`. In short:
+
+- Frontend tests run in Node by default; a test that needs browser APIs
+  outside components, views, composables and stores is named `*.dom.test.ts`.
+- Component tests mount real stores over `installFakeDesktop()`
+  (`src/test/install-fake-desktop.ts`); do not mock `stores/desktop` or
+  `stores/ipc`.
+- Rust tests that bind sockets or start processes are named `integration_*`;
+  `pnpm check` enforces it.
 
 ## Verification
 

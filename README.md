@@ -25,8 +25,9 @@ TyCo - typing AI companion for writers and professionals who work with texts a l
   window that gets the focus when Tyco hides. `wl-clipboard` (Wayland) or
   `xclip` (X11) handles the clipboard
 
-The development launcher supports Linux, macOS, and Windows. Desktop runtime
-smoke tests currently run on Linux; Rust checks run on all three platforms.
+The development launcher supports Linux, macOS, and Windows. Supported platforms are Linux and Windows; macOS is not supported for now.
+Desktop runtime smoke tests run on Linux and Windows; Rust checks also
+compile the macOS backend.
 
 ## Setup
 

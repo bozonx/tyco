@@ -1,8 +1,11 @@
 import type { DesktopViewState } from '@tyco/shared'
 
 /**
- * A stand-in for `useDesktopStore` over the state the test owns: the state is
- * read on every access, so a test may swap or mutate it
+ * @deprecated Mount the real stores over `installFakeDesktop()` instead; see
+ *   `dev_docs/testing.md`. Kept until the older tests are migrated.
+ *
+ *   A stand-in for `useDesktopStore` over the state the test owns: the state is
+ *   read on every access, so a test may swap or mutate it
  */
 export function mockDesktopStore<T extends object>(
   getState: () => object,

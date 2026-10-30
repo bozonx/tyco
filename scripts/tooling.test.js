@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
+
+import { findMislabeledTests } from './check-rust-test-tiers.mjs'
 
 import { createDevConfig, parseDevPort } from './lib/dev-config.js'
 import {
@@ -80,4 +85,32 @@ test('Cargo synchronization only changes the package version', () => {
       ),
     /Missing string version/
   )
+})
+
+test('Rust tests with sockets or processes need the integration prefix', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'tyco-test-tiers-'))
+  try {
+    await mkdir(join(dir, 'src'))
+    await mkdir(join(dir, 'tests'))
+    await writeFile(
+      join(dir, 'src', 'lib.rs'),
+      [
+        '#[test]',
+        'fn parses() { assert!(parse("a").is_ok()); }',
+        '#[tokio::test]',
+        'async fn connects() { TcpStream::connect(addr).await; }',
+        '#[test]',
+        'fn integration_runs() { Command::new("sh").spawn(); }',
+      ].join('\n')
+    )
+    await writeFile(
+      join(dir, 'tests', 'cli.rs'),
+      '#[test]\nfn round_trip() { Command::new("tyco-ctl"); }'
+    )
+    const problems = await findMislabeledTests(dir)
+    assert.equal(problems.length, 1)
+    assert.match(problems[0], /connects/)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
 })

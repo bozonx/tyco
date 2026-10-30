@@ -42,7 +42,7 @@
     "test:platform:linux": "node scripts/test-linux-platform.mjs",
     "test:desktop": "node scripts/check-desktop-runtime.mjs",
     "test:desktop:container": "node scripts/test-desktop-in-container.mjs",
-    "check:architecture": "node scripts/generate-desktop-commands.mjs --check && node scripts/check-desktop-contracts.mjs",
+    "check:architecture": "node scripts/generate-desktop-commands.mjs --check && node scripts/check-desktop-contracts.mjs && node scripts/check-rust-test-tiers.mjs",
     "test:tooling": "node --test scripts/*.test.js",
     "generate:desktop": "node scripts/generate-desktop-commands.mjs",
     "test:unit": "pnpm test:tooling && turbo run test && pnpm test:unit:rust",

@@ -8,17 +8,19 @@ Native quick-window selection is implemented on Windows through UI Automation
 and on macOS through Accessibility. macOS captures the source application PID
 and verifies its activation before pasting. Both native backends still need
 verification on their operating systems; Linux checks do not exercise them.
-Updated: 2026-10-13.
+Updated: 2026-10-30. macOS is not a supported platform for now: its
+backend stays in the tree and compiles in CI, but it is not tested, released
+or required to work.
 
 ## 1. Целевые платформы
 
-| Платформа                       | Статус         | Комментарий                                                                     |
-| ------------------------------- | -------------- | ------------------------------------------------------------------------------- |
-| Linux, KDE Plasma 6, Wayland    | основная       | трекинг окон через KWin-скрипты, layer-shell, портал хоткеев                    |
-| Linux, X11 (любой EWMH-WM)      | поддерживается | трекинг окон по событиям корневого окна, ydotool или портал, xclip              |
-| Linux, GNOME / wlroots, Wayland | частично       | хоткеи через портал или конфиг композитора; вставка в окно, получившее фокус    |
-| Windows 10 22H2+, 11            | partial        | UI Automation selection capture, HWND target, native clipboard, `SendInput`     |
-| macOS 13+                       | partial        | Accessibility selection capture, PID target, verified paste through `osascript` |
+| Платформа                       | Статус         | Комментарий                                                                  |
+| ------------------------------- | -------------- | ---------------------------------------------------------------------------- |
+| Linux, KDE Plasma 6, Wayland    | основная       | трекинг окон через KWin-скрипты, layer-shell, портал хоткеев                 |
+| Linux, X11 (любой EWMH-WM)      | поддерживается | трекинг окон по событиям корневого окна, ydotool или портал, xclip           |
+| Linux, GNOME / wlroots, Wayland | частично       | хоткеи через портал или конфиг композитора; вставка в окно, получившее фокус |
+| Windows 10 22H2+, 11            | partial        | UI Automation selection capture, HWND target, native clipboard, `SendInput`  |
+| macOS 13+                       | not supported  | backend kept compiling in CI; not tested or released for now                 |
 
 ARM64 (Windows on ARM, Apple Silicon, Linux aarch64) API не меняет: те же
 Win32, AppKit/Quartz, Wayland/X11/D-Bus. Отличаются только сборка и

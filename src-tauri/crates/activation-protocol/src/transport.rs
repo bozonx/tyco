@@ -411,7 +411,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn cancelling_the_listener_removes_its_socket_and_releases_the_server_lock() {
+    fn integration_cancelling_the_listener_removes_its_socket_and_releases_the_server_lock() {
         use std::os::unix::fs::DirBuilderExt;
         let directory = std::env::temp_dir().join(format!(
             "tyco-listener-test-{}-{}",

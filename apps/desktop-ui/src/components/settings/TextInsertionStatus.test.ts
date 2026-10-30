@@ -1,38 +1,39 @@
-import type { TextInsertionStatus as Status } from '@tyco/shared'
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import TextInsertionStatus from './TextInsertionStatus.vue'
 
-const mocks = vi.hoisted(() => ({ call: vi.fn() }))
-
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ call: mocks.call }),
-}))
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const status = (value: Status) => ({ success: true, result: value })
-
 describe('TextInsertionStatus.vue', () => {
+  let desktop: TestDesktop
+
   beforeEach(() => {
-    mocks.call.mockReset()
+    desktop = installFakeDesktop()
   })
 
+  afterEach(() => desktop.dispose())
+
+  const mountStatus = () =>
+    mount(TextInsertionStatus, { global: { plugins: [desktop.pinia] } })
+
   it('checks on mount and shows both parts of the status', async () => {
-    mocks.call.mockResolvedValue(
-      status({
-        keys: 'unavailable',
-        problem: 'ydotooldNotRunning',
-        detail: 'ydotoold is not running',
-        target: 'focusReturn',
-      })
-    )
-    const wrapper = mount(TextInsertionStatus)
+    desktop.backend.handle('get_text_insertion_status', () => ({
+      keys: 'unavailable',
+      problem: 'ydotooldNotRunning',
+      detail: 'ydotoold is not running',
+      target: 'focusReturn',
+    }))
+    const wrapper = mountStatus()
     await flushPromises()
 
-    expect(mocks.call).toHaveBeenCalledWith('get_text_insertion_status')
+    expect(desktop.backend.callsOf('get_text_insertion_status')).toHaveLength(1)
     expect(wrapper.text()).toContain(
       'settings.textInsertion.ydotooldNotRunning'
     )
@@ -42,26 +43,25 @@ describe('TextInsertionStatus.vue', () => {
   })
 
   it('asks for keyboard control when the portal needs permission', async () => {
-    mocks.call
-      .mockResolvedValueOnce(
-        status({
-          keySender: 'portal',
-          keys: 'needsPermission',
-          target: 'tracked',
-        })
-      )
-      .mockResolvedValueOnce(
-        status({ keySender: 'portal', keys: 'ready', target: 'tracked' })
-      )
-    const wrapper = mount(TextInsertionStatus)
+    let isGranted = false
+    desktop.backend.handle('get_text_insertion_status', () => ({
+      keySender: 'portal',
+      keys: isGranted ? 'ready' : 'needsPermission',
+      target: 'tracked',
+    }))
+    desktop.backend.handle('request_text_insertion_permission', () => {
+      isGranted = true
+      return { keySender: 'portal', keys: 'ready', target: 'tracked' }
+    })
+    const wrapper = mountStatus()
     await flushPromises()
 
     await wrapper.find('button').trigger('click')
     await flushPromises()
 
-    expect(mocks.call).toHaveBeenLastCalledWith(
-      'request_text_insertion_permission'
-    )
+    expect(
+      desktop.backend.callsOf('request_text_insertion_permission')
+    ).toHaveLength(1)
     expect(wrapper.text()).toContain('settings.textInsertion.keysReadyPortal')
     expect(wrapper.find('button').exists()).toBe(false)
   })
