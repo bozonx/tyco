@@ -1059,7 +1059,12 @@
     "vision": "Είσοδος εικόνων",
     "voiceTextCorrection": "Διόρθωση υπαγορευμένου κειμένου",
     "voiceHoldToRecord": "Κρατήστε πατημένο το πλήκτρο για εγγραφή (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Από προεπιλογή, η φωνητική εισαγωγή εναλλάσσεται με ένα μόνο πάτημα. Ενεργοποιήστε για εγγραφή μόνο όσο κρατάτε πατημένο το πλήκτρο."
+    "voiceHoldToRecordHint": "Από προεπιλογή, η φωνητική εισαγωγή εναλλάσσεται με ένα μόνο πάτημα. Ενεργοποιήστε για εγγραφή μόνο όσο κρατάτε πατημένο το πλήκτρο.",
+    "quickCorrectionMode": "Διόρθωση γρήγορης εισαγωγής",
+    "quickCorrectionModeInfo": "Πώς χειρίζεται η διόρθωση κειμένου το παράθυρο γρήγορης εισαγωγής.",
+    "quickCorrectionLive": "Ζωντανή προεπισκόπηση",
+    "quickCorrectionOnSubmit": "Με την ολοκλήρωση",
+    "quickCorrectionOff": "Ανενεργό"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {
@@ -1218,6 +1223,10 @@
     "newLine": "Νέα γραμμή",
     "next": "Επόμενο",
     "nothingToCorrect": "Δεν υπάρχει κάτι για διόρθωση",
-    "textTooShortForCorrection": "Το κείμενο είναι πολύ σύντομο για διόρθωση"
+    "textTooShortForCorrection": "Το κείμενο είναι πολύ σύντομο για διόρθωση",
+    "insert": "Εισαγωγή",
+    "liveCorrecting": "Διόρθωση...",
+    "livePreview": "Ζωντανή διόρθωση",
+    "clickToApply": "Κάντε κλικ για εφαρμογή"
   }
 }

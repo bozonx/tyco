@@ -105,4 +105,29 @@ describe('useCorrectionWorkflowStore', () => {
       'quick corrected'
     )
   })
+
+  it('executes insertDirect without calling correction', async () => {
+    setActivePinia(createPinia())
+    const invocations = useInvocationsStore()
+    const history = useHistoryStore()
+
+    vi.spyOn(invocations, 'call').mockResolvedValue({ ok: true })
+    const saveOutputSpy = vi
+      .spyOn(history, 'saveOutput')
+      .mockResolvedValueOnce('out-1')
+
+    const store = useCorrectionWorkflowStore()
+    await store.insertDirect('direct raw input')
+
+    expect(invocations.call).not.toHaveBeenCalledWith(
+      'core.correct',
+      expect.anything(),
+      expect.anything()
+    )
+    expect(saveOutputSpy).toHaveBeenCalledWith('direct raw input')
+    expect(invocations.call).toHaveBeenCalledWith(
+      'core.insert',
+      'direct raw input'
+    )
+  })
 })

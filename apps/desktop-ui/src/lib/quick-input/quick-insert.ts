@@ -21,13 +21,18 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     deps.clearPending(owner)
   }
 
-  const start = async (text: string): Promise<void> => {
+  const start = async (
+    text: string,
+    customCorrect?: (text: string) => Promise<string>
+  ): Promise<void> => {
     if (disposed || active || !text.trim()) return
     const run: { owner?: number | void } = {}
     active = run
     run.owner = deps.setPending(cancel)
     try {
-      const result = await deps.correct(text)
+      const result = customCorrect
+        ? await customCorrect(text)
+        : await deps.correct(text)
       if (active !== run) return
       if (!result.trim()) throw new Error('Correction returned empty text')
       await deps.saveOutput(result)
@@ -43,9 +48,28 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     }
   }
 
+  const insertDirect = async (text: string): Promise<void> => {
+    if (disposed || active || !text.trim()) return
+    const run: { owner?: number | void } = {}
+    active = run
+    run.owner = deps.setPending(cancel)
+    try {
+      await deps.saveOutput(text)
+      if (active !== run) return
+      await deps.insert(text)
+    } catch (error) {
+      if (active === run) deps.reportError(error)
+    } finally {
+      if (active === run) {
+        active = null
+        deps.clearPending(run.owner)
+      }
+    }
+  }
+
   const dispose = () => {
     disposed = true
     cancel()
   }
-  return { start, cancel, dispose }
+  return { start, insertDirect, cancel, dispose }
 }

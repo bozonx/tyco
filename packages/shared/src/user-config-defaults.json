@@ -18,7 +18,8 @@
   },
   "quickWindow": {
     "isHiddenOnBlur": true,
-    "isCorrectionPrefetchEnabled": false
+    "isCorrectionPrefetchEnabled": false,
+    "correctionMode": "onSubmit"
   },
   "hotkeys": {
     "editor": "",

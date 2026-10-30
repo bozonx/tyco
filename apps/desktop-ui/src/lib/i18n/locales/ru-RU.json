@@ -1059,7 +1059,12 @@
     "vision": "Поддержка изображений",
     "voiceTextCorrection": "Исправление распознанного текста",
     "voiceHoldToRecord": "Удерживать клавиши для записи (Push-to-Talk)",
-    "voiceHoldToRecordHint": "По умолчанию голосовой ввод переключается одиночным нажатием. Включите, чтобы запись шла только пока зажат хоткей."
+    "voiceHoldToRecordHint": "По умолчанию голосовой ввод переключается одиночным нажатием. Включите, чтобы запись шла только пока зажат хоткей.",
+    "quickCorrectionMode": "Коррекция при быстром вводе",
+    "quickCorrectionModeInfo": "Способ обработки коррекции в окне быстрого текстового ввода.",
+    "quickCorrectionLive": "Живая коррекция",
+    "quickCorrectionOnSubmit": "По завершению",
+    "quickCorrectionOff": "Без коррекции"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
@@ -1218,6 +1223,10 @@
     "newLine": "Новая строка",
     "next": "Далее",
     "nothingToCorrect": "Исправлять нечего",
-    "textTooShortForCorrection": "Слишком короткий текст для коррекции"
+    "textTooShortForCorrection": "Слишком короткий текст для коррекции",
+    "insert": "Вставить",
+    "liveCorrecting": "Коррекция...",
+    "livePreview": "Живая коррекция",
+    "clickToApply": "Нажмите, чтобы применить"
   }
 }

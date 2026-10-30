@@ -1056,7 +1056,12 @@
     "vision": "圖片輸入",
     "voiceTextCorrection": "語音文字校對",
     "voiceHoldToRecord": "按住快捷鍵錄音 (Push-to-Talk)",
-    "voiceHoldToRecordHint": "預設情況下，按一次快捷鍵即可切換語音輸入。啟用後僅在按住快捷鍵時錄音。"
+    "voiceHoldToRecordHint": "預設情況下，按一次快捷鍵即可切換語音輸入。啟用後僅在按住快捷鍵時錄音。",
+    "quickCorrectionMode": "快速輸入修正",
+    "quickCorrectionModeInfo": "快速輸入視窗如何處理文字修正。",
+    "quickCorrectionLive": "即時預覽",
+    "quickCorrectionOnSubmit": "完成時",
+    "quickCorrectionOff": "關閉"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1215,6 +1220,10 @@
     "newLine": "換行",
     "next": "下一步",
     "nothingToCorrect": "沒有需要校對的內容",
-    "textTooShortForCorrection": "文字過短，無法進行校對"
+    "textTooShortForCorrection": "文字過短，無法進行校對",
+    "insert": "插入",
+    "liveCorrecting": "正在修正...",
+    "livePreview": "即時修正",
+    "clickToApply": "點擊套用"
   }
 }

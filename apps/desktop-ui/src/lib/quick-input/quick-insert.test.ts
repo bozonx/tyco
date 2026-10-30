@@ -102,6 +102,23 @@ describe('quick correction and insertion', () => {
     expect(deps.insert).not.toHaveBeenCalled()
     expect(deps.reportError).toHaveBeenCalledOnce()
   })
+
+  it('uses custom correct function when provided', async () => {
+    const { deps, model } = setup()
+    const custom = vi.fn(async (t: string) => `Custom: ${t}`)
+    await model.start('test', custom)
+    expect(custom).toHaveBeenCalledWith('test')
+    expect(deps.correct).not.toHaveBeenCalled()
+    expect(deps.insert).toHaveBeenCalledWith('Custom: test')
+  })
+
+  it('supports insertDirect without calling correction', async () => {
+    const { deps, model } = setup()
+    await model.insertDirect('Direct text')
+    expect(deps.correct).not.toHaveBeenCalled()
+    expect(deps.saveOutput).toHaveBeenCalledWith('Direct text')
+    expect(deps.insert).toHaveBeenCalledWith('Direct text')
+  })
 })
 
 describe('quick insertion disposal', () => {

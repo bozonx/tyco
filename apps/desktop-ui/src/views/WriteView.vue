@@ -1,5 +1,17 @@
 <template>
   <div ref="containerRef" class="write-mode-container">
+    <WriteLivePreview
+      v-if="
+        isLiveMode &&
+        (textCorrectionStore.liveStatus === 'loading' ||
+          textCorrectionStore.liveCorrectedText)
+      "
+      ref="livePreviewRef"
+      :status="textCorrectionStore.liveStatus"
+      :text="textCorrectionStore.liveCorrectedText"
+      :original-text="quickInputStore.value"
+      @accept="handleAcceptLiveCorrection"
+    />
     <div ref="frameRef" class="write-frame">
       <WriteModeInput
         ref="inputRef"
@@ -16,7 +28,9 @@
         @click="submitFromHint"
       >
         <KeyboardKey>{{ submitShortcutLabel }}</KeyboardKey>
-        <span>{{ t('write.correctAndInsert') }}</span>
+        <span>{{
+          isOffMode ? t('write.insert') : t('write.correctAndInsert')
+        }}</span>
       </button>
       <span class="text-faint">•</span>
       <button
@@ -56,6 +70,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import KeyboardKey from '../components/common/KeyboardKey.vue'
+import WriteLivePreview from '../components/quick/WriteLivePreview.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
@@ -71,6 +86,7 @@ import { useDesktopStore } from '../stores/desktop'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { useQuickInputStore } from '../stores/quick-input'
+import { useTextCorrectionStore } from '../stores/text-correction'
 import { useWindowStore } from '../stores/window'
 
 const navPanelStore = useNavPanelStore()
@@ -79,10 +95,16 @@ const windowStore = useWindowStore()
 const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
 const correctionWorkflowStore = useCorrectionWorkflowStore()
+const textCorrectionStore = useTextCorrectionStore()
 const { t } = useI18n()
 const submitKey = computed(() =>
   resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
 )
+const correctionMode = computed(
+  () => desktopStore.userConfig?.quickWindow?.correctionMode ?? 'onSubmit'
+)
+const isLiveMode = computed(() => correctionMode.value === 'live')
+const isOffMode = computed(() => correctionMode.value === 'off')
 const prefetch = computed(
   () =>
     desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled === true
@@ -92,6 +114,7 @@ const newlineShortcutLabel = computed(() => newlineShortcut(submitKey.value))
 
 const containerRef = ref<HTMLElement | null>(null)
 const inputRef = ref<InstanceType<typeof WriteModeInput> | null>(null)
+const livePreviewRef = ref<InstanceType<typeof WriteLivePreview> | null>(null)
 const frameRef = ref<HTMLElement | null>(null)
 const hintRef = ref<HTMLElement | null>(null)
 // the input grows up to the top of the window, then scrolls
@@ -105,10 +128,14 @@ function measureInputMaxHeight() {
   const hint = hintRef.value
   if (!container || !frame || !hint || container.clientHeight === 0) return
   const frameStyle = getComputedStyle(frame)
+  const livePreviewEl =
+    (livePreviewRef.value as unknown as { $el?: HTMLElement })?.$el ?? null
+  const liveHeight = livePreviewEl?.offsetHeight ?? 0
+  const gap = px(getComputedStyle(container).rowGap)
   inputMaxHeight.value = maxInputHeight({
     containerHeight: container.clientHeight,
-    siblingsHeight: hint.offsetHeight,
-    gapsHeight: px(getComputedStyle(container).rowGap),
+    siblingsHeight: hint.offsetHeight + liveHeight,
+    gapsHeight: gap * (livePreviewEl ? 2 : 1),
     frameChromeHeight:
       px(frameStyle.borderTopWidth) +
       px(frameStyle.borderBottomWidth) +
@@ -127,10 +154,21 @@ function resetNav() {
 
 resetNav()
 
+function handleAcceptLiveCorrection(corrected: string) {
+  quickInputStore.setValue(corrected)
+  inputRef.value?.focus()
+}
+
+watch(
+  () => [textCorrectionStore.liveCorrectedText, textCorrectionStore.liveStatus],
+  () => nextTick(measureInputMaxHeight)
+)
+
 watch(
   () => desktopStore.desktopState?.activationId,
   () => {
     correctionWorkflowStore.cancelInsert()
+    textCorrectionStore.resetLive()
     const { isWindowShown, mode } = desktopStore.desktopState
     if (isWindowShown && mode === 'quickInput') {
       menuModalsStore.cancelPending()
@@ -149,9 +187,13 @@ watch(
   () => quickInputStore.value,
   (text) => {
     if (menuModalsStore.pendingModal) correctionWorkflowStore.cancelInsert()
-    correctionWorkflowStore.schedulePrecorrection(
-      prefetch.value && canCorrect(text) ? text : null
-    )
+    if (isLiveMode.value) {
+      textCorrectionStore.handleLiveInput(text)
+    } else if (correctionMode.value === 'onSubmit') {
+      correctionWorkflowStore.schedulePrecorrection(
+        prefetch.value && canCorrect(text) ? text : null
+      )
+    }
   }
 )
 
@@ -161,6 +203,7 @@ watch(
     if (!isShown) {
       correctionWorkflowStore.cancelInsert()
       correctionWorkflowStore.cancelPrecorrection()
+      textCorrectionStore.resetLive()
     }
   }
 )
@@ -168,6 +211,7 @@ watch(
 function cancelAndClose() {
   correctionWorkflowStore.cancelInsert()
   correctionWorkflowStore.cancelPrecorrection()
+  textCorrectionStore.resetLive()
   // Esc drops the text from the history; ArrowUp still brings it back
   quickInputStore.discard()
   menuModalsStore.cancelPending()
@@ -267,12 +311,20 @@ onUnmounted(() => {
   layoutObserver?.disconnect()
   correctionWorkflowStore.cancelInsert()
   correctionWorkflowStore.cancelPrecorrection()
+  textCorrectionStore.resetLive()
 })
 
 function submit() {
   const text = quickInputStore.value
+  if (!text.trim()) return
   quickInputStore.rememberSubmitted(text)
-  void correctionWorkflowStore.insert(text)
+  if (isOffMode.value) {
+    void correctionWorkflowStore.insertDirect(text)
+  } else if (isLiveMode.value) {
+    void correctionWorkflowStore.insertLive(text)
+  } else {
+    void correctionWorkflowStore.insert(text)
+  }
 }
 </script>
 

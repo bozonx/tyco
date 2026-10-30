@@ -40,4 +40,13 @@ describe('SettingsCorrectionTab.vue', () => {
     await wrapper.get('.inline-action').trigger('click')
     expect(context.navigate).toHaveBeenCalledWith('global-actions')
   })
+
+  it('changes quick window correction mode via segmented control', async () => {
+    const { context, wrapper } = setup()
+    expect(context.draft.value.quickWindow.correctionMode).toBe('onSubmit')
+    const segmented = wrapper.findComponent({ name: 'SegmentedControl' })
+    expect(segmented.exists()).toBe(true)
+    await segmented.vm.$emit('update:modelValue', 'live')
+    expect(context.draft.value.quickWindow.correctionMode).toBe('live')
+  })
 })

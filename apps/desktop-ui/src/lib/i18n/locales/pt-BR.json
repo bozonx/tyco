@@ -1062,7 +1062,12 @@
     "vision": "Entrada de imagens",
     "voiceTextCorrection": "Correção do texto ditado",
     "voiceHoldToRecord": "Segurar atalho para gravar (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Por padrão, a entrada de voz é ativada com um único toque. Ative para gravar apenas enquanto o atalho estiver pressionado."
+    "voiceHoldToRecordHint": "Por padrão, a entrada de voz é ativada com um único toque. Ative para gravar apenas enquanto o atalho estiver pressionado.",
+    "quickCorrectionMode": "Correção de entrada rápida",
+    "quickCorrectionModeInfo": "Como a janela de entrada rápida lida com a correção de texto.",
+    "quickCorrectionLive": "Prévia ao vivo",
+    "quickCorrectionOnSubmit": "Ao concluir",
+    "quickCorrectionOff": "Desativado"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
@@ -1221,6 +1226,10 @@
     "newLine": "Nova linha",
     "next": "Próximo",
     "nothingToCorrect": "Nada a corrigir",
-    "textTooShortForCorrection": "O texto é curto demais para correção"
+    "textTooShortForCorrection": "O texto é curto demais para correção",
+    "insert": "Inserir",
+    "liveCorrecting": "Corrigindo...",
+    "livePreview": "Correção ao vivo",
+    "clickToApply": "Clique para aplicar"
   }
 }

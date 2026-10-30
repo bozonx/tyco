@@ -4,6 +4,7 @@ import { useDesktopStore } from './desktop'
 
 import { useLlmStore } from './llm'
 import { createQuickCorrection } from '../lib/quick-input/quick-correction'
+import { createLiveCorrection } from '../lib/quick-input/live-correction'
 
 /**
  * The one corrector of the window, under the `core.correct` tool and the
@@ -19,6 +20,11 @@ export const useTextCorrectionStore = defineStore('textCorrection', () => {
       correctText(text, { signal, notifyError: false }),
   })
 
+  const liveCorrector = createLiveCorrection({
+    correct: (text, signal) =>
+      correctText(text, { signal, notifyError: false }),
+  })
+
   const desktop = useDesktopStore()
   watch(
     () =>
@@ -26,15 +32,28 @@ export const useTextCorrectionStore = defineStore('textCorrection', () => {
         desktop.userConfig.llm,
         desktop.userConfig.llm?.tasks.correction.rule,
       ]),
-    corrector.invalidate,
+    () => {
+      corrector.invalidate()
+      liveCorrector.invalidate()
+    },
     { flush: 'sync' }
   )
-  onScopeDispose(corrector.dispose)
+  onScopeDispose(() => {
+    corrector.dispose()
+    liveCorrector.dispose()
+  })
 
   return {
     correct: corrector.correct,
     getCachedCorrection: corrector.getCachedCorrection,
     schedulePrecorrection: corrector.schedulePrecorrection,
     cancel: corrector.cancel,
+
+    liveStatus: liveCorrector.status,
+    liveCorrectedText: liveCorrector.correctedText,
+    handleLiveInput: liveCorrector.handleInput,
+    getFinalCorrection: liveCorrector.getFinalCorrection,
+    cancelLive: liveCorrector.cancel,
+    resetLive: liveCorrector.reset,
   }
 })

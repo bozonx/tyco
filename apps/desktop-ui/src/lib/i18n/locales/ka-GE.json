@@ -1059,7 +1059,12 @@
     "vision": "სურათების შეყვანა",
     "voiceTextCorrection": "ნაკარნახევი ტექსტის შესწორება",
     "voiceHoldToRecord": "ჩასაწერად გეჭიროთ ცხელი კლავიში (Push-to-Talk)",
-    "voiceHoldToRecordHint": "ნაგულისხმევად, ხმოვანი შეყვანა გადაირთვება ერთი დაჭერით. ჩართეთ, რათა ჩაწერა მოხდეს მხოლოდ კლავიშის დაჭერისას."
+    "voiceHoldToRecordHint": "ნაგულისხმევად, ხმოვანი შეყვანა გადაირთვება ერთი დაჭერით. ჩართეთ, რათა ჩაწერა მოხდეს მხოლოდ კლავიშის დაჭერისას.",
+    "quickCorrectionMode": "სწრაფი შეყვანის შესწორება",
+    "quickCorrectionModeInfo": "როგორ ამუშავებს ტექსტის შესწორებას სწრაფი შეყვანის ფანჯარა.",
+    "quickCorrectionLive": "ცოცხალი გადახედვა",
+    "quickCorrectionOnSubmit": "დასრულებისას",
+    "quickCorrectionOff": "გამორთულია"
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
@@ -1218,6 +1223,10 @@
     "newLine": "ახალი ხაზი",
     "next": "შემდეგი",
     "nothingToCorrect": "შესასწორებელი არაფერია",
-    "textTooShortForCorrection": "ტექსტი შესასწორებლად ზედმეტად მოკლეა"
+    "textTooShortForCorrection": "ტექსტი შესასწორებლად ზედმეტად მოკლეა",
+    "insert": "ჩასმა",
+    "liveCorrecting": "სწორდება...",
+    "livePreview": "ცოცხალი შესწორება",
+    "clickToApply": "დააწკაპუნეთ გამოსაყენებლად"
   }
 }

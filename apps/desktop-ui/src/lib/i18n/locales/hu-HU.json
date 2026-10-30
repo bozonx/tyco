@@ -1059,7 +1059,12 @@
     "vision": "Képbevitel",
     "voiceTextCorrection": "Diktált szöveg javítása",
     "voiceHoldToRecord": "Gyorsbillentyű nyomva tartása a rögzítéshez (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Alapértelmezés szerint a hangbevitel egyetlen gombnyomással kapcsolható be és ki. Engedélyezze, ha csak a billentyű nyomva tartása alatt szeretne rögzíteni."
+    "voiceHoldToRecordHint": "Alapértelmezés szerint a hangbevitel egyetlen gombnyomással kapcsolható be és ki. Engedélyezze, ha csak a billentyű nyomva tartása alatt szeretne rögzíteni.",
+    "quickCorrectionMode": "Gyorsbevitel javítása",
+    "quickCorrectionModeInfo": "Hogyan kezeli a szövegjavítást a gyorsbeviteli ablak.",
+    "quickCorrectionLive": "Élő előnézet",
+    "quickCorrectionOnSubmit": "Befejezéskor",
+    "quickCorrectionOff": "Kikapcsolva"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1218,6 +1223,10 @@
     "newLine": "Új sor",
     "next": "Tovább",
     "nothingToCorrect": "Nincs mit javítani",
-    "textTooShortForCorrection": "A szöveg túl rövid a javításhoz"
+    "textTooShortForCorrection": "A szöveg túl rövid a javításhoz",
+    "insert": "Beillesztés",
+    "liveCorrecting": "Javítás...",
+    "livePreview": "Élő javítás",
+    "clickToApply": "Kattintson az alkalmazáshoz"
   }
 }

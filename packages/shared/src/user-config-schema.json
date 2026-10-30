@@ -82,9 +82,18 @@
       "type": "object",
       "properties": {
         "isHiddenOnBlur": { "type": "boolean", "default": true },
-        "isCorrectionPrefetchEnabled": { "type": "boolean", "default": false }
+        "isCorrectionPrefetchEnabled": { "type": "boolean", "default": false },
+        "correctionMode": {
+          "type": "string",
+          "enum": ["live", "onSubmit", "off"],
+          "default": "onSubmit"
+        }
       },
-      "required": ["isHiddenOnBlur", "isCorrectionPrefetchEnabled"],
+      "required": [
+        "isHiddenOnBlur",
+        "isCorrectionPrefetchEnabled",
+        "correctionMode"
+      ],
       "defaultPath": "quickWindow"
     },
     "hotkeys": {

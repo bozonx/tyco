@@ -1059,7 +1059,12 @@
     "vision": "Сурет енгізу",
     "voiceTextCorrection": "Айтылған мәтінді түзету",
     "voiceHoldToRecord": "Жазу үшін пернелер тіркесімін басып тұру (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Әдепкі бойынша, дауыспен енгізу бір басу арқылы ауысады. Жазу тек пернелер тіркесімі басылып тұрған кезде жүруі үшін қосыңыз."
+    "voiceHoldToRecordHint": "Әдепкі бойынша, дауыспен енгізу бір басу арқылы ауысады. Жазу тек пернелер тіркесімі басылып тұрған кезде жүруі үшін қосыңыз.",
+    "quickCorrectionMode": "Жылдам енгізуде түзету",
+    "quickCorrectionModeInfo": "Жылдам мәтін енгізу терезесінде түзетуді өңдеу әдісі.",
+    "quickCorrectionLive": "Тікелей түзету",
+    "quickCorrectionOnSubmit": "Аяқталған соң",
+    "quickCorrectionOff": "Түзетусіз"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {
@@ -1218,6 +1223,10 @@
     "newLine": "Жаңа жол",
     "next": "Келесі",
     "nothingToCorrect": "Түзететін ештеңе жоқ",
-    "textTooShortForCorrection": "Мәтін түзету үшін тым қысқа"
+    "textTooShortForCorrection": "Мәтін түзету үшін тым қысқа",
+    "insert": "Қою",
+    "liveCorrecting": "Түзету...",
+    "livePreview": "Тікелей түзету",
+    "clickToApply": "Қолдану үшін басыңыз"
   }
 }

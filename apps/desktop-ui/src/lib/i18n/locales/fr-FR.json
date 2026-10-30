@@ -1062,7 +1062,12 @@
     "vision": "Entrée d’images",
     "voiceTextCorrection": "Correction du texte dicté",
     "voiceHoldToRecord": "Maintenir le raccourci enfoncé pour enregistrer (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Par défaut, la saisie vocale s'active et se désactive d'une simple pression. Activez pour n'enregistrer que pendant le maintien du raccourci."
+    "voiceHoldToRecordHint": "Par défaut, la saisie vocale s'active et se désactive d'une simple pression. Activez pour n'enregistrer que pendant le maintien du raccourci.",
+    "quickCorrectionMode": "Correction de saisie rapide",
+    "quickCorrectionModeInfo": "Gestion de la correction dans la fenêtre de saisie rapide.",
+    "quickCorrectionLive": "Aperçu en direct",
+    "quickCorrectionOnSubmit": "À la fin",
+    "quickCorrectionOff": "Désactivé"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1221,6 +1226,10 @@
     "newLine": "Nouvelle ligne",
     "next": "Suivant",
     "nothingToCorrect": "Rien à corriger",
-    "textTooShortForCorrection": "Le texte est trop court pour être corrigé"
+    "textTooShortForCorrection": "Le texte est trop court pour être corrigé",
+    "insert": "Insérer",
+    "liveCorrecting": "Correction en cours...",
+    "livePreview": "Correction en direct",
+    "clickToApply": "Cliquer pour appliquer"
   }
 }

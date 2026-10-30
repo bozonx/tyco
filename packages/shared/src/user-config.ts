@@ -179,6 +179,16 @@ export interface StylingsConfig {
   slots: ShortcutSlots<string>
 }
 
+export const QUICK_CORRECTION_MODES = ['live', 'onSubmit', 'off'] as const
+export type QuickCorrectionMode = (typeof QUICK_CORRECTION_MODES)[number]
+export const DEFAULT_QUICK_CORRECTION_MODE: QuickCorrectionMode = 'onSubmit'
+
+export interface QuickWindowConfig {
+  isHiddenOnBlur: boolean
+  isCorrectionPrefetchEnabled: boolean
+  correctionMode: QuickCorrectionMode
+}
+
 /** Complete, normalized configuration used throughout the application. */
 export interface UserConfig {
   isInDevelopment?: boolean
@@ -189,7 +199,7 @@ export interface UserConfig {
     ui: string
   }
   editor: EditorConfig
-  quickWindow: { isHiddenOnBlur: boolean; isCorrectionPrefetchEnabled: boolean }
+  quickWindow: QuickWindowConfig
   hotkeys: HotkeysConfig
   externalAccess: ExternalAccess
   /** How the text is typed into other windows, per platform */

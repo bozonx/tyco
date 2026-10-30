@@ -1056,7 +1056,12 @@
     "vision": "图像输入",
     "voiceTextCorrection": "语音文本纠错",
     "voiceHoldToRecord": "按住快捷键录音 (Push-to-Talk)",
-    "voiceHoldToRecordHint": "默认情况下，按一次快捷键即可开启或关闭语音输入。启用后仅在按住快捷键时录音。"
+    "voiceHoldToRecordHint": "默认情况下，按一次快捷键即可开启或关闭语音输入。启用后仅在按住快捷键时录音。",
+    "quickCorrectionMode": "快速输入修正",
+    "quickCorrectionModeInfo": "快速输入窗口如何处理文本修正。",
+    "quickCorrectionLive": "实时预览",
+    "quickCorrectionOnSubmit": "完成时",
+    "quickCorrectionOff": "关闭"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1215,6 +1220,10 @@
     "newLine": "换行",
     "next": "下一步",
     "nothingToCorrect": "无需纠错",
-    "textTooShortForCorrection": "文本过短，无法纠错"
+    "textTooShortForCorrection": "文本过短，无法纠错",
+    "insert": "插入",
+    "liveCorrecting": "正在修正...",
+    "livePreview": "实时修正",
+    "clickToApply": "点击应用"
   }
 }

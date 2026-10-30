@@ -1059,7 +1059,12 @@
     "vision": "Görsel desteği",
     "voiceTextCorrection": "Tanınan metni düzeltme",
     "voiceHoldToRecord": "Kaydetmek için kısayolu basılı tutun (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Varsayılan olarak, sesli giriş tek bir basışla açılıp kapanır. Yalnızca kısayol basılı tutulurken kaydetmek için etkinleştirin."
+    "voiceHoldToRecordHint": "Varsayılan olarak, sesli giriş tek bir basışla açılıp kapanır. Yalnızca kısayol basılı tutulurken kaydetmek için etkinleştirin.",
+    "quickCorrectionMode": "Hızlı giriş düzeltmesi",
+    "quickCorrectionModeInfo": "Hızlı giriş penceresinin metin düzeltmesini nasıl işleyeceği.",
+    "quickCorrectionLive": "Canlı önizleme",
+    "quickCorrectionOnSubmit": "Tamamlandığında",
+    "quickCorrectionOff": "Kapalı"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1218,6 +1223,10 @@
     "newLine": "Yeni satır",
     "next": "Devam",
     "nothingToCorrect": "Düzeltilecek bir şey yok",
-    "textTooShortForCorrection": "Metin düzeltme için çok kısa"
+    "textTooShortForCorrection": "Metin düzeltme için çok kısa",
+    "insert": "Ekle",
+    "liveCorrecting": "Düzeltiliyor...",
+    "livePreview": "Canlı düzeltme",
+    "clickToApply": "Uygulamak için tıklayın"
   }
 }

@@ -1056,7 +1056,12 @@
     "vision": "Vstup obrázků",
     "voiceTextCorrection": "Oprava nadiktovaného textu",
     "voiceHoldToRecord": "Držet klávesovou zkratku pro záznam (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Ve výchozím nastavení se hlasový vstup přepíná jedním stisknutím. Zapněte, chcete-li nahrávat pouze po dobu držení zkratky."
+    "voiceHoldToRecordHint": "Ve výchozím nastavení se hlasový vstup přepíná jedním stisknutím. Zapněte, chcete-li nahrávat pouze po dobu držení zkratky.",
+    "quickCorrectionMode": "Oprava rychlého zadávání",
+    "quickCorrectionModeInfo": "Způsob zpracování opravy v okně rychlého zadávání.",
+    "quickCorrectionLive": "Živý náhled",
+    "quickCorrectionOnSubmit": "Po dokončení",
+    "quickCorrectionOff": "Vypnuto"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1215,6 +1220,10 @@
     "newLine": "Nový řádek",
     "next": "Další",
     "nothingToCorrect": "Není co opravit",
-    "textTooShortForCorrection": "Text je na opravu příliš krátký"
+    "textTooShortForCorrection": "Text je na opravu příliš krátký",
+    "insert": "Vložit",
+    "liveCorrecting": "Opravování...",
+    "livePreview": "Živá oprava",
+    "clickToApply": "Kliknutím použijete"
   }
 }

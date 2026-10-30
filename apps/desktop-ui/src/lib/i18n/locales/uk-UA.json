@@ -1059,7 +1059,12 @@
     "vision": "Введення зображень",
     "voiceTextCorrection": "Виправлення надиктованого тексту",
     "voiceHoldToRecord": "Утримувати клавіші для запису (Push-to-Talk)",
-    "voiceHoldToRecordHint": "За замовчуванням голосове введення перемикається одним натисканням. Увімкніть, щоб запис тривав лише поки затиснуто хоткей."
+    "voiceHoldToRecordHint": "За замовчуванням голосове введення перемикається одним натисканням. Увімкніть, щоб запис тривав лише поки затиснуто хоткей.",
+    "quickCorrectionMode": "Корекція при швидкому введенні",
+    "quickCorrectionModeInfo": "Спосіб обробки корекції у вікні швидкого текстового введення.",
+    "quickCorrectionLive": "Жива корекція",
+    "quickCorrectionOnSubmit": "Після завершення",
+    "quickCorrectionOff": "Без корекції"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
@@ -1218,6 +1223,10 @@
     "newLine": "Новий рядок",
     "next": "Далі",
     "nothingToCorrect": "Нема чого виправляти",
-    "textTooShortForCorrection": "Текст закороткий для виправлення"
+    "textTooShortForCorrection": "Текст закороткий для виправлення",
+    "insert": "Вставити",
+    "liveCorrecting": "Корекція...",
+    "livePreview": "Жива корекція",
+    "clickToApply": "Натисніть, щоб застосувати"
   }
 }

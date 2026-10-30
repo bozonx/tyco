@@ -1062,7 +1062,12 @@
     "vision": "Image input",
     "voiceTextCorrection": "Voice text correction",
     "voiceHoldToRecord": "Hold hotkey to record (Push-to-Talk)",
-    "voiceHoldToRecordHint": "By default, voice input toggles with a single press. Enable to record only while the hotkey is held down."
+    "voiceHoldToRecordHint": "By default, voice input toggles with a single press. Enable to record only while the hotkey is held down.",
+    "quickCorrectionMode": "Quick input correction",
+    "quickCorrectionModeInfo": "How the quick input window handles text correction.",
+    "quickCorrectionLive": "Live preview",
+    "quickCorrectionOnSubmit": "On completion",
+    "quickCorrectionOff": "Off"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1221,6 +1226,10 @@
     "newLine": "New line",
     "next": "Next",
     "nothingToCorrect": "Nothing to correct",
-    "textTooShortForCorrection": "Text is too short for correction"
+    "textTooShortForCorrection": "Text is too short for correction",
+    "insert": "Insert",
+    "liveCorrecting": "Correcting...",
+    "livePreview": "Live correction",
+    "clickToApply": "Click to apply"
   }
 }

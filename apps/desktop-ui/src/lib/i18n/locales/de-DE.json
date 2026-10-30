@@ -1062,7 +1062,12 @@
     "vision": "Bildeingabe",
     "voiceTextCorrection": "Korrektur von Sprachtext",
     "voiceHoldToRecord": "Tastenkombination zum Aufnehmen gedrückt halten (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Standardmäßig wird die Spracheingabe durch einmaliges Drücken ein- und ausgeschaltet. Aktivieren, um nur bei gehaltener Tastenkombination aufzunehmen."
+    "voiceHoldToRecordHint": "Standardmäßig wird die Spracheingabe durch einmaliges Drücken ein- und ausgeschaltet. Aktivieren, um nur bei gehaltener Tastenkombination aufzunehmen.",
+    "quickCorrectionMode": "Korrektur bei Schnelleingabe",
+    "quickCorrectionModeInfo": "Wie das Schnelleingabefenster die Textkorrektur handhabt.",
+    "quickCorrectionLive": "Live-Vorschau",
+    "quickCorrectionOnSubmit": "Beim Abschließen",
+    "quickCorrectionOff": "Aus"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1221,6 +1226,10 @@
     "newLine": "Neue Zeile",
     "next": "Weiter",
     "nothingToCorrect": "Nichts zu korrigieren",
-    "textTooShortForCorrection": "Der Text ist für eine Korrektur zu kurz"
+    "textTooShortForCorrection": "Der Text ist für eine Korrektur zu kurz",
+    "insert": "Einfügen",
+    "liveCorrecting": "Wird korrigiert...",
+    "livePreview": "Live-Korrektur",
+    "clickToApply": "Klicken zum Übernehmen"
   }
 }

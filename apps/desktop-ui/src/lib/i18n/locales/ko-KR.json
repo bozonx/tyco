@@ -1056,7 +1056,12 @@
     "vision": "이미지 입력",
     "voiceTextCorrection": "음성 텍스트 교정",
     "voiceHoldToRecord": "단축키를 길게 눌러 녹음 (Push-to-Talk)",
-    "voiceHoldToRecordHint": "기본적으로 음성 입력은 한 번 눌러 켜고 끕니다. 활성화하면 단축키를 누르고 있는 동안에만 녹음됩니다."
+    "voiceHoldToRecordHint": "기본적으로 음성 입력은 한 번 눌러 켜고 끕니다. 활성화하면 단축키를 누르고 있는 동안에만 녹음됩니다.",
+    "quickCorrectionMode": "빠른 입력 교정",
+    "quickCorrectionModeInfo": "빠른 입력 창에서 텍스트 교정을 처리하는 방식입니다.",
+    "quickCorrectionLive": "실시간 미리보기",
+    "quickCorrectionOnSubmit": "완료 시",
+    "quickCorrectionOff": "끄기"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
@@ -1215,6 +1220,10 @@
     "newLine": "줄 바꿈",
     "next": "다음",
     "nothingToCorrect": "교정할 내용이 없습니다",
-    "textTooShortForCorrection": "교정하기에 텍스트가 너무 짧습니다"
+    "textTooShortForCorrection": "교정하기에 텍스트가 너무 짧습니다",
+    "insert": "삽입",
+    "liveCorrecting": "교정 중...",
+    "livePreview": "실시간 교정",
+    "clickToApply": "클릭하여 적용"
   }
 }

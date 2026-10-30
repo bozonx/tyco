@@ -1062,7 +1062,12 @@
     "vision": "Input di immagini",
     "voiceTextCorrection": "Correzione del testo dettato",
     "voiceHoldToRecord": "Tieni premuta la scorciatoia per registrare (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Per impostazione predefinita, l'input vocale si attiva e disattiva con una singola pressione. Abilita per registrare solo mentre la scorciatoia è premuta."
+    "voiceHoldToRecordHint": "Per impostazione predefinita, l'input vocale si attiva e disattiva con una singola pressione. Abilita per registrare solo mentre la scorciatoia è premuta.",
+    "quickCorrectionMode": "Correzione input rapido",
+    "quickCorrectionModeInfo": "Come la finestra di input rapido gestisce la correzione.",
+    "quickCorrectionLive": "Anteprima dal vivo",
+    "quickCorrectionOnSubmit": "Al completamento",
+    "quickCorrectionOff": "Disattivato"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
@@ -1221,6 +1226,10 @@
     "newLine": "A capo",
     "next": "Avanti",
     "nothingToCorrect": "Niente da correggere",
-    "textTooShortForCorrection": "Il testo è troppo corto per essere corretto"
+    "textTooShortForCorrection": "Il testo è troppo corto per essere corretto",
+    "insert": "Inserisci",
+    "liveCorrecting": "Correzione in corso...",
+    "livePreview": "Correzione in tempo reale",
+    "clickToApply": "Fai clic per applicare"
   }
 }

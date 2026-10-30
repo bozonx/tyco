@@ -1062,7 +1062,12 @@
     "vision": "Unos slika",
     "voiceTextCorrection": "Ispravak izdiktiranog teksta",
     "voiceHoldToRecord": "Držite prečac za snimanje (Push-to-Talk)",
-    "voiceHoldToRecordHint": "Prema zadanim postavkama, glasovni unos se uključuje jednim pritiskom. Uključite za snimanje samo dok držite pritisnut prečac."
+    "voiceHoldToRecordHint": "Prema zadanim postavkama, glasovni unos se uključuje jednim pritiskom. Uključite za snimanje samo dok držite pritisnut prečac.",
+    "quickCorrectionMode": "Ispravak brzog unosa",
+    "quickCorrectionModeInfo": "Kako prozor brzog unosa obrađuje ispravak teksta.",
+    "quickCorrectionLive": "Pregled uživo",
+    "quickCorrectionOnSubmit": "Po završetku",
+    "quickCorrectionOff": "Isključeno"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1221,6 +1226,10 @@
     "newLine": "Novi redak",
     "next": "Dalje",
     "nothingToCorrect": "Nema se što ispraviti",
-    "textTooShortForCorrection": "Tekst je prekratak za ispravak"
+    "textTooShortForCorrection": "Tekst je prekratak za ispravak",
+    "insert": "Umetni",
+    "liveCorrecting": "Ispravljanje...",
+    "livePreview": "Ispravak uživo",
+    "clickToApply": "Kliknite za primjenu"
   }
 }

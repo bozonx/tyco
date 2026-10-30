@@ -113,6 +113,8 @@ export const useCorrectionWorkflowStore = defineStore(
     let insertCorrection: AbortController | null = null
     const quickInsert = createQuickInsert({
       correct: (text) => {
+        const cached = corrector.getCachedCorrection(text)
+        if (cached) return Promise.resolve(cached)
         insertCorrection = new AbortController()
         return correct(text, insertCorrection.signal)
       },
@@ -138,6 +140,9 @@ export const useCorrectionWorkflowStore = defineStore(
 
     return {
       insert: quickInsert.start,
+      insertLive: (text: string) =>
+        quickInsert.start(text, (t) => corrector.getFinalCorrection(t)),
+      insertDirect: quickInsert.insertDirect,
       cancelInsert: quickInsert.cancel,
       /** Opens a step with the correction of `text` over the current one. */
       start: step.start,

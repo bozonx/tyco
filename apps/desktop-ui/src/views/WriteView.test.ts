@@ -32,9 +32,19 @@ const mocks = vi.hoisted(() => ({
   },
   correction: {
     insert: vi.fn(),
+    insertLive: vi.fn(),
+    insertDirect: vi.fn(),
     cancelInsert: vi.fn(),
     schedulePrecorrection: vi.fn(),
     cancelPrecorrection: vi.fn(),
+  },
+  textCorrection: {
+    liveStatus: 'idle' as string,
+    liveCorrectedText: '',
+    handleLiveInput: vi.fn(),
+    getFinalCorrection: vi.fn(),
+    resetLive: vi.fn(),
+    cancelLive: vi.fn(),
   },
   call: vi.fn(),
 }))
@@ -55,6 +65,9 @@ vi.mock('../stores/desktop', async () => {
 })
 vi.mock('../stores/quick-input', () => ({
   useQuickInputStore: () => reactive(mocks.writer),
+}))
+vi.mock('../stores/text-correction', () => ({
+  useTextCorrectionStore: () => reactive(mocks.textCorrection),
 }))
 vi.mock('../stores/menu-modals', () => ({
   MenuModals: { INSERT: 'insert' },
@@ -112,7 +125,10 @@ beforeEach(() => {
     }
   )
   mocks.desktopState.isWindowShown = true
-  mocks.desktopState.userConfig.editor.submitKey = undefined
+  mocks.desktopState.userConfig = {
+    editor: { submitKey: undefined },
+  } as unknown as typeof mocks.desktopState.userConfig
+  mocks.writer.value = 'Original text'
   mocks.modals.pendingModal = null
   mocks.modals.hasOpenModal = false
   wrapper = mount(WriteView)
@@ -211,5 +227,44 @@ describe('quick input screen', () => {
     expect(mocks.writer.setValue).toHaveBeenCalledWith('cancelled text')
     writer.value = 'Original text'
     writer.recallText = ''
+  })
+
+  it('handles live correction mode and submits via insertLive', async () => {
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.userConfig = {
+      ...desktopState.userConfig,
+      quickWindow: {
+        isHiddenOnBlur: true,
+        isCorrectionPrefetchEnabled: false,
+        correctionMode: 'live',
+      },
+    } as unknown as typeof desktopState.userConfig
+    await nextTick()
+
+    const writer = reactive(mocks.writer)
+    writer.value = 'Live input'
+    await nextTick()
+    expect(mocks.textCorrection.handleLiveInput).toHaveBeenCalledWith(
+      'Live input'
+    )
+
+    press('Enter')
+    expect(mocks.correction.insertLive).toHaveBeenCalledWith('Live input')
+  })
+
+  it('handles off correction mode and submits via insertDirect', async () => {
+    const desktopState = reactive(mocks.desktopState)
+    desktopState.userConfig = {
+      ...desktopState.userConfig,
+      quickWindow: {
+        isHiddenOnBlur: true,
+        isCorrectionPrefetchEnabled: false,
+        correctionMode: 'off',
+      },
+    } as unknown as typeof desktopState.userConfig
+    await nextTick()
+
+    press('Enter')
+    expect(mocks.correction.insertDirect).toHaveBeenCalledWith('Original text')
   })
 })

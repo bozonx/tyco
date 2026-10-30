@@ -1062,7 +1062,12 @@
     "vision": "Intrare de imagini",
     "voiceTextCorrection": "Corectarea textului dictat",
     "voiceHoldToRecord": "Țineți apăsată comanda rapidă pentru înregistrare (Push-to-Talk)",
-    "voiceHoldToRecordHint": "În mod prestabilit, introducerea vocală se comută printr-o singură apăsare. Activați pentru a înregistra doar cât timp comanda rapidă este apăsată."
+    "voiceHoldToRecordHint": "În mod prestabilit, introducerea vocală se comută printr-o singură apăsare. Activați pentru a înregistra doar cât timp comanda rapidă este apăsată.",
+    "quickCorrectionMode": "Corectare introducere rapidă",
+    "quickCorrectionModeInfo": "Cum gestionează fereastra de introducere rapidă corectarea textului.",
+    "quickCorrectionLive": "Previzualizare în direct",
+    "quickCorrectionOnSubmit": "La finalizare",
+    "quickCorrectionOff": "Dezactivat"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1221,6 +1226,10 @@
     "newLine": "Rând nou",
     "next": "Înainte",
     "nothingToCorrect": "Nimic de corectat",
-    "textTooShortForCorrection": "Textul este prea scurt pentru corectare"
+    "textTooShortForCorrection": "Textul este prea scurt pentru corectare",
+    "insert": "Inserează",
+    "liveCorrecting": "Se corectează...",
+    "livePreview": "Corectare în direct",
+    "clickToApply": "Faceți clic pentru a aplica"
   }
 }
