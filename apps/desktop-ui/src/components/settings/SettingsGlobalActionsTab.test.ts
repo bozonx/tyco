@@ -90,6 +90,13 @@ describe('SettingsGlobalActionsTab.vue', () => {
         </select>
       `,
     },
+    FieldSwitch: {
+      name: 'FieldSwitch',
+      props: ['modelValue'],
+      emits: ['update:modelValue'],
+      template:
+        '<button class="field-switch-stub" :data-checked="modelValue" @click="$emit(\'update:modelValue\', !modelValue)" />',
+    },
     HotkeyInput: true,
     InfoTooltip: true,
     Button: true,
@@ -209,5 +216,40 @@ describe('SettingsGlobalActionsTab.vue', () => {
       '[data-label="settings.hotkeyActions.transformation"]'
     )
     expect(transformationRow.exists()).toBe(true)
+  })
+
+  it('renders voice hold-to-record toggle when provider supports hold and updates config', async () => {
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+    await flushPromises()
+
+    const holdRow = wrapper.find('[data-label="settings.voiceHoldToRecord"]')
+    expect(holdRow.exists()).toBe(true)
+
+    const switchComponent = holdRow.findComponent({ name: 'FieldSwitch' })
+    expect(switchComponent.exists()).toBe(true)
+    expect(switchComponent.props('modelValue')).toBe(false)
+
+    await switchComponent.vm.$emit('update:modelValue', true)
+    expect(context.draft.value.stt.isVoiceHoldEnabled).toBe(true)
+  })
+
+  it('hides voice hold-to-record toggle when provider is external', async () => {
+    call.mockImplementation(async (name: string) => ({
+      success: true,
+      result:
+        name === 'get_hotkey_provider_info'
+          ? { provider: 'external', canConfigure: false, actions: {} }
+          : { status: 'ready' },
+    }))
+
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+    await flushPromises()
+
+    const holdRow = wrapper.find('[data-label="settings.voiceHoldToRecord"]')
+    expect(holdRow.exists()).toBe(false)
   })
 })

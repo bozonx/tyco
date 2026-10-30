@@ -354,6 +354,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -550,7 +551,8 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
       }
     },
     "expected": {
@@ -725,6 +727,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -912,7 +915,8 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
       }
     },
     "expected": {
@@ -1084,6 +1088,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -1274,7 +1279,8 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
       }
     },
     "expected": {
@@ -1458,6 +1464,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -1638,7 +1645,8 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
       }
     },
     "expected": {
@@ -1810,6 +1818,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -1993,7 +2002,8 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
       }
     },
     "expected": {
@@ -2166,6 +2176,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -2352,7 +2363,8 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
       }
     },
     "expected": {
@@ -2532,6 +2544,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -2734,7 +2747,8 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
       },
       "aiVault": { "path": "" }
     },
@@ -2909,6 +2923,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
@@ -3104,7 +3119,8 @@
           "deepgram": { "modelId": "nova-3", "language": "auto" },
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
-        "isVoiceCorrectionEnabled": false
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
       },
       "aiVault": { "path": "" }
     },
@@ -3286,6 +3302,7 @@
           "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
         },
         "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },

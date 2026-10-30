@@ -1054,7 +1054,9 @@
     "vaultUseDefault": "使用預設資料夾",
     "vaultUseSubfolder": "使用 tyco-vault 子資料夾",
     "vision": "圖片輸入",
-    "voiceTextCorrection": "語音文字校對"
+    "voiceTextCorrection": "語音文字校對",
+    "voiceHoldToRecord": "按住快捷鍵錄音 (Push-to-Talk)",
+    "voiceHoldToRecordHint": "預設情況下，按一次快捷鍵即可切換語音輸入。啟用後僅在按住快捷鍵時錄音。"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

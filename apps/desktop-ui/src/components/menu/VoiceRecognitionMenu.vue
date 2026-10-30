@@ -216,7 +216,8 @@ function handleKeyUp(event: KeyboardEvent) {
   if (
     (props.finishBehavior === 'submitToChat' ||
       props.finishBehavior === 'insertIntoTarget') &&
-    event.code === 'Tab'
+    event.code === 'Tab' &&
+    !event.shiftKey
   ) {
     event.preventDefault()
     void finish('next')
@@ -245,7 +246,8 @@ function handleKeyDown(event: KeyboardEvent) {
   if (
     (props.finishBehavior === 'submitToChat' ||
       props.finishBehavior === 'insertIntoTarget') &&
-    event.code === 'Tab'
+    event.code === 'Tab' &&
+    !event.shiftKey
   ) {
     event.preventDefault()
   }

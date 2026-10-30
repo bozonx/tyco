@@ -1054,7 +1054,9 @@
     "vaultUseDefault": "기본 폴더 사용",
     "vaultUseSubfolder": "tyco-vault 하위 폴더 사용",
     "vision": "이미지 입력",
-    "voiceTextCorrection": "음성 텍스트 교정"
+    "voiceTextCorrection": "음성 텍스트 교정",
+    "voiceHoldToRecord": "단축키를 길게 눌러 녹음 (Push-to-Talk)",
+    "voiceHoldToRecordHint": "기본적으로 음성 입력은 한 번 눌러 켜고 끕니다. 활성화하면 단축키를 누르고 있는 동안에만 녹음됩니다."
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

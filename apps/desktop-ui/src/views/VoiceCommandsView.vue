@@ -334,6 +334,7 @@ const onKeyDown = (event: KeyboardEvent) => {
   }
   if (voice.stage === 'recording') {
     if (event.code === 'Tab') {
+      if (event.shiftKey) return
       event.preventDefault()
       if (hasMatchedCommand.value) {
         void voice.finish('review')

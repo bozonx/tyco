@@ -1054,7 +1054,9 @@
     "vaultUseDefault": "Použít výchozí složku",
     "vaultUseSubfolder": "Použít podsložku tyco-vault",
     "vision": "Vstup obrázků",
-    "voiceTextCorrection": "Oprava nadiktovaného textu"
+    "voiceTextCorrection": "Oprava nadiktovaného textu",
+    "voiceHoldToRecord": "Držet klávesovou zkratku pro záznam (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Ve výchozím nastavení se hlasový vstup přepíná jedním stisknutím. Zapněte, chcete-li nahrávat pouze po dobu držení zkratky."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

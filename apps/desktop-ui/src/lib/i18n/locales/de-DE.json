@@ -1060,7 +1060,9 @@
     "vaultUseDefault": "Standardordner verwenden",
     "vaultUseSubfolder": "Unterordner tyco-vault verwenden",
     "vision": "Bildeingabe",
-    "voiceTextCorrection": "Korrektur von Sprachtext"
+    "voiceTextCorrection": "Korrektur von Sprachtext",
+    "voiceHoldToRecord": "Tastenkombination zum Aufnehmen gedrückt halten (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Standardmäßig wird die Spracheingabe durch einmaliges Drücken ein- und ausgeschaltet. Aktivieren, um nur bei gehaltener Tastenkombination aufzunehmen."
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

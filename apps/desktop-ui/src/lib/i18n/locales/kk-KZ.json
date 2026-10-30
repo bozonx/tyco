@@ -1057,7 +1057,9 @@
     "vaultUseDefault": "Әдепкі қалта",
     "vaultUseSubfolder": "tyco-vault ішкі қалтасын пайдалану",
     "vision": "Сурет енгізу",
-    "voiceTextCorrection": "Айтылған мәтінді түзету"
+    "voiceTextCorrection": "Айтылған мәтінді түзету",
+    "voiceHoldToRecord": "Жазу үшін пернелер тіркесімін басып тұру (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Әдепкі бойынша, дауыспен енгізу бір басу арқылы ауысады. Жазу тек пернелер тіркесімі басылып тұрған кезде жүруі үшін қосыңыз."
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

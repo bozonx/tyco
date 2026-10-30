@@ -1060,7 +1060,9 @@
     "vaultUseDefault": "Usa la cartella predefinita",
     "vaultUseSubfolder": "Usa una sottocartella tyco-vault",
     "vision": "Input di immagini",
-    "voiceTextCorrection": "Correzione del testo dettato"
+    "voiceTextCorrection": "Correzione del testo dettato",
+    "voiceHoldToRecord": "Tieni premuta la scorciatoia per registrare (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Per impostazione predefinita, l'input vocale si attiva e disattiva con una singola pressione. Abilita per registrare solo mentre la scorciatoia è premuta."
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

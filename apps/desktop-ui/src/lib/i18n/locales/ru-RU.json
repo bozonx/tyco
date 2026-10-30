@@ -1057,7 +1057,9 @@
     "vaultUseDefault": "Папка по умолчанию",
     "vaultUseSubfolder": "Использовать подпапку tyco-vault",
     "vision": "Поддержка изображений",
-    "voiceTextCorrection": "Исправление распознанного текста"
+    "voiceTextCorrection": "Исправление распознанного текста",
+    "voiceHoldToRecord": "Удерживать клавиши для записи (Push-to-Talk)",
+    "voiceHoldToRecordHint": "По умолчанию голосовой ввод переключается одиночным нажатием. Включите, чтобы запись шла только пока зажат хоткей."
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

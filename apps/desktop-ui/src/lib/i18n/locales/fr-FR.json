@@ -1060,7 +1060,9 @@
     "vaultUseDefault": "Utiliser le dossier par défaut",
     "vaultUseSubfolder": "Utiliser un sous-dossier tyco-vault",
     "vision": "Entrée d’images",
-    "voiceTextCorrection": "Correction du texte dicté"
+    "voiceTextCorrection": "Correction du texte dicté",
+    "voiceHoldToRecord": "Maintenir le raccourci enfoncé pour enregistrer (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Par défaut, la saisie vocale s'active et se désactive d'une simple pression. Activez pour n'enregistrer que pendant le maintien du raccourci."
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

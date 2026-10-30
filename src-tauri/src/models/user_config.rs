@@ -119,6 +119,15 @@ pub fn script_command(config: &Value, id: &str) -> Option<ScriptCommand> {
     Some(ScriptCommand { label, tool_config })
 }
 
+/// Whether holding the voice hotkey records until released (Push-to-Talk).
+pub fn is_voice_hold_enabled(config: &Value) -> bool {
+    config
+        .get("stt")
+        .and_then(|stt| stt.get("isVoiceHoldEnabled"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -165,5 +174,9 @@ mod tests {
         assert!(launcher_pages(&broken).is_empty());
         assert!(!external_access(&broken).can_access_selection);
         assert_eq!(ai_vault(&json!({})), AiVaultConfig::default());
+        assert!(!is_voice_hold_enabled(&json!({})));
+        assert!(is_voice_hold_enabled(&json!({
+            "stt": { "isVoiceHoldEnabled": true }
+        })));
     }
 }

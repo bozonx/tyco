@@ -1060,7 +1060,9 @@
     "vaultUseDefault": "Użyj folderu domyślnego",
     "vaultUseSubfolder": "Użyj podfolderu tyco-vault",
     "vision": "Wejście obrazów",
-    "voiceTextCorrection": "Korekta tekstu z dyktowania"
+    "voiceTextCorrection": "Korekta tekstu z dyktowania",
+    "voiceHoldToRecord": "Przytrzymaj skrót, aby nagrywać (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Domyślnie wprowadzanie głosowe jest przełączane pojedynczym naciśnięciem. Włącz, aby nagrywać tylko podczas przytrzymywania skrótu."
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

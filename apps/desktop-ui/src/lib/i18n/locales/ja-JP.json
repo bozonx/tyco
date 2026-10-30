@@ -1057,7 +1057,9 @@
     "vaultUseDefault": "既定のフォルダーを使う",
     "vaultUseSubfolder": "tyco-vault サブフォルダーを使う",
     "vision": "画像入力",
-    "voiceTextCorrection": "音声テキストの校正"
+    "voiceTextCorrection": "音声テキストの校正",
+    "voiceHoldToRecord": "ショートカットを長押しして録音 (Push-to-Talk)",
+    "voiceHoldToRecordHint": "デフォルトでは、音声入力は1回のキー押下で切り替わります。有効にすると、キーを押している間だけ録音されます。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

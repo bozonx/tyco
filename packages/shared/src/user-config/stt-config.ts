@@ -28,6 +28,8 @@ export interface SttConfig {
    * `llm.tasks.voiceCorrection`
    */
   isVoiceCorrectionEnabled: boolean
+  /** Whether holding the voice hotkey records until released (Push-to-Talk) */
+  isVoiceHoldEnabled: boolean
   /** Whether to show the 15-key styling keyboard during hotkey voice input */
   isStylingBarEnabled: boolean
   /** Whether pressing a style key inserts the result directly without preview */

@@ -1057,7 +1057,9 @@
     "vaultUseDefault": "Varsayılan klasörü kullan",
     "vaultUseSubfolder": "tyco-vault alt klasörünü kullan",
     "vision": "Görsel desteği",
-    "voiceTextCorrection": "Tanınan metni düzeltme"
+    "voiceTextCorrection": "Tanınan metni düzeltme",
+    "voiceHoldToRecord": "Kaydetmek için kısayolu basılı tutun (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Varsayılan olarak, sesli giriş tek bir basışla açılıp kapanır. Yalnızca kısayol basılı tutulurken kaydetmek için etkinleştirin."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

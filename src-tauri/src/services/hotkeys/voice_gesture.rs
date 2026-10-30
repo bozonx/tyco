@@ -1,4 +1,4 @@
-//! Distinguishes a tap from a hold without treating keyboard repeat as a press.
+//! Tracks voice hotkey gestures without treating keyboard repeat as a press.
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -11,7 +11,6 @@ use tauri::{AppHandle, Manager};
 
 use super::HotkeyTarget;
 
-const HOLD_DURATION: Duration = Duration::from_millis(400);
 /// Keyboard repeat presses again well within this (the longest repeat delay
 /// Windows offers is 1 s); a press after a longer silence is a new one, and
 /// the release of the old one was lost.
@@ -61,20 +60,24 @@ impl VoiceGesture {
         true
     }
 
-    fn complete(&self, id: &str, activation_id: Option<u64>) -> Option<u64> {
+    fn complete(&self, id: &str, activation_id: Option<u64>, is_hold_enabled: bool) -> Option<u64> {
         let mut presses = self.0.locked();
         let press = presses.get_mut(id)?;
         press.activation_id = activation_id;
         press.is_ready = true;
-        let released_at = press.released_at;
-        let now = released_at?;
-        let press = presses.remove(id)?;
-        (now.duration_since(press.started) >= HOLD_DURATION)
-            .then_some(press.activation_id)
-            .flatten()
+        if press.released_at.is_some() {
+            let press = presses.remove(id)?;
+            if is_hold_enabled {
+                press.activation_id
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
-    fn release(&self, id: &str, now: Instant) -> Option<u64> {
+    fn release(&self, id: &str, now: Instant, is_hold_enabled: bool) -> Option<u64> {
         let mut presses = self.0.locked();
         let press = presses.get_mut(id)?;
         if !press.is_ready {
@@ -82,10 +85,17 @@ impl VoiceGesture {
             return None;
         }
         let press = presses.remove(id)?;
-        (now.duration_since(press.started) >= HOLD_DURATION)
-            .then_some(press.activation_id)
-            .flatten()
+        if is_hold_enabled {
+            press.activation_id
+        } else {
+            None
+        }
     }
+}
+
+fn is_voice_hold_enabled(app: &AppHandle) -> bool {
+    let config = app.state::<AppState>().user_config();
+    crate::models::user_config::is_voice_hold_enabled(&config)
 }
 
 pub(crate) fn pressed(app: &AppHandle, target: &HotkeyTarget, id: &str) -> Result<(), AppError> {
@@ -106,7 +116,8 @@ pub(crate) fn pressed(app: &AppHandle, target: &HotkeyTarget, id: &str) -> Resul
         && !(before.window.is_window_shown && before.activation.mode == Some(*mode))
         && after.activation.mode == Some(*mode))
     .then_some(after.activation.activation_id);
-    if let Some(activation_id) = gesture.complete(id, activation_id) {
+    let is_hold_enabled = is_voice_hold_enabled(app);
+    if let Some(activation_id) = gesture.complete(id, activation_id, is_hold_enabled) {
         finish(app, activation_id);
     }
     result
@@ -114,7 +125,11 @@ pub(crate) fn pressed(app: &AppHandle, target: &HotkeyTarget, id: &str) -> Resul
 
 pub(crate) fn released(app: &AppHandle, id: &str) {
     crate::services::selection_replace::hotkey_released(id);
-    let Some(activation_id) = app.state::<VoiceGesture>().release(id, Instant::now()) else {
+    let is_hold_enabled = is_voice_hold_enabled(app);
+    let Some(activation_id) =
+        app.state::<VoiceGesture>()
+            .release(id, Instant::now(), is_hold_enabled)
+    else {
         return;
     };
     finish(app, activation_id);
@@ -138,44 +153,63 @@ mod tests {
     use super::*;
 
     #[test]
-    fn taps_keep_recording_and_holds_finish_once() {
+    fn toggle_mode_ignores_release_and_leaves_recording_open() {
         let gesture = VoiceGesture::default();
         let now = Instant::now();
         assert!(gesture.press("voice", now));
-        gesture.complete("voice", Some(7));
-        assert!(!gesture.press("voice", now + HOLD_DURATION));
+        assert_eq!(gesture.complete("voice", Some(7), false), None);
         assert_eq!(
-            gesture.release("voice", now + Duration::from_millis(399)),
+            gesture.release("voice", now + Duration::from_millis(600), false),
             None
         );
-        assert!(gesture.press("voice", now));
-        gesture.complete("voice", Some(8));
-        assert_eq!(gesture.release("other", now + HOLD_DURATION), None);
-        assert_eq!(gesture.release("voice", now + HOLD_DURATION), Some(8));
-        assert_eq!(gesture.release("voice", now + HOLD_DURATION), None);
+        // Once released, a subsequent press starts afresh to toggle finish or reopen
+        assert!(gesture.press("voice", now + Duration::from_secs(2)));
     }
 
     #[test]
-    fn release_during_activation_is_completed_after_activation() {
+    fn hold_mode_finishes_on_release() {
         let gesture = VoiceGesture::default();
         let now = Instant::now();
         assert!(gesture.press("voice", now));
-        assert_eq!(gesture.release("voice", now + HOLD_DURATION), None);
-        assert_eq!(gesture.complete("voice", Some(9)), Some(9));
-        assert_eq!(gesture.release("voice", now + HOLD_DURATION), None);
+        assert_eq!(gesture.complete("voice", Some(8), true), None);
+        assert_eq!(gesture.release("other", now, true), None);
+        assert_eq!(
+            gesture.release("voice", now + Duration::from_millis(200), true),
+            Some(8)
+        );
+        assert_eq!(
+            gesture.release("voice", now + Duration::from_millis(200), true),
+            None
+        );
     }
 
     #[test]
-    fn a_tap_during_activation_does_not_finish() {
+    fn release_during_activation_in_hold_mode_finishes_when_completed() {
         let gesture = VoiceGesture::default();
         let now = Instant::now();
         assert!(gesture.press("voice", now));
         assert_eq!(
-            gesture.release("voice", now + Duration::from_millis(50)),
+            gesture.release("voice", now + Duration::from_millis(100), true),
             None
         );
-        assert_eq!(gesture.complete("voice", Some(9)), None);
-        assert!(gesture.press("voice", now + HOLD_DURATION));
+        assert_eq!(gesture.complete("voice", Some(9), true), Some(9));
+        assert_eq!(
+            gesture.release("voice", now + Duration::from_millis(200), true),
+            None
+        );
+    }
+
+    #[test]
+    fn release_during_activation_in_toggle_mode_does_not_finish() {
+        let gesture = VoiceGesture::default();
+        let now = Instant::now();
+        assert!(gesture.press("voice", now));
+        assert_eq!(
+            gesture.release("voice", now + Duration::from_millis(50), false),
+            None
+        );
+        assert_eq!(gesture.complete("voice", Some(9), false), None);
+        assert!(gesture.press("voice", now + Duration::from_secs(1)));
     }
 
     #[test]
@@ -183,12 +217,15 @@ mod tests {
         let gesture = VoiceGesture::default();
         let now = Instant::now();
         assert!(gesture.press("voice", now));
-        gesture.complete("voice", Some(7));
+        assert_eq!(gesture.complete("voice", Some(7), true), None);
         // repeats keep the hold alive far past the stale gap
         for step in 1..=10 {
             assert!(!gesture.press("voice", now + STALE_PRESS_GAP / 2 * step));
         }
-        assert_eq!(gesture.release("voice", now + STALE_PRESS_GAP * 5), Some(7));
+        assert_eq!(
+            gesture.release("voice", now + STALE_PRESS_GAP * 5, true),
+            Some(7)
+        );
     }
 
     #[test]
@@ -196,12 +233,16 @@ mod tests {
         let gesture = VoiceGesture::default();
         let now = Instant::now();
         assert!(gesture.press("voice", now));
-        gesture.complete("voice", Some(7));
+        assert_eq!(gesture.complete("voice", Some(7), true), None);
         // no release arrives; the next press after a pause starts afresh
         assert!(gesture.press("voice", now + STALE_PRESS_GAP));
-        gesture.complete("voice", Some(8));
+        assert_eq!(gesture.complete("voice", Some(8), true), None);
         assert_eq!(
-            gesture.release("voice", now + STALE_PRESS_GAP + HOLD_DURATION),
+            gesture.release(
+                "voice",
+                now + STALE_PRESS_GAP + Duration::from_millis(100),
+                true
+            ),
             Some(8)
         );
     }
@@ -228,8 +269,11 @@ mod tests {
         let gesture = VoiceGesture::default();
         let now = Instant::now();
         assert!(gesture.press("voice", now));
-        gesture.complete("voice", None);
-        assert_eq!(gesture.release("voice", now + HOLD_DURATION), None);
-        assert!(gesture.press("voice", now + HOLD_DURATION));
+        assert_eq!(gesture.complete("voice", None, true), None);
+        assert_eq!(
+            gesture.release("voice", now + Duration::from_millis(100), true),
+            None
+        );
+        assert!(gesture.press("voice", now + Duration::from_secs(1)));
     }
 }

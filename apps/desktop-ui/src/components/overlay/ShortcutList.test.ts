@@ -171,6 +171,33 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
+  it('allows Shift+Tab for reverse focus navigation without triggering editor navigation', () => {
+    const wrapper = mount(ShortcutList, {
+      props: {
+        text: 'test text',
+        sourceText: 'source text',
+        isEditorButtonVisible: true,
+      },
+    })
+
+    const shiftTabDown = new KeyboardEvent('keydown', {
+      code: 'Tab',
+      shiftKey: true,
+      cancelable: true,
+    })
+    window.dispatchEvent(shiftTabDown)
+    expect(shiftTabDown.defaultPrevented).toBe(false)
+
+    const shiftTabUp = new KeyboardEvent('keyup', {
+      code: 'Tab',
+      shiftKey: true,
+    })
+    window.dispatchEvent(shiftTabUp)
+    expect(mocks.toEditor).not.toHaveBeenCalled()
+
+    wrapper.unmount()
+  })
+
   it('renders custom editorButtonLabel when provided', () => {
     const wrapper = mount(ShortcutList, {
       props: {

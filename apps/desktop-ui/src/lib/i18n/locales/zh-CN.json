@@ -1054,7 +1054,9 @@
     "vaultUseDefault": "使用默认文件夹",
     "vaultUseSubfolder": "使用 tyco-vault 子文件夹",
     "vision": "图像输入",
-    "voiceTextCorrection": "语音文本纠错"
+    "voiceTextCorrection": "语音文本纠错",
+    "voiceHoldToRecord": "按住快捷键录音 (Push-to-Talk)",
+    "voiceHoldToRecordHint": "默认情况下，按一次快捷键即可开启或关闭语音输入。启用后仅在按住快捷键时录音。"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

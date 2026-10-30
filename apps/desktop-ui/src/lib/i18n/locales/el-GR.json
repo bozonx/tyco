@@ -1057,7 +1057,9 @@
     "vaultUseDefault": "Χρήση του προεπιλεγμένου φακέλου",
     "vaultUseSubfolder": "Χρήση υποφακέλου tyco-vault",
     "vision": "Είσοδος εικόνων",
-    "voiceTextCorrection": "Διόρθωση υπαγορευμένου κειμένου"
+    "voiceTextCorrection": "Διόρθωση υπαγορευμένου κειμένου",
+    "voiceHoldToRecord": "Κρατήστε πατημένο το πλήκτρο για εγγραφή (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Από προεπιλογή, η φωνητική εισαγωγή εναλλάσσεται με ένα μόνο πάτημα. Ενεργοποιήστε για εγγραφή μόνο όσο κρατάτε πατημένο το πλήκτρο."
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {

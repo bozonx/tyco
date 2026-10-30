@@ -1057,7 +1057,9 @@
     "vaultUseDefault": "Alapértelmezett mappa használata",
     "vaultUseSubfolder": "tyco-vault almappa használata",
     "vision": "Képbevitel",
-    "voiceTextCorrection": "Diktált szöveg javítása"
+    "voiceTextCorrection": "Diktált szöveg javítása",
+    "voiceHoldToRecord": "Gyorsbillentyű nyomva tartása a rögzítéshez (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Alapértelmezés szerint a hangbevitel egyetlen gombnyomással kapcsolható be és ki. Engedélyezze, ha csak a billentyű nyomva tartása alatt szeretne rögzíteni."
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

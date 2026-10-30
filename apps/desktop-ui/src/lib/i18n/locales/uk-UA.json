@@ -1057,7 +1057,9 @@
     "vaultUseDefault": "Папка за замовчуванням",
     "vaultUseSubfolder": "Використати підпапку tyco-vault",
     "vision": "Введення зображень",
-    "voiceTextCorrection": "Виправлення надиктованого тексту"
+    "voiceTextCorrection": "Виправлення надиктованого тексту",
+    "voiceHoldToRecord": "Утримувати клавіші для запису (Push-to-Talk)",
+    "voiceHoldToRecordHint": "За замовчуванням голосове введення перемикається одним натисканням. Увімкніть, щоб запис тривав лише поки затиснуто хоткей."
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

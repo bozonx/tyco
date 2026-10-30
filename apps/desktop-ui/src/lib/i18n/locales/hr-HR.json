@@ -1060,7 +1060,9 @@
     "vaultUseDefault": "Koristi zadanu mapu",
     "vaultUseSubfolder": "Koristi podmapu tyco-vault",
     "vision": "Unos slika",
-    "voiceTextCorrection": "Ispravak izdiktiranog teksta"
+    "voiceTextCorrection": "Ispravak izdiktiranog teksta",
+    "voiceHoldToRecord": "Držite prečac za snimanje (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Prema zadanim postavkama, glasovni unos se uključuje jednim pritiskom. Uključite za snimanje samo dok držite pritisnut prečac."
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

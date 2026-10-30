@@ -178,6 +178,7 @@
   "stt": {
     "provider": "deepgram",
     "isVoiceCorrectionEnabled": false,
+    "isVoiceHoldEnabled": false,
     "isStylingBarEnabled": false,
     "isStylingBarDirectInsertEnabled": false,
     "providers": {

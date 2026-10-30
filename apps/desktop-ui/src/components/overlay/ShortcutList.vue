@@ -143,6 +143,12 @@ onUnmounted(() => {
 
 function handleKeyDown(event: KeyboardEvent) {
   if (props.shortcutsDisabled) return
+  if (
+    event.code === 'Tab' &&
+    (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
+  ) {
+    return
+  }
   if (!event.repeat) pressedKeys.set(event.code, props.text)
 
   // Prevent browser default tab focus movement and space scroll
@@ -170,7 +176,11 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
     !props.spaceKey.disabled
   ) {
     void props.spaceKey.action(props.text || '')
-  } else if (event.code === 'Tab' && props.isEditorButtonVisible) {
+  } else if (
+    event.code === 'Tab' &&
+    !event.shiftKey &&
+    props.isEditorButtonVisible
+  ) {
     goToEditor()
   } else if (event.code === 'Escape' && props.escVisible) {
     event.preventDefault()

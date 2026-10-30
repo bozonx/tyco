@@ -105,6 +105,13 @@
           </div>
         </div>
       </FieldRow>
+      <FieldRow
+        v-if="isHoldSupported"
+        :label="t('settings.voiceHoldToRecord')"
+        :hint="t('settings.voiceHoldToRecordHint')"
+      >
+        <FieldSwitch v-model="userConfig.stt.isVoiceHoldEnabled" />
+      </FieldRow>
     </SettingsSection>
 
     <SettingsSection
@@ -147,6 +154,7 @@ import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoPopover from '../common/InfoPopover.vue'
 import InlineNotice from '../common/InlineNotice.vue'
@@ -203,6 +211,7 @@ const { providerState } = hotkeysStore
 const canConfigure = computed(() => providerState.canConfigure)
 const isEditable = computed(() => checkIsEditable(providerState))
 const isSystemManaged = computed(() => checkIsSystemManaged(providerState))
+const isHoldSupported = computed(() => providerState.provider !== 'external')
 const providerNote = computed(() => providerNoteKey(providerState))
 const globalInfo = computed(() =>
   [t('settings.globalActionsHint'), providerNote.value && t(providerNote.value)]

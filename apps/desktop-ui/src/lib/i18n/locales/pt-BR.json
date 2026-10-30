@@ -1060,7 +1060,9 @@
     "vaultUseDefault": "Usar a pasta padrão",
     "vaultUseSubfolder": "Usar uma subpasta tyco-vault",
     "vision": "Entrada de imagens",
-    "voiceTextCorrection": "Correção do texto ditado"
+    "voiceTextCorrection": "Correção do texto ditado",
+    "voiceHoldToRecord": "Segurar atalho para gravar (Push-to-Talk)",
+    "voiceHoldToRecordHint": "Por padrão, a entrada de voz é ativada com um único toque. Ative para gravar apenas enquanto o atalho estiver pressionado."
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

@@ -935,6 +935,7 @@
           "default": "deepgram"
         },
         "isVoiceCorrectionEnabled": { "type": "boolean", "default": false },
+        "isVoiceHoldEnabled": { "type": "boolean", "default": false },
         "isStylingBarEnabled": { "type": "boolean", "default": false },
         "isStylingBarDirectInsertEnabled": {
           "type": "boolean",
@@ -974,6 +975,7 @@
       "required": [
         "provider",
         "isVoiceCorrectionEnabled",
+        "isVoiceHoldEnabled",
         "isStylingBarEnabled",
         "isStylingBarDirectInsertEnabled",
         "providers"

@@ -1060,7 +1060,9 @@
     "vaultUseDefault": "Folosește dosarul implicit",
     "vaultUseSubfolder": "Folosește un subdosar tyco-vault",
     "vision": "Intrare de imagini",
-    "voiceTextCorrection": "Corectarea textului dictat"
+    "voiceTextCorrection": "Corectarea textului dictat",
+    "voiceHoldToRecord": "Țineți apăsată comanda rapidă pentru înregistrare (Push-to-Talk)",
+    "voiceHoldToRecordHint": "În mod prestabilit, introducerea vocală se comută printr-o singură apăsare. Activați pentru a înregistra doar cât timp comanda rapidă este apăsată."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

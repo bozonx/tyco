@@ -1057,7 +1057,9 @@
     "vaultUseDefault": "ნაგულისხმევი საქაღალდის გამოყენება",
     "vaultUseSubfolder": "tyco-vault ქვესაქაღალდის გამოყენება",
     "vision": "სურათების შეყვანა",
-    "voiceTextCorrection": "ნაკარნახევი ტექსტის შესწორება"
+    "voiceTextCorrection": "ნაკარნახევი ტექსტის შესწორება",
+    "voiceHoldToRecord": "ჩასაწერად გეჭიროთ ცხელი კლავიში (Push-to-Talk)",
+    "voiceHoldToRecordHint": "ნაგულისხმევად, ხმოვანი შეყვანა გადაირთვება ერთი დაჭერით. ჩართეთ, რათა ჩაწერა მოხდეს მხოლოდ კლავიშის დაჭერისას."
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {

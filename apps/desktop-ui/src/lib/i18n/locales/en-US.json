@@ -1060,7 +1060,9 @@
     "vaultUseDefault": "Use the default folder",
     "vaultUseSubfolder": "Use a tyco-vault subfolder",
     "vision": "Image input",
-    "voiceTextCorrection": "Voice text correction"
+    "voiceTextCorrection": "Voice text correction",
+    "voiceHoldToRecord": "Hold hotkey to record (Push-to-Talk)",
+    "voiceHoldToRecordHint": "By default, voice input toggles with a single press. Enable to record only while the hotkey is held down."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
