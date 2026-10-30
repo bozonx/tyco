@@ -104,6 +104,8 @@ export interface PreviewMenuParams {
 export interface ActionSelectMenuParams {
   onSelect: (actionId: string) => void
 }
+export type BufferedPendingAction = 'insert' | 'copy'
+
 export interface PendingModalParams {
   ai?: boolean
   correction?: boolean
@@ -111,6 +113,7 @@ export interface PendingModalParams {
   styling?: boolean
   label?: string
   onCancel?: () => void
+  allowBufferedIntent?: boolean
 }
 
 interface MenuModalParams {

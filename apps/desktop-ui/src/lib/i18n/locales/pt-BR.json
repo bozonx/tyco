@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Todas as teclas de tarefas estão ocupadas: libere uma nas configurações",
     "aiRequest": "Solicitação à IA",
     "aiTask": "Tarefa de IA",
+    "cancelIntentHint": "Esc para cancelar",
     "compareResult": "Comparar o resultado",
+    "copyOnFinish": "Copiar",
     "correction": "Correção",
     "dictationInterrupted": "O reconhecimento parou. Pressione Enter para manter o texto reconhecido ou Esc para descartá-lo.",
     "finish": "Concluir",
+    "insertOnFinish": "Inserir ao concluir",
     "listening": "Ouvindo...",
     "replaceInEditor": "Substituir no editor",
     "reviewResult": "Revisar o resultado",
@@ -522,7 +525,9 @@
     "voiceChat": "Ditar mensagem para um novo chat",
     "voiceInput": "Entrada de voz",
     "voiceSend": "Enviar",
-    "voiceToInput": "Inserir no campo de entrada"
+    "voiceToInput": "Inserir no campo de entrada",
+    "willCopyOnFinish": "Será copiado ao concluir",
+    "willInsertOnFinish": "Será inserido ao concluir"
   },
   "nav": {
     "aiChat": "Perguntar à IA",

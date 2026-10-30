@@ -424,4 +424,21 @@ describe('voice recognition failures', () => {
     )
     model.dispose()
   })
+
+  it('finishes with style and uses buffered intent when provided', async () => {
+    const stylingFn = vi.fn().mockResolvedValue('Styled words')
+    const { deps, model } = setup({
+      voiceStyling: stylingFn,
+      consumeBufferedIntent: () => 'insert',
+    })
+    await model.startSession()
+    await model.finishWithStyle('make it punchy')
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Styled words',
+      'Raw words',
+      'Styled words',
+      'insert'
+    )
+    model.dispose()
+  })
 })

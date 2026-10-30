@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Všechny klávesy úloh jsou obsazené: uvolněte některou v nastavení",
     "aiRequest": "Požadavek na AI",
     "aiTask": "Úloha AI",
+    "cancelIntentHint": "Esc pro zrušení",
     "compareResult": "Porovnat výsledek",
+    "copyOnFinish": "Zkopírovat",
     "correction": "Oprava",
     "dictationInterrupted": "Rozpoznávání se zastavilo. Stiskněte Enter pro ponechání rozpoznaného textu nebo Esc pro jeho zahození.",
     "finish": "Dokončit",
+    "insertOnFinish": "Vložit po dokončení",
     "listening": "Poslouchám...",
     "replaceInEditor": "Nahradit v editoru",
     "reviewResult": "Zkontrolovat výsledek",
@@ -522,7 +525,9 @@
     "voiceChat": "Nadiktovat zprávu do nového chatu",
     "voiceInput": "Hlasové zadávání",
     "voiceSend": "Odeslat",
-    "voiceToInput": "Vložit do vstupního pole"
+    "voiceToInput": "Vložit do vstupního pole",
+    "willCopyOnFinish": "Zkopíruje se po dokončení",
+    "willInsertOnFinish": "Vloží se po dokončení"
   },
   "nav": {
     "aiChat": "Zeptat se AI",

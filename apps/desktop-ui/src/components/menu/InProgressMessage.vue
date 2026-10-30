@@ -16,17 +16,75 @@
       "
       icon="mdi:progress-clock"
     />
-    <Button type="button" @click="handleCancel" variant="ghost" size="sm">
+
+    <div
+      v-if="props.allowBufferedIntent && menuModalsStore.bufferedIntent"
+      class="buffered-intent-badge"
+    >
+      <AppIcon
+        :icon="
+          menuModalsStore.bufferedIntent === 'insert'
+            ? 'mdi:application-export'
+            : 'mdi:clipboard-arrow-right-outline'
+        "
+        size="sm"
+      />
+      <span class="buffered-label">{{
+        menuModalsStore.bufferedIntent === 'insert'
+          ? t('menu.willInsertOnFinish')
+          : t('menu.willCopyOnFinish')
+      }}</span>
+      <span class="buffered-hint">({{ t('menu.cancelIntentHint') }})</span>
+      <button
+        type="button"
+        class="buffered-dismiss"
+        :title="t('menu.cancelIntentHint')"
+        :aria-label="t('menu.cancelIntentHint')"
+        @click="menuModalsStore.clearBufferedIntent"
+      >
+        <AppIcon icon="mdi:close" size="xs" />
+      </button>
+    </div>
+
+    <div v-else-if="props.allowBufferedIntent" class="buffered-intent-hints">
+      <button
+        type="button"
+        class="hint-chip"
+        @click="menuModalsStore.setBufferedIntent('insert')"
+      >
+        <span class="hint-kbd">Space</span>
+        <span>{{ t('menu.insertOnFinish') }}</span>
+      </button>
+      <button
+        type="button"
+        class="hint-chip"
+        @click="menuModalsStore.setBufferedIntent('copy')"
+      >
+        <span class="hint-kbd">C</span>
+        <span>{{ t('menu.copyOnFinish') }}</span>
+      </button>
+    </div>
+
+    <Button
+      type="button"
+      class="in-progress-cancel-btn"
+      @click="handleCancel"
+      variant="ghost"
+      size="sm"
+    >
       {{ t('common.cancel') }}
     </Button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
+
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import type { PendingModalParams } from '../../lib/modals/menu-modal-params'
 import { useMenuModalsStore } from '../../stores/menu-modals'
+import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import StateMessage from '../common/StateMessage.vue'
 
@@ -35,18 +93,56 @@ const props = withDefaults(defineProps<PendingModalParams>(), {
   correction: false,
   transformation: false,
   styling: false,
+  allowBufferedIntent: true,
 })
 
 const menuModalsStore = useMenuModalsStore()
 const { t } = useI18n()
 
 function handleCancel() {
+  if (menuModalsStore.bufferedIntent) {
+    menuModalsStore.clearBufferedIntent()
+    return
+  }
   if (props.onCancel) {
     props.onCancel()
   } else {
     menuModalsStore.cancelPending()
   }
 }
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (!props.allowBufferedIntent) return
+  if (event.ctrlKey || event.altKey || event.metaKey) return
+
+  if (event.code === 'Space' || event.code === 'Enter') {
+    event.preventDefault()
+    menuModalsStore.setBufferedIntent('insert')
+    return
+  }
+
+  if (event.code === 'KeyC') {
+    event.preventDefault()
+    menuModalsStore.setBufferedIntent('copy')
+    return
+  }
+
+  if (event.code === 'Escape' || event.key === 'Escape') {
+    if (menuModalsStore.bufferedIntent) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      menuModalsStore.clearBufferedIntent()
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown, true)
+})
 
 useDismissibleLayer({
   isOpen: () => true,
@@ -65,5 +161,100 @@ useDismissibleLayer({
   gap: var(--space-md);
   width: 100%;
   height: 100%;
+}
+
+.buffered-intent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--app-surface-raised);
+  border: 1px solid var(--app-border-strong);
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption);
+  color: var(--color-base-content);
+  animation: pulse-border 1.5s ease-in-out infinite alternate;
+}
+
+.buffered-label {
+  font-weight: 500;
+}
+
+.buffered-hint {
+  color: var(--app-text-muted);
+  font-size: var(--text-caption);
+}
+
+.buffered-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  margin-left: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--app-text-muted);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.buffered-dismiss:hover {
+  color: var(--color-base-content);
+  background-color: var(--app-surface-sunken);
+}
+
+.buffered-intent-hints {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.hint-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.25rem 0.625rem;
+  background-color: var(--app-surface-raised);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hint-chip:hover {
+  color: var(--color-base-content);
+  border-color: var(--app-border-strong);
+  background-color: var(--app-surface-sunken);
+}
+
+.hint-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.25;
+  background-color: var(--app-surface-sunken);
+  border: 1px solid var(--app-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-base-content);
+}
+
+@keyframes pulse-border {
+  from {
+    border-color: var(--app-border-subtle);
+  }
+  to {
+    border-color: var(--app-border-strong);
+  }
 }
 </style>

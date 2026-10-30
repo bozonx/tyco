@@ -15,6 +15,7 @@ const desktopState = reactive({
 const mocks = vi.hoisted(() => ({
   windowLabel: 'quick',
   insertAction: vi.fn(),
+  copyAction: vi.fn(),
   navPanel: { resetNavPanelState: vi.fn() },
   menuModals: { hasOpenModal: false },
   callOrNotify: vi.fn(),
@@ -84,6 +85,7 @@ vi.mock('../stores/action-menu', () => ({
   useActionMenuStore: () => ({
     getDefaultActions: () => [
       { id: 'insertIntoWindow', action: mocks.insertAction },
+      { id: 'copyToClipboard', action: mocks.copyAction },
     ],
   }),
 }))
@@ -134,6 +136,23 @@ describe('VoiceView.vue', () => {
     await flushPromises()
 
     expect(mocks.insertAction).toHaveBeenCalledWith('Dictated text')
+    expect(wrapper.findComponent({ name: 'InsertMenu' }).exists()).toBe(false)
+  })
+
+  it('copies to clipboard directly when intent is copy', async () => {
+    const wrapper = mount(VoiceView, { props: { bar: false } })
+    const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+
+    voiceMenu.vm.$emit(
+      'corrected',
+      'Dictated text',
+      'Dictated text',
+      undefined,
+      'copy'
+    )
+    await flushPromises()
+
+    expect(mocks.copyAction).toHaveBeenCalledWith('Dictated text')
     expect(wrapper.findComponent({ name: 'InsertMenu' }).exists()).toBe(false)
   })
 

@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "すべてのタスクキーが使用されています。設定で空きを作成してください",
     "aiRequest": "AIリクエスト",
     "aiTask": "AIタスク",
+    "cancelIntentHint": "Esc でキャンセル",
     "compareResult": "結果を比較",
+    "copyOnFinish": "コピー",
     "correction": "校正",
     "dictationInterrupted": "音声認識が中断されました。Enterキーを押して認識されたテキストを保持するか、Escキーで破棄してください。",
     "finish": "完了",
+    "insertOnFinish": "完了時に挿入",
     "listening": "聞き取り中...",
     "replaceInEditor": "エディター内で置換",
     "reviewResult": "結果を確認",
@@ -522,7 +525,9 @@
     "voiceChat": "新規チャットへ音声をテキスト入力",
     "voiceInput": "音声入力",
     "voiceSend": "送信",
-    "voiceToInput": "入力欄に挿入"
+    "voiceToInput": "入力欄に挿入",
+    "willCopyOnFinish": "完了時にコピーされます",
+    "willInsertOnFinish": "完了時に挿入されます"
   },
   "nav": {
     "aiChat": "AIに質問",

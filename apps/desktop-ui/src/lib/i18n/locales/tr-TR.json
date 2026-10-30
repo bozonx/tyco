@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Tüm görev tuşları dolu: ayarlardan birini boşaltın",
     "aiRequest": "AI isteği",
     "aiTask": "AI görevi",
+    "cancelIntentHint": "İptal için Esc",
     "compareResult": "Sonucu karşılaştırın",
+    "copyOnFinish": "Kopyala",
     "correction": "Düzeltme",
     "dictationInterrupted": "Tanıma durdu. Tanınan metni tutmak için Enter'a, silmek için Esc'ye basın.",
     "finish": "Bitir",
+    "insertOnFinish": "Tamamlandığında ekle",
     "listening": "Dinleniyor...",
     "replaceInEditor": "Düzenleyicide değiştir",
     "reviewResult": "Sonucu inceleyin",
@@ -522,7 +525,9 @@
     "voiceChat": "Yeni sohbete mesaj dikte edin",
     "voiceInput": "Sesli giriş",
     "voiceSend": "Gönder",
-    "voiceToInput": "Giriş alanına ekle"
+    "voiceToInput": "Giriş alanına ekle",
+    "willCopyOnFinish": "Tamamlandığında kopyalanacak",
+    "willInsertOnFinish": "Tamamlandığında eklenecek"
   },
   "nav": {
     "aiChat": "Yapay Zekâya Sor",

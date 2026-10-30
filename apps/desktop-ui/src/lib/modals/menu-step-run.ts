@@ -2,7 +2,10 @@ import { errorMessage } from '@tyco/shared/value-guards'
 import type { EditorHistoryOperation } from '@tyco/shared'
 
 import type { ToolResult } from '../tools/tool-types'
-import type { PendingModalParams } from './menu-modal-params'
+import type {
+  BufferedPendingAction,
+  PendingModalParams,
+} from './menu-modal-params'
 
 export interface MenuStepRunDependencies {
   /** The top step of the menu; undefined when the menu has no steps */
@@ -20,6 +23,11 @@ export interface MenuStepRunDependencies {
   /** The text of a failed result, as the tool tells it */
   describeResult: (result: ToolResult) => string
   reportError: (message: string) => void
+  consumeBufferedIntent?: () => BufferedPendingAction | null
+  executeBufferedIntent?: (
+    intent: BufferedPendingAction,
+    text: string
+  ) => Promise<void> | void
 }
 
 export interface MenuStepRunRequest {
@@ -71,13 +79,30 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
         return
       }
       const text = request.read(result)
-      if (text === null) return
+      if (text === null) {
+        deps.consumeBufferedIntent?.()
+        return
+      }
       await deps.saveSourceResult(sourceId, text).catch(deps.reportHistoryError)
       // closed meanwhile: the result is in the history, not on the screen
-      if (controller.signal.aborted) return
-      if (stepId !== undefined && !deps.hasStep(stepId)) return
+      if (controller.signal.aborted) {
+        deps.consumeBufferedIntent?.()
+        return
+      }
+      if (stepId !== undefined && !deps.hasStep(stepId)) {
+        deps.consumeBufferedIntent?.()
+        return
+      }
+
+      const buffered = deps.consumeBufferedIntent?.()
+      if (buffered && deps.executeBufferedIntent) {
+        await deps.executeBufferedIntent(buffered, text)
+        return
+      }
+
       request.show(text, result)
     } catch (error) {
+      deps.consumeBufferedIntent?.()
       if (controller.signal.aborted) return
       deps.reportError(errorMessage(error))
     } finally {

@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "所有任务快捷键均已占用：请在设置中释放一个",
     "aiRequest": "AI 请求",
     "aiTask": "AI 任务",
+    "cancelIntentHint": "按 Esc 取消",
     "compareResult": "对比结果",
+    "copyOnFinish": "复制",
     "correction": "文本纠错",
     "dictationInterrupted": "识别已停止。按 Enter 保留已识别的文本，按 Esc 放弃。",
     "finish": "完成",
+    "insertOnFinish": "完成后插入",
     "listening": "正在聆听…",
     "replaceInEditor": "替换到编辑器",
     "reviewResult": "查看结果",
@@ -522,7 +525,9 @@
     "voiceChat": "语音输入到新对话",
     "voiceInput": "语音输入",
     "voiceSend": "发送",
-    "voiceToInput": "插入到输入框"
+    "voiceToInput": "插入到输入框",
+    "willCopyOnFinish": "完成后将复制",
+    "willInsertOnFinish": "完成后将插入"
   },
   "nav": {
     "aiChat": "询问 AI",

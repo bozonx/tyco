@@ -2,13 +2,14 @@ import { computed, ref } from 'vue'
 
 import {
   MenuModals,
+  type BufferedPendingAction,
   type MenuStep,
   type OpenModalArgs,
   type UpdateModalArgs,
   type PendingModalParams,
 } from './menu-modal-params'
 export { MenuModals } from './menu-modal-params'
-export type { MenuStep } from './menu-modal-params'
+export type { BufferedPendingAction, MenuStep } from './menu-modal-params'
 
 export interface MenuModalsDependencies {
   blurActiveElement?: () => void
@@ -16,6 +17,7 @@ export interface MenuModalsDependencies {
 
 export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
   const pendingModal = ref<PendingModalParams | null>(null)
+  const bufferedIntent = ref<BufferedPendingAction | null>(null)
   const steps = ref<MenuStep[]>([])
   let lastStepId = 0
   let pendingId = 0
@@ -58,7 +60,22 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
     const removed = [...steps.value].reverse()
     steps.value = []
     pendingModal.value = null
+    bufferedIntent.value = null
     removed.forEach(leave)
+  }
+
+  const setBufferedIntent = (intent: BufferedPendingAction | null) => {
+    bufferedIntent.value = intent
+  }
+
+  const clearBufferedIntent = () => {
+    bufferedIntent.value = null
+  }
+
+  const consumeBufferedIntent = (): BufferedPendingAction | null => {
+    const current = bufferedIntent.value
+    bufferedIntent.value = null
+    return current
   }
 
   const setPendingModal = (
@@ -74,6 +91,7 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
       deps.blurActiveElement?.()
       pendingId += 1
     }
+    bufferedIntent.value = null
     pendingModal.value = params
     return pendingId
   }
@@ -81,12 +99,14 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
   const clearPendingModal = (owner?: number) => {
     if (owner !== undefined && owner !== pendingId) return
     pendingModal.value = null
+    bufferedIntent.value = null
   }
 
   /** Aborts the operation in progress, if it can be cancelled. */
   const cancelPending = () => {
     const onCancel = pendingModal.value?.onCancel
     pendingModal.value = null
+    bufferedIntent.value = null
     if (typeof onCancel === 'function') onCancel()
   }
 
@@ -120,6 +140,10 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
     steps,
     currentStep: topStep,
     pendingModal,
+    bufferedIntent: computed(() => bufferedIntent.value),
+    setBufferedIntent,
+    clearBufferedIntent,
+    consumeBufferedIntent,
     currentModal,
     currentModalParams,
     currentStepId,

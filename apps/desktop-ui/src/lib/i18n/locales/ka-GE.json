@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "დავალებების ყველა კლავიში დაკავებულია: გაათავისუფლეთ ერთი პარამეტრებში",
     "aiRequest": "AI მოთხოვნა",
     "aiTask": "AI დავალება",
+    "cancelIntentHint": "Esc გაუქმებისთვის",
     "compareResult": "შედეგის შედარება",
+    "copyOnFinish": "კოპირება",
     "correction": "შესწორება",
     "dictationInterrupted": "ამოცნობა შეჩერდა. დააჭირეთ Enter-ს ამოცნობილი ტექსტის შესანარჩუნებლად ან Esc-ს მის გასაუქმებლად.",
     "finish": "დასრულება",
+    "insertOnFinish": "ჩასმა დასრულებისას",
     "listening": "ვუსმენ...",
     "replaceInEditor": "რედაქტორში ჩანაცვლება",
     "reviewResult": "შედეგის გადახედვა",
@@ -522,7 +525,9 @@
     "voiceChat": "შეტყობინების კარნახი ახალ ჩატში",
     "voiceInput": "ხმოვანი შეყვანა",
     "voiceSend": "გაგზავნა",
-    "voiceToInput": "შეყვანის ველში ჩასმა"
+    "voiceToInput": "შეყვანის ველში ჩასმა",
+    "willCopyOnFinish": "დაკოპირდება დასრულებისთანავე",
+    "willInsertOnFinish": "ჩაისმება დასრულებისთანავე"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",

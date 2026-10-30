@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Wszystkie klawisze zadań są zajęte: zwolnij któryś w ustawieniach",
     "aiRequest": "Zapytanie AI",
     "aiTask": "Zadanie AI",
+    "cancelIntentHint": "Esc, aby anulować",
     "compareResult": "Porównaj wynik",
+    "copyOnFinish": "Kopiuj",
     "correction": "Korekta",
     "dictationInterrupted": "Rozpoznawanie zostało przerwane. Naciśnij Enter, aby zachować rozpoznany tekst, lub Esc, aby go odrzucić.",
     "finish": "Zakończ",
+    "insertOnFinish": "Wstaw po ukończeniu",
     "listening": "Słucham...",
     "replaceInEditor": "Zastąp w edytorze",
     "reviewResult": "Przejrzyj wynik",
@@ -522,7 +525,9 @@
     "voiceChat": "Podyktuj wiadomość do nowego czatu",
     "voiceInput": "Wprowadzanie głosowe",
     "voiceSend": "Wyślij",
-    "voiceToInput": "Wstaw do pola wprowadzania"
+    "voiceToInput": "Wstaw do pola wprowadzania",
+    "willCopyOnFinish": "Zostanie skopiowane po ukończeniu",
+    "willInsertOnFinish": "Zostanie wstawione po ukończeniu"
   },
   "nav": {
     "aiChat": "Zapytaj AI",

@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Тапсырмалардың барлық пернелері бос емес: параметрлерде біреуін босатыңыз",
     "aiRequest": "ЖИ сұрауы",
     "aiTask": "ЖИ тапсырмасы",
+    "cancelIntentHint": "Бас тарту үшін Esc",
     "compareResult": "Нәтижені салыстыру",
+    "copyOnFinish": "Көшіру",
     "correction": "Түзету",
     "dictationInterrupted": "Тану тоқтады. Танылған мәтінді сақтау үшін Enter, оны жою үшін Esc пернесін басыңыз.",
     "finish": "Аяқтау",
+    "insertOnFinish": "Аяқталғанда кірістіру",
     "listening": "Тыңдап тұрмын...",
     "replaceInEditor": "Редакторда ауыстыру",
     "reviewResult": "Нәтижені қарау",
@@ -522,7 +525,9 @@
     "voiceChat": "Жаңа чатқа хабарламаны айтып жазу",
     "voiceInput": "Дауыспен енгізу",
     "voiceSend": "Жіберу",
-    "voiceToInput": "Енгізу өрісіне кірістіру"
+    "voiceToInput": "Енгізу өрісіне кірістіру",
+    "willCopyOnFinish": "Аяқталған соң көшіріледі",
+    "willInsertOnFinish": "Аяқталған соң кірістіріледі"
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",

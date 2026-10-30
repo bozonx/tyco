@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Toate tastele de sarcini sunt ocupate: eliberați una în setări",
     "aiRequest": "Cerere AI",
     "aiTask": "Sarcină AI",
+    "cancelIntentHint": "Esc pentru anulare",
     "compareResult": "Compară rezultatul",
+    "copyOnFinish": "Copiere",
     "correction": "Corectare",
     "dictationInterrupted": "Recunoașterea s-a oprit. Apăsați Enter pentru a păstra textul recunoscut sau Esc pentru a renunța la el.",
     "finish": "Termină",
+    "insertOnFinish": "Introducere la finalizare",
     "listening": "Se ascultă...",
     "replaceInEditor": "Înlocuiește în editor",
     "reviewResult": "Verifică rezultatul",
@@ -522,7 +525,9 @@
     "voiceChat": "Dictează un mesaj într-un chat nou",
     "voiceInput": "Introducere vocală",
     "voiceSend": "Trimite",
-    "voiceToInput": "Inserează în câmpul de introducere"
+    "voiceToInput": "Inserează în câmpul de introducere",
+    "willCopyOnFinish": "Se va copia la finalizare",
+    "willInsertOnFinish": "Se va introduce la finalizare"
   },
   "nav": {
     "aiChat": "Întreabă AI",

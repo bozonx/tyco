@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "All task keys are taken: free one in the settings",
     "aiRequest": "AI request",
     "aiTask": "AI task",
+    "cancelIntentHint": "Esc to cancel",
     "compareResult": "Compare the result",
+    "copyOnFinish": "Copy on completion",
     "correction": "Correction",
     "dictationInterrupted": "Recognition stopped. Press Enter to keep the recognized text or Esc to discard it.",
     "finish": "Finish",
+    "insertOnFinish": "Insert on completion",
     "listening": "Listening...",
     "replaceInEditor": "Replace in editor",
     "reviewResult": "Review the result",
@@ -522,7 +525,9 @@
     "voiceChat": "Dictate message to new chat",
     "voiceInput": "Voice input",
     "voiceSend": "Send",
-    "voiceToInput": "Insert into input"
+    "voiceToInput": "Insert into input",
+    "willCopyOnFinish": "Will copy on completion",
+    "willInsertOnFinish": "Will insert on completion"
   },
   "nav": {
     "aiChat": "Ask AI",

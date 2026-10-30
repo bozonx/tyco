@@ -92,6 +92,13 @@ function handleCorrected(
   _correctedText: string | undefined,
   intent: VoiceFinishIntent
 ) {
+  if (intent === 'copy') {
+    const copyAction = actionMenuStore
+      .getDefaultActions()
+      .find((action) => action.id === 'copyToClipboard')
+    void copyAction?.action(resultText)
+    return
+  }
   const insertAction = actionMenuStore
     .getDefaultActions()
     .find((action) => action.id === 'insertIntoWindow')

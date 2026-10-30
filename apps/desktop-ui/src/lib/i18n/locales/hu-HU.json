@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Minden feladatbillentyű foglalt: szabadítson fel egyet a beállításokban",
     "aiRequest": "MI-kérés",
     "aiTask": "MI-feladat",
+    "cancelIntentHint": "Esc a törléshez",
     "compareResult": "Eredmény összehasonlítása",
+    "copyOnFinish": "Másolás",
     "correction": "Javítás",
     "dictationInterrupted": "A felismerés leállt. Nyomja meg az Entert a felismert szöveg megtartásához, vagy az Esc billentyűt az elvetéséhez.",
     "finish": "Befejezés",
+    "insertOnFinish": "Beillesztés a befejezéskor",
     "listening": "Figyelés...",
     "replaceInEditor": "Csere a szerkesztőben",
     "reviewResult": "Eredmény áttekintése",
@@ -522,7 +525,9 @@
     "voiceChat": "Üzenet diktálása új csevegésbe",
     "voiceInput": "Hangbevitel",
     "voiceSend": "Küldés",
-    "voiceToInput": "Beillesztés a beviteli mezőbe"
+    "voiceToInput": "Beillesztés a beviteli mezőbe",
+    "willCopyOnFinish": "Befejezés után másolásra kerül",
+    "willInsertOnFinish": "Befejezés után beillesztésre kerül"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",

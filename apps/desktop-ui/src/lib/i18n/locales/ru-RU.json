@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Все клавиши заданий заняты: освободите одну в настройках",
     "aiRequest": "Запрос к AI",
     "aiTask": "Задание для AI",
+    "cancelIntentHint": "Esc для отмены",
     "compareResult": "Сравните результат",
+    "copyOnFinish": "Скопировать",
     "correction": "Коррекция",
     "dictationInterrupted": "Распознавание прервано. Enter — сохранить распознанный текст, Esc — отменить.",
     "finish": "Закончить",
+    "insertOnFinish": "Вставить сразу",
     "listening": "Слушаю...",
     "replaceInEditor": "Заменить в редакторе",
     "reviewResult": "Проверьте результат",
@@ -522,7 +525,9 @@
     "voiceChat": "Продиктуйте сообщение в новый чат",
     "voiceInput": "Голосовой ввод",
     "voiceSend": "Отправить",
-    "voiceToInput": "Вставить в поле ввода"
+    "voiceToInput": "Вставить в поле ввода",
+    "willCopyOnFinish": "Скопируется по завершении",
+    "willInsertOnFinish": "Вставится по завершении"
   },
   "nav": {
     "aiChat": "Спросить ИИ",

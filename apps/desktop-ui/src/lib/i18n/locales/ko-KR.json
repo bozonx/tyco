@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "모든 작업 단축키가 사용 중입니다. 설정에서 하나를 비우세요",
     "aiRequest": "AI 요청",
     "aiTask": "AI 작업",
+    "cancelIntentHint": "Esc 키로 취소",
     "compareResult": "결과 비교",
+    "copyOnFinish": "복사",
     "correction": "교정",
     "dictationInterrupted": "인식이 중지되었습니다. 인식된 텍스트를 유지하려면 Enter 키를, 취소하려면 Esc 키를 누르세요.",
     "finish": "완료",
+    "insertOnFinish": "완료 시 삽입",
     "listening": "듣는 중...",
     "replaceInEditor": "편집기에서 바꾸기",
     "reviewResult": "결과 검토",
@@ -522,7 +525,9 @@
     "voiceChat": "새 채팅에 메시지 받아쓰기",
     "voiceInput": "음성 입력",
     "voiceSend": "보내기",
-    "voiceToInput": "입력창에 삽입"
+    "voiceToInput": "입력창에 삽입",
+    "willCopyOnFinish": "완료 시 복사됩니다",
+    "willInsertOnFinish": "완료 시 삽입됩니다"
   },
   "nav": {
     "aiChat": "AI에게 질문",

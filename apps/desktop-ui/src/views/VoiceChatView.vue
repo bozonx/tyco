@@ -67,6 +67,10 @@ async function handleCorrected(
   _correctedText: string | undefined,
   intent: VoiceFinishIntent
 ) {
+  if (intent === 'copy') {
+    void ipcStore.call('copy_text', { text: resultText })
+    return
+  }
   if (intent === 'next') {
     showResult(resultText)
     return

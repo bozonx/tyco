@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Sve tipke zadataka su zauzete: oslobodite jednu u postavkama",
     "aiRequest": "AI zahtjev",
     "aiTask": "AI zadatak",
+    "cancelIntentHint": "Esc za odustajanje",
     "compareResult": "Usporedi rezultat",
+    "copyOnFinish": "Kopiraj",
     "correction": "Ispravak",
     "dictationInterrupted": "Prepoznavanje je zaustavljeno. Pritisnite Enter da biste zadržali prepoznati tekst ili Esc da biste ga odbacili.",
     "finish": "Završi",
+    "insertOnFinish": "Umetni po završetku",
     "listening": "Slušam...",
     "replaceInEditor": "Zamijeni u uređivaču",
     "reviewResult": "Pregledaj rezultat",
@@ -522,7 +525,9 @@
     "voiceChat": "Izdiktiraj poruku u novi chat",
     "voiceInput": "Glasovni unos",
     "voiceSend": "Pošalji",
-    "voiceToInput": "Umetni u polje za unos"
+    "voiceToInput": "Umetni u polje za unos",
+    "willCopyOnFinish": "Kopirat će se po završetku",
+    "willInsertOnFinish": "Umetnut će se po završetku"
   },
   "nav": {
     "aiChat": "Pitaj AI",

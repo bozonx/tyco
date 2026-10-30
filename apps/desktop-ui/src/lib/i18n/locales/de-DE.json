@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Alle Aufgabentasten sind belegt: Geben Sie eine in den Einstellungen frei",
     "aiRequest": "KI-Anfrage",
     "aiTask": "KI-Aufgabe",
+    "cancelIntentHint": "Esc zum Abbrechen",
     "compareResult": "Ergebnis vergleichen",
+    "copyOnFinish": "Kopieren",
     "correction": "Korrektur",
     "dictationInterrupted": "Die Erkennung wurde beendet. Drücken Sie Enter, um den erkannten Text zu behalten, oder Esc, um ihn zu verwerfen.",
     "finish": "Fertig",
+    "insertOnFinish": "Nach Fertigstellung einfügen",
     "listening": "Hört zu...",
     "replaceInEditor": "Im Editor ersetzen",
     "reviewResult": "Ergebnis prüfen",
@@ -522,7 +525,9 @@
     "voiceChat": "Nachricht in einen neuen Chat diktieren",
     "voiceInput": "Spracheingabe",
     "voiceSend": "Senden",
-    "voiceToInput": "In die Eingabe einfügen"
+    "voiceToInput": "In die Eingabe einfügen",
+    "willCopyOnFinish": "Wird nach Fertigstellung kopiert",
+    "willInsertOnFinish": "Wird nach Fertigstellung eingefügt"
   },
   "nav": {
     "aiChat": "KI fragen",

@@ -97,6 +97,7 @@ const model = createVoiceRecognition({
   saveSourceResult: (id, text) => historyStore.saveSourceResult(id, text),
   setPendingModal: (options) => menuModalsStore.setPendingModal(options),
   clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
+  consumeBufferedIntent: () => menuModalsStore.consumeBufferedIntent(),
   options: () => props,
   onCancelled: () => {
     if (!ownsActivation()) return

@@ -488,10 +488,13 @@
     "aiPromptSlotsFull": "Усі клавіші завдань зайняті: звільніть одну в налаштуваннях",
     "aiRequest": "Запит до ШІ",
     "aiTask": "ШІ-завдання",
+    "cancelIntentHint": "Esc для скасування",
     "compareResult": "Порівняти результат",
+    "copyOnFinish": "Скопіювати",
     "correction": "Виправлення",
     "dictationInterrupted": "Розпізнавання зупинилося. Натисніть Enter, щоб залишити розпізнаний текст, або Esc, щоб відкинути його.",
     "finish": "Завершити",
+    "insertOnFinish": "Вставити після завершення",
     "listening": "Слухаю...",
     "replaceInEditor": "Замінити в редакторі",
     "reviewResult": "Переглянути результат",
@@ -522,7 +525,9 @@
     "voiceChat": "Надиктувати повідомлення в новий чат",
     "voiceInput": "Голосове введення",
     "voiceSend": "Надіслати",
-    "voiceToInput": "Вставити в поле введення"
+    "voiceToInput": "Вставити в поле введення",
+    "willCopyOnFinish": "Скопіюється після завершення",
+    "willInsertOnFinish": "Вставиться після завершення"
   },
   "nav": {
     "aiChat": "Запитати ШІ",

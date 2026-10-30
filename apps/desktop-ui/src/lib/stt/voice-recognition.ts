@@ -35,6 +35,7 @@ export interface VoiceRecognitionDependencies {
     onCancel: () => void
   }) => number
   clearPendingModal: (owner: number) => void
+  consumeBufferedIntent?: () => 'insert' | 'copy' | null
   options: () => { chat?: boolean; prefix?: string; suffix?: string }
   onCorrected: (
     result: string,
@@ -255,6 +256,10 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       }
 
       if (!isCurrent()) return
+      const buffered = deps.consumeBufferedIntent?.()
+      if (buffered) {
+        intent = buffered
+      }
       deps.onCorrected(resultText, recognizedText, correctedText, intent)
     } catch (error) {
       if (!isCurrent()) return

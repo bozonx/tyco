@@ -204,4 +204,26 @@ describe('modal visibility and cancellation', () => {
     expect(onLeave).toHaveBeenCalledOnce()
     expect(store.steps.value).toEqual([])
   })
+
+  it('manages buffered intent during pending operation', () => {
+    const store = createMenuModalsModel()
+    expect(store.bufferedIntent.value).toBeNull()
+
+    store.setBufferedIntent('insert')
+    expect(store.bufferedIntent.value).toBe('insert')
+
+    store.setBufferedIntent('copy')
+    expect(store.bufferedIntent.value).toBe('copy')
+
+    expect(store.consumeBufferedIntent()).toBe('copy')
+    expect(store.bufferedIntent.value).toBeNull()
+
+    store.setBufferedIntent('insert')
+    store.clearBufferedIntent()
+    expect(store.bufferedIntent.value).toBeNull()
+
+    store.setBufferedIntent('insert')
+    store.setPendingModal({ label: 'new task' })
+    expect(store.bufferedIntent.value).toBeNull()
+  })
 })
