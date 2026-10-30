@@ -26,7 +26,8 @@ export interface MenuStepRunDependencies {
   consumeBufferedIntent?: () => BufferedPendingAction | null
   executeBufferedIntent?: (
     intent: BufferedPendingAction,
-    text: string
+    text: string,
+    sourceText: string
   ) => Promise<void> | void
 }
 
@@ -64,10 +65,17 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
     const stepId = deps.currentStepId()
     const controller = new AbortController()
     const onCancel = () => controller.abort()
-    const owner = deps.setPending({ ...request.pending, onCancel })
+    const owner = deps.setPending({
+      allowBufferedIntent: true,
+      ...request.pending,
+      onCancel,
+    })
     const updatePending = (params: Omit<PendingModalParams, 'onCancel'>) => {
       if (!controller.signal.aborted)
-        deps.setPending({ ...params, onCancel }, owner)
+        deps.setPending(
+          { allowBufferedIntent: true, ...params, onCancel },
+          owner
+        )
     }
     try {
       const sourceId = await deps.saveSource(request.text, request.operation)
@@ -96,7 +104,7 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
 
       const buffered = deps.consumeBufferedIntent?.()
       if (buffered && deps.executeBufferedIntent) {
-        await deps.executeBufferedIntent(buffered, text)
+        await deps.executeBufferedIntent(buffered, text, request.text)
         return
       }
 

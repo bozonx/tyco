@@ -5,6 +5,8 @@ export interface ResultActionsDependencies {
   getDefaultActions: () => ActionItem[]
   hasTargetWindow: () => boolean
   noTargetHint: () => string
+  isEditorPage?: () => boolean
+  replaceInEditorAction?: ActionItem
 }
 
 export function createResultActions(deps: ResultActionsDependencies) {
@@ -19,6 +21,9 @@ export function createResultActions(deps: ResultActionsDependencies) {
         )
     },
     primaryAction() {
+      if (deps.isEditorPage?.() && deps.replaceInEditorAction) {
+        return deps.replaceInEditorAction
+      }
       const primary = deps.getDefaultActions()[0]
       if (!primary) return undefined
       return {

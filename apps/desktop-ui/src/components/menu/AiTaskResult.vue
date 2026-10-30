@@ -22,7 +22,7 @@
         :source-text="sourceText"
         :left-letter-keys="leftLetterKeys"
         :space-key="spaceKey"
-        :is-editor-button-visible="true"
+        :is-editor-button-visible="!isEditorTarget"
         esc-mode="close"
       />
     </template>
@@ -38,7 +38,7 @@ import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import type { AiTaskConfig } from '@tyco/shared'
 
-defineProps<{
+const props = defineProps<{
   task: AiTaskConfig
   resultText: string
   sourceText?: string
@@ -48,7 +48,9 @@ defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
-const { leftLetterKeys, spaceKey } = useResultActions()
+const { leftLetterKeys, spaceKey, isEditorTarget } = useResultActions(
+  () => props.sourceText
+)
 </script>
 
 <style scoped>

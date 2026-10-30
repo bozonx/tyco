@@ -114,6 +114,7 @@ export interface PendingModalParams {
   label?: string
   onCancel?: () => void
   allowBufferedIntent?: boolean
+  allowBufferedCopy?: boolean
 }
 
 interface MenuModalParams {

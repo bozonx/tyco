@@ -169,7 +169,11 @@ describe('menu step run', () => {
     answer.resolve({ ok: true, content: 'result' })
     await running
 
-    expect(executeBufferedIntent).toHaveBeenCalledWith('insert', 'result')
+    expect(executeBufferedIntent).toHaveBeenCalledWith(
+      'insert',
+      'result',
+      'source'
+    )
     expect(show).not.toHaveBeenCalled()
   })
 })

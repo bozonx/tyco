@@ -1,4 +1,5 @@
 import type {
+  BufferedPendingAction,
   InsertMenuParams,
   PendingModalParams,
 } from '../modals/menu-modal-params'
@@ -36,6 +37,13 @@ export interface CorrectionStepDependencies {
   /** Clears the in-progress overlay */
   clearPending?: (owner?: number | void) => void
   isPending?: (owner: number | void) => boolean
+  consumeBufferedIntent?: () => BufferedPendingAction | null
+  executeBufferedIntent?: (
+    intent: BufferedPendingAction,
+    text: string,
+    sourceText: string,
+    extra: CorrectionStepExtra
+  ) => Promise<boolean | void> | boolean | void
   saveResult: (text: string, result: string) => Promise<void>
   /** Reports a failure; returns the message to show on the step */
   reportError: (error: unknown) => string
@@ -81,14 +89,22 @@ export function createCorrectionStep(deps: CorrectionStepDependencies) {
           extra.onCancel()
         }
       }
-      const owner = deps.setPending({ ...extra, correction: true, onCancel })
+      const owner = deps.setPending({
+        allowBufferedIntent: true,
+        allowBufferedCopy: !extra.insertOnly,
+        ...extra,
+        correction: true,
+        onCancel,
+      })
       controllers.set(controller, owner)
 
       let result: string
       let showResult: boolean
+      let buffered: BufferedPendingAction | null
       try {
         result = await deps.correct(text, controller.signal)
       } catch (error) {
+        deps.consumeBufferedIntent?.()
         deps.clearPending?.(owner)
         if (controller.signal.aborted) return
         if (deps.isAborted?.(error)) return
@@ -96,12 +112,23 @@ export function createCorrectionStep(deps: CorrectionStepDependencies) {
         return
       } finally {
         showResult = deps.isPending?.(owner) ?? true
+        buffered = showResult ? (deps.consumeBufferedIntent?.() ?? null) : null
         deps.clearPending?.(owner)
       }
 
       if (controller.signal.aborted) return
-      if (showResult) deps.openStep({ ...base, ...resultParams(text, result) })
       await deps.saveResult(text, result)
+      if (controller.signal.aborted) return
+      if (showResult && buffered && deps.executeBufferedIntent) {
+        const handled = await deps.executeBufferedIntent(
+          buffered,
+          result,
+          text,
+          extra
+        )
+        if (handled !== false) return
+      }
+      if (showResult) deps.openStep({ ...base, ...resultParams(text, result) })
       return
     }
 

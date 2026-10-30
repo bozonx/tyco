@@ -90,8 +90,8 @@ export function createMenuModalsModel(deps: MenuModalsDependencies = {}) {
       // Hidden query inputs must not intercept Escape from the progress UI.
       deps.blurActiveElement?.()
       pendingId += 1
+      bufferedIntent.value = null
     }
-    bufferedIntent.value = null
     pendingModal.value = params
     return pendingId
   }

@@ -32,6 +32,7 @@ export interface VoiceRecognitionDependencies {
     styling?: boolean
     transformation?: boolean
     label?: string
+    allowBufferedIntent?: boolean
     onCancel: () => void
   }) => number
   clearPendingModal: (owner: number) => void
@@ -198,6 +199,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         signal?.addEventListener('abort', abortStyling)
         const owner = deps.setPendingModal({
           styling: true,
+          allowBufferedIntent: intent === 'next',
           onCancel: abortStyling,
         })
 
@@ -239,6 +241,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         signal?.addEventListener('abort', abortCorrection)
         const owner = deps.setPendingModal({
           correction: true,
+          allowBufferedIntent: intent === 'next',
           onCancel: abortCorrection,
         })
 
@@ -268,7 +271,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
 
       if (!isCurrent()) return
       const buffered = deps.consumeBufferedIntent?.()
-      if (buffered) {
+      if (buffered && intent === 'next') {
         intent = buffered
       }
       deps.onCorrected(resultText, recognizedText, correctedText, intent)

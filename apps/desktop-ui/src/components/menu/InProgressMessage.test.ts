@@ -2,16 +2,32 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useDesktopStore } from '../../stores/desktop'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import InProgressMessage from './InProgressMessage.vue'
+
+const mocks = vi.hoisted(() => ({ toastKey: vi.fn(), isEditorPage: false }))
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
+vi.mock('../../composables/use-toast', () => ({
+  default: () => ({ toastKey: mocks.toastKey, toastText: vi.fn() }),
+}))
+
+vi.mock('../../composables/use-editor-navigation', () => ({
+  useEditorNavigation: () => ({ isEditorPage: () => mocks.isEditorPage }),
+}))
+
 describe('InProgressMessage', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    mocks.toastKey.mockReset()
+    mocks.isEditorPage = false
+    vi.spyOn(useDesktopStore(), 'canInsertIntoWindow', 'get').mockReturnValue(
+      true
+    )
   })
 
   it('renders spinner and cancel button', () => {
@@ -73,10 +89,17 @@ describe('InProgressMessage', () => {
     expect(onCancel).toHaveBeenCalledOnce()
   })
 
+  it('does not show buffered intent hints by default when allowBufferedIntent is false', () => {
+    const wrapper = mount(InProgressMessage)
+    expect(wrapper.find('.buffered-intent-hints').exists()).toBe(false)
+  })
+
   it('buffers insert on Space or Enter key, and clears intent on Escape without cancelling', async () => {
     const onCancel = vi.fn()
     const menuModalsStore = useMenuModalsStore()
-    const wrapper = mount(InProgressMessage, { props: { onCancel } })
+    const wrapper = mount(InProgressMessage, {
+      props: { onCancel, allowBufferedIntent: true },
+    })
 
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(menuModalsStore.bufferedIntent).toBe('insert')
@@ -96,7 +119,9 @@ describe('InProgressMessage', () => {
 
   it('buffers copy on C key, and allows changing to insert', async () => {
     const menuModalsStore = useMenuModalsStore()
-    const wrapper = mount(InProgressMessage)
+    const wrapper = mount(InProgressMessage, {
+      props: { allowBufferedIntent: true },
+    })
 
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyC' }))
     expect(menuModalsStore.bufferedIntent).toBe('copy')
@@ -107,5 +132,53 @@ describe('InProgressMessage', () => {
     expect(menuModalsStore.bufferedIntent).toBe('insert')
     await wrapper.vm.$nextTick()
     expect(wrapper.text()).toContain('menu.willInsertOnFinish')
+  })
+
+  it('ignores repeated keydown events so held Enter does not buffer intent', () => {
+    const menuModalsStore = useMenuModalsStore()
+    mount(InProgressMessage, { props: { allowBufferedIntent: true } })
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Enter', repeat: true })
+    )
+    expect(menuModalsStore.bufferedIntent).toBeNull()
+  })
+
+  it('warns and does not register insert intent when target window is unavailable', async () => {
+    vi.spyOn(useDesktopStore(), 'canInsertIntoWindow', 'get').mockReturnValue(
+      false
+    )
+    const menuModalsStore = useMenuModalsStore()
+    const wrapper = mount(InProgressMessage, {
+      props: { allowBufferedIntent: true },
+    })
+
+    expect(wrapper.find('.hint-chip.is-disabled').exists()).toBe(true)
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
+    expect(menuModalsStore.bufferedIntent).toBeNull()
+    expect(mocks.toastKey).toHaveBeenCalledWith('selection.noTarget', 'warn')
+  })
+
+  it('offers replaceInEditor on Space when on the editor page and hides copy during editor correction', async () => {
+    mocks.isEditorPage = true
+    vi.spyOn(useDesktopStore(), 'canInsertIntoWindow', 'get').mockReturnValue(
+      false
+    )
+    const menuModalsStore = useMenuModalsStore()
+    const wrapper = mount(InProgressMessage, {
+      props: { allowBufferedIntent: true, correction: true },
+    })
+
+    expect(wrapper.text()).toContain('menu.replaceInEditor')
+    expect(wrapper.text()).not.toContain('menu.copyOnFinish')
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyC' }))
+    expect(menuModalsStore.bufferedIntent).toBeNull()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
+    expect(menuModalsStore.bufferedIntent).toBe('insert')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('menu.replaceInEditor')
   })
 })

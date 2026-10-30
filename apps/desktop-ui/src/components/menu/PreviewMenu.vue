@@ -43,7 +43,7 @@
         :source-text="props.sourceText"
         :left-letter-keys="leftLetterKeys"
         :space-key="spaceKey"
-        :is-editor-button-visible="true"
+        :is-editor-button-visible="!isEditorTarget"
         esc-mode="close"
       />
     </template>
@@ -147,7 +147,9 @@ const qualityStatusKind = computed<'info' | 'warning' | 'success'>(() => {
   return 'success'
 })
 
-const { leftLetterKeys, spaceKey } = useResultActions()
+const { leftLetterKeys, spaceKey, isEditorTarget } = useResultActions(
+  () => props.sourceText
+)
 </script>
 
 <style scoped>

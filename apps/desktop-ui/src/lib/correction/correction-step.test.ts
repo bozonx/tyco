@@ -170,6 +170,7 @@ describe('createCorrectionStep', () => {
           menu.clearPendingModal(owner ?? undefined),
         isPending: (owner: number | void) =>
           owner !== undefined && menu.isPendingModal(owner),
+        consumeBufferedIntent: menu.consumeBufferedIntent,
         saveResult: vi.fn().mockResolvedValue(undefined),
         reportError: vi.fn(() => 'failed'),
       }
@@ -270,6 +271,29 @@ describe('createCorrectionStep', () => {
       expect(menu.pendingModal.value).toBeNull()
       expect(menu.menuBreadcrumbs.value).toHaveLength(1)
       expect(menu.currentModalParams.value).toEqual({ text: 'helo' })
+    })
+
+    it('executes buffered intent directly and skips opening the step when handled', async () => {
+      const { menu, request, deps } = setupPending()
+      const executeBufferedIntent = vi.fn().mockResolvedValue(true)
+      const stepWithBuffered = createCorrectionStep({
+        ...deps,
+        executeBufferedIntent,
+      })
+
+      const done = stepWithBuffered.start('helo', { insertOnly: true })
+      menu.setBufferedIntent('insert')
+      request.resolve('hello')
+      await done
+
+      expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
+      expect(executeBufferedIntent).toHaveBeenCalledWith(
+        'insert',
+        'hello',
+        'helo',
+        { insertOnly: true }
+      )
+      expect(menu.currentModal.value).toBe(MenuModals.NONE)
     })
   })
 })

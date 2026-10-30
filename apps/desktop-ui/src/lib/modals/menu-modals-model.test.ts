@@ -223,7 +223,11 @@ describe('modal visibility and cancellation', () => {
     expect(store.bufferedIntent.value).toBeNull()
 
     store.setBufferedIntent('insert')
-    store.setPendingModal({ label: 'new task' })
+    const owner = store.setPendingModal({ label: 'new task' })
     expect(store.bufferedIntent.value).toBeNull()
+
+    store.setBufferedIntent('insert')
+    store.setPendingModal({ label: 'stage 2' }, owner)
+    expect(store.bufferedIntent.value).toBe('insert')
   })
 })

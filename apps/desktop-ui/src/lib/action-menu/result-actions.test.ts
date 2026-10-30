@@ -41,4 +41,25 @@ describe('result actions', () => {
     expect(model.primaryAction()).toBeUndefined()
     expect(model.shortcutActions()).toEqual([])
   })
+
+  it('uses replaceInEditorAction as primaryAction when on the editor page', () => {
+    const insert: ActionItem = {
+      id: 'insertIntoWindow',
+      action: async () => {},
+    }
+    const replaceInEditor: ActionItem = {
+      id: 'applyToEditor',
+      labelKey: 'menu.replaceInEditor',
+      action: async () => {},
+    }
+    const model = createResultActions({
+      getShortcutActions: () => [insert],
+      getDefaultActions: () => [insert],
+      hasTargetWindow: () => false,
+      noTargetHint: () => 'No target',
+      isEditorPage: () => true,
+      replaceInEditorAction: replaceInEditor,
+    })
+    expect(model.primaryAction()).toBe(replaceInEditor)
+  })
 })

@@ -23,7 +23,7 @@
         :source-text="props.oldText"
         :left-letter-keys="props.replaceEditor ? [] : leftLetterKeys"
         :space-key="props.replaceEditor ? replaceEditorAction : spaceKey"
-        :is-editor-button-visible="!props.replaceEditor"
+        :is-editor-button-visible="!props.replaceEditor && !isEditorTarget"
         :esc-mode="props.replaceEditor ? 'back' : 'close'"
       />
     </template>
@@ -57,5 +57,7 @@ const { diffMode, cycleMode } = usePersistedDiffMode()
 
 usePreviewModeShortcut(cycleMode)
 
-const { leftLetterKeys, spaceKey } = useResultActions()
+const { leftLetterKeys, spaceKey, isEditorTarget } = useResultActions(
+  () => props.oldText
+)
 </script>
