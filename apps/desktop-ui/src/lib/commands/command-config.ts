@@ -112,6 +112,8 @@ function defaultToolConfig(toolId: string): Record<string, unknown> {
     case 'core.translate':
       return { language: '' }
     case 'core.aiTask':
+    case 'core.transformation':
+    case 'core.styling':
       return { prompt: '' }
     default:
       // a plugin tool falls back to the plugin settings for empty fields

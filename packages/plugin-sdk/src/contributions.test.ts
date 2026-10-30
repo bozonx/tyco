@@ -7,9 +7,12 @@ import {
 } from './contributions.js'
 
 describe('plugin contribution validation', () => {
-  it('requires an exclusive toolbar callback or local tool reference', () => {
+  it('requires an exclusive callback or local tool reference for toolbar and action items', () => {
     expect(() =>
       validateContribution({ id: 'button', toolId: 'search' }, 'toolbar')
+    ).not.toThrow()
+    expect(() =>
+      validateContribution({ id: 'action', toolId: 'search' }, 'action')
     ).not.toThrow()
     expect(() =>
       validateContribution(
@@ -18,7 +21,16 @@ describe('plugin contribution validation', () => {
       )
     ).toThrow()
     expect(() =>
+      validateContribution(
+        { id: 'action', toolId: 'search', action: () => {} },
+        'action'
+      )
+    ).toThrow()
+    expect(() =>
       validateContribution({ id: 'button', toolId: 'Other.search' }, 'toolbar')
+    ).toThrow()
+    expect(() =>
+      validateContribution({ id: 'edit', toolId: 'search' }, 'edit')
     ).toThrow()
     expect(() => validateContribution({ id: 'button' }, 'toolbar')).toThrow()
   })

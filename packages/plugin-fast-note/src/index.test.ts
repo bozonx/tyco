@@ -15,20 +15,44 @@ describe('FastNote plugin', () => {
     vi.restoreAllMocks()
   })
 
-  it('registers the note tool with its default commands and a toolbar button', () => {
-    const { mocks, toolbarItems, tools } = setup({})
+  it('registers the note tool with its default commands, an action item and a toolbar button', () => {
+    const { actionItems, toolbarItems, tools } = setup({})
 
-    expect(mocks.registerActionsItems).not.toHaveBeenCalled()
     expect(tools.map((tool) => tool.id)).toEqual(['write'])
     expect(tools[0].configFields?.map((field) => field.name)).not.toContain(
       'clearInputAfterSave'
     )
+    expect(actionItems).toHaveLength(1)
+    expect(actionItems[0]).toMatchObject({
+      id: 'write',
+      icon: 'mdi:note-plus-outline',
+      labelKey: 'local.label',
+    })
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
       id: 'fastNote',
       position: 'right',
       tooltipKey: 'local.label',
     })
+  })
+
+  it('saves the text passed to the action menu item', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 8, 21, 14, 30, 0))
+
+    const { actionItems, mocks } = setup({
+      value: ' selected ',
+      config: { pathToNotes: ' ~/notes ' },
+    })
+
+    await actionItems[0].action(' selected ')
+
+    expect(mocks.callApiFunction).toHaveBeenCalledWith('saveNote', [
+      '~/notes',
+      '2026-09-21_14-30-00.md',
+      'selected\n',
+    ])
+    expect(mocks.toast).toHaveBeenCalledWith('local.noteSaved', 'success')
   })
 
   it('saves the selected text into the configured folder', async () => {

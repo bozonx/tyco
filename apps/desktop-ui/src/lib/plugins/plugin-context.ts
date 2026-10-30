@@ -1,5 +1,6 @@
 import {
   clonePluginValue,
+  type ActionContribution,
   type PluginDisposer,
   type ToolbarContribution,
   type ToolResult,
@@ -34,6 +35,11 @@ export interface PluginContextDependencies {
     snapshot: EditorInputSnapshot,
     signal: AbortSignal
   ): Promise<ToolResult>
+  invokeActionTool?(
+    toolId: string,
+    text: string,
+    signal: AbortSignal
+  ): Promise<void>
   getEditorInputValue(): string
   getEditorInputSelectedText(): string
   getEditorInputSnapshot(): EditorInputSnapshot
@@ -144,13 +150,26 @@ export function createPluginContext(
   return {
     signal: lifecycle.signal,
     onDispose: lifecycle.onDispose,
-    registerActionsItems: (items) =>
+    registerActionsItems: (items: ActionContribution[]) =>
       registration(
         'action',
         items,
         (scoped) =>
-          scoped.map((item) => {
-            const execution = uiAction(item.action)
+          scoped.map((item): ActionItem => {
+            const action =
+              item.toolId !== undefined
+                ? async (text: string) => {
+                    check()
+                    if (!deps.invokeActionTool)
+                      throw new Error('Tool invocation is unavailable')
+                    await deps.invokeActionTool(
+                      `${id}.${item.toolId}`,
+                      text,
+                      lifecycle.signal
+                    )
+                  }
+                : item.action!
+            const execution = uiAction(action, item.toolId !== undefined)
             return {
               ...item,
               get disabled() {

@@ -78,6 +78,15 @@ export default function pluginIndex(): PluginDefinition {
 
       ctx.registerTools([search])
 
+      ctx.registerActionsItems([
+        {
+          id: 'search',
+          labelKey: 'local.label',
+          icon: 'mdi:web',
+          toolId: search.id,
+        },
+      ])
+
       ctx.registerToolbarItems([
         {
           id: 'searchInInternet',

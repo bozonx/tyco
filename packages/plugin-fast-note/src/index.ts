@@ -214,6 +214,15 @@ export default function pluginIndex(): PluginDefinition {
 
       ctx.registerTools([write])
 
+      ctx.registerActionsItems([
+        {
+          id: 'write',
+          labelKey: 'local.label',
+          icon: 'mdi:note-plus-outline',
+          toolId: write.id,
+        },
+      ])
+
       ctx.registerToolbarItems([
         {
           id: 'fastNote',

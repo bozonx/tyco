@@ -1,3 +1,4 @@
+import { createInvocationRunner } from '../lib/invocation/invocation-runner'
 import { createToolInvoker } from '../lib/invocation/invoke-tool'
 import { translate } from '../lib/i18n/index'
 import { clientLogger } from '../lib/logger/index'
@@ -6,6 +7,8 @@ import type { PluginLifecycle } from '../lib/plugins/plugin-manager'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useEditMenuStore } from '../stores/edit-menu'
 import { useEditorInputStore } from '../stores/editor-input'
+import { useHistoryStore } from '../stores/history'
+import { useInvocationRunnerDependencies } from '../stores/invocations'
 import { useIpcStore } from '../stores/ipc'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useToolbarStore } from '../stores/toolbar'
@@ -18,6 +21,10 @@ export default function usePluginContext() {
   const toolbar = useToolbarStore()
   const tools = useToolsStore()
   const invokeTool = createToolInvoker({ tools })
+  const invocationRunner = createInvocationRunner(
+    useInvocationRunnerDependencies()
+  )
+  const history = useHistoryStore()
   const editor = useEditorInputStore()
   const ipc = useIpcStore()
   const routes = useEditorNavigation()
@@ -47,6 +54,14 @@ export default function usePluginContext() {
             editorSnapshot: snapshot,
           }
         ),
+      invokeActionTool: async (toolId, text, signal) => {
+        if (text.trim()) await history.saveOutput(text)
+        await invocationRunner.run(
+          { toolId, toolConfig: {}, label: toolId },
+          text,
+          { source: 'menu', signal }
+        )
+      },
       getEditorInputValue: () => editor.value,
       getEditorInputSelectedText: () =>
         editor.hasSelection ? editor.selectedText : '',

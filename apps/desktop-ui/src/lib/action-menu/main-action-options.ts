@@ -63,11 +63,7 @@ export function mainActionOptionId(
   return `${item.type}:${item.actionId}`
 }
 
-export function standardActionGroup(id: StandardActionId): MainActionGroup {
-  if (id === 'translationMenu') return { kind: 'translation' }
-  if (id === 'aiTaskMenu') return { kind: 'aiTask' }
-  if (id === 'transformationMenu') return { kind: 'transformation' }
-  if (id === 'stylingMenu') return { kind: 'styling' }
+export function standardActionGroup(_id: StandardActionId): MainActionGroup {
   return { kind: 'basic' }
 }
 
@@ -104,11 +100,17 @@ export function commandGroup(
 
 /**
  * Whether the command does just what an item of the picker does already: a
- * translation into one of the translation languages, or the rule of an AI task
+ * translation into one of the translation languages, or the rule of an AI task,
+ * transformation, or style
  */
 export function duplicatesDirectChoice(
   command: CommandConfig,
-  direct: { languages: readonly string[]; rules: readonly string[] }
+  direct: {
+    languages: readonly string[]
+    rules: readonly string[]
+    transformations?: readonly string[]
+    styling?: readonly string[]
+  }
 ): boolean {
   const value = (key: string) => {
     const field = command.toolConfig[key]
@@ -119,6 +121,16 @@ export function duplicatesDirectChoice(
   }
   if (command.toolId === 'core.aiTask') {
     return direct.rules.some((rule) => rule.trim() === value('prompt'))
+  }
+  if (command.toolId === 'core.transformation') {
+    return (direct.transformations ?? []).some(
+      (rule) => rule.trim() === value('prompt')
+    )
+  }
+  if (command.toolId === 'core.styling') {
+    return (direct.styling ?? []).some(
+      (rule) => rule.trim() === value('prompt')
+    )
   }
   return false
 }

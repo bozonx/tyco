@@ -9,12 +9,12 @@ import type { ShortcutSlots } from './translation-config'
 export const STANDARD_ACTION_IDS = [
   'insertIntoWindow',
   'copyToClipboard',
+  'correction',
+  'askInChat',
+  'translationMenu',
   'aiTaskMenu',
   'transformationMenu',
   'stylingMenu',
-  'correction',
-  'translationMenu',
-  'askInChat',
 ] as const
 
 export type StandardActionId = (typeof STANDARD_ACTION_IDS)[number]

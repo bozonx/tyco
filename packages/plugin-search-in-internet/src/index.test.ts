@@ -10,17 +10,34 @@ const setup = (options: Parameters<typeof createPluginTestContext>[0]) => {
 }
 
 describe('SearchInInternet plugin', () => {
-  it('registers the search tool and a button in the editor toolbar', () => {
-    const { mocks, toolbarItems, tools } = setup({})
+  it('registers the search tool, an action item and a button in the editor toolbar', () => {
+    const { actionItems, toolbarItems, tools } = setup({})
 
-    expect(mocks.registerActionsItems).not.toHaveBeenCalled()
     expect(tools.map((tool) => tool.id)).toEqual(['search'])
+    expect(actionItems).toHaveLength(1)
+    expect(actionItems[0]).toMatchObject({
+      id: 'search',
+      icon: 'mdi:web',
+      labelKey: 'local.label',
+    })
     expect(toolbarItems).toHaveLength(1)
     expect(toolbarItems[0]).toMatchObject({
       id: 'searchInInternet',
       position: 'right',
       tooltipKey: 'local.label',
     })
+  })
+
+  it('searches the text passed to the action menu item', async () => {
+    const { actionItems, mocks } = setup({
+      config: { url: 'https://example.com/?s=' },
+    })
+
+    await actionItems[0].action(' a&b ')
+
+    expect(mocks.callApiFunction).toHaveBeenCalledWith('openInBrowserAndHide', [
+      'https://example.com/?s=a%26b',
+    ])
   })
 
   it('searches the selected text with the configured URL', async () => {

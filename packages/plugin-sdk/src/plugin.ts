@@ -67,7 +67,13 @@ export interface ToolbarItem extends Contribution {
   action: () => void | Promise<void>
 }
 /** Public registrations require stable IDs; host-built menu items may omit them. */
-export type ActionContribution = ActionItem & { id: string }
+export type ActionContribution =
+  | (ActionItem & { id: string; toolId?: never })
+  | (Omit<ActionItem, 'action'> & {
+      id: string
+      toolId: string
+      action?: never
+    })
 export type EditContribution = EditItem & { id: string }
 export type ToolbarContribution =
   | (ToolbarItem & { toolId?: never })

@@ -2,9 +2,21 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { PluginError, TEXT_INPUT_SCHEMA } from './index.js'
 import { createPluginTestContext } from './testing.js'
-import { runToolFromToolbar } from './toolbar-tool.js'
+import { runToolFromAction, runToolFromToolbar } from './toolbar-tool.js'
 
-describe('toolbar tools', () => {
+describe('toolbar and action tools', () => {
+  it('runs a declarative action item with the provided text', async () => {
+    const { ctx } = createPluginTestContext({ value: 'editor' })
+    const run = vi.fn(async () => ({ ok: true }))
+    await runToolFromAction(
+      ctx,
+      { id: 'tool', description: 'tool', inputSchema: TEXT_INPUT_SCHEMA, run },
+      'menu text'
+    )
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({ input: { text: 'menu text' }, source: 'menu' })
+    )
+  })
   it('keeps translated notifications separate from plain text', async () => {
     const { ctx, mocks } = createPluginTestContext({ value: 'text' })
     await runToolFromToolbar(ctx, {

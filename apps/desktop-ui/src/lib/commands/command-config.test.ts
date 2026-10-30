@@ -336,6 +336,12 @@ describe('commands of the core tools', () => {
     expect(translate.toolConfig).toEqual({ language: '' })
     expect(translate.outputAction).toBe('insertIntoWindow')
     expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({ prompt: '' })
+    expect(createCommand('core.transformation', 'tr').toolConfig).toEqual({
+      prompt: '',
+    })
+    expect(createCommand('core.styling', 'st').toolConfig).toEqual({
+      prompt: '',
+    })
     expect(createCommand('Notes.write', 'n').toolConfig).toEqual({})
   })
 
@@ -351,6 +357,12 @@ describe('commands of the core tools', () => {
     expect(
       validateCommand(namedCommand('core.translate', 't'), coreTools)
     ).toEqual([{ field: 'language', messageKey: 'commands.errorNoLanguage' }])
+    expect(
+      validateCommand(namedCommand('core.transformation', 'tr'), coreTools)
+    ).toEqual([{ field: 'prompt', messageKey: 'commands.errorNoPrompt' }])
+    expect(
+      validateCommand(namedCommand('core.styling', 'st'), coreTools)
+    ).toEqual([{ field: 'prompt', messageKey: 'commands.errorNoPrompt' }])
     expect(
       validateCommand(
         withConfig(namedCommand('core.aiTask', 'a'), { prompt: 'Shorter' }),

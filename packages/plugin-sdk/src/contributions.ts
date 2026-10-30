@@ -50,15 +50,15 @@ export function validateContribution(
       !['left', 'right'].includes(String(value.position))
     )
       throw new Error('Invalid toolbar position')
-    if (value.toolId !== undefined) {
-      if (
-        typeof value.toolId !== 'string' ||
-        !hasContributionIdFormat(value.toolId) ||
-        value.action !== undefined
-      )
-        throw new Error('Invalid toolbar tool reference')
-      return
-    }
+  }
+  if ((kind === 'toolbar' || kind === 'action') && value.toolId !== undefined) {
+    if (
+      typeof value.toolId !== 'string' ||
+      !hasContributionIdFormat(value.toolId) ||
+      value.action !== undefined
+    )
+      throw new Error(`Invalid ${kind} tool reference`)
+    return
   }
   if (kind !== 'tool' && typeof value.action !== 'function')
     throw new Error('Missing plugin callback')

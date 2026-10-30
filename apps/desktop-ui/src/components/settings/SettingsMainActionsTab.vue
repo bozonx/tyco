@@ -112,6 +112,14 @@ const languages = computed(() => [
 
 const slotIds = computed(() => new Set(actionSlots.value.map(optionId)))
 
+const transformations = computed(() =>
+  userConfig.value.transformations.items.filter((item) => item.name.trim())
+)
+
+const styling = computed(() =>
+  userConfig.value.styling.items.filter((item) => item.name.trim())
+)
+
 /**
  * A command that does what a language or a task of the picker does is left out,
  * unless a slot holds it
@@ -121,6 +129,8 @@ const isOffered = (command: CommandConfig) =>
   !duplicatesDirectChoice(command, {
     languages: languages.value,
     rules: aiTasks.value.map((task) => task.prompt),
+    transformations: transformations.value.map((item) => item.rule),
+    styling: styling.value.map((item) => item.rule),
   })
 
 /** Actions that open a dialog to pick what to do are marked as such */
@@ -130,14 +140,6 @@ const OPENS_DIALOG = new Set<StandardActionId>([
   'transformationMenu',
   'stylingMenu',
 ])
-
-const transformations = computed(() =>
-  userConfig.value.transformations.items.filter((item) => item.name.trim())
-)
-
-const styling = computed(() =>
-  userConfig.value.styling.items.filter((item) => item.name.trim())
-)
 
 const availableActions = computed((): MainActionChoice[] => [
   ...userConfig.value.launcherPages.map((page, index) => ({

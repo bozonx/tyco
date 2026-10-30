@@ -185,7 +185,11 @@ export function validateCommand(
     if (!stringOr(command.toolConfig.language).trim()) {
       issues.push({ field: 'language', messageKey: 'commands.errorNoLanguage' })
     }
-  } else if (command.toolId === 'core.aiTask') {
+  } else if (
+    command.toolId === 'core.aiTask' ||
+    command.toolId === 'core.transformation' ||
+    command.toolId === 'core.styling'
+  ) {
     if (!stringOr(command.toolConfig.prompt).trim()) {
       issues.push({ field: 'prompt', messageKey: 'commands.errorNoPrompt' })
     }

@@ -3,6 +3,7 @@ import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { clientLogger } from '../lib/logger'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useIpcStore } from '../stores/ipc'
 import { useToolbarStore } from '../stores/toolbar'
@@ -70,6 +71,14 @@ describe('plugin context wiring', () => {
     await button.action()
     expect(run).toHaveBeenCalledWith(
       expect.objectContaining({ input: { text: 'world' } })
+    )
+    context.registerActionsItems([{ id: 'act', toolId: 'upper' }])
+    const action = useActionMenuStore()
+      .getRegisteredActions()
+      .find((item) => item.id === 'Example:act')!
+    await action.action('menu text')
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({ input: { text: 'menu text' }, source: 'menu' })
     )
   })
 

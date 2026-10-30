@@ -264,13 +264,17 @@ describe('conditional plugin editor boundary', () => {
   })
 })
 
-it('routes declarative toolbar buttons through host invocation with a snapshot', async () => {
+it('routes declarative toolbar buttons and action items through host invocation', async () => {
   const { context, deps, controller } = setup()
   deps.invokeTool = vi.fn(async () => ({
     ok: true,
     messageKey: 'toast.commandFailed',
   }))
+  deps.invokeActionTool = vi.fn(async () => {})
   context.registerToolbarItems([{ id: 'button', toolId: 'test' }])
+  context.registerActionsItems([
+    { id: 'action', labelKey: 'local.label', toolId: 'test' },
+  ])
   const item = vi.mocked(deps.registerToolbarItems).mock.calls[0][0][0]
   await item.action()
   expect(deps.invokeTool).toHaveBeenCalledWith(
@@ -279,6 +283,14 @@ it('routes declarative toolbar buttons through host invocation with a snapshot',
     controller.signal
   )
   expect(item.ownerPluginId).toBe('Example')
+  const actionItem = vi.mocked(deps.registerActionsItems).mock.calls[0][0][0]
+  await actionItem.action('selected text')
+  expect(deps.invokeActionTool).toHaveBeenCalledWith(
+    'Example.test',
+    'selected text',
+    controller.signal
+  )
+  expect(actionItem.ownerPluginId).toBe('Example')
 })
 
 it('releases IDs on disposal and rolls back failed registrations', () => {

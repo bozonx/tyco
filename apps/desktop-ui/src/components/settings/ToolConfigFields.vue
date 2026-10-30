@@ -8,7 +8,11 @@
       @update="update"
     />
     <AiTaskToolFields
-      v-else-if="command.toolId === 'core.aiTask'"
+      v-else-if="
+        command.toolId === 'core.aiTask' ||
+        command.toolId === 'core.transformation' ||
+        command.toolId === 'core.styling'
+      "
       :command="command"
       :user-config="userConfig"
       :warnings="warningsOf('prompt')"

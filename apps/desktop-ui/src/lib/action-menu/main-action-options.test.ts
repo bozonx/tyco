@@ -17,11 +17,11 @@ const groupLabel = (group: MainActionGroup) =>
   group.kind === 'plugin' ? `plugin ${group.plugin}` : group.kind
 
 describe('main action groups', () => {
-  it('puts the translation and the AI task apart from the basic actions', () => {
-    expect(standardActionGroup('translationMenu')).toEqual({
-      kind: 'translation',
-    })
-    expect(standardActionGroup('aiTaskMenu')).toEqual({ kind: 'aiTask' })
+  it('puts all standard actions, including menu openers, in the basic group', () => {
+    expect(standardActionGroup('translationMenu')).toEqual({ kind: 'basic' })
+    expect(standardActionGroup('aiTaskMenu')).toEqual({ kind: 'basic' })
+    expect(standardActionGroup('transformationMenu')).toEqual({ kind: 'basic' })
+    expect(standardActionGroup('stylingMenu')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('insertIntoWindow')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('askInChat')).toEqual({ kind: 'basic' })
   })
@@ -47,6 +47,12 @@ describe('main action groups', () => {
     })
     expect(commandGroup(createCommand('core.aiTask'), tools)).toEqual({
       kind: 'aiTask',
+    })
+    expect(commandGroup(createCommand('core.transformation'), tools)).toEqual({
+      kind: 'transformation',
+    })
+    expect(commandGroup(createCommand('core.styling'), tools)).toEqual({
+      kind: 'styling',
     })
     expect(commandGroup(createCommand('script'), tools)).toEqual({
       kind: 'commands',
@@ -126,13 +132,18 @@ describe('mainActionOptionId', () => {
 })
 
 describe('duplicatesDirectChoice', () => {
-  const direct = { languages: ['en-US'], rules: [' Be brief '] }
+  const direct = {
+    languages: ['en-US'],
+    rules: [' Be brief '],
+    transformations: [' Rewrite clearly '],
+    styling: [' Formal tone '],
+  }
   const command = (toolId: string, toolConfig: Record<string, unknown>) => ({
     ...createCommand(toolId),
     toolConfig,
   })
 
-  it('finds commands that do what a language or a task does', () => {
+  it('finds commands that do what a language, task, transformation or style does', () => {
     expect(
       duplicatesDirectChoice(
         command('core.translate', { language: 'en-US' }),
@@ -142,6 +153,18 @@ describe('duplicatesDirectChoice', () => {
     expect(
       duplicatesDirectChoice(
         command('core.aiTask', { prompt: 'Be brief' }),
+        direct
+      )
+    ).toBe(true)
+    expect(
+      duplicatesDirectChoice(
+        command('core.transformation', { prompt: 'Rewrite clearly' }),
+        direct
+      )
+    ).toBe(true)
+    expect(
+      duplicatesDirectChoice(
+        command('core.styling', { prompt: 'Formal tone' }),
         direct
       )
     ).toBe(true)
@@ -157,6 +180,18 @@ describe('duplicatesDirectChoice', () => {
     expect(
       duplicatesDirectChoice(
         command('core.aiTask', { prompt: 'Other' }),
+        direct
+      )
+    ).toBe(false)
+    expect(
+      duplicatesDirectChoice(
+        command('core.transformation', { prompt: 'Other' }),
+        direct
+      )
+    ).toBe(false)
+    expect(
+      duplicatesDirectChoice(
+        command('core.styling', { prompt: 'Other' }),
         direct
       )
     ).toBe(false)

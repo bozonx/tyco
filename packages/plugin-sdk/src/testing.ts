@@ -1,7 +1,9 @@
 import { vi, type Mock } from 'vitest'
-import { runToolFromToolbar } from './toolbar-tool.js'
+import { runToolFromAction, runToolFromToolbar } from './toolbar-tool.js'
 
 import type {
+  ActionContribution,
+  ActionItem,
   ToolbarContribution,
   EditorInputSnapshot,
   PluginContext,
@@ -30,9 +32,11 @@ export function createPluginTestContext(
 ): {
   ctx: PluginContext
   mocks: PluginTestMocks
+  actionItems: ActionItem[]
   toolbarItems: ToolbarItem[]
   tools: ToolDefinition[]
 } {
+  const actionItems: ActionItem[] = []
   const toolbarItems: ToolbarItem[] = []
   const tools: ToolDefinition[] = []
   let value = options.value ?? options.selectedText ?? ''
@@ -45,9 +49,26 @@ export function createPluginTestContext(
     t: vi.fn((key: string) => key),
     log: vi.fn(),
     toastText: vi.fn(),
-    registerActionsItems: vi.fn<PluginContext['registerActionsItems']>(
-      () => () => {}
-    ),
+    registerActionsItems: vi.fn((items: ActionContribution[]) => {
+      const registered = items.map((item): ActionItem => ({
+        ...item,
+        action:
+          item.toolId !== undefined
+            ? async (text: string) => {
+                const tool = tools.find((tool) => tool.id === item.toolId)
+                if (!tool) throw new Error('Unknown action tool')
+                await runToolFromAction(ctx, tool, text)
+              }
+            : item.action!,
+      }))
+      actionItems.push(...registered)
+      return () => {
+        for (const item of registered) {
+          const index = actionItems.indexOf(item)
+          if (index >= 0) actionItems.splice(index, 1)
+        }
+      }
+    }),
     registerEditItems: vi.fn<PluginContext['registerEditItems']>(
       () => () => {}
     ),
@@ -133,5 +154,11 @@ export function createPluginTestContext(
     ),
   }
 
-  return { ctx: ctx satisfies PluginContext, mocks: ctx, toolbarItems, tools }
+  return {
+    ctx: ctx satisfies PluginContext,
+    mocks: ctx,
+    actionItems,
+    toolbarItems,
+    tools,
+  }
 }
