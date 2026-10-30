@@ -95,7 +95,6 @@ import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import type { PendingModalParams } from '../../lib/modals/menu-modal-params'
-import { createKeyPressTracker } from '../../lib/ui/key-press-tracker'
 import { useDesktopStore } from '../../stores/desktop'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
@@ -145,8 +144,6 @@ function handleCancel() {
   }
 }
 
-const keyPresses = createKeyPressTracker()
-
 function handleKeyDown(event: KeyboardEvent) {
   if (!props.allowBufferedIntent) return
   if (event.ctrlKey || event.altKey || event.metaKey) return
@@ -173,36 +170,22 @@ function handleKeyDown(event: KeyboardEvent) {
 
   if (event.code === 'Space' || event.code === 'Enter') {
     event.preventDefault()
-    keyPresses.press(event.code)
     requestBufferedInsert()
     return
   }
 
   if (event.code === 'KeyC' && canBufferCopy.value) {
     event.preventDefault()
-    keyPresses.press(event.code)
     menuModalsStore.setBufferedIntent('copy')
   }
 }
 
-function handleKeyUp(event: KeyboardEvent) {
-  keyPresses.release(event.code)
-}
-
-function handleBlur() {
-  keyPresses.clear()
-}
-
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown, true)
-  window.addEventListener('keyup', handleKeyUp, true)
-  window.addEventListener('blur', handleBlur)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown, true)
-  window.removeEventListener('keyup', handleKeyUp, true)
-  window.removeEventListener('blur', handleBlur)
 })
 
 useDismissibleLayer({

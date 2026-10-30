@@ -29,6 +29,7 @@ import InsertMenu from '../components/menu/InsertMenu.vue'
 import VoiceRecognitionMenu from '../components/menu/VoiceRecognitionMenu.vue'
 import { useVoiceResultStep } from '../composables/use-voice-result-step'
 import type { VoiceFinishIntent } from '../lib/stt/voice-finish-intent'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useChatStore } from '../stores/chat'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
@@ -37,6 +38,7 @@ import { useNavPanelStore } from '../stores/nav-panel'
 
 const ipcStore = useIpcStore()
 
+const actionMenuStore = useActionMenuStore()
 const desktopStore = useDesktopStore()
 const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
@@ -74,7 +76,10 @@ async function handleCorrected(
   intent: VoiceFinishIntent
 ) {
   if (intent === 'copy') {
-    void ipcStore.call('copy_text', { text: resultText })
+    const copyAction = actionMenuStore
+      .getDefaultActions()
+      .find((action) => action.id === 'copyToClipboard')
+    void copyAction?.action(resultText)
     return
   }
   if (intent === 'next') {

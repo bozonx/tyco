@@ -29,10 +29,6 @@ export interface InsertMenuParams {
   correction?: boolean
   /** The text before correction. */
   originalText?: string
-  /** A pending correction will replace the displayed text. */
-  isCorrecting?: boolean
-  /** A failed correction leaves the original text available. */
-  correctionError?: string
   /** The correction returned the same text. */
   isCorrectionUnchanged?: boolean
   /** Offer insertion, the editor and cancellation only. */

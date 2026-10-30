@@ -37,15 +37,15 @@ export function useMenuStepRun() {
     executeBufferedIntent: async (intent, text, sourceText) => {
       if (intent === 'insert' && editorNavigation.isEditorPage()) {
         if (editorNavigation.applyEditorTransfer(text, sourceText) === false)
-          return
+          return true
         menuModalsStore.closeAll()
         editorInputStore.requestFocus()
-        return
+        return true
       }
       if (intent === 'insert') {
         if (!desktopStore.canInsertIntoWindow) {
           toastKey('selection.noTarget', 'warn')
-          return
+          return false
         }
         menuModalsStore.closeAll()
         await historyStore.saveOutput(text)
@@ -53,19 +53,20 @@ export function useMenuStepRun() {
         if (!outcome.ok) {
           toastText(toolResultMessage(outcome, t), 'error')
         }
-        return
+        return true
       }
       menuModalsStore.closeAll()
       await historyStore.saveOutput(text)
       const outcome = await invocationsStore.call('core.copy', text)
       if (!outcome.ok) {
         toastText(toolResultMessage(outcome, t), 'error')
-        return
+        return true
       }
       toastKey('common.copied', 'success')
       if (isQuickWindow()) {
         await windowStore.hide()
       }
+      return true
     },
   })
 }

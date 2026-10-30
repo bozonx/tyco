@@ -2,40 +2,18 @@
   <ActionOverlayLayout
     :title="props.correction ? t('menu.correction') : t('menu.actions')"
   >
-    <template
-      v-if="statusVisible || (hasDiff && !props.correctionError)"
-      #header-extra
-    >
-      <ResultViewModeToggle
-        preset="diff"
-        v-if="hasDiff && !props.correctionError"
-        v-model="diffMode"
-      />
-      <span
-        v-if="statusVisible"
-        class="correction-status"
-        :class="{ 'is-error': Boolean(props.correctionError) }"
-        :title="props.correctionError"
-      >
-        <AppIcon
-          v-if="props.correctionError"
-          icon="mdi:alert-circle-outline"
-          size="sm"
-        />
-        <AppIcon v-else icon="mdi:check" size="sm" />
-        {{ statusText }}
+    <template v-if="statusVisible || hasDiff" #header-extra>
+      <ResultViewModeToggle preset="diff" v-if="hasDiff" v-model="diffMode" />
+      <span v-if="statusVisible" class="correction-status">
+        <AppIcon icon="mdi:check" size="sm" />
+        {{ t('write.nothingToCorrect') }}
       </span>
     </template>
 
     <template #preview>
-      <InProgressMessage
-        v-if="props.isCorrecting"
-        correction
-        :on-cancel="menuModalsStore.back"
-      />
-      <div v-else class="preview-area">
+      <div class="preview-area">
         <Diff
-          v-if="props.oldText && !props.correctionError"
+          v-if="props.oldText"
           :old-text="props.oldText"
           :new-text="props.text"
           :mode="diffMode"
@@ -57,10 +35,9 @@
         :source-text="activeSourceText"
         :editor-button-label="editorButtonLabel"
         :left-letter-keys="leftLetterKeys"
-        :space-key="spaceKey"
+        :space-key="primaryAction"
         :shortcuts-disabled="props.shortcutsDisabled"
         :is-editor-button-visible="
-          !props.isCorrecting &&
           !editorTarget &&
           (props.isEditorButtonVisible ?? !editorNavigation.isEditorPage())
         "
@@ -71,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
@@ -88,7 +65,6 @@ import Diff from '../common/Diff.vue'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
-import InProgressMessage from './InProgressMessage.vue'
 import ResultViewModeToggle from './ResultViewModeToggle.vue'
 import { APP_CONFIG } from '@tyco/shared'
 
@@ -103,8 +79,6 @@ const props = withDefaults(defineProps<InsertMenuParams>(), {
   isEditorButtonVisible: undefined,
   correction: false,
   originalText: undefined,
-  isCorrecting: false,
-  correctionError: undefined,
   isCorrectionUnchanged: false,
   insertOnly: false,
 })
@@ -153,30 +127,7 @@ const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
 const { diffMode, cycleMode } = usePersistedDiffMode()
 
-/** Space was pressed while isCorrecting: insert once the correction is in. */
-const insertQueued = ref(false)
-
-const statusVisible = computed(
-  () => Boolean(props.correctionError) || props.isCorrectionUnchanged
-)
-
-const statusText = computed(() => {
-  if (props.correctionError) return t('write.correctionFailed')
-  return t('write.nothingToCorrect')
-})
-
-watch(
-  () => props.isCorrecting,
-  (isCorrecting, wasCorrecting) => {
-    if (isCorrecting || !wasCorrecting) return
-    const queued = insertQueued.value
-    insertQueued.value = false
-    // after a failure the user decides what to do with the text as typed
-    if (!queued || props.correctionError) return
-    const primary = primaryAction.value
-    if (primary && !primary.disabled) void primary.action(props.text)
-  }
-)
+const statusVisible = computed(() => props.isCorrectionUnchanged)
 
 usePreviewModeShortcut(() => {
   if (hasDiff.value) cycleMode()
@@ -204,7 +155,7 @@ const minCorrectionLength = APP_CONFIG.minCorrectionLength
 
 /** Why the correction action is off for this text, if it is. */
 const correctionBlocker = computed(() => {
-  if (props.correction && !props.correctionError) {
+  if (props.correction) {
     return t('write.alreadyCorrected')
   }
   if (activeActionText.value.length < minCorrectionLength) {
@@ -229,7 +180,6 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
   (props.insertOnly || editorTarget.value ? [] : actionsMenu.value).map(
     (item: ActionItem | undefined) => {
       if (!item) return undefined
-      if (props.isCorrecting) return { ...item, disabled: true }
       if (item.id === 'correction' && correctionBlocker.value) {
         return { ...item, disabled: true, hint: correctionBlocker.value }
       }
@@ -258,20 +208,6 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 
   return { ...firstItem, disabled, hint }
 })
-
-const spaceKey = computed<ActionItem | undefined>(() => {
-  if (!props.allowInsertButton && !editorTarget.value) return undefined
-  const primary = primaryAction.value
-  if (!primary || !props.isCorrecting) return primary
-
-  return {
-    ...primary,
-    labelKey: 'write.insertWhenCorrected',
-    action: async () => {
-      insertQueued.value = true
-    },
-  }
-})
 </script>
 
 <style scoped>
@@ -285,10 +221,6 @@ const spaceKey = computed<ActionItem | undefined>(() => {
   color: var(--app-text-muted);
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.correction-status.is-error {
-  color: var(--color-warning);
 }
 
 .preview-area {

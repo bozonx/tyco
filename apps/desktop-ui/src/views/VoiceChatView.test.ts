@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   },
   navPanel: { resetNavPanelState: vi.fn() },
   menuModals: { hasOpenModal: false },
+  copyAction: vi.fn(),
   call: vi.fn(),
   callOrNotify: vi.fn(),
 }))
@@ -66,6 +67,13 @@ vi.mock('../stores/nav-panel', () => ({
 }))
 
 vi.mock('../stores/chat', () => ({ useChatStore: () => mocks.chat }))
+vi.mock('../stores/action-menu', () => ({
+  useActionMenuStore: () => ({
+    getDefaultActions: () => [
+      { id: 'copyToClipboard', action: mocks.copyAction },
+    ],
+  }),
+}))
 
 describe('VoiceChatView', () => {
   beforeEach(() => {
@@ -162,6 +170,17 @@ describe('VoiceChatView', () => {
       'Some text'
     )
     expect(mocks.call).not.toHaveBeenCalled()
+  })
+
+  it('copies the result via copyToClipboard action when intent is copy', async () => {
+    const wrapper = mount(VoiceChatView)
+    const menu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+
+    menu.vm.$emit('corrected', 'Copied text', 'Copied text', undefined, 'copy')
+    await flushPromises()
+
+    expect(mocks.copyAction).toHaveBeenCalledWith('Copied text')
+    expect(mocks.callOrNotify).not.toHaveBeenCalled()
   })
 
   it('dismisses quick window on cancel', async () => {

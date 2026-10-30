@@ -217,6 +217,7 @@ async function makeDiff(prompt: string) {
 
   await runStep({
     text: trimmedText,
+    sourceText: props.text,
     operation: 'aiTask',
     pending: { styling: true },
     invoke: (signal) =>

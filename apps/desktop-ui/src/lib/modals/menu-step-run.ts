@@ -28,12 +28,17 @@ export interface MenuStepRunDependencies {
     intent: BufferedPendingAction,
     text: string,
     sourceText: string
-  ) => Promise<void> | void
+  ) => Promise<boolean | void> | boolean | void
 }
 
 export interface MenuStepRunRequest {
   /** The text the tool works on, kept in the history as the source */
   text: string
+  /**
+   * The untrimmed selection `text` came from, when it differs from `text`: used
+   * to replace the exact selection in the editor
+   */
+  sourceText?: string
   operation: EditorHistoryOperation
   /** What the pending screen shows while the tool runs */
   pending: Omit<PendingModalParams, 'onCancel'>
@@ -104,8 +109,12 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
 
       const buffered = deps.consumeBufferedIntent?.()
       if (buffered && deps.executeBufferedIntent) {
-        await deps.executeBufferedIntent(buffered, text, request.text)
-        return
+        const handled = await deps.executeBufferedIntent(
+          buffered,
+          text,
+          request.sourceText ?? request.text
+        )
+        if (handled !== false) return
       }
 
       request.show(text, result)

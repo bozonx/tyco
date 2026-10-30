@@ -48,8 +48,6 @@ export const useCorrectionWorkflowStore = defineStore(
       getCachedCorrection: corrector.getCachedCorrection,
       openStep: (params) =>
         menuModalsStore.nextModal(MenuModals.INSERT, params),
-      updateStep: (id, params) =>
-        menuModalsStore.updateStep(id, MenuModals.INSERT, params),
       setPending: (params) => menuModalsStore.setPendingModal(params),
       clearPending: (owner) =>
         menuModalsStore.clearPendingModal(owner ?? undefined),
@@ -102,9 +100,7 @@ export const useCorrectionWorkflowStore = defineStore(
         }
       },
       reportError: (error) => {
-        const message = describeError(error, translate)
-        toastText(message, 'error')
-        return message
+        toastText(describeError(error, translate), 'error')
       },
       isAborted: isCorrectionAborted,
     })

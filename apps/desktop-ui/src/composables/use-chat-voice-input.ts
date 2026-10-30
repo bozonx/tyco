@@ -2,6 +2,7 @@ import type {
   VoiceFinishBehavior,
   VoiceFinishIntent,
 } from '../lib/stt/voice-finish-intent'
+import { useActionMenuStore } from '../stores/action-menu'
 import { useChatScope } from './use-chat-scope'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 
@@ -11,6 +12,7 @@ import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
  */
 export function useChatVoiceInput() {
   const { chat: chatStore, input: chatInputStore } = useChatScope()
+  const actionMenuStore = useActionMenuStore()
   const menuModalsStore = useMenuModalsStore()
 
   const openChatVoiceInput = (options: {
@@ -39,6 +41,13 @@ export function useChatVoiceInput() {
         intent: VoiceFinishIntent
       ) => {
         menuModalsStore.closeAll()
+        if (intent === 'copy') {
+          const copyAction = actionMenuStore
+            .getDefaultActions()
+            .find((action) => action.id === 'copyToClipboard')
+          void copyAction?.action(text)
+          return
+        }
         chatInputStore.insertText(text)
         // during a reply the text stays in the input
         if (intent === 'submit') void chatStore.sendInput()

@@ -183,6 +183,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
 
       let resultText = recognizedText
       let correctedText: string | undefined
+      let postProcessAborted = false
 
       if (options?.styleRule && deps.voiceStyling) {
         if (!isCurrent()) return
@@ -221,6 +222,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         } catch {
           if (!isCurrent()) return
         } finally {
+          postProcessAborted = styling.signal.aborted
           signal?.removeEventListener('abort', abortStyling)
           deps.clearPendingModal(owner)
         }
@@ -264,6 +266,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           // the request has told the failure; the raw text goes on
           if (!isCurrent()) return
         } finally {
+          postProcessAborted = correction.signal.aborted
           signal?.removeEventListener('abort', abortCorrection)
           deps.clearPendingModal(owner)
         }
@@ -271,7 +274,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
 
       if (!isCurrent()) return
       const buffered = deps.consumeBufferedIntent?.()
-      if (buffered && intent === 'next') {
+      if (buffered && intent === 'next' && !postProcessAborted) {
         intent = buffered
       }
       deps.onCorrected(resultText, recognizedText, correctedText, intent)

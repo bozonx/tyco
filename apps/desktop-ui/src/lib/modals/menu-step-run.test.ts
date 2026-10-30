@@ -176,4 +176,36 @@ describe('menu step run', () => {
     )
     expect(show).not.toHaveBeenCalled()
   })
+
+  it('passes sourceText to executeBufferedIntent and falls back to show when it returns false', async () => {
+    const { deps, menu } = setup()
+    const executeBufferedIntent = vi.fn().mockResolvedValue(false)
+    const runWithBuffered = createMenuStepRun({
+      ...deps,
+      consumeBufferedIntent: menu.consumeBufferedIntent,
+      executeBufferedIntent,
+    })
+    const show = vi.fn()
+    const answer = deferred<ToolResult>()
+    const running = runWithBuffered(
+      request({
+        text: 'source',
+        sourceText: '  source\n',
+        show,
+        invoke: () => {
+          menu.setBufferedIntent('insert')
+          return answer.promise
+        },
+      })
+    )
+    answer.resolve({ ok: true, content: 'result' })
+    await running
+
+    expect(executeBufferedIntent).toHaveBeenCalledWith(
+      'insert',
+      'result',
+      '  source\n'
+    )
+    expect(show).toHaveBeenCalledWith('result', { ok: true, content: 'result' })
+  })
 })

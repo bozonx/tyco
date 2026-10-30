@@ -15,10 +15,19 @@ const mocks = vi.hoisted(() => ({
     nextModal: vi.fn(),
     closeAll: vi.fn(),
   },
+  copyAction: vi.fn(),
 }))
 
 vi.mock('./use-chat-scope', () => ({
   useChatScope: () => ({ chat: mocks.chatStore, input: mocks.chatInputStore }),
+}))
+
+vi.mock('../stores/action-menu', () => ({
+  useActionMenuStore: () => ({
+    getDefaultActions: () => [
+      { id: 'copyToClipboard', action: mocks.copyAction },
+    ],
+  }),
 }))
 
 vi.mock('../stores/menu-modals', () => ({
@@ -79,5 +88,18 @@ describe('useChatVoiceInput', () => {
       'urgent question'
     )
     expect(mocks.chatStore.sendInput).toHaveBeenCalled()
+  })
+
+  it('copies text without inserting into chat when intent is copy', () => {
+    const { openChatVoiceInput } = useChatVoiceInput()
+    openChatVoiceInput({ finishBehavior: 'confirm' })
+
+    const modalParams = mocks.menuModalsStore.nextModal.mock.calls[0][1]
+    modalParams.onCorrected('copied speech', 'speech', undefined, 'copy')
+
+    expect(mocks.menuModalsStore.closeAll).toHaveBeenCalled()
+    expect(mocks.copyAction).toHaveBeenCalledWith('copied speech')
+    expect(mocks.chatInputStore.insertText).not.toHaveBeenCalled()
+    expect(mocks.chatStore.sendInput).not.toHaveBeenCalled()
   })
 })

@@ -117,13 +117,13 @@ describe('createMenuModalsModel', () => {
     const store = createMenuModalsModel()
 
     const lower = store.nextModal(MenuModals.INSERT, { text: 'a' })
-    const upper = store.nextModal(MenuModals.INSERT, { isCorrecting: true })
+    const upper = store.nextModal(MenuModals.INSERT, { correction: true })
 
     expect(store.updateStep(lower, MenuModals.INSERT, { text: 'b' })).toBe(true)
     expect(
-      store.updateStep(upper, MenuModals.INSERT, { isCorrecting: false })
+      store.updateStep(upper, MenuModals.INSERT, { correction: false })
     ).toBe(true)
-    expect(store.currentModalParams.value).toEqual({ isCorrecting: false })
+    expect(store.currentModalParams.value).toEqual({ correction: false })
     expect(store.currentStepId.value).toBe(upper)
 
     store.back()

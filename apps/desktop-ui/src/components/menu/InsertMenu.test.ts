@@ -97,7 +97,7 @@ describe('InsertMenu correction step', () => {
     expect(list.props('spaceKey')?.disabled).toBe(false)
   })
 
-  it('uses menu.actions title by default and menu.correction when isCorrecting', () => {
+  it('uses menu.actions title by default and menu.correction when correction is true', () => {
     const defaultWrapper = mountMenu({ text: 'Some text' })
     expect(
       defaultWrapper.find('[data-testid="layout"]').attributes('data-title')
@@ -114,12 +114,6 @@ describe('InsertMenu correction step', () => {
     const copyButton = wrapper.findComponent(CopyButton)
     expect(copyButton.exists()).toBe(true)
     expect(copyButton.props('value')).toBe('Result to copy')
-  })
-
-  it('hides the copy button while correcting', () => {
-    const wrapper = mountMenu({ text: 'In progress', isCorrecting: true })
-    const copyButton = wrapper.findComponent(CopyButton)
-    expect(copyButton.exists()).toBe(false)
   })
 
   it('switches to original text and updates actions when diff mode is original', async () => {

@@ -29,10 +29,14 @@ function setup(overrides: Record<string, unknown> = {}) {
     }),
     openStep: (params: CorrectionStepParams & CorrectionStepExtra) =>
       menu.nextModal(MenuModals.INSERT, params),
-    updateStep: (id: number, params: Partial<CorrectionStepParams>) =>
-      menu.updateStep(id, MenuModals.INSERT, params),
+    setPending: (params: PendingModalParams) => menu.setPendingModal(params),
+    clearPending: (owner?: number | void) =>
+      menu.clearPendingModal(owner ?? undefined),
+    isPending: (owner: number | void) =>
+      owner !== undefined && menu.isPendingModal(owner),
+    consumeBufferedIntent: menu.consumeBufferedIntent,
     saveResult: vi.fn().mockResolvedValue(undefined),
-    reportError: vi.fn(() => 'failed'),
+    reportError: vi.fn(),
     ...overrides,
   }
   const step = createCorrectionStep(deps)
@@ -40,29 +44,25 @@ function setup(overrides: Record<string, unknown> = {}) {
 }
 
 describe('createCorrectionStep', () => {
-  it('shows the step at once and fills in the correction', async () => {
+  it('shows pending overlay while correcting and opens diff on success', async () => {
     const { menu, request, deps, step } = setup()
     menu.nextModal(MenuModals.INSERT, { text: 'helo' })
 
     const done = step.start('helo')
 
-    expect(menu.menuBreadcrumbs.value).toHaveLength(2)
-    expect(menu.currentModalParams.value).toMatchObject({
-      correction: true,
-      text: 'helo',
-      oldText: '',
-      originalText: 'helo',
-      isCorrecting: true,
-    })
+    expect(menu.pendingModal.value).toMatchObject({ correction: true })
+    expect(menu.menuBreadcrumbs.value).toHaveLength(1)
 
     request.resolve('hello')
     await done
 
+    expect(menu.pendingModal.value).toBeNull()
+    expect(menu.menuBreadcrumbs.value).toHaveLength(2)
     expect(menu.currentModalParams.value).toMatchObject({
       text: 'hello',
       oldText: 'helo',
       originalText: 'helo',
-      isCorrecting: false,
+      correction: true,
       isCorrectionUnchanged: false,
     })
     expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
@@ -77,7 +77,7 @@ describe('createCorrectionStep', () => {
     expect(menu.currentModalParams.value).toMatchObject({
       text: 'hello',
       oldText: 'helo',
-      isCorrecting: false,
+      isCorrectionUnchanged: false,
     })
     expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
   })
@@ -96,34 +96,90 @@ describe('createCorrectionStep', () => {
     })
   })
 
-  it('aborts the correction when the user goes back', async () => {
+  it('passes extra params to the step', async () => {
+    const { menu, request, step } = setup()
+
+    const done = step.start('helo', { isEditorButtonVisible: true })
+    request.resolve('hello')
+    await done
+
+    expect(menu.currentModalParams.value).toHaveProperty(
+      'isEditorButtonVisible',
+      true
+    )
+  })
+
+  it('keeps a newer overlay after an old correction is cancelled', async () => {
+    const { menu, request, step } = setup()
+    const pending = step.start('helo')
+    menu.cancelPending()
+    menu.setPendingModal({ label: 'New request' })
+    request.resolve('Late correction')
+    await pending
+    expect(menu.pendingModal.value).toEqual({ label: 'New request' })
+    expect(menu.currentModal.value).toBe(MenuModals.NONE)
+  })
+
+  it('saves a result without reopening a closed menu', async () => {
+    const { menu, request, deps, step } = setup()
+    const pending = step.start('helo')
+    menu.closeAll()
+    request.resolve('hello')
+    await pending
+    expect(menu.currentModal.value).toBe(MenuModals.NONE)
+    expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
+  })
+
+  it('aborts and clears pending when user cancels without opening a new step', async () => {
     const { menu, request, deps, step, signal } = setup()
     menu.nextModal(MenuModals.INSERT, { text: 'helo' })
 
     const done = step.start('helo')
-    menu.back()
+
+    expect(menu.pendingModal.value).toMatchObject({ correction: true })
+    menu.cancelPending()
 
     expect(signal()?.aborted).toBe(true)
+    expect(menu.pendingModal.value).toBeNull()
+    expect(menu.menuBreadcrumbs.value).toHaveLength(1)
+    expect(menu.currentModalParams.value).toEqual({ text: 'helo' })
+
     request.resolve('hello')
     await done
-
-    expect(menu.currentModalParams.value).toEqual({ text: 'helo' })
     expect(deps.saveResult).not.toHaveBeenCalled()
   })
 
-  it('keeps the text and shows the error when the correction fails', async () => {
+  it('invokes extra.onCancel when provided and user cancels', async () => {
+    const { menu, request, step, signal } = setup()
+    const onCancel = vi.fn()
+
+    const done = step.start('helo', { onCancel })
+
+    expect(menu.pendingModal.value).toMatchObject({ correction: true })
+    menu.cancelPending()
+
+    expect(signal()?.aborted).toBe(true)
+    expect(onCancel).toHaveBeenCalledOnce()
+    expect(menu.pendingModal.value).toBeNull()
+
+    request.resolve('hello')
+    await done
+  })
+
+  it('clears pending and reports error without leaving a failed step on error', async () => {
     const { menu, request, deps, step } = setup()
+    menu.nextModal(MenuModals.INSERT, { text: 'helo' })
 
     const done = step.start('helo')
+    expect(menu.pendingModal.value).toMatchObject({ correction: true })
+
     request.reject(new Error('offline'))
     await done
 
     expect(deps.reportError).toHaveBeenCalledOnce()
-    expect(menu.currentModalParams.value).toMatchObject({
-      text: 'helo',
-      isCorrecting: false,
-      correctionError: 'failed',
-    })
+    expect(menu.pendingModal.value).toBeNull()
+    expect(menu.menuBreadcrumbs.value).toHaveLength(1)
+    expect(menu.currentModalParams.value).toEqual({ text: 'helo' })
   })
 
   it('stops waiting quietly when the correction is aborted elsewhere', async () => {
@@ -134,167 +190,27 @@ describe('createCorrectionStep', () => {
     await done
 
     expect(deps.reportError).not.toHaveBeenCalled()
-    expect(menu.currentModalParams.value).toMatchObject({
-      text: 'helo',
-      isCorrecting: false,
-    })
-    expect(menu.currentModalParams.value).not.toHaveProperty('correctionError')
+    expect(menu.pendingModal.value).toBeNull()
+    expect(menu.currentModal.value).toBe(MenuModals.NONE)
   })
 
-  it('passes extra params to the step', () => {
-    const { menu, step } = setup()
+  it('executes buffered intent directly and skips opening the step when handled', async () => {
+    const executeBufferedIntent = vi.fn().mockResolvedValue(true)
+    const { menu, request, deps, step } = setup({ executeBufferedIntent })
 
-    void step.start('helo', { isEditorButtonVisible: true })
+    const done = step.start('helo', { insertOnly: true })
+    menu.setBufferedIntent('insert')
+    request.resolve('hello')
+    await done
 
-    expect(menu.currentModalParams.value).toHaveProperty(
-      'isEditorButtonVisible',
-      true
+    expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
+    expect(executeBufferedIntent).toHaveBeenCalledWith(
+      'insert',
+      'hello',
+      'helo',
+      { insertOnly: true }
     )
-  })
-
-  describe('with setPending and clearPending', () => {
-    function setupPending() {
-      const menu = createMenuModalsModel()
-      const request = deferred<string>()
-      let signal: AbortSignal | undefined
-      const deps = {
-        correct: vi.fn((_text: string, s: AbortSignal) => {
-          signal = s
-          return request.promise
-        }),
-        openStep: (params: CorrectionStepParams & CorrectionStepExtra) =>
-          menu.nextModal(MenuModals.INSERT, params),
-        setPending: (params: PendingModalParams) =>
-          menu.setPendingModal(params),
-        clearPending: (owner?: number | void) =>
-          menu.clearPendingModal(owner ?? undefined),
-        isPending: (owner: number | void) =>
-          owner !== undefined && menu.isPendingModal(owner),
-        consumeBufferedIntent: menu.consumeBufferedIntent,
-        saveResult: vi.fn().mockResolvedValue(undefined),
-        reportError: vi.fn(() => 'failed'),
-      }
-      const step = createCorrectionStep(deps)
-      return { menu, request, deps, step, signal: () => signal }
-    }
-
-    it('keeps a newer overlay after an old correction is cancelled', async () => {
-      const { menu, request, step } = setupPending()
-      const pending = step.start('helo')
-      menu.cancelPending()
-      menu.setPendingModal({ label: 'New request' })
-      request.resolve('Late correction')
-      await pending
-      expect(menu.pendingModal.value).toEqual({ label: 'New request' })
-      expect(menu.currentModal.value).toBe(MenuModals.NONE)
-    })
-
-    it('saves a result without reopening a closed menu', async () => {
-      const { menu, request, deps, step } = setupPending()
-      const pending = step.start('helo')
-      menu.closeAll()
-      request.resolve('hello')
-      await pending
-      expect(menu.currentModal.value).toBe(MenuModals.NONE)
-      expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
-    })
-    it('shows pending overlay while isCorrecting and opens diff on success', async () => {
-      const { menu, request, deps, step } = setupPending()
-      menu.nextModal(MenuModals.INSERT, { text: 'helo' })
-
-      const done = step.start('helo')
-
-      expect(menu.pendingModal.value).toMatchObject({ correction: true })
-      expect(menu.menuBreadcrumbs.value).toHaveLength(1)
-
-      request.resolve('hello')
-      await done
-
-      expect(menu.pendingModal.value).toBeNull()
-      expect(menu.menuBreadcrumbs.value).toHaveLength(2)
-      expect(menu.currentModalParams.value).toMatchObject({
-        text: 'hello',
-        oldText: 'helo',
-        originalText: 'helo',
-        correction: true,
-      })
-      expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
-    })
-
-    it('aborts and clears pending when user cancels without opening a new step', async () => {
-      const { menu, request, deps, step, signal } = setupPending()
-      menu.nextModal(MenuModals.INSERT, { text: 'helo' })
-
-      const done = step.start('helo')
-
-      expect(menu.pendingModal.value).toMatchObject({ correction: true })
-      menu.cancelPending()
-
-      expect(signal()?.aborted).toBe(true)
-      expect(menu.pendingModal.value).toBeNull()
-      expect(menu.menuBreadcrumbs.value).toHaveLength(1)
-      expect(menu.currentModalParams.value).toEqual({ text: 'helo' })
-
-      request.resolve('hello')
-      await done
-      expect(deps.saveResult).not.toHaveBeenCalled()
-    })
-
-    it('invokes extra.onCancel when provided and user cancels', async () => {
-      const { menu, request, step, signal } = setupPending()
-      const onCancel = vi.fn()
-
-      const done = step.start('helo', { onCancel })
-
-      expect(menu.pendingModal.value).toMatchObject({ correction: true })
-      menu.cancelPending()
-
-      expect(signal()?.aborted).toBe(true)
-      expect(onCancel).toHaveBeenCalledOnce()
-      expect(menu.pendingModal.value).toBeNull()
-
-      request.resolve('hello')
-      await done
-    })
-
-    it('clears pending and reports error without leaving a failed step on error', async () => {
-      const { menu, request, deps, step } = setupPending()
-      menu.nextModal(MenuModals.INSERT, { text: 'helo' })
-
-      const done = step.start('helo')
-      expect(menu.pendingModal.value).toMatchObject({ correction: true })
-
-      request.reject(new Error('offline'))
-      await done
-
-      expect(deps.reportError).toHaveBeenCalledOnce()
-      expect(menu.pendingModal.value).toBeNull()
-      expect(menu.menuBreadcrumbs.value).toHaveLength(1)
-      expect(menu.currentModalParams.value).toEqual({ text: 'helo' })
-    })
-
-    it('executes buffered intent directly and skips opening the step when handled', async () => {
-      const { menu, request, deps } = setupPending()
-      const executeBufferedIntent = vi.fn().mockResolvedValue(true)
-      const stepWithBuffered = createCorrectionStep({
-        ...deps,
-        executeBufferedIntent,
-      })
-
-      const done = stepWithBuffered.start('helo', { insertOnly: true })
-      menu.setBufferedIntent('insert')
-      request.resolve('hello')
-      await done
-
-      expect(deps.saveResult).toHaveBeenCalledWith('helo', 'hello')
-      expect(executeBufferedIntent).toHaveBeenCalledWith(
-        'insert',
-        'hello',
-        'helo',
-        { insertOnly: true }
-      )
-      expect(menu.currentModal.value).toBe(MenuModals.NONE)
-    })
+    expect(menu.currentModal.value).toBe(MenuModals.NONE)
   })
 })
 
@@ -304,10 +220,11 @@ describe('correction step disposal', () => {
     const pending = step.start('helo')
     step.dispose()
     expect(signal()?.aborted).toBe(true)
+    expect(menu.pendingModal.value).toBeNull()
     request.resolve('hello')
     await pending
     expect(deps.saveResult).not.toHaveBeenCalled()
-    expect(menu.currentModalParams.value).toHaveProperty('text', 'helo')
+    expect(menu.currentModal.value).toBe(MenuModals.NONE)
     await step.start('again')
     expect(deps.correct).toHaveBeenCalledOnce()
   })
