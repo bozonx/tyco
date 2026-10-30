@@ -20,6 +20,7 @@
     <InsertMenu
       v-else
       :text="dictationResultText"
+      :old-text="dictationOldText"
       :allow-insert-button="true"
       :shortcuts-disabled="menuModalsStore.hasOpenModal"
     />
@@ -66,8 +67,13 @@ navPanelStore.resetNavPanelState({ panelVisible: false })
 
 /** Only the quick window is opened by the `voice` activation */
 const activationMode = isQuickWindow() ? ('voice' as const) : undefined
-const { isInsertMenuVisible, dictationResultText, showResult, resetResult } =
-  useVoiceResultStep(() => activationMode)
+const {
+  isInsertMenuVisible,
+  dictationResultText,
+  dictationOldText,
+  showResult,
+  resetResult,
+} = useVoiceResultStep(() => activationMode)
 
 watch(isInsertMenuVisible, (shown) => emit('result-shown', shown), {
   immediate: true,
@@ -88,7 +94,7 @@ watch(
 
 function handleCorrected(
   resultText: string,
-  _recognizedText: string,
+  recognizedText: string,
   _correctedText: string | undefined,
   intent: VoiceFinishIntent
 ) {
@@ -107,7 +113,7 @@ function handleCorrected(
     void insertAction.action(resultText)
     return
   }
-  showResult(resultText)
+  showResult(resultText, recognizedText !== resultText ? recognizedText : '')
 }
 
 function handleCancelled() {

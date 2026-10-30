@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useMenuModalsStore } from '../../stores/menu-modals'
+import CopyButton from '../common/CopyButton.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
 import InsertMenu from './InsertMenu.vue'
 
@@ -34,7 +35,7 @@ const mountMenu = (props: Record<string, unknown>) =>
         ActionOverlayLayout: {
           props: ['title'],
           template:
-            '<div data-testid="layout" :data-title="title"><slot name="preview" /><slot name="actions" /></div>',
+            '<div data-testid="layout" :data-title="title"><slot name="header-extra" /><slot name="preview" /><slot name="actions" /></div>',
         },
       },
     },
@@ -106,6 +107,19 @@ describe('InsertMenu correction step', () => {
     expect(
       correctionWrapper.find('[data-testid="layout"]').attributes('data-title')
     ).toBe('menu.correction')
+  })
+
+  it('renders a copy button for the result when text is present', () => {
+    const wrapper = mountMenu({ text: 'Result to copy' })
+    const copyButton = wrapper.findComponent(CopyButton)
+    expect(copyButton.exists()).toBe(true)
+    expect(copyButton.props('value')).toBe('Result to copy')
+  })
+
+  it('hides the copy button while correcting', () => {
+    const wrapper = mountMenu({ text: 'In progress', isCorrecting: true })
+    const copyButton = wrapper.findComponent(CopyButton)
+    expect(copyButton.exists()).toBe(false)
   })
 })
 

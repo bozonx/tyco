@@ -383,6 +383,11 @@ describe('voice recognition failures', () => {
     const { deps, model } = setup({ voiceStyling: stylingFn })
     await model.startSession()
     await model.finishWithStyle('make it punchy')
+    expect(deps.saveSource).toHaveBeenCalledWith('Raw words', 'voiceCorrection')
+    expect(deps.saveSourceResult).toHaveBeenCalledWith(
+      'source-id',
+      'Styled words'
+    )
     expect(stylingFn).toHaveBeenCalledWith(
       'Raw words',
       'make it punchy',
@@ -390,6 +395,28 @@ describe('voice recognition failures', () => {
     )
     expect(deps.setPendingModal).toHaveBeenCalledWith(
       expect.objectContaining({ styling: true })
+    )
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Styled words',
+      'Raw words',
+      'Styled words',
+      'next'
+    )
+    model.dispose()
+  })
+
+  it('styles text even when its history copy cannot be saved', async () => {
+    const stylingFn = vi.fn().mockResolvedValue('Styled words')
+    const { deps, model } = setup({
+      voiceStyling: stylingFn,
+      saveSource: vi.fn().mockRejectedValue(new Error('Disk full')),
+      saveSourceResult: vi.fn().mockRejectedValue(new Error('Disk full')),
+    })
+    await model.startSession()
+    await model.finishWithStyle('make it punchy')
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'history.operationFailed',
+      'error'
     )
     expect(deps.onCorrected).toHaveBeenCalledWith(
       'Styled words',

@@ -39,7 +39,7 @@ vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
 vi.mock('../components/menu/InsertMenu.vue', () => ({
   default: {
     name: 'InsertMenu',
-    props: ['text', 'allowInsertButton', 'shortcutsDisabled'],
+    props: ['text', 'oldText', 'allowInsertButton', 'shortcutsDisabled'],
     template: '<div class="insert-menu" />',
   },
 }))

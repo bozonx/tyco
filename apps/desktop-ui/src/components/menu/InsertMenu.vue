@@ -3,7 +3,11 @@
     :title="props.correction ? t('menu.correction') : t('menu.actions')"
   >
     <template
-      v-if="statusVisible || (hasDiff && !props.correctionError)"
+      v-if="
+        statusVisible ||
+        (hasDiff && !props.correctionError) ||
+        (props.text && !props.isCorrecting)
+      "
       #header-extra
     >
       <ResultViewModeToggle
@@ -25,6 +29,12 @@
         <AppIcon v-else icon="mdi:check" size="sm" />
         {{ statusText }}
       </span>
+      <CopyButton
+        v-if="props.text && !props.isCorrecting"
+        :value="props.text"
+        :label="t('action.copy')"
+        size="sm"
+      />
     </template>
 
     <template #preview>
@@ -73,6 +83,7 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
+import CopyButton from '../common/CopyButton.vue'
 import Diff from '../common/Diff.vue'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'

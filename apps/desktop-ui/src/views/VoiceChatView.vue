@@ -14,6 +14,7 @@
     <InsertMenu
       v-else
       :text="dictationResultText"
+      :old-text="dictationOldText"
       :allow-insert-button="true"
       :shortcuts-disabled="menuModalsStore.hasOpenModal"
     />
@@ -46,8 +47,13 @@ navPanelStore.resetNavPanelState({ panelVisible: false })
 /** The user removed the context of this activation */
 const contextRemoved = ref(false)
 /** The dictated text went to the actions step instead of the chat */
-const { isInsertMenuVisible, dictationResultText, showResult, resetResult } =
-  useVoiceResultStep(() => 'voiceChat')
+const {
+  isInsertMenuVisible,
+  dictationResultText,
+  dictationOldText,
+  showResult,
+  resetResult,
+} = useVoiceResultStep(() => 'voiceChat')
 
 watch(
   () => desktopStore.desktopState.activationId,
@@ -63,7 +69,7 @@ const context = computed(() =>
 
 async function handleCorrected(
   resultText: string,
-  _recognizedText: string,
+  recognizedText: string,
   _correctedText: string | undefined,
   intent: VoiceFinishIntent
 ) {
@@ -72,7 +78,7 @@ async function handleCorrected(
     return
   }
   if (intent === 'next') {
-    showResult(resultText)
+    showResult(resultText, recognizedText !== resultText ? recognizedText : '')
     return
   }
 

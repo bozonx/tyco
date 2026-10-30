@@ -185,6 +185,14 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
 
       if (options?.styleRule && deps.voiceStyling) {
         if (!isCurrent()) return
+        let sourceId: string | null = null
+        try {
+          sourceId = await deps.saveSource(recognizedText, 'voiceCorrection')
+        } catch {
+          // the text is still here; only its copy in the history is missing
+          toastKey('history.operationFailed', 'error')
+        }
+        if (!isCurrent()) return
         const styling = new AbortController()
         const abortStyling = () => styling.abort()
         signal?.addEventListener('abort', abortStyling)
@@ -204,6 +212,9 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           if (!styling.signal.aborted && styledText.trim()) {
             resultText = styledText
             correctedText = styledText
+            await deps.saveSourceResult(sourceId, styledText).catch(() => {
+              toastKey('history.operationFailed', 'error')
+            })
           }
         } catch {
           if (!isCurrent()) return

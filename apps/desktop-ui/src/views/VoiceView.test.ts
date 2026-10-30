@@ -56,7 +56,7 @@ vi.mock('../components/menu/VoiceRecognitionMenu.vue', () => ({
 vi.mock('../components/menu/InsertMenu.vue', () => ({
   default: {
     name: 'InsertMenu',
-    props: ['text', 'allowInsertButton', 'shortcutsDisabled'],
+    props: ['text', 'oldText', 'allowInsertButton', 'shortcutsDisabled'],
     template:
       '<div class="insert-menu-stub" :data-text="text" :data-disabled="shortcutsDisabled" />',
   },
@@ -184,9 +184,9 @@ describe('VoiceView.vue', () => {
 
     voiceMenu.vm.$emit(
       'corrected',
-      'Review text',
-      'Review text',
-      undefined,
+      'Styled result',
+      'Raw transcript',
+      'Styled result',
       'next'
     )
     await flushPromises()
@@ -194,6 +194,8 @@ describe('VoiceView.vue', () => {
     expect(mocks.insertAction).not.toHaveBeenCalled()
     const insertMenu = wrapper.findComponent({ name: 'InsertMenu' })
     expect(insertMenu.exists()).toBe(true)
+    expect(insertMenu.props('text')).toBe('Styled result')
+    expect(insertMenu.props('oldText')).toBe('Raw transcript')
   })
 
   it('starts a new dictation when its hotkey comes again in the actions step', async () => {
