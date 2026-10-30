@@ -116,6 +116,7 @@ export interface HotkeysConfig {
   translation: string
   styling: string
   transformation: string
+  history: string
   voiceCommands: string
   selectionCorrection: string
 }

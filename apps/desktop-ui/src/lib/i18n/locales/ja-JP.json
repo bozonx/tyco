@@ -708,6 +708,7 @@
       "chat": "選択テキストをAIチャットのコンテキストとして使用",
       "correction": "プレビュー付き校正",
       "editor": "選択テキストをエディターで開く",
+      "history": "履歴",
       "quickInput": "クイックテキスト入力",
       "selectionActions": "選択テキストのアクション",
       "selectionCorrection": "選択テキストを直接校正",

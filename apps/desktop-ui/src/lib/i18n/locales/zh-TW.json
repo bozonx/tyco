@@ -705,6 +705,7 @@
       "chat": "在 AI 聊天中將選取的文字作為上下文",
       "correction": "帶預覽的校對",
       "editor": "在編輯器中開啟選取的文字",
+      "history": "歷史記錄",
       "quickInput": "快速文字輸入",
       "selectionActions": "選取文字動作",
       "selectionCorrection": "在原地校對選取的文字",

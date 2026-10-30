@@ -705,6 +705,7 @@
       "chat": "선택한 텍스트를 AI 채팅의 컨텍스트로 사용",
       "correction": "미리보기가 포함된 교정",
       "editor": "선택한 텍스트를 편집기에서 열기",
+      "history": "기록",
       "quickInput": "빠른 텍스트 입력",
       "selectionActions": "선택 영역 작업",
       "selectionCorrection": "선택한 텍스트를 그 자리에서 교정",

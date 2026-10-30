@@ -711,6 +711,7 @@
       "chat": "Koristi odabrani tekst kao kontekst u AI chatu",
       "correction": "Ispravak s pregledom",
       "editor": "Otvori odabrani tekst u uređivaču",
+      "history": "Povijest",
       "quickInput": "Brzi unos teksta",
       "selectionActions": "Radnje nad odabirom",
       "selectionCorrection": "Ispravi odabrani tekst na mjestu",

@@ -12,7 +12,6 @@ describe('hotkeys', () => {
     const expectedModes = [
       ...Object.values(ActivationMode).filter(
         (mode) =>
-          mode !== ActivationMode.HISTORY &&
           mode !== ActivationMode.CONFIG &&
           mode !== ActivationMode.EXTERNAL_ACCESS &&
           mode !== ActivationMode.COMMAND_LAUNCHER

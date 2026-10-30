@@ -711,6 +711,7 @@
       "chat": "Use selected text as context in AI chat",
       "correction": "Correction with preview",
       "editor": "Open selected text in the editor",
+      "history": "History",
       "quickInput": "Quick text input",
       "selectionActions": "Selection actions",
       "selectionCorrection": "Correct selected text in place",

@@ -708,6 +708,7 @@
       "chat": "Kijelölt szöveg kontextusként az MI-csevegésben",
       "correction": "Javítás előnézettel",
       "editor": "Kijelölt szöveg megnyitása a szerkesztőben",
+      "history": "Előzmények",
       "quickInput": "Gyors szövegbevitel",
       "selectionActions": "Műveletek a kijelöléssel",
       "selectionCorrection": "Kijelölt szöveg helyben javítása",

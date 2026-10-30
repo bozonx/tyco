@@ -711,6 +711,7 @@
       "chat": "Ausgewählten Text als Kontext im KI-Chat verwenden",
       "correction": "Korrektur mit Vorschau",
       "editor": "Ausgewählten Text im Editor öffnen",
+      "history": "Verlauf",
       "quickInput": "Schnelle Texteingabe",
       "selectionActions": "Aktionen für die Auswahl",
       "selectionCorrection": "Ausgewählten Text direkt korrigieren",

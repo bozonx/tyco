@@ -705,6 +705,7 @@
       "chat": "将选中文本作为上下文用于 AI 对话",
       "correction": "带预览的文本纠错",
       "editor": "在编辑器中打开选中文本",
+      "history": "历史记录",
       "quickInput": "快捷文本输入",
       "selectionActions": "选区操作",
       "selectionCorrection": "就地纠错选中文本",

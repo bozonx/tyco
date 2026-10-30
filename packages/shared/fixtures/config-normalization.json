@@ -215,7 +215,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -593,7 +594,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -958,7 +960,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1323,7 +1326,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1690,7 +1694,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2048,7 +2053,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2411,7 +2417,8 @@
         "transformation": "",
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2796,7 +2803,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3169,7 +3177,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": ""
+        "voiceCommands": "",
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {

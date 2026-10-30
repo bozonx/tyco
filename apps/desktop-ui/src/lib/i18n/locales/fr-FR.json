@@ -711,6 +711,7 @@
       "chat": "Utiliser le texte sélectionné comme contexte dans le chat IA",
       "correction": "Correction avec aperçu",
       "editor": "Ouvrir le texte sélectionné dans l’éditeur",
+      "history": "Historique",
       "quickInput": "Saisie rapide de texte",
       "selectionActions": "Actions sur la sélection",
       "selectionCorrection": "Corriger le texte sélectionné sur place",

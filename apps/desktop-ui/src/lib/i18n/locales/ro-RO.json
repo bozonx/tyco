@@ -711,6 +711,7 @@
       "chat": "Folosește textul selectat ca context în chatul AI",
       "correction": "Corectare cu previzualizare",
       "editor": "Deschide textul selectat în editor",
+      "history": "Istoric",
       "quickInput": "Introducere rapidă de text",
       "selectionActions": "Acțiuni pentru selecție",
       "selectionCorrection": "Corectează textul selectat pe loc",

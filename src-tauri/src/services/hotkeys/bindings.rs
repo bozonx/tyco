@@ -102,7 +102,7 @@ pub(crate) struct HotkeyBinding {
 }
 
 /// The command overlay opens by the hotkeys of its pages, see `launcherPages`.
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 12] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 13] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
@@ -115,6 +115,7 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 12] = [
     ActivationMode::Translation,
     ActivationMode::Styling,
     ActivationMode::Transformation,
+    ActivationMode::History,
 ];
 
 /// Every global hotkey, assigned or not: a configured shortcut wins, an
@@ -358,6 +359,10 @@ mod tests {
             default_hotkeys_config().get("editor"),
             Some(&Value::String(String::new()))
         );
+        assert_eq!(
+            default_hotkeys_config().get("history"),
+            Some(&Value::String(String::new()))
+        );
     }
 
     #[test]
@@ -428,13 +433,25 @@ mod tests {
     }
 
     #[test]
-    fn does_not_bind_history_or_config_modes() {
+    fn does_not_bind_config_mode() {
         let bindings = bindings_from_config(&json!({
-            "hotkeys": { "history": "Ctrl+Alt+H", "config": "Ctrl+Alt+Comma" }
+            "hotkeys": { "config": "Ctrl+Alt+Comma" }
         }));
-        assert!(bindings.iter().all(|binding| binding.target
-            != HotkeyTarget::Mode(ActivationMode::History)
-            && binding.target != HotkeyTarget::Mode(ActivationMode::Config)));
+        assert!(bindings
+            .iter()
+            .all(|binding| binding.target != HotkeyTarget::Mode(ActivationMode::Config)));
+    }
+
+    #[test]
+    fn binds_history_mode_when_configured() {
+        let bindings = bindings_from_config(&json!({
+            "hotkeys": { "history": "Ctrl+Alt+H" }
+        }));
+        let history_binding = bindings
+            .iter()
+            .find(|binding| binding.target == HotkeyTarget::Mode(ActivationMode::History))
+            .expect("history binding present");
+        assert_eq!(history_binding.shortcut.as_deref(), Some("Ctrl+Alt+H"));
     }
 
     #[test]
@@ -531,7 +548,10 @@ mod tests {
             global_target("selectionCorrection"),
             Some(HotkeyTarget::InlineCorrection)
         );
-        assert_eq!(global_target("history"), None);
+        assert_eq!(
+            global_target("history"),
+            Some(HotkeyTarget::Mode(ActivationMode::History))
+        );
         assert_eq!(global_target("config"), None);
         assert_eq!(global_target("replace.translate.0"), None);
         assert_eq!(global_target("bogus"), None);

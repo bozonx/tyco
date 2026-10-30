@@ -110,6 +110,7 @@
         "translation": { "type": "string", "default": "" },
         "styling": { "type": "string", "default": "" },
         "transformation": { "type": "string", "default": "" },
+        "history": { "type": "string", "default": "" },
         "voiceCommands": { "type": "string", "default": "Ctrl+Alt+Shift+X" },
         "selectionCorrection": {
           "type": "string",
@@ -128,6 +129,7 @@
         "translation",
         "styling",
         "transformation",
+        "history",
         "voiceCommands",
         "selectionCorrection"
       ],

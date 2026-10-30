@@ -711,6 +711,7 @@
       "chat": "Użyj zaznaczonego tekstu jako kontekstu w czacie AI",
       "correction": "Korekta z podglądem",
       "editor": "Otwórz zaznaczony tekst w edytorze",
+      "history": "Historia",
       "quickInput": "Szybkie wprowadzanie tekstu",
       "selectionActions": "Akcje na zaznaczeniu",
       "selectionCorrection": "Popraw zaznaczony tekst w miejscu",
