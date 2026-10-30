@@ -1021,7 +1021,7 @@
     "translationCorrectionPromptInfo": "「常に実行」モードでの校正に対する追加の指示。",
     "translationGlossary": "用語集",
     "translationGlossaryInfo": "翻訳ルール（1行に1項目）:\n\n• 原文 = 訳文 — 翻訳先の言語にかかわらず、常にこの訳語を使います。\n\n• 原文 = コード: 訳文; コード: 訳文 — 特定の言語用の訳語（es や pt-BR などのコード。es は es-AR にも適用）。コードのない訳語はその他の言語に使われます。\n例: workspace = ja: ワークスペース; es: espacio de trabajo\n\n• !除外語（翻訳しない単語）\n例: !TyCo",
-    "translationGlossaryMachineHint": "DeepLおよびGoogle Translateでは、「=」ルールは翻訳後の校正が有効な場合にのみ適用されます。",
+    "translationGlossaryMachineHint": "校正が無効な場合、DeepLとGoogleでは未翻訳の用語（!用語）のみが保持されます。翻訳ルール（=）を適用するには、翻訳後の校正を有効にしてください。",
     "translationGlossaryPlaceholder": "workspace = ja: ワークスペース; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "利用不可",
     "translationProvider": "翻訳方法",

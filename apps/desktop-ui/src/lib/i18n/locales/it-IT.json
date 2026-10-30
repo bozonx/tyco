@@ -1024,7 +1024,7 @@
     "translationCorrectionPromptInfo": "Istruzioni aggiuntive per la correzione in modalità «Sempre», ad es. «rendi il testo colloquiale» o «mantieni la terminologia coerente». Vengono aggiunte al prompt di sistema e alle istruzioni di traduzione senza sostituirli.",
     "translationGlossary": "Glossario",
     "translationGlossaryInfo": "Regole di traduzione (una voce per riga):\n\n• Termine = Traduzione: traduci sempre la parola o la frase così, qualunque sia la lingua di destinazione.\n\n• Termine = codice: Traduzione; codice: Traduzione: una traduzione propria per lingue specifiche (un codice come es o pt-BR; es vale anche per es-AR). La traduzione senza codice vale per le altre lingue.\nEsempio: workspace = it: spazio di lavoro; es: espacio de trabajo\n\n• !Termine: non tradurre la parola o la frase (lasciala invariata in tutto il testo).\nEsempio: !TyCo\n(Un punto esclamativo a inizio riga protegge l’intera frase che segue.)\n\n«!» funziona con qualsiasi metodo di traduzione. Un modello IA applica subito le regole «=»; con DeepL e Google vengono solo verificate e corrette se la correzione dopo la traduzione è attiva.",
-    "translationGlossaryMachineHint": "Con DeepL e Google, le regole «=» si applicano solo se la correzione dopo la traduzione è attiva; «!» funziona sempre.",
+    "translationGlossaryMachineHint": "Con DeepL e Google senza correzione funzionano solo i termini non tradotti (!termine). Per applicare le regole di traduzione (=), attiva la correzione dopo la traduzione.",
     "translationGlossaryPlaceholder": "workspace = it: spazio di lavoro; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "non disponibile",
     "translationProvider": "Metodo di traduzione",

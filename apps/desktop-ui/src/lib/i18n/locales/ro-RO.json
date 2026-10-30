@@ -1024,7 +1024,7 @@
     "translationCorrectionPromptInfo": "Instrucțiuni suplimentare pentru corectarea în modul „Întotdeauna”, de ex. „fă textul colocvial” sau „păstrează terminologia consecventă”. Sunt adăugate la promptul de sistem și la instrucțiunile de traducere, fără a le înlocui.",
     "translationGlossary": "Glosar",
     "translationGlossaryInfo": "Reguli de traducere (o intrare pe rând):\n\n• Termen = Traducere – traduceți întotdeauna cuvântul sau expresia astfel, indiferent de limba țintă.\n\n• Termen = cod: Traducere; cod: Traducere – o traducere proprie pentru anumite limbi (un cod precum es sau pt-BR; es este valabil și pentru es-AR). Traducerea fără cod se aplică celorlalte limbi.\nExemplu: workspace = ro: spațiu de lucru; es: espacio de trabajo\n\n• !Termen – nu traduceți cuvântul sau expresia (rămâne neschimbat în tot textul).\nExemplu: !TyCo\n(Un semn de exclamare la începutul rândului protejează întreaga expresie care urmează.)\n\n„!” funcționează cu orice metodă de traducere. Un model AI aplică regulile „=” imediat; cu DeepL și Google ele sunt doar verificate și corectate dacă este activată corectarea după traducere.",
-    "translationGlossaryMachineHint": "Cu DeepL și Google, regulile „=” se aplică doar dacă este activată corectarea după traducere; „!” funcționează întotdeauna.",
+    "translationGlossaryMachineHint": "Cu DeepL și Google fără corectare funcționează doar termenii netraduși (!termen). Pentru a aplica reguli de traducere (=), activați corectarea după traducere.",
     "translationGlossaryPlaceholder": "workspace = ro: spațiu de lucru; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "indisponibil",
     "translationProvider": "Metoda de traducere",

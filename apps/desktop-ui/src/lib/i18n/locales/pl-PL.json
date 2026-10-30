@@ -1024,7 +1024,7 @@
     "translationCorrectionPromptInfo": "Dodatkowe instrukcje dla korekty w trybie „Zawsze”, np. „nadaj tekstowi potoczny styl” lub „zachowaj spójną terminologię”. Są dodawane do promptu systemowego i instrukcji tłumaczenia, nie zastępując ich.",
     "translationGlossary": "Słowniczek",
     "translationGlossaryInfo": "Zasady tłumaczenia (jeden wpis na wiersz):\n\n• Termin = Tłumaczenie — zawsze tłumacz słowo lub wyrażenie w ten sposób, niezależnie od języka docelowego.\n\n• Termin = kod: Tłumaczenie; kod: Tłumaczenie — osobne tłumaczenie dla wybranych języków (kod taki jak es lub pt-BR; es obejmuje też es-AR). Tłumaczenie bez kodu obowiązuje dla pozostałych języków.\nPrzykład: workspace = pl: przestrzeń robocza; es: espacio de trabajo\n\n• !Termin — nie tłumacz słowa lub wyrażenia (zostaw bez zmian w całym tekście).\nPrzykład: !TyCo\n(Wykrzyknik na początku wiersza chroni całe następujące po nim wyrażenie.)\n\n„!” działa z każdą metodą tłumaczenia. Model AI stosuje reguły „=” od razu; przy DeepL i Google są one tylko sprawdzane i poprawiane, gdy włączona jest korekta po tłumaczeniu.",
-    "translationGlossaryMachineHint": "Przy DeepL i Google reguły „=” są stosowane tylko z włączoną korektą po tłumaczeniu; „!” działa zawsze.",
+    "translationGlossaryMachineHint": "W DeepL i Google bez korekty działają tylko nieprzetłumaczone terminy (!termin). Aby stosować reguły tłumaczenia (=), włącz korektę po tłumaczeniu.",
     "translationGlossaryPlaceholder": "workspace = pl: przestrzeń robocza; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "niedostępny",
     "translationProvider": "Metoda tłumaczenia",

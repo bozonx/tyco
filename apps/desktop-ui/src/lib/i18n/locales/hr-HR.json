@@ -1024,7 +1024,7 @@
     "translationCorrectionPromptInfo": "Dodatne upute za ispravak u načinu „Uvijek”, npr. „neka tekst bude razgovorni” ili „drži dosljednu terminologiju”. Dodaju se sistemskom promptu i uputama za prevođenje, a ne zamjenjuju ih.",
     "translationGlossary": "Pojmovnik",
     "translationGlossaryInfo": "Pravila prevođenja (jedan unos po retku):\n\n• Pojam = Prijevod – riječ ili izraz uvijek prevesti ovako, na koji god jezik se prevodi.\n\n• Pojam = kôd: Prijevod; kôd: Prijevod – zaseban prijevod za određene jezike (kôd poput es ili pt-BR; es vrijedi i za es-AR). Prijevod bez kôda vrijedi za ostale jezike.\nPrimjer: workspace = hr: radni prostor; es: espacio de trabajo\n\n• !Pojam – riječ ili izraz ne prevoditi (ostaje nepromijenjen u cijelom tekstu).\nPrimjer: !TyCo\n(Uskličnik na početku retka štiti cijeli izraz iza njega.)\n\n„!” radi sa svakim načinom prevođenja. AI model odmah primjenjuje pravila „=”; s DeepL-om i Googleom ona se samo provjeravaju i ispravljaju kad je uključen ispravak nakon prijevoda.",
-    "translationGlossaryMachineHint": "S DeepL-om i Googleom pravila „=” primjenjuju se samo uz uključen ispravak nakon prijevoda; „!” radi uvijek.",
+    "translationGlossaryMachineHint": "S DeepL-om i Googleom bez ispravka vrijede samo neprevedeni pojmovi (!pojam). Za primjenu pravila prijevoda (=) uključite ispravak nakon prijevoda.",
     "translationGlossaryPlaceholder": "workspace = hr: radni prostor; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "nedostupno",
     "translationProvider": "Način prevođenja",

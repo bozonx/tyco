@@ -1018,7 +1018,7 @@
     "translationCorrectionPromptInfo": "\"항상\" 모드에서의 교정을 위한 추가 지시 사항입니다(예: \"대화체로 작성\", \"일관된 용어 유지\"). 시스템 프롬프트 및 번역 지시 사항을 대체하지 않고 추가됩니다.",
     "translationGlossary": "용어집",
     "translationGlossaryInfo": "번역 규칙 (한 줄에 하나씩 입력):\n\n• 용어 = 번역 — 대상 언어와 관계없이 단어나 문구를 항상 이렇게 번역합니다.\n\n• 용어 = 코드: 번역; 코드: 번역 — 특정 언어용 번역을 따로 지정합니다 (es, pt-BR 같은 코드, es는 es-AR에도 적용). 코드 없는 번역은 나머지 언어에 적용됩니다.\n예: workspace = ko: 작업 공간; es: espacio de trabajo\n\n• !용어 — 단어나 문구를 번역하지 않습니다 (전체 텍스트에서 그대로 유지).\n예: !TyCo\n(줄 시작 부분의 느낌표는 그 뒤의 전체 문구를 보호합니다).\n\n\"!\"는 모든 번역 방식에서 작동합니다. AI 모델은 \"=\" 규칙을 즉시 적용하지만, DeepL과 Google에서는 번역 후 교정이 활성화된 경우에만 검사 및 수정됩니다.",
-    "translationGlossaryMachineHint": "DeepL과 Google에서는 번역 후 교정이 활성화된 경우에만 \"=\" 규칙이 적용됩니다. \"!\"는 항상 작동합니다.",
+    "translationGlossaryMachineHint": "교정이 꺼진 상태에서 DeepL과 Google은 번역하지 않는 용어(!용어)만 지원합니다. 번역 규칙(=)을 적용하려면 번역 후 교정을 활성화하세요.",
     "translationGlossaryPlaceholder": "workspace = ko: 작업 공간; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "사용 불가",
     "translationProvider": "번역 방식",

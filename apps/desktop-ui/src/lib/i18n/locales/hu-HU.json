@@ -1021,7 +1021,7 @@
     "translationCorrectionPromptInfo": "További utasítások a „Mindig” módban végzett javításhoz, pl. „legyen társalgási a szöveg” vagy „használj egységes terminológiát”. A rendszerprompthoz és a fordítási utasításokhoz adódnak hozzá, nem helyettesítik őket.",
     "translationGlossary": "Szójegyzék",
     "translationGlossaryInfo": "Fordítási szabályok (soronként egy bejegyzés):\n\n• Kifejezés = Fordítás – a szót vagy kifejezést mindig így kell fordítani, bármilyen nyelvre is fordítunk.\n\n• Kifejezés = kód: Fordítás; kód: Fordítás – külön fordítás bizonyos nyelvekre (kód, például es vagy pt-BR; az es az es-AR-ra is érvényes). A kód nélküli fordítás a többi nyelvre vonatkozik.\nPélda: workspace = hu: munkaterület; es: espacio de trabajo\n\n• !Kifejezés – a szót vagy kifejezést nem kell lefordítani (a teljes szövegben változatlan marad).\nPélda: !TyCo\n(A sor elején álló felkiáltójel az utána következő teljes kifejezést védi.)\n\nA „!” bármely fordítási móddal működik. Az MI-modell az „=” szabályokat azonnal alkalmazza; DeepL és Google esetén ezek csak ellenőrzésre kerülnek, és akkor javítódnak, ha a fordítás utáni javítás be van kapcsolva.",
-    "translationGlossaryMachineHint": "DeepL és Google esetén az „=” szabályok csak bekapcsolt fordítás utáni javítással érvényesülnek; a „!” mindig működik.",
+    "translationGlossaryMachineHint": "DeepL és Google esetén javítás nélkül csak a lefordítatlan kifejezések (!kifejezés) működnek. A fordítási szabályok (=) alkalmazásához kapcsolja be a fordítás utáni javítást.",
     "translationGlossaryPlaceholder": "workspace = hu: munkaterület; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "nem érhető el",
     "translationProvider": "Fordítási mód",

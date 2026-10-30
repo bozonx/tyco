@@ -1021,7 +1021,7 @@
     "translationCorrectionPromptInfo": "\"Her zaman\" modundaki düzeltme için ek talimatlar, örneğin \"metni günlük dile çevir\" veya \"terimleri tutarlı tut\". Sistem istemine ve çeviri talimatlarına eklenir, onların yerini almaz.",
     "translationGlossary": "Sözlük",
     "translationGlossaryInfo": "Çeviri kuralları (her satıra bir kural):\n\n• Terim = Çeviri — kelime veya ifadeyi, hedef dil ne olursa olsun her zaman bu şekilde çevirir.\n\n• Terim = kod: Çeviri; kod: Çeviri — belirli diller için ayrı bir çeviri (es veya pt-BR gibi bir kod; es, es-AR için de geçerlidir). Kodsuz çeviri diğer diller için geçerlidir.\nÖrnek: workspace = tr: çalışma alanı; es: espacio de trabajo\n\n• !Terim — kelime veya ifadenin çevrilmesini önler (tüm metinde olduğu gibi korur).\nÖrnek: !TyCo\n(Satır başındaki ünlem işareti, arkasından gelen tüm ifadeyi korur).\n\n\"!\" her çeviri yöntemiyle çalışır. Yapay zekâ modeli \"=\" kurallarını doğrudan uygular; DeepL ve Google ile bu kurallar yalnızca denetlenir ve çeviri sonrası düzeltme açıksa düzeltilir.",
-    "translationGlossaryMachineHint": "DeepL ve Google ile \"=\" kuralları yalnızca çeviri sonrası düzeltme açıkken uygulanır; \"!\" her zaman çalışır.",
+    "translationGlossaryMachineHint": "Düzeltme olmadan DeepL ve Google ile yalnızca çevrilmeyen terimler (!terim) çalışır. Çeviri kurallarını (=) uygulamak için çeviri sonrası düzeltmeyi etkinleştirin.",
     "translationGlossaryPlaceholder": "workspace = tr: çalışma alanı; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "kullanılamıyor",
     "translationProvider": "Çeviri yöntemi",

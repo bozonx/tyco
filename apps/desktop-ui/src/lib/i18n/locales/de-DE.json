@@ -1024,7 +1024,7 @@
     "translationCorrectionPromptInfo": "Zusätzliche Anweisungen für die Korrektur im Modus „Immer“, z. B. „mach den Text umgangssprachlich“ oder „halte die Terminologie einheitlich“. Sie werden dem System-Prompt und den Übersetzungsanweisungen hinzugefügt, ohne sie zu ersetzen.",
     "translationGlossary": "Glossar",
     "translationGlossaryInfo": "Übersetzungsregeln (ein Eintrag pro Zeile):\n\n• Begriff = Übersetzung – das Wort oder die Wendung immer so übersetzen, egal in welche Zielsprache.\n\n• Begriff = Code: Übersetzung; Code: Übersetzung – eine eigene Übersetzung für bestimmte Sprachen (ein Code wie es oder pt-BR; es gilt auch für es-AR). Eine Übersetzung ohne Code gilt für die übrigen Sprachen.\nBeispiel: workspace = de: Arbeitsbereich; es: espacio de trabajo\n\n• !Begriff – das Wort oder die Wendung nicht übersetzen (im gesamten Text unverändert lassen).\nBeispiel: !TyCo\n(Ein Ausrufezeichen am Zeilenanfang schützt die gesamte folgende Wendung.)\n\n„!“ funktioniert mit jeder Übersetzungsmethode. Ein KI-Modell wendet „=“-Regeln direkt an; bei DeepL und Google werden sie nur geprüft und korrigiert, wenn die Nachkorrektur der Übersetzung aktiviert ist.",
-    "translationGlossaryMachineHint": "Bei DeepL und Google werden „=“-Regeln nur mit aktivierter Nachkorrektur angewendet; „!“ funktioniert immer.",
+    "translationGlossaryMachineHint": "Bei DeepL und Google ohne Korrektur gelten nur unübersetzte Begriffe (!Begriff). Um Übersetzungsregeln (=) anzuwenden, aktivieren Sie die Nachkorrektur.",
     "translationGlossaryPlaceholder": "workspace = de: Arbeitsbereich; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "nicht verfügbar",
     "translationProvider": "Übersetzungsmethode",

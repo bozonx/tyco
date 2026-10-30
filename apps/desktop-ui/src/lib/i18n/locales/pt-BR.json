@@ -1024,7 +1024,7 @@
     "translationCorrectionPromptInfo": "Instruções extras para a correção no modo “Sempre”, ex.: “deixe o texto informal” ou “mantenha a terminologia consistente”. Elas são acrescentadas ao prompt do sistema e às instruções de tradução sem substituí-los.",
     "translationGlossary": "Glossário",
     "translationGlossaryInfo": "Regras de tradução (uma entrada por linha):\n\n• Termo = Tradução — sempre traduzir a palavra ou frase desta forma, seja qual for o idioma de destino.\n\n• Termo = código: Tradução; código: Tradução — uma forma própria para idiomas específicos (um código como es ou pt-BR; es também vale para es-AR). A tradução sem código vale para os demais idiomas.\nExemplo: workspace = pt: espaço de trabalho; es: espacio de trabajo\n\n• !Termo — não traduzir a palavra ou frase (manter como está em todo o texto).\nExemplo: !TyCo\n(Um ponto de exclamação no início da linha protege toda a frase depois dele.)\n\n“!” funciona com qualquer método de tradução. Um modelo de IA aplica as regras “=” diretamente; com DeepL e Google, elas são apenas verificadas e corrigidas quando a correção pós-tradução está ativada.",
-    "translationGlossaryMachineHint": "Com DeepL e Google, as regras “=” só são aplicadas quando a correção pós-tradução está ativada; “!” sempre funciona.",
+    "translationGlossaryMachineHint": "Com DeepL e Google sem correção, apenas termos não traduzidos (!termo) funcionam. Para aplicar regras de tradução (=), ative a correção pós-tradução.",
     "translationGlossaryPlaceholder": "workspace = pt: espaço de trabalho; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "indisponível",
     "translationProvider": "Método de tradução",

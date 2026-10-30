@@ -1018,7 +1018,7 @@
     "translationCorrectionPromptInfo": "Dodatečné instrukce pro opravu v režimu „Vždy“, např. „udělej text hovorový“ nebo „drž jednotnou terminologii“. Přidávají se k systémovému promptu a instrukcím překladu, nenahrazují je.",
     "translationGlossary": "Glosář",
     "translationGlossaryInfo": "Pravidla překladu (jeden záznam na řádek):\n\n• Termín = Překlad – slovo nebo frázi vždy přeložit takto, ať se překládá do jakéhokoli jazyka.\n\n• Termín = kód: Překlad; kód: Překlad – vlastní překlad pro určité jazyky (kód jako es nebo pt-BR; es platí i pro es-AR). Překlad bez kódu platí pro ostatní jazyky.\nPříklad: workspace = cs: pracovní prostor; es: espacio de trabajo\n\n• !Termín – slovo nebo frázi nepřekládat (ponechat beze změny v celém textu).\nPříklad: !TyCo\n(Vykřičník na začátku řádku chrání celou frázi za ním.)\n\n„!“ funguje s jakýmkoli způsobem překladu. Model AI použije pravidla „=“ rovnou; u DeepL a Google se jen kontrolují a opravují, je-li zapnutá oprava po překladu.",
-    "translationGlossaryMachineHint": "U DeepL a Google se pravidla „=“ použijí jen se zapnutou opravou po překladu; „!“ funguje vždy.",
+    "translationGlossaryMachineHint": "U DeepL a Google bez opravy fungují jen nepřekládané termíny (!termín). Pro použití pravidel překladu (=) zapněte opravu po překladu.",
     "translationGlossaryPlaceholder": "workspace = cs: pracovní prostor; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "nedostupný",
     "translationProvider": "Způsob překladu",

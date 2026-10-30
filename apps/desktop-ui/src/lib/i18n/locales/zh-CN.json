@@ -1018,7 +1018,7 @@
     "translationCorrectionPromptInfo": "“始终”模式下纠错的附加指令，例如“使文本更具口语化风格”或“保持术语前后一致”。它们会附加到系统提示词和翻译指令中，而不是替换它们。",
     "translationGlossary": "术语表",
     "translationGlossaryInfo": "翻译规则（每行一条）：\n\n• 原文 = 译文 — 无论翻译成哪种语言，始终使用此译法。\n\n• 原文 = 代码: 译文; 代码: 译文 — 为特定语言单独指定译法（代码如 es 或 pt-BR；es 也适用于 es-AR）。不带代码的译文适用于其他语言。\n例如：workspace = zh-CN: 工作区; es: espacio de trabajo\n\n• !术语 — 不翻译该字词或短语（在整个文本中保持原样）。\n例如：!TyCo\n（行首的感叹号会保护其后的整条短语）。\n\n“!”适用于任何翻译方式。AI 模型会立即应用“=”规则；而在 DeepL 和 Google 中，仅在启用翻译后纠错时才会检查并修正这些规则。",
-    "translationGlossaryMachineHint": "在使用 DeepL 和 Google 时，“=”规则仅在启用翻译后纠错时应用；“!”规则始终有效。",
+    "translationGlossaryMachineHint": "在未启用纠错时，DeepL 和 Google 仅支持不翻译的术语（!术语）。要应用翻译规则（=），请启用翻译后纠错。",
     "translationGlossaryPlaceholder": "workspace = zh-CN: 工作区; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "不可用",
     "translationProvider": "翻译方式",

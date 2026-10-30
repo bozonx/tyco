@@ -1018,7 +1018,7 @@
     "translationCorrectionPromptInfo": "在「一律啟用」模式下校對的額外指示，例如「使文字更口語化」或「保持術語一致」。這些指示會新增至系統提示詞與翻譯指示中，而不會取代它們。",
     "translationGlossary": "術語表",
     "translationGlossaryInfo": "翻譯規則（每行一條）：\n\n• 原文 = 譯文 — 無論翻譯成哪種語言，始終使用此譯法。\n\n• 原文 = 代碼: 譯文; 代碼: 譯文 — 為特定語言另行指定譯法（代碼如 es 或 pt-BR；es 也適用於 es-AR）。不帶代碼的譯文適用於其他語言。\n範例：workspace = zh-TW: 工作區; es: espacio de trabajo\n\n• !詞彙 — 不要翻譯該單字或詞組（在全文中保持原樣）。\n範例：!TyCo\n（行首的驚嘆號會保護其後的完整詞組）。\n\n「!」適用於任何翻譯方式。AI 模型會立即套用「=」規則；使用 DeepL 與 Google 時僅會進行檢查，且只有在啟用翻譯後校對時才會被修正。",
-    "translationGlossaryMachineHint": "使用 DeepL 與 Google 時，「=」規則僅在啟用翻譯後校對時才會套用；「!」則始終有效。",
+    "translationGlossaryMachineHint": "在未啟用校對時，DeepL 與 Google 僅支援不翻譯的詞彙（!詞彙）。若要套用翻譯規則（=），請啟用翻譯後校對。",
     "translationGlossaryPlaceholder": "workspace = zh-TW: 工作區; es: espacio de trabajo\n!TyCo",
     "translationLanguageUnavailable": "無法使用",
     "translationProvider": "翻譯方式",
