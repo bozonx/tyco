@@ -88,10 +88,9 @@
 }
 
 /* E-ink panels show a handful of gray levels and refresh slowly: pure black
-   on white, surfaces told apart by borders rather than fills, and status
-   colors dark enough to read as black on a monochrome screen while keeping
-   their hue on color panels. Contrast and motion are forced by
-   `resolveAppearance`, see `accessibility.css`. */
+   on white, surfaces told apart by borders rather than fills, and pure
+   monochrome status colors for maximum contrast without dithering artifacts.
+   Contrast and motion are forced by `resolveAppearance`, see `accessibility.css`. */
 [data-theme='eInk'] {
   color-scheme: light;
 
@@ -101,19 +100,19 @@
   --color-base-content: oklch(0% 0 0);
   --color-primary: oklch(0% 0 0);
   --color-primary-content: oklch(100% 0 0);
-  --color-secondary: oklch(30% 0 0);
+  --color-secondary: oklch(25% 0 0);
   --color-secondary-content: oklch(100% 0 0);
-  --color-accent: oklch(30% 0 0);
+  --color-accent: oklch(25% 0 0);
   --color-accent-content: oklch(100% 0 0);
   --color-neutral: oklch(0% 0 0);
   --color-neutral-content: oklch(100% 0 0);
-  --color-info: oklch(30% 0.12 245);
+  --color-info: oklch(20% 0 0);
   --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(28% 0.1 155);
+  --color-success: oklch(20% 0 0);
   --color-success-content: oklch(100% 0 0);
-  --color-warning: oklch(28% 0.1 75);
+  --color-warning: oklch(20% 0 0);
   --color-warning-content: oklch(100% 0 0);
-  --color-error: oklch(25% 0.16 25);
+  --color-error: oklch(0% 0 0);
   --color-error-content: oklch(100% 0 0);
 }
 
