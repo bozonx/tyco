@@ -3,6 +3,8 @@
   "description": "Мәтінді camelCase, snake_case, PascalCase, UPPERCASE және басқа стильдер арасында түрлендіреді",
   "capitalizeFirst": "Бірінші әріп бас әріп",
   "sentenceCase": "Сөйлем регистрі",
+  "titleCase": "Әр Сөз Бас Әріппен",
+  "invertCase": "Регистрді аудару",
   "identifierToText": "Идентификаторды мәтінге",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

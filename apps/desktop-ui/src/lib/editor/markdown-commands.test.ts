@@ -5,6 +5,7 @@ import {
   insertLink,
   toggleInlineMark,
   toggleLinePrefix,
+  type LinePrefix,
 } from './markdown-commands'
 
 const stateWith = (doc: string, from: number, to = from) =>
@@ -97,6 +98,29 @@ describe('toggleLinePrefix', () => {
     expect(
       state.update(toggleLinePrefix(state, '# ')).state.doc.toString()
     ).toBe('# Title')
+  })
+})
+
+describe('toggleLinePrefix with nesting and tasks', () => {
+  const toggle = (
+    doc: string,
+    from: number,
+    to: number,
+    prefix: LinePrefix
+  ) => {
+    const state = stateWith(doc, from, to)
+    return state.update(toggleLinePrefix(state, prefix)).state.doc.toString()
+  }
+
+  it('keeps the indentation of nested items', () => {
+    expect(toggle('- a\n  - b', 0, 9, '1. ')).toBe('1. a\n  2. b')
+    expect(toggle('  one', 2, 2, '- ')).toBe('  - one')
+  })
+
+  it('sets, converts and removes tasks', () => {
+    expect(toggle('one\n- two', 0, 9, '- [ ] ')).toBe('- [ ] one\n- [ ] two')
+    expect(toggle('- [x] done\n- [ ] todo', 0, 20, '- [ ] ')).toBe('done\ntodo')
+    expect(toggle('- [ ] task', 0, 0, '- ')).toBe('- task')
   })
 })
 

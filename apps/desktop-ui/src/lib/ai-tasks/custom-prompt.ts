@@ -1,5 +1,8 @@
-import { SHORTCUT_SLOT_KEYS } from '@tyco/shared'
-
+import {
+  firstFreeSlotIndex,
+  nameFromPrompt,
+  nextNumberedId,
+} from '../shortcut-slots/slot-prompt'
 import {
   cloneLibrary,
   placeNewTask,
@@ -8,29 +11,13 @@ import {
 
 export type { AiTaskConfig } from '@tyco/shared'
 
-const TASK_NAME_LIMIT = 32
-
-const hasId = (task: { id?: unknown } | null | undefined): boolean =>
-  typeof task?.id === 'string' && task.id.trim() !== ''
-
 /** An id no task has yet: `task-<n>` */
-export function newAiTaskId(
-  tasks: readonly ({ id?: unknown } | null | undefined)[]
-): string {
-  const used = new Set(tasks.map((task) => (hasId(task) ? task!.id : null)))
-  let n = 1
-  while (used.has(`task-${n}`)) n += 1
-  return `task-${n}`
-}
+export const newAiTaskId = (
+  items: readonly ({ id?: unknown } | null | undefined)[]
+): string => nextNumberedId(items, 'task')
 
 /** A short name of a task saved from an own request: its first line, cut */
-export function taskNameFromPrompt(prompt: string): string {
-  const firstLine = prompt.trim().split('\n')[0]?.trim() ?? ''
-
-  if (firstLine.length <= TASK_NAME_LIMIT) return firstLine
-
-  return `${firstLine.slice(0, TASK_NAME_LIMIT - 1).trimEnd()}…`
-}
+export const taskNameFromPrompt = nameFromPrompt
 
 /**
  * The task library with `prompt` saved as a task in the first free slot, or
@@ -47,7 +34,7 @@ export function addTaskFromPrompt(
   if (library.items.some((task) => task.prompt?.trim() === cleanPrompt))
     return cloneLibrary(library)
 
-  const index = SHORTCUT_SLOT_KEYS.findIndex((key) => !library.slots[key])
+  const index = firstFreeSlotIndex(library.slots)
   if (index < 0) return null
 
   return placeNewTask(library, index, {

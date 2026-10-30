@@ -30,10 +30,14 @@ export default function pluginIndex(): PluginDefinition {
           defaultValue: false,
         },
         {
-          type: 'text',
+          type: 'select',
           name: 'printWidth',
           labelKey: 'local.printWidth',
           defaultValue: 80,
+          options: [60, 80, 100, 120, 160].map((id) => ({
+            id,
+            name: String(id),
+          })),
         },
         {
           type: 'checkbox',

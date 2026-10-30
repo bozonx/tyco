@@ -3,6 +3,8 @@
   "description": "Converts text between camelCase, snake_case, PascalCase, UPPERCASE, and other styles",
   "capitalizeFirst": "Capitalize first letter",
   "sentenceCase": "Sentence case",
+  "titleCase": "Title Case",
+  "invertCase": "Invert case",
   "identifierToText": "Identifier to text",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

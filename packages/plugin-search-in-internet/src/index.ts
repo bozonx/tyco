@@ -13,10 +13,23 @@ export const DEFAULT_SEARCH_URL = 'https://duckduckgo.com/?q='
 /** Longer texts are not a query: the whole document was sent by mistake */
 export const MAX_SEARCH_LENGTH = 500
 
+/** Where the query goes in a search URL; without it, it is appended */
+export const QUERY_PLACEHOLDER = '{query}'
+
+/** Puts the encoded query at `{query}`, or at the end of the URL. */
+export function buildSearchUrl(baseUrl: string, text: string): string {
+  const query = encodeURIComponent(text)
+  const url = baseUrl.trim()
+  return url.includes(QUERY_PLACEHOLDER)
+    ? url.replaceAll(QUERY_PLACEHOLDER, query)
+    : url + query
+}
+
 const urlField: InputConfigItem = {
   type: 'text',
   name: 'url',
   labelKey: 'local.url',
+  infoKey: 'local.urlInfo',
   defaultValue: DEFAULT_SEARCH_URL,
 }
 
@@ -67,7 +80,7 @@ export default function pluginIndex(): PluginDefinition {
             }
           }
           const result = await ctx.callApiFunction('openInBrowserAndHide', [
-            baseUrl.trim() + encodeURIComponent(text),
+            buildSearchUrl(baseUrl, text),
           ])
           return result.success
             ? // the browser has the focus, and the window is hidden already

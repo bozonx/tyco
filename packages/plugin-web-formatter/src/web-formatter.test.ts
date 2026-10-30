@@ -73,7 +73,23 @@ describe('web code formatter', () => {
         semi: false,
         tabWidth: 4,
       })
-    ).toBe("const x = { a: 'b' }\n")
+    ).toBe("const x = { a: 'b' }")
+  })
+})
+
+describe('selection whitespace', () => {
+  it('keeps the whitespace around the formatted code', async () => {
+    expect(await formatWebCode(' {"a":1}')).toBe(' { "a": 1 }')
+    expect(await formatWebCode('\n{"a":1}\n\n')).toBe('\n{ "a": 1 }\n\n')
+  })
+
+  it('takes prose starting with a keyword for prose, not code', async () => {
+    await expect(formatWebCode('export the report to PDF')).rejects.toThrow(
+      'local.unsupportedLanguage'
+    )
+    await expect(formatWebCode('type something here')).rejects.toThrow(
+      'local.unsupportedLanguage'
+    )
   })
 })
 

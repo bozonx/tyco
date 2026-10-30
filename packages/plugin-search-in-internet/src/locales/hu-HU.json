@@ -1,6 +1,7 @@
 {
   "label": "Keresés az interneten",
   "url": "Internetes keresési URL",
+  "urlInfo": "A keresés a {'{'}query{'}'} helyére kerül, vagy a cím végére. Példa: https://www.google.com/search?q={'{'}query{'}'}",
   "description": "Internetes keresést indít a szövegre a böngészőben",
   "noSearchBaseUrl": "Nincs beállítva alapértelmezett URL az internetes kereséshez",
   "textTooLongForSearch": "A szöveg túl hosszú a kereséshez: jelöljön ki egy részletet",

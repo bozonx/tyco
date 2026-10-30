@@ -20,7 +20,7 @@ describe('web formatter plugin', () => {
     const items = mocks.registerFormatItems.mock.calls[0]![0] as EditItem[]
     expect(items).toHaveLength(1)
     expect(await items[0]!.action('<root><item/></root>')).toBe(
-      '<root>\n    <item />\n</root>\n'
+      '<root>\n    <item />\n</root>'
     )
   })
 })

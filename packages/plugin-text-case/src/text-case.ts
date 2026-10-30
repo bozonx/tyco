@@ -64,3 +64,46 @@ export function sentenceCase(text: string): string {
       boundary + letter.toUpperCase()
   )
 }
+
+/**
+ * Capitalizes every word and lowercases the rest: `HELLO world` → `Hello
+ * World`.
+ */
+export function titleCase(text: string): string {
+  return text.replace(/[\p{L}\p{N}][\p{L}\p{M}\p{N}'’]*/gu, (word) => {
+    const first = Array.from(word)[0]!
+    return first.toUpperCase() + word.slice(first.length).toLowerCase()
+  })
+}
+
+/** Swaps the case of every letter: `Hello World` → `hELLO wORLD`. */
+export function invertCase(text: string): string {
+  return Array.from(text, (char) => {
+    const upper = char.toUpperCase()
+    const lower = char.toLowerCase()
+    if (char === upper && char !== lower) return lower
+    if (char === lower && char !== upper) return upper
+    return char
+  }).join('')
+}
+
+/**
+ * Applies an identifier transform to every line on its own, so a multi-line
+ * selection stays multi-line; indentation and blank lines are kept.
+ */
+export function perLine(
+  transform: (text: string) => string
+): (text: string) => string {
+  return (text) =>
+    text
+      .split(/(\r?\n)/)
+      .map((part, index) => {
+        if (index % 2 === 1) return part
+        const [, leading = '', body = '', trailing = ''] =
+          /^(\s*)([\s\S]*?)(\s*)$/.exec(part) ?? []
+        if (!body) return part
+        const result = transform(body)
+        return result ? leading + result + trailing : part
+      })
+      .join('')
+}

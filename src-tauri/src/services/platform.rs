@@ -32,7 +32,7 @@ mod macos;
 pub mod windows;
 
 pub(crate) use clipboard::ClipboardSnapshot;
-pub use file_manager::{open_dir, open_file, open_web_url};
+pub use file_manager::{open_dir, open_file, open_web_page};
 pub use foreground_context::{
     capture_foreground_target, capture_selection, restore_foreground_target, ForegroundTarget,
 };

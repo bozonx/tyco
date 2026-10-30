@@ -3,6 +3,8 @@
   "description": "Konvertiert Text zwischen camelCase, snake_case, PascalCase, UPPERCASE und anderen Stilen",
   "capitalizeFirst": "Ersten Buchstaben großschreiben",
   "sentenceCase": "Satzanfang groß",
+  "titleCase": "Jedes Wort Großschreiben",
+  "invertCase": "Groß-/Kleinschreibung umkehren",
   "identifierToText": "Bezeichner in Text",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

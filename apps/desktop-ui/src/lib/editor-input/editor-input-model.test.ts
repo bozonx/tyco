@@ -191,6 +191,19 @@ describe('conditional editor edits', () => {
     expect(store.selectedText.value).toBe('')
   })
 
+  it('keeps the caret of a replaced document within the new text', () => {
+    const { store } = createStore()
+    store.setValue('a  b  c')
+    store.setSelection('', 6, 6)
+    store.applySnapshotEdit(store.getSnapshot(), 'a b c', 'document')
+    expect(store.selectionStart.value).toBe(5)
+    store.setSelection('', 2, 2)
+    store.applySnapshotEdit(store.getSnapshot(), 'a b c!', 'document')
+    expect([store.selectionStart.value, store.selectionEnd.value]).toEqual([
+      2, 2,
+    ])
+  })
+
   it('rejects an AI result after a captured selection moves to identical text', () => {
     const { store } = createStore()
     store.setValue('old old')

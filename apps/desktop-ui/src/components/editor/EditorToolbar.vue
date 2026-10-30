@@ -116,6 +116,7 @@ const viewModeTitle = computed(() =>
 const toDropdownItem = (item: EditItem): DropdownMenuItem => ({
   label: getLabel(item),
   icon: item.icon,
+  disabled: item.selectionOnly && !editorInputStore.hasSelection,
   action: () => doEdit(item),
 })
 const caseDropdownItems = computed(() =>

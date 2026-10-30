@@ -44,7 +44,7 @@ try {
       })
       assert.equal(
         await items[0].action('<root><item/></root>'),
-        '<root>\n  <item />\n</root>\n'
+        '<root>\n  <item />\n</root>'
       )
     }
     console.log(`Standalone plugin verified: ${plugin.id}`)

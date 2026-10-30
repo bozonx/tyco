@@ -68,10 +68,12 @@ export async function detectWebLanguage(text: string): Promise<WebLanguage> {
       ? 'html'
       : 'xml'
   }
+  // keywords alone also start English prose ("export the file", "type it")
   if (
     /\b(?:const|let|var|function|interface|type|import|export|class)\s+[$\p{L}_]/u.test(
       source
-    )
+    ) &&
+    /[;{}()=]/.test(source)
   )
     return 'typescript'
   if (/^\$[\w-]+\s*:/.test(source)) return 'scss'
@@ -137,14 +139,19 @@ export async function formatWebCode(
     }
     parser = language === 'javascript' ? 'babel' : language
   }
+  // Prettier ends its output with a newline; a selection inside a line or
+  // a paragraph keeps the whitespace it had around it instead
+  const leading = /^\s*/.exec(text)![0]
+  const trailing = /\s*$/.exec(text)![0]
   try {
-    return await format(text, {
+    const formatted = await format(text, {
       ...settings,
       parser,
       plugins,
       htmlWhitespaceSensitivity: 'css',
       xmlSortAttributesByKey: false,
     } as Options)
+    return leading + formatted.trim() + trailing
   } catch {
     throw new WebFormatError('local.invalidCode')
   }

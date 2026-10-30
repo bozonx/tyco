@@ -21,7 +21,7 @@
       :aria-controls="isOpen ? menuId : undefined"
       :aria-label="label ?? title ?? translate('common.more')"
       @keydown.down.stop.prevent="openAndFocus(0)"
-      @keydown.up.stop.prevent="openAndFocus(items.length - 1)"
+      @keydown.up.stop.prevent="openAndFocus(-1)"
       @click="toggleMenu"
     >
       <AppIcon v-if="icon" :icon="icon" size="md" />
@@ -57,6 +57,7 @@
           :label="item.label"
           :icon="item.icon"
           :danger="item.danger"
+          :disabled="item.disabled"
           @click="selectItem(item)"
         />
       </MenuSurface>
@@ -86,6 +87,7 @@ export interface DropdownMenuItem {
   label: string
   icon?: string
   danger?: boolean
+  disabled?: boolean
   action: () => void | Promise<void>
 }
 
@@ -135,6 +137,7 @@ const {
   align: () => (props.align === 'right' ? 'end' : 'start'),
 })
 
+/** Focuses the enabled item at `index`; a negative index counts from the end */
 async function openAndFocus(index: number) {
   isOpen.value = true
   await nextTick()
@@ -142,7 +145,7 @@ async function openAndFocus(index: number) {
   updatePosition()
   await nextTick()
   const items = menuButtons(panelRef.value)
-  items[index]?.focus()
+  items.at(index)?.focus()
 }
 function toggleMenu() {
   if (isOpen.value) close(true)

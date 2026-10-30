@@ -3,6 +3,8 @@
   "description": "Перетворює регістр тексту: camelCase, snake_case, PascalCase, UPPERCASE та інші стилі",
   "capitalizeFirst": "Перша літера велика",
   "sentenceCase": "Регістр речення",
+  "titleCase": "Кожне Слово З Великої",
+  "invertCase": "іНВЕРСІЯ рЕГІСТРУ",
   "identifierToText": "Ідентифікатор у текст",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

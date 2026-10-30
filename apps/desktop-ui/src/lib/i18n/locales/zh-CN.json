@@ -332,6 +332,7 @@
       "strikethrough": "删除线",
       "switchToFormatted": "当前为 Markdown。切换到格式化文本 (Ctrl+Shift+M)",
       "switchToSource": "当前为格式化文本。切换到 Markdown (Ctrl+Shift+M)",
+      "taskList": "任务列表",
       "title": "标记"
     },
     "menu": {

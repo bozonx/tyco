@@ -1,6 +1,7 @@
 {
   "label": "Pretraži internet",
   "url": "URL za pretraživanje interneta",
+  "urlInfo": "Upit zamjenjuje {'{'}query{'}'} ili se dodaje na kraj adrese. Primjer: https://www.google.com/search?q={'{'}query{'}'}",
   "description": "Otvara web pretraživanje teksta u pregledniku",
   "noSearchBaseUrl": "Osnovni URL za pretraživanje interneta nije konfiguriran",
   "textTooLongForSearch": "Tekst je predug za pretraživanje: odaberite fragment",

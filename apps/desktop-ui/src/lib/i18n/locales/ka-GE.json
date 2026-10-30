@@ -332,6 +332,7 @@
       "strikethrough": "გადახაზული",
       "switchToFormatted": "ახლა: Markdown. ფორმატირებულ ტექსტზე გადართვა (Ctrl+Shift+M)",
       "switchToSource": "ახლა: ფორმატირებული ტექსტი. Markdown-ზე გადართვა (Ctrl+Shift+M)",
+      "taskList": "დავალებების სია",
       "title": "მარკირება"
     },
     "menu": {

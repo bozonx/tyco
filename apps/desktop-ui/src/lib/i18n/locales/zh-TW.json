@@ -332,6 +332,7 @@
       "strikethrough": "刪除線",
       "switchToFormatted": "目前為 Markdown。切換至格式化文字 (Ctrl+Shift+M)",
       "switchToSource": "目前為格式化文字。切換至 Markdown (Ctrl+Shift+M)",
+      "taskList": "任務清單",
       "title": "標記"
     },
     "menu": {

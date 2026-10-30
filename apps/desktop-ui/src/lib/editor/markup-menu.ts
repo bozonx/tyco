@@ -32,6 +32,7 @@ const ENTRIES: MarkupEntry[] = [
   { command: 'heading3', icon: 'mdi:format-header-3' },
   { command: 'bulletList', icon: 'mdi:format-list-bulleted', group: true },
   { command: 'orderedList', icon: 'mdi:format-list-numbered' },
+  { command: 'taskList', icon: 'mdi:format-list-checks' },
   { command: 'quote', icon: 'mdi:format-quote-close' },
 ]
 

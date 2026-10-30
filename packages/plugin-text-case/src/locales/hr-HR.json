@@ -3,6 +3,8 @@
   "description": "Pretvara tekst između camelCase, snake_case, PascalCase, VELIKIH SLOVA i drugih stilova",
   "capitalizeFirst": "Prvo slovo veliko",
   "sentenceCase": "Format rečenice",
+  "titleCase": "Svaka Riječ Velikim Slovom",
+  "invertCase": "Obrni velika i mala slova",
   "identifierToText": "Identifikator u tekst",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

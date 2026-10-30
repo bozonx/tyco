@@ -3,6 +3,8 @@
   "description": "Convierte texto entre camelCase, snake_case, PascalCase, MAYÚSCULAS y otros estilos",
   "capitalizeFirst": "Primera letra en mayúscula",
   "sentenceCase": "Mayúsculas de oración",
+  "titleCase": "Mayúscula En Cada Palabra",
+  "invertCase": "Invertir mayúsculas y minúsculas",
   "identifierToText": "Identificador a texto",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

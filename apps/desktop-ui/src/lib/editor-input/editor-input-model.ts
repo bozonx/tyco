@@ -85,8 +85,14 @@ export function createEditorInputModel() {
     source: EditSource = 'ai'
   ): boolean => {
     if (!isSnapshotCurrent(snapshot)) return false
-    if (scope === 'selection') replaceSelection(text, source)
-    else replaceValue(text, source)
+    if (scope === 'selection') {
+      replaceSelection(text, source)
+      return true
+    }
+    // a reformatted document keeps the caret about where it was
+    const caret = Math.min(selectionStart.value, text.length)
+    setValue(text, source)
+    setSelection('', caret, caret)
     return true
   }
 

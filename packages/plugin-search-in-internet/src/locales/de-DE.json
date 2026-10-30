@@ -1,6 +1,7 @@
 {
   "label": "Im Internet suchen",
   "url": "URL für Internetsuche",
+  "urlInfo": "Die Suchanfrage ersetzt {'{'}query{'}'} oder wird an das Ende der Adresse angehängt. Beispiel: https://www.google.com/search?q={'{'}query{'}'}",
   "description": "Öffnet eine Websuche nach dem Text im Browser",
   "noSearchBaseUrl": "Keine Basis-URL für die Internetsuche konfiguriert",
   "textTooLongForSearch": "Der Text ist zu lang für eine Suche: Wählen Sie ein Textfragment aus",

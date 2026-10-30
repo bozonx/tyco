@@ -1,6 +1,7 @@
 {
   "label": "Hledat na internetu",
   "url": "URL pro vyhledávání na internetu",
+  "urlInfo": "Dotaz nahradí {'{'}query{'}'}, nebo se připojí na konec adresy. Příklad: https://www.google.com/search?q={'{'}query{'}'}",
   "description": "Otevře vyhledávání textu na webu v prohlížeči",
   "noSearchBaseUrl": "Není nakonfigurována výchozí URL adresa pro vyhledávání na internetu",
   "textTooLongForSearch": "Text je příliš dlouhý pro vyhledávání: vyberte fragment",

@@ -3,6 +3,8 @@
   "description": "Převádí text mezi styly camelCase, snake_case, PascalCase, UPPERCASE a dalšími",
   "capitalizeFirst": "První písmeno velké",
   "sentenceCase": "Velikost písmen věty",
+  "titleCase": "Každé Slovo Velkým Písmenem",
+  "invertCase": "Obrátit velikost písmen",
   "identifierToText": "Identifikátor na text",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

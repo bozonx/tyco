@@ -1,6 +1,7 @@
 {
   "label": "インターネットで検索",
   "url": "インターネット検索URL",
+  "urlInfo": "検索語は {'{'}query{'}'} の位置に入るか、アドレスの末尾に追加されます。例：https://www.google.com/search?q={'{'}query{'}'}",
   "description": "ブラウザでテキストのウェブ検索を開きます",
   "noSearchBaseUrl": "インターネット検索のベースURLが設定されていません",
   "textTooLongForSearch": "テキストが長すぎて検索できません。範囲を選択してください",

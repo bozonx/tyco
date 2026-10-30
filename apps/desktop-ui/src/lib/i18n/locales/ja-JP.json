@@ -332,6 +332,7 @@
       "strikethrough": "取り消し線",
       "switchToFormatted": "現在: Markdown。リッチテキストに切り替え (Ctrl+Shift+M)",
       "switchToSource": "現在: リッチテキスト。Markdownに切り替え (Ctrl+Shift+M)",
+      "taskList": "タスクリスト",
       "title": "マークアップ"
     },
     "menu": {

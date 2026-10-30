@@ -1,6 +1,7 @@
 {
   "label": "Caută pe internet",
   "url": "URL căutare pe internet",
+  "urlInfo": "Interogarea înlocuiește {'{'}query{'}'} sau se adaugă la sfârșitul adresei. Exemplu: https://www.google.com/search?q={'{'}query{'}'}",
   "description": "Deschide o căutare web pentru text în browser",
   "noSearchBaseUrl": "Nu este configurat niciun URL de bază pentru căutarea pe internet",
   "textTooLongForSearch": "Textul este prea lung pentru căutare: selectează un fragment",

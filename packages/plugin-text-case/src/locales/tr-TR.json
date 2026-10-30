@@ -3,6 +3,8 @@
   "description": "Metin büyüklüğünü dönüştürür: camelCase, snake_case, PascalCase, BÜYÜK HARF ve diğerleri",
   "capitalizeFirst": "İlk harfi büyüt",
   "sentenceCase": "Cümle düzeni",
+  "titleCase": "Her Kelimenin İlk Harfi Büyük",
+  "invertCase": "Büyük/küçük harfleri ters çevir",
   "identifierToText": "Tanımlayıcıyı metne dönüştür",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

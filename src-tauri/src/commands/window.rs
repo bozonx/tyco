@@ -40,7 +40,7 @@ pub async fn open_in_browser_and_hide(
     activation_id: u64,
 ) -> Result<(), AppError> {
     run_blocking(move || {
-        super::system::open_url(&url)?;
+        crate::services::platform::open_web_page(&url)?;
         runtime::hide_window_without_refocus(&app, window.label().into(), activation_id)
     })
     .await?

@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest'
 import {
   identifierToText,
   capitalizeFirst,
+  invertCase,
+  perLine,
+  titleCase,
   sentenceCase,
   toCamelCase,
   toConstantCase,
@@ -90,5 +93,32 @@ describe('prose case transforms', () => {
     expect(
       sentenceCase('HELLO. HOW ARE YOU? FINE!\n\nSNAKE_CASE AND WELL-KNOWN.')
     ).toBe('Hello. How are you? Fine!\n\nSnake_case and well-known.')
+  })
+})
+
+describe('title and inverted case', () => {
+  it('capitalizes every word and keeps separators', () => {
+    expect(
+      titleCase("HELLO wORLD, don't stop-now\n\u0431\u0443\u043a\u0432\u044b")
+    ).toBe("Hello World, Don't Stop-Now\n\u0411\u0443\u043a\u0432\u044b")
+  })
+
+  it('swaps the case of every letter only', () => {
+    expect(
+      invertCase('Hello World 42! \u041f\u0440\u0438\u0432\u0435\u0442')
+    ).toBe('hELLO wORLD 42! \u043f\u0420\u0418\u0412\u0415\u0422')
+    expect(invertCase(invertCase('MiXeD'))).toBe('MiXeD')
+  })
+})
+
+describe('per-line identifier transforms', () => {
+  it('keeps lines, indentation and blank lines', () => {
+    expect(perLine(toCamelCase)('hello world\n\n  foo_bar \r\nbaz')).toBe(
+      'helloWorld\n\n  fooBar \r\nbaz'
+    )
+  })
+
+  it('leaves lines without words unchanged', () => {
+    expect(perLine(toSnakeCase)('a b\n -- \n')).toBe('a_b\n -- \n')
   })
 })

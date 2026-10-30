@@ -5,6 +5,7 @@ import { Compartment, StateEffect, StateField } from '@codemirror/state'
 import type { DecorationSet } from '@codemirror/view'
 import { Decoration, EditorView } from '@codemirror/view'
 
+import { createRangeIndex } from './range-index'
 import {
   CodeBlockHeaderWidget,
   MarkerWidget,
@@ -87,6 +88,13 @@ export const hiddenMarkup = (
 }
 
 const previewFocus = StateEffect.define<boolean>()
+
+/** A caret moving within the same lines reveals nothing new */
+const sameActiveLines = (before: EditorState, after: EditorState): boolean => {
+  const a = activeLines(before)
+  const b = activeLines(after)
+  return a.from === b.from && a.to === b.to
+}
 
 /** Only selection-touched lines expose their source while the editor has focus. */
 const touchesSelection = (
@@ -281,10 +289,9 @@ export const previewDecorations = (
       return undefined
     },
   })
+  const blocks = createRangeIndex(replaced)
   for (const range of hiddenMarkup(state, 0, state.doc.length, focused)) {
-    if (
-      !replaced.some((other) => range.from < other.to && range.to > other.from)
-    ) {
+    if (!blocks.overlaps(range.from, range.to)) {
       decorations.push(
         Decoration.replace({ previewAtomic: true }).range(range.from, range.to)
       )
@@ -295,12 +302,7 @@ export const previewDecorations = (
     decorations.filter(
       (range) =>
         !range.value.spec.previewAtomic ||
-        !replaced.some(
-          (outer) =>
-            outer.from <= range.from &&
-            outer.to >= range.to &&
-            (outer.from < range.from || outer.to > range.to)
-        )
+        !blocks.containsStrictly(range.from, range.to)
     ),
     true
   )
@@ -321,7 +323,8 @@ const previewField = StateField.define<{
     }
     if (
       transaction.docChanged ||
-      transaction.selection ||
+      (transaction.selection &&
+        !sameActiveLines(transaction.startState, transaction.state)) ||
       focused !== value.focused ||
       searchPanelOpen(transaction.startState) !==
         searchPanelOpen(transaction.state) ||

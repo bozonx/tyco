@@ -50,8 +50,26 @@ fn opener() -> &'static str {
     }
 }
 
+/// Only web pages are opened: the URL comes from the webview, and the system
+/// opener would just as well run a local file or another URL handler.
+pub fn parse_web_url(value: &str) -> Result<url::Url, AppError> {
+    let url = url::Url::parse(value.trim())
+        .map_err(|error| AppError::InvalidInput(format!("Invalid URL \"{value}\": {error}")))?;
+    match url.scheme() {
+        "http" | "https" => Ok(url),
+        scheme => Err(AppError::InvalidInput(format!(
+            "Refusing to open a \"{scheme}:\" URL; only http and https are allowed"
+        ))),
+    }
+}
+
+/// Opens `value` in the browser when it is an http or https address.
+pub fn open_web_page(value: &str) -> Result<(), AppError> {
+    open_web_url(&parse_web_url(value)?)
+}
+
 /// Opens a validated web URL using the desktop handler.
-pub fn open_web_url(url: &url::Url) -> Result<(), AppError> {
+fn open_web_url(url: &url::Url) -> Result<(), AppError> {
     let mut command = if cfg!(target_os = "windows") {
         let mut command = Command::new("rundll32");
         command.arg("url.dll,FileProtocolHandler");
@@ -73,6 +91,28 @@ pub fn open_web_url(url: &url::Url) -> Result<(), AppError> {
 mod tests {
     use super::*;
     use crate::services::test_support::TestDir;
+
+    #[test]
+    fn rejects_non_web_pages_without_launching_a_process() {
+        for url in ["file:///etc/passwd", "javascript:alert(1)", "not a url"] {
+            assert!(open_web_page(url).is_err());
+        }
+    }
+
+    #[test]
+    fn accepts_web_urls_only() {
+        assert!(parse_web_url("https://duckduckgo.com/?q=a%20b&hl=en").is_ok());
+        assert!(parse_web_url(" http://example.com ").is_ok());
+        assert!(parse_web_url("http://localhost:8080/path?key=val#hash").is_ok());
+        assert!(parse_web_url("file:///etc/passwd").is_err());
+        assert!(parse_web_url("javascript:alert(1)").is_err());
+        assert!(parse_web_url("data:text/html,<b>hi</b>").is_err());
+        assert!(parse_web_url("ftp://example.com/file").is_err());
+        assert!(parse_web_url("ws://example.com/socket").is_err());
+        assert!(parse_web_url("").is_err());
+        assert!(parse_web_url("   ").is_err());
+        assert!(parse_web_url("not a url").is_err());
+    }
 
     #[test]
     fn rejects_invalid_paths_before_opening() {

@@ -25,7 +25,7 @@ Rust backend and a Vue 3 frontend, organized as a pnpm + Turborepo monorepo.
 - `dev_docs/` — design notes; read the relevant one before changing an area:
   `architecture.md`, `state-management.md`, `desktop-api.md`,
   `config-storage.md`, `plugin-packages.md`, `cross-platform.md`, `testing.md`,
-  `ui-system.md`, `ui-components.md`. `docs/external-control.md` — CLI/D-Bus API.
+  `ui-system.md`, `ui-components.md`, `editor.md`. `docs/external-control.md` — CLI/D-Bus API.
 
 Toolchain: Node.js 24 (`.node-version`), pnpm 11, Rust pinned by
 `rust-toolchain.toml`. Always use `pnpm`; never add npm or Yarn lockfiles.

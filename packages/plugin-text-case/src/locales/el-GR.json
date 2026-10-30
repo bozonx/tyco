@@ -3,6 +3,8 @@
   "description": "Μετατρέπει κείμενο μεταξύ camelCase, snake_case, PascalCase, UPPERCASE και άλλων μορφών",
   "capitalizeFirst": "Πρώτο γράμμα κεφαλαίο",
   "sentenceCase": "Πεζά-κεφαλαία πρότασης",
+  "titleCase": "Κάθε Λέξη Με Κεφαλαίο",
+  "invertCase": "Αντιστροφή πεζών/κεφαλαίων",
   "identifierToText": "Αναγνωριστικό σε κείμενο",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

@@ -332,6 +332,7 @@
       "strikethrough": "Barré",
       "switchToFormatted": "Actuellement : Markdown. Passer au texte mis en forme (Ctrl+Maj+M)",
       "switchToSource": "Actuellement : texte mis en forme. Passer au Markdown (Ctrl+Maj+M)",
+      "taskList": "Liste de tâches",
       "title": "Balisage"
     },
     "menu": {

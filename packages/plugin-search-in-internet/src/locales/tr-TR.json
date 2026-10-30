@@ -1,6 +1,7 @@
 {
   "label": "İnternette ara",
   "url": "İnternet arama URL'si",
+  "urlInfo": "Sorgu {'{'}query{'}'} yerine konur veya adresin sonuna eklenir. Örnek: https://www.google.com/search?q={'{'}query{'}'}",
   "description": "Metin için tarayıcıda web araması açar",
   "noSearchBaseUrl": "İnternet araması için temel URL ayarlanmamış",
   "textTooLongForSearch": "Metin arama için çok uzun: bir parça seçin",

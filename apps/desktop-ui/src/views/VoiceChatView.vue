@@ -35,6 +35,7 @@ import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
+import { useWindowStore } from '../stores/window'
 
 const ipcStore = useIpcStore()
 
@@ -43,6 +44,7 @@ const desktopStore = useDesktopStore()
 const navPanelStore = useNavPanelStore()
 const chatStore = useChatStore()
 const menuModalsStore = useMenuModalsStore()
+const windowStore = useWindowStore()
 
 navPanelStore.resetNavPanelState({ panelVisible: false })
 
@@ -106,6 +108,6 @@ async function handleCorrected(
 }
 
 async function handleCancelled() {
-  await ipcStore.call('hide_window')
+  await windowStore.hide()
 }
 </script>

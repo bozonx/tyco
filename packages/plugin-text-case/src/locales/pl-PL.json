@@ -3,6 +3,8 @@
   "description": "Konwertuje tekst między camelCase, snake_case, PascalCase, WIELKIMI LITERAMI i innymi stylami",
   "capitalizeFirst": "Pierwsza litera wielka",
   "sentenceCase": "Jak w zdaniu",
+  "titleCase": "Każde Słowo Wielką Literą",
+  "invertCase": "Odwróć wielkość liter",
   "identifierToText": "Identyfikator na tekst",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

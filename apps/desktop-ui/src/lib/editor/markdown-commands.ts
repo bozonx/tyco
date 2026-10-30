@@ -6,9 +6,24 @@ import type { EditorView, KeyBinding } from '@codemirror/view'
 export type InlineMark = '**' | '*' | '~~' | '`'
 
 /** Markup at the start of each selected line */
-export type LinePrefix = '# ' | '## ' | '### ' | '- ' | '1. ' | '> '
+export type LinePrefix = '# ' | '## ' | '### ' | '- ' | '1. ' | '- [ ] ' | '> '
 
-const LINE_PREFIX = /^(#{1,6} |[-*+] |\d+[.)] |> )/
+/** Indentation, then the block markup of a line: a task before a plain bullet */
+const LINE_PREFIX = /^([ \t]*)(#{1,6} |[-*+] \[[ xX]\] |[-*+] |\d+[.)] |> )?/
+
+/** Whether `current` markup is the kind of block `prefix` makes */
+const isSameKind = (current: string, prefix: LinePrefix): boolean => {
+  switch (prefix) {
+    case '- ':
+      return /^[-*+] $/.test(current)
+    case '1. ':
+      return /^\d+[.)] $/.test(current)
+    case '- [ ] ':
+      return /^[-*+] \[[ xX]\] $/.test(current)
+    default:
+      return current === prefix
+  }
+}
 
 /**
  * Wraps the selection in `mark`, or unwraps it when the mark is already around
@@ -82,15 +97,18 @@ export const toggleLinePrefix = (
   const lines = Array.from({ length: last - first + 1 }, (_, index) =>
     state.doc.line(first + index)
   )
-  const hasPrefix = (text: string) =>
-    prefix === '1. ' ? /^\d+[.)] /.test(text) : text.startsWith(prefix)
-  const remove = lines.every((line) => hasPrefix(line.text))
+  const parsed = lines.map((line) => {
+    const [, indent = '', current = ''] = LINE_PREFIX.exec(line.text) ?? []
+    return { line, indent, current }
+  })
+  const remove = parsed.every(({ current }) => isSameKind(current, prefix))
 
-  const changes = lines.map((line, index) => {
-    const current = line.text.match(LINE_PREFIX)?.[0] ?? ''
+  // nested items keep their indentation; only the markup after it changes
+  const changes = parsed.map(({ line, indent, current }, index) => {
     const next = remove ? '' : prefix === '1. ' ? `${index + 1}. ` : prefix
+    const from = line.from + indent.length
 
-    return { from: line.from, to: line.from + current.length, insert: next }
+    return { from, to: from + current.length, insert: next }
   })
 
   return { changes }
@@ -142,6 +160,7 @@ export const markdownCommands = {
   heading3: run((state) => toggleLinePrefix(state, '### ')),
   bulletList: run((state) => toggleLinePrefix(state, '- ')),
   orderedList: run((state) => toggleLinePrefix(state, '1. ')),
+  taskList: run((state) => toggleLinePrefix(state, '- [ ] ')),
   quote: run((state) => toggleLinePrefix(state, '> ')),
 }
 

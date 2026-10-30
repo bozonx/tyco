@@ -18,7 +18,9 @@ import {
 import type { LlmConfig, LlmModel, LlmTask } from '@tyco/shared'
 
 import { buildLlmCatalog, buildProviderFactories } from './llm-catalog'
+import { bindTaskModel, modelRequestOptions } from './llm-model-request'
 import type { LlmPrompt } from './llm-prompt'
+import { isModelOutput, toStreamEvent } from './llm-stream-events'
 
 /**
  * A whole answer may take a while on a slow local model; ai-kit's own default
@@ -242,46 +244,12 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
     deadline: number
   ) => {
     // the catalog's task classes come from the task models; the chat is one too
-    const scopedConfig = {
-      ...config,
-      tasks: {
-        ...config.tasks,
-        [task]: { ...config.tasks[task], modelId: model.id },
-      },
-    } as LlmConfig
-    const kit = kitFor(scopedConfig, deps.timeoutMs)
-    const isDeepSeek =
-      config.providers.find((provider) => provider.id === model.providerId)
-        ?.type === 'deepseek'
-    const temperature = options.temperature ?? model.temperature
-    // Without a limit of its own a model answers as long as it needs; a
-    // default here would cut long answers and the reasoning of thinking models
-    const outputTokenCaps = [
-      options.maxOutputTokens,
-      model.maxOutputTokens,
-    ].filter((value): value is number => value !== undefined)
-    const isThinkingEnabled =
-      model.isThinkingEnabled === true ||
-      model.providerModelId === 'deepseek-reasoner'
+    const kit = kitFor(bindTaskModel(config, task, model), deps.timeoutMs)
     const request: StreamRequest = {
       name: task,
       policy: { taskClass: task },
       ...prompt,
-      ...(isDeepSeek
-        ? {
-            providerOptions: {
-              deepseek: {
-                thinking: { type: isThinkingEnabled ? 'enabled' : 'disabled' },
-              },
-            },
-          }
-        : {}),
-      ...(temperature === undefined || (isDeepSeek && isThinkingEnabled)
-        ? {}
-        : { temperature }),
-      ...(outputTokenCaps.length
-        ? { maxOutputTokens: Math.min(...outputTokenCaps) }
-        : {}),
+      ...modelRequestOptions(config, model, options),
       abortSignal: signal,
       totalTimeoutMs: Math.max(1, deadline - Date.now()),
     }
@@ -319,74 +287,15 @@ export function createLlmClient(deps: LlmClientDependencies): LlmClient {
 
       let isCompleted = false
       for await (const part of kit.stream(request)) {
+        if (isModelOutput(part)) hasEmitted = true
+        const event = toStreamEvent(part)
+        if (event) {
+          if (event.type === 'text') text += event.text
+          if (event.type === 'approval-request') pendingApprovalCount += 1
+          yield event
+          continue
+        }
         switch (part.type) {
-          case 'model':
-            yield { type: 'model', provider: part.provider, model: part.model }
-            break
-          case 'text-delta':
-            hasEmitted = true
-            text += part.text
-            yield { type: 'text', text: part.text }
-            break
-          case 'reasoning-delta':
-            hasEmitted = true
-            yield { type: 'reasoning', text: part.text }
-            break
-          case 'tool-call':
-            hasEmitted = true
-            yield {
-              type: 'tool-call',
-              toolCallId: part.toolCallId,
-              toolName: part.toolName,
-              input: part.args,
-            }
-            break
-          case 'tool-result':
-            hasEmitted = true
-            yield {
-              type: 'tool-result',
-              toolCallId: part.toolCallId,
-              toolName: part.toolName,
-              output: part.result,
-              isError: part.isError === true,
-            }
-            break
-          case 'tool-denied':
-            hasEmitted = true
-            yield {
-              type: 'tool-denied',
-              toolCallId: part.toolCallId,
-              toolName: part.toolName,
-            }
-            break
-          case 'tool-approval-request':
-            hasEmitted = true
-            // a decision the approval rule made itself is not asked about
-            if (part.isAutomatic) break
-            pendingApprovalCount += 1
-            yield {
-              type: 'approval-request',
-              approvalId: part.approvalId,
-              toolCallId: part.toolCallId,
-              toolName: part.toolName,
-              input: part.args,
-            }
-            break
-          case 'step-finish':
-            yield {
-              type: 'step-finish',
-              step: part.step,
-              finishReason: part.finishReason,
-            }
-            break
-          case 'file':
-            hasEmitted = true
-            yield { type: 'file', mediaType: part.mediaType, data: part.data }
-            break
-          case 'sources':
-            hasEmitted = true
-            yield { type: 'sources', sources: part.sources }
-            break
           case 'error': {
             if (options.signal?.aborted) return
             const error = new LlmError(errorKind(part.kind), part.message)

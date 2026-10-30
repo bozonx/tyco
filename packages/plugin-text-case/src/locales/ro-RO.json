@@ -3,6 +3,8 @@
   "description": "Convertește textul între camelCase, snake_case, PascalCase, MAJUSCULE și alte stiluri",
   "capitalizeFirst": "Prima literă majusculă",
   "sentenceCase": "Litere ca în propoziție",
+  "titleCase": "Fiecare Cuvânt Cu Majusculă",
+  "invertCase": "Inversează majusculele",
   "identifierToText": "Identificator în text",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

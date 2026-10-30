@@ -101,8 +101,9 @@ the SDK capability list separately. Sandbox messages use serializable snapshots
 so Vue proxies never cross a MessagePort. Resource URLs preserve path separators
 and the Wry protocol prefix used by Windows; all three URL forms have unit tests.
 
-Every installed plugin must supply `en-US`, `ru-RU`, `es-AR`, and `tr-TR` with
-identical dictionary structure and interpolation arguments. Both Rust and the
+Every installed plugin must supply every locale listed in
+`packages/plugin-sdk/src/locales.json` with identical dictionary structure and
+interpolation arguments. Both Rust and the
 SDK validate this before activation. Dictionaries are never merged with another
 locale. Incompatible installed packages remain visible so they can be removed.
 

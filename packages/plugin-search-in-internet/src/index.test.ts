@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { createPluginTestContext } from '@tyco/plugin-sdk/testing'
-import pluginIndex, { DEFAULT_SEARCH_URL, MAX_SEARCH_LENGTH } from './index.js'
+import pluginIndex, {
+  buildSearchUrl,
+  DEFAULT_SEARCH_URL,
+  MAX_SEARCH_LENGTH,
+} from './index.js'
 
 const setup = (options: Parameters<typeof createPluginTestContext>[0]) => {
   const context = createPluginTestContext(options)
@@ -125,4 +129,15 @@ it('does not search a whole document sent by mistake', async () => {
 
   expect(mocks.callApiFunction).not.toHaveBeenCalled()
   expect(mocks.toast).toHaveBeenCalledWith('local.textTooLongForSearch', 'warn')
+})
+
+describe('buildSearchUrl', () => {
+  it('puts the query at the placeholder or at the end', () => {
+    expect(buildSearchUrl('https://x.org/s/{query}/all', 'a b')).toBe(
+      'https://x.org/s/a%20b/all'
+    )
+    expect(buildSearchUrl(' https://x.org/?q= ', 'a&b')).toBe(
+      'https://x.org/?q=a%26b'
+    )
+  })
 })

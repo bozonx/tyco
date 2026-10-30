@@ -18,4 +18,15 @@ describe('text case plugin', () => {
         .action('HTTPServer_error')
     ).toBe('Http server error')
   })
+
+  it('keeps identifier styles to the selection and lines apart', async () => {
+    const { ctx, mocks } = createPluginTestContext({ config: {} })
+    textCase().init(ctx)
+    const items = mocks.registerCaseItems.mock.calls[0]![0] as EditItem[]
+    const byId = (id: string) => items.find((item) => item.id === id)!
+    expect(byId('case-camelCase').selectionOnly).toBe(true)
+    expect(await byId('case-camelCase').action('a b\nc d')).toBe('aB\ncD')
+    expect(byId('case-titleCase').selectionOnly).toBeUndefined()
+    expect(await byId('case-invertCase').action('aB')).toBe('Ab')
+  })
 })

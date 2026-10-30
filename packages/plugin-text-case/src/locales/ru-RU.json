@@ -3,6 +3,8 @@
   "description": "Преобразует регистр текста: camelCase, snake_case, PascalCase, UPPERCASE и другие",
   "capitalizeFirst": "Первая буква заглавная",
   "sentenceCase": "Регистр предложений",
+  "titleCase": "Каждое Слово С Заглавной",
+  "invertCase": "иНВЕРСИЯ рЕГИСТРА",
   "identifierToText": "Идентификатор в текст",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

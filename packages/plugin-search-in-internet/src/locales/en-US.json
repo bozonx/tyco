@@ -1,6 +1,7 @@
 {
   "label": "Search the internet",
   "url": "Internet search URL",
+  "urlInfo": "The query is put in place of {'{'}query{'}'}, or appended to the end of the address. Example: https://www.google.com/search?q={'{'}query{'}'}",
   "description": "Opens a web search for the text in the browser",
   "noSearchBaseUrl": "No base URL configured for internet search",
   "textTooLongForSearch": "The text is too long to search for: select a fragment",

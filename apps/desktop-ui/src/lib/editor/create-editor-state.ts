@@ -15,6 +15,7 @@ import {
 import type { EditorMenusOptions } from './context-menu'
 import { editorMenusExtension } from './context-menu'
 import { historyKeysExtension } from './history-keys'
+import { indentKeymap, markdownIndentUnit } from './indent-commands'
 import { editorSearch } from './editor-search'
 import { translate } from '../i18n'
 import { markdownKeymap } from './markdown-commands'
@@ -95,7 +96,13 @@ export const createEditorExtensions = (
   editorSearch(options.t ?? translate),
   ...(options.onOpenActions ? [actionsKeymap(options.onOpenActions)] : []),
   // before the default keymap: Mod-i selects the parent syntax node there
-  keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
+  keymap.of([
+    ...markdownKeymap,
+    ...indentKeymap,
+    ...defaultKeymap,
+    ...historyKeymap,
+  ]),
+  markdownIndentUnit,
   ...(options.onToggleMarkup
     ? [toggleMarkupKeymap(options.onToggleMarkup)]
     : []),

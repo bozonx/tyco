@@ -332,6 +332,7 @@
       "strikethrough": "Зачёркнутый",
       "switchToFormatted": "Сейчас: Markdown. Переключить на форматированный текст (Ctrl+Shift+M)",
       "switchToSource": "Сейчас: форматированный текст. Переключить на Markdown (Ctrl+Shift+M)",
+      "taskList": "Список задач",
       "title": "Разметка"
     },
     "menu": {

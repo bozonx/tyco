@@ -3,6 +3,8 @@
   "description": "Szöveg átalakítása camelCase, snake_case, PascalCase, NAGYBETŰS és egyéb stílusok között",
   "capitalizeFirst": "Első betű nagybetűvé",
   "sentenceCase": "Mondatkezdő nagybetű",
+  "titleCase": "Minden Szó Nagybetűvel",
+  "invertCase": "Kis- és nagybetűk felcserélése",
   "identifierToText": "Azonosító szöveggé",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

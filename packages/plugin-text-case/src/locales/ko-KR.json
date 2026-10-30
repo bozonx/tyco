@@ -3,6 +3,8 @@
   "description": "텍스트를 camelCase, snake_case, PascalCase, 대문자 및 기타 스타일 간에 변환합니다",
   "capitalizeFirst": "첫 글자를 대문자로",
   "sentenceCase": "문장 대소문자",
+  "titleCase": "각 단어 첫 글자 대문자",
+  "invertCase": "대소문자 반전",
   "identifierToText": "식별자를 텍스트로",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

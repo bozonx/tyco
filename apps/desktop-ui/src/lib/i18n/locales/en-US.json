@@ -332,6 +332,7 @@
       "strikethrough": "Strikethrough",
       "switchToFormatted": "Now: Markdown. Switch to formatted text (Ctrl+Shift+M)",
       "switchToSource": "Now: formatted text. Switch to Markdown (Ctrl+Shift+M)",
+      "taskList": "Task list",
       "title": "Markup"
     },
     "menu": {

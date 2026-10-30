@@ -185,6 +185,7 @@ const DYNAMIC_KEYS = new Set([
     'heading3',
     'bulletList',
     'orderedList',
+    'taskList',
     'quote',
     'showSource',
   ].map((cmd) => `editor.markup.${cmd}`),

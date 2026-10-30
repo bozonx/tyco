@@ -54,7 +54,7 @@
       >
         <Button
           v-for="item in otherEditItems"
-          :key="item.labelKey || item.name"
+          :key="item.id || item.labelKey || item.name"
           size="sm"
           variant="neutral"
           :icon="item.icon"
@@ -112,21 +112,21 @@ const copyText = useCopyText({ saveOutput: true })
 
 const otherEditItems = computed(() => editMenuStore.getOtherEditItems())
 
-const runMenuAction = async (labelKey: string) => {
+const runMenuAction = async (id: string) => {
   const item =
     actionMenuStore
       .getActionsMenu()
-      .find((action: ActionItem) => action.labelKey === labelKey) ??
+      .find((action: ActionItem) => action.id === id) ??
     actionMenuStore
       .getDefaultActions()
-      .find((action: ActionItem) => action.labelKey === labelKey)
+      .find((action: ActionItem) => action.id === id)
   if (item) {
     await doAction(item)
   }
 }
 
-const handleStyling = () => runMenuAction('action.stylingMenu')
-const handleTransformation = () => runMenuAction('action.transformationMenu')
+const handleStyling = () => runMenuAction('stylingMenu')
+const handleTransformation = () => runMenuAction('transformationMenu')
 
 /** Opens the chat with the selection, or the whole text, attached */
 const handleAskAi = async () => {
@@ -140,9 +140,9 @@ const handleAskAi = async () => {
   )
 }
 
-const handleInsertToWindow = () => runMenuAction('action.insertIntoWindow')
-const handleTranslation = () => runMenuAction('action.translationMenu')
-const handleCorrection = () => runMenuAction('action.correction')
+const handleInsertToWindow = () => runMenuAction('insertIntoWindow')
+const handleTranslation = () => runMenuAction('translationMenu')
+const handleCorrection = () => runMenuAction('correction')
 
 const handleCopy = async () => {
   // a plain copy: "copy and close" stays in the action menu

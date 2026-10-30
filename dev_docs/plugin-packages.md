@@ -43,10 +43,9 @@ export default function plugin(): PluginDefinition {
     capabilities: ['editor'],
     defaultLocale: 'en-US',
     locales: {
-      en-US: { label: 'Example', transform: 'Transform text' },
-      ru-RU: { label: 'Example', transform: 'Transform text' },
-      es-AR: { label: 'Example', transform: 'Transform text' },
-      tr-TR: { label: 'Example', transform: 'Transform text' },
+      'en-US': { label: 'Example', transform: 'Transform text' },
+      'ru-RU': { label: 'Пример', transform: 'Преобразовать текст' },
+      // …one dictionary for every locale in packages/plugin-sdk/src/locales.json
     },
     labelKey: 'local.label',
     init(ctx) {
@@ -73,9 +72,12 @@ Use `local.*` for plugin-owned messages. The host namespaces these keys in metad
 settings, contributions, tool results and portable `PluginError` instances. Common
 host notification keys such as `toast.textNotSelected` and `toast.commandFailed`
 are also supported. `ctx.t` translates plugin messages; `ctx.toastText` accepts
-already resolved text. A package must include complete dictionaries for `en-US`, `ru-RU`, `es-AR`, and
-`tr-TR`. Keys, value types, and placeholders must match across all dictionaries.
-Missing translations are rejected; the host never falls back to another locale.
+already resolved text. A package must include a complete dictionary for every
+locale listed in `packages/plugin-sdk/src/locales.json`. Keys, value types, and
+placeholders must match across all dictionaries. Missing translations are
+rejected; the host never falls back to another locale. Messages use vue-i18n
+syntax, so a literal brace is written `{'{'}` and `{'}'}` (see the FastNote and
+SearchInInternet setting hints).
 
 Toolbar/edit/action IDs are local to the plugin and are scoped by the host. Tool
 IDs become `<pluginId>.<toolId>`. Duplicate registrations are rejected. Registration methods return an idempotent
@@ -231,6 +233,15 @@ UI callbacks drop repeated clicks while running. Their running state disables th
 button; cancellation is silent, and other errors are logged and reported. Explicit
 command runs retain their own invocation lifetimes. Registration metadata and
 callback results are validated at runtime, including for installed JavaScript.
+
+Edit items (`registerCaseItems`, `registerFormatItems`, `registerEditItems`)
+receive the selection, or the whole document when nothing is selected, and
+return its replacement. The host applies the result only when the editor still
+matches the captured snapshot. Mark an item `selectionOnly` when applying it to a
+whole document would be a surprise: TextCase does this for identifier styles,
+which would otherwise turn a document into one identifier. A transform that
+cannot keep its input's shape should restore what it can; WebFormatter keeps the
+whitespace around a formatted selection instead of Prettier's final newline.
 
 Plugin action and edit registrations require stable local IDs. Prefer `labelKey`
 for localized labels and `label` for literal text. `name` remains accepted at the

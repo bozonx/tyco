@@ -332,6 +332,7 @@
       "strikethrough": "취소선",
       "switchToFormatted": "현재: Markdown. 서식 있는 텍스트로 전환 (Ctrl+Shift+M)",
       "switchToSource": "현재: 서식 있는 텍스트. Markdown으로 전환 (Ctrl+Shift+M)",
+      "taskList": "작업 목록",
       "title": "마크업"
     },
     "menu": {

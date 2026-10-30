@@ -3,6 +3,8 @@
   "description": "テキストを camelCase、snake_case、PascalCase、UPPERCASE などのスタイル間で変換します",
   "capitalizeFirst": "先頭文字を大文字にする",
   "sentenceCase": "文の先頭を大文字",
+  "titleCase": "各単語の先頭を大文字",
+  "invertCase": "大文字と小文字を反転",
   "identifierToText": "識別子をテキストに変換",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

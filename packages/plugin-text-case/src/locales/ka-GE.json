@@ -3,6 +3,8 @@
   "description": "ტექსტის გარდაქმნა camelCase, snake_case, PascalCase, UPPERCASE და სხვა სტილებს შორის",
   "capitalizeFirst": "პირველი ასო დიდი",
   "sentenceCase": "წინადადების რეგისტრი",
+  "titleCase": "სათაურის რეგისტრი",
+  "invertCase": "რეგისტრის შებრუნება",
   "identifierToText": "იდენტიფიკატორი ტექსტად",
   "camelCase": "camelCase",
   "pascalCase": "PascalCase",

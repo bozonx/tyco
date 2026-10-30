@@ -3,6 +3,9 @@ import { locales } from './locales.js'
 import {
   capitalizeFirst,
   sentenceCase,
+  titleCase,
+  invertCase,
+  perLine,
   identifierToText,
   toCamelCase,
   toPascalCase,
@@ -13,15 +16,28 @@ import {
 import type { InputConfigItem } from '@tyco/plugin-sdk'
 import type { PluginContext } from '@tyco/plugin-sdk'
 
-const transforms = {
-  capitalizeFirst,
-  sentenceCase,
-  identifierToText,
-  camelCase: toCamelCase,
-  pascalCase: toPascalCase,
-  snakeCase: toSnakeCase,
-  constantCase: toConstantCase,
-  kebabCase: toKebabCase,
+interface CaseTransform {
+  action: (text: string) => string
+  /** Identifier styles would turn a whole document into one identifier */
+  selectionOnly?: boolean
+}
+
+const identifier = (transform: (text: string) => string): CaseTransform => ({
+  action: perLine(transform),
+  selectionOnly: true,
+})
+
+const transforms: Record<string, CaseTransform> = {
+  capitalizeFirst: { action: capitalizeFirst },
+  sentenceCase: { action: sentenceCase },
+  titleCase: { action: titleCase },
+  invertCase: { action: invertCase },
+  identifierToText: identifier(identifierToText),
+  camelCase: identifier(toCamelCase),
+  pascalCase: identifier(toPascalCase),
+  snakeCase: identifier(toSnakeCase),
+  constantCase: identifier(toConstantCase),
+  kebabCase: identifier(toKebabCase),
 }
 
 export default function pluginIndex(): PluginDefinition {
@@ -47,9 +63,10 @@ export default function pluginIndex(): PluginDefinition {
       ctx.registerCaseItems(
         Object.entries(transforms)
           .filter(([id]) => config[id] !== false)
-          .map(([id, action]) => ({
+          .map(([id, { action, selectionOnly }]) => ({
             id: `case-${id}`,
             labelKey: `local.${id}`,
+            ...(selectionOnly ? { selectionOnly } : {}),
             action,
           }))
       )
