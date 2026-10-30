@@ -800,6 +800,8 @@
     "maxTokens": "Max. tokenszám",
     "model": "Modell",
     "modelId": "Modellazonosító",
+    "modelIdDraftHint": "A modell az azonosítója megadásakor mentődik.",
+    "modelIdRequired": "Adja meg a modell azonosítóját; nélküle a modell nincs használatban.",
     "modelModeAll": "Egy mindegyikhez",
     "modelModePerTask": "Funkciónként",
     "modelsCount": "Modellek: {count}",
@@ -1011,6 +1013,8 @@
       "ydotooldNotRunning": "A ydotoold démon nem fut. Indítsa el: systemctl --user enable --now ydotool"
     },
     "theme": "Téma",
+    "thinkingMode": "Gondolkodó mód",
+    "thinkingModeHint": "A modell válasz előtt gondolkodik: lassabb, de jobban boldogul az összetett feladatokkal. Ebben a módban a hőmérséklet figyelmen kívül marad.",
     "toolUse": "Eszközhívás",
     "toolUseHint": "Lehetővé teszi, hogy a modell eszközöket használjon a csevegésben. Kapcsolja ki, ha a modell vagy a szervere nem tud eszközöket hívni.",
     "transformationsHint": "Utasítások (promptek), amelyeket az MI alkalmaz a szöveg átalakítására. Az átalakítás menüben mindegyik saját billentyűvel fut; húzza a kártyákat a billentyűk módosításához.",

@@ -9,7 +9,11 @@ import {
 
 import { createSecretKeyEditor } from '../settings/secret-key-editor'
 import { httpOrigin } from '../net/secrets'
-import { addCompatibleProvider, addModel, removeProvider } from './llm-config'
+import {
+  addCompatibleProvider,
+  createModel,
+  removeProvider,
+} from './llm-config'
 import { InvalidLlmBaseUrlError } from './llm-connection'
 import { parseModelTemperature, parseModelTokenCount } from './model-number'
 
@@ -28,6 +32,8 @@ export function createLlmSettingsModel(deps: {
   const keyDrafts = reactive<Record<string, string>>({})
   const expandedProviderIds = reactive(new Set<string>())
   const expandedModelIds = reactive(new Set<string>())
+  /** New models that wait for an id; the config gets a model only with one */
+  const draftModels = reactive<LlmModel[]>([])
   const connectionCheckStatusByProviderId = reactive<
     Partial<Record<string, LlmConnectionCheckStatus>>
   >({})
@@ -79,12 +85,50 @@ export function createLlmSettingsModel(deps: {
     delete keyDrafts[id]
     delete connectionCheckStatusByProviderId[id]
     delete connectionErrors[id]
+    discardDrafts((model) => model.providerId === id)
     deps.providerRemoved(id)
   }
+  function discardDrafts(isDiscarded: (model: LlmModel) => boolean) {
+    for (let index = draftModels.length - 1; index >= 0; index -= 1) {
+      const model = draftModels[index]
+      if (!isDiscarded(model)) continue
+      draftModels.splice(index, 1)
+      expandedModelIds.delete(model.id)
+      for (const key of Object.keys(numberDrafts)) {
+        if (key.startsWith(`${model.id}:`)) delete numberDrafts[key]
+      }
+      for (const key of Object.keys(numberErrors)) {
+        if (key.startsWith(`${model.id}:`)) delete numberErrors[key]
+      }
+    }
+  }
   function addModelToProvider(providerId: string) {
-    const model = addModel(deps.getConfig(), providerId)
+    const model = createModel(
+      deps.getConfig(),
+      providerId,
+      draftModels.map((item) => item.id)
+    )
+    draftModels.unshift(model)
     expandedModelIds.add(model.id)
   }
+  const isDraftModel = (id: string) =>
+    draftModels.some((model) => model.id === id)
+  /** The drafts of a provider first, then its saved models */
+  function modelsOf(providerId: string): LlmModel[] {
+    return [...draftModels, ...deps.getConfig().models].filter(
+      (model) => model.providerId === providerId
+    )
+  }
+  /** Saves a draft with all its fields once its id gets a character */
+  function updateModel(model: LlmModel, patch: Partial<LlmModel>) {
+    Object.assign(model, patch)
+    const index = draftModels.findIndex((item) => item.id === model.id)
+    if (index < 0 || !model.providerModelId.trim()) return
+    const [draft] = draftModels.splice(index, 1)
+    deps.getConfig().models.unshift(draft)
+  }
+  const discardDraftModel = (id: string) =>
+    discardDrafts((model) => model.id === id)
   async function checkConnection(provider: LlmProvider) {
     const request = Symbol()
     requests.set(provider.id, request)
@@ -126,6 +170,7 @@ export function createLlmSettingsModel(deps: {
   }
   function dispose() {
     requests.clear()
+    discardDrafts(() => true)
   }
   return {
     keyDrafts,
@@ -140,6 +185,10 @@ export function createLlmSettingsModel(deps: {
     addProvider,
     removeProviderById,
     addModelToProvider,
+    isDraftModel,
+    modelsOf,
+    updateModel,
+    discardDraftModel,
     checkConnection,
     setNumber,
     dispose,

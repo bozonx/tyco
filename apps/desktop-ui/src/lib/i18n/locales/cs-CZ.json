@@ -797,6 +797,8 @@
     "maxTokens": "Max. tokenů",
     "model": "Model",
     "modelId": "ID modelu",
+    "modelIdDraftHint": "Model se uloží, jakmile zadáte jeho ID.",
+    "modelIdRequired": "Zadejte ID modelu; bez něj se model nepoužívá.",
     "modelModeAll": "Jedna pro všechny",
     "modelModePerTask": "Pro každou funkci",
     "modelsCount": "Modelů: {count}",
@@ -1008,6 +1010,8 @@
       "ydotooldNotRunning": "Démon ydotoold neběží. Spusťte jej: systemctl --user enable --now ydotool"
     },
     "theme": "Motiv",
+    "thinkingMode": "Režim přemýšlení",
+    "thinkingModeHint": "Model před odpovědí přemýšlí: je pomalejší, ale lépe zvládá složité úlohy. Teplota se v tomto režimu ignoruje.",
     "toolUse": "Volání nástrojů",
     "toolUseHint": "Umožňuje modelu používat v chatu nástroje. Vypněte, pokud model nebo jeho server neumí volat nástroje.",
     "transformationsHint": "Instrukce (prompty), které AI aplikuje k transformaci textu. V nabídce transformace se každá spouští vlastní klávesou; přetažením karet změníte jejich klávesy.",

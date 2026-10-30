@@ -60,19 +60,19 @@
           </Button>
         </div>
         <StateMessage
-          v-if="!modelsFor(provider.id).length"
+          v-if="!modelsOf(provider.id).length"
           density="compact"
           :message="t('settings.noConnectionModels')"
         />
         <LlmModelEditor
-          v-for="model in modelsFor(provider.id)"
+          v-for="model in modelsOf(provider.id)"
           :key="model.id"
           :model="model"
           :providers="llm.providers"
           :placeholder="modelPlaceholder(model.providerId)"
           :settings="settings"
-          @remove="pendingModelId = $event"
-          @update="Object.assign(model, $event)"
+          @remove="requestModelRemoval"
+          @update="updateModel(model, $event)"
         />
       </div>
 
@@ -170,9 +170,18 @@ const {
   saveKey,
   removeKey,
   addModelToProvider,
+  isDraftModel,
+  modelsOf,
+  updateModel,
+  discardDraftModel,
   checkConnection,
 } = props.settings
 const pendingModelId = ref<string | null>(null)
+/** A draft holds nothing saved, so it goes without a confirmation */
+function requestModelRemoval(id: string) {
+  if (isDraftModel(id)) discardDraftModel(id)
+  else pendingModelId.value = id
+}
 function confirmModelRemoval() {
   if (pendingModelId.value) {
     removeModel(props.llm, pendingModelId.value)
@@ -193,12 +202,12 @@ const PROVIDER_ICONS: Record<string, string> = {
 function providerIcon(provider: LlmProvider) {
   return PROVIDER_ICONS[provider.type] ?? 'mdi:cube-outline'
 }
-function modelsFor(id: string) {
+function savedModelsFor(id: string) {
   return props.llm.models.filter((model) => model.providerId === id)
 }
 function providerSummary(provider: LlmProvider) {
   const count = t('settings.modelsCount', {
-    count: modelsFor(provider.id).length,
+    count: savedModelsFor(provider.id).length,
   })
   return provider.baseUrl?.trim()
     ? `${provider.baseUrl.trim()} · ${count}`

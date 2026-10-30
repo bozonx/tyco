@@ -800,6 +800,8 @@
     "maxTokens": "En fazla token",
     "model": "Model",
     "modelId": "Model kimliği",
+    "modelIdDraftHint": "Model, kimliğini girdiğinizde kaydedilir.",
+    "modelIdRequired": "Model kimliğini girin; kimliği olmayan model kullanılmaz.",
     "modelModeAll": "Hepsi için bir",
     "modelModePerTask": "Her özellik için",
     "modelsCount": "{count} model",
@@ -1011,6 +1013,8 @@
       "ydotooldNotRunning": "ydotoold arka plan hizmeti çalışmıyor. Başlatın: systemctl --user enable --now ydotool"
     },
     "theme": "Tema",
+    "thinkingMode": "Düşünme modu",
+    "thinkingModeHint": "Model yanıtlamadan önce akıl yürütür: daha yavaştır ama karmaşık görevlerde daha iyidir. Bu modda sıcaklık dikkate alınmaz.",
     "toolUse": "Araç çağırma",
     "toolUseHint": "Modelin sohbette araç kullanmasını sağlar. Model veya sunucusu araç çağıramıyorsa kapatın.",
     "transformationsHint": "Yapay zekanın metni dönüştürmek için uyguladığı talimatlar (istemler). Dönüştürme menüsünde her biri kendi tuşuyla çalışır; tuşlarını değiştirmek için kartları sürükleyin.",

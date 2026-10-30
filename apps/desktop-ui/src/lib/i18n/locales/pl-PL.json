@@ -803,6 +803,8 @@
     "maxTokens": "Maks. tokenów",
     "model": "Model",
     "modelId": "ID modelu",
+    "modelIdDraftHint": "Model zostanie zapisany, gdy wpiszesz jego ID.",
+    "modelIdRequired": "Wpisz ID modelu; bez niego model nie jest używany.",
     "modelModeAll": "Jeden dla wszystkich",
     "modelModePerTask": "Dla każdej funkcji",
     "modelsCount": "Modele: {count}",
@@ -1014,6 +1016,8 @@
       "ydotooldNotRunning": "Demon ydotoold nie działa. Uruchom go: systemctl --user enable --now ydotool"
     },
     "theme": "Motyw",
+    "thinkingMode": "Tryb myślenia",
+    "thinkingModeHint": "Model rozumuje przed odpowiedzią: wolniej, ale lepiej radzi sobie ze złożonymi zadaniami. W tym trybie temperatura jest ignorowana.",
     "toolUse": "Wywoływanie narzędzi",
     "toolUseHint": "Pozwala modelowi używać narzędzi na czacie. Wyłącz, jeśli model lub jego serwer nie potrafi wywoływać narzędzi.",
     "transformationsHint": "Instrukcje (prompty), które sztuczna inteligencja stosuje do transformacji tekstu. W menu transformacji każda uruchamia się osobnym klawiszem; przeciągaj karty, aby zmienić przypisane klawisze.",

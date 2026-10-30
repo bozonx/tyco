@@ -797,6 +797,8 @@
     "maxTokens": "Token 上限",
     "model": "模型",
     "modelId": "模型 ID",
+    "modelIdDraftHint": "輸入模型 ID 後即會儲存該模型。",
+    "modelIdRequired": "請輸入模型 ID；沒有 ID 的模型不會被使用。",
     "modelModeAll": "統一模型",
     "modelModePerTask": "依功能設定",
     "modelsCount": "{count} 個模型",
@@ -1008,6 +1010,8 @@
       "ydotooldNotRunning": "ydotoold 背景服務未執行。請啟動它：systemctl --user enable --now ydotool"
     },
     "theme": "主題",
+    "thinkingMode": "思考模式",
+    "thinkingModeHint": "模型會在回答前進行推理：速度較慢，但更擅長複雜任務。此模式下會忽略溫度。",
     "toolUse": "工具呼叫",
     "toolUseHint": "允許模型在聊天中使用工具。若模型或其伺服器不支援工具呼叫，請關閉此選項。",
     "transformationsHint": "AI 用於轉換文字的指令（提示詞）。在轉換選單中，每個指令都有對應的按鍵；拖曳卡片可變更其按鍵。",

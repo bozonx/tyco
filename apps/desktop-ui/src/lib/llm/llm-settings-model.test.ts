@@ -111,4 +111,41 @@ describe('LLM settings model', () => {
     f.model.setNumber(model, 'contextWindowTokens', '')
     expect(model.contextWindowTokens).toBeUndefined()
   })
+  it('keeps a new model out of the config until its id has a character', () => {
+    const f = fixture()
+    f.model.addModelToProvider('local')
+    expect(f.config.models).toHaveLength(1)
+    const [draft, saved] = f.model.modelsOf('local')
+    expect(saved.id).toBe('model')
+    expect(f.model.isDraftModel(draft.id)).toBe(true)
+
+    f.model.setNumber(draft, 'temperature', '0.4')
+    f.model.updateModel(draft, { name: 'Draft', providerModelId: '  ' })
+    expect(f.config.models).toHaveLength(1)
+
+    f.model.updateModel(draft, { providerModelId: 'q' })
+    expect(f.model.isDraftModel(draft.id)).toBe(false)
+    expect(f.config.models[0]).toMatchObject({
+      id: draft.id,
+      name: 'Draft',
+      providerModelId: 'q',
+      temperature: 0.4,
+    })
+  })
+
+  it('discards drafts on removal, with their provider and on disposal', () => {
+    const f = fixture()
+    f.model.addModelToProvider('local')
+    f.model.addModelToProvider('local')
+    const [first, second] = f.model.modelsOf('local')
+    expect(first.id).not.toBe(second.id)
+    f.model.discardDraftModel(first.id)
+    expect(f.model.modelsOf('local')).toHaveLength(2)
+    f.model.dispose()
+    expect(f.model.modelsOf('local')).toHaveLength(1)
+
+    f.model.addModelToProvider('local')
+    f.model.removeProviderById('local')
+    expect(f.model.modelsOf('local')).toHaveLength(0)
+  })
 })

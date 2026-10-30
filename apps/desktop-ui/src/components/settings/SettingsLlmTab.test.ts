@@ -67,15 +67,18 @@ describe('LLM settings cards', () => {
   it('updates model fields through the model editor and preserves invalid numeric drafts', async () => {
     const { llm, localCard, wrapper } = setup()
     const model = llm.models.find((item) => item.providerId === 'ollama')!
+    model.name = ''
     const card = localCard()
     await card.get('.disclosure-header').trigger('click')
     const row = card.get('.model-row')
-    const inputs = row.findAll('input')
-    await inputs[0].setValue('Local chat model')
-    await inputs[1].setValue('custom-model')
-    expect(model.name).toBe('Local chat model')
+    await row.get('input').setValue('custom-model')
     expect(model.providerModelId).toBe('custom-model')
+    expect(row.get('.model-row-header').text()).toBe('custom-model')
     await row.get('.advanced-toggle button').trigger('click')
+    const name = row.get('input[placeholder="custom-model"]')
+    await name.setValue('Local chat model')
+    expect(model.name).toBe('Local chat model')
+    expect(row.get('.model-row-header').text()).toBe('Local chat model')
     await row.get('input[type="checkbox"]').setValue(true)
     expect(model.canUseImages).toBe(true)
     const toolUseRow = wrapper
@@ -124,8 +127,16 @@ describe('LLM settings cards', () => {
       .findAll('.models-header button')
       .find((button) => button.text().includes('settings.addModel'))!
     await addButton.trigger('click')
+    expect(llm.models).toHaveLength(count)
+    expect(card.findAll('.model-row')).toHaveLength(2)
+    const draftRow = card.findAll('.model-row')[0]
+    expect(draftRow.get('.model-row-header').text()).toBe('')
+    await draftRow.get('input').setValue('q')
     expect(llm.models).toHaveLength(count + 1)
-    expect(llm.models[0]?.providerId).toBe('ollama')
+    expect(llm.models[0]).toMatchObject({
+      providerId: 'ollama',
+      providerModelId: 'q',
+    })
     expect(card.findAll('.model-row')).toHaveLength(2)
     const remove = card
       .findAll('.connection-actions button')
@@ -151,6 +162,51 @@ describe('LLM settings cards', () => {
       false
     )
     expect(context.deps.persist).toHaveBeenCalled()
+  })
+
+  it('discards an unsaved model without a confirmation', async () => {
+    const { llm, localCard } = setup()
+    const card = localCard()
+    await card.get('.disclosure-header').trigger('click')
+    const count = llm.models.length
+    await card
+      .findAll('.models-header button')
+      .find((button) => button.text().includes('settings.addModel'))!
+      .trigger('click')
+    const draftRow = card.findAll('.model-row')[0]
+    await draftRow.get('input').setValue(' ')
+    expect(llm.models).toHaveLength(count)
+    await draftRow
+      .get('button[aria-label="settings.removeModel"]')
+      .trigger('click')
+    expect(card.getComponent(ConfirmModal).props('open')).toBe(false)
+    expect(card.findAll('.model-row')).toHaveLength(1)
+    expect(llm.models).toHaveLength(count)
+  })
+
+  it('shows the thinking mode only for DeepSeek models', async () => {
+    const { llm, wrapper, localCard } = setup()
+    const thinkingRows = () =>
+      wrapper
+        .findAllComponents(FieldRow)
+        .filter((field) => field.props('label') === 'settings.thinkingMode')
+    const deepseek = wrapper
+      .findAll('.connection-card')
+      .find((card) => card.text().includes('DeepSeek'))!
+    await deepseek.get('.disclosure-header').trigger('click')
+    await deepseek.get('.model-row .advanced-toggle button').trigger('click')
+    expect(thinkingRows()).toHaveLength(1)
+    await thinkingRows()[0].get('input[type="checkbox"]').setValue(true)
+    expect(
+      llm.models.find((model) => model.providerId === 'deepseek')
+        ?.isThinkingEnabled
+    ).toBe(true)
+
+    const local = localCard()
+    await local.get('.disclosure-header').trigger('click')
+    await local.get('.model-row .advanced-toggle button').trigger('click')
+    expect(local.findAll('.model-row input[type="checkbox"]')).toHaveLength(2)
+    expect(thinkingRows()).toHaveLength(1)
   })
 
   it('confirms model removal before deleting it from the card', async () => {

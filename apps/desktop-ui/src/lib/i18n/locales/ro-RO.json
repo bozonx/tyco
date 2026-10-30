@@ -803,6 +803,8 @@
     "maxTokens": "Tokeni maximi",
     "model": "Model",
     "modelId": "ID-ul modelului",
+    "modelIdDraftHint": "Modelul se salvează după ce introduceți ID-ul lui.",
+    "modelIdRequired": "Introduceți ID-ul modelului; fără el, modelul nu este folosit.",
     "modelModeAll": "Unul pentru toate",
     "modelModePerTask": "Pentru fiecare funcție",
     "modelsCount": "Modele: {count}",
@@ -1014,6 +1016,8 @@
       "ydotooldNotRunning": "Serviciul ydotoold nu rulează. Pornește-l: systemctl --user enable --now ydotool"
     },
     "theme": "Temă",
+    "thinkingMode": "Mod de gândire",
+    "thinkingModeHint": "Modelul raționează înainte de a răspunde: mai lent, dar se descurcă mai bine cu sarcinile complexe. Temperatura este ignorată în acest mod.",
     "toolUse": "Apelarea instrumentelor",
     "toolUseHint": "Permite modelului să folosească instrumente în chat. Dezactivați dacă modelul sau serverul lui nu poate apela instrumente.",
     "transformationsHint": "Instrucțiuni (prompturi) pe care IA le aplică pentru a transforma textul. În meniul de transformare, fiecare se execută cu propria tastă; trageți cardurile pentru a le schimba tastele.",

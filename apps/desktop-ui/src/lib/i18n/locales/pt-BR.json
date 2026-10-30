@@ -803,6 +803,8 @@
     "maxTokens": "Máx. de tokens",
     "model": "Modelo",
     "modelId": "ID do modelo",
+    "modelIdDraftHint": "O modelo é salvo assim que você inserir o ID dele.",
+    "modelIdRequired": "Insira o ID do modelo; sem ele, o modelo não é usado.",
     "modelModeAll": "Uma para todas",
     "modelModePerTask": "Por função",
     "modelsCount": "Modelos: {count}",
@@ -1014,6 +1016,8 @@
       "ydotooldNotRunning": "O daemon ydotoold não está em execução. Inicie-o: systemctl --user enable --now ydotool"
     },
     "theme": "Tema",
+    "thinkingMode": "Modo de raciocínio",
+    "thinkingModeHint": "O modelo raciocina antes de responder: é mais lento, mas lida melhor com tarefas complexas. A temperatura é ignorada neste modo.",
     "toolUse": "Chamada de ferramentas",
     "toolUseHint": "Permite que o modelo use ferramentas no chat. Desative se o modelo ou o servidor dele não conseguir chamar ferramentas.",
     "transformationsHint": "Instruções (prompts) que a IA aplica para transformar o texto. No menu de transformações, cada uma é executada com sua própria tecla; arraste os cartões para alterar suas teclas.",

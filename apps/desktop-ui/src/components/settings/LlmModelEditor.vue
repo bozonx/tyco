@@ -3,7 +3,9 @@
     <div class="model-row-header">
       <div class="flex items-center gap-2 min-w-0">
         <AppIcon icon="mdi:cube-outline" size="lg" class="text-muted" />
-        <span class="font-medium truncate">{{ modelLabel(model) }}</span>
+        <span v-if="displayName" class="font-medium truncate">{{
+          displayName
+        }}</span>
       </div>
       <IconButton
         size="sm"
@@ -13,16 +15,20 @@
         @click="emit('remove', model.id)"
       />
     </div>
-    <FieldRow :label="t('settings.name')">
-      <FieldInput
-        :model-value="model.name || ''"
-        @update:model-value="emit('update', { name: $event })"
-      />
-    </FieldRow>
-    <FieldRow :label="t('settings.modelId')">
+    <FieldRow
+      :label="t('settings.modelId')"
+      required
+      :hint="isDraft ? t('settings.modelIdDraftHint') : undefined"
+      :error="
+        !isDraft && !model.providerModelId.trim()
+          ? t('settings.modelIdRequired')
+          : undefined
+      "
+    >
       <FieldInput
         :model-value="model.providerModelId"
         :placeholder="placeholder"
+        :autofocus="isDraft"
         @update:model-value="emit('update', { providerModelId: $event })"
       />
     </FieldRow>
@@ -42,6 +48,13 @@
       />
     </div>
     <div v-if="expandedModelIds.has(model.id)" :id="advancedId">
+      <FieldRow :label="t('settings.name')">
+        <FieldInput
+          :model-value="model.name || ''"
+          :placeholder="model.providerModelId.trim() || undefined"
+          @update:model-value="emit('update', { name: $event })"
+        />
+      </FieldRow>
       <FieldRow :label="t('settings.vision')">
         <FieldSwitch
           :model-value="model.canUseImages"
@@ -55,6 +68,16 @@
         <FieldSwitch
           :model-value="model.canUseTools"
           @update:model-value="emit('update', { canUseTools: $event })"
+        />
+      </FieldRow>
+      <FieldRow
+        v-if="isDeepSeek"
+        :label="t('settings.thinkingMode')"
+        :info="t('settings.thinkingModeHint')"
+      >
+        <FieldSwitch
+          :model-value="model.isThinkingEnabled === true"
+          @update:model-value="emit('update', { isThinkingEnabled: $event })"
         />
       </FieldRow>
       <FieldRow
@@ -73,6 +96,7 @@
             numberDrafts[`${model.id}:temperature`] ?? model.temperature ?? ''
           "
           :aria-invalid="numberErrors[`${model.id}:temperature`] || undefined"
+          :placeholder="t('settings.providerDefault')"
           @update:model-value="setNumber(model, 'temperature', $event)"
           @invalid-input="numberErrors[`${model.id}:temperature`] = true"
         />
@@ -129,10 +153,10 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useId } from 'vue'
+import { computed, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
-import { modelLabel } from '../../lib/llm/llm-config'
+import { modelDisplayName } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import AppIcon from '../common/AppIcon.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
@@ -145,7 +169,7 @@ import type { LlmModel, LlmProvider } from '@tyco/shared'
 
 const props = defineProps<{
   model: LlmModel
-  /** The configured providers; whether a model calls tools depends on its own */
+  /** The configured providers; the thinking mode depends on the model's own */
   providers: LlmProvider[]
   placeholder: string
   settings: ReturnType<typeof createLlmSettingsModel>
@@ -156,8 +180,21 @@ const emit = defineEmits<{
 }>()
 const { t } = useI18n()
 const advancedId = useId()
-const { expandedModelIds, numberDrafts, numberErrors, setNumber } =
-  props.settings
+const {
+  expandedModelIds,
+  numberDrafts,
+  numberErrors,
+  setNumber,
+  isDraftModel,
+} = props.settings
+const displayName = computed(() => modelDisplayName(props.model))
+const isDraft = computed(() => isDraftModel(props.model.id))
+/** Only DeepSeek models switch thinking with a request option */
+const isDeepSeek = computed(
+  () =>
+    props.providers.find((provider) => provider.id === props.model.providerId)
+      ?.type === 'deepseek'
+)
 function toggle(set: Set<string>, id: string) {
   if (set.has(id)) set.delete(id)
   else set.add(id)

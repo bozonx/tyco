@@ -50,24 +50,27 @@ export function removeProvider(config: LlmConfig, providerId: string) {
 }
 
 /**
- * A new model of a custom endpoint starts without tools: local models often
- * cannot call them
+ * A fresh model that is not in the config yet; `takenIds` are ids it must not
+ * reuse besides the config's own. A new model of a custom endpoint starts
+ * without tools: local models often cannot call them
  */
-export function addModel(config: LlmConfig, providerId: string): LlmModel {
+export function createModel(
+  config: LlmConfig,
+  providerId: string,
+  takenIds: Iterable<string> = []
+): LlmModel {
   const provider = config.providers.find((item) => item.id === providerId)
-  const model: LlmModel = {
-    id: uniqueLlmId(
-      `${providerId}-model`,
-      config.models.map((item) => item.id)
-    ),
+  return {
+    id: uniqueLlmId(`${providerId}-model`, [
+      ...config.models.map((item) => item.id),
+      ...takenIds,
+    ]),
     providerId: providerId,
     providerModelId: '',
     name: '',
     canUseImages: false,
     canUseTools: provider?.type !== 'openaiCompatible',
   }
-  config.models.unshift(model)
-  return model
 }
 
 /** Removes a model and every place a task used it */
@@ -91,10 +94,20 @@ export function removeModel(config: LlmConfig, modelId: string) {
   }
 }
 
+/**
+ * The name the user gave a model, else its provider's id; empty when neither is
+ * set
+ */
+export function modelDisplayName(
+  model: Pick<LlmModel, 'name' | 'providerModelId'>
+): string {
+  return model.name?.trim() || model.providerModelId.trim()
+}
+
 export function modelLabel(
   model: Pick<LlmModel, 'id' | 'name' | 'providerModelId'>
 ): string {
-  return model.name?.trim() || model.providerModelId.trim() || model.id
+  return modelDisplayName(model) || model.id
 }
 
 /** The model a task answers with, undefined when none is picked */

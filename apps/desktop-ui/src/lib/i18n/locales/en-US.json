@@ -803,6 +803,8 @@
     "maxTokens": "Max tokens",
     "model": "Model",
     "modelId": "Model ID",
+    "modelIdDraftHint": "The model is saved once you enter its ID.",
+    "modelIdRequired": "Enter the model ID; without it the model is not used.",
     "modelModeAll": "One for all",
     "modelModePerTask": "Per feature",
     "modelsCount": "Models: {count}",
@@ -1014,6 +1016,8 @@
       "ydotooldNotRunning": "The ydotoold daemon is not running. Start it: systemctl --user enable --now ydotool"
     },
     "theme": "Theme",
+    "thinkingMode": "Thinking mode",
+    "thinkingModeHint": "The model reasons before answering: slower, but better at complex tasks. Temperature is ignored in this mode.",
     "toolUse": "Tool calling",
     "toolUseHint": "Lets the model use tools in the chat. Turn it off if the model or its server cannot call tools.",
     "transformationsHint": "Instructions (prompts) the AI applies to transform the text. In the transformations menu each one runs with its own key; drag the cards to change their keys.",

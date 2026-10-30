@@ -803,6 +803,8 @@
     "maxTokens": "Max. Tokens",
     "model": "Modell",
     "modelId": "Modell-ID",
+    "modelIdDraftHint": "Das Modell wird gespeichert, sobald Sie seine ID eingeben.",
+    "modelIdRequired": "Geben Sie die Modell-ID ein; ohne sie wird das Modell nicht verwendet.",
     "modelModeAll": "Eine für alle",
     "modelModePerTask": "Für jede Funktion",
     "modelsCount": "Modelle: {count}",
@@ -1014,6 +1016,8 @@
       "ydotooldNotRunning": "Der ydotoold-Dienst läuft nicht. Starte ihn: systemctl --user enable --now ydotool"
     },
     "theme": "Design",
+    "thinkingMode": "Denkmodus",
+    "thinkingModeHint": "Das Modell denkt vor der Antwort nach: langsamer, aber besser bei komplexen Aufgaben. Die Temperatur wird in diesem Modus ignoriert.",
     "toolUse": "Werkzeugaufrufe",
     "toolUseHint": "Erlaubt dem Modell, im Chat Werkzeuge zu verwenden. Schalten Sie es aus, wenn das Modell oder sein Server keine Werkzeuge aufrufen kann.",
     "transformationsHint": "Anweisungen (Prompts), die die KI zur Transformation des Textes anwendet. Im Transformationsmenü wird jede mit einer eigenen Taste ausgeführt; ziehen Sie die Karten, um die Tasten zu ändern.",

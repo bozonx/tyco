@@ -803,6 +803,8 @@
     "maxTokens": "Najviše tokena",
     "model": "Model",
     "modelId": "ID modela",
+    "modelIdDraftHint": "Model se sprema čim unesete njegov ID.",
+    "modelIdRequired": "Unesite ID modela; bez njega se model ne koristi.",
     "modelModeAll": "Jedan za sve",
     "modelModePerTask": "Po funkciji",
     "modelsCount": "Modela: {count}",
@@ -1014,6 +1016,8 @@
       "ydotooldNotRunning": "Pozadinski servis ydotoold ne radi. Pokrenite ga: systemctl --user enable --now ydotool"
     },
     "theme": "Tema",
+    "thinkingMode": "Način razmišljanja",
+    "thinkingModeHint": "Model razmišlja prije odgovora: sporije, ali bolje rješava složene zadatke. Temperatura se u ovom načinu zanemaruje.",
     "toolUse": "Pozivanje alata",
     "toolUseHint": "Omogućuje modelu da koristi alate u chatu. Isključite ako model ili njegov poslužitelj ne mogu pozivati alate.",
     "transformationsHint": "Upute (upiti) koje AI primjenjuje za transformaciju teksta. U izborniku transformacije svaka se pokreće vlastitom tipkom; povucite kartice da promijenite njihove tipke.",

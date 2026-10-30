@@ -800,6 +800,8 @@
     "maxTokens": "最大出力トークン",
     "model": "モデル",
     "modelId": "モデルID",
+    "modelIdDraftHint": "モデル ID を入力するとモデルが保存されます。",
+    "modelIdRequired": "モデル ID を入力してください。ID がないモデルは使用されません。",
     "modelModeAll": "すべて共通",
     "modelModePerTask": "機能ごと",
     "modelsCount": "{count} 個のモデル",
@@ -1011,6 +1013,8 @@
       "ydotooldNotRunning": "ydotoold デーモンが動作していません。起動してください: systemctl --user enable --now ydotool"
     },
     "theme": "テーマ",
+    "thinkingMode": "思考モード",
+    "thinkingModeHint": "モデルが回答前に推論します。遅くなりますが、複雑なタスクに強くなります。このモードでは温度は無視されます。",
     "toolUse": "ツール呼び出し",
     "toolUseHint": "チャット内でモデルがツールを使用できるようにします。モデルがツール呼び出しに対応していない場合はオフにしてください。",
     "transformationsHint": "AIがテキストを変換するために適用する指示（プロンプト）。変換メニューでは各項目が固有のキーで実行されます。カードをドラッグしてキーを変更できます。",

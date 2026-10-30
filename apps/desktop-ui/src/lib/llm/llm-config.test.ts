@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   addCompatibleProvider,
-  addModel,
+  createModel,
+  modelDisplayName,
   modelLabel,
   normalizeLlmConfig,
   removeModel,
@@ -133,7 +134,8 @@ describe('llm-config', () => {
   it('adds and removes a custom provider with its models', () => {
     const config = clone(DEFAULT_LLM_CONFIG)
     const provider = addCompatibleProvider(config)
-    const model = addModel(config, provider.id)
+    const model = createModel(config, provider.id)
+    config.models.unshift(model)
     config.tasks.aiTask.modelId = model.id
     config.tasks.translation.modelId = 'ollama-qwen'
 
@@ -171,6 +173,22 @@ describe('llm-config', () => {
     expect(config.commonModelId).toBe('')
     expect(config.customTaskModels.translation).toBe('')
     expect(config.customTaskModels.correction).toBe('ollama-qwen')
+  })
+
+  it('creates a model without reusing taken ids or adding it to the config', () => {
+    const config = clone(DEFAULT_LLM_CONFIG)
+    const count = config.models.length
+    const first = createModel(config, 'google')
+    const second = createModel(config, 'google', [first.id])
+
+    expect(first).toMatchObject({ providerId: 'google', providerModelId: '' })
+    expect(second.id).not.toBe(first.id)
+    expect(config.models).toHaveLength(count)
+  })
+
+  it('names a model by name, then model id, else nothing', () => {
+    expect(modelDisplayName({ providerModelId: ' m ', name: '' })).toBe('m')
+    expect(modelDisplayName({ providerModelId: ' ', name: ' ' })).toBe('')
   })
 
   it('labels a model by name, then model id', () => {
