@@ -388,6 +388,9 @@ describe('voice recognition failures', () => {
       'make it punchy',
       expect.anything()
     )
+    expect(deps.setPendingModal).toHaveBeenCalledWith(
+      expect.objectContaining({ styling: true })
+    )
     expect(deps.onCorrected).toHaveBeenCalledWith(
       'Styled words',
       'Raw words',
@@ -409,6 +412,9 @@ describe('voice recognition failures', () => {
       'Raw words',
       'make it punchy',
       expect.anything()
+    )
+    expect(deps.setPendingModal).toHaveBeenCalledWith(
+      expect.objectContaining({ styling: true })
     )
     expect(deps.onCorrected).toHaveBeenCalledWith(
       'Styled words',

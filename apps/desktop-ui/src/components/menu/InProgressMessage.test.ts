@@ -24,6 +24,29 @@ describe('InProgressMessage', () => {
     expect(cancelBtn.text()).toContain('common.cancel')
   })
 
+  it('renders specific text for correction, transformation, styling, and ai', () => {
+    const correctionWrapper = mount(InProgressMessage, {
+      props: { correction: true },
+    })
+    expect(correctionWrapper.text()).toContain('menu.correction')
+
+    const transformationWrapper = mount(InProgressMessage, {
+      props: { transformation: true },
+    })
+    expect(transformationWrapper.text()).toContain('menu.transformation')
+
+    const stylingWrapper = mount(InProgressMessage, {
+      props: { styling: true },
+    })
+    expect(stylingWrapper.text()).toContain('menu.styling')
+
+    const aiWrapper = mount(InProgressMessage, { props: { ai: true } })
+    expect(aiWrapper.text()).toContain('menu.aiRequest')
+
+    const defaultWrapper = mount(InProgressMessage)
+    expect(defaultWrapper.text()).toContain('common.inProgress')
+  })
+
   it('invokes onCancel callback on button click', async () => {
     const onCancel = vi.fn()
     const wrapper = mount(InProgressMessage, { props: { onCancel } })

@@ -28,7 +28,10 @@ export interface VoiceRecognitionDependencies {
   ) => Promise<string | null>
   saveSourceResult: (sourceId: string | null, text: string) => Promise<unknown>
   setPendingModal: (options: {
-    correction: boolean
+    correction?: boolean
+    styling?: boolean
+    transformation?: boolean
+    label?: string
     onCancel: () => void
   }) => number
   clearPendingModal: (owner: number) => void
@@ -185,7 +188,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
         const abortStyling = () => styling.abort()
         signal?.addEventListener('abort', abortStyling)
         const owner = deps.setPendingModal({
-          correction: true,
+          styling: true,
           onCancel: abortStyling,
         })
 

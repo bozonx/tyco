@@ -45,7 +45,11 @@
                   name: voice.command ? commandLabel(voice.command) : '',
                 })
               "
-            />
+            >
+              <Button type="button" @click="close" variant="ghost" size="sm">
+                {{ t('common.cancel') }}
+              </Button>
+            </StateMessage>
 
             <template v-else>
               <div v-if="voice.command" class="voice-chosen">
@@ -145,6 +149,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import AppIcon from '../components/common/AppIcon.vue'
 import Badge from '../components/common/Badge.vue'
+import Button from '../components/common/Button.vue'
 import ContentPadding from '../components/common/ContentPadding.vue'
 import FieldSelect from '../components/common/FieldSelect.vue'
 import FieldTextArea from '../components/common/FieldTextArea.vue'

@@ -4,11 +4,15 @@
       kind="loading"
       :message="
         props.label ||
-        (props.ai
-          ? t('menu.aiRequest')
-          : props.correction
-            ? t('menu.correction')
-            : t('common.inProgress'))
+        (props.correction
+          ? t('menu.correction')
+          : props.transformation
+            ? t('menu.transformation')
+            : props.styling
+              ? t('menu.styling')
+              : props.ai
+                ? t('menu.aiRequest')
+                : t('common.inProgress'))
       "
       icon="mdi:progress-clock"
     />
@@ -29,6 +33,8 @@ import StateMessage from '../common/StateMessage.vue'
 const props = withDefaults(defineProps<PendingModalParams>(), {
   ai: false,
   correction: false,
+  transformation: false,
+  styling: false,
 })
 
 const menuModalsStore = useMenuModalsStore()

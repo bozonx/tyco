@@ -107,6 +107,8 @@ export interface ActionSelectMenuParams {
 export interface PendingModalParams {
   ai?: boolean
   correction?: boolean
+  transformation?: boolean
+  styling?: boolean
   label?: string
   onCancel?: () => void
 }

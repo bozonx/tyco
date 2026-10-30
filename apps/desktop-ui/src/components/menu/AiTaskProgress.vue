@@ -116,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import type {
   TaskRunState,
@@ -128,6 +129,13 @@ import type { AiTaskConfig } from '@tyco/shared'
 defineProps<{ task: AiTaskConfig; state: TaskRunState }>()
 
 const emit = defineEmits<{ decide: [approved: boolean]; cancel: [] }>()
+
+useDismissibleLayer({
+  isOpen: () => true,
+  elements: () => [],
+  canDismissOutside: false,
+  dismiss: () => emit('cancel'),
+})
 
 const { t } = useI18n()
 
