@@ -40,6 +40,16 @@ describe('InProgressMessage', () => {
     expect(cancelBtn.text()).toContain('common.cancel')
   })
 
+  it('renders custom cancel button label when provided', () => {
+    const wrapper = mount(InProgressMessage, {
+      props: { label: 'Working...', cancelLabel: 'Skip' },
+    })
+
+    const cancelBtn = wrapper.find('.in-progress-cancel-btn')
+    expect(cancelBtn.exists()).toBe(true)
+    expect(cancelBtn.text()).toBe('Skip')
+  })
+
   it('renders specific text for correction, transformation, styling, and ai', () => {
     const correctionWrapper = mount(InProgressMessage, {
       props: { correction: true },

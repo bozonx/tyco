@@ -528,7 +528,8 @@
     "voiceSend": "Odeslat",
     "voiceToInput": "Vložit do vstupního pole",
     "willCopyOnFinish": "Zkopíruje se po dokončení",
-    "willInsertOnFinish": "Vloží se po dokončení"
+    "willInsertOnFinish": "Vloží se po dokončení",
+    "skipProcessing": "Přeskočit"
   },
   "nav": {
     "aiChat": "Zeptat se AI",
@@ -1104,7 +1105,8 @@
     "voiceRecognitionFailed": "Rozpoznávání řeči se nepodařilo spustit",
     "webhookEmptyUrl": "URL webhooku je prázdná",
     "webhookFailed": "Požadavek na webhook selhal",
-    "webhookSuccess": "Webhook byl úspěšně odeslán"
+    "webhookSuccess": "Webhook byl úspěšně odeslán",
+    "voicePostProcessTimeout": "Zpracování hlasu trvalo příliš dlouho; byl zachován původní text"
   },
   "tools": {
     "aiTask": "Úloha AI",
@@ -1223,6 +1225,8 @@
     "insert": "Vložit",
     "liveCorrecting": "Opravování...",
     "livePreview": "Živá oprava",
-    "clickToApply": "Kliknutím použijete"
+    "clickToApply": "Kliknutím použijete",
+    "liveCorrectionFailed": "Živá oprava selhala",
+    "liveCorrectionFailedHint": "Model neodpověděl. Text bude vložen v původní podobě."
   }
 }

@@ -82,7 +82,7 @@
       variant="ghost"
       size="sm"
     >
-      {{ t('common.cancel') }}
+      {{ props.cancelLabel || t('common.cancel') }}
     </Button>
   </div>
 </template>

@@ -528,7 +528,8 @@
     "voiceSend": "Отправить",
     "voiceToInput": "Вставить в поле ввода",
     "willCopyOnFinish": "Скопируется по завершении",
-    "willInsertOnFinish": "Вставится по завершении"
+    "willInsertOnFinish": "Вставится по завершении",
+    "skipProcessing": "Пропустить"
   },
   "nav": {
     "aiChat": "Спросить ИИ",
@@ -1107,7 +1108,8 @@
     "voiceRecognitionFailed": "Не удалось запустить распознавание голоса",
     "webhookEmptyUrl": "URL вебхука не указан",
     "webhookFailed": "Ошибка отправки вебхука",
-    "webhookSuccess": "Вебхук успешно отправлен"
+    "webhookSuccess": "Вебхук успешно отправлен",
+    "voicePostProcessTimeout": "Обработка речи заняла слишком много времени; сохранён исходный текст"
   },
   "tools": {
     "aiTask": "AI-задача",
@@ -1226,6 +1228,8 @@
     "insert": "Вставить",
     "liveCorrecting": "Коррекция...",
     "livePreview": "Живая коррекция",
-    "clickToApply": "Нажмите, чтобы применить"
+    "clickToApply": "Нажмите, чтобы применить",
+    "liveCorrectionFailed": "Не удалось исправить",
+    "liveCorrectionFailedHint": "Модель не ответила. Текст будет вставлен без изменений."
   }
 }

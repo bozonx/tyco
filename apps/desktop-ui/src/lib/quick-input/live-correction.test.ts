@@ -2,9 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   DEFAULT_BOUNDARY_COOLDOWN_MS,
+  DEFAULT_FINAL_REQUEST_TIMEOUT_MS,
   DEFAULT_LIVE_DEBOUNCE_MS,
+  DEFAULT_LIVE_REQUEST_TIMEOUT_MS,
   DEFAULT_MIN_LIVE_LENGTH,
   DEFAULT_TYPING_TIMEOUT_MS,
+  LiveCorrectionTimeoutError,
   createLiveCorrection,
 } from './live-correction'
 
@@ -27,25 +30,32 @@ interface TestSetupOptions {
 
 function setup(options: TestSetupOptions = {}) {
   let currentTime = 1000
-  let pendingTimer: (() => void) | null = null
+  let nextTimerId = 1
+  const timers = new Map<number, { run: () => void; delay: number }>()
+  const debounceMs = options.debounceMs ?? DEFAULT_LIVE_DEBOUNCE_MS
+  const requestTimeoutMs = DEFAULT_LIVE_REQUEST_TIMEOUT_MS
+  const finalRequestTimeoutMs = DEFAULT_FINAL_REQUEST_TIMEOUT_MS
 
   const deps = {
     correct: vi.fn(
       async (text: string, _signal: AbortSignal) => `Fixed: ${text}`
     ),
-    setTimer: vi.fn((run: () => void, _delay: number) => {
-      pendingTimer = run
-      return 123
+    setTimer: vi.fn((run: () => void, delay: number) => {
+      const id = nextTimerId++
+      timers.set(id, { run, delay })
+      return id
     }),
-    clearTimer: vi.fn(() => {
-      pendingTimer = null
+    clearTimer: vi.fn((id: unknown) => {
+      timers.delete(id as number)
     }),
     now: vi.fn(() => currentTime),
-    debounceMs: options.debounceMs ?? DEFAULT_LIVE_DEBOUNCE_MS,
+    debounceMs,
     boundaryCooldownMs:
       options.boundaryCooldownMs ?? DEFAULT_BOUNDARY_COOLDOWN_MS,
     typingTimeoutMs: options.typingTimeoutMs ?? DEFAULT_TYPING_TIMEOUT_MS,
     minLength: options.minLength ?? DEFAULT_MIN_LIVE_LENGTH,
+    requestTimeoutMs,
+    finalRequestTimeoutMs,
   }
 
   const model = createLiveCorrection(deps)
@@ -54,19 +64,31 @@ function setup(options: TestSetupOptions = {}) {
     currentTime += ms
   }
 
-  const fireTimer = () => {
-    if (pendingTimer) {
-      const run = pendingTimer
-      pendingTimer = null
-      run()
+  const fireTimerWithDelay = (delay: number) => {
+    for (const [id, timer] of timers) {
+      if (timer.delay !== delay) continue
+      timers.delete(id)
+      timer.run()
+      return true
     }
+    return false
   }
+
+  const fireTimer = () => fireTimerWithDelay(debounceMs)
+  const fireRequestTimeout = () => fireTimerWithDelay(requestTimeoutMs)
+  const fireFinalRequestTimeout = () =>
+    fireTimerWithDelay(finalRequestTimeoutMs)
+  const hasDebounceTimer = () =>
+    [...timers.values()].some((timer) => timer.delay === debounceMs)
 
   return {
     deps,
     model,
     advanceTime,
     fireTimer,
+    fireRequestTimeout,
+    fireFinalRequestTimeout,
+    hasDebounceTimer,
     getCurrentTime: () => currentTime,
   }
 }
@@ -318,6 +340,94 @@ describe('createLiveCorrection', () => {
 
     await vi.waitFor(() => expect(model.status.value).toBe('error'))
     expect(model.error.value).toBeInstanceOf(Error)
+  })
+
+  it('times out a hung speculative request and reports an error', async () => {
+    const { deps, model, fireTimer, fireRequestTimeout, advanceTime } = setup()
+    // a dead connection: the request never settles, even when aborted
+    deps.correct.mockImplementationOnce(() => new Promise<string>(() => {}))
+
+    model.handleInput('Hanging text')
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
+    expect(model.status.value).toBe('loading')
+    const signal = deps.correct.mock.calls[0]![1] as AbortSignal
+
+    expect(fireRequestTimeout()).toBe(true)
+    await vi.waitFor(() => expect(model.status.value).toBe('error'))
+    expect(model.error.value).toBeInstanceOf(LiveCorrectionTimeoutError)
+    expect(signal.aborted).toBe(true)
+  })
+
+  it('does not retry a failed text by itself but corrects newer typing', async () => {
+    const { deps, model, fireTimer, hasDebounceTimer, advanceTime } = setup()
+    deps.correct.mockRejectedValueOnce(new Error('Network error'))
+
+    model.handleInput('Offline text')
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
+    await vi.waitFor(() => expect(model.status.value).toBe('error'))
+    expect(hasDebounceTimer()).toBe(false)
+
+    model.handleInput('Offline text more')
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
+    expect(deps.correct).toHaveBeenCalledTimes(2)
+    await vi.waitFor(() => expect(model.status.value).toBe('ready'))
+    expect(model.correctedText.value).toBe('Fixed: Offline text more')
+  })
+
+  it('corrects text typed during a timed-out request once it fails', async () => {
+    const {
+      deps,
+      model,
+      fireTimer,
+      fireRequestTimeout,
+      hasDebounceTimer,
+      advanceTime,
+    } = setup()
+    deps.correct.mockImplementationOnce(() => new Promise<string>(() => {}))
+
+    model.handleInput('First part')
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
+    model.handleInput('First part and more')
+    expect(deps.correct).toHaveBeenCalledOnce()
+
+    fireRequestTimeout()
+    await vi.waitFor(() => expect(model.status.value).toBe('error'))
+    expect(hasDebounceTimer()).toBe(true)
+    fireTimer()
+    expect(deps.correct).toHaveBeenLastCalledWith(
+      'First part and more',
+      expect.any(AbortSignal)
+    )
+  })
+
+  it('bounds the final correction by its own, longer timeout', async () => {
+    const { deps, model, fireRequestTimeout, fireFinalRequestTimeout } = setup()
+    deps.correct.mockImplementationOnce(() => new Promise<string>(() => {}))
+
+    const final = model.getFinalCorrection('Final text')
+    expect(fireRequestTimeout()).toBe(false)
+    expect(fireFinalRequestTimeout()).toBe(true)
+    await expect(final).rejects.toBeInstanceOf(LiveCorrectionTimeoutError)
+    expect(model.status.value).toBe('error')
+  })
+
+  it('retries a failed text when the final correction is requested', async () => {
+    const { deps, model, fireTimer, advanceTime } = setup()
+    deps.correct.mockRejectedValueOnce(new Error('Network error'))
+
+    model.handleInput('Retry me')
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
+    await vi.waitFor(() => expect(model.status.value).toBe('error'))
+
+    await expect(model.getFinalCorrection('Retry me')).resolves.toBe(
+      'Fixed: Retry me'
+    )
+    expect(model.status.value).toBe('ready')
   })
 
   it('cancels and resets on dispose', () => {

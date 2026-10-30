@@ -468,4 +468,59 @@ describe('voice recognition failures', () => {
     )
     model.dispose()
   })
+
+  it('saves raw recognized text to history even when formatting is disabled', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = setup({ shouldFormatRecognizedText: () => false })
+    await model.startSession()
+    await model.finish('insert')
+    expect(deps.saveSource).toHaveBeenCalledWith('Raw words', 'voiceCorrection')
+    expect(deps.saveSourceResult).not.toHaveBeenCalled()
+    expect(deps.voiceCorrection).not.toHaveBeenCalled()
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Raw words',
+      'Raw words',
+      undefined,
+      'insert'
+    )
+    model.dispose()
+  })
+
+  it('passes skip label to pending modal during post-processing', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = setup()
+    await model.startSession()
+    await model.finish()
+    expect(deps.setPendingModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        correction: true,
+        cancelLabel: 'menu.skipProcessing',
+      })
+    )
+    model.dispose()
+  })
+
+  it('times out post-processing when the model hangs, warning and falling back to raw text', async () => {
+    vi.useFakeTimers()
+    const { deps, model } = setup({
+      voiceCorrection: vi.fn(() => new Promise<string>(() => {})),
+      postProcessTimeoutMs: 5000,
+    })
+    await model.startSession()
+    const finishing = model.finish('next')
+    await vi.advanceTimersByTimeAsync(5100)
+    await finishing
+    expect(deps.toastKey).toHaveBeenCalledWith(
+      'toast.voicePostProcessTimeout',
+      'warn'
+    )
+    expect(deps.onCorrected).toHaveBeenCalledWith(
+      'Raw words',
+      'Raw words',
+      undefined,
+      'next'
+    )
+    expect(deps.clearPendingModal).toHaveBeenCalledWith(7)
+    model.dispose()
+  })
 })

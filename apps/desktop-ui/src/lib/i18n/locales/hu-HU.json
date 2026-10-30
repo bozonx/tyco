@@ -528,7 +528,8 @@
     "voiceSend": "Küldés",
     "voiceToInput": "Beillesztés a beviteli mezőbe",
     "willCopyOnFinish": "Befejezés után másolásra kerül",
-    "willInsertOnFinish": "Befejezés után beillesztésre kerül"
+    "willInsertOnFinish": "Befejezés után beillesztésre kerül",
+    "skipProcessing": "Kihagyás"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",
@@ -1107,7 +1108,8 @@
     "voiceRecognitionFailed": "A beszédfelismerést nem sikerült elindítani",
     "webhookEmptyUrl": "A webhook URL-je üres",
     "webhookFailed": "A webhook-kérés sikertelen",
-    "webhookSuccess": "A webhook sikeresen elküldve"
+    "webhookSuccess": "A webhook sikeresen elküldve",
+    "voicePostProcessTimeout": "A hangfeldolgozás túl sokáig tartott; az eredeti szöveg megmaradt"
   },
   "tools": {
     "aiTask": "MI-feladat",
@@ -1226,6 +1228,8 @@
     "insert": "Beillesztés",
     "liveCorrecting": "Javítás...",
     "livePreview": "Élő javítás",
-    "clickToApply": "Kattintson az alkalmazáshoz"
+    "clickToApply": "Kattintson az alkalmazáshoz",
+    "liveCorrectionFailed": "Az élő javítás sikertelen",
+    "liveCorrectionFailedHint": "A modell nem válaszolt. A szöveg úgy lesz beillesztve, ahogy beírta."
   }
 }

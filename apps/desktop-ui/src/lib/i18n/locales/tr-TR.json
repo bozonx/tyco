@@ -528,7 +528,8 @@
     "voiceSend": "Gönder",
     "voiceToInput": "Giriş alanına ekle",
     "willCopyOnFinish": "Tamamlandığında kopyalanacak",
-    "willInsertOnFinish": "Tamamlandığında eklenecek"
+    "willInsertOnFinish": "Tamamlandığında eklenecek",
+    "skipProcessing": "Atla"
   },
   "nav": {
     "aiChat": "Yapay Zekâya Sor",
@@ -1107,7 +1108,8 @@
     "voiceRecognitionFailed": "Ses tanıma başlatılamadı",
     "webhookEmptyUrl": "Web kancası URL'si boş",
     "webhookFailed": "Web kancası isteği başarısız oldu",
-    "webhookSuccess": "Web kancası başarıyla gönderildi"
+    "webhookSuccess": "Web kancası başarıyla gönderildi",
+    "voicePostProcessTimeout": "Ses işleme çok uzun sürdü; orijinal metin korundu"
   },
   "tools": {
     "aiTask": "Yapay zekâ görevi",
@@ -1226,6 +1228,8 @@
     "insert": "Ekle",
     "liveCorrecting": "Düzeltiliyor...",
     "livePreview": "Canlı düzeltme",
-    "clickToApply": "Uygulamak için tıklayın"
+    "clickToApply": "Uygulamak için tıklayın",
+    "liveCorrectionFailed": "Canlı düzeltme başarısız oldu",
+    "liveCorrectionFailedHint": "Model yanıt vermedi. Metin yazıldığı gibi eklenecektir."
   }
 }

@@ -528,7 +528,8 @@
     "voiceSend": "發送",
     "voiceToInput": "插入至輸入框",
     "willCopyOnFinish": "完成後將複製",
-    "willInsertOnFinish": "完成後將插入"
+    "willInsertOnFinish": "完成後將插入",
+    "skipProcessing": "略過"
   },
   "nav": {
     "aiChat": "詢問 AI",
@@ -1104,7 +1105,8 @@
     "voiceRecognitionFailed": "啟動語音辨識失敗",
     "webhookEmptyUrl": "Webhook URL 為空",
     "webhookFailed": "Webhook 請求失敗",
-    "webhookSuccess": "Webhook 發送成功"
+    "webhookSuccess": "Webhook 發送成功",
+    "voicePostProcessTimeout": "語音處理耗時過長；已保留原始文字"
   },
   "tools": {
     "aiTask": "AI 任務",
@@ -1223,6 +1225,8 @@
     "insert": "插入",
     "liveCorrecting": "正在修正...",
     "livePreview": "即時修正",
-    "clickToApply": "點擊套用"
+    "clickToApply": "點擊套用",
+    "liveCorrectionFailed": "即時校正失敗",
+    "liveCorrectionFailedHint": "模型沒有回應。文字將按鍵入的內容插入。"
   }
 }

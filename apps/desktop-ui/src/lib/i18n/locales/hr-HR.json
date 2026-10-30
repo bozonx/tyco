@@ -528,7 +528,8 @@
     "voiceSend": "Pošalji",
     "voiceToInput": "Umetni u polje za unos",
     "willCopyOnFinish": "Kopirat će se po završetku",
-    "willInsertOnFinish": "Umetnut će se po završetku"
+    "willInsertOnFinish": "Umetnut će se po završetku",
+    "skipProcessing": "Preskoči"
   },
   "nav": {
     "aiChat": "Pitaj AI",
@@ -1110,7 +1111,8 @@
     "voiceRecognitionFailed": "Prepoznavanje govora nije se moglo pokrenuti",
     "webhookEmptyUrl": "URL webhooka je prazan",
     "webhookFailed": "Zahtjev prema webhooku nije uspio",
-    "webhookSuccess": "Webhook je uspješno poslan"
+    "webhookSuccess": "Webhook je uspješno poslan",
+    "voicePostProcessTimeout": "Obrada glasa trajala je predugo; izvorni tekst je zadržan"
   },
   "tools": {
     "aiTask": "AI zadatak",
@@ -1229,6 +1231,8 @@
     "insert": "Umetni",
     "liveCorrecting": "Ispravljanje...",
     "livePreview": "Ispravak uživo",
-    "clickToApply": "Kliknite za primjenu"
+    "clickToApply": "Kliknite za primjenu",
+    "liveCorrectionFailed": "Ispravak uživo nije uspio",
+    "liveCorrectionFailedHint": "Model nije odgovorio. Tekst će biti umetnut kako je upisan."
   }
 }

@@ -4,6 +4,7 @@
       v-if="
         isLiveMode &&
         (textCorrectionStore.liveStatus === 'loading' ||
+          textCorrectionStore.liveStatus === 'error' ||
           textCorrectionStore.liveCorrectedText)
       "
       ref="livePreviewRef"

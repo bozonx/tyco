@@ -528,7 +528,8 @@
     "voiceSend": "发送",
     "voiceToInput": "插入到输入框",
     "willCopyOnFinish": "完成后将复制",
-    "willInsertOnFinish": "完成后将插入"
+    "willInsertOnFinish": "完成后将插入",
+    "skipProcessing": "跳过"
   },
   "nav": {
     "aiChat": "询问 AI",
@@ -1104,7 +1105,8 @@
     "voiceRecognitionFailed": "启动语音识别失败",
     "webhookEmptyUrl": "Webhook URL 为空",
     "webhookFailed": "Webhook 请求失败",
-    "webhookSuccess": "Webhook 发送成功"
+    "webhookSuccess": "Webhook 发送成功",
+    "voicePostProcessTimeout": "语音处理耗时过长；已保留原始文本"
   },
   "tools": {
     "aiTask": "AI 任务",
@@ -1223,6 +1225,8 @@
     "insert": "插入",
     "liveCorrecting": "正在修正...",
     "livePreview": "实时修正",
-    "clickToApply": "点击应用"
+    "clickToApply": "点击应用",
+    "liveCorrectionFailed": "实时纠错失败",
+    "liveCorrectionFailedHint": "模型未响应。文本将按键入的内容插入。"
   }
 }

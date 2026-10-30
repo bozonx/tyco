@@ -528,7 +528,8 @@
     "voiceSend": "Wyślij",
     "voiceToInput": "Wstaw do pola wprowadzania",
     "willCopyOnFinish": "Zostanie skopiowane po ukończeniu",
-    "willInsertOnFinish": "Zostanie wstawione po ukończeniu"
+    "willInsertOnFinish": "Zostanie wstawione po ukończeniu",
+    "skipProcessing": "Pomiń"
   },
   "nav": {
     "aiChat": "Zapytaj AI",
@@ -1110,7 +1111,8 @@
     "voiceRecognitionFailed": "Nie udało się uruchomić rozpoznawania mowy",
     "webhookEmptyUrl": "Adres URL webhooka jest pusty",
     "webhookFailed": "Zapytanie do webhooka nie powiodło się",
-    "webhookSuccess": "Webhook wysłany pomyślnie"
+    "webhookSuccess": "Webhook wysłany pomyślnie",
+    "voicePostProcessTimeout": "Przetwarzanie głosu trwało zbyt długo; zachowano oryginalny tekst"
   },
   "tools": {
     "aiTask": "Zadanie AI",
@@ -1229,6 +1231,8 @@
     "insert": "Wstaw",
     "liveCorrecting": "Korygowanie...",
     "livePreview": "Korekta na żywo",
-    "clickToApply": "Kliknij, aby zastosować"
+    "clickToApply": "Kliknij, aby zastosować",
+    "liveCorrectionFailed": "Korekta na żywo nie powiodła się",
+    "liveCorrectionFailedHint": "Model nie odpowiedział. Tekst zostanie wstawiony w wpisanej postaci."
   }
 }

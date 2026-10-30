@@ -1,5 +1,9 @@
 import { errorMessage } from '@tyco/shared/value-guards'
 import { computed, ref } from 'vue'
+import {
+  type TimerDependencies,
+  createSingleTimer,
+} from '../timers/single-timer'
 import { DictationError, type LiveDictationStart } from './live-dictation'
 import {
   createLiveTranscriptState,
@@ -8,7 +12,28 @@ import {
 import type { VoiceFinishIntent } from './voice-finish-intent'
 import { createVoiceSession } from './voice-session'
 
-export interface VoiceRecognitionDependencies {
+/**
+ * How long the LLM may format or style a dictation; then the raw transcript
+ * goes on as it is
+ */
+export const DEFAULT_POST_PROCESS_TIMEOUT_MS = 30_000
+
+/**
+ * `promise`, or a rejection as soon as `signal` aborts: a hung request may
+ * ignore it
+ */
+function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  if (signal.aborted) return Promise.reject(new Error('Aborted'))
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new Error('Aborted'))
+    signal.addEventListener('abort', onAbort, { once: true })
+    promise.then(resolve, reject).finally(() => {
+      signal.removeEventListener('abort', onAbort)
+    })
+  })
+}
+
+export interface VoiceRecognitionDependencies extends TimerDependencies {
   startDictation: (
     handlers: Pick<LiveDictationStart, 'onText' | 'onError'>
   ) => Promise<void>
@@ -32,11 +57,13 @@ export interface VoiceRecognitionDependencies {
     styling?: boolean
     transformation?: boolean
     label?: string
+    cancelLabel?: string
     allowBufferedIntent?: boolean
     onCancel: () => void
   }) => number
   clearPendingModal: (owner: number) => void
   consumeBufferedIntent?: () => 'insert' | 'copy' | null
+  postProcessTimeoutMs?: number
   options: () => { chat?: boolean; prefix?: string; suffix?: string }
   onCorrected: (
     result: string,
@@ -61,6 +88,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     toastKey,
     toastText,
   } = deps
+  const postProcessTimeoutMs =
+    deps.postProcessTimeoutMs ?? DEFAULT_POST_PROCESS_TIMEOUT_MS
   const transcript = ref(createLiveTranscriptState())
   const hasText = computed(() => Boolean(liveTranscriptText(transcript.value)))
   const isFinishing = ref(false)
@@ -185,80 +214,66 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       let correctedText: string | undefined
       let postProcessAborted = false
 
-      if (options?.styleRule && deps.voiceStyling) {
-        if (!isCurrent()) return
-        let sourceId: string | null = null
-        try {
-          sourceId = await deps.saveSource(recognizedText, 'voiceCorrection')
-        } catch {
-          // the text is still here; only its copy in the history is missing
-          toastKey('history.operationFailed', 'error')
-        }
-        if (!isCurrent()) return
-        const styling = new AbortController()
-        const abortStyling = () => styling.abort()
-        signal?.addEventListener('abort', abortStyling)
+      // the raw transcript is the only copy of what was said: the LLM may
+      // distort it, the insertion may fail, and it cannot be dictated the
+      // same way twice
+      let sourceId: string | null = null
+      try {
+        sourceId = await deps.saveSource(recognizedText, 'voiceCorrection')
+      } catch {
+        // the text is still here; only its copy in the history is missing
+        toastKey('history.operationFailed', 'error')
+      }
+      if (!isCurrent()) return
+
+      const styleRule = options?.styleRule
+      const voiceStyling = deps.voiceStyling
+      const postProcess =
+        styleRule && voiceStyling
+          ? {
+              pending: { styling: true },
+              run: (postSignal: AbortSignal) =>
+                voiceStyling(recognizedText, styleRule, postSignal),
+            }
+          : shouldFormatRecognizedText()
+            ? {
+                pending: { correction: true },
+                run: (postSignal: AbortSignal) =>
+                  voiceCorrection(recognizedText, postSignal),
+              }
+            : null
+
+      if (postProcess) {
+        // cancelling the post-processing keeps the recognized text as it is
+        const controller = new AbortController()
+        const abortPostProcess = () => controller.abort()
+        signal?.addEventListener('abort', abortPostProcess)
         const owner = deps.setPendingModal({
-          styling: true,
+          ...postProcess.pending,
+          cancelLabel: t('menu.skipProcessing'),
           allowBufferedIntent: intent === 'next',
-          onCancel: abortStyling,
+          onCancel: abortPostProcess,
         })
+        // a dead connection must not hold the dictated text for minutes
+        let isTimedOut = false
+        const timeout = createSingleTimer(deps)
+        timeout.start(() => {
+          isTimedOut = true
+          controller.abort()
+        }, postProcessTimeoutMs)
 
         try {
-          const styledText = await deps.voiceStyling(
-            recognizedText,
-            options.styleRule,
-            styling.signal
-          )
-
-          if (!isCurrent()) return
-          if (!styling.signal.aborted && styledText.trim()) {
-            resultText = styledText
-            correctedText = styledText
-            await deps.saveSourceResult(sourceId, styledText).catch(() => {
-              toastKey('history.operationFailed', 'error')
-            })
-          }
-        } catch {
-          if (!isCurrent()) return
-        } finally {
-          postProcessAborted = styling.signal.aborted
-          signal?.removeEventListener('abort', abortStyling)
-          deps.clearPendingModal(owner)
-        }
-      } else if (shouldFormatRecognizedText()) {
-        // the raw transcript is the only copy of what was said: the LLM may
-        // distort it, and it cannot be dictated the same way twice
-        let sourceId: string | null = null
-        try {
-          sourceId = await deps.saveSource(recognizedText, 'voiceCorrection')
-        } catch {
-          // the text is still here; only its copy in the history is missing
-          toastKey('history.operationFailed', 'error')
-        }
-        if (!isCurrent()) return
-        // cancelling the correction keeps the recognized text as it is
-        const correction = new AbortController()
-        const abortCorrection = () => correction.abort()
-        signal?.addEventListener('abort', abortCorrection)
-        const owner = deps.setPendingModal({
-          correction: true,
-          allowBufferedIntent: intent === 'next',
-          onCancel: abortCorrection,
-        })
-
-        try {
-          const formattedText = await voiceCorrection(
-            recognizedText,
-            correction.signal
+          const processedText = await untilAborted(
+            postProcess.run(controller.signal),
+            controller.signal
           )
 
           if (!isCurrent()) return
           // a reply that arrived after the user cancelled it is not used
-          if (!correction.signal.aborted && formattedText.trim()) {
-            resultText = formattedText
-            correctedText = formattedText
-            await deps.saveSourceResult(sourceId, formattedText).catch(() => {
+          if (!controller.signal.aborted && processedText.trim()) {
+            resultText = processedText
+            correctedText = processedText
+            await deps.saveSourceResult(sourceId, processedText).catch(() => {
               toastKey('history.operationFailed', 'error')
             })
           }
@@ -266,9 +281,14 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           // the request has told the failure; the raw text goes on
           if (!isCurrent()) return
         } finally {
-          postProcessAborted = correction.signal.aborted
-          signal?.removeEventListener('abort', abortCorrection)
+          timeout.stop()
+          // a timeout is not the user's choice: a buffered intent still holds
+          postProcessAborted = controller.signal.aborted && !isTimedOut
+          signal?.removeEventListener('abort', abortPostProcess)
           deps.clearPendingModal(owner)
+        }
+        if (isTimedOut && isCurrent()) {
+          toastKey('toast.voicePostProcessTimeout', 'warn')
         }
       }
 

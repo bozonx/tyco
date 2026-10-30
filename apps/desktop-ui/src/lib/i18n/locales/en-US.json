@@ -528,7 +528,8 @@
     "voiceSend": "Send",
     "voiceToInput": "Insert into input",
     "willCopyOnFinish": "Will copy on completion",
-    "willInsertOnFinish": "Will insert on completion"
+    "willInsertOnFinish": "Will insert on completion",
+    "skipProcessing": "Skip"
   },
   "nav": {
     "aiChat": "Ask AI",
@@ -1110,7 +1111,8 @@
     "voiceRecognitionFailed": "Failed to start voice recognition",
     "webhookEmptyUrl": "Webhook URL is empty",
     "webhookFailed": "Webhook request failed",
-    "webhookSuccess": "Webhook sent successfully"
+    "webhookSuccess": "Webhook sent successfully",
+    "voicePostProcessTimeout": "Voice processing took too long; original text kept"
   },
   "tools": {
     "aiTask": "AI task",
@@ -1229,6 +1231,8 @@
     "insert": "Insert",
     "liveCorrecting": "Correcting...",
     "livePreview": "Live correction",
-    "clickToApply": "Click to apply"
+    "clickToApply": "Click to apply",
+    "liveCorrectionFailed": "Live correction failed",
+    "liveCorrectionFailedHint": "The model did not respond. The text will be inserted as typed."
   }
 }

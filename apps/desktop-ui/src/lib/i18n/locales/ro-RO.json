@@ -528,7 +528,8 @@
     "voiceSend": "Trimite",
     "voiceToInput": "Inserează în câmpul de introducere",
     "willCopyOnFinish": "Se va copia la finalizare",
-    "willInsertOnFinish": "Se va introduce la finalizare"
+    "willInsertOnFinish": "Se va introduce la finalizare",
+    "skipProcessing": "Omite"
   },
   "nav": {
     "aiChat": "Întreabă AI",
@@ -1110,7 +1111,8 @@
     "voiceRecognitionFailed": "Recunoașterea vocală nu a putut porni",
     "webhookEmptyUrl": "URL-ul webhookului este gol",
     "webhookFailed": "Cererea către webhook a eșuat",
-    "webhookSuccess": "Webhook trimis cu succes"
+    "webhookSuccess": "Webhook trimis cu succes",
+    "voicePostProcessTimeout": "Procesarea vocală a durat prea mult; s-a păstrat textul original"
   },
   "tools": {
     "aiTask": "Sarcină AI",
@@ -1229,6 +1231,8 @@
     "insert": "Inserează",
     "liveCorrecting": "Se corectează...",
     "livePreview": "Corectare în direct",
-    "clickToApply": "Faceți clic pentru a aplica"
+    "clickToApply": "Faceți clic pentru a aplica",
+    "liveCorrectionFailed": "Corectarea în timp real a eșuat",
+    "liveCorrectionFailedHint": "Modelul nu a răspuns. Textul va fi inserat așa cum a fost tastat."
   }
 }

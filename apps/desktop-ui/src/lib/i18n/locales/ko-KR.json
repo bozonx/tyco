@@ -528,7 +528,8 @@
     "voiceSend": "보내기",
     "voiceToInput": "입력창에 삽입",
     "willCopyOnFinish": "완료 시 복사됩니다",
-    "willInsertOnFinish": "완료 시 삽입됩니다"
+    "willInsertOnFinish": "완료 시 삽입됩니다",
+    "skipProcessing": "건너뛰기"
   },
   "nav": {
     "aiChat": "AI에게 질문",
@@ -1104,7 +1105,8 @@
     "voiceRecognitionFailed": "음성 인식을 시작하지 못했습니다",
     "webhookEmptyUrl": "웹후크 URL이 비어 있습니다",
     "webhookFailed": "웹후크 요청 실패",
-    "webhookSuccess": "웹후크가 성공적으로 전송되었습니다"
+    "webhookSuccess": "웹후크가 성공적으로 전송되었습니다",
+    "voicePostProcessTimeout": "음성 처리에 시간이 너무 오래 걸렸습니다. 원본 텍스트가 유지되었습니다"
   },
   "tools": {
     "aiTask": "AI 작업",
@@ -1223,6 +1225,8 @@
     "insert": "삽입",
     "liveCorrecting": "교정 중...",
     "livePreview": "실시간 교정",
-    "clickToApply": "클릭하여 적용"
+    "clickToApply": "클릭하여 적용",
+    "liveCorrectionFailed": "실시간 교정 실패",
+    "liveCorrectionFailedHint": "모델이 응답하지 않았습니다. 입력한 텍스트 그대로 삽입됩니다."
   }
 }

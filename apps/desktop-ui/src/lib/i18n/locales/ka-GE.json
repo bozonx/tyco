@@ -528,7 +528,8 @@
     "voiceSend": "გაგზავნა",
     "voiceToInput": "შეყვანის ველში ჩასმა",
     "willCopyOnFinish": "დაკოპირდება დასრულებისთანავე",
-    "willInsertOnFinish": "ჩაისმება დასრულებისთანავე"
+    "willInsertOnFinish": "ჩაისმება დასრულებისთანავე",
+    "skipProcessing": "გამოტოვება"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",
@@ -1107,7 +1108,8 @@
     "voiceRecognitionFailed": "მეტყველების ამოცნობის გაშვება ვერ მოხერხდა",
     "webhookEmptyUrl": "ვებჰუკის URL ცარიელია",
     "webhookFailed": "ვებჰუკის მოთხოვნა ვერ შესრულდა",
-    "webhookSuccess": "ვებჰუკი წარმატებით გაიგზავნა"
+    "webhookSuccess": "ვებჰუკი წარმატებით გაიგზავნა",
+    "voicePostProcessTimeout": "ხმის დამუშავებას ძალიან დიდი დრო დასჭირდა; შენარჩუნებულია საწყისი ტექსტი"
   },
   "tools": {
     "aiTask": "AI დავალება",
@@ -1226,6 +1228,8 @@
     "insert": "ჩასმა",
     "liveCorrecting": "სწორდება...",
     "livePreview": "ცოცხალი შესწორება",
-    "clickToApply": "დააწკაპუნეთ გამოსაყენებლად"
+    "clickToApply": "დააწკაპუნეთ გამოსაყენებლად",
+    "liveCorrectionFailed": "ცოცხალი შესწორება ვერ მოხერხდა",
+    "liveCorrectionFailedHint": "მოდელმა არ უპასუხა. ტექსტი ჩაისმება უცვლელად."
   }
 }

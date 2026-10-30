@@ -528,7 +528,8 @@
     "voiceSend": "Надіслати",
     "voiceToInput": "Вставити в поле введення",
     "willCopyOnFinish": "Скопіюється після завершення",
-    "willInsertOnFinish": "Вставиться після завершення"
+    "willInsertOnFinish": "Вставиться після завершення",
+    "skipProcessing": "Пропустити"
   },
   "nav": {
     "aiChat": "Запитати ШІ",
@@ -1107,7 +1108,8 @@
     "voiceRecognitionFailed": "Не вдалося запустити розпізнавання мовлення",
     "webhookEmptyUrl": "URL вебхука порожній",
     "webhookFailed": "Помилка запиту до вебхука",
-    "webhookSuccess": "Вебхук успішно надіслано"
+    "webhookSuccess": "Вебхук успішно надіслано",
+    "voicePostProcessTimeout": "Обробка мовлення тривала занадто довго; збережено початковий текст"
   },
   "tools": {
     "aiTask": "ШІ-завдання",
@@ -1226,6 +1228,8 @@
     "insert": "Вставити",
     "liveCorrecting": "Корекція...",
     "livePreview": "Жива корекція",
-    "clickToApply": "Натисніть, щоб застосувати"
+    "clickToApply": "Натисніть, щоб застосувати",
+    "liveCorrectionFailed": "Помилка виправлення наживо",
+    "liveCorrectionFailedHint": "Модель не відповіла. Текст буде вставлено без змін."
   }
 }

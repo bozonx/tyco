@@ -119,6 +119,9 @@ export const useCorrectionWorkflowStore = defineStore(
         corrector.cancelLive()
       },
       saveOutput: historyStore.saveOutput,
+      saveSource: (text) => historyStore.saveSource(text, 'correction'),
+      saveSourceResult: historyStore.saveSourceResult,
+      reportHistoryError: () => toastKey('history.operationFailed', 'error'),
       // a failed insertion is reported by the tool: the window may be gone
       insert: async (text) => {
         const result = await invocations.call('core.insert', text)

@@ -108,6 +108,7 @@ export interface PendingModalParams {
   transformation?: boolean
   styling?: boolean
   label?: string
+  cancelLabel?: string
   onCancel?: () => void
   allowBufferedIntent?: boolean
   allowBufferedCopy?: boolean

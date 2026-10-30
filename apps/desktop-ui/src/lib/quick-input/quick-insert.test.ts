@@ -156,6 +156,104 @@ describe('quick correction and insertion', () => {
     expect(deps.cancelCorrection).toHaveBeenCalledOnce()
     expect(deps.openStep).not.toHaveBeenCalled()
   })
+
+  it('opens the actions step with the typed text when next correction fails', async () => {
+    const { deps, model } = setup()
+    const failure = new Error('Offline')
+    await model.next('Raw text', async () => {
+      throw failure
+    })
+    expect(deps.reportError).toHaveBeenCalledExactlyOnceWith(failure)
+    expect(deps.clearPending).toHaveBeenCalledOnce()
+    expect(deps.openStep).toHaveBeenCalledExactlyOnceWith({
+      text: 'Raw text',
+      oldText: '',
+      isCorrectionUnchanged: false,
+    })
+  })
+
+  it('does not open the fallback step when next is cancelled before it fails', async () => {
+    const { deps, model } = setup()
+    let fail: ((error: unknown) => void) | undefined
+    const pending = model.next(
+      'Raw text',
+      () => new Promise<string>((_resolve, reject) => (fail = reject))
+    )
+    await vi.waitFor(() => expect(fail).toBeDefined())
+    model.cancel()
+    fail!(new Error('Aborted'))
+    await pending
+    expect(deps.reportError).not.toHaveBeenCalled()
+    expect(deps.openStep).not.toHaveBeenCalled()
+  })
+})
+
+describe('quick insertion history', () => {
+  function setupWithHistory() {
+    const { deps } = setup()
+    const historyDeps = {
+      ...deps,
+      saveSource: vi.fn(async (_text: string) => 'source-1' as string | null),
+      saveSourceResult: vi.fn(
+        async (_id: string | null, _result: string) => {}
+      ),
+      reportHistoryError: vi.fn(),
+    }
+    return { deps: historyDeps, model: createQuickInsert(historyDeps) }
+  }
+
+  it('saves the typed text before the correction is requested', async () => {
+    const { deps, model } = setupWithHistory()
+    deps.correct.mockImplementationOnce(async () => {
+      expect(deps.saveSource).toHaveBeenCalledWith('Typed text')
+      return 'Corrected text'
+    })
+    await model.start('Typed text')
+    expect(deps.saveSourceResult).toHaveBeenCalledWith(
+      'source-1',
+      'Corrected text'
+    )
+    expect(deps.insert).toHaveBeenCalledWith('Corrected text')
+  })
+
+  it('keeps the typed text in the history when the correction fails', async () => {
+    const { deps, model } = setupWithHistory()
+    deps.correct.mockRejectedValueOnce(new Error('Offline'))
+    await model.start('Typed text')
+    expect(deps.saveSource).toHaveBeenCalledWith('Typed text')
+    expect(deps.saveSourceResult).not.toHaveBeenCalled()
+    expect(deps.reportError).toHaveBeenCalledOnce()
+  })
+
+  it('does not record an unchanged correction as a result', async () => {
+    const { deps, model } = setupWithHistory()
+    deps.correct.mockResolvedValueOnce('Clean text')
+    await model.start('Clean text')
+    expect(deps.saveSourceResult).not.toHaveBeenCalled()
+    expect(deps.insert).toHaveBeenCalledWith('Clean text')
+  })
+
+  it('goes on with the submission when the history cannot be written', async () => {
+    const { deps, model } = setupWithHistory()
+    const failure = new Error('Disk full')
+    deps.saveSource.mockRejectedValueOnce(failure)
+    await model.start('Typed text')
+    expect(deps.reportHistoryError).toHaveBeenCalledExactlyOnceWith(failure)
+    expect(deps.reportError).not.toHaveBeenCalled()
+    expect(deps.saveSourceResult).toHaveBeenCalledWith(null, 'Corrected text')
+    expect(deps.insert).toHaveBeenCalledWith('Corrected text')
+  })
+
+  it('saves the typed text before next opens the actions step', async () => {
+    const { deps, model } = setupWithHistory()
+    await model.next('Typed text', async () => {
+      throw new Error('Offline')
+    })
+    expect(deps.saveSource).toHaveBeenCalledWith('Typed text')
+    expect(deps.openStep).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Typed text' })
+    )
+  })
 })
 
 describe('quick insertion disposal', () => {

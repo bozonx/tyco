@@ -528,7 +528,8 @@
     "voiceSend": "送信",
     "voiceToInput": "入力欄に挿入",
     "willCopyOnFinish": "完了時にコピーされます",
-    "willInsertOnFinish": "完了時に挿入されます"
+    "willInsertOnFinish": "完了時に挿入されます",
+    "skipProcessing": "スキップ"
   },
   "nav": {
     "aiChat": "AIに質問",
@@ -1107,7 +1108,8 @@
     "voiceRecognitionFailed": "音声認識の開始に失敗しました",
     "webhookEmptyUrl": "Webhook URLが空です",
     "webhookFailed": "Webhookリクエストが失敗しました",
-    "webhookSuccess": "Webhookが正常に送信されました"
+    "webhookSuccess": "Webhookが正常に送信されました",
+    "voicePostProcessTimeout": "音声処理に時間がかかりすぎました。元のテキストを保持しました"
   },
   "tools": {
     "aiTask": "AIタスク",
@@ -1226,6 +1228,8 @@
     "insert": "挿入",
     "liveCorrecting": "校正中...",
     "livePreview": "リアルタイム校正",
-    "clickToApply": "クリックして適用"
+    "clickToApply": "クリックして適用",
+    "liveCorrectionFailed": "リアルタイム校正に失敗しました",
+    "liveCorrectionFailedHint": "モデルが応答しませんでした。入力されたテキストがそのまま挿入されます。"
   }
 }

@@ -528,7 +528,8 @@
     "voiceSend": "Жіберу",
     "voiceToInput": "Енгізу өрісіне кірістіру",
     "willCopyOnFinish": "Аяқталған соң көшіріледі",
-    "willInsertOnFinish": "Аяқталған соң кірістіріледі"
+    "willInsertOnFinish": "Аяқталған соң кірістіріледі",
+    "skipProcessing": "Өткізіп жіберу"
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",
@@ -1107,7 +1108,8 @@
     "voiceRecognitionFailed": "Сөйлеуді тануды іске қосу мүмкін болмады",
     "webhookEmptyUrl": "Вебхук URL-і бос",
     "webhookFailed": "Вебхук сұрауы сәтсіз аяқталды",
-    "webhookSuccess": "Вебхук сәтті жіберілді"
+    "webhookSuccess": "Вебхук сәтті жіберілді",
+    "voicePostProcessTimeout": "Дауысты өңдеу тым көп уақыт алды; бастапқы мәтін сақталды"
   },
   "tools": {
     "aiTask": "ЖИ тапсырмасы",
@@ -1226,6 +1228,8 @@
     "insert": "Қою",
     "liveCorrecting": "Түзету...",
     "livePreview": "Тікелей түзету",
-    "clickToApply": "Қолдану үшін басыңыз"
+    "clickToApply": "Қолдану үшін басыңыз",
+    "liveCorrectionFailed": "Тікелей түзету сәтсіз аяқталды",
+    "liveCorrectionFailedHint": "Модель жауап бермеді. Мәтін сол күйінде қойылады."
   }
 }

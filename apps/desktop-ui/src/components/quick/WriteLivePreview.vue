@@ -19,6 +19,12 @@
           class="animate-spin text-primary"
         />
         <AppIcon
+          v-else-if="status === 'error'"
+          icon="mdi:alert-circle-outline"
+          size="xs"
+          class="text-warning"
+        />
+        <AppIcon
           v-else
           icon="mdi:creation-outline"
           size="xs"
@@ -29,6 +35,9 @@
       <span v-if="status === 'loading'" class="write-live-status">
         {{ t('write.liveCorrecting') }}
       </span>
+      <span v-else-if="status === 'error'" class="write-live-status is-error">
+        {{ t('write.liveCorrectionFailed') }}
+      </span>
       <span v-else-if="text && isChanged" class="write-live-hint">
         {{ t('write.clickToApply') }}
       </span>
@@ -38,7 +47,16 @@
     </div>
 
     <div class="write-live-body">
-      <span v-if="text" class="write-live-text">{{ text }}</span>
+      <!-- a failed request leaves the earlier correction, now outdated -->
+      <span
+        v-if="text"
+        class="write-live-text"
+        :class="{ 'is-stale': status === 'error' }"
+        >{{ text }}</span
+      >
+      <span v-else-if="status === 'error'" class="write-live-placeholder">
+        {{ t('write.liveCorrectionFailedHint') }}
+      </span>
       <span v-else class="write-live-placeholder">
         {{ t('write.liveCorrecting') }}
       </span>
@@ -135,6 +153,10 @@ function handleClick() {
   font-size: var(--text-micro);
 }
 
+.write-live-status.is-error {
+  color: var(--color-warning);
+}
+
 .write-live-body {
   line-height: var(--editor-line-height);
   white-space: pre-wrap;
@@ -143,6 +165,10 @@ function handleClick() {
 
 .write-live-text {
   color: var(--color-base-content);
+}
+
+.write-live-text.is-stale {
+  color: var(--app-text-muted);
 }
 
 .write-live-placeholder {

@@ -528,7 +528,8 @@
     "voiceSend": "Invia",
     "voiceToInput": "Inserisci nel campo di input",
     "willCopyOnFinish": "Verrà copiato al completamento",
-    "willInsertOnFinish": "Verrà inserito al completamento"
+    "willInsertOnFinish": "Verrà inserito al completamento",
+    "skipProcessing": "Salta"
   },
   "nav": {
     "aiChat": "Chiedi all’IA",
@@ -1110,7 +1111,8 @@
     "voiceRecognitionFailed": "Impossibile avviare il riconoscimento vocale",
     "webhookEmptyUrl": "L’URL del webhook è vuoto",
     "webhookFailed": "Richiesta al webhook non riuscita",
-    "webhookSuccess": "Webhook inviato correttamente"
+    "webhookSuccess": "Webhook inviato correttamente",
+    "voicePostProcessTimeout": "L'elaborazione vocale ha richiesto troppo tempo; mantenuto il testo originale"
   },
   "tools": {
     "aiTask": "Attività IA",
@@ -1229,6 +1231,8 @@
     "insert": "Inserisci",
     "liveCorrecting": "Correzione in corso...",
     "livePreview": "Correzione in tempo reale",
-    "clickToApply": "Fai clic per applicare"
+    "clickToApply": "Fai clic per applicare",
+    "liveCorrectionFailed": "Correzione in tempo reale non riuscita",
+    "liveCorrectionFailedHint": "Il modello non ha risposto. Il testo verrà inserito così com'è stato digitato."
   }
 }

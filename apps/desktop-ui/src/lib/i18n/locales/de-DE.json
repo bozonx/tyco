@@ -528,7 +528,8 @@
     "voiceSend": "Senden",
     "voiceToInput": "In die Eingabe einfügen",
     "willCopyOnFinish": "Wird nach Fertigstellung kopiert",
-    "willInsertOnFinish": "Wird nach Fertigstellung eingefügt"
+    "willInsertOnFinish": "Wird nach Fertigstellung eingefügt",
+    "skipProcessing": "Überspringen"
   },
   "nav": {
     "aiChat": "KI fragen",
@@ -1110,7 +1111,8 @@
     "voiceRecognitionFailed": "Die Spracherkennung konnte nicht gestartet werden",
     "webhookEmptyUrl": "Die Webhook-URL ist leer",
     "webhookFailed": "Webhook-Anfrage fehlgeschlagen",
-    "webhookSuccess": "Webhook erfolgreich gesendet"
+    "webhookSuccess": "Webhook erfolgreich gesendet",
+    "voicePostProcessTimeout": "Sprachverarbeitung dauerte zu lange; Originaltext beibehalten"
   },
   "tools": {
     "aiTask": "KI-Aufgabe",
@@ -1229,6 +1231,8 @@
     "insert": "Einfügen",
     "liveCorrecting": "Wird korrigiert...",
     "livePreview": "Live-Korrektur",
-    "clickToApply": "Klicken zum Übernehmen"
+    "clickToApply": "Klicken zum Übernehmen",
+    "liveCorrectionFailed": "Live-Korrektur fehlgeschlagen",
+    "liveCorrectionFailedHint": "Das Modell hat nicht geantwortet. Der Text wird wie eingegeben eingefügt."
   }
 }

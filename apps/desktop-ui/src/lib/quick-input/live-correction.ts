@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 
+import { LlmError } from '../llm/llm-client'
 import {
   type TimerDependencies,
   createSingleTimer,
@@ -9,8 +10,21 @@ export const DEFAULT_LIVE_DEBOUNCE_MS = 900
 export const DEFAULT_BOUNDARY_COOLDOWN_MS = 2000
 export const DEFAULT_TYPING_TIMEOUT_MS = 3500
 export const DEFAULT_MIN_LIVE_LENGTH = 4
+/** A speculative request that hangs must not block live correction for long */
+export const DEFAULT_LIVE_REQUEST_TIMEOUT_MS = 15_000
+/** The final correction the user waits for may take longer than a preview */
+export const DEFAULT_FINAL_REQUEST_TIMEOUT_MS = 60_000
 
 export type LiveCorrectionStatus = 'idle' | 'loading' | 'ready' | 'error'
+
+/** The model did not answer in time; the request was aborted */
+export class LiveCorrectionTimeoutError extends LlmError {
+  constructor() {
+    // an empty detail: the localized timeout summary says it all
+    super('timeout', '')
+    this.name = 'LiveCorrectionTimeoutError'
+  }
+}
 
 export interface LiveCorrectionDependencies extends TimerDependencies {
   correct: (text: string, signal: AbortSignal) => Promise<string>
@@ -18,6 +32,8 @@ export interface LiveCorrectionDependencies extends TimerDependencies {
   boundaryCooldownMs?: number
   typingTimeoutMs?: number
   minLength?: number
+  requestTimeoutMs?: number
+  finalRequestTimeoutMs?: number
   now?: () => number
 }
 
@@ -37,15 +53,22 @@ interface ActiveRun {
  *   mid-stream, preserving intermediate feedback and token budget.
  * - Avoids duplicate requests when text has not changed, is already resolved, or
  *   matches the accepted correction.
+ * - Bounds every request by a timeout, so a dead connection fails fast instead of
+ *   freezing the preview, and does not retry a failed text on its own.
  */
 export function createLiveCorrection(deps: LiveCorrectionDependencies) {
   const timer = createSingleTimer(deps)
+  const requestTimer = createSingleTimer(deps)
   const now = deps.now ?? (() => Date.now())
   const debounceMs = deps.debounceMs ?? DEFAULT_LIVE_DEBOUNCE_MS
   const boundaryCooldownMs =
     deps.boundaryCooldownMs ?? DEFAULT_BOUNDARY_COOLDOWN_MS
   const typingTimeoutMs = deps.typingTimeoutMs ?? DEFAULT_TYPING_TIMEOUT_MS
   const minLength = deps.minLength ?? DEFAULT_MIN_LIVE_LENGTH
+  const requestTimeoutMs =
+    deps.requestTimeoutMs ?? DEFAULT_LIVE_REQUEST_TIMEOUT_MS
+  const finalRequestTimeoutMs =
+    deps.finalRequestTimeoutMs ?? DEFAULT_FINAL_REQUEST_TIMEOUT_MS
 
   const status = ref<LiveCorrectionStatus>('idle')
   const correctedText = ref<string>('')
@@ -55,12 +78,15 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
   let activeRun: ActiveRun | null = null
   let lastRequestedText = ''
   let lastResolvedText = ''
+  // a failed text is not retried on its own: offline, it would fail forever
+  let lastFailedText = ''
   let lastRequestTime = 0
   let typingStartTime = 0
   let latestText = ''
 
   const abortActive = () => {
     if (activeRun) {
+      requestTimer.stop()
       activeRun.controller.abort()
       activeRun = null
       lastRequestedText = lastResolvedText
@@ -75,29 +101,26 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
     return undefined
   }
 
+  const canRequest = (text: string) =>
+    !activeRun &&
+    text.trim().length >= minLength &&
+    getCachedCorrection(text) === undefined &&
+    text !== lastRequestedText &&
+    text !== lastFailedText
+
   const schedulePending = () => {
-    if (
-      isDisposed ||
-      activeRun ||
-      latestText.trim().length < minLength ||
-      getCachedCorrection(latestText) !== undefined ||
-      latestText === lastRequestedText
-    ) {
-      return
-    }
+    if (isDisposed || !canRequest(latestText)) return
     timer.start(() => {
-      if (
-        !activeRun &&
-        latestText.trim().length >= minLength &&
-        getCachedCorrection(latestText) === undefined &&
-        latestText !== lastRequestedText
-      ) {
+      if (canRequest(latestText)) {
         void sendRequest(latestText).catch(() => {})
       }
     }, debounceMs)
   }
 
-  const sendRequest = (text: string): Promise<string> => {
+  const sendRequest = (
+    text: string,
+    timeoutMs: number = requestTimeoutMs
+  ): Promise<string> => {
     if (isDisposed) return Promise.resolve(text)
 
     abortActive()
@@ -108,16 +131,29 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
     typingStartTime = 0
     status.value = 'loading'
     error.value = null
+    let isTimedOut = false
+
+    // a hung connection may ignore the abort: the timeout rejects on its own
+    const request = new Promise<string>((resolve, reject) => {
+      requestTimer.start(() => {
+        isTimedOut = true
+        reject(new LiveCorrectionTimeoutError())
+        controller.abort()
+      }, timeoutMs)
+      deps.correct(text, controller.signal).then(resolve, reject)
+    })
 
     const run: ActiveRun = {
       text,
       controller,
-      promise: deps.correct(text, controller.signal).then(
+      promise: request.then(
         (result) => {
           if (controller.signal.aborted) return result
           if (activeRun === run) {
+            requestTimer.stop()
             activeRun = null
             lastResolvedText = text
+            lastFailedText = ''
             correctedText.value = result
             status.value = 'ready'
             schedulePending()
@@ -125,12 +161,16 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
           return result
         },
         (err: unknown) => {
-          if (controller.signal.aborted) throw err
+          if (controller.signal.aborted && !isTimedOut) throw err
           if (activeRun === run) {
+            requestTimer.stop()
             activeRun = null
             lastRequestedText = lastResolvedText
+            lastFailedText = text
             error.value = err
             status.value = 'error'
+            // the user kept typing meanwhile: the newer text gets its chance
+            schedulePending()
           }
           throw err
         }
@@ -203,7 +243,8 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
       return await activeRun.promise
     }
     timer.stop()
-    return await sendRequest(text)
+    // the user asked for it: a text that failed before is tried again
+    return await sendRequest(text, finalRequestTimeoutMs)
   }
 
   const cancel = () => {
@@ -218,6 +259,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
     cancel()
     lastRequestedText = ''
     lastResolvedText = ''
+    lastFailedText = ''
     correctedText.value = ''
     error.value = null
     status.value = 'idle'

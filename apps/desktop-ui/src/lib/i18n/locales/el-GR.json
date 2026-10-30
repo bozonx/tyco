@@ -528,7 +528,8 @@
     "voiceSend": "Αποστολή",
     "voiceToInput": "Εισαγωγή στο πεδίο εισόδου",
     "willCopyOnFinish": "Θα αντιγραφεί μετά την ολοκλήρωση",
-    "willInsertOnFinish": "Θα εισαχθεί μετά την ολοκλήρωση"
+    "willInsertOnFinish": "Θα εισαχθεί μετά την ολοκλήρωση",
+    "skipProcessing": "Παράλειψη"
   },
   "nav": {
     "aiChat": "Ρωτήστε την ΤΝ",
@@ -1107,7 +1108,8 @@
     "voiceRecognitionFailed": "Δεν ήταν δυνατή η έναρξη της αναγνώρισης ομιλίας",
     "webhookEmptyUrl": "Το URL του webhook είναι κενό",
     "webhookFailed": "Το αίτημα webhook απέτυχε",
-    "webhookSuccess": "Το webhook στάλθηκε με επιτυχία"
+    "webhookSuccess": "Το webhook στάλθηκε με επιτυχία",
+    "voicePostProcessTimeout": "Η επεξεργασία φωνής διήρκεσε πολύ· διατηρήθηκε το αρχικό κείμενο"
   },
   "tools": {
     "aiTask": "Εργασία ΤΝ",
@@ -1226,6 +1228,8 @@
     "insert": "Εισαγωγή",
     "liveCorrecting": "Διόρθωση...",
     "livePreview": "Ζωντανή διόρθωση",
-    "clickToApply": "Κάντε κλικ για εφαρμογή"
+    "clickToApply": "Κάντε κλικ για εφαρμογή",
+    "liveCorrectionFailed": "Η ζωντανή διόρθωση απέτυχε",
+    "liveCorrectionFailedHint": "Το μοντέλο δεν απάντησε. Το κείμενο θα εισαχθεί όπως πληκτρολογήθηκε."
   }
 }
