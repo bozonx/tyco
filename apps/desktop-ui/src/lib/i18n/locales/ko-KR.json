@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "모든 작업 단축키가 사용 중입니다. 설정에서 하나를 비우세요",
     "aiRequest": "AI 요청",
     "aiTask": "AI 작업",
+    "aiTaskPromptEmpty": "이 작업에는 프롬프트가 없습니다. 설정에서 입력하세요",
     "cancelIntentHint": "Esc 키로 취소",
     "compareResult": "결과 비교",
     "copyOnFinish": "복사",

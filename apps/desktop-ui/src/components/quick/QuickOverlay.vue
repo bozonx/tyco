@@ -74,7 +74,13 @@
         />
       </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
-        <VoiceChatView v-if="currentMode === 'voiceChat'" />
+        <VoiceChatView
+          v-if="
+            currentMode === 'voiceChat' &&
+            desktopStore.desktopState.isWindowShown
+          "
+          :key="activationId"
+        />
       </div>
       <!-- gone with the window: a prompt hidden without an answer denies -->
       <div v-show="currentMode === 'externalAccess'" class="quick-mode-layer">

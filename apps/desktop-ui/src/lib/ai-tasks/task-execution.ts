@@ -25,7 +25,13 @@ export type TaskExecutionOutcome =
   | { kind: 'empty' }
   | { kind: 'inserted' }
   | { kind: 'notified'; content: string }
-  | { kind: 'show'; content: string; wasFocusGuardTriggered: boolean }
+  | {
+      kind: 'show'
+      content: string
+      wasFocusGuardTriggered: boolean
+      /** The insert into the target failed; the text is not lost */
+      wasInsertFailed?: boolean
+    }
   | { kind: 'cancelled' }
   | { kind: 'failed'; error: unknown }
 
@@ -76,8 +82,13 @@ export function createTaskExecution(deps: TaskExecutionDependencies) {
         }
         try {
           await insert(content)
-        } catch (error) {
-          return { kind: 'failed', error }
+        } catch {
+          return {
+            kind: 'show',
+            content,
+            wasFocusGuardTriggered: false,
+            wasInsertFailed: true,
+          }
         }
         await record(() => deps.history.saveOutput(content))
         return { kind: 'inserted' }

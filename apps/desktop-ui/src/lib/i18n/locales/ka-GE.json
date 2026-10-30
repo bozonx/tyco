@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "დავალებების ყველა კლავიში დაკავებულია: გაათავისუფლეთ ერთი პარამეტრებში",
     "aiRequest": "AI მოთხოვნა",
     "aiTask": "AI დავალება",
+    "aiTaskPromptEmpty": "ამ დავალებას მოთხოვნა არ აქვს: შეავსეთ ის პარამეტრებში",
     "cancelIntentHint": "Esc გაუქმებისთვის",
     "compareResult": "შედეგის შედარება",
     "copyOnFinish": "კოპირება",

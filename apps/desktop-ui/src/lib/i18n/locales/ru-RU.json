@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Все клавиши заданий заняты: освободите одну в настройках",
     "aiRequest": "Запрос к AI",
     "aiTask": "Задание для AI",
+    "aiTaskPromptEmpty": "У этой задачи нет промпта: заполните его в настройках",
     "cancelIntentHint": "Esc для отмены",
     "compareResult": "Сравните результат",
     "copyOnFinish": "Скопировать",

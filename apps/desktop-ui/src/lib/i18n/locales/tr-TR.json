@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Tüm görev tuşları dolu: ayarlardan birini boşaltın",
     "aiRequest": "AI isteği",
     "aiTask": "AI görevi",
+    "aiTaskPromptEmpty": "Bu görevin istemi yok: ayarlardan doldurun",
     "cancelIntentHint": "İptal için Esc",
     "compareResult": "Sonucu karşılaştırın",
     "copyOnFinish": "Kopyala",

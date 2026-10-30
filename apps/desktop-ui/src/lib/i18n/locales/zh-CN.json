@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "所有任务快捷键均已占用：请在设置中释放一个",
     "aiRequest": "AI 请求",
     "aiTask": "AI 任务",
+    "aiTaskPromptEmpty": "此任务没有提示词：请在设置中填写",
     "cancelIntentHint": "按 Esc 取消",
     "compareResult": "对比结果",
     "copyOnFinish": "复制",

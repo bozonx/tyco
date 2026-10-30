@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LlmStreamEvent } from '../../lib/llm/llm-client'
 import { useHistoryStore } from '../../stores/history'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useQuickDismissStore } from '../../stores/quick-dismiss'
 import {
   loadFakeDesktop,
   type TestDesktop,
@@ -76,6 +77,46 @@ describe('AiTaskMenu', () => {
     await shortcutListProps.spaceKey.action('Some task text')
     await nextTick()
     expect(wrapper.find('input').exists()).toBe(true)
+  })
+
+  it('holds the window while running and cancels the run on unmount', async () => {
+    let signal: AbortSignal | undefined
+    streamMock.mockImplementation((_kind, _prompt, options) => {
+      signal = options?.signal
+      // a stream that ends only when the run is aborted
+      return {
+        [Symbol.asyncIterator]: () => ({
+          next: () =>
+            new Promise((_resolve, reject) =>
+              signal?.addEventListener(
+                'abort',
+                () => reject(new DOMException('Aborted', 'AbortError')),
+                { once: true }
+              )
+            ),
+        }),
+      }
+    })
+    const quickDismissStore = useQuickDismissStore()
+    let shortcutListProps: Record<string, any> = {}
+    const text = 'Some task text that is long enough to process'
+
+    const wrapper = mount(AiTaskMenu, {
+      props: { text },
+      global: { stubs: stubs((props) => (shortcutListProps = props)) },
+    })
+    await shortcutListProps.spaceKey.action(text)
+    await nextTick()
+    const input = wrapper.find('input')
+    await input.setValue('Make it shorter')
+    await input.trigger('keydown', { key: 'Enter' })
+
+    await vi.waitFor(() => expect(signal).toBeDefined())
+    expect(quickDismissStore.isHeld).toBe(true)
+
+    wrapper.unmount()
+    expect(signal?.aborted).toBe(true)
+    expect(quickDismissStore.isHeld).toBe(false)
   })
 
   it('runs an own request on the text and remembers it', async () => {

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   createTaskExecution,
   type TaskExecutionDependencies,
+  type TaskExecutionHistory,
 } from './task-execution'
 import type { TaskRunResult } from './task-runner'
 
@@ -21,9 +22,13 @@ const runResult = (patch: Partial<TaskRunResult> = {}): TaskRunResult => ({
 
 function setup(patch: Partial<TaskExecutionDependencies> = {}) {
   const history = {
-    saveSource: vi.fn(async (): Promise<string | null> => 'source-1'),
-    saveSourceResult: vi.fn(async () => {}),
-    saveOutput: vi.fn(async () => {}),
+    saveSource: vi.fn<TaskExecutionHistory['saveSource']>(
+      async () => 'source-1'
+    ),
+    saveSourceResult: vi.fn<TaskExecutionHistory['saveSourceResult']>(
+      async () => {}
+    ),
+    saveOutput: vi.fn<TaskExecutionHistory['saveOutput']>(async () => {}),
   }
   const deps: TaskExecutionDependencies = {
     run: vi.fn(async () => runResult()),
@@ -90,6 +95,20 @@ describe('createTaskExecution', () => {
     })
     expect(history.saveSourceResult).not.toHaveBeenCalled()
     expect(deps.onHistoryError).toHaveBeenCalledTimes(2)
+  })
+
+  it('shows the result when the insert fails', async () => {
+    const { history, execution } = setup({
+      run: vi.fn(async () => runResult({ effectiveOutputAction: 'insert' })),
+      getInsert: () => vi.fn(async () => Promise.reject(new Error('gone'))),
+    })
+    expect(await execution.execute(task, 'text')).toEqual({
+      kind: 'show',
+      content: 'done',
+      wasFocusGuardTriggered: false,
+      wasInsertFailed: true,
+    })
+    expect(history.saveOutput).not.toHaveBeenCalled()
   })
 
   it('tells a cancellation from a failure', async () => {

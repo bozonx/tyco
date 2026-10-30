@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Minden feladatbillentyű foglalt: szabadítson fel egyet a beállításokban",
     "aiRequest": "MI-kérés",
     "aiTask": "MI-feladat",
+    "aiTaskPromptEmpty": "Ennek a feladatnak nincs promptja: töltse ki a beállításokban",
     "cancelIntentHint": "Esc a törléshez",
     "compareResult": "Eredmény összehasonlítása",
     "copyOnFinish": "Másolás",

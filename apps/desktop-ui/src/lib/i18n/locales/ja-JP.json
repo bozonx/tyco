@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "すべてのタスクキーが使用されています。設定で空きを作成してください",
     "aiRequest": "AIリクエスト",
     "aiTask": "AIタスク",
+    "aiTaskPromptEmpty": "このタスクにはプロンプトがありません。設定で入力してください",
     "cancelIntentHint": "Esc でキャンセル",
     "compareResult": "結果を比較",
     "copyOnFinish": "コピー",

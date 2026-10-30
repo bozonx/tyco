@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Alle Aufgabentasten sind belegt: Geben Sie eine in den Einstellungen frei",
     "aiRequest": "KI-Anfrage",
     "aiTask": "KI-Aufgabe",
+    "aiTaskPromptEmpty": "Diese Aufgabe hat keinen Prompt: Füllen Sie ihn in den Einstellungen aus",
     "cancelIntentHint": "Esc zum Abbrechen",
     "compareResult": "Ergebnis vergleichen",
     "copyOnFinish": "Kopieren",

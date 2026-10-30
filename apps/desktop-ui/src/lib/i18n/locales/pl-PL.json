@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Wszystkie klawisze zadań są zajęte: zwolnij któryś w ustawieniach",
     "aiRequest": "Zapytanie AI",
     "aiTask": "Zadanie AI",
+    "aiTaskPromptEmpty": "To zadanie nie ma promptu: uzupełnij go w ustawieniach",
     "cancelIntentHint": "Esc, aby anulować",
     "compareResult": "Porównaj wynik",
     "copyOnFinish": "Kopiuj",

@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Všechny klávesy úloh jsou obsazené: uvolněte některou v nastavení",
     "aiRequest": "Požadavek na AI",
     "aiTask": "Úloha AI",
+    "aiTaskPromptEmpty": "Tento úkol nemá prompt: vyplňte ho v nastavení",
     "cancelIntentHint": "Esc pro zrušení",
     "compareResult": "Porovnat výsledek",
     "copyOnFinish": "Zkopírovat",

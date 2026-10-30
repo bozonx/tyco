@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Toutes les touches de tâches sont prises : libérez-en une dans les paramètres",
     "aiRequest": "Requête IA",
     "aiTask": "Tâche IA",
+    "aiTaskPromptEmpty": "Cette tâche n'a pas d'instruction : renseignez-la dans les paramètres",
     "cancelIntentHint": "Échap pour annuler",
     "compareResult": "Comparer le résultat",
     "copyOnFinish": "Copier",

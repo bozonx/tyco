@@ -260,9 +260,45 @@ pub fn set_panel_input_region(
     Ok(())
 }
 
-// TODO: Windows (SetWindowRgn) and macOS (ignoresMouseEvents by the cursor
-// position); until then the transparent area dismisses the panel on a click
-#[cfg(any(target_os = "windows", target_os = "macos"))]
+/// The window region clips both input and painting; outside the region the
+/// panel is transparent anyway, so clicks there reach the windows below.
+#[cfg(target_os = "windows")]
+pub fn set_panel_input_region(
+    window: &WebviewWindow,
+    region: Option<InputRegion>,
+) -> Result<(), AppError> {
+    use windows_sys::Win32::Graphics::Gdi::{CreateRectRgn, DeleteObject, SetWindowRgn};
+
+    let handle = window.hwnd()?.0 as windows_sys::Win32::Foundation::HWND;
+    let Some(region) = region else {
+        // a null region gives the whole window back its input
+        unsafe { SetWindowRgn(handle, std::ptr::null_mut(), 1) };
+        return Ok(());
+    };
+    let scale = window.scale_factor()?;
+    let (x, y, width, height) = region.to_integer_logical_bounds();
+    let physical = |value: i32| (f64::from(value) * scale).round() as i32;
+    let (left, top) = (physical(x), physical(y));
+    let (right, bottom) = (physical(x + width), physical(y + height));
+    let shape = unsafe { CreateRectRgn(left, top, right, bottom) };
+    if shape.is_null() {
+        return Err(AppError::Failed(
+            "Could not create the panel input region".into(),
+        ));
+    }
+    // on success the system owns the region; on failure it is still ours
+    if unsafe { SetWindowRgn(handle, shape, 1) } == 0 {
+        unsafe { DeleteObject(shape) };
+        return Err(AppError::Failed(
+            "Could not set the panel input region".into(),
+        ));
+    }
+    Ok(())
+}
+
+// TODO: macOS (ignoresMouseEvents by the cursor position); until then the
+// transparent area dismisses the panel on a click
+#[cfg(target_os = "macos")]
 pub fn set_panel_input_region(
     _window: &WebviewWindow,
     _region: Option<InputRegion>,

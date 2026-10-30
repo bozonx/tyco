@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "All task keys are taken: free one in the settings",
     "aiRequest": "AI request",
     "aiTask": "AI task",
+    "aiTaskPromptEmpty": "This task has no prompt: fill it in the settings",
     "cancelIntentHint": "Esc to cancel",
     "compareResult": "Compare the result",
     "copyOnFinish": "Copy on completion",

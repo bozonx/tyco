@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Tutti i tasti delle attività sono occupati: liberane uno nelle impostazioni",
     "aiRequest": "Richiesta all’IA",
     "aiTask": "Attività IA",
+    "aiTaskPromptEmpty": "Questa attività non ha un prompt: compilalo nelle impostazioni",
     "cancelIntentHint": "Esc per annullare",
     "compareResult": "Confronta il risultato",
     "copyOnFinish": "Copia",

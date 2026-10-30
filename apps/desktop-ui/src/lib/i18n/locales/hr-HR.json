@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Sve tipke zadataka su zauzete: oslobodite jednu u postavkama",
     "aiRequest": "AI zahtjev",
     "aiTask": "AI zadatak",
+    "aiTaskPromptEmpty": "Ovaj zadatak nema upit: ispunite ga u postavkama",
     "cancelIntentHint": "Esc za odustajanje",
     "compareResult": "Usporedi rezultat",
     "copyOnFinish": "Kopiraj",

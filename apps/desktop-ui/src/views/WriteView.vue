@@ -302,13 +302,10 @@ function cancelFromHint() {
 function cycleCorrectionMode() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
   const next = NEXT_CORRECTION_MODE[correctionMode.value]
-  void desktopStore.updateUserConfig?.({
+  // the patch is shallow: keep the other quick window settings as they are
+  void desktopStore.updateUserConfig({
     quickWindow: {
-      isHiddenOnBlur:
-        desktopStore.userConfig?.quickWindow?.isHiddenOnBlur ?? true,
-      isCorrectionPrefetchEnabled:
-        desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled ??
-        false,
+      ...desktopStore.userConfig.quickWindow,
       correctionMode: next,
     },
   })

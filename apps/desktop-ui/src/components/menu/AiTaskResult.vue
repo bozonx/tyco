@@ -12,6 +12,12 @@
           :message="t('selection.noTarget')"
           class="mb-2"
         />
+        <InlineNotice
+          v-if="wasInsertFailed"
+          kind="error"
+          :message="t('toast.insertFailed')"
+          class="mb-2"
+        />
         <TextPreview :text="resultText" />
       </div>
     </template>
@@ -43,6 +49,7 @@ const props = defineProps<{
   resultText: string
   sourceText?: string
   wasFocusGuardTriggered?: boolean
+  wasInsertFailed?: boolean
 }>()
 
 const emit = defineEmits<{ close: [] }>()

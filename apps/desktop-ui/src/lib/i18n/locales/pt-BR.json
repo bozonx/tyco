@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Todas as teclas de tarefas estão ocupadas: libere uma nas configurações",
     "aiRequest": "Solicitação à IA",
     "aiTask": "Tarefa de IA",
+    "aiTaskPromptEmpty": "Esta tarefa não tem prompt: preencha-o nas configurações",
     "cancelIntentHint": "Esc para cancelar",
     "compareResult": "Comparar o resultado",
     "copyOnFinish": "Copiar",

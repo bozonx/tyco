@@ -490,6 +490,7 @@
     "aiPromptSlotsFull": "Toate tastele de sarcini sunt ocupate: eliberați una în setări",
     "aiRequest": "Cerere AI",
     "aiTask": "Sarcină AI",
+    "aiTaskPromptEmpty": "Această sarcină nu are prompt: completați-l în setări",
     "cancelIntentHint": "Esc pentru anulare",
     "compareResult": "Compară rezultatul",
     "copyOnFinish": "Copiere",

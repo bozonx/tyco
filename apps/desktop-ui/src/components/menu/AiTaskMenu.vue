@@ -17,6 +17,7 @@
     :result-text="resultText"
     :source-text="inputText"
     :was-focus-guard-triggered="wasFocusGuardTriggered"
+    :was-insert-failed="wasInsertFailed"
     @close="closeResult"
   />
 
@@ -68,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
@@ -96,6 +97,7 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { useLlmStore } from '../../stores/llm'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import { useQuickDismissStore } from '../../stores/quick-dismiss'
 import { useToolsStore } from '../../stores/tools'
 import { useWindowStore } from '../../stores/window'
 import TextPreview from '../common/TextPreview.vue'
@@ -140,12 +142,30 @@ const currentTask = ref<AiTaskConfig | null>(null)
 const inputText = ref('')
 const resultText = ref('')
 const wasFocusGuardTriggered = ref(false)
+const wasInsertFailed = ref(false)
 
-const taskRunState = ref<TaskRunState>({
+/** A toast shows the start of a long answer; the history keeps all of it */
+const NOTIFY_TOAST_MAX_CHARS = 280
+
+const initialRunState = (): TaskRunState => ({
   status: 'running',
   reasoning: '',
   text: '',
   toolCalls: [],
+})
+const taskRunState = ref<TaskRunState>(initialRunState())
+
+// a running task or its result must not go away with a click elsewhere
+const quickDismissStore = useQuickDismissStore()
+let releaseDismissHold: (() => void) | null = null
+watch(currentMode, (mode) => {
+  const keeps = mode === 'running' || mode === 'result'
+  if (keeps && !releaseDismissHold)
+    releaseDismissHold = quickDismissStore.hold()
+  else if (!keeps) {
+    releaseDismissHold?.()
+    releaseDismissHold = null
+  }
 })
 
 let abortController: AbortController | null = null
@@ -253,9 +273,14 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 async function onTaskSelect(taskId: string) {
   const task = findAiTask(desktopStore.userConfig?.aiTasks.items, taskId)
   if (!task || !task.prompt.trim()) {
-    toastKey('toast.desktopCommandFailed', 'error')
+    toastKey('menu.aiTaskPromptEmpty', 'warn')
     return
   }
+  await startTask(task)
+}
+
+/** Runs on the given text, or asks for one when nothing was selected */
+async function startTask(task: AiTaskConfig) {
   if (props.text.trim()) {
     await executeTask(task, props.text)
   } else {
@@ -277,15 +302,7 @@ useMenuStartup({
   },
   run: async (taskId) => {
     const task = findAiTask(desktopStore.userConfig?.aiTasks.items, taskId)
-    if (task) {
-      if (props.text.trim()) {
-        await executeTask(task, props.text)
-      } else {
-        selectedTask.value = task
-        manualInputText.value = ''
-        currentMode.value = 'manual-input'
-      }
-    }
+    if (task) await startTask(task)
   },
 })
 
@@ -379,13 +396,7 @@ async function submitCustomPrompt({ option, ctrl }: QueryPanelSubmit) {
     maxSteps: 5,
   }
 
-  if (props.text.trim()) {
-    await executeTask(customTask, props.text)
-  } else {
-    selectedTask.value = customTask
-    manualInputText.value = ''
-    currentMode.value = 'manual-input'
-  }
+  await startTask(customTask)
 }
 
 async function savePromptAsTask() {
@@ -411,15 +422,19 @@ async function executeTask(task: AiTaskConfig, textToProcess: string) {
 
   currentTask.value = task
   inputText.value = textToProcess.trim()
+  taskRunState.value = initialRunState()
   currentMode.value = 'running'
-  abortController = new AbortController()
+  const controller = new AbortController()
+  abortController = controller
 
   const outcome = await taskExecution.execute(task, textToProcess, {
-    signal: abortController.signal,
+    signal: controller.signal,
     onUpdate: (state) => {
       taskRunState.value = state
     },
   })
+  // cancelled or replaced meanwhile: this run no longer owns the menu
+  if (abortController !== controller || controller.signal.aborted) return
   abortController = null
 
   switch (outcome.kind) {
@@ -427,12 +442,13 @@ async function executeTask(task: AiTaskConfig, textToProcess: string) {
       await hideQuickWindow()
       return
     case 'notified':
-      toastText(outcome.content || t('selection.done'), 'success')
+      toastText(notifyText(outcome.content), 'success')
       await hideQuickWindow()
       return
     case 'show':
       resultText.value = outcome.content
       wasFocusGuardTriggered.value = outcome.wasFocusGuardTriggered
+      wasInsertFailed.value = outcome.wasInsertFailed === true
       currentMode.value = 'result'
       return
     case 'failed':
@@ -444,6 +460,24 @@ async function executeTask(task: AiTaskConfig, textToProcess: string) {
       currentMode.value = 'tasks'
   }
 }
+
+function notifyText(content: string): string {
+  const text = content.trim()
+  if (!text) return t('selection.done')
+  return text.length > NOTIFY_TOAST_MAX_CHARS
+    ? `${text.slice(0, NOTIFY_TOAST_MAX_CHARS).trimEnd()}…`
+    : text
+}
+
+// the next activation remounts the menu: an old run must not insert there
+onUnmounted(() => {
+  abortController?.abort()
+  abortController = null
+  pendingApprovalResolver?.(false)
+  pendingApprovalResolver = null
+  releaseDismissHold?.()
+  releaseDismissHold = null
+})
 
 async function hideQuickWindow() {
   if (isQuickWindow) await windowStore.hide()
