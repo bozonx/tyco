@@ -24,7 +24,11 @@ vi.mock('../../navigation', () => ({
 
 vi.mock('../../composables/use-chat-scope', () => ({
   useChatScope: () => ({
-    chat: { profileId: 'test-profile', currentChatParams: { id: 'chat-1' } },
+    chat: {
+      profileId: 'test-profile',
+      currentChatParams: { id: 'chat-1' },
+      refreshProfile: async () => undefined,
+    },
   }),
 }))
 

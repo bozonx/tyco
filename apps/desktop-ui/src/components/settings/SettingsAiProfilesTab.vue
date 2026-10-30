@@ -194,6 +194,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
+import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
@@ -367,11 +368,10 @@ async function handleDeleteProject() {
 // ---------------------------------------------------------------------------
 
 const showCreateProfileModal = ref(false)
-const isCreatingProfile = ref(false)
+const { isBusy: isCreatingProfile, run: runCreatingProfile } = useBusyAction()
 
 async function handleCreateProfile(name: string) {
-  isCreatingProfile.value = true
-  try {
+  await runCreatingProfile(async () => {
     const created = await aiProfilesStore.createProfile({
       name,
       soul: t('settings.profileDefaultSoul'),
@@ -379,30 +379,21 @@ async function handleCreateProfile(name: string) {
     })
     showCreateProfileModal.value = false
     navigate(profileTab(created.id))
-  } catch (error) {
-    toastError(error)
-  } finally {
-    isCreatingProfile.value = false
-  }
+  })
 }
 
 const showCreateProjectModal = ref(false)
-const isCreatingProject = ref(false)
+const { isBusy: isCreatingProject, run: runCreatingProject } = useBusyAction()
 
 async function handleCreateProject(name: string) {
-  isCreatingProject.value = true
-  try {
+  await runCreatingProject(async () => {
     const created = await aiProfilesStore.createProject({
       name,
       isExternal: false,
     })
     showCreateProjectModal.value = false
     navigate(projectTab(created.id))
-  } catch (error) {
-    toastError(error)
-  } finally {
-    isCreatingProject.value = false
-  }
+  })
 }
 
 // ---------------------------------------------------------------------------

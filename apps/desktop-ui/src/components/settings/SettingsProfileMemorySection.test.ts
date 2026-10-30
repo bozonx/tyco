@@ -214,11 +214,15 @@ describe('SettingsProfileMemorySection', () => {
       expect(mocks.listMemoryTopics).toHaveBeenCalled()
     })
 
-    // Find clear button
-    const clearBtn = wrapper
-      .findAll('button')
-      .find((b) => b.text().includes('settings.profileMemoryClear'))
-    await clearBtn?.trigger('click')
+    const findClearButton = () =>
+      wrapper
+        .findAll('button')
+        .find((b) => b.text().includes('settings.profileMemoryClear'))
+    // the button is enabled once the topics have loaded
+    await vi.waitFor(() => {
+      expect(findClearButton()?.attributes('disabled')).toBeUndefined()
+    })
+    await findClearButton()?.trigger('click')
 
     expect(wrapper.find('.confirm-modal').exists()).toBe(true)
 

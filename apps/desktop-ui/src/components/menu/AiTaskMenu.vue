@@ -79,12 +79,14 @@ import {
   addTaskFromPrompt,
   taskNameFromPrompt,
 } from '../../lib/ai-tasks/custom-prompt'
+import { createTaskExecution } from '../../lib/ai-tasks/task-execution'
 import {
   type TaskApprovalRequest,
   type TaskRunState,
   createTaskRunner,
 } from '../../lib/ai-tasks/task-runner'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
+import { clientLogger } from '../../lib/logger'
 import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
 import type { AiTaskMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
@@ -179,6 +181,21 @@ const runner = createTaskRunner({
   getTool: (toolId) => toolsStore.get(toolId),
   canInsertIntoTarget: () => desktopStore.canInsertIntoWindow,
   requestApproval,
+})
+
+const taskExecution = createTaskExecution({
+  run: (task, text, options) => runner.run(task, text, options),
+  history: historyStore,
+  getInsert: () => {
+    const insertAction = actionMenuStore
+      .getDefaultActions()
+      .find((action) => action.id === 'insertIntoWindow')
+    return insertAction && desktopStore.canInsertIntoWindow
+      ? insertAction.action
+      : undefined
+  },
+  onHistoryError: (error) =>
+    clientLogger.error('AI task history write failed', error, 'history'),
 })
 
 const layoutTitle = computed(() => {
@@ -387,87 +404,49 @@ async function savePromptAsTask() {
 }
 
 async function executeTask(task: AiTaskConfig, textToProcess: string) {
-  const trimmed = textToProcess.trim()
-  if (!trimmed) {
+  if (!textToProcess.trim()) {
     toastKey('toast.noTextToProcess', 'warn')
     return
   }
 
   currentTask.value = task
-  inputText.value = trimmed
+  inputText.value = textToProcess.trim()
   currentMode.value = 'running'
-
   abortController = new AbortController()
-  const signal = abortController.signal
 
-  let sourceId: string | null = null
-  try {
-    sourceId = await historyStore.saveSource(trimmed, 'aiTask')
-  } catch {
-    // history error must not prevent execution
-  }
+  const outcome = await taskExecution.execute(task, textToProcess, {
+    signal: abortController.signal,
+    onUpdate: (state) => {
+      taskRunState.value = state
+    },
+  })
+  abortController = null
 
-  try {
-    const result = await runner.run(task, trimmed, {
-      signal,
-      onUpdate: (state) => {
-        taskRunState.value = state
-      },
-    })
-
-    if (sourceId && result.content) {
-      await historyStore
-        .saveSourceResult(sourceId, result.content)
-        .catch(() => {})
-    }
-
-    if (
-      result.effectiveOutputAction === 'replace' ||
-      result.effectiveOutputAction === 'insert'
-    ) {
-      const insertAction = actionMenuStore
-        .getDefaultActions()
-        .find((action) => action.id === 'insertIntoWindow')
-
-      if (insertAction && desktopStore.canInsertIntoWindow) {
-        await insertAction.action(result.content)
-        await historyStore.saveOutput(result.content).catch(() => {})
-        if (isQuickWindow) {
-          await windowStore.hide()
-        }
-        return
-      }
-
-      // Target was lost or Focus Loss Guard triggered: fall back to show
-      resultText.value = result.content
-      wasFocusGuardTriggered.value = true
+  switch (outcome.kind) {
+    case 'inserted':
+      await hideQuickWindow()
+      return
+    case 'notified':
+      toastText(outcome.content || t('selection.done'), 'success')
+      await hideQuickWindow()
+      return
+    case 'show':
+      resultText.value = outcome.content
+      wasFocusGuardTriggered.value = outcome.wasFocusGuardTriggered
       currentMode.value = 'result'
       return
-    }
-
-    if (result.effectiveOutputAction === 'notify_and_close') {
-      toastText(result.content || t('selection.done'), 'success')
-      await historyStore.saveOutput(result.content).catch(() => {})
-      if (isQuickWindow) {
-        await windowStore.hide()
-      }
-      return
-    }
-
-    // Default 'show' action
-    resultText.value = result.content
-    wasFocusGuardTriggered.value = result.wasFocusGuardTriggered
-    currentMode.value = 'result'
-  } catch (_error) {
-    if (signal.aborted) {
+    case 'failed':
+      clientLogger.error('AI task failed', outcome.error, 'ai-tasks')
+      toastKey('toast.desktopCommandFailed', 'error')
       currentMode.value = 'tasks'
       return
-    }
-    toastKey('toast.desktopCommandFailed', 'error')
-    currentMode.value = 'tasks'
-  } finally {
-    abortController = null
+    default:
+      currentMode.value = 'tasks'
   }
+}
+
+async function hideQuickWindow() {
+  if (isQuickWindow) await windowStore.hide()
 }
 </script>
 

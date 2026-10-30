@@ -128,9 +128,7 @@ async function handleUndo() {
       toastError(response.error)
       return
     }
-    await (
-      chatScope.chat as unknown as { refreshProfile?: () => Promise<unknown> }
-    ).refreshProfile?.()
+    await chatScope.chat.refreshProfile()
     isUndone.value = true
     toastKey('chatTools.memory.undoSuccess', 'info')
   } catch (error) {

@@ -196,6 +196,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
+import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { compactMemoryContent } from '../../lib/ai-profiles/memory-compaction'
@@ -265,23 +266,20 @@ function handleModeChange(value: number | string | undefined) {
 
 // Topics
 const topics = ref<ProfileMemoryTopic[]>([])
-const isLoading = ref(false)
+const { isBusy: isLoading, run: runLoading } = useBusyAction((error) => {
+  topics.value = []
+  toastError(error)
+})
 
 async function loadTopics() {
   if (props.profile.memoryMode === 'off') {
     topics.value = []
     return
   }
-  isLoading.value = true
-  try {
+  await runLoading(async () => {
     topics.value =
       (await aiProfilesStore.listMemoryTopics(props.profile.id)) ?? []
-  } catch (error) {
-    topics.value = []
-    toastError(error)
-  } finally {
-    isLoading.value = false
-  }
+  })
 }
 
 watch(
@@ -343,7 +341,7 @@ function topicWarning(
 const isEditorOpen = ref(false)
 const editingFile = ref('')
 const editorContent = ref('')
-const isSaving = ref(false)
+const { isBusy: isSaving, run: runSaving } = useBusyAction()
 
 async function openEditor(file: string) {
   editingFile.value = file
@@ -366,52 +364,37 @@ function closeEditor() {
 
 async function saveEditor() {
   if (!editingFile.value) return
-  isSaving.value = true
-  try {
+  const file = editingFile.value
+  await runSaving(async () => {
     await aiProfilesStore.writeMemory(
       props.profile.id,
-      editingFile.value,
+      file,
       editorContent.value
     )
     toastKey('settings.profileMemoryFileSaved', 'info')
     closeEditor()
     await loadTopics()
-  } catch (error) {
-    toastError(error)
-  } finally {
-    isSaving.value = false
-  }
+  })
 }
 
 // Compaction
-const isCompacting = ref(false)
+const { isBusy: isCompacting, run: runCompacting } = useBusyAction()
 const isDiffModalOpen = ref(false)
 const compactingFile = ref('')
 const diffOldText = ref('')
 const diffNewText = ref('')
 
 async function startCompaction(file: string) {
-  isCompacting.value = true
-  try {
+  await runCompacting(async () => {
     const content = await aiProfilesStore.readMemory(props.profile.id, file)
     await runCompactionFlow(file, content)
-  } catch (error) {
-    toastError(error)
-  } finally {
-    isCompacting.value = false
-  }
+  })
 }
 
 async function compactCurrentEditor() {
   if (!editingFile.value || !editorContent.value.trim()) return
-  isCompacting.value = true
-  try {
-    await runCompactionFlow(editingFile.value, editorContent.value)
-  } catch (error) {
-    toastError(error)
-  } finally {
-    isCompacting.value = false
-  }
+  const file = editingFile.value
+  await runCompacting(() => runCompactionFlow(file, editorContent.value))
 }
 
 function resolveCompactionModelId(): string | undefined {

@@ -223,6 +223,7 @@ import {
   watch,
 } from 'vue'
 
+import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -277,7 +278,7 @@ const projects = computed(() => aiProfilesStore.projects)
 
 const newName = ref('')
 const nameInputRef = ref<{ focus?: () => void } | null>(null)
-const isCreating = ref(false)
+const { isBusy: isCreating, run: runCreating } = useBusyAction()
 
 onMounted(() => {
   if (isNew.value) {
@@ -298,8 +299,7 @@ const folderError = computed(() =>
 
 async function handleCreate() {
   if (!newName.value.trim() || folderError.value || isCreating.value) return
-  isCreating.value = true
-  try {
+  await runCreating(async () => {
     const created = await aiProfilesStore.createProfile({
       name: newName.value,
       id: folder.folderId.value,
@@ -307,11 +307,7 @@ async function handleCreate() {
       settings: {},
     })
     navigate(`ai-profile:${created.id}`)
-  } catch (error) {
-    toastError(error)
-  } finally {
-    isCreating.value = false
-  }
+  })
 }
 
 // ---------------------------------------------------------------------------

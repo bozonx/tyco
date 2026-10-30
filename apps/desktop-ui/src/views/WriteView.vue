@@ -164,8 +164,7 @@ function measureInputMaxHeight() {
   const hint = hintRef.value
   if (!container || !frame || !hint || container.clientHeight === 0) return
   const frameStyle = getComputedStyle(frame)
-  const livePreviewEl =
-    (livePreviewRef.value as unknown as { $el?: HTMLElement })?.$el ?? null
+  const livePreviewEl: HTMLElement | null = livePreviewRef.value?.$el ?? null
   const liveHeight = livePreviewEl?.offsetHeight ?? 0
   const gap = px(getComputedStyle(container).rowGap)
   inputMaxHeight.value = maxInputHeight({

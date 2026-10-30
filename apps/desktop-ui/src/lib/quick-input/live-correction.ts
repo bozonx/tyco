@@ -112,6 +112,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
     if (isDisposed || !canRequest(latestText)) return
     timer.start(() => {
       if (canRequest(latestText)) {
+        // the failure lands in `error` and `status`, where the UI shows it
         void sendRequest(latestText).catch(() => {})
       }
     }, debounceMs)
@@ -226,6 +227,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
 
     if (isBoundaryTrigger) {
       timer.stop()
+      // the failure lands in `error` and `status`, where the UI shows it
       void sendRequest(text).catch(() => {})
       return
     }

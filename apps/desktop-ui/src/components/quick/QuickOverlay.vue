@@ -96,6 +96,7 @@ import { useI18n } from '../../composables/use-i18n'
 import { useQuickWindowSession } from '../../composables/use-quick-window-session'
 import { getDesktopWindow as getCurrentWindow } from '../../lib/desktop/window'
 import { resultOrThrow } from '../../lib/ipc/ipc-model'
+import { clientLogger } from '../../lib/logger'
 import { createFocusLossWatcher } from '../../lib/quick-panel/focus-loss'
 import {
   type InputRegion,
@@ -236,7 +237,11 @@ const measureInputRegion = (): InputRegion | null => {
 }
 
 const updateInputRegion = () => {
-  void regionSync.update(measureInputRegion()).catch(() => {})
+  void regionSync
+    .update(measureInputRegion())
+    .catch((error: unknown) =>
+      clientLogger.error('Could not update the input region', error, 'quick')
+    )
 }
 
 const updateInputRegionAfterRender = () => {
@@ -284,7 +289,9 @@ onMounted(() => {
       if (unmounted) remove()
       else removeFocusListener = remove
     })
-    .catch(() => {})
+    .catch((error: unknown) =>
+      clientLogger.error('Could not watch window focus', error, 'quick')
+    )
 })
 
 onUnmounted(() => {
