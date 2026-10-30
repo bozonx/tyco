@@ -124,6 +124,8 @@ export const useCorrectionWorkflowStore = defineStore(
         const result = await invocations.call('core.insert', text)
         if (!result.ok) throw new Error(toolResultMessage(result, translate))
       },
+      openStep: (params) =>
+        menuModalsStore.nextModal(MenuModals.INSERT, params),
       setPending: (onCancel) =>
         menuModalsStore.setPendingModal({ correction: true, onCancel }),
       clearPending: (owner) =>
@@ -141,6 +143,8 @@ export const useCorrectionWorkflowStore = defineStore(
       insert: quickInsert.start,
       insertLive: (text: string) =>
         quickInsert.start(text, (t) => corrector.getFinalCorrection(t)),
+      nextLive: (text: string) =>
+        quickInsert.next(text, (t) => corrector.getFinalCorrection(t)),
       insertDirect: quickInsert.insertDirect,
       cancelInsert: quickInsert.cancel,
       /** Opens a step with the correction of `text` over the current one. */

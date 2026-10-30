@@ -15,6 +15,7 @@ function setup() {
     cancelCorrection: vi.fn(),
     saveOutput: vi.fn(async (_text: string) => {}),
     insert: vi.fn(async (_text: string) => {}),
+    openStep: vi.fn(),
     setPending: vi.fn(),
     clearPending: vi.fn(),
     reportError: vi.fn(),
@@ -118,6 +119,42 @@ describe('quick correction and insertion', () => {
     expect(deps.correct).not.toHaveBeenCalled()
     expect(deps.saveOutput).toHaveBeenCalledWith('Direct text')
     expect(deps.insert).toHaveBeenCalledWith('Direct text')
+  })
+
+  it('opens the actions step with corrected text and diff on next', async () => {
+    const { deps, model } = setup()
+    const custom = vi.fn(async (_t: string) => 'Fixed live text')
+    await model.next('Raw live text', custom)
+    expect(custom).toHaveBeenCalledWith('Raw live text')
+    expect(deps.clearPending).toHaveBeenCalledOnce()
+    expect(deps.openStep).toHaveBeenCalledWith({
+      text: 'Fixed live text',
+      oldText: 'Raw live text',
+      isCorrectionUnchanged: false,
+    })
+    expect(deps.insert).not.toHaveBeenCalled()
+  })
+
+  it('marks isCorrectionUnchanged when next correction equals input', async () => {
+    const { deps, model } = setup()
+    const custom = vi.fn(async (t: string) => t)
+    await model.next('Clean text', custom)
+    expect(deps.openStep).toHaveBeenCalledWith({
+      text: 'Clean text',
+      oldText: '',
+      isCorrectionUnchanged: true,
+    })
+  })
+
+  it('does not open the actions step if next is cancelled while waiting', async () => {
+    const { deps, model } = setup()
+    const correction = deferred<string>()
+    const pending = model.next('Raw text', () => correction.promise)
+    model.cancel()
+    correction.resolve('Late result')
+    await pending
+    expect(deps.cancelCorrection).toHaveBeenCalledOnce()
+    expect(deps.openStep).not.toHaveBeenCalled()
   })
 })
 

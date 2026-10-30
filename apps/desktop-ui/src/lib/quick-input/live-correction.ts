@@ -63,6 +63,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
     if (activeRun) {
       activeRun.controller.abort()
       activeRun = null
+      lastRequestedText = lastResolvedText
     }
   }
 
@@ -127,6 +128,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
           if (controller.signal.aborted) throw err
           if (activeRun === run) {
             activeRun = null
+            lastRequestedText = lastResolvedText
             error.value = err
             status.value = 'error'
           }

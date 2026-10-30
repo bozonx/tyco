@@ -130,4 +130,27 @@ describe('useCorrectionWorkflowStore', () => {
       'direct raw input'
     )
   })
+
+  it('executes nextLive workflow and opens insert modal with corrected text and oldText', async () => {
+    setActivePinia(createPinia())
+    const modals = useMenuModalsStore()
+    const nextModalSpy = vi.spyOn(modals, 'nextModal').mockReturnValue(1)
+    const { useTextCorrectionStore } = await import('./text-correction')
+    const textCorrection = useTextCorrectionStore()
+    vi.spyOn(textCorrection, 'getFinalCorrection').mockResolvedValueOnce(
+      'live corrected text'
+    )
+
+    const store = useCorrectionWorkflowStore()
+    await store.nextLive('live raw text')
+
+    expect(textCorrection.getFinalCorrection).toHaveBeenCalledWith(
+      'live raw text'
+    )
+    expect(nextModalSpy).toHaveBeenCalledWith(MenuModals.INSERT, {
+      text: 'live corrected text',
+      oldText: 'live raw text',
+      isCorrectionUnchanged: false,
+    })
+  })
 })

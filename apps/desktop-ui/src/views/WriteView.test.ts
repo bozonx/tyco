@@ -33,6 +33,7 @@ const mocks = vi.hoisted(() => ({
   correction: {
     insert: vi.fn(),
     insertLive: vi.fn(),
+    nextLive: vi.fn(),
     insertDirect: vi.fn(),
     cancelInsert: vi.fn(),
     schedulePrecorrection: vi.fn(),
@@ -254,6 +255,10 @@ describe('quick input screen', () => {
 
     press('Enter')
     expect(mocks.correction.insertLive).toHaveBeenCalledWith('Live input')
+
+    press('Tab')
+    expect(mocks.correction.nextLive).toHaveBeenCalledWith('Live input')
+    expect(mocks.modals.nextModal).not.toHaveBeenCalled()
   })
 
   it('handles off correction mode and submits via insertDirect', async () => {

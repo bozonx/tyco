@@ -287,6 +287,10 @@ function nextFromHint() {
   const text = quickInputStore.value
   if (!text.trim()) return
   quickInputStore.rememberSubmitted(text)
+  if (isLiveMode.value) {
+    void correctionWorkflowStore.nextLive(text)
+    return
+  }
   menuModalsStore.nextModal(MenuModals.INSERT, { text })
 }
 
