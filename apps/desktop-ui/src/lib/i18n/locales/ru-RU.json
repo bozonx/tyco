@@ -1063,7 +1063,7 @@
     "quickCorrectionMode": "Коррекция при быстром вводе",
     "quickCorrectionModeInfo": "Способ обработки коррекции в окне быстрого текстового ввода.",
     "quickCorrectionLive": "Живая коррекция",
-    "quickCorrectionOnSubmit": "По завершению",
+    "quickCorrectionOnSubmit": "По завершении",
     "quickCorrectionOff": "Без коррекции"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },

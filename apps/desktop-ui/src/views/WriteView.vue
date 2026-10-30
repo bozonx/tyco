@@ -28,6 +28,12 @@
         @click="submitFromHint"
       >
         <KeyboardKey>{{ submitShortcutLabel }}</KeyboardKey>
+        <AppIcon
+          v-if="!isOffMode"
+          icon="mdi:creation-outline"
+          size="xs"
+          class="text-primary"
+        />
         <span>{{
           isOffMode ? t('write.insert') : t('write.correctAndInsert')
         }}</span>
@@ -62,6 +68,23 @@
         <KeyboardKey>Esc</KeyboardKey>
         <span>{{ t('write.cancel') }}</span>
       </button>
+      <span class="text-faint">•</span>
+      <button
+        type="button"
+        class="write-hint-action write-mode-switch"
+        :class="{ 'is-active': !isOffMode }"
+        :title="t('settings.quickCorrectionMode')"
+        :aria-label="`${t('settings.quickCorrectionMode')}: ${correctionModeLabel}`"
+        @mousedown.prevent
+        @click="cycleCorrectionMode"
+      >
+        <AppIcon
+          icon="mdi:creation-outline"
+          size="xs"
+          :class="isOffMode ? 'text-faint' : 'text-primary'"
+        />
+        <span>{{ correctionModeLabel }}</span>
+      </button>
     </p>
   </div>
 </template>
@@ -69,6 +92,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
+import AppIcon from '../components/common/AppIcon.vue'
 import KeyboardKey from '../components/common/KeyboardKey.vue'
 import WriteLivePreview from '../components/quick/WriteLivePreview.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'
@@ -88,6 +112,7 @@ import { useNavPanelStore } from '../stores/nav-panel'
 import { useQuickInputStore } from '../stores/quick-input'
 import { useTextCorrectionStore } from '../stores/text-correction'
 import { useWindowStore } from '../stores/window'
+import type { QuickCorrectionMode } from '@tyco/shared'
 
 const navPanelStore = useNavPanelStore()
 const quickInputStore = useQuickInputStore()
@@ -105,6 +130,16 @@ const correctionMode = computed(
 )
 const isLiveMode = computed(() => correctionMode.value === 'live')
 const isOffMode = computed(() => correctionMode.value === 'off')
+const correctionModeLabel = computed(() => {
+  if (correctionMode.value === 'live') return t('settings.quickCorrectionLive')
+  if (correctionMode.value === 'off') return t('settings.quickCorrectionOff')
+  return t('settings.quickCorrectionOnSubmit')
+})
+const NEXT_CORRECTION_MODE: Record<QuickCorrectionMode, QuickCorrectionMode> = {
+  live: 'onSubmit',
+  onSubmit: 'off',
+  off: 'live',
+}
 const prefetch = computed(
   () =>
     desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled === true
@@ -197,6 +232,22 @@ watch(
   }
 )
 
+watch(correctionMode, (mode) => {
+  const text = quickInputStore.value
+  if (mode === 'live') {
+    correctionWorkflowStore.cancelPrecorrection()
+    textCorrectionStore.handleLiveInput(text)
+  } else if (mode === 'onSubmit') {
+    textCorrectionStore.resetLive()
+    correctionWorkflowStore.schedulePrecorrection(
+      prefetch.value && canCorrect(text) ? text : null
+    )
+  } else {
+    textCorrectionStore.resetLive()
+    correctionWorkflowStore.cancelPrecorrection()
+  }
+})
+
 watch(
   () => desktopStore.desktopState?.isWindowShown,
   (isShown) => {
@@ -242,6 +293,21 @@ function nextFromHint() {
 function cancelFromHint() {
   if (!acceptsInput()) return
   cancelAndClose()
+}
+
+function cycleCorrectionMode() {
+  if (!acceptsInput() || menuModalsStore.pendingModal) return
+  const next = NEXT_CORRECTION_MODE[correctionMode.value]
+  void desktopStore.updateUserConfig?.({
+    quickWindow: {
+      isHiddenOnBlur:
+        desktopStore.userConfig?.quickWindow?.isHiddenOnBlur ?? true,
+      isCorrectionPrefetchEnabled:
+        desktopStore.userConfig?.quickWindow?.isCorrectionPrefetchEnabled ??
+        false,
+      correctionMode: next,
+    },
+  })
 }
 
 /** Inserts a line break at the caret, as the newline shortcut does. */

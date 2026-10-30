@@ -3,7 +3,7 @@
     class="write-live-preview"
     :class="[
       `status-${status}`,
-      { 'is-clickable': Boolean(text), 'is-changed': isChanged },
+      { 'is-clickable': canAccept, 'is-changed': isChanged },
     ]"
     role="status"
     aria-live="polite"
@@ -67,8 +67,12 @@ const isChanged = computed(() => {
   return props.text.trim() !== props.originalText.trim()
 })
 
+const canAccept = computed(() => {
+  return props.status === 'ready' && Boolean(props.text) && isChanged.value
+})
+
 function handleClick() {
-  if (props.text) {
+  if (canAccept.value) {
     emit('accept', props.text)
   }
 }

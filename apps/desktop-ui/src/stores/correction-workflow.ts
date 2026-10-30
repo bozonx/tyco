@@ -114,7 +114,10 @@ export const useCorrectionWorkflowStore = defineStore(
         insertCorrection = new AbortController()
         return correct(text, insertCorrection.signal)
       },
-      cancelCorrection: () => insertCorrection?.abort(),
+      cancelCorrection: () => {
+        insertCorrection?.abort()
+        corrector.cancelLive()
+      },
       saveOutput: historyStore.saveOutput,
       // a failed insertion is reported by the tool: the window may be gone
       insert: async (text) => {

@@ -76,7 +76,7 @@ vi.mock('@tauri-apps/api/window', () => ({
 vi.mock('../../views/WriteView.vue', () => ({
   default: {
     template:
-      '<div><div class="write-frame"><textarea /></div><p class="write-hint" /></div>',
+      '<div><div class="write-live-preview" /><div class="write-frame"><textarea /></div><p class="write-hint" /></div>',
   },
 }))
 vi.mock('../../views/AiTaskView.vue', () => ({
@@ -173,9 +173,11 @@ describe('quick overlay keyboard ownership', () => {
     desktopState.isWindowShown = true
     const wrapper = mount(QuickOverlay)
     try {
+      await wrapper.find('.write-live-preview').trigger('pointerdown')
       await wrapper.find('.write-hint').trigger('pointerdown')
       await wrapper.find('textarea').trigger('pointerdown')
       expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
+      expect(mocks.call).not.toHaveBeenCalledWith('hide_window')
     } finally {
       wrapper.unmount()
     }

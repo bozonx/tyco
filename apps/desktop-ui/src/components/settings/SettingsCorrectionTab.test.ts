@@ -41,12 +41,12 @@ describe('SettingsCorrectionTab.vue', () => {
     expect(context.navigate).toHaveBeenCalledWith('global-actions')
   })
 
-  it('changes quick window correction mode via segmented control', async () => {
+  it('changes quick window correction mode via select', async () => {
     const { context, wrapper } = setup()
     expect(context.draft.value.quickWindow.correctionMode).toBe('onSubmit')
-    const segmented = wrapper.findComponent({ name: 'SegmentedControl' })
-    expect(segmented.exists()).toBe(true)
-    await segmented.vm.$emit('update:modelValue', 'live')
+    const select = wrapper.findComponent({ name: 'FieldSelect' })
+    expect(select.exists()).toBe(true)
+    await select.vm.$emit('update:modelValue', 'live')
     expect(context.draft.value.quickWindow.correctionMode).toBe('live')
   })
 })

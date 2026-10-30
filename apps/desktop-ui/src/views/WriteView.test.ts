@@ -46,6 +46,7 @@ const mocks = vi.hoisted(() => ({
     resetLive: vi.fn(),
     cancelLive: vi.fn(),
   },
+  updateUserConfig: vi.fn(),
   call: vi.fn(),
 }))
 vi.mock('../composables/use-i18n', () => ({
@@ -60,7 +61,10 @@ vi.mock('../stores/ipc', () => ({
 vi.mock('../stores/desktop', async () => {
   const { mockDesktopStore } = await import('../test/desktop-store')
   return {
-    useDesktopStore: () => mockDesktopStore(() => reactive(mocks.desktopState)),
+    useDesktopStore: () =>
+      mockDesktopStore(() => reactive(mocks.desktopState), {
+        updateUserConfig: mocks.updateUserConfig,
+      }),
   }
 })
 vi.mock('../stores/quick-input', () => ({
@@ -266,5 +270,19 @@ describe('quick input screen', () => {
 
     press('Enter')
     expect(mocks.correction.insertDirect).toHaveBeenCalledWith('Original text')
+  })
+
+  it('shows current correction mode in the hint bar and cycles it on click', async () => {
+    const modeSwitch = wrapper.get('.write-mode-switch')
+    expect(modeSwitch.text()).toContain('settings.quickCorrectionOnSubmit')
+
+    await modeSwitch.trigger('click')
+    expect(mocks.updateUserConfig).toHaveBeenCalledWith({
+      quickWindow: {
+        isHiddenOnBlur: true,
+        isCorrectionPrefetchEnabled: false,
+        correctionMode: 'off',
+      },
+    })
   })
 })

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_BOUNDARY_COOLDOWN_MS,
   DEFAULT_LIVE_DEBOUNCE_MS,
+  DEFAULT_MIN_LIVE_LENGTH,
   DEFAULT_TYPING_TIMEOUT_MS,
   createLiveCorrection,
 } from './live-correction'
@@ -21,6 +22,7 @@ interface TestSetupOptions {
   debounceMs?: number
   boundaryCooldownMs?: number
   typingTimeoutMs?: number
+  minLength?: number
 }
 
 function setup(options: TestSetupOptions = {}) {
@@ -43,6 +45,7 @@ function setup(options: TestSetupOptions = {}) {
     boundaryCooldownMs:
       options.boundaryCooldownMs ?? DEFAULT_BOUNDARY_COOLDOWN_MS,
     typingTimeoutMs: options.typingTimeoutMs ?? DEFAULT_TYPING_TIMEOUT_MS,
+    minLength: options.minLength ?? DEFAULT_MIN_LIVE_LENGTH,
   }
 
   const model = createLiveCorrection(deps)
@@ -83,6 +86,13 @@ describe('createLiveCorrection', () => {
     expect(model.correctedText.value).toBe('')
   })
 
+  it('skips speculative requests for text shorter than minLength', () => {
+    const { deps, model } = setup({ minLength: 4 })
+    model.handleInput('Hi')
+    expect(deps.setTimer).not.toHaveBeenCalled()
+    expect(deps.correct).not.toHaveBeenCalled()
+  })
+
   it('debounces rapid typing and summarizes remaining characters once paused', async () => {
     const { deps, model, fireTimer, advanceTime } = setup()
 
@@ -111,10 +121,33 @@ describe('createLiveCorrection', () => {
     expect(deps.correct).toHaveBeenCalledOnce()
   })
 
+  it('does not trigger a duplicate request when the user accepts the corrected text', async () => {
+    const { deps, model, fireTimer, advanceTime } = setup()
+
+    model.handleInput('Helo world')
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
+
+    await vi.waitFor(() => expect(model.status.value).toBe('ready'))
+    expect(model.correctedText.value).toBe('Fixed: Helo world')
+    expect(deps.correct).toHaveBeenCalledOnce()
+
+    // User clicks preview to accept the corrected text into the input
+    model.handleInput('Fixed: Helo world')
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
+
+    expect(deps.correct).toHaveBeenCalledOnce()
+    expect(model.status.value).toBe('ready')
+    expect(model.getCachedCorrection('Fixed: Helo world')).toBe(
+      'Fixed: Helo world'
+    )
+  })
+
   it('triggers early on sentence punctuation followed by a space', async () => {
     const { deps, model, advanceTime } = setup()
 
-    advanceTime(2000)
+    advanceTime(DEFAULT_BOUNDARY_COOLDOWN_MS + 100)
     model.handleInput('Hello world. ')
 
     // Should fire immediately without waiting for debounce timer
@@ -129,23 +162,10 @@ describe('createLiveCorrection', () => {
     expect(model.correctedText.value).toBe('Fixed: Hello world. ')
   })
 
-  it('triggers on clause boundary (comma + space) when cooldown has passed', async () => {
-    const { deps, model, advanceTime } = setup()
-
-    advanceTime(2000)
-    model.handleInput('After that, ')
-
-    expect(deps.correct).toHaveBeenCalledOnce()
-    expect(deps.correct).toHaveBeenCalledWith(
-      'After that, ',
-      expect.any(AbortSignal)
-    )
-  })
-
   it('triggers on word boundary when typing continues past timeout', async () => {
     const { deps, model, advanceTime, fireTimer } = setup()
 
-    advanceTime(2000)
+    advanceTime(DEFAULT_BOUNDARY_COOLDOWN_MS + 100)
     model.handleInput('Start')
     advanceTime(DEFAULT_TYPING_TIMEOUT_MS + 100)
     model.handleInput('Start continuing ')
@@ -172,9 +192,10 @@ describe('createLiveCorrection', () => {
   it('respects boundary cooldown to prevent spamming requests', async () => {
     const { deps, model, advanceTime } = setup()
 
-    advanceTime(2000)
+    advanceTime(DEFAULT_BOUNDARY_COOLDOWN_MS + 100)
     model.handleInput('Sentence one. ')
     expect(deps.correct).toHaveBeenCalledOnce()
+    await vi.waitFor(() => expect(model.status.value).toBe('ready'))
 
     // Another punctuation typed immediately (less than cooldown)
     advanceTime(200)
@@ -184,7 +205,7 @@ describe('createLiveCorrection', () => {
     expect(deps.setTimer).toHaveBeenCalled()
   })
 
-  it('aborts previous in-flight request when a newer one starts', async () => {
+  it('coalesces typing while a request is in flight and schedules follow-up on completion', async () => {
     const { deps, model, fireTimer, advanceTime } = setup()
     const firstRequest = deferred<string>()
     deps.correct.mockImplementationOnce(() => firstRequest.promise)
@@ -197,11 +218,41 @@ describe('createLiveCorrection', () => {
     const firstSignal = deps.correct.mock.calls[0]![1] as AbortSignal
     expect(firstSignal.aborted).toBe(false)
 
-    // Second request triggered
-    advanceTime(2000)
+    // User continues typing while first request is still running
+    advanceTime(DEFAULT_BOUNDARY_COOLDOWN_MS + 100)
     model.handleInput('Part1 completed. ')
-    expect(firstSignal.aborted).toBe(true)
+    expect(firstSignal.aborted).toBe(false)
+    expect(deps.correct).toHaveBeenCalledTimes(1)
+
+    // First request finishes -> shows intermediate result and schedules follow-up
+    firstRequest.resolve('Fixed: Part1')
+    await vi.waitFor(() => expect(model.status.value).toBe('ready'))
+    expect(model.correctedText.value).toBe('Fixed: Part1')
+
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
     expect(deps.correct).toHaveBeenCalledTimes(2)
+    expect(deps.correct).toHaveBeenLastCalledWith(
+      'Part1 completed. ',
+      expect.any(AbortSignal)
+    )
+  })
+
+  it('aborts stale in-flight request when getFinalCorrection is called with newer text', async () => {
+    const { deps, model, fireTimer, advanceTime } = setup()
+    const firstRequest = deferred<string>()
+    deps.correct.mockImplementationOnce(() => firstRequest.promise)
+
+    model.handleInput('Part1')
+    advanceTime(DEFAULT_LIVE_DEBOUNCE_MS)
+    fireTimer()
+
+    const firstSignal = deps.correct.mock.calls[0]![1] as AbortSignal
+    expect(firstSignal.aborted).toBe(false)
+
+    const finalResult = await model.getFinalCorrection('Part1 and Part2')
+    expect(firstSignal.aborted).toBe(true)
+    expect(finalResult).toBe('Fixed: Part1 and Part2')
   })
 
   it('provides getFinalCorrection from cache if already resolved', async () => {
@@ -246,6 +297,15 @@ describe('createLiveCorrection', () => {
       expect.any(AbortSignal)
     )
     expect(result).toBe('Fixed: Fast typed text')
+  })
+
+  it('propagates errors on getFinalCorrection instead of returning uncorrected text', async () => {
+    const { deps, model } = setup()
+    deps.correct.mockRejectedValueOnce(new Error('Network error'))
+
+    await expect(model.getFinalCorrection('Broken text')).rejects.toThrow(
+      'Network error'
+    )
   })
 
   it('handles errors cleanly without breaking state', async () => {

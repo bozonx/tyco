@@ -24,14 +24,14 @@
       </FieldRow>
 
       <FieldRow
-        group
         :label="t('settings.quickCorrectionMode')"
         :info="t('settings.quickCorrectionModeInfo')"
       >
-        <SegmentedControl
-          v-model="userConfig.quickWindow.correctionMode"
-          :label="t('settings.quickCorrectionMode')"
+        <FieldSelect
+          class="w-full"
+          :model-value="userConfig.quickWindow.correctionMode"
           :options="quickCorrectionOptions"
+          @update:model-value="updateQuickCorrectionMode"
         />
       </FieldRow>
     </SettingsSection>
@@ -45,13 +45,13 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import type { ControlOption } from '../../lib/ui/control-option'
 import FieldRow from '../common/FieldRow.vue'
+import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import I18nText from '../common/I18nText.vue'
 import InlineAction from '../common/InlineAction.vue'
-import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
-import type { QuickCorrectionMode } from '@tyco/shared'
+import { QUICK_CORRECTION_MODES, type QuickCorrectionMode } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig, navigate } = useSettingsContext()
@@ -63,4 +63,13 @@ const quickCorrectionOptions = computed<ControlOption<QuickCorrectionMode>[]>(
     { id: 'off', name: t('settings.quickCorrectionOff') },
   ]
 )
+
+function updateQuickCorrectionMode(value: string | number | undefined) {
+  if (
+    typeof value === 'string' &&
+    (QUICK_CORRECTION_MODES as readonly string[]).includes(value)
+  ) {
+    userConfig.value.quickWindow.correctionMode = value as QuickCorrectionMode
+  }
+}
 </script>

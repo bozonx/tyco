@@ -155,7 +155,7 @@ const isSheet = computed(() => {
 })
 
 /** What stays clickable while only the input or the voice bar is shown. */
-const INPUT_PARTS = '.write-frame, .write-hint, .voice-bar'
+const INPUT_PARTS = '.write-live-preview, .write-frame, .write-hint, .voice-bar'
 
 // The window keeps one size; while it shows only the input, the rest of it
 // lets clicks through to the windows below
@@ -244,6 +244,7 @@ const updateInputRegionAfterRender = () => {
 }
 
 let inputResizeObserver: ResizeObserver | undefined
+let inputMutationObserver: MutationObserver | undefined
 
 function observeInputParts() {
   inputResizeObserver?.disconnect()
@@ -262,6 +263,16 @@ onMounted(() => {
   syncFocus()
   inputResizeObserver = new ResizeObserver(updateInputRegion)
   observeInputParts()
+  if (cardRef.value && typeof MutationObserver !== 'undefined') {
+    inputMutationObserver = new MutationObserver(() => {
+      observeInputParts()
+      updateInputRegion()
+    })
+    inputMutationObserver.observe(cardRef.value, {
+      childList: true,
+      subtree: true,
+    })
+  }
   window.addEventListener('resize', updateInputRegion)
   updateInputRegionAfterRender()
   void getCurrentWindow()
@@ -279,6 +290,7 @@ onMounted(() => {
 onUnmounted(() => {
   unmounted = true
   inputResizeObserver?.disconnect()
+  inputMutationObserver?.disconnect()
   window.removeEventListener('resize', updateInputRegion)
   regionSync.dispose()
   focusLoss.dispose()
@@ -402,6 +414,7 @@ watch(
 :global(
   [data-window-focused='false'] .quick-overlay-root.is-sheet .quick-overlay-card
 ),
+:global([data-window-focused='false'] .write-live-preview),
 :global([data-window-focused='false'] .write-frame),
 :global([data-window-focused='false'] .write-hint),
 :global([data-window-focused='false'] .voice-bar) {

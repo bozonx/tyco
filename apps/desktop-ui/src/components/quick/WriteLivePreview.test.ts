@@ -37,7 +37,7 @@ describe('WriteLivePreview.vue', () => {
     expect(wrapper.emitted('accept')).toEqual([['Hello, world!']])
   })
 
-  it('indicates already corrected when text matches original', () => {
+  it('indicates already corrected when text matches original', async () => {
     const wrapper = mount(WriteLivePreview, {
       props: {
         status: 'ready',
@@ -48,6 +48,25 @@ describe('WriteLivePreview.vue', () => {
     })
 
     expect(wrapper.classes()).not.toContain('is-changed')
+    expect(wrapper.classes()).not.toContain('is-clickable')
     expect(wrapper.text()).toContain('write.alreadyCorrected')
+
+    await wrapper.trigger('click')
+    expect(wrapper.emitted('accept')).toBeUndefined()
+  })
+
+  it('does not emit accept while loading a newer correction', async () => {
+    const wrapper = mount(WriteLivePreview, {
+      props: {
+        status: 'loading',
+        text: 'Stale correction',
+        originalText: 'Stale correction plus more text',
+      },
+      global: { stubs: { AppIcon: true } },
+    })
+
+    expect(wrapper.classes()).not.toContain('is-clickable')
+    await wrapper.trigger('click')
+    expect(wrapper.emitted('accept')).toBeUndefined()
   })
 })

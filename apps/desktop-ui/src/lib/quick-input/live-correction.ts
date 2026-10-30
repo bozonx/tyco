@@ -5,9 +5,10 @@ import {
   createSingleTimer,
 } from '../timers/single-timer'
 
-export const DEFAULT_LIVE_DEBOUNCE_MS = 500
-export const DEFAULT_BOUNDARY_COOLDOWN_MS = 1200
-export const DEFAULT_TYPING_TIMEOUT_MS = 2500
+export const DEFAULT_LIVE_DEBOUNCE_MS = 900
+export const DEFAULT_BOUNDARY_COOLDOWN_MS = 2000
+export const DEFAULT_TYPING_TIMEOUT_MS = 3500
+export const DEFAULT_MIN_LIVE_LENGTH = 4
 
 export type LiveCorrectionStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -16,6 +17,7 @@ export interface LiveCorrectionDependencies extends TimerDependencies {
   debounceMs?: number
   boundaryCooldownMs?: number
   typingTimeoutMs?: number
+  minLength?: number
   now?: () => number
 }
 
@@ -28,11 +30,13 @@ interface ActiveRun {
 /**
  * Manages live, speculative text correction for quick text input:
  *
- * - Debounces rapid typing by default.
- * - Triggers early on sentence or clause boundaries (punctuation + space) and
- *   word boundaries after sustained typing.
- * - Avoids duplicate requests when text has not changed or is already resolved.
- * - Yields the final resolved correction immediately on completion.
+ * - Debounces rapid typing and skips very short fragments.
+ * - Triggers early on sentence boundaries (punctuation + space) and word
+ *   boundaries after sustained typing.
+ * - Coalesces typing while a request is already in flight instead of aborting it
+ *   mid-stream, preserving intermediate feedback and token budget.
+ * - Avoids duplicate requests when text has not changed, is already resolved, or
+ *   matches the accepted correction.
  */
 export function createLiveCorrection(deps: LiveCorrectionDependencies) {
   const timer = createSingleTimer(deps)
@@ -41,6 +45,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
   const boundaryCooldownMs =
     deps.boundaryCooldownMs ?? DEFAULT_BOUNDARY_COOLDOWN_MS
   const typingTimeoutMs = deps.typingTimeoutMs ?? DEFAULT_TYPING_TIMEOUT_MS
+  const minLength = deps.minLength ?? DEFAULT_MIN_LIVE_LENGTH
 
   const status = ref<LiveCorrectionStatus>('idle')
   const correctedText = ref<string>('')
@@ -59,6 +64,36 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
       activeRun.controller.abort()
       activeRun = null
     }
+  }
+
+  const getCachedCorrection = (text: string): string | undefined => {
+    if (!correctedText.value) return undefined
+    if (text === lastResolvedText || text === correctedText.value) {
+      return correctedText.value
+    }
+    return undefined
+  }
+
+  const schedulePending = () => {
+    if (
+      isDisposed ||
+      activeRun ||
+      latestText.trim().length < minLength ||
+      getCachedCorrection(latestText) !== undefined ||
+      latestText === lastRequestedText
+    ) {
+      return
+    }
+    timer.start(() => {
+      if (
+        !activeRun &&
+        latestText.trim().length >= minLength &&
+        getCachedCorrection(latestText) === undefined &&
+        latestText !== lastRequestedText
+      ) {
+        void sendRequest(latestText).catch(() => {})
+      }
+    }, debounceMs)
   }
 
   const sendRequest = (text: string): Promise<string> => {
@@ -84,6 +119,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
             lastResolvedText = text
             correctedText.value = result
             status.value = 'ready'
+            schedulePending()
           }
           return result
         },
@@ -112,15 +148,23 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
       return
     }
 
-    // Already fully resolved for this exact input
-    if (text === lastResolvedText) {
+    // Already resolved for this exact input or user accepted the corrected text
+    const cached = getCachedCorrection(text)
+    if (cached !== undefined) {
       timer.stop()
+      lastResolvedText = text
+      correctedText.value = cached
       status.value = 'ready'
       return
     }
 
-    // Identical request is already in flight
-    if (text === lastRequestedText && activeRun) {
+    if (text.trim().length < minLength) {
+      timer.stop()
+      return
+    }
+
+    // Coalesce while a request is already in flight; follow-up runs on completion
+    if (activeRun) {
       timer.stop()
       return
     }
@@ -131,12 +175,11 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
 
     const timeSinceLastRequest = now() - lastRequestTime
     const isSentenceBoundary = /[.!?\n]\s+$/.test(text)
-    const isClauseBoundary = /[,;:]\s+$/.test(text)
     const isTimeoutSpace =
       text.endsWith(' ') && now() - typingStartTime >= typingTimeoutMs
 
     const isBoundaryTrigger =
-      (isSentenceBoundary || isClauseBoundary || isTimeoutSpace) &&
+      (isSentenceBoundary || isTimeoutSpace) &&
       timeSinceLastRequest >= boundaryCooldownMs
 
     if (isBoundaryTrigger) {
@@ -145,36 +188,20 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
       return
     }
 
-    // Schedule debounce: if typing pauses with unsent characters, summarize
-    timer.start(() => {
-      if (
-        latestText.trim() &&
-        latestText !== lastResolvedText &&
-        latestText !== lastRequestedText
-      ) {
-        void sendRequest(latestText).catch(() => {})
-      }
-    }, debounceMs)
+    schedulePending()
   }
 
   const getFinalCorrection = async (text: string): Promise<string> => {
     if (!text.trim()) return ''
-    if (text === lastResolvedText && correctedText.value) {
-      return correctedText.value
+    const cached = getCachedCorrection(text)
+    if (cached !== undefined) {
+      return cached
     }
     if (text === lastRequestedText && activeRun) {
-      try {
-        return await activeRun.promise
-      } catch {
-        return text
-      }
+      return await activeRun.promise
     }
     timer.stop()
-    try {
-      return await sendRequest(text)
-    } catch {
-      return text
-    }
+    return await sendRequest(text)
   }
 
   const cancel = () => {
@@ -209,6 +236,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
     status,
     correctedText,
     error,
+    getCachedCorrection,
     handleInput,
     getFinalCorrection,
     cancel,

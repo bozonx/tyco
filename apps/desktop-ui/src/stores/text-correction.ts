@@ -25,6 +25,19 @@ export const useTextCorrectionStore = defineStore('textCorrection', () => {
       correctText(text, { signal, notifyError: false }),
   })
 
+  const getCachedCorrection = (text: string): string | undefined =>
+    corrector.getCachedCorrection(text) ??
+    liveCorrector.getCachedCorrection(text)
+
+  const correct = async (
+    text: string,
+    signal: AbortSignal
+  ): Promise<string> => {
+    const liveCached = liveCorrector.getCachedCorrection(text)
+    if (liveCached !== undefined) return liveCached
+    return corrector.correct(text, signal)
+  }
+
   const desktop = useDesktopStore()
   watch(
     () =>
@@ -44,8 +57,8 @@ export const useTextCorrectionStore = defineStore('textCorrection', () => {
   })
 
   return {
-    correct: corrector.correct,
-    getCachedCorrection: corrector.getCachedCorrection,
+    correct,
+    getCachedCorrection,
     schedulePrecorrection: corrector.schedulePrecorrection,
     cancel: corrector.cancel,
 
