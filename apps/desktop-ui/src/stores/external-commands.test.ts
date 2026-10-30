@@ -1,4 +1,4 @@
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { disposePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_USER_CONFIG,
@@ -6,25 +6,28 @@ import {
   type CommandRunEvent,
 } from '@tyco/shared'
 
+import { FakeDesktopError } from '../test/fake-desktop-backend'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../test/install-fake-desktop'
 import { useExternalCommandsStore } from './external-commands'
-import { useIpcStore } from './ipc'
 import { useToolsStore } from './tools'
 
-let pinia: ReturnType<typeof createPinia>
+let desktop: TestDesktop
 
 beforeEach(() => {
-  pinia = createPinia()
-  setActivePinia(pinia)
+  desktop = installFakeDesktop()
   vi.clearAllMocks()
 })
 
 afterEach(() => {
-  disposePinia(pinia)
+  disposePinia(desktop.pinia)
+  desktop.dispose()
 })
 
 describe('external commands store wiring', () => {
   it('wires runner, overlay and IPC properly on successful handleRun', async () => {
-    const ipc = useIpcStore()
     const tools = useToolsStore()
 
     const runMock = vi
@@ -57,12 +60,10 @@ describe('external commands store wiring', () => {
       isAvailableExternally: true,
     }
 
-    const callSpy = vi
-      .spyOn(ipc, 'call')
-      .mockImplementation(async (command) => ({
-        success: true,
-        result: (command === 'claim_external_job') as any,
-      }))
+    desktop.backend.handle('claim_external_job', () => true)
+    desktop.backend.handle('finish_external_job', () => null)
+    desktop.backend.handle('log_command_run', () => undefined)
+    desktop.backend.handle('show_status_overlay', () => undefined)
 
     const store = useExternalCommandsStore()
 
@@ -81,7 +82,8 @@ describe('external commands store wiring', () => {
         source: 'external',
       })
     )
-    expect(callSpy).toHaveBeenCalledWith('log_command_run', expect.anything())
+    expect(desktop.backend.callsOf('log_command_run')).toHaveLength(1)
+    expect(desktop.backend.callsOf('show_status_overlay')).not.toEqual([])
   })
 
   it('handles cancellation properly', () => {
@@ -91,16 +93,20 @@ describe('external commands store wiring', () => {
 })
 
 it('answers external access through the store and propagates failures', async () => {
-  const call = vi
-    .spyOn(useIpcStore(), 'call')
-    .mockResolvedValue({ success: true, result: undefined })
+  let isExpired = false
+  desktop.backend.handle('answer_external_access', () => {
+    if (isExpired)
+      throw new FakeDesktopError({
+        code: 'operationFailed',
+        message: 'Request expired',
+      })
+  })
   const store = useExternalCommandsStore()
   await store.answerAccess('job-1', 'deny')
-  expect(call).toHaveBeenCalledWith('answer_external_access', {
-    jobId: 'job-1',
-    decision: 'deny',
-  })
-  call.mockResolvedValueOnce({ success: false, error: 'Request expired' })
+  expect(desktop.backend.callsOf('answer_external_access')).toEqual([
+    { jobId: 'job-1', decision: 'deny' },
+  ])
+  isExpired = true
   await expect(store.answerAccess('job-1', 'once')).rejects.toThrow(
     'Request expired'
   )

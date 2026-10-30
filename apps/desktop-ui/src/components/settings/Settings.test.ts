@@ -1,17 +1,22 @@
 import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
-import { createPinia, setActivePinia } from 'pinia'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useRoute } from 'vue-router'
-import { CONFIG_VERSION } from '@tyco/shared'
+import {
+  CONFIG_VERSION,
+  DEFAULT_USER_CONFIG,
+  type UserConfig,
+} from '@tyco/shared'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import { useSettingsSessionStore } from '../../stores/settings-session'
 import SettingsGeneralTab from './SettingsGeneralTab.vue'
 import Settings from './Settings.vue'
 
 const settingsMocks = vi.hoisted(() => ({
-  configVersion: 0,
-  isInDevelopment: true,
   query: {} as Record<string, string>,
 }))
 
@@ -43,39 +48,6 @@ vi.mock('../../stores/action-menu', () => ({
   useActionMenuStore: () => ({
     resolveMainActions: (actions: any) => actions ?? [],
     getRegisteredActions: () => [],
-  }),
-}))
-
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({
-    call: vi.fn().mockImplementation((fn: string) => {
-      if (fn === 'get_storage_info') {
-        return Promise.resolve({
-          success: true,
-          result: {
-            locations: [
-              { kinds: ['config', 'data'], path: '/test/roaming' },
-              { kinds: ['cache', 'logs'], path: '/test/local' },
-            ],
-          },
-        })
-      }
-      return Promise.resolve({ status: 'ok', success: true, result: null })
-    }),
-    updateConfig: vi.fn(),
-  }),
-}))
-vi.mock('../../stores/desktop', () => ({
-  useDesktopStore: () => ({
-    userConfig: {
-      configVersion: settingsMocks.configVersion,
-      isInDevelopment: settingsMocks.isInDevelopment,
-      appearance: { theme: 'auto', contrast: 'normal', motion: 'auto' },
-      plugins: {
-        PluginA: { isEnabled: true, settings: {} },
-        PluginB: { isEnabled: false, settings: {} },
-      },
-    },
   }),
 }))
 
@@ -131,13 +103,37 @@ async function selectTab(wrapper: VueWrapper, label: string) {
   await wrapper.get(`.navigation-item[aria-label="${label}"]`).trigger('click')
 }
 
+const testConfig = (patch: Partial<UserConfig> = {}): UserConfig => ({
+  ...structuredClone(DEFAULT_USER_CONFIG),
+  isInDevelopment: true,
+  plugins: {
+    PluginA: { isEnabled: true, settings: {} },
+    PluginB: { isEnabled: false, settings: {} },
+  },
+  ...patch,
+})
+
 describe('Settings.vue', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    settingsMocks.configVersion = 0
-    settingsMocks.isInDevelopment = true
+  let desktop: TestDesktop
+
+  // the settings draft is taken from the config the window has loaded
+  const loadConfig = async (patch: Partial<UserConfig> = {}) => {
+    desktop?.dispose()
+    desktop = await loadFakeDesktop({ userConfig: testConfig(patch) })
+    desktop.backend.handle('get_storage_info', () => ({
+      locations: [
+        { kinds: ['config', 'data'], path: '/test/roaming' },
+        { kinds: ['cache', 'logs'], path: '/test/local' },
+      ],
+    }))
+  }
+
+  beforeEach(async () => {
+    await loadConfig()
     delete useRoute().query.tab
   })
+
+  afterEach(() => desktop.dispose())
   it('falls back from unknown routes and reacts to query changes', async () => {
     useRoute().query.tab = 'unknown'
     const wrapper = mount(Settings, {
@@ -159,8 +155,8 @@ describe('Settings.vue', () => {
     wrapper.unmount()
   })
 
-  it('disables settings written by a newer version', () => {
-    settingsMocks.configVersion = CONFIG_VERSION + 1
+  it('disables settings written by a newer version', async () => {
+    await loadConfig({ configVersion: CONFIG_VERSION + 1 })
     const wrapper = mount(Settings, {
       global: { stubs: { NavigationList: false, Button: true } },
     })
@@ -301,8 +297,8 @@ describe('Settings.vue', () => {
     expect(editorIdx).toBe(generalIdx + 1)
   })
 
-  it('hides editor tab and rejects editor route outside development mode', () => {
-    settingsMocks.isInDevelopment = false
+  it('hides editor tab and rejects editor route outside development mode', async () => {
+    await loadConfig({ isInDevelopment: false })
     useRoute().query.tab = 'editor'
     const wrapper = mount(Settings, {
       global: {
@@ -546,7 +542,6 @@ describe('Settings.vue', () => {
   })
 
   it('renders a heading for new profile and new project subpages', () => {
-    settingsMocks.isInDevelopment = true
     useRoute().query.tab = 'ai-profile:new'
     const wrapper = mount(Settings, {
       global: {

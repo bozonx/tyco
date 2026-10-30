@@ -1,11 +1,15 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { createCommand } from '../../lib/commands/command-config'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsCommandsTab from './SettingsCommandsTab.vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({
@@ -26,11 +30,6 @@ vi.mock('../../stores/settings-session', () => ({
     persist: vi.fn().mockResolvedValue(undefined),
     isSaved: () => true,
   }),
-}))
-
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call: vi.fn() }) }))
-vi.mock('../../stores/desktop', () => ({
-  useDesktopStore: () => ({ userConfig: { commands: [] } }),
 }))
 
 vi.mock('../../stores/secrets', () => ({
@@ -92,6 +91,14 @@ async function pickMenuItem(
 }
 
 describe('SettingsCommandsTab.vue', () => {
+  let desktop: TestDesktop
+
+  beforeEach(() => {
+    desktop = installFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
   it('reorders commands by dragging the shared handle', async () => {
     context = createTestSettingsContext({
       launcherPages: [],

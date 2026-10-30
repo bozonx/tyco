@@ -1,5 +1,5 @@
-import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createI18n } from 'vue-i18n'
 import { withConfigFieldValue } from '@tyco/plugin-sdk'
 import pluginIndex from '@tyco/plugin-fast-note'
@@ -10,11 +10,11 @@ import FastNotePreview from './FastNotePreview.vue'
 import FastNoteDirectoryPicker from './FastNoteDirectoryPicker.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import { messages as uiMessages } from '../../lib/i18n/messages'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
-const { pickDirectory } = vi.hoisted(() => ({ pickDirectory: vi.fn() }))
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callOrNotify: pickDirectory }),
-}))
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({
     t: (key: string) =>
@@ -32,6 +32,14 @@ const fields = () =>
   )
 
 describe('FastNote settings', () => {
+  let desktop: TestDesktop
+
+  beforeEach(() => {
+    desktop = installFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
   it('applies a template only on request and preserves the notes root and clear setting', async () => {
     const wrapper = mount(FastNoteSettings, { props: { fields: fields() } })
     await wrapper.get('select').setValue('2')
@@ -78,13 +86,14 @@ describe('FastNote settings', () => {
     ).toBe(true)
   })
   it('uses the directory picker without writing notes', async () => {
-    pickDirectory.mockResolvedValue({ success: true, result: '/new-notes' })
+    desktop.backend.handle('pick_directory', () => '/new-notes')
     const wrapper = mount(FastNoteSettings, { props: { fields: fields() } })
     await wrapper
       .findComponent(FastNoteDirectoryPicker)
       .get('button')
       .trigger('click')
-    expect(pickDirectory).toHaveBeenCalledWith('pick_directory')
+    await flushPromises()
+    expect(desktop.backend.callsOf('pick_directory')).toHaveLength(1)
     expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({
       pathToNotes: '/new-notes',
     })

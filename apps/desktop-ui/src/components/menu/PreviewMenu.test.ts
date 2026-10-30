@@ -1,22 +1,22 @@
 import { config, mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import PreviewMenu from './PreviewMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ label: 'main' }),
-}))
+let desktop: TestDesktop
 
 describe('PreviewMenu', () => {
-  beforeEach(() => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    config.global.plugins = [pinia]
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
+    config.global.plugins = [desktop.pinia]
     localStorage.clear()
   })
 
@@ -104,8 +104,12 @@ describe('PreviewMenu', () => {
   })
 
   it('reads translation view mode preference from sessionState', async () => {
-    const { useDesktopStore } = await import('../../stores/desktop')
-    useDesktopStore().desktopState.userConfig.translation.viewMode = 'result'
+    desktop.setUserConfig({
+      translation: {
+        ...desktop.backend.userConfig.translation,
+        viewMode: 'result',
+      },
+    })
 
     const wrapper = mount(PreviewMenu, {
       props: { text: 'Translation text', sourceText: 'Original text' },
@@ -166,4 +170,5 @@ describe('PreviewMenu', () => {
 
 afterEach(() => {
   config.global.plugins = []
+  desktop.dispose()
 })

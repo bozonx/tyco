@@ -1,7 +1,9 @@
+import { flushPromises } from '@vue/test-utils'
+import { DESKTOP_EVENTS } from '@tyco/shared'
 import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { desktopClient } from '../lib/desktop/client'
+import { installFakeDesktop } from '../test/install-fake-desktop'
 import { browserThemeRuntime } from '../lib/theme/browser-theme-runtime'
 import { disposeProfileChatStore, useProfileChatStore } from './chat'
 import { useProfileChatInputStore } from './chat-input'
@@ -59,16 +61,26 @@ describe('store lifecycle', () => {
   })
 
   it('unsubscribes global hotkeys listener on disposal', async () => {
-    const unsubscribe = vi.fn()
-    vi.spyOn(desktopClient, 'listen').mockReturnValue(
-      Promise.resolve(unsubscribe)
-    )
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    const store = useGlobalHotkeysStore(pinia)
-    await store.load()
-    disposePinia(pinia)
-    expect(unsubscribe).toHaveBeenCalledOnce()
+    const desktop = installFakeDesktop()
+    try {
+      const store = useGlobalHotkeysStore(desktop.pinia)
+      await store.load()
+      await flushPromises()
+      const loads = () =>
+        desktop.backend.callsOf('get_hotkey_provider_info').length
+      // a change of the hotkeys reloads them while the store lives
+      await desktop.emit(DESKTOP_EVENTS.HOTKEYS_CHANGED, null)
+      await flushPromises()
+      const loadsBeforeDisposal = loads()
+      expect(loadsBeforeDisposal).toBeGreaterThan(1)
+
+      disposePinia(desktop.pinia)
+      await desktop.emit(DESKTOP_EVENTS.HOTKEYS_CHANGED, null)
+      await flushPromises()
+      expect(loads()).toBe(loadsBeforeDisposal)
+    } finally {
+      desktop.dispose()
+    }
   })
 
   it('disposes both profile chat store and profile chat input store on profile removal', () => {

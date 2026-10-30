@@ -1,18 +1,11 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { reactive } from 'vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import CorrectionView from './CorrectionView.vue'
 
 const mocks = vi.hoisted(() => ({
-  desktopState: {
-    selectedText: 'Selected text' as string | null,
-    isWindowShown: true,
-    mode: 'correction',
-    activationId: 1,
-  },
   navPanel: { resetNavPanelState: vi.fn() },
-  callOrNotify: vi.fn(),
   correct: vi.fn(),
 }))
 
@@ -43,19 +36,6 @@ vi.mock('../components/overlay/ActionOverlayLayout.vue', () => ({
   },
 }))
 
-vi.mock('../stores/window', () => ({
-  useWindowStore: () => ({ hide: () => mocks.callOrNotify('hide_window') }),
-}))
-vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ callOrNotify: mocks.callOrNotify }),
-}))
-vi.mock('../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../test/desktop-store')
-  return {
-    useDesktopStore: () => mockDesktopStore(() => reactive(mocks.desktopState)),
-  }
-})
-
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanel,
 }))
@@ -65,35 +45,52 @@ vi.mock('../stores/action-menu', () => ({
 }))
 
 describe('CorrectionView', () => {
-  beforeEach(() => {
+  let desktop: TestDesktop
+  const loadSelection = async (selectedText: string | null) => {
+    desktop?.dispose()
+    desktop = await loadFakeDesktop({
+      mode: 'correction',
+      activation: { activationId: 1, selectedText },
+    })
+    desktop.backend.handle('hide_window', () => undefined)
+  }
+  const hideCount = async () => {
+    await flushPromises()
+    return desktop.backend.callsOf('hide_window').length
+  }
+  const mountView = () =>
+    mount(CorrectionView, { global: { plugins: [desktop.pinia] } })
+
+  beforeEach(async () => {
     vi.clearAllMocks()
     mocks.correct.mockReset().mockResolvedValue(undefined)
-    mocks.desktopState.selectedText = 'Selected text'
-    mocks.desktopState.activationId = 1
+    await loadSelection('Selected text')
   })
 
+  afterEach(() => desktop.dispose())
+
   it('shows an explanation and a close action when no selection was captured', async () => {
-    mocks.desktopState.selectedText = null
-    const wrapper = mount(CorrectionView)
+    await loadSelection(null)
+    const wrapper = mountView()
     expect(wrapper.text()).toContain('toast.textNotSelected')
     expect(mocks.correct).not.toHaveBeenCalled()
     await wrapper.find('.close-btn').trigger('click')
-    expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
+    expect(await hideCount()).toBe(1)
     wrapper.unmount()
   })
 
   it('does not let cancellation from an old correction hide a new activation', async () => {
-    const wrapper = mount(CorrectionView)
+    const wrapper = mountView()
     await flushPromises()
     const onCancel = mocks.correct.mock.calls[0]![1].onCancel
-    reactive(mocks.desktopState).activationId++
+    desktop.setState({ activationId: 2 })
     onCancel()
-    expect(mocks.callOrNotify).not.toHaveBeenCalled()
+    expect(await hideCount()).toBe(0)
     wrapper.unmount()
   })
 
   it('passes onCancel handler to actionMenuStore.correct', async () => {
-    mount(CorrectionView)
+    mountView()
     await flushPromises()
 
     expect(mocks.correct).toHaveBeenCalledWith('Selected text', {
@@ -103,14 +100,14 @@ describe('CorrectionView', () => {
   })
 
   it('closes window when onCancel callback passed to correct is called', async () => {
-    mount(CorrectionView)
+    mountView()
     await flushPromises()
 
     const options = mocks.correct.mock.calls[0]?.[1]
     expect(options?.onCancel).toBeTypeOf('function')
 
     options.onCancel()
-    expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
+    expect(await hideCount()).toBe(1)
   })
 
   it('closes window when cancel button in InProgressMessage is clicked', async () => {
@@ -120,18 +117,18 @@ describe('CorrectionView', () => {
       return new Promise(() => {})
     })
 
-    const wrapper = mount(CorrectionView)
+    const wrapper = mountView()
     await flushPromises()
 
     const cancelBtn = wrapper.find('.cancel-btn')
     expect(cancelBtn.exists()).toBe(true)
 
     await cancelBtn.trigger('click')
-    expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
+    expect(await hideCount()).toBeGreaterThan(0)
 
     if (capturedOnCancel) {
       capturedOnCancel()
-      expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
+      expect(await hideCount()).toBeGreaterThan(0)
     }
   })
 })

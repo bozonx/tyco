@@ -3,13 +3,15 @@ import { translationLanguageIds } from '../../lib/translation/translation-langua
 
 import { DEFAULT_SESSION_STATE } from '@tyco/shared'
 import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useHistoryStore } from '../../stores/history'
-import { useDesktopStore } from '../../stores/desktop'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import TranslateMenu from './TranslateMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -19,10 +21,6 @@ vi.mock('../../composables/use-i18n', () => ({
 const transform = vi.hoisted(() => vi.fn())
 vi.mock('../../stores/invocations', () => ({
   useInvocationsStore: () => ({ call: transform }),
-}))
-
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ label: 'main' }),
 }))
 
 const result = {
@@ -59,23 +57,33 @@ describe('TranslateMenu', () => {
       },
     })
 
-  beforeEach(() => {
-    setActivePinia(createPinia())
+  let desktop: TestDesktop
+  const setTargetLanguages = (targetLanguages: Record<string, string>) =>
+    desktop.setUserConfig({
+      translation: {
+        ...desktop.backend.userConfig.translation,
+        targetLanguages,
+      },
+    })
+  const setRecentLanguages = (recentTranslateLanguages: string[]) =>
+    desktop.setState({
+      sessionState: { ...DEFAULT_SESSION_STATE, recentTranslateLanguages },
+    })
+
+  afterEach(() => desktop.dispose())
+
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
     transform.mockReset()
     transform.mockResolvedValue(result)
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()
-    vi.spyOn(useDesktopStore(), 'patchSessionState').mockResolvedValue({
-      success: true,
-      result: useDesktopStore().desktopState.sessionState,
-    })
     useMenuModalsStore().nextModal(MenuModals.TRANSLATE)
   })
 
   it('translates into a configured language by its key', async () => {
-    const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.translation.targetLanguages = { q: 'de-DE' }
+    setTargetLanguages({ q: 'de-DE' })
     mountMenu()
 
     await shortcutListProps.leftLetterKeys[0].action()
@@ -119,7 +127,12 @@ describe('TranslateMenu', () => {
   })
 
   it('offers the whole provider catalog without requiring a search', async () => {
-    useDesktopStore().desktopState.userConfig.translation.provider = 'google'
+    desktop.setUserConfig({
+      translation: {
+        ...desktop.backend.userConfig.translation,
+        provider: 'google',
+      },
+    })
     const wrapper = mountMenu()
     await shortcutListProps.spaceKey.action()
     await nextTick()
@@ -131,7 +144,6 @@ describe('TranslateMenu', () => {
   })
 
   it('translates into any language picked from the full list', async () => {
-    const desktop = useDesktopStore()
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
@@ -142,9 +154,11 @@ describe('TranslateMenu', () => {
 
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())
     expect(transform.mock.calls[0]![2].toolConfig.language).toBe('it')
-    expect(desktop.patchSessionState).toHaveBeenCalledWith({
-      recentTranslateLanguages: ['it'],
-    })
+    await vi.waitFor(() =>
+      expect(desktop.backend.callsOf('patch_session_state')).toEqual([
+        { patch: { recentTranslateLanguages: ['it'] } },
+      ])
+    )
   })
 
   it('takes the source language picked after activating its field', async () => {
@@ -170,11 +184,7 @@ describe('TranslateMenu', () => {
   })
 
   it('translates nothing on Enter until a language is typed or chosen', async () => {
-    const desktop = useDesktopStore()
-    desktop.desktopState.sessionState = {
-      ...DEFAULT_SESSION_STATE,
-      recentTranslateLanguages: ['it-IT'],
-    }
+    setRecentLanguages(['it-IT'])
     const wrapper = mountMenu()
 
     await shortcutListProps.spaceKey.action()
@@ -203,10 +213,7 @@ describe('TranslateMenu', () => {
   })
 
   it('translates the highlighted language by clicking the Enter hint', async () => {
-    useDesktopStore().desktopState.sessionState = {
-      ...DEFAULT_SESSION_STATE,
-      recentTranslateLanguages: ['it-IT'],
-    }
+    setRecentLanguages(['it-IT'])
     const wrapper = mountMenu()
     await shortcutListProps.spaceKey.action()
     await nextTick()
@@ -226,9 +233,7 @@ describe('TranslateMenu', () => {
         resolve = done
       })
     )
-    useDesktopStore().desktopState.userConfig.translation.targetLanguages = {
-      q: 'de-DE',
-    }
+    setTargetLanguages({ q: 'de-DE' })
     const wrapper = mountMenu()
     const pending = shortcutListProps.leftLetterKeys[0].action()
     await vi.waitFor(() => expect(transform).toHaveBeenCalled())

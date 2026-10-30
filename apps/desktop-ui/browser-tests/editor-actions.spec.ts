@@ -94,6 +94,6 @@ test('translates into a chosen language and applies the result', async ({
   expect(llm.requests[0]!.body).toMatch(
     /Translate the source_text block to (European Spanish \(es-ES\)|es)/
   )
-  await page.getByRole('button', { name: /Insert into editor/ }).click()
+  await page.getByRole('button', { name: /Replace in editor/ }).click()
   await expect(editor).toHaveText('Buenos días a todos.')
 })

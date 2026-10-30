@@ -1,8 +1,12 @@
 import { flushPromises, shallowMount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
 import AiChat from './AiChat.vue'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 const mocks = vi.hoisted(() => ({
   input: { value: 'Next question', clear: vi.fn() },
@@ -40,16 +44,6 @@ vi.mock('../../stores/chat', () => ({
   useChatStore: () => reactive(mocks.chatState),
 }))
 
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () => {
-      const state = { userConfig: {} }
-      return mockDesktopStore(() => state)
-    },
-  }
-})
-
 vi.mock('../../stores/secrets', () => ({
   useSecretsStore: () => ({ refreshSecrets: async () => undefined }),
 }))
@@ -80,6 +74,14 @@ vi.mock('../../lib/desktop/window', () => ({
 }))
 
 describe('AiChat.vue', () => {
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.input.value = 'Next question'

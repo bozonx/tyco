@@ -127,9 +127,10 @@ See `dev_docs/testing.md`. In short:
 
 - Frontend tests run in Node by default; a test that needs browser APIs
   outside components, views, composables and stores is named `*.dom.test.ts`.
-- Component tests mount real stores over `installFakeDesktop()`
-  (`src/test/install-fake-desktop.ts`); do not mock `stores/desktop` or
-  `stores/ipc`.
+- Component, composable and store tests use real stores over
+  `loadFakeDesktop()` / `installFakeDesktop()`
+  (`src/test/install-fake-desktop.ts`); do not mock or spy on
+  `stores/desktop`, `stores/ipc` or `lib/desktop/client` (ESLint enforces it).
 - Rust tests that bind sockets or start processes are named `integration_*`;
   `pnpm check` enforces it.
 

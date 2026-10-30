@@ -1,8 +1,8 @@
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { createPinia, disposePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { LlmClient } from '../lib/llm/llm-client'
 import { useLlmStore } from './llm'
-import { useDesktopStore } from './desktop'
+import { loadFakeDesktop } from '../test/install-fake-desktop'
 
 const mocks = vi.hoisted(() => ({
   run: vi.fn(async () => 'Answer'),
@@ -33,13 +33,20 @@ afterEach(() => vi.clearAllMocks())
 
 describe('LLM store service wiring', () => {
   it('runs correction and chat without initializing dictation or translation', async () => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
+    const desktop = await loadFakeDesktop()
     try {
       const store = useLlmStore()
-      const desktop = useDesktopStore()
       expect(await store.actions.correctText('Sample')).toBe('Answer')
-      desktop.desktopState.userConfig.llm.tasks.chat.rule = 'Current chat rules'
+      const { llm } = desktop.backend.userConfig
+      desktop.setUserConfig({
+        llm: {
+          ...llm,
+          tasks: {
+            ...llm.tasks,
+            chat: { ...llm.tasks.chat, rule: 'Current chat rules' },
+          },
+        },
+      })
       expect(
         (
           await store.actions.sendChatMessage('Question', [], undefined, {
@@ -56,7 +63,8 @@ describe('LLM store service wiring', () => {
       expect(mocks.dictation).not.toHaveBeenCalled()
       expect(mocks.translation).not.toHaveBeenCalled()
     } finally {
-      disposePinia(pinia)
+      disposePinia(desktop.pinia)
+      desktop.dispose()
     }
   })
 

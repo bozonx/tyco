@@ -1,7 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
 
 const mocks = vi.hoisted(() => ({
@@ -42,32 +45,16 @@ vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: mocks.toastKey, toastText: mocks.toastText }),
 }))
 
-vi.mock('../../lib/desktop/client', () => ({
-  desktopClient: {
-    isAvailable: vi.fn().mockReturnValue(false),
-    invoke: vi
-      .fn()
-      .mockResolvedValue({
-        provider: 'portal',
-        canConfigure: true,
-        registered: false,
-        actions: {},
-        defaults: {},
-        systemTriggers: {},
-        platform: 'linux',
-      }),
-    listen: vi.fn().mockResolvedValue(() => {}),
-  },
-}))
-
-import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 
 describe('VoiceRecognitionMenu', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    useDesktopStore().desktopState.isWindowShown = true
+  let desktop: TestDesktop
+
+  afterEach(() => desktop.dispose())
+
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop({ window: { isWindowShown: true } })
     vi.clearAllMocks()
     mocks.startDictation.mockResolvedValue(undefined)
     mocks.cancelDictation.mockResolvedValue(undefined)
@@ -310,7 +297,9 @@ describe('VoiceRecognitionMenu', () => {
     const wrapper = mountChat()
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledOnce()
-    useDesktopStore().desktopState.activationId++
+    desktop.setState({
+      activationId: desktop.backend.activation.activationId + 1,
+    })
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledTimes(2)
     expect(wrapper.emitted('cancelled')).toBeUndefined()
@@ -328,7 +317,9 @@ describe('VoiceRecognitionMenu', () => {
     await flushPromises()
     await wrapper.find('button[title="chat.voiceSendHint"]').trigger('click')
     await flushPromises()
-    useDesktopStore().desktopState.activationId++
+    desktop.setState({
+      activationId: desktop.backend.activation.activationId + 1,
+    })
     await flushPromises()
     resolve('Old transcript')
     await flushPromises()
@@ -383,18 +374,19 @@ describe('VoiceRecognitionMenu', () => {
   })
 
   it('renders styling keyboard when isStylingBarEnabled is true and activationMode is voice', async () => {
-    const desktopStore = useDesktopStore()
-    desktopStore.desktopState.userConfig.stt.isStylingBarEnabled = true
-    desktopStore.desktopState.userConfig.styling = {
-      slots: { q: 'style-1' },
-      items: [
-        {
-          id: 'style-1',
-          name: 'Professional',
-          rule: 'Make it sound professional',
-        },
-      ],
-    }
+    desktop.setUserConfig({
+      stt: { ...desktop.backend.userConfig.stt, isStylingBarEnabled: true },
+      styling: {
+        slots: { q: 'style-1' },
+        items: [
+          {
+            id: 'style-1',
+            name: 'Professional',
+            rule: 'Make it sound professional',
+          },
+        ],
+      },
+    })
 
     const wrapper = mount(VoiceRecognitionMenu, {
       props: {
@@ -421,18 +413,19 @@ describe('VoiceRecognitionMenu', () => {
   })
 
   it('finishes with style and bypasses voice correction when a style key is pressed', async () => {
-    const desktopStore = useDesktopStore()
-    desktopStore.desktopState.userConfig.stt.isStylingBarEnabled = true
-    desktopStore.desktopState.userConfig.styling = {
-      slots: { q: 'style-1' },
-      items: [
-        {
-          id: 'style-1',
-          name: 'Professional',
-          rule: 'Make it sound professional',
-        },
-      ],
-    }
+    desktop.setUserConfig({
+      stt: { ...desktop.backend.userConfig.stt, isStylingBarEnabled: true },
+      styling: {
+        slots: { q: 'style-1' },
+        items: [
+          {
+            id: 'style-1',
+            name: 'Professional',
+            rule: 'Make it sound professional',
+          },
+        ],
+      },
+    })
     mocks.shouldFormatRecognizedText.mockReturnValue(true)
     mocks.finishDictation.mockResolvedValue('raw dictated text')
     mocks.stylingPrompt.mockResolvedValue('Styled professional text')
@@ -481,19 +474,23 @@ describe('VoiceRecognitionMenu', () => {
   })
 
   it('finishes with insert intent when isStylingBarDirectInsertEnabled is true', async () => {
-    const desktopStore = useDesktopStore()
-    desktopStore.desktopState.userConfig.stt.isStylingBarEnabled = true
-    desktopStore.desktopState.userConfig.stt.isStylingBarDirectInsertEnabled = true
-    desktopStore.desktopState.userConfig.styling = {
-      slots: { q: 'style-1' },
-      items: [
-        {
-          id: 'style-1',
-          name: 'Professional',
-          rule: 'Make it sound professional',
-        },
-      ],
-    }
+    desktop.setUserConfig({
+      stt: {
+        ...desktop.backend.userConfig.stt,
+        isStylingBarEnabled: true,
+        isStylingBarDirectInsertEnabled: true,
+      },
+      styling: {
+        slots: { q: 'style-1' },
+        items: [
+          {
+            id: 'style-1',
+            name: 'Professional',
+            rule: 'Make it sound professional',
+          },
+        ],
+      },
+    })
     mocks.shouldFormatRecognizedText.mockReturnValue(true)
     mocks.finishDictation.mockResolvedValue('raw dictated text')
     mocks.stylingPrompt.mockResolvedValue('Styled professional text')
@@ -536,18 +533,19 @@ describe('VoiceRecognitionMenu', () => {
   })
 
   it('finishes with style when a style button is clicked', async () => {
-    const desktopStore = useDesktopStore()
-    desktopStore.desktopState.userConfig.stt.isStylingBarEnabled = true
-    desktopStore.desktopState.userConfig.styling = {
-      slots: { q: 'style-1' },
-      items: [
-        {
-          id: 'style-1',
-          name: 'Professional',
-          rule: 'Make it sound professional',
-        },
-      ],
-    }
+    desktop.setUserConfig({
+      stt: { ...desktop.backend.userConfig.stt, isStylingBarEnabled: true },
+      styling: {
+        slots: { q: 'style-1' },
+        items: [
+          {
+            id: 'style-1',
+            name: 'Professional',
+            rule: 'Make it sound professional',
+          },
+        ],
+      },
+    })
     mocks.shouldFormatRecognizedText.mockReturnValue(true)
     mocks.finishDictation.mockResolvedValue('raw dictated text')
     mocks.stylingPrompt.mockResolvedValue('Styled professional text')

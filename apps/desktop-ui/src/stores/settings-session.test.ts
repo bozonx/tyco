@@ -1,24 +1,11 @@
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
-import { reactive } from 'vue'
+import { disposePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 
+import { FakeDesktopError } from '../test/fake-desktop-backend'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import { useSettingsSessionStore } from './settings-session'
 
-const mocks = vi.hoisted(() => ({
-  config: {} as typeof DEFAULT_USER_CONFIG,
-  save: vi.fn(),
-  toastText: vi.fn(),
-}))
-vi.mock('./desktop', async () => {
-  const { mockDesktopStore } = await import('../test/desktop-store')
-  return {
-    useDesktopStore: () =>
-      mockDesktopStore(() => ({ userConfig: mocks.config }), {
-        saveUserConfig: mocks.save,
-      }),
-  }
-})
+const mocks = vi.hoisted(() => ({ toastText: vi.fn() }))
 vi.mock('./action-menu', () => ({
   useActionMenuStore: () => ({
     resolveMainActions: (actions: unknown[]) => actions,
@@ -38,29 +25,29 @@ vi.mock('./toast', () => ({
 }))
 vi.mock('../lib/i18n', () => ({ translate: (key: string) => key }))
 
-let pinia: ReturnType<typeof createPinia>
-beforeEach(() => {
-  vi.useFakeTimers()
+let desktop: TestDesktop
+beforeEach(async () => {
   vi.clearAllMocks()
-  pinia = createPinia()
-  setActivePinia(pinia)
-  mocks.config = reactive(structuredClone(DEFAULT_USER_CONFIG))
-  mocks.save.mockImplementation(async (next) => {
-    mocks.config = reactive(next)
-    return { success: true, result: next }
-  })
+  desktop = await loadFakeDesktop()
+  vi.useFakeTimers()
 })
 afterEach(async () => {
-  disposePinia(pinia)
+  disposePinia(desktop.pinia)
   await Promise.resolve()
   vi.useRealTimers()
+  desktop.dispose()
 })
 
 describe('settings session ownership', () => {
   it('retains a failed page-exit save for the next settings mount', async () => {
     const session = useSettingsSessionStore()
     session.draft.appearance.theme = 'dark'
-    mocks.save.mockResolvedValueOnce({ success: false, error: 'Unavailable' })
+    desktop.backend.handle('save_user_config', () => {
+      throw new FakeDesktopError({
+        code: 'operationFailed',
+        message: 'Unavailable',
+      })
+    })
     await session.persist()
     expect(mocks.toastText).toHaveBeenCalledWith(
       'toast.settingsSaveFailed: Unavailable',
@@ -69,8 +56,14 @@ describe('settings session ownership', () => {
     const reopened = useSettingsSessionStore()
     expect(reopened.draft.appearance.theme).toBe('dark')
     expect(reopened.isSaved()).toBe(false)
+    desktop.backend.handle('save_user_config', ({ userConfig }) => {
+      desktop.backend.userConfig = userConfig
+      desktop.backend.touch()
+      return desktop.backend.snapshot()
+    })
     await reopened.persist()
     expect(reopened.isSaved()).toBe(true)
-    expect(mocks.save).toHaveBeenCalledTimes(2)
+    expect(desktop.backend.callsOf('save_user_config')).toHaveLength(2)
+    expect(desktop.backend.userConfig.appearance.theme).toBe('dark')
   })
 })

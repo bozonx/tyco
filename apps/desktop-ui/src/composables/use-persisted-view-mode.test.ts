@@ -1,71 +1,74 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { effectScope, nextTick, reactive } from 'vue'
+import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { effectScope, nextTick } from 'vue'
 
+import { FakeDesktopError } from '../test/fake-desktop-backend'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
+import { useDesktopStore } from '../stores/desktop'
 import {
   usePersistedDiffMode,
   usePersistedTranslationViewMode,
 } from './use-persisted-view-mode'
 
-const mocks = vi.hoisted(() => ({
-  userConfig: {} as {
-    editor: { diffViewMode?: string }
-    translation: { viewMode?: string }
-  },
-  toastKey: vi.fn(),
-  updateUserConfig: vi.fn(),
-}))
+const mocks = vi.hoisted(() => ({ toastKey: vi.fn() }))
 
 vi.mock('./use-toast', () => ({
   default: () => ({ toastKey: mocks.toastKey }),
 }))
 
-vi.mock('../stores/desktop', () => ({
-  useDesktopStore: () => ({
-    get userConfig() {
-      return mocks.userConfig
-    },
-    updateUserConfig: mocks.updateUserConfig,
-  }),
-}))
+const saveFailure = () => {
+  throw new FakeDesktopError({ code: 'operationFailed', message: 'io' })
+}
 
-beforeEach(() => {
-  vi.resetAllMocks()
-  mocks.updateUserConfig.mockResolvedValue({ success: true })
+let desktop: TestDesktop
+let scope: ReturnType<typeof effectScope>
+
+beforeEach(async () => {
+  scope = effectScope()
+  const userConfig = structuredClone(DEFAULT_USER_CONFIG) as UserConfig
+  userConfig.editor.diffViewMode = 'unified'
+  userConfig.translation.viewMode = 'split'
+  desktop = await loadFakeDesktop({ userConfig })
 })
+
+afterEach(() => {
+  scope.stop()
+  desktop.dispose()
+})
+
+const savedConfigs = () =>
+  desktop.backend.callsOf('save_user_config').map((call) => call.userConfig)
 
 describe('usePersistedDiffMode', () => {
   it('stores a picked mode and follows a mode stored elsewhere', async () => {
-    mocks.userConfig = reactive({
-      editor: { diffViewMode: 'unified' },
-      translation: { viewMode: 'parallel' },
-    })
-    const { diffMode, cycleMode } = usePersistedDiffMode()
+    const { diffMode, cycleMode } = scope.run(() => usePersistedDiffMode())!
     expect(diffMode.value).toBe('unified')
 
     cycleMode()
-    await nextTick()
-    expect(mocks.updateUserConfig).toHaveBeenCalledWith({
-      editor: { diffViewMode: diffMode.value },
-    })
+    await vi.waitFor(() => expect(savedConfigs()).toHaveLength(1))
+    expect(savedConfigs()[0]!.editor.diffViewMode).toBe(diffMode.value)
+    expect(desktop.backend.userConfig.editor.diffViewMode).toBe(diffMode.value)
 
-    mocks.updateUserConfig.mockClear()
-    mocks.userConfig.editor.diffViewMode = 'result'
+    desktop.setState({
+      userConfig: {
+        ...desktop.backend.userConfig,
+        editor: {
+          ...desktop.backend.userConfig.editor,
+          diffViewMode: 'result',
+        },
+      },
+    })
     await nextTick()
     expect(diffMode.value).toBe('result')
     // the mode came from the settings: nothing to store
-    expect(mocks.updateUserConfig).not.toHaveBeenCalled()
+    expect(savedConfigs()).toHaveLength(1)
   })
 })
 
 it.each(['diff', 'translation'] as const)(
   'rolls back %s mode and reports rejected saves',
   async (kind) => {
-    mocks.userConfig = reactive({
-      editor: { diffViewMode: 'unified' },
-      translation: { viewMode: 'parallel' },
-    })
-    mocks.updateUserConfig.mockResolvedValue({ success: false, error: 'io' })
-    const scope = effectScope()
+    desktop.backend.handle('save_user_config', saveFailure)
     const mode = scope.run(() =>
       kind === 'diff'
         ? usePersistedDiffMode().diffMode
@@ -80,46 +83,31 @@ it.each(['diff', 'translation'] as const)(
       )
     )
     expect(mode.value).toBe(initial)
-    expect(mocks.updateUserConfig).toHaveBeenCalledOnce()
-    scope.stop()
+    expect(savedConfigs()).toHaveLength(1)
+    expect(useDesktopStore().userConfig.editor.diffViewMode).toBe('unified')
   }
 )
 
 it('does not roll back a newer choice when an older save fails', async () => {
-  mocks.userConfig = reactive({
-    editor: { diffViewMode: 'unified' },
-    translation: {},
-  })
-  let finish!: (value: { success: false; error: string }) => void
-  mocks.updateUserConfig.mockImplementationOnce(
+  let fail!: () => void
+  desktop.backend.handle(
+    'save_user_config',
     () =>
-      new Promise((resolve) => {
-        finish = resolve
+      new Promise((_resolve, reject) => {
+        fail = () =>
+          reject(
+            new FakeDesktopError({ code: 'operationFailed', message: 'io' })
+          )
       })
   )
-  const scope = effectScope()
   const { diffMode } = scope.run(() => usePersistedDiffMode())!
   diffMode.value = 'result'
-  await nextTick()
+  await vi.waitFor(() => expect(savedConfigs()).toHaveLength(1))
   diffMode.value = 'split'
   await nextTick()
-  finish({ success: false, error: 'io' })
+  fail()
+  await vi.waitFor(() => expect(savedConfigs()).toHaveLength(2))
   await nextTick()
   expect(diffMode.value).toBe('split')
   expect(mocks.toastKey).not.toHaveBeenCalled()
-  scope.stop()
-})
-
-it('recovers from a thrown transport error', async () => {
-  mocks.userConfig = reactive({
-    editor: { diffViewMode: 'unified' },
-    translation: {},
-  })
-  mocks.updateUserConfig.mockRejectedValue(new Error('transport'))
-  const scope = effectScope()
-  const { diffMode } = scope.run(() => usePersistedDiffMode())!
-  diffMode.value = 'result'
-  await vi.waitFor(() => expect(mocks.toastKey).toHaveBeenCalledOnce())
-  expect(diffMode.value).toBe('unified')
-  scope.stop()
 })

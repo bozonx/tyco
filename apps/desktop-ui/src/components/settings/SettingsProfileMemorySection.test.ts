@@ -1,8 +1,17 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
-import type { AiProfile, ProfileMemoryTopic } from '@tyco/shared'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  DEFAULT_USER_CONFIG,
+  type AiProfile,
+  type ProfileMemoryTopic,
+  type UserConfig,
+} from '@tyco/shared'
 
 import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 const mocks = vi.hoisted(() => ({
   listMemoryTopics: vi.fn().mockResolvedValue([]),
@@ -25,26 +34,6 @@ vi.mock('../../stores/ai-profiles', () => ({
 
 vi.mock('../../stores/llm', () => ({
   useLlmStore: () => ({ client: { run: mocks.runLlm } }),
-}))
-
-vi.mock('../../stores/desktop', () => ({
-  useDesktopStore: () => ({
-    userConfig: {
-      llm: {
-        providers: [
-          {
-            id: 'p1',
-            type: 'openaiCompatible',
-            name: 'Local',
-            baseUrl: 'http://localhost:11434/v1',
-          },
-        ],
-        models: [
-          { id: 'fallback-model', providerId: 'p1', providerModelId: 'm1' },
-        ],
-      },
-    },
-  }),
 }))
 
 vi.mock('../../stores/secrets', () => ({
@@ -75,6 +64,26 @@ const baseProfile: AiProfile = {
 }
 
 describe('SettingsProfileMemorySection', () => {
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
+    const userConfig = structuredClone(DEFAULT_USER_CONFIG) as UserConfig
+    userConfig.llm.providers = [
+      {
+        id: 'p1',
+        type: 'openaiCompatible',
+        name: 'Local',
+        baseUrl: 'http://localhost:11434/v1',
+      },
+    ] as UserConfig['llm']['providers']
+    userConfig.llm.models = [
+      { id: 'fallback-model', providerId: 'p1', providerModelId: 'm1' },
+    ] as UserConfig['llm']['models']
+    desktop = await loadFakeDesktop({ userConfig })
+  })
+
+  afterEach(() => desktop.dispose())
+
   it('renders disabled notice when memoryMode is off', () => {
     const wrapper = mount(SettingsProfileMemorySection, {
       props: { profile: { ...baseProfile, memoryMode: 'off' } },

@@ -1,5 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import { createCommand } from '../lib/commands/command-config'
 import { createBuiltInVoiceCommands } from '../lib/voice-commands/built-in-voice-commands'
@@ -7,6 +7,7 @@ import { testTools } from '../lib/tools/testing'
 import { translate } from '../lib/i18n'
 import { i18n } from '../lib/i18n'
 import { getLanguageLabelKey } from '../lib/locale/language'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import VoiceCommandsView from './VoiceCommandsView.vue'
 import type {
   VoiceCandidate,
@@ -25,9 +26,7 @@ const mocks = vi.hoisted(() => ({
   switchCommand: vi.fn(),
   hide: vi.fn(),
   release: vi.fn(),
-  listen: vi.fn().mockResolvedValue(() => {}),
 }))
-const state = reactive({ isWindowShown: true, activationId: 12 })
 const builtInCommands = createBuiltInVoiceCommands(testTools(), translate)
 const commands = Array.from({ length: 40 }, (_, index) => ({
   ...createCommand('script', `command-${index}`),
@@ -61,10 +60,6 @@ const voice = reactive({
 vi.mock('../stores/voice-commands', () => ({
   useVoiceCommandsStore: () => voice,
 }))
-vi.mock('../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../test/desktop-store')
-  return { useDesktopStore: () => mockDesktopStore(() => state) }
-})
 const hotkeys = vi.hoisted(() => ({
   load: vi.fn().mockResolvedValue(undefined),
   shortcutLabel: vi.fn((_mode: string) => ''),
@@ -74,9 +69,6 @@ vi.mock('../stores/global-hotkeys', () => ({
 }))
 vi.mock('../stores/quick-dismiss', () => ({
   useQuickDismissStore: () => ({ hold: () => mocks.release }),
-}))
-vi.mock('../lib/desktop/client', () => ({
-  desktopClient: { listen: mocks.listen },
 }))
 vi.mock('../composables/use-overlay-nav', () => ({
   useOverlayNav: () => ({ handleEsc: mocks.hide }),
@@ -97,9 +89,10 @@ const candidate = (commandId: string, text = 'Hello') => ({
   textOffset: 0,
   commandOffset: 0,
 })
+let desktop: TestDesktop
 const mountView = () =>
   mount(VoiceCommandsView, {
-    global: { plugins: [i18n] },
+    global: { plugins: [i18n, desktop.pinia] },
     attachTo: document.body,
   })
 const entry = (wrapper: ReturnType<typeof mountView>, key: string) =>
@@ -107,11 +100,14 @@ const entry = (wrapper: ReturnType<typeof mountView>, key: string) =>
 const TRANSLATE_KEY = 'builtin:core.translate'
 
 describe('separate voice command overlay', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+    desktop = await loadFakeDesktop({
+      mode: 'voiceCommands',
+      activation: { activationId: 12 },
+    })
     Element.prototype.scrollIntoView = vi.fn()
     voice.unavailableReason.mockReturnValue(undefined)
-    state.isWindowShown = true
     voice.stage = 'recording'
     voice.selected = undefined
     voice.command = undefined
@@ -123,6 +119,7 @@ describe('separate voice command overlay', () => {
     voice.activeCommand = undefined
     voice.catalog = [...builtInCommands, ...commands]
   })
+  afterEach(() => desktop.dispose())
   it('lists the standard functions and user commands in one feed and starts recording', () => {
     const wrapper = mountView()
     const groups = wrapper.findAll('.voice-group').map((item) => item.text())
@@ -146,20 +143,20 @@ describe('separate voice command overlay', () => {
   it('presses Run only for the current activation on a repeat activation and cancels on hiding', async () => {
     const wrapper = mountView()
     await flushPromises()
-    const call = mocks.listen.mock.calls.find(
-      ([event]) => event === DESKTOP_EVENTS.VOICE_FINISH
-    )!
-    const handler = call[1] as (id: number) => void
-    handler(11)
+    const finish = async (activationId: number) => {
+      await desktop.emit(DESKTOP_EVENTS.VOICE_FINISH, activationId)
+      await flushPromises()
+    }
+    await finish(11)
     expect(mocks.finish).not.toHaveBeenCalled()
-    handler(12)
+    await finish(12)
     expect(mocks.finish).toHaveBeenCalledExactlyOnceWith('run')
     expect(mocks.run).not.toHaveBeenCalled()
     voice.stage = 'review'
-    handler(12)
+    await finish(12)
     expect(mocks.run).toHaveBeenCalledOnce()
     expect(mocks.finish).toHaveBeenCalledOnce()
-    state.isWindowShown = false
+    desktop.setState({ isWindowShown: false })
     await flushPromises()
     expect(mocks.cancel).toHaveBeenCalled()
     wrapper.unmount()

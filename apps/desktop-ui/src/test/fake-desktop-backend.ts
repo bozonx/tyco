@@ -3,11 +3,13 @@ import {
   DEFAULT_USER_CONFIG,
   ActivationMode,
   type Chat,
+  type DesktopActivationState,
   type DesktopCommandArgs,
   type DesktopCommandName,
   type DesktopCommandResult,
   type DesktopErrorPayload,
   type DesktopSnapshot,
+  type DesktopWindowState,
   type EditorHistoryItem,
   type SessionState,
   type UserConfig,
@@ -27,7 +29,10 @@ export interface DesktopCall {
 export interface FakeDesktopOptions {
   userConfig?: UserConfig
   sessionState?: SessionState
+  /** Shorthand for `activation.mode` */
   mode?: ActivationMode
+  activation?: Partial<DesktopActivationState>
+  window?: Partial<DesktopWindowState>
   history?: EditorHistoryItem[]
   chats?: Chat[]
 }
@@ -55,12 +60,13 @@ export class FakeDesktopBackend {
   isFocused = true
   userConfig: UserConfig
   sessionState: SessionState
+  activation: DesktopActivationState
+  window: DesktopWindowState
   history: EditorHistoryItem[]
   chats: Chat[]
 
   private revision = 1
   private nextId = 1
-  private readonly mode: ActivationMode
   private readonly handlers: HandlerMap = {}
 
   constructor(options: FakeDesktopOptions = {}) {
@@ -70,7 +76,21 @@ export class FakeDesktopBackend {
     this.sessionState = structuredClone(
       options.sessionState ?? DEFAULT_SESSION_STATE
     )
-    this.mode = options.mode ?? ActivationMode.EDITOR
+    this.activation = {
+      activationId: 1,
+      windowId: null,
+      selectedText: null,
+      mode: options.mode ?? ActivationMode.EDITOR,
+      launcherPageId: null,
+      launcherRequest: null,
+      accessRequest: null,
+      ...structuredClone(options.activation),
+    }
+    this.window = {
+      isWindowShown: true,
+      windowProfile: 'sheet',
+      ...options.window,
+    }
     this.history = structuredClone(options.history ?? [])
     this.chats = structuredClone(options.chats ?? [])
     this.installDefaultHandlers()
@@ -86,19 +106,16 @@ export class FakeDesktopBackend {
       .map((call) => call.args as DesktopCommandArgs<K>)
   }
 
+  /** Marks a state change made outside a command, for the next snapshot. */
+  touch() {
+    this.revision++
+  }
+
   snapshot(): DesktopSnapshot {
     return {
       revision: this.revision,
-      activation: {
-        activationId: 1,
-        windowId: null,
-        selectedText: null,
-        mode: this.mode,
-        launcherPageId: null,
-        launcherRequest: null,
-        accessRequest: null,
-      },
-      window: { isWindowShown: true, windowProfile: 'sheet' },
+      activation: structuredClone(this.activation),
+      window: { ...this.window },
       settings: {
         userConfig: structuredClone(this.userConfig),
         sessionState: structuredClone(this.sessionState),
@@ -231,6 +248,9 @@ export class FakeDesktopBackend {
     this.handle('get_ai_vault_path', () => '/home/tester/.local/share/tyco/ai')
     this.handle('list_ai_profiles', () => [])
     this.handle('list_ai_projects', () => [])
+    // a fresh vault: profiles have no memory yet
+    this.handle('list_ai_profile_memory_topics', () => [])
+    this.handle('read_ai_profile_memory', () => '')
     this.handle('list_installed_plugins', () => [])
     this.handle('get_secret_statuses', () => ({}))
     this.handle('get_secret_vault_state', () => 'available')

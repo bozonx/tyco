@@ -1,24 +1,22 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { h } from 'vue'
 
 import TextPreview from '../common/TextPreview.vue'
 import Diff from '../common/Diff.vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import ActionOverlayLayout from './ActionOverlayLayout.vue'
 
 const mocks = vi.hoisted(() => ({
-  currentWindowLabel: 'quick',
   currentModal: 'insert',
   breadcrumbs: [] as string[],
   closeAll: vi.fn(),
   back: vi.fn(),
-  hideWindow: vi.fn(),
   discardQuickInput: vi.fn(),
-}))
-
-vi.mock('../../lib/desktop/window', () => ({
-  isQuickWindow: () => mocks.currentWindowLabel === 'quick',
 }))
 
 vi.mock('../../stores/menu-modals', () => ({
@@ -32,19 +30,6 @@ vi.mock('../../stores/menu-modals', () => ({
   }),
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callOrNotify: mocks.hideWindow }),
-}))
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () => {
-      const state = { mode: 'quickInput' as const }
-      return mockDesktopStore(() => state)
-    },
-  }
-})
-
 vi.mock('../../stores/quick-input', () => ({
   useQuickInputStore: () => ({ discard: mocks.discardQuickInput }),
 }))
@@ -54,12 +39,21 @@ vi.mock('../../composables/use-i18n', () => ({
 }))
 
 describe('ActionOverlayLayout', () => {
-  beforeEach(() => {
+  let desktop: TestDesktop
+  const hideCalls = async () => {
+    await flushPromises()
+    return desktop.backend.callsOf('hide_window')
+  }
+
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mocks.currentWindowLabel = 'quick'
+    desktop = await loadFakeDesktop({ mode: 'quickInput' }, 'quick')
+    desktop.backend.handle('hide_window', () => undefined)
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = []
   })
+
+  afterEach(() => desktop.dispose())
 
   it('renders title and Esc button in the header', () => {
     const wrapper = mount(ActionOverlayLayout, {
@@ -98,7 +92,7 @@ describe('ActionOverlayLayout', () => {
 
     await wrapper.find('.action-overlay-esc').trigger('click')
     expect(onEsc).toHaveBeenCalled()
-    expect(mocks.hideWindow).not.toHaveBeenCalled()
+    expect(await hideCalls()).toEqual([])
   })
 
   it('triggers hideWindow when clicked in quick window without breadcrumbs', async () => {
@@ -109,7 +103,7 @@ describe('ActionOverlayLayout', () => {
     await wrapper.find('.action-overlay-esc').trigger('click')
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardQuickInput).toHaveBeenCalled()
-    expect(mocks.hideWindow).toHaveBeenCalledWith('hide_window')
+    expect(await hideCalls()).toHaveLength(1)
   })
 
   it('triggers hideWindow when only current modal is in breadcrumbs', async () => {
@@ -122,7 +116,7 @@ describe('ActionOverlayLayout', () => {
       'common.cancel'
     )
     await wrapper.find('.action-overlay-esc').trigger('click')
-    expect(mocks.hideWindow).toHaveBeenCalledWith('hide_window')
+    expect(await hideCalls()).toHaveLength(1)
   })
   it('provides a plain preview default while preserving explicit frames', () => {
     const wrapper = mount(ActionOverlayLayout, {

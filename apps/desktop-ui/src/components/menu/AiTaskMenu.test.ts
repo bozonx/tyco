@@ -1,12 +1,14 @@
 import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { LlmStreamEvent } from '../../lib/llm/llm-client'
-import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import AiTaskMenu from './AiTaskMenu.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -24,10 +26,6 @@ vi.mock('../../stores/llm', () => ({
   }),
 }))
 
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ label: 'main' }),
-}))
-
 function fakeStream(text: string): AsyncIterable<LlmStreamEvent> {
   return (async function* () {
     yield { type: 'reasoning', text: 'Thinking...' }
@@ -37,10 +35,14 @@ function fakeStream(text: string): AsyncIterable<LlmStreamEvent> {
 }
 
 describe('AiTaskMenu', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
     streamMock.mockReset()
   })
+
+  afterEach(() => desktop.dispose())
 
   const stubs = (onProps: (props: Record<string, any>) => void) => ({
     TextPreview: true,
@@ -77,13 +79,6 @@ describe('AiTaskMenu', () => {
   })
 
   it('runs an own request on the text and remembers it', async () => {
-    const desktop = useDesktopStore()
-    const patchSessionState = vi
-      .spyOn(desktop, 'patchSessionState')
-      .mockResolvedValue({
-        success: true,
-        result: desktop.desktopState.sessionState,
-      })
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     const saveSourceResult = vi
@@ -113,35 +108,32 @@ describe('AiTaskMenu', () => {
       }),
       expect.any(Object)
     )
-    expect(patchSessionState).toHaveBeenCalledWith({
-      recentAiPrompts: ['Make it shorter'],
-    })
+    await vi.waitFor(() =>
+      expect(desktop.backend.callsOf('patch_session_state')).toEqual([
+        { patch: { recentAiPrompts: ['Make it shorter'] } },
+      ])
+    )
     await vi.waitFor(() =>
       expect(saveSourceResult).toHaveBeenCalledWith('source-1', 'Shorter text')
     )
   })
 
   it('saves an own request as a task in a free key', async () => {
-    const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.aiTasks = {
-      items: [
-        {
-          id: 'task-1',
-          name: 'edit',
-          prompt: 'Edit it',
-          allowedTools: [],
-          outputAction: 'replace',
-          maxSteps: 5,
-        },
-      ],
-      slots: { q: 'task-1' },
-    }
-    const updateUserConfig = vi
-      .spyOn(desktop, 'updateUserConfig')
-      .mockResolvedValue({
-        success: true,
-        result: desktop.desktopState.userConfig,
-      })
+    desktop.setUserConfig({
+      aiTasks: {
+        items: [
+          {
+            id: 'task-1',
+            name: 'edit',
+            prompt: 'Edit it',
+            allowedTools: [],
+            outputAction: 'replace',
+            maxSteps: 5,
+          },
+        ],
+        slots: { q: 'task-1' },
+      },
+    })
     let shortcutListProps: Record<string, any> = {}
 
     const wrapper = mount(AiTaskMenu, {
@@ -154,8 +146,10 @@ describe('AiTaskMenu', () => {
     await input.setValue('Make it formal')
     await input.trigger('keydown', { key: 's', code: 'KeyS', ctrlKey: true })
 
-    await vi.waitFor(() => expect(updateUserConfig).toHaveBeenCalled())
-    expect(updateUserConfig.mock.calls[0]![0]).toEqual({
+    await vi.waitFor(() =>
+      expect(desktop.backend.callsOf('save_user_config')).toHaveLength(1)
+    )
+    expect(desktop.backend.userConfig).toMatchObject({
       aiTasks: {
         items: [
           {
@@ -216,20 +210,21 @@ describe('AiTaskMenu', () => {
   })
 
   it('prompts for manual input when text is empty', async () => {
-    const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.aiTasks = {
-      items: [
-        {
-          id: 'task-1',
-          name: 'Summarize',
-          prompt: 'Summarize it',
-          allowedTools: [],
-          outputAction: 'replace',
-          maxSteps: 5,
-        },
-      ],
-      slots: { q: 'task-1' },
-    }
+    desktop.setUserConfig({
+      aiTasks: {
+        items: [
+          {
+            id: 'task-1',
+            name: 'Summarize',
+            prompt: 'Summarize it',
+            allowedTools: [],
+            outputAction: 'replace',
+            maxSteps: 5,
+          },
+        ],
+        slots: { q: 'task-1' },
+      },
+    })
     streamMock.mockReturnValue(fakeStream('Manual summary'))
 
     let shortcutListProps: Record<string, any> = {}
@@ -261,20 +256,21 @@ describe('AiTaskMenu', () => {
   })
 
   it('runs the task of the main menu item once, by its id', async () => {
-    const desktop = useDesktopStore()
-    desktop.desktopState.userConfig.aiTasks = {
-      items: [
-        {
-          id: 'task-7',
-          name: 'edit',
-          prompt: 'Edit it',
-          allowedTools: [],
-          outputAction: 'replace',
-          maxSteps: 5,
-        },
-      ],
-      slots: { w: 'task-7' },
-    }
+    desktop.setUserConfig({
+      aiTasks: {
+        items: [
+          {
+            id: 'task-7',
+            name: 'edit',
+            prompt: 'Edit it',
+            allowedTools: [],
+            outputAction: 'replace',
+            maxSteps: 5,
+          },
+        ],
+        slots: { w: 'task-7' },
+      },
+    })
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'saveSource').mockResolvedValue('source-1')
     vi.spyOn(historyStore, 'saveSourceResult').mockResolvedValue()

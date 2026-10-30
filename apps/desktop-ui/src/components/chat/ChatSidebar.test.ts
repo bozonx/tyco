@@ -2,10 +2,13 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import ChatSidebar from './ChatSidebar.vue'
 
 const mocks = vi.hoisted(() => ({
-  userConfig: { chat: { history: { storage: 'disk' } } },
   chatHistory: [] as Array<{
     id: string
     title: string
@@ -45,14 +48,6 @@ vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: vi.fn() }),
 }))
 
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () =>
-      mockDesktopStore(() => ({ userConfig: reactive(mocks.userConfig) })),
-  }
-})
-
 vi.mock('../../composables/use-chat-scope', () => ({
   useChatScope: () => ({
     chat: {
@@ -69,10 +64,22 @@ vi.mock('../../composables/use-chat-scope', () => ({
 }))
 
 describe('ChatSidebar.vue', () => {
-  afterEach(() => vi.useRealTimers())
-  beforeEach(() => {
+  let desktop: TestDesktop
+  const setHistoryStorage = (storage: 'disk' | 'off') => {
+    const { chat } = desktop.backend.userConfig
+    desktop.setUserConfig({
+      chat: { ...chat, history: { ...chat.history, storage } },
+    })
+  }
+
+  afterEach(() => {
+    vi.useRealTimers()
+    desktop.dispose()
+  })
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mocks.userConfig.chat.history.storage = 'disk'
+    desktop = await loadFakeDesktop()
+    setHistoryStorage('disk')
     mocks.chatHistory.length = 0
     mocks.currentChatParams.id = null
     mocks.currentChatParams.title = ''
@@ -96,7 +103,7 @@ describe('ChatSidebar.vue', () => {
   })
 
   it('renders subtle hint under chats when history is disabled, without warning banner', () => {
-    mocks.userConfig.chat.history.storage = 'off'
+    setHistoryStorage('off')
 
     const wrapper = mount(ChatSidebar, {
       global: {

@@ -1,25 +1,12 @@
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { reactive } from 'vue'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import ExternalAccessView from './ExternalAccessView.vue'
 
-const { call, desktopState } = vi.hoisted(() => ({
-  call: vi.fn(
-    async (
-      _name: string,
-      _args?: unknown
-    ): Promise<{ success: boolean; error?: string }> => ({ success: true })
-  ),
-  desktopState: {
-    accessRequest: null as null | {
-      jobId: string
-      commandName: string
-      replace: boolean
-    },
-  },
+const { answerAccess } = vi.hoisted(() => ({
+  answerAccess: vi.fn(async (_jobId: string, _decision: string) => {}),
 }))
-const reactiveParams = reactive(desktopState)
 
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({
@@ -27,18 +14,8 @@ vi.mock('../composables/use-i18n', () => ({
       values?.name ? `${key}:${values.name}` : key,
   }),
 }))
-vi.mock('../stores/ipc', () => ({ useIpcStore: () => ({ call }) }))
-vi.mock('../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../test/desktop-store')
-  return { useDesktopStore: () => mockDesktopStore(() => reactiveParams) }
-})
 vi.mock('../stores/external-commands', () => ({
-  useExternalCommandsStore: () => ({
-    answerAccess: async (jobId: string, decision: string) => {
-      const result = await call('answer_external_access', { jobId, decision })
-      if (!result.success) throw new Error(result.error)
-    },
-  }),
+  useExternalCommandsStore: () => ({ answerAccess }),
 }))
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => ({ resetNavPanelState: vi.fn() }),
@@ -49,17 +26,25 @@ vi.mock('../composables/use-overlay-nav', () => ({
   ) => ({ escLabel: options().escLabel, handleEsc: () => options().onEsc?.() }),
 }))
 
-const mountView = () => mount(ExternalAccessView, { attachTo: document.body })
+let desktop: TestDesktop
+
+const mountView = () =>
+  mount(ExternalAccessView, {
+    attachTo: document.body,
+    global: { plugins: [desktop.pinia] },
+  })
 
 describe('ExternalAccessView.vue', () => {
-  beforeEach(() => {
-    call.mockClear()
-    reactiveParams.accessRequest = {
-      jobId: 'job-1',
-      commandName: 'Fix',
-      replace: true,
-    }
+  beforeEach(async () => {
+    answerAccess.mockClear()
+    desktop = await loadFakeDesktop({
+      activation: {
+        accessRequest: { jobId: 'job-1', commandName: 'Fix', replace: true },
+      },
+    })
   })
+
+  afterEach(() => desktop.dispose())
 
   it('names the command and what happens to the selection', () => {
     const wrapper = mountView()
@@ -72,9 +57,7 @@ describe('ExternalAccessView.vue', () => {
     await wrapper.find('.access-allow-always').trigger('click')
     await wrapper.find('.access-allow-once').trigger('click')
     wrapper.unmount()
-    expect(call.mock.calls).toEqual([
-      ['answer_external_access', { jobId: 'job-1', decision: 'always' }],
-    ])
+    expect(answerAccess.mock.calls).toEqual([['job-1', 'always']])
   })
 
   it('denies on Esc', () => {
@@ -82,10 +65,7 @@ describe('ExternalAccessView.vue', () => {
     window.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape' })
     )
-    expect(call).toHaveBeenCalledWith('answer_external_access', {
-      jobId: 'job-1',
-      decision: 'deny',
-    })
+    expect(answerAccess).toHaveBeenCalledWith('job-1', 'deny')
     wrapper.unmount()
   })
 
@@ -94,14 +74,12 @@ describe('ExternalAccessView.vue', () => {
     window.dispatchEvent(
       new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape' })
     )
-    expect(call).not.toHaveBeenCalled()
+    expect(answerAccess).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
   it('denies a prompt closed without an answer', () => {
     mountView().unmount()
-    expect(call.mock.calls).toEqual([
-      ['answer_external_access', { jobId: 'job-1', decision: 'deny' }],
-    ])
+    expect(answerAccess.mock.calls).toEqual([['job-1', 'deny']])
   })
 })

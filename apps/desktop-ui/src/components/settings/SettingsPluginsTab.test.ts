@@ -1,15 +1,18 @@
 import { SUPPORTED_PLUGIN_LOCALES } from '@tyco/plugin-sdk'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsPluginsTab from './SettingsPluginsTab.vue'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call: vi.fn() }) }))
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: vi.fn() }),
 }))
@@ -73,6 +76,14 @@ vi.mock('../../stores/plugin-runtime', () => ({
 }))
 
 describe('SettingsPluginsTab.vue', () => {
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
   it('renders all installed plugins with toggle checkboxes without field config', () => {
     const userConfig = {
       plugins: {

@@ -2,14 +2,14 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { i18n, setI18nLocale } from '../../lib/i18n/index'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import ChatMarkdown from './ChatMarkdown.vue'
 
 const mocks = vi.hoisted(() => ({
-  openLink: vi.fn(async () => ({ success: true, result: undefined })),
   diagram: vi.fn(async () => new Blob(['<svg/>'], { type: 'image/svg+xml' })),
-}))
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callOrNotify: mocks.openLink }),
 }))
 vi.mock('../../lib/chat/chat-mermaid', () => ({
   renderChatMermaid: mocks.diagram,
@@ -30,17 +30,20 @@ async function settle() {
   await flushPromises()
 }
 
+let desktop: TestDesktop
 const wrappers: ReturnType<typeof mount>[] = []
 function render(content: string, streaming = false) {
   const wrapper = mount(ChatMarkdown, {
     props: { content, streaming },
-    global: { plugins: [i18n] },
+    global: { plugins: [i18n, desktop.pinia] },
   })
   wrappers.push(wrapper)
   return wrapper
 }
 
 beforeEach(() => {
+  desktop = installFakeDesktop()
+  desktop.backend.handle('open_in_browser', () => undefined)
   vi.useFakeTimers()
   setI18nLocale('en-US')
   Object.defineProperty(URL, 'createObjectURL', {
@@ -56,6 +59,7 @@ afterEach(() => {
   wrappers.splice(0).forEach((wrapper) => wrapper.unmount())
   vi.useRealTimers()
   setI18nLocale('en-US')
+  desktop.dispose()
 })
 
 describe('ChatMarkdown.vue', () => {
@@ -106,9 +110,10 @@ describe('ChatMarkdown.vue', () => {
     const wrapper = render('[Source](https://example.com)', true)
     await flushPromises()
     await wrapper.find('a').trigger('click')
-    expect(mocks.openLink).toHaveBeenCalledWith('open_in_browser', {
-      url: 'https://example.com',
-    })
+    await flushPromises()
+    expect(desktop.backend.callsOf('open_in_browser')).toEqual([
+      { url: 'https://example.com' },
+    ])
   })
 
   it('renders a streamed answer in batches, and at once when it ends', async () => {

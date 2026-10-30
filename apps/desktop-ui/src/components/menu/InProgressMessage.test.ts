@@ -1,9 +1,11 @@
 import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useDesktopStore } from '../../stores/desktop'
 import { useMenuModalsStore } from '../../stores/menu-modals'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import InProgressMessage from './InProgressMessage.vue'
 
 const mocks = vi.hoisted(() => ({ toastKey: vi.fn(), isEditorPage: false }))
@@ -21,14 +23,16 @@ vi.mock('../../composables/use-editor-navigation', () => ({
 }))
 
 describe('InProgressMessage', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
     mocks.toastKey.mockReset()
     mocks.isEditorPage = false
-    vi.spyOn(useDesktopStore(), 'canInsertIntoWindow', 'get').mockReturnValue(
-      true
-    )
+    // a tracked target window: the result can be inserted into it
+    desktop = await loadFakeDesktop({ activation: { windowId: 'target' } })
   })
+
+  afterEach(() => desktop.dispose())
 
   it('renders spinner and cancel button', () => {
     const wrapper = mount(InProgressMessage, { props: { label: 'Working...' } })
@@ -155,9 +159,7 @@ describe('InProgressMessage', () => {
   })
 
   it('warns and does not register insert intent when target window is unavailable', async () => {
-    vi.spyOn(useDesktopStore(), 'canInsertIntoWindow', 'get').mockReturnValue(
-      false
-    )
+    desktop.setState({ windowId: null })
     const menuModalsStore = useMenuModalsStore()
     const wrapper = mount(InProgressMessage, {
       props: { allowBufferedIntent: true },
@@ -172,9 +174,7 @@ describe('InProgressMessage', () => {
 
   it('offers replaceInEditor on Space when on the editor page and hides copy during editor correction', async () => {
     mocks.isEditorPage = true
-    vi.spyOn(useDesktopStore(), 'canInsertIntoWindow', 'get').mockReturnValue(
-      false
-    )
+    desktop.setState({ windowId: null })
     const menuModalsStore = useMenuModalsStore()
     const wrapper = mount(InProgressMessage, {
       props: { allowBufferedIntent: true, correction: true },

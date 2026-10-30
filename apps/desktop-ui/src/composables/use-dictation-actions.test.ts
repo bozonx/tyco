@@ -1,30 +1,13 @@
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { DEFAULT_USER_CONFIG, type UserConfig } from '@tyco/shared'
+import { disposePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   start: vi.fn().mockResolvedValue(undefined),
   refreshSecrets: vi.fn().mockResolvedValue(undefined),
   secrets: {} as Record<string, { origins: string[]; available: boolean }>,
-  provider: 'deepgram',
 }))
 
-vi.mock('../stores/desktop', () => ({
-  useDesktopStore: () => ({
-    userConfig: {
-      stt: {
-        provider: mocks.provider,
-        isVoiceCorrectionEnabled: false,
-        isStylingBarEnabled: false,
-        isStylingBarDirectInsertEnabled: false,
-        providers: {
-          deepgram: { modelId: 'nova-3', language: 'auto' },
-          sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
-        },
-      },
-      language: { ui: 'auto' },
-    },
-  }),
-}))
 vi.mock('../stores/secrets', () => ({ useSecretsStore: () => mocks }))
 vi.mock('../stores/llm', () => ({ useLlmStore: () => ({ actions: {} }) }))
 vi.mock('../stores/translation', () => ({ useTranslationStore: () => ({}) }))
@@ -39,18 +22,27 @@ vi.mock('./use-toast', () => ({
 }))
 
 import { setI18nLocale } from '../lib/i18n/index'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import { useDictationActions } from './use-dictation-actions'
 
 describe('dictation credential preflight', () => {
-  let pinia: ReturnType<typeof createPinia>
-  afterEach(() => disposePinia(pinia))
+  let desktop: TestDesktop
+  afterEach(() => {
+    disposePinia(desktop.pinia)
+    desktop.dispose()
+  })
+  const loadWith = async (provider: UserConfig['stt']['provider']) => {
+    desktop?.dispose()
+    const userConfig = structuredClone(DEFAULT_USER_CONFIG) as UserConfig
+    userConfig.stt.provider = provider
+    userConfig.stt.isVoiceCorrectionEnabled = false
+    desktop = await loadFakeDesktop({ userConfig })
+  }
   const handlers = { onText: vi.fn(), onError: vi.fn() }
 
-  beforeEach(() => {
-    pinia = createPinia()
-    setActivePinia(pinia)
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mocks.provider = 'deepgram'
+    await loadWith('deepgram')
     mocks.secrets = {}
     mocks.refreshSecrets.mockResolvedValue(undefined)
     setI18nLocale('en-US')
@@ -88,7 +80,7 @@ describe('dictation credential preflight', () => {
   })
 
   it('starts a self-hosted provider without checking keys', async () => {
-    mocks.provider = 'sherpaOnnx'
+    await loadWith('sherpaOnnx')
     await useDictationActions().startDictation(handlers)
     expect(mocks.refreshSecrets).not.toHaveBeenCalled()
     expect(mocks.start).toHaveBeenCalledWith(

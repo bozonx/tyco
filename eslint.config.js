@@ -211,5 +211,34 @@ export default defineConfig(
     },
   },
 
+  // Tests replace the native side with the fake desktop, never the desktop
+  // layer itself (dev_docs/testing.md).
+  {
+    files: ['apps/desktop-ui/src/**/*.test.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.object.name='vi'][callee.property.name='mock'] > Literal[value=/(^|\\/)(stores\\/desktop|stores\\/ipc|lib\\/desktop\\/client|\\.\\/desktop|\\.\\/ipc)$/]",
+          message:
+            'Use installFakeDesktop() from src/test/install-fake-desktop.ts instead of mocking the desktop layer.',
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='vi'][callee.property.name='spyOn'] > CallExpression.arguments:first-child[callee.name=/^use(Desktop|Ipc)Store$/]",
+          message:
+            'Handle the command in the fake desktop instead of spying on the desktop store.',
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='vi'][callee.property.name='spyOn'] > Identifier.arguments:first-child[name='desktopClient']",
+          message:
+            'Use installFakeDesktop() instead of spying on the desktop client.',
+        },
+      ],
+    },
+  },
+
   prettierConfig
 )

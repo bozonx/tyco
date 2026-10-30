@@ -1,10 +1,13 @@
 import { shallowMount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import NavPanel from './NavPanel.vue'
 
 const mocks = vi.hoisted(() => ({
-  userConfig: { isInDevelopment: true },
   currentRoute: {
     value: { path: '/chat', query: {} as Record<string, string> },
   },
@@ -29,10 +32,6 @@ const mocks = vi.hoisted(() => ({
     isLoaded: true,
     loadAll: vi.fn(),
   },
-}))
-
-vi.mock('../../stores/desktop', () => ({
-  useDesktopStore: () => ({ userConfig: mocks.userConfig }),
 }))
 
 vi.mock('vue-router', () => ({ useRoute: () => mocks.currentRoute.value }))
@@ -68,9 +67,14 @@ vi.mock('../../stores/ai-profiles', () => ({
 }))
 
 describe('NavPanel.vue', () => {
-  beforeEach(() => {
+  let desktop: TestDesktop
+
+  afterEach(() => desktop.dispose())
+
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mocks.userConfig.isInDevelopment = true
+    desktop = await loadFakeDesktop()
+    desktop.setUserConfig({ isInDevelopment: true })
     mocks.currentRoute.value = { path: '/chat', query: {} }
     mocks.aiProfilesStore.profiles = []
     mocks.appNavigation.isCurrent.mockImplementation(
@@ -79,7 +83,7 @@ describe('NavPanel.vue', () => {
   })
 
   it('hides profile tabs outside development mode', () => {
-    mocks.userConfig.isInDevelopment = false
+    desktop.setUserConfig({ isInDevelopment: false })
     mocks.aiProfilesStore.profiles = [{ id: 'writer', name: 'Writer' }]
     const wrapper = shallowMount(NavPanel)
     expect(wrapper.find('.profiles-tabs-container').exists()).toBe(false)

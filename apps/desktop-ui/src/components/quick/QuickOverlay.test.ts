@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import {
   defineComponent,
   h,
@@ -7,13 +7,16 @@ import {
   onUnmounted,
   reactive,
 } from 'vue'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ActivationMode } from '@tyco/shared'
 
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import QuickOverlay from './QuickOverlay.vue'
 
 const mocks = vi.hoisted(() => ({
-  desktopState: { mode: 'quickInput', isWindowShown: true, activationId: 1 },
-  call: vi.fn(async () => ({ success: true, result: undefined })),
   focus: vi.fn(),
   hideWindow: vi.fn(),
   markDismissed: vi.fn(),
@@ -30,15 +33,6 @@ vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ call: mocks.call }),
-}))
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () => mockDesktopStore(() => reactive(mocks.desktopState)),
-  }
-})
 vi.mock('../../stores/quick-input', () => ({
   useQuickInputStore: () => ({
     requestFocus: mocks.focus,
@@ -62,6 +56,7 @@ vi.mock('../../stores/quick-dismiss', () => ({
 }))
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({
+    label: 'quick',
     setSize: vi.fn(async () => {}),
     onFocusChanged: vi.fn(
       async (handler: (event: { payload: boolean }) => void) => {
@@ -117,7 +112,26 @@ vi.mock('../../views/VoiceView.vue', () => ({
   }),
 }))
 
+let desktop: TestDesktop
+const sent = async (
+  command: Parameters<TestDesktop['backend']['callsOf']>[0]
+) => {
+  await flushPromises()
+  return desktop.backend.callsOf(command)
+}
+
+beforeEach(async () => {
+  desktop = await loadFakeDesktop(
+    { mode: 'quickInput', activation: { activationId: 1 } },
+    'quick'
+  )
+  desktop.backend.handle('hide_window', () => undefined)
+  desktop.backend.handle('hide_quick_window_on_blur', () => undefined)
+  desktop.backend.handle('set_quick_input_region', () => undefined)
+})
+
 afterEach(() => {
+  desktop.dispose()
   vi.unstubAllGlobals()
   vi.clearAllMocks()
   mocks.windowFocused = true
@@ -136,20 +150,21 @@ describe('quick overlay keyboard ownership', () => {
         disconnect() {}
       }
     )
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'quickInput'
-    desktopState.isWindowShown = true
-    const wrapper = mount(QuickOverlay)
+    desktop.setState({ mode: 'quickInput' })
+    desktop.setState({ isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
       expect(mocks.hideWindow).not.toHaveBeenCalled()
 
-      desktopState.mode = 'voice'
+      desktop.setState({ mode: 'voice' })
       await nextTick()
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
       expect(mocks.hideWindow).toHaveBeenCalledOnce()
 
-      desktopState.mode = 'quickInput'
+      desktop.setState({ mode: 'quickInput' })
       await nextTick()
       mocks.hideWindow.mockClear()
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }))
@@ -168,16 +183,17 @@ describe('quick overlay keyboard ownership', () => {
         disconnect() {}
       }
     )
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'quickInput'
-    desktopState.isWindowShown = true
-    const wrapper = mount(QuickOverlay)
+    desktop.setState({ mode: 'quickInput' })
+    desktop.setState({ isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       await wrapper.find('.write-live-preview').trigger('pointerdown')
       await wrapper.find('.write-hint').trigger('pointerdown')
       await wrapper.find('textarea').trigger('pointerdown')
-      expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
-      expect(mocks.call).not.toHaveBeenCalledWith('hide_window')
+      expect(await sent('hide_quick_window_on_blur')).toEqual([])
+      expect(await sent('hide_window')).toEqual([])
     } finally {
       wrapper.unmount()
     }
@@ -191,13 +207,14 @@ describe('quick overlay keyboard ownership', () => {
         disconnect() {}
       }
     )
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'quickInput'
-    desktopState.isWindowShown = true
-    const wrapper = mount(QuickOverlay)
+    desktop.setState({ mode: 'quickInput' })
+    desktop.setState({ isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
-      expect(mocks.call).toHaveBeenCalledWith('hide_window')
+      expect(await sent('hide_window')).not.toEqual([])
       expect(mocks.markDismissed).toHaveBeenCalledOnce()
     } finally {
       wrapper.unmount()
@@ -212,19 +229,20 @@ describe('quick overlay keyboard ownership', () => {
         disconnect() {}
       }
     )
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'quickInput'
-    desktopState.isWindowShown = true
+    desktop.setState({ mode: 'quickInput' })
+    desktop.setState({ isWindowShown: true })
     const modals = reactive(mocks.modals)
     modals.currentModal = 'insert'
-    const wrapper = mount(QuickOverlay)
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
       modals.currentModal = 'none'
       modals.pendingModal = 'insert'
       await nextTick()
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
-      expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
+      expect(await sent('hide_quick_window_on_blur')).toEqual([])
       expect(mocks.markDismissed).not.toHaveBeenCalled()
     } finally {
       wrapper.unmount()
@@ -256,37 +274,44 @@ describe('quick overlay input region', () => {
       .mockImplementation(function (this: Element) {
         return rects[this.className] ?? new DOMRect()
       })
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'quickInput'
-    desktopState.isWindowShown = true
-    const wrapper = mount(QuickOverlay)
+    desktop.setState({ mode: 'quickInput' })
+    desktop.setState({ isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       await vi.waitFor(() =>
-        expect(mocks.call).toHaveBeenCalledWith('set_quick_input_region', {
+        expect(
+          desktop.backend.callsOf('set_quick_input_region')
+        ).toContainEqual({
+          activationId: 1,
           region: { x: 0, y: 412, width: 800, height: 88 },
         })
       )
 
       // the dictation bar leaves the screen above it clickable too
-      mocks.call.mockClear()
-      desktopState.mode = 'voice'
+      desktop.backend.calls.length = 0
+      desktop.setState({ mode: 'voice' })
       await vi.waitFor(() =>
-        expect(mocks.call).toHaveBeenCalledWith('set_quick_input_region', {
+        expect(
+          desktop.backend.callsOf('set_quick_input_region')
+        ).toContainEqual({
+          activationId: 1,
           region: { x: 0, y: 364, width: 800, height: 136 },
         })
       )
 
-      mocks.call.mockClear()
-      desktopState.mode = 'aiTasks'
+      desktop.backend.calls.length = 0
+      desktop.setState({ mode: 'aiTasks' })
       await vi.waitFor(() =>
-        expect(mocks.call).toHaveBeenCalledWith('set_quick_input_region', {
-          region: null,
-        })
+        expect(
+          desktop.backend.callsOf('set_quick_input_region')
+        ).toContainEqual({ activationId: 1, region: null })
       )
     } finally {
       wrapper.unmount()
       rectSpy.mockRestore()
-      desktopState.mode = 'quickInput'
+      desktop.setState({ mode: 'quickInput' })
     }
   })
 })
@@ -303,44 +328,47 @@ describe('quick overlay menus', () => {
 
   it('renders styling and transformation views in quick overlay', async () => {
     stubResizeObserver()
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'styling'
-    desktopState.isWindowShown = true
-    const wrapper = mount(QuickOverlay)
+    desktop.setState({ mode: 'styling' })
+    desktop.setState({ isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       expect(wrapper.find('.styling-view').exists()).toBe(true)
-      desktopState.mode = 'transformation'
+      desktop.setState({ mode: 'transformation' })
       await nextTick()
       expect(wrapper.find('.transformation-view').exists()).toBe(true)
     } finally {
       wrapper.unmount()
-      desktopState.mode = 'quickInput'
+      desktop.setState({ mode: 'quickInput' })
     }
   })
 
   it('keeps the menus of the other modes when clicking outside the card', async () => {
     stubResizeObserver()
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'aiTasks'
-    desktopState.isWindowShown = true
-    const wrapper = mount(QuickOverlay)
+    desktop.setState({ mode: 'aiTasks' })
+    desktop.setState({ isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
-      expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
+      expect(await sent('hide_quick_window_on_blur')).toEqual([])
     } finally {
       wrapper.unmount()
-      desktopState.mode = 'quickInput'
+      desktop.setState({ mode: 'quickInput' })
     }
   })
 
   const loseFocus = async (mode: string, modal = 'none') => {
     stubResizeObserver()
     vi.useFakeTimers()
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = mode
-    desktopState.isWindowShown = true
+    desktop.setState({ mode: mode as ActivationMode })
+    desktop.setState({ isWindowShown: true })
     mocks.modals.currentModal = modal
-    const wrapper = mount(QuickOverlay)
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       await vi.waitFor(() => expect(mocks.focusHandlers).toHaveLength(1))
       mocks.windowFocused = false
@@ -349,7 +377,7 @@ describe('quick overlay menus', () => {
     } finally {
       wrapper.unmount()
       vi.useRealTimers()
-      desktopState.mode = 'quickInput'
+      desktop.setState({ mode: 'quickInput' })
       mocks.modals.currentModal = 'none'
     }
   }
@@ -363,33 +391,34 @@ describe('quick overlay menus', () => {
     'transformation',
   ])('dismisses the %s menu when the focus goes elsewhere', async (mode) => {
     await loseFocus(mode)
-    expect(mocks.call).toHaveBeenCalledWith('hide_quick_window_on_blur')
-    expect(mocks.call).not.toHaveBeenCalledWith('hide_window')
+    expect(await sent('hide_quick_window_on_blur')).not.toEqual([])
+    expect(await sent('hide_window')).toEqual([])
   })
 
   it('keeps the step after the menu when the focus goes elsewhere', async () => {
     await loseFocus('selectionActions', 'translate')
-    expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
+    expect(await sent('hide_quick_window_on_blur')).toEqual([])
   })
 
   it('keeps a command past the list when the focus goes elsewhere', async () => {
     mocks.launcher.stage = { kind: 'prepare' }
     await loseFocus('commandLauncher')
-    expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
+    expect(await sent('hide_quick_window_on_blur')).toEqual([])
   })
 
   it('keeps a correction when the focus goes elsewhere', async () => {
     await loseFocus('correction')
-    expect(mocks.call).not.toHaveBeenCalledWith('hide_quick_window_on_blur')
+    expect(await sent('hide_quick_window_on_blur')).toEqual([])
   })
 
   it('tells when the window does not take the keys', async () => {
     stubResizeObserver()
     vi.useFakeTimers()
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'aiTasks'
-    desktopState.isWindowShown = true
-    const wrapper = mount(QuickOverlay)
+    desktop.setState({ mode: 'aiTasks' })
+    desktop.setState({ isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       await vi.waitFor(() => expect(mocks.focusHandlers).toHaveLength(1))
       expect(wrapper.find('.quick-focus-hint').exists()).toBe(false)
@@ -406,37 +435,40 @@ describe('quick overlay menus', () => {
     } finally {
       wrapper.unmount()
       vi.useRealTimers()
-      desktopState.mode = 'quickInput'
+      desktop.setState({ mode: 'quickInput' })
     }
   })
 
   it('keeps a hidden menu but resets it for the next activation', async () => {
     stubResizeObserver()
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.mode = 'aiTasks'
-    desktopState.isWindowShown = true
-    const wrapper = mount(QuickOverlay)
+    desktop.setState({ mode: 'aiTasks' })
+    desktop.setState({ isWindowShown: true })
+    const wrapper = mount(QuickOverlay, {
+      global: { plugins: [desktop.pinia] },
+    })
     try {
       expect(mocks.aiTaskMounts).toBe(1)
 
-      desktopState.isWindowShown = false
+      desktop.setState({ isWindowShown: false })
       await nextTick()
       expect(mocks.aiTaskMounts).toBe(1)
       expect(mocks.aiTaskUnmounts).toBe(0)
       mocks.cancelAndCloseAll.mockClear()
-      desktopState.isWindowShown = true
-      desktopState.activationId++
+      desktop.setState({ isWindowShown: true })
+      desktop.setState({
+        activationId: desktop.backend.activation.activationId + 1,
+      })
       await nextTick()
       expect(mocks.aiTaskMounts).toBe(2)
       expect(mocks.aiTaskUnmounts).toBe(1)
       expect(mocks.cancelAndCloseAll).toHaveBeenCalledOnce()
 
-      desktopState.mode = 'quickInput'
+      desktop.setState({ mode: 'quickInput' })
       await nextTick()
       expect(mocks.aiTaskUnmounts).toBe(2)
     } finally {
       wrapper.unmount()
-      desktopState.mode = 'quickInput'
+      desktop.setState({ mode: 'quickInput' })
     }
   })
 })

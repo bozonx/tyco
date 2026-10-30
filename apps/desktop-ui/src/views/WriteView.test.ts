@@ -1,16 +1,11 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { nextTick, reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SubmitKey } from '@tyco/shared'
+import { DEFAULT_USER_CONFIG } from '@tyco/shared'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import WriteView from './WriteView.vue'
 
 const mocks = vi.hoisted(() => ({
-  desktopState: {
-    isWindowShown: true,
-    mode: 'quickInput',
-    activationId: 1,
-    userConfig: { editor: { submitKey: undefined as SubmitKey | undefined } },
-  },
   writer: {
     value: 'Original text',
     recallText: '',
@@ -47,27 +42,10 @@ const mocks = vi.hoisted(() => ({
     resetLive: vi.fn(),
     cancelLive: vi.fn(),
   },
-  updateUserConfig: vi.fn(),
-  call: vi.fn(),
 }))
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
-vi.mock('../stores/window', () => ({
-  useWindowStore: () => ({ hide: () => mocks.call('hide_window') }),
-}))
-vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ call: mocks.call, callOrNotify: mocks.call }),
-}))
-vi.mock('../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../test/desktop-store')
-  return {
-    useDesktopStore: () =>
-      mockDesktopStore(() => reactive(mocks.desktopState), {
-        updateUserConfig: mocks.updateUserConfig,
-      }),
-  }
-})
 vi.mock('../stores/quick-input', () => ({
   useQuickInputStore: () => reactive(mocks.writer),
 }))
@@ -111,6 +89,13 @@ vi.mock('../components/quick/WriteModeInput.vue', async () => {
 })
 
 let wrapper: ReturnType<typeof mount>
+let desktop: TestDesktop
+const setQuickWindow = (
+  patch: Partial<typeof DEFAULT_USER_CONFIG.quickWindow>
+) =>
+  desktop.setUserConfig({
+    quickWindow: { ...desktop.backend.userConfig.quickWindow, ...patch },
+  })
 const press = (code: string, options: KeyboardEventInit = {}) =>
   window.dispatchEvent(
     new KeyboardEvent('keydown', {
@@ -121,7 +106,7 @@ const press = (code: string, options: KeyboardEventInit = {}) =>
       ...options,
     })
   )
-beforeEach(() => {
+beforeEach(async () => {
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -129,19 +114,21 @@ beforeEach(() => {
       disconnect() {}
     }
   )
-  mocks.desktopState.isWindowShown = true
-  mocks.desktopState.userConfig = {
-    editor: { submitKey: undefined },
-  } as unknown as typeof mocks.desktopState.userConfig
+  desktop = await loadFakeDesktop({
+    mode: 'quickInput',
+    activation: { activationId: 1 },
+  })
+  desktop.backend.handle('hide_window', () => undefined)
   mocks.writer.value = 'Original text'
   mocks.modals.pendingModal = null
   mocks.modals.hasOpenModal = false
-  wrapper = mount(WriteView)
+  wrapper = mount(WriteView, { global: { plugins: [desktop.pinia] } })
   vi.clearAllMocks()
 })
 afterEach(() => {
   wrapper.unmount()
   vi.unstubAllGlobals()
+  desktop.dispose()
 })
 
 describe('quick input screen', () => {
@@ -163,13 +150,14 @@ describe('quick input screen', () => {
     expect(mocks.correction.insert).not.toHaveBeenCalled()
   })
 
-  it('keeps newline and cancel behavior', () => {
+  it('keeps newline and cancel behavior', async () => {
     press('Enter', { shiftKey: true })
     expect(mocks.writer.setValue).toHaveBeenCalled()
     press('Escape')
     expect(mocks.writer.discard).toHaveBeenCalledOnce()
     expect(mocks.correction.cancelInsert).toHaveBeenCalledOnce()
-    expect(mocks.call).toHaveBeenCalledWith('hide_window')
+    await flushPromises()
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
   })
 
   it('blocks duplicate submissions while pending but allows cancellation', async () => {
@@ -184,7 +172,9 @@ describe('quick input screen', () => {
   })
 
   it('sends with Ctrl+Enter in that mode and updates the hint', async () => {
-    reactive(mocks.desktopState).userConfig.editor.submitKey = 'Ctrl+Enter'
+    desktop.setUserConfig({
+      editor: { ...desktop.backend.userConfig.editor, submitKey: 'Ctrl+Enter' },
+    })
     await nextTick()
     press('Enter')
     expect(mocks.correction.insert).not.toHaveBeenCalled()
@@ -201,25 +191,23 @@ describe('quick input screen', () => {
   })
 
   it('cancels pending insertion when hidden or reactivated', async () => {
-    reactive(mocks.desktopState).isWindowShown = false
+    desktop.setState({ isWindowShown: false })
     await nextTick()
     expect(mocks.correction.cancelInsert).toHaveBeenCalledOnce()
-    reactive(mocks.desktopState).activationId++
+    desktop.setState({ activationId: 2 })
     await nextTick()
     expect(mocks.correction.cancelInsert).toHaveBeenCalledTimes(2)
   })
 
   it('selects a kept text on reopening and focuses an empty one', async () => {
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.isWindowShown = true
     mocks.writer.startSession.mockReturnValueOnce(true)
-    desktopState.activationId++
+    desktop.setState({ activationId: 2 })
     await nextTick()
     expect(mocks.writer.requestFocusAndSelectAll).toHaveBeenCalledOnce()
     expect(mocks.writer.requestFocus).not.toHaveBeenCalled()
 
     mocks.writer.startSession.mockReturnValueOnce(false)
-    desktopState.activationId++
+    desktop.setState({ activationId: 3 })
     await nextTick()
     expect(mocks.writer.requestFocus).toHaveBeenCalledOnce()
   })
@@ -235,15 +223,7 @@ describe('quick input screen', () => {
   })
 
   it('handles live correction mode and submits via insertLive', async () => {
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.userConfig = {
-      ...desktopState.userConfig,
-      quickWindow: {
-        isHiddenOnBlur: true,
-        isCorrectionPrefetchEnabled: false,
-        correctionMode: 'live',
-      },
-    } as unknown as typeof desktopState.userConfig
+    setQuickWindow({ correctionMode: 'live' })
     await nextTick()
 
     const writer = reactive(mocks.writer)
@@ -262,15 +242,7 @@ describe('quick input screen', () => {
   })
 
   it('handles off correction mode and submits via insertDirect', async () => {
-    const desktopState = reactive(mocks.desktopState)
-    desktopState.userConfig = {
-      ...desktopState.userConfig,
-      quickWindow: {
-        isHiddenOnBlur: true,
-        isCorrectionPrefetchEnabled: false,
-        correctionMode: 'off',
-      },
-    } as unknown as typeof desktopState.userConfig
+    setQuickWindow({ correctionMode: 'off' })
     await nextTick()
 
     press('Enter')
@@ -282,12 +254,10 @@ describe('quick input screen', () => {
     expect(modeSwitch.text()).toContain('settings.quickCorrectionOnSubmit')
 
     await modeSwitch.trigger('click')
-    expect(mocks.updateUserConfig).toHaveBeenCalledWith({
-      quickWindow: {
-        isHiddenOnBlur: true,
-        isCorrectionPrefetchEnabled: false,
-        correctionMode: 'off',
-      },
+    await flushPromises()
+    expect(desktop.backend.userConfig.quickWindow).toEqual({
+      ...DEFAULT_USER_CONFIG.quickWindow,
+      correctionMode: 'off',
     })
   })
 })

@@ -1,6 +1,10 @@
-import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import ShortcutList from './ShortcutList.vue'
 
 const mocks = vi.hoisted(() => ({
@@ -9,13 +13,10 @@ const mocks = vi.hoisted(() => ({
   closeAll: vi.fn(),
   cancelPending: vi.fn(),
   currentModalParams: {} as Record<string, unknown>,
-  hideWindow: vi.fn(),
   goToEditor: vi.fn(),
   discardQuickInput: vi.fn(),
-  currentWindowLabel: 'main',
   currentModal: 'insert',
   breadcrumbs: ['insert'] as string[],
-  mode: 'quickInput',
 }))
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -57,26 +58,8 @@ vi.mock('../../stores/menu-modals', () => ({
   }),
 }))
 
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({
-    call: mocks.hideWindow,
-    callOrNotify: mocks.hideWindow,
-  }),
-}))
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () =>
-      mockDesktopStore(() => ({ mode: mocks.mode, userConfig: {} })),
-  }
-})
-
 vi.mock('../../navigation', () => ({
   appNavigation: { goToEditor: mocks.goToEditor },
-}))
-
-vi.mock('../../lib/desktop/window', () => ({
-  isQuickWindow: () => mocks.currentWindowLabel === 'quick',
 }))
 
 const press = (
@@ -96,14 +79,22 @@ const press = (
 }
 
 describe('ShortcutList', () => {
-  beforeEach(() => {
+  let desktop: TestDesktop
+  const openWindow = async (label: 'main' | 'quick') => {
+    desktop?.dispose()
+    desktop = await loadFakeDesktop({ mode: 'quickInput' }, label)
+    desktop.backend.handle('hide_window', () => undefined)
+  }
+
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mocks.currentWindowLabel = 'main'
+    await openWindow('main')
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = ['insert']
-    mocks.mode = 'quickInput'
     mocks.currentModalParams = {}
   })
+
+  afterEach(() => desktop.dispose())
 
   it('maps actions to physical 5x3 keyboard positions without shifting', () => {
     const qAction = vi.fn()
@@ -213,11 +204,10 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
-  it('resolves Esc to close mode on root screen without breadcrumbs and closes quick window', () => {
-    mocks.currentWindowLabel = 'quick'
+  it('resolves Esc to close mode on root screen without breadcrumbs and closes quick window', async () => {
+    await openWindow('quick')
     mocks.currentModal = 'insert'
     mocks.breadcrumbs = []
-    mocks.mode = 'quickInput'
 
     const wrapper = mount(ShortcutList, {
       props: { text: 'result text', escVisible: true },
@@ -227,7 +217,8 @@ describe('ShortcutList', () => {
 
     expect(mocks.closeAll).toHaveBeenCalled()
     expect(mocks.discardQuickInput).toHaveBeenCalled()
-    expect(mocks.hideWindow).toHaveBeenCalledWith('hide_window')
+    await flushPromises()
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
     wrapper.unmount()
   })
 
@@ -246,8 +237,8 @@ describe('ShortcutList', () => {
     wrapper.unmount()
   })
 
-  it('goes back on Escape when breadcrumbs exist in quick window', () => {
-    mocks.currentWindowLabel = 'quick'
+  it('goes back on Escape when breadcrumbs exist in quick window', async () => {
+    await openWindow('quick')
     mocks.currentModal = 'ai-task'
     mocks.breadcrumbs = ['insert', 'ai-task']
 

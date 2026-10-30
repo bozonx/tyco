@@ -61,30 +61,48 @@ tests are checked by `tsconfig.tooling.json`.
 
 ## Component tests and the desktop boundary
 
-Component, view and composable tests mount the real Pinia stores. Replace the
-native side, not the stores: `installFakeDesktop()` from
+Component, view, composable and store tests use the real Pinia stores. Replace
+the native side, not the stores: `installFakeDesktop()` from
 `src/test/install-fake-desktop.ts` puts the shared in-memory backend
 (`src/test/fake-desktop-backend.ts`, the same one the browser tests use)
 behind `@tauri-apps/api`, so the IPC store, desktop state model and client run
-as in the app.
+as in the app. Arguments and results cross as JSON, as over real IPC, so
+reactive proxies and `undefined` fields behave the same.
 
 ```ts
 let desktop: TestDesktop
 beforeEach(async () => {
-  desktop = installFakeDesktop({ userConfig })
-  await desktop.load() // only when the component reads the desktop state
+  // loads the state; `installFakeDesktop` skips that
+  desktop = await loadFakeDesktop({ userConfig, mode: 'quickInput' }, 'quick')
 })
 afterEach(() => desktop.dispose()) // fails on commands without a handler
 
-desktop.backend.handle('get_text_insertion_status', () => status)
+desktop.backend.handle('open_action_log', () => true)
 mount(Component, { global: { plugins: [desktop.pinia] } })
-expect(desktop.backend.callsOf('copy_text')).toEqual([{ text: 'Hi' }])
+expect(desktop.backend.callsOf('open_action_log')).toHaveLength(1)
 ```
 
-Do not mock `stores/desktop` or `stores/ipc`, and do not write a new store
-stand-in like `mockDesktopStore`: a copy of store logic drifts from the store.
-Mocking a heavy feature store (LLM, chat) or `use-i18n` to isolate a component
-is still fine. Older tests that mock the desktop stores are being migrated.
+- Seed state through the options: `userConfig`, `sessionState`, `mode`,
+  `activation` (window ID, selection, activation ID), `window`, `history`,
+  `chats`; the second argument is the window label (`'main'` or `'quick'`).
+- Change state during a test with `desktop.setState(patch)` or
+  `desktop.setUserConfig(patch)`: they deliver it like the app does on
+  `STATE_CHANGED`. Do not write into `useDesktopStore().desktopState`.
+- Fire desktop events with `desktop.emit(DESKTOP_EVENTS..., payload)`.
+- Make a command fail by throwing `FakeDesktopError` from its handler, and
+  delay it by returning a promise the test settles.
+- `loadFakeDesktop` clears the calls of the load: `backend.calls` holds what
+  the test caused. Real IPC adds `activationId` to activation commands, so
+  expect it in their arguments.
+- `mockIPC` drops request headers, so binary commands lose their `meta` in
+  jsdom; the browser tests cover them.
+
+Do not mock `stores/desktop`, `stores/ipc` or `lib/desktop/client`, and do not
+spy on their methods: a copy of the desktop layer hides the bugs of its
+callers (a failed `call` is a result, not an exception). Mocking a heavy
+feature store (LLM, chat), `use-i18n` or a native window API such as
+`@tauri-apps/api/window` to isolate a component is still fine. ESLint rejects
+mocks of and spies on the desktop layer in desktop UI tests.
 
 ## Rust isolation
 

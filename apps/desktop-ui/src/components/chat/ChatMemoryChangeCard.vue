@@ -118,11 +118,16 @@ async function handleUndo() {
   if (!profileId.value || isUndone.value || isUndoing.value) return
   isUndoing.value = true
   try {
-    await ipcStore.call('undo_ai_profile_memory', {
+    const response = await ipcStore.call('undo_ai_profile_memory', {
       profileId: profileId.value,
       chatId: chatId.value,
       file: fileName.value,
     })
+    // `call` reports a failure in its result instead of throwing
+    if (!response.success) {
+      toastError(response.error)
+      return
+    }
     await (
       chatScope.chat as unknown as { refreshProfile?: () => Promise<unknown> }
     ).refreshProfile?.()

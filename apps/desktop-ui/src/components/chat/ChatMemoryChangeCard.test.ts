@@ -1,17 +1,17 @@
-import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { FakeDesktopError } from '../../test/fake-desktop-backend'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import ChatMemoryChangeCard from './ChatMemoryChangeCard.vue'
 
 const mocks = vi.hoisted(() => ({
-  call: vi.fn(),
   goToConfig: vi.fn(),
   toastKey: vi.fn(),
   toastError: vi.fn(),
-}))
-
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ call: mocks.call }),
 }))
 
 vi.mock('../../composables/use-toast', () => ({
@@ -37,7 +37,29 @@ vi.mock('../../composables/use-i18n', () => ({
   }),
 }))
 
+const undoCall = {
+  type: 'tool-call',
+  toolCallId: 'c3',
+  toolName: 'memory_add',
+  input: { file: 'health.md', fact: 'Fact to undo' },
+  state: 'done',
+} as const
+
+const clickableButton = {
+  props: ['disabled'],
+  template:
+    '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+}
+
 describe('ChatMemoryChangeCard', () => {
+  let desktop: TestDesktop
+
+  beforeEach(() => {
+    desktop = installFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
   it('renders memory update card for memory_add', () => {
     const wrapper = mount(ChatMemoryChangeCard, {
       props: {
@@ -49,7 +71,10 @@ describe('ChatMemoryChangeCard', () => {
           state: 'done',
         },
       },
-      global: { stubs: { AppIcon: true, Button: true } },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: { AppIcon: true, Button: true },
+      },
     })
 
     expect(wrapper.text()).toContain('chatTools.memory.memoryUpdated:health.md')
@@ -68,7 +93,10 @@ describe('ChatMemoryChangeCard', () => {
           state: 'done',
         },
       },
-      global: { stubs: { AppIcon: true, Button: true } },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: { AppIcon: true, Button: true },
+      },
     })
 
     expect(wrapper.find('.memory-diff-line.is-removed').text()).toContain(
@@ -80,42 +108,51 @@ describe('ChatMemoryChangeCard', () => {
   })
 
   it('calls undo IPC on undo click', async () => {
-    mocks.call.mockResolvedValueOnce({ file: 'health.md', after: '' })
-
+    desktop.backend.handle('undo_ai_profile_memory', ({ file }) => ({
+      file,
+      after: '',
+    }))
     const wrapper = mount(ChatMemoryChangeCard, {
-      props: {
-        call: {
-          type: 'tool-call',
-          toolCallId: 'c3',
-          toolName: 'memory_add',
-          input: { file: 'health.md', fact: 'Fact to undo' },
-          state: 'done',
-        },
-      },
+      props: { call: undoCall },
       global: {
-        stubs: {
-          AppIcon: true,
-          Button: {
-            props: ['disabled'],
-            template:
-              '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
-          },
-        },
+        plugins: [desktop.pinia],
+        stubs: { AppIcon: true, Button: clickableButton },
       },
     })
 
-    const buttons = wrapper.findAll('button')
-    await buttons[0].trigger('click')
+    await wrapper.findAll('button')[0].trigger('click')
+    await flushPromises()
 
-    expect(mocks.call).toHaveBeenCalledWith('undo_ai_profile_memory', {
-      profileId: 'test-profile',
-      chatId: 'chat-1',
-      file: 'health.md',
-    })
+    expect(desktop.backend.callsOf('undo_ai_profile_memory')).toEqual([
+      { profileId: 'test-profile', chatId: 'chat-1', file: 'health.md' },
+    ])
     expect(mocks.toastKey).toHaveBeenCalledWith(
       'chatTools.memory.undoSuccess',
       'info'
     )
+  })
+
+  it('reports a failed undo instead of confirming it', async () => {
+    desktop.backend.handle('undo_ai_profile_memory', () => {
+      throw new FakeDesktopError({
+        code: 'operationFailed',
+        message: 'Nothing to undo',
+      })
+    })
+    const wrapper = mount(ChatMemoryChangeCard, {
+      props: { call: undoCall },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: { AppIcon: true, Button: clickableButton },
+      },
+    })
+
+    await wrapper.findAll('button')[0].trigger('click')
+    await flushPromises()
+
+    expect(mocks.toastError).toHaveBeenCalledOnce()
+    expect(mocks.toastKey).not.toHaveBeenCalled()
+    expect(wrapper.findAll('button')[0].attributes('disabled')).toBeUndefined()
   })
 
   it('opens profile settings on open click', async () => {
@@ -130,6 +167,7 @@ describe('ChatMemoryChangeCard', () => {
         },
       },
       global: {
+        plugins: [desktop.pinia],
         stubs: {
           AppIcon: true,
           Button: {

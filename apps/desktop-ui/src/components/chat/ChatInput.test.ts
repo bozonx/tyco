@@ -1,7 +1,11 @@
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import ChatInput from './ChatInput.vue'
 
 const mocks = vi.hoisted(() => ({
@@ -15,7 +19,6 @@ const mocks = vi.hoisted(() => ({
     addFiles: vi.fn(),
     addDroppedFiles: vi.fn(),
   },
-  ipcState: { desktopState: { userConfig: {} as any } },
 }))
 
 vi.mock('../../stores/chat', () => ({ useChatStore: () => mocks.chatState }))
@@ -32,23 +35,20 @@ vi.mock('../../stores/chat-input', () => ({
     }),
 }))
 
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () => mockDesktopStore(() => mocks.ipcState.desktopState),
-  }
-})
-
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
 describe('ChatInput.vue', () => {
-  beforeEach(() => {
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
     vi.clearAllMocks()
     mocks.chatState.attachedContext = []
-    mocks.ipcState.desktopState.userConfig = {}
+    desktop = await loadFakeDesktop()
   })
+
+  afterEach(() => desktop.dispose())
 
   describe('chat file paste', () => {
     it('attaches clipboard files that come without text', () => {
@@ -134,9 +134,12 @@ describe('ChatInput.vue', () => {
     })
 
     it('emits send on Ctrl+Enter when submitKey is configured as ctrlEnter', async () => {
-      mocks.ipcState.desktopState.userConfig = {
-        editor: { submitKey: 'Ctrl+Enter' },
-      }
+      desktop.setUserConfig({
+        editor: {
+          ...desktop.backend.userConfig.editor,
+          submitKey: 'Ctrl+Enter',
+        },
+      })
       const wrapper = mount(ChatInput)
       const textarea = wrapper.get('textarea')
 

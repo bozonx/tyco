@@ -1,10 +1,18 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { disposePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_USER_CONFIG, SUBMIT_KEYS } from '@tyco/shared'
+import {
+  DEFAULT_USER_CONFIG,
+  SUBMIT_KEYS,
+  type HotkeyProviderInfo,
+} from '@tyco/shared'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsGlobalActionsTab from './SettingsGlobalActionsTab.vue'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -14,37 +22,32 @@ vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey: vi.fn(), toastText: vi.fn() }),
 }))
 
-vi.mock('../../lib/desktop/client', () => ({
-  desktopClient: { listen: vi.fn().mockResolvedValue(() => {}) },
-}))
-
-const { call } = vi.hoisted(() => ({
-  call: vi.fn(async (name: string) => ({
-    success: true,
-    result:
-      name === 'get_hotkey_provider_info'
-        ? { provider: 'global-shortcut', canConfigure: false, actions: {} }
-        : { status: 'ready' },
-  })),
-}))
-
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call }) }))
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () =>
-      mockDesktopStore(() => ({ userConfig: DEFAULT_USER_CONFIG })),
-  }
+const providerInfo = (
+  provider: HotkeyProviderInfo['provider']
+): HotkeyProviderInfo => ({
+  provider,
+  canConfigure: false,
+  actions: {},
+  systemTriggers: {},
+  registered: true,
+  defaults: {},
+  commands: {},
+  platform: 'linux',
 })
 
 describe('SettingsGlobalActionsTab.vue', () => {
-  let pinia: ReturnType<typeof createPinia>
-  beforeEach(() => {
-    pinia = createPinia()
-    setActivePinia(pinia)
-    vi.clearAllMocks()
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
+    desktop.backend.handle('get_hotkey_provider_info', () =>
+      providerInfo('global-shortcut')
+    )
   })
-  afterEach(() => disposePinia(pinia))
+
+  afterEach(() => desktop.dispose())
+
+  afterEach(() => disposePinia(desktop.pinia))
 
   let context: ReturnType<typeof createTestSettingsContext>
   beforeEach(() => {
@@ -190,9 +193,7 @@ describe('SettingsGlobalActionsTab.vue', () => {
     await voiceRow.find('[title="settings.unassignHotkey"]').trigger('click')
     await flushPromises()
 
-    expect(call.mock.calls.some(([name]) => name === 'apply_hotkey')).toBe(
-      false
-    )
+    expect(desktop.backend.callsOf('apply_hotkey')).toEqual([])
     expect(context.draft.value.hotkeys.voice).toBe('')
     // an unassigned hotkey offers no removal
     const editorRow = wrapper.find(
@@ -237,13 +238,9 @@ describe('SettingsGlobalActionsTab.vue', () => {
   })
 
   it('hides voice hold-to-record toggle when provider is external', async () => {
-    call.mockImplementation(async (name: string) => ({
-      success: true,
-      result:
-        name === 'get_hotkey_provider_info'
-          ? { provider: 'external', canConfigure: false, actions: {} }
-          : { status: 'ready' },
-    }))
+    desktop.backend.handle('get_hotkey_provider_info', () =>
+      providerInfo('external')
+    )
 
     const wrapper = mount(SettingsGlobalActionsTab, {
       global: { provide: context.provide, stubs: globalStubs },

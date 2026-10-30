@@ -1,19 +1,23 @@
-import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEditorInputStore } from '../stores/editor-input'
-import { useIpcStore } from '../stores/ipc'
-import { useDesktopStore } from '../stores/desktop'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import EditorView from './EditorView.vue'
 
 describe('Editor actions shortcut', () => {
-  beforeEach(() => setActivePinia(createPinia()))
+  let desktop: TestDesktop
 
-  it('does not hide the editor when Escape was handled by its search panel', () => {
-    const call = vi.spyOn(useIpcStore(), 'callOrNotify')
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
+    desktop.backend.handle('hide_window', () => undefined)
+  })
+
+  afterEach(() => desktop.dispose())
+
+  it('does not hide the editor when Escape was handled by its search panel', async () => {
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },
     })
@@ -23,7 +27,8 @@ describe('Editor actions shortcut', () => {
     })
     event.preventDefault()
     window.dispatchEvent(event)
-    expect(call).not.toHaveBeenCalled()
+    await flushPromises()
+    expect(desktop.backend.callsOf('hide_window')).toEqual([])
     wrapper.unmount()
   })
 
@@ -84,7 +89,9 @@ describe('Editor actions shortcut', () => {
   })
 
   it('keeps Ctrl+Enter for actions whatever sends the text', () => {
-    useDesktopStore().desktopState.userConfig.editor.submitKey = 'Ctrl+Enter'
+    desktop.setUserConfig({
+      editor: { ...desktop.backend.userConfig.editor, submitKey: 'Ctrl+Enter' },
+    })
     const open = vi.spyOn(useMenuModalsStore(), 'nextModal')
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },
@@ -106,14 +113,6 @@ describe('Editor actions shortcut', () => {
   it('closes editor on Escape while keeping unsaved text in memory', async () => {
     const editor = useEditorInputStore()
     editor.setValue('Unsaved text', 'plain')
-    const ipc = useIpcStore()
-    vi.spyOn(ipc, 'call').mockResolvedValue({
-      success: true,
-      result: undefined,
-    })
-    const callSpy = vi
-      .spyOn(ipc, 'callOrNotify')
-      .mockResolvedValue({ success: true, result: undefined })
 
     const wrapper = mount(EditorView, {
       global: { stubs: { Editor: true, ContentPadding: true } },
@@ -129,11 +128,8 @@ describe('Editor actions shortcut', () => {
     await flushPromises()
 
     expect(editor.value).toBe('Unsaved text')
-    expect(callSpy).toHaveBeenCalledWith('hide_window')
-    expect(ipc.call).not.toHaveBeenCalledWith(
-      'add_editor_history_item',
-      expect.anything()
-    )
+    expect(desktop.backend.callsOf('hide_window')).toHaveLength(1)
+    expect(desktop.backend.callsOf('add_editor_history_item')).toEqual([])
     wrapper.unmount()
   })
 

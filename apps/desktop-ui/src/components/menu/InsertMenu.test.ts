@@ -1,22 +1,20 @@
 import { config, mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import CopyButton from '../common/CopyButton.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import InsertMenu from './InsertMenu.vue'
 
 const mocks = vi.hoisted(() => ({ editorPage: true }))
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
-}))
-
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({ label: 'main' }),
 }))
 
 vi.mock('../../navigation', () => ({
@@ -49,11 +47,13 @@ const correctionStep = {
   isEditorButtonVisible: true,
 }
 
+let desktop: TestDesktop
+
 describe('InsertMenu correction step', () => {
-  beforeEach(() => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    config.global.plugins = [pinia]
+  beforeEach(async () => {
+    desktop = installFakeDesktop()
+    await desktop.load()
+    config.global.plugins = [desktop.pinia]
     localStorage.clear()
     mocks.editorPage = true
   })
@@ -84,11 +84,14 @@ describe('InsertMenu correction step', () => {
     expect(list.props('isEditorButtonVisible')).toBe(true)
   })
 
-  it('enables insertion without a window ID when the desktop supports focus return', () => {
+  it('enables insertion without a window ID when the desktop supports focus return', async () => {
     mocks.editorPage = false
-    const desktop = useDesktopStore()
-    vi.spyOn(desktop, 'canInsertIntoWindow', 'get').mockReturnValue(true)
-    expect(desktop.desktopState.windowId).toBeNull()
+    desktop.backend.handle('get_text_insertion_status', () => ({
+      keys: 'ready',
+      target: 'focusReturn',
+    }))
+    await desktop.load()
+    expect(desktop.backend.activation.windowId).toBeNull()
     const list = mountMenu({
       text: 'GNOME text',
       insertOnly: true,
@@ -138,4 +141,5 @@ describe('InsertMenu correction step', () => {
 
 afterEach(() => {
   config.global.plugins = []
+  desktop.dispose()
 })

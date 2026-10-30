@@ -1,22 +1,19 @@
 import { type DOMWrapper, flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandEditor from './CommandEditor.vue'
 import type { CommandConfig } from '@tyco/shared'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
-const { call, toastKey } = vi.hoisted(() => ({
-  call: vi.fn(),
-  toastKey: vi.fn(),
-}))
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call }) }))
-vi.mock('../../stores/desktop', () => ({
-  useDesktopStore: () => ({ userConfig: { commands: [] } }),
-}))
+const { toastKey } = vi.hoisted(() => ({ toastKey: vi.fn() }))
 vi.mock('../../composables/use-toast', () => ({
   default: () => ({ toastKey }),
 }))
@@ -48,8 +45,15 @@ const lastUpdate = (wrapper: ReturnType<typeof mountEditor>) =>
   wrapper.emitted('update')!.at(-1)![0] as CommandConfig
 
 describe('CommandEditor.vue', () => {
+  let desktop: TestDesktop
+
   beforeEach(() => {
-    call.mockReset()
+    desktop = installFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
+  beforeEach(() => {
     toastKey.mockReset()
   })
 
@@ -182,12 +186,14 @@ describe('CommandEditor.vue', () => {
   it('opens the log and tells when there is none yet', async () => {
     const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
     const button = wrapper.find('.command-open-log')
-    call.mockResolvedValueOnce({ success: true, result: true })
+    let hasLog = true
+    desktop.backend.handle('open_action_log', () => hasLog)
     await button.trigger('click')
-    expect(call).toHaveBeenCalledWith('open_action_log')
+    await flushPromises()
+    expect(desktop.backend.callsOf('open_action_log')).toHaveLength(1)
     expect(toastKey).not.toHaveBeenCalled()
 
-    call.mockResolvedValueOnce({ success: true, result: false })
+    hasLog = false
     await button.trigger('click')
     await flushPromises()
     expect(toastKey).toHaveBeenCalledWith('commands.logEmpty')

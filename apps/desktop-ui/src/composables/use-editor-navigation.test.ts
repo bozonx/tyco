@@ -1,28 +1,29 @@
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { flushPromises } from '@vue/test-utils'
+import { disposePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { appNavigation } from '../navigation'
 import { useEditorInputStore } from '../stores/editor-input'
-import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../test/install-fake-desktop'
 import { useEditorNavigation } from './use-editor-navigation'
 
-const windowState = vi.hoisted(() => ({ label: 'main' }))
-vi.mock('../lib/desktop/window', () => ({
-  getDesktopWindow: () => windowState,
-  isQuickWindow: () => windowState.label === 'quick',
-}))
+let desktop: TestDesktop
+const openWindow = (label: 'main' | 'quick') => {
+  desktop?.dispose()
+  desktop = installFakeDesktop({}, label)
+}
 
-let pinia: ReturnType<typeof createPinia>
 beforeEach(() => {
-  pinia = createPinia()
-  setActivePinia(pinia)
-  windowState.label = 'main'
+  openWindow('main')
   vi.spyOn(appNavigation, 'goToEditor').mockResolvedValue()
 })
 afterEach(() => {
-  disposePinia(pinia)
-  vi.restoreAllMocks()
+  disposePinia(desktop.pinia)
+  desktop.dispose()
 })
 
 describe('editor navigation', () => {
@@ -45,16 +46,14 @@ describe('editor navigation', () => {
     expect(editor.value).toBe('before new after')
   })
 
-  it('delegates a quick window transfer to the main window', () => {
-    windowState.label = 'quick'
-    const call = vi
-      .spyOn(useIpcStore(), 'callOrNotify')
-      .mockResolvedValue({ success: true, result: undefined })
+  it('delegates a quick window transfer to the main window', async () => {
+    openWindow('quick')
+    desktop.backend.handle('open_main_editor', () => undefined)
     useEditorNavigation().toEditor('new', 'old')
-    expect(call).toHaveBeenCalledWith('open_main_editor', {
-      text: 'new',
-      sourceText: 'old',
-    })
+    await flushPromises()
+    expect(desktop.backend.callsOf('open_main_editor')).toEqual([
+      { text: 'new', sourceText: 'old', activationId: 0 },
+    ])
     expect(useEditorInputStore().value).toBe('')
     expect(appNavigation.goToEditor).not.toHaveBeenCalled()
   })

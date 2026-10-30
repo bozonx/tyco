@@ -1,10 +1,14 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { DEFAULT_USER_CONFIG, type AiProfile } from '@tyco/shared'
+import { type AiProfile } from '@tyco/shared'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsAiProfilesTab from './SettingsAiProfilesTab.vue'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -22,14 +26,6 @@ vi.mock('../../stores/ai-profiles', () => ({
 vi.mock('../../stores/secrets', () => ({
   useSecretsStore: () => ({ secrets: {} }),
 }))
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () =>
-      mockDesktopStore(() => ({ userConfig: DEFAULT_USER_CONFIG })),
-  }
-})
-
 const profile = (fields: Partial<AiProfile>): AiProfile => ({
   id: 'writer',
   name: 'Writer',
@@ -65,6 +61,14 @@ function createStore() {
 }
 
 describe('SettingsAiProfilesTab.vue', () => {
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
   let store: ReturnType<typeof createStore>
   let context: ReturnType<typeof createTestSettingsContext>
   beforeEach(() => {

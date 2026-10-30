@@ -1,24 +1,16 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick, reactive } from 'vue'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { APP_ROUTES } from '../lib/navigation/routes'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import VoiceView from './VoiceView.vue'
 
-const desktopState = reactive({
-  isWindowShown: true,
-  mode: 'voice',
-  activationId: 1,
-  windowId: 123 as number | undefined,
-})
-
 const mocks = vi.hoisted(() => ({
-  windowLabel: 'quick',
   insertAction: vi.fn(),
   copyAction: vi.fn(),
   navPanel: { resetNavPanelState: vi.fn() },
   menuModals: { hasOpenModal: false },
-  callOrNotify: vi.fn(),
   navigationPush: vi.fn(),
   finishSignal: {
     mode: (): string | undefined => undefined,
@@ -29,11 +21,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../composables/use-voice-finish-signal', () => ({
   useVoiceFinishSignal: (mode: () => string | undefined, confirm: () => void) =>
     (mocks.finishSignal = { mode, confirm }),
-}))
-
-vi.mock('../lib/desktop/window', () => ({
-  getDesktopWindow: () => ({ label: mocks.windowLabel }),
-  isQuickWindow: () => mocks.windowLabel === 'quick',
 }))
 
 vi.mock('../navigation', () => ({
@@ -62,17 +49,6 @@ vi.mock('../components/menu/InsertMenu.vue', () => ({
   },
 }))
 
-vi.mock('../stores/window', () => ({
-  useWindowStore: () => ({ hide: () => mocks.callOrNotify('hide_window') }),
-}))
-vi.mock('../stores/ipc', () => ({
-  useIpcStore: () => ({ callOrNotify: mocks.callOrNotify }),
-}))
-vi.mock('../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../test/desktop-store')
-  return { useDesktopStore: () => mockDesktopStore(() => desktopState) }
-})
-
 vi.mock('../stores/nav-panel', () => ({
   useNavPanelStore: () => mocks.navPanel,
 }))
@@ -91,15 +67,27 @@ vi.mock('../stores/action-menu', () => ({
 }))
 
 describe('VoiceView.vue', () => {
-  beforeEach(() => {
+  let desktop: TestDesktop
+  const openWindow = async (label: 'main' | 'quick') => {
+    desktop?.dispose()
+    desktop = await loadFakeDesktop(
+      { activation: { mode: 'voice', activationId: 1, windowId: '123' } },
+      label
+    )
+    desktop.backend.handle('hide_window', () => undefined)
+  }
+  const hideCalls = async () => {
+    await flushPromises()
+    return desktop.backend.callsOf('hide_window')
+  }
+
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mocks.windowLabel = 'quick'
-    desktopState.isWindowShown = true
-    desktopState.mode = 'voice'
-    desktopState.activationId = 1
-    desktopState.windowId = 123
+    await openWindow('quick')
     mocks.menuModals.hasOpenModal = false
   })
+
+  afterEach(() => desktop.dispose())
 
   it('resets nav panel state on creation and renders voice recognition menu inside padding', () => {
     const wrapper = mount(VoiceView, { props: { bar: false } })
@@ -157,7 +145,7 @@ describe('VoiceView.vue', () => {
   })
 
   it('shows InsertMenu when canInsertIntoWindow is false', async () => {
-    desktopState.windowId = undefined
+    desktop.setState({ windowId: null })
     const wrapper = mount(VoiceView, { props: { bar: false } })
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
 
@@ -216,8 +204,8 @@ describe('VoiceView.vue', () => {
     ).toBe(true)
   })
 
-  it('leaves the hotkey to the quick window', () => {
-    mocks.windowLabel = 'main'
+  it('leaves the hotkey to the quick window', async () => {
+    await openWindow('main')
     const wrapper = mount(VoiceView, { props: { bar: false } })
     expect(
       wrapper
@@ -227,19 +215,19 @@ describe('VoiceView.vue', () => {
   })
 
   it('hides quick window on cancellation when window label is quick', async () => {
-    mocks.windowLabel = 'quick'
+    await openWindow('quick')
     const wrapper = mount(VoiceView, { props: { bar: false } })
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
 
     voiceMenu.vm.$emit('cancelled')
     await flushPromises()
 
-    expect(mocks.callOrNotify).toHaveBeenCalledWith('hide_window')
+    expect(await hideCalls()).toHaveLength(1)
     expect(mocks.navigationPush).not.toHaveBeenCalled()
   })
 
   it('navigates to editor on cancellation when window label is main', async () => {
-    mocks.windowLabel = 'main'
+    await openWindow('main')
     const wrapper = mount(VoiceView, { props: { bar: false } })
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
 
@@ -247,18 +235,18 @@ describe('VoiceView.vue', () => {
     await flushPromises()
 
     expect(mocks.navigationPush).toHaveBeenCalledWith(APP_ROUTES.EDITOR.path)
-    expect(mocks.callOrNotify).not.toHaveBeenCalled()
+    expect(await hideCalls()).toEqual([])
   })
 
   it('ignores cancellation if window is hidden or mode is not voice', async () => {
-    desktopState.isWindowShown = false
+    desktop.setState({ isWindowShown: false })
     const wrapper = mount(VoiceView, { props: { bar: false } })
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
 
     voiceMenu.vm.$emit('cancelled')
     await flushPromises()
 
-    expect(mocks.callOrNotify).not.toHaveBeenCalled()
+    expect(await hideCalls()).toEqual([])
     expect(mocks.navigationPush).not.toHaveBeenCalled()
   })
 
@@ -270,7 +258,7 @@ describe('VoiceView.vue', () => {
     await flushPromises()
     expect(wrapper.findComponent({ name: 'InsertMenu' }).exists()).toBe(true)
 
-    desktopState.activationId = 2
+    desktop.setState({ activationId: 2 })
     await nextTick()
     await flushPromises()
 

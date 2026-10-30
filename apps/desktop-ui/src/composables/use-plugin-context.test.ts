@@ -1,21 +1,25 @@
 import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '@tyco/plugin-sdk'
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { disposePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { clientLogger } from '../lib/logger'
 import { useActionMenuStore } from '../stores/action-menu'
 import { useEditorInputStore } from '../stores/editor-input'
-import { useIpcStore } from '../stores/ipc'
 import { useToolbarStore } from '../stores/toolbar'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../test/install-fake-desktop'
 import usePluginContext from './use-plugin-context'
 
-let pinia: ReturnType<typeof createPinia>
+let desktop: TestDesktop
 beforeEach(() => {
-  pinia = createPinia()
-  setActivePinia(pinia)
+  desktop = installFakeDesktop()
+  desktop.backend.handle('hide_window', () => undefined)
 })
 afterEach(() => {
-  disposePinia(pinia)
+  disposePinia(desktop.pinia)
+  desktop.dispose()
 })
 
 function createContext() {
@@ -84,14 +88,15 @@ describe('plugin context wiring', () => {
 
   it('routes desktop functions and logs through host services', async () => {
     const { context } = createContext()
-    const call = vi
-      .spyOn(useIpcStore(), 'call')
-      .mockResolvedValue({ success: true } as never)
+    desktop.backend.handle('write_plugin_note', () => '/notes/dir/note.md')
+    desktop.backend.handle('open_in_browser_and_hide', () => undefined)
     await context.callApiFunction('appendNote', ['dir', 'note.md', 'text'])
     await context.callApiFunction('openInBrowserAndHide', [
       'https://example.com',
     ])
-    expect(call.mock.calls).toEqual([
+    expect(
+      desktop.backend.calls.map(({ command, args }) => [command, args])
+    ).toEqual([
       [
         'write_plugin_note',
         {
@@ -102,7 +107,10 @@ describe('plugin context wiring', () => {
           append: true,
         },
       ],
-      ['open_in_browser_and_hide', { url: 'https://example.com' }],
+      [
+        'open_in_browser_and_hide',
+        { url: 'https://example.com', activationId: 0 },
+      ],
     ])
 
     const log = vi.spyOn(clientLogger, 'log').mockImplementation(() => {})

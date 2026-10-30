@@ -1,5 +1,4 @@
 import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 import { nextTick, reactive } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { slotsFromList } from '../../lib/shortcut-slots/shortcut-slots'
@@ -9,10 +8,14 @@ import type { CommandConfig } from '@tyco/shared'
 import { createCommandLauncherModel } from '../../lib/command-launcher/launcher-model'
 import { createCommand } from '../../lib/commands/command-config'
 import { testTools } from '../../lib/tools/testing'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import CommandLauncher from './CommandLauncher.vue'
 
 const mocks = vi.hoisted(() => ({
-  desktopState: { activationId: 1, selectedText: null as string | null },
+  selectedText: null as string | null,
   run: vi.fn(async () => ({ success: true, result: undefined })),
   handleEsc: vi.fn(),
   store: null as unknown,
@@ -31,15 +34,6 @@ vi.mock('../../composables/use-overlay-nav', () => ({
     },
   }),
 }))
-vi.mock('../../stores/ipc', () => ({
-  useIpcStore: () => ({ callOrNotify: vi.fn() }),
-}))
-vi.mock('../../stores/desktop', async () => {
-  const { mockDesktopStore } = await import('../../test/desktop-store')
-  return {
-    useDesktopStore: () => mockDesktopStore(() => reactive(mocks.desktopState)),
-  }
-})
 vi.mock('../../stores/tools', async () => {
   const { testTools } = await import('../../lib/tools/testing')
   const tools = testTools()
@@ -81,7 +75,7 @@ function mountLauncher(
         })),
       tools: testTools(),
       commands: () => commands,
-      selectedText: () => mocks.desktopState.selectedText,
+      selectedText: () => mocks.selectedText,
       run: mocks.run,
     })
   )
@@ -96,13 +90,16 @@ const keydown = (target: Element, init: KeyboardEventInit) =>
     new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init })
   )
 
-beforeEach(() => {
-  setActivePinia(createPinia())
+let desktop: TestDesktop
+
+beforeEach(async () => {
+  desktop = await loadFakeDesktop({ mode: 'commandLauncher' })
 })
 
 afterEach(() => {
   vi.clearAllMocks()
-  mocks.desktopState.selectedText = null
+  mocks.selectedText = null
+  desktop.dispose()
 })
 
 describe('CommandLauncher', () => {

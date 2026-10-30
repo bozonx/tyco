@@ -1,21 +1,24 @@
-import { createPinia, setActivePinia } from 'pinia'
-import { config, mount } from '@vue/test-utils'
+import { config, flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Editor from './Editor.vue'
 import Icon from '../common/AppIcon.vue'
-import { useDesktopStore } from '../../stores/desktop'
+import {
+  loadFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
+let desktop: TestDesktop
+
 describe('Editor.vue toolbar', () => {
-  beforeEach(() => {
-    const pinia = createPinia()
-    setActivePinia(pinia)
-    useDesktopStore().userConfig.isInDevelopment = true
-    config.global.plugins = [pinia]
+  beforeEach(async () => {
+    desktop = await loadFakeDesktop()
+    desktop.setUserConfig({ isInDevelopment: true })
+    config.global.plugins = [desktop.pinia]
     vi.clearAllMocks()
   })
 
@@ -285,15 +288,11 @@ describe('Editor.vue toolbar', () => {
 
   it('renders dev quick buttons and activates mode with editor text', async () => {
     const { useEditorInputStore } = await import('../../stores/editor-input')
-    const { useIpcStore } = await import('../../stores/ipc')
     const editorInputStore = useEditorInputStore()
-    const ipcStore = useIpcStore()
 
     editorInputStore.setValue('hello from editor test', 'plain')
 
-    const callSpy = vi
-      .spyOn(ipcStore, 'call')
-      .mockResolvedValue({ success: true, result: undefined } as any)
+    desktop.backend.handle('activate_mode', () => undefined)
 
     const wrapper = mount(Editor, {
       global: {
@@ -304,7 +303,8 @@ describe('Editor.vue toolbar', () => {
           Button: {
             props: ['title'],
             template:
-              '<button class="btn-stub" :title="title" @click="$emit(\'click\')"><slot /></button>',
+              // the click listener falls through to the button
+              '<button class="btn-stub" :title="title"><slot /></button>',
           },
         },
       },
@@ -315,10 +315,10 @@ describe('Editor.vue toolbar', () => {
 
     await aiTasksQuickBtn.trigger('click')
 
-    expect(callSpy).toHaveBeenCalledWith('activate_mode', {
-      mode: 'aiTasks',
-      text: 'hello from editor test',
-    })
+    await flushPromises()
+    expect(desktop.backend.callsOf('activate_mode')).toEqual([
+      { mode: 'aiTasks', text: 'hello from editor test' },
+    ])
   })
 
   it('renders info tooltip with selection hint in the right rail and not in footer', () => {
@@ -484,4 +484,5 @@ describe('Editor.vue toolbar', () => {
 
 afterEach(() => {
   config.global.plugins = []
+  desktop.dispose()
 })

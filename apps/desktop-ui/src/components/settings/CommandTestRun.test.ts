@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import type { CommandConfig } from '@tyco/shared'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
 import {
@@ -8,6 +8,10 @@ import {
   runCommandTest,
 } from '../../lib/commands/command-test-run'
 import CommandTestRun from './CommandTestRun.vue'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({
@@ -24,10 +28,6 @@ vi.mock(
 )
 const { session } = vi.hoisted(() => ({
   session: { persist: vi.fn(async () => {}), isSaved: vi.fn(() => true) },
-}))
-vi.mock('../../stores/ipc', () => ({ useIpcStore: () => ({ call: vi.fn() }) }))
-vi.mock('../../stores/desktop', () => ({
-  useDesktopStore: () => ({ userConfig: { commands: [] } }),
 }))
 vi.mock('../../stores/settings-session', () => ({
   useSettingsSessionStore: () => session,
@@ -56,6 +56,14 @@ const runWith = async (result: CommandTestResult) => {
 }
 
 describe('CommandTestRun.vue', () => {
+  let desktop: TestDesktop
+
+  beforeEach(() => {
+    desktop = installFakeDesktop()
+  })
+
+  afterEach(() => desktop.dispose())
+
   beforeEach(() => vi.mocked(runCommandTest).mockReset())
 
   it('shows the exit code and both streams of a script', async () => {

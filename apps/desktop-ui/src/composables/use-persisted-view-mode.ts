@@ -33,13 +33,9 @@ function usePersistedMode<T extends string>(
       onCleanup(() => {
         current = false
       })
-      try {
-        const result = await store(next)
-        if (result.success) return
-      } catch {
-        // Transport failures use the same recovery as a rejected settings save.
-      }
-      if (!current) return
+      // a desktop call reports a failure in its result, it never throws
+      const result = await store(next)
+      if (result.success || !current) return
       mode.value = stored()
       toastKey('settings.saveFailed', 'error')
     }

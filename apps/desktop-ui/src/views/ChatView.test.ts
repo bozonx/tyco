@@ -1,12 +1,12 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia, disposePinia, setActivePinia } from 'pinia'
+import { disposePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import ChatView from './ChatView.vue'
 
 const mocks = vi.hoisted(() => ({
-  userConfig: { isInDevelopment: true },
   startNewChat: vi.fn(),
   openLastOrNewChat: vi.fn(),
   mediaMatches: false,
@@ -36,10 +36,6 @@ function chatFor(profileId: string | null) {
 }
 const chatState = chatFor(null)
 const profileChatState = chatFor('writer')
-
-vi.mock('../stores/desktop', () => ({
-  useDesktopStore: () => ({ userConfig: mocks.userConfig }),
-}))
 
 vi.mock('../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -93,12 +89,11 @@ vi.mock('../components/common/IconButton.vue', () => ({
 }))
 
 describe('ChatView.vue', () => {
-  let pinia: ReturnType<typeof createPinia>
-  beforeEach(() => {
-    pinia = createPinia()
-    setActivePinia(pinia)
+  let desktop: TestDesktop
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mocks.userConfig.isInDevelopment = true
+    desktop = await loadFakeDesktop()
+    desktop.setUserConfig({ isInDevelopment: true })
     chatState.isGenerating = false
     mocks.mediaMatches = false
     mocks.profileId = null
@@ -114,10 +109,13 @@ describe('ChatView.vue', () => {
       dispatchEvent: vi.fn(),
     }))
   })
-  afterEach(() => disposePinia(pinia))
+  afterEach(() => {
+    disposePinia(desktop.pinia)
+    desktop.dispose()
+  })
 
   it('hides a profile route outside development mode', () => {
-    mocks.userConfig.isInDevelopment = false
+    desktop.setUserConfig({ isInDevelopment: false })
     mocks.profileId = 'writer'
     const wrapper = mount(ChatView)
     expect(wrapper.find('.profile-header').exists()).toBe(false)

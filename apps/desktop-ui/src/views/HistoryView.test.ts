@@ -1,10 +1,9 @@
-import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import HistoryView from './HistoryView.vue'
 import { useHistoryStore } from '../stores/history'
-import { useDesktopStore } from '../stores/desktop'
+import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 
 const mockToEditor = vi.fn()
 vi.mock('../navigation', () => ({
@@ -24,14 +23,18 @@ vi.mock('../composables/use-i18n', () => ({
 }))
 
 describe('HistoryView.vue', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
+  let desktop: TestDesktop
+
+  beforeEach(async () => {
     vi.clearAllMocks()
-    useDesktopStore().desktopState.userConfig.isInDevelopment = true
+    desktop = await loadFakeDesktop()
+    desktop.setUserConfig({ isInDevelopment: true })
   })
 
+  afterEach(() => desktop.dispose())
+
   it('redirects to the editor when development mode is disabled', () => {
-    delete useDesktopStore().desktopState.userConfig.isInDevelopment
+    desktop.setUserConfig({ isInDevelopment: undefined })
     vi.spyOn(useHistoryStore(), 'loadEditorHistory').mockResolvedValue()
     mount(HistoryView, { global: { stubs: { HistoryList: true } } })
     expect(mockToEditor).toHaveBeenCalledOnce()
@@ -179,11 +182,10 @@ describe('HistoryView.vue', () => {
     const historyStore = useHistoryStore()
     vi.spyOn(historyStore, 'loadEditorHistory').mockResolvedValue()
 
-    const desktop = useDesktopStore()
-    desktop.desktopState.userConfig = {
-      ...desktop.desktopState.userConfig,
-      editor: { history: { storage: 'off' } },
-    } as any
+    const { editor } = desktop.backend.userConfig
+    desktop.setUserConfig({
+      editor: { ...editor, history: { ...editor.history, storage: 'off' } },
+    })
 
     const wrapper = mount(HistoryView, {
       global: {
