@@ -107,13 +107,13 @@
   --color-accent-content: oklch(100% 0 0);
   --color-neutral: oklch(0% 0 0);
   --color-neutral-content: oklch(100% 0 0);
-  --color-info: oklch(38% 0.12 245);
+  --color-info: oklch(30% 0.12 245);
   --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(38% 0.1 155);
+  --color-success: oklch(28% 0.1 155);
   --color-success-content: oklch(100% 0 0);
-  --color-warning: oklch(42% 0.1 75);
+  --color-warning: oklch(28% 0.1 75);
   --color-warning-content: oklch(100% 0 0);
-  --color-error: oklch(40% 0.16 25);
+  --color-error: oklch(25% 0.16 25);
   --color-error-content: oklch(100% 0 0);
 }
 

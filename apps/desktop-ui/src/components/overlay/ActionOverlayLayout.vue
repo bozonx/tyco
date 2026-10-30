@@ -145,6 +145,11 @@ const { escLabel, handleEsc } = useOverlayNav(() => ({
   background-color: var(--app-hover);
 }
 
+.action-overlay-esc:focus-visible {
+  outline: var(--app-focus-outline-width) solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .action-overlay-preview-box {
   position: relative;
   display: flex;

@@ -66,6 +66,11 @@ const emit = defineEmits<{ (e: 'click'): void }>()
   border-color: var(--app-border-subtle);
 }
 
+.shortcut:focus-visible {
+  outline: var(--app-focus-outline-width) solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .shortcut:disabled {
   cursor: not-allowed;
   color: var(--app-text-faint);

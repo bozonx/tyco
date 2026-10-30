@@ -43,4 +43,28 @@ describe('reduced motion at mount', () => {
     expect(request).not.toHaveBeenCalled()
     wrapper.unmount()
   })
+
+  it('switches to a static uniform level and stops pulsing when data-motion="reduce" is active', async () => {
+    document.documentElement.setAttribute('data-motion', 'reduce')
+    const request = vi.spyOn(window, 'requestAnimationFrame')
+    const wrapper = mount(AudioWaveform, {
+      props: { level: 0.5, peak: 0.5 },
+      global: { plugins: [i18n] },
+    })
+
+    expect(request).not.toHaveBeenCalled()
+    const mic = wrapper.find('.mic-icon')
+    expect(mic.classes()).not.toContain('animate-pulse')
+
+    const bars = wrapper.findAll('.waveform-bar')
+    expect(bars.length).toBe(32)
+    // All bars in static mode share the same uniform height
+    const firstHeight = (bars[0].element as HTMLElement).style.height
+    expect(
+      bars.every((b) => (b.element as HTMLElement).style.height === firstHeight)
+    ).toBe(true)
+
+    document.documentElement.removeAttribute('data-motion')
+    wrapper.unmount()
+  })
 })

@@ -67,4 +67,15 @@ describe('LiveTranscript', () => {
     expect(wrapper.text()).toContain('in progress')
     expect(wrapper.text()).toContain('After')
   })
+
+  it('exposes a polite live region for screen readers', () => {
+    const wrapper = mount(LiveTranscript, {
+      props: { committed: 'testing', draft: '' },
+    })
+
+    const root = wrapper.find('.live-transcript')
+    expect(root.attributes('role')).toBe('status')
+    expect(root.attributes('aria-live')).toBe('polite')
+    expect(root.attributes('aria-atomic')).toBe('false')
+  })
 })

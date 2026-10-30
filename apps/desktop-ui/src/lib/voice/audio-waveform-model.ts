@@ -73,5 +73,29 @@ export function createAudioWaveformModel() {
     heights = newHeights
     return { heights: newHeights, opacities: newOpacities }
   }
-  return { step }
+
+  function staticFrame(input: {
+    level: number
+    peak?: number
+    isCompact: boolean
+  }) {
+    const currentLevel = Math.max(0, Math.min(1, input.level))
+    const currentPeak = Math.max(0, Math.min(1, input.peak ?? 0))
+    const effectiveLevel = Math.max(currentLevel * 1.5, currentPeak * 0.8)
+    const maxBarHeight = input.isCompact
+      ? COMPACT_MAX_BAR_HEIGHT_PX
+      : MAX_BAR_HEIGHT_PX
+
+    const height = Math.round(
+      MIN_BAR_HEIGHT_PX +
+        Math.min(1, effectiveLevel) * (maxBarHeight - MIN_BAR_HEIGHT_PX)
+    )
+    const opacity = effectiveLevel > 0.03 ? 0.8 : 0.4
+    return {
+      heights: new Array<number>(BAR_COUNT).fill(height),
+      opacities: new Array<number>(BAR_COUNT).fill(opacity),
+    }
+  }
+
+  return { step, staticFrame }
 }

@@ -6,6 +6,7 @@
     auto-resize
     :max-auto-height="maxHeight"
     :placeholder="t('input.textPlaceholder')"
+    :aria-label="t('input.textPlaceholder')"
     :model-value="quickInputStore.value"
     @update:model-value="handleInput"
   />

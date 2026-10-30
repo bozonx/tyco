@@ -107,12 +107,12 @@
   /* Both text levels keep at least 4.5:1 (WCAG AA) on every base surface */
   --app-text-muted: color-mix(
     in oklab,
-    var(--color-base-content) 72%,
+    var(--color-base-content) 82%,
     transparent
   );
   --app-text-faint: color-mix(
     in oklab,
-    var(--color-base-content) 62%,
+    var(--color-base-content) 70%,
     transparent
   );
   --app-accent-soft: color-mix(in oklab, var(--color-primary) 12%, transparent);

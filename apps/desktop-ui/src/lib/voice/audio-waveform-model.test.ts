@@ -29,4 +29,13 @@ describe('audio waveform model', () => {
         .heights
     )
   })
+  it('computes static frame with uniform bar heights for reduced motion', () => {
+    const model = createAudioWaveformModel()
+    const frame = model.staticFrame({ level: 0.5, peak: 0.5, isCompact: true })
+    expect(frame.heights).toHaveLength(32)
+    const firstHeight = frame.heights[0]
+    expect(frame.heights.every((h) => h === firstHeight)).toBe(true)
+    expect(firstHeight).toBeGreaterThan(4)
+    expect(frame.opacities.every((o) => o === 0.8)).toBe(true)
+  })
 })

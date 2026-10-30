@@ -1,5 +1,11 @@
 <template>
-  <div ref="container" class="live-transcript selectable">
+  <div
+    ref="container"
+    class="live-transcript selectable"
+    role="status"
+    aria-live="polite"
+    aria-atomic="false"
+  >
     <Transition name="fade" mode="out-in">
       <div v-if="!hasContent && !hasPrefix" class="live-transcript-placeholder">
         <span class="placeholder-text">{{

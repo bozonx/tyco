@@ -23,7 +23,11 @@
 
       <div class="waveform-meta">
         <div class="waveform-status">
-          <AppIcon icon="mdi:microphone" class="mic-icon animate-pulse" />
+          <AppIcon
+            icon="mdi:microphone"
+            class="mic-icon"
+            :class="{ 'animate-pulse': !isReducedMotion }"
+          />
           <span>{{ t('menu.listening') }}</span>
         </div>
         <div class="waveform-timer">{{ formattedDuration }}</div>
@@ -56,16 +60,45 @@ const props = withDefaults(
 
 const { t } = useI18n()
 
+let motionQuery: MediaQueryList | undefined
+let mutationObserver: MutationObserver | undefined
+
+function checkReducedMotion(): boolean {
+  if (
+    typeof document !== 'undefined' &&
+    document.documentElement.getAttribute('data-motion') === 'reduce'
+  ) {
+    return true
+  }
+  return motionQuery?.matches ?? false
+}
+
+const isReducedMotion = ref(checkReducedMotion())
+let animationFrameId: number | null = null
+
 const model = createAudioWaveformModel()
-const initial = model.step({ level: 0, peak: 0, isCompact: props.compact })
+const initial = isReducedMotion.value
+  ? model.staticFrame({
+      level: props.level,
+      peak: props.peak,
+      isCompact: props.compact,
+    })
+  : model.step({ level: 0, peak: 0, isCompact: props.compact })
 const barHeights = ref(initial.heights)
 const barOpacities = ref(initial.opacities)
 const formattedDuration = computed(() =>
   formatWaveformDuration(props.durationMs)
 )
-const isReducedMotion = ref(false)
-let animationFrameId: number | null = null
-let motionQuery: MediaQueryList | undefined
+
+function applyStaticLevel() {
+  const frame = model.staticFrame({
+    level: props.level,
+    peak: props.peak,
+    isCompact: props.compact,
+  })
+  barHeights.value = frame.heights
+  barOpacities.value = frame.opacities
+}
 
 function updateAnimation() {
   animationFrameId = null
@@ -83,23 +116,53 @@ function updateAnimation() {
 function syncAnimation() {
   if (animationFrameId !== null) cancelAnimationFrame(animationFrameId)
   animationFrameId = null
-  if (!props.isTranscribing && !isReducedMotion.value)
+  if (isReducedMotion.value) {
+    applyStaticLevel()
+  } else if (!props.isTranscribing) {
     animationFrameId = requestAnimationFrame(updateAnimation)
+  }
 }
 
 function syncMotionPreference() {
-  isReducedMotion.value = motionQuery?.matches ?? false
+  isReducedMotion.value = checkReducedMotion()
   syncAnimation()
 }
 
+watch(
+  () => [props.level, props.peak, props.compact],
+  () => {
+    if (isReducedMotion.value && !props.isTranscribing) {
+      applyStaticLevel()
+    }
+  }
+)
+
 watch(() => props.isTranscribing, syncAnimation)
 onMounted(() => {
-  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-  motionQuery.addEventListener('change', syncMotionPreference)
+  motionQuery =
+    typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)')
+      : undefined
+  motionQuery?.addEventListener?.('change', syncMotionPreference)
+
+  if (
+    typeof MutationObserver !== 'undefined' &&
+    typeof document !== 'undefined'
+  ) {
+    mutationObserver = new MutationObserver(() => {
+      syncMotionPreference()
+    })
+    mutationObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-motion'],
+    })
+  }
+
   syncMotionPreference()
 })
 onUnmounted(() => {
-  motionQuery?.removeEventListener('change', syncMotionPreference)
+  motionQuery?.removeEventListener?.('change', syncMotionPreference)
+  mutationObserver?.disconnect()
   if (animationFrameId !== null) cancelAnimationFrame(animationFrameId)
 })
 </script>
@@ -254,5 +317,13 @@ onUnmounted(() => {
   .mic-icon {
     animation: none;
   }
+}
+
+:global([data-motion='reduce']) .waveform-bar {
+  transition: none;
+}
+
+:global([data-motion='reduce']) .mic-icon {
+  animation: none !important;
 }
 </style>

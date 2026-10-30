@@ -57,6 +57,7 @@
       type="file"
       multiple
       class="hidden"
+      :aria-label="t('chat.addFile')"
       @change="pickFiles"
     />
 
