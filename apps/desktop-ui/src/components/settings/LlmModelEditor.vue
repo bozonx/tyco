@@ -103,6 +103,7 @@
       </FieldRow>
       <FieldRow
         :label="t('settings.maxTokens')"
+        :info="t('settings.maxTokensHint')"
         :error="
           numberErrors[`${model.id}:maxOutputTokens`]
             ? t('settings.numberTokensInvalid')
@@ -126,6 +127,7 @@
       </FieldRow>
       <FieldRow
         :label="t('settings.contextSize')"
+        :info="t('settings.contextSizeHint')"
         :error="
           numberErrors[`${model.id}:contextWindowTokens`]
             ? t('settings.numberTokensInvalid')
