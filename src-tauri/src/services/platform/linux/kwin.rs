@@ -3,6 +3,7 @@
 //! can do both: a long-lived tracker script reports every window activation
 //! back to Tyco over D-Bus, and a one-shot script activates a window by its id.
 
+use crate::locks::MutexExt;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -261,7 +262,7 @@ pub fn activate_window(id: &str) -> Result<(), AppError> {
             "Invalid KWin window id: {id}"
         )));
     }
-    let _activation = ACTIVATION.lock().unwrap_or_else(|error| error.into_inner());
+    let _activation = ACTIVATION.locked();
     tracker().forget_missing();
     run_script(
         ACTIVATOR_SCRIPT_NAME,
@@ -279,7 +280,7 @@ pub fn activate_window(id: &str) -> Result<(), AppError> {
 /// Moves Tyco's normal window to the active desktop and focuses it.
 pub fn activate_own_window(own_class: &str) -> Result<(), AppError> {
     static ACTIVATION: Mutex<()> = Mutex::new(());
-    let _activation = ACTIVATION.lock().unwrap_or_else(|error| error.into_inner());
+    let _activation = ACTIVATION.locked();
     let own_class = own_class.to_ascii_lowercase();
     let source = OWN_ACTIVATOR_SCRIPT
         .replace("__PID__", &std::process::id().to_string())

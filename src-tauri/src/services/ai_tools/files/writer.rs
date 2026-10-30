@@ -4,8 +4,7 @@ use super::scoped_io;
 
 use super::reader::read_existing_text;
 use super::{
-    invalid, Access, AiFileChangePreview, AiFileToolOutput, AiFileToolRequest, ProfileFiles,
-    MAX_WRITE_BYTES,
+    Access, AiFileChangePreview, AiFileToolOutput, AiFileToolRequest, ProfileFiles, MAX_WRITE_BYTES,
 };
 use crate::errors::AppError;
 
@@ -18,11 +17,11 @@ impl ProfileFiles {
         ensure_write_size(content.len())?;
         let target = self.resolve(path, Access::Write, true)?;
         if target.is_root() {
-            return Err(invalid(format!("{path} is a folder")));
+            return Err(AppError::invalid_input(format!("{path} is a folder")));
         }
         let is_created = match target.directory.metadata(target.relative_path()) {
             Ok(metadata) if metadata.is_dir() => {
-                return Err(invalid(format!("{path} is a folder")))
+                return Err(AppError::invalid_input(format!("{path} is a folder")))
             }
             Ok(_) => false,
             Err(error) if error.kind() == io::ErrorKind::NotFound => true,
@@ -59,16 +58,18 @@ impl ProfileFiles {
         let source = self.resolve(from, Access::Write, false)?;
         let destination = self.resolve(to, Access::Write, false)?;
         if source.is_root() || destination.is_root() {
-            return Err(invalid("A root folder cannot be moved"));
+            return Err(AppError::invalid_input("A root folder cannot be moved"));
         }
         let (source_parent, source_name) = source.parent(false)?;
         let meta = source_parent.symlink_metadata(source_name)?;
         if meta.is_dir() && destination.path.starts_with(&source.path) {
-            return Err(invalid("A folder cannot be moved into itself"));
+            return Err(AppError::invalid_input(
+                "A folder cannot be moved into itself",
+            ));
         }
         let (destination_parent, destination_name) = destination.parent(true)?;
         match destination_parent.symlink_metadata(destination_name) {
-            Ok(_) => return Err(invalid(format!("{to} already exists"))),
+            Ok(_) => return Err(AppError::invalid_input(format!("{to} already exists"))),
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error.into()),
         }
@@ -101,7 +102,7 @@ impl ProfileFiles {
                 ensure_write_size(content.len())?;
                 let target = self.resolve(&path, Access::Write, true)?;
                 if target.is_root() {
-                    return Err(invalid(format!("{path} is a folder")));
+                    return Err(AppError::invalid_input(format!("{path} is a folder")));
                 }
                 let before = match target.directory.metadata(target.relative_path()) {
                     Ok(_) => Some(read_existing_text(&target, &path)?),
@@ -129,7 +130,9 @@ impl ProfileFiles {
                     after,
                 })
             }
-            _ => Err(invalid("Only a write or an edit has a preview")),
+            _ => Err(AppError::invalid_input(
+                "Only a write or an edit has a preview",
+            )),
         }
     }
 }
@@ -143,7 +146,7 @@ pub(in crate::services::ai_tools) fn apply_edit(
     replace_all: bool,
 ) -> Result<(String, usize), AppError> {
     if old_text.is_empty() {
-        return Err(invalid(
+        return Err(AppError::invalid_input(
             "old_text is empty: write the whole file with write_file instead",
         ));
     }
@@ -165,12 +168,12 @@ pub(in crate::services::ai_tools) fn apply_edit(
         ensure_write_size(result_bytes)?;
     }
     match count {
-        0 => Err(invalid(
+        0 => Err(AppError::invalid_input(
             "old_text was not found in the file: read it again and copy the text exactly",
         )),
         1 => Ok((text.replacen(old_text.as_str(), &new_text, 1), 1)),
         _ if replace_all => Ok((text.replace(old_text.as_str(), &new_text), count)),
-        _ => Err(invalid(format!(
+        _ => Err(AppError::invalid_input(format!(
             "old_text was found {count} times: add surrounding text to make it unique, or set replaceAll"
         ))),
     }

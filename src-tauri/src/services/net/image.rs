@@ -45,8 +45,7 @@ fn validate_request(request: &FetchRequest) -> Result<PreparedRequest, AppError>
             "Image requests must be credential-free GET requests".into(),
         ));
     }
-    let prepared = prepare(Protocol::Http, &request.url, &[], &Secrets::new())
-        .map_err(AppError::InvalidInput)?;
+    let prepared = prepare(Protocol::Http, &request.url, &[], &Secrets::new())?;
     if !prepared.url.username().is_empty()
         || prepared.url.password().is_some()
         || !matches!(prepared.url.port_or_known_default(), Some(80 | 443))

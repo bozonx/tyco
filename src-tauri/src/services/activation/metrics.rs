@@ -1,4 +1,4 @@
-use crate::locks::MutexExt;
+use crate::locks::{CondvarExt, MutexExt};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -127,12 +127,11 @@ impl ActivationMetrics {
 
     fn wait_for_result(&self, id: u64) -> Option<ActivationTrial> {
         let trials = self.trials.locked();
-        let (trials, _) = self
-            .result_ready
-            .wait_timeout_while(trials, Duration::from_secs(2), |trials| {
-                trials.get(&id).is_none_or(|trial| !trial.result_submitted)
-            })
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let (trials, _) =
+            self.result_ready
+                .wait_timeout_while_locked(trials, Duration::from_secs(2), |trials| {
+                    trials.get(&id).is_none_or(|trial| !trial.result_submitted)
+                });
         trials.get(&id).cloned()
     }
 

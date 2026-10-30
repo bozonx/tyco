@@ -20,6 +20,7 @@ use serde_json::Value;
 use super::binary_paths::default_binary_path;
 use super::remote_desktop::{self, KeyEvent, PortalState};
 use crate::errors::AppError;
+use crate::models::user_config::{self, LinuxInsertionConfig, PasteShortcut};
 use crate::services::platform::session::{self, DisplayServer};
 use crate::services::platform::text_injector::{
     KeySender, KeysState, TargetTracking, TextInsertionProblem, TextInsertionStatus,
@@ -36,40 +37,7 @@ const YDOTOOL: &str = "ydotool";
 /// names instead.
 const YDOTOOL_KEYCODE_SYNTAX: &str = "<keycode>:<pressed>";
 
-/// The key combination that makes the target window paste. Ctrl+V is bound
-/// to a key position, so it breaks on layouts like Dvorak and in terminals.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum PasteShortcut {
-    CtrlV,
-    CtrlShiftV,
-    ShiftInsert,
-}
-
 impl PasteShortcut {
-    /// Reads `windowInsertion.linux.pasteShortcut`.
-    fn from_config(linux: Option<&Value>) -> Self {
-        match linux
-            .and_then(|value| value.get("pasteShortcut"))
-            .and_then(Value::as_str)
-        {
-            Some("Ctrl+Shift+V") => Self::CtrlShiftV,
-            Some("Shift+Insert") => Self::ShiftInsert,
-            _ => Self::CtrlV,
-        }
-    }
-
-    fn for_target(linux: Option<&Value>, terminal: bool) -> Self {
-        if !terminal {
-            return Self::from_config(linux);
-        }
-        match linux.and_then(|value| value.get("terminalPasteShortcut")) {
-            Some(Value::Null) => Self::from_config(linux),
-            Some(Value::String(value)) if value == "Ctrl+V" => Self::CtrlV,
-            Some(Value::String(value)) if value == "Shift+Insert" => Self::ShiftInsert,
-            _ => Self::CtrlShiftV,
-        }
-    }
-
     fn paste_keys(self) -> &'static [u16] {
         match self {
             Self::CtrlV => &[KEY_LEFT_CTRL, KEY_V],
@@ -90,14 +58,14 @@ impl PasteShortcut {
 }
 
 fn focused_shortcut(
-    linux: Option<&Value>,
+    linux: &LinuxInsertionConfig,
     action: FocusedKeyAction,
     terminal: bool,
 ) -> PasteShortcut {
     if terminal && action == FocusedKeyAction::Copy {
         PasteShortcut::CtrlShiftV
     } else {
-        PasteShortcut::for_target(linux, terminal)
+        linux.paste_shortcut_for(terminal)
     }
 }
 
@@ -190,7 +158,7 @@ impl SystemTextInjector {
         target_window_id: Option<&str>,
     ) -> Result<(), AppError> {
         self.ensure_supported()?;
-        let linux = linux_settings(user_config.get("windowInsertion"));
+        let linux = user_config::linux_insertion(user_config);
         let terminal = match (self.session, target_window_id) {
             (_, None) => {
                 if tracker().is_running() {
@@ -215,7 +183,7 @@ impl SystemTextInjector {
                 })
             }
         };
-        let shortcut = PasteShortcut::for_target(linux, terminal);
+        let shortcut = linux.paste_shortcut_for(terminal);
         send_keys(combo_events(shortcut.paste_keys()))
     }
 
@@ -229,8 +197,8 @@ impl SystemTextInjector {
         terminal: bool,
     ) -> Result<(), AppError> {
         self.ensure_supported()?;
-        let linux = linux_settings(user_config.get("windowInsertion"));
-        let shortcut = focused_shortcut(linux, action, terminal);
+        let linux = user_config::linux_insertion(user_config);
+        let shortcut = focused_shortcut(&linux, action, terminal);
         send_keys(combo_events(action.keys(shortcut)))
     }
 
@@ -441,11 +409,6 @@ fn run_ydotool(binary: &str, socket: &PathBuf, events: &[KeyEvent]) -> Result<()
     }
 }
 
-/// The Linux part of `windowInsertion`.
-fn linux_settings(insertion: Option<&Value>) -> Option<&Value> {
-    insertion.and_then(|value| value.get("linux"))
-}
-
 fn wait_with_timeout(
     mut child: Child,
     binary: &str,
@@ -563,53 +526,22 @@ mod tests {
     }
 
     #[test]
-    fn terminal_paste_is_explicit_and_does_not_change_copy_keys() {
-        for (setting, expected) in [
-            (json!("Ctrl+V"), PasteShortcut::CtrlV),
-            (json!("Ctrl+Shift+V"), PasteShortcut::CtrlShiftV),
-            (json!("Shift+Insert"), PasteShortcut::ShiftInsert),
-            (Value::Null, PasteShortcut::ShiftInsert),
-            (json!("invalid"), PasteShortcut::CtrlShiftV),
-        ] {
-            let config = json!({
-                "pasteShortcut": "Shift+Insert",
-                "terminalPasteShortcut": setting,
-            });
-            assert_eq!(PasteShortcut::for_target(Some(&config), true), expected);
-            assert_eq!(
-                focused_shortcut(Some(&config), FocusedKeyAction::Paste, true),
-                expected
-            );
-            assert_eq!(
-                PasteShortcut::for_target(Some(&config), false),
-                PasteShortcut::ShiftInsert
-            );
-            assert_eq!(
-                focused_shortcut(Some(&config), FocusedKeyAction::Copy, true),
-                PasteShortcut::CtrlShiftV
-            );
-        }
+    fn terminal_copy_keys_ignore_the_paste_setting() {
+        let linux = user_config::linux_insertion(&json!({"windowInsertion": {"linux": {
+            "pasteShortcut": "Shift+Insert",
+            "terminalPasteShortcut": "Ctrl+V",
+        }}}));
         assert_eq!(
-            PasteShortcut::for_target(None, true),
-            PasteShortcut::CtrlShiftV
-        );
-    }
-
-    #[test]
-    fn paste_shortcut_comes_from_the_config() {
-        let shortcut = |value: Value| PasteShortcut::from_config(Some(&value));
-        assert_eq!(shortcut(json!({})), PasteShortcut::CtrlV);
-        assert_eq!(
-            shortcut(json!({ "pasteShortcut": "bogus" })),
+            focused_shortcut(&linux, FocusedKeyAction::Paste, true),
             PasteShortcut::CtrlV
         );
         assert_eq!(
-            shortcut(json!({ "pasteShortcut": "Ctrl+Shift+V" })),
-            PasteShortcut::CtrlShiftV
+            focused_shortcut(&linux, FocusedKeyAction::Paste, false),
+            PasteShortcut::ShiftInsert
         );
         assert_eq!(
-            shortcut(json!({ "pasteShortcut": "Shift+Insert" })),
-            PasteShortcut::ShiftInsert
+            focused_shortcut(&linux, FocusedKeyAction::Copy, true),
+            PasteShortcut::CtrlShiftV
         );
     }
 

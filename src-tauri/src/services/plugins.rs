@@ -364,21 +364,16 @@ pub fn approved_note_roots(
     {
         roots.push(root.to_owned());
     }
-    if let Some(commands) = config["commands"].as_array() {
-        let prefix = format!("{id}.");
-        for command in commands {
-            if command["isEnabled"].as_bool() == Some(true)
-                && command["toolId"]
-                    .as_str()
-                    .is_some_and(|tool| tool.starts_with(&prefix))
-            {
-                if let Some(root) = command["toolConfig"][field]
-                    .as_str()
-                    .filter(|root| !root.trim().is_empty())
-                {
-                    roots.push(root.to_owned());
-                }
-            }
+    let prefix = format!("{id}.");
+    for command in crate::models::user_config::commands(config) {
+        if !command.is_enabled || !command.tool_id.starts_with(&prefix) {
+            continue;
+        }
+        if let Some(root) = command.tool_config[field]
+            .as_str()
+            .filter(|root| !root.trim().is_empty())
+        {
+            roots.push(root.to_owned());
         }
     }
     if roots.is_empty() {

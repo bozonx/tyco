@@ -1,8 +1,9 @@
 //! Storage modes, retention limits, and secret sanitization.
 use super::DEFAULT_EDITOR_HISTORY_LIMIT;
+use crate::models::user_config::{self, HistoryStorage};
 use crate::models::EditorHistoryItem;
 use crate::services::secrets::detector::redact_secrets;
-use crate::services::storage::{history_limit, DAY_MS};
+use crate::services::storage::DAY_MS;
 use serde_json::Value;
 
 /// Where the editor history lives.
@@ -15,16 +16,12 @@ pub enum EditorHistoryStorageMode {
     Disk,
 }
 
-impl EditorHistoryStorageMode {
-    /// The saved storage; `disk`, the default, when it is missing.
-    pub fn from_config(user_config: &Value) -> Self {
-        match user_config
-            .pointer("/editor/history/storage")
-            .and_then(Value::as_str)
-        {
-            Some("off") => Self::Off,
-            Some("session") => Self::Session,
-            _ => Self::Disk,
+impl From<HistoryStorage> for EditorHistoryStorageMode {
+    fn from(storage: HistoryStorage) -> Self {
+        match storage {
+            HistoryStorage::Off => Self::Off,
+            HistoryStorage::Session => Self::Session,
+            HistoryStorage::Disk => Self::Disk,
         }
     }
 }
@@ -46,36 +43,19 @@ pub struct EditorHistoryPolicy {
 
 impl EditorHistoryPolicy {
     pub fn from_config(user_config: &Value) -> Self {
-        let flag = |key: &str| {
-            user_config["editor"]["history"]
-                .get(key)
-                .and_then(Value::as_bool)
-                .unwrap_or(false)
-        };
-
-        let storage = EditorHistoryStorageMode::from_config(user_config);
+        let history = user_config::editor_history(user_config);
+        let storage = EditorHistoryStorageMode::from(history.storage);
         let on_disk = storage == EditorHistoryStorageMode::Disk;
 
         Self {
             max_entries: if storage == EditorHistoryStorageMode::Off {
                 0
             } else {
-                history_limit(
-                    &user_config["editor"]["history"],
-                    "maxItems",
-                    DEFAULT_EDITOR_HISTORY_LIMIT,
-                )
+                history.max_items.unwrap_or(DEFAULT_EDITOR_HISTORY_LIMIT)
             },
             is_memory_only: storage == EditorHistoryStorageMode::Session,
-            retention_days: if on_disk {
-                user_config
-                    .pointer("/editor/history/retentionDays")
-                    .and_then(Value::as_u64)
-                    .unwrap_or(0)
-            } else {
-                0
-            },
-            should_redact_secrets: on_disk && flag("isSecretSanitizingEnabled"),
+            retention_days: if on_disk { history.retention_days } else { 0 },
+            should_redact_secrets: on_disk && history.is_secret_sanitizing_enabled,
         }
     }
 

@@ -3,8 +3,7 @@ use std::path::Path;
 
 use super::sandbox::Resolved;
 use super::{
-    invalid, Access, AiFileToolOutput, DirEntry, EntryKind, ProfileFiles, MAX_READ_BYTES,
-    MAX_WRITE_BYTES,
+    Access, AiFileToolOutput, DirEntry, EntryKind, ProfileFiles, MAX_READ_BYTES, MAX_WRITE_BYTES,
 };
 use crate::errors::AppError;
 use crate::services::ai_tools::file_search;
@@ -43,7 +42,7 @@ impl ProfileFiles {
         }
         let target = self.resolve(path, Access::Read, true)?;
         if !target.path.is_dir() {
-            return Err(invalid(format!("{path} is not a folder")));
+            return Err(AppError::invalid_input(format!("{path} is not a folder")));
         }
         let (entries, is_truncated) = file_search::list(&target, depth, pattern)?;
         Ok(AiFileToolOutput::ListDir {
@@ -71,7 +70,7 @@ impl ProfileFiles {
         let target = self.resolve(path, Access::Read, true)?;
         let meta = target.directory.metadata(target.relative_path())?;
         if meta.is_dir() {
-            return Err(invalid(format!(
+            return Err(AppError::invalid_input(format!(
                 "{path} is a folder: list it with list_dir"
             )));
         }
@@ -120,7 +119,7 @@ fn document_media_type(path: &Path) -> Option<&'static str> {
 fn read_text(target: &Resolved<'_>, shown: &str, max_bytes: u64) -> Result<String, AppError> {
     let bytes = read_scoped_bytes(target, shown, max_bytes)?;
     if bytes[..bytes.len().min(BINARY_PROBE_BYTES)].contains(&0) {
-        return Err(invalid(format!("{shown} is a binary file")));
+        return Err(AppError::invalid_input(format!("{shown} is a binary file")));
     }
     let text = match String::from_utf8(bytes) {
         Ok(text) => text,
@@ -135,12 +134,13 @@ fn read_text(target: &Resolved<'_>, shown: &str, max_bytes: u64) -> Result<Strin
 pub(super) fn read_existing_text(target: &Resolved<'_>, shown: &str) -> Result<String, AppError> {
     let bytes = read_scoped_bytes(target, shown, MAX_WRITE_BYTES as u64)?;
     if bytes.contains(&0) {
-        return Err(invalid(format!("{shown} is a binary file")));
+        return Err(AppError::invalid_input(format!("{shown} is a binary file")));
     }
     // Editing must never replace undecodable bytes elsewhere in the file.
     // Keep a UTF-8 BOM so that an unrelated edit preserves the encoding marker.
-    String::from_utf8(bytes)
-        .map_err(|_| invalid(format!("{shown} is not UTF-8 and cannot be edited safely")))
+    String::from_utf8(bytes).map_err(|_| {
+        AppError::invalid_input(format!("{shown} is not UTF-8 and cannot be edited safely"))
+    })
 }
 
 /// Bound the actual read as well as metadata: another writer may grow the file.
@@ -155,7 +155,7 @@ fn read_scoped_bytes(
     )?;
     let metadata = file.metadata()?;
     if !metadata.is_file() {
-        return Err(invalid(format!("{shown} is not a file")));
+        return Err(AppError::invalid_input(format!("{shown} is not a file")));
     }
     let too_large = || AppError::ResourceLimit(format!("{shown} is too large to read or edit"));
     if metadata.len() > max_bytes {
@@ -198,7 +198,9 @@ pub(in crate::services::ai_tools) fn page_lines_from(
     character_offset: usize,
 ) -> Result<LinePage, AppError> {
     if max_characters == 0 {
-        return Err(invalid("maxCharacters must be greater than zero"));
+        return Err(AppError::invalid_input(
+            "maxCharacters must be greater than zero",
+        ));
     }
     let lines: Vec<&str> = text.split_inclusive('\n').collect();
     let total_lines = lines.len();
@@ -214,12 +216,14 @@ pub(in crate::services::ai_tools) fn page_lines_from(
         });
     }
     if start >= total_lines {
-        return Err(invalid(format!(
+        return Err(AppError::invalid_input(format!(
             "Offset {offset} is past the end: the file has {total_lines} lines"
         )));
     }
     if character_offset > 0 && character_offset >= lines[start].chars().count() {
-        return Err(invalid("characterOffset is past the end of the line"));
+        return Err(AppError::invalid_input(
+            "characterOffset is past the end of the line",
+        ));
     }
     let mut next_character_offset = None;
     let mut content = String::new();

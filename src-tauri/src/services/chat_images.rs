@@ -29,10 +29,6 @@ use crate::desktop_contract::MAX_CHAT_IMAGE_PIXELS as MAX_PIXELS;
 const WEBP_QUALITIES: [f32; 4] = [85.0, 75.0, 60.0, 45.0];
 const FORMATS: [(&str, &str); 1] = [("webp", "image/webp")];
 
-fn invalid(message: &str) -> AppError {
-    AppError::InvalidInput(message.into())
-}
-
 pub fn validate_id(id: &str) -> Result<(), AppError> {
     if id.len() != 64
         || !id
@@ -71,22 +67,24 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
     });
     let mut reader = decoder
         .read_info()
-        .map_err(|_| invalid("Invalid PNG image"))?;
+        .map_err(|_| AppError::invalid_input("Invalid PNG image"))?;
     let info = reader.info();
     if !within_limits(info.width, info.height)
         || info.animation_control.is_some()
         || info.bit_depth != png::BitDepth::Eight
         || !matches!(info.color_type, png::ColorType::Rgb | png::ColorType::Rgba)
     {
-        return Err(invalid("Unsupported image dimensions or format"));
+        return Err(AppError::invalid_input(
+            "Unsupported image dimensions or format",
+        ));
     }
     let buffer_size = reader
         .output_buffer_size()
-        .ok_or_else(|| invalid("Unsupported image dimensions or format"))?;
+        .ok_or_else(|| AppError::invalid_input("Unsupported image dimensions or format"))?;
     let mut pixels = vec![0; buffer_size];
     let output = reader
         .next_frame(&mut pixels)
-        .map_err(|_| invalid("Invalid PNG pixels"))?;
+        .map_err(|_| AppError::invalid_input("Invalid PNG pixels"))?;
     let pixels = &pixels[..output.buffer_size()];
     let encoder = if output.color_type == png::ColorType::Rgba {
         webp::Encoder::from_rgba(pixels, output.width, output.height)
@@ -96,7 +94,7 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
     for quality in WEBP_QUALITIES {
         let encoded = encoder
             .encode_simple(false, quality)
-            .map_err(|_| invalid("WebP encoding failed"))?;
+            .map_err(|_| AppError::invalid_input("WebP encoding failed"))?;
         if encoded.len() > MAX_IMAGE_BYTES {
             continue;
         }
@@ -116,14 +114,14 @@ fn normalize(bytes: &[u8], name: Option<String>) -> Result<(ChatImage, Vec<u8>),
 /// Dimensions from the header: stored bytes are already normalized and are
 /// verified by their hash, so they are never re-encoded.
 fn stored_dimensions(bytes: &[u8]) -> Result<(u32, u32), AppError> {
-    let features =
-        webp::BitstreamFeatures::new(bytes).ok_or_else(|| invalid("Invalid WebP image"))?;
+    let features = webp::BitstreamFeatures::new(bytes)
+        .ok_or_else(|| AppError::invalid_input("Invalid WebP image"))?;
     if features.has_animation() {
-        return Err(invalid("Animated images are not supported"));
+        return Err(AppError::invalid_input("Animated images are not supported"));
     }
     let (width, height) = (features.width(), features.height());
     if !within_limits(width, height) {
-        return Err(invalid("Unsupported image dimensions"));
+        return Err(AppError::invalid_input("Unsupported image dimensions"));
     }
     Ok((width, height))
 }

@@ -1,3 +1,4 @@
+use crate::locks::MutexExt;
 use std::sync::Mutex;
 
 use tauri::{AppHandle, Manager};
@@ -277,8 +278,7 @@ async fn ensure_sent_by_kwin(
     };
     let is_cached_owner = |owner: &Mutex<Option<OwnedUniqueName>>| {
         owner
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+            .locked()
             .as_ref()
             .is_some_and(|owner| owner.as_ref() == *sender)
     };
@@ -290,7 +290,7 @@ async fn ensure_sent_by_kwin(
         .get_name_owner(BusName::from_static_str(KWIN_SERVICE).map_err(zbus::Error::from)?)
         .await?;
     let is_kwin = owner.as_ref() == *sender;
-    *KWIN_OWNER.lock().unwrap_or_else(|error| error.into_inner()) = Some(owner);
+    *KWIN_OWNER.locked() = Some(owner);
     if is_kwin {
         Ok(())
     } else {

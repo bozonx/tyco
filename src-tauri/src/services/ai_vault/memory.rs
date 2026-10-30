@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{LazyLock, RwLock};
+use std::sync::RwLock;
 
 use super::operations::{existing_profile_dir, validate_id};
 use super::types::{ProfileMemoryChange, ProfileMemorySearchResult, ProfileMemoryTopic};
 use crate::errors::AppError;
+use crate::locks::RwLockExt;
 use crate::services::atomic_file::{create_private_dir, write_private};
 
 pub const PROFILE_MEMORY_DIR: &str = "memory";
@@ -20,42 +21,49 @@ pub const MAX_MEMORY_FILE_BYTES: usize = 64 * 1024;
 pub const MAX_MEMORY_TOPIC_FILES: usize = 50;
 pub const MAX_MEMORY_SEARCH_RESULTS: usize = 100;
 
-static LAST_READ_VERSIONS: LazyLock<RwLock<HashMap<(String, String), String>>> =
-    LazyLock::new(Default::default);
+/// The hash of each memory file as the AI last read it, per profile, so that
+/// a write based on a stale read is refused. Managed by Tauri.
+#[derive(Default)]
+pub struct MemoryReadVersions(RwLock<HashMap<(String, String), String>>);
+
+impl MemoryReadVersions {
+    fn key(profile_id: &str, file: &str) -> (String, String) {
+        (profile_id.to_owned(), file.to_owned())
+    }
+
+    fn record(&self, profile_id: &str, file: &str, content: &str) {
+        self.0
+            .write_locked()
+            .insert(Self::key(profile_id, file), hash_content(content));
+    }
+
+    fn forget(&self, profile_id: &str, file: &str) {
+        self.0.write_locked().remove(&Self::key(profile_id, file));
+    }
+
+    pub fn clear_profile(&self, profile_id: &str) {
+        self.0
+            .write_locked()
+            .retain(|(profile, _), _| profile != profile_id);
+    }
+
+    /// Fails when the file on disk differs from the version last read.
+    fn check(&self, profile_id: &str, file: &str, disk_content: &str) -> Result<(), AppError> {
+        let versions = self.0.read_locked();
+        match versions.get(&Self::key(profile_id, file)) {
+            Some(last_hash) if *last_hash != hash_content(disk_content) => {
+                Err(AppError::InvalidInput(
+                    "The memory file was modified after it was read. Read it again before modifying.".into(),
+                ))
+            }
+            _ => Ok(()),
+        }
+    }
+}
 
 /// Calculates a SHA-256 hash of the content for optimistic locking.
 pub fn hash_content(content: &str) -> String {
     crate::services::sha256::sha256_hex(content.as_bytes())
-}
-
-pub fn record_read_version(profile_id: &str, file: &str, hash: &str) {
-    if let Ok(mut lock) = LAST_READ_VERSIONS.write() {
-        lock.insert((profile_id.to_string(), file.to_string()), hash.to_string());
-    }
-}
-
-pub fn clear_read_versions(profile_id: &str) {
-    if let Ok(mut lock) = LAST_READ_VERSIONS.write() {
-        lock.retain(|(p, _), _| p != profile_id);
-    }
-}
-
-pub fn check_optimistic_lock(
-    profile_id: &str,
-    file: &str,
-    disk_content: &str,
-) -> Result<(), AppError> {
-    if let Ok(lock) = LAST_READ_VERSIONS.read() {
-        if let Some(last_hash) = lock.get(&(profile_id.to_string(), file.to_string())) {
-            let current_hash = hash_content(disk_content);
-            if current_hash != *last_hash {
-                return Err(AppError::InvalidInput(
-                    "The memory file was modified after it was read. Read it again before modifying.".into(),
-                ));
-            }
-        }
-    }
-    Ok(())
 }
 
 /// Normalizes and validates a memory file name.
@@ -228,6 +236,7 @@ fn save_snapshot_if_needed(
 /// Reads a memory file (`core.md` or topic file) and records its version for optimistic locking.
 pub fn read_profile_memory(
     vault_root: &Path,
+    versions: &MemoryReadVersions,
     profile_id: &str,
     file: &str,
 ) -> Result<String, AppError> {
@@ -243,7 +252,7 @@ pub fn read_profile_memory(
     }
 
     let content = fs::read_to_string(&target_path)?;
-    record_read_version(profile_id, &normalized, &hash_content(&content));
+    versions.record(profile_id, &normalized, &content);
     Ok(content)
 }
 
@@ -251,6 +260,7 @@ pub fn read_profile_memory(
 /// If a topic file does not exist, it is created.
 pub fn add_profile_memory_fact(
     vault_root: &Path,
+    versions: &MemoryReadVersions,
     profile_id: &str,
     chat_id: Option<&str>,
     file: &str,
@@ -273,7 +283,7 @@ pub fn add_profile_memory_fact(
 
     let (before, after) = if target_path.exists() {
         let existing = fs::read_to_string(&target_path)?;
-        check_optimistic_lock(profile_id, &normalized, &existing)?;
+        versions.check(profile_id, &normalized, &existing)?;
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
 
         let mut next = existing.clone();
@@ -320,7 +330,7 @@ pub fn add_profile_memory_fact(
     }
 
     write_private(&target_path, &after)?;
-    record_read_version(profile_id, &normalized, &hash_content(&after));
+    versions.record(profile_id, &normalized, &after);
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -375,6 +385,7 @@ fn apply_memory_replace(text: &str, old_text: &str, new_text: &str) -> Result<St
 /// If `new_text` is empty, deletes the thesis.
 pub fn replace_profile_memory(
     vault_root: &Path,
+    versions: &MemoryReadVersions,
     profile_id: &str,
     chat_id: Option<&str>,
     file: &str,
@@ -399,7 +410,7 @@ pub fn replace_profile_memory(
     }
 
     let before = fs::read_to_string(&target_path)?;
-    check_optimistic_lock(profile_id, &normalized, &before)?;
+    versions.check(profile_id, &normalized, &before)?;
 
     let after = apply_memory_replace(&before, old_text, new_text)?;
     if after.len() > MAX_MEMORY_FILE_BYTES {
@@ -410,7 +421,7 @@ pub fn replace_profile_memory(
 
     save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
     write_private(&target_path, &after)?;
-    record_read_version(profile_id, &normalized, &hash_content(&after));
+    versions.record(profile_id, &normalized, &after);
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -422,6 +433,7 @@ pub fn replace_profile_memory(
 /// Completely rewrites a memory file (e.g. for compaction).
 pub fn rewrite_profile_memory(
     vault_root: &Path,
+    versions: &MemoryReadVersions,
     profile_id: &str,
     chat_id: Option<&str>,
     file: &str,
@@ -440,7 +452,7 @@ pub fn rewrite_profile_memory(
 
     let before = if target_path.exists() {
         let existing = fs::read_to_string(&target_path)?;
-        check_optimistic_lock(profile_id, &normalized, &existing)?;
+        versions.check(profile_id, &normalized, &existing)?;
         save_snapshot_if_needed(&memory_dir, chat_id, &normalized, &target_path)?;
         Some(existing)
     } else {
@@ -457,7 +469,7 @@ pub fn rewrite_profile_memory(
     };
 
     write_private(&target_path, content)?;
-    record_read_version(profile_id, &normalized, &hash_content(content));
+    versions.record(profile_id, &normalized, content);
 
     Ok(ProfileMemoryChange {
         file: normalized,
@@ -469,6 +481,7 @@ pub fn rewrite_profile_memory(
 /// Restores a memory file to its state prior to any modifications made during a chat.
 pub fn undo_profile_memory(
     vault_root: &Path,
+    versions: &MemoryReadVersions,
     profile_id: &str,
     chat_id: Option<&str>,
     file: &str,
@@ -492,9 +505,7 @@ pub fn undo_profile_memory(
             None
         };
         let _ = fs::remove_file(&absent_file);
-        if let Ok(mut lock) = LAST_READ_VERSIONS.write() {
-            lock.remove(&(profile_id.to_string(), normalized.clone()));
-        }
+        versions.forget(profile_id, &normalized);
         return Ok(ProfileMemoryChange {
             file: normalized,
             before,
@@ -510,7 +521,7 @@ pub fn undo_profile_memory(
         };
         let restored = fs::read_to_string(&snapshot_file)?;
         write_private(&target_path, &restored)?;
-        record_read_version(profile_id, &normalized, &hash_content(&restored));
+        versions.record(profile_id, &normalized, &restored);
         let _ = fs::remove_file(&snapshot_file);
         return Ok(ProfileMemoryChange {
             file: normalized,
@@ -650,7 +661,11 @@ pub fn list_profile_memory_topics(
 
 /// Clears memory content for a profile: removes all topic files and snapshots,
 /// resets `core.md` to default, and clears read version records.
-pub fn clear_profile_memory(vault_root: &Path, profile_id: &str) -> Result<(), AppError> {
+pub fn clear_profile_memory(
+    vault_root: &Path,
+    versions: &MemoryReadVersions,
+    profile_id: &str,
+) -> Result<(), AppError> {
     validate_id(profile_id)?;
     let memory_dir = profile_memory_dir(vault_root, profile_id)?;
     let topics_dir = memory_dir.join(MEMORY_TOPICS_DIR);
@@ -665,6 +680,6 @@ pub fn clear_profile_memory(vault_root: &Path, profile_id: &str) -> Result<(), A
     }
 
     write_private(&memory_dir.join(MEMORY_CORE_FILE), DEFAULT_MEMORY_CORE)?;
-    clear_read_versions(profile_id);
+    versions.clear_profile(profile_id);
     Ok(())
 }

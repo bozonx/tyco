@@ -261,10 +261,6 @@ pub struct AiFileChangePreview {
     pub after: String,
 }
 
-fn invalid(message: impl Into<String>) -> AppError {
-    AppError::InvalidInput(message.into())
-}
-
 /// The folders a profile's file tools reach, with its permissions to each.
 pub struct ProfileFiles {
     roots: Vec<AiFileRoot>,
@@ -329,10 +325,10 @@ impl ProfileFiles {
             AiFileToolRequest::DeletePath { path } => {
                 let target = self.resolve(&path, Access::Write, false)?;
                 if target.is_root() {
-                    return Err(invalid("A root folder cannot be deleted"));
+                    return Err(AppError::invalid_input("A root folder cannot be deleted"));
                 }
                 fs::symlink_metadata(&target.path)
-                    .map_err(|_| invalid(format!("{path} does not exist")))?;
+                    .map_err(|_| AppError::invalid_input(format!("{path} does not exist")))?;
                 let path = target.virtual_path();
                 remove(&target.path)?;
                 Ok(AiFileToolOutput::DeletePath { path })

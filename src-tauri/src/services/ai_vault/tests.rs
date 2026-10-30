@@ -155,10 +155,11 @@ fn creating_never_overwrites_an_existing_profile() {
 
 #[test]
 fn saving_never_brings_back_a_deleted_profile() {
+    let versions = MemoryReadVersions::default();
     let test_dir = TestDir::new("ai_vault_profile_resurrect");
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("writer", 1000), "").unwrap();
-    delete_profile(&vault_root, "writer").unwrap();
+    delete_profile(&vault_root, &versions, "writer").unwrap();
 
     assert!(save_profile(&vault_root, profile("writer", 1000)).is_err());
     assert!(write_profile_soul(&vault_root, "writer", "soul").is_err());
@@ -285,11 +286,12 @@ fn an_unreadable_profile_file_is_skipped() {
 
 #[test]
 fn deleting_a_profile_removes_its_folder() {
+    let versions = MemoryReadVersions::default();
     let test_dir = TestDir::new("ai_vault_profile_delete");
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("writer", 1000), "").unwrap();
 
-    delete_profile(&vault_root, "writer").unwrap();
+    delete_profile(&vault_root, &versions, "writer").unwrap();
 
     assert!(!vault_root.join("profiles").join("writer").exists());
     assert!(list_profiles(&vault_root).unwrap().is_empty());
@@ -505,6 +507,7 @@ fn memory_directories_and_core_are_created_with_profile_and_lazily_for_existing(
 
 #[test]
 fn memory_path_isolation_and_file_name_validation() {
+    let versions = MemoryReadVersions::default();
     let test_dir = TestDir::new("ai_vault_memory_validation");
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("writer", 1000), "").unwrap();
@@ -534,11 +537,12 @@ fn memory_path_isolation_and_file_name_validation() {
             "{invalid}"
         );
         assert!(
-            read_profile_memory(&vault_root, "writer", invalid).is_err(),
+            read_profile_memory(&vault_root, &versions, "writer", invalid).is_err(),
             "{invalid}"
         );
         assert!(
-            add_profile_memory_fact(&vault_root, "writer", None, invalid, "fact").is_err(),
+            add_profile_memory_fact(&vault_root, &versions, "writer", None, invalid, "fact")
+                .is_err(),
             "{invalid}"
         );
     }
@@ -546,17 +550,19 @@ fn memory_path_isolation_and_file_name_validation() {
 
 #[test]
 fn memory_crud_add_replace_rewrite_and_search() {
+    let versions = MemoryReadVersions::default();
     let test_dir = TestDir::new("ai_vault_memory_crud");
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("doc", 1000), "").unwrap();
 
     // 1. Read core
-    let core = read_profile_memory(&vault_root, "doc", "core.md").unwrap();
+    let core = read_profile_memory(&vault_root, &versions, "doc", "core.md").unwrap();
     assert_eq!(core, DEFAULT_MEMORY_CORE);
 
     // 2. Add fact to core
     let change = add_profile_memory_fact(
         &vault_root,
+        &versions,
         "doc",
         Some("chat-1"),
         "core.md",
@@ -569,6 +575,7 @@ fn memory_crud_add_replace_rewrite_and_search() {
     // 3. Add fact to a new topic file (creates health.md)
     let topic_change = add_profile_memory_fact(
         &vault_root,
+        &versions,
         "doc",
         Some("chat-1"),
         "health.md",
@@ -596,6 +603,7 @@ fn memory_crud_add_replace_rewrite_and_search() {
     // 6. Replace fact in health.md
     let replaced = replace_profile_memory(
         &vault_root,
+        &versions,
         "doc",
         Some("chat-1"),
         "health.md",
@@ -611,6 +619,7 @@ fn memory_crud_add_replace_rewrite_and_search() {
     // 7. Delete fact via replace with empty string
     let deleted = replace_profile_memory(
         &vault_root,
+        &versions,
         "doc",
         Some("chat-1"),
         "health.md",
@@ -622,8 +631,15 @@ fn memory_crud_add_replace_rewrite_and_search() {
 
     // 8. Rewrite health.md
     let compacted = "# Health\nMedical history\n\n- No allergies\n";
-    let rewritten =
-        rewrite_profile_memory(&vault_root, "doc", Some("chat-1"), "health.md", compacted).unwrap();
+    let rewritten = rewrite_profile_memory(
+        &vault_root,
+        &versions,
+        "doc",
+        Some("chat-1"),
+        "health.md",
+        compacted,
+    )
+    .unwrap();
     assert_eq!(rewritten.after, compacted);
 
     // List topics again: description is parsed from line 2
@@ -635,53 +651,75 @@ fn memory_crud_add_replace_rewrite_and_search() {
     assert_eq!(health_topic.description.as_deref(), Some("Medical history"));
 
     // 9. Clear memory
-    clear_profile_memory(&vault_root, "doc").unwrap();
+    clear_profile_memory(&vault_root, &versions, "doc").unwrap();
     let cleared_topics = list_profile_memory_topics(&vault_root, "doc").unwrap();
     assert_eq!(cleared_topics.len(), 1);
     assert_eq!(cleared_topics[0].file, "core.md");
     assert_eq!(
-        read_profile_memory(&vault_root, "doc", "core.md").unwrap(),
+        read_profile_memory(&vault_root, &versions, "doc", "core.md").unwrap(),
         DEFAULT_MEMORY_CORE
     );
 }
 
 #[test]
 fn memory_limits_are_enforced() {
+    let versions = MemoryReadVersions::default();
     let test_dir = TestDir::new("ai_vault_memory_limits");
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("limited", 1000), "").unwrap();
 
     // 1. Fact exceeds MAX_MEMORY_FACT_LEN
     let oversized_fact = "a".repeat(MAX_MEMORY_FACT_LEN + 1);
-    assert!(
-        add_profile_memory_fact(&vault_root, "limited", None, "core.md", &oversized_fact).is_err()
-    );
+    assert!(add_profile_memory_fact(
+        &vault_root,
+        &versions,
+        "limited",
+        None,
+        "core.md",
+        &oversized_fact
+    )
+    .is_err());
 
     // 2. File size exceeds MAX_MEMORY_FILE_BYTES
     let huge_content = "a".repeat(MAX_MEMORY_FILE_BYTES + 1);
-    assert!(
-        rewrite_profile_memory(&vault_root, "limited", None, "health.md", &huge_content).is_err()
-    );
+    assert!(rewrite_profile_memory(
+        &vault_root,
+        &versions,
+        "limited",
+        None,
+        "health.md",
+        &huge_content
+    )
+    .is_err());
 
     // 3. Max topic files limit
     for i in 0..MAX_MEMORY_TOPIC_FILES {
         let file = format!("topic_{i}.md");
-        assert!(add_profile_memory_fact(&vault_root, "limited", None, &file, "fact").is_ok());
+        assert!(
+            add_profile_memory_fact(&vault_root, &versions, "limited", None, &file, "fact").is_ok()
+        );
     }
     // 51st topic file is rejected
-    assert!(
-        add_profile_memory_fact(&vault_root, "limited", None, "topic_extra.md", "fact").is_err()
-    );
+    assert!(add_profile_memory_fact(
+        &vault_root,
+        &versions,
+        "limited",
+        None,
+        "topic_extra.md",
+        "fact"
+    )
+    .is_err());
 }
 
 #[test]
 fn memory_optimistic_locking_rejects_concurrent_edits() {
+    let versions = MemoryReadVersions::default();
     let test_dir = TestDir::new("ai_vault_memory_lock");
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("locked", 1000), "").unwrap();
 
     // 1. Read file to record its current version
-    let _ = read_profile_memory(&vault_root, "locked", "core.md").unwrap();
+    let _ = read_profile_memory(&vault_root, &versions, "locked", "core.md").unwrap();
 
     // 2. User modifies file directly on disk
     let core_path = vault_root.join("profiles/locked/memory/core.md");
@@ -690,6 +728,7 @@ fn memory_optimistic_locking_rejects_concurrent_edits() {
     // 3. Model attempts to modify: rejected because disk != recorded hash
     let add_result = add_profile_memory_fact(
         &vault_root,
+        &versions,
         "locked",
         None,
         "core.md",
@@ -698,17 +737,24 @@ fn memory_optimistic_locking_rejects_concurrent_edits() {
     assert!(add_result.is_err());
 
     // 4. Model re-reads file to update its recorded version
-    let re_read = read_profile_memory(&vault_root, "locked", "core.md").unwrap();
+    let re_read = read_profile_memory(&vault_root, &versions, "locked", "core.md").unwrap();
     assert_eq!(re_read, "# Modified by user in editor\n");
 
     // 5. Subsequent write succeeds
-    assert!(
-        add_profile_memory_fact(&vault_root, "locked", None, "core.md", "Now succeeds",).is_ok()
-    );
+    assert!(add_profile_memory_fact(
+        &vault_root,
+        &versions,
+        "locked",
+        None,
+        "core.md",
+        "Now succeeds",
+    )
+    .is_ok());
 }
 
 #[test]
 fn memory_undo_restores_snapshots_per_chat() {
+    let versions = MemoryReadVersions::default();
     let test_dir = TestDir::new("ai_vault_memory_undo");
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("undo_prof", 1000), "").unwrap();
@@ -716,6 +762,7 @@ fn memory_undo_restores_snapshots_per_chat() {
     // Case 1: Modification of existing file (core.md)
     add_profile_memory_fact(
         &vault_root,
+        &versions,
         "undo_prof",
         Some("chat-1"),
         "core.md",
@@ -724,6 +771,7 @@ fn memory_undo_restores_snapshots_per_chat() {
     .unwrap();
     add_profile_memory_fact(
         &vault_root,
+        &versions,
         "undo_prof",
         Some("chat-1"),
         "core.md",
@@ -731,38 +779,53 @@ fn memory_undo_restores_snapshots_per_chat() {
     )
     .unwrap();
 
-    let current_core = read_profile_memory(&vault_root, "undo_prof", "core.md").unwrap();
+    let current_core = read_profile_memory(&vault_root, &versions, "undo_prof", "core.md").unwrap();
     assert!(current_core.contains("First fact") && current_core.contains("Second fact"));
 
     // Undo chat-1: restores core.md to pre-chat state (DEFAULT_MEMORY_CORE)
-    let undone = undo_profile_memory(&vault_root, "undo_prof", Some("chat-1"), "core.md").unwrap();
+    let undone = undo_profile_memory(
+        &vault_root,
+        &versions,
+        "undo_prof",
+        Some("chat-1"),
+        "core.md",
+    )
+    .unwrap();
     assert_eq!(undone.after, DEFAULT_MEMORY_CORE);
     assert_eq!(
-        read_profile_memory(&vault_root, "undo_prof", "core.md").unwrap(),
+        read_profile_memory(&vault_root, &versions, "undo_prof", "core.md").unwrap(),
         DEFAULT_MEMORY_CORE
     );
 
     // Case 2: Creation of a new topic file in chat-2
     add_profile_memory_fact(
         &vault_root,
+        &versions,
         "undo_prof",
         Some("chat-2"),
         "allergies.md",
         "Pollen allergy",
     )
     .unwrap();
-    assert!(read_profile_memory(&vault_root, "undo_prof", "allergies.md").is_ok());
+    assert!(read_profile_memory(&vault_root, &versions, "undo_prof", "allergies.md").is_ok());
 
     // Undo chat-2: deletes the newly created allergies.md
-    let undone_topic =
-        undo_profile_memory(&vault_root, "undo_prof", Some("chat-2"), "allergies.md").unwrap();
+    let undone_topic = undo_profile_memory(
+        &vault_root,
+        &versions,
+        "undo_prof",
+        Some("chat-2"),
+        "allergies.md",
+    )
+    .unwrap();
     assert_eq!(undone_topic.after, "");
-    assert!(read_profile_memory(&vault_root, "undo_prof", "allergies.md").is_err());
+    assert!(read_profile_memory(&vault_root, &versions, "undo_prof", "allergies.md").is_err());
 
     // Case 3: Undo when no snapshot exists returns NotFound
     assert!(matches!(
         undo_profile_memory(
             &vault_root,
+            &versions,
             "undo_prof",
             Some("chat-nonexistent"),
             "core.md"
@@ -777,6 +840,7 @@ fn memory_undo_restores_snapshots_per_chat() {
     }
     rewrite_profile_memory(
         &vault_root,
+        &versions,
         "undo_prof",
         None,
         "large_topic.md",

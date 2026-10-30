@@ -10,7 +10,7 @@
 // Only the Linux backends feed the tracker and ask about the session so far.
 #![cfg_attr(not(target_os = "linux"), allow(dead_code))]
 
-use crate::locks::MutexExt;
+use crate::locks::{CondvarExt, MutexExt};
 use std::sync::{Condvar, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
@@ -239,11 +239,7 @@ impl WindowTracker {
             if now >= deadline {
                 return Err(AppError::Failed(timeout_message.to_owned()));
             }
-            state = self
-                .changed
-                .wait_timeout(state, deadline - now)
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .0;
+            state = self.changed.wait_timeout_locked(state, deadline - now).0;
         }
     }
 
@@ -288,24 +284,18 @@ fn startup_barrier() -> &'static TrackerStartupBarrier {
 
 /// Reports that a backend started, or that none will start soon.
 pub fn finish_startup() {
-    *startup_barrier()
-        .done
-        .lock()
-        .unwrap_or_else(|error| error.into_inner()) = true;
+    *startup_barrier().done.locked() = true;
     startup_barrier().changed.notify_all();
 }
 
 /// Waits up to `timeout` for the first attempt to start a backend. An
 /// activation needs the tracker to know the window it was called from.
 pub fn wait_for_startup(timeout: Duration) {
-    let done = startup_barrier()
-        .done
-        .lock()
-        .unwrap_or_else(|error| error.into_inner());
-    let (_done, result) = startup_barrier()
-        .changed
-        .wait_timeout_while(done, timeout, |done| !*done)
-        .unwrap_or_else(|error| error.into_inner());
+    let done = startup_barrier().done.locked();
+    let (_done, result) =
+        startup_barrier()
+            .changed
+            .wait_timeout_while_locked(done, timeout, |done| !*done);
     if result.timed_out() {
         log::debug!("Activating before the window tracker has started");
     }

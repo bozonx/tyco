@@ -52,6 +52,16 @@ pub enum AppError {
     Json(#[from] serde_json::Error),
 }
 
+impl AppError {
+    pub fn invalid_input(message: impl Into<String>) -> Self {
+        Self::InvalidInput(message.into())
+    }
+
+    pub fn invalid_data(message: impl Into<String>) -> Self {
+        Self::InvalidData(message.into())
+    }
+}
+
 macro_rules! error_codes {
     ($($(#[$doc:meta])* $code:ident),* $(,)?) => {
         /// What went wrong with a desktop command, for the webview to decide

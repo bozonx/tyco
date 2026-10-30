@@ -1,11 +1,11 @@
 //! Desktop notifications retain their sender until application shutdown.
 
 use crate::errors::AppError;
+use crate::locks::{CondvarExt, MutexExt};
 use crate::services::background::StoppableService;
 use std::time::Instant;
 
 #[cfg(any(target_os = "linux", test))]
-use crate::locks::MutexExt;
 #[cfg(any(target_os = "linux", test))]
 use std::sync::{Condvar, Mutex};
 
@@ -47,10 +47,7 @@ impl<C> PersistentSender<C> {
     ) -> Result<(), AppError> {
         let mut state = self.state.locked();
         while state.busy && !state.stopped {
-            state = self
-                .changed
-                .wait(state)
-                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            state = self.changed.wait_locked(state);
         }
         if state.stopped {
             return Err(AppError::ServiceUnavailable(
@@ -87,19 +84,9 @@ impl<C> StoppableService for PersistentSender<C> {
     }
 
     fn wait_until(&self, deadline: Instant) -> bool {
-        let mut state = self.state.locked();
-        while state.busy {
-            let remaining = deadline.saturating_duration_since(Instant::now());
-            if remaining.is_zero() {
-                return false;
-            }
-            state = self
-                .changed
-                .wait_timeout(state, remaining)
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .0;
-        }
-        true
+        let state = self.state.locked();
+        self.changed
+            .wait_while_until(state, deadline, |state| state.busy)
     }
 }
 

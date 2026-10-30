@@ -1,3 +1,4 @@
+use crate::errors::AppError;
 use base64::Engine;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -54,37 +55,37 @@ pub enum FetchEvent {
     },
 }
 
-pub fn decode_body(body: Option<&str>) -> Result<Option<Vec<u8>>, String> {
+pub fn decode_body(body: Option<&str>) -> Result<Option<Vec<u8>>, AppError> {
     decode_body_with_limit(body, MAX_REQUEST_BODY_BYTES)
 }
 
 fn decode_body_with_limit(
     body: Option<&str>,
     max_decoded_body_bytes: usize,
-) -> Result<Option<Vec<u8>>, String> {
+) -> Result<Option<Vec<u8>>, AppError> {
     body.map(|body| {
         let max_encoded_bytes = max_decoded_body_bytes.div_ceil(3) * 4;
         if body.len() > max_encoded_bytes {
-            return Err(format!(
+            return Err(AppError::InvalidInput(format!(
                 "Request body exceeds the {max_decoded_body_bytes} byte limit"
-            ));
+            )));
         }
         let decoded = base64::engine::general_purpose::STANDARD
             .decode(body)
-            .map_err(|error| format!("Invalid request body: {error}"))?;
+            .map_err(|error| AppError::InvalidInput(format!("Invalid request body: {error}")))?;
         if decoded.len() > max_decoded_body_bytes {
-            return Err(format!(
+            return Err(AppError::InvalidInput(format!(
                 "Request body exceeds the {max_decoded_body_bytes} byte limit"
-            ));
+            )));
         }
         Ok(decoded)
     })
     .transpose()
 }
 
-pub fn parse_method(method: &str) -> Result<reqwest::Method, String> {
+pub fn parse_method(method: &str) -> Result<reqwest::Method, AppError> {
     reqwest::Method::from_bytes(method.to_ascii_uppercase().as_bytes())
-        .map_err(|_| format!("Invalid HTTP method \"{method}\""))
+        .map_err(|_| AppError::InvalidInput(format!("Invalid HTTP method \"{method}\"")))
 }
 
 /// Sends one request and streams its response into `sink`. Every outcome ends
@@ -238,9 +239,11 @@ mod tests {
     fn rejects_encoded_size_before_decoding_and_checks_padding_boundary() {
         assert!(decode_body_with_limit(Some("!!!!!!!!!"), 4)
             .unwrap_err()
+            .to_string()
             .contains("exceeds"));
         assert!(decode_body_with_limit(Some("YWJjZGU="), 4)
             .unwrap_err()
+            .to_string()
             .contains("exceeds"));
         assert_eq!(
             decode_body_with_limit(Some("YWJjZA=="), 4).unwrap(),

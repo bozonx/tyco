@@ -28,8 +28,8 @@ pub async fn fetch<S: EventSink>(
         let prepared = policy.prepare(Protocol::Http, &request.url, &request.headers, &secrets)?;
         (prepared, net.client().clone())
     };
-    let method = http::parse_method(&request.method).map_err(AppError::InvalidInput)?;
-    let body = http::decode_body(request.body.as_deref()).map_err(AppError::InvalidInput)?;
+    let method = http::parse_method(&request.method)?;
+    let body = http::decode_body(request.body.as_deref())?;
 
     let id = task.id();
     let chunk_permits = task.response_chunk_permits();

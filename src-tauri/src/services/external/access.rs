@@ -1,5 +1,6 @@
 //! Asks the user whether an external call may use the selection while
 //! `externalAccess.canAccessSelection` is off: once, from now on, or not at all.
+use crate::locks::MutexExt;
 use std::sync::Mutex;
 
 use serde::Deserialize;
@@ -36,16 +37,13 @@ pub struct AccessPrompt(Mutex<Option<PendingAccessRequest>>);
 
 impl AccessPrompt {
     pub fn is_pending(&self) -> bool {
-        self.0
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .is_some()
+        self.0.locked().is_some()
     }
 
     /// Takes the prompt for `pending`; false while another request waits.
     /// One step, so that two requests at once cannot both take it.
     fn try_claim(&self, pending: PendingAccessRequest) -> bool {
-        let mut slot = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        let mut slot = self.0.locked();
         if slot.is_some() {
             return false;
         }
@@ -54,7 +52,7 @@ impl AccessPrompt {
     }
 
     fn take(&self, job_id: &str) -> Option<PendingAccessRequest> {
-        let mut pending = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        let mut pending = self.0.locked();
         if pending.as_ref().is_some_and(|item| item.job_id == job_id) {
             pending.take()
         } else {

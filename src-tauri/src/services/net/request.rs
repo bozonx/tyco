@@ -2,6 +2,7 @@
 //!
 //! Pure: no I/O, so every rule about where a secret may go is unit-tested.
 
+use crate::errors::AppError;
 use url::form_urlencoded::byte_serialize;
 use url::Url;
 
@@ -34,20 +35,25 @@ pub enum Protocol {
 }
 
 /// The URL with its origin, when its scheme fits the protocol.
-fn parse_url(protocol: Protocol, value: &str) -> Result<(Url, String), String> {
-    let url = Url::parse(value).map_err(|error| format!("Invalid URL \"{value}\": {error}"))?;
+fn parse_url(protocol: Protocol, value: &str) -> Result<(Url, String), AppError> {
+    let url = Url::parse(value)
+        .map_err(|error| AppError::InvalidInput(format!("Invalid URL \"{value}\": {error}")))?;
     let allowed_schemes: &[&str] = match protocol {
         Protocol::Http => &["http", "https"],
         Protocol::WebSocket => &["ws", "wss"],
     };
     if !allowed_schemes.contains(&url.scheme()) {
-        return Err(format!("Unsupported URL scheme \"{}\"", url.scheme()));
+        return Err(AppError::invalid_input(format!(
+            "Unsupported URL scheme \"{}\"",
+            url.scheme()
+        )));
     }
-    let origin = origin_of(&url).ok_or_else(|| format!("URL \"{url}\" has no host"))?;
+    let origin = origin_of(&url)
+        .ok_or_else(|| AppError::InvalidInput(format!("URL \"{url}\" has no host")))?;
     Ok((url, origin))
 }
 
-pub fn request_origin(protocol: Protocol, value: &str) -> Result<String, String> {
+pub fn request_origin(protocol: Protocol, value: &str) -> Result<String, AppError> {
     parse_url(protocol, value).map(|(_, origin)| origin)
 }
 
@@ -59,17 +65,19 @@ pub fn prepare(
     url: &str,
     headers: &[(String, String)],
     secrets: &Secrets,
-) -> Result<PreparedRequest, String> {
+) -> Result<PreparedRequest, AppError> {
     let (mut url, origin) = parse_url(protocol, url)?;
 
-    let resolve = |id: &str| -> Result<&str, String> {
+    let resolve = |id: &str| -> Result<&str, AppError> {
         let entry = secrets
             .get(id)
-            .ok_or_else(|| format!("No secret \"{id}\" is configured"))?;
+            .ok_or_else(|| AppError::InvalidInput(format!("No secret \"{id}\" is configured")))?;
         if entry.origins.contains(&origin) {
             Ok(entry.value.as_str())
         } else {
-            Err(format!("Secret \"{id}\" may not be sent to {origin}"))
+            Err(AppError::InvalidInput(format!(
+                "Secret \"{id}\" may not be sent to {origin}"
+            )))
         }
     };
 
@@ -101,8 +109,8 @@ pub fn prepare(
 fn replace_refs(
     text: &str,
     prefix: &str,
-    mut resolve: impl FnMut(&str) -> Result<String, String>,
-) -> Result<String, String> {
+    mut resolve: impl FnMut(&str) -> Result<String, AppError>,
+) -> Result<String, AppError> {
     let mut result = String::with_capacity(text.len());
     let mut rest = text;
 
@@ -112,7 +120,7 @@ fn replace_refs(
         let id_len = after.find(|c: char| !is_id_char(c)).unwrap_or(after.len());
         let id = &after[..id_len];
         if id.is_empty() {
-            return Err(String::from("Empty secret reference"));
+            return Err(AppError::invalid_input("Empty secret reference"));
         }
         result.push_str(&resolve(id)?);
         rest = &after[id_len..];
@@ -236,7 +244,8 @@ mod tests {
             &[header("x-goog-api-key", "tyco-secret:llm.google")],
             &secrets(),
         )
-        .unwrap_err();
+        .unwrap_err()
+        .to_string();
         assert!(error.contains("may not be sent to https://attacker.example"));
 
         let error = prepare(
@@ -245,7 +254,8 @@ mod tests {
             &[],
             &secrets(),
         )
-        .unwrap_err();
+        .unwrap_err()
+        .to_string();
         assert!(error.contains("may not be sent"));
     }
 
@@ -277,7 +287,8 @@ mod tests {
             &[header("authorization", "Bearer tyco-secret:openrouter")],
             &secrets(),
         )
-        .unwrap_err();
+        .unwrap_err()
+        .to_string();
         assert!(error.contains("No secret \"openrouter\""));
     }
 

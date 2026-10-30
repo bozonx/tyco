@@ -1,12 +1,12 @@
 //! System clipboard and focused-window adapters for selection replacement.
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
-use std::thread;
-#[cfg(any(target_os = "linux", target_os = "windows", test))]
 use std::time::{Duration, Instant};
 
 use serde_json::Value;
 
 use crate::errors::AppError;
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
+use crate::services::clock::{MonotonicClock, SystemClock};
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 use crate::services::selection_replace::SelectionTarget;
 use crate::services::selection_replace::{
@@ -110,7 +110,7 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), Sel
         user_config,
         is_terminal: run.target.is_terminal,
     };
-    match copy_with_probe(&io, &run.target.id, &probe) {
+    match copy_with_probe(&io, &SystemClock, &run.target.id, &probe) {
         Ok(CopyOutcome::Copied(text)) => {
             run.started_at = Instant::now();
             Ok((text, run))
@@ -172,6 +172,7 @@ pub(crate) fn capture(_user_config: &Value) -> Result<(String, SelectionRun), Se
         &WindowsCopyProbe {
             is_terminal: run.target.is_terminal,
         },
+        &SystemClock,
         &run.target.id,
         &probe,
     )
@@ -209,12 +210,6 @@ trait CopyProbe {
     fn focused_target_id(&self) -> Option<String>;
     fn press_copy(&self) -> Result<(), AppError>;
     fn read_text(&self) -> Option<String>;
-    fn now(&self) -> Instant {
-        Instant::now()
-    }
-    fn pause(&self, duration: Duration) {
-        thread::sleep(duration);
-    }
 }
 
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
@@ -234,6 +229,7 @@ enum CopyOutcome {
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 fn copy_with_probe(
     io: &impl CopyProbe,
+    clock: &impl MonotonicClock,
     target_id: &str,
     probe: &str,
 ) -> Result<CopyOutcome, AppError> {
@@ -242,7 +238,7 @@ fn copy_with_probe(
         return Ok(CopyOutcome::FocusChanged);
     }
     io.press_copy()?;
-    let deadline = io.now() + COPY_TIMEOUT;
+    let deadline = clock.now() + COPY_TIMEOUT;
     loop {
         let read = io.read_text();
         match read {
@@ -252,7 +248,7 @@ fn copy_with_probe(
             // not text, e.g. an image, or not answered yet
             None => {}
         }
-        if io.now() >= deadline {
+        if clock.now() >= deadline {
             log::debug!(
                 "The copy keys changed nothing in the clipboard: {}",
                 match read {
@@ -262,7 +258,7 @@ fn copy_with_probe(
             );
             return Ok(CopyOutcome::Nothing);
         }
-        io.pause(COPY_POLL_INTERVAL);
+        clock.sleep(COPY_POLL_INTERVAL);
     }
 }
 
@@ -501,10 +497,13 @@ mod tests {
             };
             read.map(|text| text.replace("PROBE", "p"))
         }
+    }
+
+    impl MonotonicClock for Probe {
         fn now(&self) -> Instant {
             self.start + self.elapsed.get()
         }
-        fn pause(&self, duration: Duration) {
+        fn sleep(&self, duration: Duration) {
             self.elapsed.set(self.elapsed.get() + duration);
         }
     }
@@ -514,7 +513,7 @@ mod tests {
         for focused in [None, Some("terminal")] {
             let io = probe(focused, vec![Some("selected")]);
             assert_eq!(
-                copy_with_probe(&io, "target", "p").unwrap(),
+                copy_with_probe(&io, &io, "target", "p").unwrap(),
                 CopyOutcome::FocusChanged
             );
             assert_eq!(*io.calls.borrow(), ["probe:p"]);
@@ -525,7 +524,7 @@ mod tests {
     fn the_copied_text_replaces_the_probe() {
         let io = probe(Some("target"), vec![Some("PROBE"), None, Some("selected")]);
         assert_eq!(
-            copy_with_probe(&io, "target", "p").unwrap(),
+            copy_with_probe(&io, &io, "target", "p").unwrap(),
             CopyOutcome::Copied("selected".into())
         );
         assert_eq!(*io.calls.borrow(), ["probe:p", "copy"]);
@@ -536,14 +535,14 @@ mod tests {
     fn whitespace_or_an_unchanged_clipboard_is_no_selection() {
         let io = probe(Some("target"), vec![Some(" \n")]);
         assert_eq!(
-            copy_with_probe(&io, "target", "p").unwrap(),
+            copy_with_probe(&io, &io, "target", "p").unwrap(),
             CopyOutcome::Nothing
         );
         assert_eq!(io.elapsed.get(), Duration::ZERO);
         for read in [Some("PROBE"), None] {
             let io = probe(Some("target"), vec![read]);
             assert_eq!(
-                copy_with_probe(&io, "target", "p").unwrap(),
+                copy_with_probe(&io, &io, "target", "p").unwrap(),
                 CopyOutcome::Nothing
             );
             assert!(io.elapsed.get() >= COPY_TIMEOUT);

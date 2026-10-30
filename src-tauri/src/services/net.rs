@@ -5,7 +5,6 @@
 //! webview never holds one. Responses and socket frames go back through a
 //! Tauri channel — JSON events for control, raw bytes for bodies.
 
-use crate::locks::MutexExt;
 pub mod authorization;
 pub mod gateway;
 pub mod http;
@@ -13,6 +12,7 @@ pub mod image;
 pub mod request;
 pub mod socket;
 
+use crate::locks::{CondvarExt, MutexExt};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
@@ -239,17 +239,9 @@ impl crate::services::background::StoppableService for NetState {
     }
     fn wait_until(&self, deadline: Instant) -> bool {
         let count = self.activity.active_count.locked();
-        *self
-            .activity
+        self.activity
             .changed
-            .wait_timeout_while(
-                count,
-                deadline.saturating_duration_since(Instant::now()),
-                |count| *count != 0,
-            )
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .0
-            == 0
+            .wait_while_until(count, deadline, |count| *count != 0)
     }
 }
 

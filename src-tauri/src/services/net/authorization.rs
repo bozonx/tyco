@@ -26,7 +26,7 @@ impl NetworkPolicy {
         url: &str,
         secrets: &Secrets,
     ) -> Result<(), AppError> {
-        let origin = request_origin(protocol, url).map_err(AppError::InvalidInput)?;
+        let origin = request_origin(protocol, url)?;
         if self.allowed_origins.contains(&origin)
             || secrets
                 .values()
@@ -48,7 +48,7 @@ impl NetworkPolicy {
         secrets: &Secrets,
     ) -> Result<PreparedRequest, AppError> {
         self.ensure_allowed(protocol, url, secrets)?;
-        prepare(protocol, url, headers, secrets).map_err(AppError::InvalidInput)
+        prepare(protocol, url, headers, secrets)
     }
 }
 

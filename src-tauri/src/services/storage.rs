@@ -15,17 +15,6 @@ pub use paths::{
 
 #[cfg(test)]
 use serde_json::json;
-use serde_json::Value;
-
-/// How many entries to keep; 0 turns the history off. Missing or invalid
-/// numbers use the domain default; serialized numeric strings are not accepted.
-fn history_limit(config: &Value, key: &str, default: usize) -> usize {
-    config
-        .get(key)
-        .and_then(Value::as_u64)
-        .and_then(|value| usize::try_from(value).ok())
-        .unwrap_or(default)
-}
 
 fn new_history_id(now_ms: u64) -> String {
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -42,33 +31,6 @@ mod tests {
     use super::*;
     use crate::models::{EditorHistoryEntry, EditorHistoryKind, EditorHistoryOperation};
     use crate::services::storage::test_support::history_item;
-
-    #[test]
-    fn history_limit_falls_back_to_the_default() {
-        let config = json!({ "maxItems": "many", "negative": -3 });
-
-        assert_eq!(history_limit(&config, "maxItems", 20), 20);
-        assert_eq!(history_limit(&config, "negative", 20), 20);
-        assert_eq!(history_limit(&config, "missing", 10), 10);
-    }
-
-    #[test]
-    fn history_limit_accepts_numbers_and_rejects_numeric_strings() {
-        assert_eq!(history_limit(&json!({ "maxItems": 5 }), "maxItems", 50), 5);
-        assert_eq!(
-            history_limit(&json!({ "maxItems": " 7 " }), "maxItems", 50),
-            50
-        );
-    }
-
-    #[test]
-    fn history_limit_zero_turns_the_history_off() {
-        assert_eq!(history_limit(&json!({ "maxItems": 0 }), "maxItems", 50), 0);
-        assert_eq!(
-            history_limit(&json!({ "maxItems": "0" }), "maxItems", 50),
-            50
-        );
-    }
 
     #[test]
     fn editor_history_item_uses_the_ui_field_names() {

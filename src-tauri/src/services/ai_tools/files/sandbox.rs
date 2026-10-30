@@ -4,9 +4,7 @@ use cap_std::fs::Dir;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
-use super::{
-    invalid, Access, AiFileRoot, ProfileFiles, FILES_TOOL_GROUP, PROJECTS_ROOT, WORKSPACE_ROOT,
-};
+use super::{Access, AiFileRoot, ProfileFiles, FILES_TOOL_GROUP, PROJECTS_ROOT, WORKSPACE_ROOT};
 use crate::errors::AppError;
 use crate::services::ai_vault::{self, AiProfile, ProjectAccessMode};
 
@@ -45,7 +43,7 @@ impl Resolved<'_> {
         let relative = self.relative_path();
         let name = relative
             .file_name()
-            .ok_or_else(|| invalid("A root folder cannot be changed"))?;
+            .ok_or_else(|| AppError::invalid_input("A root folder cannot be changed"))?;
         let parent = relative
             .parent()
             .filter(|path| !path.as_os_str().is_empty())
@@ -112,16 +110,18 @@ fn canonical_prefix(path: &Path) -> Result<PathBuf, AppError> {
             }
             // there is an entry, but it leads nowhere: a broken link
             Err(_) if fs::symlink_metadata(&existing).is_ok() => {
-                return Err(invalid("The path goes through a broken link"))
+                return Err(AppError::invalid_input(
+                    "The path goes through a broken link",
+                ))
             }
             Err(_) => {
                 let name = existing
                     .file_name()
-                    .ok_or_else(|| invalid("The folder is unavailable"))?
+                    .ok_or_else(|| AppError::invalid_input("The folder is unavailable"))?
                     .to_os_string();
                 missing.push(name);
                 if !existing.pop() {
-                    return Err(invalid("The folder is unavailable"));
+                    return Err(AppError::invalid_input("The folder is unavailable"));
                 }
             }
         }
@@ -182,13 +182,13 @@ impl ProfileFiles {
         for part in path.split(['/', '\\']) {
             match part {
                 "" | "." => continue,
-                ".." => return Err(invalid("A path may not go up with ..")),
+                ".." => return Err(AppError::invalid_input("A path may not go up with ..")),
                 _ => parts.push(part),
             }
         }
         let (root, rest) = match parts.as_slice() {
             [] => {
-                return Err(invalid(
+                return Err(AppError::invalid_input(
                     "Name a path inside workspace/ or projects/<project-id>/",
                 ))
             }
@@ -197,7 +197,7 @@ impl ProfileFiles {
                 (self.find_root(&format!("{PROJECTS_ROOT}/{id}"))?, rest)
             }
             _ => {
-                return Err(invalid(format!(
+                return Err(AppError::invalid_input(format!(
                     "Unknown path {path}: paths start with workspace/ or projects/<project-id>/"
                 )))
             }
@@ -207,7 +207,7 @@ impl ProfileFiles {
             .components()
             .all(|component| matches!(component, Component::Normal(_)))
         {
-            return Err(invalid(format!("Invalid path {path}")));
+            return Err(AppError::invalid_input(format!("Invalid path {path}")));
         }
         Ok((root, relative))
     }
@@ -216,7 +216,7 @@ impl ProfileFiles {
         self.roots
             .iter()
             .find(|root| root.path == path)
-            .ok_or_else(|| invalid(format!("The profile has no access to {path}")))
+            .ok_or_else(|| AppError::invalid_input(format!("The profile has no access to {path}")))
     }
 
     /// Where a path is on disk, kept inside its root.
@@ -231,7 +231,7 @@ impl ProfileFiles {
     ) -> Result<Resolved<'_>, AppError> {
         let (root, relative) = self.locate(path)?;
         if *root.access(access) == ProjectAccessMode::Deny {
-            return Err(invalid(format!(
+            return Err(AppError::invalid_input(format!(
                 "The profile may not {} {}",
                 match access {
                     Access::Read => "read",
@@ -241,10 +241,12 @@ impl ProfileFiles {
             )));
         }
         if is_forbidden(root, &relative) {
-            return Err(invalid(format!("{path} is not available to tools")));
+            return Err(AppError::invalid_input(format!(
+                "{path} is not available to tools"
+            )));
         }
         let root_dir = fs::canonicalize(&root.dir).map_err(|error| {
-            invalid(format!(
+            AppError::invalid_input(format!(
                 "The folder of {} is unavailable: {error}",
                 root.path
             ))
@@ -255,14 +257,16 @@ impl ProfileFiles {
             _ => root_dir.clone(),
         };
         if follow && fs::symlink_metadata(&real).is_ok_and(|meta| meta.file_type().is_symlink()) {
-            real =
-                fs::canonicalize(&real).map_err(|_| invalid(format!("{path} is a broken link")))?;
+            real = fs::canonicalize(&real)
+                .map_err(|_| AppError::invalid_input(format!("{path} is a broken link")))?;
         }
-        let inside = real
-            .strip_prefix(&root_dir)
-            .map_err(|_| invalid(format!("{path} leads outside of {}", root.path)))?;
+        let inside = real.strip_prefix(&root_dir).map_err(|_| {
+            AppError::invalid_input(format!("{path} leads outside of {}", root.path))
+        })?;
         if is_forbidden(root, inside) {
-            return Err(invalid(format!("{path} is not available to tools")));
+            return Err(AppError::invalid_input(format!(
+                "{path} is not available to tools"
+            )));
         }
         Ok(Resolved {
             root,
@@ -280,7 +284,9 @@ fn ensure_files_enabled(profile: &AiProfile) -> Result<(), AppError> {
         .and_then(|tools| tools.groups.get(FILES_TOOL_GROUP));
     match group {
         Some(group) if group.is_enabled && group.access != ProjectAccessMode::Deny => Ok(()),
-        _ => Err(invalid("The file tools are off for this profile")),
+        _ => Err(AppError::invalid_input(
+            "The file tools are off for this profile",
+        )),
     }
 }
 

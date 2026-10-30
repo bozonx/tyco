@@ -1,6 +1,6 @@
 //! Wall-clock time since the Unix epoch. A clock set before 1970 reads as
 //! zero rather than failing: timestamps and unique names need no error path.
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 pub fn since_epoch() -> Duration {
     SystemTime::now()
@@ -14,4 +14,22 @@ pub fn now_ms() -> u64 {
 
 pub fn now_ns() -> u128 {
     since_epoch().as_nanos()
+}
+
+/// Monotonic time and sleeping, so that polling loops can run on a fake clock
+/// in tests.
+pub trait MonotonicClock {
+    fn now(&self) -> Instant;
+    fn sleep(&self, duration: Duration);
+}
+
+pub struct SystemClock;
+
+impl MonotonicClock for SystemClock {
+    fn now(&self) -> Instant {
+        Instant::now()
+    }
+    fn sleep(&self, duration: Duration) {
+        std::thread::sleep(duration);
+    }
 }

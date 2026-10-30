@@ -1,4 +1,5 @@
 use tauri::AppHandle;
+use tauri::Manager;
 
 use super::run_blocking;
 use crate::{
@@ -87,7 +88,9 @@ pub async fn delete_ai_profile(app: AppHandle, id: String) -> Result<(), AppErro
     run_blocking(move || {
         ai_vault::with_vault(&app, |dir| {
             // Vault access is already held; do not acquire it recursively.
-            storage::while_chats_locked_in_vault(&app, || ai_vault::delete_profile(dir, &id))
+            storage::while_chats_locked_in_vault(&app, || {
+                ai_vault::delete_profile(dir, &app.state::<ai_vault::MemoryReadVersions>(), &id)
+            })
         })
     })
     .await?
@@ -157,7 +160,12 @@ pub async fn read_ai_profile_memory(
 ) -> Result<String, AppError> {
     run_blocking(move || {
         ai_vault::with_vault(&app, |dir| {
-            ai_vault::read_profile_memory(dir, &profile_id, &file)
+            ai_vault::read_profile_memory(
+                dir,
+                &app.state::<ai_vault::MemoryReadVersions>(),
+                &profile_id,
+                &file,
+            )
         })
     })
     .await?
@@ -189,7 +197,14 @@ pub async fn add_ai_profile_memory_fact(
 ) -> Result<ProfileMemoryChange, AppError> {
     run_blocking(move || {
         ai_vault::with_vault(&app, |dir| {
-            ai_vault::add_profile_memory_fact(dir, &profile_id, chat_id.as_deref(), &file, &fact)
+            ai_vault::add_profile_memory_fact(
+                dir,
+                &app.state::<ai_vault::MemoryReadVersions>(),
+                &profile_id,
+                chat_id.as_deref(),
+                &file,
+                &fact,
+            )
         })
     })
     .await?
@@ -209,6 +224,7 @@ pub async fn replace_ai_profile_memory(
         ai_vault::with_vault(&app, |dir| {
             ai_vault::replace_profile_memory(
                 dir,
+                &app.state::<ai_vault::MemoryReadVersions>(),
                 &profile_id,
                 chat_id.as_deref(),
                 &file,
@@ -231,7 +247,14 @@ pub async fn rewrite_ai_profile_memory(
 ) -> Result<ProfileMemoryChange, AppError> {
     run_blocking(move || {
         ai_vault::with_vault(&app, |dir| {
-            ai_vault::rewrite_profile_memory(dir, &profile_id, chat_id.as_deref(), &file, &content)
+            ai_vault::rewrite_profile_memory(
+                dir,
+                &app.state::<ai_vault::MemoryReadVersions>(),
+                &profile_id,
+                chat_id.as_deref(),
+                &file,
+                &content,
+            )
         })
     })
     .await?
@@ -247,7 +270,13 @@ pub async fn undo_ai_profile_memory(
 ) -> Result<ProfileMemoryChange, AppError> {
     run_blocking(move || {
         ai_vault::with_vault(&app, |dir| {
-            ai_vault::undo_profile_memory(dir, &profile_id, chat_id.as_deref(), &file)
+            ai_vault::undo_profile_memory(
+                dir,
+                &app.state::<ai_vault::MemoryReadVersions>(),
+                &profile_id,
+                chat_id.as_deref(),
+                &file,
+            )
         })
     })
     .await?
@@ -257,7 +286,13 @@ pub async fn undo_ai_profile_memory(
 #[tauri::command]
 pub async fn clear_ai_profile_memory(app: AppHandle, profile_id: String) -> Result<(), AppError> {
     run_blocking(move || {
-        ai_vault::with_vault(&app, |dir| ai_vault::clear_profile_memory(dir, &profile_id))
+        ai_vault::with_vault(&app, |dir| {
+            ai_vault::clear_profile_memory(
+                dir,
+                &app.state::<ai_vault::MemoryReadVersions>(),
+                &profile_id,
+            )
+        })
     })
     .await?
 }

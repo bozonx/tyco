@@ -9,10 +9,6 @@ use crate::services::settings::schema::MAX_SAFE_INTEGER;
 
 pub(crate) use crate::desktop_contract::SUPPORTED_PLUGIN_LOCALES;
 
-fn invalid(message: impl Into<String>) -> AppError {
-    AppError::InvalidData(message.into())
-}
-
 pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
     validate_metadata(manifest)?;
     validate_locales(manifest)?;
@@ -22,17 +18,16 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
         .iter()
         .any(|capability| capability == "notes");
     if manifest.notes_directory_field.is_some() && !has_notes {
-        return Err(invalid("Invalid notes directory field"));
+        return Err(AppError::invalid_data("Invalid notes directory field"));
     }
     if has_notes {
         let name = manifest
             .notes_directory_field
             .as_deref()
             .unwrap_or("pathToNotes");
-        let config = manifest
-            .default_config
-            .as_ref()
-            .ok_or_else(|| invalid("Notes access requires an empty directory setting"))?;
+        let config = manifest.default_config.as_ref().ok_or_else(|| {
+            AppError::invalid_data("Notes access requires an empty directory setting")
+        })?;
         if !config["fields"].as_array().is_some_and(|fields| {
             fields.iter().any(|field| {
                 field["name"].as_str() == Some(name)
@@ -43,7 +38,9 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
                         .is_none_or(|value| value.as_str() == Some(""))
             })
         }) {
-            return Err(invalid("Notes access requires an empty directory setting"));
+            return Err(AppError::invalid_data(
+                "Notes access requires an empty directory setting",
+            ));
         }
         if config["presets"].as_object().is_some_and(|selectors| {
             selectors.values().any(|presets| {
@@ -56,7 +53,9 @@ pub fn validate_manifest(manifest: &PluginManifest) -> Result<(), AppError> {
                 })
             })
         }) {
-            return Err(invalid("Plugin presets cannot grant notes access"));
+            return Err(AppError::invalid_data(
+                "Plugin presets cannot grant notes access",
+            ));
         }
     }
     if let Some(config) = &manifest.default_config {
@@ -83,18 +82,20 @@ fn validate_settings_migrations(
         Some(value) => value
             .as_u64()
             .filter(|version| *version <= 64)
-            .ok_or_else(|| invalid("Invalid plugin settings version"))?,
+            .ok_or_else(|| AppError::invalid_data("Invalid plugin settings version"))?,
         None => 0,
     };
     let empty = Vec::new();
     let migrations = match config.get("migrations") {
         Some(value) => value
             .as_array()
-            .ok_or_else(|| invalid("Invalid plugin settings migrations"))?,
+            .ok_or_else(|| AppError::invalid_data("Invalid plugin settings migrations"))?,
         None => &empty,
     };
     if migrations.len() as u64 != version {
-        return Err(invalid("Invalid plugin settings migration chain"));
+        return Err(AppError::invalid_data(
+            "Invalid plugin settings migration chain",
+        ));
     }
     let valid_name = |name: &str| {
         !name.is_empty()
@@ -111,20 +112,20 @@ fn validate_settings_migrations(
             .and_then(serde_json::Value::as_u64)
             != Some(index as u64)
         {
-            return Err(invalid("Invalid plugin settings migration"));
+            return Err(AppError::invalid_data("Invalid plugin settings migration"));
         }
         let renames = migration
             .get("rename")
             .and_then(serde_json::Value::as_object)
-            .ok_or_else(|| invalid("Invalid plugin settings renames"))?;
+            .ok_or_else(|| AppError::invalid_data("Invalid plugin settings renames"))?;
         if renames.len() > MAX_SETTINGS_RENAMES {
-            return Err(invalid("Too many plugin settings renames"));
+            return Err(AppError::invalid_data("Too many plugin settings renames"));
         }
         let mut targets = std::collections::HashSet::new();
         for (source, target) in renames {
             let target = target
                 .as_str()
-                .ok_or_else(|| invalid("Invalid plugin settings rename"))?;
+                .ok_or_else(|| AppError::invalid_data("Invalid plugin settings rename"))?;
             if !valid_name(source)
                 || !valid_name(target)
                 || source == target
@@ -133,7 +134,7 @@ fn validate_settings_migrations(
                 || notes_directory_field == Some(source.as_str())
                 || notes_directory_field == Some(target)
             {
-                return Err(invalid("Invalid plugin settings rename"));
+                return Err(AppError::invalid_data("Invalid plugin settings rename"));
             }
         }
     }
@@ -143,7 +144,7 @@ fn validate_settings_migrations(
 fn validate_metadata(manifest: &PluginManifest) -> Result<(), AppError> {
     let id = &manifest.id;
     if !is_valid_plugin_id(id) {
-        return Err(invalid("Invalid plugin ID"));
+        return Err(AppError::invalid_data("Invalid plugin ID"));
     }
     let parts: Vec<_> = manifest.version.split('.').collect();
     if parts.len() != 3
@@ -154,21 +155,23 @@ fn validate_metadata(manifest: &PluginManifest) -> Result<(), AppError> {
                 || !part.bytes().all(|byte| byte.is_ascii_digit())
         })
     {
-        return Err(invalid("Plugin version must have three numeric components"));
+        return Err(AppError::invalid_data(
+            "Plugin version must have three numeric components",
+        ));
     }
     if manifest.api_version != API_VERSION {
-        return Err(invalid("Unsupported plugin API version"));
+        return Err(AppError::invalid_data("Unsupported plugin API version"));
     }
     if manifest
         .capabilities
         .iter()
         .any(|value| !matches!(value.as_str(), "editor" | "notes" | "browser"))
     {
-        return Err(invalid("Unknown plugin capability"));
+        return Err(AppError::invalid_data("Unknown plugin capability"));
     }
     let unique: std::collections::HashSet<_> = manifest.capabilities.iter().collect();
     if unique.len() != manifest.capabilities.len() {
-        return Err(invalid("Duplicate plugin capability"));
+        return Err(AppError::invalid_data("Duplicate plugin capability"));
     }
     Ok(())
 }
@@ -177,19 +180,19 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
     let dictionaries = manifest
         .locales
         .as_object()
-        .ok_or_else(|| invalid("Invalid plugin locales"))?;
+        .ok_or_else(|| AppError::invalid_data("Invalid plugin locales"))?;
     if !dictionaries
         .get(&manifest.default_locale)
         .is_some_and(serde_json::Value::is_object)
     {
-        return Err(invalid("Missing plugin default locale"));
+        return Err(AppError::invalid_data("Missing plugin default locale"));
     }
     fn validate_messages(value: &serde_json::Value, depth: usize) -> Result<(), AppError> {
         let object = value
             .as_object()
-            .ok_or_else(|| invalid("Invalid plugin dictionary"))?;
+            .ok_or_else(|| AppError::invalid_data("Invalid plugin dictionary"))?;
         if depth > 16 {
-            return Err(invalid("Plugin dictionary is too deep"));
+            return Err(AppError::invalid_data("Plugin dictionary is too deep"));
         }
         for (key, entry) in object {
             if key.is_empty()
@@ -199,7 +202,7 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
                     .bytes()
                     .all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))
             {
-                return Err(invalid("Invalid plugin dictionary key"));
+                return Err(AppError::invalid_data("Invalid plugin dictionary key"));
             }
             if let Some(text) = entry.as_str() {
                 let stripped = text
@@ -208,7 +211,9 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
                     .replace("{'|'}", "")
                     .replace("{\"|\"}", "");
                 if stripped.contains('@') || stripped.contains('|') {
-                    return Err(invalid("Unescaped '@' or '|' in plugin message"));
+                    return Err(AppError::invalid_data(
+                        "Unescaped '@' or '|' in plugin message",
+                    ));
                 }
             } else {
                 validate_messages(entry, depth + 1)?;
@@ -225,13 +230,15 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
             _ => false,
         };
         if !is_language || !is_region {
-            return Err(invalid("Invalid plugin locale"));
+            return Err(AppError::invalid_data("Invalid plugin locale"));
         }
         validate_messages(dictionary, 0)?;
     }
     for locale in SUPPORTED_PLUGIN_LOCALES {
         if !dictionaries.contains_key(locale) {
-            return Err(invalid(format!("Missing plugin locale: {locale}")));
+            return Err(AppError::invalid_data(format!(
+                "Missing plugin locale: {locale}"
+            )));
         }
     }
     fn signature(value: &serde_json::Value) -> serde_json::Value {
@@ -257,7 +264,9 @@ fn validate_locales(manifest: &PluginManifest) -> Result<(), AppError> {
         .values()
         .any(|dictionary| signature(dictionary) != expected)
     {
-        return Err(invalid("Plugin locale structure or placeholders differ"));
+        return Err(AppError::invalid_data(
+            "Plugin locale structure or placeholders differ",
+        ));
     }
     Ok(())
 }
@@ -267,29 +276,29 @@ fn validate_icons(manifest: &PluginManifest) -> Result<(), AppError> {
         let map = icons
             .get("icons")
             .and_then(serde_json::Value::as_object)
-            .ok_or_else(|| invalid("Invalid plugin icons"))?;
+            .ok_or_else(|| AppError::invalid_data("Invalid plugin icons"))?;
         if map.len() > MAX_ICONS {
-            return Err(invalid("Too many plugin icons"));
+            return Err(AppError::invalid_data("Too many plugin icons"));
         }
         let prefix = icons
             .get("prefix")
             .and_then(serde_json::Value::as_str)
-            .ok_or_else(|| invalid("Invalid plugin icon prefix"))?;
+            .ok_or_else(|| AppError::invalid_data("Invalid plugin icon prefix"))?;
         if prefix.is_empty()
             || !prefix.as_bytes()[0].is_ascii_lowercase()
             || !prefix
                 .bytes()
                 .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
         {
-            return Err(invalid("Invalid plugin icon prefix"));
+            return Err(AppError::invalid_data("Invalid plugin icon prefix"));
         }
         let unsafe_svg = regex::Regex::new(r"(?i)<\s*(script|foreignObject|iframe|image|style|a)\b|\bon[a-z0-9_-]+\s*=|(?:href|url)\s*[=(]|javascript:|https?:|data:")
-            .map_err(|_| invalid("Invalid plugin icon validator"))?;
+            .map_err(|_| AppError::invalid_data("Invalid plugin icon validator"))?;
         for (name, icon) in map {
             let body = icon
                 .get("body")
                 .and_then(serde_json::Value::as_str)
-                .ok_or_else(|| invalid("Invalid plugin icon"))?;
+                .ok_or_else(|| AppError::invalid_data("Invalid plugin icon"))?;
             if name.is_empty()
                 || !name
                     .bytes()
@@ -297,7 +306,7 @@ fn validate_icons(manifest: &PluginManifest) -> Result<(), AppError> {
                 || body.len() > MAX_ICON_BODY_BYTES
                 || unsafe_svg.is_match(body)
             {
-                return Err(invalid("Unsafe plugin icon"));
+                return Err(AppError::invalid_data("Unsafe plugin icon"));
             }
             for dimension in [
                 icons.get("width"),
@@ -311,7 +320,7 @@ fn validate_icons(manifest: &PluginManifest) -> Result<(), AppError> {
                 if !dimension.as_f64().is_some_and(|number| {
                     number.is_finite() && number > 0.0 && number <= MAX_ICON_DIMENSION
                 }) {
-                    return Err(invalid("Invalid plugin icon dimensions"));
+                    return Err(AppError::invalid_data("Invalid plugin icon dimensions"));
                 }
             }
         }
@@ -323,16 +332,16 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
     let fields = config
         .get("fields")
         .and_then(serde_json::Value::as_array)
-        .ok_or_else(|| invalid("Invalid plugin config"))?;
+        .ok_or_else(|| AppError::invalid_data("Invalid plugin config"))?;
     if fields.len() > MAX_CONFIG_FIELDS {
-        return Err(invalid("Too many plugin fields"));
+        return Err(AppError::invalid_data("Too many plugin fields"));
     }
     let mut names = std::collections::HashSet::new();
     for field in fields {
         let name = field
             .get("name")
             .and_then(serde_json::Value::as_str)
-            .ok_or_else(|| invalid("Invalid plugin field name"))?;
+            .ok_or_else(|| AppError::invalid_data("Invalid plugin field name"))?;
         if name.is_empty()
             || !name.as_bytes()[0].is_ascii_alphabetic()
             || !name
@@ -341,13 +350,13 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
             || matches!(name, "constructor" | "prototype")
             || !names.insert(name)
         {
-            return Err(invalid("Invalid plugin field name"));
+            return Err(AppError::invalid_data("Invalid plugin field name"));
         }
         if !matches!(
             field.get("type").and_then(serde_json::Value::as_str),
             Some("text" | "textarea" | "select" | "checkbox" | "sortable-checklist")
         ) {
-            return Err(invalid("Invalid plugin field type"));
+            return Err(AppError::invalid_data("Invalid plugin field type"));
         }
         let field_type = field
             .get("type")
@@ -356,31 +365,31 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
         if let Some(options) = field.get("options") {
             let options = options
                 .as_array()
-                .ok_or_else(|| invalid("Invalid plugin field options"))?;
+                .ok_or_else(|| AppError::invalid_data("Invalid plugin field options"))?;
             let mut option_ids = std::collections::HashSet::new();
             for option in options {
                 let id = option
                     .get("id")
-                    .ok_or_else(|| invalid("Invalid plugin option"))?;
+                    .ok_or_else(|| AppError::invalid_data("Invalid plugin option"))?;
                 if !(id.is_string()
                     || id.as_f64().is_some_and(|number| {
                         number.fract() == 0.0 && number.abs() <= MAX_SAFE_INTEGER
                     }))
                     || !option_ids.insert(format!("{}:{}", id.is_string(), option_identity(id)))
                 {
-                    return Err(invalid("Invalid plugin option"));
+                    return Err(AppError::invalid_data("Invalid plugin option"));
                 }
             }
         }
         let default = field.get("defaultValue");
         if field_type == "checkbox" && !default.is_some_and(serde_json::Value::is_boolean) {
-            return Err(invalid("Invalid checkbox default"));
+            return Err(AppError::invalid_data("Invalid checkbox default"));
         }
         if field_type == "select" {
             let options = field
                 .get("options")
                 .and_then(serde_json::Value::as_array)
-                .ok_or_else(|| invalid("Select fields require options"))?;
+                .ok_or_else(|| AppError::invalid_data("Select fields require options"))?;
             if !default.is_some_and(|value| {
                 options.iter().any(|option| {
                     option.get("id").is_some_and(|id| {
@@ -389,7 +398,7 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
                     })
                 })
             }) {
-                return Err(invalid("Invalid select default"));
+                return Err(AppError::invalid_data("Invalid select default"));
             }
         }
         for key in ["value", "defaultValue"] {
@@ -397,7 +406,9 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
                 .get(key)
                 .is_some_and(|value| !valid_field_value(field, value, false))
             {
-                return Err(invalid(format!("Invalid plugin field {key}")));
+                return Err(AppError::invalid_data(format!(
+                    "Invalid plugin field {key}"
+                )));
             }
         }
     }
@@ -411,42 +422,44 @@ fn validate_presets(
     if let Some(presets) = config.get("presets") {
         let presets = presets
             .as_object()
-            .ok_or_else(|| invalid("Invalid plugin presets"))?;
+            .ok_or_else(|| AppError::invalid_data("Invalid plugin presets"))?;
         for (selector, choices) in presets {
             let selector_field = fields
                 .iter()
                 .find(|field| {
                     field.get("name").and_then(serde_json::Value::as_str) == Some(selector.as_str())
                 })
-                .ok_or_else(|| invalid("Invalid preset selector"))?;
+                .ok_or_else(|| AppError::invalid_data("Invalid preset selector"))?;
             if selector_field
                 .get("type")
                 .and_then(serde_json::Value::as_str)
                 != Some("select")
             {
-                return Err(invalid("Preset selector must be a select field"));
+                return Err(AppError::invalid_data(
+                    "Preset selector must be a select field",
+                ));
             }
             let options = selector_field
                 .get("options")
                 .and_then(serde_json::Value::as_array)
-                .ok_or_else(|| invalid("Preset selector has no options"))?;
+                .ok_or_else(|| AppError::invalid_data("Preset selector has no options"))?;
             let choices = choices
                 .as_object()
-                .ok_or_else(|| invalid("Invalid preset choices"))?;
+                .ok_or_else(|| AppError::invalid_data("Invalid preset choices"))?;
             for (choice, values) in choices {
                 if !options.iter().any(|option| {
                     option
                         .get("id")
                         .is_some_and(|id| option_identity(id) == choice.as_str())
                 }) {
-                    return Err(invalid("Unknown plugin preset"));
+                    return Err(AppError::invalid_data("Unknown plugin preset"));
                 }
                 let values = values
                     .as_object()
-                    .ok_or_else(|| invalid("Invalid plugin preset values"))?;
+                    .ok_or_else(|| AppError::invalid_data("Invalid plugin preset values"))?;
                 for (name, value) in values {
                     if matches!(name.as_str(), "__proto__" | "constructor" | "prototype") {
-                        return Err(invalid("Unsafe plugin preset field"));
+                        return Err(AppError::invalid_data("Unsafe plugin preset field"));
                     }
                     let field = fields
                         .iter()
@@ -454,10 +467,10 @@ fn validate_presets(
                             field.get("name").and_then(serde_json::Value::as_str)
                                 == Some(name.as_str())
                         })
-                        .ok_or_else(|| invalid("Unknown plugin preset field"))?;
+                        .ok_or_else(|| AppError::invalid_data("Unknown plugin preset field"))?;
                     let valid = valid_field_value(field, value, true);
                     if !valid {
-                        return Err(invalid("Invalid plugin preset value"));
+                        return Err(AppError::invalid_data("Invalid plugin preset value"));
                     }
                 }
             }

@@ -178,10 +178,14 @@ pub fn save_profile(vault_root: &Path, profile: AiProfile) -> Result<(), AppErro
     write_profile_file(&dir, &profile)
 }
 
-pub fn delete_profile(vault_root: &Path, id: &str) -> Result<(), AppError> {
+pub fn delete_profile(
+    vault_root: &Path,
+    versions: &super::memory::MemoryReadVersions,
+    id: &str,
+) -> Result<(), AppError> {
     let dir = profile_dir(vault_root, id)?;
     if dir.exists() {
-        super::memory::clear_read_versions(id);
+        versions.clear_profile(id);
         fs::remove_dir_all(&dir)?;
     }
     Ok(())

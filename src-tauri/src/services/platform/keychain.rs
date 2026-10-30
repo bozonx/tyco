@@ -29,7 +29,7 @@ impl SystemKeychain {
         }
     }
 
-    fn store(&self) -> Result<Arc<CredentialStore>, String> {
+    fn store(&self) -> Result<Arc<CredentialStore>, VaultError> {
         let mut store = self.store.locked();
         if let Some(store) = store.as_ref() {
             return Ok(Arc::clone(store));
@@ -39,7 +39,7 @@ impl SystemKeychain {
         Ok(opened)
     }
 
-    fn entry(&self, id: &str) -> Result<Entry, String> {
+    fn entry(&self, id: &str) -> Result<Entry, VaultError> {
         self.store()?
             .build(&self.namespace, id, None)
             .map_err(describe)
@@ -51,18 +51,18 @@ impl SecretVault for SystemKeychain {
         match self.entry(id)?.get_password() {
             Ok(value) => Ok(Some(value)),
             Err(Error::NoEntry) => Ok(None),
-            Err(error) => Err(describe(error).into()),
+            Err(error) => Err(describe(error)),
         }
     }
 
     fn set(&self, id: &str, value: &str) -> Result<(), VaultError> {
-        Ok(self.entry(id)?.set_password(value).map_err(describe)?)
+        self.entry(id)?.set_password(value).map_err(describe)
     }
 
     fn delete(&self, id: &str) -> Result<(), VaultError> {
         match self.entry(id)?.delete_credential() {
             Ok(()) | Err(Error::NoEntry) => Ok(()),
-            Err(error) => Err(describe(error).into()),
+            Err(error) => Err(describe(error)),
         }
     }
 }
@@ -87,8 +87,8 @@ fn open_store() -> keyring_core::Result<Arc<CredentialStore>> {
     Ok(store)
 }
 
-fn describe(error: Error) -> String {
-    format!("system keychain: {error}")
+fn describe(error: Error) -> VaultError {
+    VaultError(format!("system keychain: {error}"))
 }
 
 #[cfg(test)]

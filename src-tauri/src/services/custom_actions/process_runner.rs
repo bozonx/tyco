@@ -1,3 +1,4 @@
+use crate::locks::{CondvarExt, MutexExt};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStderr, ChildStdout, Stdio};
@@ -82,11 +83,7 @@ pub struct ScriptRuns {
 }
 impl ScriptRuns {
     fn register(&self, run_id: Option<&str>) -> Result<CancelRegistration, AppError> {
-        let mut registry = self
-            .shared
-            .registry
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let mut registry = self.shared.registry.locked();
         if registry.is_stopping {
             return Err(AppError::ServiceUnavailable(
                 "Script service is stopping".into(),
@@ -116,11 +113,7 @@ impl ScriptRuns {
         })
     }
     pub fn cancel(&self, run_id: &str) -> bool {
-        let registry = self
-            .shared
-            .registry
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let registry = self.shared.registry.locked();
         for (name, flag) in registry.runs.values() {
             if name.as_deref() == Some(run_id) {
                 flag.store(true, Ordering::SeqCst);
@@ -133,33 +126,17 @@ impl ScriptRuns {
 
 impl crate::services::background::StoppableService for ScriptRuns {
     fn stop(&self) {
-        let mut registry = self
-            .shared
-            .registry
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let mut registry = self.shared.registry.locked();
         registry.is_stopping = true;
         for (_, flag) in registry.runs.values() {
             flag.store(true, Ordering::SeqCst);
         }
     }
     fn wait_until(&self, deadline: Instant) -> bool {
-        let registry = self
-            .shared
-            .registry
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
+        let registry = self.shared.registry.locked();
         self.shared
             .changed
-            .wait_timeout_while(
-                registry,
-                deadline.saturating_duration_since(Instant::now()),
-                |registry| !registry.runs.is_empty(),
-            )
-            .unwrap_or_else(|error| error.into_inner())
-            .0
-            .runs
-            .is_empty()
+            .wait_while_until(registry, deadline, |registry| !registry.runs.is_empty())
     }
 }
 
@@ -170,12 +147,7 @@ struct CancelRegistration {
 }
 impl Drop for CancelRegistration {
     fn drop(&mut self) {
-        self.shared
-            .registry
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .runs
-            .remove(&self.id);
+        self.shared.registry.locked().runs.remove(&self.id);
         self.shared.changed.notify_all();
     }
 }

@@ -1,5 +1,5 @@
 //! Tracks releases independently for each hotkey press.
-use crate::locks::MutexExt;
+use crate::locks::{CondvarExt, MutexExt};
 use std::collections::HashMap;
 use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::{Duration, Instant};
@@ -56,8 +56,7 @@ impl HotkeyPress {
             }
             counts = releases
                 .changed
-                .wait_timeout(counts, deadline - now)
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .wait_timeout_locked(counts, deadline - now)
                 .0;
         }
         log::debug!(

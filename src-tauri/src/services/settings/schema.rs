@@ -1,5 +1,4 @@
 //! Validation and repair use the portable schema shared with the webview.
-use crate::locks::MutexExt;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 
@@ -25,17 +24,37 @@ static SCHEMA: LazyLock<Value> = LazyLock::new(|| {
 static PORTABLE_DEFAULTS: LazyLock<Value> =
     LazyLock::new(crate::services::settings::defaults::portable_user_config);
 
-/// The compiled `pattern`s of the schema; a save validates the whole config,
-/// so each is compiled once rather than on every check.
-static PATTERNS: LazyLock<std::sync::Mutex<HashMap<String, regex::Regex>>> =
-    LazyLock::new(Default::default);
+/// The compiled `pattern`s of the schema, built once with it: a save
+/// validates the whole config.
+static PATTERNS: LazyLock<HashMap<String, regex::Regex>> = LazyLock::new(|| {
+    let mut patterns = HashMap::new();
+    collect_patterns(&SCHEMA, &mut patterns);
+    patterns
+});
+
+fn collect_patterns(schema: &Value, patterns: &mut HashMap<String, regex::Regex>) {
+    match schema {
+        Value::Object(object) => {
+            if let Some(pattern) = object.get("pattern").and_then(Value::as_str) {
+                patterns
+                    .entry(pattern.to_owned())
+                    .or_insert_with(|| regex::Regex::new(pattern).expect("valid schema pattern"));
+            }
+            object
+                .values()
+                .for_each(|value| collect_patterns(value, patterns));
+        }
+        Value::Array(items) => items
+            .iter()
+            .for_each(|item| collect_patterns(item, patterns)),
+        _ => {}
+    }
+}
 
 fn matches_pattern(pattern: &str, text: &str) -> bool {
-    let mut patterns = PATTERNS.locked();
-    patterns
-        .entry(pattern.to_owned())
-        .or_insert_with(|| regex::Regex::new(pattern).expect("valid schema pattern"))
-        .is_match(text)
+    PATTERNS
+        .get(pattern)
+        .is_some_and(|regex| regex.is_match(text))
 }
 
 fn default_of<'a>(schema: &'a Value, defaults: &'a Value) -> &'a Value {
@@ -46,7 +65,7 @@ fn default_of<'a>(schema: &'a Value, defaults: &'a Value) -> &'a Value {
     }
 }
 
-fn invalid(path: &str) -> AppError {
+fn invalid_field(path: &str) -> AppError {
     AppError::InvalidInput(format!("Invalid configuration field: {path}"))
 }
 
@@ -58,17 +77,17 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
         {
             Ok(())
         } else {
-            Err(invalid(path))
+            Err(invalid_field(path))
         };
     }
     if let Some(choices) = schema["enum"].as_array() {
         if !choices.contains(value) {
-            return Err(invalid(path));
+            return Err(invalid_field(path));
         }
     }
     match schema["type"].as_str() {
         Some("object") => {
-            let fields = value.as_object().ok_or_else(|| invalid(path))?;
+            let fields = value.as_object().ok_or_else(|| invalid_field(path))?;
             for key in schema["required"]
                 .as_array()
                 .into_iter()
@@ -76,7 +95,7 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
                 .filter_map(Value::as_str)
             {
                 if !fields.contains_key(key) {
-                    return Err(invalid(&format!("{path}.{key}")));
+                    return Err(invalid_field(&format!("{path}.{key}")));
                 }
             }
             for (key, value) in fields {
@@ -84,19 +103,19 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
                 if schema["propertyNames"].is_object()
                     && validate(&json!(key), &schema["propertyNames"], &nested_path).is_err()
                 {
-                    return Err(invalid(&nested_path));
+                    return Err(invalid_field(&nested_path));
                 }
                 if let Some(child) = schema["properties"].get(key) {
                     validate(value, child, &nested_path)?;
                 } else if schema["additionalProperties"] == false {
-                    return Err(invalid(&nested_path));
+                    return Err(invalid_field(&nested_path));
                 } else if schema["additionalProperties"].is_object() {
                     validate(value, &schema["additionalProperties"], &nested_path)?;
                 }
             }
         }
         Some("array") => {
-            let items = value.as_array().ok_or_else(|| invalid(path))?;
+            let items = value.as_array().ok_or_else(|| invalid_field(path))?;
             if schema["minItems"]
                 .as_u64()
                 .is_some_and(|min| items.len() < min as usize)
@@ -104,39 +123,39 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
                     .as_u64()
                     .is_some_and(|max| items.len() > max as usize)
             {
-                return Err(invalid(path));
+                return Err(invalid_field(path));
             }
             for (index, item) in items.iter().enumerate() {
                 validate(item, &schema["items"], &format!("{path}[{index}]"))?;
                 if schema["uniqueItems"] == true && items[..index].contains(item) {
-                    return Err(invalid(path));
+                    return Err(invalid_field(path));
                 }
             }
         }
         Some("string") => {
-            let text = value.as_str().ok_or_else(|| invalid(path))?;
+            let text = value.as_str().ok_or_else(|| invalid_field(path))?;
             if let Some(pattern) = schema["pattern"].as_str() {
                 if !matches_pattern(pattern, text) {
-                    return Err(invalid(path));
+                    return Err(invalid_field(path));
                 }
             }
             if schema["maxLength"]
                 .as_u64()
                 .is_some_and(|maximum| text.chars().count() > maximum as usize)
             {
-                return Err(invalid(path));
+                return Err(invalid_field(path));
             }
             if schema["minLength"]
                 .as_u64()
                 .is_some_and(|minimum| text.trim().chars().count() < minimum as usize)
             {
-                return Err(invalid(path));
+                return Err(invalid_field(path));
             }
         }
-        Some("boolean") if !value.is_boolean() => return Err(invalid(path)),
-        Some("null") if !value.is_null() => return Err(invalid(path)),
+        Some("boolean") if !value.is_boolean() => return Err(invalid_field(path)),
+        Some("null") if !value.is_null() => return Err(invalid_field(path)),
         Some("integer" | "number") => {
-            let number = value.as_f64().ok_or_else(|| invalid(path))?;
+            let number = value.as_f64().ok_or_else(|| invalid_field(path))?;
             if !number.is_finite()
                 || (schema["type"] == "integer" && value.as_u64().is_none())
                 || schema["minimum"]
@@ -146,7 +165,7 @@ fn validate(value: &Value, schema: &Value, path: &str) -> Result<(), AppError> {
                     .as_f64()
                     .is_some_and(|maximum| number > maximum)
             {
-                return Err(invalid(path));
+                return Err(invalid_field(path));
             }
         }
         _ => {}
@@ -316,7 +335,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             .flatten()
         {
             if !seen.insert(item["id"].as_str()) {
-                return Err(invalid(pointer));
+                return Err(invalid_field(pointer));
             }
         }
     }
@@ -335,23 +354,23 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
         let mut seen = HashSet::new();
         for value in slot_values(slots) {
             if !seen.insert(value.as_str()) {
-                return Err(invalid(key));
+                return Err(invalid_field(key));
             }
         }
     }
     for id in slot_values(&config["aiTasks"]["slots"]).filter_map(Value::as_str) {
         if !tasks.contains(id) {
-            return Err(invalid("aiTasks.slots"));
+            return Err(invalid_field("aiTasks.slots"));
         }
     }
     for id in slot_values(&config["transformations"]["slots"]).filter_map(Value::as_str) {
         if !transformations.contains(id) {
-            return Err(invalid("transformations.slots"));
+            return Err(invalid_field("transformations.slots"));
         }
     }
     for id in slot_values(&config["styling"]["slots"]).filter_map(Value::as_str) {
         if !stylings.contains(id) {
-            return Err(invalid("styling.slots"));
+            return Err(invalid_field("styling.slots"));
         }
     }
     let providers = ids(config, "/llm/providers");
@@ -361,7 +380,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
         if (builtin && provider["type"] != id)
             || (!builtin && provider["type"] != CUSTOM_LLM_PROVIDER_TYPE)
         {
-            return Err(invalid("llm.providers.type"));
+            return Err(invalid_field("llm.providers.type"));
         }
     }
     let models = ids(config, "/llm/models");
@@ -369,7 +388,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     let pages = ids(config, "/launcherPages");
     for model in config["llm"]["models"].as_array().into_iter().flatten() {
         if !providers.contains(model["providerId"].as_str().unwrap_or_default()) {
-            return Err(invalid("llm.models.providerId"));
+            return Err(invalid_field("llm.models.providerId"));
         }
     }
     for id in config["llm"]["tasks"]
@@ -379,7 +398,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
         .filter_map(|task| task["modelId"].as_str())
     {
         if !id.is_empty() && !models.contains(id) {
-            return Err(invalid("llm.tasks.modelId"));
+            return Err(invalid_field("llm.tasks.modelId"));
         }
     }
     for slot in slot_values(&config["mainActions"]) {
@@ -387,26 +406,26 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             Some("command")
                 if !commands.contains(slot["commandId"].as_str().unwrap_or_default()) =>
             {
-                return Err(invalid("mainActions.commandId"))
+                return Err(invalid_field("mainActions.commandId"))
             }
             Some("aiTask") if !tasks.contains(slot["taskId"].as_str().unwrap_or_default()) => {
-                return Err(invalid("mainActions.taskId"))
+                return Err(invalid_field("mainActions.taskId"))
             }
             Some("transformation")
                 if !transformations
                     .contains(slot["transformationId"].as_str().unwrap_or_default()) =>
             {
-                return Err(invalid("mainActions.transformationId"))
+                return Err(invalid_field("mainActions.transformationId"))
             }
             Some("styling")
                 if !stylings.contains(slot["stylingId"].as_str().unwrap_or_default()) =>
             {
-                return Err(invalid("mainActions.stylingId"))
+                return Err(invalid_field("mainActions.stylingId"))
             }
             Some("launcherPage")
                 if !pages.contains(slot["pageId"].as_str().unwrap_or_default()) =>
             {
-                return Err(invalid("mainActions.pageId"));
+                return Err(invalid_field("mainActions.pageId"));
             }
             _ => {}
         }
@@ -414,7 +433,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     for page in config["launcherPages"].as_array().into_iter().flatten() {
         for id in slot_values(&page["slots"]).filter_map(Value::as_str) {
             if !commands.contains(id) {
-                return Err(invalid("launcherPages.slots"));
+                return Err(invalid_field("launcherPages.slots"));
             }
         }
     }
@@ -424,7 +443,7 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
 pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
     validate(config, &SCHEMA, "userConfig")?;
     if config["configVersion"] != json!(crate::services::settings::version::CONFIG_VERSION) {
-        return Err(invalid("configVersion"));
+        return Err(invalid_field("configVersion"));
     }
     for command in config["commands"].as_array().into_iter().flatten() {
         if let Some(schema) = tool_config_schema(&command["toolId"]) {
@@ -433,9 +452,9 @@ pub fn validate_user_config(config: &Value) -> Result<(), AppError> {
         if command["toolId"] == "webhook" && command["toolConfig"]["isAuthEnabled"] == true {
             let id = command["toolConfig"]["authSecretId"]
                 .as_str()
-                .ok_or_else(|| invalid("commands.toolConfig.authSecretId"))?;
+                .ok_or_else(|| invalid_field("commands.toolConfig.authSecretId"))?;
             if !crate::services::secrets::is_valid_id(id) {
-                return Err(invalid("commands.toolConfig.authSecretId"));
+                return Err(invalid_field("commands.toolConfig.authSecretId"));
             }
         }
     }

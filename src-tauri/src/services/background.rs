@@ -1,5 +1,5 @@
 //! Application-owned tasks share cancellation and a bounded shutdown barrier.
-use crate::locks::MutexExt;
+use crate::locks::{CondvarExt, MutexExt};
 use std::future::Future;
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
@@ -78,8 +78,7 @@ impl StopToken {
         *self
             .0
             .changed
-            .wait_timeout_while(stopped, duration, |stopped| !*stopped)
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .wait_timeout_while_locked(stopped, duration, |stopped| !*stopped)
             .0
     }
     pub async fn cancelled(&self) {
@@ -179,14 +178,9 @@ impl BackgroundServices {
     }
     fn wait_for_tasks(&self, deadline: Instant) -> bool {
         let tasks = self.barrier.tasks.locked();
-        let remaining = deadline.saturating_duration_since(Instant::now());
         self.barrier
             .changed
-            .wait_timeout_while(tasks, remaining, |tasks| tasks.active_count != 0)
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .0
-            .active_count
-            == 0
+            .wait_while_until(tasks, deadline, |tasks| tasks.active_count != 0)
     }
 }
 

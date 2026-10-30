@@ -7,6 +7,7 @@
 //! keeps it while keys are pressed, and closes it after a while without any:
 //! the desktop shows an open session as remote control in progress.
 
+use crate::locks::MutexExt;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Mutex, OnceLock};
@@ -84,7 +85,7 @@ fn call<T>(request: impl FnOnce(Sender<T>) -> Request, timeout: Duration) -> Res
     let (reply, answer) = mpsc::channel();
     let request = request(reply);
     {
-        let mut worker = WORKER.lock().unwrap_or_else(|error| error.into_inner());
+        let mut worker = WORKER.locked();
         let sent = match worker.as_ref() {
             Some(sender) => match sender.send(request) {
                 Ok(()) => None,

@@ -100,6 +100,7 @@ pub fn run() {
             .manage(services::external::jobs::ExternalJobs::default())
             .manage(services::external::command_library::ToolCatalogState::default())
             .manage(services::chat_images::ChatImages::default())
+            .manage(services::ai_vault::MemoryReadVersions::default())
             .manage(services::dropped_files::DroppedFiles::default())
             .manage(services::plugins::PluginInspection::default())
             .manage(services::voice::session::VoiceSessionState::default())

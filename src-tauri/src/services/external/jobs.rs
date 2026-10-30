@@ -1,4 +1,5 @@
 //! Bounded, in-memory lifecycle of external command invocations.
+use crate::locks::MutexExt;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
@@ -30,9 +31,7 @@ pub struct ExternalJobs {
 
 impl ExternalJobs {
     fn lock_entries(&self) -> MutexGuard<'_, BTreeMap<String, ExternalJobEntry>> {
-        self.entries
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
+        self.entries.locked()
     }
 
     pub fn create(

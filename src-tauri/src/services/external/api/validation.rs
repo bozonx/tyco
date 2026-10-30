@@ -43,12 +43,10 @@ pub(super) fn raw_command<'a>(config: &'a Value, id: &str) -> Option<&'a Value> 
 
 /// The name the user gave the command, for the access prompt.
 pub(super) fn command_name(config: &Value, id: &str) -> String {
-    raw_command(config, id)
-        .and_then(|command| command["name"].as_str())
-        .map(str::trim)
+    crate::models::user_config::command(config, id)
+        .map(|command| command.name.trim().to_owned())
         .filter(|name| !name.is_empty())
-        .unwrap_or(id)
-        .to_owned()
+        .unwrap_or_else(|| id.to_owned())
 }
 
 pub(super) fn describe(app: &AppHandle, target: &str, by_name: bool) -> ApiResult<Value> {
