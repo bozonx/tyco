@@ -118,6 +118,13 @@ fn show_application_mode_on_main_thread(
         .ok_or_else(|| AppError::ServiceUnavailable("Main window not found".into()))?;
     let state = app.state::<AppState>();
 
+    // When the main window is already shown on another virtual desktop or in
+    // the background, hiding it before showing it again unmaps its surface so
+    // the compositor places the remapped window on the current desktop.
+    if state.snapshot().window.is_window_shown && !super::target_focus::has_focused_window(app) {
+        let _ = window.hide();
+    }
+
     window.set_decorations(true)?;
     window.set_resizable(true)?;
     window.set_focusable(true)?;

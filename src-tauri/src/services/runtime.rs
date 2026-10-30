@@ -236,6 +236,9 @@ fn activate_on_main_thread(
         window.set_decorations(true)?;
         window.set_resizable(true)?;
         window.center()?;
+        if state.snapshot().window.is_window_shown && !has_focused_window(app) {
+            let _ = window.hide();
+        }
     }
     window.set_focusable(true)?;
     window.show()?;

@@ -158,7 +158,7 @@ fn stays_on_current_desktop(current: Option<u32>, target: Option<u32>) -> bool {
 }
 
 /// Moves Tyco's normal window to the active desktop and focuses it.
-pub(crate) fn activate_own_window() -> Result<(), AppError> {
+pub(crate) fn activate_own_window(own_class: &str) -> Result<(), AppError> {
     let Ok((connection, screen)) = x11rb::connect(None) else {
         return Ok(());
     };
@@ -175,14 +175,11 @@ pub(crate) fn activate_own_window() -> Result<(), AppError> {
     };
     let current_desktop_atom = intern(&connection, "_NET_CURRENT_DESKTOP")?;
     let wm_desktop_atom = intern(&connection, "_NET_WM_DESKTOP")?;
-    let own_class = gtk::glib::prgname()
-        .map(|name| name.to_string())
-        .unwrap_or_default();
     let watcher = Watcher {
         connection: &connection,
         root,
         atoms,
-        own_class,
+        own_class: own_class.to_owned(),
         pid: std::process::id(),
     };
     let Some(own_window) = watcher.clients().into_iter().find(|&w| {

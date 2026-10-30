@@ -196,6 +196,12 @@ impl WindowTracker {
         })
     }
 
+    /// Whether a backend is running and reports a Tyco window as focused.
+    pub fn is_own_window_active(&self) -> bool {
+        let state = self.state.locked();
+        state.running && state.active_kind == WindowKind::Own
+    }
+
     pub fn is_running(&self) -> bool {
         self.state.locked().running
     }
@@ -377,6 +383,7 @@ mod tests {
     fn reports_the_active_application_window() {
         let tracker = running_tracker();
         tracker.window_activated(&seq(1), "a", WindowKind::Foreign, "org.kde.konsole");
+        assert!(!tracker.is_own_window_active());
         assert_eq!(
             tracker.active_window(),
             Some(ActiveWindow {
@@ -385,8 +392,10 @@ mod tests {
             })
         );
         tracker.window_activated(&seq(2), "tyco", WindowKind::Own, "tyco");
+        assert!(tracker.is_own_window_active());
         assert_eq!(tracker.active_window().unwrap().id, "tyco");
         tracker.window_activated(&seq(3), "desktop", WindowKind::Other, "plasmashell");
+        assert!(!tracker.is_own_window_active());
         assert_eq!(tracker.active_window(), None);
     }
 

@@ -1,4 +1,5 @@
 //! Tray interactions delegate window operations to the runtime.
+use super::target_focus::has_focused_window;
 use super::{hide_active_window, show_application};
 use crate::errors::AppError;
 use crate::state::AppState;
@@ -14,8 +15,8 @@ enum TrayClickAction {
     ShowApplication,
 }
 
-fn tray_click_action(is_window_shown: bool) -> TrayClickAction {
-    if is_window_shown {
+fn tray_click_action(is_window_shown: bool, is_window_focused: bool) -> TrayClickAction {
+    if is_window_shown && is_window_focused {
         TrayClickAction::HideActiveWindow
     } else {
         TrayClickAction::ShowApplication
@@ -94,7 +95,10 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
                 let app = tray.app_handle();
                 if let Some(state) = app.try_state::<AppState>() {
                     let snapshot = state.snapshot();
-                    let result = match tray_click_action(snapshot.window.is_window_shown) {
+                    let result = match tray_click_action(
+                        snapshot.window.is_window_shown,
+                        has_focused_window(app),
+                    ) {
                         TrayClickAction::HideActiveWindow => hide_active_window(app),
                         TrayClickAction::ShowApplication => show_application(app),
                     };
@@ -112,8 +116,22 @@ pub(super) fn setup_tray(app: &mut App) -> Result<(), AppError> {
 mod tests {
     use super::*;
     #[test]
-    fn tray_click_hides_a_visible_window_and_shows_the_application_otherwise() {
-        assert_eq!(tray_click_action(true), TrayClickAction::HideActiveWindow);
-        assert_eq!(tray_click_action(false), TrayClickAction::ShowApplication);
+    fn tray_click_hides_a_focused_visible_window_and_shows_the_application_otherwise() {
+        assert_eq!(
+            tray_click_action(true, true),
+            TrayClickAction::HideActiveWindow
+        );
+        assert_eq!(
+            tray_click_action(true, false),
+            TrayClickAction::ShowApplication
+        );
+        assert_eq!(
+            tray_click_action(false, false),
+            TrayClickAction::ShowApplication
+        );
+        assert_eq!(
+            tray_click_action(false, true),
+            TrayClickAction::ShowApplication
+        );
     }
 }

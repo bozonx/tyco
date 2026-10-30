@@ -35,6 +35,10 @@ fn wait_until_unfocused_with(
 }
 
 pub(super) fn has_focused_window(app: &AppHandle) -> bool {
+    let tracker = crate::services::platform::window_tracker::tracker();
+    if tracker.is_running() {
+        return tracker.is_own_window_active();
+    }
     app.webview_windows()
         .values()
         .any(|window| window.is_focused().unwrap_or(false))

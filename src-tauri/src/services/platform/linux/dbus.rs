@@ -24,6 +24,9 @@ const ERROR_PREFIX: &str = "org.tyco.Error";
 /// the rest of the UI works without the hotkey integration.
 pub fn spawn_dbus_server(app: AppHandle) -> Result<(), crate::errors::AppError> {
     let services = app.state::<crate::services::background::BackgroundServices>();
+    let own_class = gtk::glib::prgname()
+        .map(|name| name.to_string())
+        .unwrap_or_default();
     let handle = app.clone();
     services.spawn_async(async move {
         let app = handle;
@@ -48,7 +51,6 @@ pub fn spawn_dbus_server(app: AppHandle) -> Result<(), crate::errors::AppError> 
         };
         log::info!("D-Bus server listening on {MESSAGE_DEST}{MESSAGE_PATH}");
         if session::current().is_kde_wayland() {
-            let own_class = gtk::glib::prgname().unwrap_or_default();
             if let Err(error) = app
                 .state::<crate::services::background::BackgroundServices>()
                 .spawn_thread("kwin-window-tracker", move |stop| {

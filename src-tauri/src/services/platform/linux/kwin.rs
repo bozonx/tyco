@@ -39,9 +39,18 @@ function tycoNextSeq() {
     tycoSeq += 1;
     return TYCO_SESSION + ":" + tycoSeq;
 }
+function tycoMatchesClass(window, ownClass) {
+    if (!ownClass) {
+        return false;
+    }
+    const cls = String(window.resourceClass || "").toLowerCase();
+    const name = String(window.resourceName || "").toLowerCase();
+    const desktopFile = String(window.desktopFileName || "").toLowerCase();
+    return cls === ownClass || name === ownClass || desktopFile === ownClass;
+}
 function tycoKind(window) {
     // the class covers a sandbox, where Tyco does not know its own pid
-    if (window.pid === TYCO_PID || (TYCO_CLASS !== "" && window.resourceClass === TYCO_CLASS)) {
+    if (window.pid === TYCO_PID || tycoMatchesClass(window, TYCO_CLASS)) {
         return "own";
     }
     return window.normalWindow || window.dialog ? "foreign" : "other";
@@ -79,11 +88,23 @@ const OWN_ACTIVATOR_SCRIPT: &str = r#"
 (function () {
     const pid = __PID__;
     const ownClass = "__CLASS__";
+    function matchesOwn(w) {
+        if (w.pid === pid) {
+            return true;
+        }
+        if (!ownClass) {
+            return false;
+        }
+        const cls = String(w.resourceClass || "").toLowerCase();
+        const name = String(w.resourceName || "").toLowerCase();
+        const desktopFile = String(w.desktopFileName || "").toLowerCase();
+        return cls === ownClass || name === ownClass || desktopFile === ownClass;
+    }
     function activate() {
         const windows = workspace.windowList();
         for (let i = 0; i < windows.length; i++) {
             const w = windows[i];
-            if (w.normalWindow && (w.pid === pid || (ownClass !== "" && w.resourceClass === ownClass))) {
+            if (w.normalWindow && matchesOwn(w)) {
                 if (!w.onAllDesktops && workspace.currentDesktop) {
                     if (w.desktops !== undefined) {
                         w.desktops = [workspace.currentDesktop];
@@ -93,6 +114,9 @@ const OWN_ACTIVATOR_SCRIPT: &str = r#"
                 }
                 w.minimized = false;
                 workspace.activeWindow = w;
+                if (w.demandsAttention) {
+                    w.demandsAttention = false;
+                }
                 return true;
             }
         }
@@ -177,12 +201,13 @@ fn tracker_alive() -> bool {
 /// Loads the tracker script and waits for its first report.
 fn start_tracker(own_class: &str) -> Result<(), AppError> {
     let session = new_session();
+    let own_class = own_class.to_ascii_lowercase();
     let source = TRACKER_SCRIPT
         .replace("__PID__", &std::process::id().to_string())
         .replace(
             "__CLASS__",
-            if is_class_name(own_class) {
-                own_class
+            if is_class_name(&own_class) {
+                &own_class
             } else {
                 ""
             },
@@ -252,10 +277,10 @@ pub fn activate_window(id: &str) -> Result<(), AppError> {
 }
 
 /// Moves Tyco's normal window to the active desktop and focuses it.
-pub fn activate_own_window() -> Result<(), AppError> {
+pub fn activate_own_window(own_class: &str) -> Result<(), AppError> {
     static ACTIVATION: Mutex<()> = Mutex::new(());
     let _activation = ACTIVATION.lock().unwrap_or_else(|error| error.into_inner());
-    let own_class = gtk::glib::prgname().unwrap_or_default();
+    let own_class = own_class.to_ascii_lowercase();
     let source = OWN_ACTIVATOR_SCRIPT
         .replace("__PID__", &std::process::id().to_string())
         .replace(

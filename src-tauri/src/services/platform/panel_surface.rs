@@ -147,15 +147,35 @@ pub fn focus_window(window: &WebviewWindow) -> Result<(), AppError> {
     #[cfg(target_os = "linux")]
     {
         let native = window.gtk_window()?;
+        let is_main = window.label() == "main";
+        // On Wayland, a mapped xdg_toplevel stays bound to the virtual desktop
+        // it was first mapped on, and `present()` from a background tray event
+        // without an activation token only marks the window as demanding
+        // attention on that other desktop. Unmapping and remapping an unfocused
+        // main window lets the compositor map it fresh on the current desktop.
+        let is_focused = {
+            let tracker = super::window_tracker::tracker();
+            if tracker.is_running() {
+                tracker.is_own_window_active() && native.is_active()
+            } else {
+                native.is_active()
+            }
+        };
+        if is_main && native.is_visible() && !is_focused {
+            native.hide();
+        }
         native.show_all();
         native.deiconify();
         native.present();
-        if window.label() == "main" {
+        if is_main {
+            let own_class = gtk::glib::prgname()
+                .map(|name| name.to_string())
+                .unwrap_or_default();
             if super::session::current().is_kde_wayland() {
                 if let Err(error) = std::thread::Builder::new()
                     .name("kwin-own-activator".into())
-                    .spawn(|| {
-                        if let Err(error) = super::linux::kwin::activate_own_window() {
+                    .spawn(move || {
+                        if let Err(error) = super::linux::kwin::activate_own_window(&own_class) {
                             log::debug!("Could not activate TyCo window via KWin script: {error}");
                         }
                     })
@@ -165,8 +185,8 @@ pub fn focus_window(window: &WebviewWindow) -> Result<(), AppError> {
             } else if super::session::current().is_x11() {
                 if let Err(error) = std::thread::Builder::new()
                     .name("x11-own-activator".into())
-                    .spawn(|| {
-                        if let Err(error) = super::linux::x11::activate_own_window() {
+                    .spawn(move || {
+                        if let Err(error) = super::linux::x11::activate_own_window(&own_class) {
                             log::debug!("Could not activate TyCo window via X11: {error}");
                         }
                     })
