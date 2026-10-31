@@ -555,6 +555,8 @@
     "noSelection": "선택된 내용이 없습니다",
     "noTarget": "포커스가 있는 애플리케이션 창이 없습니다",
     "resultInClipboard": "결과가 클립보드에 복사되었습니다",
+    "selectionChanged": "처리하는 동안 선택 영역이 바뀌어 결과를 클립보드에 복사했습니다",
+    "terminalSelection": "터미널의 선택 영역은 바꿀 수 없어 결과를 클립보드에 복사했습니다",
     "unchanged": {
       "command": "명령 실행 후에도 텍스트가 변경되지 않았습니다",
       "correction": "오류를 찾지 못했습니다"
@@ -999,14 +1001,17 @@
     "tasksHint": "AI가 텍스트에 적용하는 지시 사항(프롬프트)입니다. 작업 메뉴에서 각 지시 사항은 고유한 키로 실행됩니다. 카드를 드래그하여 키를 변경할 수 있습니다.",
     "tasksTab": "AI 작업",
     "temperature": "온도",
+    "terminalApps": "기타 터미널",
+    "terminalAppsHint": "Tyco가 인식하지 못하는 터미널의 창 클래스를 쉼표로 구분해 입력하세요. 터미널에서 Tyco는 Ctrl+C를 누르지 않으며 선택 영역의 결과를 클립보드에 넣습니다.",
     "terminalPasteShortcut": "터미널 붙여넣기 단축키",
-    "terminalPasteShortcutHint": "인식된 터미널 창에서 결과를 삽입하고 선택한 텍스트를 바꿀 때 사용됩니다. 선택한 텍스트 복사는 Ctrl+Shift+C를 사용합니다.",
+    "terminalPasteShortcutHint": "인식된 터미널 창에 결과를 삽입할 때 사용됩니다. 터미널에서 선택한 텍스트는 키를 누르지 않고 읽으며, 결과는 클립보드로 들어갑니다.",
     "terminalPasteShortcutSame": "일반 앱과 동일",
     "textCorrection": "텍스트 교정",
     "textInsertion": {
       "accessibilityDenied": "시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용에서 Tyco를 허용하세요.",
       "allowKeyboardControl": "허용",
       "checkFailed": "텍스트 삽입을 확인하지 못했습니다: {error}",
+      "clipboardToolsMissing": "클립보드 도구가 없습니다: {tools}. Wayland에서는 wl-clipboard를, X11에서는 xclip을 설치하세요.",
       "keysReadyPortal": "데스크톱의 원격 제어 포털을 통해 키를 누릅니다",
       "keysReadySystem": "시스템 입력으로 키를 누릅니다",
       "keysReadyYdotool": "ydotool로 키를 누릅니다",

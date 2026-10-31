@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 131913ba57716dbbb1f2a0bfa923876f8195a8ac36f439456572e97e0ad25e4b
+// Source hash: cf04a22a04162a1b42e5f8274af993f67dbbe63812986dcad171f955f1259abc
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -602,7 +602,12 @@ export type SecretStatus = {
 export type SelectionCancelEvent = { runId: number }
 
 export type SelectionFinishStatus =
-  'pasted' | 'clipboard' | 'restored' | 'stale'
+  | 'pasted'
+  | 'clipboard'
+  | 'selectionChanged'
+  | 'terminal'
+  | 'restored'
+  | 'stale'
 
 export type SelectionRunError = { code: SelectionRunErrorCode; message: string }
 
@@ -701,6 +706,11 @@ export type TextInsertionStatus = {
   /** What the system reported, in English. */
   detail?: string
   target: TargetTracking
+  /**
+   * Clipboard tools the session needs and lacks, e.g. `wl-copy`: without them
+   * nothing can be inserted or captured.
+   */
+  missingClipboardTools: Array<string>
 }
 
 /** A tool as the webview registry describes it, see `set_tool_catalog`. */

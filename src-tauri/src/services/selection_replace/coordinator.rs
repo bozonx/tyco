@@ -19,7 +19,8 @@ pub(super) const ABANDONED_RUN_AGE: Duration = Duration::from_secs(180);
 pub(super) enum SelectionRunTakeOutcome {
     Empty,
     Active(SelectionRun),
-    Abandoned(SelectionRun),
+    /// One the webview never finished, now dropped.
+    Abandoned,
 }
 
 #[derive(Default)]
@@ -46,7 +47,7 @@ impl SelectionRunCoordinator {
                 "Dropping selection run {} the webview never finished",
                 run.id
             );
-            SelectionRunTakeOutcome::Abandoned(run)
+            SelectionRunTakeOutcome::Abandoned
         }
     }
 
@@ -68,8 +69,8 @@ pub(super) trait SelectionBackend {
     }
     fn user_config(&self) -> std::sync::Arc<Value>;
     fn wait(&self, wait: TriggerWait);
+    /// Copies the selection; the clipboard has its content back by return.
     fn capture(&self, config: &Value) -> Result<(String, SelectionRun), SelectionRunError>;
-    fn restore(&self, run: SelectionRun);
     fn paste(
         &self,
         config: &Value,
@@ -103,8 +104,7 @@ pub(super) enum TriggerDecision {
     Cancel(SelectionRun, CapturingGuard),
     /// Cancel this run, then capture anew.
     Replace(SelectionRun, CapturingGuard),
-    /// With a run the webview abandoned, whose clipboard goes back first.
-    Capture(CapturingGuard, Option<SelectionRun>),
+    Capture(CapturingGuard),
 }
 
 impl SelectionRunCoordinator {
@@ -138,9 +138,8 @@ impl SelectionRunCoordinator {
                 TriggerKind::Toggle => TriggerDecision::Cancel(run, guard),
                 TriggerKind::Replace => TriggerDecision::Replace(run, guard),
             }),
-            SelectionRunTakeOutcome::Empty => Ok(TriggerDecision::Capture(guard, None)),
-            SelectionRunTakeOutcome::Abandoned(run) => {
-                Ok(TriggerDecision::Capture(guard, Some(run)))
+            SelectionRunTakeOutcome::Empty | SelectionRunTakeOutcome::Abandoned => {
+                Ok(TriggerDecision::Capture(guard))
             }
         }
     }
@@ -151,13 +150,7 @@ impl SelectionRunCoordinator {
         action: String,
         wait: TriggerWait,
         guard: CapturingGuard,
-        abandoned: Option<SelectionRun>,
     ) {
-        // the clipboard of the abandoned run would otherwise keep its
-        // selection, and the new snapshot would take that for the user's
-        if let Some(run) = abandoned {
-            backend.restore(run);
-        }
         backend.wait(wait);
         let run_id = self.next_id.fetch_add(1, Ordering::SeqCst) + 1;
         let user_config = backend.user_config();
@@ -190,9 +183,7 @@ impl SelectionRunCoordinator {
         drop(guard);
         if let Err(error) = backend.publish(event) {
             log::error!("Could not hand the selection over to the webview: {error}");
-            if let Some(run) = self.take_if(run_id) {
-                backend.restore(run);
-            }
+            self.take_if(run_id);
         }
     }
 
@@ -205,10 +196,10 @@ impl SelectionRunCoordinator {
             .reserve()
             .ok_or_else(|| AppError::Busy("A selection is being captured".into()))?;
         // a run the webview abandoned must not keep external jobs out for good
-        let abandoned = {
+        {
             let mut current = self.lock();
             match current.as_ref() {
-                None => None,
+                None => {}
                 Some(run)
                     if !run.is_external
                         && now.saturating_duration_since(run.started_at) >= ABANDONED_RUN_AGE =>
@@ -217,19 +208,15 @@ impl SelectionRunCoordinator {
                         "Dropping selection run {} the webview never finished",
                         run.id
                     );
-                    current.take()
+                    current.take();
                 }
                 Some(_) => return Err(AppError::Busy("A selection run is already active".into())),
             }
-        };
-        if let Some(run) = abandoned {
-            backend.restore(run);
         }
         let (text, mut run) = backend
             .capture(&backend.user_config())
             .map_err(|error| AppError::Failed(error.message))?;
         if !backend.can_run() {
-            backend.restore(run);
             return Err(AppError::ServiceUnavailable(
                 "Selection service is stopping".into(),
             ));
@@ -252,10 +239,7 @@ impl SelectionRunCoordinator {
             return Ok(SelectionFinishStatus::Stale);
         };
         match text.filter(|_| backend.can_run()) {
-            None => {
-                backend.restore(run);
-                Ok(SelectionFinishStatus::Restored)
-            }
+            None => Ok(SelectionFinishStatus::Restored),
             Some(text) => backend.paste(&backend.user_config(), run, text),
         }
     }
@@ -263,7 +247,6 @@ impl SelectionRunCoordinator {
 
 pub(super) fn cancel_with(backend: &impl SelectionBackend, run: SelectionRun) {
     let id = run.id;
-    backend.restore(run);
     if let Err(error) = backend.cancelled(id) {
         log::warn!("Could not report the cancelled selection run: {error}");
     }

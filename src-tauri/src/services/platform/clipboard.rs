@@ -25,15 +25,26 @@ pub fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
 
 #[cfg(target_os = "linux")]
 fn copy_to_clipboard_linux(text: &str) -> Result<(), AppError> {
-    let clipboard_commands: [(&str, &[&str]); 3] = [
-        ("wl-copy", &["--type", "text/plain"]),
-        ("xclip", &["-selection", "clipboard"]),
-        ("xsel", &["--clipboard", "--input"]),
-    ];
+    use super::linux::clipboard_restore::Backend;
+
+    // the tool of the session: on X11, `wl-copy` would fill the clipboard of
+    // a Wayland session that `xclip` and the reads of Tyco never see
+    let clipboard_commands: &[(&str, &[&str])] = match Backend::current() {
+        Some(Backend::WlClipboard) => &[("wl-copy", &["--type", "text/plain"])],
+        Some(Backend::Xclip) => &[
+            ("xclip", &["-selection", "clipboard"]),
+            ("xsel", &["--clipboard", "--input"]),
+        ],
+        None => &[
+            ("wl-copy", &["--type", "text/plain"]),
+            ("xclip", &["-selection", "clipboard"]),
+            ("xsel", &["--clipboard", "--input"]),
+        ],
+    };
 
     let mut last_error: Option<AppError> = None;
 
-    for (binary, args) in clipboard_commands {
+    for &(binary, args) in clipboard_commands {
         match write_to_clipboard_command(binary, args, text) {
             Ok(()) => return Ok(()),
             Err(AppError::Io(error)) if error.kind() == std::io::ErrorKind::NotFound => continue,
@@ -46,8 +57,28 @@ fn copy_to_clipboard_linux(text: &str) -> Result<(), AppError> {
     }
 
     Err(AppError::ServiceUnavailable(String::from(
-        "No clipboard utility found. Install wl-clipboard, xclip, or xsel.",
+        "No clipboard utility found. Install wl-clipboard on Wayland, or xclip on X11.",
     )))
+}
+
+/// The clipboard tools the session needs and lacks; empty when all are
+/// there.
+#[cfg(target_os = "linux")]
+pub fn missing_clipboard_tools() -> Vec<&'static str> {
+    use super::linux::clipboard_restore::Backend;
+    let Some(backend) = Backend::current() else {
+        return Vec::new();
+    };
+    let path = std::env::var_os("PATH");
+    backend
+        .tools()
+        .iter()
+        .copied()
+        .filter(|tool| {
+            path.as_deref()
+                .is_none_or(|path| !std::env::split_paths(path).any(|dir| dir.join(tool).is_file()))
+        })
+        .collect()
 }
 
 /// How long a clipboard tool may take to take the text.
@@ -142,6 +173,17 @@ pub(crate) fn read_text() -> Option<String> {
     {
         None
     }
+}
+
+/// Puts `snapshot` back again if an application copies over it soon after,
+/// see `restore_now` after a capture that gave up waiting for the copy.
+pub(crate) fn guard_restored(snapshot: ClipboardSnapshot) {
+    #[cfg(target_os = "linux")]
+    super::linux::clipboard_restore::guard_restored(snapshot);
+    #[cfg(target_os = "windows")]
+    super::windows::clipboard::guard_restored(snapshot);
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    match snapshot {}
 }
 
 /// Empties the clipboard; used when there is no snapshot to put back.

@@ -1,6 +1,6 @@
 //! Inserting text goes through the clipboard. The previous clipboard content
 //! is put back once the target window has pasted: with `wl-clipboard` on
-//! Wayland and `xclip` on X11.
+//! Wayland and `xclip` on X11 (`xsel` reads and writes text only).
 
 use std::thread;
 use std::time::Duration;
@@ -9,8 +9,11 @@ use crate::services::platform::session;
 
 const COMMAND_TIMEOUT: Duration = Duration::from_millis(500);
 /// The target reads the clipboard when it handles the paste keys; restoring
-/// earlier would make it paste the old content.
-const RESTORE_DELAY: Duration = Duration::from_secs(1);
+/// earlier would make it paste the old content. Nothing tells when it has
+/// read it, so the delay leaves room for slow targets: a remote desktop, a
+/// busy Electron app. Pasting the result twice is harmless; pasting the old
+/// content, which may be a password, is not.
+const RESTORE_DELAY: Duration = Duration::from_millis(2500);
 const TEXT_TYPES: [&str; 3] = ["text/plain;charset=utf-8", "text/plain", "UTF8_STRING"];
 
 /// One representation of the clipboard content. The tools offer a single
@@ -22,13 +25,13 @@ pub struct ClipboardSnapshot {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Backend {
+pub(crate) enum Backend {
     WlClipboard,
     Xclip,
 }
 
 impl Backend {
-    fn current() -> Option<Self> {
+    pub(crate) fn current() -> Option<Self> {
         let session = session::current();
         if session.is_x11() {
             Some(Self::Xclip)
@@ -39,13 +42,22 @@ impl Backend {
         }
     }
 
-    /// Whether a snapshot can be taken without side effects. Outside KDE,
-    /// `wl-paste` may need a focused window of its own to read the clipboard,
-    /// which would take the focus from the target.
+    /// Whether a snapshot can be taken without side effects. Without the
+    /// data control protocol, `wl-paste` needs a focused window of its own to
+    /// read the clipboard, which would take the focus from the target. KWin
+    /// and the wlroots compositors offer the protocol; GNOME does not.
     fn can_snapshot(self) -> bool {
         match self {
             Self::Xclip => true,
-            Self::WlClipboard => session::current().is_kde_wayland(),
+            Self::WlClipboard => has_data_control(session::current().desktop),
+        }
+    }
+
+    /// The tools this backend runs, for the settings to tell a missing one.
+    pub(crate) fn tools(self) -> &'static [&'static str] {
+        match self {
+            Self::WlClipboard => &["wl-copy", "wl-paste"],
+            Self::Xclip => &["xclip"],
         }
     }
 
@@ -111,27 +123,80 @@ pub fn restore_later(snapshot: ClipboardSnapshot, inserted: String) {
 /// The plain text in the clipboard, if it holds any.
 pub fn read_text() -> Option<String> {
     let output = match Backend::current()? {
-        Backend::Xclip => command_output("xclip", &["-selection", "clipboard", "-o"])?,
+        Backend::Xclip => command_output("xclip", &["-selection", "clipboard", "-o"])
+            .or_else(|| command_output("xsel", &["--clipboard", "--output"]))?,
         backend => backend.read("text/plain")?,
+    };
+    String::from_utf8(output).ok()
+}
+
+/// The primary selection: what was selected last, in any window. Terminals
+/// put their selection there as soon as it is made.
+pub fn read_primary() -> Option<String> {
+    let output = match Backend::current()? {
+        Backend::Xclip => command_output("xclip", &["-selection", "primary", "-o"])
+            .or_else(|| command_output("xsel", &["--primary", "--output"]))?,
+        Backend::WlClipboard => command_output("wl-paste", &["--primary", "--no-newline"])?,
     };
     String::from_utf8(output).ok()
 }
 
 /// Empties the clipboard; used when there is no snapshot to put back.
 pub fn clear() {
-    let result = match Backend::current() {
-        Some(Backend::WlClipboard) => super::super::process::status(
-            super::super::process::command("wl-copy", &["--clear"]),
+    let run = |binary: &str, args: &[&str]| {
+        super::super::process::status(
+            super::super::process::command(binary, args),
             None,
             super::super::clipboard::CLIPBOARD_WRITE_TIMEOUT,
         )
-        .map(drop)
-        .map_err(Into::into),
-        _ => super::super::clipboard::copy_to_clipboard(""),
+        .map_err(crate::errors::AppError::from)
+        .and_then(|status| {
+            status.success().then_some(()).ok_or_else(|| {
+                crate::errors::AppError::Failed(format!("{binary} failed with {status}"))
+            })
+        })
+    };
+    let result = match Backend::current() {
+        Some(Backend::WlClipboard) => run("wl-copy", &["--clear"]),
+        // xclip cannot drop the selection; an empty text is the closest
+        Some(Backend::Xclip) => run("xsel", &["--clipboard", "--clear"])
+            .or_else(|_| super::super::clipboard::copy_to_clipboard("")),
+        None => super::super::clipboard::copy_to_clipboard(""),
     };
     if let Err(error) = result {
         log::warn!("Could not clear the clipboard: {error}");
     }
+}
+
+/// Puts `snapshot` back again when the clipboard changes soon after it was
+/// restored: an application that copied too late for a capture would
+/// otherwise leave its copy there in place of the user's content.
+pub fn guard_restored(snapshot: ClipboardSnapshot) {
+    thread::spawn(move || {
+        let restored = read_text();
+        let deadline = std::time::Instant::now() + LATE_COPY_WINDOW;
+        while std::time::Instant::now() < deadline {
+            thread::sleep(LATE_COPY_POLL_INTERVAL);
+            let current = read_text();
+            if current.is_some() && current != restored {
+                log::debug!("A late copy replaced the restored clipboard; restoring it again");
+                restore_now(&snapshot);
+                return;
+            }
+        }
+    });
+}
+
+/// How long after a capture gave up a late copy is still expected.
+const LATE_COPY_WINDOW: Duration = Duration::from_millis(1500);
+const LATE_COPY_POLL_INTERVAL: Duration = Duration::from_millis(100);
+
+/// Whether the compositor lets clipboard tools work without a window.
+fn has_data_control(desktop: session::Desktop) -> bool {
+    matches!(
+        desktop,
+        session::Desktop::Kde | session::Desktop::Sway | session::Desktop::Hyprland
+    )
 }
 
 /// Puts `snapshot` back right away.
@@ -238,6 +303,14 @@ mod tests {
             Backend::WlClipboard.write_command("text/plain"),
             ("wl-copy", vec!["--type", "text/plain"])
         );
+    }
+
+    #[test]
+    fn snapshots_only_where_tools_need_no_window() {
+        assert!(has_data_control(session::Desktop::Kde));
+        assert!(has_data_control(session::Desktop::Hyprland));
+        assert!(!has_data_control(session::Desktop::Gnome));
+        assert!(!has_data_control(session::Desktop::Other));
     }
 
     #[test]

@@ -42,7 +42,8 @@
     "linux": {
       "pasteShortcut": "Ctrl+V",
       "terminalPasteShortcut": "Ctrl+Shift+V"
-    }
+    },
+    "terminalApps": []
   },
   "translation": {
     "provider": "llm",

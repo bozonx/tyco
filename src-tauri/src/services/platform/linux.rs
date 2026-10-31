@@ -21,6 +21,7 @@ pub mod x11;
 use serde_json::Value;
 
 use crate::errors::AppError;
+pub(crate) use foreground_context::is_selection_from;
 use foreground_context::SystemForegroundContext;
 
 pub fn capture_foreground_target() -> Option<String> {

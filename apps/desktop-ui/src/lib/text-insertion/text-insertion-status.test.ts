@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   createTextInsertionStatusModel,
+  describeClipboardTools,
   describeKeys,
   describeTarget,
 } from './text-insertion-status'
@@ -16,6 +17,7 @@ const ready: TextInsertionStatus = {
   keySender: 'ydotool',
   keys: 'ready',
   target: 'tracked',
+  missingClipboardTools: [],
 }
 
 describe('describeKeys', () => {
@@ -44,14 +46,31 @@ describe('describeKeys', () => {
         keys: 'unavailable',
         problem: 'ydotooldNotRunning',
         target: 'tracked',
+        missingClipboardTools: [],
       })
     ).toEqual({
       tone: 'error',
       messageKey: 'settings.textInsertion.ydotooldNotRunning',
     })
     expect(
-      describeKeys({ keys: 'unavailable', target: 'tracked' }).messageKey
+      describeKeys({
+        keys: 'unavailable',
+        target: 'tracked',
+        missingClipboardTools: [],
+      }).messageKey
     ).toBe('settings.textInsertion.keysUnavailable')
+  })
+})
+
+describe('describeClipboardTools', () => {
+  it('reports missing clipboard tools only', () => {
+    expect(describeClipboardTools(ready)).toBeNull()
+    expect(
+      describeClipboardTools({ ...ready, missingClipboardTools: ['wl-copy'] })
+    ).toEqual({
+      tone: 'error',
+      messageKey: 'settings.textInsertion.clipboardToolsMissing',
+    })
   })
 })
 

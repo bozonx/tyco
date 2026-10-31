@@ -13,6 +13,17 @@ import {
   parseSelectionAction,
 } from '@tyco/shared'
 
+/** Why a result went to the clipboard instead of replacing the selection */
+const CLIPBOARD_MESSAGE_KEYS: Partial<Record<SelectionFinishStatus, string>> = {
+  clipboard: 'selection.focusChanged',
+  selectionChanged: 'selection.selectionChanged',
+  terminal: 'selection.terminalSelection',
+}
+
+/** Whether two texts differ only in surrounding whitespace or line breaks */
+const sameText = (first: string, second: string) =>
+  first.replace(/\r\n/g, '\n').trim() === second.replace(/\r\n/g, '\n').trim()
+
 /** Quick work finishes before the bubble would show up, so nothing flashes */
 const INFO_HIDE_MS = 1800
 const NOTICE_HIDE_MS = 4000
@@ -156,7 +167,7 @@ export function createSelectionReplace(deps: SelectionReplaceDependencies) {
       fail(action, deps.t('selection.emptyResult'))
       return
     }
-    if (result.trim() === event.text.trim()) {
+    if (sameText(result, event.text)) {
       await finishQuietly(event.runId)
       notice(deps.t(`selection.unchanged.${action.kind}`))
       return
@@ -173,8 +184,9 @@ export function createSelectionReplace(deps: SelectionReplaceDependencies) {
     if (disposed || status === 'stale') return
     void deps.saveResult?.(action, event.text, replacement)
 
-    if (status === 'clipboard') {
-      const message = deps.t('selection.focusChanged')
+    const clipboardMessageKey = CLIPBOARD_MESSAGE_KEYS[status]
+    if (clipboardMessageKey) {
+      const message = deps.t(clipboardMessageKey)
       notice(message, NOTICE_HIDE_MS)
       deps.notify(deps.t('selection.resultInClipboard'), message)
       return

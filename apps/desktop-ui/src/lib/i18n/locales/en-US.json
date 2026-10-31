@@ -558,6 +558,8 @@
     "noSelection": "Nothing is selected",
     "noTarget": "No application window has the focus",
     "resultInClipboard": "The result is in the clipboard",
+    "selectionChanged": "The selection changed meanwhile, so the result was copied to the clipboard",
+    "terminalSelection": "Text selected in a terminal cannot be replaced, so the result was copied to the clipboard",
     "unchanged": {
       "command": "The command left the text as it was",
       "correction": "No mistakes found"
@@ -1005,14 +1007,17 @@
     "tasksHint": "Instructions (prompts) the AI applies to the text. In the tasks menu each one runs with its own key; drag the cards to change their keys.",
     "tasksTab": "AI tasks",
     "temperature": "Temperature",
+    "terminalApps": "Other terminals",
+    "terminalAppsHint": "Window classes of terminals Tyco does not recognize, separated by commas. Tyco never presses Ctrl+C in a terminal and puts the result for its selection into the clipboard.",
     "terminalPasteShortcut": "Paste shortcut in terminals",
-    "terminalPasteShortcutHint": "Used for inserting results and replacing selected text in recognized terminal windows. Copying selected text uses Ctrl+Shift+C.",
+    "terminalPasteShortcutHint": "Used for inserting results into recognized terminal windows. Text selected in a terminal is read without pressing keys, and the result goes to the clipboard.",
     "terminalPasteShortcutSame": "Same as regular apps",
     "textCorrection": "Text correction",
     "textInsertion": {
       "accessibilityDenied": "Allow Tyco in System Settings → Privacy & Security → Accessibility.",
       "allowKeyboardControl": "Allow",
       "checkFailed": "Could not check text insertion: {error}",
+      "clipboardToolsMissing": "Clipboard tools are missing: {tools}. Install wl-clipboard on Wayland or xclip on X11.",
       "keysReadyPortal": "Keys are pressed through the desktop's remote control portal",
       "keysReadySystem": "Keys are pressed with the system input",
       "keysReadyYdotool": "Keys are pressed with ydotool",

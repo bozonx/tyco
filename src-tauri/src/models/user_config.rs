@@ -155,6 +155,21 @@ pub fn linux_insertion(config: &Value) -> LinuxInsertionConfig {
     section_at(config, "/windowInsertion/linux")
 }
 
+/// `windowInsertion.terminalApps`: window classes the user marks as
+/// terminals, in addition to the known ones. Blank entries are dropped.
+pub fn terminal_apps(config: &Value) -> Vec<String> {
+    config
+        .pointer("/windowInsertion/terminalApps")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|app| !app.is_empty())
+        .map(str::to_owned)
+        .collect()
+}
+
 /// `isInDevelopment`: a development build that keeps no editor history.
 pub fn is_in_development(config: &Value) -> bool {
     config
@@ -416,5 +431,14 @@ mod tests {
         let bogus =
             linux_insertion(&json!({"windowInsertion": {"linux": {"pasteShortcut": "bogus"}}}));
         assert_eq!(bogus.paste_shortcut_for(false), PasteShortcut::CtrlV);
+    }
+
+    #[test]
+    fn terminal_apps_keep_only_named_classes() {
+        let config =
+            json!({"windowInsertion": {"terminalApps": [" PuTTY ", "", 3, "org.example.Term"]}});
+        assert_eq!(terminal_apps(&config), ["PuTTY", "org.example.Term"]);
+        assert!(terminal_apps(&json!({})).is_empty());
+        assert!(terminal_apps(&json!({"windowInsertion": {"terminalApps": "x"}})).is_empty());
     }
 }

@@ -558,6 +558,8 @@
     "noSelection": "Ništa nije odabrano",
     "noTarget": "Nijedan prozor aplikacije nije u fokusu",
     "resultInClipboard": "Rezultat je u međuspremniku",
+    "selectionChanged": "Odabir se u međuvremenu promijenio, pa je rezultat kopiran u međuspremnik",
+    "terminalSelection": "Odabir u terminalu ne može se zamijeniti, pa je rezultat kopiran u međuspremnik",
     "unchanged": {
       "command": "Naredba je ostavila tekst nepromijenjen",
       "correction": "Nisu pronađene pogreške"
@@ -1005,14 +1007,17 @@
     "tasksHint": "Upute (promptovi) koje AI primjenjuje na tekst. U izborniku zadataka svaka se pokreće vlastitom tipkom; povucite kartice da biste promijenili njihove tipke.",
     "tasksTab": "AI zadaci",
     "temperature": "Temperatura",
+    "terminalApps": "Ostali terminali",
+    "terminalAppsHint": "Klase prozora terminala koje Tyco ne prepoznaje, odvojene zarezima. U terminalu Tyco nikad ne pritišće Ctrl+C, a rezultat za njegov odabir stavlja u međuspremnik.",
     "terminalPasteShortcut": "Prečac za lijepljenje u terminalima",
-    "terminalPasteShortcutHint": "Koristi se za umetanje rezultata i zamjenu odabranog teksta u prepoznatim prozorima terminala. Za kopiranje odabranog teksta koristi se Ctrl+Shift+C.",
+    "terminalPasteShortcutHint": "Koristi se za umetanje rezultata u prepoznate prozore terminala. Tekst odabran u terminalu čita se bez pritiskanja tipki, a rezultat ide u međuspremnik.",
     "terminalPasteShortcutSame": "Isto kao u običnim aplikacijama",
     "textCorrection": "Ispravak teksta",
     "textInsertion": {
       "accessibilityDenied": "Dopustite Tyco u Postavkama sustava → Privatnost i sigurnost → Pristupačnost.",
       "allowKeyboardControl": "Dopusti",
       "checkFailed": "Umetanje teksta nije moguće provjeriti: {error}",
+      "clipboardToolsMissing": "Nedostaju alati međuspremnika: {tools}. Instalirajte wl-clipboard na Waylandu ili xclip na X11.",
       "keysReadyPortal": "Tipke se pritišću putem portala za daljinsko upravljanje radne površine",
       "keysReadySystem": "Tipke se pritišću sistemskim unosom",
       "keysReadyYdotool": "Tipke pritišće ydotool",

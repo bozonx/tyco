@@ -558,6 +558,8 @@
     "noSelection": "Nincs kijelölés",
     "noTarget": "Egyik alkalmazásablak sincs fókuszban",
     "resultInClipboard": "Az eredmény a vágólapon van",
+    "selectionChanged": "A kijelölés időközben megváltozott, ezért az eredmény a vágólapra került",
+    "terminalSelection": "A terminálban lévő kijelölés nem cserélhető le, ezért az eredmény a vágólapra került",
     "unchanged": {
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
@@ -1002,14 +1004,17 @@
     "tasksHint": "Utasítások (promptok), amelyeket az MI a szövegre alkalmaz. A feladatmenüben mindegyik saját billentyűvel fut; húzza a kártyákat a billentyűik módosításához.",
     "tasksTab": "MI-feladatok",
     "temperature": "Hőmérséklet",
+    "terminalApps": "Egyéb terminálok",
+    "terminalAppsHint": "A Tyco által fel nem ismert terminálok ablakosztályai vesszővel elválasztva. Terminálban a Tyco soha nem nyomja meg a Ctrl+C-t, a kijelölés eredményét pedig a vágólapra teszi.",
     "terminalPasteShortcut": "Beillesztési billentyűparancs terminálokban",
-    "terminalPasteShortcutHint": "Az eredmények beillesztésére és a kijelölt szöveg cseréjére szolgál a felismert terminálablakokban. A kijelölt szöveg másolása Ctrl+Shift+C-vel történik.",
+    "terminalPasteShortcutHint": "Az eredmények beillesztésére szolgál a felismert terminálablakokban. A terminálban kijelölt szöveget billentyűlenyomás nélkül olvassa be, az eredmény pedig a vágólapra kerül.",
     "terminalPasteShortcutSame": "Ugyanaz, mint a szokásos alkalmazásokban",
     "textCorrection": "Szövegjavítás",
     "textInsertion": {
       "accessibilityDenied": "Engedélyezze a Tycót: Rendszerbeállítások → Adatvédelem és biztonság → Kisegítő lehetőségek.",
       "allowKeyboardControl": "Engedélyezés",
       "checkFailed": "Nem sikerült ellenőrizni a szövegbeillesztést: {error}",
+      "clipboardToolsMissing": "Hiányoznak a vágólap eszközei: {tools}. Telepítse a wl-clipboard csomagot Waylandhez vagy az xclip csomagot X11-hez.",
       "keysReadyPortal": "A billentyűket az asztal távvezérlési portálja nyomja le",
       "keysReadySystem": "A billentyűket a rendszer bevitele nyomja le",
       "keysReadyYdotool": "A billentyűket a ydotool nyomja le",

@@ -29,6 +29,7 @@ describe('TextInsertionStatus.vue', () => {
       problem: 'ydotooldNotRunning',
       detail: 'ydotoold is not running',
       target: 'focusReturn',
+      missingClipboardTools: [],
     }))
     const wrapper = mountStatus()
     await flushPromises()
@@ -48,10 +49,16 @@ describe('TextInsertionStatus.vue', () => {
       keySender: 'portal',
       keys: isGranted ? 'ready' : 'needsPermission',
       target: 'tracked',
+      missingClipboardTools: [],
     }))
     desktop.backend.handle('request_text_insertion_permission', () => {
       isGranted = true
-      return { keySender: 'portal', keys: 'ready', target: 'tracked' }
+      return {
+        keySender: 'portal',
+        keys: 'ready',
+        target: 'tracked',
+        missingClipboardTools: [],
+      }
     })
     const wrapper = mountStatus()
     await flushPromises()

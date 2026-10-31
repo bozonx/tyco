@@ -558,6 +558,8 @@
     "noSelection": "Nada está selecionado",
     "noTarget": "Nenhuma janela de aplicativo está em foco",
     "resultInClipboard": "O resultado está na área de transferência",
+    "selectionChanged": "A seleção mudou nesse meio-tempo, então o resultado foi copiado para a área de transferência",
+    "terminalSelection": "Uma seleção em um terminal não pode ser substituída, então o resultado foi copiado para a área de transferência",
     "unchanged": {
       "command": "O comando deixou o texto como estava",
       "correction": "Nenhum erro encontrado"
@@ -1005,14 +1007,17 @@
     "tasksHint": "Instruções (prompts) que a IA aplica ao texto. No menu de tarefas, cada uma é executada com sua própria tecla; arraste os cartões para mudar as teclas.",
     "tasksTab": "Tarefas de IA",
     "temperature": "Temperatura",
+    "terminalApps": "Outros terminais",
+    "terminalAppsHint": "Classes de janela de terminais que o Tyco não reconhece, separadas por vírgulas. Em um terminal, o Tyco nunca pressiona Ctrl+C e coloca o resultado da seleção na área de transferência.",
     "terminalPasteShortcut": "Atalho de colar em terminais",
-    "terminalPasteShortcutHint": "Usado para inserir resultados e substituir o texto selecionado em janelas de terminal reconhecidas. Para copiar o texto selecionado é usado Ctrl+Shift+C.",
+    "terminalPasteShortcutHint": "Usado para inserir resultados em janelas de terminal reconhecidas. O texto selecionado em um terminal é lido sem pressionar teclas, e o resultado vai para a área de transferência.",
     "terminalPasteShortcutSame": "Igual aos aplicativos comuns",
     "textCorrection": "Correção de texto",
     "textInsertion": {
       "accessibilityDenied": "Permita o Tyco em Ajustes do Sistema → Privacidade e Segurança → Acessibilidade.",
       "allowKeyboardControl": "Permitir",
       "checkFailed": "Não foi possível verificar a inserção de texto: {error}",
+      "clipboardToolsMissing": "Faltam ferramentas da área de transferência: {tools}. Instale o wl-clipboard no Wayland ou o xclip no X11.",
       "keysReadyPortal": "As teclas são pressionadas pelo portal de controle remoto da área de trabalho",
       "keysReadySystem": "As teclas são pressionadas pela entrada do sistema",
       "keysReadyYdotool": "As teclas são pressionadas pelo ydotool",

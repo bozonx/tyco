@@ -94,13 +94,22 @@ pub struct TextInsertionStatus {
     #[ts(optional)]
     pub detail: Option<String>,
     pub target: TargetTracking,
+    /// Clipboard tools the session needs and lacks, e.g. `wl-copy`: without
+    /// them nothing can be inserted or captured.
+    pub missing_clipboard_tools: Vec<String>,
 }
 
 /// What text insertion can do now and what it lacks. Runs system tools and
 /// D-Bus calls, so it belongs on the blocking pool.
 #[cfg(target_os = "linux")]
 pub fn text_insertion_status() -> TextInsertionStatus {
-    super::linux::text_injector::status()
+    TextInsertionStatus {
+        missing_clipboard_tools: super::clipboard::missing_clipboard_tools()
+            .into_iter()
+            .map(String::from)
+            .collect(),
+        ..super::linux::text_injector::status()
+    }
 }
 
 #[cfg(target_os = "windows")]
@@ -111,6 +120,7 @@ pub fn text_insertion_status() -> TextInsertionStatus {
         problem: None,
         detail: None,
         target: TargetTracking::Tracked,
+        missing_clipboard_tools: Vec::new(),
     }
 }
 
@@ -129,6 +139,7 @@ pub fn text_insertion_status() -> TextInsertionStatus {
             .then_some(TextInsertionProblem::AccessibilityDenied),
         detail: check.err().map(|error| error.to_string()),
         target: TargetTracking::Tracked,
+        missing_clipboard_tools: Vec::new(),
     }
 }
 
@@ -151,10 +162,10 @@ fn inject_paste_impl(user_config: &Value, target_window_id: Option<&str>) -> Res
 
 #[cfg(target_os = "windows")]
 fn inject_paste_impl(
-    _user_config: &Value,
+    user_config: &Value,
     target_platform_id: Option<&str>,
 ) -> Result<(), AppError> {
-    super::windows::inject_paste(target_platform_id)
+    super::windows::inject_paste(user_config, target_platform_id)
 }
 
 #[cfg(target_os = "macos")]

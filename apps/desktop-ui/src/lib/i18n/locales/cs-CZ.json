@@ -555,6 +555,8 @@
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
     "resultInClipboard": "Výsledek je ve schránce",
+    "selectionChanged": "Výběr se mezitím změnil, proto byl výsledek zkopírován do schránky",
+    "terminalSelection": "Výběr v terminálu nelze nahradit, proto byl výsledek zkopírován do schránky",
     "unchanged": {
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
@@ -999,14 +1001,17 @@
     "tasksHint": "Instrukce (prompty), které AI použije na text. V nabídce úloh se každá spouští vlastní klávesou; přetažením karet změníte jejich klávesy.",
     "tasksTab": "Úlohy AI",
     "temperature": "Teplota",
+    "terminalApps": "Další terminály",
+    "terminalAppsHint": "Třídy oken terminálů, které Tyco nerozpozná, oddělené čárkami. V terminálu Tyco nikdy nestiskne Ctrl+C a výsledek pro jeho výběr vloží do schránky.",
     "terminalPasteShortcut": "Zkratka pro vložení v terminálech",
-    "terminalPasteShortcutHint": "Používá se pro vkládání výsledků a nahrazování vybraného textu v rozpoznaných oknech terminálu. Ke kopírování vybraného textu slouží Ctrl+Shift+C.",
+    "terminalPasteShortcutHint": "Používá se pro vkládání výsledků do rozpoznaných oken terminálu. Text vybraný v terminálu se čte bez stisku kláves a výsledek jde do schránky.",
     "terminalPasteShortcutSame": "Stejná jako v běžných aplikacích",
     "textCorrection": "Oprava textu",
     "textInsertion": {
       "accessibilityDenied": "Povolte Tyco v Nastavení systému → Soukromí a zabezpečení → Zpřístupnění.",
       "allowKeyboardControl": "Povolit",
       "checkFailed": "Vkládání textu se nepodařilo ověřit: {error}",
+      "clipboardToolsMissing": "Chybí nástroje schránky: {tools}. Nainstalujte wl-clipboard ve Waylandu nebo xclip v X11.",
       "keysReadyPortal": "Klávesy se stisknou přes portál vzdáleného ovládání plochy",
       "keysReadySystem": "Klávesy se stisknou systémovým vstupem",
       "keysReadyYdotool": "Klávesy stiskne ydotool",

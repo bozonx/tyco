@@ -558,6 +558,8 @@
     "noSelection": "Rien n’est sélectionné",
     "noTarget": "Aucune fenêtre d’application n’a le focus",
     "resultInClipboard": "Le résultat est dans le presse-papiers",
+    "selectionChanged": "La sélection a changé entre-temps, le résultat a donc été copié dans le presse-papiers",
+    "terminalSelection": "Une sélection dans un terminal ne peut pas être remplacée, le résultat a donc été copié dans le presse-papiers",
     "unchanged": {
       "command": "La commande a laissé le texte tel quel",
       "correction": "Aucune faute trouvée"
@@ -1005,14 +1007,17 @@
     "tasksHint": "Instructions (prompts) que l’IA applique au texte. Dans le menu des tâches, chacune se lance avec sa propre touche ; faites glisser les cartes pour changer leurs touches.",
     "tasksTab": "Tâches IA",
     "temperature": "Température",
+    "terminalApps": "Autres terminaux",
+    "terminalAppsHint": "Classes de fenêtres des terminaux que Tyco ne reconnaît pas, séparées par des virgules. Dans un terminal, Tyco n’appuie jamais sur Ctrl+C et place le résultat de sa sélection dans le presse-papiers.",
     "terminalPasteShortcut": "Raccourci de collage dans les terminaux",
-    "terminalPasteShortcutHint": "Utilisé pour insérer des résultats et remplacer le texte sélectionné dans les fenêtres de terminal reconnues. La copie du texte sélectionné utilise Ctrl+Maj+C.",
+    "terminalPasteShortcutHint": "Utilisé pour insérer les résultats dans les fenêtres de terminal reconnues. Le texte sélectionné dans un terminal est lu sans appuyer sur des touches, et le résultat va dans le presse-papiers.",
     "terminalPasteShortcutSame": "Comme dans les applications ordinaires",
     "textCorrection": "Correction de texte",
     "textInsertion": {
       "accessibilityDenied": "Autorisez Tyco dans Réglages Système → Confidentialité et sécurité → Accessibilité.",
       "allowKeyboardControl": "Autoriser",
       "checkFailed": "Impossible de vérifier l'insertion de texte : {error}",
+      "clipboardToolsMissing": "Des outils de presse-papiers manquent : {tools}. Installez wl-clipboard sous Wayland ou xclip sous X11.",
       "keysReadyPortal": "Les touches sont pressées via le portail de contrôle à distance du bureau",
       "keysReadySystem": "Les touches sont pressées avec la saisie du système",
       "keysReadyYdotool": "Les touches sont pressées avec ydotool",

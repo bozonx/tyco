@@ -89,6 +89,7 @@ describe('InsertMenu correction step', () => {
     desktop.backend.handle('get_text_insertion_status', () => ({
       keys: 'ready',
       target: 'focusReturn',
+      missingClipboardTools: [],
     }))
     await desktop.load()
     expect(desktop.backend.activation.windowId).toBeNull()

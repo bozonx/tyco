@@ -20,7 +20,7 @@ use serde_json::Value;
 use super::binary_paths::default_binary_path;
 use super::remote_desktop::{self, KeyEvent, PortalState};
 use crate::errors::AppError;
-use crate::models::user_config::{self, LinuxInsertionConfig, PasteShortcut};
+use crate::models::user_config::{self, PasteShortcut};
 use crate::services::platform::session::{self, DisplayServer};
 use crate::services::platform::text_injector::{
     KeySender, KeysState, TargetTracking, TextInsertionProblem, TextInsertionStatus,
@@ -32,6 +32,11 @@ const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(10);
 /// KWin reports the activation before the client gets keyboard focus, so the
 /// paste waits a moment longer.
 const WAYLAND_FOCUS_SETTLE_DELAY: Duration = Duration::from_millis(80);
+/// An X11 window manager publishes the active window before the client has
+/// handled its focus event.
+const X11_FOCUS_SETTLE_DELAY: Duration = Duration::from_millis(40);
+/// How long the keys wait for the user to let go of held modifiers on X11.
+const MODIFIER_RELEASE_TIMEOUT: Duration = Duration::from_secs(1);
 const YDOTOOL: &str = "ydotool";
 /// How `ydotool key --help` of 1.x describes its arguments; 0.1.x takes key
 /// names instead.
@@ -54,18 +59,6 @@ impl PasteShortcut {
             Self::CtrlShiftV => &[KEY_LEFT_CTRL, KEY_LEFT_SHIFT, KEY_C],
             Self::ShiftInsert => &[KEY_LEFT_CTRL, KEY_INSERT],
         }
-    }
-}
-
-fn focused_shortcut(
-    linux: &LinuxInsertionConfig,
-    action: FocusedKeyAction,
-    terminal: bool,
-) -> PasteShortcut {
-    if terminal && action == FocusedKeyAction::Copy {
-        PasteShortcut::CtrlShiftV
-    } else {
-        linux.paste_shortcut_for(terminal)
     }
 }
 
@@ -94,8 +87,9 @@ const MODIFIER_KEYS: [u16; 8] = [
 
 /// Presses `keys` in order and releases them in reverse. The modifiers of the
 /// hotkey that started the action may still be held, and would turn Ctrl+C
-/// into Ctrl+Alt+C. The compositor keeps a single keyboard state for all
-/// devices, so releasing them from the virtual keyboard first clears them.
+/// into Ctrl+Alt+C. KWin and Mutter keep a single keyboard state for all
+/// devices, so releasing them from the virtual keyboard first clears them;
+/// X11 does not, see `send_keys`.
 fn combo_events(keys: &[u16]) -> Vec<KeyEvent> {
     let releases = MODIFIER_KEYS.iter().map(|&key| (key, false));
     let presses = keys.iter().map(|&key| (key, true));
@@ -159,6 +153,7 @@ impl SystemTextInjector {
     ) -> Result<(), AppError> {
         self.ensure_supported()?;
         let linux = user_config::linux_insertion(user_config);
+        let terminal_apps = user_config::terminal_apps(user_config);
         let terminal = match (self.session, target_window_id) {
             (_, None) => {
                 if tracker().is_running() {
@@ -170,8 +165,9 @@ impl SystemTextInjector {
                 false
             }
             (InjectionSessionKind::X11, Some(window_id)) => {
-                let terminal = super::x11::is_terminal_window(window_id);
+                let terminal = super::x11::is_terminal_window(window_id, &terminal_apps);
                 super::x11::activate_window(window_id)?;
+                thread::sleep(X11_FOCUS_SETTLE_DELAY);
                 terminal
             }
             (_, Some(window_id)) => {
@@ -179,7 +175,10 @@ impl SystemTextInjector {
                 thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
                 tracker().active_window().is_some_and(|window| {
                     window.id == window_id
-                        && crate::services::platform::selection::is_terminal_class(&window.class)
+                        && crate::services::platform::terminals::is_terminal_class(
+                            &window.class,
+                            &terminal_apps,
+                        )
                 })
             }
         };
@@ -188,18 +187,18 @@ impl SystemTextInjector {
     }
 
     /// Presses the keys of `action` in whatever window has the keyboard
-    /// focus, without activating any window first. A terminal gets the
-    /// Ctrl+Shift family, where Ctrl+C would interrupt the running program.
+    /// focus, without activating any window first. Never a terminal: its
+    /// selection is read from the primary selection instead, and its copy
+    /// keys differ between terminals, where a wrong guess interrupts the
+    /// running program.
     pub fn press_in_focused(
         &self,
         user_config: &Value,
         action: FocusedKeyAction,
-        terminal: bool,
     ) -> Result<(), AppError> {
         self.ensure_supported()?;
         let linux = user_config::linux_insertion(user_config);
-        let shortcut = focused_shortcut(&linux, action, terminal);
-        send_keys(combo_events(action.keys(shortcut)))
+        send_keys(combo_events(action.keys(linux.paste_shortcut_for(false))))
     }
 
     fn ensure_supported(&self) -> Result<(), AppError> {
@@ -251,6 +250,7 @@ fn keys_status(
         problem,
         detail,
         target: TargetTracking::Tracked,
+        missing_clipboard_tools: Vec::new(),
     }
 }
 
@@ -304,8 +304,12 @@ fn choose_sender(
 }
 
 /// Presses `events` with ydotool when it is set up, otherwise through the
-/// portal, which may first ask the user.
+/// portal, which may first ask the user. On X11 a modifier the user still
+/// holds would stay down, so the keys wait for its release first.
 fn send_keys(events: Vec<KeyEvent>) -> Result<(), AppError> {
+    if session::current().is_x11() {
+        super::x11::wait_for_modifiers_released(MODIFIER_RELEASE_TIMEOUT);
+    }
     let ydotool = if session::is_sandboxed() {
         Err(sandboxed_ydotool())
     } else {
@@ -378,18 +382,29 @@ fn ydotool_socket_paths() -> Vec<PathBuf> {
 }
 
 /// The ydotool 1.x client only talks to the ydotoold socket; access to
-/// `/dev/uinput` alone is not enough. The socket is a datagram one.
+/// `/dev/uinput` alone is not enough. The socket is a datagram one. A socket
+/// in a shared directory such as `/tmp` may belong to another user, who
+/// would then see the keys: only one of this user or of root, the owner of
+/// a system daemon, is taken.
 fn ydotool_socket() -> Result<PathBuf, AppError> {
+    // SAFETY: getuid has no preconditions and cannot fail.
+    let uid = unsafe { libc::getuid() };
     if let Some(path) = ydotool_socket_paths().into_iter().find(|path| {
-        std::os::unix::net::UnixDatagram::unbound()
-            .and_then(|socket| socket.connect(path))
-            .is_ok()
+        is_trusted_owner(path, uid)
+            && std::os::unix::net::UnixDatagram::unbound()
+                .and_then(|socket| socket.connect(path))
+                .is_ok()
     }) {
         return Ok(path);
     }
     Err(AppError::ServiceUnavailable(String::from(
         "ydotoold is not running. Start it, for example with `systemctl --user enable --now ydotool`, and make sure it can access /dev/uinput",
     )))
+}
+
+fn is_trusted_owner(path: &std::path::Path, uid: u32) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    std::fs::metadata(path).is_ok_and(|metadata| metadata.uid() == uid || metadata.uid() == 0)
 }
 
 /// The client knows a single default socket path, which differs between
@@ -526,23 +541,36 @@ mod tests {
     }
 
     #[test]
-    fn terminal_copy_keys_ignore_the_paste_setting() {
+    fn copy_keys_follow_the_family_of_the_paste_setting() {
         let linux = user_config::linux_insertion(&json!({"windowInsertion": {"linux": {
             "pasteShortcut": "Shift+Insert",
-            "terminalPasteShortcut": "Ctrl+V",
         }}}));
+        let shortcut = linux.paste_shortcut_for(false);
         assert_eq!(
-            focused_shortcut(&linux, FocusedKeyAction::Paste, true),
-            PasteShortcut::CtrlV
+            FocusedKeyAction::Copy.keys(shortcut),
+            [KEY_LEFT_CTRL, KEY_INSERT]
         );
         assert_eq!(
-            focused_shortcut(&linux, FocusedKeyAction::Paste, false),
-            PasteShortcut::ShiftInsert
+            FocusedKeyAction::Paste.keys(shortcut),
+            [KEY_LEFT_SHIFT, KEY_INSERT]
         );
-        assert_eq!(
-            focused_shortcut(&linux, FocusedKeyAction::Copy, true),
-            PasteShortcut::CtrlShiftV
-        );
+    }
+
+    #[test]
+    fn only_sockets_of_this_user_or_root_are_trusted() {
+        let path = std::env::temp_dir().join(format!("tyco-socket-{}", std::process::id()));
+        std::fs::write(&path, "").unwrap();
+        // SAFETY: getuid has no preconditions and cannot fail.
+        let uid = unsafe { libc::getuid() };
+        assert!(is_trusted_owner(&path, uid));
+        if uid != 0 {
+            assert!(!is_trusted_owner(&path, uid + 1));
+        }
+        assert!(!is_trusted_owner(
+            std::path::Path::new("/nonexistent/socket"),
+            uid
+        ));
+        std::fs::remove_file(&path).unwrap();
     }
 
     #[test]

@@ -11,7 +11,7 @@ use crate::locks::MutexExt;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Mutex, OnceLock};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use ashpd::desktop::remote_desktop::{
     DeviceType, KeyState, RemoteDesktop, SelectDevicesOptions, StartOptions,
@@ -26,8 +26,6 @@ const SESSION_IDLE_TIMEOUT: Duration = Duration::from_secs(60);
 const CALL_TIMEOUT: Duration = Duration::from_secs(3);
 /// How long the user may take to answer the permission dialog.
 const PERMISSION_TIMEOUT: Duration = Duration::from_secs(120);
-/// How long the window under the permission dialog takes to get the focus back.
-const DIALOG_FOCUS_SETTLE_DELAY: Duration = Duration::from_millis(400);
 const TOKEN_FILE: &str = "remote-desktop.token";
 
 /// What the portal can do for Tyco now.
@@ -47,6 +45,14 @@ enum Request {
     Probe(Sender<PortalState>),
     Start(Sender<Result<(), AppError>>),
     Press(Vec<KeyEvent>, Sender<Result<(), AppError>>),
+}
+
+/// A request with the moment its caller stops waiting for the answer. The
+/// worker handles one request at a time, and keys pressed after that moment
+/// would go to whatever window has the focus by then.
+struct Queued {
+    request: Request,
+    deadline: Instant,
 }
 
 struct Config {
@@ -80,10 +86,13 @@ pub fn press(keys: Vec<KeyEvent>) -> Result<(), AppError> {
 }
 
 fn call<T>(request: impl FnOnce(Sender<T>) -> Request, timeout: Duration) -> Result<T, AppError> {
-    static WORKER: Mutex<Option<Sender<Request>>> = Mutex::new(None);
+    static WORKER: Mutex<Option<Sender<Queued>>> = Mutex::new(None);
 
     let (reply, answer) = mpsc::channel();
-    let request = request(reply);
+    let request = Queued {
+        request: request(reply),
+        deadline: Instant::now() + timeout,
+    };
     {
         let mut worker = WORKER.locked();
         let sent = match worker.as_ref() {
@@ -112,7 +121,7 @@ fn worker_gone() -> AppError {
     AppError::ServiceUnavailable(String::from("The RemoteDesktop portal worker stopped"))
 }
 
-fn spawn_worker(receiver: Receiver<Request>) -> Result<(), AppError> {
+fn spawn_worker(receiver: Receiver<Queued>) -> Result<(), AppError> {
     std::thread::Builder::new()
         .name(String::from("remote-desktop-portal"))
         .spawn(move || {
@@ -134,7 +143,13 @@ fn spawn_worker(receiver: Receiver<Request>) -> Result<(), AppError> {
                     receiver.recv().map_err(RecvTimeoutError::from)
                 };
                 match received {
-                    Ok(request) => runtime.block_on(worker.handle(request)),
+                    Ok(queued) if Instant::now() >= queued.deadline => {
+                        log::warn!(
+                            "Dropping a RemoteDesktop request its caller no longer waits for"
+                        );
+                        drop(queued);
+                    }
+                    Ok(queued) => runtime.block_on(worker.handle(queued.request)),
                     Err(RecvTimeoutError::Timeout) => runtime.block_on(worker.close()),
                     Err(RecvTimeoutError::Disconnected) => {
                         runtime.block_on(worker.close());
@@ -269,28 +284,41 @@ impl Worker {
         let may_ask = self.session.is_none() && read_token().is_none();
         self.ensure_session().await?;
         if may_ask {
-            // the permission dialog had the focus; the desktop gives it back
-            // to the window that had it before
-            tokio::time::sleep(DIALOG_FOCUS_SETTLE_DELAY).await;
+            // the permission dialog had the focus, and the caller checked the
+            // target window before it opened: the keys could reach another
+            // window, where Ctrl+C may stop a program
+            return Err(AppError::Failed(String::from(
+                "Keyboard control has just been allowed. Run the action again",
+            )));
         }
-        if let Err(error) = self.send(keys).await {
+        match self.send(keys).await {
+            Ok(()) => Ok(()),
             // the user or the desktop may have ended the session; a new one
-            // restores the permission
-            log::info!("RemoteDesktop session failed, starting a new one: {error}");
-            self.close().await;
-            self.ensure_session().await?;
-            self.send(keys).await?;
+            // restores the permission. Only when no key went through: a
+            // second run of a half sent combination could paste twice
+            Err((0, error)) => {
+                log::info!("RemoteDesktop session failed, starting a new one: {error}");
+                self.close().await;
+                self.ensure_session().await?;
+                self.send(keys).await.map_err(|(_, error)| error)
+            }
+            Err((_, error)) => {
+                // closing the session releases the keys left down
+                self.close().await;
+                Err(error)
+            }
         }
-        Ok(())
     }
 
-    async fn send(&self, keys: &[KeyEvent]) -> Result<(), AppError> {
+    /// Presses `keys`; on failure, how many went through.
+    async fn send(&self, keys: &[KeyEvent]) -> Result<(), (usize, AppError)> {
         let (Some(portal), Some(session)) = (&self.portal, &self.session) else {
-            return Err(AppError::ServiceUnavailable(String::from(
-                "No RemoteDesktop session",
-            )));
+            return Err((
+                0,
+                AppError::ServiceUnavailable(String::from("No RemoteDesktop session")),
+            ));
         };
-        for &(key, pressed) in keys {
+        for (sent, &(key, pressed)) in keys.iter().enumerate() {
             let state = if pressed {
                 KeyState::Pressed
             } else {
@@ -302,7 +330,8 @@ impl Worker {
                 state,
                 Default::default(),
             ))
-            .await?;
+            .await
+            .map_err(|error| (sent, error))?;
         }
         Ok(())
     }

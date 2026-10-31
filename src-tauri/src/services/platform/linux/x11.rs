@@ -26,8 +26,80 @@ use crate::services::platform::window_tracker::{
     finish_startup, new_session, tracker, TrackerChange, WindowKind,
 };
 
+/// Whether the primary selection belongs to the client of window `id`. A
+/// client keeps its selections on a window of its own, often a hidden one,
+/// but every window it creates shares its resource id base. `None` when
+/// that cannot be told.
+pub(crate) fn is_primary_selection_from(id: &str) -> Option<bool> {
+    let window = id.parse::<Window>().ok()?;
+    let (connection, _) = x11rb::connect(None).ok()?;
+    let owner = connection
+        .get_selection_owner(AtomEnum::PRIMARY.into())
+        .ok()?
+        .reply()
+        .ok()?
+        .owner;
+    if owner == x11rb::NONE {
+        return Some(false);
+    }
+    Some(is_same_client(
+        owner,
+        window,
+        connection.setup().resource_id_mask,
+    ))
+}
+
+fn is_same_client(first: Window, second: Window, resource_id_mask: u32) -> bool {
+    first & !resource_id_mask == second & !resource_id_mask
+}
+
+/// Waits until no modifier key is held, at most `timeout`; whether none is.
+/// X11 keeps the key state of every keyboard apart, so a modifier the user
+/// still holds stays down whatever a virtual keyboard releases, and would
+/// turn Ctrl+C into Ctrl+Alt+C.
+pub(crate) fn wait_for_modifiers_released(timeout: Duration) -> bool {
+    let Ok((connection, _)) = x11rb::connect(None) else {
+        return true;
+    };
+    let Some(modifiers) = connection
+        .get_modifier_mapping()
+        .ok()
+        .and_then(|cookie| cookie.reply().ok())
+        .map(|reply| reply.keycodes)
+    else {
+        return true;
+    };
+    let deadline = std::time::Instant::now() + timeout;
+    loop {
+        let Some(keys) = connection
+            .query_keymap()
+            .ok()
+            .and_then(|cookie| cookie.reply().ok())
+            .map(|reply| reply.keys)
+        else {
+            return true;
+        };
+        if !is_any_key_down(&keys, &modifiers) {
+            return true;
+        }
+        if std::time::Instant::now() >= deadline {
+            log::debug!("Modifier keys are still held; pressing the keys anyway");
+            return false;
+        }
+        std::thread::sleep(ACTIVATION_POLL_INTERVAL);
+    }
+}
+
+/// Whether any of `keycodes` is down in a `QueryKeymap` bit vector.
+fn is_any_key_down(keymap: &[u8; 32], keycodes: &[u8]) -> bool {
+    keycodes
+        .iter()
+        .filter(|&&keycode| keycode != 0)
+        .any(|&keycode| keymap[usize::from(keycode / 8)] & (1 << (keycode % 8)) != 0)
+}
+
 /// Read the target's class before activation, while Tyco may still have focus.
-pub(crate) fn is_terminal_window(id: &str) -> bool {
+pub(crate) fn is_terminal_window(id: &str, extra: &[String]) -> bool {
     let Some(window) = id.parse::<Window>().ok() else {
         return false;
     };
@@ -38,11 +110,9 @@ pub(crate) fn is_terminal_window(id: &str) -> bool {
         .ok()
         .and_then(|cookie| cookie.reply().ok().flatten())
         .is_some_and(|class| {
-            crate::services::platform::selection::is_terminal_class(&String::from_utf8_lossy(
-                class.class(),
-            )) || crate::services::platform::selection::is_terminal_class(&String::from_utf8_lossy(
-                class.instance(),
-            ))
+            use crate::services::platform::terminals::is_terminal_class;
+            is_terminal_class(&String::from_utf8_lossy(class.class()), extra)
+                || is_terminal_class(&String::from_utf8_lossy(class.instance()), extra)
         })
 }
 
@@ -483,6 +553,22 @@ fn x11_error(error: impl Display) -> AppError {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn windows_of_one_client_share_the_resource_id_base() {
+        let mask = 0x001F_FFFF;
+        assert!(is_same_client(0x0420_0001, 0x0420_00A3, mask));
+        assert!(!is_same_client(0x0420_0001, 0x0440_0001, mask));
+    }
+
+    #[test]
+    fn tells_held_keys_from_the_keymap_bits() {
+        let mut keymap = [0u8; 32];
+        // keycode 37, the left Ctrl of a usual X11 keymap
+        keymap[4] = 1 << 5;
+        assert!(is_any_key_down(&keymap, &[50, 37]));
+        assert!(!is_any_key_down(&keymap, &[50, 0]));
+    }
 
     const NORMAL: Atom = 1;
     const DIALOG: Atom = 2;

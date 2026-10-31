@@ -19,6 +19,7 @@ pub(crate) mod selection;
 pub mod session;
 pub mod shell;
 mod shortcut_settings;
+pub(crate) mod terminals;
 mod text_injector;
 mod titlebar;
 mod webview;

@@ -558,6 +558,8 @@
     "noSelection": "何も選択されていません",
     "noTarget": "フォーカスされているアプリケーションウィンドウがありません",
     "resultInClipboard": "結果をクリップボードにコピーしました",
+    "selectionChanged": "処理中に選択範囲が変わったため、結果をクリップボードにコピーしました",
+    "terminalSelection": "ターミナルの選択範囲は置き換えられないため、結果をクリップボードにコピーしました",
     "unchanged": {
       "command": "コマンドによるテキストの変更はありませんでした",
       "correction": "修正箇所は見つかりませんでした"
@@ -1002,14 +1004,17 @@
     "tasksHint": "テキストに適用するAIへの指示（プロンプト）。タスクメニューに表示され、ショートカットキーから呼び出せます。",
     "tasksTab": "AIタスク",
     "temperature": "温度 (Temperature)",
+    "terminalApps": "その他のターミナル",
+    "terminalAppsHint": "Tyco が認識しないターミナルのウィンドウクラスをカンマ区切りで指定します。ターミナルでは Tyco は Ctrl+C を押さず、選択範囲の結果をクリップボードに入れます。",
     "terminalPasteShortcut": "ターミナルでの貼り付けショートカット",
-    "terminalPasteShortcutHint": "ターミナルウィンドウでの結果の挿入や選択テキストの置換に使用されます。",
+    "terminalPasteShortcutHint": "認識されたターミナルウィンドウに結果を挿入するときに使います。ターミナルで選択したテキストはキーを押さずに読み取られ、結果はクリップボードに入ります。",
     "terminalPasteShortcutSame": "通常のアプリと同じ",
     "textCorrection": "テキスト校正",
     "textInsertion": {
       "accessibilityDenied": "システム設定 → プライバシーとセキュリティ → アクセシビリティ で Tyco を許可してください。",
       "allowKeyboardControl": "許可",
       "checkFailed": "テキスト挿入を確認できませんでした: {error}",
+      "clipboardToolsMissing": "クリップボードツールがありません: {tools}。Wayland では wl-clipboard、X11 では xclip をインストールしてください。",
       "keysReadyPortal": "キーはデスクトップのリモート操作ポータル経由で押されます",
       "keysReadySystem": "キーはシステムの入力で押されます",
       "keysReadyYdotool": "キーは ydotool で押されます",

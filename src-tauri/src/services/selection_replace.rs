@@ -22,7 +22,7 @@ use serde_json::Value;
 use tauri::{AppHandle, Manager};
 use ts_rs::TS;
 
-use super::platform::selection::{capture, paste_result, restore_clipboard};
+use super::platform::selection::{capture, paste_result};
 use crate::errors::AppError;
 use crate::events::{self, DesktopEvent};
 use crate::state::AppState;
@@ -114,7 +114,14 @@ pub enum SelectionFinishStatus {
     /// clipboard instead of going into the wrong place.
     #[serde(rename = "clipboard")]
     CopiedToClipboard,
-    /// No result to insert; the clipboard got its old content back.
+    /// The selection changed while the action ran; the result waits in the
+    /// clipboard instead of replacing other text.
+    SelectionChanged,
+    /// The selection is in a terminal, where it cannot be replaced; the
+    /// result waits in the clipboard.
+    #[serde(rename = "terminal")]
+    TerminalClipboard,
+    /// No result to insert; nothing was changed.
     Restored,
     /// The run was cancelled or replaced meanwhile.
     Stale,
@@ -132,8 +139,6 @@ pub(crate) struct SelectionRun {
     pub captured_text: Option<String>,
     pub target: SelectionTarget,
     pub started_at: Instant,
-    /// What the clipboard held before the copy keys overwrote it.
-    pub clipboard_snapshot: Option<super::platform::ClipboardSnapshot>,
 }
 
 struct SystemSelectionBackend<'a>(&'a AppHandle);
@@ -156,9 +161,6 @@ impl SelectionBackend for SystemSelectionBackend<'_> {
     }
     fn capture(&self, config: &Value) -> Result<(String, SelectionRun), SelectionRunError> {
         capture(config)
-    }
-    fn restore(&self, run: SelectionRun) {
-        restore_clipboard(run);
     }
     fn paste(
         &self,
@@ -200,7 +202,7 @@ pub fn trigger(
     let decision =
         app.state::<SelectionRunCoordinator>()
             .begin_trigger(action, kind, Instant::now())?;
-    let (guard, abandoned) = match decision {
+    let guard = match decision {
         TriggerDecision::Busy => {
             log::debug!("Ignoring the {action} trigger: a selection is being captured");
             return Ok(());
@@ -211,9 +213,9 @@ pub fn trigger(
         }
         TriggerDecision::Replace(run, guard) => {
             cancel_with(&SystemSelectionBackend(app), run);
-            (guard, None)
+            guard
         }
-        TriggerDecision::Capture(guard, abandoned) => (guard, abandoned),
+        TriggerDecision::Capture(guard) => guard,
     };
     let action = action.to_owned();
     let handle = app.clone();
@@ -228,7 +230,6 @@ pub fn trigger(
                 action,
                 wait,
                 guard,
-                abandoned,
             );
         })?;
     Ok(())
@@ -255,8 +256,7 @@ pub fn finish(
         .finish_with(&SystemSelectionBackend(app), run_id, text)
 }
 
-/// Ends the run without replacing the selection: the clipboard gets its
-/// content back.
+/// Ends the run without replacing the selection.
 pub fn release(app: &AppHandle, run_id: u64) {
     if let Err(error) = finish(app, run_id, None) {
         log::warn!("Could not release the selection run: {error}");

@@ -209,6 +209,8 @@ export interface UserConfig {
       pasteShortcut: PasteShortcut
       terminalPasteShortcut: PasteShortcut | null
     }
+    /** Window classes treated as terminals besides the known ones */
+    terminalApps: string[]
   }
   translation: TranslationConfig
   mainActions: ShortcutSlots<MainActionConfig>

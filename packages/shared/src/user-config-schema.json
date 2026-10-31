@@ -164,9 +164,14 @@
             "pasteShortcut": "Ctrl+V",
             "terminalPasteShortcut": "Ctrl+Shift+V"
           }
+        },
+        "terminalApps": {
+          "type": "array",
+          "items": { "type": "string", "default": "" },
+          "default": []
         }
       },
-      "required": ["linux"],
+      "required": ["linux", "terminalApps"],
       "defaultPath": "windowInsertion"
     },
     "translation": {

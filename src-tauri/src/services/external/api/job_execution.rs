@@ -245,6 +245,12 @@ pub fn complete(app: &AppHandle, id: &str, mut completion: JobCompletion) {
             Ok(selection_replace::SelectionFinishStatus::CopiedToClipboard) if replace => {
                 Some("Focus changed; result is in the clipboard".into())
             }
+            Ok(selection_replace::SelectionFinishStatus::SelectionChanged) if replace => {
+                Some("The selection changed; result is in the clipboard".into())
+            }
+            Ok(selection_replace::SelectionFinishStatus::TerminalClipboard) if replace => {
+                Some("A terminal selection cannot be replaced; result is in the clipboard".into())
+            }
             Ok(selection_replace::SelectionFinishStatus::Stale) if replace => {
                 Some("Selection target is no longer available".into())
             }

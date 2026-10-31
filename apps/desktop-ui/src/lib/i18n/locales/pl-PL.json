@@ -558,6 +558,8 @@
     "noSelection": "Nic nie jest zaznaczone",
     "noTarget": "Żadne okno aplikacji nie jest aktywne",
     "resultInClipboard": "Wynik jest w schowku",
+    "selectionChanged": "W międzyczasie zaznaczenie się zmieniło, więc wynik skopiowano do schowka",
+    "terminalSelection": "Zaznaczenia w terminalu nie można zastąpić, więc wynik skopiowano do schowka",
     "unchanged": {
       "command": "Polecenie pozostawiło tekst bez zmian",
       "correction": "Nie znaleziono błędów"
@@ -1005,14 +1007,17 @@
     "tasksHint": "Instrukcje (prompty), które AI stosuje do tekstu. W menu zadań każda uruchamia się własnym klawiszem; przeciągaj karty, aby zmienić ich klawisze.",
     "tasksTab": "Zadania AI",
     "temperature": "Temperatura",
+    "terminalApps": "Inne terminale",
+    "terminalAppsHint": "Klasy okien terminali, których Tyco nie rozpoznaje, oddzielone przecinkami. W terminalu Tyco nigdy nie naciska Ctrl+C, a wynik dla zaznaczenia umieszcza w schowku.",
     "terminalPasteShortcut": "Skrót wklejania w terminalach",
-    "terminalPasteShortcutHint": "Służy do wstawiania wyników i zastępowania zaznaczonego tekstu w rozpoznanych oknach terminala. Kopiowanie zaznaczonego tekstu używa Ctrl+Shift+C.",
+    "terminalPasteShortcutHint": "Używany do wstawiania wyników w rozpoznanych oknach terminala. Tekst zaznaczony w terminalu jest odczytywany bez naciskania klawiszy, a wynik trafia do schowka.",
     "terminalPasteShortcutSame": "Jak w zwykłych aplikacjach",
     "textCorrection": "Korekta tekstu",
     "textInsertion": {
       "accessibilityDenied": "Zezwól Tyco w Ustawieniach systemowych → Prywatność i ochrona → Dostępność.",
       "allowKeyboardControl": "Zezwól",
       "checkFailed": "Nie udało się sprawdzić wstawiania tekstu: {error}",
+      "clipboardToolsMissing": "Brakuje narzędzi schowka: {tools}. Zainstaluj wl-clipboard w Wayland lub xclip w X11.",
       "keysReadyPortal": "Klawisze są naciskane przez portal zdalnego sterowania pulpitu",
       "keysReadySystem": "Klawisze są naciskane za pomocą wejścia systemowego",
       "keysReadyYdotool": "Klawisze naciska ydotool",

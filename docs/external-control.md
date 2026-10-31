@@ -306,8 +306,8 @@ tyco-ctl run my-transform --selection --wait
 
 Interactive execution may ask for input. It never implicitly
 uses a selection. `--selection` captures the focused application's selected
-text; without `--replace`, the output is returned and the old clipboard is
-restored when the job ends. `--replace` requires `--selection`, overrides configured after-run output handling, and inserts the
+text; without `--replace`, the output is returned and the clipboard is left as
+the user had it. `--replace` requires `--selection`, overrides configured after-run output handling, and inserts the
 result back into the original target. Empty replacement output is a failure.
 
 A changed foreground window prevents insertion: the result remains in the
@@ -326,12 +326,27 @@ Selection jobs are exclusive. A second external invocation returns a busy/
 selection error; it does not toggle cancellation of the first one. Internal
 selection hotkeys also cannot cancel an active external selection job.
 
-Windows capture uses `Ctrl+C`, insertion uses `Ctrl+V` (`Ctrl+Shift+C/V` in
-recognized terminal windows), and clipboard snapshots
-preserve HGLOBAL-backed formats. Handle-backed clipboard formats or snapshots
-over 16 MiB are rejected before mutation. Elevated target applications may
-reject simulated input from a non-elevated Tyco process. Linux selection capture
-uses the existing platform clipboard/window tracking and key injection support.
+Capture presses the copy keys in the focused window and gives the clipboard
+its content back right away, so it holds neither the selection while a job
+runs nor loses what the user copies meanwhile. Before replacing, the
+selection is copied again: when it changed, or the focus moved, the result
+stays in the clipboard and the job fails with `SelectionFailed`.
+
+Terminals never get Ctrl+C, which would interrupt the running program. On
+Linux their selection is read from the primary selection; on Windows the
+console, Windows Terminal and mintty copy with `Ctrl+Insert`, Alacritty and
+WezTerm with `Ctrl+Shift+C`, and PuTTY-like terminals, which have no copy
+keys, are refused. A terminal selection is never replaced: the result goes to
+the clipboard. Other terminals can be named in `windowInsertion.terminalApps`.
+
+Windows clipboard snapshots preserve HGLOBAL-backed formats; handle-backed
+and private formats are skipped, and snapshots over 16 MiB are rejected
+before mutation. Text Tyco moves through the clipboard is kept out of the
+clipboard history and its cloud sync. A target running as administrator is
+refused, since Windows silently drops simulated input from a non-elevated
+Tyco. Linux selection capture uses the platform clipboard tools, window
+tracking and key injection.
+
 macOS selection replacement is currently unsupported and returns a selection
 error; ordinary command execution still uses the Unix transport.
 

@@ -154,6 +154,14 @@ describe('createSelectionReplace', () => {
     )
   })
 
+  it('takes Windows line breaks for unchanged text', async () => {
+    const { request, deps, model } = setup()
+    const done = model.handleRun(event({ text: 'first\r\nsecond' }))
+    request.resolve('first\nsecond')
+    await done
+    expect(deps.finish).toHaveBeenCalledWith(1, null)
+  })
+
   it('reports a failed request in the bubble and a notification', async () => {
     const { request, deps, model } = setup()
     const done = model.handleRun(event({ action: 'command:fix' }))
@@ -194,6 +202,25 @@ describe('createSelectionReplace', () => {
       'selection.focusChanged'
     )
   })
+
+  it.each([
+    ['selectionChanged', 'selection.selectionChanged'],
+    ['terminal', 'selection.terminalSelection'],
+  ] as const)(
+    'tells why a %s result waits in the clipboard',
+    async (status, messageKey) => {
+      const { request, deps, model } = setup({
+        finish: vi.fn().mockResolvedValue(status),
+      })
+      const done = model.handleRun(event())
+      request.resolve('Hello world.')
+      await done
+      expect(deps.notify).toHaveBeenCalledWith(
+        'selection.resultInClipboard',
+        messageKey
+      )
+    }
+  )
 
   it('reports a failed paste', async () => {
     const { request, deps, model } = setup({

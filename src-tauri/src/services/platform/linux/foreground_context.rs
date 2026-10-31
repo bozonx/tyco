@@ -1,10 +1,6 @@
-use std::time::Duration;
-
 use super::primary_selection;
 use crate::services::platform::session::{self, DisplayServer};
 use crate::services::platform::window_tracker::tracker;
-
-const COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Clone, Copy, Debug)]
 pub struct SystemForegroundContext {
@@ -16,15 +12,6 @@ impl SystemForegroundContext {
         Self {
             display: session::current().display,
         }
-    }
-
-    /// A selection owner that does not answer would hold the capture, and
-    /// with it the activation, for good.
-    fn command_output(program: &str, args: &[&str]) -> Option<String> {
-        let output = super::command::output_with_timeout(program, args, COMMAND_TIMEOUT)?;
-        let value = String::from_utf8(output).ok()?;
-        let value = value.trim_end_matches(['\r', '\n']);
-        (!value.is_empty()).then(|| value.to_owned())
     }
 
     /// The tracker knows the window focused before a Tyco one; without it
@@ -49,20 +36,30 @@ impl SystemForegroundContext {
     }
 
     /// The primary selection, which holds what was selected last in any
-    /// window. On Wayland, only when it was made in `target`, as far as that
-    /// is known, see `primary_selection`. Never the clipboard: a copied text
-    /// is not a selection.
+    /// window, when it was made in `target`, as far as that is known: see
+    /// `primary_selection` on Wayland, the selection owner on X11. Never the
+    /// clipboard: a copied text is not a selection.
     pub async fn capture_selection(&self, target: Option<String>) -> Option<String> {
-        match self.display {
-            DisplayServer::X11 => Self::command_output("xclip", &["-selection", "primary", "-o"]),
-            DisplayServer::Wayland => {
-                if primary_selection::is_selection_from_window(target.as_deref()) == Some(false) {
-                    return None;
-                }
-                Self::command_output("wl-paste", &["--primary", "--no-newline"])
-            }
-            DisplayServer::Native | DisplayServer::Unknown => None,
+        if !matches!(self.display, DisplayServer::X11 | DisplayServer::Wayland) {
+            return None;
         }
+        if is_selection_from(self.display, target.as_deref()) == Some(false) {
+            return None;
+        }
+        super::clipboard_restore::read_primary().filter(|text| !text.trim().is_empty())
+    }
+}
+
+/// Whether the primary selection was made in `target`; `None` when that is
+/// not known.
+pub(crate) fn is_selection_from(display: DisplayServer, target: Option<&str>) -> Option<bool> {
+    match display {
+        DisplayServer::X11 => match target {
+            Some(target) => super::x11::is_primary_selection_from(target),
+            None => Some(false),
+        },
+        DisplayServer::Wayland => primary_selection::is_selection_from_window(target),
+        DisplayServer::Native | DisplayServer::Unknown => None,
     }
 }
 

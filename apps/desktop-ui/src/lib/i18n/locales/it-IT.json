@@ -558,6 +558,8 @@
     "noSelection": "Non è selezionato nulla",
     "noTarget": "Nessuna finestra di applicazione ha il focus",
     "resultInClipboard": "Il risultato è negli appunti",
+    "selectionChanged": "Nel frattempo la selezione è cambiata, quindi il risultato è stato copiato negli appunti",
+    "terminalSelection": "Una selezione in un terminale non può essere sostituita, quindi il risultato è stato copiato negli appunti",
     "unchanged": {
       "command": "Il comando ha lasciato il testo invariato",
       "correction": "Nessun errore trovato"
@@ -1005,14 +1007,17 @@
     "tasksHint": "Istruzioni (prompt) che l’IA applica al testo. Nel menu delle attività ognuna si esegue con il proprio tasto; trascina le schede per cambiarne i tasti.",
     "tasksTab": "Attività IA",
     "temperature": "Temperatura",
+    "terminalApps": "Altri terminali",
+    "terminalAppsHint": "Classi di finestra dei terminali che Tyco non riconosce, separate da virgole. In un terminale Tyco non preme mai Ctrl+C e mette negli appunti il risultato per la sua selezione.",
     "terminalPasteShortcut": "Scorciatoia per incollare nei terminali",
-    "terminalPasteShortcutHint": "Usata per inserire i risultati e sostituire il testo selezionato nelle finestre di terminale riconosciute. Per copiare il testo selezionato si usa Ctrl+Maiusc+C.",
+    "terminalPasteShortcutHint": "Usata per inserire i risultati nelle finestre di terminale riconosciute. Il testo selezionato in un terminale viene letto senza premere tasti e il risultato va negli appunti.",
     "terminalPasteShortcutSame": "Come nelle app normali",
     "textCorrection": "Correzione del testo",
     "textInsertion": {
       "accessibilityDenied": "Consenti Tyco in Impostazioni di Sistema → Privacy e sicurezza → Accessibilità.",
       "allowKeyboardControl": "Consenti",
       "checkFailed": "Impossibile verificare l'inserimento del testo: {error}",
+      "clipboardToolsMissing": "Mancano gli strumenti per gli appunti: {tools}. Installa wl-clipboard su Wayland o xclip su X11.",
       "keysReadyPortal": "I tasti vengono premuti tramite il portale di controllo remoto del desktop",
       "keysReadySystem": "I tasti vengono premuti con l'input di sistema",
       "keysReadyYdotool": "I tasti vengono premuti con ydotool",

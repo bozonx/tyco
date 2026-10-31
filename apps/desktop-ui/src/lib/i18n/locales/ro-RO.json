@@ -558,6 +558,8 @@
     "noSelection": "Nu este selectat nimic",
     "noTarget": "Nicio fereastră de aplicație nu are focusul",
     "resultInClipboard": "Rezultatul este în clipboard",
+    "selectionChanged": "Între timp selecția s-a schimbat, așa că rezultatul a fost copiat în clipboard",
+    "terminalSelection": "O selecție dintr-un terminal nu poate fi înlocuită, așa că rezultatul a fost copiat în clipboard",
     "unchanged": {
       "command": "Comanda a lăsat textul neschimbat",
       "correction": "Nu s-au găsit greșeli"
@@ -1005,14 +1007,17 @@
     "tasksHint": "Instrucțiuni (prompturi) pe care AI le aplică textului. În meniul de sarcini, fiecare rulează cu propria tastă; trageți cardurile pentru a le schimba tastele.",
     "tasksTab": "Sarcini AI",
     "temperature": "Temperatură",
+    "terminalApps": "Alte terminale",
+    "terminalAppsHint": "Clasele de ferestre ale terminalelor pe care Tyco nu le recunoaște, separate prin virgulă. Într-un terminal, Tyco nu apasă niciodată Ctrl+C și pune rezultatul pentru selecția lui în clipboard.",
     "terminalPasteShortcut": "Comandă rapidă de lipire în terminale",
-    "terminalPasteShortcutHint": "Folosită pentru inserarea rezultatelor și înlocuirea textului selectat în ferestrele de terminal recunoscute. Copierea textului selectat folosește Ctrl+Shift+C.",
+    "terminalPasteShortcutHint": "Folosită pentru inserarea rezultatelor în ferestrele de terminal recunoscute. Textul selectat într-un terminal este citit fără a apăsa taste, iar rezultatul ajunge în clipboard.",
     "terminalPasteShortcutSame": "La fel ca în aplicațiile obișnuite",
     "textCorrection": "Corectarea textului",
     "textInsertion": {
       "accessibilityDenied": "Permite Tyco în Configurări sistem → Confidențialitate și securitate → Accesibilitate.",
       "allowKeyboardControl": "Permite",
       "checkFailed": "Inserarea textului nu a putut fi verificată: {error}",
+      "clipboardToolsMissing": "Lipsesc instrumentele pentru clipboard: {tools}. Instalați wl-clipboard pe Wayland sau xclip pe X11.",
       "keysReadyPortal": "Tastele sunt apăsate prin portalul de control la distanță al desktopului",
       "keysReadySystem": "Tastele sunt apăsate cu intrarea sistemului",
       "keysReadyYdotool": "Tastele sunt apăsate cu ydotool",

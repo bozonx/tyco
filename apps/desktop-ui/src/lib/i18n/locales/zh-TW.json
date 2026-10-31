@@ -555,6 +555,8 @@
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
     "resultInClipboard": "結果已存入剪貼簿",
+    "selectionChanged": "處理期間選取範圍已變更，因此結果已複製到剪貼簿",
+    "terminalSelection": "終端機中的選取範圍無法取代，因此結果已複製到剪貼簿",
     "unchanged": {
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
@@ -999,14 +1001,17 @@
     "tasksHint": "AI 套用至文字的指示 (提示詞)。在任務選單中，每個任務都有專屬按鍵；拖曳卡片以變更其按鍵。",
     "tasksTab": "AI 任務",
     "temperature": "溫度",
+    "terminalApps": "其他終端機",
+    "terminalAppsHint": "Tyco 無法辨識的終端機視窗類別，以逗號分隔。在終端機中 Tyco 絕不按 Ctrl+C，並會把選取範圍的結果放入剪貼簿。",
     "terminalPasteShortcut": "終端機中的貼上快捷鍵",
-    "terminalPasteShortcutHint": "用於在已識別的終端機視窗中插入結果與取代選取的文字。複製選取的文字使用 Ctrl+Shift+C。",
+    "terminalPasteShortcutHint": "用於將結果插入已辨識的終端機視窗。終端機中選取的文字無需按鍵即可讀取，結果會放入剪貼簿。",
     "terminalPasteShortcutSame": "與一般應用程式相同",
     "textCorrection": "文字校對",
     "textInsertion": {
       "accessibilityDenied": "請在「系統設定 → 隱私權與安全性 → 輔助使用」中允許 Tyco。",
       "allowKeyboardControl": "允許",
       "checkFailed": "無法檢查文字插入：{error}",
+      "clipboardToolsMissing": "缺少剪貼簿工具：{tools}。請在 Wayland 下安裝 wl-clipboard，或在 X11 下安裝 xclip。",
       "keysReadyPortal": "透過桌面的遠端控制入口按鍵",
       "keysReadySystem": "透過系統輸入按鍵",
       "keysReadyYdotool": "透過 ydotool 按鍵",

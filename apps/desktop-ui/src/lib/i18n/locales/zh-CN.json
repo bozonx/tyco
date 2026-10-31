@@ -555,6 +555,8 @@
     "noSelection": "未选中任何内容",
     "noTarget": "没有具有焦点的应用程序窗口",
     "resultInClipboard": "结果已复制到剪贴板",
+    "selectionChanged": "处理期间选区已改变，因此结果已复制到剪贴板",
+    "terminalSelection": "终端中的选区无法替换，因此结果已复制到剪贴板",
     "unchanged": {
       "command": "命令未对文本做任何更改",
       "correction": "未发现错误"
@@ -999,14 +1001,17 @@
     "tasksHint": "AI 应用于文本的指令（Prompt）。在任务菜单中，每项任务使用独立的按键运行；拖动卡片可更改其按键。",
     "tasksTab": "AI 任务",
     "temperature": "温度 (Temperature)",
+    "terminalApps": "其他终端",
+    "terminalAppsHint": "Tyco 无法识别的终端窗口类，用逗号分隔。在终端中 Tyco 从不按 Ctrl+C，并会把选区的结果放入剪贴板。",
     "terminalPasteShortcut": "终端中的粘贴快捷键",
-    "terminalPasteShortcutHint": "用于在已识别的终端窗口中插入结果和替换选中文本。复制选中文本使用 Ctrl+Shift+C。",
+    "terminalPasteShortcutHint": "用于向已识别的终端窗口插入结果。终端中选中的文本无需按键即可读取，结果会放入剪贴板。",
     "terminalPasteShortcutSame": "与普通应用相同",
     "textCorrection": "文本纠错",
     "textInsertion": {
       "accessibilityDenied": "请在“系统设置 → 隐私与安全性 → 辅助功能”中允许 Tyco。",
       "allowKeyboardControl": "允许",
       "checkFailed": "无法检查文本插入：{error}",
+      "clipboardToolsMissing": "缺少剪贴板工具：{tools}。请在 Wayland 下安装 wl-clipboard，或在 X11 下安装 xclip。",
       "keysReadyPortal": "通过桌面的远程控制门户按键",
       "keysReadySystem": "通过系统输入按键",
       "keysReadyYdotool": "通过 ydotool 按键",

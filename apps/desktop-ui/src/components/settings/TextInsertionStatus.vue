@@ -25,6 +25,16 @@
         :icon="NOTICE_ICONS[lines.target.tone]"
         :message="t(lines.target.messageKey)"
       />
+      <InlineNotice
+        v-if="lines.clipboard"
+        :kind="NOTICE_KINDS[lines.clipboard.tone]"
+        :icon="NOTICE_ICONS[lines.clipboard.tone]"
+        :message="
+          t(lines.clipboard.messageKey, {
+            tools: status.missingClipboardTools.join(', '),
+          })
+        "
+      />
     </template>
     <InlineNotice
       v-if="error"
@@ -42,6 +52,7 @@ import { useI18n } from '../../composables/use-i18n'
 import {
   type InsertionStatusTone,
   createTextInsertionStatusModel,
+  describeClipboardTools,
   describeKeys,
   describeTarget,
 } from '../../lib/text-insertion/text-insertion-status'
@@ -74,6 +85,7 @@ const lines = computed(
     status.value && {
       keys: describeKeys(status.value),
       target: describeTarget(status.value),
+      clipboard: describeClipboardTools(status.value),
     }
 )
 

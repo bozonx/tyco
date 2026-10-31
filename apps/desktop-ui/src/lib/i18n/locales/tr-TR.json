@@ -558,6 +558,8 @@
     "noSelection": "Hiçbir şey seçili değil",
     "noTarget": "Odakta bir uygulama penceresi yok",
     "resultInClipboard": "Sonuç panoda",
+    "selectionChanged": "Bu sırada seçim değişti, bu yüzden sonuç panoya kopyalandı",
+    "terminalSelection": "Terminaldeki bir seçim değiştirilemez, bu yüzden sonuç panoya kopyalandı",
     "unchanged": {
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
@@ -1002,14 +1004,17 @@
     "tasksHint": "Yapay zekânın metne uyguladığı talimatlar (istemler). Görevler menüsünde her biri kendi tuşuyla çalışır; tuşları değiştirmek için kartları sürükleyin.",
     "tasksTab": "AI görevleri",
     "temperature": "Sıcaklık",
+    "terminalApps": "Diğer terminaller",
+    "terminalAppsHint": "Tyco'nun tanımadığı terminallerin pencere sınıfları, virgülle ayrılmış. Tyco bir terminalde asla Ctrl+C'ye basmaz ve seçimin sonucunu panoya koyar.",
     "terminalPasteShortcut": "Terminallerde yapıştırma kısayolu",
-    "terminalPasteShortcutHint": "Tanınan terminal pencerelerinde sonuç eklemek ve seçili metni değiştirmek için kullanılır. Seçili metin Ctrl+Shift+C ile kopyalanır.",
+    "terminalPasteShortcutHint": "Tanınan terminal pencerelerine sonuç eklemek için kullanılır. Terminalde seçili metin tuşa basılmadan okunur ve sonuç panoya gider.",
     "terminalPasteShortcutSame": "Normal uygulamalarla aynı",
     "textCorrection": "Metin düzeltme",
     "textInsertion": {
       "accessibilityDenied": "Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik bölümünde Tyco'ya izin verin.",
       "allowKeyboardControl": "İzin ver",
       "checkFailed": "Metin ekleme denetlenemedi: {error}",
+      "clipboardToolsMissing": "Pano araçları eksik: {tools}. Wayland'de wl-clipboard veya X11'de xclip yükleyin.",
       "keysReadyPortal": "Tuşlar masaüstünün uzaktan denetim portalı üzerinden basılıyor",
       "keysReadySystem": "Tuşlar sistem girdisiyle basılıyor",
       "keysReadyYdotool": "Tuşlar ydotool ile basılıyor",

@@ -27,6 +27,7 @@ describe('SettingsGeneralTab.vue', () => {
           pasteShortcut: 'Ctrl+V',
           terminalPasteShortcut: 'Ctrl+Shift+V',
         },
+        terminalApps: ['PuTTY'],
       },
       ...overrides,
     }) as UserConfig
@@ -141,5 +142,17 @@ describe('SettingsGeneralTab.vue', () => {
 
     await field.setValue('same')
     expect(config.windowInsertion.linux.terminalPasteShortcut).toBeNull()
+  })
+
+  it('edits the extra terminals as a comma separated list', async () => {
+    const config = createConfig()
+    const wrapper = mountTab(config)
+    const field = wrapper.find('[data-label="settings.terminalApps"] input')
+    expect(field.element).toHaveProperty('value', 'PuTTY')
+
+    await field.setValue('PuTTY, my-term, ')
+    expect(config.windowInsertion.terminalApps).toEqual(['PuTTY', 'my-term'])
+    // the separator being typed stays in the field
+    expect(field.element).toHaveProperty('value', 'PuTTY, my-term, ')
   })
 })

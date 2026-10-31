@@ -9,7 +9,6 @@ use super::coordinator::{
     ABANDONED_RUN_AGE,
 };
 use super::*;
-use crate::services::platform::selection::is_terminal_class;
 
 #[test]
 fn validates_selection_actions() {
@@ -39,23 +38,6 @@ fn run_at(id: u64, started_at: Instant) -> SelectionRun {
             is_terminal: false,
         },
         started_at,
-        clipboard_snapshot: None,
-    }
-}
-
-#[test]
-fn recognizes_terminals_by_application_id() {
-    for class in [
-        "org.kde.konsole",
-        "Alacritty",
-        "kitty",
-        "org.gnome.Ptyxis",
-        "xfce4-terminal",
-    ] {
-        assert!(is_terminal_class(class), "{class}");
-    }
-    for class in ["firefox", "org.kde.kate", "telegramdesktop", ""] {
-        assert!(!is_terminal_class(class), "{class}");
     }
 }
 
@@ -80,27 +62,26 @@ fn an_abandoned_run_is_not_cancelled_but_dropped() {
     runs.lock().replace(run_at(2, now));
     assert!(matches!(
         runs.take_active_at(now + ABANDONED_RUN_AGE),
-        SelectionRunTakeOutcome::Abandoned(SelectionRun { id: 2, .. })
+        SelectionRunTakeOutcome::Abandoned
     ));
     assert!(runs.lock().is_none());
 }
 
 #[test]
-fn an_abandoned_run_gets_its_clipboard_back_before_the_next_capture() {
+fn a_trigger_after_an_abandoned_run_captures_anew() {
     let runs = SelectionRunCoordinator::default();
-    let backend = Backend::default();
-    let guard = runs.reserve().unwrap();
-    runs.capture_and_publish(
-        &backend,
-        "correction".into(),
-        TriggerWait::Now,
-        guard,
-        Some(run_at(9, Instant::now())),
-    );
-    assert_eq!(
-        backend.operations.lock().unwrap()[..3],
-        ["restore:9", "wait", "capture"]
-    );
+    let started = Instant::now();
+    runs.lock().replace(run_at(9, started));
+    assert!(matches!(
+        runs.begin_trigger(
+            "correction",
+            TriggerKind::Toggle,
+            started + ABANDONED_RUN_AGE
+        )
+        .unwrap(),
+        TriggerDecision::Capture(..)
+    ));
+    assert!(runs.lock().is_none());
 }
 
 #[derive(Default)]
@@ -130,12 +111,6 @@ impl SelectionBackend for Backend {
         } else {
             Ok(("selected".into(), run_at(0, Instant::now())))
         }
-    }
-    fn restore(&self, run: SelectionRun) {
-        self.operations
-            .lock()
-            .unwrap()
-            .push(format!("restore:{}", run.id));
     }
     fn paste(
         &self,
@@ -169,13 +144,13 @@ impl SelectionBackend for Backend {
 }
 
 fn start(runs: &SelectionRunCoordinator, backend: &Backend) -> u64 {
-    let TriggerDecision::Capture(guard, None) = runs
+    let TriggerDecision::Capture(guard) = runs
         .begin_trigger("correction", TriggerKind::Toggle, Instant::now())
         .unwrap()
     else {
         panic!("capture expected");
     };
-    runs.capture_and_publish(backend, "correction".into(), TriggerWait::Now, guard, None);
+    runs.capture_and_publish(backend, "correction".into(), TriggerWait::Now, guard);
     backend.events.lock().unwrap().last().unwrap().run_id
 }
 
@@ -209,7 +184,7 @@ fn capture_publish_finish_and_stale_results_have_no_system_dependencies() {
 }
 
 #[test]
-fn failed_publication_restores_only_its_capture_and_releases_the_reservation() {
+fn failed_publication_drops_its_run_and_releases_the_reservation() {
     let runs = SelectionRunCoordinator::default();
     let backend = Backend {
         publish_error: true,
@@ -219,7 +194,7 @@ fn failed_publication_restores_only_its_capture_and_releases_the_reservation() {
     assert!(runs.lock().is_none());
     assert_eq!(
         *backend.operations.lock().unwrap(),
-        ["wait", "capture", "publish", "restore:1"]
+        ["wait", "capture", "publish"]
     );
     assert!(matches!(
         runs.begin_trigger("correction", TriggerKind::Toggle, Instant::now())
@@ -247,7 +222,7 @@ fn capture_failure_is_published_without_creating_a_run() {
 }
 
 #[test]
-fn a_second_trigger_cancels_and_keeps_capture_reserved_until_restoration_finishes() {
+fn a_second_trigger_cancels_and_keeps_capture_reserved_until_it_is_reported() {
     let runs = SelectionRunCoordinator::default();
     let backend = Backend::default();
     start(&runs, &backend);
@@ -267,15 +242,12 @@ fn a_second_trigger_cancels_and_keeps_capture_reserved_until_restoration_finishe
         .is_err());
     cancel_with(&backend, run);
     drop(guard);
-    assert_eq!(
-        &backend.operations.lock().unwrap()[3..],
-        ["restore:1", "cancel:1"]
-    );
+    assert_eq!(&backend.operations.lock().unwrap()[3..], ["cancel:1"]);
     assert!(runs.prepare_external_with(&backend, Instant::now()).is_ok());
 }
 
 #[test]
-fn external_capture_is_never_cancelled_and_empty_results_restore_the_clipboard() {
+fn external_capture_is_never_cancelled_and_empty_results_change_nothing() {
     let runs = SelectionRunCoordinator::default();
     let backend = Backend::default();
     let (id, text) = runs
@@ -334,19 +306,13 @@ fn a_requested_action_replaces_the_run_in_progress_instead_of_only_cancelling_it
     };
     assert_eq!(run.id, first);
     cancel_with(&backend, run);
-    runs.capture_and_publish(
-        &backend,
-        "command:fix".into(),
-        TriggerWait::Now,
-        guard,
-        None,
-    );
+    runs.capture_and_publish(&backend, "command:fix".into(), TriggerWait::Now, guard);
     let events = backend.events.lock().unwrap();
     assert_eq!(events.last().unwrap().action, "command:fix");
     assert_eq!(runs.lock().as_ref().map(|run| run.id), Some(first + 1));
     assert_eq!(
         &backend.operations.lock().unwrap()[3..],
-        ["restore:1", "cancel:1", "wait", "capture", "publish"]
+        ["cancel:1", "wait", "capture", "publish"]
     );
 }
 
@@ -365,10 +331,7 @@ fn an_abandoned_run_does_not_keep_external_jobs_out() {
     let (id, _) = runs
         .prepare_external_with(&backend, started + ABANDONED_RUN_AGE)
         .unwrap();
-    assert_eq!(
-        *backend.operations.lock().unwrap(),
-        ["restore:4", "capture"]
-    );
+    assert_eq!(*backend.operations.lock().unwrap(), ["capture"]);
     // a long external job is never taken for an abandoned one
     assert!(runs
         .prepare_external_with(&backend, started + ABANDONED_RUN_AGE * 10)

@@ -40,6 +40,16 @@
           @update:model-value="updateTerminalPasteShortcut"
         />
       </FieldRow>
+      <FieldRow
+        :label="t('settings.terminalApps')"
+        :info="t('settings.terminalAppsHint')"
+      >
+        <FieldInput
+          :model-value="terminalAppsText"
+          placeholder="PuTTY, org.example.Terminal"
+          @update:model-value="updateTerminalApps"
+        />
+      </FieldRow>
     </SettingsSection>
 
     <StorageLocations :is-in-development="userConfig.isInDevelopment" />
@@ -61,7 +71,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -71,6 +81,7 @@ import {
   buildLanguageOptions,
 } from '../../lib/locale/language'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
+import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
@@ -114,6 +125,36 @@ const updateTerminalPasteShortcut = (value: string | number | undefined) => {
   userConfig.value.windowInsertion.linux.terminalPasteShortcut =
     value === 'same' ? null : (value as PasteShortcut)
 }
+
+/** Window classes as the user types them: comma separated */
+const parseTerminalApps = (text: string) =>
+  text
+    .split(',')
+    .map((app) => app.trim())
+    .filter((app) => app !== '')
+
+const terminalAppsText = ref(
+  userConfig.value.windowInsertion.terminalApps.join(', ')
+)
+
+const updateTerminalApps = (value: string | number | undefined) => {
+  terminalAppsText.value = String(value ?? '')
+  userConfig.value.windowInsertion.terminalApps = parseTerminalApps(
+    terminalAppsText.value
+  )
+}
+
+// a change made elsewhere, e.g. a reset, shows up in the field; the text
+// being typed keeps its separators
+watch(
+  () => userConfig.value.windowInsertion.terminalApps,
+  (apps) => {
+    const typed = parseTerminalApps(terminalAppsText.value)
+    if (typed.join('\n') !== apps.join('\n')) {
+      terminalAppsText.value = apps.join(', ')
+    }
+  }
+)
 
 const appLanguageOptions = computed(() => {
   return [

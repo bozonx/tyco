@@ -277,6 +277,7 @@ export class FakeDesktopBackend {
     this.handle('get_text_insertion_status', () => ({
       keys: 'ready',
       target: 'tracked',
+      missingClipboardTools: [],
     }))
     this.handle('log_client_message', noop)
     this.handle('mark_activation_metric', noop)

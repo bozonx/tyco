@@ -65,6 +65,18 @@ export function describeTarget(
       }
 }
 
+/** The clipboard tools the session lacks, when it lacks any */
+export function describeClipboardTools(
+  status: TextInsertionStatus
+): InsertionStatusLine | null {
+  return status.missingClipboardTools.length > 0
+    ? {
+        tone: 'error',
+        messageKey: 'settings.textInsertion.clipboardToolsMissing',
+      }
+    : null
+}
+
 /** The insertion status of the settings page, checked whenever it opens */
 export function createTextInsertionStatusModel(
   deps: TextInsertionStatusDependencies
