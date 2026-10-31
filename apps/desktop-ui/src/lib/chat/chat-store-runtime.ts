@@ -34,6 +34,7 @@ import {
 } from './chat-llm-selection'
 import { createChatModel } from './chat-model'
 import { createChatProfileRuntime } from './chat-profile-runtime'
+import { createChatRemoval } from './chat-removal'
 
 type SendChatOptions = NonNullable<
   Parameters<ChatStoreRuntimeDependencies['llmActions']['sendChatMessage']>[3]
@@ -392,6 +393,21 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     selectModel: scope.selectModel,
   })
 
+  const chatRemoval = createChatRemoval({
+    history,
+    chat: model,
+    isHistoryEnabled,
+    releaseImages: async (id) => {
+      await deps.invoke('release_deleted_chat_images', { id })
+    },
+    reportError: (error) => {
+      warn(
+        `A chat history operation failed: ${describeError(error, translate)}`
+      )
+      toastKey('history.operationFailed', 'error')
+    },
+  })
+
   let disposed = false
   /**
    * Another window, the settings or the retention removed chats: the list is
@@ -425,6 +441,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     if (disposed) return
     disposed = true
     stopListening?.()
+    void chatRemoval.dispose()
     controller.dispose()
     chatTools.dispose()
     model.dispose()
@@ -460,6 +477,10 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     refreshProfile,
     /** The chats listed in the sidebar */
     history,
+    /** The chat removed last, while its removal can be undone */
+    removedChat: chatRemoval.removed,
+    removeChat: chatRemoval.remove,
+    undoRemoveChat: chatRemoval.undo,
     dispose,
   }
 }

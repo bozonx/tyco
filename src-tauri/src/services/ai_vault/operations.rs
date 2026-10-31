@@ -208,9 +208,15 @@ pub fn write_profile_soul(vault_root: &Path, id: &str, content: &str) -> Result<
 
 /// Where the profile keeps its chats; only an existing profile has one.
 pub fn profile_chats_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
-    let dir = existing_profile_dir(vault_root, id)?.join(PROFILE_CHATS_DIR);
+    let dir = existing_profile_chats_path(vault_root, id)?;
     create_private_dir(&dir)?;
     Ok(dir)
+}
+
+/// The chat folder of an existing profile, which may not exist yet: reading
+/// chats creates nothing.
+pub fn existing_profile_chats_path(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
+    Ok(existing_profile_dir(vault_root, id)?.join(PROFILE_CHATS_DIR))
 }
 
 /// The chat folders of every profile in the vault, for the history settings

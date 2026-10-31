@@ -80,12 +80,14 @@ import HistoryList, {
   type HistoryListItem,
 } from '../components/history/HistoryList.vue'
 import { useCopyText } from '../composables/use-copy-text'
+import { useEditorHistoryChanges } from '../composables/use-editor-history-changes'
 import { useEditorNavigation } from '../composables/use-editor-navigation'
 import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import { createRemovalUndo } from '../lib/history/removal-undo'
+import { clientLogger } from '../lib/logger'
 import { appNavigation } from '../navigation'
 import { useDesktopStore } from '../stores/desktop'
 import { useHistoryStore } from '../stores/history'
@@ -110,7 +112,13 @@ const removal = createRemovalUndo<EditorHistoryItem>({
   remove: historyStore.removeFromEditorHistory,
   restore: historyStore.restoreEditorItem,
   clear: historyStore.clearEditorHistory,
-  reportError: () => toastKey('history.operationFailed', 'error'),
+  reportError: (error) => {
+    clientLogger.warn(
+      `An editor history operation failed: ${String(error)}`,
+      'history'
+    )
+    toastKey('history.operationFailed', 'error')
+  },
 })
 const removedItem = removal.removed
 const undoRemove = removal.undo
@@ -187,10 +195,17 @@ const loadEditorHistory = async () => {
   try {
     await historyStore.loadEditorHistory()
     hasEditorLoadError.value = false
-  } catch {
+  } catch (error) {
+    clientLogger.warn(
+      `Could not load the editor history: ${String(error)}`,
+      'history'
+    )
     hasEditorLoadError.value = true
   }
 }
+
+// another window or the settings changed it
+useEditorHistoryChanges(() => void loadEditorHistory())
 
 const removeEditorItem = (item: HistoryListItem) => removal.remove(item.id)
 

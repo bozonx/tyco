@@ -69,4 +69,21 @@ describe('chat-title', () => {
     expect(cleanGeneratedTitle('«Выпечка хлеба»')).toBe('Выпечка хлеба')
     expect(cleanGeneratedTitle('\n\n')).toBe('')
   })
+
+  it('drops a title label in the languages of the app', () => {
+    expect(cleanGeneratedTitle('Titel: Brot backen')).toBe('Brot backen')
+    expect(cleanGeneratedTitle('标题：烤面包')).toBe('烤面包')
+    expect(cleanGeneratedTitle('Заголовок: Выпечка')).toBe('Выпечка')
+    expect(cleanGeneratedTitle('Python: async basics')).toBe(
+      'Python: async basics'
+    )
+  })
+
+  it('never cuts a character outside the BMP in half', () => {
+    const generated = cleanGeneratedTitle('😀'.repeat(100))
+    expect(Array.from(generated)).toHaveLength(81)
+    expect(generated.endsWith('😀…')).toBe(true)
+    const draft = draftChatTitle('🍞'.repeat(70))
+    expect(draft).toBe(`${'🍞'.repeat(60)}…`)
+  })
 })

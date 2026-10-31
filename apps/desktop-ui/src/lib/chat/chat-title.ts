@@ -7,16 +7,59 @@ const DRAFT_TITLE_LENGTH = 60
  * longer, up to `MAX_CHAT_TITLE_LENGTH` in `ChatSidebar.vue`
  */
 const TITLE_MAX_LENGTH = 80
+/**
+ * A "Title:" a model may put before the title, in the languages of the app; the
+ * title follows the language of the user's message
+ */
+const TITLE_LABEL = new RegExp(
+  `^(${[
+    'title',
+    'название',
+    'заголовок',
+    'назва',
+    'тақырып',
+    'titel',
+    'titre',
+    'título',
+    'titolo',
+    'tytuł',
+    'název',
+    'titlu',
+    'naslov',
+    'cím',
+    'başlık',
+    'τίτλος',
+    'სათაური',
+    'タイトル',
+    '제목',
+    '标题',
+    '標題',
+  ].join('|')})\\s*[:：]\\s*`,
+  'iu'
+)
+
 /** Favor the user's topic over the answer when bounding title generation input. */
 const TITLE_QUESTION_CHARACTERS = 2_000
 const TITLE_ANSWER_CHARACTERS = 1_000
 
+/**
+ * The first `length` characters of `text`. Counts code points, so an emoji or
+ * another character outside the BMP is never cut in half
+ */
+function headOf(text: string, length: number): string {
+  return Array.from(text).slice(0, length).join('')
+}
+
+function lengthOf(text: string): number {
+  return Array.from(text).length
+}
+
 /** The start of the first message, on one line, cut at a word */
 export function draftChatTitle(message: string): string {
   const line = message.replace(/\s+/g, ' ').trim()
-  if (line.length <= DRAFT_TITLE_LENGTH) return line
+  if (lengthOf(line) <= DRAFT_TITLE_LENGTH) return line
 
-  const cut = line.slice(0, DRAFT_TITLE_LENGTH)
+  const cut = headOf(line, DRAFT_TITLE_LENGTH)
   const lastSpace = cut.lastIndexOf(' ')
   const head =
     lastSpace > DRAFT_TITLE_LENGTH / 2 ? cut.slice(0, lastSpace) : cut
@@ -64,13 +107,13 @@ export function cleanGeneratedTitle(raw: string): string {
       .map((item) => item.trim())
       .find(Boolean) ?? ''
   const title = line
-    .replace(/^(title|название)\s*:\s*/i, '')
+    .replace(TITLE_LABEL, '')
     .replace(/^[#*\s]+|[*\s]+$/g, '')
     .replace(/^["'«“„`]+|["'»”“`]+$/g, '')
     .replace(/[.。]+$/, '')
     .trim()
-  return title.length > TITLE_MAX_LENGTH
-    ? `${title.slice(0, TITLE_MAX_LENGTH).trimEnd()}…`
+  return lengthOf(title) > TITLE_MAX_LENGTH
+    ? `${headOf(title, TITLE_MAX_LENGTH).trimEnd()}…`
     : title
 }
 

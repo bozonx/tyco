@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 3af503bcf4287ef4645ac15ed3134399dda6ee4a271f9fdb86e1b5b751435958
+// Source hash: 32429afff016f009c8b7694e0a9020640cdc911f97dc77ab1c7b7c25672b861c
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -799,6 +799,7 @@ export interface DesktopEventPayloads {
   'app://open-main-chat': OpenMainChatEvent
   'app://open-main-editor': EditorTransfer
   'app://chats-changed': ChatsChangedEvent
+  'app://editor-history-changed': null
   'app://main-window-closed': null
   'app://activation-metrics-start': ActivationMetricsRequest
   'app://activation-metrics-collect': ActivationMetricsRequest

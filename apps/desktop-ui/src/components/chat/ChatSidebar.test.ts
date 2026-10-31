@@ -6,6 +6,7 @@ import {
   loadFakeDesktop,
   type TestDesktop,
 } from '../../test/install-fake-desktop'
+import { createChatRemoval } from '../../lib/chat/chat-removal'
 import ChatSidebar from './ChatSidebar.vue'
 
 const mocks = vi.hoisted(() => ({
@@ -25,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   restoreChatItem: vi.fn(),
   releaseUndo: vi.fn(async () => undefined),
   history: null as unknown,
+  chat: null as unknown,
 }))
 
 mocks.history = reactive({
@@ -36,10 +38,6 @@ mocks.history = reactive({
   restoreChatItem: mocks.restoreChatItem,
 })
 
-vi.mock('../../lib/chat/chat-image-storage', () => ({
-  releaseDeletedChatImages: mocks.releaseUndo,
-}))
-
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
@@ -49,19 +47,43 @@ vi.mock('../../composables/use-toast', () => ({
 }))
 
 vi.mock('../../composables/use-chat-scope', () => ({
-  useChatScope: () => ({
+  useChatScope: () => ({ chat: mocks.chat }),
+}))
+
+/** The chat store as the sidebar reads it, with a real undo of removals */
+function createChatMock() {
+  const removal = createChatRemoval({
+    history: mocks.history as Parameters<
+      typeof createChatRemoval
+    >[0]['history'],
     chat: {
-      isGenerating: mocks.isGenerating,
-      currentChatParams: mocks.currentChatParams,
-      messages: mocks.messages,
-      startNewChat: mocks.startNewChat,
-      openChat: mocks.openChat,
+      currentChatParams: {
+        get value() {
+          return mocks.currentChatParams as { id?: string }
+        },
+      } as never,
+      stopGeneration: vi.fn(),
       abandonChat: vi.fn(),
       whenSaved: vi.fn().mockResolvedValue(undefined),
-      history: mocks.history,
+      openChat: mocks.openChat,
     },
-  }),
-}))
+    isHistoryEnabled: () => true,
+    releaseImages: mocks.releaseUndo,
+    reportError: vi.fn(),
+  })
+  return reactive({
+    isGenerating: mocks.isGenerating,
+    currentChatParams: mocks.currentChatParams,
+    messages: mocks.messages,
+    startNewChat: mocks.startNewChat,
+    openChat: mocks.openChat,
+    history: mocks.history,
+    removedChat: removal.removed,
+    removeChat: removal.remove,
+    undoRemoveChat: removal.undo,
+  })
+}
+mocks.chat = createChatMock()
 
 describe('ChatSidebar.vue', () => {
   let desktop: TestDesktop
@@ -83,6 +105,7 @@ describe('ChatSidebar.vue', () => {
     mocks.chatHistory.length = 0
     mocks.currentChatParams.id = null
     mocks.currentChatParams.title = ''
+    mocks.chat = createChatMock()
   })
 
   it('does not display warning banner or disabled hint when history is enabled', () => {
@@ -236,6 +259,30 @@ describe('ChatSidebar.vue', () => {
     expect(mocks.releaseUndo).toHaveBeenCalledWith('image-chat')
     wrapper.unmount()
   })
+  it('keeps the undo of a removed chat after the sidebar closes', async () => {
+    const wrapper = await deleteImageChat()
+    wrapper.unmount()
+    expect(mocks.releaseUndo).not.toHaveBeenCalled()
+
+    const reopened = mount(ChatSidebar, {
+      global: {
+        stubs: {
+          Button: { template: '<button><slot /></button>' },
+          Icon: true,
+          SearchInput: true,
+          DropdownMenu: true,
+          ConfirmModal: true,
+        },
+      },
+    })
+    await reopened.get('.sidebar-notice button').trigger('click')
+    await flushPromises()
+    expect(mocks.restoreChatItem).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'image-chat' })
+    )
+    reopened.unmount()
+  })
+
   it('keeps undo available after a failed restore and retries without releasing images early', async () => {
     mocks.restoreChatItem.mockRejectedValueOnce(new Error('Unavailable'))
     const wrapper = await deleteImageChat()

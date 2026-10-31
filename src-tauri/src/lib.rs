@@ -130,13 +130,13 @@ pub fn run() {
             ));
             let user_config =
                 services::settings::persist::read_or_create_user_config(app.handle())?;
-            let history_cleanup_failed = match storage::apply_history_settings_on_startup(
+            let history_cleanup_failed = match storage::apply_editor_history_settings_on_startup(
                 app.handle(),
                 &user_config.value,
             ) {
                 Ok(()) => false,
                 Err(error) => {
-                    log::error!("Could not apply the history settings: {error}");
+                    log::error!("Could not apply the editor history settings: {error}");
                     true
                 }
             };
@@ -146,9 +146,13 @@ pub fn run() {
                 user_config.value.clone(),
                 crate::models::SessionState::default(),
             )));
+            let history = &app.state::<AppState>().history;
             if history_cleanup_failed {
-                app.state::<AppState>().history.mark_cleanup_pending();
+                history.mark_editor_cleanup_pending();
             }
+            // the chats are brought in line with the settings in the
+            // background, see `spawn_cleanup_retry`
+            history.mark_chat_cleanup_pending();
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
             // reaching the system store may wait for an unlock prompt, which
             // must not hold up the start

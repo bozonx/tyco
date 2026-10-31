@@ -99,3 +99,39 @@ it('keeps a renamed title trimmed, as the storage does', async () => {
   expect(driver.renameChat).toHaveBeenCalledWith('c1', 'New')
   expect(model.chatHistory.value[0]?.title).toBe('New')
 })
+
+it('shares one next load among the loads asked for while one runs', async () => {
+  const finishes: Array<(value: ChatSummary[]) => void> = []
+  const listChats = vi.fn(
+    () =>
+      new Promise<ChatSummary[]>((resolve) => {
+        finishes.push(resolve)
+      })
+  )
+  const model = createChatHistoryModel(
+    {
+      listChats,
+      getChat: vi.fn(),
+      saveChat: vi.fn(),
+      renameChat: vi.fn(),
+      deleteChat: vi.fn(),
+      searchChats: vi.fn(),
+      clearChats: vi.fn(),
+    },
+    vi.fn()
+  )
+  const first = model.loadChatHistory()
+  const second = model.loadChatHistory()
+  const third = model.loadChatHistory()
+  expect(second).toBe(third)
+  expect(listChats).toHaveBeenCalledTimes(1)
+
+  finishes[0]([])
+  await first
+  await vi.waitFor(() => expect(listChats).toHaveBeenCalledTimes(2))
+  const latest = { id: 'new', title: 'New', lastMessageAt: 1 }
+  finishes[1]([latest])
+  await second
+  expect(model.chatHistory.value).toEqual([latest])
+  expect(listChats).toHaveBeenCalledTimes(2)
+})

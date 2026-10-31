@@ -74,6 +74,14 @@ impl EditorHistoryTarget<'_> {
     }
 }
 
+/// Whether the entries are in the memory of the process: in the memory-only
+/// mode, and after that mode was turned off, while the memory still holds
+/// what it kept. Turning the history off records nothing new and removes
+/// nothing.
+fn is_in_memory(policy: &EditorHistoryPolicy, memory: &[EditorHistoryItem]) -> bool {
+    policy.is_memory_only || (!policy.is_recording && !memory.is_empty())
+}
+
 /// The editor history as the settings let it be seen and changed.
 struct EditorHistorySession<'a> {
     store: EditorHistoryTarget<'a>,
@@ -89,7 +97,7 @@ impl<'a> EditorHistorySession<'a> {
         memory: &'a mut Vec<EditorHistoryItem>,
     ) -> Result<Self, AppError> {
         let policy = EditorHistoryPolicy::from_config(user_config);
-        let store = if policy.is_memory_only {
+        let store = if is_in_memory(&policy, memory) {
             EditorHistoryTarget::Memory(memory)
         } else {
             EditorHistoryTarget::File(editor_history_path(app)?)
@@ -147,7 +155,11 @@ fn save_editor_history_entry(
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
 
-    if !history.is_in_development || entry.text.trim().is_empty() || policy.max_entries == 0 {
+    if !history.is_in_development
+        || !policy.is_recording
+        || entry.text.trim().is_empty()
+        || policy.max_entries == 0
+    {
         return Ok(None);
     }
 
@@ -197,9 +209,12 @@ pub fn restore_editor_history_item(
     memory: &mut Vec<EditorHistoryItem>,
     mut item: EditorHistoryItem,
 ) -> Result<(), AppError> {
+    validate_restored_item(&mut item, now_ms())?;
     let mut history = EditorHistorySession::open(app, user_config, memory)?;
     let policy = history.policy;
 
+    // an undo puts back what the user removed, also while nothing new is
+    // recorded
     if !history.is_in_development || policy.max_entries == 0 {
         return Ok(());
     }
@@ -215,6 +230,25 @@ pub fn restore_editor_history_item(
 
     Ok(())
 }
+
+/// The webview hands the removed item back: its id must be one the backend
+/// could have given, and its time cannot lie ahead, or it would stay on top.
+fn validate_restored_item(item: &mut EditorHistoryItem, now_ms: u64) -> Result<(), AppError> {
+    let is_valid_id = !item.id.is_empty()
+        && item.id.len() <= MAX_HISTORY_ID_LENGTH
+        && item
+            .id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-');
+    if !is_valid_id {
+        return Err(AppError::InvalidInput("Invalid editor history id".into()));
+    }
+    item.created_at_ms = item.created_at_ms.min(now_ms);
+    Ok(())
+}
+
+/// Ids are two hexadecimal numbers joined by a dash, see `new_history_id`.
+const MAX_HISTORY_ID_LENGTH: usize = 64;
 
 pub fn delete_editor_history_item(
     app: &AppHandle,
@@ -238,17 +272,17 @@ pub fn clear_editor_history(
     remove_editor_history_files(&editor_history_path(app)?)
 }
 
-/// Applies the history settings to what is stored. At startup the
+/// Brings the history file in line with `policy`: deletes it when the
+/// history is kept in memory only, and drops expired entries and those over
+/// the limit otherwise, also while the history is off. At startup the
 /// memory-only mode means that the history of the previous run is gone, also
 /// when that run ended without a chance to clean up.
-/// Brings the history file in line with `policy`: deletes it when the
-/// history is off or kept in memory only, and drops expired entries otherwise.
 pub(super) fn enforce_editor_history_policy(
     app: &AppHandle,
     policy: &EditorHistoryPolicy,
 ) -> Result<(), AppError> {
     let path = editor_history_path(app)?;
-    if policy.is_memory_only || policy.max_entries == 0 {
+    if policy.is_memory_only {
         remove_editor_history_files(&path)?;
     } else {
         enforce_editor_history_file(&path, policy, now_ms())?;
@@ -296,8 +330,11 @@ fn commit_history_transition<T>(
     memory: &mut Vec<EditorHistoryItem>,
     commit: impl FnOnce() -> Result<T, AppError>,
 ) -> Result<HistoryCommit<T>, AppError> {
-    let to_memory = !before.is_memory_only && after.is_memory_only;
-    let to_disk = before.is_memory_only && !after.is_memory_only && after.max_entries > 0;
+    let was_in_memory = is_in_memory(before, memory);
+    // a history turned off stays where it was
+    let stays_in_memory = after.is_memory_only || (!after.is_recording && was_in_memory);
+    let to_memory = !was_in_memory && after.is_memory_only;
+    let to_disk = was_in_memory && !stays_in_memory;
     let prepared_memory = if to_memory {
         let mut items = read_file_records(path)?;
         after.enforce(&mut items, now_ms());
@@ -319,7 +356,7 @@ fn commit_history_transition<T>(
     let prepared = if to_disk {
         let mut items = memory.clone();
         after.enforce(&mut items, now_ms());
-        write_jsonl(path, &items)
+        EditorHistoryTarget::File(path.to_path_buf()).write(items)
     } else {
         Ok(())
     };
@@ -341,10 +378,7 @@ fn commit_history_transition<T>(
             return Err(error);
         }
     };
-    let cleanup = if after.max_entries == 0 {
-        memory.clear();
-        remove_editor_history_files(path)
-    } else if let Some(items) = prepared_memory {
+    let cleanup = if let Some(items) = prepared_memory {
         *memory = items;
         remove_editor_history_files(path)
     } else if to_disk {
@@ -352,8 +386,15 @@ fn commit_history_transition<T>(
         Ok(())
     } else if after.is_memory_only {
         remove_editor_history_files(path)
+    } else if stays_in_memory {
+        after.enforce(memory, now_ms());
+        Ok(())
+    } else if before == after {
+        Ok(())
     } else {
-        switch_editor_history_store(path, before, after, memory, now_ms())
+        // what the new policy no longer keeps goes at once, not with the next
+        // write
+        enforce_editor_history_file(path, after, now_ms())
     };
     let cleanup_failed = cleanup.is_err();
     if let Err(error) = cleanup {
@@ -365,26 +406,6 @@ fn commit_history_transition<T>(
         value: committed,
         is_cleanup_pending: cleanup_failed,
     })
-}
-
-/// The history stays where it is: what the new policy no longer keeps is
-/// removed at once, not with the next write.
-fn switch_editor_history_store(
-    path: &Path,
-    before: &EditorHistoryPolicy,
-    after: &EditorHistoryPolicy,
-    memory: &mut Vec<EditorHistoryItem>,
-    now_ms: u64,
-) -> Result<(), AppError> {
-    if before == after {
-        return Ok(());
-    }
-    if after.is_memory_only {
-        after.enforce(memory, now_ms);
-        Ok(())
-    } else {
-        enforce_editor_history_file(path, after, now_ms)
-    }
 }
 
 #[cfg(test)]

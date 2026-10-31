@@ -8,8 +8,9 @@ use serde::Serialize;
 use crate::errors::AppError;
 use crate::services::atomic_file::write_private;
 
+/// Compact: a chat is written several times a turn, attachments and all.
 pub(super) fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), AppError> {
-    write_private(path, &serde_json::to_string_pretty(value)?)
+    write_private(path, &serde_json::to_string(value)?)
 }
 
 pub(super) fn read_jsonl<T: DeserializeOwned>(path: &Path) -> Result<Vec<T>, AppError> {

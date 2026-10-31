@@ -21,10 +21,31 @@ export function createChatHistoryModel(
   // before a change never lands after it
   let chatListVersion = 0
 
-  const loadChatHistory = async (): Promise<void> => {
+  const readChatHistory = async (): Promise<void> => {
     const version = ++chatListVersion
     const loadedHistory = await driver.listChats()
     if (version === chatListVersion) chatHistory.value = loadedHistory || []
+  }
+
+  // A save reloads the list and so does the change event it sends to every
+  // window: loads asked for while one runs share a single next one
+  let runningLoad: Promise<void> | null = null
+  let queuedLoad: Promise<void> | null = null
+
+  const loadChatHistory = (): Promise<void> => {
+    if (!runningLoad) {
+      runningLoad = readChatHistory().finally(() => {
+        runningLoad = null
+      })
+      return runningLoad
+    }
+    queuedLoad ??= runningLoad
+      .catch(() => undefined)
+      .then(() => {
+        queuedLoad = null
+        return loadChatHistory()
+      })
+    return queuedLoad
   }
 
   /** The chat is stored; a list that failed to reload is refreshed next time */

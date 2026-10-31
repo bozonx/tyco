@@ -69,6 +69,8 @@ desktop_events! {
     OpenMainEditor = "app://open-main-editor" => EditorTransfer;
     /// A chat history changed in storage.
     ChatsChanged = "app://chats-changed" => ChatsChangedEvent;
+    /// The editor history changed in storage.
+    EditorHistoryChanged = "app://editor-history-changed" => ();
     /// The user closed the main window rather than hid it.
     MainWindowClosed = "app://main-window-closed" => ();
     #[cfg_attr(not(feature = "activation-bench"), allow(dead_code))]

@@ -100,7 +100,9 @@ pub(super) fn apply_editor_history_result(
 }
 
 /// Entries are ordered newest first, so the item goes before the first older
-/// one. Nothing is inserted when the same text has been added again meanwhile
+/// one. Nothing is inserted when the item is there already, or when the same
+/// text has been added again meanwhile as an entry that would have absorbed
+/// it, see `collapses_duplicate`: sources with the same text stay separate.
 pub(super) fn insert_restored_item(
     history: &mut Vec<EditorHistoryItem>,
     item: EditorHistoryItem,
@@ -108,10 +110,10 @@ pub(super) fn insert_restored_item(
 ) -> bool {
     let text = item.text.trim();
 
-    if history
-        .iter()
-        .any(|existing| existing.id == item.id || existing.text.trim() == text)
-    {
+    if history.iter().any(|existing| {
+        existing.id == item.id
+            || (existing.text.trim() == text && collapses_duplicate(existing.kind, item.kind))
+    }) {
         return false;
     }
 
@@ -334,6 +336,33 @@ mod tests {
         assert!(!insert_restored_item(
             &mut history,
             history_item("r", " same ", EditorHistoryKind::Output),
+            10
+        ));
+        assert_eq!(history.len(), 1);
+    }
+
+    #[test]
+    fn insert_restored_item_brings_back_a_source_beside_another_with_the_same_text() {
+        let mut kept = history_item("k", "text", EditorHistoryKind::Source);
+        kept.created_at_ms = 30;
+        let mut history = vec![kept];
+        let mut removed = history_item("r", "text", EditorHistoryKind::Source);
+        removed.created_at_ms = 20;
+        removed.result = Some(String::from("Text."));
+
+        assert!(insert_restored_item(&mut history, removed, 10));
+        assert_eq!(history.len(), 2);
+        assert_eq!(history[1].id, "r");
+        assert_eq!(history[1].result.as_deref(), Some("Text."));
+    }
+
+    #[test]
+    fn insert_restored_item_skips_an_item_that_is_there_already() {
+        let mut history = vec![history_item("r", "text", EditorHistoryKind::Source)];
+
+        assert!(!insert_restored_item(
+            &mut history,
+            history_item("r", "text", EditorHistoryKind::Source),
             10
         ));
         assert_eq!(history.len(), 1);

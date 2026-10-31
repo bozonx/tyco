@@ -29,13 +29,16 @@ impl From<HistoryStorage> for EditorHistoryStorageMode {
 /// What the settings say about the editor history.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EditorHistoryPolicy {
+    /// New texts are added. A history turned off records nothing new but
+    /// keeps what it has: the user clears it on purpose.
+    pub is_recording: bool,
     /// How many entries to keep; 0 keeps none.
     pub max_entries: usize,
     /// The entries live in the memory of the process only and never reach the
     /// disk, so nothing of them outlives the app, whichever way it ends.
     pub is_memory_only: bool,
     /// Entries older than this many days are dropped; 0 keeps them forever.
-    /// Applies on the disk only, as does `should_redact_secrets`.
+    /// Applies to the file only, as does `should_redact_secrets`.
     pub retention_days: u64,
     /// What looks like a password or a key is masked before it is stored.
     pub should_redact_secrets: bool,
@@ -45,14 +48,12 @@ impl EditorHistoryPolicy {
     pub fn from_config(user_config: &Value) -> Self {
         let history = user_config::editor_history(user_config);
         let storage = EditorHistoryStorageMode::from(history.storage);
-        let on_disk = storage == EditorHistoryStorageMode::Disk;
+        // a history turned off keeps its file, under the same rules
+        let on_disk = storage != EditorHistoryStorageMode::Session;
 
         Self {
-            max_entries: if storage == EditorHistoryStorageMode::Off {
-                0
-            } else {
-                history.max_items.unwrap_or(DEFAULT_EDITOR_HISTORY_LIMIT)
-            },
+            is_recording: storage != EditorHistoryStorageMode::Off,
+            max_entries: history.max_items.unwrap_or(DEFAULT_EDITOR_HISTORY_LIMIT),
             is_memory_only: storage == EditorHistoryStorageMode::Session,
             retention_days: if on_disk { history.retention_days } else { 0 },
             should_redact_secrets: on_disk && history.is_secret_sanitizing_enabled,
@@ -110,6 +111,7 @@ mod tests {
 
     fn policy() -> EditorHistoryPolicy {
         EditorHistoryPolicy {
+            is_recording: true,
             max_entries: 100,
             is_memory_only: false,
             retention_days: 0,
@@ -124,6 +126,7 @@ mod tests {
         assert_eq!(
             EditorHistoryPolicy::from_config(&config),
             EditorHistoryPolicy {
+                is_recording: true,
                 max_entries: 20,
                 is_memory_only: false,
                 retention_days: 7,
@@ -142,10 +145,12 @@ mod tests {
         );
         assert_eq!(
             EditorHistoryPolicy::from_config(
-                &json!({"editor":{"history":{"storage":"off","maxItems":20}}})
+                &json!({"editor":{"history":{"storage":"off","maxItems":20,"retentionDays":7}}})
             ),
             EditorHistoryPolicy {
-                max_entries: 0,
+                is_recording: false,
+                max_entries: 20,
+                retention_days: 7,
                 ..policy()
             }
         );

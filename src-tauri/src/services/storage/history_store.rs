@@ -3,6 +3,7 @@ use crate::locks::MutexExt;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
+use std::time::Duration;
 
 use tauri::{AppHandle, Manager};
 
@@ -37,7 +38,10 @@ pub struct HistoryStorageCoordinator {
     editor_history: Mutex<Vec<EditorHistoryItem>>,
     chat_history_lock: Mutex<()>,
     chat_search: chats::ChatSearchCache,
-    cleanup_pending: AtomicBool,
+    /// The editor history file still holds what the committed policy drops.
+    editor_cleanup_pending: AtomicBool,
+    /// Some chat history still holds what the committed policies drop.
+    chat_cleanup_pending: AtomicBool,
 }
 
 impl HistoryStorageCoordinator {
@@ -51,6 +55,12 @@ impl HistoryStorageCoordinator {
 
     /// Hold repository locks through the single config publication, then run
     /// destructive cleanup under the committed policy without rolling it back.
+    ///
+    /// A cleanup that keeps failing never blocks a save of other settings:
+    /// only a change of the editor history settings waits for the editor
+    /// cleanup still pending, so that a looser policy cannot bring back what
+    /// the committed one deletes. Chat cleanups simply run under the new
+    /// policies, which decide what stays.
     pub fn commit_settings<T>(
         &self,
         app: &AppHandle,
@@ -60,11 +70,12 @@ impl HistoryStorageCoordinator {
     ) -> Result<T, AppError> {
         let mut memory = self.lock_editor_history();
         let _chats = self.lock_chat_history();
-        if self.cleanup_pending.load(Ordering::SeqCst) {
-            // Complete the already committed cleanup before accepting another
-            // policy; turning history on must not resurrect data pending deletion.
-            enforce_history_policies(app, &before)?;
-            self.cleanup_pending.store(false, Ordering::SeqCst);
+        if self.editor_cleanup_pending.load(Ordering::SeqCst) {
+            match editor::enforce_editor_history_policy(app, &before.editor) {
+                Ok(()) => self.editor_cleanup_pending.store(false, Ordering::SeqCst),
+                Err(error) if before.editor != after.editor => return Err(error),
+                Err(error) => log::warn!("Editor history cleanup is still pending: {error}"),
+            }
         }
         let result = editor::commit_history_settings(
             app,
@@ -73,81 +84,132 @@ impl HistoryStorageCoordinator {
             &mut memory,
             commit,
         )?;
-        // A failed cleanup is retried above while it is pending, so the chats
-        // are only read again when their policy or the vault changes.
+        if result.is_cleanup_pending {
+            self.editor_cleanup_pending.store(true, Ordering::SeqCst);
+        }
+        if before.editor != after.editor {
+            notify_editor_history_changed(app);
+        }
         let chat_settings_changed = before.chat != after.chat
             || before.profile_chat != after.profile_chat
             || before.vault_path != after.vault_path;
-        let chat_cleanup = if chat_settings_changed {
-            enforce_chat_history_policies(app, &after)
-        } else {
-            Ok(())
-        };
-        self.cleanup_pending.store(
-            result.is_cleanup_pending || chat_cleanup.is_err(),
-            Ordering::SeqCst,
-        );
-        if let Err(error) = chat_cleanup {
-            log::warn!("Settings committed; chat history cleanup will be retried: {error}");
+        if chat_settings_changed || self.chat_cleanup_pending.load(Ordering::SeqCst) {
+            let chat_cleanup = enforce_chat_history_policies(app, &after);
+            self.chat_cleanup_pending
+                .store(chat_cleanup.is_err(), Ordering::SeqCst);
+            if let Err(error) = chat_cleanup {
+                log::warn!("Settings committed; chat history cleanup will be retried: {error}");
+            }
         }
         Ok(result.value)
     }
-    pub fn mark_cleanup_pending(&self) {
-        self.cleanup_pending.store(true, Ordering::SeqCst);
+
+    /// The editor history file may hold what the policy drops, e.g. after a
+    /// failed cleanup at startup.
+    pub fn mark_editor_cleanup_pending(&self) {
+        self.editor_cleanup_pending.store(true, Ordering::SeqCst);
     }
-    /// The maintenance worker retries using current settings under the save lock.
-    pub fn retry_cleanup(&self, app: &AppHandle, state: &AppState) {
-        if !self.cleanup_pending.load(Ordering::SeqCst) {
-            return;
+
+    /// The chat histories are brought in line with the policies in the
+    /// background, e.g. at startup, without holding up the first window.
+    pub fn mark_chat_cleanup_pending(&self) {
+        self.chat_cleanup_pending.store(true, Ordering::SeqCst);
+    }
+
+    fn is_cleanup_pending(&self) -> bool {
+        self.editor_cleanup_pending.load(Ordering::SeqCst)
+            || self.chat_cleanup_pending.load(Ordering::SeqCst)
+    }
+
+    /// The maintenance worker retries using current settings under the save
+    /// lock. Returns `None` when nothing was pending; a failure is logged.
+    fn retry_cleanup(&self, app: &AppHandle, state: &AppState) -> Option<Result<(), AppError>> {
+        if !self.is_cleanup_pending() {
+            return None;
         }
         let _vault = state.read_vault();
         let _settings = state.lock_settings_update();
         let _editor = self.lock_editor_history();
         let _chats = self.lock_chat_history();
         let policy = HistorySettings::from_config(&state.user_config());
-        if enforce_history_policies(app, &policy).is_ok() {
-            self.cleanup_pending.store(false, Ordering::SeqCst);
+        let mut result = Ok(());
+        if self.editor_cleanup_pending.load(Ordering::SeqCst) {
+            match editor::enforce_editor_history_policy(app, &policy.editor) {
+                Ok(()) => {
+                    self.editor_cleanup_pending.store(false, Ordering::SeqCst);
+                    notify_editor_history_changed(app);
+                }
+                Err(error) => {
+                    log::warn!("Editor history cleanup failed; it will be retried: {error}");
+                    result = Err(error);
+                }
+            }
         }
+        if self.chat_cleanup_pending.load(Ordering::SeqCst) {
+            match enforce_chat_history_policies(app, &policy) {
+                Ok(()) => self.chat_cleanup_pending.store(false, Ordering::SeqCst),
+                Err(error) => {
+                    log::warn!("Chat history cleanup failed; it will be retried: {error}");
+                    result = result.and(Err(error));
+                }
+            }
+        }
+        Some(result)
     }
 }
 
-/// How often a failed history cleanup is retried.
-const CLEANUP_RETRY_INTERVAL: std::time::Duration = std::time::Duration::from_secs(1);
+/// How soon a pending history cleanup is first tried, and how long the wait
+/// between failed tries grows to.
+const CLEANUP_RETRY_MIN_INTERVAL: Duration = Duration::from_secs(1);
+const CLEANUP_RETRY_MAX_INTERVAL: Duration = Duration::from_secs(5 * 60);
 
-/// Retries a pending history cleanup in the background, see `retry_cleanup`.
+/// The wait before the next try: the shortest after a success or while
+/// nothing is pending, twice the last one after a failure.
+fn next_cleanup_retry_interval(current: Duration, outcome: Option<bool>) -> Duration {
+    match outcome {
+        Some(false) => (current * 2).min(CLEANUP_RETRY_MAX_INTERVAL),
+        _ => CLEANUP_RETRY_MIN_INTERVAL,
+    }
+}
+
+/// Runs a pending history cleanup in the background, see `retry_cleanup`.
 pub fn spawn_cleanup_retry(app: AppHandle) -> Result<(), AppError> {
     let services = app.state::<crate::services::background::BackgroundServices>();
     let handle = app.clone();
     services.spawn_async(async move {
         let app = handle;
+        let mut interval = CLEANUP_RETRY_MIN_INTERVAL;
         loop {
-            tokio::time::sleep(CLEANUP_RETRY_INTERVAL).await;
+            tokio::time::sleep(interval).await;
+            if !app.state::<AppState>().history.is_cleanup_pending() {
+                interval = CLEANUP_RETRY_MIN_INTERVAL;
+                continue;
+            }
             let worker_app = app.clone();
-            let _ = app
+            let outcome = app
                 .state::<crate::services::background::BackgroundServices>()
                 .run_blocking(move || {
                     let state = worker_app.state::<AppState>();
-                    state.history.retry_cleanup(&worker_app, &state);
+                    state.history.retry_cleanup(&worker_app, &state)
                 })
-                .await;
+                .await
+                .ok()
+                .flatten()
+                .map(|result| result.is_ok());
+            interval = next_cleanup_retry_interval(interval, outcome);
         }
     })
 }
 
-/// Applies the history settings of the config the app starts with. The
-/// caller marks a failed cleanup as pending, see `mark_cleanup_pending`.
-pub fn apply_history_settings_on_startup(
+/// Applies the editor history settings of the config the app starts with:
+/// one file, read before the first window can show it. The chats, which may
+/// be many, are left to the background worker, see `mark_chat_cleanup_pending`.
+/// The caller marks a failure as pending, see `mark_editor_cleanup_pending`.
+pub fn apply_editor_history_settings_on_startup(
     app: &AppHandle,
     user_config: &serde_json::Value,
 ) -> Result<(), AppError> {
-    enforce_history_policies(app, &HistorySettings::from_config(user_config))
-}
-
-/// Deletes what the policies no longer keep, from the editor history file and
-/// from every chat history.
-fn enforce_history_policies(app: &AppHandle, settings: &HistorySettings) -> Result<(), AppError> {
-    editor::enforce_editor_history_policy(app, &settings.editor)?;
-    enforce_chat_history_policies(app, settings)
+    editor::enforce_editor_history_policy(app, &HistorySettings::from_config(user_config).editor)
 }
 
 /// Brings the chats of "Ask AI" and of every profile in line with their
@@ -228,6 +290,14 @@ fn notify_chats_changed(
     }
 }
 
+/// Tells every window that the editor history changed; a failure is only
+/// logged, as for the chats.
+fn notify_editor_history_changed(app: &AppHandle) {
+    if let Err(error) = crate::events::emit::<crate::events::EditorHistoryChanged, _>(app, ()) {
+        log::warn!("Could not announce an editor history change: {error}");
+    }
+}
+
 fn notify_chats_removed(app: &AppHandle, scope: &ChatScope, removed: Vec<String>) {
     if !removed.is_empty() {
         notify_chats_changed(app, scope, removed, false);
@@ -241,6 +311,16 @@ fn with_editor<T>(
     let state = app.state::<AppState>();
     let mut memory = state.history.lock_editor_history();
     operation(&state.user_config(), &mut memory)
+}
+
+/// Changes the editor history and tells every window about it.
+fn change_editor<T>(
+    app: &AppHandle,
+    operation: impl FnOnce(&serde_json::Value, &mut Vec<EditorHistoryItem>) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    let value = with_editor(app, operation)?;
+    notify_editor_history_changed(app);
+    Ok(value)
 }
 
 /// Whose chat history an operation works on: the chats of "Ask AI" or a
@@ -257,17 +337,33 @@ impl ChatScope {
     }
 }
 
+/// Whether an operation only reads a chat history: then a profile folder
+/// without chats is not created.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ChatAccess {
+    Read,
+    Write,
+}
+
 fn scope_chats_dir(
     app: &AppHandle,
     state: &AppState,
     scope: &ChatScope,
+    access: ChatAccess,
 ) -> Result<std::path::PathBuf, AppError> {
     match scope {
         ChatScope::AskAi => chats::app_chats_dir(app),
         ChatScope::Profile(profile_id) => {
             let vault_root =
                 crate::services::ai_vault::resolve_vault_path(app, &state.user_config())?;
-            crate::services::ai_vault::profile_chats_dir(&vault_root, profile_id)
+            match access {
+                ChatAccess::Read => {
+                    crate::services::ai_vault::existing_profile_chats_path(&vault_root, profile_id)
+                }
+                ChatAccess::Write => {
+                    crate::services::ai_vault::profile_chats_dir(&vault_root, profile_id)
+                }
+            }
         }
     }
 }
@@ -276,21 +372,23 @@ fn scope_chats_dir(
 fn with_chats<T>(
     app: &AppHandle,
     scope: &ChatScope,
+    access: ChatAccess,
     operation: impl FnOnce(&AppState, &Path) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let _vault = state.read_vault();
-    with_chats_in_vault(app, scope, operation)
+    with_chats_in_vault(app, scope, access, operation)
 }
 
 fn with_chats_in_vault<T>(
     app: &AppHandle,
     scope: &ChatScope,
+    access: ChatAccess,
     operation: impl FnOnce(&AppState, &Path) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let _guard = state.history.lock_chat_history();
-    let chats_dir = scope_chats_dir(app, &state, scope)?;
+    let chats_dir = scope_chats_dir(app, &state, scope, access)?;
     operation(&state, &chats_dir)
 }
 
@@ -315,7 +413,7 @@ pub fn add_editor_history_item(
     app: &AppHandle,
     entry: EditorHistoryEntry,
 ) -> Result<Option<String>, AppError> {
-    with_editor(app, |config, memory| {
+    change_editor(app, |config, memory| {
         editor::add_editor_history_item(app, config, memory, entry)
     })
 }
@@ -325,7 +423,7 @@ pub fn set_editor_history_result(
     id: String,
     result: String,
 ) -> Result<(), AppError> {
-    with_editor(app, |config, memory| {
+    change_editor(app, |config, memory| {
         editor::set_editor_history_result(app, config, memory, id, result)
     })
 }
@@ -334,23 +432,25 @@ pub fn restore_editor_history_item(
     app: &AppHandle,
     item: EditorHistoryItem,
 ) -> Result<(), AppError> {
-    with_editor(app, |config, memory| {
+    change_editor(app, |config, memory| {
         editor::restore_editor_history_item(app, config, memory, item)
     })
 }
 
 pub fn delete_editor_history_item(app: &AppHandle, id: String) -> Result<(), AppError> {
-    with_editor(app, |config, memory| {
+    change_editor(app, |config, memory| {
         editor::delete_editor_history_item(app, config, memory, id)
     })
 }
 
 pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
-    with_editor(app, |_, memory| editor::clear_editor_history(app, memory))
+    change_editor(app, |_, memory| editor::clear_editor_history(app, memory))
 }
 
 pub fn list_chats(app: &AppHandle, scope: &ChatScope) -> Result<Vec<ChatSummary>, AppError> {
-    with_chats(app, scope, |_, chats_dir| chats::list_chats(chats_dir))
+    with_chats(app, scope, ChatAccess::Read, |_, chats_dir| {
+        chats::list_chats(chats_dir)
+    })
 }
 
 /// Import leases and image loading are protected against concurrent cleanup.
@@ -360,7 +460,7 @@ pub fn read_chat(
     id: String,
     owner: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
-    with_chats(app, scope, |_, chats_dir| {
+    with_chats(app, scope, ChatAccess::Read, |_, chats_dir| {
         chats::recover_chat_transaction(chats_dir)?;
         let chat = chats::open_chat(chats_dir, id)?;
         // without an import lease nothing holds the images: they are read
@@ -378,7 +478,7 @@ pub fn read_chat(
 }
 
 pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), AppError> {
-    let removed = with_chats(app, scope, |state, chats_dir| {
+    let removed = with_chats(app, scope, ChatAccess::Write, |state, chats_dir| {
         let config = state.user_config();
         let policy = match scope {
             ChatScope::AskAi => chats::ChatHistoryPolicy::from_config(&config),
@@ -401,7 +501,7 @@ pub fn rename_chat(
     id: String,
     title: String,
 ) -> Result<(), AppError> {
-    with_chats(app, scope, |_, chats_dir| {
+    with_chats(app, scope, ChatAccess::Write, |_, chats_dir| {
         chats::rename_chat(chats_dir, id, title)
     })?;
     notify_chats_changed(app, scope, Vec::new(), false);
@@ -417,9 +517,10 @@ pub fn search_chats(
     // chat without holding up unrelated saves or editor history operations.
     let state = app.state::<AppState>();
     let _vault = state.read_vault();
-    let (chats_dir, history) = with_chats_in_vault(app, scope, |_, chats_dir| {
-        Ok((chats_dir.to_path_buf(), chats::list_chats(chats_dir)?))
-    })?;
+    let (chats_dir, history) =
+        with_chats_in_vault(app, scope, ChatAccess::Read, |_, chats_dir| {
+            Ok((chats_dir.to_path_buf(), chats::list_chats(chats_dir)?))
+        })?;
     chats::search_chats(&chats_dir, history, query, &state.history.chat_search)
 }
 
@@ -430,7 +531,7 @@ pub fn delete_chat(
     owner: String,
 ) -> Result<Option<Chat>, AppError> {
     let id_for_event = id.clone();
-    with_chats(app, scope, |_, chats_dir| {
+    with_chats(app, scope, ChatAccess::Write, |_, chats_dir| {
         chats::recover_chat_transaction(chats_dir)?;
         let removed = match chats::read_chat(chats_dir, id.clone()) {
             Ok(Some(chat)) => {
@@ -455,7 +556,9 @@ pub fn delete_chat(
 }
 
 pub fn clear_chats(app: &AppHandle, scope: &ChatScope) -> Result<(), AppError> {
-    with_chats(app, scope, |_, chats_dir| chats::clear_chats(chats_dir))?;
+    with_chats(app, scope, ChatAccess::Write, |_, chats_dir| {
+        chats::clear_chats(chats_dir)
+    })?;
     notify_chats_changed(app, scope, Vec::new(), true);
     Ok(())
 }
@@ -498,7 +601,7 @@ fn load_chat_images(
 }
 
 pub fn read_chat_image(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<Vec<u8>, AppError> {
-    with_chats(app, scope, |_, chats_dir| {
+    with_chats(app, scope, ChatAccess::Read, |_, chats_dir| {
         app.state::<ChatImages>()
             .lock()
             .get(&chats::chat_image_directory(chats_dir), id)
@@ -508,6 +611,36 @@ pub fn read_chat_image(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<V
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_failing_cleanup_waits_longer_each_time_up_to_a_limit() {
+        let mut interval = CLEANUP_RETRY_MIN_INTERVAL;
+        for _ in 0..20 {
+            interval = next_cleanup_retry_interval(interval, Some(false));
+        }
+        assert_eq!(interval, CLEANUP_RETRY_MAX_INTERVAL);
+        assert_eq!(
+            next_cleanup_retry_interval(interval, Some(true)),
+            CLEANUP_RETRY_MIN_INTERVAL
+        );
+        assert_eq!(
+            next_cleanup_retry_interval(interval, None),
+            CLEANUP_RETRY_MIN_INTERVAL
+        );
+        assert_eq!(
+            next_cleanup_retry_interval(CLEANUP_RETRY_MIN_INTERVAL, Some(false)),
+            CLEANUP_RETRY_MIN_INTERVAL * 2
+        );
+    }
+
+    #[test]
+    fn pending_cleanups_are_tracked_apart() {
+        let storage = HistoryStorageCoordinator::default();
+        assert!(!storage.is_cleanup_pending());
+        storage.mark_chat_cleanup_pending();
+        assert!(storage.is_cleanup_pending());
+        assert!(!storage.editor_cleanup_pending.load(Ordering::SeqCst));
+    }
 
     #[test]
     fn chat_operations_do_not_lock_editor_history() {

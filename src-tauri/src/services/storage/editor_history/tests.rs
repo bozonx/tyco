@@ -6,6 +6,7 @@ use serde_json::json;
 
 fn policy() -> EditorHistoryPolicy {
     EditorHistoryPolicy {
+        is_recording: true,
         max_entries: 100,
         is_memory_only: false,
         retention_days: 0,
@@ -28,7 +29,7 @@ fn cleanup_failure_preserves_the_committed_policy_and_can_be_retried() {
     )
     .unwrap();
     let after = EditorHistoryPolicy {
-        max_entries: 0,
+        is_memory_only: true,
         ..policy()
     };
     let HistoryCommit {
@@ -53,13 +54,13 @@ fn cleanup_failure_preserves_the_committed_policy_and_can_be_retried() {
 }
 
 #[test]
-fn config_write_failure_never_deletes_disabled_history() {
+fn config_write_failure_never_deletes_the_history_file() {
     let dir = TestDir::new("failed-disable");
     let path = dir.join(EDITOR_HISTORY_FILE);
     let items = vec![history_item("a", "private", EditorHistoryKind::Draft)];
     write_jsonl(&path, &items).unwrap();
     let after = EditorHistoryPolicy {
-        max_entries: 0,
+        is_memory_only: true,
         ..policy()
     };
     let result = commit_history_transition(&path, &policy(), &after, &mut Vec::new(), || {
@@ -182,7 +183,7 @@ fn save_editor_history_entry_stores_nothing_when_the_history_is_off() {
         is_in_development: true,
         store: EditorHistoryTarget::File(path.clone()),
         policy: EditorHistoryPolicy {
-            max_entries: 0,
+            is_recording: false,
             ..policy()
         },
     };
@@ -282,24 +283,71 @@ fn switching_memory_only_off_writes_the_memory_to_the_file() {
 }
 
 #[test]
-fn turning_the_history_off_deletes_the_file() {
+fn turning_the_history_off_keeps_the_file() {
     let dir = TestDir::new("turn-off");
     let path = dir.join(EDITOR_HISTORY_FILE);
-    write_jsonl(&path, &[history_item("a", "a", EditorHistoryKind::Draft)]).unwrap();
+    let items = vec![history_item("a", "a", EditorHistoryKind::Draft)];
+    write_jsonl(&path, &items).unwrap();
+    let off = EditorHistoryPolicy {
+        is_recording: false,
+        ..policy()
+    };
 
-    switch_editor_history_store(
-        &path,
-        &policy(),
-        &EditorHistoryPolicy {
-            max_entries: 0,
-            ..policy()
-        },
-        &mut Vec::new(),
-        now_ms(),
-    )
-    .unwrap();
+    commit_history_transition(&path, &policy(), &off, &mut Vec::new(), || Ok(())).unwrap();
+    assert_eq!(read_file_records(&path).unwrap(), items);
 
+    // and turning it on again keeps it as well
+    commit_history_transition(&path, &off, &policy(), &mut Vec::new(), || Ok(())).unwrap();
+    assert_eq!(read_file_records(&path).unwrap(), items);
+}
+
+#[test]
+fn turning_the_memory_only_history_off_keeps_it_in_memory() {
+    let dir = TestDir::new("session-off");
+    let path = dir.join(EDITOR_HISTORY_FILE);
+    let mut item = history_item("a", "in memory", EditorHistoryKind::Draft);
+    item.created_at_ms = now_ms();
+    let mut memory = vec![item];
+    let session = EditorHistoryPolicy {
+        is_memory_only: true,
+        ..policy()
+    };
+    let off = EditorHistoryPolicy {
+        is_recording: false,
+        ..policy()
+    };
+
+    commit_history_transition(&path, &session, &off, &mut memory, || Ok(())).unwrap();
+    assert_eq!(history_texts(&memory), ["in memory"]);
     assert!(!path.exists());
+    assert!(is_in_memory(&off, &memory));
+    let history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory(&mut memory),
+        policy: off,
+        is_in_development: true,
+    };
+    assert_eq!(history_texts(&history.load().unwrap()), ["in memory"]);
+
+    // turned on on the disk, what the memory kept goes to the file
+    commit_history_transition(&path, &off, &policy(), &mut memory, || Ok(())).unwrap();
+    assert!(memory.is_empty());
+    assert_eq!(
+        history_texts(&read_file_records(&path).unwrap()),
+        ["in memory"]
+    );
+}
+
+#[test]
+fn a_restored_item_needs_a_valid_id_and_a_past_time() {
+    let mut item = history_item("18f-2a", "text", EditorHistoryKind::Draft);
+    item.created_at_ms = 500;
+    validate_restored_item(&mut item, 100).unwrap();
+    assert_eq!(item.created_at_ms, 100);
+
+    for id in ["", "../x", "a b", &"a".repeat(65)] {
+        let mut item = history_item(id, "text", EditorHistoryKind::Draft);
+        assert!(validate_restored_item(&mut item, 100).is_err(), "{id}");
+    }
 }
 
 #[test]
@@ -312,7 +360,7 @@ fn a_lower_limit_applies_to_the_file_at_once() {
     ];
     write_jsonl(&path, &items).unwrap();
 
-    switch_editor_history_store(
+    commit_history_transition(
         &path,
         &policy(),
         &EditorHistoryPolicy {
@@ -320,7 +368,7 @@ fn a_lower_limit_applies_to_the_file_at_once() {
             ..policy()
         },
         &mut Vec::new(),
-        now_ms(),
+        || Ok(()),
     )
     .unwrap();
 

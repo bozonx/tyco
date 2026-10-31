@@ -375,7 +375,13 @@ fn profile_folders_exist_only_for_existing_profiles_with_valid_ids() {
     let vault_root = test_dir.join("vault");
     create_profile(&vault_root, profile("writer", 1000), "").unwrap();
 
+    let path = existing_profile_chats_path(&vault_root, "writer").unwrap();
+    assert!(matches!(
+        existing_profile_chats_path(&vault_root, "missing"),
+        Err(AppError::NotFound(_))
+    ));
     let chats = profile_chats_dir(&vault_root, "writer").unwrap();
+    assert_eq!(chats, path);
     let workspace = profile_workspace_dir(&vault_root, "writer").unwrap();
     assert!(chats.is_dir() && chats.starts_with(vault_root.join("profiles/writer")));
     assert!(workspace.is_dir() && workspace.starts_with(vault_root.join("profiles/writer")));

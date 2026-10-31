@@ -1,5 +1,5 @@
 import type { EditorHistoryConfig, UserConfig } from '@tyco/shared'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createTestSettingsContext } from '../../test/settings-context'
@@ -7,6 +7,10 @@ import SettingsEditorHistorySection from './SettingsEditorHistorySection.vue'
 
 const mockToast = vi.fn()
 const mockClearEditorHistory = vi.fn().mockResolvedValue(undefined)
+const mockHistory = vi.hoisted(() => ({
+  editorHistory: [] as Array<{ id: string }>,
+  loadEditorHistory: vi.fn(async () => {}),
+}))
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -17,7 +21,17 @@ vi.mock('../../composables/use-toast', () => ({
 }))
 
 vi.mock('../../stores/history', () => ({
-  useHistoryStore: () => ({ clearEditorHistory: mockClearEditorHistory }),
+  useHistoryStore: () => ({
+    clearEditorHistory: mockClearEditorHistory,
+    get editorHistory() {
+      return mockHistory.editorHistory
+    },
+    loadEditorHistory: mockHistory.loadEditorHistory,
+  }),
+}))
+
+vi.mock('../../composables/use-editor-history-changes', () => ({
+  useEditorHistoryChanges: vi.fn(),
 }))
 
 describe('SettingsEditorHistorySection.vue', () => {
@@ -52,19 +66,21 @@ describe('SettingsEditorHistorySection.vue', () => {
               '<section class="section-stub" :data-title="title"><slot name="actions" /><slot /></section>',
           },
           FieldRow: {
-            props: ['label', 'info', 'nested'],
+            props: ['label', 'info', 'nested', 'hint'],
             template:
-              '<div class="field-row-stub" :data-label="label"><slot /></div>',
+              '<div class="field-row-stub" :data-label="label" :data-hint="hint"><slot /></div>',
           },
           FieldSelect: {
+            name: 'FieldSelect',
             props: ['modelValue', 'options'],
+            emits: ['update:modelValue'],
             template:
               '<select class="field-select-stub" :data-val="modelValue" />',
           },
           FieldNumber: {
             props: ['modelValue'],
             template:
-              '<input class="field-input-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+              '<input class="field-input-stub" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" @change="$emit(\'change\')" />',
           },
           FieldSwitch: {
             props: ['modelValue'],
@@ -166,6 +182,88 @@ describe('SettingsEditorHistorySection.vue', () => {
     await wrapper.find('.confirm-btn').trigger('click')
     expect(mockClearEditorHistory).toHaveBeenCalledTimes(1)
     expect(mockToast).toHaveBeenCalledWith('history.cleared', 'info')
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+  })
+
+  it('tells a failed clear instead of leaving it unhandled', async () => {
+    mockClearEditorHistory.mockRejectedValueOnce(new Error('Disk unavailable'))
+    const wrapper = mountTab()
+
+    await wrapper.find('.btn-stub').trigger('click')
+    await wrapper.find('.confirm-btn').trigger('click')
+    await flushPromises()
+
+    expect(mockToast).toHaveBeenCalledWith('history.operationFailed', 'error')
+    expect(mockToast).not.toHaveBeenCalledWith('history.cleared', 'info')
+  })
+
+  it('shows how many entries are stored, also while the history is off', async () => {
+    mockHistory.editorHistory = [{ id: 'a' }, { id: 'b' }]
+    const wrapper = mountTab(createConfig({ storage: 'off' }))
+    await flushPromises()
+
+    expect(mockHistory.loadEditorHistory).toHaveBeenCalled()
+    expect(
+      wrapper.get('[data-label="history.clear"]').attributes('data-hint')
+    ).toBe('settings.editorHistoryCount')
+    mockHistory.editorHistory = []
+  })
+
+  it('turns the history off without deleting anything or asking', async () => {
+    const config = createConfig({ storage: 'disk' })
+    const wrapper = mountTab(config)
+
+    wrapper
+      .findAllComponents({ name: 'FieldSelect' })[0]
+      .vm.$emit('update:modelValue', 'off')
+    await flushPromises()
+
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
+    expect(config.editor.history.storage).toBe('off')
+  })
+
+  it('asks before moving the history off the disk', async () => {
+    const config = createConfig({ storage: 'disk' })
+    const wrapper = mountTab(config)
+
+    wrapper
+      .findAllComponents({ name: 'FieldSelect' })[0]
+      .vm.$emit('update:modelValue', 'session')
+    await flushPromises()
+
+    expect(config.editor.history.storage).toBe('disk')
+    await wrapper.find('.confirm-btn').trigger('click')
+    expect(config.editor.history.storage).toBe('session')
+  })
+
+  it('applies a lower limit only once the field is left and the user agrees', async () => {
+    const config = createConfig({ maxItems: 100 })
+    const wrapper = mountTab(config)
+    const input = wrapper.get('.field-input-stub')
+
+    await input.setValue('5')
+    expect(config.editor.history.maxItems).toBe(100)
+    await input.setValue('50')
+    expect(config.editor.history.maxItems).toBe(100)
+    await input.trigger('change')
+    expect(wrapper.find('.confirm-modal-stub').exists()).toBe(true)
+
+    await wrapper.find('.cancel-btn').trigger('click')
+    expect(config.editor.history.maxItems).toBe(100)
+
+    await input.setValue('50')
+    await input.trigger('change')
+    await wrapper.find('.confirm-btn').trigger('click')
+    expect(config.editor.history.maxItems).toBe(50)
+  })
+
+  it('applies a higher limit at once', async () => {
+    const config = createConfig({ maxItems: 100 })
+    const wrapper = mountTab(config)
+
+    await wrapper.get('.field-input-stub').setValue('200')
+
+    expect(config.editor.history.maxItems).toBe(200)
     expect(wrapper.find('.confirm-modal-stub').exists()).toBe(false)
   })
 })

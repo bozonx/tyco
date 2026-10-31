@@ -274,12 +274,115 @@ fn a_journal_replays_even_if_no_chat_file_was_written_yet() {
 }
 
 #[test]
-fn a_broken_transaction_never_runs_orphan_cleanup() {
+fn a_broken_transaction_is_set_aside_without_losing_chats() {
     let dir = TestDir::new("broken-transaction");
     write_json(&dir.join("kept.json"), &chat_item("kept")).unwrap();
+    // the index does not list the chat: no orphan cleanup may remove it
+    write_json(&dir.join(CHAT_INDEX_FILE), &Vec::<ChatSummary>::new()).unwrap();
     fs::write(dir.join(CHAT_TRANSACTION_FILE), "{").unwrap();
-    assert!(load_chat_index(&dir).is_err());
+
+    let ids: Vec<_> = load_chat_index(&dir)
+        .unwrap()
+        .into_iter()
+        .map(|item| item.id)
+        .collect();
+
+    assert_eq!(ids, ["kept"]);
     assert!(dir.join("kept.json").exists());
+    assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
+    let copies = fs::read_dir(&dir)
+        .unwrap()
+        .filter(|entry| {
+            entry
+                .as_ref()
+                .unwrap()
+                .file_name()
+                .to_string_lossy()
+                .starts_with(&format!("{CHAT_TRANSACTION_FILE}.broken-"))
+        })
+        .count();
+    assert_eq!(copies, 1);
+    // the history works again
+    let images = Mutex::new(ChatImageStore::default());
+    save_chat(&dir, enabled_policy(), &images, chat_item("new")).unwrap();
+    assert_eq!(list_chats(&dir).unwrap().len(), 2);
+}
+
+#[test]
+fn a_broken_transaction_keeps_the_chat_it_staged() {
+    let dir = TestDir::new("broken-transaction-staged");
+    let mut staged = chat_item("staged");
+    staged.title = String::from("newest");
+    write_json(&dir.join("staged.json"), &chat_item("staged")).unwrap();
+    write_json(&staged_chat_path(&dir, "staged"), &staged).unwrap();
+    fs::write(dir.join(CHAT_TRANSACTION_FILE), "not json").unwrap();
+
+    let history = load_chat_index(&dir).unwrap();
+
+    assert_eq!(history.len(), 1);
+    assert_eq!(history[0].title, "newest");
+    assert!(!staged_chat_path(&dir, "staged").exists());
+    assert_eq!(
+        read_chat(&dir, "staged".into()).unwrap().unwrap().title,
+        "newest"
+    );
+}
+
+#[test]
+fn a_missing_folder_reads_as_an_empty_history() {
+    let dir = TestDir::new("missing-chat-folder");
+    let chats_dir = dir.join("never-created");
+
+    assert!(list_chats(&chats_dir).unwrap().is_empty());
+    assert!(read_chat(&chats_dir, "a".into()).unwrap().is_none());
+    let cache = ChatSearchCache::default();
+    assert!(search_chats(&chats_dir, Vec::new(), "x".into(), &cache)
+        .unwrap()
+        .is_empty());
+    assert!(!chats_dir.exists());
+}
+
+#[test]
+fn a_saved_title_is_cut_to_the_rename_limit() {
+    let dir = TestDir::new("save-long-title");
+    let images = Mutex::new(ChatImageStore::default());
+    let mut chat = chat_item("long");
+    chat.title = "й".repeat(MAX_CHAT_TITLE_CHARS + 10);
+
+    save_chat(&dir, enabled_policy(), &images, chat).unwrap();
+
+    let title = read_chat(&dir, "long".into()).unwrap().unwrap().title;
+    assert_eq!(title.chars().count(), MAX_CHAT_TITLE_CHARS);
+    assert!(title.ends_with('…'));
+    assert_eq!(list_chats(&dir).unwrap()[0].title, title);
+    let short = clamp_chat_title("short");
+    assert_eq!(short, "short");
+}
+
+#[test]
+fn the_search_cache_keeps_to_its_size_dropping_the_least_recently_used() {
+    let dir = TestDir::new("search-cache-limit");
+    let images = Mutex::new(ChatImageStore::default());
+    for id in ["a", "b", "c"] {
+        let mut chat = chat_item(id);
+        chat.title = format!("{id}{}", "x".repeat(40));
+        save_chat(&dir, enabled_policy(), &images, chat).unwrap();
+    }
+    // each text is 41 bytes: two fit
+    let cache = ChatSearchCache::with_max_bytes(100);
+    let history = list_chats(&dir).unwrap();
+    let found = search_chats(&dir, history.clone(), "x".into(), &cache).unwrap();
+
+    assert_eq!(found.len(), 3);
+    assert!(cache.cached_bytes() <= 100);
+    assert_eq!(cache.cached_bytes(), 82);
+    // a text larger than the whole cache is searched but never kept
+    let tiny = ChatSearchCache::with_max_bytes(10);
+    assert_eq!(
+        search_chats(&dir, history, "ax".into(), &tiny).unwrap(),
+        ["a"]
+    );
+    assert_eq!(tiny.cached_bytes(), 0);
 }
 
 #[test]

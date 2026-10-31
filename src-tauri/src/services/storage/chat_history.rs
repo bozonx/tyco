@@ -110,9 +110,15 @@ pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError>
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(error.into()),
     };
-    // A damaged journal is an error, never permission to delete stored chats.
-    let transaction: PendingChatTransaction = serde_json::from_slice(&raw)?;
-    validate_chat_transaction(&transaction)?;
+    let transaction = match serde_json::from_slice::<PendingChatTransaction>(&raw)
+        .map_err(AppError::from)
+        .and_then(|transaction| {
+            validate_chat_transaction(&transaction)?;
+            Ok(transaction)
+        }) {
+        Ok(transaction) => transaction,
+        Err(error) => return recover_from_damaged_journal(chats_dir, &journal, error),
+    };
     if let Some(chat) = transaction.chat {
         let id = validate_chat_id(&chat.id)?;
         write_json(&chats_dir.join(format!("{id}.json")), &chat)?;
@@ -133,6 +139,40 @@ pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError>
     }
     remove_file_if_exists(&journal)?;
     crate::services::atomic_file::sync_parent(&journal)
+}
+
+/// A journal that cannot be parsed never permits deleting stored chats, and it
+/// must not block the history forever either. It is set aside, the chats it
+/// staged are moved into place, and the index is rebuilt from the chat files,
+/// so at most the interrupted change is lost: a removed chat may come back.
+fn recover_from_damaged_journal(
+    chats_dir: &Path,
+    journal: &Path,
+    error: AppError,
+) -> Result<(), AppError> {
+    let copy = crate::services::atomic_file::quarantine(journal)?;
+    log::warn!(
+        "Chat journal {} is unreadable ({error}); moved it to {} and rebuilding the index",
+        journal.display(),
+        copy.display()
+    );
+    for entry in fs::read_dir(chats_dir)? {
+        let path = entry?.path();
+        let Some(id) = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .and_then(|name| name.strip_suffix(STAGED_CHAT_SUFFIX))
+            .and_then(|id| validate_chat_id(id).ok())
+        else {
+            continue;
+        };
+        // a staged chat is written just before its journal: it is the newest
+        let target = chats_dir.join(format!("{id}.json"));
+        fs::rename(&path, &target)?;
+    }
+    crate::services::atomic_file::sync_parent(journal)?;
+    let history = rebuild_chat_index(chats_dir)?;
+    write_json(&chats_dir.join(CHAT_INDEX_FILE), &history)
 }
 
 /// The directory of the chats of "Ask AI"; a profile keeps its own.
@@ -180,7 +220,13 @@ fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
 /// orphan cleanup.
 fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
     let mut history = Vec::new();
-    for entry in fs::read_dir(chats_dir)? {
+    let entries = match fs::read_dir(chats_dir) {
+        Ok(entries) => entries,
+        // a profile that never saved a chat has no folder yet
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(history),
+        Err(error) => return Err(error.into()),
+    };
+    for entry in entries {
         let path = entry?.path();
         if chat_file_id(&path).is_none() || !path.is_file() {
             continue;
@@ -233,11 +279,14 @@ pub fn save_chat(
     chats_dir: &Path,
     policy: ChatHistoryPolicy,
     images: &Mutex<ChatImageStore>,
-    chat: Chat,
+    mut chat: Chat,
 ) -> Result<Vec<String>, AppError> {
     if !policy.is_enabled {
         return Ok(Vec::new());
     }
+    // a title made from another one, e.g. of a branch, may outgrow the limit
+    // a rename keeps; a stored title is always one a rename could give
+    chat.title = clamp_chat_title(&chat.title);
 
     validate_chat_id(&chat.id)?;
     let mut history = list_chats(chats_dir)?;
@@ -374,28 +423,112 @@ fn validate_chat_title(title: &str) -> Result<String, AppError> {
     Ok(title.to_string())
 }
 
+/// The title cut to `MAX_CHAT_TITLE_CHARS` characters, ending with an ellipsis
+/// when cut.
+fn clamp_chat_title(title: &str) -> String {
+    if title.chars().count() <= MAX_CHAT_TITLE_CHARS {
+        return title.to_string();
+    }
+    let head: String = title.chars().take(MAX_CHAT_TITLE_CHARS - 1).collect();
+    format!("{}…", head.trim_end())
+}
+
 fn rename_in_chat_index(history: &mut [ChatSummary], id: &str, title: &str) {
     if let Some(item) = history.iter_mut().find(|item| item.id == id) {
         item.title = title.to_string();
     }
 }
 
-/// Ids of the chats whose title or messages contain `query`, in index order.
-/// The index holds no messages, so each chat file is read.
 /// The lowercase searchable text of chat files, reused while a file keeps its
 /// modification time and size, so a search does not parse every chat again.
-#[derive(Default)]
+/// It holds at most `MAX_CACHED_SEARCH_BYTES` of text; the chats searched
+/// longest ago are dropped first.
 pub struct ChatSearchCache {
-    entries: Mutex<HashMap<PathBuf, CachedChatText>>,
+    state: Mutex<SearchCacheState>,
+    max_bytes: usize,
+}
+
+impl Default for ChatSearchCache {
+    fn default() -> Self {
+        Self::with_max_bytes(MAX_CACHED_SEARCH_BYTES)
+    }
+}
+
+#[derive(Default)]
+struct SearchCacheState {
+    entries: HashMap<PathBuf, CachedChatText>,
+    total_bytes: usize,
+    /// Counts the lookups, so the least recently used entry can be found.
+    clock: u64,
 }
 
 struct CachedChatText {
     modified: SystemTime,
     size_bytes: u64,
     text: String,
+    last_used: u64,
+}
+
+/// How much chat text the search keeps in memory, across every history.
+const MAX_CACHED_SEARCH_BYTES: usize = 32 * 1024 * 1024;
+
+impl SearchCacheState {
+    fn remove(&mut self, path: &Path) {
+        if let Some(entry) = self.entries.remove(path) {
+            self.total_bytes -= entry.text.len();
+        }
+    }
+
+    fn insert(&mut self, path: PathBuf, text: CachedText, max_bytes: usize) {
+        let CachedText {
+            modified,
+            size_bytes,
+            text,
+        } = text;
+        self.remove(&path);
+        if text.len() > max_bytes {
+            return;
+        }
+        while self.total_bytes + text.len() > max_bytes {
+            let Some(oldest) = self
+                .entries
+                .iter()
+                .min_by_key(|(_, entry)| entry.last_used)
+                .map(|(path, _)| path.clone())
+            else {
+                break;
+            };
+            self.remove(&oldest);
+        }
+        self.clock += 1;
+        self.total_bytes += text.len();
+        self.entries.insert(
+            path,
+            CachedChatText {
+                modified,
+                size_bytes,
+                text,
+                last_used: self.clock,
+            },
+        );
+    }
+}
+
+/// A chat text as read, before it is cached.
+struct CachedText {
+    modified: SystemTime,
+    size_bytes: u64,
+    text: String,
 }
 
 impl ChatSearchCache {
+    fn with_max_bytes(max_bytes: usize) -> Self {
+        Self {
+            state: Mutex::default(),
+            max_bytes,
+        }
+    }
+
     /// Whether the text of a chat file contains `query`; `None` when there is
     /// no file.
     fn matches(&self, chats_dir: &Path, id: &str, query: &str) -> Result<Option<bool>, AppError> {
@@ -407,9 +540,15 @@ impl ChatSearchCache {
         };
         let modified = metadata.modified()?;
         let size_bytes = metadata.len();
-        if let Some(cached) = self.entries.locked().get(&path) {
-            if cached.modified == modified && cached.size_bytes == size_bytes {
-                return Ok(Some(cached.text.contains(query)));
+        {
+            let mut state = self.state.locked();
+            state.clock += 1;
+            let now = state.clock;
+            if let Some(cached) = state.entries.get_mut(&path) {
+                if cached.modified == modified && cached.size_bytes == size_bytes {
+                    cached.last_used = now;
+                    return Ok(Some(cached.text.contains(query)));
+                }
             }
         }
         let Some(chat) = read_chat(chats_dir, id.to_string())? else {
@@ -417,28 +556,45 @@ impl ChatSearchCache {
         };
         let text = chat_search_text(&chat);
         let found = text.contains(query);
-        self.entries.locked().insert(
+        self.state.locked().insert(
             path,
-            CachedChatText {
+            CachedText {
                 modified,
                 size_bytes,
                 text,
             },
+            self.max_bytes,
         );
         Ok(Some(found))
     }
 
     /// Drops the chats of `chats_dir` the index no longer lists.
     fn retain_listed(&self, chats_dir: &Path, history: &[ChatSummary]) {
-        self.entries.locked().retain(|path, _| {
-            path.parent() != Some(chats_dir)
-                || history
-                    .iter()
-                    .any(|item| path.file_stem().and_then(|stem| stem.to_str()) == Some(&item.id))
-        });
+        let mut state = self.state.locked();
+        let gone: Vec<PathBuf> = state
+            .entries
+            .keys()
+            .filter(|path| {
+                path.parent() == Some(chats_dir)
+                    && !history.iter().any(|item| {
+                        path.file_stem().and_then(|stem| stem.to_str()) == Some(&item.id)
+                    })
+            })
+            .cloned()
+            .collect();
+        for path in gone {
+            state.remove(&path);
+        }
+    }
+
+    #[cfg(test)]
+    fn cached_bytes(&self) -> usize {
+        self.state.locked().total_bytes
     }
 }
 
+/// Ids of the chats whose title or messages contain `query`, in index order.
+/// The index holds no messages, so each chat file is read.
 pub(super) fn search_chats(
     chats_dir: &Path,
     history: Vec<ChatSummary>,

@@ -145,8 +145,6 @@ import {
   groupChatHistory,
 } from '../../lib/chat/chat-history-list'
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
-import { releaseDeletedChatImages } from '../../lib/chat/chat-image-storage'
-import { createRemovalUndo } from '../../lib/history/removal-undo'
 import { clientLogger } from '../../lib/logger'
 import { useDesktopStore } from '../../stores/desktop'
 import AppIcon from '../common/AppIcon.vue'
@@ -172,9 +170,10 @@ const { chat: chatStore } = useChatScope()
 const history = chatStore.history
 const desktopStore = useDesktopStore()
 
-void history
-  .loadChatHistory()
-  .catch(() => toastKey('history.operationFailed', 'error'))
+void history.loadChatHistory().catch((error) => {
+  clientLogger.warn(`Could not load the chats: ${String(error)}`, 'chat')
+  toastKey('history.operationFailed', 'error')
+})
 
 const isSearchOpen = ref(false)
 const searchInputRef = ref<{ focus(): void } | null>(null)
@@ -198,31 +197,9 @@ const renamingId = ref<string | null>(null)
 const renameValue = ref('')
 const renameInputs = ref<HTMLInputElement[]>([])
 const chatToDelete = ref<string | null>(null)
-const removal = createRemovalUndo<Chat>({
-  remove: async (id) => {
-    const wasOpen = chatStore.currentChatParams.id === id
-    if (wasOpen) {
-      chatStore.abandonChat()
-      await chatStore.whenSaved()
-    }
-    try {
-      return await history.deleteChat(id)
-    } catch (error) {
-      if (wasOpen) await chatStore.openChat(id, { silent: true })
-      throw error
-    }
-  },
-  restore: async (item) => {
-    // a chat is not stored while the history is off: the undo keeps it
-    if (chatHistoryDisabled.value)
-      throw new Error('Chat history is off; the chat was not restored')
-    await history.restoreChatItem(item)
-  },
-  release: (item) => releaseDeletedChatImages(item.id),
-  reportError: () => toastKey('history.operationFailed', 'error'),
-})
-const removedChat = removal.removed
-const undoRemoveChat = removal.undo
+/** The undo lives with the chat, so closing the sidebar does not lose it */
+const removedChat = computed(() => chatStore.removedChat)
+const undoRemoveChat = () => chatStore.undoRemoveChat()
 
 const chatHistoryDisabled = computed(
   () => !isChatHistoryEnabled(desktopStore.userConfig, chatStore.profileId)
@@ -305,7 +282,8 @@ async function copyChatMarkdown(id: string) {
   } else {
     try {
       targetChat = await history.loadChat(id)
-    } catch {
+    } catch (error) {
+      clientLogger.warn(`Could not read chat ${id}: ${String(error)}`, 'chat')
       toastKey('history.operationFailed', 'error')
       return
     }
@@ -357,11 +335,10 @@ async function confirmDeleteChat() {
   const id = chatToDelete.value
   chatToDelete.value = null
   if (!id) return
-  await removal.remove(id)
+  await chatStore.removeChat(id)
 }
 
 onUnmounted(() => {
-  void removal.dispose()
   clearTimeout(searchTimer)
 })
 </script>
