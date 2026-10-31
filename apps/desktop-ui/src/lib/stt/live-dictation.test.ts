@@ -47,6 +47,7 @@ function setup(finishTimeoutMs?: number) {
     parts,
     requests,
     capture,
+    stt,
     texts,
     onError,
     dictation,
@@ -113,10 +114,48 @@ describe('createLiveDictation', () => {
     await tick()
 
     expect(t.onError).toHaveBeenCalledWith(
-      new Error('deepgram live session failed')
+      expect.objectContaining({
+        kind: 'provider',
+        details: 'deepgram live session failed',
+      })
     )
     expect(t.capture.stop).toHaveBeenCalled()
     expect(await t.dictation.finish()).toBe('Kept.')
+  })
+
+  it('tells a microphone that did not start as such', async () => {
+    const t = setup()
+    vi.mocked(t.capture.start).mockRejectedValueOnce(
+      new Error('No default input device found')
+    )
+    await expect(t.start()).rejects.toMatchObject({
+      kind: 'microphone',
+      details: 'No default input device found',
+    })
+  })
+
+  it('tells a microphone lost while recording as such, not as the provider saw it', async () => {
+    const t = setup()
+    // a provider that reads the audio and fails in words of its own
+    t.stt.transcribeLive = (request) =>
+      (async function* () {
+        try {
+          for await (const chunk of request.audio) void chunk
+        } catch {
+          throw new Error('stream interrupted')
+        }
+        yield { type: 'partial' as const, text: 'never', startMs: 0 }
+      })()
+    await t.start()
+    t.audio.fail(new Error('Audio input stream failed: unplugged'))
+    await tick()
+    await tick()
+    expect(t.onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'microphoneLost',
+        details: 'Audio input stream failed: unplugged',
+      })
+    )
   })
 
   it('fails the finish when nothing was recognized before a failure', async () => {

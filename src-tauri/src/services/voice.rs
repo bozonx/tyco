@@ -35,6 +35,9 @@ const LEVEL_INTERVAL: Duration = Duration::from_millis(40);
 const SETUP_TIMEOUT: Duration = Duration::from_secs(10);
 /// Generous: a Bluetooth headset switching profiles pauses for seconds.
 const CALLBACK_TIMEOUT: Duration = Duration::from_secs(10);
+/// After a stream error the samples must go on soon: some backends recover
+/// on their own (ALSA retries a failed read), others end the stream with it.
+const STREAM_ERROR_GRACE: Duration = Duration::from_secs(1);
 const STOP_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Clone, Serialize, Debug, PartialEq, ts_rs::TS)]
@@ -173,9 +176,16 @@ async fn supersede_capture_unlocked(state: &VoiceSessionState) -> Result<(), App
         return Ok(());
     };
     session.superseded.store(true, Ordering::SeqCst);
-    tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
-        .await
-        .map_err(|error| AppError::Failed(format!("capture stop task failed: {error}")))?
+    let stopped =
+        tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
+            .await
+            .map_err(|error| AppError::Failed(format!("capture stop task failed: {error}")))?;
+    // the old capture has its stop flag set and gives the device up once its
+    // backend lets go: the new one must not fail for that
+    if let Err(error) = stopped {
+        log::warn!("The previous voice capture did not stop in time: {error}");
+    }
+    Ok(())
 }
 
 /// Shutdown cannot wait indefinitely for a stalled device or event sink.
@@ -277,14 +287,27 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         if received != callback_count {
             callback_count = received;
             last_callback = clock.now();
-        } else if !stop_flag.load(Ordering::SeqCst)
-            && clock.now().saturating_duration_since(last_callback) >= CALLBACK_TIMEOUT
-        {
-            // Some audio backends cork a disconnected device without invoking
-            // CPAL's error callback. Silence still produces callbacks.
-            *context.stream_error.locked() = Some("Audio input stopped delivering samples".into());
-            stop_flag.store(true, Ordering::SeqCst);
-            break;
+            if let Some(message) = context.recoverable_error.locked().take() {
+                log::info!("Voice capture recovered from: {message}");
+            }
+        } else if !stop_flag.load(Ordering::SeqCst) {
+            let silent_for = clock.now().saturating_duration_since(last_callback);
+            let recoverable_error = context.recoverable_error.locked().clone();
+            let is_failed = match recoverable_error {
+                Some(_) => silent_for >= STREAM_ERROR_GRACE,
+                None => silent_for >= CALLBACK_TIMEOUT,
+            };
+            if is_failed {
+                // Some audio backends cork a disconnected device without
+                // invoking CPAL's error callback. Silence still produces
+                // callbacks.
+                *context.stream_error.locked() = Some(
+                    recoverable_error
+                        .unwrap_or_else(|| "Audio input stopped delivering samples".into()),
+                );
+                stop_flag.store(true, Ordering::SeqCst);
+                break;
+            }
         }
 
         if !flush_pending(&context.pending_pcm_samples, sink, chunk_samples) {
@@ -341,12 +364,22 @@ fn flush_pending<S: EventSink>(
 
 pub(crate) struct StreamContext {
     pub pending_pcm_samples: Arc<Mutex<Vec<i16>>>,
+    /// Ends the capture as soon as the capture loop sees it
     pub stream_error: Arc<Mutex<Option<String>>>,
+    /// A stream error the backend may recover from: it ends the capture only
+    /// when no samples follow, see `STREAM_ERROR_GRACE`
+    pub recoverable_error: Arc<Mutex<Option<String>>>,
     pub current_level: Arc<Mutex<(f32, f32)>>,
     pub callback_count: Arc<AtomicU64>,
     pub stop_flag: Arc<AtomicBool>,
     pub device_sample_rate_hz: u32,
     pub output_sample_rate_hz: u32,
+}
+
+/// A device that is gone does not come back; other errors may pass, see
+/// `STREAM_ERROR_GRACE`.
+fn is_fatal_stream_error(error: &cpal::StreamError) -> bool {
+    matches!(error, cpal::StreamError::DeviceNotAvailable)
 }
 
 pub(crate) fn build_input_stream<T>(
@@ -368,16 +401,21 @@ where
     let pending_pcm_samples = Arc::clone(&context.pending_pcm_samples);
     let level_monitor = Arc::clone(&context.current_level);
     let stream_error = Arc::clone(&context.stream_error);
+    let recoverable_error = Arc::clone(&context.recoverable_error);
     let error_stop_flag = Arc::clone(&context.stop_flag);
     let mut downsampler =
         Downsampler::new(context.device_sample_rate_hz, context.output_sample_rate_hz);
     let mut converted = Vec::new();
-    let error_callback = move |error| {
-        log::error!("Voice capture audio input stream error: {error}");
-        if let Ok(mut current_error) = stream_error.lock() {
-            *current_error = Some(format!("Audio input stream failed: {error}"));
+    let error_callback = move |error: cpal::StreamError| {
+        let message = format!("Audio input stream failed: {error}");
+        if is_fatal_stream_error(&error) {
+            log::error!("Voice capture audio input stream error: {error}");
+            *stream_error.locked() = Some(message);
+            error_stop_flag.store(true, Ordering::SeqCst);
+        } else {
+            log::warn!("Voice capture audio input stream error: {error}");
+            *recoverable_error.locked() = Some(message);
         }
-        error_stop_flag.store(true, Ordering::SeqCst);
     };
     device
         .build_input_stream(

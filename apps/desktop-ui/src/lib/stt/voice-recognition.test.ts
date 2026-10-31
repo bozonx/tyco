@@ -218,6 +218,33 @@ describe('voice recognition failures', () => {
     expect(deps.voiceCorrection).not.toHaveBeenCalled()
   })
 
+  it('does not offer to keep or drop the text of a session that broke while finishing', async () => {
+    vi.useFakeTimers()
+    let resolveFinish!: (text: string) => void
+    const { deps, model, handlers } = await started({
+      shouldFormatRecognizedText: () => false,
+      finishDictation: vi.fn(
+        () =>
+          new Promise<string>((done) => {
+            resolveFinish = done
+          })
+      ),
+    })
+    handlers.onText({ committed: 'Heard', draft: '' })
+    const finishing = model.finish()
+    await vi.waitFor(() => expect(deps.finishDictation).toHaveBeenCalled())
+    handlers.onError(new DictationError('timeout', 'Timed out'))
+    await vi.waitFor(() =>
+      expect(deps.toastText).toHaveBeenCalledWith(
+        'toast.dictationTimeout',
+        'error'
+      )
+    )
+    resolveFinish('Heard')
+    await finishing
+    expect(deps.onCorrected).toHaveBeenCalled()
+  })
+
   it('does not start over a broken session that still holds its text', async () => {
     vi.useFakeTimers()
     const { deps, model, handlers } = await started()

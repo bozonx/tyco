@@ -109,9 +109,9 @@ it('bounds incoming audio and stops the overflowing capture before its id arrive
     },
   })
   const capture = await createVoiceCaptureControl(fake.ipc).start()
-  await expect(collect(capture.audio)).rejects.toThrow(
-    'Receive queue limit exceeded'
-  )
+  await expect(collect(capture.audio)).rejects.toMatchObject({
+    kind: 'overflow',
+  })
   expect(fake.callsOf('stop_voice_capture').map((call) => call.args)).toEqual([
     { sessionId: 7 },
   ])

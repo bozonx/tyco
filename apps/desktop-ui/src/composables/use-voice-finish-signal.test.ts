@@ -30,12 +30,16 @@ describe('useVoiceFinishSignal', () => {
 
   afterEach(() => desktop.dispose())
 
-  const mountSignal = (mode: () => string | undefined, confirm: () => void) => {
+  const mountSignal = (
+    mode: () => string | undefined,
+    confirm: () => void,
+    release?: () => void
+  ) => {
     let label: { value: string } | undefined
     const wrapper = mount(
       defineComponent({
         setup() {
-          label = useVoiceFinishSignal(mode, confirm)
+          label = useVoiceFinishSignal(mode, confirm, release)
           return () => null
         },
       }),
@@ -77,6 +81,20 @@ describe('useVoiceFinishSignal', () => {
     await flushPromises()
     expect(label.value).toBe('')
     await finish(7)
+    expect(confirm).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('tells a release of the held hotkey apart from a press', async () => {
+    const confirm = vi.fn()
+    const release = vi.fn()
+    const { wrapper } = mountSignal(() => 'voice', confirm, release)
+    await flushPromises()
+    desktop.setState({ isWindowShown: true })
+    await desktop.emit(DESKTOP_EVENTS.VOICE_RELEASE, 6)
+    await desktop.emit(DESKTOP_EVENTS.VOICE_RELEASE, 7)
+    await flushPromises()
+    expect(release).toHaveBeenCalledOnce()
     expect(confirm).not.toHaveBeenCalled()
     wrapper.unmount()
   })

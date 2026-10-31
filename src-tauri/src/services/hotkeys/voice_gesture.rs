@@ -109,13 +109,14 @@ pub(crate) fn pressed(app: &AppHandle, target: &HotkeyTarget, id: &str) -> Resul
     if !gesture.press(id, Instant::now()) {
         return Ok(());
     }
-    let before = app.state::<AppState>().snapshot();
     let result = target.trigger(app, id);
     let after = app.state::<AppState>().snapshot();
-    let activation_id = (result.is_ok()
-        && !(before.window.is_window_shown && before.activation.mode == Some(*mode))
-        && after.activation.mode == Some(*mode))
-    .then_some(after.activation.activation_id);
+    // a press on an open voice input confirms it, or starts a new recording
+    // from its result step: the release ends only a recording, so the window
+    // decides which of the two this hold was
+    let activation_id =
+        (result.is_ok() && after.window.is_window_shown && after.activation.mode == Some(*mode))
+            .then_some(after.activation.activation_id);
     let is_hold_enabled = is_voice_hold_enabled(app);
     if let Some(activation_id) = gesture.complete(id, activation_id, is_hold_enabled) {
         finish(app, activation_id);
@@ -138,7 +139,7 @@ pub(crate) fn released(app: &AppHandle, id: &str) {
 fn finish(app: &AppHandle, activation_id: u64) {
     let snapshot = app.state::<AppState>().snapshot();
     if snapshot.activation.activation_id == activation_id && snapshot.window.is_window_shown {
-        if let Err(error) = crate::events::emit_to::<crate::events::VoiceFinish, _>(
+        if let Err(error) = crate::events::emit_to::<crate::events::VoiceRelease, _>(
             app,
             crate::services::runtime::QUICK_WINDOW_LABEL,
             activation_id,

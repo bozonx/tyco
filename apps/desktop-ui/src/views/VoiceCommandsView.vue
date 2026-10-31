@@ -140,6 +140,16 @@
             >
               {{ t('voiceCommands.run') }}
             </ShortcutButton>
+            <!-- the text stays until the new recording replaces it -->
+            <ShortcutButton
+              :keys="[]"
+              icon="mdi:microphone"
+              :disabled="voice.stage === 'running'"
+              data-testid="voice-record-again"
+              @click="void voice.start()"
+            >
+              {{ t('voiceCommands.recordAgain') }}
+            </ShortcutButton>
           </template>
         </div>
       </template>
@@ -323,13 +333,18 @@ const finishHotkey = useVoiceFinishSignal(
   () => {
     if (voice.stage === 'recording') void voice.finish('run')
     else if (voice.stage === 'review') void voice.run()
+  },
+  // Push-to-Talk: letting go stops the recording; it never runs a review
+  () => {
+    if (voice.stage === 'recording') void voice.finish('run')
   }
 )
 const withHotkey = (keys: string[]) =>
   finishHotkey.value ? [...keys, finishHotkey.value] : keys
 
 const onKeyDown = (event: KeyboardEvent) => {
-  if (event.repeat) return
+  // Enter that confirms an IME composition belongs to the text
+  if (event.repeat || event.isComposing || event.keyCode === 229) return
   if (event.code === 'Escape') {
     event.preventDefault()
     close()

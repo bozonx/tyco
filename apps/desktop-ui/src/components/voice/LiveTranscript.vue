@@ -16,7 +16,9 @@
       <div v-else class="live-transcript-content">
         <span v-if="prefix" class="live-transcript-prefix">{{ prefix }}</span>
         <span v-if="committed">{{ committedSpacer }}{{ committed }}</span>
-        <span v-if="draft" class="live-transcript-draft"
+        <!-- the guess is rewritten many times a second: a screen reader
+             announces the words once they settle -->
+        <span v-if="draft" class="live-transcript-draft" aria-hidden="true"
           >{{ draftSpacer }}{{ draft }}</span
         >
         <span v-if="!hasContent" class="placeholder-text placeholder-inline"

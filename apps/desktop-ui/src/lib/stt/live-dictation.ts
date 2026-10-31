@@ -9,33 +9,13 @@ import {
 import type { SttClient } from './stt-client'
 import type { SttModel } from './stt-config'
 import type { VoiceCaptureControl } from './voice-capture'
+import { asDictationError, DictationError } from './dictation-error'
 
-/**
- * A failure of the dictation itself, told to the user by `kind`: `superseded`
- * means another voice input took the microphone over.
- */
-export class DictationError extends Error {
-  constructor(
-    readonly kind: 'closed' | 'timeout' | 'superseded',
-    message: string
-  ) {
-    super(message)
-    this.name = 'DictationError'
-  }
-}
-
-const DICTATION_ERROR_KEYS: Record<DictationError['kind'], string> = {
-  closed: 'toast.dictationClosed',
-  timeout: 'toast.dictationTimeout',
-  superseded: 'toast.dictationSuperseded',
-}
-
-/** The message key of a dictation failure; other errors carry their own text */
-export function dictationErrorKey(error: unknown): string | undefined {
-  return error instanceof DictationError
-    ? DICTATION_ERROR_KEYS[error.kind]
-    : undefined
-}
+export {
+  DictationError,
+  dictationErrorKey,
+  describeDictationError,
+} from './dictation-error'
 
 /** How long the provider may take for its last words once the audio ends */
 const FINISH_TIMEOUT_MS = 10_000
@@ -116,7 +96,24 @@ export function createLiveDictation(
       finishing = false
       onError = request.onError
 
-      const { sampleRate, audio, isSuperseded } = await deps.capture.start()
+      let capture: Awaited<ReturnType<VoiceCaptureControl['start']>>
+      try {
+        capture = await deps.capture.start()
+      } catch (error) {
+        throw asDictationError('microphone', error)
+      }
+      const { sampleRate, isSuperseded } = capture
+      // the provider reports a broken audio stream in words of its own: the
+      // microphone's failure is kept to be told as it is
+      let captureFailure: unknown
+      const audio = (async function* () {
+        try {
+          yield* capture.audio
+        } catch (error) {
+          captureFailure = error
+          throw error
+        }
+      })()
       // cancelled while the microphone was starting: it must not stay on
       if (current.signal.aborted) {
         await stopCapture()
@@ -134,7 +131,7 @@ export function createLiveDictation(
         })
       } catch (error) {
         await stopCapture()
-        throw error
+        throw asDictationError('provider', error)
       }
 
       session = (async () => {
@@ -162,7 +159,10 @@ export function createLiveDictation(
           }
         } catch (error) {
           if (current.signal.aborted) return
-          failure = error instanceof Error ? error : new Error(String(error))
+          failure =
+            captureFailure !== undefined
+              ? asDictationError('microphoneLost', captureFailure)
+              : asDictationError('provider', error)
           await stopCapture()
           request.onError(failure)
         }

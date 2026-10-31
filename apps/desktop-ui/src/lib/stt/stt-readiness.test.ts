@@ -27,7 +27,7 @@ describe('STT key readiness', () => {
 
   it('explains which provider needs a key', () => {
     expect(() => assertSttKeyAvailable({}, 'deepgram', translate)).toThrow(
-      'toast.voiceKeyMissing: deepgram'
+      'toast.voiceKeyMissing: Deepgram'
     )
   })
 
@@ -43,7 +43,7 @@ describe('STT key readiness', () => {
         'deepgram',
         translate
       )
-    ).toThrow('toast.voiceKeyUnavailable: deepgram')
+    ).toThrow('toast.voiceKeyUnavailable: Deepgram')
   })
 
   it('does not accept inherited properties as saved keys', () => {

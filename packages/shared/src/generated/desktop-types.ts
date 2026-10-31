@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: bb4fd36e418133686a362b39403b353e68dfb196cefc278ca766058630a23ecc
+// Source hash: 3af503bcf4287ef4645ac15ed3134399dda6ee4a271f9fdb86e1b5b751435958
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -803,6 +803,7 @@ export interface DesktopEventPayloads {
   'app://activation-metrics-start': ActivationMetricsRequest
   'app://activation-metrics-collect': ActivationMetricsRequest
   'app://voice-finish': number
+  'app://voice-release': number
   'app://voice-audio-level': VoiceAudioLevelPayload
   'app://selection-run': SelectionRunEvent
   'app://selection-cancel': SelectionCancelEvent

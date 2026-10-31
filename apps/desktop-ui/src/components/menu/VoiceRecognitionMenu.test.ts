@@ -255,6 +255,39 @@ describe('VoiceRecognitionMenu', () => {
       wrapper.unmount()
     })
 
+    it('leaves Space and Enter typed into a field to the field', async () => {
+      const wrapper = mountVoiceInput('confirm')
+      await flushPromises()
+      const field = document.createElement('textarea')
+      document.body.append(field)
+      for (const code of ['Space', 'Enter']) {
+        const down = new KeyboardEvent('keydown', {
+          code,
+          bubbles: true,
+          cancelable: true,
+        })
+        field.dispatchEvent(down)
+        field.dispatchEvent(new KeyboardEvent('keyup', { code, bubbles: true }))
+        expect(down.defaultPrevented).toBe(false)
+      }
+      await flushPromises()
+      expect(mocks.finishDictation).not.toHaveBeenCalled()
+      field.remove()
+      wrapper.unmount()
+    })
+
+    it('does not finish on Enter that confirms an IME composition', async () => {
+      const wrapper = mountVoiceInput('confirm')
+      await flushPromises()
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { code: 'Enter', isComposing: true })
+      )
+      document.dispatchEvent(new KeyboardEvent('keyup', { code: 'Enter' }))
+      await flushPromises()
+      expect(mocks.finishDictation).not.toHaveBeenCalled()
+      wrapper.unmount()
+    })
+
     it('keeps Tab available for focus navigation in confirm mode', async () => {
       const wrapper = mountVoiceInput('confirm')
       await flushPromises()
@@ -303,6 +336,22 @@ describe('VoiceRecognitionMenu', () => {
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledTimes(2)
     expect(wrapper.emitted('cancelled')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('stops recording when an activation of the other window hides this one', async () => {
+    const wrapper = mountChat()
+    await flushPromises()
+    expect(mocks.startDictation).toHaveBeenCalledOnce()
+    // a quick window activation: the shared state says shown, yet for the
+    // quick window, while this main window is hidden
+    desktop.setState({
+      activationId: desktop.backend.activation.activationId + 1,
+      mode: 'quickInput',
+    })
+    await flushPromises()
+    expect(mocks.startDictation).toHaveBeenCalledOnce()
+    expect(mocks.cancelDictation).toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -409,6 +458,39 @@ describe('VoiceRecognitionMenu', () => {
     expect(styleButtons.length).toBeGreaterThan(0)
     expect(wrapper.text()).toContain('Professional')
 
+    wrapper.unmount()
+  })
+
+  it('shows no button for a style without a rule', async () => {
+    desktop.setUserConfig({
+      stt: { ...desktop.backend.userConfig.stt, isStylingBarEnabled: true },
+      styling: {
+        slots: { q: 'style-1', w: 'style-2' },
+        items: [
+          { id: 'style-1', name: 'Professional', rule: 'Be professional' },
+          { id: 'style-2', name: 'Empty', rule: '  ' },
+        ],
+      },
+    })
+    const wrapper = mount(VoiceRecognitionMenu, {
+      props: {
+        variant: 'bar',
+        activationMode: 'voice',
+        finishBehavior: 'insertIntoTarget',
+      },
+      global: {
+        stubs: {
+          LiveTranscript: {
+            props: ['committed', 'draft', 'prefix', 'suffix'],
+            template: '<div class="live-transcript" />',
+          },
+        },
+      },
+    })
+    await flushPromises()
+    const grid = wrapper.find('.voice-bar-styling-grid')
+    expect(grid.text()).toContain('Professional')
+    expect(grid.text()).not.toContain('Empty')
     wrapper.unmount()
   })
 

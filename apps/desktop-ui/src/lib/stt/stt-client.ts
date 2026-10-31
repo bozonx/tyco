@@ -23,6 +23,17 @@ const CONNECT_TIMEOUT_MS = 20_000
  * there, leaving English.
  */
 const MULTILINGUAL_LANGUAGE = 'multi'
+/** What Deepgram assumes when a model gets no language */
+const DEEPGRAM_DEFAULT_LANGUAGE = 'en'
+/**
+ * Deepgram models that take `multi`: Nova-3 and the general Nova-2. Another
+ * model rejects it; it is sent Deepgram's own default, English, since the kit
+ * would send `multi` for a live session without a language.
+ */
+export function isDeepgramMultilingualModel(modelId: string): boolean {
+  const id = modelId.trim().toLowerCase()
+  return id.startsWith('nova-3') || id === 'nova-2' || id === 'nova-2-general'
+}
 /** Self-hosted servers: reached by the configured address, without a key */
 const KEYLESS_STT_PROVIDERS: readonly SttProvider[] = ['sherpaOnnx']
 /** The names `@bozonx/ai-kit` knows the providers by */
@@ -138,7 +149,9 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
       const language =
         request.language ??
         (request.model.provider === 'deepgram'
-          ? MULTILINGUAL_LANGUAGE
+          ? isDeepgramMultilingualModel(request.model.modelId)
+            ? MULTILINGUAL_LANGUAGE
+            : DEEPGRAM_DEFAULT_LANGUAGE
           : undefined)
       return kitFor(request.model).transcribeStream({
         audio: request.audio,

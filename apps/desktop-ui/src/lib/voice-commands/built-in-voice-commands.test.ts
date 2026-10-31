@@ -82,7 +82,10 @@ describe('built-in voice commands', () => {
       commands: () => [saved],
       builtInCommands: () => createBuiltInVoiceCommands(coreTools, t),
       tools: coreTools,
-      startDictation: async () => {},
+      // the command was recognized live before the user asked to run it
+      startDictation: async ({ onText }) => {
+        onText({ committed: 'translate to English Hello!', draft: '' })
+      },
       finishDictation: async () => 'translate to English Hello!',
       cancelDictation: async () => {},
       run,

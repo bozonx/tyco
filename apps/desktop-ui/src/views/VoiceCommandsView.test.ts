@@ -140,6 +140,21 @@ describe('separate voice command overlay', () => {
     expect(mocks.cancel).toHaveBeenCalled()
     expect(mocks.release).toHaveBeenCalledOnce()
   })
+  it('stops the recording on release of the held hotkey, never runs a review', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    const release = async () => {
+      await desktop.emit(DESKTOP_EVENTS.VOICE_RELEASE, 12)
+      await flushPromises()
+    }
+    await release()
+    expect(mocks.finish).toHaveBeenCalledExactlyOnceWith('run')
+    voice.stage = 'review'
+    await release()
+    expect(mocks.run).not.toHaveBeenCalled()
+    expect(mocks.finish).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
   it('presses Run only for the current activation on a repeat activation and cancels on hiding', async () => {
     const wrapper = mountView()
     await flushPromises()
@@ -277,8 +292,22 @@ describe('separate voice command overlay', () => {
       new KeyboardEvent('keydown', { code: 'Enter', shiftKey: true })
     )
     expect(mocks.run).not.toHaveBeenCalled()
+    // Enter that confirms an IME composition belongs to the text
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Enter', isComposing: true })
+    )
+    expect(mocks.run).not.toHaveBeenCalled()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }))
     expect(mocks.run).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
+  it('records again from the review', async () => {
+    voice.stage = 'review'
+    const wrapper = mountView()
+    await flushPromises()
+    mocks.start.mockClear()
+    await wrapper.find('[data-testid="voice-record-again"]').trigger('click')
+    expect(mocks.start).toHaveBeenCalledOnce()
     wrapper.unmount()
   })
   it('shows a short hint when no user commands are enabled', () => {

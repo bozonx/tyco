@@ -12,3 +12,9 @@ export const isQuickWindow = () =>
   getDesktopWindowLabel() === DESKTOP_WINDOW_LABELS.QUICK
 
 export { convertFileSrc } from '@tauri-apps/api/core'
+
+/**
+ * Whether the desktop runs the quick window apart from the main one. Without
+ * the runtime, e.g. in the browser, one page renders every mode.
+ */
+export const hasSeparateQuickWindow = () => isTauri()

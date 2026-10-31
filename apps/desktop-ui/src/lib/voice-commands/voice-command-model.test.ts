@@ -67,7 +67,7 @@ describe('voice command session', () => {
       await vi.advanceTimersByTimeAsync(3_600_000)
       expect(deps.finishDictation).toHaveBeenCalledOnce()
       expect(model.stage.value).toBe('review')
-      expect(model.error.value).toBe('voiceCommands.recordingLimitReached')
+      expect(model.error.value).toBe('toast.recordingLimitReached')
       expect(deps.run).not.toHaveBeenCalled()
     } finally {
       vi.useRealTimers()
@@ -353,6 +353,27 @@ it('automatically runs the final exact command by default', async () => {
     'Hello!',
     expect.any(AbortSignal)
   )
+})
+
+it('waits for review when the final transcript names another command', async () => {
+  const { model, deps, partial } = setup({
+    finishDictation: vi.fn(async () => 'translate to English Hello!'),
+  })
+  await model.start()
+  partial('save note Hello')
+  await model.finish()
+  expect(deps.run).not.toHaveBeenCalled()
+  expect(model.stage.value).toBe('review')
+  expect(model.command.value?.id).toBe('builtin:voice:translate:en-US')
+})
+
+it('does not run a command that was not recognized when finished to run', async () => {
+  const { model, deps } = setup()
+  await model.start()
+  await model.finish('run')
+  expect(deps.run).not.toHaveBeenCalled()
+  expect(model.stage.value).toBe('review')
+  expect(model.command.value?.id).toBe('note')
 })
 
 it('waits for manual execution when finished for review', async () => {

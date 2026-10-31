@@ -31,12 +31,15 @@ import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
+import { hasSeparateQuickWindow, isQuickWindow } from '../../lib/desktop/window'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
+import { isModeOfWindow } from '../../lib/navigation/routes'
 import { resolveDictationTarget } from '../../lib/stt/dictation-target'
 import type { VoiceFinishIntent } from '../../lib/stt/voice-finish-intent'
 import { createVoiceRecognition } from '../../lib/stt/voice-recognition'
 import { stylingSlotList } from '../../lib/styling/styling-library'
 import { createKeyPressTracker } from '../../lib/ui/key-press-tracker'
+import { isTextEntryTarget } from '../../lib/ui/text-entry-target'
 import { useDesktopStore } from '../../stores/desktop'
 import { useHistoryStore } from '../../stores/history'
 import { useLlmStore } from '../../stores/llm'
@@ -72,8 +75,15 @@ const desktopStore = useDesktopStore()
 let sessionActivationId = desktopStore.desktopState.activationId
 const isSameActivation = () =>
   sessionActivationId === desktopStore.desktopState.activationId
-const ownsActivation = () =>
-  isSameActivation() && desktopStore.desktopState.isWindowShown
+/**
+ * The desktop state is shared by the windows: an activation of the other window
+ * shows that one and hides this one, while `isWindowShown` stays true
+ */
+const isOwnWindowShown = () =>
+  desktopStore.desktopState.isWindowShown &&
+  (!hasSeparateQuickWindow() ||
+    isModeOfWindow(desktopStore.desktopState.mode, isQuickWindow()))
+const ownsActivation = () => isSameActivation() && isOwnWindowShown()
 const historyStore = useHistoryStore()
 const menuModalsStore = useMenuModalsStore()
 // a click elsewhere must not cut a dictation short
@@ -152,6 +162,11 @@ const finishHotkey = useVoiceFinishSignal(
   () => props.activationMode,
   () => {
     if (ownsActivation()) void finish(primaryIntent())
+  },
+  // Push-to-Talk: letting go ends the recording this hold started
+  () => {
+    if (ownsActivation() && (isStarted.value || model.isStarting()))
+      void finish(primaryIntent())
   }
 )
 const { audioLevel, audioPeak, recordingDurationMs } = useVoiceRecordingMeter(
@@ -170,7 +185,15 @@ useDismissibleLayer({
 // Enter on the button that opened this input, or a hotkey with Space, ends
 // with a keyup here that must not finish the dictation it just started
 const keyPresses = createKeyPressTracker()
-const trackKeyDown = (event: KeyboardEvent) => keyPresses.press(event.code)
+/**
+ * The inline bar shares the screen with the editor or the chat input: keys
+ * typed there, and Enter that confirms an IME composition, are the text's
+ */
+const isTypingKey = (event: KeyboardEvent) =>
+  event.isComposing || event.keyCode === 229 || isTextEntryTarget(event.target)
+const trackKeyDown = (event: KeyboardEvent) => {
+  if (!isTypingKey(event)) keyPresses.press(event.code)
+}
 const forgetKeys = () => keyPresses.clear()
 
 function findMatchingStyle(event: KeyboardEvent) {
@@ -192,6 +215,7 @@ function findMatchingStyle(event: KeyboardEvent) {
 
 function handleKeyUp(event: KeyboardEvent) {
   if (!keyPresses.release(event.code)) return
+  if (isTypingKey(event)) return
   if (event.defaultPrevented) return
 
   const matchingStyle = findMatchingStyle(event)
@@ -235,6 +259,7 @@ function handleKeyUp(event: KeyboardEvent) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
+  if (isTypingKey(event)) return
   const matchingStyle = findMatchingStyle(event)
   if (matchingStyle) {
     event.preventDefault()
@@ -268,28 +293,42 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
+/** The recording must not go on in a window the user no longer sees */
+function stopUnseenRecording() {
+  if ((isStarted.value || model.isStarting()) && !isFinishing.value) {
+    void cancel()
+  }
+}
+
 watch(
   () => desktopStore.desktopState.activationId,
   async (activationId) => {
-    if (!desktopStore.desktopState.isWindowShown) return
+    if (!isOwnWindowShown()) {
+      stopUnseenRecording()
+      return
+    }
+    // only an activation of this voice input starts it over; any other one
+    // took the user elsewhere
+    if (
+      props.activationMode &&
+      desktopStore.desktopState.mode !== props.activationMode
+    ) {
+      stopUnseenRecording()
+      return
+    }
     sessionActivationId = activationId
     await model.restartSession()
   }
 )
 
-watch(
-  () => desktopStore.desktopState?.isWindowShown,
-  (isShown) => {
-    if (isShown) {
-      sessionActivationId = desktopStore.desktopState.activationId
-      void startSession()
-    } else {
-      if ((isStarted.value || model.isStarting()) && !isFinishing.value) {
-        void cancel()
-      }
-    }
+watch(isOwnWindowShown, (isShown) => {
+  if (isShown) {
+    sessionActivationId = desktopStore.desktopState.activationId
+    void startSession()
+  } else {
+    stopUnseenRecording()
   }
-)
+})
 
 onMounted(async () => {
   // on the document, so it runs before the nav panel's Esc handler on the window
@@ -299,7 +338,10 @@ onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('blur', forgetKeys)
 
-  if (desktopStore.desktopState?.isWindowShown !== false) {
+  if (
+    desktopStore.desktopState?.isWindowShown === undefined ||
+    isOwnWindowShown()
+  ) {
     await startSession()
   }
 })

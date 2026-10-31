@@ -3,6 +3,7 @@ import { type VoiceCaptureEvent } from '@tyco/shared'
 
 import { createAsyncQueue } from '../net/async-queue'
 import { errorMessage, isArrayBuffer, type NetIpc } from '../net/net-ipc'
+import { DictationError } from './dictation-error'
 
 interface VoiceCapture {
   /** Rate of the PCM16 mono audio, in hertz */
@@ -52,7 +53,10 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
           // the audio before it is complete: it ends as usual
           superseded = true
           queue.end()
-        } else if (event.type === 'error') queue.fail(new Error(event.message))
+        } else if (event.type === 'error')
+          queue.fail(
+            new DictationError('microphoneLost', event.message, event.message)
+          )
       }
 
       try {
@@ -65,7 +69,18 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
         const { sampleRate } = started
         return {
           sampleRate,
-          audio: queue.values,
+          audio: (async function* () {
+            try {
+              yield* queue.values
+            } catch (error) {
+              throw overflowed
+                ? new DictationError(
+                    'overflow',
+                    'The speech service fell behind the recording'
+                  )
+                : error
+            }
+          })(),
           isSuperseded: () => superseded,
         }
       } catch (error) {

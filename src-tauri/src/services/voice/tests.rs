@@ -102,6 +102,7 @@ impl AudioSource for TestSource {
             context: StreamContext {
                 pending_pcm_samples,
                 stream_error: Arc::new(Mutex::new(self.stream_error.clone())),
+                recoverable_error: Arc::new(Mutex::new(None)),
                 current_level: Arc::new(Mutex::new((0.5, 0.75))),
                 callback_count: Arc::new(AtomicU64::new(0)),
                 stop_flag: Arc::clone(stop_flag),
@@ -543,4 +544,116 @@ async fn a_running_capture_is_told_when_a_new_one_takes_the_microphone() {
         Some(r#"{"type":"superseded"}"#)
     );
     stop_capture(&state, Some(second.session_id)).await.unwrap();
+}
+
+/// A source whose stream has just reported a recoverable error
+struct RecoverableErrorSource {
+    callbacks: Arc<AtomicU64>,
+    trace: Trace,
+}
+
+impl AudioSource for RecoverableErrorSource {
+    type Stream = TestStream;
+    fn open(&self, stop: &Arc<AtomicBool>) -> Result<OpenedCapture<TestStream>, AppError> {
+        let mut opened = TestSource {
+            trace: self.trace.clone(),
+            ..TestSource::default()
+        }
+        .open(stop)?;
+        opened.context.callback_count = Arc::clone(&self.callbacks);
+        *opened.context.recoverable_error.locked() = Some("Audio input stream failed: read".into());
+        Ok(opened)
+    }
+}
+
+#[test]
+fn a_stream_error_followed_by_samples_does_not_end_the_capture() {
+    struct RecoveringRuntime {
+        now: std::cell::Cell<Instant>,
+        callbacks: Arc<AtomicU64>,
+        stop: Arc<AtomicBool>,
+    }
+    impl MonotonicClock for RecoveringRuntime {
+        fn now(&self) -> Instant {
+            self.now.get()
+        }
+        fn sleep(&self, _duration: Duration) {
+            self.now.set(self.now.get() + STREAM_ERROR_GRACE);
+            if self.callbacks.fetch_add(1, Ordering::Relaxed) == 3 {
+                self.stop.store(true, Ordering::SeqCst);
+            }
+        }
+    }
+    let callbacks = Arc::new(AtomicU64::new(0));
+    let stop = Arc::new(AtomicBool::new(false));
+    let runtime = RecoveringRuntime {
+        now: std::cell::Cell::new(Instant::now()),
+        callbacks: Arc::clone(&callbacks),
+        stop: Arc::clone(&stop),
+    };
+    let sink = RecordingSink::default();
+    let (tx, _rx) = std_mpsc::sync_channel(1);
+    run_capture_thread(
+        &RecoverableErrorSource {
+            callbacks,
+            trace: Trace::default(),
+        },
+        &Trace::default(),
+        &runtime,
+        &sink,
+        &stop,
+        &AtomicBool::new(false),
+        &tx,
+    )
+    .unwrap();
+    assert_eq!(*sink.events.locked(), [r#"{"type":"end"}"#]);
+}
+
+#[test]
+fn a_stream_error_without_samples_after_it_ends_the_capture_with_that_error() {
+    struct StalledRuntime(std::cell::Cell<Instant>);
+    impl MonotonicClock for StalledRuntime {
+        fn now(&self) -> Instant {
+            self.0.get()
+        }
+        fn sleep(&self, _duration: Duration) {
+            // far less than `CALLBACK_TIMEOUT`: the error cuts the wait short
+            self.0.set(self.0.get() + STREAM_ERROR_GRACE);
+        }
+    }
+    let sink = RecordingSink::default();
+    let stop = Arc::new(AtomicBool::new(false));
+    let (tx, _rx) = std_mpsc::sync_channel(1);
+    run_capture_thread(
+        &RecoverableErrorSource {
+            callbacks: Arc::new(AtomicU64::new(0)),
+            trace: Trace::default(),
+        },
+        &Trace::default(),
+        &StalledRuntime(std::cell::Cell::new(Instant::now())),
+        &sink,
+        &stop,
+        &AtomicBool::new(false),
+        &tx,
+    )
+    .unwrap();
+    assert!(stop.load(Ordering::SeqCst));
+    assert_eq!(
+        *sink.events.locked(),
+        [r#"{"type":"error","message":"Audio input stream failed: read"}"#]
+    );
+}
+
+#[test]
+fn only_a_lost_device_is_a_fatal_stream_error() {
+    assert!(is_fatal_stream_error(
+        &cpal::StreamError::DeviceNotAvailable
+    ));
+    assert!(!is_fatal_stream_error(
+        &cpal::StreamError::BackendSpecific {
+            err: cpal::BackendSpecificError {
+                description: "read failed".into(),
+            },
+        }
+    ));
 }

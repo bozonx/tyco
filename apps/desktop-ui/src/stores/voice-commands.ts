@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, onScopeDispose } from 'vue'
 import { translate } from '../lib/i18n'
+import { describeDictationError } from '../lib/stt/dictation-error'
 import { createBuiltInVoiceCommands } from '../lib/voice-commands/built-in-voice-commands'
 import { useDictationActions } from '../composables/use-dictation-actions'
 import { createVoiceCommandModel } from '../lib/voice-commands/voice-command-model'
@@ -30,6 +31,7 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
     commands: () => desktop.userConfig.commands,
     tools,
     ...useDictationActions(),
+    describeError: (cause) => describeDictationError(cause, translate),
     saveTranscript: (text) => history.saveSource(text, 'voiceCorrection'),
     run: async (command, text, signal) => {
       if (signal.aborted) return { success: false, cancelled: true }

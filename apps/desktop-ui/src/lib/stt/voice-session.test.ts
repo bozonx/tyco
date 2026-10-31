@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { messages } from '../i18n/messages'
 import {
   createVoiceSession,
+  MAX_RECORDING_MS,
+  SILENCE_TIMEOUT_MS,
   type VoiceSessionDependencies,
 } from './voice-session'
 
@@ -86,4 +89,14 @@ describe('createVoiceSession', () => {
     expect(session.signal).toBeUndefined()
     expect(vi.getTimerCount()).toBe(0)
   })
+})
+
+it('tells the user the limits the session keeps', () => {
+  // the messages name the limits in words: changing one means rewording
+  // `toast.recordingSilenceStop` and `toast.recordingLimitReached` everywhere
+  const { toast } = messages['en-US']
+  expect(SILENCE_TIMEOUT_MS / 60_000).toBe(3)
+  expect(toast.recordingSilenceStop).toContain('3 minutes')
+  expect(MAX_RECORDING_MS / 3_600_000).toBe(1)
+  expect(toast.recordingLimitReached).toContain('one hour')
 })

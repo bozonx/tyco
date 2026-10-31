@@ -72,10 +72,11 @@ const { t } = useI18n()
 
 const slots = computed(() => {
   if (!props.stylingPresets || !props.stylingPresets.length) return null
-  return SHORTCUT_SLOT_KEYS.map((key, index) => ({
-    key,
-    item: props.stylingPresets?.[index] ?? null,
-  }))
+  // a preset without a rule does nothing, as its key does not
+  return SHORTCUT_SLOT_KEYS.map((key, index) => {
+    const item = props.stylingPresets?.[index] ?? null
+    return { key, item: item?.rule.trim() ? item : null }
+  })
 })
 </script>
 <style scoped>

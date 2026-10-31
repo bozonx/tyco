@@ -1,10 +1,10 @@
-import { errorMessage } from '@tyco/shared/value-guards'
 import { computed, ref } from 'vue'
 import {
   type TimerDependencies,
   createSingleTimer,
 } from '../timers/single-timer'
-import { dictationErrorKey, type LiveDictationStart } from './live-dictation'
+import { describeDictationError } from './dictation-error'
+import type { LiveDictationStart } from './live-dictation'
 import {
   createLiveTranscriptState,
   liveTranscriptText,
@@ -137,8 +137,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
 
   /** What went wrong, in the words of the user's language where they are ours */
   function describeVoiceError(error: unknown): string {
-    const key = dictationErrorKey(error)
-    return key ? t(key) : errorMessage(error)
+    return describeDictationError(error, t)
   }
 
   /** The session `onCancelled` was last told about: it is told once */
@@ -354,8 +353,12 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       return
     }
 
+    // while finishing, the text heard so far is already on its way: the
+    // choice between keeping and dropping it is no longer the user's
     toastText(
-      `${describeVoiceError(error)}\n${t('menu.dictationInterrupted')}`,
+      isFinishing.value
+        ? describeVoiceError(error)
+        : `${describeVoiceError(error)}\n${t('menu.dictationInterrupted')}`,
       'error'
     )
   }

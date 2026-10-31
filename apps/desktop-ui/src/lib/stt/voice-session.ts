@@ -3,7 +3,8 @@ import {
   createSingleTimer,
 } from '../timers/single-timer'
 
-// Silence is billed too: a forgotten recording must not run all day
+// Silence is billed too: a forgotten recording must not run all day. The
+// messages name this limit and the silence one in words, in every locale.
 export const MAX_RECORDING_MS = 3_600_000
 /**
  * A recording with no recognized speech for this long was left running. Every

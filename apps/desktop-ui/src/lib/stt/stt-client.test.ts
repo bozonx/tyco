@@ -2,7 +2,11 @@ import type { SocketOpener, TranscriptPart } from '@bozonx/ai-kit'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createAsyncQueue } from '../net/async-queue'
-import { buildSttCatalog, createSttClient } from './stt-client'
+import {
+  buildSttCatalog,
+  createSttClient,
+  isDeepgramMultilingualModel,
+} from './stt-client'
 
 const model = { provider: 'deepgram' as const, modelId: 'nova-3' }
 
@@ -160,6 +164,35 @@ describe('createSttClient', () => {
     expect(deepgram.opened[0].url).toContain('language=multi')
     expect(deepgram.opened[0].url).not.toContain('detect_language')
     expect(deepgram.opened[1].url).toContain('language=ru')
+  })
+
+  it('sends English, not multi, to a model without multilingual support', async () => {
+    const deepgram = fakeDeepgram([])
+    const client = createSttClient({
+      transport: { fetch: vi.fn(), openSocket: deepgram.openSocket },
+    })
+    await collect(
+      client.transcribeLive({
+        model: { ...model, modelId: 'enhanced' },
+        audio: audio(),
+        sampleRate: 16_000,
+        hasApiKey: true,
+      })
+    )
+    expect(
+      new URL(deepgram.opened[0].url).searchParams.getAll('language')
+    ).toEqual(['en'])
+  })
+
+  it.each([
+    ['nova-3', true],
+    ['nova-3-medical', true],
+    ['nova-2', true],
+    ['nova-2-general', true],
+    ['nova-2-meeting', false],
+    ['whisper-large', false],
+  ])('knows whether %s takes multi', (modelId, expected) => {
+    expect(isDeepgramMultilingualModel(modelId)).toBe(expected)
   })
 
   it('reports a failed audio source as an error part', async () => {

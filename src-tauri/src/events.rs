@@ -78,6 +78,9 @@ desktop_events! {
     /// A repeated activation confirms the open voice input; carries its
     /// activation id.
     VoiceFinish = "app://voice-finish" => u64;
+    /// The held voice hotkey was released (Push-to-Talk); carries the
+    /// activation id. It ends a recording, never starts one.
+    VoiceRelease = "app://voice-release" => u64;
     VoiceAudioLevel = "app://voice-audio-level" => VoiceAudioLevelPayload;
     SelectionRun = "app://selection-run" => SelectionRunEvent;
     SelectionCancel = "app://selection-cancel" => SelectionCancelEvent;

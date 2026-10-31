@@ -90,6 +90,18 @@ export function isQuickWindowMode(mode: ActivationMode | null): boolean {
   return mode !== null && QUICK_WINDOW_MODES.has(mode)
 }
 
+/**
+ * Whether an activation of `mode` shows the window this code runs in. The
+ * desktop state is shared: its `isWindowShown` and `activationId` may belong to
+ * the other window.
+ */
+export function isModeOfWindow(
+  mode: ActivationMode | null,
+  isQuick: boolean
+): boolean {
+  return isQuickWindowMode(mode) === isQuick
+}
+
 export function resolveModeRoute(mode: ActivationMode | null): AppRoutePath {
   return mode ? MODE_ROUTE_MAP[mode] : APP_ROUTES.HOME.path
 }

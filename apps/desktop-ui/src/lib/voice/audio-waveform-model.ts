@@ -20,14 +20,40 @@ export function formatWaveformDuration(ms: number): string {
   return hours > 0 ? `${hours}:${clock}` : clock
 }
 
+/** How far the wave moves per frame of a 60 Hz display */
+const PHASE_PER_FRAME = 0.08
+const FRAME_MS = 1000 / 60
+/** A frame after a pause, e.g. in a hidden tab, moves no further than this */
+const MAX_FRAME_GAP_MS = 100
+
+/** What the bars show of the level, at most the full height */
+function effectiveLevelOf(level: number, peak: number): number {
+  const currentLevel = Math.max(0, Math.min(1, level))
+  const currentPeak = Math.max(0, Math.min(1, peak))
+  return Math.min(1, Math.max(currentLevel * 1.5, currentPeak * 0.8))
+}
+
 export function createAudioWaveformModel() {
   let phase = 0
+  let lastFrameMs: number | undefined
   let heights = new Array<number>(BAR_COUNT).fill(MIN_BAR_HEIGHT_PX)
-  function step(input: { level: number; peak: number; isCompact: boolean }) {
-    phase += 0.08
-    const currentLevel = Math.max(0, Math.min(1, input.level))
-    const currentPeak = Math.max(0, Math.min(1, input.peak))
-    const effectiveLevel = Math.max(currentLevel * 1.5, currentPeak * 0.8)
+  /**
+   * One frame at `timeMs`, the animation clock: the wave moves as fast on a 144
+   * Hz display as on a 60 Hz one. Without it every call is one frame.
+   */
+  function step(input: {
+    level: number
+    peak: number
+    isCompact: boolean
+    timeMs?: number
+  }) {
+    const gapMs =
+      input.timeMs === undefined || lastFrameMs === undefined
+        ? FRAME_MS
+        : Math.min(MAX_FRAME_GAP_MS, Math.max(0, input.timeMs - lastFrameMs))
+    lastFrameMs = input.timeMs
+    phase += (PHASE_PER_FRAME * gapMs) / FRAME_MS
+    const effectiveLevel = effectiveLevelOf(input.level, input.peak)
     const maxBarHeight = input.isCompact
       ? COMPACT_MAX_BAR_HEIGHT_PX
       : MAX_BAR_HEIGHT_PX
@@ -52,7 +78,11 @@ export function createAudioWaveformModel() {
           effectiveLevel *
           (maxBarHeight - MIN_BAR_HEIGHT_PX)
 
-      const targetHeight = Math.max(ambientHeight, voiceHeight)
+      // the modulation swings above 1: the bar still stops at its height
+      const targetHeight = Math.min(
+        maxBarHeight,
+        Math.max(ambientHeight, voiceHeight)
+      )
       const prevHeight = heights[i] || MIN_BAR_HEIGHT_PX
 
       // Fast attack, smooth decay
@@ -79,16 +109,13 @@ export function createAudioWaveformModel() {
     peak?: number
     isCompact: boolean
   }) {
-    const currentLevel = Math.max(0, Math.min(1, input.level))
-    const currentPeak = Math.max(0, Math.min(1, input.peak ?? 0))
-    const effectiveLevel = Math.max(currentLevel * 1.5, currentPeak * 0.8)
+    const effectiveLevel = effectiveLevelOf(input.level, input.peak ?? 0)
     const maxBarHeight = input.isCompact
       ? COMPACT_MAX_BAR_HEIGHT_PX
       : MAX_BAR_HEIGHT_PX
 
     const height = Math.round(
-      MIN_BAR_HEIGHT_PX +
-        Math.min(1, effectiveLevel) * (maxBarHeight - MIN_BAR_HEIGHT_PX)
+      MIN_BAR_HEIGHT_PX + effectiveLevel * (maxBarHeight - MIN_BAR_HEIGHT_PX)
     )
     const opacity = effectiveLevel > 0.03 ? 0.8 : 0.4
     return {

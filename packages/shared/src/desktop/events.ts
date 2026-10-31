@@ -16,6 +16,8 @@ export const DESKTOP_EVENTS = {
   ACTIVATION_METRICS_COLLECT: 'app://activation-metrics-collect',
   /** A repeated activation confirms the open voice input; carries its id */
   VOICE_FINISH: 'app://voice-finish',
+  /** The held voice hotkey was released; carries the activation id */
+  VOICE_RELEASE: 'app://voice-release',
   VOICE_AUDIO_LEVEL: 'app://voice-audio-level',
   SELECTION_RUN: 'app://selection-run',
   SELECTION_CANCEL: 'app://selection-cancel',

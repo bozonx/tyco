@@ -38,4 +38,23 @@ describe('audio waveform model', () => {
     expect(firstHeight).toBeGreaterThan(4)
     expect(frame.opacities.every((o) => o === 0.8)).toBe(true)
   })
+  it('never grows a bar past its full height, however loud', () => {
+    const model = createAudioWaveformModel()
+    for (let index = 0; index < 60; index++) {
+      const frame = model.step({ level: 1, peak: 1, isCompact: false })
+      expect(Math.max(...frame.heights)).toBeLessThanOrEqual(72)
+    }
+  })
+  it('moves the wave by elapsed time, not by frame count', () => {
+    // two 120 Hz frames cover what one 60 Hz frame does
+    const fast = createAudioWaveformModel()
+    const slow = createAudioWaveformModel()
+    const input = { level: 0, peak: 0, isCompact: true }
+    fast.step({ ...input, timeMs: 0 })
+    slow.step({ ...input, timeMs: 0 })
+    fast.step({ ...input, timeMs: 1000 / 120 })
+    const fastFrame = fast.step({ ...input, timeMs: 1000 / 60 })
+    const slowFrame = slow.step({ ...input, timeMs: 1000 / 60 })
+    expect(fastFrame.opacities).toEqual(slowFrame.opacities)
+  })
 })

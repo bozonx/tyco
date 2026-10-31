@@ -100,13 +100,14 @@ function applyStaticLevel() {
   barOpacities.value = frame.opacities
 }
 
-function updateAnimation() {
+function updateAnimation(timeMs?: number) {
   animationFrameId = null
   if (props.isTranscribing || isReducedMotion.value) return
   const frame = model.step({
     level: props.level,
     peak: props.peak,
     isCompact: props.compact,
+    timeMs,
   })
   barHeights.value = frame.heights
   barOpacities.value = frame.opacities

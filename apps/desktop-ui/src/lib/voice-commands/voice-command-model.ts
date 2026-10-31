@@ -4,7 +4,7 @@ import { computed, ref, shallowRef } from 'vue'
 import type { CommandConfig } from '@tyco/shared'
 import type { InvocationOutcome } from '../invocation/invocation-types'
 import type { DictationHandlers } from '../stt/dictation-controller'
-import { dictationErrorKey } from '../stt/live-dictation'
+import { type DictationError, dictationErrorKey } from '../stt/dictation-error'
 import {
   createLiveTranscriptState,
   liveTranscriptText,
@@ -42,6 +42,8 @@ export interface VoiceCommandDependencies extends TimerDependencies {
   ) => Promise<InvocationOutcome>
   /** The recognized speech, kept in the history before anything runs */
   saveTranscript?: (text: string) => Promise<unknown>
+  /** A dictation failure with its details, in the user's language */
+  describeError?: (cause: unknown) => string
   /** Silence is billed too: a forgotten recording must not run all day */
   maxRecordingMs?: number
   silenceTimeoutMs?: number
@@ -50,7 +52,7 @@ export interface VoiceCommandDependencies extends TimerDependencies {
 
 /** Why a recording stopped by itself, as message keys */
 const AUTO_STOP_ERRORS: Record<AutoStopReason, string> = {
-  limit: 'voiceCommands.recordingLimitReached',
+  limit: 'toast.recordingLimitReached',
   silence: 'toast.recordingSilenceStop',
 }
 
@@ -58,11 +60,16 @@ const AUTO_STOP_ERRORS: Record<AutoStopReason, string> = {
  * The text of `error`: a message key for failures the app describes itself,
  * which the view translates, or the error's own message
  */
-function errorText(cause: unknown): string {
-  return (
-    dictationErrorKey(cause) ??
-    (cause instanceof Error ? cause.message : String(cause))
-  )
+function errorText(
+  cause: unknown,
+  describe?: (cause: unknown) => string
+): string {
+  const key = dictationErrorKey(cause)
+  // a failure with details is told with them: the view cannot add them to
+  // a bare key
+  if (key && !(cause as DictationError).details) return key
+  if (key && describe) return describe(cause)
+  return cause instanceof Error ? cause.message : String(cause)
 }
 
 /** Whether a finished recording runs its command at once or waits for review */
@@ -223,7 +230,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       // Keep the transcript and input, including after a successful run.
     } catch (cause) {
       if (current !== generation || disposed) return
-      error.value = errorText(cause)
+      error.value = errorText(cause, deps.describeError)
     } finally {
       if (current === generation && !disposed) {
         controller = undefined
@@ -239,14 +246,23 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     error.value = ''
   }
 
+  /** The same command with the same parameters */
+  const isSameCall = (a: VoiceCandidate, b: VoiceCandidate | undefined) =>
+    Boolean(b) &&
+    a.commandId === b!.commandId &&
+    JSON.stringify(a.parameters) === JSON.stringify(b!.parameters)
+
   /**
    * Settles a recording on its text and picks the command it names. A session
-   * that broke is never run on its own: its text may be cut short.
+   * that broke is never run on its own: its text may be cut short. Only the
+   * command the user saw recognized when asking to run runs on its own: the
+   * final transcript may name another one.
    */
   const review = async (
     text: string,
     intent: VoiceCommandFinishIntent,
-    brokenBy?: string
+    brokenBy?: string,
+    expected?: VoiceCandidate
   ) => {
     transcript.value = text
     liveTranscript.value = { committed: text, draft: '' }
@@ -260,6 +276,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       if (
         !brokenBy &&
         intent === 'run' &&
+        isSameCall(candidate, expected) &&
         !candidate.commandOffset &&
         canRun.value
       )
@@ -273,6 +290,8 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
 
   const finish = async (intent: VoiceCommandFinishIntent = 'run') => {
     if (stage.value !== 'recording') return
+    // what the user asked to run, as shown when they asked
+    const expected = canRunLive.value ? activeCandidate.value : undefined
     voiceSession.stopTimer()
     stage.value = 'finishing'
     const current = generation
@@ -290,10 +309,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       // the only copy of what was said: it cannot be dictated the same way
       // twice, and the review may end without running anything
       void deps.saveTranscript?.(finalText).catch(() => undefined)
-      await review(finalText, intent, interruption)
+      await review(finalText, intent, interruption, expected)
     } catch (cause) {
       if (current !== generation || disposed) return
-      error.value = errorText(cause)
+      error.value = errorText(cause, deps.describeError)
       stage.value = 'review'
     }
   }
@@ -335,7 +354,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
           if (current !== generation || disposed) return
           // `finish` still gets what was heard before the failure
           if (stage.value === 'finishing') {
-            interruption = errorText(cause)
+            interruption = errorText(cause, deps.describeError)
             return
           }
           generation += 1
@@ -346,10 +365,10 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
           const heard = liveTranscriptText(liveTranscript.value)
           if (heard.trim()) {
             void deps.saveTranscript?.(heard).catch(() => undefined)
-            void review(heard, 'review', errorText(cause))
+            void review(heard, 'review', errorText(cause, deps.describeError))
             return
           }
-          error.value = errorText(cause)
+          error.value = errorText(cause, deps.describeError)
           stage.value = 'review'
         },
       })
@@ -357,7 +376,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       .catch((cause: unknown) => {
         if (current !== generation || disposed) return
         voiceSession.abort()
-        error.value = errorText(cause)
+        error.value = errorText(cause, deps.describeError)
         stage.value = 'review'
       })
       .finally(() => {
