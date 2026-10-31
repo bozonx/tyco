@@ -227,6 +227,7 @@ import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
+import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
 import { createProfileEditor } from '../../lib/ai-profiles/profile-editor'
 import {
@@ -397,9 +398,7 @@ function setProjectAccess(
   })
 }
 
-onBeforeUnmount(() => {
-  void editor.flush()
-})
+useSettingsDraft(editor.flush)
 
 // ---------------------------------------------------------------------------
 // Folder

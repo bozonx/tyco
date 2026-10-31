@@ -22,10 +22,16 @@ Components are grouped by feature (`chat`, `editor`, `history`, `quick`,
 Settings tabs edit a draft owned by `createSettingsSession`, not persisted
 state. The four tabs that deliberately mutate that draft have explicit local
 ESLint exceptions. Config normalization and autosave are separate tested models.
-Saves send both the edited config and its baseline. Rust merges independently
-changed fields under the config lock and rejects concurrent conflicting edits
-(including arrays). A rejected save preserves the draft; reopening settings
-loads the current config. New edits during a save are rebased onto its result.
+Saves send the local edits applied to the stored baseline, and the baseline;
+what only the webview fills in (plugin defaults) is not written unchanged.
+Rust merges independently changed fields under the config lock and rejects
+concurrent conflicting edits (including arrays). A rejected save preserves the
+draft. A conflict pauses the autosave until the user keeps their values or takes
+the other window's ones for the conflicting fields; other local edits stay
+either way, and only "Reload" discards them. New edits during a save are rebased
+onto its result. The session follows the stored config (`savedUserConfig`), not
+the config an external run brings. On exit the webview flushes the config and
+every draft registered with `registerDraft` (AI profiles and projects).
 
 ## Backend and trust boundaries
 

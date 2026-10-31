@@ -16,7 +16,7 @@ import { syncI18nLocale } from '../lib/i18n'
 import { syncDocumentLanguageAttributes } from '../lib/locale/language'
 import { clientLogger } from '../lib/logger'
 import { appNavigation } from '../navigation'
-import { isQuickWindowMode } from '../lib/navigation/routes'
+import { APP_ROUTES, isQuickWindowMode } from '../lib/navigation/routes'
 import { createSettingsShutdown } from '../lib/settings/settings-shutdown'
 import { useChatStore } from '../stores/chat'
 import { useChatInputStore } from '../stores/chat-input'
@@ -64,16 +64,8 @@ export function useAppRuntime() {
   const { toastKey } = useToast()
   const settingsShutdown = createSettingsShutdown({
     flush: async () => {
-      const session = useSettingsSessionStore()
-      await session.persist()
-      if (!session.hasUnsavedChanges) {
-        try {
-          await desktopStore.loadDesktopState()
-        } catch {
-          // Keep saved status if desktop state query fails on shutdown
-        }
-      }
-      return session.isSaved()
+      // every draft: the config and those kept apart, e.g. of an AI profile
+      return await useSettingsSessionStore().flushAll()
     },
     acknowledge: async (requestId, saved) => {
       const result = await desktopClient.invoke(
@@ -82,7 +74,14 @@ export function useAppRuntime() {
       )
       if (!result.success) throw new Error(result.error)
     },
-    notifyError: () => toastKey('settings.shutdownCancelled', 'error'),
+    notifyError: () => {
+      // the main window shows the settings that block the exit; the quick
+      // window has none to show
+      if (isQuickWindow) return
+      toastKey('settings.shutdownCancelled', 'error')
+      if (!appNavigation.isCurrent(APP_ROUTES.CONFIG.path))
+        void appNavigation.goToConfig()
+    },
   })
   // The benchmark activates the write mode only. Tauri delivers its events to
   // every window, and an answer from the main window would race the real one

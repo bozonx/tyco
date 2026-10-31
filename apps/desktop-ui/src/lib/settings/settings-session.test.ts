@@ -255,7 +255,7 @@ describe('settings concurrency and recovery', () => {
     expect(model.conflicts.value).toEqual(['appearance.theme'])
     await model.persist()
     expect(deps.save).not.toHaveBeenCalled()
-    model.resolveConflicts(true)
+    model.resolveConflicts('mine')
     await model.persist()
     expect(model.draft.value).toMatchObject({
       appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
@@ -379,10 +379,108 @@ describe('settings concurrency and recovery', () => {
       commands: [cmd1, { ...cmd2, name: 'Second Remote' }],
     })
     expect(model.conflicts.value).toEqual([])
-    model.resolveConflicts(true)
+    model.resolveConflicts('mine')
     expect(model.draft.value.commands).toEqual([
       expect.objectContaining({ id: 'cmd1', name: 'First Modified' }),
       expect.objectContaining({ id: 'cmd2', name: 'Second Remote' }),
     ])
+  })
+})
+
+describe('settings conflicts and failures shown to the user', () => {
+  const remote = (theme: 'light' | 'dark', ui = 'ru-RU') => ({
+    ...config(),
+    appearance: { ...DEFAULT_USER_CONFIG.appearance, theme },
+    language: { ...DEFAULT_USER_CONFIG.language, ui },
+  })
+
+  it('tells once that a conflict pauses the autosave', () => {
+    const notifyConflict = vi.fn()
+    const { model } = setup({ notifyConflict })
+    model.draft.value.appearance.theme = 'dark'
+    model.applyIncoming(remote('light'))
+    model.schedule()
+    model.applyIncoming(remote('light', 'de-DE'))
+    expect(model.conflicts.value).toEqual(['appearance.theme'])
+    expect(notifyConflict).toHaveBeenCalledOnce()
+  })
+
+  it('takes the other window value for a conflict and keeps other local edits', async () => {
+    const { model, deps } = setup()
+    model.draft.value.appearance.theme = 'dark'
+    model.draft.value.editor.submitKey = 'Ctrl+Enter'
+    model.applyIncoming(remote('light'))
+    model.resolveConflicts('theirs')
+    expect(model.conflicts.value).toEqual([])
+    expect(model.draft.value.appearance.theme).toBe('light')
+    expect(model.draft.value.editor.submitKey).toBe('Ctrl+Enter')
+    expect(model.draft.value.language.ui).toBe('ru-RU')
+    await model.persist()
+    expect(deps.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        appearance: expect.objectContaining({ theme: 'light' }),
+        editor: expect.objectContaining({ submitKey: 'Ctrl+Enter' }),
+      }),
+      expect.objectContaining({
+        language: { ...DEFAULT_USER_CONFIG.language, ui: 'ru-RU' },
+      })
+    )
+  })
+
+  it('reload discards every local edit', async () => {
+    const { model } = setup({ loadConfig: async () => remote('light') })
+    model.draft.value.appearance.theme = 'dark'
+    model.draft.value.editor.submitKey = 'Ctrl+Enter'
+    await model.reload()
+    expect(model.draft.value.editor.submitKey).toBe(
+      DEFAULT_USER_CONFIG.editor.submitKey
+    )
+    expect(model.draft.value.appearance.theme).toBe('light')
+    expect(model.reloadCount.value).toBe(1)
+  })
+
+  it('does not bring back an entity removed in another window', () => {
+    const { model } = setup()
+    const base = config().commands[0]!
+    const first = { ...base, id: 'first', name: 'First' }
+    const second = { ...base, id: 'second', name: 'Second' }
+    model.applyIncoming({ ...config(), commands: [first, second] })
+    model.draft.value.commands = [{ ...first, name: 'Edited' }, second]
+    model.applyIncoming({ ...config(), commands: [first] })
+    model.resolveConflicts('mine')
+    expect(model.draft.value.commands.map((item) => item.id)).toEqual(['first'])
+    expect(model.draft.value.commands[0]?.name).toBe('Edited')
+  })
+
+  it('tells a repeated failure once', async () => {
+    const save = vi
+      .fn<SettingsSessionDependencies['save']>()
+      .mockResolvedValue({
+        success: false,
+        error: 'Invalid',
+        errorCode: 'invalidInput',
+      })
+    const { model, deps } = setup({ save })
+    model.draft.value.appearance.theme = 'dark'
+    await model.persist()
+    model.draft.value.appearance.theme = 'light'
+    await model.persist()
+    expect(save).toHaveBeenCalledTimes(2)
+    expect(deps.notifyError).toHaveBeenCalledOnce()
+    expect(model.saveError.value).toBe('Invalid')
+  })
+
+  it('sends only local edits, not what the webview alone fills in', async () => {
+    // the webview adds a field the stored config does not have
+    const prepare = (value: unknown) => ({
+      ...(JSON.parse(JSON.stringify(value)) as UserConfig),
+      plugins: { example: { isEnabled: false, settings: { a: 1 } } },
+    })
+    const { model, deps } = setup({ prepare })
+    model.draft.value.appearance.theme = 'dark'
+    await model.persist()
+    const [next] = vi.mocked(deps.save).mock.calls[0]!
+    expect(next.appearance.theme).toBe('dark')
+    expect(next.plugins).toEqual(DEFAULT_USER_CONFIG.plugins)
   })
 })

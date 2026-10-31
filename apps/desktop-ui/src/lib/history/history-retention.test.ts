@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   historyRetentionChoices,
   historyRetentionOptions,
+  isStricterRetention,
 } from './history-retention'
 
 describe('history retention choices', () => {
@@ -24,5 +25,16 @@ describe('history retention options', () => {
       { id: 0, name: 'Forever' },
       { id: 7, name: '7 days' },
     ])
+  })
+})
+
+describe('stricter retention', () => {
+  it('is a shorter period, or any period after keeping forever', () => {
+    expect(isStricterRetention(undefined, 30)).toBe(true)
+    expect(isStricterRetention(0, 7)).toBe(true)
+    expect(isStricterRetention(30, 7)).toBe(true)
+    expect(isStricterRetention(7, 30)).toBe(false)
+    expect(isStricterRetention(30, 30)).toBe(false)
+    expect(isStricterRetention(30, 0)).toBe(false)
   })
 })

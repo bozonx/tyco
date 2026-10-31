@@ -1,5 +1,5 @@
 <template>
-  <div class="secret-key-field">
+  <div class="secret-key-field" @keydown.enter.prevent="saveTyped">
     <FieldInput
       class="flex-1"
       type="password"
@@ -31,13 +31,13 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 
-defineProps<{
+const props = defineProps<{
   modelValue: string
   hasKey: boolean
   save: () => Promise<void>
@@ -55,6 +55,12 @@ async function run(action: () => Promise<void>) {
     isBusy.value = false
   }
 }
+function saveTyped() {
+  if (props.modelValue.trim()) void run(props.save)
+}
+// everything else on the page saves itself: a typed key is not lost by
+// leaving the page before pressing Save
+onBeforeUnmount(saveTyped)
 </script>
 <style scoped>
 .secret-key-field {

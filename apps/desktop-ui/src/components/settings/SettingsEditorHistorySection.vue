@@ -16,19 +16,28 @@
         :label="t('settings.editorHistoryStorage')"
         :info="t('settings.editorHistoryStorageHint')"
       >
-        <FieldSelect v-model="history.storage" :options="storageOptions" />
+        <FieldSelect
+          :model-value="history.storage"
+          :options="storageOptions"
+          @update:model-value="setStorage"
+        />
       </FieldRow>
       <div v-if="history.storage !== 'off'" class="history-nested">
         <FieldRow
           :label="t('settings.editorHistoryMaxItems')"
           nested
           :separator="false"
+          :error="
+            isLimitInvalid ? t('settings.numberTokensInvalid') : undefined
+          "
         >
           <FieldNumber
             :min="1"
             :step="1"
             :model-value="history.maxItems"
+            :aria-invalid="isLimitInvalid || undefined"
             @update:model-value="setLimit"
+            @invalid-input="isLimitInvalid = true"
           />
         </FieldRow>
         <template v-if="history.storage === 'disk'">
@@ -68,6 +77,16 @@
       @confirm="onClear"
       @cancel="showClearModal = false"
     />
+
+    <ConfirmModal
+      :open="pendingChange !== null"
+      :title="t('settings.historyDeleteConfirmTitle')"
+      :message="pendingChange?.message ?? ''"
+      :confirm-text="t('common.delete')"
+      danger
+      @confirm="confirmChange"
+      @cancel="pendingChange = null"
+    />
   </SettingsSection>
 </template>
 
@@ -78,7 +97,10 @@ import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import useToast from '../../composables/use-toast'
 import { editorHistoryRetentionChoices } from '../../lib/history/editor-history-storage'
-import { historyRetentionOptions } from '../../lib/history/history-retention'
+import {
+  historyRetentionOptions,
+  isStricterRetention,
+} from '../../lib/history/history-retention'
 import { toHtmlLang } from '../../lib/locale/language'
 import { useHistoryStore } from '../../stores/history'
 import Button from '../common/Button.vue'
@@ -104,17 +126,53 @@ async function onClear() {
   toastKey('history.cleared', 'info')
 }
 
+/** What is typed is not a limit: the stored one stays, and the field says so */
+const isLimitInvalid = ref(false)
+
 function setLimit(value: string) {
   const parsed = Number(value)
-  if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 1) return
-  history.value.maxItems = Math.round(parsed)
+  isLimitInvalid.value =
+    value.trim() === '' || !Number.isInteger(parsed) || parsed < 1
+  if (isLimitInvalid.value) return
+  history.value.maxItems = parsed
+}
+
+/** A change that deletes stored entries waits for the user to confirm it */
+const pendingChange = ref<{ message: string; apply: () => void } | null>(null)
+
+function confirmChange() {
+  pendingChange.value?.apply()
+  pendingChange.value = null
+}
+
+function setStorage(value: string | number | undefined) {
+  if (value !== 'disk' && value !== 'session' && value !== 'off') return
+  const apply = () => {
+    history.value.storage = value
+  }
+  if (value === 'off' && history.value.storage !== 'off') {
+    pendingChange.value = {
+      message: t('settings.editorHistoryOffConfirm'),
+      apply,
+    }
+  } else apply()
 }
 
 function setRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  if (parsed === 0) delete history.value.retentionDays
-  else history.value.retentionDays = parsed
+  const apply = () => {
+    if (parsed === 0) delete history.value.retentionDays
+    else history.value.retentionDays = parsed
+  }
+  if (isStricterRetention(history.value.retentionDays, parsed)) {
+    const period =
+      retentionOptions.value.find((option) => option.id === parsed)?.name ?? ''
+    pendingChange.value = {
+      message: t('settings.editorHistoryRetentionConfirm', { period }),
+      apply,
+    }
+  } else apply()
 }
 
 const storageOptions = computed(() => [

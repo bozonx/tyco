@@ -67,3 +67,20 @@ describe('settings session ownership', () => {
     expect(desktop.backend.userConfig.appearance.theme).toBe('dark')
   })
 })
+
+describe('settings drafts on exit', () => {
+  it('saves the config and every registered draft, and tells a failed one', async () => {
+    const session = useSettingsSessionStore()
+    const profile = vi.fn(async () => true)
+    const unregister = session.registerDraft(profile)
+    expect(await session.flushAll()).toBe(true)
+    expect(profile).toHaveBeenCalledOnce()
+    const failing = vi.fn(async () => {
+      throw new Error('Unavailable')
+    })
+    session.registerDraft(failing)
+    expect(await session.flushAll()).toBe(false)
+    unregister()
+    expect(profile).toHaveBeenCalledTimes(2)
+  })
+})

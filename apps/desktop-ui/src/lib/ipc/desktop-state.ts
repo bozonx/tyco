@@ -28,12 +28,16 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
       Boolean(desktopState.value.windowId) ||
       insertionStatus.value?.target === 'focusReturn'
   )
+  // the config of the last snapshot: a run with its own config never
+  // changes what the settings edit and save over
+  const savedUserConfig = ref<UserConfig>(desktopState.value.userConfig)
   let loaded = !deps.desktopClient.isAvailable()
   let sessionStateWrites: Promise<unknown> = Promise.resolve()
 
   const applyViewState = (incoming: DesktopViewState) => {
     if (incoming.revision < desktopState.value.revision) return false
     desktopState.value = incoming
+    savedUserConfig.value = incoming.userConfig
     loaded = true
     return true
   }
@@ -72,7 +76,7 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
 
   const saveUserConfig = async (
     userConfig: UserConfig,
-    baseConfig: UserConfig = desktopState.value.userConfig
+    baseConfig: UserConfig = savedUserConfig.value
   ) => {
     if (!loaded) return notLoaded()
     const response = await deps.call('save_user_config', {
@@ -81,12 +85,12 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     })
     if (!response.success) return response
     applySnapshot(response.result)
-    return { success: true as const, result: desktopState.value.userConfig }
+    return { success: true as const, result: savedUserConfig.value }
   }
 
-  /** Stores the fields of `patch` over the current config */
+  /** Stores the fields of `patch` over the saved config */
   const updateUserConfig = (patch: Partial<UserConfig>) =>
-    saveUserConfig({ ...desktopState.value.userConfig, ...patch })
+    saveUserConfig({ ...savedUserConfig.value, ...patch })
 
   const patchSessionState = (patch: Partial<SessionState>) => {
     if (!loaded) return Promise.resolve(notLoaded())
@@ -123,6 +127,8 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     canInsertIntoWindow,
     desktopState,
     userConfig: computed(() => desktopState.value.userConfig),
+    /** The stored config, without the config of a run in progress */
+    savedUserConfig: computed(() => savedUserConfig.value),
     sessionState: computed(() => desktopState.value.sessionState),
     updateUserConfig,
     applyViewState,

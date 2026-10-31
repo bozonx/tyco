@@ -305,7 +305,7 @@ function cycleCorrectionMode() {
   // the patch is shallow: keep the other quick window settings as they are
   void desktopStore.updateUserConfig({
     quickWindow: {
-      ...desktopStore.userConfig.quickWindow,
+      ...desktopStore.savedUserConfig.quickWindow,
       correctionMode: next,
     },
   })

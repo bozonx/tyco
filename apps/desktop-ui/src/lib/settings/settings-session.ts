@@ -12,8 +12,7 @@ const FIRST_SAVE_RETRY_MS = 1000
 const RETRYABLE_SAVE_ERRORS: readonly DesktopErrorCode[] = [
   'ioError',
   'serviceUnavailable',
-  'runtimeError',
-  'operationFailed',
+  'busy',
 ]
 
 export interface SettingsSessionDependencies {
@@ -21,7 +20,10 @@ export interface SettingsSessionDependencies {
   prepare: (config: unknown) => UserConfig
   save: (next: UserConfig, base: UserConfig) => Promise<IpcResult<UserConfig>>
   canSave: () => boolean
+  /** Told once per distinct failure; repeated attempts stay quiet */
   notifyError: (message: string) => void
+  /** Told when edits from another window start blocking the autosave */
+  notifyConflict?: () => void
   debounceMs: number
   getLatestConfig?: () => UserConfig
   loadConfig?: () => Promise<UserConfig>
@@ -45,9 +47,19 @@ function asEntities(
   return map
 }
 
-/** Reapplies local edits over a newer config; entity collections merge by id. */
-function rebase(saved: unknown, submitted: unknown, draft: unknown): unknown {
+/**
+ * Reapplies local edits (`submitted` → `draft`) over a newer config `saved`;
+ * entity collections merge by id. A field changed on both sides keeps the local
+ * value, or the saved one with `preferSaved`
+ */
+function rebase(
+  saved: unknown,
+  submitted: unknown,
+  draft: unknown,
+  preferSaved = false
+): unknown {
   if (equal(submitted, draft)) return saved
+  if (equal(submitted, saved)) return draft
   const savedEntities = asEntities(saved)
   const submittedEntities = asEntities(submitted)
   const draftEntities = asEntities(draft)
@@ -55,32 +67,44 @@ function rebase(saved: unknown, submitted: unknown, draft: unknown): unknown {
     const draftArray = draft as Record<string, unknown>[]
     const savedArray = saved as Record<string, unknown>[]
     const draftIds = new Set(draftArray.map((item) => String(item.id)))
-    const merged = draftArray.map((item) => {
+    const merged = draftArray.flatMap((item) => {
       const id = String(item.id)
       const savedItem = savedEntities.get(id)
       const submittedItem = submittedEntities.get(id)
       if (savedItem && submittedItem) {
-        return rebase(savedItem, submittedItem, item)
+        return [rebase(savedItem, submittedItem, item, preferSaved)]
       }
-      return item
+      // removed elsewhere: gone unless edited here (and kept on a conflict)
+      if (submittedItem && (preferSaved || equal(submittedItem, item))) {
+        return []
+      }
+      return [item]
     })
     for (const savedItem of savedArray) {
       const id = String(savedItem.id)
-      if (!draftIds.has(id) && !submittedEntities.has(id)) {
+      if (draftIds.has(id)) continue
+      const submittedItem = submittedEntities.get(id)
+      // added elsewhere, or removed here while changed elsewhere
+      if (!submittedItem || (preferSaved && !equal(submittedItem, savedItem))) {
         merged.push(savedItem)
       }
     }
     return merged
   }
-  if (!object(saved) || !object(submitted) || !object(draft)) return draft
+  if (!object(saved) || !object(submitted) || !object(draft)) {
+    return preferSaved ? saved : draft
+  }
   const result = { ...saved }
   for (const key of new Set([
     ...Object.keys(submitted),
     ...Object.keys(draft),
   ])) {
     if (equal(submitted[key], draft[key])) continue
-    if (!Object.hasOwn(draft, key)) delete result[key]
-    else result[key] = rebase(saved[key], submitted[key], draft[key])
+    if (!Object.hasOwn(draft, key)) {
+      if (!preferSaved || equal(submitted[key], saved[key])) delete result[key]
+    } else {
+      result[key] = rebase(saved[key], submitted[key], draft[key], preferSaved)
+    }
   }
   return result
 }
@@ -138,6 +162,10 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
   let savedDraft = deps.prepare(baseline)
   const draft = ref<UserConfig>(clone(savedDraft))
   const latestConfig = ref<UserConfig>(clone(baseline))
+  // the prepared latest config and whether it differs from what was edited
+  // from: most edits are checked for conflicts without walking the config
+  let preparedLatest = savedDraft
+  let hasRemoteChanges = false
   const isSaving = ref(false)
   const saveError = ref('')
   const conflicts = ref<string[]>([])
@@ -147,29 +175,51 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
   let pending: Promise<void> | undefined
   let retryCount = 0
   let isApplying = false
-  const isSaved = () => equal(deps.prepare(draft.value), savedDraft)
+  const prepareDraft = () => deps.prepare(draft.value)
+  const isSaved = (prepared = prepareDraft()) => equal(prepared, savedDraft)
   const hasUnsavedChanges = computed(() => !isSaved())
-  const refreshConflicts = () => {
-    conflicts.value = findConflicts(
-      deps.prepare(latestConfig.value),
-      savedDraft,
-      deps.prepare(draft.value)
+  const setLatest = (config: UserConfig) => {
+    latestConfig.value = clone(config)
+    preparedLatest = deps.prepare(config)
+    hasRemoteChanges = !equal(preparedLatest, savedDraft)
+  }
+  const setBaseline = (config: UserConfig) => {
+    baseline = clone(config)
+    savedDraft = deps.prepare(baseline)
+    setLatest(config)
+  }
+  const setConflicts = (next: string[]) => {
+    const hadConflicts = conflicts.value.length > 0
+    conflicts.value = next
+    if (!hadConflicts && next.length) deps.notifyConflict?.()
+  }
+  const refreshConflicts = (prepared = prepareDraft()) => {
+    setConflicts(
+      hasRemoteChanges
+        ? findConflicts(preparedLatest, savedDraft, prepared)
+        : []
     )
   }
+  /**
+   * What is sent: the local edits applied to the stored config, so that what
+   * only the webview fills in, e.g. plugin defaults, is not written unchanged
+   */
+  const toPayload = (prepared: UserConfig) =>
+    clone(rebase(baseline, savedDraft, prepared)) as UserConfig
   const applyIncoming = (incoming: UserConfig) => {
-    latestConfig.value = clone(incoming)
     if (isSaving.value || !isSaved()) {
+      setLatest(incoming)
       refreshConflicts()
       return
     }
-    baseline = clone(incoming)
-    savedDraft = deps.prepare(baseline)
+    setBaseline(incoming)
     draft.value = clone(savedDraft)
     conflicts.value = []
   }
   const reportFailure = (message: string, code?: DesktopErrorCode) => {
+    // the same failure again, e.g. on the next keystroke, is shown already
+    if (saveError.value !== message) deps.notifyError(message)
     saveError.value = message
-    deps.notifyError(message)
     if (
       active &&
       retryCount < MAX_SAVE_RETRIES &&
@@ -185,20 +235,26 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
       )
     }
   }
+  const canPersist = () => {
+    if (!deps.canSave()) return false
+    const prepared = prepareDraft()
+    if (isSaved(prepared)) return false
+    refreshConflicts(prepared)
+    return !conflicts.value.length
+  }
   const persist = (): Promise<void> => {
     clearTimeout(timer)
     timer = undefined
     if (pending) return pending
-    if (!deps.canSave() || isSaved() || conflicts.value.length)
-      return Promise.resolve()
+    if (!canPersist()) return Promise.resolve()
     isSaving.value = true
     // Read the draft at execution time and drain edits made during the write.
     // There is never a queue of obsolete snapshots with destructive policies.
     pending = Promise.resolve().then(async () => {
       try {
-        while (deps.canSave() && !isSaved() && !conflicts.value.length) {
-          const submitted = clone(deps.prepare(draft.value))
-          const result = await deps.save(submitted, clone(baseline))
+        while (canPersist()) {
+          const submitted = clone(prepareDraft())
+          const result = await deps.save(toPayload(submitted), clone(baseline))
           if (!result.success) {
             if (result.errorCode === 'configConflict' && deps.loadConfig) {
               try {
@@ -212,9 +268,7 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
           }
           const saved = deps.getLatestConfig?.() ?? result.result
           const rawDraft = clone(draft.value)
-          baseline = clone(saved)
-          latestConfig.value = clone(saved)
-          savedDraft = deps.prepare(saved)
+          setBaseline(saved)
           isApplying = true
           // Preserve unfinished UI values while adopting backend updates.
           // A copy: the rebase shares objects with `savedDraft`, and an edit
@@ -240,24 +294,19 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
     if (isApplying) return
     clearTimeout(timer)
     timer = undefined
-    refreshConflicts()
-    if (!isSaving.value && isSaved()) {
+    const prepared = prepareDraft()
+    refreshConflicts(prepared)
+    if (!isSaving.value && isSaved(prepared)) {
       saveError.value = ''
       retryCount = 0
-      if (!equal(deps.prepare(latestConfig.value), savedDraft)) {
+      if (hasRemoteChanges) {
         isApplying = true
         applyIncoming(latestConfig.value)
         isApplying = false
       }
       return
     }
-    if (
-      !active ||
-      isSaved() ||
-      conflicts.value.length ||
-      isSaving.value ||
-      !deps.canSave()
-    )
+    if (!active || conflicts.value.length || isSaving.value || !deps.canSave())
       return
     retryCount = 0
     timer = setTimeout(() => {
@@ -265,25 +314,32 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
       void persist()
     }, deps.debounceMs)
   }
-  const resolveConflicts = (keepLocalEdits: boolean) => {
-    if (isSaving.value) return
-    const incoming = deps.getLatestConfig?.() ?? latestConfig.value
-    const next = keepLocalEdits
-      ? rebase(deps.prepare(incoming), savedDraft, draft.value)
-      : deps.prepare(incoming)
-    baseline = clone(incoming)
-    latestConfig.value = clone(incoming)
-    savedDraft = deps.prepare(incoming)
+  const adopt = (incoming: UserConfig, next: unknown) => {
+    setBaseline(incoming)
     draft.value = clone(next as UserConfig)
     conflicts.value = []
     saveError.value = ''
     retryCount = 0
-    if (!keepLocalEdits) reloadCount.value++
   }
+  /**
+   * Settles the fields changed in both windows: `mine` keeps the local values,
+   * `theirs` takes the other window's. Every other local edit stays either way
+   */
+  const resolveConflicts = (keep: 'mine' | 'theirs') => {
+    if (isSaving.value) return
+    const incoming = deps.getLatestConfig?.() ?? latestConfig.value
+    adopt(
+      incoming,
+      rebase(deps.prepare(incoming), savedDraft, draft.value, keep === 'theirs')
+    )
+  }
+  /** Drops every local edit and shows the stored settings */
   const reload = async () => {
     if (isSaving.value) return
-    if (deps.loadConfig) applyIncoming(await deps.loadConfig())
-    resolveConflicts(false)
+    if (deps.loadConfig) setLatest(await deps.loadConfig())
+    const incoming = deps.getLatestConfig?.() ?? latestConfig.value
+    adopt(incoming, deps.prepare(incoming))
+    reloadCount.value++
   }
   const dispose = () => {
     active = false
@@ -304,6 +360,6 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
     resolveConflicts,
     reload,
     dispose,
-    isSaved,
+    isSaved: () => isSaved(),
   }
 }

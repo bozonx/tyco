@@ -287,3 +287,28 @@ describe('insertion capability', () => {
     expect(model.canInsertIntoWindow.value).toBe(true)
   })
 })
+
+describe('saved config', () => {
+  it('keeps the stored config apart from the config of a run', async () => {
+    const { model, call } = setup()
+    await model.loadDesktopState()
+    const stored = model.savedUserConfig.value
+    const runConfig = {
+      ...(JSON.parse(JSON.stringify(stored)) as typeof stored),
+      editor: { ...stored.editor, submitKey: 'Ctrl+Enter' as const },
+    }
+    model.setExecutionConfig(runConfig)
+    expect(model.userConfig.value.editor.submitKey).toBe('Ctrl+Enter')
+    expect(model.savedUserConfig.value).toBe(stored)
+    // a patch is stored over the saved config, never over the run's one
+    await model.updateUserConfig({ aiVault: { path: '/vault' } })
+    const [, args] = call.mock.calls.at(-1)!
+    const { userConfig, baseConfig } = args as {
+      userConfig: typeof stored
+      baseConfig: typeof stored
+    }
+    expect(baseConfig).toBe(stored)
+    expect(userConfig.editor.submitKey).toBe(stored.editor.submitKey)
+    expect(userConfig.aiVault.path).toBe('/vault')
+  })
+})

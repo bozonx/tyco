@@ -355,3 +355,53 @@ export function settingsTabTitle(
       return ''
   }
 }
+
+/** The settings tab that edits a section of the config, by its key */
+const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
+  appearance: 'accessibility',
+  language: 'general',
+  windowInsertion: 'general',
+  isInDevelopment: 'general',
+  editor: 'editor',
+  markdown: 'editor',
+  quickWindow: 'correction',
+  hotkeys: 'global-actions',
+  externalAccess: 'commands',
+  commands: 'commands',
+  translation: 'translations',
+  mainActions: 'main-actions',
+  launcherPages: 'launcher-commands',
+  llm: 'llm',
+  aiTasks: 'tasks',
+  transformations: 'transformations',
+  styling: 'styling',
+  aiVault: 'ai-profiles',
+  aiProfiles: 'ai-profiles',
+  plugins: 'plugins',
+  chat: 'chat',
+  stt: 'stt',
+}
+
+/** Fields of a section edited on another tab than the rest of it */
+const CONFIG_FIELD_TABS: Record<string, SettingsSectionId> = {
+  'appearance.theme': 'general',
+  'translation.targetLanguages': 'languages',
+}
+
+/**
+ * The titles of the settings tabs that edit the given config paths, e.g.
+ * `llm.models[x].name`, each once; a path of no tab shows its section key
+ */
+export function settingsTitlesOfConfigPaths(
+  paths: readonly string[],
+  translate: (key: string) => string
+): string[] {
+  const titles = paths.map((path) => {
+    const [section = path, field] = path.split(/[.[]/)
+    const id =
+      CONFIG_FIELD_TABS[`${section}.${field}`] ?? CONFIG_SECTION_TABS[section]
+    const tab = id && SECTIONS.find((item) => item.id === id)
+    return tab ? translate(tab.labelKey) : section
+  })
+  return [...new Set(titles)]
+}

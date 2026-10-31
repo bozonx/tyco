@@ -26,9 +26,10 @@
           :is-saving="isSaving"
           :is-reloading="isReloading"
           :save-error="saveError"
-          :conflicts="conflicts"
+          :conflicts="conflictTitles"
           @reload="reloadSettings"
-          @keep-local="keepLocalChanges"
+          @keep-mine="resolveConflicts('mine')"
+          @use-theirs="resolveConflicts('theirs')"
           @retry="session.persist()"
         />
 
@@ -83,7 +84,6 @@ import { useRoute } from 'vue-router'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { syncI18nLocale } from '../../lib/i18n'
 import {
   getNavigatorLanguages,
   resolveUiLanguagePreference,
@@ -99,8 +99,10 @@ import {
   parseSettingsTab,
   settingsNavigationItemId,
   settingsTabTitle,
+  settingsTitlesOfConfigPaths,
 } from '../../lib/settings/settings-navigation'
 import { createSettingsOperations } from '../../lib/settings/settings-operations'
+import { appNavigation } from '../../navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import { useSecretsStore } from '../../stores/secrets'
@@ -128,7 +130,6 @@ import SettingsTasksTab from './SettingsTasksTab.vue'
 import SettingsTransformationsTab from './SettingsTransformationsTab.vue'
 import SettingsTranslationsTab from './SettingsTranslationsTab.vue'
 import SettingsVoiceTab from './SettingsVoiceTab.vue'
-import { CONFIG_VERSION } from '@tyco/shared'
 
 /** The sections without a parameter; each edits the draft from the context */
 const SECTION_TABS: Record<
@@ -179,7 +180,11 @@ const {
   isSaving,
   saveError,
   conflicts,
+  isConfigNewer: configIsNewer,
 } = storeToRefs(session)
+const conflictTitles = computed(() =>
+  settingsTitlesOfConfigPaths(conflicts.value, t)
+)
 const isReloading = ref(false)
 async function reloadSettings() {
   isReloading.value = true
@@ -191,8 +196,8 @@ async function reloadSettings() {
     isReloading.value = false
   }
 }
-function keepLocalChanges() {
-  session.resolveConflicts(true)
+function resolveConflicts(keep: 'mine' | 'theirs') {
+  session.resolveConflicts(keep)
   void session.persist()
 }
 
@@ -295,21 +300,10 @@ provide(SETTINGS_CONTEXT_KEY, {
   },
 })
 
-watch(
-  () => userConfig.value.language.ui,
-  (appLanguage) => {
-    syncI18nLocale(appLanguage)
-  }
-)
-
-/** A newer build wrote the config: it is shown but never written over */
-const configIsNewer = computed(
-  () =>
-    Math.max(
-      userConfig.value.configVersion ?? 0,
-      session.latestConfig.configVersion ?? 0
-    ) > CONFIG_VERSION
-)
+// the address keeps the open tab, e.g. for going back to it
+watch(currentTab, (tab) => {
+  void appNavigation.rememberConfigTab(tab)
+})
 
 onMounted(() => {
   void Promise.resolve(secretsStore.refreshSecrets()).catch((error: unknown) =>

@@ -10,12 +10,15 @@ export interface NavigationApi {
   goToHistory: () => Promise<void>
   /** Opens the settings, on `tab` when given */
   goToConfig: (tab?: string) => Promise<void>
+  /** Keeps the open settings tab in the address; elsewhere does nothing */
+  rememberConfigTab: (tab: string) => Promise<void>
   goToChat: () => Promise<void>
   goToProfileChat: (profileId: string) => Promise<void>
 }
 
 export function createAppNavigation(router: {
   push: Router['push']
+  replace: Router['replace']
   currentRoute: {
     readonly value: { path: string; query: Record<string, unknown> }
   }
@@ -46,6 +49,11 @@ export function createAppNavigation(router: {
           ? { path: APP_ROUTES.CONFIG.path, query: { tab } }
           : APP_ROUTES.CONFIG.path
       )
+    },
+    async rememberConfigTab(tab: string) {
+      const { path, query } = router.currentRoute.value
+      if (path !== APP_ROUTES.CONFIG.path || query.tab === tab) return
+      await router.replace({ path, query: { ...query, tab } })
     },
     async goToChat() {
       await router.push(APP_ROUTES.CHAT.path)

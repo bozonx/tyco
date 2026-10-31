@@ -8,10 +8,11 @@ describe('createAppNavigation', () => {
   function setup(profile: unknown) {
     const router = {
       push: vi.fn<Router['push']>().mockResolvedValue(undefined),
-      currentRoute: shallowRef({
-        path: APP_ROUTES.CHAT.path,
-        query: { profile },
-      }),
+      replace: vi.fn<Router['replace']>().mockResolvedValue(undefined),
+      currentRoute: shallowRef<{
+        path: string
+        query: Record<string, unknown>
+      }>({ path: APP_ROUTES.CHAT.path, query: { profile } }),
     }
     return { router, navigation: createAppNavigation(router) }
   }
@@ -34,6 +35,22 @@ describe('createAppNavigation', () => {
     expect(router.push).toHaveBeenLastCalledWith({
       path: APP_ROUTES.CHAT.path,
       query: { profile: 'editor' },
+    })
+  })
+  it('keeps the settings tab in the address only on the settings page', async () => {
+    const { router, navigation } = setup('writer')
+    await navigation.rememberConfigTab('llm')
+    expect(router.replace).not.toHaveBeenCalled()
+    router.currentRoute.value = {
+      path: APP_ROUTES.CONFIG.path,
+      query: { tab: 'general' },
+    }
+    await navigation.rememberConfigTab('general')
+    expect(router.replace).not.toHaveBeenCalled()
+    await navigation.rememberConfigTab('llm')
+    expect(router.replace).toHaveBeenCalledWith({
+      path: APP_ROUTES.CONFIG.path,
+      query: { tab: 'llm' },
     })
   })
 })

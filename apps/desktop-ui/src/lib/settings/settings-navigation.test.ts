@@ -6,6 +6,7 @@ import {
   isSettingsTabAvailable,
   parseSettingsTab,
   settingsNavigationItemId,
+  settingsTitlesOfConfigPaths,
   settingsTabTitle,
 } from './settings-navigation'
 
@@ -187,5 +188,29 @@ describe('settings navigation', () => {
     expect(hasSettingsPageTitle('ai-profile:new')).toBe(true)
     expect(hasSettingsPageTitle('ai-project:notes')).toBe(true)
     expect(hasSettingsPageTitle('ai-project:new')).toBe(true)
+  })
+})
+
+describe('settings titles of config paths', () => {
+  it('names each tab once, a field on its own tab, and an unknown section by its key', () => {
+    expect(
+      settingsTitlesOfConfigPaths(
+        [
+          'llm.models[a].name',
+          'llm.tasks.chat.rule',
+          'appearance.theme',
+          'appearance.contrast',
+          'translation.targetLanguages.q',
+          'future',
+        ],
+        (key) => `t:${key}`
+      )
+    ).toEqual([
+      't:settings.llmTab',
+      't:settings.generalTab',
+      't:settings.sectionAccessibility',
+      't:settings.languagesTab',
+      'future',
+    ])
   })
 })

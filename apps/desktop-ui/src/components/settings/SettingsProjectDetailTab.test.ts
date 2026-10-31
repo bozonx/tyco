@@ -16,6 +16,14 @@ vi.mock('../../composables/use-toast', () => ({
 }))
 
 const projects = vi.hoisted(() => ({ store: null as unknown }))
+// the page has no settings session here: its draft is saved when it unmounts
+vi.mock('../../composables/use-settings-draft', async () => {
+  const { onBeforeUnmount } = await import('vue')
+  return {
+    useSettingsDraft: (flush: () => Promise<boolean>) =>
+      onBeforeUnmount(() => void flush()),
+  }
+})
 vi.mock('../../stores/ai-profiles', () => ({
   useAiProfilesStore: () => projects.store,
 }))

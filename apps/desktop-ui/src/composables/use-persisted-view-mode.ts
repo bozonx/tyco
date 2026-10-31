@@ -49,7 +49,7 @@ export function usePersistedDiffMode() {
     () => resolveDiffMode(desktopStore.userConfig.editor.diffViewMode),
     (diffViewMode) =>
       desktopStore.updateUserConfig({
-        editor: { ...desktopStore.userConfig.editor, diffViewMode },
+        editor: { ...desktopStore.savedUserConfig.editor, diffViewMode },
       })
   )
 
@@ -69,7 +69,10 @@ export function usePersistedTranslationViewMode(hasSourceText: () => boolean) {
         : 'result',
     (mode) =>
       desktopStore.updateUserConfig({
-        translation: { ...desktopStore.userConfig.translation, viewMode: mode },
+        translation: {
+          ...desktopStore.savedUserConfig.translation,
+          viewMode: mode,
+        },
       })
   )
 

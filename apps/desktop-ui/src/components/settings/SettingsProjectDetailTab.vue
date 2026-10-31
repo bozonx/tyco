@@ -106,11 +106,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
+import { useSettingsDraft } from '../../composables/use-settings-draft'
 import useToast from '../../composables/use-toast'
 import {
   type ProjectAccessLevel,
@@ -179,9 +180,7 @@ watch(
   { immediate: true }
 )
 
-onBeforeUnmount(() => {
-  void editor.flush()
-})
+useSettingsDraft(editor.flush)
 
 /** Only an existing project is stored on change; a new one waits for Save */
 function change() {

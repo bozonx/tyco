@@ -176,25 +176,28 @@ describe('Settings.vue', () => {
         },
       },
     })
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    // the live region is always there, and says nothing while saves succeed
+    expect(wrapper.get('[role="status"]').text()).toBe('')
     const session = useSettingsSessionStore()
     session.isSaving = true
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.get('[role="status"]').text()).toBe('')
     session.isSaving = false
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.get('[role="status"]').text()).toBe('')
     session.saveError = 'Unavailable'
     await wrapper.vm.$nextTick()
     expect(wrapper.get('[role="status"]').text()).toContain('Unavailable')
     expect(wrapper.get('[role="status"]').text()).toContain(
       'settings.saveRetry'
     )
-    session.conflicts = ['theme']
+    session.conflicts = ['llm.models[a].name', 'llm.tasks', 'unknownSection']
     await wrapper.vm.$nextTick()
-    expect(wrapper.get('[role="status"]').text()).toContain(
-      'settings.saveKeepLocal'
-    )
+    const status = wrapper.get('[role="status"]').text()
+    expect(status).toContain('settings.saveKeepLocal')
+    expect(status).toContain('settings.saveUseTheirs')
+    // a conflict names the tab of the setting, once, not its config path
+    expect(status).not.toContain('llm.models')
     wrapper.unmount()
   })
 
@@ -212,7 +215,7 @@ describe('Settings.vue', () => {
     })
     await selectTab(wrapper, 'settings.llmTab')
     await wrapper.get('.key-draft').setValue('unfinished key')
-    useSettingsSessionStore().resolveConflicts(false)
+    await useSettingsSessionStore().reload()
     await wrapper.vm.$nextTick()
     expect((wrapper.get('.key-draft').element as HTMLInputElement).value).toBe(
       ''

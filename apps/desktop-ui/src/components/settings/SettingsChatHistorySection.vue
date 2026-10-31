@@ -53,6 +53,20 @@
       @confirm="onClear"
       @cancel="showClearModal = false"
     />
+
+    <ConfirmModal
+      :open="pendingRetention !== null"
+      :title="t('settings.historyDeleteConfirmTitle')"
+      :message="
+        t('settings.chatHistoryRetentionConfirm', {
+          period: retentionLabel(pendingRetention),
+        })
+      "
+      :confirm-text="t('common.delete')"
+      danger
+      @confirm="confirmRetention"
+      @cancel="pendingRetention = null"
+    />
   </SettingsSection>
 </template>
 
@@ -67,7 +81,10 @@ import {
   chatHistoryConfig,
   chatHistoryRetentionChoices,
 } from '../../lib/chat/chat-history-settings'
-import { historyRetentionOptions } from '../../lib/history/history-retention'
+import {
+  historyRetentionOptions,
+  isStricterRetention,
+} from '../../lib/history/history-retention'
 import { toHtmlLang } from '../../lib/locale/language'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useHistoryStore } from '../../stores/history'
@@ -172,11 +189,30 @@ function setHistoryEnabled(isEnabled: boolean) {
   history.value.storage = isEnabled ? 'disk' : 'off'
 }
 
+/** A period that deletes chats waits for the user to confirm it */
+const pendingRetention = ref<number | null>(null)
+
+function applyRetentionDays(days: number) {
+  if (days === 0) delete history.value.retentionDays
+  else history.value.retentionDays = days
+}
+
 function setRetentionDays(value: number | string | undefined) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 0) return
-  if (parsed === 0) delete history.value.retentionDays
-  else history.value.retentionDays = parsed
+  if (isStricterRetention(history.value.retentionDays, parsed))
+    pendingRetention.value = parsed
+  else applyRetentionDays(parsed)
+}
+
+function confirmRetention() {
+  if (pendingRetention.value !== null)
+    applyRetentionDays(pendingRetention.value)
+  pendingRetention.value = null
+}
+
+function retentionLabel(days: number | null) {
+  return retentionOptions.value.find((option) => option.id === days)?.name ?? ''
 }
 
 const retentionOptions = computed(() =>

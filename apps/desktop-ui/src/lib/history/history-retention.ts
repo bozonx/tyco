@@ -28,3 +28,14 @@ export function historyRetentionOptions(
     name: days === 0 ? foreverLabel : format.format(days),
   }))
 }
+
+/**
+ * Whether a retention period of `next` days deletes what `current` keeps: a
+ * shorter period, or any period after keeping forever (0 or unset)
+ */
+export function isStricterRetention(
+  current: number | undefined,
+  next: number
+): boolean {
+  return next > 0 && (!current || next < current)
+}
