@@ -49,7 +49,7 @@ export default function pluginIndex(): PluginDefinition {
         id: 'search',
         labelKey: 'local.label',
         descriptionKey: 'local.description',
-        icon: 'mdi:web',
+        icon: 'mdi:search-web',
         description: 'Opens a web search for the text in the browser',
         inputSchema: TEXT_INPUT_SCHEMA,
         configFields: [urlField],
@@ -95,7 +95,7 @@ export default function pluginIndex(): PluginDefinition {
         {
           id: 'search',
           labelKey: 'local.label',
-          icon: 'mdi:web',
+          icon: 'mdi:search-web',
           toolId: search.id,
         },
       ])
@@ -103,7 +103,7 @@ export default function pluginIndex(): PluginDefinition {
       ctx.registerToolbarItems([
         {
           id: 'searchInInternet',
-          icon: 'mdi:web',
+          icon: 'mdi:search-web',
           tooltipKey: 'local.label',
           position: 'right',
           toolId: search.id,

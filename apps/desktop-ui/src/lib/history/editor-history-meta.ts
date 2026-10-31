@@ -15,7 +15,7 @@ export interface EditorHistoryView extends EditorHistoryMeta {
 }
 
 const OPERATION_ICONS: Record<EditorHistoryOperation, string> = {
-  aiTask: 'mdi:auto-fix',
+  aiTask: 'mdi:robot-outline',
   translation: 'mdi:translate',
   correction: 'mdi:spellcheck',
   voiceCorrection: 'mdi:microphone-outline',
@@ -42,7 +42,7 @@ export function getEditorHistoryMeta(
   item: Pick<EditorHistoryItem, 'kind' | 'operation' | 'result'>
 ): EditorHistoryMeta {
   if (item.kind === 'output') {
-    return { icon: 'mdi:export-variant', labelKey: 'history.kindOutput' }
+    return { icon: 'mdi:application-export', labelKey: 'history.kindOutput' }
   }
 
   if (item.kind === 'draft') {

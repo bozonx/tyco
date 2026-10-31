@@ -31,8 +31,8 @@ const { t } = useI18n()
 const MODE_OPTIONS = {
   unified: { labelKey: 'diff.modeUnified', icon: 'mdi:view-agenda-outline' },
   split: { labelKey: 'diff.modeSplit', icon: 'mdi:view-split-vertical' },
-  result: { labelKey: 'diff.modeResult', icon: 'mdi:file-document-outline' },
-  original: { labelKey: 'diff.modeOriginal', icon: 'mdi:history' },
+  result: { labelKey: 'diff.modeResult', icon: 'mdi:file-check-outline' },
+  original: { labelKey: 'diff.modeOriginal', icon: 'mdi:file-undo-outline' },
 } as const
 
 const resolvedLabel = computed(

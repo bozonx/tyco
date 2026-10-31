@@ -21,7 +21,7 @@ describe('SearchInInternet plugin', () => {
     expect(actionItems).toHaveLength(1)
     expect(actionItems[0]).toMatchObject({
       id: 'search',
-      icon: 'mdi:web',
+      icon: 'mdi:search-web',
       labelKey: 'local.label',
     })
     expect(toolbarItems).toHaveLength(1)

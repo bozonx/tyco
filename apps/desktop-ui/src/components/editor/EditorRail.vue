@@ -25,7 +25,7 @@
         tone="accent"
         @click="emit('correction')"
         :label="scoped(t('action.correction'))"
-        icon="mdi:auto-fix"
+        icon="mdi:spellcheck"
       />
       <div class="rail-divider" />
       <IconButton

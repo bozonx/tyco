@@ -113,7 +113,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     id: 'core.insert' satisfies CoreToolId,
     labelKey: 'tools.insert',
     descriptionKey: 'tools.insertDescription',
-    icon: 'mdi:keyboard-outline',
+    icon: 'mdi:application-export',
     description:
       'Types the text into the window the user was working in, as if pasted',
     inputSchema: TEXT_INPUT_SCHEMA,
@@ -149,7 +149,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     id: 'core.askInChat' satisfies CoreToolId,
     labelKey: 'tools.askInChat',
     descriptionKey: 'tools.askInChatDescription',
-    icon: 'mdi:chat-processing-outline',
+    icon: 'mdi:chat-question-outline',
     description: 'Opens the chat of the app with the text attached',
     inputSchema: TEXT_INPUT_SCHEMA,
     run: async (call) => {

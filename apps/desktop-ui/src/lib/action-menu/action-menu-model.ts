@@ -234,7 +234,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
         {
           id: 'correction',
           labelKey: 'action.correction',
-          icon: 'mdi:auto-fix',
+          icon: 'mdi:spellcheck',
           action: (text: string) => correct(text),
         },
         {
@@ -253,7 +253,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           {
             id: 'askInChat',
             labelKey: 'action.askInChat',
-            icon: 'mdi:chat-outline',
+            icon: 'mdi:chat-question-outline',
           },
           'core.askInChat',
           false

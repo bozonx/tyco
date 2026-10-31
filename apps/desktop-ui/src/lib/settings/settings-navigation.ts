@@ -26,7 +26,7 @@ export const SETTINGS_NAVIGATION_GROUPS = [
       {
         id: 'accessibility',
         labelKey: 'settings.sectionAccessibility',
-        icon: 'mdi:human-handsup',
+        icon: 'mdi:human',
       },
     ],
   },
@@ -79,11 +79,15 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.stylingTab',
         icon: 'mdi:palette-outline',
       },
-      { id: 'languages', labelKey: 'settings.languagesTab', icon: 'mdi:web' },
+      {
+        id: 'languages',
+        labelKey: 'settings.languagesTab',
+        icon: 'mdi:translate-variant',
+      },
       {
         id: 'launcher-commands',
         labelKey: 'settings.launcherCommandsTab',
-        icon: 'mdi:console',
+        icon: 'mdi:rocket-launch-outline',
       },
       {
         id: 'commands',

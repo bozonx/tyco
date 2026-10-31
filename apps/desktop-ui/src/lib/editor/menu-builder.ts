@@ -52,9 +52,9 @@ const ACTION_ICONS: Record<string, string> = {
   insertIntoWindow: 'mdi:application-export',
   copyToClipboard: 'mdi:clipboard-arrow-right-outline',
   aiTask: 'mdi:robot-outline',
-  correction: 'mdi:auto-fix',
+  correction: 'mdi:spellcheck',
   translation: 'mdi:translate',
-  askInChat: 'mdi:chat-outline',
+  askInChat: 'mdi:chat-question-outline',
 }
 
 /** Icon of an action: its own one, the standard one, or a generic fallback */

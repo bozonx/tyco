@@ -168,7 +168,7 @@ const recentLanguages = computed(
   () => desktopStore.sessionState?.recentTranslateLanguages ?? []
 )
 
-const AUTO_ICON = 'mdi:auto-fix'
+const AUTO_ICON = 'mdi:auto-mode'
 
 const GROUP_LABELS: Record<LanguageGroup, string> = {
   recent: 'menu.translateGroupRecent',

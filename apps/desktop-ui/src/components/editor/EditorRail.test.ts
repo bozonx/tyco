@@ -39,13 +39,15 @@ describe('EditorRail.vue', () => {
 
   it('hides correction button when not in development mode', async () => {
     const wrapper = await mountRail(false)
-    expect(wrapper.find('button[data-icon="mdi:auto-fix"]').exists()).toBe(
+    expect(wrapper.find('button[data-icon="mdi:spellcheck"]').exists()).toBe(
       false
     )
   })
 
   it('shows correction button when in development mode', async () => {
     const wrapper = await mountRail(true)
-    expect(wrapper.find('button[data-icon="mdi:auto-fix"]').exists()).toBe(true)
+    expect(wrapper.find('button[data-icon="mdi:spellcheck"]').exists()).toBe(
+      true
+    )
   })
 })
