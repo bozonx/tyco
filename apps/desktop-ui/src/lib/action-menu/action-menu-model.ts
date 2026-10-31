@@ -167,7 +167,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     }
     const minLength =
       deps.minCorrectionLength?.() ?? APP_CONFIG.minCorrectionLength
-    if (text.length < minLength) {
+    if (text.trim().length < minLength) {
       deps.showToast('toast.textTooShortForCorrection', 'warn')
       return
     }

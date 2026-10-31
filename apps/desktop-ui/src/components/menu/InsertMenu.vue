@@ -158,7 +158,7 @@ const correctionBlocker = computed(() => {
   if (props.correction) {
     return t('write.alreadyCorrected')
   }
-  if (activeActionText.value.length < minCorrectionLength) {
+  if (activeActionText.value.trim().length < minCorrectionLength) {
     return t('write.textTooShortForCorrection')
   }
   return undefined

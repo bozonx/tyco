@@ -1,108 +1,36 @@
-import {
-  SHORTCUT_SLOT_KEYS,
-  type StylingConfig,
-  type StylingsConfig,
-} from '@tyco/shared'
+import type { StylingConfig, StylingsConfig } from '@tyco/shared'
 
 import {
-  moveShortcutSlot,
-  slotList,
-  slotsFromList,
-} from '../shortcut-slots/shortcut-slots'
+  cloneSlotLibrary,
+  findSlotItem,
+  moveSlotItem,
+  placeNewSlotItem,
+  removeSlotItemAt,
+  slotItemList,
+  updateSlotItem,
+  withoutEmptySlotItems,
+} from '../shortcut-slots/slot-library'
 
 /** The text styles and the menu that shows them, `styling` of the config */
 export type StylingLibrary = StylingsConfig
 
-export function cloneStylingLibrary(library: StylingLibrary): StylingLibrary {
-  return {
-    ...library,
-    items: library.items.map((item) => ({ ...item })),
-    slots: { ...library.slots },
-  }
-}
+type Item = StylingConfig
+type Library = StylingLibrary
 
-export function findStyling(
-  stylings: readonly StylingConfig[] | undefined,
-  stylingId: string
-): StylingConfig | undefined {
-  return stylings?.find((item) => item.id === stylingId)
-}
-
-/** The styling presets of the menu in key order; an empty slot is `null` */
-export function stylingSlotList(
-  library: StylingLibrary | undefined
-): (StylingConfig | null)[] {
-  return slotList(library?.slots).map(
-    (id) => (id && findStyling(library?.items, id)) || null
-  )
-}
-
-/** Adds `item` to the library and puts it into the slot at `index` */
-export function placeNewStyling(
-  library: StylingLibrary,
-  index: number,
-  item: StylingConfig
-): StylingLibrary {
-  const ids = slotList(library.slots)
-  ids[index] = item.id
-  return {
-    ...library,
-    items: [...library.items, item],
-    slots: slotsFromList(ids),
-  }
-}
-
-/** Removes the style of the slot at `index` from the menu and the library */
-export function removeStylingAt(
-  library: StylingLibrary,
-  index: number
-): StylingLibrary {
-  const itemId = library.slots[SHORTCUT_SLOT_KEYS[index]!]
-  const ids = slotList(library.slots)
-  ids[index] = null
-  return {
-    ...library,
-    items: library.items.filter((item) => item.id !== itemId),
-    slots: slotsFromList(ids),
-  }
-}
-
-/** Moves a style to another slot of the menu */
-export function moveStylingSlot(
-  library: StylingLibrary,
-  from: number,
-  to: number
-): StylingLibrary {
-  return {
-    ...library,
-    slots: slotsFromList(moveShortcutSlot(slotList(library.slots), from, to)),
-  }
-}
-
-export function updateStyling(
-  library: StylingLibrary,
+export const cloneStylingLibrary = (library: Library) =>
+  cloneSlotLibrary<Item, Library>(library)
+export const findStyling = findSlotItem<Item>
+export const stylingSlotList = slotItemList<Item>
+export const placeNewStyling = (library: Library, index: number, item: Item) =>
+  placeNewSlotItem<Item, Library>(library, index, item)
+export const removeStylingAt = (library: Library, index: number) =>
+  removeSlotItemAt<Item, Library>(library, index)
+export const moveStylingSlot = (library: Library, from: number, to: number) =>
+  moveSlotItem<Item, Library>(library, from, to)
+export const updateStyling = (
+  library: Library,
   stylingId: string,
-  patch: Partial<Omit<StylingConfig, 'id'>>
-): StylingLibrary {
-  return {
-    ...library,
-    items: library.items.map((item) =>
-      item.id === stylingId ? { ...item, ...patch } : item
-    ),
-  }
-}
-
-/** Drops the styles with neither a name nor a rule, with their slots */
-export function withoutEmptyStylings(library: StylingLibrary): StylingLibrary {
-  const kept = library.items.filter(
-    (item) => item.name.trim() || item.rule.trim()
-  )
-  const ids = new Set(kept.map((item) => item.id))
-  return {
-    ...library,
-    items: kept,
-    slots: Object.fromEntries(
-      Object.entries(library.slots).filter(([, id]) => id && ids.has(id))
-    ),
-  }
-}
+  patch: Partial<Omit<Item, 'id'>>
+) => updateSlotItem<Item, Library>(library, stylingId, patch)
+export const withoutEmptyStylings = (library: Library) =>
+  withoutEmptySlotItems<Item, Library>(library)

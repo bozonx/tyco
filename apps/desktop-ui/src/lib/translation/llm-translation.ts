@@ -10,6 +10,7 @@ import {
   type TranslationProblem,
 } from '@bozonx/ai-kit/translate'
 
+import { cleanLlmOutput } from '../llm/llm-output'
 import { ESTIMATED_CHARACTERS_PER_TOKEN } from '../llm/token-estimate'
 import { protectTranslationText } from './protected-text'
 import { translationLanguageLabel } from './translation-languages'
@@ -81,7 +82,7 @@ async function runLlmChunks<T>(
       }
     )
     options.signal?.throwIfAborted()
-    const cleaned = cleanLlmOutput(result, request.source)
+    const cleaned = cleanLlmOutput(result, request.source).trim()
     ensureTranslationOutput(cleaned, request.source)
     if (!request.restore) return cleaned
     try {
@@ -253,35 +254,6 @@ function translationSystem(
   ]
     .filter(Boolean)
     .join('\n\n')
-}
-
-export function cleanLlmOutput(output: string, source: string): string {
-  let cleaned = output.trim()
-
-  const untrustedMatch = cleaned.match(
-    /^<(?:untrusted_content|translation|source_text)[^>]*>\s*([\s\S]*?)\s*<\/(?:untrusted_content|translation|source_text)>$/i
-  )
-  if (
-    untrustedMatch &&
-    !source.includes('<untrusted_content') &&
-    !source.includes('<translation')
-  ) {
-    cleaned = untrustedMatch[1]!.trim()
-  }
-
-  const fenceMatch = cleaned.match(/^```[a-zA-Z0-9_-]*\r?\n([\s\S]*?)\r?\n```$/)
-  if (fenceMatch && !source.trim().startsWith('```')) {
-    cleaned = fenceMatch[1]!.trim()
-  }
-
-  const prefixMatch = cleaned.match(
-    /^(?:Here(?:'s| is) (?:the )?(?:repaired |corrected )?translation:\s*|Translation:\s*)/i
-  )
-  if (prefixMatch && !source.match(/^(?:Here(?:'s| is)|Translation:)/i)) {
-    cleaned = cleaned.slice(prefixMatch[0].length).trim()
-  }
-
-  return cleaned
 }
 
 function ensureTranslationOutput(result: string, source: string): void {

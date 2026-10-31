@@ -534,7 +534,10 @@
     "voiceToInput": "Giriş alanına ekle",
     "willCopyOnFinish": "Tamamlandığında kopyalanacak",
     "willInsertOnFinish": "Tamamlandığında eklenecek",
-    "skipProcessing": "Atla"
+    "skipProcessing": "Atla",
+    "aiPromptSaved": "Menüye kaydedildi",
+    "aiPromptAlreadySaved": "Bu istek zaten menüde",
+    "ruleNotFound": "Bu kural artık mevcut değil"
   },
   "nav": {
     "aiChat": "Yapay Zekâya Sor",
@@ -1116,6 +1119,7 @@
     "textTooShortForCorrection": "Metin düzeltme için çok kısa",
     "textTooShortToProcess": "Metin işlemek için çok kısa",
     "textTooShortToTranslate": "Metin çevirmek için çok kısa",
+    "sameTranslationLanguage": "Kaynak ve hedef dil aynı",
     "textTransformFailed": "Metin dönüştürülemedi: {detail}",
     "textTransformStale": "Biçimlendirme sırasında metin veya seçim değişti. Komutu yeniden çalıştırın.",
     "voiceKeyCheckFailed": "Sesli giriş için API anahtarı kontrol edilemedi. Sistem anahtar deposunu kontrol edin ve uygulamayı yeniden başlatın.",

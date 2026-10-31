@@ -83,7 +83,13 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
         )
     }
     try {
-      const sourceId = await deps.saveSource(request.text, request.operation)
+      // the history is a convenience: a failed write must not stop the tool
+      const sourceId = await deps
+        .saveSource(request.text, request.operation)
+        .catch(() => {
+          deps.reportHistoryError()
+          return null
+        })
       if (controller.signal.aborted) return
       const result = await request.invoke(controller.signal, updatePending)
       if (result.cancelled || controller.signal.aborted) return
@@ -92,20 +98,11 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
         return
       }
       const text = request.read(result)
-      if (text === null) {
-        deps.consumeBufferedIntent?.()
-        return
-      }
+      if (text === null) return
       await deps.saveSourceResult(sourceId, text).catch(deps.reportHistoryError)
       // closed meanwhile: the result is in the history, not on the screen
-      if (controller.signal.aborted) {
-        deps.consumeBufferedIntent?.()
-        return
-      }
-      if (stepId !== undefined && !deps.hasStep(stepId)) {
-        deps.consumeBufferedIntent?.()
-        return
-      }
+      if (controller.signal.aborted) return
+      if (stepId !== undefined && !deps.hasStep(stepId)) return
 
       const buffered = deps.consumeBufferedIntent?.()
       if (buffered && deps.executeBufferedIntent) {
@@ -119,7 +116,6 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
 
       request.show(text, result)
     } catch (error) {
-      deps.consumeBufferedIntent?.()
       if (controller.signal.aborted) return
       deps.reportError(errorMessage(error))
     } finally {

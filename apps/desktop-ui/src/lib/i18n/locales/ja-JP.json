@@ -534,7 +534,10 @@
     "voiceToInput": "入力欄に挿入",
     "willCopyOnFinish": "完了時にコピーされます",
     "willInsertOnFinish": "完了時に挿入されます",
-    "skipProcessing": "スキップ"
+    "skipProcessing": "スキップ",
+    "aiPromptSaved": "メニューに保存しました",
+    "aiPromptAlreadySaved": "このリクエストはすでにメニューにあります",
+    "ruleNotFound": "このルールはもう存在しません"
   },
   "nav": {
     "aiChat": "AIに質問",
@@ -1116,6 +1119,7 @@
     "textTooShortForCorrection": "テキストが短すぎるため校正できません",
     "textTooShortToProcess": "テキストが短すぎるため処理できません",
     "textTooShortToTranslate": "テキストが短すぎるため翻訳できません",
+    "sameTranslationLanguage": "翻訳元と翻訳先の言語が同じです",
     "textTransformFailed": "テキストの変換に失敗しました: {detail}",
     "textTransformStale": "整形中にテキストまたは選択範囲が変更されました。もう一度コマンドを実行してください。",
     "voiceKeyCheckFailed": "音声入力用のAPIキーを確認できませんでした。システムキーチェーンを確認し、アプリを再起動してください。",

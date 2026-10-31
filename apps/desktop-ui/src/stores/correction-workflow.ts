@@ -11,15 +11,11 @@ import {
   isCorrectionAborted,
 } from '../lib/quick-input/quick-correction'
 import { createQuickInsert } from '../lib/quick-input/quick-insert'
-import { useEditorNavigation } from '../composables/use-editor-navigation'
-import { useDesktopStore } from './desktop'
-import { useEditorInputStore } from './editor-input'
+import { useBufferedIntent } from '../composables/use-buffered-intent'
 import { useTextCorrectionStore } from './text-correction'
 import { useHistoryStore } from './history'
 import { useInvocationsStore } from './invocations'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
-import { useWindowStore } from './window'
-import { isQuickWindow } from '../lib/desktop/window'
 
 export const useCorrectionWorkflowStore = defineStore(
   'correctionWorkflow',
@@ -27,10 +23,8 @@ export const useCorrectionWorkflowStore = defineStore(
     const { toastKey, toastText } = useToastStore()
     const menuModalsStore = useMenuModalsStore()
     const historyStore = useHistoryStore()
-    const desktopStore = useDesktopStore()
-    const editorInputStore = useEditorInputStore()
-    const windowStore = useWindowStore()
-    const editorNavigation = useEditorNavigation()
+
+    const runBufferedIntent = useBufferedIntent()
 
     const corrector = useTextCorrectionStore()
     const invocations = useInvocationsStore()
@@ -54,43 +48,7 @@ export const useCorrectionWorkflowStore = defineStore(
       isPending: (owner) =>
         owner !== undefined && menuModalsStore.isPendingModal(owner),
       consumeBufferedIntent: menuModalsStore.consumeBufferedIntent,
-      executeBufferedIntent: async (intent, result, sourceText) => {
-        if (editorNavigation.isEditorPage()) {
-          if (intent !== 'insert') return false
-          if (
-            editorNavigation.applyEditorTransfer(result, sourceText) === false
-          )
-            return true
-          menuModalsStore.closeAll()
-          editorInputStore.requestFocus()
-          return true
-        }
-        if (intent === 'insert') {
-          if (!desktopStore.canInsertIntoWindow) {
-            toastKey('selection.noTarget', 'warn')
-            return false
-          }
-          menuModalsStore.closeAll()
-          await historyStore.saveOutput(result)
-          const outcome = await invocations.call('core.insert', result)
-          if (!outcome.ok) {
-            toastText(toolResultMessage(outcome, translate), 'error')
-          }
-          return true
-        }
-        menuModalsStore.closeAll()
-        await historyStore.saveOutput(result)
-        const outcome = await invocations.call('core.copy', result)
-        if (!outcome.ok) {
-          toastText(toolResultMessage(outcome, translate), 'error')
-          return true
-        }
-        toastKey('common.copied', 'success')
-        if (isQuickWindow()) {
-          await windowStore.hide()
-        }
-        return true
-      },
+      executeBufferedIntent: runBufferedIntent,
       saveResult: async (text, result) => {
         try {
           const sourceId = await historyStore.saveSource(text, 'correction')
@@ -110,7 +68,8 @@ export const useCorrectionWorkflowStore = defineStore(
     const quickInsert = createQuickInsert({
       correct: (text) => {
         const cached = corrector.getCachedCorrection(text)
-        if (cached) return Promise.resolve(cached)
+        if (cached !== undefined) return Promise.resolve(cached)
+        insertCorrection?.abort()
         insertCorrection = new AbortController()
         return correct(text, insertCorrection.signal)
       },
@@ -135,6 +94,7 @@ export const useCorrectionWorkflowStore = defineStore(
         menuModalsStore.clearPendingModal(owner ?? undefined),
       reportError: (error) =>
         toastText(describeError(error, translate), 'error'),
+      isAborted: isCorrectionAborted,
     })
 
     onScopeDispose(() => {

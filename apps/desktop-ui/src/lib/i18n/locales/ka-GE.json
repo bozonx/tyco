@@ -534,7 +534,10 @@
     "voiceToInput": "შეყვანის ველში ჩასმა",
     "willCopyOnFinish": "დაკოპირდება დასრულებისთანავე",
     "willInsertOnFinish": "ჩაისმება დასრულებისთანავე",
-    "skipProcessing": "გამოტოვება"
+    "skipProcessing": "გამოტოვება",
+    "aiPromptSaved": "შენახულია მენიუში",
+    "aiPromptAlreadySaved": "ეს მოთხოვნა უკვე მენიუშია",
+    "ruleNotFound": "ეს წესი აღარ არსებობს"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",
@@ -1116,6 +1119,7 @@
     "textTooShortForCorrection": "ტექსტი შესასწორებლად ზედმეტად მოკლეა",
     "textTooShortToProcess": "ტექსტი დასამუშავებლად ზედმეტად მოკლეა",
     "textTooShortToTranslate": "ტექსტი სათარგმნად ზედმეტად მოკლეა",
+    "sameTranslationLanguage": "საწყისი და სამიზნე ენები ერთნაირია",
     "textTransformFailed": "ტექსტის გარდაქმნა ვერ მოხერხდა: {detail}",
     "textTransformStale": "ფორმატირებისას ტექსტი ან მონიშნული შეიცვალა. გაუშვით ბრძანება ხელახლა.",
     "voiceKeyCheckFailed": "ხმოვანი შეყვანის API გასაღების შემოწმება ვერ მოხერხდა. შეამოწმეთ სისტემის გასაღებების საცავი და გადატვირთეთ აპი.",

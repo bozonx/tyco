@@ -10,6 +10,13 @@ import type {
   AiChatTurnOptions,
   AiRequestOptions,
 } from './llm-request'
+import { cleanLlmOutput } from './llm-output'
+
+type TextTaskKind =
+  | LlmInstructionKind.CORRECTION
+  | LlmInstructionKind.AI_TASK
+  | LlmInstructionKind.TRANSFORMATION
+  | LlmInstructionKind.STYLING
 
 export interface LlmActionsDependencies {
   aiRequest: ReturnType<typeof createLlmRequest>
@@ -84,82 +91,51 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     return cleanGeneratedTitle(raw)
   }
 
-  const correctText = async (
-    text: string,
-    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
-  ) => {
+  type TextTaskOptions = Pick<AiRequestOptions, 'signal' | 'notifyError'>
+
+  /**
+   * Runs a task over `text` under `rules`; the result comes without the
+   * wrapping a model may add. An empty text is reported unless errors are not
+   */
+  const runTextTask = async (
+    kind: TextTaskKind,
+    text: string | undefined,
+    rules: string | undefined,
+    options: TextTaskOptions
+  ): Promise<string> => {
     if (!text?.trim()) {
-      deps.notifyEmptyText()
+      if (options.notifyError !== false) deps.notifyEmptyText()
       return ''
     }
-
-    const userConfig = deps.getUserConfig()
-
-    return await aiRequest(LlmInstructionKind.CORRECTION, text, {
+    const result = await aiRequest(kind, text, {
       ...options,
-      instructions:
-        deps.getAppConfig().aiInstructions[LlmInstructionKind.CORRECTION],
-      rules: userConfig.llm?.tasks.correction.rule,
+      instructions: deps.getAppConfig().aiInstructions[kind],
+      rules,
     })
+    return result ? cleanLlmOutput(result, text) : result
   }
+
+  /** Runs a task under an own instruction, which must not be empty */
+  const promptTask =
+    (kind: TextTaskKind) =>
+    (prompt: string, text?: string, options: TextTaskOptions = {}) => {
+      const rules = prompt.trim()
+      if (!rules) return Promise.reject(new Error('The instruction is empty'))
+      return runTextTask(kind, text, rules, options)
+    }
+
+  const correctText = (text: string, options: TextTaskOptions = {}) =>
+    runTextTask(
+      LlmInstructionKind.CORRECTION,
+      text,
+      deps.getUserConfig().llm?.tasks.correction.rule,
+      options
+    )
 
   /** Applies an own request typed in the AI task menu, like a task's rule */
-  const aiCustomPrompt = async (
-    prompt: string,
-    text?: string,
-    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
-  ) => {
-    if (!text?.trim()) {
-      deps.notifyEmptyText()
-      return ''
-    }
-    if (!prompt.trim()) return ''
-
-    return await aiRequest(LlmInstructionKind.AI_TASK, text, {
-      ...options,
-      instructions:
-        deps.getAppConfig().aiInstructions[LlmInstructionKind.AI_TASK],
-      rules: prompt.trim(),
-    })
-  }
-
-  const transformationPrompt = async (
-    prompt: string,
-    text?: string,
-    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
-  ) => {
-    if (!text?.trim()) {
-      deps.notifyEmptyText()
-      return ''
-    }
-    if (!prompt.trim()) return ''
-
-    return await aiRequest(LlmInstructionKind.TRANSFORMATION, text, {
-      ...options,
-      instructions:
-        deps.getAppConfig().aiInstructions[LlmInstructionKind.TRANSFORMATION],
-      rules: prompt.trim(),
-    })
-  }
-
-  const stylingPrompt = async (
-    prompt: string,
-    text?: string,
-    options: Pick<AiRequestOptions, 'signal' | 'notifyError'> = {}
-  ) => {
-    if (!text?.trim()) {
-      deps.notifyEmptyText()
-      return ''
-    }
-    if (!prompt.trim()) return ''
-
-    return await aiRequest(LlmInstructionKind.STYLING, text, {
-      ...options,
-      instructions:
-        deps.getAppConfig().aiInstructions[LlmInstructionKind.STYLING],
-      rules: prompt.trim(),
-    })
-  }
+  const aiCustomPrompt = promptTask(LlmInstructionKind.AI_TASK)
+  const transformationPrompt = promptTask(LlmInstructionKind.TRANSFORMATION)
+  const stylingPrompt = promptTask(LlmInstructionKind.STYLING)
 
   return {
     aiRequest,

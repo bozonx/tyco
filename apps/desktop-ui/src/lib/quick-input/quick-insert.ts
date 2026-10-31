@@ -21,6 +21,8 @@ export interface QuickInsertDependencies {
   setPending: (cancel: () => void) => number | void
   clearPending: (owner?: number | void) => void
   reportError: (error: unknown) => void
+  /** Whether the error means the correction was stopped, not that it failed */
+  isAborted?: (error: unknown) => boolean
 }
 
 /** Owns a submission until insertion starts; abandoned results cannot paste. */
@@ -55,6 +57,15 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     }
   }
 
+  /** The history is a convenience: a failed write must not stop the insertion */
+  const saveOutput = async (text: string) => {
+    try {
+      await deps.saveOutput(text)
+    } catch (error) {
+      deps.reportHistoryError?.(error)
+    }
+  }
+
   /**
    * The correction of `text`; the typed text reaches the history first, so a
    * failed request or a closed window does not lose it
@@ -84,11 +95,11 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
       if (!result.trim()) throw new Error('Correction returned empty text')
       if (result !== text) await saveSourceResult(sourceId, result)
       if (active !== run) return
-      await deps.saveOutput(result)
+      await saveOutput(result)
       if (active !== run) return
       await deps.insert(result)
     } catch (error) {
-      if (active === run) deps.reportError(error)
+      if (active === run && !deps.isAborted?.(error)) deps.reportError(error)
     } finally {
       if (active === run) {
         active = null
@@ -125,7 +136,7 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     } catch (error) {
       // a cancelled step stays closed; a failed one falls back to the input
       if (active !== run) return
-      deps.reportError(error)
+      if (!deps.isAborted?.(error)) deps.reportError(error)
       step = { text, oldText: '', isCorrectionUnchanged: false }
     }
     active = null
@@ -139,7 +150,7 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     active = run
     run.owner = deps.setPending(cancel)
     try {
-      await deps.saveOutput(text)
+      await saveOutput(text)
       if (active !== run) return
       await deps.insert(text)
     } catch (error) {

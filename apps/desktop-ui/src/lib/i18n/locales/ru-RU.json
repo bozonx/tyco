@@ -534,7 +534,10 @@
     "voiceToInput": "Вставить в поле ввода",
     "willCopyOnFinish": "Скопируется по завершении",
     "willInsertOnFinish": "Вставится по завершении",
-    "skipProcessing": "Пропустить"
+    "skipProcessing": "Пропустить",
+    "aiPromptSaved": "Сохранено в меню",
+    "aiPromptAlreadySaved": "Этот запрос уже есть в меню",
+    "ruleNotFound": "Это правило больше не существует"
   },
   "nav": {
     "aiChat": "Спросить ИИ",
@@ -1116,6 +1119,7 @@
     "textTooShortForCorrection": "Слишком короткий текст для коррекции",
     "textTooShortToProcess": "Слишком короткий текст для обработки",
     "textTooShortToTranslate": "Слишком короткий текст для перевода",
+    "sameTranslationLanguage": "Исходный и целевой языки совпадают",
     "textTransformFailed": "Не удалось преобразовать текст: {detail}",
     "textTransformStale": "Текст или выделение изменились во время форматирования. Запустите команду снова.",
     "voiceKeyCheckFailed": "Не удалось проверить API-ключ для голосового ввода. Проверьте системное хранилище ключей и перезапустите приложение.",

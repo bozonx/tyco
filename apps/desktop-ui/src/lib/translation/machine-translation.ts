@@ -1,5 +1,6 @@
 import { Catalog, chunkText, createAiKit, isAiError } from '@bozonx/ai-kit'
 import {
+  restoreKeptTerms,
   selectGlossaryForText,
   type GlossaryEntry,
 } from '@bozonx/ai-kit/translate'
@@ -107,7 +108,15 @@ export async function translateWithMachine(
       if (isAiError(error) && protectedChunk.text !== chunk) {
         // Fallback: provider corrupted protected tokens, retry this chunk unprotected
         const fallbackResult = await translateChunk(chunk)
-        restored = fallbackResult.translations[0] ?? ''
+        options.signal?.throwIfAborted()
+        resultProvider = fallbackResult.provider
+        resultModel = fallbackResult.model
+        // without the protection the provider may have translated kept terms
+        restored = restoreKeptTerms({
+          source: chunk,
+          translated: fallbackResult.translations[0] ?? '',
+          entries: applicableGlossary.filter((entry) => entry.doNotTranslate),
+        }).text
       } else {
         throw error
       }

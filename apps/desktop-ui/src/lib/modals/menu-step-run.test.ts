@@ -208,4 +208,15 @@ describe('menu step run', () => {
     )
     expect(show).toHaveBeenCalledWith('result', { ok: true, content: 'result' })
   })
+
+  it('runs the tool even when the history cannot be written', async () => {
+    const { deps, run } = setup()
+    deps.saveSource.mockRejectedValue(new Error('disk full'))
+    const step = request()
+    await run(step)
+    expect(step.invoke).toHaveBeenCalled()
+    expect(step.show).toHaveBeenCalledWith('result', expect.anything())
+    expect(deps.reportHistoryError).toHaveBeenCalled()
+    expect(deps.saveSourceResult).toHaveBeenCalledWith(null, 'result')
+  })
 })

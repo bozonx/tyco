@@ -534,7 +534,10 @@
     "voiceToInput": "Insérer dans la saisie",
     "willCopyOnFinish": "Sera copié une fois terminé",
     "willInsertOnFinish": "Sera inséré une fois terminé",
-    "skipProcessing": "Ignorer"
+    "skipProcessing": "Ignorer",
+    "aiPromptSaved": "Enregistré dans le menu",
+    "aiPromptAlreadySaved": "Cette demande est déjà dans le menu",
+    "ruleNotFound": "Cette règle n'existe plus"
   },
   "nav": {
     "aiChat": "Demander à l’IA",
@@ -1119,6 +1122,7 @@
     "textTooShortForCorrection": "Le texte est trop court pour être corrigé",
     "textTooShortToProcess": "Le texte est trop court pour être traité",
     "textTooShortToTranslate": "Le texte est trop court pour être traduit",
+    "sameTranslationLanguage": "Les langues source et cible sont identiques",
     "textTransformFailed": "La transformation du texte a échoué : {detail}",
     "textTransformStale": "Le texte ou la sélection a changé pendant la mise en forme. Relancez la commande.",
     "voiceKeyCheckFailed": "Impossible de vérifier la clé d’API pour la saisie vocale. Vérifiez le trousseau du système et redémarrez l’application.",

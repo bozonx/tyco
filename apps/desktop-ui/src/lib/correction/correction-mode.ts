@@ -21,7 +21,11 @@ export function createCorrectionMode(deps: CorrectionModeDependencies) {
       generation += 1
       lastText = null
       queuedText = null
-      pending = false
+      // the run of the old activation will not clear its pending state
+      if (pending) {
+        pending = false
+        deps.setPending(false)
+      }
     }
     if (!text?.trim()) {
       lastText = null

@@ -534,7 +534,10 @@
     "voiceToInput": "Вставити в поле введення",
     "willCopyOnFinish": "Скопіюється після завершення",
     "willInsertOnFinish": "Вставиться після завершення",
-    "skipProcessing": "Пропустити"
+    "skipProcessing": "Пропустити",
+    "aiPromptSaved": "Збережено в меню",
+    "aiPromptAlreadySaved": "Цей запит уже є в меню",
+    "ruleNotFound": "Цього правила більше не існує"
   },
   "nav": {
     "aiChat": "Запитати ШІ",
@@ -1116,6 +1119,7 @@
     "textTooShortForCorrection": "Текст закороткий для виправлення",
     "textTooShortToProcess": "Текст закороткий для обробки",
     "textTooShortToTranslate": "Текст закороткий для перекладу",
+    "sameTranslationLanguage": "Мова оригіналу та мова перекладу збігаються",
     "textTransformFailed": "Не вдалося перетворити текст: {detail}",
     "textTransformStale": "Текст або виділення змінилися під час форматування. Виконайте команду ще раз.",
     "voiceKeyCheckFailed": "Не вдалося перевірити API-ключ для голосового введення. Перевірте системну в’язку ключів і перезапустіть застосунок.",

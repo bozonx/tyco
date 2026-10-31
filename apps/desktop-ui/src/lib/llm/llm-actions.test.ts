@@ -115,11 +115,25 @@ describe('LLM application actions', () => {
       rules: 'Summarize',
     })
     f.aiRequest.mockClear()
-    expect(await f.actions.aiCustomPrompt('  ', 'Sample')).toBe('')
+    await expect(f.actions.aiCustomPrompt('  ', 'Sample')).rejects.toThrow(
+      'The instruction is empty'
+    )
     expect(await f.actions.aiCustomPrompt('Prompt')).toBe('')
     expect(await f.actions.correctText('  ')).toBe('')
     expect(f.notifyEmptyText).toHaveBeenCalledTimes(2)
     expect(f.aiRequest).not.toHaveBeenCalled()
+  })
+
+  it('reports no empty text when errors are not reported', async () => {
+    const f = fixture()
+    expect(await f.actions.correctText(' ', { notifyError: false })).toBe('')
+    expect(f.notifyEmptyText).not.toHaveBeenCalled()
+  })
+
+  it('strips the wrapping a model adds to a task result', async () => {
+    const f = fixture()
+    f.aiRequest.mockResolvedValue('Here is the corrected text:\nFixed')
+    expect(await f.actions.correctText('Fixd')).toBe('Fixed')
   })
 
   it('preserves request failures for the caller', async () => {

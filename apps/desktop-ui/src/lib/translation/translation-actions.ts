@@ -2,7 +2,7 @@ import type { UserConfig } from '@tyco/shared'
 
 import { LlmError, toLlmError } from '../llm/llm-client'
 import type { LlmRequestErrorDependencies } from '../llm/llm-request-error'
-import { formatTranslationError } from './translation-errors'
+import { TranslationError, formatTranslationError } from './translation-errors'
 import type { createTranslationClient } from './translation-client'
 
 export interface TranslateActionOptions {
@@ -48,7 +48,7 @@ export function createTranslationActions(deps: TranslationActionsDependencies) {
       if (options.notifyError !== false) {
         deps.notifyError(formatTranslationError(error, deps.translate))
       }
-      throw llmError
+      throw new TranslationError(error)
     }
   }
 

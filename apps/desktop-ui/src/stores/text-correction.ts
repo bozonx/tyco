@@ -40,11 +40,8 @@ export const useTextCorrectionStore = defineStore('textCorrection', () => {
 
   const desktop = useDesktopStore()
   watch(
-    () =>
-      JSON.stringify([
-        desktop.userConfig.llm,
-        desktop.userConfig.llm?.tasks.correction.rule,
-      ]),
+    // the models, the connection and the correction rule all live here
+    () => JSON.stringify(desktop.userConfig.llm),
     () => {
       corrector.invalidate()
       liveCorrector.invalidate()

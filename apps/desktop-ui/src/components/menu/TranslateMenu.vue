@@ -100,6 +100,7 @@ import QueryPanel, {
   type QueryPanelOption,
   type QueryPanelSubmit,
 } from './QueryPanel.vue'
+import { APP_CONFIG } from '@tyco/shared'
 
 const props = withDefaults(defineProps<TranslateMenuParams>(), {
   text: '',
@@ -114,8 +115,6 @@ const menuModalsStore = useMenuModalsStore()
 const runStep = useMenuStepRun()
 const { toastKey, toastText } = useToast()
 const { t, locale } = useI18n()
-
-const MIN_TRANSLATE_LENGTH = 2
 
 /** The full language list instead of the configured keys */
 const isPickerMode = ref(false)
@@ -144,7 +143,7 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
       ? {
           name: languageLabel(lang),
           action: async () => {
-            await translate(lang)
+            await translate(lang, pickedSourceLanguage())
           },
         }
       : undefined
@@ -281,12 +280,14 @@ async function submitLanguage({ option }: QueryPanelSubmit) {
   void desktopStore.patchSessionState({
     recentTranslateLanguages: pushRecent(recentLanguages.value, option.id),
   })
-  await translate(
-    option.id,
-    sourceLanguage.value === AUTO_LANGUAGE_VALUE
-      ? undefined
-      : sourceLanguage.value
-  )
+  await translate(option.id, pickedSourceLanguage())
+}
+
+/** The source language the user picked; undefined lets the translator detect it */
+function pickedSourceLanguage(): string | undefined {
+  return sourceLanguage.value === AUTO_LANGUAGE_VALUE
+    ? undefined
+    : sourceLanguage.value
 }
 
 const translate = async (targetLanguage: string, source?: string) => {
@@ -302,8 +303,13 @@ const translate = async (targetLanguage: string, source?: string) => {
     /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(
       trimmed
     )
-  if (!isCjk && trimmed.length < MIN_TRANSLATE_LENGTH) {
+  if (!isCjk && trimmed.length < APP_CONFIG.minTranslationLength) {
     toastKey('toast.textTooShortToTranslate', 'warn')
+    return
+  }
+
+  if (source === targetLanguage) {
+    toastKey('toast.sameTranslationLanguage', 'warn')
     return
   }
 

@@ -46,7 +46,7 @@ const emptyMessage = computed(() => {
   if (!text?.trim()) return t('toast.textNotSelected')
   const minLength = APP_CONFIG.minCorrectionLength
   return t(
-    text.length < minLength
+    text.trim().length < minLength
       ? 'toast.textTooShortForCorrection'
       : 'write.correctionFailed'
   )

@@ -534,7 +534,10 @@
     "voiceToInput": "Inserează în câmpul de introducere",
     "willCopyOnFinish": "Se va copia la finalizare",
     "willInsertOnFinish": "Se va introduce la finalizare",
-    "skipProcessing": "Omite"
+    "skipProcessing": "Omite",
+    "aiPromptSaved": "Salvat în meniu",
+    "aiPromptAlreadySaved": "Această cerere este deja în meniu",
+    "ruleNotFound": "Această regulă nu mai există"
   },
   "nav": {
     "aiChat": "Întreabă AI",
@@ -1119,6 +1122,7 @@
     "textTooShortForCorrection": "Textul este prea scurt pentru corectare",
     "textTooShortToProcess": "Textul este prea scurt pentru procesare",
     "textTooShortToTranslate": "Textul este prea scurt pentru traducere",
+    "sameTranslationLanguage": "Limba sursă și limba țintă sunt aceleași",
     "textTransformFailed": "Transformarea textului a eșuat: {detail}",
     "textTransformStale": "Textul sau selecția s-a schimbat în timpul formatării. Rulați comanda din nou.",
     "voiceKeyCheckFailed": "Cheia API pentru introducerea vocală nu a putut fi verificată. Verificați breloul de chei al sistemului și reporniți aplicația.",

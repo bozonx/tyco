@@ -534,7 +534,10 @@
     "voiceToInput": "Енгізу өрісіне кірістіру",
     "willCopyOnFinish": "Аяқталған соң көшіріледі",
     "willInsertOnFinish": "Аяқталған соң кірістіріледі",
-    "skipProcessing": "Өткізіп жіберу"
+    "skipProcessing": "Өткізіп жіберу",
+    "aiPromptSaved": "Мәзірге сақталды",
+    "aiPromptAlreadySaved": "Бұл сұрау мәзірде бар",
+    "ruleNotFound": "Бұл ереже енді жоқ"
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",
@@ -1116,6 +1119,7 @@
     "textTooShortForCorrection": "Мәтін түзету үшін тым қысқа",
     "textTooShortToProcess": "Мәтін өңдеу үшін тым қысқа",
     "textTooShortToTranslate": "Мәтін аудару үшін тым қысқа",
+    "sameTranslationLanguage": "Бастапқы және мақсатты тілдер бірдей",
     "textTransformFailed": "Мәтінді түрлендіру сәтсіз аяқталды: {detail}",
     "textTransformStale": "Пішімдеу кезінде мәтін немесе белгілеу өзгерді. Команданы қайта іске қосыңыз.",
     "voiceKeyCheckFailed": "Дауыспен енгізуге арналған API кілтін тексеру мүмкін болмады. Жүйелік кілттер қоймасын тексеріп, қолданбаны қайта іске қосыңыз.",

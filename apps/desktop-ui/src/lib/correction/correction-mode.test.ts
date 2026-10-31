@@ -37,6 +37,22 @@ describe('correction mode', () => {
     expect(startCorrection).toHaveBeenCalledTimes(2)
   })
 
+  it('clears the pending state when a new activation has no text', async () => {
+    let finish: () => void = () => {}
+    const startCorrection = vi.fn(
+      () => new Promise<void>((resolve) => (finish = resolve))
+    )
+    const setPending = vi.fn()
+    const model = createCorrectionMode({ startCorrection, setPending })
+
+    const first = model.consume('selected', 1)
+    await model.consume('', 2)
+    finish()
+    await first
+
+    expect(setPending.mock.calls).toEqual([[true], [false]])
+  })
+
   it('processes the latest capture received while isCorrecting', async () => {
     let finish!: () => void
     const startCorrection = vi
@@ -74,7 +90,8 @@ describe('correction mode', () => {
     const second = model.consume('same', 2)
     finish[0]!()
     await first
-    expect(setPending.mock.calls).toEqual([[true], [true]])
+    // the new activation resets the old pending state before its own run
+    expect(setPending.mock.calls).toEqual([[true], [false], [true]])
     finish[1]!()
     await second
     expect(setPending).toHaveBeenLastCalledWith(false)

@@ -534,7 +534,10 @@
     "voiceToInput": "Umetni u polje za unos",
     "willCopyOnFinish": "Kopirat će se po završetku",
     "willInsertOnFinish": "Umetnut će se po završetku",
-    "skipProcessing": "Preskoči"
+    "skipProcessing": "Preskoči",
+    "aiPromptSaved": "Spremljeno u izbornik",
+    "aiPromptAlreadySaved": "Ovaj zahtjev već je u izborniku",
+    "ruleNotFound": "Ovo pravilo više ne postoji"
   },
   "nav": {
     "aiChat": "Pitaj AI",
@@ -1119,6 +1122,7 @@
     "textTooShortForCorrection": "Tekst je prekratak za ispravak",
     "textTooShortToProcess": "Tekst je prekratak za obradu",
     "textTooShortToTranslate": "Tekst je prekratak za prijevod",
+    "sameTranslationLanguage": "Izvorni i ciljni jezik su isti",
     "textTransformFailed": "Pretvorba teksta nije uspjela: {detail}",
     "textTransformStale": "Tekst ili odabir promijenio se tijekom oblikovanja. Ponovno pokrenite naredbu.",
     "voiceKeyCheckFailed": "API ključ za glasovni unos nije se mogao provjeriti. Provjerite privjesak ključeva sustava i ponovno pokrenite aplikaciju.",

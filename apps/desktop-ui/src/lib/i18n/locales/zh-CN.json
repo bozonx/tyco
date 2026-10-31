@@ -534,7 +534,10 @@
     "voiceToInput": "插入到输入框",
     "willCopyOnFinish": "完成后将复制",
     "willInsertOnFinish": "完成后将插入",
-    "skipProcessing": "跳过"
+    "skipProcessing": "跳过",
+    "aiPromptSaved": "已保存到菜单",
+    "aiPromptAlreadySaved": "此请求已在菜单中",
+    "ruleNotFound": "此规则已不存在"
   },
   "nav": {
     "aiChat": "询问 AI",
@@ -1113,6 +1116,7 @@
     "textTooShortForCorrection": "文本过短，无法纠错",
     "textTooShortToProcess": "文本过短，无法处理",
     "textTooShortToTranslate": "文本过短，无法翻译",
+    "sameTranslationLanguage": "源语言和目标语言相同",
     "textTransformFailed": "文本转换失败：{detail}",
     "textTransformStale": "格式化时文本或选区已更改。请重新运行命令。",
     "voiceKeyCheckFailed": "无法检查语音输入的 API 密钥。请检查系统钥匙串并重启应用。",

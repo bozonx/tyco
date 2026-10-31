@@ -534,7 +534,10 @@
     "voiceToInput": "Insert into input",
     "willCopyOnFinish": "Will copy on completion",
     "willInsertOnFinish": "Will insert on completion",
-    "skipProcessing": "Skip"
+    "skipProcessing": "Skip",
+    "aiPromptSaved": "Saved to the menu",
+    "aiPromptAlreadySaved": "This request is already in the menu",
+    "ruleNotFound": "This rule no longer exists"
   },
   "nav": {
     "aiChat": "Ask AI",
@@ -1119,6 +1122,7 @@
     "textTooShortForCorrection": "Text is too short for correction",
     "textTooShortToProcess": "Text is too short to process",
     "textTooShortToTranslate": "Text is too short to translate",
+    "sameTranslationLanguage": "The source and target languages are the same",
     "textTransformFailed": "Text transformation failed: {detail}",
     "textTransformStale": "Text or selection changed while formatting. Run the command again.",
     "voiceKeyCheckFailed": "Could not check the API key for voice input. Check the system keychain and restart the app.",

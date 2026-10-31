@@ -24,8 +24,8 @@ describe('styling prompts', () => {
   it('adds styling from prompt to first free slot', () => {
     const library = { items: [], slots: {} }
     const updated = addStylingFromPrompt(library, 'Formal tone')
-    expect(updated).not.toBeNull()
-    expect(updated?.slots.q).toBe('style-1')
-    expect(updated?.items[0]?.rule).toBe('Formal tone')
+    expect(updated?.outcome).toBe('added')
+    expect(updated?.library.slots.q).toBe('style-1')
+    expect(updated?.library.items[0]?.rule).toBe('Formal tone')
   })
 })

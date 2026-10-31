@@ -534,7 +534,10 @@
     "voiceToInput": "插入至輸入框",
     "willCopyOnFinish": "完成後將複製",
     "willInsertOnFinish": "完成後將插入",
-    "skipProcessing": "略過"
+    "skipProcessing": "略過",
+    "aiPromptSaved": "已儲存到選單",
+    "aiPromptAlreadySaved": "此請求已在選單中",
+    "ruleNotFound": "此規則已不存在"
   },
   "nav": {
     "aiChat": "詢問 AI",
@@ -1113,6 +1116,7 @@
     "textTooShortForCorrection": "文字過短，無法校對",
     "textTooShortToProcess": "文字過短，無法處理",
     "textTooShortToTranslate": "文字過短，無法翻譯",
+    "sameTranslationLanguage": "來源語言與目標語言相同",
     "textTransformFailed": "文字轉換失敗：{detail}",
     "textTransformStale": "格式化期間文字或選取範圍已變更。請重新執行命令。",
     "voiceKeyCheckFailed": "無法檢查語音輸入的 API 金鑰。請檢查系統金鑰圈並重新啟動應用程式。",

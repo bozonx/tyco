@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { AiError } from '@bozonx/ai-kit'
 import { LlmError } from '../llm/llm-client'
 import {
+  TranslationError,
+  UnsupportedTranslationLanguageError,
   formatTranslationError,
   translationErrorKey,
 } from './translation-errors'
@@ -69,6 +71,26 @@ describe('translation errors', () => {
           'The translation provider does not support the selected language'
         )
       )
+    ).toBe('translationErrors.unsupportedLanguage')
+  })
+
+  it('keeps the translator failure when wrapped for a tool', () => {
+    const error = new TranslationError(
+      new AiError('invalid_request', 'quota', { status: 456 })
+    )
+    expect(translationErrorKey(error)).toBe('translationErrors.quotaExceeded')
+    expect(formatTranslationError(error, (key) => key)).toContain('quota')
+  })
+
+  it('tells a burst rate limit apart from a used up quota', () => {
+    expect(
+      translationErrorKey(new AiError('rate_limit', 'Too many requests'))
+    ).toBe('llmErrors.rateLimit')
+  })
+
+  it('names an unsupported language by the error type', () => {
+    expect(
+      translationErrorKey(new UnsupportedTranslationLanguageError('deepl'))
     ).toBe('translationErrors.unsupportedLanguage')
   })
 })

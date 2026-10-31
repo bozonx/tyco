@@ -89,22 +89,20 @@ export function createCorrectionStep(deps: CorrectionStepDependencies) {
     controllers.set(controller, owner)
 
     let result: string
-    let showResult: boolean
-    let buffered: BufferedPendingAction | null
     try {
       result = await deps.correct(text, controller.signal)
     } catch (error) {
-      deps.consumeBufferedIntent?.()
+      // clearing the pending screen drops an action buffered on it
       deps.clearPending(owner)
-      if (controller.signal.aborted) return
-      if (deps.isAborted?.(error)) return
+      if (controller.signal.aborted || deps.isAborted?.(error)) return
       deps.reportError(error)
       return
-    } finally {
-      showResult = deps.isPending?.(owner) ?? true
-      buffered = showResult ? (deps.consumeBufferedIntent?.() ?? null) : null
-      deps.clearPending(owner)
     }
+    const showResult = deps.isPending?.(owner) ?? true
+    const buffered = showResult
+      ? (deps.consumeBufferedIntent?.() ?? null)
+      : null
+    deps.clearPending(owner)
 
     if (controller.signal.aborted) return
     await deps.saveResult(text, result)

@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 
 import { LlmError } from '../llm/llm-client'
+import { CorrectionAbortedError } from './quick-correction'
 import {
   type TimerDependencies,
   createSingleTimer,
@@ -122,7 +123,7 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
     text: string,
     timeoutMs: number = requestTimeoutMs
   ): Promise<string> => {
-    if (isDisposed) return Promise.resolve(text)
+    if (isDisposed) return Promise.reject(new CorrectionAbortedError())
 
     abortActive()
 
@@ -149,7 +150,8 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
       controller,
       promise: request.then(
         (result) => {
-          if (controller.signal.aborted) return result
+          // a request layer may resolve with a partial or empty text on abort
+          if (controller.signal.aborted) throw new CorrectionAbortedError()
           if (activeRun === run) {
             requestTimer.stop()
             activeRun = null
@@ -162,7 +164,8 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
           return result
         },
         (err: unknown) => {
-          if (controller.signal.aborted && !isTimedOut) throw err
+          if (controller.signal.aborted && !isTimedOut)
+            throw new CorrectionAbortedError()
           if (activeRun === run) {
             requestTimer.stop()
             activeRun = null

@@ -273,4 +273,25 @@ describe('quick insertion disposal', () => {
     expect(deps.insert).not.toHaveBeenCalled()
     expect(deps.reportError).not.toHaveBeenCalled()
   })
+
+  it('inserts even when the history cannot be written', async () => {
+    const { deps, model } = setup()
+    deps.saveOutput.mockRejectedValue(new Error('disk full'))
+    await model.start('Original')
+    expect(deps.insert).toHaveBeenCalledExactlyOnceWith('Corrected text')
+    expect(deps.reportError).not.toHaveBeenCalled()
+  })
+
+  it('stays silent when the correction was aborted elsewhere', async () => {
+    const { deps } = setup()
+    const aborted = new Error('aborted')
+    deps.correct.mockRejectedValue(aborted)
+    const model = createQuickInsert({
+      ...deps,
+      isAborted: (error) => error === aborted,
+    })
+    await model.start('Original')
+    expect(deps.reportError).not.toHaveBeenCalled()
+    expect(deps.insert).not.toHaveBeenCalled()
+  })
 })

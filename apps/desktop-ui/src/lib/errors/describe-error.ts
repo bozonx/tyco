@@ -3,6 +3,10 @@ import { errorMessage } from '@tyco/shared/value-guards'
 import { DESKTOP_ERROR_KEYS, isDesktopError } from '../desktop/ipc-error'
 import { LlmError } from '../llm/llm-client'
 import { formatLlmError } from '../llm/llm-errors'
+import {
+  TranslationError,
+  formatTranslationError,
+} from '../translation/translation-errors'
 import { withErrorDetail } from './error-detail'
 
 /**
@@ -14,6 +18,8 @@ export function describeError(
   error: unknown,
   translate: (key: string) => string
 ): string {
+  if (error instanceof TranslationError)
+    return formatTranslationError(error, translate)
   if (error instanceof LlmError) return formatLlmError(error, translate)
   if (isDesktopError(error))
     return withErrorDetail(

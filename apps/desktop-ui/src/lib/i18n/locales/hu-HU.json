@@ -534,7 +534,10 @@
     "voiceToInput": "Beillesztés a beviteli mezőbe",
     "willCopyOnFinish": "Befejezés után másolásra kerül",
     "willInsertOnFinish": "Befejezés után beillesztésre kerül",
-    "skipProcessing": "Kihagyás"
+    "skipProcessing": "Kihagyás",
+    "aiPromptSaved": "Mentve a menübe",
+    "aiPromptAlreadySaved": "Ez a kérés már szerepel a menüben",
+    "ruleNotFound": "Ez a szabály már nem létezik"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",
@@ -1116,6 +1119,7 @@
     "textTooShortForCorrection": "A szöveg túl rövid a javításhoz",
     "textTooShortToProcess": "A szöveg túl rövid a feldolgozáshoz",
     "textTooShortToTranslate": "A szöveg túl rövid a fordításhoz",
+    "sameTranslationLanguage": "A forrás- és a célnyelv megegyezik",
     "textTransformFailed": "A szöveg átalakítása sikertelen: {detail}",
     "textTransformStale": "A szöveg vagy a kijelölés megváltozott a formázás közben. Futtassa újra a parancsot.",
     "voiceKeyCheckFailed": "A hangbevitel API-kulcsát nem sikerült ellenőrizni. Ellenőrizze a rendszer kulcstartóját, és indítsa újra az alkalmazást.",

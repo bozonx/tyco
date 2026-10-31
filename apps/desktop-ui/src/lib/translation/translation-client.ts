@@ -1,4 +1,3 @@
-import { AiError } from '@bozonx/ai-kit'
 import {
   runTranslationPipeline,
   type GlossaryEntry,
@@ -10,6 +9,7 @@ import {
 
 import { repairWithLlm, translateWithLlm } from './llm-translation'
 import { translateWithMachine } from './machine-translation'
+import { UnsupportedTranslationLanguageError } from './translation-errors'
 import { resolveTranslationLanguage } from './translation-languages'
 import type {
   TranslationRunOptions,
@@ -17,7 +17,6 @@ import type {
   TranslationClientDependencies,
 } from './translation-pass'
 
-export { cleanLlmOutput } from './llm-translation'
 export { translationKitSecretId } from './machine-translation'
 export type {
   TranslationClientDependencies,
@@ -57,11 +56,7 @@ export function createTranslationClient(deps: TranslationClientDependencies): {
             options.sourceLanguage !== 'auto' &&
             !sourceLanguage)
         )
-          throw new AiError(
-            'invalid_request',
-            'The translation provider does not support the selected language',
-            { provider: config.provider }
-          )
+          throw new UnsupportedTranslationLanguageError(config.provider)
         options = { ...options, targetLanguage, sourceLanguage }
       }
       options.onStage?.('translating')

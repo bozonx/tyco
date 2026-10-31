@@ -534,7 +534,10 @@
     "voiceToInput": "Wstaw do pola wprowadzania",
     "willCopyOnFinish": "Zostanie skopiowane po ukończeniu",
     "willInsertOnFinish": "Zostanie wstawione po ukończeniu",
-    "skipProcessing": "Pomiń"
+    "skipProcessing": "Pomiń",
+    "aiPromptSaved": "Zapisano w menu",
+    "aiPromptAlreadySaved": "To polecenie jest już w menu",
+    "ruleNotFound": "Ta reguła już nie istnieje"
   },
   "nav": {
     "aiChat": "Zapytaj AI",
@@ -1119,6 +1122,7 @@
     "textTooShortForCorrection": "Tekst jest za krótki do korekty",
     "textTooShortToProcess": "Tekst jest za krótki do przetworzenia",
     "textTooShortToTranslate": "Tekst jest za krótki do przetłumaczenia",
+    "sameTranslationLanguage": "Język źródłowy i docelowy są takie same",
     "textTransformFailed": "Przekształcenie tekstu nie powiodło się: {detail}",
     "textTransformStale": "Tekst lub zaznaczenie zmieniło się podczas formatowania. Uruchom polecenie ponownie.",
     "voiceKeyCheckFailed": "Nie udało się sprawdzić klucza API do wprowadzania głosowego. Sprawdź systemowy pęk kluczy i uruchom aplikację ponownie.",

@@ -534,7 +534,10 @@
     "voiceToInput": "Vložit do vstupního pole",
     "willCopyOnFinish": "Zkopíruje se po dokončení",
     "willInsertOnFinish": "Vloží se po dokončení",
-    "skipProcessing": "Přeskočit"
+    "skipProcessing": "Přeskočit",
+    "aiPromptSaved": "Uloženo do nabídky",
+    "aiPromptAlreadySaved": "Tento požadavek už v nabídce je",
+    "ruleNotFound": "Toto pravidlo již neexistuje"
   },
   "nav": {
     "aiChat": "Zeptat se AI",
@@ -1113,6 +1116,7 @@
     "textTooShortForCorrection": "Text je na opravu příliš krátký",
     "textTooShortToProcess": "Text je na zpracování příliš krátký",
     "textTooShortToTranslate": "Text je na překlad příliš krátký",
+    "sameTranslationLanguage": "Zdrojový a cílový jazyk jsou stejné",
     "textTransformFailed": "Převod textu selhal: {detail}",
     "textTransformStale": "Text nebo výběr se během formátování změnil. Spusťte příkaz znovu.",
     "voiceKeyCheckFailed": "Klíč API pro hlasové zadávání se nepodařilo ověřit. Zkontrolujte systémovou klíčenku a restartujte aplikaci.",

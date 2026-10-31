@@ -534,7 +534,10 @@
     "voiceToInput": "In die Eingabe einfügen",
     "willCopyOnFinish": "Wird nach Fertigstellung kopiert",
     "willInsertOnFinish": "Wird nach Fertigstellung eingefügt",
-    "skipProcessing": "Überspringen"
+    "skipProcessing": "Überspringen",
+    "aiPromptSaved": "Im Menü gespeichert",
+    "aiPromptAlreadySaved": "Diese Anfrage ist bereits im Menü",
+    "ruleNotFound": "Diese Regel existiert nicht mehr"
   },
   "nav": {
     "aiChat": "KI fragen",
@@ -1119,6 +1122,7 @@
     "textTooShortForCorrection": "Der Text ist für eine Korrektur zu kurz",
     "textTooShortToProcess": "Der Text ist für die Verarbeitung zu kurz",
     "textTooShortToTranslate": "Der Text ist für eine Übersetzung zu kurz",
+    "sameTranslationLanguage": "Ausgangs- und Zielsprache sind identisch",
     "textTransformFailed": "Die Textumwandlung ist fehlgeschlagen: {detail}",
     "textTransformStale": "Text oder Auswahl hat sich während der Formatierung geändert. Führen Sie den Befehl erneut aus.",
     "voiceKeyCheckFailed": "Der API-Schlüssel für die Spracheingabe konnte nicht geprüft werden. Prüfen Sie den Schlüsselbund des Systems und starten Sie die App neu.",

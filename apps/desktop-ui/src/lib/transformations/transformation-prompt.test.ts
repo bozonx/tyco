@@ -29,8 +29,8 @@ describe('transformation prompts', () => {
   it('adds transformation from prompt to first free slot', () => {
     const library = { items: [], slots: {} }
     const updated = addTransformationFromPrompt(library, 'Format code')
-    expect(updated).not.toBeNull()
-    expect(updated?.slots.q).toBe('transformation-1')
-    expect(updated?.items[0]?.rule).toBe('Format code')
+    expect(updated?.outcome).toBe('added')
+    expect(updated?.library.slots.q).toBe('transformation-1')
+    expect(updated?.library.items[0]?.rule).toBe('Format code')
   })
 })
