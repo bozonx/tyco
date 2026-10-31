@@ -24,7 +24,7 @@ jobs:
       matrix:
         session: [x11, kwin, sway]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       - name: Build platform test container
         uses: docker/build-push-action@v6
