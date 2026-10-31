@@ -1,7 +1,7 @@
 //! Validates plugin metadata and bundled assets without executing code.
 use super::package_format::{
     MAX_CONFIG_FIELDS, MAX_ICONS, MAX_ICON_BODY_BYTES, MAX_ICON_DIMENSION, MAX_SETTINGS_RENAMES,
-    MAX_SETTING_NAME_LENGTH,
+    MAX_SETTING_NAME_LENGTH, MAX_VISIBILITY_VALUES,
 };
 use super::{is_valid_plugin_id, PluginManifest, API_VERSION};
 use crate::errors::AppError;
@@ -412,7 +412,48 @@ fn validate_config_fields(config: &serde_json::Value) -> Result<&[serde_json::Va
             }
         }
     }
+    for field in fields {
+        if let Some(visibility) = field.get("visibleWhen") {
+            if !valid_field_visibility(field, visibility, &names) {
+                return Err(AppError::invalid_data("Invalid plugin field visibility"));
+            }
+        }
+    }
     Ok(fields)
+}
+
+/// `visibleWhen` names another declared field and lists the values that show
+/// this one.
+fn valid_field_visibility(
+    field: &serde_json::Value,
+    visibility: &serde_json::Value,
+    names: &std::collections::HashSet<&str>,
+) -> bool {
+    let Some(visibility) = visibility.as_object() else {
+        return false;
+    };
+    let target = visibility.get("field").and_then(serde_json::Value::as_str);
+    let values = visibility
+        .get("equals")
+        .and_then(serde_json::Value::as_array);
+    visibility
+        .keys()
+        .all(|key| key == "field" || key == "equals")
+        && target.is_some_and(|target| {
+            names.contains(target)
+                && field.get("name").and_then(serde_json::Value::as_str) != Some(target)
+        })
+        && values.is_some_and(|values| {
+            !values.is_empty()
+                && values.len() <= MAX_VISIBILITY_VALUES
+                && values.iter().all(|value| {
+                    value.is_string()
+                        || value.is_boolean()
+                        || value.as_f64().is_some_and(|number| {
+                            number.fract() == 0.0 && number.abs() <= MAX_SAFE_INTEGER
+                        })
+                })
+        })
 }
 
 fn validate_presets(

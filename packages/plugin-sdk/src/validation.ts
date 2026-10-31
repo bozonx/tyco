@@ -5,6 +5,7 @@ import {
   MAX_ICON_BODY_BYTES,
   MAX_ICON_DIMENSION,
   MAX_ICONS,
+  MAX_VISIBILITY_VALUES,
   RESERVED_PLUGIN_ID,
   hasPluginIdFormat,
 } from './package-format.js'
@@ -310,6 +311,29 @@ export function validatePluginFields(fields: unknown): void {
         !field.options.some((option) => option.id === field.defaultValue))
     )
       fail('Invalid select default')
+  }
+  for (const field of fields as Record<string, unknown>[]) {
+    const visibility = field.visibleWhen
+    if (visibility === undefined) continue
+    if (
+      !record(visibility) ||
+      Object.keys(visibility).some(
+        (key) => !['field', 'equals'].includes(key)
+      ) ||
+      typeof visibility.field !== 'string' ||
+      visibility.field === field.name ||
+      !names.has(visibility.field) ||
+      !Array.isArray(visibility.equals) ||
+      visibility.equals.length === 0 ||
+      visibility.equals.length > MAX_VISIBILITY_VALUES ||
+      visibility.equals.some(
+        (value) =>
+          typeof value !== 'string' &&
+          typeof value !== 'boolean' &&
+          !Number.isSafeInteger(value)
+      )
+    )
+      fail('Invalid plugin field visibility')
   }
 }
 

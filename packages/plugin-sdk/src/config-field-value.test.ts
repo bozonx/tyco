@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { withConfigFieldValue } from './config-field-value.js'
+import {
+  isConfigFieldVisible,
+  withConfigFieldValue,
+} from './config-field-value.js'
 import type { InputConfigItem } from './config.js'
 
 describe('withConfigFieldValue', () => {
@@ -83,5 +86,20 @@ describe('withConfigFieldValue', () => {
       void textarea
     }
     void checkContracts
+  })
+})
+
+describe('isConfigFieldVisible', () => {
+  it('shows a field only for the listed values of the other field', () => {
+    const field: InputConfigItem = {
+      type: 'text',
+      name: 'template',
+      visibleWhen: { field: 'mode', equals: ['custom', 2] },
+    }
+    expect(isConfigFieldVisible(field, { mode: 'custom' })).toBe(true)
+    expect(isConfigFieldVisible(field, { mode: 2 })).toBe(true)
+    expect(isConfigFieldVisible(field, { mode: '2' })).toBe(false)
+    expect(isConfigFieldVisible(field, {})).toBe(false)
+    expect(isConfigFieldVisible({ type: 'text', name: 'plain' }, {})).toBe(true)
   })
 })

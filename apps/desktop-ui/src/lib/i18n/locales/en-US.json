@@ -700,22 +700,8 @@
     "editorTab": "Editor",
     "externalMethods": "Other activation methods",
     "externalMethodsHint": "Use this command from a terminal, script, or system shortcut. The tyco-ctl client must be installed and available in PATH. Linux also supports D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Apply template",
-      "browse": "Choose folder",
-      "errors": {
-        "invalidFileName": "File name template contains control characters.",
-        "invalidNotesPath": "Use an absolute notes path or a path starting with ~/.",
-        "invalidSubfolder": "Subfolder must be relative, without .. or invalid path characters.",
-        "missingContentToken": "The content template must include {'{'}content{'}'}.",
-        "unknownTemplateToken": "Unknown template token. Check the supported tokens."
-      },
-      "folder": "Notes folder",
-      "pathHint": "Use an absolute path or ~/notes. For Logseq, choose the graph root; journals is added automatically.",
-      "preview": "Preview",
-      "sampleText": "Example note\nMore details",
-      "template": "Apply settings template"
-    },
+    "browseFolder": "Choose folder",
+    "configPreview": "Preview",
     "forcedByEInk": "Always high contrast and no animations with the e-ink theme",
     "formatWithLlm": "Automatically correct dictation before inserting into external application",
     "generalTab": "General",

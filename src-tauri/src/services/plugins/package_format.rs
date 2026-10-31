@@ -6,6 +6,7 @@ pub(super) const MAX_PLUGIN_ID_LENGTH: usize = 128;
 pub(super) const MAX_SETTING_NAME_LENGTH: usize = 128;
 pub(super) const MAX_CONFIG_FIELDS: usize = 256;
 pub(super) const MAX_SETTINGS_RENAMES: usize = 256;
+pub(super) const MAX_VISIBILITY_VALUES: usize = 64;
 pub(super) const MAX_ICONS: usize = 4096;
 pub(super) const MAX_ICON_BODY_BYTES: usize = 128 * 1024;
 pub(super) const MAX_ICON_DIMENSION: f64 = 4096.0;
@@ -35,6 +36,7 @@ mod tests {
             ("MAX_SETTING_NAME_LENGTH", MAX_SETTING_NAME_LENGTH),
             ("MAX_CONFIG_FIELDS", MAX_CONFIG_FIELDS),
             ("MAX_SETTINGS_RENAMES", MAX_SETTINGS_RENAMES),
+            ("MAX_VISIBILITY_VALUES", MAX_VISIBILITY_VALUES),
             ("MAX_ICONS", MAX_ICONS),
             ("MAX_ICON_BODY_BYTES", MAX_ICON_BODY_BYTES),
             ("MAX_ICON_DIMENSION", MAX_ICON_DIMENSION as usize),

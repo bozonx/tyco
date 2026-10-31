@@ -25,7 +25,7 @@
   "fileNameTemplate": "Modèle de nom de fichier",
   "fileNameTemplateInfo": "Prend en charge les jetons de date ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}), ainsi que {'{'}title{'}'} et {'{'}slug{'}'}. En cas de conflit de nom, les fichiers reçoivent un suffixe numérique.",
   "contentTemplate": "Modèle de contenu",
-  "contentTemplateInfo": "Prend en charge les jetons de date, {'{'}title{'}'} et le jeton obligatoire {'{'}content{'}'}. Le mode d'ajout crée le fichier s'il est absent.",
+  "contentTemplateInfo": "Prend en charge les jetons de date, {'{'}title{'}'} et le jeton obligatoire {'{'}content{'}'}. Écrivez {'{'}{'{'} ou {'}'}{'}'} pour une accolade littérale. Si un titre utilise {'{'}title{'}'}, la première ligne n'est pas répétée en dessous. Le mode ajout crée le fichier s'il n'existe pas.",
   "clearInputAfterSave": "Effacer le champ de saisie après l'enregistrement",
   "toolLabel": "Écrire une note",
   "toolDescription": "Enregistre le texte en tant que nouvelle note ou l'ajoute à une note existante, dans votre dossier de notes",
@@ -34,8 +34,12 @@
   "noteAppended": "Note ajoutée",
   "noteSaveFailed": "Échec de l'enregistrement de la note",
   "invalidNotesPath": "Utilisez un chemin absolu ou un chemin commençant par ~/.",
-  "invalidSubfolder": "Le sous-dossier doit être relatif, sans .. ni caractères de chemin non valides.",
-  "unknownTemplateToken": "Jeton de modèle inconnu. Vérifiez les jetons pris en charge.",
+  "invalidSubfolder": "Le sous-dossier doit être relatif, utiliser / comme séparateur et ne contenir ni .., ni noms réservés comme CON, ni caractères de chemin invalides.",
+  "unknownTemplateToken": "Jeton de modèle inconnu {'{'}{token}{'}'}. Vérifiez les jetons pris en charge ou écrivez {'{'}{'{'} et {'}'}{'}'} pour des accolades littérales.",
   "missingContentToken": "Le modèle de contenu doit inclure {'{'}content{'}'}.",
-  "invalidFileName": "Le modèle de nom de fichier contient des caractères de contrôle."
+  "invalidFileName": "Le modèle de nom de fichier contient des caractères de contrôle.",
+  "noteSaveDenied": "L'écriture dans le dossier de notes n'est pas autorisée. Vérifiez ses permissions et que le dossier est enregistré dans les paramètres.",
+  "noteSaveInvalid": "Le dossier de notes ou le nom de fichier n'est pas valide. Vérifiez le dossier ou raccourcissez le modèle de nom de fichier.",
+  "noteTooLarge": "La note est trop volumineuse ou le disque est plein.",
+  "previewText": "Exemple de note\nPlus de détails"
 }

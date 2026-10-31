@@ -1,7 +1,7 @@
 <template>
   <div class="ui-form-container">
     <FieldRow
-      v-for="item in fields"
+      v-for="item in visibleFields"
       :key="item.name"
       :group="item.type === 'sortable-checklist'"
       :label="configFieldLabel(item, t)"
@@ -11,6 +11,10 @@
       <ConfigFieldControl
         :control="controlFor(item)"
         @update:model-value="updateValue(item.name, $event)"
+      />
+      <DirectoryPickerButton
+        v-if="item.name === directoryField"
+        @select="updateValue(item.name, $event)"
       />
     </FieldRow>
   </div>
@@ -28,10 +32,15 @@ import {
 import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-control'
 import FieldRow from '../common/FieldRow.vue'
 import ConfigFieldControl from './ConfigFieldControl.vue'
+import DirectoryPickerButton from './DirectoryPickerButton.vue'
 import type { InputConfigItem } from '@/types'
-import { withConfigFieldValue } from '@tyco/plugin-sdk'
+import { isConfigFieldVisible, withConfigFieldValue } from '@tyco/plugin-sdk'
 
-const props = defineProps<{ config: InputConfigItem[] }>()
+const props = defineProps<{
+  config: InputConfigItem[]
+  /** A text field that also gets a folder picker */
+  directoryField?: string
+}>()
 
 const emit = defineEmits<{
   (e: 'update:values', values: Record<string, unknown>): void
@@ -44,6 +53,9 @@ const fields = computed(() =>
   )
 )
 const values = ref<Record<string, unknown>>({})
+const visibleFields = computed(() =>
+  fields.value.filter((field) => isConfigFieldVisible(field, values.value))
+)
 
 watch(
   () => props.config,

@@ -694,22 +694,8 @@
     "editorTab": "Editor",
     "externalMethods": "Další způsoby spuštění",
     "externalMethodsHint": "Použijte tento příkaz z terminálu, skriptu nebo systémové zkratky. Klient tyco-ctl musí být nainstalován a dostupný v PATH. Linux podporuje také D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Použít šablonu",
-      "browse": "Vybrat složku",
-      "errors": {
-        "invalidFileName": "Šablona názvu souboru obsahuje řídicí znaky.",
-        "invalidNotesPath": "Použijte absolutní cestu k poznámkám nebo cestu začínající ~/.",
-        "invalidSubfolder": "Podsložka musí být relativní, bez .. a neplatných znaků cesty.",
-        "missingContentToken": "Šablona obsahu musí obsahovat {'{'}content{'}'}.",
-        "unknownTemplateToken": "Neznámá proměnná šablony. Zkontrolujte podporované proměnné."
-      },
-      "folder": "Složka poznámek",
-      "pathHint": "Použijte absolutní cestu nebo ~/notes. Pro Logseq vyberte kořen grafu; journals se doplní automaticky.",
-      "preview": "Náhled",
-      "sampleText": "Ukázková poznámka\nDalší podrobnosti",
-      "template": "Použít šablonu nastavení"
-    },
+    "browseFolder": "Vybrat složku",
+    "configPreview": "Náhled",
     "forcedByEInk": "S motivem e-ink vždy vysoký kontrast a žádné animace",
     "formatWithLlm": "Automaticky opravit diktování před vložením do externí aplikace",
     "generalTab": "Obecné",

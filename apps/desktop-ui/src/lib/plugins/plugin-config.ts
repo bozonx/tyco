@@ -83,7 +83,14 @@ export function resolvePluginConfig(
   return clonePluginValue(config)
 }
 
-/** Applies declarative preset values when a user changes a preset selector. */
+const sameValue = (left: unknown, right: unknown) =>
+  JSON.stringify(left) === JSON.stringify(right)
+
+/**
+ * Applies declarative preset values when a user changes a preset selector.
+ * Editing a value the selected preset sets leaves that preset: the selector
+ * moves to the preset without values (e.g. "Custom"), if the plugin has one.
+ */
 export function applyPluginPreset(
   plugin: ReturnType<PluginFactory>,
   state: Record<string, unknown>,
@@ -93,17 +100,35 @@ export function applyPluginPreset(
   for (const [selector, presets] of Object.entries(
     plugin.defaultConfig?.presets ?? {}
   )) {
-    if (
-      !Object.hasOwn(updates, selector) ||
-      updates[selector] === state[selector]
-    )
-      continue
-    const selected = updates[selector]
-    if (
+    const selected = next[selector]
+    const preset =
       (typeof selected === 'string' || typeof selected === 'number') &&
       Object.hasOwn(presets, selected)
-    )
-      Object.assign(next, clonePluginValue(presets[selected]))
+        ? (presets[selected] as Record<string, unknown>)
+        : undefined
+    if (
+      Object.hasOwn(updates, selector) &&
+      updates[selector] !== state[selector]
+    ) {
+      if (preset) Object.assign(next, clonePluginValue(preset))
+      continue
+    }
+    const leavesPreset =
+      preset !== undefined &&
+      Object.keys(updates).some(
+        (name) =>
+          Object.hasOwn(preset, name) &&
+          !sameValue(updates[name], state[name]) &&
+          !sameValue(updates[name], preset[name])
+      )
+    if (!leavesPreset) continue
+    const free = Object.entries(presets).find(
+      ([, values]) => Object.keys(values).length === 0
+    )?.[0]
+    const option = plugin.defaultConfig?.fields
+      .find((field) => field.name === selector)
+      ?.options?.find((candidate) => String(candidate.id) === free)
+    if (option) next[selector] = option.id
   }
   return clonePluginValue(next)
 }

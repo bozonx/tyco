@@ -700,22 +700,8 @@
     "editorTab": "Editor",
     "externalMethods": "Outros métodos de ativação",
     "externalMethodsHint": "Use este comando a partir de um terminal, script ou atalho do sistema. O cliente tyco-ctl precisa estar instalado e disponível no PATH. O Linux também oferece D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Aplicar modelo",
-      "browse": "Escolher pasta",
-      "errors": {
-        "invalidFileName": "O modelo de nome de arquivo contém caracteres de controle.",
-        "invalidNotesPath": "Use um caminho absoluto para as notas ou um caminho que comece com ~/.",
-        "invalidSubfolder": "A subpasta deve ser relativa, sem .. nem caracteres de caminho inválidos.",
-        "missingContentToken": "O modelo de conteúdo deve incluir {'{'}content{'}'}.",
-        "unknownTemplateToken": "Variável de modelo desconhecida. Verifique as variáveis compatíveis."
-      },
-      "folder": "Pasta de notas",
-      "pathHint": "Use um caminho absoluto ou ~/notes. Para o Logseq, escolha a raiz do grafo; journals é adicionado automaticamente.",
-      "preview": "Pré-visualização",
-      "sampleText": "Nota de exemplo\nMais detalhes",
-      "template": "Aplicar modelo de configurações"
-    },
+    "browseFolder": "Escolher pasta",
+    "configPreview": "Pré-visualização",
     "forcedByEInk": "Com o tema e-ink, sempre alto contraste e sem animações",
     "formatWithLlm": "Corrigir o ditado automaticamente antes de inseri-lo em um aplicativo externo",
     "generalTab": "Geral",

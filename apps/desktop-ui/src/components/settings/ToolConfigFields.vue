@@ -18,14 +18,7 @@
       :warnings="warningsOf('prompt')"
       @update="update"
     />
-    <component
-      :is="TOOL_FIELD_COMPONENTS[tool.id] ?? PluginToolFields"
-      v-else
-      :command="command"
-      :tool="tool"
-      @update="update"
-      @patch="emit('patch', $event)"
-    />
+    <PluginToolFields v-else :command="command" :tool="tool" @update="update" />
   </div>
 </template>
 <script setup lang="ts">
@@ -38,7 +31,6 @@ import { useToolsStore } from '../../stores/tools'
 import AiTaskToolFields from './AiTaskToolFields.vue'
 import PluginToolFields from './PluginToolFields.vue'
 import TranslationToolFields from './TranslationToolFields.vue'
-import { TOOL_FIELD_COMPONENTS } from './tool-field-components'
 import {
   type CommandConfig,
   ACTION_TEXT_PLACEHOLDER as TEXT,
@@ -50,10 +42,7 @@ const props = defineProps<{
   tool: RegisteredTool
   userConfig?: UserConfig
 }>()
-const emit = defineEmits<{
-  update: [field: string, value: unknown]
-  patch: [values: Record<string, unknown>]
-}>()
+const emit = defineEmits<{ update: [field: string, value: unknown] }>()
 const { t } = useI18n()
 const toolsStore = useToolsStore()
 const issues = computed(() => validateCommand(props.command, toolsStore))

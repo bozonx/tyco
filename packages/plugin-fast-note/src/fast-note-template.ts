@@ -1,5 +1,13 @@
 const MS_PER_SECOND = 1000
 const MS_PER_WEEK = 7 * 24 * 60 * 60 * MS_PER_SECOND
+/** How many characters of the first line `{title}` takes into a file name. */
+const MAX_TITLE_LENGTH = 60
+/**
+ * Common file systems allow 255 bytes per name; the rest is left for the
+ * numeric suffix the host adds on a name collision.
+ */
+const MAX_FILE_NAME_BYTES = 200
+const DEFAULT_FILE_NAME_TEMPLATE = '{YYYY}-{MM}-{DD}_{HH}-{mm}-{ss}.md'
 
 export type FastNoteSaveMode = 'create' | 'append'
 
@@ -13,6 +21,16 @@ export type FastNotePreset =
   | 'date_folders'
   | 'logseq_journal'
   | 'custom'
+
+const SAVE_MODES: readonly FastNoteSaveMode[] = ['create', 'append']
+const FOLDER_PRESETS: readonly FastNoteFolderPreset[] = [
+  'flat',
+  'year',
+  'year_month',
+  'year_month_flat',
+  'year_week',
+  'custom',
+]
 
 export interface FastNoteConfig {
   pathToNotes: string
@@ -33,6 +51,10 @@ export interface PresetDefaults {
   contentTemplate: string
 }
 
+/**
+ * Values a preset fills in. `custom` is empty: choosing it keeps the current
+ * values, and editing a value of another preset switches to it.
+ */
 export const FAST_NOTE_PRESETS: Record<
   FastNotePreset,
   Partial<PresetDefaults>
@@ -41,7 +63,7 @@ export const FAST_NOTE_PRESETS: Record<
     saveMode: 'create',
     folderPreset: 'flat',
     customSubfolderTemplate: '',
-    fileNameTemplate: '{YYYY}-{MM}-{DD}_{HH}-{mm}-{ss}.md',
+    fileNameTemplate: DEFAULT_FILE_NAME_TEMPLATE,
     contentTemplate: '{content}',
   },
   obsidian_zettel: {
@@ -115,27 +137,71 @@ export function getDateTokens(date: Date) {
   return { YYYY, YY, MM, DD, HH, mm, ss, WW, GGGG, zettel, timestamp }
 }
 
+const DATE_TOKEN_NAMES = Object.keys(getDateTokens(new Date(0)))
+
+/** Line endings of pasted or Windows text, as the templates write them. */
+const normalizeLineEndings = (text: string) => text.replace(/\r\n?/g, '\n')
+
+/** Invisible characters that reorder how a name reads, e.g. `abc‮dm.exe`. */
+const BIDI_CONTROLS = /[؜‎‏‪-‮⁦-⁩]/gu
+/** Device names Windows opens instead of a file, with any extension. */
+const WINDOWS_RESERVED_NAME =
+  /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?: *\.| *$)/i
+
 export function sanitizeFileName(name: string): string {
   let cleaned = name
+    .replace(BIDI_CONTROLS, '')
     .replace(/[/\\:*?"<>|\p{Cc}]+/gu, '-')
     .trim()
-    .replace(/[. ]+$/g, '')
-  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(cleaned))
-    cleaned = `_${cleaned}`
+    // a leading dot hides the file; Windows drops trailing dots and spaces
+    .replace(/^[. ]+|[. ]+$/g, '')
+  if (WINDOWS_RESERVED_NAME.test(cleaned)) cleaned = `_${cleaned}`
   return cleaned
 }
 
+const graphemes = (text: string): string[] =>
+  Array.from(
+    new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text),
+    (part) => part.segment
+  )
+
+/** Cuts `text` to at most `maxBytes` of UTF-8 without splitting a character. */
+function truncateUtf8(text: string, maxBytes: number): string {
+  const encoder = new TextEncoder()
+  if (encoder.encode(text).length <= maxBytes) return text
+  let result = ''
+  let bytes = 0
+  for (const part of graphemes(text)) {
+    bytes += encoder.encode(part).length
+    if (bytes > maxBytes) break
+    result += part
+  }
+  return result
+}
+
+/** Block markup in front of the text of a line, in any nesting order. */
+const BLOCK_MARKER =
+  /^(?:>[ \t]*|#{1,6}(?:[ \t]+|$)|[-*+](?:[ \t]+|$)|\d+[.)](?:[ \t]+|$)|\[[ xX]\](?:[ \t]+|$))/
+
+/** The first non-empty line without its Markdown markup. */
 export function extractTitle(text: string, maxLength = Infinity): string {
   const firstLine =
-    text.split(/\r?\n/).find((line) => line.trim().length > 0) || ''
-  const cleaned = firstLine
-    .replace(/^([#\s*-]+(\[[ xX]\])?|>+|\d+\.)\s*/, '')
+    normalizeLineEndings(text)
+      .split('\n')
+      .find((line) => line.trim().length > 0) ?? ''
+  let line = firstLine.trim()
+  while (BLOCK_MARKER.test(line)) line = line.replace(BLOCK_MARKER, '')
+  const cleaned = line
+    .replace(
+      /!?\[\[([^\]|]*)(?:\|([^\]]*))?\]\]/g,
+      (_, target: string, alias?: string) => alias || target
+    )
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/(\*\*|__|~~|`)(.+?)\1/g, '$2')
     .trim()
-  if (!cleaned) {
-    return ''
-  }
-  return Array.from(cleaned).length > maxLength
-    ? Array.from(cleaned).slice(0, maxLength).join('').trim()
+  const parts = graphemes(cleaned)
+  return parts.length > maxLength
+    ? parts.slice(0, maxLength).join('').trim()
     : cleaned
 }
 
@@ -146,32 +212,74 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
+/** `{name}` is a token; `{{` and `}}` write a literal brace. */
+const TEMPLATE_TOKEN = /\{\{|\}\}|\{([A-Za-z]\w*)\}/g
+
+/** The token names a template uses, without escaped braces. */
+export function templateTokenNames(template: string): string[] {
+  return Array.from(
+    template.matchAll(TEMPLATE_TOKEN),
+    (match) => match[1]
+  ).filter((name): name is string => name !== undefined)
+}
+
+/**
+ * Replaces the known tokens of `template`. `format` may escape a value; it is
+ * told whether the token stands inside quotes of the template.
+ */
 export function renderTemplate(
   template: string,
-  tokens: Record<string, string>
+  tokens: Record<string, string>,
+  format?: (name: string, value: string, quote: '"' | "'" | '') => string
 ): string {
-  return template.replace(/\{(\w+)\}/g, (match, key) => {
-    return Object.hasOwn(tokens, key) ? tokens[key] : match
+  return template.replace(TEMPLATE_TOKEN, (match, name, offset: number) => {
+    if (match === '{{') return '{'
+    if (match === '}}') return '}'
+    if (!Object.hasOwn(tokens, name)) return match
+    const before = template[offset - 1]
+    const quote =
+      (before === '"' || before === "'") &&
+      template[offset + match.length] === before
+        ? before
+        : ''
+    return format ? format(name, tokens[name]!, quote) : tokens[name]!
   })
 }
 
+const nonBlank = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0
+
+/**
+ * The settings a note is written with: a value left empty or unknown falls back
+ * to the selected preset, then to the default one.
+ */
 export function getEffectiveConfig(
   config?: Partial<FastNoteConfig>
 ): PresetDefaults {
-  const presetKey = config?.preset || 'default'
-  const presetDefaults = {
+  const presetKey =
+    config?.preset && Object.hasOwn(FAST_NOTE_PRESETS, config.preset)
+      ? config.preset
+      : 'default'
+  const preset = {
     ...FAST_NOTE_PRESETS.default,
     ...FAST_NOTE_PRESETS[presetKey],
   } as PresetDefaults
+  const text = (
+    key: Exclude<keyof PresetDefaults, 'saveMode' | 'folderPreset'>
+  ) => (nonBlank(config?.[key]) ? config[key] : preset[key])
 
   return {
-    saveMode: config?.saveMode || presetDefaults.saveMode,
-    folderPreset: config?.folderPreset || presetDefaults.folderPreset,
-    customSubfolderTemplate:
-      config?.customSubfolderTemplate ?? presetDefaults.customSubfolderTemplate,
-    fileNameTemplate:
-      config?.fileNameTemplate || presetDefaults.fileNameTemplate,
-    contentTemplate: config?.contentTemplate ?? presetDefaults.contentTemplate,
+    saveMode: SAVE_MODES.includes(config?.saveMode as FastNoteSaveMode)
+      ? config!.saveMode!
+      : preset.saveMode,
+    folderPreset: FOLDER_PRESETS.includes(
+      config?.folderPreset as FastNoteFolderPreset
+    )
+      ? config!.folderPreset!
+      : preset.folderPreset,
+    customSubfolderTemplate: text('customSubfolderTemplate'),
+    fileNameTemplate: text('fileNameTemplate'),
+    contentTemplate: text('contentTemplate'),
   }
 }
 
@@ -184,7 +292,7 @@ export function resolveNoteDir(
   const base = baseDir.trim()
   const trimmedBase = /^[a-zA-Z]:[/\\]+$/.test(base)
     ? `${base.slice(0, 2)}/`
-    : base.replace(/[/\\]+$/, '') || (baseDir.trim().startsWith('/') ? '/' : '')
+    : base.replace(/[/\\]+$/, '') || (base.startsWith('/') ? '/' : '')
   const tokens = getDateTokens(date)
 
   let subfolder: string
@@ -202,7 +310,7 @@ export function resolveNoteDir(
       subfolder = `${tokens.GGGG}/W${tokens.WW}`
       break
     case 'custom':
-      subfolder = renderTemplate(customSubfolderTemplate || '', tokens)
+      subfolder = renderTemplate(customSubfolderTemplate, tokens)
       break
     case 'flat':
     default:
@@ -210,11 +318,14 @@ export function resolveNoteDir(
       break
   }
 
-  const cleanSubfolder = subfolder.replace(/^[/\\]+|[/\\]+$/g, '')
+  const cleanSubfolder = subfolder.replace(/^\/+|\/+$/g, '')
   return cleanSubfolder
     ? `${trimmedBase}${trimmedBase.endsWith('/') ? '' : '/'}${cleanSubfolder}`
     : trimmedBase
 }
+
+/** An extension written in the template, e.g. `.md`; a title never adds one. */
+const FILE_EXTENSION = /\.[a-zA-Z][a-zA-Z0-9]{0,9}$/
 
 export function resolveNoteFileName(
   fileNameTemplate: string,
@@ -222,66 +333,104 @@ export function resolveNoteFileName(
   text: string
 ): string {
   const dateTokens = getDateTokens(date)
-  const title = sanitizeFileName(extractTitle(text, 60))
+  const day = `${dateTokens.YYYY}-${dateTokens.MM}-${dateTokens.DD}`
+  const fallback = `${day}_${dateTokens.HH}-${dateTokens.mm}-${dateTokens.ss}.md`
+  const title = sanitizeFileName(extractTitle(text, MAX_TITLE_LENGTH))
   const slug = slugify(title)
 
-  const tokens = {
-    ...dateTokens,
-    title: title || `${dateTokens.YYYY}-${dateTokens.MM}-${dateTokens.DD}`,
-    slug: slug || `${dateTokens.YYYY}-${dateTokens.MM}-${dateTokens.DD}`,
-  }
-
-  const template = fileNameTemplate || '{YYYY}-{MM}-{DD}_{HH}-{mm}-{ss}.md'
-  const rawName = renderTemplate(template, tokens)
-  let cleaned = sanitizeFileName(rawName)
-
-  if (!/\.[a-zA-Z][a-zA-Z0-9]{0,9}$/.test(template)) {
-    cleaned = `${cleaned}.md`
-  }
-
-  if (!cleaned || cleaned === '.md') {
-    return `${dateTokens.YYYY}-${dateTokens.MM}-${dateTokens.DD}_${dateTokens.HH}-${dateTokens.mm}-${dateTokens.ss}.md`
-  }
-
-  return cleaned
+  const template = nonBlank(fileNameTemplate)
+    ? fileNameTemplate
+    : DEFAULT_FILE_NAME_TEMPLATE
+  const name = sanitizeFileName(
+    renderTemplate(template, {
+      ...dateTokens,
+      title: title || day,
+      slug: slug || day,
+    })
+  )
+  const written = FILE_EXTENSION.test(template)
+    ? name.match(FILE_EXTENSION)?.[0]
+    : undefined
+  const extension = written ?? '.md'
+  const stem = written ? name.slice(0, -written.length) : name
+  const shortStem = sanitizeFileName(
+    truncateUtf8(
+      stem,
+      MAX_FILE_NAME_BYTES - new TextEncoder().encode(extension).length
+    )
+  )
+  return shortStem ? `${shortStem}${extension}` : fallback
 }
 
+/** A YAML scalar of a value, inside the quotes the template already has. */
+function yamlValue(value: string, quote: '"' | "'" | ''): string {
+  if (quote === "'") return value.replace(/'/g, "''").replace(/\n/g, ' ')
+  const json = JSON.stringify(value)
+  return quote === '"' ? json.slice(1, -1) : json
+}
+
+/** Drops the first non-empty line and the blank lines after it. */
+function withoutFirstLine(text: string): string {
+  const lines = text.split('\n')
+  lines.splice(0, lines.findIndex((line) => line.trim()) + 1)
+  while (lines.length && !lines[0]!.trim()) lines.shift()
+  return lines.join('\n')
+}
+
+/**
+ * What continues the line of `{content}` on its next lines: the quote marks and
+ * the indentation of a list item, so a multi-line text stays inside them.
+ */
+function continuationPrefix(contentTemplate: string): string {
+  const line = contentTemplate
+    .split('\n')
+    .find((candidate) => candidate.includes('{content}'))
+  if (line === undefined) return ''
+  const before = line.slice(0, line.indexOf('{content}'))
+  const quote = before.match(/^[ \t]*(?:>[ \t]?)*/)![0]
+  const list = before
+    .slice(quote.length)
+    .match(/^([ \t]*)((?:[-+*]|\d+[.)])[ \t]+)/)
+  return list ? `${quote}${list[1]}${list[2]!.replace(/[^\t]/g, ' ')}` : quote
+}
+
+/** The leading `---` block of a template, as YAML front matter. */
+const FRONT_MATTER = /^---\n[\s\S]*?\n---(?:\n|$)/
+
 export function resolveNoteContent(
-  mode: FastNoteSaveMode,
   contentTemplate: string,
   text: string,
   date: Date
 ): string {
-  const dateTokens = getDateTokens(date)
-  const title = extractTitle(text)
+  const template = normalizeLineEndings(contentTemplate)
+  const normalized = normalizeLineEndings(text)
+  const title = extractTitle(normalized)
+  // A heading made of the title already shows the first line.
+  const body =
+    title && /(?:^|\n)[ \t]*#{1,6}[ \t]+\{title\}/.test(template)
+      ? withoutFirstLine(normalized)
+      : normalized
+  const prefix = continuationPrefix(template)
+  const content = prefix
+    ? body
+        .split('\n')
+        .map((line, index) =>
+          index === 0 ? line : line ? `${prefix}${line}` : prefix.trimEnd()
+        )
+        .join('\n')
+    : body
+  const tokens = { ...getDateTokens(date), title, content }
 
-  // Indent continuation lines when the template inserts content into a list.
-  const contentLine = contentTemplate
-    .split('\n')
-    .find((line) => line.includes('{content}'))
-  const listPrefix = contentLine?.match(/^(\s*(?:[-+*]|\d+[.)])\s+)/)?.[1]
-  const source =
-    /(?:^|\n)#+ \{title\}/.test(contentTemplate) && /^\s*#+\s/.test(text)
-      ? text.replace(/^\s*#+[^\n]*(?:\r?\n|$)/, '').replace(/^\r?\n/, '')
-      : text
-  const content = listPrefix
-    ? source.replace(/\r?\n/g, `\n${' '.repeat(listPrefix.length)}`)
-    : source
-  const tokens = { ...dateTokens, title, content }
-
-  let result: string
-  if (contentTemplate?.trim()) {
-    result = renderTemplate(contentTemplate, tokens)
-  } else if (mode === 'append') {
-    result = `- **${dateTokens.HH}:${dateTokens.mm}**: ${text}`
-  } else {
-    result = text
-  }
+  const frontMatter = template.match(FRONT_MATTER)?.[0] ?? ''
+  const result =
+    renderTemplate(frontMatter, tokens, (name, value, quote) =>
+      name === 'title' || name === 'content' ? yamlValue(value, quote) : value
+    ) + renderTemplate(template.slice(frontMatter.length), tokens)
 
   return result.endsWith('\n') ? result : `${result}\n`
 }
 
-export type FastNoteValidationIssue =
+export type FastNoteIssueCode =
   | 'noNotesPath'
   | 'invalidNotesPath'
   | 'invalidSubfolder'
@@ -289,48 +438,62 @@ export type FastNoteValidationIssue =
   | 'missingContentToken'
   | 'invalidFileName'
 
+export interface FastNoteIssue {
+  code: FastNoteIssueCode
+  /** The token `unknownTemplateToken` is about */
+  token?: string
+}
+
+/** A subfolder name the supported file systems all take. */
+function isValidFolderName(name: string): boolean {
+  return (
+    name !== '..' &&
+    (name === '.' || !/[. ]$/.test(name)) &&
+    !WINDOWS_RESERVED_NAME.test(name)
+  )
+}
+
 /** Validates templates before writing or clearing any editor content. */
 export function validateFastNoteConfig(
   config: Partial<FastNoteConfig>
-): FastNoteValidationIssue[] {
-  const issues: FastNoteValidationIssue[] = []
+): FastNoteIssue[] {
+  const issues: FastNoteIssue[] = []
   const path = config.pathToNotes?.trim() ?? ''
-  if (!path) issues.push('noNotesPath')
+  if (!path) issues.push({ code: 'noNotesPath' })
   else if (
     !/^(?:\/|[a-zA-Z]:[/\\]|\\\\|~(?:[/\\]|$))/.test(path) ||
     /\p{Cc}/u.test(path) ||
     path.split(/[/\\]/).includes('..')
   )
-    issues.push('invalidNotesPath')
+    issues.push({ code: 'invalidNotesPath' })
   const effective = getEffectiveConfig(config)
-  const dateKeys = Object.keys(getDateTokens(new Date()))
   const templates: Array<[string, string[]]> = [
-    [effective.fileNameTemplate, [...dateKeys, 'title', 'slug']],
-    [effective.contentTemplate, [...dateKeys, 'title', 'content']],
+    [effective.fileNameTemplate, [...DATE_TOKEN_NAMES, 'title', 'slug']],
+    [effective.contentTemplate, [...DATE_TOKEN_NAMES, 'title', 'content']],
   ]
   if (effective.folderPreset === 'custom') {
     const folder = effective.customSubfolderTemplate
-    templates.push([folder, dateKeys])
+    templates.push([folder, DATE_TOKEN_NAMES])
     if (
-      /^(?:[/\\]|[a-zA-Z]:)/.test(folder) ||
-      folder.split(/[/\\]/).includes('..') ||
-      /[:*?"<>|\p{Cc}]/u.test(folder)
+      /^(?:\/|[a-zA-Z]:)/.test(folder) ||
+      /[\\:*?"<>|\p{Cc}]/u.test(folder) ||
+      !folder
+        .split('/')
+        .filter(Boolean)
+        .every((name) => isValidFolderName(name))
     )
-      issues.push('invalidSubfolder')
+      issues.push({ code: 'invalidSubfolder' })
   }
-  if (
-    templates.some(([template, keys]) =>
-      Array.from(template.matchAll(/\{([A-Za-z]\w*)\}/g)).some(
-        (match) => !keys.includes(match[1])
-      )
+  const unknownToken = templates
+    .flatMap(([template, names]) =>
+      templateTokenNames(template).filter((name) => !names.includes(name))
     )
-  )
-    issues.push('unknownTemplateToken')
-  if (
-    effective.contentTemplate.trim() &&
-    !effective.contentTemplate.includes('{content}')
-  )
-    issues.push('missingContentToken')
-  if (/\p{Cc}/u.test(effective.fileNameTemplate)) issues.push('invalidFileName')
+    .at(0)
+  if (unknownToken !== undefined)
+    issues.push({ code: 'unknownTemplateToken', token: unknownToken })
+  if (!templateTokenNames(effective.contentTemplate).includes('content'))
+    issues.push({ code: 'missingContentToken' })
+  if (/\p{Cc}/u.test(effective.fileNameTemplate))
+    issues.push({ code: 'invalidFileName' })
   return issues
 }

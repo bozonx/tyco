@@ -25,7 +25,7 @@
   "fileNameTemplate": "Šablona názvu souboru",
   "fileNameTemplateInfo": "Podporuje tokeny data ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}), a také {'{'}title{'}'} a {'{'}slug{'}'}. Při shodě názvů obdrží soubory číselnou příponu.",
   "contentTemplate": "Šablona obsahu",
-  "contentTemplateInfo": "Podporuje tokeny data, {'{'}title{'}'} a povinný {'{'}content{'}'}. Režim připojení vytvoří soubor, pokud chybí.",
+  "contentTemplateInfo": "Podporuje tokeny data, {'{'}title{'}'} a povinný {'{'}content{'}'}. Pro složenou závorku napište {'{'}{'{'} nebo {'}'}{'}'}. Pokud nadpis používá {'{'}title{'}'}, první řádek se pod ním neopakuje. Režim připojení vytvoří soubor, pokud chybí.",
   "clearInputAfterSave": "Po uložení vymazat vstupní pole",
   "toolLabel": "Zapsat poznámku",
   "toolDescription": "Uloží text jako novou poznámku nebo jej připojí ke stávající ve složce poznámek",
@@ -34,8 +34,12 @@
   "noteAppended": "Poznámka připojena",
   "noteSaveFailed": "Uložení poznámky se nezdařilo",
   "invalidNotesPath": "Použijte absolutní cestu k poznámkám nebo cestu začínající ~/.",
-  "invalidSubfolder": "Podsložka musí být relativní, bez .. a neplatných znaků cesty.",
-  "unknownTemplateToken": "Neznámý token šablony. Zkontrolujte podporované tokeny.",
+  "invalidSubfolder": "Podsložka musí být relativní, používat / jako oddělovač a nesmí obsahovat .., rezervované názvy jako CON ani neplatné znaky cesty.",
+  "unknownTemplateToken": "Neznámý token šablony {'{'}{token}{'}'}. Zkontrolujte podporované tokeny nebo pro složené závorky napište {'{'}{'{'} a {'}'}{'}'}.",
   "missingContentToken": "Šablona obsahu musí obsahovat {'{'}content{'}'}.",
-  "invalidFileName": "Šablona názvu souboru obsahuje řídicí znaky."
+  "invalidFileName": "Šablona názvu souboru obsahuje řídicí znaky.",
+  "noteSaveDenied": "Zápis do složky poznámek není povolen. Zkontrolujte její oprávnění a to, že je složka uložena v nastavení.",
+  "noteSaveInvalid": "Složka poznámek nebo název souboru není platný. Zkontrolujte složku nebo zkraťte šablonu názvu souboru.",
+  "noteTooLarge": "Poznámka je příliš velká nebo je disk plný.",
+  "previewText": "Ukázková poznámka\nDalší podrobnosti"
 }

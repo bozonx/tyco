@@ -25,7 +25,7 @@
   "fileNameTemplate": "Dosya adı şablonu",
   "fileNameTemplateInfo": "Tarih belirteçlerini ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}) ve ayrıca {'{'}title{'}'} ile {'{'}slug{'}'} belirteçlerini destekler. Ad çakışmasında dosyalara sayısal ek verilir.",
   "contentTemplate": "İçerik şablonu",
-  "contentTemplateInfo": "Tarih belirteçlerini, {'{'}title{'}'} ve zorunlu {'{'}content{'}'} belirtecini destekler. Ekleme modu dosya yoksa oluşturur.",
+  "contentTemplateInfo": "Tarih belirteçlerini, {'{'}title{'}'} ve zorunlu {'{'}content{'}'} belirtecini destekler. Süslü parantez yazmak için {'{'}{'{'} veya {'}'}{'}'} kullanın. Bir başlık {'{'}title{'}'} kullanıyorsa ilk satır altında tekrarlanmaz. Ekleme modu dosya yoksa oluşturur.",
   "clearInputAfterSave": "Kaydettikten sonra giriş alanını temizle",
   "toolLabel": "Not yaz",
   "toolDescription": "Metni not klasörünüzde yeni bir not olarak kaydeder veya bir nota ekler",
@@ -34,8 +34,12 @@
   "noteAppended": "Not eklendi",
   "noteSaveFailed": "Not kaydedilemedi",
   "invalidNotesPath": "Mutlak bir not yolu veya ~/ ile başlayan bir yol kullanın.",
-  "invalidSubfolder": "Alt klasör göreli olmalı; .. veya geçersiz yol karakterleri içermemeli.",
-  "unknownTemplateToken": "Bilinmeyen şablon belirteci. Desteklenen belirteçleri kontrol edin.",
+  "invalidSubfolder": "Alt klasör göreli olmalı, ayırıcı olarak / kullanmalı ve .., CON gibi ayrılmış adlar veya geçersiz yol karakterleri içermemelidir.",
+  "unknownTemplateToken": "Bilinmeyen şablon belirteci {'{'}{token}{'}'}. Desteklenen belirteçleri kontrol edin veya süslü parantez için {'{'}{'{'} ve {'}'}{'}'} yazın.",
   "missingContentToken": "İçerik şablonu {'{'}content{'}'} içermeli.",
-  "invalidFileName": "Dosya adı şablonu kontrol karakterleri içeriyor."
+  "invalidFileName": "Dosya adı şablonu kontrol karakterleri içeriyor.",
+  "noteSaveDenied": "Notlar klasörüne yazmaya izin verilmiyor. Klasörün izinlerini ve ayarlarda kayıtlı olduğunu kontrol edin.",
+  "noteSaveInvalid": "Notlar klasörü veya dosya adı geçersiz. Klasörü kontrol edin ya da dosya adı şablonunu kısaltın.",
+  "noteTooLarge": "Not çok büyük veya disk dolu.",
+  "previewText": "Örnek not\nDaha fazla ayrıntı"
 }

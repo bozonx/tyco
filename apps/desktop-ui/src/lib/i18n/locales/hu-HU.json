@@ -697,22 +697,8 @@
     "editorTab": "Szerkesztő",
     "externalMethods": "Egyéb indítási módok",
     "externalMethodsHint": "Használja ezt a parancsot terminálból, szkriptből vagy rendszerszintű billentyűparancsból. A tyco-ctl kliensnek telepítve és a PATH-ban elérhetőnek kell lennie. Linuxon a D-Bus is támogatott: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Sablon alkalmazása",
-      "browse": "Mappa kiválasztása",
-      "errors": {
-        "invalidFileName": "A fájlnévsablon vezérlőkaraktereket tartalmaz.",
-        "invalidNotesPath": "Használjon abszolút jegyzetútvonalat vagy ~/ kezdetű útvonalat.",
-        "invalidSubfolder": "Az almappának relatívnak kell lennie, .. és érvénytelen útvonal-karakterek nélkül.",
-        "missingContentToken": "A tartalomsablonnak tartalmaznia kell a következőt: {'{'}content{'}'}.",
-        "unknownTemplateToken": "Ismeretlen sablonváltozó. Ellenőrizze a támogatott változókat."
-      },
-      "folder": "Jegyzetmappa",
-      "pathHint": "Használjon abszolút útvonalat vagy a ~/notes formát. Logseq esetén a gráf gyökerét válassza; a journals automatikusan hozzáadódik.",
-      "preview": "Előnézet",
-      "sampleText": "Példajegyzet\nTovábbi részletek",
-      "template": "Beállítássablon alkalmazása"
-    },
+    "browseFolder": "Mappa kiválasztása",
+    "configPreview": "Előnézet",
     "forcedByEInk": "Az e-ink témánál mindig magas kontraszt és nincsenek animációk",
     "formatWithLlm": "Diktálás automatikus javítása a külső alkalmazásba való beillesztés előtt",
     "generalTab": "Általános",

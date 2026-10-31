@@ -25,7 +25,7 @@
   "fileNameTemplate": "Fájlnévsablon",
   "fileNameTemplateInfo": "Támogatja a dátumtokeneket ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}), valamint a {'{'}title{'}'} és {'{'}slug{'}'} tokeneket. Névütközés esetén a fájlok numerikus utótagot kapnak.",
   "contentTemplate": "Tartalomsablon",
-  "contentTemplateInfo": "Támogatja a dátumtokeneket, a {'{'}title{'}'} tokent és a kötelező {'{'}content{'}'} tokent. A hozzáfűzés mód létrehozza a fájlt, ha hiányzik.",
+  "contentTemplateInfo": "Támogatja a dátumtokeneket, a {'{'}title{'}'} tokent és a kötelező {'{'}content{'}'} tokent. Kapcsos zárójelhez írja: {'{'}{'{'} vagy {'}'}{'}'}. Ha egy címsor a {'{'}title{'}'} tokent használja, az első sor nem ismétlődik alatta. A hozzáfűzés mód létrehozza a fájlt, ha hiányzik.",
   "clearInputAfterSave": "Bemeneti mező törlése mentés után",
   "toolLabel": "Jegyzet írása",
   "toolDescription": "Menti a szöveget új jegyzetként, vagy meglévőhöz fűzi a jegyzetmappában",
@@ -34,8 +34,12 @@
   "noteAppended": "Jegyzet hozzáfűzve",
   "noteSaveFailed": "A jegyzet mentése nem sikerült",
   "invalidNotesPath": "Használjon abszolút útvonalat vagy ~/ kezdetű útvonalat.",
-  "invalidSubfolder": "Az almappának relatívnak kell lennie, .. és érvénytelen útvonalkarakterek nélkül.",
-  "unknownTemplateToken": "Ismeretlen sablontoken. Ellenőrizze a támogatott tokeneket.",
+  "invalidSubfolder": "Az almappának relatívnak kell lennie, elválasztóként /-t kell használnia, és nem tartalmazhat .. elemet, foglalt nevet (például CON) vagy érvénytelen útvonalkaraktert.",
+  "unknownTemplateToken": "Ismeretlen sablontoken: {'{'}{token}{'}'}. Ellenőrizze a támogatott tokeneket, vagy kapcsos zárójelhez írja: {'{'}{'{'} és {'}'}{'}'}.",
   "missingContentToken": "A tartalomsablonnak tartalmaznia kell a {'{'}content{'}'} tokent.",
-  "invalidFileName": "A fájlnévsablon vezérlőkaraktereket tartalmaz."
+  "invalidFileName": "A fájlnévsablon vezérlőkaraktereket tartalmaz.",
+  "noteSaveDenied": "A jegyzetek mappájába írás nem engedélyezett. Ellenőrizze a mappa jogosultságait, és hogy el van-e mentve a beállításokban.",
+  "noteSaveInvalid": "A jegyzetek mappája vagy a fájlnév érvénytelen. Ellenőrizze a mappát, vagy rövidítse a fájlnévsablont.",
+  "noteTooLarge": "A jegyzet túl nagy, vagy megtelt a lemez.",
+  "previewText": "Példajegyzet\nTovábbi részletek"
 }

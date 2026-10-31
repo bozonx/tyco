@@ -25,7 +25,7 @@
   "fileNameTemplate": "檔案名稱範本",
   "fileNameTemplateInfo": "支援日期標記 ({'{'}YYYY{'}'}、{'{'}YY{'}'}、{'{'}MM{'}'}、{'{'}DD{'}'}、{'{'}HH{'}'}、{'{'}mm{'}'}、{'{'}ss{'}'}、{'{'}WW{'}'}、{'{'}GGGG{'}'}、{'{'}zettel{'}'}、{'{'}timestamp{'}'})，以及 {'{'}title{'}'} 和 {'{'}slug{'}'}。名稱衝突時檔案會獲得數字後綴。",
   "contentTemplate": "內容範本",
-  "contentTemplateInfo": "支援日期標記、{'{'}title{'}'} 以及必填的 {'{'}content{'}'}。附加模式在檔案遺失時自動建立。",
+  "contentTemplateInfo": "支援日期權杖、{'{'}title{'}'} 以及必要的 {'{'}content{'}'}。若要輸入大括號，請寫 {'{'}{'{'} 或 {'}'}{'}'}。如果標題使用 {'{'}title{'}'}，第一行不會在其下方重複。附加模式會在檔案不存在時建立檔案。",
   "clearInputAfterSave": "儲存後清除輸入欄位",
   "toolLabel": "撰寫筆記",
   "toolDescription": "在筆記資料夾中將文字儲存為新筆記或附加到現有筆記中",
@@ -34,8 +34,12 @@
   "noteAppended": "筆記已附加",
   "noteSaveFailed": "儲存筆記失敗",
   "invalidNotesPath": "請使用絕對筆記路徑或以 ~/ 開頭的路徑。",
-  "invalidSubfolder": "子資料夾必須為相對路徑，不得包含 .. 或無效的路徑字元。",
-  "unknownTemplateToken": "未知的範本標記。請檢查支援的標記。",
+  "invalidSubfolder": "子資料夾必須是相對路徑，使用 / 作為分隔符號，且不能包含 ..、CON 等保留名稱或無效的路徑字元。",
+  "unknownTemplateToken": "未知的範本權杖 {'{'}{token}{'}'}。請檢查支援的權杖，或寫 {'{'}{'{'} 和 {'}'}{'}'} 來表示大括號。",
   "missingContentToken": "內容範本必須包含 {'{'}content{'}'}。",
-  "invalidFileName": "檔案名稱範本包含控制字元。"
+  "invalidFileName": "檔案名稱範本包含控制字元。",
+  "noteSaveDenied": "不允許寫入筆記資料夾。請檢查其權限，並確認該資料夾已儲存在設定中。",
+  "noteSaveInvalid": "筆記資料夾或檔案名稱無效。請檢查資料夾或縮短檔案名稱範本。",
+  "noteTooLarge": "筆記過大，或磁碟已滿。",
+  "previewText": "範例筆記\n更多詳細資訊"
 }

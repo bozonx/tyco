@@ -144,6 +144,7 @@ describe('FastNote plugin', () => {
     ])
     expect(result).toEqual({
       ok: true,
+      isCommitted: true,
       messageKey: 'local.noteAppended',
       keepWindow: false,
     })
@@ -163,12 +164,119 @@ describe('FastNote plugin', () => {
     expect(mocks.toast).toHaveBeenCalledWith('local.noteSaveFailed', 'error')
   })
 
+  it('tells why the host refused to write the note', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    for (const [errorCode, messageKey] of [
+      ['permissionDenied', 'local.noteSaveDenied'],
+      ['invalidInput', 'local.noteSaveInvalid'],
+      ['resourceLimit', 'local.noteTooLarge'],
+      ['ioError', 'local.noteSaveFailed'],
+    ]) {
+      const { tools } = setup({
+        config: { pathToNotes: '/notes' },
+        apiResult: { success: false, error: 'detail', errorCode },
+      })
+      expect(
+        await tools[0].run({
+          input: { text: 'text' },
+          config: { pathToNotes: '/notes' },
+          source: 'launcher',
+          signal: new AbortController().signal,
+          isOutputRequested: false,
+        })
+      ).toEqual({ ok: false, messageKey })
+    }
+  })
+
+  it('reports a saved note when clearing the editor fails', async () => {
+    const { mocks, tools } = setup({
+      value: 'text',
+      config: { pathToNotes: '/notes', clearInputAfterSave: true },
+    })
+    mocks.applyEditorInputEdit.mockRejectedValueOnce(new Error('gone'))
+    expect(
+      await tools[0].run({
+        input: { text: 'text' },
+        config: { pathToNotes: '/notes' },
+        source: 'menu',
+        signal: new AbortController().signal,
+        isOutputRequested: false,
+      })
+    ).toMatchObject({ ok: true, isCommitted: true })
+    expect(mocks.log).toHaveBeenCalledWith(
+      'warn',
+      'Failed to clear the editor after saving',
+      expect.any(Error)
+    )
+  })
+
+  it('reports the note as saved when the call is cancelled during the write', async () => {
+    const controller = new AbortController()
+    const { mocks, tools } = setup({
+      value: 'text',
+      config: { pathToNotes: '/notes', clearInputAfterSave: true },
+    })
+    mocks.callApiFunction.mockImplementationOnce(async () => {
+      controller.abort()
+      return { success: true, result: '/notes/x.md' }
+    })
+    expect(
+      await tools[0].run({
+        input: { text: 'text' },
+        config: { pathToNotes: '/notes' },
+        source: 'menu',
+        signal: controller.signal,
+        isOutputRequested: false,
+      })
+    ).toMatchObject({ ok: true, isCommitted: true })
+    expect(mocks.applyEditorInputEdit).not.toHaveBeenCalled()
+  })
+
+  it('lists every settings problem at once', async () => {
+    const { tools } = setup({})
+    expect(
+      await tools[0].run({
+        input: { text: 'text' },
+        config: { pathToNotes: 'relative', fileNameTemplate: '{typo}' },
+        source: 'launcher',
+        signal: new AbortController().signal,
+        isOutputRequested: false,
+      })
+    ).toEqual({
+      ok: false,
+      level: 'warn',
+      message: 'local.invalidNotesPath local.unknownTemplateToken',
+    })
+  })
+
+  it('previews the note path and content for the settings', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 3, 10, 15, 0))
+    const { tools } = setup({})
+    expect(
+      await tools[0].previewConfig!({
+        pathToNotes: '/vault',
+        preset: 'obsidian_daily',
+        fileNameTemplate: '{YYYY}-{MM}-{DD}.md',
+        contentTemplate: '- {nope} {content}',
+      })
+    ).toEqual({
+      issues: [
+        { messageKey: 'local.unknownTemplateToken', params: { token: 'nope' } },
+      ],
+      samples: ['/vault/2026-10-03.md', '- {nope} local.previewText\n'],
+    })
+    expect((await tools[0].previewConfig!({ pathToNotes: '' })).issues).toEqual(
+      []
+    )
+  })
+
   it('warns when the notes folder is not configured', async () => {
     const { mocks, toolbarItems } = setup({ value: 'text' })
 
     await toolbarItems[0].action()
 
-    expect(mocks.toast).toHaveBeenCalledWith('local.noNotesPath', 'warn')
+    expect(mocks.toastText).toHaveBeenCalledWith('local.noNotesPath', 'warn')
     expect(mocks.callApiFunction).not.toHaveBeenCalled()
   })
 
@@ -296,7 +404,7 @@ describe('FastNote template safety', () => {
     expect(mocks.callApiFunction).not.toHaveBeenCalled()
     expect(mocks.applyEditorInputEdit).not.toHaveBeenCalled()
     expect(await ctx.getEditorInputValue()).toBe('Important text')
-    expect(mocks.toast).toHaveBeenCalledWith(
+    expect(mocks.toastText).toHaveBeenCalledWith(
       'local.missingContentToken',
       'warn'
     )

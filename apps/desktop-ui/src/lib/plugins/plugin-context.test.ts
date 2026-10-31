@@ -148,6 +148,68 @@ describe('plugin context boundary', () => {
     complete()
     expect(await running).toEqual({ ok: false, cancelled: true })
   })
+  it('reports a change a tool committed before its plugin was disabled, without output', async () => {
+    const { context, deps, controller } = setup()
+    context.registerTools([
+      tool(async () => {
+        controller.abort()
+        return {
+          ok: true,
+          isCommitted: true,
+          content: 'late',
+          messageKey: 'local.saved',
+        }
+      }),
+    ])
+    const registered = vi.mocked(deps.registerTools).mock.calls[0][0][0]
+    expect(
+      await registered.run({
+        input: { text: 'text' },
+        config: {},
+        source: 'external',
+        signal: new AbortController().signal,
+        isOutputRequested: true,
+      })
+    ).toEqual({
+      ok: true,
+      isCommitted: true,
+      messageKey: pluginMessageKey('Example', 'local.saved'),
+    })
+  })
+  it('scopes settings previews and offers a folder picker only for the notes setting', async () => {
+    const { context, deps } = setup(['notes'])
+    const previewConfig = vi.fn(async () => ({
+      issues: [{ messageKey: 'local.bad', params: { token: 'x' } }],
+      samples: ['sample'],
+    }))
+    context.registerTools([
+      { ...tool(async () => ({ ok: true })), previewConfig },
+    ])
+    const registered = vi.mocked(deps.registerTools).mock.calls[0][0][0]
+    const config = { pathToNotes: '/notes' }
+    expect(await registered.previewConfig!(config)).toEqual({
+      issues: [
+        {
+          messageKey: pluginMessageKey('Example', 'local.bad'),
+          params: { token: 'x' },
+        },
+      ],
+      samples: ['sample'],
+    })
+    // the plugin gets a copy it cannot use to change the editor state
+    expect(previewConfig.mock.calls[0]).not.toContain(config)
+    expect(registered.directoryFieldName).toBe('pathToNotes')
+
+    previewConfig.mockResolvedValueOnce({ samples: [7] } as never)
+    await expect(registered.previewConfig!(config)).rejects.toThrow()
+
+    const editorOnly = setup()
+    editorOnly.context.registerTools([tool(async () => ({ ok: true }))])
+    expect(
+      vi.mocked(editorOnly.deps.registerTools).mock.calls[0][0][0]
+        .directoryFieldName
+    ).toBeUndefined()
+  })
   it('does not apply an edit transformation that finishes after deactivation', async () => {
     const { context, deps, controller } = setup()
     let complete!: (text: string) => void

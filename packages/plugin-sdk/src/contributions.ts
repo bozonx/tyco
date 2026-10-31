@@ -3,7 +3,7 @@ import {
   hasContributionIdFormat,
 } from './package-format.js'
 import { isRecord } from './value-guards.js'
-import type { ToolResult, ParseResult } from './tools.js'
+import type { ToolResult, ParseResult, ToolConfigPreview } from './tools.js'
 
 /** Check untrusted registration data before it reaches a host registry. */
 export function validateContribution(
@@ -72,7 +72,7 @@ export function validateToolResult(
   for (const field of ['messageKey', 'message', 'content'])
     if (value[field] !== undefined && typeof value[field] !== 'string')
       throw new Error(`Invalid tool result ${field}`)
-  for (const field of ['cancelled', 'keepWindow'])
+  for (const field of ['cancelled', 'keepWindow', 'isCommitted'])
     if (value[field] !== undefined && typeof value[field] !== 'boolean')
       throw new Error(`Invalid tool result ${field}`)
   if (
@@ -82,6 +82,61 @@ export function validateToolResult(
     throw new Error('Invalid tool result level')
   if (value.meta !== undefined && !isRecord(value.meta))
     throw new Error('Invalid tool result metadata')
+}
+
+/**
+ * What a run reports when its call was cancelled while it ran: nothing, unless
+ * it already changed something outside the app (`isCommitted`). Its output is
+ * dropped either way.
+ */
+export function cancelledToolResult(result: unknown): ToolResult {
+  if (isRecord(result) && result.ok === true && result.isCommitted === true) {
+    validateToolResult(result)
+    return Object.fromEntries(
+      Object.entries(result).filter(([key]) => key !== 'content')
+    ) as unknown as ToolResult
+  }
+  return { ok: false, cancelled: true }
+}
+
+/** Bounds of a settings preview, which the host renders as it is. */
+export const MAX_PREVIEW_ISSUES = 32
+export const MAX_PREVIEW_SAMPLES = 8
+export const MAX_PREVIEW_SAMPLE_LENGTH = 65_536
+
+export function validateToolConfigPreview(
+  value: unknown
+): asserts value is ToolConfigPreview {
+  if (!isRecord(value)) throw new Error('Invalid tool config preview')
+  if (value.issues !== undefined) {
+    if (
+      !Array.isArray(value.issues) ||
+      value.issues.length > MAX_PREVIEW_ISSUES
+    )
+      throw new Error('Invalid tool config issues')
+    for (const issue of value.issues)
+      if (
+        !isRecord(issue) ||
+        typeof issue.messageKey !== 'string' ||
+        (issue.params !== undefined &&
+          (!isRecord(issue.params) ||
+            Object.values(issue.params).some(
+              (param) => typeof param !== 'string' && typeof param !== 'number'
+            )))
+      )
+        throw new Error('Invalid tool config issue')
+  }
+  if (
+    value.samples !== undefined &&
+    (!Array.isArray(value.samples) ||
+      value.samples.length > MAX_PREVIEW_SAMPLES ||
+      value.samples.some(
+        (sample) =>
+          typeof sample !== 'string' ||
+          sample.length > MAX_PREVIEW_SAMPLE_LENGTH
+      ))
+  )
+    throw new Error('Invalid tool config samples')
 }
 
 export function validateParseResult(

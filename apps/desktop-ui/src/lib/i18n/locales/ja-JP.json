@@ -697,22 +697,8 @@
     "editorTab": "エディター",
     "externalMethods": "その他の呼び出し方法",
     "externalMethodsHint": "ターミナル、スクリプト、またはシステムのショートカットからこのコマンドを実行します。tyco-ctlクライアントがインストールされ、PATHに含まれている必要があります。LinuxではD-Busもサポートされています: org.tyco.Service, /org/tyco/Object, org.tyco.Interface。",
-    "fastNote": {
-      "apply": "テンプレートを適用",
-      "browse": "フォルダーを選択",
-      "errors": {
-        "invalidFileName": "ファイル名テンプレートに制御文字が含まれています。",
-        "invalidNotesPath": "絶対パスまたは ~/ で始まるパスを使用してください。",
-        "invalidSubfolder": "サブフォルダーは相対パスで、.. や無効なパス文字を含まないようにしてください。",
-        "missingContentToken": "コンテンツテンプレートには {'{'}content{'}'} を含める必要があります。",
-        "unknownTemplateToken": "不明なテンプレートトークンです。サポートされているトークンを確認してください。"
-      },
-      "folder": "ノートフォルダー",
-      "pathHint": "絶対パスまたは ~/notes を使用してください。Logseqの場合はグラフのルートを選択してください。journalsは自動的に追加されます。",
-      "preview": "プレビュー",
-      "sampleText": "サンプルノート\n詳細情報",
-      "template": "設定テンプレートを適用"
-    },
+    "browseFolder": "フォルダーを選択",
+    "configPreview": "プレビュー",
     "forcedByEInk": "E-Inkテーマでは常に高コントラストになり、アニメーションはオフになります",
     "formatWithLlm": "外部アプリに挿入する前にディクテーションを自動修正する",
     "generalTab": "一般",

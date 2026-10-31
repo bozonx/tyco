@@ -75,6 +75,43 @@ describe('plugin config', () => {
       enabledFeature: false,
     })
   })
+  it('moves to the preset without values when a preset value is edited', () => {
+    const withFree = {
+      ...plugin,
+      defaultConfig: {
+        fields: [
+          {
+            name: 'mode',
+            type: 'select' as const,
+            defaultValue: 'safe',
+            options: [{ id: 'safe' }, { id: 'own' }],
+          },
+          {
+            name: 'enabledFeature',
+            type: 'checkbox' as const,
+            defaultValue: true,
+          },
+          { name: 'note', type: 'text' as const, defaultValue: '' },
+        ],
+        presets: { mode: { safe: { enabledFeature: true }, own: {} } },
+      },
+    }
+    const state = { mode: 'safe', enabledFeature: true, note: '' }
+    // a field the preset does not set keeps it
+    expect(applyPluginPreset(withFree, state, { ...state, note: 'x' })).toEqual(
+      { ...state, note: 'x' }
+    )
+    expect(
+      applyPluginPreset(withFree, state, { ...state, enabledFeature: false })
+    ).toEqual({ ...state, mode: 'own', enabledFeature: false })
+    // without such a preset the selection stays
+    expect(
+      applyPluginPreset(withPresetsOf(plugin), state, {
+        ...state,
+        enabledFeature: false,
+      })
+    ).toMatchObject({ mode: 'safe', enabledFeature: false })
+  })
   it('reads only its current identity and returns detached settings', () => {
     const states = {
       Other: { isEnabled: true, settings: { mode: 'custom' } },
@@ -141,3 +178,18 @@ it('persists migrated settings and their version without losing newer settings o
   expect(applyPluginDefaults([() => upgraded], prepared)).toEqual(prepared)
   expect(applyPluginDefaults([() => plugin], prepared)).toEqual(prepared)
 })
+
+function withPresetsOf(definition: typeof plugin) {
+  return {
+    ...definition,
+    defaultConfig: {
+      ...definition.defaultConfig,
+      presets: {
+        mode: {
+          safe: { enabledFeature: true },
+          custom: { enabledFeature: false },
+        },
+      },
+    },
+  }
+}

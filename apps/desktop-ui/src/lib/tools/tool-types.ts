@@ -10,6 +10,11 @@ export interface ToolDefinition extends SdkToolDefinition {
   getUnavailableReasonKey?(): string | undefined
   /** The tool writes its output to the action log when the command asks */
   canLogOutput?: boolean
+  /**
+   * A text field the settings editor offers a folder picker for: the setting
+   * that grants a notes plugin its notes root
+   */
+  directoryFieldName?: string
 }
 
 /** Who provides a tool of the registry */

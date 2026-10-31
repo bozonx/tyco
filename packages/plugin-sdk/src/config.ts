@@ -9,6 +9,16 @@ export interface SortableChecklistItem {
   enabled: boolean
 }
 
+/**
+ * Shows a field only while another field of the same form has one of the listed
+ * values, e.g. a template that applies to one mode only. A hidden field keeps
+ * its saved value.
+ */
+export interface ConfigFieldVisibility {
+  field: string
+  equals: ReadonlyArray<string | number | boolean>
+}
+
 interface InputConfigField<Type extends string, Value> {
   type: Type
   name: string
@@ -20,6 +30,7 @@ interface InputConfigField<Type extends string, Value> {
   defaultValue?: Value
   options?: InputConfigOption[]
   vertical?: boolean
+  visibleWhen?: ConfigFieldVisibility
 }
 
 export type InputConfigItem =

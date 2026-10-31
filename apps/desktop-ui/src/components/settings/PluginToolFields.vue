@@ -1,5 +1,4 @@
 <template>
-  <slot name="before" />
   <FieldRow
     v-for="field in visibleFields"
     :key="field.name"
@@ -14,9 +13,16 @@
       auto-resize
       @update:model-value="updateField(field, $event)"
     />
-    <slot name="field" :field="field" />
+    <DirectoryPickerButton
+      v-if="field.name === tool.directoryFieldName"
+      @select="emit('update', field.name, $event)"
+    />
   </FieldRow>
-  <slot name="after" />
+  <ToolConfigPreview
+    v-if="tool.previewConfig"
+    :tool="tool"
+    :config="effectiveConfig"
+  />
   <p
     v-if="tool.owner.kind === 'plugin' && tool.configFields?.length"
     class="tool-field-hint"
@@ -33,26 +39,27 @@ import {
   configFieldLabel,
   configOptionLabel,
 } from '../../lib/config-fields/config-field-labels'
+import { toolCallConfig } from '../../lib/tools/tool-input'
 import type { RegisteredTool } from '../../lib/tools/tool-types'
 import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-control'
 import type { InputConfigItem } from '../../types'
 import FieldRow from '../common/FieldRow.vue'
 import ConfigFieldControl from './ConfigFieldControl.vue'
+import DirectoryPickerButton from './DirectoryPickerButton.vue'
+import ToolConfigPreview from './ToolConfigPreview.vue'
+import { isConfigFieldVisible } from '@tyco/plugin-sdk'
 import type { CommandConfig } from '@tyco/shared'
 
-const props = defineProps<{
-  command: CommandConfig
-  tool: RegisteredTool
-  excludedFields?: string[]
-}>()
-const emit = defineEmits<{
-  update: [field: string, value: unknown]
-  patch: [values: Record<string, unknown>]
-}>()
+const props = defineProps<{ command: CommandConfig; tool: RegisteredTool }>()
+const emit = defineEmits<{ update: [field: string, value: unknown] }>()
 const { t } = useI18n()
+/** What a run of the command gets: its settings over the plugin settings */
+const effectiveConfig = computed(() =>
+  toolCallConfig(props.tool, props.command.toolConfig)
+)
 const visibleFields = computed(() =>
-  (props.tool.configFields ?? []).filter(
-    (field) => !props.excludedFields?.includes(field.name)
+  (props.tool.configFields ?? []).filter((field) =>
+    isConfigFieldVisible(field, effectiveConfig.value)
   )
 )
 const stringValue = (name: string): string => {
@@ -63,7 +70,14 @@ const stringValue = (name: string): string => {
 const fieldLabel = (field: InputConfigItem) => configFieldLabel(field, t)
 const fieldInfo = (field: InputConfigItem) => configFieldInfo(field, t)
 
-const pluginSetting = (name: string): unknown => props.tool.baseConfig?.()[name]
+/**
+ * What an empty field of the command falls back to: the plugin settings, or the
+ * values of a preset the command selects
+ */
+const pluginSetting = (name: string): unknown => {
+  const { [name]: _own, ...rest } = props.command.toolConfig
+  return toolCallConfig(props.tool, rest)[name]
+}
 
 const optionName = (field: InputConfigItem, id: unknown): string => {
   const option = field.options?.find((item) => item.id === id)

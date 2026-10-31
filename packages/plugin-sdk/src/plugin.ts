@@ -142,7 +142,13 @@ export interface PluginContext {
   ): Promise<{
     success: boolean
     result?: PluginDesktopFunctions[K]['result']
+    /** For logs; not translated */
     error?: string
+    /**
+     * Why the call failed, e.g. `permissionDenied`, `invalidInput` or
+     * `resourceLimit`; absent when the host cannot tell
+     */
+    errorCode?: string
   }>
   getMyConfig<T extends object = Record<string, unknown>>(): Partial<T>
 }

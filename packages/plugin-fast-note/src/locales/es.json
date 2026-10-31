@@ -25,7 +25,7 @@
   "fileNameTemplate": "Plantilla del nombre de archivo",
   "fileNameTemplateInfo": "Admite tokens de fecha ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}), además de {'{'}title{'}'} y {'{'}slug{'}'}. Los archivos reciben un sufijo numérico si el nombre ya existe.",
   "contentTemplate": "Plantilla de contenido",
-  "contentTemplateInfo": "Admite tokens de fecha, {'{'}title{'}'} y el obligatorio {'{'}content{'}'}. El modo de anexado crea el archivo si falta.",
+  "contentTemplateInfo": "Admite tokens de fecha, {'{'}title{'}'} y el obligatorio {'{'}content{'}'}. Escribe {'{'}{'{'} o {'}'}{'}'} para una llave literal. Si un encabezado usa {'{'}title{'}'}, la primera línea no se repite debajo. El modo de anexar crea el archivo si no existe.",
   "clearInputAfterSave": "Limpiar el campo de entrada después de guardar",
   "toolLabel": "Escribir una nota",
   "toolDescription": "Guarda el texto como una nota nueva o lo agrega a una, en tu carpeta de notas",
@@ -34,8 +34,12 @@
   "noteAppended": "Nota agregada",
   "noteSaveFailed": "No se pudo guardar la nota",
   "invalidNotesPath": "Usá una ruta absoluta para las notas o una que empiece con ~/.",
-  "invalidSubfolder": "La subcarpeta debe ser relativa, sin .. ni caracteres de ruta inválidos.",
-  "unknownTemplateToken": "Variable de plantilla desconocida. Revisá las variables disponibles.",
+  "invalidSubfolder": "La subcarpeta debe ser relativa, usar / como separador y no contener .., nombres reservados como CON ni caracteres de ruta no válidos.",
+  "unknownTemplateToken": "Token de plantilla desconocido {'{'}{token}{'}'}. Revisa los tokens admitidos o escribe {'{'}{'{'} y {'}'}{'}'} para llaves literales.",
   "missingContentToken": "La plantilla de contenido debe incluir {'{'}content{'}'}.",
-  "invalidFileName": "La plantilla de nombre contiene caracteres de control."
+  "invalidFileName": "La plantilla de nombre contiene caracteres de control.",
+  "noteSaveDenied": "No se permite escribir en la carpeta de notas. Revisa sus permisos y que la carpeta esté guardada en la configuración.",
+  "noteSaveInvalid": "La carpeta de notas o el nombre de archivo no es válido. Revisa la carpeta o acorta la plantilla del nombre de archivo.",
+  "noteTooLarge": "La nota es demasiado grande o el disco está lleno.",
+  "previewText": "Nota de ejemplo\nMás detalles"
 }

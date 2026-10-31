@@ -1,11 +1,12 @@
 <template>
-  <Button size="sm" @click="browse">{{ t('settings.fastNote.browse') }}</Button>
+  <Button size="sm" @click="browse">{{ t('settings.browseFolder') }}</Button>
 </template>
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
 import { useIpcStore } from '../../stores/ipc'
 import Button from '../common/Button.vue'
 
+/** Lets the user choose a folder in the native dialog; nothing is read. */
 const emit = defineEmits<{ select: [path: string] }>()
 const { t } = useI18n()
 const ipc = useIpcStore()

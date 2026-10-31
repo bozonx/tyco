@@ -700,22 +700,8 @@
     "editorTab": "Editor",
     "externalMethods": "Weitere Aufrufmöglichkeiten",
     "externalMethodsHint": "Verwenden Sie diesen Befehl aus einem Terminal, einem Skript oder über ein Systemkürzel. Der Client tyco-ctl muss installiert und im PATH verfügbar sein. Linux unterstützt auch D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Vorlage anwenden",
-      "browse": "Ordner wählen",
-      "errors": {
-        "invalidFileName": "Die Dateinamenvorlage enthält Steuerzeichen.",
-        "invalidNotesPath": "Verwenden Sie einen absoluten Notizpfad oder einen Pfad, der mit ~/ beginnt.",
-        "invalidSubfolder": "Der Unterordner muss relativ sein, ohne .. oder ungültige Pfadzeichen.",
-        "missingContentToken": "Die Inhaltsvorlage muss {'{'}content{'}'} enthalten.",
-        "unknownTemplateToken": "Unbekannter Vorlagenplatzhalter. Prüfen Sie die unterstützten Platzhalter."
-      },
-      "folder": "Notizordner",
-      "pathHint": "Verwenden Sie einen absoluten Pfad oder ~/notes. Für Logseq wählen Sie das Stammverzeichnis des Graphen; journals wird automatisch ergänzt.",
-      "preview": "Vorschau",
-      "sampleText": "Beispielnotiz\nWeitere Details",
-      "template": "Einstellungsvorlage anwenden"
-    },
+    "browseFolder": "Ordner wählen",
+    "configPreview": "Vorschau",
     "forcedByEInk": "Mit dem E-Ink-Design immer hoher Kontrast und keine Animationen",
     "formatWithLlm": "Diktat vor dem Einfügen in externe Anwendung automatisch korrigieren",
     "generalTab": "Allgemein",

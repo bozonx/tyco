@@ -137,6 +137,19 @@ describe('createToolInvoker', () => {
     })
   })
 
+  it('reports a change a tool committed while it was cancelled, without its output', async () => {
+    const controller = new AbortController()
+    const committed = invokerOf(
+      tool(async () => {
+        controller.abort()
+        return { ok: true, isCommitted: true, content: 'partial' }
+      })
+    )
+    expect(
+      await committed(invocation, 'x', { signal: controller.signal })
+    ).toEqual({ ok: true, isCommitted: true, sourceText: '' })
+  })
+
   it('turns thrown errors into failures with a reason for the log', async () => {
     const plugin = invokerOf(
       tool(async () => {

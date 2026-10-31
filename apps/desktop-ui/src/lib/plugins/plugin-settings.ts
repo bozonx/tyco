@@ -18,6 +18,8 @@ export interface InstalledPluginItem {
   canRestore?: boolean
   error?: string
   fields: InputConfigItem[]
+  /** The setting that grants a notes plugin its notes root */
+  directoryFieldName?: string
 }
 
 export function resolveInstalledPlugins(
@@ -60,6 +62,9 @@ export function resolveInstalledPlugins(
           status === 'active' || status === 'disabled' ? undefined : status,
         canRestore: plugin._canRestore ?? false,
         ...(error ? { error } : {}),
+        ...(plugin.capabilities?.includes('notes')
+          ? { directoryFieldName: plugin.notesDirectoryField ?? 'pathToNotes' }
+          : {}),
         fields: scopeConfigFields(pluginId, error ? [] : rawFields).map(
           (field) => withConfigFieldValue(field, config[field.name])
         ),

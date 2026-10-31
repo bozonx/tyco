@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  cancelledToolResult,
   validateContribution,
   validateParseResult,
+  validateToolConfigPreview,
   validateToolResult,
   validateToolSchema,
 } from './contributions.js'
@@ -55,5 +57,43 @@ describe('plugin contribution validation', () => {
     ).not.toThrow()
     expect(() => validateToolSchema({ properties: { broken: null } })).toThrow()
     expect(() => validateToolSchema({ required: 'text' })).toThrow()
+  })
+  it('reports a cancelled run only when it already committed a change', () => {
+    expect(cancelledToolResult({ ok: true, content: 'text' })).toEqual({
+      ok: false,
+      cancelled: true,
+    })
+    expect(
+      cancelledToolResult({
+        ok: true,
+        isCommitted: true,
+        content: 'text',
+        messageKey: 'local.saved',
+      })
+    ).toEqual({ ok: true, isCommitted: true, messageKey: 'local.saved' })
+    expect(cancelledToolResult({ ok: false, isCommitted: true })).toEqual({
+      ok: false,
+      cancelled: true,
+    })
+    expect(() =>
+      cancelledToolResult({ ok: true, isCommitted: true, level: 'loud' })
+    ).toThrow()
+  })
+  it('bounds settings previews', () => {
+    expect(() =>
+      validateToolConfigPreview({
+        issues: [{ messageKey: 'local.bad', params: { token: 'x', count: 1 } }],
+        samples: ['a', 'b'],
+      })
+    ).not.toThrow()
+    for (const value of [
+      null,
+      { issues: [{}] },
+      { issues: [{ messageKey: 'k', params: { nested: {} } }] },
+      { samples: [1] },
+      { samples: Array(9).fill('') },
+      { samples: ['x'.repeat(65_537)] },
+    ])
+      expect(() => validateToolConfigPreview(value)).toThrow()
   })
 })

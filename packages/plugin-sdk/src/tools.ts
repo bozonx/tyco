@@ -106,6 +106,26 @@ export interface ToolResult {
   meta?: Record<string, unknown>
   /** The window stays open after a run without output, e.g. for the editor */
   keepWindow?: boolean
+  /**
+   * The run already changed something outside the app, e.g. wrote a file. The
+   * result is then reported even when the call was cancelled meanwhile, without
+   * its `content`.
+   */
+  isCommitted?: boolean
+}
+
+/** A problem with tool settings, shown where the user edits them. */
+export interface ToolConfigIssue {
+  /** A `local.*` key of the plugin or a common host key */
+  messageKey: string
+  params?: Record<string, string | number>
+}
+
+/** What a tool reports about settings while the user edits them. */
+export interface ToolConfigPreview {
+  issues?: ToolConfigIssue[]
+  /** Sample output for these settings, shown as preformatted text */
+  samples?: string[]
 }
 
 export interface ToolDefinition {
@@ -134,5 +154,12 @@ export interface ToolDefinition {
   defaultOutputAction?: CommandOutputAction
   /** Phrases suggested when the user creates a command for this tool */
   defaultPhrasesKey?: string
+  /**
+   * Checks settings and shows sample output in plugin settings and the command
+   * editor; it must not have side effects.
+   */
+  previewConfig?(
+    config: Record<string, unknown>
+  ): ToolConfigPreview | Promise<ToolConfigPreview>
   run(call: ToolCall): Promise<ToolResult>
 }

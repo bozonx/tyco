@@ -124,6 +124,25 @@ field types and options, and applies defaults. Unknown fields are not passed to
 the plugin. `getMyConfig` returns a detached copy; plugins never receive global
 user config. `enabled` is host metadata. Draft edits take effect when saved.
 
+The host renders every plugin's settings and command fields itself; there are no
+plugin-specific settings components. Plugins describe the form declaratively:
+
+- `visibleWhen: { field, equals }` shows a field only while another field of
+  the same form has one of the listed values. A hidden field keeps its value.
+  In the command editor the condition reads what a run gets: the command's
+  values over the plugin settings.
+- `defaultConfig.presets` fill fields when the user picks a preset. Editing a
+  value the selected preset sets moves the selector to the preset that has no
+  values (for example "Custom"), when the plugin declares one.
+- The text field named by `notesDirectoryField` gets a folder picker. The
+  native dialog returns a path the user chose; it grants nothing until the
+  setting is saved.
+- A tool may implement `previewConfig(config)` to report problems
+  (`issues` with message keys and params) and sample output (`samples`) for the
+  settings being edited. The host shows it under the plugin settings and in
+  the command editor. It must have no side effects; results are validated and
+  bounded like other RPC values.
+
 Activation may be async and can return a cleanup function. Use `ctx.onDispose` for
 subscriptions and timers, and observe `ctx.signal` for ongoing work. Disabling,
 removing or updating a plugin aborts its lifetime and removes all its contributions.
@@ -131,7 +150,10 @@ Only plugins whose effective settings or package revision changed are restarted.
 An activation failure rolls back partial registrations without stopping other
 plugins. A late async activation cannot register after disposal; its returned
 cleanup is still called. Tool execution combines the caller's cancellation signal
-with the plugin lifetime and suppresses cancelled output. Cancellation gives an
+with the plugin lifetime and suppresses cancelled output. A run that already
+changed something outside the app (for example wrote a note) returns
+`isCommitted: true`; its result is then reported even when the call was
+cancelled meanwhile, without its `content`. Cancellation gives an
 external worker 1.5 seconds to finish its current callback; an uncooperative worker
 is terminated and marked failed. Cancellation of queued invocations is remembered.
 Cleanup handlers run in reverse order. A throwing or asynchronously stalled handler
@@ -170,7 +192,14 @@ from persisted settings; runtime arguments cannot grant another root. Subfolders
 are supported, parent traversal and descendant symlinks are rejected, and only
 regular files can be appended. Plugin defaults, presets and default commands
 cannot pre-authorize a directory. Existing SDK `saveNote` and `appendNote` calls
-use this scoped service through the host adapter.
+use this scoped service through the host adapter. A failed call carries an
+`errorCode` (`permissionDenied`, `invalidInput`, `resourceLimit`, ...) so the
+plugin can tell the user why; `error` is an untranslated detail for logs.
+
+Bundled plugins have no installed manifest, so the backend keeps their IDs and
+notes settings in `BUNDLED_IDS` and `BUNDLED_NOTES_FIELDS`
+(`src-tauri/src/services/plugins.rs`). `pnpm check:plugins` fails when these
+drift from the built manifests.
 
 ## Local installation
 

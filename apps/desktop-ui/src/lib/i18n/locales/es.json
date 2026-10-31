@@ -700,22 +700,8 @@
     "editorTab": "Editor",
     "externalMethods": "Otros métodos de activación",
     "externalMethodsHint": "Usa este comando desde una terminal, un script o un atajo del sistema. El cliente tyco-ctl debe estar instalado y disponible en PATH. Linux también admite D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Aplicar la plantilla",
-      "browse": "Elegir carpeta",
-      "errors": {
-        "invalidFileName": "La plantilla del nombre de archivo contiene caracteres de control.",
-        "invalidNotesPath": "Usa una ruta absoluta para las notas o una ruta que empiece por ~/.",
-        "invalidSubfolder": "La subcarpeta debe ser relativa, sin .. ni caracteres no válidos en rutas.",
-        "missingContentToken": "La plantilla de contenido debe incluir {'{'}content{'}'}.",
-        "unknownTemplateToken": "Variable de plantilla desconocida. Revisa las variables admitidas."
-      },
-      "folder": "Carpeta de notas",
-      "pathHint": "Usa una ruta absoluta o ~/notes. Para Logseq, elige la raíz del grafo; journals se agrega automáticamente.",
-      "preview": "Vista previa",
-      "sampleText": "Nota de ejemplo\nMás detalles",
-      "template": "Aplicar una plantilla de configuración"
-    },
+    "browseFolder": "Elegir carpeta",
+    "configPreview": "Vista previa",
     "forcedByEInk": "Con el tema de tinta electrónica siempre hay contraste alto y no hay animaciones",
     "formatWithLlm": "Corregir automáticamente el dictado antes de insertarlo en una aplicación externa",
     "generalTab": "General",

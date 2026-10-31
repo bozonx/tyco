@@ -1,15 +1,16 @@
-import type { PluginDefinition } from '@tyco/plugin-sdk'
-import { locales } from './locales.js'
-import type { InputConfigItem } from '@tyco/plugin-sdk'
-
 import {
+  type EditorInputSnapshot,
+  type InputConfigItem,
   type PluginContext,
+  type PluginDefinition,
   TEXT_INPUT_SCHEMA,
+  type ToolConfigIssue,
   type ToolDefinition,
   type ToolResult,
 } from '@tyco/plugin-sdk'
 import {
   type FastNoteConfig,
+  type FastNoteIssue,
   getEffectiveConfig,
   resolveNoteContent,
   resolveNoteDir,
@@ -17,6 +18,7 @@ import {
   FAST_NOTE_PRESETS,
   validateFastNoteConfig,
 } from './fast-note-template.js'
+import { locales } from './locales.js'
 
 const FIELDS: InputConfigItem[] = [
   {
@@ -70,6 +72,7 @@ const FIELDS: InputConfigItem[] = [
     labelKey: 'local.customSubfolderTemplate',
     infoKey: 'local.customSubfolderTemplateInfo',
     defaultValue: '',
+    visibleWhen: { field: 'folderPreset', equals: ['custom'] },
   },
   {
     type: 'text',
@@ -101,6 +104,22 @@ const COMMAND_FIELDS = FIELDS.filter(
   (field) => field.name !== 'clearInputAfterSave'
 )
 
+/** Messages for the desktop error codes of a failed note write. */
+const SAVE_ERROR_KEYS: Readonly<Record<string, string>> = {
+  permissionDenied: 'local.noteSaveDenied',
+  invalidInput: 'local.noteSaveInvalid',
+  resourceLimit: 'local.noteTooLarge',
+  fileTooLarge: 'local.noteTooLarge',
+}
+
+const issueMessage = (issue: FastNoteIssue): ToolConfigIssue => ({
+  messageKey: `local.${issue.code}`,
+  ...(issue.token === undefined ? {} : { params: { token: issue.token } }),
+})
+
+const joinPath = (dir: string, fileName: string) =>
+  dir ? `${dir}${/[/\\]$/.test(dir) ? '' : '/'}${fileName}` : fileName
+
 export default function pluginIndex(): PluginDefinition {
   return {
     id: 'FastNote',
@@ -114,6 +133,20 @@ export default function pluginIndex(): PluginDefinition {
     descriptionKey: 'local.description',
     defaultConfig: { fields: FIELDS, presets: { preset: FAST_NOTE_PRESETS } },
     init: (ctx: PluginContext) => {
+      /** Clears the saved text from the editor; the note is already written. */
+      async function clearSavedText(snapshot: EditorInputSnapshot) {
+        try {
+          // Saving a selection must preserve the surrounding document.
+          await ctx.applyEditorInputEdit(
+            snapshot,
+            '',
+            snapshot.selectedText.trim() ? 'selection' : 'document'
+          )
+        } catch (error) {
+          ctx.log('warn', 'Failed to clear the editor after saving', error)
+        }
+      }
+
       const write: ToolDefinition = {
         id: 'write',
         labelKey: 'local.toolLabel',
@@ -123,6 +156,30 @@ export default function pluginIndex(): PluginDefinition {
           'Saves the text as a new note, or appends it to a note, in the notes folder of the user',
         inputSchema: TEXT_INPUT_SCHEMA,
         configFields: COMMAND_FIELDS,
+        previewConfig: (config) => {
+          const settings = config as Partial<FastNoteConfig>
+          const effective = getEffectiveConfig(settings)
+          const now = new Date()
+          const text = ctx.t('local.previewText')
+          const dir = resolveNoteDir(
+            settings.pathToNotes ?? '',
+            effective.folderPreset,
+            effective.customSubfolderTemplate,
+            now
+          )
+          return {
+            issues: validateFastNoteConfig(settings)
+              .filter((issue) => issue.code !== 'noNotesPath')
+              .map(issueMessage),
+            samples: [
+              joinPath(
+                dir,
+                resolveNoteFileName(effective.fileNameTemplate, now, text)
+              ),
+              resolveNoteContent(effective.contentTemplate, text, now),
+            ],
+          }
+        },
         run: async ({
           input,
           config,
@@ -139,17 +196,15 @@ export default function pluginIndex(): PluginDefinition {
             }
 
           const settings = config as Partial<FastNoteConfig>
-          const baseDir = settings.pathToNotes?.trim()
-          if (!baseDir) {
-            return { ok: false, level: 'warn', messageKey: 'local.noNotesPath' }
-          }
-
           const issues = validateFastNoteConfig(settings)
           if (issues.length)
             return {
               ok: false,
               level: 'warn',
-              messageKey: `local.${issues[0]}`,
+              message: issues
+                .map(issueMessage)
+                .map((issue) => ctx.t(issue.messageKey, issue.params))
+                .join(' '),
             }
 
           const fromEditor = source === 'menu' || source === 'toolbar'
@@ -166,7 +221,7 @@ export default function pluginIndex(): PluginDefinition {
           const effective = getEffectiveConfig(settings)
           const now = new Date()
           const dir = resolveNoteDir(
-            baseDir,
+            settings.pathToNotes!,
             effective.folderPreset,
             effective.customSubfolderTemplate,
             now
@@ -177,7 +232,6 @@ export default function pluginIndex(): PluginDefinition {
             text
           )
           const content = resolveNoteContent(
-            effective.saveMode,
             effective.contentTemplate,
             text,
             now
@@ -189,20 +243,20 @@ export default function pluginIndex(): PluginDefinition {
           )
           if (!result.success) {
             ctx.log('error', 'Failed to save the note', result.error)
-            return { ok: false, messageKey: 'local.noteSaveFailed' }
+            return {
+              ok: false,
+              messageKey:
+                (result.errorCode && SAVE_ERROR_KEYS[result.errorCode]) ||
+                'local.noteSaveFailed',
+            }
           }
 
           // the overlay and external calls have no editor to clear or keep
-          if (snapshot && sourceMatches && !signal.aborted) {
-            // Saving a selection must preserve the surrounding document.
-            await ctx.applyEditorInputEdit(
-              snapshot,
-              '',
-              snapshot.selectedText.trim() ? 'selection' : 'document'
-            )
-          }
+          if (snapshot && sourceMatches && !signal.aborted)
+            await clearSavedText(snapshot)
           return {
             ok: true,
+            isCommitted: true,
             messageKey:
               effective.saveMode === 'append'
                 ? 'local.noteAppended'

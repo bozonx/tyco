@@ -948,6 +948,206 @@
     }
   },
   {
+    "name": "field visibility",
+    "valid": true,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en-US",
+      "locales": {
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "de-DE": { "label": "Example" },
+        "fr-FR": { "label": "Example" },
+        "es": { "label": "Example" },
+        "it-IT": { "label": "Example" },
+        "pt-BR": { "label": "Example" },
+        "pl-PL": { "label": "Example" },
+        "tr-TR": { "label": "Example" },
+        "uk-UA": { "label": "Example" },
+        "cs-CZ": { "label": "Example" },
+        "hu-HU": { "label": "Example" },
+        "ro-RO": { "label": "Example" },
+        "el-GR": { "label": "Example" },
+        "hr-HR": { "label": "Example" },
+        "ka-GE": { "label": "Example" },
+        "kk-KZ": { "label": "Example" },
+        "zh-CN": { "label": "Example" },
+        "zh-TW": { "label": "Example" },
+        "ja-JP": { "label": "Example" },
+        "ko-KR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "type": "select",
+            "name": "mode",
+            "defaultValue": "a",
+            "options": [{ "id": "a" }, { "id": "b" }]
+          },
+          {
+            "type": "text",
+            "name": "template",
+            "defaultValue": "",
+            "visibleWhen": { "field": "mode", "equals": ["b"] }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "visibility of an undeclared field",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en-US",
+      "locales": {
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "de-DE": { "label": "Example" },
+        "fr-FR": { "label": "Example" },
+        "es": { "label": "Example" },
+        "it-IT": { "label": "Example" },
+        "pt-BR": { "label": "Example" },
+        "pl-PL": { "label": "Example" },
+        "tr-TR": { "label": "Example" },
+        "uk-UA": { "label": "Example" },
+        "cs-CZ": { "label": "Example" },
+        "hu-HU": { "label": "Example" },
+        "ro-RO": { "label": "Example" },
+        "el-GR": { "label": "Example" },
+        "hr-HR": { "label": "Example" },
+        "ka-GE": { "label": "Example" },
+        "kk-KZ": { "label": "Example" },
+        "zh-CN": { "label": "Example" },
+        "zh-TW": { "label": "Example" },
+        "ja-JP": { "label": "Example" },
+        "ko-KR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "type": "select",
+            "name": "mode",
+            "defaultValue": "a",
+            "options": [{ "id": "a" }, { "id": "b" }]
+          },
+          {
+            "type": "text",
+            "name": "template",
+            "defaultValue": "",
+            "visibleWhen": { "field": "missing", "equals": ["b"] }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "visibility without values",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en-US",
+      "locales": {
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "de-DE": { "label": "Example" },
+        "fr-FR": { "label": "Example" },
+        "es": { "label": "Example" },
+        "it-IT": { "label": "Example" },
+        "pt-BR": { "label": "Example" },
+        "pl-PL": { "label": "Example" },
+        "tr-TR": { "label": "Example" },
+        "uk-UA": { "label": "Example" },
+        "cs-CZ": { "label": "Example" },
+        "hu-HU": { "label": "Example" },
+        "ro-RO": { "label": "Example" },
+        "el-GR": { "label": "Example" },
+        "hr-HR": { "label": "Example" },
+        "ka-GE": { "label": "Example" },
+        "kk-KZ": { "label": "Example" },
+        "zh-CN": { "label": "Example" },
+        "zh-TW": { "label": "Example" },
+        "ja-JP": { "label": "Example" },
+        "ko-KR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "type": "select",
+            "name": "mode",
+            "defaultValue": "a",
+            "options": [{ "id": "a" }, { "id": "b" }]
+          },
+          {
+            "type": "text",
+            "name": "template",
+            "defaultValue": "",
+            "visibleWhen": { "field": "mode", "equals": [] }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "visibility with an unknown key",
+    "valid": false,
+    "manifest": {
+      "id": "Example",
+      "version": "1.0.0",
+      "apiVersion": 2,
+      "capabilities": ["editor"],
+      "defaultLocale": "en-US",
+      "locales": {
+        "en-US": { "label": "Example" },
+        "ru-RU": { "label": "Example" },
+        "de-DE": { "label": "Example" },
+        "fr-FR": { "label": "Example" },
+        "es": { "label": "Example" },
+        "it-IT": { "label": "Example" },
+        "pt-BR": { "label": "Example" },
+        "pl-PL": { "label": "Example" },
+        "tr-TR": { "label": "Example" },
+        "uk-UA": { "label": "Example" },
+        "cs-CZ": { "label": "Example" },
+        "hu-HU": { "label": "Example" },
+        "ro-RO": { "label": "Example" },
+        "el-GR": { "label": "Example" },
+        "hr-HR": { "label": "Example" },
+        "ka-GE": { "label": "Example" },
+        "kk-KZ": { "label": "Example" },
+        "zh-CN": { "label": "Example" },
+        "zh-TW": { "label": "Example" },
+        "ja-JP": { "label": "Example" },
+        "ko-KR": { "label": "Example" }
+      },
+      "defaultConfig": {
+        "fields": [
+          {
+            "type": "select",
+            "name": "mode",
+            "defaultValue": "a",
+            "options": [{ "id": "a" }, { "id": "b" }]
+          },
+          {
+            "type": "text",
+            "name": "template",
+            "defaultValue": "",
+            "visibleWhen": { "field": "mode", "equals": ["b"], "not": true }
+          }
+        ]
+      }
+    }
+  },
+  {
     "name": "notes directory declaration",
     "valid": true,
     "manifest": {

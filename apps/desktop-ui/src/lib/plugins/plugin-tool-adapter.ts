@@ -1,5 +1,8 @@
 import {
+  cancelledToolResult,
+  clonePluginValue,
   validateContribution,
+  validateToolConfigPreview,
   validateToolResult,
   validateToolSchema,
   validateParseResult,
@@ -39,6 +42,26 @@ export function createPluginToolAdapter(
         : undefined,
       configFields: scopeConfigFields(id, definition.configFields),
       configPresets: lifecycle.configPresets,
+      directoryFieldName: lifecycle.capabilities.includes('notes')
+        ? (lifecycle.notesDirectoryField ?? 'pathToNotes')
+        : undefined,
+      previewConfig: definition.previewConfig
+        ? async (config) => {
+            check()
+            const preview = await definition.previewConfig!(
+              clonePluginValue(config)
+            )
+            check()
+            validateToolConfigPreview(preview)
+            return {
+              ...preview,
+              issues: preview.issues?.map((issue) => ({
+                ...issue,
+                messageKey: key(issue.messageKey),
+              })),
+            }
+          }
+        : undefined,
       getUnavailableReasonKey: () =>
         lifecycle.signal.aborted ? 'toast.commandUnavailable' : undefined,
       parseText: definition.parseText
@@ -69,8 +92,9 @@ export function createPluginToolAdapter(
         check()
         const signal = AbortSignal.any([call.signal, lifecycle.signal])
         try {
-          const result = await definition.run({ ...call, signal })
-          if (signal.aborted) return { ok: false, cancelled: true }
+          const run = await definition.run({ ...call, signal })
+          const result = signal.aborted ? cancelledToolResult(run) : run
+          if (result.cancelled) return result
           validateToolResult(result)
           return {
             ...result,
@@ -103,6 +127,11 @@ export function createPluginToolAdapter(
         typeof definition.parseText !== 'function'
       )
         throw new Error('Invalid plugin parser')
+      if (
+        definition.previewConfig !== undefined &&
+        typeof definition.previewConfig !== 'function'
+      )
+        throw new Error('Invalid plugin settings preview')
       if (definition.configFields) validatePluginFields(definition.configFields)
       if (lifecycle.capabilities.includes('notes')) {
         const directoryField = lifecycle.notesDirectoryField ?? 'pathToNotes'

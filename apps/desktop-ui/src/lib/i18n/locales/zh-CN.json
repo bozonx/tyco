@@ -694,22 +694,8 @@
     "editorTab": "编辑器",
     "externalMethods": "其他激活方式",
     "externalMethodsHint": "可从终端、脚本或系统快捷键运行此命令。必须已安装 tyco-ctl 客户端且可在 PATH 中找到。Linux 还支持 D-Bus：org.tyco.Service、/org/tyco/Object、org.tyco.Interface。",
-    "fastNote": {
-      "apply": "应用模板",
-      "browse": "选择文件夹",
-      "errors": {
-        "invalidFileName": "文件名模板包含控制字符。",
-        "invalidNotesPath": "请使用绝对路径或以 ~/ 开头的路径。",
-        "invalidSubfolder": "子文件夹必须是相对路径，且不能包含 .. 或无效的路径字符。",
-        "missingContentToken": "内容模板必须包含 {'{'}content{'}'}。",
-        "unknownTemplateToken": "未知的模板占位符。请查看受支持的占位符。"
-      },
-      "folder": "笔记文件夹",
-      "pathHint": "使用绝对路径或 ~/notes。对于 Logseq，请选择图谱根目录；系统会自动添加 journals。",
-      "preview": "预览",
-      "sampleText": "示例笔记\n更多详情",
-      "template": "应用设置模板"
-    },
+    "browseFolder": "选择文件夹",
+    "configPreview": "预览",
     "forcedByEInk": "使用电子墨水主题时始终开启高对比度并禁用动画",
     "formatWithLlm": "在插入外部应用程序前自动更正听写",
     "generalTab": "通用",

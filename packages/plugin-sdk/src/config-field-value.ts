@@ -47,3 +47,14 @@ export function withConfigFieldValue(
       }
   }
 }
+
+/** Whether a field is shown for these values of its form; see `visibleWhen`. */
+export function isConfigFieldVisible(
+  field: InputConfigItem,
+  values: Record<string, unknown>
+): boolean {
+  if (!field.visibleWhen) return true
+  return field.visibleWhen.equals.some(
+    (expected) => expected === values[field.visibleWhen!.field]
+  )
+}

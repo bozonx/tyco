@@ -141,6 +141,34 @@ describe('plugin field value contracts', () => {
       ])
     ).not.toThrow()
   })
+  it('requires visibility conditions to name another declared field', () => {
+    const mode = {
+      type: 'select',
+      name: 'mode',
+      defaultValue: 'a',
+      options: [{ id: 'a' }],
+    }
+    const template = (visibleWhen: unknown) => ({
+      type: 'text',
+      name: 'template',
+      defaultValue: '',
+      visibleWhen,
+    })
+    expect(() =>
+      validatePluginFields([mode, template({ field: 'mode', equals: ['a'] })])
+    ).not.toThrow()
+    for (const visibleWhen of [
+      { field: 'template', equals: ['a'] },
+      { field: 'missing', equals: ['a'] },
+      { field: 'mode', equals: [] },
+      { field: 'mode', equals: [{}] },
+      { field: 'mode', equals: ['a'], extra: 1 },
+      'mode',
+    ])
+      expect(() =>
+        validatePluginFields([mode, template(visibleWhen)])
+      ).toThrow()
+  })
 })
 
 import manifestCases from './test-fixtures/manifests.json'

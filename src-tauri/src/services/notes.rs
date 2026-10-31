@@ -86,7 +86,36 @@ fn append_note(dir: &str, file_name: &str, text: &str) -> Result<PathBuf, AppErr
 }
 
 /// A plugin may write only under a user-approved root, including new subfolders.
+///
+/// File system failures the user can act on get their own error code, so the
+/// plugin can tell "no permission" or "name too long" from other failures.
 pub fn write_scoped_note(
+    roots: &[String],
+    dir: &str,
+    file_name: &str,
+    text: &str,
+    append: bool,
+) -> Result<PathBuf, AppError> {
+    write_scoped_note_inner(roots, dir, file_name, text, append).map_err(|error| match error {
+        AppError::Io(error) => note_io_error(error),
+        other => other,
+    })
+}
+
+fn note_io_error(error: std::io::Error) -> AppError {
+    match error.kind() {
+        ErrorKind::PermissionDenied | ErrorKind::ReadOnlyFilesystem => {
+            AppError::PermissionDenied(error.to_string())
+        }
+        ErrorKind::InvalidFilename => AppError::InvalidInput(error.to_string()),
+        ErrorKind::StorageFull | ErrorKind::QuotaExceeded | ErrorKind::FileTooLarge => {
+            AppError::ResourceLimit(error.to_string())
+        }
+        _ => AppError::Io(error),
+    }
+}
+
+fn write_scoped_note_inner(
     roots: &[String],
     dir: &str,
     file_name: &str,
@@ -127,7 +156,7 @@ pub fn write_scoped_note(
                 target.push(name);
                 match fs::symlink_metadata(&target) {
                     Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_dir() => {
-                        return Err(AppError::InvalidInput(
+                        return Err(AppError::PermissionDenied(
                             "Plugin notes cannot follow directory symlinks".into(),
                         ));
                     }
@@ -136,7 +165,7 @@ pub fn write_scoped_note(
                     Err(error) => return Err(error.into()),
                 }
                 if !target.canonicalize()?.starts_with(&canonical_root) {
-                    return Err(AppError::InvalidInput(
+                    return Err(AppError::PermissionDenied(
                         "Plugin note directory is outside the approved root".into(),
                     ));
                 }
@@ -157,7 +186,7 @@ pub fn write_scoped_note(
             save_note(target, file_name, text)
         };
     }
-    Err(AppError::InvalidInput(
+    Err(AppError::PermissionDenied(
         "Plugin note directory is outside the approved roots".into(),
     ))
 }
@@ -288,6 +317,20 @@ mod tests {
             );
         }
     }
+    #[test]
+    fn file_system_failures_keep_a_code_the_user_can_act_on() {
+        use crate::errors::ErrorCode;
+        for (kind, code) in [
+            (ErrorKind::PermissionDenied, ErrorCode::PermissionDenied),
+            (ErrorKind::ReadOnlyFilesystem, ErrorCode::PermissionDenied),
+            (ErrorKind::InvalidFilename, ErrorCode::InvalidInput),
+            (ErrorKind::StorageFull, ErrorCode::ResourceLimit),
+            (ErrorKind::Other, ErrorCode::IoError),
+        ] {
+            assert_eq!(note_io_error(std::io::Error::from(kind)).code(), code);
+        }
+    }
+
     #[test]
     fn concurrent_appends_preserve_lines() {
         let dir = TestDir::new("concurrent-notes");

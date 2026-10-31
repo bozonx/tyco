@@ -24,6 +24,8 @@ const API_VERSION: u32 = 2;
 const FORMAT_VERSION: u32 = 1;
 /// Package keys are hex digests; a longer one is not ours.
 const MAX_PACKAGE_KEY_LENGTH: usize = 256;
+/// Plugins that ship with the app. `scripts/check-plugin-packages.mjs` checks
+/// this list against their built manifests.
 const BUNDLED_IDS: &[&str] = &[
     "FastNote",
     "Diacritics",
@@ -31,6 +33,10 @@ const BUNDLED_IDS: &[&str] = &[
     "WebFormatter",
     "SearchInInternet",
 ];
+/// The `notesDirectoryField` of each bundled plugin with the `notes`
+/// capability. Bundled plugins have no installed manifest to read it from, and
+/// the webview must not be the one to tell which setting grants a notes root.
+const BUNDLED_NOTES_FIELDS: &[(&str, &str)] = &[("FastNote", "pathToNotes")];
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -154,8 +160,11 @@ impl PluginStore {
     }
     /// Only native metadata chooses which saved setting grants notes access.
     pub fn notes_directory_field(&self, id: &str) -> Result<String, AppError> {
-        if id == "FastNote" {
-            return Ok("pathToNotes".into());
+        if let Some((_, field)) = BUNDLED_NOTES_FIELDS
+            .iter()
+            .find(|(bundled, _)| *bundled == id)
+        {
+            return Ok((*field).into());
         }
         if !is_valid_plugin_id(id) || BUNDLED_IDS.contains(&id) {
             return Err(AppError::PermissionDenied(

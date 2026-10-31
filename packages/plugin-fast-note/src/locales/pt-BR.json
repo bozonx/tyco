@@ -25,7 +25,7 @@
   "fileNameTemplate": "Modelo do nome de arquivo",
   "fileNameTemplateInfo": "Suporta tokens de data ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}), bem como {'{'}title{'}'} e {'{'}slug{'}'}. Os arquivos recebem um sufixo numérico em colisões de nomes.",
   "contentTemplate": "Modelo de conteúdo",
-  "contentTemplateInfo": "Suporta tokens de data, {'{'}title{'}'} e o obrigatório {'{'}content{'}'}. O modo anexar cria o arquivo se não existir.",
+  "contentTemplateInfo": "Suporta tokens de data, {'{'}title{'}'} e o obrigatório {'{'}content{'}'}. Escreva {'{'}{'{'} ou {'}'}{'}'} para uma chave literal. Se um título usar {'{'}title{'}'}, a primeira linha não é repetida abaixo dele. O modo de anexar cria o arquivo se ele não existir.",
   "clearInputAfterSave": "Limpar o campo de entrada após salvar",
   "toolLabel": "Escrever uma nota",
   "toolDescription": "Salva o texto como uma nova nota ou o adiciona a uma existente, na sua pasta de notas",
@@ -34,8 +34,12 @@
   "noteAppended": "Nota anexada",
   "noteSaveFailed": "Falha ao salvar a nota",
   "invalidNotesPath": "Use um caminho absoluto ou um caminho que comece com ~/.",
-  "invalidSubfolder": "A subpasta deve ser relativa, sem .. ou caracteres de caminho inválidos.",
-  "unknownTemplateToken": "Token de modelo desconhecido. Verifique os tokens suportados.",
+  "invalidSubfolder": "A subpasta deve ser relativa, usar / como separador e não conter .., nomes reservados como CON ou caracteres de caminho inválidos.",
+  "unknownTemplateToken": "Token de modelo desconhecido {'{'}{token}{'}'}. Verifique os tokens suportados ou escreva {'{'}{'{'} e {'}'}{'}'} para chaves literais.",
   "missingContentToken": "O modelo de conteúdo deve incluir {'{'}content{'}'}.",
-  "invalidFileName": "O modelo de nome de arquivo contém caracteres de controle."
+  "invalidFileName": "O modelo de nome de arquivo contém caracteres de controle.",
+  "noteSaveDenied": "Não é permitido gravar na pasta de notas. Verifique as permissões dela e se a pasta está salva nas configurações.",
+  "noteSaveInvalid": "A pasta de notas ou o nome do arquivo não é válido. Verifique a pasta ou encurte o modelo de nome de arquivo.",
+  "noteTooLarge": "A nota é grande demais ou o disco está cheio.",
+  "previewText": "Nota de exemplo\nMais detalhes"
 }

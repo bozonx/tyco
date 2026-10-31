@@ -700,22 +700,8 @@
     "editorTab": "Edytor",
     "externalMethods": "Inne sposoby uruchamiania",
     "externalMethodsHint": "Używaj tego polecenia z terminala, skryptu lub skrótu systemowego. Klient tyco-ctl musi być zainstalowany i dostępny w PATH. Linux obsługuje też D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Zastosuj szablon",
-      "browse": "Wybierz folder",
-      "errors": {
-        "invalidFileName": "Szablon nazwy pliku zawiera znaki sterujące.",
-        "invalidNotesPath": "Użyj bezwzględnej ścieżki notatek lub ścieżki zaczynającej się od ~/.",
-        "invalidSubfolder": "Podfolder musi być względny, bez .. i niedozwolonych znaków ścieżki.",
-        "missingContentToken": "Szablon treści musi zawierać {'{'}content{'}'}.",
-        "unknownTemplateToken": "Nieznana zmienna szablonu. Sprawdź obsługiwane zmienne."
-      },
-      "folder": "Folder notatek",
-      "pathHint": "Użyj ścieżki bezwzględnej lub ~/notes. Dla Logseq wybierz katalog główny grafu; journals zostanie dodany automatycznie.",
-      "preview": "Podgląd",
-      "sampleText": "Przykładowa notatka\nWięcej szczegółów",
-      "template": "Zastosuj szablon ustawień"
-    },
+    "browseFolder": "Wybierz folder",
+    "configPreview": "Podgląd",
     "forcedByEInk": "Z motywem e-ink zawsze wysoki kontrast i brak animacji",
     "formatWithLlm": "Automatycznie poprawiaj dyktowanie przed wklejeniem do zewnętrznej aplikacji",
     "generalTab": "Ogólne",

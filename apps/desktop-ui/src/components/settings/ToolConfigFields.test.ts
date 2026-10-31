@@ -1,8 +1,9 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createCommand } from '../../lib/commands/command-config'
 import type { RegisteredTool } from '../../lib/tools/tool-types'
+import { installFakeDesktop } from '../../test/install-fake-desktop'
 import ToolConfigFields from './ToolConfigFields.vue'
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -66,5 +67,57 @@ describe('ToolConfigFields', () => {
       'prompt',
       'Command prompt',
     ])
+  })
+
+  it('shows fields, inherited values and the preview for what a run gets', async () => {
+    const desktop = installFakeDesktop()
+    const previewConfig = vi.fn(async (config: Record<string, unknown>) => ({
+      samples: [`${String(config.folder)}:${String(config.template)}`],
+    }))
+    const withModes: RegisteredTool = {
+      ...tool,
+      baseConfig: () => ({ mode: 'a', template: 'base', folder: '/notes' }),
+      configPresets: { mode: { b: { template: 'preset' } } },
+      directoryFieldName: 'folder',
+      previewConfig,
+      configFields: [
+        { type: 'text', name: 'folder', label: 'Folder' },
+        {
+          type: 'select',
+          name: 'mode',
+          label: 'Mode',
+          defaultValue: 'a',
+          options: [{ id: 'a' }, { id: 'b' }],
+        },
+        {
+          type: 'text',
+          name: 'template',
+          label: 'Template',
+          visibleWhen: { field: 'mode', equals: ['b'] },
+        },
+      ],
+    }
+    const command = createCommand(withModes.id, 'example')
+    const wrapper = mount(ToolConfigFields, {
+      props: { tool: withModes, command },
+    })
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('Template')
+    expect(wrapper.findAll('button')).toHaveLength(1)
+    expect(wrapper.get('pre').text()).toBe('/notes:base')
+
+    await wrapper.setProps({
+      command: { ...command, toolConfig: { mode: 'b' } },
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('Template')
+    // the empty field falls back to the preset the command selects
+    expect(previewConfig).toHaveBeenLastCalledWith({
+      mode: 'b',
+      template: 'preset',
+      folder: '/notes',
+    })
+    expect(wrapper.get('pre').text()).toBe('/notes:preset')
+    desktop.dispose()
   })
 })

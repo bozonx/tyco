@@ -25,7 +25,7 @@
   "fileNameTemplate": "Șablon nume fișier",
   "fileNameTemplateInfo": "Acceptă tokenuri de dată ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}), precum și {'{'}title{'}'} și {'{'}slug{'}'}. Fișierele primesc un sufix numeric la coliziuni de nume.",
   "contentTemplate": "Șablon de conținut",
-  "contentTemplateInfo": "Acceptă tokenuri de dată, {'{'}title{'}'} și cel obligatoriu {'{'}content{'}'}. Modul adăugare creează fișierul dacă lipsește.",
+  "contentTemplateInfo": "Acceptă tokenuri de dată, {'{'}title{'}'} și tokenul obligatoriu {'{'}content{'}'}. Scrieți {'{'}{'{'} sau {'}'}{'}'} pentru o acoladă literală. Dacă un titlu folosește {'{'}title{'}'}, primul rând nu se repetă sub el. Modul de adăugare creează fișierul dacă lipsește.",
   "clearInputAfterSave": "Golește câmpul de introducere după salvare",
   "toolLabel": "Scrie o notă",
   "toolDescription": "Salvează textul ca notă nouă sau îl adaugă la una existentă, în dosarul de notițe",
@@ -34,8 +34,12 @@
   "noteAppended": "Notă adăugată",
   "noteSaveFailed": "Salvarea notei a eșuat",
   "invalidNotesPath": "Folosește o cale absolută sau o cale care începe cu ~/.",
-  "invalidSubfolder": "Subdosarul trebuie să fie relativ, fără .. sau caractere de cale nevalide.",
-  "unknownTemplateToken": "Token de șablon necunoscut. Verifică tokenurile acceptate.",
+  "invalidSubfolder": "Subdosarul trebuie să fie relativ, să folosească / ca separator și să nu conțină .., nume rezervate precum CON sau caractere de cale nevalide.",
+  "unknownTemplateToken": "Token de șablon necunoscut {'{'}{token}{'}'}. Verificați tokenurile acceptate sau scrieți {'{'}{'{'} și {'}'}{'}'} pentru acolade literale.",
   "missingContentToken": "Șablonul de conținut trebuie să includă {'{'}content{'}'}.",
-  "invalidFileName": "Șablonul de nume de fișier conține caractere de control."
+  "invalidFileName": "Șablonul de nume de fișier conține caractere de control.",
+  "noteSaveDenied": "Scrierea în dosarul de notițe nu este permisă. Verificați permisiunile dosarului și că este salvat în setări.",
+  "noteSaveInvalid": "Dosarul de notițe sau numele fișierului nu este valid. Verificați dosarul sau scurtați șablonul numelui de fișier.",
+  "noteTooLarge": "Nota este prea mare sau discul este plin.",
+  "previewText": "Notă de exemplu\nMai multe detalii"
 }

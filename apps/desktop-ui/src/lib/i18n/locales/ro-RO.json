@@ -700,22 +700,8 @@
     "editorTab": "Editor",
     "externalMethods": "Alte metode de activare",
     "externalMethodsHint": "Folosiți această comandă dintr-un terminal, un script sau o comandă rapidă de sistem. Clientul tyco-ctl trebuie să fie instalat și disponibil în PATH. Linux acceptă și D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Aplică șablonul",
-      "browse": "Alege dosarul",
-      "errors": {
-        "invalidFileName": "Șablonul numelui de fișier conține caractere de control.",
-        "invalidNotesPath": "Folosiți o cale absolută pentru notițe sau o cale care începe cu ~/.",
-        "invalidSubfolder": "Subdosarul trebuie să fie relativ, fără .. sau caractere de cale nevalide.",
-        "missingContentToken": "Șablonul de conținut trebuie să includă {'{'}content{'}'}.",
-        "unknownTemplateToken": "Variabilă de șablon necunoscută. Verificați variabilele acceptate."
-      },
-      "folder": "Dosarul notițelor",
-      "pathHint": "Folosiți o cale absolută sau ~/notes. Pentru Logseq, alegeți rădăcina grafului; journals se adaugă automat.",
-      "preview": "Previzualizare",
-      "sampleText": "Notiță exemplu\nMai multe detalii",
-      "template": "Aplică un șablon de setări"
-    },
+    "browseFolder": "Alege dosarul",
+    "configPreview": "Previzualizare",
     "forcedByEInk": "Cu tema e-ink, întotdeauna contrast ridicat și fără animații",
     "formatWithLlm": "Corectează automat dictarea înainte de inserarea într-o aplicație externă",
     "generalTab": "General",

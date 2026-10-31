@@ -694,22 +694,8 @@
     "editorTab": "편집기",
     "externalMethods": "기타 실행 방법",
     "externalMethodsHint": "터미널, 스크립트 또는 시스템 단축키에서 이 명령을 사용하세요. tyco-ctl 클라이언트가 설치되어 PATH에 있어야 합니다. Linux는 D-Bus도 지원합니다: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "템플릿 적용",
-      "browse": "폴더 선택",
-      "errors": {
-        "invalidFileName": "파일 이름 템플릿에 제어 문자가 포함되어 있습니다.",
-        "invalidNotesPath": "절대 경로 또는 ~/로 시작하는 경로를 사용하세요.",
-        "invalidSubfolder": "하위 폴더는 .. 또는 잘못된 경로 문자가 없는 상대 경로여야 합니다.",
-        "missingContentToken": "본문 템플릿에는 {'{'}content{'}'}가 포함되어야 합니다.",
-        "unknownTemplateToken": "알 수 없는 템플릿 토큰입니다. 지원되는 토큰을 확인하세요."
-      },
-      "folder": "메모 폴더",
-      "pathHint": "절대 경로 또는 ~/notes를 사용하세요. Logseq의 경우 그래프 루트를 선택하면 journals가 자동으로 추가됩니다.",
-      "preview": "미리보기",
-      "sampleText": "예시 메모\n자세한 내용",
-      "template": "설정 템플릿 적용"
-    },
+    "browseFolder": "폴더 선택",
+    "configPreview": "미리보기",
     "forcedByEInk": "전자잉크 테마에서는 항상 높은 대비와 애니메이션 끄기가 적용됩니다",
     "formatWithLlm": "외부 애플리케이션에 삽입하기 전에 받아쓰기 자동 수정",
     "generalTab": "일반",

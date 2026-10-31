@@ -25,7 +25,7 @@
   "fileNameTemplate": "Dateinamensvorlage",
   "fileNameTemplateInfo": "Unterstützt Datums-Token ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}) sowie {'{'}title{'}'} und {'{'}slug{'}'}. Bei Namenskonflikten erhalten Dateien ein numerisches Suffix.",
   "contentTemplate": "Inhaltssvorlage",
-  "contentTemplateInfo": "Unterstützt Datums-Token, {'{'}title{'}'} und das erforderliche {'{'}content{'}'}. Der Anhangmodus erstellt die Datei, falls nicht vorhanden.",
+  "contentTemplateInfo": "Unterstützt Datums-Token, {'{'}title{'}'} und das erforderliche {'{'}content{'}'}. Schreiben Sie {'{'}{'{'} oder {'}'}{'}'} für eine geschweifte Klammer. Verwendet eine Überschrift {'{'}title{'}'}, wird die erste Zeile darunter nicht wiederholt. Der Anhangmodus erstellt die Datei, falls nicht vorhanden.",
   "clearInputAfterSave": "Eingabefeld nach dem Speichern leeren",
   "toolLabel": "Notiz schreiben",
   "toolDescription": "Speichert den Text als neue Notiz oder hängt ihn an eine vorhandene an, in Ihrem Notizordner",
@@ -34,8 +34,12 @@
   "noteAppended": "Notiz angehängt",
   "noteSaveFailed": "Fehler beim Speichern der Notiz",
   "invalidNotesPath": "Verwenden Sie einen absoluten Notizpfad oder einen Pfad, der mit ~/ beginnt.",
-  "invalidSubfolder": "Unterordner muss relativ sein, ohne .. oder ungültige Pfadzeichen.",
-  "unknownTemplateToken": "Unbekanntes Vorlagen-Token. Überprüfen Sie die unterstützten Token.",
+  "invalidSubfolder": "Unterordner muss relativ sein, / als Trennzeichen verwenden und darf weder .., reservierte Namen wie CON noch ungültige Pfadzeichen enthalten.",
+  "unknownTemplateToken": "Unbekanntes Vorlagen-Token {'{'}{token}{'}'}. Überprüfen Sie die unterstützten Token oder schreiben Sie {'{'}{'{'} und {'}'}{'}'} für geschweifte Klammern.",
   "missingContentToken": "Die Inhaltssvorlage muss {'{'}content{'}'} enthalten.",
-  "invalidFileName": "Dateinamensvorlage enthält Steuerzeichen."
+  "invalidFileName": "Dateinamensvorlage enthält Steuerzeichen.",
+  "noteSaveDenied": "Schreiben in den Notizordner ist nicht erlaubt. Prüfen Sie seine Berechtigungen und ob der Ordner in den Einstellungen gespeichert ist.",
+  "noteSaveInvalid": "Notizordner oder Dateiname ist ungültig. Prüfen Sie den Ordner oder kürzen Sie die Dateinamenvorlage.",
+  "noteTooLarge": "Die Notiz ist zu groß oder der Datenträger ist voll.",
+  "previewText": "Beispielnotiz\nWeitere Details"
 }

@@ -694,22 +694,8 @@
     "editorTab": "編輯器",
     "externalMethods": "其他喚醒方式",
     "externalMethodsHint": "從終端機、指令碼或系統快捷鍵使用此命令。必須安裝 tyco-ctl 用戶端並加入 PATH。Linux 亦支援 D-Bus：org.tyco.Service、/org/tyco/Object、org.tyco.Interface。",
-    "fastNote": {
-      "apply": "套用範本",
-      "browse": "選取資料夾",
-      "errors": {
-        "invalidFileName": "檔案名稱範本包含控制字元。",
-        "invalidNotesPath": "請使用絕對筆記路徑或以 ~/ 開頭的路徑。",
-        "invalidSubfolder": "子資料夾必須為相對路徑，不能包含 .. 或無效的路徑字元。",
-        "missingContentToken": "內容範本必須包含 {'{'}content{'}'}。",
-        "unknownTemplateToken": "未知的範本 Token。請檢查支援的 Token。"
-      },
-      "folder": "筆記資料夾",
-      "pathHint": "使用絕對路徑或 ~/notes。若使用 Logseq，請選擇知識庫根目錄；journals 會自動附加。",
-      "preview": "預覽",
-      "sampleText": "筆記範例\n更多詳細資訊",
-      "template": "套用設定範本"
-    },
+    "browseFolder": "選取資料夾",
+    "configPreview": "預覽",
     "forcedByEInk": "電子墨水主題下始終採用高對比且無動畫",
     "formatWithLlm": "在插入外部應用程式前自動修正聽寫",
     "generalTab": "一般",

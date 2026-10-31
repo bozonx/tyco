@@ -12,6 +12,8 @@ export const MAX_CONTRIBUTION_ID_LENGTH = 128
 
 export const MAX_CONFIG_FIELDS = 256
 export const MAX_SETTINGS_RENAMES = 256
+/** How many values a field's `visibleWhen` condition may list. */
+export const MAX_VISIBILITY_VALUES = 64
 export const MAX_TOOL_SCHEMA_PROPERTIES = 256
 /** Contributions a plugin may register in one call */
 export const MAX_CONTRIBUTION_BATCH = 256

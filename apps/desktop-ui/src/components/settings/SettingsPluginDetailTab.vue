@@ -19,15 +19,11 @@
         :message="t('settings.pluginPackageFailed', { detail: plugin.error })"
       />
       <div v-if="plugin.isEnabled" class="plugin-card-body">
-        <FastNoteSettings
-          v-if="plugin.pluginId === 'FastNote'"
-          :fields="plugin.fields"
-          @update="operations.updatePluginConfig(plugin.pluginId, $event)"
-        />
         <ConfigFields
-          v-else-if="plugin.fields.length > 0"
+          v-if="plugin.fields.length > 0"
           :key="plugin.pluginId"
           :config="plugin.fields"
+          :directory-field="plugin.directoryFieldName"
           @update:values="
             operations.updatePluginConfig(plugin.pluginId, $event)
           "
@@ -35,6 +31,12 @@
         <p v-else class="plugin-detail-note">
           {{ t('settings.noPluginSettings') }}
         </p>
+        <ToolConfigPreview
+          v-for="tool in previewTools"
+          :key="tool.id"
+          :tool="tool"
+          :config="settings"
+        />
       </div>
       <p v-else class="plugin-card-body plugin-detail-note">
         {{ t('settings.pluginDisabledHint') }}
@@ -44,19 +46,43 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import type { InstalledPluginItem } from '../../lib/plugins/plugin-settings'
+import { useToolsStore } from '../../stores/tools'
 import InlineNotice from '../common/InlineNotice.vue'
 import ConfigFields from './ConfigFields.vue'
-import FastNoteSettings from './FastNoteSettings.vue'
 import PluginCard from './PluginCard.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
+import ToolConfigPreview from './ToolConfigPreview.vue'
 
-defineProps<{ plugin: InstalledPluginItem }>()
+const props = defineProps<{ plugin: InstalledPluginItem }>()
 
 const { t } = useI18n()
 const { operations, navigate } = useSettingsContext()
+const toolsStore = useToolsStore()
+/** The settings being edited, as the plugin tools get them */
+const settings = computed(() =>
+  Object.fromEntries(
+    props.plugin.fields.map((field) => [
+      field.name,
+      field.value ?? field.defaultValue,
+    ])
+  )
+)
+/** Tools of the plugin that preview their output for these settings */
+const previewTools = computed(() =>
+  toolsStore
+    .list()
+    .filter(
+      (tool) =>
+        tool.owner.kind === 'plugin' &&
+        tool.owner.pluginId === props.plugin.pluginId &&
+        tool.previewConfig
+    )
+)
 </script>
 
 <style scoped>

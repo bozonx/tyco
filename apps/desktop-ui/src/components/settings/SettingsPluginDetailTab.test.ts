@@ -1,6 +1,11 @@
-import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useToolsStore } from '../../stores/tools'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
 import { createTestSettingsContext } from '../../test/settings-context'
 import SettingsPluginDetailTab from './SettingsPluginDetailTab.vue'
 
@@ -10,9 +15,12 @@ vi.mock('../../composables/use-i18n', () => ({
 
 describe('SettingsPluginDetailTab.vue', () => {
   let context: ReturnType<typeof createTestSettingsContext>
+  let desktop: TestDesktop
   beforeEach(() => {
+    desktop = installFakeDesktop()
     context = createTestSettingsContext({ plugins: {} })
   })
+  afterEach(() => desktop.dispose())
 
   const pluginWithConfig = {
     pluginId: 'SamplePlugin',
@@ -127,5 +135,45 @@ describe('SettingsPluginDetailTab.vue', () => {
 
     expect(wrapper.find('.fields-stub').exists()).toBe(false)
     expect(wrapper.text()).toContain('settings.pluginDisabledHint')
+  })
+
+  it('offers a folder picker for the notes setting and previews plugin tools', async () => {
+    const previewConfig = vi.fn(async (config: Record<string, unknown>) => ({
+      issues: [{ messageKey: 'plugin.sample.problem' }],
+      samples: [`${String(config.folder)}/note.md`],
+    }))
+    useToolsStore().registerPluginTools('SamplePlugin', [
+      {
+        id: 'write',
+        description: 'Writes',
+        inputSchema: { type: 'object' },
+        previewConfig,
+        run: async () => ({ ok: true }),
+      },
+    ])
+    const wrapper = mount(SettingsPluginDetailTab, {
+      props: {
+        plugin: {
+          ...pluginWithConfig,
+          directoryFieldName: 'folder',
+          fields: [{ type: 'text' as const, name: 'folder', value: '/notes' }],
+        },
+      },
+      global: {
+        provide: context.provide,
+        stubs: {
+          ConfigFields: {
+            props: ['config', 'directoryField'],
+            template: '<div class="fields-stub" :data-dir="directoryField" />',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.get('.fields-stub').attributes('data-dir')).toBe('folder')
+    expect(previewConfig).toHaveBeenCalledWith({ folder: '/notes' })
+    expect(wrapper.get('[role="alert"]').text()).toBe('plugin.sample.problem')
+    expect(wrapper.get('pre').text()).toBe('/notes/note.md')
   })
 })

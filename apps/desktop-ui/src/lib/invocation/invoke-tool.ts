@@ -1,4 +1,8 @@
-import { isPluginError, isPluginCancellation } from '@tyco/plugin-sdk'
+import {
+  cancelledToolResult,
+  isPluginError,
+  isPluginCancellation,
+} from '@tyco/plugin-sdk'
 import { errorMessage } from '@tyco/shared/value-guards'
 import {
   resolveToolInput,
@@ -136,7 +140,10 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
         wantsOutput: resolveSink(invocation, options) !== 'none',
         ...(options.onProgress ? { onProgress: options.onProgress } : {}),
       })
-      if (signal.aborted) return { ok: false, cancelled: true }
+      if (signal.aborted) {
+        const settled = cancelledToolResult(result)
+        return settled.cancelled ? settled : { ...settled, sourceText: '' }
+      }
       return {
         ...result,
         sourceText: Object.keys(parsed.input).length ? text : '',

@@ -700,22 +700,8 @@
     "editorTab": "Uređivač",
     "externalMethods": "Drugi načini pokretanja",
     "externalMethodsHint": "Koristite ovu naredbu iz terminala, skripte ili prečaca sustava. Klijent tyco-ctl mora biti instaliran i dostupan u PATH-u. Linux podržava i D-Bus: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Primijeni predložak",
-      "browse": "Odaberi mapu",
-      "errors": {
-        "invalidFileName": "Predložak naziva datoteke sadrži kontrolne znakove.",
-        "invalidNotesPath": "Koristite apsolutnu putanju bilješki ili putanju koja počinje s ~/.",
-        "invalidSubfolder": "Podmapa mora biti relativna, bez .. i nevaljanih znakova putanje.",
-        "missingContentToken": "Predložak sadržaja mora sadržavati {'{'}content{'}'}.",
-        "unknownTemplateToken": "Nepoznata varijabla predloška. Provjerite podržane varijable."
-      },
-      "folder": "Mapa bilješki",
-      "pathHint": "Koristite apsolutnu putanju ili ~/notes. Za Logseq odaberite korijen grafa; journals se dodaje automatski.",
-      "preview": "Pregled",
-      "sampleText": "Primjer bilješke\nViše pojedinosti",
-      "template": "Primijeni predložak postavki"
-    },
+    "browseFolder": "Odaberi mapu",
+    "configPreview": "Pregled",
     "forcedByEInk": "S temom e-ink uvijek visok kontrast i bez animacija",
     "formatWithLlm": "Automatski ispravi diktat prije umetanja u vanjsku aplikaciju",
     "generalTab": "Općenito",

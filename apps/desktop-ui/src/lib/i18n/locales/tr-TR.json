@@ -697,22 +697,8 @@
     "editorTab": "Düzenleyici",
     "externalMethods": "Diğer etkinleştirme yöntemleri",
     "externalMethodsHint": "Bu komutu terminalden, betikten veya sistem kısayolundan kullanın. tyco-ctl istemcisi kurulu ve PATH içinde erişilebilir olmalıdır. Linux ayrıca D-Bus destekler: org.tyco.Service, /org/tyco/Object, org.tyco.Interface.",
-    "fastNote": {
-      "apply": "Şablonu uygula",
-      "browse": "Klasör seç",
-      "errors": {
-        "invalidFileName": "Dosya adı şablonu kontrol karakterleri içeriyor.",
-        "invalidNotesPath": "Mutlak bir not yolu veya ~/ ile başlayan bir yol kullanın.",
-        "invalidSubfolder": "Alt klasör göreli olmalı; .. veya geçersiz yol karakterleri içermemeli.",
-        "missingContentToken": "İçerik şablonu {'{'}content{'}'} içermeli.",
-        "unknownTemplateToken": "Bilinmeyen şablon belirteci. Desteklenen belirteçleri kontrol edin."
-      },
-      "folder": "Not klasörü",
-      "pathHint": "Mutlak yol veya ~/notes kullanın. Logseq için grafiğin kökünü seçin; journals otomatik eklenir.",
-      "preview": "Önizleme",
-      "sampleText": "Örnek not\nDiğer ayrıntılar",
-      "template": "Ayar şablonu uygula"
-    },
+    "browseFolder": "Klasör seç",
+    "configPreview": "Önizleme",
     "forcedByEInk": "E-ink temasında kontrast her zaman yüksektir ve animasyonlar kapalıdır",
     "formatWithLlm": "Harici uygulamaya eklemeden önce dikteyi otomatik olarak düzelt",
     "generalTab": "Genel",

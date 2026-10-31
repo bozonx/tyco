@@ -25,7 +25,7 @@
   "fileNameTemplate": "Szablon nazwy pliku",
   "fileNameTemplateInfo": "Obsługuje tokeny daty ({'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}, {'{'}DD{'}'}, {'{'}HH{'}'}, {'{'}mm{'}'}, {'{'}ss{'}'}, {'{'}WW{'}'}, {'{'}GGGG{'}'}, {'{'}zettel{'}'}, {'{'}timestamp{'}'}) oraz {'{'}title{'}'} i {'{'}slug{'}'}. W przypadku kolizji nazw pliki otrzymują sufiks numeryczny.",
   "contentTemplate": "Szablon zawartości",
-  "contentTemplateInfo": "Obsługuje tokeny daty, {'{'}title{'}'} oraz wymagany {'{'}content{'}'}. Tryb dopisywania tworzy plik, jeśli nie istnieje.",
+  "contentTemplateInfo": "Obsługuje tokeny daty, {'{'}title{'}'} oraz wymagany {'{'}content{'}'}. Wpisz {'{'}{'{'} lub {'}'}{'}'}, aby uzyskać nawias klamrowy. Jeśli nagłówek używa {'{'}title{'}'}, pierwszy wiersz nie jest pod nim powtarzany. Tryb dopisywania tworzy plik, jeśli nie istnieje.",
   "clearInputAfterSave": "Wyczyść pole wprowadzania po zapisaniu",
   "toolLabel": "Napisz notatkę",
   "toolDescription": "Zapisuje tekst jako nową notatkę lub dołącza go do istniejącej w folderze notatek",
@@ -34,8 +34,12 @@
   "noteAppended": "Notatka dołączona",
   "noteSaveFailed": "Nie udało się zapisać notatki",
   "invalidNotesPath": "Użyj bezwzględnej ścieżki do notatek lub ścieżki zaczynającej się od ~/.",
-  "invalidSubfolder": "Podfolder musi być ścieżką względną, bez .. ani nieprawidłowych znaków ścieżki.",
-  "unknownTemplateToken": "Nieznany token szablonu. Sprawdź listę obsługiwanych tokenów.",
+  "invalidSubfolder": "Podfolder musi być względny, używać / jako separatora i nie zawierać .., nazw zastrzeżonych, takich jak CON, ani niedozwolonych znaków ścieżki.",
+  "unknownTemplateToken": "Nieznany token szablonu {'{'}{token}{'}'}. Sprawdź obsługiwane tokeny lub wpisz {'{'}{'{'} i {'}'}{'}'}, aby uzyskać nawiasy klamrowe.",
   "missingContentToken": "Szablon zawartości musi zawierać {'{'}content{'}'}.",
-  "invalidFileName": "Szablon nazwy pliku zawiera znaki sterujące."
+  "invalidFileName": "Szablon nazwy pliku zawiera znaki sterujące.",
+  "noteSaveDenied": "Zapis w folderze notatek jest niedozwolony. Sprawdź jego uprawnienia oraz czy folder jest zapisany w ustawieniach.",
+  "noteSaveInvalid": "Folder notatek lub nazwa pliku są nieprawidłowe. Sprawdź folder lub skróć szablon nazwy pliku.",
+  "noteTooLarge": "Notatka jest zbyt duża lub dysk jest pełny.",
+  "previewText": "Przykładowa notatka\nWięcej szczegółów"
 }

@@ -15,7 +15,7 @@ export interface PluginTestContextOptions {
   value?: string
   selectedText?: string
   config?: Record<string, unknown>
-  apiResult?: { success: boolean; error?: string }
+  apiResult?: { success: boolean; error?: string; errorCode?: string }
 }
 
 type PluginTestMocks = {

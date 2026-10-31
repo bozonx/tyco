@@ -25,7 +25,7 @@
   "fileNameTemplate": "文件名模板",
   "fileNameTemplateInfo": "支持日期标记（{'{'}YYYY{'}'}、{'{'}YY{'}'}、{'{'}MM{'}'}、{'{'}DD{'}'}、{'{'}HH{'}'}、{'{'}mm{'}'}、{'{'}ss{'}'}、{'{'}WW{'}'}、{'{'}GGGG{'}'}、{'{'}zettel{'}'}、{'{'}timestamp{'}'}），以及 {'{'}title{'}'} 和 {'{'}slug{'}'}。文件名冲突时文件会获得数字后缀。",
   "contentTemplate": "内容模板",
-  "contentTemplateInfo": "支持日期标记、{'{'}title{'}'} 以及必需的 {'{'}content{'}'}。追加模式在文件缺失时自动创建。",
+  "contentTemplateInfo": "支持日期令牌、{'{'}title{'}'} 和必需的 {'{'}content{'}'}。要输入花括号，请写 {'{'}{'{'} 或 {'}'}{'}'}。如果标题使用 {'{'}title{'}'}，第一行不会在其下方重复。追加模式会在文件不存在时创建文件。",
   "clearInputAfterSave": "保存后清空输入框",
   "toolLabel": "写入笔记",
   "toolDescription": "在笔记文件夹中将文本保存为新笔记或追加到现有笔记中",
@@ -34,8 +34,12 @@
   "noteAppended": "笔记已追加",
   "noteSaveFailed": "保存笔记失败",
   "invalidNotesPath": "请使用绝对笔记路径或以 ~/ 开头的路径。",
-  "invalidSubfolder": "子文件夹必须是相对路径，不能包含 .. 或无效的路径字符。",
-  "unknownTemplateToken": "未知的模板标记。请检查支持的标记。",
+  "invalidSubfolder": "子文件夹必须是相对路径，使用 / 作为分隔符，且不能包含 ..、CON 等保留名称或无效的路径字符。",
+  "unknownTemplateToken": "未知的模板令牌 {'{'}{token}{'}'}。请检查支持的令牌，或写 {'{'}{'{'} 和 {'}'}{'}'} 来表示花括号。",
   "missingContentToken": "内容模板必须包含 {'{'}content{'}'}。",
-  "invalidFileName": "文件名模板包含控制字符。"
+  "invalidFileName": "文件名模板包含控制字符。",
+  "noteSaveDenied": "不允许写入笔记文件夹。请检查其权限，并确认该文件夹已保存在设置中。",
+  "noteSaveInvalid": "笔记文件夹或文件名无效。请检查文件夹或缩短文件名模板。",
+  "noteTooLarge": "笔记过大，或磁盘已满。",
+  "previewText": "示例笔记\n更多详情"
 }

@@ -7,6 +7,35 @@ import { pathToFileURL } from 'node:url'
 
 const root = resolve(import.meta.dirname, '..')
 const temporary = await mkdtemp(resolve(tmpdir(), 'tyco-plugin-packages-'))
+
+/**
+ * What the Rust backend knows about bundled plugins: their IDs and which
+ * setting grants each notes plugin its notes root.
+ */
+const pluginsSource = await readFile(
+  resolve(root, 'src-tauri/src/services/plugins.rs'),
+  'utf8'
+)
+/** @param {string} name */
+const rustConstant = (name) => {
+  const match = pluginsSource.match(
+    new RegExp(`const ${name}: [^=]+= &\\[([\\s\\S]*?)\\];`)
+  )
+  assert.ok(match, `${name} is not declared in plugins.rs`)
+  return match[1]
+}
+const bundledIds = new Set(
+  Array.from(rustConstant('BUNDLED_IDS').matchAll(/"([^"]+)"/g), (m) => m[1])
+)
+const bundledNotesFields = new Map(
+  Array.from(
+    rustConstant('BUNDLED_NOTES_FIELDS').matchAll(
+      /\("([^"]+)",\s*"([^"]+)"\)/g
+    ),
+    (m) => [m[1], m[2]]
+  )
+)
+const seenIds = new Set()
 try {
   for (const name of await readdir(resolve(root, 'packages'))) {
     if (
@@ -32,6 +61,26 @@ try {
     assert.equal(plugin.version, artifact.manifest.version)
     assert.deepEqual(plugin.capabilities, artifact.manifest.capabilities)
     assert.ok(plugin.locales[plugin.defaultLocale])
+    const packageJson = JSON.parse(
+      await readFile(resolve(root, 'packages', name, 'package.json'), 'utf8')
+    )
+    assert.equal(
+      plugin.version,
+      packageJson.version,
+      `${plugin.id}: the plugin version differs from its package.json`
+    )
+    assert.ok(
+      bundledIds.has(plugin.id),
+      `${plugin.id} is missing from BUNDLED_IDS in plugins.rs`
+    )
+    seenIds.add(plugin.id)
+    assert.equal(
+      bundledNotesFields.get(plugin.id),
+      plugin.capabilities.includes('notes')
+        ? (plugin.notesDirectoryField ?? 'pathToNotes')
+        : undefined,
+      `${plugin.id}: BUNDLED_NOTES_FIELDS in plugins.rs differs from the manifest`
+    )
     for (const field of plugin.defaultConfig?.fields ?? [])
       assert.equal(typeof field.name, 'string')
     if (plugin.id === 'WebFormatter') {
@@ -49,6 +98,11 @@ try {
     }
     console.log(`Standalone plugin verified: ${plugin.id}`)
   }
+  assert.deepEqual(
+    [...bundledIds].filter((id) => !seenIds.has(id)),
+    [],
+    'BUNDLED_IDS in plugins.rs lists plugins that are not bundled'
+  )
 } finally {
   await rm(temporary, { recursive: true, force: true })
 }
