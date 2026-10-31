@@ -10,15 +10,31 @@ import type { SttClient } from './stt-client'
 import type { SttModel } from './stt-config'
 import type { VoiceCaptureControl } from './voice-capture'
 
-/** A failure of the dictation itself, told to the user by `kind` */
+/**
+ * A failure of the dictation itself, told to the user by `kind`: `superseded`
+ * means another voice input took the microphone over.
+ */
 export class DictationError extends Error {
   constructor(
-    readonly kind: 'closed' | 'timeout',
+    readonly kind: 'closed' | 'timeout' | 'superseded',
     message: string
   ) {
     super(message)
     this.name = 'DictationError'
   }
+}
+
+const DICTATION_ERROR_KEYS: Record<DictationError['kind'], string> = {
+  closed: 'toast.dictationClosed',
+  timeout: 'toast.dictationTimeout',
+  superseded: 'toast.dictationSuperseded',
+}
+
+/** The message key of a dictation failure; other errors carry their own text */
+export function dictationErrorKey(error: unknown): string | undefined {
+  return error instanceof DictationError
+    ? DICTATION_ERROR_KEYS[error.kind]
+    : undefined
 }
 
 /** How long the provider may take for its last words once the audio ends */
@@ -100,7 +116,7 @@ export function createLiveDictation(
       finishing = false
       onError = request.onError
 
-      const { sampleRate, audio } = await deps.capture.start()
+      const { sampleRate, audio, isSuperseded } = await deps.capture.start()
       // cancelled while the microphone was starting: it must not stay on
       if (current.signal.aborted) {
         await stopCapture()
@@ -134,10 +150,15 @@ export function createLiveDictation(
             }
           }
           if (!finishing && !current.signal.aborted) {
-            throw new DictationError(
-              'closed',
-              'The speech recognition session closed while recording'
-            )
+            throw isSuperseded()
+              ? new DictationError(
+                  'superseded',
+                  'Another voice input took the microphone over'
+                )
+              : new DictationError(
+                  'closed',
+                  'The speech recognition session closed while recording'
+                )
           }
         } catch (error) {
           if (current.signal.aborted) return

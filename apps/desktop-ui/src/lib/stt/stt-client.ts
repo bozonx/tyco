@@ -56,6 +56,11 @@ export interface SttClient {
   transcribeLive: (request: SttLiveRequest) => AsyncIterable<TranscriptPart>
 }
 
+/** Whether `url` can address a self-hosted streaming server: `ws://` or `wss://` */
+export function isSttServerUrlValid(url: string): boolean {
+  return /^wss?:\/\/[^/\s]+/iu.test(url.trim())
+}
+
 /** Builds a speech catalog for the one configured live model. */
 export function buildSttCatalog(model: SttModel): Catalog {
   if (!model.modelId.trim()) {
@@ -65,7 +70,7 @@ export function buildSttCatalog(model: SttModel): Catalog {
   if (!isKeyRequiredForSttProvider(model.provider)) {
     if (!baseUrl)
       throw new Error('The speech recognition server address is empty')
-    if (!/^wss?:\/\/[^/\s]+/i.test(baseUrl))
+    if (!isSttServerUrlValid(baseUrl))
       throw new Error(
         'The speech recognition server address must start with ws:// or wss://'
       )

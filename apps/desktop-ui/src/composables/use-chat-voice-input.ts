@@ -43,10 +43,7 @@ export function useChatVoiceInput() {
       ) => {
         menuModalsStore.closeAll()
         if (intent === 'copy') {
-          const copyAction = actionMenuStore
-            .getDefaultActions()
-            .find((action) => action.id === 'copyToClipboard')
-          void copyAction?.action(text)
+          void actionMenuStore.runDefaultAction('copyToClipboard', text)
           return
         }
         chatInputStore.insertText(text)

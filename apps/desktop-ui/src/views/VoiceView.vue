@@ -101,10 +101,7 @@ function handleCorrected(
   intent: VoiceFinishIntent
 ) {
   if (intent === 'copy') {
-    const copyAction = actionMenuStore
-      .getDefaultActions()
-      .find((action) => action.id === 'copyToClipboard')
-    void copyAction?.action(resultText)
+    void actionMenuStore.runDefaultAction('copyToClipboard', resultText)
     return
   }
   const insertAction = actionMenuStore

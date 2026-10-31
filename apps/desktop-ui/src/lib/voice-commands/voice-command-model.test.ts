@@ -3,12 +3,13 @@ import { createCommand } from '../commands/command-config'
 import { testTools } from '../tools/testing'
 import { createBuiltInVoiceCommands } from './built-in-voice-commands'
 import { translate } from '../i18n'
+import { DictationError } from '../stt/live-dictation'
 import {
   createVoiceCommandModel,
   type VoiceCommandDependencies,
 } from './voice-command-model'
 
-function setup() {
+function setup(overrides: Partial<VoiceCommandDependencies> = {}) {
   const baseTools = testTools()
   const scriptTool = baseTools.get('script')!
   const tools = {
@@ -45,6 +46,8 @@ function setup() {
     finishDictation: vi.fn(async () => 'save note Hello!'),
     cancelDictation: vi.fn(async () => {}),
     run: vi.fn(async () => ({ success: true })),
+    saveTranscript: vi.fn(async () => 'source-id'),
+    ...overrides,
   }
   const model = createVoiceCommandModel(deps)
   return {
@@ -59,7 +62,7 @@ describe('voice command session', () => {
   it('stops a forgotten recording at the limit and waits for review', async () => {
     vi.useFakeTimers()
     try {
-      const { model, deps } = setup()
+      const { model, deps } = setup({ silenceTimeoutMs: 7_200_000 })
       await model.start()
       await vi.advanceTimersByTimeAsync(3_600_000)
       expect(deps.finishDictation).toHaveBeenCalledOnce()
@@ -69,6 +72,47 @@ describe('voice command session', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('stops after three minutes without recognized speech and waits for review', async () => {
+    vi.useFakeTimers()
+    try {
+      const { model, deps, partial } = setup()
+      await model.start()
+      await vi.advanceTimersByTimeAsync(170_000)
+      partial('save note')
+      await vi.advanceTimersByTimeAsync(150_000)
+      expect(deps.finishDictation).not.toHaveBeenCalled()
+      expect(model.autoStopWarning.value).toBeUndefined()
+      await vi.advanceTimersByTimeAsync(15_000)
+      expect(model.autoStopWarning.value).toMatchObject({ reason: 'silence' })
+      await vi.advanceTimersByTimeAsync(15_000)
+      expect(deps.finishDictation).toHaveBeenCalledOnce()
+      expect(model.stage.value).toBe('review')
+      expect(model.error.value).toBe('toast.recordingSilenceStop')
+      expect(deps.run).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps the recognized speech in the history before the review', async () => {
+    const { model, deps } = setup()
+    await model.start()
+    await model.finish('review')
+    expect(deps.saveTranscript).toHaveBeenCalledWith('save note Hello!')
+    expect(deps.run).not.toHaveBeenCalled()
+  })
+
+  it('tells a dictation failure by its message key', async () => {
+    const { model } = setup({
+      finishDictation: vi.fn(async () => {
+        throw new DictationError('timeout', 'Timed out')
+      }),
+    })
+    await model.start()
+    await model.finish()
+    expect(model.error.value).toBe('toast.dictationTimeout')
   })
 
   it('clears the limit when the recording is finished or cancelled', async () => {

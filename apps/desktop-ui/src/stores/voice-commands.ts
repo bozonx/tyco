@@ -30,6 +30,7 @@ export const useVoiceCommandsStore = defineStore('voiceCommands', () => {
     commands: () => desktop.userConfig.commands,
     tools,
     ...useDictationActions(),
+    saveTranscript: (text) => history.saveSource(text, 'voiceCorrection'),
     run: async (command, text, signal) => {
       if (signal.aborted) return { success: false, cancelled: true }
       const current = [

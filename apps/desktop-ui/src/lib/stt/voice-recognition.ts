@@ -4,26 +4,25 @@ import {
   type TimerDependencies,
   createSingleTimer,
 } from '../timers/single-timer'
-import { DictationError, type LiveDictationStart } from './live-dictation'
+import { dictationErrorKey, type LiveDictationStart } from './live-dictation'
 import {
   createLiveTranscriptState,
   liveTranscriptText,
 } from './live-transcript'
 import type { VoiceFinishIntent } from './voice-finish-intent'
-import { type AutoStopWarning, createVoiceSession } from './voice-session'
+import {
+  AUTO_STOP_WARNING_MS,
+  type AutoStopWarning,
+  createVoiceSession,
+  MAX_RECORDING_MS,
+  SILENCE_TIMEOUT_MS,
+} from './voice-session'
 
 /**
  * How long the LLM may format or style a dictation; then the raw transcript
  * goes on as it is
  */
 export const DEFAULT_POST_PROCESS_TIMEOUT_MS = 30_000
-
-// Silence is billed too: a forgotten dictation must not run all day
-export const MAX_RECORDING_MS = 3_600_000
-/** A dictation with no recognized speech for this long was left running */
-export const SILENCE_TIMEOUT_MS = 180_000
-/** How long the countdown before an automatic stop is shown */
-export const AUTO_STOP_WARNING_MS = 20_000
 
 /**
  * `promise`, or a rejection as soon as `signal` aborts: a hung request may
@@ -136,19 +135,18 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     },
   })
 
-  const DICTATION_ERROR_KEYS = {
-    closed: 'toast.dictationClosed',
-    timeout: 'toast.dictationTimeout',
-  } as const
-
   /** What went wrong, in the words of the user's language where they are ours */
   function describeVoiceError(error: unknown): string {
-    if (error instanceof DictationError)
-      return t(DICTATION_ERROR_KEYS[error.kind])
-    return errorMessage(error)
+    const key = dictationErrorKey(error)
+    return key ? t(key) : errorMessage(error)
   }
 
+  /** The session `onCancelled` was last told about: it is told once */
+  let cancelledGeneration: number | undefined
+
   function notifyCancelled() {
+    if (cancelledGeneration === sessionGeneration) return
+    cancelledGeneration = sessionGeneration
     deps.onCancelled()
   }
 
@@ -363,11 +361,14 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   }
 
   async function startSession() {
+    // a session that broke keeps its text until it is finished or cancelled:
+    // starting over, e.g. when the window is shown again, would drop it
     if (
       disposed ||
       isCancelling.value ||
       isStarted.value ||
       isFinishing.value ||
+      hasSession ||
       starting
     )
       return

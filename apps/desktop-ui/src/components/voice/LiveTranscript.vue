@@ -15,12 +15,12 @@
       </div>
       <div v-else class="live-transcript-content">
         <span v-if="prefix" class="live-transcript-prefix">{{ prefix }}</span>
-        <span v-if="committed">{{ prefixSpacer }}{{ committed }}</span>
+        <span v-if="committed">{{ committedSpacer }}{{ committed }}</span>
         <span v-if="draft" class="live-transcript-draft"
           >{{ draftSpacer }}{{ draft }}</span
         >
         <span v-if="!hasContent" class="placeholder-text placeholder-inline"
-          >{{ prefixSpacer }}{{ placeholder || t('menu.speakNow') }}</span
+          >{{ placeholderSpacer }}{{ placeholder || t('menu.speakNow') }}</span
         >
         <span class="live-transcript-cursor" aria-hidden="true" />
         <span v-if="suffix" class="live-transcript-suffix"
@@ -35,6 +35,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { needsSpaceBetween } from '../../lib/text/word-spacing'
 
 const props = defineProps<{
   /** Settled text */
@@ -55,26 +56,25 @@ const container = ref<HTMLElement>()
 const hasContent = computed(() => Boolean(props.committed || props.draft))
 const hasPrefix = computed(() => Boolean(props.prefix || props.suffix))
 
-const prefixSpacer = computed(() => {
-  if (!props.prefix) return ''
-  return /\s$/.test(props.prefix) ? '' : ' '
-})
+// the same spacing as the text that is inserted, see `insertAtCursor`
+const spacer = (head: string | undefined, tail: string | undefined) =>
+  needsSpaceBetween(head ?? '', tail ?? '') ? ' ' : ''
 
-const draftSpacer = computed(() => {
-  if (props.committed) {
-    return /\s$/.test(props.committed) ? '' : ' '
-  }
-  return prefixSpacer.value
-})
+/** The placeholder stands in for words: it is set off from the prefix */
+const placeholderSpacer = computed(() =>
+  props.prefix && !/\s$/u.test(props.prefix) ? ' ' : ''
+)
+
+const committedSpacer = computed(() => spacer(props.prefix, props.committed))
+
+const draftSpacer = computed(() =>
+  spacer(props.committed || props.prefix, props.draft)
+)
 
 const suffixSpacer = computed(() => {
-  if (props.draft) {
-    return /\s$/.test(props.draft) ? '' : ' '
-  }
-  if (props.committed) {
-    return /\s$/.test(props.committed) ? '' : ' '
-  }
-  return prefixSpacer.value
+  const spoken = props.draft || props.committed
+  if (spoken) return spacer(spoken, props.suffix)
+  return props.suffix && !/^\s/u.test(props.suffix) ? ' ' : ''
 })
 
 // the newest words are the ones being spoken: keep them in view

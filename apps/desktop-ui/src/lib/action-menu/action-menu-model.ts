@@ -330,6 +330,17 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     ]
   }
 
+  /**
+   * Runs a built-in action such as `copyToClipboard` or `insertIntoWindow` on
+   * `text`; false when there is no action by that id.
+   */
+  const runDefaultAction = async (id: string, text: string) => {
+    const action = getDefaultActions().find((item) => item.id === id)
+    if (!action) return false
+    await action.action(text)
+    return true
+  }
+
   const getActionsMenu = () =>
     getShortcutActions().filter((action): action is ActionItem => !!action)
 
@@ -342,6 +353,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     getRegisteredActions,
     resolveMainActions,
     getDefaultActions,
+    runDefaultAction,
     correct,
     getActionsMenu,
     getShortcutActions,

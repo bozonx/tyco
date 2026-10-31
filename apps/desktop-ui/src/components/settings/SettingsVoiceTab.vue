@@ -12,6 +12,7 @@
         v-if="!sttNeedsKey"
         :label="t('settings.sttServerUrl')"
         :hint="t('settings.sttServerUrlHint')"
+        :error="sttServerUrlError"
       >
         <FieldInput
           :model-value="userConfig.stt.providers.sherpaOnnx.baseUrl"
@@ -97,7 +98,11 @@ import {
 } from '../../lib/locale/language'
 import { createSecretKeyEditor } from '../../lib/settings/secret-key-editor'
 import { DICTATION_LANGUAGE_AUTO } from '../../lib/stt/dictation-language'
-import { isKeyRequiredForSttProvider, secretId } from '../../lib/stt/stt-client'
+import {
+  isKeyRequiredForSttProvider,
+  isSttServerUrlValid,
+  secretId,
+} from '../../lib/stt/stt-client'
 import { activeSttModel } from '../../lib/stt/stt-config'
 import { useSecretsStore } from '../../stores/secrets'
 import FieldInput from '../common/FieldInput.vue'
@@ -130,6 +135,14 @@ const setSttProvider = (value: string | number | undefined) => {
   if (STT_PROVIDERS.includes(value as SttProvider))
     userConfig.value.stt.provider = value as SttProvider
 }
+
+/** Told here, not only when a dictation fails to start */
+const sttServerUrlError = computed(() =>
+  !sttNeedsKey.value &&
+  !isSttServerUrlValid(userConfig.value.stt.providers.sherpaOnnx.baseUrl)
+    ? t('settings.sttServerUrlInvalid')
+    : undefined
+)
 
 const setSttServerUrl = (value: string) => {
   userConfig.value.stt.providers.sherpaOnnx.baseUrl = value.trim()

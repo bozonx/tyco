@@ -25,7 +25,8 @@ export interface SttConfig {
   provider: SttProvider
   /**
    * The LLM turns the transcript into written text; its settings are
-   * `llm.tasks.voiceCorrection`
+   * `llm.tasks.voiceCorrection`. By design it applies only to dictation into
+   * external windows, not to the chat or the editor.
    */
   isVoiceCorrectionEnabled: boolean
   /** Whether holding the voice hotkey records until released (Push-to-Talk) */

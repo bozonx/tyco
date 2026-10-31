@@ -9,6 +9,8 @@ interface VoiceCapture {
   sampleRate: number
   /** Ends once the microphone is stopped and its last chunk delivered */
   audio: AsyncIterable<AudioChunk>
+  /** Whether `audio` ended because a newer capture took the microphone */
+  isSuperseded: () => boolean
 }
 
 export interface VoiceCaptureControl {
@@ -26,6 +28,7 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
   return {
     async start() {
       let overflowed = false
+      let superseded = false
       let captureSessionId: number | undefined
       const queue = createAsyncQueue<AudioChunk>({
         maxBytes: 4 * 1024 * 1024,
@@ -45,7 +48,11 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
         }
         const event = message as VoiceCaptureEvent
         if (event.type === 'end') queue.end()
-        else if (event.type === 'error') queue.fail(new Error(event.message))
+        else if (event.type === 'superseded') {
+          // the audio before it is complete: it ends as usual
+          superseded = true
+          queue.end()
+        } else if (event.type === 'error') queue.fail(new Error(event.message))
       }
 
       try {
@@ -56,7 +63,11 @@ export function createVoiceCaptureControl(ipc: NetIpc): VoiceCaptureControl {
         sessionId = captureSessionId
         if (overflowed) await ipc.invoke('stop_voice_capture', { sessionId })
         const { sampleRate } = started
-        return { sampleRate, audio: queue.values }
+        return {
+          sampleRate,
+          audio: queue.values,
+          isSuperseded: () => superseded,
+        }
       } catch (error) {
         throw new Error(errorMessage(error), { cause: error })
       }

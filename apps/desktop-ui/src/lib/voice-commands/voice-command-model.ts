@@ -4,16 +4,22 @@ import { computed, ref, shallowRef } from 'vue'
 import type { CommandConfig } from '@tyco/shared'
 import type { InvocationOutcome } from '../invocation/invocation-types'
 import type { DictationHandlers } from '../stt/dictation-controller'
+import { dictationErrorKey } from '../stt/live-dictation'
 import {
   createLiveTranscriptState,
   liveTranscriptText,
   type LiveTranscriptState,
 } from '../stt/live-transcript'
 import type { ToolLookup } from '../tools/tool-types'
+import type { TimerDependencies } from '../timers/single-timer'
 import {
-  createSingleTimer,
-  type TimerDependencies,
-} from '../timers/single-timer'
+  AUTO_STOP_WARNING_MS,
+  type AutoStopReason,
+  type AutoStopWarning,
+  createVoiceSession,
+  MAX_RECORDING_MS,
+  SILENCE_TIMEOUT_MS,
+} from '../stt/voice-session'
 import {
   compileVoiceRoutes,
   isVoiceCommand,
@@ -34,12 +40,30 @@ export interface VoiceCommandDependencies extends TimerDependencies {
     text: string,
     signal: AbortSignal
   ) => Promise<InvocationOutcome>
+  /** The recognized speech, kept in the history before anything runs */
+  saveTranscript?: (text: string) => Promise<unknown>
   /** Silence is billed too: a forgotten recording must not run all day */
   maxRecordingMs?: number
+  silenceTimeoutMs?: number
+  now?: () => number
 }
 
-const MAX_RECORDING_MS = 3_600_000
-const RECORDING_LIMIT_ERROR = 'voiceCommands.recordingLimitReached'
+/** Why a recording stopped by itself, as message keys */
+const AUTO_STOP_ERRORS: Record<AutoStopReason, string> = {
+  limit: 'voiceCommands.recordingLimitReached',
+  silence: 'toast.recordingSilenceStop',
+}
+
+/**
+ * The text of `error`: a message key for failures the app describes itself,
+ * which the view translates, or the error's own message
+ */
+function errorText(cause: unknown): string {
+  return (
+    dictationErrorKey(cause) ??
+    (cause instanceof Error ? cause.message : String(cause))
+  )
+}
 
 /** Whether a finished recording runs its command at once or waits for review */
 export type VoiceCommandFinishIntent = 'run' | 'review'
@@ -56,7 +80,9 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   )
   const inputText = ref('')
   const selected = shallowRef<VoiceCandidate>()
+  /** A message key (`voiceCommands.*`, `toast.*`) or a message as it came */
   const error = ref('')
+  const autoStopWarning = shallowRef<AutoStopWarning>()
   let generation = 0
   /** Why the session broke while `finish` was waiting for its last words */
   let interruption: string | undefined
@@ -64,7 +90,23 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   let starting: Promise<void> | undefined
   let stopping = Promise.resolve()
   let controller: AbortController | undefined
-  const limitTimer = createSingleTimer(deps)
+  const voiceSession = createVoiceSession({
+    setTimer: deps.setTimer,
+    clearTimer: deps.clearTimer,
+    now: deps.now,
+    maxRecordingMs: deps.maxRecordingMs ?? MAX_RECORDING_MS,
+    silenceTimeoutMs: deps.silenceTimeoutMs ?? SILENCE_TIMEOUT_MS,
+    warningLeadMs: AUTO_STOP_WARNING_MS,
+    onWarning: (warning) => {
+      autoStopWarning.value = warning
+    },
+    onAutoStop: (reason) => {
+      if (stage.value !== 'recording') return
+      // the text is kept for review: it is not run on its own
+      interruption = AUTO_STOP_ERRORS[reason]
+      void finish('review')
+    },
+  })
   const commands = computed(() => [
     ...(deps.builtInCommands?.() ?? []),
     ...deps.commands().filter((item) => !isBuiltInVoiceCommand(item)),
@@ -181,7 +223,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
       // Keep the transcript and input, including after a successful run.
     } catch (cause) {
       if (current !== generation || disposed) return
-      error.value = cause instanceof Error ? cause.message : String(cause)
+      error.value = errorText(cause)
     } finally {
       if (current === generation && !disposed) {
         controller = undefined
@@ -210,10 +252,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     liveTranscript.value = { committed: text, draft: '' }
     inputText.value = text
     stage.value = 'review'
-    const result = resolveVoice(
-      compileVoiceRoutes(commands.value, deps.tools),
-      text
-    )
+    const result = resolveVoice(routes.value, text)
     if (result.kind === 'match') {
       const candidate = result.candidates[0]!
       choose(candidate)
@@ -234,7 +273,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
 
   const finish = async (intent: VoiceCommandFinishIntent = 'run') => {
     if (stage.value !== 'recording') return
-    limitTimer.stop()
+    voiceSession.stopTimer()
     stage.value = 'finishing'
     const current = generation
     try {
@@ -248,10 +287,13 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
         stage.value = 'review'
         return
       }
+      // the only copy of what was said: it cannot be dictated the same way
+      // twice, and the review may end without running anything
+      void deps.saveTranscript?.(finalText).catch(() => undefined)
       await review(finalText, intent, interruption)
     } catch (cause) {
       if (current !== generation || disposed) return
-      error.value = cause instanceof Error ? cause.message : String(cause)
+      error.value = errorText(cause)
       stage.value = 'review'
     }
   }
@@ -271,12 +313,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     // Preserve the previous text until new recognition explicitly replaces it.
     selected.value = undefined
     liveTranscript.value = createLiveTranscriptState()
-    limitTimer.start(() => {
-      if (current !== generation || stage.value !== 'recording') return
-      // the text is kept for review: it is not run on its own
-      interruption = RECORDING_LIMIT_ERROR
-      void finish('review')
-    }, deps.maxRecordingMs ?? MAX_RECORDING_MS)
+    voiceSession.begin()
     const pending = (async () => {
       await stopping
       if (current !== generation || disposed) return
@@ -288,35 +325,39 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
             stage.value === 'recording'
           ) {
             liveTranscript.value = state
-            transcript.value = liveTranscriptText(state)
+            const text = liveTranscriptText(state)
+            // empty results come in silence too: only new words are speech
+            if (text !== transcript.value) voiceSession.markActivity()
+            transcript.value = text
           }
         },
         onError: (cause) => {
           if (current !== generation || disposed) return
           // `finish` still gets what was heard before the failure
           if (stage.value === 'finishing') {
-            interruption = cause.message
+            interruption = errorText(cause)
             return
           }
           generation += 1
-          limitTimer.stop()
+          voiceSession.abort()
           stopping = stopping
             .then(() => deps.cancelDictation())
             .catch(() => undefined)
           const heard = liveTranscriptText(liveTranscript.value)
           if (heard.trim()) {
-            void review(heard, 'review', cause.message)
+            void deps.saveTranscript?.(heard).catch(() => undefined)
+            void review(heard, 'review', errorText(cause))
             return
           }
-          error.value = cause.message
+          error.value = errorText(cause)
           stage.value = 'review'
         },
       })
     })()
       .catch((cause: unknown) => {
         if (current !== generation || disposed) return
-        limitTimer.stop()
-        error.value = cause instanceof Error ? cause.message : String(cause)
+        voiceSession.abort()
+        error.value = errorText(cause)
         stage.value = 'review'
       })
       .finally(() => {
@@ -328,7 +369,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
 
   const cancel = () => {
     generation += 1
-    limitTimer.stop()
+    voiceSession.abort()
     controller?.abort()
     stage.value = 'idle'
     error.value = ''
@@ -348,6 +389,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
   }
   return {
     stage,
+    autoStopWarning,
     recordingPhase,
     hasMatchedCommand,
     activeCandidate,
@@ -382,6 +424,7 @@ export function createVoiceCommandModel(deps: VoiceCommandDependencies) {
     dispose() {
       disposed = true
       void cancel().catch(() => undefined)
+      voiceSession.dispose()
     },
   }
 }

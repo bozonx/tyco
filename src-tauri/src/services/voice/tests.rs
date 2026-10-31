@@ -140,7 +140,16 @@ fn stream_stops_before_final_samples_and_end_and_resets_the_audio_level() {
         stop: Arc::clone(&stop),
     };
     let (tx, rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(&source, &trace, &runtime, &trace, &stop, &tx).unwrap();
+    run_capture_thread(
+        &source,
+        &trace,
+        &runtime,
+        &trace,
+        &stop,
+        &AtomicBool::new(false),
+        &tx,
+    )
+    .unwrap();
     assert_eq!(rx.try_recv().unwrap().unwrap(), TARGET_SAMPLE_RATE_HZ);
     assert_eq!(
         trace.values(),
@@ -157,7 +166,7 @@ fn stream_stops_before_final_samples_and_end_and_resets_the_audio_level() {
 }
 
 #[test]
-fn stream_failure_emits_error_instead_of_final_audio_and_end() {
+fn stream_failure_sends_the_final_audio_then_an_error_instead_of_end() {
     let trace = Trace::default();
     let source = TestSource {
         trace: trace.clone(),
@@ -171,14 +180,60 @@ fn stream_failure_emits_error_instead_of_final_audio_and_end() {
         stop: Arc::clone(&stop),
     };
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(&source, &trace, &runtime, &trace, &stop, &tx).unwrap();
+    run_capture_thread(
+        &source,
+        &trace,
+        &runtime,
+        &trace,
+        &stop,
+        &AtomicBool::new(false),
+        &tx,
+    )
+    .unwrap();
     assert_eq!(
         trace.values(),
         [
             "open",
             "drop-stream",
             "level:0",
+            "bytes:3202",
             r#"{"type":"error","message":"stream failed"}"#
+        ]
+    );
+}
+
+#[test]
+fn a_superseded_capture_sends_its_final_audio_then_superseded() {
+    let trace = Trace::default();
+    let source = TestSource {
+        trace: trace.clone(),
+        stop_on_open: true,
+        ..TestSource::default()
+    };
+    let stop = Arc::new(AtomicBool::new(false));
+    let runtime = TestRuntime {
+        now: std::cell::Cell::new(Instant::now()),
+        stop: Arc::clone(&stop),
+    };
+    let (tx, _rx) = std_mpsc::sync_channel(1);
+    run_capture_thread(
+        &source,
+        &trace,
+        &runtime,
+        &trace,
+        &stop,
+        &AtomicBool::new(true),
+        &tx,
+    )
+    .unwrap();
+    assert_eq!(
+        trace.values(),
+        [
+            "open",
+            "drop-stream",
+            "level:0",
+            "bytes:3202",
+            r#"{"type":"superseded"}"#
         ]
     );
 }
@@ -207,6 +262,7 @@ fn a_device_that_stops_callbacks_emits_error_and_releases_the_stream() {
         &StalledRuntime(std::cell::Cell::new(Instant::now())),
         &trace,
         &stop,
+        &AtomicBool::new(false),
         &tx,
     )
     .unwrap();
@@ -217,6 +273,7 @@ fn a_device_that_stops_callbacks_emits_error_and_releases_the_stream() {
             "open",
             "drop-stream",
             "level:0",
+            "bytes:3202",
             r#"{"type":"error","message":"Audio input stopped delivering samples"}"#
         ]
     );
@@ -265,6 +322,7 @@ fn recurring_callbacks_keep_capture_alive_even_when_samples_are_silent() {
         &runtime,
         &sink,
         &stop,
+        &AtomicBool::new(false),
         &tx,
     )
     .unwrap();
@@ -289,7 +347,16 @@ fn a_closed_listener_stops_capture_without_sending_end() {
         stop: Arc::clone(&stop),
     };
     let (tx, _rx) = std_mpsc::sync_channel(1);
-    run_capture_thread(&source, &trace, &runtime, &sink, &stop, &tx).unwrap();
+    run_capture_thread(
+        &source,
+        &trace,
+        &runtime,
+        &sink,
+        &stop,
+        &AtomicBool::new(false),
+        &tx,
+    )
+    .unwrap();
     assert!(stop.load(Ordering::SeqCst));
     assert!(sink.events.lock().unwrap().is_empty());
     assert_eq!(trace.values(), ["open", "drop-stream", "level:0"]);
@@ -391,9 +458,11 @@ async fn new_capture_replaces_the_old_one_and_a_stale_stop_leaves_it_running() {
         .nth(1)
         .unwrap()
         .0;
+    // the test source stops on its own at once, so the first capture may end
+    // before the second one supersedes it
     let first_end = values
         .iter()
-        .position(|value| value == r#"{"type":"end"}"#)
+        .position(|value| value == r#"{"type":"superseded"}"# || value == r#"{"type":"end"}"#)
         .unwrap();
     assert!(
         first_end < second_open,
@@ -434,10 +503,44 @@ fn serializes_control_events() {
         r#"{"type":"end"}"#
     );
     assert_eq!(
+        serde_json::to_string(&CaptureEvent::Superseded).unwrap(),
+        r#"{"type":"superseded"}"#
+    );
+    assert_eq!(
         serde_json::to_string(&CaptureEvent::Error {
             message: "boom".into()
         })
         .unwrap(),
         r#"{"type":"error","message":"boom"}"#
     );
+}
+
+#[tokio::test]
+async fn a_running_capture_is_told_when_a_new_one_takes_the_microphone() {
+    let state = VoiceSessionState::default();
+    let first_sink = Trace::default();
+    start_capture_with(
+        TestSource::default(),
+        Trace::default(),
+        &state,
+        first_sink.clone(),
+    )
+    .await
+    .unwrap();
+    let second = start_capture_with(
+        TestSource {
+            stop_on_open: true,
+            ..TestSource::default()
+        },
+        Trace::default(),
+        &state,
+        Trace::default(),
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        first_sink.values().last().map(String::as_str),
+        Some(r#"{"type":"superseded"}"#)
+    );
+    stop_capture(&state, Some(second.session_id)).await.unwrap();
 }

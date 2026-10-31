@@ -79,7 +79,21 @@ function tokenize(text: string): Token[] {
   }))
 }
 
-const words = (text: string) => tokenize(text).map((token) => token.word)
+/**
+ * Route phrases and parameter variants are a small fixed set, while the live
+ * transcript is resolved again on every partial result: their words are
+ * tokenized once.
+ */
+const wordCache = new Map<string, readonly string[]>()
+const WORD_CACHE_LIMIT = 10_000
+function words(text: string): readonly string[] {
+  const cached = wordCache.get(text)
+  if (cached) return cached
+  const result = tokenize(text).map((token) => token.word)
+  if (wordCache.size >= WORD_CACHE_LIMIT) wordCache.clear()
+  wordCache.set(text, result)
+  return result
+}
 const startsWith = (input: readonly string[], prefix: readonly string[]) =>
   prefix.every((word, index) => input[index] === word)
 
@@ -315,6 +329,55 @@ export function isVoiceCommand(
   )
 }
 
+/** A grammar entry lists its spoken variants separated by `;` */
+export function grammarVariants(value: string): string[] {
+  return value
+    .split(';')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+/** `{language}` (or `~`) marks where the language is spoken in a template */
+const LANGUAGE_SLOT = /\{language\}|~/u
+
+/**
+ * One translation template as a route. Text glued to the slot, such as the
+ * Korean `{language}로` or the Japanese `{language}に翻訳`, is spoken as one word
+ * with the language, so it becomes part of every language variant rather than a
+ * word of its own.
+ */
+function translateRoute(
+  commandId: string,
+  template: string,
+  language: string,
+  languageVariants: string
+): VoiceRoute {
+  const variants = grammarVariants(languageVariants)
+  if (!LANGUAGE_SLOT.test(template))
+    return {
+      commandId,
+      phrase: template,
+      parameters: [{ name: 'language', value: language, variants }],
+    }
+  const [before = '', after = ''] = template.split(LANGUAGE_SLOT)
+  const gluedBefore = before.match(/\S+$/u)?.[0] ?? ''
+  const gluedAfter = after.match(/^\S+/u)?.[0] ?? ''
+  return {
+    commandId,
+    phrase: before.slice(0, before.length - gluedBefore.length).trim(),
+    suffix: after.slice(gluedAfter.length).trim(),
+    parameters: [
+      {
+        name: 'language',
+        value: language,
+        variants: variants.map(
+          (variant) => `${gluedBefore}${variant}${gluedAfter}`
+        ),
+      },
+    ],
+  }
+}
+
 /** All spoken languages are compiled, independently of the UI language. */
 export function compileVoiceRoutes(
   commands: readonly CommandConfig[],
@@ -339,46 +402,14 @@ export function compileVoiceRoutes(
         const language = String(command.toolConfig.language ?? '')
         const variants =
           grammar.languages[language as keyof typeof grammar.languages]
-        if (variants) {
-          for (const template of grammar.translate.split(';')) {
-            const trimmed = template.trim()
-            if (!trimmed) continue
-            if (trimmed.includes('{language}') || trimmed.includes('~')) {
-              const [prefix = '', suffix = ''] =
-                trimmed.split(/\{language\}|~/u)
-              routes.push({
-                commandId: command.id,
-                phrase: prefix.trim(),
-                suffix: suffix.trim(),
-                parameters: [
-                  {
-                    name: 'language',
-                    value: language,
-                    variants: variants.split(';'),
-                  },
-                ],
-              })
-            } else {
-              routes.push({
-                commandId: command.id,
-                phrase: trimmed,
-                parameters: [
-                  {
-                    name: 'language',
-                    value: language,
-                    variants: variants.split(';'),
-                  },
-                ],
-              })
-            }
-          }
+        if (!variants) continue
+        for (const template of grammarVariants(grammar.translate)) {
+          routes.push(translateRoute(command.id, template, language, variants))
         }
       } else if (command.toolId === 'core.askInChat') {
-        routes.push({
-          commandId: command.id,
-          phrase: grammar.actions.askInChat,
-          parameters: [],
-        })
+        for (const phrase of grammarVariants(grammar.actions.askInChat)) {
+          routes.push({ commandId: command.id, phrase, parameters: [] })
+        }
       }
     }
   }
@@ -390,8 +421,8 @@ export function findVoiceConflicts(
   routes: readonly VoiceRoute[],
   commandId: string
 ): string[] {
-  const expand = (route: VoiceRoute): string[][] => {
-    let prefixes = [words(route.phrase)]
+  const expand = (route: VoiceRoute): (readonly string[])[] => {
+    let prefixes: (readonly string[])[] = [words(route.phrase)]
     for (const parameter of route.parameters) {
       prefixes = prefixes.flatMap((prefix) =>
         parameter.variants.map((variant) => [...prefix, ...words(variant)])

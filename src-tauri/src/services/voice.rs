@@ -61,6 +61,9 @@ pub struct VoiceCaptureInfo {
 pub enum CaptureEvent {
     /// Every captured sample has been sent.
     End,
+    /// Every captured sample has been sent, and the microphone went to a
+    /// newer capture, possibly of another window.
+    Superseded,
     Error {
         message: String,
     },
@@ -120,7 +123,7 @@ where
         ));
     }
     // One microphone: a new dictation ends the previous one.
-    stop_capture_unlocked(state, None).await?;
+    supersede_capture_unlocked(state).await?;
     let session_id = state.allocate_session_id();
     let (session, sample_rate_hz) = tokio::task::spawn_blocking(move || {
         create_capture_session(source, levels, sink, session_id, SETUP_TIMEOUT)
@@ -163,6 +166,18 @@ async fn stop_capture_unlocked(
         .map_err(|error| AppError::Failed(format!("capture stop task failed: {error}")))?
 }
 
+/// Stops whatever capture runs, telling its listener that a newer capture
+/// took the microphone over.
+async fn supersede_capture_unlocked(state: &VoiceSessionState) -> Result<(), AppError> {
+    let Some(session) = state.take(None) else {
+        return Ok(());
+    };
+    session.superseded.store(true, Ordering::SeqCst);
+    tokio::task::spawn_blocking(move || session.stop_until(Instant::now() + STOP_TIMEOUT))
+        .await
+        .map_err(|error| AppError::Failed(format!("capture stop task failed: {error}")))?
+}
+
 /// Shutdown cannot wait indefinitely for a stalled device or event sink.
 pub fn stop_capture_on_shutdown(state: &VoiceSessionState, deadline: Instant) {
     if let Some(session) = state.shutdown() {
@@ -186,6 +201,8 @@ where
 {
     let stop_flag = Arc::new(AtomicBool::new(false));
     let thread_stop_flag = Arc::clone(&stop_flag);
+    let superseded = Arc::new(AtomicBool::new(false));
+    let thread_superseded = Arc::clone(&superseded);
     let (setup_tx, setup_rx) = std_mpsc::sync_channel::<Result<u32, AppError>>(1);
     let thread = thread::spawn(move || {
         // only setup can fail; later failures go through the channel
@@ -195,6 +212,7 @@ where
             &SystemClock,
             &sink,
             &thread_stop_flag,
+            &thread_superseded,
             &setup_tx,
         ) {
             log::error!("Voice capture error: {error}");
@@ -207,6 +225,7 @@ where
             VoiceCaptureSession {
                 id,
                 stop_flag,
+                superseded,
                 thread,
             },
             sample_rate_hz,
@@ -234,6 +253,7 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
     clock: &impl MonotonicClock,
     sink: &S,
     stop_flag: &Arc<AtomicBool>,
+    superseded: &AtomicBool,
     setup_tx: &std_mpsc::SyncSender<Result<u32, AppError>>,
 ) -> Result<(), AppError> {
     let OpenedCapture {
@@ -288,15 +308,18 @@ fn run_capture_thread<A: AudioSource, L: AudioLevelSink, S: EventSink>(
         peak: 0.0,
     });
 
-    let stream_error = context.stream_error.locked().take();
-    if let Some(message) = stream_error {
-        sink.send_event(&CaptureEvent::Error { message });
+    // what was captured goes out first, whatever ended the capture: the
+    // words spoken last are still transcribed
+    if !flush_pending(&context.pending_pcm_samples, sink, 1) {
         return Ok(());
     }
-
-    if flush_pending(&context.pending_pcm_samples, sink, 1) {
-        sink.send_event(&CaptureEvent::End);
-    }
+    let stream_error = context.stream_error.locked().take();
+    let event = match stream_error {
+        Some(message) => CaptureEvent::Error { message },
+        None if superseded.load(Ordering::SeqCst) => CaptureEvent::Superseded,
+        None => CaptureEvent::End,
+    };
+    sink.send_event(&event);
     Ok(())
 }
 

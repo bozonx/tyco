@@ -7,6 +7,8 @@ pub struct VoiceCaptureSession {
     /// `VoiceSessionState::take`.
     pub id: u64,
     pub stop_flag: Arc<AtomicBool>,
+    /// Set before a stop when a newer capture takes the microphone over.
+    pub superseded: Arc<AtomicBool>,
     pub thread: std::thread::JoinHandle<()>,
 }
 
@@ -96,6 +98,7 @@ mod tests {
         VoiceCaptureSession {
             id,
             stop_flag: Arc::new(AtomicBool::new(false)),
+            superseded: Arc::new(AtomicBool::new(false)),
             thread: std::thread::spawn(|| {}),
         }
     }
@@ -123,6 +126,7 @@ mod tests {
         let capture = VoiceCaptureSession {
             id: 1,
             stop_flag: stop_flag.clone(),
+            superseded: Arc::new(AtomicBool::new(false)),
             thread: std::thread::spawn(move || {
                 let _ = waiting.recv();
             }),

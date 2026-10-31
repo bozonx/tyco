@@ -24,6 +24,9 @@
                 <AppIcon icon="mdi:microphone" size="md" aria-hidden="true" />
                 <span>{{ t('voiceCommands.phaseAwaitingCommand') }}</span>
               </p>
+              <VoiceAutoStopNotice
+                :deadline-ms="voice.autoStopWarning?.deadlineMs"
+              />
               <AudioWaveform
                 :level="audioLevel"
                 :peak="audioPeak"
@@ -121,7 +124,7 @@
             <ShortcutButton
               :keys="['Tab']"
               icon="mdi:pencil-outline"
-              :disabled="!hasMatchedCommand || voice.stage === 'finishing'"
+              :disabled="voice.stage === 'finishing'"
               @click="void voice.finish('review')"
             >
               {{ t('voiceCommands.edit') }}
@@ -160,6 +163,7 @@ import ActionOverlayLayout from '../components/overlay/ActionOverlayLayout.vue'
 import ShortcutButton from '../components/overlay/ShortcutButton.vue'
 import AudioWaveform from '../components/voice/AudioWaveform.vue'
 import LiveTranscript from '../components/voice/LiveTranscript.vue'
+import VoiceAutoStopNotice from '../components/voice/VoiceAutoStopNotice.vue'
 import VoiceCommandCatalog from '../components/voice/VoiceCommandCatalog.vue'
 import { useI18n } from '../composables/use-i18n'
 import { useOverlayNav } from '../composables/use-overlay-nav'
@@ -230,7 +234,6 @@ const languageOptions = computed(() =>
   }))
 )
 
-const hasMatchedCommand = computed(() => Boolean(voice.hasMatchedCommand))
 const canRunLive = computed(() => Boolean(voice.canRunLive))
 
 const liveChosenName = computed(() => {
@@ -336,9 +339,9 @@ const onKeyDown = (event: KeyboardEvent) => {
     if (event.code === 'Tab') {
       if (event.shiftKey) return
       event.preventDefault()
-      if (hasMatchedCommand.value) {
-        void voice.finish('review')
-      }
+      // stops the recording for review even when no command was heard: the
+      // text can then be edited and a command picked by hand
+      void voice.finish('review')
     } else if (event.code === 'Space' || event.code === 'Enter') {
       event.preventDefault()
       if (canRunLive.value) {

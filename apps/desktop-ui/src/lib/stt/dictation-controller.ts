@@ -26,6 +26,11 @@ export function createDictationController(
   deps: DictationControllerDependencies
 ) {
   let generation = 0
+  /**
+   * LLM formatting applies to dictation into external windows only, by design:
+   * in the chat and the editor the text stays editable in place and goes on to
+   * the user's own actions, so it is inserted as recognized.
+   */
   const shouldFormatRecognizedText = (target: DictationTarget = 'external') =>
     target === 'external' && deps.getConfig().stt.isVoiceCorrectionEnabled
 

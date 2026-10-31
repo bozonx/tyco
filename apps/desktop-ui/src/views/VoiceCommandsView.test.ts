@@ -177,12 +177,13 @@ describe('separate voice command overlay', () => {
     hotkeys.shortcutLabel.mockImplementation(() => '')
     wrapper.unmount()
   })
-  it('disables shortcuts while awaiting command and finishes on Space/Tab once recognized', async () => {
+  it('runs on Space only once recognized and stops for review on Tab at any time', async () => {
     const wrapper = mountView()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' }))
     expect(mocks.finish).not.toHaveBeenCalled()
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab' }))
-    expect(mocks.finish).not.toHaveBeenCalled()
+    expect(mocks.finish).toHaveBeenLastCalledWith('review')
+    mocks.finish.mockClear()
 
     voice.hasMatchedCommand = true
     voice.canRunLive = true

@@ -1,9 +1,14 @@
 import type { CommandConfig } from '@tyco/shared'
 
+import { isBuiltInVoiceCommand } from './built-in-voice-commands'
 import { commandLabel } from '../commands/command-runtime'
 import { getLanguageLabelKey } from '../locale/language'
 import { isTranslateEntry, type VoiceCatalogEntry } from './voice-catalog'
-import type { VoiceCandidate, VoiceResolution } from './voice-resolver'
+import {
+  grammarVariants,
+  type VoiceCandidate,
+  type VoiceResolution,
+} from './voice-resolver'
 
 export const DEFAULT_TRANSLATION_ID = 'builtin:voice:translate:en-US'
 
@@ -18,8 +23,9 @@ export interface VoiceNotice {
   message: string
 }
 
+/** The standard translation, one command per language */
 export const isTranslationCommand = (command: CommandConfig): boolean =>
-  command.toolId === 'core.translate' && command.id.startsWith('builtin:')
+  command.toolId === 'core.translate' && isBuiltInVoiceCommand(command)
 
 export const voiceCommandLanguageLabel = (
   command: CommandConfig,
@@ -47,18 +53,38 @@ export const voiceEntryLanguage = (
   return command ? voiceCommandLanguageLabel(command, t) : ''
 }
 
+/** The language slot of a translation template, see `compileVoiceRoutes` */
+const LANGUAGE_SLOT = /\{language\}|~/u
+
+/**
+ * A grammar entry as written: `t` would interpolate its `{language}` slot. The
+ * slot is passed back to itself to keep it.
+ */
+const rawGrammar = (
+  t: (key: string, params?: Record<string, string>) => string,
+  key: string
+) => t(key, { language: '{language}' })
+
 export const voiceEntryPhrases = (
   entry: VoiceCatalogEntry,
   routes: readonly VoiceRouteLike[],
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, string>) => string
 ): string[] => {
   const text = t('voiceCommands.textPlaceholder')
-  if (isTranslateEntry(entry))
-    return [
-      `${t('voiceGrammar.translate')} ${t('voiceCommands.languagePlaceholder')} ${text}`,
-    ]
+  if (isTranslateEntry(entry)) {
+    const language = t('voiceCommands.languagePlaceholder')
+    return grammarVariants(rawGrammar(t, 'voiceGrammar.translate'))
+      .slice(0, 1)
+      .map((template) =>
+        LANGUAGE_SLOT.test(template)
+          ? `${template.replace(LANGUAGE_SLOT, language)} ${text}`
+          : `${template} ${language} ${text}`
+      )
+  }
   if (entry.group === 'builtIn')
-    return [`${t('voiceGrammar.actions.askInChat')} ${text}`]
+    return grammarVariants(rawGrammar(t, 'voiceGrammar.actions.askInChat'))
+      .slice(0, 1)
+      .map((phrase) => `${phrase} ${text}`)
   return [
     ...new Set(
       routes
@@ -75,6 +101,9 @@ export const voiceEntryPhrases = (
   ]
 }
 
+/** Errors the app describes itself come as message keys, see the model */
+const MESSAGE_KEY = /^(?:voiceCommands|toast)\.[\w.]+$/u
+
 export function resolveVoiceNotice(
   state: {
     error: string
@@ -88,10 +117,7 @@ export function resolveVoiceNotice(
 ): VoiceNotice | undefined {
   if (state.error) {
     const key = state.error
-    return {
-      kind: 'error',
-      message: key.startsWith('voiceCommands.') ? t(key) : key,
-    }
+    return { kind: 'error', message: MESSAGE_KEY.test(key) ? t(key) : key }
   }
   if (state.command) {
     const reason = state.unavailableReason(state.command)

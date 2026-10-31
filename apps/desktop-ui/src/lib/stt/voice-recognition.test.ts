@@ -218,6 +218,37 @@ describe('voice recognition failures', () => {
     expect(deps.voiceCorrection).not.toHaveBeenCalled()
   })
 
+  it('does not start over a broken session that still holds its text', async () => {
+    vi.useFakeTimers()
+    const { deps, model, handlers } = await started()
+    handlers.onText({ committed: 'Heard', draft: '' })
+    handlers.onError(new Error('Network'))
+    await vi.waitFor(() => expect(model.isStarted.value).toBe(false))
+    await model.startSession()
+    expect(deps.startDictation).toHaveBeenCalledOnce()
+    expect(model.transcript.value.committed).toBe('Heard')
+    model.dispose()
+  })
+
+  it('tells about a cancellation once when the finish times out without text', async () => {
+    vi.useFakeTimers()
+    let fail!: (error: Error) => void
+    const { deps, model, handlers } = await started({
+      finishDictation: () =>
+        new Promise<string>((_, reject) => {
+          fail = reject
+        }),
+    })
+    const finishing = model.finish()
+    await vi.waitFor(() => expect(model.isTranscribing.value).toBe(true))
+    const timeout = new DictationError('timeout', 'Timed out')
+    handlers.onError(timeout)
+    await vi.waitFor(() => expect(deps.onCancelled).toHaveBeenCalled())
+    fail(timeout)
+    await finishing
+    expect(deps.onCancelled).toHaveBeenCalledOnce()
+  })
+
   it('warns when nothing was recognized', async () => {
     vi.useFakeTimers()
     const { deps, model } = await started({

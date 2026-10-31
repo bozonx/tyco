@@ -12,10 +12,15 @@ const model = { provider: 'deepgram' as const, modelId: 'nova-3' }
 /** A microphone whose audio ends when stopped, and a provider driven by hand */
 function setup(finishTimeoutMs?: number) {
   const audio = createAsyncQueue<AudioChunk>()
+  let superseded = false
   const parts = createAsyncQueue<TranscriptPart>()
   const requests: SttLiveRequest[] = []
   const capture: VoiceCaptureControl = {
-    start: vi.fn(async () => ({ sampleRate: 16_000, audio: audio.values })),
+    start: vi.fn(async () => ({
+      sampleRate: 16_000,
+      audio: audio.values,
+      isSuperseded: () => superseded,
+    })),
     stop: vi.fn(async () => audio.end()),
   }
   const stt: SttClient = {
@@ -34,12 +39,41 @@ function setup(finishTimeoutMs?: number) {
       onText: (state) => texts.push(state),
       onError,
     })
-  return { audio, parts, requests, capture, texts, onError, dictation, start }
+  const supersede = () => {
+    superseded = true
+  }
+  return {
+    audio,
+    parts,
+    requests,
+    capture,
+    texts,
+    onError,
+    dictation,
+    start,
+    supersede,
+  }
 }
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 describe('createLiveDictation', () => {
+  it('tells that another voice input took the microphone over', async () => {
+    const t = setup()
+    await t.start()
+    t.parts.push({
+      type: 'final',
+      segment: { index: 0, startMs: 0, endMs: 900, text: 'Kept words' },
+    })
+    t.supersede()
+    t.parts.end()
+    await tick()
+    expect(t.onError).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'superseded' })
+    )
+    expect(await t.dictation.finish()).toBe('Kept words')
+  })
+
   it('shows the text as it is recognized and returns it when finished', async () => {
     const t = setup()
     await t.start()
@@ -222,7 +256,12 @@ describe('createLiveDictation', () => {
     vi.mocked(t.capture.start).mockImplementation(
       () =>
         new Promise((resolve) => {
-          started = () => resolve({ sampleRate: 16_000, audio: t.audio.values })
+          started = () =>
+            resolve({
+              sampleRate: 16_000,
+              audio: t.audio.values,
+              isSuperseded: () => false,
+            })
         })
     )
     const starting = t.start()

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: cf04a22a04162a1b42e5f8274af993f67dbbe63812986dcad171f955f1259abc
+// Source hash: bb4fd36e418133686a362b39403b353e68dfb196cefc278ca766058630a23ecc
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -756,7 +756,7 @@ export type VoiceAudioLevelPayload = { level: number; peak: number }
 
 /** Control messages on the audio channel; the audio itself goes as raw bytes. */
 export type VoiceCaptureEvent =
-  { type: 'end' } | { type: 'error'; message: string }
+  { type: 'end' } | { type: 'superseded' } | { type: 'error'; message: string }
 
 export type VoiceCaptureInfo = {
   /** Rate of the PCM16 mono chunks that follow. */

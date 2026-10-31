@@ -1,5 +1,7 @@
 import type { TranscriptPart } from '@bozonx/ai-kit'
 
+import { joinWords } from '../text/word-spacing'
+
 export interface LiveTranscriptState {
   /** Settled speech; the provider will not revise it */
   committed: string
@@ -25,7 +27,7 @@ export function applyTranscriptPart(
       return { ...state, draft: part.text.trim() }
     case 'final':
       return {
-        committed: joinWords(state.committed, part.segment.text),
+        committed: joinTranscript(state.committed, part.segment.text),
         draft: '',
       }
     default:
@@ -35,18 +37,11 @@ export function applyTranscriptPart(
 
 /** The text as it stands: settled speech, then the current guess */
 export function liveTranscriptText(state: LiveTranscriptState): string {
-  return joinWords(state.committed, state.draft)
+  return joinTranscript(state.committed, state.draft)
 }
 
-/** Scripts written without spaces between words */
-const UNSPACED_SCRIPT =
-  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}\u3000-\u303f\uff00-\uffef]/u
-
-function joinWords(head: string, tail: string): string {
+function joinTranscript(head: string, tail: string): string {
   const next = tail.trim()
   if (!next) return head
-  if (!head) return next
-  const isUnspaced =
-    UNSPACED_SCRIPT.test(head.at(-1) ?? '') && UNSPACED_SCRIPT.test(next[0]!)
-  return isUnspaced ? `${head}${next}` : `${head} ${next}`
+  return joinWords(head, next)
 }

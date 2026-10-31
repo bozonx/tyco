@@ -45,3 +45,20 @@ describe('insertAtCursor', () => {
     expect(insertAtCursor('ab', { start: 10, end: 12 }, 'c').value).toBe('ab c')
   })
 })
+
+describe('insertAtCursor punctuation and scripts', () => {
+  it('does not put a space before punctuation after the caret', () => {
+    expect(insertAtCursor('Hello.', { start: 5, end: 5 }, 'world')).toEqual({
+      value: 'Hello world.',
+      caret: 11,
+    })
+  })
+
+  it('joins text in a script without spaces', () => {
+    expect(insertAtCursor('你好', null, '世界').value).toBe('你好世界')
+  })
+
+  it('leaves the value unchanged for an empty text', () => {
+    expect(insertAtCursor('Hello', null, '').value).toBe('Hello')
+  })
+})

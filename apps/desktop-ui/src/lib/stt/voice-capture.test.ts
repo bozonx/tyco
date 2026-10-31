@@ -54,6 +54,18 @@ describe('createVoiceCaptureControl', () => {
     )
   })
 
+  it('ends the audio as usual when a newer capture takes the microphone', async () => {
+    const fake = createFakeNetIpc({
+      ['start_voice_capture']: () => ({ sampleRate: 16_000, sessionId: 7 }),
+    })
+    const capture = await createVoiceCaptureControl(fake.ipc).start()
+    fake.emit(pcm(1, 2))
+    fake.emit({ type: 'superseded' })
+
+    expect(await collect(capture.audio)).toEqual([[1, 2]])
+    expect(capture.isSuperseded()).toBe(true)
+  })
+
   it('does not stop a capture it never started', async () => {
     const fake = createFakeNetIpc({})
 

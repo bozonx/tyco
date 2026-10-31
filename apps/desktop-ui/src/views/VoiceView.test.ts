@@ -58,12 +58,20 @@ vi.mock('../stores/menu-modals', () => ({
 }))
 
 vi.mock('../stores/action-menu', () => ({
-  useActionMenuStore: () => ({
-    getDefaultActions: () => [
+  useActionMenuStore: () => {
+    const actions = () => [
       { id: 'insertIntoWindow', action: mocks.insertAction },
       { id: 'copyToClipboard', action: mocks.copyAction },
-    ],
-  }),
+    ]
+    return {
+      getDefaultActions: actions,
+      runDefaultAction: async (id: string, text: string) => {
+        const action = actions().find((item) => item.id === id)
+        await action?.action(text)
+        return Boolean(action)
+      },
+    }
+  },
 }))
 
 describe('VoiceView.vue', () => {

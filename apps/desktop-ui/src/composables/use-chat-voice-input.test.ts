@@ -23,11 +23,17 @@ vi.mock('./use-chat-scope', () => ({
 }))
 
 vi.mock('../stores/action-menu', () => ({
-  useActionMenuStore: () => ({
-    getDefaultActions: () => [
-      { id: 'copyToClipboard', action: mocks.copyAction },
-    ],
-  }),
+  useActionMenuStore: () => {
+    const actions = () => [{ id: 'copyToClipboard', action: mocks.copyAction }]
+    return {
+      getDefaultActions: actions,
+      runDefaultAction: async (id: string, text: string) => {
+        const action = actions().find((item) => item.id === id)
+        await action?.action(text)
+        return Boolean(action)
+      },
+    }
+  },
 }))
 
 vi.mock('../stores/menu-modals', () => ({

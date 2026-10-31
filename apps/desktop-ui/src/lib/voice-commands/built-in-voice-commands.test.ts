@@ -5,7 +5,11 @@ import { messages } from '../i18n/messages'
 import { testTools } from '../tools/testing'
 import { createBuiltInVoiceCommands } from './built-in-voice-commands'
 import { createVoiceCommandModel } from './voice-command-model'
-import { compileVoiceRoutes, resolveVoice } from './voice-resolver'
+import {
+  compileVoiceRoutes,
+  grammarVariants,
+  resolveVoice,
+} from './voice-resolver'
 
 const tools = testTools()
 const textTool = tools.get('script')!
@@ -38,24 +42,31 @@ describe('built-in voice commands', () => {
     (_, locale) => {
       const commands = createBuiltInVoiceCommands(coreTools, t)
       const routes = compileVoiceRoutes(commands, coreTools)
-      expect(
-        resolveVoice(routes, `${locale.voiceGrammar.actions.askInChat} Hello!`)
-          .candidates[0]
-      ).toMatchObject({ commandId: 'builtin:voice:askInChat', text: 'Hello!' })
-
-      const firstTemplate = locale.voiceGrammar.translate.split(';')[0]!
-      const lang = locale.voiceGrammar.languages['en-US'].split(';')[0]!
-      const translatePhrase = firstTemplate.includes('{language}')
-        ? `${firstTemplate.replace('{language}', lang)} Hello!`
-        : `${firstTemplate} ${lang} Hello!`
-
-      expect(resolveVoice(routes, translatePhrase).candidates[0]).toMatchObject(
-        {
-          commandId: 'builtin:voice:translate:en-US',
-          parameters: { language: 'en-US' },
+      for (const phrase of grammarVariants(
+        locale.voiceGrammar.actions.askInChat
+      )) {
+        expect(
+          resolveVoice(routes, `${phrase} Hello!`).candidates[0]
+        ).toMatchObject({
+          commandId: 'builtin:voice:askInChat',
           text: 'Hello!',
-        }
-      )
+        })
+      }
+
+      const lang = grammarVariants(locale.voiceGrammar.languages['de-DE'])[0]!
+      for (const template of grammarVariants(locale.voiceGrammar.translate)) {
+        const translatePhrase = /\{language\}|~/u.test(template)
+          ? `${template.replace(/\{language\}|~/u, lang)} Hello!`
+          : `${template} ${lang} Hello!`
+        expect(
+          resolveVoice(routes, translatePhrase).candidates[0],
+          translatePhrase
+        ).toMatchObject({
+          commandId: 'builtin:voice:translate:de-DE',
+          parameters: { language: 'de-DE' },
+          text: 'Hello!',
+        })
+      }
     }
   )
   it('runs after final dictation with the built-in language config even with a disabled saved command', async () => {

@@ -13,14 +13,9 @@ interface DeepgramLiveMessage {
   channel?: { alternatives?: { transcript?: string }[] }
 }
 
-/** The last message read: each one is checked and then rewritten */
-let lastParsed: { message: string; event: DeepgramLiveMessage } | undefined
-
 function parseDeepgramMessage(message: string): DeepgramLiveMessage {
-  if (lastParsed?.message === message) return lastParsed.event
-  let event: DeepgramLiveMessage
   try {
-    event = JSON.parse(message) as DeepgramLiveMessage
+    return JSON.parse(message) as DeepgramLiveMessage
   } catch {
     throw new AiError(
       'provider_unavailable',
@@ -28,8 +23,21 @@ function parseDeepgramMessage(message: string): DeepgramLiveMessage {
       { provider: 'deepgram' }
     )
   }
-  lastParsed = { message, event }
-  return event
+}
+
+/**
+ * Each message is checked and then rewritten: the parse is kept for the message
+ * it belongs to, so that it is done once. Owned by one provider instance, not
+ * shared by the module.
+ */
+function createDeepgramParser(): (message: string) => DeepgramLiveMessage {
+  let last: { message: string; event: DeepgramLiveMessage } | undefined
+  return (message) => {
+    if (last?.message === message) return last.event
+    const event = parseDeepgramMessage(message)
+    last = { message, event }
+    return event
+  }
 }
 
 /**
@@ -39,8 +47,11 @@ function parseDeepgramMessage(message: string): DeepgramLiveMessage {
  * space reaches the transcript as a result that clears the guess and adds no
  * words.
  */
-export function keepEmptyDeepgramResult(message: string): string {
-  const event = parseDeepgramMessage(message)
+export function keepEmptyDeepgramResult(
+  message: string,
+  parse: (message: string) => DeepgramLiveMessage = parseDeepgramMessage
+): string {
+  const event = parse(message)
   const alternative = event.channel?.alternatives?.[0]
   if (event.type !== 'Results' || !alternative || alternative.transcript)
     return message
@@ -57,14 +68,15 @@ export function keepEmptyDeepgramResult(message: string): string {
 }
 
 /** Deepgram's terminal Metadata confirms that CloseStream flushed the audio. */
-export const createDeepgramProvider: SttProviderFactory = (init) =>
-  deepgramSttProvider({
+export const createDeepgramProvider: SttProviderFactory = (init) => {
+  const parse = createDeepgramParser()
+  return deepgramSttProvider({
     ...init,
     openSocket: confirmedSocket(init, {
       providerName: 'Deepgram',
       providerId: 'deepgram',
       confirmsFinal: (message) => {
-        const event = parseDeepgramMessage(message)
+        const event = parse(message)
         if (event.type === 'Error')
           throw new AiError(
             'provider_unavailable',
@@ -75,6 +87,7 @@ export const createDeepgramProvider: SttProviderFactory = (init) =>
           )
         return event.type === 'Metadata'
       },
-      rewrite: keepEmptyDeepgramResult,
+      rewrite: (message) => keepEmptyDeepgramResult(message, parse),
     }),
   })
+}
