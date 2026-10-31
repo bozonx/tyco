@@ -8,8 +8,8 @@ export interface ChatSessionStorageDriver {
   saveChat(chat: Chat): Promise<void>
   renameChat(id: string, title: string): Promise<void>
   deleteChat(id: string): Promise<Chat | null>
-  searchChats?(query: string): Promise<string[]>
-  clearChats?(): Promise<void>
+  searchChats(query: string): Promise<string[]>
+  clearChats(): Promise<void>
 }
 
 export function isChatSessionStorageDriver(
@@ -23,7 +23,9 @@ export function isChatSessionStorageDriver(
     'getChat' in value &&
     'saveChat' in value &&
     'renameChat' in value &&
-    'deleteChat' in value
+    'deleteChat' in value &&
+    'searchChats' in value &&
+    'clearChats' in value
   )
 }
 
@@ -54,10 +56,9 @@ export function createIpcChatSessionStorageDriver(
     async renameChat(id: string, title: string): Promise<void> {
       await call('rename_chat', { id, title, ...scope })
     },
+    /** The removed chat comes back, for an undo */
     async deleteChat(id: string): Promise<Chat | null> {
-      const removed = await call('get_chat', { id, ...scope })
-      await call('delete_chat', { id, ...scope })
-      return removed || null
+      return (await call('delete_chat', { id, ...scope })) || null
     },
     async searchChats(query: string): Promise<string[]> {
       const result = await call('search_chats', { query, ...scope })

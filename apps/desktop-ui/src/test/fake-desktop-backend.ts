@@ -227,7 +227,9 @@ export class FakeDesktopBackend {
       ]
     })
     this.handle('delete_chat', ({ id }) => {
+      const removed = this.chats.find((chat) => chat.id === id) ?? null
       this.chats = this.chats.filter((chat) => chat.id !== id)
+      return removed
     })
     this.handle('rename_chat', ({ id, title }) => {
       const chat = this.chats.find((item) => item.id === id)

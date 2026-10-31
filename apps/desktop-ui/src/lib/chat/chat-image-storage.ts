@@ -45,10 +45,7 @@ export function createChatImageStorage(deps: {
     return chat
   }
 
-  async function loadImage(id: string): Promise<Uint8Array<ArrayBuffer>> {
-    const response = await deps.invoke('read_chat_image', { id, profileId })
-    return new Uint8Array(response)
-  }
+  const loadImage = (id: string) => getChatImage(id, profileId, deps.invoke)
 
   return { storeChatImage, syncChatImages, loadChatWithImages, loadImage }
 }
@@ -56,9 +53,10 @@ export function createChatImageStorage(deps: {
 /** The bytes of a chat image; a profile chat keeps its images itself */
 export async function getChatImage(
   id: string,
-  profileId?: string
+  profileId?: string,
+  invokeImage: DesktopInvoke = invoke
 ): Promise<Uint8Array<ArrayBuffer>> {
-  const response = await invoke('read_chat_image', { id, profileId })
+  const response = await invokeImage('read_chat_image', { id, profileId })
   return new Uint8Array(response)
 }
 

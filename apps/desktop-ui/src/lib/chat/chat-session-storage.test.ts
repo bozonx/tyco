@@ -13,6 +13,8 @@ describe('chat-session-storage', () => {
       saveChat: vi.fn(),
       renameChat: vi.fn(),
       deleteChat: vi.fn(),
+      searchChats: vi.fn(),
+      clearChats: vi.fn(),
     }
     expect(isChatSessionStorageDriver(driver)).toBe(true)
     expect(isChatSessionStorageDriver({})).toBe(false)
@@ -23,7 +25,7 @@ describe('chat-session-storage', () => {
   it('delegates listChats, getChat, saveChat, renameChat, deleteChat to HistoryApi', async () => {
     const call = vi.fn<DesktopCall>().mockImplementation(async (name) => {
       if (name === 'list_chats') return { success: true, result: [] }
-      if (name === 'get_chat') {
+      if (name === 'get_chat' || name === 'delete_chat') {
         return {
           success: true,
           result: { id: 'c1', title: 'T1', lastMessageAt: 0, messages: [] },
@@ -31,7 +33,6 @@ describe('chat-session-storage', () => {
       }
       if (name === 'save_chat') return { success: true, result: undefined }
       if (name === 'rename_chat') return { success: true, result: undefined }
-      if (name === 'delete_chat') return { success: true, result: undefined }
       if (name === 'search_chats') return { success: true, result: ['c1'] }
       if (name === 'clear_chats') return { success: true, result: undefined }
       return { success: false, error: 'Unknown' }
@@ -58,8 +59,8 @@ describe('chat-session-storage', () => {
       lastMessageAt: 0,
       messages: [],
     })
-    expect(await driver.searchChats!('query')).toEqual(['c1'])
-    await expect(driver.clearChats!()).resolves.toBeUndefined()
+    expect(await driver.searchChats('query')).toEqual(['c1'])
+    await expect(driver.clearChats()).resolves.toBeUndefined()
   })
 
   it('adds the profile id to every call of a profile chat', async () => {
@@ -90,15 +91,14 @@ describe('chat-session-storage', () => {
     await driver.saveChat(chat)
     await driver.renameChat('p1', 'Renamed')
     await driver.deleteChat('p1')
-    await driver.searchChats!('word')
-    await driver.clearChats!()
+    await driver.searchChats('word')
+    await driver.clearChats()
 
     expect(call.mock.calls).toEqual([
       ['list_chats', { profileId: 'writer' }],
       ['get_chat', { id: 'p1', profileId: 'writer' }],
       ['save_chat', { chat, profileId: 'writer' }],
       ['rename_chat', { id: 'p1', title: 'Renamed', profileId: 'writer' }],
-      ['get_chat', { id: 'p1', profileId: 'writer' }],
       ['delete_chat', { id: 'p1', profileId: 'writer' }],
       ['search_chats', { query: 'word', profileId: 'writer' }],
       ['clear_chats', { profileId: 'writer' }],

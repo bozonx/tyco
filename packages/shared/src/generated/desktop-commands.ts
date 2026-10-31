@@ -119,7 +119,10 @@ export interface DesktopCommands {
   create_ai_project: { args: { project: AiProject }; result: void }
   delete_ai_profile: { args: { id: string }; result: void }
   delete_ai_project: { args: { id: string }; result: void }
-  delete_chat: { args: { id: string; profileId?: string | null }; result: void }
+  delete_chat: {
+    args: { id: string; profileId?: string | null }
+    result: Chat | null
+  }
   delete_editor_history_item: { args: { id: string }; result: void }
   delete_secret: { args: { id: string }; result: void }
   execute_script_action: {

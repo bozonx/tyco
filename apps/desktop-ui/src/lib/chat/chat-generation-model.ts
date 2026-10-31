@@ -7,7 +7,7 @@ import {
 } from '@tyco/shared'
 import { LlmInstructionKind } from '../../types'
 import { prepareChatRequest } from './chat-request'
-import { draftChatTitle } from './chat-title'
+import { draftTitleOf } from './chat-title'
 import { prepareGenerationRequest } from './chat-request-preparation'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
@@ -45,6 +45,7 @@ export function createChatGenerationModel(
     | 'messageTooLongError'
     | 'imageOmittedText'
     | 'getChatInstructions'
+    | 'prepareTurn'
   >,
   state: ChatState,
   persist: (messages: ChatMessage[]) => Promise<boolean>,
@@ -68,6 +69,8 @@ export function createChatGenerationModel(
   })
   let abortController: AbortController | null = null
   let generationId = 0
+  /** A turn is reading what it needs before it starts */
+  let isPreparing = false
   /** Stops the answer; `save` keeps what came of it in the history */
   const halt = (save: boolean) => {
     generationId += 1
@@ -102,15 +105,33 @@ export function createChatGenerationModel(
     message: string,
     attachments: ChatAttachment[],
     images: ChatImage[],
-    { saveQuestion = true }: { saveQuestion?: boolean } = {}
+    {
+      saveQuestion = true,
+      onAccepted,
+    }: { saveQuestion?: boolean; onAccepted?: () => void } = {}
   ): Promise<TurnResult> => {
     if (!message?.trim() && !images.length && !attachments.length) {
       deps.notifyError(deps.emptyMessageError())
       return REJECTED
     }
 
-    if (isGenerating.value) {
+    if (isGenerating.value || isPreparing) {
       return REJECTED
+    }
+
+    if (deps.prepareTurn) {
+      // the request is sized by what the turn will send: a profile reads its
+      // SOUL.md and memory first
+      const beforePreparing = generationId
+      isPreparing = true
+      try {
+        await deps.prepareTurn()
+      } catch {
+        // the turn goes on with what is known
+      } finally {
+        isPreparing = false
+      }
+      if (generationId !== beforePreparing) return ABORTED
     }
 
     const request = prepareGenerationRequest(
@@ -141,14 +162,16 @@ export function createChatGenerationModel(
 
     const userMessageIndex = messages.value.length
     messages.value.push(userMessage)
+    onAccepted?.()
 
     if (!currentChatParams.value.id) {
       currentChatParams.value.id = deps.createId()
     }
     if (!currentChatParams.value.title) {
-      currentChatParams.value.title = message.trim()
-        ? draftChatTitle(message)
-        : attachments[0]?.name || deps.imageTitle?.() || 'Image'
+      currentChatParams.value.title = draftTitleOf(
+        userMessage,
+        deps.imageTitle?.() || 'Image'
+      )
     }
     currentChatParams.value.attachments = []
     currentChatParams.value.images = []
@@ -231,11 +254,6 @@ export function createChatGenerationModel(
     if (currentGenerationId !== generationId) return ABORTED
 
     settleUnfinishedToolCalls(assistantMessage)
-    if (!hasAnswer(assistantMessage)) {
-      messages.value.splice(userMessageIndex, 2)
-      return FAILED
-    }
-
     const saved = await persist(messages.value)
     if (
       saved &&
@@ -255,9 +273,10 @@ export function createChatGenerationModel(
   const sendMessage = async (
     message: string,
     attachments: ChatAttachment[] = [],
-    images: ChatImage[] = []
+    images: ChatImage[] = [],
+    options: { onAccepted?: () => void } = {}
   ) => {
-    const result = await runTurn(message, attachments, images)
+    const result = await runTurn(message, attachments, images, options)
     return result.status === 'aborted' || result.status === 'rejected'
       ? ''
       : result.content
@@ -303,7 +322,9 @@ export function createChatGenerationModel(
     if (!userMessage) return ''
 
     const previousMessages = [...messages.value]
+    const chatId = currentChatParams.value.id
     messages.value = messages.value.slice(0, userIndex)
+    const regenerated = messages.value
     // the stored chat keeps the later turns until the new answer replaces them
     const result = await runTurn(
       userMessage.content,
@@ -311,7 +332,20 @@ export function createChatGenerationModel(
       userMessage.images ?? [],
       { saveQuestion: false }
     )
-    // a partial answer cut by an error is already stored and stays
+    // stopped before any of the answer came: nothing was stored, so the chat
+    // goes back to what the history holds. A partial answer is stored and stays
+    const stoppedEmpty =
+      result.status === 'aborted' &&
+      messages.value === regenerated &&
+      currentChatParams.value.id === chatId &&
+      // the question at most: no answer of the turn is left
+      messages.value.length <= userIndex + 1
+    if (stoppedEmpty) {
+      messages.value = previousMessages
+      lastFailedTurn.value = null
+      isStopped.value = false
+      return ''
+    }
     if (
       result.status === 'rejected' ||
       (result.status === 'failed' && !result.content)

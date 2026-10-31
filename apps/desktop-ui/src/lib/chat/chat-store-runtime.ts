@@ -173,11 +173,13 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     },
   })
 
+  /** The profile as the current turn read it, see `prepareTurn` */
+  let turnProfile: AiProfile | undefined
   const createProfileScope = (id: string): ChatScope => ({
     instructions: () => fullInstructions.value,
     rules: () => undefined,
     turnOptions: async (modelId, toolOutputBudgetCharacters) => {
-      const stored = await refreshProfile()
+      const stored = turnProfile ?? profile.value
       return {
         ...(await chatTools.turnTools(
           modelId,
@@ -228,15 +230,25 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     })
   }
 
+  /** The last write of the chat failed; the next failure is not told again */
+  let saveFailed = false
   const model = createChatModel({
+    // a profile reads its SOUL.md, memory and settings before the request is
+    // measured, so the budget counts the instructions that are sent
+    ...(profileId
+      ? {
+          prepareTurn: async () => {
+            turnProfile = undefined
+            turnProfile = await refreshProfile()
+          },
+        }
+      : {}),
     sendChatMessage: async (
       message,
       prevMessages,
       _instructions,
       { toolOutputBudgetCharacters, ...options }
     ) => {
-      // a profile reads its SOUL.md and settings here, so the instructions
-      // are taken after them
       const turnOptions = await scope.turnOptions(
         options.modelId,
         toolOutputBudgetCharacters
@@ -252,16 +264,26 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     saveChat: async (item) => {
       try {
         await history.saveChat(item)
+        saveFailed = false
       } catch (error) {
-        toastKey('history.operationFailed', 'error')
+        // a turn writes more than once: a failing disk is told once
+        if (!saveFailed) toastKey('history.operationFailed', 'error')
+        saveFailed = true
+        warn(
+          `Could not save chat ${item.id}: ${describeError(error, translate)}`
+        )
         throw error
       }
     },
-    renameChat: async (id, title) => {
+    renameChat: async (id, title, options) => {
       try {
         await history.renameChat(id, title)
       } catch (error) {
-        toastKey('history.operationFailed', 'error')
+        if (options?.silent)
+          warn(
+            `Could not rename chat ${id}: ${describeError(error, translate)}`
+          )
+        else toastKey('history.operationFailed', 'error')
         throw error
       }
     },

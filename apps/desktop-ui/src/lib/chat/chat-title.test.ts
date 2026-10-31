@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   cleanGeneratedTitle,
   draftChatTitle,
+  draftTitleOf,
   needsGeneratedTitle,
 } from './chat-title'
 
@@ -26,15 +27,36 @@ describe('chat-title', () => {
       { role: 'user' as const, content: 'Hi there' },
       { role: 'assistant' as const, content: 'Hello' },
     ]
-    expect(needsGeneratedTitle(first, 'Hi there')).toBe(true)
-    expect(needsGeneratedTitle(first, 'Renamed')).toBe(false)
-    expect(needsGeneratedTitle(first.slice(0, 1), 'Hi there')).toBe(false)
+    expect(needsGeneratedTitle(first, 'Hi there', 'Image')).toBe(true)
+    expect(needsGeneratedTitle(first, 'Renamed', 'Image')).toBe(false)
+    expect(needsGeneratedTitle(first.slice(0, 1), 'Hi there', 'Image')).toBe(
+      false
+    )
     expect(
       needsGeneratedTitle(
         [...first, { role: 'user', content: 'More' }, first[1]],
-        'Hi there'
+        'Hi there',
+        'Image'
       )
     ).toBe(false)
+  })
+
+  it('generates a title for a chat begun with an image or a file only', () => {
+    const answer = { role: 'assistant' as const, content: 'A cat' }
+    const image = [{ role: 'user' as const, content: '' }, answer]
+    expect(needsGeneratedTitle(image, 'Image', 'Image')).toBe(true)
+    const file = [
+      {
+        role: 'user' as const,
+        content: '',
+        attachments: [
+          { text: 'data', source: 'selection' as const, name: 'a.txt' },
+        ],
+      },
+      answer,
+    ]
+    expect(draftTitleOf(file[0], 'Image')).toBe('a.txt')
+    expect(needsGeneratedTitle(file, 'a.txt', 'Image')).toBe(true)
   })
 
   it('cleans what the model answered', () => {

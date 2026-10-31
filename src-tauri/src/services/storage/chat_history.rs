@@ -40,14 +40,31 @@ struct PendingChatTransaction {
     chat: Option<Chat>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     staged_chat_id: Option<String>,
+    /// The transaction may leave images no chat refers to. Finding them reads
+    /// every chat, so a save that keeps its images skips it. Journals of older
+    /// versions do not say and are cleaned.
+    #[serde(default = "always_clean_images")]
+    clean_images: bool,
+}
+
+fn always_clean_images() -> bool {
+    true
+}
+
+/// Whether a transaction may leave images that no chat refers to.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ImageCleanup {
+    Needed,
+    Skipped,
 }
 
 impl PendingChatTransaction {
-    fn index_only(history: Vec<ChatSummary>) -> Self {
+    fn index_only(history: Vec<ChatSummary>, cleanup: ImageCleanup) -> Self {
         Self {
             history,
             chat: None,
             staged_chat_id: None,
+            clean_images: cleanup == ImageCleanup::Needed,
         }
     }
 }
@@ -60,8 +77,9 @@ fn commit_chat_transaction(
     chats_dir: &Path,
     history: Vec<ChatSummary>,
     chat: Option<Chat>,
+    cleanup: ImageCleanup,
 ) -> Result<(), AppError> {
-    let mut transaction = PendingChatTransaction::index_only(history);
+    let mut transaction = PendingChatTransaction::index_only(history, cleanup);
     if let Some(chat) = chat {
         let id = validate_chat_id(&chat.id)?;
         write_json(&staged_chat_path(chats_dir, &id), &chat)?;
@@ -110,6 +128,9 @@ pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError>
     }
     write_json(&chats_dir.join(CHAT_INDEX_FILE), &transaction.history)?;
     remove_orphan_chat_files(chats_dir, &transaction.history)?;
+    if transaction.clean_images {
+        crate::services::chat_images::remove_orphan_images(chats_dir)?;
+    }
     remove_file_if_exists(&journal)?;
     crate::services::atomic_file::sync_parent(&journal)
 }
@@ -228,9 +249,35 @@ pub fn save_chat(
     // the chat being saved stays, whatever date its last message has: its
     // file is written either way, and dropping it from the index would
     // have the orphan cleanup delete it right away
+    let count = history.len();
     policy.drop_expired(&mut history, now_ms());
+    let cleanup = if history.len() < count || drops_images(chats_dir, &chat) {
+        ImageCleanup::Needed
+    } else {
+        ImageCleanup::Skipped
+    };
     upsert_chat_index(&mut history, &chat);
-    commit_chat_transaction(chats_dir, history, Some(chat))
+    commit_chat_transaction(chats_dir, history, Some(chat), cleanup)
+}
+
+/// Whether the stored version of `chat` refers to images the new one does not.
+/// A stored chat that cannot be read counts as one that does.
+fn drops_images(chats_dir: &Path, chat: &Chat) -> bool {
+    let stored = match read_chat(chats_dir, chat.id.clone()) {
+        Ok(Some(stored)) => stored,
+        Ok(None) => return false,
+        Err(_) => return true,
+    };
+    let stored_ids = chat_image_ids(&stored);
+    !stored_ids.is_subset(&chat_image_ids(chat))
+}
+
+fn chat_image_ids(chat: &Chat) -> std::collections::HashSet<&str> {
+    chat.messages
+        .iter()
+        .flat_map(|message| &message.images)
+        .map(|image| image.id.as_str())
+        .collect()
 }
 
 /// Puts the chat on top of the index, without its messages to keep the index
@@ -285,7 +332,7 @@ pub(super) fn open_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, Ap
             );
             let mut history = list_chats(chats_dir)?;
             history.retain(|item| item.id != id);
-            commit_chat_transaction(chats_dir, history, None)?;
+            commit_chat_transaction(chats_dir, history, None, ImageCleanup::Needed)?;
             Ok(None)
         }
     }
@@ -294,13 +341,31 @@ pub(super) fn open_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, Ap
 /// Gives a stored chat another title. Neither its messages nor its place in
 /// the index change: a rename is not activity in the chat.
 pub fn rename_chat(chats_dir: &Path, id: String, title: String) -> Result<(), AppError> {
+    let title = validate_chat_title(&title)?;
     let mut history = list_chats(chats_dir)?;
     let Some(mut chat) = read_chat(chats_dir, id.clone())? else {
         return Err(AppError::NotFound(String::from("Chat not found")));
     };
     chat.title = title;
     rename_in_chat_index(&mut history, &id, &chat.title);
-    commit_chat_transaction(chats_dir, history, Some(chat))
+    // the messages, and so the images, stay as they are
+    commit_chat_transaction(chats_dir, history, Some(chat), ImageCleanup::Skipped)
+}
+
+/// The longest title a chat can be given, in characters; the sidebar uses the
+/// same limit.
+const MAX_CHAT_TITLE_CHARS: usize = 120;
+
+/// A title as a rename stores it: trimmed, neither empty nor too long.
+fn validate_chat_title(title: &str) -> Result<String, AppError> {
+    let title = title.trim();
+    if title.is_empty() {
+        return Err(AppError::InvalidInput("Chat title is empty".into()));
+    }
+    if title.chars().count() > MAX_CHAT_TITLE_CHARS {
+        return Err(AppError::InvalidInput("Chat title is too long".into()));
+    }
+    Ok(title.to_string())
 }
 
 fn rename_in_chat_index(history: &mut [ChatSummary], id: &str, title: &str) {
@@ -421,7 +486,7 @@ pub fn delete_chat(chats_dir: &Path, id: String) -> Result<(), AppError> {
     validate_chat_id(&id)?;
     let mut history = list_chats(chats_dir)?;
     history.retain(|item| item.id != id);
-    commit_chat_transaction(chats_dir, history, None)
+    commit_chat_transaction(chats_dir, history, None, ImageCleanup::Needed)
 }
 
 /// What the settings say about the chat history.
@@ -480,13 +545,13 @@ pub(super) fn enforce_chat_history_policy(
         return Ok(());
     }
 
-    commit_chat_transaction(chats_dir, history, None)
+    commit_chat_transaction(chats_dir, history, None, ImageCleanup::Needed)
 }
 
 /// Removes the index, chat files, and persisted image bytes.
 pub fn clear_chats(chats_dir: &Path) -> Result<(), AppError> {
     recover_chat_transaction(chats_dir)?;
-    commit_chat_transaction(chats_dir, Vec::new(), None)?;
+    commit_chat_transaction(chats_dir, Vec::new(), None, ImageCleanup::Needed)?;
     let images_dir = chats_dir.join("images");
     if images_dir.exists() {
         fs::remove_dir_all(images_dir)?;
@@ -533,9 +598,7 @@ fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatSummary]) -> Result
             fs::remove_file(&path)?;
         }
     }
-    crate::services::atomic_file::sync_parent(&chats_dir.join(CHAT_INDEX_FILE))?;
-
-    crate::services::chat_images::remove_orphan_images(chats_dir)
+    crate::services::atomic_file::sync_parent(&chats_dir.join(CHAT_INDEX_FILE))
 }
 
 #[cfg(test)]

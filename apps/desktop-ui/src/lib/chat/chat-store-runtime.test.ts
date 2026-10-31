@@ -139,7 +139,8 @@ describe('chat-store-runtime', () => {
 
   it('reports toast error when saving chat history fails', async () => {
     const history = createFakeHistory()
-    vi.mocked(history.saveChat).mockRejectedValueOnce(new Error('disk full'))
+    // the question and the answer are both written, and both fail
+    vi.mocked(history.saveChat).mockRejectedValue(new Error('disk full'))
     const toastKey = vi.fn()
     const input = reactive(createChatInputModel())
 
@@ -177,7 +178,13 @@ describe('chat-store-runtime', () => {
     await runtime.sendInput()
     await vi.waitFor(() => expect(runtime.isGenerating.value).toBe(false))
 
-    expect(toastKey).toHaveBeenCalledWith('history.operationFailed', 'error')
+    await runtime.whenSaved()
+    expect(history.saveChat).toHaveBeenCalledTimes(2)
+    // a failing disk is told once, not for every write
+    expect(toastKey).toHaveBeenCalledExactlyOnceWith(
+      'history.operationFailed',
+      'error'
+    )
     runtime.dispose()
   })
 

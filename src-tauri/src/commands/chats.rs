@@ -70,7 +70,7 @@ pub async fn delete_chat(
     app: AppHandle,
     id: String,
     profile_id: Option<String>,
-) -> Result<(), AppError> {
+) -> Result<Option<Chat>, AppError> {
     let owner = super::chat_images::deleted_chat_owner(&window, &id);
     let scope = ChatScope::from_profile_id(profile_id);
     run_blocking(move || storage::delete_chat(&app, &scope, id, owner)).await?

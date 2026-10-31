@@ -24,12 +24,26 @@ export function draftChatTitle(message: string): string {
 }
 
 /**
+ * The title a chat gets with its first question: its text, else the name of its
+ * first attachment, else `fallback` (a question of images only)
+ */
+export function draftTitleOf(
+  question: Pick<ChatMessage, 'content' | 'attachments'>,
+  fallback: string
+): string {
+  return question.content.trim()
+    ? draftChatTitle(question.content)
+    : question.attachments?.[0]?.name || fallback
+}
+
+/**
  * A title is generated once, after the first answer, and only while the chat
  * still has its draft title: the user may have renamed it meanwhile
  */
 export function needsGeneratedTitle(
   messages: ChatMessage[],
-  title: string
+  title: string,
+  fallbackTitle: string
 ): boolean {
   const users = messages.filter((message) => message.role === 'user')
   const answers = messages.filter(
@@ -38,7 +52,7 @@ export function needsGeneratedTitle(
   return (
     users.length === 1 &&
     answers.length === 1 &&
-    title === draftChatTitle(users[0].content)
+    title === draftTitleOf(users[0], fallbackTitle)
   )
 }
 

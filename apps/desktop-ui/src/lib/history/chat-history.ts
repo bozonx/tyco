@@ -51,7 +51,7 @@ export function createChatHistoryModel(
 
   /** Ids of the chats whose title or messages contain the query */
   const searchChats = async (query: string): Promise<string[]> => {
-    return driver.searchChats ? (await driver.searchChats(query)) || [] : []
+    return (await driver.searchChats(query)) || []
   }
 
   const deleteChat = async (id: string): Promise<Chat | null> => {
@@ -68,9 +68,7 @@ export function createChatHistoryModel(
   }
 
   const clearChats = async (): Promise<void> => {
-    if (driver.clearChats) {
-      await driver.clearChats()
-    }
+    await driver.clearChats()
     chatListVersion += 1
     chatHistory.value = []
   }

@@ -357,7 +357,9 @@ describe('chat-model', () => {
       expect.objectContaining({ title: 'Hello there' })
     )
     await vi.waitFor(() =>
-      expect(deps.renameChat).toHaveBeenCalledWith('chat-id-1', 'Greeting')
+      expect(deps.renameChat).toHaveBeenCalledWith('chat-id-1', 'Greeting', {
+        silent: true,
+      })
     )
     expect(deps.generateChatTitle).toHaveBeenCalledWith(
       'Hello there',
@@ -387,7 +389,11 @@ describe('chat-model', () => {
     await Promise.resolve()
 
     expect(store.currentChatParams.value.title).toBe('Mine')
-    expect(deps.renameChat).toHaveBeenCalledExactlyOnceWith('chat-id-1', 'Mine')
+    expect(deps.renameChat).toHaveBeenCalledExactlyOnceWith(
+      'chat-id-1',
+      'Mine',
+      undefined
+    )
   })
 
   it('writes the question even when no answer comes', async () => {

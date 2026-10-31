@@ -2,6 +2,7 @@
   <div
     ref="root"
     class="chat-markdown selectable"
+    :class="{ 'is-streaming': streaming }"
     @click="handleClick"
     @auxclick="handleAuxClick"
     @load.capture="emit('content-resized')"
@@ -143,6 +144,27 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* the cursor of an answer still coming, after its last text */
+.chat-markdown.is-streaming :deep(> :last-child::after) {
+  content: '';
+  display: inline-block;
+  width: 0.45rem;
+  height: 1em;
+  margin-left: 0.15rem;
+  vertical-align: text-bottom;
+  background: var(--color-primary);
+  animation: chat-blink 1s step-end infinite;
+}
+@keyframes chat-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-markdown.is-streaming :deep(> :last-child::after) {
+    animation: none;
+  }
+}
 .chat-markdown {
   color: var(--color-base-content);
   font-size: var(--text-title);

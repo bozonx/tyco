@@ -3,7 +3,6 @@ import {
   CORE_MEMORY_HARD_LIMIT_TOKENS,
   CORE_MEMORY_WARN_TOKENS,
   estimateMemoryTokens,
-  memoryBudgetInCharacters,
   OMITTED_TOOL_RESULT,
   tokensToCharacters,
   TOPIC_MEMORY_HARD_LIMIT_TOKENS,
@@ -135,9 +134,8 @@ describe('memory token limits and budget', () => {
     expect(TOPIC_MEMORY_HARD_LIMIT_TOKENS).toBe(4000)
   })
 
-  it('converts tokens and estimates memory budget', () => {
+  it('converts tokens and estimates memory size', () => {
     expect(tokensToCharacters(1000)).toBe(3000)
     expect(estimateMemoryTokens('x'.repeat(300))).toBe(100)
-    expect(memoryBudgetInCharacters(450)).toBe(450)
   })
 })

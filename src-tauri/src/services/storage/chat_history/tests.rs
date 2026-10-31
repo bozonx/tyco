@@ -138,6 +138,7 @@ fn an_interrupted_save_replays_before_orphan_cleanup() {
         history: vec![ChatSummary::from(&new), ChatSummary::from(&old)],
         chat: Some(new.clone()),
         staged_chat_id: None,
+        clean_images: true,
     };
     write_json(&dir.join(CHAT_TRANSACTION_FILE), &journal).unwrap();
     // The process stopped after the chat was written but before the index.
@@ -163,7 +164,7 @@ fn cleanup_failure_after_index_commit_replays_without_resurrecting_chats() {
     write_json(&dir.join(CHAT_INDEX_FILE), &vec![ChatSummary::from(&chat)]).unwrap();
     // An invalid image directory fails cleanup after the new index is durable.
     fs::write(dir.join("images"), "blocked").unwrap();
-    assert!(commit_chat_transaction(&dir, Vec::new(), None).is_err());
+    assert!(commit_chat_transaction(&dir, Vec::new(), None, ImageCleanup::Needed).is_err());
     assert!(!dir.join("removed.json").exists());
     assert!(dir.join(CHAT_TRANSACTION_FILE).exists());
     let index: Vec<ChatSummary> =
@@ -185,6 +186,7 @@ fn an_interrupted_delete_is_not_resurrected_by_index_recovery() {
             history: Vec::new(),
             chat: None,
             staged_chat_id: None,
+            clean_images: true,
         },
     )
     .unwrap();
@@ -196,7 +198,7 @@ fn an_interrupted_delete_is_not_resurrected_by_index_recovery() {
 fn an_invalid_save_cannot_leave_a_journal_that_blocks_other_chats() {
     let dir = TestDir::new("invalid-save");
     let history = vec![ChatSummary::from(&chat_item("../invalid"))];
-    assert!(commit_chat_transaction(&dir, history, None).is_err());
+    assert!(commit_chat_transaction(&dir, history, None, ImageCleanup::Needed).is_err());
     assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
     assert!(load_chat_index(&dir).unwrap().is_empty());
 }
@@ -217,6 +219,7 @@ fn a_staged_save_replays_once_and_drops_staged_leftovers() {
             history: vec![ChatSummary::from(&chat)],
             chat: None,
             staged_chat_id: Some(String::from("new")),
+            clean_images: true,
         },
     )
     .unwrap();
@@ -235,6 +238,7 @@ fn a_save_writes_no_chat_into_the_journal() {
         &dir,
         vec![ChatSummary::from(&chat_item("a"))],
         Some(chat_item("a")),
+        ImageCleanup::Skipped,
     )
     .unwrap();
     assert_eq!(read_chat(&dir, "a".into()).unwrap().unwrap().id, "a");
@@ -243,6 +247,7 @@ fn a_save_writes_no_chat_into_the_journal() {
         history: Vec::new(),
         chat: None,
         staged_chat_id: Some(String::from("a")),
+        clean_images: true,
     };
     assert!(serde_json::to_value(&journal)
         .unwrap()
@@ -260,6 +265,7 @@ fn a_journal_replays_even_if_no_chat_file_was_written_yet() {
             history: vec![ChatSummary::from(&chat)],
             chat: Some(chat),
             staged_chat_id: None,
+            clean_images: true,
         },
     )
     .unwrap();
@@ -578,4 +584,43 @@ fn remove_orphan_chat_files_keeps_active_chats_and_the_index() {
     assert!(dir.join("kept.json").exists());
     assert!(!dir.join("orphan.json").exists());
     assert!(dir.join("index.json.broken-1").exists());
+}
+
+#[test]
+fn a_journal_without_the_cleanup_flag_cleans_images() {
+    let journal: PendingChatTransaction = serde_json::from_str(r#"{"history":[]}"#).unwrap();
+    assert!(journal.clean_images);
+}
+
+#[test]
+fn a_rename_stores_a_trimmed_title_and_refuses_empty_or_long_ones() {
+    let dir = TestDir::new("rename-title");
+    let chat = chat_item("a");
+    commit_chat_transaction(
+        &dir,
+        vec![ChatSummary::from(&chat)],
+        Some(chat),
+        ImageCleanup::Skipped,
+    )
+    .unwrap();
+    rename_chat(&dir, "a".into(), "  New title  ".into()).unwrap();
+    assert_eq!(
+        read_chat(&dir, "a".into()).unwrap().unwrap().title,
+        "New title"
+    );
+    assert!(rename_chat(&dir, "a".into(), "   ".into()).is_err());
+    let long = "x".repeat(MAX_CHAT_TITLE_CHARS + 1);
+    assert!(rename_chat(&dir, "a".into(), long).is_err());
+    assert_eq!(list_chats(&dir).unwrap()[0].title, "New title");
+}
+
+#[test]
+fn a_new_chat_or_one_that_keeps_its_images_drops_none() {
+    let dir = TestDir::new("drops-images");
+    let chat = chat_item("a");
+    assert!(!drops_images(&dir, &chat));
+    write_json(&dir.join("a.json"), &chat).unwrap();
+    assert!(!drops_images(&dir, &chat));
+    fs::write(dir.join("a.json"), "broken").unwrap();
+    assert!(drops_images(&dir, &chat));
 }

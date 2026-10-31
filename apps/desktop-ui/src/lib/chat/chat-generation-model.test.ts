@@ -237,6 +237,127 @@ describe('createChatGenerationModel', () => {
     })
   })
 
+  describe('turn preparation and regeneration stops', () => {
+    const waitForStop = (signal?: AbortSignal) =>
+      new Promise<ChatToolLoopState>((_, reject) =>
+        signal?.addEventListener('abort', () => reject(new Error('aborted')))
+      )
+
+    it('restores the later turns when a regeneration is stopped before any answer', async () => {
+      const state = createState()
+      const original: ChatMessage[] = [
+        { role: 'user', content: 'First' },
+        { role: 'assistant', content: 'Old' },
+        { role: 'user', content: 'Second' },
+        { role: 'assistant', content: 'Later' },
+      ]
+      state.messages.value = [...original]
+      const { generation, deps, persist } = setup(state)
+      deps.sendChatMessage.mockImplementationOnce(async (_m, _h, _i, options) =>
+        waitForStop(options?.signal)
+      )
+
+      const pending = generation.regenerateMessage(1)
+      await vi.waitFor(() => expect(state.isGenerating.value).toBe(true))
+      generation.stopGeneration()
+
+      expect(await pending).toBe('')
+      expect(state.messages.value).toEqual(original)
+      expect(state.isStopped.value).toBe(false)
+      expect(state.lastFailedTurn.value).toBeNull()
+      expect(persist).not.toHaveBeenCalled()
+    })
+
+    it('keeps a partial regenerated answer once stopped: it is stored', async () => {
+      const state = createState()
+      state.messages.value = [
+        { role: 'user', content: 'First' },
+        { role: 'assistant', content: 'Old' },
+        { role: 'user', content: 'Second' },
+        { role: 'assistant', content: 'Later' },
+      ]
+      const { generation, deps, persist } = setup(state)
+      deps.sendChatMessage.mockImplementationOnce(
+        async (_m, _h, _i, options) => {
+          streamChunk(options, 'Part')
+          return waitForStop(options?.signal)
+        }
+      )
+
+      const pending = generation.regenerateMessage(1)
+      await vi.waitFor(() =>
+        expect(state.messages.value.at(-1)?.content).toBe('Part')
+      )
+      generation.stopGeneration()
+      await pending
+
+      expect(state.messages.value.map((m) => m.content)).toEqual([
+        'First',
+        'Part',
+      ])
+      expect(persist).toHaveBeenCalledTimes(1)
+    })
+
+    it('prepares the turn before measuring it, and tells when the question is taken', async () => {
+      const state = createState()
+      const { generation, deps } = setup(state)
+      const order: string[] = []
+      const withPreparation = createChatGenerationModel(
+        {
+          ...deps,
+          prepareTurn: async () => {
+            order.push('prepare')
+          },
+          getChatModel: () => {
+            order.push('measure')
+            return sampleModel
+          },
+        },
+        state,
+        vi.fn(async () => true),
+        vi.fn(async () => {}),
+        vi.fn()
+      )
+      void generation
+
+      await withPreparation.sendMessage('Hi', [], [], {
+        onAccepted: () => order.push('accepted'),
+      })
+
+      expect(order).toEqual(['prepare', 'measure', 'accepted'])
+    })
+
+    it('refuses a second turn while the first one is preparing', async () => {
+      const state = createState()
+      const { deps } = setup(state)
+      let finishPreparing = () => {}
+      const generation = createChatGenerationModel(
+        {
+          ...deps,
+          prepareTurn: () =>
+            new Promise<void>((resolve) => (finishPreparing = resolve)),
+        },
+        state,
+        vi.fn(async () => true),
+        vi.fn(async () => {}),
+        vi.fn()
+      )
+
+      const first = generation.sendMessage('One')
+      expect(await generation.sendMessage('Two')).toBe('')
+      finishPreparing()
+      expect(await first).toBe('Hello world!')
+      expect(deps.sendChatMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not accept a question it rejects', async () => {
+      const { generation } = setup(createState(), null)
+      const onAccepted = vi.fn()
+      await generation.sendMessage('Hi', [], [], { onAccepted })
+      expect(onAccepted).not.toHaveBeenCalled()
+    })
+  })
+
   describe('tool steps', () => {
     const waitingCall: ChatToolLoopState = {
       content: 'Let me check.',

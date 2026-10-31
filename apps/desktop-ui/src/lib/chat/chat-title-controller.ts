@@ -4,7 +4,7 @@ import type { ChatState } from './chat-state'
 export function createChatTitleController(
   deps: Pick<
     ChatModelDependencies,
-    'generateChatTitle' | 'renameChat' | 'isHistoryEnabled'
+    'generateChatTitle' | 'renameChat' | 'isHistoryEnabled' | 'imageTitle'
   >,
   state: Pick<ChatState, 'messages' | 'currentChatParams'>
 ) {
@@ -19,16 +19,24 @@ export function createChatTitleController(
     const id = currentChatParams.value.id
     const title = currentTitle()
     if (deps.isHistoryEnabled?.() === false) return
-    if (!id || !needsGeneratedTitle(messages.value, title)) return
+    const fallbackTitle = deps.imageTitle?.() || 'Image'
+    if (!id || !needsGeneratedTitle(messages.value, title, fallbackTitle))
+      return
 
-    const [question, answer] = messages.value
+    const question = messages.value.find((item) => item.role === 'user')
+    const answer = messages.value.find(
+      (item) => item.role === 'assistant' && item.content
+    )
+    if (!question || !answer) return
     titleController?.abort()
     const controller = new AbortController()
     titleController = controller
     let generated: string
     try {
       generated = await deps.generateChatTitle(
-        question.content,
+        question.content.trim() ||
+          question.attachments?.[0]?.name ||
+          fallbackTitle,
         answer.content,
         modelId,
         controller.signal
@@ -45,7 +53,7 @@ export function createChatTitleController(
     // renamed meanwhile, by the user or in another way
     if (isCurrent && currentTitle() !== title) return
     try {
-      await deps.renameChat(id, generated)
+      await deps.renameChat(id, generated, { silent: true })
       if (currentChatParams.value.id === id && currentTitle() === title)
         currentChatParams.value.title = generated
     } catch {

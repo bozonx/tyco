@@ -347,10 +347,10 @@ pub fn delete_chat(
     scope: &ChatScope,
     id: String,
     owner: String,
-) -> Result<(), AppError> {
+) -> Result<Option<Chat>, AppError> {
     with_chats(app, scope, |_, chats_dir| {
         chats::recover_chat_transaction(chats_dir)?;
-        match chats::read_chat(chats_dir, id.clone()) {
+        let removed = match chats::read_chat(chats_dir, id.clone()) {
             Ok(Some(chat)) => {
                 load_chat_images(
                     &app.state::<ChatImages>(),
@@ -358,11 +358,16 @@ pub fn delete_chat(
                     &chat,
                     ImageRetention::Undo(&owner),
                 )?;
+                Some(chat)
             }
-            Ok(None) => {}
-            Err(error) => log::warn!("Removing chat {id}, which cannot be read: {error}"),
-        }
-        chats::delete_chat(chats_dir, id)
+            Ok(None) => None,
+            Err(error) => {
+                log::warn!("Removing chat {id}, which cannot be read: {error}");
+                None
+            }
+        };
+        chats::delete_chat(chats_dir, id)?;
+        Ok(removed)
     })
 }
 
@@ -389,10 +394,18 @@ fn load_chat_images(
             ImageRetention::Active(None) => {}
             ImageRetention::Undo(owner) => images.hold_undo(owner, &image.id),
         }
-        let result = images.get(&directory, &image.id);
-        if let ImageRetention::Undo(_) = retention {
-            if let Err(error) = result {
-                log::warn!("Could not preserve chat image for undo: {error}");
+        // the chat still opens: a missing image shows as one that failed
+        if let Err(error) = images.get(&directory, &image.id) {
+            match retention {
+                ImageRetention::Undo(_) => {
+                    log::warn!(
+                        "Could not preserve chat image {} for undo: {error}",
+                        image.id
+                    )
+                }
+                ImageRetention::Active(_) => {
+                    log::warn!("Could not load chat image {}: {error}", image.id)
+                }
             }
         }
     }

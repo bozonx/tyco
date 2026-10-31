@@ -333,7 +333,13 @@ pub fn remove_orphan_images(chats_dir: &Path) -> Result<(), AppError> {
         {
             let chat: Chat = match serde_json::from_slice(&fs::read(&path)?) {
                 Ok(chat) => chat,
-                Err(_) => return Ok(()),
+                Err(error) => {
+                    log::warn!(
+                        "Keeping all chat images: chat file {} is unreadable ({error})",
+                        path.display()
+                    );
+                    return Ok(());
+                }
             };
             live.extend(
                 chat.messages

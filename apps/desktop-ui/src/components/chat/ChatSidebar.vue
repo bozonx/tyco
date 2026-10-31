@@ -146,6 +146,7 @@ import {
 import { isChatHistoryEnabled } from '../../lib/chat/chat-history-settings'
 import { releaseDeletedChatImages } from '../../lib/chat/chat-image-storage'
 import { createRemovalUndo } from '../../lib/history/removal-undo'
+import { clientLogger } from '../../lib/logger'
 import { useDesktopStore } from '../../stores/desktop'
 import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
@@ -157,6 +158,7 @@ import SearchInput from '../common/SearchInput.vue'
 import StateMessage from '../common/StateMessage.vue'
 import type { Chat, ChatSummary } from '@tyco/shared'
 
+/** The storage refuses longer titles, see `rename_chat` */
 const MAX_CHAT_TITLE_LENGTH = 120
 const CHAT_SEARCH_DEBOUNCE_MS = 200
 
@@ -225,24 +227,33 @@ const matchedIds = ref<Set<string> | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let searchRun = 0
 
-watch(
-  [query, () => history.chatHistory],
-  ([value]) => {
-    clearTimeout(searchTimer)
-    matchedIds.value = null
-    const run = ++searchRun
-    if (!value.trim()) return
-    searchTimer = setTimeout(async () => {
-      try {
-        const ids = await history.searchChats(value)
-        if (run === searchRun) matchedIds.value = new Set(ids)
-      } catch {
-        // the titles are still matched
-      }
-    }, CHAT_SEARCH_DEBOUNCE_MS)
-  },
-  { deep: true }
+/**
+ * Which chats there are and when each last changed: the search runs again when
+ * a chat comes, goes or gets a message. The storage caches the text of
+ * unchanged chats, so a new run reads only what changed
+ */
+const chatListKey = computed(() =>
+  history.chatHistory
+    .map((item) => `${item.id}:${item.lastMessageAt}`)
+    .sort()
+    .join('\n')
 )
+
+watch([query, chatListKey], ([value]) => {
+  clearTimeout(searchTimer)
+  matchedIds.value = null
+  const run = ++searchRun
+  if (!value.trim()) return
+  searchTimer = setTimeout(async () => {
+    try {
+      const ids = await history.searchChats(value)
+      if (run === searchRun) matchedIds.value = new Set(ids)
+    } catch (error) {
+      // the titles are still matched
+      clientLogger.warn(`Chat search failed: ${String(error)}`, 'chat')
+    }
+  }, CHAT_SEARCH_DEBOUNCE_MS)
+})
 
 const groups = computed(() =>
   groupChatHistory(
@@ -290,7 +301,10 @@ async function copyChatMarkdown(id: string) {
       return
     }
   }
-  if (!targetChat) return
+  if (!targetChat) {
+    toastKey('chat.notFound', 'error')
+    return
+  }
   const md = formatChatToMarkdown(targetChat.messages, {
     title: targetChat.title,
   })

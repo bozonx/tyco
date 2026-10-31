@@ -66,6 +66,8 @@ it('uses a custom ChatSessionStorageDriver directly', async () => {
     deleteChat: vi
       .fn()
       .mockResolvedValue({ id: 'c1', title: 'Custom', messages: [] }),
+    searchChats: vi.fn().mockResolvedValue([]),
+    clearChats: vi.fn().mockResolvedValue(undefined),
   }
   const model = createChatHistoryModel(driver, vi.fn())
   await model.loadChatHistory()

@@ -1,6 +1,5 @@
 import { ref } from 'vue'
-import type { ChatMessage, ChatImage, ChatParams } from '@tyco/shared'
-import { createChatHistoryEntry } from './chat-history-entry'
+import type { Chat, ChatMessage, ChatImage, ChatParams } from '@tyco/shared'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
 export function createChatPersistenceQueue(
@@ -27,12 +26,12 @@ export function createChatPersistenceQueue(
   ): Promise<boolean> => {
     const id = chatParams.id
     if (!id || chatMessages.length === 0) return Promise.resolve(false)
-    const entry = createChatHistoryEntry({
+    const entry: Chat = {
       id,
       title: chatParams.title || '',
       lastMessageAt: deps.nowMs(),
       messages: [...chatMessages],
-    })
+    }
     const held = chatMessages.flatMap((message) => message.images || [])
     savingImages.value.push(...held)
     pendingWriteCount += 1
@@ -55,11 +54,15 @@ export function createChatPersistenceQueue(
     return write
   }
 
-  const renameChat = (id: string, title: string): Promise<void> => {
+  const renameChat = (
+    id: string,
+    title: string,
+    options?: { silent?: boolean }
+  ): Promise<void> => {
     pendingWriteCount += 1
     const write = lastWrite.then(async () => {
       try {
-        await deps.renameChat(id, title)
+        await deps.renameChat(id, title, options)
         if (currentChatParams.value.id === id)
           currentChatParams.value.title = title
         // a write queued meanwhile still carries the old title

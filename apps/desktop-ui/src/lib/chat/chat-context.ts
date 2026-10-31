@@ -18,14 +18,6 @@ export {
   TOPIC_MEMORY_WARN_TOKENS,
 }
 
-/**
- * Calculates memory characters against context budget, keeping memory ahead of
- * history.
- */
-export function memoryBudgetInCharacters(memoryCharacters: number): number {
-  return memoryCharacters
-}
-
 /** What an old tool result is replaced with when the context runs short */
 export const OMITTED_TOOL_RESULT = '[Result omitted to save context]'
 

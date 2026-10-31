@@ -26,7 +26,7 @@ export function createProfileChatsModel(deps: ProfileChatsDependencies) {
    */
   const clearAll = async (): Promise<void> => {
     const results = await Promise.allSettled(
-      deps.listProfileIds().map((id) => deps.storageFor(id).clearChats?.())
+      deps.listProfileIds().map((id) => deps.storageFor(id).clearChats())
     )
     const failure = results.find(
       (result): result is PromiseRejectedResult => result.status === 'rejected'

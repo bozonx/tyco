@@ -28,7 +28,7 @@ function createApi() {
           ],
         }
       }
-      if (functionName === 'get_chat') {
+      if (functionName === 'get_chat' || functionName === 'delete_chat') {
         return {
           result: {
             id: 'chat-1',

@@ -214,23 +214,23 @@ export function createChatController(deps: ChatControllerDependencies) {
         return false
       const attachments = [...attachedContext.value]
       const submission = ++inputSubmission
-      const initialMessageCount = model.messages.value.length
-      const pending = model.sendMessage(message, attachments, [
-        ...pendingImages.value,
-      ])
       const chatId = model.currentChatParams.value.id
+      // the chat tells when the question joined the conversation; a question
+      // it never took (no model, too long) goes back to the input
+      const accepted = new Promise<boolean>((resolve) => {
+        model
+          .sendMessage(message, attachments, [...pendingImages.value], {
+            onAccepted: () => resolve(true),
+          })
+          .then(
+            () => resolve(false),
+            () => resolve(false)
+          )
+      })
       const messages = model.messages.value
       chatInputStore.clear()
 
-      // Restore only if the request could not be sent (e.g. no model or exceeded budget).
-      // Once the request is dispatched to the chat, it stays in the conversation and must not
-      // be restored into the input upon completion or failure of the assistant turn.
-      const dispatched =
-        model.messages.value.length > initialMessageCount ||
-        model.isGenerating.value
-
-      if (!dispatched) {
-        await pending
+      if (!(await accepted)) {
         if (
           !disposed &&
           submission === inputSubmission &&

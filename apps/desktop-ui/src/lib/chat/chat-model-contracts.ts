@@ -40,7 +40,12 @@ export interface ChatModelDependencies {
     signal?: AbortSignal
   ) => Promise<string>
   saveChat: (item: Chat) => void | Promise<void>
-  renameChat: (id: string, title: string) => void | Promise<void>
+  /** `silent`: a background rename, whose failure is not told to the user */
+  renameChat: (
+    id: string,
+    title: string,
+    options?: { silent?: boolean }
+  ) => void | Promise<void>
   loadChat: (id: string) => Promise<Chat | null>
   navigateTo: (path: AppRoutePath) => void | Promise<void>
   notifyError: (message: string) => void
@@ -63,6 +68,11 @@ export interface ChatModelDependencies {
   getLastChatId: () => string | null | undefined
   /** The model picked in the chat; null when none is available */
   getChatModel: () => ChatRequestModel | null
+  /**
+   * Reads anew what sizes a turn, such as a profile's instructions; runs before
+   * the request is measured
+   */
+  prepareTurn?: () => Promise<void>
   /** Whether chats are stored; a title is generated only for a stored chat */
   isHistoryEnabled?: () => boolean
 }

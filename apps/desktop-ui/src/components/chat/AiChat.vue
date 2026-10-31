@@ -39,7 +39,6 @@
         >
           <span /><span /><span />
         </div>
-        <div v-else-if="chatStore.isGenerating" class="stream-cursor" />
 
         <InlineNotice
           v-if="chatStore.isCoreClipped"
@@ -318,13 +317,6 @@ onMounted(() => {
 .typing-indicator > span:nth-child(3) {
   animation-delay: 300ms;
 }
-.stream-cursor {
-  width: 0.45rem;
-  height: 1rem;
-  margin-top: -2.55rem;
-  background: var(--color-primary);
-  animation: chat-blink 1s step-end infinite;
-}
 .chat-error span {
   flex: 1;
 }
@@ -380,11 +372,6 @@ onMounted(() => {
     transform: translateY(-2px);
   }
 }
-@keyframes chat-blink {
-  50% {
-    opacity: 0;
-  }
-}
 @media (max-width: 640px) {
   .chat-column,
   .composer-wrap {
@@ -393,8 +380,7 @@ onMounted(() => {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .typing-indicator > span,
-  .stream-cursor {
+  .typing-indicator > span {
     animation: none;
   }
 }
