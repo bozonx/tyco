@@ -51,12 +51,14 @@ it('does not record editor history or results outside development mode', async (
   expect(await model.saveOutput('Output')).toBeNull()
   expect(await model.saveSource('Source', 'correction')).toBeNull()
   await model.saveSourceResult('existing', 'Result')
-  await model.restoreEditorItem({
-    id: 'existing',
-    text: 'Text',
-    kind: 'draft',
-    createdAt: 1,
-  })
+  await expect(
+    model.restoreEditorItem({
+      id: 'existing',
+      text: 'Text',
+      kind: 'draft',
+      createdAt: 1,
+    })
+  ).rejects.toThrow()
   expect(call).not.toHaveBeenCalled()
   isInDevelopment = true
   expect(await model.saveOutput('Output')).toBe('saved')

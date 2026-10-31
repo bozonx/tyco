@@ -13,7 +13,7 @@ use crate::services::chat_images::ChatImages;
 use crate::state::AppState;
 
 /// Typed history policies are parsed once at the serialized config boundary.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct HistorySettings {
     pub editor: editor::EditorHistoryPolicy,
     pub chat: chats::ChatHistoryPolicy,
@@ -73,9 +73,16 @@ impl HistoryStorageCoordinator {
             &mut memory,
             commit,
         )?;
-        // Retry on every settings save, even if the policy itself is unchanged.
-        // A previous cleanup may have failed after its config was committed.
-        let chat_cleanup = enforce_chat_history_policies(app, &after);
+        // A failed cleanup is retried above while it is pending, so the chats
+        // are only read again when their policy or the vault changes.
+        let chat_settings_changed = before.chat != after.chat
+            || before.profile_chat != after.profile_chat
+            || before.vault_path != after.vault_path;
+        let chat_cleanup = if chat_settings_changed {
+            enforce_chat_history_policies(app, &after)
+        } else {
+            Ok(())
+        };
         self.cleanup_pending.store(
             result.is_cleanup_pending || chat_cleanup.is_err(),
             Ordering::SeqCst,
@@ -127,14 +134,17 @@ fn enforce_chat_history_policies(
     settings: &HistorySettings,
 ) -> Result<(), AppError> {
     let ask_ai = chats::app_chats_dir(app)
-        .and_then(|chats_dir| chats::enforce_chat_history_policy(&chats_dir, settings.chat));
+        .and_then(|chats_dir| chats::enforce_chat_history_policy(&chats_dir, settings.chat))
+        .map(|removed| notify_chats_removed(app, &ChatScope::AskAi, removed));
     // an unavailable vault has no chats to clean up now; they are trimmed once
     // a profile chat is saved there again
     let profiles = match crate::services::ai_vault::resolve_vault_path_from_config(
         Some(&settings.vault_path),
         || crate::services::storage::app_data_sub_dir(app, "ai-vault"),
     ) {
-        Ok(vault_root) => enforce_profile_chat_history_policy(&vault_root, settings.profile_chat),
+        Ok(vault_root) => {
+            enforce_profile_chat_history_policy(app, &vault_root, settings.profile_chat)
+        }
         Err(error) => {
             log::warn!("Skipping the profile chat cleanup: {error}");
             Ok(())
@@ -145,23 +155,60 @@ fn enforce_chat_history_policies(
 
 /// Applies the policy all profiles share to the chats of each of them.
 fn enforce_profile_chat_history_policy(
+    app: &AppHandle,
     vault_root: &Path,
     policy: chats::ChatHistoryPolicy,
 ) -> Result<(), AppError> {
-    if !policy.is_enabled {
-        return Ok(());
-    }
     let mut result = Ok(());
     for chats_dir in crate::services::ai_vault::all_profile_chats_dirs(vault_root)? {
-        if let Err(error) = chats::enforce_chat_history_policy(&chats_dir, policy) {
-            log::warn!(
-                "Could not clean up the chats in {}: {error}",
-                chats_dir.display()
-            );
-            result = result.and(Err(error));
+        match chats::enforce_chat_history_policy(&chats_dir, policy) {
+            Ok(removed) => {
+                // the profile folder is named by the profile id
+                if let Some(profile_id) = chats_dir
+                    .parent()
+                    .and_then(Path::file_name)
+                    .and_then(|name| name.to_str())
+                {
+                    notify_chats_removed(app, &ChatScope::Profile(profile_id.to_string()), removed);
+                }
+            }
+            Err(error) => {
+                log::warn!(
+                    "Could not clean up the chats in {}: {error}",
+                    chats_dir.display()
+                );
+                result = result.and(Err(error));
+            }
         }
     }
     result
+}
+
+/// Tells every window that a chat history changed. A lost event leaves a list
+/// stale until it is read again, so a failure is only logged.
+fn notify_chats_changed(
+    app: &AppHandle,
+    scope: &ChatScope,
+    removed_chat_ids: Vec<String>,
+    is_cleared: bool,
+) {
+    let payload = crate::models::ChatsChangedEvent {
+        profile_id: match scope {
+            ChatScope::AskAi => None,
+            ChatScope::Profile(id) => Some(id.clone()),
+        },
+        removed_chat_ids,
+        is_cleared,
+    };
+    if let Err(error) = crate::events::emit::<crate::events::ChatsChanged, _>(app, payload) {
+        log::warn!("Could not announce a chat history change: {error}");
+    }
+}
+
+fn notify_chats_removed(app: &AppHandle, scope: &ChatScope, removed: Vec<String>) {
+    if !removed.is_empty() {
+        notify_chats_changed(app, scope, removed, false);
+    }
 }
 
 fn with_editor<T>(
@@ -293,7 +340,9 @@ pub fn read_chat(
     with_chats(app, scope, |_, chats_dir| {
         chats::recover_chat_transaction(chats_dir)?;
         let chat = chats::open_chat(chats_dir, id)?;
-        if let Some(chat) = &chat {
+        // without an import lease nothing holds the images: they are read
+        // when shown, e.g. not at all for a Markdown copy
+        if let (Some(chat), Some(_)) = (&chat, &owner) {
             load_chat_images(
                 &app.state::<ChatImages>(),
                 chats_dir,
@@ -306,14 +355,21 @@ pub fn read_chat(
 }
 
 pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), AppError> {
-    with_chats(app, scope, |state, chats_dir| {
+    let removed = with_chats(app, scope, |state, chats_dir| {
         let config = state.user_config();
         let policy = match scope {
             ChatScope::AskAi => chats::ChatHistoryPolicy::from_config(&config),
             ChatScope::Profile(_) => chats::ChatHistoryPolicy::for_profiles(&config),
         };
-        chats::save_chat(chats_dir, policy, app.state::<ChatImages>().store(), item)
-    })
+        if !policy.is_enabled {
+            return Ok(None);
+        }
+        chats::save_chat(chats_dir, policy, app.state::<ChatImages>().store(), item).map(Some)
+    })?;
+    if let Some(removed) = removed {
+        notify_chats_changed(app, scope, removed, false);
+    }
+    Ok(())
 }
 
 pub fn rename_chat(
@@ -324,7 +380,9 @@ pub fn rename_chat(
 ) -> Result<(), AppError> {
     with_chats(app, scope, |_, chats_dir| {
         chats::rename_chat(chats_dir, id, title)
-    })
+    })?;
+    notify_chats_changed(app, scope, Vec::new(), false);
+    Ok(())
 }
 
 pub fn search_chats(
@@ -348,6 +406,7 @@ pub fn delete_chat(
     id: String,
     owner: String,
 ) -> Result<Option<Chat>, AppError> {
+    let id_for_event = id.clone();
     with_chats(app, scope, |_, chats_dir| {
         chats::recover_chat_transaction(chats_dir)?;
         let removed = match chats::read_chat(chats_dir, id.clone()) {
@@ -366,13 +425,16 @@ pub fn delete_chat(
                 None
             }
         };
-        chats::delete_chat(chats_dir, id)?;
+        chats::delete_chat(chats_dir, id.clone())?;
         Ok(removed)
     })
+    .inspect(|_| notify_chats_changed(app, scope, vec![id_for_event], false))
 }
 
 pub fn clear_chats(app: &AppHandle, scope: &ChatScope) -> Result<(), AppError> {
-    with_chats(app, scope, |_, chats_dir| chats::clear_chats(chats_dir))
+    with_chats(app, scope, |_, chats_dir| chats::clear_chats(chats_dir))?;
+    notify_chats_changed(app, scope, Vec::new(), true);
+    Ok(())
 }
 
 enum ImageRetention<'a> {

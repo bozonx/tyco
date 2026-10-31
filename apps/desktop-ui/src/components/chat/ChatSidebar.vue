@@ -137,6 +137,7 @@ import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useChatScope } from '../../composables/use-chat-scope'
 import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
+import { useNow } from '../../composables/use-now'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
 import {
@@ -211,7 +212,12 @@ const removal = createRemovalUndo<Chat>({
       throw error
     }
   },
-  restore: (item) => history.restoreChatItem(item),
+  restore: async (item) => {
+    // a chat is not stored while the history is off: the undo keeps it
+    if (chatHistoryDisabled.value)
+      throw new Error('Chat history is off; the chat was not restored')
+    await history.restoreChatItem(item)
+  },
   release: (item) => releaseDeletedChatImages(item.id),
   reportError: () => toastKey('history.operationFailed', 'error'),
 })
@@ -239,9 +245,10 @@ const chatListKey = computed(() =>
     .join('\n')
 )
 
-watch([query, chatListKey], ([value]) => {
+watch([query, chatListKey], ([value], [previousQuery]) => {
   clearTimeout(searchTimer)
-  matchedIds.value = null
+  // the matches of the same query stay shown until the new run answers
+  if (value !== previousQuery) matchedIds.value = null
   const run = ++searchRun
   if (!value.trim()) return
   searchTimer = setTimeout(async () => {
@@ -255,9 +262,11 @@ watch([query, chatListKey], ([value]) => {
   }, CHAT_SEARCH_DEBOUNCE_MS)
 })
 
+const now = useNow()
 const groups = computed(() =>
   groupChatHistory(
-    filterChatHistory(history.chatHistory, query.value, matchedIds.value)
+    filterChatHistory(history.chatHistory, query.value, matchedIds.value),
+    now.value
   )
 )
 

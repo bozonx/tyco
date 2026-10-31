@@ -8,6 +8,8 @@ export const DESKTOP_EVENTS = {
   HOTKEYS_CHANGED: 'app://hotkeys-changed',
   OPEN_MAIN_CHAT: 'app://open-main-chat',
   OPEN_MAIN_EDITOR: 'app://open-main-editor',
+  /** A chat history changed in storage */
+  CHATS_CHANGED: 'app://chats-changed',
   /** The user closed the main window rather than hid it */
   MAIN_WINDOW_CLOSED: 'app://main-window-closed',
   ACTIVATION_METRICS_START: 'app://activation-metrics-start',

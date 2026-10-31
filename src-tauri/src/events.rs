@@ -7,7 +7,7 @@ use serde_json::{Map, Value};
 use tauri::{Emitter, EventTarget, Runtime};
 use ts_rs::TS;
 
-use crate::models::{DesktopSnapshot, OpenMainChatEvent};
+use crate::models::{ChatsChangedEvent, DesktopSnapshot, OpenMainChatEvent};
 use crate::services::selection_replace::SelectionRunEvent;
 use crate::services::voice::VoiceAudioLevelPayload;
 
@@ -67,6 +67,8 @@ desktop_events! {
     HotkeysChanged = "app://hotkeys-changed" => ();
     OpenMainChat = "app://open-main-chat" => OpenMainChatEvent;
     OpenMainEditor = "app://open-main-editor" => EditorTransfer;
+    /// A chat history changed in storage.
+    ChatsChanged = "app://chats-changed" => ChatsChangedEvent;
     /// The user closed the main window rather than hid it.
     MainWindowClosed = "app://main-window-closed" => ();
     #[cfg_attr(not(feature = "activation-bench"), allow(dead_code))]

@@ -300,7 +300,17 @@ impl ChatImageStore {
                 ));
             }
             for image in &message.images {
-                let bytes = self.get(directory, &image.id)?;
+                // an image lost from the disk and the session must not keep
+                // the rest of the chat from being saved: it shows as one that
+                // failed, as when the chat is opened
+                let bytes = match self.get(directory, &image.id) {
+                    Ok(bytes) => bytes,
+                    Err(error @ (AppError::Io(_) | AppError::InvalidData(_))) => {
+                        log::warn!("Saving the chat without image {}: {error}", image.id);
+                        continue;
+                    }
+                    Err(error) => return Err(error),
+                };
                 let canonical = &self.images[&image.id].0;
                 if canonical.width_px != image.width_px
                     || canonical.height_px != image.height_px

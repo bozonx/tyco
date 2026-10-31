@@ -28,6 +28,20 @@ describe('createProfileChatsModel', () => {
     await expect(model.countAll()).resolves.toBe(5)
   })
 
+  it('counts the profiles that can be read when one cannot', async () => {
+    const model = createProfileChatsModel({
+      listProfileIds: () => ['writer', 'broken'],
+      storageFor: (id) => ({
+        listChats: async () => {
+          if (id === 'broken') throw new Error('unreadable')
+          return summaries(2)
+        },
+        clearChats: async () => {},
+      }),
+    })
+    await expect(model.countAll()).resolves.toBe(2)
+  })
+
   it('counts nothing without profiles', async () => {
     const { model } = setup({})
     await expect(model.countAll()).resolves.toBe(0)

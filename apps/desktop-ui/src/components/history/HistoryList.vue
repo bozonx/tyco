@@ -49,6 +49,7 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useNow } from '../../composables/use-now'
 import { groupByDay } from '../../lib/history/history-list'
 import type {
   HistoryListAction,
@@ -114,8 +115,9 @@ const filtered = computed(() => {
   )
 })
 
+const now = useNow()
 const groups = computed(() =>
-  groupByDay(filtered.value, (item) => item.time ?? 0, Date.now(), locale.value)
+  groupByDay(filtered.value, (item) => item.time ?? 0, now.value, locale.value)
 )
 </script>
 

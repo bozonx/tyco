@@ -3,6 +3,7 @@ import {
   type AiProfile,
   type ChatAttachment,
   type ChatSummary,
+  type ChatsChangedEvent,
   type SessionState,
   type UserConfig,
 } from '@tyco/shared'
@@ -74,7 +75,16 @@ export interface ChatStoreRuntimeDependencies {
   toastText: (message: string, kind: 'error' | 'warn') => void
   toastKey: (key: string, kind: 'error' | 'warn') => void
   warn: (message: string) => void
+  /** Waits before each retry of a failed chat write */
+  saveRetryDelaysMs?: readonly number[]
+  /** Hears every change of a chat history, from any window */
+  listenChatsChanged?: (
+    handler: (event: ChatsChangedEvent) => void
+  ) => Promise<() => void>
 }
+
+/** How long a failed chat write waits before each retry */
+const CHAT_SAVE_RETRY_DELAYS_MS = [1000, 5000] as const
 
 /**
  * Composes the runtime models of a single chat ("Ask AI" when `profileId` is
@@ -232,6 +242,10 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
 
   /** The last write of the chat failed; the next failure is not told again */
   let saveFailed = false
+  const isHistoryEnabled = () => {
+    const config = deps.getUserConfig()
+    return config ? isChatHistoryEnabled(config, profileId) : false
+  }
   const model = createChatModel({
     // a profile reads its SOUL.md, memory and settings before the request is
     // measured, so the budget counts the instructions that are sent
@@ -261,7 +275,10 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       )
     },
     generateChatTitle: deps.llmActions.generateChatTitle,
+    saveRetryDelaysMs: deps.saveRetryDelaysMs ?? CHAT_SAVE_RETRY_DELAYS_MS,
     saveChat: async (item) => {
+      // nothing is stored while the history is off: the chat stays in memory
+      if (!isHistoryEnabled()) return
       try {
         await history.saveChat(item)
         saveFailed = false
@@ -311,14 +328,13 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     nowMs: () => Date.now(),
     // which chat to reopen is a convenience: a failure is only logged
     saveSessionState: async (patch) => {
-      if (patch.lastChatId !== undefined)
-        await scope.saveLastChatId(patch.lastChatId)
+      if (patch.lastChatId === undefined) return
+      // a chat that is not stored cannot be reopened
+      if (patch.lastChatId !== null && !isHistoryEnabled()) return
+      await scope.saveLastChatId(patch.lastChatId)
     },
     getLastChatId: scope.getLastChatId,
-    isHistoryEnabled: () => {
-      const config = deps.getUserConfig()
-      return config ? isChatHistoryEnabled(config, profileId) : false
-    },
+    isHistoryEnabled,
     getChatModel: () => {
       const picked = selectedModel.value
       return picked
@@ -377,9 +393,38 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
   })
 
   let disposed = false
+  /**
+   * Another window, the settings or the retention removed chats: the list is
+   * read again, and a removed open chat is left rather than written back
+   */
+  const onChatsChanged = (event: ChatsChangedEvent) => {
+    if (disposed || (event.profileId ?? null) !== profileId) return
+    history
+      .loadChatHistory()
+      .catch((error) =>
+        warn(`Could not reload the chats: ${describeError(error, translate)}`)
+      )
+    const openId = model.currentChatParams.value.id
+    const isOpenRemoved =
+      (event.isCleared && model.messages.value.length > 0) ||
+      (openId !== undefined && event.removedChatIds.includes(openId))
+    if (isOpenRemoved) model.abandonChat()
+  }
+  let stopListening: (() => void) | undefined
+  void deps
+    .listenChatsChanged?.(onChatsChanged)
+    .then((stop) => {
+      if (disposed) stop()
+      else stopListening = stop
+    })
+    .catch((error) =>
+      warn(`Could not follow chat changes: ${describeError(error, translate)}`)
+    )
+
   const dispose = () => {
     if (disposed) return
     disposed = true
+    stopListening?.()
     controller.dispose()
     chatTools.dispose()
     model.dispose()

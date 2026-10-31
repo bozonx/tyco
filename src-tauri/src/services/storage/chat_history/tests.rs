@@ -624,3 +624,93 @@ fn a_new_chat_or_one_that_keeps_its_images_drops_none() {
     fs::write(dir.join("a.json"), "broken").unwrap();
     assert!(drops_images(&dir, &chat));
 }
+
+#[test]
+fn a_chat_whose_image_is_lost_can_still_be_saved() {
+    let dir = TestDir::new("chat-lost-image");
+    let images = Mutex::new(ChatImageStore::default());
+    let mut chat = chat_item("lost");
+    chat.messages.push(crate::models::ChatMessage {
+        role: crate::models::ChatRole::User,
+        content: String::from("look"),
+        attachments: Vec::new(),
+        images: vec![crate::models::ChatImage {
+            id: "a".repeat(64),
+            media_type: crate::models::ChatImageMediaType::Webp,
+            width_px: 1,
+            height_px: 1,
+            size_bytes: 1,
+            name: None,
+        }],
+        parts: Vec::new(),
+        status: None,
+    });
+
+    save_chat(&dir, enabled_policy(), &images, chat).unwrap();
+
+    assert_eq!(
+        read_chat(&dir, "lost".into())
+            .unwrap()
+            .unwrap()
+            .messages
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn retention_applies_while_the_history_is_off() {
+    let dir = TestDir::new("chat-retention-off");
+    let images = Mutex::new(ChatImageStore::default());
+    save_chat(&dir, enabled_policy(), &images, chat_item("old")).unwrap();
+    let mut fresh = chat_item("fresh");
+    fresh.last_message_at_ms = now_ms();
+    save_chat(&dir, enabled_policy(), &images, fresh).unwrap();
+
+    let removed = enforce_chat_history_policy(
+        &dir,
+        ChatHistoryPolicy {
+            is_enabled: false,
+            retention_days: 30,
+        },
+    )
+    .unwrap();
+
+    assert_eq!(removed, ["old"]);
+    let ids: Vec<_> = list_chats(&dir)
+        .unwrap()
+        .into_iter()
+        .map(|item| item.id)
+        .collect();
+    assert_eq!(ids, ["fresh"]);
+}
+
+#[test]
+fn a_restored_chat_goes_back_to_its_place() {
+    let mut history = Vec::new();
+    for (id, time) in [("newest", 30), ("oldest", 10)] {
+        let mut chat = chat_item(id);
+        chat.last_message_at_ms = time;
+        history.push(ChatSummary::from(&chat));
+    }
+    let mut restored = chat_item("restored");
+    restored.last_message_at_ms = 20;
+
+    upsert_chat_index(&mut history, &restored);
+
+    let ids: Vec<_> = history.iter().map(|item| item.id.as_str()).collect();
+    assert_eq!(ids, ["newest", "restored", "oldest"]);
+}
+
+#[test]
+fn renaming_an_unreadable_chat_sets_it_aside() {
+    let dir = TestDir::new("chat-rename-broken");
+    let images = Mutex::new(ChatImageStore::default());
+    save_chat(&dir, enabled_policy(), &images, chat_item("broken")).unwrap();
+    fs::write(dir.join("broken.json"), "{").unwrap();
+
+    let result = rename_chat(&dir, "broken".into(), "New".into());
+
+    assert!(matches!(result, Err(AppError::NotFound(_))));
+    assert!(list_chats(&dir).unwrap().is_empty());
+}

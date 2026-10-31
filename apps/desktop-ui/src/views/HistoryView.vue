@@ -118,7 +118,7 @@ const clearEditorHistory = removal.clear
 const hasEditorLoadError = ref(false)
 
 const isEditorHistoryDisabled = computed(() =>
-  isEditorHistoryOff({ ...desktopStore.userConfig })
+  isEditorHistoryOff(desktopStore.userConfig)
 )
 
 const searchQuery = ref<string>('')

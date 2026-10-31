@@ -55,16 +55,12 @@ describe('quick correction and insertion', () => {
     expect(deps.reportError).not.toHaveBeenCalled()
   })
 
-  it('checks cancellation after saving history', async () => {
+  it('inserts without waiting for the history write', async () => {
     const { deps, model } = setup()
-    const history = deferred<void>()
-    deps.saveOutput.mockReturnValue(history.promise)
-    const pending = model.start('Original')
-    await vi.waitFor(() => expect(deps.saveOutput).toHaveBeenCalled())
-    model.cancel()
-    history.resolve()
-    await pending
-    expect(deps.insert).not.toHaveBeenCalled()
+    deps.saveOutput.mockReturnValue(new Promise<void>(() => {}))
+    await model.start('Original')
+    expect(deps.insert).toHaveBeenCalledExactlyOnceWith('Corrected text')
+    expect(deps.saveOutput).toHaveBeenCalledWith('Corrected text')
   })
 
   it('keeps a newer pending operation intact when an older one finishes', async () => {
@@ -257,19 +253,21 @@ describe('quick insertion history', () => {
 })
 
 describe('quick insertion disposal', () => {
-  it('blocks insertion even when disposal happens during a history write', async () => {
+  it('blocks insertion even when disposal happens during a source write', async () => {
     const { deps, model } = setup()
-    const history = deferred<void>()
-    deps.saveOutput.mockReturnValue(history.promise)
-    const pending = model.start('Original')
-    await vi.waitFor(() => expect(deps.saveOutput).toHaveBeenCalledOnce())
-    model.dispose()
-    model.dispose()
-    history.resolve()
+    const history = deferred<string | null>()
+    const withSource = createQuickInsert({
+      ...deps,
+      saveSource: vi.fn(() => history.promise),
+    })
+    const pending = withSource.start('Original')
+    withSource.dispose()
+    withSource.dispose()
+    history.resolve('source')
     await pending
-    await model.start('Another')
+    await withSource.start('Another')
+    void model
     expect(deps.cancelCorrection).toHaveBeenCalledOnce()
-    expect(deps.correct).toHaveBeenCalledOnce()
     expect(deps.insert).not.toHaveBeenCalled()
     expect(deps.reportError).not.toHaveBeenCalled()
   })

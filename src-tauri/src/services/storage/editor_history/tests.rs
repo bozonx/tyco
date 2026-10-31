@@ -119,7 +119,8 @@ fn failed_store_transition_preserves_memory() {
         is_memory_only: true,
         ..policy()
     };
-    assert!(switch_editor_history_store(&path, &before, &policy(), &mut memory, now_ms()).is_err());
+    let result = commit_history_transition(&path, &before, &policy(), &mut memory, || Ok(()));
+    assert!(result.is_err());
     assert_eq!(memory, original);
 }
 
@@ -236,7 +237,7 @@ fn switching_to_memory_only_moves_the_file_into_memory() {
     write_jsonl(&path, &[item]).unwrap();
     let mut memory = Vec::new();
 
-    switch_editor_history_store(
+    commit_history_transition(
         &path,
         &policy(),
         &EditorHistoryPolicy {
@@ -244,7 +245,7 @@ fn switching_to_memory_only_moves_the_file_into_memory() {
             ..policy()
         },
         &mut memory,
-        now,
+        || Ok(()),
     )
     .unwrap();
 
@@ -261,7 +262,7 @@ fn switching_memory_only_off_writes_the_memory_to_the_file() {
     item.created_at_ms = now;
     let mut memory = vec![item];
 
-    switch_editor_history_store(
+    commit_history_transition(
         &path,
         &EditorHistoryPolicy {
             is_memory_only: true,
@@ -269,7 +270,7 @@ fn switching_memory_only_off_writes_the_memory_to_the_file() {
         },
         &policy(),
         &mut memory,
-        now,
+        || Ok(()),
     )
     .unwrap();
 
@@ -302,7 +303,7 @@ fn turning_the_history_off_deletes_the_file() {
 }
 
 #[test]
-fn a_lower_limit_waits_for_the_next_write() {
+fn a_lower_limit_applies_to_the_file_at_once() {
     let dir = TestDir::new("lower-limit");
     let path = dir.join(EDITOR_HISTORY_FILE);
     let items = vec![
@@ -323,7 +324,7 @@ fn a_lower_limit_waits_for_the_next_write() {
     )
     .unwrap();
 
-    assert_eq!(read_file_records(&path).unwrap().len(), 2);
+    assert_eq!(read_file_records(&path).unwrap().len(), 1);
 }
 
 #[test]

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: bc84facad1d073bb5cdaa35173699488b7ada0aca9325fd4d3adea3140f4bafb
+// Source hash: 131913ba57716dbbb1f2a0bfa923876f8195a8ac36f439456572e97e0ad25e4b
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -257,6 +257,19 @@ export type ChatSummary = {
   lastMessageAt: number
 }
 
+/**
+ * A chat history changed: every window reloads its list, and a window showing a
+ * removed chat leaves it instead of writing it back.
+ */
+export type ChatsChangedEvent = {
+  /** `None` for the chats of "Ask AI". */
+  profileId?: string | null
+  /** The chats that are gone. */
+  removedChatIds: Array<string>
+  /** Every chat of the history is gone. */
+  isCleared: boolean
+}
+
 export type ClientLogLevel = 'error' | 'warn' | 'info' | 'debug'
 
 /** Effective input for one configured command, computed by its tool registry. */
@@ -351,8 +364,6 @@ export type EditorHistoryEntry = {
   text: string
   kind: EditorHistoryKind
   operation?: EditorHistoryOperation | null
-  /** A draft entry this one supersedes: the same editing session saved again. */
-  replaceId?: string | null
 }
 
 export type EditorHistoryItem = {
@@ -777,6 +788,7 @@ export interface DesktopEventPayloads {
   'app://hotkeys-changed': null
   'app://open-main-chat': OpenMainChatEvent
   'app://open-main-editor': EditorTransfer
+  'app://chats-changed': ChatsChangedEvent
   'app://main-window-closed': null
   'app://activation-metrics-start': ActivationMetricsRequest
   'app://activation-metrics-collect': ActivationMetricsRequest

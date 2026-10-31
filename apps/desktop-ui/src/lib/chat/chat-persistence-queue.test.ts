@@ -133,4 +133,46 @@ describe('createChatPersistenceQueue', () => {
     expect(result).toBe(true)
     expect(saveChat).toHaveBeenCalled()
   })
+
+  it('retries a failed write until it succeeds', async () => {
+    const saveChat = vi
+      .fn<(entry: unknown) => Promise<void>>()
+      .mockRejectedValueOnce(new Error('busy'))
+      .mockResolvedValue(undefined)
+    const queue = createChatPersistenceQueue(
+      {
+        saveChat,
+        renameChat: vi.fn(async () => {}),
+        nowMs: () => 1,
+        saveRetryDelaysMs: [0],
+      },
+      { currentChatParams: ref<ChatParams>({ id: 'chat-1' }) }
+    )
+
+    expect(await queue.persist([message])).toBe(true)
+    expect(saveChat).toHaveBeenCalledTimes(2)
+  })
+
+  it('stops retrying once a newer write is queued', async () => {
+    const saveChat = vi
+      .fn<(entry: unknown) => Promise<void>>()
+      .mockRejectedValueOnce(new Error('busy'))
+      .mockResolvedValue(undefined)
+    const queue = createChatPersistenceQueue(
+      {
+        saveChat,
+        renameChat: vi.fn(async () => {}),
+        nowMs: () => 1,
+        saveRetryDelaysMs: [0, 0],
+      },
+      { currentChatParams: ref<ChatParams>({ id: 'chat-1' }) }
+    )
+
+    const first = queue.persist([message])
+    const second = queue.persist([message, { role: 'assistant', content: 'a' }])
+
+    expect(await first).toBe(false)
+    expect(await second).toBe(true)
+    expect(saveChat).toHaveBeenCalledTimes(2)
+  })
 })

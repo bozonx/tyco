@@ -60,10 +60,11 @@ impl EditorHistoryTarget<'_> {
         }
     }
 
-    /// An empty history leaves no file behind.
+    /// An empty history leaves no file behind. Copies of a damaged file stay:
+    /// only clearing the history or turning it off removes them.
     fn write(&mut self, items: Vec<EditorHistoryItem>) -> Result<(), AppError> {
         match self {
-            Self::File(path) if items.is_empty() => remove_editor_history_files(path),
+            Self::File(path) if items.is_empty() => remove_file_if_exists(path),
             Self::File(path) => write_jsonl(path, &items),
             Self::Memory(memory) => {
                 **memory = items;
@@ -164,12 +165,7 @@ fn save_editor_history_entry(
         is_result_applied: false,
     };
 
-    let id = push_editor_history(
-        &mut items,
-        item,
-        entry.replace_id.as_deref(),
-        policy.max_entries,
-    );
+    let id = push_editor_history(&mut items, item, policy.max_entries);
     history.save(items)?;
 
     Ok(Some(id))
@@ -371,6 +367,8 @@ fn commit_history_transition<T>(
     })
 }
 
+/// The history stays where it is: what the new policy no longer keeps is
+/// removed at once, not with the next write.
 fn switch_editor_history_store(
     path: &Path,
     before: &EditorHistoryPolicy,
@@ -378,42 +376,15 @@ fn switch_editor_history_store(
     memory: &mut Vec<EditorHistoryItem>,
     now_ms: u64,
 ) -> Result<(), AppError> {
-    let mut file = EditorHistoryTarget::File(path.to_path_buf());
-
-    if after.is_memory_only != before.is_memory_only {
-        // the entries move to where the history lives now
-        let mut items = if after.is_memory_only {
-            file.read()?
-        } else {
-            memory.clone()
-        };
-        after.enforce(&mut items, now_ms);
-
-        if after.is_memory_only {
-            remove_editor_history_files(path)?;
-            *memory = items;
-            return Ok(());
-        }
-        file.write(items)?;
-        memory.clear();
+    if before == after {
         return Ok(());
     }
-
-    let turned_off = after.max_entries == 0 && before.max_entries != 0;
-    let sanitize_turned_on = after.should_redact_secrets && !before.should_redact_secrets;
-
-    if turned_off || sanitize_turned_on {
-        let mut store = if after.is_memory_only {
-            EditorHistoryTarget::Memory(memory)
-        } else {
-            file
-        };
-        let mut items = store.read()?;
-        after.enforce(&mut items, now_ms);
-        store.write(items)?;
+    if after.is_memory_only {
+        after.enforce(memory, now_ms);
+        Ok(())
+    } else {
+        enforce_editor_history_file(path, after, now_ms)
     }
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -31,15 +31,8 @@ fn collapses_duplicate(new_kind: EditorHistoryKind, existing_kind: EditorHistory
 pub(super) fn push_editor_history(
     history: &mut Vec<EditorHistoryItem>,
     mut item: EditorHistoryItem,
-    replace_id: Option<&str>,
     limit: usize,
 ) -> String {
-    if let Some(replace_id) = replace_id {
-        history.retain(|existing| {
-            existing.id != replace_id || existing.kind != EditorHistoryKind::Draft
-        });
-    }
-
     let text = item.text.trim();
 
     if item.kind != EditorHistoryKind::Source {
@@ -152,7 +145,6 @@ mod tests {
         push_editor_history(
             &mut history,
             history_item("c", "  first\n", EditorHistoryKind::Source),
-            None,
             10,
         );
 
@@ -167,7 +159,7 @@ mod tests {
         let mut source = history_item("b", "sent", EditorHistoryKind::Source);
         source.operation = Some(EditorHistoryOperation::Translation);
 
-        push_editor_history(&mut history, source, None, 10);
+        push_editor_history(&mut history, source, 10);
 
         assert_eq!(history.len(), 2);
         assert_eq!(history[0].id, "b");
@@ -188,7 +180,7 @@ mod tests {
         second.operation = Some(EditorHistoryOperation::Correction);
         let mut history = vec![first];
 
-        push_editor_history(&mut history, second, None, 10);
+        push_editor_history(&mut history, second, 10);
 
         assert_eq!(history.len(), 2);
         assert_eq!(history[0].id, "b");
@@ -207,7 +199,6 @@ mod tests {
         push_editor_history(
             &mut history,
             history_item("b", "text", EditorHistoryKind::Draft),
-            None,
             10,
         );
 
@@ -230,7 +221,6 @@ mod tests {
         push_editor_history(
             &mut history,
             history_item("b", "text", EditorHistoryKind::Output),
-            None,
             10,
         );
 
@@ -253,7 +243,7 @@ mod tests {
         let mut output = history_item("b", "Text.\n", EditorHistoryKind::Output);
         output.created_at_ms = 5;
 
-        let id = push_editor_history(&mut history, output, None, 10);
+        let id = push_editor_history(&mut history, output, 10);
 
         assert_eq!(id, "a");
         assert_eq!(history_texts(&history), vec!["text", "older"]);
@@ -274,44 +264,12 @@ mod tests {
         let id = push_editor_history(
             &mut history,
             history_item("d", "Text.", EditorHistoryKind::Draft),
-            None,
             10,
         );
 
         assert_eq!(id, "a");
         assert_eq!(history_texts(&history), vec!["text", "older"]);
         assert!(!history[0].is_result_applied);
-    }
-
-    #[test]
-    fn push_editor_history_replaces_the_draft_of_the_same_session() {
-        let mut history = vec![
-            history_item("d", "hello", EditorHistoryKind::Draft),
-            history_item("o", "older", EditorHistoryKind::Output),
-        ];
-
-        push_editor_history(
-            &mut history,
-            history_item("e", "hello world", EditorHistoryKind::Draft),
-            Some("d"),
-            10,
-        );
-
-        assert_eq!(history_texts(&history), vec!["hello world", "older"]);
-    }
-
-    #[test]
-    fn push_editor_history_never_replaces_a_non_draft() {
-        let mut history = vec![history_item("o", "sent", EditorHistoryKind::Output)];
-
-        push_editor_history(
-            &mut history,
-            history_item("e", "sent and edited", EditorHistoryKind::Draft),
-            Some("o"),
-            10,
-        );
-
-        assert_eq!(history_texts(&history), vec!["sent and edited", "sent"]);
     }
 
     #[test]
@@ -324,7 +282,6 @@ mod tests {
         push_editor_history(
             &mut history,
             history_item("c", "third", EditorHistoryKind::Output),
-            None,
             2,
         );
 

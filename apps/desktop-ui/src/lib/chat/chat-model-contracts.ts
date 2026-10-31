@@ -75,4 +75,9 @@ export interface ChatModelDependencies {
   prepareTurn?: () => Promise<void>
   /** Whether chats are stored; a title is generated only for a stored chat */
   isHistoryEnabled?: () => boolean
+  /**
+   * Waits before each retry of a failed chat write; no retry without it. A
+   * newer write of the chat ends the retries, it carries the newer state
+   */
+  saveRetryDelaysMs?: readonly number[]
 }

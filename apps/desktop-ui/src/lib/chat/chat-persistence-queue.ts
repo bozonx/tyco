@@ -3,7 +3,10 @@ import type { Chat, ChatMessage, ChatImage, ChatParams } from '@tyco/shared'
 import type { ChatModelDependencies } from './chat-model-contracts'
 import type { ChatState } from './chat-state'
 export function createChatPersistenceQueue(
-  deps: Pick<ChatModelDependencies, 'saveChat' | 'renameChat' | 'nowMs'>,
+  deps: Pick<
+    ChatModelDependencies,
+    'saveChat' | 'renameChat' | 'nowMs' | 'saveRetryDelaysMs'
+  >,
   state: Pick<ChatState, 'currentChatParams'>
 ) {
   const { currentChatParams } = state
@@ -17,6 +20,24 @@ export function createChatPersistenceQueue(
   }
   // writes go one after another, so that an older state never lands last
   let lastWrite: Promise<unknown> = Promise.resolve()
+  /** Counts the chat writes, so that a retry sees a newer one queued */
+  let writeCount = 0
+  const wait = (ms: number) =>
+    new Promise<void>((resolve) => setTimeout(resolve, ms))
+  /** Writes `entry`, retrying while no newer write is queued */
+  const saveWithRetry = async (entry: Chat, writeNumber: number) => {
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        await deps.saveChat(entry)
+        return true
+      } catch {
+        const delay = deps.saveRetryDelaysMs?.[attempt]
+        if (delay === undefined || writeNumber !== writeCount) return false
+        await wait(delay)
+        if (writeNumber !== writeCount) return false
+      }
+    }
+  }
   const savingImages = ref<ChatImage[]>([])
 
   /** Writes the chat as it is; a failure is reported by the dependency */
@@ -35,13 +56,11 @@ export function createChatPersistenceQueue(
     const held = chatMessages.flatMap((message) => message.images || [])
     savingImages.value.push(...held)
     pendingWriteCount += 1
+    const writeNumber = ++writeCount
     const write = lastWrite.then(async () => {
       try {
         entry.title = renamedTitles.get(id) ?? entry.title
-        await deps.saveChat(entry)
-        return true
-      } catch {
-        return false
+        return await saveWithRetry(entry, writeNumber)
       } finally {
         for (const image of held) {
           const index = savingImages.value.indexOf(image)

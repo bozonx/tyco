@@ -41,7 +41,9 @@ export function createChatHistoryModel(
   }
 
   /** Gives a chat another title, keeping its messages and its place */
-  const renameChat = async (id: string, title: string) => {
+  const renameChat = async (id: string, rawTitle: string) => {
+    // the storage keeps the title trimmed
+    const title = rawTitle.trim()
     await driver.renameChat(id, title)
     chatListVersion += 1
     chatHistory.value = chatHistory.value.map((item) =>

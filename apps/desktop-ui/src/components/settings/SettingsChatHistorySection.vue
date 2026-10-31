@@ -148,7 +148,8 @@ function useScopeChats(scope: ChatHistoryScope) {
 const scopeChats = useScopeChats(props.scope)
 
 onMounted(() => {
-  void scopeChats.load()
+  // the count stays at what was last read
+  scopeChats.load().catch(() => {})
 })
 
 const chatCount = computed(() => scopeChats.count.value)

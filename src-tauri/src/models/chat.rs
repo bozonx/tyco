@@ -10,6 +10,20 @@ pub struct OpenMainChatEvent {
     pub auto_send: bool,
 }
 
+/// A chat history changed: every window reloads its list, and a window
+/// showing a removed chat leaves it instead of writing it back.
+#[derive(Debug, Clone, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(optional_fields = nullable)]
+pub struct ChatsChangedEvent {
+    /// `None` for the chats of "Ask AI".
+    pub profile_id: Option<String>,
+    /// The chats that are gone.
+    pub removed_chat_ids: Vec<String>,
+    /// Every chat of the history is gone.
+    pub is_cleared: bool,
+}
+
 /// A text the user attached to a chat message.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 pub struct ChatAttachment {

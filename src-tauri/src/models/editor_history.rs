@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 pub enum EditorHistoryKind {
     /// Inserted into a window or copied to the clipboard.
     Output,
-    /// Unsent text: discarded from the editor or kept there while the window
-    /// was hidden.
+    /// Unsent text. Nothing records drafts now; entries of older versions
+    /// are still read.
     Draft,
     /// Snapshot taken right before an AI transformation.
     Source,
@@ -53,9 +53,6 @@ pub struct EditorHistoryEntry {
     pub kind: EditorHistoryKind,
     #[serde(default)]
     pub operation: Option<EditorHistoryOperation>,
-    /// A draft entry this one supersedes: the same editing session saved again.
-    #[serde(default)]
-    pub replace_id: Option<String>,
 }
 
 #[cfg(test)]

@@ -69,12 +69,10 @@ export function createSelectionAction(deps: SelectionActionDependencies) {
     result: string
   ) => {
     try {
-      if (action.kind === 'correction') {
-        const sourceId = await deps.history.saveSource(text, 'correction')
-        await deps.history.saveSourceResult(sourceId, result)
-      } else {
-        await deps.history.saveOutput(text)
-      }
+      // the selection is the source of the result, it never left the app
+      const operation = action.kind === 'correction' ? 'correction' : 'aiTask'
+      const sourceId = await deps.history.saveSource(text, operation)
+      await deps.history.saveSourceResult(sourceId, result)
       await deps.history.saveOutput(result)
     } catch (error) {
       // Insertion already succeeded; a history failure must not undo it.

@@ -234,9 +234,9 @@ pub fn save_chat(
     policy: ChatHistoryPolicy,
     images: &Mutex<ChatImageStore>,
     chat: Chat,
-) -> Result<(), AppError> {
+) -> Result<Vec<String>, AppError> {
     if !policy.is_enabled {
-        return Ok(());
+        return Ok(Vec::new());
     }
 
     validate_chat_id(&chat.id)?;
@@ -249,15 +249,16 @@ pub fn save_chat(
     // the chat being saved stays, whatever date its last message has: its
     // file is written either way, and dropping it from the index would
     // have the orphan cleanup delete it right away
-    let count = history.len();
-    policy.drop_expired(&mut history, now_ms());
-    let cleanup = if history.len() < count || drops_images(chats_dir, &chat) {
+    let removed = policy.drop_expired(&mut history, now_ms());
+    let cleanup = if !removed.is_empty() || drops_images(chats_dir, &chat) {
         ImageCleanup::Needed
     } else {
         ImageCleanup::Skipped
     };
+    let removed = removed.into_iter().filter(|id| *id != chat.id).collect();
     upsert_chat_index(&mut history, &chat);
-    commit_chat_transaction(chats_dir, history, Some(chat), cleanup)
+    commit_chat_transaction(chats_dir, history, Some(chat), cleanup)?;
+    Ok(removed)
 }
 
 /// Whether the stored version of `chat` refers to images the new one does not.
@@ -280,13 +281,17 @@ fn chat_image_ids(chat: &Chat) -> std::collections::HashSet<&str> {
         .collect()
 }
 
-/// Puts the chat on top of the index, without its messages to keep the index
-/// small. The chat just written is the most recent one, also when it existed
-/// before.
+/// Puts the chat into the index by the time of its last message, newest
+/// first, without its messages to keep the index small. A chat restored by an
+/// undo goes back to its place; one just written goes on top.
 fn upsert_chat_index(history: &mut Vec<ChatSummary>, chat: &Chat) {
     let index_item = ChatSummary::from(chat);
     history.retain(|item| item.id != index_item.id);
-    history.insert(0, index_item);
+    let index = history
+        .iter()
+        .position(|item| item.last_message_at_ms <= index_item.last_message_at_ms)
+        .unwrap_or(history.len());
+    history.insert(index, index_item);
 }
 
 pub fn read_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError> {
@@ -342,10 +347,11 @@ pub(super) fn open_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, Ap
 /// the index change: a rename is not activity in the chat.
 pub fn rename_chat(chats_dir: &Path, id: String, title: String) -> Result<(), AppError> {
     let title = validate_chat_title(&title)?;
-    let mut history = list_chats(chats_dir)?;
-    let Some(mut chat) = read_chat(chats_dir, id.clone())? else {
+    // an unreadable chat is set aside and leaves the index, as on opening
+    let Some(mut chat) = open_chat(chats_dir, id.clone())? else {
         return Err(AppError::NotFound(String::from("Chat not found")));
     };
+    let mut history = list_chats(chats_dir)?;
     chat.title = title;
     rename_in_chat_index(&mut history, &id, &chat.title);
     // the messages, and so the images, stay as they are
@@ -390,8 +396,9 @@ struct CachedChatText {
 }
 
 impl ChatSearchCache {
-    /// The text of a chat file; `None` when there is no file.
-    fn text(&self, chats_dir: &Path, id: &str) -> Result<Option<String>, AppError> {
+    /// Whether the text of a chat file contains `query`; `None` when there is
+    /// no file.
+    fn matches(&self, chats_dir: &Path, id: &str, query: &str) -> Result<Option<bool>, AppError> {
         let path = chats_dir.join(format!("{}.json", validate_chat_id(id)?));
         let metadata = match fs::metadata(&path) {
             Ok(metadata) => metadata,
@@ -402,22 +409,23 @@ impl ChatSearchCache {
         let size_bytes = metadata.len();
         if let Some(cached) = self.entries.locked().get(&path) {
             if cached.modified == modified && cached.size_bytes == size_bytes {
-                return Ok(Some(cached.text.clone()));
+                return Ok(Some(cached.text.contains(query)));
             }
         }
         let Some(chat) = read_chat(chats_dir, id.to_string())? else {
             return Ok(None);
         };
         let text = chat_search_text(&chat);
+        let found = text.contains(query);
         self.entries.locked().insert(
             path,
             CachedChatText {
                 modified,
                 size_bytes,
-                text: text.clone(),
+                text,
             },
         );
-        Ok(Some(text))
+        Ok(Some(found))
     }
 
     /// Drops the chats of `chats_dir` the index no longer lists.
@@ -444,8 +452,8 @@ pub(super) fn search_chats(
     cache.retain_listed(chats_dir, &history);
     let mut found = Vec::new();
     for item in history {
-        let matches = match cache.text(chats_dir, &item.id) {
-            Ok(Some(text)) => text.contains(&query),
+        let matches = match cache.matches(chats_dir, &item.id, &query) {
+            Ok(Some(found)) => found,
             // a chat the index lists without a file can still match by title
             Ok(None) => item.title.to_lowercase().contains(&query),
             Err(error) => {
@@ -511,12 +519,21 @@ impl ChatHistoryPolicy {
     }
 
     /// Drops the chats whose last message is older than the retention period.
-    fn drop_expired(&self, history: &mut Vec<ChatSummary>, now_ms: u64) {
+    /// Returns the ids of the dropped chats.
+    fn drop_expired(&self, history: &mut Vec<ChatSummary>, now_ms: u64) -> Vec<String> {
         if self.retention_days == 0 {
-            return;
+            return Vec::new();
         }
         let cutoff = now_ms.saturating_sub(self.retention_days.saturating_mul(DAY_MS));
-        history.retain(|item| item.last_message_at_ms >= cutoff);
+        let mut removed = Vec::new();
+        history.retain(|item| {
+            let keep = item.last_message_at_ms >= cutoff;
+            if !keep {
+                removed.push(item.id.clone());
+            }
+            keep
+        });
+        removed
     }
 }
 
@@ -529,23 +546,20 @@ impl From<ChatHistoryConfig> for ChatHistoryPolicy {
     }
 }
 
-/// Brings the stored chats in line with the settings: expired ones are dropped.
+/// Brings the stored chats in line with the settings: expired ones are
+/// dropped, also while no new chats are saved. Returns the dropped ids.
 pub(super) fn enforce_chat_history_policy(
     chats_dir: &Path,
     policy: ChatHistoryPolicy,
-) -> Result<(), AppError> {
-    if !policy.is_enabled {
-        return Ok(());
-    }
-
+) -> Result<Vec<String>, AppError> {
     let mut history = list_chats(chats_dir)?;
-    let count = history.len();
-    policy.drop_expired(&mut history, now_ms());
-    if history.len() == count {
-        return Ok(());
+    let removed = policy.drop_expired(&mut history, now_ms());
+    if removed.is_empty() {
+        return Ok(removed);
     }
 
-    commit_chat_transaction(chats_dir, history, None, ImageCleanup::Needed)
+    commit_chat_transaction(chats_dir, history, None, ImageCleanup::Needed)?;
+    Ok(removed)
 }
 
 /// Removes the index, chat files, and persisted image bytes.

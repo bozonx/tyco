@@ -95,9 +95,9 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
       if (!result.trim()) throw new Error('Correction returned empty text')
       if (result !== text) await saveSourceResult(sourceId, result)
       if (active !== run) return
-      await saveOutput(result)
-      if (active !== run) return
       await deps.insert(result)
+      // recorded once it left the app; the write does not hold up the insertion
+      void saveOutput(result)
     } catch (error) {
       if (active === run && !deps.isAborted?.(error)) deps.reportError(error)
     } finally {
@@ -150,9 +150,8 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     active = run
     run.owner = deps.setPending(cancel)
     try {
-      await saveOutput(text)
-      if (active !== run) return
       await deps.insert(text)
+      void saveOutput(text)
     } catch (error) {
       if (active === run) deps.reportError(error)
     } finally {

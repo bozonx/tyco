@@ -15,8 +15,8 @@ export function createEditorHistoryModel(
 
   const editorHistory = ref<EditorHistoryItem[]>([])
 
-  // writes still on their way: a load must not overtake them, otherwise the
-  // text saved on the way to the history page would be missing from it
+  // writes still on their way: a load must not overtake them, otherwise a
+  // text saved just before the history page opened would be missing from it
   const pendingWrites = new Set<Promise<unknown>>()
 
   let editorListVersion = 0
@@ -80,7 +80,9 @@ export function createEditorHistoryModel(
 
   /** Puts a removed entry back to its place. */
   const restoreEditorItem = async (item: EditorHistoryItem): Promise<void> => {
-    if (!canRecord()) return
+    // the undo keeps the item rather than losing it to a restore that did nothing
+    if (!canRecord())
+      throw new Error('Editor history is not recorded; nothing was restored')
     await track(call('restore_editor_history_item', { item }))
     await loadEditorHistory()
   }

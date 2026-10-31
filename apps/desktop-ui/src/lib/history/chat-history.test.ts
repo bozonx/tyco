@@ -80,3 +80,22 @@ it('uses a custom ChatSessionStorageDriver directly', async () => {
   expect(driver.deleteChat).toHaveBeenCalledWith('c1')
   expect(model.chatHistory.value).toEqual([])
 })
+
+it('keeps a renamed title trimmed, as the storage does', async () => {
+  const driver = {
+    listChats: vi.fn().mockResolvedValue([{ id: 'c1', title: 'Old' }]),
+    getChat: vi.fn().mockResolvedValue(null),
+    saveChat: vi.fn().mockResolvedValue(undefined),
+    renameChat: vi.fn().mockResolvedValue(undefined),
+    deleteChat: vi.fn().mockResolvedValue(null),
+    searchChats: vi.fn().mockResolvedValue([]),
+    clearChats: vi.fn().mockResolvedValue(undefined),
+  }
+  const model = createChatHistoryModel(driver, vi.fn())
+  await model.loadChatHistory()
+
+  await model.renameChat('c1', '  New  ')
+
+  expect(driver.renameChat).toHaveBeenCalledWith('c1', 'New')
+  expect(model.chatHistory.value[0]?.title).toBe('New')
+})

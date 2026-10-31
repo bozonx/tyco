@@ -12,12 +12,12 @@ export function filterChatHistory(
   query: string,
   matchedIds?: ReadonlySet<string> | null
 ) {
-  const normalized = query.trim().toLocaleLowerCase()
+  // the same case folding as the search in storage
+  const normalized = query.trim().toLowerCase()
   if (!normalized) return items
   return items.filter(
     (item) =>
-      matchedIds?.has(item.id) ||
-      item.title.toLocaleLowerCase().includes(normalized)
+      matchedIds?.has(item.id) || item.title.toLowerCase().includes(normalized)
   )
 }
 

@@ -2,6 +2,7 @@ import {
   DEFAULT_SESSION_STATE,
   DEFAULT_USER_CONFIG,
   type AiProfile,
+  type ChatsChangedEvent,
   type SessionState,
 } from '@tyco/shared'
 import { describe, expect, it, vi } from 'vitest'
@@ -145,6 +146,7 @@ describe('chat-store-runtime', () => {
     const input = reactive(createChatInputModel())
 
     const runtime = createChatStoreRuntime({
+      saveRetryDelaysMs: [],
       profileId: null,
       invoke: vi.fn(async () => undefined) as unknown as typeof invokeDesktop,
       history,
@@ -369,4 +371,30 @@ it('does not reopen a profile after disposal during preparation', async () => {
   expect(deps.navigateTo).not.toHaveBeenCalled()
   expect(deps.afterRender).not.toHaveBeenCalled()
   expect(runtime.currentChatParams.value).toEqual({})
+})
+
+it('reloads the list and leaves an open chat removed elsewhere', async () => {
+  let notify: (event: ChatsChangedEvent) => void = () => {}
+  const deps = runtimeDependencies('writer')
+  const runtime = createChatStoreRuntime({
+    ...deps,
+    listenChatsChanged: async (handler) => {
+      notify = handler
+      return () => {}
+    },
+  })
+  await vi.waitFor(() => expect(notify).not.toBe(undefined))
+  runtime.currentChatParams.value = { id: 'open' }
+
+  notify({ profileId: null, removedChatIds: ['open'], isCleared: false })
+  expect(deps.history.loadChatHistory).not.toHaveBeenCalled()
+  expect(runtime.currentChatParams.value.id).toBe('open')
+
+  notify({ profileId: 'writer', removedChatIds: ['other'], isCleared: false })
+  expect(deps.history.loadChatHistory).toHaveBeenCalledOnce()
+  expect(runtime.currentChatParams.value.id).toBe('open')
+
+  notify({ profileId: 'writer', removedChatIds: ['open'], isCleared: false })
+  expect(runtime.currentChatParams.value.id).not.toBe('open')
+  runtime.dispose()
 })

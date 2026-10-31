@@ -29,7 +29,7 @@ const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{EditorHistoryEntry, EditorHistoryKind, EditorHistoryOperation};
+    use crate::models::{EditorHistoryKind, EditorHistoryOperation};
     use crate::services::storage::test_support::history_item;
 
     #[test]
@@ -56,18 +56,6 @@ mod tests {
             serde_json::to_value(&item).unwrap()["isResultApplied"],
             json!(true)
         );
-    }
-
-    #[test]
-    fn editor_history_entry_reads_the_replace_id() {
-        let entry: EditorHistoryEntry = serde_json::from_value(json!({
-            "text": "text",
-            "kind": "draft",
-            "replaceId": "abc",
-        }))
-        .unwrap();
-
-        assert_eq!(entry.replace_id.as_deref(), Some("abc"));
     }
 
     #[test]

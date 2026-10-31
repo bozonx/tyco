@@ -1,10 +1,11 @@
-import { llmSecretId } from '@tyco/shared'
+import { DESKTOP_EVENTS, llmSecretId } from '@tyco/shared'
 import { defineStore, getActivePinia, type Pinia } from 'pinia'
 import { nextTick, onScopeDispose, watch } from 'vue'
 
 import { useToastStore } from './toast'
 import { createIpcChatSessionStorageDriver } from '../lib/chat/chat-session-storage'
 import { createChatStoreRuntime } from '../lib/chat/chat-store-runtime'
+import { desktopClient } from '../lib/desktop/client'
 import { invokeDesktop } from '../lib/desktop/invoke'
 import { getDesktopWindowLabel } from '../lib/desktop/window'
 import { createChatHistoryModel } from '../lib/history/chat-history'
@@ -106,6 +107,8 @@ function createChatStoreSetup(profileId: string | null) {
       toastText,
       toastKey,
       warn: (message) => clientLogger.warn(message, 'chat'),
+      listenChatsChanged: (handler) =>
+        desktopClient.listen(DESKTOP_EVENTS.CHATS_CHANGED, handler),
     })
 
     onScopeDispose(dispose)

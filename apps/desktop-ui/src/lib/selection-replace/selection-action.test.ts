@@ -48,7 +48,7 @@ describe('selection action', () => {
     expect(deps.logRun).not.toHaveBeenCalled()
   })
 
-  it('runs and logs a command and records both outgoing texts', async () => {
+  it('runs and logs a command and records its source and result', async () => {
     const { deps, model, signal, command } = fixture()
     const action = { kind: 'command' as const, commandId: command.id }
     expect(await model.run(action, 'Original', signal)).toBe('Transformed')
@@ -60,8 +60,11 @@ describe('selection action', () => {
       success: true,
     })
     await model.saveResult(action, 'Original', 'Transformed')
-    expect(deps.history.saveOutput).toHaveBeenNthCalledWith(1, 'Original')
-    expect(deps.history.saveOutput).toHaveBeenNthCalledWith(2, 'Transformed')
+    expect(deps.history.saveSource).toHaveBeenCalledWith('Original', 'aiTask')
+    expect(deps.history.saveSourceResult).toHaveBeenCalledOnce()
+    expect(deps.history.saveOutput).toHaveBeenCalledExactlyOnceWith(
+      'Transformed'
+    )
   })
 
   it('rejects missing commands without invoking a tool', async () => {
