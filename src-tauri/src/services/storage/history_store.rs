@@ -111,6 +111,29 @@ impl HistoryStorageCoordinator {
     }
 }
 
+/// How often a failed history cleanup is retried.
+const CLEANUP_RETRY_INTERVAL: std::time::Duration = std::time::Duration::from_secs(1);
+
+/// Retries a pending history cleanup in the background, see `retry_cleanup`.
+pub fn spawn_cleanup_retry(app: AppHandle) -> Result<(), AppError> {
+    let services = app.state::<crate::services::background::BackgroundServices>();
+    let handle = app.clone();
+    services.spawn_async(async move {
+        let app = handle;
+        loop {
+            tokio::time::sleep(CLEANUP_RETRY_INTERVAL).await;
+            let worker_app = app.clone();
+            let _ = app
+                .state::<crate::services::background::BackgroundServices>()
+                .run_blocking(move || {
+                    let state = worker_app.state::<AppState>();
+                    state.history.retry_cleanup(&worker_app, &state);
+                })
+                .await;
+        }
+    })
+}
+
 /// Applies the history settings of the config the app starts with. The
 /// caller marks a failed cleanup as pending, see `mark_cleanup_pending`.
 pub fn apply_history_settings_on_startup(

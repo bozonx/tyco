@@ -182,6 +182,7 @@ pub fn run() {
             let args = std::env::args().collect::<Vec<_>>();
             activate_from_args(app.handle(), &args)?;
             services::external::api::spawn_reaper(app.handle().clone())?;
+            services::storage::spawn_cleanup_retry(app.handle().clone())?;
             services::activation::socket::spawn_server(app.handle().clone())?;
             services::signals::spawn_signal_watcher(app.handle().clone())?;
             Ok(())

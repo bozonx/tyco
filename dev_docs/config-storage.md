@@ -125,7 +125,7 @@ Conventions:
   `Shift+Insert`. `Ctrl` is the Control key on every platform; `Super` is Cmd
   on macOS and the Windows key on Windows.
 - Text that is not set is an empty string (`aiVault.path`, a hotkey, a tool
-  path); a number that is not set is absent (`timeoutSec`, model limits,
+  path); a number that is not set is absent (model limits,
   `retentionDays`, which keeps everything without it). Zero is never a
   sentinel: a feature is turned off by its own field (`storage: "off"`).
 - Ids of the user's entities (commands, models, AI tasks, launcher pages)

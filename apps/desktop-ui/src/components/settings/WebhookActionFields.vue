@@ -164,6 +164,7 @@ import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { webhookToolConfig } from '../../lib/commands/command-config'
+import { isSecretReferenced } from '../../lib/commands/command-secrets'
 import { createWebhookAuthModel } from '../../lib/commands/webhook-auth-model'
 import {
   type WebhookHeaderRow,
@@ -282,7 +283,7 @@ const { authDraft, saveAuth, removeAuth, replaceSecret, removeUnusedSecret } =
     getSecretId: () => secretId.value,
     getSecretOrigins: (id) => secretsStore.secrets[id]?.origins ?? [],
     isSecretReferenced: (id) =>
-      JSON.stringify(session.draft?.commands ?? []).includes(id),
+      isSecretReferenced(session.draft?.commands ?? [], id),
     createId: () => crypto.randomUUID(),
     setSecret: secretsStore.setSecret,
     removeSecret: secretsStore.removeSecret,

@@ -244,8 +244,6 @@
     "testRunning": "Uruchamianie…",
     "testStop": "Zatrzymaj",
     "testTextPlaceholder": "Tekst do testu",
-    "timeoutInfo": "Jak długo czeka się na skrypt, którego wynik jest potrzebny; potem kończy się błędem. Domyślnie {seconds}, maksymalnie {max}. Gdy wynik nie jest potrzebny („Nic”), na skrypt czeka się 3 s i zostawia go w tle.",
-    "timeoutLabel": "Czekaj na wynik, sekundy",
     "toolInfo": "Narzędzie: {tool}",
     "toolMissing": "Jego narzędzie jest niedostępne: wtyczka jest wyłączona lub jej brak",
     "preTransformFailed": "Nie udało się przygotować tekstu dla polecenia",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Przekształca tekst za pomocą promptu LLM przed przekazaniem go do polecenia.",
     "llmPreTransformPromptLabel": "Prompt transformacji",
     "llmPreTransformPromptPlaceholder": "Prompt przekształcający tekst przed przekazaniem do polecenia",
-    "llmPreTransformPromptInfo": "Instrukcja dla LLM służąca do przekształcenia tekstu wejściowego przed wysłaniem do polecenia."
+    "llmPreTransformPromptInfo": "Instrukcja dla LLM służąca do przekształcenia tekstu wejściowego przed wysłaniem do polecenia.",
+    "externalTimeoutLabel": "Limit uruchomienia w tle, sekundy",
+    "externalTimeoutInfo": "Jak długo wywołanie zewnętrzne może działać w tle, licząc od startu polecenia; potem jest zatrzymywane i zgłaszane jako przekroczenie czasu. Domyślnie {seconds}, najwyżej {max}. Uruchomienia w oknie nie mają limitu: widzisz je i możesz je anulować.",
+    "preTransformEmpty": "LLM nie zwrócił tekstu dla polecenia"
   },
   "common": {
     "add": "Dodaj",
@@ -383,6 +384,7 @@
     "failed": "Polecenie „{name}” nie powiodło się",
     "missing": "Polecenia nie ma w bibliotece",
     "running": "Uruchamianie „{name}”…",
+    "timedOut": "Nie zakończono w ciągu {seconds} s i zatrzymano",
     "unknown": "Nieznany błąd"
   },
   "history": {

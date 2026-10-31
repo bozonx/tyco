@@ -49,6 +49,47 @@ function setup(
 }
 
 describe('createExternalRun', () => {
+  it('tells the user about a run the backend stopped over its limit', async () => {
+    const { deps } = setup(async () => ({ success: true }))
+    const timedOut: InvocationOutcome = {
+      success: false,
+      cancelled: true,
+      code: 'TimedOut',
+      message: 'The command did not finish within its time limit',
+    }
+    const model = createExternalRun({
+      ...deps,
+      claimJob: async () => true,
+      finishJob: async () => timedOut,
+    })
+    const command = { ...lamp, externalTimeoutSec: 45 }
+    await expect(
+      model.handleRun(
+        event({ userConfig: { ...DEFAULT_USER_CONFIG, commands: [command] } })
+      )
+    ).resolves.toEqual(timedOut)
+    expect(deps.notify).toHaveBeenCalledWith(
+      'externalCommand.failed {"name":"Lamp"}',
+      'externalCommand.timedOut {"seconds":"45"}'
+    )
+  })
+
+  it('reports a failed claim instead of dropping it silently', async () => {
+    const { deps } = setup(async () => ({ success: true }))
+    const error = new Error('IPC down')
+    const model = createExternalRun({
+      ...deps,
+      claimJob: async () => {
+        throw error
+      },
+    })
+    await expect(model.handleRun(event())).resolves.toMatchObject({
+      cancelled: true,
+    })
+    expect(deps.reportError).toHaveBeenCalledWith(error)
+    expect(deps.run).not.toHaveBeenCalled()
+  })
+
   it('reports persistence failures while preserving the command outcome', async () => {
     const { deps, external } = setup(async () => ({ success: true }))
     const error = new Error('disk full')

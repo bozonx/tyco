@@ -31,7 +31,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
         'command-launcher'
       ),
     tools: useToolsStore(),
-    commands: () => desktopStore.userConfig?.commands,
+    commands: () => desktopStore.userConfig.commands,
     launcherPages: () => desktopStore.userConfig.launcherPages,
     selectedText: () => desktopStore.desktopState.selectedText,
     run: runner.run,
@@ -59,6 +59,7 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       if (!result.success) {
         toastText(result.error ?? translate('toast.commandFailed'), 'error')
       }
+      return result.success
     },
     commandMissing: (commandId) => {
       toastText(

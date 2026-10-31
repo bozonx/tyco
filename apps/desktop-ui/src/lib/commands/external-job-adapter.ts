@@ -11,9 +11,12 @@ export interface ExternalJobAdapterDependencies {
 /** Maps desktop job responses to the outcome understood by both runners. */
 export function createExternalJobAdapter(deps: ExternalJobAdapterDependencies) {
   return {
+    /** False when the job is not ours; a failed call throws */
     async claimJob(id: string): Promise<boolean> {
       const result = await deps.call('claim_external_job', { id })
-      return result.success && result.result === true
+      if (!result.success)
+        throw new Error(result.error ?? 'Could not claim the job')
+      return result.result === true
     },
     async finishJob(
       id: string,

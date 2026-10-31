@@ -244,8 +244,6 @@
     "testRunning": "Spouští se…",
     "testStop": "Zastavit",
     "testTextPlaceholder": "Text k otestování",
-    "timeoutInfo": "Jak dlouho se čeká na skript, jehož výstup je potřeba; poté selže. Výchozí {seconds}, nejvýše {max}. Když výstup potřeba není („Nic“), čeká se na skript 3 s a pak se nechá na pozadí.",
-    "timeoutLabel": "Čekat na výstup, sekundy",
     "toolInfo": "Nástroj: {tool}",
     "toolMissing": "Jeho nástroj není k dispozici: plugin je vypnutý nebo chybí",
     "preTransformFailed": "Text pro příkaz se nepodařilo připravit",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Před předáním do příkazu transformuje text pomocí dotazu pro LLM.",
     "llmPreTransformPromptLabel": "Instrukce pro transformaci",
     "llmPreTransformPromptPlaceholder": "Instrukce, která transformuje text před odesláním do příkazu",
-    "llmPreTransformPromptInfo": "Instrukce pro LLM k transformaci vstupního textu před odesláním do příkazu."
+    "llmPreTransformPromptInfo": "Instrukce pro LLM k transformaci vstupního textu před odesláním do příkazu.",
+    "externalTimeoutLabel": "Limit běhu na pozadí, sekundy",
+    "externalTimeoutInfo": "Jak dlouho může externí volání běžet na pozadí, počítáno od spuštění příkazu; poté je zastaveno a nahlášeno jako vypršení času. Výchozí hodnota {seconds}, nejvýše {max}. Běhy v okně nejsou omezeny: vidíte je a můžete je zrušit.",
+    "preTransformEmpty": "LLM nevrátil pro příkaz žádný text"
   },
   "common": {
     "add": "Přidat",
@@ -383,6 +384,7 @@
     "failed": "Příkaz „{name}“ selhal",
     "missing": "Příkaz není v knihovně",
     "running": "Spouští se „{name}“…",
+    "timedOut": "Nedokončeno do {seconds} s a zastaveno",
     "unknown": "Neznámá chyba"
   },
   "history": {

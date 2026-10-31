@@ -244,8 +244,6 @@
     "testRunning": "실행 중…",
     "testStop": "중지",
     "testTextPlaceholder": "테스트할 텍스트",
-    "timeoutInfo": "출력이 필요한 스크립트를 대기할 시간(초)이며, 이후 실패 처리됩니다. 기본값은 {seconds}초, 최대 {max}초입니다. 출력이 필요 없는 경우(“동작 없음”) 스크립트는 3초만 대기한 후 백그라운드에 유지됩니다.",
-    "timeoutLabel": "출력 대기 시간(초)",
     "toolInfo": "도구: {tool}",
     "toolMissing": "도구를 사용할 수 없습니다: 플러그인이 비활성화되었거나 누락되었습니다",
     "preTransformFailed": "명령에 사용할 텍스트를 준비하지 못했습니다",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "명령에 전달하기 전에 LLM 프롬프트로 텍스트를 변환합니다.",
     "llmPreTransformPromptLabel": "변환 프롬프트",
     "llmPreTransformPromptPlaceholder": "명령이 받기 전에 텍스트를 변환하는 프롬프트",
-    "llmPreTransformPromptInfo": "명령으로 보내기 전에 입력 텍스트를 변환하기 위한 LLM 지침입니다."
+    "llmPreTransformPromptInfo": "명령으로 보내기 전에 입력 텍스트를 변환하기 위한 LLM 지침입니다.",
+    "externalTimeoutLabel": "백그라운드 실행 제한(초)",
+    "externalTimeoutInfo": "외부 호출이 명령 시작부터 백그라운드에서 실행될 수 있는 시간입니다. 이후에는 중지되고 시간 초과로 보고됩니다. 기본값 {seconds}, 최대 {max}. 창에서의 실행은 제한이 없습니다. 진행 상황이 보이고 취소할 수 있기 때문입니다.",
+    "preTransformEmpty": "LLM이 명령에 사용할 텍스트를 반환하지 않았습니다"
   },
   "common": {
     "add": "추가",
@@ -383,6 +384,7 @@
     "failed": "“{name}” 명령이 실패했습니다",
     "missing": "라이브러리에 명령이 없습니다",
     "running": "“{name}” 실행 중…",
+    "timedOut": "{seconds}초 안에 끝나지 않아 중지되었습니다",
     "unknown": "알 수 없는 오류"
   },
   "history": {

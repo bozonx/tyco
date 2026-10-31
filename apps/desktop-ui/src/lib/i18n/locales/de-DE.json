@@ -244,8 +244,6 @@
     "testRunning": "Wird ausgeführt…",
     "testStop": "Stoppen",
     "testTextPlaceholder": "Text zum Testen",
-    "timeoutInfo": "Wie lange auf ein Skript gewartet wird, dessen Ausgabe benötigt wird; danach schlägt es fehl. Standardmäßig {seconds}, höchstens {max}. Wird die Ausgabe nicht benötigt („Nichts“), wird 3 s gewartet und das Skript im Hintergrund weiterlaufen gelassen.",
-    "timeoutLabel": "Auf Ausgabe warten, Sekunden",
     "toolInfo": "Werkzeug: {tool}",
     "toolMissing": "Sein Werkzeug ist nicht verfügbar: Das Plugin ist deaktiviert oder fehlt",
     "preTransformFailed": "Der Text für den Befehl konnte nicht vorbereitet werden",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Transformiert den Text mit einem LLM-Prompt, bevor er an den Befehl übergeben wird.",
     "llmPreTransformPromptLabel": "Transformations-Prompt",
     "llmPreTransformPromptPlaceholder": "Prompt, der den Text transformiert, bevor der Befehl ihn erhält",
-    "llmPreTransformPromptInfo": "Anweisung an das LLM, um den Eingabetext vor dem Senden an den Befehl zu transformieren."
+    "llmPreTransformPromptInfo": "Anweisung an das LLM, um den Eingabetext vor dem Senden an den Befehl zu transformieren.",
+    "externalTimeoutLabel": "Limit für Hintergrundausführung, Sekunden",
+    "externalTimeoutInfo": "Wie lange ein externer Aufruf im Hintergrund laufen darf, gezählt ab dem Start des Befehls; danach wird er gestoppt und als Zeitüberschreitung gemeldet. Standardmäßig {seconds}, höchstens {max}. Ausführungen in einem Fenster sind nicht begrenzt: Sie sehen sie und können sie abbrechen.",
+    "preTransformEmpty": "Das LLM hat keinen Text für den Befehl zurückgegeben"
   },
   "common": {
     "add": "Hinzufügen",
@@ -383,6 +384,7 @@
     "failed": "Der Befehl „{name}“ ist fehlgeschlagen",
     "missing": "Der Befehl ist nicht in der Bibliothek",
     "running": "„{name}“ wird ausgeführt…",
+    "timedOut": "Nicht innerhalb von {seconds} s abgeschlossen und gestoppt",
     "unknown": "Unbekannter Fehler"
   },
   "history": {

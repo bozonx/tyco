@@ -100,8 +100,11 @@ hiding the newly active window or pasting into its activation.
 
 A script in the webview, e.g. one injected through a model answer, must not
 run a command, read a file or write one the user never set up. `execute_script_action`
-takes the id of a saved `script` command: the shell command, its working
-directory and timeout are read from the saved config. The command editor saves
+takes the id of a saved `script` command: the shell command and its working
+directory are read from the saved config, and a disabled command is refused.
+A run whose output is captured has no time limit: the caller shows it and
+cancels it with `cancel_script_action`; a background external run is cancelled
+by the limit of its job. The command editor saves
 the draft before a test run and runs only what was saved. Notes are written
 only by `write_plugin_note`, under a root the user approved for that plugin.
 `read_dropped_file` reads only the paths of the last drop onto the window.

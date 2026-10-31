@@ -4,14 +4,15 @@ import type { DesktopCall } from '../ipc/ipc-model'
 import { createExternalJobAdapter } from './external-job-adapter'
 
 describe('external job adapter', () => {
-  it('claims only confirmed jobs', async () => {
+  it('claims only confirmed jobs and throws on a failed call', async () => {
     const call = vi
       .fn<DesktopCall>()
       .mockResolvedValueOnce({ success: false, error: 'Unavailable' })
       .mockResolvedValueOnce({ success: true, result: false })
       .mockResolvedValueOnce({ success: true, result: true })
     const adapter = createExternalJobAdapter({ call: call as DesktopCall })
-    expect(await adapter.claimJob('job')).toBe(false)
+    // a broken call is not mistaken for a job another window has taken
+    await expect(adapter.claimJob('job')).rejects.toThrow('Unavailable')
     expect(await adapter.claimJob('job')).toBe(false)
     expect(await adapter.claimJob('job')).toBe(true)
     expect(call).toHaveBeenCalledWith('claim_external_job', { id: 'job' })

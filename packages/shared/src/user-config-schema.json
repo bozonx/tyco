@@ -442,6 +442,12 @@
             "default": "none"
           },
           "isAvailableExternally": { "type": "boolean", "default": false },
+          "externalTimeoutSec": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600,
+            "default": 120
+          },
           "isVoiceEnabled": { "type": "boolean", "default": false },
           "isOutputLogged": { "type": "boolean", "default": false },
           "isEnabled": { "type": "boolean", "default": true }
@@ -459,6 +465,7 @@
           "outputAction",
           "isOutputLogged",
           "isAvailableExternally",
+          "externalTimeoutSec",
           "isEnabled",
           "isVoiceEnabled"
         ]
@@ -1028,8 +1035,7 @@
       "type": "object",
       "properties": {
         "command": { "type": "string", "default": "" },
-        "workingDirectory": { "type": "string", "default": "" },
-        "timeoutSec": { "type": "integer", "minimum": 1, "maximum": 3600 }
+        "workingDirectory": { "type": "string", "default": "" }
       },
       "required": ["command"]
     },

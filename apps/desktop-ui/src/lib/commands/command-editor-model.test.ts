@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { SCRIPT_MAX_TIMEOUT_SEC } from '@tyco/shared'
+import {
+  EXTERNAL_TIMEOUT_DEFAULT_SEC,
+  EXTERNAL_TIMEOUT_MAX_SEC,
+} from '@tyco/shared'
 
 import { createCommand } from './command-config'
 import { createCommandEditorModel } from './command-editor-model'
@@ -10,7 +13,7 @@ describe('command editor model', () => {
     let command = {
       ...createCommand('script', 'test'),
       description: 'Previous',
-      toolConfig: { command: 'echo test', timeoutSec: 2 },
+      toolConfig: { command: 'echo test' },
     }
     const model = createCommandEditorModel({
       getCommand: () => command,
@@ -20,14 +23,14 @@ describe('command editor model', () => {
     })
     model.updateDescription(' ')
     expect(command).not.toHaveProperty('description')
-    model.updateTimeout(String(SCRIPT_MAX_TIMEOUT_SEC + 1))
-    expect(command.toolConfig.timeoutSec).toBe(SCRIPT_MAX_TIMEOUT_SEC)
-    model.updateTimeout('')
-    expect(command.toolConfig).not.toHaveProperty('timeoutSec')
-    model.updateTimeout('1.6')
-    expect(command.toolConfig.timeoutSec).toBe(2)
-    model.updateTimeout('10abc')
-    expect(command.toolConfig).not.toHaveProperty('timeoutSec')
+    model.updateExternalTimeout(String(EXTERNAL_TIMEOUT_MAX_SEC + 1))
+    expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_MAX_SEC)
+    model.updateExternalTimeout('1.6')
+    expect(command.externalTimeoutSec).toBe(2)
+    model.updateExternalTimeout('')
+    expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
+    model.updateExternalTimeout('10abc')
+    expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
     expect(command.toolConfig.command).toBe('echo test')
   })
   it('sets the output action of quick commands', () => {

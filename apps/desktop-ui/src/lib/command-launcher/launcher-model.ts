@@ -11,7 +11,6 @@ import {
   commandTakesText,
   isCommandAvailable,
 } from '../commands/command-runtime'
-import { moveHighlight } from '../menu-query/menu-query'
 import { SHORTCUT_SLOT_COUNT, slotList } from '../shortcut-slots/shortcut-slots'
 import type { ToolLookup } from '../tools/tool-types'
 import {
@@ -21,9 +20,6 @@ import {
 } from './launcher-execution'
 
 export type { LauncherStage } from './launcher-execution'
-
-/** The first commands of the list are run with the keys `1`–`9` */
-const LAUNCHER_KEY_COUNT = 9
 
 /** Whether the overlay offers the command */
 export function isLauncherCommand(
@@ -108,8 +104,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   }
   const nextPage = (delta = 1) =>
     setPage((pageIndex.value + delta + pageCount.value) % pageCount.value)
-  const query = ref('')
-  const highlightedCommandIndex = ref(0)
   const stage = shallowRef<LauncherStage>({ kind: 'list' })
   /** The text the prepared command gets */
   const inputText = ref('')
@@ -135,10 +129,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
       isLauncherCommand(command, deps.tools)
     )
   )
-  const filteredCommands = computed(() =>
-    searchCommands(commands.value, query.value)
-  )
-
   const slotCommands = computed<(CommandConfig | null)[]>(() => {
     const slots = deps.launcherPages()[pageIndex.value]?.slots ?? {}
     const all = deps.commands() ?? []
@@ -163,8 +153,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const reset = () => {
     execution.reset()
     pageIndex.value = 0
-    query.value = ''
-    highlightedCommandIndex.value = 0
     inputText.value = ''
     textEdited = false
     fromSelection = false
@@ -183,19 +171,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   /** The commands run without the selection until the next activation */
   const dropSelection = () => {
     selectionDropped.value = true
-  }
-
-  const setQuery = (value: string) => {
-    query.value = value
-    highlightedCommandIndex.value = 0
-  }
-
-  const move = (delta: number) => {
-    highlightedCommandIndex.value = moveHighlight(
-      highlightedCommandIndex.value,
-      delta,
-      filteredCommands.value.length
-    )
   }
 
   /** Runs the command on `given`, or first asks for its text when there is none */
@@ -249,20 +224,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   /** Stops the running command; it is reported as cancelled */
   const cancel = () => {
     if (stage.value.kind === 'running') execution.cancel()
-  }
-
-  const pickHighlighted = () => {
-    const command = filteredCommands.value[highlightedCommandIndex.value]
-    return command ? pick(command) : Promise.resolve()
-  }
-
-  /** `1`–`9`: the command at that place of the list */
-  const pickByKey = (key: number) => {
-    const command =
-      key >= 1 && key <= LAUNCHER_KEY_COUNT
-        ? filteredCommands.value[key - 1]
-        : undefined
-    return command ? pick(command) : Promise.resolve()
   }
 
   const setText = (value: string) => {
@@ -337,20 +298,15 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     pageCount,
     setPage,
     nextPage,
-    query,
-    highlightedCommandIndex,
     stage,
     inputText,
     selection,
     selectionDropped,
     dropSelection,
     commands,
-    filteredCommands,
     slotCommands,
     canSubmit,
     reset,
-    setQuery,
-    move,
     pick,
     pickSlot,
     request,
@@ -361,8 +317,6 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     dismissExternal: () => {
       if (execution.externalCall?.jobId) reset()
     },
-    pickHighlighted,
-    pickByKey,
     setText,
     submit,
     back,

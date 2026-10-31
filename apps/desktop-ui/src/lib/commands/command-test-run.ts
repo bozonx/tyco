@@ -39,8 +39,7 @@ const isSameScript = (saved: CommandConfig, draft: CommandConfig): boolean => {
   return (
     saved.toolId === 'script' &&
     a.command === b.command &&
-    (a.workingDirectory ?? '') === (b.workingDirectory ?? '') &&
-    a.timeoutSec === b.timeoutSec
+    (a.workingDirectory ?? '') === (b.workingDirectory ?? '')
   )
 }
 

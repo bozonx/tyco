@@ -215,7 +215,7 @@ fn input_kind(
 
 /// Whether a script takes the text: its command mentions `{{TEXT}}`.
 /// Keep in sync with `scriptTakesText` in
-/// `packages/shared/src/user-config.ts`.
+/// `packages/shared/src/user-config/commands-config.ts`.
 fn script_can_take_text(config: &Value) -> bool {
     let command = str_field(config, "command");
     command.contains(TEXT_PLACEHOLDER)
@@ -223,7 +223,7 @@ fn script_can_take_text(config: &Value) -> bool {
 
 /// Whether a webhook takes the text: `{{TEXT}}` is in its URL or in the body
 /// of a POST request. Keep in sync with `webhookTakesText` in
-/// `packages/shared/src/user-config.ts`.
+/// `packages/shared/src/user-config/commands-config.ts`.
 fn webhook_can_take_text(config: &Value) -> bool {
     str_field(config, "url").contains(TEXT_PLACEHOLDER)
         || (str_field(config, "method") != "GET"
@@ -394,7 +394,7 @@ pub fn describe(
     let raw = commands_of(user_config)
         .iter()
         .find(|raw| id_of(raw) == command.id);
-    let tool = raw.and_then(|raw| catalog?.get(str_field(raw, "toolId")));
+    let tool = raw.and_then(|raw| catalog?.get(str_field(raw, "toolId").trim()));
     let schema = match (raw, tool) {
         (Some(raw), Some(tool)) => command_input(raw, tool)?
             .map(|input| input.input_schema.clone())

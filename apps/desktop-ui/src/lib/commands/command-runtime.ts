@@ -214,9 +214,13 @@ export interface PreTransformResult {
   message?: string
 }
 
+/** Shown when the LLM prepared no text for the command */
+const PRE_TRANSFORM_EMPTY_KEY = 'commands.preTransformEmpty'
+
 /**
  * Pre-transforms the text using LLM if the command has pre-transformation
- * enabled.
+ * enabled and takes the text: a command that does not would only send it to the
+ * LLM for nothing. An empty result is a failure, not a text to run on
  */
 export async function preTransformCommandText(
   command: CommandConfig,
@@ -232,7 +236,7 @@ export async function preTransformCommandText(
     ) => Promise<string>
   } = {}
 ): Promise<PreTransformResult> {
-  if (!command.isLlmPreTransformEnabled) {
+  if (!command.isLlmPreTransformEnabled || !commandTakesText(command, tools)) {
     return { ok: true, text }
   }
   const prompt = stringOr(command.llmPreTransformPrompt).trim()
@@ -251,6 +255,8 @@ export async function preTransformCommandText(
         signal: options.signal,
       })
       if (options.signal?.aborted) return { ok: false, cancelled: true }
+      if (!result.trim())
+        return { ok: false, messageKey: PRE_TRANSFORM_EMPTY_KEY }
       return { ok: true, text: result }
     } catch (error) {
       if (options.signal?.aborted) return { ok: false, cancelled: true }
@@ -280,7 +286,10 @@ export async function preTransformCommandText(
     if (!res.ok) {
       return { ok: false, messageKey: res.messageKey, message: res.message }
     }
-    return { ok: true, text: res.content ?? text }
+    if (!res.content?.trim()) {
+      return { ok: false, messageKey: PRE_TRANSFORM_EMPTY_KEY }
+    }
+    return { ok: true, text: res.content }
   } catch (error) {
     if (options.signal?.aborted) return { ok: false, cancelled: true }
     return { ok: false, message: errorMessage(error) }

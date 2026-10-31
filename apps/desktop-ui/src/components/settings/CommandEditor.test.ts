@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCommand } from '../../lib/commands/command-config'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import CommandEditor from './CommandEditor.vue'
-import type { CommandConfig } from '@tyco/shared'
+import { type CommandConfig, EXTERNAL_TIMEOUT_DEFAULT_SEC } from '@tyco/shared'
 import {
   installFakeDesktop,
   type TestDesktop,
@@ -174,13 +174,21 @@ describe('CommandEditor.vue', () => {
     expect(tooltip.props('text')).toBe('commands.launcherSelectionHint')
   })
 
-  it('stores a whole timeout and drops an empty one', async () => {
-    const wrapper = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+  it('limits only external background runs, falling back to the default', async () => {
+    const local = mountEditor(script({ command: 'ls' }, { name: 'ls' }))
+    // a run in a window has no limit, so the field is for external calls only
+    expect(local.find('input[type="number"]').exists()).toBe(false)
+
+    const wrapper = mountEditor(
+      script({ command: 'ls' }, { name: 'ls', isAvailableExternally: true })
+    )
     const input = wrapper.find('input[type="number"]')
     await input.setValue('90')
-    expect(lastUpdate(wrapper).toolConfig.timeoutSec).toBe(90)
+    expect(lastUpdate(wrapper).externalTimeoutSec).toBe(90)
     await input.setValue('')
-    expect(lastUpdate(wrapper).toolConfig).not.toHaveProperty('timeoutSec')
+    expect(lastUpdate(wrapper).externalTimeoutSec).toBe(
+      EXTERNAL_TIMEOUT_DEFAULT_SEC
+    )
   })
 
   it('opens the log and tells when there is none yet', async () => {

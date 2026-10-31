@@ -1,10 +1,11 @@
 import commandNames from '../../../../../packages/shared/fixtures/command-names.json'
 import { describe, expect, it } from 'vitest'
 
-import type {
-  CommandConfig,
-  MainActionConfig,
-  ShortcutSlots,
+import {
+  type CommandConfig,
+  EXTERNAL_TIMEOUT_DEFAULT_SEC,
+  type MainActionConfig,
+  type ShortcutSlots,
 } from '@tyco/shared'
 
 import { testTools } from '../tools/testing'
@@ -25,6 +26,7 @@ import {
   normalizeCommandName,
 } from './command-external'
 import {
+  externalTimeoutOf,
   createCommand,
   normalizeCommands,
   normalizeLauncherCommands,
@@ -81,6 +83,7 @@ describe('normalizeCommands for one command', () => {
       outputAction: 'none',
       isOutputLogged: false,
       isAvailableExternally: false,
+      externalTimeoutSec: EXTERNAL_TIMEOUT_DEFAULT_SEC,
       isEnabled: true,
       // fields it does not know stay for the build that wrote them
       afterRun: 'bogus',
@@ -139,16 +142,25 @@ describe('normalizeCommands for one command', () => {
   })
 })
 
+describe('externalTimeoutOf', () => {
+  it('keeps a whole positive limit up to an hour, the default otherwise', () => {
+    expect(externalTimeoutOf(90.4)).toBe(90)
+    expect(externalTimeoutOf(99999)).toBe(3600)
+    expect(externalTimeoutOf(0)).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
+    expect(externalTimeoutOf('30')).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
+    expect(externalTimeoutOf(Number.NaN)).toBe(EXTERNAL_TIMEOUT_DEFAULT_SEC)
+  })
+})
+
 describe('scriptToolConfigOf', () => {
-  it('keeps a whole positive timeout up to an hour', () => {
-    expect(scriptToolConfigOf({ timeoutSec: 90.4 }).timeoutSec).toBe(90)
-    expect(scriptToolConfigOf({ timeoutSec: 99999 }).timeoutSec).toBe(3600)
-    expect(scriptToolConfigOf({ timeoutSec: 0 })).not.toHaveProperty(
-      'timeoutSec'
-    )
-    expect(scriptToolConfigOf({ timeoutSec: '30' })).not.toHaveProperty(
-      'timeoutSec'
-    )
+  it('reads the command and the directory only', () => {
+    expect(
+      scriptToolConfigOf({
+        command: 'ls',
+        workingDirectory: '~',
+        timeoutSec: 5,
+      })
+    ).toEqual({ command: 'ls', workingDirectory: '~' })
   })
 })
 

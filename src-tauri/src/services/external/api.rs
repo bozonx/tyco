@@ -141,9 +141,6 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
     }) {
         return Response::coded_error(ErrorCode::InvalidInput, "Protocol message is too large");
     }
-    for id in app.state::<ExternalJobs>().expired_job_ids() {
-        cancel(app, &id, ErrorCode::TimedOut);
-    }
     match request {
         Request::Status => {
             let config = app.state::<AppState>().user_config();

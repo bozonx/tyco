@@ -17,11 +17,6 @@ use crate::services::platform::shell;
 /// Stands in for the text in a command; see `shell::substitute`.
 pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
 
-/// How long a command whose output is needed may run before it is killed,
-/// unless the command sets its own time; see `SCRIPT_OUTPUT_TIMEOUT_SEC`.
-const OUTPUT_TIMEOUT: Duration = Duration::from_secs(60);
-/// The longest time a command may set; see `SCRIPT_MAX_TIMEOUT_SEC`.
-const MAX_OUTPUT_TIMEOUT: Duration = Duration::from_secs(3600);
 /// How long a command whose output is not needed is waited for. One still
 /// running by then, e.g. a GUI app it started, is left in the background.
 const STATUS_WAIT: Duration = Duration::from_secs(3);
@@ -33,6 +28,8 @@ const POLL_INTERVAL: Duration = Duration::from_millis(20);
 pub const SCRIPT_CANCELLED: &str = "Cancelled";
 
 const MAX_OUTPUT_BYTES: usize = 1 << 20;
+/// The error of a command whose output does not fit `MAX_OUTPUT_BYTES`.
+pub const SCRIPT_OUTPUT_TOO_LARGE: &str = "The command output exceeds 1 MiB";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -52,11 +49,10 @@ pub struct ScriptRequest<'a> {
     pub command: &'a str,
     pub working_dir: Option<&'a str>,
     pub text: &'a str,
-    /// The caller uses the output: the command is waited for longer and
-    /// killed if it does not finish in time.
+    /// The caller uses the output: the command is waited for until it exits
+    /// or the run is cancelled. The caller shows the run and can cancel it, so
+    /// there is no time limit; a background caller cancels on its own limit.
     pub should_capture_output: bool,
-    /// Replaces `OUTPUT_TIMEOUT`, up to `MAX_OUTPUT_TIMEOUT`.
-    pub output_timeout: Option<Duration>,
     pub should_log_output: bool,
     /// Lets `cancel_script` stop the command while it is waited for.
     pub run_id: Option<&'a str>,
@@ -168,7 +164,15 @@ pub fn resolve_working_dir(working_dir: Option<&str>) -> Result<Option<PathBuf>,
     }
 }
 
-type SharedOutputBuffer = Arc<Mutex<Vec<u8>>>;
+/// The output of a pipe, up to `MAX_OUTPUT_BYTES`.
+#[derive(Default)]
+struct OutputBuffer {
+    bytes: Vec<u8>,
+    /// More came than fits: the bytes are not the whole output.
+    is_overflowed: bool,
+}
+
+type SharedOutputBuffer = Arc<Mutex<OutputBuffer>>;
 
 /// Reads a pipe into a buffer of bounded size; the receiver gets a message
 /// once the pipe is closed.
@@ -178,8 +182,13 @@ fn spawn_reader(
 ) -> std::io::Result<PipeReader> {
     PipeReader::start(pipe, move |bytes| {
         if let Ok(mut buffer) = buffer.lock() {
-            let room = MAX_OUTPUT_BYTES.saturating_sub(buffer.len());
-            buffer.extend_from_slice(&bytes[..bytes.len().min(room)]);
+            let room = MAX_OUTPUT_BYTES.saturating_sub(buffer.bytes.len());
+            if bytes.len() > room {
+                buffer.is_overflowed = true;
+            }
+            buffer
+                .bytes
+                .extend_from_slice(&bytes[..bytes.len().min(room)]);
         }
     })
 }
@@ -187,8 +196,12 @@ fn spawn_reader(
 fn read_buffer(buffer: &SharedOutputBuffer) -> String {
     buffer
         .lock()
-        .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+        .map(|buffer| String::from_utf8_lossy(&buffer.bytes).into_owned())
         .unwrap_or_default()
+}
+
+fn is_overflowed(buffer: &SharedOutputBuffer) -> bool {
+    buffer.lock().is_ok_and(|buffer| buffer.is_overflowed)
 }
 
 struct RunningScript {
@@ -227,11 +240,11 @@ impl RunningScript {
         Ok(running)
     }
 
-    /// Waits until the command exits, the deadline passes or the run is
-    /// cancelled.
+    /// Waits until the command exits, the deadline (if any) passes or the run
+    /// is cancelled.
     fn wait_until(
         &mut self,
-        deadline: Instant,
+        deadline: Option<Instant>,
         cancelled: &AtomicBool,
     ) -> std::io::Result<ProcessWaitOutcome> {
         loop {
@@ -241,27 +254,29 @@ impl RunningScript {
             if cancelled.load(Ordering::SeqCst) {
                 return Ok(ProcessWaitOutcome::Cancelled);
             }
-            if Instant::now() >= deadline {
+            if deadline.is_some_and(|deadline| Instant::now() >= deadline) {
                 return Ok(ProcessWaitOutcome::TimedOut);
             }
             thread::sleep(POLL_INTERVAL);
         }
     }
 
-    fn finish(mut self, status: std::process::ExitStatus) -> ScriptExecutionResult {
+    /// The result of the exited command, and whether its stdout did not fit.
+    fn finish(mut self, status: std::process::ExitStatus) -> (ScriptExecutionResult, bool) {
         let deadline = Instant::now() + PIPE_GRACE;
         for reader in &self.readers {
             reader.drain_until(deadline);
         }
         self.readers.clear();
         self.kill_and_reap_on_drop = false;
-        ScriptExecutionResult {
+        let result = ScriptExecutionResult {
             is_success: status.success(),
             exit_code: status.code(),
             stdout: read_buffer(&self.stdout),
             stderr: read_buffer(&self.stderr),
             is_running: false,
-        }
+        };
+        (result, is_overflowed(&self.stdout))
     }
 }
 
@@ -318,22 +333,19 @@ pub fn execute_script(
     let stderr = child.stderr.take();
     let mut running = RunningScript::start(child, stdout, stderr)?;
 
-    let output_timeout = request
-        .output_timeout
-        .filter(|timeout| !timeout.is_zero())
-        .map_or(OUTPUT_TIMEOUT, |timeout| timeout.min(MAX_OUTPUT_TIMEOUT));
-    let wait = if request.should_capture_output {
-        output_timeout
-    } else {
-        STATUS_WAIT
-    };
+    let deadline = (!request.should_capture_output).then(|| Instant::now() + STATUS_WAIT);
     let status = running
-        .wait_until(Instant::now() + wait, &registration.flag)
+        .wait_until(deadline, &registration.flag)
         .map_err(|error| fail(&log, format!("Failed to wait for the command: {error}")))?;
 
     match status {
         ProcessWaitOutcome::Exited(status) => {
-            let result = running.finish(status);
+            let (result, is_stdout_overflowed) = running.finish(status);
+            // a cut output would pass for the whole one, e.g. replace a selection
+            if is_stdout_overflowed && request.should_capture_output {
+                log.write(&result, Some(SCRIPT_OUTPUT_TOO_LARGE));
+                return Err(AppError::Failed(SCRIPT_OUTPUT_TOO_LARGE.into()));
+            }
             log.write(&result, None);
             return Ok(result);
         }
@@ -343,21 +355,11 @@ pub fn execute_script(
         ProcessWaitOutcome::TimedOut => {}
     }
 
-    if request.should_capture_output {
-        return Err(fail(
-            &log,
-            format!(
-                "The command did not finish in {} s",
-                output_timeout.as_secs()
-            ),
-        ));
-    }
-
     // left running, e.g. a GUI app; the outcome only goes to the log
     thread::spawn(move || {
         let status = running.child.wait();
         match status {
-            Ok(status) => log.write(&running.finish(status), None),
+            Ok(status) => log.write(&running.finish(status).0, None),
             Err(error) => log.write(&empty_result(), Some(&error.to_string())),
         }
     });
@@ -391,7 +393,6 @@ mod tests {
             working_dir: None,
             text,
             should_capture_output: true,
-            output_timeout: None,
             should_log_output: false,
             run_id: None,
         }
@@ -413,20 +414,55 @@ mod tests {
         pub const SLEEP: &str = "Start-Sleep 30";
     }
 
-    /// A timeout stops the processes the command started too: they would run
-    /// on and keep the output pipes open.
+    /// Cancels the run `run_id` of `runs` as soon as it is registered.
+    fn cancel_when_started(runs: &ScriptRuns, run_id: &str) -> thread::JoinHandle<()> {
+        let runs = runs.clone();
+        let run_id = run_id.to_owned();
+        thread::spawn(move || {
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while !runs.cancel(&run_id) && Instant::now() < deadline {
+                thread::sleep(Duration::from_millis(10));
+            }
+        })
+    }
+
+    /// A cancellation stops the processes the command started too: they would
+    /// run on and keep the output pipes open.
     #[cfg(unix)]
     #[test]
-    fn integration_a_timeout_stops_the_whole_process_tree() {
+    fn integration_a_cancellation_stops_the_whole_process_tree() {
         let directory = TestDir::new("process-tree");
         let pid_file = directory.join("pid");
         let command = format!("sleep 30 & echo $! > '{}'; wait", pid_file.display());
-        let mut timed = request(&command, "");
-        timed.output_timeout = Some(Duration::from_millis(500));
+        let run_id = format!("tree-test-{}", std::process::id());
+        let runs = ScriptRuns::default();
+        // the pid file must exist before the run is cancelled
+        let canceller = {
+            let runs = runs.clone();
+            let run_id = run_id.clone();
+            let pid_file = pid_file.clone();
+            thread::spawn(move || {
+                let deadline = Instant::now() + Duration::from_secs(5);
+                while !pid_file.exists() && Instant::now() < deadline {
+                    thread::sleep(Duration::from_millis(10));
+                }
+                thread::sleep(Duration::from_millis(50));
+                runs.cancel(&run_id);
+            })
+        };
 
         let started = Instant::now();
-        assert!(execute_script(&ScriptRuns::default(), &timed, None).is_err());
-        assert!(started.elapsed() < Duration::from_secs(5));
+        let result = execute_script(
+            &runs,
+            &ScriptRequest {
+                run_id: Some(&run_id),
+                ..request(&command, "")
+            },
+            None,
+        );
+        canceller.join().unwrap();
+        assert_eq!(result.unwrap_err().to_string(), SCRIPT_CANCELLED);
+        assert!(started.elapsed() < Duration::from_secs(10));
 
         let pid: i32 = fs::read_to_string(&pid_file)
             .unwrap()
@@ -438,7 +474,7 @@ mod tests {
         while unsafe { libc::kill(pid, 0) } == 0 {
             assert!(
                 Instant::now() < deadline,
-                "the child process still runs after the timeout deadline"
+                "the child process still runs after the cancellation"
             );
             thread::sleep(Duration::from_millis(10));
         }
@@ -528,36 +564,24 @@ mod tests {
         assert!(started.elapsed() < Duration::from_secs(10));
     }
 
+    #[cfg(unix)]
     #[test]
-    fn integration_kills_a_command_that_outlives_its_own_timeout() {
-        let started = Instant::now();
-        let error = execute_script(
-            &ScriptRuns::default(),
-            &ScriptRequest {
-                output_timeout: Some(Duration::from_secs(1)),
-                ..request(commands::SLEEP, "")
-            },
-            None,
-        )
-        .unwrap_err();
-        assert_eq!(error.to_string(), "The command did not finish in 1 s");
-        assert!(started.elapsed() < Duration::from_secs(10));
+    fn integration_an_output_too_large_fails_instead_of_being_cut() {
+        let command = format!("head -c {} /dev/zero", MAX_OUTPUT_BYTES + 1);
+        let error =
+            execute_script(&ScriptRuns::default(), &request(&command, ""), None).unwrap_err();
+        assert_eq!(error.to_string(), SCRIPT_OUTPUT_TOO_LARGE);
+
+        let command = format!("head -c {MAX_OUTPUT_BYTES} /dev/zero");
+        let result = execute_script(&ScriptRuns::default(), &request(&command, ""), None).unwrap();
+        assert_eq!(result.stdout.len(), MAX_OUTPUT_BYTES);
     }
 
     #[test]
     fn integration_kills_a_cancelled_command() {
         let run_id = format!("cancel-test-{}", std::process::id());
         let runs = ScriptRuns::default();
-        let canceller = {
-            let runs = runs.clone();
-            let run_id = run_id.clone();
-            thread::spawn(move || {
-                let deadline = Instant::now() + Duration::from_secs(5);
-                while !runs.cancel(&run_id) && Instant::now() < deadline {
-                    thread::sleep(Duration::from_millis(10));
-                }
-            })
-        };
+        let canceller = cancel_when_started(&runs, &run_id);
         let started = Instant::now();
         let result = execute_script(
             &runs,

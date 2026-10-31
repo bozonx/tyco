@@ -245,8 +245,6 @@ pub struct ScriptToolConfig {
     /// Empty for the home directory.
     #[serde(default)]
     pub working_directory: String,
-    #[serde(default)]
-    pub timeout_sec: Option<u64>,
 }
 
 /// A saved command of the `script` tool, as a run takes it.
@@ -256,6 +254,7 @@ pub struct ScriptCommand {
     /// `lib/commands/command-runtime.ts`.
     pub label: String,
     pub tool_config: ScriptToolConfig,
+    pub is_enabled: bool,
 }
 
 /// A saved command, `commands[]`. Its `toolConfig` depends on the tool and
@@ -273,6 +272,34 @@ pub struct CommandConfig {
     pub is_enabled: bool,
     #[serde(default)]
     pub tool_config: Value,
+    /// The limit of a background external run, in seconds; see
+    /// `EXTERNAL_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
+    #[serde(
+        default = "default_external_timeout_sec",
+        deserialize_with = "lenient_external_timeout"
+    )]
+    pub external_timeout_sec: u64,
+}
+
+/// See `EXTERNAL_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
+pub const EXTERNAL_TIMEOUT_DEFAULT_SEC: u64 = 120;
+/// See `EXTERNAL_TIMEOUT_MAX_SEC` in `commands-config.ts`.
+pub const EXTERNAL_TIMEOUT_MAX_SEC: u64 = 3600;
+
+fn default_external_timeout_sec() -> u64 {
+    EXTERNAL_TIMEOUT_DEFAULT_SEC
+}
+
+/// A limit out of range falls back to the default, as the schema repair does.
+fn lenient_external_timeout<'de, D>(deserializer: D) -> Result<u64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Value::deserialize(deserializer)?;
+    Ok(value
+        .as_u64()
+        .filter(|seconds| (1..=EXTERNAL_TIMEOUT_MAX_SEC).contains(seconds))
+        .unwrap_or(EXTERNAL_TIMEOUT_DEFAULT_SEC))
 }
 
 /// The saved commands in their order; one that is not an object is left out.
@@ -307,7 +334,11 @@ pub fn script_command(config: &Value, id: &str) -> Option<ScriptCommand> {
     } else {
         String::from("Command")
     };
-    Some(ScriptCommand { label, tool_config })
+    Some(ScriptCommand {
+        label,
+        tool_config,
+        is_enabled: command.is_enabled,
+    })
 }
 
 /// Whether holding the voice hotkey records until released (Push-to-Talk).
@@ -332,7 +363,7 @@ mod tests {
     fn script_commands_are_found_by_id_with_their_label() {
         let config = json!({"commands": [
             {"id": "a", "name": " Notes ", "toolId": "script",
-             "toolConfig": {"command": "echo {{TEXT}}", "workingDirectory": "~/n", "timeoutSec": 5}},
+             "toolConfig": {"command": "echo {{TEXT}}", "workingDirectory": "~/n"}},
             {"id": "b", "name": "", "toolId": "script", "toolConfig": {"command": " ls "}},
             {"id": "c", "name": "Hook", "toolId": "webhook", "toolConfig": {"url": "x"}},
         ]});
@@ -340,10 +371,25 @@ mod tests {
         assert_eq!(a.label, "Notes");
         assert_eq!(a.tool_config.command, "echo {{TEXT}}");
         assert_eq!(a.tool_config.working_directory, "~/n");
-        assert_eq!(a.tool_config.timeout_sec, Some(5));
         assert_eq!(script_command(&config, "b").unwrap().label, "ls");
         assert!(script_command(&config, "c").is_none());
         assert!(script_command(&config, "missing").is_none());
+    }
+
+    #[test]
+    fn external_timeouts_out_of_range_fall_back_to_the_default() {
+        let config = json!({"commands": [
+            {"id": "a", "externalTimeoutSec": 30},
+            {"id": "b"},
+            {"id": "c", "externalTimeoutSec": 0},
+            {"id": "d", "externalTimeoutSec": 99999},
+            {"id": "e", "externalTimeoutSec": "60"},
+        ]});
+        let seconds = |id| command(&config, id).unwrap().external_timeout_sec;
+        assert_eq!(seconds("a"), 30);
+        for id in ["b", "c", "d", "e"] {
+            assert_eq!(seconds(id), EXTERNAL_TIMEOUT_DEFAULT_SEC);
+        }
     }
 
     #[test]

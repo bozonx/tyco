@@ -244,8 +244,6 @@
     "testRunning": "Exécution…",
     "testStop": "Arrêter",
     "testTextPlaceholder": "Texte de test",
-    "timeoutInfo": "Durée d’attente d’un script dont la sortie est nécessaire ; au-delà, il échoue. {seconds} par défaut, {max} au maximum. Quand la sortie n’est pas nécessaire (« Rien »), le script est attendu 3 s puis laissé en arrière-plan.",
-    "timeoutLabel": "Attendre la sortie, secondes",
     "toolInfo": "Outil : {tool}",
     "toolMissing": "Son outil n’est pas disponible : le plugin est désactivé ou absent",
     "preTransformFailed": "Impossible de préparer le texte pour la commande",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Transforme le texte avec une instruction LLM avant de le transmettre à la commande.",
     "llmPreTransformPromptLabel": "Instruction de transformation",
     "llmPreTransformPromptPlaceholder": "Instruction qui transforme le texte avant qu’il soit reçu par la commande",
-    "llmPreTransformPromptInfo": "Instruction pour le LLM afin de transformer le texte d’entrée avant de l’envoyer à la commande."
+    "llmPreTransformPromptInfo": "Instruction pour le LLM afin de transformer le texte d’entrée avant de l’envoyer à la commande.",
+    "externalTimeoutLabel": "Limite d’exécution en arrière-plan, secondes",
+    "externalTimeoutInfo": "Durée pendant laquelle un appel externe peut s’exécuter en arrière-plan, à partir du démarrage de la commande ; ensuite il est arrêté et signalé comme expiré. {seconds} par défaut, au plus {max}. Les exécutions dans une fenêtre ne sont pas limitées : vous les voyez et pouvez les annuler.",
+    "preTransformEmpty": "Le LLM n’a renvoyé aucun texte pour la commande"
   },
   "common": {
     "add": "Ajouter",
@@ -383,6 +384,7 @@
     "failed": "La commande « {name} » a échoué",
     "missing": "La commande n’est pas dans la bibliothèque",
     "running": "Exécution de « {name} »…",
+    "timedOut": "Non terminée en {seconds} s, elle a été arrêtée",
     "unknown": "Erreur inconnue"
   },
   "history": {

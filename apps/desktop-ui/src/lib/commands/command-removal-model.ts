@@ -8,8 +8,7 @@ import {
   type ShortcutSlots,
 } from '@tyco/shared'
 
-import { webhookToolConfig } from './command-config'
-import { secretIdFromRef } from '../net/secrets'
+import { commandSecretIds, isSecretReferenced } from './command-secrets'
 
 interface RemovedCommand {
   command: CommandConfig
@@ -48,22 +47,16 @@ export function createCommandRemovalModel(deps: {
       void cleanup(command).catch(deps.notifyError)
     }
   }
+  /** Removes the secrets of a removed command that nothing else refers to */
   async function cleanup(command: CommandConfig) {
     await deps.persist()
-    if (
-      !deps.isSaved() ||
-      deps.getCommands().some((item) => item.id === command.id)
-    )
+    const commands = deps.getCommands()
+    if (!deps.isSaved() || commands.some((item) => item.id === command.id))
       return
-    const tool = webhookToolConfig(command)
-    const ids = new Set(
-      Object.values(tool.headers ?? {}).flatMap((value) => {
-        const id = secretIdFromRef(value)
-        return id ? [id] : []
-      })
-    )
-    if (tool.authSecretId) ids.add(tool.authSecretId)
-    for (const id of ids) await deps.removeSecret(id)
+    for (const id of commandSecretIds(command)) {
+      // another command may hold a reference copied from this one
+      if (!isSecretReferenced(commands, id)) await deps.removeSecret(id)
+    }
   }
   function removeCommand(command: CommandConfig) {
     finishRemoval()

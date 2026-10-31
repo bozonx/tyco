@@ -43,9 +43,10 @@ export interface LauncherExecutionDependencies {
   ) => Promise<InvocationOutcome>
   /**
    * Hands a command whose output replaces the selection over to a selection
-   * run: the overlay hides, and the selection is replaced where it is
+   * run: the overlay hides, and the selection is replaced where it is. Resolves
+   * with whether the hand-over succeeded; a failure is reported
    */
-  replaceSelection?: (command: CommandConfig) => Promise<void>
+  replaceSelection?: (command: CommandConfig) => Promise<boolean>
   /** Records a text that leaves the app with a command */
   saveOutput?: (text: string) => Promise<void>
   logRun?: (record: CommandRunRecord) => Promise<void> | void
@@ -129,8 +130,9 @@ export function createLauncherExecution(
       // the selection run reports and logs the outcome itself
       ui.reset()
       try {
-        await deps.replaceSelection(command)
-        return { success: true }
+        return (await deps.replaceSelection(command))
+          ? { success: true }
+          : { success: false, message: 'Selection replacement failed' }
       } catch (error) {
         deps.reportError?.(error)
         return { success: false, message: errorMessage(error) }
@@ -228,7 +230,12 @@ export function createLauncherExecution(
     get externalCall() {
       return externalCall
     },
+    /**
+     * A command of the list runs on its own: the external call the overlay was
+     * opened for, if any, is over
+     */
     useLauncher() {
+      if (externalCall) void releaseJob(cancelled)
       source = 'launcher'
     },
     prepare(call: LauncherRequest | null) {

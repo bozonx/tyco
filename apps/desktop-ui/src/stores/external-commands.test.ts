@@ -58,6 +58,7 @@ describe('external commands store wiring', () => {
       outputAction: 'none',
       isOutputLogged: false,
       isAvailableExternally: true,
+      externalTimeoutSec: 120,
     }
 
     desktop.backend.handle('claim_external_job', () => true)

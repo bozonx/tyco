@@ -7,7 +7,7 @@ import {
   type ToolDefinition,
   type ToolResult,
 } from '../tools/tool-types'
-import { createInvocationRunner } from './invocation-runner'
+import { createInvocationRunner, reportResult } from './invocation-runner'
 import type { Invocation } from './invocation-types'
 
 const echoTool = (
@@ -124,5 +124,30 @@ describe('built-in invocations', () => {
     expect(outcome).toEqual({ success: false, message: 'No clipboard' })
     expect(deps.showText).toHaveBeenCalledWith('No clipboard', 'error')
     expect(deps.hideWindow).not.toHaveBeenCalled()
+  })
+})
+
+describe('reportResult', () => {
+  it('never drops a failure when the context cannot show its text', () => {
+    const showToast = vi.fn()
+    reportResult({ showToast }, { ok: false, messageKey: 'toast.scriptFailed' })
+    expect(showToast).toHaveBeenCalledWith('toast.scriptFailed', 'error')
+
+    const showError = vi.fn()
+    reportResult({ showToast, showError }, { ok: false, message: 'boom' })
+    expect(showError).toHaveBeenCalledWith('toast.commandFailed', 'boom')
+
+    showToast.mockClear()
+    reportResult({ showToast }, { ok: false, message: 'boom' })
+    expect(showToast).toHaveBeenCalledWith('toast.commandFailed', 'error')
+  })
+
+  it('shows a text where the context can and leaves silent successes alone', () => {
+    const showToast = vi.fn()
+    const showText = vi.fn()
+    reportResult({ showToast, showText }, { ok: false, message: 'boom' })
+    expect(showText).toHaveBeenCalledWith('boom', 'error')
+    reportResult({ showToast }, { ok: true, message: 'fine' })
+    expect(showToast).not.toHaveBeenCalled()
   })
 })

@@ -886,7 +886,61 @@ describe('LLM pre-transformation', () => {
     const outcome = await runner.run(cmd, 'raw text')
     expect(outcome.success).toBe(false)
     expect(executeScriptAction).not.toHaveBeenCalled()
-    expect(deps.showText).toHaveBeenCalledWith('LLM model failed', 'error')
+    // the LLM error comes with what failed
+    expect(deps.showError).toHaveBeenCalledWith(
+      'commands.preTransformFailed',
+      'LLM model failed'
+    )
+  })
+
+  it('does not send the text to the LLM for a command that does not take it', async () => {
+    const executeScriptAction = vi.fn(async () => ({
+      success: true,
+      exitCode: 0,
+      stdout: 'done',
+      stderr: '',
+      running: false,
+    }))
+    const transformTextWithLlm = vi.fn(async () => 'prepared')
+    const { runner } = setup({ executeScriptAction, transformTextWithLlm })
+    const cmd = script(
+      { command: 'make backup' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: 'Fix errors',
+        outputAction: 'none',
+      }
+    )
+
+    const outcome = await runner.run(cmd, 'selected private text')
+    expect(outcome.success).toBe(true)
+    expect(transformTextWithLlm).not.toHaveBeenCalled()
+    expect(executeScriptAction).toHaveBeenCalledOnce()
+  })
+
+  it('fails instead of running the command on an empty LLM result', async () => {
+    const executeScriptAction = vi.fn()
+    const transformTextWithLlm = vi.fn(async () => '  \n')
+    const { runner, deps } = setup({
+      executeScriptAction,
+      transformTextWithLlm,
+    })
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      {
+        isLlmPreTransformEnabled: true,
+        llmPreTransformPrompt: 'Fix errors',
+        outputAction: 'none',
+      }
+    )
+
+    const outcome = await runner.run(cmd, 'raw text')
+    expect(outcome.success).toBe(false)
+    expect(executeScriptAction).not.toHaveBeenCalled()
+    expect(deps.showError).toHaveBeenCalledWith(
+      'commands.preTransformEmpty',
+      undefined
+    )
   })
 
   it('pre-transforms text before transform() replaces selection', async () => {

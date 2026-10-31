@@ -20,7 +20,8 @@ import type {
   InvocationOutcome,
 } from '../invocation/invocation-types'
 
-/** Quick commands finish before the bubble would show up */
+/** The code of a job the backend stopped over its limit */
+const TIMED_OUT_CODE = 'TimedOut'
 
 type RunReportKind = 'info' | 'warn' | 'error' | 'success'
 
@@ -73,9 +74,28 @@ export function createExternalRun(deps: ExternalRunDependencies) {
   // a job the backend failed to hand over or take back is not ours to run;
   // the run itself is reported either way
   const claimJob = (id: string) =>
-    deps.claimJob ? deps.claimJob(id).catch(() => false) : Promise.resolve(true)
-  const finishJob = (id: string, outcome: InvocationOutcome) =>
-    Promise.resolve(deps.finishJob?.(id, outcome)).catch(() => undefined)
+    deps.claimJob
+      ? deps.claimJob(id).catch((error: unknown) => {
+          deps.reportError?.(error)
+          return false
+        })
+      : Promise.resolve(true)
+  const finishJob = (
+    id: string,
+    outcome: InvocationOutcome
+  ): Promise<InvocationOutcome | void> => {
+    const failedToFinish = (error: unknown) => {
+      deps.reportError?.(error)
+      return undefined
+    }
+    try {
+      return Promise.resolve(deps.finishJob?.(id, outcome)).catch(
+        failedToFinish
+      )
+    } catch (error) {
+      return Promise.resolve(failedToFinish(error))
+    }
+  }
 
   const complete = async (
     run: ActiveExternalRun,
@@ -187,7 +207,16 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     // a disposed window neither shows nor logs what is left of its runs
     if (disposed) return cancelled
     logCommandRun(deps, commandRunRecord(command, 'external', input, outcome))
-    if (!outcome.success && !outcome.cancelled) {
+    // the backend stopped a run over the limit of its command: nobody may
+    // be watching, so it is told like a failure
+    if (outcome.code === TIMED_OUT_CODE) {
+      failed(
+        name,
+        deps.t('externalCommand.timedOut', {
+          seconds: String(command.externalTimeoutSec),
+        })
+      )
+    } else if (!outcome.success && !outcome.cancelled) {
       if (!hasReportedFailure)
         failed(name, outcome.message ?? deps.t('externalCommand.unknown'))
     } else if (!hasReported) {

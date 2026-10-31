@@ -244,8 +244,6 @@
     "testRunning": "Çalışıyor…",
     "testStop": "Durdur",
     "testTextPlaceholder": "Deneme metni",
-    "timeoutInfo": "Çıktısı gereken bir betiğin ne kadar bekleneceği; sonra hatayla sonlanır. Varsayılan {seconds}, en fazla {max}. Çıktı gerekmiyorsa (“Hiçbir şey”) betik 3 sn beklenir ve arka planda bırakılır.",
-    "timeoutLabel": "Çıktıyı bekle, saniye",
     "toolInfo": "Araç: {tool}",
     "toolMissing": "Aracı kullanılamıyor: eklenti kapalı veya yok",
     "preTransformFailed": "Komut için metin hazırlanamadı",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Metni komuta iletmeden önce bir LLM istemiyle dönüştürür.",
     "llmPreTransformPromptLabel": "Dönüştürme istemi",
     "llmPreTransformPromptPlaceholder": "Metni komuta iletilmeden önce dönüştüren istem",
-    "llmPreTransformPromptInfo": "Girdi metnini komuta göndermeden önce dönüştürmek için LLM talimatı."
+    "llmPreTransformPromptInfo": "Girdi metnini komuta göndermeden önce dönüştürmek için LLM talimatı.",
+    "externalTimeoutLabel": "Arka planda çalışma sınırı, saniye",
+    "externalTimeoutInfo": "Harici bir çağrının, komutun başlangıcından itibaren arka planda ne kadar çalışabileceği; sonrasında durdurulur ve zaman aşımı olarak bildirilir. Varsayılan {seconds}, en fazla {max}. Bir pencerede yapılan çalıştırmaların sınırı yoktur: onları görür ve iptal edebilirsiniz.",
+    "preTransformEmpty": "LLM komut için metin döndürmedi"
   },
   "common": {
     "add": "Ekle",
@@ -383,6 +384,7 @@
     "failed": "“{name}” komutu başarısız oldu",
     "missing": "Komut kitaplıkta yok",
     "running": "“{name}” çalıştırılıyor…",
+    "timedOut": "{seconds} sn içinde bitmedi ve durduruldu",
     "unknown": "Bilinmeyen hata"
   },
   "history": {

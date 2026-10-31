@@ -244,8 +244,6 @@
     "testRunning": "実行中…",
     "testStop": "停止",
     "testTextPlaceholder": "テスト用テキスト",
-    "timeoutInfo": "出力が必要なスクリプトの待機時間。この時間を超えると失敗します。デフォルトは {seconds} 秒、最大 {max} 秒です。出力が不要な場合（「何もしない」）、スクリプトは3秒間待機された後、バックグラウンドに残されます。",
-    "timeoutLabel": "出力待機時間（秒）",
     "toolInfo": "ツール: {tool}",
     "toolMissing": "ツールが利用できません。プラグインが無効か見つかりません",
     "preTransformFailed": "コマンド用のテキストを準備できませんでした",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "コマンドに渡す前にLLMプロンプトでテキストを変換します。",
     "llmPreTransformPromptLabel": "変換プロンプト",
     "llmPreTransformPromptPlaceholder": "コマンドに渡す前にテキストを変換するプロンプト",
-    "llmPreTransformPromptInfo": "コマンドに送信する前に入力テキストを変換するためのLLM指示。"
+    "llmPreTransformPromptInfo": "コマンドに送信する前に入力テキストを変換するためのLLM指示。",
+    "externalTimeoutLabel": "バックグラウンド実行の上限（秒）",
+    "externalTimeoutInfo": "外部呼び出しがバックグラウンドで実行できる時間（コマンドの開始から計測）。超えると停止され、タイムアウトとして報告されます。既定は {seconds}、最大 {max}。ウィンドウでの実行には上限がありません。実行状況が見え、キャンセルできるためです。",
+    "preTransformEmpty": "LLM がコマンド用のテキストを返しませんでした"
   },
   "common": {
     "add": "追加",
@@ -383,6 +384,7 @@
     "failed": "コマンド「{name}」が失敗しました",
     "missing": "コマンドがライブラリに見つかりません",
     "running": "「{name}」を実行中…",
+    "timedOut": "{seconds} 秒以内に完了しなかったため停止しました",
     "unknown": "不明なエラー"
   },
   "history": {

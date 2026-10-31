@@ -26,6 +26,35 @@ export interface InvocationRunnerDependencies extends ToolInvokerDependencies {
   hideWindow?: () => void
 }
 
+/** Shown with a failure that has no message of its own to translate */
+const FAILED_KEY = 'toast.commandFailed'
+
+/**
+ * Tells the user what a tool reported. A failure is never dropped: without a
+ * way to show its text, the generic failure toast stands in
+ */
+export function reportResult(
+  deps: Pick<
+    InvocationRunnerDependencies,
+    'showToast' | 'showError' | 'showText'
+  >,
+  result: Pick<ToolResult, 'ok' | 'level' | 'messageKey' | 'message'>
+): void {
+  const level = result.level ?? (result.ok ? 'success' : 'error')
+  if (result.messageKey) {
+    if (level === 'error' && deps.showError) {
+      deps.showError(result.messageKey, result.message)
+    } else {
+      deps.showToast(result.messageKey, level)
+    }
+  } else if (result.message && deps.showText) {
+    deps.showText(result.message, level)
+  } else if (level === 'error') {
+    if (deps.showError) deps.showError(FAILED_KEY, result.message)
+    else deps.showToast(FAILED_KEY, 'error')
+  }
+}
+
 /** The clipboard sink puts the output there with the tool the copy action runs */
 const copyInvocation: Invocation = {
   toolId: 'core.copy' satisfies CoreToolId,
@@ -60,19 +89,7 @@ const cancelled: InvocationOutcome = {
 export function createInvocationRunner(deps: InvocationRunnerDependencies) {
   const invoke = createToolInvoker(deps)
 
-  /** Tells the user what the tool reported */
-  const report = (result: ToolResult) => {
-    const level = result.level ?? (result.ok ? 'success' : 'error')
-    if (result.messageKey) {
-      if (level === 'error') {
-        deps.showError?.(result.messageKey, result.message)
-      } else {
-        deps.showToast(result.messageKey, level)
-      }
-    } else if (result.message) {
-      deps.showText?.(result.message, level)
-    }
-  }
+  const report = (result: ToolResult) => reportResult(deps, result)
 
   /** The output without its trailing line breaks, or null when it is empty */
   const outputText = (output: string): string | null => {

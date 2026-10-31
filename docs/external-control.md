@@ -117,7 +117,7 @@ may use it. **Allow once** runs this call only, **Always allow** turns the
 permission on, and **Deny**, Esc or closing the prompt fails the job with
 `AccessDenied`. The prompt cannot tell which application is asking. One prompt
 is shown at a time; another such call meanwhile fails with `AccessDenied`. A
-prompt left unanswered ends with the job's timeout. `open --selection` still
+prompt left unanswered ends with the start limit of the job, see below. `open --selection` still
 requires the permission and does not ask.
 
 Opening a mode that records, such as `voice`, `voice-chat` or `quick-input`, needs no
@@ -407,8 +407,19 @@ snapshot. A tool may already have performed irreversible side effects; cancel
 is not rollback. Leaving a prepared interactive request cancels it.
 
 Jobs are in-memory and disappear when Tyco exits. At most 32 jobs may be active;
-at most 128 are retained, evicting the oldest terminal jobs first. Jobs that do
-not finish within 300 seconds are cancelled with `TimedOut`. Returned output
+at most 128 are retained, evicting the oldest terminal jobs first. Two limits end
+a job with `TimedOut`:
+
+- **Start**: a job must start within 300 seconds of the call. This covers the
+  access prompt and the text the user types in the command overlay.
+- **Run**: a command that runs in the background, without a window, is
+  stopped once it runs longer than its own limit, counted from its start. The
+  limit is set per command in the settings ("Background run limit"), 120
+  seconds by default, 1–3600. A command that runs in the command overlay has
+  no run limit: the user sees it and can cancel it.
+
+A script is killed with its whole process tree when its job is cancelled or
+times out. Returned output
 is capped at 512 KiB and must also fit the escaped 1 MiB protocol envelope. Oversized output fails with `OutputTooLarge`.
 
 Client `--timeout` controls waiting (default 300, range 1–3600 seconds); it is

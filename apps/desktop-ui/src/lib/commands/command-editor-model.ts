@@ -1,6 +1,6 @@
 import type { CommandConfig, CommandOutputAction } from '@tyco/shared'
 
-import { scriptTimeoutOf } from './command-config'
+import { externalTimeoutOf } from './command-config'
 
 export function createCommandEditorModel(deps: {
   getCommand: () => CommandConfig
@@ -19,10 +19,11 @@ export function createCommandEditorModel(deps: {
       toolConfig: value === undefined ? rest : { ...rest, [field]: value },
     })
   }
-  function updateTimeout(value: string) {
-    // the text must be a number as a whole: `10abc` is no timeout
+  /** An empty or invalid text gives the default limit */
+  function updateExternalTimeout(value: string) {
+    // the text must be a number as a whole: `10abc` is no limit
     const seconds = /^\s*\d+(\.\d+)?\s*$/.test(value) ? Number(value) : NaN
-    updateToolConfig('timeoutSec', scriptTimeoutOf(seconds))
+    update({ externalTimeoutSec: externalTimeoutOf(seconds) })
   }
   function updateOutputAction(outputAction: CommandOutputAction) {
     update({ outputAction })
@@ -31,7 +32,7 @@ export function createCommandEditorModel(deps: {
     update,
     updateDescription,
     updateToolConfig,
-    updateTimeout,
+    updateExternalTimeout,
     updateOutputAction,
   }
 }

@@ -6,7 +6,9 @@ import {
   type ShortcutSlots,
 } from '@tyco/shared'
 
+import { secretRef } from '../net/secrets'
 import { createCommand } from './command-config'
+import { commandSecretIds, isSecretReferenced } from './command-secrets'
 import { createCommandRemovalModel } from './command-removal-model'
 
 describe('command removal model', () => {
@@ -101,6 +103,56 @@ describe('command removal model', () => {
     f.model.undoRemove()
     f.model.finishRemoval()
     expect(f.removeSecret).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps a secret another command still refers to', async () => {
+    const f = fixture()
+    const twin = {
+      ...createCommand('webhook', 'twin'),
+      toolConfig: {
+        url: 'https://example.com',
+        headers: { authorization: secretRef('webhook.auth.test') },
+      },
+    }
+    let commands = [f.command, twin]
+    const removeSecret = vi.fn().mockResolvedValue(undefined)
+    const persist = vi.fn().mockResolvedValue(undefined)
+    const model = createCommandRemovalModel({
+      getCommands: () => commands,
+      getMainActions: () => ({}),
+      updateCommands: (value) => {
+        commands = value as typeof commands
+      },
+      updateMainActions: vi.fn(),
+      removeSecret,
+      persist,
+      isSaved: () => true,
+      notifyError: vi.fn(),
+    })
+    model.removeCommand(f.command)
+    model.finishRemoval()
+    await vi.waitFor(() => expect(persist).toHaveBeenCalled())
+    await Promise.resolve()
+    expect(removeSecret).not.toHaveBeenCalled()
+  })
+
+  it('finds the secrets of a webhook in its headers and its Authorization', () => {
+    const command = {
+      ...createCommand('webhook', 'hook'),
+      toolConfig: {
+        url: 'https://example.com',
+        authSecretId: 'webhook.auth.a',
+        headers: { 'x-key': secretRef('webhook.header.b'), plain: 'value' },
+      },
+    }
+    expect(commandSecretIds(command).sort()).toEqual([
+      'webhook.auth.a',
+      'webhook.header.b',
+    ])
+    expect(commandSecretIds(createCommand('script', 'script'))).toEqual([])
+    expect(isSecretReferenced([command], 'webhook.header.b')).toBe(true)
+    // an id that only contains another one is not a reference to it
+    expect(isSecretReferenced([command], 'webhook.auth')).toBe(false)
   })
 
   it('undo of the next deletion does not restore a finalized command', () => {

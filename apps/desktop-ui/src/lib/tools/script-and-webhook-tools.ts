@@ -118,7 +118,7 @@ function createScriptTool(
       }
       // finished before the cancellation reached it
       if (call.signal.aborted) return cancelled
-      if (!result) return { ok: false, message: 'No result' }
+      if (!result) return { ok: false, messageKey: 'toast.scriptFailed' }
       if (!result.success && !result.running) {
         return {
           ok: false,

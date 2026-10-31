@@ -99,6 +99,7 @@ test.describe('command launcher', () => {
         outputAction: 'showMenu',
         isOutputLogged: false,
         isAvailableExternally: false,
+        externalTimeoutSec: 120,
       },
     ]
     desktop.userConfig.launcherPages[0]!.slots.q = 'browser-command'

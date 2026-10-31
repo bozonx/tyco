@@ -8,14 +8,14 @@ pub use process_runner::{
     execute_script, ScriptExecutionResult, ScriptRequest, ScriptRuns, TEXT_PLACEHOLDER,
 };
 
-use std::{path::Path, time::Duration};
+use std::path::Path;
 
 use serde_json::Value;
 
 use crate::{errors::AppError, models::user_config};
 
-/// A run of a script saved in the library; the shell command, working
-/// directory and timeout come from the config, never from the caller.
+/// A run of a script saved in the library; the shell command and working
+/// directory come from the config, never from the caller.
 pub struct SavedScriptRun<'a> {
     pub command_id: &'a str,
     pub text: &'a str,
@@ -37,6 +37,12 @@ pub fn execute_saved_script(
             run.command_id
         ))
     })?;
+    if !command.is_enabled {
+        return Err(AppError::InvalidInput(format!(
+            "The command `{}` is disabled",
+            run.command_id
+        )));
+    }
     let tool_config = &command.tool_config;
     execute_script(
         runs,
@@ -47,7 +53,6 @@ pub fn execute_saved_script(
                 .filter(|dir| !dir.trim().is_empty()),
             text: run.text,
             should_capture_output: run.should_capture_output,
-            output_timeout: tool_config.timeout_sec.map(Duration::from_secs),
             should_log_output: run.should_log_output,
             run_id: run.run_id,
         },
@@ -60,11 +65,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn an_unknown_or_non_script_command_is_refused_before_running() {
+    fn an_unknown_disabled_or_non_script_command_is_refused_before_running() {
         let config = serde_json::json!({"commands": [
-            {"id": "hook", "name": "Hook", "toolId": "webhook", "toolConfig": {"url": "x"}},
+            {"id": "hook", "name": "Hook", "toolId": "webhook", "toolConfig": {"url": "x"}, "isEnabled": true},
+            {"id": "off", "name": "Off", "toolId": "script", "toolConfig": {"command": "true"}, "isEnabled": false},
         ]});
-        for command_id in ["missing", "hook"] {
+        for command_id in ["missing", "hook", "off"] {
             let result = execute_saved_script(
                 &ScriptRuns::default(),
                 &config,

@@ -122,10 +122,12 @@ describe('webhookResultText', () => {
 describe('executeWebhook', () => {
   it('resolves with the response body', async () => {
     const fetchFn = vi.fn().mockResolvedValue(okResponse('answer'))
+    const signal = new AbortController().signal
     await expect(
-      executeWebhook(webhook(), 'test', fetchFn as never)
+      executeWebhook(webhook(), 'test', fetchFn as never, undefined, signal)
     ).resolves.toBe('answer')
-    expect(fetchFn.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal)
+    // no time limit of its own: the request ends with the caller's signal
+    expect(fetchFn.mock.calls[0][1].signal).toBe(signal)
   })
 
   it('fails on an error status and logs only the origin', async () => {
@@ -212,6 +214,30 @@ describe('executeWebhook', () => {
       )
     ).rejects.toThrow('Failed')
     expect(log.mock.calls[0][1]).not.toContain('private-text')
+    // the reason stays in the log, only the URL is cut to its origin
+    expect(log.mock.calls[0][1]).toContain('Error: Failed https://x.test')
+  })
+
+  it('quotes the start of an error response in the failure', async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValue({
+        ok: false,
+        status: 422,
+        statusText: '',
+        text: () =>
+          Promise.resolve(`{"error":"bad\n input"}${'x'.repeat(500)}`),
+      })
+    const error: Error = await executeWebhook(
+      webhook(),
+      null,
+      fetchFn as never
+    ).then(
+      () => new Error('resolved'),
+      (caught: unknown) => caught as Error
+    )
+    expect(error.message).toMatch(/^HTTP 422: \{"error":"bad input"\}x+…$/)
+    expect(error.message.length).toBeLessThan(220)
   })
 
   it('bounds explicitly enabled response logging without truncating the result', async () => {

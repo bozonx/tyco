@@ -244,8 +244,6 @@
     "testRunning": "Running…",
     "testStop": "Stop",
     "testTextPlaceholder": "Text to test with",
-    "timeoutInfo": "How long a script whose output is needed is waited for; after that it fails. {seconds} by default, at most {max}. When the output is not needed (“Nothing”), the script is waited for 3 s and left in the background.",
-    "timeoutLabel": "Wait for output, seconds",
     "toolInfo": "Tool: {tool}",
     "toolMissing": "Its tool is not available: the plugin is disabled or missing",
     "preTransformFailed": "Could not prepare the text for the command",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Transforms the text with an LLM prompt before passing it to the command.",
     "llmPreTransformPromptLabel": "Transformation prompt",
     "llmPreTransformPromptPlaceholder": "Prompt that transforms the text before the command receives it",
-    "llmPreTransformPromptInfo": "Instruction for the LLM to transform the input text before sending it to the command."
+    "llmPreTransformPromptInfo": "Instruction for the LLM to transform the input text before sending it to the command.",
+    "externalTimeoutLabel": "Background run limit, seconds",
+    "externalTimeoutInfo": "How long an external call may run in the background, counted from the start of the command; after that it is stopped and reported as timed out. {seconds} by default, at most {max}. Runs in a window have no limit: you see them and can cancel them.",
+    "preTransformEmpty": "The LLM returned no text for the command"
   },
   "common": {
     "add": "Add",
@@ -383,6 +384,7 @@
     "failed": "The command “{name}” failed",
     "missing": "The command is not in the library",
     "running": "Running “{name}”…",
+    "timedOut": "Did not finish in {seconds} s and was stopped",
     "unknown": "Unknown error"
   },
   "history": {

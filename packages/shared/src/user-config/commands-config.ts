@@ -71,17 +71,15 @@ export interface ScriptToolConfig {
   command: string
   /** Empty for the home directory */
   workingDirectory?: string
-  /**
-   * How long the output is waited for, in seconds; absent for
-   * `SCRIPT_OUTPUT_TIMEOUT_SEC`
-   */
-  timeoutSec?: number
 }
 
-/** How long a script whose output is used runs by default, in seconds */
-export const SCRIPT_OUTPUT_TIMEOUT_SEC = 60
-/** The longest a script whose output is used may run, in seconds */
-export const SCRIPT_MAX_TIMEOUT_SEC = 3600
+/**
+ * How long a background external run of a command may take by default, in
+ * seconds. Runs in a window have no limit: the user sees them and can cancel
+ */
+export const EXTERNAL_TIMEOUT_DEFAULT_SEC = 120
+/** The longest limit of a background external run, in seconds */
+export const EXTERNAL_TIMEOUT_MAX_SEC = 3600
 
 /** `toolConfig` of a `webhook` command */
 export interface WebhookToolConfig {
@@ -153,6 +151,11 @@ export interface CommandConfig {
   isOutputLogged: boolean
   /** Local applications may run it through tyco-ctl and D-Bus */
   isAvailableExternally: boolean
+  /**
+   * How long a background external run may take, in seconds, counted from its
+   * start; a run in a window has no limit
+   */
+  externalTimeoutSec: number
   isEnabled: boolean
 }
 

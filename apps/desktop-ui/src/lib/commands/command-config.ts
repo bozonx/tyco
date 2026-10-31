@@ -3,8 +3,9 @@ import {
   COMMAND_OUTPUT_ACTIONS,
   type CommandConfig,
   type CommandOutputAction,
+  EXTERNAL_TIMEOUT_DEFAULT_SEC,
+  EXTERNAL_TIMEOUT_MAX_SEC,
   normalizeCommands,
-  SCRIPT_MAX_TIMEOUT_SEC,
   SHORTCUT_SLOT_KEYS,
   type ScriptToolConfig,
   type WebhookToolConfig,
@@ -30,21 +31,25 @@ function headersOf(value: unknown): Record<string, string> {
   )
 }
 
-/** A whole number of seconds the script may run, or `undefined` for none */
-export function scriptTimeoutOf(value: unknown): number | undefined {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
+/**
+ * The limit of a background external run as a whole number of seconds within
+ * range, or the default for anything else
+ */
+export function externalTimeoutOf(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value))
+    return EXTERNAL_TIMEOUT_DEFAULT_SEC
   const seconds = Math.round(value)
-  return seconds >= 1 ? Math.min(seconds, SCRIPT_MAX_TIMEOUT_SEC) : undefined
+  return seconds >= 1
+    ? Math.min(seconds, EXTERNAL_TIMEOUT_MAX_SEC)
+    : EXTERNAL_TIMEOUT_DEFAULT_SEC
 }
 
 export function scriptToolConfigOf(
   config: Record<string, unknown>
 ): ScriptToolConfig {
-  const timeoutSec = scriptTimeoutOf(config.timeoutSec)
   return {
     command: stringOr(config.command),
     workingDirectory: stringOr(config.workingDirectory),
-    ...(timeoutSec ? { timeoutSec } : {}),
   }
 }
 
@@ -145,6 +150,7 @@ export function createCommand(
     outputAction: outputActionOf(tool?.defaultOutputAction),
     isOutputLogged: false,
     isAvailableExternally: false,
+    externalTimeoutSec: EXTERNAL_TIMEOUT_DEFAULT_SEC,
     isEnabled: true,
   }
 }

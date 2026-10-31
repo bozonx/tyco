@@ -244,8 +244,6 @@
     "testRunning": "Pokreće se…",
     "testStop": "Zaustavi",
     "testTextPlaceholder": "Tekst za testiranje",
-    "timeoutInfo": "Koliko se dugo čeka na skriptu čiji je izlaz potreban; nakon toga ne uspijeva. Zadano {seconds}, najviše {max}. Kad izlaz nije potreban („Ništa”), na skriptu se čeka 3 s i ostavlja se u pozadini.",
-    "timeoutLabel": "Čekanje izlaza, sekunde",
     "toolInfo": "Alat: {tool}",
     "toolMissing": "Njezin alat nije dostupan: dodatak je onemogućen ili nedostaje",
     "preTransformFailed": "Tekst za naredbu nije moguće pripremiti",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Transformira tekst upitom za LLM prije prosljeđivanja naredbi.",
     "llmPreTransformPromptLabel": "Uputa za transformaciju",
     "llmPreTransformPromptPlaceholder": "Uputa koja transformira tekst prije nego što ga primi naredba",
-    "llmPreTransformPromptInfo": "Uputa za LLM kojom se ulazni tekst transformira prije slanja naredbi."
+    "llmPreTransformPromptInfo": "Uputa za LLM kojom se ulazni tekst transformira prije slanja naredbi.",
+    "externalTimeoutLabel": "Ograničenje izvođenja u pozadini, sekunde",
+    "externalTimeoutInfo": "Koliko dugo vanjski poziv smije raditi u pozadini, računajući od pokretanja naredbe; nakon toga se zaustavlja i prijavljuje kao isteklo vrijeme. Zadano {seconds}, najviše {max}. Izvođenja u prozoru nisu ograničena: vidite ih i možete ih otkazati.",
+    "preTransformEmpty": "LLM nije vratio tekst za naredbu"
   },
   "common": {
     "add": "Dodaj",
@@ -383,6 +384,7 @@
     "failed": "Naredba „{name}” nije uspjela",
     "missing": "Naredba nije u biblioteci",
     "running": "Pokreće se „{name}”…",
+    "timedOut": "Nije završeno za {seconds} s i zaustavljeno je",
     "unknown": "Nepoznata pogreška"
   },
   "history": {

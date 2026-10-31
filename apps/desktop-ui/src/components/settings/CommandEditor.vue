@@ -117,32 +117,6 @@
             ><InfoTooltip :text="t('commands.descriptionInfo')"
           /></template>
         </FieldRow>
-        <FieldRow
-          v-if="command.toolId === 'script'"
-          class="command-field"
-          vertical
-          density="compact"
-          :label="t('commands.timeoutLabel')"
-        >
-          <FieldNumber
-            :min="1"
-            :max="SCRIPT_MAX_TIMEOUT_SEC"
-            :step="1"
-            :model-value="scriptConfig.timeoutSec ?? ''"
-            :placeholder="String(SCRIPT_OUTPUT_TIMEOUT_SEC)"
-            @update:model-value="updateTimeout"
-          />
-
-          <template #info
-            ><InfoTooltip
-              :text="
-                t('commands.timeoutInfo', {
-                  seconds: SCRIPT_OUTPUT_TIMEOUT_SEC,
-                  max: SCRIPT_MAX_TIMEOUT_SEC,
-                })
-              "
-          /></template>
-        </FieldRow>
         <div class="command-field-row">
           <template v-if="tool?.canLogOutput">
             <FieldSwitch
@@ -176,6 +150,32 @@
             <CopyButton :value="cliCommand" :label="t('commands.copyCli')" />
           </span>
         </div>
+        <FieldRow
+          v-if="command.isAvailableExternally"
+          class="command-field command-place-detail"
+          vertical
+          density="compact"
+          :label="t('commands.externalTimeoutLabel')"
+        >
+          <FieldNumber
+            :min="1"
+            :max="EXTERNAL_TIMEOUT_MAX_SEC"
+            :step="1"
+            :model-value="command.externalTimeoutSec"
+            :placeholder="String(EXTERNAL_TIMEOUT_DEFAULT_SEC)"
+            @update:model-value="updateExternalTimeout"
+          />
+
+          <template #info
+            ><InfoTooltip
+              :text="
+                t('commands.externalTimeoutInfo', {
+                  seconds: EXTERNAL_TIMEOUT_DEFAULT_SEC,
+                  max: EXTERNAL_TIMEOUT_MAX_SEC,
+                })
+              "
+          /></template>
+        </FieldRow>
         <p
           v-if="command.isAvailableExternally && nameConflicts.length"
           class="command-warning"
@@ -224,7 +224,6 @@ import { computed, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
-import { scriptToolConfig } from '../../lib/commands/command-config'
 import { createCommandEditorModel } from '../../lib/commands/command-editor-model'
 import {
   commandCliCall,
@@ -259,8 +258,8 @@ import ToolConfigFields from './ToolConfigFields.vue'
 import {
   type CommandConfig,
   type CommandOutputAction,
-  SCRIPT_MAX_TIMEOUT_SEC,
-  SCRIPT_OUTPUT_TIMEOUT_SEC,
+  EXTERNAL_TIMEOUT_DEFAULT_SEC,
+  EXTERNAL_TIMEOUT_MAX_SEC,
   type UserConfig,
 } from '@tyco/shared'
 
@@ -293,27 +292,25 @@ const customActionTool = computed(
   () => props.command.toolId === 'script' || props.command.toolId === 'webhook'
 )
 const canTest = computed(() => canTestCommand(props.command))
-const scriptConfig = computed(() => scriptToolConfig(props.command))
 /** Why the command cannot run, unless its tool is missing altogether */
 const unavailableReason = computed(() =>
   tool.value ? commandUnavailableReason(props.command, toolsStore) : undefined
 )
-const nameWarnings = computed(() =>
-  validateCommand(props.command, toolsStore)
-    .filter((issue) => issue.field === 'name')
+const issues = computed(() => validateCommand(props.command, toolsStore))
+const warningsFor = (field: string) =>
+  issues.value
+    .filter((issue) => issue.field === field)
     .map((issue) => t(issue.messageKey))
-)
+const nameWarnings = computed(() => warningsFor('name'))
 const preTransformWarnings = computed(() =>
-  validateCommand(props.command, toolsStore)
-    .filter((issue) => issue.field === 'llmPreTransformPrompt')
-    .map((issue) => t(issue.messageKey))
+  warningsFor('llmPreTransformPrompt')
 )
 
 const {
   update,
   updateDescription,
   updateToolConfig,
-  updateTimeout,
+  updateExternalTimeout,
   updateOutputAction,
 } = createCommandEditorModel({
   getCommand: () => props.command,
@@ -355,7 +352,6 @@ const testBodyId = useId()
 const advancedBodyId = useId()
 const isAdvancedOpen = ref<boolean>(
   Boolean(props.command.description) ||
-    Boolean(scriptConfig.value.timeoutSec) ||
     Boolean(props.command.isOutputLogged) ||
     Boolean(props.command.isAvailableExternally) ||
     Boolean(props.command.isLlmPreTransformEnabled)

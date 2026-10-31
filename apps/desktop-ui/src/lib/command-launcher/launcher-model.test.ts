@@ -76,7 +76,7 @@ it('reports output persistence and logging errors without failing a command', as
   deps.logRun.mockImplementationOnce(() => {
     throw error
   })
-  await model.pickByKey(2)
+  await model.pick(model.commands.value[1])
   model.setText('note text')
   await model.submit()
   await vi.waitFor(() => expect(deps.reportError).toHaveBeenCalledTimes(2))
@@ -121,6 +121,28 @@ describe('slotCommands and pickSlot', () => {
     await model.pickSlot(2)
     expect(run).toHaveBeenCalledWith(backup, '', expect.anything())
   })
+
+  it('keeps a disabled command in its slot but does not run it', async () => {
+    const run = vi.fn(async () => ({ success: true }))
+    const disabled = { ...backup, isEnabled: false }
+    const model = createCommandLauncherModel({
+      tools,
+      commands: () => [disabled],
+      launcherPages: () => [
+        {
+          id: 'main',
+          slots: { q: 'backup' },
+          inputMode: 'selection' as const,
+          hotkey: '',
+        },
+      ],
+      selectedText: () => null,
+      run,
+    })
+    expect(model.slotCommands.value[0]?.id).toBe('backup')
+    await model.pickSlot(0)
+    expect(run).not.toHaveBeenCalled()
+  })
 })
 
 describe('searchCommands', () => {
@@ -164,7 +186,7 @@ describe('createCommandLauncherModel', () => {
   it('lists only the commands of the overlay', () => {
     const hidden = { ...note, id: 'hidden', isEnabled: false }
     const { model } = setup([backup, hidden, lights])
-    expect(model.filteredCommands.value.map((item) => item.id)).toEqual([
+    expect(model.commands.value.map((item) => item.id)).toEqual([
       'backup',
       'lights',
     ])
@@ -173,7 +195,7 @@ describe('createCommandLauncherModel', () => {
   it('runs a command without text right away', async () => {
     const { deps, model } = setup()
     deps.selectedText.mockReturnValue('selected')
-    await model.pickByKey(1)
+    await model.pick(model.commands.value[0])
     expect(deps.run).toHaveBeenCalledWith(backup, '', expect.anything())
     expect(deps.saveOutput).not.toHaveBeenCalled()
     expect(deps.logRun).toHaveBeenCalledWith({
@@ -188,7 +210,7 @@ describe('createCommandLauncherModel', () => {
   it('runs a text command on the selection', async () => {
     const { deps, model } = setup()
     deps.selectedText.mockReturnValue('buy milk')
-    await model.pickByKey(2)
+    await model.pick(model.commands.value[1])
     expect(deps.saveOutput).toHaveBeenCalledWith('buy milk')
     expect(deps.run).toHaveBeenCalledWith(
       note,
@@ -202,7 +224,7 @@ describe('createCommandLauncherModel', () => {
 
   it('asks for the text when nothing is selected', async () => {
     const { deps, model } = setup()
-    await model.pickByKey(2)
+    await model.pick(model.commands.value[1])
     expect(deps.run).not.toHaveBeenCalled()
     expect(model.stage.value).toEqual({
       kind: 'prepare',
@@ -227,7 +249,7 @@ describe('createCommandLauncherModel', () => {
 
   it('runs on a selection captured while asking for the text', async () => {
     const { deps, model } = setup()
-    await model.pickByKey(2)
+    await model.pick(model.commands.value[1])
     await model.selectionArrived('late selection')
     expect(deps.run).toHaveBeenCalledWith(
       note,
@@ -239,7 +261,7 @@ describe('createCommandLauncherModel', () => {
 
   it('keeps the typed text from a selection captured late', async () => {
     const { model } = setup()
-    await model.pickByKey(2)
+    await model.pick(model.commands.value[1])
     model.setText('typed')
     await model.selectionArrived('late selection')
     expect(model.inputText.value).toBe('typed')
@@ -250,7 +272,7 @@ describe('createCommandLauncherModel', () => {
     deps.selectedText.mockReturnValue('leftover')
     model.dropSelection()
     expect(model.selection.value).toBe('')
-    await model.pickByKey(2)
+    await model.pick(model.commands.value[1])
     expect(deps.run).not.toHaveBeenCalled()
     expect(model.stage.value.kind).toBe('prepare')
     expect(model.inputText.value).toBe('')
@@ -270,7 +292,7 @@ describe('createCommandLauncherModel', () => {
   it('keeps the text for another try when the command fails', async () => {
     const run = vi.fn(async () => ({ success: false, message: 'HTTP 500' }))
     const { deps, model } = setup(undefined, { run })
-    await model.pickByKey(2)
+    await model.pick(model.commands.value[1])
     model.setText('text')
     await model.submit()
     expect(model.stage.value).toEqual({
@@ -287,7 +309,7 @@ describe('createCommandLauncherModel', () => {
   it('goes back to the list when a command without text fails', async () => {
     const run = vi.fn().mockRejectedValue(new Error('boom'))
     const { deps, model } = setup(undefined, { run })
-    await model.pickByKey(1)
+    await model.pick(model.commands.value[0])
     expect(model.stage.value.kind).toBe('list')
     expect(deps.logRun).toHaveBeenCalledWith(
       expect.objectContaining({ success: false, message: 'boom' })
@@ -303,9 +325,9 @@ describe('createCommandLauncherModel', () => {
         })
     )
     const { model } = setup(undefined, { run })
-    const first = model.pickByKey(1)
+    const first = model.pick(model.commands.value[0])
     await Promise.resolve()
-    await model.pickByKey(3)
+    await model.pick(model.commands.value[2])
     finish({ success: true })
     await first
     expect(run).toHaveBeenCalledTimes(1)
@@ -320,42 +342,20 @@ describe('createCommandLauncherModel', () => {
         })
     )
     const { model } = setup(undefined, { run })
-    const first = model.pickByKey(1)
+    const first = model.pick(model.commands.value[0])
     await Promise.resolve()
     model.reset()
-    model.setQuery('note')
+    model.dropSelection()
     finish({ success: false })
     await first
     expect(model.stage.value.kind).toBe('list')
-    expect(model.query.value).toBe('note')
-  })
-
-  it('filters with the query and picks by the place in the result', async () => {
-    const { deps, model } = setup()
-    model.setQuery('свет')
-    expect(model.filteredCommands.value).toEqual([lights])
-    await model.pickByKey(1)
-    expect(deps.run).toHaveBeenCalledWith(lights, '', expect.anything())
-    await model.pickByKey(2)
-    expect(deps.run).toHaveBeenCalledTimes(1)
-  })
-
-  it('moves the highlight around the list', async () => {
-    const { deps, model } = setup()
-    model.move(-1)
-    expect(model.highlightedCommandIndex.value).toBe(2)
-    model.move(1)
-    expect(model.highlightedCommandIndex.value).toBe(0)
-    model.move(1)
-    deps.selectedText.mockReturnValue('x')
-    await model.pickHighlighted()
-    expect(deps.run).toHaveBeenCalledWith(note, 'x', expect.anything())
+    expect(model.selectionDropped.value).toBe(true)
   })
 
   it('goes back from a prepared command to the list', async () => {
     const { model } = setup()
     expect(model.back()).toBe(false)
-    await model.pickByKey(2)
+    await model.pick(model.commands.value[1])
     expect(model.back()).toBe(true)
     expect(model.stage.value.kind).toBe('list')
   })
@@ -412,6 +412,25 @@ describe('external calls', () => {
     expect(model.stage.value.kind).toBe('list')
   })
 
+  it('finishes the job of a call when another command is picked instead', async () => {
+    const finishJob = vi.fn(async () => {})
+    const { deps } = setup([note, lamp])
+    const model = createCommandLauncherModel({ ...deps, finishJob })
+    await model.request({ commandId: 'note', jobId: 'job-1' })
+    expect(model.stage.value.kind).toBe('prepare')
+    await model.pick(lamp)
+    // the other command never runs under the job of the call
+    expect(finishJob).toHaveBeenCalledWith(
+      'job-1',
+      expect.objectContaining({ cancelled: true })
+    )
+    expect(deps.run).toHaveBeenCalledWith(
+      lamp,
+      '',
+      expect.objectContaining({ source: 'launcher', input: undefined })
+    )
+  })
+
   it('logs a command picked from the list after a call as the overlay', async () => {
     const { deps, model } = setupExternal([note, lamp])
     await model.request({ commandId: 'note' })
@@ -441,7 +460,7 @@ describe('cancelling a running command', () => {
     )
     const { deps, model } = setup(undefined, { run })
     deps.selectedText.mockReturnValue('text')
-    const running = model.pickByKey(2)
+    const running = model.pick(model.commands.value[1])
     await Promise.resolve()
     await Promise.resolve()
     expect(model.stage.value.kind).toBe('running')
@@ -462,7 +481,7 @@ describe('commands that replace the selection', () => {
   )
 
   function setupReplacing(commands: CommandConfig[] = [replacing]) {
-    const replaceSelection = vi.fn(async () => {})
+    const replaceSelection = vi.fn(async () => true)
     const { deps } = setup(commands)
     const model = createCommandLauncherModel({ ...deps, replaceSelection })
     return { deps, model, replaceSelection }
@@ -471,7 +490,7 @@ describe('commands that replace the selection', () => {
   it('hands the selection over to a selection run', async () => {
     const { deps, model, replaceSelection } = setupReplacing()
     deps.selectedText.mockReturnValue('hola')
-    await model.pickByKey(1)
+    await model.pick(model.commands.value[0])
     expect(replaceSelection).toHaveBeenCalledWith(replacing)
     expect(deps.run).not.toHaveBeenCalled()
     expect(model.stage.value.kind).toBe('list')
@@ -479,14 +498,14 @@ describe('commands that replace the selection', () => {
 
   it('hands over a selection captured while asking for the text', async () => {
     const { model, replaceSelection } = setupReplacing()
-    await model.pickByKey(1)
+    await model.pick(model.commands.value[0])
     await model.selectionArrived('hola')
     expect(replaceSelection).toHaveBeenCalledWith(replacing)
   })
 
   it('runs a typed or edited text itself, for the paste sink', async () => {
     const { deps, model, replaceSelection } = setupReplacing()
-    await model.pickByKey(1)
+    await model.pick(model.commands.value[0])
     model.setText('hola amigo')
     await model.submit()
     expect(replaceSelection).not.toHaveBeenCalled()

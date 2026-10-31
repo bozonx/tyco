@@ -244,8 +244,6 @@
     "testRunning": "正在執行…",
     "testStop": "停止",
     "testTextPlaceholder": "用於測試的文字",
-    "timeoutInfo": "需要輸出的指令碼最長等待時間；超時則視為失敗。預設為 {seconds} 秒，最多 {max} 秒。當不需要輸出（「無」）時，指令碼會等待 3 秒，隨後留在背景執行。",
-    "timeoutLabel": "等待輸出時間，秒",
     "toolInfo": "工具：{tool}",
     "toolMissing": "其工具無法使用：外掛程式已停用或遺失",
     "preTransformFailed": "無法為指令準備文字",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "在傳遞給命令之前，使用 LLM 提示詞對文字進行轉換。",
     "llmPreTransformPromptLabel": "預處理提示詞",
     "llmPreTransformPromptPlaceholder": "在命令接收之前轉換文字的提示詞",
-    "llmPreTransformPromptInfo": "用於在將輸入文字發送到命令之前由 LLM 進行轉換的指示。"
+    "llmPreTransformPromptInfo": "用於在將輸入文字發送到命令之前由 LLM 進行轉換的指示。",
+    "externalTimeoutLabel": "背景執行時限（秒）",
+    "externalTimeoutInfo": "外部呼叫在背景可執行的時間，從指令啟動時開始計算；逾時後會被停止並回報為逾時。預設 {seconds}，最多 {max}。在視窗中執行沒有時限：您可以看到執行過程並隨時取消。",
+    "preTransformEmpty": "LLM 未為此指令傳回文字"
   },
   "common": {
     "add": "新增",
@@ -383,6 +384,7 @@
     "failed": "命令「{name}」執行失敗",
     "missing": "命令庫中沒有該命令",
     "running": "正在執行「{name}」…",
+    "timedOut": "未在 {seconds} 秒內完成，已停止",
     "unknown": "未知的錯誤"
   },
   "history": {

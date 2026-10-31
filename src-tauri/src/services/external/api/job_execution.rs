@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use serde::Deserialize;
 use tauri::{AppHandle, Manager};
 use tyco_activation_protocol::{ErrorCode, Job, JobState, Response, RunRequest};
@@ -37,16 +39,8 @@ pub(super) fn start(
     mut request: RunRequest,
     source: ActivationSource,
 ) -> ApiResult<Job> {
-    if app
-        .state::<crate::services::external::command_library::ToolCatalogState>()
-        .get()
-        .is_none()
-    {
-        return Err(Box::new(Response::coded_error(
-            ErrorCode::NotReady,
-            "Command execution tools are still loading",
-        )));
-    }
+    // a command whose tool needs the catalog fails the lookup with
+    // `NotReady` while it is loading; a script or a webhook does not wait
     let command = lookup(app, &request.target, request.by_name)?;
     validate_run(&command, &request)?;
     let config = app.state::<AppState>().user_config();
@@ -127,6 +121,17 @@ fn hand_off(
 ) -> ApiResult<()> {
     let config = app.state::<AppState>().user_config();
     let needs_ui = command.can_take_text && request.text.is_none() && request.input.is_none();
+    // a run in the overlay is seen and can be cancelled; one in the
+    // background is bounded by the limit of its command
+    let run_limit = (!needs_ui).then(|| {
+        Duration::from_secs(
+            crate::models::user_config::command(&config, &command.id).map_or(
+                crate::models::user_config::EXTERNAL_TIMEOUT_DEFAULT_SEC,
+                |command| command.external_timeout_sec,
+            ),
+        )
+    });
+    app.state::<ExternalJobs>().set_run_limit(job_id, run_limit);
     let handoff = if needs_ui {
         let mut activation = Activation::new(ActivationMode::CommandLauncher, source);
         // External calls never capture a selection implicitly when opening UI.
@@ -284,6 +289,13 @@ pub(super) fn cancel(app: &AppHandle, id: &str, code: ErrorCode) -> Response {
     };
     if !job.state.is_terminal() {
         access::withdraw(app, id);
+        let message = match code {
+            ErrorCode::TimedOut if job.state == JobState::Accepted => {
+                "The command was not started in time"
+            }
+            ErrorCode::TimedOut => "The command did not finish within its time limit",
+            _ => "The command was cancelled",
+        };
         complete(
             app,
             id,
@@ -291,7 +303,7 @@ pub(super) fn cancel(app: &AppHandle, id: &str, code: ErrorCode) -> Response {
                 is_success: false,
                 is_cancelled: true,
                 output: None,
-                message: Some(code.into()),
+                message: Some(message.into()),
                 code: Some(code.into()),
             },
         );
@@ -355,22 +367,15 @@ pub fn claim(app: &AppHandle, id: &str) -> bool {
     true
 }
 
-/// Expires abandoned UI requests even when no external client polls them.
+/// Cancels jobs that waited too long to start and background runs over their
+/// limit, even when no external client polls them.
 pub fn spawn_reaper(app: AppHandle) -> Result<(), AppError> {
     let services = app.state::<crate::services::background::BackgroundServices>();
     let handle = app.clone();
     services.spawn_async(async move {
         let app = handle;
         loop {
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-            let maintenance_app = app.clone();
-            let _ = app
-                .state::<crate::services::background::BackgroundServices>()
-                .run_blocking(move || {
-                    let state = maintenance_app.state::<AppState>();
-                    state.history.retry_cleanup(&maintenance_app, &state);
-                })
-                .await;
+            tokio::time::sleep(Duration::from_secs(1)).await;
             let ids = app.state::<ExternalJobs>().expired_job_ids();
             for id in ids {
                 let handle = app.clone();

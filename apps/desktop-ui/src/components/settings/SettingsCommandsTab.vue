@@ -164,7 +164,7 @@ const props = defineProps<{
 const { draft: userConfig, navigate } = useSettingsContext()
 
 const { t } = useI18n()
-const { toastKey } = useToast()
+const { toastKey, toastError } = useToast()
 const secretsStore = useSecretsStore()
 const toolsStore = useToolsStore()
 
@@ -312,10 +312,12 @@ const { removed, removeCommand, undoRemove, finishRemoval } =
     removeSecret: (id) => secretsStore.removeSecret(id),
     persist: settingsSession.persist,
     isSaved: settingsSession.isSaved,
-    notifyError: (error) =>
+    notifyError: (error) => {
       clientLogger.error('Could not remove command secrets', {
         error: String(error),
-      }),
+      })
+      toastError(error, 'settings.keyRemoveFailed')
+    },
   })
 const removedName = computed(
   () => removed.value?.command.name.trim() || t('commands.unnamed')

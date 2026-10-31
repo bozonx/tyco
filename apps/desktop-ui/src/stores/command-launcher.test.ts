@@ -41,15 +41,15 @@ describe('command launcher store wiring', () => {
   it('initializes and wires model with ipc and tool dependencies', () => {
     const store = useCommandLauncherStore()
     expect(store.stage.kind).toBe('list')
-    expect(store.query).toBe('')
+    expect(store.selectionDropped).toBe(false)
   })
 
   it('resets and updates page when activationId changes without launcherRequest', async () => {
     const store = useCommandLauncherStore()
     const desktop = useDesktopStore()
 
-    store.setQuery('search text')
-    expect(store.query).toBe('search text')
+    store.dropSelection()
+    expect(store.selectionDropped).toBe(true)
 
     desktop.applyViewState({
       ...desktop.desktopState,
@@ -69,7 +69,7 @@ describe('command launcher store wiring', () => {
     })
     await nextTick()
 
-    expect(store.query).toBe('')
+    expect(store.selectionDropped).toBe(false)
     expect(store.pageIndex).toBe(1)
   })
 
@@ -77,7 +77,7 @@ describe('command launcher store wiring', () => {
     const store = useCommandLauncherStore()
     const desktop = useDesktopStore()
 
-    store.setQuery('search text')
+    store.dropSelection()
 
     desktop.applyViewState({
       ...desktop.desktopState,
@@ -87,7 +87,7 @@ describe('command launcher store wiring', () => {
     })
     await nextTick()
 
-    expect(store.query).toBe('search text')
+    expect(store.selectionDropped).toBe(true)
   })
 
   it('populates text when selectedText arrives during prepare stage', async () => {
@@ -106,6 +106,7 @@ describe('command launcher store wiring', () => {
       outputAction: 'none',
       isOutputLogged: false,
       isAvailableExternally: false,
+      externalTimeoutSec: 120,
     }
     store.stage = { kind: 'prepare', command: cmd, autoRun: false }
 
@@ -135,6 +136,7 @@ describe('command launcher store wiring', () => {
       outputAction: 'none',
       isOutputLogged: false,
       isAvailableExternally: false,
+      externalTimeoutSec: 120,
     }
     desktop.applyViewState({
       ...desktop.desktopState,

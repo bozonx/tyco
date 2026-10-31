@@ -130,12 +130,14 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
-import { searchCommands } from '../../lib/command-launcher/launcher-model'
+import {
+  isLauncherCommand,
+  searchCommands,
+} from '../../lib/command-launcher/launcher-model'
 import {
   commandIcon,
   commandLabel,
   commandTarget,
-  isCommandAvailable,
 } from '../../lib/commands/command-runtime'
 import type { TextControl } from '../../lib/ui/text-control'
 import { type ActionItem } from '../../stores/action-menu'
@@ -218,16 +220,16 @@ const searchAction = computed<ActionItem>(() => ({
 }))
 
 const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
-  launcher.slotCommands.map((command) => {
+  launcher.slotCommands.map((command, index) => {
     if (!command) return undefined
-    const available = isCommandAvailable(command, toolsStore)
     return {
       name: commandLabel(command),
       icon: commandIcon(command, toolsStore),
       hint: command.description,
-      disabled: !available,
+      // a disabled command stays in its slot, but does not run
+      disabled: !isLauncherCommand(command, toolsStore),
       action: async () => {
-        await launcher.pick(command)
+        await launcher.pickSlot(index)
       },
     }
   })

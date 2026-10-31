@@ -244,8 +244,6 @@
     "testRunning": "Fut…",
     "testStop": "Leállítás",
     "testTextPlaceholder": "Tesztszöveg",
-    "timeoutInfo": "Mennyi ideig vár a program egy olyan szkriptre, amelynek a kimenetére szükség van; utána hibával leáll. Alapértelmezés szerint {seconds}, legfeljebb {max}. Ha a kimenetre nincs szükség („Semmi”), a program 3 mp-ig vár, majd a háttérben hagyja a szkriptet.",
-    "timeoutLabel": "Várakozás a kimenetre, másodperc",
     "toolInfo": "Eszköz: {tool}",
     "toolMissing": "Az eszköze nem érhető el: a bővítmény ki van kapcsolva vagy hiányzik",
     "preTransformFailed": "Nem sikerült előkészíteni a szöveget a parancshoz",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Átalakítja a szöveget az LLM-utasítással, mielőtt átadná a parancsnak.",
     "llmPreTransformPromptLabel": "Átalakítási utasítás",
     "llmPreTransformPromptPlaceholder": "Utasítás, amely átalakítja a szöveget, mielőtt a parancs megkapná",
-    "llmPreTransformPromptInfo": "Utasítás az LLM számára a bemeneti szöveg átalakításához, mielőtt a parancsnak elküldené."
+    "llmPreTransformPromptInfo": "Utasítás az LLM számára a bemeneti szöveg átalakításához, mielőtt a parancsnak elküldené.",
+    "externalTimeoutLabel": "Háttérfuttatás korlátja, másodperc",
+    "externalTimeoutInfo": "Meddig futhat egy külső hívás a háttérben a parancs indításától számítva; utána leáll, és időtúllépésként jelenik meg. Alapértelmezés szerint {seconds}, legfeljebb {max}. Az ablakban futó parancsoknak nincs korlátja: látja őket, és megszakíthatja őket.",
+    "preTransformEmpty": "Az LLM nem adott vissza szöveget a parancshoz"
   },
   "common": {
     "add": "Hozzáadás",
@@ -383,6 +384,7 @@
     "failed": "A(z) „{name}” parancs sikertelen",
     "missing": "A parancs nincs a könyvtárban",
     "running": "„{name}” futtatása…",
+    "timedOut": "Nem fejeződött be {seconds} mp alatt, ezért leállt",
     "unknown": "Ismeretlen hiba"
   },
   "history": {

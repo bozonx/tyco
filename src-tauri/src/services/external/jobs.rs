@@ -9,7 +9,9 @@ use tyco_activation_protocol::{ErrorCode, Job, JobState, RunRequest};
 
 const MAX_JOBS: usize = 128;
 const MAX_ACTIVE_JOBS: usize = 32;
-const JOB_TIMEOUT: Duration = Duration::from_secs(300);
+/// How long a job may wait before it starts: for the user to answer the
+/// access prompt or to type the text in the command overlay.
+const START_TIMEOUT: Duration = Duration::from_secs(300);
 const MAX_OUTPUT_BYTES: usize = 512 * 1024;
 
 struct ExternalJobEntry {
@@ -21,6 +23,10 @@ struct ExternalJobEntry {
     pending_completion: Option<Job>,
     /// The user allowed this call to use the selection, see `services::external::access`.
     is_selection_approved: bool,
+    /// How long the run may take once started: set for a run in the
+    /// background, `None` for one in a window, which the user can cancel.
+    run_limit: Option<Duration>,
+    claimed_at: Option<Instant>,
 }
 
 #[derive(Default)]
@@ -94,6 +100,8 @@ impl ExternalJobs {
                 command_snapshot: None,
                 pending_completion: None,
                 is_selection_approved: false,
+                run_limit: None,
+                claimed_at: None,
             },
         );
         Ok(job)
@@ -109,6 +117,13 @@ impl ExternalJobs {
         self.lock_entries()
             .get(id)
             .is_some_and(|entry| entry.command_snapshot.as_ref() == command)
+    }
+
+    /// Limits the run of the job once it starts; `None` runs it unbounded.
+    pub fn set_run_limit(&self, id: &str, limit: Option<Duration>) {
+        if let Some(entry) = self.lock_entries().get_mut(id) {
+            entry.run_limit = limit;
+        }
     }
 
     pub fn approve_selection(&self, id: &str) {
@@ -154,12 +169,17 @@ impl ExternalJobs {
     }
 
     pub fn claim(&self, id: &str) -> Option<(String, RunRequest)> {
+        self.claim_at(id, Instant::now())
+    }
+
+    fn claim_at(&self, id: &str, now: Instant) -> Option<(String, RunRequest)> {
         let mut entries = self.lock_entries();
         let entry = entries.get_mut(id)?;
         if entry.job.state != JobState::Accepted {
             return None;
         }
         entry.job.state = JobState::Running;
+        entry.claimed_at = Some(now);
         Some((entry.job.command_id.clone(), entry.request.clone()))
     }
 
@@ -242,12 +262,23 @@ impl ExternalJobs {
         self.expired_job_ids_at(Instant::now())
     }
 
+    /// Jobs that waited too long to start, and background runs over their
+    /// limit. A finished run that is replacing the selection is left alone.
     fn expired_job_ids_at(&self, now: Instant) -> Vec<String> {
         self.lock_entries()
             .iter()
-            .filter(|(_, entry)| {
-                !entry.job.state.is_terminal()
-                    && now.saturating_duration_since(entry.created_at) >= JOB_TIMEOUT
+            .filter(|(_, entry)| match (&entry.job.state, entry.claimed_at) {
+                (JobState::Accepted, _) => {
+                    now.saturating_duration_since(entry.created_at) >= START_TIMEOUT
+                }
+                (state, Some(claimed_at))
+                    if !state.is_terminal() && entry.pending_completion.is_none() =>
+                {
+                    entry
+                        .run_limit
+                        .is_some_and(|limit| now.saturating_duration_since(claimed_at) >= limit)
+                }
+                _ => false,
             })
             .map(|(id, _)| id.clone())
             .collect()
@@ -395,10 +426,10 @@ mod tests {
             .create_at("test".into(), RunRequest::default(), None, now)
             .unwrap();
         assert!(jobs
-            .expired_job_ids_at(now + JOB_TIMEOUT - Duration::from_nanos(1))
+            .expired_job_ids_at(now + START_TIMEOUT - Duration::from_nanos(1))
             .is_empty());
         assert_eq!(
-            jobs.expired_job_ids_at(now + JOB_TIMEOUT),
+            jobs.expired_job_ids_at(now + START_TIMEOUT),
             vec![job.id.clone()]
         );
         jobs.finish(
@@ -413,7 +444,34 @@ mod tests {
             jobs.get(&job.id).unwrap().code.as_deref(),
             Some("OutputTooLarge")
         );
-        assert!(jobs.expired_job_ids_at(now + JOB_TIMEOUT).is_empty());
+        assert!(jobs.expired_job_ids_at(now + START_TIMEOUT).is_empty());
+    }
+
+    #[test]
+    fn a_background_run_is_limited_from_its_start_and_a_window_run_is_not() {
+        let jobs = ExternalJobs::default();
+        let now = Instant::now();
+        let background = jobs
+            .create_at("test".into(), RunRequest::default(), None, now)
+            .unwrap();
+        let window = jobs
+            .create_at("test".into(), RunRequest::default(), None, now)
+            .unwrap();
+        let limit = Duration::from_secs(120);
+        jobs.set_run_limit(&background.id, Some(limit));
+        // the wait before the start does not count towards the limit
+        let started = now + Duration::from_secs(200);
+        jobs.claim_at(&background.id, started).unwrap();
+        jobs.claim_at(&window.id, started).unwrap();
+        let hour_later = started + Duration::from_secs(3600);
+        assert!(jobs
+            .expired_job_ids_at(started + limit - Duration::from_nanos(1))
+            .is_empty());
+        assert_eq!(
+            jobs.expired_job_ids_at(started + limit),
+            vec![background.id.clone()]
+        );
+        assert!(!jobs.expired_job_ids_at(hour_later).contains(&window.id));
     }
     #[test]
     fn escaped_output_must_fit_the_wire_envelope() {

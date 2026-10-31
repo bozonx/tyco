@@ -244,8 +244,6 @@
     "testRunning": "Ejecutando…",
     "testStop": "Detener",
     "testTextPlaceholder": "Texto para probar",
-    "timeoutInfo": "Cuánto tiempo se espera a un script cuya salida se necesita; después falla. {seconds} de forma predeterminada, como máximo {max}. Cuando la salida no se necesita («Nada»), se espera al script 3 s y se deja en segundo plano.",
-    "timeoutLabel": "Esperar la salida, segundos",
     "toolInfo": "Herramienta: {tool}",
     "toolMissing": "Su herramienta no está disponible: el plugin está desactivado o falta",
     "preTransformFailed": "No se pudo preparar el texto para el comando",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Transforma el texto con una instrucción de LLM antes de pasarlo al comando.",
     "llmPreTransformPromptLabel": "Instrucción de transformación",
     "llmPreTransformPromptPlaceholder": "Instrucción que transforma el texto antes de que lo reciba el comando",
-    "llmPreTransformPromptInfo": "Instrucción para el LLM con la que transformar el texto de entrada antes de enviarlo al comando."
+    "llmPreTransformPromptInfo": "Instrucción para el LLM con la que transformar el texto de entrada antes de enviarlo al comando.",
+    "externalTimeoutLabel": "Límite de ejecución en segundo plano, segundos",
+    "externalTimeoutInfo": "Cuánto tiempo puede ejecutarse una llamada externa en segundo plano, contando desde el inicio del comando; después se detiene y se informa como tiempo agotado. {seconds} por defecto, como máximo {max}. Las ejecuciones en una ventana no tienen límite: las ves y puedes cancelarlas.",
+    "preTransformEmpty": "El LLM no devolvió texto para el comando"
   },
   "common": {
     "add": "Agregar",
@@ -383,6 +384,7 @@
     "failed": "El comando «{name}» falló",
     "missing": "El comando no está en la biblioteca",
     "running": "Ejecutando «{name}»…",
+    "timedOut": "No terminó en {seconds} s y se detuvo",
     "unknown": "Error desconocido"
   },
   "history": {

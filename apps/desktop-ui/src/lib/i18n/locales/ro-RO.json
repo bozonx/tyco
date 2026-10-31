@@ -244,8 +244,6 @@
     "testRunning": "Se rulează…",
     "testStop": "Oprește",
     "testTextPlaceholder": "Text pentru test",
-    "timeoutInfo": "Cât timp este așteptat un script a cărui ieșire este necesară; după aceea eșuează. Implicit {seconds}, cel mult {max}. Când ieșirea nu este necesară („Nimic”), scriptul este așteptat 3 s și lăsat în fundal.",
-    "timeoutLabel": "Așteptarea ieșirii, secunde",
     "toolInfo": "Instrument: {tool}",
     "toolMissing": "Instrumentul său nu este disponibil: pluginul este dezactivat sau lipsește",
     "preTransformFailed": "Textul pentru comandă nu a putut fi pregătit",
@@ -258,7 +256,10 @@
     "llmPreTransformInfo": "Transformă textul cu o instrucțiune LLM înainte de a-l trimite la comandă.",
     "llmPreTransformPromptLabel": "Prompt de transformare",
     "llmPreTransformPromptPlaceholder": "Prompt care transformă textul înainte de a fi primit de comandă",
-    "llmPreTransformPromptInfo": "Instrucțiune pentru LLM de transformare a textului de intrare înainte de a fi trimis comenzii."
+    "llmPreTransformPromptInfo": "Instrucțiune pentru LLM de transformare a textului de intrare înainte de a fi trimis comenzii.",
+    "externalTimeoutLabel": "Limită pentru rularea în fundal, secunde",
+    "externalTimeoutInfo": "Cât timp poate rula în fundal un apel extern, socotind de la pornirea comenzii; apoi este oprit și raportat ca expirat. Implicit {seconds}, cel mult {max}. Rulările într-o fereastră nu sunt limitate: le vedeți și le puteți anula.",
+    "preTransformEmpty": "LLM nu a returnat niciun text pentru comandă"
   },
   "common": {
     "add": "Adaugă",
@@ -383,6 +384,7 @@
     "failed": "Comanda „{name}” a eșuat",
     "missing": "Comanda nu se află în bibliotecă",
     "running": "Se rulează „{name}”…",
+    "timedOut": "Nu s-a terminat în {seconds} s și a fost oprită",
     "unknown": "Eroare necunoscută"
   },
   "history": {

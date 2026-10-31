@@ -3,6 +3,7 @@ import type { CommandConfig } from '@tyco/shared'
 import {
   createInvocationRunner,
   type InvocationRunnerDependencies,
+  reportResult,
 } from '../invocation/invocation-runner'
 import type {
   InvocationOptions,
@@ -52,21 +53,12 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
       return { ok: false as const, outcome, result }
     }
     if (!pre.ok) {
-      const messageKey =
-        pre.messageKey ?? (pre.message ? undefined : FAILED_KEY)
-      if (messageKey) {
-        if (deps.showError) deps.showError(messageKey, pre.message)
-        else deps.showToast(messageKey, 'error')
-      } else if (pre.message && deps.showText) {
-        deps.showText(pre.message, 'error')
-      } else if (deps.showError) {
-        deps.showError(FAILED_KEY, pre.message)
-      } else {
-        deps.showToast(FAILED_KEY, 'error')
-      }
+      // the LLM error alone would not say what failed
+      const messageKey = pre.messageKey ?? FAILED_KEY
+      reportResult(deps, { ok: false, messageKey, message: pre.message })
       const outcome: InvocationOutcome = {
         success: false,
-        message: pre.message ?? messageKey ?? 'Pre-transformation failed',
+        message: pre.message ?? messageKey,
       }
       const result: ToolResult = { ok: false, messageKey, message: pre.message }
       return { ok: false as const, outcome, result }

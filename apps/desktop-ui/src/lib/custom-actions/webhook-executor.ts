@@ -4,8 +4,9 @@ import { ACTION_TEXT_PLACEHOLDER, type WebhookToolConfig } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 
-const WEBHOOK_TIMEOUT_MS = 30_000
 const MAX_LOG_RESPONSE_CHARS = 4096
+/** How much of an error response the failure message quotes */
+const MAX_ERROR_BODY_CHARS = 200
 
 /** Writes a webhook call of the command `name` to the action log */
 export type WebhookCallLog = (name: string, details: string) => Promise<void>
@@ -109,7 +110,33 @@ export function webhookResultText(body: string): string {
   return body
 }
 
-/** Sends the text; resolves with the response body. */
+/**
+ * `text` with every URL cut down to its origin: a path or a query may hold
+ * credentials or the text itself
+ */
+export function redactUrls(text: string): string {
+  return text.replace(/\b[a-z][a-z\d+.-]*:\/\/[^\s'"<>]+/gi, (match) => {
+    try {
+      return new URL(match).origin
+    } catch {
+      return '[URL]'
+    }
+  })
+}
+
+/** The start of an error response on one line, for the failure message */
+function errorBodyExcerpt(body: string): string {
+  const line = body.replace(/\s+/g, ' ').trim()
+  return line.length > MAX_ERROR_BODY_CHARS
+    ? `${line.slice(0, MAX_ERROR_BODY_CHARS)}…`
+    : line
+}
+
+/**
+ * Sends the text; resolves with the response body. There is no time limit of
+ * its own: the caller shows the run and cancels it through `signal`, a
+ * background caller on its own limit
+ */
 export async function executeWebhook(
   target: WebhookTarget,
   text: string | null,
@@ -137,30 +164,21 @@ export async function executeWebhook(
     }
   }
 
-  const controller = new AbortController()
-  const abort = () => controller.abort(signal?.reason)
-  if (signal?.aborted) abort()
-  signal?.addEventListener('abort', abort, { once: true })
-  const timer = setTimeout(
-    () =>
-      controller.abort(
-        new Error(`No response in ${WEBHOOK_TIMEOUT_MS / 1000} s`)
-      ),
-    WEBHOOK_TIMEOUT_MS
-  )
   let response: Response
   let responseText: string
   try {
-    response = await fetchFn(url, { ...init, signal: controller.signal })
+    response = await fetchFn(url, { ...init, signal })
     responseText =
       typeof response.text === 'function' ? await response.text() : ''
   } catch (error) {
     const message = errorMessage(error)
-    await log(`${logPrefix}\nError: Request failed or was cancelled`, true)
+    await log(
+      signal?.aborted
+        ? `${logPrefix}\nCancelled`
+        : `${logPrefix}\nError: ${redactUrls(message)}`,
+      true
+    )
     throw new Error(message, { cause: error })
-  } finally {
-    clearTimeout(timer)
-    signal?.removeEventListener('abort', abort)
   }
 
   const loggedResponse = target.isOutputLogged
@@ -173,8 +191,9 @@ export async function executeWebhook(
     !response.ok
   )
   if (!response.ok) {
+    const excerpt = errorBodyExcerpt(responseText)
     throw new Error(
-      `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`
+      `HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''}${excerpt ? `: ${excerpt}` : ''}`
     )
   }
   return responseText
