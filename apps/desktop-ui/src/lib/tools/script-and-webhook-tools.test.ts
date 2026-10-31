@@ -21,3 +21,26 @@ describe('script tool', () => {
     expect(executeScriptAction).not.toHaveBeenCalled()
   })
 })
+
+describe('a window without the clients', () => {
+  const call = {
+    input: { text: 'x' },
+    source: 'menu' as const,
+    signal: new AbortController().signal,
+    isOutputRequested: true,
+    command: { id: 'c-1', name: 'C', isOutputLogged: false },
+  }
+  const [script, webhook] = createScriptAndWebhookTools({})
+
+  it('fails a script it cannot send to the backend', async () => {
+    await expect(
+      script.run({ ...call, config: { command: 'echo' } })
+    ).resolves.toEqual({ ok: false, messageKey: 'toast.scriptFailed' })
+  })
+
+  it('does not pass a webhook it cannot send for a success', async () => {
+    await expect(
+      webhook.run({ ...call, config: { url: 'https://x.test' } })
+    ).resolves.toEqual({ ok: false, messageKey: 'toast.webhookFailed' })
+  })
+})

@@ -64,18 +64,24 @@ export function buildWebhookRequest(
   const headers: Record<string, string> = { 'user-agent': 'Tyco-Desktop' }
   let body: string | undefined
   if (method === 'POST') {
-    body = target.payloadTemplate?.trim()
-      ? isJson(fillJsonTemplate(target.payloadTemplate, ''))
-        ? fillJsonTemplate(target.payloadTemplate, text ?? '')
-        : target.payloadTemplate.split(ACTION_TEXT_PLACEHOLDER).join(text ?? '')
-      : JSON.stringify({
+    const rawTemplate = target.payloadTemplate ?? ''
+    const template = rawTemplate.trim()
+    body = !template
+      ? JSON.stringify({
           action: target.name || target.id,
           timestamp: Date.now(),
           source: 'tyco',
         })
-    headers['content-type'] = isJson(body)
-      ? 'application/json; charset=utf-8'
-      : 'text/plain; charset=utf-8'
+      : // the text alone is sent as it is, not as a JSON string
+        template === ACTION_TEXT_PLACEHOLDER
+        ? (text ?? '')
+        : isJson(fillJsonTemplate(rawTemplate, ''))
+          ? fillJsonTemplate(rawTemplate, text ?? '')
+          : rawTemplate.split(ACTION_TEXT_PLACEHOLDER).join(text ?? '')
+    headers['content-type'] =
+      template !== ACTION_TEXT_PLACEHOLDER && isJson(body)
+        ? 'application/json; charset=utf-8'
+        : 'text/plain; charset=utf-8'
   }
 
   for (const [name, value] of Object.entries(target.headers ?? {})) {
@@ -178,7 +184,9 @@ export async function executeWebhook(
         : `${logPrefix}\nError: ${redactUrls(message)}`,
       true
     )
-    throw new Error(message, { cause: error })
+    // the message goes to toasts and the run log: a URL in it may carry a
+    // token in its path or query
+    throw new Error(redactUrls(message), { cause: error })
   }
 
   const loggedResponse = target.isOutputLogged

@@ -9,9 +9,9 @@ export function createCommandEditorModel(deps: {
   function update(patch: Partial<CommandConfig>) {
     deps.update({ ...deps.getCommand(), ...patch })
   }
+  /** A blank description is none; the field stays, as the schema requires */
   function updateDescription(value: string) {
-    const { description: _previous, ...rest } = deps.getCommand()
-    deps.update(value.trim() ? { ...rest, description: value } : rest)
+    update({ description: value.trim() ? value : '' })
   }
   function updateToolConfig(field: string, value: unknown) {
     const { [field]: _previous, ...rest } = deps.getCommand().toolConfig

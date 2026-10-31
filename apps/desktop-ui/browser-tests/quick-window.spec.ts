@@ -90,6 +90,7 @@ test.describe('command launcher', () => {
       {
         id: 'browser-command',
         name: 'Browser command',
+        description: '',
         toolId: 'script',
         toolConfig: { command: 'printf browser', workingDirectory: '' },
         phrases: [],

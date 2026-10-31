@@ -367,3 +367,42 @@ fn names_normalize_as_the_webview_does() {
         assert_eq!(normalize_name(name), expected, "{name:?}");
     }
 }
+
+#[test]
+fn a_name_waits_while_a_command_of_that_name_is_loading() {
+    let config = json!({"commands": [
+        {"id": "a", "name": "Same", "toolId": "script",
+         "toolConfig": {"command": "x"}, "isAvailableExternally": true},
+        {"id": "b", "name": "Same", "toolId": "Plugin.late", "isAvailableExternally": true},
+    ]});
+    // the catalog has not come yet: `b` may be callable too
+    assert_eq!(
+        find_by_name(&config, None, "same"),
+        Err(CommandLookupError::ToolsLoading("b".into()))
+    );
+}
+
+#[test]
+fn a_name_that_cannot_be_called_tells_the_most_telling_reason() {
+    let config = json!({"commands": [
+        {"id": "off", "name": "Same", "toolId": "script",
+         "toolConfig": {"command": "x"}, "isEnabled": false, "isAvailableExternally": true},
+        {"id": "inside", "name": "Same", "toolId": "script",
+         "toolConfig": {"command": "x"}},
+    ]});
+    assert_eq!(
+        find_by_name(&config, None, "same"),
+        Err(CommandLookupError::NotExternal("inside".into()))
+    );
+}
+
+#[test]
+fn describe_names_a_command_without_a_name_by_its_id() {
+    let config = json!({"commands": [
+        {"id": "nameless", "name": "  ", "toolId": "script",
+         "toolConfig": {"command": "x"}, "isAvailableExternally": true},
+    ]});
+    let description = describe(&config, None, "nameless", false).unwrap();
+    assert_eq!(description["name"], "nameless");
+    assert_eq!(list(&config, None)[0]["name"], "nameless");
+}

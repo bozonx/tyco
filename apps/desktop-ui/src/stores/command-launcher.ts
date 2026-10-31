@@ -8,6 +8,7 @@ import { ActivationMode } from '@tyco/shared'
 import { useToastStore } from './toast'
 import { createCommandLauncherModel } from '../lib/command-launcher/launcher-model'
 import { createCommandRunner } from '../lib/commands/command-runner'
+import { commandLabel } from '../lib/commands/command-runtime'
 import { translate } from '../lib/i18n/index'
 import { resultOrThrow } from '../lib/ipc/ipc-model'
 import { useInvocationRunnerDependencies } from './invocations'
@@ -60,6 +61,9 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
         toastText(result.error ?? translate('toast.commandFailed'), 'error')
       }
       return result.success
+    },
+    commandUnavailable: (command, reasonKey) => {
+      toastText(`${commandLabel(command)}: ${translate(reasonKey)}`, 'warn')
     },
     commandMissing: (commandId) => {
       toastText(

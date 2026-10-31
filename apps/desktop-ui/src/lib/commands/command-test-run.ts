@@ -10,6 +10,7 @@ import {
   buildScriptRequest,
   cancelScriptRun,
 } from '../custom-actions/script-executor'
+import { outputRequest, toolCallCommand } from '../tools/tool-call'
 import type { ToolLookup } from '../tools/tool-types'
 import {
   commandLabel,
@@ -80,7 +81,17 @@ export async function runCommandTest(
     if (!scriptToolConfig(command).command.trim()) {
       return { kind: 'error', messageKey: 'commands.errorNoCommand' }
     }
-    const saved = await deps.saveCommand(command.id)
+    let saved: CommandConfig | undefined
+    try {
+      saved = await deps.saveCommand(command.id)
+    } catch (error) {
+      if (signal.aborted) return { kind: 'cancelled' }
+      return {
+        kind: 'error',
+        messageKey: 'commands.testNeedsSave',
+        message: errorMessage(error),
+      }
+    }
     if (signal.aborted) return { kind: 'cancelled' }
     if (!saved || !isSameScript(saved, command)) {
       return { kind: 'error', messageKey: 'commands.testNeedsSave' }
@@ -133,14 +144,8 @@ export async function runCommandTest(
       config: command.toolConfig,
       source: 'menu',
       signal,
-      command: {
-        id: command.id,
-        name: commandLabel(command),
-        isOutputLogged: false,
-        logOutput: false,
-      },
-      isOutputRequested: true,
-      wantsOutput: true,
+      command: toolCallCommand(command.id, commandLabel(command), false),
+      ...outputRequest(true),
     })
     if (signal.aborted || result.cancelled) return { kind: 'cancelled' }
     if (!result.ok) {

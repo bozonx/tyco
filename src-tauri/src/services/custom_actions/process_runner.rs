@@ -325,13 +325,16 @@ pub fn execute_script(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
-    let registration = runs.register(request.run_id)?;
+    let registration = runs.register(request.run_id).inspect_err(|error| {
+        log.write(&empty_result(), Some(&error.to_string()));
+    })?;
     let mut child = command
         .spawn()
         .map_err(|error| fail(&log, format!("Failed to start the command: {error}")))?;
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
-    let mut running = RunningScript::start(child, stdout, stderr)?;
+    let mut running = RunningScript::start(child, stdout, stderr)
+        .map_err(|error| fail(&log, format!("Failed to read the command output: {error}")))?;
 
     let deadline = (!request.should_capture_output).then(|| Instant::now() + STATUS_WAIT);
     let status = running

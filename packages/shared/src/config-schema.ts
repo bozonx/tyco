@@ -286,12 +286,123 @@ export function normalizeLlmConfig(value: unknown): UserConfig['llm'] {
   return llm
 }
 
+const MAX_COMMAND_ID_LENGTH = 64
+
+const commandIdPattern = new RegExp(
+  (schemaAt('commands').items?.properties?.id?.pattern as string | undefined) ??
+    '^[a-z0-9][a-z0-9._-]{0,63}$'
+)
+
+/**
+ * A valid command id made of an invalid one: ASCII letters in lower case, each
+ * run of other characters as one `-`, without leading or trailing punctuation.
+ * Keep in sync with `command_id_from` in `services/settings/schema.rs`
+ */
+function commandIdFrom(id: string): string {
+  return id
+    .replace(/[A-Z]/g, (letter) => letter.toLowerCase())
+    .replace(/[^a-z0-9._-]+/gu, '-')
+    .replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '')
+    .slice(0, MAX_COMMAND_ID_LENGTH)
+}
+
+/** Keep in sync with `is_blank_id` in `services/settings/schema.rs` */
+const isBlankId = (id: string): boolean => /^[ \t\n\r]*$/.test(id)
+
+/**
+ * New ids for the commands whose id breaks the schema, which would drop them:
+ * e.g. `MyCmd` of a config edited by hand becomes `mycmd`. Each new id is
+ * unique; repeats of one invalid id get the same new id, as they were
+ * duplicates before
+ */
+function commandIdRepairs(commands: unknown): Map<string, string> {
+  const repairs = new Map<string, string>()
+  if (!Array.isArray(commands)) return repairs
+  const ids = commands.flatMap((command) =>
+    isRecord(command) && typeof command.id === 'string' ? [command.id] : []
+  )
+  const taken = new Set(ids.filter((id) => commandIdPattern.test(id)))
+  for (const id of ids) {
+    // a blank id is no id: such a command stays dropped
+    if (commandIdPattern.test(id) || repairs.has(id) || isBlankId(id)) continue
+    const base = commandIdFrom(id) || 'command'
+    let candidate = base
+    for (let index = 2; taken.has(candidate); index += 1) {
+      const suffix = `-${index}`
+      candidate = `${base.slice(0, MAX_COMMAND_ID_LENGTH - suffix.length)}${suffix}`
+    }
+    taken.add(candidate)
+    repairs.set(id, candidate)
+  }
+  return repairs
+}
+
+const withRepairedId = (
+  command: unknown,
+  repairs: Map<string, string>
+): unknown =>
+  isRecord(command) && typeof command.id === 'string' && repairs.has(command.id)
+    ? { ...command, id: repairs.get(command.id) }
+    : command
+
+/**
+ * The raw config with valid ids for its commands, the menu items and launcher
+ * keys of those commands following them
+ */
+function repairCommandIds(value: unknown): unknown {
+  if (!isRecord(value)) return value
+  const repairs = commandIdRepairs(value.commands)
+  if (!repairs.size) return value
+  const result: Record<string, unknown> = {
+    ...value,
+    commands: (value.commands as unknown[]).map((command) =>
+      withRepairedId(command, repairs)
+    ),
+  }
+  if (isRecord(value.mainActions)) {
+    result.mainActions = Object.fromEntries(
+      Object.entries(value.mainActions).map(([key, slot]) => [
+        key,
+        isRecord(slot) &&
+        slot.type === 'command' &&
+        typeof slot.commandId === 'string' &&
+        repairs.has(slot.commandId)
+          ? { ...slot, commandId: repairs.get(slot.commandId) }
+          : slot,
+      ])
+    )
+  }
+  if (Array.isArray(value.launcherPages)) {
+    result.launcherPages = value.launcherPages.map((page: unknown) =>
+      isRecord(page) && isRecord(page.slots)
+        ? {
+            ...page,
+            slots: Object.fromEntries(
+              Object.entries(page.slots).map(([key, id]) => [
+                key,
+                typeof id === 'string' ? (repairs.get(id) ?? id) : id,
+              ])
+            ),
+          }
+        : page
+    )
+  }
+  return result
+}
+
 /**
  * The command library: each id once, with the tool settings of the built-in
- * tools repaired
+ * tools repaired; an invalid id is repaired rather than the command dropped
  */
 export function normalizeCommands(value: unknown): UserConfig['commands'] {
-  const commands = repair(value, schemaAt('commands')) as UserConfig['commands']
+  const repairs = commandIdRepairs(value)
+  const source = repairs.size
+    ? (value as unknown[]).map((command) => withRepairedId(command, repairs))
+    : value
+  const commands = repair(
+    source,
+    schemaAt('commands')
+  ) as UserConfig['commands']
   for (const command of commands) {
     command.toolId = command.toolId.trim()
     const toolSchema =
@@ -314,7 +425,7 @@ export function normalizeCommands(value: unknown): UserConfig['commands'] {
  * are, as are the opaque plugin and tool settings
  */
 export function normalizeUserConfig(value: UserConfigInput): UserConfig {
-  const config = repair(value, schema) as UserConfig
+  const config = repair(repairCommandIds(value), schema) as UserConfig
   config.configVersion = configVersion
   config.commands = normalizeCommands(config.commands)
   config.llm = normalizeLlmConfig(config.llm)

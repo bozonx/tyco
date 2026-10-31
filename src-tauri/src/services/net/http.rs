@@ -194,11 +194,7 @@ fn describe(error: &reqwest::Error) -> String {
         source = cause.source();
     }
     if let Some(url) = error.url() {
-        let mut redacted = url.clone();
-        if redacted.query().is_some() {
-            redacted.set_query(Some("<redacted>"));
-            message = message.replace(url.as_str(), redacted.as_str());
-        }
+        message = message.replace(url.as_str(), &super::request::redacted_url(url));
     }
     message
 }

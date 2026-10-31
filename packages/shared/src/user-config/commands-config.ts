@@ -125,8 +125,11 @@ export interface CommandConfig {
   /** Stable */
   id: string
   name: string
-  /** Tells the LLM what the command does; the agent and LLM parsing use it */
-  description?: string
+  /**
+   * Tells the LLM what the command does; the agent and LLM parsing use it.
+   * Empty when there is none: the schema requires the field
+   */
+  description: string
   /** Explicit literal voice phrases; the display name is never matched. */
   phrases: string[]
   isVoiceEnabled: boolean

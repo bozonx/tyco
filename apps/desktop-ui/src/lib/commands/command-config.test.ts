@@ -22,7 +22,7 @@ import {
 import {
   commandCliCall,
   platformCliShell,
-  findExternalCommandNameConflicts,
+  externalCommandNameConflicts,
   normalizeCommandName,
 } from './command-external'
 import {
@@ -139,6 +139,19 @@ describe('normalizeCommands for one command', () => {
     expect(normalizeCommand({ id: ' ', toolId: 'script' })).toBeUndefined()
     expect(normalizeCommand({ id: 'a' })).toBeUndefined()
     expect(normalizeCommand('script')).toBeUndefined()
+  })
+
+  it('repairs an id that breaks the schema instead of dropping the command', () => {
+    expect(normalizeCommand({ id: 'My Cmd!', toolId: 'script' })?.id).toBe(
+      'my-cmd'
+    )
+    expect(
+      normalizeCommands([
+        { id: 'notes', toolId: 'script' },
+        { id: 'Notes', toolId: 'script' },
+        { id: 'Скрипт', toolId: 'script' },
+      ]).map((command) => command.id)
+    ).toEqual(['notes', 'notes-2', 'command'])
   })
 })
 
@@ -345,13 +358,14 @@ describe('external names', () => {
     const b = named('b', ' свет ')
     const c = named('c', 'Свет', false)
     const d = { ...named('d', 'свет'), isEnabled: false }
-    const commands = [a, b, c, d, named('e', 'Other')]
-    expect(findExternalCommandNameConflicts(commands, a, tools)).toEqual([b])
+    const commands = [a, b, c, d, named('e', 'Other'), named('f', '')]
+    const conflicts = externalCommandNameConflicts(commands, tools)
+    expect(conflicts.get('a')).toEqual([b])
+    expect(conflicts.get('b')).toEqual([a])
     // a command that may not be called has no twins to warn about
-    expect(findExternalCommandNameConflicts(commands, c, tools)).toEqual([])
-    expect(
-      findExternalCommandNameConflicts(commands, named('f', ''), tools)
-    ).toEqual([])
+    expect(conflicts.has('c')).toBe(false)
+    expect(conflicts.has('e')).toBe(false)
+    expect(conflicts.has('f')).toBe(false)
   })
 })
 

@@ -158,9 +158,12 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     // earlier progress message does not stand for it
     let hasReported = false
     let hasReportedFailure = false
+    /** A warning the run gave, e.g. a disabled command: it tells a failure */
+    let lastWarning: string | undefined
     const report: RunReport = (kind, message) => {
       if (disposed || controller.signal.aborted) return
       hasReported = true
+      if (kind === 'warn') lastWarning = message
       if (kind === 'error') {
         hasReportedFailure = true
         failed(name, message)
@@ -181,8 +184,8 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     })
     const input = event.text ?? null
     if (input !== null)
-      await deps
-        .saveOutput?.(input)
+      await Promise.resolve()
+        .then(() => deps.saveOutput?.(input))
         .catch((error: unknown) => deps.reportError?.(error))
 
     if (disposed || controller.signal.aborted) {
@@ -217,8 +220,12 @@ export function createExternalRun(deps: ExternalRunDependencies) {
         })
       )
     } else if (!outcome.success && !outcome.cancelled) {
+      // the outcome message is for the log; the user gets what the run said
       if (!hasReportedFailure)
-        failed(name, outcome.message ?? deps.t('externalCommand.unknown'))
+        failed(
+          name,
+          lastWarning ?? outcome.message ?? deps.t('externalCommand.unknown')
+        )
     } else if (!hasReported) {
       deps.showOverlay(null)
     }
@@ -238,6 +245,20 @@ export function createExternalRun(deps: ExternalRunDependencies) {
     runs.add(run)
     try {
       return await perform(event, run)
+    } catch (error) {
+      // a run that broke must still give its job back, or the caller waits
+      // for it until the time limit
+      deps.reportError?.(error)
+      const outcome: InvocationOutcome = {
+        success: false,
+        message: errorMessage(error),
+      }
+      try {
+        failed(event.commandId, outcome.message ?? '')
+      } catch (reportError) {
+        deps.reportError?.(reportError)
+      }
+      return await complete(run, outcome)
     } finally {
       runs.delete(run)
       if (event.jobId && controllers.get(event.jobId) === run.controller)

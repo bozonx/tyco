@@ -22,7 +22,7 @@ describe('command editor model', () => {
       },
     })
     model.updateDescription(' ')
-    expect(command).not.toHaveProperty('description')
+    expect(command.description).toBe('')
     model.updateExternalTimeout(String(EXTERNAL_TIMEOUT_MAX_SEC + 1))
     expect(command.externalTimeoutSec).toBe(EXTERNAL_TIMEOUT_MAX_SEC)
     model.updateExternalTimeout('1.6')

@@ -14,6 +14,7 @@ import {
 import type { ToolLookup, ToolResult } from '../tools/tool-types'
 import type { Invocation, InvocationOptions } from './invocation-types'
 import { resolveSink } from './result-sinks'
+import { outputRequest, toolCallCommand } from '../tools/tool-call'
 
 export interface ToolInvokerDependencies {
   /** The tools the invocations run */
@@ -128,16 +129,14 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
         signal,
         ...(invocation.commandId
           ? {
-              command: {
-                id: invocation.commandId,
-                name: invocation.label,
-                isOutputLogged: invocation.isOutputLogged ?? false,
-                logOutput: invocation.isOutputLogged ?? false,
-              },
+              command: toolCallCommand(
+                invocation.commandId,
+                invocation.label,
+                invocation.isOutputLogged ?? false
+              ),
             }
           : {}),
-        isOutputRequested: resolveSink(invocation, options) !== 'none',
-        wantsOutput: resolveSink(invocation, options) !== 'none',
+        ...outputRequest(resolveSink(invocation, options) !== 'none'),
         ...(options.onProgress ? { onProgress: options.onProgress } : {}),
       })
       if (signal.aborted) {

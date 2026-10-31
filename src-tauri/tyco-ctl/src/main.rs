@@ -513,6 +513,10 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(run(&["run", "--name", "ls"]), ("ls".into(), true));
+        // a name that looks like a flag is still the name: the line the
+        // settings copy needs no `--`
+        assert_eq!(run(&["run", "--name", "-x"]), ("-x".into(), true));
+        assert_eq!(run(&["run", "--name", "--json"]), ("--json".into(), true));
         assert!(command(&["run", "ls", "--name"]).is_err());
         assert_eq!(run(&["run", "ls"]), ("ls".into(), false));
         assert!(command(&["run", "--name"]).is_err());

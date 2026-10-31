@@ -82,9 +82,7 @@
               :autofocus-name="focusedCommandId === command.id"
               :menu-slot="menuSlots.get(command.id)"
               :launcher-slots="launcherSlots.get(command.id) ?? []"
-              :name-conflicts="
-                findExternalCommandNameConflicts(commands, command, toolsStore)
-              "
+              :name-conflicts="nameConflicts.get(command.id) ?? []"
               @toggle="toggle(command.id)"
               @drag="startDrag(index, $event)"
               @update="updateCommand(index, $event)"
@@ -133,7 +131,7 @@ import {
   createCommand,
   normalizeCommands,
 } from '../../lib/commands/command-config'
-import { findExternalCommandNameConflicts } from '../../lib/commands/command-external'
+import { externalCommandNameConflicts } from '../../lib/commands/command-external'
 import { createCommandRemovalModel } from '../../lib/commands/command-removal-model'
 import { commandUnavailableReason } from '../../lib/commands/command-runtime'
 import { clientLogger } from '../../lib/logger'
@@ -181,6 +179,10 @@ const setCommands = (next: CommandConfig[]) => {
   userConfig.value.commands = next
 }
 const commands = computed(() => normalizeCommands(userConfig.value.commands))
+/** The other commands an external call by the name of each one could mean */
+const nameConflicts = computed(() =>
+  externalCommandNameConflicts(commands.value, toolsStore)
+)
 
 /** The first slot of the action menu that holds each command */
 const menuSlots = computed(() => {

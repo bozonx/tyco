@@ -49,6 +49,7 @@ describe('external commands store wiring', () => {
     const cmd: CommandConfig = {
       id: 'cmd-ext',
       name: 'External Command',
+      description: '',
       isEnabled: true,
       toolId: 'mock.tool',
       toolConfig: {},

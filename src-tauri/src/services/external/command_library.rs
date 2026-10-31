@@ -318,20 +318,37 @@ pub fn find_by_name(
             !normalized.is_empty() && normalize_name(str_field(command, "name")) == normalized
         })
         .collect();
-    let callable_matches: Vec<ExternalCommand> = matches
+    let resolved: Vec<Result<ExternalCommand, CommandLookupError>> = matches
         .iter()
-        .filter_map(|command| resolve_callable_command(command, catalog).ok())
+        .map(|command| resolve_callable_command(command, catalog))
         .collect();
-    match callable_matches.as_slice() {
-        [command] => Ok(command.clone()),
-        [] => match matches.first() {
-            Some(command) => resolve_callable_command(command, catalog),
-            None => Err(CommandLookupError::NotFound(name.into())),
-        },
-        several => Err(CommandLookupError::Ambiguous(
+    let callable_matches: Vec<&ExternalCommand> = resolved
+        .iter()
+        .filter_map(|found| found.as_ref().ok())
+        .collect();
+    // a command whose tools are still loading may turn out callable as well:
+    // running another one of the same name now could run the wrong one
+    let loading = resolved.iter().find_map(|found| match found {
+        Err(error @ CommandLookupError::ToolsLoading(_)) => Some(error.clone()),
+        _ => None,
+    });
+    match (callable_matches.as_slice(), loading) {
+        (several @ [_, _, ..], _) => Err(CommandLookupError::Ambiguous(
             name.into(),
             several.iter().map(|command| command.id.clone()).collect(),
         )),
+        (_, Some(loading)) => Err(loading),
+        ([command], None) => Ok((*command).clone()),
+        ([], None) => resolved
+            .into_iter()
+            .min_by_key(|found| match found {
+                // the reason that says most about why the name cannot be called
+                Err(CommandLookupError::Unavailable(..)) => 0,
+                Err(CommandLookupError::NotExternal(_)) => 1,
+                Err(CommandLookupError::Disabled(_)) => 2,
+                _ => 3,
+            })
+            .unwrap_or_else(|| Err(CommandLookupError::NotFound(name.into()))),
     }
 }
 
@@ -349,31 +366,33 @@ struct ListedCommand {
 
 /// The commands that may be called from outside, as a JSON array of
 /// `{ id, name, input, ... }`, in the order of the library.
+/// The name a call shows for the command: its id when it has none.
+fn display_name(command: &Value) -> &str {
+    let name = str_field(command, "name").trim();
+    if name.is_empty() {
+        id_of(command)
+    } else {
+        name
+    }
+}
+
 pub fn list(user_config: &Value, catalog: Option<&ToolCatalog>) -> Value {
     let listed: Vec<ListedCommand> = commands_of(user_config)
         .iter()
         .filter(|command| !id_of(command).is_empty())
         .filter_map(|command| Some((command, resolve_callable_command(command, catalog).ok()?)))
-        .map(|(command, found)| {
-            let name = str_field(command, "name").trim();
-            ListedCommand {
-                id: id_of(command).to_owned(),
-                name: if name.is_empty() {
-                    id_of(command)
-                } else {
-                    name
-                }
-                .to_owned(),
-                input: if found.has_structured_input {
-                    "structured"
-                } else if found.can_take_text {
-                    "text"
-                } else {
-                    "none"
-                },
-                can_replace_selection: found.can_take_text && !found.has_structured_input,
-                output: "return",
-            }
+        .map(|(command, found)| ListedCommand {
+            id: id_of(command).to_owned(),
+            name: display_name(command).to_owned(),
+            input: if found.has_structured_input {
+                "structured"
+            } else if found.can_take_text {
+                "text"
+            } else {
+                "none"
+            },
+            can_replace_selection: found.can_take_text && !found.has_structured_input,
+            output: "return",
         })
         .collect();
     serde_json::to_value(listed).unwrap_or_else(|_| Value::Array(Vec::new()))
@@ -403,7 +422,7 @@ pub fn describe(
     };
     Ok(serde_json::json!({
         "id": command.id,
-        "name": raw.and_then(|item| item.get("name")),
+        "name": raw.map_or(command.id.as_str(), display_name),
         "input": if command.has_structured_input { "structured" } else if command.can_take_text { "text" } else { "none" },
         "textAccepted": command.can_take_text,
         "canReplaceSelection": command.can_take_text && !command.has_structured_input,

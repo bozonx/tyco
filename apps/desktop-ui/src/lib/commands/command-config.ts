@@ -53,9 +53,13 @@ export function scriptToolConfigOf(
   }
 }
 
+/** A webhook config as read from a command: its method and headers are set */
+export type ResolvedWebhookToolConfig = WebhookToolConfig &
+  Required<Pick<WebhookToolConfig, 'method' | 'headers'>>
+
 export function webhookToolConfigOf(
   config: Record<string, unknown>
-): WebhookToolConfig {
+): ResolvedWebhookToolConfig {
   return {
     url: stringOr(config.url),
     method: config.method === 'GET' ? 'GET' : 'POST',
@@ -75,8 +79,9 @@ export const toolConfigText = (command: CommandConfig, key: string): string =>
 export const scriptToolConfig = (command: CommandConfig): ScriptToolConfig =>
   scriptToolConfigOf(command.toolConfig)
 
-export const webhookToolConfig = (command: CommandConfig): WebhookToolConfig =>
-  webhookToolConfigOf(command.toolConfig)
+export const webhookToolConfig = (
+  command: CommandConfig
+): ResolvedWebhookToolConfig => webhookToolConfigOf(command.toolConfig)
 
 export { normalizeCommands }
 
@@ -140,6 +145,7 @@ export function createCommand(
   return {
     id,
     name: '',
+    description: '',
     phrases: [],
     isVoiceEnabled: false,
     toolId,

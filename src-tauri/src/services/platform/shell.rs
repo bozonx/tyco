@@ -108,7 +108,37 @@ enum QuoteContext {
 /// text escaped in place. The command must have `TEXT_ENV` set, see
 /// [`command_with_text`].
 pub fn substitute(script: &str, placeholder: &str, text: &str) -> String {
-    let windows = cfg!(target_os = "windows");
+    substitute_for(script, placeholder, text, cfg!(target_os = "windows"))
+}
+
+/// Whether PowerShell takes `c` for a single quote: it treats the typographic
+/// ones as the ASCII one, so a string opened by one is closed by any other.
+fn is_powershell_single_quote(c: char) -> bool {
+    matches!(c, '\'' | '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{201B}')
+}
+
+/// Whether PowerShell takes `c` for a double quote, see
+/// [`is_powershell_single_quote`].
+fn is_powershell_double_quote(c: char) -> bool {
+    matches!(c, '"' | '\u{201C}' | '\u{201D}' | '\u{201E}')
+}
+
+fn substitute_for(script: &str, placeholder: &str, text: &str, windows: bool) -> String {
+    let is_single = |c: char| {
+        if windows {
+            is_powershell_single_quote(c)
+        } else {
+            c == '\''
+        }
+    };
+    let is_double = |c: char| {
+        if windows {
+            is_powershell_double_quote(c)
+        } else {
+            c == '"'
+        }
+    };
+    let escape = if windows { '`' } else { '\\' };
     let mut result = String::with_capacity(script.len() + 16);
     let mut context = QuoteContext::Bare;
     let mut rest = script;
@@ -124,29 +154,35 @@ pub fn substitute(script: &str, placeholder: &str, text: &str) -> String {
         let Some(c) = chars.next() else { break };
         result.push(c);
         rest = chars.as_str();
+        let next = rest.chars().next();
 
-        let escape = if windows { '`' } else { '\\' };
-        match (context, c) {
-            (QuoteContext::Bare | QuoteContext::DoubleQuoted, c) if c == escape => {
+        match context {
+            QuoteContext::Bare | QuoteContext::DoubleQuoted if c == escape => {
                 // the escaped character is taken as it is
-                if let Some(next) = rest.chars().next() {
+                if let Some(next) = next {
                     result.push(next);
                     rest = &rest[next.len_utf8()..];
                 }
             }
-            (QuoteContext::Bare, '\'') => context = QuoteContext::SingleQuoted,
-            (QuoteContext::Bare, '"') => context = QuoteContext::DoubleQuoted,
-            (QuoteContext::SingleQuoted, '\'') if windows && rest.starts_with('\'') => {
-                result.push('\'');
-                rest = &rest[1..];
+            QuoteContext::Bare if is_single(c) => context = QuoteContext::SingleQuoted,
+            QuoteContext::Bare if is_double(c) => context = QuoteContext::DoubleQuoted,
+            // PowerShell takes two quotes in a row inside a string for one
+            QuoteContext::SingleQuoted
+                if windows && is_single(c) && next.is_some_and(is_single) =>
+            {
+                let next = next.unwrap_or_default();
+                result.push(next);
+                rest = &rest[next.len_utf8()..];
             }
-            (QuoteContext::DoubleQuoted, '"') if windows && rest.starts_with('"') => {
-                result.push('"');
-                rest = &rest[1..];
+            QuoteContext::DoubleQuoted
+                if windows && is_double(c) && next.is_some_and(is_double) =>
+            {
+                let next = next.unwrap_or_default();
+                result.push(next);
+                rest = &rest[next.len_utf8()..];
             }
-            (QuoteContext::SingleQuoted, '\'') | (QuoteContext::DoubleQuoted, '"') => {
-                context = QuoteContext::Bare
-            }
+            QuoteContext::SingleQuoted if is_single(c) => context = QuoteContext::Bare,
+            QuoteContext::DoubleQuoted if is_double(c) => context = QuoteContext::Bare,
             _ => {}
         }
     }
@@ -171,9 +207,12 @@ fn reference(context: QuoteContext, text: &str, windows: bool) -> String {
 fn escape_powershell_single(text: &str) -> String {
     // PowerShell also treats typographic single quotes as quotes
     text.chars()
-        .flat_map(|c| match c {
-            '\'' | '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{201B}' => vec![c, c],
-            c => vec![c],
+        .flat_map(|c| {
+            if is_powershell_single_quote(c) {
+                vec![c, c]
+            } else {
+                vec![c]
+            }
         })
         .collect()
 }
@@ -276,6 +315,47 @@ mod tests {
         run(&format!("true # {PLACEHOLDER}"), &text);
 
         assert!(!marker.exists(), "the text ran as a command");
+    }
+
+    /// PowerShell closes a string at any of its quotes: a script that mixes
+    /// typographic and ASCII ones must not get the text inlined outside of a
+    /// single-quoted string, where `$(...)` would run.
+    #[test]
+    fn powershell_typographic_quotes_keep_the_text_out_of_the_script() {
+        let text = "$(calc)";
+        let windows = |script: &str| substitute_for(script, PLACEHOLDER, text, true);
+        // a double-quoted string around single quotes expands, so the text
+        // goes by the variable
+        assert_eq!(
+            windows("Write-Output \u{201C}'{{TEXT}}'\u{201D}"),
+            "Write-Output \u{201C}'${env:TYCO_TEXT}'\u{201D}"
+        );
+        // a single-quoted string closed by a typographic quote
+        assert_eq!(
+            windows("Write-Output 'a\u{2019} {{TEXT}}"),
+            "Write-Output 'a\u{2019} ${env:TYCO_TEXT}"
+        );
+        // inside a typographic single-quoted string the text is escaped
+        assert_eq!(
+            windows("Write-Output \u{2018}{{TEXT}}\u{2019}"),
+            "Write-Output \u{2018}$(calc)\u{2019}"
+        );
+        assert_eq!(
+            substitute_for("echo \u{2018}x\u{2019}''", PLACEHOLDER, "\u{2019}", true),
+            "echo \u{2018}x\u{2019}''"
+        );
+        assert_eq!(
+            substitute_for("'a''{{TEXT}}'", PLACEHOLDER, "\u{2019}", true),
+            "'a''\u{2019}\u{2019}'"
+        );
+    }
+
+    #[test]
+    fn posix_ignores_typographic_quotes() {
+        assert_eq!(
+            substitute_for("echo \u{2018}{{TEXT}}\u{2019}", PLACEHOLDER, "x", false),
+            "echo \u{2018}\"${TYCO_TEXT}\"\u{2019}"
+        );
     }
 
     #[test]

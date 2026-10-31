@@ -34,10 +34,26 @@ pub enum Protocol {
     WebSocket,
 }
 
+/// The URL as messages may show it: its path and query may hold credentials
+/// (webhook URLs often carry a token in the path) or the text being sent, so
+/// only the origin stays.
+pub(crate) fn redacted_url(url: &Url) -> String {
+    let Some(origin) = origin_of(url) else {
+        return format!("{}:<redacted>", url.scheme());
+    };
+    let is_bare = url.path() == "/" && url.query().is_none() && url.fragment().is_none();
+    if is_bare {
+        origin
+    } else {
+        format!("{origin}/<redacted>")
+    }
+}
+
 /// The URL with its origin, when its scheme fits the protocol.
 fn parse_url(protocol: Protocol, value: &str) -> Result<(Url, String), AppError> {
+    // the value itself may hold credentials, see `redacted_url`
     let url = Url::parse(value)
-        .map_err(|error| AppError::InvalidInput(format!("Invalid URL \"{value}\": {error}")))?;
+        .map_err(|error| AppError::InvalidInput(format!("Invalid URL: {error}")))?;
     let allowed_schemes: &[&str] = match protocol {
         Protocol::Http => &["http", "https"],
         Protocol::WebSocket => &["ws", "wss"],
@@ -48,8 +64,9 @@ fn parse_url(protocol: Protocol, value: &str) -> Result<(Url, String), AppError>
             url.scheme()
         )));
     }
-    let origin = origin_of(&url)
-        .ok_or_else(|| AppError::InvalidInput(format!("URL \"{url}\" has no host")))?;
+    let origin = origin_of(&url).ok_or_else(|| {
+        AppError::InvalidInput(format!("URL \"{}\" has no host", redacted_url(&url)))
+    })?;
     Ok((url, origin))
 }
 
@@ -134,6 +151,18 @@ fn replace_refs(
 mod tests {
     use super::*;
     use crate::services::secrets::SecretEntry;
+
+    #[test]
+    fn messages_show_the_origin_of_a_url_only() {
+        let url = |value: &str| redacted_url(&Url::parse(value).unwrap());
+        assert_eq!(url("https://example.com/"), "https://example.com");
+        assert_eq!(
+            url("https://hooks.example.com/services/T0/B0/secret?token=x"),
+            "https://hooks.example.com/<redacted>"
+        );
+        let error = parse_url(Protocol::Http, "https://[bad/secret").unwrap_err();
+        assert!(!error.to_string().contains("secret"), "{error}");
+    }
 
     fn secrets() -> Secrets {
         let mut secrets = Secrets::new();

@@ -9,6 +9,7 @@ import type {
 import {
   commandLabel,
   commandTakesText,
+  commandUnavailableReason,
   isCommandAvailable,
 } from '../commands/command-runtime'
 import { SHORTCUT_SLOT_COUNT, slotList } from '../shortcut-slots/shortcut-slots'
@@ -91,6 +92,11 @@ export interface CommandLauncherDependencies extends LauncherExecutionDependenci
   selectedText: () => string | null | undefined
   /** Tells that a command of an external call is gone from the library */
   commandMissing?: (commandId: string) => void
+  /**
+   * Tells why the command of a key does not run: it is disabled, or the i18n
+   * key of why its tool cannot run it
+   */
+  commandUnavailable?: (command: CommandConfig, reasonKey: string) => void
 }
 
 /** The command overlay opened from the keyboard: list, search, keys, input */
@@ -145,9 +151,19 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
 
   const pickSlot = (index: number) => {
     const command = slotCommands.value[index]
-    return command && isLauncherCommand(command, deps.tools)
-      ? pick(command)
-      : Promise.resolve()
+    if (!command) return Promise.resolve()
+    if (!isLauncherCommand(command, deps.tools)) {
+      // the key shows the command dimmed; a press of it still gets an answer
+      deps.commandUnavailable?.(
+        command,
+        command.isEnabled
+          ? (commandUnavailableReason(command, deps.tools) ??
+              'toast.commandUnavailable')
+          : 'toast.commandDisabled'
+      )
+      return Promise.resolve()
+    }
+    return pick(command)
   }
 
   const reset = () => {

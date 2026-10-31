@@ -28,22 +28,29 @@ function canRunCommandExternally(
 }
 
 /**
- * The other commands an external call by the name of `command` could mean as
- * well: such a call is refused as ambiguous
+ * The other commands an external call by the name of each command could mean as
+ * well, by command id: such a call is refused as ambiguous
  */
-export function findExternalCommandNameConflicts(
+export function externalCommandNameConflicts(
   commands: readonly CommandConfig[],
-  command: CommandConfig,
   tools: ToolLookup
-): CommandConfig[] {
-  const name = normalizeCommandName(command.name)
-  if (!name || !canRunCommandExternally(command, tools)) return []
-  return commands.filter(
-    (other) =>
-      other.id !== command.id &&
-      canRunCommandExternally(other, tools) &&
-      normalizeCommandName(other.name) === name
-  )
+): Map<string, CommandConfig[]> {
+  const byName = new Map<string, CommandConfig[]>()
+  for (const command of commands) {
+    const name = normalizeCommandName(command.name)
+    if (!name || !canRunCommandExternally(command, tools)) continue
+    byName.set(name, [...(byName.get(name) ?? []), command])
+  }
+  const conflicts = new Map<string, CommandConfig[]>()
+  for (const group of byName.values()) {
+    if (group.length < 2) continue
+    for (const command of group)
+      conflicts.set(
+        command.id,
+        group.filter((other) => other.id !== command.id)
+      )
+  }
+  return conflicts
 }
 
 /** The shell the copied line is for: POSIX sh or Windows PowerShell */

@@ -474,6 +474,7 @@ pub fn normalize_user_config(config: &mut Value) -> bool {
 /// check that both give the same result.
 fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     let original = config.clone();
+    repair_command_ids(config);
     *config = repair(config, &SCHEMA, defaults);
     config["configVersion"] = json!(crate::services::settings::version::CONFIG_VERSION);
     for command in config["commands"].as_array_mut().into_iter().flatten() {
@@ -655,6 +656,120 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         });
     }
     *config != original
+}
+
+const MAX_COMMAND_ID_LENGTH: usize = 64;
+
+fn is_valid_command_id(id: &str) -> bool {
+    SCHEMA["properties"]["commands"]["items"]["properties"]["id"]["pattern"]
+        .as_str()
+        .is_some_and(|pattern| matches_pattern(pattern, id))
+}
+
+/// A valid command id made of an invalid one: ASCII letters in lower case,
+/// each run of other characters as one `-`, without leading or trailing
+/// punctuation. Keep in sync with `commandIdFrom` in `@tyco/shared`.
+fn command_id_from(id: &str) -> String {
+    let mut result = String::with_capacity(id.len());
+    let mut in_run = false;
+    for c in id.chars().map(|c| c.to_ascii_lowercase()) {
+        if c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, '.' | '_' | '-') {
+            result.push(c);
+            in_run = false;
+        } else if !in_run {
+            result.push('-');
+            in_run = true;
+        }
+    }
+    result
+        .trim_matches(|c: char| !c.is_ascii_alphanumeric())
+        .chars()
+        .take(MAX_COMMAND_ID_LENGTH)
+        .collect()
+}
+
+/// Keep in sync with `isBlankId` in `@tyco/shared`.
+fn is_blank_id(id: &str) -> bool {
+    id.chars().all(|c| matches!(c, ' ' | '\t' | '\n' | '\r'))
+}
+
+/// New ids for the commands whose id breaks the schema, which would drop
+/// them; see `commandIdRepairs` in `@tyco/shared`.
+fn command_id_repairs(commands: &Value) -> HashMap<String, String> {
+    let mut repairs = HashMap::new();
+    let ids: Vec<&str> = commands
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|command| command.get("id").and_then(Value::as_str))
+        .collect();
+    let mut taken: HashSet<String> = ids
+        .iter()
+        .filter(|id| is_valid_command_id(id))
+        .map(|id| (*id).to_owned())
+        .collect();
+    for id in ids {
+        // a blank id is no id: such a command stays dropped
+        if is_valid_command_id(id) || repairs.contains_key(id) || is_blank_id(id) {
+            continue;
+        }
+        let mut base = command_id_from(id);
+        if base.is_empty() {
+            base = String::from("command");
+        }
+        let mut candidate = base.clone();
+        let mut index = 2;
+        while taken.contains(&candidate) {
+            let suffix = format!("-{index}");
+            let kept: String = base
+                .chars()
+                .take(MAX_COMMAND_ID_LENGTH - suffix.len())
+                .collect();
+            candidate = format!("{kept}{suffix}");
+            index += 1;
+        }
+        taken.insert(candidate.clone());
+        repairs.insert(id.to_owned(), candidate);
+    }
+    repairs
+}
+
+/// Gives the commands valid ids, the menu items and launcher keys of those
+/// commands following them; see `repairCommandIds` in `@tyco/shared`.
+fn repair_command_ids(config: &mut Value) {
+    let repairs = command_id_repairs(&config["commands"]);
+    if repairs.is_empty() {
+        return;
+    }
+    let renamed = |value: &mut Value| {
+        if let Some(new_id) = value.as_str().and_then(|id| repairs.get(id)) {
+            *value = Value::String(new_id.clone());
+        }
+    };
+    for command in config["commands"].as_array_mut().into_iter().flatten() {
+        if let Some(id) = command.get_mut("id") {
+            renamed(id);
+        }
+    }
+    if let Some(slots) = config.get_mut("mainActions").and_then(Value::as_object_mut) {
+        for slot in slots.values_mut() {
+            if slot["type"] == "command" {
+                if let Some(id) = slot.get_mut("commandId") {
+                    renamed(id);
+                }
+            }
+        }
+    }
+    if let Some(pages) = config
+        .get_mut("launcherPages")
+        .and_then(Value::as_array_mut)
+    {
+        for page in pages {
+            if let Some(slots) = page.get_mut("slots").and_then(Value::as_object_mut) {
+                slots.values_mut().for_each(&renamed);
+            }
+        }
+    }
 }
 
 fn deduplicate_by_id(collection: &mut Value) {

@@ -100,6 +100,27 @@ describe('runCommandTest', () => {
     }
   })
 
+  it('tells why a script could not be saved instead of failing silently', async () => {
+    const d = deps(
+      undefined,
+      undefined,
+      vi.fn().mockRejectedValue(new Error('disk full'))
+    )
+    const result = await runCommandTest(
+      script({}),
+      'hi',
+      testTools(),
+      d,
+      new AbortController().signal
+    )
+    expect(result).toEqual({
+      kind: 'error',
+      messageKey: 'commands.testNeedsSave',
+      message: 'disk full',
+    })
+    expect(d.executeScriptAction).not.toHaveBeenCalled()
+  })
+
   it('does not ask the LLM for a script it cannot save', async () => {
     const transformTextWithLlm = vi.fn().mockResolvedValue('HI')
     const command = script(

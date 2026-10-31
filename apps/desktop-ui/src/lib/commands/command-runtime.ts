@@ -14,6 +14,7 @@ import type {
   ToolLookup,
 } from '../tools/tool-types'
 import { httpOrigin } from '../net/secrets'
+import { outputRequest } from '../tools/tool-call'
 import { scriptToolConfig, stringOr, webhookToolConfig } from './command-config'
 
 /** Output handling belongs to the invocation context, not the tool. */
@@ -113,13 +114,22 @@ export function suggestCommandName(command: CommandConfig): string {
   return ''
 }
 
-/** The name shown for the command, never empty */
+/**
+ * The name shown for the command, never empty. Without a name of its own it is
+ * named by what it runs, never by a fixed word that would need a translation
+ */
 export function commandLabel(command: CommandConfig): string {
   if (command.name.trim()) return command.name
   if (command.toolId === 'script') {
-    return scriptToolConfig(command).command.trim() || 'Command'
+    return scriptToolConfig(command).command.trim() || command.id
   }
-  if (command.toolId === 'webhook') return 'Webhook'
+  if (command.toolId === 'webhook') {
+    return (
+      suggestCommandName(command) ||
+      webhookToolConfig(command).url.trim() ||
+      command.id
+    )
+  }
   // the tool says more than the generated id of the command
   return command.toolId.trim() || command.id
 }
@@ -145,7 +155,7 @@ export function commandTarget(command: CommandConfig): string {
   if (command.toolId === 'script') return scriptToolConfig(command).command
   if (command.toolId === 'webhook') {
     const config = webhookToolConfig(command)
-    return `${config.method ?? 'POST'} ${config.url}`
+    return `${config.method} ${config.url}`
   }
   return ''
 }
@@ -277,8 +287,7 @@ export async function preTransformCommandText(
       config: { prompt },
       source: options.source ?? 'menu',
       signal: options.signal ?? new AbortController().signal,
-      isOutputRequested: true,
-      wantsOutput: true,
+      ...outputRequest(true),
     })
     if (res.cancelled || options.signal?.aborted) {
       return { ok: false, cancelled: true }

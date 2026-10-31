@@ -90,9 +90,16 @@ describe('webhook authorization', () => {
     const { deps, model } = setup()
     deps.getSecretOrigins.mockReturnValue(['https://api.test'])
     expect(await model.replaceSecret('header-1', ' v ')).toBe(true)
+    // the webhook has moved to example.com: the secret follows it there
     expect(deps.setSecret).toHaveBeenCalledWith('header-1', 'v', [
       'https://api.test',
+      'https://example.com',
     ])
     expect(await model.replaceSecret('header-1', '  ')).toBe(false)
+    deps.getSecretOrigins.mockReturnValue(['https://example.com'])
+    await model.replaceSecret('header-1', 'w')
+    expect(deps.setSecret).toHaveBeenLastCalledWith('header-1', 'w', [
+      'https://example.com',
+    ])
   })
 })

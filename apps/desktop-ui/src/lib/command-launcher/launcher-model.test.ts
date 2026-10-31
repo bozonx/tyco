@@ -124,24 +124,37 @@ describe('slotCommands and pickSlot', () => {
 
   it('keeps a disabled command in its slot but does not run it', async () => {
     const run = vi.fn(async () => ({ success: true }))
+    const commandUnavailable = vi.fn()
     const disabled = { ...backup, isEnabled: false }
+    const missingTool = { ...note, toolId: 'notes.write' }
     const model = createCommandLauncherModel({
       tools,
-      commands: () => [disabled],
+      commands: () => [disabled, missingTool],
       launcherPages: () => [
         {
           id: 'main',
-          slots: { q: 'backup' },
+          slots: { q: 'backup', w: 'note' },
           inputMode: 'selection' as const,
           hotkey: '',
         },
       ],
       selectedText: () => null,
       run,
+      commandUnavailable,
     })
     expect(model.slotCommands.value[0]?.id).toBe('backup')
     await model.pickSlot(0)
+    await model.pickSlot(1)
     expect(run).not.toHaveBeenCalled()
+    // a press of the key says why nothing happens
+    expect(commandUnavailable).toHaveBeenCalledWith(
+      disabled,
+      'toast.commandDisabled'
+    )
+    expect(commandUnavailable).toHaveBeenCalledWith(
+      missingTool,
+      'commands.toolMissing'
+    )
   })
 })
 

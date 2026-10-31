@@ -94,9 +94,11 @@ function createScriptTool(
         )
       }
       call.signal.addEventListener('abort', cancel, { once: true })
-      let result: ScriptExecutionResult | undefined
+      if (!deps.executeScriptAction)
+        return { ok: false, messageKey: 'toast.scriptFailed' }
+      let result: ScriptExecutionResult
       try {
-        result = await deps.executeScriptAction?.({
+        result = await deps.executeScriptAction({
           ...buildScriptRequest(
             call.command.id,
             scriptTakesText(config) ? textOf(call.input) : null,
@@ -118,7 +120,6 @@ function createScriptTool(
       }
       // finished before the cancellation reached it
       if (call.signal.aborted) return cancelled
-      if (!result) return { ok: false, messageKey: 'toast.scriptFailed' }
       if (!result.success && !result.running) {
         return {
           ok: false,
@@ -155,9 +156,12 @@ function createWebhookTool(
       if (!config.url.trim()) {
         return { ok: false, level: 'warn', messageKey: 'toast.webhookEmptyUrl' }
       }
-      let response: string | undefined
+      // a window without the network client must not pass for a sent request
+      if (!deps.executeWebhook)
+        return { ok: false, messageKey: 'toast.webhookFailed' }
+      let response: string
       try {
-        response = await deps.executeWebhook?.(
+        response = await deps.executeWebhook(
           {
             ...config,
             id: call.command?.id ?? '',
@@ -179,7 +183,7 @@ function createWebhookTool(
       return {
         ok: true,
         messageKey: 'toast.webhookSuccess',
-        content: webhookResultText(response ?? ''),
+        content: webhookResultText(response),
       }
     },
   }

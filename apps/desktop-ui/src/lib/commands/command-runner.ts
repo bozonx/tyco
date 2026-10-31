@@ -55,7 +55,6 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
     if (!pre.ok) {
       // the LLM error alone would not say what failed
       const messageKey = pre.messageKey ?? FAILED_KEY
-      reportResult(deps, { ok: false, messageKey, message: pre.message })
       const outcome: InvocationOutcome = {
         success: false,
         message: pre.message ?? messageKey,
@@ -84,7 +83,11 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
       return runner.run(commandInvocation(command), text, options)
     }
     const pre = await preTransform(command, text, options)
-    if (!pre.ok) return pre.outcome
+    if (!pre.ok) {
+      // `transform` leaves it to its caller, which reports it its own way
+      if (!pre.result.cancelled) reportResult(deps, pre.result)
+      return pre.outcome
+    }
     return runner.run(commandInvocation(command), pre.text, pre.options)
   }
 

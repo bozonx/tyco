@@ -97,6 +97,7 @@ describe('command launcher store wiring', () => {
     const cmd: CommandConfig = {
       id: 'cmd1',
       name: 'Cmd 1',
+      description: '',
       isEnabled: true,
       toolId: 'core.copy',
       toolConfig: {},
@@ -127,6 +128,7 @@ describe('command launcher store wiring', () => {
     const cmd: CommandConfig = {
       id: 'cmd1',
       name: 'Cmd 1',
+      description: '',
       isEnabled: true,
       toolId: 'core.copy',
       toolConfig: {},

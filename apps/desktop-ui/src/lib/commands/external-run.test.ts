@@ -217,6 +217,41 @@ describe('reports during a run', () => {
     )
   })
 
+  it('tells a failure by the warning the run gave, not by its log message', async () => {
+    const { deps, external } = setup(async (_c, _t, report) => {
+      report('warn', 'The command is disabled')
+      return { success: false, message: 'Disabled' }
+    })
+    await external.handleRun(event({ jobId: undefined }))
+    expect(deps.notify).toHaveBeenCalledWith(
+      'externalCommand.failed {"name":"Lamp"}',
+      'The command is disabled'
+    )
+  })
+
+  it('gives the job back when the run breaks before the command starts', async () => {
+    const { deps } = setup(async () => ({ success: true }))
+    const finishJob = vi.fn(async () => undefined)
+    const model = createExternalRun({
+      ...deps,
+      claimJob: async () => true,
+      finishJob,
+      applyUserConfig: () => {
+        throw new Error('broken config')
+      },
+    })
+    await expect(model.handleRun(event())).resolves.toMatchObject({
+      success: false,
+      message: 'broken config',
+    })
+    expect(finishJob).toHaveBeenCalledWith(
+      'job',
+      expect.objectContaining({ success: false, message: 'broken config' })
+    )
+    expect(deps.reportError).toHaveBeenCalled()
+    expect(deps.run).not.toHaveBeenCalled()
+  })
+
   it('logs a call for a command gone from the library', async () => {
     const { deps, external } = setup(async () => ({ success: true }))
     await external.handleRun(event({ commandId: 'gone', jobId: undefined }))

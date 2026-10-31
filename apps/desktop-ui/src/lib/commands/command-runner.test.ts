@@ -822,6 +822,34 @@ describe('LLM pre-transformation', () => {
     )
   })
 
+  it('reports a failed pre-transformation of a run once, and leaves it to the caller of a transform', async () => {
+    const executeScriptAction = vi.fn()
+    const transformTextWithLlm = vi
+      .fn()
+      .mockRejectedValue(new Error('LLM down'))
+    const { runner, deps } = setup({
+      executeScriptAction,
+      transformTextWithLlm,
+    })
+    const cmd = script(
+      { command: 'echo {{TEXT}}' },
+      { isLlmPreTransformEnabled: true, llmPreTransformPrompt: 'Fix errors' }
+    )
+
+    const result = await runner.transform(cmd, 'raw text')
+    expect(result).toMatchObject({ ok: false, message: 'LLM down' })
+    expect(deps.showError).not.toHaveBeenCalled()
+    expect(deps.showToast).not.toHaveBeenCalled()
+
+    await runner.run(cmd, 'raw text')
+    expect(deps.showError).toHaveBeenCalledTimes(1)
+    expect(deps.showError).toHaveBeenCalledWith(
+      'commands.preTransformFailed',
+      'LLM down'
+    )
+    expect(executeScriptAction).not.toHaveBeenCalled()
+  })
+
   it('skips transformation when input text is empty', async () => {
     const executeScriptAction = vi
       .fn()

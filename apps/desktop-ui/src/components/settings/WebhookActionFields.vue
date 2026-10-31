@@ -96,6 +96,13 @@
           icon="mdi:close"
         />
       </div>
+      <p v-if="headerSecretOrigins.length" class="action-field-warning">
+        {{
+          t('settings.apiKeyBoundTo', {
+            origin: headerSecretOrigins.join(', '),
+          })
+        }}
+      </p>
       <p v-if="duplicateHeaders.size" class="action-field-warning">
         {{ t('settings.actionWebhookHeaderDuplicate') }}
       </p>
@@ -206,7 +213,7 @@ const { toastKey, toastError } = useToast()
 const headerRows = ref<WebhookHeaderRow[]>([])
 const secretDrafts = reactive<Record<number, string>>({})
 const configHeaders = computed(() =>
-  props.command.toolId === 'webhook' ? (webhook.value.headers ?? {}) : {}
+  props.command.toolId === 'webhook' ? webhook.value.headers : {}
 )
 watch(
   [() => props.command.id, configHeaders],
@@ -277,6 +284,21 @@ const authBoundElsewhere = computed(() => {
   return Boolean(origin) && !authOrigins.value.includes(origin!)
 })
 
+/**
+ * The origins of the secret headers that do not go to the URL of the webhook:
+ * the proxy refuses to send them there until their value is saved again
+ */
+const headerSecretOrigins = computed(() => {
+  const origin = httpOrigin(webhook.value.url)
+  if (!origin) return []
+  const elsewhere = headerRows.value.flatMap(([, value]) => {
+    const id = secretIdOf(value)
+    const origins = id ? (secretsStore.secrets[id]?.origins ?? []) : []
+    return origins.length && !origins.includes(origin) ? origins : []
+  })
+  return [...new Set(elsewhere)]
+})
+
 const { authDraft, saveAuth, removeAuth, replaceSecret, removeUnusedSecret } =
   createWebhookAuthModel({
     getUrl: () => webhook.value.url,
@@ -297,7 +319,10 @@ const { authDraft, saveAuth, removeAuth, replaceSecret, removeUnusedSecret } =
   })
 
 onMounted(() => {
-  if (webhook.value.isAuthEnabled)
+  const hasSecretHeader = headerRows.value.some(([, value]) =>
+    Boolean(secretIdOf(value))
+  )
+  if (webhook.value.isAuthEnabled || hasSecretHeader)
     void secretsStore
       .refreshSecrets()
       .catch((error: unknown) =>

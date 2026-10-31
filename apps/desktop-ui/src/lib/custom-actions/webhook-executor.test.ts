@@ -61,6 +61,15 @@ describe('buildWebhookRequest', () => {
     expect(init.headers['content-type']).toContain('text/plain')
   })
 
+  it('sends the text alone as it is when the template is the placeholder', () => {
+    const { init } = buildWebhookRequest(
+      webhook({ payloadTemplate: ' {{TEXT}} ' }),
+      'say "hi"'
+    )
+    expect(init.body).toBe('say "hi"')
+    expect(init.headers['content-type']).toContain('text/plain')
+  })
+
   it('adds no text to a GET request without a placeholder', () => {
     const { url, init } = buildWebhookRequest(
       webhook({ method: 'GET', url: 'https://api.example.com/trigger' }),
@@ -212,7 +221,7 @@ describe('executeWebhook', () => {
           .mockRejectedValue(new Error('Failed https://x.test/private-text')),
         log
       )
-    ).rejects.toThrow('Failed')
+    ).rejects.toThrow(/^Failed https:\/\/x\.test$/)
     expect(log.mock.calls[0][1]).not.toContain('private-text')
     // the reason stays in the log, only the URL is cut to its origin
     expect(log.mock.calls[0][1]).toContain('Error: Failed https://x.test')

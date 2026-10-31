@@ -75,15 +75,17 @@ export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
   }
 
   /**
-   * Puts a new value under a stored secret, keeping its id and origins, so a
-   * secret header never turns into plain text in the config
+   * Puts a new value under a stored secret, keeping its id, so a secret header
+   * never turns into plain text in the config. It stays bound to its origins
+   * and, as the user typed it for this webhook, to the origin of its URL too:
+   * after a change of the URL the secret would otherwise never be sent
    */
   async function replaceSecret(id: string, value: string) {
     const trimmed = value.trim()
     if (!id || !trimmed) return false
     const known = deps.getSecretOrigins?.(id) ?? []
     const origin = httpOrigin(deps.getUrl())
-    const origins = known.length ? known : origin ? [origin] : []
+    const origins = [...new Set(origin ? [...known, origin] : known)]
     if (!origins.length) {
       deps.notifyInvalidOrigin()
       return false

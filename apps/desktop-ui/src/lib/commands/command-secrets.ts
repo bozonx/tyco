@@ -11,7 +11,7 @@ export function commandSecretIds(command: CommandConfig): string[] {
   if (command.toolId !== 'webhook') return []
   const tool = webhookToolConfig(command)
   const ids = new Set(
-    Object.values(tool.headers ?? {}).flatMap((value) => {
+    Object.values(tool.headers).flatMap((value) => {
       const id = secretIdFromRef(value)
       return id ? [id] : []
     })
