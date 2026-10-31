@@ -33,7 +33,7 @@
           v-for="action in visibleActions"
           :key="action.id"
           size="xs"
-          :variant="action.danger ? 'danger-ghost' : 'ghost'"
+          variant="ghost"
           tone="muted"
           @click="emit('action', action.id, item)"
           :label="action.title"

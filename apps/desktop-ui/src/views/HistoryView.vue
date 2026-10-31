@@ -158,7 +158,6 @@ const editorActions = computed<HistoryListAction[]>(() => [
     id: 'remove',
     icon: 'mdi:trash-can-outline',
     title: t('history.removeItem'),
-    danger: true,
   },
 ])
 

@@ -11,7 +11,7 @@
         size="xs"
         icon="mdi:trash-can-outline"
         class="confirm-clear-btn"
-        variant="danger"
+        variant="neutral"
         @click="confirmClear"
       >
         {{ t('history.clearConfirmButton') }}
@@ -21,7 +21,7 @@
   <template v-else>
     <Button
       size="xs"
-      variant="danger-ghost"
+      variant="ghost"
       icon="mdi:trash-can-outline"
       class="clear-btn"
       tone="muted"
