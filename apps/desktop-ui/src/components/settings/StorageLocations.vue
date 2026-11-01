@@ -20,12 +20,7 @@
         :key="item.key"
         class="storage-item"
       >
-        <span class="storage-item-label">
-          {{ item.label }}
-          <span v-if="item.hint" class="storage-item-hint">{{
-            item.hint
-          }}</span>
-        </span>
+        <span class="storage-item-label">{{ item.label }}</span>
         <div class="storage-path-box">
           <code class="storage-path" :title="item.value">{{ item.value }}</code>
           <div class="storage-path-actions">
@@ -59,12 +54,12 @@ import StateMessage from '../common/StateMessage.vue'
 import type { StorageInfo, StorageKind } from '@tyco/shared'
 
 const { t } = useI18n()
-const props = defineProps<{ isInDevelopment?: boolean }>()
 const ipcStore = useIpcStore()
 const storageInfo = ref<StorageInfo | null>(null)
 const STORAGE_KIND_LABELS: Record<StorageKind, string> = {
-  config: 'settings.storageConfig',
-  data: 'settings.storageData',
+  user: 'settings.userData.title',
+  device: 'settings.storageDevice',
+  state: 'settings.storageState',
   cache: 'settings.storageCache',
   logs: 'settings.storageLogs',
 }
@@ -80,10 +75,6 @@ const storageInfoItems = computed(() =>
     label: location.kinds
       .map((kind) => t(STORAGE_KIND_LABELS[kind]))
       .join(' · '),
-    hint:
-      location.kinds.includes('data') && props.isInDevelopment
-        ? t('settings.storageDataHint')
-        : undefined,
     value: location.path,
   }))
 )
@@ -140,12 +131,6 @@ onMounted(() => {
 .storage-item-label {
   font-size: var(--text-caption);
   font-weight: 500;
-  color: var(--app-text-muted);
-}
-
-.storage-item-hint {
-  display: block;
-  font-weight: 400;
   color: var(--app-text-muted);
 }
 

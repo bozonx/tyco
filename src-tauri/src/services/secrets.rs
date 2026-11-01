@@ -142,12 +142,13 @@ pub async fn with_store<T: Send + 'static>(
 
 impl SecretStore {
     pub fn load_for_app(app: &AppHandle) -> Result<Self, AppError> {
-        let dir = AppPaths::resolve(app)?.config_dir;
+        // the list names the keys of this device: it is never synced
+        let dir = AppPaths::resolve(app)?.device_dir;
         create_private_dir(&dir)?;
         let namespace = vault_namespace(
             &app.config().identifier,
             dev_paths_from_env(&app.config().identifier)?
-                .map(|paths| paths.config_dir)
+                .map(|paths| paths.device_dir)
                 .as_deref(),
         );
         Self::load(dir.join(SECRETS_FILE_NAME), system_vault(namespace))

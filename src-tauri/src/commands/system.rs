@@ -15,6 +15,12 @@ pub async fn copy_text(text: String) -> Result<(), AppError> {
     run_blocking(move || copy_for_user(&text)).await?
 }
 
+/// Starts the app again, e.g. to look for a data folder that was missing.
+#[tauri::command]
+pub fn restart_app(app: AppHandle) {
+    crate::services::runtime::request_restart(&app);
+}
+
 /// Opens a chat citation without hiding the conversation.
 #[tauri::command]
 pub async fn open_in_browser(url: String) -> Result<(), AppError> {

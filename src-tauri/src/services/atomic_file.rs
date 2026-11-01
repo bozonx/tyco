@@ -1,12 +1,67 @@
 //! Durable writes of the files Tyco owns: the config, the history
 //! and the secrets.
+//!
+//! Copies kept aside (broken files, files before a repair or a salvage) go to
+//! the recovery folder of the root the file is in, see
+//! [`register_recovery_root`]: the user data folder holds data only, as it
+//! may be synced to other machines. A file outside every registered root
+//! keeps its copies next to it.
 
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::RwLock;
+use std::time::Duration;
 
 use crate::errors::AppError;
+use crate::locks::RwLockExt;
+
+/// What the name of a temporary file starts with, so that a sync tool can be
+/// told to skip it. It stays next to its file: a rename across folders would
+/// not be atomic.
+pub const TEMPORARY_FILE_PREFIX: &str = ".tyco-tmp-";
+
+/// The roots whose kept-aside copies go elsewhere, with where they go.
+static RECOVERY_ROOTS: RwLock<Vec<(PathBuf, PathBuf)>> = RwLock::new(Vec::new());
+
+/// Has the copies of the files under `root` kept in `recovery`, at the same
+/// relative path. A root registered again moves to the new place.
+pub fn register_recovery_root(root: &Path, recovery: &Path) {
+    let mut roots = RECOVERY_ROOTS.write_locked();
+    roots.retain(|(known, _)| known != root);
+    roots.push((root.to_path_buf(), recovery.to_path_buf()));
+}
+
+/// The folder the copies of `path` go to and the name they start with.
+fn copy_location(path: &Path) -> (PathBuf, std::ffi::OsString) {
+    let name = path.file_name().unwrap_or_default().to_os_string();
+    let roots = RECOVERY_ROOTS.read_locked();
+    let dir = recovery_dir_of(path, &roots)
+        .unwrap_or_else(|| path.parent().map(Path::to_path_buf).unwrap_or_default());
+    (dir, name)
+}
+
+/// The recovery folder of `path` among `roots`: the longest root wins.
+fn recovery_dir_of(path: &Path, roots: &[(PathBuf, PathBuf)]) -> Option<PathBuf> {
+    let (root, recovery) = roots
+        .iter()
+        .filter(|(root, _)| path.starts_with(root))
+        .max_by_key(|(root, _)| root.components().count())?;
+    let relative = path.parent()?.strip_prefix(root).ok()?;
+    Some(recovery.join(relative))
+}
+
+/// Creates the folder for the copies of `path` and returns where a copy
+/// named with `suffix` goes.
+fn copy_path(path: &Path, suffix: &str) -> Result<PathBuf, AppError> {
+    let (dir, mut name) = copy_location(path);
+    if !dir.as_os_str().is_empty() && !dir.exists() {
+        create_private_dir(&dir)?;
+    }
+    name.push(suffix);
+    Ok(dir.join(name))
+}
 
 /// How many set-aside copies of one file stay: the broken ones moved out of
 /// the way, or the snapshots taken before a repair. Older ones are deleted.
@@ -47,8 +102,9 @@ fn write_atomic(
     permissions: Option<fs::Permissions>,
 ) -> Result<(), AppError> {
     let (temporary, mut file) = loop {
-        let mut name = path.file_name().unwrap_or_default().to_os_string();
-        name.push(format!(".tmp-{}", unique_file_suffix()));
+        let mut name = std::ffi::OsString::from(TEMPORARY_FILE_PREFIX);
+        name.push(path.file_name().unwrap_or_default());
+        name.push(format!("-{}", unique_file_suffix()));
         let temporary_path = path.with_file_name(name);
         let mut options = fs::OpenOptions::new();
         options.write(true).create_new(true);
@@ -69,8 +125,42 @@ fn write_atomic(
     }
     file.sync_all()?;
     drop(file);
-    fs::rename(&temporary.0, path)?;
+    rename_retrying(&temporary.0, path)?;
     sync_parent(path)
+}
+
+/// How long a rename is retried while another program holds the file.
+const RENAME_RETRY_DELAYS_MS: [u64; 7] = [20, 40, 80, 160, 320, 500, 800];
+
+/// Renames `from` over `to`. On Windows a sync tool (Dropbox, OneDrive) or a
+/// virus scanner may hold the file open for a moment, which fails the rename
+/// with a sharing violation; it is retried for about two seconds.
+pub(crate) fn rename_retrying(from: &Path, to: &Path) -> std::io::Result<()> {
+    retry_transient(
+        || fs::rename(from, to),
+        is_transient_rename_error,
+        std::thread::sleep,
+    )
+}
+
+fn retry_transient<T>(
+    mut attempt: impl FnMut() -> std::io::Result<T>,
+    is_transient: impl Fn(&std::io::Error) -> bool,
+    mut sleep: impl FnMut(Duration),
+) -> std::io::Result<T> {
+    for delay in RENAME_RETRY_DELAYS_MS {
+        match attempt() {
+            Err(error) if is_transient(&error) => sleep(Duration::from_millis(delay)),
+            result => return result,
+        }
+    }
+    attempt()
+}
+
+/// `ERROR_ACCESS_DENIED` and `ERROR_SHARING_VIOLATION`, which a file held
+/// open by another program gives on Windows.
+fn is_transient_rename_error(error: &std::io::Error) -> bool {
+    cfg!(windows) && matches!(error.raw_os_error(), Some(5 | 32))
 }
 
 struct TemporaryFile(PathBuf);
@@ -122,12 +212,10 @@ pub fn create_private_dir(path: &Path) -> Result<(), AppError> {
 pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
     let stamp = crate::services::clock::now_ns();
     let target = loop {
-        let mut name = path.file_name().unwrap_or_default().to_os_string();
-        name.push(format!(
-            "{BROKEN_COPY_MARKER}{stamp}-{}",
-            unique_file_suffix()
-        ));
-        let target = path.with_file_name(name);
+        let target = copy_path(
+            path,
+            &format!("{BROKEN_COPY_MARKER}{stamp}-{}", unique_file_suffix()),
+        )?;
         match fs::OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -141,9 +229,9 @@ pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
             Err(error) => return Err(error.into()),
         }
     };
-    if let Err(error) = fs::rename(path, &target) {
+    if let Err(error) = move_file(path, &target) {
         let _ = fs::remove_file(&target);
-        return Err(error.into());
+        return Err(error);
     }
     #[cfg(unix)]
     {
@@ -155,21 +243,62 @@ pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
     Ok(target)
 }
 
-/// Deletes all but the `keep` newest copies of `path`: the files next to it
-/// named after it with `marker` and a suffix.
-pub fn prune_copies(path: &Path, marker: &str, keep: usize) -> Result<(), AppError> {
-    let (Some(dir), Some(name)) = (path.parent(), path.file_name()) else {
-        return Ok(());
-    };
-    let prefix = format!("{}{marker}", name.to_string_lossy());
-    let mut copies = Vec::new();
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        if !entry.file_name().to_string_lossy().starts_with(&prefix) {
-            continue;
+/// Moves a file into the recovery folder, which may be on another disk:
+/// then it is copied and removed.
+fn move_file(from: &Path, to: &Path) -> Result<(), AppError> {
+    match fs::rename(from, to) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::CrossesDevices => {
+            fs::copy(from, to)?;
+            fs::remove_file(from)?;
+            Ok(())
         }
-        let modified = entry.metadata()?.modified()?;
-        copies.push((modified, entry.path()));
+        Err(error) => Err(error.into()),
+    }
+}
+
+/// The copies of `path` kept aside under `marker`, see [`prune_copies`].
+pub fn kept_copies(path: &Path, marker: &str) -> Result<Vec<PathBuf>, AppError> {
+    let (dir, name) = copy_location(path);
+    let prefix = format!("{}{marker}", name.to_string_lossy());
+    let entries = match fs::read_dir(if dir.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        &dir
+    }) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(error.into()),
+    };
+    let mut copies = Vec::new();
+    for entry in entries {
+        let entry = entry?;
+        if entry.file_name().to_string_lossy().starts_with(&prefix) {
+            copies.push(entry.path());
+        }
+    }
+    Ok(copies)
+}
+
+/// Removes every broken copy of `path`, e.g. when the user clears the history.
+pub fn remove_broken_copies(path: &Path) -> Result<(), AppError> {
+    for copy in kept_copies(path, BROKEN_COPY_MARKER)? {
+        match fs::remove_file(copy) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
+    }
+    Ok(())
+}
+
+/// Deletes all but the `keep` newest copies of `path`: the files of its copy
+/// folder named after it with `marker` and a suffix.
+pub fn prune_copies(path: &Path, marker: &str, keep: usize) -> Result<(), AppError> {
+    let mut copies = Vec::new();
+    for copy in kept_copies(path, marker)? {
+        let modified = fs::metadata(&copy)?.modified()?;
+        copies.push((modified, copy));
     }
     copies.sort_by_key(|(modified, _)| std::cmp::Reverse(*modified));
     for (_, copy) in copies.into_iter().skip(keep) {
@@ -187,12 +316,10 @@ pub fn preserve_broken_copy(path: &Path, raw: &[u8]) -> Result<PathBuf, AppError
 /// Keeps `raw` next to `path`, named with `marker` and the content digest, so
 /// that the same content is kept once; only the newest copies stay.
 pub fn preserve_copy(path: &Path, marker: &str, raw: &[u8]) -> Result<PathBuf, AppError> {
-    let mut name = path.file_name().unwrap_or_default().to_os_string();
-    name.push(format!(
-        "{marker}{}",
-        crate::services::sha256::sha256_hex(raw)
-    ));
-    let target = path.with_file_name(name);
+    let target = copy_path(
+        path,
+        &format!("{marker}{}", crate::services::sha256::sha256_hex(raw)),
+    )?;
     if !target.exists() {
         write_private_bytes(&target, raw)?;
         prune_copies(path, marker, KEPT_COPY_COUNT)?;
@@ -276,7 +403,7 @@ mod tests {
         write_private(&path, "new").unwrap();
 
         assert_eq!(fs::read_to_string(&path).unwrap(), "new");
-        assert!(!dir.join("file.json.tmp").exists());
+        assert_eq!(fs::read_dir(&*dir).unwrap().count(), 1);
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -359,6 +486,89 @@ mod tests {
 
         assert!(parsed.is_none());
         assert!(!path.exists());
+    }
+
+    #[test]
+    fn copies_of_a_registered_root_go_to_its_recovery_folder() {
+        let dir = TestDir::new("recovery-root");
+        let root = dir.join("user");
+        let recovery = dir.join("state/recovery/user");
+        fs::create_dir_all(root.join("history")).unwrap();
+        register_recovery_root(&root, &recovery);
+        let path = root.join("history/device.jsonl");
+        fs::write(&path, "broken").unwrap();
+
+        let copy = preserve_broken_copy(&path, b"broken").unwrap();
+        assert!(copy.starts_with(recovery.join("history")));
+        let moved = quarantine(&path).unwrap();
+        assert!(moved.starts_with(recovery.join("history")));
+        assert_eq!(fs::read_to_string(&moved).unwrap(), "broken");
+        assert_eq!(fs::read_dir(root.join("history")).unwrap().count(), 0);
+        assert_eq!(kept_copies(&path, BROKEN_COPY_MARKER).unwrap().len(), 2);
+        remove_broken_copies(&path).unwrap();
+        assert!(kept_copies(&path, BROKEN_COPY_MARKER).unwrap().is_empty());
+    }
+
+    #[test]
+    fn the_longest_recovery_root_wins() {
+        let roots = vec![
+            (PathBuf::from("/a"), PathBuf::from("/r/a")),
+            (PathBuf::from("/a/b"), PathBuf::from("/r/b")),
+        ];
+        assert_eq!(
+            recovery_dir_of(Path::new("/a/b/c/file"), &roots),
+            Some(PathBuf::from("/r/b/c"))
+        );
+        assert_eq!(
+            recovery_dir_of(Path::new("/a/file"), &roots),
+            Some(PathBuf::from("/r/a"))
+        );
+        assert_eq!(recovery_dir_of(Path::new("/other/file"), &roots), None);
+    }
+
+    #[test]
+    fn a_transient_rename_failure_is_retried_until_it_passes() {
+        let mut attempts = 0;
+        let mut slept = Duration::ZERO;
+        let result = retry_transient(
+            || {
+                attempts += 1;
+                if attempts < 3 {
+                    Err(std::io::Error::from_raw_os_error(32))
+                } else {
+                    Ok(attempts)
+                }
+            },
+            |error| error.raw_os_error() == Some(32),
+            |delay| slept += delay,
+        );
+        assert_eq!(result.unwrap(), 3);
+        assert_eq!(slept, Duration::from_millis(60));
+
+        let mut attempts = 0;
+        let mut slept = Duration::ZERO;
+        let result: std::io::Result<()> = retry_transient(
+            || {
+                attempts += 1;
+                Err(std::io::Error::from_raw_os_error(32))
+            },
+            |_| true,
+            |delay| slept += delay,
+        );
+        assert!(result.is_err());
+        assert_eq!(attempts, RENAME_RETRY_DELAYS_MS.len() + 1);
+        assert!(slept <= Duration::from_millis(2_000));
+
+        let mut attempts = 0;
+        let _: std::io::Result<()> = retry_transient(
+            || {
+                attempts += 1;
+                Err(std::io::Error::other("permanent"))
+            },
+            |_| false,
+            |_| {},
+        );
+        assert_eq!(attempts, 1);
     }
 
     #[test]

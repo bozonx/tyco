@@ -11,6 +11,12 @@ fn chat_item(id: &str) -> Chat {
     }
 }
 
+fn dated(id: &str, last_message_at_ms: u64) -> Chat {
+    let mut chat = chat_item(id);
+    chat.last_message_at_ms = last_message_at_ms;
+    chat
+}
+
 fn enabled_policy() -> ChatHistoryPolicy {
     ChatHistoryPolicy {
         is_enabled: true,
@@ -18,35 +24,50 @@ fn enabled_policy() -> ChatHistoryPolicy {
     }
 }
 
+/// A chat history in `dir/<name>`, its index in the state of `dir`.
+fn dirs_at(dir: &Path, name: &str) -> ChatDirs {
+    let chats = dir.join(name);
+    fs::create_dir_all(&chats).unwrap();
+    ChatDirs {
+        chats,
+        index: dir.join("state/index").join(name).join(CHAT_INDEX_FILE),
+        orphans: dir.join("state/index").join(ORPHAN_IMAGES_FILE),
+    }
+}
+
+fn dirs(dir: &Path) -> ChatDirs {
+    dirs_at(dir, "chats")
+}
+
+fn ids(dirs: &ChatDirs) -> Vec<String> {
+    list_chats(dirs)
+        .unwrap()
+        .into_iter()
+        .map(|item| item.id)
+        .collect()
+}
+
 #[test]
 fn any_folder_keeps_its_own_chat_history() {
     let dir = TestDir::new("chat-history-folder");
-    let ask_dir = dir.join("chats");
-    let profile_dir = dir.join("profile-chats");
-    fs::create_dir_all(&ask_dir).unwrap();
-    fs::create_dir_all(&profile_dir).unwrap();
+    let ask = dirs_at(&dir, "chats");
+    let profile = dirs_at(&dir, "profile-chats");
     let images = Mutex::new(ChatImageStore::default());
 
-    save_chat(
-        &profile_dir,
-        enabled_policy(),
-        &images,
-        chat_item("profile"),
-    )
-    .unwrap();
+    save_chat(&profile, enabled_policy(), &images, chat_item("profile")).unwrap();
 
-    assert!(list_chats(&ask_dir).unwrap().is_empty());
-    let history = list_chats(&profile_dir).unwrap();
-    assert_eq!(history.len(), 1);
-    assert_eq!(history[0].id, "profile");
+    assert!(list_chats(&ask).unwrap().is_empty());
+    assert_eq!(ids(&profile), ["profile"]);
 
-    rename_chat(&profile_dir, "profile".into(), "Renamed".into()).unwrap();
-    let chat = read_chat(&profile_dir, "profile".into()).unwrap().unwrap();
+    rename_chat(&profile, "profile".into(), "Renamed".into()).unwrap();
+    let chat = read_chat(&profile.chats, "profile".into())
+        .unwrap()
+        .unwrap();
     assert_eq!(chat.title, "Renamed");
     assert_eq!(
         search_chats(
-            &profile_dir,
-            list_chats(&profile_dir).unwrap(),
+            &profile.chats,
+            list_chats(&profile).unwrap(),
             "renamed".into(),
             &ChatSearchCache::default()
         )
@@ -54,23 +75,44 @@ fn any_folder_keeps_its_own_chat_history() {
         vec!["profile"]
     );
 
-    delete_chat(&profile_dir, "profile".into()).unwrap();
-    assert!(list_chats(&profile_dir).unwrap().is_empty());
-    assert!(!profile_dir.join("profile.json").exists());
+    delete_chat(&profile, "profile".into()).unwrap();
+    assert!(list_chats(&profile).unwrap().is_empty());
+    assert!(!profile.chats.join("profile.json").exists());
+}
+
+#[test]
+fn the_chat_folder_holds_chat_files_only() {
+    let dir = TestDir::new("chat-folder-files");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    save_chat(&dirs, enabled_policy(), &images, chat_item("a")).unwrap();
+    let names: Vec<_> = fs::read_dir(&dirs.chats)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(names, ["a.json"]);
+    list_chats(&dirs).unwrap();
+    assert!(dirs.index.is_file());
 }
 
 #[test]
 fn search_normalizes_the_query_once_and_an_empty_one_lists_every_chat() {
     let dir = TestDir::new("chat-search");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let mut trip = chat_item("trip");
     trip.title = String::from("Trip plan");
-    save_chat(&dir, enabled_policy(), &images, trip).unwrap();
-    save_chat(&dir, enabled_policy(), &images, chat_item("other")).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, trip).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, chat_item("other")).unwrap();
     let cache = ChatSearchCache::default();
     let search = |query: &str| {
-        let mut found =
-            search_chats(&dir, list_chats(&dir).unwrap(), query.into(), &cache).unwrap();
+        let mut found = search_chats(
+            &dirs.chats,
+            list_chats(&dirs).unwrap(),
+            query.into(),
+            &cache,
+        )
+        .unwrap();
         found.sort();
         found
     };
@@ -82,6 +124,7 @@ fn search_normalizes_the_query_once_and_an_empty_one_lists_every_chat() {
 #[test]
 fn search_finds_attachments_and_sees_a_changed_chat() {
     let dir = TestDir::new("chat-search-attachments");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let cache = ChatSearchCache::default();
     let mut chat = chat_item("doc");
@@ -99,344 +142,163 @@ fn search_finds_attachments_and_sees_a_changed_chat() {
         parts: vec![],
         status: None,
     }];
-    save_chat(&dir, enabled_policy(), &images, chat.clone()).unwrap();
-    let search =
-        |query: &str| search_chats(&dir, list_chats(&dir).unwrap(), query.into(), &cache).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, chat.clone()).unwrap();
+    let search = |query: &str| {
+        search_chats(
+            &dirs.chats,
+            list_chats(&dirs).unwrap(),
+            query.into(),
+            &cache,
+        )
+        .unwrap()
+    };
 
     assert_eq!(search("revenue"), vec!["doc"]);
     assert_eq!(search("REPORT.PDF"), vec!["doc"]);
     assert!(search("budget").is_empty());
 
     chat.messages[0].content = String::from("The budget is approved and final");
-    save_chat(&dir, enabled_policy(), &images, chat).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, chat).unwrap();
     assert_eq!(search("budget"), vec!["doc"]);
 }
 
 #[test]
 fn a_disabled_history_stores_no_chat_in_any_folder() {
     let dir = TestDir::new("chat-history-disabled");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let policy = ChatHistoryPolicy {
         is_enabled: false,
         retention_days: 0,
     };
 
-    save_chat(&dir, policy, &images, chat_item("chat")).unwrap();
+    save_chat(&dirs, policy, &images, chat_item("chat")).unwrap();
 
-    assert!(list_chats(&dir).unwrap().is_empty());
-    assert!(!dir.join("chat.json").exists());
-}
-
-#[test]
-fn an_interrupted_save_replays_before_orphan_cleanup() {
-    let dir = TestDir::new("interrupted-save");
-    let old = chat_item("old");
-    let new = chat_item("new");
-    write_json(&dir.join(CHAT_INDEX_FILE), &vec![old.clone()]).unwrap();
-    write_json(&dir.join("old.json"), &old).unwrap();
-    let journal = PendingChatTransaction {
-        history: vec![ChatSummary::from(&new), ChatSummary::from(&old)],
-        chat: Some(new.clone()),
-        staged_chat_id: None,
-        clean_images: true,
-    };
-    write_json(&dir.join(CHAT_TRANSACTION_FILE), &journal).unwrap();
-    // The process stopped after the chat was written but before the index.
-    write_json(&dir.join("new.json"), &new).unwrap();
-    let history = load_chat_index(&dir).unwrap();
-    assert_eq!(
-        history
-            .iter()
-            .map(|item| item.id.as_str())
-            .collect::<Vec<_>>(),
-        ["new", "old"]
-    );
-    remove_orphan_chat_files(&dir, &history).unwrap();
-    assert!(dir.join("new.json").exists());
-    assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
-}
-
-#[test]
-fn cleanup_failure_after_index_commit_replays_without_resurrecting_chats() {
-    let dir = TestDir::new("failed-chat-cleanup");
-    let chat = chat_item("removed");
-    write_json(&dir.join("removed.json"), &chat).unwrap();
-    write_json(&dir.join(CHAT_INDEX_FILE), &vec![ChatSummary::from(&chat)]).unwrap();
-    // An invalid image directory fails cleanup after the new index is durable.
-    fs::write(dir.join("images"), "blocked").unwrap();
-    assert!(commit_chat_transaction(&dir, Vec::new(), None, ImageCleanup::Needed).is_err());
-    assert!(!dir.join("removed.json").exists());
-    assert!(dir.join(CHAT_TRANSACTION_FILE).exists());
-    let index: Vec<ChatSummary> =
-        serde_json::from_slice(&fs::read(dir.join(CHAT_INDEX_FILE)).unwrap()).unwrap();
-    assert!(index.is_empty());
-    fs::remove_file(dir.join("images")).unwrap();
-    assert!(load_chat_index(&dir).unwrap().is_empty());
-    assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
-}
-
-#[test]
-fn an_interrupted_delete_is_not_resurrected_by_index_recovery() {
-    let dir = TestDir::new("interrupted-delete");
-    let chat = chat_item("removed");
-    write_json(&dir.join("removed.json"), &chat).unwrap();
-    write_json(
-        &dir.join(CHAT_TRANSACTION_FILE),
-        &PendingChatTransaction {
-            history: Vec::new(),
-            chat: None,
-            staged_chat_id: None,
-            clean_images: true,
-        },
-    )
-    .unwrap();
-    assert!(load_chat_index(&dir).unwrap().is_empty());
-    assert!(!dir.join("removed.json").exists());
-}
-
-#[test]
-fn an_invalid_save_cannot_leave_a_journal_that_blocks_other_chats() {
-    let dir = TestDir::new("invalid-save");
-    let history = vec![ChatSummary::from(&chat_item("../invalid"))];
-    assert!(commit_chat_transaction(&dir, history, None, ImageCleanup::Needed).is_err());
-    assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
-    assert!(load_chat_index(&dir).unwrap().is_empty());
-}
-
-#[test]
-fn a_staged_save_replays_once_and_drops_staged_leftovers() {
-    let dir = TestDir::new("staged-save");
-    let chat = chat_item("new");
-    write_json(&staged_chat_path(&dir, "new"), &chat).unwrap();
-    write_json(
-        &staged_chat_path(&dir, "abandoned"),
-        &chat_item("abandoned"),
-    )
-    .unwrap();
-    write_json(
-        &dir.join(CHAT_TRANSACTION_FILE),
-        &PendingChatTransaction {
-            history: vec![ChatSummary::from(&chat)],
-            chat: None,
-            staged_chat_id: Some(String::from("new")),
-            clean_images: true,
-        },
-    )
-    .unwrap();
-
-    assert_eq!(load_chat_index(&dir).unwrap()[0].id, "new");
-    assert!(dir.join("new.json").exists());
-    assert!(!staged_chat_path(&dir, "new").exists());
-    assert!(!staged_chat_path(&dir, "abandoned").exists());
-    assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
-}
-
-#[test]
-fn a_save_writes_no_chat_into_the_journal() {
-    let dir = TestDir::new("staged-commit");
-    commit_chat_transaction(
-        &dir,
-        vec![ChatSummary::from(&chat_item("a"))],
-        Some(chat_item("a")),
-        ImageCleanup::Skipped,
-    )
-    .unwrap();
-    assert_eq!(read_chat(&dir, "a".into()).unwrap().unwrap().id, "a");
-    assert!(!staged_chat_path(&dir, "a").exists());
-    let journal = PendingChatTransaction {
-        history: Vec::new(),
-        chat: None,
-        staged_chat_id: Some(String::from("a")),
-        clean_images: true,
-    };
-    assert!(serde_json::to_value(&journal)
-        .unwrap()
-        .get("chat")
-        .is_none());
-}
-
-#[test]
-fn a_journal_replays_even_if_no_chat_file_was_written_yet() {
-    let dir = TestDir::new("journal-only");
-    let chat = chat_item("new");
-    write_json(
-        &dir.join(CHAT_TRANSACTION_FILE),
-        &PendingChatTransaction {
-            history: vec![ChatSummary::from(&chat)],
-            chat: Some(chat),
-            staged_chat_id: None,
-            clean_images: true,
-        },
-    )
-    .unwrap();
-    assert_eq!(load_chat_index(&dir).unwrap()[0].id, "new");
-    assert!(dir.join("new.json").exists());
-}
-
-#[test]
-fn a_broken_transaction_is_set_aside_without_losing_chats() {
-    let dir = TestDir::new("broken-transaction");
-    write_json(&dir.join("kept.json"), &chat_item("kept")).unwrap();
-    // the index does not list the chat: no orphan cleanup may remove it
-    write_json(&dir.join(CHAT_INDEX_FILE), &Vec::<ChatSummary>::new()).unwrap();
-    fs::write(dir.join(CHAT_TRANSACTION_FILE), "{").unwrap();
-
-    let ids: Vec<_> = load_chat_index(&dir)
-        .unwrap()
-        .into_iter()
-        .map(|item| item.id)
-        .collect();
-
-    assert_eq!(ids, ["kept"]);
-    assert!(dir.join("kept.json").exists());
-    assert!(!dir.join(CHAT_TRANSACTION_FILE).exists());
-    let copies = fs::read_dir(&dir)
-        .unwrap()
-        .filter(|entry| {
-            entry
-                .as_ref()
-                .unwrap()
-                .file_name()
-                .to_string_lossy()
-                .starts_with(&format!("{CHAT_TRANSACTION_FILE}.broken-"))
-        })
-        .count();
-    assert_eq!(copies, 1);
-    // the history works again
-    let images = Mutex::new(ChatImageStore::default());
-    save_chat(&dir, enabled_policy(), &images, chat_item("new")).unwrap();
-    assert_eq!(list_chats(&dir).unwrap().len(), 2);
-}
-
-#[test]
-fn a_broken_transaction_keeps_the_chat_it_staged() {
-    let dir = TestDir::new("broken-transaction-staged");
-    let mut staged = chat_item("staged");
-    staged.title = String::from("newest");
-    write_json(&dir.join("staged.json"), &chat_item("staged")).unwrap();
-    write_json(&staged_chat_path(&dir, "staged"), &staged).unwrap();
-    fs::write(dir.join(CHAT_TRANSACTION_FILE), "not json").unwrap();
-
-    let history = load_chat_index(&dir).unwrap();
-
-    assert_eq!(history.len(), 1);
-    assert_eq!(history[0].title, "newest");
-    assert!(!staged_chat_path(&dir, "staged").exists());
-    assert_eq!(
-        read_chat(&dir, "staged".into()).unwrap().unwrap().title,
-        "newest"
-    );
+    assert!(list_chats(&dirs).unwrap().is_empty());
+    assert!(!dirs.chats.join("chat.json").exists());
 }
 
 #[test]
 fn a_missing_folder_reads_as_an_empty_history() {
     let dir = TestDir::new("missing-chat-folder");
-    let chats_dir = dir.join("never-created");
+    let dirs = ChatDirs {
+        chats: dir.join("never-created"),
+        index: dir.join("state/chats.json"),
+        orphans: dir.join("state/orphans.json"),
+    };
 
-    assert!(list_chats(&chats_dir).unwrap().is_empty());
-    assert!(read_chat(&chats_dir, "a".into()).unwrap().is_none());
+    assert!(list_chats(&dirs).unwrap().is_empty());
+    assert!(read_chat(&dirs.chats, "a".into()).unwrap().is_none());
     let cache = ChatSearchCache::default();
-    assert!(search_chats(&chats_dir, Vec::new(), "x".into(), &cache)
+    assert!(search_chats(&dirs.chats, Vec::new(), "x".into(), &cache)
         .unwrap()
         .is_empty());
-    assert!(!chats_dir.exists());
+    assert!(!dirs.chats.exists());
 }
 
 #[test]
 fn a_saved_title_is_cut_to_the_rename_limit() {
     let dir = TestDir::new("save-long-title");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let mut chat = chat_item("long");
     chat.title = "й".repeat(MAX_CHAT_TITLE_CHARS + 10);
 
-    save_chat(&dir, enabled_policy(), &images, chat).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, chat).unwrap();
 
-    let title = read_chat(&dir, "long".into()).unwrap().unwrap().title;
+    let title = read_chat(&dirs.chats, "long".into())
+        .unwrap()
+        .unwrap()
+        .title;
     assert_eq!(title.chars().count(), MAX_CHAT_TITLE_CHARS);
     assert!(title.ends_with('…'));
-    assert_eq!(list_chats(&dir).unwrap()[0].title, title);
-    let short = clamp_chat_title("short");
-    assert_eq!(short, "short");
+    assert_eq!(list_chats(&dirs).unwrap()[0].title, title);
+    assert_eq!(clamp_chat_title("short"), "short");
 }
 
 #[test]
 fn the_search_cache_keeps_to_its_size_dropping_the_least_recently_used() {
     let dir = TestDir::new("search-cache-limit");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     for id in ["a", "b", "c"] {
         let mut chat = chat_item(id);
         chat.title = format!("{id}{}", "x".repeat(40));
-        save_chat(&dir, enabled_policy(), &images, chat).unwrap();
+        save_chat(&dirs, enabled_policy(), &images, chat).unwrap();
     }
     // each text is 41 bytes: two fit
     let cache = ChatSearchCache::with_max_bytes(100);
-    let history = list_chats(&dir).unwrap();
-    let found = search_chats(&dir, history.clone(), "x".into(), &cache).unwrap();
+    let history = list_chats(&dirs).unwrap();
+    let found = search_chats(&dirs.chats, history.clone(), "x".into(), &cache).unwrap();
 
     assert_eq!(found.len(), 3);
-    assert!(cache.cached_bytes() <= 100);
     assert_eq!(cache.cached_bytes(), 82);
     // a text larger than the whole cache is searched but never kept
     let tiny = ChatSearchCache::with_max_bytes(10);
     assert_eq!(
-        search_chats(&dir, history, "ax".into(), &tiny).unwrap(),
+        search_chats(&dirs.chats, history, "ax".into(), &tiny).unwrap(),
         ["a"]
     );
     assert_eq!(tiny.cached_bytes(), 0);
 }
 
 #[test]
-fn an_unreadable_chat_is_set_aside_and_leaves_the_index() {
+fn an_unreadable_chat_is_set_aside_and_leaves_the_list() {
     let dir = TestDir::new("open-broken-chat");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     for id in ["kept", "broken"] {
-        save_chat(&dir, enabled_policy(), &images, chat_item(id)).unwrap();
+        save_chat(&dirs, enabled_policy(), &images, chat_item(id)).unwrap();
     }
-    fs::write(dir.join("broken.json"), b"{\"id\": ").unwrap();
-    assert!(read_chat(&dir, "broken".into()).is_err());
+    fs::write(dirs.chats.join("broken.json"), b"{\"id\": ").unwrap();
+    assert!(read_chat(&dirs.chats, "broken".into()).is_err());
 
-    assert!(open_chat(&dir, "broken".into()).unwrap().is_none());
+    assert!(open_chat(&dirs, "broken".into()).unwrap().is_none());
 
-    let ids: Vec<_> = list_chats(&dir)
-        .unwrap()
-        .into_iter()
-        .map(|item| item.id)
-        .collect();
-    assert_eq!(ids, ["kept"]);
-    let kept_aside = fs::read_dir(&*dir).unwrap().any(|entry| {
+    assert_eq!(ids(&dirs), ["kept"]);
+    let kept_aside = fs::read_dir(&dirs.chats).unwrap().any(|entry| {
         let name = entry.unwrap().file_name();
         name.to_string_lossy().starts_with("broken.json.broken-")
     });
     assert!(kept_aside);
-    assert_eq!(open_chat(&dir, "kept".into()).unwrap().unwrap().id, "kept");
+    assert_eq!(open_chat(&dirs, "kept".into()).unwrap().unwrap().id, "kept");
 }
 
 #[test]
 fn saving_a_chat_past_the_retention_period_keeps_it() {
     let dir = TestDir::new("save-expired-chat");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let policy = ChatHistoryPolicy {
         is_enabled: true,
         retention_days: 30,
     };
     // a chat whose last message is from 1970, e.g. one only renamed
-    save_chat(&dir, policy, &images, chat_item("old")).unwrap();
-    assert_eq!(list_chats(&dir).unwrap().len(), 1);
-    assert!(dir.join("old.json").exists());
+    save_chat(&dirs, policy, &images, chat_item("old")).unwrap();
+    assert_eq!(ids(&dirs), ["old"]);
+    assert!(dirs.chats.join("old.json").exists());
 }
 
 #[test]
-fn rename_in_chat_index_keeps_the_order() {
-    let mut history = vec![
-        ChatSummary::from(&chat_item("a")),
-        ChatSummary::from(&chat_item("b")),
-    ];
-
-    rename_in_chat_index(&mut history, "b", "renamed");
-
-    assert_eq!(history[0].id, "a");
-    assert_eq!(history[1].id, "b");
-    assert_eq!(history[1].title, "renamed");
+fn the_list_is_ordered_by_the_last_message() {
+    let dir = TestDir::new("chat-order");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    for chat in [
+        dated("oldest", 10),
+        dated("newest", 30),
+        dated("restored", 20),
+    ] {
+        save_chat(&dirs, enabled_policy(), &images, chat).unwrap();
+    }
+    assert_eq!(ids(&dirs), ["newest", "restored", "oldest"]);
+    // a rename is not activity in the chat
+    rename_chat(&dirs, "oldest".into(), "Renamed".into()).unwrap();
+    assert_eq!(ids(&dirs), ["newest", "restored", "oldest"]);
+    assert!(serde_json::to_value(&list_chats(&dirs).unwrap()[0])
+        .unwrap()
+        .get("messages")
+        .is_none());
 }
 
 #[test]
@@ -456,27 +318,6 @@ fn search_text_holds_the_title_and_the_messages_ignoring_case() {
     assert!(text.contains("trip"));
     assert!(text.contains("билеты"));
     assert!(!text.contains("hotel"));
-}
-
-#[test]
-fn upsert_chat_index_moves_an_updated_chat_to_the_top() {
-    let mut history = vec![
-        ChatSummary::from(&chat_item("a")),
-        ChatSummary::from(&chat_item("b")),
-        ChatSummary::from(&chat_item("c")),
-    ];
-    let mut updated = chat_item("c");
-    updated.title = String::from("updated");
-
-    upsert_chat_index(&mut history, &updated);
-
-    let ids: Vec<_> = history.iter().map(|item| item.id.as_str()).collect();
-    assert_eq!(ids, ["c", "a", "b"]);
-    assert_eq!(history[0].title, "updated");
-    assert!(serde_json::to_value(&history[0])
-        .unwrap()
-        .get("messages")
-        .is_none());
 }
 
 #[test]
@@ -531,15 +372,10 @@ fn profile_chats_follow_their_own_settings() {
 #[test]
 fn chat_history_policy_drops_the_chats_past_the_retention_period() {
     let now = 1_791_504_000_000;
-    let dated = |id: &str, days_ago: u64| {
-        let mut chat = chat_item(id);
-        chat.last_message_at_ms = now - days_ago * DAY_MS;
-        chat
-    };
     let mut history = vec![
-        ChatSummary::from(&dated("fresh", 1)),
-        ChatSummary::from(&dated("old", 38)),
-        ChatSummary::from(&dated("recent", 29)),
+        ChatSummary::from(&dated("fresh", now - DAY_MS)),
+        ChatSummary::from(&dated("old", now - 38 * DAY_MS)),
+        ChatSummary::from(&dated("recent", now - 29 * DAY_MS)),
     ];
     let policy = |retention_days| ChatHistoryPolicy {
         is_enabled: true,
@@ -557,16 +393,15 @@ fn chat_history_policy_drops_the_chats_past_the_retention_period() {
 #[test]
 fn chat_history_policy_disabled_does_not_clear_chats() {
     let dir = TestDir::new("policy-disabled-keeps-chats");
-    let chat = chat_item("chat-1");
-    write_json(&dir.join(format!("{}.json", chat.id)), &chat).unwrap();
-    write_json(&dir.join(CHAT_INDEX_FILE), &[ChatSummary::from(&chat)]).unwrap();
+    let dirs = dirs(&dir);
+    write_json(&dirs.chats.join("chat-1.json"), &chat_item("chat-1")).unwrap();
 
     let policy = ChatHistoryPolicy {
         is_enabled: false,
         retention_days: 0,
     };
-    enforce_chat_history_policy(&dir, policy).unwrap();
-    assert_eq!(list_chats(&dir).unwrap().len(), 1);
+    enforce_chat_history_policy(&dirs, policy).unwrap();
+    assert_eq!(ids(&dirs), ["chat-1"]);
 }
 
 #[cfg(unix)]
@@ -574,147 +409,126 @@ fn chat_history_policy_disabled_does_not_clear_chats() {
 fn rebuilding_does_not_quarantine_a_chat_that_cannot_be_read() {
     use std::os::unix::fs::PermissionsExt;
     let dir = TestDir::new("rebuild-permission-denied");
-    let path = dir.join("unreadable.json");
-    let chat = chat_item("unreadable");
-    write_json(&path, &chat).unwrap();
+    let dirs = dirs(&dir);
+    let path = dirs.chats.join("unreadable.json");
+    write_json(&path, &chat_item("unreadable")).unwrap();
     fs::set_permissions(&path, fs::Permissions::from_mode(0o000)).unwrap();
-    let result = load_chat_index(&dir);
+    let result = load_chat_index(&dirs);
     fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
     assert!(
         matches!(result, Err(AppError::Io(error)) if error.kind() == std::io::ErrorKind::PermissionDenied)
     );
     assert_eq!(
-        read_chat(&dir, "unreadable".into()).unwrap().unwrap().id,
+        read_chat(&dirs.chats, "unreadable".into())
+            .unwrap()
+            .unwrap()
+            .id,
         "unreadable"
     );
-    assert!(!dir.join(CHAT_INDEX_FILE).exists());
-    assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
+    assert!(!dirs.index.exists());
+    assert_eq!(fs::read_dir(&dirs.chats).unwrap().count(), 1);
 }
 
 #[test]
 fn a_lost_or_broken_index_is_rebuilt_from_the_chat_files() {
     let dir = TestDir::new("rebuild");
-    let mut older = chat_item("older");
-    older.last_message_at_ms = 1_767_225_600_000;
-    let mut newer = chat_item("newer");
-    newer.last_message_at_ms = 1_769_904_000_000;
-    for chat in [&older, &newer] {
-        write_json(&dir.join(format!("{}.json", chat.id)), chat).unwrap();
-    }
-    fs::write(dir.join("broken.json"), "{").unwrap();
+    let dirs = dirs(&dir);
+    write_json(&dirs.chats.join("older.json"), &dated("older", 10)).unwrap();
+    write_json(&dirs.chats.join("newer.json"), &dated("newer", 20)).unwrap();
 
-    let ids =
-        |history: Vec<ChatSummary>| history.into_iter().map(|item| item.id).collect::<Vec<_>>();
-    assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
-    assert!(
-        !dir.join("broken.json").exists(),
-        "set aside, not left as an orphan"
-    );
+    assert_eq!(ids(&dirs), ["newer", "older"]);
+    fs::write(&dirs.index, "broken").unwrap();
+    assert_eq!(ids(&dirs), ["newer", "older"]);
+    fs::remove_file(&dirs.index).unwrap();
+    assert_eq!(ids(&dirs), ["newer", "older"]);
+}
 
-    fs::write(dir.join(CHAT_INDEX_FILE), "[{").unwrap();
-    assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
-    assert_eq!(ids(load_chat_index(&dir).unwrap()), ["newer", "older"]);
+#[test]
+fn a_chat_written_by_another_device_shows_without_a_save_here() {
+    let dir = TestDir::new("chat-from-sync");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    save_chat(&dirs, enabled_policy(), &images, dated("local", 10)).unwrap();
+    assert_eq!(ids(&dirs), ["local"]);
+    // a sync brings a chat and changes another
+    write_json(&dirs.chats.join("synced.json"), &dated("synced", 20)).unwrap();
+    let mut changed = dated("local", 30);
+    changed.title = String::from("Changed elsewhere");
+    write_json(&dirs.chats.join("local.json"), &changed).unwrap();
+    let history = list_chats(&dirs).unwrap();
+    assert_eq!(history[0].title, "Changed elsewhere");
+    assert_eq!(ids(&dirs), ["local", "synced"]);
+    // and removes one
+    fs::remove_file(dirs.chats.join("synced.json")).unwrap();
+    assert_eq!(ids(&dirs), ["local"]);
+}
+
+#[test]
+fn an_index_of_an_earlier_version_and_copies_of_sync_tools_are_no_chats() {
+    let dir = TestDir::new("chat-foreign-files");
+    let dirs = dirs(&dir);
+    write_json(&dirs.chats.join("a.json"), &chat_item("a")).unwrap();
+    fs::write(dirs.chats.join("index.json"), "[]").unwrap();
+    write_json(
+        &dirs
+            .chats
+            .join("a.sync-conflict-20261101-120000-ABCDEFG.json"),
+        &chat_item("a"),
+    )
+    .unwrap();
+    write_json(
+        &dirs.chats.join("a (conflicted copy 2026-11-01).json"),
+        &chat_item("a"),
+    )
+    .unwrap();
+    write_json(&dirs.chats.join(".tyco-tmp-a.json-1-1"), &chat_item("a")).unwrap();
+    assert_eq!(ids(&dirs), ["a"]);
+    // nothing of them is set aside as a broken chat
+    assert!(dirs.chats.join("index.json").exists());
+    assert!(dirs
+        .chats
+        .join("a.sync-conflict-20261101-120000-ABCDEFG.json")
+        .exists());
 }
 
 #[test]
 fn rebuilding_quarantines_mismatched_ids_without_losing_their_bytes() {
-    let dir = TestDir::new("mismatched-ids");
-    let chat = chat_item("different-id");
-    write_json(&dir.join("original-id.json"), &chat).unwrap();
-    let original_bytes = fs::read(dir.join("original-id.json")).unwrap();
-    assert!(load_chat_index(&dir).unwrap().is_empty());
-    assert!(!dir.join("original-id.json").exists());
-    let quarantined = fs::read_dir(&dir)
+    let dir = TestDir::new("rebuild-mismatch");
+    let dirs = dirs(&dir);
+    let raw = serde_json::to_vec(&chat_item("other")).unwrap();
+    fs::write(dirs.chats.join("named.json"), &raw).unwrap();
+
+    assert!(list_chats(&dirs).unwrap().is_empty());
+    let kept = fs::read_dir(&dirs.chats)
         .unwrap()
-        .find_map(|entry| {
-            let path = entry.unwrap().path();
-            path.file_name()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .starts_with("original-id.json.broken-")
-                .then_some(path)
-        })
+        .map(|entry| entry.unwrap().path())
+        .find(|path| path.to_string_lossy().contains("named.json.broken-"))
         .unwrap();
-    assert_eq!(fs::read(&quarantined).unwrap(), original_bytes);
-    let valid = chat_item("valid");
-    write_json(&dir.join("valid.json"), &valid).unwrap();
-    let history = load_chat_index(&dir).unwrap();
-    remove_orphan_chat_files(&dir, &history).unwrap();
-    assert_eq!(fs::read(quarantined).unwrap(), original_bytes);
-    assert_eq!(history[0].id, "valid");
+    assert_eq!(fs::read(kept).unwrap(), raw);
 }
 
 #[test]
-fn invalid_index_ids_trigger_recovery_from_valid_chat_files() {
-    let dir = TestDir::new("invalid-index-ids");
-    write_json(&dir.join("valid.json"), &chat_item("valid")).unwrap();
-    write_json(
-        &dir.join(CHAT_INDEX_FILE),
-        &vec![ChatSummary::from(&chat_item("../invalid"))],
-    )
-    .unwrap();
-    assert_eq!(load_chat_index(&dir).unwrap()[0].id, "valid");
-}
-
-#[test]
-fn stored_chat_ids_must_match_their_filename() {
-    assert!(validate_stored_chat_id(Path::new("original.json"), &chat_item("different")).is_err());
-    assert!(validate_stored_chat_id(Path::new("original.json"), &chat_item("../invalid")).is_err());
-    assert!(validate_stored_chat_id(Path::new("original.json"), &chat_item("original")).is_ok());
-}
-
-#[test]
-fn validate_chat_id_rejects_path_traversal() {
-    assert!(validate_chat_id("../../etc/passwd").is_err());
-    assert!(validate_chat_id("chat/id").is_err());
-    assert!(validate_chat_id("").is_err());
-    assert!(validate_chat_id("index").is_err());
-    assert_eq!(validate_chat_id("chat-1_A").unwrap(), "chat-1_A");
-}
-
-#[test]
-fn remove_orphan_chat_files_keeps_active_chats_and_the_index() {
-    let dir = TestDir::new("orphans");
-    fs::write(dir.join("index.json"), "[]").unwrap();
-    fs::write(dir.join("kept.json"), "{}").unwrap();
-    fs::write(dir.join("orphan.json"), "{}").unwrap();
-    fs::write(dir.join("index.json.broken-1"), "[").unwrap();
-
-    remove_orphan_chat_files(&dir, &[ChatSummary::from(&chat_item("kept"))]).unwrap();
-
-    assert!(dir.join("index.json").exists());
-    assert!(dir.join("kept.json").exists());
-    assert!(!dir.join("orphan.json").exists());
-    assert!(dir.join("index.json.broken-1").exists());
-}
-
-#[test]
-fn a_journal_without_the_cleanup_flag_cleans_images() {
-    let journal: PendingChatTransaction = serde_json::from_str(r#"{"history":[]}"#).unwrap();
-    assert!(journal.clean_images);
+fn validate_chat_id_rejects_path_traversal_and_the_old_index() {
+    for id in ["", "..", "../x", "a/b", "index"] {
+        assert!(validate_chat_id(id).is_err(), "{id:?}");
+    }
+    assert!(validate_chat_id("2b9c0f4e-7d1a").is_ok());
 }
 
 #[test]
 fn a_rename_stores_a_trimmed_title_and_refuses_empty_or_long_ones() {
     let dir = TestDir::new("rename-title");
-    let chat = chat_item("a");
-    commit_chat_transaction(
-        &dir,
-        vec![ChatSummary::from(&chat)],
-        Some(chat),
-        ImageCleanup::Skipped,
-    )
-    .unwrap();
-    rename_chat(&dir, "a".into(), "  New title  ".into()).unwrap();
+    let dirs = dirs(&dir);
+    write_json(&dirs.chats.join("a.json"), &chat_item("a")).unwrap();
+    rename_chat(&dirs, "a".into(), "  New title  ".into()).unwrap();
     assert_eq!(
-        read_chat(&dir, "a".into()).unwrap().unwrap().title,
+        read_chat(&dirs.chats, "a".into()).unwrap().unwrap().title,
         "New title"
     );
-    assert!(rename_chat(&dir, "a".into(), "   ".into()).is_err());
+    assert!(rename_chat(&dirs, "a".into(), "   ".into()).is_err());
     let long = "x".repeat(MAX_CHAT_TITLE_CHARS + 1);
-    assert!(rename_chat(&dir, "a".into(), long).is_err());
-    assert_eq!(list_chats(&dir).unwrap()[0].title, "New title");
+    assert!(rename_chat(&dirs, "a".into(), long).is_err());
+    assert_eq!(list_chats(&dirs).unwrap()[0].title, "New title");
 }
 
 #[test]
@@ -731,6 +545,7 @@ fn a_new_chat_or_one_that_keeps_its_images_drops_none() {
 #[test]
 fn a_chat_whose_image_is_lost_can_still_be_saved() {
     let dir = TestDir::new("chat-lost-image");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
     let mut chat = chat_item("lost");
     chat.messages.push(crate::models::ChatMessage {
@@ -749,10 +564,10 @@ fn a_chat_whose_image_is_lost_can_still_be_saved() {
         status: None,
     });
 
-    save_chat(&dir, enabled_policy(), &images, chat).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, chat).unwrap();
 
     assert_eq!(
-        read_chat(&dir, "lost".into())
+        read_chat(&dirs.chats, "lost".into())
             .unwrap()
             .unwrap()
             .messages
@@ -764,14 +579,13 @@ fn a_chat_whose_image_is_lost_can_still_be_saved() {
 #[test]
 fn retention_applies_while_the_history_is_off() {
     let dir = TestDir::new("chat-retention-off");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
-    save_chat(&dir, enabled_policy(), &images, chat_item("old")).unwrap();
-    let mut fresh = chat_item("fresh");
-    fresh.last_message_at_ms = now_ms();
-    save_chat(&dir, enabled_policy(), &images, fresh).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, chat_item("old")).unwrap();
+    save_chat(&dirs, enabled_policy(), &images, dated("fresh", now_ms())).unwrap();
 
     let removed = enforce_chat_history_policy(
-        &dir,
+        &dirs,
         ChatHistoryPolicy {
             is_enabled: false,
             retention_days: 30,
@@ -780,40 +594,49 @@ fn retention_applies_while_the_history_is_off() {
     .unwrap();
 
     assert_eq!(removed, ["old"]);
-    let ids: Vec<_> = list_chats(&dir)
-        .unwrap()
-        .into_iter()
-        .map(|item| item.id)
-        .collect();
-    assert_eq!(ids, ["fresh"]);
+    assert_eq!(ids(&dirs), ["fresh"]);
+    assert!(!dirs.chats.join("old.json").exists());
 }
 
 #[test]
-fn a_restored_chat_goes_back_to_its_place() {
-    let mut history = Vec::new();
-    for (id, time) in [("newest", 30), ("oldest", 10)] {
-        let mut chat = chat_item(id);
-        chat.last_message_at_ms = time;
-        history.push(ChatSummary::from(&chat));
-    }
-    let mut restored = chat_item("restored");
-    restored.last_message_at_ms = 20;
+fn clearing_removes_the_chats_their_images_and_the_index() {
+    let dir = TestDir::new("chat-clear");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    save_chat(&dirs, enabled_policy(), &images, chat_item("a")).unwrap();
+    fs::create_dir_all(dirs.images()).unwrap();
+    fs::write(dirs.images().join("x.webp"), "x").unwrap();
+    fs::write(dirs.chats.join("notes.txt"), "kept").unwrap();
 
-    upsert_chat_index(&mut history, &restored);
+    clear_chats(&dirs).unwrap();
 
-    let ids: Vec<_> = history.iter().map(|item| item.id.as_str()).collect();
-    assert_eq!(ids, ["newest", "restored", "oldest"]);
+    assert!(list_chats(&dirs).unwrap().is_empty());
+    assert!(!dirs.images().exists());
+    assert!(dirs.chats.join("notes.txt").exists());
 }
 
 #[test]
 fn renaming_an_unreadable_chat_sets_it_aside() {
     let dir = TestDir::new("chat-rename-broken");
+    let dirs = dirs(&dir);
     let images = Mutex::new(ChatImageStore::default());
-    save_chat(&dir, enabled_policy(), &images, chat_item("broken")).unwrap();
-    fs::write(dir.join("broken.json"), "{").unwrap();
+    save_chat(&dirs, enabled_policy(), &images, chat_item("broken")).unwrap();
+    fs::write(dirs.chats.join("broken.json"), "{").unwrap();
 
-    let result = rename_chat(&dir, "broken".into(), "New".into());
+    let result = rename_chat(&dirs, "broken".into(), "New".into());
 
     assert!(matches!(result, Err(AppError::NotFound(_))));
-    assert!(list_chats(&dir).unwrap().is_empty());
+    assert!(list_chats(&dirs).unwrap().is_empty());
+}
+
+#[test]
+fn every_vault_keeps_its_indexes_apart() {
+    let dir = TestDir::new("vault-index-dirs");
+    fs::create_dir_all(dir.join("one")).unwrap();
+    fs::create_dir_all(dir.join("two")).unwrap();
+    let index = dir.join("index");
+    let one = vault_index_dir(&index, &dir.join("one"));
+    assert_ne!(one, vault_index_dir(&index, &dir.join("two")));
+    assert_eq!(one, vault_index_dir(&index, &dir.join("one/../one")));
+    assert!(one.starts_with(index.join("ai-vault")));
 }

@@ -64,6 +64,7 @@ function fixture(overrides: Partial<AppWindowControllerDependencies> = {}) {
     stopMetrics: vi.fn(),
     disposePlugins: vi.fn(async () => {}),
     refreshPlugins: vi.fn(async () => {}),
+    notifySettingsConflict: vi.fn(),
     shutdown: {
       request: vi.fn(async () => {}),
       cancel: vi.fn(),

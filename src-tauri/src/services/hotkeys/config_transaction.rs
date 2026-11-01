@@ -308,17 +308,16 @@ mod tests {
     #[test]
     fn added_and_removed_launcher_pages_change_their_shortcuts() {
         let before = bindings_from_config(&serde_json::json!({
-            "launcherPages": [
-                {"id": "kept", "hotkey": "Ctrl+Alt+K"},
-                {"id": "removed", "hotkey": "Ctrl+Alt+R"},
-                {"id": "unbound"},
-            ],
+            "launcherPages": [{"id": "kept"}, {"id": "removed"}, {"id": "unbound"}],
+            "hotkeys": {
+                "launcherPages": {"kept": "Ctrl+Alt+K", "removed": "Ctrl+Alt+R"}
+            },
         }));
         let after = bindings_from_config(&serde_json::json!({
-            "launcherPages": [
-                {"id": "kept", "hotkey": "Ctrl+Alt+K"},
-                {"id": "added", "hotkey": "Ctrl+Alt+A"},
-            ],
+            "launcherPages": [{"id": "kept"}, {"id": "added"}],
+            "hotkeys": {
+                "launcherPages": {"kept": "Ctrl+Alt+K", "added": "Ctrl+Alt+A"}
+            },
         }));
         let changes = binding_changes(&before, after);
         assert_eq!(

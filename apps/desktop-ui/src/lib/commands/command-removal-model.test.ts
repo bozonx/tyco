@@ -26,12 +26,7 @@ describe('command removal model', () => {
       q: { type: 'command', commandId: command.id },
     }
     let pages: LauncherPageConfig[] = [
-      {
-        id: 'main',
-        inputMode: 'selection',
-        hotkey: '',
-        slots: { q: command.id },
-      },
+      { id: 'main', inputMode: 'selection', slots: { q: command.id } },
     ]
     const removeSecret = vi.fn().mockResolvedValue(undefined)
     const model = createCommandRemovalModel({

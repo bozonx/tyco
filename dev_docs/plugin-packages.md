@@ -196,6 +196,16 @@ use this scoped service through the host adapter. A failed call carries an
 `errorCode` (`permissionDenied`, `invalidInput`, `resourceLimit`, ...) so the
 plugin can tell the user why; `error` is an untranslated detail for logs.
 
+The notes folder means something on one machine only, so it is kept on the
+device: the host knows the field by `notesDirectoryField` and moves its value
+out of the shared config into `device.json` (`pluginPaths.<plugin id>` for the
+plugin settings, `pluginCommandPaths.<command id>` for a command), leaving an
+empty string in `config.json`; loading puts it back, so plugins and
+`write_plugin_note` see one config as before. A tool that has the field and no
+folder on this device is unavailable there (`commands.notesFolderMissing`), and
+the field is marked as one of this device. The package format and the SDK do
+not change.
+
 Bundled plugins have no installed manifest, so the backend keeps their IDs and
 notes settings in `BUNDLED_IDS` and `BUNDLED_NOTES_FIELDS`
 (`src-tauri/src/services/plugins.rs`). `pnpm check:plugins` fails when these

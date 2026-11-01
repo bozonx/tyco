@@ -200,6 +200,8 @@ export function useAppRuntime() {
     stopMetrics: activationMetrics.stop,
     disposePlugins: pluginRuntime.dispose,
     refreshPlugins: pluginRuntime.refreshInstalledPlugins,
+    notifySettingsConflict: () =>
+      toastKey('settings.userData.syncConflictToast', 'warn'),
     shutdown: settingsShutdown,
     runSelection: (payload) => useSelectionReplaceStore().handleRun(payload),
     cancelSelection: (runId) => useSelectionReplaceStore().handleCancel(runId),

@@ -86,7 +86,10 @@ pub struct InstalledPlugin {
 }
 
 pub struct PluginStore {
-    root: PathBuf,
+    /// The `plugins` folder of the user data folder, or why there is none.
+    root: Result<PathBuf, String>,
+    /// False while the user data folder is read only.
+    is_writable: bool,
     lock: Mutex<()>,
 }
 fn is_valid_plugin_id(id: &str) -> bool {
@@ -154,9 +157,45 @@ impl PluginStore {
             log::error!("Could not create {}: {error}", root.display());
         }
         Self {
-            root,
+            root: Ok(root),
+            is_writable: true,
             lock: Mutex::new(()),
         }
+    }
+
+    /// The plugins of a user data folder that cannot be written: nothing is
+    /// created there.
+    pub fn read_only(root: PathBuf) -> Self {
+        Self {
+            root: Ok(root),
+            is_writable: false,
+            lock: Mutex::new(()),
+        }
+    }
+
+    /// No plugins while the user data folder is not connected.
+    pub fn unavailable(reason: String) -> Self {
+        Self {
+            root: Err(reason),
+            is_writable: false,
+            lock: Mutex::new(()),
+        }
+    }
+
+    fn dir(&self) -> Result<&Path, AppError> {
+        self.root
+            .as_deref()
+            .map_err(|reason| AppError::UserDataUnavailable(reason.clone()))
+    }
+
+    fn writable_dir(&self) -> Result<&Path, AppError> {
+        let dir = self.dir()?;
+        if !self.is_writable {
+            return Err(AppError::UserDataUnavailable(
+                "The data folder is read only".into(),
+            ));
+        }
+        Ok(dir)
     }
     /// Only native metadata chooses which saved setting grants notes access.
     pub fn notes_directory_field(&self, id: &str) -> Result<String, AppError> {
@@ -173,7 +212,7 @@ impl PluginStore {
         }
         let _guard = self.lock.locked();
         let installed: InstalledPackage = serde_json::from_str(&read_stored(
-            &self.root.join(format!("{}.json", storage_key(id))),
+            &self.dir()?.join(format!("{}.json", storage_key(id))),
         )?)?;
         validate_manifest(&installed.package.manifest)?;
         if installed.package.manifest.id != id
@@ -222,18 +261,19 @@ impl PluginStore {
                 "Plugin manifest changed after inspection".into(),
             ));
         }
+        let root = self.writable_dir()?;
         let revision = crate::services::clock::now_ns().to_string();
         let key = storage_key(&package.manifest.id);
         let result = InstalledPlugin {
             manifest: package.manifest.clone(),
             module_path: format!("{key}/{revision}.js"),
-            has_previous_version: self.root.join(format!("{key}.json")).exists(),
+            has_previous_version: root.join(format!("{key}.json")).exists(),
         };
         let installed = InstalledPackage { package, revision };
-        let current = self.root.join(format!("{key}.json"));
+        let current = root.join(format!("{key}.json"));
         if current.exists() {
             atomic_file::write_private(
-                &self.root.join(format!("{key}.previous")),
+                &root.join(format!("{key}.previous")),
                 &read_stored(&current)?,
             )?;
         }
@@ -243,11 +283,18 @@ impl PluginStore {
     pub fn list(&self) -> Result<Vec<InstalledPlugin>, AppError> {
         let _guard = self.lock.locked();
         let mut result = Vec::new();
-        for entry in fs::read_dir(&self.root)? {
-            let path = entry?.path();
-            if path.extension().and_then(|value| value.to_str()) != Some("json") {
-                continue;
-            }
+        // no plugins while the user data folder is not connected
+        let Ok(root) = self.dir() else {
+            return Ok(result);
+        };
+        let files = crate::services::storage::user_files::list_own_files(root, |name| {
+            name.strip_suffix(".json").is_some_and(|key| {
+                !key.is_empty()
+                    && key.len() <= MAX_PACKAGE_KEY_LENGTH
+                    && key.bytes().all(|byte| byte.is_ascii_hexdigit())
+            })
+        })?;
+        for (_, path) in files {
             let parsed = read_stored(&path).and_then(|raw| {
                 serde_json::from_str::<InstalledPackage>(&raw).map_err(AppError::from)
             });
@@ -260,7 +307,7 @@ impl PluginStore {
                     result.push(InstalledPlugin {
                         manifest: installed.package.manifest,
                         module_path: format!("{key}/{}.js", installed.revision),
-                        has_previous_version: self.root.join(format!("{key}.previous")).exists(),
+                        has_previous_version: root.join(format!("{key}.previous")).exists(),
                     });
                 }
                 Err(reason) => log::warn!("Could not read installed plugin: {reason}"),
@@ -276,8 +323,9 @@ impl PluginStore {
                 "Invalid or bundled plugin ID".into(),
             ));
         }
+        let root = self.writable_dir()?;
         let key = storage_key(id);
-        let previous = self.root.join(format!("{key}.previous"));
+        let previous = root.join(format!("{key}.previous"));
         let raw = read_stored(&previous)?;
         let installed: InstalledPackage = serde_json::from_str(&raw)?;
         validate_manifest(&installed.package.manifest)?;
@@ -286,7 +334,7 @@ impl PluginStore {
                 "Invalid previous plugin identity".into(),
             ));
         }
-        atomic_file::write_private(&self.root.join(format!("{key}.json")), &raw)?;
+        atomic_file::write_private(&root.join(format!("{key}.json")), &raw)?;
         fs::remove_file(previous)?;
         Ok(())
     }
@@ -300,11 +348,12 @@ impl PluginStore {
                 "A bundled plugin cannot be removed".into(),
             ));
         }
-        let previous = self.root.join(format!("{}.previous", storage_key(id)));
+        let root = self.writable_dir()?;
+        let previous = root.join(format!("{}.previous", storage_key(id)));
         if previous.exists() {
             fs::remove_file(previous)?;
         }
-        let path = self.root.join(format!("{}.json", storage_key(id)));
+        let path = root.join(format!("{}.json", storage_key(id)));
         match fs::remove_file(path) {
             Ok(()) => Ok(()),
             Err(reason) if reason.kind() == std::io::ErrorKind::NotFound => Ok(()),
@@ -325,7 +374,7 @@ impl PluginStore {
             return Err(AppError::InvalidInput("Invalid plugin module key".into()));
         }
         let installed: InstalledPackage =
-            serde_json::from_str(&read_stored(&self.root.join(format!("{key}.json")))?)?;
+            serde_json::from_str(&read_stored(&self.dir()?.join(format!("{key}.json")))?)?;
         validate_manifest(&installed.package.manifest)?;
         if key != storage_key(&installed.package.manifest.id)
             || revision != format!("{}.js", installed.revision)
@@ -387,7 +436,7 @@ pub fn approved_note_roots(
     }
     if roots.is_empty() {
         return Err(AppError::PermissionDenied(
-            "Notes directory is not configured".into(),
+            "The notes folder is not set on this device".into(),
         ));
     }
     Ok(roots)

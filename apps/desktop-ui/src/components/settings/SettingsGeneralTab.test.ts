@@ -67,6 +67,7 @@ describe('SettingsGeneralTab.vue', () => {
           StorageLocations: {
             template: '<div class="storage-locations-stub" />',
           },
+          UserDataFolder: { template: '<div class="user-data-folder-stub" />' },
         },
       },
     })

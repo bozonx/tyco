@@ -13,7 +13,8 @@
       "storage": "disk",
       "maxItems": 1000,
       "retentionDays": 30,
-      "isSecretSanitizingEnabled": true
+      "isSecretSanitizingEnabled": true,
+      "isLocalOnly": false
     },
     "shortcuts": {
       "bold": "Ctrl+B",
@@ -55,7 +56,8 @@
     "transformation": "",
     "history": "",
     "voiceCommands": "Ctrl+Alt+Shift+X",
-    "selectionCorrection": "Ctrl+Alt+Shift+F"
+    "selectionCorrection": "Ctrl+Alt+Shift+F",
+    "launcherPages": { "main": "Ctrl+Alt+Shift+Q" }
   },
   "externalAccess": { "canAccessSelection": false },
   "windowInsertion": {
@@ -81,14 +83,7 @@
     "t": { "type": "standard", "actionId": "translationMenu" },
     "a": { "type": "standard", "actionId": "askInChat" }
   },
-  "launcherPages": [
-    {
-      "id": "main",
-      "inputMode": "selection",
-      "hotkey": "Ctrl+Alt+Shift+Q",
-      "slots": {}
-    }
-  ],
+  "launcherPages": [{ "id": "main", "inputMode": "selection", "slots": {} }],
   "commands": [],
   "llm": {
     "providers": [

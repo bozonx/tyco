@@ -8,6 +8,9 @@
       :info="configFieldInfo(item, t)"
       :vertical="item.vertical ?? item.type === 'sortable-checklist'"
     >
+      <template v-if="item.name === directoryField" #info>
+        <DeviceScopeBadge />
+      </template>
       <ConfigFieldControl
         :control="controlFor(item)"
         @update:model-value="updateValue(item.name, $event)"
@@ -32,6 +35,7 @@ import {
 import type { ConfigFieldControl as Control } from '../../lib/ui/config-field-control'
 import FieldRow from '../common/FieldRow.vue'
 import ConfigFieldControl from './ConfigFieldControl.vue'
+import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import DirectoryPickerButton from './DirectoryPickerButton.vue'
 import type { InputConfigItem } from '@/types'
 import { isConfigFieldVisible, withConfigFieldValue } from '@tyco/plugin-sdk'

@@ -58,9 +58,9 @@ pub(super) fn checked_secret<'a>(
 /// the real keys.
 pub(super) fn vault_namespace(
     identifier: &str,
-    dev_config_dir: Option<&std::path::Path>,
+    dev_device_dir: Option<&std::path::Path>,
 ) -> String {
-    match dev_config_dir {
+    match dev_device_dir {
         None => identifier.to_string(),
         Some(dir) => {
             let digest = Sha256::digest(dir.to_string_lossy().as_bytes());

@@ -17,13 +17,17 @@ export interface WebhookAuthDependencies {
   persist: () => Promise<unknown>
   isSaved: () => boolean
   notifyInvalidOrigin: () => void
+  /** A key is stored on this device only: other devices keep their own */
+  notifySavedOnDevice?: () => void
   reportSaveError: (error: unknown) => void
   reportRemoveError: (error: unknown) => void
 }
 
 /**
  * Keeps credentials behind the secret store and removes them only after the
- * config that no longer refers to them is saved
+ * config that no longer refers to them is saved. The id of a key is made once,
+ * with the reference to it, and never changes: the config is shared by every
+ * device, each keeping its own value under that id
  */
 export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
   const authDraft = ref('')
@@ -45,20 +49,20 @@ export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
       deps.notifyInvalidOrigin()
       return
     }
-    const previousId = deps.getSecretId()
+    const existingId = deps.getSecretId()
     try {
-      const id = `${WEBHOOK_AUTH_SECRET_PREFIX}${deps.createId()}`
+      // a new value goes under the id the config has, on this device only
+      const id = existingId || `${WEBHOOK_AUTH_SECRET_PREFIX}${deps.createId()}`
       await deps.setSecret(id, value, [origin])
-      deps.update('authSecretId', id)
-      await deps.afterRender()
+      if (!existingId) {
+        deps.update('authSecretId', id)
+        await deps.afterRender()
+      }
       authDraft.value = ''
       deps.update('isAuthEnabled', true)
+      deps.notifySavedOnDevice?.()
     } catch (error) {
       deps.reportSaveError(error)
-      return
-    }
-    if (previousId) {
-      await removeUnusedSecret(previousId).catch(deps.reportRemoveError)
     }
   }
 
@@ -75,23 +79,22 @@ export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
   }
 
   /**
-   * Puts a new value under a stored secret, keeping its id, so a secret header
-   * never turns into plain text in the config. It stays bound to its origins
-   * and, as the user typed it for this webhook, to the origin of its URL too:
-   * after a change of the URL the secret would otherwise never be sent
+   * Puts a new value under a secret the config refers to, keeping its id, so a
+   * secret header never turns into plain text in the config. The value is
+   * stored at once, on this device only, bound to the origin of the URL the
+   * webhook has here; a URL without one stores nothing
    */
   async function replaceSecret(id: string, value: string) {
     const trimmed = value.trim()
     if (!id || !trimmed) return false
-    const known = deps.getSecretOrigins?.(id) ?? []
     const origin = httpOrigin(deps.getUrl())
-    const origins = [...new Set(origin ? [...known, origin] : known)]
-    if (!origins.length) {
+    if (!origin) {
       deps.notifyInvalidOrigin()
       return false
     }
     try {
-      await deps.setSecret(id, trimmed, origins)
+      await deps.setSecret(id, trimmed, [origin])
+      deps.notifySavedOnDevice?.()
       return true
     } catch (error) {
       deps.reportSaveError(error)

@@ -303,3 +303,79 @@ fn a_development_home_gets_its_own_namespace() {
         )
     );
 }
+
+/// Two devices share one config, each with its own keys: a key entered on
+/// one never changes the reference the other one follows, and the startup
+/// cleanup of one never takes the key of the other.
+#[test]
+fn two_devices_keep_their_own_keys_under_one_shared_reference() {
+    let laptop = in_memory();
+    let desktop = in_memory();
+    let mut config = serde_json::json!({"commands": [{
+        "id": "hook",
+        "toolId": "webhook",
+        "toolConfig": {
+            "url": "https://hooks.example/path",
+            "headers": {"x-key": "laptop value"},
+            "isAuthEnabled": true,
+            "authSecretId": "webhook.auth.shared"
+        }
+    }]});
+
+    // the laptop makes the header secret and enters its authorization key
+    let pending = webhook::protect_for_save(&laptop, &mut config).unwrap();
+    pending.commit(&config.clone(), &config);
+    laptop
+        .set(
+            "webhook.auth.shared",
+            "laptop token",
+            Some(vec!["https://hooks.example".into()]),
+        )
+        .unwrap();
+    let header_ref = config["commands"][0]["toolConfig"]["headers"]["x-key"].clone();
+    let header_id = header_ref
+        .as_str()
+        .and_then(|value| value.strip_prefix(SECRET_REF_PREFIX))
+        .unwrap()
+        .to_owned();
+
+    // the synced config reaches the desktop, which has no keys yet: its
+    // startup cleanup and its save change neither the config nor the laptop
+    webhook::cleanup_after_startup(&desktop, &config);
+    let synced = config.clone();
+    let pending = webhook::protect_for_save(&desktop, &mut config).unwrap();
+    pending.commit(&synced, &config);
+    assert_eq!(config, synced, "a save without new values rebinds nothing");
+
+    // the desktop enters its own values under the same ids
+    for (id, value) in [
+        (&header_id[..], "desktop value"),
+        ("webhook.auth.shared", "desktop token"),
+    ] {
+        desktop
+            .set(id, value, Some(vec!["https://hooks.example".into()]))
+            .unwrap();
+    }
+    webhook::cleanup_after_startup(&laptop, &config);
+    webhook::cleanup_after_startup(&desktop, &config);
+
+    assert_eq!(
+        config["commands"][0]["toolConfig"]["headers"]["x-key"],
+        header_ref
+    );
+    let value =
+        |store: &SecretStore, id: &str| store.snapshot().get(id).map(|entry| entry.value.clone());
+    assert_eq!(value(&laptop, &header_id).as_deref(), Some("laptop value"));
+    assert_eq!(
+        value(&laptop, "webhook.auth.shared").as_deref(),
+        Some("laptop token")
+    );
+    assert_eq!(
+        value(&desktop, &header_id).as_deref(),
+        Some("desktop value")
+    );
+    assert_eq!(
+        value(&desktop, "webhook.auth.shared").as_deref(),
+        Some("desktop token")
+    );
+}

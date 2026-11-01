@@ -1,0 +1,81 @@
+[
+  {
+    "name": "device fields of sections and whole device sections",
+    "user": {
+      "appearance": { "theme": "dark" },
+      "editor": { "submitKey": "Enter", "history": { "storage": "disk" } },
+      "aiVault": {},
+      "stt": {
+        "provider": "sherpaOnnx",
+        "providers": { "deepgram": { "modelId": "nova-3" } }
+      },
+      "commands": [{ "id": "note", "toolId": "script" }]
+    },
+    "device": {
+      "isInDevelopment": true,
+      "appearance": { "uiScalePercent": 125 },
+      "editor": { "history": { "isLocalOnly": true } },
+      "hotkeys": {
+        "quickInput": "Ctrl+Alt+W",
+        "launcherPages": { "main": "Ctrl+Alt+Q" }
+      },
+      "externalAccess": { "canAccessSelection": true },
+      "windowInsertion": { "terminalApps": ["kitty"] },
+      "aiVault": { "path": "/home/user/vault" },
+      "stt": { "providers": { "sherpaOnnx": { "baseUrl": "ws://pc:6006" } } }
+    },
+    "joined": {
+      "appearance": { "theme": "dark", "uiScalePercent": 125 },
+      "editor": {
+        "submitKey": "Enter",
+        "history": { "storage": "disk", "isLocalOnly": true }
+      },
+      "aiVault": { "path": "/home/user/vault" },
+      "stt": {
+        "provider": "sherpaOnnx",
+        "providers": {
+          "deepgram": { "modelId": "nova-3" },
+          "sherpaOnnx": { "baseUrl": "ws://pc:6006" }
+        }
+      },
+      "commands": [{ "id": "note", "toolId": "script" }],
+      "isInDevelopment": true,
+      "hotkeys": {
+        "quickInput": "Ctrl+Alt+W",
+        "launcherPages": { "main": "Ctrl+Alt+Q" }
+      },
+      "externalAccess": { "canAccessSelection": true },
+      "windowInsertion": { "terminalApps": ["kitty"] }
+    },
+    "deviceUnknownPaths": []
+  },
+  {
+    "name": "unknown fields go back to the file they came from",
+    "user": {
+      "appearance": { "theme": "light", "futureUser": 1 },
+      "futureSection": { "a": 1 }
+    },
+    "device": {
+      "appearance": { "futureDevice": 2 },
+      "hotkeys": { "futureHotkey": "Ctrl+F" },
+      "futureDeviceSection": { "b": 2 }
+    },
+    "joined": {
+      "appearance": { "theme": "light", "futureUser": 1, "futureDevice": 2 },
+      "futureSection": { "a": 1 },
+      "hotkeys": { "futureHotkey": "Ctrl+F" },
+      "futureDeviceSection": { "b": 2 }
+    },
+    "deviceUnknownPaths": [
+      ["appearance", "futureDevice"],
+      ["futureDeviceSection"]
+    ]
+  },
+  {
+    "name": "a device part alone",
+    "user": {},
+    "device": { "hotkeys": { "voice": "" } },
+    "joined": { "hotkeys": { "voice": "" } },
+    "deviceUnknownPaths": []
+  }
+]

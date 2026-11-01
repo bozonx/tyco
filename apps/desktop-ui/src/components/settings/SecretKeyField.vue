@@ -9,7 +9,7 @@
       :placeholder="
         hasKey
           ? t('settings.apiKeyReplacePlaceholder')
-          : t('settings.apiKeyPlaceholder')
+          : t('settings.apiKeyNotSetPlaceholder')
       "
       @update:model-value="emit('update:modelValue', $event)"
     />

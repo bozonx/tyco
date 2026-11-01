@@ -332,51 +332,95 @@ impl ChatImageStore {
     }
 }
 
-/// Scan surviving chats rather than duplicating references in the index.
-/// An unreadable chat aborts collection: uncertain references are kept.
-pub fn remove_orphan_images(chats_dir: &Path) -> Result<(), AppError> {
-    let mut live = HashSet::new();
-    for entry in fs::read_dir(chats_dir)? {
-        let path = entry?.path();
-        if path.extension().is_some_and(|ext| ext == "json")
-            && path.file_name().is_some_and(|name| name != "index.json")
-        {
-            let chat: Chat = match serde_json::from_slice(&fs::read(&path)?) {
-                Ok(chat) => chat,
-                Err(error) => {
-                    log::warn!(
-                        "Keeping all chat images: chat file {} is unreadable ({error})",
-                        path.display()
-                    );
-                    return Ok(());
-                }
-            };
-            live.extend(
-                chat.messages
-                    .into_iter()
-                    .flat_map(|message| message.images)
-                    .map(|image| image.id),
-            );
-        }
-    }
+/// How long an image no chat refers to stays: a sync tool may bring an image
+/// before the chat that refers to it.
+pub const ORPHAN_IMAGE_GRACE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
+
+/// When each image without a chat referring to it was first seen, by images
+/// folder and image id. The time of the file is no help: Syncthing and rsync
+/// keep the time of the original.
+type OrphanRecord = std::collections::BTreeMap<String, std::collections::BTreeMap<String, u64>>;
+
+/// Removes the images of `chats_dir` no chat has referred to for
+/// `ORPHAN_IMAGE_GRACE_MS`, by the times kept in `orphans_path`. An image that
+/// is referred to again leaves the record. An unreadable chat aborts
+/// collection: uncertain references are kept.
+pub fn remove_orphan_images(
+    chats_dir: &Path,
+    orphans_path: &Path,
+    now_ms: u64,
+) -> Result<(), AppError> {
     let directory = chats_dir.join("images");
-    if !directory.exists() {
-        return Ok(());
+    let mut record: OrphanRecord = fs::read(orphans_path)
+        .ok()
+        .and_then(|raw| serde_json::from_slice(&raw).ok())
+        .unwrap_or_default();
+    let key = directory.to_string_lossy().into_owned();
+    let before = record.clone();
+
+    let mut live = HashSet::new();
+    let chats = crate::services::storage::user_files::list_own_files(chats_dir, |name| {
+        name.strip_suffix(".json")
+            .is_some_and(|id| crate::services::file_ids::is_file_id(id) && id != "index")
+    })?;
+    for (_, path) in chats {
+        let chat: Chat = match serde_json::from_slice(&fs::read(&path)?) {
+            Ok(chat) => chat,
+            Err(error) => {
+                log::warn!(
+                    "Keeping all chat images: chat file {} is unreadable ({error})",
+                    path.display()
+                );
+                return Ok(());
+            }
+        };
+        live.extend(
+            chat.messages
+                .into_iter()
+                .flat_map(|message| message.images)
+                .map(|image| image.id),
+        );
     }
-    for entry in fs::read_dir(directory)? {
-        let path = entry?.path();
-        if path.is_file()
-            && path
-                .extension()
-                .and_then(|ext| ext.to_str())
-                .is_some_and(|ext| FORMATS.iter().any(|(known, _)| *known == ext))
-            && path
-                .file_stem()
-                .and_then(|id| id.to_str())
-                .is_some_and(|id| !live.contains(id))
-        {
-            fs::remove_file(path)?;
+    let images = crate::services::storage::user_files::list_own_files(&directory, |name| {
+        Path::new(name)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .is_some_and(|ext| FORMATS.iter().any(|(known, _)| *known == ext))
+    })?;
+    let seen = record.entry(key.clone()).or_default();
+    let mut present = HashSet::new();
+    for (_, path) in images {
+        let Some(id) = path
+            .file_stem()
+            .and_then(|id| id.to_str())
+            .map(str::to_owned)
+        else {
+            continue;
+        };
+        present.insert(id.clone());
+        if live.contains(&id) {
+            seen.remove(&id);
+            continue;
         }
+        let first_seen = *seen.entry(id.clone()).or_insert(now_ms);
+        if now_ms.saturating_sub(first_seen) >= ORPHAN_IMAGE_GRACE_MS {
+            fs::remove_file(&path)?;
+            seen.remove(&id);
+            present.remove(&id);
+        }
+    }
+    seen.retain(|id, _| present.contains(id));
+    if seen.is_empty() {
+        record.remove(&key);
+    }
+    if record != before {
+        if let Some(dir) = orphans_path.parent() {
+            crate::services::atomic_file::create_private_dir(dir)?;
+        }
+        crate::services::atomic_file::write_private(
+            orphans_path,
+            &serde_json::to_string(&record)?,
+        )?;
     }
     Ok(())
 }
@@ -501,19 +545,50 @@ mod tests {
             serde_json::to_vec(&chat).unwrap(),
         )
         .unwrap();
-        remove_orphan_images(&directory).unwrap();
+        let orphans = directory.join("state/orphan-images.json");
+        remove_orphan_images(&directory, &orphans, 0).unwrap();
         let mut restored = ChatImageStore::default();
         assert_eq!(
             restored.get(&directory.join("images"), &image.id).unwrap(),
             store.get(&directory.join("images"), &image.id).unwrap()
         );
+        let file = directory.join("images").join(format!("{}.webp", image.id));
         fs::remove_file(directory.join("test.json")).unwrap();
-        remove_orphan_images(&directory).unwrap();
-        assert!(!directory
-            .join("images")
-            .join(format!("{}.webp", image.id))
-            .exists());
+        // first seen without a chat: kept for the grace period, whatever
+        // the time of the file says
+        remove_orphan_images(&directory, &orphans, 1_000).unwrap();
+        assert!(file.exists());
+        remove_orphan_images(&directory, &orphans, ORPHAN_IMAGE_GRACE_MS).unwrap();
+        assert!(file.exists());
+        remove_orphan_images(&directory, &orphans, 1_000 + ORPHAN_IMAGE_GRACE_MS).unwrap();
+        assert!(!file.exists());
         assert!(store.get(&directory.join("images"), &image.id).is_ok());
+    }
+
+    #[test]
+    fn an_image_referred_to_again_leaves_the_record() {
+        let directory = TestDir::new("tyco-chat-images-adopted");
+        let images = directory.join("images");
+        fs::create_dir_all(&images).unwrap();
+        let id = "a".repeat(64);
+        let file = images.join(format!("{id}.webp"));
+        fs::write(&file, b"image").unwrap();
+        let orphans = directory.join("state/orphan-images.json");
+        remove_orphan_images(&directory, &orphans, 0).unwrap();
+        assert!(fs::read_to_string(&orphans).unwrap().contains(&id));
+        // the chat arrives
+        let chat = serde_json::json!({
+            "id": "late",
+            "title": "Late",
+            "lastMessageAt": 0,
+            "messages": [{"role": "user", "content": "", "images": [{
+                "id": id, "mediaType": "image/webp", "width": 1, "height": 1, "size": 5
+            }]}]
+        });
+        fs::write(directory.join("late.json"), chat.to_string()).unwrap();
+        remove_orphan_images(&directory, &orphans, 2 * ORPHAN_IMAGE_GRACE_MS).unwrap();
+        assert!(file.exists());
+        assert!(!orphans.exists() || !fs::read_to_string(&orphans).unwrap().contains(&id));
     }
     #[test]
     fn rejects_mismatched_metadata_and_exhausted_session_memory() {

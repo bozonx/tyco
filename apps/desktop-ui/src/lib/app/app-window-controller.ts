@@ -20,6 +20,8 @@ export interface AppWindowControllerDependencies {
   stopMetrics: () => void
   disposePlugins: () => Promise<void>
   refreshPlugins: () => Promise<void>
+  /** Another device changed the settings this one has just saved */
+  notifySettingsConflict: () => void
   shutdown: {
     request: (requestId: number) => Promise<void>
     cancel: () => void
@@ -121,6 +123,10 @@ export function createAppWindowController(
           )
           await deps.goToEditor()
         }),
+        subscribe(
+          DESKTOP_EVENTS.SETTINGS_CONFLICT,
+          deps.notifySettingsConflict
+        ),
         subscribe(DESKTOP_EVENTS.MAIN_WINDOW_CLOSED, async () => {
           chatRequest++
           await deps.resetMainWindow()

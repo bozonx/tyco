@@ -9,6 +9,7 @@
         <h3 v-if="title" class="settings-section-title">
           <span>{{ title }}</span>
           <InfoTooltip v-if="info" :text="info" />
+          <DeviceScopeBadge v-if="deviceScoped" />
         </h3>
         <p
           v-if="description || $slots.description"
@@ -29,6 +30,7 @@
 
 <script setup lang="ts">
 import InfoTooltip from '../common/InfoTooltip.vue'
+import DeviceScopeBadge from './DeviceScopeBadge.vue'
 
 withDefaults(
   defineProps<{
@@ -36,8 +38,10 @@ withDefaults(
     description?: string
     info?: string
     bare?: boolean
+    /** The settings of the section belong to this device: never synced */
+    deviceScoped?: boolean
   }>(),
-  { title: '', description: '', info: '', bare: false }
+  { title: '', description: '', info: '', bare: false, deviceScoped: false }
 )
 </script>
 

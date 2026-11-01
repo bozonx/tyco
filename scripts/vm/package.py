@@ -69,15 +69,14 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
     config["language"]["ui"] = "en-US"
     config["appearance"]["theme"] = "dark"
     config["hotkeys"] = dict.fromkeys(config["hotkeys"], "")
-    for page in config["launcherPages"]:
-        page["hotkey"] = ""
+    config["hotkeys"]["launcherPages"] = {}
     fixture = vm.run_dir / "package-config.json"
     fixture.write_text(json.dumps(config))
     vm.ssh(
         "mkdir -p .config/com.tyco.app .local/lib/tyco .local/bin .local/share/applications .local/share/com.tyco.app"
     )
     if not args.previous_artifact:
-        vm.copy_to(fixture, ".config/com.tyco.app/config.json")
+        vm.copy_to(fixture, ".local/share/com.tyco.app/config.json")
     vm.ssh(
         "printf %s 'VM package user data fixture' > .local/share/com.tyco.app/vm-preserved.txt"
     )
@@ -218,22 +217,20 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
             report["previousReleaseStatus"] = previous_status
             validate_upgrade_versions(previous_status.get("version"), current_version)
             stop()
-            previous_config = json.loads(vm.ssh("cat .config/com.tyco.app/config.json"))
+            previous_config = json.loads(vm.ssh("cat .local/share/com.tyco.app/config.json"))
             previous_config["appearance"]["theme"] = "dark"
             previous_config["language"]["ui"] = "en-US"
-            previous_config["hotkeys"] = dict.fromkeys(previous_config["hotkeys"], "")
-            for page in previous_config["launcherPages"]:
-                page["hotkey"] = ""
+            # the hotkeys are kept in device.json, apart from the user data
             saved = vm.run_dir / "previous-release-config.json"
             saved.write_text(json.dumps(previous_config))
-            vm.copy_to(saved, ".config/com.tyco.app/config.json")
+            vm.copy_to(saved, ".local/share/com.tyco.app/config.json")
             replace_installed_image()
             current_status = launch()
             if current_status.get("version") != current_version:
                 raise StepFailed(
                     "Upgraded application does not report the current release version"
                 )
-            migrated = json.loads(vm.ssh("cat .config/com.tyco.app/config.json"))
+            migrated = json.loads(vm.ssh("cat .local/share/com.tyco.app/config.json"))
             if (
                 migrated["appearance"]["theme"] != "dark"
                 or migrated["language"]["ui"] != "en-US"
@@ -332,11 +329,11 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
         )
         stop()
         before_reinstall = vm.ssh(
-            "sha256sum .config/com.tyco.app/config.json .local/share/com.tyco.app/vm-preserved.txt"
+            "sha256sum .local/share/com.tyco.app/config.json .local/share/com.tyco.app/vm-preserved.txt"
         )
         replace_installed_image()
         require_preserved = vm.ssh(
-            "sha256sum .config/com.tyco.app/config.json .local/share/com.tyco.app/vm-preserved.txt"
+            "sha256sum .local/share/com.tyco.app/config.json .local/share/com.tyco.app/vm-preserved.txt"
         )
         if require_preserved != before_reinstall:
             raise StepFailed(
@@ -363,7 +360,7 @@ def run_package_checks(*, vm, args, guest, record, report, setup_observer):
             "rm .local/share/applications/com.tyco.app.desktop .local/bin/tyco .local/lib/tyco/Tyco.AppImage && rmdir .local/lib/tyco && update-desktop-database .local/share/applications"
         )
         vm.ssh(
-            "test ! -e .local/bin/tyco && test ! -e .local/share/applications/com.tyco.app.desktop && test -f .config/com.tyco.app/config.json && test -f .local/share/com.tyco.app/vm-preserved.txt"
+            "test ! -e .local/bin/tyco && test ! -e .local/share/applications/com.tyco.app.desktop && test -f .local/share/com.tyco.app/config.json && test -f .local/share/com.tyco.app/vm-preserved.txt"
         )
         record(
             "VM-18.uninstall",

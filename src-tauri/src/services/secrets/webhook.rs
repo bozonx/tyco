@@ -4,22 +4,28 @@ use std::collections::HashSet;
 
 use crate::errors::AppError;
 use crate::services::secrets::{normalize_origin, SecretStore, SECRET_REF_PREFIX};
-use crate::services::sha256::sha256_hex;
 
 /// The secrets the app makes for webhooks; it removes them once unused.
 const WEBHOOK_HEADER_PREFIX: &str = "webhook.header.";
 const WEBHOOK_AUTH_PREFIX: &str = "webhook.auth.";
 
-fn header_secret_id(command_id: &str, header: &str, value: &str, origin: &str) -> String {
-    let digest = sha256_hex(format!(
-        "{command_id}\0{}\0{value}\0{origin}",
-        header.to_ascii_lowercase()
-    ));
-    format!("{WEBHOOK_HEADER_PREFIX}{digest}")[..63].to_owned()
+/// The id of a header that has just become secret. It is made once and never
+/// changes with the value, nor with the device the value was typed on: the
+/// config holding it is shared by every device, each with its own value
+/// under it. Ids of earlier versions stay valid as they are.
+fn new_header_secret_id() -> String {
+    format!(
+        "{WEBHOOK_HEADER_PREFIX}{}",
+        crate::services::random_id::new_uuid()
+    )
 }
 
+/// Replaces the header values typed in plain text with references to new
+/// secrets, made by `new_id`, holding the values and bound to the origin of
+/// the URL of their webhook on this device.
 fn protect_headers(
     config: &mut Value,
+    mut new_id: impl FnMut() -> String,
     mut store: impl FnMut(&str, &str, &str) -> Result<(), AppError>,
 ) -> Result<bool, AppError> {
     let Some(commands) = config.get_mut("commands").and_then(Value::as_array_mut) else {
@@ -45,8 +51,12 @@ fn protect_headers(
             if raw.trim().is_empty() || raw.contains(SECRET_REF_PREFIX) {
                 continue;
             }
-            let origin = normalize_origin(&url)?;
-            let id = header_secret_id(&command_id, name, raw, &origin);
+            let origin = normalize_origin(&url).map_err(|error| {
+                AppError::InvalidInput(format!(
+                    "The secret header \"{name}\" of the webhook \"{command_id}\" cannot be saved: {error}"
+                ))
+            })?;
+            let id = new_id();
             store(&id, raw, &origin)?;
             *value = Value::String(format!("{SECRET_REF_PREFIX}{id}"));
             changed = true;
@@ -110,7 +120,7 @@ pub fn protect_for_save<'a>(
         committed: false,
     };
     let mut protected = config.clone();
-    protect_headers(&mut protected, |id, value, origin| {
+    protect_headers(&mut protected, new_header_secret_id, |id, value, origin| {
         store.set(id, value, Some(vec![origin.to_owned()]))?;
         if !known.contains(id) {
             pending.created.push(id.to_owned());
@@ -230,34 +240,51 @@ mod tests {
     }
 
     #[test]
-    fn replaces_headers_with_stable_origin_bound_references() {
+    fn replaces_headers_with_origin_bound_references_of_their_own() {
         let mut config = serde_json::json!({"commands":[{"id":"one", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example/path", "headers":{"x-api-key":"private-key", "Authorization":"Bearer token"}}}]});
         let mut stored = Vec::new();
-        assert!(protect_headers(&mut config, |id, value, origin| {
-            stored.push((id.to_owned(), value.to_owned(), origin.to_owned()));
-            Ok(())
-        })
-        .unwrap());
+        assert!(
+            protect_headers(&mut config, new_header_secret_id, |id, value, origin| {
+                stored.push((id.to_owned(), value.to_owned(), origin.to_owned()));
+                Ok(())
+            })
+            .unwrap()
+        );
         assert_eq!(stored.len(), 2);
-        assert!(stored
-            .iter()
-            .all(|(id, _, origin)| id.len() == 63 && origin == "https://hooks.example"));
+        assert!(stored.iter().all(|(id, _, origin)| {
+            crate::services::secrets::is_valid_id(id)
+                && id.starts_with(WEBHOOK_HEADER_PREFIX)
+                && origin == "https://hooks.example"
+        }));
+        assert_ne!(stored[0].0, stored[1].0);
         assert!(!config.to_string().contains("private-key"));
-        assert!(!protect_headers(&mut config, |_, _, _| panic!(
-            "References must not be rebound"
-        ))
-        .unwrap());
-        assert_ne!(
-            header_secret_id("one", "x-api-key", "value", "https://hooks.example"),
-            header_secret_id("two", "x-api-key", "value", "https://hooks.example")
+        assert!(
+            !protect_headers(&mut config, new_header_secret_id, |_, _, _| panic!(
+                "References must not be rebound"
+            ))
+            .unwrap()
         );
-        assert_ne!(
-            header_secret_id("one", "x-api-key", "value", "https://hooks.example"),
-            header_secret_id("one", "x-api-key", "value", "https://other.example")
-        );
+    }
+
+    #[test]
+    fn the_id_of_a_header_does_not_hold_its_value() {
+        // the shared config goes to a cloud: a digest of a weak value could
+        // be guessed from it
+        let mut config = serde_json::json!({"commands":[{"id":"one", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example", "headers":{"x-key":"1234"}}}]});
+        let mut ids = Vec::new();
+        protect_headers(
+            &mut config,
+            || String::from("webhook.header.fixed"),
+            |id, _, _| {
+                ids.push(id.to_owned());
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(ids, ["webhook.header.fixed"]);
         assert_eq!(
-            header_secret_id("one", "X-Api-Key", "value", "https://hooks.example"),
-            header_secret_id("one", "x-api-key", "value", "https://hooks.example")
+            config["commands"][0]["toolConfig"]["headers"]["x-key"],
+            "tyco-secret:webhook.header.fixed"
         );
     }
     #[test]
@@ -265,9 +292,9 @@ mod tests {
         let mut config = serde_json::json!({"commands":[{"id":"one", "toolId":"webhook", "toolConfig":{"url":"https://hooks.example", "headers":{"x-key":"private"}}}]});
         let original = config.clone();
         assert!(
-            protect_headers(&mut config, |_, _, _| Err(AppError::ServiceUnavailable(
-                "Keychain locked".into()
-            )))
+            protect_headers(&mut config, new_header_secret_id, |_, _, _| Err(
+                AppError::ServiceUnavailable("Keychain locked".into())
+            ))
             .is_err()
         );
         assert_eq!(config, original);

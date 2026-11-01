@@ -122,9 +122,16 @@ describe('Settings.vue', () => {
     desktop = await loadFakeDesktop({ userConfig: testConfig(patch) })
     desktop.backend.handle('get_storage_info', () => ({
       locations: [
-        { kinds: ['config', 'data'], path: '/test/roaming' },
-        { kinds: ['cache', 'logs'], path: '/test/local' },
+        { kinds: ['device'], path: '/test/device' },
+        { kinds: ['state', 'cache', 'logs'], path: '/test/local' },
       ],
+      userData: {
+        path: '/test/data',
+        defaultPath: '/test/data',
+        isDefault: true,
+        status: 'connected',
+        isWritableByOthers: false,
+      },
     }))
   }
 
@@ -491,8 +498,8 @@ describe('Settings.vue', () => {
       item.find('.storage-item-label').text()
     )
     expect(labels).toEqual([
-      'settings.storageConfig · settings.storageData settings.storageDataHint',
-      'settings.storageCache · settings.storageLogs',
+      'settings.storageDevice',
+      'settings.storageState · settings.storageCache · settings.storageLogs',
     ])
     expect(storageItems[1].find('.storage-path').text()).toBe('/test/local')
 

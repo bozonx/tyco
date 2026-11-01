@@ -18,6 +18,7 @@ export const DESKTOP_ERROR_KEYS: Readonly<Record<DesktopErrorCode, string>> = {
   notFound: 'desktopErrors.notFound',
   fileTooLarge: 'desktopErrors.fileTooLarge',
   unsupportedConfig: 'desktopErrors.unsupportedConfig',
+  userDataUnavailable: 'desktopErrors.userDataUnavailable',
   stale: 'desktopErrors.stale',
   runtimeError: 'desktopErrors.runtimeError',
   ioError: 'desktopErrors.ioError',

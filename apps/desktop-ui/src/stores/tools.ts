@@ -142,6 +142,8 @@ export const useToolsStore = defineStore('tools', () => {
   const registry = createToolRegistry([
     ...createScriptAndWebhookTools({
       ...createScriptActionClient(ipcStore.call),
+      secretIds: async () =>
+        new Set(Object.keys(await useSecretsStore().client.status())),
       executeWebhook: (target, text, signal) =>
         executeWebhook(
           target,

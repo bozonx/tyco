@@ -8,6 +8,7 @@ function setup() {
     storage: 'disk',
     maxItems: 100,
     isSecretSanitizingEnabled: true,
+    isLocalOnly: false,
   }
   const model = createEditorHistorySettingsModel({
     getHistory: () => history,

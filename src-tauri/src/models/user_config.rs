@@ -81,6 +81,9 @@ pub struct EditorHistoryConfig {
     pub retention_days: u64,
     #[serde(default, deserialize_with = "lenient")]
     pub is_secret_sanitizing_enabled: bool,
+    /// The journal of this device stays out of the user data folder.
+    #[serde(default, deserialize_with = "lenient")]
+    pub is_local_only: bool,
 }
 
 pub fn editor_history(config: &Value) -> EditorHistoryConfig {
@@ -194,20 +197,26 @@ pub struct LauncherPageConfig {
     pub id: String,
     #[serde(default)]
     pub input_mode: LauncherInputMode,
-    /// Empty when the page has no hotkey.
-    #[serde(default)]
+    /// Empty when the page has no hotkey on this device, see
+    /// `hotkeys.launcherPages`.
+    #[serde(skip)]
     pub hotkey: String,
 }
 
 /// The pages in their order; one that does not fit is left out, the others
-/// stay.
+/// stay. Each carries the shortcut this device opens it with.
 pub fn launcher_pages(config: &Value) -> Vec<LauncherPageConfig> {
+    let shortcuts = &config["hotkeys"]["launcherPages"];
     config
         .get("launcherPages")
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
         .filter_map(|page| LauncherPageConfig::deserialize(page).ok())
+        .map(|mut page| {
+            page.hotkey = shortcuts[&page.id].as_str().unwrap_or_default().to_owned();
+            page
+        })
         .collect()
 }
 
@@ -396,9 +405,10 @@ mod tests {
     fn sections_read_their_fields_and_fall_back_to_defaults() {
         let config = json!({
             "launcherPages": [
-                {"id": "main", "inputMode": "none", "hotkey": "Ctrl+Alt+M", "slots": []},
-                {"id": "second", "inputMode": "selection", "hotkey": "", "slots": []},
+                {"id": "main", "inputMode": "none", "slots": []},
+                {"id": "second", "inputMode": "selection", "slots": []},
             ],
+            "hotkeys": {"launcherPages": {"main": "Ctrl+Alt+M", "gone": "Ctrl+Alt+G"}},
             "externalAccess": {"canAccessSelection": true},
             "aiVault": {"path": "/vault"},
         });
@@ -406,10 +416,11 @@ mod tests {
         assert_eq!(pages[0].input_mode, LauncherInputMode::None);
         assert_eq!(pages[0].hotkey, "Ctrl+Alt+M");
         assert_eq!(pages[1].input_mode, LauncherInputMode::Selection);
+        assert_eq!(pages[1].hotkey, "");
         assert!(external_access(&config).can_access_selection);
         assert_eq!(ai_vault(&config).path, "/vault");
 
-        let partly = json!({"launcherPages": [{"hotkey": "x"}, {"id": "kept"}]});
+        let partly = json!({"launcherPages": [{"inputMode": "none"}, {"id": "kept"}]});
         assert_eq!(launcher_pages(&partly).len(), 1);
         let broken = json!({"launcherPages": "pages", "externalAccess": 1});
         assert!(launcher_pages(&broken).is_empty());

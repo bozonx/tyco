@@ -11,6 +11,8 @@ const HOTKEYS_CONFIG_KEY: &str = "hotkeys";
 /// The key of the inline correction in `hotkeys`, and its hotkey id.
 const SELECTION_CORRECTION_CONFIG_KEY: &str = "selectionCorrection";
 const LAUNCHER_PAGE_TARGET_PREFIX: &str = "launcherPage.";
+/// The shortcuts of the launcher pages in `hotkeys`, by page id.
+const LAUNCHER_PAGES_KEY: &str = "launcherPages";
 pub(super) use crate::services::selection_replace::CORRECTION_ACTION;
 const DEFAULT_CORRECTION_KEY: &str = "F";
 /// The first page of the default `launcherPages`, the one with a hotkey.
@@ -175,27 +177,19 @@ fn configured_shortcut(
 pub(crate) fn restore_config_shortcut(config: &mut Value, source: &Value, target: &HotkeyTarget) {
     match target {
         HotkeyTarget::LauncherPage(page_id) => {
-            let previous = source
-                .get("launcherPages")
-                .and_then(Value::as_array)
-                .and_then(|pages| {
-                    pages
-                        .iter()
-                        .find(|page| page.get("id").and_then(Value::as_str) == Some(page_id))
-                })
-                .and_then(|page| page.get("hotkey").cloned())
-                .unwrap_or_else(|| Value::String(String::new()));
-            let page = config
-                .get_mut("launcherPages")
-                .and_then(Value::as_array_mut)
-                .and_then(|pages| {
-                    pages
-                        .iter_mut()
-                        .find(|page| page.get("id").and_then(Value::as_str) == Some(page_id))
-                });
-            if let Some(Value::Object(page)) = page {
-                page.insert(String::from("hotkey"), previous);
-            }
+            let previous = source[HOTKEYS_CONFIG_KEY][LAUNCHER_PAGES_KEY]
+                .get(page_id)
+                .cloned();
+            let Some(Value::Object(shortcuts)) = config
+                .get_mut(HOTKEYS_CONFIG_KEY)
+                .and_then(|hotkeys| hotkeys.get_mut(LAUNCHER_PAGES_KEY))
+            else {
+                return;
+            };
+            match previous {
+                Some(previous) => shortcuts.insert(page_id.clone(), previous),
+                None => shortcuts.remove(page_id),
+            };
         }
         HotkeyTarget::Mode(_) | HotkeyTarget::InlineCorrection => {
             let id = target.id();
@@ -264,10 +258,10 @@ pub fn default_launcher_page_shortcut() -> String {
 
 pub(super) fn default_bindings() -> Vec<HotkeyBinding> {
     bindings_from_config(&serde_json::json!({
-        "launcherPages": [{
-            "id": DEFAULT_LAUNCHER_PAGE_ID,
-            "hotkey": default_launcher_page_shortcut()
-        }]
+        "launcherPages": [{ "id": DEFAULT_LAUNCHER_PAGE_ID }],
+        "hotkeys": {
+            "launcherPages": { DEFAULT_LAUNCHER_PAGE_ID: default_launcher_page_shortcut() }
+        }
     }))
 }
 
@@ -376,11 +370,12 @@ mod tests {
     #[test]
     fn reads_overrides_and_unassigns_empty_bindings() {
         let bindings = bindings_from_config(&json!({
-            "hotkeys": { "editor": "Super+Space", "voice": "  " },
-            "launcherPages": [
-                { "id": "main", "hotkey": "" },
-                { "id": "work", "hotkey": "Ctrl+Alt+2" }
-            ]
+            "hotkeys": {
+                "editor": "Super+Space",
+                "voice": "  ",
+                "launcherPages": { "main": "", "work": "Ctrl+Alt+2" }
+            },
+            "launcherPages": [{ "id": "main" }, { "id": "work" }]
         }));
         let shortcut = |id: &str| {
             bindings
@@ -454,15 +449,16 @@ mod tests {
     #[test]
     fn restores_refused_shortcuts_from_the_previous_config() {
         let previous = json!({
-            "hotkeys": { "voice": "Ctrl+Alt+V" },
-            "launcherPages": [{ "id": "main", "hotkey": "Ctrl+Alt+Q" }]
+            "hotkeys": { "voice": "Ctrl+Alt+V", "launcherPages": { "main": "Ctrl+Alt+Q" } },
+            "launcherPages": [{ "id": "main" }]
         });
         let mut next = json!({
-            "hotkeys": { "voice": "Ctrl+Alt+X", "chat": "Ctrl+Alt+C" },
-            "launcherPages": [
-                { "id": "main", "hotkey": "Ctrl+Alt+W" },
-                { "id": "new", "hotkey": "Ctrl+Alt+N" }
-            ]
+            "hotkeys": {
+                "voice": "Ctrl+Alt+X",
+                "chat": "Ctrl+Alt+C",
+                "launcherPages": { "main": "Ctrl+Alt+W", "new": "Ctrl+Alt+N" }
+            },
+            "launcherPages": [{ "id": "main" }, { "id": "new" }]
         });
         for target in [
             HotkeyTarget::Mode(ActivationMode::Voice),
@@ -472,9 +468,10 @@ mod tests {
         ] {
             restore_config_shortcut(&mut next, &previous, &target);
         }
-        assert_eq!(next["hotkeys"], json!({ "voice": "Ctrl+Alt+V" }));
-        assert_eq!(next["launcherPages"][0]["hotkey"], "Ctrl+Alt+Q");
-        assert_eq!(next["launcherPages"][1]["hotkey"], "");
+        assert_eq!(
+            next["hotkeys"],
+            json!({ "voice": "Ctrl+Alt+V", "launcherPages": { "main": "Ctrl+Alt+Q" } })
+        );
     }
 
     #[test]

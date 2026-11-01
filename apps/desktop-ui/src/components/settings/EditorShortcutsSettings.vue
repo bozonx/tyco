@@ -81,7 +81,7 @@ function setShortcut(id: EditorShortcutId, shortcut: string) {
   const globalConflict =
     shortcut &&
     (Object.values(draft.value.hotkeys).includes(shortcut) ||
-      draft.value.launcherPages.some((page) => page.hotkey === shortcut) ||
+      Object.values(draft.value.hotkeys.launcherPages).includes(shortcut) ||
       Object.values(hotkeys.providerState.systemTriggers).some((value) =>
         value?.split(', ').includes(shortcut)
       ))

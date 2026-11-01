@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 80be0d45dfe014d5c828e1d07607f433c963a7d182e94b1dcbb34f0fabe1ac5e
+// Source hash: 04609083c81ddd594e0e75edb93a0f3fe7988cc9d9950feac4a733187b5e1b90
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -332,6 +332,7 @@ export type DesktopErrorCode =
   | 'notFound'
   | 'fileTooLarge'
   | 'unsupportedConfig'
+  | 'userDataUnavailable'
   | 'stale'
   | 'runtimeError'
   | 'ioError'
@@ -343,6 +344,8 @@ export type DesktopErrorPayload = { code: DesktopErrorCode; message: string }
 export type DesktopSettingsState = {
   userConfig: UserConfig
   sessionState: SessionState
+  /** Where the user data folder is and whether it can be used. */
+  userData: UserDataState
 }
 
 /** Wire state is grouped by domain; all domains share a coherent revision. */
@@ -638,6 +641,12 @@ export type SessionState = {
 
 export type SessionStatePatch = Partial<SessionState>
 
+/**
+ * The fields another device changed too, where the save of this one won; the
+ * version of the other device is kept in the recovery folder.
+ */
+export type SettingsConflictEvent = { paths: Array<string> }
+
 /** Control events. Binary frames travel as raw bytes. */
 export type SocketEvent =
   | { type: 'open' }
@@ -674,10 +683,18 @@ export type StatusOverlayRequest = {
   onlyIfVisible?: boolean
 }
 
-export type StorageInfo = { locations: Array<StorageLocation> }
+export type StorageInfo = {
+  /** The system folders of the app; the user data folder is `user_data`. */
+  locations: Array<StorageLocation>
+  userData: UserDataState
+}
 
-/** What a storage location holds; history and chats are data. */
-export type StorageKind = 'config' | 'data' | 'cache' | 'logs'
+/**
+ * What a storage location holds: the user data folder (settings, history,
+ * chats, plugins), the files of this device (device settings, key list), and
+ * the system folders of the app.
+ */
+export type StorageKind = 'user' | 'device' | 'state' | 'cache' | 'logs'
 
 /**
  * A directory the app keeps files in, with everything it holds: the platform
@@ -733,6 +750,49 @@ export type ToolGroupSettings = {
   access: ProjectAccessMode
 }
 
+/**
+ * How `relocate_user_data` changes the user data folder; the user says it, the
+ * backend never guesses it from what a folder holds.
+ */
+export type UserDataRelocationMode =
+  'move' | 'connect' | 'resetToDefault' | 'useDefault'
+
+/**
+ * Where the user data folder is and whether it can be used; fixed for the life
+ * of the process, as changing the folder restarts the app.
+ */
+export type UserDataState = {
+  path: string
+  /** The folder the data is in when the user has chosen none. */
+  defaultPath: string
+  isDefault: boolean
+  status: UserDataStatus
+  /**
+   * Other users may write into the folder or its parent, and so change the
+   * commands this app runs (checked on Linux only).
+   */
+  isWritableByOthers: boolean
+}
+
+/** Whether the user data folder can be used. */
+export type UserDataStatus = 'connected' | 'notConnected' | 'newerFormat'
+
+export type UserDataTarget = {
+  path: string
+  /** The default folder of the platform. */
+  isDefault: boolean
+  contents: UserDataTargetKind
+}
+
+/** What a folder the user data may go to holds. */
+export type UserDataTargetKind =
+  | { kind: 'current' }
+  | { kind: 'empty' }
+  | { kind: 'userData'; formatVersion: number; isSupported: boolean }
+  | { kind: 'unfinished' }
+  | { kind: 'occupied'; subfolderPath: string }
+  | { kind: 'forbidden' }
+
 /** Whether the system credential store can be reached. */
 export type VaultState = 'available' | 'unavailable'
 
@@ -782,6 +842,7 @@ export const DESKTOP_ERROR_CODES = [
   'notFound',
   'fileTooLarge',
   'unsupportedConfig',
+  'userDataUnavailable',
   'stale',
   'runtimeError',
   'ioError',
@@ -799,6 +860,7 @@ export interface DesktopEventPayloads {
   'app://open-main-editor': EditorTransfer
   'app://chats-changed': ChatsChangedEvent
   'app://editor-history-changed': null
+  'app://settings-conflict': SettingsConflictEvent
   'app://main-window-closed': null
   'app://activation-metrics-start': ActivationMetricsRequest
   'app://activation-metrics-collect': ActivationMetricsRequest

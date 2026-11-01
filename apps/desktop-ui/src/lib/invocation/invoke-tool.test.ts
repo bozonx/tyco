@@ -56,6 +56,28 @@ describe('createToolInvoker', () => {
     expect(run).not.toHaveBeenCalled()
   })
 
+  it('refuses a note-writing tool without a notes folder on this device', async () => {
+    const run = vi.fn(async (): Promise<ToolResult> => ({ ok: true }))
+    const notes = tool(run, {
+      directoryFieldName: 'pathToNotes',
+      configFields: [{ name: 'pathToNotes', type: 'text', defaultValue: '' }],
+    })
+    const invoke = invokerOf(notes)
+    expect(await invoke(invocation, 'x')).toMatchObject({
+      unavailable: 'commands.notesFolderMissing',
+    })
+    expect(run).not.toHaveBeenCalled()
+    await invoke({ ...invocation, toolConfig: { pathToNotes: '/notes' } }, 'x')
+    expect(run).toHaveBeenCalled()
+    // a tool of the same plugin that writes no notes is not held up
+    const other = vi.fn(async (): Promise<ToolResult> => ({ ok: true }))
+    await invokerOf(tool(other, { directoryFieldName: 'pathToNotes' }))(
+      invocation,
+      'x'
+    )
+    expect(other).toHaveBeenCalled()
+  })
+
   it('runs an explicit input as it is and validates it first', async () => {
     const run = vi.fn(async (): Promise<ToolResult> => ({ ok: true }))
     const invoke = invokerOf(tool(run))

@@ -96,6 +96,9 @@
           icon="mdi:close"
         />
       </div>
+      <p v-if="hasHeaderMissingHere" class="action-field-warning">
+        {{ t('settings.secretNotSetOnDevice') }}
+      </p>
       <p v-if="headerSecretOrigins.length" class="action-field-warning">
         {{
           t('settings.apiKeyBoundTo', {
@@ -154,6 +157,9 @@
           {{ t('common.remove') }}
         </Button>
       </div>
+      <p v-if="isAuthMissingHere" class="action-field-warning">
+        {{ t('settings.secretNotSetOnDevice') }}
+      </p>
       <p v-if="authBoundElsewhere" class="action-field-warning">
         {{ t('settings.apiKeyBoundTo', { origin: authOrigins.join(', ') }) }}
       </p>
@@ -273,13 +279,24 @@ const hasAuth = computed(
   () =>
     props.command.toolId === 'webhook' &&
     Boolean(webhook.value.isAuthEnabled) &&
-    Object.hasOwn(secretsStore.secrets, secretId.value)
+    Boolean(secretId.value)
+)
+/** The config refers to a key that this device has no value for yet */
+const isAuthMissingHere = computed(
+  () => hasAuth.value && !Object.hasOwn(secretsStore.secrets, secretId.value)
+)
+/** Secret headers whose value this device has not been given yet */
+const hasHeaderMissingHere = computed(() =>
+  headerRows.value.some(([, value]) => {
+    const id = secretIdOf(value)
+    return Boolean(id) && !Object.hasOwn(secretsStore.secrets, id!)
+  })
 )
 const authOrigins = computed(
   () => secretsStore.secrets[secretId.value]?.origins ?? []
 )
 const authBoundElsewhere = computed(() => {
-  if (!hasAuth.value) return false
+  if (!hasAuth.value || isAuthMissingHere.value) return false
   const origin = httpOrigin(webhook.value.url)
   return Boolean(origin) && !authOrigins.value.includes(origin!)
 })
@@ -314,6 +331,7 @@ const { authDraft, saveAuth, removeAuth, replaceSecret, removeUnusedSecret } =
     persist: session.persist,
     isSaved: session.isSaved,
     notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
+    notifySavedOnDevice: () => toastKey('settings.keySavedOnDevice', 'success'),
     reportSaveError: (error) => toastError(error, 'settings.keySaveFailed'),
     reportRemoveError: (error) => toastError(error, 'settings.keyRemoveFailed'),
   })

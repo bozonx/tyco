@@ -31,6 +31,13 @@
         "lastProfileChatIds": {},
         "recentAiPrompts": [],
         "recentTranslateLanguages": []
+      },
+      "userData": {
+        "path": "",
+        "defaultPath": "",
+        "isDefault": true,
+        "status": "connected",
+        "isWritableByOthers": false
       }
     }
   },

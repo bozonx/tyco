@@ -68,7 +68,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -185,7 +185,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Alt+B",
@@ -227,7 +228,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -253,7 +255,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -436,7 +438,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -565,7 +567,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -607,7 +610,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -633,7 +637,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -810,12 +814,7 @@
         "e": { "type": "launcherPage", "pageId": "page-2" }
       },
       "launcherPages": [
-        {
-          "id": "main",
-          "slots": { "q": "missing" },
-          "inputMode": "none",
-          "hotkey": ""
-        }
+        { "id": "main", "slots": { "q": "missing" }, "inputMode": "none" }
       ],
       "commands": [],
       "llm": {
@@ -933,7 +932,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -975,7 +975,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -994,9 +995,7 @@
         "providers": { "deepl": { "endpoint": "free" } }
       },
       "mainActions": {},
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "none", "hotkey": "" }
-      ],
+      "launcherPages": [{ "id": "main", "slots": {}, "inputMode": "none" }],
       "commands": [],
       "llm": {
         "providers": [
@@ -1178,7 +1177,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -1301,7 +1300,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -1343,7 +1343,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1369,7 +1370,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -1557,7 +1558,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -1670,7 +1671,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -1712,7 +1714,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1738,7 +1741,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -1887,7 +1890,8 @@
         "translation": "",
         "styling": "",
         "transformation": "",
-        "selectionCorrection": "Ctrl+Alt+F"
+        "selectionCorrection": "Ctrl+Alt+F",
+        "launcherPages": { "alpha": "Ctrl+Alt+1", "removed-page": "Ctrl+Alt+2" }
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1911,9 +1915,9 @@
         "w": { "type": "launcherPage", "pageId": "missing" }
       },
       "launcherPages": [
-        { "id": "alpha", "inputMode": "none", "slots": {}, "hotkey": "" },
-        { "id": "beta", "inputMode": "selection", "slots": {}, "hotkey": "" },
-        { "id": "alpha", "inputMode": "selection", "slots": {}, "hotkey": "" }
+        { "id": "alpha", "inputMode": "none", "slots": {} },
+        { "id": "beta", "inputMode": "selection", "slots": {} },
+        { "id": "alpha", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
       "llm": {
@@ -2031,7 +2035,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -2073,7 +2078,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": { "alpha": "Ctrl+Alt+1" }
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2093,8 +2099,8 @@
       },
       "mainActions": { "q": { "type": "launcherPage", "pageId": "beta" } },
       "launcherPages": [
-        { "id": "alpha", "inputMode": "none", "slots": {}, "hotkey": "" },
-        { "id": "beta", "inputMode": "selection", "slots": {}, "hotkey": "" }
+        { "id": "alpha", "inputMode": "none", "slots": {} },
+        { "id": "beta", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
       "llm": {
@@ -2278,7 +2284,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -2396,7 +2402,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -2439,7 +2446,8 @@
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2465,7 +2473,7 @@
         "a": { "type": "standard", "actionId": "askInChat" }
       },
       "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection", "hotkey": "" }
+        { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
       "llm": {
@@ -2784,7 +2792,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -2826,7 +2835,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "",
-        "history": ""
+        "history": "",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2848,7 +2858,7 @@
         "q": { "type": "standard", "actionId": "insertIntoWindow" }
       },
       "launcherPages": [
-        { "id": "main", "inputMode": "selection", "slots": {}, "hotkey": "" }
+        { "id": "main", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
       "llm": {
@@ -3036,7 +3046,7 @@
         "q": { "type": "standard", "actionId": "insertIntoWindow" }
       },
       "launcherPages": [
-        { "id": "main", "inputMode": "selection", "slots": {}, "hotkey": "" }
+        { "id": "main", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
       "llm": {
@@ -3159,7 +3169,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -3201,7 +3212,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "",
-        "history": ""
+        "history": "",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3230,7 +3242,7 @@
         "q": { "type": "standard", "actionId": "insertIntoWindow" }
       },
       "launcherPages": [
-        { "id": "main", "inputMode": "selection", "slots": {}, "hotkey": "" }
+        { "id": "main", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
       "llm": {
@@ -3407,8 +3419,7 @@
         {
           "id": "main",
           "slots": { "q": "Мой скрипт", "w": "notes" },
-          "inputMode": "none",
-          "hotkey": ""
+          "inputMode": "none"
         }
       ],
       "commands": [
@@ -3558,7 +3569,8 @@
           "storage": "disk",
           "maxItems": 1000,
           "retentionDays": 30,
-          "isSecretSanitizingEnabled": true
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
         },
         "shortcuts": {
           "bold": "Ctrl+B",
@@ -3600,7 +3612,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X"
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": {}
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3626,8 +3639,7 @@
         {
           "id": "main",
           "slots": { "q": "command", "w": "notes" },
-          "inputMode": "none",
-          "hotkey": ""
+          "inputMode": "none"
         }
       ],
       "commands": [

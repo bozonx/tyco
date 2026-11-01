@@ -217,8 +217,6 @@ export const DEFAULT_MAIN_ACTIONS =
 export interface LauncherPageConfig {
   id: string
   inputMode: 'selection' | 'none'
-  /** Opens the page; empty for none */
-  hotkey: string
   /** Command ids */
   slots: ShortcutSlots<string>
 }

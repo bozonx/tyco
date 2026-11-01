@@ -634,7 +634,145 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             command_ids.contains(id.as_str().unwrap_or_default())
         });
     }
+    prune_device_references(config);
     *config != original
+}
+
+/// Drops what a device field refers to and the user data no longer has: the
+/// shortcut of a launcher page removed, e.g. on another machine. References
+/// go from the device to the user data only, so this changes the device part
+/// alone. Returns whether something was dropped.
+pub fn prune_device_references(config: &mut Value) -> bool {
+    let page_ids: HashSet<String> = ids(config, "/launcherPages")
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+    let Some(shortcuts) = config["hotkeys"]
+        .get_mut("launcherPages")
+        .and_then(Value::as_object_mut)
+    else {
+        return false;
+    };
+    let before = shortcuts.len();
+    shortcuts.retain(|id, _| page_ids.contains(id));
+    shortcuts.len() != before
+}
+
+fn is_device_schema(schema: &Value) -> bool {
+    schema["x-scope"] == "device"
+}
+
+/// Whether the field at `path`, e.g. `["appearance", "uiScalePercent"]`,
+/// belongs to this device rather than to the user data.
+#[cfg(test)]
+pub fn is_device_scoped(path: &[&str]) -> bool {
+    let mut schema = &*SCHEMA;
+    for key in path {
+        schema = &schema["properties"][*key];
+        if schema.is_null() {
+            return false;
+        }
+        if is_device_schema(schema) {
+            return true;
+        }
+    }
+    false
+}
+
+/// The path of a config field, its keys in order.
+pub type ConfigPath = Vec<String>;
+
+/// The config split into the part of the user data, which may be synced, and
+/// the part of this device, see `x-scope` of the schema. An unknown field goes
+/// back to the file it came from: `device_unknown` names those of the device.
+pub fn split_by_scope(config: &Value, device_unknown: &HashSet<ConfigPath>) -> (Value, Value) {
+    fn split(
+        value: &serde_json::Map<String, Value>,
+        schema: &Value,
+        path: &mut ConfigPath,
+        device_unknown: &HashSet<ConfigPath>,
+    ) -> (
+        serde_json::Map<String, Value>,
+        serde_json::Map<String, Value>,
+    ) {
+        let mut user = serde_json::Map::new();
+        let mut device = serde_json::Map::new();
+        for (key, item) in value {
+            let child = &schema["properties"][key];
+            path.push(key.clone());
+            if is_device_schema(child) {
+                device.insert(key.clone(), item.clone());
+            } else if let (Some(_), Some(fields)) =
+                (child["properties"].as_object(), item.as_object())
+            {
+                let (nested_user, nested_device) = split(fields, child, path, device_unknown);
+                user.insert(key.clone(), Value::Object(nested_user));
+                if !nested_device.is_empty() {
+                    device.insert(key.clone(), Value::Object(nested_device));
+                }
+            } else if child.is_null() && device_unknown.contains(path) {
+                device.insert(key.clone(), item.clone());
+            } else {
+                user.insert(key.clone(), item.clone());
+            }
+            path.pop();
+        }
+        (user, device)
+    }
+    let empty = serde_json::Map::new();
+    let (user, device) = split(
+        config.as_object().unwrap_or(&empty),
+        &SCHEMA,
+        &mut Vec::new(),
+        device_unknown,
+    );
+    (Value::Object(user), Value::Object(device))
+}
+
+/// The parts of the user data and of the device joined into one config, and
+/// the paths of the unknown fields the device part brought, for
+/// `split_by_scope`.
+pub fn join_scopes(user: &Value, device: &Value) -> (Value, HashSet<ConfigPath>) {
+    fn join(
+        target: &mut serde_json::Map<String, Value>,
+        source: &serde_json::Map<String, Value>,
+        schema: Option<&Value>,
+        path: &mut ConfigPath,
+        unknown: &mut HashSet<ConfigPath>,
+    ) {
+        for (key, item) in source {
+            let child = schema.map(|schema| &schema["properties"][key]);
+            path.push(key.clone());
+            if let Some(schema) = schema {
+                if child.is_some_and(Value::is_null) && !is_device_schema(schema) {
+                    unknown.insert(path.clone());
+                }
+            }
+            let container =
+                child.filter(|child| child["properties"].is_object() && !is_device_schema(child));
+            match (container, item.as_object(), target.get_mut(key)) {
+                (Some(child), Some(fields), Some(Value::Object(existing))) => {
+                    join(existing, fields, Some(child), path, unknown);
+                }
+                _ => {
+                    target.insert(key.clone(), item.clone());
+                }
+            }
+            path.pop();
+        }
+    }
+    let mut config = user.as_object().cloned().unwrap_or_default();
+    let mut unknown = HashSet::new();
+    if let Some(device) = device.as_object() {
+        join(
+            &mut config,
+            device,
+            Some(&SCHEMA),
+            &mut Vec::new(),
+            &mut unknown,
+        );
+    }
+    (Value::Object(config), unknown)
 }
 
 const MAX_COMMAND_ID_LENGTH: usize = 64;
@@ -803,6 +941,67 @@ mod tests {
     }
 
     #[test]
+    fn shared_scope_fixtures_match_the_webview() {
+        let cases: Vec<Value> = serde_json::from_str(include_str!(
+            "../../../../packages/shared/fixtures/config-scope.json"
+        ))
+        .unwrap();
+        for case in cases {
+            let name = &case["name"];
+            let (joined, unknown) = join_scopes(&case["user"], &case["device"]);
+            assert_eq!(joined, case["joined"], "{name}");
+            let expected: HashSet<ConfigPath> =
+                serde_json::from_value(case["deviceUnknownPaths"].clone()).unwrap();
+            assert_eq!(unknown, expected, "{name}");
+            let (user, device) = split_by_scope(&joined, &unknown);
+            assert_eq!(user, case["user"], "{name}");
+            assert_eq!(device, case["device"], "{name}");
+        }
+    }
+
+    #[test]
+    fn device_scope_marks_sections_and_fields_never_entities() {
+        assert!(is_device_scoped(&["hotkeys", "quickInput"]));
+        assert!(is_device_scoped(&["appearance", "uiScalePercent"]));
+        assert!(is_device_scoped(&["editor", "history", "isLocalOnly"]));
+        assert!(!is_device_scoped(&["appearance", "theme"]));
+        assert!(!is_device_scoped(&["editor", "shortcuts", "bold"]));
+        fn visit(node: &Value, in_entity: bool, path: &str, found: &mut Vec<String>) {
+            match node {
+                Value::Object(fields) => {
+                    if in_entity && fields.contains_key("x-scope") {
+                        found.push(path.to_owned());
+                    }
+                    for (key, child) in fields {
+                        let entity = in_entity
+                            || matches!(key.as_str(), "items" | "additionalProperties" | "$defs");
+                        visit(child, entity, &format!("{path}/{key}"), found);
+                    }
+                }
+                Value::Array(items) => {
+                    for (index, item) in items.iter().enumerate() {
+                        visit(item, in_entity, &format!("{path}/{index}"), found);
+                    }
+                }
+                _ => {}
+            }
+        }
+        let mut found = Vec::new();
+        visit(&SCHEMA, false, "", &mut found);
+        assert!(found.is_empty(), "x-scope inside an entity: {found:?}");
+    }
+
+    #[test]
+    fn a_shortcut_of_a_removed_page_is_dropped() {
+        let mut config = crate::services::settings::defaults::default_user_config();
+        config["hotkeys"]["launcherPages"]["gone"] = json!("Ctrl+Alt+9");
+        assert!(prune_device_references(&mut config));
+        assert!(config["hotkeys"]["launcherPages"].get("gone").is_none());
+        assert!(config["hotkeys"]["launcherPages"].get("main").is_some());
+        assert!(!prune_device_references(&mut config));
+    }
+
+    #[test]
     fn missing_fields_take_the_platform_defaults() {
         let defaults = crate::services::settings::defaults::default_user_config();
         let mut config = PORTABLE_DEFAULTS.clone();
@@ -813,7 +1012,7 @@ mod tests {
         normalize_user_config(&mut config);
         assert_eq!(config["hotkeys"]["voice"], defaults["hotkeys"]["voice"]);
         assert_eq!(
-            defaults["launcherPages"][0]["hotkey"],
+            defaults["hotkeys"]["launcherPages"]["main"],
             json!(crate::services::hotkeys::default_launcher_page_shortcut())
         );
     }

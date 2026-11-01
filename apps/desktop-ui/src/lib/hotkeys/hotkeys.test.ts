@@ -17,16 +17,17 @@ describe('hotkeys', () => {
           mode !== ActivationMode.COMMAND_LAUNCHER
       ),
       'selectionCorrection',
+      'launcherPages',
     ]
     expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(
       expectedModes.sort()
     )
   })
 
-  it('keeps the hotkeys of the command pages on the pages', () => {
-    expect(
-      DEFAULT_USER_CONFIG.launcherPages.map((page) => page.hotkey)
-    ).toEqual(['Ctrl+Alt+Shift+Q'])
+  it('keeps the hotkeys of the command pages on the device, by page', () => {
+    expect(DEFAULT_USER_CONFIG.hotkeys.launcherPages).toEqual({
+      main: 'Ctrl+Alt+Shift+Q',
+    })
   })
 
   it('normalizes aliases and modifier order', () => {

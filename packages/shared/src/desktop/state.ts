@@ -6,6 +6,7 @@ import type {
   DesktopSnapshot,
   DesktopWindowState,
   SessionState,
+  UserDataState,
 } from '../generated/desktop-types'
 
 /** What an activation opens */
@@ -29,6 +30,15 @@ export const ActivationMode = {
   /** Asks whether an external call may use the selection; Tyco opens it itself */
   EXTERNAL_ACCESS: 'externalAccess',
 } as const satisfies Record<string, ActivationModeName>
+
+/** The user data folder before the backend tells where it is */
+export const DEFAULT_USER_DATA_STATE: UserDataState = {
+  path: '',
+  defaultPath: '',
+  isDefault: true,
+  status: 'connected',
+  isWritableByOthers: false,
+}
 
 export const DEFAULT_SESSION_STATE: SessionState = {
   lastChatId: null,
@@ -56,6 +66,7 @@ export const DEFAULT_DESKTOP_VIEW_STATE: DesktopViewState = {
   accessRequest: null,
   userConfig: DEFAULT_USER_CONFIG,
   sessionState: DEFAULT_SESSION_STATE,
+  userData: DEFAULT_USER_DATA_STATE,
   isWindowShown: false,
   windowProfile: 'sheet',
 }
@@ -85,6 +96,7 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
     windowProfile,
     userConfig,
     sessionState,
+    userData,
   } = view
   return {
     revision,
@@ -98,6 +110,6 @@ export function desktopViewToSnapshot(view: DesktopViewState): DesktopSnapshot {
       accessRequest,
     },
     window: { isWindowShown, windowProfile },
-    settings: { userConfig, sessionState },
+    settings: { userConfig, sessionState, userData },
   }
 }

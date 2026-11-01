@@ -10,6 +10,7 @@
   <template v-if="isQuickWindow">
     <QuickOverlay />
   </template>
+  <UserDataMissingScreen v-else-if="isUserDataMissing" />
   <template v-else>
     <div class="layout" :inert="settingsShutdown.isClosing.value">
       <NavPanel v-if="navPanelStore.navPanelState.panelVisible" />
@@ -22,13 +23,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import NavPanel from './components/app/NavPanel.vue'
+import UserDataMissingScreen from './components/app/UserDataMissingScreen.vue'
 import ToastContainer from './components/common/ToastContainer.vue'
 import MenuModals from './components/menu/MenuModals.vue'
 import QuickOverlay from './components/quick/QuickOverlay.vue'
 import { useAppRuntime } from './composables/use-app-runtime'
+import { useDesktopStore } from './stores/desktop'
 
 const { settingsShutdown, t, isQuickWindow, navPanelStore } = useAppRuntime()
+const desktop = useDesktopStore()
+/** The chosen data folder is not there: nothing else can work */
+const isUserDataMissing = computed(
+  () => desktop.userData.status === 'notConnected'
+)
 </script>
 
 <style scoped>

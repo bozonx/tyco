@@ -130,6 +130,8 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
     /** The stored config, without the config of a run in progress */
     savedUserConfig: computed(() => savedUserConfig.value),
     sessionState: computed(() => desktopState.value.sessionState),
+    /** Where the user data folder is and whether it can be used */
+    userData: computed(() => desktopState.value.userData),
     updateUserConfig,
     applyViewState,
     loadDesktopState,

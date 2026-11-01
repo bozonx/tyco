@@ -86,9 +86,9 @@ pub fn prepare(
     let (mut url, origin) = parse_url(protocol, url)?;
 
     let resolve = |id: &str| -> Result<&str, AppError> {
-        let entry = secrets
-            .get(id)
-            .ok_or_else(|| AppError::InvalidInput(format!("No secret \"{id}\" is configured")))?;
+        let entry = secrets.get(id).ok_or_else(|| {
+            AppError::InvalidInput(format!("The key \"{id}\" is not set on this device"))
+        })?;
         if entry.origins.contains(&origin) {
             Ok(entry.value.as_str())
         } else {
@@ -318,7 +318,7 @@ mod tests {
         )
         .unwrap_err()
         .to_string();
-        assert!(error.contains("No secret \"openrouter\""));
+        assert!(error.contains("The key \"openrouter\" is not set on this device"));
     }
 
     #[test]

@@ -4,6 +4,7 @@ import {
   type ScriptActionRequest,
   type ScriptExecutionResult,
   scriptTakesText,
+  type WebhookToolConfig,
   webhookTakesText,
 } from '@tyco/shared'
 
@@ -20,6 +21,7 @@ import {
   scriptToolConfigOf,
   webhookToolConfigOf,
 } from '../commands/command-config'
+import { secretIdFromRef } from '../net/secrets'
 import {
   NO_INPUT_SCHEMA,
   TEXT_INPUT_SCHEMA,
@@ -36,6 +38,11 @@ export interface ScriptAndWebhookToolDependencies {
    * such run is going
    */
   cancelScriptAction?: (runId: string) => Promise<boolean>
+  /**
+   * The ids of the keys this device has values for; a webhook referring to
+   * another one is not sent
+   */
+  secretIds?: () => Promise<ReadonlySet<string>>
   /** Resolves with the response body; rejects once `signal` aborts */
   executeWebhook?: (
     target: WebhookTarget,
@@ -138,6 +145,16 @@ function createScriptTool(
   }
 }
 
+/** The keys a webhook refers to: its authorization and its secret headers */
+function webhookSecretIds(config: WebhookToolConfig): string[] {
+  const ids = Object.values(config.headers ?? {}).flatMap((value) => {
+    const id = secretIdFromRef(value)
+    return id ? [id] : []
+  })
+  if (config.isAuthEnabled && config.authSecretId) ids.push(config.authSecretId)
+  return ids
+}
+
 function createWebhookTool(
   deps: ScriptAndWebhookToolDependencies
 ): ToolDefinition {
@@ -159,6 +176,18 @@ function createWebhookTool(
       // a window without the network client must not pass for a sent request
       if (!deps.executeWebhook)
         return { ok: false, messageKey: 'toast.webhookFailed' }
+      // the config is shared by devices, each with its own keys: one not
+      // entered here is asked for rather than the request sent without it
+      if (deps.secretIds) {
+        const known = await deps.secretIds()
+        if (webhookSecretIds(config).some((id) => !known.has(id)))
+          return {
+            ok: false,
+            level: 'warn',
+            messageKey: 'toast.webhookKeyNotSet',
+            message: call.command?.name || 'Webhook',
+          }
+      }
       let response: string
       try {
         response = await deps.executeWebhook(

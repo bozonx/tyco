@@ -6,14 +6,73 @@ use serde_json::{Map, Value};
 
 use crate::errors::AppError;
 
+/// What a merge does when both sides changed the same field differently.
+enum Conflicts<'a> {
+    /// Refuses the merge: two windows of one device must not overwrite each
+    /// other silently.
+    Reject,
+    /// Takes `next` and records the path: the change the user has just made
+    /// on this device wins over the one another device synced.
+    PreferNext(&'a mut Vec<String>),
+}
+
 pub fn merge_config(current: &Value, base: &Value, next: &Value) -> Result<Value, AppError> {
+    merge_root(current, base, next, &mut Conflicts::Reject)
+}
+
+/// Merges the changes of this device, `next`, with those another device
+/// made meanwhile, `current` (the file on the disk), both since `base`. A
+/// field both changed takes the value of `next`; the paths of such fields
+/// are returned with the result.
+pub fn merge_preferring_next(
+    current: &Value,
+    base: &Value,
+    next: &Value,
+) -> Result<(Value, Vec<String>), AppError> {
+    let mut conflicts = Vec::new();
+    let merged = merge_root(
+        current,
+        base,
+        next,
+        &mut Conflicts::PreferNext(&mut conflicts),
+    )?;
+    Ok((merged, conflicts))
+}
+
+fn merge_root(
+    current: &Value,
+    base: &Value,
+    next: &Value,
+    conflicts: &mut Conflicts,
+) -> Result<Value, AppError> {
     if !current.is_object() || !base.is_object() || !next.is_object() {
         return Err(AppError::InvalidInput(
             "The user config must be an object".into(),
         ));
     }
-    merge(Some(current), Some(base), Some(next), "userConfig")?
-        .ok_or_else(|| AppError::InvalidInput("The user config cannot be removed".into()))
+    merge(
+        Some(current),
+        Some(base),
+        Some(next),
+        "userConfig",
+        conflicts,
+    )?
+    .ok_or_else(|| AppError::InvalidInput("The user config cannot be removed".into()))
+}
+
+/// Resolves a conflict at `path`: an error, or the value of `next`.
+fn resolve(
+    next: Option<&Value>,
+    path: &str,
+    conflicts: &mut Conflicts,
+) -> Result<Option<Value>, AppError> {
+    match conflicts {
+        Conflicts::Reject => Err(conflict(path)),
+        Conflicts::PreferNext(paths) => {
+            paths.push(path.to_owned());
+            Ok(next.cloned())
+        }
+    }
 }
 
 fn merge(
@@ -21,6 +80,7 @@ fn merge(
     base: Option<&Value>,
     next: Option<&Value>,
     path: &str,
+    conflicts: &mut Conflicts,
 ) -> Result<Option<Value>, AppError> {
     if base == next || current == next {
         return Ok(current.cloned());
@@ -30,18 +90,33 @@ fn merge(
     }
     match (current, base, next) {
         (Some(Value::Object(current)), Some(Value::Object(base)), Some(Value::Object(next))) => {
-            merge_objects(current, base, next, path).map(|fields| Some(Value::Object(fields)))
+            merge_objects(current, base, next, path, conflicts)
+                .map(|fields| Some(Value::Object(fields)))
         }
-        (Some(Value::Array(current)), Some(Value::Array(base)), Some(Value::Array(next))) => {
-            match (entities(current), entities(base), entities(next)) {
-                (Some(current), Some(base), Some(next)) => {
-                    merge_entities(&current, &base, &next, path)
-                        .map(|items| Some(Value::Array(items)))
+        (
+            Some(Value::Array(current_items)),
+            Some(Value::Array(base_items)),
+            Some(Value::Array(next_items)),
+        ) => {
+            match (
+                entities(current_items),
+                entities(base_items),
+                entities(next_items),
+            ) {
+                (Some(current_entities), Some(base_entities), Some(next_entities)) => {
+                    merge_entities(
+                        &current_entities,
+                        &base_entities,
+                        &next_entities,
+                        path,
+                        conflicts,
+                    )
+                    .map(|items| Some(Value::Array(items)))
                 }
-                _ => Err(conflict(path)),
+                _ => resolve(next, path, conflicts),
             }
         }
-        _ => Err(conflict(path)),
+        _ => resolve(next, path, conflicts),
     }
 }
 
@@ -70,6 +145,7 @@ fn merge_objects(
     base: &Map<String, Value>,
     next: &Map<String, Value>,
     path: &str,
+    conflicts: &mut Conflicts,
 ) -> Result<Map<String, Value>, AppError> {
     let mut result = Map::new();
     for key in ordered_keys([current, next, base]) {
@@ -78,6 +154,7 @@ fn merge_objects(
             base.get(key),
             next.get(key),
             &format!("{path}.{key}"),
+            conflicts,
         )? {
             result.insert(key.clone(), value);
         }
@@ -142,6 +219,7 @@ fn merge_entities(
     base: &[(&str, &Value)],
     next: &[(&str, &Value)],
     path: &str,
+    conflicts: &mut Conflicts,
 ) -> Result<Vec<Value>, AppError> {
     let mut merged: Vec<(&str, Value)> = Vec::new();
     for (id, _) in current.iter().chain(next).chain(base) {
@@ -153,6 +231,7 @@ fn merge_entities(
             find(base, id),
             find(next, id),
             &format!("{path}[{id}]"),
+            conflicts,
         )? {
             merged.push((id, value));
         }
@@ -164,13 +243,16 @@ fn merge_entities(
     let next_order = kept(ids(next), &merged_ids);
     let current_moved = is_moved(&current_order, &base_order);
     let next_moved = is_moved(&next_order, &base_order);
-    if current_moved
+    let orders_conflict = current_moved
         && next_moved
-        && in_base(&current_order, &base_order) != in_base(&next_order, &base_order)
-    {
-        return Err(conflict(path));
+        && in_base(&current_order, &base_order) != in_base(&next_order, &base_order);
+    if orders_conflict {
+        match conflicts {
+            Conflicts::Reject => return Err(conflict(path)),
+            Conflicts::PreferNext(paths) => paths.push(path.to_owned()),
+        }
     }
-    let leading = if next_moved && !current_moved {
+    let leading = if next_moved && (!current_moved || orders_conflict) {
         next_order
     } else {
         current_order
@@ -190,6 +272,42 @@ fn merge_entities(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn a_change_of_this_device_wins_over_one_from_the_disk() {
+        let base = json!({"a": 1, "b": 1, "list": [{"id": "x", "v": 1}]});
+        let disk = json!({"a": 2, "b": 2, "list": [{"id": "x", "v": 2}]});
+        let local = json!({"a": 3, "b": 1, "list": [{"id": "x", "v": 3}]});
+        let (merged, conflicts) = merge_preferring_next(&disk, &base, &local).unwrap();
+        assert_eq!(
+            merged,
+            json!({"a": 3, "b": 2, "list": [{"id": "x", "v": 3}]})
+        );
+        assert_eq!(conflicts, ["userConfig.a", "userConfig.list[x].v"]);
+    }
+
+    #[test]
+    fn independent_changes_of_the_disk_and_this_device_merge() {
+        let base = json!({"a": 1, "b": 1, "list": [{"id": "x"}]});
+        let disk = json!({"a": 2, "b": 1, "list": [{"id": "x"}, {"id": "y"}]});
+        let local = json!({"a": 1, "b": 3, "list": [{"id": "x"}, {"id": "z"}]});
+        let (merged, conflicts) = merge_preferring_next(&disk, &base, &local).unwrap();
+        assert_eq!(
+            merged,
+            json!({"a": 2, "b": 3, "list": [{"id": "x"}, {"id": "y"}, {"id": "z"}]})
+        );
+        assert!(conflicts.is_empty());
+    }
+
+    #[test]
+    fn different_reorderings_take_the_order_of_this_device() {
+        let base = json!({"list": [{"id": "a"}, {"id": "b"}, {"id": "c"}]});
+        let disk = json!({"list": [{"id": "c"}, {"id": "a"}, {"id": "b"}]});
+        let local = json!({"list": [{"id": "b"}, {"id": "a"}, {"id": "c"}]});
+        let (merged, conflicts) = merge_preferring_next(&disk, &base, &local).unwrap();
+        assert_eq!(merged, local);
+        assert_eq!(conflicts, ["userConfig.list"]);
+    }
 
     #[test]
     fn independent_nested_edits_and_removals_survive() {

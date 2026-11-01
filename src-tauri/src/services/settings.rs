@@ -31,7 +31,12 @@ impl HeaderSecrets for webhook::PendingHeaderSecrets<'_> {
 trait SettingsHost {
     type Secrets: HeaderSecrets;
     fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError>;
-    fn write_config(&self, config: &Value) -> Result<(), AppError>;
+    /// Writes the config and returns it as saved: with the changes another
+    /// device synced meanwhile. A failed write leaves the files as they were.
+    fn write_config(
+        &self,
+        config: &Value,
+    ) -> Result<persist::SavedUserConfig, persist::SaveFailure>;
     /// `commit` gets `next` with the shortcuts the system refused put back.
     fn with_hotkeys<T>(
         &self,
@@ -46,6 +51,8 @@ trait SettingsHost {
         commit: impl FnOnce() -> Result<T, AppError>,
     ) -> Result<T, AppError>;
     fn publish(&self, state: &AppState);
+    /// Tells the windows which fields another device changed too.
+    fn report_conflicts(&self, conflicts: &[String]);
 }
 
 struct AppSettingsHost<'a> {
@@ -59,8 +66,15 @@ impl<'a> SettingsHost for AppSettingsHost<'a> {
     fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError> {
         webhook::protect_for_save(self.secrets, config)
     }
-    fn write_config(&self, config: &Value) -> Result<(), AppError> {
-        persist::save_user_config(self.app, config)
+    fn write_config(
+        &self,
+        config: &Value,
+    ) -> Result<persist::SavedUserConfig, persist::SaveFailure> {
+        let files = self.app.state::<persist::ConfigFiles>();
+        let device = self.app.state::<storage::device::DeviceStore>();
+        let plugins = self.app.state::<super::plugins::PluginStore>();
+        let notes = |id: &str| plugins.notes_directory_field(id).ok();
+        files.save(&device, &notes, config)
     }
     fn with_hotkeys<T>(
         &self,
@@ -81,6 +95,16 @@ impl<'a> SettingsHost for AppSettingsHost<'a> {
     }
     fn publish(&self, state: &AppState) {
         runtime::publish_state(self.app, state);
+    }
+    fn report_conflicts(&self, conflicts: &[String]) {
+        let payload = crate::models::SettingsConflictEvent {
+            paths: conflicts.to_vec(),
+        };
+        if let Err(error) =
+            crate::events::emit::<crate::events::SettingsConflict, _>(self.app, payload)
+        {
+            log::warn!("Could not announce a settings conflict: {error}");
+        }
     }
 }
 
@@ -171,32 +195,38 @@ fn save_with(
         return Err(persist::newer_config_error());
     }
     let mut next = merge::merge_config(&previous, &base, &next)?;
+    schema::prune_device_references(&mut next);
     schema::validate_user_config(&next)?;
     let mut pending = Some(host.protect(&mut next)?);
     let before = HistorySettings::from_config(&previous);
     let after = HistorySettings::from_config(&next);
+    let mut conflicts = Vec::new();
     let snapshot = host.with_hotkeys(&previous, &mut next, |next| {
         host.with_history(before, after, || {
-            if let Err(error) = host.write_config(next) {
-                // A directory sync can fail after rename, so restore the old file.
-                if let Err(rollback) = host.write_config(&previous) {
-                    pending.take().expect("pending header secrets").retain();
-                    return Err(AppError::Failed(format!(
-                        "Could not save config: {error}; could not restore config: {rollback}"
-                    )));
+            let saved = match host.write_config(next) {
+                Ok(saved) => saved,
+                Err(failure) => {
+                    // the files may hold the new references or the old ones
+                    if failure.is_uncertain {
+                        pending.take().expect("pending header secrets").retain();
+                    }
+                    return Err(failure.error);
                 }
-                return Err(error);
-            }
+            };
+            conflicts = saved.conflicts;
             // Exactly one publication, while the history repositories are locked.
             Ok(state.update_snapshot(|snapshot| {
-                snapshot.settings.user_config = std::sync::Arc::new(next.clone())
+                snapshot.settings.user_config = std::sync::Arc::new(saved.value)
             }))
         })
     })?;
     pending
         .expect("pending header secrets")
-        .commit(&previous, &next);
+        .commit(&previous, &snapshot.settings.user_config);
     host.publish(state);
+    if !conflicts.is_empty() {
+        host.report_conflicts(&conflicts);
+    }
     Ok(snapshot)
 }
 
@@ -217,24 +247,34 @@ mod tests {
         calls: RefCell<Vec<&'static str>>,
         disk: RefCell<Value>,
         fail_save: bool,
-        fail_rollback: bool,
         conflict: bool,
         fail_history: bool,
+        /// The theme another device saved meanwhile.
+        disk_change: Option<Value>,
+        conflicts: Vec<String>,
     }
     impl SettingsHost for Host {
         type Secrets = FakeSecrets;
         fn protect(&self, _: &mut Value) -> Result<FakeSecrets, AppError> {
             Ok(FakeSecrets)
         }
-        fn write_config(&self, config: &Value) -> Result<(), AppError> {
-            let is_save = !self.calls.borrow().contains(&"write");
+        fn write_config(
+            &self,
+            config: &Value,
+        ) -> Result<persist::SavedUserConfig, persist::SaveFailure> {
             self.calls.borrow_mut().push("write");
-            *self.disk.borrow_mut() = config.clone();
-            if (is_save && self.fail_save) || (!is_save && self.fail_rollback) {
-                Err(AppError::Io(std::io::Error::other("Disk unavailable")))
-            } else {
-                Ok(())
+            if self.fail_save {
+                return Err(AppError::Io(std::io::Error::other("Disk unavailable")).into());
             }
+            let mut value = config.clone();
+            if let Some(disk) = &self.disk_change {
+                value["appearance"]["theme"] = disk.clone();
+            }
+            *self.disk.borrow_mut() = value.clone();
+            Ok(persist::SavedUserConfig {
+                value,
+                conflicts: self.conflicts.clone(),
+            })
         }
         fn with_hotkeys<T>(
             &self,
@@ -263,6 +303,9 @@ mod tests {
         }
         fn publish(&self, _: &AppState) {
             self.calls.borrow_mut().push("publish");
+        }
+        fn report_conflicts(&self, _: &[String]) {
+            self.calls.borrow_mut().push("conflicts");
         }
     }
     fn state() -> AppState {
@@ -323,7 +366,7 @@ mod tests {
         );
     }
     #[test]
-    fn failed_save_restores_disk_without_cleanup_or_publication() {
+    fn a_failed_save_neither_cleans_up_nor_publishes() {
         let state = state();
         let base = Value::clone(&state.user_config());
         let host = Host {
@@ -331,23 +374,29 @@ mod tests {
             ..Host::default()
         };
         assert!(save_with(&state, &host, changed(&base), base.clone()).is_err());
-        assert_eq!(*host.disk.borrow(), base);
         assert_eq!(state.snapshot().revision, 0);
-        assert_eq!(*host.calls.borrow(), ["prepare", "write", "write"]);
+        assert_eq!(*host.calls.borrow(), ["prepare", "write"]);
     }
+
     #[test]
-    fn failed_rollback_is_reported_without_publishing_uncertain_state() {
+    fn a_change_of_another_device_is_published_with_the_save() {
         let state = state();
         let base = Value::clone(&state.user_config());
         let host = Host {
-            fail_save: true,
-            fail_rollback: true,
+            disk_change: Some(serde_json::json!("dark")),
+            conflicts: vec![String::from("userConfig.appearance.theme")],
             ..Host::default()
         };
-        let error = save_with(&state, &host, changed(&base), base).unwrap_err();
-        assert!(error.to_string().contains("could not restore config"));
-        assert_eq!(state.snapshot().revision, 0);
+        let saved = save_with(&state, &host, changed(&base), base).unwrap();
+        assert_eq!(saved.settings.user_config["appearance"]["theme"], "dark");
+        assert_eq!(saved.settings.user_config["language"]["ui"], "ru-RU");
+        assert_eq!(state.user_config()["appearance"]["theme"], "dark");
+        assert_eq!(
+            *host.calls.borrow(),
+            ["prepare", "write", "cleanup", "publish", "conflicts"]
+        );
     }
+
     #[test]
     fn conflicting_hotkeys_do_not_touch_storage() {
         let state = state();

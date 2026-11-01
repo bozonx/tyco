@@ -17,6 +17,7 @@
         :hint="t('settings.sttServerUrlHint')"
         :error="sttServerUrlError"
       >
+        <template #info><DeviceScopeBadge /></template>
         <FieldInput
           :model-value="userConfig.stt.providers.sherpaOnnx.baseUrl"
           placeholder="ws://localhost:6006"
@@ -113,6 +114,7 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
+import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'

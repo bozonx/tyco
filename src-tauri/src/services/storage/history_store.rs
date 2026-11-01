@@ -104,6 +104,14 @@ impl HistoryStorageCoordinator {
         Ok(result.value)
     }
 
+    /// Runs `operation` while no history is read or written, e.g. to move the
+    /// user data folder.
+    pub fn while_locked<T>(&self, operation: impl FnOnce() -> T) -> T {
+        let _editor = self.lock_editor_history();
+        let _chats = self.lock_chat_history();
+        operation()
+    }
+
     /// The editor history file may hold what the policy drops, e.g. after a
     /// failed cleanup at startup.
     pub fn mark_editor_cleanup_pending(&self) {
@@ -218,14 +226,14 @@ fn enforce_chat_history_policies(
     app: &AppHandle,
     settings: &HistorySettings,
 ) -> Result<(), AppError> {
-    let ask_ai = chats::app_chats_dir(app)
-        .and_then(|chats_dir| chats::enforce_chat_history_policy(&chats_dir, settings.chat))
+    let ask_ai = chats::app_chat_dirs(app)
+        .and_then(|dirs| chats::enforce_chat_history_policy(&dirs, settings.chat))
         .map(|removed| notify_chats_removed(app, &ChatScope::AskAi, removed));
     // an unavailable vault has no chats to clean up now; they are trimmed once
     // a profile chat is saved there again
     let profiles = match crate::services::ai_vault::resolve_vault_path_from_config(
         Some(&settings.vault_path),
-        || crate::services::storage::app_data_sub_dir(app, "ai-vault"),
+        || crate::services::storage::user_sub_dir(app, "ai-vault"),
     ) {
         Ok(vault_root) => {
             enforce_profile_chat_history_policy(app, &vault_root, settings.profile_chat)
@@ -246,16 +254,19 @@ fn enforce_profile_chat_history_policy(
 ) -> Result<(), AppError> {
     let mut result = Ok(());
     for chats_dir in crate::services::ai_vault::all_profile_chats_dirs(vault_root)? {
-        match chats::enforce_chat_history_policy(&chats_dir, policy) {
+        // the profile folder is named by the profile id
+        let Some(profile_id) = chats_dir
+            .parent()
+            .and_then(Path::file_name)
+            .and_then(|name| name.to_str())
+            .map(str::to_owned)
+        else {
+            continue;
+        };
+        let dirs = chats::profile_chat_dirs(app, vault_root, &profile_id, chats_dir.clone())?;
+        match chats::enforce_chat_history_policy(&dirs, policy) {
             Ok(removed) => {
-                // the profile folder is named by the profile id
-                if let Some(profile_id) = chats_dir
-                    .parent()
-                    .and_then(Path::file_name)
-                    .and_then(|name| name.to_str())
-                {
-                    notify_chats_removed(app, &ChatScope::Profile(profile_id.to_string()), removed);
-                }
+                notify_chats_removed(app, &ChatScope::Profile(profile_id), removed);
             }
             Err(error) => {
                 log::warn!(
@@ -345,25 +356,26 @@ enum ChatAccess {
     Write,
 }
 
-fn scope_chats_dir(
+fn scope_chat_dirs(
     app: &AppHandle,
     state: &AppState,
     scope: &ChatScope,
     access: ChatAccess,
-) -> Result<std::path::PathBuf, AppError> {
+) -> Result<chats::ChatDirs, AppError> {
     match scope {
-        ChatScope::AskAi => chats::app_chats_dir(app),
+        ChatScope::AskAi => chats::app_chat_dirs(app),
         ChatScope::Profile(profile_id) => {
             let vault_root =
                 crate::services::ai_vault::resolve_vault_path(app, &state.user_config())?;
-            match access {
+            let chats_dir = match access {
                 ChatAccess::Read => {
                     crate::services::ai_vault::existing_profile_chats_path(&vault_root, profile_id)
                 }
                 ChatAccess::Write => {
                     crate::services::ai_vault::profile_chats_dir(&vault_root, profile_id)
                 }
-            }
+            }?;
+            chats::profile_chat_dirs(app, &vault_root, profile_id, chats_dir)
         }
     }
 }
@@ -373,7 +385,7 @@ fn with_chats<T>(
     app: &AppHandle,
     scope: &ChatScope,
     access: ChatAccess,
-    operation: impl FnOnce(&AppState, &Path) -> Result<T, AppError>,
+    operation: impl FnOnce(&AppState, &chats::ChatDirs) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let _vault = state.read_vault();
@@ -384,12 +396,12 @@ fn with_chats_in_vault<T>(
     app: &AppHandle,
     scope: &ChatScope,
     access: ChatAccess,
-    operation: impl FnOnce(&AppState, &Path) -> Result<T, AppError>,
+    operation: impl FnOnce(&AppState, &chats::ChatDirs) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
     let state = app.state::<AppState>();
     let _guard = state.history.lock_chat_history();
-    let chats_dir = scope_chats_dir(app, &state, scope, access)?;
-    operation(&state, &chats_dir)
+    let dirs = scope_chat_dirs(app, &state, scope, access)?;
+    operation(&state, &dirs)
 }
 
 /// Runs `operation` while no chat history is written, e.g. to remove a profile
@@ -444,12 +456,14 @@ pub fn delete_editor_history_item(app: &AppHandle, id: String) -> Result<(), App
 }
 
 pub fn clear_editor_history(app: &AppHandle) -> Result<(), AppError> {
-    change_editor(app, |_, memory| editor::clear_editor_history(app, memory))
+    change_editor(app, |config, memory| {
+        editor::clear_editor_history(app, config, memory)
+    })
 }
 
 pub fn list_chats(app: &AppHandle, scope: &ChatScope) -> Result<Vec<ChatSummary>, AppError> {
-    with_chats(app, scope, ChatAccess::Read, |_, chats_dir| {
-        chats::list_chats(chats_dir)
+    with_chats(app, scope, ChatAccess::Read, |_, dirs| {
+        chats::list_chats(dirs)
     })
 }
 
@@ -460,15 +474,14 @@ pub fn read_chat(
     id: String,
     owner: Option<String>,
 ) -> Result<Option<Chat>, AppError> {
-    with_chats(app, scope, ChatAccess::Read, |_, chats_dir| {
-        chats::recover_chat_transaction(chats_dir)?;
-        let chat = chats::open_chat(chats_dir, id)?;
+    with_chats(app, scope, ChatAccess::Read, |_, dirs| {
+        let chat = chats::open_chat(dirs, id)?;
         // without an import lease nothing holds the images: they are read
         // when shown, e.g. not at all for a Markdown copy
         if let (Some(chat), Some(_)) = (&chat, &owner) {
             load_chat_images(
                 &app.state::<ChatImages>(),
-                chats_dir,
+                &dirs.chats,
                 chat,
                 ImageRetention::Active(owner.as_deref()),
             )?;
@@ -478,7 +491,7 @@ pub fn read_chat(
 }
 
 pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), AppError> {
-    let removed = with_chats(app, scope, ChatAccess::Write, |state, chats_dir| {
+    let removed = with_chats(app, scope, ChatAccess::Write, |state, dirs| {
         let config = state.user_config();
         let policy = match scope {
             ChatScope::AskAi => chats::ChatHistoryPolicy::from_config(&config),
@@ -487,7 +500,7 @@ pub fn save_chat(app: &AppHandle, scope: &ChatScope, item: Chat) -> Result<(), A
         if !policy.is_enabled {
             return Ok(None);
         }
-        chats::save_chat(chats_dir, policy, app.state::<ChatImages>().store(), item).map(Some)
+        chats::save_chat(dirs, policy, app.state::<ChatImages>().store(), item).map(Some)
     })?;
     if let Some(removed) = removed {
         notify_chats_changed(app, scope, removed, false);
@@ -501,8 +514,8 @@ pub fn rename_chat(
     id: String,
     title: String,
 ) -> Result<(), AppError> {
-    with_chats(app, scope, ChatAccess::Write, |_, chats_dir| {
-        chats::rename_chat(chats_dir, id, title)
+    with_chats(app, scope, ChatAccess::Write, |_, dirs| {
+        chats::rename_chat(dirs, id, title)
     })?;
     notify_chats_changed(app, scope, Vec::new(), false);
     Ok(())
@@ -517,10 +530,9 @@ pub fn search_chats(
     // chat without holding up unrelated saves or editor history operations.
     let state = app.state::<AppState>();
     let _vault = state.read_vault();
-    let (chats_dir, history) =
-        with_chats_in_vault(app, scope, ChatAccess::Read, |_, chats_dir| {
-            Ok((chats_dir.to_path_buf(), chats::list_chats(chats_dir)?))
-        })?;
+    let (chats_dir, history) = with_chats_in_vault(app, scope, ChatAccess::Read, |_, dirs| {
+        Ok((dirs.chats.clone(), chats::list_chats(dirs)?))
+    })?;
     chats::search_chats(&chats_dir, history, query, &state.history.chat_search)
 }
 
@@ -531,13 +543,12 @@ pub fn delete_chat(
     owner: String,
 ) -> Result<Option<Chat>, AppError> {
     let id_for_event = id.clone();
-    with_chats(app, scope, ChatAccess::Write, |_, chats_dir| {
-        chats::recover_chat_transaction(chats_dir)?;
-        let removed = match chats::read_chat(chats_dir, id.clone()) {
+    with_chats(app, scope, ChatAccess::Write, |_, dirs| {
+        let removed = match chats::read_chat(&dirs.chats, id.clone()) {
             Ok(Some(chat)) => {
                 load_chat_images(
                     &app.state::<ChatImages>(),
-                    chats_dir,
+                    &dirs.chats,
                     &chat,
                     ImageRetention::Undo(&owner),
                 )?;
@@ -549,15 +560,15 @@ pub fn delete_chat(
                 None
             }
         };
-        chats::delete_chat(chats_dir, id.clone())?;
+        chats::delete_chat(dirs, id.clone())?;
         Ok(removed)
     })
     .inspect(|_| notify_chats_changed(app, scope, vec![id_for_event], false))
 }
 
 pub fn clear_chats(app: &AppHandle, scope: &ChatScope) -> Result<(), AppError> {
-    with_chats(app, scope, ChatAccess::Write, |_, chats_dir| {
-        chats::clear_chats(chats_dir)
+    with_chats(app, scope, ChatAccess::Write, |_, dirs| {
+        chats::clear_chats(dirs)
     })?;
     notify_chats_changed(app, scope, Vec::new(), true);
     Ok(())
@@ -601,10 +612,8 @@ fn load_chat_images(
 }
 
 pub fn read_chat_image(app: &AppHandle, scope: &ChatScope, id: &str) -> Result<Vec<u8>, AppError> {
-    with_chats(app, scope, ChatAccess::Read, |_, chats_dir| {
-        app.state::<ChatImages>()
-            .lock()
-            .get(&chats::chat_image_directory(chats_dir), id)
+    with_chats(app, scope, ChatAccess::Read, |_, dirs| {
+        app.state::<ChatImages>().lock().get(&dirs.images(), id)
     })
 }
 

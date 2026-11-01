@@ -9,14 +9,14 @@ use tauri::{AppHandle, Manager};
 fn configured_vault_dir(app: &AppHandle, state: &AppState) -> Result<PathBuf, AppError> {
     let configured = crate::models::user_config::ai_vault(&state.user_config()).path;
     match configured.trim() {
-        "" => storage::app_data_sub_dir(app, "ai-vault"),
+        "" => storage::user_sub_dir(app, "ai-vault"),
         path => Ok(PathBuf::from(path)),
     }
 }
 
 /// A chosen folder, or the default one for `None`, and whether it is the default.
 fn target_dir(app: &AppHandle, path: Option<&str>) -> Result<(PathBuf, bool), AppError> {
-    let default = storage::app_data_sub_dir(app, "ai-vault")?;
+    let default = storage::user_sub_dir(app, "ai-vault")?;
     match path.map(str::trim).filter(|path| !path.is_empty()) {
         Some(path) => {
             let path = PathBuf::from(path);

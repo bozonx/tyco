@@ -71,6 +71,11 @@ export interface EditorHistoryConfig {
   /** Absent: entries are kept indefinitely */
   retentionDays?: number
   isSecretSanitizingEnabled: boolean
+  /**
+   * The history of this device stays on it, out of the user data folder that
+   * may be synced; the histories of other devices are still shown
+   */
+  isLocalOnly: boolean
 }
 
 /** Chats live on the disk or are not kept at all */
@@ -141,9 +146,12 @@ export interface HotkeysConfig {
   history: string
   voiceCommands: string
   selectionCorrection: string
+  /** The shortcut that opens a page of the command overlay, by page id */
+  launcherPages: Record<string, string>
 }
 
-export type HotkeyId = keyof HotkeysConfig
+/** The hotkeys of activation modes, all but the launcher pages */
+export type HotkeyId = Exclude<keyof HotkeysConfig, 'launcherPages'>
 
 /** Per-plugin state: the plugin owns `settings` */
 export interface PluginEntryConfig {

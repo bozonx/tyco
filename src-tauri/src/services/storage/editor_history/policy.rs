@@ -42,6 +42,9 @@ pub struct EditorHistoryPolicy {
     pub retention_days: u64,
     /// What looks like a password or a key is masked before it is stored.
     pub should_redact_secrets: bool,
+    /// This device writes its journal into the state folder rather than into
+    /// the user data folder, which may be synced.
+    pub is_local_only: bool,
 }
 
 impl EditorHistoryPolicy {
@@ -57,6 +60,24 @@ impl EditorHistoryPolicy {
             is_memory_only: storage == EditorHistoryStorageMode::Session,
             retention_days: if on_disk { history.retention_days } else { 0 },
             should_redact_secrets: on_disk && history.is_secret_sanitizing_enabled,
+            is_local_only: history.is_local_only,
+        }
+    }
+
+    /// The oldest time an entry may have to be kept; 0 keeps every entry.
+    pub(super) fn cutoff_ms(&self, now_ms: u64) -> u64 {
+        if self.retention_days > 0 {
+            now_ms.saturating_sub(self.retention_days.saturating_mul(DAY_MS))
+        } else {
+            0
+        }
+    }
+
+    /// Masks what looks like a secret in an entry, when the policy asks.
+    pub(super) fn redact_item(&self, item: &mut EditorHistoryItem) {
+        if self.should_redact_secrets {
+            item.text = redact_secrets(&item.text);
+            item.result = item.result.take().map(|result| redact_secrets(&result));
         }
     }
 
@@ -72,16 +93,11 @@ impl EditorHistoryPolicy {
     /// retention period or over the limit and masks secrets when asked, also
     /// in entries stored before the setting was turned on.
     pub(super) fn enforce(&self, history: &mut Vec<EditorHistoryItem>, now_ms: u64) {
-        if self.retention_days > 0 {
-            let cutoff = now_ms.saturating_sub(self.retention_days.saturating_mul(DAY_MS));
-            history.retain(|item| item.created_at_ms >= cutoff);
-        }
+        let cutoff = self.cutoff_ms(now_ms);
+        history.retain(|item| item.created_at_ms >= cutoff);
         history.truncate(self.max_entries);
-        if self.should_redact_secrets {
-            for item in history.iter_mut() {
-                item.text = redact_secrets(&item.text);
-                item.result = item.result.take().map(|result| redact_secrets(&result));
-            }
+        for item in history.iter_mut() {
+            self.redact_item(item);
         }
     }
 }
@@ -116,12 +132,13 @@ mod tests {
             is_memory_only: false,
             retention_days: 0,
             should_redact_secrets: false,
+            is_local_only: false,
         }
     }
 
     #[test]
     fn policy_reads_the_settings() {
-        let config = json!({"editor":{"history":{"storage":"disk","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true}}});
+        let config = json!({"editor":{"history":{"storage":"disk","maxItems":20,"retentionDays":7,"isSecretSanitizingEnabled":true,"isLocalOnly":true}}});
 
         assert_eq!(
             EditorHistoryPolicy::from_config(&config),
@@ -131,6 +148,7 @@ mod tests {
                 is_memory_only: false,
                 retention_days: 7,
                 should_redact_secrets: true,
+                is_local_only: true,
             }
         );
         assert_eq!(

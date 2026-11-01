@@ -12,6 +12,7 @@ pub(crate) mod hotkeys;
 pub mod keychain;
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 mod line_copy;
+pub mod machine;
 #[cfg(any(target_os = "windows", test))]
 mod native_selection;
 pub mod notifications;

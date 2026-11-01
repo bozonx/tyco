@@ -55,6 +55,7 @@ describe('SettingsEditorHistorySection.vue', () => {
         maxItems: 100,
         retentionDays: 30,
         isSecretSanitizingEnabled: true,
+        isLocalOnly: false,
         ...editorHistory,
       },
     },

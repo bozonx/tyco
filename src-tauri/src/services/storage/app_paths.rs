@@ -2,22 +2,28 @@
 //!
 //! | purpose | Linux (XDG)                 | macOS                          | Windows                |
 //! | ------- | --------------------------- | ------------------------------ | ---------------------- |
-//! | config  | `~/.config/<id>`            | `~/Library/Application Support/<id>` | `%APPDATA%\<id>` |
+//! | device  | `~/.config/<id>`            | `~/Library/Application Support/<id>.device` | `%LOCALAPPDATA%\<id>\device` |
 //! | data    | `~/.local/share/<id>`       | `~/Library/Application Support/<id>` | `%APPDATA%\<id>` |
 //! | state   | `~/.local/state/<id>`       | `~/Library/Application Support/<id>` | `%LOCALAPPDATA%\<id>` |
 //! | cache   | `~/.cache/<id>`             | `~/Library/Caches/<id>`        | `%LOCALAPPDATA%\<id>`  |
 //! | logs    | `~/.local/state/<id>/logs`  | `~/Library/Logs/<id>`          | `%LOCALAPPDATA%\<id>\logs` |
 //!
-//! The webview keeps its own storage (local storage, its HTTP cache) in a
-//! `webview` folder of `data` on Linux and of `state` on Windows, apart from
-//! the app's files; WKWebView on macOS has no such setting.
+//! `device` holds the files of this machine only (`device.json`,
+//! `secrets.json`); it is never the user data folder nor inside it. `data` is
+//! the default user data folder, see `user_data`: the user may pick another
+//! one, e.g. a synced folder. On Windows the device folder is a subfolder of
+//! the local one, apart from the cache, and never in the roaming `%APPDATA%`,
+//! which a domain profile carries to other machines.
 //!
-//! The state directory holds logs and platform webview state. `SessionState`
-//! lives only in memory; persistent preview preferences belong to the config.
+//! The webview keeps its own storage (local storage, its HTTP cache) in a
+//! `webview` folder of `state`, apart from the app's files; WKWebView on
+//! macOS has no such setting.
+//!
+//! The state directory holds logs, platform webview state and the files
+//! derived from the user data or kept aside from it (indexes, recovery
+//! copies). `SessionState` lives only in memory.
 
-#[cfg(any(debug_assertions, test))]
-use std::path::Path;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use tauri::{AppHandle, Manager};
 
@@ -27,10 +33,24 @@ use crate::errors::AppError;
 const DEV_HOME_ENV: &str = "TYCO_DEV_HOME";
 /// The folder of the webview storage, see `AppPaths::webview_dir`.
 const WEBVIEW_DIR: &str = "webview";
+/// The device folder inside the local one on Windows.
+#[cfg_attr(not(any(target_os = "windows", test)), allow(dead_code))]
+const DEVICE_SUBDIR: &str = "device";
+
+/// The device folder next to the data folder, where the platform puts the
+/// config into the data folder (macOS).
+#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+fn sibling_device_dir(data_dir: &Path) -> PathBuf {
+    let mut name = data_dir.file_name().unwrap_or_default().to_os_string();
+    name.push(".device");
+    data_dir.with_file_name(name)
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppPaths {
-    pub config_dir: PathBuf,
+    /// The files of this machine only.
+    pub device_dir: PathBuf,
+    /// The default user data folder.
     pub data_dir: PathBuf,
     pub state_dir: PathBuf,
     pub cache_dir: PathBuf,
@@ -40,12 +60,10 @@ pub struct AppPaths {
 impl AppPaths {
     /// Where the webviews keep their storage; `None` where it cannot be set.
     pub fn webview_dir(&self) -> Option<PathBuf> {
-        if cfg!(target_os = "windows") {
-            Some(self.state_dir.join(WEBVIEW_DIR))
-        } else if cfg!(target_os = "macos") {
+        if cfg!(target_os = "macos") {
             None
         } else {
-            Some(self.data_dir.join(WEBVIEW_DIR))
+            Some(self.state_dir.join(WEBVIEW_DIR))
         }
     }
 
@@ -69,8 +87,15 @@ impl AppPaths {
         } else {
             state_dir.join("logs")
         };
+        let device_dir = if cfg!(target_os = "windows") {
+            state_dir.join(DEVICE_SUBDIR)
+        } else if cfg!(target_os = "macos") {
+            sibling_device_dir(&data_dir)
+        } else {
+            resolver.app_config_dir()?
+        };
         Ok(Self {
-            config_dir: resolver.app_config_dir()?,
+            device_dir,
             data_dir,
             state_dir,
             cache_dir: resolver.app_cache_dir()?,
@@ -139,7 +164,7 @@ pub fn dev_paths_from_env(_identifier: &str) -> Result<Option<AppPaths>, AppErro
 fn dev_paths(home: &Path, identifier: &str) -> AppPaths {
     #[cfg(target_os = "macos")]
     let paths = AppPaths {
-        config_dir: home.join("Library/Application Support").join(identifier),
+        device_dir: sibling_device_dir(&home.join("Library/Application Support").join(identifier)),
         data_dir: home.join("Library/Application Support").join(identifier),
         state_dir: home.join("Library/Application Support").join(identifier),
         cache_dir: home.join("Library/Caches").join(identifier),
@@ -148,7 +173,10 @@ fn dev_paths(home: &Path, identifier: &str) -> AppPaths {
 
     #[cfg(target_os = "windows")]
     let paths = AppPaths {
-        config_dir: home.join("AppData/Roaming").join(identifier),
+        device_dir: home
+            .join("AppData/Local")
+            .join(identifier)
+            .join(DEVICE_SUBDIR),
         data_dir: home.join("AppData/Roaming").join(identifier),
         state_dir: home.join("AppData/Local").join(identifier),
         cache_dir: home.join("AppData/Local").join(identifier),
@@ -157,7 +185,7 @@ fn dev_paths(home: &Path, identifier: &str) -> AppPaths {
 
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     let paths = AppPaths {
-        config_dir: home.join(".config").join(identifier),
+        device_dir: home.join(".config").join(identifier),
         data_dir: home.join(".local/share").join(identifier),
         state_dir: home.join(".local/state").join(identifier),
         cache_dir: home.join(".cache").join(identifier),
@@ -178,7 +206,11 @@ mod tests {
 
         #[cfg(target_os = "linux")]
         {
-            assert_eq!(paths.config_dir, home.join(".config/com.tyco.app"));
+            assert_eq!(paths.device_dir, home.join(".config/com.tyco.app"));
+            assert_eq!(
+                paths.webview_dir(),
+                Some(home.join(".local/state/com.tyco.app/webview"))
+            );
             assert_eq!(paths.data_dir, home.join(".local/share/com.tyco.app"));
             assert_eq!(paths.state_dir, home.join(".local/state/com.tyco.app"));
             assert_eq!(paths.cache_dir, home.join(".cache/com.tyco.app"));
@@ -188,8 +220,8 @@ mod tests {
         #[cfg(target_os = "macos")]
         {
             assert_eq!(
-                paths.config_dir,
-                home.join("Library/Application Support/com.tyco.app")
+                paths.device_dir,
+                home.join("Library/Application Support/com.tyco.app.device")
             );
             assert_eq!(paths.state_dir, paths.data_dir);
             assert_eq!(paths.cache_dir, home.join("Library/Caches/com.tyco.app"));
@@ -198,11 +230,28 @@ mod tests {
 
         #[cfg(target_os = "windows")]
         {
-            assert_eq!(paths.config_dir, home.join("AppData/Roaming/com.tyco.app"));
+            assert_eq!(
+                paths.device_dir,
+                home.join("AppData/Local/com.tyco.app/device")
+            );
+            assert_eq!(paths.data_dir, home.join("AppData/Roaming/com.tyco.app"));
             assert_eq!(paths.state_dir, home.join("AppData/Local/com.tyco.app"));
             assert_eq!(paths.cache_dir, home.join("AppData/Local/com.tyco.app"));
             assert_eq!(paths.log_dir, home.join("AppData/Local/com.tyco.app/logs"));
         }
+    }
+
+    #[test]
+    fn the_device_folder_is_never_the_data_folder_nor_inside_it() {
+        let paths = dev_paths(Path::new("/home/user"), "com.tyco.app");
+        assert!(!paths.device_dir.starts_with(&paths.data_dir));
+        assert!(!paths.data_dir.starts_with(&paths.device_dir));
+        assert_ne!(paths.device_dir, paths.state_dir);
+        assert_ne!(paths.device_dir, paths.cache_dir);
+        assert_eq!(
+            sibling_device_dir(Path::new("/a/com.tyco.app")),
+            PathBuf::from("/a/com.tyco.app.device")
+        );
     }
 
     #[test]

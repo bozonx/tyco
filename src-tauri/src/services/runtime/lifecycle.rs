@@ -73,6 +73,16 @@ const SHUTDOWN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
 
 /// Drain services off the UI thread so queued window operations can complete.
 pub fn request_exit(app: &AppHandle) {
+    end(app, false);
+}
+
+/// Shuts down like `request_exit` and starts the app again, e.g. after the
+/// user data folder changed: the folders are not switched in a running app.
+pub fn request_restart(app: &AppHandle) {
+    end(app, true);
+}
+
+fn end(app: &AppHandle, restarts: bool) {
     let state = app.state::<AppState>();
     if !state.begin_quitting() {
         return;
@@ -82,6 +92,9 @@ pub fn request_exit(app: &AppHandle) {
         .name("application-shutdown".into())
         .spawn(move || {
             shutdown(&handle);
+            if restarts {
+                handle.restart();
+            }
             handle.exit(0);
         });
     if let Err(error) = result {

@@ -1,0 +1,471 @@
+use super::*;
+use crate::services::settings::defaults::default_user_config;
+use crate::services::storage::device::DeviceFile;
+use crate::services::test_support::TestDir;
+use serde_json::json;
+
+fn no_notes(_: &str) -> Option<String> {
+    None
+}
+
+fn fast_note(id: &str) -> Option<String> {
+    (id == "FastNote").then(|| String::from("pathToNotes"))
+}
+
+struct Setup {
+    dir: TestDir,
+    files: ConfigFiles,
+    device: DeviceStore,
+}
+
+impl Setup {
+    fn new(name: &str) -> Self {
+        let dir = TestDir::new(name);
+        fs::create_dir_all(dir.join("user")).unwrap();
+        let files = ConfigFiles::at(
+            Some(dir.join("user").join(CONFIG_FILE_NAME)),
+            true,
+            dir.join("state").join(CONFIG_BASE_FILE_NAME),
+        );
+        Self {
+            dir,
+            files,
+            device: DeviceStore::in_memory(DeviceFile::default()),
+        }
+    }
+
+    fn user_path(&self) -> PathBuf {
+        self.dir.join("user").join(CONFIG_FILE_NAME)
+    }
+
+    fn user_file(&self) -> Value {
+        serde_json::from_str(&fs::read_to_string(self.user_path()).unwrap()).unwrap()
+    }
+
+    fn load(&self) -> LoadedUserConfig {
+        self.files.load(&self.device, &no_notes).unwrap()
+    }
+
+    fn save(&self, config: &Value) -> SavedUserConfig {
+        self.files
+            .save(&self.device, &no_notes, config)
+            .map_err(|failure| failure.error)
+            .unwrap()
+    }
+}
+
+#[test]
+fn a_missing_config_is_created_from_the_defaults() {
+    let setup = Setup::new("config-create");
+    let loaded = setup.load();
+    assert_eq!(loaded.value, default_user_config());
+    assert!(loaded.is_complete);
+    let user = setup.user_file();
+    assert!(
+        user.get("hotkeys").is_none(),
+        "hotkeys belong to the device"
+    );
+    assert_eq!(user["appearance"]["theme"], "auto");
+    assert!(user["appearance"].get("uiScalePercent").is_none());
+}
+
+#[test]
+fn a_lossy_startup_repair_keeps_the_previous_file() {
+    let setup = Setup::new("config-repair");
+    let path = setup.user_path();
+    let broken = json!({"appearance":{"theme":"sepia"},"unknown":1});
+    fs::write(&path, broken.to_string()).unwrap();
+
+    let loaded = setup.load();
+
+    assert!(loaded.is_complete);
+    assert_eq!(loaded.value["appearance"]["theme"], "auto");
+    assert_eq!(setup.user_file()["unknown"], 1);
+    let copies: Vec<_> = fs::read_dir(path.parent().unwrap())
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|copy| copy != &path)
+        .collect();
+    assert_eq!(copies.len(), 1);
+    assert!(copies[0]
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .starts_with("config.json.repaired-"));
+    let kept: Value = serde_json::from_str(&fs::read_to_string(&copies[0]).unwrap()).unwrap();
+    assert_eq!(kept, broken);
+}
+
+#[test]
+fn a_repair_that_only_fills_fields_leaves_the_file_alone() {
+    let setup = Setup::new("config-fill");
+    let path = setup.user_path();
+    let raw = r#"{"appearance":{"theme":"dark"}}"#;
+    fs::write(&path, raw).unwrap();
+
+    let loaded = setup.load();
+
+    assert_eq!(loaded.value["appearance"]["theme"], "dark");
+    assert_eq!(fs::read_to_string(&path).unwrap(), raw);
+    assert_eq!(fs::read_dir(path.parent().unwrap()).unwrap().count(), 1);
+}
+
+#[test]
+fn a_newer_config_of_either_file_is_shown_and_never_written() {
+    let newer = version::CONFIG_VERSION + 1;
+    let setup = Setup::new("config-newer-user");
+    let raw = format!(r#"{{"configVersion":{newer},"appearance":{{"theme":"dark"}}}}"#);
+    fs::write(setup.user_path(), &raw).unwrap();
+    let loaded = setup.load();
+    assert_eq!(loaded.value["configVersion"], newer);
+    assert!(!loaded.is_complete);
+    assert_eq!(fs::read_to_string(setup.user_path()).unwrap(), raw);
+
+    let setup = Setup::new("config-newer-device");
+    setup
+        .device
+        .update(|file| file.config = json!({"configVersion": newer, "hotkeys": {}}))
+        .unwrap();
+    let loaded = setup.load();
+    assert_eq!(version::config_version(&loaded.value), newer);
+    assert!(!setup.user_path().exists());
+}
+
+#[test]
+fn a_save_splits_the_config_and_a_load_joins_it() {
+    let setup = Setup::new("config-split");
+    let mut config = setup.load().value;
+    config["hotkeys"]["voice"] = json!("Ctrl+Alt+1");
+    config["appearance"]["uiScalePercent"] = json!(150);
+    config["appearance"]["theme"] = json!("dark");
+    config["editor"]["history"]["isLocalOnly"] = json!(true);
+
+    setup.save(&config);
+
+    let user = setup.user_file();
+    assert_eq!(
+        user["appearance"],
+        json!({"theme": "dark", "contrast": "auto", "motion": "auto"})
+    );
+    assert!(user.get("hotkeys").is_none());
+    assert!(user["editor"]["history"].get("isLocalOnly").is_none());
+    let device = setup.device.snapshot().config;
+    assert_eq!(device["hotkeys"]["voice"], "Ctrl+Alt+1");
+    assert_eq!(device["appearance"], json!({"uiScalePercent": 150}));
+    assert_eq!(device["configVersion"], version::CONFIG_VERSION);
+
+    assert_eq!(setup.load().value, config);
+}
+
+#[test]
+fn device_fields_found_in_the_user_file_move_to_the_device() {
+    let setup = Setup::new("config-device-fields-move");
+    fs::write(
+        setup.user_path(),
+        json!({
+            "appearance": {"theme": "dark", "uiScalePercent": 150},
+            "hotkeys": {"voice": "Ctrl+Alt+9"},
+            "aiVault": {"path": "/vault"}
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    let loaded = setup.load();
+
+    assert!(loaded.is_complete);
+    let device = setup.device.snapshot().config;
+    assert_eq!(device["hotkeys"]["voice"], "Ctrl+Alt+9");
+    assert_eq!(device["appearance"]["uiScalePercent"], 150);
+    assert_eq!(device["aiVault"]["path"], "/vault");
+    let user = setup.user_file();
+    assert!(user.get("hotkeys").is_none());
+    assert!(user["appearance"].get("uiScalePercent").is_none());
+    assert_eq!(user["appearance"]["theme"], "dark");
+    // and a second start keeps them
+    let again = setup.load();
+    assert_eq!(again.value["hotkeys"]["voice"], "Ctrl+Alt+9");
+    assert_eq!(again.value["appearance"]["uiScalePercent"], 150);
+}
+
+#[test]
+fn unknown_fields_go_back_to_their_own_file() {
+    let setup = Setup::new("config-unknown");
+    fs::write(
+        setup.user_path(),
+        json!({"appearance": {"theme": "dark", "fromUser": 1}}).to_string(),
+    )
+    .unwrap();
+    setup
+        .device
+        .update(|file| file.config = json!({"appearance": {"fromDevice": 2}, "deviceOnly": 3}))
+        .unwrap();
+    let mut config = setup.load().value;
+    assert_eq!(config["appearance"]["fromDevice"], 2);
+    config["appearance"]["theme"] = json!("light");
+
+    setup.save(&config);
+
+    let user = setup.user_file();
+    assert_eq!(user["appearance"]["fromUser"], 1);
+    assert!(user["appearance"].get("fromDevice").is_none());
+    assert!(user.get("deviceOnly").is_none());
+    let device = setup.device.snapshot().config;
+    assert_eq!(device["appearance"]["fromDevice"], 2);
+    assert_eq!(device["deviceOnly"], 3);
+    assert!(device["appearance"].get("fromUser").is_none());
+}
+
+#[test]
+fn a_folder_that_is_not_connected_is_never_written() {
+    let dir = TestDir::new("config-not-connected");
+    let files = ConfigFiles::at(None, false, dir.join("state").join(CONFIG_BASE_FILE_NAME));
+    let device = DeviceStore::in_memory(DeviceFile {
+        config: json!({"hotkeys": {"voice": "Ctrl+Alt+9"}}),
+        ..DeviceFile::default()
+    });
+    let loaded = files.load(&device, &no_notes).unwrap();
+    assert_eq!(loaded.value["hotkeys"]["voice"], "Ctrl+Alt+9");
+    assert!(!loaded.is_complete);
+    assert!(matches!(
+        files.save(&device, &no_notes, &loaded.value),
+        Err(SaveFailure {
+            error: AppError::UserDataUnavailable(_),
+            ..
+        })
+    ));
+    assert_eq!(fs::read_dir(&*dir).unwrap().count(), 0);
+}
+
+#[test]
+fn a_change_another_device_synced_survives_a_save() {
+    let setup = Setup::new("config-merge");
+    let mut config = setup.load().value;
+    // another device changes the theme meanwhile
+    let mut disk = setup.user_file();
+    disk["appearance"]["theme"] = json!("dark");
+    fs::write(setup.user_path(), disk.to_string()).unwrap();
+
+    config["language"]["ui"] = json!("ru-RU");
+    let saved = setup.save(&config);
+
+    assert!(saved.conflicts.is_empty());
+    assert_eq!(saved.value["appearance"]["theme"], "dark");
+    assert_eq!(saved.value["language"]["ui"], "ru-RU");
+    let user = setup.user_file();
+    assert_eq!(user["appearance"]["theme"], "dark");
+    assert_eq!(user["language"]["ui"], "ru-RU");
+
+    // the next save compares with what it wrote: no merge, no conflict
+    config = saved.value;
+    config["appearance"]["theme"] = json!("light");
+    let saved = setup.save(&config);
+    assert!(saved.conflicts.is_empty());
+    assert_eq!(setup.user_file()["appearance"]["theme"], "light");
+}
+
+#[test]
+fn a_field_both_devices_changed_takes_the_change_of_this_one() {
+    let setup = Setup::new("config-merge-conflict");
+    let mut config = setup.load().value;
+    let mut disk = setup.user_file();
+    disk["appearance"]["theme"] = json!("dark");
+    fs::write(setup.user_path(), disk.to_string()).unwrap();
+
+    config["appearance"]["theme"] = json!("eInk");
+    let saved = setup.save(&config);
+
+    assert_eq!(saved.conflicts, ["userConfig.appearance.theme"]);
+    assert_eq!(setup.user_file()["appearance"]["theme"], "eInk");
+    let kept = fs::read_dir(setup.dir.join("user"))
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .find(|path| path.to_string_lossy().contains(".disk-"))
+        .expect("the version of the disk is kept");
+    let kept: Value = serde_json::from_str(&fs::read_to_string(kept).unwrap()).unwrap();
+    assert_eq!(kept["appearance"]["theme"], "dark");
+}
+
+#[test]
+fn without_a_base_the_disk_is_taken_as_it_is() {
+    let setup = Setup::new("config-no-base");
+    fs::write(
+        setup.user_path(),
+        json!({"appearance": {"theme": "dark"}}).to_string(),
+    )
+    .unwrap();
+    let loaded = setup.load();
+    assert_eq!(loaded.value["appearance"]["theme"], "dark");
+    let base: Value = serde_json::from_str(
+        &fs::read_to_string(setup.dir.join("state").join(CONFIG_BASE_FILE_NAME)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(base["config"]["appearance"]["theme"], "dark");
+}
+
+#[test]
+fn notes_folders_stay_on_the_device() {
+    let setup = Setup::new("config-notes");
+    let mut config = setup.files.load(&setup.device, &fast_note).unwrap().value;
+    config["plugins"]["FastNote"] =
+        json!({"isEnabled": true, "settings": {"pathToNotes": "/notes", "mode": "daily"}});
+    config["commands"] = json!([
+        {"id": "inbox", "toolId": "FastNote.addNote", "toolConfig": {"pathToNotes": "/inbox"}},
+        {"id": "other", "toolId": "script", "toolConfig": {"pathToNotes": "/kept"}}
+    ]);
+    let config = {
+        let mut repaired = config;
+        schema::normalize_user_config(&mut repaired);
+        repaired
+    };
+
+    setup
+        .files
+        .save(&setup.device, &fast_note, &config)
+        .map_err(|failure| failure.error)
+        .unwrap();
+
+    let user = setup.user_file();
+    assert_eq!(user["plugins"]["FastNote"]["settings"]["pathToNotes"], "");
+    assert_eq!(user["plugins"]["FastNote"]["settings"]["mode"], "daily");
+    assert_eq!(user["commands"][0]["toolConfig"]["pathToNotes"], "");
+    assert_eq!(user["commands"][1]["toolConfig"]["pathToNotes"], "/kept");
+    let device = setup.device.snapshot();
+    assert_eq!(device.plugin_paths["FastNote"], "/notes");
+    assert_eq!(device.plugin_command_paths["inbox"], "/inbox");
+
+    let loaded = setup.files.load(&setup.device, &fast_note).unwrap().value;
+    assert_eq!(
+        loaded["plugins"]["FastNote"]["settings"]["pathToNotes"],
+        "/notes"
+    );
+    assert_eq!(loaded["commands"][0]["toolConfig"]["pathToNotes"], "/inbox");
+    assert_eq!(
+        crate::services::plugins::approved_note_roots(&loaded, "FastNote", "pathToNotes").unwrap(),
+        ["/notes", "/inbox"]
+    );
+
+    // the folder of a removed command goes with it
+    let mut without = loaded;
+    without["commands"].as_array_mut().unwrap().remove(0);
+    setup
+        .files
+        .save(&setup.device, &fast_note, &without)
+        .map_err(|failure| failure.error)
+        .unwrap();
+    assert!(setup.device.snapshot().plugin_command_paths.is_empty());
+}
+
+#[test]
+fn a_file_broken_while_running_is_kept_aside_and_replaced() {
+    let setup = Setup::new("config-broken-on-save");
+    let config = setup.load().value;
+    for broken in [&b"{\"appearance\": "[..], &[0xff, 0xfe][..]] {
+        fs::write(setup.user_path(), broken).unwrap();
+        setup.save(&config);
+        assert_eq!(setup.user_file()["appearance"]["theme"], "auto");
+        let kept = fs::read_dir(setup.dir.join("user"))
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .any(|copy| copy != setup.user_path() && fs::read(&copy).unwrap() == broken);
+        assert!(kept, "the broken bytes are kept");
+    }
+}
+
+#[test]
+fn a_config_set_aside_as_broken_makes_the_config_incomplete() {
+    let setup = Setup::new("config-broken-incomplete");
+    fs::write(setup.user_path(), "{ broken").unwrap();
+    let loaded = setup.load();
+    assert!(!loaded.is_complete);
+    assert_eq!(loaded.value, default_user_config());
+}
+
+#[test]
+fn a_conflicting_copy_of_a_sync_tool_makes_the_config_incomplete() {
+    let setup = Setup::new("config-conflict-copy");
+    setup.load();
+    fs::write(
+        setup
+            .dir
+            .join("user/config.sync-conflict-20261101-120000-ABC.json"),
+        "{}",
+    )
+    .unwrap();
+    assert!(!setup.load().is_complete);
+}
+
+#[test]
+fn keeping_every_value_ignores_added_fields_and_the_version() {
+    let original = json!({"configVersion": 0, "a": {"b": [1, {"c": 2}]}});
+    assert!(keeps_every_value(
+        &original,
+        &json!({"configVersion": 1, "a": {"b": [1, {"c": 2, "d": 3}], "e": 4}})
+    ));
+    assert!(!keeps_every_value(&original, &json!({"a": {"b": [1]}})));
+    assert!(!keeps_every_value(&json!({"x": 1}), &json!({})));
+}
+
+#[test]
+fn missing_sections_come_from_the_defaults() {
+    let defaults = default_user_config();
+    let mut config = serde_json::json!({});
+    assert!(schema::normalize_user_config(&mut config));
+    assert_eq!(config, defaults);
+    assert!(!schema::normalize_user_config(&mut config));
+}
+
+/// Two devices write one user data folder in turns, each with its own state
+/// and device file: no change of either is lost, and the device settings of
+/// one never reach the other.
+#[test]
+fn two_devices_on_one_folder_keep_each_others_changes() {
+    let dir = TestDir::new("config-two-devices");
+    fs::create_dir_all(dir.join("user")).unwrap();
+    let user_path = dir.join("user").join(CONFIG_FILE_NAME);
+    let device = |name: &str| {
+        (
+            ConfigFiles::at(
+                Some(user_path.clone()),
+                true,
+                dir.join(name).join(CONFIG_BASE_FILE_NAME),
+            ),
+            DeviceStore::in_memory(DeviceFile::default()),
+        )
+    };
+    let (laptop_files, laptop) = device("laptop");
+    let (desktop_files, desktop) = device("desktop");
+    let save = |files: &ConfigFiles, store: &DeviceStore, config: &Value| {
+        files
+            .save(store, &no_notes, config)
+            .map_err(|failure| failure.error)
+            .unwrap()
+            .value
+    };
+
+    let mut on_laptop = laptop_files.load(&laptop, &no_notes).unwrap().value;
+    let mut on_desktop = desktop_files.load(&desktop, &no_notes).unwrap().value;
+
+    on_laptop["appearance"]["theme"] = json!("dark");
+    on_laptop["hotkeys"]["voice"] = json!("Ctrl+Alt+L");
+    on_laptop = save(&laptop_files, &laptop, &on_laptop);
+
+    // the desktop has not seen the change of the laptop
+    on_desktop["language"]["ui"] = json!("ru-RU");
+    on_desktop["hotkeys"]["voice"] = json!("Ctrl+Alt+D");
+    on_desktop = save(&desktop_files, &desktop, &on_desktop);
+    assert_eq!(on_desktop["appearance"]["theme"], "dark");
+
+    on_laptop["editor"]["submitKey"] = json!("Ctrl+Enter");
+    let on_laptop = save(&laptop_files, &laptop, &on_laptop);
+    assert_eq!(on_laptop["language"]["ui"], "ru-RU");
+
+    let user: Value = serde_json::from_str(&fs::read_to_string(&user_path).unwrap()).unwrap();
+    assert_eq!(user["appearance"]["theme"], "dark");
+    assert_eq!(user["language"]["ui"], "ru-RU");
+    assert_eq!(user["editor"]["submitKey"], "Ctrl+Enter");
+    assert!(user.get("hotkeys").is_none());
+    assert_eq!(laptop.snapshot().config["hotkeys"]["voice"], "Ctrl+Alt+L");
+    assert_eq!(desktop.snapshot().config["hotkeys"]["voice"], "Ctrl+Alt+D");
+    assert_eq!(on_laptop["hotkeys"]["voice"], "Ctrl+Alt+L");
+}

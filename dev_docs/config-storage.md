@@ -58,34 +58,37 @@ from them.
 The normalized `UserConfig` type has every section present. Serialized input
 is untrusted `UserConfigInput` and must pass through normalization before use.
 
-| Section           | Contents                                                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `appearance`      | `theme`, `contrast`, `motion`, `uiScalePercent` (50–300; the settings offer presets)                               |
-| `language`        | `ui` (interface locale or `auto`), `user` (the locale the user speaks and writes, or `auto`)                       |
-| `editor`          | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`)       |
-| `quickWindow`     | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`                                                                    |
-| `hotkeys`         | one shortcut per activation mode a hotkey opens, named as the mode, and `selectionCorrection`                      |
-| `externalAccess`  | `canAccessSelection`; each command allows external calls with `isAvailableExternally`                              |
-| `windowInsertion` | `linux`: `pasteShortcut`, `terminalPasteShortcut`; `terminalApps`: extra window classes treated as terminals       |
-| `translation`     | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode` |
-| `mainActions`     | the action menu (a shortcut grid)                                                                                  |
-| `launcherPages`   | `id`, `inputMode`, `hotkey`, `slots` (a shortcut grid of command ids)                                              |
-| `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, …                 |
-| `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                          |
-| `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)      |
-| `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                           |
-| `aiVault`         | `path`, empty for the default location                                                                             |
-| `aiProfiles`      | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                        |
-| `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                              |
-| `plugins`         | per plugin id: `isEnabled` and the plugin-owned `settings`                                                         |
-| `chat`            | `imageQuality`, `history` (`storage`: `off` or `disk`, `retentionDays`)                                            |
-| `stt`             | `provider`, `isVoiceCorrectionEnabled`, `providers.deepgram`, `providers.sherpaOnnx`                               |
+| Section           | Contents                                                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `appearance`      | `theme`, `contrast`, `motion`, `uiScalePercent` (50–300; the settings offer presets)                                        |
+| `language`        | `ui` (interface locale or `auto`), `user` (the locale the user speaks and writes, or `auto`)                                |
+| `editor`          | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`, `isLocalOnly`) |
+| `quickWindow`     | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`                                                                             |
+| `hotkeys`         | one shortcut per activation mode a hotkey opens, named as the mode, `selectionCorrection` and `launcherPages`               |
+| `externalAccess`  | `canAccessSelection`; each command allows external calls with `isAvailableExternally`                                       |
+| `windowInsertion` | `linux`: `pasteShortcut`, `terminalPasteShortcut`; `terminalApps`: extra window classes treated as terminals                |
+| `translation`     | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode`          |
+| `mainActions`     | the action menu (a shortcut grid)                                                                                           |
+| `launcherPages`   | `id`, `inputMode`, `slots` (a shortcut grid of command ids)                                                                 |
+| `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, …                          |
+| `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                                   |
+| `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)               |
+| `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                    |
+| `aiVault`         | `path`, empty for the default location                                                                                      |
+| `aiProfiles`      | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                                 |
+| `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                       |
+| `plugins`         | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                  |
+| `chat`            | `imageQuality`, `history` (`storage`: `off` or `disk`, `retentionDays`)                                                     |
+| `stt`             | `provider`, `isVoiceCorrectionEnabled`, `providers.deepgram`, `providers.sherpaOnnx`                                        |
 
 The hotkeys of `hotkeys` are named as the activation modes they open
 (`quickInput`, `selectionActions`, `translation`, …); the name is also the
 hotkey id the UI and the system portal use. `selectionCorrection` corrects the
-selection in place, and a launcher page carries its own `hotkey`, with the id
-`launcherPage.<page id>`.
+selection in place, and `hotkeys.launcherPages` maps a launcher page id to the
+shortcut that opens it, with the hotkey id `launcherPage.<page id>`. The
+shortcut is kept with the other hotkeys of the device, not in the page: a
+device field never lives inside an entity of the user. A shortcut of a page
+that is gone is dropped.
 
 The glossary is one for every target language: `{ "term", "translation" }`,
 where a term kept as it is has itself as its translation. ai-kit's
@@ -163,6 +166,46 @@ three-way merge: objects merge field by field, entity lists (items with an
 `id`) merge item by item and keep the order one side changed; editing the same
 field, or reordering differently in both windows, is rejected explicitly.
 
+## User and device parts
+
+The webview sees one `UserConfig`; only the backend splits it. A field or
+section marked `"x-scope": "device"` in the schema belongs to this machine and
+lives in the `config` of `device.json`; everything else is the user's and
+lives in `config.json` of the user data folder, which may be synced. Both
+adapters (`splitUserConfig`/`joinUserConfig` of `@tyco/shared`,
+`schema::split_by_scope`/`join_scopes`) give the same parts; the fixtures of
+`packages/shared/fixtures/config-scope.json` check it. `x-scope` never marks a
+field inside a list item or a map entry: a device field may live in a user
+section (`appearance.uiScalePercent`), never in a user entity.
+
+The device fields are `hotkeys`, `windowInsertion`, `externalAccess`,
+`appearance.uiScalePercent`, `aiVault.path`, `stt.providers.sherpaOnnx`,
+`isInDevelopment` and `editor.history.isLocalOnly`. An unknown field goes back
+to the file it was read from, so a device field of a newer build never reaches
+`config.json` through an older one. Both parts carry `configVersion`; when
+either is newer than the build knows, the whole config is shown and never
+saved (`configIsNewer`).
+
+References go from the device to the user data only: a device value of an
+entity is kept by the entity id (the shortcuts of launcher pages, the notes
+folders of plugins), and one whose entity is gone is dropped on that device.
+
+The notes folders of plugins are taken out of the plugin settings and the
+commands and kept on the device (`pluginPaths`, `pluginCommandPaths` of
+`device.json`), leaving empty strings in `config.json`; see
+`plugin-packages.md`.
+
+`config.json` is the one file every device rewrites, so each save merges it
+three ways with `config.base.json` of the state folder, the version this device
+last read or wrote (`settings::persist`). A change another device synced
+meanwhile survives; where both changed one field, the change just made here
+wins, the version of the disk is kept in the recovery folder, and the windows
+get `app://settings-conflict`. Without a base, e.g. after connecting another
+folder, the disk is taken as it is. Without a watcher a synced change is taken
+in at the next save or start. A startup repair writes a file only when the
+repair changed a value, not when it only filled missing fields, so that two
+builds of different versions do not rewrite the shared file in turns.
+
 ## Lifetime and locations
 
 `SessionState` is shared across windows and lives only in backend memory. Last
@@ -174,13 +217,68 @@ avoid a flash before the authoritative config arrives.
 Linux paths below honor XDG overrides. macOS and Windows use the platform paths
 in `services/storage/app_paths.rs`; `TYCO_DEV_HOME` isolates development storage.
 
-| Root                                  | Files                                                                                                                                                                      |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Config (`~/.config/com.tyco.app`)     | `config.json`, `secrets.json`                                                                                                                                              |
-| Data (`~/.local/share/com.tyco.app`)  | `editor-history.jsonl`; `chats/index.json`, `<id>.json`, `images/`, `chat-transaction.pending`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/`; `webview/` (Linux) |
-| State (`~/.local/state/com.tyco.app`) | `logs/tyco.log` and its rotations; `logs/actions.log` and `actions.log.1`; `webview/` (Windows)                                                                            |
-| Cache (`~/.cache/com.tyco.app`)       | Platform cache directory, created when opened; no application-owned model downloads                                                                                        |
-| User-selected paths                   | Plugin note files; `aiVault.path`                                                                                                                                          |
+| Root                                                                             | Files                                                                                                                                                     |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User data (`~/.local/share/com.tyco.app` by default, or a folder the user chose) | `tyco-user.json`; `config.json`; `history/editor/<device id>.jsonl`; `chats/<id>.json`, `images/`; `plugins/<key>.json` and `<key>.previous`; `ai-vault/` |
+| Device (`~/.config/com.tyco.app`; `%LOCALAPPDATA%\com.tyco.app\device`)          | `device.json`, `secrets.json`                                                                                                                             |
+| State (`~/.local/state/com.tyco.app`)                                            | `logs/`; `webview/`; `config.base.json`; `history/editor/local.jsonl`; `index/` (chat indexes, `orphan-images.json`); `recovery/`                         |
+| Cache (`~/.cache/com.tyco.app`)                                                  | Platform cache directory, created when opened; no application-owned model downloads                                                                       |
+| User-selected paths                                                              | Plugin note files; `aiVault.path`                                                                                                                         |
+
+The user data folder holds everything the user made and set up, and nothing
+else: it may be synced to other machines (Syncthing, Nextcloud, Dropbox,
+OneDrive). Everything that belongs to one machine stays in the device, state
+and cache folders. The device folder is never the user data folder nor inside
+it; on Windows it is a subfolder of the local folder, never in the roaming one.
+`device.json` holds the device part of the config and the fields of the device
+itself: `deviceId` (a UUID made on the first start), `machineId`, through which
+a copy of the device folder on another machine gets a new `deviceId`,
+`userDataPath`, and the notes folders of plugins.
+
+`tyco-user.json` (`{ "formatVersion": 1 }`) marks the user data folder; its
+version counts layouts of the folder, apart from `configVersion`. The default
+folder gets it when it has none, and what it holds already is used as it is. A
+chosen folder that is missing, empty or has no marker is not connected:
+nothing is created or written there, every write fails with
+`userDataUnavailable`, and the main window offers to retry, to connect another
+folder or to use the default one, since an empty set of data a sync tool spread
+would wipe out the real one. A folder of a newer layout is read and never
+written. The settings warn when other users may write into the chosen folder
+(Linux): its commands run on this machine.
+
+The folder is changed by `relocate_user_data` only (`desktop-api.md`), never by
+a settings save, and the app restarts. `move` moves the known entries into an
+empty folder; `connect` uses a folder with a marker of a known version and
+leaves the current data where it is; a folder with Tyco files but no marker is
+refused as a sync that has not finished; a folder with files of its own, or a
+folder of the app, is refused. `resetToDefault` moves the data back only when
+the default folder holds none; otherwise the user chooses `useDefault`, which
+uses that data and moves nothing. The move is the one of the AI vault
+(`storage::data_root_relocation`).
+
+Copies kept aside (broken files, files before a repair or a salvage, the disk's
+version that lost a merge) go to `recovery/` of the state folder at the path of
+their file, never next to it in the user data folder. Temporary files of atomic
+writes stay next to their file, named `.tyco-tmp-*`, so that a sync tool can
+skip them. Every reader of the user data folder takes only names of its own
+format and skips the conflicting copies and temporary files of sync tools
+(`storage::user_files`); resolving the copies is left to a later version.
+
+The editor history is a journal per device: a device writes
+`history/editor/<device id>.jsonl` only, reads the journals of every device and
+merges them by time. A change to an entry of another device is a record of its
+own journal (`delete`, `result`, `clear`); no journal of another device is
+rewritten. The limits apply to the merged history when it is read; a device
+compacts its own journal, keeping the records that still name an entry and its
+latest `clear`. With `editor.history.isLocalOnly` the journal of the device is
+`history/editor/local.jsonl` of the state folder, and moves over when the
+setting changes. Times are the clocks of the devices: a clock that is off moves
+entries in the order, nothing more.
+
+A chat is its file, `chats/<id>.json`. The list is an index of the state folder
+(`index/chats.json`, and `index/ai-vault/<digest of the vault path>/<profile>/`
+for the chats of profiles), rebuilt from the files when their names, sizes or
+modification times change; an earlier `chats/index.json` is not read.
 
 A profile of the AI vault keeps `profile.json`, `SOUL.md`, its chats in `chats/`
 (laid out as the app's own `chats/`) and its files in `workspace/`. Profile and
@@ -205,9 +303,9 @@ differ only in case collide on a case-insensitive file system.
 
 The config file belongs to the app; edits made by hand are unsupported, and a
 malformed known value is repaired. Unknown fields are kept (see the versions
-above), and a startup repair rewrites the file in place. A repair that drops or replaces a value first keeps
-the file it read as `config.json.repaired-<digest>`; one that only fills missing
-fields or stamps the version keeps none. Unreadable files are retained as
+above). A startup repair that drops or replaces a value keeps the file it read
+as `config.json.repaired-<digest>` and rewrites it; one that only fills missing
+fields or stamps the version keeps none and leaves the file alone. Unreadable files are retained as
 private `.broken-*` copies; up to 3 copies of a file are kept. Before JSONL
 salvage, an exact copy named by its content digest is saved once, including
 invalid UTF-8 bytes. Explicit editor-history clearing removes its damage copies
@@ -218,19 +316,30 @@ clean up their own files.
 
 A secret id names what the key is for: `llm.<provider id>`,
 `translation.deepl`, `translation.google`, `stt.deepgram`, `webhook.auth.<uuid>`
-and `webhook.header.<digest>` (see `packages/shared/src/secret-ids.ts`).
+and `webhook.header.<uuid>` (see `packages/shared/src/secret-ids.ts`). Ids of
+earlier versions, digests included, stay valid as they are.
 
-New webhook authorization keys use independent `webhook.auth.<uuid>` identities
-stored as `authSecretId` references; re-entering a key creates a fresh identity. Header values
-are replaced by origin-bound `tyco-secret:` references. Newly created header
-secrets are rolled back when config saving fails, unless restoring the config
-also fails and the disk's references are uncertain.
+The values and `secrets.json` belong to the device and are never synced: each
+machine has its own keys under the ids the shared config refers to. So an id
+is made once, with the reference to it, and never changes: `authSecretId` when
+a webhook first gets an authorization key, `webhook.header.<uuid>` when a
+header first becomes secret. A key entered again goes under the id the config
+has, at once and on this device only; the config does not change, and a
+settings undo does not bring the old value back. The origins of a key are
+those of the URL on this device. A key a device has no value for is a state,
+not an error: the request is not sent, and the settings say that the key is not
+set on this device. Newly created header secrets are rolled back when config
+saving fails, unless restoring the config also fails and the disk's references
+are uncertain.
 
 After a successful save, obsolete header secrets are collected while retaining
 references for commands still offered for undo. Final command removal waits for
 successful config persistence, then removes unused authorization and header
 secrets. The backend refuses deleting a key still referenced by the saved config.
-Startup collects unreferenced managed webhook secrets when no drafts or undo
-operations exist. A failed vault-only deletion keeps its metadata for a later retry.
+Startup collects the unreferenced managed webhook secrets of this device, and
+removes nothing from the config for a missing key; it does not run while the
+user data folder is not connected or read only, when the config is newer, was
+set aside as broken, or has a conflicting copy of a sync tool next to it, as
+uncertain references keep the keys. A failed vault-only deletion keeps its metadata for a later retry.
 The system vault holds the key values; `secrets.json` holds only their ids and
 origins.

@@ -19,7 +19,7 @@ use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
-use crate::services::storage::app_data_sub_dir;
+use crate::services::storage::user_sub_dir;
 
 /// Resolves the vault root directory given an optional configured path string and a fallback directory provider.
 /// A configured path that cannot be used is an error: falling back would quietly
@@ -46,11 +46,11 @@ pub fn resolve_vault_path_from_config(
 
 /// Resolves the AI vault root directory for the application.
 /// If `aiVault.path` is set in the user config, it is used.
-/// Otherwise, it defaults to `app_data_sub_dir(app, "ai-vault")`.
+/// Otherwise, it defaults to the `ai-vault` folder of the user data folder.
 pub fn resolve_vault_path(app: &AppHandle, user_config: &Value) -> Result<PathBuf, AppError> {
     let configured = crate::models::user_config::ai_vault(user_config).path;
 
-    resolve_vault_path_from_config(Some(&configured), || app_data_sub_dir(app, "ai-vault"))
+    resolve_vault_path_from_config(Some(&configured), || user_sub_dir(app, "ai-vault"))
 }
 
 /// Resolve the active vault only after relocation has finished; retain access

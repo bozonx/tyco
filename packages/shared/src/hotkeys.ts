@@ -27,19 +27,18 @@ export function resolveHotkeyTarget(
   id: string
 ): { get: () => string; set: (shortcut: string) => void } | null {
   if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
-    const page = config.launcherPages.find(
-      (item) => item.id === id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
-    )
-    return page
-      ? {
-          get: () => page.hotkey,
-          set: (value) => {
-            page.hotkey = value
-          },
-        }
-      : null
+    const pageId = id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
+    if (!config.launcherPages.some((item) => item.id === pageId)) return null
+    return {
+      get: () => config.hotkeys.launcherPages[pageId] ?? '',
+      set: (value) => {
+        // the shortcuts are kept on this device, apart from the pages
+        if (value) config.hotkeys.launcherPages[pageId] = value
+        else delete config.hotkeys.launcherPages[pageId]
+      },
+    }
   }
-  if (!Object.hasOwn(config.hotkeys, id)) return null
+  if (id === 'launcherPages' || !Object.hasOwn(config.hotkeys, id)) return null
   const key = id as HotkeyId
   return {
     get: () => config.hotkeys[key],

@@ -31,6 +31,8 @@ interface Schema {
   defaultPath?: string
   pattern?: string
   uniqueItems?: boolean
+  /** `device`: the field belongs to this device and is never synced */
+  'x-scope'?: 'device'
 }
 
 const schema = schemaValue as unknown as Schema
@@ -460,5 +462,128 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   })
   for (const page of config.launcherPages)
     page.slots = filterSlots(page.slots, (id) => commands.has(id))
+  // a device refers to the pages it has shortcuts for; one gone is dropped
+  config.hotkeys.launcherPages = Object.fromEntries(
+    Object.entries(config.hotkeys.launcherPages).filter(([id]) =>
+      pageIds.has(id)
+    )
+  )
   return config
+}
+
+const isDeviceSchema = (shape: Schema | undefined) =>
+  shape?.['x-scope'] === 'device'
+
+/**
+ * Whether the field at `path`, e.g. `appearance.uiScalePercent`, belongs to
+ * this device: it lives in the device file and is not synced with the user data
+ * folder
+ */
+export function isDeviceScopedPath(path: string): boolean {
+  let shape: Schema | undefined = schema
+  for (const key of path.split('.')) {
+    shape = shape?.properties?.[key]
+    if (!shape) return false
+    if (isDeviceSchema(shape)) return true
+  }
+  return false
+}
+
+/** A path of an unknown field, its keys in order */
+export type ConfigPath = readonly string[]
+
+const pathKey = (path: ConfigPath) => JSON.stringify(path)
+
+/**
+ * The config split into the part of the user, synced, and the part of this
+ * device (`x-scope: device` of the schema). An unknown field goes where it came
+ * from: `deviceUnknownPaths` names those read from the device file
+ */
+export function splitUserConfig(
+  config: Record<string, unknown>,
+  deviceUnknownPaths: readonly ConfigPath[] = []
+): { user: Record<string, unknown>; device: Record<string, unknown> } {
+  const fromDevice = new Set(deviceUnknownPaths.map(pathKey))
+  const split = (
+    value: Record<string, unknown>,
+    shape: Schema,
+    path: string[]
+  ): { user: Record<string, unknown>; device: Record<string, unknown> } => {
+    const user: Record<string, unknown> = {}
+    const device: Record<string, unknown> = {}
+    for (const [key, item] of Object.entries(value)) {
+      const child = shape.properties?.[key]
+      const childPath = [...path, key]
+      if (isDeviceSchema(child)) device[key] = item
+      else if (child?.properties && isRecord(item)) {
+        const parts = split(item, child, childPath)
+        user[key] = parts.user
+        if (Object.keys(parts.device).length) device[key] = parts.device
+      } else if (!child && fromDevice.has(pathKey(childPath)))
+        device[key] = item
+      else user[key] = item
+    }
+    return { user, device }
+  }
+  return split(config, schema, [])
+}
+
+/**
+ * The config of the user and the device joined into one, and the paths of the
+ * unknown fields that came from the device, for `splitUserConfig`
+ */
+export function joinUserConfig(
+  user: Record<string, unknown>,
+  device: Record<string, unknown>
+): { config: Record<string, unknown>; deviceUnknownPaths: string[][] } {
+  const deviceUnknownPaths: string[][] = []
+  const join = (
+    target: Record<string, unknown>,
+    source: Record<string, unknown>,
+    shape: Schema | undefined,
+    path: string[]
+  ) => {
+    for (const [key, item] of Object.entries(source)) {
+      const child = shape?.properties?.[key]
+      const childPath = [...path, key]
+      if (shape && !child && !isDeviceSchema(shape))
+        deviceUnknownPaths.push(childPath)
+      if (
+        child?.properties &&
+        !isDeviceSchema(child) &&
+        isRecord(item) &&
+        isRecord(target[key])
+      ) {
+        const nested = { ...(target[key] as Record<string, unknown>) }
+        join(nested, item, child, childPath)
+        target[key] = nested
+      } else target[key] = item
+    }
+  }
+  const config = { ...user }
+  join(config, device, schema, [])
+  return { config, deviceUnknownPaths }
+}
+
+/** Whether `x-scope` marks a field inside a list item or a map entry */
+export function deviceScopeInsideEntities(shape: Schema = schema): string[] {
+  const found: string[] = []
+  const visit = (node: unknown, path: string, isInEntity: boolean) => {
+    if (!isRecord(node)) return
+    if (isInEntity && node['x-scope'] !== undefined) found.push(path)
+    for (const [key, child] of Object.entries(node)) {
+      const entity =
+        isInEntity ||
+        key === 'items' ||
+        key === 'additionalProperties' ||
+        key === '$defs'
+      if (isRecord(child)) visit(child, `${path}/${key}`, entity)
+      else if (Array.isArray(child))
+        child.forEach((item, index) =>
+          visit(item, `${path}/${key}/${index}`, entity)
+        )
+    }
+  }
+  visit(shape, '', false)
+  return found
 }

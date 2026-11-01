@@ -1,3 +1,9 @@
+//! The chats of a history: one file per chat, `<id>.json`, the only record
+//! of it. The list of the chats is an index derived from those files and
+//! kept in the state folder, apart from the user data folder, which may be
+//! synced: it is rebuilt when the chat files change, telling them by their
+//! size and modification time together, as either alone may be kept by a
+//! sync tool or rounded by a file system.
 use crate::locks::MutexExt;
 use std::sync::Mutex;
 
@@ -11,238 +17,165 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 use super::json_files::{remove_file_if_exists, write_json};
-use super::paths::app_data_sub_dir;
 use super::DAY_MS;
 use crate::errors::AppError;
 use crate::models::user_config::{self, ChatHistoryConfig, HistoryStorage};
 use crate::models::{Chat, ChatSummary};
-use crate::services::atomic_file::read_or_quarantine;
 use crate::services::clock::now_ms;
 
 use crate::services::chat_images::ChatImageStore;
 
-const CHAT_INDEX_FILE: &str = "index.json";
-const CHAT_TRANSACTION_FILE: &str = "chat-transaction.pending";
+/// The folders and files of one chat history.
+#[derive(Clone, Debug)]
+pub struct ChatDirs {
+    /// The chat files and their `images` folder.
+    pub chats: PathBuf,
+    /// The derived index of the state folder.
+    pub index: PathBuf,
+    /// When each unreferenced image was first seen, see
+    /// `chat_images::remove_orphan_images`.
+    pub orphans: PathBuf,
+}
 
-const STAGED_CHAT_SUFFIX: &str = ".json.staged";
+impl ChatDirs {
+    pub fn images(&self) -> PathBuf {
+        chat_image_directory(&self.chats)
+    }
+}
 
-/// The index and optional chat replacement are committed together. The journal
-/// remains until cleanup finishes, so interrupted saves and deletes are replayed.
-///
-/// A saved chat is written once, to `<id>.json.staged`, and the journal names
-/// it; the replay moves it into place. Journals of older versions carry the
-/// whole chat in `chat` and are still replayed.
-#[derive(Serialize, Deserialize)]
+/// The folder of the indexes in the state folder.
+const INDEX_DIR: &str = "index";
+const CHAT_INDEX_FILE: &str = "chats.json";
+const ORPHAN_IMAGES_FILE: &str = "orphan-images.json";
+
+/// The chats of "Ask AI": `chats` of the user data folder.
+pub fn app_chat_dirs(app: &AppHandle) -> Result<ChatDirs, AppError> {
+    let index_dir = super::paths::state_sub_dir(app, INDEX_DIR)?;
+    Ok(ChatDirs {
+        chats: super::user_data::user_sub_dir(app, "chats")?,
+        index: index_dir.join(CHAT_INDEX_FILE),
+        orphans: index_dir.join(ORPHAN_IMAGES_FILE),
+    })
+}
+
+/// The chats of a profile of the vault at `vault_root`. The indexes of each
+/// vault have a folder of their own, named by the digest of its path, so that
+/// two vaults never share one.
+pub fn profile_chat_dirs(
+    app: &AppHandle,
+    vault_root: &Path,
+    profile_id: &str,
+    chats_dir: PathBuf,
+) -> Result<ChatDirs, AppError> {
+    let index_dir = super::paths::state_sub_dir(app, INDEX_DIR)?;
+    Ok(ChatDirs {
+        chats: chats_dir,
+        index: vault_index_dir(&index_dir, vault_root)
+            .join(profile_id)
+            .join(CHAT_INDEX_FILE),
+        orphans: index_dir.join(ORPHAN_IMAGES_FILE),
+    })
+}
+
+pub(super) fn vault_index_dir(index_dir: &Path, vault_root: &Path) -> PathBuf {
+    let canonical = fs::canonicalize(vault_root).unwrap_or_else(|_| vault_root.to_path_buf());
+    let digest = crate::services::sha256::sha256_hex(canonical.to_string_lossy().as_bytes());
+    index_dir.join("ai-vault").join(&digest[..16])
+}
+
+/// A chat file as the index last saw it.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct PendingChatTransaction {
-    history: Vec<ChatSummary>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    chat: Option<Chat>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    staged_chat_id: Option<String>,
-    /// The transaction may leave images no chat refers to. Finding them reads
-    /// every chat, so a save that keeps its images skips it. Journals of older
-    /// versions do not say and are cleaned.
-    #[serde(default = "always_clean_images")]
-    clean_images: bool,
+struct IndexedFile {
+    name: String,
+    size: u64,
+    /// Nanoseconds since the Unix epoch; 0 when the system cannot tell.
+    modified_ns: u128,
 }
 
-fn always_clean_images() -> bool {
-    true
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ChatIndex {
+    files: Vec<IndexedFile>,
+    /// The summary of each file of `files`, in the same order.
+    chats: Vec<ChatSummary>,
 }
 
-/// Whether a transaction may leave images that no chat refers to.
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum ImageCleanup {
-    Needed,
-    Skipped,
-}
-
-impl PendingChatTransaction {
-    fn index_only(history: Vec<ChatSummary>, cleanup: ImageCleanup) -> Self {
-        Self {
-            history,
-            chat: None,
-            staged_chat_id: None,
-            clean_images: cleanup == ImageCleanup::Needed,
-        }
-    }
-}
-
-fn staged_chat_path(chats_dir: &Path, id: &str) -> PathBuf {
-    chats_dir.join(format!("{id}{STAGED_CHAT_SUFFIX}"))
-}
-
-fn commit_chat_transaction(
-    chats_dir: &Path,
-    history: Vec<ChatSummary>,
-    chat: Option<Chat>,
-    cleanup: ImageCleanup,
-) -> Result<(), AppError> {
-    let mut transaction = PendingChatTransaction::index_only(history, cleanup);
-    if let Some(chat) = chat {
-        let id = validate_chat_id(&chat.id)?;
-        write_json(&staged_chat_path(chats_dir, &id), &chat)?;
-        transaction.staged_chat_id = Some(id);
-    }
-    validate_chat_transaction(&transaction)?;
-    write_json(&chats_dir.join(CHAT_TRANSACTION_FILE), &transaction)?;
-    recover_chat_transaction(chats_dir)
-}
-
-fn validate_chat_transaction(transaction: &PendingChatTransaction) -> Result<(), AppError> {
-    for item in &transaction.history {
-        validate_chat_id(&item.id)?;
-    }
-    if let Some(chat) = &transaction.chat {
-        validate_chat_id(&chat.id)?;
-    }
-    if let Some(id) = &transaction.staged_chat_id {
-        validate_chat_id(id)?;
-    }
-    Ok(())
-}
-
-pub(super) fn recover_chat_transaction(chats_dir: &Path) -> Result<(), AppError> {
-    let journal = chats_dir.join(CHAT_TRANSACTION_FILE);
-    let raw = match fs::read(&journal) {
-        Ok(raw) => raw,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(error) => return Err(error.into()),
-    };
-    let transaction = match serde_json::from_slice::<PendingChatTransaction>(&raw)
-        .map_err(AppError::from)
-        .and_then(|transaction| {
-            validate_chat_transaction(&transaction)?;
-            Ok(transaction)
-        }) {
-        Ok(transaction) => transaction,
-        Err(error) => return recover_from_damaged_journal(chats_dir, &journal, error),
-    };
-    if let Some(chat) = transaction.chat {
-        let id = validate_chat_id(&chat.id)?;
-        write_json(&chats_dir.join(format!("{id}.json")), &chat)?;
-    }
-    if let Some(id) = &transaction.staged_chat_id {
-        let target = chats_dir.join(format!("{id}.json"));
-        match fs::rename(staged_chat_path(chats_dir, id), &target) {
-            Ok(()) => crate::services::atomic_file::sync_parent(&target)?,
-            // moved already by a replay that stopped later
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error.into()),
-        }
-    }
-    write_json(&chats_dir.join(CHAT_INDEX_FILE), &transaction.history)?;
-    remove_orphan_chat_files(chats_dir, &transaction.history)?;
-    if transaction.clean_images {
-        crate::services::chat_images::remove_orphan_images(chats_dir)?;
-    }
-    remove_file_if_exists(&journal)?;
-    crate::services::atomic_file::sync_parent(&journal)
-}
-
-/// A journal that cannot be parsed never permits deleting stored chats, and it
-/// must not block the history forever either. It is set aside, the chats it
-/// staged are moved into place, and the index is rebuilt from the chat files,
-/// so at most the interrupted change is lost: a removed chat may come back.
-fn recover_from_damaged_journal(
-    chats_dir: &Path,
-    journal: &Path,
-    error: AppError,
-) -> Result<(), AppError> {
-    let copy = crate::services::atomic_file::quarantine(journal)?;
-    log::warn!(
-        "Chat journal {} is unreadable ({error}); moved it to {} and rebuilding the index",
-        journal.display(),
-        copy.display()
-    );
-    for entry in fs::read_dir(chats_dir)? {
-        let path = entry?.path();
-        let Some(id) = path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .and_then(|name| name.strip_suffix(STAGED_CHAT_SUFFIX))
-            .and_then(|id| validate_chat_id(id).ok())
-        else {
-            continue;
-        };
-        // a staged chat is written just before its journal: it is the newest
-        let target = chats_dir.join(format!("{id}.json"));
-        fs::rename(&path, &target)?;
-    }
-    crate::services::atomic_file::sync_parent(journal)?;
-    let history = rebuild_chat_index(chats_dir)?;
-    write_json(&chats_dir.join(CHAT_INDEX_FILE), &history)
-}
-
-/// The directory of the chats of "Ask AI"; a profile keeps its own.
-pub fn app_chats_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    app_data_sub_dir(app, "chats")
-}
-
-pub fn list_chats(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
-    load_chat_index(chats_dir)
-}
-
-/// The index of the chats in `chats_dir`. An index that is missing or cannot
-/// be read is built anew from the chat files: the chats are all there, and
-/// an empty index would have the next save remove them as orphans.
-fn load_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
-    recover_chat_transaction(chats_dir)?;
-    let index_path = chats_dir.join(CHAT_INDEX_FILE);
-    if let Some(history) = read_or_quarantine(&index_path, |raw| {
-        let history: Vec<ChatSummary> = serde_json::from_str(raw)?;
-        let mut ids = std::collections::HashSet::new();
-        for item in &history {
-            validate_chat_id(&item.id)?;
-            if !ids.insert(&item.id) {
-                return Err(AppError::InvalidInput("Duplicate chat id in index".into()));
-            }
-        }
-        Ok(history)
+/// The chat files of a folder as they are now.
+fn chat_files(chats_dir: &Path) -> Result<Vec<(IndexedFile, PathBuf)>, AppError> {
+    let mut files = Vec::new();
+    for (name, path) in super::user_files::list_own_files(chats_dir, |name| {
+        chat_file_id(Path::new(name)).is_some()
     })? {
-        return Ok(history);
+        let metadata = match fs::metadata(&path) {
+            Ok(metadata) => metadata,
+            // removed meanwhile, e.g. by a sync
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(error.into()),
+        };
+        let modified_ns = metadata
+            .modified()
+            .ok()
+            .and_then(|time| time.duration_since(SystemTime::UNIX_EPOCH).ok())
+            .map_or(0, |duration| duration.as_nanos());
+        files.push((
+            IndexedFile {
+                name,
+                size: metadata.len(),
+                modified_ns,
+            },
+            path,
+        ));
     }
-    let history = rebuild_chat_index(chats_dir)?;
-    if !history.is_empty() {
-        log::warn!(
-            "Rebuilt the chat index of {} from {} chat files",
-            chats_dir.display(),
-            history.len()
-        );
-        write_json(&index_path, &history)?;
-    }
-    Ok(history)
+    Ok(files)
 }
 
-/// The index entries of the chat files in `chats_dir`, the most recent first.
-/// A chat file that cannot be read is set aside rather than lost to the
-/// orphan cleanup.
-fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
-    let mut history = Vec::new();
-    let entries = match fs::read_dir(chats_dir) {
-        Ok(entries) => entries,
-        // a profile that never saved a chat has no folder yet
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(history),
-        Err(error) => return Err(error.into()),
-    };
-    for entry in entries {
-        let path = entry?.path();
-        if chat_file_id(&path).is_none() || !path.is_file() {
+fn read_index(path: &Path) -> Option<ChatIndex> {
+    let raw = fs::read(path).ok()?;
+    let index: ChatIndex = serde_json::from_slice(&raw).ok()?;
+    (index.files.len() == index.chats.len()).then_some(index)
+}
+
+pub fn list_chats(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
+    load_chat_index(dirs)
+}
+
+/// The summaries of the chats, the most recent first. A file the index saw
+/// as it is now keeps its summary; any other is read again. A file that
+/// cannot be parsed, or holds another chat, is set aside rather than listed
+/// as a chat that never opens.
+fn load_chat_index(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
+    let files = chat_files(&dirs.chats)?;
+    let stored = read_index(&dirs.index).unwrap_or_default();
+    if stored.files.len() == files.len()
+        && stored
+            .files
+            .iter()
+            .zip(&files)
+            .all(|(indexed, (file, _))| indexed == file)
+    {
+        return Ok(sorted(stored.chats));
+    }
+    let known: HashMap<&IndexedFile, &ChatSummary> =
+        stored.files.iter().zip(&stored.chats).collect();
+    let mut index = ChatIndex::default();
+    for (file, path) in files {
+        if let Some(summary) = known.get(&file) {
+            index.chats.push((*summary).clone());
+            index.files.push(file);
             continue;
         }
         // I/O failures do not establish corruption: leave the file untouched
         // and abort rebuilding instead of publishing an incomplete index.
-        let raw = fs::read(&path)?;
-        let parsed = serde_json::from_slice::<Chat>(&raw)
-            .map_err(AppError::from)
-            .and_then(|chat| {
-                validate_stored_chat_id(&path, &chat)?;
-                Ok(chat)
-            });
-        match parsed {
+        let raw = match fs::read(&path) {
+            Ok(raw) => raw,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(error.into()),
+        };
+        match parse_stored_chat(&path, &raw) {
             Ok(chat) => {
-                history.push(ChatSummary::from(&chat));
+                index.chats.push(ChatSummary::from(&chat));
+                index.files.push(file);
             }
             Err(error) => {
                 log::warn!("Chat file {} is unreadable: {error}", path.display());
@@ -250,8 +183,28 @@ fn rebuild_chat_index(chats_dir: &Path) -> Result<Vec<ChatSummary>, AppError> {
             }
         }
     }
-    history.sort_by_key(|item| std::cmp::Reverse(item.last_message_at_ms));
-    Ok(history)
+    // the index is derived: a failure costs a rebuild next time
+    if let Err(error) = write_index(&dirs.index, &index) {
+        log::warn!("Could not save the chat index: {error}");
+    }
+    Ok(sorted(index.chats))
+}
+
+fn write_index(path: &Path, index: &ChatIndex) -> Result<(), AppError> {
+    if let Some(dir) = path.parent() {
+        crate::services::atomic_file::create_private_dir(dir)?;
+    }
+    write_json(path, index)
+}
+
+/// Newest first by the last message; a tie keeps a fixed order.
+fn sorted(mut chats: Vec<ChatSummary>) -> Vec<ChatSummary> {
+    chats.sort_by(|a, b| {
+        b.last_message_at_ms
+            .cmp(&a.last_message_at_ms)
+            .then_with(|| a.id.cmp(&b.id))
+    });
+    chats
 }
 
 /// The chat id of a chat file: `<id>.json` with a valid id.
@@ -275,8 +228,12 @@ pub fn chat_image_directory(chats_dir: &Path) -> PathBuf {
     chats_dir.join("images")
 }
 
+fn chat_path(chats_dir: &Path, id: &str) -> Result<PathBuf, AppError> {
+    Ok(chats_dir.join(format!("{}.json", validate_chat_id(id)?)))
+}
+
 pub fn save_chat(
-    chats_dir: &Path,
+    dirs: &ChatDirs,
     policy: ChatHistoryPolicy,
     images: &Mutex<ChatImageStore>,
     mut chat: Chat,
@@ -288,26 +245,42 @@ pub fn save_chat(
     // a rename keeps; a stored title is always one a rename could give
     chat.title = clamp_chat_title(&chat.title);
 
-    validate_chat_id(&chat.id)?;
-    let mut history = list_chats(chats_dir)?;
+    let path = chat_path(&dirs.chats, &chat.id)?;
+    let mut history = list_chats(dirs)?;
 
-    images
-        .locked()
-        .persist(&chat_image_directory(chats_dir), &chat)?;
+    images.locked().persist(&dirs.images(), &chat)?;
 
-    // the chat being saved stays, whatever date its last message has: its
-    // file is written either way, and dropping it from the index would
-    // have the orphan cleanup delete it right away
-    let removed = policy.drop_expired(&mut history, now_ms());
-    let cleanup = if !removed.is_empty() || drops_images(chats_dir, &chat) {
-        ImageCleanup::Needed
-    } else {
-        ImageCleanup::Skipped
-    };
-    let removed = removed.into_iter().filter(|id| *id != chat.id).collect();
-    upsert_chat_index(&mut history, &chat);
-    commit_chat_transaction(chats_dir, history, Some(chat), cleanup)?;
+    // the chat being saved stays, whatever date its last message has
+    let mut removed = policy.drop_expired(&mut history, now_ms());
+    removed.retain(|id| *id != chat.id);
+    let drops_images = !removed.is_empty() || drops_images(&dirs.chats, &chat);
+    write_json(&path, &chat)?;
+    remove_chat_files(&dirs.chats, &removed)?;
+    if drops_images {
+        clean_images(dirs);
+    }
     Ok(removed)
+}
+
+/// Removes the files of the chats `ids`.
+fn remove_chat_files(chats_dir: &Path, ids: &[String]) -> Result<(), AppError> {
+    for id in ids {
+        remove_file_if_exists(&chat_path(chats_dir, id)?)?;
+    }
+    if !ids.is_empty() {
+        crate::services::atomic_file::sync_parent(&chats_dir.join("."))?;
+    }
+    Ok(())
+}
+
+/// Collects the images no chat refers to any more. Collection is the last
+/// step of a change: a failure only delays it.
+fn clean_images(dirs: &ChatDirs) {
+    if let Err(error) =
+        crate::services::chat_images::remove_orphan_images(&dirs.chats, &dirs.orphans, now_ms())
+    {
+        log::warn!("Could not collect unused chat images: {error}");
+    }
 }
 
 /// Whether the stored version of `chat` refers to images the new one does not.
@@ -330,21 +303,8 @@ fn chat_image_ids(chat: &Chat) -> std::collections::HashSet<&str> {
         .collect()
 }
 
-/// Puts the chat into the index by the time of its last message, newest
-/// first, without its messages to keep the index small. A chat restored by an
-/// undo goes back to its place; one just written goes on top.
-fn upsert_chat_index(history: &mut Vec<ChatSummary>, chat: &Chat) {
-    let index_item = ChatSummary::from(chat);
-    history.retain(|item| item.id != index_item.id);
-    let index = history
-        .iter()
-        .position(|item| item.last_message_at_ms <= index_item.last_message_at_ms)
-        .unwrap_or(history.len());
-    history.insert(index, index_item);
-}
-
 pub fn read_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError> {
-    let path = chats_dir.join(format!("{}.json", validate_chat_id(&id)?));
+    let path = chat_path(chats_dir, &id)?;
     let Some(raw) = read_chat_bytes(&path)? else {
         return Ok(None);
     };
@@ -367,11 +327,10 @@ fn parse_stored_chat(path: &Path, raw: &[u8]) -> Result<Chat, AppError> {
 }
 
 /// Reads a chat to open it. A file that cannot be parsed, or holds another
-/// chat, is set aside the way a rebuild of the index sets it aside, and its
-/// chat leaves the index: it would otherwise stay listed without ever
-/// opening. Changes the index, so it runs under the chat history lock.
-pub(super) fn open_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, AppError> {
-    let path = chats_dir.join(format!("{}.json", validate_chat_id(&id)?));
+/// chat, is set aside the way a rebuild of the index sets it aside, and so
+/// leaves the list: it would otherwise stay listed without ever opening.
+pub(super) fn open_chat(dirs: &ChatDirs, id: String) -> Result<Option<Chat>, AppError> {
+    let path = chat_path(&dirs.chats, &id)?;
     let Some(raw) = read_chat_bytes(&path)? else {
         return Ok(None);
     };
@@ -384,27 +343,22 @@ pub(super) fn open_chat(chats_dir: &Path, id: String) -> Result<Option<Chat>, Ap
                 path.display(),
                 copy.display()
             );
-            let mut history = list_chats(chats_dir)?;
-            history.retain(|item| item.id != id);
-            commit_chat_transaction(chats_dir, history, None, ImageCleanup::Needed)?;
+            clean_images(dirs);
             Ok(None)
         }
     }
 }
 
 /// Gives a stored chat another title. Neither its messages nor its place in
-/// the index change: a rename is not activity in the chat.
-pub fn rename_chat(chats_dir: &Path, id: String, title: String) -> Result<(), AppError> {
+/// the list change: a rename is not activity in the chat.
+pub fn rename_chat(dirs: &ChatDirs, id: String, title: String) -> Result<(), AppError> {
     let title = validate_chat_title(&title)?;
-    // an unreadable chat is set aside and leaves the index, as on opening
-    let Some(mut chat) = open_chat(chats_dir, id.clone())? else {
+    // an unreadable chat is set aside and leaves the list, as on opening
+    let Some(mut chat) = open_chat(dirs, id.clone())? else {
         return Err(AppError::NotFound(String::from("Chat not found")));
     };
-    let mut history = list_chats(chats_dir)?;
     chat.title = title;
-    rename_in_chat_index(&mut history, &id, &chat.title);
-    // the messages, and so the images, stay as they are
-    commit_chat_transaction(chats_dir, history, Some(chat), ImageCleanup::Skipped)
+    write_json(&chat_path(&dirs.chats, &id)?, &chat)
 }
 
 /// The longest title a chat can be given, in characters; the sidebar uses the
@@ -431,12 +385,6 @@ fn clamp_chat_title(title: &str) -> String {
     }
     let head: String = title.chars().take(MAX_CHAT_TITLE_CHARS - 1).collect();
     format!("{}…", head.trim_end())
-}
-
-fn rename_in_chat_index(history: &mut [ChatSummary], id: &str, title: &str) {
-    if let Some(item) = history.iter_mut().find(|item| item.id == id) {
-        item.title = title.to_string();
-    }
 }
 
 /// The lowercase searchable text of chat files, reused while a file keeps its
@@ -568,7 +516,7 @@ impl ChatSearchCache {
         Ok(Some(found))
     }
 
-    /// Drops the chats of `chats_dir` the index no longer lists.
+    /// Drops the chats of `chats_dir` the list no longer has.
     fn retain_listed(&self, chats_dir: &Path, history: &[ChatSummary]) {
         let mut state = self.state.locked();
         let gone: Vec<PathBuf> = state
@@ -646,11 +594,10 @@ fn chat_search_text(chat: &Chat) -> String {
     pieces.join("\n").to_lowercase()
 }
 
-pub fn delete_chat(chats_dir: &Path, id: String) -> Result<(), AppError> {
-    validate_chat_id(&id)?;
-    let mut history = list_chats(chats_dir)?;
-    history.retain(|item| item.id != id);
-    commit_chat_transaction(chats_dir, history, None, ImageCleanup::Needed)
+pub fn delete_chat(dirs: &ChatDirs, id: String) -> Result<(), AppError> {
+    remove_chat_files(&dirs.chats, &[id])?;
+    clean_images(dirs);
+    Ok(())
 }
 
 /// What the settings say about the chat history.
@@ -705,40 +652,35 @@ impl From<ChatHistoryConfig> for ChatHistoryPolicy {
 /// Brings the stored chats in line with the settings: expired ones are
 /// dropped, also while no new chats are saved. Returns the dropped ids.
 pub(super) fn enforce_chat_history_policy(
-    chats_dir: &Path,
+    dirs: &ChatDirs,
     policy: ChatHistoryPolicy,
 ) -> Result<Vec<String>, AppError> {
-    let mut history = list_chats(chats_dir)?;
+    let mut history = list_chats(dirs)?;
     let removed = policy.drop_expired(&mut history, now_ms());
     if removed.is_empty() {
         return Ok(removed);
     }
-
-    commit_chat_transaction(chats_dir, history, None, ImageCleanup::Needed)?;
+    remove_chat_files(&dirs.chats, &removed)?;
+    clean_images(dirs);
     Ok(removed)
 }
 
-/// Removes the index, chat files, and persisted image bytes.
-pub fn clear_chats(chats_dir: &Path) -> Result<(), AppError> {
-    recover_chat_transaction(chats_dir)?;
-    commit_chat_transaction(chats_dir, Vec::new(), None, ImageCleanup::Needed)?;
-    let images_dir = chats_dir.join("images");
+/// Removes the chat files, the images and the index.
+pub fn clear_chats(dirs: &ChatDirs) -> Result<(), AppError> {
+    let images_dir = dirs.images();
     if images_dir.exists() {
         fs::remove_dir_all(images_dir)?;
     }
-
-    for entry in fs::read_dir(chats_dir)?.flatten() {
-        let path = entry.path();
-        if path.is_file() {
-            remove_file_if_exists(&path)?;
-        }
+    for (_, path) in super::user_files::list_own_files(&dirs.chats, |name| {
+        chat_file_id(Path::new(name)).is_some()
+    })? {
+        remove_file_if_exists(&path)?;
     }
-
-    Ok(())
+    remove_file_if_exists(&dirs.index)
 }
 
 fn validate_chat_id(id: &str) -> Result<String, AppError> {
-    // "index" would name the index file
+    // `index.json` is the index an earlier version kept among the chats
     let is_safe = crate::services::file_ids::is_file_id(id) && id != "index";
 
     if !is_safe {
@@ -746,29 +688,6 @@ fn validate_chat_id(id: &str) -> Result<String, AppError> {
     }
 
     Ok(id.to_string())
-}
-
-/// Removes the chat files the index no longer lists. Only chat files: the
-/// index, a file set aside as unreadable and anything else stay.
-fn remove_orphan_chat_files(chats_dir: &Path, history: &[ChatSummary]) -> Result<(), AppError> {
-    let active_ids = history
-        .iter()
-        .map(|item| item.id.as_str())
-        .collect::<std::collections::HashSet<_>>();
-
-    for entry in fs::read_dir(chats_dir)? {
-        let path = entry?.path();
-        // a staged chat left by a save that never wrote its journal
-        let staged = path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .is_some_and(|name| name.ends_with(STAGED_CHAT_SUFFIX));
-        let orphan = staged || chat_file_id(&path).is_some_and(|id| !active_ids.contains(id));
-        if orphan && path.is_file() {
-            fs::remove_file(&path)?;
-        }
-    }
-    crate::services::atomic_file::sync_parent(&chats_dir.join(CHAT_INDEX_FILE))
 }
 
 #[cfg(test)]

@@ -2,31 +2,31 @@
 //! other users, on every lookup: the user may delete one while Tyco runs.
 use std::path::PathBuf;
 
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
+use super::user_data::{user_dir_for, UserData, UserDirAccess};
 use crate::errors::AppError;
 use crate::models::{StorageInfo, StorageKind, StorageLocation};
 use crate::services::atomic_file::create_private_dir;
 use crate::services::storage::app_paths::AppPaths;
 
-pub fn app_config_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = AppPaths::resolve(app)?.config_dir;
-
+/// The folder of this device's own files, see `AppPaths::device_dir`.
+pub fn device_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
+    let dir = AppPaths::resolve(app)?.device_dir;
     create_private_dir(&dir)?;
-
     Ok(dir)
 }
 
-pub fn app_data_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
-    let dir = AppPaths::resolve(app)?.data_dir;
-
+/// The state folder: logs, the webview, and what is derived from the user
+/// data or kept aside from it.
+pub fn state_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
+    let dir = AppPaths::resolve(app)?.state_dir;
     create_private_dir(&dir)?;
-
     Ok(dir)
 }
 
-pub fn app_data_sub_dir(app: &AppHandle, sub: &str) -> Result<PathBuf, AppError> {
-    let dir = app_data_dir(app)?.join(sub);
+pub fn state_sub_dir(app: &AppHandle, sub: &str) -> Result<PathBuf, AppError> {
+    let dir = state_dir(app)?.join(sub);
     create_private_dir(&dir)?;
     Ok(dir)
 }
@@ -46,21 +46,29 @@ pub fn app_log_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
 /// Where each kind of file is; listing them creates no directory.
 pub fn get_storage_info(app: &AppHandle) -> Result<StorageInfo, AppError> {
     let paths = AppPaths::resolve(app)?;
+    let user_data = app
+        .try_state::<UserData>()
+        .map(|data| data.state())
+        .ok_or_else(|| {
+            AppError::ServiceUnavailable("The data folder is not resolved yet".into())
+        })?;
     Ok(StorageInfo {
         locations: group_storage_locations([
-            (StorageKind::Config, paths.config_dir),
-            (StorageKind::Data, paths.data_dir),
+            (StorageKind::Device, paths.device_dir),
+            (StorageKind::State, paths.state_dir),
             (StorageKind::Cache, paths.cache_dir),
             (StorageKind::Logs, paths.log_dir),
         ]),
+        user_data,
     })
 }
 
 /// The directory of a storage kind, for the user to open.
 pub fn storage_dir(app: &AppHandle, kind: StorageKind) -> Result<PathBuf, AppError> {
     match kind {
-        StorageKind::Config => app_config_dir(app),
-        StorageKind::Data => app_data_dir(app),
+        StorageKind::User => user_dir_for(app, UserDirAccess::Read),
+        StorageKind::Device => device_dir(app),
+        StorageKind::State => state_dir(app),
         StorageKind::Cache => app_cache_dir(app),
         StorageKind::Logs => app_log_dir(app),
     }
@@ -111,15 +119,31 @@ mod tests {
     fn storage_info_serializes_locations() {
         let info = StorageInfo {
             locations: vec![StorageLocation {
-                kinds: vec![StorageKind::Config, StorageKind::Logs],
-                path: "/config".into(),
+                kinds: vec![StorageKind::State, StorageKind::Logs],
+                path: "/state".into(),
             }],
+            user_data: crate::models::UserDataState {
+                path: "/sync/tyco".into(),
+                default_path: "/data".into(),
+                is_default: false,
+                status: crate::models::UserDataStatus::NotConnected,
+                is_writable_by_others: false,
+            },
         };
 
         let json = serde_json::to_value(&info).unwrap();
         assert_eq!(
             json,
-            json!({ "locations": [{ "kinds": ["config", "logs"], "path": "/config" }] })
+            json!({
+                "locations": [{ "kinds": ["state", "logs"], "path": "/state" }],
+                "userData": {
+                    "path": "/sync/tyco",
+                    "defaultPath": "/data",
+                    "isDefault": false,
+                    "status": "notConnected",
+                    "isWritableByOthers": false
+                }
+            })
         );
     }
 
@@ -137,33 +161,29 @@ mod tests {
         };
         use StorageKind::*;
 
-        // Linux: every kind in a directory of its own
+        // Linux: every kind in a directory of its own, logs inside the state
         assert_eq!(
             group(&[
-                (Config, "/h/.config/id"),
-                (Data, "/h/.local/share/id"),
+                (Device, "/h/.config/id"),
+                (State, "/h/.local/state/id"),
                 (Cache, "/h/.cache/id"),
                 (Logs, "/h/.local/state/id/logs"),
             ]),
             [
-                (vec![Config], String::from("/h/.config/id")),
-                (vec![Data], String::from("/h/.local/share/id")),
+                (vec![Device], String::from("/h/.config/id")),
+                (vec![State, Logs], String::from("/h/.local/state/id")),
                 (vec![Cache], String::from("/h/.cache/id")),
-                (vec![Logs], String::from("/h/.local/state/id/logs")),
             ]
         );
-        // Windows: the same directory, and logs inside the cache
+        // Windows: the device folder, the cache and the logs inside the state
         assert_eq!(
             group(&[
-                (Config, "/r/id"),
-                (Data, "/r/id"),
+                (Device, "/l/id/device"),
+                (State, "/l/id"),
                 (Cache, "/l/id"),
                 (Logs, "/l/id/logs"),
             ]),
-            [
-                (vec![Config, Data], String::from("/r/id")),
-                (vec![Cache, Logs], String::from("/l/id")),
-            ]
+            [(vec![Device, State, Cache, Logs], String::from("/l/id"))]
         );
         // a root listed after the directory inside it
         assert_eq!(

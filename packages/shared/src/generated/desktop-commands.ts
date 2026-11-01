@@ -45,6 +45,8 @@ import type {
   StorageKind,
   TextInsertionStatus,
   ToolCatalogEntry,
+  UserDataRelocationMode,
+  UserDataTarget,
   VaultState,
   VaultTarget,
   VoiceCaptureInfo,
@@ -156,6 +158,10 @@ export interface DesktopCommands {
     args: { path?: string | null }
     result: VaultTarget
   }
+  inspect_user_data_target: {
+    args: { path?: string | null }
+    result: UserDataTarget
+  }
   install_plugin_package: {
     args: { inspectionId: string }
     result: InstalledPlugin
@@ -247,6 +253,10 @@ export interface DesktopCommands {
     args: { path?: string | null; moveData: boolean }
     result: void
   }
+  relocate_user_data: {
+    args: { mode: UserDataRelocationMode; path?: string | null }
+    result: void
+  }
   rename_chat: {
     args: { id: string; title: string; profileId?: string | null }
     result: void
@@ -266,6 +276,7 @@ export interface DesktopCommands {
     args: undefined
     result: TextInsertionStatus
   }
+  restart_app: { args: undefined; result: void }
   restore_editor_history_item: {
     args: { item: EditorHistoryItem }
     result: void

@@ -49,6 +49,17 @@ export function invocationUnavailableReason(
   if (!tool) return 'commands.toolMissing'
   const reason = tool.getUnavailableReasonKey?.()
   if (reason) return reason
+  // a tool that writes notes needs the folder, set on each device in the
+  // plugin settings or in the command
+  const notesField = tool.directoryFieldName
+  if (
+    notesField &&
+    tool.configFields?.some((field) => field.name === notesField) &&
+    !String(
+      toolCallConfig(tool, invocation.toolConfig)[notesField] ?? ''
+    ).trim()
+  )
+    return 'commands.notesFolderMissing'
   const kind = toolInputKind(
     tool,
     invocation.toolConfig,

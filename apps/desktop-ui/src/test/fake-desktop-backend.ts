@@ -1,6 +1,7 @@
 import {
   DEFAULT_SESSION_STATE,
   DEFAULT_USER_CONFIG,
+  DEFAULT_USER_DATA_STATE,
   ActivationMode,
   type Chat,
   type DesktopActivationState,
@@ -13,6 +14,7 @@ import {
   type EditorHistoryItem,
   type SessionState,
   type UserConfig,
+  type UserDataState,
 } from '@tyco/shared'
 
 type CommandHandler<K extends DesktopCommandName> = (
@@ -29,6 +31,8 @@ export interface DesktopCall {
 export interface FakeDesktopOptions {
   userConfig?: UserConfig
   sessionState?: SessionState
+  /** Where the data folder is and whether it can be used */
+  userData?: UserDataState
   /** Shorthand for `activation.mode` */
   mode?: ActivationMode
   activation?: Partial<DesktopActivationState>
@@ -60,6 +64,7 @@ export class FakeDesktopBackend {
   isFocused = true
   userConfig: UserConfig
   sessionState: SessionState
+  userData: UserDataState
   activation: DesktopActivationState
   window: DesktopWindowState
   history: EditorHistoryItem[]
@@ -76,6 +81,7 @@ export class FakeDesktopBackend {
     this.sessionState = structuredClone(
       options.sessionState ?? DEFAULT_SESSION_STATE
     )
+    this.userData = structuredClone(options.userData ?? DEFAULT_USER_DATA_STATE)
     this.activation = {
       activationId: 1,
       windowId: null,
@@ -119,6 +125,7 @@ export class FakeDesktopBackend {
       settings: {
         userConfig: structuredClone(this.userConfig),
         sessionState: structuredClone(this.sessionState),
+        userData: structuredClone(this.userData),
       },
     }
   }
@@ -267,11 +274,17 @@ export class FakeDesktopBackend {
     }))
     this.handle('get_storage_info', () => ({
       locations: [
-        { kinds: ['config'], path: '/home/tester/.config/tyco' },
-        { kinds: ['data'], path: '/home/tester/.local/share/tyco' },
+        { kinds: ['device'], path: '/home/tester/.config/tyco' },
+        { kinds: ['state', 'logs'], path: '/home/tester/.local/state/tyco' },
         { kinds: ['cache'], path: '/home/tester/.cache/tyco' },
-        { kinds: ['logs'], path: '/home/tester/.local/state/tyco' },
       ],
+      userData: {
+        path: '/home/tester/.local/share/tyco',
+        defaultPath: '/home/tester/.local/share/tyco',
+        isDefault: true,
+        status: 'connected',
+        isWritableByOthers: false,
+      },
     }))
 
     this.handle('get_text_insertion_status', () => ({

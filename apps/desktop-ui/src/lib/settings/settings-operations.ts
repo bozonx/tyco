@@ -45,6 +45,10 @@ export function createSettingsOperations(deps: {
         ([, item]) => item.type !== 'launcherPage' || ids.has(item.pageId)
       )
     )
+    // the shortcut of a removed page goes with it
+    config.hotkeys.launcherPages = Object.fromEntries(
+      Object.entries(config.hotkeys.launcherPages).filter(([id]) => ids.has(id))
+    )
     config.launcherPages = pages
   }
 

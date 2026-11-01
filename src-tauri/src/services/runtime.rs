@@ -8,7 +8,7 @@ mod tray;
 mod warmup;
 mod window_visibility;
 
-pub use lifecycle::{create_windows, manage_state, request_exit, setup, shutdown};
+pub use lifecycle::{create_windows, manage_state, request_exit, request_restart, setup, shutdown};
 pub use panel_layer::set_quick_input_region;
 pub use target_focus::{follow_target_window, forget_target_window, wait_until_unfocused};
 pub use target_paste::paste_into_target;

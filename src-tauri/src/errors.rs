@@ -40,6 +40,10 @@ pub enum AppError {
     InvalidData(String),
     #[error("{0}")]
     UnsupportedConfig(String),
+    /// The user data folder is not connected, or a newer Tyco laid it out
+    /// and it is read only.
+    #[error("{0}")]
+    UserDataUnavailable(String),
     /// The request was made for a state that has changed since, e.g. an
     /// activation a newer one replaced.
     #[error("{0}")]
@@ -101,6 +105,8 @@ error_codes! {
     FileTooLarge,
     /// The config was written by a newer version of the app.
     UnsupportedConfig,
+    /// The user data folder is not connected, or it is read only.
+    UserDataUnavailable,
     /// The request was made for a state that has changed since.
     Stale,
     /// The runtime of the app failed.
@@ -125,6 +131,7 @@ impl AppError {
             Self::FileTooLarge(_) => ErrorCode::FileTooLarge,
             Self::InvalidData(_) | Self::Json(_) => ErrorCode::InvalidData,
             Self::UnsupportedConfig(_) => ErrorCode::UnsupportedConfig,
+            Self::UserDataUnavailable(_) => ErrorCode::UserDataUnavailable,
             Self::Stale(_) => ErrorCode::Stale,
             Self::Tauri(_) => ErrorCode::RuntimeError,
             Self::Io(_) => ErrorCode::IoError,
@@ -199,6 +206,10 @@ mod tests {
             (
                 AppError::UnsupportedConfig("Config version 99".into()),
                 "unsupportedConfig",
+            ),
+            (
+                AppError::UserDataUnavailable("Not connected".into()),
+                "userDataUnavailable",
             ),
             (AppError::Stale("Activation changed".into()), "stale"),
             (

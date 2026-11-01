@@ -7,7 +7,7 @@ use serde_json::{Map, Value};
 use tauri::{Emitter, EventTarget, Runtime};
 use ts_rs::TS;
 
-use crate::models::{ChatsChangedEvent, DesktopSnapshot, OpenMainChatEvent};
+use crate::models::{ChatsChangedEvent, DesktopSnapshot, OpenMainChatEvent, SettingsConflictEvent};
 use crate::services::selection_replace::SelectionRunEvent;
 use crate::services::voice::VoiceAudioLevelPayload;
 
@@ -71,6 +71,9 @@ desktop_events! {
     ChatsChanged = "app://chats-changed" => ChatsChangedEvent;
     /// The editor history changed in storage.
     EditorHistoryChanged = "app://editor-history-changed" => ();
+    /// A settings save merged a change another device synced into the same
+    /// fields; the change of this device won.
+    SettingsConflict = "app://settings-conflict" => SettingsConflictEvent;
     /// The user closed the main window rather than hid it.
     MainWindowClosed = "app://main-window-closed" => ();
     #[cfg_attr(not(feature = "activation-bench"), allow(dead_code))]

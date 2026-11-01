@@ -295,6 +295,19 @@ KWin-активатор своего окна.
   сообщается в лог.
 - Secrets use the platform keychain (`keyring`): Windows Credential Manager,
   macOS Keychain, and Linux Secret Service. The webview receives references only.
+- Папки (`services/storage/app_paths.rs`): папка пользователя по умолчанию —
+  перемещаемый `%APPDATA%\com.tyco.app`, состояние, кэш и логи —
+  `%LOCALAPPDATA%\com.tyco.app`, а файлы устройства (`device.json`,
+  `secrets.json`) — его подпапка `device\`. В `%APPDATA%` их класть нельзя:
+  перемещаемый профиль домена увёз бы `deviceId` на другие машины, а сама эта
+  папка — папка пользователя по умолчанию. Хранилище webview лежит в
+  `%LOCALAPPDATA%\com.tyco.app\webview`.
+- Атомарная запись повторяет rename до ~2 с, пока Dropbox, OneDrive или
+  антивирус держат файл открытым (`ERROR_SHARING_VIOLATION`,
+  `ERROR_ACCESS_DENIED`), см. `atomic_file::rename_retrying`.
+- `machineId` для распознавания копии `device.json` на другой машине —
+  `HKLM\SOFTWARE\Microsoft\Cryptography\MachineGuid` (на Linux —
+  `/etc/machine-id`), `platform/machine.rs`.
 - Бандл: `nsis` или `msi`, подпись кода (иначе SmartScreen).
 
 ### macOS
@@ -311,6 +324,11 @@ KWin-активатор своего окна.
 - Бандл: `dmg`/`app`, подпись и нотаризация обязательны на практике.
 
 ### Для всех ОС
+
+- Хранилище webview на Linux лежит в `~/.local/state/com.tyco.app/webview`, как
+  на Windows — в папке состояния, а не в папке пользователя: та может
+  синхронизироваться. Старая `~/.local/share/com.tyco.app/webview` не
+  переносится; локальное хранилище webview один раз сбрасывается.
 
 - Local control uses the authenticated transport in `tyco-activation-protocol`.
   The platform implementations and end-to-end transport tests are maintained

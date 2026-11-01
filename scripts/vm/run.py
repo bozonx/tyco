@@ -763,12 +763,11 @@ def main():
                 config["hotkeys"] = dict.fromkeys(config["hotkeys"], "")
                 config["hotkeys"]["quickInput"] = "Ctrl+Alt+I"
                 config["hotkeys"]["selectionCorrection"] = "Ctrl+Alt+K"
-                for page in config["launcherPages"]:
-                    page["hotkey"] = ""
+                config["hotkeys"]["launcherPages"] = {}
                 config_path = vm.run_dir / "fixture-config.json"
                 config_path.write_text(json.dumps(config))
-                vm.ssh("mkdir -p .config/com.tyco.app")
-                vm.copy_to(config_path, ".config/com.tyco.app/config.json")
+                vm.ssh("mkdir -p .local/share/com.tyco.app")
+                vm.copy_to(config_path, ".local/share/com.tyco.app/config.json")
                 desktop = vm.run_dir / "com.tyco.app.desktop"
                 desktop.write_text(
                     f"[Desktop Entry]\nType=Application\nName=TyCo\nExec=/home/{vm.user}/tyco-vm/{application}\nTerminal=false\n"

@@ -3,15 +3,19 @@ mod test_support;
 
 pub mod app_paths;
 mod chat_history;
+pub mod data_root_relocation;
+pub mod device;
 mod editor_history;
 mod history_store;
 mod json_files;
 mod paths;
+pub mod user_data;
+pub mod user_data_relocation;
+pub mod user_files;
 
 pub use history_store::*;
-pub use paths::{
-    app_config_dir, app_data_dir, app_data_sub_dir, app_log_dir, get_storage_info, storage_dir,
-};
+pub use paths::{app_log_dir, get_storage_info, storage_dir};
+pub use user_data::{open_user_data, user_sub_dir, UserDirAccess};
 
 #[cfg(test)]
 use serde_json::json;

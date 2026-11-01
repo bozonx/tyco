@@ -17,7 +17,10 @@
       </FieldRow>
     </SettingsSection>
 
-    <SettingsSection :title="t('settings.sectionWindowInsertion')">
+    <SettingsSection
+      :title="t('settings.sectionWindowInsertion')"
+      device-scoped
+    >
       <TextInsertionStatus />
       <FieldRow
         :label="t('settings.pasteShortcut')"
@@ -52,7 +55,8 @@
       </FieldRow>
     </SettingsSection>
 
-    <StorageLocations :is-in-development="userConfig.isInDevelopment" />
+    <UserDataFolder />
+    <StorageLocations />
     <div class="development-features-row">
       <FieldCheckbox
         v-if="userConfig.isInDevelopment"
@@ -88,6 +92,7 @@ import SegmentedControl from '../common/SegmentedControl.vue'
 import SettingsSection from './SettingsSection.vue'
 import StorageLocations from './StorageLocations.vue'
 import TextInsertionStatus from './TextInsertionStatus.vue'
+import UserDataFolder from './UserDataFolder.vue'
 import { type PasteShortcut, type ThemeMode } from '@tyco/shared'
 
 const { t } = useI18n()

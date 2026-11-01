@@ -1,7 +1,7 @@
 //! The configuration and state a fresh start begins with.
 use crate::models::{
     ActivationMode, ActivationSnapshot, DesktopSnapshot, SessionState, SettingsSnapshot,
-    WindowProfile, WindowSnapshot,
+    UserDataState, UserDataStatus, WindowProfile, WindowSnapshot,
 };
 use crate::services::hotkeys;
 use serde_json::{json, Map, Value};
@@ -25,8 +25,9 @@ pub fn portable_user_config() -> Value {
 pub fn default_user_config() -> Value {
     let mut config = portable_user_config();
     config["hotkeys"] = hotkeys::default_hotkeys_config();
-    if let Some(page) = config["launcherPages"].get_mut(0) {
-        page["hotkey"] = json!(hotkeys::default_launcher_page_shortcut());
+    if let Some(page_id) = config["launcherPages"][0]["id"].as_str().map(str::to_owned) {
+        config["hotkeys"]["launcherPages"] =
+            json!({ page_id: hotkeys::default_launcher_page_shortcut() });
     }
     config
 }
@@ -53,6 +54,13 @@ pub fn default_desktop_snapshot(
         settings: SettingsSnapshot {
             user_config: std::sync::Arc::new(user_config),
             session_state,
+            user_data: UserDataState {
+                path: String::new(),
+                default_path: String::new(),
+                is_default: true,
+                status: UserDataStatus::Connected,
+                is_writable_by_others: false,
+            },
         },
     }
 }

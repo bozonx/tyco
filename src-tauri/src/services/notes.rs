@@ -202,7 +202,7 @@ fn resolve_notes_dir(dir: &str, home: Option<&Path>) -> Result<PathBuf, AppError
 
     if dir.is_empty() {
         return Err(AppError::ServiceUnavailable(String::from(
-            "Notes directory is not configured",
+            "The notes folder is not set on this device",
         )));
     }
 

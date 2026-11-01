@@ -125,34 +125,41 @@ pub fn run() {
             }
         }))
         .setup(|app| {
-            app.manage(services::plugins::PluginStore::new(
-                storage::app_data_dir(app.handle())?.join("plugins"),
-            ));
-            let user_config =
-                services::settings::persist::read_or_create_user_config(app.handle())?;
-            let history_cleanup_failed = match storage::apply_editor_history_settings_on_startup(
-                app.handle(),
-                &user_config.value,
-            ) {
-                Ok(()) => false,
-                Err(error) => {
-                    log::error!("Could not apply the editor history settings: {error}");
-                    true
-                }
+            let user_data = storage::open_user_data(app)?;
+            let user_config = {
+                let files = app.state::<services::settings::persist::ConfigFiles>();
+                let device = app.state::<storage::device::DeviceStore>();
+                let plugins = app.state::<services::plugins::PluginStore>();
+                files.load(&device, &|id| plugins.notes_directory_field(id).ok())?
             };
+            let history_cleanup_failed = user_data.is_writable()
+                && match storage::apply_editor_history_settings_on_startup(
+                    app.handle(),
+                    &user_config.value,
+                ) {
+                    Ok(()) => false,
+                    Err(error) => {
+                        log::error!("Could not apply the editor history settings: {error}");
+                        true
+                    }
+                };
             // the state every command and window event reads exists before
             // the first webview can call one
-            app.manage(AppState::new(default_desktop_snapshot(
+            let mut snapshot = default_desktop_snapshot(
                 user_config.value.clone(),
                 crate::models::SessionState::default(),
-            )));
+            );
+            snapshot.settings.user_data = user_data.state();
+            app.manage(AppState::new(snapshot));
             let history = &app.state::<AppState>().history;
             if history_cleanup_failed {
                 history.mark_editor_cleanup_pending();
             }
             // the chats are brought in line with the settings in the
             // background, see `spawn_cleanup_retry`
-            history.mark_chat_cleanup_pending();
+            if user_data.is_writable() {
+                history.mark_chat_cleanup_pending();
+            }
             app.manage(services::secrets::SecretStore::load_for_app(app.handle())?);
             // reaching the system store may wait for an unlock prompt, which
             // must not hold up the start
@@ -161,7 +168,8 @@ pub fn run() {
                 .spawn_thread("secret-vault-warmup", move |_| {
                     let store = secrets_app.state::<services::secrets::SecretStore>();
                     store.vault_state();
-                    if !user_config.is_on_disk {
+                    // unsure references keep the keys: they may come back
+                    if !user_config.is_complete {
                         return;
                     }
                     // A settings save meanwhile may have left secrets for its
@@ -298,9 +306,12 @@ pub fn run() {
             commands::settings::patch_session_state,
             commands::settings::save_user_config,
             commands::storage::get_storage_info,
+            commands::storage::inspect_user_data_target,
             commands::storage::open_storage_location,
+            commands::storage::relocate_user_data,
             commands::system::copy_text,
             commands::system::open_in_browser,
+            commands::system::restart_app,
             commands::system::show_desktop_notification,
             commands::system::show_status_overlay,
             commands::voice::start_voice_capture,

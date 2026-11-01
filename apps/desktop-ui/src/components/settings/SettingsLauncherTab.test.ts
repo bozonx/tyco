@@ -42,7 +42,6 @@ const mountTab = (commandSlots: (string | null)[] = ['cmd1', null, 'cmd2']) =>
       {
         id: 'main',
         inputMode: 'selection',
-        hotkey: '',
         slots: slotsFromList(commandSlots),
       },
     ],
@@ -62,7 +61,6 @@ describe('SettingsLauncherTab.vue', () => {
     expect(pages()[1]).toEqual({
       id: expect.any(String),
       inputMode: 'selection',
-      hotkey: '',
       slots: {},
     })
     await nextTick()
@@ -83,7 +81,6 @@ describe('SettingsLauncherTab.vue', () => {
     const other: LauncherPageConfig = {
       id: 'other',
       inputMode: 'none',
-      hotkey: '',
       slots: {},
     }
     context.draft.value.launcherPages = [pages()[0], other]
@@ -134,7 +131,6 @@ describe('SettingsLauncherTab.vue', () => {
       launcherPages: [{ q: 'cmd1' }, { q: 'cmd2' }, {}].map((slots, index) => ({
         id: `page-${index}`,
         inputMode: 'selection' as const,
-        hotkey: '',
         slots,
       })),
     })

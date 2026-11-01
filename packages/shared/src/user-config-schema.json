@@ -3,7 +3,7 @@
   "title": "Tyco user configuration",
   "type": "object",
   "properties": {
-    "isInDevelopment": { "type": "boolean" },
+    "isInDevelopment": { "type": "boolean", "x-scope": "device" },
     "configVersion": {
       "type": "integer",
       "minimum": 0,
@@ -23,7 +23,8 @@
           "type": "integer",
           "minimum": 50,
           "maximum": 300,
-          "default": 100
+          "default": 100,
+          "x-scope": "device"
         }
       },
       "required": ["theme", "contrast", "motion", "uiScalePercent"],
@@ -64,14 +65,25 @@
               "minimum": 1,
               "maximum": 9007199254740991
             },
-            "isSecretSanitizingEnabled": { "type": "boolean", "default": true }
+            "isSecretSanitizingEnabled": { "type": "boolean", "default": true },
+            "isLocalOnly": {
+              "type": "boolean",
+              "default": false,
+              "x-scope": "device"
+            }
           },
-          "required": ["storage", "maxItems", "isSecretSanitizingEnabled"],
+          "required": [
+            "storage",
+            "maxItems",
+            "isSecretSanitizingEnabled",
+            "isLocalOnly"
+          ],
           "default": {
             "storage": "disk",
             "maxItems": 1000,
             "retentionDays": 30,
-            "isSecretSanitizingEnabled": true
+            "isSecretSanitizingEnabled": true,
+            "isLocalOnly": false
           }
         },
         "shortcuts": {
@@ -161,6 +173,15 @@
         "selectionCorrection": {
           "type": "string",
           "default": "Ctrl+Alt+Shift+F"
+        },
+        "launcherPages": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+          },
+          "additionalProperties": { "type": "string" },
+          "default": {}
         }
       },
       "required": [
@@ -176,9 +197,11 @@
         "transformation",
         "history",
         "voiceCommands",
-        "selectionCorrection"
+        "selectionCorrection",
+        "launcherPages"
       ],
-      "defaultPath": "hotkeys"
+      "defaultPath": "hotkeys",
+      "x-scope": "device"
     },
     "externalAccess": {
       "type": "object",
@@ -186,7 +209,8 @@
         "canAccessSelection": { "type": "boolean", "default": false }
       },
       "required": ["canAccessSelection"],
-      "defaultPath": "externalAccess"
+      "defaultPath": "externalAccess",
+      "x-scope": "device"
     },
     "windowInsertion": {
       "type": "object",
@@ -217,7 +241,8 @@
         }
       },
       "required": ["linux", "terminalApps"],
-      "defaultPath": "windowInsertion"
+      "defaultPath": "windowInsertion",
+      "x-scope": "device"
     },
     "translation": {
       "type": "object",
@@ -431,13 +456,9 @@
             "additionalProperties": { "type": "string", "minLength": 1 },
             "default": {}
           },
-          "inputMode": {
-            "enum": ["selection", "none"],
-            "default": "selection"
-          },
-          "hotkey": { "type": "string", "default": "" }
+          "inputMode": { "enum": ["selection", "none"], "default": "selection" }
         },
-        "required": ["id", "inputMode", "hotkey", "slots"]
+        "required": ["id", "inputMode", "slots"]
       },
       "defaultPath": "launcherPages"
     },
@@ -766,7 +787,9 @@
     },
     "aiVault": {
       "type": "object",
-      "properties": { "path": { "type": "string", "default": "" } },
+      "properties": {
+        "path": { "type": "string", "default": "", "x-scope": "device" }
+      },
       "required": ["path"],
       "defaultPath": "aiVault"
     },
@@ -947,7 +970,8 @@
                 }
               },
               "required": ["baseUrl"],
-              "default": { "baseUrl": "ws://localhost:6006" }
+              "default": { "baseUrl": "ws://localhost:6006" },
+              "x-scope": "device"
             }
           },
           "required": ["deepgram", "sherpaOnnx"],

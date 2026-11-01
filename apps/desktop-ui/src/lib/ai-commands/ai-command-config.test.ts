@@ -78,7 +78,6 @@ describe('savePromptAsCommand', () => {
   const page = (slots: LauncherPageConfig['slots']): LauncherPageConfig => ({
     id: 'main',
     inputMode: 'selection',
-    hotkey: '',
     slots,
   })
 

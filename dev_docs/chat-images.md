@@ -90,7 +90,12 @@ silently evicted. An active chat that itself exceeds the session quota receives
 an error; starting another chat releases its ownership. History-loaded images
 remain available to an active chat if saved history is deleted. Unsaved drafts
 never touch disk. History persistence stores validated hash-addressed images
-atomically; orphan collection scans surviving chat references.
+atomically; orphan collection scans surviving chat references. A sync tool may
+bring an image before the chat that refers to it, and Syncthing and rsync keep
+the modification time of the original, so the age of a file tells nothing: the
+collection records in `index/orphan-images.json` of the state folder when it
+first saw an image without references, and removes it only after seven days
+without one by that record. An image that gets a reference leaves the record.
 
 ## Verification
 
@@ -99,7 +104,8 @@ limits, mixed PDFs, scan rendering, cancellation, queues, ownership handoff,
 context trimming, explicit historical image omission, attachment-only messages,
 file metadata roundtrips, and provider image rejection. Rust tests cover owners
 across windows, cache eviction, quotas, bounded native reads, normalization,
-history persistence, and orphan collection.
+history persistence, and orphan collection by the time an image was first seen
+without references.
 
 Browser smoke checks exercise actual PDF text extraction, scan rendering, and
 image normalization under a CSP equivalent to the production directives used

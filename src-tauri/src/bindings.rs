@@ -78,6 +78,9 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<models::SessionState>();
     visitor.visit::<models::StorageInfo>();
     visitor.visit::<models::StorageKind>();
+    visitor.visit::<models::UserDataRelocationMode>();
+    visitor.visit::<models::SettingsConflictEvent>();
+    visitor.visit::<services::storage::user_data_relocation::UserDataTarget>();
     visitor.visit::<services::activation::ActivationMode>();
     visitor.visit::<services::activation::metrics::ActivationMetricMark>();
     visitor.visit::<services::ai_tools::files::AiFileChangePreview>();

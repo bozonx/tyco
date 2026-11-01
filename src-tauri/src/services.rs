@@ -17,6 +17,7 @@ pub mod net;
 pub mod notes;
 pub mod platform;
 pub mod plugins;
+pub mod random_id;
 pub mod runtime;
 pub mod secrets;
 pub mod selection_replace;

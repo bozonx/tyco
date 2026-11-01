@@ -123,6 +123,26 @@ holds them is described in `src-tauri/src/commands/chat_images.rs`.
 
 Plugins use `openInBrowserAndHide`; removed SDK browser names are rejected.
 
+## Data folder
+
+`get_storage_info` lists the system folders (`device`, `state`, `cache`, `logs`)
+and, apart from them, `userData`: where the user data folder is and whether it
+can be used (`connected`, `notConnected`, `newerFormat`). The snapshot carries
+the same `userData` in `settings`; it is fixed for the life of the process.
+
+`inspect_user_data_target({ path })` tells what a folder holds (`empty`,
+`userData`, `unfinished`, `occupied`, `forbidden`, `current`); no path asks
+about the default folder. `relocate_user_data({ mode, path })` changes the
+folder as the user said (`move`, `connect`, `resetToDefault`, `useDefault`),
+writes it into `device.json` and restarts the app; the webview saves its drafts
+first. `restart_app` restarts without changing anything, e.g. to look again for
+a folder that was missing. The CLI and D-Bus have none of these.
+
+A save that merged a change another device synced into the same fields emits
+`app://settings-conflict` with their paths; the change of this device won.
+A command that needs the user data folder while it is not connected, or read
+only, fails with `userDataUnavailable`.
+
 ## Verification
 
 Run `pnpm validate:all` after changing the cross-language API. Contract tests cover

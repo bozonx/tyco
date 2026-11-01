@@ -102,6 +102,7 @@
         :label="t('settings.aiVaultPath')"
         :error="vaultError || undefined"
       >
+        <template #info><DeviceScopeBadge /></template>
         <div class="vault-path-control">
           <FieldInput
             class="vault-path-input"
@@ -211,6 +212,7 @@ import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import StateMessage from '../common/StateMessage.vue'
+import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'

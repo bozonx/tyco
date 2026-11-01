@@ -3,6 +3,7 @@
     <SettingsSection
       :title="t('settings.globalHotkeysTitle')"
       :info="globalInfo"
+      device-scoped
     >
       <template v-if="isSystemManaged" #actions>
         <Button
@@ -221,8 +222,12 @@ const globalInfo = computed(() =>
     .join('\n\n')
 )
 
-const modes = (Object.keys(DEFAULT_USER_CONFIG.hotkeys) as HotkeyId[])
-  .filter((id) => id !== 'selectionCorrection')
+const modes = Object.keys(DEFAULT_USER_CONFIG.hotkeys)
+  // the pages have rows of their own, below
+  .filter(
+    (id): id is HotkeyId =>
+      id !== 'selectionCorrection' && id !== 'launcherPages'
+  )
   .sort(
     (a, b) =>
       (MODE_ORDER.indexOf(a) + 1 || Infinity) -
@@ -273,7 +278,11 @@ const allRows = computed<HotkeyRow[]>(() => [
     return {
       id,
       label: t('settings.launcherPage', { page: index + 1 }),
-      value: displayedShortcut(providerState, id, page.hotkey),
+      value: displayedShortcut(
+        providerState,
+        id,
+        userConfig.value.hotkeys.launcherPages[page.id] ?? ''
+      ),
       defaultValue: defaultShortcut(providerState, id, ''),
       command: activationCommand(
         providerState,

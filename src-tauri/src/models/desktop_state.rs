@@ -39,6 +39,8 @@ pub struct SettingsSnapshot {
     #[ts(type = "UserConfig")]
     pub user_config: std::sync::Arc<Value>,
     pub session_state: SessionState,
+    /// Where the user data folder is and whether it can be used.
+    pub user_data: super::UserDataState,
 }
 #[cfg(test)]
 mod tests {
