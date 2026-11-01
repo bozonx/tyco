@@ -50,17 +50,13 @@ impl PasteShortcut {
             Self::ShiftInsert => &[KEY_LEFT_SHIFT, KEY_INSERT],
         }
     }
-
-    /// The copy combination of the same family: a terminal that pastes with
-    /// Ctrl+Shift+V copies with Ctrl+Shift+C.
-    fn copy_keys(self) -> &'static [u16] {
-        match self {
-            Self::CtrlV => &[KEY_LEFT_CTRL, KEY_C],
-            Self::CtrlShiftV => &[KEY_LEFT_CTRL, KEY_LEFT_SHIFT, KEY_C],
-            Self::ShiftInsert => &[KEY_LEFT_CTRL, KEY_INSERT],
-        }
-    }
 }
+
+/// The keys that copy, whatever pastes: GTK, Qt, Chromium, Firefox, Java and
+/// LibreOffice all copy with Ctrl+Insert. Ctrl+C would interrupt the program
+/// in a terminal embedded in an editor, and Ctrl+Shift+C, the copy of a
+/// Ctrl+Shift+V family, opens the inspector of a browser.
+const COPY_KEYS: [u16; 2] = [KEY_LEFT_CTRL, KEY_INSERT];
 
 // Linux input event codes
 const KEY_LEFT_CTRL: u16 = 29;
@@ -71,7 +67,6 @@ const KEY_RIGHT_CTRL: u16 = 97;
 const KEY_RIGHT_ALT: u16 = 100;
 const KEY_LEFT_META: u16 = 125;
 const KEY_RIGHT_META: u16 = 126;
-const KEY_C: u16 = 46;
 const KEY_V: u16 = 47;
 const KEY_INSERT: u16 = 110;
 const MODIFIER_KEYS: [u16; 8] = [
@@ -117,7 +112,7 @@ pub enum FocusedKeyAction {
 impl FocusedKeyAction {
     fn keys(self, shortcut: PasteShortcut) -> &'static [u16] {
         match self {
-            Self::Copy => shortcut.copy_keys(),
+            Self::Copy => &COPY_KEYS,
             Self::Paste => shortcut.paste_keys(),
         }
     }
@@ -191,10 +186,9 @@ impl SystemTextInjector {
     }
 
     /// Presses the keys of `action` in whatever window has the keyboard
-    /// focus, without activating any window first. Never a terminal: its
-    /// selection is read from the primary selection instead, and its copy
-    /// keys differ between terminals, where a wrong guess interrupts the
-    /// running program.
+    /// focus, without activating any window first. Never a terminal window:
+    /// its selection is read from the primary selection instead, and its
+    /// copy keys differ between terminals.
     pub fn press_in_focused(
         &self,
         user_config: &Value,
@@ -545,17 +539,22 @@ mod tests {
     }
 
     #[test]
-    fn copy_keys_follow_the_family_of_the_paste_setting() {
+    fn copy_keys_are_ctrl_insert_whatever_pastes() {
+        for paste in ["Ctrl+V", "Ctrl+Shift+V", "Shift+Insert"] {
+            let linux = user_config::linux_insertion(&json!({"windowInsertion": {"linux": {
+                "pasteShortcut": paste,
+            }}}));
+            let shortcut = linux.paste_shortcut_for(false);
+            assert_eq!(
+                FocusedKeyAction::Copy.keys(shortcut),
+                [KEY_LEFT_CTRL, KEY_INSERT]
+            );
+        }
         let linux = user_config::linux_insertion(&json!({"windowInsertion": {"linux": {
             "pasteShortcut": "Shift+Insert",
         }}}));
-        let shortcut = linux.paste_shortcut_for(false);
         assert_eq!(
-            FocusedKeyAction::Copy.keys(shortcut),
-            [KEY_LEFT_CTRL, KEY_INSERT]
-        );
-        assert_eq!(
-            FocusedKeyAction::Paste.keys(shortcut),
+            FocusedKeyAction::Paste.keys(linux.paste_shortcut_for(false)),
             [KEY_LEFT_SHIFT, KEY_INSERT]
         );
     }
@@ -592,19 +591,8 @@ mod tests {
             ]
         );
         assert_eq!(
-            tail(PasteShortcut::ShiftInsert.copy_keys()),
+            tail(&COPY_KEYS),
             [(29, true), (110, true), (110, false), (29, false)]
-        );
-        assert_eq!(
-            tail(PasteShortcut::CtrlShiftV.copy_keys()),
-            [
-                (29, true),
-                (42, true),
-                (46, true),
-                (46, false),
-                (42, false),
-                (29, false)
-            ]
         );
     }
 

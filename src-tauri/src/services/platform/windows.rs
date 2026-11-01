@@ -3,6 +3,7 @@ pub(crate) mod foreground_tracker;
 
 use std::mem::size_of;
 use std::sync::atomic::{AtomicIsize, Ordering};
+use std::sync::Mutex;
 use std::time::Duration;
 
 use windows_sys::Win32::Foundation::HWND;
@@ -12,15 +13,64 @@ use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
     VK_LMENU, VK_LSHIFT, VK_LWIN, VK_RCONTROL, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SHIFT,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible,
-    SetForegroundWindow, ShowWindow, SW_RESTORE,
+    GetForegroundWindow, GetGUIThreadInfo, GetWindowThreadProcessId, IsChild, IsIconic, IsWindow,
+    IsWindowVisible, SetForegroundWindow, ShowWindow, GUITHREADINFO, SW_RESTORE,
 };
 
 use crate::errors::AppError;
+use crate::locks::MutexExt;
 use crate::services::platform::window_tracker::{tracker, WindowKind};
 
 /// How long PowerShell may take to read the selection of a window.
 const SELECTION_SCRIPT_TIMEOUT: Duration = Duration::from_secs(3);
+/// The exit code of the selection script where PowerShell runs in
+/// Constrained Language Mode, which forbids loading UI Automation.
+const SELECTION_SCRIPT_CONSTRAINED: i32 = 3;
+
+/// The control that had the keyboard focus in a target window when it was
+/// taken, as (target, control): by the time the selection is read Tyco has
+/// the focus, and the control tells which text field the selection is in.
+static FOCUSED_CONTROL: Mutex<(isize, isize)> = Mutex::new((0, 0));
+
+/// Remembers the control with the keyboard focus in `target`, see
+/// `FOCUSED_CONTROL`. A window in the background may tell no focus: the one
+/// remembered for it while it had the focus stays.
+fn remember_focused_control(target: isize) {
+    let mut remembered = FOCUSED_CONTROL.locked();
+    match focused_control_of(target as HWND) {
+        Some(control) => *remembered = (target, control),
+        None if remembered.0 != target => *remembered = (target, target),
+        None => {}
+    }
+}
+
+/// The control of the thread of `window` that has the keyboard focus, when
+/// it is `window` or one of its children.
+fn focused_control_of(window: HWND) -> Option<isize> {
+    // SAFETY: plain queries; the structure is zeroed and sized as asked
+    unsafe {
+        let thread = GetWindowThreadProcessId(window, std::ptr::null_mut());
+        if thread == 0 {
+            return None;
+        }
+        let mut info: GUITHREADINFO = std::mem::zeroed();
+        info.cbSize = size_of::<GUITHREADINFO>() as u32;
+        if GetGUIThreadInfo(thread, &mut info) == 0 || info.hwndFocus.is_null() {
+            return None;
+        }
+        (info.hwndFocus == window || IsChild(window, info.hwndFocus) != 0)
+            .then_some(info.hwndFocus as isize)
+    }
+}
+
+fn remembered_focused_control(target: isize) -> isize {
+    let (remembered_target, control) = *FOCUSED_CONTROL.locked();
+    if remembered_target == target && control != 0 && unsafe { IsWindow(control as HWND) } != 0 {
+        control
+    } else {
+        target
+    }
+}
 
 /// The foreground window when it is an application window of another
 /// process; never Tyco's, the desktop or a shell window.
@@ -41,7 +91,11 @@ pub fn capture_foreground_target() -> Option<String> {
     static LAST_FOREGROUND_TARGET: AtomicIsize = AtomicIsize::new(0);
 
     if tracker().is_running() {
-        return tracker().target();
+        let target = tracker().target();
+        if let Some(handle) = target.as_deref().and_then(|id| id.parse::<isize>().ok()) {
+            remember_focused_control(handle);
+        }
+        return target;
     }
     // SAFETY: plain query
     let window_handle = unsafe { GetForegroundWindow() };
@@ -60,7 +114,11 @@ pub fn capture_foreground_target() -> Option<String> {
         }
     };
     // SAFETY: plain query; any value is accepted
-    (target != 0 && unsafe { IsWindow(target as HWND) } != 0).then(|| target.to_string())
+    let is_live = target != 0 && unsafe { IsWindow(target as HWND) } != 0;
+    if is_live {
+        remember_focused_control(target);
+    }
+    is_live.then(|| target.to_string())
 }
 
 pub async fn capture_selection(target: Option<String>) -> Option<String> {
@@ -75,24 +133,37 @@ pub async fn capture_selection(target: Option<String>) -> Option<String> {
     }
     // Read the target window through UI Automation after Tyco takes focus.
     // Sending Ctrl+C here would steal focus back and dismiss the quick panel.
+    // The search starts at the control that had the keyboard focus: it holds
+    // the selection the user means, where another field may keep an older
+    // one, and its subtree is far smaller than that of a browser window.
     const SCRIPT: &str = r#"
 $ErrorActionPreference = 'Stop'
+if ($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage') { exit 3 }
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
-$root = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr][long]$env:TYCO_SELECTION_WINDOW)
 $condition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::IsTextPatternAvailableProperty, $true)
-$elements = $root.FindAll([System.Windows.Automation.TreeScope]::Subtree, $condition)
-foreach ($element in $elements) {
+function Find-Selection([string]$handle) {
     try {
-        $pattern = $element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern)
-        $text = ($pattern.GetSelection() | ForEach-Object { $_.GetText(-1) }) -join "`n"
-        if (-not [string]::IsNullOrWhiteSpace($text)) {
-            $json = ConvertTo-Json -InputObject $text -Compress
-            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
-            [Console]::OpenStandardOutput().Write($bytes, 0, $bytes.Length)
-            break
-        }
-    } catch { continue }
+        $root = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr][long]$handle)
+        $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Subtree, $condition)
+    } catch { return $null }
+    foreach ($element in $elements) {
+        try {
+            $pattern = $element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern)
+            $text = ($pattern.GetSelection() | ForEach-Object { $_.GetText(-1) }) -join "`n"
+            if (-not [string]::IsNullOrWhiteSpace($text)) { return $text }
+        } catch { continue }
+    }
+    return $null
+}
+$text = Find-Selection $env:TYCO_SELECTION_FOCUS
+if ($null -eq $text -and $env:TYCO_SELECTION_FOCUS -ne $env:TYCO_SELECTION_WINDOW) {
+    $text = Find-Selection $env:TYCO_SELECTION_WINDOW
+}
+if ($null -ne $text) {
+    $json = ConvertTo-Json -InputObject $text -Compress
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+    [Console]::OpenStandardOutput().Write($bytes, 0, $bytes.Length)
 }
 "#;
     let mut command = super::process::command(
@@ -100,7 +171,17 @@ foreach ($element in $elements) {
         &["-NoProfile", "-NonInteractive", "-Command", SCRIPT],
     );
     command.env("TYCO_SELECTION_WINDOW", window_handle.to_string());
+    command.env(
+        "TYCO_SELECTION_FOCUS",
+        remembered_focused_control(window_handle).to_string(),
+    );
     let (status, output) = super::process::run(command, None, SELECTION_SCRIPT_TIMEOUT).ok()?;
+    if status.code() == Some(SELECTION_SCRIPT_CONSTRAINED) {
+        log::warn!(
+            "PowerShell runs in Constrained Language Mode, which forbids UI Automation: the selection of the window cannot be read"
+        );
+        return None;
+    }
     status
         .success()
         .then(|| super::native_selection::decode_selected_text(&output))
@@ -200,7 +281,10 @@ fn focus_window(window_handle: HWND) {
 /// The keys a window copies and pastes with.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum WindowKeys {
-    /// Ctrl+C and Ctrl+V: any application but a terminal.
+    /// Ctrl+Insert copies and Ctrl+V pastes: any application but a
+    /// terminal. Ctrl+C would interrupt the program in a terminal embedded
+    /// in an editor, which its window class does not tell, while every
+    /// common toolkit copies with Ctrl+Insert too.
     Ctrl,
     /// Ctrl+Shift+C and Ctrl+Shift+V.
     CtrlShift,
@@ -384,11 +468,30 @@ const RELEASED_MODIFIERS: [u16; 8] = [
     VK_RCONTROL,
 ];
 
+/// An unassigned virtual key. The key of a hotkey never reaches the
+/// focused window, so a held Alt released alone would open its menu bar
+/// (or the KeyTips of Office), and a Win key the Start menu; a key between
+/// the press and the release prevents both, as AutoHotkey's menu mask key.
+const MENU_MASK_KEY: u16 = 0xE8;
+
 fn held_modifier_releases(is_held: impl Fn(u16) -> bool) -> Vec<INPUT> {
-    RELEASED_MODIFIERS
+    let held: Vec<u16> = RELEASED_MODIFIERS
         .into_iter()
         .filter(|&key| is_held(key))
-        .map(|key| key_input(key, KEYEVENTF_KEYUP))
+        .collect();
+    let needs_mask = held
+        .iter()
+        .any(|key| matches!(*key, VK_LMENU | VK_RMENU | VK_LWIN | VK_RWIN));
+    let mask = needs_mask
+        .then(|| {
+            [
+                key_input(MENU_MASK_KEY, 0),
+                key_input(MENU_MASK_KEY, KEYEVENTF_KEYUP),
+            ]
+        })
+        .into_iter()
+        .flatten();
+    mask.chain(held.into_iter().map(|key| key_input(key, KEYEVENTF_KEYUP)))
         .collect()
 }
 
@@ -403,7 +506,8 @@ fn combination(keys: WindowKeys, action: KeyAction) -> Option<(&'static [u16], u
         KeyAction::Paste => u16::from(b'V'),
     };
     match (keys, action) {
-        (WindowKeys::Ctrl, action) => Some((CTRL, letter(action))),
+        (WindowKeys::Ctrl, KeyAction::Copy) => Some((CTRL, VK_INSERT)),
+        (WindowKeys::Ctrl, KeyAction::Paste) => Some((CTRL, letter(KeyAction::Paste))),
         (WindowKeys::CtrlShift, action) => Some((CTRL_SHIFT, letter(action))),
         (WindowKeys::Insert, KeyAction::Copy) => Some((CTRL, VK_INSERT)),
         (WindowKeys::Insert | WindowKeys::PasteOnly, KeyAction::Paste) => Some((SHIFT, VK_INSERT)),
@@ -459,8 +563,16 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(
             keys,
-            [(VK_RSHIFT, KEYEVENTF_KEYUP), (VK_LMENU, KEYEVENTF_KEYUP)]
+            [
+                (MENU_MASK_KEY, 0),
+                (MENU_MASK_KEY, KEYEVENTF_KEYUP),
+                (VK_RSHIFT, KEYEVENTF_KEYUP),
+                (VK_LMENU, KEYEVENTF_KEYUP)
+            ]
         );
+        // a held Shift or Ctrl opens no menu
+        let releases = held_modifier_releases(|key| key == VK_LSHIFT);
+        assert_eq!(releases.len(), 1);
     }
 
     #[test]
@@ -486,6 +598,15 @@ mod tests {
             Some((&[VK_CONTROL][..], VK_INSERT))
         );
         assert_eq!(combination(WindowKeys::PasteOnly, KeyAction::Copy), None);
+        // no Ctrl+C anywhere: a terminal inside an editor would be interrupted
+        assert_eq!(
+            combination(WindowKeys::Ctrl, KeyAction::Copy),
+            Some((&[VK_CONTROL][..], VK_INSERT))
+        );
+        assert_eq!(
+            combination(WindowKeys::Ctrl, KeyAction::Paste),
+            Some((&[VK_CONTROL][..], u16::from(b'V')))
+        );
     }
 
     #[test]

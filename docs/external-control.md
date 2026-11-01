@@ -337,8 +337,11 @@ runs nor loses what the user copies meanwhile. Before replacing, the
 selection is copied again: when it changed, or the focus moved, the result
 stays in the clipboard and the job fails with `SelectionFailed`.
 
-Terminals never get Ctrl+C, which would interrupt the running program. On
-Linux their selection is read from the primary selection; on Windows the
+No window ever gets Ctrl+C, which would interrupt the program in a
+terminal, also one embedded in an editor: applications copy with
+`Ctrl+Insert`. An editor that copies the current line when nothing is
+selected counts as having no selection. Terminal windows on Linux get no
+copy keys: their selection is read from the primary selection; on Windows the
 console, Windows Terminal and mintty copy with `Ctrl+Insert`, Alacritty and
 WezTerm with `Ctrl+Shift+C`, and PuTTY-like terminals, which have no copy
 keys, are refused. A terminal selection is never replaced: the result goes to

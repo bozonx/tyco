@@ -9,6 +9,7 @@ mod backoff;
 mod binary_paths;
 pub mod clipboard_restore;
 pub(crate) mod command;
+mod data_control;
 pub mod dbus;
 mod foreground_context;
 pub(crate) mod hotkeys_portal;

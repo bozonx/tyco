@@ -7,15 +7,18 @@ use std::time::{Duration, Instant};
 use windows_sys::Win32::Foundation::{GlobalFree, HWND};
 use windows_sys::Win32::System::DataExchange::{
     CloseClipboard, CountClipboardFormats, EmptyClipboard, EnumClipboardFormats, GetClipboardData,
-    GetClipboardSequenceNumber, OpenClipboard, RegisterClipboardFormatW, SetClipboardData,
+    GetClipboardFormatNameW, GetClipboardSequenceNumber, IsClipboardFormatAvailable, OpenClipboard,
+    RegisterClipboardFormatW, SetClipboardData,
 };
 use windows_sys::Win32::System::Memory::{
     GlobalAlloc, GlobalLock, GlobalSize, GlobalUnlock, GMEM_MOVEABLE,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{CreateWindowExW, DestroyWindow, HWND_MESSAGE};
 
+const CF_TEXT: u32 = 1;
 const CF_BITMAP: u32 = 2;
 const CF_METAFILEPICT: u32 = 3;
+const CF_OEMTEXT: u32 = 7;
 const CF_PALETTE: u32 = 9;
 const CF_UNICODETEXT: u32 = 13;
 const CF_ENHMETAFILE: u32 = 14;
@@ -29,20 +32,29 @@ const UNICODE_TEXT: u32 = CF_UNICODETEXT;
 /// How long to wait for another application to release the clipboard.
 const OPEN_TIMEOUT: Duration = Duration::from_millis(250);
 const OPEN_RETRY_INTERVAL: Duration = Duration::from_millis(10);
-/// The pasting application reads the clipboard within this time. Nothing
-/// tells when it has, so the delay leaves room for slow targets: a remote
-/// desktop, a busy Office document. Pasting the result twice is harmless;
-/// pasting the old content, which may be a password, is not.
-const RESTORE_DELAY: Duration = Duration::from_millis(2500);
-/// How long after a capture gave up a late copy is still expected.
-const LATE_COPY_WINDOW: Duration = Duration::from_millis(1500);
-const LATE_COPY_POLL_INTERVAL: Duration = Duration::from_millis(100);
 /// Registered formats that keep the text Tyco moves through the clipboard
 /// out of clipboard managers, the clipboard history and its cloud sync.
 const EXCLUDE_FROM_MONITORS: &str = "ExcludeClipboardContentFromMonitorProcessing";
 const CAN_INCLUDE_IN_HISTORY: &str = "CanIncludeInClipboardHistory";
 const CAN_UPLOAD_TO_CLOUD: &str = "CanUploadToCloudClipboard";
 const MAX_SNAPSHOT_BYTES: usize = 16 * 1024 * 1024;
+/// OLE formats that link or embed the copied object in its source. Reading
+/// one makes the source render the whole object, e.g. Excel a workbook of a
+/// large range, which takes seconds; once the source no longer owns the
+/// clipboard they point at nothing, and the data formats kept beside them
+/// paste the content.
+const OLE_OBJECT_FORMATS: [&str; 10] = [
+    "Embed Source",
+    "Embedded Object",
+    "Link Source",
+    "Link Source Descriptor",
+    "Object Descriptor",
+    "Link",
+    "ObjectLink",
+    "OwnerLink",
+    "Native",
+    "Ole Private Data",
+];
 
 /// Formats whose handle may be no global memory: GDI and metafile handles,
 /// and the private formats, which may hold any handle the owner likes.
@@ -111,6 +123,7 @@ pub struct ClipboardSnapshot(Vec<(u32, Vec<u8>)>);
 
 pub fn snapshot() -> Result<ClipboardSnapshot, AppError> {
     let _clipboard = WindowsClipboardLock::open()?;
+    let has_unicode_text = unsafe { IsClipboardFormatAvailable(CF_UNICODETEXT) } != 0;
     let mut formats = Vec::new();
     let mut format = 0;
     let mut total = 0;
@@ -119,8 +132,8 @@ pub fn snapshot() -> Result<ClipboardSnapshot, AppError> {
         if format == 0 {
             break;
         }
-        // These formats use GDI/metafile handles rather than global memory.
-        if is_non_global_memory_format(format) {
+        // GDI and metafile handles are no global memory; see `is_skipped_format`
+        if is_non_global_memory_format(format) || is_skipped_format(format, has_unicode_text) {
             continue;
         }
         let handle = unsafe { GetClipboardData(format) };
@@ -182,6 +195,35 @@ fn set_bytes(format: u32, bytes: &[u8]) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Formats a snapshot leaves out besides those of other handles: text
+/// Windows synthesizes again from the Unicode text, and the OLE formats of
+/// `OLE_OBJECT_FORMATS`.
+fn is_skipped_format(format: u32, has_unicode_text: bool) -> bool {
+    if has_unicode_text && matches!(format, CF_TEXT | CF_OEMTEXT) {
+        return true;
+    }
+    format >= 0xC000 && is_ole_object_format(&format_name(format))
+}
+
+fn is_ole_object_format(name: &str) -> bool {
+    OLE_OBJECT_FORMATS.contains(&name)
+}
+
+/// The name of a registered format; empty for a standard one.
+fn format_name(format: u32) -> String {
+    let mut buffer = [0u16; 256];
+    let length =
+        unsafe { GetClipboardFormatNameW(format, buffer.as_mut_ptr(), buffer.len() as i32) };
+    usize::try_from(length)
+        .ok()
+        .and_then(|length| buffer.get(..length))
+        .map(String::from_utf16_lossy)
+        .unwrap_or_default()
+}
+
+/// Puts the snapshot back, marked like the texts Tyco moves through the
+/// clipboard: the content is in the history already, from when the user
+/// copied it.
 pub fn restore(snapshot: &ClipboardSnapshot) -> Result<(), AppError> {
     let _clipboard = WindowsClipboardLock::open()?;
     if unsafe { EmptyClipboard() } == 0 {
@@ -190,7 +232,27 @@ pub fn restore(snapshot: &ClipboardSnapshot) -> Result<(), AppError> {
     for (format, bytes) in &snapshot.0 {
         set_bytes(*format, bytes)?;
     }
+    mark_out_of_history(&snapshot.0);
     Ok(())
+}
+
+/// Adds the formats that keep the content out of clipboard managers, the
+/// clipboard history and its cloud sync, unless `present` has them already.
+/// The clipboard is open.
+fn mark_out_of_history(present: &[(u32, Vec<u8>)]) {
+    for (name, value) in [
+        (EXCLUDE_FROM_MONITORS, 0u32),
+        (CAN_INCLUDE_IN_HISTORY, 0),
+        (CAN_UPLOAD_TO_CLOUD, 0),
+    ] {
+        let format = registered_format(name);
+        if format == 0 || present.iter().any(|(kept, _)| *kept == format) {
+            continue;
+        }
+        if set_bytes(format, &value.to_ne_bytes()).is_err() {
+            log::debug!("Could not mark the clipboard content with {name}");
+        }
+    }
 }
 
 pub fn clear() -> Result<(), AppError> {
@@ -201,7 +263,9 @@ pub fn clear() -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn write_text(text: &str) -> Result<(), AppError> {
+/// Puts `text` into the clipboard; a `transient` one, a probe, a selection
+/// or a result, stays out of the history, which would keep it for good.
+pub fn write_text(text: &str, transient: bool) -> Result<(), AppError> {
     let _clipboard = WindowsClipboardLock::open()?;
     if unsafe { EmptyClipboard() } == 0 {
         return Err(std::io::Error::last_os_error().into());
@@ -212,19 +276,48 @@ pub fn write_text(text: &str) -> Result<(), AppError> {
         .flat_map(u16::to_ne_bytes)
         .collect();
     set_bytes(UNICODE_TEXT, &bytes)?;
-    // the probe, the selection and the result are no content of the user's:
-    // they stay out of the history, which would keep them for good
-    for (name, value) in [
-        (EXCLUDE_FROM_MONITORS, 0u32),
-        (CAN_INCLUDE_IN_HISTORY, 0),
-        (CAN_UPLOAD_TO_CLOUD, 0),
-    ] {
-        let format = registered_format(name);
-        if format == 0 || set_bytes(format, &value.to_ne_bytes()).is_err() {
-            log::debug!("Could not mark the clipboard text with {name}");
-        }
+    if transient {
+        mark_out_of_history(&[]);
     }
     Ok(())
+}
+
+/// Whether the clipboard offers the registered format `name`; needs no lock.
+pub fn has_format(name: &str) -> bool {
+    let format = registered_format(name);
+    format != 0 && unsafe { IsClipboardFormatAvailable(format) } != 0
+}
+
+/// Whether the clipboard offers text; needs no lock, so polling it leaves
+/// the clipboard free for the application that copies.
+pub fn has_text() -> bool {
+    (unsafe { IsClipboardFormatAvailable(UNICODE_TEXT) }) != 0
+}
+
+/// The bytes of the registered format `name`, if the clipboard offers it.
+pub fn read_format(name: &str) -> Option<Vec<u8>> {
+    if !has_format(name) {
+        return None;
+    }
+    let format = registered_format(name);
+    let _clipboard = WindowsClipboardLock::open().ok()?;
+    let handle = unsafe { GetClipboardData(format) };
+    if handle.is_null() {
+        return None;
+    }
+    let size = unsafe { GlobalSize(handle) };
+    if size == 0 || size > MAX_SNAPSHOT_BYTES {
+        return None;
+    }
+    let pointer = unsafe { GlobalLock(handle) };
+    if pointer.is_null() {
+        return None;
+    }
+    let bytes = unsafe { std::slice::from_raw_parts(pointer.cast::<u8>(), size).to_vec() };
+    unsafe {
+        GlobalUnlock(handle);
+    }
+    Some(bytes)
 }
 
 fn registered_format(name: &str) -> u32 {
@@ -265,32 +358,23 @@ pub fn read_text() -> Option<String> {
     text
 }
 
-/// Puts `snapshot` back again if the clipboard changes soon after it was
-/// restored: an application that copied too late for a capture would
-/// otherwise leave its copy there in place of the user's content.
-pub fn guard_restored(snapshot: ClipboardSnapshot) {
-    let sequence = sequence_number();
-    std::thread::spawn(move || {
-        let deadline = Instant::now() + LATE_COPY_WINDOW;
-        while Instant::now() < deadline {
-            std::thread::sleep(LATE_COPY_POLL_INTERVAL);
-            if sequence_number() != sequence {
-                log::debug!("A late copy replaced the restored clipboard; restoring it again");
-                if let Err(error) = restore(&snapshot) {
-                    log::warn!("Could not restore the clipboard: {error}");
-                }
-                return;
-            }
-        }
-    });
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-pub fn restore_later(snapshot: ClipboardSnapshot) {
-    let sequence = unsafe { GetClipboardSequenceNumber() };
-    std::thread::spawn(move || {
-        std::thread::sleep(RESTORE_DELAY);
-        if unsafe { GetClipboardSequenceNumber() } == sequence {
-            let _ = restore(&snapshot);
-        }
-    });
+    #[test]
+    fn leaves_out_the_ole_object_formats_only() {
+        assert!(is_ole_object_format("Embed Source"));
+        assert!(is_ole_object_format("Link Source Descriptor"));
+        assert!(!is_ole_object_format("HTML Format"));
+        assert!(!is_ole_object_format("Biff12"));
+    }
+
+    #[test]
+    fn leaves_out_synthesized_text_only_beside_unicode_text() {
+        assert!(is_skipped_format(CF_TEXT, true));
+        assert!(is_skipped_format(CF_OEMTEXT, true));
+        assert!(!is_skipped_format(CF_TEXT, false));
+        assert!(!is_skipped_format(CF_UNICODETEXT, true));
+    }
 }

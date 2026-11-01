@@ -329,7 +329,9 @@ fn integration_headless_platform() {
             foreign.text().as_deref() == Some("Inserted platform text")
         });
         assert_eq!(own.text().as_deref(), Some(""));
-        clipboard_restore::restore_later(snapshot, "Inserted platform text".into());
+        crate::services::platform::clipboard::session()
+            .begin()
+            .restore_later(snapshot, "Inserted platform text");
         eventually("clipboard restored", || {
             clipboard_restore::read_text().as_deref() == Some("Clipboard sentinel")
         });
@@ -337,7 +339,9 @@ fn integration_headless_platform() {
         // A later user copy must win over a pending restore.
         let snapshot = clipboard_restore::snapshot().unwrap();
         copy("Temporary paste", is_x11);
-        clipboard_restore::restore_later(snapshot, "Temporary paste".into());
+        crate::services::platform::clipboard::session()
+            .begin()
+            .restore_later(snapshot, "Temporary paste");
         copy("New user copy", is_x11);
         thread::sleep(Duration::from_millis(1300));
         assert_eq!(

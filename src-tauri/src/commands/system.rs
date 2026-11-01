@@ -4,7 +4,7 @@ use tauri::{AppHandle, Manager};
 
 use super::run_blocking;
 use crate::errors::AppError;
-use crate::services::platform::clipboard::copy_to_clipboard;
+use crate::services::platform::clipboard::copy_for_user;
 use crate::services::platform::open_web_page;
 use crate::services::status_overlay::{self, StatusOverlayRequest};
 
@@ -12,7 +12,7 @@ use crate::services::status_overlay::{self, StatusOverlayRequest};
 /// its output while another Tyco window may be in use.
 #[tauri::command]
 pub async fn copy_text(text: String) -> Result<(), AppError> {
-    run_blocking(move || copy_to_clipboard(&text)).await?
+    run_blocking(move || copy_for_user(&text)).await?
 }
 
 /// Opens a chat citation without hiding the conversation.

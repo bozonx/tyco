@@ -80,6 +80,9 @@ struct AppPasteHost<'a> {
     activation_id: u64,
     target: Option<ForegroundTarget>,
     user_config: std::sync::Arc<serde_json::Value>,
+    /// The insertion is one clipboard operation: no capture runs meanwhile,
+    /// and content an earlier operation still owes the user comes back.
+    clipboard: platform::clipboard::SystemClipboardOperation,
 }
 
 impl TargetPasteHost for AppPasteHost<'_> {
@@ -92,7 +95,7 @@ impl TargetPasteHost for AppPasteHost<'_> {
             .activation_id
     }
     fn clipboard_snapshot(&self) -> Option<ClipboardSnapshot> {
-        platform::clipboard::snapshot()
+        self.clipboard.snapshot()
     }
     fn hand_over_focus(&self) {
         if let Some(target) = &self.target {
@@ -112,10 +115,10 @@ impl TargetPasteHost for AppPasteHost<'_> {
         SystemTextInjector.inject(&self.user_config, self.target.as_ref())
     }
     fn restore_now(&self, snapshot: &ClipboardSnapshot) {
-        platform::clipboard::restore_now(snapshot);
+        self.clipboard.restore_now(snapshot);
     }
     fn restore_later(&self, snapshot: ClipboardSnapshot, text: String) {
-        platform::clipboard::restore_later(snapshot, text);
+        self.clipboard.restore_later(snapshot, &text);
     }
 }
 
@@ -139,6 +142,7 @@ pub fn paste_into_target(
             .clone()
             .map(ForegroundTarget::from_platform_id),
         user_config: snapshot.settings.user_config.clone(),
+        clipboard: platform::clipboard::session().begin(),
     };
     paste_with(&host, activation_id, text)
 }

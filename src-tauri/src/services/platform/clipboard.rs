@@ -6,37 +6,84 @@ use std::time::Duration;
 
 use crate::errors::AppError;
 
+mod session;
+
+pub(crate) use session::{session, SystemClipboardOperation};
+
+/// Whether clipboard managers and the clipboard history may keep a text.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Retention {
+    /// The user asked for the text and may want it again later.
+    History,
+    /// A probe, a selection or a result Tyco moves through the clipboard:
+    /// no content of the user's, and a history would keep it for good.
+    Transient,
+}
+
+/// Puts text the user asked for into the clipboard. Content an earlier
+/// capture or paste still owes back is forgotten: the user replaced it.
+pub fn copy_for_user(text: &str) -> Result<(), AppError> {
+    let operation = session().begin();
+    operation.discard_owed();
+    write_text(text, Retention::History)
+}
+
+/// Puts text Tyco moves through the clipboard there, kept out of clipboard
+/// managers where the platform allows. Captures and pastes call it while
+/// they hold a clipboard operation, see `session`.
 pub fn copy_to_clipboard(text: &str) -> Result<(), AppError> {
+    write_text(text, Retention::Transient)
+}
+
+fn write_text(text: &str, retention: Retention) -> Result<(), AppError> {
     #[cfg(target_os = "macos")]
     {
+        let _ = retention;
         write_to_clipboard_command("pbcopy", &[], text)
     }
 
     #[cfg(target_os = "windows")]
     {
-        super::windows::clipboard::write_text(text)
+        super::windows::clipboard::write_text(text, retention == Retention::Transient)
     }
 
     #[cfg(target_os = "linux")]
     {
-        copy_to_clipboard_linux(text)
+        copy_to_clipboard_linux(text, retention)
     }
 }
 
+/// Whether `wl-copy` can tell clipboard managers to keep a text out of their
+/// history (wl-clipboard 2.2 and later), which Klipper and CopyQ honor.
 #[cfg(target_os = "linux")]
-fn copy_to_clipboard_linux(text: &str) -> Result<(), AppError> {
+fn wl_copy_has_sensitive() -> bool {
+    static HAS_SENSITIVE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *HAS_SENSITIVE.get_or_init(|| {
+        super::linux::command::output_with_timeout("wl-copy", &["--help"], Duration::from_secs(2))
+            .is_some_and(|help| String::from_utf8_lossy(&help).contains("--sensitive"))
+    })
+}
+
+#[cfg(target_os = "linux")]
+fn copy_to_clipboard_linux(text: &str, retention: Retention) -> Result<(), AppError> {
     use super::linux::clipboard_restore::Backend;
 
+    // xclip and xsel cannot add the hint clipboard managers look for
+    let wl_copy: &[&str] = if retention == Retention::Transient && wl_copy_has_sensitive() {
+        &["--type", "text/plain", "--sensitive"]
+    } else {
+        &["--type", "text/plain"]
+    };
     // the tool of the session: on X11, `wl-copy` would fill the clipboard of
     // a Wayland session that `xclip` and the reads of Tyco never see
-    let clipboard_commands: &[(&str, &[&str])] = match Backend::current() {
-        Some(Backend::WlClipboard) => &[("wl-copy", &["--type", "text/plain"])],
-        Some(Backend::Xclip) => &[
+    let clipboard_commands: Vec<(&str, &[&str])> = match Backend::current() {
+        Some(Backend::WlClipboard) => vec![("wl-copy", wl_copy)],
+        Some(Backend::Xclip) => vec![
             ("xclip", &["-selection", "clipboard"]),
             ("xsel", &["--clipboard", "--input"]),
         ],
-        None => &[
-            ("wl-copy", &["--type", "text/plain"]),
+        None => vec![
+            ("wl-copy", wl_copy),
             ("xclip", &["-selection", "clipboard"]),
             ("xsel", &["--clipboard", "--input"]),
         ],
@@ -44,7 +91,7 @@ fn copy_to_clipboard_linux(text: &str) -> Result<(), AppError> {
 
     let mut last_error: Option<AppError> = None;
 
-    for &(binary, args) in clipboard_commands {
+    for (binary, args) in clipboard_commands {
         match write_to_clipboard_command(binary, args, text) {
             Ok(()) => return Ok(()),
             Err(AppError::Io(error)) if error.kind() == std::io::ErrorKind::NotFound => continue,
@@ -111,8 +158,9 @@ pub(crate) use super::windows::clipboard::ClipboardSnapshot;
 #[derive(Debug)]
 pub(crate) enum ClipboardSnapshot {}
 
-/// The clipboard content, if the platform can preserve it.
-pub(crate) fn snapshot() -> Option<ClipboardSnapshot> {
+/// The clipboard content, if the platform can preserve it. Captures and
+/// pastes take it through their operation, see `session`.
+fn snapshot() -> Option<ClipboardSnapshot> {
     #[cfg(target_os = "linux")]
     {
         super::linux::clipboard_restore::snapshot()
@@ -129,25 +177,8 @@ pub(crate) fn snapshot() -> Option<ClipboardSnapshot> {
     }
 }
 
-/// Puts `snapshot` back once the target window has had time to paste
-/// `inserted`, unless the clipboard got something else meanwhile.
-pub(crate) fn restore_later(snapshot: ClipboardSnapshot, inserted: String) {
-    #[cfg(target_os = "linux")]
-    super::linux::clipboard_restore::restore_later(snapshot, inserted);
-    #[cfg(target_os = "windows")]
-    {
-        let _ = inserted;
-        super::windows::clipboard::restore_later(snapshot);
-    }
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
-    {
-        let _ = inserted;
-        match snapshot {}
-    }
-}
-
 /// Puts `snapshot` back right away.
-pub(crate) fn restore_now(snapshot: &ClipboardSnapshot) {
+fn restore_now(snapshot: &ClipboardSnapshot) {
     #[cfg(target_os = "linux")]
     super::linux::clipboard_restore::restore_now(snapshot);
     #[cfg(target_os = "windows")]
@@ -173,17 +204,6 @@ pub(crate) fn read_text() -> Option<String> {
     {
         None
     }
-}
-
-/// Puts `snapshot` back again if an application copies over it soon after,
-/// see `restore_now` after a capture that gave up waiting for the copy.
-pub(crate) fn guard_restored(snapshot: ClipboardSnapshot) {
-    #[cfg(target_os = "linux")]
-    super::linux::clipboard_restore::guard_restored(snapshot);
-    #[cfg(target_os = "windows")]
-    super::windows::clipboard::guard_restored(snapshot);
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
-    match snapshot {}
 }
 
 /// Empties the clipboard; used when there is no snapshot to put back.

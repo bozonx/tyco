@@ -6,11 +6,20 @@
 //! an action runs, nor lose what the user copies meanwhile. The paste takes a
 //! fresh snapshot for the same reason.
 //!
-//! A terminal gets no copy keys: Ctrl+C interrupts the running program, and
-//! the keys that copy differ between terminals. On Linux its selection is
-//! read from the primary selection; nothing is ever pasted over it, since a
-//! terminal selection cannot be replaced and a paste at the prompt could run
-//! a command.
+//! Every capture and paste is one operation of the clipboard session, see
+//! `clipboard::session`: they never run at the same time, and content one
+//! still owes the user is not lost to the next.
+//!
+//! The copy keys are Ctrl+Insert, never Ctrl+C: Ctrl+C interrupts the
+//! program in a terminal, also one embedded in an editor that its window
+//! class does not tell. A terminal window gets no copy keys on Linux, where
+//! the keys that copy differ between terminals: its selection is read from
+//! the primary selection. Nothing is ever pasted over a terminal selection,
+//! since it cannot be replaced and a paste at the prompt could run a command.
+//!
+//! An editor that copies the current line when nothing is selected is told
+//! by the marks it leaves in the clipboard and, on Linux, by the primary
+//! selection, see `line_copy`.
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 use std::time::{Duration, Instant};
 
@@ -98,12 +107,14 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), Sel
         terminal_selection(&target.id)?
     } else {
         let injector = super::linux::text_injector::SystemTextInjector::detect();
+        let operation = super::clipboard::session().begin();
         copy_selection(
             &LinuxCopyProbe {
                 injector: &injector,
                 user_config,
+                target_id: &target.id,
             },
-            &SystemCaptureClipboard,
+            &SystemCaptureClipboard(&operation),
             &target.id,
         )?
     };
@@ -157,7 +168,8 @@ pub(crate) fn capture(user_config: &Value) -> Result<(String, SelectionRun), Sel
         SelectionRunError::new(SelectionRunErrorCode::Capture, error.to_string())
     })?;
     let probe = WindowsCopyProbe::new(keys);
-    let text = copy_selection(&probe, &SystemCaptureClipboard, &id)?;
+    let operation = super::clipboard::session().begin();
+    let text = copy_selection(&probe, &SystemCaptureClipboard(&operation), &id)?;
     Ok((
         text,
         new_run(SelectionTarget {
@@ -238,14 +250,15 @@ fn settle_clipboard<C: CaptureClipboard>(
     }
 }
 
+/// The clipboard of a capture, owned by its operation.
 #[cfg(any(target_os = "linux", target_os = "windows"))]
-struct SystemCaptureClipboard;
+struct SystemCaptureClipboard<'a>(&'a super::clipboard::SystemClipboardOperation);
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]
-impl CaptureClipboard for SystemCaptureClipboard {
+impl CaptureClipboard for SystemCaptureClipboard<'_> {
     type Snapshot = super::clipboard::ClipboardSnapshot;
     fn snapshot(&self) -> Option<Self::Snapshot> {
-        let snapshot = super::clipboard::snapshot();
+        let snapshot = self.0.snapshot();
         if snapshot.is_none() {
             log::warn!("The clipboard content cannot be preserved; the copied text replaces it");
         }
@@ -255,10 +268,10 @@ impl CaptureClipboard for SystemCaptureClipboard {
         super::clipboard::read_text()
     }
     fn restore_now(&self, snapshot: &Self::Snapshot) {
-        super::clipboard::restore_now(snapshot);
+        self.0.restore_now(snapshot);
     }
     fn guard_restored(&self, snapshot: Self::Snapshot) {
-        super::clipboard::guard_restored(snapshot);
+        self.0.guard_restored(snapshot);
     }
     fn clear(&self) {
         super::clipboard::clear();
@@ -278,13 +291,19 @@ trait CopyProbe {
     fn focused_target_id(&self) -> Option<String>;
     fn press_copy(&self) -> Result<(), AppError>;
     fn read_text(&self) -> Option<String>;
+    /// Whether `copied`, just copied, is the line an editor copies when
+    /// nothing is selected, see `line_copy`.
+    fn is_line_copy(&self, _copied: &str) -> bool {
+        false
+    }
 }
 
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 #[derive(Debug, PartialEq, Eq)]
 enum CopyOutcome {
     Copied(String),
-    /// Nothing, or only whitespace, is selected.
+    /// Nothing, or only whitespace, is selected; or the copy keys copied the
+    /// current line, which an editor does when nothing is selected.
     Nothing,
     /// Another window took the focus: its copy keys must not be pressed,
     /// e.g. Ctrl+C in a terminal stops the running program.
@@ -312,6 +331,10 @@ fn copy_with_probe(
         match read {
             Some(ref text) if text == probe => {}
             Some(ref text) if text.trim().is_empty() => return Ok(CopyOutcome::Nothing),
+            Some(text) if io.is_line_copy(&text) => {
+                log::debug!("The copy keys copied the current line: nothing is selected");
+                return Ok(CopyOutcome::Nothing);
+            }
             Some(text) => return Ok(CopyOutcome::Copied(text)),
             // not text, e.g. an image, or not answered yet
             None => {}
@@ -330,10 +353,16 @@ fn copy_with_probe(
     }
 }
 
+/// How long one poll of a capture waits for the clipboard owner: the next
+/// poll asks again, and the copy has its own deadline.
+#[cfg(target_os = "linux")]
+const LINUX_POLL_READ_TIMEOUT: Duration = Duration::from_millis(150);
+
 #[cfg(target_os = "linux")]
 struct LinuxCopyProbe<'a> {
     injector: &'a super::linux::text_injector::SystemTextInjector,
     user_config: &'a Value,
+    target_id: &'a str,
 }
 
 #[cfg(target_os = "linux")]
@@ -350,7 +379,36 @@ impl CopyProbe for LinuxCopyProbe<'_> {
             .press_in_focused(self.user_config, FocusedKeyAction::Copy)
     }
     fn read_text(&self) -> Option<String> {
-        super::clipboard::read_text()
+        super::linux::clipboard_restore::read_text_within(LINUX_POLL_READ_TIMEOUT)
+    }
+    fn is_line_copy(&self, copied: &str) -> bool {
+        use super::line_copy;
+        use super::linux::clipboard_restore;
+        let types = clipboard_restore::types();
+        let offers = |wanted: &str| types.iter().any(|offered| offered == wanted);
+        if line_copy::LINE_COPY_FORMATS
+            .iter()
+            .any(|format| offers(format))
+        {
+            return true;
+        }
+        let marks_empty_selection = [
+            line_copy::MONACO_DATA_TYPE,
+            line_copy::CHROMIUM_CUSTOM_DATA_TYPE,
+        ]
+        .into_iter()
+        .filter(|data_type| offers(data_type))
+        .any(|data_type| {
+            clipboard_restore::read_type(data_type)
+                .is_some_and(|data| line_copy::is_empty_selection_data(&data))
+        });
+        if marks_empty_selection {
+            return true;
+        }
+        // the primary selection holds what is really selected in the window
+        let display = super::session::current().display;
+        super::linux::is_selection_from(display, Some(self.target_id)) == Some(true)
+            && line_copy::contradicts_primary(copied, clipboard_restore::read_primary().as_deref())
     }
 }
 
@@ -376,7 +434,7 @@ impl WindowsCopyProbe {
 #[cfg(target_os = "windows")]
 impl CopyProbe for WindowsCopyProbe {
     fn write_probe(&self, probe: &str) -> Result<(), AppError> {
-        super::windows::clipboard::write_text(probe)?;
+        super::windows::clipboard::write_text(probe, true)?;
         self.sequence
             .set(super::windows::clipboard::sequence_number());
         Ok(())
@@ -388,10 +446,20 @@ impl CopyProbe for WindowsCopyProbe {
         super::windows::press_keys(self.keys, super::windows::KeyAction::Copy)
     }
     fn read_text(&self) -> Option<String> {
-        if super::windows::clipboard::sequence_number() == self.sequence.get() {
+        use super::windows::clipboard;
+        // no lock is needed to tell whether text is there yet
+        if clipboard::sequence_number() == self.sequence.get() || !clipboard::has_text() {
             return None;
         }
         super::clipboard::read_text()
+    }
+    fn is_line_copy(&self, _copied: &str) -> bool {
+        use super::{line_copy, windows::clipboard};
+        line_copy::LINE_COPY_FORMATS
+            .iter()
+            .any(|format| clipboard::has_format(format))
+            || clipboard::read_format(line_copy::CHROMIUM_CUSTOM_DATA_TYPE)
+                .is_some_and(|data| line_copy::is_empty_selection_data(&data))
     }
 }
 
@@ -414,11 +482,14 @@ trait PasteExecutor {
     fn restore_later(&self, snapshot: Self::Snapshot, text: String);
 }
 
-/// Line breaks as one character, the way the result and a copy compare: a
-/// Windows application copies CRLF.
+/// Whether a copy of the selection is the text the result was made of. Line
+/// breaks count as one character, as a Windows application copies CRLF, and
+/// whitespace at the ends does not count: Word and LibreOffice add a line
+/// break to a copied paragraph, and a copy may turn a no-break space into a
+/// space.
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 fn same_text(first: &str, second: &str) -> bool {
-    first.replace("\r\n", "\n") == second.replace("\r\n", "\n")
+    super::line_copy::normalized(first) == super::line_copy::normalized(second)
 }
 
 /// Pastes `text` over the selection of the run, when the selection is still
@@ -477,14 +548,15 @@ fn paste_with<E: PasteExecutor>(
     Ok(SelectionFinishStatus::Pasted)
 }
 
+/// The effects of a paste, under its clipboard operation.
 #[cfg(any(target_os = "linux", target_os = "windows"))]
-struct SystemPasteExecutor;
+struct SystemPasteExecutor<'a>(&'a super::clipboard::SystemClipboardOperation);
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]
-impl PasteExecutor for SystemPasteExecutor {
+impl PasteExecutor for SystemPasteExecutor<'_> {
     type Snapshot = super::clipboard::ClipboardSnapshot;
     fn snapshot(&self) -> Option<Self::Snapshot> {
-        super::clipboard::snapshot()
+        self.0.snapshot()
     }
     fn copy_selection(
         &self,
@@ -497,6 +569,7 @@ impl PasteExecutor for SystemPasteExecutor {
             let probe = LinuxCopyProbe {
                 injector: &injector,
                 user_config: config,
+                target_id: &target.id,
             };
             copy_with_probe(&probe, &SystemClock, &target.id, &probe_text())
         }
@@ -542,10 +615,10 @@ impl PasteExecutor for SystemPasteExecutor {
         }
     }
     fn restore_now(&self, snapshot: &Self::Snapshot) {
-        super::clipboard::restore_now(snapshot);
+        self.0.restore_now(snapshot);
     }
     fn restore_later(&self, snapshot: Self::Snapshot, text: String) {
-        super::clipboard::restore_later(snapshot, text);
+        self.0.restore_later(snapshot, &text);
     }
 }
 
@@ -555,7 +628,8 @@ pub(crate) fn paste_result(
     run: SelectionRun,
     text: String,
 ) -> Result<SelectionFinishStatus, AppError> {
-    paste_with(&SystemPasteExecutor, config, run, text)
+    let operation = super::clipboard::session().begin();
+    paste_with(&SystemPasteExecutor(&operation), config, run, text)
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "windows")))]
@@ -581,6 +655,8 @@ mod tests {
         reads: RefCell<Vec<Option<&'static str>>>,
         elapsed: Cell<Duration>,
         start: Instant,
+        /// Whether the clipboard marks the copy as a line copied without a selection
+        line_copy: bool,
     }
 
     fn probe(focused: Option<&'static str>, reads: Vec<Option<&'static str>>) -> Probe {
@@ -590,6 +666,7 @@ mod tests {
             reads: RefCell::new(reads),
             elapsed: Cell::new(Duration::ZERO),
             start: Instant::now(),
+            line_copy: false,
         }
     }
 
@@ -613,6 +690,9 @@ mod tests {
                 reads[0]
             };
             read.map(|text| text.replace("PROBE", "p"))
+        }
+        fn is_line_copy(&self, _copied: &str) -> bool {
+            self.line_copy
         }
     }
 
@@ -664,6 +744,25 @@ mod tests {
             );
             assert!(io.elapsed.get() >= COPY_TIMEOUT);
         }
+    }
+
+    #[test]
+    fn the_line_an_editor_copies_without_a_selection_is_no_selection() {
+        let io = Probe {
+            line_copy: true,
+            ..probe(Some("target"), vec![Some("fn main() {}\n")])
+        };
+        assert_eq!(
+            copy_with_probe(&io, &io, "target", "p").unwrap(),
+            CopyOutcome::Nothing
+        );
+    }
+
+    #[test]
+    fn a_selection_copied_with_other_line_breaks_or_end_whitespace_is_the_same() {
+        assert!(same_text("line one\nline two", "line one\r\nline two\r\n"));
+        assert!(same_text("a\u{a0}b", "a b"));
+        assert!(!same_text("line one", "line two"));
     }
 
     /// A clipboard holding `current`, whose snapshot is "user content".
