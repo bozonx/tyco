@@ -341,8 +341,12 @@
       "heading1": "見出し 1",
       "heading2": "見出し 2",
       "heading3": "見出し 3",
+      "heading4": "見出し 4",
+      "heading5": "見出し 5",
+      "heading6": "見出し 6",
       "italic": "斜体",
       "link": "リンク",
+      "normalText": "標準テキスト",
       "orderedList": "番号付きリスト",
       "quote": "引用",
       "showSource": "Markdown記法を表示",
@@ -350,10 +354,7 @@
       "switchToFormatted": "現在: Markdown。リッチテキストに切り替え (Ctrl+Shift+M)",
       "switchToSource": "現在: リッチテキスト。Markdownに切り替え (Ctrl+Shift+M)",
       "taskList": "タスクリスト",
-      "title": "マークアップ",
-      "heading4": "見出し 4",
-      "heading5": "見出し 5",
-      "heading6": "見出し 6"
+      "title": "マークアップ"
     },
     "menu": {
       "actions": "アクション",

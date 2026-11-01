@@ -341,8 +341,12 @@
       "heading1": "Заголовок 1",
       "heading2": "Заголовок 2",
       "heading3": "Заголовок 3",
+      "heading4": "Заголовок 4",
+      "heading5": "Заголовок 5",
+      "heading6": "Заголовок 6",
       "italic": "Курсив",
       "link": "Посилання",
+      "normalText": "Звичайний текст",
       "orderedList": "Нумерований список",
       "quote": "Цитата",
       "showSource": "Показати розмітку Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Зараз: Markdown. Перейти до форматованого тексту (Ctrl+Shift+M)",
       "switchToSource": "Зараз: форматований текст. Перейти до Markdown (Ctrl+Shift+M)",
       "taskList": "Список завдань",
-      "title": "Розмітка",
-      "heading4": "Заголовок 4",
-      "heading5": "Заголовок 5",
-      "heading6": "Заголовок 6"
+      "title": "Розмітка"
     },
     "menu": {
       "actions": "Дії",

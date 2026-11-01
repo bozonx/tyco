@@ -341,8 +341,12 @@
       "heading1": "Επικεφαλίδα 1",
       "heading2": "Επικεφαλίδα 2",
       "heading3": "Επικεφαλίδα 3",
+      "heading4": "Επικεφαλίδα 4",
+      "heading5": "Επικεφαλίδα 5",
+      "heading6": "Επικεφαλίδα 6",
       "italic": "Πλάγια",
       "link": "Σύνδεσμος",
+      "normalText": "Κανονικό κείμενο",
       "orderedList": "Αριθμημένη λίστα",
       "quote": "Παράθεση",
       "showSource": "Εμφάνιση σήμανσης Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Τώρα: Markdown. Μετάβαση σε μορφοποιημένο κείμενο (Ctrl+Shift+M)",
       "switchToSource": "Τώρα: μορφοποιημένο κείμενο. Μετάβαση σε Markdown (Ctrl+Shift+M)",
       "taskList": "Λίστα εργασιών",
-      "title": "Σήμανση",
-      "heading4": "Επικεφαλίδα 4",
-      "heading5": "Επικεφαλίδα 5",
-      "heading6": "Επικεφαλίδα 6"
+      "title": "Σήμανση"
     },
     "menu": {
       "actions": "Ενέργειες",

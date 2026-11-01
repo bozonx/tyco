@@ -24,7 +24,8 @@ const ENTRIES: MarkupEntry[] = [
   { command: 'strikethrough', icon: 'mdi:format-strikethrough-variant' },
   { command: 'code', icon: 'mdi:code-tags' },
   { command: 'link', icon: 'mdi:link-variant' },
-  { command: 'heading1', icon: 'mdi:format-header-1', group: true },
+  { command: 'normalText', icon: 'mdi:format-paragraph', group: true },
+  { command: 'heading1', icon: 'mdi:format-header-1' },
   { command: 'heading2', icon: 'mdi:format-header-2' },
   { command: 'heading3', icon: 'mdi:format-header-3' },
   { command: 'heading4', icon: 'mdi:format-header-4' },
@@ -35,6 +36,11 @@ const ENTRIES: MarkupEntry[] = [
   { command: 'taskList', icon: 'mdi:format-list-checks' },
   { command: 'quote', icon: 'mdi:format-quote-close' },
 ]
+
+function formatShortcutForMenu(shortcut?: string): string | undefined {
+  if (!shortcut) return undefined
+  return shortcut.replace(/\bPeriod\b/g, '.')
+}
 
 /**
  * The "Markup" submenu of the editor: the formatting a quick buffer rarely
@@ -51,7 +57,9 @@ export const buildMarkupItems = ({
     id: `markup-${entry.command}`,
     label: t(`editor.markup.${entry.command}`),
     icon: entry.icon,
-    shortcut: shortcuts[entry.command as keyof EditorShortcuts] || undefined,
+    shortcut: formatShortcutForMenu(
+      shortcuts[entry.command as keyof EditorShortcuts]
+    ),
     separatorBefore: entry.group,
     action: () => run(entry.command),
   })),
@@ -61,7 +69,7 @@ export const buildMarkupItems = ({
     icon: isMarkupShown
       ? 'mdi:checkbox-marked-outline'
       : 'mdi:checkbox-blank-outline',
-    shortcut: shortcuts.toggleMarkup || undefined,
+    shortcut: formatShortcutForMenu(shortcuts.toggleMarkup),
     separatorBefore: true,
     action: toggleShowMarkup,
   },

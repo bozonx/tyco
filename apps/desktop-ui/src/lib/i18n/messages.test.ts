@@ -179,6 +179,7 @@ const DYNAMIC_KEYS = new Set([
     'strikethrough',
     'code',
     'link',
+    'normalText',
     'heading1',
     'heading2',
     'heading3',

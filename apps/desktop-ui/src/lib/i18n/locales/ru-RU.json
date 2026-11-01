@@ -341,8 +341,12 @@
       "heading1": "Заголовок 1",
       "heading2": "Заголовок 2",
       "heading3": "Заголовок 3",
+      "heading4": "Заголовок 4",
+      "heading5": "Заголовок 5",
+      "heading6": "Заголовок 6",
       "italic": "Курсив",
       "link": "Ссылка",
+      "normalText": "Обычный текст",
       "orderedList": "Нумерованный список",
       "quote": "Цитата",
       "showSource": "Показывать разметку Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Сейчас: Markdown. Переключить на форматированный текст (Ctrl+Shift+M)",
       "switchToSource": "Сейчас: форматированный текст. Переключить на Markdown (Ctrl+Shift+M)",
       "taskList": "Список задач",
-      "title": "Разметка",
-      "heading4": "Заголовок 4",
-      "heading5": "Заголовок 5",
-      "heading6": "Заголовок 6"
+      "title": "Разметка"
     },
     "menu": {
       "actions": "Действия",

@@ -341,8 +341,12 @@
       "heading1": "제목 1",
       "heading2": "제목 2",
       "heading3": "제목 3",
+      "heading4": "제목 4",
+      "heading5": "제목 5",
+      "heading6": "제목 6",
       "italic": "기울임꼴",
       "link": "링크",
+      "normalText": "일반 텍스트",
       "orderedList": "번호 매기기 목록",
       "quote": "인용구",
       "showSource": "Markdown 마크업 표시",
@@ -350,10 +354,7 @@
       "switchToFormatted": "현재: Markdown. 서식 있는 텍스트로 전환 (Ctrl+Shift+M)",
       "switchToSource": "현재: 서식 있는 텍스트. Markdown으로 전환 (Ctrl+Shift+M)",
       "taskList": "작업 목록",
-      "title": "마크업",
-      "heading4": "제목 4",
-      "heading5": "제목 5",
-      "heading6": "제목 6"
+      "title": "마크업"
     },
     "menu": {
       "actions": "작업",

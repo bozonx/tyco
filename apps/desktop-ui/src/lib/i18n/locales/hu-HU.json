@@ -341,8 +341,12 @@
       "heading1": "1. címsor",
       "heading2": "2. címsor",
       "heading3": "3. címsor",
+      "heading4": "4. címsor",
+      "heading5": "5. címsor",
+      "heading6": "6. címsor",
       "italic": "Dőlt",
       "link": "Hivatkozás",
+      "normalText": "Normál szöveg",
       "orderedList": "Számozott lista",
       "quote": "Idézet",
       "showSource": "Markdown-jelölés megjelenítése",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Most: Markdown. Váltás formázott szövegre (Ctrl+Shift+M)",
       "switchToSource": "Most: formázott szöveg. Váltás Markdownra (Ctrl+Shift+M)",
       "taskList": "Feladatlista",
-      "title": "Jelölés",
-      "heading4": "4. címsor",
-      "heading5": "5. címsor",
-      "heading6": "6. címsor"
+      "title": "Jelölés"
     },
     "menu": {
       "actions": "Műveletek",

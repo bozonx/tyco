@@ -341,8 +341,12 @@
       "heading1": "სათაური 1",
       "heading2": "სათაური 2",
       "heading3": "სათაური 3",
+      "heading4": "სათაური 4",
+      "heading5": "სათაური 5",
+      "heading6": "სათაური 6",
       "italic": "დახრილი",
       "link": "ბმული",
+      "normalText": "ჩვეულებრივი ტექსტი",
       "orderedList": "დანომრილი სია",
       "quote": "ციტატა",
       "showSource": "Markdown მარკირების ჩვენება",
@@ -350,10 +354,7 @@
       "switchToFormatted": "ახლა: Markdown. ფორმატირებულ ტექსტზე გადართვა (Ctrl+Shift+M)",
       "switchToSource": "ახლა: ფორმატირებული ტექსტი. Markdown-ზე გადართვა (Ctrl+Shift+M)",
       "taskList": "დავალებების სია",
-      "title": "მარკირება",
-      "heading4": "სათაური 4",
-      "heading5": "სათაური 5",
-      "heading6": "სათაური 6"
+      "title": "მარკირება"
     },
     "menu": {
       "actions": "მოქმედებები",

@@ -2,6 +2,7 @@ import { EditorSelection, EditorState } from '@codemirror/state'
 import { describe, expect, it } from 'vitest'
 
 import {
+  clearLinePrefix,
   insertLink,
   toggleInlineMark,
   toggleLinePrefix,
@@ -121,6 +122,32 @@ describe('toggleLinePrefix with nesting and tasks', () => {
     expect(toggle('one\n- two', 0, 9, '- [ ] ')).toBe('- [ ] one\n- [ ] two')
     expect(toggle('- [x] done\n- [ ] todo', 0, 20, '- [ ] ')).toBe('done\ntodo')
     expect(toggle('- [ ] task', 0, 0, '- ')).toBe('- task')
+  })
+})
+
+describe('clearLinePrefix', () => {
+  it('clears headings, lists, tasks and quotes', () => {
+    const doc = '# Title\n- Bullet\n1. Numbered\n- [ ] Task\n> Quote\nPlain'
+    const state = stateWith(doc, 0, doc.length)
+    expect(state.update(clearLinePrefix(state)).state.doc.toString()).toBe(
+      'Title\nBullet\nNumbered\nTask\nQuote\nPlain'
+    )
+  })
+
+  it('preserves indentation when clearing line prefix', () => {
+    const doc = '  - nested item'
+    const state = stateWith(doc, 0, doc.length)
+    expect(state.update(clearLinePrefix(state)).state.doc.toString()).toBe(
+      '  nested item'
+    )
+  })
+
+  it('leaves already plain text untouched', () => {
+    const doc = 'just text'
+    const state = stateWith(doc, 2, 5)
+    expect(state.update(clearLinePrefix(state)).state.doc.toString()).toBe(
+      'just text'
+    )
   })
 })
 

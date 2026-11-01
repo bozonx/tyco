@@ -20,17 +20,20 @@ the selection; the view mirrors them.
 
 ## Keys
 
-| Keys            | Action                                                                |
-| --------------- | --------------------------------------------------------------------- |
-| Ctrl+B / I / E  | Bold, italic, inline code (toggles)                                   |
-| Ctrl+Shift+X    | Strikethrough                                                         |
-| Ctrl+1…6        | Toggle heading level 1–6                                              |
-| Ctrl+K          | Link from the selection                                               |
-| Tab / Shift+Tab | Indent or outdent the selected lines or the list item under the caret |
-| Ctrl+Shift+M    | Formatted view ↔ raw Markdown                                         |
-| Ctrl+Shift+V    | Paste as plain text                                                   |
-| Ctrl+Enter      | Quick actions                                                         |
-| Ctrl+Z / Ctrl+Y | Undo / redo on any keyboard layout (`history-keys.ts`)                |
+| Keys                 | Action                                                                |
+| -------------------- | --------------------------------------------------------------------- |
+| Ctrl+B / I / E       | Bold, italic, inline code (toggles)                                   |
+| Ctrl+Shift+X         | Strikethrough                                                         |
+| Ctrl+0               | Normal text (clears heading, list or quote prefix)                    |
+| Ctrl+1…3             | Toggle heading level 1–3                                              |
+| Ctrl+Shift+8 / 7 / 9 | Bulleted, numbered and task lists                                     |
+| Ctrl+Shift+.         | Quote                                                                 |
+| Ctrl+K               | Link from the selection                                               |
+| Tab / Shift+Tab      | Indent or outdent the selected lines or the list item under the caret |
+| Ctrl+Shift+M         | Formatted view ↔ raw Markdown                                         |
+| Ctrl+Shift+V         | Paste as plain text                                                   |
+| Ctrl+Enter           | Quick actions                                                         |
+| Ctrl+Z / Ctrl+Y      | Undo / redo on any keyboard layout (`history-keys.ts`)                |
 
 Formatting, indentation and Markdown display shortcuts are configurable in the
 Editor section at the bottom of Hotkeys settings. Empty bindings disable a

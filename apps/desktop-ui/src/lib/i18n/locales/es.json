@@ -341,8 +341,12 @@
       "heading1": "Encabezado 1",
       "heading2": "Encabezado 2",
       "heading3": "Encabezado 3",
+      "heading4": "Encabezado 4",
+      "heading5": "Encabezado 5",
+      "heading6": "Encabezado 6",
       "italic": "Cursiva",
       "link": "Enlace",
+      "normalText": "Texto normal",
       "orderedList": "Lista numerada",
       "quote": "Cita",
       "showSource": "Mostrar el marcado Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Ahora: Markdown. Cambiar a texto con formato (Ctrl+Shift+M)",
       "switchToSource": "Ahora: texto con formato. Cambiar a Markdown (Ctrl+Shift+M)",
       "taskList": "Lista de tareas",
-      "title": "Marcado",
-      "heading4": "Encabezado 4",
-      "heading5": "Encabezado 5",
-      "heading6": "Encabezado 6"
+      "title": "Marcado"
     },
     "menu": {
       "actions": "Acciones",

@@ -4,6 +4,7 @@ import { EditorView } from '@codemirror/view'
 import {
   DEFAULT_USER_CONFIG,
   hotkeyFromKeyboardEvent,
+  normalizeHotkey,
   type EditorShortcutId,
   type EditorShortcuts,
 } from '@tyco/shared'
@@ -72,7 +73,11 @@ export function editorShortcutsExtension(
         const shortcut = editorShortcutFromEvent(event)
         if (!shortcut) return false
         const shortcuts = getShortcuts()
-        const id = EDITOR_SHORTCUT_IDS.find((id) => shortcuts[id] === shortcut)
+        const id = EDITOR_SHORTCUT_IDS.find(
+          (id) =>
+            shortcuts[id] === shortcut ||
+            normalizeHotkey(shortcuts[id]) === shortcut
+        )
         if (!id) return false
         if (id === 'indent') return indentOrInsertTab(view)
         if (id === 'outdent') return indentLess(view)

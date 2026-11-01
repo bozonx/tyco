@@ -341,8 +341,12 @@
       "heading1": "1-тақырып",
       "heading2": "2-тақырып",
       "heading3": "3-тақырып",
+      "heading4": "4-тақырып",
+      "heading5": "5-тақырып",
+      "heading6": "6-тақырып",
       "italic": "Көлбеу",
       "link": "Сілтеме",
+      "normalText": "Қалыпты мәтін",
       "orderedList": "Нөмірленген тізім",
       "quote": "Дәйексөз",
       "showSource": "Markdown белгілерін көрсету",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Қазір: Markdown. Пішімделген мәтінге ауысу (Ctrl+Shift+M)",
       "switchToSource": "Қазір: пішімделген мәтін. Markdown-ға ауысу (Ctrl+Shift+M)",
       "taskList": "Тапсырмалар тізімі",
-      "title": "Белгілеу",
-      "heading4": "4-тақырып",
-      "heading5": "5-тақырып",
-      "heading6": "6-тақырып"
+      "title": "Белгілеу"
     },
     "menu": {
       "actions": "Әрекеттер",

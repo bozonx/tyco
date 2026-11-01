@@ -341,8 +341,12 @@
       "heading1": "Titre 1",
       "heading2": "Titre 2",
       "heading3": "Titre 3",
+      "heading4": "Titre 4",
+      "heading5": "Titre 5",
+      "heading6": "Titre 6",
       "italic": "Italique",
       "link": "Lien",
+      "normalText": "Texte normal",
       "orderedList": "Liste numérotée",
       "quote": "Citation",
       "showSource": "Afficher le balisage Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Actuellement : Markdown. Passer au texte mis en forme (Ctrl+Maj+M)",
       "switchToSource": "Actuellement : texte mis en forme. Passer au Markdown (Ctrl+Maj+M)",
       "taskList": "Liste de tâches",
-      "title": "Balisage",
-      "heading4": "Titre 4",
-      "heading5": "Titre 5",
-      "heading6": "Titre 6"
+      "title": "Balisage"
     },
     "menu": {
       "actions": "Actions",

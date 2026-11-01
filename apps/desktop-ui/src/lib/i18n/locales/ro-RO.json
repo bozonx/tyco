@@ -341,8 +341,12 @@
       "heading1": "Titlu 1",
       "heading2": "Titlu 2",
       "heading3": "Titlu 3",
+      "heading4": "Titlu 4",
+      "heading5": "Titlu 5",
+      "heading6": "Titlu 6",
       "italic": "Cursiv",
       "link": "Link",
+      "normalText": "Text normal",
       "orderedList": "Listă numerotată",
       "quote": "Citat",
       "showSource": "Afișează marcajul Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Acum: Markdown. Comută la text formatat (Ctrl+Shift+M)",
       "switchToSource": "Acum: text formatat. Comută la Markdown (Ctrl+Shift+M)",
       "taskList": "Listă de sarcini",
-      "title": "Marcaj",
-      "heading4": "Titlu 4",
-      "heading5": "Titlu 5",
-      "heading6": "Titlu 6"
+      "title": "Marcaj"
     },
     "menu": {
       "actions": "Acțiuni",

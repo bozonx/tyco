@@ -341,8 +341,12 @@
       "heading1": "Başlık 1",
       "heading2": "Başlık 2",
       "heading3": "Başlık 3",
+      "heading4": "Başlık 4",
+      "heading5": "Başlık 5",
+      "heading6": "Başlık 6",
       "italic": "İtalik",
       "link": "Bağlantı",
+      "normalText": "Normal metin",
       "orderedList": "Numaralı liste",
       "quote": "Alıntı",
       "showSource": "Markdown işaretlerini göster",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Şu an: Markdown. Biçimlendirilmiş metne geç (Ctrl+Shift+M)",
       "switchToSource": "Şu an: biçimlendirilmiş metin. Markdown görünümüne geç (Ctrl+Shift+M)",
       "taskList": "Görev listesi",
-      "title": "Biçimlendirme",
-      "heading4": "Başlık 4",
-      "heading5": "Başlık 5",
-      "heading6": "Başlık 6"
+      "title": "Biçimlendirme"
     },
     "menu": {
       "actions": "Eylemler",

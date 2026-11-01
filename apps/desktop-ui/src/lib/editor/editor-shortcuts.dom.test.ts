@@ -52,7 +52,7 @@ function press(
 }
 
 describe('editor shortcuts', () => {
-  it.each([1, 2, 3, 4, 5, 6])('toggles heading %i and undoes it', (level) => {
+  it.each([1, 2, 3])('toggles heading %i and undoes it', (level) => {
     const { view } = editor('Title', 3)
     expect(press(view, String(level), `Digit${level}`)).toBe(true)
     expect(view.state.doc.toString()).toBe(`${'#'.repeat(level)} Title`)
@@ -60,21 +60,49 @@ describe('editor shortcuts', () => {
     expect(view.state.doc.toString()).toBe('Title')
     expect(undo(view)).toBe(true)
   })
+  it('does not bind headings 4-6 by default', () => {
+    const { view } = editor('Title', 3)
+    expect(press(view, '4', 'Digit4')).toBe(false)
+    expect(press(view, '5', 'Digit5')).toBe(false)
+    expect(press(view, '6', 'Digit6')).toBe(false)
+    expect(view.state.doc.toString()).toBe('Title')
+  })
+  it('turns heading into normal text with Ctrl+0', () => {
+    const { view } = editor('# Title', 3)
+    expect(press(view, '0', 'Digit0')).toBe(true)
+    expect(view.state.doc.toString()).toBe('Title')
+    expect(undo(view)).toBe(true)
+    expect(view.state.doc.toString()).toBe('# Title')
+  })
+  it('toggles bulleted, numbered, checklist lists and quotes with default shortcuts', () => {
+    const { view } = editor('Item', 2)
+    expect(press(view, '8', 'Digit8', { shiftKey: true })).toBe(true)
+    expect(view.state.doc.toString()).toBe('- Item')
+
+    expect(press(view, '7', 'Digit7', { shiftKey: true })).toBe(true)
+    expect(view.state.doc.toString()).toBe('1. Item')
+
+    expect(press(view, '9', 'Digit9', { shiftKey: true })).toBe(true)
+    expect(view.state.doc.toString()).toBe('- [ ] Item')
+
+    expect(press(view, '.', 'Period', { shiftKey: true })).toBe(true)
+    expect(view.state.doc.toString()).toBe('> Item')
+  })
   it('keeps the caret after the inserted heading marker', () => {
     const { view } = editor('', 0)
-    press(view, '6', 'Digit6')
-    expect(view.state.selection.main.head).toBe(7)
+    press(view, '3', 'Digit3')
+    expect(view.state.selection.main.head).toBe(4)
     view.dispatch(view.state.replaceSelection('Title'))
-    expect(view.state.doc.toString()).toBe('###### Title')
+    expect(view.state.doc.toString()).toBe('### Title')
     undo(view)
-    expect(view.state.doc.toString()).toBe('###### ')
+    expect(view.state.doc.toString()).toBe('### ')
     undo(view)
     expect(view.state.doc.toString()).toBe('')
   })
   it('changes the heading level and excludes a line at the selection end', () => {
     const { view } = editor('# One\nTwo\nThree', 0, 10)
-    press(view, '4', 'Digit4')
-    expect(view.state.doc.toString()).toBe('#### One\n#### Two\nThree')
+    press(view, '2', 'Digit2')
+    expect(view.state.doc.toString()).toBe('## One\n## Two\nThree')
   })
   it('uses current bindings immediately and releases the old binding', () => {
     const { view, configure } = editor('text', 0, 4)

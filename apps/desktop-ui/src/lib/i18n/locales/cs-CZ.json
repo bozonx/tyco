@@ -341,8 +341,12 @@
       "heading1": "Nadpis 1",
       "heading2": "Nadpis 2",
       "heading3": "Nadpis 3",
+      "heading4": "Nadpis 4",
+      "heading5": "Nadpis 5",
+      "heading6": "Nadpis 6",
       "italic": "Kurzíva",
       "link": "Odkaz",
+      "normalText": "Normální text",
       "orderedList": "Číslovaný seznam",
       "quote": "Citace",
       "showSource": "Zobrazit značky Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Nyní: Markdown. Přepnout na formátovaný text (Ctrl+Shift+M)",
       "switchToSource": "Nyní: formátovaný text. Přepnout na Markdown (Ctrl+Shift+M)",
       "taskList": "Seznam úkolů",
-      "title": "Značky",
-      "heading4": "Nadpis 4",
-      "heading5": "Nadpis 5",
-      "heading6": "Nadpis 6"
+      "title": "Značky"
     },
     "menu": {
       "actions": "Akce",

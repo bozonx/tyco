@@ -19,6 +19,21 @@ describe('buildMarkupItems', () => {
     })
     void bold.action?.()
     expect(run).toHaveBeenCalledWith('bold')
+
+    const normalText = items.find((item) => item.id === 'markup-normalText')!
+    expect(normalText).toMatchObject({
+      label: 'editor.markup.normalText',
+      shortcut: 'Ctrl+0',
+    })
+
+    const quote = items.find((item) => item.id === 'markup-quote')!
+    expect(quote).toMatchObject({
+      label: 'editor.markup.quote',
+      shortcut: 'Ctrl+Shift+.',
+    })
+
+    const heading4 = items.find((item) => item.id === 'markup-heading4')!
+    expect(heading4.shortcut).toBeUndefined()
   })
 
   it('ends with the raw markup switch showing its state', () => {

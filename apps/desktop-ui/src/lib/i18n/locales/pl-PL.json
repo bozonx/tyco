@@ -341,8 +341,12 @@
       "heading1": "Nagłówek 1",
       "heading2": "Nagłówek 2",
       "heading3": "Nagłówek 3",
+      "heading4": "Nagłówek 4",
+      "heading5": "Nagłówek 5",
+      "heading6": "Nagłówek 6",
       "italic": "Kursywa",
       "link": "Link",
+      "normalText": "Zwykły tekst",
       "orderedList": "Lista numerowana",
       "quote": "Cytat",
       "showSource": "Pokaż znaczniki Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Teraz: Markdown. Przełącz na tekst sformatowany (Ctrl+Shift+M)",
       "switchToSource": "Teraz: tekst sformatowany. Przełącz na Markdown (Ctrl+Shift+M)",
       "taskList": "Lista zadań",
-      "title": "Znaczniki",
-      "heading4": "Nagłówek 4",
-      "heading5": "Nagłówek 5",
-      "heading6": "Nagłówek 6"
+      "title": "Znaczniki"
     },
     "menu": {
       "actions": "Akcje",

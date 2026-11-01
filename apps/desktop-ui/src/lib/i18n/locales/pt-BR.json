@@ -341,8 +341,12 @@
       "heading1": "Título 1",
       "heading2": "Título 2",
       "heading3": "Título 3",
+      "heading4": "Título 4",
+      "heading5": "Título 5",
+      "heading6": "Título 6",
       "italic": "Itálico",
       "link": "Link",
+      "normalText": "Texto normal",
       "orderedList": "Lista numerada",
       "quote": "Citação",
       "showSource": "Mostrar a marcação Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Agora: Markdown. Mudar para texto formatado (Ctrl+Shift+M)",
       "switchToSource": "Agora: texto formatado. Mudar para Markdown (Ctrl+Shift+M)",
       "taskList": "Lista de tarefas",
-      "title": "Marcação",
-      "heading4": "Título 4",
-      "heading5": "Título 5",
-      "heading6": "Título 6"
+      "title": "Marcação"
     },
     "menu": {
       "actions": "Ações",

@@ -341,8 +341,12 @@
       "heading1": "Überschrift 1",
       "heading2": "Überschrift 2",
       "heading3": "Überschrift 3",
+      "heading4": "Überschrift 4",
+      "heading5": "Überschrift 5",
+      "heading6": "Überschrift 6",
       "italic": "Kursiv",
       "link": "Link",
+      "normalText": "Normaler Text",
       "orderedList": "Nummerierte Liste",
       "quote": "Zitat",
       "showSource": "Markdown-Auszeichnung anzeigen",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Jetzt: Markdown. Zu formatiertem Text wechseln (Strg+Umschalt+M)",
       "switchToSource": "Jetzt: formatierter Text. Zu Markdown wechseln (Strg+Umschalt+M)",
       "taskList": "Aufgabenliste",
-      "title": "Auszeichnung",
-      "heading4": "Überschrift 4",
-      "heading5": "Überschrift 5",
-      "heading6": "Überschrift 6"
+      "title": "Auszeichnung"
     },
     "menu": {
       "actions": "Aktionen",

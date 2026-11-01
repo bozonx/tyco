@@ -87,5 +87,7 @@ const MAC_KEY_LABELS: Record<string, string> = {
 export function keyLabelFor(key: string, platform: HotkeyPlatform): string {
   if (platform === 'macos') return MAC_KEY_LABELS[key] ?? key
   if (platform === 'windows' && key === 'Super') return 'Win'
+  if (key === 'Period') return '.'
+  if (key === 'Comma') return ','
   return key
 }

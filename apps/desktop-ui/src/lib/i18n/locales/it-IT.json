@@ -341,8 +341,12 @@
       "heading1": "Titolo 1",
       "heading2": "Titolo 2",
       "heading3": "Titolo 3",
+      "heading4": "Titolo 4",
+      "heading5": "Titolo 5",
+      "heading6": "Titolo 6",
       "italic": "Corsivo",
       "link": "Link",
+      "normalText": "Testo normale",
       "orderedList": "Elenco numerato",
       "quote": "Citazione",
       "showSource": "Mostra il markup Markdown",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Ora: Markdown. Passa al testo formattato (Ctrl+Maiusc+M)",
       "switchToSource": "Ora: testo formattato. Passa a Markdown (Ctrl+Maiusc+M)",
       "taskList": "Elenco attività",
-      "title": "Markup",
-      "heading4": "Titolo 4",
-      "heading5": "Titolo 5",
-      "heading6": "Titolo 6"
+      "title": "Markup"
     },
     "menu": {
       "actions": "Azioni",

@@ -127,6 +127,29 @@ export const toggleLinePrefix = (
 }
 
 /**
+ * Removes any heading, list or quote prefix from every line of the selection,
+ * turning the lines into normal text.
+ */
+export const clearLinePrefix = (state: EditorState): TransactionSpec => {
+  const { from, to } = state.selection.main
+  const first = state.doc.lineAt(from).number
+  const last = state.doc.lineAt(
+    to > from && state.doc.lineAt(to).from === to ? to - 1 : to
+  ).number
+  const lines = Array.from({ length: last - first + 1 }, (_, index) =>
+    state.doc.line(first + index)
+  )
+  const changes = lines.flatMap((line) => {
+    const [, indent = '', current = ''] = LINE_PREFIX.exec(line.text) ?? []
+    if (!current) return []
+    const from = line.from + indent.length
+    return [{ from, to: from + current.length, insert: '' }]
+  })
+
+  return { changes, selection: state.selection.map(state.changes(changes), 1) }
+}
+
+/**
  * `[text](url)` from the selection; the caret lands where the address goes. A
  * selection that is an address itself becomes the address.
  */
@@ -181,6 +204,7 @@ export const markdownCommands = {
   strikethrough: run((state) => toggleInlineMark(state, '~~')),
   code: run((state) => toggleInlineMark(state, '`')),
   link: run(insertLink),
+  normalText: run(clearLinePrefix),
   heading1: run((state) => toggleLinePrefix(state, '# ')),
   heading2: run((state) => toggleLinePrefix(state, '## ')),
   heading3: run((state) => toggleLinePrefix(state, '### ')),

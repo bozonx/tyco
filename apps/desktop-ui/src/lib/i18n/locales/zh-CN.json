@@ -341,8 +341,12 @@
       "heading1": "一级标题",
       "heading2": "二级标题",
       "heading3": "三级标题",
+      "heading4": "三级标题",
+      "heading5": "三级标题",
+      "heading6": "三级标题",
       "italic": "斜体",
       "link": "链接",
+      "normalText": "普通文本",
       "orderedList": "有序列表",
       "quote": "引用",
       "showSource": "显示 Markdown 标记",
@@ -350,10 +354,7 @@
       "switchToFormatted": "当前为 Markdown。切换到格式化文本 (Ctrl+Shift+M)",
       "switchToSource": "当前为格式化文本。切换到 Markdown (Ctrl+Shift+M)",
       "taskList": "任务列表",
-      "title": "标记",
-      "heading4": "三级标题",
-      "heading5": "三级标题",
-      "heading6": "三级标题"
+      "title": "标记"
     },
     "menu": {
       "actions": "操作",

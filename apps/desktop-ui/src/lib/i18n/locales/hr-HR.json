@@ -341,8 +341,12 @@
       "heading1": "Naslov 1",
       "heading2": "Naslov 2",
       "heading3": "Naslov 3",
+      "heading4": "Naslov 4",
+      "heading5": "Naslov 5",
+      "heading6": "Naslov 6",
       "italic": "Kurziv",
       "link": "Poveznica",
+      "normalText": "Običan tekst",
       "orderedList": "Numerirani popis",
       "quote": "Citat",
       "showSource": "Prikaži Markdown oznake",
@@ -350,10 +354,7 @@
       "switchToFormatted": "Sada: Markdown. Prebaci na oblikovani tekst (Ctrl+Shift+M)",
       "switchToSource": "Sada: oblikovani tekst. Prebaci na Markdown (Ctrl+Shift+M)",
       "taskList": "Popis zadataka",
-      "title": "Oznake",
-      "heading4": "Naslov 4",
-      "heading5": "Naslov 5",
-      "heading6": "Naslov 6"
+      "title": "Oznake"
     },
     "menu": {
       "actions": "Radnje",
