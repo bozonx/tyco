@@ -68,7 +68,7 @@ zbus-secret-service-keyring-store = { version = "1", features = ["rt-async-io-cr
 ashpd = { version = "0.13.13", features = ["global_shortcuts", "remote_desktop", "screencast"] }
 gtk = "0.18"
 gtk-sys = "0.18"
-x11rb = "0.13"
+x11rb = "0.14"
 # which window has the focus on wlroots compositors, see platform/linux/wlr_toplevel.rs
 wayland-client = "0.31"
 wayland-protocols-wlr = { version = "0.3", features = ["client"] }
