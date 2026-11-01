@@ -126,3 +126,35 @@ test('configures a connection and model through settings and uses them in chat',
     page.getByRole('paragraph').filter({ hasText: 'The saved model works.' })
   ).toBeVisible()
 })
+
+test('creates a project with Enter and explains invalid edits', async ({
+  page,
+  desktop,
+}) => {
+  desktop.userConfig.isInDevelopment = true
+  desktop.handle('create_ai_project', () => {})
+  desktop.handle('save_ai_project', () => {})
+  await page.reload()
+  await page
+    .getByRole('banner')
+    .getByRole('button', { name: 'Settings' })
+    .click()
+  await page.getByRole('button', { name: 'AI Profiles', exact: true }).click()
+  await page.getByRole('button', { name: 'New Project', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'New Project' })
+  await dialog
+    .getByRole('textbox', { name: 'Project Name' })
+    .fill('Browser project')
+  await dialog.getByRole('textbox', { name: 'Project Name' }).press('Enter')
+  const name = page.getByRole('textbox', { name: 'Project Name' })
+  await expect(name).toHaveValue('Browser project')
+  await name.fill('')
+  await expect(name).toHaveAttribute('aria-invalid', 'true')
+  await expect(
+    page.getByText('Enter a name; changes are not saved until then.')
+  ).toBeVisible()
+  expect(desktop.callsOf('save_ai_project')).toHaveLength(0)
+  await name.fill('Renamed project')
+  await expect.poll(() => desktop.callsOf('save_ai_project').length).toBe(1)
+  expect(desktop.callsOf('create_ai_project')).toHaveLength(1)
+})

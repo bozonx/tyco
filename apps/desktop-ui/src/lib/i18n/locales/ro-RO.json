@@ -928,6 +928,8 @@
     "projectPermissionsHint": "Fără permisiune, profilul nu poate accesa un proiect. Se aplică cel mai strict dintre cele două moduri – cel al „Fișierelor” și cel al proiectului.",
     "projectProfileAccess": "Accesul profilurilor",
     "projectProfileAccessHint": "Profilurile care pot lucra cu fișierele acestui proiect. Același acces se setează și pe pagina fiecărui profil.",
+    "projectNameRequired": "Introduceți un nume; modificările nu vor fi salvate până atunci.",
+    "projectPathRequired": "Selectați un dosar pentru proiectul extern; modificările nu vor fi salvate până atunci.",
     "projectTargetPath": "Calea dosarului proiectului",
     "projectType": "Tipul proiectului",
     "projectTypeExternal": "Dosar extern",

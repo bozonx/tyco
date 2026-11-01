@@ -30,7 +30,7 @@
               size="xs"
               variant="neutral"
               icon="mdi:refresh"
-              :disabled="isLoading"
+              :disabled="isLoading || isClearing"
               @click="loadTopics"
             >
               {{ t('settings.profileMemoryRefresh') }}
@@ -39,7 +39,13 @@
               size="xs"
               variant="danger"
               icon="mdi:trash-can-outline"
-              :disabled="isLoading || !topics || topics.length === 0"
+              :disabled="
+                isLoading ||
+                isClearing ||
+                isSaving ||
+                isApplying ||
+                topics.length === 0
+              "
               @click="isConfirmClearOpen = true"
             >
               {{ t('settings.profileMemoryClear') }}
@@ -83,7 +89,7 @@
                   icon="mdi:auto-fix"
                   :label="t('settings.profileMemoryCompact')"
                   :title="t('settings.profileMemoryCompact')"
-                  :disabled="isCompacting"
+                  :disabled="isCompacting || isApplying || isClearing"
                   @click="startCompaction(topic.file)"
                 />
                 <IconButton
@@ -91,6 +97,7 @@
                   icon="mdi:square-edit-outline"
                   :label="t('settings.profileMemoryEditFile')"
                   :title="t('settings.profileMemoryEditFile')"
+                  :disabled="isSaving || isApplying || isClearing"
                   @click="openEditor(topic.file)"
                 />
               </div>
@@ -124,7 +131,9 @@
             size="sm"
             variant="neutral"
             icon="mdi:auto-fix"
-            :disabled="isCompacting || !editorContent.trim()"
+            :disabled="
+              isCompacting || isApplying || isSaving || !editorContent.trim()
+            "
             @click="compactCurrentEditor"
           >
             {{ t('settings.profileMemoryCompact') }}
@@ -133,7 +142,8 @@
             size="sm"
             variant="primary"
             icon="mdi:content-save-outline"
-            :disabled="isSaving"
+            :loading="isSaving"
+            :disabled="isApplying || isClearing"
             @click="saveEditor"
           >
             {{ t('common.save') }}
@@ -172,6 +182,8 @@
             size="sm"
             variant="primary"
             icon="mdi:check"
+            :loading="isApplying"
+            :disabled="isSaving || isClearing"
             @click="applyCompaction"
           >
             {{ t('settings.profileMemoryApplyCompact') }}
@@ -194,12 +206,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onScopeDispose, ref, watch } from 'vue'
 
-import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import useToast from '../../composables/use-toast'
 import { compactMemoryContent } from '../../lib/ai-profiles/memory-compaction'
+import { createMemoryCompactionModel } from '../../lib/ai-profiles/memory-compaction-model'
+import { createMemoryEditorModel } from '../../lib/ai-profiles/memory-editor-model'
+import { createMemoryTopicsModel } from '../../lib/ai-profiles/memory-topics-model'
 import {
   chatModelOptions,
   pickScopedChatModel,
@@ -259,45 +273,30 @@ const modeOptions = computed(() => [
 ])
 
 function handleModeChange(value: number | string | undefined) {
-  if (value && typeof value === 'string') {
-    emit('update:memoryMode', value as ProfileMemoryMode)
+  if (
+    value === 'auto' ||
+    value === 'ask' ||
+    value === 'read-only' ||
+    value === 'off'
+  ) {
+    emit('update:memoryMode', value)
   }
 }
 
-// Topics
-const topics = ref<ProfileMemoryTopic[]>([])
-const { isBusy: isLoading, run: runLoading } = useBusyAction((error) => {
-  topics.value = []
-  toastError(error)
+const topicsModel = createMemoryTopicsModel({
+  list: (id) => aiProfilesStore.listMemoryTopics(id),
+  clear: (id) => aiProfilesStore.clearMemory(id),
+  reportError: toastError,
+  onCleared: () => toastKey('settings.profileMemoryClearSuccess', 'info'),
 })
-
-async function loadTopics() {
+const { topics, isLoading, isClearing } = topicsModel
+function loadTopics() {
   if (props.profile.memoryMode === 'off') {
-    topics.value = []
-    return
+    topicsModel.reset()
+    return Promise.resolve()
   }
-  await runLoading(async () => {
-    topics.value =
-      (await aiProfilesStore.listMemoryTopics(props.profile.id)) ?? []
-  })
+  return topicsModel.loadTopics(props.profile.id)
 }
-
-watch(
-  () => props.profile.id,
-  () => void loadTopics(),
-  { immediate: true }
-)
-
-watch(
-  () => props.profile.memoryMode,
-  (mode) => {
-    if (mode === 'off') {
-      topics.value = []
-    } else {
-      void loadTopics()
-    }
-  }
-)
 
 function topicTitle(topic: ProfileMemoryTopic) {
   if (topic.file === 'core.md') {
@@ -337,65 +336,81 @@ function topicWarning(
   return null
 }
 
-// Editor modal
-const isEditorOpen = ref(false)
-const editingFile = ref('')
-const editorContent = ref('')
-const { isBusy: isSaving, run: runSaving } = useBusyAction()
-
-async function openEditor(file: string) {
-  editingFile.value = file
-  try {
-    editorContent.value = await aiProfilesStore.readMemory(
-      props.profile.id,
-      file
-    )
-    isEditorOpen.value = true
-  } catch (error) {
-    toastError(error)
-  }
-}
-
-function closeEditor() {
-  isEditorOpen.value = false
-  editingFile.value = ''
-  editorContent.value = ''
-}
-
-async function saveEditor() {
-  if (!editingFile.value) return
-  const file = editingFile.value
-  await runSaving(async () => {
-    await aiProfilesStore.writeMemory(
-      props.profile.id,
-      file,
-      editorContent.value
-    )
+const editor = createMemoryEditorModel({
+  read: (id, file) => aiProfilesStore.readMemory(id, file),
+  write: (id, file, content) => aiProfilesStore.writeMemory(id, file, content),
+  reportError: toastError,
+  onSaved: () => {
     toastKey('settings.profileMemoryFileSaved', 'info')
-    closeEditor()
-    await loadTopics()
-  })
+    void loadTopics()
+  },
+})
+const {
+  isEditorOpen,
+  editingFile,
+  editorContent,
+  isSaving,
+  closeEditor,
+  saveEditor,
+} = editor
+function openEditor(file: string) {
+  return editor.openEditor(props.profile.id, file)
 }
-
-// Compaction
-const { isBusy: isCompacting, run: runCompacting } = useBusyAction()
-const isDiffModalOpen = ref(false)
-const compactingFile = ref('')
-const diffOldText = ref('')
-const diffNewText = ref('')
-
-async function startCompaction(file: string) {
-  await runCompacting(async () => {
-    const content = await aiProfilesStore.readMemory(props.profile.id, file)
-    await runCompactionFlow(file, content)
-  })
+const compaction = createMemoryCompactionModel({
+  read: (id, file) => aiProfilesStore.readMemory(id, file),
+  write: (id, file, content) => aiProfilesStore.writeMemory(id, file, content),
+  compact: (file, content) => {
+    const modelId = resolveCompactionModelId()
+    return compactMemoryContent({
+      file,
+      content,
+      runModel: (prompt) => llmStore.client.run('chat', prompt, { modelId }),
+    })
+  },
+  reportError: toastError,
+  onUnchanged: () => toastKey('settings.profileMemoryCompactNoChange', 'info'),
+  onApplied: (id, file, original, content) => {
+    editor.replaceContent(id, file, original, content)
+    toastKey('settings.profileMemoryCompactSuccess', 'info')
+    void loadTopics()
+  },
+})
+const {
+  isCompacting,
+  isApplying,
+  isDiffModalOpen,
+  compactingFile,
+  diffOldText,
+  diffNewText,
+  closeDiffModal,
+  applyCompaction,
+} = compaction
+function startCompaction(file: string) {
+  return compaction.startCompaction(props.profile.id, file)
 }
-
-async function compactCurrentEditor() {
+function compactCurrentEditor() {
   if (!editingFile.value || !editorContent.value.trim()) return
-  const file = editingFile.value
-  await runCompacting(() => runCompactionFlow(file, editorContent.value))
+  return compaction.startCompaction(
+    props.profile.id,
+    editingFile.value,
+    editorContent.value
+  )
 }
+watch(
+  () => [props.profile.id, props.profile.memoryMode] as const,
+  () => {
+    editor.closeEditor()
+    compaction.closeDiffModal()
+    topicsModel.reset()
+    isConfirmClearOpen.value = false
+    void loadTopics()
+  }
+)
+onScopeDispose(() => {
+  editor.dispose()
+  compaction.dispose()
+  topicsModel.dispose()
+})
 
 function resolveCompactionModelId(): string | undefined {
   if (props.profile.modelId) return props.profile.modelId
@@ -411,65 +426,14 @@ function resolveCompactionModelId(): string | undefined {
   )
 }
 
-async function runCompactionFlow(file: string, content: string) {
-  const modelId = resolveCompactionModelId()
-  const result = await compactMemoryContent({
-    file,
-    content,
-    runModel: async (prompt) => {
-      return await llmStore.client.run('chat', prompt, { modelId })
-    },
-  })
-
-  if (result.trim() === content.trim()) {
-    toastKey('settings.profileMemoryCompactNoChange', 'info')
-    return
-  }
-
-  compactingFile.value = file
-  diffOldText.value = content
-  diffNewText.value = result
-  isDiffModalOpen.value = true
-}
-
-function closeDiffModal() {
-  isDiffModalOpen.value = false
-  compactingFile.value = ''
-  diffOldText.value = ''
-  diffNewText.value = ''
-}
-
-async function applyCompaction() {
-  if (!compactingFile.value) return
-  try {
-    await aiProfilesStore.writeMemory(
-      props.profile.id,
-      compactingFile.value,
-      diffNewText.value
-    )
-    toastKey('settings.profileMemoryCompactSuccess', 'info')
-    if (isEditorOpen.value && editingFile.value === compactingFile.value) {
-      editorContent.value = diffNewText.value
-    }
-    closeDiffModal()
-    await loadTopics()
-  } catch (error) {
-    toastError(error)
-  }
-}
-
-// Clear memory
 const isConfirmClearOpen = ref(false)
-
+void loadTopics()
 async function handleClearMemory() {
+  if (isSaving.value || isApplying.value || isClearing.value) return
   isConfirmClearOpen.value = false
-  try {
-    await aiProfilesStore.clearMemory(props.profile.id)
-    toastKey('settings.profileMemoryClearSuccess', 'info')
-    await loadTopics()
-  } catch (error) {
-    toastError(error)
-  }
+  editor.closeEditor()
+  compaction.closeDiffModal()
+  await topicsModel.clearMemory(props.profile.id)
 }
 </script>
 

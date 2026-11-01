@@ -928,6 +928,8 @@
     "projectPermissionsHint": "Senza un permesso il profilo non può accedere a un progetto. Si applica la più restrittiva delle due modalità: quella di «File» e quella del progetto.",
     "projectProfileAccess": "Accesso dei profili",
     "projectProfileAccessHint": "Profili che possono lavorare con i file di questo progetto. Lo stesso accesso si imposta anche nella pagina di ogni profilo.",
+    "projectNameRequired": "Inserisci un nome; le modifiche non verranno salvate fino ad allora.",
+    "projectPathRequired": "Seleziona una cartella per il progetto esterno; le modifiche non verranno salvate fino ad allora.",
     "projectTargetPath": "Percorso della cartella del progetto",
     "projectType": "Tipo di progetto",
     "projectTypeExternal": "Cartella esterna",

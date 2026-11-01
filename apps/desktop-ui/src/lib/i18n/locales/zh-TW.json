@@ -922,6 +922,8 @@
     "projectPermissionsHint": "沒有權限時，設定檔無法存取專案。將套用「檔案」與專案兩者中較嚴格的模式。",
     "projectProfileAccess": "設定檔存取",
     "projectProfileAccessHint": "可以處理此專案檔案的設定檔。同樣的存取也可在每個設定檔的頁面中設定。",
+    "projectNameRequired": "請輸入名稱；在此之前不會儲存變更。",
+    "projectPathRequired": "請選擇外部專案的資料夾；在此之前不會儲存變更。",
     "projectTargetPath": "專案資料夾路徑",
     "projectType": "專案類型",
     "projectTypeExternal": "外部資料夾",

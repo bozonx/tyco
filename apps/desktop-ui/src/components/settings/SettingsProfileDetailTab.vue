@@ -13,26 +13,28 @@
       <SettingsSection :title="t('settings.newProfile')">
         <form class="profile-create-form" @submit.prevent="handleCreate">
           <FieldRow :label="t('settings.profileName')">
-            <FieldInput ref="nameInputRef" v-model="newName" autofocus />
-          </FieldRow>
-          <FieldRow
-            :label="t('settings.vaultFolder')"
-            :info="t('settings.vaultFolderHint')"
-            :hint="`profiles/${folder.folderId.value}`"
-            :error="folderError"
-          >
             <FieldInput
-              v-model="folder.typedId.value"
-              :placeholder="folder.suggestedId.value"
+              ref="nameInputRef"
+              v-model="newName"
+              autofocus
+              :disabled="isCreating"
             />
           </FieldRow>
+          <VaultFolderField
+            :disabled="isCreating"
+            :field="folder"
+            @update:typed-id="folder.typedId.value = $event"
+            directory="profiles"
+            :info="t('settings.vaultFolderHint')"
+          />
           <div class="profile-form-actions">
             <Button
               type="submit"
               size="sm"
               variant="primary"
               icon="mdi:plus"
-              :disabled="!newName.trim() || Boolean(folderError) || isCreating"
+              :disabled="!newName.trim() || Boolean(folderError)"
+              :loading="isCreating"
             >
               {{ t('settings.createProfile') }}
             </Button>
@@ -69,60 +71,24 @@
           </div>
         </FieldRow>
 
-        <div class="advanced-toggle">
-          <DisclosureHeader
-            density="compact"
-            icon="mdi:tune-variant"
-            icon-size="md"
-            :expanded="isAdvancedExpanded"
-            :controls="advancedId"
-            :title="
-              isAdvancedExpanded
-                ? t('settings.hideAdvanced')
-                : t('settings.showAdvanced')
-            "
-            @toggle="isAdvancedExpanded = !isAdvancedExpanded"
+        <SettingsAdvancedFields v-model:expanded="isAdvancedExpanded">
+          <ModelNumberField
+            kind="temperature"
+            :model-value="temperatureText"
+            :is-invalid="temperatureError"
+            :placeholder="t('settings.profileUseModelValue')"
+            @update:model-value="changeTemperature"
+            @invalid-input="temperatureError = true"
           />
-        </div>
-
-        <div v-if="isAdvancedExpanded" :id="advancedId">
-          <FieldRow
-            :label="t('settings.temperature')"
-            :error="
-              temperatureError
-                ? t('settings.numberTemperatureInvalid')
-                : undefined
-            "
-          >
-            <FieldNumber
-              min="0"
-              :max="MAX_PROFILE_TEMPERATURE"
-              step="0.1"
-              :model-value="temperatureText"
-              :placeholder="t('settings.profileUseModelValue')"
-              :aria-invalid="temperatureError || undefined"
-              @update:model-value="changeTemperature"
-              @invalid-input="temperatureError = true"
-            />
-          </FieldRow>
-          <FieldRow
-            :label="t('settings.maxTokens')"
-            :error="
-              maxOutputTokensError
-                ? t('settings.numberTokensInvalid')
-                : undefined
-            "
-          >
-            <FieldNumber
-              min="1"
-              :model-value="maxOutputTokensText"
-              :placeholder="t('settings.profileUseModelValue')"
-              :aria-invalid="maxOutputTokensError || undefined"
-              @update:model-value="changeMaxOutputTokens"
-              @invalid-input="maxOutputTokensError = true"
-            />
-          </FieldRow>
-        </div>
+          <ModelNumberField
+            kind="maxOutputTokens"
+            :model-value="maxOutputTokensText"
+            :is-invalid="maxOutputTokensError"
+            :placeholder="t('settings.profileUseModelValue')"
+            @update:model-value="changeMaxOutputTokens"
+            @invalid-input="maxOutputTokensError = true"
+          />
+        </SettingsAdvancedFields>
       </SettingsSection>
 
       <SettingsProfileToolsSection
@@ -213,15 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  useId,
-  watch,
-} from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
@@ -247,20 +205,20 @@ import {
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
-import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldInput from '../common/FieldInput.vue'
-import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
+import ModelNumberField from './ModelNumberField.vue'
+import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
-import { MAX_PROFILE_TEMPERATURE } from '@tyco/shared'
+import VaultFolderField from './VaultFolderField.vue'
 
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
@@ -316,7 +274,6 @@ async function handleCreate() {
 // ---------------------------------------------------------------------------
 
 const isAdvancedExpanded = ref(false)
-const advancedId = useId()
 
 // ---------------------------------------------------------------------------
 // Settings: typed ones are stored a moment after they change, picked ones
@@ -436,12 +393,5 @@ async function handleOpenFolder() {
   justify-content: space-between;
   gap: var(--space-sm);
   width: 100%;
-}
-
-.advanced-toggle {
-  display: flex;
-  padding: var(--space-xs) var(--space-md);
-  font-size: var(--text-control);
-  color: var(--app-text-muted);
 }
 </style>

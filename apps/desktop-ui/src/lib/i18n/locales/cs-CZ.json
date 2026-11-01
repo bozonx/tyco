@@ -922,6 +922,8 @@
     "projectPermissionsHint": "Bez oprávnění se profil k projektu nedostane. Platí přísnější ze dvou režimů – režim „Souborů“ a režim projektu.",
     "projectProfileAccess": "Přístup profilů",
     "projectProfileAccessHint": "Profily, které mohou pracovat se soubory tohoto projektu. Stejný přístup se nastavuje i na stránce každého profilu.",
+    "projectNameRequired": "Zadejte název; do té doby se změny neuloží.",
+    "projectPathRequired": "Vyberte složku externího projektu; do té doby se změny neuloží.",
     "projectTargetPath": "Cesta ke složce projektu",
     "projectType": "Typ projektu",
     "projectTypeExternal": "Externí složka",

@@ -29,70 +29,45 @@
       />
     </FieldRow>
 
-    <FieldRow
-      :label="t('history.clear')"
-      :hint="t('settings.chatCount', { count: chatCount })"
-      inline
-    >
-      <Button
-        size="sm"
-        variant="ghost"
-        icon="mdi:trash-can-outline"
-        @click="showClearModal = true"
-      >
-        {{ t('settings.deleteAllChats') }}
-      </Button>
-    </FieldRow>
-
-    <ConfirmModal
-      :open="showClearModal"
-      :title="t('history.clearConfirmTitle')"
-      :message="t(texts.confirmKey)"
-      :confirm-text="t('history.clearConfirmButton')"
-      danger
-      @confirm="onClear"
-      @cancel="showClearModal = false"
+    <SettingsHistoryClear
+      :label="t('settings.deleteAllChats')"
+      :count-hint="t('settings.chatCount', { count: chatCount })"
+      :confirm-title="t('history.clearConfirmTitle')"
+      :confirm-message="t(texts.confirmKey)"
+      :clear="scopeChats.clear"
     />
 
     <ConfirmModal
-      :open="pendingRetention !== null"
+      :open="pendingChange !== null"
       :title="t('settings.historyDeleteConfirmTitle')"
-      :message="
-        t('settings.chatHistoryRetentionConfirm', {
-          period: retentionLabel(pendingRetention),
-        })
-      "
+      :message="pendingChange?.message ?? ''"
       :confirm-text="t('common.delete')"
       danger
-      @confirm="confirmRetention"
-      @cancel="pendingRetention = null"
+      @confirm="confirmChange"
+      @cancel="cancelChange"
     />
   </SettingsSection>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, unref, watch } from 'vue'
+import { computed, onMounted } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
-import useToast from '../../composables/use-toast'
+import { useSettingsHistoryChats } from '../../composables/use-settings-history-chats'
 import {
   type ChatHistoryScope,
   chatHistoryConfig,
   chatHistoryRetentionChoices,
 } from '../../lib/chat/chat-history-settings'
-import {
-  historyRetentionOptions,
-  isStricterRetention,
-} from '../../lib/history/history-retention'
+import { historyRetentionOptions } from '../../lib/history/history-retention'
+import { createHistorySettingsModel } from '../../lib/history/history-settings-model'
 import { toHtmlLang } from '../../lib/locale/language'
-import { useAiProfilesStore } from '../../stores/ai-profiles'
-import { useHistoryStore } from '../../stores/history'
-import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
+import SettingsHistoryClear from './SettingsHistoryClear.vue'
 import SettingsSection from './SettingsSection.vue'
 
 const props = withDefaults(defineProps<{ scope?: ChatHistoryScope }>(), {
@@ -114,55 +89,11 @@ const TEXTS = {
 
 const { t } = useI18n()
 const { draft: userConfig, effectiveAppLanguage } = useSettingsContext()
-const { toastKey } = useToast()
 
 const texts = computed(() => TEXTS[props.scope])
 const history = computed(() => chatHistoryConfig(userConfig.value, props.scope))
 
-/** What the chats of the scope are counted and cleared with */
-function useScopeChats(scope: ChatHistoryScope) {
-  if (scope === 'profiles') {
-    const aiProfilesStore = useAiProfilesStore()
-    const count = ref(0)
-    let countRequest = 0
-    const refresh = async () => {
-      const request = ++countRequest
-      try {
-        const total = await aiProfilesStore.countAllProfileChats()
-        if (request === countRequest) count.value = total
-      } catch {
-        // the count stays as last read
-      }
-    }
-    // the profiles are listed once the vault is read
-    watch(
-      () => aiProfilesStore.profiles.map(({ id }) => id).join('\n'),
-      () => void refresh()
-    )
-    return {
-      count,
-      load: refresh,
-      clear: async () => {
-        countRequest += 1
-        try {
-          await aiProfilesStore.clearAllProfileChats()
-        } finally {
-          void refresh()
-        }
-      },
-    }
-  }
-  const historyStore = useHistoryStore()
-  return {
-    count: computed(() => unref(historyStore.chatHistory)?.length ?? 0),
-    load: async () => {
-      await historyStore.loadChatHistory?.()
-    },
-    clear: () => historyStore.clearChats(),
-  }
-}
-
-const scopeChats = useScopeChats(props.scope)
+const scopeChats = useSettingsHistoryChats(props.scope)
 
 onMounted(() => {
   // the count stays at what was last read
@@ -171,49 +102,26 @@ onMounted(() => {
 
 const chatCount = computed(() => scopeChats.count.value)
 
-const showClearModal = ref(false)
-
-async function onClear() {
-  showClearModal.value = false
-  try {
-    await scopeChats.clear()
-    toastKey('history.cleared', 'info')
-  } catch {
-    toastKey('history.operationFailed', 'error')
-  }
-}
-
 const isHistoryChecked = computed(() => history.value.storage !== 'off')
 
 function setHistoryEnabled(isEnabled: boolean) {
   history.value.storage = isEnabled ? 'disk' : 'off'
 }
 
-/** A period that deletes chats waits for the user to confirm it */
-const pendingRetention = ref<number | null>(null)
-
-function applyRetentionDays(days: number) {
-  if (days === 0) delete history.value.retentionDays
-  else history.value.retentionDays = days
-}
-
-function setRetentionDays(value: number | string | undefined) {
-  const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed < 0) return
-  if (isStricterRetention(history.value.retentionDays, parsed))
-    pendingRetention.value = parsed
-  else applyRetentionDays(parsed)
-}
-
-function confirmRetention() {
-  if (pendingRetention.value !== null)
-    applyRetentionDays(pendingRetention.value)
-  pendingRetention.value = null
-}
-
-function retentionLabel(days: number | null) {
-  return retentionOptions.value.find((option) => option.id === days)?.name ?? ''
-}
+const { pendingChange, confirmChange, cancelChange, setRetentionDays } =
+  createHistorySettingsModel({
+    getRetentionDays: () => history.value.retentionDays,
+    setRetentionDays: (days) => {
+      if (days === undefined) delete history.value.retentionDays
+      else history.value.retentionDays = days
+    },
+    retentionMessage: (days) =>
+      t('settings.chatHistoryRetentionConfirm', {
+        period:
+          retentionOptions.value.find((option) => option.id === days)?.name ??
+          '',
+      }),
+  })
 
 const retentionOptions = computed(() =>
   historyRetentionOptions(

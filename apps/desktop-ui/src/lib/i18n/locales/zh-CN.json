@@ -922,6 +922,8 @@
     "projectPermissionsHint": "未获得权限时，配置文件无法访问项目。若“文件”权限与项目权限不一致，将应用二者中更严格的规则。",
     "projectProfileAccess": "配置文件访问",
     "projectProfileAccessHint": "可以处理此项目文件的配置文件。同样的访问也可在每个配置文件的页面中设置。",
+    "projectNameRequired": "请输入名称；在此之前不会保存更改。",
+    "projectPathRequired": "请选择外部项目的文件夹；在此之前不会保存更改。",
     "projectTargetPath": "项目文件夹路径",
     "projectType": "项目类型",
     "projectTypeExternal": "外部文件夹",

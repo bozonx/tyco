@@ -9,87 +9,97 @@
         size="sm"
         variant="primary"
         icon="mdi:content-save"
+        type="submit"
+        :form="formId"
         :disabled="!isValid || Boolean(folderError)"
-        @click="handleCreate"
+        :loading="isCreating"
       >
         {{ t('settings.saveProject') }}
       </Button>
       <SettingsAutosaveStatus v-else :status="saveStatus" />
     </SettingsDetailHeader>
 
-    <template v-if="isNew || project">
-      <SettingsSection :title="t('settings.aiEntityGeneral')">
-        <FieldRow :label="t('settings.projectName')">
-          <FieldInput v-model="name" @update:model-value="change" />
-        </FieldRow>
-        <FieldRow
-          v-if="isNew"
-          :label="t('settings.vaultFolder')"
-          :info="t('settings.projectFolderHint')"
-          :hint="`projects/${folder.folderId.value}`"
-          :error="folderError"
-        >
-          <FieldInput
-            v-model="folder.typedId.value"
-            :placeholder="folder.suggestedId.value"
-          />
-        </FieldRow>
-        <FieldRow
-          v-else
-          :label="t('settings.vaultFolder')"
-          :info="t('settings.projectFolderFixedHint')"
-        >
-          <code class="vault-folder">projects/{{ projectId }}</code>
-        </FieldRow>
-        <FieldRow :label="t('settings.projectDescription')">
-          <FieldInput v-model="description" @update:model-value="change" />
-        </FieldRow>
-        <FieldRow :label="t('settings.projectType')">
-          <SegmentedControl
-            size="sm"
-            :label="t('settings.projectType')"
-            :model-value="isExternal ? 'external' : 'internal'"
-            :options="projectTypeOptions"
-            @update:model-value="changeType($event === 'external')"
-          />
-        </FieldRow>
-        <FieldRow
-          v-if="isExternal"
-          :label="t('settings.projectTargetPath')"
-          :info="targetPath || undefined"
-        >
-          <Button
-            size="sm"
-            variant="neutral"
-            icon="mdi:folder-open-outline"
-            @click="handlePickFolder"
+    <form
+      v-if="isNew || project"
+      :id="formId"
+      class="settings-stack"
+      @submit.prevent="handleCreate"
+    >
+      <fieldset class="contents" :disabled="isCreating">
+        <SettingsSection :title="t('settings.aiEntityGeneral')">
+          <FieldRow
+            :label="t('settings.projectName')"
+            :error="name.trim() ? undefined : t('settings.projectNameRequired')"
           >
-            {{ t('settings.selectFolder') }}
-          </Button>
-        </FieldRow>
-      </SettingsSection>
-
-      <SettingsSection
-        :title="t('settings.projectProfileAccess')"
-        :info="t('settings.projectProfileAccessHint')"
-      >
-        <div class="settings-section-content">
-          <SettingsAccessList
-            :entries="accessEntries"
-            :candidates="accessCandidates"
-            :add-label="t('settings.grantProfileAccess')"
-            :empty-message="
-              profiles.length === 0
-                ? t('settings.noProfilesYet')
-                : t('settings.noProfilesWithAccess')
-            "
-            :openable="!isNew"
-            @change="changeAccess"
-            @open="(profileId) => navigate(profileTab(profileId))"
+            <FieldInput v-model="name" @update:model-value="change" />
+          </FieldRow>
+          <VaultFolderField
+            v-if="isNew"
+            :field="folder"
+            @update:typed-id="folder.typedId.value = $event"
+            directory="projects"
+            :info="t('settings.projectFolderHint')"
           />
-        </div>
-      </SettingsSection>
-    </template>
+          <FieldRow
+            v-else
+            :label="t('settings.vaultFolder')"
+            :info="t('settings.projectFolderFixedHint')"
+          >
+            <code class="vault-folder">projects/{{ projectId }}</code>
+          </FieldRow>
+          <FieldRow :label="t('settings.projectDescription')">
+            <FieldInput v-model="description" @update:model-value="change" />
+          </FieldRow>
+          <FieldRow :label="t('settings.projectType')">
+            <SegmentedControl
+              size="sm"
+              :label="t('settings.projectType')"
+              :model-value="isExternal ? 'external' : 'internal'"
+              :options="projectTypeOptions"
+              @update:model-value="changeType($event === 'external')"
+            />
+          </FieldRow>
+          <FieldRow
+            v-if="isExternal"
+            :label="t('settings.projectTargetPath')"
+            :hint="targetPath || undefined"
+            :error="
+              targetPath.trim() ? undefined : t('settings.projectPathRequired')
+            "
+          >
+            <Button
+              size="sm"
+              variant="neutral"
+              icon="mdi:folder-open-outline"
+              @click="handlePickFolder"
+            >
+              {{ t('settings.selectFolder') }}
+            </Button>
+          </FieldRow>
+        </SettingsSection>
+
+        <SettingsSection
+          :title="t('settings.projectProfileAccess')"
+          :info="t('settings.projectProfileAccessHint')"
+        >
+          <div class="settings-section-content">
+            <SettingsAccessList
+              :entries="accessEntries"
+              :candidates="accessCandidates"
+              :add-label="t('settings.grantProfileAccess')"
+              :empty-message="
+                profiles.length === 0
+                  ? t('settings.noProfilesYet')
+                  : t('settings.noProfilesWithAccess')
+              "
+              :openable="!isNew"
+              @change="changeAccess"
+              @open="(profileId) => navigate(profileTab(profileId))"
+            />
+          </div>
+        </SettingsSection>
+      </fieldset>
+    </form>
 
     <StateMessage
       v-else-if="aiProfilesStore.isLoaded"
@@ -106,8 +116,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 
+import { useBusyAction } from '../../composables/use-busy-action'
 import { useI18n } from '../../composables/use-i18n'
 import { useRetryToast } from '../../composables/use-retry-toast'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -139,15 +150,18 @@ import SettingsAccessList, {
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsSection from './SettingsSection.vue'
+import VaultFolderField from './VaultFolderField.vue'
 import type { AiProfile } from '@tyco/shared'
 
 const props = defineProps<{ projectId: string }>()
+const formId = useId()
 const { navigate } = useSettingsContext()
 
 const { t } = useI18n()
 const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 
+const { isBusy: isCreating, run: runCreating } = useBusyAction()
 const isNew = computed(() => props.projectId === NEW_ENTITY_ID)
 
 const profiles = computed(() => aiProfilesStore.profiles)
@@ -260,8 +274,9 @@ const folderError = computed(() =>
 )
 
 async function handleCreate() {
-  if (!isValid.value || folderError.value) return
-  try {
+  if (!isNew.value || !isValid.value || folderError.value || isCreating.value)
+    return
+  await runCreating(async () => {
     const created = await aiProfilesStore.createProject({
       ...editor.fields(),
       id: folder.folderId.value,
@@ -277,9 +292,7 @@ async function handleCreate() {
     }
     pendingAccess.value = {}
     navigate(projectTab(created.id))
-  } catch (error) {
-    toastError(error)
-  }
+  })
 }
 </script>
 

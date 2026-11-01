@@ -32,22 +32,10 @@
         @update:model-value="emit('update', { providerModelId: $event })"
       />
     </FieldRow>
-    <div class="advanced-toggle">
-      <DisclosureHeader
-        density="compact"
-        icon="mdi:tune-variant"
-        icon-size="md"
-        :expanded="expandedModelIds.has(model.id)"
-        :controls="advancedId"
-        :title="
-          expandedModelIds.has(model.id)
-            ? t('settings.hideAdvanced')
-            : t('settings.showAdvanced')
-        "
-        @toggle="toggle(expandedModelIds, model.id)"
-      />
-    </div>
-    <div v-if="expandedModelIds.has(model.id)" :id="advancedId">
+    <SettingsAdvancedFields
+      :expanded="expandedModelIds.has(model.id)"
+      @update:expanded="toggle(expandedModelIds, model.id)"
+    >
       <FieldRow :label="t('settings.name')">
         <FieldInput
           :model-value="model.name || ''"
@@ -80,93 +68,58 @@
           @update:model-value="emit('update', { isThinkingEnabled: $event })"
         />
       </FieldRow>
-      <FieldRow
-        :label="t('settings.temperature')"
-        :error="
-          numberErrors[`${model.id}:temperature`]
-            ? t('settings.numberTemperatureInvalid')
-            : undefined
+      <ModelNumberField
+        kind="temperature"
+        :model-value="
+          numberDrafts[`${model.id}:temperature`] ?? model.temperature ?? ''
         "
-      >
-        <FieldNumber
-          min="0"
-          max="2"
-          step="0.1"
-          :model-value="
-            numberDrafts[`${model.id}:temperature`] ?? model.temperature ?? ''
-          "
-          :aria-invalid="numberErrors[`${model.id}:temperature`] || undefined"
-          :placeholder="t('settings.providerDefault')"
-          @update:model-value="setNumber(model, 'temperature', $event)"
-          @invalid-input="numberErrors[`${model.id}:temperature`] = true"
-        />
-      </FieldRow>
-      <FieldRow
-        :label="t('settings.maxTokens')"
+        :is-invalid="numberErrors[`${model.id}:temperature`]"
+        :placeholder="t('settings.providerDefault')"
+        @update:model-value="setNumber(model, 'temperature', $event)"
+        @invalid-input="numberErrors[`${model.id}:temperature`] = true"
+      />
+      <ModelNumberField
+        kind="maxOutputTokens"
+        :model-value="
+          numberDrafts[`${model.id}:maxOutputTokens`] ??
+          model.maxOutputTokens ??
+          ''
+        "
+        :is-invalid="numberErrors[`${model.id}:maxOutputTokens`]"
+        :placeholder="t('settings.providerDefault')"
+        @update:model-value="setNumber(model, 'maxOutputTokens', $event)"
+        @invalid-input="numberErrors[`${model.id}:maxOutputTokens`] = true"
         :info="t('settings.maxTokensHint')"
-        :error="
-          numberErrors[`${model.id}:maxOutputTokens`]
-            ? t('settings.numberTokensInvalid')
-            : undefined
+      />
+      <ModelNumberField
+        kind="contextWindowTokens"
+        :model-value="
+          numberDrafts[`${model.id}:contextWindowTokens`] ??
+          model.contextWindowTokens ??
+          ''
         "
-      >
-        <FieldNumber
-          min="1"
-          :model-value="
-            numberDrafts[`${model.id}:maxOutputTokens`] ??
-            model.maxOutputTokens ??
-            ''
-          "
-          :aria-invalid="
-            numberErrors[`${model.id}:maxOutputTokens`] || undefined
-          "
-          :placeholder="t('settings.providerDefault')"
-          @update:model-value="setNumber(model, 'maxOutputTokens', $event)"
-          @invalid-input="numberErrors[`${model.id}:maxOutputTokens`] = true"
-        />
-      </FieldRow>
-      <FieldRow
-        :label="t('settings.contextSize')"
+        :is-invalid="numberErrors[`${model.id}:contextWindowTokens`]"
+        :placeholder="t('settings.providerDefault')"
+        @update:model-value="setNumber(model, 'contextWindowTokens', $event)"
+        @invalid-input="numberErrors[`${model.id}:contextWindowTokens`] = true"
         :info="t('settings.contextSizeHint')"
-        :error="
-          numberErrors[`${model.id}:contextWindowTokens`]
-            ? t('settings.numberTokensInvalid')
-            : undefined
-        "
-      >
-        <FieldNumber
-          min="1"
-          :model-value="
-            numberDrafts[`${model.id}:contextWindowTokens`] ??
-            model.contextWindowTokens ??
-            ''
-          "
-          :aria-invalid="
-            numberErrors[`${model.id}:contextWindowTokens`] || undefined
-          "
-          :placeholder="t('settings.providerDefault')"
-          @update:model-value="setNumber(model, 'contextWindowTokens', $event)"
-          @invalid-input="
-            numberErrors[`${model.id}:contextWindowTokens`] = true
-          "
-        />
-      </FieldRow>
-    </div>
+      />
+    </SettingsAdvancedFields>
   </div>
 </template>
 <script setup lang="ts">
-import { computed, useId } from 'vue'
+import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { modelDisplayName } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import AppIcon from '../common/AppIcon.vue'
-import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldInput from '../common/FieldInput.vue'
-import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
+import ModelNumberField from './ModelNumberField.vue'
+import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import type { LlmModel, LlmProvider } from '@tyco/shared'
 
 const props = defineProps<{
@@ -181,7 +134,6 @@ const emit = defineEmits<{
   update: [patch: Partial<LlmModel>]
 }>()
 const { t } = useI18n()
-const advancedId = useId()
 const {
   expandedModelIds,
   numberDrafts,
@@ -217,11 +169,5 @@ function toggle(set: Set<string>, id: string) {
   padding: var(--space-sm) var(--space-md);
   border-bottom: 1px solid var(--app-border-subtle);
   background: var(--app-surface-raised);
-}
-.advanced-toggle {
-  display: flex;
-  padding: var(--space-xs) var(--space-md);
-  font-size: var(--text-control);
-  color: var(--app-text-muted);
 }
 </style>

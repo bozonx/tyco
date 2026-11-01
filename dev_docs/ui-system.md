@@ -111,6 +111,21 @@ undoable removal live in `lib/commands/*-model.ts`; LLM key operations, connecti
 state and numeric edits live in `lib/llm/llm-settings-model.ts`. Components retain
 translation, rendering, focus, and dependency wiring.
 
+Settings reuse `VaultFolderField` for suggested vault IDs, `ModelNumberField`
+for model/profile numeric controls, and `SettingsAdvancedFields` for their
+additional options. The caller owns field values and validation; these components
+render them and emit edits. `SettingsHistoryClear` owns confirmation and busy
+feedback for clearing a history scope. Retention confirmations and editor history
+policy edits live in `lib/history/*-settings-model.ts`.
+
+Profile memory uses separate injected models for topics, file editing and
+compaction in `lib/ai-profiles/memory-*-model.ts`. File reads publish the file name
+and content together; request revisions suppress stale results after closing,
+changing profiles, disabling memory or disposal. Writes retain their original
+profile/file identity, and compaction updates an open editor only if its source
+text still matches. The component wires stores, translates messages and disposes
+these models.
+
 ## Shared control conventions
 
 UI options use `id` and `name` (`ControlOption`); plugin SDK serialization is

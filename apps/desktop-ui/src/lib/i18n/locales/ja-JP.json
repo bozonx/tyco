@@ -925,6 +925,8 @@
     "projectPermissionsHint": "権限がない場合、プロファイルはプロジェクトにアクセスできません。「ファイル」とプロジェクトの2つのモードのうち、より厳格な方が適用されます。",
     "projectProfileAccess": "プロファイルのアクセス",
     "projectProfileAccessHint": "このプロジェクトのファイルを扱えるプロファイルです。同じアクセスは各プロファイルのページでも設定できます。",
+    "projectNameRequired": "名前を入力してください。入力するまで変更は保存されません。",
+    "projectPathRequired": "外部プロジェクトのフォルダーを選択してください。選択するまで変更は保存されません。",
     "projectTargetPath": "フォルダーパス",
     "projectType": "プロジェクトの種類",
     "projectTypeExternal": "外部フォルダー",

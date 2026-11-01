@@ -58,29 +58,12 @@
       </div>
     </div>
 
-    <FieldRow
+    <SettingsHistoryClear
       :label="t('history.clear')"
-      :hint="t('settings.editorHistoryCount', { count: entryCount })"
-      inline
-    >
-      <Button
-        size="sm"
-        variant="ghost"
-        icon="mdi:trash-can-outline"
-        @click="showClearModal = true"
-      >
-        {{ t('history.clear') }}
-      </Button>
-    </FieldRow>
-
-    <ConfirmModal
-      :open="showClearModal"
-      :title="t('settings.clearEditorHistoryConfirmTitle')"
-      :message="t('settings.clearEditorHistoryConfirmDialog')"
-      :confirm-text="t('history.clearConfirmButton')"
-      danger
-      @confirm="onClear"
-      @cancel="showClearModal = false"
+      :count-hint="t('settings.editorHistoryCount', { count: entryCount })"
+      :confirm-title="t('settings.clearEditorHistoryConfirmTitle')"
+      :confirm-message="t('settings.clearEditorHistoryConfirmDialog')"
+      :clear="() => historyStore.clearEditorHistory()"
     />
 
     <ConfirmModal
@@ -96,34 +79,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 
 import { useEditorHistoryChanges } from '../../composables/use-editor-history-changes'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
-import useToast from '../../composables/use-toast'
+import { createEditorHistorySettingsModel } from '../../lib/history/editor-history-settings-model'
 import { editorHistoryRetentionChoices } from '../../lib/history/editor-history-storage'
-import {
-  historyRetentionOptions,
-  isStricterRetention,
-} from '../../lib/history/history-retention'
+import { historyRetentionOptions } from '../../lib/history/history-retention'
 import { toHtmlLang } from '../../lib/locale/language'
 import { clientLogger } from '../../lib/logger'
 import { useHistoryStore } from '../../stores/history'
-import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
+import SettingsHistoryClear from './SettingsHistoryClear.vue'
 import SettingsSection from './SettingsSection.vue'
-
-/** The limit the backend uses when the settings name none */
-const DEFAULT_EDITOR_HISTORY_LIMIT = 1000
 
 const { t } = useI18n()
 const { draft: userConfig, effectiveAppLanguage } = useSettingsContext()
-const { toastKey } = useToast()
 const historyStore = useHistoryStore()
 
 const history = computed(() => userConfig.value.editor.history)
@@ -148,109 +124,26 @@ const loadEntries = async () => {
 onMounted(() => void loadEntries())
 useEditorHistoryChanges(() => void loadEntries())
 
-const showClearModal = ref(false)
-
-async function onClear() {
-  showClearModal.value = false
-  try {
-    await historyStore.clearEditorHistory()
-    toastKey('history.cleared', 'info')
-  } catch (error) {
-    clientLogger.warn(
-      `Could not clear the editor history: ${String(error)}`,
-      'history'
-    )
-    toastKey('history.operationFailed', 'error')
-  }
-}
-
-/** What is typed is not a limit: the stored one stays, and the field says so */
-const isLimitInvalid = ref(false)
-/**
- * A lower limit typed but not yet confirmed. It is applied once the field is
- * left, after the user agrees: the settings save as they change, and typing
- * "50" over "100" passes through "5"
- */
-const typedLimit = ref<number | null>(null)
-const currentLimit = () =>
-  history.value.maxItems ?? DEFAULT_EDITOR_HISTORY_LIMIT
-
-function setLimit(value: string) {
-  const parsed = Number(value)
-  isLimitInvalid.value =
-    value.trim() === '' || !Number.isInteger(parsed) || parsed < 1
-  if (isLimitInvalid.value) return
-  if (parsed < currentLimit()) {
-    typedLimit.value = parsed
-    return
-  }
-  typedLimit.value = null
-  history.value.maxItems = parsed
-}
-
-function confirmLowerLimit() {
-  const limit = typedLimit.value
-  if (limit === null || isLimitInvalid.value) return
-  pendingChange.value = {
-    message: t('settings.editorHistoryLimitConfirm', { count: limit }),
-    apply: () => {
-      history.value.maxItems = limit
-      typedLimit.value = null
-    },
-    cancel: () => {
-      typedLimit.value = null
-    },
-  }
-}
-
-/** A change that deletes stored entries waits for the user to confirm it */
-const pendingChange = ref<{
-  message: string
-  apply: () => void
-  cancel?: () => void
-} | null>(null)
-
-function confirmChange() {
-  pendingChange.value?.apply()
-  pendingChange.value = null
-}
-
-function cancelChange() {
-  pendingChange.value?.cancel?.()
-  pendingChange.value = null
-}
-
-function setStorage(value: string | number | undefined) {
-  if (value !== 'disk' && value !== 'session' && value !== 'off') return
-  const apply = () => {
-    history.value.storage = value
-  }
-  // turning the history off only stops recording: the entries stay. Keeping
-  // it for the session only moves the entries off the disk
-  if (value === 'session' && history.value.storage !== 'session') {
-    pendingChange.value = {
-      message: t('settings.editorHistorySessionConfirm'),
-      apply,
-    }
-  } else apply()
-}
-
-function setRetentionDays(value: number | string | undefined) {
-  const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed < 0) return
-  const apply = () => {
-    if (parsed === 0) delete history.value.retentionDays
-    else history.value.retentionDays = parsed
-  }
-  if (isStricterRetention(history.value.retentionDays, parsed)) {
-    const period =
-      retentionOptions.value.find((option) => option.id === parsed)?.name ?? ''
-    pendingChange.value = {
-      message: t('settings.editorHistoryRetentionConfirm', { period }),
-      apply,
-    }
-  } else apply()
-}
+const {
+  pendingChange,
+  confirmChange,
+  cancelChange,
+  setRetentionDays,
+  isLimitInvalid,
+  typedLimit,
+  setLimit,
+  confirmLowerLimit,
+  setStorage,
+} = createEditorHistorySettingsModel({
+  getHistory: () => history.value,
+  limitMessage: (count) => t('settings.editorHistoryLimitConfirm', { count }),
+  sessionMessage: () => t('settings.editorHistorySessionConfirm'),
+  retentionMessage: (days) =>
+    t('settings.editorHistoryRetentionConfirm', {
+      period:
+        retentionOptions.value.find((option) => option.id === days)?.name ?? '',
+    }),
+})
 
 const storageOptions = computed(() => [
   { id: 'disk', name: t('settings.editorHistoryStorageDisk') },

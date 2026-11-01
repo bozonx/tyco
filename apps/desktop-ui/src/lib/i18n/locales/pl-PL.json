@@ -928,6 +928,8 @@
     "projectPermissionsHint": "Bez uprawnienia profil nie ma dostępu do projektu. Obowiązuje surowszy z dwóch trybów — ten z „Plików” i ten z projektu.",
     "projectProfileAccess": "Dostęp profili",
     "projectProfileAccessHint": "Profile, które mogą pracować z plikami tego projektu. Ten sam dostęp ustawia się też na stronie każdego profilu.",
+    "projectNameRequired": "Wpisz nazwę; do tego czasu zmiany nie zostaną zapisane.",
+    "projectPathRequired": "Wybierz folder projektu zewnętrznego; do tego czasu zmiany nie zostaną zapisane.",
     "projectTargetPath": "Ścieżka folderu projektu",
     "projectType": "Typ projektu",
     "projectTypeExternal": "Folder zewnętrzny",

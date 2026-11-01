@@ -925,6 +925,8 @@
     "projectPermissionsHint": "Jogosultság nélkül a profil nem fér hozzá a projekthez. A két mód közül a szigorúbb érvényes – a „Fájlok” módja és a projekté.",
     "projectProfileAccess": "Profilok hozzáférése",
     "projectProfileAccessHint": "Profilok, amelyek dolgozhatnak a projekt fájljaival. Ugyanez a hozzáférés minden profil oldalán is beállítható.",
+    "projectNameRequired": "Adjon meg egy nevet; addig a módosítások nem lesznek mentve.",
+    "projectPathRequired": "Válasszon mappát a külső projekthez; addig a módosítások nem lesznek mentve.",
     "projectTargetPath": "A projektmappa útvonala",
     "projectType": "Projekt típusa",
     "projectTypeExternal": "Külső mappa",

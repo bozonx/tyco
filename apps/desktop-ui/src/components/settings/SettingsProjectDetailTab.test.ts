@@ -72,6 +72,7 @@ describe('SettingsProjectDetailTab.vue', () => {
 
   const mountTab = (projectId = 'notes') =>
     mount(SettingsProjectDetailTab, {
+      attachTo: document.body,
       props: { projectId },
       global: {
         provide: context.provide,
@@ -108,6 +109,46 @@ describe('SettingsProjectDetailTab.vue', () => {
     )
     expect(store.saveProject).not.toHaveBeenCalled()
     expect(context.navigate).toHaveBeenCalledWith('ai-project:created')
+  })
+
+  it('submits the form and blocks repeated creation while access is granted', async () => {
+    store.profiles.push(profile({}))
+    let finish!: () => void
+    store.setProjectAccess.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        })
+    )
+    const wrapper = mountTab('new')
+    await wrapper.get('input').setValue('Docs')
+    await wrapper
+      .findComponent({ name: 'SettingsAccessList' })
+      .vm.$emit('change', 'writer', 'read')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(
+      button(wrapper, 'settings.saveProject').attributes('disabled')
+    ).toBeDefined()
+    await wrapper.get('form').trigger('submit')
+    expect(store.createProject).toHaveBeenCalledOnce()
+    expect(context.navigate).not.toHaveBeenCalled()
+    finish()
+    await flushPromises()
+    expect(context.navigate).toHaveBeenCalledWith('ai-project:created')
+  })
+
+  it('explains why an invalid project cannot be saved', async () => {
+    const wrapper = mountTab()
+    await wrapper.get('input').setValue('')
+    expect(wrapper.text()).toContain('settings.projectNameRequired')
+    await wrapper
+      .findComponent({ name: 'SegmentedControl' })
+      .vm.$emit('update:modelValue', 'external')
+    expect(wrapper.text()).toContain('settings.projectPathRequired')
+    wrapper.unmount()
+    await flushPromises()
+    expect(store.saveProject).not.toHaveBeenCalled()
   })
 
   it('shows the folder of an existing project', () => {

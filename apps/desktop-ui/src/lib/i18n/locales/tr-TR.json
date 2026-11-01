@@ -925,6 +925,8 @@
     "projectPermissionsHint": "İzin olmadan profil projeye erişemez. İki moddan daha katı olanı geçerlidir: «Dosyalar»ınki ve projeninki.",
     "projectProfileAccess": "Profil erişimi",
     "projectProfileAccessHint": "Bu projenin dosyalarıyla çalışabilen profiller. Aynı erişim her profilin sayfasında da ayarlanır.",
+    "projectNameRequired": "Bir ad girin; o zamana kadar değişiklikler kaydedilmez.",
+    "projectPathRequired": "Harici proje için bir klasör seçin; o zamana kadar değişiklikler kaydedilmez.",
     "projectTargetPath": "Proje Klasör Yolu",
     "projectType": "Proje Türü",
     "projectTypeExternal": "Harici klasör",

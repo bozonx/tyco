@@ -15,12 +15,14 @@
             <FieldInput
               :model-value="item.name"
               :placeholder="t('settings.name')"
+              :aria-label="t('settings.name')"
               class="font-medium"
               @update:model-value="updateItem(index, 'name', $event)"
             />
             <FieldTextArea
               :model-value="item.rule"
               :placeholder="t('settings.rule')"
+              :aria-label="t('settings.rule')"
               @update:model-value="updateItem(index, 'rule', $event)"
             />
           </div>

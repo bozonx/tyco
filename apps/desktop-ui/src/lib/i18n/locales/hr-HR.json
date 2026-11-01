@@ -928,6 +928,8 @@
     "projectPermissionsHint": "Bez dopuštenja profil ne može pristupiti projektu. Vrijedi stroži od dva načina – onaj „Datoteka” i onaj projekta.",
     "projectProfileAccess": "Pristup profila",
     "projectProfileAccessHint": "Profili koji mogu raditi s datotekama ovog projekta. Isti pristup postavlja se i na stranici svakog profila.",
+    "projectNameRequired": "Unesite naziv; promjene se do tada neće spremiti.",
+    "projectPathRequired": "Odaberite mapu za vanjski projekt; promjene se do tada neće spremiti.",
     "projectTargetPath": "Putanja mape projekta",
     "projectType": "Vrsta projekta",
     "projectTypeExternal": "Vanjska mapa",
