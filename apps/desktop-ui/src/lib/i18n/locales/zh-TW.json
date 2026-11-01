@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "AI 任務",
     "askInChat": "在聊天中提問",
     "copy": "複製",
     "copyToClipboard": "複製並關閉",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "「{name}」：正在執行「{step}」…",
     "allCommands": "所有命令",
     "commandMissing": "命令庫中沒有命令 {id}。",
     "dropSelection": "不使用選取的文字",
+    "hintAskAi": "問 AI",
     "hintNewLine": "換行",
     "hintRun": "執行",
+    "hintSavePrompt": "儲存為 AI 指令",
     "nothingFound": "找不到命令",
     "pages": "分頁：",
+    "promptSaved": "已儲存為 AI 指令",
+    "promptSavedAlready": "已有使用此提示詞的 AI 指令",
     "running": "正在執行「{name}」…",
     "searchPlaceholder": "搜尋命令…",
     "selection": "選取的文字：{count} 個字元",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "留空的欄位將自外掛程式設定取得其值。",
     "promptFromTask": "從 AI 任務帶入指示",
     "promptFromTaskPlaceholder": "選擇 AI 任務…",
-    "promptInfo": "套用至文字的 AI 指示。命令中會儲存獨立複本：編輯原始 AI 任務不會影響此命令。",
+    "promptInfo": "套用於文字的 AI 指示。指令中保存獨立副本：編輯原始轉換或風格不會影響此指令。",
     "promptLabel": "給 LLM 的指示",
     "promptPlaceholder": "例如：讓文字更精煉且親切",
     "removed": "命令「{name}」已移除",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "用於在將輸入文字發送到命令之前由 LLM 進行轉換的指示。",
     "externalTimeoutLabel": "背景執行時限（秒）",
     "externalTimeoutInfo": "外部呼叫在背景可執行的時間，從指令啟動時開始計算；逾時後會被停止並回報為逾時。預設 {seconds}，最多 {max}。在視窗中執行沒有時限：您可以看到執行過程並隨時取消。",
-    "preTransformEmpty": "LLM 未為此指令傳回文字"
+    "preTransformEmpty": "LLM 未為此指令傳回文字",
+    "aiTitle": "AI 指令",
+    "aiDescription": "AI 指令以 LLM 執行你的提示詞，並可執行你允許的指令。所有 AI 指令都由此模型回答。",
+    "aiPromptLabel": "提示詞",
+    "aiPromptInfo": "AI 如何處理執行指令的文字：改寫、擷取資料、決定執行哪些指令以及用什麼參數。",
+    "aiPromptPlaceholder": "例如：找出文字中的日期和時間，並把活動加入我的行事曆",
+    "aiAllowedCommands": "可執行的指令",
+    "aiAllowedCommandsInfo": "當提示詞需要時，AI 會直接執行這些指令而不詢問。指令永遠不會執行自己，也不會執行呼叫它的 AI 指令。",
+    "aiNoOtherCommands": "還沒有其他指令。",
+    "aiMaxSteps": "步數上限",
+    "aiMaxStepsInfo": "一次執行中 AI 可回答的次數；每執行一個指令佔用一步。"
   },
   "common": {
     "add": "新增",
@@ -493,8 +507,6 @@
     "aiPromptSave": "另存為任務",
     "aiPromptSlotsFull": "所有任務快捷鍵皆已占用：請在設定中釋放一個",
     "aiRequest": "AI 請求",
-    "aiTask": "AI 任務",
-    "aiTaskPromptEmpty": "此任務沒有提示詞：請在設定中填寫",
     "cancelIntentHint": "按 Esc 取消",
     "compareResult": "比較結果",
     "copyOnFinish": "複製",
@@ -707,7 +719,6 @@
     "hideAdvanced": "隱藏進階設定",
     "hotkey": "快捷鍵",
     "hotkeyActions": {
-      "aiTasks": "AI 任務",
       "chat": "在 AI 聊天中將選取的文字作為上下文",
       "correction": "帶預覽的校對",
       "editor": "在編輯器中開啟選取的文字",
@@ -759,7 +770,7 @@
     "llmConnectionsHint": "Tyco 發送 AI 請求的端點：Google、OpenRouter、DeepSeek 或任何具有 OpenAI 相容 API 的伺服器，例如本機的 Ollama 或 LM Studio。模型會在各連線內部新增。儲存的金鑰將存入安全存放區，不再顯示。",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "AI 任務",
+      "aiCommands": "AI 指令",
       "basic": "基本",
       "commands": "我的命令",
       "styling": "文字風格化",
@@ -768,7 +779,6 @@
       "unavailable": "無法使用"
     },
     "mainActionStylingRemoved": "已刪除的文字風格",
-    "mainActionTaskRemoved": "已刪除的 AI 任務",
     "mainActionTransformationRemoved": "已刪除的文字轉換",
     "mainActionsHint": "主選單動作：各動作均由專屬按鍵執行。拖曳卡片以變更其按鍵。",
     "mainActionsTab": "主動作",
@@ -995,8 +1005,6 @@
     "taskModelChange": "變更",
     "taskModelInfo": "模型在「LLM」頁面中指派。",
     "taskModelNone": "未選擇",
-    "tasksHint": "AI 套用至文字的指示 (提示詞)。在任務選單中，每個任務都有專屬按鍵；拖曳卡片以變更其按鍵。",
-    "tasksTab": "AI 任務",
     "temperature": "溫度",
     "terminalApps": "其他終端機",
     "terminalAppsHint": "Tyco 無法辨識的終端機視窗類別，以逗號分隔。在終端機中 Tyco 絕不按 Ctrl+C，並會把選取範圍的結果放入剪貼簿。",
@@ -1082,7 +1090,8 @@
     "quickCorrectionModeInfo": "快速輸入視窗如何處理文字修正。",
     "quickCorrectionLive": "即時預覽",
     "quickCorrectionOnSubmit": "完成時",
-    "quickCorrectionOff": "關閉"
+    "quickCorrectionOff": "關閉",
+    "aiCommands": "AI 指令"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1136,8 +1145,8 @@
     "voicePostProcessTimeout": "語音處理耗時過長；已保留原始文字"
   },
   "tools": {
-    "aiTask": "AI 任務",
-    "aiTaskDescription": "透過 LLM 將命令的指示套用至文字",
+    "aiTask": "AI 指令",
+    "aiTaskDescription": "AI 執行你的提示詞，並可執行其他指令",
     "askInChat": "在聊天中提問",
     "askInChatDescription": "開啟聊天並附帶該文字",
     "copy": "複製",

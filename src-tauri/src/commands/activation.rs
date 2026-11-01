@@ -62,10 +62,6 @@ mod tests {
             ActivationMode::QuickInput
         );
         assert_eq!(
-            ActivationMode::parse("aiTasks").unwrap(),
-            ActivationMode::AiTasks
-        );
-        assert_eq!(
             ActivationMode::parse("voice").unwrap(),
             ActivationMode::Voice
         );

@@ -14,7 +14,6 @@ pub enum ActivationMode {
     VoiceCommands,
     Voice,
     SelectionActions,
-    AiTasks,
     CommandLauncher,
     Correction,
     Translation,
@@ -29,7 +28,7 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     /// The modes a caller may name: every one but `ExternalAccess`.
-    pub const PUBLIC_MODES: [Self; 15] = [
+    pub const PUBLIC_MODES: [Self; 14] = [
         Self::Editor,
         Self::QuickInput,
         Self::Chat,
@@ -37,7 +36,6 @@ impl ActivationMode {
         Self::VoiceCommands,
         Self::Voice,
         Self::SelectionActions,
-        Self::AiTasks,
         Self::CommandLauncher,
         Self::Correction,
         Self::Translation,
@@ -65,7 +63,6 @@ impl ActivationMode {
             Self::VoiceChat => "voiceChat",
             Self::Voice => "voice",
             Self::SelectionActions => "selectionActions",
-            Self::AiTasks => "aiTasks",
             Self::CommandLauncher => "commandLauncher",
             Self::Correction => "correction",
             Self::Translation => "translation",

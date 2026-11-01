@@ -8,7 +8,6 @@ const APP_ROUTE_NAMES = {
   CHAT: 'chat',
   WRITE: 'write',
   VOICE: 'voice',
-  AI_TASKS: 'aiTasks',
   SELECT: 'select',
   COMMAND_LAUNCHER: 'commandLauncher',
   VOICE_COMMANDS: 'voiceCommands',
@@ -26,7 +25,6 @@ export const APP_ROUTES = {
   CHAT: { name: APP_ROUTE_NAMES.CHAT, path: '/chat' },
   WRITE: { name: APP_ROUTE_NAMES.WRITE, path: '/write' },
   VOICE: { name: APP_ROUTE_NAMES.VOICE, path: '/voice' },
-  AI_TASKS: { name: APP_ROUTE_NAMES.AI_TASKS, path: '/aiTasks' },
   SELECT: { name: APP_ROUTE_NAMES.SELECT, path: '/select' },
   COMMAND_LAUNCHER: {
     name: APP_ROUTE_NAMES.COMMAND_LAUNCHER,
@@ -50,7 +48,6 @@ export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
 export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.SELECTION_ACTIONS]: APP_ROUTES.SELECT.path,
   [ActivationMode.VOICE]: APP_ROUTES.VOICE.path,
-  [ActivationMode.AI_TASKS]: APP_ROUTES.AI_TASKS.path,
   [ActivationMode.VOICE_COMMANDS]: APP_ROUTES.VOICE_COMMANDS.path,
   [ActivationMode.COMMAND_LAUNCHER]: APP_ROUTES.COMMAND_LAUNCHER.path,
   [ActivationMode.CORRECTION]: APP_ROUTES.CORRECTION.path,
@@ -75,7 +72,6 @@ const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
   ActivationMode.QUICK_INPUT,
   ActivationMode.VOICE,
   ActivationMode.SELECTION_ACTIONS,
-  ActivationMode.AI_TASKS,
   ActivationMode.VOICE_COMMANDS,
   ActivationMode.COMMAND_LAUNCHER,
   ActivationMode.CORRECTION,

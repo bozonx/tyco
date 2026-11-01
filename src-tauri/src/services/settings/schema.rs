@@ -307,10 +307,9 @@ const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
 const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 
 /// The entity collections, each with distinct ids.
-const ENTITY_COLLECTIONS: [&str; 7] = [
+const ENTITY_COLLECTIONS: [&str; 6] = [
     "/commands",
     "/launcherPages",
-    "/aiTasks/items",
     "/transformations/items",
     "/styling/items",
     "/llm/providers",
@@ -339,11 +338,9 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             }
         }
     }
-    let tasks = ids(config, "/aiTasks/items");
     let transformations = ids(config, "/transformations/items");
     let stylings = ids(config, "/styling/items");
     for (slots, key) in [
-        (&config["aiTasks"]["slots"], "aiTasks.slots"),
         (&config["transformations"]["slots"], "transformations.slots"),
         (&config["styling"]["slots"], "styling.slots"),
         (
@@ -356,11 +353,6 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             if !seen.insert(value.as_str()) {
                 return Err(invalid_field(key));
             }
-        }
-    }
-    for id in slot_values(&config["aiTasks"]["slots"]).filter_map(Value::as_str) {
-        if !tasks.contains(id) {
-            return Err(invalid_field("aiTasks.slots"));
         }
     }
     for id in slot_values(&config["transformations"]["slots"]).filter_map(Value::as_str) {
@@ -407,9 +399,6 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
                 if !commands.contains(slot["commandId"].as_str().unwrap_or_default()) =>
             {
                 return Err(invalid_field("mainActions.commandId"))
-            }
-            Some("aiTask") if !tasks.contains(slot["taskId"].as_str().unwrap_or_default()) => {
-                return Err(invalid_field("mainActions.taskId"))
             }
             Some("transformation")
                 if !transformations
@@ -565,15 +554,6 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             command["toolConfig"] = repair(&command["toolConfig"], schema, defaults);
         }
     }
-    let task_ids: HashSet<String> = ids(config, "/aiTasks/items")
-        .into_iter()
-        .map(str::to_owned)
-        .collect();
-    let mut slotted_tasks = HashSet::new();
-    retain_slots(&mut config["aiTasks"]["slots"], |id| {
-        let id = id.as_str().unwrap_or_default();
-        task_ids.contains(id) && slotted_tasks.insert(id.to_owned())
-    });
     let transformation_ids: HashSet<String> = ids(config, "/transformations/items")
         .into_iter()
         .map(str::to_owned)
@@ -641,7 +621,6 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     retain_slots(&mut config["mainActions"], |slot| {
         match slot["type"].as_str() {
             Some("command") => command_ids.contains(slot["commandId"].as_str().unwrap_or_default()),
-            Some("aiTask") => task_ids.contains(slot["taskId"].as_str().unwrap_or_default()),
             Some("transformation") => {
                 transformation_ids.contains(slot["transformationId"].as_str().unwrap_or_default())
             }
@@ -862,7 +841,7 @@ mod tests {
             ("/editor/history/maxItems", json!(1.5)),
             ("/editor/history/maxItems", json!(0)),
             ("/editor/history/retentionDays", json!(0)),
-            ("/aiTasks/items/0/id", json!("Deep edit")),
+            ("/transformations/items/0/id", json!("Deep edit")),
             ("/launcherPages/0/id", json!("Main")),
             ("/llm/models/0/id", json!(" ollama-qwen")),
             ("/stt/providers", json!("bad")),
@@ -883,9 +862,9 @@ mod tests {
                 "/translation/targetLanguages",
                 json!({"q": "en-US", "w": "en-US"}),
             ),
-            ("/aiTasks/slots", json!({"q": "missing"})),
+            ("/transformations/slots", json!({"q": "missing"})),
             (
-                "/aiTasks/slots",
+                "/transformations/slots",
                 json!({"q": "deep-edit", "w": "deep-edit"}),
             ),
         ] {
@@ -893,7 +872,7 @@ mod tests {
             *config.pointer_mut(path).unwrap() = value;
             assert!(validate_user_config(&config).is_err(), "{path}");
         }
-        for pointer in ["/llm/models", "/aiTasks/items"] {
+        for pointer in ["/llm/models", "/transformations/items"] {
             let mut config = defaults.clone();
             let items = config.pointer_mut(pointer).unwrap().as_array_mut().unwrap();
             items.push(items[0].clone());
@@ -912,7 +891,8 @@ mod tests {
             "y": {"type":"standard","actionId":"askInChat"},
         });
         config["translation"]["targetLanguages"] = json!({"q": "en-US", "w": "en-US", "e": 1});
-        config["aiTasks"]["slots"] = json!({"q": "gone", "w": "deep-edit", "e": "deep-edit"});
+        config["transformations"]["slots"] =
+            json!({"q": "gone", "w": "deep-edit", "e": "deep-edit"});
         assert!(normalize_user_config(&mut config));
         validate_user_config(&config).unwrap();
         assert!(!normalize_user_config(&mut config));
@@ -924,7 +904,10 @@ mod tests {
             config["translation"]["targetLanguages"],
             json!({"q": "en-US"})
         );
-        assert_eq!(config["aiTasks"]["slots"], json!({"w": "deep-edit"}));
+        assert_eq!(
+            config["transformations"]["slots"],
+            json!({"w": "deep-edit"})
+        );
         assert_eq!(config["stt"]["isVoiceCorrectionEnabled"], false);
     }
 

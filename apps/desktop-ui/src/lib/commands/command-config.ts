@@ -3,6 +3,7 @@ import {
   COMMAND_OUTPUT_ACTIONS,
   type CommandConfig,
   type CommandOutputAction,
+  AI_COMMAND_MAX_STEPS_DEFAULT,
   EXTERNAL_TIMEOUT_DEFAULT_SEC,
   EXTERNAL_TIMEOUT_MAX_SEC,
   normalizeCommands,
@@ -124,6 +125,11 @@ function defaultToolConfig(toolId: string): Record<string, unknown> {
     case 'core.translate':
       return { language: '' }
     case 'core.aiTask':
+      return {
+        prompt: '',
+        allowedCommandIds: [],
+        maxSteps: AI_COMMAND_MAX_STEPS_DEFAULT,
+      }
     case 'core.transformation':
     case 'core.styling':
       return { prompt: '' }

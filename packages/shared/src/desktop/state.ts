@@ -14,7 +14,6 @@ export type ActivationMode = ActivationModeName
 export const ActivationMode = {
   SELECTION_ACTIONS: 'selectionActions',
   VOICE: 'voice',
-  AI_TASKS: 'aiTasks',
   VOICE_COMMANDS: 'voiceCommands',
   COMMAND_LAUNCHER: 'commandLauncher',
   CORRECTION: 'correction',

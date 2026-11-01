@@ -28,7 +28,6 @@
     "voiceChat": "",
     "voice": "Ctrl+Alt+Shift+V",
     "selectionActions": "Ctrl+Alt+Shift+S",
-    "aiTasks": "",
     "correction": "",
     "translation": "",
     "styling": "",
@@ -56,7 +55,7 @@
   "mainActions": {
     "q": { "type": "standard", "actionId": "insertIntoWindow" },
     "w": { "type": "standard", "actionId": "copyToClipboard" },
-    "e": { "type": "standard", "actionId": "aiTaskMenu" },
+    "e": { "type": "launcherPage", "pageId": "main" },
     "r": { "type": "standard", "actionId": "correction" },
     "t": { "type": "standard", "actionId": "translationMenu" },
     "a": { "type": "standard", "actionId": "askInChat" }
@@ -140,20 +139,16 @@
     },
     "imageQuality": "balanced"
   },
-  "aiTasks": {
+  "transformations": {
     "items": [
       {
         "id": "deep-edit",
         "name": "Deep edit",
-        "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-        "allowedTools": [],
-        "outputAction": "replace",
-        "maxSteps": 5
+        "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
       }
     ],
     "slots": { "q": "deep-edit" }
   },
-  "transformations": { "items": [], "slots": {} },
   "styling": { "items": [], "slots": {} },
   "aiVault": { "path": "" },
   "aiProfiles": { "chatHistory": { "storage": "disk" } },

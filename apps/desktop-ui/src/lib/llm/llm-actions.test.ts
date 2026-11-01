@@ -107,18 +107,18 @@ describe('LLM application actions', () => {
 
   it('uses a trimmed custom prompt and refuses empty inputs', async () => {
     const f = fixture()
-    expect(await f.actions.aiCustomPrompt('  Summarize  ', 'Sample')).toBe(
-      'Answer'
-    )
-    expect(f.aiRequest).toHaveBeenCalledWith('aiTask', 'Sample', {
-      instructions: APP_CONFIG.aiInstructions.aiTask,
+    expect(
+      await f.actions.transformationPrompt('  Summarize  ', 'Sample')
+    ).toBe('Answer')
+    expect(f.aiRequest).toHaveBeenCalledWith('transformation', 'Sample', {
+      instructions: APP_CONFIG.aiInstructions.transformation,
       rules: 'Summarize',
     })
     f.aiRequest.mockClear()
-    await expect(f.actions.aiCustomPrompt('  ', 'Sample')).rejects.toThrow(
-      'The instruction is empty'
-    )
-    expect(await f.actions.aiCustomPrompt('Prompt')).toBe('')
+    await expect(
+      f.actions.transformationPrompt('  ', 'Sample')
+    ).rejects.toThrow('The instruction is empty')
+    expect(await f.actions.transformationPrompt('Prompt')).toBe('')
     expect(await f.actions.correctText('  ')).toBe('')
     expect(f.notifyEmptyText).toHaveBeenCalledTimes(2)
     expect(f.aiRequest).not.toHaveBeenCalled()

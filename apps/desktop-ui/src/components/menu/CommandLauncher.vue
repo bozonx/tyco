@@ -41,9 +41,7 @@
 
       <InProgressMessage
         v-else-if="stage.kind === 'running'"
-        :label="
-          t('commandLauncher.running', { name: commandLabel(stage.command) })
-        "
+        :label="runningLabel"
         :on-cancel="launcher.cancel"
       />
 
@@ -89,6 +87,7 @@
           :empty-text="t('commandLauncher.nothingFound')"
           auto-highlight
           @submit="submitSearch"
+          @save="savePrompt"
           @back="closeSearch"
         />
         <div v-else>
@@ -130,6 +129,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
+import { isAiCommand } from '../../lib/ai-commands/ai-command-config'
 import {
   isLauncherCommand,
   searchCommands,
@@ -246,23 +246,57 @@ const searchOptions = computed<QueryPanelOption[]>(() => {
   }))
 })
 
+/** What the running command shows: an AI command tells the command it runs */
+const runningLabel = computed(() => {
+  if (stage.value.kind !== 'running') return ''
+  const name = commandLabel(stage.value.command)
+  return isAiCommand(stage.value.command) && launcher.progress
+    ? t('commandLauncher.aiStep', { name, step: launcher.progress })
+    : t('commandLauncher.running', { name })
+})
+
+const hasQuery = computed(() => Boolean(query.value.trim()))
+
 const searchHints = computed<QueryPanelHint[]>(() => [
   {
     keys: ['Enter'],
     label: t('commandLauncher.hintRun'),
-    disabled: searchOptions.value.length === 0,
+    disabled: searchOptions.value.length === 0 && !hasQuery.value,
+  },
+  {
+    keys: ['Ctrl', 'Enter'],
+    label: t('commandLauncher.hintAskAi'),
+    disabled: !hasQuery.value,
+    action: () => submitSearch({ ctrl: true }),
+  },
+  {
+    keys: ['Ctrl', 'S'],
+    label: t('commandLauncher.hintSavePrompt'),
+    disabled: !hasQuery.value,
+    action: savePrompt,
   },
   { keys: ['Esc'], label: t('common.back'), action: closeSearch },
 ])
 
-function submitSearch({ option }: QueryPanelSubmit) {
-  if (!option) return
-  const cmd = launcher.commands.find((c) => c.id === option.id)
-  if (cmd) {
-    isSearchMode.value = false
-    query.value = ''
-    void launcher.pick(cmd)
-  }
+/**
+ * Enter runs the highlighted command; Ctrl+Enter, or Enter when nothing is
+ * found, runs the typed text as a request to the AI
+ */
+function submitSearch({ option, ctrl }: QueryPanelSubmit) {
+  const prompt = query.value.trim()
+  const cmd =
+    option && !ctrl
+      ? launcher.commands.find((c) => c.id === option.id)
+      : undefined
+  if (!cmd && !prompt) return
+  isSearchMode.value = false
+  query.value = ''
+  void (cmd ? launcher.pick(cmd) : launcher.runPrompt(prompt))
+}
+
+/** Saves the typed text as an AI command; the search stays for running it */
+async function savePrompt() {
+  if (hasQuery.value) await launcher.savePrompt(query.value)
 }
 
 const onTextKeyDown = (event: KeyboardEvent) => {

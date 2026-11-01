@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "AI 任务",
     "askInChat": "在聊天中提问",
     "copy": "复制",
     "copyToClipboard": "复制并关闭",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "“{name}”：正在运行“{step}”…",
     "allCommands": "所有命令",
     "commandMissing": "命令 {id} 不在库中。",
     "dropSelection": "不使用选中的文本",
+    "hintAskAi": "问 AI",
     "hintNewLine": "换行",
     "hintRun": "运行",
+    "hintSavePrompt": "保存为 AI 命令",
     "nothingFound": "未找到命令",
     "pages": "页面：",
+    "promptSaved": "已保存为 AI 命令",
+    "promptSavedAlready": "已有使用此提示词的 AI 命令",
     "running": "正在运行“{name}”…",
     "searchPlaceholder": "搜索命令…",
     "selection": "已选文本：{count} 个字符",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "留空字段将从插件设置中获取其值。",
     "promptFromTask": "从 AI 任务获取指令",
     "promptFromTaskPlaceholder": "选择 AI 任务…",
-    "promptInfo": "应用于文本的 AI 指令。命令中存储了一份独立副本：编辑原始 AI 任务不会影响此命令。",
+    "promptInfo": "应用于文本的 AI 指令。命令中保存独立副本：编辑原始转换或风格不会影响此命令。",
     "promptLabel": "给 LLM 的指令",
     "promptPlaceholder": "例如：使文本更简洁、更友好",
     "removed": "命令“{name}”已移除",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "用于在将输入文本发送到命令之前由 LLM 进行转换的指令。",
     "externalTimeoutLabel": "后台运行时限（秒）",
     "externalTimeoutInfo": "外部调用在后台可运行的时长，从命令启动时开始计算；超时后将被停止并报告为超时。默认 {seconds}，最多 {max}。在窗口中运行没有时限：您可以看到运行过程并随时取消。",
-    "preTransformEmpty": "LLM 未为该命令返回文本"
+    "preTransformEmpty": "LLM 未为该命令返回文本",
+    "aiTitle": "AI 命令",
+    "aiDescription": "AI 命令用 LLM 执行你的提示词，并可运行你允许的命令。所有 AI 命令都由此模型回答。",
+    "aiPromptLabel": "提示词",
+    "aiPromptInfo": "AI 如何处理运行命令的文本：改写、提取数据、决定运行哪些命令以及用什么参数。",
+    "aiPromptPlaceholder": "例如：找出文本中的日期和时间，并把事件添加到我的日历",
+    "aiAllowedCommands": "可运行的命令",
+    "aiAllowedCommandsInfo": "当提示词需要时，AI 会直接运行这些命令而不询问。命令永远不会运行自身，也不会运行调用它的 AI 命令。",
+    "aiNoOtherCommands": "还没有其他命令。",
+    "aiMaxSteps": "步数上限",
+    "aiMaxStepsInfo": "一次运行中 AI 可回答的次数；每运行一个命令占用一步。"
   },
   "common": {
     "add": "添加",
@@ -493,8 +507,6 @@
     "aiPromptSave": "保存为任务",
     "aiPromptSlotsFull": "所有任务快捷键均已占用：请在设置中释放一个",
     "aiRequest": "AI 请求",
-    "aiTask": "AI 任务",
-    "aiTaskPromptEmpty": "此任务没有提示词：请在设置中填写",
     "cancelIntentHint": "按 Esc 取消",
     "compareResult": "对比结果",
     "copyOnFinish": "复制",
@@ -707,7 +719,6 @@
     "hideAdvanced": "隐藏高级设置",
     "hotkey": "快捷键",
     "hotkeyActions": {
-      "aiTasks": "AI 任务",
       "chat": "将选中文本作为上下文用于 AI 对话",
       "correction": "带预览的文本纠错",
       "editor": "在编辑器中打开选中文本",
@@ -759,7 +770,7 @@
     "llmConnectionsHint": "Tyco 发送 AI 请求的目标：Google、OpenRouter、DeepSeek 或任何具有兼容 OpenAI API 的服务器，例如本地的 Ollama 或 LM Studio。模型添加在其连接内部。保存的密钥将存入安全存储区，不再显示。",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "AI 任务",
+      "aiCommands": "AI 命令",
       "basic": "基础",
       "commands": "我的命令",
       "styling": "文本风格化",
@@ -768,7 +779,6 @@
       "unavailable": "不可用"
     },
     "mainActionStylingRemoved": "已删除的文本风格",
-    "mainActionTaskRemoved": "已删除的 AI 任务",
     "mainActionTransformationRemoved": "已删除的文本转换",
     "mainActionsHint": "主菜单操作：每项操作使用独立的按键运行。拖动卡片可更改其按键。",
     "mainActionsTab": "主操作",
@@ -995,8 +1005,6 @@
     "taskModelChange": "更改",
     "taskModelInfo": "模型在“LLM”页面中分配。",
     "taskModelNone": "未选择",
-    "tasksHint": "AI 应用于文本的指令（Prompt）。在任务菜单中，每项任务使用独立的按键运行；拖动卡片可更改其按键。",
-    "tasksTab": "AI 任务",
     "temperature": "温度 (Temperature)",
     "terminalApps": "其他终端",
     "terminalAppsHint": "Tyco 无法识别的终端窗口类，用逗号分隔。在终端中 Tyco 从不按 Ctrl+C，并会把选区的结果放入剪贴板。",
@@ -1082,7 +1090,8 @@
     "quickCorrectionModeInfo": "快速输入窗口如何处理文本修正。",
     "quickCorrectionLive": "实时预览",
     "quickCorrectionOnSubmit": "完成时",
-    "quickCorrectionOff": "关闭"
+    "quickCorrectionOff": "关闭",
+    "aiCommands": "AI 命令"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1136,8 +1145,8 @@
     "voicePostProcessTimeout": "语音处理耗时过长；已保留原始文本"
   },
   "tools": {
-    "aiTask": "AI 任务",
-    "aiTaskDescription": "通过 LLM 将命令中的指令应用于文本",
+    "aiTask": "AI 命令",
+    "aiTaskDescription": "AI 执行你的提示词，并可运行其他命令",
     "askInChat": "在聊天中提问",
     "askInChatDescription": "打开聊天并附上文本",
     "copy": "复制",

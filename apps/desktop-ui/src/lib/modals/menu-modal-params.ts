@@ -8,7 +8,6 @@ import type { TranslationMeta } from '../translation/translation-meta'
 
 export enum MenuModals {
   INSERT = 'insert',
-  AI_TASK = 'ai-task',
   TRANSFORMATION = 'transformation',
   STYLING = 'styling',
   DIFF = 'diff',
@@ -34,12 +33,6 @@ export interface InsertMenuParams {
   isCorrectionUnchanged?: boolean
   /** Offer insertion, the editor and cancellation only. */
   insertOnly?: boolean
-}
-export interface AiTaskMenuParams {
-  text?: string
-  shortcutsDisabled?: boolean
-  /** Runs this task immediately when the dialog opens. */
-  taskId?: string
 }
 export interface TransformationMenuParams {
   text?: string
@@ -119,7 +112,6 @@ export interface PendingModalParams {
 
 interface MenuModalParams {
   [MenuModals.INSERT]: InsertMenuParams
-  [MenuModals.AI_TASK]: AiTaskMenuParams
   [MenuModals.TRANSFORMATION]: TransformationMenuParams
   [MenuModals.STYLING]: StylingMenuParams
   [MenuModals.DIFF]: DiffMenuParams

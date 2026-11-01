@@ -111,7 +111,6 @@ export interface HotkeysConfig {
   voiceChat: string
   voice: string
   selectionActions: string
-  aiTasks: string
   correction: string
   translation: string
   styling: string
@@ -128,28 +127,6 @@ export interface PluginEntryConfig {
   settingsVersion?: number
   isEnabled: boolean
   settings: Record<string, unknown>
-}
-
-export type AiTaskOutputAction =
-  'replace' | 'insert' | 'show' | 'notify_and_close'
-
-/** A functional AI task of the task library */
-export interface AiTaskConfig {
-  id: string
-  name: string
-  icon?: string
-  prompt: string
-  modelId?: string
-  allowedTools: string[]
-  outputAction: AiTaskOutputAction
-  maxSteps: number
-}
-
-export interface AiTasksConfig {
-  /** The task library, in the order the settings list it */
-  items: AiTaskConfig[]
-  /** The AI task menu: task ids by shortcut key */
-  slots: ShortcutSlots<string>
 }
 
 /** A named text transformation rule of the transformation library */
@@ -217,7 +194,6 @@ export interface UserConfig {
   launcherPages: LauncherPageConfig[]
   commands: CommandConfig[]
   llm: LlmConfig
-  aiTasks: AiTasksConfig
   transformations: TransformationsConfig
   styling: StylingsConfig
   aiVault: AiVaultLocationConfig

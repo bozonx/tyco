@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "AIタスク",
     "askInChat": "チャットで質問",
     "copy": "コピー",
     "copyToClipboard": "コピーして閉じる",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "「{name}」：「{step}」を実行中…",
     "allCommands": "すべてのコマンド",
     "commandMissing": "コマンド「{id}」はライブラリにありません。",
     "dropSelection": "選択したテキストを使用しない",
+    "hintAskAi": "AI に聞く",
     "hintNewLine": "改行",
     "hintRun": "実行",
+    "hintSavePrompt": "AI コマンドとして保存",
     "nothingFound": "コマンドが見つかりません",
     "pages": "ページ:",
+    "promptSaved": "AI コマンドとして保存しました",
+    "promptSavedAlready": "このプロンプトの AI コマンドはすでにあります",
     "running": "「{name}」を実行中…",
     "searchPlaceholder": "コマンドを検索…",
     "selection": "選択テキスト: {count} 文字",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "空のフィールドにはプラグイン設定の値が使用されます。",
     "promptFromTask": "AIタスクから指示を取得",
     "promptFromTaskPlaceholder": "AIタスクを選択…",
-    "promptInfo": "テキストに適用されるAIの指示。独立したコピーがコマンドに保存されるため、元のAIタスクを編集してもこのコマンドには影響しません。",
+    "promptInfo": "テキストに適用する AI への指示です。コマンドには独立したコピーが保存されます。元の変換やスタイルを編集しても、このコマンドには影響しません。",
     "promptLabel": "LLMへの指示",
     "promptPlaceholder": "例: テキストをより短く、親しみやすい表現にしてください",
     "removed": "コマンド「{name}」を削除しました",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "コマンドに送信する前に入力テキストを変換するためのLLM指示。",
     "externalTimeoutLabel": "バックグラウンド実行の上限（秒）",
     "externalTimeoutInfo": "外部呼び出しがバックグラウンドで実行できる時間（コマンドの開始から計測）。超えると停止され、タイムアウトとして報告されます。既定は {seconds}、最大 {max}。ウィンドウでの実行には上限がありません。実行状況が見え、キャンセルできるためです。",
-    "preTransformEmpty": "LLM がコマンド用のテキストを返しませんでした"
+    "preTransformEmpty": "LLM がコマンド用のテキストを返しませんでした",
+    "aiTitle": "AI コマンド",
+    "aiDescription": "AI コマンドは LLM でプロンプトを実行し、許可したコマンドを実行できます。すべての AI コマンドにこのモデルが応答します。",
+    "aiPromptLabel": "プロンプト",
+    "aiPromptInfo": "コマンドを実行したテキストを AI がどう扱うか：書き換える、データを取り出す、どのコマンドを何で実行するかを決める。",
+    "aiPromptPlaceholder": "例：テキストから日時を見つけて、予定をカレンダーに追加して",
+    "aiAllowedCommands": "実行できるコマンド",
+    "aiAllowedCommandsInfo": "プロンプトが必要とするとき、AI はこれらのコマンドを確認なしで実行します。コマンドが自分自身や自分を呼び出した AI コマンドを実行することはありません。",
+    "aiNoOtherCommands": "ほかのコマンドはまだありません。",
+    "aiMaxSteps": "ステップ上限",
+    "aiMaxStepsInfo": "1 回の実行で AI が応答できる回数。実行するコマンドごとに 1 ステップを使います。"
   },
   "common": {
     "add": "追加",
@@ -493,8 +507,6 @@
     "aiPromptSave": "タスクとして保存",
     "aiPromptSlotsFull": "すべてのタスクキーが使用されています。設定で空きを作成してください",
     "aiRequest": "AIリクエスト",
-    "aiTask": "AIタスク",
-    "aiTaskPromptEmpty": "このタスクにはプロンプトがありません。設定で入力してください",
     "cancelIntentHint": "Esc でキャンセル",
     "compareResult": "結果を比較",
     "copyOnFinish": "コピー",
@@ -710,7 +722,6 @@
     "hideAdvanced": "高度な設定を非表示",
     "hotkey": "ショートカット",
     "hotkeyActions": {
-      "aiTasks": "AIタスク",
       "chat": "選択テキストをAIチャットのコンテキストとして使用",
       "correction": "プレビュー付き校正",
       "editor": "選択テキストをエディターで開く",
@@ -762,7 +773,7 @@
     "llmConnectionsHint": "TyCoがAIリクエストを送信する場所：Google、OpenRouter、DeepSeek、またはローカルのOllamaやLM StudioなどのOpenAI互換APIを持つサーバー。モデルは接続内に追加されます。保存されたキーは安全なストレージに送られ、再表示されることはありません。",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "AIタスク",
+      "aiCommands": "AI コマンド",
       "basic": "基本",
       "commands": "マイコマンド",
       "styling": "テキストスタイリング",
@@ -771,7 +782,6 @@
       "unavailable": "利用不可"
     },
     "mainActionStylingRemoved": "削除されたテキストスタイル",
-    "mainActionTaskRemoved": "削除されたAIタスク",
     "mainActionTransformationRemoved": "削除されたテキスト変換",
     "mainActionsHint": "メインメニューのアクション: それぞれ独自のキーで実行されます。カードをドラッグしてキーを変更できます。",
     "mainActionsTab": "メインアクション",
@@ -998,8 +1008,6 @@
     "taskModelChange": "変更",
     "taskModelInfo": "モデルは「LLM」ページで割り当てます。",
     "taskModelNone": "未選択",
-    "tasksHint": "テキストに適用するAIへの指示（プロンプト）。タスクメニューに表示され、ショートカットキーから呼び出せます。",
-    "tasksTab": "AIタスク",
     "temperature": "温度 (Temperature)",
     "terminalApps": "その他のターミナル",
     "terminalAppsHint": "Tyco が認識しないターミナルのウィンドウクラスをカンマ区切りで指定します。ターミナルでは Tyco は Ctrl+C を押さず、選択範囲の結果をクリップボードに入れます。",
@@ -1085,7 +1093,8 @@
     "quickCorrectionModeInfo": "クイック入力ウィンドウでのテキスト校正の処理方法。",
     "quickCorrectionLive": "リアルタイム",
     "quickCorrectionOnSubmit": "完了時",
-    "quickCorrectionOff": "オフ"
+    "quickCorrectionOff": "オフ",
+    "aiCommands": "AI コマンド"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {
@@ -1139,8 +1148,8 @@
     "voicePostProcessTimeout": "音声処理に時間がかかりすぎました。元のテキストを保持しました"
   },
   "tools": {
-    "aiTask": "AIタスク",
-    "aiTaskDescription": "LLMを使用してコマンドの指示をテキストに適用します",
+    "aiTask": "AI コマンド",
+    "aiTaskDescription": "AI がプロンプトを実行し、ほかのコマンドも実行できます",
     "askInChat": "チャットで質問",
     "askInChatDescription": "テキストを添付してチャットを開きます",
     "copy": "コピー",

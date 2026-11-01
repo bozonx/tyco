@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "AI task",
     "askInChat": "Ask in chat",
     "copy": "Copy",
     "copyToClipboard": "Copy and close",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "“{name}”: running “{step}”…",
     "allCommands": "All commands",
     "commandMissing": "The command {id} is not in the library.",
     "dropSelection": "Don't use the selected text",
+    "hintAskAi": "Ask AI",
     "hintNewLine": "New line",
     "hintRun": "Run",
+    "hintSavePrompt": "Save as AI command",
     "nothingFound": "No commands found",
     "pages": "Pages:",
+    "promptSaved": "Saved as an AI command",
+    "promptSavedAlready": "An AI command with this prompt already exists",
     "running": "Running “{name}”…",
     "searchPlaceholder": "Search commands…",
     "selection": "Selected text: {count} chars",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Empty fields take their value from the plugin settings.",
     "promptFromTask": "Take the instruction from an AI task",
     "promptFromTaskPlaceholder": "Choose an AI task…",
-    "promptInfo": "AI instructions applied to the text. An independent copy is stored in the command: editing the original AI task will not affect this command.",
+    "promptInfo": "AI instructions applied to the text. An independent copy is stored in the command: editing the original transformation or style will not affect this command.",
     "promptLabel": "Instruction for the LLM",
     "promptPlaceholder": "E.g. Make the text shorter and friendlier",
     "removed": "Command “{name}” removed",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Instruction for the LLM to transform the input text before sending it to the command.",
     "externalTimeoutLabel": "Background run limit, seconds",
     "externalTimeoutInfo": "How long an external call may run in the background, counted from the start of the command; after that it is stopped and reported as timed out. {seconds} by default, at most {max}. Runs in a window have no limit: you see them and can cancel them.",
-    "preTransformEmpty": "The LLM returned no text for the command"
+    "preTransformEmpty": "The LLM returned no text for the command",
+    "aiTitle": "AI commands",
+    "aiDescription": "An AI command follows your prompt with the LLM and may run the commands you allow it. This model answers every AI command.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "What the AI does with the text the command runs on: rewrite it, pull data out of it, decide which commands to run and with what.",
+    "aiPromptPlaceholder": "E.g. Find the date and time in the text and add the event to my calendar",
+    "aiAllowedCommands": "Commands it may run",
+    "aiAllowedCommandsInfo": "The AI runs these commands without asking whenever the prompt needs them. A command never runs itself or an AI command that called it.",
+    "aiNoOtherCommands": "There are no other commands yet.",
+    "aiMaxSteps": "Step limit",
+    "aiMaxStepsInfo": "How many times the AI may answer in one run; each command it runs takes a step."
   },
   "common": {
     "add": "Add",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Save as task",
     "aiPromptSlotsFull": "All task keys are taken: free one in the settings",
     "aiRequest": "AI request",
-    "aiTask": "AI task",
-    "aiTaskPromptEmpty": "This task has no prompt: fill it in the settings",
     "cancelIntentHint": "Esc to cancel",
     "compareResult": "Compare the result",
     "copyOnFinish": "Copy on completion",
@@ -713,7 +725,6 @@
     "hideAdvanced": "Hide advanced settings",
     "hotkey": "Hotkey",
     "hotkeyActions": {
-      "aiTasks": "AI tasks",
       "chat": "Use selected text as context in AI chat",
       "correction": "Correction with preview",
       "editor": "Open selected text in the editor",
@@ -765,7 +776,7 @@
     "llmConnectionsHint": "Where Tyco sends AI requests: Google, OpenRouter, DeepSeek or any server with an OpenAI-compatible API, such as a local Ollama or LM Studio. Models are added inside their connection. A saved key goes to secure storage and is never shown again.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "AI tasks",
+      "aiCommands": "AI commands",
       "basic": "Basic",
       "commands": "My commands",
       "styling": "Text styling",
@@ -774,7 +785,6 @@
       "unavailable": "Unavailable"
     },
     "mainActionStylingRemoved": "Deleted text style",
-    "mainActionTaskRemoved": "Deleted AI task",
     "mainActionTransformationRemoved": "Deleted text transformation",
     "mainActionsHint": "Main menu actions: each one runs with its own key. Drag the cards to change their keys.",
     "mainActionsTab": "Main actions",
@@ -1001,8 +1011,6 @@
     "taskModelChange": "Change",
     "taskModelInfo": "The model is assigned on the LLM page.",
     "taskModelNone": "Not selected",
-    "tasksHint": "Instructions (prompts) the AI applies to the text. In the tasks menu each one runs with its own key; drag the cards to change their keys.",
-    "tasksTab": "AI tasks",
     "temperature": "Temperature",
     "terminalApps": "Other terminals",
     "terminalAppsHint": "Window classes of terminals Tyco does not recognize, separated by commas. Tyco never presses Ctrl+C in a terminal and puts the result for its selection into the clipboard.",
@@ -1088,7 +1096,8 @@
     "quickCorrectionModeInfo": "How the quick input window handles text correction.",
     "quickCorrectionLive": "Live preview",
     "quickCorrectionOnSubmit": "On completion",
-    "quickCorrectionOff": "Off"
+    "quickCorrectionOff": "Off",
+    "aiCommands": "AI commands"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1142,8 +1151,8 @@
     "voicePostProcessTimeout": "Voice processing took too long; original text kept"
   },
   "tools": {
-    "aiTask": "AI task",
-    "aiTaskDescription": "Applies the instruction of the command to the text with the LLM",
+    "aiTask": "AI command",
+    "aiTaskDescription": "The AI follows your prompt and may run other commands",
     "askInChat": "Ask in chat",
     "askInChatDescription": "Opens the chat with the text attached",
     "copy": "Copy",

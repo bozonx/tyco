@@ -102,7 +102,7 @@ pub(crate) struct HotkeyBinding {
 }
 
 /// The command overlay opens by the hotkeys of its pages, see `launcherPages`.
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 13] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 12] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
@@ -110,7 +110,6 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 13] = [
     ActivationMode::VoiceCommands,
     ActivationMode::Voice,
     ActivationMode::SelectionActions,
-    ActivationMode::AiTasks,
     ActivationMode::Correction,
     ActivationMode::Translation,
     ActivationMode::Styling,
@@ -238,7 +237,6 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         ActivationMode::Editor
         | ActivationMode::Chat
         | ActivationMode::VoiceChat
-        | ActivationMode::AiTasks
         | ActivationMode::CommandLauncher
         | ActivationMode::Correction
         | ActivationMode::Translation
@@ -301,7 +299,6 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::VoiceChat => "Ask the chat by voice",
         ActivationMode::Voice => "Start voice input",
         ActivationMode::SelectionActions => "Open selection actions",
-        ActivationMode::AiTasks => "Open AI tasks",
         ActivationMode::CommandLauncher => "Run a command",
         ActivationMode::Correction => "Correct selected text with review",
         ActivationMode::Translation => "Translate selected text",

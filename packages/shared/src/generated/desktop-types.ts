@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 32429afff016f009c8b7694e0a9020640cdc911f97dc77ab1c7b7c25672b861c
+// Source hash: 80be0d45dfe014d5c828e1d07607f433c963a7d182e94b1dcbb34f0fabe1ac5e
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -29,7 +29,6 @@ export type ActivationMode =
   | 'voiceCommands'
   | 'voice'
   | 'selectionActions'
-  | 'aiTasks'
   | 'commandLauncher'
   | 'correction'
   | 'translation'

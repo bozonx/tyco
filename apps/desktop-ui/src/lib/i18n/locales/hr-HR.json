@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "AI zadatak",
     "askInChat": "Pitaj u chatu",
     "copy": "Kopiraj",
     "copyToClipboard": "Kopiraj i zatvori",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "„{name}”: pokrećem „{step}”…",
     "allCommands": "Sve naredbe",
     "commandMissing": "Naredba {id} nije u biblioteci.",
     "dropSelection": "Ne koristi odabrani tekst",
+    "hintAskAi": "Pitaj AI",
     "hintNewLine": "Novi redak",
     "hintRun": "Pokreni",
+    "hintSavePrompt": "Spremi kao AI naredbu",
     "nothingFound": "Nisu pronađene naredbe",
     "pages": "Stranice:",
+    "promptSaved": "Spremljeno kao AI naredba",
+    "promptSavedAlready": "AI naredba s ovim promptom već postoji",
     "running": "Pokreće se „{name}”…",
     "searchPlaceholder": "Pretraži naredbe…",
     "selection": "Odabrani tekst, znakova: {count}",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Prazna polja preuzimaju vrijednost iz postavki dodatka.",
     "promptFromTask": "Preuzmi uputu iz AI zadatka",
     "promptFromTaskPlaceholder": "Odaberite AI zadatak…",
-    "promptInfo": "AI upute koje se primjenjuju na tekst. U naredbi se sprema neovisna kopija: uređivanje izvornog AI zadatka neće utjecati na ovu naredbu.",
+    "promptInfo": "AI uputa koja se primjenjuje na tekst. U naredbi se sprema neovisna kopija: uređivanje izvorne transformacije ili stila neće utjecati na ovu naredbu.",
     "promptLabel": "Uputa za LLM",
     "promptPlaceholder": "Npr. Skrati tekst i učini ga prijaznijim",
     "removed": "Naredba „{name}” je uklonjena",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Uputa za LLM kojom se ulazni tekst transformira prije slanja naredbi.",
     "externalTimeoutLabel": "Ograničenje izvođenja u pozadini, sekunde",
     "externalTimeoutInfo": "Koliko dugo vanjski poziv smije raditi u pozadini, računajući od pokretanja naredbe; nakon toga se zaustavlja i prijavljuje kao isteklo vrijeme. Zadano {seconds}, najviše {max}. Izvođenja u prozoru nisu ograničena: vidite ih i možete ih otkazati.",
-    "preTransformEmpty": "LLM nije vratio tekst za naredbu"
+    "preTransformEmpty": "LLM nije vratio tekst za naredbu",
+    "aiTitle": "AI naredbe",
+    "aiDescription": "AI naredba izvršava vaš prompt pomoću LLM-a i smije pokretati naredbe koje joj dopustite. Ovaj model odgovara na sve AI naredbe.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "Što AI radi s tekstom na kojem se naredba pokreće: prepisuje ga, izvlači podatke iz njega, odlučuje koje naredbe pokrenuti i s čime.",
+    "aiPromptPlaceholder": "Npr. Pronađi datum i vrijeme u tekstu i dodaj događaj u moj kalendar",
+    "aiAllowedCommands": "Naredbe koje smije pokretati",
+    "aiAllowedCommandsInfo": "AI pokreće ove naredbe bez pitanja kad god ih prompt treba. Naredba nikad ne pokreće samu sebe ni AI naredbu koja ju je pozvala.",
+    "aiNoOtherCommands": "Još nema drugih naredbi.",
+    "aiMaxSteps": "Ograničenje koraka",
+    "aiMaxStepsInfo": "Koliko puta AI smije odgovoriti u jednom pokretanju; svaka pokrenuta naredba troši korak."
   },
   "common": {
     "add": "Dodaj",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Spremi kao zadatak",
     "aiPromptSlotsFull": "Sve tipke zadataka su zauzete: oslobodite jednu u postavkama",
     "aiRequest": "AI zahtjev",
-    "aiTask": "AI zadatak",
-    "aiTaskPromptEmpty": "Ovaj zadatak nema upit: ispunite ga u postavkama",
     "cancelIntentHint": "Esc za odustajanje",
     "compareResult": "Usporedi rezultat",
     "copyOnFinish": "Kopiraj",
@@ -713,7 +725,6 @@
     "hideAdvanced": "Sakrij napredne postavke",
     "hotkey": "Prečac",
     "hotkeyActions": {
-      "aiTasks": "AI zadaci",
       "chat": "Koristi odabrani tekst kao kontekst u AI chatu",
       "correction": "Ispravak s pregledom",
       "editor": "Otvori odabrani tekst u uređivaču",
@@ -765,7 +776,7 @@
     "llmConnectionsHint": "Kamo Tyco šalje AI zahtjeve: Google, OpenRouter, DeepSeek ili bilo koji poslužitelj s API-jem kompatibilnim s OpenAI-jem, npr. lokalni Ollama ili LM Studio. Modeli se dodaju unutar svoje veze. Spremljeni ključ ide u sigurnu pohranu i više se nikad ne prikazuje.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "AI zadaci",
+      "aiCommands": "AI naredbe",
       "basic": "Osnovne",
       "commands": "Moje naredbe",
       "styling": "Stiliziranje teksta",
@@ -774,7 +785,6 @@
       "unavailable": "Nedostupne"
     },
     "mainActionStylingRemoved": "Izbrisan stil teksta",
-    "mainActionTaskRemoved": "Izbrisani AI zadatak",
     "mainActionTransformationRemoved": "Izbrisana transformacija teksta",
     "mainActionsHint": "Radnje glavnog izbornika: svaka se pokreće vlastitom tipkom. Povucite kartice da biste promijenili njihove tipke.",
     "mainActionsTab": "Glavne radnje",
@@ -1001,8 +1011,6 @@
     "taskModelChange": "Promijeni",
     "taskModelInfo": "Model se dodjeljuje na stranici „LLM”.",
     "taskModelNone": "Nije odabrano",
-    "tasksHint": "Upute (promptovi) koje AI primjenjuje na tekst. U izborniku zadataka svaka se pokreće vlastitom tipkom; povucite kartice da biste promijenili njihove tipke.",
-    "tasksTab": "AI zadaci",
     "temperature": "Temperatura",
     "terminalApps": "Ostali terminali",
     "terminalAppsHint": "Klase prozora terminala koje Tyco ne prepoznaje, odvojene zarezima. U terminalu Tyco nikad ne pritišće Ctrl+C, a rezultat za njegov odabir stavlja u međuspremnik.",
@@ -1088,7 +1096,8 @@
     "quickCorrectionModeInfo": "Kako prozor brzog unosa obrađuje ispravak teksta.",
     "quickCorrectionLive": "Pregled uživo",
     "quickCorrectionOnSubmit": "Po završetku",
-    "quickCorrectionOff": "Isključeno"
+    "quickCorrectionOff": "Isključeno",
+    "aiCommands": "AI naredbe"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1142,8 +1151,8 @@
     "voicePostProcessTimeout": "Obrada glasa trajala je predugo; izvorni tekst je zadržan"
   },
   "tools": {
-    "aiTask": "AI zadatak",
-    "aiTaskDescription": "Primjenjuje uputu naredbe na tekst pomoću LLM-a",
+    "aiTask": "AI naredba",
+    "aiTaskDescription": "AI izvršava vaš prompt i smije pokretati druge naredbe",
     "askInChat": "Pitaj u chatu",
     "askInChatDescription": "Otvara chat s priloženim tekstom",
     "copy": "Kopiraj",

@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "MI-feladat",
     "askInChat": "Kérdezés a csevegésben",
     "copy": "Másolás",
     "copyToClipboard": "Másolás és bezárás",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "„{name}”: „{step}” futtatása…",
     "allCommands": "Minden parancs",
     "commandMissing": "A(z) {id} parancs nincs a könyvtárban.",
     "dropSelection": "Ne használja a kijelölt szöveget",
+    "hintAskAi": "Kérdezd az MI-t",
     "hintNewLine": "Új sor",
     "hintRun": "Futtatás",
+    "hintSavePrompt": "Mentés MI-parancsként",
     "nothingFound": "Nincs találat a parancsok között",
     "pages": "Oldalak:",
+    "promptSaved": "Mentve MI-parancsként",
+    "promptSavedAlready": "Már létezik MI-parancs ezzel a prompttal",
     "running": "„{name}” futtatása…",
     "searchPlaceholder": "Parancsok keresése…",
     "selection": "Kijelölt szöveg: {count} karakter",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Az üres mezők a bővítmény beállításaiból veszik az értéküket.",
     "promptFromTask": "Utasítás átvétele egy MI-feladatból",
     "promptFromTaskPlaceholder": "Válasszon MI-feladatot…",
-    "promptInfo": "A szövegre alkalmazott MI-utasítások. A parancsban egy független másolat tárolódik: az eredeti MI-feladat szerkesztése nem érinti ezt a parancsot.",
+    "promptInfo": "A szövegre alkalmazott MI-utasítás. A parancs független másolatot tárol: az eredeti átalakítás vagy stílus módosítása nem érinti ezt a parancsot.",
     "promptLabel": "Utasítás az LLM számára",
     "promptPlaceholder": "Pl. Tedd rövidebbé és barátságosabbá a szöveget",
     "removed": "„{name}” parancs eltávolítva",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Utasítás az LLM számára a bemeneti szöveg átalakításához, mielőtt a parancsnak elküldené.",
     "externalTimeoutLabel": "Háttérfuttatás korlátja, másodperc",
     "externalTimeoutInfo": "Meddig futhat egy külső hívás a háttérben a parancs indításától számítva; utána leáll, és időtúllépésként jelenik meg. Alapértelmezés szerint {seconds}, legfeljebb {max}. Az ablakban futó parancsoknak nincs korlátja: látja őket, és megszakíthatja őket.",
-    "preTransformEmpty": "Az LLM nem adott vissza szöveget a parancshoz"
+    "preTransformEmpty": "Az LLM nem adott vissza szöveget a parancshoz",
+    "aiTitle": "MI-parancsok",
+    "aiDescription": "Egy MI-parancs az LLM-mel végrehajtja a promptodat, és futtathatja azokat a parancsokat, amelyeket engedélyezel neki. Ez a modell válaszol minden MI-parancsra.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "Mit kezd az MI a szöveggel, amelyen a parancs fut: átírja, adatokat nyer ki belőle, eldönti, mely parancsokat futtassa és mivel.",
+    "aiPromptPlaceholder": "Pl. Keresd meg a dátumot és az időt a szövegben, és vedd fel az eseményt a naptáramba",
+    "aiAllowedCommands": "Futtatható parancsok",
+    "aiAllowedCommandsInfo": "Az MI kérdés nélkül futtatja ezeket a parancsokat, amikor a promptnak szüksége van rájuk. Egy parancs soha nem futtatja önmagát, sem azt az MI-parancsot, amely meghívta.",
+    "aiNoOtherCommands": "Még nincsenek más parancsok.",
+    "aiMaxSteps": "Lépéskorlát",
+    "aiMaxStepsInfo": "Hányszor válaszolhat az MI egy futtatás alatt; minden lefuttatott parancs egy lépés."
   },
   "common": {
     "add": "Hozzáadás",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Mentés feladatként",
     "aiPromptSlotsFull": "Minden feladatbillentyű foglalt: szabadítson fel egyet a beállításokban",
     "aiRequest": "MI-kérés",
-    "aiTask": "MI-feladat",
-    "aiTaskPromptEmpty": "Ennek a feladatnak nincs promptja: töltse ki a beállításokban",
     "cancelIntentHint": "Esc a törléshez",
     "compareResult": "Eredmény összehasonlítása",
     "copyOnFinish": "Másolás",
@@ -710,7 +722,6 @@
     "hideAdvanced": "Speciális beállítások elrejtése",
     "hotkey": "Billentyűparancs",
     "hotkeyActions": {
-      "aiTasks": "MI-feladatok",
       "chat": "Kijelölt szöveg kontextusként az MI-csevegésben",
       "correction": "Javítás előnézettel",
       "editor": "Kijelölt szöveg megnyitása a szerkesztőben",
@@ -762,7 +773,7 @@
     "llmConnectionsHint": "Hova küldi a Tyco az MI-kéréseket: Google, OpenRouter, DeepSeek vagy bármely OpenAI-kompatibilis API-val rendelkező szerver, például helyi Ollama vagy LM Studio. A modelleket a saját kapcsolatukon belül kell hozzáadni. A mentett kulcs a biztonságos tárolóba kerül, és soha többé nem jelenik meg.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "MI-feladatok",
+      "aiCommands": "MI-parancsok",
       "basic": "Alapvető",
       "commands": "Saját parancsok",
       "styling": "Szövegstilizálás",
@@ -771,7 +782,6 @@
       "unavailable": "Nem érhető el"
     },
     "mainActionStylingRemoved": "Törölt szövegstílus",
-    "mainActionTaskRemoved": "Törölt MI-feladat",
     "mainActionTransformationRemoved": "Törölt szövegátalakítás",
     "mainActionsHint": "A főmenü műveletei: mindegyik saját billentyűvel fut. Húzza a kártyákat a billentyűik módosításához.",
     "mainActionsTab": "Fő műveletek",
@@ -998,8 +1008,6 @@
     "taskModelChange": "Módosítás",
     "taskModelInfo": "A modell a „LLM” oldalon rendelhető hozzá.",
     "taskModelNone": "Nincs kiválasztva",
-    "tasksHint": "Utasítások (promptok), amelyeket az MI a szövegre alkalmaz. A feladatmenüben mindegyik saját billentyűvel fut; húzza a kártyákat a billentyűik módosításához.",
-    "tasksTab": "MI-feladatok",
     "temperature": "Hőmérséklet",
     "terminalApps": "Egyéb terminálok",
     "terminalAppsHint": "A Tyco által fel nem ismert terminálok ablakosztályai vesszővel elválasztva. Terminálban a Tyco soha nem nyomja meg a Ctrl+C-t, a kijelölés eredményét pedig a vágólapra teszi.",
@@ -1085,7 +1093,8 @@
     "quickCorrectionModeInfo": "Hogyan kezeli a szövegjavítást a gyorsbeviteli ablak.",
     "quickCorrectionLive": "Élő előnézet",
     "quickCorrectionOnSubmit": "Befejezéskor",
-    "quickCorrectionOff": "Kikapcsolva"
+    "quickCorrectionOff": "Kikapcsolva",
+    "aiCommands": "MI-parancsok"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1139,8 +1148,8 @@
     "voicePostProcessTimeout": "A hangfeldolgozás túl sokáig tartott; az eredeti szöveg megmaradt"
   },
   "tools": {
-    "aiTask": "MI-feladat",
-    "aiTaskDescription": "Az LLM segítségével alkalmazza a parancs utasítását a szövegre",
+    "aiTask": "MI-parancs",
+    "aiTaskDescription": "Az MI végrehajtja a promptodat, és más parancsokat is futtathat",
     "askInChat": "Kérdezés a csevegésben",
     "askInChatDescription": "Megnyitja a csevegést a csatolt szöveggel",
     "copy": "Másolás",

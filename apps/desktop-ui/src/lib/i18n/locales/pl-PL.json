@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "Zadanie AI",
     "askInChat": "Zapytaj na czacie",
     "copy": "Kopiuj",
     "copyToClipboard": "Kopiuj i zamknij",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "„{name}”: uruchamiam „{step}”…",
     "allCommands": "Wszystkie polecenia",
     "commandMissing": "Polecenia {id} nie ma w bibliotece.",
     "dropSelection": "Nie używaj zaznaczonego tekstu",
+    "hintAskAi": "Zapytaj AI",
     "hintNewLine": "Nowy wiersz",
     "hintRun": "Uruchom",
+    "hintSavePrompt": "Zapisz jako polecenie AI",
     "nothingFound": "Nie znaleziono poleceń",
     "pages": "Strony:",
+    "promptSaved": "Zapisano jako polecenie AI",
+    "promptSavedAlready": "Polecenie AI z tym promptem już istnieje",
     "running": "Uruchamianie „{name}”…",
     "searchPlaceholder": "Szukaj poleceń…",
     "selection": "Zaznaczony tekst, znaki: {count}",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Puste pola przyjmują wartość z ustawień wtyczki.",
     "promptFromTask": "Pobierz instrukcję z zadania AI",
     "promptFromTaskPlaceholder": "Wybierz zadanie AI…",
-    "promptInfo": "Instrukcje AI stosowane do tekstu. W poleceniu zapisywana jest niezależna kopia: edycja oryginalnego zadania AI nie wpłynie na to polecenie.",
+    "promptInfo": "Instrukcja AI stosowana do tekstu. Polecenie przechowuje niezależną kopię: edycja oryginalnej transformacji lub stylu nie wpłynie na to polecenie.",
     "promptLabel": "Instrukcja dla LLM",
     "promptPlaceholder": "Np. Skróć tekst i nadaj mu przyjaźniejszy ton",
     "removed": "Usunięto polecenie „{name}”",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Instrukcja dla LLM służąca do przekształcenia tekstu wejściowego przed wysłaniem do polecenia.",
     "externalTimeoutLabel": "Limit uruchomienia w tle, sekundy",
     "externalTimeoutInfo": "Jak długo wywołanie zewnętrzne może działać w tle, licząc od startu polecenia; potem jest zatrzymywane i zgłaszane jako przekroczenie czasu. Domyślnie {seconds}, najwyżej {max}. Uruchomienia w oknie nie mają limitu: widzisz je i możesz je anulować.",
-    "preTransformEmpty": "LLM nie zwrócił tekstu dla polecenia"
+    "preTransformEmpty": "LLM nie zwrócił tekstu dla polecenia",
+    "aiTitle": "Polecenia AI",
+    "aiDescription": "Polecenie AI wykonuje Twój prompt za pomocą LLM i może uruchamiać polecenia, na które mu pozwolisz. Ten model odpowiada na wszystkie polecenia AI.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "Co AI robi z tekstem, na którym uruchomiono polecenie: przepisuje go, wyciąga z niego dane, decyduje, które polecenia uruchomić i z czym.",
+    "aiPromptPlaceholder": "Np. Znajdź w tekście datę i godzinę i dodaj wydarzenie do mojego kalendarza",
+    "aiAllowedCommands": "Polecenia, które może uruchamiać",
+    "aiAllowedCommandsInfo": "AI uruchamia te polecenia bez pytania, gdy prompt tego wymaga. Polecenie nigdy nie uruchamia samego siebie ani polecenia AI, które je wywołało.",
+    "aiNoOtherCommands": "Nie ma jeszcze innych poleceń.",
+    "aiMaxSteps": "Limit kroków",
+    "aiMaxStepsInfo": "Ile razy AI może odpowiedzieć w jednym uruchomieniu; każde uruchomione polecenie zajmuje krok."
   },
   "common": {
     "add": "Dodaj",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Zapisz jako zadanie",
     "aiPromptSlotsFull": "Wszystkie klawisze zadań są zajęte: zwolnij któryś w ustawieniach",
     "aiRequest": "Zapytanie AI",
-    "aiTask": "Zadanie AI",
-    "aiTaskPromptEmpty": "To zadanie nie ma promptu: uzupełnij go w ustawieniach",
     "cancelIntentHint": "Esc, aby anulować",
     "compareResult": "Porównaj wynik",
     "copyOnFinish": "Kopiuj",
@@ -713,7 +725,6 @@
     "hideAdvanced": "Ukryj ustawienia zaawansowane",
     "hotkey": "Skrót",
     "hotkeyActions": {
-      "aiTasks": "Zadania AI",
       "chat": "Użyj zaznaczonego tekstu jako kontekstu w czacie AI",
       "correction": "Korekta z podglądem",
       "editor": "Otwórz zaznaczony tekst w edytorze",
@@ -765,7 +776,7 @@
     "llmConnectionsHint": "Dokąd Tyco wysyła zapytania AI: Google, OpenRouter, DeepSeek lub dowolny serwer z API zgodnym z OpenAI, np. lokalna Ollama lub LM Studio. Modele dodaje się wewnątrz połączenia. Zapisany klucz trafia do bezpiecznego magazynu i nigdy więcej nie jest wyświetlany.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "Zadania AI",
+      "aiCommands": "Polecenia AI",
       "basic": "Podstawowe",
       "commands": "Moje polecenia",
       "styling": "Stylizacja tekstu",
@@ -774,7 +785,6 @@
       "unavailable": "Niedostępne"
     },
     "mainActionStylingRemoved": "Usunięty styl tekstu",
-    "mainActionTaskRemoved": "Usunięte zadanie AI",
     "mainActionTransformationRemoved": "Usunięta transformacja tekstu",
     "mainActionsHint": "Akcje menu głównego: każda uruchamia się własnym klawiszem. Przeciągaj karty, aby zmienić ich klawisze.",
     "mainActionsTab": "Akcje główne",
@@ -1001,8 +1011,6 @@
     "taskModelChange": "Zmień",
     "taskModelInfo": "Model przypisuje się na stronie „LLM”.",
     "taskModelNone": "Nie wybrano",
-    "tasksHint": "Instrukcje (prompty), które AI stosuje do tekstu. W menu zadań każda uruchamia się własnym klawiszem; przeciągaj karty, aby zmienić ich klawisze.",
-    "tasksTab": "Zadania AI",
     "temperature": "Temperatura",
     "terminalApps": "Inne terminale",
     "terminalAppsHint": "Klasy okien terminali, których Tyco nie rozpoznaje, oddzielone przecinkami. W terminalu Tyco nigdy nie naciska Ctrl+C, a wynik dla zaznaczenia umieszcza w schowku.",
@@ -1088,7 +1096,8 @@
     "quickCorrectionModeInfo": "Sposób obsługi korekty w oknie szybkiego wprowadzania.",
     "quickCorrectionLive": "Podgląd na żywo",
     "quickCorrectionOnSubmit": "Po zakończeniu",
-    "quickCorrectionOff": "Wyłączone"
+    "quickCorrectionOff": "Wyłączone",
+    "aiCommands": "Polecenia AI"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1142,8 +1151,8 @@
     "voicePostProcessTimeout": "Przetwarzanie głosu trwało zbyt długo; zachowano oryginalny tekst"
   },
   "tools": {
-    "aiTask": "Zadanie AI",
-    "aiTaskDescription": "Stosuje instrukcję polecenia do tekstu za pomocą LLM",
+    "aiTask": "Polecenie AI",
+    "aiTaskDescription": "AI wykonuje Twój prompt i może uruchamiać inne polecenia",
     "askInChat": "Zapytaj na czacie",
     "askInChatDescription": "Otwiera czat z załączonym tekstem",
     "copy": "Kopiuj",

@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "Úloha AI",
     "askInChat": "Zeptat se v chatu",
     "copy": "Kopírovat",
     "copyToClipboard": "Kopírovat a zavřít",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "„{name}“: spouštím „{step}“…",
     "allCommands": "Všechny příkazy",
     "commandMissing": "Příkaz {id} není v knihovně.",
     "dropSelection": "Nepoužívat vybraný text",
+    "hintAskAi": "Zeptat se AI",
     "hintNewLine": "Nový řádek",
     "hintRun": "Spustit",
+    "hintSavePrompt": "Uložit jako AI příkaz",
     "nothingFound": "Nenalezeny žádné příkazy",
     "pages": "Stránky:",
+    "promptSaved": "Uloženo jako AI příkaz",
+    "promptSavedAlready": "AI příkaz s tímto promptem už existuje",
     "running": "Spouští se „{name}“…",
     "searchPlaceholder": "Hledat příkazy…",
     "selection": "Vybraný text, znaků: {count}",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Prázdná pole přebírají hodnotu z nastavení pluginu.",
     "promptFromTask": "Převzít instrukci z úlohy AI",
     "promptFromTaskPlaceholder": "Vyberte úlohu AI…",
-    "promptInfo": "Instrukce AI použité na text. V příkazu se ukládá nezávislá kopie: úprava původní úlohy AI tento příkaz neovlivní.",
+    "promptInfo": "Instrukce AI použitá na text. Příkaz si ukládá nezávislou kopii: úprava původní transformace nebo stylu tento příkaz neovlivní.",
     "promptLabel": "Instrukce pro LLM",
     "promptPlaceholder": "Např. Zkrať text a udělej ho přátelštějším",
     "removed": "Příkaz „{name}“ odstraněn",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Instrukce pro LLM k transformaci vstupního textu před odesláním do příkazu.",
     "externalTimeoutLabel": "Limit běhu na pozadí, sekundy",
     "externalTimeoutInfo": "Jak dlouho může externí volání běžet na pozadí, počítáno od spuštění příkazu; poté je zastaveno a nahlášeno jako vypršení času. Výchozí hodnota {seconds}, nejvýše {max}. Běhy v okně nejsou omezeny: vidíte je a můžete je zrušit.",
-    "preTransformEmpty": "LLM nevrátil pro příkaz žádný text"
+    "preTransformEmpty": "LLM nevrátil pro příkaz žádný text",
+    "aiTitle": "AI příkazy",
+    "aiDescription": "AI příkaz plní váš prompt pomocí LLM a smí spouštět příkazy, které mu povolíte. Tento model odpovídá na všechny AI příkazy.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "Co AI udělá s textem, na kterém příkaz běží: přepíše ho, vytáhne z něj data, rozhodne, které příkazy spustit a s čím.",
+    "aiPromptPlaceholder": "Např. Najdi v textu datum a čas a přidej událost do mého kalendáře",
+    "aiAllowedCommands": "Příkazy, které smí spouštět",
+    "aiAllowedCommandsInfo": "AI spouští tyto příkazy bez ptaní, kdykoli je prompt potřebuje. Příkaz nikdy nespustí sám sebe ani AI příkaz, který ho zavolal.",
+    "aiNoOtherCommands": "Zatím nejsou žádné další příkazy.",
+    "aiMaxSteps": "Limit kroků",
+    "aiMaxStepsInfo": "Kolikrát smí AI v jednom běhu odpovědět; každý spuštěný příkaz zabere krok."
   },
   "common": {
     "add": "Přidat",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Uložit jako úlohu",
     "aiPromptSlotsFull": "Všechny klávesy úloh jsou obsazené: uvolněte některou v nastavení",
     "aiRequest": "Požadavek na AI",
-    "aiTask": "Úloha AI",
-    "aiTaskPromptEmpty": "Tento úkol nemá prompt: vyplňte ho v nastavení",
     "cancelIntentHint": "Esc pro zrušení",
     "compareResult": "Porovnat výsledek",
     "copyOnFinish": "Zkopírovat",
@@ -707,7 +719,6 @@
     "hideAdvanced": "Skrýt pokročilá nastavení",
     "hotkey": "Klávesová zkratka",
     "hotkeyActions": {
-      "aiTasks": "Úlohy AI",
       "chat": "Použít vybraný text jako kontext v chatu AI",
       "correction": "Oprava s náhledem",
       "editor": "Otevřít vybraný text v editoru",
@@ -759,7 +770,7 @@
     "llmConnectionsHint": "Kam Tyco posílá požadavky na AI: Google, OpenRouter, DeepSeek nebo libovolný server s API kompatibilním s OpenAI, třeba místní Ollama či LM Studio. Modely se přidávají uvnitř svého připojení. Uložený klíč jde do zabezpečeného úložiště a už se nikdy nezobrazí.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "Úlohy AI",
+      "aiCommands": "AI příkazy",
       "basic": "Základní",
       "commands": "Moje příkazy",
       "styling": "Stylizace textu",
@@ -768,7 +779,6 @@
       "unavailable": "Nedostupné"
     },
     "mainActionStylingRemoved": "Smazaný styl textu",
-    "mainActionTaskRemoved": "Smazaná úloha AI",
     "mainActionTransformationRemoved": "Smazaná transformace textu",
     "mainActionsHint": "Akce hlavní nabídky: každá se spouští vlastní klávesou. Přetažením karet změníte jejich klávesy.",
     "mainActionsTab": "Hlavní akce",
@@ -995,8 +1005,6 @@
     "taskModelChange": "Změnit",
     "taskModelInfo": "Model se přiřazuje na stránce «LLM».",
     "taskModelNone": "Nevybráno",
-    "tasksHint": "Instrukce (prompty), které AI použije na text. V nabídce úloh se každá spouští vlastní klávesou; přetažením karet změníte jejich klávesy.",
-    "tasksTab": "Úlohy AI",
     "temperature": "Teplota",
     "terminalApps": "Další terminály",
     "terminalAppsHint": "Třídy oken terminálů, které Tyco nerozpozná, oddělené čárkami. V terminálu Tyco nikdy nestiskne Ctrl+C a výsledek pro jeho výběr vloží do schránky.",
@@ -1082,7 +1090,8 @@
     "quickCorrectionModeInfo": "Způsob zpracování opravy v okně rychlého zadávání.",
     "quickCorrectionLive": "Živý náhled",
     "quickCorrectionOnSubmit": "Po dokončení",
-    "quickCorrectionOff": "Vypnuto"
+    "quickCorrectionOff": "Vypnuto",
+    "aiCommands": "AI příkazy"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1136,8 +1145,8 @@
     "voicePostProcessTimeout": "Zpracování hlasu trvalo příliš dlouho; byl zachován původní text"
   },
   "tools": {
-    "aiTask": "Úloha AI",
-    "aiTaskDescription": "Použije na text instrukci příkazu pomocí LLM",
+    "aiTask": "AI příkaz",
+    "aiTaskDescription": "AI plní váš prompt a smí spouštět další příkazy",
     "askInChat": "Zeptat se v chatu",
     "askInChatDescription": "Otevře chat s přiloženým textem",
     "copy": "Kopírovat",

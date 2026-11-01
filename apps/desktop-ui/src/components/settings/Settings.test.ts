@@ -259,7 +259,6 @@ describe('Settings.vue', () => {
       ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],
       [
         'main-actions',
-        'tasks',
         'transformations',
         'styling',
         'languages',

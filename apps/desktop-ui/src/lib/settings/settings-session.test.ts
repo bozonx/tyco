@@ -326,25 +326,18 @@ describe('settings concurrency and recovery', () => {
   it('keeps unfinished fields when another setting is saved', async () => {
     const prepare = (value: unknown) => {
       const next = JSON.parse(JSON.stringify(value)) as UserConfig
-      next.aiTasks.items = next.aiTasks.items.filter(
-        (task) => task.name || task.prompt
+      next.transformations.items = next.transformations.items.filter(
+        (item) => item.name || item.rule
       )
       return next
     }
     const { model } = setup({ prepare })
-    model.draft.value.aiTasks.items = [
-      {
-        id: 'unfinished',
-        name: '',
-        prompt: '',
-        allowedTools: [],
-        outputAction: 'replace',
-        maxSteps: 5,
-      },
+    model.draft.value.transformations.items = [
+      { id: 'unfinished', name: '', rule: '' },
     ]
     model.draft.value.appearance.theme = 'dark'
     await model.persist()
-    expect(model.draft.value.aiTasks.items[0]?.id).toBe('unfinished')
+    expect(model.draft.value.transformations.items[0]?.id).toBe('unfinished')
     expect(model.isSaved()).toBe(true)
   })
 

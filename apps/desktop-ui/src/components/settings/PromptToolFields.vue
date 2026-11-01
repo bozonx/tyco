@@ -14,7 +14,7 @@
     />
   </FieldRow>
   <FieldRow
-    v-if="aiTaskOptions.length"
+    v-if="ruleOptions.length"
     vertical
     density="compact"
     :label="t('commands.promptFromTask')"
@@ -23,9 +23,9 @@
       model-value=""
       :options="[
         { id: '', name: t('commands.promptFromTaskPlaceholder') },
-        ...aiTaskOptions,
+        ...ruleOptions,
       ]"
-      @update:model-value="takeTaskRule"
+      @update:model-value="takeRule"
     />
   </FieldRow>
 </template>
@@ -47,37 +47,26 @@ const props = defineProps<{
 const emit = defineEmits<{ update: [field: string, value: unknown] }>()
 const { t } = useI18n()
 const prompt = computed(() => toolConfigText(props.command, 'prompt'))
-const sourceItems = computed(
-  (): { id: string; name: string; prompt: string }[] => {
-    if (props.command.toolId === 'core.transformation')
-      return (props.userConfig?.transformations.items ?? []).map((item) => ({
-        id: item.id,
-        name: item.name,
-        prompt: item.rule,
-      }))
-    if (props.command.toolId === 'core.styling')
-      return (props.userConfig?.styling.items ?? []).map((item) => ({
-        id: item.id,
-        name: item.name,
-        prompt: item.rule,
-      }))
-    return props.userConfig?.aiTasks.items ?? []
-  }
+/** The library of the tool: transformations or styles */
+const sourceItems = computed(() =>
+  props.command.toolId === 'core.styling'
+    ? (props.userConfig?.styling.items ?? [])
+    : (props.userConfig?.transformations.items ?? [])
 )
-const aiTaskOptions = computed(() =>
-  sourceItems.value.flatMap((task, index) =>
-    task.prompt.trim()
-      ? [{ id: task.id, name: task.name || `#${index + 1}` }]
+const ruleOptions = computed(() =>
+  sourceItems.value.flatMap((item, index) =>
+    item.rule.trim()
+      ? [{ id: item.id, name: item.name || `#${index + 1}` }]
       : []
   )
 )
 
-/** The rule is copied: the command keeps it when the task changes */
-function takeTaskRule(value: string | number | undefined) {
-  const task =
+/** The rule is copied: the command keeps it when the library item changes */
+function takeRule(value: string | number | undefined) {
+  const item =
     typeof value === 'string'
-      ? sourceItems.value.find((item) => item.id === value)
+      ? sourceItems.value.find((entry) => entry.id === value)
       : undefined
-  if (task) emit('update', 'prompt', task.prompt)
+  if (item) emit('update', 'prompt', item.rule)
 }
 </script>

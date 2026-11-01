@@ -72,7 +72,6 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `launcherPages`   | `id`, `inputMode`, `hotkey`, `slots` (a shortcut grid of command ids)                                              |
 | `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, …                 |
 | `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                          |
-| `aiTasks`         | `items`, the task library (`id`, `name`, `rule`); `slots`, the AI task menu (a shortcut grid of task ids)          |
 | `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)      |
 | `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                           |
 | `aiVault`         | `path`, empty for the default location                                                                             |
@@ -109,14 +108,15 @@ hotkey belongs to the page that it opens. At least one page is required.
 `llm.tasks` holds what each LLM task needs: `chat` (`rule`; the chat runs on
 the model picked in it), `correction`, `voiceCorrection` (`modelId`,
 `rule`; on when `stt.isVoiceCorrectionEnabled`), `translation` (`modelId`, `rule`, `qualityGateRule` for the review
-pass) and `aiTask` (`modelId`; every AI task has its own rule). `modelId` is
+pass) and `aiTask` (`modelId`; the model of every AI command, each of which
+has its own prompt). `modelId` is
 the one model that answers the task, empty when none is picked; a call that
 fails is not retried on another model.
 
 The standard items of the action menu (`type: "standard"`) are not the core
 tools under another name: they are menu behaviors (the correction opens its
-review, the insertion knows the target window, `aiTaskMenu` and
-`translationMenu` open a submenu). The core tools (`core.*`) serve commands,
+review, the insertion knows the target window, `transformationMenu`,
+`stylingMenu` and `translationMenu` open a submenu). The core tools (`core.*`) serve commands,
 which run headless.
 
 Conventions:
@@ -128,7 +128,8 @@ Conventions:
   path); a number that is not set is absent (model limits,
   `retentionDays`, which keeps everything without it). Zero is never a
   sentinel: a feature is turned off by its own field (`storage: "off"`).
-- Ids of the user's entities (commands, models, AI tasks, launcher pages)
+- Ids of the user's entities (commands, models, transformations, styles,
+  launcher pages)
   match `^[a-z0-9][a-z0-9._-]{0,63}$`; provider ids are at most 60 characters,
   as they go into secret ids. An entity with a malformed id is dropped.
 - Locales are BCP 47 tags with a region: `en-US`, `ru-RU`.
@@ -141,8 +142,14 @@ Conventions:
 
 Script tools use `workingDirectory`; webhook tools use `isAuthEnabled` and
 `authSecretId`; commands use `isLlmArgumentParsingEnabled`. The standard
-menu actions `aiTaskMenu` and `translationMenu` open a menu to pick from; one
-task or language is an item of the `aiTask` or `translation` type.
+menu actions `transformationMenu`, `stylingMenu` and `translationMenu` open a
+menu to pick from; one transformation, style or language is an item of the
+`transformation`, `styling` or `translation` type.
+
+An AI command is a command of the `core.aiTask` tool. Its `toolConfig` holds
+`prompt`, `allowedCommandIds` (the commands its agent may run; the command
+itself never runs) and `maxSteps` (1–50, 5 by default), see
+`dev_docs/design-ai-commands.md`.
 
 Voice invocation is opt-in per command: `isVoiceEnabled` defaults to `false`.
 Whether a recognized command runs at once is a choice of the voice overlay, not

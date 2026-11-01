@@ -93,11 +93,6 @@ const commands = computed(() => normalizeCommands(userConfig.value.commands))
 
 const optionId = mainActionOptionId
 
-/** The AI tasks the menu can refer to: those with a name */
-const aiTasks = computed(() =>
-  userConfig.value.aiTasks.items.filter((task) => task.name.trim())
-)
-
 /** The translation languages, and those the slots translate into already */
 const languages = computed(() => [
   ...new Set([
@@ -128,7 +123,6 @@ const isOffered = (command: CommandConfig) =>
   slotIds.value.has(optionId({ type: 'command', commandId: command.id })) ||
   !duplicatesDirectChoice(command, {
     languages: languages.value,
-    rules: aiTasks.value.map((task) => task.prompt),
     transformations: transformations.value.map((item) => item.rule),
     styling: styling.value.map((item) => item.rule),
   })
@@ -136,7 +130,6 @@ const isOffered = (command: CommandConfig) =>
 /** Actions that open a dialog to pick what to do are marked as such */
 const OPENS_DIALOG = new Set<StandardActionId>([
   'translationMenu',
-  'aiTaskMenu',
   'transformationMenu',
   'stylingMenu',
 ])
@@ -158,11 +151,6 @@ const availableActions = computed((): MainActionChoice[] => [
     config: { type: 'translation' as const, language },
     name: translationLanguageLabel(language, locale.value),
     group: { kind: 'translation' as const },
-  })),
-  ...aiTasks.value.map((task) => ({
-    config: { type: 'aiTask' as const, taskId: task.id },
-    name: task.name,
-    group: { kind: 'aiTask' as const },
   })),
   ...transformations.value.map((item) => ({
     config: { type: 'transformation' as const, transformationId: item.id },
@@ -222,8 +210,8 @@ function groupLabel(group: MainActionGroup): string {
       return t('settings.mainActionGroups.basic')
     case 'translation':
       return t('settings.mainActionGroups.translation')
-    case 'aiTask':
-      return t('settings.mainActionGroups.aiTask')
+    case 'aiCommands':
+      return t('settings.mainActionGroups.aiCommands')
     case 'transformation':
       return t('settings.mainActionGroups.transformation')
     case 'styling':
@@ -246,7 +234,6 @@ function unavailableName(slot: MainActionConfig): string {
           (page) => page.id === slot.pageId
         ) + 1,
     })
-  if (slot.type === 'aiTask') return t('settings.mainActionTaskRemoved')
   if (slot.type === 'transformation')
     return t('settings.mainActionTransformationRemoved')
   if (slot.type === 'styling') return t('settings.mainActionStylingRemoved')

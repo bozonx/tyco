@@ -7,9 +7,15 @@
       :warnings="warningsOf('language')"
       @update="update"
     />
-    <AiTaskToolFields
+    <AiCommandToolFields
+      v-else-if="command.toolId === 'core.aiTask'"
+      :command="command"
+      :user-config="userConfig"
+      :warnings="warningsOf('prompt')"
+      @update="update"
+    />
+    <PromptToolFields
       v-else-if="
-        command.toolId === 'core.aiTask' ||
         command.toolId === 'core.transformation' ||
         command.toolId === 'core.styling'
       "
@@ -28,8 +34,9 @@ import { useI18n } from '../../composables/use-i18n'
 import { validateCommand } from '../../lib/commands/command-runtime'
 import type { RegisteredTool } from '../../lib/tools/tool-types'
 import { useToolsStore } from '../../stores/tools'
-import AiTaskToolFields from './AiTaskToolFields.vue'
+import AiCommandToolFields from './AiCommandToolFields.vue'
 import PluginToolFields from './PluginToolFields.vue'
+import PromptToolFields from './PromptToolFields.vue'
 import TranslationToolFields from './TranslationToolFields.vue'
 import {
   type CommandConfig,

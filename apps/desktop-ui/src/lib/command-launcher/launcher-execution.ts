@@ -58,6 +58,8 @@ export function createLauncherExecution(
   ui: {
     stage: ShallowRef<LauncherStage>
     inputText: Ref<string>
+    /** The stage the running command reports, see `ToolCall.onProgress` */
+    progress: Ref<string>
     fromSelection: () => boolean
     reset: () => void
   }
@@ -141,6 +143,7 @@ export function createLauncherExecution(
     const call = externalCall
     const running: LauncherStage = { kind: 'running', command }
     ui.stage.value = running
+    ui.progress.value = ''
     const runController = new AbortController()
     controller = runController
     if (call?.jobId) {
@@ -186,6 +189,9 @@ export function createLauncherExecution(
         signal: runController.signal,
         source,
         input: call?.input,
+        onProgress: (stage) => {
+          if (controller === runController) ui.progress.value = stage
+        },
       })
     } catch (error) {
       outcome = runController.signal.aborted

@@ -65,7 +65,7 @@ describe('createOverlayNavModel', () => {
   it('resolves to back for intermediate modals even without breadcrumbs', () => {
     const deps = createDeps({
       canGoBack: () => false,
-      currentModal: () => MenuModals.AI_TASK,
+      currentModal: () => MenuModals.TRANSLATE,
     })
     const nav = createOverlayNavModel(deps)
 

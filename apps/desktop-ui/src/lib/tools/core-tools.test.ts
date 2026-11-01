@@ -19,9 +19,6 @@ function setup(extra: Partial<CoreToolDependencies> = {}) {
         text: `${language}: ${text}`,
       })
     ),
-    aiCustomPrompt: vi.fn(
-      async (prompt: string, text: string) => `${prompt} → ${text}`
-    ),
     transformationPrompt: vi.fn(
       async (prompt: string, text: string) => `${prompt} → ${text}`
     ),
@@ -65,7 +62,6 @@ describe('createCoreTools', () => {
       'core.copy',
       'core.correct',
       'core.translate',
-      'core.aiTask',
       'core.transformation',
       'core.styling',
       'core.askInChat',
@@ -113,10 +109,9 @@ describe('createCoreTools', () => {
       ok: true,
       content: 'en-US: hola',
     })
-    expect(await run('core.aiTask', 'text', { prompt: ' Shorter ' })).toEqual({
-      ok: true,
-      content: 'Shorter → text',
-    })
+    expect(
+      await run('core.transformation', 'text', { prompt: ' Shorter ' })
+    ).toEqual({ ok: true, content: 'Shorter → text' })
   })
 
   it('passes the source language and the stages to the translator', async () => {
@@ -158,7 +153,7 @@ describe('createCoreTools', () => {
       ok: false,
       messageKey: 'commands.errorNoLanguage',
     })
-    expect(await run('core.aiTask', 'text', { prompt: ' ' })).toEqual({
+    expect(await run('core.styling', 'text', { prompt: ' ' })).toEqual({
       ok: false,
       messageKey: 'commands.errorNoPrompt',
     })
@@ -170,13 +165,13 @@ describe('createCoreTools', () => {
       correctText: async () => {
         throw new Error('Rate limit')
       },
-      aiCustomPrompt: async () => ' ',
+      transformationPrompt: async () => ' ',
     })
     expect(await run('core.correct', 'x')).toEqual({
       ok: false,
       message: 'Rate limit',
     })
-    expect(await run('core.aiTask', 'x', { prompt: 'p' })).toEqual({
+    expect(await run('core.transformation', 'x', { prompt: 'p' })).toEqual({
       ok: false,
       messageKey: 'selection.emptyResult',
     })
@@ -199,21 +194,18 @@ describe('createCoreTools', () => {
   it('tells why a tool of the LLM cannot run', () => {
     const { tools } = setup({
       getLlmUnavailableReasonKey: (task) =>
-        task === 'aiTask' ? 'tools.noLlm' : undefined,
+        task === 'styling' ? 'tools.noLlm' : undefined,
       getTranslatorUnavailableReasonKey: () => 'tools.noLlm',
     })
     expect(
       tools.get('core.correct')?.getUnavailableReasonKey?.()
     ).toBeUndefined()
-    expect(tools.get('core.aiTask')?.getUnavailableReasonKey?.()).toBe(
-      'tools.noLlm'
-    )
     expect(
       tools.get('core.transformation')?.getUnavailableReasonKey?.()
     ).toBeUndefined()
-    expect(
-      tools.get('core.styling')?.getUnavailableReasonKey?.()
-    ).toBeUndefined()
+    expect(tools.get('core.styling')?.getUnavailableReasonKey?.()).toBe(
+      'tools.noLlm'
+    )
     expect(tools.get('core.translate')?.getUnavailableReasonKey?.()).toBe(
       'tools.noLlm'
     )

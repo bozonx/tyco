@@ -187,7 +187,6 @@ const MODE_ORDER: HotkeyId[] = [
   'voiceChat',
   'voiceCommands',
   'selectionActions',
-  'aiTasks',
   'correction',
   'translation',
   'styling',

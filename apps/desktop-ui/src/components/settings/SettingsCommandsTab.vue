@@ -96,6 +96,13 @@
     </SettingsSection>
 
     <SettingsSection
+      :title="t('commands.aiTitle')"
+      :info="t('commands.aiDescription')"
+    >
+      <SettingsTaskModel task="aiTask" />
+    </SettingsSection>
+
+    <SettingsSection
       :title="t('commands.externalTitle')"
       :info="t('commands.externalDescription')"
     >
@@ -149,6 +156,7 @@ import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import CommandCard from './CommandCard.vue'
 import SettingsSection from './SettingsSection.vue'
+import SettingsTaskModel from './SettingsTaskModel.vue'
 import {
   type CommandConfig,
   DEFAULT_EXTERNAL_ACCESS,

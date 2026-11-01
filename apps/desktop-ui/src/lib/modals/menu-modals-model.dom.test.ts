@@ -40,17 +40,17 @@ describe('createMenuModalsModel', () => {
   it('handles back navigation correctly across stack', () => {
     const store = createMenuModalsModel()
 
-    store.nextModal(MenuModals.AI_TASK, { text: 'first' })
+    store.nextModal(MenuModals.TRANSFORMATION, { text: 'first' })
     store.nextModal(MenuModals.INSERT, { text: 'second' })
 
     expect(store.menuBreadcrumbs.value).toEqual([
-      MenuModals.AI_TASK,
+      MenuModals.TRANSFORMATION,
       MenuModals.INSERT,
     ])
 
     store.back()
-    expect(store.currentModal.value).toBe(MenuModals.AI_TASK)
-    expect(store.menuBreadcrumbs.value).toEqual([MenuModals.AI_TASK])
+    expect(store.currentModal.value).toBe(MenuModals.TRANSFORMATION)
+    expect(store.menuBreadcrumbs.value).toEqual([MenuModals.TRANSFORMATION])
 
     store.back()
     expect(store.currentModal.value).toBe(MenuModals.NONE)
@@ -61,7 +61,7 @@ describe('createMenuModalsModel', () => {
   it('closes all and resets state', () => {
     const store = createMenuModalsModel()
 
-    store.nextModal(MenuModals.AI_TASK)
+    store.nextModal(MenuModals.TRANSFORMATION)
     store.setPendingModal({ correction: true })
 
     expect(store.pendingModal.value).toEqual({ correction: true })

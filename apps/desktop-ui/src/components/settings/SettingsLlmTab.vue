@@ -124,7 +124,7 @@ const TASK_LABEL_KEYS = {
   translation: 'action.translationMenu',
   voiceCorrection: 'settings.voiceTextCorrection',
   correction: 'settings.textCorrection',
-  aiTask: 'settings.tasksTab',
+  aiTask: 'settings.aiCommands',
   transformation: 'settings.transformationsTab',
   styling: 'settings.stylingTab',
 } as const

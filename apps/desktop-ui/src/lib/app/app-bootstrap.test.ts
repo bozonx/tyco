@@ -51,14 +51,14 @@ describe('app-bootstrap', () => {
     const bootstrap = createAppBootstrap(deps)
     const params: DesktopViewState = {
       ...DEFAULT_DESKTOP_VIEW_STATE,
-      mode: ActivationMode.AI_TASKS,
+      mode: ActivationMode.TRANSFORMATION,
     }
 
     await bootstrap.applyParams(params)
 
     expect(deps.applyViewState).toHaveBeenCalledWith(params)
     expect(deps.closeAllModals).toHaveBeenCalledOnce()
-    expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.AI_TASKS.path)
+    expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.TRANSFORMATION.path)
   })
 
   it('starts runtime listeners and emits init event', async () => {

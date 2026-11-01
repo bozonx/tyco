@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "AI görevi",
     "askInChat": "Sohbette sor",
     "copy": "Kopyala",
     "copyToClipboard": "Kopyala ve kapat",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "“{name}”: “{step}” çalıştırılıyor…",
     "allCommands": "Tüm komutlar",
     "commandMissing": "{id} komutu kitaplıkta yok.",
     "dropSelection": "Seçili metni kullanma",
+    "hintAskAi": "Yapay zekâya sor",
     "hintNewLine": "Yeni satır",
     "hintRun": "Çalıştır",
+    "hintSavePrompt": "Yapay zekâ komutu olarak kaydet",
     "nothingFound": "Komut bulunamadı",
     "pages": "Sayfalar:",
+    "promptSaved": "Yapay zekâ komutu olarak kaydedildi",
+    "promptSavedAlready": "Bu isteme sahip bir yapay zekâ komutu zaten var",
     "running": "«{name}» çalıştırılıyor…",
     "searchPlaceholder": "Komut ara…",
     "selection": "Seçili metin: {count} karakter",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Boş alanlar değerini eklenti ayarlarından alır.",
     "promptFromTask": "Talimatı bir yapay zekâ görevinden al",
     "promptFromTaskPlaceholder": "Bir yapay zekâ görevi seçin…",
-    "promptInfo": "Metne uygulanan yapay zekâ talimatı. Komutta bağımsız bir kopya saklanır: orijinal yapay zekâ görevini düzenlemek bu komutu etkilemez.",
+    "promptInfo": "Metne uygulanan yapay zekâ talimatı. Komutta bağımsız bir kopya saklanır: özgün dönüşümü veya stili düzenlemek bu komutu etkilemez.",
     "promptLabel": "LLM için talimat",
     "promptPlaceholder": "Ör. Metni daha kısa ve samimi yap",
     "removed": "“{name}” komutu silindi",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Girdi metnini komuta göndermeden önce dönüştürmek için LLM talimatı.",
     "externalTimeoutLabel": "Arka planda çalışma sınırı, saniye",
     "externalTimeoutInfo": "Harici bir çağrının, komutun başlangıcından itibaren arka planda ne kadar çalışabileceği; sonrasında durdurulur ve zaman aşımı olarak bildirilir. Varsayılan {seconds}, en fazla {max}. Bir pencerede yapılan çalıştırmaların sınırı yoktur: onları görür ve iptal edebilirsiniz.",
-    "preTransformEmpty": "LLM komut için metin döndürmedi"
+    "preTransformEmpty": "LLM komut için metin döndürmedi",
+    "aiTitle": "Yapay zekâ komutları",
+    "aiDescription": "Bir yapay zekâ komutu isteminizi LLM ile uygular ve izin verdiğiniz komutları çalıştırabilir. Bu model tüm yapay zekâ komutlarını yanıtlar.",
+    "aiPromptLabel": "İstem",
+    "aiPromptInfo": "Yapay zekânın, komutun çalıştığı metinle ne yaptığı: yeniden yazmak, içinden veri çıkarmak, hangi komutları neyle çalıştıracağına karar vermek.",
+    "aiPromptPlaceholder": "Ör. Metindeki tarihi ve saati bul ve etkinliği takvimime ekle",
+    "aiAllowedCommands": "Çalıştırabileceği komutlar",
+    "aiAllowedCommandsInfo": "Yapay zekâ, istem gerektirdiğinde bu komutları sormadan çalıştırır. Bir komut asla kendini veya onu çağıran yapay zekâ komutunu çalıştırmaz.",
+    "aiNoOtherCommands": "Henüz başka komut yok.",
+    "aiMaxSteps": "Adım sınırı",
+    "aiMaxStepsInfo": "Yapay zekânın bir çalıştırmada kaç kez yanıt verebileceği; çalıştırdığı her komut bir adım sayılır."
   },
   "common": {
     "add": "Ekle",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Görev olarak kaydet",
     "aiPromptSlotsFull": "Tüm görev tuşları dolu: ayarlardan birini boşaltın",
     "aiRequest": "AI isteği",
-    "aiTask": "AI görevi",
-    "aiTaskPromptEmpty": "Bu görevin istemi yok: ayarlardan doldurun",
     "cancelIntentHint": "İptal için Esc",
     "compareResult": "Sonucu karşılaştırın",
     "copyOnFinish": "Kopyala",
@@ -710,7 +722,6 @@
     "hideAdvanced": "Gelişmiş ayarları gizle",
     "hotkey": "Kısayol tuşu",
     "hotkeyActions": {
-      "aiTasks": "Yapay zekâ görevleri",
       "chat": "Seçili metni yapay zekâ sohbetinde bağlam olarak kullan",
       "correction": "Önizlemeli düzeltme",
       "editor": "Seçili metni düzenleyicide aç",
@@ -762,7 +773,7 @@
     "llmConnectionsHint": "Tyco’nun yapay zekâ isteklerini gönderdiği yer: Google, OpenRouter, DeepSeek ya da yerel Ollama veya LM Studio gibi OpenAI uyumlu API’ye sahip herhangi bir sunucu. Modeller kendi bağlantılarının içine eklenir. Kaydedilen anahtar güvenli depolamaya alınır ve bir daha gösterilmez.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "AI görevleri",
+      "aiCommands": "Yapay zekâ komutları",
       "basic": "Temel",
       "commands": "Komutlarım",
       "styling": "Metin stillendirme",
@@ -771,7 +782,6 @@
       "unavailable": "Kullanılamayanlar"
     },
     "mainActionStylingRemoved": "Silinen metin stili",
-    "mainActionTaskRemoved": "Silinmiş AI görevi",
     "mainActionTransformationRemoved": "Silinen metin dönüştürmesi",
     "mainActionsHint": "Ana menü eylemleri: her biri kendi tuşuyla çalışır. Tuşları değiştirmek için kartları sürükleyin.",
     "mainActionsTab": "Ana eylemler",
@@ -998,8 +1008,6 @@
     "taskModelChange": "Değiştir",
     "taskModelInfo": "Model \"LLM\" sayfasında atanır.",
     "taskModelNone": "Seçilmedi",
-    "tasksHint": "Yapay zekânın metne uyguladığı talimatlar (istemler). Görevler menüsünde her biri kendi tuşuyla çalışır; tuşları değiştirmek için kartları sürükleyin.",
-    "tasksTab": "AI görevleri",
     "temperature": "Sıcaklık",
     "terminalApps": "Diğer terminaller",
     "terminalAppsHint": "Tyco'nun tanımadığı terminallerin pencere sınıfları, virgülle ayrılmış. Tyco bir terminalde asla Ctrl+C'ye basmaz ve seçimin sonucunu panoya koyar.",
@@ -1085,7 +1093,8 @@
     "quickCorrectionModeInfo": "Hızlı giriş penceresinin metin düzeltmesini nasıl işleyeceği.",
     "quickCorrectionLive": "Canlı önizleme",
     "quickCorrectionOnSubmit": "Tamamlandığında",
-    "quickCorrectionOff": "Kapalı"
+    "quickCorrectionOff": "Kapalı",
+    "aiCommands": "Yapay zekâ komutları"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1139,8 +1148,8 @@
     "voicePostProcessTimeout": "Ses işleme çok uzun sürdü; orijinal metin korundu"
   },
   "tools": {
-    "aiTask": "Yapay zekâ görevi",
-    "aiTaskDescription": "Komutun talimatını LLM ile metne uygular",
+    "aiTask": "Yapay zekâ komutu",
+    "aiTaskDescription": "Yapay zekâ isteminizi uygular ve başka komutları çalıştırabilir",
     "askInChat": "Sohbette sor",
     "askInChatDescription": "Sohbeti metin ekli olarak açar",
     "copy": "Kopyala",

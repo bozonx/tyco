@@ -389,7 +389,7 @@ describe('SettingsLlmTab.vue', () => {
       'action.translationMenu',
       'settings.voiceTextCorrection',
       'settings.textCorrection',
-      'settings.tasksTab',
+      'settings.aiCommands',
       'settings.transformationsTab',
       'settings.stylingTab',
       'settings.chatImageQuality',

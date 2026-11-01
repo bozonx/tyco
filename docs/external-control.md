@@ -205,7 +205,7 @@ tyco-ctl open chat --text 'Explain this paragraph'
 tyco-ctl open editor --selection
 ```
 
-Modes: `editor`, `quick-input`, `chat`, `voice-chat`, `voice-commands`, `voice`, `selection-actions`, `ai-tasks`,
+Modes: `editor`, `quick-input`, `chat`, `voice-chat`, `voice-commands`, `voice`, `selection-actions`,
 `command-launcher`, `correction`, `translation`, `history`, `settings`.
 The old camelCase spellings and `config` remain valid aliases.
 

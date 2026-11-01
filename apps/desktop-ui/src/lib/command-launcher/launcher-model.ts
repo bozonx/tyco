@@ -12,6 +12,7 @@ import {
   commandUnavailableReason,
   isCommandAvailable,
 } from '../commands/command-runtime'
+import { adHocAiCommand } from '../ai-commands/ai-command-config'
 import { SHORTCUT_SLOT_COUNT, slotList } from '../shortcut-slots/shortcut-slots'
 import type { ToolLookup } from '../tools/tool-types'
 import {
@@ -113,6 +114,8 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const stage = shallowRef<LauncherStage>({ kind: 'list' })
   /** The text the prepared command gets */
   const inputText = ref('')
+  /** The stage the running command reports */
+  const progress = ref('')
   /** The user changed the text, so a selection arriving late keeps off it */
   let textEdited = false
   /** The text is the selection of the window under the overlay */
@@ -170,6 +173,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     execution.reset()
     pageIndex.value = 0
     inputText.value = ''
+    progress.value = ''
     textEdited = false
     fromSelection = false
     selectionDropped.value = false
@@ -179,6 +183,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
   const execution = createLauncherExecution(deps, {
     stage,
     inputText,
+    progress,
     fromSelection: () => fromSelection,
     reset,
   })
@@ -213,6 +218,13 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     execution.useLauncher()
     await start(command, currentSelection(), true)
   }
+
+  /**
+   * Runs a request typed in the search as an AI command made for it, on the
+   * selection; without one, the user is asked for the text first
+   */
+  const runPrompt = (prompt: string): Promise<void> =>
+    prompt.trim() ? pick(adHocAiCommand(prompt)) : Promise.resolve()
 
   /**
    * An external call that needs the overlay: use explicit text or ask for
@@ -316,6 +328,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     nextPage,
     stage,
     inputText,
+    progress,
     selection,
     selectionDropped,
     dropSelection,
@@ -325,6 +338,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     reset,
     pick,
     pickSlot,
+    runPrompt,
     request,
     cancel,
     cancelExternal: (id: string) => {

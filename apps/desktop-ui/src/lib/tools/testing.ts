@@ -29,7 +29,6 @@ function testCoreTool(
     askInChat: unused,
     correctText: unused,
     translateTo: unused,
-    aiCustomPrompt: unused,
     transformationPrompt: unused,
     stylingPrompt: unused,
     getLlmUnavailableReasonKey: () => undefined,

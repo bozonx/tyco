@@ -82,7 +82,7 @@ export interface LlmTasksConfig {
     qualityGateRule: string
   }
   voiceCorrection: LlmTaskConfig
-  /** Each AI task has its own rule, see `AiTaskConfig` */
+  /** Each AI command has its own prompt, see `AiCommandToolConfig` */
   aiTask: Pick<LlmTaskConfig, 'modelId'>
   /** Each transformation has its own rule, see `TransformationConfig` */
   transformation: Pick<LlmTaskConfig, 'modelId'>

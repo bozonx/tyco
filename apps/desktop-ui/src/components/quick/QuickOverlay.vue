@@ -28,9 +28,6 @@
       </div>
       <!-- Hiding preserves the view until its next activation. A new activation
            remounts action menus to clear their previous query and language. -->
-      <div v-show="currentMode === 'aiTasks'" class="quick-mode-layer">
-        <AiTaskView v-if="currentMode === 'aiTasks'" :key="activationId" />
-      </div>
       <div v-show="currentMode === 'selectionActions'" class="quick-mode-layer">
         <SelectionView
           v-if="currentMode === 'selectionActions'"
@@ -115,7 +112,6 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
-import AiTaskView from '../../views/AiTaskView.vue'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionView from '../../views/CorrectionView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'

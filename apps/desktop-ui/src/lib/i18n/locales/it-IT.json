@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "Attività IA",
     "askInChat": "Chiedi nella chat",
     "copy": "Copia",
     "copyToClipboard": "Copia e chiudi",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "«{name}»: esecuzione di «{step}»…",
     "allCommands": "Tutti i comandi",
     "commandMissing": "Il comando {id} non è nella libreria.",
     "dropSelection": "Non usare il testo selezionato",
+    "hintAskAi": "Chiedi all’IA",
     "hintNewLine": "A capo",
     "hintRun": "Esegui",
+    "hintSavePrompt": "Salva come comando IA",
     "nothingFound": "Nessun comando trovato",
     "pages": "Pagine:",
+    "promptSaved": "Salvato come comando IA",
+    "promptSavedAlready": "Esiste già un comando IA con questo prompt",
     "running": "Esecuzione di «{name}»…",
     "searchPlaceholder": "Cerca comandi…",
     "selection": "Testo selezionato: {count} caratteri",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "I campi vuoti prendono il valore dalle impostazioni del plugin.",
     "promptFromTask": "Prendi l’istruzione da un’attività IA",
     "promptFromTaskPlaceholder": "Scegli un’attività IA…",
-    "promptInfo": "Istruzioni IA applicate al testo. Nel comando viene salvata una copia indipendente: modificare l’attività IA originale non influirà su questo comando.",
+    "promptInfo": "Istruzione IA applicata al testo. Il comando ne conserva una copia indipendente: modificare la trasformazione o lo stile originale non influirà su questo comando.",
     "promptLabel": "Istruzione per l’LLM",
     "promptPlaceholder": "Es. rendi il testo più breve e cordiale",
     "removed": "Comando «{name}» rimosso",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Istruzione per l’LLM con cui trasformare il testo di input prima di inviarlo al comando.",
     "externalTimeoutLabel": "Limite di esecuzione in background, secondi",
     "externalTimeoutInfo": "Per quanto tempo una chiamata esterna può essere eseguita in background, contando dall’avvio del comando; poi viene interrotta e segnalata come scaduta. {seconds} per impostazione predefinita, al massimo {max}. Le esecuzioni in una finestra non hanno limiti: le vedi e puoi annullarle.",
-    "preTransformEmpty": "L’LLM non ha restituito alcun testo per il comando"
+    "preTransformEmpty": "L’LLM non ha restituito alcun testo per il comando",
+    "aiTitle": "Comandi IA",
+    "aiDescription": "Un comando IA segue il tuo prompt con l’LLM e può eseguire i comandi che gli consenti. Questo modello risponde a tutti i comandi IA.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "Cosa fa l’IA con il testo su cui viene eseguito il comando: riscriverlo, estrarne dati, decidere quali comandi eseguire e con cosa.",
+    "aiPromptPlaceholder": "Ad es. Trova data e ora nel testo e aggiungi l’evento al mio calendario",
+    "aiAllowedCommands": "Comandi che può eseguire",
+    "aiAllowedCommandsInfo": "L’IA esegue questi comandi senza chiedere quando il prompt ne ha bisogno. Un comando non esegue mai sé stesso né un comando IA che l’ha chiamato.",
+    "aiNoOtherCommands": "Non ci sono ancora altri comandi.",
+    "aiMaxSteps": "Limite di passi",
+    "aiMaxStepsInfo": "Quante volte l’IA può rispondere in un’esecuzione; ogni comando eseguito conta come un passo."
   },
   "common": {
     "add": "Aggiungi",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Salva come attività",
     "aiPromptSlotsFull": "Tutti i tasti delle attività sono occupati: liberane uno nelle impostazioni",
     "aiRequest": "Richiesta all’IA",
-    "aiTask": "Attività IA",
-    "aiTaskPromptEmpty": "Questa attività non ha un prompt: compilalo nelle impostazioni",
     "cancelIntentHint": "Esc per annullare",
     "compareResult": "Confronta il risultato",
     "copyOnFinish": "Copia",
@@ -713,7 +725,6 @@
     "hideAdvanced": "Nascondi le impostazioni avanzate",
     "hotkey": "Scorciatoia",
     "hotkeyActions": {
-      "aiTasks": "Attività IA",
       "chat": "Usa il testo selezionato come contesto nella chat IA",
       "correction": "Correzione con anteprima",
       "editor": "Apri il testo selezionato nell’editor",
@@ -765,7 +776,7 @@
     "llmConnectionsHint": "Dove Tyco invia le richieste IA: Google, OpenRouter, DeepSeek o qualsiasi server con un’API compatibile con OpenAI, come Ollama o LM Studio in locale. I modelli si aggiungono all’interno della loro connessione. Una chiave salvata va nell’archivio sicuro e non viene più mostrata.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "Attività IA",
+      "aiCommands": "Comandi IA",
       "basic": "Di base",
       "commands": "I miei comandi",
       "styling": "Stilizzazione del testo",
@@ -774,7 +785,6 @@
       "unavailable": "Non disponibili"
     },
     "mainActionStylingRemoved": "Stile del testo eliminato",
-    "mainActionTaskRemoved": "Attività IA eliminata",
     "mainActionTransformationRemoved": "Trasformazione del testo eliminata",
     "mainActionsHint": "Azioni del menu principale: ognuna si esegue con il proprio tasto. Trascina le schede per cambiarne i tasti.",
     "mainActionsTab": "Azioni principali",
@@ -1001,8 +1011,6 @@
     "taskModelChange": "Modifica",
     "taskModelInfo": "Il modello si assegna nella pagina «LLM».",
     "taskModelNone": "Non selezionato",
-    "tasksHint": "Istruzioni (prompt) che l’IA applica al testo. Nel menu delle attività ognuna si esegue con il proprio tasto; trascina le schede per cambiarne i tasti.",
-    "tasksTab": "Attività IA",
     "temperature": "Temperatura",
     "terminalApps": "Altri terminali",
     "terminalAppsHint": "Classi di finestra dei terminali che Tyco non riconosce, separate da virgole. In un terminale Tyco non preme mai Ctrl+C e mette negli appunti il risultato per la sua selezione.",
@@ -1088,7 +1096,8 @@
     "quickCorrectionModeInfo": "Come la finestra di input rapido gestisce la correzione.",
     "quickCorrectionLive": "Anteprima dal vivo",
     "quickCorrectionOnSubmit": "Al completamento",
-    "quickCorrectionOff": "Disattivato"
+    "quickCorrectionOff": "Disattivato",
+    "aiCommands": "Comandi IA"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
@@ -1142,8 +1151,8 @@
     "voicePostProcessTimeout": "L'elaborazione vocale ha richiesto troppo tempo; mantenuto il testo originale"
   },
   "tools": {
-    "aiTask": "Attività IA",
-    "aiTaskDescription": "Applica al testo l’istruzione del comando con l’LLM",
+    "aiTask": "Comando IA",
+    "aiTaskDescription": "L’IA segue il tuo prompt e può eseguire altri comandi",
     "askInChat": "Chiedi nella chat",
     "askInChatDescription": "Apre la chat con il testo allegato",
     "copy": "Copia",

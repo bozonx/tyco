@@ -310,14 +310,14 @@ describe('Editor.vue toolbar', () => {
       },
     })
 
-    const aiTasksQuickBtn = wrapper.find('button[title="Open Quick AI Tasks"]')
-    expect(aiTasksQuickBtn.exists()).toBe(true)
+    const selectQuickBtn = wrapper.find('button[title="Open Quick Select"]')
+    expect(selectQuickBtn.exists()).toBe(true)
 
-    await aiTasksQuickBtn.trigger('click')
+    await selectQuickBtn.trigger('click')
 
     await flushPromises()
     expect(desktop.backend.callsOf('activate_mode')).toEqual([
-      { mode: 'aiTasks', text: 'hello from editor test' },
+      { mode: 'selectionActions', text: 'hello from editor test' },
     ])
   })
 

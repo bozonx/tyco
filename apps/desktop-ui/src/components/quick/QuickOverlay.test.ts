@@ -23,8 +23,8 @@ const mocks = vi.hoisted(() => ({
   modals: { currentModal: 'none', pendingModal: null as string | null },
   windowFocused: true,
   focusHandlers: [] as ((event: { payload: boolean }) => void)[],
-  aiTaskMounts: 0,
-  aiTaskUnmounts: 0,
+  menuMounts: 0,
+  menuUnmounts: 0,
   cancelAndCloseAll: vi.fn(),
   launcher: { stage: { kind: 'list' } },
 }))
@@ -74,13 +74,6 @@ vi.mock('../../views/WriteView.vue', () => ({
       '<div><div class="write-live-preview" /><div class="write-frame"><textarea /></div><p class="write-hint" /></div>',
   },
 }))
-vi.mock('../../views/AiTaskView.vue', () => ({
-  default: {
-    template: '<div />',
-    mounted: () => mocks.aiTaskMounts++,
-    unmounted: () => mocks.aiTaskUnmounts++,
-  },
-}))
 vi.mock('../../views/SelectionView.vue', () => ({
   default: { template: '<div />' },
 }))
@@ -91,7 +84,11 @@ vi.mock('../../views/CorrectionView.vue', () => ({
   default: { template: '<div />' },
 }))
 vi.mock('../../views/TranslateView.vue', () => ({
-  default: { template: '<div />' },
+  default: {
+    template: '<div />',
+    mounted: () => mocks.menuMounts++,
+    unmounted: () => mocks.menuUnmounts++,
+  },
 }))
 vi.mock('../../views/StylingView.vue', () => ({
   default: { template: '<div class="styling-view" />' },
@@ -136,8 +133,8 @@ afterEach(() => {
   vi.clearAllMocks()
   mocks.windowFocused = true
   mocks.focusHandlers = []
-  mocks.aiTaskMounts = 0
-  mocks.aiTaskUnmounts = 0
+  mocks.menuMounts = 0
+  mocks.menuUnmounts = 0
   mocks.launcher.stage = { kind: 'list' }
 })
 
@@ -302,7 +299,7 @@ describe('quick overlay input region', () => {
       )
 
       desktop.backend.calls.length = 0
-      desktop.setState({ mode: 'aiTasks' })
+      desktop.setState({ mode: 'translation' })
       await vi.waitFor(() =>
         expect(
           desktop.backend.callsOf('set_quick_input_region')
@@ -346,7 +343,7 @@ describe('quick overlay menus', () => {
 
   it('keeps the menus of the other modes when clicking outside the card', async () => {
     stubResizeObserver()
-    desktop.setState({ mode: 'aiTasks' })
+    desktop.setState({ mode: 'translation' })
     desktop.setState({ isWindowShown: true })
     const wrapper = mount(QuickOverlay, {
       global: { plugins: [desktop.pinia] },
@@ -384,7 +381,6 @@ describe('quick overlay menus', () => {
 
   it.each([
     'selectionActions',
-    'aiTasks',
     'commandLauncher',
     'translation',
     'styling',
@@ -414,7 +410,7 @@ describe('quick overlay menus', () => {
   it('tells when the window does not take the keys', async () => {
     stubResizeObserver()
     vi.useFakeTimers()
-    desktop.setState({ mode: 'aiTasks' })
+    desktop.setState({ mode: 'translation' })
     desktop.setState({ isWindowShown: true })
     const wrapper = mount(QuickOverlay, {
       global: { plugins: [desktop.pinia] },
@@ -441,31 +437,31 @@ describe('quick overlay menus', () => {
 
   it('keeps a hidden menu but resets it for the next activation', async () => {
     stubResizeObserver()
-    desktop.setState({ mode: 'aiTasks' })
+    desktop.setState({ mode: 'translation' })
     desktop.setState({ isWindowShown: true })
     const wrapper = mount(QuickOverlay, {
       global: { plugins: [desktop.pinia] },
     })
     try {
-      expect(mocks.aiTaskMounts).toBe(1)
+      expect(mocks.menuMounts).toBe(1)
 
       desktop.setState({ isWindowShown: false })
       await nextTick()
-      expect(mocks.aiTaskMounts).toBe(1)
-      expect(mocks.aiTaskUnmounts).toBe(0)
+      expect(mocks.menuMounts).toBe(1)
+      expect(mocks.menuUnmounts).toBe(0)
       mocks.cancelAndCloseAll.mockClear()
       desktop.setState({ isWindowShown: true })
       desktop.setState({
         activationId: desktop.backend.activation.activationId + 1,
       })
       await nextTick()
-      expect(mocks.aiTaskMounts).toBe(2)
-      expect(mocks.aiTaskUnmounts).toBe(1)
+      expect(mocks.menuMounts).toBe(2)
+      expect(mocks.menuUnmounts).toBe(1)
       expect(mocks.cancelAndCloseAll).toHaveBeenCalledOnce()
 
       desktop.setState({ mode: 'quickInput' })
       await nextTick()
-      expect(mocks.aiTaskUnmounts).toBe(2)
+      expect(mocks.menuUnmounts).toBe(2)
     } finally {
       wrapper.unmount()
       desktop.setState({ mode: 'quickInput' })

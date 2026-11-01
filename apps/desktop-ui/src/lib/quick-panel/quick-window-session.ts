@@ -2,7 +2,6 @@
 const DISMISSIBLE_MODES = new Set([
   'quickInput',
   'selectionActions',
-  'aiTasks',
   'commandLauncher',
   'translation',
   'styling',

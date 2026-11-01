@@ -210,7 +210,6 @@ const DYNAMIC_KEYS = new Set([
     'voiceChat',
     'voiceCommands',
     'selectionActions',
-    'aiTasks',
     'selectionCorrection',
     'correction',
     'translation',

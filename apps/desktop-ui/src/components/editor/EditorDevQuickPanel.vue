@@ -46,12 +46,6 @@ const QUICK_MODES: ReadonlyArray<{
     icon: 'mdi:pencil-outline',
   },
   {
-    mode: ActivationMode.AI_TASKS,
-    label: 'AI Tasks',
-    title: 'Open Quick AI Tasks',
-    icon: 'mdi:robot-outline',
-  },
-  {
     mode: ActivationMode.SELECTION_ACTIONS,
     label: 'Select',
     title: 'Open Quick Select',

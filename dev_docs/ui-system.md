@@ -154,7 +154,8 @@ controls use `group` and each control supplies its own accessible name.
 `ConfigFieldControl` renders a normalized control description. `ConfigFields`
 adapts plugin settings. `PluginToolFields` adapts command overrides, preserving
 inheritance and explicit `false`. These value semantics must stay separate.
-`TranslationToolFields` and `AiTaskToolFields` own the built-in tool forms;
+`TranslationToolFields`, `AiCommandToolFields` (AI commands) and
+`PromptToolFields` (transformations and styles) own the built-in tool forms;
 `ToolConfigFields` selects the form.
 
 Keep parsing and asynchronous settings behavior in injected models under

@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "Sarcină AI",
     "askInChat": "Întreabă în chat",
     "copy": "Copiază",
     "copyToClipboard": "Copiază și închide",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "„{name}”: rulez „{step}”…",
     "allCommands": "Toate comenzile",
     "commandMissing": "Comanda {id} nu se află în bibliotecă.",
     "dropSelection": "Nu folosi textul selectat",
+    "hintAskAi": "Întreabă AI-ul",
     "hintNewLine": "Rând nou",
     "hintRun": "Rulează",
+    "hintSavePrompt": "Salvează ca comandă AI",
     "nothingFound": "Nu s-au găsit comenzi",
     "pages": "Pagini:",
+    "promptSaved": "Salvat ca comandă AI",
+    "promptSavedAlready": "Există deja o comandă AI cu acest prompt",
     "running": "Se rulează „{name}”…",
     "searchPlaceholder": "Caută comenzi…",
     "selection": "Text selectat: {count} caractere",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Câmpurile goale preiau valoarea din setările pluginului.",
     "promptFromTask": "Preia instrucțiunea dintr-o sarcină AI",
     "promptFromTaskPlaceholder": "Alegeți o sarcină AI…",
-    "promptInfo": "Instrucțiuni AI aplicate textului. În comandă se păstrează o copie independentă: editarea sarcinii AI originale nu va afecta această comandă.",
+    "promptInfo": "Instrucțiune AI aplicată textului. Comanda păstrează o copie independentă: modificarea transformării sau a stilului original nu va afecta această comandă.",
     "promptLabel": "Instrucțiune pentru LLM",
     "promptPlaceholder": "De ex.: Fă textul mai scurt și mai prietenos",
     "removed": "Comanda „{name}” a fost eliminată",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Instrucțiune pentru LLM de transformare a textului de intrare înainte de a fi trimis comenzii.",
     "externalTimeoutLabel": "Limită pentru rularea în fundal, secunde",
     "externalTimeoutInfo": "Cât timp poate rula în fundal un apel extern, socotind de la pornirea comenzii; apoi este oprit și raportat ca expirat. Implicit {seconds}, cel mult {max}. Rulările într-o fereastră nu sunt limitate: le vedeți și le puteți anula.",
-    "preTransformEmpty": "LLM nu a returnat niciun text pentru comandă"
+    "preTransformEmpty": "LLM nu a returnat niciun text pentru comandă",
+    "aiTitle": "Comenzi AI",
+    "aiDescription": "O comandă AI urmează promptul tău cu LLM-ul și poate rula comenzile pe care i le permiți. Acest model răspunde la toate comenzile AI.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "Ce face AI-ul cu textul pe care rulează comanda: îl rescrie, extrage date din el, decide ce comenzi să ruleze și cu ce.",
+    "aiPromptPlaceholder": "De ex. Găsește data și ora în text și adaugă evenimentul în calendarul meu",
+    "aiAllowedCommands": "Comenzi pe care le poate rula",
+    "aiAllowedCommandsInfo": "AI-ul rulează aceste comenzi fără să întrebe ori de câte ori promptul are nevoie de ele. O comandă nu se rulează niciodată pe sine și nici comanda AI care a apelat-o.",
+    "aiNoOtherCommands": "Încă nu există alte comenzi.",
+    "aiMaxSteps": "Limită de pași",
+    "aiMaxStepsInfo": "De câte ori poate răspunde AI-ul într-o rulare; fiecare comandă rulată consumă un pas."
   },
   "common": {
     "add": "Adaugă",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Salvează ca sarcină",
     "aiPromptSlotsFull": "Toate tastele de sarcini sunt ocupate: eliberați una în setări",
     "aiRequest": "Cerere AI",
-    "aiTask": "Sarcină AI",
-    "aiTaskPromptEmpty": "Această sarcină nu are prompt: completați-l în setări",
     "cancelIntentHint": "Esc pentru anulare",
     "compareResult": "Compară rezultatul",
     "copyOnFinish": "Copiere",
@@ -713,7 +725,6 @@
     "hideAdvanced": "Ascunde setările avansate",
     "hotkey": "Comandă rapidă",
     "hotkeyActions": {
-      "aiTasks": "Sarcini AI",
       "chat": "Folosește textul selectat ca context în chatul AI",
       "correction": "Corectare cu previzualizare",
       "editor": "Deschide textul selectat în editor",
@@ -765,7 +776,7 @@
     "llmConnectionsHint": "Unde trimite Tyco cererile AI: Google, OpenRouter, DeepSeek sau orice server cu un API compatibil OpenAI, cum ar fi Ollama sau LM Studio local. Modelele se adaugă în cadrul conexiunii lor. O cheie salvată ajunge în stocarea securizată și nu mai este afișată niciodată.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "Sarcini AI",
+      "aiCommands": "Comenzi AI",
       "basic": "De bază",
       "commands": "Comenzile mele",
       "styling": "Stilizare text",
@@ -774,7 +785,6 @@
       "unavailable": "Indisponibile"
     },
     "mainActionStylingRemoved": "Stil de text șters",
-    "mainActionTaskRemoved": "Sarcină AI ștearsă",
     "mainActionTransformationRemoved": "Transformare text ștearsă",
     "mainActionsHint": "Acțiunile meniului principal: fiecare rulează cu propria tastă. Trageți cardurile pentru a le schimba tastele.",
     "mainActionsTab": "Acțiuni principale",
@@ -1001,8 +1011,6 @@
     "taskModelChange": "Schimbă",
     "taskModelInfo": "Modelul se atribuie pe pagina „LLM”.",
     "taskModelNone": "Neselectat",
-    "tasksHint": "Instrucțiuni (prompturi) pe care AI le aplică textului. În meniul de sarcini, fiecare rulează cu propria tastă; trageți cardurile pentru a le schimba tastele.",
-    "tasksTab": "Sarcini AI",
     "temperature": "Temperatură",
     "terminalApps": "Alte terminale",
     "terminalAppsHint": "Clasele de ferestre ale terminalelor pe care Tyco nu le recunoaște, separate prin virgulă. Într-un terminal, Tyco nu apasă niciodată Ctrl+C și pune rezultatul pentru selecția lui în clipboard.",
@@ -1088,7 +1096,8 @@
     "quickCorrectionModeInfo": "Cum gestionează fereastra de introducere rapidă corectarea textului.",
     "quickCorrectionLive": "Previzualizare în direct",
     "quickCorrectionOnSubmit": "La finalizare",
-    "quickCorrectionOff": "Dezactivat"
+    "quickCorrectionOff": "Dezactivat",
+    "aiCommands": "Comenzi AI"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1142,8 +1151,8 @@
     "voicePostProcessTimeout": "Procesarea vocală a durat prea mult; s-a păstrat textul original"
   },
   "tools": {
-    "aiTask": "Sarcină AI",
-    "aiTaskDescription": "Aplică textului instrucțiunea comenzii cu ajutorul LLM",
+    "aiTask": "Comandă AI",
+    "aiTaskDescription": "AI-ul urmează promptul tău și poate rula alte comenzi",
     "askInChat": "Întreabă în chat",
     "askInChatDescription": "Deschide chatul cu textul atașat",
     "copy": "Copiază",

@@ -26,17 +26,17 @@ describe('settings config preparation', () => {
     expect(result).toHaveProperty('aiRules', { chat: 'old' })
     expect(result.markdown).toBeDefined()
   })
-  it('normalizes malformed nested settings and filters invalid task fields', () => {
+  it('normalizes malformed nested settings and filters invalid library items', () => {
     const input = {
       ...structuredClone(DEFAULT_USER_CONFIG),
-      aiTasks: {
+      transformations: {
         items: [
           null,
           42,
           { name: 123, rule: {} },
           { name: 123, rule: 'Translate', id: [] },
-          { id: 'empty', name: ' ', prompt: '' },
-          { id: 'kept', name: '', prompt: 'Shorten' },
+          { id: 'empty', name: ' ', rule: '' },
+          { id: 'kept', name: '', rule: 'Shorten' },
         ],
         slots: { q: 'empty', t: 'kept', w: 'missing' },
       },
@@ -64,18 +64,12 @@ describe('settings config preparation', () => {
     const original = structuredClone(input)
     const result = model().prepare(input)
     expect(input).toEqual(original)
-    expect(result.aiTasks).toEqual({
+    expect(result.transformations).toEqual({
       items: [
-        {
-          id: 'kept',
-          name: '',
-          prompt: 'Shorten',
-          allowedTools: [],
-          outputAction: 'replace',
-          maxSteps: 5,
-        },
+        { id: 'empty', name: ' ', rule: '' },
+        { id: 'kept', name: '', rule: 'Shorten' },
       ],
-      slots: { t: 'kept' },
+      slots: { q: 'empty', t: 'kept' },
     })
     expect(result.llm.tasks).toEqual({
       ...DEFAULT_USER_CONFIG.llm.tasks,

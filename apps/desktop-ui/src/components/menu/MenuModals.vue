@@ -7,11 +7,6 @@
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
-    <AiTaskMenu
-      v-else-if="menuModalsStore.currentStep?.modal === MenuModals.AI_TASK"
-      :key="menuModalsStore.currentStepId"
-      v-bind="menuModalsStore.currentStep.params"
-    />
     <TransformationMenu
       v-else-if="
         menuModalsStore.currentStep?.modal === MenuModals.TRANSFORMATION
@@ -68,7 +63,6 @@ import { computed } from 'vue'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import Overlay from '../overlay/Overlay.vue'
 import ActionSelectModal from './ActionSelectModal.vue'
-import AiTaskMenu from './AiTaskMenu.vue'
 import DiffMenu from './DiffMenu.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import InsertMenu from './InsertMenu.vue'

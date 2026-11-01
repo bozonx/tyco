@@ -31,7 +31,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -58,7 +57,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -135,19 +133,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -209,14 +194,13 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "history": ""
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -237,7 +221,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -316,19 +299,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -361,7 +331,16 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
@@ -399,7 +378,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -426,7 +404,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -514,19 +491,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -589,14 +553,13 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "history": ""
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -617,7 +580,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -692,19 +654,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -737,7 +686,16 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
@@ -775,7 +733,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -801,7 +758,7 @@
       },
       "mainActions": {
         "q": { "type": "command", "commandId": "missing" },
-        "w": { "type": "aiTask", "taskId": "missing" },
+        "w": { "type": "transformation", "transformationId": "missing" },
         "e": { "type": "launcherPage", "pageId": "page-2" }
       },
       "launcherPages": [
@@ -881,19 +838,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -956,14 +900,13 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "history": ""
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1056,19 +999,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1101,7 +1031,16 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
@@ -1139,7 +1078,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -1166,7 +1104,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -1243,19 +1180,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1323,14 +1247,13 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "history": ""
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1351,7 +1274,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -1430,19 +1352,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1480,7 +1389,16 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
@@ -1518,7 +1436,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -1545,7 +1462,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -1617,19 +1533,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1692,14 +1595,13 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "history": ""
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1720,7 +1622,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -1792,19 +1693,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -1837,7 +1725,16 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
@@ -1875,7 +1772,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -1977,19 +1873,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2052,14 +1935,13 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "history": ""
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2153,19 +2035,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2198,7 +2067,16 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
@@ -2236,7 +2114,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -2264,7 +2141,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -2341,19 +2217,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2416,15 +2279,14 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
         "transformation": "",
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "history": ""
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2445,7 +2307,6 @@
       "mainActions": {
         "q": { "type": "standard", "actionId": "insertIntoWindow" },
         "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "e": { "type": "standard", "actionId": "aiTaskMenu" },
         "r": { "type": "standard", "actionId": "correction" },
         "t": { "type": "standard", "actionId": "translationMenu" },
         "a": { "type": "standard", "actionId": "askInChat" }
@@ -2524,19 +2385,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2569,7 +2417,16 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
@@ -2607,7 +2464,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -2719,28 +2575,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "a",
-            "name": "A",
-            "prompt": "x",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          },
-          {
-            "id": "a",
-            "name": "Copy",
-            "prompt": "y",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          },
-          "bogus"
-        ],
-        "slots": { "q": "a", "w": "a" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2771,7 +2605,15 @@
         "isVoiceCorrectionEnabled": false,
         "isVoiceHoldEnabled": false
       },
-      "aiVault": { "path": "" }
+      "aiVault": { "path": "" },
+      "transformations": {
+        "items": [
+          { "id": "a", "name": "A", "rule": "x" },
+          { "id": "a", "name": "Copy", "rule": "y" },
+          "bogus"
+        ],
+        "slots": { "q": "a", "w": "a" }
+      }
     },
     "expected": {
       "configVersion": 1,
@@ -2804,7 +2646,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -2906,19 +2747,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "a",
-            "name": "A",
-            "prompt": "x",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "a" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -2952,7 +2780,10 @@
         "isStylingBarDirectInsertEnabled": false
       },
       "aiVault": { "path": "" },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "slots": { "q": "a" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -2989,7 +2820,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -3103,19 +2933,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "a",
-            "name": "A",
-            "prompt": "x",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "a" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -3146,7 +2963,11 @@
         "isVoiceCorrectionEnabled": false,
         "isVoiceHoldEnabled": false
       },
-      "aiVault": { "path": "" }
+      "aiVault": { "path": "" },
+      "transformations": {
+        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "slots": { "q": "a" }
+      }
     },
     "expected": {
       "configVersion": 1,
@@ -3179,7 +3000,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -3288,19 +3108,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "a",
-            "name": "A",
-            "prompt": "x",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "a" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -3334,7 +3141,10 @@
         "isStylingBarDirectInsertEnabled": false
       },
       "aiVault": { "path": "" },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [{ "id": "a", "name": "A", "rule": "x" }],
+        "slots": { "q": "a" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -3371,7 +3181,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -3507,19 +3316,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -3582,7 +3378,6 @@
         "voiceChat": "",
         "voice": "Ctrl+Alt+V",
         "selectionActions": "Ctrl+Alt+S",
-        "aiTasks": "",
         "correction": "",
         "translation": "",
         "styling": "",
@@ -3759,19 +3554,6 @@
         },
         "imageQuality": "balanced"
       },
-      "aiTasks": {
-        "items": [
-          {
-            "id": "deep-edit",
-            "name": "deepEdit",
-            "prompt": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms.",
-            "allowedTools": [],
-            "outputAction": "replace",
-            "maxSteps": 5
-          }
-        ],
-        "slots": { "q": "deep-edit" }
-      },
       "markdown": {
         "format": {
           "bullet": "-",
@@ -3804,7 +3586,16 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
-      "transformations": { "items": [], "slots": {} },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
       "styling": { "items": [], "slots": {} },
       "aiVault": { "path": "" },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }

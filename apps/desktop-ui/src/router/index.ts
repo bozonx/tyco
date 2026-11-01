@@ -2,7 +2,6 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 
 import { clientLogger } from '../lib/logger'
 import { APP_ROUTES } from '../lib/navigation/routes'
-import AiTaskView from '../views/AiTaskView.vue'
 import ChatView from '../views/ChatView.vue'
 import CommandLauncherView from '../views/CommandLauncherView.vue'
 import CorrectionView from '../views/CorrectionView.vue'
@@ -61,11 +60,6 @@ const router = createRouter({
       path: APP_ROUTES.VOICE.path,
       name: APP_ROUTES.VOICE.name,
       component: VoiceView,
-    },
-    {
-      path: APP_ROUTES.AI_TASKS.path,
-      name: APP_ROUTES.AI_TASKS.name,
-      component: AiTaskView,
     },
     {
       path: APP_ROUTES.CORRECTION.path,

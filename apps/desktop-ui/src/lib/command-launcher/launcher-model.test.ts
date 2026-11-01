@@ -5,6 +5,7 @@ import type { CommandConfig } from '@tyco/shared'
 
 import { createCommand } from '../commands/command-config'
 import { testTools } from '../tools/testing'
+import { TEXT_INPUT_SCHEMA } from '../tools/tool-types'
 import {
   type CommandLauncherDependencies,
   createCommandLauncherModel,
@@ -807,5 +808,70 @@ describe('launcher completion ownership', () => {
     await pending
     expect(logRun).not.toHaveBeenCalled()
     expect(finishJob).toHaveBeenCalledOnce()
+  })
+})
+
+describe('requests typed in the search', () => {
+  const aiTool = {
+    id: 'core.aiTask',
+    description: 'AI command',
+    inputSchema: TEXT_INPUT_SCHEMA,
+    run: async () => ({ ok: true }),
+  }
+
+  const setupWithAi = () => {
+    const deps = {
+      tools: testTools({}, [aiTool]),
+      commands: () => [],
+      launcherPages: () => [
+        { id: 'main', inputMode: 'selection' as const, hotkey: '', slots: {} },
+      ],
+      selectedText: vi.fn<() => string | null>(() => 'selected'),
+      run: vi.fn<CommandLauncherDependencies['run']>(async () => ({
+        success: true,
+      })),
+    }
+    return { deps, model: createCommandLauncherModel(deps) }
+  }
+
+  it('runs the request as an AI command on the selection, showing its output', async () => {
+    const { deps, model } = setupWithAi()
+    await model.runPrompt('Explain this')
+    expect(deps.run).toHaveBeenCalledOnce()
+    const [command, text] = deps.run.mock.calls[0]!
+    expect(command).toMatchObject({
+      toolId: 'core.aiTask',
+      outputAction: 'showMenu',
+      toolConfig: { prompt: 'Explain this' },
+    })
+    expect(text).toBe('selected')
+    model.dispose()
+  })
+
+  it('asks for the text without a selection and ignores an empty request', async () => {
+    const { deps, model } = setupWithAi()
+    deps.selectedText.mockReturnValue(null)
+    await model.runPrompt('  ')
+    expect(model.stage.value).toEqual({ kind: 'list' })
+    await model.runPrompt('Explain this')
+    expect(model.stage.value.kind).toBe('prepare')
+    expect(deps.run).not.toHaveBeenCalled()
+    model.dispose()
+  })
+
+  it('shows the stage the running command reports until the next run', async () => {
+    const { deps, model } = setupWithAi()
+    let finish: () => void = () => {}
+    deps.run.mockImplementationOnce(async (_command, _text, options) => {
+      options?.onProgress?.('Calendar')
+      await new Promise<void>((resolve) => (finish = resolve))
+      return { success: true }
+    })
+    const running = model.runPrompt('Plan it')
+    await vi.waitFor(() => expect(model.progress.value).toBe('Calendar'))
+    finish()
+    await running
+    expect(model.progress.value).toBe('')
+    model.dispose()
   })
 })

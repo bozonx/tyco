@@ -14,7 +14,6 @@ import { cleanLlmOutput } from './llm-output'
 
 type TextTaskKind =
   | LlmInstructionKind.CORRECTION
-  | LlmInstructionKind.AI_TASK
   | LlmInstructionKind.TRANSFORMATION
   | LlmInstructionKind.STYLING
 
@@ -132,8 +131,6 @@ export function createLlmActions(deps: LlmActionsDependencies) {
       options
     )
 
-  /** Applies an own request typed in the AI task menu, like a task's rule */
-  const aiCustomPrompt = promptTask(LlmInstructionKind.AI_TASK)
   const transformationPrompt = promptTask(LlmInstructionKind.TRANSFORMATION)
   const stylingPrompt = promptTask(LlmInstructionKind.STYLING)
 
@@ -143,7 +140,6 @@ export function createLlmActions(deps: LlmActionsDependencies) {
     sendChatMessage,
     generateChatTitle,
     correctText,
-    aiCustomPrompt,
     transformationPrompt,
     stylingPrompt,
   }

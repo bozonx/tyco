@@ -68,7 +68,6 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.mainActionsTab',
         icon: 'mdi:gesture-tap-button',
       },
-      { id: 'tasks', labelKey: 'settings.tasksTab', icon: 'mdi:robot-outline' },
       {
         id: 'transformations',
         labelKey: 'settings.transformationsTab',
@@ -372,7 +371,6 @@ const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
   mainActions: 'main-actions',
   launcherPages: 'launcher-commands',
   llm: 'llm',
-  aiTasks: 'tasks',
   transformations: 'transformations',
   styling: 'styling',
   aiVault: 'ai-profiles',

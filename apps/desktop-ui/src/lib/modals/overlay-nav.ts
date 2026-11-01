@@ -36,11 +36,7 @@ export function createOverlayNavModel(
       return 'close'
     }
 
-    if (
-      modal === MenuModals.AI_TASK ||
-      modal === MenuModals.TRANSLATE ||
-      modal === MenuModals.ACTION_SELECT
-    ) {
+    if (modal === MenuModals.TRANSLATE || modal === MenuModals.ACTION_SELECT) {
       return 'back'
     }
 

@@ -19,7 +19,6 @@ const groupLabel = (group: MainActionGroup) =>
 describe('main action groups', () => {
   it('puts all standard actions, including menu openers, in the basic group', () => {
     expect(standardActionGroup('translationMenu')).toEqual({ kind: 'basic' })
-    expect(standardActionGroup('aiTaskMenu')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('transformationMenu')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('stylingMenu')).toEqual({ kind: 'basic' })
     expect(standardActionGroup('insertIntoWindow')).toEqual({ kind: 'basic' })
@@ -46,7 +45,7 @@ describe('main action groups', () => {
       kind: 'translation',
     })
     expect(commandGroup(createCommand('core.aiTask'), tools)).toEqual({
-      kind: 'aiTask',
+      kind: 'aiCommands',
     })
     expect(commandGroup(createCommand('core.transformation'), tools)).toEqual({
       kind: 'transformation',
@@ -86,7 +85,7 @@ describe('buildMainActionOptions', () => {
         choice('alpha', { kind: 'plugin', plugin: 'Alpha' }),
         choice('insert', { kind: 'basic' }),
         choice('toSpanish', { kind: 'translation' }),
-        choice('shorten', { kind: 'aiTask' }),
+        choice('shorten', { kind: 'aiCommands' }),
       ],
       slots: [],
       unavailableName: () => '',
@@ -97,7 +96,7 @@ describe('buildMainActionOptions', () => {
       ['basic', 'insert'],
       ['translation', 'toEnglish'],
       ['translation', 'toSpanish'],
-      ['aiTask', 'shorten'],
+      ['aiCommands', 'shorten'],
       ['commands', 'script'],
       ['plugin Alpha', 'alpha'],
       ['plugin Zeta', 'zeta'],
@@ -121,10 +120,13 @@ describe('buildMainActionOptions', () => {
 })
 
 describe('mainActionOptionId', () => {
-  it('names AI tasks by id and translations by language', () => {
-    expect(mainActionOptionId({ type: 'aiTask', taskId: 'task-1' })).toBe(
-      'aiTask:task-1'
-    )
+  it('names transformations by id and translations by language', () => {
+    expect(
+      mainActionOptionId({
+        type: 'transformation',
+        transformationId: 'shorten',
+      })
+    ).toBe('transformation:shorten')
     expect(mainActionOptionId({ type: 'translation', language: 'en-US' })).toBe(
       'translation:en-US'
     )
@@ -134,7 +136,6 @@ describe('mainActionOptionId', () => {
 describe('duplicatesDirectChoice', () => {
   const direct = {
     languages: ['en-US'],
-    rules: [' Be brief '],
     transformations: [' Rewrite clearly '],
     styling: [' Formal tone '],
   }
@@ -143,16 +144,10 @@ describe('duplicatesDirectChoice', () => {
     toolConfig,
   })
 
-  it('finds commands that do what a language, task, transformation or style does', () => {
+  it('finds commands that do what a language, transformation or style does', () => {
     expect(
       duplicatesDirectChoice(
         command('core.translate', { language: 'en-US' }),
-        direct
-      )
-    ).toBe(true)
-    expect(
-      duplicatesDirectChoice(
-        command('core.aiTask', { prompt: 'Be brief' }),
         direct
       )
     ).toBe(true)
@@ -177,9 +172,10 @@ describe('duplicatesDirectChoice', () => {
         direct
       )
     ).toBe(false)
+    // an AI command may run other commands: it is never a plain rule
     expect(
       duplicatesDirectChoice(
-        command('core.aiTask', { prompt: 'Other' }),
+        command('core.aiTask', { prompt: 'Rewrite clearly' }),
         direct
       )
     ).toBe(false)

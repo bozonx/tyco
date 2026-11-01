@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "Tâche IA",
     "askInChat": "Demander dans le chat",
     "copy": "Copier",
     "copyToClipboard": "Copier et fermer",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "« {name} » : exécution de « {step} »…",
     "allCommands": "Toutes les commandes",
     "commandMissing": "La commande {id} n’est pas dans la bibliothèque.",
     "dropSelection": "Ne pas utiliser le texte sélectionné",
+    "hintAskAi": "Demander à l’IA",
     "hintNewLine": "Nouvelle ligne",
     "hintRun": "Exécuter",
+    "hintSavePrompt": "Enregistrer comme commande IA",
     "nothingFound": "Aucune commande trouvée",
     "pages": "Pages :",
+    "promptSaved": "Enregistré comme commande IA",
+    "promptSavedAlready": "Une commande IA avec ce prompt existe déjà",
     "running": "Exécution de « {name} »…",
     "searchPlaceholder": "Rechercher des commandes…",
     "selection": "Texte sélectionné : {count} caractères",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Les champs vides prennent leur valeur dans les paramètres du plugin.",
     "promptFromTask": "Reprendre l’instruction d’une tâche IA",
     "promptFromTaskPlaceholder": "Choisissez une tâche IA…",
-    "promptInfo": "Instructions IA appliquées au texte. Une copie indépendante est enregistrée dans la commande : modifier la tâche IA d’origine n’affectera pas cette commande.",
+    "promptInfo": "Instruction IA appliquée au texte. La commande en garde une copie indépendante : modifier la transformation ou le style d’origine n’affectera pas cette commande.",
     "promptLabel": "Instruction pour le LLM",
     "promptPlaceholder": "Ex. : rends le texte plus court et plus amical",
     "removed": "Commande « {name} » supprimée",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Instruction pour le LLM afin de transformer le texte d’entrée avant de l’envoyer à la commande.",
     "externalTimeoutLabel": "Limite d’exécution en arrière-plan, secondes",
     "externalTimeoutInfo": "Durée pendant laquelle un appel externe peut s’exécuter en arrière-plan, à partir du démarrage de la commande ; ensuite il est arrêté et signalé comme expiré. {seconds} par défaut, au plus {max}. Les exécutions dans une fenêtre ne sont pas limitées : vous les voyez et pouvez les annuler.",
-    "preTransformEmpty": "Le LLM n’a renvoyé aucun texte pour la commande"
+    "preTransformEmpty": "Le LLM n’a renvoyé aucun texte pour la commande",
+    "aiTitle": "Commandes IA",
+    "aiDescription": "Une commande IA suit votre prompt avec le LLM et peut exécuter les commandes que vous lui autorisez. Ce modèle répond à toutes les commandes IA.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "Ce que l’IA fait du texte sur lequel la commande s’exécute : le réécrire, en extraire des données, décider quelles commandes lancer et avec quoi.",
+    "aiPromptPlaceholder": "Par ex. Trouve la date et l’heure dans le texte et ajoute l’événement à mon agenda",
+    "aiAllowedCommands": "Commandes qu’elle peut exécuter",
+    "aiAllowedCommandsInfo": "L’IA exécute ces commandes sans demander dès que le prompt en a besoin. Une commande ne s’exécute jamais elle-même ni une commande IA qui l’a appelée.",
+    "aiNoOtherCommands": "Il n’y a pas encore d’autres commandes.",
+    "aiMaxSteps": "Limite d’étapes",
+    "aiMaxStepsInfo": "Nombre de réponses de l’IA autorisées par exécution ; chaque commande lancée compte pour une étape."
   },
   "common": {
     "add": "Ajouter",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Enregistrer comme tâche",
     "aiPromptSlotsFull": "Toutes les touches de tâches sont prises : libérez-en une dans les paramètres",
     "aiRequest": "Requête IA",
-    "aiTask": "Tâche IA",
-    "aiTaskPromptEmpty": "Cette tâche n'a pas d'instruction : renseignez-la dans les paramètres",
     "cancelIntentHint": "Échap pour annuler",
     "compareResult": "Comparer le résultat",
     "copyOnFinish": "Copier",
@@ -713,7 +725,6 @@
     "hideAdvanced": "Masquer les paramètres avancés",
     "hotkey": "Raccourci",
     "hotkeyActions": {
-      "aiTasks": "Tâches IA",
       "chat": "Utiliser le texte sélectionné comme contexte dans le chat IA",
       "correction": "Correction avec aperçu",
       "editor": "Ouvrir le texte sélectionné dans l’éditeur",
@@ -765,7 +776,7 @@
     "llmConnectionsHint": "Où Tyco envoie les requêtes IA : Google, OpenRouter, DeepSeek ou tout serveur doté d’une API compatible OpenAI, comme un Ollama ou un LM Studio local. Les modèles s’ajoutent dans leur connexion. Une clé enregistrée va dans le stockage sécurisé et n’est plus jamais affichée.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "Tâches IA",
+      "aiCommands": "Commandes IA",
       "basic": "Base",
       "commands": "Mes commandes",
       "styling": "Stylisation de texte",
@@ -774,7 +785,6 @@
       "unavailable": "Indisponibles"
     },
     "mainActionStylingRemoved": "Style de texte supprimé",
-    "mainActionTaskRemoved": "Tâche IA supprimée",
     "mainActionTransformationRemoved": "Transformation de texte supprimée",
     "mainActionsHint": "Actions du menu principal : chacune se lance avec sa propre touche. Faites glisser les cartes pour changer leurs touches.",
     "mainActionsTab": "Actions principales",
@@ -1001,8 +1011,6 @@
     "taskModelChange": "Modifier",
     "taskModelInfo": "Le modèle s’attribue sur la page « LLM ».",
     "taskModelNone": "Non sélectionné",
-    "tasksHint": "Instructions (prompts) que l’IA applique au texte. Dans le menu des tâches, chacune se lance avec sa propre touche ; faites glisser les cartes pour changer leurs touches.",
-    "tasksTab": "Tâches IA",
     "temperature": "Température",
     "terminalApps": "Autres terminaux",
     "terminalAppsHint": "Classes de fenêtres des terminaux que Tyco ne reconnaît pas, séparées par des virgules. Dans un terminal, Tyco n’appuie jamais sur Ctrl+C et place le résultat de sa sélection dans le presse-papiers.",
@@ -1088,7 +1096,8 @@
     "quickCorrectionModeInfo": "Gestion de la correction dans la fenêtre de saisie rapide.",
     "quickCorrectionLive": "Aperçu en direct",
     "quickCorrectionOnSubmit": "À la fin",
-    "quickCorrectionOff": "Désactivé"
+    "quickCorrectionOff": "Désactivé",
+    "aiCommands": "Commandes IA"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1142,8 +1151,8 @@
     "voicePostProcessTimeout": "Le traitement vocal a pris trop de temps ; texte d’origine conservé"
   },
   "tools": {
-    "aiTask": "Tâche IA",
-    "aiTaskDescription": "Applique au texte l’instruction de la commande avec le LLM",
+    "aiTask": "Commande IA",
+    "aiTaskDescription": "L’IA suit votre prompt et peut exécuter d’autres commandes",
     "askInChat": "Demander dans le chat",
     "askInChatDescription": "Ouvre le chat avec le texte joint",
     "copy": "Copier",

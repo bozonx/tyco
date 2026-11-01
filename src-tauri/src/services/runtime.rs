@@ -274,7 +274,6 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         ActivationMode::QuickInput
         | ActivationMode::Voice
         | ActivationMode::SelectionActions
-        | ActivationMode::AiTasks
         | ActivationMode::VoiceCommands
         | ActivationMode::CommandLauncher
         | ActivationMode::Correction
@@ -307,7 +306,6 @@ mod tests {
             ActivationMode::QuickInput,
             ActivationMode::Voice,
             ActivationMode::SelectionActions,
-            ActivationMode::AiTasks,
             ActivationMode::CommandLauncher,
             ActivationMode::Correction,
             ActivationMode::VoiceChat,

@@ -20,7 +20,6 @@ function coreTools() {
       ...services,
       correctText: vi.fn(),
       translateTo: vi.fn(),
-      aiCustomPrompt: vi.fn(),
       transformationPrompt: vi.fn(),
       stylingPrompt: vi.fn(),
       getLlmUnavailableReasonKey: () => undefined,
@@ -36,7 +35,6 @@ describe('createActionMenuModel', () => {
     const { services, tools } = coreTools()
     const deps = {
       saveOutput: vi.fn().mockResolvedValue(undefined),
-      openAiTaskModal: vi.fn(),
       openTranslateModal: vi.fn(),
       openTransformationModal: vi.fn(),
       openStylingModal: vi.fn(),
@@ -292,7 +290,6 @@ describe('createActionMenuModel', () => {
     }
     const deps = {
       saveOutput: vi.fn().mockResolvedValue(undefined),
-      openAiTaskModal: vi.fn(),
       openTranslateModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
@@ -397,21 +394,21 @@ describe('createActionMenuModel', () => {
     })
   })
 
-  it('builds the items of AI tasks and languages, which open their dialog', async () => {
+  it('builds the items of transformations and languages, which open their dialog', async () => {
     const { deps } = setup()
     const store = createActionMenuModel({
       ...deps,
       mainActions: () => ({
-        q: { type: 'aiTask', taskId: 'task-2' },
-        w: { type: 'aiTask', taskId: 'gone' },
+        q: { type: 'transformation', transformationId: 'shorten' },
+        w: { type: 'transformation', transformationId: 'gone' },
         e: { type: 'translation', language: 'en-US' },
       }),
-      aiTasks: () => [{ id: 'task-2', name: 'Shorten' }],
+      transformations: () => [{ id: 'shorten', name: 'Shorten' }],
     })
 
     const slots = store.getShortcutActions()
     expect(slots.map((action) => action?.id)).toEqual([
-      'aiTask:task-2',
+      'transformation:shorten',
       undefined,
       'translation:en-US',
     ])
@@ -419,7 +416,10 @@ describe('createActionMenuModel', () => {
     expect(slots[2]).toMatchObject({ labelKey: 'language.en-US' })
 
     await slots[0]?.action('some text')
-    expect(deps.openAiTaskModal).toHaveBeenCalledWith('some text', 'task-2')
+    expect(deps.openTransformationModal).toHaveBeenCalledWith(
+      'some text',
+      'shorten'
+    )
     await slots[2]?.action('some text')
     expect(deps.openTranslateModal).toHaveBeenCalledWith('some text', 'en-US')
 

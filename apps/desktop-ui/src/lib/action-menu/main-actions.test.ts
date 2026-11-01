@@ -27,19 +27,19 @@ describe('normalizeMainActions', () => {
     ])
   })
 
-  it('keeps references to commands, AI tasks and translation languages', () => {
+  it('keeps references to commands, transformations and translation languages', () => {
     const raw = {
       q: { type: 'command', commandId: 'sc1' },
       w: { type: 'command', commandId: ' ' },
-      e: { type: 'aiTask', taskId: 'task-1' },
-      r: { type: 'aiTask', taskId: '' },
+      e: { type: 'transformation', transformationId: 'shorten' },
+      r: { type: 'transformation', transformationId: '' },
       t: { type: 'translation', language: 'en-US' },
       a: { type: 'translation' },
     }
     expect(normalizeMainActions(raw).slice(0, 6)).toEqual([
       { type: 'command', commandId: 'sc1' },
       null,
-      { type: 'aiTask', taskId: 'task-1' },
+      { type: 'transformation', transformationId: 'shorten' },
       null,
       { type: 'translation', language: 'en-US' },
       null,

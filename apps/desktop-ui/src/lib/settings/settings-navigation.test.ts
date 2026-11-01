@@ -99,7 +99,6 @@ describe('settings navigation', () => {
         'settings.actionsCategory',
         [
           'main-actions',
-          'tasks',
           'transformations',
           'styling',
           'languages',

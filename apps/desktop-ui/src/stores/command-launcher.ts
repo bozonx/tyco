@@ -6,6 +6,7 @@ import { onScopeDispose, watch } from 'vue'
 import { ActivationMode } from '@tyco/shared'
 
 import { useToastStore } from './toast'
+import { savePromptAsCommand } from '../lib/ai-commands/ai-command-config'
 import { createCommandLauncherModel } from '../lib/command-launcher/launcher-model'
 import { createCommandRunner } from '../lib/commands/command-runner'
 import { commandLabel } from '../lib/commands/command-runtime'
@@ -112,6 +113,29 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
     }
   )
 
+  /** Saves a request typed in the search as an AI command */
+  const savePrompt = async (prompt: string): Promise<boolean> => {
+    const saved = savePromptAsCommand(
+      desktopStore.userConfig,
+      prompt,
+      model.pageIndex.value
+    )
+    if (!saved.isAdded) {
+      toastText(translate('commandLauncher.promptSavedAlready'), 'info')
+      return false
+    }
+    const result = await desktopStore.updateUserConfig({
+      commands: saved.commands,
+      launcherPages: saved.launcherPages,
+    })
+    if (!result.success) {
+      toastText(translate('toast.desktopCommandFailed'), 'error')
+      return false
+    }
+    toastText(translate('commandLauncher.promptSaved'), 'success')
+    return true
+  }
+
   onScopeDispose(model.dispose)
-  return model
+  return { ...model, savePrompt }
 })

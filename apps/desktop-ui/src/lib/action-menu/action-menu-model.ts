@@ -32,8 +32,6 @@ export type { ActionItem } from '../../types/plugins'
 export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
-  /** With `taskId` the dialog runs that AI task at once */
-  openAiTaskModal: (text: string, taskId?: string) => void
   openTransformationModal?: (text: string, transformationId?: string) => void
   openStylingModal?: (text: string, stylingId?: string) => void
   /** With `language` the dialog translates into it at once */
@@ -47,8 +45,6 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   mainActions?: () => ShortcutSlots<MainActionConfig> | undefined
   /** The command library the menu items of the `command` type refer to */
   commands?: () => readonly CommandConfig[] | undefined
-  /** The AI tasks the menu items of the `aiTask` type refer to by id */
-  aiTasks?: () => readonly { id: string; name: string }[] | undefined
   transformations?: () => readonly { id: string; name: string }[] | undefined
   styling?: () => readonly { id: string; name: string }[] | undefined
 }
@@ -104,18 +100,6 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       }
       action(text)
     }
-
-  /** The menu item of an AI task, or none when the task is gone */
-  const createAiTaskActionItem = (taskId: string): ActionItem | undefined => {
-    const task = deps.aiTasks?.()?.find((item) => item.id === taskId)
-    if (!task?.name) return undefined
-    return {
-      id: `aiTask:${taskId}`,
-      name: task.name,
-      icon: 'mdi:robot-outline',
-      action: withText((text) => deps.openAiTaskModal(text, taskId)),
-    }
-  }
 
   const createTransformationActionItem = (
     transformationId: string
@@ -195,18 +179,6 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           'core.copy',
           true
         ),
-        {
-          id: 'aiTaskMenu',
-          labelKey: 'action.aiTaskMenu',
-          icon: 'mdi:robot-outline',
-          action: async (text: string) => {
-            if (!text?.trim()) {
-              deps.showToast('toast.textNotSelected', 'error')
-              return
-            }
-            deps.openAiTaskModal(text)
-          },
-        },
         {
           id: 'transformationMenu',
           labelKey: 'action.transformationMenu',
@@ -311,7 +283,6 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           ? createCommandActionItem(command)
           : undefined
       }
-      if (item.type === 'aiTask') return createAiTaskActionItem(item.taskId)
       if (item.type === 'transformation') {
         return createTransformationActionItem(item.transformationId)
       }

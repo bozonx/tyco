@@ -204,7 +204,6 @@ mod tests {
             "voiceChat",
             "voice",
             "selectionActions",
-            "aiTasks",
             "commandLauncher",
             "correction",
             "translation",
@@ -234,7 +233,6 @@ mod tests {
         for mode in [
             ActivationMode::Editor,
             ActivationMode::SelectionActions,
-            ActivationMode::AiTasks,
             ActivationMode::CommandLauncher,
             ActivationMode::Correction,
             ActivationMode::Translation,

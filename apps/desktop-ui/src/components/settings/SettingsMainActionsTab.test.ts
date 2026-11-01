@@ -55,24 +55,10 @@ describe('SettingsMainActionsTab.vue', () => {
   beforeEach(() =>
     configure({
       mainActions: { q: { type: 'standard', actionId: 'correction' } },
-      aiTasks: {
+      transformations: {
         items: [
-          {
-            id: 'shorten',
-            name: 'Shorten',
-            prompt: 'Make it short',
-            allowedTools: [],
-            outputAction: 'replace',
-            maxSteps: 5,
-          },
-          {
-            id: 'unnamed',
-            name: ' ',
-            prompt: 'Hidden',
-            allowedTools: [],
-            outputAction: 'replace',
-            maxSteps: 5,
-          },
+          { id: 'shorten', name: 'Shorten', rule: 'Make it short' },
+          { id: 'unnamed', name: ' ', rule: 'Hidden' },
         ],
         slots: {},
       },
@@ -103,10 +89,10 @@ describe('SettingsMainActionsTab.vue', () => {
     })
   })
 
-  it('offers standard actions, named tasks and plugin actions', () => {
+  it('offers standard actions, named transformations and plugin actions', () => {
     const texts = optionTexts(mountTab())
     expect(texts).toContain('action.correction')
-    expect(texts).toContain('action.aiTaskMenu…')
+    expect(texts).toContain('action.transformationMenu…')
     expect(texts).toContain('Shorten')
     expect(texts).toContain('Shout')
     expect(texts).not.toContain('Without id')
@@ -121,8 +107,8 @@ describe('SettingsMainActionsTab.vue', () => {
       .find((option) => option.text() === 'Shorten')!
     await select.setValue(shorten.element.value)
     expect(context.draft.value.mainActions.q).toEqual({
-      type: 'aiTask',
-      taskId: 'shorten',
+      type: 'transformation',
+      transformationId: 'shorten',
     })
   })
 
@@ -145,12 +131,12 @@ describe('SettingsMainActionsTab.vue', () => {
   it('names slots whose action is gone', () => {
     configure({
       mainActions: {
-        q: { type: 'aiTask', taskId: 'removed' },
+        q: { type: 'transformation', transformationId: 'removed' },
         w: { type: 'command', commandId: 'missing' },
       },
     })
     const texts = optionTexts(mountTab())
-    expect(texts).toContain('settings.mainActionTaskRemoved')
+    expect(texts).toContain('settings.mainActionTransformationRemoved')
     expect(texts).toContain('commands.unavailableInMenu:{"name":"missing"}')
   })
 

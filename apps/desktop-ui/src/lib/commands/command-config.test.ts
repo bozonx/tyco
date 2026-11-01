@@ -376,7 +376,11 @@ describe('commands of the core tools', () => {
     })
     expect(translate.toolConfig).toEqual({ language: '' })
     expect(translate.outputAction).toBe('insertIntoWindow')
-    expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({ prompt: '' })
+    expect(createCommand('core.aiTask', 'a').toolConfig).toEqual({
+      prompt: '',
+      allowedCommandIds: [],
+      maxSteps: 5,
+    })
     expect(createCommand('core.transformation', 'tr').toolConfig).toEqual({
       prompt: '',
     })

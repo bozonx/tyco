@@ -6,7 +6,6 @@ import {
   type UserConfig,
   type AppearanceSettings,
 } from '@tyco/shared'
-import { withoutEmptyTasks } from '../ai-tasks/ai-task-library'
 import { applyPluginDefaults } from '../plugins/plugin-config'
 import type { PluginFactory } from '../../types/plugins'
 
@@ -28,7 +27,7 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
     const input = recordOf(cloned)
     // `normalizeUserConfig` applies the rules the backend applies; here only
     // what the webview knows: the cached appearance and the plugin defaults
-    const config = normalizeUserConfig({
+    return normalizeUserConfig({
       ...input,
       appearance: normalizeAppearance(input.appearance ?? deps.appearance()),
       plugins: applyPluginDefaults(
@@ -36,15 +35,6 @@ export function createSettingsConfig(deps: SettingsConfigDependencies) {
         recordOf(input.plugins)
       ),
     })
-    // a task being typed in is not a change until it has a name or a rule
-    const aiTasks = withoutEmptyTasks(config.aiTasks)
-    const taskIds = new Set(aiTasks.items.map((task) => task.id))
-    const mainActions = Object.fromEntries(
-      Object.entries(config.mainActions).filter(
-        ([, slot]) => slot.type !== 'aiTask' || taskIds.has(slot.taskId)
-      )
-    )
-    return { ...config, aiTasks, mainActions }
   }
   return { prepare }
 }

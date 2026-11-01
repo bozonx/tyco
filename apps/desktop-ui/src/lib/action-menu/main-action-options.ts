@@ -17,7 +17,7 @@ export type MainActionGroup =
       kind:
         | 'basic'
         | 'translation'
-        | 'aiTask'
+        | 'aiCommands'
         | 'transformation'
         | 'styling'
         | 'commands'
@@ -41,7 +41,7 @@ export interface MainActionOption {
 const GROUP_ORDER: MainActionGroup['kind'][] = [
   'basic',
   'translation',
-  'aiTask',
+  'aiCommands',
   'transformation',
   'styling',
   'commands',
@@ -55,7 +55,6 @@ export function mainActionOptionId(
   if (!item) return ''
   if (item.type === 'launcherPage') return `launcherPage:${item.pageId}`
   if (item.type === 'command') return `command:${item.commandId}`
-  if (item.type === 'aiTask') return `aiTask:${item.taskId}`
   if (item.type === 'transformation')
     return `transformation:${item.transformationId}`
   if (item.type === 'styling') return `styling:${item.stylingId}`
@@ -88,7 +87,7 @@ export function commandGroup(
   tools: ToolLookup
 ): MainActionGroup {
   if (command.toolId === 'core.translate') return { kind: 'translation' }
-  if (command.toolId === 'core.aiTask') return { kind: 'aiTask' }
+  if (command.toolId === 'core.aiTask') return { kind: 'aiCommands' }
   if (command.toolId === 'core.transformation')
     return { kind: 'transformation' }
   if (command.toolId === 'core.styling') return { kind: 'styling' }
@@ -100,14 +99,13 @@ export function commandGroup(
 
 /**
  * Whether the command does just what an item of the picker does already: a
- * translation into one of the translation languages, or the rule of an AI task,
- * transformation, or style
+ * translation into one of the translation languages, or the rule of a
+ * transformation or a style
  */
 export function duplicatesDirectChoice(
   command: CommandConfig,
   direct: {
     languages: readonly string[]
-    rules: readonly string[]
     transformations?: readonly string[]
     styling?: readonly string[]
   }
@@ -118,9 +116,6 @@ export function duplicatesDirectChoice(
   }
   if (command.toolId === 'core.translate') {
     return direct.languages.includes(value('language'))
-  }
-  if (command.toolId === 'core.aiTask') {
-    return direct.rules.some((rule) => rule.trim() === value('prompt'))
   }
   if (command.toolId === 'core.transformation') {
     return (direct.transformations ?? []).some(

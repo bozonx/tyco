@@ -26,9 +26,6 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)
     },
-    openAiTaskModal: (text: string, taskId?: string) => {
-      menuModalsStore.nextModal(MenuModals.AI_TASK, { text, taskId })
-    },
     openTransformationModal: (text: string, transformationId?: string) => {
       menuModalsStore.nextModal(MenuModals.TRANSFORMATION, {
         text,
@@ -60,7 +57,6 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
       isMainActionVisible(action, desktopStore.userConfig.isInDevelopment),
     mainActions: () => desktopStore.userConfig.mainActions,
     commands: () => desktopStore.userConfig.commands,
-    aiTasks: () => desktopStore.userConfig.aiTasks.items,
     transformations: () => desktopStore.userConfig.transformations?.items,
     styling: () => desktopStore.userConfig.styling?.items,
     ...useInvocationRunnerDependencies(),

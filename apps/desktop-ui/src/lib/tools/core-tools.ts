@@ -33,11 +33,6 @@ export interface CoreToolDependencies {
     text: string,
     options: TranslateOptions
   ) => Promise<TransformOutput>
-  aiCustomPrompt: (
-    prompt: string,
-    text: string,
-    signal: AbortSignal
-  ) => Promise<string>
   transformationPrompt: (
     prompt: string,
     text: string,
@@ -107,7 +102,10 @@ function transformTool(
   }
 }
 
-/** The tools over what the app already does; they add no behavior of their own */
+/**
+ * The tools over what the app already does; they add no behavior of their own.
+ * The AI command tool is made apart, see `createAiCommandTool`
+ */
 export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
   const insert: ToolDefinition = {
     id: 'core.insert' satisfies CoreToolId,
@@ -201,24 +199,6 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     }
   )
 
-  const aiTask = transformTool(
-    deps,
-    {
-      id: 'core.aiTask' satisfies CoreToolId,
-      labelKey: 'tools.aiTask',
-      descriptionKey: 'tools.aiTaskDescription',
-      icon: 'mdi:robot-outline',
-      description:
-        'Applies the instruction of the command to the text with the LLM',
-      getUnavailableReasonKey: () => deps.getLlmUnavailableReasonKey('aiTask'),
-    },
-    (call, text) => {
-      const prompt = stringOf(call.config.prompt)
-      if (!prompt) return { ok: false, messageKey: 'commands.errorNoPrompt' }
-      return deps.aiCustomPrompt(prompt, text, call.signal)
-    }
-  )
-
   const transformation = transformTool(
     deps,
     {
@@ -255,14 +235,5 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     }
   )
 
-  return [
-    insert,
-    copy,
-    correct,
-    translate,
-    aiTask,
-    transformation,
-    styling,
-    askInChat,
-  ]
+  return [insert, copy, correct, translate, transformation, styling, askInChat]
 }

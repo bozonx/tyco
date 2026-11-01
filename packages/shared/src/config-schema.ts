@@ -435,11 +435,6 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   config.translation.targetLanguages = distinctSlots(
     config.translation.targetLanguages
   )
-  config.aiTasks.items = deduplicate(config.aiTasks.items)
-  const taskIds = new Set(config.aiTasks.items.map((task) => task.id))
-  config.aiTasks.slots = distinctSlots(
-    filterSlots(config.aiTasks.slots, (id) => taskIds.has(id))
-  )
   config.transformations.items = deduplicate(config.transformations.items)
   const transformationIds = new Set(
     config.transformations.items.map((item) => item.id)
@@ -457,7 +452,6 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   const pageIds = new Set(config.launcherPages.map((page) => page.id))
   config.mainActions = filterSlots(config.mainActions, (slot) => {
     if (slot.type === 'command') return commands.has(slot.commandId)
-    if (slot.type === 'aiTask') return taskIds.has(slot.taskId)
     if (slot.type === 'transformation')
       return transformationIds.has(slot.transformationId)
     if (slot.type === 'styling') return stylingIds.has(slot.stylingId)

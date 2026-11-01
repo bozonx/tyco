@@ -2,9 +2,8 @@ import configDefaults from '../user-config-defaults.json' with { type: 'json' }
 import type { ShortcutSlots } from './translation-config'
 
 /**
- * The built-in items of the action menu. `aiTaskMenu` and `translationMenu`
- * open a menu to pick from; a single task or language is an item of the
- * `aiTask` or `translation` type
+ * The built-in items of the action menu. `translationMenu` opens a menu to pick
+ * from; a single language is an item of the `translation` type
  */
 export const STANDARD_ACTION_IDS = [
   'insertIntoWindow',
@@ -12,7 +11,6 @@ export const STANDARD_ACTION_IDS = [
   'correction',
   'askInChat',
   'translationMenu',
-  'aiTaskMenu',
   'transformationMenu',
   'stylingMenu',
 ] as const
@@ -80,6 +78,22 @@ export interface ScriptToolConfig {
 export const EXTERNAL_TIMEOUT_DEFAULT_SEC = 120
 /** The longest limit of a background external run, in seconds */
 export const EXTERNAL_TIMEOUT_MAX_SEC = 3600
+
+/** How many model steps an AI command takes by default; each tool call is one */
+export const AI_COMMAND_MAX_STEPS_DEFAULT = 5
+/** The most model steps an AI command may take */
+export const AI_COMMAND_MAX_STEPS_MAX = 50
+
+/**
+ * `toolConfig` of an AI command, a command of the `core.aiTask` tool: an LLM
+ * agent that follows `prompt` and may call the commands of `allowedCommandIds`
+ */
+export interface AiCommandToolConfig {
+  prompt: string
+  /** The commands the agent may run; never the command itself */
+  allowedCommandIds: string[]
+  maxSteps: number
+}
 
 /** `toolConfig` of a `webhook` command */
 export interface WebhookToolConfig {
@@ -168,12 +182,6 @@ export interface CommandMainAction {
   commandId: string
 }
 
-/** A task of `aiTasks`, by its `id` */
-export interface AiTaskMainAction {
-  type: 'aiTask'
-  taskId: string
-}
-
 /** A transformation of `transformations`, by its `id` */
 export interface TransformationMainAction {
   type: 'transformation'
@@ -197,7 +205,6 @@ export type MainActionConfig =
   | StandardMainAction
   | PluginMainAction
   | CommandMainAction
-  | AiTaskMainAction
   | TransformationMainAction
   | StylingMainAction
   | TranslationMainAction

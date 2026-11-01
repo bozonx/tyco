@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import { TRANSLATION_SECRET_IDS, type LlmTask } from '@tyco/shared'
+import { APP_CONFIG, TRANSLATION_SECRET_IDS, type LlmTask } from '@tyco/shared'
 
 import { useLlmStore } from './llm'
 import { executeWebhook } from '../lib/custom-actions/webhook-executor'
@@ -13,7 +13,11 @@ import { isSecretUsable } from '../lib/net/secrets'
 import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { createScriptAndWebhookTools } from '../lib/tools/script-and-webhook-tools'
+import { createAiCommandTool } from '../lib/ai-commands/ai-command-tool'
+import { commandInvocation } from '../lib/commands/command-runtime'
+import { createToolInvoker } from '../lib/invocation/invoke-tool'
 import { createCoreTools } from '../lib/tools/core-tools'
+import { toolCallConfig, toolInputSchema } from '../lib/tools/tool-input'
 import { createToolRegistry } from '../lib/tools/tool-registry'
 import type { TranslationMeta } from '../lib/translation/translation-meta'
 import { useSecretsStore } from './secrets'
@@ -32,8 +36,8 @@ export const useToolsStore = defineStore('tools', () => {
   const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
   const secretsStore = useSecretsStore()
-  const { aiCustomPrompt, transformationPrompt, stylingPrompt } =
-    useLlmStore().actions
+  const llmStore = useLlmStore()
+  const { transformationPrompt, stylingPrompt } = llmStore.actions
   const { translateTo } = useTranslationStore().actions
   const textCorrectionStore = useTextCorrectionStore()
   const { pasteIntoTargetAndHide } = createDesktopInsertion({
@@ -81,8 +85,6 @@ export const useToolsStore = defineStore('tools', () => {
         meta: { provider, kind, model, quality } satisfies TranslationMeta,
       }
     },
-    aiCustomPrompt: (prompt, text, signal) =>
-      aiCustomPrompt(prompt, text, { signal, notifyError: false }),
     transformationPrompt: (prompt, text, signal) =>
       transformationPrompt(prompt, text, { signal, notifyError: false }),
     stylingPrompt: (prompt, text, signal) =>
@@ -114,6 +116,28 @@ export const useToolsStore = defineStore('tools', () => {
     describeError: (error) => describeError(error, translate),
   })
 
+  // the agent runs commands through the registry it is a tool of
+  const invoke = createToolInvoker({ tools: { get: (id) => registry.get(id) } })
+  const aiCommandTool = createAiCommandTool({
+    stream: (task, prompt, options) =>
+      llmStore.client.stream(task, prompt, options),
+    instructions: () => APP_CONFIG.aiInstructions.aiTask,
+    commands: () => desktopStore.userConfig?.commands ?? [],
+    commandInputSchema: (command) => {
+      const tool = registry.get(command.toolId)
+      if (!tool || tool.getUnavailableReasonKey?.()) return undefined
+      return toolInputSchema(tool, toolCallConfig(tool, command.toolConfig))
+    },
+    runCommand: (command, input, { signal, source }) =>
+      invoke(
+        commandInvocation(command),
+        typeof input.text === 'string' ? input.text : '',
+        { input, signal, source, output: 'return' }
+      ),
+    getUnavailableReasonKey: () => getLlmUnavailableReasonKey('aiTask'),
+    describeError: (error) => describeError(error, translate),
+  })
+
   const registry = createToolRegistry([
     ...createScriptAndWebhookTools({
       ...createScriptActionClient(ipcStore.call),
@@ -129,6 +153,7 @@ export const useToolsStore = defineStore('tools', () => {
         ),
     }),
     ...coreTools,
+    aiCommandTool,
   ])
   return { ...registry, provideAskInChat }
 })

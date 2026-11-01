@@ -1,6 +1,5 @@
 {
   "action": {
-    "aiTaskMenu": "KI-Aufgabe",
     "askInChat": "Im Chat fragen",
     "copy": "Kopieren",
     "copyToClipboard": "Kopieren und schließen",
@@ -160,13 +159,18 @@
     }
   },
   "commandLauncher": {
+    "aiStep": "„{name}“: führe „{step}“ aus…",
     "allCommands": "Alle Befehle",
     "commandMissing": "Der Befehl {id} ist nicht in der Bibliothek.",
     "dropSelection": "Ausgewählten Text nicht verwenden",
+    "hintAskAi": "KI fragen",
     "hintNewLine": "Neue Zeile",
     "hintRun": "Ausführen",
+    "hintSavePrompt": "Als KI-Befehl speichern",
     "nothingFound": "Keine Befehle gefunden",
     "pages": "Seiten:",
+    "promptSaved": "Als KI-Befehl gespeichert",
+    "promptSavedAlready": "Ein KI-Befehl mit diesem Prompt existiert bereits",
     "running": "„{name}“ wird ausgeführt…",
     "searchPlaceholder": "Befehle suchen…",
     "selection": "Ausgewählter Text: {count} Zeichen",
@@ -229,7 +233,7 @@
     "pluginFieldsHint": "Leere Felder übernehmen ihren Wert aus den Plugin-Einstellungen.",
     "promptFromTask": "Anweisung aus einer KI-Aufgabe übernehmen",
     "promptFromTaskPlaceholder": "KI-Aufgabe wählen…",
-    "promptInfo": "KI-Anweisungen, die auf den Text angewendet werden. Im Befehl wird eine unabhängige Kopie gespeichert: Änderungen an der ursprünglichen KI-Aufgabe wirken sich nicht auf diesen Befehl aus.",
+    "promptInfo": "KI-Anweisung, die auf den Text angewendet wird. Der Befehl speichert eine unabhängige Kopie: Änderungen an der ursprünglichen Transformation oder dem Stil wirken sich nicht auf diesen Befehl aus.",
     "promptLabel": "Anweisung für das LLM",
     "promptPlaceholder": "z. B. Mach den Text kürzer und freundlicher",
     "removed": "Befehl „{name}“ entfernt",
@@ -259,7 +263,17 @@
     "llmPreTransformPromptInfo": "Anweisung an das LLM, um den Eingabetext vor dem Senden an den Befehl zu transformieren.",
     "externalTimeoutLabel": "Limit für Hintergrundausführung, Sekunden",
     "externalTimeoutInfo": "Wie lange ein externer Aufruf im Hintergrund laufen darf, gezählt ab dem Start des Befehls; danach wird er gestoppt und als Zeitüberschreitung gemeldet. Standardmäßig {seconds}, höchstens {max}. Ausführungen in einem Fenster sind nicht begrenzt: Sie sehen sie und können sie abbrechen.",
-    "preTransformEmpty": "Das LLM hat keinen Text für den Befehl zurückgegeben"
+    "preTransformEmpty": "Das LLM hat keinen Text für den Befehl zurückgegeben",
+    "aiTitle": "KI-Befehle",
+    "aiDescription": "Ein KI-Befehl führt Ihren Prompt mit dem LLM aus und darf die Befehle ausführen, die Sie ihm erlauben. Dieses Modell beantwortet alle KI-Befehle.",
+    "aiPromptLabel": "Prompt",
+    "aiPromptInfo": "Was die KI mit dem Text macht, auf dem der Befehl läuft: ihn umschreiben, Daten daraus entnehmen, entscheiden, welche Befehle mit welchen Angaben laufen.",
+    "aiPromptPlaceholder": "Z. B. Finde Datum und Uhrzeit im Text und trage den Termin in meinen Kalender ein",
+    "aiAllowedCommands": "Befehle, die er ausführen darf",
+    "aiAllowedCommandsInfo": "Die KI führt diese Befehle ohne Rückfrage aus, wenn der Prompt sie braucht. Ein Befehl führt nie sich selbst aus und auch keinen KI-Befehl, der ihn aufgerufen hat.",
+    "aiNoOtherCommands": "Es gibt noch keine anderen Befehle.",
+    "aiMaxSteps": "Schrittlimit",
+    "aiMaxStepsInfo": "Wie oft die KI in einem Lauf antworten darf; jeder ausgeführte Befehl kostet einen Schritt."
   },
   "common": {
     "add": "Hinzufügen",
@@ -493,8 +507,6 @@
     "aiPromptSave": "Als Aufgabe speichern",
     "aiPromptSlotsFull": "Alle Aufgabentasten sind belegt: Geben Sie eine in den Einstellungen frei",
     "aiRequest": "KI-Anfrage",
-    "aiTask": "KI-Aufgabe",
-    "aiTaskPromptEmpty": "Diese Aufgabe hat keinen Prompt: Füllen Sie ihn in den Einstellungen aus",
     "cancelIntentHint": "Esc zum Abbrechen",
     "compareResult": "Ergebnis vergleichen",
     "copyOnFinish": "Kopieren",
@@ -713,7 +725,6 @@
     "hideAdvanced": "Erweiterte Einstellungen ausblenden",
     "hotkey": "Tastenkürzel",
     "hotkeyActions": {
-      "aiTasks": "KI-Aufgaben",
       "chat": "Ausgewählten Text als Kontext im KI-Chat verwenden",
       "correction": "Korrektur mit Vorschau",
       "editor": "Ausgewählten Text im Editor öffnen",
@@ -765,7 +776,7 @@
     "llmConnectionsHint": "Wohin Tyco KI-Anfragen sendet: Google, OpenRouter, DeepSeek oder ein beliebiger Server mit OpenAI-kompatibler API, etwa ein lokales Ollama oder LM Studio. Modelle werden innerhalb ihrer Verbindung hinzugefügt. Ein gespeicherter Schlüssel kommt in den sicheren Speicher und wird nie wieder angezeigt.",
     "llmTab": "LLM",
     "mainActionGroups": {
-      "aiTask": "KI-Aufgaben",
+      "aiCommands": "KI-Befehle",
       "basic": "Grundlegend",
       "commands": "Meine Befehle",
       "styling": "Textstilisierung",
@@ -774,7 +785,6 @@
       "unavailable": "Nicht verfügbar"
     },
     "mainActionStylingRemoved": "Gelöschter Textstil",
-    "mainActionTaskRemoved": "Gelöschte KI-Aufgabe",
     "mainActionTransformationRemoved": "Gelöschte Texttransformation",
     "mainActionsHint": "Aktionen des Hauptmenüs: Jede läuft mit ihrer eigenen Taste. Ziehen Sie die Karten, um ihre Tasten zu ändern.",
     "mainActionsTab": "Hauptaktionen",
@@ -1001,8 +1011,6 @@
     "taskModelChange": "Ändern",
     "taskModelInfo": "Das Modell wird auf der Seite „LLM“ zugewiesen.",
     "taskModelNone": "Nicht ausgewählt",
-    "tasksHint": "Anweisungen (Prompts), die die KI auf den Text anwendet. Im Aufgabenmenü läuft jede mit ihrer eigenen Taste; ziehen Sie die Karten, um ihre Tasten zu ändern.",
-    "tasksTab": "KI-Aufgaben",
     "temperature": "Temperatur",
     "terminalApps": "Weitere Terminals",
     "terminalAppsHint": "Fensterklassen von Terminals, die Tyco nicht erkennt, durch Kommas getrennt. In einem Terminal drückt Tyco nie Strg+C und legt das Ergebnis für dessen Auswahl in die Zwischenablage.",
@@ -1088,7 +1096,8 @@
     "quickCorrectionModeInfo": "Wie das Schnelleingabefenster die Textkorrektur handhabt.",
     "quickCorrectionLive": "Live-Vorschau",
     "quickCorrectionOnSubmit": "Beim Abschließen",
-    "quickCorrectionOff": "Aus"
+    "quickCorrectionOff": "Aus",
+    "aiCommands": "KI-Befehle"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1142,8 +1151,8 @@
     "voicePostProcessTimeout": "Sprachverarbeitung dauerte zu lange; Originaltext beibehalten"
   },
   "tools": {
-    "aiTask": "KI-Aufgabe",
-    "aiTaskDescription": "Wendet die Anweisung des Befehls mit dem LLM auf den Text an",
+    "aiTask": "KI-Befehl",
+    "aiTaskDescription": "Die KI führt Ihren Prompt aus und darf andere Befehle ausführen",
     "askInChat": "Im Chat fragen",
     "askInChatDescription": "Öffnet den Chat mit dem angehängten Text",
     "copy": "Kopieren",
