@@ -14,13 +14,14 @@ or required to work.
 
 ## 1. Целевые платформы
 
-| Платформа                       | Статус         | Комментарий                                                                  |
-| ------------------------------- | -------------- | ---------------------------------------------------------------------------- |
-| Linux, KDE Plasma 6, Wayland    | основная       | трекинг окон через KWin-скрипты, layer-shell, портал хоткеев                 |
-| Linux, X11 (любой EWMH-WM)      | поддерживается | трекинг окон по событиям корневого окна, ydotool или портал, xclip           |
-| Linux, GNOME / wlroots, Wayland | частично       | хоткеи через портал или конфиг композитора; вставка в окно, получившее фокус |
-| Windows 10 22H2+, 11            | partial        | UI Automation selection capture, HWND target, native clipboard, `SendInput`  |
-| macOS 13+                       | not supported  | backend kept compiling in CI; not tested or released for now                 |
+| Платформа                    | Статус         | Комментарий                                                                             |
+| ---------------------------- | -------------- | --------------------------------------------------------------------------------------- |
+| Linux, KDE Plasma 6, Wayland | основная       | трекинг окон через KWin-скрипты, layer-shell, портал хоткеев                            |
+| Linux, X11 (любой EWMH-WM)   | поддерживается | трекинг окон по событиям корневого окна, ydotool или портал, xclip                      |
+| Linux, wlroots, Wayland      | поддерживается | трекинг окон по протоколу wlr-foreign-toplevel, хоткеи через конфиг композитора         |
+| Linux, GNOME, Wayland        | частично       | хоткеи через портал; вставка в окно, получившее фокус                                   |
+| Windows 10 22H2+, 11         | partial        | WinEvent window tracker, UI Automation selection capture, native clipboard, `SendInput` |
+| macOS 13+                    | not supported  | backend kept compiling in CI; not tested or released for now                            |
 
 ARM64 (Windows on ARM, Apple Silicon, Linux aarch64) API не меняет: те же
 Win32, AppKit/Quartz, Wayland/X11/D-Bus. Отличаются только сборка и
@@ -55,8 +56,11 @@ platform/
                       Secret Service; без него ключи не сохраняются
   linux.rs, linux/
     dbus.rs           D-Bus API и колбэки KWin-трекера
-    kwin.rs           бэкенд трекера: KWin-скрипты (KDE Wayland)
+    kwin.rs           бэкенд трекера: KWin-скрипт и KWin WindowsRunner (KDE Wayland)
+    wlr_toplevel.rs   бэкенд трекера: zwlr_foreign_toplevel_management_v1 (wlroots)
     x11.rs            бэкенд трекера: события _NET_ACTIVE_WINDOW (X11)
+    readiness.rs      ожидание данных или остановки через poll(2), без таймеров
+    activation_token.rs  токен xdg-activation для показа своего окна
     text_injector.rs  нажатие клавиш: ydotool или портал RemoteDesktop
     remote_desktop.rs сессия портала RemoteDesktop и её restore token
     clipboard_restore.rs  снимок и восстановление буфера: wl-clipboard / xclip
@@ -64,6 +68,7 @@ platform/
     layer_shell.rs    gtk-layer-shell
     status_overlay.rs окно статуса на GTK
   windows.rs, windows/clipboard.rs, macos.rs  бэкенды этих ОС
+  windows/foreground_tracker.rs  бэкенд трекера: SetWinEventHook (Windows)
 ```
 
 ### Сессия (`session.rs`)
@@ -89,16 +94,46 @@ platform/
 
 Бэкенды:
 
-- **KWin** (`linux/kwin.rs`) — скрипт в KWin шлёт события по D-Bus, второй
-  скрипт активирует окно. Запускается из `dbus.rs`, когда занято имя
-  `org.tyco.Service`.
+- **KWin** (`linux/kwin.rs`) — скрипт в KWin шлёт события по D-Bus. Окно
+  активируется одним вызовом `org.kde.krunner1.Run("0_<id>")` на
+  `/WindowsRunner` KWin; если этот плагин выключен — одноразовым скриптом.
+  Несуществующее окно узнаётся сразу по пустому `getWindowInfo`. Запускается
+  из `dbus.rs`, когда занято имя `org.tyco.Service`. Перезапуск KWin
+  (Plasma перезапускает его после падения, не закрывая приложения) виден по
+  `NameOwnerChanged` для `org.kde.KWin`: трекер сразу сбрасывается и
+  поднимается заново, а не через 30-секундную проверку.
+- **wlroots** (`linux/wlr_toplevel.rs`) — протокол
+  `zwlr_foreign_toplevel_management_v1` (Sway, Hyprland, labwc, Wayfire,
+  river, niri): состояние `activated` и запрос `activate`. Свои окна — по
+  app_id (имя программы или идентификатор приложения). Протокол не видит
+  layer-shell-панель Tyco, поэтому трекер работает в режиме
+  `OwnFocus::ToplevelsOnly`, и фокус своих окон дополнительно спрашивается у GTK.
+- **Windows** (`windows/foreground_tracker.rs`) — out-of-context хуки
+  `EVENT_SYSTEM_FOREGROUND` и `EVENT_OBJECT_DESTROY` в потоке с циклом
+  сообщений. Свои окна — по PID. Рабочий стол (`Progman`, `WorkerW`) — «цели
+  нет». Оболочка, которая получает фокус мимоходом (панель задач при щелчке
+  по трею, Alt+Tab, Пуск, поиск, окна `WS_EX_NOACTIVATE`), не цель и не
+  стирает последнее окно пользователя. Закрытое окно забывается, поэтому
+  переиспользованный HWND не станет целью.
 - **X11** (`linux/x11.rs`) — `x11rb` (чистый Rust, без libxcb), подписка на
   `PropertyNotify` корневого окна: `_NET_ACTIVE_WINDOW` даёт активацию,
   разница `_NET_CLIENT_LIST` — закрытие. Своё окно узнаётся по `_NET_WM_PID`
   или `WM_CLASS`, чужое — по `_NET_WM_WINDOW_TYPE` NORMAL/DIALOG. Id окна
   десятичный. При потере соединения перезапускается с растущей
   паузой.
-- **Windows / macOS** — пока нет (см. §4).
+- **macOS** — пока нет.
+
+Пустой отчёт «фокуса нет ни у кого» композиторы шлют мимоходом между двумя
+окнами; он не стирает последнее чужое окно, это делает только фокус на окне
+рабочего стола или панели. Иначе переход «окно → пусто → Tyco» оставлял
+Tyco без цели.
+
+X11-трекер и наблюдатель PRIMARY спят в `poll(2)` на своём сокете или канале
+и на eventfd остановки (`linux/readiness.rs`), а не просыпаются каждые
+20 мс. Короткие запросы X11 используют одно общее соединение. Запрос
+`_NET_ACTIVE_WINDOW` уходит с source=2 (как от панели задач: Tyco
+активирует чужое окно по явной команде пользователя) и с настоящим временем
+сервера, а не с 0, который Mutter считает ошибкой клиента.
 
 Если трекер не запущен (WM без EWMH), X11 читает `_NET_ACTIVE_WINDOW`
 напрямую. Окно активируется запросом `_NET_ACTIVE_WINDOW` к оконному
@@ -127,13 +162,27 @@ resource id). Перед нажатием клавиш на X11 Tyco ждёт, �
 отпустит модификаторы: X11 хранит состояние клавиш каждой клавиатуры
 отдельно, и отпускание с виртуальной клавиатуры их не снимает.
 
+### Показ своего окна (Wayland)
+
+Композитор отдаёт фокус окну, только если оно предъявит токен
+`xdg-activation-v1`, полученный источником действия пользователя. Tyco
+принимает токен из сигнала `Activated` портала GlobalShortcuts (новые версии
+портала кладут его в `activation_token`), из `tyco-ctl open`
+(`XDG_ACTIVATION_TOKEN` или `DESKTOP_STARTUP_ID`) и из D-Bus-метода
+`OpenWithActivationToken`. Токен ждёт 5 секунд в
+`linux/activation_token.rs`, и ближайший `focus_window` передаёт его в GTK
+(`gtk_window_set_startup_id`), а GTK — композитору. Иконка в трее токена не
+даёт: Tauri показывает её через libayatana-appindicator, где нет метода
+`ProvideXdgActivationToken`. Для этого случая остаются перемаппинг окна и
+KWin-активатор своего окна.
+
 ### Вставка в другие окна (Linux)
 
 Вставка — это два независимых шага:
 
 1. **Окно-цель.** Трекер (KWin-скрипт или x11rb) знает окно, из которого
-   открыли Tyco, и возвращает ему фокус. Без трекера (GNOME, wlroots,
-   сломанный KWin) Tyco прячет своё окно и вставляет в окно, которое
+   открыли Tyco, и возвращает ему фокус. Без трекера (GNOME, композитор
+   без wlr-foreign-toplevel, сломанный KWin) Tyco прячет своё окно и вставляет в окно, которое
    получило фокус; настройки показывают это предупреждением. Замена
    выделения без трекера недоступна: нельзя проверить, что фокус остался в
    том же окне, а Ctrl+C в терминале прерывает программу.
@@ -169,14 +218,14 @@ resource id). Перед нажатием клавиш на X11 Tyco ждёт, �
 
 ## 3. Linux: особенности окружений
 
-| Возможность        | KDE Wayland            | GNOME Wayland                  | wlroots (Sway, Hyprland)                | X11                   |
-| ------------------ | ---------------------- | ------------------------------ | --------------------------------------- | --------------------- |
-| Глобальные хоткеи  | портал GlobalShortcuts | портал (GNOME 48+)             | конфиг композитора + `tyco-ctl`         | tauri global-shortcut |
-| Трекинг окон       | KWin-скрипт            | нет API                        | нет (Hyprland: IPC-сокет, Sway: i3-IPC) | x11rb                 |
-| Активация окна     | KWin-скрипт            | нет                            | IPC композитора                         | `_NET_ACTIVE_WINDOW`  |
-| Нажатие клавиш     | ydotool / портал       | ydotool / портал RemoteDesktop | ydotool                                 | ydotool / портал      |
-| Панель поверх окон | gtk-layer-shell        | нет layer-shell                | gtk-layer-shell                         | обычное окно          |
-| PRIMARY-выделение  | wl-paste               | wl-paste*                      | wl-paste                                | xclip                 |
+| Возможность        | KDE Wayland            | GNOME Wayland                  | wlroots (Sway, Hyprland)        | X11                   |
+| ------------------ | ---------------------- | ------------------------------ | ------------------------------- | --------------------- |
+| Глобальные хоткеи  | портал GlobalShortcuts | портал (GNOME 48+)             | конфиг композитора + `tyco-ctl` | tauri global-shortcut |
+| Трекинг окон       | KWin-скрипт            | нет API                        | wlr-foreign-toplevel            | x11rb                 |
+| Активация окна     | KWin WindowsRunner     | нет                            | wlr-foreign-toplevel `activate` | `_NET_ACTIVE_WINDOW`  |
+| Нажатие клавиш     | ydotool / портал       | ydotool / портал RemoteDesktop | ydotool                         | ydotool / портал      |
+| Панель поверх окон | gtk-layer-shell        | нет layer-shell                | gtk-layer-shell                 | обычное окно          |
+| PRIMARY-выделение  | wl-paste               | wl-paste*                      | wl-paste                        | xclip                 |
 
 \* Без протокола data-control GNOME не отдаёт буфер фоновому клиенту:
 `wl-paste` открывает своё окно и забирает фокус. Поэтому снимок буфера на
@@ -184,8 +233,8 @@ Wayland делается только в KDE.
 
 Направления на будущее:
 
-1. **wlroots** — бэкенды трекера на IPC Hyprland и i3-IPC Sway; ввод через
-   `wtype` (virtual-keyboard).
+1. **wlroots** — ввод через `wtype` (virtual-keyboard). COSMIC: свой
+   протокол `cosmic-toplevel-management`.
 2. **GNOME** — чужие окна недоступны без расширения Shell. Остаётся честная
    деградация: вставка через буфер обмена и уведомление.
 3. **UI по возможностям**: отдавать во фронтенд набор доступных функций
@@ -203,10 +252,13 @@ Wayland делается только в KDE.
 
 ### Windows
 
-- Трекер окон: `SetWinEventHook(EVENT_SYSTEM_FOREGROUND)` вместо снимка
-  `GetForegroundWindow` в момент активации; свои окна — по PID процесса.
-- Активация: `SetForegroundWindow` часто отклоняется правилами foreground lock;
-  нужен `AttachThreadInput` или `AllowSetForegroundWindow`.
+- Трекер окон сделан (`windows/foreground_tracker.rs`, см. §2).
+- Активация: Windows отдаёт `SetForegroundWindow` только процессу, у которого
+  фокус. Поэтому Tyco передаёт фокус цели, пока его окно ещё активно, и
+  только потом прячется (`platform::focus_paste_target`,
+  `RESTORES_FOCUS_BEFORE_HIDING`). `AttachThreadInput` не используем:
+  Microsoft не рекомендует этот приём, потоки начинают делить состояние
+  ввода и могут зависнуть вместе с целевым окном.
 - UIPI: ввод в окна, запущенные от администратора, недоступен — сообщать об
   этом, а не молча ничего не делать.
 - Буфер обмена: нативный API вместо запуска `powershell` (300+ мс на старт).
@@ -286,7 +338,7 @@ Rust-зависимости, запуск контейнера использу�
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Xvfb + Openbox           | Настоящий x11rb-трекер, своё/чужое окно, активация через x11rb и вставка XSendEvent, xclip и PRIMARY, восстановление буфера, новая пользовательская копия, закрытие цели |
 | KWin virtual + XWayland  | Production KWin-скрипты и D-Bus-отчёты, выбор и активация цели, вставка через XSendEvent в XWayland-клиент, wl-clipboard/PRIMARY, восстановление буфера и закрытие цели  |
-| Sway headless + libinput | wl-clipboard/PRIMARY, настоящий ydotool: вставка без трекера в окно с фокусом, отказ снимка буфера вне KDE                                                               |
+| Sway headless + libinput | wlr-foreign-toplevel-трекер, своё/чужое окно, wl-clipboard/PRIMARY, настоящий ydotool: вставка в цель после её активации, закрытие цели, отказ снимка буфера вне KDE     |
 
 Тестовый редактор — отдельный GTK-процесс; он записывает содержимое поля в
 файл, поэтому проверяется текст, действительно полученный чужим окном.

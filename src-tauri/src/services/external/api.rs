@@ -182,9 +182,16 @@ fn dispatch_inner(app: &AppHandle, request: Request, source: ActivationSource) -
             mode,
             text,
             selection,
-        } => match open(app, &mode, text, selection, source) {
-            Ok(()) => Response::success(),
-            Err(error) => *error,
-        },
+            activation_token,
+        } => {
+            // the window shown for this request takes it
+            if let Some(token) = activation_token {
+                crate::services::platform::offer_activation_token(token);
+            }
+            match open(app, &mode, text, selection, source) {
+                Ok(()) => Response::success(),
+                Err(error) => *error,
+            }
+        }
     }
 }

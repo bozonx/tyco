@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 use serde_json::json;
 
-use super::{clipboard_restore, kwin, text_injector, x11};
+use super::{clipboard_restore, kwin, text_injector, wlr_toplevel, x11};
 use crate::services::background::{BackgroundServices, StoppableService};
 use crate::services::platform::window_tracker::{tracker, WindowKind};
 
@@ -210,24 +210,20 @@ fn integration_headless_platform() {
     } else {
         if is_x11 {
             x11::spawn_tracker(&services.0, "tyco-test-own".into(), |_| {}).unwrap();
+        } else {
+            wlr_toplevel::spawn_tracker(&services.0, vec!["tyco-test-own".into()], |_| {}).unwrap();
         }
         None
     };
-    if session != "sway" {
-        eventually("tracker startup", || tracker().is_running());
-    }
+    eventually("tracker startup", || tracker().is_running());
 
     let foreign = Editor::start(&root, "tyco-test-foreign");
-    let target = if session != "sway" {
-        eventually("foreign activation", || {
-            tracker()
-                .active_window()
-                .is_some_and(|window| window.class.eq_ignore_ascii_case(foreign.name))
-        });
-        Some(tracker().target().expect("Foreign paste target"))
-    } else {
-        None
-    };
+    eventually("foreign activation", || {
+        tracker()
+            .active_window()
+            .is_some_and(|window| window.class.eq_ignore_ascii_case(foreign.name))
+    });
+    let target = Some(tracker().target().expect("Foreign paste target"));
 
     // Real PRIMARY is distinct from CLIPBOARD, and capture uses the platform API.
     copy("Clipboard sentinel", is_x11);
@@ -251,19 +247,29 @@ fn integration_headless_platform() {
     let injector = text_injector::SystemTextInjector::detect();
     let config = json!({"windowInsertion": {"linux": {"pasteShortcut": "Ctrl+V"}}});
     if session == "sway" {
-        assert!(!tracker().is_running());
-        assert!(super::capture_foreground_target().is_none());
+        // the foreign toplevel protocol tells the window and activates it
+        assert_eq!(super::capture_foreground_target(), target);
         assert!(clipboard_restore::snapshot().is_none());
         assert_eq!(
             text_injector::status().target,
-            crate::services::platform::text_injector::TargetTracking::FocusReturn
+            crate::services::platform::text_injector::TargetTracking::Tracked
         );
-        // without a tracker the paste goes to the focused window
-        copy("Focused ydotool paste", false);
-        injector.inject_paste(&config, None).unwrap();
+        let own = Editor::start(&root, "tyco-test-own");
+        eventually("own window activation", || tracker().is_own_window_active());
+        assert_eq!(
+            tracker().target(),
+            target,
+            "Own window must preserve foreign target"
+        );
+        copy("Tracked ydotool paste", false);
+        injector.inject_paste(&config, target.as_deref()).unwrap();
         eventually("real ydotool paste in foreign Wayland client", || {
-            foreign.text().as_deref() == Some("Focused ydotool paste")
+            foreign.text().as_deref() == Some("Tracked ydotool paste")
         });
+        assert_eq!(own.text().as_deref(), Some(""));
+        drop(foreign);
+        eventually("closed target forgotten", || tracker().target().is_none());
+        assert!(wlr_toplevel::activate_window(target.as_deref().unwrap()).is_err());
     } else {
         let snapshot = clipboard_restore::snapshot().expect("Real clipboard snapshot");
         let own = Editor::start(&root, "tyco-test-own");

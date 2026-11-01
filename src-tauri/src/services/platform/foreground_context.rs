@@ -27,6 +27,29 @@ pub fn restore_foreground_target(target: &ForegroundTarget) {
     restore_foreground_target_impl(target.as_platform_id());
 }
 
+/// Gives `target` the focus before Tyco hides the window a paste starts from,
+/// where the system lets only the foreground process hand the focus over
+/// (Windows). Elsewhere the paste activates the target itself.
+pub fn focus_paste_target(target: &ForegroundTarget) {
+    #[cfg(target_os = "windows")]
+    super::windows::focus_paste_target(target.as_platform_id());
+    #[cfg(not(target_os = "windows"))]
+    let _ = target;
+}
+
+/// Keeps the activation token of the request that is about to show a Tyco
+/// window, see `linux::activation_token`. Other systems have none.
+pub fn offer_activation_token(token: String) {
+    #[cfg(target_os = "linux")]
+    super::linux::activation_token::offer(token);
+    #[cfg(not(target_os = "linux"))]
+    let _ = token;
+}
+
+/// Whether focus goes back to the target before Tyco hides its window rather
+/// than after, see `focus_paste_target`.
+pub const RESTORES_FOCUS_BEFORE_HIDING: bool = cfg!(target_os = "windows");
+
 pub async fn capture_selection(target: Option<ForegroundTarget>) -> Option<String> {
     capture_selection_impl(target.map(ForegroundTarget::into_platform_id)).await
 }

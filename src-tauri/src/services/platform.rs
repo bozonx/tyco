@@ -35,7 +35,8 @@ pub mod windows;
 pub(crate) use clipboard::ClipboardSnapshot;
 pub use file_manager::{open_dir, open_file, open_web_page};
 pub use foreground_context::{
-    capture_foreground_target, capture_selection, restore_foreground_target, ForegroundTarget,
+    capture_foreground_target, capture_selection, focus_paste_target, offer_activation_token,
+    restore_foreground_target, ForegroundTarget, RESTORES_FOCUS_BEFORE_HIDING,
 };
 pub use panel_surface::{
     apply_panel_surface, attach_panel_surface, disable_panel_keyboard, focus_window,
@@ -69,17 +70,28 @@ pub fn user_runtime_dir() -> Option<std::path::PathBuf> {
     std::env::var_os("XDG_RUNTIME_DIR").map(std::path::PathBuf::from)
 }
 
-/// Starts what follows the desktop session: the D-Bus API, the window
-/// tracker and the primary selection watcher on Linux, and waits briefly for
-/// the tracker to report the window Tyco was started from. `on_window_change`
-/// hears of each window the user turns to or closes.
+/// Starts what follows the desktop session: the window tracker, plus the
+/// D-Bus API and the primary selection watcher on Linux, and waits briefly
+/// for the tracker to report the window Tyco was started from.
+/// `on_window_change` hears of each window the user turns to or closes.
 pub fn start_session_services(
     app: &tauri::AppHandle,
     on_window_change: fn(&tauri::AppHandle, window_tracker::TrackerChange),
 ) -> Result<(), crate::errors::AppError> {
     #[cfg(target_os = "linux")]
     return linux::start_session_services(app, on_window_change);
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "windows")]
+    {
+        use tauri::Manager;
+        let handle = app.clone();
+        windows::foreground_tracker::spawn_tracker(
+            &app.state::<crate::services::background::BackgroundServices>(),
+            move |change| on_window_change(&handle, change),
+        )?;
+        window_tracker::wait_for_startup(std::time::Duration::from_millis(800));
+        Ok(())
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
     {
         let _ = (app, on_window_change);
         Ok(())

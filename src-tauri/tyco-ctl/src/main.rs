@@ -124,6 +124,7 @@ fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
                 mode,
                 text,
                 selection,
+                activation_token: None,
             };
         }
         "replace" => match &args[1..] {
@@ -345,6 +346,15 @@ fn wants_json_errors(args: &[String]) -> bool {
     false
 }
 
+/// The token a launcher hands the program it starts, for the window Tyco
+/// opens: `XDG_ACTIVATION_TOKEN` on Wayland, `DESKTOP_STARTUP_ID` on X11.
+fn activation_token_from_env() -> Option<String> {
+    ["XDG_ACTIVATION_TOKEN", "DESKTOP_STARTUP_ID"]
+        .into_iter()
+        .filter_map(|name| env::var(name).ok())
+        .find(|token| !token.is_empty())
+}
+
 fn run() -> Result<(), CliError> {
     let args = env::args().skip(1).collect::<Vec<_>>();
     if let Some(help) = help(&args) {
@@ -361,6 +371,12 @@ fn run() -> Result<(), CliError> {
     }
     let mut command = parse_cli_invocation(&args)
         .map_err(|error| CliError::new(ErrorCode::InvalidInput, error))?;
+    if let Request::Open {
+        activation_token, ..
+    } = &mut command.request
+    {
+        *activation_token = activation_token_from_env();
+    }
     if command.stdin {
         let mut text = String::new();
         io::stdin()

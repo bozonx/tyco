@@ -1,4 +1,5 @@
 pub(crate) mod clipboard;
+pub(crate) mod foreground_tracker;
 
 use std::mem::size_of;
 use std::sync::atomic::{AtomicIsize, Ordering};
@@ -11,39 +12,54 @@ use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
     VK_LMENU, VK_LSHIFT, VK_LWIN, VK_RCONTROL, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SHIFT,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    GetClassNameW, GetForegroundWindow, GetWindowThreadProcessId, IsIconic, IsWindow,
-    IsWindowVisible, SetForegroundWindow, ShowWindow, SW_RESTORE,
+    GetForegroundWindow, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible,
+    SetForegroundWindow, ShowWindow, SW_RESTORE,
 };
 
 use crate::errors::AppError;
+use crate::services::platform::window_tracker::{tracker, WindowKind};
 
 /// How long PowerShell may take to read the selection of a window.
 const SELECTION_SCRIPT_TIMEOUT: Duration = Duration::from_secs(3);
 
+/// The foreground window when it is an application window of another
+/// process; never Tyco's, the desktop or a shell window.
 pub(crate) fn focused_foreground_target() -> Option<String> {
+    // SAFETY: plain query
     let window_handle = unsafe { GetForegroundWindow() };
-    if window_handle.is_null() {
-        return None;
-    }
-    let mut process_id = 0;
-    unsafe { GetWindowThreadProcessId(window_handle, &mut process_id) };
-    (process_id != std::process::id()).then(|| (window_handle as isize).to_string())
+    let class = foreground_tracker::class_name(window_handle);
+    (foreground_tracker::classify(window_handle, &class)
+        == foreground_tracker::Focus::Window(WindowKind::Foreign))
+    .then(|| (window_handle as isize).to_string())
 }
 
+/// The window text goes to: the tracker knows the one the user worked in
+/// before Tyco. Without it the foreground window is taken, or the last
+/// application window seen at an earlier activation when Tyco has the focus.
 pub fn capture_foreground_target() -> Option<String> {
+    use foreground_tracker::Focus;
     static LAST_FOREGROUND_TARGET: AtomicIsize = AtomicIsize::new(0);
-    let window_handle = unsafe { GetForegroundWindow() };
-    if window_handle.is_null() {
-        return None;
+
+    if tracker().is_running() {
+        return tracker().target();
     }
-    let mut process_id = 0;
-    unsafe { GetWindowThreadProcessId(window_handle, &mut process_id) };
-    let target = if process_id == std::process::id() {
-        LAST_FOREGROUND_TARGET.load(Ordering::SeqCst)
-    } else {
-        LAST_FOREGROUND_TARGET.store(window_handle as isize, Ordering::SeqCst);
-        window_handle as isize
+    // SAFETY: plain query
+    let window_handle = unsafe { GetForegroundWindow() };
+    let class = foreground_tracker::class_name(window_handle);
+    let target = match foreground_tracker::classify(window_handle, &class) {
+        Focus::Window(WindowKind::Foreign) => {
+            LAST_FOREGROUND_TARGET.store(window_handle as isize, Ordering::SeqCst);
+            window_handle as isize
+        }
+        Focus::Window(WindowKind::Own) | Focus::Passing => {
+            LAST_FOREGROUND_TARGET.load(Ordering::SeqCst)
+        }
+        Focus::Window(WindowKind::Other) => {
+            LAST_FOREGROUND_TARGET.store(0, Ordering::SeqCst);
+            0
+        }
     };
+    // SAFETY: plain query; any value is accepted
     (target != 0 && unsafe { IsWindow(target as HWND) } != 0).then(|| target.to_string())
 }
 
@@ -125,29 +141,59 @@ pub fn inject_paste(
 }
 
 /// Gives keyboard focus back to `target_window_handle` when it is still a live,
-/// visible, non-minimized window of another process.
+/// visible, non-minimized window of another process. Called while a Tyco
+/// window still has the focus: Windows lets the foreground process hand it
+/// over, and may refuse a process in the background.
 pub fn restore_foreground_target(target_window_handle: &str) {
-    let Some(window_handle) = target_window_handle
+    let Some(window_handle) = parse_window(target_window_handle) else {
+        return;
+    };
+    // SAFETY: plain queries; any handle is accepted
+    if unsafe { IsWindowVisible(window_handle) } == 0 || unsafe { IsIconic(window_handle) } != 0 {
+        return;
+    }
+    focus_window(window_handle);
+}
+
+/// Brings the paste target to the foreground before Tyco hides its window,
+/// for the reason `restore_foreground_target` tells. A minimized window is
+/// restored first: it would take the focus without showing itself. Best
+/// effort: the paste checks the focus again.
+pub fn focus_paste_target(target_window_handle: &str) {
+    let Some(window_handle) = parse_window(target_window_handle) else {
+        return;
+    };
+    if ensure_not_elevated(window_handle).is_err() {
+        return;
+    }
+    // SAFETY: plain query and a show request for a live window
+    if unsafe { IsIconic(window_handle) } != 0 {
+        unsafe { ShowWindow(window_handle, SW_RESTORE) };
+    }
+    focus_window(window_handle);
+}
+
+/// A live window of another process, by its decimal handle.
+fn parse_window(window_handle: &str) -> Option<HWND> {
+    let window_handle = window_handle
         .parse::<isize>()
         .ok()
         .filter(|&value| value != 0)
-        .map(|value| value as HWND)
-    else {
-        return;
-    };
-    if unsafe { IsWindow(window_handle) } == 0
-        || unsafe { IsWindowVisible(window_handle) } == 0
-        || unsafe { IsIconic(window_handle) } != 0
-    {
-        return;
+        .map(|value| value as HWND)?;
+    // SAFETY: plain query; any handle is accepted
+    if unsafe { IsWindow(window_handle) } == 0 {
+        return None;
     }
     let mut process_id = 0;
+    // SAFETY: plain query of a live window
     unsafe { GetWindowThreadProcessId(window_handle, &mut process_id) };
-    if process_id == std::process::id() || unsafe { GetForegroundWindow() } == window_handle {
-        return;
-    }
-    unsafe {
-        SetForegroundWindow(window_handle);
+    (process_id != std::process::id()).then_some(window_handle)
+}
+
+fn focus_window(window_handle: HWND) {
+    // SAFETY: plain query and a focus request for a live window
+    if unsafe { GetForegroundWindow() } != window_handle {
+        unsafe { SetForegroundWindow(window_handle) };
     }
 }
 
@@ -185,15 +231,11 @@ pub(crate) enum KeyAction {
 /// The keys of window `window_handle`, told by its class; `terminal_apps`
 /// are classes the user marks as terminals.
 pub(crate) fn window_keys(window_handle: HWND, terminal_apps: &[String]) -> WindowKeys {
-    let mut class = [0u16; 256];
-    let length = unsafe { GetClassNameW(window_handle, class.as_mut_ptr(), class.len() as i32) };
-    if length <= 0 {
+    let class = foreground_tracker::class_name(window_handle);
+    if class.is_empty() {
         return WindowKeys::Ctrl;
     }
-    keys_for_class(
-        &String::from_utf16_lossy(&class[..length as usize]),
-        terminal_apps,
-    )
+    keys_for_class(&class, terminal_apps)
 }
 
 /// The keys of the window `id`, a decimal HWND.

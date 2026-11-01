@@ -289,7 +289,7 @@ fn hide_window_with_refocus(
                 "The window activation is no longer current".into(),
             ));
         }
-        let target = if should_restore_target_focus(
+        let mut target = if should_restore_target_focus(
             restore_focus,
             &label,
             app.state::<PanelLayerState>().supported,
@@ -301,6 +301,12 @@ fn hide_window_with_refocus(
         } else {
             None
         };
+        if crate::services::platform::RESTORES_FOCUS_BEFORE_HIDING {
+            // while a Tyco window still has the focus to hand over
+            if let Some(target) = target.take() {
+                crate::services::platform::restore_foreground_target(&target);
+            }
+        }
         hide_on_main_thread(app)?;
         if let Some(target) = target {
             let _ = app

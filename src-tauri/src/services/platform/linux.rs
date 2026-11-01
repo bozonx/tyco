@@ -1,8 +1,10 @@
 //! Linux backends. Which one serves a call depends on the session, see
 //! `super::session`: X11 lets Tyco find and activate any window, while on
-//! Wayland only KDE Plasma does, via KWin scripts. Keys are pressed the same
-//! way in both, see `text_injector`.
+//! Wayland KDE Plasma does over KWin's D-Bus API, and wlroots compositors
+//! through the foreign toplevel protocol. Keys are pressed the same way in
+//! all of them, see `text_injector`.
 
+pub mod activation_token;
 mod backoff;
 mod binary_paths;
 pub mod clipboard_restore;
@@ -13,9 +15,11 @@ pub(crate) mod hotkeys_portal;
 pub mod kwin;
 pub mod layer_shell;
 pub mod primary_selection;
+mod readiness;
 pub mod remote_desktop;
 pub(crate) mod status_overlay;
 pub mod text_injector;
+pub mod wlr_toplevel;
 pub mod x11;
 
 use serde_json::Value;
@@ -67,10 +71,24 @@ pub fn start_session_services(
             on_window_change(&handle, change)
         })?;
     }
+    if session.is_wayland() && !session.is_kde_wayland() {
+        // GTK names a Wayland window after the application id or the
+        // program class, which is the program name capitalized
+        let own_names = vec![
+            gtk::glib::prgname().unwrap_or_default().to_string(),
+            app.config().identifier.clone(),
+        ];
+        let handle = app.clone();
+        wlr_toplevel::spawn_tracker(&services, own_names, move |change| {
+            on_window_change(&handle, change)
+        })?;
+    }
     if session.is_wayland() {
         primary_selection::spawn_watcher(&services)?;
     }
-    if session.is_x11() || session.is_kde_wayland() {
+    // every X11 and Wayland session starts a tracker backend, which reports
+    // when it runs or gives up
+    if session.is_x11() || session.is_wayland() {
         super::window_tracker::wait_for_startup(TRACKER_STARTUP_WAIT);
     }
     Ok(())

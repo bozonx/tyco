@@ -166,6 +166,12 @@ pub fn focus_window(window: &WebviewWindow) -> Result<(), AppError> {
         }
         native.show_all();
         native.deiconify();
+        // GTK hands the token to the compositor through xdg-activation-v1,
+        // which then gives the window the focus rather than just marking it
+        if let Some(token) = super::linux::activation_token::take() {
+            use gtk::prelude::GtkWindowExt;
+            native.set_startup_id(&token);
+        }
         native.present();
         if is_main {
             let own_class = gtk::glib::prgname()

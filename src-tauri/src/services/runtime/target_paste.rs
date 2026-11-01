@@ -14,6 +14,9 @@ trait TargetPasteHost {
     type Snapshot;
     fn activation_id(&self) -> u64;
     fn clipboard_snapshot(&self) -> Option<Self::Snapshot>;
+    /// Hands the focus to the target while Tyco still has it, where only
+    /// the foreground process may (see `platform::focus_paste_target`).
+    fn hand_over_focus(&self);
     fn hide(&self) -> Result<(), AppError>;
     fn copy(&self, text: &str) -> Result<(), AppError>;
     fn release_focus(&self);
@@ -37,6 +40,7 @@ fn paste_with<H: TargetPasteHost>(
         return Err(stale("The insertion activation is no longer current"));
     }
     let previous = host.clipboard_snapshot();
+    host.hand_over_focus();
     host.hide()?;
     host.copy(&text)?;
     let give_back = |previous: Option<H::Snapshot>| {
@@ -89,6 +93,11 @@ impl TargetPasteHost for AppPasteHost<'_> {
     }
     fn clipboard_snapshot(&self) -> Option<ClipboardSnapshot> {
         platform::clipboard::snapshot()
+    }
+    fn hand_over_focus(&self) {
+        if let Some(target) = &self.target {
+            platform::focus_paste_target(target);
+        }
     }
     fn hide(&self) -> Result<(), AppError> {
         hide_window_without_refocus(self.app, self.window_label.clone(), self.activation_id)
@@ -167,6 +176,9 @@ mod tests {
         fn clipboard_snapshot(&self) -> Option<()> {
             self.has_snapshot.then_some(())
         }
+        fn hand_over_focus(&self) {
+            self.calls.borrow_mut().push("hand-over");
+        }
         fn hide(&self) -> Result<(), AppError> {
             self.step("hide", 1);
             Ok(())
@@ -208,7 +220,14 @@ mod tests {
         paste_with(&host, 0, "text".into()).unwrap();
         assert_eq!(
             *host.calls.borrow(),
-            ["hide", "copy", "focus", "inject", "restore-later"]
+            [
+                "hand-over",
+                "hide",
+                "copy",
+                "focus",
+                "inject",
+                "restore-later"
+            ]
         );
     }
 
@@ -225,8 +244,8 @@ mod tests {
     #[test]
     fn a_newer_activation_gives_the_clipboard_back() {
         for (change_after, expected) in [
-            (2, vec!["hide", "copy", "restore-now"]),
-            (3, vec!["hide", "copy", "focus", "restore-now"]),
+            (2, vec!["hand-over", "hide", "copy", "restore-now"]),
+            (3, vec!["hand-over", "hide", "copy", "focus", "restore-now"]),
         ] {
             let host = Host {
                 change_after: Some(change_after),
@@ -245,7 +264,14 @@ mod tests {
         assert!(paste_with(&host, 0, "text".into()).is_err());
         assert_eq!(
             *host.calls.borrow(),
-            ["hide", "copy", "focus", "inject", "restore-now"]
+            [
+                "hand-over",
+                "hide",
+                "copy",
+                "focus",
+                "inject",
+                "restore-now"
+            ]
         );
     }
 
@@ -256,7 +282,10 @@ mod tests {
             ..with_snapshot()
         };
         assert!(paste_with(&host, 0, "text".into()).is_err());
-        assert_eq!(*host.calls.borrow(), ["hide", "copy", "focus", "inject"]);
+        assert_eq!(
+            *host.calls.borrow(),
+            ["hand-over", "hide", "copy", "focus", "inject"]
+        );
     }
 
     #[test]
@@ -266,12 +295,12 @@ mod tests {
             ..Host::default()
         };
         assert!(paste_with(&host, 0, "text".into()).is_err());
-        assert_eq!(*host.calls.borrow(), ["hide", "copy"]);
+        assert_eq!(*host.calls.borrow(), ["hand-over", "hide", "copy"]);
         let host = Host {
             copy_fails: true,
             ..with_snapshot()
         };
         assert!(paste_with(&host, 0, "text".into()).is_err());
-        assert_eq!(*host.calls.borrow(), ["hide", "copy"]);
+        assert_eq!(*host.calls.borrow(), ["hand-over", "hide", "copy"]);
     }
 }

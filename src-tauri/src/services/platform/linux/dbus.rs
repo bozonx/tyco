@@ -89,6 +89,22 @@ impl TycoDbus {
         self.open_with(mode, None, true).await
     }
 
+    /// Opens the window of `mode`, letting it take the focus with the
+    /// `xdg-activation-v1` token the caller got from the compositor.
+    async fn open_with_activation_token(
+        &self,
+        mode: String,
+        activation_token: String,
+    ) -> Result<(), ApiError> {
+        self.dispatch(Request::Open {
+            mode,
+            text: None,
+            selection: false,
+            activation_token: (!activation_token.is_empty()).then_some(activation_token),
+        })
+        .await
+    }
+
     /// Runs the library command `id` as the command launcher does: it asks
     /// for input or confirmation when needed and returns the result to the caller.
     async fn run_command(&self, id: String) -> Result<(), ApiError> {
@@ -134,6 +150,7 @@ impl TycoDbus {
             mode,
             text,
             selection,
+            activation_token: None,
         })
         .await
     }

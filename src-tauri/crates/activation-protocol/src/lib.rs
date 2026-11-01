@@ -67,6 +67,12 @@ pub enum Request {
         text: Option<String>,
         #[serde(default)]
         selection: bool,
+        /// The `xdg-activation-v1` (or X11 startup notification) token the
+        /// caller was started with, so that the compositor lets the window
+        /// take the focus. Left out when there is none, so that older
+        /// versions still read the request.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        activation_token: Option<String>,
     },
     DescribeCommand {
         target: String,
@@ -335,12 +341,33 @@ mod tests {
     }
 
     #[test]
+    fn an_open_request_without_a_token_keeps_its_old_form() {
+        let request = Request::Open {
+            mode: "editor".into(),
+            text: None,
+            selection: false,
+            activation_token: None,
+        };
+        assert_eq!(
+            serde_json::to_string(&request).unwrap(),
+            r#"{"command":"open","mode":"editor","text":null,"selection":false}"#
+        );
+    }
+
+    #[test]
     fn requests_round_trip() {
         for request in [
             Request::Open {
                 mode: "editor".into(),
                 text: None,
                 selection: false,
+                activation_token: None,
+            },
+            Request::Open {
+                mode: "quickInput".into(),
+                text: None,
+                selection: false,
+                activation_token: Some("kwin-42".into()),
             },
             Request::Run {
                 request: RunRequest {

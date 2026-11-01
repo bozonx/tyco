@@ -82,8 +82,8 @@ fn no_target_error() -> SelectionRunError {
     let session = session::current();
     let message = if session.is_kde_wayland() && !tracker().is_running() {
         "Replacing a selection needs the KWin window tracker, which is not running"
-    } else if session.is_wayland() && !session.is_kde_wayland() {
-        "Replacing a selection on Wayland needs KDE Plasma: this desktop does not tell Tyco which window has the focus"
+    } else if session.is_wayland() && !tracker().is_running() {
+        "Replacing a selection on Wayland needs KDE Plasma or a compositor with the wlr foreign toplevel protocol: this desktop does not tell Tyco which window has the focus"
     } else {
         "No application window has the focus"
     };

@@ -1,7 +1,9 @@
-//! Foreign windows on KDE Plasma under Wayland. No Wayland protocol lets a
-//! regular client learn or activate another client's window, but KWin scripts
-//! can do both: a long-lived tracker script reports every window activation
-//! back to Tyco over D-Bus, and a one-shot script activates a window by its id.
+//! Foreign windows on KDE Plasma under Wayland. KWin offers no Wayland
+//! protocol that lets a regular client learn or activate another client's
+//! window, but it can do both over D-Bus: a long-lived tracker script reports
+//! every window activation back to Tyco, and the window runner KWin serves to
+//! KRunner activates a window by its id. A one-shot script activates it where
+//! that runner is disabled.
 
 use crate::locks::MutexExt;
 use std::path::PathBuf;
@@ -14,6 +16,10 @@ use crate::errors::AppError;
 use crate::services::platform::window_tracker::{finish_startup, new_session, tracker};
 
 const SCRIPTING_PATH: &str = "/Scripting";
+const RUNNER_PATH: &str = "/WindowsRunner";
+const RUNNER_INTERFACE: &str = "org.kde.krunner1";
+/// The match id prefix of KWin's window runner for activating a window.
+const RUNNER_ACTIVATE: &str = "0_";
 const SCRIPTING_INTERFACE: &str = "org.kde.kwin.Scripting";
 const SCRIPT_INTERFACE: &str = "org.kde.kwin.Script";
 const TRACKER_SCRIPT_NAME: &str = "tyco-window-tracker";
@@ -24,6 +30,7 @@ const ACTIVATION_TIMEOUT: Duration = Duration::from_secs(2);
 /// script failed, e.g. on Plasma 5 whose scripting API differs.
 const TRACKER_START_TIMEOUT: Duration = Duration::from_secs(2);
 /// How often the supervisor checks that KWin still runs the tracker script.
+/// A restart of KWin itself is noticed at once, see `watch_kwin_owner`.
 const TRACKER_CHECK_INTERVAL: Duration = Duration::from_secs(30);
 /// Retries after a failed start.
 const TRACKER_RESTART: Backoff = Backoff::new(Duration::from_secs(5), Duration::from_secs(120));
@@ -139,15 +146,31 @@ const OWN_ACTIVATOR_SCRIPT: &str = r#"
 })();
 "#;
 
+/// What wakes the supervisor before its next check.
+#[derive(Debug, PartialEq, Eq)]
+enum SupervisorEvent {
+    Stopped,
+    /// KWin left the bus (`false`) or took its name again (`true`).
+    KwinPresent(bool),
+}
+
 /// Keeps the tracker script running for the lifetime of the process: starts
 /// it, retries a failed start with a growing delay, and starts it again once
-/// KWin no longer runs it. `own_class` is the resource class of Tyco windows.
-/// Must run once Tyco owns its D-Bus name, otherwise the reports of the script
-/// get lost. Cancellation unloads the script before the supervisor exits.
+/// KWin no longer runs it or KWin itself was restarted. `own_class` is the
+/// resource class of Tyco windows. Must run once Tyco owns its D-Bus name,
+/// otherwise the reports of the script get lost. Cancellation unloads the
+/// script before the supervisor exits.
 pub fn supervise_tracker(own_class: &str, stop: &crate::services::background::StopToken) {
+    let (events, wakeups) = std::sync::mpsc::channel();
+    forward_stop(stop.clone(), events.clone());
+    if let Err(error) = watch_kwin_owner(events) {
+        log::debug!("Not watching KWin restarts: {error}");
+    }
     let mut failures = 0u32;
+    let mut restart = false;
     while !stop.is_stopped() {
-        if !tracker_alive() {
+        if restart || !tracker_alive() {
+            restart = false;
             match start_tracker(own_class) {
                 Ok(()) => {
                     if failures == 0 {
@@ -168,15 +191,72 @@ pub fn supervise_tracker(own_class: &str, stop: &crate::services::background::St
             }
             finish_startup();
         }
-        if stop.wait(if failures == 0 {
+        let delay = if failures == 0 {
             TRACKER_CHECK_INTERVAL
         } else {
             TRACKER_RESTART.delay(failures)
-        }) {
-            break;
+        };
+        match wakeups.recv_timeout(delay) {
+            Ok(SupervisorEvent::Stopped) => break,
+            Ok(SupervisorEvent::KwinPresent(false)) => {
+                // its windows and the script are gone with it
+                log::info!("KWin left the session bus; window tracking pauses");
+                tracker().reset(false, String::new());
+            }
+            Ok(SupervisorEvent::KwinPresent(true)) => {
+                log::info!("KWin is back on the session bus; starting the window tracker");
+                failures = 0;
+                restart = true;
+            }
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
         }
     }
     stop_tracker();
+}
+
+/// Turns the cancellation of `stop` into an event, so that the supervisor
+/// waits on one channel instead of polling for it.
+fn forward_stop(
+    stop: crate::services::background::StopToken,
+    events: std::sync::mpsc::Sender<SupervisorEvent>,
+) {
+    let spawned = std::thread::Builder::new()
+        .name("kwin-tracker-stop".into())
+        .spawn(move || {
+            while !stop.wait(Duration::from_secs(3600)) {}
+            let _ = events.send(SupervisorEvent::Stopped);
+        });
+    if let Err(error) = spawned {
+        log::warn!("Could not watch for the KWin tracker stop: {error}");
+    }
+}
+
+/// Reports each change of the owner of KWin's bus name: a restarted KWin,
+/// which Plasma does after a crash while applications keep running, has lost
+/// the tracker script and every window id. The thread blocks on the signal
+/// until the process exits, or until the supervisor is gone.
+fn watch_kwin_owner(events: std::sync::mpsc::Sender<SupervisorEvent>) -> Result<(), AppError> {
+    let connection = session()?;
+    let proxy = zbus::blocking::fdo::DBusProxy::new(&connection).map_err(dbus_error)?;
+    let changes = proxy
+        .receive_name_owner_changed_with_args(&[(0, KWIN_SERVICE)])
+        .map_err(dbus_error)?;
+    std::thread::Builder::new()
+        .name("kwin-owner-watch".into())
+        .spawn(move || {
+            let _connection = connection;
+            for change in changes {
+                let Ok(args) = change.args() else {
+                    continue;
+                };
+                let present = args.new_owner().is_some();
+                if events.send(SupervisorEvent::KwinPresent(present)).is_err() {
+                    return;
+                }
+            }
+        })?;
+    Ok(())
 }
 
 /// Whether the tracker runs as far as KWin can tell. A failed check counts
@@ -253,8 +333,8 @@ pub fn stop_tracker() {
 
 /// Activates the window and waits until KWin reports it focused.
 pub fn activate_window(id: &str) -> Result<(), AppError> {
-    // the activator script has a single name and file: a second activation
-    // running alongside would unload or overwrite the script of the first
+    // a second activation alongside could unload or overwrite the activator
+    // script of the first, and both would wait for different windows
     static ACTIVATION: Mutex<()> = Mutex::new(());
 
     if !is_window_id(id) {
@@ -264,6 +344,41 @@ pub fn activate_window(id: &str) -> Result<(), AppError> {
     }
     let _activation = ACTIVATION.locked();
     tracker().forget_missing();
+    match activate_with_runner(id) {
+        Ok(true) => tracker().wait_until_active(id, ACTIVATION_TIMEOUT),
+        Ok(false) => {
+            tracker().window_missing(id);
+            Err(AppError::Stale(String::from(
+                "The target window has been closed",
+            )))
+        }
+        Err(error) => {
+            log::debug!("KWin window runner is unavailable, activating with a script: {error}");
+            activate_with_script(id)
+        }
+    }
+}
+
+/// Activates the window with KWin's window runner, one D-Bus call instead of
+/// loading a script; `false` when KWin has no such window.
+fn activate_with_runner(id: &str) -> Result<bool, AppError> {
+    let connection = session()?;
+    if window_info(&connection, id)?.is_empty() {
+        return Ok(false);
+    }
+    connection
+        .call_method(
+            Some(KWIN_SERVICE),
+            RUNNER_PATH,
+            Some(RUNNER_INTERFACE),
+            "Run",
+            &(format!("{RUNNER_ACTIVATE}{id}"), ""),
+        )
+        .map_err(dbus_error)?;
+    Ok(true)
+}
+
+fn activate_with_script(id: &str) -> Result<(), AppError> {
     run_script(
         ACTIVATOR_SCRIPT_NAME,
         &ACTIVATOR_SCRIPT.replace("__ID__", id),
@@ -275,6 +390,24 @@ pub fn activate_window(id: &str) -> Result<(), AppError> {
         log::warn!("Could not unload the KWin window activator: {error}");
     }
     result
+}
+
+type WindowInfo = std::collections::HashMap<String, zbus::zvariant::OwnedValue>;
+
+/// KWin's description of the window; empty when there is no such window.
+fn window_info(connection: &zbus::blocking::Connection, id: &str) -> Result<WindowInfo, AppError> {
+    connection
+        .call_method(
+            Some(KWIN_SERVICE),
+            "/KWin",
+            Some(KWIN_SERVICE),
+            "getWindowInfo",
+            &(id,),
+        )
+        .map_err(dbus_error)?
+        .body()
+        .deserialize()
+        .map_err(dbus_error)
 }
 
 /// Moves Tyco's normal window to the active desktop and focuses it.
@@ -315,23 +448,10 @@ fn query_window_center(id: &str) -> Option<(i32, i32)> {
         .method_timeout(Duration::from_millis(500))
         .build()
         .ok()?;
-    let reply = connection
-        .call_method(
-            Some(KWIN_SERVICE),
-            "/KWin",
-            Some(KWIN_SERVICE),
-            "getWindowInfo",
-            &(id,),
-        )
-        .ok()?;
-    let fields: std::collections::HashMap<String, zbus::zvariant::OwnedValue> =
-        reply.body().deserialize().ok()?;
-    center_from_fields(&fields)
+    center_from_fields(&window_info(&connection, id).ok()?)
 }
 
-fn center_from_fields(
-    fields: &std::collections::HashMap<String, zbus::zvariant::OwnedValue>,
-) -> Option<(i32, i32)> {
+fn center_from_fields(fields: &WindowInfo) -> Option<(i32, i32)> {
     let number = |name: &str| {
         let value = fields.get(name)?;
         f64::try_from(value)
@@ -512,6 +632,14 @@ mod tests {
         assert!(!is_window_id(""));
         assert!(!is_window_id("\"); workspace.activeWindow = null; (\""));
         assert!(!is_window_id("12345 abc"));
+    }
+
+    #[test]
+    fn the_window_runner_activates_by_internal_id() {
+        assert_eq!(
+            format!("{RUNNER_ACTIVATE}{WINDOW}"),
+            "0_{da63572a-f14f-4bda-bc6e-fad90679a426}"
+        );
     }
 
     #[test]

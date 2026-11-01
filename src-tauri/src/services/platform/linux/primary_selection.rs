@@ -21,16 +21,15 @@ use std::io::Read;
 use std::os::unix::process::CommandExt;
 use std::process::{Command, Stdio};
 use std::sync::{Mutex, OnceLock};
-use std::time::Duration;
 
 use super::backoff::DISPLAY_RECONNECT;
+use super::readiness::{wait_readable, Readiness, StopFd};
+use std::os::fd::AsRawFd;
 
 use crate::services::platform::window_tracker::tracker;
 
 /// A watch that keeps failing is not supported by the compositor.
 const MAX_FAILURES: u32 = 5;
-/// How often an idle watcher checks for output and for a stop.
-const READ_POLL_INTERVAL: Duration = Duration::from_millis(20);
 
 #[derive(Debug, Default)]
 struct SelectionOriginState {
@@ -95,9 +94,16 @@ pub fn spawn_watcher(
     services: &crate::services::background::BackgroundServices,
 ) -> Result<(), crate::errors::AppError> {
     services.spawn_thread("primary-selection", |stop| {
+        let stop_fd = match StopFd::new(&stop) {
+            Ok(stop_fd) => stop_fd,
+            Err(error) => {
+                log::warn!("Cannot watch the primary selection: {error}");
+                return;
+            }
+        };
         let mut failures = 0u32;
         while !stop.is_stopped() {
-            match watch(&stop) {
+            match watch(&stop, &stop_fd) {
                 Ok(()) => failures = 0,
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                     log::warn!(
@@ -124,7 +130,7 @@ pub fn spawn_watcher(
 }
 
 /// Runs one `wl-paste --watch` until it exits; an error when it failed.
-fn watch(stop: &crate::services::background::StopToken) -> std::io::Result<()> {
+fn watch(stop: &crate::services::background::StopToken, stop_fd: &StopFd) -> std::io::Result<()> {
     let mut command = Command::new("wl-paste");
     command
         .args(["--primary", "--watch", "echo"])
@@ -162,7 +168,7 @@ fn watch(stop: &crate::services::background::StopToken) -> std::io::Result<()> {
                     }
                 }
                 Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-                    if stop.wait(READ_POLL_INTERVAL) {
+                    if wait_readable(stdout.as_raw_fd(), stop_fd)? == Readiness::Stopped {
                         break;
                     }
                 }

@@ -125,6 +125,11 @@ permission: the recording happens in a visible Tyco window and nothing of it is
 returned to the caller. Hotkeys bound in the desktop's own configuration, as on
 Hyprland and Sway, run `tyco-ctl open voice` and rely on that.
 
+`tyco-ctl open` passes on the activation token it was started with
+(`XDG_ACTIVATION_TOKEN` on Wayland, `DESKTOP_STARTUP_ID` on X11). Launchers and
+shortcut daemons set it, and with it the compositor lets the opened window take
+the focus instead of only marking it as demanding attention.
+
 The corresponding user configuration is:
 
 ```json
@@ -450,14 +455,15 @@ starts library commands the way a user would. It has no discovery, background
 execution, or job monitoring; use `tyco-ctl` for those. Both share the
 authorization dispatcher, so the same grants and capabilities apply.
 
-| Method              | Arguments          | What it does                                      |
-| ------------------- | ------------------ | ------------------------------------------------- |
-| `Open`              | `s` mode           | Opens the window of the mode                      |
-| `OpenWithText`      | `s` mode, `s` text | Opens it with the text as input                   |
-| `OpenWithSelection` | `s` mode           | Opens it with the selection of the focused window |
-| `RunCommand`        | `s` command ID     | Runs the command interactively                    |
-| `ReplaceSelection`  | `s` command ID     | Replaces the selection with the command's output  |
-| `CorrectSelection`  |                    | Corrects the selection in place                   |
+| Method                    | Arguments           | What it does                                                     |
+| ------------------------- | ------------------- | ---------------------------------------------------------------- |
+| `Open`                    | `s` mode            | Opens the window of the mode                                     |
+| `OpenWithText`            | `s` mode, `s` text  | Opens it with the text as input                                  |
+| `OpenWithSelection`       | `s` mode            | Opens it with the selection of the focused window                |
+| `OpenWithActivationToken` | `s` mode, `s` token | Opens it with an `xdg-activation-v1` token, so it gets the focus |
+| `RunCommand`              | `s` command ID      | Runs the command interactively                                   |
+| `ReplaceSelection`        | `s` command ID      | Replaces the selection with the command's output                 |
+| `CorrectSelection`        |                     | Corrects the selection in place                                  |
 
 Modes are those of `tyco-ctl open`. `RunCommand` behaves like
 `tyco-ctl run <id> --interactive`: it asks for missing input in the command

@@ -171,7 +171,11 @@ impl SystemTextInjector {
                 terminal
             }
             (_, Some(window_id)) => {
-                super::kwin::activate_window(window_id)?;
+                if session::current().is_kde_wayland() {
+                    super::kwin::activate_window(window_id)?;
+                } else {
+                    super::wlr_toplevel::activate_window(window_id)?;
+                }
                 thread::sleep(WAYLAND_FOCUS_SETTLE_DELAY);
                 tracker().active_window().is_some_and(|window| {
                     window.id == window_id

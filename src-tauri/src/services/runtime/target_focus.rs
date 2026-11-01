@@ -34,14 +34,18 @@ fn wait_until_unfocused_with(
     }
 }
 
+/// The tracker tells it when it sees every Tyco window; a backend that misses
+/// layer-shell panels leaves those to the toolkit.
 pub(super) fn has_focused_window(app: &AppHandle) -> bool {
     let tracker = crate::services::platform::window_tracker::tracker();
-    if tracker.is_running() {
+    if tracker.reports_own_focus() {
         return tracker.is_own_window_active();
     }
-    app.webview_windows()
-        .values()
-        .any(|window| window.is_focused().unwrap_or(false))
+    tracker.is_own_window_active()
+        || app
+            .webview_windows()
+            .values()
+            .any(|window| window.is_focused().unwrap_or(false))
 }
 
 /// The target window was closed: nothing can be inserted into it any more.

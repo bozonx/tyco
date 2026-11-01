@@ -185,7 +185,19 @@ async fn run_portal(app: AppHandle, bindings: Vec<HotkeyBinding>) -> Result<(), 
     // one stream keeps a release after its press; selection actions press
     // keys of their own and wait for the hotkey to be released first
     let mut events = futures_util::stream::select(
-        activated.map(|event| (true, event.shortcut_id().to_owned())),
+        activated.map(|event| {
+            // newer portals hand over a token, so the window Tyco shows
+            // for the hotkey may take the focus
+            if let Some(token) = event
+                .options()
+                .get("activation_token")
+                .and_then(|value| <&str>::try_from(&**value).ok())
+                .filter(|token| !token.is_empty())
+            {
+                super::activation_token::offer(token.to_owned());
+            }
+            (true, event.shortcut_id().to_owned())
+        }),
         deactivated.map(|event| (false, event.shortcut_id().to_owned())),
     );
     while let Some((is_pressed, id)) = events.next().await {

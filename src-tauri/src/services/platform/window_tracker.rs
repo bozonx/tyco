@@ -1,14 +1,16 @@
 //! Which window has the keyboard focus, and which one text goes to. The
 //! state is the same for every platform; a backend reports window activations
-//! to it: a KWin script on KDE Plasma under Wayland, root window events on X11.
+//! to it: a KWin script on KDE Plasma under Wayland, the foreign toplevel
+//! protocol on wlroots compositors, root window events on X11, and WinEvent
+//! hooks on Windows.
 //!
 //! Reports carry a sequence number "session:number". A backend may deliver
 //! them out of order (KWin reports arrive as concurrent D-Bus calls), and a
 //! restarted backend must not have its state undone by late reports of the
 //! previous one.
 
-// Only the Linux backends feed the tracker and ask about the session so far.
-#![cfg_attr(not(target_os = "linux"), allow(dead_code))]
+// Only the Linux and Windows backends feed the tracker.
+#![cfg_attr(not(any(target_os = "linux", target_os = "windows")), allow(dead_code))]
 
 use crate::locks::{CondvarExt, MutexExt};
 use std::sync::{Condvar, Mutex, OnceLock};
@@ -45,9 +47,21 @@ impl WindowKind {
     }
 }
 
+/// Which windows of Tyco a backend sees getting the focus.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum OwnFocus {
+    /// Every one, so the tracker alone tells whether Tyco has the focus.
+    #[default]
+    Reported,
+    /// Only toplevel windows: a layer-shell panel of Tyco takes the focus
+    /// without a report, so the toolkit has to be asked too.
+    ToplevelsOnly,
+}
+
 #[derive(Debug, Default, PartialEq, Eq)]
 struct TrackerState {
     running: bool,
+    own_focus: OwnFocus,
     /// Tells the reports of the running backend from late ones of an earlier run.
     backend_session_id: String,
     /// The number of the latest report applied, see `accept`.
@@ -81,18 +95,22 @@ impl TrackerState {
         true
     }
 
+    /// An empty `id` means no window has the focus. Compositors report that
+    /// in passing, between two windows, so it keeps the last foreign window;
+    /// only the focus on a desktop or panel window forgets it.
     fn window_activated(&mut self, id: &str, kind: WindowKind) {
         self.has_received_report = true;
-        self.active_window_id = (!id.is_empty()).then(|| id.to_owned());
-        self.active_kind = if id.is_empty() {
-            WindowKind::Other
-        } else {
-            kind
-        };
-        if self.active_kind == WindowKind::Foreign {
-            self.last_foreign_window_id = Some(id.to_owned());
-        } else if self.active_kind == WindowKind::Other {
-            self.last_foreign_window_id = None;
+        if id.is_empty() {
+            self.active_window_id = None;
+            self.active_kind = WindowKind::Other;
+            return;
+        }
+        self.active_window_id = Some(id.to_owned());
+        self.active_kind = kind;
+        match kind {
+            WindowKind::Foreign => self.last_foreign_window_id = Some(id.to_owned()),
+            WindowKind::Other => self.last_foreign_window_id = None,
+            WindowKind::Own => {}
         }
     }
 
@@ -206,6 +224,22 @@ impl WindowTracker {
         self.state.locked().running
     }
 
+    /// Whether the running backend reports the focus of every Tyco window,
+    /// see `OwnFocus`.
+    pub fn reports_own_focus(&self) -> bool {
+        let state = self.state.locked();
+        state.running && state.own_focus == OwnFocus::Reported
+    }
+
+    /// Whether `id` is the active window or the target, the only windows
+    /// whose closing matters.
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+    pub fn is_tracked(&self, id: &str) -> bool {
+        let state = self.state.locked();
+        state.active_window_id.as_deref() == Some(id)
+            || state.last_foreign_window_id.as_deref() == Some(id)
+    }
+
     /// Clears the window an activation found missing, before a new one.
     pub(crate) fn forget_missing(&self) {
         self.update(|state| state.missing_window_id = None);
@@ -213,9 +247,20 @@ impl WindowTracker {
 
     /// Starts over for the backend run `backend_session_id`, or for none when stopped.
     pub(crate) fn reset(&self, running: bool, backend_session_id: String) {
+        self.reset_with(running, backend_session_id, OwnFocus::Reported);
+    }
+
+    /// `reset` for a backend that sees only some Tyco windows, see `OwnFocus`.
+    pub(crate) fn reset_with(
+        &self,
+        running: bool,
+        backend_session_id: String,
+        own_focus: OwnFocus,
+    ) {
         self.update(|state| {
             *state = TrackerState {
                 running,
+                own_focus,
                 backend_session_id,
                 ..TrackerState::default()
             }
@@ -346,13 +391,40 @@ mod tests {
         let mut state = TrackerState::default();
         state.window_activated("a", WindowKind::Foreign);
         state.window_activated("tyco", WindowKind::Own);
-        state.window_activated("", WindowKind::Foreign);
+        state.window_activated("desktop", WindowKind::Other);
         assert_eq!(state.last_foreign_window_id, None);
-        assert_eq!(state.active_window_id, None);
+        assert_eq!(state.active_window_id.as_deref(), Some("desktop"));
         assert_eq!(state.active_kind, WindowKind::Other);
         state.window_activated("b", WindowKind::Foreign);
         assert_eq!(state.last_foreign_window_id.as_deref(), Some("b"));
         assert_eq!(state.active_window_id.as_deref(), Some("b"));
+    }
+
+    #[test]
+    fn keeps_the_last_foreign_window_between_two_windows() {
+        let mut state = TrackerState::default();
+        state.window_activated("a", WindowKind::Foreign);
+        state.window_activated("", WindowKind::Foreign);
+        assert_eq!(state.active_window_id, None);
+        assert_eq!(state.active_kind, WindowKind::Other);
+        assert_eq!(state.target(), None);
+        state.window_activated("tyco", WindowKind::Own);
+        assert_eq!(state.target().as_deref(), Some("a"));
+    }
+
+    #[test]
+    fn tells_which_windows_are_tracked_and_how_own_focus_is_known() {
+        let tracker = running_tracker();
+        assert!(tracker.reports_own_focus());
+        tracker.window_activated(&seq(1), "a", WindowKind::Foreign, "");
+        tracker.window_activated(&seq(2), "tyco", WindowKind::Own, "");
+        assert!(tracker.is_tracked("a"));
+        assert!(tracker.is_tracked("tyco"));
+        assert!(!tracker.is_tracked("b"));
+        tracker.reset_with(true, String::from("t"), OwnFocus::ToplevelsOnly);
+        assert!(!tracker.reports_own_focus());
+        tracker.reset(false, String::new());
+        assert!(!tracker.reports_own_focus());
     }
 
     #[test]
