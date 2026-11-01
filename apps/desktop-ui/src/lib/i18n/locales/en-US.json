@@ -215,7 +215,7 @@
     "fieldOff": "No",
     "fieldOn": "Yes",
     "fromPluginSettings": "From the plugin settings: {value}",
-    "hint": "Set a command up once and run it from the main action menu, quick commands, and other applications.",
+    "hint": "Commands are customizable actions powered by tools: LLM prompts, shell scripts, HTTP webhooks, or translation. They process selected text or run without input, and their result can be inserted into the active window, copied to the clipboard, or displayed. Run commands from quick launcher commands, the main actions menu, or via tyco-ctl.",
     "inputUnsupported": "Its tool needs a structured input that cannot be taken from a text",
     "languageInfo": "The language is kept in the command: reordering the translation languages in the settings does not change it.",
     "languageLabel": "Translate into",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Live preview",
     "quickCorrectionOnSubmit": "On completion",
     "quickCorrectionOff": "Off",
-    "aiCommands": "AI commands"
+    "aiCommands": "AI commands",
+    "chatInfo": "A quick AI chat for everyday tasks. Unlike AI profiles with isolated roles and tools, this is a universal conversation not tied to a specific profile. You can ask questions, use selected text as context, attach images, set a general system prompt, and manage local chat history.",
+    "sttTabInfo": "Voice dictation lets you dictate text into any active application. Speech recognition works via a local server (Sherpa-ONNX) or a cloud service (Deepgram). Recording is triggered by a hotkey, and transcribed text is automatically inserted at the cursor. You can also enable LLM post-processing for punctuation, error correction, and rule-based formatting.",
+    "stylingNavTab": "Styling",
+    "transformationsNavTab": "Transformation"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

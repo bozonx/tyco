@@ -215,7 +215,7 @@
     "fieldOff": "No",
     "fieldOn": "Sí",
     "fromPluginSettings": "De la configuración del plugin: {value}",
-    "hint": "Configura un comando una vez y ejecútalo desde el menú principal de acciones, los comandos rápidos y otras aplicaciones.",
+    "hint": "Los comandos son acciones personalizables basadas en herramientas: prompts de LLM, scripts de shell, webhooks HTTP o traducción. Procesan el texto seleccionado o se ejecutan sin entrada, y su resultado puede insertarse en la ventana activa, copiarse al portapapeles o mostrarse en pantalla. Se ejecutan desde comandos rápidos (lanzador), el menú de acciones principales o mediante tyco-ctl.",
     "inputUnsupported": "Su herramienta necesita una entrada estructurada que no se puede obtener de un texto",
     "languageInfo": "El idioma se guarda en el comando: reordenar los idiomas de traducción en la configuración no lo cambia.",
     "languageLabel": "Traducir a",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Vista previa en vivo",
     "quickCorrectionOnSubmit": "Al completar",
     "quickCorrectionOff": "Desactivado",
-    "aiCommands": "Comandos de IA"
+    "aiCommands": "Comandos de IA",
+    "chatInfo": "Un chat rápido con IA para tareas cotidianas. A diferencia de los perfiles de IA con roles y herramientas aislados, esta es una conversación universal no vinculada a un perfil específico. Puede hacer preguntas, usar texto seleccionado como contexto, adjuntar imágenes, configurar un prompt general del sistema y administrar el historial local de chats.",
+    "sttTabInfo": "El dictado por voz le permite dictar texto en cualquier aplicación activa. El reconocimiento de voz funciona a través de un servidor local (Sherpa-ONNX) o un servicio en la nube (Deepgram). La grabación se inicia con una tecla de acceso rápido y el texto transcrito se inserta automáticamente en la posición del cursor. También puede activar el posprocesamiento mediante LLM para puntuación, corrección de errores y formato.",
+    "stylingNavTab": "Estilización",
+    "transformationsNavTab": "Transformación"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

@@ -215,7 +215,7 @@
     "fieldOff": "Nu",
     "fieldOn": "Da",
     "fromPluginSettings": "Din setările pluginului: {value}",
-    "hint": "Configurați o comandă o singură dată și rulați-o din meniul principal de acțiuni, din comenzile rapide și din alte aplicații.",
+    "hint": "Comenzile sunt acțiuni personalizabile bazate pe instrumente: prompturi LLM, scripturi shell, webhook-uri HTTP sau traducere. Procesează textul selectat sau rulează fără date de intrare, iar rezultatul poate fi inserat în fereastra activă, copiat în clipboard sau afișat. Se apelează din comenzi rapide (lansator), meniul acțiunilor principale sau prin tyco-ctl.",
     "inputUnsupported": "Instrumentul său are nevoie de o intrare structurată, care nu poate fi obținută dintr-un text",
     "languageInfo": "Limba este păstrată în comandă: reordonarea limbilor de traducere în setări nu o modifică.",
     "languageLabel": "Tradu în",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Previzualizare în direct",
     "quickCorrectionOnSubmit": "La finalizare",
     "quickCorrectionOff": "Dezactivat",
-    "aiCommands": "Comenzi AI"
+    "aiCommands": "Comenzi AI",
+    "chatInfo": "Un chat rapid cu IA pentru sarcini zilnice. Spre deosebire de profilurile IA cu roluri și instrumente izolate, aceasta este o conversație universală nelegată de un profil anume. Puteți pune întrebări, utiliza textul selectat drept context, atașa imagini, configura un prompt general de sistem și gestiona istoricul local de conversații.",
+    "sttTabInfo": "Dictarea vocală vă permite să dictați text în orice aplicație activă. Recunoașterea vocală funcționează printr-un server local (Sherpa-ONNX) sau un serviciu cloud (Deepgram). Înregistrarea se pornește printr-o scurtătură de tastatură, iar textul transcris este inserat automat la cursor. Puteți activa și post-procesarea prin LLM pentru punctuație, corectare și formatare.",
+    "stylingNavTab": "Stilizare",
+    "transformationsNavTab": "Transformare"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

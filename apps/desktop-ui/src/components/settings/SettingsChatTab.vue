@@ -1,6 +1,6 @@
 <template>
   <div class="settings-stack">
-    <SettingsSection>
+    <SettingsSection :title="t('settings.chat')" :info="t('settings.chatInfo')">
       <FieldRow
         :label="t('settings.chatPrompt')"
         :info="t('settings.chatPromptInfo')"

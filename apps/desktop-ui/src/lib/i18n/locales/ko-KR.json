@@ -215,7 +215,7 @@
     "fieldOff": "아니오",
     "fieldOn": "예",
     "fromPluginSettings": "플러그인 설정에서 가져옴: {value}",
-    "hint": "명령을 한 번 설정해 두면 메인 작업 메뉴, 빠른 명령 및 다른 애플리케이션에서 실행할 수 있습니다.",
+    "hint": "명령은 LLM 프롬프트, 셸 스크립트, HTTP 웹후크, 번역 등의 도구를 기반으로 하는 맞춤형 작업입니다. 선택한 텍스트를 처리하거나 입력 없이 실행할 수 있으며, 결과를 활성 창에 삽입하거나 클립보드에 복사하거나 화면에 표시할 수 있습니다. 빠른 명령(런처), 기본 동작 메뉴 또는 tyco-ctl CLI를 통해 실행됩니다.",
     "inputUnsupported": "도구에 텍스트로부터 가져올 수 없는 구조화된 입력이 필요합니다",
     "languageInfo": "언어는 명령에 저장됩니다. 설정에서 번역 언어 순서를 변경해도 영향을 받지 않습니다.",
     "languageLabel": "번역할 언어",
@@ -1093,7 +1093,11 @@
     "quickCorrectionLive": "실시간 미리보기",
     "quickCorrectionOnSubmit": "완료 시",
     "quickCorrectionOff": "끄기",
-    "aiCommands": "AI 명령"
+    "aiCommands": "AI 명령",
+    "chatInfo": "일상적인 작업을 위한 빠른 AI 채팅입니다. 분리된 역할과 도구를 갖춘 AI 프로필과 달리 특정 프로필에 종속되지 않는 범용 대화입니다. 질문하기, 선택한 텍스트를 컨텍스트로 전달하기, 이미지 첨부, 일반 시스템 프롬프트 설정 및 로컬 대화 기록 관리가 가능합니다.",
+    "sttTabInfo": "음성 입력을 통해 활성 애플리케이션 어디에나 텍스트를 받아쓸 수 있습니다. 음성 인식은 로컬 서버(Sherpa-ONNX) 또는 클라우드 서비스(Deepgram)를 통해 작동합니다. 단축키로 녹음이 시작되며 인식된 텍스트는 커서 위치에 자동 삽입됩니다. 구두점 정리, 오류 수정 및 규칙 서식 지정을 위한 LLM 후처리도 활성화할 수 있습니다.",
+    "stylingNavTab": "스타일 지정",
+    "transformationsNavTab": "변환"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

@@ -215,7 +215,7 @@
     "fieldOff": "Hayır",
     "fieldOn": "Evet",
     "fromPluginSettings": "Eklenti ayarlarından: {value}",
-    "hint": "Bir komutu bir kez ayarlayın; ana eylem menüsünden, hızlı komutlardan ve diğer uygulamalardan çalıştırın.",
+    "hint": "Komutlar; LLM istemleri, kabuk komut dosyaları, HTTP web kancaları veya çeviri gibi araçlara dayalı özelleştirilebilir eylemlerdir. Seçili metni işleyebilir veya girdi olmadan çalışabilirler; sonuç etkin pencereye eklenebilir, panoya kopyalanabilir veya gösterilebilir. Hızlı komutlardan (başlatıcı), ana eylemler menüsünden veya tyco-ctl aracılığıyla çalıştırılırlar.",
     "inputUnsupported": "Aracı, metinden alınamayan yapılandırılmış bir girdi bekliyor",
     "languageInfo": "Dil komutta saklanır: ayarlardaki çeviri dillerinin sırasını değiştirmek onu etkilemez.",
     "languageLabel": "Şu dile çevir",
@@ -1096,7 +1096,11 @@
     "quickCorrectionLive": "Canlı önizleme",
     "quickCorrectionOnSubmit": "Tamamlandığında",
     "quickCorrectionOff": "Kapalı",
-    "aiCommands": "Yapay zekâ komutları"
+    "aiCommands": "Yapay zekâ komutları",
+    "chatInfo": "Günlük görevler için hızlı bir yapay zeka sohbeti. İzole rollere ve araçlara sahip yapay zeka profillerinin aksine bu, belirli bir profile bağlı olmayan evrensel bir sohbettir. Soru sorabilir, seçili metni bağlam olarak kullanabilir, görsel ekleyebilir, genel bir sistem istemi ayarlayabilir ve yerel sohbet geçmişini yönetebilirsiniz.",
+    "sttTabInfo": "Sesle dikte, herhangi bir etkin uygulamaya sesle metin girmenizi sağlar. Konuşma tanıma, yerel bir sunucu (Sherpa-ONNX) veya bulut hizmeti (Deepgram) üzerinden çalışır. Kayıt bir kısayol tuşuyla başlatılır ve tanınan metin imlecin olduğu yere otomatik olarak eklenir. Noktalama, hata düzeltme ve biçimlendirme için LLM son işlemesi de etkinleştirilebilir.",
+    "stylingNavTab": "Stillendirme",
+    "transformationsNavTab": "Dönüştürme"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

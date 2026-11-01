@@ -45,9 +45,9 @@ describe('SettingsVoiceTab.vue', () => {
         provide: createTestSettingsContext(userConfig).provide,
         stubs: {
           SettingsSection: {
-            props: ['title'],
+            props: ['title', 'info'],
             template:
-              '<section class="section-stub" :data-title="title"><slot /></section>',
+              '<section class="section-stub" :data-title="title" :data-info="info"><slot /></section>',
           },
           FieldRow: {
             props: ['label', 'hint', 'info'],
@@ -88,6 +88,11 @@ describe('SettingsVoiceTab.vue', () => {
     const config = createConfig()
     const wrapper = mountTab(config)
 
+    const sections = wrapper.findAll('.section-stub')
+    expect(sections[0].attributes('data-title')).toBe('settings.sttTab')
+    expect(sections[0].attributes('data-info')).toBe('settings.sttTabInfo')
+    expect(sections[1].attributes('data-title')).toBeUndefined()
+
     const labels = wrapper
       .findAll('.field-row-stub')
       .map((f) => f.attributes('data-label'))
@@ -101,6 +106,11 @@ describe('SettingsVoiceTab.vue', () => {
     const config = createConfig()
     config.stt.provider = 'deepgram'
     const wrapper = mountTab(config)
+
+    const sections = wrapper.findAll('.section-stub')
+    expect(sections[0].attributes('data-title')).toBe('settings.sttTab')
+    expect(sections[0].attributes('data-info')).toBe('settings.sttTabInfo')
+    expect(sections[1].attributes('data-title')).toBeUndefined()
 
     const labels = wrapper
       .findAll('.field-row-stub')

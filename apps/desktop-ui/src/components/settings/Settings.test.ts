@@ -255,7 +255,7 @@ describe('Settings.vue', () => {
           list.findAll('button').map((btn) => btn.attributes('data-key'))
         )
     ).toEqual([
-      ['general', 'editor', 'global-actions', 'accessibility'],
+      ['general', 'global-actions', 'editor', 'accessibility'],
       ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],
       [
         'main-actions',
@@ -269,7 +269,7 @@ describe('Settings.vue', () => {
     ])
   })
 
-  it('places editor tab in primary tabs right after general tab', () => {
+  it('places hotkeys tab in primary tabs right after general tab', () => {
     const wrapper = mount(Settings, {
       global: {
         stubs: {
@@ -292,11 +292,11 @@ describe('Settings.vue', () => {
       .map((btn) => btn.attributes('data-key'))
 
     const generalIdx = tabKeys.indexOf('general')
-    const editorIdx = tabKeys.indexOf('editor')
+    const hotkeysIdx = tabKeys.indexOf('global-actions')
 
     expect(generalIdx).toBeGreaterThan(-1)
-    expect(editorIdx).toBeGreaterThan(-1)
-    expect(editorIdx).toBe(generalIdx + 1)
+    expect(hotkeysIdx).toBeGreaterThan(-1)
+    expect(hotkeysIdx).toBe(generalIdx + 1)
   })
 
   it('hides editor tab and rejects editor route outside development mode', async () => {
@@ -536,7 +536,7 @@ describe('Settings.vue', () => {
 
     const sections = wrapper.findAll('.settings-section-stub')
     expect(sections).toHaveLength(2)
-    expect(sections[0].attributes('data-title')).toBeFalsy()
+    expect(sections[0].attributes('data-title')).toBe('settings.sttTab')
     expect(sections[1].attributes('data-title')).toBeFalsy()
     expect(
       sections[1].find('[data-label="settings.formatWithLlm"]').exists()

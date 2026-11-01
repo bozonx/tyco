@@ -215,7 +215,7 @@
     "fieldOff": "否",
     "fieldOn": "是",
     "fromPluginSettings": "來自外掛程式設定：{value}",
-    "hint": "設定一次命令，即可從主動作選單、快速命令與其他應用程式中執行。",
+    "hint": "命令是基於工具的可自訂動作：LLM 提示詞、Shell 指令碼、HTTP Webhook 或翻譯。它們可以處理選取的文字或在無輸入下執行，結果可插入使用中的視窗、複製到剪貼簿或在畫面上顯示。可透過快速命令（啟動器）、主要動作功能表或 tyco-ctl 命令列執行。",
     "inputUnsupported": "其工具需要無法從文字中取得的結構化輸入",
     "languageInfo": "語言會保存在命令中：在設定中重新排列翻譯語言順序不會改變此設定。",
     "languageLabel": "翻譯為",
@@ -1093,7 +1093,11 @@
     "quickCorrectionLive": "即時預覽",
     "quickCorrectionOnSubmit": "完成時",
     "quickCorrectionOff": "關閉",
-    "aiCommands": "AI 指令"
+    "aiCommands": "AI 指令",
+    "chatInfo": "用於日常任務的快速 AI 對話。與擁有獨立角色和工具的 AI 設定檔不同，這是未綁定任何特定設定檔的通用對話。您可以發問、將選取的文字作為上下文、附加圖片、設定通用系統提示詞並管理本機對話歷程記錄。",
+    "sttTabInfo": "語音輸入讓您可以向任何使用中的應用程式口述文字。語音辨識透過本機伺服器（Sherpa-ONNX）或雲端服務（Deepgram）進行。透過快速鍵啟動錄音，辨識後的文字會自動插入游標位置。亦可啟用 LLM 後續處理以補上標點、修正錯誤並套用格式化規則。",
+    "stylingNavTab": "風格化",
+    "transformationsNavTab": "轉換"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

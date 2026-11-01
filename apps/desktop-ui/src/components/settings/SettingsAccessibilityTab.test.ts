@@ -46,6 +46,10 @@ describe('SettingsAccessibilityTab.vue', () => {
     }
     const wrapper = mountTab(appearance)
 
+    expect(
+      wrapper.find('.section-stub').attributes('data-title')
+    ).toBeUndefined()
+
     const selects = wrapper.findAll('.field-select-stub')
     expect(selects).toHaveLength(3)
 
@@ -66,6 +70,10 @@ describe('SettingsAccessibilityTab.vue', () => {
     }
     const wrapper = mountTab(appearance)
 
+    expect(
+      wrapper.find('.section-stub').attributes('data-title')
+    ).toBeUndefined()
+
     const selects = wrapper.findAll('.field-select-stub')
     expect(selects[0].attributes('disabled')).toBeDefined()
     expect(selects[1].attributes('disabled')).toBeDefined()
@@ -85,6 +93,10 @@ describe('SettingsAccessibilityTab.vue', () => {
     }
     const wrapper = mountTab(appearance)
 
+    expect(
+      wrapper.find('.section-stub').attributes('data-title')
+    ).toBeUndefined()
+
     const selects = wrapper.findAll('.field-select-stub')
     await selects[0].setValue('more')
 
@@ -103,6 +115,10 @@ describe('SettingsAccessibilityTab.vue', () => {
     }
     const wrapper = mountTab(appearance)
 
+    expect(
+      wrapper.find('.section-stub').attributes('data-title')
+    ).toBeUndefined()
+
     const selects = wrapper.findAll('.field-select-stub')
     await selects[1].setValue('reduce')
 
@@ -120,6 +136,10 @@ describe('SettingsAccessibilityTab.vue', () => {
       uiScalePercent: 100,
     }
     const wrapper = mountTab(appearance)
+
+    expect(
+      wrapper.find('.section-stub').attributes('data-title')
+    ).toBeUndefined()
 
     const selects = wrapper.findAll('.field-select-stub')
     await selects[2].setValue('115')

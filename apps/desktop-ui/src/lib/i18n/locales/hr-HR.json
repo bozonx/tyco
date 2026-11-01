@@ -215,7 +215,7 @@
     "fieldOff": "Ne",
     "fieldOn": "Da",
     "fromPluginSettings": "Iz postavki dodatka: {value}",
-    "hint": "Postavite naredbu jednom i pokrećite je iz glavnog izbornika radnji, brzih naredbi i drugih aplikacija.",
+    "hint": "Naredbe su prilagodljive radnje temeljene na alatima: LLM upiti, skripte ljuske, HTTP webhookovi ili prijevod. Obrađuju označeni tekst ili se pokreću bez unosa, a rezultat mogu umetnuti u aktivni prozor, kopirati u međuspremnik ili prikazati. Pokreću se iz brzih naredbi (pokretača), izbornika glavnih radnji ili putem tyco-ctl-a.",
     "inputUnsupported": "Njezin alat treba strukturirani unos koji se ne može dobiti iz teksta",
     "languageInfo": "Jezik se sprema u naredbi: promjena redoslijeda jezika prijevoda u postavkama ga ne mijenja.",
     "languageLabel": "Prevedi na",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Pregled uživo",
     "quickCorrectionOnSubmit": "Po završetku",
     "quickCorrectionOff": "Isključeno",
-    "aiCommands": "AI naredbe"
+    "aiCommands": "AI naredbe",
+    "chatInfo": "Brzi AI chat za svakodnevne zadatke. Za razliku od AI profila s izoliranim ulogama i alatima, ovo je univerzalni razgovor bez vezivanja uz određeni profil. Možete postavljati pitanja, koristiti označeni tekst kao kontekst, priložiti slike, postaviti opći sistemski prompt i upravljati lokalnom poviješću razgovora.",
+    "sttTabInfo": "Glasovni unos omogućuje diktiranje teksta u bilo koju aktivnu aplikaciju. Prepoznavanje govora radi putem lokalnog poslužitelja (Sherpa-ONNX) ili usluge u oblaku (Deepgram). Snimanje se pokreće tipkovničkim prečacem, a prepoznati tekst automatski se umeće na mjesto pokazivača. Možete uključiti i naknadnu obradu putem LLM-a za interpunkciju, ispravke i formatiranje.",
+    "stylingNavTab": "Stiliziranje",
+    "transformationsNavTab": "Transformacija"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

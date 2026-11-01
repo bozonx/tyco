@@ -90,7 +90,7 @@ describe('settings navigation', () => {
     expect(
       groups.map((group) => [group.label, group.items.map((item) => item.id)])
     ).toEqual([
-      [undefined, ['general', 'editor', 'global-actions', 'accessibility']],
+      [undefined, ['general', 'global-actions', 'editor', 'accessibility']],
       [
         'settings.aiCategory',
         ['llm', 'stt', 'chat', 'translations', 'correction', 'ai-profiles'],
@@ -112,6 +112,12 @@ describe('settings navigation', () => {
     expect(groups[1].items.find((item) => item.id === 'stt')?.name).toBe(
       'settings.sttNavTab'
     )
+    expect(groups[2].items.find((item) => item.id === 'styling')?.name).toBe(
+      'settings.stylingNavTab'
+    )
+    expect(
+      groups[2].items.find((item) => item.id === 'transformations')?.name
+    ).toBe('settings.transformationsNavTab')
     expect(allPlugins.name).toBe('settings.allPluginsTab')
     expect(plugin).toMatchObject({
       name: 'Text case',
@@ -127,6 +133,23 @@ describe('settings navigation', () => {
       plugins: [{ pluginId: 'case', label: 'Text case', isEnabled: true }],
     }).at(-1)!.items
     expect(plugin.status).toBeUndefined()
+  })
+
+  it('sorts plugins alphabetically by id in navigation', () => {
+    const pluginItems = buildSettingsNavigation({
+      ...sources,
+      plugins: [
+        { pluginId: 'zeta', label: 'Zeta Plugin', isEnabled: true },
+        { pluginId: 'alpha', label: 'Alpha Plugin', isEnabled: true },
+        { pluginId: 'beta', label: 'Beta Plugin', isEnabled: false },
+      ],
+    }).at(-1)!.items
+    expect(pluginItems.map((item) => item.id)).toEqual([
+      'plugins',
+      'plugin:alpha',
+      'plugin:beta',
+      'plugin:zeta',
+    ])
   })
 
   it('marks the navigation item of a page', () => {

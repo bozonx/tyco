@@ -215,7 +215,7 @@
     "fieldOff": "Não",
     "fieldOn": "Sim",
     "fromPluginSettings": "Das configurações do plugin: {value}",
-    "hint": "Configure um comando uma vez e execute-o no menu principal de ações, nos comandos rápidos e em outros aplicativos.",
+    "hint": "Comandos são ações personalizáveis baseadas em ferramentas: prompts de LLM, scripts de shell, webhooks HTTP ou tradução. Eles processam texto selecionado ou executam sem entrada, e seu resultado pode ser inserido na janela ativa, copiado para a área de transferência ou exibido. São executados a partir de comandos rápidos (inicializador), do menu de ações principais ou via tyco-ctl.",
     "inputUnsupported": "A ferramenta dele precisa de uma entrada estruturada que não pode ser obtida de um texto",
     "languageInfo": "O idioma fica salvo no comando: reordenar os idiomas de tradução nas configurações não o altera.",
     "languageLabel": "Traduzir para",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Prévia ao vivo",
     "quickCorrectionOnSubmit": "Ao concluir",
     "quickCorrectionOff": "Desativado",
-    "aiCommands": "Comandos de IA"
+    "aiCommands": "Comandos de IA",
+    "chatInfo": "Um chat rápido com IA para tarefas do dia a dia. Ao contrário dos perfis de IA com papéis e ferramentas isolados, esta é uma conversa universal não vinculada a um perfil específico. Você pode fazer perguntas, usar texto selecionado como contexto, anexar imagens, configurar um prompt de sistema geral e gerenciar o histórico local de conversas.",
+    "sttTabInfo": "A digitação por voz permite ditar texto em qualquer aplicativo ativo. O reconhecimento de voz funciona por meio de um servidor local (Sherpa-ONNX) ou serviço em nuvem (Deepgram). A gravação é iniciada por uma tecla de atalho e o texto transcrito é inserido no cursor. Também é possível habilitar o pós-processamento por LLM para pontuação, correção de erros e formatação.",
+    "stylingNavTab": "Estilização",
+    "transformationsNavTab": "Transformação"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

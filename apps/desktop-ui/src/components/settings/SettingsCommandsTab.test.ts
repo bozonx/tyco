@@ -99,6 +99,13 @@ describe('SettingsCommandsTab.vue', () => {
 
   afterEach(() => desktop.dispose())
 
+  it('renders section title and info tooltip', () => {
+    const wrapper = mountTab()
+    const section = wrapper.findComponent({ name: 'SettingsSection' })
+    expect(section.props('title')).toBe('settings.commandsTab')
+    expect(section.props('info')).toBe('commands.hint')
+  })
+
   it('reorders commands by dragging the shared handle', async () => {
     context = createTestSettingsContext({
       launcherPages: [],

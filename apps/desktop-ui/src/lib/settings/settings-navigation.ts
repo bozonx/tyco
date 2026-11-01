@@ -14,14 +14,14 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         icon: 'mdi:tune-variant',
       },
       {
-        id: 'editor',
-        labelKey: 'settings.editorTab',
-        icon: 'mdi:pencil-outline',
-      },
-      {
         id: 'global-actions',
         labelKey: 'settings.hotkeysTab',
         icon: 'mdi:keyboard-outline',
+      },
+      {
+        id: 'editor',
+        labelKey: 'settings.editorTab',
+        icon: 'mdi:pencil-outline',
       },
       {
         id: 'accessibility',
@@ -71,11 +71,13 @@ export const SETTINGS_NAVIGATION_GROUPS = [
       {
         id: 'transformations',
         labelKey: 'settings.transformationsTab',
+        navigationLabelKey: 'settings.transformationsNavTab',
         icon: 'mdi:auto-fix',
       },
       {
         id: 'styling',
         labelKey: 'settings.stylingTab',
+        navigationLabelKey: 'settings.stylingNavTab',
         icon: 'mdi:palette-outline',
       },
       {
@@ -230,8 +232,12 @@ export function buildSettingsNavigation(
         name: translate(navigationLabelKey(section)),
         icon: section.icon,
       }))
-    if (group.id === 'plugins')
-      items.push(...sources.plugins.map(pluginNavigationItem(translate)))
+    if (group.id === 'plugins') {
+      const sortedPlugins = [...sources.plugins].sort((a, b) =>
+        a.pluginId.localeCompare(b.pluginId)
+      )
+      items.push(...sortedPlugins.map(pluginNavigationItem(translate)))
+    }
     return {
       id: group.id,
       label: 'labelKey' in group ? translate(group.labelKey) : undefined,

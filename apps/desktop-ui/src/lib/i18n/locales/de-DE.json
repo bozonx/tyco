@@ -215,7 +215,7 @@
     "fieldOff": "Nein",
     "fieldOn": "Ja",
     "fromPluginSettings": "Aus den Plugin-Einstellungen: {value}",
-    "hint": "Richten Sie einen Befehl einmal ein und führen Sie ihn aus dem Hauptaktionsmenü, den Schnellbefehlen und anderen Anwendungen aus.",
+    "hint": "Befehle sind anpassbare Aktionen auf Basis von Werkzeugen: LLM-Prompts, Shell-Skripte, HTTP-Webhooks oder Übersetzung. Sie verarbeiten markierten Text oder laufen ohne Eingabe; das Ergebnis kann in das aktive Fenster eingefügt, in die Zwischenablage kopiert oder angezeigt werden. Befehle werden über Schnellbefehle (Launcher), das Hauptaktionsmenü oder über tyco-ctl aufgerufen.",
     "inputUnsupported": "Sein Werkzeug braucht eine strukturierte Eingabe, die sich nicht aus einem Text gewinnen lässt",
     "languageInfo": "Die Sprache wird im Befehl gespeichert: Eine neue Reihenfolge der Übersetzungssprachen in den Einstellungen ändert sie nicht.",
     "languageLabel": "Übersetzen in",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Live-Vorschau",
     "quickCorrectionOnSubmit": "Beim Abschließen",
     "quickCorrectionOff": "Aus",
-    "aiCommands": "KI-Befehle"
+    "aiCommands": "KI-Befehle",
+    "chatInfo": "Ein schneller KI-Chat für alltägliche Aufgaben. Im Gegensatz zu KI-Profilen mit isolierten Rollen und Werkzeugen ist dies ein universeller Chat ohne Bindung an ein Profil. Sie können Fragen stellen, markierten Text als Kontext nutzen, Bilder anhängen, einen allgemeinen Systemprompt festlegen und den lokalen Chatverlauf verwalten.",
+    "sttTabInfo": "Die Spracheingabe ermöglicht das Diktieren von Text in jede aktive Anwendung. Die Spracherkennung läuft über einen lokalen Server (Sherpa-ONNX) oder einen Cloud-Dienst (Deepgram). Die Aufnahme wird per Hotkey gestartet und der erkannte Text automatisch an der Cursorposition eingefügt. Zusätzlich kann eine LLM-Nachbearbeitung für Zeichensetzung, Fehlerkorrektur und Formatierung aktiviert werden.",
+    "stylingNavTab": "Stilisierung",
+    "transformationsNavTab": "Transformation"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

@@ -215,7 +215,7 @@
     "fieldOff": "Ne",
     "fieldOn": "Ano",
     "fromPluginSettings": "Z nastavení pluginu: {value}",
-    "hint": "Nastavte příkaz jednou a spouštějte ho z hlavní nabídky akcí, z rychlých příkazů i z jiných aplikací.",
+    "hint": "Příkazy jsou přizpůsobitelné akce založené na nástrojích: dotazy na LLM, shellové skripty, HTTP webhooky nebo překlad. Zpracovávají vybraný text nebo běží bez vstupu a výsledek mohou vložit do aktivního okna, zkopírovat do schránky nebo zobrazit. Spouštějí se z rychlých příkazů (spouštěče), nabídky hlavních akcí nebo přes tyco-ctl.",
     "inputUnsupported": "Jeho nástroj potřebuje strukturovaný vstup, který nelze získat z textu",
     "languageInfo": "Jazyk je uložen v příkazu: změna pořadí jazyků překladu v nastavení ho nemění.",
     "languageLabel": "Překládat do",
@@ -1093,7 +1093,11 @@
     "quickCorrectionLive": "Živý náhled",
     "quickCorrectionOnSubmit": "Po dokončení",
     "quickCorrectionOff": "Vypnuto",
-    "aiCommands": "AI příkazy"
+    "aiCommands": "AI příkazy",
+    "chatInfo": "Rychlý chat s umělou inteligencí pro každodenní úkoly. Na rozdíl od profilů AI s oddělenými rolemi a nástroji jde o univerzální konverzaci bez vazby na konkrétní profil. Můžete pokládat dotazy, použít vybraný text jako kontext, přikládat obrázky, nastavit obecný systémový prompt a spravovat lokální historii chatu.",
+    "sttTabInfo": "Hlasové diktování umožňuje diktovat text do libovolné aktivní aplikace. Rozpoznávání řeči funguje přes lokální server (Sherpa-ONNX) nebo cloudovou službu (Deepgram). Záznam se spouští klávesovou zkratkou a rozpoznaný text se automaticky vloží na pozici kurzoru. Navíc lze zapnout postprocessing přes LLM pro interpunkci, opravu chyb a formátování podle pravidel.",
+    "stylingNavTab": "Stylizace",
+    "transformationsNavTab": "Transformace"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

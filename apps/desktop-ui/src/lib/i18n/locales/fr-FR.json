@@ -215,7 +215,7 @@
     "fieldOff": "Non",
     "fieldOn": "Oui",
     "fromPluginSettings": "Depuis les paramètres du plugin : {value}",
-    "hint": "Configurez une commande une fois et lancez-la depuis le menu d’actions principal, les commandes rapides et d’autres applications.",
+    "hint": "Les commandes sont des actions personnalisables basées sur des outils : requêtes LLM, scripts shell, webhooks HTTP ou traduction. Elles traitent le texte sélectionné ou s'exécutent sans entrée, et leur résultat peut être inséré dans la fenêtre active, copié dans le presse-papiers ou affiché. Elles se lancent depuis les commandes rapides (lanceur), le menu d'actions principales ou via tyco-ctl.",
     "inputUnsupported": "Son outil attend une entrée structurée qui ne peut pas être tirée d’un texte",
     "languageInfo": "La langue est enregistrée dans la commande : réordonner les langues de traduction dans les paramètres ne la modifie pas.",
     "languageLabel": "Traduire en",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Aperçu en direct",
     "quickCorrectionOnSubmit": "À la fin",
     "quickCorrectionOff": "Désactivé",
-    "aiCommands": "Commandes IA"
+    "aiCommands": "Commandes IA",
+    "chatInfo": "Un chat IA rapide pour les tâches quotidiennes. Contrairement aux profils IA avec des rôles et outils isolés, il s'agit d'une conversation universelle sans profil spécifique. Vous pouvez poser des questions, utiliser le texte sélectionné comme contexte, joindre des images, configurer une instruction système générale et gérer l'historique local des discussions.",
+    "sttTabInfo": "La dictée vocale vous permet de dicter du texte dans n'importe quelle application active. La reconnaissance vocale fonctionne via un serveur local (Sherpa-ONNX) ou un service cloud (Deepgram). L'enregistrement est déclenché par un raccourci clavier et le texte transcrit est inséré au curseur. Vous pouvez également activer le post-traitement LLM pour la ponctuation, la correction d'erreurs et le formatage.",
+    "stylingNavTab": "Stylisation",
+    "transformationsNavTab": "Transformation"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

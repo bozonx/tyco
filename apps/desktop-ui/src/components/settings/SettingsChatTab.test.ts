@@ -34,6 +34,9 @@ describe('SettingsChatTab.vue', () => {
     expect(wrapper.get('.chat-history-stub').attributes('data-scope')).toBe(
       'askAi'
     )
+    const section = wrapper.findComponent({ name: 'SettingsSection' })
+    expect(section.props('title')).toBe('settings.chat')
+    expect(section.props('info')).toBe('settings.chatInfo')
 
     await wrapper.get('textarea').setValue('Answer briefly')
     expect(context.draft.value.llm.tasks.chat.rule).toBe('Answer briefly')

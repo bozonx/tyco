@@ -215,7 +215,7 @@
     "fieldOff": "Nem",
     "fieldOn": "Igen",
     "fromPluginSettings": "A bővítmény beállításaiból: {value}",
-    "hint": "Állítson be egy parancsot egyszer, és futtassa a fő műveletmenüből, a gyorsparancsokból és más alkalmazásokból.",
+    "hint": "A parancsok eszközökön alapuló, testreszabható műveletek: LLM-promptok, shell parancsfájlok, HTTP webhookok vagy fordítás. Feldolgozzák a kijelölt szöveget vagy bemenet nélkül futnak, az eredmény pedig beilleszthető az aktív ablakba, a vágólapra másolható vagy megjeleníthető. Futtathatók a gyorsparancsokból (indítóból), a fő műveletek menüjéből vagy a tyco-ctl segítségével.",
     "inputUnsupported": "Az eszköze strukturált bemenetet igényel, amely szövegből nem nyerhető ki",
     "languageInfo": "A nyelv a parancsban tárolódik: a fordítási nyelvek sorrendjének módosítása a beállításokban nem változtatja meg.",
     "languageLabel": "Fordítás erre:",
@@ -1096,7 +1096,11 @@
     "quickCorrectionLive": "Élő előnézet",
     "quickCorrectionOnSubmit": "Befejezéskor",
     "quickCorrectionOff": "Kikapcsolva",
-    "aiCommands": "MI-parancsok"
+    "aiCommands": "MI-parancsok",
+    "chatInfo": "Gyors AI-csevegés a mindennapi feladatokhoz. Az izolált szerepkörökkel és eszközökkel rendelkező AI-profilokkal ellentétben ez egy univerzális beszélgetés, amely nem kötődik konkrét profilhoz. Feltehet kérdéseket, használhatja a kijelölt szöveget kontextusként, csatolhat képeket, beállíthat általános rendszerpromptot és kezelheti a helyi csevegési előzményeket.",
+    "sttTabInfo": "A hangdiktálás lehetővé teszi szöveg diktálását bármely aktív alkalmazásba. A beszédfelismerés helyi kiszolgálón (Sherpa-ONNX) vagy felhőszolgáltatáson (Deepgram) keresztül működik. A felvétel gyorsbillentyűvel indítható, és a felismert szöveg automatikusan beillesztésre kerül a kurzor pozíciójába. További LLM-utófeldolgozás is bekapcsolható az írásjelek, hibajavítás és formázás céljából.",
+    "stylingNavTab": "Stilizálás",
+    "transformationsNavTab": "Átalakítás"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

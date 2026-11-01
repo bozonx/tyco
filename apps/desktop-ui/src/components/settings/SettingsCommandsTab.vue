@@ -1,6 +1,10 @@
 <template>
   <div class="settings-stack">
-    <SettingsSection :description="t('commands.hint')" bare>
+    <SettingsSection
+      :title="t('settings.commandsTab')"
+      :info="t('commands.hint')"
+      bare
+    >
       <template #actions>
         <Button
           variant="primary"

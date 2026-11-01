@@ -215,7 +215,7 @@
     "fieldOff": "No",
     "fieldOn": "Sì",
     "fromPluginSettings": "Dalle impostazioni del plugin: {value}",
-    "hint": "Configura un comando una volta ed eseguilo dal menu azioni principale, dai comandi rapidi e da altre applicazioni.",
+    "hint": "I comandi sono azioni personalizzabili basate su strumenti: prompt LLM, script shell, webhook HTTP o traduzione. Elaborano il testo selezionato o vengono eseguiti senza input e il risultato può essere inserito nella finestra attiva, copiato negli appunti o mostrato a schermo. Si richiamano dai comandi rapidi (launcher), dal menu delle azioni principali o tramite tyco-ctl.",
     "inputUnsupported": "Il suo strumento richiede un input strutturato che non si può ricavare da un testo",
     "languageInfo": "La lingua è salvata nel comando: riordinare le lingue di traduzione nelle impostazioni non la cambia.",
     "languageLabel": "Traduci in",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Anteprima dal vivo",
     "quickCorrectionOnSubmit": "Al completamento",
     "quickCorrectionOff": "Disattivato",
-    "aiCommands": "Comandi IA"
+    "aiCommands": "Comandi IA",
+    "chatInfo": "Una chat rapida con l'IA per le attività quotidiane. A differenza dei profili IA con ruoli e strumenti isolati, questa è una conversazione universale non legata a un profilo specifico. Puoi fare domande, usare il testo selezionato come contesto, allegare immagini, impostare un prompt di sistema generale e gestire la cronologia locale delle chat.",
+    "sttTabInfo": "La dettatura vocale consente di dettare testo in qualsiasi applicazione attiva. Il riconoscimento vocale funziona tramite un server locale (Sherpa-ONNX) o un servizio cloud (Deepgram). La registrazione si avvia con una scorciatoia da tastiera e il testo viene inserito automaticamente alla posizione del cursore. È inoltre possibile abilitare la post-elaborazione tramite LLM per punteggiatura, correzione di errori e formattazione.",
+    "stylingNavTab": "Stilizzazione",
+    "transformationsNavTab": "Trasformazione"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

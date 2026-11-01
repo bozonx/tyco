@@ -1,6 +1,7 @@
 <template>
   <RuleLibrarySettings
     task="transformation"
+    title-key="settings.transformationsTab"
     hint-key="settings.transformationsHint"
     library-key="transformations"
     id-prefix="transformation"

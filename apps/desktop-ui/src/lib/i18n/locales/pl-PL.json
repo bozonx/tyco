@@ -215,7 +215,7 @@
     "fieldOff": "Nie",
     "fieldOn": "Tak",
     "fromPluginSettings": "Z ustawień wtyczki: {value}",
-    "hint": "Skonfiguruj polecenie raz i uruchamiaj je z głównego menu akcji, szybkich poleceń i innych aplikacji.",
+    "hint": "Polecenia to konfigurowalne akcje oparte na narzędziach: zapytania LLM, skrypty powłoki, webhooki HTTP lub tłumaczenie. Przetwarzają zaznaczony tekst lub działają bez danych wejściowych, a wynik mogą wstawić do aktywnego okna, skopiować do schowka lub wyświetlić. Uruchamia się je z szybkich poleceń (launchera), menu głównych akcji lub przez tyco-ctl.",
     "inputUnsupported": "Jego narzędzie wymaga ustrukturyzowanych danych wejściowych, których nie da się uzyskać z tekstu",
     "languageInfo": "Język jest zapisany w poleceniu: zmiana kolejności języków tłumaczenia w ustawieniach go nie zmienia.",
     "languageLabel": "Tłumacz na",
@@ -1099,7 +1099,11 @@
     "quickCorrectionLive": "Podgląd na żywo",
     "quickCorrectionOnSubmit": "Po zakończeniu",
     "quickCorrectionOff": "Wyłączone",
-    "aiCommands": "Polecenia AI"
+    "aiCommands": "Polecenia AI",
+    "chatInfo": "Szybki czat z AI do codziennych zadań. W przeciwieństwie do profili AI z odrębnymi rolami i narzędziami jest to uniwersalna konwersacja niepowiązana z konkretnym profilem. Możesz zadawać pytania, przekazywać zaznaczony tekst jako kontekst, dołączać obrazy, ustawiać ogólny prompt systemowy i zarządzać lokalną historią czatów.",
+    "sttTabInfo": "Dyktowanie głosowe umożliwia wprowadzanie tekstu głosem do dowolnej aktywnej aplikacji. Rozpoznawanie mowy działa przez lokalny serwer (Sherpa-ONNX) lub usługę w chmurze (Deepgram). Nagrywanie uruchamia się skrótem klawiszowym, a rozpoznany tekst trafia w miejsce kursora. Opcjonalnie można włączyć postprocessing LLM do interpunkcji, korekty i formatowania według reguł.",
+    "stylingNavTab": "Stylizacja",
+    "transformationsNavTab": "Transformacja"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

@@ -1,6 +1,9 @@
 <template>
   <div class="settings-stack">
-    <SettingsSection :description="t(props.hintKey)">
+    <SettingsSection
+      :title="props.titleKey ? t(props.titleKey) : undefined"
+      :info="props.hintKey ? t(props.hintKey) : undefined"
+    >
       <SettingsTaskModel :task="props.task" />
     </SettingsSection>
     <SettingsSection bare>
@@ -65,6 +68,7 @@ type MainAction = MainActionConfig
 /** The settings of a rule library: the styles or the transformations */
 const props = defineProps<{
   task: LlmTask
+  titleKey?: string
   hintKey: string
   /** The config key of the library */
   libraryKey: 'styling' | 'transformations'

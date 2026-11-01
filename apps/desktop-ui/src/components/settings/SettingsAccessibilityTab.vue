@@ -1,5 +1,5 @@
 <template>
-  <SettingsSection :title="t('settings.sectionAccessibility')">
+  <SettingsSection>
     <FieldRow
       :label="t('settings.contrast')"
       :hint="isEInkTheme ? t('settings.forcedByEInk') : undefined"

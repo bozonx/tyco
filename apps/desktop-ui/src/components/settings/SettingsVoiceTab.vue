@@ -1,6 +1,9 @@
 <template>
   <div class="settings-stack">
-    <SettingsSection>
+    <SettingsSection
+      :title="t('settings.sttTab')"
+      :info="t('settings.sttTabInfo')"
+    >
       <FieldRow :label="t('settings.sttProvider')">
         <FieldSelect
           :model-value="userConfig.stt.provider"

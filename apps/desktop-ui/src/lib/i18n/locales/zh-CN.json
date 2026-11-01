@@ -215,7 +215,7 @@
     "fieldOff": "否",
     "fieldOn": "是",
     "fromPluginSettings": "来自插件设置：{value}",
-    "hint": "只需配置一次命令，即可从主操作菜单、快捷命令和其他应用程序中运行它。",
+    "hint": "命令是基于工具的可自定义操作：LLM 提示词、Shell 脚本、HTTP Webhook 或翻译。它们可以处理选中的文本或无输入运行，结果可插入活动窗口、复制到剪贴板或在屏幕上显示。可通过快速命令（启动器）、主要操作菜单或 tyco-ctl 命令行运行。",
     "inputUnsupported": "其工具需要结构化输入，无法从文本中获取",
     "languageInfo": "语言保存在命令中：在设置中重新排序翻译语言不会改变它。",
     "languageLabel": "翻译为",
@@ -1093,7 +1093,11 @@
     "quickCorrectionLive": "实时预览",
     "quickCorrectionOnSubmit": "完成时",
     "quickCorrectionOff": "关闭",
-    "aiCommands": "AI 命令"
+    "aiCommands": "AI 命令",
+    "chatInfo": "用于日常任务的快速 AI 对话。与拥有独立角色和工具的 AI 配置文件不同，这是不绑定任何配置文件的通用对话。你可以提问、将所选文本作为上下文、附加图片、配置通用系统提示词并管理本地对话历史记录。",
+    "sttTabInfo": "语音输入允许你向任何处于活动状态的应用程序口述文本。语音识别通过本地服务器（Sherpa-ONNX）或云服务（Deepgram）运行。通过快捷键启动录音，识别的文本会自动插入光标所在位置。还可以启用 LLM 后处理以补充标点、纠错和应用格式化规则。",
+    "stylingNavTab": "风格化",
+    "transformationsNavTab": "转换"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
