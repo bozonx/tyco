@@ -31,6 +31,9 @@ impl HeaderSecrets for webhook::PendingHeaderSecrets<'_> {
 trait SettingsHost {
     type Secrets: HeaderSecrets;
     fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError>;
+    /// `config` with the changes another device synced meanwhile; nothing is
+    /// written.
+    fn with_disk_changes(&self, config: &Value) -> Result<Value, AppError>;
     /// Writes the config and returns it as saved: with the changes another
     /// device synced meanwhile. A failed write leaves the files as they were.
     fn write_config(
@@ -65,6 +68,13 @@ impl<'a> SettingsHost for AppSettingsHost<'a> {
     type Secrets = webhook::PendingHeaderSecrets<'a>;
     fn protect(&self, config: &mut Value) -> Result<Self::Secrets, AppError> {
         webhook::protect_for_save(self.secrets, config)
+    }
+    fn with_disk_changes(&self, config: &Value) -> Result<Value, AppError> {
+        let files = self.app.state::<persist::ConfigFiles>();
+        let device = self.app.state::<storage::device::DeviceStore>();
+        let plugins = self.app.state::<super::plugins::PluginStore>();
+        let notes = |id: &str| plugins.notes_directory_field(id).ok();
+        Ok(files.with_disk_changes(&device, &notes, config)?.value)
     }
     fn write_config(
         &self,
@@ -197,6 +207,9 @@ fn save_with(
     let mut next = merge::merge_config(&previous, &base, &next)?;
     schema::prune_device_references(&mut next);
     schema::validate_user_config(&next)?;
+    // what another device synced comes first: the history settings, among
+    // others, are committed as merged
+    let mut next = host.with_disk_changes(&next)?;
     let mut pending = Some(host.protect(&mut next)?);
     let before = HistorySettings::from_config(&previous);
     let after = HistorySettings::from_config(&next);
@@ -249,14 +262,23 @@ mod tests {
         fail_save: bool,
         conflict: bool,
         fail_history: bool,
-        /// The theme another device saved meanwhile.
-        disk_change: Option<Value>,
+        /// What another device saved meanwhile, by JSON pointer.
+        disk_changes: Vec<(&'static str, Value)>,
         conflicts: Vec<String>,
+        /// The editor history retention the save committed.
+        committed_retention_days: RefCell<Option<u64>>,
     }
     impl SettingsHost for Host {
         type Secrets = FakeSecrets;
         fn protect(&self, _: &mut Value) -> Result<FakeSecrets, AppError> {
             Ok(FakeSecrets)
+        }
+        fn with_disk_changes(&self, config: &Value) -> Result<Value, AppError> {
+            let mut value = config.clone();
+            for (pointer, change) in &self.disk_changes {
+                *value.pointer_mut(pointer).expect("changed field") = change.clone();
+            }
+            Ok(value)
         }
         fn write_config(
             &self,
@@ -266,10 +288,7 @@ mod tests {
             if self.fail_save {
                 return Err(AppError::Io(std::io::Error::other("Disk unavailable")).into());
             }
-            let mut value = config.clone();
-            if let Some(disk) = &self.disk_change {
-                value["appearance"]["theme"] = disk.clone();
-            }
+            let value = config.clone();
             *self.disk.borrow_mut() = value.clone();
             Ok(persist::SavedUserConfig {
                 value,
@@ -290,9 +309,10 @@ mod tests {
         fn with_history<T>(
             &self,
             _: HistorySettings,
-            _: HistorySettings,
+            after: HistorySettings,
             commit: impl FnOnce() -> Result<T, AppError>,
         ) -> Result<T, AppError> {
+            *self.committed_retention_days.borrow_mut() = Some(after.editor.retention_days);
             self.calls.borrow_mut().push("prepare");
             if self.fail_history {
                 return Err(AppError::Failed("Could not prepare editor history".into()));
@@ -383,7 +403,10 @@ mod tests {
         let state = state();
         let base = Value::clone(&state.user_config());
         let host = Host {
-            disk_change: Some(serde_json::json!("dark")),
+            disk_changes: vec![
+                ("/appearance/theme", serde_json::json!("dark")),
+                ("/editor/history/retentionDays", serde_json::json!(7)),
+            ],
             conflicts: vec![String::from("userConfig.appearance.theme")],
             ..Host::default()
         };
@@ -391,6 +414,8 @@ mod tests {
         assert_eq!(saved.settings.user_config["appearance"]["theme"], "dark");
         assert_eq!(saved.settings.user_config["language"]["ui"], "ru-RU");
         assert_eq!(state.user_config()["appearance"]["theme"], "dark");
+        // the history follows the merged settings at once
+        assert_eq!(*host.committed_retention_days.borrow(), Some(7));
         assert_eq!(
             *host.calls.borrow(),
             ["prepare", "write", "cleanup", "publish", "conflicts"]

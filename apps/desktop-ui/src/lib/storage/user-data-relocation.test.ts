@@ -88,5 +88,14 @@ describe('describeUserDataRelocation', () => {
       describeUserDataRelocation('resetToDefault', target({ kind: 'current' }))
         .mode
     ).toBeNull()
+    expect(
+      describeUserDataRelocation(
+        'resetToDefault',
+        target({ kind: 'userData', formatVersion: 2, isSupported: false })
+      )
+    ).toMatchObject({
+      mode: null,
+      notice: { kind: 'error', messageKey: 'settings.userData.targetNewer' },
+    })
   })
 })

@@ -265,6 +265,31 @@ fn a_change_another_device_synced_survives_a_save() {
 }
 
 #[test]
+fn the_changes_of_the_disk_are_merged_before_a_save_without_writing() {
+    let setup = Setup::new("config-merge-before-save");
+    let mut config = setup.load().value;
+    let mut disk = setup.user_file();
+    disk["editor"]["history"]["retentionDays"] = json!(7);
+    fs::write(setup.user_path(), disk.to_string()).unwrap();
+    let written = fs::read(setup.user_path()).unwrap();
+
+    config["language"]["ui"] = json!("ru-RU");
+    let merged = setup
+        .files
+        .with_disk_changes(&setup.device, &no_notes, &config)
+        .unwrap();
+    assert_eq!(merged.value["editor"]["history"]["retentionDays"], 7);
+    assert_eq!(merged.value["language"]["ui"], "ru-RU");
+    assert!(merged.conflicts.is_empty());
+    assert_eq!(fs::read(setup.user_path()).unwrap(), written);
+
+    // the save that follows finds nothing new to merge
+    let saved = setup.save(&merged.value);
+    assert!(saved.conflicts.is_empty());
+    assert_eq!(saved.value, merged.value);
+}
+
+#[test]
 fn a_field_both_devices_changed_takes_the_change_of_this_one() {
     let setup = Setup::new("config-merge-conflict");
     let mut config = setup.load().value;
@@ -354,6 +379,59 @@ fn notes_folders_stay_on_the_device() {
         .map_err(|failure| failure.error)
         .unwrap();
     assert!(setup.device.snapshot().plugin_command_paths.is_empty());
+}
+
+fn device_with_notes() -> DeviceFile {
+    DeviceFile {
+        plugin_paths: [(String::from("FastNote"), String::from("/notes"))].into(),
+        plugin_command_paths: [(String::from("inbox"), String::from("/inbox"))].into(),
+        ..DeviceFile::default()
+    }
+}
+
+#[test]
+fn notes_folders_survive_a_config_that_was_not_read() {
+    // the folder is not connected
+    let dir = TestDir::new("config-notes-not-connected");
+    let files = ConfigFiles::at(None, false, dir.join("state").join(CONFIG_BASE_FILE_NAME));
+    let device = DeviceStore::in_memory(device_with_notes());
+    files.load(&device, &fast_note).unwrap();
+    assert_eq!(device.snapshot(), device_with_notes());
+
+    // the config is broken, or missing
+    for raw in [Some("{ broken"), None] {
+        let setup = Setup::new("config-notes-broken");
+        if let Some(raw) = raw {
+            fs::write(setup.user_path(), raw).unwrap();
+        }
+        let device = DeviceStore::in_memory(device_with_notes());
+        setup.files.load(&device, &fast_note).unwrap();
+        let snapshot = device.snapshot();
+        assert_eq!(snapshot.plugin_paths, device_with_notes().plugin_paths);
+        assert_eq!(
+            snapshot.plugin_command_paths,
+            device_with_notes().plugin_command_paths
+        );
+    }
+}
+
+#[test]
+fn a_config_that_was_read_drops_the_folders_of_removed_commands_only() {
+    let setup = Setup::new("config-notes-read");
+    fs::write(setup.user_path(), json!({"commands": []}).to_string()).unwrap();
+    let device = DeviceStore::in_memory(device_with_notes());
+    let loaded = setup.files.load(&device, &fast_note).unwrap().value;
+    let snapshot = device.snapshot();
+    assert!(snapshot.plugin_command_paths.is_empty());
+    // a plugin without saved settings keeps the folder of this device
+    assert_eq!(snapshot.plugin_paths["FastNote"], "/notes");
+
+    setup
+        .files
+        .save(&device, &fast_note, &loaded)
+        .map_err(|failure| failure.error)
+        .unwrap();
+    assert_eq!(device.snapshot().plugin_paths["FastNote"], "/notes");
 }
 
 #[test]

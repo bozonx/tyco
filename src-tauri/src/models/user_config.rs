@@ -173,7 +173,8 @@ pub fn terminal_apps(config: &Value) -> Vec<String> {
         .collect()
 }
 
-/// `isInDevelopment`: a development build that keeps no editor history.
+/// `isInDevelopment`: unlocks the features still in development, such as the
+/// development plugins and the editor history.
 pub fn is_in_development(config: &Value) -> bool {
     config
         .get("isInDevelopment")

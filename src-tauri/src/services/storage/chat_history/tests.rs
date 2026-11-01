@@ -404,6 +404,25 @@ fn chat_history_policy_disabled_does_not_clear_chats() {
     assert_eq!(ids(&dirs), ["chat-1"]);
 }
 
+#[test]
+fn every_policy_pass_collects_the_unused_images() {
+    // e.g. at startup: no chat expires, yet an image nothing refers to starts
+    // its grace period
+    let dir = TestDir::new("policy-collects-images");
+    let dirs = dirs(&dir);
+    write_json(&dirs.chats.join("chat-1.json"), &chat_item("chat-1")).unwrap();
+    fs::create_dir_all(dirs.images()).unwrap();
+    fs::write(dirs.images().join("unused.webp"), b"webp").unwrap();
+
+    assert!(enforce_chat_history_policy(&dirs, enabled_policy())
+        .unwrap()
+        .is_empty());
+    let record: Value = serde_json::from_slice(&fs::read(&dirs.orphans).unwrap()).unwrap();
+    let key = dirs.images().to_string_lossy().into_owned();
+    assert!(record[key.as_str()]["unused"].is_u64());
+    assert!(dirs.images().join("unused.webp").exists());
+}
+
 #[cfg(unix)]
 #[test]
 fn rebuilding_does_not_quarantine_a_chat_that_cannot_be_read() {

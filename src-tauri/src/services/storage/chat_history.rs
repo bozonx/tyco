@@ -651,15 +651,15 @@ impl From<ChatHistoryConfig> for ChatHistoryPolicy {
 
 /// Brings the stored chats in line with the settings: expired ones are
 /// dropped, also while no new chats are saved. Returns the dropped ids.
+/// The unused images are collected each time, e.g. at startup: an image
+/// waits out its grace period, so a collection only when a chat drops one
+/// would hardly ever remove it.
 pub(super) fn enforce_chat_history_policy(
     dirs: &ChatDirs,
     policy: ChatHistoryPolicy,
 ) -> Result<Vec<String>, AppError> {
     let mut history = list_chats(dirs)?;
     let removed = policy.drop_expired(&mut history, now_ms());
-    if removed.is_empty() {
-        return Ok(removed);
-    }
     remove_chat_files(&dirs.chats, &removed)?;
     clean_images(dirs);
     Ok(removed)

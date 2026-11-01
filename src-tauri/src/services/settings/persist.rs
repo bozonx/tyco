@@ -60,6 +60,17 @@ pub struct SavedUserConfig {
     pub conflicts: Vec<String>,
 }
 
+/// A config merged with the disk, see [`ConfigFiles::merge_with_disk`].
+struct Merged {
+    /// `config.json` as it is on the disk, when it can be read.
+    disk: Option<Value>,
+    /// The part of the user data to write.
+    user: Value,
+    /// The whole config, as the app holds it.
+    value: Value,
+    conflicts: Vec<String>,
+}
+
 /// A save that failed. When the files could not be put back either, it is
 /// uncertain which references they hold.
 #[derive(Debug)]
@@ -180,7 +191,10 @@ impl ConfigFiles {
         let (mut value, unknown) = join_scopes(&user_raw, &device_raw);
         put_note_paths(&mut value, &device_file, notes);
         schema::normalize_user_config(&mut value);
-        let parts = Parts::of(&value, &unknown, notes);
+        let mut parts = Parts::of(&value, &unknown, notes);
+        // a config that was not read says nothing about the commands: the
+        // folders of this device stay until a config that was read drops them
+        parts.keep_device_paths(&device_file, user_file != UserFile::Read);
         *self.device_unknown.locked() = unknown;
 
         let mut is_on_disk = true;
@@ -246,62 +260,23 @@ impl ConfigFiles {
             return Err(AppError::UserDataUnavailable(self.unavailable.clone()).into());
         };
         let unknown = self.device_unknown.locked().clone();
-        let parts = Parts::of(config, &unknown, notes);
+        let mut parts = Parts::of(config, &unknown, notes);
+        parts.keep_device_paths(&device.snapshot(), false);
         let previous_bytes = read_bytes(path)?;
-        let disk = match &previous_bytes {
-            None => None,
-            Some(raw) => match serde_json::from_slice::<Value>(raw) {
-                Ok(value) if version::is_newer_than_supported(&value) => {
-                    return Err(newer_config_error().into());
-                }
-                Ok(value) if value.is_object() => Some(value),
-                Ok(_) | Err(_) => {
-                    // the config in memory is valid, and refusing every save
-                    // would not get the file fixed
-                    let copy = preserve_broken_copy(path, raw)?;
-                    log::warn!(
-                        "The config on the disk is unreadable; kept it at {} and wrote the current one",
-                        copy.display()
-                    );
-                    None
-                }
-            },
-        };
-        let base = self.read_base();
-
-        let mut user = parts.user.clone();
-        let mut conflicts = Vec::new();
-        let mut value = config.clone();
-        if let (Some(disk), Some(base)) = (&disk, &base) {
-            if disk != base {
-                let device_part = &parts.device;
-                let disk_part = normalized_user_part(disk, device_part, &unknown, notes);
-                let base_part = normalized_user_part(base, device_part, &unknown, notes);
-                let (merged, lost) = merge::merge_preferring_next(&disk_part, &base_part, &user)?;
-                if !lost.is_empty() {
-                    if let Some(raw) = &previous_bytes {
-                        match preserve_copy(path, DISK_COPY_MARKER, raw) {
-                            Ok(copy) => log::warn!(
-                                "Settings changed on another device too ({}); kept its version at {}",
-                                lost.join(", "),
-                                copy.display()
-                            ),
-                            Err(error) => {
-                                log::error!("Could not keep the config of the disk: {error}")
-                            }
-                        }
-                    }
-                }
-                conflicts = lost;
-                // what the other device removed may leave references of this
-                // one dangling: the merge is repaired like a file read
-                let (mut joined, _) = join_scopes(&merged, device_part);
-                put_note_paths(&mut joined, &parts.as_device_file(), notes);
-                schema::normalize_user_config(&mut joined);
-                user = Parts::of(&joined, &unknown, notes).user;
-                value = joined;
-            }
-        }
+        let Merged {
+            disk,
+            user,
+            value,
+            conflicts,
+        } = self.merge_with_disk(
+            path,
+            previous_bytes.as_deref(),
+            &parts,
+            &unknown,
+            notes,
+            config,
+            true,
+        )?;
 
         if disk.as_ref() != Some(&user) {
             write_user_file(path, &user)?;
@@ -324,6 +299,115 @@ impl ConfigFiles {
         }
         self.write_base(&user);
         Ok(SavedUserConfig { value, conflicts })
+    }
+
+    /// `config` with the changes another device synced into `config.json`
+    /// since this device last read or wrote it, and the fields both changed,
+    /// where `config` wins; nothing is written. A save applies them before
+    /// it commits anything else, so that everything it commits, e.g. the
+    /// history settings, follows the merged config.
+    pub fn with_disk_changes(
+        &self,
+        device: &DeviceStore,
+        notes: NotesFields,
+        config: &Value,
+    ) -> Result<SavedUserConfig, AppError> {
+        let Some(path) = self.user_path.as_deref().filter(|_| self.is_writable) else {
+            return Err(AppError::UserDataUnavailable(self.unavailable.clone()));
+        };
+        let unknown = self.device_unknown.locked().clone();
+        let mut parts = Parts::of(config, &unknown, notes);
+        parts.keep_device_paths(&device.snapshot(), false);
+        let previous_bytes = read_bytes(path)?;
+        let merged = self.merge_with_disk(
+            path,
+            previous_bytes.as_deref(),
+            &parts,
+            &unknown,
+            notes,
+            config,
+            false,
+        )?;
+        Ok(SavedUserConfig {
+            value: merged.value,
+            conflicts: merged.conflicts,
+        })
+    }
+
+    /// Merges `config`, split into `parts`, with `raw`, the bytes of
+    /// `config.json`, three ways with the base. `keeps_copies` keeps an
+    /// unreadable file, and the version of the disk that lost a conflict, in
+    /// the recovery folder.
+    #[allow(clippy::too_many_arguments)]
+    fn merge_with_disk(
+        &self,
+        path: &Path,
+        raw: Option<&[u8]>,
+        parts: &Parts,
+        unknown: &HashSet<ConfigPath>,
+        notes: NotesFields,
+        config: &Value,
+        keeps_copies: bool,
+    ) -> Result<Merged, AppError> {
+        let disk = match raw {
+            None => None,
+            Some(raw) => match serde_json::from_slice::<Value>(raw) {
+                Ok(value) if version::is_newer_than_supported(&value) => {
+                    return Err(newer_config_error());
+                }
+                Ok(value) if value.is_object() => Some(value),
+                Ok(_) | Err(_) => {
+                    // the config in memory is valid, and refusing every save
+                    // would not get the file fixed
+                    if keeps_copies {
+                        let copy = preserve_broken_copy(path, raw)?;
+                        log::warn!(
+                            "The config on the disk is unreadable; kept it at {} and wrote the current one",
+                            copy.display()
+                        );
+                    }
+                    None
+                }
+            },
+        };
+        let mut merged = Merged {
+            user: parts.user.clone(),
+            value: config.clone(),
+            conflicts: Vec::new(),
+            disk: disk.clone(),
+        };
+        let (Some(disk), Some(base)) = (disk, self.read_base()) else {
+            return Ok(merged);
+        };
+        if disk != base {
+            let device_part = &parts.device;
+            let disk_part = normalized_user_part(&disk, device_part, unknown, notes);
+            let base_part = normalized_user_part(&base, device_part, unknown, notes);
+            let (user, lost) = merge::merge_preferring_next(&disk_part, &base_part, &merged.user)?;
+            if keeps_copies && !lost.is_empty() {
+                if let Some(raw) = raw {
+                    match preserve_copy(path, DISK_COPY_MARKER, raw) {
+                        Ok(copy) => log::warn!(
+                            "Settings changed on another device too ({}); kept its version at {}",
+                            lost.join(", "),
+                            copy.display()
+                        ),
+                        Err(error) => {
+                            log::error!("Could not keep the config of the disk: {error}")
+                        }
+                    }
+                }
+            }
+            merged.conflicts = lost;
+            // what the other device removed may leave references of this
+            // one dangling: the merge is repaired like a file read
+            let (mut joined, _) = join_scopes(&user, device_part);
+            put_note_paths(&mut joined, &parts.as_device_file(), notes);
+            schema::normalize_user_config(&mut joined);
+            merged.user = Parts::of(&joined, unknown, notes).user;
+            merged.value = joined;
+        }
+        Ok(merged)
     }
 
     fn read_base(&self) -> Option<Value> {
@@ -442,12 +526,13 @@ struct Parts {
     device: Value,
     plugin_paths: BTreeMap<String, String>,
     plugin_command_paths: BTreeMap<String, String>,
+    owners: NoteOwners,
 }
 
 impl Parts {
     fn of(config: &Value, device_unknown: &HashSet<ConfigPath>, notes: NotesFields) -> Self {
         let mut config = config.clone();
-        let (plugin_paths, plugin_command_paths) = take_note_paths(&mut config, notes);
+        let taken = take_note_paths(&mut config, notes);
         let (user, mut device) = schema::split_by_scope(&config, device_unknown);
         if let Some(version) = config.get(version::CONFIG_VERSION_KEY) {
             device[version::CONFIG_VERSION_KEY] = version.clone();
@@ -455,8 +540,33 @@ impl Parts {
         Self {
             user,
             device,
-            plugin_paths,
-            plugin_command_paths,
+            plugin_paths: taken.plugin_paths,
+            plugin_command_paths: taken.command_paths,
+            owners: taken.owners,
+        }
+    }
+
+    /// Keeps the folders of `device` the config has no field for: a plugin
+    /// without saved settings, and, when `keeps_missing_commands`, a command
+    /// the config does not hold, as one that was not read says nothing about
+    /// it. The folder of a command a config that was read no longer holds is
+    /// dropped.
+    fn keep_device_paths(&mut self, device: &DeviceFile, keeps_missing_commands: bool) {
+        for (id, path) in &device.plugin_paths {
+            if !self.owners.plugins.contains(id) {
+                self.plugin_paths
+                    .entry(id.clone())
+                    .or_insert_with(|| path.clone());
+            }
+        }
+        if keeps_missing_commands {
+            for (id, path) in &device.plugin_command_paths {
+                if !self.owners.commands.contains(id) {
+                    self.plugin_command_paths
+                        .entry(id.clone())
+                        .or_insert_with(|| path.clone());
+                }
+            }
         }
     }
 
@@ -491,14 +601,32 @@ fn tool_plugin(tool_id: &str) -> Option<&str> {
     tool_id.split_once('.').map(|(plugin, _)| plugin)
 }
 
+/// The plugins whose settings hold a notes folder field, and the commands the
+/// config holds, by id: the config decides their folders.
+#[derive(Default)]
+struct NoteOwners {
+    plugins: HashSet<String>,
+    commands: HashSet<String>,
+}
+
+/// The notes folders a config held, see [`take_note_paths`].
+struct TakenNotePaths {
+    plugin_paths: BTreeMap<String, String>,
+    command_paths: BTreeMap<String, String>,
+    owners: NoteOwners,
+}
+
 /// Takes the notes folders out of the plugin settings and the commands of
 /// plugins, leaving empty strings: a folder means something on one machine
 /// only, so each device sets its own. Returns them by plugin id and by
 /// command id.
-fn take_note_paths(
-    config: &mut Value,
-    notes: NotesFields,
-) -> (BTreeMap<String, String>, BTreeMap<String, String>) {
+fn take_note_paths(config: &mut Value, notes: NotesFields) -> TakenNotePaths {
+    let mut owners = NoteOwners::default();
+    for command in config["commands"].as_array().into_iter().flatten() {
+        if let Some(id) = command["id"].as_str() {
+            owners.commands.insert(id.to_owned());
+        }
+    }
     let mut plugin_paths = BTreeMap::new();
     if let Some(plugins) = config["plugins"].as_object_mut() {
         for (id, plugin) in plugins {
@@ -506,6 +634,9 @@ fn take_note_paths(
                 continue;
             };
             if let Some(path) = plugin["settings"].get_mut(&field) {
+                if path.is_string() {
+                    owners.plugins.insert(id.clone());
+                }
                 if let Some(text) = path.as_str().filter(|text| !text.trim().is_empty()) {
                     plugin_paths.insert(id.clone(), text.to_owned());
                 }
@@ -534,7 +665,11 @@ fn take_note_paths(
             }
         }
     }
-    (plugin_paths, command_paths)
+    TakenNotePaths {
+        plugin_paths,
+        command_paths,
+        owners,
+    }
 }
 
 /// Puts the notes folders of this device back into the config. One of a

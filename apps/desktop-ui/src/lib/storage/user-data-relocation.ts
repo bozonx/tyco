@@ -33,6 +33,9 @@ export function describeUserDataRelocation(
 ): UserDataRelocation {
   const contents = target.contents
   if (action === 'resetToDefault') {
+    // data of a newer layout would only be read, as with `connect`
+    if (contents.kind === 'userData' && !contents.isSupported)
+      return refusal('settings.userData.targetNewer', 'error')
     // the default folder takes the data only when it holds none of its own
     return contents.kind === 'empty' || contents.kind === 'occupied'
       ? {

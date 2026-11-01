@@ -210,6 +210,13 @@ pub fn plan(
                     "The data is in the default folder already".into(),
                 ));
             }
+            // as `connect`: data of a newer layout would only be read
+            if marker_version(default_dir).is_some_and(|version| version > USER_FORMAT_VERSION) {
+                return Err(AppError::UnsupportedConfig(format!(
+                    "The data in {} was laid out by a newer version of Tyco; update Tyco to use it",
+                    default_dir.display()
+                )));
+            }
             Ok(RelocationPlan::Use {
                 to: default_dir.to_path_buf(),
             })
@@ -594,5 +601,15 @@ mod tests {
                 to: folders.default.clone()
             }
         );
+        // data of a newer layout is not used: it would only be read
+        fs::write(
+            folders.default.join(USER_MARKER_FILE),
+            format!(r#"{{"formatVersion":{}}}"#, USER_FORMAT_VERSION + 1),
+        )
+        .unwrap();
+        assert!(matches!(
+            folders.plan(UserDataRelocationMode::UseDefault, None),
+            Err(AppError::UnsupportedConfig(_))
+        ));
     }
 }

@@ -193,14 +193,19 @@ folders of plugins), and one whose entity is gone is dropped on that device.
 The notes folders of plugins are taken out of the plugin settings and the
 commands and kept on the device (`pluginPaths`, `pluginCommandPaths` of
 `device.json`), leaving empty strings in `config.json`; see
-`plugin-packages.md`.
+`plugin-packages.md`. Only a `config.json` that was read changes them: while
+the user data folder is not connected, or its config is broken or missing, the
+folders of the device stay as they are. The folder of a command a read config
+no longer holds is dropped; that of a plugin without saved settings is kept.
 
 `config.json` is the one file every device rewrites, so each save merges it
 three ways with `config.base.json` of the state folder, the version this device
 last read or wrote (`settings::persist`). A change another device synced
 meanwhile survives; where both changed one field, the change just made here
 wins, the version of the disk is kept in the recovery folder, and the windows
-get `app://settings-conflict`. Without a base, e.g. after connecting another
+get `app://settings-conflict`. The merge comes first in a save, before the
+hotkeys, the history settings and the keys are committed, so that they follow
+the merged config; the write compares with the disk once more. Without a base, e.g. after connecting another
 folder, the disk is taken as it is. Without a watcher a synced change is taken
 in at the next save or start. A startup repair writes a file only when the
 repair changed a value, not when it only filled missing fields, so that two

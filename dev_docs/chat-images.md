@@ -96,6 +96,9 @@ the modification time of the original, so the age of a file tells nothing: the
 collection records in `index/orphan-images.json` of the state folder when it
 first saw an image without references, and removes it only after seven days
 without one by that record. An image that gets a reference leaves the record.
+Collection runs when a saved chat drops an image and whenever the chat history
+is brought in line with its settings: at startup, in the background, and after
+the chat history settings change.
 
 ## Verification
 
