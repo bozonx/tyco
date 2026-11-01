@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  stepDiffMode,
+  stepParallelViewMode,
   DEFAULT_DIFF_VIEW_MODE,
-  cycleDiffMode,
-  cycleParallelViewMode,
   splitDiffParts,
   computeWordDiff,
   hasDifferences,
@@ -95,14 +95,17 @@ describe('diff-model', () => {
     expect(isDiffViewMode('original')).toBe(true)
     expect(isDiffViewMode('other')).toBe(false)
 
-    expect(cycleDiffMode('unified')).toBe('split')
-    expect(cycleDiffMode('split')).toBe('result')
-    expect(cycleDiffMode('result')).toBe('original')
-    expect(cycleDiffMode('original')).toBe('unified')
+    expect(stepDiffMode('unified', 1)).toBe('split')
+    expect(stepDiffMode('result', 1)).toBe('original')
+    expect(stepDiffMode('original', 1)).toBe('original')
+    expect(stepDiffMode('split', -1)).toBe('unified')
+    expect(stepDiffMode('unified', -1)).toBe('unified')
 
     expect(resolveParallelViewMode()).toBe('split')
     expect(resolveParallelViewMode('result')).toBe('result')
-    expect(cycleParallelViewMode('split')).toBe('result')
-    expect(cycleParallelViewMode('result')).toBe('split')
+    expect(stepParallelViewMode('split', 1)).toBe('result')
+    expect(stepParallelViewMode('result', 1)).toBe('result')
+    expect(stepParallelViewMode('result', -1)).toBe('split')
+    expect(stepParallelViewMode('split', -1)).toBe('split')
   })
 })

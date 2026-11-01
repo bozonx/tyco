@@ -55,8 +55,8 @@ import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedTranslationViewMode } from '../../composables/use-persisted-view-mode'
-import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import { useResultActions } from '../../composables/use-result-actions'
+import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { PreviewMenuParams } from '../../lib/modals/menu-modal-params'
 import AppIcon from '../common/AppIcon.vue'
 import InlineNotice from '../common/InlineNotice.vue'
@@ -76,11 +76,11 @@ watch(
   }
 )
 
-const { viewMode, cycleMode } = usePersistedTranslationViewMode(() =>
+const { viewMode, stepMode } = usePersistedTranslationViewMode(() =>
   Boolean(props.sourceText)
 )
 
-usePreviewModeShortcut(cycleMode)
+useViewModeArrowKeys(stepMode)
 
 const { t } = useI18n()
 

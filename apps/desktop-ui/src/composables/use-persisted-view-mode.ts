@@ -2,11 +2,12 @@ import type { IpcResult } from '@tyco/shared'
 import { ref, watch, type Ref } from 'vue'
 
 import {
-  cycleDiffMode,
-  cycleParallelViewMode,
   resolveDiffMode,
   resolveParallelViewMode,
+  stepDiffMode,
+  stepParallelViewMode,
   type DiffViewMode,
+  type ModeStep,
   type ParallelViewMode,
 } from '../lib/diff/diff-model'
 import { useDesktopStore } from '../stores/desktop'
@@ -53,11 +54,11 @@ export function usePersistedDiffMode() {
       })
   )
 
-  function cycleMode() {
-    diffMode.value = cycleDiffMode(diffMode.value)
+  function stepMode(step: ModeStep) {
+    diffMode.value = stepDiffMode(diffMode.value, step)
   }
 
-  return { diffMode, cycleMode }
+  return { diffMode, stepMode }
 }
 
 export function usePersistedTranslationViewMode(hasSourceText: () => boolean) {
@@ -76,10 +77,10 @@ export function usePersistedTranslationViewMode(hasSourceText: () => boolean) {
       })
   )
 
-  function cycleMode() {
+  function stepMode(step: ModeStep) {
     if (!hasSourceText()) return
-    viewMode.value = cycleParallelViewMode(viewMode.value)
+    viewMode.value = stepParallelViewMode(viewMode.value, step)
   }
 
-  return { viewMode, cycleMode }
+  return { viewMode, stepMode }
 }

@@ -30,9 +30,30 @@ export function resolveDiffMode(preferred?: DiffViewMode | null): DiffViewMode {
   return isDiffViewMode(preferred) ? preferred : DEFAULT_DIFF_VIEW_MODE
 }
 
-export function cycleDiffMode(current: DiffViewMode): DiffViewMode {
-  const modes: DiffViewMode[] = ['unified', 'split', 'result', 'original']
-  return modes[(modes.indexOf(current) + 1) % modes.length]
+/** Previous (-1) or next (1) mode; stops at the first and the last one */
+export type ModeStep = -1 | 1
+
+const DIFF_MODE_ORDER: DiffViewMode[] = [
+  'unified',
+  'split',
+  'result',
+  'original',
+]
+const PARALLEL_MODE_ORDER: ParallelViewMode[] = ['split', 'result']
+
+function stepMode<T>(modes: readonly T[], current: T, step: ModeStep): T {
+  const index = Math.min(
+    Math.max(modes.indexOf(current) + step, 0),
+    modes.length - 1
+  )
+  return modes[index]
+}
+
+export function stepDiffMode(
+  current: DiffViewMode,
+  step: ModeStep
+): DiffViewMode {
+  return stepMode(DIFF_MODE_ORDER, current, step)
 }
 
 export type ParallelViewMode = 'split' | 'result'
@@ -43,10 +64,11 @@ export function resolveParallelViewMode(
   return preferred === 'split' || preferred === 'result' ? preferred : 'split'
 }
 
-export function cycleParallelViewMode(
-  current: ParallelViewMode
+export function stepParallelViewMode(
+  current: ParallelViewMode,
+  step: ModeStep
 ): ParallelViewMode {
-  return current === 'split' ? 'result' : 'split'
+  return stepMode(PARALLEL_MODE_ORDER, current, step)
 }
 
 class UnicodeWordsWithSpaceDiff extends Diff<string, string, string> {

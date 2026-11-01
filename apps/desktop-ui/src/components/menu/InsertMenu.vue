@@ -53,7 +53,7 @@ import { computed } from 'vue'
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
-import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
+import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
@@ -125,12 +125,12 @@ const actionsMenu = computed(() => {
 })
 const { t } = useI18n()
 const hasDiff = computed(() => Boolean(props.oldText))
-const { diffMode, cycleMode } = usePersistedDiffMode()
+const { diffMode, stepMode } = usePersistedDiffMode()
 
 const statusVisible = computed(() => props.isCorrectionUnchanged)
 
-usePreviewModeShortcut(() => {
-  if (hasDiff.value) cycleMode()
+useViewModeArrowKeys((step) => {
+  if (hasDiff.value) stepMode(step)
 })
 
 const isShowingOriginal = computed(

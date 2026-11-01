@@ -35,8 +35,8 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
-import { usePreviewModeShortcut } from '../../composables/use-preview-mode-shortcut'
 import { useResultActions } from '../../composables/use-result-actions'
+import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { DiffMenuParams } from '../../lib/modals/menu-modal-params'
 import Diff from '../common/Diff.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
@@ -53,9 +53,9 @@ const replaceEditorAction = computed<ActionItem>(() => ({
   action: async () => props.replaceEditor?.(),
 }))
 
-const { diffMode, cycleMode } = usePersistedDiffMode()
+const { diffMode, stepMode } = usePersistedDiffMode()
 
-usePreviewModeShortcut(cycleMode)
+useViewModeArrowKeys(stepMode)
 
 const { leftLetterKeys, spaceKey, isEditorTarget } = useResultActions(
   () => props.oldText

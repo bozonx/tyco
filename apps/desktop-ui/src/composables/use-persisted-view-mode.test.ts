@@ -41,10 +41,10 @@ const savedConfigs = () =>
 
 describe('usePersistedDiffMode', () => {
   it('stores a picked mode and follows a mode stored elsewhere', async () => {
-    const { diffMode, cycleMode } = scope.run(() => usePersistedDiffMode())!
+    const { diffMode, stepMode } = scope.run(() => usePersistedDiffMode())!
     expect(diffMode.value).toBe('unified')
 
-    cycleMode()
+    stepMode(1)
     await vi.waitFor(() => expect(savedConfigs()).toHaveLength(1))
     expect(savedConfigs()[0]!.editor.diffViewMode).toBe(diffMode.value)
     expect(desktop.backend.userConfig.editor.diffViewMode).toBe(diffMode.value)
