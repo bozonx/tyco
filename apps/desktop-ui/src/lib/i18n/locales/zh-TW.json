@@ -350,7 +350,10 @@
       "switchToFormatted": "目前為 Markdown。切換至格式化文字 (Ctrl+Shift+M)",
       "switchToSource": "目前為格式化文字。切換至 Markdown (Ctrl+Shift+M)",
       "taskList": "任務清單",
-      "title": "標記"
+      "title": "標記",
+      "heading4": "標題 4",
+      "heading5": "標題 5",
+      "heading6": "標題 6"
     },
     "menu": {
       "actions": "動作",
@@ -1097,7 +1100,14 @@
     "chatInfo": "用於日常任務的快速 AI 對話。與擁有獨立角色和工具的 AI 設定檔不同，這是未綁定任何特定設定檔的通用對話。您可以發問、將選取的文字作為上下文、附加圖片、設定通用系統提示詞並管理本機對話歷程記錄。",
     "sttTabInfo": "語音輸入讓您可以向任何使用中的應用程式口述文字。語音辨識透過本機伺服器（Sherpa-ONNX）或雲端服務（Deepgram）進行。透過快速鍵啟動錄音，辨識後的文字會自動插入游標位置。亦可啟用 LLM 後續處理以補上標點、修正錯誤並套用格式化規則。",
     "stylingNavTab": "風格化",
-    "transformationsNavTab": "轉換"
+    "transformationsNavTab": "轉換",
+    "editorShortcuts": {
+      "title": "編輯器",
+      "hint": "點擊快捷鍵並按下新的組合鍵。Escape 取消錄製。這些快捷鍵僅在編輯器中生效。",
+      "indent": "增加縮排",
+      "outdent": "減少縮排",
+      "reserved": "此快捷鍵已保留用於文字編輯或應用程式操作。"
+    }
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

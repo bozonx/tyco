@@ -350,7 +350,10 @@
       "switchToFormatted": "Sada: Markdown. Prebaci na oblikovani tekst (Ctrl+Shift+M)",
       "switchToSource": "Sada: oblikovani tekst. Prebaci na Markdown (Ctrl+Shift+M)",
       "taskList": "Popis zadataka",
-      "title": "Oznake"
+      "title": "Oznake",
+      "heading4": "Naslov 4",
+      "heading5": "Naslov 5",
+      "heading6": "Naslov 6"
     },
     "menu": {
       "actions": "Radnje",
@@ -1103,7 +1106,14 @@
     "chatInfo": "Brzi AI chat za svakodnevne zadatke. Za razliku od AI profila s izoliranim ulogama i alatima, ovo je univerzalni razgovor bez vezivanja uz određeni profil. Možete postavljati pitanja, koristiti označeni tekst kao kontekst, priložiti slike, postaviti opći sistemski prompt i upravljati lokalnom poviješću razgovora.",
     "sttTabInfo": "Glasovni unos omogućuje diktiranje teksta u bilo koju aktivnu aplikaciju. Prepoznavanje govora radi putem lokalnog poslužitelja (Sherpa-ONNX) ili usluge u oblaku (Deepgram). Snimanje se pokreće tipkovničkim prečacem, a prepoznati tekst automatski se umeće na mjesto pokazivača. Možete uključiti i naknadnu obradu putem LLM-a za interpunkciju, ispravke i formatiranje.",
     "stylingNavTab": "Stiliziranje",
-    "transformationsNavTab": "Transformacija"
+    "transformationsNavTab": "Transformacija",
+    "editorShortcuts": {
+      "title": "Uređivač",
+      "hint": "Kliknite prečac i pritisnite nove tipke. Escape otkazuje snimanje. Ovi prečaci vrijede samo u uređivaču.",
+      "indent": "Povećaj uvlaku",
+      "outdent": "Smanji uvlaku",
+      "reserved": "Ovaj je prečac rezerviran za uređivanje teksta ili radnje aplikacije."
+    }
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

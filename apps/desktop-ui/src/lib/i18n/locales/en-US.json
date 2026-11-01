@@ -350,7 +350,10 @@
       "switchToFormatted": "Now: Markdown. Switch to formatted text (Ctrl+Shift+M)",
       "switchToSource": "Now: formatted text. Switch to Markdown (Ctrl+Shift+M)",
       "taskList": "Task list",
-      "title": "Markup"
+      "title": "Markup",
+      "heading4": "Heading 4",
+      "heading5": "Heading 5",
+      "heading6": "Heading 6"
     },
     "menu": {
       "actions": "Actions",
@@ -1103,7 +1106,14 @@
     "chatInfo": "A quick AI chat for everyday tasks. Unlike AI profiles with isolated roles and tools, this is a universal conversation not tied to a specific profile. You can ask questions, use selected text as context, attach images, set a general system prompt, and manage local chat history.",
     "sttTabInfo": "Voice dictation lets you dictate text into any active application. Speech recognition works via a local server (Sherpa-ONNX) or a cloud service (Deepgram). Recording is triggered by a hotkey, and transcribed text is automatically inserted at the cursor. You can also enable LLM post-processing for punctuation, error correction, and rule-based formatting.",
     "stylingNavTab": "Styling",
-    "transformationsNavTab": "Transformation"
+    "transformationsNavTab": "Transformation",
+    "editorShortcuts": {
+      "title": "Editor",
+      "hint": "Click a shortcut and press new keys. Escape cancels recording. These shortcuts apply only in the editor.",
+      "indent": "Increase indent",
+      "outdent": "Decrease indent",
+      "reserved": "This shortcut is reserved for text editing or application actions."
+    }
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

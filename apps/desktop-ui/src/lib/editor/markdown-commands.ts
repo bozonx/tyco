@@ -1,12 +1,24 @@
+import { isolateHistory } from '@codemirror/commands'
+import { ensureSyntaxTree } from '@codemirror/language'
 import { EditorSelection } from '@codemirror/state'
 import type { EditorState, TransactionSpec } from '@codemirror/state'
-import type { EditorView, KeyBinding } from '@codemirror/view'
+import type { EditorView } from '@codemirror/view'
 
 /** Inline markup put around the selection */
 export type InlineMark = '**' | '*' | '~~' | '`'
 
 /** Markup at the start of each selected line */
-export type LinePrefix = '# ' | '## ' | '### ' | '- ' | '1. ' | '- [ ] ' | '> '
+export type LinePrefix =
+  | '# '
+  | '## '
+  | '### '
+  | '#### '
+  | '##### '
+  | '###### '
+  | '- '
+  | '1. '
+  | '- [ ] '
+  | '> '
 
 /** Indentation, then the block markup of a line: a task before a plain bullet */
 const LINE_PREFIX = /^([ \t]*)(#{1,6} |[-*+] \[[ xX]\] |[-*+] |\d+[.)] |> )?/
@@ -62,7 +74,7 @@ export const toggleInlineMark = (
   const before = state.sliceDoc(0, from)
   const after = state.sliceDoc(to)
 
-  if (from !== to && canRemove(before, after)) {
+  if (canRemove(before, after)) {
     return {
       changes: [
         { from: from - size, to: from, insert: '' },
@@ -111,7 +123,7 @@ export const toggleLinePrefix = (
     return { from, to: from + current.length, insert: next }
   })
 
-  return { changes }
+  return { changes, selection: state.selection.map(state.changes(changes), 1) }
 }
 
 /**
@@ -140,10 +152,24 @@ export const insertLink = (state: EditorState): TransactionSpec => {
 const run =
   (spec: (state: EditorState) => TransactionSpec) =>
   (view: EditorView): boolean => {
+    const { from, to } = view.state.selection.main
+    const tree = ensureSyntaxTree(view.state, to, 50)
+    if (!tree) return true
+    let isCode = false
+    tree.iterate({
+      from,
+      to,
+      enter(node) {
+        if (node.name === 'FencedCode' || node.name === 'CodeBlock')
+          isCode = true
+      },
+    })
+    if (isCode) return true
     view.dispatch(
       view.state.update(spec(view.state), {
         scrollIntoView: true,
         userEvent: 'input.format',
+        annotations: isolateHistory.of('full'),
       })
     )
     return true
@@ -158,6 +184,9 @@ export const markdownCommands = {
   heading1: run((state) => toggleLinePrefix(state, '# ')),
   heading2: run((state) => toggleLinePrefix(state, '## ')),
   heading3: run((state) => toggleLinePrefix(state, '### ')),
+  heading4: run((state) => toggleLinePrefix(state, '#### ')),
+  heading5: run((state) => toggleLinePrefix(state, '##### ')),
+  heading6: run((state) => toggleLinePrefix(state, '###### ')),
   bulletList: run((state) => toggleLinePrefix(state, '- ')),
   orderedList: run((state) => toggleLinePrefix(state, '1. ')),
   taskList: run((state) => toggleLinePrefix(state, '- [ ] ')),
@@ -165,12 +194,3 @@ export const markdownCommands = {
 }
 
 export type MarkdownCommand = keyof typeof markdownCommands
-
-/** The usual shortcuts of text editors; there is no toolbar for them */
-export const markdownKeymap: KeyBinding[] = [
-  { key: 'Mod-b', run: markdownCommands.bold },
-  { key: 'Mod-i', run: markdownCommands.italic },
-  { key: 'Mod-k', run: markdownCommands.link },
-  { key: 'Mod-e', run: markdownCommands.code },
-  { key: 'Mod-Shift-x', run: markdownCommands.strikethrough },
-]

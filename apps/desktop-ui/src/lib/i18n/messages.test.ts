@@ -182,12 +182,16 @@ const DYNAMIC_KEYS = new Set([
     'heading1',
     'heading2',
     'heading3',
+    'heading4',
+    'heading5',
+    'heading6',
     'bulletList',
     'orderedList',
     'taskList',
     'quote',
     'showSource',
   ].map((cmd) => `editor.markup.${cmd}`),
+  ...['indent', 'outdent'].map((id) => `settings.editorShortcuts.${id}`),
 ])
 
 const KEY_PATTERNS = [

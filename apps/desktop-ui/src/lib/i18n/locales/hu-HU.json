@@ -350,7 +350,10 @@
       "switchToFormatted": "Most: Markdown. Váltás formázott szövegre (Ctrl+Shift+M)",
       "switchToSource": "Most: formázott szöveg. Váltás Markdownra (Ctrl+Shift+M)",
       "taskList": "Feladatlista",
-      "title": "Jelölés"
+      "title": "Jelölés",
+      "heading4": "4. címsor",
+      "heading5": "5. címsor",
+      "heading6": "6. címsor"
     },
     "menu": {
       "actions": "Műveletek",
@@ -1100,7 +1103,14 @@
     "chatInfo": "Gyors AI-csevegés a mindennapi feladatokhoz. Az izolált szerepkörökkel és eszközökkel rendelkező AI-profilokkal ellentétben ez egy univerzális beszélgetés, amely nem kötődik konkrét profilhoz. Feltehet kérdéseket, használhatja a kijelölt szöveget kontextusként, csatolhat képeket, beállíthat általános rendszerpromptot és kezelheti a helyi csevegési előzményeket.",
     "sttTabInfo": "A hangdiktálás lehetővé teszi szöveg diktálását bármely aktív alkalmazásba. A beszédfelismerés helyi kiszolgálón (Sherpa-ONNX) vagy felhőszolgáltatáson (Deepgram) keresztül működik. A felvétel gyorsbillentyűvel indítható, és a felismert szöveg automatikusan beillesztésre kerül a kurzor pozíciójába. További LLM-utófeldolgozás is bekapcsolható az írásjelek, hibajavítás és formázás céljából.",
     "stylingNavTab": "Stilizálás",
-    "transformationsNavTab": "Átalakítás"
+    "transformationsNavTab": "Átalakítás",
+    "editorShortcuts": {
+      "title": "Szerkesztő",
+      "hint": "Kattintson egy gyorsbillentyűre, és nyomja meg az új billentyűket. Az Escape megszakítja a rögzítést. Ezek csak a szerkesztőben működnek.",
+      "indent": "Behúzás növelése",
+      "outdent": "Behúzás csökkentése",
+      "reserved": "Ez a gyorsbillentyű szövegszerkesztéshez vagy alkalmazásműveletekhez van fenntartva."
+    }
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

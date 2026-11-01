@@ -155,6 +155,7 @@ const menuGroups = (): EditorMenuGroups => ({
       action: () => doAction(item),
     })),
   markupItems: buildMarkupItems({
+    shortcuts: desktopStore.userConfig.editor.shortcuts,
     t,
     run: (command) => {
       if (!view) return
@@ -215,6 +216,7 @@ onMounted(() => {
       getMarkdownSettings: () => desktopStore.userConfig.markdown.format,
       onPastePlain: () => void commands.pastePlain(),
       markdownPreview: !isMarkupShown.value,
+      getEditorShortcuts: () => desktopStore.userConfig.editor.shortcuts,
       onToggleMarkup: toggleShowMarkup,
       onOpenActions: openInsertMenu,
       onContextMenu: openContextMenu,

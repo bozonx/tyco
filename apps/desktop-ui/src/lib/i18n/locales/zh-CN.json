@@ -350,7 +350,10 @@
       "switchToFormatted": "当前为 Markdown。切换到格式化文本 (Ctrl+Shift+M)",
       "switchToSource": "当前为格式化文本。切换到 Markdown (Ctrl+Shift+M)",
       "taskList": "任务列表",
-      "title": "标记"
+      "title": "标记",
+      "heading4": "三级标题",
+      "heading5": "三级标题",
+      "heading6": "三级标题"
     },
     "menu": {
       "actions": "操作",
@@ -1097,7 +1100,14 @@
     "chatInfo": "用于日常任务的快速 AI 对话。与拥有独立角色和工具的 AI 配置文件不同，这是不绑定任何配置文件的通用对话。你可以提问、将所选文本作为上下文、附加图片、配置通用系统提示词并管理本地对话历史记录。",
     "sttTabInfo": "语音输入允许你向任何处于活动状态的应用程序口述文本。语音识别通过本地服务器（Sherpa-ONNX）或云服务（Deepgram）运行。通过快捷键启动录音，识别的文本会自动插入光标所在位置。还可以启用 LLM 后处理以补充标点、纠错和应用格式化规则。",
     "stylingNavTab": "风格化",
-    "transformationsNavTab": "转换"
+    "transformationsNavTab": "转换",
+    "editorShortcuts": {
+      "title": "编辑器",
+      "hint": "点击快捷键并按下新的组合键。Escape 取消录制。这些快捷键仅在编辑器中生效。",
+      "indent": "增加缩进",
+      "outdent": "减少缩进",
+      "reserved": "此快捷键已保留用于文本编辑或应用操作。"
+    }
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

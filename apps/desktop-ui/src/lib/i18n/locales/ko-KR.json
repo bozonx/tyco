@@ -350,7 +350,10 @@
       "switchToFormatted": "현재: Markdown. 서식 있는 텍스트로 전환 (Ctrl+Shift+M)",
       "switchToSource": "현재: 서식 있는 텍스트. Markdown으로 전환 (Ctrl+Shift+M)",
       "taskList": "작업 목록",
-      "title": "마크업"
+      "title": "마크업",
+      "heading4": "제목 4",
+      "heading5": "제목 5",
+      "heading6": "제목 6"
     },
     "menu": {
       "actions": "작업",
@@ -1097,7 +1100,14 @@
     "chatInfo": "일상적인 작업을 위한 빠른 AI 채팅입니다. 분리된 역할과 도구를 갖춘 AI 프로필과 달리 특정 프로필에 종속되지 않는 범용 대화입니다. 질문하기, 선택한 텍스트를 컨텍스트로 전달하기, 이미지 첨부, 일반 시스템 프롬프트 설정 및 로컬 대화 기록 관리가 가능합니다.",
     "sttTabInfo": "음성 입력을 통해 활성 애플리케이션 어디에나 텍스트를 받아쓸 수 있습니다. 음성 인식은 로컬 서버(Sherpa-ONNX) 또는 클라우드 서비스(Deepgram)를 통해 작동합니다. 단축키로 녹음이 시작되며 인식된 텍스트는 커서 위치에 자동 삽입됩니다. 구두점 정리, 오류 수정 및 규칙 서식 지정을 위한 LLM 후처리도 활성화할 수 있습니다.",
     "stylingNavTab": "스타일 지정",
-    "transformationsNavTab": "변환"
+    "transformationsNavTab": "변환",
+    "editorShortcuts": {
+      "title": "편집기",
+      "hint": "단축키를 클릭하고 새 키를 누르세요. Escape로 기록을 취소합니다. 이 단축키는 편집기에서만 작동합니다.",
+      "indent": "들여쓰기 늘리기",
+      "outdent": "들여쓰기 줄이기",
+      "reserved": "이 단축키는 텍스트 편집 또는 앱 작업에 예약되어 있습니다."
+    }
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

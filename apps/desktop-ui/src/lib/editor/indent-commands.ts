@@ -1,7 +1,7 @@
-import { indentLess, indentMore } from '@codemirror/commands'
+import { indentMore } from '@codemirror/commands'
 import { indentUnit } from '@codemirror/language'
 import type { EditorState, Extension } from '@codemirror/state'
-import type { Command, KeyBinding } from '@codemirror/view'
+import type { Command } from '@codemirror/view'
 
 /**
  * Four spaces nest an item under both `- ` and `1. ` in CommonMark: a nested
@@ -40,7 +40,3 @@ export const indentOrInsertTab: Command = (view) => {
 
   return true
 }
-
-export const indentKeymap: KeyBinding[] = [
-  { key: 'Tab', run: indentOrInsertTab, shift: indentLess },
-]

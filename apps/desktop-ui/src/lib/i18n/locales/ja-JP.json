@@ -350,7 +350,10 @@
       "switchToFormatted": "現在: Markdown。リッチテキストに切り替え (Ctrl+Shift+M)",
       "switchToSource": "現在: リッチテキスト。Markdownに切り替え (Ctrl+Shift+M)",
       "taskList": "タスクリスト",
-      "title": "マークアップ"
+      "title": "マークアップ",
+      "heading4": "見出し 4",
+      "heading5": "見出し 5",
+      "heading6": "見出し 6"
     },
     "menu": {
       "actions": "アクション",
@@ -1100,7 +1103,14 @@
     "chatInfo": "日常のタスクに使える素早いAIチャットです。独立した役割やツールを持つAIプロファイルとは異なり、特定のプロファイルに紐付かない汎用的な会話です。質問の入力、選択テキストのコンテキスト利用、画像の添付、共通システムプロンプトの設定、ローカル履歴の管理が可能です。",
     "sttTabInfo": "音声入力により、任意のアクティブなアプリにテキストを口述入力できます。音声認識はローカルサーバー（Sherpa-ONNX）またはクラウドサービス（Deepgram）で行われます。ホットキーで録音を開始し、認識されたテキストがカーソル位置に自動挿入されます。句読点や誤字修正、ルールに基づく書式適用のためのLLM後処理も有効にできます。",
     "stylingNavTab": "スタイリング",
-    "transformationsNavTab": "変換"
+    "transformationsNavTab": "変換",
+    "editorShortcuts": {
+      "title": "エディター",
+      "hint": "ショートカットをクリックして新しいキーを押します。Escape で記録をキャンセルします。これらはエディター内でのみ有効です。",
+      "indent": "インデントを増やす",
+      "outdent": "インデントを減らす",
+      "reserved": "このショートカットはテキスト編集またはアプリ操作用に予約されています。"
+    }
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

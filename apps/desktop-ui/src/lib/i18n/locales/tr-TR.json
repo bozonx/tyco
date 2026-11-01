@@ -350,7 +350,10 @@
       "switchToFormatted": "Şu an: Markdown. Biçimlendirilmiş metne geç (Ctrl+Shift+M)",
       "switchToSource": "Şu an: biçimlendirilmiş metin. Markdown görünümüne geç (Ctrl+Shift+M)",
       "taskList": "Görev listesi",
-      "title": "Biçimlendirme"
+      "title": "Biçimlendirme",
+      "heading4": "Başlık 4",
+      "heading5": "Başlık 5",
+      "heading6": "Başlık 6"
     },
     "menu": {
       "actions": "Eylemler",
@@ -1100,7 +1103,14 @@
     "chatInfo": "Günlük görevler için hızlı bir yapay zeka sohbeti. İzole rollere ve araçlara sahip yapay zeka profillerinin aksine bu, belirli bir profile bağlı olmayan evrensel bir sohbettir. Soru sorabilir, seçili metni bağlam olarak kullanabilir, görsel ekleyebilir, genel bir sistem istemi ayarlayabilir ve yerel sohbet geçmişini yönetebilirsiniz.",
     "sttTabInfo": "Sesle dikte, herhangi bir etkin uygulamaya sesle metin girmenizi sağlar. Konuşma tanıma, yerel bir sunucu (Sherpa-ONNX) veya bulut hizmeti (Deepgram) üzerinden çalışır. Kayıt bir kısayol tuşuyla başlatılır ve tanınan metin imlecin olduğu yere otomatik olarak eklenir. Noktalama, hata düzeltme ve biçimlendirme için LLM son işlemesi de etkinleştirilebilir.",
     "stylingNavTab": "Stillendirme",
-    "transformationsNavTab": "Dönüştürme"
+    "transformationsNavTab": "Dönüştürme",
+    "editorShortcuts": {
+      "title": "Düzenleyici",
+      "hint": "Bir kısayola tıklayıp yeni tuşlara basın. Escape kaydı iptal eder. Bu kısayollar yalnızca düzenleyicide çalışır.",
+      "indent": "Girintiyi artır",
+      "outdent": "Girintiyi azalt",
+      "reserved": "Bu kısayol metin düzenleme veya uygulama işlemleri için ayrılmıştır."
+    }
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

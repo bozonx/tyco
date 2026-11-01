@@ -24,12 +24,22 @@ the selection; the view mirrors them.
 | --------------- | --------------------------------------------------------------------- |
 | Ctrl+B / I / E  | Bold, italic, inline code (toggles)                                   |
 | Ctrl+Shift+X    | Strikethrough                                                         |
+| Ctrl+1…6        | Toggle heading level 1–6                                              |
 | Ctrl+K          | Link from the selection                                               |
 | Tab / Shift+Tab | Indent or outdent the selected lines or the list item under the caret |
 | Ctrl+Shift+M    | Formatted view ↔ raw Markdown                                         |
 | Ctrl+Shift+V    | Paste as plain text                                                   |
 | Ctrl+Enter      | Quick actions                                                         |
 | Ctrl+Z / Ctrl+Y | Undo / redo on any keyboard layout (`history-keys.ts`)                |
+
+Formatting, indentation and Markdown display shortcuts are configurable in the
+Editor section at the bottom of Hotkeys settings. Empty bindings disable a
+shortcut. The menu shows current bindings; changes apply without recreating the
+editor. Capture and execution use the same key normalization: Latin layouts keep
+their letters, other layouts use the corresponding key position. Conflicting
+editor bindings, core editing shortcuts and configured global actions are
+rejected. Markdown commands leave fenced and indented code blocks intact, and
+each formatting command is a separate undo step.
 
 Tab stays in the editor (`indent-commands.ts`). Outside a list with no selection
 it inserts the indent unit at the caret. The indent unit is four spaces, which
@@ -42,7 +52,7 @@ Enter continues lists, tasks and quotes, and Backspace removes their markup
 ## Markup menu
 
 The context menu's Markup submenu (`markup-menu.ts`) runs the commands of
-`markdown-commands.ts`: inline marks, link, headings 1–3, bullet, numbered and
+`markdown-commands.ts`: inline marks, link, headings 1–6, bullet, numbered and
 task lists, quote, and the raw-Markdown switch. Line commands keep the line's
 indentation, replace another block prefix (a bullet becomes a task, a heading
 changes level) and remove the prefix when every selected line already has it.

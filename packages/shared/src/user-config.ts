@@ -94,7 +94,25 @@ export interface AiProfilesConfig {
   chatHistory: ChatHistoryConfig
 }
 
+export type EditorShortcutId =
+  | 'bold'
+  | 'italic'
+  | 'link'
+  | 'code'
+  | 'strikethrough'
+  | 'heading1'
+  | 'heading2'
+  | 'heading3'
+  | 'heading4'
+  | 'heading5'
+  | 'heading6'
+  | 'indent'
+  | 'outdent'
+  | 'toggleMarkup'
+export type EditorShortcuts = Record<EditorShortcutId, string>
+
 export interface EditorConfig {
+  shortcuts: EditorShortcuts
   submitKey: SubmitKey
   diffViewMode: 'unified' | 'split' | 'result' | 'original'
   history: EditorHistoryConfig

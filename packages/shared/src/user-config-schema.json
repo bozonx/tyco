@@ -73,9 +73,46 @@
             "retentionDays": 30,
             "isSecretSanitizingEnabled": true
           }
+        },
+        "shortcuts": {
+          "type": "object",
+          "properties": {
+            "bold": { "type": "string", "default": "Ctrl+B" },
+            "italic": { "type": "string", "default": "Ctrl+I" },
+            "link": { "type": "string", "default": "Ctrl+K" },
+            "code": { "type": "string", "default": "Ctrl+E" },
+            "strikethrough": { "type": "string", "default": "Ctrl+Shift+X" },
+            "heading1": { "type": "string", "default": "Ctrl+1" },
+            "heading2": { "type": "string", "default": "Ctrl+2" },
+            "heading3": { "type": "string", "default": "Ctrl+3" },
+            "heading4": { "type": "string", "default": "Ctrl+4" },
+            "heading5": { "type": "string", "default": "Ctrl+5" },
+            "heading6": { "type": "string", "default": "Ctrl+6" },
+            "indent": { "type": "string", "default": "Tab" },
+            "outdent": { "type": "string", "default": "Shift+Tab" },
+            "toggleMarkup": { "type": "string", "default": "Ctrl+Shift+M" }
+          },
+          "required": [
+            "bold",
+            "italic",
+            "link",
+            "code",
+            "strikethrough",
+            "heading1",
+            "heading2",
+            "heading3",
+            "heading4",
+            "heading5",
+            "heading6",
+            "indent",
+            "outdent",
+            "toggleMarkup"
+          ],
+          "additionalProperties": false,
+          "defaultPath": "editor.shortcuts"
         }
       },
-      "required": ["submitKey", "diffViewMode", "history"],
+      "required": ["submitKey", "diffViewMode", "history", "shortcuts"],
       "defaultPath": "editor"
     },
     "quickWindow": {

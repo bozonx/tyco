@@ -350,7 +350,10 @@
       "switchToFormatted": "Jetzt: Markdown. Zu formatiertem Text wechseln (Strg+Umschalt+M)",
       "switchToSource": "Jetzt: formatierter Text. Zu Markdown wechseln (Strg+Umschalt+M)",
       "taskList": "Aufgabenliste",
-      "title": "Auszeichnung"
+      "title": "Auszeichnung",
+      "heading4": "Überschrift 4",
+      "heading5": "Überschrift 5",
+      "heading6": "Überschrift 6"
     },
     "menu": {
       "actions": "Aktionen",
@@ -1103,7 +1106,14 @@
     "chatInfo": "Ein schneller KI-Chat für alltägliche Aufgaben. Im Gegensatz zu KI-Profilen mit isolierten Rollen und Werkzeugen ist dies ein universeller Chat ohne Bindung an ein Profil. Sie können Fragen stellen, markierten Text als Kontext nutzen, Bilder anhängen, einen allgemeinen Systemprompt festlegen und den lokalen Chatverlauf verwalten.",
     "sttTabInfo": "Die Spracheingabe ermöglicht das Diktieren von Text in jede aktive Anwendung. Die Spracherkennung läuft über einen lokalen Server (Sherpa-ONNX) oder einen Cloud-Dienst (Deepgram). Die Aufnahme wird per Hotkey gestartet und der erkannte Text automatisch an der Cursorposition eingefügt. Zusätzlich kann eine LLM-Nachbearbeitung für Zeichensetzung, Fehlerkorrektur und Formatierung aktiviert werden.",
     "stylingNavTab": "Stilisierung",
-    "transformationsNavTab": "Transformation"
+    "transformationsNavTab": "Transformation",
+    "editorShortcuts": {
+      "title": "Editor",
+      "hint": "Klicken Sie auf ein Kürzel und drücken Sie neue Tasten. Escape bricht die Aufnahme ab. Diese Kürzel gelten nur im Editor.",
+      "indent": "Einzug vergrößern",
+      "outdent": "Einzug verkleinern",
+      "reserved": "Dieses Kürzel ist für die Textbearbeitung oder Anwendungsaktionen reserviert."
+    }
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

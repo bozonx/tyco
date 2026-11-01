@@ -350,7 +350,10 @@
       "switchToFormatted": "Teraz: Markdown. Przełącz na tekst sformatowany (Ctrl+Shift+M)",
       "switchToSource": "Teraz: tekst sformatowany. Przełącz na Markdown (Ctrl+Shift+M)",
       "taskList": "Lista zadań",
-      "title": "Znaczniki"
+      "title": "Znaczniki",
+      "heading4": "Nagłówek 4",
+      "heading5": "Nagłówek 5",
+      "heading6": "Nagłówek 6"
     },
     "menu": {
       "actions": "Akcje",
@@ -1103,7 +1106,14 @@
     "chatInfo": "Szybki czat z AI do codziennych zadań. W przeciwieństwie do profili AI z odrębnymi rolami i narzędziami jest to uniwersalna konwersacja niepowiązana z konkretnym profilem. Możesz zadawać pytania, przekazywać zaznaczony tekst jako kontekst, dołączać obrazy, ustawiać ogólny prompt systemowy i zarządzać lokalną historią czatów.",
     "sttTabInfo": "Dyktowanie głosowe umożliwia wprowadzanie tekstu głosem do dowolnej aktywnej aplikacji. Rozpoznawanie mowy działa przez lokalny serwer (Sherpa-ONNX) lub usługę w chmurze (Deepgram). Nagrywanie uruchamia się skrótem klawiszowym, a rozpoznany tekst trafia w miejsce kursora. Opcjonalnie można włączyć postprocessing LLM do interpunkcji, korekty i formatowania według reguł.",
     "stylingNavTab": "Stylizacja",
-    "transformationsNavTab": "Transformacja"
+    "transformationsNavTab": "Transformacja",
+    "editorShortcuts": {
+      "title": "Edytor",
+      "hint": "Kliknij skrót i naciśnij nowe klawisze. Escape anuluje nagrywanie. Te skróty działają tylko w edytorze.",
+      "indent": "Zwiększ wcięcie",
+      "outdent": "Zmniejsz wcięcie",
+      "reserved": "Ten skrót jest zarezerwowany do edycji tekstu lub działań aplikacji."
+    }
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

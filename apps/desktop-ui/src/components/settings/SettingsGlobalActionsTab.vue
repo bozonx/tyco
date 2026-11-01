@@ -128,6 +128,7 @@
         />
       </FieldRow>
     </SettingsSection>
+    <EditorShortcutsSettings />
   </div>
 </template>
 
@@ -158,6 +159,7 @@ import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoPopover from '../common/InfoPopover.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import EditorShortcutsSettings from './EditorShortcutsSettings.vue'
 import HotkeyInput from './HotkeyInput.vue'
 import SettingsSection from './SettingsSection.vue'
 import {

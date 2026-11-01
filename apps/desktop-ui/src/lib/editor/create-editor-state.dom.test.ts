@@ -28,7 +28,13 @@ describe('toggle markup shortcut', () => {
     const onToggle = vi.fn()
     const view = mountEditor(onToggle)
 
-    press(view, { key: 'M', ctrlKey: true, shiftKey: true, keyCode: 77 })
+    press(view, {
+      key: 'M',
+      ctrlKey: true,
+      shiftKey: true,
+      keyCode: 77,
+      code: 'KeyM',
+    })
 
     expect(onToggle).toHaveBeenCalledTimes(1)
     view.destroy()
@@ -38,7 +44,13 @@ describe('toggle markup shortcut', () => {
     const onToggle = vi.fn()
     const view = mountEditor(onToggle)
 
-    press(view, { key: 'Ь', ctrlKey: true, shiftKey: true, keyCode: 77 })
+    press(view, {
+      key: 'Ь',
+      ctrlKey: true,
+      shiftKey: true,
+      keyCode: 77,
+      code: 'KeyM',
+    })
 
     expect(onToggle).toHaveBeenCalledTimes(1)
     view.destroy()
@@ -48,7 +60,7 @@ describe('toggle markup shortcut', () => {
     const onToggle = vi.fn()
     const view = mountEditor(onToggle)
 
-    press(view, { key: 'm', ctrlKey: true, keyCode: 77 })
+    press(view, { key: 'm', ctrlKey: true, keyCode: 77, code: 'KeyM' })
 
     expect(onToggle).not.toHaveBeenCalled()
     view.destroy()

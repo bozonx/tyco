@@ -1,9 +1,11 @@
+import { DEFAULT_USER_CONFIG, type EditorShortcuts } from '@tyco/shared'
 import type { MarkdownCommand } from './markdown-commands'
 import type { EditorMenuItem } from './menu-item'
 
 export interface MarkupMenuSources {
   t: (key: string) => string
   run: (command: MarkdownCommand) => void
+  shortcuts?: EditorShortcuts
   /** Whether the raw markup is shown everywhere, not only on the edited line */
   isMarkupShown: boolean
   toggleShowMarkup: () => void
@@ -12,24 +14,22 @@ export interface MarkupMenuSources {
 interface MarkupEntry {
   command: MarkdownCommand
   icon: string
-  shortcut?: string
   /** Starts a new group of the menu */
   group?: boolean
 }
 
 const ENTRIES: MarkupEntry[] = [
-  { command: 'bold', icon: 'mdi:format-bold', shortcut: 'Ctrl+B' },
-  { command: 'italic', icon: 'mdi:format-italic', shortcut: 'Ctrl+I' },
-  {
-    command: 'strikethrough',
-    icon: 'mdi:format-strikethrough-variant',
-    shortcut: 'Ctrl+Shift+X',
-  },
-  { command: 'code', icon: 'mdi:code-tags', shortcut: 'Ctrl+E' },
-  { command: 'link', icon: 'mdi:link-variant', shortcut: 'Ctrl+K' },
+  { command: 'bold', icon: 'mdi:format-bold' },
+  { command: 'italic', icon: 'mdi:format-italic' },
+  { command: 'strikethrough', icon: 'mdi:format-strikethrough-variant' },
+  { command: 'code', icon: 'mdi:code-tags' },
+  { command: 'link', icon: 'mdi:link-variant' },
   { command: 'heading1', icon: 'mdi:format-header-1', group: true },
   { command: 'heading2', icon: 'mdi:format-header-2' },
   { command: 'heading3', icon: 'mdi:format-header-3' },
+  { command: 'heading4', icon: 'mdi:format-header-4' },
+  { command: 'heading5', icon: 'mdi:format-header-5' },
+  { command: 'heading6', icon: 'mdi:format-header-6' },
   { command: 'bulletList', icon: 'mdi:format-list-bulleted', group: true },
   { command: 'orderedList', icon: 'mdi:format-list-numbered' },
   { command: 'taskList', icon: 'mdi:format-list-checks' },
@@ -45,12 +45,13 @@ export const buildMarkupItems = ({
   run,
   isMarkupShown,
   toggleShowMarkup,
+  shortcuts = DEFAULT_USER_CONFIG.editor.shortcuts,
 }: MarkupMenuSources): EditorMenuItem[] => [
   ...ENTRIES.map((entry) => ({
     id: `markup-${entry.command}`,
     label: t(`editor.markup.${entry.command}`),
     icon: entry.icon,
-    shortcut: entry.shortcut,
+    shortcut: shortcuts[entry.command as keyof EditorShortcuts] || undefined,
     separatorBefore: entry.group,
     action: () => run(entry.command),
   })),
@@ -60,7 +61,7 @@ export const buildMarkupItems = ({
     icon: isMarkupShown
       ? 'mdi:checkbox-marked-outline'
       : 'mdi:checkbox-blank-outline',
-    shortcut: 'Ctrl+Shift+M',
+    shortcut: shortcuts.toggleMarkup || undefined,
     separatorBefore: true,
     action: toggleShowMarkup,
   },

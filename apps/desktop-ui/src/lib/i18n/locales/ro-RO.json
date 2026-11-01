@@ -350,7 +350,10 @@
       "switchToFormatted": "Acum: Markdown. Comută la text formatat (Ctrl+Shift+M)",
       "switchToSource": "Acum: text formatat. Comută la Markdown (Ctrl+Shift+M)",
       "taskList": "Listă de sarcini",
-      "title": "Marcaj"
+      "title": "Marcaj",
+      "heading4": "Titlu 4",
+      "heading5": "Titlu 5",
+      "heading6": "Titlu 6"
     },
     "menu": {
       "actions": "Acțiuni",
@@ -1103,7 +1106,14 @@
     "chatInfo": "Un chat rapid cu IA pentru sarcini zilnice. Spre deosebire de profilurile IA cu roluri și instrumente izolate, aceasta este o conversație universală nelegată de un profil anume. Puteți pune întrebări, utiliza textul selectat drept context, atașa imagini, configura un prompt general de sistem și gestiona istoricul local de conversații.",
     "sttTabInfo": "Dictarea vocală vă permite să dictați text în orice aplicație activă. Recunoașterea vocală funcționează printr-un server local (Sherpa-ONNX) sau un serviciu cloud (Deepgram). Înregistrarea se pornește printr-o scurtătură de tastatură, iar textul transcris este inserat automat la cursor. Puteți activa și post-procesarea prin LLM pentru punctuație, corectare și formatare.",
     "stylingNavTab": "Stilizare",
-    "transformationsNavTab": "Transformare"
+    "transformationsNavTab": "Transformare",
+    "editorShortcuts": {
+      "title": "Editor",
+      "hint": "Faceți clic pe o scurtătură și apăsați tastele noi. Escape anulează înregistrarea. Aceste scurtături funcționează doar în editor.",
+      "indent": "Mărește indentarea",
+      "outdent": "Micșorează indentarea",
+      "reserved": "Această scurtătură este rezervată editării textului sau acțiunilor aplicației."
+    }
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

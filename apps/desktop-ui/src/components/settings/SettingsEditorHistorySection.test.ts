@@ -1,4 +1,8 @@
-import type { EditorHistoryConfig, UserConfig } from '@tyco/shared'
+import {
+  DEFAULT_USER_CONFIG,
+  type EditorHistoryConfig,
+  type UserConfig,
+} from '@tyco/shared'
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -43,6 +47,7 @@ describe('SettingsEditorHistorySection.vue', () => {
     editorHistory: Partial<EditorHistoryConfig> = {}
   ): Pick<UserConfig, 'editor'> => ({
     editor: {
+      ...structuredClone(DEFAULT_USER_CONFIG.editor),
       submitKey: 'Enter',
       diffViewMode: 'unified',
       history: {

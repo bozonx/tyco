@@ -66,6 +66,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useFieldControl } from '../../composables/use-field-control'
 import { useI18n } from '../../composables/use-i18n'
+import { editorShortcutFromEvent } from '../../lib/editor/editor-shortcuts'
 import {
   heldModifiers,
   keyLabelFor,
@@ -88,6 +89,7 @@ const props = withDefaults(
     readonly?: boolean
     /** Names the keys the way the platform does */
     platform?: HotkeyPlatform
+    editor?: boolean
   }>(),
   { ariaLabel: undefined, placeholder: '', readonly: false, platform: 'linux' }
 )
@@ -144,7 +146,13 @@ function onKeyDown(event: KeyboardEvent) {
   if (!isRecording.value) return
   event.preventDefault()
   event.stopPropagation()
-  const step = recordKeyDown(event, props.platform)
+  const shortcut = props.editor ? editorShortcutFromEvent(event) : null
+  let step = shortcut
+    ? { kind: 'done' as const, shortcut }
+    : recordKeyDown(event, props.platform)
+  if (props.editor && !shortcut && step.kind === 'done') {
+    step = { kind: 'invalid', keys: [...heldModifiers(event), event.key] }
+  }
   switch (step.kind) {
     case 'cancel':
       buttonRef.value?.blur()

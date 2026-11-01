@@ -350,7 +350,10 @@
       "switchToFormatted": "Ahora: Markdown. Cambiar a texto con formato (Ctrl+Shift+M)",
       "switchToSource": "Ahora: texto con formato. Cambiar a Markdown (Ctrl+Shift+M)",
       "taskList": "Lista de tareas",
-      "title": "Marcado"
+      "title": "Marcado",
+      "heading4": "Encabezado 4",
+      "heading5": "Encabezado 5",
+      "heading6": "Encabezado 6"
     },
     "menu": {
       "actions": "Acciones",
@@ -1103,7 +1106,14 @@
     "chatInfo": "Un chat rápido con IA para tareas cotidianas. A diferencia de los perfiles de IA con roles y herramientas aislados, esta es una conversación universal no vinculada a un perfil específico. Puede hacer preguntas, usar texto seleccionado como contexto, adjuntar imágenes, configurar un prompt general del sistema y administrar el historial local de chats.",
     "sttTabInfo": "El dictado por voz le permite dictar texto en cualquier aplicación activa. El reconocimiento de voz funciona a través de un servidor local (Sherpa-ONNX) o un servicio en la nube (Deepgram). La grabación se inicia con una tecla de acceso rápido y el texto transcrito se inserta automáticamente en la posición del cursor. También puede activar el posprocesamiento mediante LLM para puntuación, corrección de errores y formato.",
     "stylingNavTab": "Estilización",
-    "transformationsNavTab": "Transformación"
+    "transformationsNavTab": "Transformación",
+    "editorShortcuts": {
+      "title": "Editor",
+      "hint": "Haz clic en un atajo y pulsa las nuevas teclas. Escape cancela la captura. Estos atajos solo se aplican en el editor.",
+      "indent": "Aumentar sangría",
+      "outdent": "Reducir sangría",
+      "reserved": "Este atajo está reservado para editar texto o acciones de la aplicación."
+    }
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

@@ -15,10 +15,11 @@ import {
 import type { EditorMenusOptions } from './context-menu'
 import { editorMenusExtension } from './context-menu'
 import { historyKeysExtension } from './history-keys'
-import { indentKeymap, markdownIndentUnit } from './indent-commands'
+import { markdownIndentUnit } from './indent-commands'
 import { editorSearch } from './editor-search'
 import { translate } from '../i18n'
-import { markdownKeymap } from './markdown-commands'
+import { editorShortcutsExtension } from './editor-shortcuts'
+import { DEFAULT_USER_CONFIG, type EditorShortcuts } from '@tyco/shared'
 import { markdownPreview } from './markdown-preview'
 import { pasteExtension } from './paste'
 import { editorHighlightStyle, editorTheme } from './theme'
@@ -44,6 +45,7 @@ interface EditorCallbacks {
 
 export interface CreateEditorStateOptions
   extends EditorCallbacks, EditorMenusOptions {
+  getEditorShortcuts?: () => EditorShortcuts
   doc?: string
   placeholder?: string
   /** Convert pasted HTML into Markdown; if omitted, paste remains native */
@@ -76,17 +78,6 @@ const actionsKeymap = (onActions: () => void): Extension =>
     },
   ])
 
-const toggleMarkupKeymap = (onToggle: () => void): Extension =>
-  keymap.of([
-    {
-      key: 'Mod-Shift-m',
-      run: () => {
-        onToggle()
-        return true
-      },
-    },
-  ])
-
 /** Set of editor extensions */
 export const createEditorExtensions = (
   options: CreateEditorStateOptions = {}
@@ -95,17 +86,16 @@ export const createEditorExtensions = (
   historyKeysExtension(),
   editorSearch(options.t ?? translate),
   ...(options.onOpenActions ? [actionsKeymap(options.onOpenActions)] : []),
-  // before the default keymap: Mod-i selects the parent syntax node there
+  // Mod-i belongs to configurable italic formatting, not syntax navigation.
   keymap.of([
-    ...markdownKeymap,
-    ...indentKeymap,
-    ...defaultKeymap,
+    ...defaultKeymap.filter((binding) => binding.key !== 'Mod-i'),
     ...historyKeymap,
   ]),
   markdownIndentUnit,
-  ...(options.onToggleMarkup
-    ? [toggleMarkupKeymap(options.onToggleMarkup)]
-    : []),
+  editorShortcutsExtension(
+    options.getEditorShortcuts ?? (() => DEFAULT_USER_CONFIG.editor.shortcuts),
+    options.onToggleMarkup
+  ),
   EditorView.lineWrapping,
   EditorState.allowMultipleSelections.of(false),
   // shows an insertion point while text is dragged into the editor
