@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "AI uruchamia te polecenia bez pytania, gdy prompt tego wymaga. Polecenie nigdy nie uruchamia samego siebie ani polecenia AI, które je wywołało.",
     "aiNoOtherCommands": "Nie ma jeszcze innych poleceń.",
     "aiMaxSteps": "Limit kroków",
-    "aiMaxStepsInfo": "Ile razy AI może odpowiedzieć w jednym uruchomieniu; każde uruchomione polecenie zajmuje krok."
+    "aiMaxStepsInfo": "Maksymalna liczba poleceń, które AI może uruchomić. Końcowa odpowiedź nie wlicza się do tego limitu."
   },
   "common": {
     "add": "Dodaj",

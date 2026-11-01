@@ -173,7 +173,7 @@ describe('createAiCommandTool', () => {
       ok: true,
       content: 'Two is done',
     })
-    expect(calls[0]).toMatchObject({ offered: ['one', 'two'], maxSteps: 4 })
+    expect(calls[0]).toMatchObject({ offered: ['one', 'two'], maxSteps: 5 })
     expect(ran).toEqual([{ id: 'two', input: { text: 'for two' } }])
     expect(onProgress).toHaveBeenCalledWith('TWO')
   })
@@ -204,13 +204,21 @@ describe('createAiCommandTool', () => {
     expect(calls[0]?.offered).toEqual(['one'])
   })
 
-  it('needs a text and a prompt', async () => {
-    const { run } = setup([])
-    expect(await run(aiCommand('a'), '  ')).toMatchObject({
-      ok: false,
-      messageKey: 'toast.textNotSelected',
+  it('runs a self-contained prompt without input text', async () => {
+    const command = aiCommand('a')
+    const { run, calls } = setup([command], {
+      'Prompt of a': ['Happy birthday!'],
     })
-    expect(await run(aiCommand('a', [], ' '))).toEqual({
+    expect(await run(command, '')).toMatchObject({
+      ok: true,
+      content: 'Happy birthday!',
+    })
+    expect(calls[0]?.text).toBe('Carry out the command instructions.')
+  })
+
+  it('requires command instructions even without input text', async () => {
+    const { run } = setup([])
+    expect(await run(aiCommand('a', [], ' '), '')).toEqual({
       ok: false,
       messageKey: 'commands.errorNoPrompt',
     })

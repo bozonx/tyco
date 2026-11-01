@@ -14,8 +14,7 @@ import { createTauriFetch } from '../lib/net/tauri-fetch'
 import { tauriNetIpc } from '../lib/net/tauri-net'
 import { createScriptAndWebhookTools } from '../lib/tools/script-and-webhook-tools'
 import { createAiCommandTool } from '../lib/ai-commands/ai-command-tool'
-import { commandInvocation } from '../lib/commands/command-runtime'
-import { createToolInvoker } from '../lib/invocation/invoke-tool'
+import { createCommandTransformer } from '../lib/commands/command-runner'
 import { createCoreTools } from '../lib/tools/core-tools'
 import { toolCallConfig, toolInputSchema } from '../lib/tools/tool-input'
 import { createToolRegistry } from '../lib/tools/tool-registry'
@@ -117,7 +116,9 @@ export const useToolsStore = defineStore('tools', () => {
   })
 
   // the agent runs commands through the registry it is a tool of
-  const invoke = createToolInvoker({ tools: { get: (id) => registry.get(id) } })
+  const transformCommand = createCommandTransformer({
+    tools: { get: (id) => registry.get(id) },
+  })
   const aiCommandTool = createAiCommandTool({
     stream: (task, prompt, options) =>
       llmStore.client.stream(task, prompt, options),
@@ -129,8 +130,8 @@ export const useToolsStore = defineStore('tools', () => {
       return toolInputSchema(tool, toolCallConfig(tool, command.toolConfig))
     },
     runCommand: (command, input, { signal, source }) =>
-      invoke(
-        commandInvocation(command),
+      transformCommand(
+        command,
         typeof input.text === 'string' ? input.text : '',
         { input, signal, source, output: 'return' }
       ),

@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "Die KI führt diese Befehle ohne Rückfrage aus, wenn der Prompt sie braucht. Ein Befehl führt nie sich selbst aus und auch keinen KI-Befehl, der ihn aufgerufen hat.",
     "aiNoOtherCommands": "Es gibt noch keine anderen Befehle.",
     "aiMaxSteps": "Schrittlimit",
-    "aiMaxStepsInfo": "Wie oft die KI in einem Lauf antworten darf; jeder ausgeführte Befehl kostet einen Schritt."
+    "aiMaxStepsInfo": "Maximale Anzahl der Befehle, die die KI ausführen darf. Die abschließende Antwort zählt nicht zu diesem Limit."
   },
   "common": {
     "add": "Hinzufügen",

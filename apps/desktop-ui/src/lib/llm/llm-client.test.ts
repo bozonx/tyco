@@ -1,3 +1,4 @@
+import { createAiCommandRunner } from '../ai-commands/ai-command-runner'
 import {
   dynamicTool,
   jsonSchema,
@@ -639,6 +640,48 @@ function toolServer() {
 }
 
 describe('llm-client stream', () => {
+  it('lets an AI command execute one command and then answer with a one-call budget', async () => {
+    const fetch = vi.fn<FetchFunction>(async (_input, init) => {
+      const body = JSON.parse(String(init?.body))
+      const answered = body.messages.some(
+        (message: { role: string }) => message.role === 'tool'
+      )
+      if (answered) {
+        expect(body.tools ?? []).toHaveLength(0)
+        return streamResponse(sse(['It is noon.']))
+      }
+      return streamResponse(toolCallChunks('c0_clock'))
+    })
+    const { client } = setup(fetch, toolConfig())
+    const execute = vi.fn(async () => ({ ok: true, content: '12:00' }))
+    const run = createAiCommandRunner({
+      stream: client.stream,
+      instructions: () => '',
+    })
+    expect(
+      await run(
+        {
+          prompt: 'Report the time',
+          allowedCommandIds: ['clock'],
+          maxSteps: 1,
+        },
+        '',
+        [
+          {
+            commandId: 'clock',
+            label: 'Clock',
+            description: 'Current time',
+            inputSchema: { type: 'object', properties: {} },
+            execute,
+          },
+        ],
+        { signal: new AbortController().signal }
+      )
+    ).toBe('It is noon.')
+    expect(execute).toHaveBeenCalledOnce()
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
   it('runs the tool loop and reports every step', async () => {
     const fetch = toolServer()
     const { client } = setup(fetch, toolConfig())

@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "當提示詞需要時，AI 會直接執行這些指令而不詢問。指令永遠不會執行自己，也不會執行呼叫它的 AI 指令。",
     "aiNoOtherCommands": "還沒有其他指令。",
     "aiMaxSteps": "步數上限",
-    "aiMaxStepsInfo": "一次執行中 AI 可回答的次數；每執行一個指令佔用一步。"
+    "aiMaxStepsInfo": "AI 可執行的最大指令數。最終回答不計入此限制。"
   },
   "common": {
     "add": "新增",

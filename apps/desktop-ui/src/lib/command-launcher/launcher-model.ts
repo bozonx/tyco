@@ -8,6 +8,7 @@ import type {
 
 import {
   commandLabel,
+  commandRequiresText,
   commandTakesText,
   commandUnavailableReason,
   isCommandAvailable,
@@ -203,7 +204,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     const takesText = commandTakesText(command, deps.tools)
     const input = takesText ? given : ''
     fromSelection = selection && Boolean(input.trim())
-    if (takesText && !input.trim()) {
+    if (commandRequiresText(command, deps.tools) && !input.trim()) {
       inputText.value = input
       textEdited = false
       stage.value = { kind: 'prepare', command, autoRun: true }
@@ -221,7 +222,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
 
   /**
    * Runs a request typed in the search as an AI command made for it, on the
-   * selection; without one, the user is asked for the text first
+   * selection when present, or on its own otherwise
    */
   const runPrompt = (prompt: string): Promise<void> =>
     prompt.trim() ? pick(adHocAiCommand(prompt)) : Promise.resolve()
@@ -265,7 +266,7 @@ export function createCommandLauncherModel(deps: CommandLauncherDependencies) {
     const current = stage.value
     if (current.kind !== 'prepare') return false
     return (
-      !commandTakesText(current.command, deps.tools) ||
+      !commandRequiresText(current.command, deps.tools) ||
       Boolean(inputText.value.trim())
     )
   })

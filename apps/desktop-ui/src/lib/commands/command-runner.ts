@@ -9,6 +9,7 @@ import type {
   InvocationOptions,
   InvocationOutcome,
 } from '../invocation/invocation-types'
+import { createToolInvoker } from '../invocation/invoke-tool'
 import type { ToolResult } from '../tools/tool-types'
 import { commandInvocation, preTransformCommandText } from './command-runtime'
 
@@ -29,11 +30,13 @@ export interface CommandRunnerDependencies extends InvocationRunnerDependencies 
   ) => Promise<string>
 }
 
-/** Runs the commands of the library; a disabled command does not run */
-export function createCommandRunner(deps: CommandRunnerDependencies) {
-  const runner = createInvocationRunner(deps)
+type CommandTransformDependencies = Pick<
+  CommandRunnerDependencies,
+  'tools' | 'language' | 'transformTextWithLlm'
+>
 
-  const preTransform = async (
+function createInputPreparation(deps: CommandTransformDependencies) {
+  return async (
     command: CommandConfig,
     text: string,
     options: InvocationOptions
@@ -69,6 +72,40 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
         : options
     return { ok: true as const, text: nextText, options: nextOptions }
   }
+}
+
+/**
+ * Executes a command without presenting its result, retaining input
+ * preparation.
+ */
+export function createCommandTransformer(deps: CommandTransformDependencies) {
+  const invoke = createToolInvoker(deps)
+  const prepare = createInputPreparation(deps)
+  return async (
+    command: CommandConfig,
+    text: string,
+    options: InvocationOptions = {}
+  ): Promise<ToolResult> => {
+    if (!command.isEnabled) return disabled
+    const pre = await prepare(command, text, options)
+    if (!pre.ok) return pre.result
+    const {
+      unavailable,
+      failure: _failure,
+      sourceText: _source,
+      ...result
+    } = await invoke(commandInvocation(command), pre.text, {
+      ...pre.options,
+      output: 'return',
+    })
+    return unavailable ? { ok: false, messageKey: unavailable } : result
+  }
+}
+
+/** Runs the commands of the library; a disabled command does not run */
+export function createCommandRunner(deps: CommandRunnerDependencies) {
+  const runner = createInvocationRunner(deps)
+  const preTransform = createInputPreparation(deps)
 
   const run = async (
     command: CommandConfig,
@@ -91,20 +128,7 @@ export function createCommandRunner(deps: CommandRunnerDependencies) {
     return runner.run(commandInvocation(command), pre.text, pre.options)
   }
 
-  /** The output of `command` on `text`, which replaces the selection */
-  const transform = async (
-    command: CommandConfig,
-    text: string,
-    options: InvocationOptions = {}
-  ): Promise<ToolResult> => {
-    if (!command.isEnabled) return disabled
-    if (!command.isLlmPreTransformEnabled) {
-      return runner.transform(commandInvocation(command), text, options)
-    }
-    const pre = await preTransform(command, text, options)
-    if (!pre.ok) return pre.result
-    return runner.transform(commandInvocation(command), pre.text, pre.options)
-  }
+  const transform = createCommandTransformer(deps)
 
   return { run, transform }
 }

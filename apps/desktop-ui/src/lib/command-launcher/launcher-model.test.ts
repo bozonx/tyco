@@ -815,7 +815,7 @@ describe('requests typed in the search', () => {
   const aiTool = {
     id: 'core.aiTask',
     description: 'AI command',
-    inputSchema: TEXT_INPUT_SCHEMA,
+    inputSchema: { ...TEXT_INPUT_SCHEMA, required: [] },
     run: async () => ({ ok: true }),
   }
 
@@ -848,14 +848,14 @@ describe('requests typed in the search', () => {
     model.dispose()
   })
 
-  it('asks for the text without a selection and ignores an empty request', async () => {
+  it('runs without a selection and ignores an empty request', async () => {
     const { deps, model } = setupWithAi()
     deps.selectedText.mockReturnValue(null)
     await model.runPrompt('  ')
     expect(model.stage.value).toEqual({ kind: 'list' })
     await model.runPrompt('Explain this')
-    expect(model.stage.value.kind).toBe('prepare')
-    expect(deps.run).not.toHaveBeenCalled()
+    expect(deps.run).toHaveBeenCalledOnce()
+    expect(deps.run.mock.calls[0]?.[1]).toBe('')
     model.dispose()
   })
 

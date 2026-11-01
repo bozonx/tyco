@@ -92,6 +92,7 @@ export interface AiCommandToolConfig {
   prompt: string
   /** The commands the agent may run; never the command itself */
   allowedCommandIds: string[]
+  /** Maximum command calls per run; the final answer does not consume a call. */
   maxSteps: number
 }
 

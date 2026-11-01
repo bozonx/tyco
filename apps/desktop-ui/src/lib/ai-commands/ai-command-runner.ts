@@ -68,6 +68,7 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     tools: readonly AiCommandAgentTool[],
     options: AiCommandRunOptions
   ): Promise<string> => {
+    let callsUsed = 0
     const byName = new Map<string, AiCommandAgentTool>()
     const toolSet: ToolSet = {}
     tools.forEach((tool, index) => {
@@ -78,13 +79,18 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
         inputSchema: jsonSchema(
           tool.inputSchema as Parameters<typeof jsonSchema>[0]
         ),
-        execute: async (input, { abortSignal }) =>
-          toolResultForModel(
+        execute: async (input, { abortSignal }) => {
+          // Reserve before awaiting: parallel calls share the same budget.
+          if (callsUsed >= config.maxSteps)
+            return 'Command call limit reached. Do not call more commands; answer using the results already available.'
+          callsUsed += 1
+          return toolResultForModel(
             await tool.execute(
               isRecord(input) ? input : {},
               abortSignal ?? options.signal
             )
-          ),
+          )
+        },
       })
     })
 
@@ -96,10 +102,27 @@ export function createAiCommandRunner(deps: AiCommandRunnerDependencies) {
     let answer = ''
     for await (const event of deps.stream(
       'aiTask',
-      { system, messages: [{ role: 'user', content: text }] },
+      {
+        system,
+        messages: [
+          {
+            role: 'user',
+            content: text.trim() ? text : 'Carry out the command instructions.',
+          },
+        ],
+      },
       {
         signal: options.signal,
-        ...(tools.length ? { tools: toolSet, maxSteps: config.maxSteps } : {}),
+        ...(tools.length
+          ? {
+              tools: toolSet,
+              maxSteps: config.maxSteps + 1,
+              prepareStep: ({ stepNumber }) =>
+                callsUsed >= config.maxSteps || stepNumber >= config.maxSteps
+                  ? { activeTools: [], toolChoice: 'none' }
+                  : undefined,
+            }
+          : {}),
       }
     )) {
       if (event.type === 'text') {

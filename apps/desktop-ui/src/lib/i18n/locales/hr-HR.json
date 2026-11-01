@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "AI pokreće ove naredbe bez pitanja kad god ih prompt treba. Naredba nikad ne pokreće samu sebe ni AI naredbu koja ju je pozvala.",
     "aiNoOtherCommands": "Još nema drugih naredbi.",
     "aiMaxSteps": "Ograničenje koraka",
-    "aiMaxStepsInfo": "Koliko puta AI smije odgovoriti u jednom pokretanju; svaka pokrenuta naredba troši korak."
+    "aiMaxStepsInfo": "Najveći broj naredbi koje AI smije pokrenuti. Završni odgovor ne ulazi u ovo ograničenje."
   },
   "common": {
     "add": "Dodaj",

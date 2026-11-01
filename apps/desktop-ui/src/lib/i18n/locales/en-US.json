@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "The AI runs these commands without asking whenever the prompt needs them. A command never runs itself or an AI command that called it.",
     "aiNoOtherCommands": "There are no other commands yet.",
     "aiMaxSteps": "Step limit",
-    "aiMaxStepsInfo": "How many times the AI may answer in one run; each command it runs takes a step."
+    "aiMaxStepsInfo": "Maximum number of commands the AI may run. The final answer does not count toward this limit."
   },
   "common": {
     "add": "Add",

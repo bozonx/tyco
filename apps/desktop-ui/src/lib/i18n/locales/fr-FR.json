@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "L’IA exécute ces commandes sans demander dès que le prompt en a besoin. Une commande ne s’exécute jamais elle-même ni une commande IA qui l’a appelée.",
     "aiNoOtherCommands": "Il n’y a pas encore d’autres commandes.",
     "aiMaxSteps": "Limite d’étapes",
-    "aiMaxStepsInfo": "Nombre de réponses de l’IA autorisées par exécution ; chaque commande lancée compte pour une étape."
+    "aiMaxStepsInfo": "Nombre maximal de commandes que l’IA peut exécuter. La réponse finale ne compte pas dans cette limite."
   },
   "common": {
     "add": "Ajouter",

@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "AI-ul rulează aceste comenzi fără să întrebe ori de câte ori promptul are nevoie de ele. O comandă nu se rulează niciodată pe sine și nici comanda AI care a apelat-o.",
     "aiNoOtherCommands": "Încă nu există alte comenzi.",
     "aiMaxSteps": "Limită de pași",
-    "aiMaxStepsInfo": "De câte ori poate răspunde AI-ul într-o rulare; fiecare comandă rulată consumă un pas."
+    "aiMaxStepsInfo": "Numărul maxim de comenzi pe care le poate rula AI-ul. Răspunsul final nu se ia în calcul pentru această limită."
   },
   "common": {
     "add": "Adaugă",

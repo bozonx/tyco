@@ -2,6 +2,7 @@ import { createPinia, disposePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CommandConfig } from '@tyco/shared'
 
+import type * as CommandRunnerModule from '../lib/commands/command-runner'
 import { createCommand } from '../lib/commands/command-config'
 import { useDesktopStore } from './desktop'
 import { useHistoryStore } from './history'
@@ -15,7 +16,8 @@ const mocks = vi.hoisted(() => ({
   dictationText: 'test voice hello voice',
 }))
 
-vi.mock('../lib/commands/command-runner', () => ({
+vi.mock('../lib/commands/command-runner', async (importOriginal) => ({
+  ...(await importOriginal<typeof CommandRunnerModule>()),
   createCommandRunner: () => ({ run: mocks.runCommand }),
 }))
 

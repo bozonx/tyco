@@ -44,12 +44,6 @@ const notice = (content: string): string => {
     : text
 }
 
-const noText: ToolResult = {
-  ok: false,
-  level: 'warn',
-  messageKey: 'toast.textNotSelected',
-}
-
 const cancelled: ToolResult = { ok: false, cancelled: true }
 
 /**
@@ -117,11 +111,10 @@ export function createAiCommandTool(
     description:
       'Follows the instructions of the command with an LLM agent that may run the commands it is allowed to',
     defaultOutputAction: 'insertIntoWindow',
-    inputSchema: TEXT_INPUT_SCHEMA,
+    inputSchema: { ...TEXT_INPUT_SCHEMA, required: [] },
     getUnavailableReasonKey: deps.getUnavailableReasonKey,
     run: async (call) => {
       const text = typeof call.input.text === 'string' ? call.input.text : ''
-      if (!text.trim()) return noText
       const config = aiCommandToolConfigOf(call.config)
       if (!config.prompt.trim())
         return { ok: false, messageKey: 'commands.errorNoPrompt' }

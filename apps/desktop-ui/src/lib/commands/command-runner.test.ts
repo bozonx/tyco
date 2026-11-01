@@ -12,7 +12,7 @@ import { TEXT_INPUT_SCHEMA, type ToolDefinition } from '../tools/tool-types'
 import { createCommand } from './command-config'
 import type { InvocationRunnerDependencies } from '../invocation/invocation-runner'
 import type { InvocationOptions } from '../invocation/invocation-types'
-import { createCommandRunner } from './command-runner'
+import { createCommandRunner, createCommandTransformer } from './command-runner'
 
 const script = (
   toolConfig: Record<string, unknown> = {},
@@ -994,5 +994,100 @@ describe('LLM pre-transformation', () => {
     expect(executeScriptAction).toHaveBeenCalledWith(
       expect.objectContaining({ text: 'pre-transformed' })
     )
+  })
+})
+
+describe('commands invoked by an agent', () => {
+  it('prepares explicit text input without applying the output action or showing UI', async () => {
+    const run = vi.fn(async () => ({ ok: true, content: 'result' }))
+    const prepare = vi.fn(async () => ({ ok: true, content: 'prepared' }))
+    const { deps } = setup({}, [
+      {
+        id: 'agent-target',
+        description: 'Target',
+        inputSchema: TEXT_INPUT_SCHEMA,
+        run,
+      },
+      {
+        id: 'core.transformation',
+        description: 'Prepare',
+        inputSchema: TEXT_INPUT_SCHEMA,
+        run: prepare,
+      },
+    ])
+    const transform = createCommandTransformer(deps)
+    const command = {
+      ...createCommand('agent-target', 'target'),
+      isLlmPreTransformEnabled: true,
+      llmPreTransformPrompt: 'Prepare the text',
+      outputAction: 'copyToClipboard' as const,
+    }
+    const signal = new AbortController().signal
+    expect(
+      await transform(command, 'raw', {
+        input: { text: 'raw' },
+        signal,
+        source: 'launcher',
+      })
+    ).toMatchObject({ ok: true, content: 'result' })
+    expect(prepare).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: { text: 'raw' },
+        config: { prompt: 'Prepare the text' },
+        signal,
+      })
+    )
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: { text: 'prepared' },
+        signal,
+        isOutputRequested: true,
+      })
+    )
+    expect(deps.showToast).not.toHaveBeenCalled()
+    expect(deps.showResultMenu).not.toHaveBeenCalled()
+    expect(deps.hideWindow).not.toHaveBeenCalled()
+  })
+
+  it('does not execute a command when its preparation fails or is cancelled', async () => {
+    const run = vi.fn(async () => ({ ok: true }))
+    const prepare = vi.fn(async () => ({
+      ok: false,
+      message: 'Preparation failed',
+    }))
+    const { deps } = setup({}, [
+      {
+        id: 'agent-target',
+        description: 'Target',
+        inputSchema: TEXT_INPUT_SCHEMA,
+        run,
+      },
+      {
+        id: 'core.transformation',
+        description: 'Prepare',
+        inputSchema: TEXT_INPUT_SCHEMA,
+        run: prepare,
+      },
+    ])
+    const transform = createCommandTransformer(deps)
+    const command = {
+      ...createCommand('agent-target', 'target'),
+      isLlmPreTransformEnabled: true,
+      llmPreTransformPrompt: 'Prepare',
+    }
+    expect(
+      await transform(command, 'raw', { input: { text: 'raw' } })
+    ).toMatchObject({ ok: false, message: 'Preparation failed' })
+    const controller = new AbortController()
+    controller.abort()
+    expect(
+      await transform(command, 'raw', {
+        signal: controller.signal,
+        input: { text: 'raw' },
+      })
+    ).toMatchObject({ cancelled: true })
+    expect(prepare).toHaveBeenCalledOnce()
+    expect(run).not.toHaveBeenCalled()
+    expect(deps.showToast).not.toHaveBeenCalled()
   })
 })

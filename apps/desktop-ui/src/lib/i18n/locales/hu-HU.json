@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "Az MI kérdés nélkül futtatja ezeket a parancsokat, amikor a promptnak szüksége van rájuk. Egy parancs soha nem futtatja önmagát, sem azt az MI-parancsot, amely meghívta.",
     "aiNoOtherCommands": "Még nincsenek más parancsok.",
     "aiMaxSteps": "Lépéskorlát",
-    "aiMaxStepsInfo": "Hányszor válaszolhat az MI egy futtatás alatt; minden lefuttatott parancs egy lépés."
+    "aiMaxStepsInfo": "Az MI által futtatható parancsok maximális száma. A végső válasz nem számít bele ebbe a korlátba."
   },
   "common": {
     "add": "Hozzáadás",

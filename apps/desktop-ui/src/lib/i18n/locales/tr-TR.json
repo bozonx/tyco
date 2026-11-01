@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "Yapay zekâ, istem gerektirdiğinde bu komutları sormadan çalıştırır. Bir komut asla kendini veya onu çağıran yapay zekâ komutunu çalıştırmaz.",
     "aiNoOtherCommands": "Henüz başka komut yok.",
     "aiMaxSteps": "Adım sınırı",
-    "aiMaxStepsInfo": "Yapay zekânın bir çalıştırmada kaç kez yanıt verebileceği; çalıştırdığı her komut bir adım sayılır."
+    "aiMaxStepsInfo": "Yapay zekânın çalıştırabileceği en fazla komut sayısı. Son yanıt bu sınıra dahil değildir."
   },
   "common": {
     "add": "Ekle",

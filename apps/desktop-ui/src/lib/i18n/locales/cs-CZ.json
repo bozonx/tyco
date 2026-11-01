@@ -273,7 +273,7 @@
     "aiAllowedCommandsInfo": "AI spouští tyto příkazy bez ptaní, kdykoli je prompt potřebuje. Příkaz nikdy nespustí sám sebe ani AI příkaz, který ho zavolal.",
     "aiNoOtherCommands": "Zatím nejsou žádné další příkazy.",
     "aiMaxSteps": "Limit kroků",
-    "aiMaxStepsInfo": "Kolikrát smí AI v jednom běhu odpovědět; každý spuštěný příkaz zabere krok."
+    "aiMaxStepsInfo": "Maximální počet příkazů, které smí AI spustit. Závěrečná odpověď se do limitu nezapočítává."
   },
   "common": {
     "add": "Přidat",

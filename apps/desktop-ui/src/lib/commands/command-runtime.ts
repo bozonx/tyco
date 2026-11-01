@@ -7,7 +7,11 @@ import { errorMessage } from '@tyco/shared/value-guards'
 import type { Invocation, ResultSink } from '../invocation/invocation-types'
 import { invocationUnavailableReason } from '../invocation/invoke-tool'
 import { resolveSink } from '../invocation/result-sinks'
-import { toolInputKind } from '../tools/tool-input'
+import {
+  toolCallConfig,
+  toolInputKind,
+  toolInputSchema,
+} from '../tools/tool-input'
 import type {
   RegisteredTool,
   ToolInputKind,
@@ -72,6 +76,20 @@ export function commandTakesText(
 ): boolean {
   const kind = commandInputKind(command, tools)
   return kind === 'text' || kind === 'parsed'
+}
+
+/** Whether launching the command needs nonempty text before it can run. */
+export function commandRequiresText(
+  command: CommandConfig,
+  tools: ToolLookup
+): boolean {
+  if (!commandTakesText(command, tools)) return false
+  const tool = commandTool(command, tools)!
+  const schema = toolInputSchema(tool, toolCallConfig(tool, command.toolConfig))
+  return (
+    commandInputKind(command, tools) === 'parsed' ||
+    Boolean(schema.required?.includes('text'))
+  )
 }
 
 /** Whether the command can be an item of the action menu */
