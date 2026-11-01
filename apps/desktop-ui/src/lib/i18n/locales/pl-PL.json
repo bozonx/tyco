@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "AI uruchamia te polecenia bez pytania, gdy prompt tego wymaga. Polecenie nigdy nie uruchamia samego siebie ani polecenia AI, które je wywołało.",
     "aiNoOtherCommands": "Nie ma jeszcze innych poleceń.",
     "aiMaxSteps": "Limit kroków",
-    "aiMaxStepsInfo": "Maksymalna liczba poleceń, które AI może uruchomić. Końcowa odpowiedź nie wlicza się do tego limitu."
+    "aiMaxStepsInfo": "Maksymalna liczba poleceń, które AI może uruchomić. Końcowa odpowiedź nie wlicza się do tego limitu.",
+    "otherPlatform": "Nie działa na tej platformie",
+    "variablesNotSet": "Używana zmienna nie ma wartości na tym urządzeniu",
+    "platforms": "Platformy",
+    "platformsInfo": "Polecenie działa tylko na zaznaczonych platformach; gdy żadna nie jest zaznaczona — na wszystkich. Na innej platformie zostaje na listach, ale się nie wykonuje.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Dodaj",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Potrzebna usługa jest teraz niedostępna",
     "stale": "Stan zdążył się zmienić, spróbuj ponownie",
     "unsupportedConfig": "Ustawienia zapisała nowsza wersja aplikacji",
-    "userDataUnavailable": "Folder danych jest niedostępny"
+    "userDataUnavailable": "Folder danych jest niedostępny",
+    "variableNotSet": "Zmienna nie ma wartości na tym urządzeniu",
+    "vaultUnavailable": "Folder profili AI nie jest podłączony na tym urządzeniu",
+    "projectUnavailable": "Folder projektu nie jest ustawiony na tym urządzeniu"
   },
   "diff": {
     "modeOriginal": "Tylko oryginał",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Oddzielni asystenci z własną instrukcją, modelem, narzędziami i czatami. Każdy profil to karta na górnym pasku.",
     "aiProfilesTab": "Profile AI",
     "aiVaultPath": "Ścieżka sejfu profili AI",
-    "aiVaultPathHint": "Folder profili AI (ich SOUL.md, czatów i przestrzeni roboczych) oraz projektów wewnętrznych. Domyślnie folder ai-vault w danych aplikacji.",
-    "aiVaultTitle": "Sejf",
     "allPluginsTab": "Wszystkie wtyczki",
     "apiKey": "Klucz API",
     "apiKeyBoundTo": "Zapisany klucz jest wysyłany tylko do {origin}. Zapisz go ponownie, aby używać go z tym adresem.",
@@ -1155,7 +1162,15 @@
       "indent": "Zwiększ wcięcie",
       "outdent": "Zmniejsz wcięcie",
       "reserved": "Ten skrót jest zarezerwowany do edycji tekstu lub działań aplikacji."
-    }
+    },
+    "aiVaultExternalHint": "Puste: folder ai-vault w folderze danych, synchronizowany razem z nim. Osobny folder przyda się dla git, Obsidian lub osobnej synchronizacji.",
+    "aiVaultGitWarning": "Nie trzymaj repozytorium git w synchronizowanym folderze: zmiany z dwóch urządzeń mogą je uszkodzić.",
+    "aiVaultNotConnected": "Folder profili AI nie jest podłączony na tym urządzeniu: {path}. Nic nie zostało utworzone w jego miejsce.",
+    "aiVaultUseDefault": "Użyj folderu domyślnego",
+    "projectFolderNotSetOnDevice": "Folder nieustawiony na tym urządzeniu",
+    "projectSetFolder": "Ustaw folder",
+    "projectsWithoutFolder": "Projekty zewnętrzne bez folderu na tym urządzeniu: {count}",
+    "variablesTab": "Zmienne"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "Zapytanie do webhooka nie powiodło się",
     "webhookKeyNotSet": "Klucz tego webhooka nie jest ustawiony na tym urządzeniu; wpisz go w ustawieniach polecenia",
     "webhookSuccess": "Webhook wysłany pomyślnie",
-    "voicePostProcessTimeout": "Przetwarzanie głosu trwało zbyt długo; zachowano oryginalny tekst"
+    "voicePostProcessTimeout": "Przetwarzanie głosu trwało zbyt długo; zachowano oryginalny tekst",
+    "variablesNotSet": "Zmienne nie mają wartości na tym urządzeniu; ustaw je w Ustawienia → Zmienne"
   },
   "tools": {
     "aiTask": "Polecenie AI",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Kliknij, aby zastosować",
     "liveCorrectionFailed": "Korekta na żywo nie powiodła się",
     "liveCorrectionFailedHint": "Model nie odpowiedział. Tekst zostanie wstawiony w wpisanej postaci."
+  },
+  "variables": {
+    "add": "Dodaj",
+    "addTitle": "Nowa zmienna",
+    "browseFile": "Plik…",
+    "builtinHint": "Zawsze dostępne; ich wartości pochodzą z tego urządzenia.",
+    "builtinTitle": "Zmienne wbudowane",
+    "declare": "Zadeklaruj zmienną",
+    "description": "Opis",
+    "empty": "Brak zmiennych.",
+    "errorBuiltinName": "Nazwy zaczynające się od TYCO_ są zarezerwowane dla zmiennych wbudowanych",
+    "errorInvalidName": "Użyj wielkich liter łacińskich, cyfr i _, zaczynając od litery",
+    "errorNameTaken": "Zmienna o tej nazwie już istnieje",
+    "errorNoName": "Wpisz nazwę",
+    "hint": "Zmienna pozwala poleceniu lub adresowi dostawcy użyć wartości, która na każdym urządzeniu jest inna, np. ścieżki folderu lub lokalnego serwera. Nazwa jest wspólna dla wszystkich urządzeń, a wartość każde urządzenie ustawia samo. Wstawia się ją jako {example}.",
+    "hintNotDeclared": "{name} nie jest zadeklarowana",
+    "hintNotSet": "{name} nie ma wartości na tym urządzeniu",
+    "insert": "Wstaw zmienną",
+    "listTitle": "Zmienne",
+    "manage": "Zarządzaj zmiennymi…",
+    "name": "Nazwa",
+    "nameHint": "Na przykład NOTES_DIR. Polecenia odwołują się do niej po nazwie; zmiana nazwy je aktualizuje.",
+    "notForSecrets": "Wartości są zapisywane jawnym tekstem i mogą trafić do promptu lub adresu URL. Nie przechowuj tu kluczy — służą do tego pola kluczy.",
+    "remove": "Usuń zmienną",
+    "setValue": "Ustaw wartość",
+    "unsetOnDevice": "Zmienne bez wartości na tym urządzeniu: {count}",
+    "unused": "Nieużywana",
+    "usedBy": "Używana przez: {count}",
+    "value": "Wartość",
+    "valueNotSet": "Nieustawiona na tym urządzeniu: polecenia, które jej używają, nie działają",
+    "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   }
 }

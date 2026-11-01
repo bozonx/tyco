@@ -26,4 +26,5 @@ pub mod sha256;
 pub mod signals;
 pub mod status_overlay;
 pub mod storage;
+pub mod variables;
 pub mod voice;

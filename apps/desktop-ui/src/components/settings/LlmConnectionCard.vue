@@ -22,7 +22,9 @@
           />
         </FieldRow>
         <FieldRow :label="t('settings.baseUrl')">
-          <FieldInput
+          <ActionTemplateField
+            without-text
+            can-use-variables
             :model-value="provider.baseUrl || ''"
             placeholder="http://localhost:11434/v1"
             @update:model-value="emit('update', { baseUrl: $event })"
@@ -133,9 +135,11 @@
 import { ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsVariables } from '../../composables/use-settings-variables'
 import { removeModel } from '../../lib/llm/llm-config'
 import type { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { type SecretsStatus, httpOrigin } from '../../lib/net/secrets'
+import { providerBaseUrl } from '../../lib/variables/command-variables'
 import Badge from '../common/Badge.vue'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -145,10 +149,12 @@ import FieldRow from '../common/FieldRow.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
+import ActionTemplateField from './ActionTemplateField.vue'
 import LlmModelEditor from './LlmModelEditor.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import { type LlmConfig, type LlmProvider, llmSecretId } from '@tyco/shared'
 
+const variables = useSettingsVariables()
 const props = defineProps<{
   expanded: boolean
   provider: LlmProvider
@@ -236,7 +242,8 @@ function statusTone(provider: LlmProvider) {
 function keyHint(provider: LlmProvider) {
   if (provider.type !== 'openaiCompatible') return undefined
   const origins = props.secrets[llmSecretId(provider.id)]?.origins
-  const origin = httpOrigin(provider.baseUrl)
+  const url = providerBaseUrl(provider, variables())
+  const origin = url.ok ? httpOrigin(url.value) : null
   return origins && origin && !origins.includes(origin)
     ? t('settings.apiKeyBoundTo', { origin: origins.join(', ') })
     : t('settings.apiKeyOptional')

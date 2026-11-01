@@ -293,6 +293,7 @@ pub fn run() {
             commands::script_actions::cancel_script_action,
             commands::script_actions::execute_script_action,
             commands::script_actions::pick_directory,
+            commands::script_actions::pick_file,
             commands::script_actions::pick_script_file,
             commands::secrets::delete_secret,
             commands::secrets::get_secret_statuses,

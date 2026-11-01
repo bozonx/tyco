@@ -10,6 +10,7 @@
       <ActionTemplateField
         ref="commandRef"
         multiline
+        can-use-variables
         :model-value="script.command"
         :placeholder="
           t('settings.actionCommandPlaceholder', { placeholder: TEXT })
@@ -37,13 +38,13 @@
       density="compact"
       :label="t('settings.actionWorkingDirLabel')"
     >
-      <div class="action-field-row">
-        <FieldInput
-          class="flex-1"
-          :model-value="script.workingDirectory"
-          :placeholder="t('settings.actionWorkingDirPlaceholder')"
-          @update:model-value="update('workingDirectory', $event)"
-        />
+      <ActionTemplateField
+        without-text
+        can-use-variables
+        :model-value="script.workingDirectory"
+        :placeholder="t('settings.actionWorkingDirPlaceholder')"
+        @update:model-value="update('workingDirectory', $event)"
+      >
         <IconButton
           variant="ghost"
           size="sm"
@@ -51,7 +52,7 @@
           :label="t('settings.browseWorkingDir')"
           icon="mdi:folder-open-outline"
         />
-      </div>
+      </ActionTemplateField>
 
       <template #info
         ><InfoTooltip :text="t('settings.actionWorkingDirInfo')"
@@ -66,7 +67,6 @@ import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
 import { scriptToolConfig } from '../../lib/commands/command-config'
 import { useIpcStore } from '../../stores/ipc'
-import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'

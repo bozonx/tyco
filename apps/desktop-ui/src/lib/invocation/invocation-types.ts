@@ -19,6 +19,8 @@ export interface Invocation {
   isOutputLogged?: boolean
   /** Where the command launcher sends the output, see `resolveSink` */
   outputAction?: CommandOutputAction
+  /** The platforms the command runs on; absent or empty for every one */
+  platforms?: readonly string[]
 }
 
 /** What happens to the text a tool returns */

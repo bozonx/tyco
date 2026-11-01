@@ -102,8 +102,10 @@ import {
   settingsTitlesOfConfigPaths,
 } from '../../lib/settings/settings-navigation'
 import { createSettingsOperations } from '../../lib/settings/settings-operations'
+import { deviceVariableValues } from '../../lib/variables/command-variables'
 import { appNavigation } from '../../navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
+import { useDesktopStore } from '../../stores/desktop'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import { useSecretsStore } from '../../stores/secrets'
 import { useSettingsSessionStore } from '../../stores/settings-session'
@@ -128,6 +130,7 @@ import SettingsSaveStatus from './SettingsSaveStatus.vue'
 import SettingsStylingTab from './SettingsStylingTab.vue'
 import SettingsTransformationsTab from './SettingsTransformationsTab.vue'
 import SettingsTranslationsTab from './SettingsTranslationsTab.vue'
+import SettingsVariablesTab from './SettingsVariablesTab.vue'
 import SettingsVoiceTab from './SettingsVoiceTab.vue'
 
 /** The sections without a parameter; each edits the draft from the context */
@@ -144,6 +147,7 @@ const SECTION_TABS: Record<
   llm: SettingsLlmTab,
   translations: SettingsTranslationsTab,
   accessibility: SettingsAccessibilityTab,
+  variables: SettingsVariablesTab,
   plugins: SettingsPluginsTab,
   'main-actions': SettingsMainActionsTab,
   transformations: SettingsTransformationsTab,
@@ -296,6 +300,8 @@ provide(SETTINGS_CONTEXT_KEY, {
     focusCommandId.value = commandId
     currentTab.value = 'commands'
   },
+  variables: () =>
+    deviceVariableValues(userConfig.value, useDesktopStore().userData),
 })
 
 // the address keeps the open tab, e.g. for going back to it

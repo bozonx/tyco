@@ -116,6 +116,23 @@
             ><InfoTooltip :text="t('commands.descriptionInfo')"
           /></template>
         </FieldRow>
+        <FieldRow
+          class="command-field"
+          density="compact"
+          :label="t('commands.platforms')"
+          :info="t('commands.platformsInfo')"
+        >
+          <div class="flex flex-wrap gap-3">
+            <FieldCheckbox
+              v-for="platform in COMMAND_PLATFORMS"
+              :key="platform"
+              :label="platformLabels[platform]"
+              :model-value="command.platforms?.includes(platform) ?? false"
+              :data-testid="`command-platform-${platform}`"
+              @update:model-value="togglePlatform(platform, $event)"
+            />
+          </div>
+        </FieldRow>
         <div class="command-field-row">
           <template v-if="tool?.canLogOutput">
             <FieldSwitch
@@ -243,6 +260,7 @@ import { useToolsStore } from '../../stores/tools'
 import Button from '../common/Button.vue'
 import CopyButton from '../common/CopyButton.vue'
 import DisclosureHeader from '../common/DisclosureHeader.vue'
+import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -255,8 +273,10 @@ import CommandVoiceFields from './CommandVoiceFields.vue'
 import CustomActionFields from './CustomActionFields.vue'
 import ToolConfigFields from './ToolConfigFields.vue'
 import {
+  COMMAND_PLATFORMS,
   type CommandConfig,
   type CommandOutputAction,
+  type CommandPlatform,
   EXTERNAL_TIMEOUT_DEFAULT_SEC,
   EXTERNAL_TIMEOUT_MAX_SEC,
   type UserConfig,
@@ -353,8 +373,23 @@ const isAdvancedOpen = ref<boolean>(
   Boolean(props.command.description) ||
     Boolean(props.command.isOutputLogged) ||
     Boolean(props.command.isAvailableExternally) ||
-    Boolean(props.command.isLlmPreTransformEnabled)
+    Boolean(props.command.isLlmPreTransformEnabled) ||
+    Boolean(props.command.platforms?.length)
 )
+
+const platformLabels = computed<Record<CommandPlatform, string>>(() => ({
+  linux: t('commands.platformLinux'),
+  windows: t('commands.platformWindows'),
+}))
+
+/** None checked runs the command on every platform */
+function togglePlatform(platform: CommandPlatform, isChecked: boolean) {
+  const current = props.command.platforms ?? []
+  const next = COMMAND_PLATFORMS.filter((item) =>
+    item === platform ? isChecked : current.includes(item)
+  )
+  update({ platforms: next })
+}
 
 /** By the name, which reads better, while it is unique; otherwise by the id */
 const cliShell = platformCliShell(

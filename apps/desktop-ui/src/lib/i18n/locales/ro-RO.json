@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "AI-ul rulează aceste comenzi fără să întrebe ori de câte ori promptul are nevoie de ele. O comandă nu se rulează niciodată pe sine și nici comanda AI care a apelat-o.",
     "aiNoOtherCommands": "Încă nu există alte comenzi.",
     "aiMaxSteps": "Limită de pași",
-    "aiMaxStepsInfo": "Numărul maxim de comenzi pe care le poate rula AI-ul. Răspunsul final nu se ia în calcul pentru această limită."
+    "aiMaxStepsInfo": "Numărul maxim de comenzi pe care le poate rula AI-ul. Răspunsul final nu se ia în calcul pentru această limită.",
+    "otherPlatform": "Nu rulează pe această platformă",
+    "variablesNotSet": "O variabilă pe care o folosește nu are valoare pe acest dispozitiv",
+    "platforms": "Platforme",
+    "platformsInfo": "Comanda rulează doar pe platformele bifate; dacă nu e bifată niciuna, pe toate. Pe altă platformă rămâne în liste, dar nu rulează.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Adaugă",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Un serviciu necesar nu este disponibil acum",
     "stale": "Starea s-a schimbat între timp, încercați din nou",
     "unsupportedConfig": "Setările au fost salvate de o versiune mai nouă a aplicației",
-    "userDataUnavailable": "Folderul de date nu este disponibil"
+    "userDataUnavailable": "Folderul de date nu este disponibil",
+    "variableNotSet": "O variabilă nu are valoare pe acest dispozitiv",
+    "vaultUnavailable": "Dosarul profilurilor AI nu este conectat pe acest dispozitiv",
+    "projectUnavailable": "Dosarul proiectului nu este setat pe acest dispozitiv"
   },
   "diff": {
     "modeOriginal": "Doar original",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Asistenți separați, cu propria instrucțiune, model, instrumente și chaturi. Fiecare profil este o filă în bara de sus.",
     "aiProfilesTab": "Profiluri AI",
     "aiVaultPath": "Calea seifului de profiluri AI",
-    "aiVaultPathHint": "Dosarul profilurilor AI (fișierele lor SOUL.md, chaturile și spațiile de lucru) și al proiectelor interne. Implicit, dosarul ai-vault din datele aplicației.",
-    "aiVaultTitle": "Seif",
     "allPluginsTab": "Toate pluginurile",
     "apiKey": "Cheie API",
     "apiKeyBoundTo": "Cheia salvată este trimisă doar către {origin}. Salvați-o din nou pentru a o folosi cu această adresă.",
@@ -1155,7 +1162,15 @@
       "indent": "Mărește indentarea",
       "outdent": "Micșorează indentarea",
       "reserved": "Această scurtătură este rezervată editării textului sau acțiunilor aplicației."
-    }
+    },
+    "aiVaultExternalHint": "Gol: dosarul ai-vault din dosarul de date, sincronizat împreună cu el. Un dosar separat e potrivit pentru git, Obsidian sau o sincronizare proprie.",
+    "aiVaultGitWarning": "Nu țineți un depozit git într-un dosar sincronizat: modificările de pe două dispozitive îl pot deteriora.",
+    "aiVaultNotConnected": "Dosarul profilurilor AI nu este conectat pe acest dispozitiv: {path}. Nu s-a creat nimic în locul lui.",
+    "aiVaultUseDefault": "Folosește dosarul implicit",
+    "projectFolderNotSetOnDevice": "Dosar nesetat pe acest dispozitiv",
+    "projectSetFolder": "Setează dosarul",
+    "projectsWithoutFolder": "Proiecte externe fără dosar pe acest dispozitiv: {count}",
+    "variablesTab": "Variabile"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "Cererea către webhook a eșuat",
     "webhookKeyNotSet": "Cheia acestui webhook nu este setată pe acest dispozitiv; introduceți-o în setările comenzii",
     "webhookSuccess": "Webhook trimis cu succes",
-    "voicePostProcessTimeout": "Procesarea vocală a durat prea mult; s-a păstrat textul original"
+    "voicePostProcessTimeout": "Procesarea vocală a durat prea mult; s-a păstrat textul original",
+    "variablesNotSet": "Unele variabile nu au valoare pe acest dispozitiv; setați-le în Setări → Variabile"
   },
   "tools": {
     "aiTask": "Comandă AI",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Faceți clic pentru a aplica",
     "liveCorrectionFailed": "Corectarea în timp real a eșuat",
     "liveCorrectionFailedHint": "Modelul nu a răspuns. Textul va fi inserat așa cum a fost tastat."
+  },
+  "variables": {
+    "add": "Adaugă",
+    "addTitle": "Variabilă nouă",
+    "browseFile": "Fișier…",
+    "builtinHint": "Mereu disponibile; valorile lor vin de pe acest dispozitiv.",
+    "builtinTitle": "Variabile integrate",
+    "declare": "Declară variabila",
+    "description": "Descriere",
+    "empty": "Încă nu există variabile.",
+    "errorBuiltinName": "Numele care încep cu TYCO_ sunt rezervate variabilelor integrate",
+    "errorInvalidName": "Folosiți litere latine mari, cifre și _, începând cu o literă",
+    "errorNameTaken": "Există deja o variabilă cu acest nume",
+    "errorNoName": "Introduceți un nume",
+    "hint": "O variabilă permite unei comenzi sau adresei unui furnizor să folosească o valoare diferită pe fiecare dispozitiv, de exemplu calea unui dosar sau un server local. Numele este comun tuturor dispozitivelor; fiecare își setează propria valoare. Se inserează ca {example}.",
+    "hintNotDeclared": "{name} nu este declarată",
+    "hintNotSet": "{name} nu are valoare pe acest dispozitiv",
+    "insert": "Inserează variabilă",
+    "listTitle": "Variabile",
+    "manage": "Gestionează variabilele…",
+    "name": "Nume",
+    "nameHint": "De exemplu NOTES_DIR. Comenzile se referă la ea prin nume; redenumirea le actualizează.",
+    "notForSecrets": "Valorile sunt stocate ca text simplu și pot ajunge într-un prompt sau un URL. Nu păstrați chei aici: folosiți câmpurile pentru chei.",
+    "remove": "Elimină variabila",
+    "setValue": "Setează valoarea",
+    "unsetOnDevice": "Variabile fără valoare pe acest dispozitiv: {count}",
+    "unused": "Nefolosită",
+    "usedBy": "Folosită de: {count}",
+    "value": "Valoare",
+    "valueNotSet": "Nesetată pe acest dispozitiv: comenzile care o folosesc nu rulează",
+    "valuePlaceholder": "O cale, o adresă sau alt text"
   }
 }

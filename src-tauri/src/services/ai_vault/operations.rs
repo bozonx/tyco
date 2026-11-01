@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -5,6 +6,7 @@ use super::types::{AiProfile, AiProject};
 use crate::errors::AppError;
 use crate::services::atomic_file::{create_private_dir, write_private};
 use crate::services::file_ids::{is_file_id, MAX_FILE_ID_LEN};
+use crate::services::storage::device::DeviceStore;
 
 const PROFILE_FILE: &str = "profile.json";
 /// What an internal project keeps its settings in, next to its files.
@@ -270,6 +272,58 @@ fn project_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
     Ok(vault_root.join("projects").join(id))
 }
 
+/// The folders of the external projects of one vault on this device: the
+/// description of a project is synced with the vault, its folder is set on
+/// each device. Kept in `device.json`, see `DeviceFile::ai_project_paths`.
+pub struct ProjectPaths<'a> {
+    pub device: &'a DeviceStore,
+    pub vault_id: &'a str,
+}
+
+impl ProjectPaths<'_> {
+    fn get(&self, project_id: &str) -> Option<String> {
+        self.device
+            .snapshot()
+            .ai_project_paths
+            .get(self.vault_id)
+            .and_then(|paths| paths.get(project_id))
+            .cloned()
+    }
+
+    fn set(&self, project_id: &str, path: Option<&str>) -> Result<(), AppError> {
+        self.device.update(|file| {
+            let paths = file
+                .ai_project_paths
+                .entry(self.vault_id.to_owned())
+                .or_default();
+            match path {
+                Some(path) => {
+                    paths.insert(project_id.to_owned(), path.to_owned());
+                }
+                None => {
+                    paths.remove(project_id);
+                }
+            }
+            if paths.is_empty() {
+                file.ai_project_paths.remove(self.vault_id);
+            }
+        })
+    }
+
+    /// Drops the folders of the projects that are gone, e.g. removed on
+    /// another device.
+    fn retain(&self, ids: &HashSet<&str>) -> Result<(), AppError> {
+        self.device.update(|file| {
+            if let Some(paths) = file.ai_project_paths.get_mut(self.vault_id) {
+                paths.retain(|id, _| ids.contains(id.as_str()));
+                if paths.is_empty() {
+                    file.ai_project_paths.remove(self.vault_id);
+                }
+            }
+        })
+    }
+}
+
 fn validate_project(project: &AiProject) -> Result<(), AppError> {
     validate_id(&project.id)?;
     if project.name.trim().is_empty() {
@@ -277,54 +331,97 @@ fn validate_project(project: &AiProject) -> Result<(), AppError> {
             "Project name cannot be empty".into(),
         ));
     }
-    if project.is_external {
-        let target = project
-            .target_path
-            .as_deref()
-            .map(str::trim)
-            .filter(|s| !s.is_empty())
-            .ok_or_else(|| {
-                AppError::InvalidInput("External project requires a target path".into())
-            })?;
-        let target_path = Path::new(target);
-        if !target_path.is_absolute() || !target_path.is_dir() {
-            return Err(AppError::InvalidInput(
-                "External target path must be an existing absolute directory".into(),
-            ));
-        }
-    }
     Ok(())
 }
 
+/// The folder an external project is given on this device, checked to be an
+/// existing absolute folder; `None` when none is given.
+fn checked_target(project: &AiProject) -> Result<Option<&str>, AppError> {
+    let Some(target) = project
+        .target_path
+        .as_deref()
+        .map(str::trim)
+        .filter(|target| !target.is_empty())
+    else {
+        return Ok(None);
+    };
+    let target_path = Path::new(target);
+    if !target_path.is_absolute() || !target_path.is_dir() {
+        return Err(AppError::InvalidInput(
+            "External target path must be an existing absolute directory".into(),
+        ));
+    }
+    Ok(Some(target))
+}
+
+/// The file holds the description only: the folder of an external project
+/// belongs to the device.
 fn write_project_file(dir: &Path, project: &AiProject) -> Result<(), AppError> {
+    let shared = AiProject {
+        target_path: None,
+        ..project.clone()
+    };
     write_private(
         &dir.join(PROJECT_FILE),
-        &serde_json::to_string_pretty(project)?,
+        &serde_json::to_string_pretty(&shared)?,
     )
 }
 
 /// Where the files of a project are: its own folder in the vault, or the
-/// folder an external project links to.
+/// folder an external project has on this device. An external project
+/// without one here is not connected: the model gets that as the result of
+/// its tool, not as a failure of the chat.
 pub fn project_files_dir(vault_root: &Path, project: &AiProject) -> Result<PathBuf, AppError> {
+    if !project.is_external {
+        return project_dir(vault_root, &project.id);
+    }
     match project.target_path.as_deref().map(str::trim) {
-        Some(target) if project.is_external && !target.is_empty() => Ok(PathBuf::from(target)),
-        _ if project.is_external => Err(AppError::InvalidInput(format!(
-            "External project {} has no target path",
+        Some(target) if !target.is_empty() && Path::new(target).is_dir() => {
+            Ok(PathBuf::from(target))
+        }
+        Some(target) if !target.is_empty() => Err(AppError::ProjectUnavailable(format!(
+            "The project {} is not connected on this device: its folder {target} is not there",
             project.id
         ))),
-        _ => project_dir(vault_root, &project.id),
+        _ => Err(AppError::ProjectUnavailable(format!(
+            "The project {} is not connected on this device: its folder is not set here",
+            project.id
+        ))),
     }
 }
 
-pub fn list_projects(vault_root: &Path) -> Result<Vec<AiProject>, AppError> {
+/// The projects of the vault, each external one with its folder on this
+/// device, if it has one.
+pub fn list_projects(vault_root: &Path, paths: &ProjectPaths) -> Result<Vec<AiProject>, AppError> {
     ensure_vault_dirs(vault_root)?;
     let mut projects: Vec<AiProject> = read_entries(&vault_root.join("projects"), PROJECT_FILE)?;
     projects.sort_by_key(|a| a.created_at);
+    for project in &mut projects {
+        project.target_path = project
+            .is_external
+            .then(|| paths.get(&project.id))
+            .flatten();
+    }
+    let ids: HashSet<&str> = projects.iter().map(|project| project.id.as_str()).collect();
+    if let Err(error) = paths.retain(&ids) {
+        log::warn!("Could not drop the folders of removed projects: {error}");
+    }
     Ok(projects)
 }
 
-pub fn create_project(vault_root: &Path, project: AiProject) -> Result<(), AppError> {
+/// Creates the project; an external one needs its folder on this device.
+pub fn create_project(
+    vault_root: &Path,
+    paths: &ProjectPaths,
+    project: AiProject,
+) -> Result<(), AppError> {
     validate_project(&project)?;
+    let target = checked_target(&project)?;
+    if project.is_external && target.is_none() {
+        return Err(AppError::InvalidInput(
+            "External project requires a target path".into(),
+        ));
+    }
     ensure_vault_dirs(vault_root)?;
     let dir = project_dir(vault_root, &project.id)?;
     if dir.join(PROJECT_FILE).exists() {
@@ -334,25 +431,42 @@ pub fn create_project(vault_root: &Path, project: AiProject) -> Result<(), AppEr
         )));
     }
     create_private_dir(&dir)?;
-    write_project_file(&dir, &project)
+    write_project_file(&dir, &project)?;
+    if project.is_external {
+        paths.set(&project.id, target)?;
+    }
+    Ok(())
 }
 
-pub fn save_project(vault_root: &Path, project: AiProject) -> Result<(), AppError> {
+/// Updates the project. The folder given for an external project becomes
+/// its folder on this device; none given leaves the one it has here.
+pub fn save_project(
+    vault_root: &Path,
+    paths: &ProjectPaths,
+    project: AiProject,
+) -> Result<(), AppError> {
     validate_project(&project)?;
+    let target = checked_target(&project)?;
     let dir = project_dir(vault_root, &project.id)?;
     if !dir.join(PROJECT_FILE).is_file() {
         return Err(not_found("Project", &project.id));
     }
-    write_project_file(&dir, &project)
+    write_project_file(&dir, &project)?;
+    match (project.is_external, target) {
+        (true, Some(target)) => paths.set(&project.id, Some(target)),
+        (true, None) => Ok(()),
+        (false, _) => paths.set(&project.id, None),
+    }
 }
 
 /// Removes the project and every profile's permissions for it. The files of
 /// an external project stay where they are: only its link is removed.
-pub fn delete_project(vault_root: &Path, id: &str) -> Result<(), AppError> {
+pub fn delete_project(vault_root: &Path, paths: &ProjectPaths, id: &str) -> Result<(), AppError> {
     let dir = project_dir(vault_root, id)?;
     if dir.exists() {
         fs::remove_dir_all(&dir)?;
     }
+    paths.set(id, None)?;
 
     for mut profile in list_profiles(vault_root)? {
         if profile.project_permissions.remove(id).is_some() {

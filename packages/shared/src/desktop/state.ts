@@ -38,6 +38,8 @@ export const DEFAULT_USER_DATA_STATE: UserDataState = {
   isDefault: true,
   status: 'connected',
   isWritableByOthers: false,
+  deviceId: '',
+  platform: 'linux',
 }
 
 export const DEFAULT_SESSION_STATE: SessionState = {

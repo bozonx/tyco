@@ -6,12 +6,19 @@
     :info="t('commands.aiPromptInfo')"
     :warning="warnings"
   >
-    <FieldTextArea
-      :model-value="config.prompt"
-      :placeholder="t('commands.aiPromptPlaceholder')"
-      auto-resize
-      @update:model-value="emit('update', 'prompt', $event)"
-    />
+    <div class="flex items-start gap-1">
+      <FieldTextArea
+        class="flex-1"
+        :model-value="config.prompt"
+        :placeholder="t('commands.aiPromptPlaceholder')"
+        auto-resize
+        @update:model-value="emit('update', 'prompt', $event)"
+      />
+      <VariableInsertMenu
+        @insert="emit('update', 'prompt', `${config.prompt}${$event}`)"
+      />
+    </div>
+    <VariableReferenceHints :templates="[config.prompt]" />
   </FieldRow>
   <FieldRow
     vertical
@@ -59,6 +66,8 @@ import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
+import VariableInsertMenu from './VariableInsertMenu.vue'
+import VariableReferenceHints from './VariableReferenceHints.vue'
 import {
   AI_COMMAND_MAX_STEPS_MAX,
   type CommandConfig,

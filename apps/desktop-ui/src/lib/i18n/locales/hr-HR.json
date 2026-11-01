@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "AI pokreće ove naredbe bez pitanja kad god ih prompt treba. Naredba nikad ne pokreće samu sebe ni AI naredbu koja ju je pozvala.",
     "aiNoOtherCommands": "Još nema drugih naredbi.",
     "aiMaxSteps": "Ograničenje koraka",
-    "aiMaxStepsInfo": "Najveći broj naredbi koje AI smije pokrenuti. Završni odgovor ne ulazi u ovo ograničenje."
+    "aiMaxStepsInfo": "Najveći broj naredbi koje AI smije pokrenuti. Završni odgovor ne ulazi u ovo ograničenje.",
+    "otherPlatform": "Ne pokreće se na ovoj platformi",
+    "variablesNotSet": "Varijabla koju koristi nema vrijednost na ovom uređaju",
+    "platforms": "Platforme",
+    "platformsInfo": "Naredba se pokreće samo na označenim platformama; ako nijedna nije označena, na svima. Na drugoj platformi ostaje na popisima, ali se ne pokreće.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Dodaj",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Potrebna usluga trenutačno nije dostupna",
     "stale": "Stanje se u međuvremenu promijenilo, pokušajte ponovno",
     "unsupportedConfig": "Postavke je spremila novija verzija aplikacije",
-    "userDataUnavailable": "Mapa podataka nije dostupna"
+    "userDataUnavailable": "Mapa podataka nije dostupna",
+    "variableNotSet": "Varijabla nema vrijednost na ovom uređaju",
+    "vaultUnavailable": "Mapa AI profila nije povezana na ovom uređaju",
+    "projectUnavailable": "Mapa projekta nije postavljena na ovom uređaju"
   },
   "diff": {
     "modeOriginal": "Samo izvornik",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Zasebni asistenti s vlastitom uputom, modelom, alatima i chatovima. Svaki profil je kartica na gornjoj traci.",
     "aiProfilesTab": "AI profili",
     "aiVaultPath": "Putanja trezora AI profila",
-    "aiVaultPathHint": "Mapa AI profila (njihovih SOUL.md datoteka, chatova i radnih prostora) i internih projekata. Zadano je mapa ai-vault u podacima aplikacije.",
-    "aiVaultTitle": "Trezor",
     "allPluginsTab": "Svi dodaci",
     "apiKey": "API ključ",
     "apiKeyBoundTo": "Spremljeni ključ šalje se samo na {origin}. Spremite ga ponovno da biste ga koristili s ovom adresom.",
@@ -1155,7 +1162,15 @@
       "indent": "Povećaj uvlaku",
       "outdent": "Smanji uvlaku",
       "reserved": "Ovaj je prečac rezerviran za uređivanje teksta ili radnje aplikacije."
-    }
+    },
+    "aiVaultExternalHint": "Prazno: mapa ai-vault unutar mape podataka, sinkronizira se s njom. Zasebna mapa prikladna je za git, Obsidian ili zasebnu sinkronizaciju.",
+    "aiVaultGitWarning": "Ne držite git repozitorij unutar sinkronizirane mape: izmjene s dvaju uređaja mogu ga oštetiti.",
+    "aiVaultNotConnected": "Mapa AI profila nije povezana na ovom uređaju: {path}. Ništa nije stvoreno umjesto nje.",
+    "aiVaultUseDefault": "Koristi zadanu mapu",
+    "projectFolderNotSetOnDevice": "Mapa nije postavljena na ovom uređaju",
+    "projectSetFolder": "Postavi mapu",
+    "projectsWithoutFolder": "Vanjski projekti bez mape na ovom uređaju: {count}",
+    "variablesTab": "Varijable"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "Zahtjev prema webhooku nije uspio",
     "webhookKeyNotSet": "Ključ ovog webhooka nije postavljen na ovom uređaju; unesite ga u postavkama naredbe",
     "webhookSuccess": "Webhook je uspješno poslan",
-    "voicePostProcessTimeout": "Obrada glasa trajala je predugo; izvorni tekst je zadržan"
+    "voicePostProcessTimeout": "Obrada glasa trajala je predugo; izvorni tekst je zadržan",
+    "variablesNotSet": "Varijable nemaju vrijednost na ovom uređaju; postavite ih u Postavke → Varijable"
   },
   "tools": {
     "aiTask": "AI naredba",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Kliknite za primjenu",
     "liveCorrectionFailed": "Ispravak uživo nije uspio",
     "liveCorrectionFailedHint": "Model nije odgovorio. Tekst će biti umetnut kako je upisan."
+  },
+  "variables": {
+    "add": "Dodaj",
+    "addTitle": "Nova varijabla",
+    "browseFile": "Datoteka…",
+    "builtinHint": "Uvijek dostupne; vrijednosti dolaze s ovog uređaja.",
+    "builtinTitle": "Ugrađene varijable",
+    "declare": "Deklariraj varijablu",
+    "description": "Opis",
+    "empty": "Još nema varijabli.",
+    "errorBuiltinName": "Nazivi koji počinju s TYCO_ rezervirani su za ugrađene varijable",
+    "errorInvalidName": "Koristite velika latinična slova, znamenke i _, s početnim slovom",
+    "errorNameTaken": "Varijabla s tim nazivom već postoji",
+    "errorNoName": "Unesite naziv",
+    "hint": "Varijabla omogućuje naredbi ili adresi pružatelja da koristi vrijednost koja je na svakom uređaju drukčija, primjerice putanju mape ili lokalni poslužitelj. Naziv je zajednički svim uređajima, a vrijednost svaki uređaj postavlja sam. Umeće se kao {example}.",
+    "hintNotDeclared": "{name} nije deklarirana",
+    "hintNotSet": "{name} nema vrijednost na ovom uređaju",
+    "insert": "Umetni varijablu",
+    "listTitle": "Varijable",
+    "manage": "Upravljanje varijablama…",
+    "name": "Naziv",
+    "nameHint": "Primjerice NOTES_DIR. Naredbe se na nju pozivaju nazivom; preimenovanje ih ažurira.",
+    "notForSecrets": "Vrijednosti se spremaju kao običan tekst i mogu završiti u promptu ili URL-u. Ne spremajte ovdje ključeve — za njih postoje polja ključeva.",
+    "remove": "Ukloni varijablu",
+    "setValue": "Postavi vrijednost",
+    "unsetOnDevice": "Varijable bez vrijednosti na ovom uređaju: {count}",
+    "unused": "Ne koristi se",
+    "usedBy": "Koristi: {count}",
+    "value": "Vrijednost",
+    "valueNotSet": "Nije postavljena na ovom uređaju: naredbe koje je koriste ne pokreću se",
+    "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   }
 }

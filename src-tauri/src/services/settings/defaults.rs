@@ -60,6 +60,8 @@ pub fn default_desktop_snapshot(
                 is_default: true,
                 status: UserDataStatus::Connected,
                 is_writable_by_others: false,
+                device_id: String::new(),
+                platform: String::from("linux"),
             },
         },
     }

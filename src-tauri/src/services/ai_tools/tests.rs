@@ -586,6 +586,11 @@ fn project(id: &str, created_at: u64) -> AiProject {
 #[test]
 fn a_profile_reaches_its_workspace_and_permitted_projects() {
     let vault = TestDir::new("ai_files_profile");
+    let device = crate::services::storage::device::DeviceStore::in_memory(Default::default());
+    let paths = ai_vault::ProjectPaths {
+        device: &device,
+        vault_id: "v",
+    };
     let enabled = ProfileToolSettings {
         groups: HashMap::from([(
             FILES_TOOL_GROUP.to_string(),
@@ -598,10 +603,10 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     };
     ai_vault::create_profile(&vault, profile(Some(enabled)), "").unwrap();
     for (index, id) in ["book", "closed", "other"].iter().enumerate() {
-        ai_vault::create_project(&vault, project(id, index as u64)).unwrap();
+        ai_vault::create_project(&vault, &paths, project(id, index as u64)).unwrap();
     }
 
-    let files = ProfileFiles::load(&vault, "writer").unwrap();
+    let files = ProfileFiles::load(&vault, &paths, "writer").unwrap();
     let roots: Vec<_> = files
         .roots()
         .iter()
@@ -625,11 +630,50 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
     assert!(error.contains("not available"), "{error}");
 
     ai_vault::save_profile(&vault, profile(None)).unwrap();
-    assert!(ProfileFiles::load(&vault, "writer")
+    assert!(ProfileFiles::load(&vault, &paths, "writer")
         .err()
         .unwrap()
         .to_string()
         .contains("off"));
+}
+
+#[test]
+fn an_external_project_without_its_folder_here_is_named_and_refused() {
+    let vault = TestDir::new("ai_files_unconnected_project");
+    let device = crate::services::storage::device::DeviceStore::in_memory(Default::default());
+    let paths = ai_vault::ProjectPaths {
+        device: &device,
+        vault_id: "v",
+    };
+    let enabled = ProfileToolSettings {
+        groups: HashMap::from([(
+            FILES_TOOL_GROUP.to_string(),
+            ToolGroupSettings {
+                is_enabled: true,
+                access: Allow,
+            },
+        )]),
+        max_step_count: None,
+    };
+    ai_vault::create_profile(&vault, profile(Some(enabled)), "").unwrap();
+    // made on another device: the description is synced, the folder is not
+    let dir = vault.join("projects/book");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join(ai_vault::PROJECT_FILE),
+        r#"{"id":"book","name":"Book","isExternal":true,"targetPath":"/elsewhere","createdAt":1,"updatedAt":1}"#,
+    )
+    .unwrap();
+
+    let files = ProfileFiles::load(&vault, &paths, "writer").unwrap();
+    let book = &files.roots()[1];
+    assert_eq!(book.path, "projects/book");
+    assert!(book.unavailable.is_some());
+    let error = files
+        .resolve("projects/book/a.md", Access::Read, true)
+        .err()
+        .unwrap();
+    assert!(matches!(error, AppError::ProjectUnavailable(_)), "{error}");
 }
 
 #[test]

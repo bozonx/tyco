@@ -70,7 +70,9 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `translation`     | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode`          |
 | `mainActions`     | the action menu (a shortcut grid)                                                                                           |
 | `launcherPages`   | `id`, `inputMode`, `slots` (a shortcut grid of command ids)                                                                 |
-| `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, …                          |
+| `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, `platforms`, …             |
+| `variables`       | the variables commands refer to as `{{var:NAME}}`: `id`, `name`, `description`                                              |
+| `variableValues`  | the value of each variable on this device, by variable id (device)                                                          |
 | `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                                   |
 | `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)               |
 | `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                    |
@@ -154,6 +156,50 @@ An AI command is a command of the `core.aiTask` tool. Its `toolConfig` holds
 itself never runs) and `maxSteps` (1–50, 5 by default), see
 `dev_docs/design-ai-commands.md`.
 
+A command may name the `platforms` it runs on (`linux`, `windows`; absent or
+empty for every one). On another platform it stays in the config and in the
+grids, shown unavailable, and does not run; normalization keeps the references
+to it.
+
+### Variables
+
+A variable gives a command, or the base URL of an `openaiCompatible` provider,
+a value that differs between devices: a folder, a local server. Its declaration
+is the user's (`variables: [{ id, name, description }]`), its value the
+device's (`variableValues: { "<variable id>": "<value>" }`, `x-scope: device`):
+a device refers to the shared entity, and the value of a variable that is gone
+is dropped. A name matches `^[A-Z][A-Z0-9_]*$`, is unique without case and
+never starts with `TYCO_`, the prefix of the built-in `TYCO_USER_DIR` (the user
+data folder) and `TYCO_DEVICE_ID`. Values are plain text and may go into a
+prompt or a URL; keys stay in the secret store.
+
+A template refers to a variable as `{{var:NAME}}` and is filled once before it
+is used: what a value holds, `{{TEXT}}` or another `{{var:…}}`, stays text. A
+variable without a value on this device (or not declared) stops the run, and the
+error names it; an empty value is never put in quietly. The escaping follows the
+place, as for `{{TEXT}}`:
+
+- a script's `command`: the value goes by the environment, quoted for the shell
+  (`shell::substitute_all`); every variable with a value is in the environment
+  of the script as `TYCO_VAR_<NAME>`, the built-in ones under their own names,
+  so a variable never stands in for one of the system;
+- a script's `workingDirectory`: as it is, then `~` is expanded;
+- a webhook's URL and plain header values: as they are (no line break in a
+  header); its body by the rules of `{{TEXT}}`: escaped inside a JSON string, a
+  JSON string of its own when bare;
+- an AI command's `prompt` and a provider's `baseUrl`: as they are.
+
+Plugin command fields have templates of their own and are not filled. The rules
+live in `@tyco/shared` (`variables.ts`) and `services::variables`, checked by
+`packages/shared/fixtures/variable-substitution.json`. Scripts are filled by the
+backend; webhooks, AI commands and provider URLs by the webview, which gets the
+values in the joined config. The backend fills the URLs too where it decides by
+them: the origins the network policy allows and the origin a webhook header key
+is bound to, which comes from the URL as it is on this device. A save checks the
+template, not the value: a reference to an undeclared variable is accepted and
+shown. Renaming a variable renames `{{var:…}}` in the fields that are filled and
+in provider base URLs.
+
 Voice invocation is opt-in per command: `isVoiceEnabled` defaults to `false`.
 Whether a recognized command runs at once is a choice of the voice overlay, not
 of the command. `phrases` are literal strings, one synonym per entry.
@@ -180,15 +226,18 @@ section (`appearance.uiScalePercent`), never in a user entity.
 
 The device fields are `hotkeys`, `windowInsertion`, `externalAccess`,
 `appearance.uiScalePercent`, `aiVault.path`, `stt.providers.sherpaOnnx`,
-`isInDevelopment` and `editor.history.isLocalOnly`. An unknown field goes back
+`isInDevelopment`, `editor.history.isLocalOnly` and `variableValues`. An unknown field goes back
 to the file it was read from, so a device field of a newer build never reaches
 `config.json` through an older one. Both parts carry `configVersion`; when
 either is newer than the build knows, the whole config is shown and never
 saved (`configIsNewer`).
 
 References go from the device to the user data only: a device value of an
-entity is kept by the entity id (the shortcuts of launcher pages, the notes
-folders of plugins), and one whose entity is gone is dropped on that device.
+entity is kept by the entity id (the shortcuts of launcher pages, the values of
+variables, the notes folders of plugins, the folders of external projects), and
+one whose entity is gone is dropped on that device. A config that was not read
+(the folder is not connected, the file is broken or missing) says nothing about
+which entities are gone: the device keeps its values then.
 
 The notes folders of plugins are taken out of the plugin settings and the
 commands and kept on the device (`pluginPaths`, `pluginCommandPaths` of
@@ -291,9 +340,30 @@ project folders are named by their ids, made once from the name (transliterated
 to Latin) and never changed by a rename: chats, project permissions and the
 `projects/<id>/` paths the model sees refer to them.
 
+The vault is known by its marker `tyco-vault.json` (`formatVersion`, a
+`vaultId` made once). The default vault, `ai-vault/` of the user data folder,
+is made with its marker when it is not there. `aiVault.path` of a device is a
+folder of its own, e.g. for git, Obsidian or a sync of its own; it may not lie
+inside the user data folder. Such a folder is used only when it is there with
+its marker, or holds `profiles/` or `projects/` of a vault made before the
+marker, which then gets one. A missing or empty folder is not connected:
+nothing is made in its place, vault operations fail with `vaultUnavailable`,
+and the profiles offer to pick a folder or the default one.
+
+The description of a project (`projects/<id>/project.json`: `id`, `name`,
+`description`, `isExternal`) is synced with the vault; the folder of an
+external project is set on each device, in `aiProjectPaths` of `device.json`
+by vault id, then project id. The webview gets it as `targetPath` of the
+project; a save without one keeps the folder the device has. Creating an
+external project asks for its folder; a project without one on this device is
+listed as such, and its file tools fail with `projectUnavailable`, which the
+model gets as the result of the tool. The model sees `projects/<id>/` whatever
+the folder is. Writes into the memory of a profile are refused when the file
+changed since the model read it, e.g. by another device.
+
 `aiVault.path` is changed only by `relocate_ai_vault`, never by a settings save.
 It moves the vault into an empty folder, or points the app at an empty folder or
-an existing vault without moving anything; a folder holding other files is
+an existing vault without moving anything, and gives the folder its marker; a folder holding other files is
 refused (the settings offer a `tyco-vault` subfolder of it). A move renames each
 top-level entry, or copies, checks and then removes it across disks, and moves
 the entries back when it fails. Vault operations acquire shared access before

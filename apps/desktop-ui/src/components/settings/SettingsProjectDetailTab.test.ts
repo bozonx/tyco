@@ -142,10 +142,13 @@ describe('SettingsProjectDetailTab.vue', () => {
     const wrapper = mountTab()
     await wrapper.get('input').setValue('')
     expect(wrapper.text()).toContain('settings.projectNameRequired')
+    // the folder of a stored project is set on each device: one without it
+    // here is told so, not refused
     await wrapper
       .findComponent({ name: 'SegmentedControl' })
       .vm.$emit('update:modelValue', 'external')
-    expect(wrapper.text()).toContain('settings.projectPathRequired')
+    expect(wrapper.text()).not.toContain('settings.projectPathRequired')
+    expect(wrapper.text()).toContain('settings.projectFolderNotSetOnDevice')
     wrapper.unmount()
     await flushPromises()
     expect(store.saveProject).not.toHaveBeenCalled()

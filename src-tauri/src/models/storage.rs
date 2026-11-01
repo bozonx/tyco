@@ -43,8 +43,9 @@ pub enum UserDataStatus {
     NewerFormat,
 }
 
-/// Where the user data folder is and whether it can be used; fixed for the
-/// life of the process, as changing the folder restarts the app.
+/// Where the user data folder is and whether it can be used, and the device
+/// it is used on; fixed for the life of the process, as changing the folder
+/// restarts the app.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct UserDataState {
@@ -56,6 +57,11 @@ pub struct UserDataState {
     /// Other users may write into the folder or its parent, and so change
     /// the commands this app runs (checked on Linux only).
     pub is_writable_by_others: bool,
+    /// The id of this device, the built-in variable `TYCO_DEVICE_ID`.
+    pub device_id: String,
+    /// The platform of this device: a command limited to others does not run.
+    #[ts(type = r#""linux" | "windows" | "macos""#)]
+    pub platform: String,
 }
 
 /// How `relocate_user_data` changes the user data folder; the user says it,

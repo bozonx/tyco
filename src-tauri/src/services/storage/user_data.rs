@@ -16,6 +16,7 @@ use tauri::{AppHandle, Manager};
 use crate::errors::AppError;
 use crate::models::{UserDataState, UserDataStatus};
 use crate::services::atomic_file::{create_private_dir, write_private};
+use crate::services::variables::{Builtins, VariableValues};
 
 pub const USER_MARKER_FILE: &str = "tyco-user.json";
 /// The layout of the folder: names of files and folders, not the schema of
@@ -83,6 +84,8 @@ pub struct UserData {
     pub default_dir: PathBuf,
     pub status: UserDataStatus,
     pub is_writable_by_others: bool,
+    /// The id of this device, set once the device file is read.
+    pub device_id: String,
 }
 
 impl UserData {
@@ -106,6 +109,7 @@ impl UserData {
             default_dir: default_dir.to_path_buf(),
             status,
             is_writable_by_others,
+            device_id: String::new(),
         }
     }
 
@@ -120,6 +124,8 @@ impl UserData {
             is_default: self.is_default(),
             status: self.status,
             is_writable_by_others: self.is_writable_by_others,
+            device_id: self.device_id.clone(),
+            platform: crate::services::platform::hotkeys::platform_name().to_owned(),
         }
     }
 
@@ -233,7 +239,8 @@ pub fn open_user_data(app: &tauri::App) -> Result<UserData, AppError> {
         paths.device_dir.join(DEVICE_FILE_NAME),
         crate::services::platform::machine::machine_id(),
     )?;
-    let data = UserData::resolve(&paths.data_dir, &device.snapshot().user_data_path);
+    let mut data = UserData::resolve(&paths.data_dir, &device.snapshot().user_data_path);
+    data.device_id = device.device_id();
     match data.status {
         UserDataStatus::Connected => {
             register_recovery_root(&data.dir, &recovery.join("user"));
@@ -276,6 +283,27 @@ pub fn user_dir_for(app: &AppHandle, access: UserDirAccess) -> Result<PathBuf, A
         AppError::ServiceUnavailable(String::from("The data folder is not resolved yet"))
     })?;
     data.dir_for(access).map(Path::to_path_buf)
+}
+
+/// The values the variables of `config` have on this device, the built-in
+/// ones included; see `services::variables`.
+pub fn variable_values(app: &AppHandle, config: &serde_json::Value) -> VariableValues {
+    let data = app.try_state::<UserData>();
+    let user_dir = data
+        .as_ref()
+        .map(|data| data.dir.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let device_id = data
+        .as_ref()
+        .map(|data| data.device_id.clone())
+        .unwrap_or_default();
+    VariableValues::of(
+        config,
+        &Builtins {
+            user_dir: &user_dir,
+            device_id: &device_id,
+        },
+    )
 }
 
 /// A folder of the user data folder, created for writing.

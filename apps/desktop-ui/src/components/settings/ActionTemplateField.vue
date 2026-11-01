@@ -23,12 +23,18 @@
     />
     <!-- mousedown.prevent: the field keeps its focus and caret -->
     <IconButton
+      v-if="!withoutText"
       variant="ghost"
       size="sm"
       @mousedown.prevent
       @click="insert(TEXT)"
       :label="t('settings.actionInsertText', { placeholder: TEXT })"
       icon="mdi:code-braces"
+    />
+    <VariableInsertMenu
+      v-if="canUseVariables"
+      @mousedown.prevent
+      @insert="insert"
     />
     <slot />
     <InfoTooltip
@@ -38,6 +44,10 @@
       align="end"
     />
   </div>
+  <VariableReferenceHints
+    v-if="canUseVariables"
+    :templates="[modelValue ?? '']"
+  />
 </template>
 
 <script setup lang="ts">
@@ -49,6 +59,8 @@ import FieldInput from '../common/FieldInput.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
+import VariableInsertMenu from './VariableInsertMenu.vue'
+import VariableReferenceHints from './VariableReferenceHints.vue'
 import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
 
 defineOptions({ inheritAttrs: false })
@@ -62,6 +74,10 @@ const props = defineProps<{
   placeholder?: string
   info?: string
   multiline?: boolean
+  /** The field takes `{{var:NAME}}`: it offers the variables to insert */
+  canUseVariables?: boolean
+  /** The field does not take the text: no `{{TEXT}}` to insert */
+  withoutText?: boolean
 }>()
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()

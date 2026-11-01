@@ -64,6 +64,11 @@ const entries = computed<AccessListEntry[]>(() =>
         title: project.name,
         description: project.description || undefined,
         level,
+        // the profile keeps its access; the folder is set on each device
+        warning:
+          project.isExternal && !project.targetPath?.trim()
+            ? t('settings.projectFolderNotSetOnDevice')
+            : undefined,
       },
     ]
   })

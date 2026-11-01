@@ -43,6 +43,13 @@ export const COMMAND_OUTPUT_ACTIONS = [
 ] as const
 export type CommandOutputAction = (typeof COMMAND_OUTPUT_ACTIONS)[number]
 
+/**
+ * The platforms a command may be limited to; a command of another one stays in
+ * the config and the grids but does not run there
+ */
+export const COMMAND_PLATFORMS = ['linux', 'windows'] as const
+export type CommandPlatform = (typeof COMMAND_PLATFORMS)[number]
+
 /** Tools that run what the user configured; the way out for anything else */
 export const BUILTIN_TOOL_IDS = ['script', 'webhook'] as const
 export type BuiltinToolId = (typeof BUILTIN_TOOL_IDS)[number]
@@ -175,6 +182,8 @@ export interface CommandConfig {
    */
   externalTimeoutSec: number
   isEnabled: boolean
+  /** The platforms it runs on; absent or empty for every one */
+  platforms?: CommandPlatform[]
 }
 
 /** A command of the library placed in the action menu */

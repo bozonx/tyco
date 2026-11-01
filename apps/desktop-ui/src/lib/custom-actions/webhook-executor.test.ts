@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   buildWebhookRequest,
   executeWebhook,
-  fillJsonTemplate,
   type WebhookTarget,
   webhookResultText,
 } from './webhook-executor'
@@ -22,22 +21,58 @@ const webhook = (extra: Partial<WebhookTarget> = {}): WebhookTarget => ({
   ...extra,
 })
 
-describe('fillJsonTemplate', () => {
+describe('the JSON body', () => {
   const text = 'say "hi"\nnow \\ {{TEXT}}'
+  const body = (payloadTemplate: string) =>
+    buildWebhookRequest(webhook({ payloadTemplate }), text).init.body as string
 
   it('escapes the text inside a JSON string', () => {
-    const body = fillJsonTemplate('{"text":"{{TEXT}}","n":1}', text)
-    expect(JSON.parse(body)).toEqual({ text, n: 1 })
+    expect(JSON.parse(body('{"text":"{{TEXT}}","n":1}'))).toEqual({
+      text,
+      n: 1,
+    })
   })
 
   it('escapes the text inside a longer JSON string', () => {
-    const body = fillJsonTemplate('{"text":"> {{TEXT}} <"}', text)
-    expect(JSON.parse(body)).toEqual({ text: `> ${text} <` })
+    expect(JSON.parse(body('{"text":"> {{TEXT}} <"}'))).toEqual({
+      text: `> ${text} <`,
+    })
   })
 
   it('makes a JSON string of a bare placeholder', () => {
-    const body = fillJsonTemplate('{"text": {{TEXT}}}', text)
-    expect(JSON.parse(body)).toEqual({ text })
+    expect(JSON.parse(body('{"text": {{TEXT}}}'))).toEqual({ text })
+  })
+})
+
+describe('variables of a webhook', () => {
+  const variables = { HOOKS: 'https://hooks.example', TOKEN: 'a "b"' }
+
+  it('fill the URL, a plain header and the body, not a key reference', () => {
+    const { url, init } = buildWebhookRequest(
+      webhook({
+        url: '{{var:HOOKS}}/run?q={{TEXT}}',
+        headers: {
+          'X-Token': 'Token {{var:TOKEN}}',
+          'X-Key': 'tyco-secret:webhook.header.1',
+        },
+        payloadTemplate: '{"token":"{{var:TOKEN}}","text":{{TEXT}}}',
+      }),
+      'a b',
+      variables
+    )
+    expect(url).toBe('https://hooks.example/run?q=a%20b')
+    expect(init.headers['x-token']).toBe('Token a "b"')
+    expect(init.headers['x-key']).toBe('tyco-secret:webhook.header.1')
+    expect(JSON.parse(init.body as string)).toEqual({
+      token: 'a "b"',
+      text: 'a b',
+    })
+  })
+
+  it('stop the request when one has no value here, naming it', () => {
+    expect(() =>
+      buildWebhookRequest(webhook({ url: '{{var:HOOKS}}/run' }), null)
+    ).toThrow('HOOKS')
   })
 })
 

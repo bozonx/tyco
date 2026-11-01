@@ -1,5 +1,5 @@
 import {
-  ACTION_TEXT_PLACEHOLDER,
+  sampleUrlTemplate,
   type CommandConfig,
   type CommandRunSource,
 } from '@tyco/shared'
@@ -162,6 +162,7 @@ export function commandInvocation(command: CommandConfig): Invocation {
     isLlmArgumentParsingEnabled: command.isLlmArgumentParsingEnabled,
     isOutputLogged: command.isOutputLogged,
     outputAction: command.outputAction,
+    ...(command.platforms?.length ? { platforms: command.platforms } : {}),
   }
 }
 
@@ -211,9 +212,7 @@ export function validateCommand(
     const config = webhookToolConfig(command)
     if (!config.url.trim()) {
       issues.push({ field: 'url', messageKey: 'commands.errorNoUrl' })
-    } else if (
-      !httpOrigin(config.url.replaceAll(ACTION_TEXT_PLACEHOLDER, 'x'))
-    ) {
+    } else if (!httpOrigin(sampleUrlTemplate(config.url))) {
       issues.push({ field: 'url', messageKey: 'commands.errorInvalidUrl' })
     }
   } else if (command.toolId === 'core.translate') {

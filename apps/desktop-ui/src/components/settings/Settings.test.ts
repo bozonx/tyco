@@ -131,6 +131,8 @@ describe('Settings.vue', () => {
         isDefault: true,
         status: 'connected',
         isWritableByOthers: false,
+        deviceId: 'test-device',
+        platform: 'linux',
       },
     }))
   }
@@ -271,6 +273,7 @@ describe('Settings.vue', () => {
         'languages',
         'launcher-commands',
         'commands',
+        'variables',
       ],
       ['plugins', 'plugin:PluginA', 'plugin:PluginB'],
     ])

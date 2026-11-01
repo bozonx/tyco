@@ -9,7 +9,8 @@
         "provider": "sherpaOnnx",
         "providers": { "deepgram": { "modelId": "nova-3" } }
       },
-      "commands": [{ "id": "note", "toolId": "script" }]
+      "commands": [{ "id": "note", "toolId": "script" }],
+      "variables": [{ "id": "notes", "name": "NOTES_DIR", "description": "" }]
     },
     "device": {
       "isInDevelopment": true,
@@ -22,7 +23,8 @@
       "externalAccess": { "canAccessSelection": true },
       "windowInsertion": { "terminalApps": ["kitty"] },
       "aiVault": { "path": "/home/user/vault" },
-      "stt": { "providers": { "sherpaOnnx": { "baseUrl": "ws://pc:6006" } } }
+      "stt": { "providers": { "sherpaOnnx": { "baseUrl": "ws://pc:6006" } } },
+      "variableValues": { "notes": "/home/user/notes" }
     },
     "joined": {
       "appearance": { "theme": "dark", "uiScalePercent": 125 },
@@ -45,7 +47,9 @@
         "launcherPages": { "main": "Ctrl+Alt+Q" }
       },
       "externalAccess": { "canAccessSelection": true },
-      "windowInsertion": { "terminalApps": ["kitty"] }
+      "windowInsertion": { "terminalApps": ["kitty"] },
+      "variables": [{ "id": "notes", "name": "NOTES_DIR", "description": "" }],
+      "variableValues": { "notes": "/home/user/notes" }
     },
     "deviceUnknownPaths": []
   },

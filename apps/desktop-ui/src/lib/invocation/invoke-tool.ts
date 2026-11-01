@@ -15,6 +15,11 @@ import type { ToolLookup, ToolResult } from '../tools/tool-types'
 import type { Invocation, InvocationOptions } from './invocation-types'
 import { resolveSink } from './result-sinks'
 import { outputRequest, toolCallCommand } from '../tools/tool-call'
+import {
+  commandMissingVariables,
+  isOnPlatform,
+  type CommandEnvironment,
+} from '../variables/command-variables'
 
 export interface ToolInvokerDependencies {
   /** The tools the invocations run */
@@ -41,7 +46,7 @@ export type InvokeResult = ToolResult & {
 export function invocationUnavailableReason(
   invocation: Pick<
     Invocation,
-    'toolId' | 'toolConfig' | 'isLlmArgumentParsingEnabled'
+    'toolId' | 'toolConfig' | 'isLlmArgumentParsingEnabled' | 'platforms'
   >,
   tools: ToolLookup
 ): string | undefined {
@@ -49,6 +54,15 @@ export function invocationUnavailableReason(
   if (!tool) return 'commands.toolMissing'
   const reason = tool.getUnavailableReasonKey?.()
   if (reason) return reason
+  const environment = tools.environment?.()
+  if (environment) {
+    // the config is shared by devices: a command of another platform, or one
+    // whose variables this device has no values for, stays but does not run
+    if (!isOnPlatform(invocation.platforms, environment.platform))
+      return 'commands.otherPlatform'
+    if (invocationMissingVariables(invocation, environment).length)
+      return 'commands.variablesNotSet'
+  }
   // a tool that writes notes needs the folder, set on each device in the
   // plugin settings or in the command
   const notesField = tool.directoryFieldName
@@ -67,6 +81,12 @@ export function invocationUnavailableReason(
   )
   return kind === null ? 'commands.inputUnsupported' : undefined
 }
+
+/** The variables the invocation refers to without a value on this device */
+const invocationMissingVariables = (
+  invocation: Pick<Invocation, 'toolId' | 'toolConfig'>,
+  environment: CommandEnvironment
+): string[] => commandMissingVariables(invocation, environment.variables)
 
 /**
  * Calls the tool of an invocation: checks that it can run, turns the text into
@@ -87,6 +107,20 @@ export function createToolInvoker(deps: ToolInvokerDependencies) {
           ? tool.getUnavailableReasonKey?.()
           : 'commands.toolMissing'
         : invocationUnavailableReason(invocation, deps.tools)
+    if (reason === 'commands.variablesNotSet') {
+      // the user is told which values to set here
+      const names = invocationMissingVariables(
+        invocation,
+        deps.tools.environment!()
+      )
+      return {
+        ok: false,
+        messageKey: 'toast.variablesNotSet',
+        message: names.join(', '),
+        failure: `${reason}: ${names.join(', ')}`,
+        unavailable: reason,
+      }
+    }
     if (!tool || reason) {
       const unavailable = reason ?? 'commands.toolMissing'
       return {

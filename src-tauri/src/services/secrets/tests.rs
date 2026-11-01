@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 use super::origins::vault_namespace;
 use super::*;
 use crate::services::test_support::TestDir;
+use crate::services::variables::VariableValues;
 
 /// A vault in memory that can be made unreachable or read-only.
 #[derive(Default)]
@@ -323,7 +324,8 @@ fn two_devices_keep_their_own_keys_under_one_shared_reference() {
     }]});
 
     // the laptop makes the header secret and enters its authorization key
-    let pending = webhook::protect_for_save(&laptop, &mut config).unwrap();
+    let pending =
+        webhook::protect_for_save(&laptop, &mut config, &VariableValues::default()).unwrap();
     pending.commit(&config.clone(), &config);
     laptop
         .set(
@@ -343,7 +345,8 @@ fn two_devices_keep_their_own_keys_under_one_shared_reference() {
     // startup cleanup and its save change neither the config nor the laptop
     webhook::cleanup_after_startup(&desktop, &config);
     let synced = config.clone();
-    let pending = webhook::protect_for_save(&desktop, &mut config).unwrap();
+    let pending =
+        webhook::protect_for_save(&desktop, &mut config, &VariableValues::default()).unwrap();
     pending.commit(&synced, &config);
     assert_eq!(config, synced, "a save without new values rebinds nothing");
 

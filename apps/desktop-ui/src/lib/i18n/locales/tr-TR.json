@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "Yapay zekâ, istem gerektirdiğinde bu komutları sormadan çalıştırır. Bir komut asla kendini veya onu çağıran yapay zekâ komutunu çalıştırmaz.",
     "aiNoOtherCommands": "Henüz başka komut yok.",
     "aiMaxSteps": "Adım sınırı",
-    "aiMaxStepsInfo": "Yapay zekânın çalıştırabileceği en fazla komut sayısı. Son yanıt bu sınıra dahil değildir."
+    "aiMaxStepsInfo": "Yapay zekânın çalıştırabileceği en fazla komut sayısı. Son yanıt bu sınıra dahil değildir.",
+    "otherPlatform": "Bu platformda çalışmaz",
+    "variablesNotSet": "Kullandığı bir değişkenin bu cihazda değeri yok",
+    "platforms": "Platformlar",
+    "platformsInfo": "Komut yalnızca işaretli platformlarda çalışır; hiçbiri işaretli değilse hepsinde. Başka bir platformda listelerde kalır ama çalışmaz.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Ekle",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Gerekli bir hizmet şu anda kullanılamıyor",
     "stale": "Durum bu arada değişti, tekrar deneyin",
     "unsupportedConfig": "Ayarlar uygulamanın daha yeni bir sürümüyle kaydedilmiş",
-    "userDataUnavailable": "Veri klasörü kullanılamıyor"
+    "userDataUnavailable": "Veri klasörü kullanılamıyor",
+    "variableNotSet": "Bir değişkenin bu cihazda değeri yok",
+    "vaultUnavailable": "Yapay zekâ profilleri klasörü bu cihazda bağlı değil",
+    "projectUnavailable": "Proje klasörü bu cihazda ayarlanmamış"
   },
   "diff": {
     "modeOriginal": "Yalnızca orijinal",
@@ -628,8 +637,6 @@
     "aiProfilesHint": "Kendi talimatı, modeli, araçları ve sohbetleri olan ayrı asistanlar. Her profil üst çubukta bir sekmedir.",
     "aiProfilesTab": "Yapay Zekâ Profilleri",
     "aiVaultPath": "Yapay Zekâ Profil Kasa Yolu",
-    "aiVaultPathHint": "Yapay zekâ profillerinin (SOUL.md dosyaları, sohbetleri ve çalışma klasörleri) ve dahili projelerin klasörü. Varsayılan olarak uygulama verilerindeki ai-vault klasörü.",
-    "aiVaultTitle": "Kasa",
     "allPluginsTab": "Tüm eklentiler",
     "apiKey": "API anahtarı",
     "apiKeyBoundTo": "Kayıtlı anahtar yalnızca {origin} adresine gönderilir. Bu adresle kullanmak için yeniden kaydedin.",
@@ -1152,7 +1159,15 @@
       "indent": "Girintiyi artır",
       "outdent": "Girintiyi azalt",
       "reserved": "Bu kısayol metin düzenleme veya uygulama işlemleri için ayrılmıştır."
-    }
+    },
+    "aiVaultExternalHint": "Boş: veri klasörünün içindeki ai-vault klasörü, onunla birlikte eşitlenir. Ayrı bir klasör git, Obsidian ya da ayrı bir eşitleme için uygundur.",
+    "aiVaultGitWarning": "Eşitlenen bir klasörde git deposu tutmayın: iki cihazdan yapılan değişiklikler ona zarar verebilir.",
+    "aiVaultNotConnected": "Yapay zekâ profilleri klasörü bu cihazda bağlı değil: {path}. Yerine hiçbir şey oluşturulmadı.",
+    "aiVaultUseDefault": "Varsayılan klasörü kullan",
+    "projectFolderNotSetOnDevice": "Klasör bu cihazda ayarlanmamış",
+    "projectSetFolder": "Klasör ayarla",
+    "projectsWithoutFolder": "Bu cihazda klasörü olmayan harici projeler: {count}",
+    "variablesTab": "Değişkenler"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {
@@ -1204,7 +1219,8 @@
     "webhookFailed": "Web kancası isteği başarısız oldu",
     "webhookKeyNotSet": "Bu webhook’un anahtarı bu cihazda ayarlanmadı; komut ayarlarından girin",
     "webhookSuccess": "Web kancası başarıyla gönderildi",
-    "voicePostProcessTimeout": "Ses işleme çok uzun sürdü; orijinal metin korundu"
+    "voicePostProcessTimeout": "Ses işleme çok uzun sürdü; orijinal metin korundu",
+    "variablesNotSet": "Bazı değişkenlerin bu cihazda değeri yok; Ayarlar → Değişkenler bölümünden ayarlayın"
   },
   "tools": {
     "aiTask": "Yapay zekâ komutu",
@@ -1334,5 +1350,36 @@
     "clickToApply": "Uygulamak için tıklayın",
     "liveCorrectionFailed": "Canlı düzeltme başarısız oldu",
     "liveCorrectionFailedHint": "Model yanıt vermedi. Metin yazıldığı gibi eklenecektir."
+  },
+  "variables": {
+    "add": "Ekle",
+    "addTitle": "Yeni değişken",
+    "browseFile": "Dosya…",
+    "builtinHint": "Her zaman kullanılabilir; değerleri bu cihazdan gelir.",
+    "builtinTitle": "Yerleşik değişkenler",
+    "declare": "Değişkeni tanımla",
+    "description": "Açıklama",
+    "empty": "Henüz değişken yok.",
+    "errorBuiltinName": "TYCO_ ile başlayan adlar yerleşik değişkenlere ayrılmıştır",
+    "errorInvalidName": "Büyük Latin harfleri, rakamlar ve _ kullanın; bir harfle başlayın",
+    "errorNameTaken": "Bu ada sahip bir değişken zaten var",
+    "errorNoName": "Bir ad girin",
+    "hint": "Değişken, bir komutun ya da sağlayıcı adresinin her cihazda farklı olan bir değeri, örneğin bir klasör yolunu veya yerel bir sunucuyu kullanmasını sağlar. Ad tüm cihazlarda ortaktır; değeri her cihaz kendisi ayarlar. {example} olarak eklenir.",
+    "hintNotDeclared": "{name} tanımlı değil",
+    "hintNotSet": "{name} değişkeninin bu cihazda değeri yok",
+    "insert": "Değişken ekle",
+    "listTitle": "Değişkenler",
+    "manage": "Değişkenleri yönet…",
+    "name": "Ad",
+    "nameHint": "Örneğin NOTES_DIR. Komutlar ona adıyla başvurur; yeniden adlandırma onları günceller.",
+    "notForSecrets": "Değerler düz metin olarak saklanır ve bir isteme ya da URL’ye girebilir. Anahtarları burada tutmayın: anahtar alanlarını kullanın.",
+    "remove": "Değişkeni kaldır",
+    "setValue": "Değer ayarla",
+    "unsetOnDevice": "Bu cihazda değeri olmayan değişkenler: {count}",
+    "unused": "Kullanılmıyor",
+    "usedBy": "Kullanan: {count}",
+    "value": "Değer",
+    "valueNotSet": "Bu cihazda ayarlanmamış: onu kullanan komutlar çalışmaz",
+    "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   }
 }

@@ -15,7 +15,7 @@ pub mod user_files;
 
 pub use history_store::*;
 pub use paths::{app_log_dir, get_storage_info, storage_dir};
-pub use user_data::{open_user_data, user_sub_dir, UserDirAccess};
+pub use user_data::{open_user_data, user_sub_dir, variable_values, UserDirAccess};
 
 #[cfg(test)]
 use serde_json::json;

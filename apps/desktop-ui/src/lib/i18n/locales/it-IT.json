@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "L’IA esegue questi comandi senza chiedere quando il prompt ne ha bisogno. Un comando non esegue mai sé stesso né un comando IA che l’ha chiamato.",
     "aiNoOtherCommands": "Non ci sono ancora altri comandi.",
     "aiMaxSteps": "Limite di passi",
-    "aiMaxStepsInfo": "Numero massimo di comandi che l’IA può eseguire. La risposta finale non rientra in questo limite."
+    "aiMaxStepsInfo": "Numero massimo di comandi che l’IA può eseguire. La risposta finale non rientra in questo limite.",
+    "otherPlatform": "Non viene eseguito su questa piattaforma",
+    "variablesNotSet": "Una variabile che usa non ha un valore su questo dispositivo",
+    "platforms": "Piattaforme",
+    "platformsInfo": "Il comando viene eseguito solo sulle piattaforme selezionate; se nessuna è selezionata, su tutte. Su un’altra piattaforma resta negli elenchi ma non viene eseguito.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Aggiungi",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Un servizio necessario non è disponibile al momento",
     "stale": "Lo stato è cambiato nel frattempo, riprova",
     "unsupportedConfig": "Le impostazioni sono state salvate da una versione più recente dell’app",
-    "userDataUnavailable": "La cartella dati non è disponibile"
+    "userDataUnavailable": "La cartella dati non è disponibile",
+    "variableNotSet": "Una variabile non ha un valore su questo dispositivo",
+    "vaultUnavailable": "La cartella dei profili IA non è collegata su questo dispositivo",
+    "projectUnavailable": "La cartella del progetto non è impostata su questo dispositivo"
   },
   "diff": {
     "modeOriginal": "Solo originale",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Assistenti separati con istruzione, modello, strumenti e chat propri. Ogni profilo è una scheda nella barra superiore.",
     "aiProfilesTab": "Profili IA",
     "aiVaultPath": "Percorso dell’archivio dei profili IA",
-    "aiVaultPathHint": "La cartella dei profili IA (i loro SOUL.md, chat e spazi di lavoro) e dei progetti interni. Per impostazione predefinita, la cartella ai-vault nei dati dell’app.",
-    "aiVaultTitle": "Archivio",
     "allPluginsTab": "Tutti i plugin",
     "apiKey": "Chiave API",
     "apiKeyBoundTo": "La chiave salvata viene inviata solo a {origin}. Salvala di nuovo per usarla con questo indirizzo.",
@@ -1155,7 +1162,15 @@
       "indent": "Aumenta rientro",
       "outdent": "Riduci rientro",
       "reserved": "Questa scorciatoia è riservata alla modifica del testo o alle azioni dell’applicazione."
-    }
+    },
+    "aiVaultExternalHint": "Vuoto: la cartella ai-vault nella cartella dati, sincronizzata con essa. Una cartella separata va bene per git, Obsidian o una sincronizzazione propria.",
+    "aiVaultGitWarning": "Non tenere un repository git in una cartella sincronizzata: le modifiche da due dispositivi possono danneggiarlo.",
+    "aiVaultNotConnected": "La cartella dei profili IA non è collegata su questo dispositivo: {path}. Al suo posto non è stato creato nulla.",
+    "aiVaultUseDefault": "Usa la cartella predefinita",
+    "projectFolderNotSetOnDevice": "Cartella non impostata su questo dispositivo",
+    "projectSetFolder": "Imposta cartella",
+    "projectsWithoutFolder": "Progetti esterni senza cartella su questo dispositivo: {count}",
+    "variablesTab": "Variabili"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "Richiesta al webhook non riuscita",
     "webhookKeyNotSet": "La chiave di questo webhook non è impostata su questo dispositivo; inseriscila nelle impostazioni del comando",
     "webhookSuccess": "Webhook inviato correttamente",
-    "voicePostProcessTimeout": "L'elaborazione vocale ha richiesto troppo tempo; mantenuto il testo originale"
+    "voicePostProcessTimeout": "L'elaborazione vocale ha richiesto troppo tempo; mantenuto il testo originale",
+    "variablesNotSet": "Alcune variabili non hanno un valore su questo dispositivo; impostale in Impostazioni → Variabili"
   },
   "tools": {
     "aiTask": "Comando IA",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Fai clic per applicare",
     "liveCorrectionFailed": "Correzione in tempo reale non riuscita",
     "liveCorrectionFailedHint": "Il modello non ha risposto. Il testo verrà inserito così com'è stato digitato."
+  },
+  "variables": {
+    "add": "Aggiungi",
+    "addTitle": "Nuova variabile",
+    "browseFile": "File…",
+    "builtinHint": "Sempre disponibili; i loro valori provengono da questo dispositivo.",
+    "builtinTitle": "Variabili integrate",
+    "declare": "Dichiara variabile",
+    "description": "Descrizione",
+    "empty": "Ancora nessuna variabile.",
+    "errorBuiltinName": "I nomi che iniziano con TYCO_ sono riservati alle variabili integrate",
+    "errorInvalidName": "Usa lettere latine maiuscole, cifre e _, iniziando con una lettera",
+    "errorNameTaken": "Esiste già una variabile con questo nome",
+    "errorNoName": "Inserisci un nome",
+    "hint": "Una variabile permette a un comando o all’indirizzo di un fornitore di usare un valore diverso su ogni dispositivo, come il percorso di una cartella o un server locale. Il nome è comune a tutti i dispositivi; ognuno imposta il proprio valore. Si inserisce come {example}.",
+    "hintNotDeclared": "{name} non è dichiarata",
+    "hintNotSet": "{name} non ha un valore su questo dispositivo",
+    "insert": "Inserisci variabile",
+    "listTitle": "Variabili",
+    "manage": "Gestisci variabili…",
+    "name": "Nome",
+    "nameHint": "Ad esempio NOTES_DIR. I comandi vi fanno riferimento per nome; rinominarla li aggiorna.",
+    "notForSecrets": "I valori sono salvati in chiaro e possono finire in un prompt o in un URL. Non inserire chiavi qui: usa i campi delle chiavi.",
+    "remove": "Rimuovi variabile",
+    "setValue": "Imposta valore",
+    "unsetOnDevice": "Variabili senza valore su questo dispositivo: {count}",
+    "unused": "Non usata",
+    "usedBy": "Usata da: {count}",
+    "value": "Valore",
+    "valueNotSet": "Non impostata su questo dispositivo: i comandi che la usano non vengono eseguiti",
+    "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   }
 }

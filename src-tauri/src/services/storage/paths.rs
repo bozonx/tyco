@@ -128,6 +128,8 @@ mod tests {
                 is_default: false,
                 status: crate::models::UserDataStatus::NotConnected,
                 is_writable_by_others: false,
+                device_id: String::new(),
+                platform: String::from("linux"),
             },
         };
 
@@ -141,7 +143,9 @@ mod tests {
                     "defaultPath": "/data",
                     "isDefault": false,
                     "status": "notConnected",
-                    "isWritableByOthers": false
+                    "isWritableByOthers": false,
+                    "deviceId": "",
+                    "platform": "linux"
                 }
             })
         );

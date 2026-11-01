@@ -1,5 +1,5 @@
 import type { InjectionKey, Ref } from 'vue'
-import type { UserConfig } from '@tyco/shared'
+import type { UserConfig, VariableValues } from '@tyco/shared'
 
 import type { SettingsOperations } from './settings-operations'
 
@@ -16,6 +16,11 @@ export interface SettingsContext {
   navigate: (tab: string) => void
   /** Opens the commands tab on one command */
   editCommand: (commandId: string) => void
+  /**
+   * The values the variables of the draft have on this device, the built-in
+   * ones included; none when the page does not know the device
+   */
+  variables?: () => VariableValues
 }
 
 export const SETTINGS_CONTEXT_KEY: InjectionKey<SettingsContext> =

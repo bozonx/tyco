@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "Az MI kérdés nélkül futtatja ezeket a parancsokat, amikor a promptnak szüksége van rájuk. Egy parancs soha nem futtatja önmagát, sem azt az MI-parancsot, amely meghívta.",
     "aiNoOtherCommands": "Még nincsenek más parancsok.",
     "aiMaxSteps": "Lépéskorlát",
-    "aiMaxStepsInfo": "Az MI által futtatható parancsok maximális száma. A végső válasz nem számít bele ebbe a korlátba."
+    "aiMaxStepsInfo": "Az MI által futtatható parancsok maximális száma. A végső válasz nem számít bele ebbe a korlátba.",
+    "otherPlatform": "Ezen a platformon nem fut",
+    "variablesNotSet": "Egy általa használt változónak nincs értéke ezen az eszközön",
+    "platforms": "Platformok",
+    "platformsInfo": "A parancs csak a bejelölt platformokon fut; ha egyik sincs bejelölve, mindegyiken. Más platformon a listákban marad, de nem fut.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Hozzáadás",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Egy szükséges szolgáltatás most nem érhető el",
     "stale": "Az állapot közben megváltozott, próbálja újra",
     "unsupportedConfig": "A beállításokat az alkalmazás egy újabb verziója mentette",
-    "userDataUnavailable": "Az adatmappa nem érhető el"
+    "userDataUnavailable": "Az adatmappa nem érhető el",
+    "variableNotSet": "Egy változónak nincs értéke ezen az eszközön",
+    "vaultUnavailable": "Az MI-profilok mappája nincs csatlakoztatva ezen az eszközön",
+    "projectUnavailable": "A projekt mappája nincs beállítva ezen az eszközön"
   },
   "diff": {
     "modeOriginal": "Csak eredeti",
@@ -628,8 +637,6 @@
     "aiProfilesHint": "Különálló asszisztensek saját utasítással, modellel, eszközökkel és csevegésekkel. Minden profil egy lap a felső sávon.",
     "aiProfilesTab": "MI-profilok",
     "aiVaultPath": "Az MI-profilok tárolójának útvonala",
-    "aiVaultPathHint": "Az MI-profilok (SOUL.md fájljaik, csevegéseik és munkaterületeik) és a belső projektek mappája. Alapértelmezés szerint az alkalmazásadatokban lévő ai-vault mappa.",
-    "aiVaultTitle": "Tároló",
     "allPluginsTab": "Minden bővítmény",
     "apiKey": "API-kulcs",
     "apiKeyBoundTo": "A mentett kulcs csak ide kerül elküldésre: {origin}. Mentse el újra, ha ezzel a címmel szeretné használni.",
@@ -1152,7 +1159,15 @@
       "indent": "Behúzás növelése",
       "outdent": "Behúzás csökkentése",
       "reserved": "Ez a gyorsbillentyű szövegszerkesztéshez vagy alkalmazásműveletekhez van fenntartva."
-    }
+    },
+    "aiVaultExternalHint": "Üres: az ai-vault mappa az adatmappán belül, amely vele együtt szinkronizálódik. Külön mappa git, Obsidian vagy saját szinkronizálás esetén hasznos.",
+    "aiVaultGitWarning": "Ne tartson git-tárolót szinkronizált mappában: két eszköz módosításai károsíthatják.",
+    "aiVaultNotConnected": "Az MI-profilok mappája nincs csatlakoztatva ezen az eszközön: {path}. A helyére semmi nem jött létre.",
+    "aiVaultUseDefault": "Alapértelmezett mappa használata",
+    "projectFolderNotSetOnDevice": "A mappa nincs beállítva ezen az eszközön",
+    "projectSetFolder": "Mappa beállítása",
+    "projectsWithoutFolder": "Mappa nélküli külső projektek ezen az eszközön: {count}",
+    "variablesTab": "Változók"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1204,7 +1219,8 @@
     "webhookFailed": "A webhook-kérés sikertelen",
     "webhookKeyNotSet": "Ennek a webhooknak a kulcsa nincs beállítva ezen az eszközön; adja meg a parancs beállításaiban",
     "webhookSuccess": "A webhook sikeresen elküldve",
-    "voicePostProcessTimeout": "A hangfeldolgozás túl sokáig tartott; az eredeti szöveg megmaradt"
+    "voicePostProcessTimeout": "A hangfeldolgozás túl sokáig tartott; az eredeti szöveg megmaradt",
+    "variablesNotSet": "Egyes változóknak nincs értéke ezen az eszközön; állítsa be őket: Beállítások → Változók"
   },
   "tools": {
     "aiTask": "MI-parancs",
@@ -1334,5 +1350,36 @@
     "clickToApply": "Kattintson az alkalmazáshoz",
     "liveCorrectionFailed": "Az élő javítás sikertelen",
     "liveCorrectionFailedHint": "A modell nem válaszolt. A szöveg úgy lesz beillesztve, ahogy beírta."
+  },
+  "variables": {
+    "add": "Hozzáadás",
+    "addTitle": "Új változó",
+    "browseFile": "Fájl…",
+    "builtinHint": "Mindig elérhetők; értékük erről az eszközről származik.",
+    "builtinTitle": "Beépített változók",
+    "declare": "Változó deklarálása",
+    "description": "Leírás",
+    "empty": "Még nincsenek változók.",
+    "errorBuiltinName": "A TYCO_ kezdetű nevek a beépített változók számára vannak fenntartva",
+    "errorInvalidName": "Használjon latin nagybetűket, számjegyeket és _ jelet, betűvel kezdve",
+    "errorNameTaken": "Már létezik ilyen nevű változó",
+    "errorNoName": "Adjon meg egy nevet",
+    "hint": "A változóval egy parancs vagy egy szolgáltató címe olyan értéket használhat, amely eszközönként eltér, például egy mappa útvonalát vagy egy helyi kiszolgálót. A név minden eszközön közös, az értéket minden eszköz maga állítja be. Beszúrás: {example}.",
+    "hintNotDeclared": "{name} nincs deklarálva",
+    "hintNotSet": "{name} értéke nincs megadva ezen az eszközön",
+    "insert": "Változó beszúrása",
+    "listTitle": "Változók",
+    "manage": "Változók kezelése…",
+    "name": "Név",
+    "nameHint": "Például NOTES_DIR. A parancsok név szerint hivatkoznak rá; az átnevezés frissíti őket.",
+    "notForSecrets": "Az értékek egyszerű szövegként tárolódnak, és promptba vagy URL-be kerülhetnek. Ne tároljon itt kulcsokat — azokra a kulcsmezők valók.",
+    "remove": "Változó eltávolítása",
+    "setValue": "Érték megadása",
+    "unsetOnDevice": "Érték nélküli változók ezen az eszközön: {count}",
+    "unused": "Nincs használatban",
+    "usedBy": "Használja: {count}",
+    "value": "Érték",
+    "valueNotSet": "Nincs megadva ezen az eszközön: az ezt használó parancsok nem futnak",
+    "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   }
 }

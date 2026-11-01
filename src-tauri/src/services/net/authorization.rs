@@ -2,6 +2,7 @@
 use super::request::{prepare, request_origin, PreparedRequest, Protocol};
 use crate::errors::AppError;
 use crate::services::secrets::{origin_of, Secrets};
+use crate::services::variables::{self, Place, VariableValues};
 use serde_json::Value;
 use std::collections::HashSet;
 
@@ -11,10 +12,14 @@ pub struct NetworkPolicy {
 }
 
 impl NetworkPolicy {
-    pub fn from_config(config: &Value) -> Self {
+    /// The endpoints of `config`, their variables filled with `variables`,
+    /// the values of this device; one that refers to a variable without a
+    /// value allows nothing.
+    pub fn from_config(config: &Value, variables: &VariableValues) -> Self {
         Self {
             allowed_origins: configured_base_urls(config)
-                .filter_map(|value| url::Url::parse(value).ok())
+                .filter_map(|value| variables::substitute(value, variables, Place::Url).ok())
+                .filter_map(|value| url::Url::parse(&value).ok())
                 .filter_map(|value| origin_of(&value))
                 .collect(),
         }
@@ -102,7 +107,27 @@ mod tests {
         config: &Value,
         secrets: &Secrets,
     ) -> Result<(), AppError> {
-        NetworkPolicy::from_config(config).ensure_allowed(protocol, url, secrets)
+        NetworkPolicy::from_config(config, &VariableValues::default())
+            .ensure_allowed(protocol, url, secrets)
+    }
+
+    #[test]
+    fn endpoints_take_the_variables_of_this_device() {
+        let config = serde_json::json!({
+            "llm": {"providers": [{"type": "openaiCompatible", "baseUrl": "{{var:LOCAL_API}}/v1"}]},
+            "commands": [{"toolId": "webhook", "toolConfig": {"url": "{{var:HOOKS}}/run"}}]
+        });
+        let secrets = crate::services::secrets::Secrets::new();
+        let values = VariableValues::from_pairs(&[("LOCAL_API", "http://localhost:11434")]);
+        let policy = NetworkPolicy::from_config(&config, &values);
+        assert!(policy
+            .ensure_allowed(Protocol::Http, "http://localhost:11434/v1/models", &secrets)
+            .is_ok());
+        // a variable without a value allows nothing
+        let policy = NetworkPolicy::from_config(&config, &VariableValues::default());
+        assert!(policy
+            .ensure_allowed(Protocol::Http, "http://localhost:11434/v1/models", &secrets)
+            .is_err());
     }
 
     #[test]

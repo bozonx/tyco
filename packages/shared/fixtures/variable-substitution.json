@@ -1,0 +1,112 @@
+[
+  {
+    "name": "a prompt takes the value as it is",
+    "place": "text",
+    "template": "Save it to {{var:NOTES_DIR}} now",
+    "values": { "NOTES_DIR": "/home/me/notes" },
+    "expected": "Save it to /home/me/notes now"
+  },
+  {
+    "name": "a value is not parsed again",
+    "place": "text",
+    "template": "{{var:A}}|{{var:B}}",
+    "values": { "A": "{{TEXT}} {{var:B}}", "B": "b" },
+    "expected": "{{TEXT}} {{var:B}}|b"
+  },
+  {
+    "name": "the text placeholder stays without a text",
+    "place": "text",
+    "template": "{{TEXT}} {{var:A}}",
+    "values": { "A": "1" },
+    "expected": "{{TEXT}} 1"
+  },
+  {
+    "name": "a variable without a value is named once",
+    "place": "url",
+    "template": "{{var:A}}/{{var:B}}/{{var:B}}",
+    "values": { "A": "http://a" },
+    "missing": ["B"]
+  },
+  {
+    "name": "a name of another spelling is another variable",
+    "place": "text",
+    "template": "{{var:notes_dir}}",
+    "values": { "NOTES_DIR": "/n" },
+    "missing": ["notes_dir"]
+  },
+  {
+    "name": "built-in variables",
+    "place": "text",
+    "template": "{{var:TYCO_USER_DIR}}/x {{var:TYCO_DEVICE_ID}}",
+    "values": { "TYCO_USER_DIR": "/sync/tyco", "TYCO_DEVICE_ID": "d1" },
+    "expected": "/sync/tyco/x d1"
+  },
+  {
+    "name": "a URL takes a base address as it is",
+    "place": "url",
+    "template": "{{var:LOCAL_API}}/v1?key={{var:KEY}}",
+    "values": { "LOCAL_API": "http://localhost:11434", "KEY": "a b" },
+    "expected": "http://localhost:11434/v1?key=a b"
+  },
+  {
+    "name": "a URL encodes the text but not a variable",
+    "place": "url",
+    "template": "https://x.test/?q={{TEXT}}&p={{var:P}}",
+    "text": "a b&c",
+    "values": { "P": "/a b" },
+    "expected": "https://x.test/?q=a%20b%26c&p=/a b"
+  },
+  {
+    "name": "a header takes the value as it is",
+    "place": "header",
+    "template": "Token {{var:T}}",
+    "values": { "T": "abc def" },
+    "expected": "Token abc def"
+  },
+  {
+    "name": "a header refuses a line break in a value",
+    "place": "header",
+    "template": "Token {{var:T}}",
+    "values": { "T": "abc\r\nX-Evil: 1" }
+  },
+  {
+    "name": "a JSON body escapes a value inside a string",
+    "place": "json",
+    "template": "{\"path\":\"dir: {{var:P}}\",\"text\":\"{{TEXT}}\"}",
+    "text": "say \"hi\"",
+    "values": { "P": "C:\\a \"b\"" },
+    "expected": "{\"path\":\"dir: C:\\\\a \\\"b\\\"\",\"text\":\"say \\\"hi\\\"\"}"
+  },
+  {
+    "name": "a bare value of a JSON body becomes a string",
+    "place": "json",
+    "template": "{\"p\":{{var:P}},\"t\":{{TEXT}}}",
+    "text": "x",
+    "values": { "P": "1" },
+    "expected": "{\"p\":\"1\",\"t\":\"x\"}"
+  },
+  {
+    "name": "a body that is not JSON takes the values as they are",
+    "place": "json",
+    "template": "path={{var:P}}&t={{TEXT}}",
+    "text": "a\"b",
+    "values": { "P": "c\"d" },
+    "expected": "path=c\"d&t=a\"b"
+  },
+  {
+    "name": "the text alone is the body as it is",
+    "place": "json",
+    "template": " {{TEXT}} ",
+    "text": "raw {{var:P}}",
+    "values": { "P": "p" },
+    "expected": "raw {{var:P}}"
+  },
+  {
+    "name": "a JSON body with a missing variable",
+    "place": "json",
+    "template": "{\"p\":\"{{var:P}}\"}",
+    "text": "",
+    "values": {},
+    "missing": ["P"]
+  }
+]

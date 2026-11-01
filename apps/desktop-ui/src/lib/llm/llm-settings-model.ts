@@ -5,6 +5,7 @@ import {
   type LlmConfig,
   type LlmModel,
   type LlmProvider,
+  type VariableValues,
 } from '@tyco/shared'
 
 import { createSecretKeyEditor } from '../settings/secret-key-editor'
@@ -15,6 +16,7 @@ import {
   removeProvider,
 } from './llm-config'
 import { InvalidLlmBaseUrlError } from './llm-connection'
+import { providerBaseUrl } from '../variables/command-variables'
 import { parseModelTemperature, parseModelTokenCount } from './model-number'
 
 export type LlmConnectionCheckStatus = 'checking' | 'success' | 'error'
@@ -28,6 +30,10 @@ export function createLlmSettingsModel(deps: {
   notifyInvalidUrl: () => void
   formatConnectionError: (error: unknown) => string
   providerRemoved: (id: string) => void
+  /** The values of the variables on this device, for the base URLs */
+  variables?: () => VariableValues
+  /** A base URL refers to variables without a value on this device */
+  notifyVariablesNotSet?: (names: string[]) => void
 }) {
   const keyDrafts = reactive<Record<string, string>>({})
   const expandedProviderIds = reactive(new Set<string>())
@@ -63,8 +69,24 @@ export function createLlmSettingsModel(deps: {
       onSaved: () => clearConnectionCheck(id),
       onRemoved: () => clearConnectionCheck(id),
     })
-  async function saveKey(provider: LlmProvider) {
-    if (!keyDrafts[provider.id]?.trim()) return
+  /**
+   * The provider with its base URL as it is on this device, or `null` when it
+   * refers to variables without a value here, which the user is told
+   */
+  function onThisDevice(provider: LlmProvider): LlmProvider | null {
+    if (provider.type !== 'openaiCompatible') return provider
+    const url = providerBaseUrl(provider, deps.variables?.() ?? {})
+    if (url.ok) return { ...provider, baseUrl: url.value }
+    if (url.missing.length && deps.notifyVariablesNotSet)
+      deps.notifyVariablesNotSet(url.missing)
+    else deps.notifyInvalidUrl()
+    return null
+  }
+  async function saveKey(saved: LlmProvider) {
+    if (!keyDrafts[saved.id]?.trim()) return
+    // the key is bound to the address the provider has on this device
+    const provider = onThisDevice(saved)
+    if (!provider) return
     const origin =
       provider.type === 'openaiCompatible' ? httpOrigin(provider.baseUrl) : null
     if (provider.type === 'openaiCompatible' && !origin) {
@@ -129,7 +151,9 @@ export function createLlmSettingsModel(deps: {
   }
   const discardDraftModel = (id: string) =>
     discardDrafts((model) => model.id === id)
-  async function checkConnection(provider: LlmProvider) {
+  async function checkConnection(saved: LlmProvider) {
+    const provider = onThisDevice(saved)
+    if (!provider) return
     const request = Symbol()
     requests.set(provider.id, request)
     connectionCheckStatusByProviderId[provider.id] = 'checking'

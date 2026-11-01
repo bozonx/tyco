@@ -95,6 +95,11 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.commandsTab',
         icon: 'mdi:console-line',
       },
+      {
+        id: 'variables',
+        labelKey: 'settings.variablesTab',
+        icon: 'mdi:variable',
+      },
     ],
   },
   {

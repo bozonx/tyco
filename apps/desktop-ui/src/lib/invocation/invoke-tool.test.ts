@@ -56,6 +56,44 @@ describe('createToolInvoker', () => {
     expect(run).not.toHaveBeenCalled()
   })
 
+  it('refuses a command of another platform or with a variable not set here', async () => {
+    const run = vi.fn(async (): Promise<ToolResult> => ({ ok: true }))
+    const registry = createToolRegistry([tool(run, { id: 'webhook' })])
+    const invoke = createToolInvoker({
+      tools: {
+        get: registry.get,
+        environment: () => ({
+          platform: 'linux',
+          variables: { HOOKS: 'https://hooks.example' },
+        }),
+      },
+    })
+    const webhook: Invocation = {
+      toolId: 'webhook',
+      toolConfig: { url: '{{var:HOOKS}}/{{var:PATH}}' },
+      label: 'Hook',
+    }
+    expect(
+      await invoke({ ...webhook, platforms: ['windows'] }, 'x')
+    ).toMatchObject({ unavailable: 'commands.otherPlatform' })
+    expect(await invoke(webhook, 'x')).toMatchObject({
+      ok: false,
+      messageKey: 'toast.variablesNotSet',
+      message: 'PATH',
+      unavailable: 'commands.variablesNotSet',
+    })
+    expect(run).not.toHaveBeenCalled()
+    await invoke(
+      {
+        ...webhook,
+        toolConfig: { url: '{{var:HOOKS}}/x' },
+        platforms: ['linux'],
+      },
+      'x'
+    )
+    expect(run).toHaveBeenCalled()
+  })
+
   it('refuses a note-writing tool without a notes folder on this device', async () => {
     const run = vi.fn(async (): Promise<ToolResult> => ({ ok: true }))
     const notes = tool(run, {

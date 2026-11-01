@@ -2,7 +2,8 @@
 //! of the user config (hotkeys, window insertion, …, see `x-scope` of the
 //! schema) and the fields of the device itself, which the settings never
 //! show: its id, the machine it was made on, where the user data folder is,
-//! and the paths of the plugins that write notes.
+//! the paths of the plugins that write notes and the folders of the external
+//! projects of the AI profiles.
 use crate::locks::MutexExt;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -35,6 +36,11 @@ pub struct DeviceFile {
     /// The notes folder of a plugin command on this device, by command id.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub plugin_command_paths: BTreeMap<String, String>,
+    /// The folder of an external project of the AI profiles on this
+    /// device: by the id of its vault (see `ai_vault::marker`), then by the
+    /// project id.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub ai_project_paths: BTreeMap<String, BTreeMap<String, String>>,
     /// The device part of the user config, its `configVersion` included.
     #[serde(default = "empty_object")]
     pub config: Value,
@@ -55,6 +61,7 @@ impl Default for DeviceFile {
             user_data_path: String::new(),
             plugin_paths: BTreeMap::new(),
             plugin_command_paths: BTreeMap::new(),
+            ai_project_paths: BTreeMap::new(),
             config: empty_object(),
             other: Map::new(),
         }

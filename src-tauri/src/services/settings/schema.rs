@@ -307,8 +307,9 @@ const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
 const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 
 /// The entity collections, each with distinct ids.
-const ENTITY_COLLECTIONS: [&str; 6] = [
+const ENTITY_COLLECTIONS: [&str; 7] = [
     "/commands",
+    "/variables",
     "/launcherPages",
     "/transformations/items",
     "/styling/items",
@@ -336,6 +337,13 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             if !seen.insert(item["id"].as_str()) {
                 return Err(invalid_field(pointer));
             }
+        }
+    }
+    let mut names = HashSet::new();
+    for variable in config["variables"].as_array().into_iter().flatten() {
+        let name = variable["name"].as_str().unwrap_or_default();
+        if !is_user_variable_name(name) || !names.insert(name.to_ascii_uppercase()) {
+            return Err(invalid_field("variables.name"));
         }
     }
     let transformations = ids(config, "/transformations/items");
@@ -549,6 +557,7 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             deduplicate_by_id(collection);
         }
     }
+    retain_user_variables(config);
     for command in config["commands"].as_array_mut().into_iter().flatten() {
         if let Some(schema) = tool_config_schema(&command["toolId"]) {
             command["toolConfig"] = repair(&command["toolConfig"], schema, defaults);
@@ -643,19 +652,51 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
 /// go from the device to the user data only, so this changes the device part
 /// alone. Returns whether something was dropped.
 pub fn prune_device_references(config: &mut Value) -> bool {
+    let mut is_pruned = false;
     let page_ids: HashSet<String> = ids(config, "/launcherPages")
         .into_iter()
         .map(str::to_owned)
         .collect();
-    let Some(shortcuts) = config["hotkeys"]
+    if let Some(shortcuts) = config["hotkeys"]
         .get_mut("launcherPages")
         .and_then(Value::as_object_mut)
-    else {
-        return false;
+    {
+        let before = shortcuts.len();
+        shortcuts.retain(|id, _| page_ids.contains(id));
+        is_pruned |= shortcuts.len() != before;
+    }
+    let variable_ids: HashSet<String> = ids(config, "/variables")
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+    if let Some(values) = config
+        .get_mut("variableValues")
+        .and_then(Value::as_object_mut)
+    {
+        let before = values.len();
+        values.retain(|id, _| variable_ids.contains(id));
+        is_pruned |= values.len() != before;
+    }
+    is_pruned
+}
+
+/// Whether `name` may name a variable of the user: the schema pattern holds
+/// it, and the prefix of the built-in ones does not start it.
+fn is_user_variable_name(name: &str) -> bool {
+    !name.starts_with(crate::services::variables::BUILTIN_PREFIX)
+}
+
+/// Drops the variables a user may not declare, and the repeats of a name, the
+/// first one kept: a template refers to a variable by its name.
+fn retain_user_variables(config: &mut Value) {
+    let Some(variables) = config["variables"].as_array_mut() else {
+        return;
     };
-    let before = shortcuts.len();
-    shortcuts.retain(|id, _| page_ids.contains(id));
-    shortcuts.len() != before
+    let mut names = HashSet::new();
+    variables.retain(|variable| {
+        let name = variable["name"].as_str().unwrap_or_default();
+        is_user_variable_name(name) && names.insert(name.to_ascii_uppercase())
+    });
 }
 
 fn is_device_schema(schema: &Value) -> bool {

@@ -86,7 +86,9 @@ pub fn inspect_target(current: &Path, target: &Path) -> Result<VaultTargetKind, 
     if names.is_empty() {
         return Ok(VaultTargetKind::Empty);
     }
-    if VAULT_DIRS.iter().any(|dir| target.join(dir).is_dir()) {
+    if VAULT_DIRS.iter().any(|dir| target.join(dir).is_dir())
+        || target.join(super::marker::VAULT_MARKER_FILE).is_file()
+    {
         return Ok(VaultTargetKind::Vault {
             profile_count: count_entries(&target.join("profiles"), "profile.json"),
             project_count: count_entries(&target.join("projects"), "project.json"),

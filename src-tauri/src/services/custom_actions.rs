@@ -3,7 +3,7 @@ mod file_dialogs;
 mod process_runner;
 
 pub use command_logging::{action_log_path, log_command_run, log_custom_action, CommandRunRecord};
-pub use file_dialogs::{pick_directory, pick_script_file};
+pub use file_dialogs::{pick_directory, pick_file, pick_script_file};
 pub use process_runner::{
     execute_script, ScriptExecutionResult, ScriptRequest, ScriptRuns, TEXT_PLACEHOLDER,
 };
@@ -12,6 +12,7 @@ use std::path::Path;
 
 use serde_json::Value;
 
+use crate::services::variables::VariableValues;
 use crate::{errors::AppError, models::user_config};
 
 /// A run of a script saved in the library; the shell command and working
@@ -24,10 +25,12 @@ pub struct SavedScriptRun<'a> {
     pub run_id: Option<&'a str>,
 }
 
-/// Runs the saved script `run.command_id` of `config`.
+/// Runs the saved script `run.command_id` of `config`, its variables filled
+/// with `variables`, the values of this device.
 pub fn execute_saved_script(
     runs: &ScriptRuns,
     config: &Value,
+    variables: &VariableValues,
     run: &SavedScriptRun,
     log_dir: Option<&Path>,
 ) -> Result<ScriptExecutionResult, AppError> {
@@ -43,6 +46,12 @@ pub fn execute_saved_script(
             run.command_id
         )));
     }
+    if !command.is_on_this_platform {
+        return Err(AppError::InvalidInput(format!(
+            "The command `{}` does not run on this platform",
+            run.command_id
+        )));
+    }
     let tool_config = &command.tool_config;
     execute_script(
         runs,
@@ -55,6 +64,7 @@ pub fn execute_saved_script(
             should_capture_output: run.should_capture_output,
             should_log_output: run.should_log_output,
             run_id: run.run_id,
+            variables,
         },
         log_dir,
     )
@@ -69,11 +79,14 @@ mod tests {
         let config = serde_json::json!({"commands": [
             {"id": "hook", "name": "Hook", "toolId": "webhook", "toolConfig": {"url": "x"}, "isEnabled": true},
             {"id": "off", "name": "Off", "toolId": "script", "toolConfig": {"command": "true"}, "isEnabled": false},
+            {"id": "elsewhere", "name": "Elsewhere", "toolId": "script", "toolConfig": {"command": "true"}, "isEnabled": true,
+             "platforms": [if cfg!(target_os = "windows") { "linux" } else { "windows" }]},
         ]});
-        for command_id in ["missing", "hook", "off"] {
+        for command_id in ["missing", "hook", "off", "elsewhere"] {
             let result = execute_saved_script(
                 &ScriptRuns::default(),
                 &config,
+                &VariableValues::default(),
                 &SavedScriptRun {
                     command_id,
                     text: "",

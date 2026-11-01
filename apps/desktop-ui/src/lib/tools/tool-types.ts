@@ -1,3 +1,4 @@
+import type { CommandEnvironment } from '../variables/command-variables'
 import type {
   ToolDefinition as SdkToolDefinition,
   JsonSchema,
@@ -33,4 +34,9 @@ export interface RegisteredTool extends ToolDefinition {
 /** What the commands need from the registry */
 export interface ToolLookup {
   get(toolId: string): RegisteredTool | undefined
+  /**
+   * The platform and the variable values of this device; without it a command
+   * is not checked against them
+   */
+  environment?: () => CommandEnvironment
 }

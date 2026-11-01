@@ -231,13 +231,13 @@ fn enforce_chat_history_policies(
         .map(|removed| notify_chats_removed(app, &ChatScope::AskAi, removed));
     // an unavailable vault has no chats to clean up now; they are trimmed once
     // a profile chat is saved there again
-    let profiles = match crate::services::ai_vault::resolve_vault_path_from_config(
+    let user_dir = super::user_data::user_dir_for(app, super::UserDirAccess::Read).ok();
+    let profiles = match crate::services::ai_vault::open_vault(
         Some(&settings.vault_path),
-        || crate::services::storage::user_sub_dir(app, "ai-vault"),
+        user_dir.as_deref(),
+        || crate::services::storage::user_sub_dir(app, crate::services::ai_vault::VAULT_DIR_NAME),
     ) {
-        Ok(vault_root) => {
-            enforce_profile_chat_history_policy(app, &vault_root, settings.profile_chat)
-        }
+        Ok(vault) => enforce_profile_chat_history_policy(app, &vault.root, settings.profile_chat),
         Err(error) => {
             log::warn!("Skipping the profile chat cleanup: {error}");
             Ok(())

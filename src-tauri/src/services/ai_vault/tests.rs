@@ -1,7 +1,24 @@
 use std::collections::HashMap;
+use std::fs;
 
 use super::*;
+use crate::services::storage::device::{DeviceFile, DeviceStore};
 use crate::services::test_support::TestDir;
+
+thread_local! {
+    /// The device file of a test: each test runs on a thread of its own.
+    static DEVICE: &'static DeviceStore =
+        Box::leak(Box::new(DeviceStore::in_memory(DeviceFile::default())));
+}
+
+/// The folders of the external projects of the vault `v` on the device of
+/// the test.
+fn paths() -> ProjectPaths<'static> {
+    ProjectPaths {
+        device: DEVICE.with(|device| *device),
+        vault_id: "v",
+    }
+}
 
 fn profile(id: &str, created_at: u64) -> AiProfile {
     AiProfile {
@@ -31,55 +48,48 @@ fn project(id: &str, created_at: u64) -> AiProject {
 }
 
 #[test]
-fn resolve_vault_path_uses_fallback_when_unconfigured_or_empty() {
+fn the_default_vault_is_used_when_no_path_is_set_and_gets_a_marker() {
     let test_dir = TestDir::new("ai_vault_fallback");
     let fallback_path = test_dir.join("default-ai-vault");
-    let fallback = || Ok(fallback_path.clone());
-
-    let resolved = resolve_vault_path_from_config(None, fallback).unwrap();
-    assert_eq!(resolved, fallback_path);
-
-    let resolved_empty = resolve_vault_path_from_config(Some(""), fallback).unwrap();
-    assert_eq!(resolved_empty, fallback_path);
-
-    let resolved_whitespace = resolve_vault_path_from_config(Some("   "), fallback).unwrap();
-    assert_eq!(resolved_whitespace, fallback_path);
+    for configured in [None, Some(""), Some("   ")] {
+        let vault = open_vault(configured, None, || Ok(fallback_path.clone())).unwrap();
+        assert_eq!(vault.root, fallback_path);
+    }
+    assert!(fallback_path.join(marker::VAULT_MARKER_FILE).is_file());
 }
 
 #[test]
-fn resolve_vault_path_rejects_a_relative_path_instead_of_falling_back() {
-    let test_dir = TestDir::new("ai_vault_relative");
-    let fallback_path = test_dir.join("default-ai-vault");
-
-    let resolved =
-        resolve_vault_path_from_config(Some("relative/path/to/vault"), || Ok(fallback_path));
-    assert!(resolved.is_err());
-}
-
-#[test]
-fn resolve_vault_path_rejects_an_unusable_folder_instead_of_falling_back() {
+fn a_relative_or_unusable_path_is_an_error_instead_of_the_default_vault() {
     let test_dir = TestDir::new("ai_vault_unusable");
     let blocker = test_dir.join("file");
     std::fs::write(&blocker, "not a folder").unwrap();
-    let configured = blocker.join("vault");
     let fallback_path = test_dir.join("default-ai-vault");
-
-    let resolved =
-        resolve_vault_path_from_config(Some(configured.to_str().unwrap()), || Ok(fallback_path));
-    assert!(resolved.is_err());
+    for configured in [
+        String::from("relative/path/to/vault"),
+        blocker.join("vault").to_string_lossy().into_owned(),
+    ] {
+        assert!(open_vault(Some(&configured), None, || Ok(fallback_path.clone())).is_err());
+    }
+    assert!(!fallback_path.exists());
 }
 
 #[test]
-fn resolve_vault_path_accepts_valid_absolute_path() {
+fn a_chosen_vault_that_is_not_there_is_not_connected_and_not_made() {
     let test_dir = TestDir::new("ai_vault_custom");
     let custom_vault = test_dir.join("my-custom-vault");
     let fallback_path = test_dir.join("default-ai-vault");
-    let fallback = || Ok(fallback_path.clone());
-
-    let resolved =
-        resolve_vault_path_from_config(Some(custom_vault.to_str().unwrap()), fallback).unwrap();
-    assert_eq!(resolved, custom_vault);
-    assert!(custom_vault.is_dir());
+    let result = open_vault(Some(custom_vault.to_str().unwrap()), None, || {
+        Ok(fallback_path.clone())
+    });
+    assert!(matches!(result, Err(AppError::VaultUnavailable(_))));
+    assert!(!custom_vault.exists());
+    std::fs::create_dir_all(&custom_vault).unwrap();
+    marker::ensure_marker(&custom_vault).unwrap();
+    let vault = open_vault(Some(custom_vault.to_str().unwrap()), None, || {
+        Ok(fallback_path.clone())
+    })
+    .unwrap();
+    assert_eq!(vault.root, custom_vault);
 }
 
 #[cfg(unix)]
@@ -319,15 +329,15 @@ fn test_project_crud() {
     let ext_dir = test_dir.join("external_folder");
     std::fs::create_dir_all(&ext_dir).unwrap();
 
-    create_project(&vault_root, project("internal", 1000)).unwrap();
-    assert!(create_project(&vault_root, project("internal", 1500)).is_err());
+    create_project(&vault_root, &paths(), project("internal", 1000)).unwrap();
+    assert!(create_project(&vault_root, &paths(), project("internal", 1500)).is_err());
 
     let mut external = project("external", 2000);
     external.is_external = true;
     external.target_path = Some(ext_dir.to_str().unwrap().to_string());
-    create_project(&vault_root, external).unwrap();
+    create_project(&vault_root, &paths(), external).unwrap();
 
-    let ids: Vec<_> = list_projects(&vault_root)
+    let ids: Vec<_> = list_projects(&vault_root, &paths())
         .unwrap()
         .into_iter()
         .map(|p| p.id)
@@ -337,20 +347,81 @@ fn test_project_crud() {
     let mut bad_ext = project("bad_ext", 3000);
     bad_ext.is_external = true;
     bad_ext.target_path = Some("non_existent_folder".to_string());
-    assert!(create_project(&vault_root, bad_ext).is_err());
-    assert!(save_project(&vault_root, project("missing", 3000)).is_err());
+    assert!(create_project(&vault_root, &paths(), bad_ext).is_err());
+    assert!(save_project(&vault_root, &paths(), project("missing", 3000)).is_err());
+
+    // the folder is the device's own: the file holds the description only
+    let file = std::fs::read_to_string(vault_root.join("projects/external/project.json")).unwrap();
+    assert!(!file.contains("targetPath"), "{file}");
+    assert_eq!(
+        paths().device.snapshot().ai_project_paths["v"]["external"],
+        ext_dir.to_str().unwrap()
+    );
 
     // Delete external project does not delete target_path
-    delete_project(&vault_root, "external").unwrap();
+    delete_project(&vault_root, &paths(), "external").unwrap();
     assert!(ext_dir.is_dir());
-    assert_eq!(list_projects(&vault_root).unwrap().len(), 1);
+    assert_eq!(list_projects(&vault_root, &paths()).unwrap().len(), 1);
+    assert!(paths().device.snapshot().ai_project_paths.is_empty());
+}
+
+#[test]
+fn an_external_project_has_its_folder_on_each_device() {
+    let test_dir = TestDir::new("ai_vault_project_devices");
+    let vault_root = test_dir.join("vault");
+    let ext_dir = test_dir.join("site");
+    std::fs::create_dir_all(&ext_dir).unwrap();
+    let mut external = project("site", 1);
+    external.is_external = true;
+    external.target_path = Some(ext_dir.to_str().unwrap().into());
+    create_project(&vault_root, &paths(), external).unwrap();
+
+    // another device of the same vault knows the project, not its folder
+    let laptop = DeviceStore::in_memory(DeviceFile::default());
+    let laptop_paths = ProjectPaths {
+        device: &laptop,
+        vault_id: "v",
+    };
+    let listed = list_projects(&vault_root, &laptop_paths).unwrap();
+    assert_eq!(listed[0].target_path, None);
+    let error = project_files_dir(&vault_root, &listed[0]).unwrap_err();
+    assert!(matches!(error, AppError::ProjectUnavailable(_)), "{error}");
+
+    // renaming it there needs no folder and keeps that of the first device
+    let mut renamed = listed[0].clone();
+    renamed.name = "Site".into();
+    save_project(&vault_root, &laptop_paths, renamed.clone()).unwrap();
+    assert_eq!(
+        list_projects(&vault_root, &paths()).unwrap()[0]
+            .target_path
+            .as_deref(),
+        ext_dir.to_str()
+    );
+    // setting the folder there checks it
+    renamed.target_path = Some("relative".into());
+    assert!(save_project(&vault_root, &laptop_paths, renamed.clone()).is_err());
+    renamed.target_path = Some(test_dir.to_str().unwrap().into());
+    save_project(&vault_root, &laptop_paths, renamed).unwrap();
+    assert_eq!(
+        list_projects(&vault_root, &laptop_paths).unwrap()[0]
+            .target_path
+            .as_deref(),
+        test_dir.to_str()
+    );
+
+    // the folder of a project removed elsewhere is dropped
+    std::fs::remove_dir_all(vault_root.join("projects/site")).unwrap();
+    assert!(list_projects(&vault_root, &laptop_paths)
+        .unwrap()
+        .is_empty());
+    assert!(laptop.snapshot().ai_project_paths.is_empty());
 }
 
 #[test]
 fn deleting_a_project_removes_the_permissions_for_it() {
     let test_dir = TestDir::new("ai_vault_project_permissions");
     let vault_root = test_dir.join("vault");
-    create_project(&vault_root, project("docs", 1000)).unwrap();
+    create_project(&vault_root, &paths(), project("docs", 1000)).unwrap();
     let mut writer = profile("writer", 1000);
     writer.project_permissions.insert(
         "docs".into(),
@@ -361,7 +432,7 @@ fn deleting_a_project_removes_the_permissions_for_it() {
     );
     create_profile(&vault_root, writer, "").unwrap();
 
-    delete_project(&vault_root, "docs").unwrap();
+    delete_project(&vault_root, &paths(), "docs").unwrap();
 
     assert!(get_profile(&vault_root, "writer")
         .unwrap()
@@ -400,7 +471,7 @@ fn profile_folders_exist_only_for_existing_profiles_with_valid_ids() {
     for id in ["../escape", "a/b", ".", ""] {
         assert!(get_profile(&vault_root, id).is_err(), "{id}");
         assert!(profile_chats_dir(&vault_root, id).is_err(), "{id}");
-        assert!(delete_project(&vault_root, id).is_err(), "{id}");
+        assert!(delete_project(&vault_root, &paths(), id).is_err(), "{id}");
     }
 }
 
@@ -444,10 +515,17 @@ fn project_files_are_in_the_vault_or_the_linked_folder() {
         project_files_dir(&vault_root, &external).unwrap(),
         test_dir.to_path_buf()
     );
-    external.target_path = Some("   ".into());
-    assert!(project_files_dir(&vault_root, &external).is_err());
-    external.target_path = None;
-    assert!(project_files_dir(&vault_root, &external).is_err());
+    for target in [
+        Some(String::from("   ")),
+        None,
+        Some(test_dir.join("gone").display().to_string()),
+    ] {
+        external.target_path = target;
+        assert!(matches!(
+            project_files_dir(&vault_root, &external),
+            Err(AppError::ProjectUnavailable(_))
+        ));
+    }
 }
 
 #[test]
@@ -456,7 +534,7 @@ fn projects_need_a_name_and_an_absolute_existing_external_folder() {
     let vault_root = test_dir.join("vault");
     let mut blank = project("blank", 1);
     blank.name = "  ".into();
-    assert!(create_project(&vault_root, blank).is_err());
+    assert!(create_project(&vault_root, &paths(), blank).is_err());
 
     let file = test_dir.join("file.txt");
     std::fs::write(&file, "").unwrap();
@@ -468,9 +546,12 @@ fn projects_need_a_name_and_an_absolute_existing_external_folder() {
         let mut external = project("external", 1);
         external.is_external = true;
         external.target_path = target.clone();
-        assert!(create_project(&vault_root, external).is_err(), "{target:?}");
+        assert!(
+            create_project(&vault_root, &paths(), external).is_err(),
+            "{target:?}"
+        );
     }
-    assert!(list_projects(&vault_root).unwrap().is_empty());
+    assert!(list_projects(&vault_root, &paths()).unwrap().is_empty());
 }
 
 #[test]

@@ -27,18 +27,26 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
   const description = ref('')
   const isExternal = ref(false)
   const targetPath = ref('')
+  /**
+   * The project is stored already. Its folder is set on each device: one that
+   * has none here is still edited, and gets its folder when the user gives one
+   */
+  const isStored = ref(false)
 
   const isValid = computed(
     () =>
       Boolean(name.value.trim()) &&
-      (!isExternal.value || Boolean(targetPath.value.trim()))
+      (!isExternal.value || isStored.value || Boolean(targetPath.value.trim()))
   )
 
   const fields = (): ProjectFields => ({
     name: name.value.trim(),
     description: description.value.trim() || undefined,
     isExternal: isExternal.value,
-    targetPath: isExternal.value ? targetPath.value.trim() : undefined,
+    targetPath:
+      isExternal.value && targetPath.value.trim()
+        ? targetPath.value.trim()
+        : undefined,
   })
 
   const autosave = createAutosave({
@@ -59,6 +67,7 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     description.value = project?.description ?? ''
     isExternal.value = project?.isExternal ?? false
     targetPath.value = project?.targetPath ?? ''
+    isStored.value = Boolean(project)
   }
 
   /** Stores a change of an existing project once it is valid */
@@ -72,6 +81,7 @@ export function createProjectEditor(deps: ProjectEditorDependencies) {
     description,
     isExternal,
     targetPath,
+    isStored,
     isValid,
     fields,
     saveStatus: autosaves.status,

@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "Die KI führt diese Befehle ohne Rückfrage aus, wenn der Prompt sie braucht. Ein Befehl führt nie sich selbst aus und auch keinen KI-Befehl, der ihn aufgerufen hat.",
     "aiNoOtherCommands": "Es gibt noch keine anderen Befehle.",
     "aiMaxSteps": "Schrittlimit",
-    "aiMaxStepsInfo": "Maximale Anzahl der Befehle, die die KI ausführen darf. Die abschließende Antwort zählt nicht zu diesem Limit."
+    "aiMaxStepsInfo": "Maximale Anzahl der Befehle, die die KI ausführen darf. Die abschließende Antwort zählt nicht zu diesem Limit.",
+    "otherPlatform": "Läuft nicht auf dieser Plattform",
+    "variablesNotSet": "Eine verwendete Variable hat auf diesem Gerät keinen Wert",
+    "platforms": "Plattformen",
+    "platformsInfo": "Der Befehl läuft nur auf den markierten Plattformen; ist keine markiert, auf allen. Auf einer anderen Plattform bleibt er in den Listen, wird aber nicht ausgeführt.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Hinzufügen",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Ein benötigter Dienst ist gerade nicht verfügbar",
     "stale": "Der Zustand hat sich inzwischen geändert, bitte erneut versuchen",
     "unsupportedConfig": "Die Einstellungen stammen von einer neueren App-Version",
-    "userDataUnavailable": "Der Datenordner ist nicht verfügbar"
+    "userDataUnavailable": "Der Datenordner ist nicht verfügbar",
+    "variableNotSet": "Eine Variable hat auf diesem Gerät keinen Wert",
+    "vaultUnavailable": "Der Ordner der KI-Profile ist auf diesem Gerät nicht verbunden",
+    "projectUnavailable": "Der Projektordner ist auf diesem Gerät nicht festgelegt"
   },
   "diff": {
     "modeOriginal": "Nur Original",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Getrennte Assistenten mit eigener Anweisung, eigenem Modell, eigenen Werkzeugen und Chats. Jedes Profil ist ein Tab in der oberen Leiste.",
     "aiProfilesTab": "KI-Profile",
     "aiVaultPath": "Pfad zum Tresor der KI-Profile",
-    "aiVaultPathHint": "Der Ordner der KI-Profile (ihre SOUL.md, Chats und Arbeitsbereiche) und der internen Projekte. Standardmäßig der Ordner ai-vault in den App-Daten.",
-    "aiVaultTitle": "Tresor",
     "allPluginsTab": "Alle Plugins",
     "apiKey": "API-Schlüssel",
     "apiKeyBoundTo": "Der gespeicherte Schlüssel wird nur an {origin} gesendet. Speichern Sie ihn erneut, um ihn mit dieser Adresse zu verwenden.",
@@ -1155,7 +1162,15 @@
       "indent": "Einzug vergrößern",
       "outdent": "Einzug verkleinern",
       "reserved": "Dieses Kürzel ist für die Textbearbeitung oder Anwendungsaktionen reserviert."
-    }
+    },
+    "aiVaultExternalHint": "Leer: der Ordner ai-vault im Datenordner, der mit ihm synchronisiert wird. Ein eigener Ordner eignet sich für git, Obsidian oder eine eigene Synchronisierung.",
+    "aiVaultGitWarning": "Legen Sie kein git-Repository in einen synchronisierten Ordner: Änderungen von zwei Geräten können es beschädigen.",
+    "aiVaultNotConnected": "Der Ordner der KI-Profile ist auf diesem Gerät nicht verbunden: {path}. An seiner Stelle wurde nichts angelegt.",
+    "aiVaultUseDefault": "Standardordner verwenden",
+    "projectFolderNotSetOnDevice": "Ordner auf diesem Gerät nicht festgelegt",
+    "projectSetFolder": "Ordner festlegen",
+    "projectsWithoutFolder": "Externe Projekte ohne Ordner auf diesem Gerät: {count}",
+    "variablesTab": "Variablen"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "Webhook-Anfrage fehlgeschlagen",
     "webhookKeyNotSet": "Der Schlüssel dieses Webhooks ist auf diesem Gerät nicht gesetzt; gib ihn in den Befehlseinstellungen ein",
     "webhookSuccess": "Webhook erfolgreich gesendet",
-    "voicePostProcessTimeout": "Sprachverarbeitung dauerte zu lange; Originaltext beibehalten"
+    "voicePostProcessTimeout": "Sprachverarbeitung dauerte zu lange; Originaltext beibehalten",
+    "variablesNotSet": "Variablen haben auf diesem Gerät keinen Wert; legen Sie ihn unter Einstellungen → Variablen fest"
   },
   "tools": {
     "aiTask": "KI-Befehl",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Klicken zum Übernehmen",
     "liveCorrectionFailed": "Live-Korrektur fehlgeschlagen",
     "liveCorrectionFailedHint": "Das Modell hat nicht geantwortet. Der Text wird wie eingegeben eingefügt."
+  },
+  "variables": {
+    "add": "Hinzufügen",
+    "addTitle": "Neue Variable",
+    "browseFile": "Datei…",
+    "builtinHint": "Immer verfügbar; ihre Werte stammen von diesem Gerät.",
+    "builtinTitle": "Integrierte Variablen",
+    "declare": "Variable deklarieren",
+    "description": "Beschreibung",
+    "empty": "Noch keine Variablen.",
+    "errorBuiltinName": "Namen mit dem Präfix TYCO_ sind für integrierte Variablen reserviert",
+    "errorInvalidName": "Verwenden Sie lateinische Großbuchstaben, Ziffern und _, beginnend mit einem Buchstaben",
+    "errorNameTaken": "Eine Variable mit diesem Namen gibt es bereits",
+    "errorNoName": "Geben Sie einen Namen ein",
+    "hint": "Mit einer Variable kann ein Befehl oder eine Anbieteradresse einen Wert nutzen, der auf jedem Gerät anders ist, etwa einen Ordnerpfad oder einen lokalen Server. Der Name gilt für alle Geräte, den Wert legt jedes Gerät selbst fest. Eingefügt wird sie als {example}.",
+    "hintNotDeclared": "{name} ist nicht deklariert",
+    "hintNotSet": "{name} hat auf diesem Gerät keinen Wert",
+    "insert": "Variable einfügen",
+    "listTitle": "Variablen",
+    "manage": "Variablen verwalten…",
+    "name": "Name",
+    "nameHint": "Zum Beispiel NOTES_DIR. Befehle verweisen über den Namen darauf; eine Umbenennung aktualisiert sie.",
+    "notForSecrets": "Werte werden als Klartext gespeichert und können in einen Prompt oder eine URL gelangen. Speichern Sie hier keine Schlüssel – dafür gibt es die Schlüsselfelder.",
+    "remove": "Variable entfernen",
+    "setValue": "Wert festlegen",
+    "unsetOnDevice": "Variablen ohne Wert auf diesem Gerät: {count}",
+    "unused": "Nicht verwendet",
+    "usedBy": "Verwendet von: {count}",
+    "value": "Wert",
+    "valueNotSet": "Auf diesem Gerät nicht festgelegt: Befehle damit werden nicht ausgeführt",
+    "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   }
 }

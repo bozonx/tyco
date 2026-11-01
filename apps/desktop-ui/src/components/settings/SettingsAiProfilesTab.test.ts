@@ -42,6 +42,9 @@ function createStore() {
     projects: [] as Array<Record<string, unknown>>,
     vaultPath: '/vault',
     vaultError: '',
+    isVaultNotConnected: false,
+    relocateVault: vi.fn(async () => {}),
+    setProjectFolder: vi.fn(async () => true),
     loadAll: vi.fn(async () => {}),
     openVaultDir: vi.fn(async () => {}),
     pickFolder: vi.fn(async (): Promise<string | null> => '/elsewhere'),
@@ -214,24 +217,68 @@ describe('SettingsAiProfilesTab.vue', () => {
     expect(profileModal.props('open')).toBe(true)
   })
 
-  it('changes the vault folder in a dialog, never in the draft', async () => {
+  it('offers a folder or the default one when the vault is not connected', async () => {
+    store.isVaultNotConnected = true
     const wrapper = mountTab()
+    const notice = wrapper.get('[data-testid="vault-not-connected"]')
+    expect(notice.text()).toContain('settings.aiVaultNotConnected')
     const modal = wrapper.findComponent({ name: 'SettingsVaultLocationModal' })
-    expect(modal.props('open')).toBe(false)
-    await button(wrapper, 'settings.vaultChange').trigger('click')
+    await button(wrapper, 'settings.selectFolder').trigger('click')
     expect(modal.props('open')).toBe(true)
-    expect(modal.props('currentPath')).toBe('/vault')
-    await modal.vm.$emit('close')
-    expect(modal.props('open')).toBe(false)
+    await button(wrapper, 'settings.aiVaultUseDefault').trigger('click')
+    expect(store.relocateVault).toHaveBeenCalledWith(undefined, false)
     expect(context.draft.value.aiVault.path).toBe('')
   })
 
-  it('reports a vault folder that cannot be opened', async () => {
-    store.openVaultDir.mockRejectedValueOnce(new Error('Missing'))
+  it('tells about external projects without a folder on this device', async () => {
+    store.projects.push(
+      {
+        id: 'site',
+        name: 'Site',
+        isExternal: true,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+      {
+        id: 'book',
+        name: 'Book',
+        isExternal: true,
+        createdAt: 2,
+        updatedAt: 2,
+      },
+      {
+        id: 'docs',
+        name: 'Docs',
+        isExternal: true,
+        targetPath: '/docs',
+        createdAt: 3,
+        updatedAt: 3,
+      }
+    )
     const wrapper = mountTab()
-    await button(wrapper, 'settings.openInFileManager').trigger('click')
-    await flushPromises()
-    expect(toastError.mock.calls).toEqual([[new Error('Missing')]])
+    expect(wrapper.text()).toContain('settings.projectsWithoutFolder')
+    const items = wrapper.findAllComponents({ name: 'SettingsEntityItem' })
+    const site = items.find((item) => item.props('title') === 'Site')!
+    expect(site.props('description')).toBe(
+      'settings.projectFolderNotSetOnDevice'
+    )
+    const menu = site.findComponent({ name: 'DropdownMenu' })
+    const actions = menu.props('items') as Array<{
+      label: string
+      action: () => Promise<void>
+    }>
+    await actions
+      .find((item) => item.label === 'settings.projectSetFolder')!
+      .action()
+    expect(store.setProjectFolder).toHaveBeenCalledWith('site')
+    const docs = items.find((item) => item.props('title') === 'Docs')!
+    expect(
+      (
+        docs.findComponent({ name: 'DropdownMenu' }).props('items') as Array<{
+          label: string
+        }>
+      ).map((item) => item.label)
+    ).not.toContain('settings.projectSetFolder')
   })
 
   it('duplicates and deletes a profile through its menu', async () => {

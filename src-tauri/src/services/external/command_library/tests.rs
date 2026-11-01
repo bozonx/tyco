@@ -406,3 +406,26 @@ fn describe_names_a_command_without_a_name_by_its_id() {
     assert_eq!(description["name"], "nameless");
     assert_eq!(list(&config, None)[0]["name"], "nameless");
 }
+
+#[test]
+fn a_command_of_another_platform_is_not_called_and_stays_in_the_config() {
+    let other = if cfg!(target_os = "windows") {
+        "linux"
+    } else {
+        "windows"
+    };
+    let config = json!({"commands": [{
+        "id": "elsewhere", "name": "Elsewhere", "toolId": "script",
+        "toolConfig": {"command": "x"}, "isAvailableExternally": true,
+        "platforms": [other]
+    }]});
+    assert!(matches!(
+        find_by_id(&config, None, "elsewhere"),
+        Err(CommandLookupError::Unavailable(_, Some(_)))
+    ));
+    let mut normalized = config.clone();
+    normalized["mainActions"] = json!({"q": {"type": "command", "commandId": "elsewhere"}});
+    crate::services::settings::schema::normalize_user_config(&mut normalized);
+    assert_eq!(normalized["commands"][0]["id"], "elsewhere");
+    assert_eq!(normalized["mainActions"]["q"]["commandId"], "elsewhere");
+}

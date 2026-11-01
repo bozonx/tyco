@@ -13,6 +13,7 @@ use super::command_logging::LogContext;
 use crate::errors::AppError;
 use crate::services::platform::process::{PipeReader, PollablePipe};
 use crate::services::platform::shell;
+use crate::services::variables::{self, VariableValues};
 
 /// Stands in for the text in a command; see `shell::substitute`.
 pub const TEXT_PLACEHOLDER: &str = "{{TEXT}}";
@@ -56,6 +57,9 @@ pub struct ScriptRequest<'a> {
     pub should_log_output: bool,
     /// Lets `cancel_script` stop the command while it is waited for.
     pub run_id: Option<&'a str>,
+    /// The variables `{{var:NAME}}` of the command and its working directory
+    /// stand for; the script gets them in its environment too.
+    pub variables: &'a VariableValues,
 }
 
 type CancelFlag = Arc<AtomicBool>;
@@ -313,9 +317,23 @@ pub fn execute_script(
         AppError::Failed(message)
     };
 
-    let cwd =
-        resolve_working_dir(request.working_dir).map_err(|error| fail(&log, error.to_string()))?;
-    let mut command = shell::command_with_text(request.command, TEXT_PLACEHOLDER, request.text);
+    let missing = variables::missing(
+        [request.command, request.working_dir.unwrap_or_default()],
+        request.variables,
+    );
+    if !missing.is_empty() {
+        let error = variables::not_set_error(&missing);
+        log.write(&empty_result(), Some(&error.to_string()));
+        return Err(error);
+    }
+    let working_dir = request
+        .working_dir
+        .map(|dir| variables::substitute(dir, request.variables, variables::Place::Text))
+        .transpose()
+        .map_err(|error| fail(&log, error.to_string()))?;
+    let cwd = resolve_working_dir(working_dir.as_deref())
+        .map_err(|error| fail(&log, error.to_string()))?;
+    let mut command = script_command(request);
     if let Some(cwd) = &cwd {
         command.current_dir(cwd);
         log.cwd = cwd.to_string_lossy().into_owned();
@@ -372,6 +390,32 @@ pub fn execute_script(
     })
 }
 
+/// The shell command of `request`: the text and each variable it refers to
+/// go by the environment, see `shell::substitute_all`.
+fn script_command(request: &ScriptRequest) -> std::process::Command {
+    let names = variables::references(request.command);
+    let tokens: Vec<(String, String)> = names
+        .iter()
+        .map(|name| (variables::placeholder(name), VariableValues::env_name(name)))
+        .collect();
+    let mut placeholders = vec![shell::Placeholder {
+        token: TEXT_PLACEHOLDER,
+        env: shell::TEXT_ENV,
+        value: request.text,
+    }];
+    for ((token, env), name) in tokens.iter().zip(&names) {
+        placeholders.push(shell::Placeholder {
+            token,
+            env,
+            value: request.variables.get(name).unwrap_or_default(),
+        });
+    }
+    let mut command = shell::command(&shell::substitute_all(request.command, &placeholders));
+    command.env(shell::TEXT_ENV, request.text);
+    command.envs(request.variables.env());
+    command
+}
+
 fn empty_result() -> ScriptExecutionResult {
     ScriptExecutionResult {
         is_success: false,
@@ -398,8 +442,12 @@ mod tests {
             should_capture_output: true,
             should_log_output: false,
             run_id: None,
+            variables: &NO_VARIABLES,
         }
     }
+
+    static NO_VARIABLES: std::sync::LazyLock<VariableValues> =
+        std::sync::LazyLock::new(VariableValues::default);
 
     #[cfg(not(target_os = "windows"))]
     mod commands {
@@ -549,6 +597,61 @@ mod tests {
             None,
         );
         assert!(result.is_err());
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn integration_fills_variables_quoted_and_passes_them_in_the_environment() {
+        let dir = TestDir::new("script-variables");
+        let nasty = "it's \"x\" $HOME `id` {{TEXT}} {{var:OTHER}}";
+        let variables = VariableValues::from_pairs(&[
+            ("NOTES_DIR", nasty),
+            ("OTHER", "other"),
+            (variables::USER_DIR, "/sync/tyco"),
+            ("WORK", dir.to_str().unwrap()),
+        ]);
+        let result = execute_script(
+            &ScriptRuns::default(),
+            &ScriptRequest {
+                working_dir: Some("{{var:WORK}}"),
+                variables: &variables,
+                ..request(
+                    "printf '%s|%s|%s|%s|' {{var:NOTES_DIR}} \"$TYCO_VAR_OTHER\" \"$TYCO_USER_DIR\" {{TEXT}}; pwd",
+                    "text",
+                )
+            },
+            None,
+        )
+        .unwrap();
+        let (printed, cwd) = result.stdout.rsplit_once('|').unwrap();
+        assert_eq!(printed, format!("{nasty}|other|/sync/tyco|text"));
+        assert_eq!(
+            PathBuf::from(cwd.trim()).canonicalize().unwrap(),
+            dir.canonicalize().unwrap()
+        );
+    }
+
+    #[test]
+    fn a_variable_without_a_value_stops_the_script_before_it_starts() {
+        let dir = TestDir::new("script-missing-variable");
+        let marker = dir.join("ran");
+        let command = format!("touch {}; echo {{{{var:NOTES_DIR}}}}", marker.display());
+        let error =
+            execute_script(&ScriptRuns::default(), &request(&command, ""), None).unwrap_err();
+        assert!(
+            matches!(&error, AppError::VariableNotSet(message) if message.contains("NOTES_DIR"))
+        );
+        assert!(!marker.exists());
+        let error = execute_script(
+            &ScriptRuns::default(),
+            &ScriptRequest {
+                working_dir: Some("{{var:WORK}}"),
+                ..request("true", "")
+            },
+            None,
+        )
+        .unwrap_err();
+        assert!(matches!(&error, AppError::VariableNotSet(message) if message.contains("WORK")));
     }
 
     #[test]

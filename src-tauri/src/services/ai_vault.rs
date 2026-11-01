@@ -4,53 +4,61 @@ mod relocation_tests;
 mod tests;
 
 pub mod location;
+pub mod marker;
 pub mod memory;
 pub mod operations;
 pub mod relocation;
 pub mod types;
 
+pub use marker::Vault;
 pub use memory::*;
 pub use operations::*;
 pub use types::*;
 
 use serde_json::Value;
-use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
 use crate::errors::AppError;
 use crate::services::storage::user_sub_dir;
 
-/// Resolves the vault root directory given an optional configured path string and a fallback directory provider.
-/// A configured path that cannot be used is an error: falling back would quietly
-/// show another, usually empty, vault in its place.
-pub fn resolve_vault_path_from_config(
+/// The vault of `configured_path`, the `aiVault.path` of this device: the
+/// default one, inside the user data folder, when it is empty. A chosen
+/// folder that is not there is an error, never replaced by another, usually
+/// empty, vault; see `marker`.
+pub fn open_vault(
     configured_path: Option<&str>,
-    fallback: impl FnOnce() -> Result<PathBuf, AppError>,
-) -> Result<PathBuf, AppError> {
-    let Some(raw) = configured_path.map(str::trim).filter(|s| !s.is_empty()) else {
-        return fallback();
-    };
-    let path = PathBuf::from(raw);
-    if !path.is_absolute() {
-        return Err(AppError::InvalidInput(format!(
-            "The AI vault path is not absolute: {raw}"
-        )));
+    user_dir: Option<&std::path::Path>,
+    default_dir: impl FnOnce() -> Result<PathBuf, AppError>,
+) -> Result<Vault, AppError> {
+    match configured_path
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+    {
+        None => marker::open_default(&default_dir()?),
+        Some(path) => marker::open_external(std::path::Path::new(path), user_dir),
     }
-    // The folder is the user's own: its permissions are left as they are.
-    fs::create_dir_all(&path).map_err(|error| {
-        AppError::Failed(format!("The AI vault folder {raw} is unavailable: {error}"))
-    })?;
-    Ok(path)
 }
 
-/// Resolves the AI vault root directory for the application.
-/// If `aiVault.path` is set in the user config, it is used.
-/// Otherwise, it defaults to the `ai-vault` folder of the user data folder.
-pub fn resolve_vault_path(app: &AppHandle, user_config: &Value) -> Result<PathBuf, AppError> {
+/// The vault of the app, see [`open_vault`].
+pub fn resolve_vault(app: &AppHandle, user_config: &Value) -> Result<Vault, AppError> {
     let configured = crate::models::user_config::ai_vault(user_config).path;
+    let user_dir = crate::services::storage::user_data::user_dir_for(
+        app,
+        crate::services::storage::UserDirAccess::Read,
+    )
+    .ok();
+    open_vault(Some(&configured), user_dir.as_deref(), || {
+        user_sub_dir(app, VAULT_DIR_NAME)
+    })
+}
 
-    resolve_vault_path_from_config(Some(&configured), || user_sub_dir(app, "ai-vault"))
+/// The folder of the default vault inside the user data folder.
+pub const VAULT_DIR_NAME: &str = "ai-vault";
+
+/// The root of the vault of the app, see [`resolve_vault`].
+pub fn resolve_vault_path(app: &AppHandle, user_config: &Value) -> Result<PathBuf, AppError> {
+    resolve_vault(app, user_config).map(|vault| vault.root)
 }
 
 /// Resolve the active vault only after relocation has finished; retain access
@@ -59,8 +67,34 @@ pub fn with_vault<T>(
     app: &AppHandle,
     operation: impl FnOnce(&std::path::Path) -> Result<T, AppError>,
 ) -> Result<T, AppError> {
+    with_vault_of(app, |vault| operation(&vault.root))
+}
+
+/// [`with_vault`] with the vault and its id.
+pub fn with_vault_of<T>(
+    app: &AppHandle,
+    operation: impl FnOnce(&Vault) -> Result<T, AppError>,
+) -> Result<T, AppError> {
     let state = app.state::<crate::state::AppState>();
     let _access = state.read_vault();
-    let path = resolve_vault_path(app, &state.user_config())?;
-    operation(&path)
+    let vault = resolve_vault(app, &state.user_config())?;
+    operation(&vault)
+}
+
+/// [`with_vault`] with the folders the external projects of the vault have
+/// on this device.
+pub fn with_projects<T>(
+    app: &AppHandle,
+    operation: impl FnOnce(&std::path::Path, &ProjectPaths) -> Result<T, AppError>,
+) -> Result<T, AppError> {
+    with_vault_of(app, |vault| {
+        let device = app.state::<crate::services::storage::device::DeviceStore>();
+        operation(
+            &vault.root,
+            &ProjectPaths {
+                device: &device,
+                vault_id: &vault.id,
+            },
+        )
+    })
 }

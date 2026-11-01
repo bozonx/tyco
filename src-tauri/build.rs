@@ -107,6 +107,7 @@ fn main() {
             "paste_into_target_and_hide",
             "patch_session_state",
             "pick_directory",
+            "pick_file",
             "pick_plugin_package",
             "pick_script_file",
             "preview_ai_file_change",

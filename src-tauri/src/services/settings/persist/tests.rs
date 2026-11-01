@@ -415,6 +415,62 @@ fn notes_folders_survive_a_config_that_was_not_read() {
     }
 }
 
+fn device_with_variable_values() -> DeviceFile {
+    DeviceFile {
+        config: json!({"variableValues": {"notes": "/notes"}}),
+        ..DeviceFile::default()
+    }
+}
+
+#[test]
+fn variable_values_stay_on_the_device_and_go_with_their_variable() {
+    let setup = Setup::new("config-variables");
+    let mut config = setup.load().value;
+    config["variables"] = json!([{"id": "notes", "name": "NOTES_DIR", "description": ""}]);
+    config["variableValues"] = json!({"notes": "/notes"});
+    setup.save(&config);
+    assert_eq!(setup.user_file()["variables"][0]["name"], "NOTES_DIR");
+    assert!(setup.user_file().get("variableValues").is_none());
+    assert_eq!(
+        setup.device.snapshot().config["variableValues"],
+        json!({"notes": "/notes"})
+    );
+    assert_eq!(setup.load().value["variableValues"]["notes"], "/notes");
+
+    // another device removed the variable: its value goes on this one
+    let mut user = setup.user_file();
+    user["variables"] = json!([]);
+    fs::write(setup.user_path(), user.to_string()).unwrap();
+    let loaded = setup.load().value;
+    assert_eq!(loaded["variableValues"], json!({}));
+    assert_eq!(setup.device.snapshot().config["variableValues"], json!({}));
+}
+
+#[test]
+fn variable_values_survive_a_config_that_was_not_read() {
+    let dir = TestDir::new("config-variables-not-connected");
+    let files = ConfigFiles::at(None, false, dir.join("state").join(CONFIG_BASE_FILE_NAME));
+    let device = DeviceStore::in_memory(device_with_variable_values());
+    files.load(&device, &no_notes).unwrap();
+    assert_eq!(
+        device.snapshot().config["variableValues"],
+        json!({"notes": "/notes"})
+    );
+
+    for raw in [Some("{ broken"), None] {
+        let setup = Setup::new("config-variables-broken");
+        if let Some(raw) = raw {
+            fs::write(setup.user_path(), raw).unwrap();
+        }
+        let device = DeviceStore::in_memory(device_with_variable_values());
+        setup.files.load(&device, &no_notes).unwrap();
+        assert_eq!(
+            device.snapshot().config["variableValues"],
+            json!({"notes": "/notes"})
+        );
+    }
+}
+
 #[test]
 fn a_config_that_was_read_drops_the_folders_of_removed_commands_only() {
     let setup = Setup::new("config-notes-read");

@@ -116,25 +116,35 @@ pub async fn write_ai_profile_soul(
 
 #[tauri::command]
 pub async fn list_ai_projects(app: AppHandle) -> Result<Vec<AiProject>, AppError> {
-    run_blocking(move || ai_vault::with_vault(&app, ai_vault::list_projects)).await?
+    run_blocking(move || ai_vault::with_projects(&app, ai_vault::list_projects)).await?
 }
 
 #[tauri::command]
 pub async fn create_ai_project(app: AppHandle, project: AiProject) -> Result<(), AppError> {
-    run_blocking(move || ai_vault::with_vault(&app, |dir| ai_vault::create_project(dir, project)))
-        .await?
+    run_blocking(move || {
+        ai_vault::with_projects(&app, |dir, paths| {
+            ai_vault::create_project(dir, paths, project)
+        })
+    })
+    .await?
 }
 
 #[tauri::command]
 pub async fn save_ai_project(app: AppHandle, project: AiProject) -> Result<(), AppError> {
-    run_blocking(move || ai_vault::with_vault(&app, |dir| ai_vault::save_project(dir, project)))
-        .await?
+    run_blocking(move || {
+        ai_vault::with_projects(&app, |dir, paths| {
+            ai_vault::save_project(dir, paths, project)
+        })
+    })
+    .await?
 }
 
 #[tauri::command]
 pub async fn delete_ai_project(app: AppHandle, id: String) -> Result<(), AppError> {
-    run_blocking(move || ai_vault::with_vault(&app, |dir| ai_vault::delete_project(dir, &id)))
-        .await?
+    run_blocking(move || {
+        ai_vault::with_projects(&app, |dir, paths| ai_vault::delete_project(dir, paths, &id))
+    })
+    .await?
 }
 
 /// Lists all memory topics and core summary for a profile.

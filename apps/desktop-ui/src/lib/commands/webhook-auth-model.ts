@@ -1,5 +1,9 @@
 import { ref } from 'vue'
-import { WEBHOOK_AUTH_SECRET_PREFIX } from '@tyco/shared'
+import {
+  substituteVariables,
+  WEBHOOK_AUTH_SECRET_PREFIX,
+  type VariableValues,
+} from '@tyco/shared'
 import { httpOrigin } from '../net/secrets'
 
 export interface WebhookAuthDependencies {
@@ -17,6 +21,10 @@ export interface WebhookAuthDependencies {
   persist: () => Promise<unknown>
   isSaved: () => boolean
   notifyInvalidOrigin: () => void
+  /** The values of the variables on this device, for the URL */
+  variables?: () => VariableValues
+  /** The URL refers to variables without a value on this device */
+  notifyVariablesNotSet?: (names: string[]) => void
   /** A key is stored on this device only: other devices keep their own */
   notifySavedOnDevice?: () => void
   reportSaveError: (error: unknown) => void
@@ -32,6 +40,27 @@ export interface WebhookAuthDependencies {
 export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
   const authDraft = ref('')
 
+  /**
+   * The origin of the URL as it is on this device, which a key is bound to;
+   * `null`, told to the user, when there is none, e.g. a variable without a
+   * value here
+   */
+  function originHere(): string | null {
+    const url = substituteVariables(
+      deps.getUrl().trim(),
+      deps.variables?.() ?? {},
+      'url',
+      ''
+    )
+    if (!url.ok && url.missing.length && deps.notifyVariablesNotSet) {
+      deps.notifyVariablesNotSet(url.missing)
+      return null
+    }
+    const origin = url.ok ? httpOrigin(url.value) : null
+    if (!origin) deps.notifyInvalidOrigin()
+    return origin
+  }
+
   /** Removes a secret once the saved config no longer refers to it */
   async function removeUnusedSecret(id: string) {
     if (!id) return
@@ -44,11 +73,8 @@ export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
   async function saveAuth() {
     const value = authDraft.value.trim()
     if (!value) return
-    const origin = httpOrigin(deps.getUrl())
-    if (!origin) {
-      deps.notifyInvalidOrigin()
-      return
-    }
+    const origin = originHere()
+    if (!origin) return
     const existingId = deps.getSecretId()
     try {
       // a new value goes under the id the config has, on this device only
@@ -87,11 +113,8 @@ export function createWebhookAuthModel(deps: WebhookAuthDependencies) {
   async function replaceSecret(id: string, value: string) {
     const trimmed = value.trim()
     if (!id || !trimmed) return false
-    const origin = httpOrigin(deps.getUrl())
-    if (!origin) {
-      deps.notifyInvalidOrigin()
-      return false
-    }
+    const origin = originHere()
+    if (!origin) return false
     try {
       await deps.setSecret(id, trimmed, [origin])
       deps.notifySavedOnDevice?.()

@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "La IA ejecuta estos comandos sin preguntar cuando el prompt los necesita. Un comando nunca se ejecuta a sí mismo ni a un comando de IA que lo llamó.",
     "aiNoOtherCommands": "Todavía no hay otros comandos.",
     "aiMaxSteps": "Límite de pasos",
-    "aiMaxStepsInfo": "Número máximo de comandos que puede ejecutar la IA. La respuesta final no cuenta para este límite."
+    "aiMaxStepsInfo": "Número máximo de comandos que puede ejecutar la IA. La respuesta final no cuenta para este límite.",
+    "otherPlatform": "No se ejecuta en esta plataforma",
+    "variablesNotSet": "Una variable que usa no tiene valor en este dispositivo",
+    "platforms": "Plataformas",
+    "platformsInfo": "El comando solo se ejecuta en las plataformas marcadas; si no hay ninguna marcada, en todas. En otra plataforma sigue en las listas, pero no se ejecuta.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Agregar",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Un servicio necesario no está disponible ahora",
     "stale": "El estado cambió mientras tanto, inténtalo de nuevo",
     "unsupportedConfig": "La configuración fue guardada por una versión más nueva de la app",
-    "userDataUnavailable": "La carpeta de datos no está disponible"
+    "userDataUnavailable": "La carpeta de datos no está disponible",
+    "variableNotSet": "Una variable no tiene valor en este dispositivo",
+    "vaultUnavailable": "La carpeta de perfiles de IA no está conectada en este dispositivo",
+    "projectUnavailable": "La carpeta del proyecto no está definida en este dispositivo"
   },
   "diff": {
     "modeOriginal": "Solo original",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Asistentes separados con su propia instrucción, modelo, herramientas y chats. Cada perfil es una pestaña en la barra superior.",
     "aiProfilesTab": "Perfiles de IA",
     "aiVaultPath": "Ruta del almacén de perfiles de IA",
-    "aiVaultPathHint": "La carpeta de los perfiles de IA (sus SOUL.md, chats y espacios de trabajo) y de los proyectos internos. De forma predeterminada, la carpeta ai-vault en los datos de la aplicación.",
-    "aiVaultTitle": "Almacén",
     "allPluginsTab": "Todos los plugins",
     "apiKey": "Clave de API",
     "apiKeyBoundTo": "La clave guardada solo se envía a {origin}. Guárdala de nuevo para usarla con esta dirección.",
@@ -1155,7 +1162,15 @@
       "indent": "Aumentar sangría",
       "outdent": "Reducir sangría",
       "reserved": "Este atajo está reservado para editar texto o acciones de la aplicación."
-    }
+    },
+    "aiVaultExternalHint": "Vacío: la carpeta ai-vault dentro de la carpeta de datos, sincronizada con ella. Una carpeta aparte sirve para git, Obsidian o una sincronización propia.",
+    "aiVaultGitWarning": "No guardes un repositorio git dentro de una carpeta sincronizada: los cambios desde dos dispositivos pueden dañarlo.",
+    "aiVaultNotConnected": "La carpeta de perfiles de IA no está conectada en este dispositivo: {path}. No se creó nada en su lugar.",
+    "aiVaultUseDefault": "Usar la carpeta predeterminada",
+    "projectFolderNotSetOnDevice": "Carpeta no definida en este dispositivo",
+    "projectSetFolder": "Definir carpeta",
+    "projectsWithoutFolder": "Proyectos externos sin carpeta en este dispositivo: {count}",
+    "variablesTab": "Variables"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "La solicitud al webhook falló",
     "webhookKeyNotSet": "La clave de este webhook no está definida en este dispositivo; introdúcela en los ajustes del comando",
     "webhookSuccess": "Webhook enviado correctamente",
-    "voicePostProcessTimeout": "El procesamiento de voz tardó demasiado; se mantuvo el texto original"
+    "voicePostProcessTimeout": "El procesamiento de voz tardó demasiado; se mantuvo el texto original",
+    "variablesNotSet": "Hay variables sin valor en este dispositivo; defínelas en Ajustes → Variables"
   },
   "tools": {
     "aiTask": "Comando de IA",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Clic para aplicar",
     "liveCorrectionFailed": "Error en la corrección en vivo",
     "liveCorrectionFailedHint": "El modelo no respondió. El texto se insertará tal como se escribió."
+  },
+  "variables": {
+    "add": "Añadir",
+    "addTitle": "Nueva variable",
+    "browseFile": "Archivo…",
+    "builtinHint": "Siempre disponibles; sus valores vienen de este dispositivo.",
+    "builtinTitle": "Variables integradas",
+    "declare": "Declarar variable",
+    "description": "Descripción",
+    "empty": "Aún no hay variables.",
+    "errorBuiltinName": "Los nombres que empiezan por TYCO_ están reservados para variables integradas",
+    "errorInvalidName": "Usa letras latinas mayúsculas, cifras y _, empezando por una letra",
+    "errorNameTaken": "Ya existe una variable con este nombre",
+    "errorNoName": "Escribe un nombre",
+    "hint": "Una variable permite que un comando o la dirección de un proveedor use un valor distinto en cada dispositivo, como la ruta de una carpeta o un servidor local. El nombre es común a todos los dispositivos; cada uno define su propio valor. Se inserta como {example}.",
+    "hintNotDeclared": "{name} no está declarada",
+    "hintNotSet": "{name} no tiene valor en este dispositivo",
+    "insert": "Insertar variable",
+    "listTitle": "Variables",
+    "manage": "Gestionar variables…",
+    "name": "Nombre",
+    "nameHint": "Por ejemplo NOTES_DIR. Los comandos se refieren a ella por su nombre; al renombrarla se actualizan.",
+    "notForSecrets": "Los valores se guardan como texto plano y pueden acabar en un prompt o una URL. No guardes claves aquí: usa los campos de clave.",
+    "remove": "Eliminar variable",
+    "setValue": "Definir valor",
+    "unsetOnDevice": "Variables sin valor en este dispositivo: {count}",
+    "unused": "Sin usar",
+    "usedBy": "Usada por: {count}",
+    "value": "Valor",
+    "valueNotSet": "Sin definir en este dispositivo: los comandos que la usan no se ejecutan",
+    "valuePlaceholder": "Una ruta, una dirección u otro texto"
   }
 }

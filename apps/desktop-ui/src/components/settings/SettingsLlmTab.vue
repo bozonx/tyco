@@ -96,6 +96,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
+import { useSettingsVariables } from '../../composables/use-settings-variables'
 import useToast from '../../composables/use-toast'
 import { describeError } from '../../lib/errors/describe-error'
 import { modelLabel } from '../../lib/llm/llm-config'
@@ -103,6 +104,7 @@ import { createLlmConnectionChecker } from '../../lib/llm/llm-connection'
 import { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { httpOrigin } from '../../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
+import { providerBaseUrl } from '../../lib/variables/command-variables'
 import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
@@ -132,7 +134,13 @@ const TASK_LABEL_KEYS = {
 const { t } = useI18n()
 const { draft: userConfig, operations } = useSettingsContext()
 const llm = computed(() => userConfig.value.llm)
-const { toastKey, toastError } = useToast()
+const { toastKey, toastError, toastText } = useToast()
+const settingsVariables = useSettingsVariables()
+/** The origin of a custom provider as it is on this device */
+const originHere = (provider: LlmProvider) => {
+  const url = providerBaseUrl(provider, settingsVariables())
+  return url.ok ? httpOrigin(url.value) : null
+}
 const secretsStore = useSecretsStore()
 const checkLlmConnection = createLlmConnectionChecker({
   fetch: createTauriTransport(tauriNetIpc).fetch,
@@ -151,6 +159,9 @@ const settings = createLlmSettingsModel({
   formatConnectionError: (error) =>
     `${t('settings.connectionFailed')}\n${describeError(error, t)}`,
   providerRemoved: (id) => void operations.finishProviderRemoval(id),
+  variables: settingsVariables,
+  notifyVariablesNotSet: (names) =>
+    toastText(`${t('toast.variablesNotSet')}\n${names.join(', ')}`, 'error'),
 })
 const { addProvider, removeProviderById, dispose } = settings
 onBeforeUnmount(dispose)
@@ -259,7 +270,7 @@ const modelOptions = computed(() =>
         Boolean(model.providerModelId.trim()) &&
         Boolean(
           provider &&
-          (provider.type !== 'openaiCompatible' || httpOrigin(provider.baseUrl))
+          (provider.type !== 'openaiCompatible' || originHere(provider))
         )
       )
     })

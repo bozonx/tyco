@@ -195,6 +195,9 @@ impl ConfigFiles {
         // a config that was not read says nothing about the commands: the
         // folders of this device stay until a config that was read drops them
         parts.keep_device_paths(&device_file, user_file != UserFile::Read);
+        if user_file != UserFile::Read {
+            parts.keep_device_references(&device_raw);
+        }
         *self.device_unknown.locked() = unknown;
 
         let mut is_on_disk = true;
@@ -570,6 +573,25 @@ impl Parts {
         }
     }
 
+    /// Keeps the device values of entities the config has not got, the values
+    /// of variables and the shortcuts of launcher pages: a config that was not
+    /// read says nothing about which entities are gone.
+    fn keep_device_references(&mut self, device_raw: &Value) {
+        for pointer in ["/variableValues", "/hotkeys/launcherPages"] {
+            let Some(kept) = device_raw.pointer(pointer).and_then(Value::as_object) else {
+                continue;
+            };
+            let Some(current) = ensure_object_at(&mut self.device, pointer) else {
+                continue;
+            };
+            for (id, value) in kept {
+                if value.is_string() && !current.contains_key(id) {
+                    current.insert(id.clone(), value.clone());
+                }
+            }
+        }
+    }
+
     fn store_device(&self, file: &mut DeviceFile) {
         file.config = self.device.clone();
         file.plugin_paths = self.plugin_paths.clone();
@@ -581,6 +603,22 @@ impl Parts {
         self.store_device(&mut file);
         file
     }
+}
+
+/// The object at `pointer` of `value`, created with its parents when missing;
+/// `None` when something that is not an object is in the way.
+fn ensure_object_at<'a>(
+    value: &'a mut Value,
+    pointer: &str,
+) -> Option<&'a mut serde_json::Map<String, Value>> {
+    let mut current = value;
+    for key in pointer.split('/').skip(1) {
+        current = current
+            .as_object_mut()?
+            .entry(key)
+            .or_insert_with(|| json!({}));
+    }
+    current.as_object_mut()
 }
 
 /// The user part of a `config.json` as it would be read with `device`: the

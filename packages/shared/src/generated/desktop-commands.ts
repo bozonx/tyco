@@ -227,6 +227,7 @@ export interface DesktopCommands {
     result: DesktopSnapshot
   }
   pick_directory: { args: undefined; result: string | null }
+  pick_file: { args: undefined; result: string | null }
   pick_plugin_package: { args: undefined; result: PluginPackagePreview | null }
   pick_script_file: { args: undefined; result: string | null }
   preview_ai_file_change: {

@@ -10,6 +10,10 @@ import { markRaw } from 'vue'
 
 import { createLlmClient, isKeylessProvider } from '../lib/llm/llm-client'
 import { normalizeLlmConfig } from '../lib/llm/llm-config'
+import {
+  deviceVariableValues,
+  withProviderVariables,
+} from '../lib/variables/command-variables'
 import { createSecretKeyProvider } from '../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../lib/net/tauri-net'
 import { useDesktopStore } from './desktop'
@@ -19,7 +23,12 @@ export const useLlmStore = defineStore('llm', () => {
   const desktopStore = useDesktopStore()
   const secretsStore = useSecretsStore()
 
-  const getConfig = () => normalizeLlmConfig(desktopStore.userConfig?.llm)
+  // the base URL of a custom provider may refer to the variables of a device
+  const getConfig = () =>
+    withProviderVariables(
+      normalizeLlmConfig(desktopStore.userConfig?.llm),
+      deviceVariableValues(desktopStore.userConfig, desktopStore.userData)
+    )
   const client = createLlmClient({
     getConfig,
     transport: createTauriTransport(tauriNetIpc),

@@ -1,4 +1,9 @@
-import type { CommandConfig, CommandRunSource } from '@tyco/shared'
+import {
+  substituteVariables,
+  type CommandConfig,
+  type CommandRunSource,
+  type VariableValues,
+} from '@tyco/shared'
 
 import { commandLabel } from '../commands/command-runtime'
 import {
@@ -32,6 +37,8 @@ export interface AiCommandToolDependencies extends AiCommandRunnerDependencies {
   getUnavailableReasonKey: () => string | undefined
   /** A message for a failure of the LLM */
   describeError: (error: unknown) => string
+  /** The values of the variables on this device, for `{{var:NAME}}` */
+  variables?: () => VariableValues
 }
 
 /** A toast shows the start of a long answer of a command without output */
@@ -115,9 +122,22 @@ export function createAiCommandTool(
     getUnavailableReasonKey: deps.getUnavailableReasonKey,
     run: async (call) => {
       const text = typeof call.input.text === 'string' ? call.input.text : ''
-      const config = aiCommandToolConfigOf(call.config)
-      if (!config.prompt.trim())
+      const saved = aiCommandToolConfigOf(call.config)
+      if (!saved.prompt.trim())
         return { ok: false, messageKey: 'commands.errorNoPrompt' }
+      const prompt = substituteVariables(
+        saved.prompt,
+        deps.variables?.() ?? {},
+        'text'
+      )
+      // an empty value is never put in quietly: the run says what is missing
+      if (!prompt.ok)
+        return {
+          ok: false,
+          messageKey: 'toast.variablesNotSet',
+          message: prompt.missing.join(', '),
+        }
+      const config = { ...saved, prompt: prompt.value }
       const chain = [
         ...(callers.get(call.signal) ?? []),
         ...(call.command ? [call.command.id] : []),

@@ -1,5 +1,22 @@
 <template>
   <div class="settings-stack">
+    <InlineNotice
+      v-if="isVaultNotConnected"
+      kind="warning"
+      appearance="surface"
+      icon="mdi:folder-alert-outline"
+      :message="
+        t('settings.aiVaultNotConnected', { path: userConfig.aiVault.path })
+      "
+      data-testid="vault-not-connected"
+    >
+      <Button size="sm" @click="showVaultModal = true">
+        {{ t('settings.selectFolder') }}
+      </Button>
+      <Button size="sm" variant="ghost" @click="useDefaultVault">
+        {{ t('settings.aiVaultUseDefault') }}
+      </Button>
+    </InlineNotice>
     <SettingsSection
       :title="t('settings.aiProfilesTab')"
       :info="t('settings.aiProfilesHint')"
@@ -62,6 +79,16 @@
       </template>
 
       <div class="settings-section-content">
+        <InlineNotice
+          v-if="projectsWithoutFolder.length > 1"
+          density="compact"
+          kind="warning"
+          :message="
+            t('settings.projectsWithoutFolder', {
+              count: projectsWithoutFolder.length,
+            })
+          "
+        />
         <StateMessage
           v-if="projects.length === 0"
           density="compact"
@@ -93,42 +120,6 @@
     </SettingsSection>
 
     <SettingsChatHistorySection scope="profiles" />
-
-    <SettingsSection
-      :title="t('settings.aiVaultTitle')"
-      :info="t('settings.aiVaultPathHint')"
-    >
-      <FieldRow
-        :label="t('settings.aiVaultPath')"
-        :error="vaultError || undefined"
-      >
-        <template #info><DeviceScopeBadge /></template>
-        <div class="vault-path-control">
-          <FieldInput
-            class="vault-path-input"
-            readonly
-            :model-value="vaultPath || userConfig.aiVault.path"
-          />
-          <Button
-            size="sm"
-            variant="neutral"
-            icon="mdi:folder-edit-outline"
-            @click="showVaultModal = true"
-          >
-            {{ t('settings.vaultChange') }}
-          </Button>
-          <Button
-            size="sm"
-            variant="neutral"
-            icon="mdi:folder-open-outline"
-            :disabled="Boolean(vaultError)"
-            @click="handleOpenVault"
-          >
-            {{ t('settings.openInFileManager') }}
-          </Button>
-        </div>
-      </FieldRow>
-    </SettingsSection>
 
     <SettingsVaultLocationModal
       :open="showVaultModal"
@@ -209,10 +200,8 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
-import FieldInput from '../common/FieldInput.vue'
-import FieldRow from '../common/FieldRow.vue'
+import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
-import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
@@ -228,7 +217,30 @@ const aiProfilesStore = useAiProfilesStore()
 const profiles = computed(() => aiProfilesStore.profiles)
 const projects = computed(() => aiProfilesStore.projects)
 const vaultPath = computed(() => aiProfilesStore.vaultPath)
-const vaultError = computed(() => aiProfilesStore.vaultError)
+const isVaultNotConnected = computed(() => aiProfilesStore.isVaultNotConnected)
+
+/** An external project with no folder on this device */
+const isWithoutFolder = (project: AiProject) =>
+  project.isExternal && !project.targetPath?.trim()
+const projectsWithoutFolder = computed(() =>
+  projects.value.filter(isWithoutFolder)
+)
+
+async function setProjectFolder(project: AiProject) {
+  try {
+    await aiProfilesStore.setProjectFolder(project.id)
+  } catch (error) {
+    toastError(error)
+  }
+}
+
+async function useDefaultVault() {
+  try {
+    await aiProfilesStore.relocateVault(undefined, false)
+  } catch (error) {
+    toastError(error)
+  }
+}
 
 /** The tools a profile may use, in one line */
 function describeProfile(profile: AiProfile): string {
@@ -240,6 +252,7 @@ function describeProfile(profile: AiProfile): string {
 
 /** The profiles assigned to the project, or a fallback when none are connected */
 function describeProject(project: AiProject): string {
+  if (isWithoutFolder(project)) return t('settings.projectFolderNotSetOnDevice')
   const assigned = profiles.value.filter(
     (profile) =>
       projectAccessLevelOf(profile.projectPermissions[project.id]) !== undefined
@@ -337,6 +350,15 @@ async function handleDeleteProfile() {
 
 function projectMenuItems(project: AiProject): DropdownMenuItem[] {
   return [
+    ...(isWithoutFolder(project)
+      ? [
+          {
+            label: t('settings.projectSetFolder'),
+            icon: 'mdi:folder-open-outline',
+            action: () => setProjectFolder(project),
+          },
+        ]
+      : []),
     {
       label: t('common.delete'),
       icon: 'mdi:trash-can-outline',
@@ -398,32 +420,5 @@ async function handleCreateProject(name: string) {
   })
 }
 
-// ---------------------------------------------------------------------------
-// AI Vault Folder
-// ---------------------------------------------------------------------------
-
-async function handleOpenVault() {
-  try {
-    await aiProfilesStore.openVaultDir()
-  } catch (error) {
-    toastError(error)
-  }
-}
-
 const showVaultModal = ref(false)
 </script>
-
-<style scoped>
-.vault-path-control {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.vault-path-input {
-  flex: 1 1 14rem;
-  min-width: 0;
-}
-</style>

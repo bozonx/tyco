@@ -265,6 +265,9 @@ pub struct ScriptCommand {
     pub label: String,
     pub tool_config: ScriptToolConfig,
     pub is_enabled: bool,
+    /// Whether it runs on the platform of this build, see
+    /// [`CommandConfig::platforms`].
+    pub is_on_this_platform: bool,
 }
 
 /// A saved command, `commands[]`. Its `toolConfig` depends on the tool and
@@ -289,6 +292,26 @@ pub struct CommandConfig {
         deserialize_with = "lenient_external_timeout"
     )]
     pub external_timeout_sec: u64,
+    /// The platforms the command runs on, empty for every one. On another
+    /// one it stays in the config and in the grids, but does not run.
+    #[serde(default, deserialize_with = "lenient")]
+    pub platforms: Vec<String>,
+}
+
+impl CommandConfig {
+    /// Whether the command runs on the platform of this build.
+    pub fn is_on_this_platform(&self) -> bool {
+        is_on_this_platform(&self.platforms)
+    }
+}
+
+/// Whether `platforms` of a command, empty for every one, take the platform
+/// of this build.
+pub fn is_on_this_platform(platforms: &[String]) -> bool {
+    platforms.is_empty()
+        || platforms
+            .iter()
+            .any(|platform| platform == crate::services::platform::hotkeys::platform_name())
 }
 
 /// See `EXTERNAL_TIMEOUT_DEFAULT_SEC` in `commands-config.ts`.
@@ -348,6 +371,7 @@ pub fn script_command(config: &Value, id: &str) -> Option<ScriptCommand> {
         label,
         tool_config,
         is_enabled: command.is_enabled,
+        is_on_this_platform: command.is_on_this_platform(),
     })
 }
 

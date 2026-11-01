@@ -24,6 +24,10 @@ import { useTextCorrectionStore } from './text-correction'
 import { useTranslationStore } from './translation'
 import { createScriptActionClient } from '../lib/custom-actions/script-action-client'
 import { useDesktopStore } from './desktop'
+import {
+  deviceVariableValues,
+  type CommandEnvironment,
+} from '../lib/variables/command-variables'
 import { useIpcStore } from './ipc'
 
 /**
@@ -45,6 +49,15 @@ export const useToolsStore = defineStore('tools', () => {
     notifyDesktop: (summary, body) =>
       ipcStore.call('show_desktop_notification', { summary, body }),
     translateInsertFailed: () => translate('toast.insertFailed'),
+  })
+
+  /** The platform and the variable values of this device */
+  const environment = (): CommandEnvironment => ({
+    platform: desktopStore.userData?.platform ?? '',
+    variables: deviceVariableValues(
+      desktopStore.userConfig,
+      desktopStore.userData
+    ),
   })
 
   const getLlmUnavailableReasonKey = (task: LlmTask) =>
@@ -117,7 +130,7 @@ export const useToolsStore = defineStore('tools', () => {
 
   // the agent runs commands through the registry it is a tool of
   const transformCommand = createCommandTransformer({
-    tools: { get: (id) => registry.get(id) },
+    tools: { get: (id) => registry.get(id), environment },
   })
   const aiCommandTool = createAiCommandTool({
     stream: (task, prompt, options) =>
@@ -137,6 +150,7 @@ export const useToolsStore = defineStore('tools', () => {
       ),
     getUnavailableReasonKey: () => getLlmUnavailableReasonKey('aiTask'),
     describeError: (error) => describeError(error, translate),
+    variables: () => environment().variables,
   })
 
   const registry = createToolRegistry([
@@ -152,11 +166,12 @@ export const useToolsStore = defineStore('tools', () => {
           async (name, details) => {
             await ipcStore.call('log_webhook_call', { name, details })
           },
-          signal
+          signal,
+          environment().variables
         ),
     }),
     ...coreTools,
     aiCommandTool,
   ])
-  return { ...registry, provideAskInChat }
+  return { ...registry, environment, provideAskInChat }
 })

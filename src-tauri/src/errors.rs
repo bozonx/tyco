@@ -44,6 +44,16 @@ pub enum AppError {
     /// and it is read only.
     #[error("{0}")]
     UserDataUnavailable(String),
+    /// A command refers to a variable that has no value on this device.
+    #[error("{0}")]
+    VariableNotSet(String),
+    /// The folder of the AI profiles is set on this device but not there,
+    /// e.g. a disk that is not mounted.
+    #[error("{0}")]
+    VaultUnavailable(String),
+    /// An external project has no folder on this device.
+    #[error("{0}")]
+    ProjectUnavailable(String),
     /// The request was made for a state that has changed since, e.g. an
     /// activation a newer one replaced.
     #[error("{0}")]
@@ -107,6 +117,12 @@ error_codes! {
     UnsupportedConfig,
     /// The user data folder is not connected, or it is read only.
     UserDataUnavailable,
+    /// A command refers to a variable without a value on this device.
+    VariableNotSet,
+    /// The folder of the AI profiles is not there on this device.
+    VaultUnavailable,
+    /// An external project has no folder on this device.
+    ProjectUnavailable,
     /// The request was made for a state that has changed since.
     Stale,
     /// The runtime of the app failed.
@@ -132,6 +148,9 @@ impl AppError {
             Self::InvalidData(_) | Self::Json(_) => ErrorCode::InvalidData,
             Self::UnsupportedConfig(_) => ErrorCode::UnsupportedConfig,
             Self::UserDataUnavailable(_) => ErrorCode::UserDataUnavailable,
+            Self::VariableNotSet(_) => ErrorCode::VariableNotSet,
+            Self::VaultUnavailable(_) => ErrorCode::VaultUnavailable,
+            Self::ProjectUnavailable(_) => ErrorCode::ProjectUnavailable,
             Self::Stale(_) => ErrorCode::Stale,
             Self::Tauri(_) => ErrorCode::RuntimeError,
             Self::Io(_) => ErrorCode::IoError,
@@ -210,6 +229,18 @@ mod tests {
             (
                 AppError::UserDataUnavailable("Not connected".into()),
                 "userDataUnavailable",
+            ),
+            (
+                AppError::VariableNotSet("NOTES_DIR".into()),
+                "variableNotSet",
+            ),
+            (
+                AppError::VaultUnavailable("No vault".into()),
+                "vaultUnavailable",
+            ),
+            (
+                AppError::ProjectUnavailable("No folder".into()),
+                "projectUnavailable",
             ),
             (AppError::Stale("Activation changed".into()), "stale"),
             (

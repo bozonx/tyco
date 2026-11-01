@@ -62,6 +62,11 @@ pub struct AiFileRoot {
     /// An internal project keeps `project.json` at its top.
     #[serde(skip)]
     pub(super) has_project_file: bool,
+    /// Why the folder cannot be reached on this device: an external project
+    /// without its folder here.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub unavailable: Option<String>,
 }
 
 impl AiFileRoot {
@@ -81,6 +86,7 @@ impl AiFileRoot {
             write,
             dir: dir.to_path_buf(),
             has_project_file,
+            unavailable: None,
         }
     }
 

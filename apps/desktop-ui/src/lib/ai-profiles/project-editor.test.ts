@@ -60,10 +60,12 @@ describe('project editor', () => {
     expect(editor.saveStatus.value).toBe('saved')
   })
 
-  it('holds an external project without a folder back', async () => {
+  it('holds a new external project without a folder back', async () => {
     const { deps, editor } = setup()
-    editor.load(project)
+    editor.load()
+    editor.name.value = 'Site'
     editor.isExternal.value = true
+    expect(editor.isValid.value).toBe(false)
     editor.change()
     await vi.advanceTimersByTimeAsync(100)
     expect(deps.saveProject).not.toHaveBeenCalled()
@@ -76,11 +78,25 @@ describe('project editor', () => {
     )
   })
 
+  it('stores an external project that has no folder on this device', async () => {
+    const { deps, editor } = setup()
+    editor.load({ ...project, isExternal: true })
+    editor.name.value = 'Renamed'
+    editor.change()
+    await vi.advanceTimersByTimeAsync(100)
+    // no folder given leaves the one the device has, if any
+    expect(deps.saveProject).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Renamed', targetPath: undefined })
+    )
+  })
+
   it.each(['name', 'targetPath'] as const)(
     'cancels a pending save when %s becomes invalid',
     async (field) => {
       const { deps, editor } = setup()
-      editor.load(project)
+      // the folder is required of a new project only
+      editor.load(field === 'name' ? project : undefined)
+      editor.name.value = 'Notes'
       editor.isExternal.value = true
       editor.targetPath.value = '/notes'
       editor.change()

@@ -269,4 +269,38 @@ describe('createAiCommandTool', () => {
     expect(result.message?.length).toBeLessThanOrEqual(281)
     expect(result.message?.endsWith('…')).toBe(true)
   })
+
+  it('fills the variables of its prompt, and does not run without their values', async () => {
+    const prompts: string[] = []
+    const make = (variables: Record<string, string>) =>
+      createAiCommandTool({
+        stream: async function* (_task: unknown, prompt: unknown) {
+          prompts.push(JSON.stringify(prompt))
+          yield { type: 'text-delta', text: 'done' }
+        } as never,
+        instructions: () => '',
+        commands: () => [],
+        commandInputSchema: () => undefined,
+        runCommand: async () => ({ ok: true }),
+        getUnavailableReasonKey: () => undefined,
+        describeError: (error) => (error as Error).message,
+        variables: () => variables,
+      })
+    const call: ToolCall = {
+      input: { text: 'x' },
+      config: { prompt: 'Look in {{var:NOTES_DIR}}', allowedCommandIds: [] },
+      source: 'launcher',
+      signal: new AbortController().signal,
+      isOutputRequested: true,
+    }
+    expect(await make({}).run(call)).toEqual({
+      ok: false,
+      messageKey: 'toast.variablesNotSet',
+      message: 'NOTES_DIR',
+    })
+    expect(prompts).toEqual([])
+    await make({ NOTES_DIR: '/home/me/notes' }).run(call)
+    expect(prompts.join('')).toContain('Look in /home/me/notes')
+    expect(prompts.join('')).not.toContain('{{var:')
+  })
 })

@@ -19,6 +19,7 @@
           @update:model-value="update('method', $event)"
         />
         <ActionTemplateField
+          can-use-variables
           :model-value="webhook.url"
           placeholder="https://"
           :info="t('settings.actionWebhookUrlInfo', { placeholder: TEXT })"
@@ -37,6 +38,7 @@
     >
       <ActionTemplateField
         multiline
+        can-use-variables
         :model-value="webhook.payloadTemplate"
         :placeholder="t('settings.actionWebhookPayloadPlaceholder')"
         :info="t('settings.actionWebhookBodyInfo', { placeholder: TEXT })"
@@ -96,6 +98,11 @@
           icon="mdi:close"
         />
       </div>
+      <VariableReferenceHints
+        :templates="
+          headerRows.map(([, value]) => (secretIdOf(value) ? '' : value))
+        "
+      />
       <p v-if="hasHeaderMissingHere" class="action-field-warning">
         {{ t('settings.secretNotSetOnDevice') }}
       </p>
@@ -175,6 +182,7 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 
 import { useCommandValidation } from '../../composables/use-command-validation'
 import { useI18n } from '../../composables/use-i18n'
+import { useSettingsVariables } from '../../composables/use-settings-variables'
 import useToast from '../../composables/use-toast'
 import { webhookToolConfig } from '../../lib/commands/command-config'
 import { isSecretReferenced } from '../../lib/commands/command-secrets'
@@ -200,8 +208,12 @@ import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import ActionTemplateField from './ActionTemplateField.vue'
+import VariableReferenceHints from './VariableReferenceHints.vue'
 import type { CommandConfig } from '@tyco/shared'
-import { ACTION_TEXT_PLACEHOLDER as TEXT } from '@tyco/shared'
+import {
+  ACTION_TEXT_PLACEHOLDER as TEXT,
+  substituteVariables,
+} from '@tyco/shared'
 
 const props = defineProps<{ command: CommandConfig }>()
 const emit = defineEmits<{ update: [field: string, value: unknown] }>()
@@ -212,8 +224,19 @@ function update(field: string, value: unknown) {
 }
 
 const webhook = computed(() => webhookToolConfig(props.command))
+const variables = useSettingsVariables()
+/** The URL as it is on this device; empty when a variable has no value here */
+const urlHere = computed(() => {
+  const url = substituteVariables(
+    webhook.value.url.trim(),
+    variables(),
+    'url',
+    ''
+  )
+  return url.ok ? url.value : ''
+})
 const secretsStore = useSecretsStore()
-const { toastKey, toastError } = useToast()
+const { toastKey, toastError, toastText } = useToast()
 // the rows live here, so a row without a name or with a repeated one is kept
 // while it is edited; the config gets the valid headers only
 const headerRows = ref<WebhookHeaderRow[]>([])
@@ -297,7 +320,7 @@ const authOrigins = computed(
 )
 const authBoundElsewhere = computed(() => {
   if (!hasAuth.value || isAuthMissingHere.value) return false
-  const origin = httpOrigin(webhook.value.url)
+  const origin = httpOrigin(urlHere.value)
   return Boolean(origin) && !authOrigins.value.includes(origin!)
 })
 
@@ -306,7 +329,7 @@ const authBoundElsewhere = computed(() => {
  * the proxy refuses to send them there until their value is saved again
  */
 const headerSecretOrigins = computed(() => {
-  const origin = httpOrigin(webhook.value.url)
+  const origin = httpOrigin(urlHere.value)
   if (!origin) return []
   const elsewhere = headerRows.value.flatMap(([, value]) => {
     const id = secretIdOf(value)
@@ -331,6 +354,9 @@ const { authDraft, saveAuth, removeAuth, replaceSecret, removeUnusedSecret } =
     persist: session.persist,
     isSaved: session.isSaved,
     notifyInvalidOrigin: () => toastKey('settings.invalidBaseUrl', 'error'),
+    variables,
+    notifyVariablesNotSet: (names) =>
+      toastText(`${t('toast.variablesNotSet')}\n${names.join(', ')}`, 'error'),
     notifySavedOnDevice: () => toastKey('settings.keySavedOnDevice', 'success'),
     reportSaveError: (error) => toastError(error, 'settings.keySaveFailed'),
     reportRemoveError: (error) => toastError(error, 'settings.keyRemoveFailed'),

@@ -18,9 +18,11 @@ pub async fn execute_script_action(
     run_blocking(move || {
         let config = app.state::<AppState>().user_config();
         let log_dir = storage::app_log_dir(&app).ok();
+        let variables = storage::variable_values(&app, &config);
         custom_actions::execute_saved_script(
             &app.state::<custom_actions::ScriptRuns>(),
             &config,
+            &variables,
             &SavedScriptRun {
                 command_id: &request.command_id,
                 text: &request.text,
@@ -47,4 +49,10 @@ pub async fn pick_script_file(app: AppHandle) -> Result<Option<String>, AppError
 #[tauri::command]
 pub async fn pick_directory(app: AppHandle) -> Result<Option<String>, AppError> {
     run_blocking(move || custom_actions::pick_directory(&app)).await
+}
+
+/// A file the user picks, as its path, e.g. the value of a variable.
+#[tauri::command]
+pub async fn pick_file(app: AppHandle) -> Result<Option<String>, AppError> {
+    run_blocking(move || custom_actions::pick_file(&app)).await
 }

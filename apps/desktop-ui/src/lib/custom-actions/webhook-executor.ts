@@ -1,8 +1,14 @@
 import { errorMessage } from '@tyco/shared/value-guards'
 import type { FetchFunction } from '@bozonx/ai-kit'
-import { ACTION_TEXT_PLACEHOLDER, type WebhookToolConfig } from '@tyco/shared'
+import {
+  ACTION_TEXT_PLACEHOLDER,
+  substituteVariables,
+  type VariablePlace,
+  type VariableValues,
+  type WebhookToolConfig,
+} from '@tyco/shared'
 
-import { secretRef } from '../net/secrets'
+import { isSecretRef, secretRef } from '../net/secrets'
 
 const MAX_LOG_RESPONSE_CHARS = 4096
 /** How much of an error response the failure message quotes */
@@ -20,18 +26,21 @@ export interface WebhookTarget extends WebhookToolConfig {
 }
 
 /**
- * `template` with the text in place of every placeholder: escaped inside a JSON
- * string, `"{{TEXT}}"` included, or as a JSON string of its own when bare.
+ * `template` filled for `place`; a variable without a value here stops the
+ * request, see `substituteVariables`
  */
-export function fillJsonTemplate(template: string, text: string): string {
-  const quoted = JSON.stringify(text)
-  const escaped = quoted.slice(1, -1)
-  return template.replace(
-    /"((?:[^"\\]|\\.)*)"|\{\{TEXT\}\}/g,
-    (match, inner: string | undefined) =>
-      inner === undefined
-        ? quoted
-        : `"${inner.split(ACTION_TEXT_PLACEHOLDER).join(escaped)}"`
+function filled(
+  template: string,
+  variables: VariableValues,
+  place: VariablePlace,
+  text: string | null
+): string {
+  const result = substituteVariables(template, variables, place, text)
+  if (result.ok) return result.value
+  throw new Error(
+    result.missing.length
+      ? `Variables not set on this device: ${result.missing.join(', ')}`
+      : `The value of the variable ${(result as { invalidName: string }).invalidName} cannot go into a header`
   )
 }
 
@@ -50,16 +59,11 @@ function isJson(value: string): boolean {
  */
 export function buildWebhookRequest(
   target: WebhookTarget,
-  text: string | null
+  text: string | null,
+  variables: VariableValues = {}
 ): { url: string; init: RequestInit & { headers: Record<string, string> } } {
   const method = target.method || 'POST'
-  let url = target.url.trim()
-
-  if (url.includes(ACTION_TEXT_PLACEHOLDER)) {
-    url = url
-      .split(ACTION_TEXT_PLACEHOLDER)
-      .join(encodeURIComponent(text ?? ''))
-  }
+  const url = filled(target.url.trim(), variables, 'url', text)
 
   const headers: Record<string, string> = { 'user-agent': 'Tyco-Desktop' }
   let body: string | undefined
@@ -72,12 +76,7 @@ export function buildWebhookRequest(
           timestamp: Date.now(),
           source: 'tyco',
         })
-      : // the text alone is sent as it is, not as a JSON string
-        template === ACTION_TEXT_PLACEHOLDER
-        ? (text ?? '')
-        : isJson(fillJsonTemplate(rawTemplate, ''))
-          ? fillJsonTemplate(rawTemplate, text ?? '')
-          : rawTemplate.split(ACTION_TEXT_PLACEHOLDER).join(text ?? '')
+      : filled(rawTemplate, variables, 'json', text)
     headers['content-type'] =
       template !== ACTION_TEXT_PLACEHOLDER && isJson(body)
         ? 'application/json; charset=utf-8'
@@ -85,7 +84,11 @@ export function buildWebhookRequest(
   }
 
   for (const [name, value] of Object.entries(target.headers ?? {})) {
-    if (name.trim()) headers[name.trim().toLowerCase()] = value
+    if (!name.trim()) continue
+    // a key reference is filled by the proxy, never with a variable
+    headers[name.trim().toLowerCase()] = isSecretRef(value)
+      ? value
+      : filled(value, variables, 'header', null)
   }
   if (target.isAuthEnabled) {
     if (!target.authSecretId)
@@ -148,9 +151,10 @@ export async function executeWebhook(
   text: string | null,
   fetchFn: FetchFunction,
   logFn?: WebhookCallLog,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  variables: VariableValues = {}
 ): Promise<string> {
-  const { url, init } = buildWebhookRequest(target, text)
+  const { url, init } = buildWebhookRequest(target, text, variables)
   // Paths and query strings can contain webhook credentials.
   let origin = '[invalid URL]'
   try {

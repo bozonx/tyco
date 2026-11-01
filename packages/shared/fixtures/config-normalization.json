@@ -258,6 +258,8 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -640,6 +642,8 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -997,6 +1001,8 @@
       "mainActions": {},
       "launcherPages": [{ "id": "main", "slots": {}, "inputMode": "none" }],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -1373,6 +1379,8 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -1744,6 +1752,8 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -2103,6 +2113,8 @@
         { "id": "beta", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -2476,6 +2488,8 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -2861,6 +2875,8 @@
         { "id": "main", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -3245,6 +3261,8 @@
         { "id": "main", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
+      "variables": [],
+      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -3712,6 +3730,503 @@
           "isVoiceEnabled": false
         }
       ],
+      "variables": [],
+      "variableValues": {},
+      "llm": {
+        "providers": [
+          { "id": "google", "type": "google", "name": "Google Gemini" },
+          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
+          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "ollama",
+            "type": "openaiCompatible",
+            "name": "Ollama",
+            "baseUrl": "http://localhost:11434/v1"
+          }
+        ],
+        "models": [
+          {
+            "id": "ollama-qwen",
+            "providerId": "ollama",
+            "providerModelId": "qwen2.5:7b",
+            "name": "Qwen 2.5 7B",
+            "temperature": 0.2,
+            "contextWindowTokens": 4096,
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
+          },
+          {
+            "id": "gemini-flash",
+            "providerId": "google",
+            "providerModelId": "gemini-3.8-flash",
+            "name": "Gemini 3.8 Flash",
+            "temperature": 1,
+            "contextWindowTokens": 128000,
+            "canUseImages": true,
+            "canUseTools": true
+          },
+          {
+            "id": "deepseek-chat",
+            "providerId": "deepseek",
+            "providerModelId": "deepseek-flash",
+            "name": "DeepSeek Flash",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
+          },
+          {
+            "id": "openrouter-gpt-4-1-mini",
+            "providerId": "openrouter",
+            "providerModelId": "openai/gpt-4.1-mini",
+            "name": "GPT-4.1 mini",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": true,
+            "canUseTools": true
+          }
+        ],
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "translation": {
+            "modelId": "ollama-qwen",
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" },
+          "transformation": { "modelId": "" },
+          "styling": { "modelId": "" }
+        },
+        "imageQuality": "balanced"
+      },
+      "markdown": {
+        "format": {
+          "bullet": "-",
+          "emphasis": "*",
+          "strong": "*",
+          "headingStyle": "atx",
+          "isListMarkerIncremented": true
+        },
+        "strip": {
+          "bullet": "-",
+          "codeBlockIndent": "none",
+          "blockquoteIndent": "none",
+          "linkFormat": "text",
+          "imageFormat": "alt",
+          "hasInlineCode": false,
+          "hasThematicBreaks": true,
+          "hasTaskCheckboxes": true
+        }
+      },
+      "plugins": {},
+      "chat": { "history": { "storage": "disk" } },
+      "stt": {
+        "provider": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false,
+        "isStylingBarEnabled": false,
+        "isStylingBarDirectInsertEnabled": false
+      },
+      "transformations": {
+        "items": [
+          {
+            "id": "deep-edit",
+            "name": "Deep edit",
+            "rule": "Improve awkward phrasing, add pronouns where needed, clarify meaning, remove redundancy, and choose natural synonyms."
+          }
+        ],
+        "slots": { "q": "deep-edit" }
+      },
+      "styling": { "items": [], "slots": {} },
+      "aiVault": { "path": "" },
+      "aiProfiles": { "chatHistory": { "storage": "disk" } }
+    }
+  },
+  {
+    "name": "variables: distinct ids and names, user names only, values of declared variables, platforms of commands",
+    "input": {
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto", "user": "auto" },
+      "editor": {
+        "submitKey": "Enter",
+        "diffViewMode": "unified",
+        "history": {
+          "storage": "disk",
+          "maxItems": 1000,
+          "retentionDays": 30,
+          "isSecretSanitizingEnabled": true
+        }
+      },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false
+      },
+      "hotkeys": {
+        "editor": "",
+        "quickInput": "",
+        "chat": "",
+        "voiceChat": "",
+        "voice": "Ctrl+Alt+V",
+        "selectionActions": "Ctrl+Alt+S",
+        "correction": "",
+        "translation": "",
+        "styling": "",
+        "transformation": "",
+        "selectionCorrection": "Ctrl+Alt+F"
+      },
+      "externalAccess": { "canAccessSelection": false },
+      "windowInsertion": {
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "method": "xdotool",
+          "xdotoolPath": "",
+          "ydotoolPath": ""
+        }
+      },
+      "translation": {
+        "provider": "llm",
+        "qualityGate": "off",
+        "glossary": [],
+        "targetLanguages": { "q": "en-US" },
+        "viewMode": "split",
+        "providers": { "deepl": { "endpoint": "free" } }
+      },
+      "mainActions": {
+        "q": { "type": "command", "commandId": "MyCmd" },
+        "w": { "type": "command", "commandId": " Notes " }
+      },
+      "launcherPages": [
+        {
+          "id": "main",
+          "slots": { "q": "Мой скрипт", "w": "notes" },
+          "inputMode": "none"
+        }
+      ],
+      "commands": [
+        {
+          "id": "notes",
+          "name": "Notes",
+          "toolId": "script",
+          "toolConfig": { "command": "true" },
+          "platforms": ["linux", "macos", "linux"]
+        },
+        {
+          "id": "MyCmd",
+          "name": "Upper case",
+          "toolId": "script",
+          "toolConfig": { "command": "true" }
+        },
+        {
+          "id": "Мой скрипт",
+          "name": "Cyrillic only",
+          "toolId": "script",
+          "toolConfig": { "command": "true" }
+        },
+        {
+          "id": " Notes ",
+          "name": "Collides with notes",
+          "toolId": "script",
+          "toolConfig": { "command": "true" }
+        },
+        {
+          "id": "MyCmd",
+          "name": "Repeat of an invalid id",
+          "toolId": "script",
+          "toolConfig": { "command": "true" }
+        }
+      ],
+      "variables": [
+        { "id": "notes", "name": "NOTES_DIR", "description": "Notes" },
+        { "id": "dup", "name": "NOTES_DIR", "description": "" },
+        { "id": "builtin", "name": "TYCO_X", "description": "" },
+        { "id": "bad", "name": "lower", "description": "" },
+        { "id": "notes", "name": "OTHER", "description": "" },
+        { "id": "api", "name": "LOCAL_API" }
+      ],
+      "variableValues": {
+        "notes": "/n",
+        "dup": "/d",
+        "gone": "x",
+        "api": "",
+        "builtin": "y"
+      },
+      "llm": {
+        "providers": [
+          { "id": "google", "type": "google", "name": "Google Gemini" },
+          { "id": "openrouter", "type": "openrouter", "name": "OpenRouter" },
+          { "id": "deepseek", "type": "deepseek", "name": "DeepSeek" },
+          {
+            "id": "ollama",
+            "type": "openaiCompatible",
+            "name": "Ollama",
+            "baseUrl": "http://localhost:11434/v1"
+          }
+        ],
+        "models": [
+          {
+            "id": "ollama-qwen",
+            "providerId": "ollama",
+            "providerModelId": "qwen2.5:7b",
+            "name": "Qwen 2.5 7B",
+            "temperature": 0.2,
+            "contextWindowTokens": 4096,
+            "maxOutputTokens": 1024,
+            "canUseImages": false,
+            "canUseTools": false
+          },
+          {
+            "id": "gemini-flash",
+            "providerId": "google",
+            "providerModelId": "gemini-3.8-flash",
+            "name": "Gemini 3.8 Flash",
+            "temperature": 1,
+            "contextWindowTokens": 128000,
+            "canUseImages": true,
+            "canUseTools": true
+          },
+          {
+            "id": "deepseek-chat",
+            "providerId": "deepseek",
+            "providerModelId": "deepseek-flash",
+            "name": "DeepSeek Flash",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": false,
+            "canUseTools": true
+          },
+          {
+            "id": "openrouter-gpt-4-1-mini",
+            "providerId": "openrouter",
+            "providerModelId": "openai/gpt-4.1-mini",
+            "name": "GPT-4.1 mini",
+            "temperature": 0.2,
+            "contextWindowTokens": 128000,
+            "canUseImages": true,
+            "canUseTools": true
+          }
+        ],
+        "tasks": {
+          "chat": { "rule": "" },
+          "correction": { "modelId": "ollama-qwen", "rule": "" },
+          "translation": {
+            "modelId": "ollama-qwen",
+            "rule": "",
+            "qualityGateRule": ""
+          },
+          "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
+          "aiTask": { "modelId": "ollama-qwen" }
+        },
+        "imageQuality": "balanced"
+      },
+      "markdown": {
+        "format": {
+          "bullet": "-",
+          "emphasis": "*",
+          "strong": "*",
+          "headingStyle": "atx",
+          "isListMarkerIncremented": true
+        },
+        "strip": {
+          "bullet": "-",
+          "codeBlockIndent": "none",
+          "blockquoteIndent": "none",
+          "linkFormat": "text",
+          "imageFormat": "alt",
+          "hasInlineCode": false,
+          "hasThematicBreaks": true,
+          "hasTaskCheckboxes": true
+        }
+      },
+      "plugins": {},
+      "chat": { "history": { "storage": "disk" } },
+      "stt": {
+        "provider": "deepgram",
+        "providers": {
+          "deepgram": { "modelId": "nova-3", "language": "auto" },
+          "sherpaOnnx": { "baseUrl": "ws://localhost:6006" }
+        },
+        "isVoiceCorrectionEnabled": false,
+        "isVoiceHoldEnabled": false
+      }
+    },
+    "expected": {
+      "configVersion": 1,
+      "appearance": {
+        "theme": "auto",
+        "contrast": "auto",
+        "motion": "auto",
+        "uiScalePercent": 100
+      },
+      "language": { "ui": "auto" },
+      "editor": {
+        "submitKey": "Enter",
+        "diffViewMode": "unified",
+        "history": {
+          "storage": "disk",
+          "maxItems": 1000,
+          "retentionDays": 30,
+          "isSecretSanitizingEnabled": true,
+          "isLocalOnly": false
+        },
+        "shortcuts": {
+          "bold": "Ctrl+B",
+          "italic": "Ctrl+I",
+          "link": "Ctrl+K",
+          "code": "Ctrl+E",
+          "strikethrough": "Ctrl+Shift+X",
+          "normalText": "Ctrl+0",
+          "heading1": "Ctrl+1",
+          "heading2": "Ctrl+2",
+          "heading3": "Ctrl+3",
+          "heading4": "",
+          "heading5": "",
+          "heading6": "",
+          "bulletList": "Ctrl+Shift+8",
+          "orderedList": "Ctrl+Shift+7",
+          "taskList": "Ctrl+Shift+9",
+          "quote": "Ctrl+Shift+Period",
+          "indent": "Tab",
+          "outdent": "Shift+Tab",
+          "toggleMarkup": "Ctrl+Shift+M"
+        }
+      },
+      "quickWindow": {
+        "isHiddenOnBlur": true,
+        "isCorrectionPrefetchEnabled": false,
+        "correctionMode": "onSubmit"
+      },
+      "hotkeys": {
+        "editor": "",
+        "quickInput": "",
+        "chat": "",
+        "voiceChat": "",
+        "voice": "Ctrl+Alt+V",
+        "selectionActions": "Ctrl+Alt+S",
+        "correction": "",
+        "translation": "",
+        "styling": "",
+        "transformation": "",
+        "selectionCorrection": "Ctrl+Alt+F",
+        "history": "",
+        "voiceCommands": "Ctrl+Alt+Shift+X",
+        "launcherPages": {}
+      },
+      "externalAccess": { "canAccessSelection": false },
+      "windowInsertion": {
+        "linux": {
+          "pasteShortcut": "Ctrl+V",
+          "terminalPasteShortcut": "Ctrl+Shift+V"
+        },
+        "terminalApps": []
+      },
+      "translation": {
+        "provider": "llm",
+        "qualityGate": "off",
+        "glossary": [],
+        "targetLanguages": { "q": "en-US" },
+        "viewMode": "split",
+        "providers": { "deepl": { "endpoint": "free" } }
+      },
+      "mainActions": {
+        "q": { "type": "command", "commandId": "mycmd" },
+        "w": { "type": "command", "commandId": "notes-2" }
+      },
+      "launcherPages": [
+        {
+          "id": "main",
+          "slots": { "q": "command", "w": "notes" },
+          "inputMode": "none"
+        }
+      ],
+      "commands": [
+        {
+          "id": "notes",
+          "name": "Notes",
+          "toolId": "script",
+          "toolConfig": { "command": "true" },
+          "description": "",
+          "phrases": [],
+          "isLlmArgumentParsingEnabled": false,
+          "isLlmPreTransformEnabled": false,
+          "llmPreTransformPrompt": "",
+          "outputAction": "none",
+          "isOutputLogged": false,
+          "isAvailableExternally": false,
+          "externalTimeoutSec": 120,
+          "isEnabled": true,
+          "isVoiceEnabled": false,
+          "platforms": ["linux"]
+        },
+        {
+          "id": "mycmd",
+          "name": "Upper case",
+          "toolId": "script",
+          "toolConfig": { "command": "true" },
+          "description": "",
+          "phrases": [],
+          "isLlmArgumentParsingEnabled": false,
+          "isLlmPreTransformEnabled": false,
+          "llmPreTransformPrompt": "",
+          "outputAction": "none",
+          "isOutputLogged": false,
+          "isAvailableExternally": false,
+          "externalTimeoutSec": 120,
+          "isEnabled": true,
+          "isVoiceEnabled": false
+        },
+        {
+          "id": "command",
+          "name": "Cyrillic only",
+          "toolId": "script",
+          "toolConfig": { "command": "true" },
+          "description": "",
+          "phrases": [],
+          "isLlmArgumentParsingEnabled": false,
+          "isLlmPreTransformEnabled": false,
+          "llmPreTransformPrompt": "",
+          "outputAction": "none",
+          "isOutputLogged": false,
+          "isAvailableExternally": false,
+          "externalTimeoutSec": 120,
+          "isEnabled": true,
+          "isVoiceEnabled": false
+        },
+        {
+          "id": "notes-2",
+          "name": "Collides with notes",
+          "toolId": "script",
+          "toolConfig": { "command": "true" },
+          "description": "",
+          "phrases": [],
+          "isLlmArgumentParsingEnabled": false,
+          "isLlmPreTransformEnabled": false,
+          "llmPreTransformPrompt": "",
+          "outputAction": "none",
+          "isOutputLogged": false,
+          "isAvailableExternally": false,
+          "externalTimeoutSec": 120,
+          "isEnabled": true,
+          "isVoiceEnabled": false
+        }
+      ],
+      "variables": [
+        { "id": "notes", "name": "NOTES_DIR", "description": "Notes" },
+        { "id": "api", "name": "LOCAL_API", "description": "" }
+      ],
+      "variableValues": { "notes": "/n" },
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },

@@ -284,6 +284,8 @@ export class FakeDesktopBackend {
         isDefault: true,
         status: 'connected',
         isWritableByOthers: false,
+        deviceId: 'test-device',
+        platform: 'linux',
       },
     }))
 

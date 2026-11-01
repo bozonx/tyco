@@ -131,7 +131,11 @@ fn canonical_prefix(path: &Path) -> Result<PathBuf, AppError> {
 impl ProfileFiles {
     /// The profile's roots as they are on disk now. A profile whose file tools
     /// are off reaches none.
-    pub fn load(vault_root: &Path, profile_id: &str) -> Result<Self, AppError> {
+    pub fn load(
+        vault_root: &Path,
+        paths: &ai_vault::ProjectPaths,
+        profile_id: &str,
+    ) -> Result<Self, AppError> {
         let profile = ai_vault::get_profile(vault_root, profile_id)?;
         ensure_files_enabled(&profile)?;
         let mut roots = vec![AiFileRoot {
@@ -142,8 +146,9 @@ impl ProfileFiles {
             write: ProjectAccessMode::Allow,
             dir: ai_vault::profile_workspace_dir(vault_root, profile_id)?,
             has_project_file: false,
+            unavailable: None,
         }];
-        for project in ai_vault::list_projects(vault_root)? {
+        for project in ai_vault::list_projects(vault_root, paths)? {
             let Some(permission) = profile.project_permissions.get(&project.id) else {
                 continue;
             };
@@ -152,12 +157,11 @@ impl ProfileFiles {
             {
                 continue;
             }
-            let dir = match ai_vault::project_files_dir(vault_root, &project) {
-                Ok(dir) => dir,
-                Err(error) => {
-                    log::warn!("Skipping the files of project {}: {error}", project.id);
-                    continue;
-                }
+            // a project not connected on this device is still named, so that
+            // the model is told why it cannot reach it
+            let (dir, unavailable) = match ai_vault::project_files_dir(vault_root, &project) {
+                Ok(dir) => (dir, None),
+                Err(error) => (PathBuf::new(), Some(error.to_string())),
             };
             roots.push(AiFileRoot {
                 path: format!("{PROJECTS_ROOT}/{}", project.id),
@@ -170,6 +174,7 @@ impl ProfileFiles {
                 write: permission.write.clone(),
                 dir,
                 has_project_file: !project.is_external,
+                unavailable,
             });
         }
         Ok(Self { roots })
@@ -230,6 +235,9 @@ impl ProfileFiles {
         follow: bool,
     ) -> Result<Resolved<'_>, AppError> {
         let (root, relative) = self.locate(path)?;
+        if let Some(reason) = &root.unavailable {
+            return Err(AppError::ProjectUnavailable(reason.clone()));
+        }
         if *root.access(access) == ProjectAccessMode::Deny {
             return Err(AppError::invalid_input(format!(
                 "The profile may not {} {}",

@@ -64,9 +64,17 @@
             :label="t('settings.projectTargetPath')"
             :hint="targetPath || undefined"
             :error="
-              targetPath.trim() ? undefined : t('settings.projectPathRequired')
+              targetPath.trim() || isStored
+                ? undefined
+                : t('settings.projectPathRequired')
+            "
+            :warning="
+              !targetPath.trim() && isStored
+                ? t('settings.projectFolderNotSetOnDevice')
+                : undefined
             "
           >
+            <template #info><DeviceScopeBadge /></template>
             <Button
               size="sm"
               variant="neutral"
@@ -143,6 +151,7 @@ import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import StateMessage from '../common/StateMessage.vue'
+import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SettingsAccessList, {
   type AccessListCandidate,
   type AccessListEntry,
@@ -178,8 +187,15 @@ const editor = createProjectEditor({
   },
   reportError: useRetryToast(),
 })
-const { name, description, isExternal, targetPath, isValid, saveStatus } =
-  editor
+const {
+  name,
+  description,
+  isExternal,
+  targetPath,
+  isStored,
+  isValid,
+  saveStatus,
+} = editor
 
 // the fields take the project once it is there; the settings may open
 // before the vault is read

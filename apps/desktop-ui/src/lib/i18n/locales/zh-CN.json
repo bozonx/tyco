@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "当提示词需要时，AI 会直接运行这些命令而不询问。命令永远不会运行自身，也不会运行调用它的 AI 命令。",
     "aiNoOtherCommands": "还没有其他命令。",
     "aiMaxSteps": "步数上限",
-    "aiMaxStepsInfo": "AI 可执行的最大命令数。最终回答不计入此限制。"
+    "aiMaxStepsInfo": "AI 可执行的最大命令数。最终回答不计入此限制。",
+    "otherPlatform": "不在此平台上运行",
+    "variablesNotSet": "其使用的变量在此设备上没有值",
+    "platforms": "平台",
+    "platformsInfo": "命令只在勾选的平台上运行；都不勾选则在所有平台上运行。在其他平台上，它仍保留在列表中，但不会运行。",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "添加",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "所需服务当前不可用",
     "stale": "状态已发生变化，请重试",
     "unsupportedConfig": "设置由更新版本的应用保存",
-    "userDataUnavailable": "数据文件夹不可用"
+    "userDataUnavailable": "数据文件夹不可用",
+    "variableNotSet": "变量在此设备上没有值",
+    "vaultUnavailable": "AI 配置文件夹未在此设备上连接",
+    "projectUnavailable": "项目文件夹未在此设备上设置"
   },
   "diff": {
     "modeOriginal": "仅原始内容",
@@ -625,8 +634,6 @@
     "aiProfilesHint": "独立的助手，拥有各自的指令、模型、工具和对话。每个配置文件是顶部栏中的一个选项卡。",
     "aiProfilesTab": "AI 配置文件",
     "aiVaultPath": "AI 配置文件保管库路径",
-    "aiVaultPathHint": "AI 配置文件（包括其 SOUL.md、聊天和工作区）以及内部项目的存放文件夹。默认为应用数据目录中的 ai-vault 文件夹。",
-    "aiVaultTitle": "保管库",
     "allPluginsTab": "所有插件",
     "apiKey": "API 密钥",
     "apiKeyBoundTo": "保存的密钥仅用于 {origin}。若要与此地址配合使用，请重新保存密钥。",
@@ -1149,7 +1156,15 @@
       "indent": "增加缩进",
       "outdent": "减少缩进",
       "reserved": "此快捷键已保留用于文本编辑或应用操作。"
-    }
+    },
+    "aiVaultExternalHint": "留空：使用数据文件夹内的 ai-vault 文件夹，并随其同步。单独的文件夹适合 git、Obsidian 或独立同步。",
+    "aiVaultGitWarning": "不要把 git 仓库放在同步文件夹中：来自两台设备的修改可能损坏它。",
+    "aiVaultNotConnected": "AI 配置文件夹未在此设备上连接：{path}。没有在其位置创建任何内容。",
+    "aiVaultUseDefault": "使用默认文件夹",
+    "projectFolderNotSetOnDevice": "此设备上未设置文件夹",
+    "projectSetFolder": "设置文件夹",
+    "projectsWithoutFolder": "此设备上没有文件夹的外部项目：{count}",
+    "variablesTab": "变量"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1201,7 +1216,8 @@
     "webhookFailed": "Webhook 请求失败",
     "webhookKeyNotSet": "此设备上未设置该 Webhook 的密钥；请在命令设置中输入",
     "webhookSuccess": "Webhook 发送成功",
-    "voicePostProcessTimeout": "语音处理耗时过长；已保留原始文本"
+    "voicePostProcessTimeout": "语音处理耗时过长；已保留原始文本",
+    "variablesNotSet": "部分变量在此设备上没有值；请在“设置 → 变量”中设置"
   },
   "tools": {
     "aiTask": "AI 命令",
@@ -1331,5 +1347,36 @@
     "clickToApply": "点击应用",
     "liveCorrectionFailed": "实时纠错失败",
     "liveCorrectionFailedHint": "模型未响应。文本将按键入的内容插入。"
+  },
+  "variables": {
+    "add": "添加",
+    "addTitle": "新建变量",
+    "browseFile": "文件…",
+    "builtinHint": "始终可用；其值来自此设备。",
+    "builtinTitle": "内置变量",
+    "declare": "声明变量",
+    "description": "描述",
+    "empty": "还没有变量。",
+    "errorBuiltinName": "以 TYCO_ 开头的名称保留给内置变量",
+    "errorInvalidName": "请使用大写拉丁字母、数字和 _，并以字母开头",
+    "errorNameTaken": "已存在同名变量",
+    "errorNoName": "请输入名称",
+    "hint": "变量可让命令或服务商地址使用在不同设备上各不相同的值，例如文件夹路径或本地服务器。名称在所有设备间共享，值由每台设备自行设置。以 {example} 的形式插入。",
+    "hintNotDeclared": "{name} 未声明",
+    "hintNotSet": "{name} 在此设备上没有值",
+    "insert": "插入变量",
+    "listTitle": "变量",
+    "manage": "管理变量…",
+    "name": "名称",
+    "nameHint": "例如 NOTES_DIR。命令按名称引用变量；重命名会同步更新命令。",
+    "notForSecrets": "值以明文保存，可能进入提示词或 URL。请勿在此存放密钥，请使用密钥输入框。",
+    "remove": "删除变量",
+    "setValue": "设置值",
+    "unsetOnDevice": "此设备上没有值的变量：{count}",
+    "unused": "未使用",
+    "usedBy": "使用者：{count}",
+    "value": "值",
+    "valueNotSet": "此设备上未设置：使用它的命令不会运行",
+    "valuePlaceholder": "路径、地址或其他文本"
   }
 }

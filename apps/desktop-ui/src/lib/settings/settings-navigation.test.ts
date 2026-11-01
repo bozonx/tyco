@@ -104,6 +104,7 @@ describe('settings navigation', () => {
           'languages',
           'launcher-commands',
           'commands',
+          'variables',
         ],
       ],
       ['settings.pluginsTab', ['plugins', 'plugin:case']],

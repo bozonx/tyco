@@ -128,7 +128,11 @@ describe('CommandEditor.vue', () => {
       'commands.launcherResultGroup'
     )
     expect(advanced.findAll('.command-place')).toHaveLength(0)
-    expect(advanced.findAll('input[type="checkbox"]')).toHaveLength(3)
+    // the external toggle and its options, and the platforms
+    expect(advanced.findAll('input[type="checkbox"]')).toHaveLength(5)
+    expect(
+      advanced.find('[data-testid="command-platform-linux"]').exists()
+    ).toBe(true)
     expect(wrapper.findAll('.command-place')).toHaveLength(0)
   })
 

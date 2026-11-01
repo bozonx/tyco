@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "The AI runs these commands without asking whenever the prompt needs them. A command never runs itself or an AI command that called it.",
     "aiNoOtherCommands": "There are no other commands yet.",
     "aiMaxSteps": "Step limit",
-    "aiMaxStepsInfo": "Maximum number of commands the AI may run. The final answer does not count toward this limit."
+    "aiMaxStepsInfo": "Maximum number of commands the AI may run. The final answer does not count toward this limit.",
+    "otherPlatform": "It does not run on this platform",
+    "variablesNotSet": "A variable it uses has no value on this device",
+    "platforms": "Platforms",
+    "platformsInfo": "The command runs only on the checked platforms; with none checked, on every one. On another platform it stays in the lists but does not run.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Add",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "A required service is unavailable right now",
     "stale": "The state has changed meanwhile, try again",
     "unsupportedConfig": "The settings were saved by a newer version of the app",
-    "userDataUnavailable": "The data folder is unavailable"
+    "userDataUnavailable": "The data folder is unavailable",
+    "variableNotSet": "A variable has no value on this device",
+    "vaultUnavailable": "The folder of AI profiles is not connected on this device",
+    "projectUnavailable": "The project folder is not set on this device"
   },
   "diff": {
     "modeOriginal": "Original only",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Separate assistants with their own instruction, model, tools and chats. Each profile is a tab in the top bar.",
     "aiProfilesTab": "AI Profiles",
     "aiVaultPath": "AI Profiles Vault Path",
-    "aiVaultPathHint": "The folder of AI profiles (their SOUL.md, chats and workspaces) and internal projects. By default, the ai-vault folder in the app data.",
-    "aiVaultTitle": "Vault",
     "allPluginsTab": "All plugins",
     "apiKey": "API Key",
     "apiKeyBoundTo": "The saved key only goes to {origin}. Save it again to use it with this address.",
@@ -1155,7 +1162,15 @@
       "indent": "Increase indent",
       "outdent": "Decrease indent",
       "reserved": "This shortcut is reserved for text editing or application actions."
-    }
+    },
+    "aiVaultExternalHint": "Empty: the ai-vault folder inside the data folder, synced with it. A separate folder suits git, Obsidian or a sync of its own.",
+    "aiVaultGitWarning": "Do not keep a git repository inside a synced folder: edits from two devices can damage it.",
+    "aiVaultNotConnected": "The folder of AI profiles is not connected on this device: {path}. Nothing was created in its place.",
+    "aiVaultUseDefault": "Use the default folder",
+    "projectFolderNotSetOnDevice": "Folder not set on this device",
+    "projectSetFolder": "Set folder",
+    "projectsWithoutFolder": "External projects without a folder on this device: {count}",
+    "variablesTab": "Variables"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "Webhook request failed",
     "webhookKeyNotSet": "The key of this webhook is not set on this device; enter it in the command settings",
     "webhookSuccess": "Webhook sent successfully",
-    "voicePostProcessTimeout": "Voice processing took too long; original text kept"
+    "voicePostProcessTimeout": "Voice processing took too long; original text kept",
+    "variablesNotSet": "Variables have no value on this device; set them in Settings → Variables"
   },
   "tools": {
     "aiTask": "AI command",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Click to apply",
     "liveCorrectionFailed": "Live correction failed",
     "liveCorrectionFailedHint": "The model did not respond. The text will be inserted as typed."
+  },
+  "variables": {
+    "add": "Add",
+    "addTitle": "New variable",
+    "browseFile": "File…",
+    "builtinHint": "Always available; their values come from this device.",
+    "builtinTitle": "Built-in variables",
+    "declare": "Declare variable",
+    "description": "Description",
+    "empty": "No variables yet.",
+    "errorBuiltinName": "Names starting with TYCO_ are reserved for built-in variables",
+    "errorInvalidName": "Use capital Latin letters, digits and _, starting with a letter",
+    "errorNameTaken": "A variable with this name already exists",
+    "errorNoName": "Enter a name",
+    "hint": "A variable lets a command or a provider address use a value that differs between devices, such as a folder path or a local server. The name is shared by all devices; each device sets its own value. Insert it as {example}.",
+    "hintNotDeclared": "{name} is not declared",
+    "hintNotSet": "{name} has no value on this device",
+    "insert": "Insert variable",
+    "listTitle": "Variables",
+    "manage": "Manage variables…",
+    "name": "Name",
+    "nameHint": "For example NOTES_DIR. Commands refer to it by name; renaming updates them.",
+    "notForSecrets": "Values are stored as plain text and may go into a prompt or a URL. Do not put keys here: use the key fields instead.",
+    "remove": "Remove variable",
+    "setValue": "Set value",
+    "unsetOnDevice": "Variables not set on this device: {count}",
+    "unused": "Not used",
+    "usedBy": "Used by: {count}",
+    "value": "Value",
+    "valueNotSet": "Not set on this device: commands that use it do not run",
+    "valuePlaceholder": "A path, an address or other text"
   }
 }

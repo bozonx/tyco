@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "AI spouští tyto příkazy bez ptaní, kdykoli je prompt potřebuje. Příkaz nikdy nespustí sám sebe ani AI příkaz, který ho zavolal.",
     "aiNoOtherCommands": "Zatím nejsou žádné další příkazy.",
     "aiMaxSteps": "Limit kroků",
-    "aiMaxStepsInfo": "Maximální počet příkazů, které smí AI spustit. Závěrečná odpověď se do limitu nezapočítává."
+    "aiMaxStepsInfo": "Maximální počet příkazů, které smí AI spustit. Závěrečná odpověď se do limitu nezapočítává.",
+    "otherPlatform": "Na této platformě se nespouští",
+    "variablesNotSet": "Proměnná, kterou používá, nemá na tomto zařízení hodnotu",
+    "platforms": "Platformy",
+    "platformsInfo": "Příkaz se spouští jen na zaškrtnutých platformách; když není zaškrtnutá žádná, na všech. Na jiné platformě zůstává v seznamech, ale nespouští se.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Přidat",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Potřebná služba je teď nedostupná",
     "stale": "Stav se mezitím změnil, zkuste to znovu",
     "unsupportedConfig": "Nastavení uložila novější verze aplikace",
-    "userDataUnavailable": "Složka dat není dostupná"
+    "userDataUnavailable": "Složka dat není dostupná",
+    "variableNotSet": "Proměnná nemá na tomto zařízení hodnotu",
+    "vaultUnavailable": "Složka profilů AI není na tomto zařízení připojena",
+    "projectUnavailable": "Složka projektu není na tomto zařízení nastavena"
   },
   "diff": {
     "modeOriginal": "Pouze originál",
@@ -625,8 +634,6 @@
     "aiProfilesHint": "Samostatní asistenti s vlastní instrukcí, modelem, nástroji a chaty. Každý profil je karta v horní liště.",
     "aiProfilesTab": "Profily AI",
     "aiVaultPath": "Cesta k trezoru profilů AI",
-    "aiVaultPathHint": "Složka profilů AI (jejich SOUL.md, chatů a pracovních prostorů) a interních projektů. Výchozí je složka ai-vault v datech aplikace.",
-    "aiVaultTitle": "Trezor",
     "allPluginsTab": "Všechny pluginy",
     "apiKey": "Klíč API",
     "apiKeyBoundTo": "Uložený klíč se posílá jen na {origin}. Uložte ho znovu, chcete-li ho použít s touto adresou.",
@@ -1149,7 +1156,15 @@
       "indent": "Zvětšit odsazení",
       "outdent": "Zmenšit odsazení",
       "reserved": "Tato zkratka je vyhrazena pro úpravy textu nebo akce aplikace."
-    }
+    },
+    "aiVaultExternalHint": "Prázdné: složka ai-vault ve složce dat, synchronizovaná spolu s ní. Samostatná složka se hodí pro git, Obsidian nebo vlastní synchronizaci.",
+    "aiVaultGitWarning": "Neukládejte git repozitář do synchronizované složky: úpravy ze dvou zařízení ho mohou poškodit.",
+    "aiVaultNotConnected": "Složka profilů AI není na tomto zařízení připojena: {path}. Místo ní nebylo nic vytvořeno.",
+    "aiVaultUseDefault": "Použít výchozí složku",
+    "projectFolderNotSetOnDevice": "Složka na tomto zařízení není nastavena",
+    "projectSetFolder": "Nastavit složku",
+    "projectsWithoutFolder": "Externí projekty bez složky na tomto zařízení: {count}",
+    "variablesTab": "Proměnné"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1201,7 +1216,8 @@
     "webhookFailed": "Požadavek na webhook selhal",
     "webhookKeyNotSet": "Klíč tohoto webhooku není na tomto zařízení nastaven; zadejte ho v nastavení příkazu",
     "webhookSuccess": "Webhook byl úspěšně odeslán",
-    "voicePostProcessTimeout": "Zpracování hlasu trvalo příliš dlouho; byl zachován původní text"
+    "voicePostProcessTimeout": "Zpracování hlasu trvalo příliš dlouho; byl zachován původní text",
+    "variablesNotSet": "Proměnné nemají na tomto zařízení hodnotu; nastavte je v Nastavení → Proměnné"
   },
   "tools": {
     "aiTask": "AI příkaz",
@@ -1331,5 +1347,36 @@
     "clickToApply": "Kliknutím použijete",
     "liveCorrectionFailed": "Živá oprava selhala",
     "liveCorrectionFailedHint": "Model neodpověděl. Text bude vložen v původní podobě."
+  },
+  "variables": {
+    "add": "Přidat",
+    "addTitle": "Nová proměnná",
+    "browseFile": "Soubor…",
+    "builtinHint": "Vždy dostupné; jejich hodnoty pocházejí z tohoto zařízení.",
+    "builtinTitle": "Vestavěné proměnné",
+    "declare": "Deklarovat proměnnou",
+    "description": "Popis",
+    "empty": "Zatím žádné proměnné.",
+    "errorBuiltinName": "Názvy začínající TYCO_ jsou vyhrazeny pro vestavěné proměnné",
+    "errorInvalidName": "Použijte velká latinská písmena, číslice a _, na začátku písmeno",
+    "errorNameTaken": "Proměnná s tímto názvem už existuje",
+    "errorNoName": "Zadejte název",
+    "hint": "Proměnná umožní příkazu nebo adrese poskytovatele použít hodnotu, která se na každém zařízení liší, třeba cestu ke složce nebo místní server. Název je společný pro všechna zařízení, hodnotu si každé zařízení nastaví samo. Vkládá se jako {example}.",
+    "hintNotDeclared": "{name} není deklarována",
+    "hintNotSet": "{name} nemá na tomto zařízení hodnotu",
+    "insert": "Vložit proměnnou",
+    "listTitle": "Proměnné",
+    "manage": "Spravovat proměnné…",
+    "name": "Název",
+    "nameHint": "Například NOTES_DIR. Příkazy na ni odkazují názvem; přejmenování je aktualizuje.",
+    "notForSecrets": "Hodnoty se ukládají jako prostý text a mohou se dostat do promptu nebo URL. Neukládejte sem klíče — na ty jsou pole klíčů.",
+    "remove": "Odebrat proměnnou",
+    "setValue": "Nastavit hodnotu",
+    "unsetOnDevice": "Proměnné bez hodnoty na tomto zařízení: {count}",
+    "unused": "Nepoužívá se",
+    "usedBy": "Používá: {count}",
+    "value": "Hodnota",
+    "valueNotSet": "Na tomto zařízení není nastavena: příkazy, které ji používají, se nespustí",
+    "valuePlaceholder": "Cesta, adresa nebo jiný text"
   }
 }

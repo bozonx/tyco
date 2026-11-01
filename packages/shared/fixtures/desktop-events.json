@@ -37,7 +37,9 @@
         "defaultPath": "",
         "isDefault": true,
         "status": "connected",
-        "isWritableByOthers": false
+        "isWritableByOthers": false,
+        "deviceId": "",
+        "platform": "linux"
       }
     }
   },

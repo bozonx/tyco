@@ -11,6 +11,7 @@ import {
   type UserConfig,
   type UserConfigInput,
 } from './user-config'
+import { BUILTIN_VARIABLE_PREFIX } from './variables'
 
 interface Schema {
   minItems?: number
@@ -462,13 +463,37 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   })
   for (const page of config.launcherPages)
     page.slots = filterSlots(page.slots, (id) => commands.has(id))
+  config.variables = normalizeVariables(config.variables)
   // a device refers to the pages it has shortcuts for; one gone is dropped
   config.hotkeys.launcherPages = Object.fromEntries(
     Object.entries(config.hotkeys.launcherPages).filter(([id]) =>
       pageIds.has(id)
     )
   )
+  const variableIds = new Set(config.variables.map((variable) => variable.id))
+  config.variableValues = Object.fromEntries(
+    Object.entries(config.variableValues).filter(([id]) => variableIds.has(id))
+  )
   return config
+}
+
+/**
+ * The variables: each id once, a name of the built-in prefix dropped, and the
+ * repeats of a name, the first one kept, as a template refers to a variable by
+ * its name. Keep in sync with `retain_user_variables` of
+ * `services/settings/schema.rs`
+ */
+export function normalizeVariables(value: unknown): UserConfig['variables'] {
+  const names = new Set<string>()
+  return deduplicate(
+    repair(value, schemaAt('variables')) as UserConfig['variables']
+  ).filter((variable) => {
+    const name = variable.name.toUpperCase()
+    if (variable.name.startsWith(BUILTIN_VARIABLE_PREFIX) || names.has(name))
+      return false
+    names.add(name)
+    return true
+  })
 }
 
 const isDeviceSchema = (shape: Schema | undefined) =>

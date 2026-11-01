@@ -13,6 +13,7 @@ import type {
   LauncherPageConfig,
   MainActionConfig,
 } from './user-config/commands-config'
+import type { VariableConfig } from './variables'
 
 export * from './user-config/llm-config'
 export * from './user-config/translation-config'
@@ -224,6 +225,13 @@ export interface UserConfig {
   mainActions: ShortcutSlots<MainActionConfig>
   launcherPages: LauncherPageConfig[]
   commands: CommandConfig[]
+  /** The variables commands refer to as `{{var:NAME}}`, see `variables.ts` */
+  variables: VariableConfig[]
+  /**
+   * The values of the variables on this device, by variable id; kept on the
+   * device, never synced. An unset variable is absent
+   */
+  variableValues: Record<string, string>
   llm: LlmConfig
   transformations: TransformationsConfig
   styling: StylingsConfig

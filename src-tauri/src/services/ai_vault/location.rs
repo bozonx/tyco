@@ -1,4 +1,5 @@
 //! Application boundary for vault location changes.
+use super::marker;
 use super::relocation::{self, VaultTarget};
 use crate::services::{settings, storage};
 use crate::{errors::AppError, state::AppState};
@@ -9,18 +10,24 @@ use tauri::{AppHandle, Manager};
 fn configured_vault_dir(app: &AppHandle, state: &AppState) -> Result<PathBuf, AppError> {
     let configured = crate::models::user_config::ai_vault(&state.user_config()).path;
     match configured.trim() {
-        "" => storage::user_sub_dir(app, "ai-vault"),
+        "" => storage::user_sub_dir(app, super::VAULT_DIR_NAME),
         path => Ok(PathBuf::from(path)),
     }
 }
 
-/// A chosen folder, or the default one for `None`, and whether it is the default.
+/// A chosen folder, or the default one for `None`, and whether it is the
+/// default. A chosen one inside the user data folder is refused: the vault
+/// there is the default one.
 fn target_dir(app: &AppHandle, path: Option<&str>) -> Result<(PathBuf, bool), AppError> {
-    let default = storage::user_sub_dir(app, "ai-vault")?;
+    let default = storage::user_sub_dir(app, super::VAULT_DIR_NAME)?;
     match path.map(str::trim).filter(|path| !path.is_empty()) {
         Some(path) => {
             let path = PathBuf::from(path);
             let is_default = path == default;
+            if !is_default {
+                let user_dir = storage::user_data::user_dir_for(app, storage::UserDirAccess::Read)?;
+                marker::check_external_path(&path, Some(&user_dir))?;
+            }
             Ok((path, is_default))
         }
         None => Ok((default, true)),
@@ -50,6 +57,8 @@ pub fn relocate(app: &AppHandle, path: Option<&str>, move_data: bool) -> Result<
     };
     let current = configured_vault_dir(app, &state)?;
     relocation::relocate_with(&current, &target, move_data, || {
+        // the vault, moved or connected, is known by its marker from now on
+        marker::ensure_marker(&target)?;
         let base = state.user_config().as_ref().clone();
         let mut next = base.clone();
         next["aiVault"]["path"] = serde_json::json!(configured_path);

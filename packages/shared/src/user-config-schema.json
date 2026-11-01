@@ -507,7 +507,13 @@
           },
           "isVoiceEnabled": { "type": "boolean", "default": false },
           "isOutputLogged": { "type": "boolean", "default": false },
-          "isEnabled": { "type": "boolean", "default": true }
+          "isEnabled": { "type": "boolean", "default": true },
+          "platforms": {
+            "type": "array",
+            "items": { "enum": ["linux", "windows"] },
+            "uniqueItems": true,
+            "default": []
+          }
         },
         "required": [
           "id",
@@ -528,6 +534,43 @@
         ]
       },
       "defaultPath": "commands"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "default": "",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "default": "",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "description": { "type": "string", "default": "" }
+        },
+        "required": ["id", "name", "description"]
+      },
+      "defaultPath": "variables"
+    },
+    "variableValues": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+      },
+      "additionalProperties": { "type": "string", "minLength": 1 },
+      "default": {},
+      "x-scope": "device"
     },
     "llm": {
       "type": "object",
@@ -1005,6 +1048,8 @@
     "mainActions",
     "launcherPages",
     "commands",
+    "variables",
+    "variableValues",
     "llm",
     "transformations",
     "styling",

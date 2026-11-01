@@ -31,8 +31,10 @@ pub async fn list_ai_file_roots(
     profile_id: String,
 ) -> Result<Vec<AiFileRoot>, AppError> {
     run_blocking(move || {
-        ai_vault::with_vault(&app, |dir| {
-            Ok(ProfileFiles::load(dir, &profile_id)?.roots().to_vec())
+        ai_vault::with_projects(&app, |dir, paths| {
+            Ok(ProfileFiles::load(dir, paths, &profile_id)?
+                .roots()
+                .to_vec())
         })
     })
     .await?
@@ -45,8 +47,8 @@ pub async fn run_ai_file_tool(
     request: AiFileToolRequest,
 ) -> Result<AiFileToolOutput, AppError> {
     run_blocking(move || {
-        ai_vault::with_vault(&app, |dir| {
-            ProfileFiles::load(dir, &profile_id)?.run(request)
+        ai_vault::with_projects(&app, |dir, paths| {
+            ProfileFiles::load(dir, paths, &profile_id)?.run(request)
         })
     })
     .await?
@@ -60,8 +62,8 @@ pub async fn preview_ai_file_change(
     request: AiFileToolRequest,
 ) -> Result<AiFileChangePreview, AppError> {
     run_blocking(move || {
-        ai_vault::with_vault(&app, |dir| {
-            ProfileFiles::load(dir, &profile_id)?.preview(request)
+        ai_vault::with_projects(&app, |dir, paths| {
+            ProfileFiles::load(dir, paths, &profile_id)?.preview(request)
         })
     })
     .await?
@@ -75,8 +77,8 @@ pub async fn read_ai_file_bytes(
     path: String,
 ) -> Result<tauri::ipc::Response, AppError> {
     run_blocking(move || {
-        ai_vault::with_vault(&app, |dir| {
-            ProfileFiles::load(dir, &profile_id)?
+        ai_vault::with_projects(&app, |dir, paths| {
+            ProfileFiles::load(dir, paths, &profile_id)?
                 .read_bytes(&path)
                 .map(tauri::ipc::Response::new)
         })
@@ -93,8 +95,8 @@ pub async fn save_ai_upload(
 ) -> Result<String, AppError> {
     let BinaryRequest { bytes, meta } = request;
     run_blocking(move || {
-        ai_vault::with_vault(&app, |dir| {
-            ProfileFiles::load(dir, &meta.profile_id)?.save_upload(&meta.name, &bytes)
+        ai_vault::with_projects(&app, |dir, paths| {
+            ProfileFiles::load(dir, paths, &meta.profile_id)?.save_upload(&meta.name, &bytes)
         })
     })
     .await?

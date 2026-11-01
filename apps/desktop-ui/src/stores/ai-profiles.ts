@@ -58,6 +58,11 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
   const vaultPath = ref('')
   /** Why the vault cannot be read, e.g. its configured folder is unavailable */
   const vaultError = ref('')
+  /**
+   * The folder this device has set for the vault is not there: nothing was made
+   * in its place, the user picks a folder or the default one
+   */
+  const isVaultNotConnected = ref(false)
   const isLoaded = ref(false)
 
   let loadRequest = 0
@@ -67,7 +72,10 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     let active = true
     const isCurrent = () => active && request === loadRequest
     try {
-      const path = resultOrThrow(await call('get_ai_vault_path'))
+      const response = await call('get_ai_vault_path')
+      if (!response.success && request === loadRequest)
+        isVaultNotConnected.value = response.errorCode === 'vaultUnavailable'
+      const path = resultOrThrow(response)
       if (!isCurrent()) return
       await Promise.all([
         profilesModel.loadProfiles(isCurrent),
@@ -76,6 +84,7 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       if (request !== loadRequest) return
       vaultPath.value = path
       vaultError.value = ''
+      isVaultNotConnected.value = false
     } catch (error) {
       if (request !== loadRequest) return
       profilesModel.profiles.value = []
@@ -167,6 +176,15 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
     projects: readonly(projectsModel.projects),
     vaultPath: readonly(vaultPath),
     vaultError: readonly(vaultError),
+    isVaultNotConnected: readonly(isVaultNotConnected),
+    /** Gives an external project its folder on this device */
+    setProjectFolder: async (id: string): Promise<boolean> => {
+      const project = projectsModel.getProject(id)
+      const folder = await projectsModel.pickExternalFolder()
+      if (!project || !folder) return false
+      await projectsModel.saveProject({ ...project, targetPath: folder })
+      return true
+    },
     isLoaded: readonly(isLoaded),
     loadAll,
     openVaultDir,

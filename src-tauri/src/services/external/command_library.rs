@@ -278,6 +278,16 @@ fn resolve_callable_command(
     if !can_run_externally(command) {
         return Err(CommandLookupError::NotExternal(id));
     }
+    let platforms: Vec<String> = command
+        .get("platforms")
+        .and_then(|platforms| serde_json::from_value(platforms.clone()).ok())
+        .unwrap_or_default();
+    if !crate::models::user_config::is_on_this_platform(&platforms) {
+        return Err(CommandLookupError::Unavailable(
+            id,
+            Some(String::from("it does not run on this platform")),
+        ));
+    }
     let can_take_text = resolve_text_input_support(command, catalog)?;
     Ok(ExternalCommand {
         id,

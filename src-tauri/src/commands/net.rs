@@ -31,7 +31,7 @@ pub async fn start_fetch(
     crate::services::net::gateway::fetch(
         &net,
         window.label(),
-        NetworkPolicy::from_config(&app_state.user_config()),
+        network_policy(&app, &app_state),
         with_store(&app, SecretStore::snapshot),
         request,
         on_event,
@@ -64,7 +64,7 @@ pub async fn open_socket(
     crate::services::net::gateway::open_socket(
         &net,
         window.label(),
-        NetworkPolicy::from_config(&app_state.user_config()),
+        network_policy(&app, &app_state),
         with_store(&app, SecretStore::snapshot),
         request,
         on_event,
@@ -116,4 +116,13 @@ pub fn close_socket(
         Err(error @ AppError::ResourceLimit(_)) => Err(error),
         _ => Ok(()),
     }
+}
+
+/// The endpoints the user configured, with the variables of this device.
+fn network_policy(app: &AppHandle, app_state: &AppState) -> NetworkPolicy {
+    let config = app_state.user_config();
+    NetworkPolicy::from_config(
+        &config,
+        &crate::services::storage::variable_values(app, &config),
+    )
 }

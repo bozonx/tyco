@@ -76,12 +76,18 @@
       <FieldSwitch v-model="userConfig.editor.history.isLocalOnly" />
     </FieldRow>
 
+    <SettingsAdvancedFields v-model:expanded="isAdvancedOpen">
+      <div class="user-data-advanced">
+        <AiVaultLocation />
+      </div>
+    </SettingsAdvancedFields>
+
     <UserDataRelocationModal :model="folder" :current-path="userData.path" />
   </SettingsSection>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -95,7 +101,9 @@ import FieldRow from '../common/FieldRow.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
+import AiVaultLocation from './AiVaultLocation.vue'
 import DeviceScopeBadge from './DeviceScopeBadge.vue'
+import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsSection from './SettingsSection.vue'
 import UserDataRelocationModal from './UserDataRelocationModal.vue'
 
@@ -105,6 +113,8 @@ const store = useUserDataStore()
 const userData = computed(() => store.state())
 const settingsSession = useSettingsSessionStore()
 const folder = useUserDataFolder(() => settingsSession.flushAll())
+/** Open when the vault is set apart on this device, so it is not missed */
+const isAdvancedOpen = ref(Boolean(userConfig.value.aiVault.path))
 
 async function open() {
   // a failure leaves nothing open, which tells enough
@@ -138,6 +148,10 @@ async function open() {
   font-size: var(--text-caption);
   word-break: break-all;
   user-select: all;
+}
+
+.user-data-advanced {
+  padding: 0 var(--space-lg) var(--space-md);
 }
 
 .user-data-actions {

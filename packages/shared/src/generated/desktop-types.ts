@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 04609083c81ddd594e0e75edb93a0f3fe7988cc9d9950feac4a733187b5e1b90
+// Source hash: 90af43d71a1ab9905188a94fa27e4bdc54ca900936450f55d1223a450d57ec18
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -64,6 +64,11 @@ export type AiFileRoot = {
   description?: string
   read: ProjectAccessMode
   write: ProjectAccessMode
+  /**
+   * Why the folder cannot be reached on this device: an external project
+   * without its folder here.
+   */
+  unavailable?: string
 }
 
 export type AiFileSearchMatch = {
@@ -333,6 +338,9 @@ export type DesktopErrorCode =
   | 'fileTooLarge'
   | 'unsupportedConfig'
   | 'userDataUnavailable'
+  | 'variableNotSet'
+  | 'vaultUnavailable'
+  | 'projectUnavailable'
   | 'stale'
   | 'runtimeError'
   | 'ioError'
@@ -758,8 +766,9 @@ export type UserDataRelocationMode =
   'move' | 'connect' | 'resetToDefault' | 'useDefault'
 
 /**
- * Where the user data folder is and whether it can be used; fixed for the life
- * of the process, as changing the folder restarts the app.
+ * Where the user data folder is and whether it can be used, and the device it
+ * is used on; fixed for the life of the process, as changing the folder
+ * restarts the app.
  */
 export type UserDataState = {
   path: string
@@ -772,6 +781,10 @@ export type UserDataState = {
    * commands this app runs (checked on Linux only).
    */
   isWritableByOthers: boolean
+  /** The id of this device, the built-in variable `TYCO_DEVICE_ID`. */
+  deviceId: string
+  /** The platform of this device: a command limited to others does not run. */
+  platform: 'linux' | 'windows' | 'macos'
 }
 
 /** Whether the user data folder can be used. */
@@ -843,6 +856,9 @@ export const DESKTOP_ERROR_CODES = [
   'fileTooLarge',
   'unsupportedConfig',
   'userDataUnavailable',
+  'variableNotSet',
+  'vaultUnavailable',
+  'projectUnavailable',
   'stale',
   'runtimeError',
   'ioError',

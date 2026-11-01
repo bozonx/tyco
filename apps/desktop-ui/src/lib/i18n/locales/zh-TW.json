@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "當提示詞需要時，AI 會直接執行這些指令而不詢問。指令永遠不會執行自己，也不會執行呼叫它的 AI 指令。",
     "aiNoOtherCommands": "還沒有其他指令。",
     "aiMaxSteps": "步數上限",
-    "aiMaxStepsInfo": "AI 可執行的最大指令數。最終回答不計入此限制。"
+    "aiMaxStepsInfo": "AI 可執行的最大指令數。最終回答不計入此限制。",
+    "otherPlatform": "不在此平台上執行",
+    "variablesNotSet": "其使用的變數在此裝置上沒有值",
+    "platforms": "平台",
+    "platformsInfo": "命令只在勾選的平台上執行；都不勾選則在所有平台上執行。在其他平台上，它仍保留在清單中，但不會執行。",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "新增",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "所需服務目前無法使用",
     "stale": "狀態已有變化，請重試",
     "unsupportedConfig": "設定是由較新版本的應用程式儲存",
-    "userDataUnavailable": "資料夾無法使用"
+    "userDataUnavailable": "資料夾無法使用",
+    "variableNotSet": "變數在此裝置上沒有值",
+    "vaultUnavailable": "AI 設定檔資料夾未在此裝置上連接",
+    "projectUnavailable": "專案資料夾未在此裝置上設定"
   },
   "diff": {
     "modeOriginal": "僅原始內容",
@@ -625,8 +634,6 @@
     "aiProfilesHint": "擁有專屬指示、模型、工具與聊天記錄的獨立助手。每個設定檔皆為頂部列中的一個分頁。",
     "aiProfilesTab": "AI 設定檔",
     "aiVaultPath": "AI 設定檔保存庫路徑",
-    "aiVaultPathHint": "儲存 AI 設定檔（其 SOUL.md、聊天記錄與工作區）和內部專案的資料夾。預設為應用程式資料中的 ai-vault 資料夾。",
-    "aiVaultTitle": "保存庫",
     "allPluginsTab": "所有外掛程式",
     "apiKey": "API 金鑰",
     "apiKeyBoundTo": "儲存的金鑰僅發送至 {origin}。若要用於此位址，請重新儲存金鑰。",
@@ -1149,7 +1156,15 @@
       "indent": "增加縮排",
       "outdent": "減少縮排",
       "reserved": "此快捷鍵已保留用於文字編輯或應用程式操作。"
-    }
+    },
+    "aiVaultExternalHint": "留空：使用資料資料夾內的 ai-vault 資料夾，並隨其同步。獨立的資料夾適合 git、Obsidian 或獨立同步。",
+    "aiVaultGitWarning": "不要把 git 儲存庫放在同步資料夾中：來自兩台裝置的修改可能損壞它。",
+    "aiVaultNotConnected": "AI 設定檔資料夾未在此裝置上連接：{path}。沒有在其位置建立任何內容。",
+    "aiVaultUseDefault": "使用預設資料夾",
+    "projectFolderNotSetOnDevice": "此裝置上未設定資料夾",
+    "projectSetFolder": "設定資料夾",
+    "projectsWithoutFolder": "此裝置上沒有資料夾的外部專案：{count}",
+    "variablesTab": "變數"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {
@@ -1201,7 +1216,8 @@
     "webhookFailed": "Webhook 請求失敗",
     "webhookKeyNotSet": "此裝置上未設定此 Webhook 的金鑰；請在命令設定中輸入",
     "webhookSuccess": "Webhook 發送成功",
-    "voicePostProcessTimeout": "語音處理耗時過長；已保留原始文字"
+    "voicePostProcessTimeout": "語音處理耗時過長；已保留原始文字",
+    "variablesNotSet": "部分變數在此裝置上沒有值；請在「設定 → 變數」中設定"
   },
   "tools": {
     "aiTask": "AI 指令",
@@ -1331,5 +1347,36 @@
     "clickToApply": "點擊套用",
     "liveCorrectionFailed": "即時校正失敗",
     "liveCorrectionFailedHint": "模型沒有回應。文字將按鍵入的內容插入。"
+  },
+  "variables": {
+    "add": "新增",
+    "addTitle": "新增變數",
+    "browseFile": "檔案…",
+    "builtinHint": "隨時可用；其值來自此裝置。",
+    "builtinTitle": "內建變數",
+    "declare": "宣告變數",
+    "description": "說明",
+    "empty": "尚無變數。",
+    "errorBuiltinName": "以 TYCO_ 開頭的名稱保留給內建變數",
+    "errorInvalidName": "請使用大寫拉丁字母、數字和 _，並以字母開頭",
+    "errorNameTaken": "已有同名變數",
+    "errorNoName": "請輸入名稱",
+    "hint": "變數可讓命令或服務供應商位址使用在各裝置上不同的值，例如資料夾路徑或本機伺服器。名稱在所有裝置間共用，值由每台裝置自行設定。以 {example} 的形式插入。",
+    "hintNotDeclared": "{name} 未宣告",
+    "hintNotSet": "{name} 在此裝置上沒有值",
+    "insert": "插入變數",
+    "listTitle": "變數",
+    "manage": "管理變數…",
+    "name": "名稱",
+    "nameHint": "例如 NOTES_DIR。命令依名稱參照變數；重新命名會一併更新命令。",
+    "notForSecrets": "值以明文儲存，可能進入提示詞或 URL。請勿在此存放金鑰，請使用金鑰欄位。",
+    "remove": "移除變數",
+    "setValue": "設定值",
+    "unsetOnDevice": "此裝置上沒有值的變數：{count}",
+    "unused": "未使用",
+    "usedBy": "使用者：{count}",
+    "value": "值",
+    "valueNotSet": "此裝置上未設定：使用它的命令不會執行",
+    "valuePlaceholder": "路徑、位址或其他文字"
   }
 }

@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "L’IA exécute ces commandes sans demander dès que le prompt en a besoin. Une commande ne s’exécute jamais elle-même ni une commande IA qui l’a appelée.",
     "aiNoOtherCommands": "Il n’y a pas encore d’autres commandes.",
     "aiMaxSteps": "Limite d’étapes",
-    "aiMaxStepsInfo": "Nombre maximal de commandes que l’IA peut exécuter. La réponse finale ne compte pas dans cette limite."
+    "aiMaxStepsInfo": "Nombre maximal de commandes que l’IA peut exécuter. La réponse finale ne compte pas dans cette limite.",
+    "otherPlatform": "Ne s’exécute pas sur cette plateforme",
+    "variablesNotSet": "Une variable qu’elle utilise n’a pas de valeur sur cet appareil",
+    "platforms": "Plateformes",
+    "platformsInfo": "La commande s’exécute seulement sur les plateformes cochées ; si aucune n’est cochée, sur toutes. Sur une autre plateforme, elle reste dans les listes mais ne s’exécute pas.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Ajouter",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Un service requis est indisponible pour le moment",
     "stale": "L’état a changé entre-temps, réessayez",
     "unsupportedConfig": "Les paramètres ont été enregistrés par une version plus récente de l’application",
-    "userDataUnavailable": "Le dossier de données est indisponible"
+    "userDataUnavailable": "Le dossier de données est indisponible",
+    "variableNotSet": "Une variable n’a pas de valeur sur cet appareil",
+    "vaultUnavailable": "Le dossier des profils IA n’est pas connecté sur cet appareil",
+    "projectUnavailable": "Le dossier du projet n’est pas défini sur cet appareil"
   },
   "diff": {
     "modeOriginal": "Original uniquement",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Des assistants distincts, chacun avec sa propre instruction, son modèle, ses outils et ses chats. Chaque profil est un onglet dans la barre supérieure.",
     "aiProfilesTab": "Profils IA",
     "aiVaultPath": "Chemin du coffre des profils IA",
-    "aiVaultPathHint": "Le dossier des profils IA (leurs SOUL.md, chats et espaces de travail) et des projets internes. Par défaut, le dossier ai-vault dans les données de l’application.",
-    "aiVaultTitle": "Coffre",
     "allPluginsTab": "Tous les plugins",
     "apiKey": "Clé d’API",
     "apiKeyBoundTo": "La clé enregistrée n’est envoyée qu’à {origin}. Enregistrez-la de nouveau pour l’utiliser avec cette adresse.",
@@ -1155,7 +1162,15 @@
       "indent": "Augmenter le retrait",
       "outdent": "Réduire le retrait",
       "reserved": "Ce raccourci est réservé à l’édition de texte ou aux actions de l’application."
-    }
+    },
+    "aiVaultExternalHint": "Vide : le dossier ai-vault dans le dossier de données, synchronisé avec lui. Un dossier distinct convient à git, à Obsidian ou à une synchronisation propre.",
+    "aiVaultGitWarning": "Ne placez pas un dépôt git dans un dossier synchronisé : des modifications depuis deux appareils peuvent l’endommager.",
+    "aiVaultNotConnected": "Le dossier des profils IA n’est pas connecté sur cet appareil : {path}. Rien n’a été créé à sa place.",
+    "aiVaultUseDefault": "Utiliser le dossier par défaut",
+    "projectFolderNotSetOnDevice": "Dossier non défini sur cet appareil",
+    "projectSetFolder": "Définir le dossier",
+    "projectsWithoutFolder": "Projets externes sans dossier sur cet appareil : {count}",
+    "variablesTab": "Variables"
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "La requête au webhook a échoué",
     "webhookKeyNotSet": "La clé de ce webhook n’est pas définie sur cet appareil ; saisissez-la dans les paramètres de la commande",
     "webhookSuccess": "Webhook envoyé avec succès",
-    "voicePostProcessTimeout": "Le traitement vocal a pris trop de temps ; texte d’origine conservé"
+    "voicePostProcessTimeout": "Le traitement vocal a pris trop de temps ; texte d’origine conservé",
+    "variablesNotSet": "Des variables n’ont pas de valeur sur cet appareil ; définissez-les dans Paramètres → Variables"
   },
   "tools": {
     "aiTask": "Commande IA",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Cliquer pour appliquer",
     "liveCorrectionFailed": "Échec de la correction en direct",
     "liveCorrectionFailedHint": "Le modèle n'a pas répondu. Le texte sera inséré tel quel."
+  },
+  "variables": {
+    "add": "Ajouter",
+    "addTitle": "Nouvelle variable",
+    "browseFile": "Fichier…",
+    "builtinHint": "Toujours disponibles ; leurs valeurs viennent de cet appareil.",
+    "builtinTitle": "Variables intégrées",
+    "declare": "Déclarer la variable",
+    "description": "Description",
+    "empty": "Aucune variable pour l’instant.",
+    "errorBuiltinName": "Les noms commençant par TYCO_ sont réservés aux variables intégrées",
+    "errorInvalidName": "Utilisez des lettres latines majuscules, des chiffres et _, en commençant par une lettre",
+    "errorNameTaken": "Une variable porte déjà ce nom",
+    "errorNoName": "Saisissez un nom",
+    "hint": "Une variable permet à une commande ou à l’adresse d’un fournisseur d’utiliser une valeur propre à chaque appareil, comme le chemin d’un dossier ou un serveur local. Le nom est commun à tous les appareils ; chaque appareil définit sa valeur. Insérez-la sous la forme {example}.",
+    "hintNotDeclared": "{name} n’est pas déclarée",
+    "hintNotSet": "{name} n’a pas de valeur sur cet appareil",
+    "insert": "Insérer une variable",
+    "listTitle": "Variables",
+    "manage": "Gérer les variables…",
+    "name": "Nom",
+    "nameHint": "Par exemple NOTES_DIR. Les commandes y font référence par son nom ; un renommage les met à jour.",
+    "notForSecrets": "Les valeurs sont stockées en clair et peuvent finir dans un prompt ou une URL. N’y mettez pas de clés : utilisez les champs de clé.",
+    "remove": "Supprimer la variable",
+    "setValue": "Définir la valeur",
+    "unsetOnDevice": "Variables sans valeur sur cet appareil : {count}",
+    "unused": "Non utilisée",
+    "usedBy": "Utilisée par : {count}",
+    "value": "Valeur",
+    "valueNotSet": "Non définie sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
+    "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   }
 }

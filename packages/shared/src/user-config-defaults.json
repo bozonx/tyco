@@ -85,6 +85,8 @@
   },
   "launcherPages": [{ "id": "main", "inputMode": "selection", "slots": {} }],
   "commands": [],
+  "variables": [],
+  "variableValues": {},
   "llm": {
     "providers": [
       { "id": "google", "type": "google", "name": "Google Gemini" },

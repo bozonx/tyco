@@ -39,6 +39,7 @@ pub fn command(script: &str) -> Command {
 
 /// A command that runs `script` with every `placeholder` standing for `text`,
 /// see [`substitute`].
+#[cfg(test)]
 pub fn command_with_text(script: &str, placeholder: &str, text: &str) -> Command {
     let mut command = command(&substitute(script, placeholder, text));
     command.env(TEXT_ENV, text);
@@ -107,8 +108,32 @@ enum QuoteContext {
 /// Only a PowerShell single-quoted string, which expands nothing, gets the
 /// text escaped in place. The command must have `TEXT_ENV` set, see
 /// [`command_with_text`].
+#[cfg(test)]
 pub fn substitute(script: &str, placeholder: &str, text: &str) -> String {
-    substitute_for(script, placeholder, text, cfg!(target_os = "windows"))
+    substitute_all(
+        script,
+        &[Placeholder {
+            token: placeholder,
+            env: TEXT_ENV,
+            value: text,
+        }],
+    )
+}
+
+/// A placeholder of a script and the environment variable that carries its
+/// value into the command, see [`substitute_all`].
+pub struct Placeholder<'a> {
+    pub token: &'a str,
+    pub env: &'a str,
+    pub value: &'a str,
+}
+
+/// Replaces every placeholder in `script` with a reference to its
+/// environment variable, as [`substitute`] does for the text. The script is
+/// read once, so a value never becomes a placeholder of its own. The command
+/// must have each variable set.
+pub fn substitute_all(script: &str, placeholders: &[Placeholder]) -> String {
+    substitute_for(script, placeholders, cfg!(target_os = "windows"))
 }
 
 /// Whether PowerShell takes `c` for a single quote: it treats the typographic
@@ -123,7 +148,7 @@ fn is_powershell_double_quote(c: char) -> bool {
     matches!(c, '"' | '\u{201C}' | '\u{201D}' | '\u{201E}')
 }
 
-fn substitute_for(script: &str, placeholder: &str, text: &str, windows: bool) -> String {
+fn substitute_for(script: &str, placeholders: &[Placeholder], windows: bool) -> String {
     let is_single = |c: char| {
         if windows {
             is_powershell_single_quote(c)
@@ -144,9 +169,16 @@ fn substitute_for(script: &str, placeholder: &str, text: &str, windows: bool) ->
     let mut rest = script;
 
     while !rest.is_empty() {
-        if !placeholder.is_empty() && rest.starts_with(placeholder) {
-            result.push_str(&reference(context, text, windows));
-            rest = &rest[placeholder.len()..];
+        if let Some(placeholder) = placeholders.iter().find(|placeholder| {
+            !placeholder.token.is_empty() && rest.starts_with(placeholder.token)
+        }) {
+            result.push_str(&reference(
+                context,
+                placeholder.env,
+                placeholder.value,
+                windows,
+            ));
+            rest = &rest[placeholder.token.len()..];
             continue;
         }
 
@@ -192,13 +224,13 @@ fn substitute_for(script: &str, placeholder: &str, text: &str, windows: bool) ->
 
 /// What stands for the text in `context`. The braces keep a character right
 /// after the placeholder out of the variable name.
-fn reference(context: QuoteContext, text: &str, windows: bool) -> String {
+fn reference(context: QuoteContext, env: &str, text: &str, windows: bool) -> String {
     match (context, windows) {
-        (QuoteContext::Bare, false) => format!("\"${{{TEXT_ENV}}}\""),
+        (QuoteContext::Bare, false) => format!("\"${{{env}}}\""),
         // close the quotes, add the variable quoted on its own, reopen them
-        (QuoteContext::SingleQuoted, false) => format!("'\"${{{TEXT_ENV}}}\"'"),
-        (QuoteContext::DoubleQuoted, false) => format!("${{{TEXT_ENV}}}"),
-        (QuoteContext::Bare | QuoteContext::DoubleQuoted, true) => format!("${{env:{TEXT_ENV}}}"),
+        (QuoteContext::SingleQuoted, false) => format!("'\"${{{env}}}\"'"),
+        (QuoteContext::DoubleQuoted, false) => format!("${{{env}}}"),
+        (QuoteContext::Bare | QuoteContext::DoubleQuoted, true) => format!("${{env:{env}}}"),
         // a single-quoted string cannot hold a variable, and expands nothing
         (QuoteContext::SingleQuoted, true) => escape_powershell_single(text),
     }
@@ -239,6 +271,19 @@ mod tests {
     }
 
     const PLACEHOLDER: &str = "{{TEXT}}";
+
+    /// `substitute_for` with the text as the one placeholder.
+    fn substitute_text(script: &str, placeholder: &str, text: &str, windows: bool) -> String {
+        substitute_for(
+            script,
+            &[Placeholder {
+                token: placeholder,
+                env: TEXT_ENV,
+                value: text,
+            }],
+            windows,
+        )
+    }
     const NASTY: &str = "it's \"quoted\" $HOME `id` \\ ; exit 3 ‘’“”";
 
     /// Runs `template` with `text` in place of the placeholders.
@@ -323,7 +368,7 @@ mod tests {
     #[test]
     fn powershell_typographic_quotes_keep_the_text_out_of_the_script() {
         let text = "$(calc)";
-        let windows = |script: &str| substitute_for(script, PLACEHOLDER, text, true);
+        let windows = |script: &str| substitute_text(script, PLACEHOLDER, text, true);
         // a double-quoted string around single quotes expands, so the text
         // goes by the variable
         assert_eq!(
@@ -341,11 +386,11 @@ mod tests {
             "Write-Output \u{2018}$(calc)\u{2019}"
         );
         assert_eq!(
-            substitute_for("echo \u{2018}x\u{2019}''", PLACEHOLDER, "\u{2019}", true),
+            substitute_text("echo \u{2018}x\u{2019}''", PLACEHOLDER, "\u{2019}", true),
             "echo \u{2018}x\u{2019}''"
         );
         assert_eq!(
-            substitute_for("'a''{{TEXT}}'", PLACEHOLDER, "\u{2019}", true),
+            substitute_text("'a''{{TEXT}}'", PLACEHOLDER, "\u{2019}", true),
             "'a''\u{2019}\u{2019}'"
         );
     }
@@ -353,7 +398,7 @@ mod tests {
     #[test]
     fn posix_ignores_typographic_quotes() {
         assert_eq!(
-            substitute_for("echo \u{2018}{{TEXT}}\u{2019}", PLACEHOLDER, "x", false),
+            substitute_text("echo \u{2018}{{TEXT}}\u{2019}", PLACEHOLDER, "x", false),
             "echo \u{2018}\"${TYCO_TEXT}\"\u{2019}"
         );
     }

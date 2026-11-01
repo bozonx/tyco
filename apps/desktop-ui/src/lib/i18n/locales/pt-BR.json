@@ -274,7 +274,13 @@
     "aiAllowedCommandsInfo": "A IA executa esses comandos sem perguntar quando o prompt precisa deles. Um comando nunca executa a si mesmo nem um comando de IA que o chamou.",
     "aiNoOtherCommands": "Ainda não há outros comandos.",
     "aiMaxSteps": "Limite de etapas",
-    "aiMaxStepsInfo": "Número máximo de comandos que a IA pode executar. A resposta final não conta para esse limite."
+    "aiMaxStepsInfo": "Número máximo de comandos que a IA pode executar. A resposta final não conta para esse limite.",
+    "otherPlatform": "Não é executado nesta plataforma",
+    "variablesNotSet": "Uma variável que ele usa não tem valor neste dispositivo",
+    "platforms": "Plataformas",
+    "platformsInfo": "O comando é executado apenas nas plataformas marcadas; sem nenhuma marcada, em todas. Em outra plataforma ele continua nas listas, mas não é executado.",
+    "platformLinux": "Linux",
+    "platformWindows": "Windows"
   },
   "common": {
     "add": "Adicionar",
@@ -308,7 +314,10 @@
     "serviceUnavailable": "Um serviço necessário está indisponível no momento",
     "stale": "O estado mudou nesse meio-tempo, tente novamente",
     "unsupportedConfig": "As configurações foram salvas por uma versão mais nova do app",
-    "userDataUnavailable": "A pasta de dados não está disponível"
+    "userDataUnavailable": "A pasta de dados não está disponível",
+    "variableNotSet": "Uma variável não tem valor neste dispositivo",
+    "vaultUnavailable": "A pasta de perfis de IA não está conectada neste dispositivo",
+    "projectUnavailable": "A pasta do projeto não está definida neste dispositivo"
   },
   "diff": {
     "modeOriginal": "Apenas original",
@@ -631,8 +640,6 @@
     "aiProfilesHint": "Assistentes separados, cada um com sua própria instrução, modelo, ferramentas e chats. Cada perfil é uma aba na barra superior.",
     "aiProfilesTab": "Perfis de IA",
     "aiVaultPath": "Caminho do cofre de perfis de IA",
-    "aiVaultPathHint": "A pasta dos perfis de IA (seus SOUL.md, chats e espaços de trabalho) e dos projetos internos. Por padrão, a pasta ai-vault nos dados do aplicativo.",
-    "aiVaultTitle": "Cofre",
     "allPluginsTab": "Todos os plugins",
     "apiKey": "Chave de API",
     "apiKeyBoundTo": "A chave salva só é enviada para {origin}. Salve-a de novo para usá-la com este endereço.",
@@ -1155,7 +1162,15 @@
       "indent": "Aumentar recuo",
       "outdent": "Diminuir recuo",
       "reserved": "Este atalho está reservado para edição de texto ou ações do aplicativo."
-    }
+    },
+    "aiVaultExternalHint": "Vazio: a pasta ai-vault dentro da pasta de dados, sincronizada com ela. Uma pasta separada serve para git, Obsidian ou uma sincronização própria.",
+    "aiVaultGitWarning": "Não mantenha um repositório git dentro de uma pasta sincronizada: edições de dois dispositivos podem danificá-lo.",
+    "aiVaultNotConnected": "A pasta de perfis de IA não está conectada neste dispositivo: {path}. Nada foi criado no lugar dela.",
+    "aiVaultUseDefault": "Usar a pasta padrão",
+    "projectFolderNotSetOnDevice": "Pasta não definida neste dispositivo",
+    "projectSetFolder": "Definir pasta",
+    "projectsWithoutFolder": "Projetos externos sem pasta neste dispositivo: {count}",
+    "variablesTab": "Variáveis"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
@@ -1207,7 +1222,8 @@
     "webhookFailed": "A solicitação ao webhook falhou",
     "webhookKeyNotSet": "A chave deste webhook não está definida neste dispositivo; digite-a nas configurações do comando",
     "webhookSuccess": "Webhook enviado com sucesso",
-    "voicePostProcessTimeout": "O processamento de voz demorou muito; texto original mantido"
+    "voicePostProcessTimeout": "O processamento de voz demorou muito; texto original mantido",
+    "variablesNotSet": "Há variáveis sem valor neste dispositivo; defina-as em Configurações → Variáveis"
   },
   "tools": {
     "aiTask": "Comando de IA",
@@ -1337,5 +1353,36 @@
     "clickToApply": "Clique para aplicar",
     "liveCorrectionFailed": "Falha na correção em tempo real",
     "liveCorrectionFailedHint": "O modelo não respondeu. O texto será inserido como foi digitado."
+  },
+  "variables": {
+    "add": "Adicionar",
+    "addTitle": "Nova variável",
+    "browseFile": "Arquivo…",
+    "builtinHint": "Sempre disponíveis; os valores vêm deste dispositivo.",
+    "builtinTitle": "Variáveis integradas",
+    "declare": "Declarar variável",
+    "description": "Descrição",
+    "empty": "Ainda não há variáveis.",
+    "errorBuiltinName": "Nomes que começam com TYCO_ são reservados para variáveis integradas",
+    "errorInvalidName": "Use letras latinas maiúsculas, dígitos e _, começando por uma letra",
+    "errorNameTaken": "Já existe uma variável com este nome",
+    "errorNoName": "Digite um nome",
+    "hint": "Uma variável permite que um comando ou o endereço de um provedor use um valor diferente em cada dispositivo, como o caminho de uma pasta ou um servidor local. O nome é comum a todos os dispositivos; cada um define o próprio valor. Insira como {example}.",
+    "hintNotDeclared": "{name} não está declarada",
+    "hintNotSet": "{name} não tem valor neste dispositivo",
+    "insert": "Inserir variável",
+    "listTitle": "Variáveis",
+    "manage": "Gerenciar variáveis…",
+    "name": "Nome",
+    "nameHint": "Por exemplo NOTES_DIR. Os comandos se referem a ela pelo nome; renomear atualiza os comandos.",
+    "notForSecrets": "Os valores ficam em texto simples e podem ir para um prompt ou uma URL. Não guarde chaves aqui: use os campos de chave.",
+    "remove": "Remover variável",
+    "setValue": "Definir valor",
+    "unsetOnDevice": "Variáveis sem valor neste dispositivo: {count}",
+    "unused": "Não usada",
+    "usedBy": "Usada por: {count}",
+    "value": "Valor",
+    "valueNotSet": "Não definida neste dispositivo: os comandos que a usam não são executados",
+    "valuePlaceholder": "Um caminho, um endereço ou outro texto"
   }
 }
