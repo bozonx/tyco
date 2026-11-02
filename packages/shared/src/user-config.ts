@@ -193,7 +193,6 @@ export interface StylingsConfig {
 
 export const QUICK_CORRECTION_MODES = ['live', 'onSubmit', 'off'] as const
 export type QuickCorrectionMode = (typeof QUICK_CORRECTION_MODES)[number]
-export const DEFAULT_QUICK_CORRECTION_MODE: QuickCorrectionMode = 'onSubmit'
 
 export interface QuickWindowConfig {
   isHiddenOnBlur: boolean

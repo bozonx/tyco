@@ -294,5 +294,3 @@ export function createLiveCorrection(deps: LiveCorrectionDependencies) {
     dispose,
   }
 }
-
-export type LiveCorrection = ReturnType<typeof createLiveCorrection>

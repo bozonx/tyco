@@ -107,8 +107,6 @@ export function createAutosave(deps: AutosaveDependencies) {
   return { status, error, schedule, flush, cancel }
 }
 
-export type Autosave = ReturnType<typeof createAutosave>
-
 /** What a page with several autosaved parts shows: the worst state first */
 export type AutosaveSummary = 'error' | 'saving' | 'saved' | ''
 

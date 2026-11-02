@@ -90,12 +90,7 @@ pub struct AiProfile {
     pub id: String,
     pub name: String,
     /// The model the profile's chats run on; the first usable one when unset.
-    /// Profiles written before the setting kept the last picked model.
-    #[serde(
-        default,
-        alias = "lastModelId",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub model_id: Option<String>,
     /// Overrides the temperature of the model; the model's own when unset.

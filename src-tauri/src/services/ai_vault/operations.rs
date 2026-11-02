@@ -148,10 +148,6 @@ pub fn list_profiles(vault_root: &Path) -> Result<Vec<AiProfile>, AppError> {
 /// The profile as it is on disk now: the user may edit the file by hand.
 pub fn get_profile(vault_root: &Path, id: &str) -> Result<AiProfile, AppError> {
     let dir = existing_profile_dir(vault_root, id)?;
-    let memory_dir = dir.join(super::memory::PROFILE_MEMORY_DIR);
-    if !memory_dir.exists() {
-        let _ = super::memory::ensure_memory_dir_initialized(&memory_dir);
-    }
     Ok(serde_json::from_str(&fs::read_to_string(
         dir.join(PROFILE_FILE),
     )?)?)

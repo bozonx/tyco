@@ -108,5 +108,3 @@ export function createAiProjectsModel(deps: AiProjectsModelDependencies) {
     pickExternalFolder,
   }
 }
-
-export type AiProjectsModel = ReturnType<typeof createAiProjectsModel>

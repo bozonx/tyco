@@ -234,5 +234,3 @@ export function createAiProfilesModel(deps: AiProfilesModelDependencies) {
     writeSoul,
   }
 }
-
-export type AiProfilesModel = ReturnType<typeof createAiProfilesModel>

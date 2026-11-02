@@ -70,8 +70,3 @@ export async function readDroppedChatFile(
     path.split(/[\\/]/).at(-1) || 'file'
   )
 }
-
-/** Ends the undo of a deleted chat, which held its images */
-export function releaseDeletedChatImages(id: string): Promise<void> {
-  return invoke('release_deleted_chat_images', { id })
-}

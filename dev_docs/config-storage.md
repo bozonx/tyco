@@ -61,7 +61,7 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | Section           | Contents                                                                                                                    |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `appearance`      | `theme`, `contrast`, `motion`, `uiScalePercent` (50–300; the settings offer presets)                                        |
-| `language`        | `ui` (interface locale or `auto`), `user` (the locale the user speaks and writes, or `auto`)                                |
+| `language`        | `ui` (interface locale or `auto`)                                                                                           |
 | `editor`          | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`, `isLocalOnly`) |
 | `quickWindow`     | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`                                                                             |
 | `hotkeys`         | one shortcut per activation mode a hotkey opens, named as the mode, `selectionCorrection` and `launcherPages`               |
@@ -73,14 +73,14 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, `platforms`, …             |
 | `variables`       | the variables commands refer to as `{{var:NAME}}`: `id`, `name`, `description`                                              |
 | `variableValues`  | the value of each variable on this device, by variable id (device)                                                          |
-| `llm`             | `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                                   |
+| `llm`             | `imageQuality`, `providers` (by `type`), `models`, `tasks`: per task its `modelId` and `rule` (see below)                   |
 | `transformations` | `items`, the transformation library; `slots`, the transformation menu (a shortcut grid of transformation ids)               |
 | `styling`         | `items`, the styling library; `slots`, the styling menu (a shortcut grid of styling ids)                                    |
 | `aiVault`         | `path`, empty for the default location                                                                                      |
 | `aiProfiles`      | `chatHistory` (`storage`: `off` or `disk`, `retentionDays`)                                                                 |
 | `markdown`        | `format` (how the editor writes Markdown), `strip` (what is left of it in plain text)                                       |
 | `plugins`         | per plugin id: `isEnabled` and the plugin-owned `settings`                                                                  |
-| `chat`            | `imageQuality`, `history` (`storage`: `off` or `disk`, `retentionDays`)                                                     |
+| `chat`            | `history` (`storage`: `off` or `disk`, `retentionDays`)                                                                     |
 | `stt`             | `provider`, `isVoiceCorrectionEnabled`, `providers.deepgram`, `providers.sherpaOnnx`                                        |
 
 The hotkeys of `hotkeys` are named as the activation modes they open

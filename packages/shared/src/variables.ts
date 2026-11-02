@@ -20,14 +20,8 @@ export const VARIABLE_NAME_PATTERN = /^[A-Z][A-Z0-9_]*$/
 export const MAX_VARIABLE_NAME_LENGTH = 64
 /** The prefix of the built-in variables; a variable of the user never has it */
 export const BUILTIN_VARIABLE_PREFIX = 'TYCO_'
-/**
- * The prefix a variable of the user takes in the environment of a script, so
- * that it never stands in for a variable of the system
- */
-export const VARIABLE_ENV_PREFIX = 'TYCO_VAR_'
 /** The built-in variables: the user data folder and the id of this device */
 export const BUILTIN_VARIABLES = ['TYCO_USER_DIR', 'TYCO_DEVICE_ID'] as const
-export type BuiltinVariable = (typeof BUILTIN_VARIABLES)[number]
 
 /**
  * Where a template is filled, which decides how a value is escaped: as it is in
@@ -44,12 +38,6 @@ const REFERENCE_SOURCE = String.raw`\{\{var:([A-Za-z_][A-Za-z0-9_]*)\}\}`
 
 /** `{{var:NAME}}` */
 export const variablePlaceholder = (name: string): string => `{{var:${name}}}`
-
-/** The name a variable has in the environment of a script */
-export const variableEnvName = (name: string): string =>
-  name.startsWith(BUILTIN_VARIABLE_PREFIX)
-    ? name
-    : `${VARIABLE_ENV_PREFIX}${name}`
 
 /** The names `template` refers to, each once, in their order */
 export function variableReferences(template: string): string[] {

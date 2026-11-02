@@ -29,17 +29,6 @@ export interface SavePromptResult<L> {
   outcome: SavePromptOutcome
 }
 
-export function cloneSlotLibrary<
-  T extends SlotLibraryItem,
-  L extends SlotLibrary<T>,
->(library: L): L {
-  return {
-    ...library,
-    items: library.items.map((item) => ({ ...item })),
-    slots: { ...library.slots },
-  }
-}
-
 export function findSlotItem<T extends SlotLibraryItem>(
   items: readonly T[] | undefined,
   id: string

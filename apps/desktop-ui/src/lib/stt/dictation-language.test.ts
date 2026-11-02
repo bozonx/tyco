@@ -7,13 +7,7 @@ import {
 
 describe('dictationLanguageFor', () => {
   it('lets the provider detect the language by default', () => {
-    for (const setting of [
-      undefined,
-      '',
-      ' ',
-      DICTATION_LANGUAGE_AUTO,
-      'multi',
-    ])
+    for (const setting of [undefined, '', ' ', DICTATION_LANGUAGE_AUTO])
       expect(dictationLanguageFor(setting)).toBeUndefined()
   })
 

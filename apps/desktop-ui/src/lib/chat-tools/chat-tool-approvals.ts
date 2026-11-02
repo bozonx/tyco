@@ -55,5 +55,3 @@ export function createChatToolApprovals() {
     },
   }
 }
-
-export type ChatToolApprovals = ReturnType<typeof createChatToolApprovals>

@@ -26,10 +26,8 @@ const DEEPGRAM_REGIONAL_LANGUAGES: ReadonlySet<string> = new Set([
   'th-TH',
 ])
 
-/** `multi` is accepted only for compatibility with saved settings. */
 export function dictationLanguageFor(setting?: string): string | undefined {
-  if (!setting || setting === DICTATION_LANGUAGE_AUTO || setting === 'multi')
-    return undefined
+  if (!setting || setting === DICTATION_LANGUAGE_AUTO) return undefined
   const [rawLanguage, rawRegion] = setting.trim().split('-')
   const language = rawLanguage?.toLowerCase()
   if (!language) return undefined

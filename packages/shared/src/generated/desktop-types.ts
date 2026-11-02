@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: f3ba5403eb9c239fb621d18af5d1396cb7f2748fea88c0c5650e5db024af7937
+// Source hash: 7b05269344ed8478179036bba20fdab1bf73e14f1bfe7baf91560e1d68490c81
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -158,10 +158,7 @@ export type AiFileToolRequest =
 export type AiProfile = {
   id: string
   name: string
-  /**
-   * The model the profile's chats run on; the first usable one when unset.
-   * Profiles written before the setting kept the last picked model.
-   */
+  /** The model the profile's chats run on; the first usable one when unset. */
   modelId?: string
   /** Overrides the temperature of the model; the model's own when unset. */
   temperature?: number

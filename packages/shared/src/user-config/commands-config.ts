@@ -52,10 +52,6 @@ export type CommandOutputAction = (typeof COMMAND_OUTPUT_ACTIONS)[number]
 export const COMMAND_PLATFORMS = ['linux', 'windows'] as const
 export type CommandPlatform = (typeof COMMAND_PLATFORMS)[number]
 
-/** Tools that run what the user configured; the way out for anything else */
-export const BUILTIN_TOOL_IDS = ['script', 'webhook'] as const
-export type BuiltinToolId = (typeof BUILTIN_TOOL_IDS)[number]
-
 /** Tools over what the app already does, see `lib/tools/core-tools.ts` */
 export const CORE_TOOL_IDS = [
   'core.insert',

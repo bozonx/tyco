@@ -236,5 +236,3 @@ export function createChatToolRegistry(deps: ChatToolRegistryDependencies) {
 
   return { resolve }
 }
-
-export type ChatToolRegistry = ReturnType<typeof createChatToolRegistry>

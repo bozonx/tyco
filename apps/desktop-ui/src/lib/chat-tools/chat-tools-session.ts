@@ -109,5 +109,3 @@ export function createChatToolsSession(deps: ChatToolsSessionDependencies) {
     dispose: approvals.cancelAll,
   }
 }
-
-export type ChatToolsSession = ReturnType<typeof createChatToolsSession>

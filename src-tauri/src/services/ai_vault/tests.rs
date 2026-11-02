@@ -254,21 +254,6 @@ fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
 }
 
 #[test]
-fn a_profile_written_with_the_last_used_model_keeps_it() {
-    let test_dir = TestDir::new("ai_vault_profile_legacy");
-    let vault_root = test_dir.join("vault");
-    create_profile(&vault_root, profile("writer", 1000), "").unwrap();
-    std::fs::write(
-        vault_root.join("profiles/writer/profile.json"),
-        r#"{"id":"writer","name":"Writer","icon":"mdi:pen","lastModelId":"model-a","projectPermissions":{},"createdAt":1,"updatedAt":1}"#,
-    )
-    .unwrap();
-
-    let loaded = get_profile(&vault_root, "writer").unwrap();
-    assert_eq!(loaded.model_id.as_deref(), Some("model-a"));
-}
-
-#[test]
 fn a_missing_soul_is_an_empty_instruction() {
     let test_dir = TestDir::new("ai_vault_soul_missing");
     let vault_root = test_dir.join("vault");

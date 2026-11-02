@@ -29,5 +29,3 @@ export function createSingleTimer(deps: TimerDependencies = {}) {
 
   return { start, stop, isPending: () => timer !== null }
 }
-
-export type SingleTimer = ReturnType<typeof createSingleTimer>
