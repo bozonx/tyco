@@ -47,7 +47,7 @@ function createDeepgramParser(): (message: string) => DeepgramLiveMessage {
  * space reaches the transcript as a result that clears the guess and adds no
  * words.
  */
-export function keepEmptyDeepgramResult(
+function keepEmptyDeepgramResult(
   message: string,
   parse: (message: string) => DeepgramLiveMessage = parseDeepgramMessage
 ): string {

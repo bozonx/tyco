@@ -30,12 +30,8 @@ const VARIABLE_FIELDS: Readonly<Record<string, readonly string[]>> = {
   'core.aiTask': ['prompt'],
 }
 
-/** Whether the settings of `toolId` take variables */
-export const canToolUseVariables = (toolId: string): boolean =>
-  Object.hasOwn(VARIABLE_FIELDS, toolId)
-
 /** The names of the fields of `toolId` that take variables */
-export const variableFieldsOf = (toolId: string): readonly string[] =>
+const variableFieldsOf = (toolId: string): readonly string[] =>
   VARIABLE_FIELDS[toolId] ?? []
 
 /** Whether `value` of a webhook header is plain text, not a key reference */
@@ -46,7 +42,7 @@ const isPlainHeader = (value: unknown): value is string =>
  * The texts of a command's settings that may refer to variables: those the run
  * fills. A webhook's body counts only for a POST request
  */
-export function commandVariableTemplates(
+function commandVariableTemplates(
   toolId: string,
   toolConfig: Record<string, unknown>
 ): string[] {

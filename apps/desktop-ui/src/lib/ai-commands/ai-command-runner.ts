@@ -48,7 +48,7 @@ const TOOL_NAME_LENGTH = 64
  * A name the AI providers accept for the tool of a command: the index keeps
  * apart ids that differ only in characters a name cannot have
  */
-export const agentToolName = (index: number, commandId: string): string =>
+const agentToolName = (index: number, commandId: string): string =>
   `c${index}_${commandId.replace(/[^a-zA-Z0-9_-]/g, '_')}`.slice(
     0,
     TOOL_NAME_LENGTH

@@ -5,7 +5,7 @@ import type { ChatToolProvider } from './chat-tool-registry'
 import { adaptRegisteredTool } from './registered-tool-adapter'
 
 /** The group of the debug tools */
-export const DEBUG_TOOL_GROUP_ID = 'debug'
+const DEBUG_TOOL_GROUP_ID = 'debug'
 
 /** Whether a development build offers the debug tools to every chat */
 export function isDebugChatToolsEnabled(

@@ -216,7 +216,7 @@ export function slugify(text: string): string {
 const TEMPLATE_TOKEN = /\{\{|\}\}|\{([A-Za-z]\w*)\}/g
 
 /** The token names a template uses, without escaped braces. */
-export function templateTokenNames(template: string): string[] {
+function templateTokenNames(template: string): string[] {
   return Array.from(
     template.matchAll(TEMPLATE_TOKEN),
     (match) => match[1]

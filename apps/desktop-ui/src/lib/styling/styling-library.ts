@@ -1,7 +1,6 @@
 import type { StylingConfig, StylingsConfig } from '@tyco/shared'
 
 import {
-  cloneSlotLibrary,
   findSlotItem,
   moveSlotItem,
   placeNewSlotItem,
@@ -17,8 +16,6 @@ export type StylingLibrary = StylingsConfig
 type Item = StylingConfig
 type Library = StylingLibrary
 
-export const cloneStylingLibrary = (library: Library) =>
-  cloneSlotLibrary<Item, Library>(library)
 export const findStyling = findSlotItem<Item>
 export const stylingSlotList = slotItemList<Item>
 export const placeNewStyling = (library: Library, index: number, item: Item) =>

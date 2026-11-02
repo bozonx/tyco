@@ -3,7 +3,7 @@ import { createCommand } from '../commands/command-config'
 import { testTools } from '../tools/testing'
 import { createBuiltInVoiceCommands } from './built-in-voice-commands'
 import { translate } from '../i18n'
-import { DictationError } from '../stt/live-dictation'
+import { DictationError } from '../stt/dictation-error'
 import {
   createVoiceCommandModel,
   type VoiceCommandDependencies,

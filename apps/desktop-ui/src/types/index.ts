@@ -1,7 +1,6 @@
 export enum LlmInstructionKind {
   VOICE_CORRECTION = 'voiceCorrection',
   CORRECTION = 'correction',
-  AI_TASK = 'aiTask',
   TRANSFORMATION = 'transformation',
   STYLING = 'styling',
   CHAT = 'chat',

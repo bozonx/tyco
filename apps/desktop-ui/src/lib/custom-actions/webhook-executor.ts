@@ -123,7 +123,7 @@ export function webhookResultText(body: string): string {
  * `text` with every URL cut down to its origin: a path or a query may hold
  * credentials or the text itself
  */
-export function redactUrls(text: string): string {
+function redactUrls(text: string): string {
   return text.replace(/\b[a-z][a-z\d+.-]*:\/\/[^\s'"<>]+/gi, (match) => {
     try {
       return new URL(match).origin

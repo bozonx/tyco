@@ -118,7 +118,7 @@ async function main() {
               input: { text: 'hello' },
               config,
               source: 'external',
-              wantsOutput: true,
+              isOutputRequested: true,
               $signal: true,
             },
           ]

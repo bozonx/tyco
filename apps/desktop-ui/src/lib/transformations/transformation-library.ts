@@ -1,7 +1,6 @@
 import type { TransformationConfig, TransformationsConfig } from '@tyco/shared'
 
 import {
-  cloneSlotLibrary,
   findSlotItem,
   moveSlotItem,
   placeNewSlotItem,
@@ -20,8 +19,6 @@ export type TransformationLibrary = TransformationsConfig
 type Item = TransformationConfig
 type Library = TransformationLibrary
 
-export const cloneTransformationLibrary = (library: Library) =>
-  cloneSlotLibrary<Item, Library>(library)
 export const findTransformation = findSlotItem<Item>
 export const transformationSlotList = slotItemList<Item>
 export const placeNewTransformation = (

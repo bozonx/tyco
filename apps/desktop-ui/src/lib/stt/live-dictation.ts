@@ -11,12 +11,6 @@ import type { SttModel } from './stt-config'
 import type { VoiceCaptureControl } from './voice-capture'
 import { asDictationError, DictationError } from './dictation-error'
 
-export {
-  DictationError,
-  dictationErrorKey,
-  describeDictationError,
-} from './dictation-error'
-
 /** How long the provider may take for its last words once the audio ends */
 const FINISH_TIMEOUT_MS = 10_000
 /**

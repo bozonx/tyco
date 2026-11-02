@@ -22,7 +22,7 @@ import {
  * How long the LLM may format or style a dictation; then the raw transcript
  * goes on as it is
  */
-export const DEFAULT_POST_PROCESS_TIMEOUT_MS = 30_000
+const DEFAULT_POST_PROCESS_TIMEOUT_MS = 30_000
 
 /**
  * `promise`, or a rejection as soon as `signal` aborts: a hung request may

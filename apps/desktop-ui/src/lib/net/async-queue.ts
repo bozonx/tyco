@@ -9,7 +9,7 @@ export interface AsyncQueue<T> {
 }
 
 /** What a queue holds unread before it fails, unless told otherwise */
-export const DEFAULT_MAX_QUEUED_COUNT = 1024
+const DEFAULT_MAX_QUEUED_COUNT = 1024
 export const DEFAULT_MAX_QUEUED_BYTES = 1024 * 1024
 
 export function createAsyncQueue<T>(

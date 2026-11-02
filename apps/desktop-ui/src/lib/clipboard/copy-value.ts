@@ -6,7 +6,7 @@ import {
 } from '../timers/single-timer'
 
 /** How long a copy button shows that it copied */
-export const COPIED_FEEDBACK_MS = 2000
+const COPIED_FEEDBACK_MS = 2000
 
 export interface CopyValueDependencies extends TimerDependencies {
   writeText: (text: string) => Promise<void>

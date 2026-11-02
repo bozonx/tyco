@@ -32,7 +32,6 @@ export async function runToolFromAction(
           source: 'menu',
           signal: ctx.signal,
           isOutputRequested: false,
-          wantsOutput: false,
         })
       : parsed
     validateToolResult(result)
@@ -84,7 +83,6 @@ export async function runToolFromToolbar(
           editorSnapshot,
           signal: ctx.signal,
           isOutputRequested: false,
-          wantsOutput: false,
         })
       : parsed
     validateToolResult(result)

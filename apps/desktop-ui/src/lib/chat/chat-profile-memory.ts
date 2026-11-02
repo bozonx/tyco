@@ -2,12 +2,10 @@ import type { ProfileMemoryTopic } from '@tyco/shared'
 
 import { ESTIMATED_CHARACTERS_PER_TOKEN } from '../llm/token-estimate'
 
-export const MEMORY_CORE_FILE = 'core.md'
 export const CORE_MEMORY_WARN_TOKENS = 1000
 export const CORE_MEMORY_HARD_LIMIT_TOKENS = 1500
 export const TOPIC_MEMORY_WARN_TOKENS = 2500
 export const TOPIC_MEMORY_HARD_LIMIT_TOKENS = 4000
-export const MAX_MEMORY_TOPIC_COUNT = 50
 
 /** Estimates tokens from characters or bytes. */
 export function estimateMemoryTokens(value: string | number): number {

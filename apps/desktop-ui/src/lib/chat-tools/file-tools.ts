@@ -311,9 +311,6 @@ const FILE_TOOLS: readonly FileToolSpec[] = [
   },
 ]
 
-/** The names of the file tools, as the model calls them */
-export const FILE_TOOL_NAMES = FILE_TOOLS.map((tool) => tool.name)
-
 /**
  * The file tools of a profile chat: its workspace and the projects it has
  * permissions for. The folders and permissions are read for every turn; Rust

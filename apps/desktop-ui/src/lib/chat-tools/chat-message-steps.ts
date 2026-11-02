@@ -3,7 +3,7 @@ import type { ChatMessage, ChatMessagePart } from '@tyco/shared'
 import type { ChatToolLoopState } from './chat-tool-loop'
 
 /** Whether the parts hold anything besides the answer's text */
-export function hasToolSteps(parts: readonly ChatMessagePart[] | undefined) {
+function hasToolSteps(parts: readonly ChatMessagePart[] | undefined) {
   return parts?.some((part) => part.type !== 'text') ?? false
 }
 

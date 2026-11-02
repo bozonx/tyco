@@ -18,7 +18,7 @@ export const stringOr = (value: unknown): string =>
   typeof value === 'string' ? value : ''
 
 /** The output action of a tool, or `none` */
-export const outputActionOf = (value: unknown): CommandOutputAction =>
+const outputActionOf = (value: unknown): CommandOutputAction =>
   COMMAND_OUTPUT_ACTIONS.includes(value as CommandOutputAction)
     ? (value as CommandOutputAction)
     : 'none'

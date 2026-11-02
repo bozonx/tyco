@@ -7,7 +7,7 @@ import { EditorView } from '@codemirror/view'
  * that Ctrl+Y of a QWERTZ keyboard is not taken for Ctrl+Z; the QWERTY letter
  * at the same position otherwise, e.g. under a Cyrillic layout.
  */
-export const shortcutLetter = (event: KeyboardEvent): string | null => {
+const shortcutLetter = (event: KeyboardEvent): string | null => {
   if (/^[a-z]$/i.test(event.key)) return event.key.toLowerCase()
   const physical = /^Key([A-Z])$/.exec(event.code)
   return physical ? physical[1].toLowerCase() : null

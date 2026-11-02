@@ -156,7 +156,7 @@ export function removeCommandReferences(
 }
 
 /** The launcher pages without the slots that refer to the command */
-export function removeCommandFromLauncherPages(
+function removeCommandFromLauncherPages(
   pages: readonly LauncherPageConfig[],
   commandId: string
 ): LauncherPageConfig[] {
@@ -169,7 +169,7 @@ export function removeCommandFromLauncherPages(
 }
 
 /** The launcher pages with restored command slots where still unassigned */
-export function restoreCommandInLauncherPages(
+function restoreCommandInLauncherPages(
   currentPages: readonly LauncherPageConfig[],
   previousPages: readonly LauncherPageConfig[],
   commandId: string

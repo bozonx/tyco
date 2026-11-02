@@ -7,7 +7,7 @@ import type { Command } from '@codemirror/view'
  * Four spaces nest an item under both `- ` and `1. ` in CommonMark: a nested
  * item has to start at the text of its parent, which is column 2 or 3.
  */
-export const MARKDOWN_INDENT = '    '
+const MARKDOWN_INDENT = '    '
 
 export const markdownIndentUnit: Extension = indentUnit.of(MARKDOWN_INDENT)
 

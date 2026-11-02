@@ -381,14 +381,8 @@ describe('plugin tools', () => {
       config: { dir: '~/work' },
       source: 'launcher',
       signal: expect.any(AbortSignal),
-      command: {
-        id: 'n-1',
-        name: 'Note',
-        isOutputLogged: false,
-        logOutput: false,
-      },
+      command: { id: 'n-1', name: 'Note', isOutputLogged: false },
       isOutputRequested: false,
-      wantsOutput: false,
     })
     expect(deps.showToast).toHaveBeenCalledWith('toast.noteSaved', 'success')
     expect(deps.hideWindow).toHaveBeenCalled()

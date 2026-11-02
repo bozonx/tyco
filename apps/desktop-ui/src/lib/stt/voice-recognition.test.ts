@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DictationError, type LiveDictationStart } from './live-dictation'
+import { DictationError } from './dictation-error'
+import type { LiveDictationStart } from './live-dictation'
 import {
   createVoiceRecognition,
   type VoiceRecognitionDependencies,
