@@ -71,7 +71,7 @@ describe('selection action', () => {
     const { deps, model, signal } = fixture()
     await expect(
       model.run({ kind: 'command', commandId: 'missing' }, 'Text', signal)
-    ).rejects.toThrow('commandLauncher.commandMissing')
+    ).rejects.toThrow('commands.commandMissing')
     expect(deps.transform).not.toHaveBeenCalled()
   })
 

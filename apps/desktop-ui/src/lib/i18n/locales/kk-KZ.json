@@ -173,26 +173,6 @@
       "noCommandsHint": "Алдымен Баптаулар → Пәрмендер бөлімінде пәрмендер жасаңыз."
     }
   },
-  "commandLauncher": {
-    "aiStep": "«{name}»: «{step}» орындалуда…",
-    "allCommands": "Барлық командалар",
-    "commandMissing": "{id} командасы кітапханада жоқ.",
-    "dropSelection": "Белгіленген мәтінді қолданбау",
-    "hintAskAi": "ЖИ-ден сұрау",
-    "hintNewLine": "Жаңа жол",
-    "hintRun": "Іске қосу",
-    "hintSavePrompt": "ЖИ командасы ретінде сақтау",
-    "nothingFound": "Командалар табылмады",
-    "pages": "Беттер:",
-    "promptSaved": "ЖИ командасы ретінде сақталды",
-    "promptSavedAlready": "Бұл промптпен ЖИ командасы бұрыннан бар",
-    "running": "«{name}» орындалуда…",
-    "searchPlaceholder": "Командаларды іздеу…",
-    "selection": "Белгіленген мәтін: {count} таңба",
-    "targetHint": "Не орындалады: қабықша командасы немесе вебхук әдісі мен URL",
-    "textPlaceholder": "Команда үшін мәтін",
-    "title": "Командалар"
-  },
   "commands": {
     "advanced": "Қосымша",
     "afterRunCopy": "Алмасу буферіне",
@@ -295,7 +275,9 @@
     "platforms": "Платформалар",
     "platformsInfo": "Команда тек белгіленген платформаларда орындалады; ешқайсысы белгіленбесе — барлығында. Басқа платформада тізімдерде қалады, бірақ орындалмайды.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "«{name}» орындалуда…",
+    "commandMissing": "{id} командасы кітапханада жоқ."
   },
   "common": {
     "add": "Қосу",
@@ -644,7 +626,6 @@
     "actionWorkingDirPlaceholder": "Үй каталогы",
     "actionsCategory": "Әрекеттер",
     "addConnection": "Қосылым қосу",
-    "addLauncherPage": "Бет қосу",
     "addModel": "Модель қосу",
     "aiCategory": "ЖИ",
     "aiEntityGeneral": "Жалпы",
@@ -757,7 +738,7 @@
       "editor": "Белгіленген мәтінді редакторда ашу",
       "history": "Тарих",
       "quickInput": "Мәтінді жылдам енгізу",
-      "selectionActions": "Белгіленген мәтінмен әрекеттер",
+      "selectionActions": "Әрекеттер (1-бет)",
       "selectionCorrection": "Белгіленген мәтінді орнында түзету",
       "styling": "Мәтінді стильдеу",
       "transformation": "Мәтінді түрлендіру",
@@ -765,7 +746,9 @@
       "voice": "Дауыспен енгізу",
       "voiceChat": "ЖИ чатында белгіленген мәтін туралы дауыстық сұрақ",
       "voiceCommands": "Дауыстық командалар",
-      "voiceTransformation": "Мәтінді дауыспен түрлендіру"
+      "voiceTransformation": "Мәтінді дауыспен түрлендіру",
+      "selectionActionsPage2": "Әрекеттер: 2-бет",
+      "selectionActionsPage3": "Әрекеттер: 3-бет"
     },
     "hotkeyInput": {
       "cancelHint": "Болдырмау үшін Esc",
@@ -796,11 +779,6 @@
     "keySaveFailed": "Кілтті жаңарту мүмкін болмады",
     "keyRemoveFailed": "Кілтті жою мүмкін болмады",
     "languagesTab": "Аударма тілдері",
-    "launcherCommandsHint": "Жылдам командалар терезесінде сол қолдың бір пернесімен іске қосылатын командалар: Q–T, A–G және Z–B. Пернелерін өзгерту үшін карталарды сүйреңіз. Әр беттің «Жылдам пернелер» қойындысында өз жаһандық тіркесімі бар.",
-    "launcherCommandsTab": "Жылдам командалар",
-    "launcherPage": "Жылдам командалар: {page}-бет",
-    "launcherPageTakesText": "Белгіленген мәтінді алу",
-    "launcherPageTakesTextInfo": "Командалары мәтінді өңдемейтін беттер үшін өшіріңіз: тақта белгіленген мәтінді алмай ашылады, сондықтан бұрынғы белгілеулер командаларға түспейді.",
     "llmConnections": "Қосылымдар",
     "llmConnectionsHint": "Tyco ЖИ сұрауларын қайда жібереді: Google, OpenRouter, DeepSeek немесе OpenAI-мен үйлесімді API бар кез келген сервер, мысалы жергілікті Ollama не LM Studio. Модельдер өз қосылымының ішінде қосылады. Сақталған кілт қорғалған қоймаға түседі және енді ешқашан көрсетілмейді.",
     "llmTab": "LLM",
@@ -816,8 +794,6 @@
     },
     "mainActionStylingRemoved": "Жойылған мәтін стилі",
     "mainActionTransformationRemoved": "Жойылған мәтінді түрлендіру",
-    "mainActionsHint": "Негізгі мәзір әрекеттері: әрқайсысы өз пернесімен іске қосылады. Пернелерін өзгерту үшін карталарды сүйреңіз.",
-    "mainActionsTab": "Негізгі әрекеттер",
     "markdownBullet": "Тізім маркері",
     "markdownCleanBlockquoteAngle": "> (дәйексөз префиксін сақтау)",
     "markdownCleanBlockquoteIndent": "Дәйексөз стилі",
@@ -972,7 +948,6 @@
     "rebindHotkeysError": "Жылдам пернелерді қайта тіркеу мүмкін болмады",
     "rebindHotkeysHint": "Жүйе параметрлерінде жойылған жылдам пернелерді қайтарады; сіз өзгерткен тіркесімдер сақталады. Ескірген жылдам пернелерден құтылу үшін алдымен жүйе параметрлерінде Tyco-ны жойыңыз.",
     "removeKey": "Кілтті жою",
-    "removeLauncherPage": "Бетті жою",
     "removeModel": "Модельді алып тастау",
     "removeModelConfirm": "Бұл модельді жою керек пе?",
     "removePluginPackage": "Буманы жою",
@@ -1188,7 +1163,14 @@
     "askInProfileChat": "Чатта сұрау: {profile}",
     "mainActionProfileRemoved": "Жойылған профиль",
     "webJinaApiKey": "Jina AI API кілті",
-    "webJinaApiKeyHint": "Міндетті емес. Кілті жоқ сұраулар ортақ лимиттері бар тегін тарифті пайдаланады."
+    "webJinaApiKeyHint": "Міндетті емес. Кілті жоқ сұраулар ортақ лимиттері бар тегін тарифті пайдаланады.",
+    "actionsTab": "Әрекеттер",
+    "actionsHint": "Әрекеттер терезесінде сол қолдың бір пернесімен орындалатын әрекеттер: Q–T, A–G және Z–B. Пернелерді өзгерту үшін карталарды сүйреңіз. Әрекеттерді ұйымдастыру үшін беттерді пайдаланыңыз.",
+    "actionPage": "Бет {page}",
+    "addActionPage": "Бет қосу",
+    "removeActionPage": "Бетті жою",
+    "actionPageTakesText": "Таңдалған мәтінді қабылдау",
+    "actionPageTakesTextInfo": "Өшірілген кезде, бұл бетті ашу басқа қолданбалардан таңдалған мәтінді көшірмейді."
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

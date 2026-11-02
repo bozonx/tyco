@@ -441,7 +441,5 @@ pub fn describe(
     }))
 }
 
-pub use crate::models::LauncherRequest;
-
 #[cfg(test)]
 mod tests;

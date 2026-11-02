@@ -35,7 +35,6 @@ export interface AppWindowControllerDependencies {
     payload: EventPayload<typeof DESKTOP_EVENTS.COMMAND_RUN>
   ) => Promise<unknown>
   cancelCommand: (id: string) => void
-  cancelLauncher: (id: string) => void
   closeModals: () => void
   goToChat: () => Promise<void>
   goToProfileChat?: (profileId: string) => Promise<void>
@@ -132,7 +131,6 @@ export function createAppWindowController(
         }),
         subscribe(DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL, (id) => {
           deps.cancelCommand(id)
-          deps.cancelLauncher(id)
         })
       )
     } else {

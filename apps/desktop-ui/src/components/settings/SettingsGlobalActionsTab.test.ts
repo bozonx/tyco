@@ -261,20 +261,34 @@ describe('SettingsGlobalActionsTab.vue', () => {
     expect(holdRow.exists()).toBe(false)
   })
 
-  it('renders at least 3 launcher page rows even when launcherPages has only 1 page', () => {
+  it('renders rows for all 3 action pages', () => {
     delete context.draft.value.isInDevelopment
-    context.draft.value.launcherPages = [
-      { id: 'main', inputMode: 'selection', slots: {} },
-    ]
 
     const wrapper = mount(SettingsGlobalActionsTab, {
       global: { provide: context.provide, stubs: globalStubs },
     })
 
     const rows = wrapper.findAll('.field-row-stub')
-    const pageRows = rows.filter(
-      (r) => r.attributes('data-label') === 'settings.launcherPage'
-    )
-    expect(pageRows.length).toBe(3)
+    expect(
+      rows.some(
+        (r) =>
+          r.attributes('data-label') ===
+          'settings.hotkeyActions.selectionActions'
+      )
+    ).toBe(true)
+    expect(
+      rows.some(
+        (r) =>
+          r.attributes('data-label') ===
+          'settings.hotkeyActions.selectionActionsPage2'
+      )
+    ).toBe(true)
+    expect(
+      rows.some(
+        (r) =>
+          r.attributes('data-label') ===
+          'settings.hotkeyActions.selectionActionsPage3'
+      )
+    ).toBe(true)
   })
 })

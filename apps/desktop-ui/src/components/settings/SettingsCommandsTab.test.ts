@@ -56,12 +56,16 @@ let context: ReturnType<typeof createTestSettingsContext>
 
 const mountTab = (focusCommandId?: string, stubEditor = true) => {
   context = createTestSettingsContext({
-    launcherPages: [],
+    actionPages: [
+      {
+        inputMode: 'selection',
+        slots: {
+          q: { type: 'command', commandId: 'wh1' },
+          w: { type: 'standard', actionId: 'translationMenu' },
+        },
+      },
+    ],
     commands: [webhook, script],
-    mainActions: {
-      q: { type: 'command', commandId: 'wh1' },
-      w: { type: 'standard', actionId: 'translationMenu' },
-    },
   } as Partial<UserConfig>)
   return mount(SettingsCommandsTab, {
     props: { focusCommandId },
@@ -108,9 +112,8 @@ describe('SettingsCommandsTab.vue', () => {
 
   it('reorders commands by dragging the shared handle', async () => {
     context = createTestSettingsContext({
-      launcherPages: [],
+      actionPages: [{ inputMode: 'selection', slots: {} }],
       commands: [webhook, script],
-      mainActions: {},
     } as Partial<UserConfig>)
     const wrapper = mount(SettingsCommandsTab, {
       attachTo: document.body,
@@ -164,22 +167,25 @@ describe('SettingsCommandsTab.vue', () => {
     expect(cards[1].find('.command-placements').text()).toBe('')
   })
 
-  it('shows action keys and assignments on every launcher page', async () => {
+  it('shows action keys and assignments on every action page', async () => {
     const wrapper = mountTab()
-    context.draft.value.launcherPages = [
-      { q: 'wh1' },
-      { w: 'wh1' },
-      { q: 'sc1' },
-    ].map((slots, index) => ({
-      id: `page-${index}`,
-      inputMode: 'selection' as const,
-      hotkey: '',
-      slots,
-    }))
+    context.draft.value.actionPages = [
+      {
+        inputMode: 'selection',
+        slots: { q: { type: 'command', commandId: 'wh1' } },
+      },
+      {
+        inputMode: 'selection',
+        slots: { w: { type: 'command', commandId: 'wh1' } },
+      },
+      {
+        inputMode: 'none',
+        slots: { q: { type: 'command', commandId: 'sc1' } },
+      },
+    ]
     await nextTick()
     const placements = wrapper.findAll('.command-placements')
     expect(placements[0].text()).toContain('"key":"Q"')
-    expect(placements[0].text()).toContain('"page":1,"key":"Q"')
     expect(placements[0].text()).toContain('"page":2,"key":"W"')
     expect(placements[1].text()).toContain('"page":3,"key":"Q"')
     expect(placements[0].findAll('button')).toHaveLength(0)
@@ -250,7 +256,7 @@ describe('SettingsCommandsTab.vue', () => {
     await pickMenuItem(wrapper, 0, '.dropdown-item.is-danger')
 
     expect(commandIds()).toEqual(['sc1'])
-    expect(context.draft.value.mainActions).toEqual({
+    expect(context.draft.value.actionPages[0].slots).toEqual({
       w: { type: 'standard', actionId: 'translationMenu' },
     })
     expect(wrapper.find('.commands-notice').text()).toContain(
@@ -267,7 +273,7 @@ describe('SettingsCommandsTab.vue', () => {
     await wrapper.find('.commands-notice button').trigger('click')
 
     expect(commandIds()).toEqual(['wh1', 'sc1'])
-    expect(context.draft.value.mainActions).toEqual({
+    expect(context.draft.value.actionPages[0].slots).toEqual({
       q: { type: 'command', commandId: 'wh1' },
       w: { type: 'standard', actionId: 'translationMenu' },
     })

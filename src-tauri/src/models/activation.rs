@@ -1,6 +1,5 @@
 //! What an activation opens, as the webview receives it.
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::errors::AppError;
 
@@ -14,7 +13,6 @@ pub enum ActivationMode {
     VoiceCommands,
     Voice,
     SelectionActions,
-    CommandLauncher,
     Correction,
     Translation,
     Styling,
@@ -30,7 +28,7 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     /// The modes a caller may name: every one but `ExternalAccess`.
-    pub const PUBLIC_MODES: [Self; 16] = [
+    pub const PUBLIC_MODES: [Self; 15] = [
         Self::Editor,
         Self::QuickInput,
         Self::Chat,
@@ -38,7 +36,6 @@ impl ActivationMode {
         Self::VoiceCommands,
         Self::Voice,
         Self::SelectionActions,
-        Self::CommandLauncher,
         Self::Correction,
         Self::Translation,
         Self::Styling,
@@ -67,7 +64,6 @@ impl ActivationMode {
             Self::VoiceChat => "voiceChat",
             Self::Voice => "voice",
             Self::SelectionActions => "selectionActions",
-            Self::CommandLauncher => "commandLauncher",
             Self::Correction => "correction",
             Self::Translation => "translation",
             Self::Styling => "styling",
@@ -108,21 +104,4 @@ pub struct AccessRequest {
     /// The output is to replace the selection, not only to be returned.
     #[serde(rename = "replace")]
     pub should_replace: bool,
-}
-
-/// A command the overlay opens with, see `Activation::launcher_request`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-pub struct LauncherRequest {
-    pub command_id: String,
-    /// The text of the call; without it the selection or the field gives it.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub text: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub job_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(type = "Record<string, unknown>")]
-    pub input: Option<serde_json::Map<String, Value>>,
 }

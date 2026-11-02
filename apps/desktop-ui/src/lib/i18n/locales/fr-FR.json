@@ -173,26 +173,6 @@
       "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes."
     }
   },
-  "commandLauncher": {
-    "aiStep": "« {name} » : exécution de « {step} »…",
-    "allCommands": "Toutes les commandes",
-    "commandMissing": "La commande {id} n’est pas dans la bibliothèque.",
-    "dropSelection": "Ne pas utiliser le texte sélectionné",
-    "hintAskAi": "Demander à l’IA",
-    "hintNewLine": "Nouvelle ligne",
-    "hintRun": "Exécuter",
-    "hintSavePrompt": "Enregistrer comme commande IA",
-    "nothingFound": "Aucune commande trouvée",
-    "pages": "Pages :",
-    "promptSaved": "Enregistré comme commande IA",
-    "promptSavedAlready": "Une commande IA avec ce prompt existe déjà",
-    "running": "Exécution de « {name} »…",
-    "searchPlaceholder": "Rechercher des commandes…",
-    "selection": "Texte sélectionné : {count} caractères",
-    "targetHint": "Ce qui sera exécuté : la commande shell, ou la méthode et l’URL du webhook",
-    "textPlaceholder": "Texte pour la commande",
-    "title": "Commandes"
-  },
   "commands": {
     "advanced": "Avancé",
     "afterRunCopy": "Dans le presse-papiers",
@@ -295,7 +275,9 @@
     "platforms": "Plateformes",
     "platformsInfo": "La commande s’exécute seulement sur les plateformes cochées ; si aucune n’est cochée, sur toutes. Sur une autre plateforme, elle reste dans les listes mais ne s’exécute pas.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Exécution de « {name} »…",
+    "commandMissing": "La commande {id} n’est pas dans la bibliothèque."
   },
   "common": {
     "add": "Ajouter",
@@ -647,7 +629,6 @@
     "actionWorkingDirPlaceholder": "Dossier personnel",
     "actionsCategory": "Actions",
     "addConnection": "Ajouter une connexion",
-    "addLauncherPage": "Ajouter une page",
     "addModel": "Ajouter un modèle",
     "aiCategory": "IA",
     "aiEntityGeneral": "Général",
@@ -760,7 +741,7 @@
       "editor": "Ouvrir le texte sélectionné dans l’éditeur",
       "history": "Historique",
       "quickInput": "Saisie rapide de texte",
-      "selectionActions": "Actions sur la sélection",
+      "selectionActions": "Actions (page 1)",
       "selectionCorrection": "Corriger le texte sélectionné sur place",
       "styling": "Stylisation de texte",
       "transformation": "Transformation de texte",
@@ -768,7 +749,9 @@
       "voice": "Saisie vocale",
       "voiceChat": "Question vocale sur le texte sélectionné dans le chat IA",
       "voiceCommands": "Commandes vocales",
-      "voiceTransformation": "Transformation textuelle vocale"
+      "voiceTransformation": "Transformation textuelle vocale",
+      "selectionActionsPage2": "Actions : page 2",
+      "selectionActionsPage3": "Actions : page 3"
     },
     "hotkeyInput": {
       "cancelHint": "Échap pour annuler",
@@ -799,11 +782,6 @@
     "keySaveFailed": "Impossible de mettre à jour la clé",
     "keyRemoveFailed": "Impossible de supprimer la clé",
     "languagesTab": "Langues de traduction",
-    "launcherCommandsHint": "Commandes lancées d’une seule touche de la main gauche dans la fenêtre des commandes rapides : Q–T, A–G et Z–B. Faites glisser les cartes pour changer leurs touches. Chaque page a son propre raccourci global dans l’onglet Raccourcis.",
-    "launcherCommandsTab": "Commandes rapides",
-    "launcherPage": "Commandes rapides : page {page}",
-    "launcherPageTakesText": "Récupérer le texte sélectionné",
-    "launcherPageTakesTextInfo": "Désactivez pour les pages dont les commandes ne traitent pas de texte : le lanceur s’ouvrira sans capturer le texte surligné, pour que d’anciennes sélections ne se retrouvent pas dans les commandes.",
     "llmConnections": "Connexions",
     "llmConnectionsHint": "Où Tyco envoie les requêtes IA : Google, OpenRouter, DeepSeek ou tout serveur doté d’une API compatible OpenAI, comme un Ollama ou un LM Studio local. Les modèles s’ajoutent dans leur connexion. Une clé enregistrée va dans le stockage sécurisé et n’est plus jamais affichée.",
     "llmTab": "LLM",
@@ -819,8 +797,6 @@
     },
     "mainActionStylingRemoved": "Style de texte supprimé",
     "mainActionTransformationRemoved": "Transformation de texte supprimée",
-    "mainActionsHint": "Actions du menu principal : chacune se lance avec sa propre touche. Faites glisser les cartes pour changer leurs touches.",
-    "mainActionsTab": "Actions principales",
     "markdownBullet": "Puce de liste",
     "markdownCleanBlockquoteAngle": "> (garder le préfixe de citation)",
     "markdownCleanBlockquoteIndent": "Style des citations",
@@ -975,7 +951,6 @@
     "rebindHotkeysError": "Impossible de réenregistrer les raccourcis",
     "rebindHotkeysHint": "Rétablit les raccourcis supprimés dans les paramètres du système ; les raccourcis que vous avez modifiés sont conservés. Pour éliminer les raccourcis obsolètes, supprimez d’abord Tyco dans les paramètres du système.",
     "removeKey": "Retirer la clé",
-    "removeLauncherPage": "Supprimer la page",
     "removeModel": "Retirer le modèle",
     "removeModelConfirm": "Retirer ce modèle ?",
     "removePluginPackage": "Retirer le paquet",
@@ -1191,7 +1166,14 @@
     "askInProfileChat": "Demander dans le chat : {profile}",
     "mainActionProfileRemoved": "Profil supprimé",
     "webJinaApiKey": "Clé API Jina AI",
-    "webJinaApiKeyHint": "Facultatif. Sans clé, les requêtes utilisent le niveau gratuit avec des limites partagées."
+    "webJinaApiKeyHint": "Facultatif. Sans clé, les requêtes utilisent le niveau gratuit avec des limites partagées.",
+    "actionsTab": "Actions",
+    "actionsHint": "Actions lancées d'une seule touche de la main gauche dans la fenêtre d'actions : Q–T, A–G et Z–B. Faites glisser les cartes pour changer les touches. Utilisez des pages pour organiser les actions.",
+    "actionPage": "Page {page}",
+    "addActionPage": "Ajouter une page",
+    "removeActionPage": "Supprimer la page",
+    "actionPageTakesText": "Accepter le texte sélectionné",
+    "actionPageTakesTextInfo": "Si cette option est désactivée, l'ouverture de cette page ne copie pas le texte sélectionné depuis d'autres applications."
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

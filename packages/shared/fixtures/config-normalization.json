@@ -227,11 +227,12 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": {}
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -249,16 +250,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -362,6 +353,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -613,11 +621,12 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": {}
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -635,16 +644,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -744,6 +743,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -982,11 +998,12 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": {}
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1004,8 +1021,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {},
-      "launcherPages": [{ "id": "main", "slots": {}, "inputMode": "none" }],
       "commands": [],
       "llm": {
         "providers": [
@@ -1109,6 +1124,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -1354,11 +1386,12 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": {}
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1376,16 +1409,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -1494,6 +1517,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -1729,11 +1769,12 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": {}
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -1751,16 +1792,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -1857,6 +1888,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -2097,7 +2145,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
-        "launcherPages": { "alpha": "Ctrl+Alt+1" },
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
@@ -2119,11 +2168,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": { "q": { "type": "launcherPage", "pageId": "beta" } },
-      "launcherPages": [
-        { "id": "alpha", "inputMode": "none", "slots": {} },
-        { "id": "beta", "inputMode": "selection", "slots": {} }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -2227,6 +2271,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -2469,11 +2530,12 @@
         "transformation": "",
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": {}
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2491,16 +2553,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -2604,6 +2656,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -2863,10 +2932,11 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
-        "history": "",
-        "launcherPages": {}
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2884,12 +2954,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" }
-      },
-      "launcherPages": [
-        { "id": "main", "inputMode": "selection", "slots": {} }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -2998,6 +3062,23 @@
         "items": [{ "id": "a", "name": "A", "rule": "x" }],
         "slots": { "q": "a" }
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "styling": { "items": [], "slots": {} },
@@ -3244,10 +3325,11 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
-        "history": "",
-        "launcherPages": {}
+        "history": ""
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3272,12 +3354,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" }
-      },
-      "launcherPages": [
-        { "id": "main", "inputMode": "selection", "slots": {} }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -3386,6 +3462,23 @@
         "items": [{ "id": "a", "name": "A", "rule": "x" }],
         "slots": { "q": "a" }
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "styling": { "items": [], "slots": {} },
@@ -3647,11 +3740,12 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": {}
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -3669,17 +3763,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "command", "commandId": "mycmd" },
-        "w": { "type": "command", "commandId": "notes-2" }
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": { "q": "command", "w": "notes" },
-          "inputMode": "none"
-        }
-      ],
       "commands": [
         {
           "id": "notes",
@@ -3852,6 +3935,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "variables": [],
       "variableValues": {},
       "transformations": {
@@ -4140,11 +4240,12 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "selectionActionsPage2": "",
+        "selectionActionsPage3": "",
         "customTransformation": "",
         "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": {}
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -4162,17 +4263,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "command", "commandId": "mycmd" },
-        "w": { "type": "command", "commandId": "notes-2" }
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": { "q": "command", "w": "notes" },
-          "inputMode": "none"
-        }
-      ],
       "commands": [
         {
           "id": "notes",
@@ -4351,6 +4441,23 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "actionPages": [
+        {
+          "inputMode": "selection",
+          "slots": {
+            "q": { "type": "standard", "actionId": "copyToClipboard" },
+            "w": { "type": "plugin", "actionId": "FastNote:write" },
+            "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+            "t": { "type": "standard", "actionId": "translationMenu" },
+            "a": { "type": "standard", "actionId": "askInChat" },
+            "s": { "type": "standard", "actionId": "stylingMenu" },
+            "d": { "type": "standard", "actionId": "correction" },
+            "f": { "type": "standard", "actionId": "transformationMenu" },
+            "g": { "type": "standard", "actionId": "customTransformation" },
+            "v": { "type": "standard", "actionId": "voiceTransformation" }
+          }
+        }
+      ],
       "transformations": {
         "items": [
           {

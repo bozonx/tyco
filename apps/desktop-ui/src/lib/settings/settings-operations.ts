@@ -1,8 +1,7 @@
 import {
   llmSecretId,
   resolveHotkeyTarget,
-  STATIC_LAUNCHER_PAGE_IDS,
-  type LauncherPageConfig,
+  type ActionPageConfig,
   type UserConfig,
 } from '@tyco/shared'
 import type { PluginFactory } from '../../types/plugins'
@@ -36,23 +35,14 @@ export function createSettingsOperations(deps: {
     }
   }
 
-  const updateLauncherPages = (pages: LauncherPageConfig[]) => {
+  const updateActionPages = (pages: ActionPageConfig[]) => {
     if (pages.length === 0)
-      throw new Error('At least one launcher page is required')
+      throw new Error('At least one action page is required')
     const config = deps.getConfig()
-    const ids = new Set(pages.map((page) => page.id))
-    config.mainActions = Object.fromEntries(
-      Object.entries(config.mainActions).filter(
-        ([, item]) => item.type !== 'launcherPage' || ids.has(item.pageId)
-      )
+    const normalized = pages.map((page, index) =>
+      index === 0 ? { ...page, inputMode: 'selection' as const } : page
     )
-    // the shortcut of a removed page goes with it, but static pages stay
-    config.hotkeys.launcherPages = Object.fromEntries(
-      Object.entries(config.hotkeys.launcherPages).filter(
-        ([id]) => STATIC_LAUNCHER_PAGE_IDS.includes(id) || ids.has(id)
-      )
-    )
-    config.launcherPages = pages
+    config.actionPages = normalized
   }
 
   const updatePluginEnabled = (pluginId: string, isEnabled: boolean) => {
@@ -84,8 +74,8 @@ export function createSettingsOperations(deps: {
   }
 
   /**
-   * `id` is a hotkey id: a mode, the inline correction, or a page of the
-   * command overlay, each stored where it belongs
+   * `id` is a hotkey id: a mode, the inline correction, or an action page, each
+   * stored where it belongs
    */
   const updateHotkey = (id: string, shortcut: string) => {
     resolveHotkeyTarget(deps.getConfig(), id)?.set(shortcut)
@@ -93,7 +83,7 @@ export function createSettingsOperations(deps: {
 
   return {
     finishProviderRemoval,
-    updateLauncherPages,
+    updateActionPages,
     updateHotkey,
     updatePluginEnabled,
     updatePluginConfig,

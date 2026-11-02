@@ -151,6 +151,40 @@ describe('InsertMenu correction step', () => {
     const list = wrapper.findComponent(ShortcutList)
     expect(list.props('spaceKey')?.id).toBe('insertIntoWindow')
   })
+
+  it('renders page buttons and switches pages with keys when multiple pages exist', async () => {
+    const actionMenuStore = (
+      await import('../../stores/action-menu')
+    ).useActionMenuStore()
+    desktop.setUserConfig({
+      actionPages: [
+        {
+          inputMode: 'selection',
+          slots: { q: { type: 'standard', actionId: 'copyToClipboard' } },
+        },
+        {
+          inputMode: 'none',
+          slots: { q: { type: 'standard', actionId: 'askInChat' } },
+        },
+      ],
+    })
+    actionMenuStore.setPage(0)
+    const wrapper = mountMenu({ text: 'Selected text' })
+    const pageButtons = wrapper.findAll('.action-page-button')
+    expect(pageButtons).toHaveLength(2)
+    expect(pageButtons[0].classes()).toContain('is-active')
+    expect(wrapper.find('.preview-area').exists()).toBe(true)
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '2' }))
+    await wrapper.vm.$nextTick()
+    expect(actionMenuStore.pageIndex).toBe(1)
+    expect(wrapper.find('.preview-area').exists()).toBe(false)
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageUp' }))
+    await wrapper.vm.$nextTick()
+    expect(actionMenuStore.pageIndex).toBe(0)
+    expect(wrapper.find('.preview-area').exists()).toBe(true)
+  })
 })
 
 afterEach(() => {

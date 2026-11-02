@@ -2,7 +2,6 @@
 const DISMISSIBLE_MODES = new Set([
   'quickInput',
   'selectionActions',
-  'commandLauncher',
   'translation',
   'styling',
   'transformation',
@@ -11,8 +10,6 @@ const DISMISSIBLE_MODES = new Set([
 export interface QuickWindowSessionDependencies {
   mode: () => string
   isWindowShown: () => boolean
-  /** The command overlay is past its list: a typed text or a running command */
-  isLauncherPastList: () => boolean
   hasModal: () => boolean
   hasPendingModal: () => boolean
   /** The user lets the window hide when it loses focus */
@@ -38,7 +35,6 @@ export function createQuickWindowSession(deps: QuickWindowSessionDependencies) {
    */
   const keepsOnFocusLoss = (): boolean =>
     !DISMISSIBLE_MODES.has(deps.mode()) ||
-    (deps.mode() === 'commandLauncher' && deps.isLauncherPastList()) ||
     deps.hasModal() ||
     deps.hasPendingModal()
 

@@ -3,7 +3,6 @@ import { watch } from 'vue'
 import { resetDismissibleKeyboardState } from './use-dismissible-layer'
 
 import { createQuickWindowSession } from '../lib/quick-panel/quick-window-session'
-import { useCommandLauncherStore } from '../stores/command-launcher'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
@@ -22,12 +21,10 @@ export function useQuickWindowSession(
   const menuModalsStore = useMenuModalsStore()
   const quickInputStore = useQuickInputStore()
   const quickDismissStore = useQuickDismissStore()
-  const commandLauncherStore = useCommandLauncherStore()
 
   const session = createQuickWindowSession({
     mode: () => desktopStore.desktopState.mode || 'quickInput',
     isWindowShown: () => Boolean(desktopStore.desktopState.isWindowShown),
-    isLauncherPastList: () => commandLauncherStore.stage.kind !== 'list',
     hasModal: () => menuModalsStore.currentModal !== MenuModals.NONE,
     hasPendingModal: () => Boolean(menuModalsStore.pendingModal),
     isHideOnBlurEnabled: () =>

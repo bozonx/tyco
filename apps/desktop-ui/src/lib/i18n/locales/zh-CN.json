@@ -173,26 +173,6 @@
       "noCommandsHint": "请先在设置 → 命令中创建命令。"
     }
   },
-  "commandLauncher": {
-    "aiStep": "“{name}”：正在运行“{step}”…",
-    "allCommands": "所有命令",
-    "commandMissing": "命令 {id} 不在库中。",
-    "dropSelection": "不使用选中的文本",
-    "hintAskAi": "问 AI",
-    "hintNewLine": "换行",
-    "hintRun": "运行",
-    "hintSavePrompt": "保存为 AI 命令",
-    "nothingFound": "未找到命令",
-    "pages": "页面：",
-    "promptSaved": "已保存为 AI 命令",
-    "promptSavedAlready": "已有使用此提示词的 AI 命令",
-    "running": "正在运行“{name}”…",
-    "searchPlaceholder": "搜索命令…",
-    "selection": "已选文本：{count} 个字符",
-    "targetHint": "将要执行的内容：Shell 命令，或者 Webhook 方法与 URL",
-    "textPlaceholder": "命令的输入文本",
-    "title": "命令"
-  },
   "commands": {
     "advanced": "高级",
     "afterRunCopy": "复制到剪贴板",
@@ -295,7 +275,9 @@
     "platforms": "平台",
     "platformsInfo": "命令只在勾选的平台上运行；都不勾选则在所有平台上运行。在其他平台上，它仍保留在列表中，但不会运行。",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "正在运行“{name}”…",
+    "commandMissing": "命令 {id} 不在库中。"
   },
   "common": {
     "add": "添加",
@@ -641,7 +623,6 @@
     "actionWorkingDirPlaceholder": "主目录",
     "actionsCategory": "操作",
     "addConnection": "添加连接",
-    "addLauncherPage": "添加页面",
     "addModel": "添加模型",
     "aiCategory": "AI",
     "aiEntityGeneral": "通用",
@@ -754,7 +735,7 @@
       "editor": "在编辑器中打开选中文本",
       "history": "历史记录",
       "quickInput": "快捷文本输入",
-      "selectionActions": "选区操作",
+      "selectionActions": "操作（第 1 页）",
       "selectionCorrection": "就地纠错选中文本",
       "styling": "文本风格化",
       "transformation": "文本转换",
@@ -762,7 +743,9 @@
       "voice": "语音输入",
       "voiceChat": "在 AI 对话中针对选中文本进行语音提问",
       "voiceCommands": "语音命令",
-      "voiceTransformation": "文本语音转换"
+      "voiceTransformation": "文本语音转换",
+      "selectionActionsPage2": "操作：第 2 页",
+      "selectionActionsPage3": "操作：第 3 页"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -793,11 +776,6 @@
     "keySaveFailed": "更新密钥失败",
     "keyRemoveFailed": "无法移除密钥",
     "languagesTab": "翻译语言",
-    "launcherCommandsHint": "在快捷命令窗口中通过左手单键（Q–T、A–G 和 Z–B）运行的命令。拖动卡片可更改其按键。每个页面在“快捷键”选项卡中都有独立的全局快捷键。",
-    "launcherCommandsTab": "快捷命令",
-    "launcherPage": "快捷命令：第 {page} 页",
-    "launcherPageTakesText": "获取选中文本",
-    "launcherPageTakesTextInfo": "对于不处理文本的命令页面可禁用此项：启动器打开时将不捕获高亮选中的文本，防止先前的选区残留到命令中。",
     "llmConnections": "连接",
     "llmConnectionsHint": "Tyco 发送 AI 请求的目标：Google、OpenRouter、DeepSeek 或任何具有兼容 OpenAI API 的服务器，例如本地的 Ollama 或 LM Studio。模型添加在其连接内部。保存的密钥将存入安全存储区，不再显示。",
     "llmTab": "LLM",
@@ -813,8 +791,6 @@
     },
     "mainActionStylingRemoved": "已删除的文本风格",
     "mainActionTransformationRemoved": "已删除的文本转换",
-    "mainActionsHint": "主菜单操作：每项操作使用独立的按键运行。拖动卡片可更改其按键。",
-    "mainActionsTab": "主操作",
     "markdownBullet": "列表标记",
     "markdownCleanBlockquoteAngle": "> (保留引用前缀)",
     "markdownCleanBlockquoteIndent": "块引用样式",
@@ -969,7 +945,6 @@
     "rebindHotkeysError": "无法重新注册快捷键",
     "rebindHotkeysHint": "恢复在系统设置中被移除的快捷键；您修改过的快捷键将被保留。若要废弃旧快捷键，请先在系统设置中移除 Tyco。",
     "removeKey": "移除密钥",
-    "removeLauncherPage": "删除页面",
     "removeModel": "移除模型",
     "removeModelConfirm": "确定要移除此模型吗？",
     "removePluginPackage": "移除扩展包",
@@ -1185,7 +1160,14 @@
     "askInProfileChat": "在聊天中询问：{profile}",
     "mainActionProfileRemoved": "已删除的配置文件",
     "webJinaApiKey": "Jina AI API 密钥",
-    "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。"
+    "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。",
+    "actionsTab": "操作",
+    "actionsHint": "在操作窗口中通过左手单键（Q–T、A–G 和 Z–B）运行的操作。拖动卡片可更改按键。使用页面组织操作。",
+    "actionPage": "第 {page} 页",
+    "addActionPage": "添加页面",
+    "removeActionPage": "删除页面",
+    "actionPageTakesText": "接收选中文本",
+    "actionPageTakesTextInfo": "禁用后，打开此页面不会从其他应用程序复制选中文本。"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

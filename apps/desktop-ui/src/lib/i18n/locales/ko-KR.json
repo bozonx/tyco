@@ -173,26 +173,6 @@
       "noCommandsHint": "먼저 설정 → 명령어에서 명령어를 생성하세요."
     }
   },
-  "commandLauncher": {
-    "aiStep": "“{name}”: “{step}” 실행 중…",
-    "allCommands": "모든 명령",
-    "commandMissing": "명령 {id}을(를) 라이브러리에서 찾을 수 없습니다.",
-    "dropSelection": "선택한 텍스트 사용 안 함",
-    "hintAskAi": "AI에게 묻기",
-    "hintNewLine": "줄 바꿈",
-    "hintRun": "실행",
-    "hintSavePrompt": "AI 명령으로 저장",
-    "nothingFound": "명령을 찾을 수 없습니다",
-    "pages": "페이지:",
-    "promptSaved": "AI 명령으로 저장했습니다",
-    "promptSavedAlready": "이 프롬프트의 AI 명령이 이미 있습니다",
-    "running": "“{name}” 실행 중…",
-    "searchPlaceholder": "명령 검색…",
-    "selection": "선택된 텍스트: {count}자",
-    "targetHint": "실행 대상: 셸 명령 또는 웹후크 메서드 및 URL",
-    "textPlaceholder": "명령에 사용할 텍스트",
-    "title": "명령"
-  },
   "commands": {
     "advanced": "고급",
     "afterRunCopy": "클립보드로 복사",
@@ -295,7 +275,9 @@
     "platforms": "플랫폼",
     "platformsInfo": "명령은 선택한 플랫폼에서만 실행됩니다. 아무것도 선택하지 않으면 모든 플랫폼에서 실행됩니다. 다른 플랫폼에서는 목록에 남지만 실행되지 않습니다.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "“{name}” 실행 중…",
+    "commandMissing": "명령 {id}을(를) 라이브러리에서 찾을 수 없습니다."
   },
   "common": {
     "add": "추가",
@@ -641,7 +623,6 @@
     "actionWorkingDirPlaceholder": "홈 디렉터리",
     "actionsCategory": "작업",
     "addConnection": "연결 추가",
-    "addLauncherPage": "페이지 추가",
     "addModel": "모델 추가",
     "aiCategory": "AI",
     "aiEntityGeneral": "일반",
@@ -754,7 +735,7 @@
       "editor": "선택한 텍스트를 편집기에서 열기",
       "history": "기록",
       "quickInput": "빠른 텍스트 입력",
-      "selectionActions": "선택 영역 작업",
+      "selectionActions": "작업 (페이지 1)",
       "selectionCorrection": "선택한 텍스트를 그 자리에서 교정",
       "styling": "텍스트 스타일 지정",
       "transformation": "텍스트 변환",
@@ -762,7 +743,9 @@
       "voice": "음성 입력",
       "voiceChat": "선택한 텍스트에 대해 AI 채팅에 음성으로 질문",
       "voiceCommands": "음성 명령",
-      "voiceTransformation": "텍스트 음성 변환"
+      "voiceTransformation": "텍스트 음성 변환",
+      "selectionActionsPage2": "작업: 페이지 2",
+      "selectionActionsPage3": "작업: 페이지 3"
     },
     "hotkeyInput": {
       "cancelHint": "취소하려면 Esc",
@@ -793,11 +776,6 @@
     "keySaveFailed": "키 업데이트 실패",
     "keyRemoveFailed": "키를 제거하지 못했습니다",
     "languagesTab": "번역 언어",
-    "launcherCommandsHint": "빠른 명령 창에서 왼손 키 하나(Q–T, A–G, Z–B)로 실행되는 명령입니다. 카드를 드래그하여 키를 변경할 수 있습니다. 각 페이지는 단축키 탭에서 고유한 전역 단축키를 할당받습니다.",
-    "launcherCommandsTab": "빠른 명령",
-    "launcherPage": "빠른 명령: {page}페이지",
-    "launcherPageTakesText": "선택한 텍스트 가져오기",
-    "launcherPageTakesTextInfo": "텍스트를 처리하지 않는 명령이 있는 페이지의 경우 비활성화하세요. 실행기가 강조 표시된 텍스트를 캡처하지 않고 열리므로 이전 선택 내용이 명령으로 유출되는 것을 방지합니다.",
     "llmConnections": "연결",
     "llmConnectionsHint": "Tyco가 AI 요청을 보낼 위치: Google, OpenRouter, DeepSeek 또는 로컬 Ollama, LM Studio와 같이 OpenAI 호환 API를 지원하는 서버입니다. 모델은 각 연결 내에서 추가됩니다. 저장된 키는 보안 저장소로 이동하며 다시 표시되지 않습니다.",
     "llmTab": "LLM",
@@ -813,8 +791,6 @@
     },
     "mainActionStylingRemoved": "삭제된 텍스트 스타일",
     "mainActionTransformationRemoved": "삭제된 텍스트 변환",
-    "mainActionsHint": "메인 메뉴 작업: 각 작업은 고유한 키로 실행됩니다. 카드를 드래그하여 키를 변경할 수 있습니다.",
-    "mainActionsTab": "메인 작업",
     "markdownBullet": "목록 마커",
     "markdownCleanBlockquoteAngle": "> (인용 접두사 유지)",
     "markdownCleanBlockquoteIndent": "인용 블록 스타일",
@@ -969,7 +945,6 @@
     "rebindHotkeysError": "단축키를 다시 등록할 수 없습니다",
     "rebindHotkeysHint": "시스템 설정에서 제거된 단축키를 다시 가져옵니다. 변경한 단축키는 유지됩니다. 오래된 단축키를 삭제하려면 먼저 시스템 설정에서 Tyco를 제거하세요.",
     "removeKey": "키 제거",
-    "removeLauncherPage": "페이지 삭제",
     "removeModel": "모델 제거",
     "removeModelConfirm": "이 모델을 제거하시겠습니까?",
     "removePluginPackage": "패키지 제거",
@@ -1185,7 +1160,14 @@
     "askInProfileChat": "채팅에서 질문: {profile}",
     "mainActionProfileRemoved": "삭제된 프로필",
     "webJinaApiKey": "Jina AI API 키",
-    "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다."
+    "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다.",
+    "actionsTab": "작업",
+    "actionsHint": "작업 창에서 왼손 키 하나(Q–T, A–G, Z–B)로 실행되는 작업입니다. 카드를 드래그하여 키를 변경할 수 있습니다. 페이지를 사용하여 작업을 정리하세요.",
+    "actionPage": "페이지 {page}",
+    "addActionPage": "페이지 추가",
+    "removeActionPage": "페이지 삭제",
+    "actionPageTakesText": "선택한 텍스트 수락",
+    "actionPageTakesTextInfo": "비활성화하면 이 페이지를 열 때 다른 애플리케이션에서 선택한 텍스트를 복사하지 않습니다."
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

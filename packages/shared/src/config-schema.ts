@@ -4,6 +4,7 @@ import configDefaults from './user-config-defaults.json' with { type: 'json' }
 import configVersion from './config-version.json' with { type: 'json' }
 import {
   BUILTIN_LLM_PROVIDERS,
+  DEFAULT_ACTION_PAGES,
   LLM_TASKS,
   normalizeGlossaryEntry,
   SHORTCUT_SLOT_KEYS,
@@ -12,7 +13,6 @@ import {
   type UserConfigInput,
 } from './user-config'
 import { BUILTIN_VARIABLE_PREFIX } from './variables'
-import { STATIC_LAUNCHER_PAGE_IDS } from './hotkeys'
 
 interface Schema {
   minItems?: number
@@ -363,28 +363,20 @@ function repairCommandIds(value: unknown): unknown {
       withRepairedId(command, repairs)
     ),
   }
-  if (isRecord(value.mainActions)) {
-    result.mainActions = Object.fromEntries(
-      Object.entries(value.mainActions).map(([key, slot]) => [
-        key,
-        isRecord(slot) &&
-        slot.type === 'command' &&
-        typeof slot.commandId === 'string' &&
-        repairs.has(slot.commandId)
-          ? { ...slot, commandId: repairs.get(slot.commandId) }
-          : slot,
-      ])
-    )
-  }
-  if (Array.isArray(value.launcherPages)) {
-    result.launcherPages = value.launcherPages.map((page: unknown) =>
+  if (Array.isArray(value.actionPages)) {
+    result.actionPages = value.actionPages.map((page: unknown) =>
       isRecord(page) && isRecord(page.slots)
         ? {
             ...page,
             slots: Object.fromEntries(
-              Object.entries(page.slots).map(([key, id]) => [
+              Object.entries(page.slots).map(([key, slot]) => [
                 key,
-                typeof id === 'string' ? (repairs.get(id) ?? id) : id,
+                isRecord(slot) &&
+                slot.type === 'command' &&
+                typeof slot.commandId === 'string' &&
+                repairs.has(slot.commandId)
+                  ? { ...slot, commandId: repairs.get(slot.commandId) }
+                  : slot,
               ])
             ),
           }
@@ -452,25 +444,26 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
     filterSlots(config.styling.slots, (id) => stylingIds.has(id))
   )
   const commands = new Set(config.commands.map((command) => command.id))
-  config.launcherPages = deduplicate(config.launcherPages)
-  const pageIds = new Set(config.launcherPages.map((page) => page.id))
-  config.mainActions = filterSlots(config.mainActions, (slot) => {
-    if (slot.type === 'command') return commands.has(slot.commandId)
-    if (slot.type === 'transformation')
-      return transformationIds.has(slot.transformationId)
-    if (slot.type === 'styling') return stylingIds.has(slot.stylingId)
-    if (slot.type === 'launcherPage') return pageIds.has(slot.pageId)
-    return true
-  })
-  for (const page of config.launcherPages)
-    page.slots = filterSlots(page.slots, (id) => commands.has(id))
+  if (!Array.isArray(config.actionPages) || config.actionPages.length === 0) {
+    config.actionPages = DEFAULT_ACTION_PAGES
+  }
+  const raw = config as unknown as Record<string, unknown>
+  delete raw.mainActions
+  delete raw.launcherPages
+  if (isRecord(config.hotkeys)) {
+    delete (config.hotkeys as Record<string, unknown>).launcherPages
+  }
+  config.actionPages[0].inputMode = 'selection'
+  for (const page of config.actionPages) {
+    page.slots = filterSlots(page.slots, (slot) => {
+      if (slot.type === 'command') return commands.has(slot.commandId)
+      if (slot.type === 'transformation')
+        return transformationIds.has(slot.transformationId)
+      if (slot.type === 'styling') return stylingIds.has(slot.stylingId)
+      return true
+    })
+  }
   config.variables = normalizeVariables(config.variables)
-  // a device refers to the pages it has shortcuts for; one gone is dropped, but static pages stay
-  config.hotkeys.launcherPages = Object.fromEntries(
-    Object.entries(config.hotkeys.launcherPages).filter(
-      ([id]) => STATIC_LAUNCHER_PAGE_IDS.includes(id) || pageIds.has(id)
-    )
-  )
   const variableIds = new Set(config.variables.map((variable) => variable.id))
   config.variableValues = Object.fromEntries(
     Object.entries(config.variableValues).filter(([id]) => variableIds.has(id))

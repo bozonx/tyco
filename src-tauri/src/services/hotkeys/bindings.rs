@@ -10,17 +10,15 @@ use tauri::AppHandle;
 const HOTKEYS_CONFIG_KEY: &str = "hotkeys";
 /// The key of the inline correction in `hotkeys`, and its hotkey id.
 const SELECTION_CORRECTION_CONFIG_KEY: &str = "selectionCorrection";
-const LAUNCHER_PAGE_TARGET_PREFIX: &str = "launcherPage.";
-/// The shortcuts of the launcher pages in `hotkeys`, by page id.
-const LAUNCHER_PAGES_KEY: &str = "launcherPages";
+const SELECTION_ACTIONS_KEY: &str = "selectionActions";
+const SELECTION_ACTIONS_PAGE_2_KEY: &str = "selectionActionsPage2";
+const SELECTION_ACTIONS_PAGE_3_KEY: &str = "selectionActionsPage3";
+
 pub(super) use crate::services::selection_replace::CORRECTION_ACTION;
 const DEFAULT_CORRECTION_KEY: &str = "F";
-/// The first page of the default `launcherPages`, the one with a hotkey.
-const DEFAULT_LAUNCHER_PAGE_ID: &str = "main";
-const DEFAULT_LAUNCHER_PAGE_KEY: &str = "Q";
 const CORRECTION_DESCRIPTION: &str = "Correct selected text in place";
 
-/// What a hotkey does: open a mode or a page of the command overlay, or
+/// What a hotkey does: open a mode or an action page, or
 /// correct the selection in the focused window in place, see
 /// `selection_replace`. Commands have no hotkeys: they run from the overlay,
 /// by voice, or through tyco-ctl.
@@ -28,29 +26,35 @@ const CORRECTION_DESCRIPTION: &str = "Correct selected text in place";
 pub(crate) enum HotkeyTarget {
     Mode(ActivationMode),
     InlineCorrection,
-    /// The id of a page of `launcherPages`
-    LauncherPage(String),
+    /// An action page by 0-based index
+    ActionPage(usize),
 }
 
 impl HotkeyTarget {
     /// The id shared with the UI and the portal: the mode name,
-    /// `selectionCorrection`, or `launcherPage.<page id>`.
+    /// `selectionCorrection`, or action page keys.
     pub(crate) fn parse(id: &str) -> Result<Self, AppError> {
-        if let Some(page_id) = id.strip_prefix(LAUNCHER_PAGE_TARGET_PREFIX) {
-            if page_id.trim().is_empty() {
-                return Err(AppError::InvalidInput(String::from("Invalid command page")));
-            }
-            return Ok(Self::LauncherPage(page_id.to_owned()));
-        }
         if id == SELECTION_CORRECTION_CONFIG_KEY {
             return Ok(Self::InlineCorrection);
+        }
+        if id == SELECTION_ACTIONS_KEY {
+            return Ok(Self::ActionPage(0));
+        }
+        if id == SELECTION_ACTIONS_PAGE_2_KEY {
+            return Ok(Self::ActionPage(1));
+        }
+        if id == SELECTION_ACTIONS_PAGE_3_KEY {
+            return Ok(Self::ActionPage(2));
         }
         ActivationMode::parse(id).map(Self::Mode)
     }
 
     pub(crate) fn id(&self) -> String {
         match self {
-            Self::LauncherPage(page_id) => format!("{LAUNCHER_PAGE_TARGET_PREFIX}{page_id}"),
+            Self::ActionPage(0) => SELECTION_ACTIONS_KEY.to_owned(),
+            Self::ActionPage(1) => SELECTION_ACTIONS_PAGE_2_KEY.to_owned(),
+            Self::ActionPage(2) => SELECTION_ACTIONS_PAGE_3_KEY.to_owned(),
+            Self::ActionPage(index) => format!("selectionActionsPage{}", index + 1),
             Self::Mode(mode) => mode.as_str().to_owned(),
             Self::InlineCorrection => SELECTION_CORRECTION_CONFIG_KEY.to_owned(),
         }
@@ -58,8 +62,9 @@ impl HotkeyTarget {
 
     pub(crate) fn cli_command(&self) -> String {
         match self {
-            Self::LauncherPage(page_id) => {
-                format!("tyco --mode={}", Activation::launcher_page_mode(page_id))
+            Self::ActionPage(0) => "tyco-ctl open selection-actions".to_owned(),
+            Self::ActionPage(index) => {
+                format!("tyco --mode={}", Activation::action_page_mode(*index))
             }
             Self::Mode(mode) => format!(
                 "tyco-ctl open {}",
@@ -74,12 +79,9 @@ impl HotkeyTarget {
     /// Runs the target for a press of the hotkey with the given provider id.
     pub(crate) fn trigger(&self, app: &AppHandle, hotkey_id: &str) -> Result<(), AppError> {
         match self {
-            Self::LauncherPage(page_id) => runtime::activate(
+            Self::ActionPage(index) => runtime::activate(
                 app,
-                Activation::from_mode(
-                    &Activation::launcher_page_mode(page_id),
-                    ActivationSource::Hotkey,
-                )?,
+                Activation::selection_actions(*index, ActivationSource::Hotkey),
             ),
             Self::Mode(mode) => {
                 runtime::activate(app, Activation::new(*mode, ActivationSource::Hotkey))
@@ -103,15 +105,13 @@ pub(crate) struct HotkeyBinding {
     pub(crate) description: String,
 }
 
-/// The command overlay opens by the hotkeys of its pages, see `launcherPages`.
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 14] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 13] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
     ActivationMode::VoiceChat,
     ActivationMode::VoiceCommands,
     ActivationMode::Voice,
-    ActivationMode::SelectionActions,
     ActivationMode::Correction,
     ActivationMode::Translation,
     ActivationMode::Styling,
@@ -134,33 +134,36 @@ pub(crate) fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
         ),
         description: mode_description(mode).to_owned(),
     });
-    let configured_pages = crate::models::user_config::launcher_pages(config);
-    let mut page_targets: Vec<(String, String)> = Vec::new();
-    let static_page_ids = [DEFAULT_LAUNCHER_PAGE_ID, "page-2", "page-3"];
-    let shortcuts = &config["hotkeys"]["launcherPages"];
-    for (index, static_id) in static_page_ids.into_iter().enumerate() {
-        if let Some(page) = configured_pages.get(index) {
-            page_targets.push((page.id.clone(), page.hotkey.clone()));
-        } else {
-            let hotkey = shortcuts[static_id].as_str().unwrap_or_default().to_owned();
-            page_targets.push((static_id.to_owned(), hotkey));
-        }
-    }
-    if configured_pages.len() > static_page_ids.len() {
-        for page in &configured_pages[static_page_ids.len()..] {
-            page_targets.push((page.id.clone(), page.hotkey.clone()));
-        }
-    }
-    let pages = page_targets
-        .into_iter()
-        .enumerate()
-        .map(|(index, (page_id, hotkey))| HotkeyBinding {
-            target: HotkeyTarget::LauncherPage(page_id),
-            shortcut: Some(hotkey.trim().to_owned()).filter(|hotkey| !hotkey.is_empty()),
-            description: format!("Quick commands: page {}", index + 1),
-        });
+
+    let action_pages = [
+        (
+            HotkeyTarget::ActionPage(0),
+            SELECTION_ACTIONS_KEY,
+            Some(format!("{DEFAULT_MODIFIERS}+S")),
+            "Show action menu: page 1",
+        ),
+        (
+            HotkeyTarget::ActionPage(1),
+            SELECTION_ACTIONS_PAGE_2_KEY,
+            None,
+            "Show action menu: page 2",
+        ),
+        (
+            HotkeyTarget::ActionPage(2),
+            SELECTION_ACTIONS_PAGE_3_KEY,
+            None,
+            "Show action menu: page 3",
+        ),
+    ]
+    .into_iter()
+    .map(|(target, key, default, desc)| HotkeyBinding {
+        target,
+        shortcut: configured_shortcut(configured.and_then(|values| values.get(key)), || default),
+        description: desc.to_owned(),
+    });
+
     modes
-        .chain(pages)
+        .chain(action_pages)
         .chain([selection_binding(config)])
         .collect()
 }
@@ -194,37 +197,18 @@ fn configured_shortcut(
 /// Puts back the shortcut `target` has in `source` into `config`: a
 /// shortcut the system refused must not be saved as if it were bound.
 pub(crate) fn restore_config_shortcut(config: &mut Value, source: &Value, target: &HotkeyTarget) {
-    match target {
-        HotkeyTarget::LauncherPage(page_id) => {
-            let previous = source[HOTKEYS_CONFIG_KEY][LAUNCHER_PAGES_KEY]
-                .get(page_id)
-                .cloned();
-            let Some(Value::Object(shortcuts)) = config
-                .get_mut(HOTKEYS_CONFIG_KEY)
-                .and_then(|hotkeys| hotkeys.get_mut(LAUNCHER_PAGES_KEY))
-            else {
-                return;
-            };
-            match previous {
-                Some(previous) => shortcuts.insert(page_id.clone(), previous),
-                None => shortcuts.remove(page_id),
-            };
-        }
-        HotkeyTarget::Mode(_) | HotkeyTarget::InlineCorrection => {
-            let id = target.id();
-            let previous = source
-                .get(HOTKEYS_CONFIG_KEY)
-                .and_then(|hotkeys| hotkeys.get(&id))
-                .cloned();
-            let Some(Value::Object(hotkeys)) = config.get_mut(HOTKEYS_CONFIG_KEY) else {
-                return;
-            };
-            match previous {
-                Some(previous) => hotkeys.insert(id, previous),
-                None => hotkeys.remove(&id),
-            };
-        }
-    }
+    let id = target.id();
+    let previous = source
+        .get(HOTKEYS_CONFIG_KEY)
+        .and_then(|hotkeys| hotkeys.get(&id))
+        .cloned();
+    let Some(Value::Object(hotkeys)) = config.get_mut(HOTKEYS_CONFIG_KEY) else {
+        return;
+    };
+    match previous {
+        Some(previous) => hotkeys.insert(id, previous),
+        None => hotkeys.remove(&id),
+    };
 }
 
 /// The target of a global hotkey id; other targets have no global hotkey.
@@ -232,7 +216,7 @@ pub(crate) fn global_target(id: &str) -> Option<HotkeyTarget> {
     let target = HotkeyTarget::parse(id).ok()?;
     let global = match &target {
         HotkeyTarget::Mode(mode) => GLOBAL_HOTKEY_MODES.contains(mode),
-        HotkeyTarget::InlineCorrection | HotkeyTarget::LauncherPage(_) => true,
+        HotkeyTarget::InlineCorrection | HotkeyTarget::ActionPage(_) => true,
     };
     global.then_some(target)
 }
@@ -244,13 +228,12 @@ pub(crate) fn global_target(id: &str) -> Option<HotkeyTarget> {
 fn default_key(mode: ActivationMode) -> Option<&'static str> {
     match mode {
         ActivationMode::Voice => Some("V"),
-        ActivationMode::SelectionActions => Some("S"),
         ActivationMode::VoiceCommands => Some("X"),
         ActivationMode::QuickInput => Some("W"),
         ActivationMode::Editor
         | ActivationMode::Chat
         | ActivationMode::VoiceChat
-        | ActivationMode::CommandLauncher
+        | ActivationMode::SelectionActions
         | ActivationMode::Correction
         | ActivationMode::Translation
         | ActivationMode::Styling
@@ -272,26 +255,8 @@ fn default_correction_shortcut() -> Option<String> {
     (!cfg!(target_os = "macos")).then(|| format!("{DEFAULT_MODIFIERS}+{DEFAULT_CORRECTION_KEY}"))
 }
 
-/// The shortcut of the first page of the default `launcherPages`.
-pub fn default_launcher_page_shortcut() -> String {
-    format!("{DEFAULT_MODIFIERS}+{DEFAULT_LAUNCHER_PAGE_KEY}")
-}
-
 pub(super) fn default_bindings() -> Vec<HotkeyBinding> {
-    bindings_from_config(&serde_json::json!({
-        "launcherPages": [
-            { "id": DEFAULT_LAUNCHER_PAGE_ID },
-            { "id": "page-2" },
-            { "id": "page-3" },
-        ],
-        "hotkeys": {
-            "launcherPages": {
-                DEFAULT_LAUNCHER_PAGE_ID: default_launcher_page_shortcut(),
-                "page-2": "",
-                "page-3": "",
-            }
-        }
-    }))
+    bindings_from_config(&serde_json::json!({}))
 }
 
 /// The `hotkeys` of the default user config on this platform; an unassigned
@@ -306,6 +271,18 @@ pub fn default_hotkeys_config() -> Value {
             )
         })
         .collect::<Map<_, _>>();
+    hotkeys.insert(
+        SELECTION_ACTIONS_KEY.to_owned(),
+        Value::String(format!("{DEFAULT_MODIFIERS}+S")),
+    );
+    hotkeys.insert(
+        SELECTION_ACTIONS_PAGE_2_KEY.to_owned(),
+        Value::String(String::new()),
+    );
+    hotkeys.insert(
+        SELECTION_ACTIONS_PAGE_3_KEY.to_owned(),
+        Value::String(String::new()),
+    );
     hotkeys.insert(
         SELECTION_CORRECTION_CONFIG_KEY.to_owned(),
         Value::String(default_correction_shortcut().unwrap_or_default()),
@@ -322,7 +299,6 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::VoiceChat => "Ask the chat by voice",
         ActivationMode::Voice => "Start voice input",
         ActivationMode::SelectionActions => "Open selection actions",
-        ActivationMode::CommandLauncher => "Run a command",
         ActivationMode::Correction => "Correct selected text with review",
         ActivationMode::Translation => "Translate selected text",
         ActivationMode::Styling => "Open text styling",
@@ -366,13 +342,7 @@ mod tests {
             .filter(|binding| binding.shortcut.is_some())
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        let mut expected = vec![
-            "quickInput",
-            "voiceCommands",
-            "voice",
-            "selectionActions",
-            "launcherPage.main",
-        ];
+        let mut expected = vec!["quickInput", "voiceCommands", "voice", "selectionActions"];
         if !cfg!(target_os = "macos") {
             expected.push("selectionCorrection");
         }
@@ -395,9 +365,9 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 3);
         assert!(defaults.contains(&String::from("selectionCorrection")));
-        assert!(defaults.contains(&String::from("launcherPage.main")));
-        assert!(defaults.contains(&String::from("launcherPage.page-2")));
-        assert!(defaults.contains(&String::from("launcherPage.page-3")));
+        assert!(defaults.contains(&String::from("selectionActions")));
+        assert!(defaults.contains(&String::from("selectionActionsPage2")));
+        assert!(defaults.contains(&String::from("selectionActionsPage3")));
     }
 
     #[test]
@@ -406,9 +376,9 @@ mod tests {
             "hotkeys": {
                 "editor": "Super+Space",
                 "voice": "  ",
-                "launcherPages": { "main": "", "work": "Ctrl+Alt+2" }
-            },
-            "launcherPages": [{ "id": "main" }, { "id": "work" }]
+                "selectionActions": "",
+                "selectionActionsPage2": "Ctrl+Alt+2"
+            }
         }));
         let shortcut = |id: &str| {
             bindings
@@ -418,13 +388,13 @@ mod tests {
         };
         assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 3);
         assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
-        assert_eq!(shortcut("launcherPage.main"), None);
-        assert_eq!(shortcut("launcherPage.work").as_deref(), Some("Ctrl+Alt+2"));
-        assert_eq!(shortcut("voice"), None);
+        assert_eq!(shortcut("selectionActions"), None);
         assert_eq!(
-            shortcut("selectionActions"),
-            default_shortcut(ActivationMode::SelectionActions)
+            shortcut("selectionActionsPage2").as_deref(),
+            Some("Ctrl+Alt+2")
         );
+        assert_eq!(shortcut("selectionActionsPage3"), None);
+        assert_eq!(shortcut("voice"), None);
         assert_eq!(shortcut("chat"), None);
     }
 
@@ -482,28 +452,25 @@ mod tests {
     #[test]
     fn restores_refused_shortcuts_from_the_previous_config() {
         let previous = json!({
-            "hotkeys": { "voice": "Ctrl+Alt+V", "launcherPages": { "main": "Ctrl+Alt+Q" } },
-            "launcherPages": [{ "id": "main" }]
+            "hotkeys": { "voice": "Ctrl+Alt+V", "selectionActions": "Ctrl+Alt+Q" }
         });
         let mut next = json!({
             "hotkeys": {
                 "voice": "Ctrl+Alt+X",
                 "chat": "Ctrl+Alt+C",
-                "launcherPages": { "main": "Ctrl+Alt+W", "new": "Ctrl+Alt+N" }
-            },
-            "launcherPages": [{ "id": "main" }, { "id": "new" }]
+                "selectionActions": "Ctrl+Alt+W"
+            }
         });
         for target in [
             HotkeyTarget::Mode(ActivationMode::Voice),
             HotkeyTarget::Mode(ActivationMode::Chat),
-            HotkeyTarget::LauncherPage(String::from("main")),
-            HotkeyTarget::LauncherPage(String::from("new")),
+            HotkeyTarget::ActionPage(0),
         ] {
             restore_config_shortcut(&mut next, &previous, &target);
         }
         assert_eq!(
             next["hotkeys"],
-            json!({ "voice": "Ctrl+Alt+V", "launcherPages": { "main": "Ctrl+Alt+Q" } })
+            json!({ "voice": "Ctrl+Alt+V", "selectionActions": "Ctrl+Alt+Q" })
         );
     }
 
@@ -522,8 +489,12 @@ mod tests {
             "tyco-ctl replace correction"
         );
         assert_eq!(
-            HotkeyTarget::LauncherPage(String::from("work")).cli_command(),
-            "tyco --mode=commandLauncher:work"
+            HotkeyTarget::ActionPage(0).cli_command(),
+            "tyco-ctl open selection-actions"
+        );
+        assert_eq!(
+            HotkeyTarget::ActionPage(1).cli_command(),
+            "tyco --mode=selectionActions:2"
         );
     }
 
@@ -542,11 +513,15 @@ mod tests {
         assert!(HotkeyTarget::parse("replace.translate.0").is_err());
         assert!(HotkeyTarget::parse("replace.bogus").is_err());
         assert!(HotkeyTarget::parse("bogus").is_err());
-        let page = HotkeyTarget::parse("launcherPage.work").unwrap();
-        assert_eq!(page, HotkeyTarget::LauncherPage(String::from("work")));
-        assert_eq!(page.id(), "launcherPage.work");
-        assert!(HotkeyTarget::parse("launcherPage.").is_err());
-        assert!(HotkeyTarget::parse("commandLauncher2").is_err());
+        let page1 = HotkeyTarget::parse("selectionActions").unwrap();
+        assert_eq!(page1, HotkeyTarget::ActionPage(0));
+        assert_eq!(page1.id(), "selectionActions");
+        let page2 = HotkeyTarget::parse("selectionActionsPage2").unwrap();
+        assert_eq!(page2, HotkeyTarget::ActionPage(1));
+        assert_eq!(page2.id(), "selectionActionsPage2");
+        let page3 = HotkeyTarget::parse("selectionActionsPage3").unwrap();
+        assert_eq!(page3, HotkeyTarget::ActionPage(2));
+        assert_eq!(page3.id(), "selectionActionsPage3");
     }
 
     #[test]

@@ -166,6 +166,7 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
   // from: most edits are checked for conflicts without walking the config
   let preparedLatest = savedDraft
   let hasRemoteChanges = false
+  let inFlightSubmitted: UserConfig | undefined
   const isSaving = ref(false)
   const saveError = ref('')
   const conflicts = ref<string[]>([])
@@ -178,14 +179,16 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
   const prepareDraft = () => deps.prepare(draft.value)
   const isSaved = (prepared = prepareDraft()) => equal(prepared, savedDraft)
   const hasUnsavedChanges = computed(() => !isSaved())
+  const currentBase = () => inFlightSubmitted ?? savedDraft
   const setLatest = (config: UserConfig) => {
     latestConfig.value = clone(config)
     preparedLatest = deps.prepare(config)
-    hasRemoteChanges = !equal(preparedLatest, savedDraft)
+    hasRemoteChanges = !equal(preparedLatest, currentBase())
   }
   const setBaseline = (config: UserConfig) => {
     baseline = clone(config)
     savedDraft = deps.prepare(baseline)
+    inFlightSubmitted = undefined
     setLatest(config)
   }
   const setConflicts = (next: string[]) => {
@@ -196,7 +199,7 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
   const refreshConflicts = (prepared = prepareDraft()) => {
     setConflicts(
       hasRemoteChanges
-        ? findConflicts(preparedLatest, savedDraft, prepared)
+        ? findConflicts(preparedLatest, currentBase(), prepared)
         : []
     )
   }
@@ -254,8 +257,10 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
       try {
         while (canPersist()) {
           const submitted = clone(prepareDraft())
+          inFlightSubmitted = submitted
           const result = await deps.save(toPayload(submitted), clone(baseline))
           if (!result.success) {
+            inFlightSubmitted = undefined
             if (result.errorCode === 'configConflict' && deps.loadConfig) {
               try {
                 applyIncoming(await deps.loadConfig())
@@ -284,6 +289,7 @@ export function createSettingsSession(deps: SettingsSessionDependencies) {
       } catch (error) {
         reportFailure(errorMessage(error))
       } finally {
+        inFlightSubmitted = undefined
         isSaving.value = false
         pending = undefined
       }

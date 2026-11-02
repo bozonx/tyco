@@ -45,7 +45,7 @@ export function createSelectionAction(deps: SelectionActionDependencies) {
       )
       if (!command)
         throw new Error(
-          deps.t('commandLauncher.commandMissing', { id: action.commandId })
+          deps.t('commands.commandMissing', { id: action.commandId })
         )
       result = await deps.transform(command, text, signal)
       logCommandRun(

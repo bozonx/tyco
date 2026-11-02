@@ -58,12 +58,6 @@ const QUICK_MODES: ReadonlyArray<{
     icon: 'mdi:microphone-outline',
   },
   {
-    mode: ActivationMode.COMMAND_LAUNCHER,
-    label: 'Commands',
-    title: 'Open Quick Commands',
-    icon: 'mdi:console-line',
-  },
-  {
     mode: ActivationMode.TRANSLATION,
     label: 'Translate',
     title: 'Open Quick Translate',

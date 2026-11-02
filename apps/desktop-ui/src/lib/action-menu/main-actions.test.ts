@@ -50,7 +50,6 @@ describe('normalizeMainActions', () => {
 describe('isMainActionVisible', () => {
   it.each<MainActionConfig>([
     { type: 'command', commandId: 'script' },
-    { type: 'launcherPage', pageId: 'page' },
     { type: 'standard', actionId: 'askInChat' },
     { type: 'standard', actionId: 'correction' },
     { type: 'profileChat', profileId: 'assistant' },

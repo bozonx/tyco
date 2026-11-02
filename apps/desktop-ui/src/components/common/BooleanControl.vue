@@ -1,6 +1,9 @@
 <template>
   <label
-    :class="$attrs.class"
+    :class="[
+      $attrs.class,
+      { 'is-disabled opacity-50 cursor-not-allowed': isDisabled },
+    ]"
     :style="$attrs.style"
     class="boolean-control"
     :title="title"
@@ -10,6 +13,7 @@
       type="checkbox"
       :role="kind === 'switch' ? 'switch' : undefined"
       :checked="props.modelValue"
+      :disabled="isDisabled ? true : undefined"
       :title="title"
       @change="handleChange"
       :class="
@@ -23,6 +27,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useFieldControl } from '../../composables/use-field-control'
 import type { BooleanControlProps } from '../../lib/ui/boolean-control'
 
@@ -38,9 +44,14 @@ const controlAttrs = useFieldControl({
   getLabel: () => props.label,
 })
 
+const isDisabled = computed(() =>
+  Boolean(props.disabled || controlAttrs().disabled)
+)
+
 const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void }>()
 
 function handleChange(event?: Event) {
+  if (isDisabled.value) return
   const target = event?.target as HTMLInputElement | undefined
   const next = target ? target.checked : !props.modelValue
 

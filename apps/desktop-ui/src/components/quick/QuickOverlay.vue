@@ -34,12 +34,6 @@
           :key="activationId"
         />
       </div>
-      <div v-show="currentMode === 'commandLauncher'" class="quick-mode-layer">
-        <CommandLauncherView
-          v-if="currentMode === 'commandLauncher'"
-          :key="activationId"
-        />
-      </div>
       <div
         v-if="
           currentMode === 'voiceCommands' &&
@@ -130,7 +124,6 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
-import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionView from '../../views/CorrectionView.vue'
 import CustomTransformationView from '../../views/CustomTransformationView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'

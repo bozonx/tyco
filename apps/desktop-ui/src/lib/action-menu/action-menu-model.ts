@@ -1,15 +1,17 @@
+import { computed, ref } from 'vue'
+
 import type { CorrectionStepExtra } from '../correction/correction-step'
 import type { ActionItem } from '../../types/plugins'
 import { createContributionRegistry } from '../plugins/contribution-registry'
 
 import {
   APP_CONFIG,
+  type ActionPageConfig,
   type CommandConfig,
   type CoreToolId,
   type MainActionConfig,
   type ShortcutSlots,
   type StandardActionId,
-  STATIC_LAUNCHER_PAGE_IDS,
 } from '@tyco/shared'
 
 import {
@@ -42,9 +44,8 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
   startCorrection: (text: string, extra?: CorrectionStepExtra) => Promise<void>
   minCorrectionLength?: () => number
-  openLauncherPage?: (pageId: string, text: string) => Promise<void>
-  launcherPages?: () => readonly { id: string }[]
   isMainActionVisible?: (action: MainActionConfig) => boolean
+  actionPages?: () => readonly ActionPageConfig[] | undefined
   mainActions?: () => ShortcutSlots<MainActionConfig> | undefined
   /** The command library the menu items of the `command` type refer to */
   commands?: () => readonly CommandConfig[] | undefined
@@ -284,14 +285,49 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
 
   const getRegisteredActions = registry.list
 
-  const resolveMainActions = (config: unknown = deps.mainActions?.()) =>
-    normalizeMainActions(config).map((action) =>
+  const pageIndex = ref(0)
+  const pageCount = computed(() =>
+    Math.max(1, deps.actionPages?.()?.length ?? 1)
+  )
+  const currentPage = computed(
+    () => deps.actionPages?.()?.[pageIndex.value] ?? deps.actionPages?.()?.[0]
+  )
+  const takesText = computed(() => {
+    if (pageIndex.value === 0) return true
+    return currentPage.value?.inputMode !== 'none'
+  })
+
+  const setPage = (index: number) => {
+    const max = pageCount.value - 1
+    pageIndex.value = Math.max(0, Math.min(index, max))
+  }
+  const nextPage = () => {
+    pageIndex.value = (pageIndex.value + 1) % pageCount.value
+  }
+  const prevPage = () => {
+    pageIndex.value = (pageIndex.value - 1 + pageCount.value) % pageCount.value
+  }
+
+  const resolveMainActions = (
+    config?: unknown,
+    targetPageIndex = pageIndex.value
+  ) => {
+    const pages = deps.actionPages?.()
+    const resolvedConfig =
+      config ??
+      (pages && pages.length > 0
+        ? pages[targetPageIndex]?.slots
+        : deps.mainActions?.())
+    return normalizeMainActions(resolvedConfig).map((action) =>
       action && deps.isMainActionVisible && !deps.isMainActionVisible(action)
         ? null
         : action
     )
+  }
 
-  const getShortcutActions = (): (ActionItem | undefined)[] => {
+  const getShortcutActions = (
+    targetPageIndex = pageIndex.value
+  ): (ActionItem | undefined)[] => {
     const defaults = new Map(
       getDefaultActions().map((action) => [action.id, action])
     )
@@ -301,26 +337,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     const commands = new Map(
       (deps.commands?.() ?? []).map((command) => [command.id, command])
     )
-    const slots = resolveMainActions().map((item) => {
+    const slots = resolveMainActions(undefined, targetPageIndex).map((item) => {
       if (!item) return undefined
-      if (item.type === 'launcherPage') {
-        const pageIndex = (deps.launcherPages?.() ?? []).findIndex(
-          (page) => page.id === item.pageId
-        )
-        const pageNumber =
-          pageIndex >= 0
-            ? pageIndex + 1
-            : STATIC_LAUNCHER_PAGE_IDS.includes(item.pageId)
-              ? STATIC_LAUNCHER_PAGE_IDS.indexOf(item.pageId) + 1
-              : 1
-        return {
-          name: translate('settings.launcherPage', { page: pageNumber }),
-          icon: 'mdi:view-grid-outline',
-          action: async (text: string) => {
-            await deps.openLauncherPage?.(item.pageId, text)
-          },
-        }
-      }
       if (item.type === 'standard') return defaults.get(item.actionId)
       if (item.type === 'plugin') return plugins.get(item.actionId)
       if (item.type === 'command') {
@@ -362,8 +380,10 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     return true
   }
 
-  const getActionsMenu = () =>
-    getShortcutActions().filter((action): action is ActionItem => !!action)
+  const getActionsMenu = (targetPageIndex = pageIndex.value) =>
+    getShortcutActions(targetPageIndex).filter(
+      (action): action is ActionItem => !!action
+    )
 
   const registerActionsItems = registry.register
   const unregisterPlugin = registry.unregisterPlugin
@@ -379,5 +399,12 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     getActionsMenu,
     getShortcutActions,
     registerActionsItems,
+    pageIndex,
+    pageCount,
+    currentPage,
+    takesText,
+    setPage,
+    nextPage,
+    prevPage,
   }
 }

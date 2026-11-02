@@ -19,7 +19,7 @@ const USAGE: &str = "Usage: tyco-ctl status
        tyco-ctl jobs <status|cancel|wait> <job-id> [--json] [--timeout SECONDS]
 
 Modes: editor, quick-input, chat, voice-chat, voice-commands, voice, selection-actions,
-       command-launcher, correction, translation, history, settings.
+       correction, translation, history, settings.
 Use --stdin for private text. Input is preserved exactly.
 Run defaults to non-interactive execution and always returns output.
 Use --replace to replace a selection.
@@ -508,7 +508,7 @@ mod tests {
         assert!(command(&["commands"]).is_err());
         assert!(command(&["run", "test", "text"]).is_err());
         assert!(command(&["run", "test", "-"]).is_err());
-        assert!(command(&["open", "command-launcher", "--selection"]).is_ok());
+        assert!(command(&["open", "selection-actions", "--selection"]).is_ok());
         assert!(command(&["replace", "command:test"]).is_err());
         assert!(command(&["replace", "correction"]).is_ok());
         assert!(command(&["replace", "correction", "--selection"]).is_err());

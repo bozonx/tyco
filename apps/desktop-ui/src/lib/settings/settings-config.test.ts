@@ -81,7 +81,7 @@ describe('settings config preparation', () => {
     expect(result.hotkeys.selectionCorrection).toBe(
       DEFAULT_USER_CONFIG.hotkeys.selectionCorrection
     )
-    expect(result.launcherPages).toEqual(DEFAULT_USER_CONFIG.launcherPages)
+    expect(result.actionPages).toEqual(DEFAULT_USER_CONFIG.actionPages)
     expect(result.translation.targetLanguages).toEqual(
       DEFAULT_USER_CONFIG.translation.targetLanguages
     )

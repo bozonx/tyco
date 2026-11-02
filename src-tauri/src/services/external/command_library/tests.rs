@@ -424,8 +424,14 @@ fn a_command_of_another_platform_is_not_called_and_stays_in_the_config() {
         Err(CommandLookupError::Unavailable(_, Some(_)))
     ));
     let mut normalized = config.clone();
-    normalized["mainActions"] = json!({"q": {"type": "command", "commandId": "elsewhere"}});
+    normalized["actionPages"] = json!([{
+        "inputMode": "selection",
+        "slots": {"q": {"type": "command", "commandId": "elsewhere"}}
+    }]);
     crate::services::settings::schema::normalize_user_config(&mut normalized);
     assert_eq!(normalized["commands"][0]["id"], "elsewhere");
-    assert_eq!(normalized["mainActions"]["q"]["commandId"], "elsewhere");
+    assert_eq!(
+        normalized["actionPages"][0]["slots"]["q"]["commandId"],
+        "elsewhere"
+    );
 }

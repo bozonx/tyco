@@ -119,7 +119,6 @@ import SettingsEditorTab from './SettingsEditorTab.vue'
 import SettingsGeneralTab from './SettingsGeneralTab.vue'
 import SettingsGlobalActionsTab from './SettingsGlobalActionsTab.vue'
 import SettingsLanguagesTab from './SettingsLanguagesTab.vue'
-import SettingsLauncherTab from './SettingsLauncherTab.vue'
 import SettingsLlmTab from './SettingsLlmTab.vue'
 import SettingsMainActionsTab from './SettingsMainActionsTab.vue'
 import SettingsPluginDetailTab from './SettingsPluginDetailTab.vue'
@@ -153,7 +152,6 @@ const SECTION_TABS: Record<
   transformations: SettingsTransformationsTab,
   styling: SettingsStylingTab,
   languages: SettingsLanguagesTab,
-  'launcher-commands': SettingsLauncherTab,
 }
 
 const { pluginFactories, pluginRuntimeStates } = usePluginRuntimeStore()

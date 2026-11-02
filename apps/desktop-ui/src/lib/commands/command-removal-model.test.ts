@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import {
-  type LauncherPageConfig,
-  type MainActionConfig,
-  type ShortcutSlots,
-} from '@tyco/shared'
+import { type ActionPageConfig, type MainActionConfig } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 import { createCommand } from './command-config'
@@ -22,24 +18,20 @@ describe('command removal model', () => {
       },
     }
     let commands = [command]
-    let actions: ShortcutSlots<MainActionConfig> = {
-      q: { type: 'command', commandId: command.id },
-    }
-    let pages: LauncherPageConfig[] = [
-      { id: 'main', inputMode: 'selection', slots: { q: command.id } },
+    let pages: ActionPageConfig[] = [
+      {
+        inputMode: 'selection',
+        slots: { q: { type: 'command', commandId: command.id } },
+      },
     ]
     const removeSecret = vi.fn().mockResolvedValue(undefined)
     const model = createCommandRemovalModel({
       getCommands: () => commands,
-      getMainActions: () => actions,
-      getLauncherPages: () => pages,
+      getActionPages: () => pages,
       updateCommands: (value) => {
         commands = value as typeof commands
       },
-      updateMainActions: (value) => {
-        actions = value
-      },
-      updateLauncherPages: (value) => {
+      updateActionPages: (value) => {
         pages = value
       },
       removeSecret,
@@ -52,29 +44,27 @@ describe('command removal model', () => {
       model,
       removeSecret,
       getCommands: () => commands,
-      getActions: () => actions,
       getPages: () => pages,
-      setActions: (value: ShortcutSlots<MainActionConfig>) => {
-        actions = value
-      },
-      setPages: (value: LauncherPageConfig[]) => {
+      setPages: (value: ActionPageConfig[]) => {
         pages = value
       },
     }
   }
+
   it('undo restores the command and references without deleting its secret', () => {
     const f = fixture()
     f.model.removeCommand(f.command)
     expect(f.getCommands()).toEqual([])
-    expect(f.getActions()).toEqual({})
+    expect(f.getPages()[0]?.slots).toEqual({})
     f.model.undoRemove()
     expect(f.getCommands()).toEqual([f.command])
-    expect(f.getActions()).toEqual({
+    expect(f.getPages()[0]?.slots).toEqual({
       q: { type: 'command', commandId: f.command.id },
     })
     f.model.finishRemoval()
     expect(f.removeSecret).not.toHaveBeenCalled()
   })
+
   it('finalizes secret deletion only once after undo is no longer offered', async () => {
     const f = fixture()
     f.model.removeCommand(f.command)
@@ -86,6 +76,7 @@ describe('command removal model', () => {
       )
     )
   })
+
   it('finalizes the previous deletion when another command is removed', async () => {
     const f = fixture()
     f.model.removeCommand(f.command)
@@ -114,11 +105,11 @@ describe('command removal model', () => {
     const persist = vi.fn().mockResolvedValue(undefined)
     const model = createCommandRemovalModel({
       getCommands: () => commands,
-      getMainActions: () => ({}),
+      getActionPages: () => [],
       updateCommands: (value) => {
         commands = value as typeof commands
       },
-      updateMainActions: vi.fn(),
+      updateActionPages: vi.fn(),
       removeSecret,
       persist,
       isSaved: () => true,
@@ -157,7 +148,7 @@ describe('command removal model', () => {
     f.model.removeCommand(second)
     f.model.undoRemove()
     expect(f.getCommands()).toEqual([second])
-    expect(f.getActions()).toEqual({})
+    expect(f.getPages()[0]?.slots).toEqual({})
   })
 
   it('handles secret cleanup failure without retaining the pending deletion', async () => {
@@ -170,6 +161,7 @@ describe('command removal model', () => {
     f.model.undoRemove()
     expect(f.getCommands()).toEqual([])
   })
+
   it('undo preserves references assigned while deletion is pending', () => {
     const f = fixture()
     f.model.removeCommand(f.command)
@@ -177,18 +169,20 @@ describe('command removal model', () => {
       type: 'command',
       commandId: 'replacement',
     }
-    f.setActions({ q: replacement })
+    f.setPages([{ inputMode: 'selection', slots: { q: replacement } }])
     f.model.undoRemove()
     expect(f.getCommands()).toEqual([f.command])
-    expect(f.getActions()).toEqual({ q: replacement })
+    expect(f.getPages()[0]?.slots).toEqual({ q: replacement })
     expect(f.removeSecret).not.toHaveBeenCalled()
   })
 
-  it('removes and restores command references in launcher pages', () => {
+  it('removes and restores command references in action pages', () => {
     const f = fixture()
     f.model.removeCommand(f.command)
     expect(f.getPages()[0]?.slots).toEqual({})
     f.model.undoRemove()
-    expect(f.getPages()[0]?.slots).toEqual({ q: f.command.id })
+    expect(f.getPages()[0]?.slots).toEqual({
+      q: { type: 'command', commandId: f.command.id },
+    })
   })
 })

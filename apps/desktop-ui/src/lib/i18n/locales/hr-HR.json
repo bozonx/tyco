@@ -173,26 +173,6 @@
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe."
     }
   },
-  "commandLauncher": {
-    "aiStep": "„{name}”: pokrećem „{step}”…",
-    "allCommands": "Sve naredbe",
-    "commandMissing": "Naredba {id} nije u biblioteci.",
-    "dropSelection": "Ne koristi odabrani tekst",
-    "hintAskAi": "Pitaj AI",
-    "hintNewLine": "Novi redak",
-    "hintRun": "Pokreni",
-    "hintSavePrompt": "Spremi kao AI naredbu",
-    "nothingFound": "Nisu pronađene naredbe",
-    "pages": "Stranice:",
-    "promptSaved": "Spremljeno kao AI naredba",
-    "promptSavedAlready": "AI naredba s ovim promptom već postoji",
-    "running": "Pokreće se „{name}”…",
-    "searchPlaceholder": "Pretraži naredbe…",
-    "selection": "Odabrani tekst, znakova: {count}",
-    "targetHint": "Što će se pokrenuti: naredba ljuske ili metoda i URL webhooka",
-    "textPlaceholder": "Tekst za naredbu",
-    "title": "Naredbe"
-  },
   "commands": {
     "advanced": "Napredno",
     "afterRunCopy": "U međuspremnik",
@@ -295,7 +275,9 @@
     "platforms": "Platforme",
     "platformsInfo": "Naredba se pokreće samo na označenim platformama; ako nijedna nije označena, na svima. Na drugoj platformi ostaje na popisima, ali se ne pokreće.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Pokreće se „{name}”…",
+    "commandMissing": "Naredba {id} nije u biblioteci."
   },
   "common": {
     "add": "Dodaj",
@@ -647,7 +629,6 @@
     "actionWorkingDirPlaceholder": "Osobni direktorij",
     "actionsCategory": "Radnje",
     "addConnection": "Dodaj vezu",
-    "addLauncherPage": "Dodaj stranicu",
     "addModel": "Dodaj model",
     "aiCategory": "AI",
     "aiEntityGeneral": "Općenito",
@@ -760,7 +741,7 @@
       "editor": "Otvori odabrani tekst u uređivaču",
       "history": "Povijest",
       "quickInput": "Brzi unos teksta",
-      "selectionActions": "Radnje nad odabirom",
+      "selectionActions": "Radnje (stranica 1)",
       "selectionCorrection": "Ispravi odabrani tekst na mjestu",
       "styling": "Stiliziranje teksta",
       "transformation": "Transformacija teksta",
@@ -768,7 +749,9 @@
       "voice": "Glasovni unos",
       "voiceChat": "Glasovno pitanje o odabranom tekstu u AI chatu",
       "voiceCommands": "Glasovne naredbe",
-      "voiceTransformation": "Glasovna transformacija teksta"
+      "voiceTransformation": "Glasovna transformacija teksta",
+      "selectionActionsPage2": "Radnje: stranica 2",
+      "selectionActionsPage3": "Radnje: stranica 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",
@@ -799,11 +782,6 @@
     "keySaveFailed": "Ključ se nije mogao ažurirati",
     "keyRemoveFailed": "Uklanjanje ključa nije uspjelo",
     "languagesTab": "Jezici prijevoda",
-    "launcherCommandsHint": "Naredbe koje se pokreću jednom tipkom lijeve ruke u prozoru brzih naredbi: Q–T, A–G i Z–B. Povucite kartice da biste promijenili njihove tipke. Svaka stranica ima vlastiti globalni prečac na kartici Prečaci.",
-    "launcherCommandsTab": "Brze naredbe",
-    "launcherPage": "Brze naredbe: stranica {page}",
-    "launcherPageTakesText": "Preuzmi odabrani tekst",
-    "launcherPageTakesTextInfo": "Isključite za stranice čije naredbe ne obrađuju tekst: pokretač će se otvoriti bez preuzimanja označenog teksta, pa raniji odabiri neće dospjeti u naredbe.",
     "llmConnections": "Veze",
     "llmConnectionsHint": "Kamo Tyco šalje AI zahtjeve: Google, OpenRouter, DeepSeek ili bilo koji poslužitelj s API-jem kompatibilnim s OpenAI-jem, npr. lokalni Ollama ili LM Studio. Modeli se dodaju unutar svoje veze. Spremljeni ključ ide u sigurnu pohranu i više se nikad ne prikazuje.",
     "llmTab": "LLM",
@@ -819,8 +797,6 @@
     },
     "mainActionStylingRemoved": "Izbrisan stil teksta",
     "mainActionTransformationRemoved": "Izbrisana transformacija teksta",
-    "mainActionsHint": "Radnje glavnog izbornika: svaka se pokreće vlastitom tipkom. Povucite kartice da biste promijenili njihove tipke.",
-    "mainActionsTab": "Glavne radnje",
     "markdownBullet": "Oznaka popisa",
     "markdownCleanBlockquoteAngle": "> (zadrži prefiks citata)",
     "markdownCleanBlockquoteIndent": "Stil citata",
@@ -975,7 +951,6 @@
     "rebindHotkeysError": "Prečaci se nisu mogli ponovno registrirati",
     "rebindHotkeysHint": "Vraća prečace uklonjene u postavkama sustava; prečaci koje ste promijenili ostaju. Da biste se riješili zastarjelih prečaca, najprije uklonite Tyco u postavkama sustava.",
     "removeKey": "Ukloni ključ",
-    "removeLauncherPage": "Izbriši stranicu",
     "removeModel": "Ukloni model",
     "removeModelConfirm": "Ukloniti ovaj model?",
     "removePluginPackage": "Ukloni paket",
@@ -1191,7 +1166,14 @@
     "askInProfileChat": "Pitaj u chatu: {profile}",
     "mainActionProfileRemoved": "Izbrisani profil",
     "webJinaApiKey": "Jina AI API ključ",
-    "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima."
+    "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima.",
+    "actionsTab": "Radnje",
+    "actionsHint": "Radnje koje se pokreću jednom tipkom lijeve ruke u prozoru radnji: Q–T, A–G i Z–B. Povucite kartice za promjenu tipki. Koristite stranice za organizaciju radnji.",
+    "actionPage": "Stranica {page}",
+    "addActionPage": "Dodaj stranicu",
+    "removeActionPage": "Ukloni stranicu",
+    "actionPageTakesText": "Prihvati odabrani tekst",
+    "actionPageTakesTextInfo": "Kada je onemogućeno, otvaranje ove stranice ne kopira odabrani tekst iz drugih aplikacija."
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

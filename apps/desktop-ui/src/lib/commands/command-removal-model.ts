@@ -2,8 +2,8 @@ import { ref } from 'vue'
 
 import {
   SHORTCUT_SLOT_KEYS,
+  type ActionPageConfig,
   type CommandConfig,
-  type LauncherPageConfig,
   type MainActionConfig,
   type ShortcutSlots,
 } from '@tyco/shared'
@@ -13,8 +13,7 @@ import { commandSecretIds, isSecretReferenced } from './command-secrets'
 interface RemovedCommand {
   command: CommandConfig
   index: number
-  mainActions?: MenuSlots
-  launcherPages?: LauncherPageConfig[]
+  actionPages?: ActionPageConfig[]
 }
 
 type MenuSlots = ShortcutSlots<MainActionConfig>
@@ -27,17 +26,16 @@ const isCommandItem = (
 /** Undo restores references without overwriting edits made after removal. */
 export function createCommandRemovalModel(deps: {
   getCommands: () => CommandConfig[]
-  getMainActions: () => MenuSlots
-  getLauncherPages?: () => LauncherPageConfig[]
+  getActionPages: () => ActionPageConfig[]
   updateCommands: (commands: CommandConfig[]) => void
-  updateMainActions: (actions: MenuSlots) => void
-  updateLauncherPages?: (pages: LauncherPageConfig[]) => void
+  updateActionPages: (pages: ActionPageConfig[]) => void
   removeSecret: (id: string) => Promise<void>
   persist: () => Promise<unknown>
   isSaved: () => boolean
   notifyError: (error: unknown) => void
 }) {
   const removed = ref<RemovedCommand | null>(null)
+
   function finishRemoval() {
     const entry = removed.value
     removed.value = null
@@ -47,6 +45,7 @@ export function createCommandRemovalModel(deps: {
       void cleanup(command).catch(deps.notifyError)
     }
   }
+
   /** Removes the secrets of a removed command that nothing else refers to */
   async function cleanup(command: CommandConfig) {
     await deps.persist()
@@ -58,32 +57,27 @@ export function createCommandRemovalModel(deps: {
       if (!isSecretReferenced(commands, id)) await deps.removeSecret(id)
     }
   }
+
   function removeCommand(command: CommandConfig) {
     finishRemoval()
     const commands = deps.getCommands()
-    const mainActions = deps.getMainActions()
-    const referencedInMenu = Object.values(mainActions).some((slot) =>
-      isCommandItem(slot, command.id)
-    )
-    const launcherPages = deps.getLauncherPages?.()
-    const referencedInPages = launcherPages?.some((page) =>
-      Object.values(page.slots).includes(command.id)
+    const actionPages = deps.getActionPages()
+    const referencedInPages = actionPages.some((page) =>
+      Object.values(page.slots).some((slot) => isCommandItem(slot, command.id))
     )
     removed.value = {
       command,
       index: commands.findIndex((item) => item.id === command.id),
-      mainActions: referencedInMenu ? { ...mainActions } : undefined,
-      launcherPages:
-        referencedInPages && launcherPages ? [...launcherPages] : undefined,
+      actionPages: referencedInPages ? [...actionPages] : undefined,
     }
     deps.updateCommands(commands.filter((item) => item.id !== command.id))
-    if (referencedInMenu)
-      deps.updateMainActions(removeCommandReferences(mainActions, command.id))
-    if (referencedInPages && launcherPages && deps.updateLauncherPages)
-      deps.updateLauncherPages(
-        removeCommandFromLauncherPages(launcherPages, command.id)
+    if (referencedInPages) {
+      deps.updateActionPages(
+        removeCommandFromActionPages(actionPages, command.id)
       )
+    }
   }
+
   function undoRemove() {
     const entry = removed.value
     if (!entry) return
@@ -91,27 +85,17 @@ export function createCommandRemovalModel(deps: {
     deps.updateCommands(
       restoreCommand(deps.getCommands(), entry.command, entry.index)
     )
-    if (entry.mainActions)
-      deps.updateMainActions(
-        restoreCommandReferences(
-          deps.getMainActions(),
-          entry.mainActions,
+    if (entry.actionPages) {
+      deps.updateActionPages(
+        restoreCommandInActionPages(
+          deps.getActionPages(),
+          entry.actionPages,
           entry.command.id
         )
       )
-    if (
-      entry.launcherPages &&
-      deps.getLauncherPages &&
-      deps.updateLauncherPages
-    )
-      deps.updateLauncherPages(
-        restoreCommandInLauncherPages(
-          deps.getLauncherPages(),
-          entry.launcherPages,
-          entry.command.id
-        )
-      )
+    }
   }
+
   return { removed, removeCommand, undoRemove, finishRemoval }
 }
 
@@ -155,35 +139,29 @@ export function removeCommandReferences(
   )
 }
 
-/** The launcher pages without the slots that refer to the command */
-function removeCommandFromLauncherPages(
-  pages: readonly LauncherPageConfig[],
+/** The action pages without the slots that refer to the command */
+export function removeCommandFromActionPages(
+  pages: readonly ActionPageConfig[],
   commandId: string
-): LauncherPageConfig[] {
+): ActionPageConfig[] {
   return pages.map((page) => ({
     ...page,
-    slots: Object.fromEntries(
-      Object.entries(page.slots).filter(([, id]) => id !== commandId)
-    ),
+    slots: removeCommandReferences(page.slots, commandId),
   }))
 }
 
-/** The launcher pages with restored command slots where still unassigned */
-function restoreCommandInLauncherPages(
-  currentPages: readonly LauncherPageConfig[],
-  previousPages: readonly LauncherPageConfig[],
+/** The action pages with restored command slots where still unassigned */
+export function restoreCommandInActionPages(
+  currentPages: readonly ActionPageConfig[],
+  previousPages: readonly ActionPageConfig[],
   commandId: string
-): LauncherPageConfig[] {
-  const previousMap = new Map(previousPages.map((page) => [page.id, page]))
-  return currentPages.map((page) => {
-    const before = previousMap.get(page.id)
+): ActionPageConfig[] {
+  return currentPages.map((page, index) => {
+    const before = previousPages[index]
     if (!before) return page
-    const nextSlots = { ...page.slots }
-    for (const key of SHORTCUT_SLOT_KEYS) {
-      if (!nextSlots[key] && before.slots[key] === commandId) {
-        nextSlots[key] = commandId
-      }
+    return {
+      ...page,
+      slots: restoreCommandReferences(page.slots, before.slots, commandId),
     }
-    return { ...page, slots: nextSlots }
   })
 }

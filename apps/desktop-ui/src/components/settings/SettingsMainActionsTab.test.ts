@@ -61,7 +61,12 @@ describe('SettingsMainActionsTab.vue', () => {
   }
   beforeEach(() =>
     configure({
-      mainActions: { q: { type: 'standard', actionId: 'correction' } },
+      actionPages: [
+        {
+          inputMode: 'selection',
+          slots: { q: { type: 'standard', actionId: 'correction' } },
+        },
+      ],
       transformations: {
         items: [
           { id: 'shorten', name: 'Shorten', rule: 'Make it short' },
@@ -98,7 +103,7 @@ describe('SettingsMainActionsTab.vue', () => {
       .findAll('option')
       .find((option) => option.text() === 'Shorten')!
     await select.setValue(shorten.element.value)
-    expect(context.draft.value.mainActions.q).toEqual({
+    expect(context.draft.value.actionPages[0].slots.q).toEqual({
       type: 'transformation',
       transformationId: 'shorten',
     })
@@ -107,25 +112,30 @@ describe('SettingsMainActionsTab.vue', () => {
   it('adds, moves and removes slots', async () => {
     const wrapper = mountTab()
     await wrapper.get('.add').trigger('click')
-    expect(context.draft.value.mainActions.w).toEqual({
+    expect(context.draft.value.actionPages[0].slots.w).toEqual({
       type: 'standard',
       actionId: 'insertIntoWindow',
     })
     await wrapper.get('.move').trigger('click')
-    expect(context.draft.value.mainActions.q).toEqual({
+    expect(context.draft.value.actionPages[0].slots.q).toEqual({
       type: 'standard',
       actionId: 'insertIntoWindow',
     })
     await wrapper.findAll('.remove')[0]!.trigger('click')
-    expect(context.draft.value.mainActions.q).toBeUndefined()
+    expect(context.draft.value.actionPages[0].slots.q).toBeUndefined()
   })
 
   it('names slots whose action is gone', () => {
     configure({
-      mainActions: {
-        q: { type: 'transformation', transformationId: 'removed' },
-        w: { type: 'command', commandId: 'missing' },
-      },
+      actionPages: [
+        {
+          inputMode: 'selection',
+          slots: {
+            q: { type: 'transformation', transformationId: 'removed' },
+            w: { type: 'command', commandId: 'missing' },
+          },
+        },
+      ],
     })
     const texts = optionTexts(mountTab())
     expect(texts).toContain('settings.mainActionTransformationRemoved')
@@ -133,11 +143,67 @@ describe('SettingsMainActionsTab.vue', () => {
   })
 
   it('opens the command of a slot for editing', async () => {
-    configure({ mainActions: { q: { type: 'command', commandId: 'cmd1' } } })
+    configure({
+      actionPages: [
+        {
+          inputMode: 'selection',
+          slots: { q: { type: 'command', commandId: 'cmd1' } },
+        },
+      ],
+    })
     const wrapper = mountTab()
     await wrapper
       .findComponent({ name: 'IconButton' })
       .vm.$emit('click', new MouseEvent('click'))
     expect(context.editCommand).toHaveBeenCalledWith('cmd1')
+  })
+
+  it('adds, removes and switches action pages with takesText switch rules', async () => {
+    const wrapper = mountTab()
+    // 1 page initially: delete button is disabled
+    const buttons = wrapper.findAllComponents({ name: 'Button' })
+    const removeBtn = buttons.find((b) =>
+      b.text().includes('settings.removeActionPage')
+    )!
+    expect(removeBtn.props('disabled')).toBe(true)
+
+    // Add page
+    const addBtn = buttons.find((b) =>
+      b.text().includes('settings.addActionPage')
+    )!
+    await addBtn.trigger('click')
+    expect(context.draft.value.actionPages).toHaveLength(2)
+
+    // Now on page 2: remove button is enabled
+    expect(
+      wrapper
+        .findAllComponents({ name: 'Button' })
+        .find((b) => b.text().includes('settings.removeActionPage'))!
+        .props('disabled')
+    ).toBe(false)
+
+    // FieldSwitch on page 2 can be toggled
+    const fieldSwitch = wrapper.findComponent({ name: 'FieldSwitch' })
+    expect(fieldSwitch.props('disabled')).toBe(false)
+    fieldSwitch.vm.$emit('update:modelValue', false)
+    await wrapper.vm.$nextTick()
+    expect(context.draft.value.actionPages[1].inputMode).toBe('none')
+
+    // Switch back to page 1
+    const page1Btn = wrapper.findAllComponents({ name: 'Button' })[0]!
+    await page1Btn.trigger('click')
+    // FieldSwitch on page 1 is disabled
+    expect(
+      wrapper.findComponent({ name: 'FieldSwitch' }).props('disabled')
+    ).toBe(true)
+
+    // Delete page 2
+    const page2Btn = wrapper.findAllComponents({ name: 'Button' })[1]!
+    await page2Btn.trigger('click')
+    const deleteBtn = wrapper
+      .findAllComponents({ name: 'Button' })
+      .find((b) => b.text().includes('settings.removeActionPage'))!
+    await deleteBtn.trigger('click')
+    expect(context.draft.value.actionPages).toHaveLength(1)
   })
 })

@@ -173,26 +173,6 @@
       "noCommandsHint": "ჯერ შექმენით ბრძანებები პარამეტრები → ბრძანებები განყოფილებაში."
     }
   },
-  "commandLauncher": {
-    "aiStep": "„{name}“: სრულდება „{step}“…",
-    "allCommands": "ყველა ბრძანება",
-    "commandMissing": "ბრძანება {id} ბიბლიოთეკაში არ არის.",
-    "dropSelection": "მონიშნული ტექსტის გამოყენების გარეშე",
-    "hintAskAi": "ჰკითხე AI-ს",
-    "hintNewLine": "ახალი ხაზი",
-    "hintRun": "გაშვება",
-    "hintSavePrompt": "შენახვა AI ბრძანებად",
-    "nothingFound": "ბრძანებები ვერ მოიძებნა",
-    "pages": "გვერდები:",
-    "promptSaved": "შენახულია AI ბრძანებად",
-    "promptSavedAlready": "ამ პრომპტით AI ბრძანება უკვე არსებობს",
-    "running": "სრულდება „{name}“…",
-    "searchPlaceholder": "ბრძანებების ძიება…",
-    "selection": "მონიშნული ტექსტი: {count} სიმბოლო",
-    "targetHint": "რა შესრულდება: გარსის ბრძანება ან ვებჰუკის მეთოდი და URL",
-    "textPlaceholder": "ტექსტი ბრძანებისთვის",
-    "title": "ბრძანებები"
-  },
   "commands": {
     "advanced": "დამატებითი",
     "afterRunCopy": "ბუფერში",
@@ -295,7 +275,9 @@
     "platforms": "პლატფორმები",
     "platformsInfo": "ბრძანება მხოლოდ მონიშნულ პლატფორმებზე სრულდება; თუ არცერთი არ არის მონიშნული — ყველაზე. სხვა პლატფორმაზე სიებში რჩება, მაგრამ არ სრულდება.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "სრულდება „{name}“…",
+    "commandMissing": "ბრძანება {id} ბიბლიოთეკაში არ არის."
   },
   "common": {
     "add": "დამატება",
@@ -644,7 +626,6 @@
     "actionWorkingDirPlaceholder": "პირადი საქაღალდე",
     "actionsCategory": "მოქმედებები",
     "addConnection": "კავშირის დამატება",
-    "addLauncherPage": "გვერდის დამატება",
     "addModel": "მოდელის დამატება",
     "aiCategory": "AI",
     "aiEntityGeneral": "ზოგადი",
@@ -757,7 +738,7 @@
       "editor": "მონიშნული ტექსტის რედაქტორში გახსნა",
       "history": "ისტორია",
       "quickInput": "ტექსტის სწრაფი შეყვანა",
-      "selectionActions": "მოქმედებები მონიშნულზე",
+      "selectionActions": "მოქმედებები (გვერდი 1)",
       "selectionCorrection": "მონიშნული ტექსტის ადგილზე შესწორება",
       "styling": "ტექსტის სტილიზაცია",
       "transformation": "ტექსტის ტრანსფორმაცია",
@@ -765,7 +746,9 @@
       "voice": "ხმოვანი შეყვანა",
       "voiceChat": "ხმოვანი კითხვა მონიშნულ ტექსტზე AI ჩატში",
       "voiceCommands": "ხმოვანი ბრძანებები",
-      "voiceTransformation": "ტექსტის ხმოვანი ტრანსფორმაცია"
+      "voiceTransformation": "ტექსტის ხმოვანი ტრანსფორმაცია",
+      "selectionActionsPage2": "მოქმედებები: გვერდი 2",
+      "selectionActionsPage3": "მოქმედებები: გვერდი 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — გაუქმება",
@@ -796,11 +779,6 @@
     "keySaveFailed": "გასაღების განახლება ვერ მოხერხდა",
     "keyRemoveFailed": "გასაღების წაშლა ვერ მოხერხდა",
     "languagesTab": "თარგმანის ენები",
-    "launcherCommandsHint": "ბრძანებები, რომლებიც სწრაფი ბრძანებების ფანჯარაში მარცხენა ხელის ერთი კლავიშით ეშვება: Q–T, A–G და Z–B. გადაათრიეთ ბარათები მათი კლავიშების შესაცვლელად. თითოეულ გვერდს საკუთარი გლობალური კომბინაცია აქვს ჩანართზე „კომბინაციები“.",
-    "launcherCommandsTab": "სწრაფი ბრძანებები",
-    "launcherPage": "სწრაფი ბრძანებები: გვერდი {page}",
-    "launcherPageTakesText": "მონიშნული ტექსტის აღება",
-    "launcherPageTakesTextInfo": "გამორთეთ იმ გვერდებისთვის, რომელთა ბრძანებებიც ტექსტს არ ამუშავებს: გამშვები მონიშნული ტექსტის აღების გარეშე გაიხსნება, რათა წინა მონიშვნები ბრძანებებში არ მოხვდეს.",
     "llmConnections": "კავშირები",
     "llmConnectionsHint": "სად აგზავნის Tyco AI მოთხოვნებს: Google, OpenRouter, DeepSeek ან ნებისმიერი სერვერი OpenAI-თან თავსებადი API-ით, მაგალითად ლოკალური Ollama ან LM Studio. მოდელები თავიანთ კავშირში ემატება. შენახული გასაღები დაცულ საცავში ხვდება და აღარასდროს ჩანს.",
     "llmTab": "LLM",
@@ -816,8 +794,6 @@
     },
     "mainActionStylingRemoved": "წაშლილი ტექსტის სტილი",
     "mainActionTransformationRemoved": "წაშლილი ტექსტის ტრანსფორმაცია",
-    "mainActionsHint": "მთავარი მენიუს მოქმედებები: თითოეული საკუთარი კლავიშით ეშვება. გადაათრიეთ ბარათები მათი კლავიშების შესაცვლელად.",
-    "mainActionsTab": "მთავარი მოქმედებები",
     "markdownBullet": "სიის მარკერი",
     "markdownCleanBlockquoteAngle": "> (ციტატის პრეფიქსის შენარჩუნება)",
     "markdownCleanBlockquoteIndent": "ციტატების სტილი",
@@ -972,7 +948,6 @@
     "rebindHotkeysError": "კომბინაციების ხელახლა რეგისტრაცია ვერ მოხერხდა",
     "rebindHotkeysHint": "აბრუნებს სისტემის პარამეტრებში წაშლილ კომბინაციებს; თქვენ მიერ შეცვლილი კომბინაციები ნარჩუნდება. მოძველებული კომბინაციების მოსაშორებლად ჯერ წაშალეთ Tyco სისტემის პარამეტრებში.",
     "removeKey": "გასაღების მოცილება",
-    "removeLauncherPage": "გვერდის წაშლა",
     "removeModel": "მოდელის მოცილება",
     "removeModelConfirm": "მოცილდეს ეს მოდელი?",
     "removePluginPackage": "პაკეტის მოცილება",
@@ -1188,7 +1163,14 @@
     "askInProfileChat": "კითხვა ჩატში: {profile}",
     "mainActionProfileRemoved": "წაშლილი პროფილი",
     "webJinaApiKey": "Jina AI API გასაღები",
-    "webJinaApiKeyHint": "არასავალდებულო. გასაღების გარეშე, მოთხოვნები იყენებს უფასო ტარიფს საერთო ლიმიტებით."
+    "webJinaApiKeyHint": "არასავალდებულო. გასაღების გარეშე, მოთხოვნები იყენებს უფასო ტარიფს საერთო ლიმიტებით.",
+    "actionsTab": "მოქმედებები",
+    "actionsHint": "მოქმედებები, რომლებიც მოქმედებების ფანჯარაში მარცხენა ხელის ერთი ღილაკით ეშვება: Q–T, A–G და Z–B. გადაათრიეთ ბარათები ღილაკების შესაცვლელად. გამოიყენეთ გვერდები მოქმედებების ორგანიზებისთვის.",
+    "actionPage": "გვერდი {page}",
+    "addActionPage": "გვერდის დამატება",
+    "removeActionPage": "გვერდის წაშლა",
+    "actionPageTakesText": "არჩეული ტექსტის მიღება",
+    "actionPageTakesTextInfo": "გამორთვის შემთხვევაში, ამ გვერდის გახსნა არ დააკოპირებს არჩეულ ტექსტს სხვა აპლიკაციებიდან."
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {

@@ -23,7 +23,6 @@ import {
   useChatInputStore,
   useProfileChatInputStore,
 } from '../stores/chat-input'
-import { useCommandLauncherStore } from '../stores/command-launcher'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useExternalCommandsStore } from '../stores/external-commands'
 import { useDesktopStore } from '../stores/desktop'
@@ -210,7 +209,6 @@ export function useAppRuntime() {
     cancelSelection: (runId) => useSelectionReplaceStore().handleCancel(runId),
     runCommand: (payload) => useExternalCommandsStore().handleRun(payload),
     cancelCommand: (id) => useExternalCommandsStore().handleCancel(id),
-    cancelLauncher: (id) => useCommandLauncherStore().cancelExternal(id),
     closeModals: menuModalsStore.closeAll,
     goToChat: appNavigation.goToChat,
     goToProfileChat: appNavigation.goToProfileChat,

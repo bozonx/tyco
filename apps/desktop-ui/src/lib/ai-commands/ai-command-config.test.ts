@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { LauncherPageConfig } from '@tyco/shared'
+import type { ActionPageConfig } from '@tyco/shared'
 
 import { createCommand } from '../commands/command-config'
 import {
@@ -75,39 +75,44 @@ describe('commands from a typed request', () => {
 })
 
 describe('savePromptAsCommand', () => {
-  const page = (slots: LauncherPageConfig['slots']): LauncherPageConfig => ({
-    id: 'main',
+  const page = (slots: ActionPageConfig['slots']): ActionPageConfig => ({
     inputMode: 'selection',
     slots,
   })
 
   it('adds the command to the library and the first free key of a laid out page', () => {
     const saved = savePromptAsCommand(
-      { commands: [], launcherPages: [page({ q: 'x' })] },
+      {
+        commands: [],
+        actionPages: [page({ q: { type: 'standard', actionId: 'askInChat' } })],
+      },
       'Summarize',
       0,
       'new'
     )
     expect(saved.isAdded).toBe(true)
     expect(saved.commands.map((command) => command.id)).toEqual(['new'])
-    expect(saved.launcherPages[0]?.slots).toEqual({ q: 'x', w: 'new' })
+    expect(saved.actionPages[0]?.slots).toEqual({
+      q: { type: 'standard', actionId: 'askInChat' },
+      w: { type: 'command', commandId: 'new' },
+    })
   })
 
   it('leaves a page without a layout as it is: it lists every command', () => {
     const pages = [page({})]
     const saved = savePromptAsCommand(
-      { commands: [], launcherPages: pages },
+      { commands: [], actionPages: pages },
       'Summarize',
       0,
       'new'
     )
-    expect(saved.launcherPages).toEqual(pages)
+    expect(saved.actionPages).toEqual(pages)
   })
 
   it('does not save a prompt twice', () => {
     const existing = aiCommandFromPrompt('Summarize', 'old')
     const saved = savePromptAsCommand(
-      { commands: [existing], launcherPages: [page({})] },
+      { commands: [existing], actionPages: [page({})] },
       ' Summarize ',
       0
     )

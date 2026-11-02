@@ -102,6 +102,90 @@ describe('settings session', () => {
     expect(model.isSaved()).toBe(true)
   })
 
+  it('does not trigger a conflict when an in-flight save echoes back while user made another edit', async () => {
+    let finishSave!: (result: { success: true; result: UserConfig }) => void
+    const notifyConflict = vi.fn()
+    const save = vi
+      .fn<SettingsSessionDependencies['save']>()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishSave = resolve
+          })
+      )
+      .mockImplementation(async (next) => ({
+        success: true as const,
+        result: next,
+      }))
+    const { model } = setup({ save, notifyConflict })
+    model.draft.value.appearance.theme = 'dark'
+    const firstPersist = model.persist()
+    await Promise.resolve()
+
+    model.draft.value.appearance.theme = 'light'
+
+    model.applyIncoming({
+      ...config(),
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
+    })
+
+    finishSave({
+      success: true,
+      result: {
+        ...config(),
+        appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
+      },
+    })
+    await firstPersist
+
+    expect(notifyConflict).not.toHaveBeenCalled()
+    expect(model.conflicts.value).toEqual([])
+    expect(model.draft.value.appearance.theme).toBe('light')
+    expect(model.isSaved()).toBe(true)
+    expect(save).toHaveBeenCalledTimes(2)
+    expect(save.mock.calls[1][0].appearance.theme).toBe('light')
+  })
+
+  it('detects a real conflict if another window modifies the same setting while a save is in flight', async () => {
+    let finishSave!: (result: { success: true; result: UserConfig }) => void
+    const notifyConflict = vi.fn()
+    const save = vi
+      .fn<SettingsSessionDependencies['save']>()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishSave = resolve
+          })
+      )
+      .mockImplementation(async (next) => ({
+        success: true as const,
+        result: next,
+      }))
+    const { model } = setup({ save, notifyConflict })
+    model.draft.value.appearance.theme = 'dark'
+    const firstPersist = model.persist()
+    await Promise.resolve()
+
+    model.draft.value.appearance.theme = 'light'
+
+    model.applyIncoming({
+      ...config(),
+      appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'eInk' },
+    })
+
+    expect(notifyConflict).toHaveBeenCalledOnce()
+    expect(model.conflicts.value).toEqual(['appearance.theme'])
+
+    finishSave({
+      success: true,
+      result: {
+        ...config(),
+        appearance: { ...DEFAULT_USER_CONFIG.appearance, theme: 'dark' },
+      },
+    })
+    await firstPersist
+  })
+
   it('retains failed changes and recovers the queue after an exception', async () => {
     const save = vi
       .fn<SettingsSessionDependencies['save']>()

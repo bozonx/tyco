@@ -74,18 +74,34 @@ describe('createActionMenuModel', () => {
     expect(mainActions.q.actionId).toBe('askInChat')
   })
 
-  it('opens command pages beyond the global shortcut range with the current text', async () => {
+  it('supports multiple action pages and determines takesText per page', () => {
     const { deps } = setup()
-    const openLauncherPage = vi.fn(async () => {})
     const store = createActionMenuModel({
       ...deps,
-      openLauncherPage,
-      launcherPages: () =>
-        Array.from({ length: 13 }, (_, index) => ({ id: `page-${index}` })),
-      mainActions: () => ({ q: { type: 'launcherPage', pageId: 'page-12' } }),
+      actionPages: () => [
+        {
+          inputMode: 'selection',
+          slots: { q: { type: 'standard', actionId: 'copyToClipboard' } },
+        },
+        {
+          inputMode: 'none',
+          slots: { q: { type: 'standard', actionId: 'askInChat' } },
+        },
+      ],
     })
-    await store.getShortcutActions()[0]?.action('current text')
-    expect(openLauncherPage).toHaveBeenCalledWith('page-12', 'current text')
+    expect(store.pageCount.value).toBe(2)
+    expect(store.pageIndex.value).toBe(0)
+    expect(store.takesText.value).toBe(true)
+    expect(store.getShortcutActions()[0]?.id).toBe('copyToClipboard')
+
+    store.nextPage()
+    expect(store.pageIndex.value).toBe(1)
+    expect(store.takesText.value).toBe(false)
+    expect(store.getShortcutActions()[0]?.id).toBe('askInChat')
+
+    store.setPage(0)
+    expect(store.pageIndex.value).toBe(0)
+    expect(store.takesText.value).toBe(true)
   })
 
   it('shows toast when attempting actions on empty text', async () => {

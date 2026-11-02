@@ -640,20 +640,18 @@ impl Parts {
     }
 
     /// Keeps the device values of entities the config has not got, the values
-    /// of variables and the shortcuts of launcher pages: a config that was not
-    /// read says nothing about which entities are gone.
+    /// of variables: a config that was not read says nothing about which entities are gone.
     fn keep_device_references(&mut self, device_raw: &Value) {
-        for pointer in ["/variableValues", "/hotkeys/launcherPages"] {
-            let Some(kept) = device_raw.pointer(pointer).and_then(Value::as_object) else {
-                continue;
-            };
-            let Some(current) = ensure_object_at(&mut self.device, pointer) else {
-                continue;
-            };
-            for (id, value) in kept {
-                if value.is_string() && !current.contains_key(id) {
-                    current.insert(id.clone(), value.clone());
-                }
+        let pointer = "/variableValues";
+        let Some(kept) = device_raw.pointer(pointer).and_then(Value::as_object) else {
+            return;
+        };
+        let Some(current) = ensure_object_at(&mut self.device, pointer) else {
+            return;
+        };
+        for (id, value) in kept {
+            if value.is_string() && !current.contains_key(id) {
+                current.insert(id.clone(), value.clone());
             }
         }
     }

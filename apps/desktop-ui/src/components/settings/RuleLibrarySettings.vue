@@ -90,14 +90,16 @@ function setLibrary(next: Library) {
 
 /** Main actions of removed items would point nowhere */
 function dropMainActions(removedIds: readonly string[]) {
-  const actions = userConfig.value.mainActions
-  if (!removedIds.length || !actions) return
-  userConfig.value.mainActions = Object.fromEntries(
-    Object.entries(actions).filter(
-      ([, action]) =>
-        !action || !removedIds.some((id) => props.isMainActionOf(action, id))
+  if (!removedIds.length || !userConfig.value.actionPages) return
+  for (const page of userConfig.value.actionPages) {
+    if (!page.slots) continue
+    page.slots = Object.fromEntries(
+      Object.entries(page.slots).filter(
+        ([, action]) =>
+          !action || !removedIds.some((id) => props.isMainActionOf(action, id))
+      )
     )
-  )
+  }
 }
 
 function moveItem(from: number, to: number) {

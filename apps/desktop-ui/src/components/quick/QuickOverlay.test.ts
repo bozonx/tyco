@@ -26,7 +26,6 @@ const mocks = vi.hoisted(() => ({
   menuMounts: 0,
   menuUnmounts: 0,
   cancelAndCloseAll: vi.fn(),
-  launcher: { stage: { kind: 'list' } },
 }))
 
 vi.mock('../../composables/use-i18n', () => ({
@@ -47,9 +46,6 @@ vi.mock('../../stores/menu-modals', () => ({
       cancelAndCloseAll: mocks.cancelAndCloseAll,
       closeAll: vi.fn(),
     }),
-}))
-vi.mock('../../stores/command-launcher', () => ({
-  useCommandLauncherStore: () => reactive(mocks.launcher),
 }))
 vi.mock('../../stores/quick-dismiss', () => ({
   useQuickDismissStore: () => ({ isHeld: false }),
@@ -141,7 +137,6 @@ afterEach(() => {
   mocks.focusHandlers = []
   mocks.menuMounts = 0
   mocks.menuUnmounts = 0
-  mocks.launcher.stage = { kind: 'list' }
 })
 
 describe('quick overlay keyboard ownership', () => {
@@ -385,26 +380,17 @@ describe('quick overlay menus', () => {
     }
   }
 
-  it.each([
-    'selectionActions',
-    'commandLauncher',
-    'translation',
-    'styling',
-    'transformation',
-  ])('dismisses the %s menu when the focus goes elsewhere', async (mode) => {
-    await loseFocus(mode)
-    expect(await sent('hide_quick_window_on_blur')).not.toEqual([])
-    expect(await sent('hide_window')).toEqual([])
-  })
+  it.each(['selectionActions', 'translation', 'styling', 'transformation'])(
+    'dismisses the %s menu when the focus goes elsewhere',
+    async (mode) => {
+      await loseFocus(mode)
+      expect(await sent('hide_quick_window_on_blur')).not.toEqual([])
+      expect(await sent('hide_window')).toEqual([])
+    }
+  )
 
   it('keeps the step after the menu when the focus goes elsewhere', async () => {
     await loseFocus('selectionActions', 'translate')
-    expect(await sent('hide_quick_window_on_blur')).toEqual([])
-  })
-
-  it('keeps a command past the list when the focus goes elsewhere', async () => {
-    mocks.launcher.stage = { kind: 'prepare' }
-    await loseFocus('commandLauncher')
     expect(await sent('hide_quick_window_on_blur')).toEqual([])
   })
 

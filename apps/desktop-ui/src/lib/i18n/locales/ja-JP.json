@@ -173,26 +173,6 @@
       "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。"
     }
   },
-  "commandLauncher": {
-    "aiStep": "「{name}」：「{step}」を実行中…",
-    "allCommands": "すべてのコマンド",
-    "commandMissing": "コマンド「{id}」はライブラリにありません。",
-    "dropSelection": "選択したテキストを使用しない",
-    "hintAskAi": "AI に聞く",
-    "hintNewLine": "改行",
-    "hintRun": "実行",
-    "hintSavePrompt": "AI コマンドとして保存",
-    "nothingFound": "コマンドが見つかりません",
-    "pages": "ページ:",
-    "promptSaved": "AI コマンドとして保存しました",
-    "promptSavedAlready": "このプロンプトの AI コマンドはすでにあります",
-    "running": "「{name}」を実行中…",
-    "searchPlaceholder": "コマンドを検索…",
-    "selection": "選択テキスト: {count} 文字",
-    "targetHint": "実行対象: シェルコマンド、またはWebhookのメソッドとURL",
-    "textPlaceholder": "コマンド用のテキスト",
-    "title": "コマンド"
-  },
   "commands": {
     "advanced": "高度な設定",
     "afterRunCopy": "クリップボードへ",
@@ -295,7 +275,9 @@
     "platforms": "プラットフォーム",
     "platformsInfo": "コマンドはチェックしたプラットフォームでのみ実行されます。何もチェックしなければすべてで実行されます。ほかのプラットフォームではリストに残りますが、実行されません。",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "「{name}」を実行中…",
+    "commandMissing": "コマンド「{id}」はライブラリにありません。"
   },
   "common": {
     "add": "追加",
@@ -644,7 +626,6 @@
     "actionWorkingDirPlaceholder": "ホームディレクトリ",
     "actionsCategory": "アクション",
     "addConnection": "接続を追加",
-    "addLauncherPage": "ページを追加",
     "addModel": "モデルを追加",
     "aiCategory": "AI",
     "aiEntityGeneral": "全般",
@@ -757,7 +738,7 @@
       "editor": "選択テキストをエディターで開く",
       "history": "履歴",
       "quickInput": "クイックテキスト入力",
-      "selectionActions": "選択テキストのアクション",
+      "selectionActions": "アクション（ページ 1）",
       "selectionCorrection": "選択テキストを直接校正",
       "styling": "テキストスタイリング",
       "transformation": "テキスト変換",
@@ -765,7 +746,9 @@
       "voice": "音声入力",
       "voiceChat": "選択テキストについてAIチャットで音声質問",
       "voiceCommands": "音声コマンド",
-      "voiceTransformation": "テキストの音声変換"
+      "voiceTransformation": "テキストの音声変換",
+      "selectionActionsPage2": "アクション: ページ 2",
+      "selectionActionsPage3": "アクション: ページ 3"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",
@@ -796,11 +779,6 @@
     "keySaveFailed": "キーの更新に失敗しました",
     "keyRemoveFailed": "キーを削除できませんでした",
     "languagesTab": "翻訳言語",
-    "launcherCommandsHint": "クイックコマンドウィンドウで左手の単一キー（Q–T、A–G、Z–B）で実行できるコマンド。カードをドラッグしてキーを変更できます。各ページには「ショートカット」タブで独自のグローバルショートカットを設定できます。",
-    "launcherCommandsTab": "クイックコマンド",
-    "launcherPage": "クイックコマンド: ページ {page}",
-    "launcherPageTakesText": "選択テキストを受け取る",
-    "launcherPageTakesTextInfo": "有効にすると、このページのコマンドは選択テキストまたはクイック入力のテキストを操作します。無効にすると、独立した操作として実行されます。",
     "llmConnections": "接続",
     "llmConnectionsHint": "TyCoがAIリクエストを送信する場所：Google、OpenRouter、DeepSeek、またはローカルのOllamaやLM StudioなどのOpenAI互換APIを持つサーバー。モデルは接続内に追加されます。保存されたキーは安全なストレージに送られ、再表示されることはありません。",
     "llmTab": "LLM",
@@ -816,8 +794,6 @@
     },
     "mainActionStylingRemoved": "削除されたテキストスタイル",
     "mainActionTransformationRemoved": "削除されたテキスト変換",
-    "mainActionsHint": "メインメニューのアクション: それぞれ独自のキーで実行されます。カードをドラッグしてキーを変更できます。",
-    "mainActionsTab": "メインアクション",
     "markdownBullet": "箇条書きマーカー",
     "markdownCleanBlockquoteAngle": "> (引用プレフィックスを維持)",
     "markdownCleanBlockquoteIndent": "引用ブロックのスタイル",
@@ -972,7 +948,6 @@
     "rebindHotkeysError": "ショートカットを再登録できませんでした",
     "rebindHotkeysHint": "システム設定で削除されたショートカットを再登録します。変更したショートカットは維持されます。古いショートカットを破棄するには、まずシステム設定でTycoを削除してください。",
     "removeKey": "キーを削除",
-    "removeLauncherPage": "ページを削除",
     "removeModel": "モデルを削除",
     "removeModelConfirm": "このモデルを削除しますか？",
     "removePluginPackage": "パッケージを削除",
@@ -1188,7 +1163,14 @@
     "askInProfileChat": "チャットで質問: {profile}",
     "mainActionProfileRemoved": "削除されたプロファイル",
     "webJinaApiKey": "Jina AI API キー",
-    "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。"
+    "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。",
+    "actionsTab": "アクション",
+    "actionsHint": "アクションウィンドウで左手の単一キー（Q–T、A–G、Z–B）で実行されるアクション。カードをドラッグしてキーを変更できます。ページを使用してアクションを整理します。",
+    "actionPage": "ページ {page}",
+    "addActionPage": "ページを追加",
+    "removeActionPage": "ページを削除",
+    "actionPageTakesText": "選択したテキストを受け入れる",
+    "actionPageTakesTextInfo": "無効にすると、このページを開いても他のアプリケーションから選択したテキストがコピーされません。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

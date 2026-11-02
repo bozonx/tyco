@@ -255,8 +255,7 @@ fn activate_on_main_thread(
         snapshot.activation.mode = Some(activation.mode);
         snapshot.activation.target_window_id = activation.target_window_id;
         snapshot.activation.selected_text = activation.selected_text;
-        snapshot.activation.launcher_page_id = activation.launcher_page_id;
-        snapshot.activation.launcher_request = activation.launcher_request;
+        snapshot.activation.action_page_index = activation.action_page_index;
         snapshot.activation.access_request = activation.access_request;
         snapshot.window.is_window_shown = true;
         snapshot.window.window_profile = activation.mode.profile();
@@ -275,7 +274,6 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::Voice
         | ActivationMode::SelectionActions
         | ActivationMode::VoiceCommands
-        | ActivationMode::CommandLauncher
         | ActivationMode::Correction
         | ActivationMode::VoiceChat
         | ActivationMode::Translation
@@ -308,7 +306,6 @@ mod tests {
             ActivationMode::QuickInput,
             ActivationMode::Voice,
             ActivationMode::SelectionActions,
-            ActivationMode::CommandLauncher,
             ActivationMode::Correction,
             ActivationMode::VoiceChat,
             ActivationMode::Translation,

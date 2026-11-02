@@ -173,26 +173,6 @@
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
     }
   },
-  "commandLauncher": {
-    "aiStep": "„{name}”: uruchamiam „{step}”…",
-    "allCommands": "Wszystkie polecenia",
-    "commandMissing": "Polecenia {id} nie ma w bibliotece.",
-    "dropSelection": "Nie używaj zaznaczonego tekstu",
-    "hintAskAi": "Zapytaj AI",
-    "hintNewLine": "Nowy wiersz",
-    "hintRun": "Uruchom",
-    "hintSavePrompt": "Zapisz jako polecenie AI",
-    "nothingFound": "Nie znaleziono poleceń",
-    "pages": "Strony:",
-    "promptSaved": "Zapisano jako polecenie AI",
-    "promptSavedAlready": "Polecenie AI z tym promptem już istnieje",
-    "running": "Uruchamianie „{name}”…",
-    "searchPlaceholder": "Szukaj poleceń…",
-    "selection": "Zaznaczony tekst, znaki: {count}",
-    "targetHint": "Co zostanie uruchomione: polecenie powłoki albo metoda i adres URL webhooka",
-    "textPlaceholder": "Tekst dla polecenia",
-    "title": "Polecenia"
-  },
   "commands": {
     "advanced": "Zaawansowane",
     "afterRunCopy": "Do schowka",
@@ -295,7 +275,9 @@
     "platforms": "Platformy",
     "platformsInfo": "Polecenie działa tylko na zaznaczonych platformach; gdy żadna nie jest zaznaczona — na wszystkich. Na innej platformie zostaje na listach, ale się nie wykonuje.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Uruchamianie „{name}”…",
+    "commandMissing": "Polecenia {id} nie ma w bibliotece."
   },
   "common": {
     "add": "Dodaj",
@@ -647,7 +629,6 @@
     "actionWorkingDirPlaceholder": "Katalog domowy",
     "actionsCategory": "Akcje",
     "addConnection": "Dodaj połączenie",
-    "addLauncherPage": "Dodaj stronę",
     "addModel": "Dodaj model",
     "aiCategory": "AI",
     "aiEntityGeneral": "Ogólne",
@@ -760,7 +741,7 @@
       "editor": "Otwórz zaznaczony tekst w edytorze",
       "history": "Historia",
       "quickInput": "Szybkie wprowadzanie tekstu",
-      "selectionActions": "Akcje na zaznaczeniu",
+      "selectionActions": "Działania (strona 1)",
       "selectionCorrection": "Popraw zaznaczony tekst w miejscu",
       "styling": "Stylizacja tekstu",
       "transformation": "Transformacja tekstu",
@@ -768,7 +749,9 @@
       "voice": "Wprowadzanie głosowe",
       "voiceChat": "Pytanie głosowe o zaznaczony tekst w czacie AI",
       "voiceCommands": "Polecenia głosowe",
-      "voiceTransformation": "Głosowa transformacja tekstu"
+      "voiceTransformation": "Głosowa transformacja tekstu",
+      "selectionActionsPage2": "Działania: strona 2",
+      "selectionActionsPage3": "Działania: strona 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",
@@ -799,11 +782,6 @@
     "keySaveFailed": "Nie udało się zaktualizować klucza",
     "keyRemoveFailed": "Nie udało się usunąć klucza",
     "languagesTab": "Języki tłumaczenia",
-    "launcherCommandsHint": "Polecenia uruchamiane jednym klawiszem lewej ręki w oknie szybkich poleceń: Q–T, A–G i Z–B. Przeciągaj karty, aby zmienić ich klawisze. Każda strona ma własny skrót globalny na karcie Skróty.",
-    "launcherCommandsTab": "Szybkie polecenia",
-    "launcherPage": "Szybkie polecenia: strona {page}",
-    "launcherPageTakesText": "Pobieraj zaznaczony tekst",
-    "launcherPageTakesTextInfo": "Wyłącz dla stron, których polecenia nie przetwarzają tekstu: program uruchamiający otworzy się bez przechwytywania zaznaczonego tekstu, dzięki czemu wcześniejsze zaznaczenia nie trafią do poleceń.",
     "llmConnections": "Połączenia",
     "llmConnectionsHint": "Dokąd Tyco wysyła zapytania AI: Google, OpenRouter, DeepSeek lub dowolny serwer z API zgodnym z OpenAI, np. lokalna Ollama lub LM Studio. Modele dodaje się wewnątrz połączenia. Zapisany klucz trafia do bezpiecznego magazynu i nigdy więcej nie jest wyświetlany.",
     "llmTab": "LLM",
@@ -819,8 +797,6 @@
     },
     "mainActionStylingRemoved": "Usunięty styl tekstu",
     "mainActionTransformationRemoved": "Usunięta transformacja tekstu",
-    "mainActionsHint": "Akcje menu głównego: każda uruchamia się własnym klawiszem. Przeciągaj karty, aby zmienić ich klawisze.",
-    "mainActionsTab": "Akcje główne",
     "markdownBullet": "Znacznik listy",
     "markdownCleanBlockquoteAngle": "> (zachowaj prefiks cytatu)",
     "markdownCleanBlockquoteIndent": "Styl cytatów",
@@ -975,7 +951,6 @@
     "rebindHotkeysError": "Nie udało się ponownie zarejestrować skrótów",
     "rebindHotkeysHint": "Przywraca skróty usunięte w ustawieniach systemu; zmienione przez Ciebie skróty są zachowywane. Aby pozbyć się przestarzałych skrótów, najpierw usuń Tyco w ustawieniach systemu.",
     "removeKey": "Usuń klucz",
-    "removeLauncherPage": "Usuń stronę",
     "removeModel": "Usuń model",
     "removeModelConfirm": "Usunąć ten model?",
     "removePluginPackage": "Usuń pakiet",
@@ -1191,7 +1166,14 @@
     "askInProfileChat": "Zapytaj na czacie: {profile}",
     "mainActionProfileRemoved": "Usunięty profil",
     "webJinaApiKey": "Klucz API Jina AI",
-    "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami."
+    "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",
+    "actionsTab": "Działania",
+    "actionsHint": "Działania uruchamiane jednym klawiszem lewej ręki w oknie działań: Q–T, A–G i Z–B. Przeciągaj karty, aby zmienić klawisze. Używaj stron do organizowania działań.",
+    "actionPage": "Strona {page}",
+    "addActionPage": "Dodaj stronę",
+    "removeActionPage": "Usuń stronę",
+    "actionPageTakesText": "Akceptuj zaznaczony tekst",
+    "actionPageTakesTextInfo": "Gdy wyłączone, otwarcie tej strony nie kopiuje zaznaczonego tekstu z innych aplikacji."
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

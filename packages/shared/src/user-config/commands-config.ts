@@ -215,7 +215,6 @@ export interface ProfileChatMainAction {
 }
 
 export type MainActionConfig =
-  | { type: 'launcherPage'; pageId: string }
   | StandardMainAction
   | PluginMainAction
   | CommandMainAction
@@ -224,13 +223,13 @@ export type MainActionConfig =
   | TranslationMainAction
   | ProfileChatMainAction
 
-export const DEFAULT_MAIN_ACTIONS =
-  configDefaults.mainActions as ShortcutSlots<MainActionConfig>
-
-/** A configured launcher page; references stay stable when pages move. */
-export interface LauncherPageConfig {
-  id: string
+/** A configured action page; pages are addressed by index. */
+export interface ActionPageConfig {
   inputMode: 'selection' | 'none'
-  /** Command ids */
-  slots: ShortcutSlots<string>
+  slots: ShortcutSlots<MainActionConfig>
 }
+
+export const DEFAULT_ACTION_PAGES =
+  configDefaults.actionPages as ActionPageConfig[]
+
+export const DEFAULT_MAIN_ACTIONS = DEFAULT_ACTION_PAGES[0].slots

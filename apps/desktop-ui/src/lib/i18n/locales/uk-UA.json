@@ -173,26 +173,6 @@
       "noCommandsHint": "Спочатку створіть команди в Налаштування → Команди."
     }
   },
-  "commandLauncher": {
-    "aiStep": "«{name}»: виконую «{step}»…",
-    "allCommands": "Усі команди",
-    "commandMissing": "Команди {id} немає в бібліотеці.",
-    "dropSelection": "Не використовувати виділений текст",
-    "hintAskAi": "Запитати ШІ",
-    "hintNewLine": "Новий рядок",
-    "hintRun": "Виконати",
-    "hintSavePrompt": "Зберегти як ШІ-команду",
-    "nothingFound": "Команд не знайдено",
-    "pages": "Сторінки:",
-    "promptSaved": "Збережено як ШІ-команду",
-    "promptSavedAlready": "ШІ-команда з таким промптом уже є",
-    "running": "Виконується «{name}»…",
-    "searchPlaceholder": "Пошук команд…",
-    "selection": "Виділений текст, символів: {count}",
-    "targetHint": "Що буде виконано: команда оболонки або метод і URL вебхука",
-    "textPlaceholder": "Текст для команди",
-    "title": "Команди"
-  },
   "commands": {
     "advanced": "Додатково",
     "afterRunCopy": "У буфер обміну",
@@ -295,7 +275,9 @@
     "platforms": "Платформи",
     "platformsInfo": "Команда виконується лише на позначених платформах; якщо нічого не позначено — на всіх. На іншій платформі вона лишається у списках, але не виконується.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Виконується «{name}»…",
+    "commandMissing": "Команди {id} немає в бібліотеці."
   },
   "common": {
     "add": "Додати",
@@ -644,7 +626,6 @@
     "actionWorkingDirPlaceholder": "Домашня тека",
     "actionsCategory": "Дії",
     "addConnection": "Додати підключення",
-    "addLauncherPage": "Додати сторінку",
     "addModel": "Додати модель",
     "aiCategory": "ШІ",
     "aiEntityGeneral": "Загальне",
@@ -757,7 +738,7 @@
       "editor": "Відкрити виділений текст у редакторі",
       "history": "Історія",
       "quickInput": "Швидке введення тексту",
-      "selectionActions": "Дії з виділенням",
+      "selectionActions": "Дії (сторінка 1)",
       "selectionCorrection": "Виправити виділений текст на місці",
       "styling": "Стилізація тексту",
       "transformation": "Трансформація тексту",
@@ -765,7 +746,9 @@
       "voice": "Голосове введення",
       "voiceChat": "Голосове запитання про виділений текст у ШІ-чаті",
       "voiceCommands": "Голосові команди",
-      "voiceTransformation": "Голосова трансформація тексту"
+      "voiceTransformation": "Голосова трансформація тексту",
+      "selectionActionsPage2": "Дії: сторінка 2",
+      "selectionActionsPage3": "Дії: сторінка 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — скасувати",
@@ -796,11 +779,6 @@
     "keySaveFailed": "Не вдалося оновити ключ",
     "keyRemoveFailed": "Не вдалося видалити ключ",
     "languagesTab": "Мови перекладу",
-    "launcherCommandsHint": "Команди, що запускаються однією клавішею лівої руки у вікні швидких команд: Q–T, A–G і Z–B. Перетягуйте картки, щоб змінити їхні клавіші. Кожна сторінка має власне глобальне сполучення на вкладці «Гарячі клавіші».",
-    "launcherCommandsTab": "Швидкі команди",
-    "launcherPage": "Швидкі команди: сторінка {page}",
-    "launcherPageTakesText": "Брати виділений текст",
-    "launcherPageTakesTextInfo": "Вимкніть для сторінок, команди яких не обробляють текст: панель відкриватиметься без захоплення виділеного тексту, щоб попередні виділення не потрапляли в команди.",
     "llmConnections": "Підключення",
     "llmConnectionsHint": "Куди Tyco надсилає ШІ-запити: Google, OpenRouter, DeepSeek або будь-який сервер з OpenAI-сумісним API, наприклад локальний Ollama чи LM Studio. Моделі додаються всередині свого підключення. Збережений ключ потрапляє в захищене сховище й більше ніколи не показується.",
     "llmTab": "LLM",
@@ -816,8 +794,6 @@
     },
     "mainActionStylingRemoved": "Видалений стиль тексту",
     "mainActionTransformationRemoved": "Видалена трансформація тексту",
-    "mainActionsHint": "Дії головного меню: кожна виконується своєю клавішею. Перетягуйте картки, щоб змінити їхні клавіші.",
-    "mainActionsTab": "Головні дії",
     "markdownBullet": "Маркер списку",
     "markdownCleanBlockquoteAngle": "> (залишити префікс цитати)",
     "markdownCleanBlockquoteIndent": "Стиль цитат",
@@ -972,7 +948,6 @@
     "rebindHotkeysError": "Не вдалося повторно зареєструвати гарячі клавіші",
     "rebindHotkeysHint": "Повертає гарячі клавіші, видалені в системних налаштуваннях; змінені вами сполучення зберігаються. Щоб позбутися застарілих гарячих клавіш, спершу видаліть Tyco в системних налаштуваннях.",
     "removeKey": "Видалити ключ",
-    "removeLauncherPage": "Видалити сторінку",
     "removeModel": "Прибрати модель",
     "removeModelConfirm": "Видалити цю модель?",
     "removePluginPackage": "Видалити пакет",
@@ -1188,7 +1163,14 @@
     "askInProfileChat": "Запитати в чаті: {profile}",
     "mainActionProfileRemoved": "Видалений профіль",
     "webJinaApiKey": "API-ключ Jina AI",
-    "webJinaApiKeyHint": "Необов'язково. Без ключа запити працюють через безкоштовний тариф зі спільними лімітами."
+    "webJinaApiKeyHint": "Необов'язково. Без ключа запити працюють через безкоштовний тариф зі спільними лімітами.",
+    "actionsTab": "Дії",
+    "actionsHint": "Дії, що запускаються однією клавішею лівої руки у вікні дій: Q–T, A–G і Z–B. Перетягуйте картки для зміни клавіш. Використовуйте сторінки для впорядкування дій.",
+    "actionPage": "Сторінка {page}",
+    "addActionPage": "Додати сторінку",
+    "removeActionPage": "Видалити сторінку",
+    "actionPageTakesText": "Приймати виділений текст",
+    "actionPageTakesTextInfo": "Якщо вимкнено, відкриття цієї сторінки не копіює виділений текст з інших програм."
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

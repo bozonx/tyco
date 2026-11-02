@@ -1,10 +1,10 @@
 import {
   AI_COMMAND_MAX_STEPS_DEFAULT,
   AI_COMMAND_MAX_STEPS_MAX,
+  type ActionPageConfig,
   type AiCommandToolConfig,
   type CommandConfig,
   type CoreToolId,
-  type LauncherPageConfig,
   SHORTCUT_SLOT_KEYS,
 } from '@tyco/shared'
 
@@ -84,7 +84,7 @@ export const adHocAiCommand = (prompt: string): CommandConfig => ({
 
 export interface SavedPrompt {
   commands: CommandConfig[]
-  launcherPages: LauncherPageConfig[]
+  actionPages: ActionPageConfig[]
   /** False when an AI command with this prompt is in the library already */
   isAdded: boolean
 }
@@ -97,31 +97,34 @@ export interface SavedPrompt {
 export function savePromptAsCommand(
   library: {
     commands: readonly CommandConfig[]
-    launcherPages: readonly LauncherPageConfig[]
+    actionPages: readonly ActionPageConfig[]
   },
   prompt: string,
   pageIndex: number,
   id?: string
 ): SavedPrompt {
   const commands = [...library.commands]
-  const launcherPages = [...library.launcherPages]
+  const actionPages = [...library.actionPages]
   const text = prompt.trim()
   const isSaved = commands.some(
     (command) =>
       isAiCommand(command) &&
       aiCommandToolConfigOf(command.toolConfig).prompt.trim() === text
   )
-  if (!text || isSaved) return { commands, launcherPages, isAdded: false }
+  if (!text || isSaved) return { commands, actionPages, isAdded: false }
   const command = aiCommandFromPrompt(text, id)
   commands.push(command)
-  const page = launcherPages[pageIndex]
+  const page = actionPages[pageIndex]
   if (page && Object.keys(page.slots).length) {
     const key = SHORTCUT_SLOT_KEYS[firstFreeSlotIndex(page.slots)]
     if (key)
-      launcherPages[pageIndex] = {
+      actionPages[pageIndex] = {
         ...page,
-        slots: { ...page.slots, [key]: command.id },
+        slots: {
+          ...page.slots,
+          [key]: { type: 'command', commandId: command.id },
+        },
       }
   }
-  return { commands, launcherPages, isAdded: true }
+  return { commands, actionPages, isAdded: true }
 }

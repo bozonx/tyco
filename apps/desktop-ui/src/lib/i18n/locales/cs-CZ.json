@@ -173,26 +173,6 @@
       "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy."
     }
   },
-  "commandLauncher": {
-    "aiStep": "„{name}“: spouštím „{step}“…",
-    "allCommands": "Všechny příkazy",
-    "commandMissing": "Příkaz {id} není v knihovně.",
-    "dropSelection": "Nepoužívat vybraný text",
-    "hintAskAi": "Zeptat se AI",
-    "hintNewLine": "Nový řádek",
-    "hintRun": "Spustit",
-    "hintSavePrompt": "Uložit jako AI příkaz",
-    "nothingFound": "Nenalezeny žádné příkazy",
-    "pages": "Stránky:",
-    "promptSaved": "Uloženo jako AI příkaz",
-    "promptSavedAlready": "AI příkaz s tímto promptem už existuje",
-    "running": "Spouští se „{name}“…",
-    "searchPlaceholder": "Hledat příkazy…",
-    "selection": "Vybraný text, znaků: {count}",
-    "targetHint": "Co se spustí: příkaz shellu, nebo metoda a URL webhooku",
-    "textPlaceholder": "Text pro příkaz",
-    "title": "Příkazy"
-  },
   "commands": {
     "advanced": "Pokročilé",
     "afterRunCopy": "Do schránky",
@@ -295,7 +275,9 @@
     "platforms": "Platformy",
     "platformsInfo": "Příkaz se spouští jen na zaškrtnutých platformách; když není zaškrtnutá žádná, na všech. Na jiné platformě zůstává v seznamech, ale nespouští se.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Spouští se „{name}“…",
+    "commandMissing": "Příkaz {id} není v knihovně."
   },
   "common": {
     "add": "Přidat",
@@ -641,7 +623,6 @@
     "actionWorkingDirPlaceholder": "Domovský adresář",
     "actionsCategory": "Akce",
     "addConnection": "Přidat připojení",
-    "addLauncherPage": "Přidat stránku",
     "addModel": "Přidat model",
     "aiCategory": "AI",
     "aiEntityGeneral": "Obecné",
@@ -754,7 +735,7 @@
       "editor": "Otevřít vybraný text v editoru",
       "history": "Historie",
       "quickInput": "Rychlé zadání textu",
-      "selectionActions": "Akce s výběrem",
+      "selectionActions": "Akce (stránka 1)",
       "selectionCorrection": "Opravit vybraný text na místě",
       "styling": "Stylizace textu",
       "transformation": "Transformace textu",
@@ -762,7 +743,9 @@
       "voice": "Hlasové zadávání",
       "voiceChat": "Hlasová otázka k vybranému textu v chatu AI",
       "voiceCommands": "Hlasové příkazy",
-      "voiceTransformation": "Hlasová transformace textu"
+      "voiceTransformation": "Hlasová transformace textu",
+      "selectionActionsPage2": "Akce: stránka 2",
+      "selectionActionsPage3": "Akce: stránka 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pro zrušení",
@@ -793,11 +776,6 @@
     "keySaveFailed": "Klíč se nepodařilo aktualizovat",
     "keyRemoveFailed": "Klíč se nepodařilo odebrat",
     "languagesTab": "Jazyky překladu",
-    "launcherCommandsHint": "Příkazy spouštěné jedinou klávesou levé ruky v okně rychlých příkazů: Q–T, A–G a Z–B. Přetažením karet změníte jejich klávesy. Každá stránka má vlastní globální zkratku na kartě Klávesové zkratky.",
-    "launcherCommandsTab": "Rychlé příkazy",
-    "launcherPage": "Rychlé příkazy: stránka {page}",
-    "launcherPageTakesText": "Převzít vybraný text",
-    "launcherPageTakesTextInfo": "Vypněte pro stránky, jejichž příkazy nezpracovávají text: spouštěč se otevře bez zachycení označeného textu, takže se dřívější výběry nedostanou do příkazů.",
     "llmConnections": "Připojení",
     "llmConnectionsHint": "Kam Tyco posílá požadavky na AI: Google, OpenRouter, DeepSeek nebo libovolný server s API kompatibilním s OpenAI, třeba místní Ollama či LM Studio. Modely se přidávají uvnitř svého připojení. Uložený klíč jde do zabezpečeného úložiště a už se nikdy nezobrazí.",
     "llmTab": "LLM",
@@ -813,8 +791,6 @@
     },
     "mainActionStylingRemoved": "Smazaný styl textu",
     "mainActionTransformationRemoved": "Smazaná transformace textu",
-    "mainActionsHint": "Akce hlavní nabídky: každá se spouští vlastní klávesou. Přetažením karet změníte jejich klávesy.",
-    "mainActionsTab": "Hlavní akce",
     "markdownBullet": "Značka seznamu",
     "markdownCleanBlockquoteAngle": "> (ponechat předponu citace)",
     "markdownCleanBlockquoteIndent": "Styl citací",
@@ -969,7 +945,6 @@
     "rebindHotkeysError": "Zkratky se nepodařilo znovu zaregistrovat",
     "rebindHotkeysHint": "Vrátí zkratky odstraněné v nastavení systému; zkratky, které jste změnili, zůstanou. Chcete-li se zbavit zastaralých zkratek, nejprve odeberte Tyco v nastavení systému.",
     "removeKey": "Odebrat klíč",
-    "removeLauncherPage": "Smazat stránku",
     "removeModel": "Odebrat model",
     "removeModelConfirm": "Odebrat tento model?",
     "removePluginPackage": "Odebrat balíček",
@@ -1185,7 +1160,14 @@
     "askInProfileChat": "Zeptat se v chatu: {profile}",
     "mainActionProfileRemoved": "Smazaný profil",
     "webJinaApiKey": "Klíč API Jina AI",
-    "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity."
+    "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity.",
+    "actionsTab": "Akce",
+    "actionsHint": "Akce spouštěné jedinou klávesou levé ruky v okně akcí: Q–T, A–G a Z–B. Přetažením karet změníte jejich klávesy. Použijte stránky k uspořádání akcí.",
+    "actionPage": "Stránka {page}",
+    "addActionPage": "Přidat stránku",
+    "removeActionPage": "Odebrat stránku",
+    "actionPageTakesText": "Přijímat vybraný text",
+    "actionPageTakesTextInfo": "Je-li vypnuto, otevření této stránky nekopíruje vybraný text z jiných aplikací."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

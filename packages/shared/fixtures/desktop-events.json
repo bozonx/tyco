@@ -17,8 +17,7 @@
       "windowId": "target",
       "selectedText": "Captured text",
       "mode": "editor",
-      "launcherPageId": null,
-      "launcherRequest": null,
+      "actionPageIndex": null,
       "accessRequest": null
     },
     "window": { "isWindowShown": true, "windowProfile": "sheet" },

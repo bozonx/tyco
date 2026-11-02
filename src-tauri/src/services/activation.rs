@@ -13,8 +13,8 @@ pub mod socket;
 use serde_json::Value;
 
 use crate::errors::AppError;
-use crate::models::user_config::{self, LauncherInputMode};
-pub use crate::models::{AccessRequest, ActivationMode, LauncherRequest, WindowProfile};
+use crate::models::user_config::{self, ActionInputMode};
+pub use crate::models::{AccessRequest, ActivationMode, WindowProfile};
 
 /// Logical size of every activated window; keep it in sync with the windows in
 /// `tauri.conf.json`. The quick input panel draws only its input field and
@@ -29,7 +29,7 @@ pub enum ActivationSource {
     Ui,
 }
 
-const LAUNCHER_PAGE_MODE_PREFIX: &str = "commandLauncher:";
+const SELECTION_ACTIONS_MODE_PREFIX: &str = "selectionActions:";
 
 #[derive(Debug)]
 pub struct Activation {
@@ -37,10 +37,8 @@ pub struct Activation {
     pub source: ActivationSource,
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
-    /// The page of `launcherPages` the command overlay opens on; `None` for
-    /// the first one.
-    pub launcher_page_id: Option<String>,
-    pub launcher_request: Option<LauncherRequest>,
+    /// The page of `actionPages` the action menu opens on; `None` or 0 for the first one.
+    pub action_page_index: Option<usize>,
     /// What the access prompt asks about, see `services::external::access`.
     pub access_request: Option<AccessRequest>,
 }
@@ -52,47 +50,53 @@ impl Activation {
             source,
             target_window_id: None,
             selected_text: None,
-            launcher_page_id: None,
-            launcher_request: None,
+            action_page_index: None,
             access_request: None,
         }
     }
 
-    /// A mode, or `commandLauncher:<page id>` for a page of the command
-    /// overlay.
+    pub fn selection_actions(page_index: usize, source: ActivationSource) -> Self {
+        let mut activation = Self::new(ActivationMode::SelectionActions, source);
+        activation.action_page_index = Some(page_index);
+        activation
+    }
+
+    /// A mode, or `selectionActions:<page 1-based index>` for an action page.
     pub fn from_mode(value: &str, source: ActivationSource) -> Result<Self, AppError> {
-        if let Some(page_id) = value.strip_prefix(LAUNCHER_PAGE_MODE_PREFIX) {
-            if page_id.trim().is_empty() {
-                return Err(AppError::InvalidInput("Invalid command page".into()));
+        let canonical = tyco_activation_protocol::canonical_mode(value);
+        if let Some(rest) = canonical.strip_prefix(SELECTION_ACTIONS_MODE_PREFIX) {
+            if let Ok(page_num) = rest.parse::<usize>() {
+                let page_index = if page_num > 0 { page_num - 1 } else { 0 };
+                return Ok(Self::selection_actions(page_index, source));
             }
-            let mut activation = Self::new(ActivationMode::CommandLauncher, source);
-            activation.launcher_page_id = Some(page_id.to_owned());
-            return Ok(activation);
+            return Err(AppError::InvalidInput("Invalid action page".into()));
         }
         Ok(Self::new(ActivationMode::parse(value)?, source))
     }
 
-    /// The mode string that opens the command overlay on `page_id`.
-    pub fn launcher_page_mode(page_id: &str) -> String {
-        format!("{LAUNCHER_PAGE_MODE_PREFIX}{page_id}")
+    /// The mode string that opens the action menu on `page_index` (0-based).
+    pub fn action_page_mode(page_index: usize) -> String {
+        format!("{SELECTION_ACTIONS_MODE_PREFIX}{}", page_index + 1)
     }
 
     /// Whether the activation takes the selection of the window it was made
-    /// from: not a page of the command overlay the user set to run without
-    /// text, see `launcherPages[].inputMode` of the config.
+    /// from: not an action page the user set to run without text,
+    /// see `actionPages[].inputMode` of the config. The first page always takes text.
     pub fn can_take_selection(&self, user_config: &Value) -> bool {
         if self.mode == ActivationMode::VoiceCommands {
             return false;
         }
-        if self.mode != ActivationMode::CommandLauncher || self.launcher_request.is_some() {
+        if self.mode != ActivationMode::SelectionActions {
             return true;
         }
-        let pages = user_config::launcher_pages(user_config);
-        let page = match &self.launcher_page_id {
-            Some(id) => pages.iter().find(|page| page.id == *id),
-            None => pages.first(),
-        };
-        page.is_none_or(|page| page.input_mode != LauncherInputMode::None)
+        let index = self.action_page_index.unwrap_or(0);
+        if index == 0 {
+            return true;
+        }
+        let pages = user_config::action_pages(user_config);
+        pages
+            .get(index)
+            .is_none_or(|page| page.input_mode != ActionInputMode::None)
     }
 
     /// Whether this activation confirms the voice input it would open, instead
@@ -136,15 +140,17 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn a_command_page_set_without_text_takes_no_selection() {
-        let config = json!({ "launcherPages": [{"id":"main","inputMode":"none"},{"id":"second","inputMode":"selection"},{"id":"third","inputMode":"none"}] });
+    fn an_action_page_set_without_text_takes_no_selection_unless_first_page() {
+        let config = json!({ "actionPages": [{"inputMode":"selection"},{"inputMode":"none"},{"inputMode":"selection"}] });
         let page = |mode: &str| Activation::from_mode(mode, ActivationSource::Ui).unwrap();
         assert!(!page("voiceCommands").can_take_selection(&config));
-        assert!(!page("commandLauncher").can_take_selection(&config));
-        assert!(page("commandLauncher:second").can_take_selection(&config));
-        assert!(!page("commandLauncher:third").can_take_selection(&config));
-        assert!(page("commandLauncher:third").can_take_selection(&json!({})));
-        assert!(page("commandLauncher:removed").can_take_selection(&config));
+        // First page always takes selection
+        assert!(page("selectionActions").can_take_selection(&config));
+        assert!(page("selectionActions:1").can_take_selection(&config));
+        // Second page is none
+        assert!(!page("selectionActions:2").can_take_selection(&config));
+        // Third page is selection
+        assert!(page("selectionActions:3").can_take_selection(&config));
         assert!(page("translation").can_take_selection(&config));
     }
 
@@ -176,21 +182,16 @@ mod tests {
     }
 
     #[test]
-    fn command_pages_parse_without_changing_the_overlay_mode() {
-        let activation =
-            Activation::from_mode("commandLauncher:work", ActivationSource::Ui).unwrap();
-        assert_eq!(activation.mode, ActivationMode::CommandLauncher);
-        assert_eq!(activation.launcher_page_id.as_deref(), Some("work"));
+    fn action_pages_parse_with_action_page_index() {
+        let activation = Activation::from_mode("selectionActions:2", ActivationSource::Ui).unwrap();
+        assert_eq!(activation.mode, ActivationMode::SelectionActions);
+        assert_eq!(activation.action_page_index, Some(1));
+        assert_eq!(Activation::action_page_mode(1), "selectionActions:2");
+        assert!(Activation::from_mode("selectionActions:abc", ActivationSource::Ui).is_err());
         assert_eq!(
-            Activation::launcher_page_mode("work"),
-            "commandLauncher:work"
-        );
-        assert!(Activation::from_mode("commandLauncher:", ActivationSource::Ui).is_err());
-        assert!(Activation::from_mode("commandLauncher2", ActivationSource::Ui).is_err());
-        assert_eq!(
-            Activation::from_mode("commandLauncher", ActivationSource::Ui)
+            Activation::from_mode("selectionActions", ActivationSource::Ui)
                 .unwrap()
-                .launcher_page_id,
+                .action_page_index,
             None
         );
     }
@@ -204,7 +205,6 @@ mod tests {
             "voiceChat",
             "voice",
             "selectionActions",
-            "commandLauncher",
             "correction",
             "translation",
             "history",
@@ -233,7 +233,6 @@ mod tests {
         for mode in [
             ActivationMode::Editor,
             ActivationMode::SelectionActions,
-            ActivationMode::CommandLauncher,
             ActivationMode::Correction,
             ActivationMode::Translation,
             ActivationMode::Styling,

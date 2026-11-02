@@ -9,9 +9,8 @@ import type {
 } from './user-config/translation-config'
 import type { SttConfig } from './user-config/stt-config'
 import type {
+  ActionPageConfig,
   CommandConfig,
-  LauncherPageConfig,
-  MainActionConfig,
 } from './user-config/commands-config'
 import type { VariableConfig } from './variables'
 
@@ -140,6 +139,8 @@ export interface HotkeysConfig {
   voiceChat: string
   voice: string
   selectionActions: string
+  selectionActionsPage2: string
+  selectionActionsPage3: string
   correction: string
   translation: string
   styling: string
@@ -149,12 +150,10 @@ export interface HotkeysConfig {
   history: string
   voiceCommands: string
   selectionCorrection: string
-  /** The shortcut that opens a page of the command overlay, by page id */
-  launcherPages: Record<string, string>
 }
 
-/** The hotkeys of activation modes, all but the launcher pages */
-export type HotkeyId = Exclude<keyof HotkeysConfig, 'launcherPages'>
+/** The hotkeys of activation modes and action pages */
+export type HotkeyId = keyof HotkeysConfig
 
 /** Per-plugin state: the plugin owns `settings` */
 export interface PluginEntryConfig {
@@ -223,8 +222,7 @@ export interface UserConfig {
     terminalApps: string[]
   }
   translation: TranslationConfig
-  mainActions: ShortcutSlots<MainActionConfig>
-  launcherPages: LauncherPageConfig[]
+  actionPages: ActionPageConfig[]
   commands: CommandConfig[]
   /** The variables commands refer to as `{{var:NAME}}`, see `variables.ts` */
   variables: VariableConfig[]

@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 3f2a9456006f2ead06fe065a76b8421de17dd146b4000d03532109a5fbeaa0fc
+// Source hash: 6712cb2cfa487f87c778a47c5608f742cca6a8dbd32588221accd524e1a40ae4
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -29,7 +29,6 @@ export type ActivationMode =
   | 'voiceCommands'
   | 'voice'
   | 'selectionActions'
-  | 'commandLauncher'
   | 'correction'
   | 'translation'
   | 'styling'
@@ -321,11 +320,10 @@ export type DesktopActivationState = {
   selectedText: string | null
   mode: ActivationMode | null
   /**
-   * The page of `launcherPages` the command overlay opens on; `None` for the
+   * The page of `actionPages` the action menu opens on; `None` or 0 for the
    * first one.
    */
-  launcherPageId: string | null
-  launcherRequest: LauncherRequest | null
+  actionPageIndex: number | null
   accessRequest: AccessRequest | null
 }
 
@@ -515,15 +513,6 @@ export type JobCompletion = {
 export type KeySender = 'ydotool' | 'portal' | 'system'
 
 export type KeysState = 'ready' | 'needsPermission' | 'unavailable'
-
-/** A command the overlay opens with, see `Activation::launcher_request`. */
-export type LauncherRequest = {
-  commandId: string
-  /** The text of the call; without it the selection or the field gives it. */
-  text?: string
-  jobId?: string
-  input?: Record<string, unknown>
-}
 
 /** What the main window opens its chat with. */
 export type OpenMainChatEvent = {

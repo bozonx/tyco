@@ -1,5 +1,6 @@
+import { watch } from 'vue'
 import { defineStore } from 'pinia'
-import { ActivationMode, APP_CONFIG } from '@tyco/shared'
+import { APP_CONFIG } from '@tyco/shared'
 
 import {
   type ActionItem,
@@ -10,7 +11,6 @@ import { useInvocationRunnerDependencies } from './invocations'
 import { useCorrectionWorkflowStore } from './correction-workflow'
 import { useHistoryStore } from './history'
 import { useDesktopStore } from './desktop'
-import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
 import { useAiProfilesStore } from './ai-profiles'
 import { useProfileChatStore } from './chat'
@@ -18,14 +18,13 @@ import { useProfileChatStore } from './chat'
 export type { ActionItem }
 
 export const useActionMenuStore = defineStore('actionMenu', () => {
-  const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
   const menuModalsStore = useMenuModalsStore()
   const historyStore = useHistoryStore()
   const correctionWorkflowStore = useCorrectionWorkflowStore()
   const aiProfilesStore = useAiProfilesStore()
 
-  return createActionMenuModel({
+  const model = createActionMenuModel({
     saveOutput: async (text: string) => {
       await historyStore.saveOutput(text)
     },
@@ -54,17 +53,9 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         ...extra,
       }),
     minCorrectionLength: () => APP_CONFIG.minCorrectionLength,
-    openLauncherPage: async (pageId, text) => {
-      await ipcStore.call('activate_mode', {
-        mode: ActivationMode.COMMAND_LAUNCHER,
-        launcherPageId: pageId,
-        text,
-      })
-    },
-    launcherPages: () => desktopStore.userConfig.launcherPages,
     isMainActionVisible: (action) =>
       isMainActionVisible(action, desktopStore.userConfig.isInDevelopment),
-    mainActions: () => desktopStore.userConfig.mainActions,
+    actionPages: () => desktopStore.userConfig.actionPages,
     commands: () => desktopStore.userConfig.commands,
     transformations: () => desktopStore.userConfig.transformations?.items,
     styling: () => desktopStore.userConfig.styling?.items,
@@ -75,4 +66,16 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     },
     ...useInvocationRunnerDependencies(),
   })
+
+  watch(
+    () => desktopStore.desktopState.actionPageIndex,
+    (index) => {
+      if (typeof index === 'number') {
+        model.setPage(index)
+      }
+    },
+    { immediate: true }
+  )
+
+  return model
 })

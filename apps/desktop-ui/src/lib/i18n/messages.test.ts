@@ -159,6 +159,8 @@ const DYNAMIC_KEYS = new Set([
     'voiceChat',
     'voiceCommands',
     'selectionActions',
+    'selectionActionsPage2',
+    'selectionActionsPage3',
     'selectionCorrection',
     'correction',
     'translation',

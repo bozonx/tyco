@@ -173,26 +173,6 @@
       "noCommandsHint": "Create commands in Settings → Commands first."
     }
   },
-  "commandLauncher": {
-    "aiStep": "“{name}”: running “{step}”…",
-    "allCommands": "All commands",
-    "commandMissing": "The command {id} is not in the library.",
-    "dropSelection": "Don't use the selected text",
-    "hintAskAi": "Ask AI",
-    "hintNewLine": "New line",
-    "hintRun": "Run",
-    "hintSavePrompt": "Save as AI command",
-    "nothingFound": "No commands found",
-    "pages": "Pages:",
-    "promptSaved": "Saved as an AI command",
-    "promptSavedAlready": "An AI command with this prompt already exists",
-    "running": "Running “{name}”…",
-    "searchPlaceholder": "Search commands…",
-    "selection": "Selected text: {count} chars",
-    "targetHint": "What will run: the shell command, or the webhook method and URL",
-    "textPlaceholder": "Text for the command",
-    "title": "Commands"
-  },
   "commands": {
     "advanced": "Advanced",
     "afterRunCopy": "To clipboard",
@@ -295,7 +275,9 @@
     "platforms": "Platforms",
     "platformsInfo": "The command runs only on the checked platforms; with none checked, on every one. On another platform it stays in the lists but does not run.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Running “{name}”…",
+    "commandMissing": "The command {id} is not in the library."
   },
   "common": {
     "add": "Add",
@@ -647,7 +629,6 @@
     "actionWorkingDirPlaceholder": "Home directory",
     "actionsCategory": "Actions",
     "addConnection": "Add connection",
-    "addLauncherPage": "Add page",
     "addModel": "Add model",
     "aiCategory": "AI",
     "aiEntityGeneral": "General",
@@ -760,7 +741,7 @@
       "editor": "Open selected text in the editor",
       "history": "History",
       "quickInput": "Quick text input",
-      "selectionActions": "Selection actions",
+      "selectionActions": "Actions (page 1)",
       "selectionCorrection": "Correct selected text in place",
       "styling": "Text styling",
       "transformation": "Text transformation",
@@ -768,7 +749,9 @@
       "voice": "Voice input",
       "voiceChat": "Voice question about selected text in AI chat",
       "voiceCommands": "Voice commands",
-      "voiceTransformation": "Voice text transformation"
+      "voiceTransformation": "Voice text transformation",
+      "selectionActionsPage2": "Actions: page 2",
+      "selectionActionsPage3": "Actions: page 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc to cancel",
@@ -799,11 +782,6 @@
     "keySaveFailed": "Failed to update the key",
     "keyRemoveFailed": "Failed to remove the key",
     "languagesTab": "Translation languages",
-    "launcherCommandsHint": "Commands that run with a single left-hand key in the quick commands window: Q–T, A–G and Z–B. Drag the cards to change their keys. Each page gets its own global shortcut on the Hotkeys tab.",
-    "launcherCommandsTab": "Quick commands",
-    "launcherPage": "Quick commands: page {page}",
-    "launcherPageTakesText": "Take the selected text",
-    "launcherPageTakesTextInfo": "Disable for pages whose commands do not process text: the launcher will open without capturing highlighted text, preventing previous selections from leaking into commands.",
     "llmConnections": "Connections",
     "llmConnectionsHint": "Where Tyco sends AI requests: Google, OpenRouter, DeepSeek or any server with an OpenAI-compatible API, such as a local Ollama or LM Studio. Models are added inside their connection. A saved key goes to secure storage and is never shown again.",
     "llmTab": "LLM",
@@ -819,8 +797,6 @@
     },
     "mainActionStylingRemoved": "Deleted text style",
     "mainActionTransformationRemoved": "Deleted text transformation",
-    "mainActionsHint": "Main menu actions: each one runs with its own key. Drag the cards to change their keys.",
-    "mainActionsTab": "Main actions",
     "markdownBullet": "List marker",
     "markdownCleanBlockquoteAngle": "> (keep quote prefix)",
     "markdownCleanBlockquoteIndent": "Blockquotes style",
@@ -975,7 +951,6 @@
     "rebindHotkeysError": "Could not register the hotkeys again",
     "rebindHotkeysHint": "Brings back the hotkeys removed in the system settings; the shortcuts you changed are kept. To drop outdated hotkeys, first remove Tyco in the system settings.",
     "removeKey": "Remove key",
-    "removeLauncherPage": "Delete page",
     "removeModel": "Remove model",
     "removeModelConfirm": "Remove this model?",
     "removePluginPackage": "Remove package",
@@ -1191,7 +1166,14 @@
     "askInProfileChat": "Ask in chat: {profile}",
     "mainActionProfileRemoved": "Deleted profile",
     "webJinaApiKey": "Jina AI API key",
-    "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits."
+    "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits.",
+    "actionsTab": "Actions",
+    "actionsHint": "Actions that run with a single left-hand key in the actions window: Q–T, A–G, and Z–B. Drag cards to change keys. Use pages to organize actions.",
+    "actionPage": "Page {page}",
+    "addActionPage": "Add page",
+    "removeActionPage": "Remove page",
+    "actionPageTakesText": "Accept selected text",
+    "actionPageTakesTextInfo": "When disabled, opening this page does not copy selected text from other applications."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

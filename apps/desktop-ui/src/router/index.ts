@@ -3,7 +3,6 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { clientLogger } from '../lib/logger'
 import { APP_ROUTES } from '../lib/navigation/routes'
 import ChatView from '../views/ChatView.vue'
-import CommandLauncherView from '../views/CommandLauncherView.vue'
 import CorrectionView from '../views/CorrectionView.vue'
 import EditorView from '../views/EditorView.vue'
 import HistoryView from '../views/HistoryView.vue'
@@ -97,11 +96,6 @@ const router = createRouter({
       path: APP_ROUTES.SELECT.path,
       name: APP_ROUTES.SELECT.name,
       component: SelectionView,
-    },
-    {
-      path: APP_ROUTES.COMMAND_LAUNCHER.path,
-      name: APP_ROUTES.COMMAND_LAUNCHER.name,
-      component: CommandLauncherView,
     },
   ],
 })

@@ -306,29 +306,23 @@ mod tests {
     }
 
     #[test]
-    fn added_and_removed_launcher_pages_change_their_shortcuts() {
+    fn changed_action_pages_change_their_shortcuts() {
         let before = bindings_from_config(&serde_json::json!({
-            "launcherPages": [{"id": "kept"}, {"id": "removed"}, {"id": "unbound"}],
             "hotkeys": {
-                "launcherPages": {"kept": "Ctrl+Alt+K", "removed": "Ctrl+Alt+R"}
+                "selectionActionsPage2": "Ctrl+Alt+2",
+                "selectionActionsPage3": "Ctrl+Alt+3"
             },
         }));
         let after = bindings_from_config(&serde_json::json!({
-            "launcherPages": [{"id": "kept"}, {"id": "added"}],
             "hotkeys": {
-                "launcherPages": {"kept": "Ctrl+Alt+K", "added": "Ctrl+Alt+A"}
+                "selectionActionsPage2": "Ctrl+Alt+2",
+                "selectionActionsPage3": "Ctrl+Alt+A"
             },
         }));
         let changes = binding_changes(&before, after);
         assert_eq!(
             changes,
-            vec![
-                (
-                    HotkeyTarget::LauncherPage("added".into()),
-                    Some("Ctrl+Alt+A".into())
-                ),
-                (HotkeyTarget::LauncherPage("removed".into()), None),
-            ]
+            vec![(HotkeyTarget::ActionPage(2), Some("Ctrl+Alt+A".into()))]
         );
     }
 

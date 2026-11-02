@@ -44,7 +44,7 @@
               v-else-if="voice.stage === 'running'"
               kind="loading"
               :message="
-                t('commandLauncher.running', {
+                t('commands.running', {
                   name: voice.command ? commandLabel(voice.command) : '',
                 })
               "

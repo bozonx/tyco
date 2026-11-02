@@ -11,9 +11,9 @@ use super::validation::{
 use super::ApiResult;
 use crate::errors::AppError;
 use crate::events;
-use crate::services::activation::{Activation, ActivationMode, ActivationSource};
+use crate::services::activation::ActivationSource;
 use crate::services::external::access::{self, AccessPrompt, AccessPromptError, AccessRequest};
-use crate::services::external::command_library::{self, ExternalCommand};
+use crate::services::external::command_library::ExternalCommand;
 use crate::services::external::jobs::ExternalJobs;
 use crate::services::{runtime, selection_replace};
 use crate::state::AppState;
@@ -117,49 +117,39 @@ fn hand_off(
     job_id: &str,
     command: &ExternalCommand,
     request: &RunRequest,
-    source: ActivationSource,
+    _source: ActivationSource,
 ) -> ApiResult<()> {
     let config = app.state::<AppState>().user_config();
     let needs_ui = command.can_take_text && request.text.is_none() && request.input.is_none();
-    // a run in the overlay is seen and can be cancelled; one in the
-    // background is bounded by the limit of its command
-    let run_limit = (!needs_ui).then(|| {
-        Duration::from_secs(
-            crate::models::user_config::command(&config, &command.id).map_or(
-                crate::models::user_config::EXTERNAL_TIMEOUT_DEFAULT_SEC,
-                |command| command.external_timeout_sec,
-            ),
-        )
-    });
+    if needs_ui {
+        return Err(Box::new(Response::coded_error(
+            ErrorCode::InvalidInput,
+            "Command requires text input",
+        )));
+    }
+    let run_limit = Some(Duration::from_secs(
+        crate::models::user_config::command(&config, &command.id).map_or(
+            crate::models::user_config::EXTERNAL_TIMEOUT_DEFAULT_SEC,
+            |command| command.external_timeout_sec,
+        ),
+    ));
     app.state::<ExternalJobs>().set_run_limit(job_id, run_limit);
-    let handoff = if needs_ui {
-        let mut activation = Activation::new(ActivationMode::CommandLauncher, source);
-        // External calls never capture a selection implicitly when opening UI.
-        activation.selected_text = Some(String::new());
-        activation.launcher_request = Some(command_library::LauncherRequest {
-            command_id: command.id.clone(),
-            text: request.text.clone(),
-            job_id: Some(job_id.to_owned()),
-            input: request.input.clone(),
+    let handoff = app
+        .get_webview_window(runtime::QUICK_WINDOW_LABEL)
+        .ok_or_else(|| "Quick window not found".to_owned())
+        .and_then(|window| {
+            events::emit::<events::CommandRun, _>(
+                &window,
+                events::CommandRunEvent {
+                    command_id: command.id.clone(),
+                    job_id: job_id.to_owned(),
+                    text: request.text.clone(),
+                    input: request.input.clone(),
+                    user_config: config,
+                },
+            )
+            .map_err(|error| error.to_string())
         });
-        runtime::activate(app, activation).map_err(|error| error.to_string())
-    } else {
-        app.get_webview_window(runtime::QUICK_WINDOW_LABEL)
-            .ok_or_else(|| "Quick window not found".to_owned())
-            .and_then(|window| {
-                events::emit::<events::CommandRun, _>(
-                    &window,
-                    events::CommandRunEvent {
-                        command_id: command.id.clone(),
-                        job_id: job_id.to_owned(),
-                        text: request.text.clone(),
-                        input: request.input.clone(),
-                        user_config: config,
-                    },
-                )
-                .map_err(|error| error.to_string())
-            })
-    };
     handoff.map_err(|error| {
         fail(app, job_id, error.clone(), ErrorCode::Unavailable);
         Box::new(Response::coded_error(ErrorCode::Unavailable, error))

@@ -65,7 +65,7 @@ export const SETTINGS_NAVIGATION_GROUPS = [
     sections: [
       {
         id: 'main-actions',
-        labelKey: 'settings.mainActionsTab',
+        labelKey: 'settings.actionsTab',
         icon: 'mdi:gesture-tap-button',
       },
       {
@@ -84,11 +84,6 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         id: 'languages',
         labelKey: 'settings.languagesTab',
         icon: 'mdi:translate-variant',
-      },
-      {
-        id: 'launcher-commands',
-        labelKey: 'settings.launcherCommandsTab',
-        icon: 'mdi:rocket-launch-outline',
       },
       {
         id: 'commands',
@@ -136,7 +131,6 @@ const DEVELOPMENT_SECTION_IDS: readonly string[] = [
   'commands',
   'correction',
   'editor',
-  'launcher-commands',
 ]
 
 const SECTIONS = SETTINGS_NAVIGATION_GROUPS.flatMap(
@@ -379,8 +373,7 @@ const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
   externalAccess: 'commands',
   commands: 'commands',
   translation: 'translations',
-  mainActions: 'main-actions',
-  launcherPages: 'launcher-commands',
+  actionPages: 'main-actions',
   llm: 'llm',
   transformations: 'transformations',
   styling: 'styling',

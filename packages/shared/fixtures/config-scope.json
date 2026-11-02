@@ -18,7 +18,7 @@
       "editor": { "history": { "isLocalOnly": true } },
       "hotkeys": {
         "quickInput": "Ctrl+Alt+W",
-        "launcherPages": { "main": "Ctrl+Alt+Q" }
+        "selectionActionsPage2": "Ctrl+Alt+Q"
       },
       "externalAccess": { "canAccessSelection": true },
       "windowInsertion": { "terminalApps": ["kitty"] },
@@ -44,7 +44,7 @@
       "isInDevelopment": true,
       "hotkeys": {
         "quickInput": "Ctrl+Alt+W",
-        "launcherPages": { "main": "Ctrl+Alt+Q" }
+        "selectionActionsPage2": "Ctrl+Alt+Q"
       },
       "externalAccess": { "canAccessSelection": true },
       "windowInsertion": { "terminalApps": ["kitty"] },

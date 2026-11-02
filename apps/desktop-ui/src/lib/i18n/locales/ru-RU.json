@@ -173,26 +173,6 @@
       "noCommandsHint": "Сначала создайте команды в Настройки → Команды."
     }
   },
-  "commandLauncher": {
-    "aiStep": "«{name}»: выполняю «{step}»…",
-    "allCommands": "Все команды",
-    "commandMissing": "Команда {id} не найдена в библиотеке.",
-    "dropSelection": "Не использовать выделенный текст",
-    "hintAskAi": "Спросить ИИ",
-    "hintNewLine": "Новая строка",
-    "hintRun": "Выполнить",
-    "hintSavePrompt": "Сохранить как ИИ-команду",
-    "nothingFound": "Команды не найдены",
-    "pages": "Страницы:",
-    "promptSaved": "Сохранено как ИИ-команда",
-    "promptSavedAlready": "ИИ-команда с таким промптом уже есть",
-    "running": "Выполняю «{name}»…",
-    "searchPlaceholder": "Поиск команды…",
-    "selection": "Выделенный текст: {count} симв.",
-    "targetHint": "Что будет запущено: shell-команда или метод и адрес вебхука",
-    "textPlaceholder": "Текст для команды",
-    "title": "Команды"
-  },
   "commands": {
     "advanced": "Дополнительно",
     "afterRunCopy": "В буфер обмена",
@@ -295,7 +275,9 @@
     "platforms": "Платформы",
     "platformsInfo": "Команда выполняется только на отмеченных платформах; если ничего не отмечено — на всех. На другой платформе она остаётся в списках, но не выполняется.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Выполняю «{name}»…",
+    "commandMissing": "Команда {id} не найдена в библиотеке."
   },
   "common": {
     "add": "Добавить",
@@ -644,7 +626,6 @@
     "actionWorkingDirPlaceholder": "Домашняя папка",
     "actionsCategory": "Действия",
     "addConnection": "Добавить подключение",
-    "addLauncherPage": "Добавить страницу",
     "addModel": "Добавить модель",
     "aiCategory": "ИИ",
     "aiEntityGeneral": "Основное",
@@ -757,7 +738,7 @@
       "editor": "Открыть выделенный текст в редакторе",
       "history": "История",
       "quickInput": "Режим быстрого текстового ввода",
-      "selectionActions": "Действия с выделением",
+      "selectionActions": "Действия (страница 1)",
       "selectionCorrection": "Исправить выделенный текст на месте",
       "styling": "Стилизация текста",
       "transformation": "Трансформация текста",
@@ -765,7 +746,9 @@
       "voice": "Голосовой ввод",
       "voiceChat": "Голосовой вопрос по выделенному тексту в чате с ИИ",
       "voiceCommands": "Голосовые команды",
-      "voiceTransformation": "Голосовая трансформация"
+      "voiceTransformation": "Голосовая трансформация",
+      "selectionActionsPage2": "Действия: страница 2",
+      "selectionActionsPage3": "Действия: страница 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — отмена",
@@ -796,11 +779,6 @@
     "keySaveFailed": "Не удалось изменить ключ",
     "keyRemoveFailed": "Не удалось удалить ключ",
     "languagesTab": "Языки перевода",
-    "launcherCommandsHint": "Команды, которые в окне быстрых команд запускаются одной клавишей под левой рукой: Q–T, A–G и Z–B. Перетаскивайте карточки, чтобы сменить клавишу. У каждой страницы своё глобальное сочетание на вкладке «Хоткеи».",
-    "launcherCommandsTab": "Быстрые команды",
-    "launcherPage": "Быстрые команды: страница {page}",
-    "launcherPageTakesText": "Принимать выделенный текст",
-    "launcherPageTakesTextInfo": "Отключите для страниц, команды которых не работают с текстом: окно откроется без захвата выделения, чтобы старый выделенный текст случайно не попал в команды.",
     "llmConnections": "Подключения",
     "llmConnectionsHint": "Куда Tyco отправляет запросы к ИИ: Google, OpenRouter, DeepSeek или любой сервер с API, совместимым с OpenAI, например локальные Ollama и LM Studio. Модели добавляются внутри своего подключения. Сохранённый ключ хранится в защищённом хранилище и больше не показывается.",
     "llmTab": "LLM",
@@ -816,8 +794,6 @@
     },
     "mainActionStylingRemoved": "Удалённый стиль текста",
     "mainActionTransformationRemoved": "Удалённая трансформация текста",
-    "mainActionsHint": "Действия главного меню: каждое запускается своей клавишей. Перетаскивайте карточки, чтобы сменить клавишу.",
-    "mainActionsTab": "Основные действия",
     "markdownBullet": "Маркер списка",
     "markdownCleanBlockquoteAngle": "> (сохранять префикс цитаты)",
     "markdownCleanBlockquoteIndent": "Оформление цитат",
@@ -972,7 +948,6 @@
     "rebindHotkeysError": "Не удалось заново зарегистрировать хоткеи",
     "rebindHotkeysHint": "Возвращает хоткеи, удалённые в системных настройках; изменённые вами сочетания сохранятся. Чтобы убрать устаревшие хоткеи, сначала удалите Tyco в системных настройках.",
     "removeKey": "Удалить ключ",
-    "removeLauncherPage": "Удалить страницу",
     "removeModel": "Удалить модель",
     "removeModelConfirm": "Удалить эту модель?",
     "removePluginPackage": "Удалить пакет",
@@ -1188,7 +1163,14 @@
     "askInProfileChat": "Спросить в чате: {profile}",
     "mainActionProfileRemoved": "Удалённый профиль",
     "webJinaApiKey": "API-ключ Jina AI",
-    "webJinaApiKeyHint": "Необязательно. Без ключа запросы работают через бесплатный тариф с общими лимитами."
+    "webJinaApiKeyHint": "Необязательно. Без ключа запросы работают через бесплатный тариф с общими лимитами.",
+    "actionsTab": "Действия",
+    "actionsHint": "Действия, которые запускаются одной клавишей под левой рукой в окне действий: Q–T, A–G и Z–B. Перетаскивайте карточки для смены клавиш. Используйте страницы для группировки действий.",
+    "actionPage": "Страница {page}",
+    "addActionPage": "Создать страницу",
+    "removeActionPage": "Удалить страницу",
+    "actionPageTakesText": "Принимать выделенный текст",
+    "actionPageTakesTextInfo": "Если выключено, открытие этой страницы не копирует выделенный текст из других приложений."
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

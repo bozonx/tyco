@@ -79,7 +79,7 @@ export interface DesktopCommands {
   activate_mode: {
     args: {
       mode: ActivationMode
-      launcherPageId?: string | null
+      actionPageIndex?: number | null
       text?: string | null
     }
     result: void

@@ -1,4 +1,4 @@
-use super::{AccessRequest, ActivationMode, LauncherRequest, SessionState, WindowProfile};
+use super::{AccessRequest, ActivationMode, SessionState, WindowProfile};
 use serde::Serialize;
 use serde_json::Value;
 /// Wire state is grouped by domain; all domains share a coherent revision.
@@ -19,10 +19,8 @@ pub struct ActivationSnapshot {
     pub target_window_id: Option<String>,
     pub selected_text: Option<String>,
     pub mode: Option<ActivationMode>,
-    /// The page of `launcherPages` the command overlay opens on; `None` for
-    /// the first one.
-    pub launcher_page_id: Option<String>,
-    pub launcher_request: Option<LauncherRequest>,
+    /// The page of `actionPages` the action menu opens on; `None` or 0 for the first one.
+    pub action_page_index: Option<usize>,
     pub access_request: Option<AccessRequest>,
 }
 #[derive(Debug, Clone, Serialize, ts_rs::TS)]

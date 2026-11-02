@@ -173,26 +173,6 @@
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi."
     }
   },
-  "commandLauncher": {
-    "aiStep": "„{name}”: rulez „{step}”…",
-    "allCommands": "Toate comenzile",
-    "commandMissing": "Comanda {id} nu se află în bibliotecă.",
-    "dropSelection": "Nu folosi textul selectat",
-    "hintAskAi": "Întreabă AI-ul",
-    "hintNewLine": "Rând nou",
-    "hintRun": "Rulează",
-    "hintSavePrompt": "Salvează ca comandă AI",
-    "nothingFound": "Nu s-au găsit comenzi",
-    "pages": "Pagini:",
-    "promptSaved": "Salvat ca comandă AI",
-    "promptSavedAlready": "Există deja o comandă AI cu acest prompt",
-    "running": "Se rulează „{name}”…",
-    "searchPlaceholder": "Caută comenzi…",
-    "selection": "Text selectat: {count} caractere",
-    "targetHint": "Ce se va rula: comanda shell sau metoda și URL-ul webhookului",
-    "textPlaceholder": "Text pentru comandă",
-    "title": "Comenzi"
-  },
   "commands": {
     "advanced": "Avansat",
     "afterRunCopy": "În clipboard",
@@ -295,7 +275,9 @@
     "platforms": "Platforme",
     "platformsInfo": "Comanda rulează doar pe platformele bifate; dacă nu e bifată niciuna, pe toate. Pe altă platformă rămâne în liste, dar nu rulează.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Se rulează „{name}”…",
+    "commandMissing": "Comanda {id} nu se află în bibliotecă."
   },
   "common": {
     "add": "Adaugă",
@@ -647,7 +629,6 @@
     "actionWorkingDirPlaceholder": "Director personal",
     "actionsCategory": "Acțiuni",
     "addConnection": "Adaugă conexiune",
-    "addLauncherPage": "Adaugă pagină",
     "addModel": "Adaugă model",
     "aiCategory": "IA",
     "aiEntityGeneral": "General",
@@ -760,7 +741,7 @@
       "editor": "Deschide textul selectat în editor",
       "history": "Istoric",
       "quickInput": "Introducere rapidă de text",
-      "selectionActions": "Acțiuni pentru selecție",
+      "selectionActions": "Acțiuni (pagina 1)",
       "selectionCorrection": "Corectează textul selectat pe loc",
       "styling": "Stilizare text",
       "transformation": "Transformare text",
@@ -768,7 +749,9 @@
       "voice": "Introducere vocală",
       "voiceChat": "Întrebare vocală despre textul selectat în chatul AI",
       "voiceCommands": "Comenzi vocale",
-      "voiceTransformation": "Transformare vocală a textului"
+      "voiceTransformation": "Transformare vocală a textului",
+      "selectionActionsPage2": "Acțiuni: pagina 2",
+      "selectionActionsPage3": "Acțiuni: pagina 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",
@@ -799,11 +782,6 @@
     "keySaveFailed": "Cheia nu a putut fi actualizată",
     "keyRemoveFailed": "Cheia nu a putut fi eliminată",
     "languagesTab": "Limbi de traducere",
-    "launcherCommandsHint": "Comenzi care rulează cu o singură tastă a mâinii stângi în fereastra de comenzi rapide: Q–T, A–G și Z–B. Trageți cardurile pentru a le schimba tastele. Fiecare pagină are propria comandă rapidă globală în fila Comenzi rapide.",
-    "launcherCommandsTab": "Comenzi rapide",
-    "launcherPage": "Comenzi rapide: pagina {page}",
-    "launcherPageTakesText": "Preia textul selectat",
-    "launcherPageTakesTextInfo": "Dezactivați pentru paginile ale căror comenzi nu procesează text: lansatorul se va deschide fără a captura textul evidențiat, astfel încât selecțiile anterioare să nu ajungă în comenzi.",
     "llmConnections": "Conexiuni",
     "llmConnectionsHint": "Unde trimite Tyco cererile AI: Google, OpenRouter, DeepSeek sau orice server cu un API compatibil OpenAI, cum ar fi Ollama sau LM Studio local. Modelele se adaugă în cadrul conexiunii lor. O cheie salvată ajunge în stocarea securizată și nu mai este afișată niciodată.",
     "llmTab": "LLM",
@@ -819,8 +797,6 @@
     },
     "mainActionStylingRemoved": "Stil de text șters",
     "mainActionTransformationRemoved": "Transformare text ștearsă",
-    "mainActionsHint": "Acțiunile meniului principal: fiecare rulează cu propria tastă. Trageți cardurile pentru a le schimba tastele.",
-    "mainActionsTab": "Acțiuni principale",
     "markdownBullet": "Marcator de listă",
     "markdownCleanBlockquoteAngle": "> (păstrează prefixul de citat)",
     "markdownCleanBlockquoteIndent": "Stilul citatelor",
@@ -975,7 +951,6 @@
     "rebindHotkeysError": "Comenzile rapide nu au putut fi înregistrate din nou",
     "rebindHotkeysHint": "Recuperează comenzile rapide eliminate în setările sistemului; cele pe care le-ați schimbat sunt păstrate. Pentru a renunța la comenzile rapide învechite, eliminați mai întâi Tyco în setările sistemului.",
     "removeKey": "Elimină cheia",
-    "removeLauncherPage": "Șterge pagina",
     "removeModel": "Elimină modelul",
     "removeModelConfirm": "Eliminați acest model?",
     "removePluginPackage": "Elimină pachetul",
@@ -1191,7 +1166,14 @@
     "askInProfileChat": "Întreabă în chat: {profile}",
     "mainActionProfileRemoved": "Profil șters",
     "webJinaApiKey": "Cheie API Jina AI",
-    "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate."
+    "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
+    "actionsTab": "Acțiuni",
+    "actionsHint": "Acțiuni care rulează cu o singură tastă a mâinii stângi în fereastra de acțiuni: Q–T, A–G și Z–B. Trageți cardurile pentru a schimba tastele. Utilizați pagini pentru a organiza acțiunile.",
+    "actionPage": "Pagina {page}",
+    "addActionPage": "Adaugă pagină",
+    "removeActionPage": "Elimină pagina",
+    "actionPageTakesText": "Acceptă textul selectat",
+    "actionPageTakesTextInfo": "Când este dezactivat, deschiderea acestei pagini nu copiază textul selectat din alte aplicații."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

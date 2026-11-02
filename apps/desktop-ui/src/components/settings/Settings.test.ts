@@ -271,7 +271,6 @@ describe('Settings.vue', () => {
         'transformations',
         'styling',
         'languages',
-        'launcher-commands',
         'commands',
         'variables',
       ],

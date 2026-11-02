@@ -173,26 +173,6 @@
       "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi."
     }
   },
-  "commandLauncher": {
-    "aiStep": "«{name}»: esecuzione di «{step}»…",
-    "allCommands": "Tutti i comandi",
-    "commandMissing": "Il comando {id} non è nella libreria.",
-    "dropSelection": "Non usare il testo selezionato",
-    "hintAskAi": "Chiedi all’IA",
-    "hintNewLine": "A capo",
-    "hintRun": "Esegui",
-    "hintSavePrompt": "Salva come comando IA",
-    "nothingFound": "Nessun comando trovato",
-    "pages": "Pagine:",
-    "promptSaved": "Salvato come comando IA",
-    "promptSavedAlready": "Esiste già un comando IA con questo prompt",
-    "running": "Esecuzione di «{name}»…",
-    "searchPlaceholder": "Cerca comandi…",
-    "selection": "Testo selezionato: {count} caratteri",
-    "targetHint": "Cosa verrà eseguito: il comando shell, oppure il metodo e l’URL del webhook",
-    "textPlaceholder": "Testo per il comando",
-    "title": "Comandi"
-  },
   "commands": {
     "advanced": "Avanzate",
     "afterRunCopy": "Negli appunti",
@@ -295,7 +275,9 @@
     "platforms": "Piattaforme",
     "platformsInfo": "Il comando viene eseguito solo sulle piattaforme selezionate; se nessuna è selezionata, su tutte. Su un’altra piattaforma resta negli elenchi ma non viene eseguito.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "Esecuzione di «{name}»…",
+    "commandMissing": "Il comando {id} non è nella libreria."
   },
   "common": {
     "add": "Aggiungi",
@@ -647,7 +629,6 @@
     "actionWorkingDirPlaceholder": "Cartella home",
     "actionsCategory": "Azioni",
     "addConnection": "Aggiungi connessione",
-    "addLauncherPage": "Aggiungi pagina",
     "addModel": "Aggiungi modello",
     "aiCategory": "IA",
     "aiEntityGeneral": "Generale",
@@ -760,7 +741,7 @@
       "editor": "Apri il testo selezionato nell’editor",
       "history": "Cronologia",
       "quickInput": "Inserimento rapido di testo",
-      "selectionActions": "Azioni sulla selezione",
+      "selectionActions": "Azioni (pagina 1)",
       "selectionCorrection": "Correggi il testo selezionato sul posto",
       "styling": "Stilizzazione del testo",
       "transformation": "Trasformazione del testo",
@@ -768,7 +749,9 @@
       "voice": "Input vocale",
       "voiceChat": "Domanda vocale sul testo selezionato nella chat IA",
       "voiceCommands": "Comandi vocali",
-      "voiceTransformation": "Trasformazione vocale del testo"
+      "voiceTransformation": "Trasformazione vocale del testo",
+      "selectionActionsPage2": "Azioni: pagina 2",
+      "selectionActionsPage3": "Azioni: pagina 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc per annullare",
@@ -799,11 +782,6 @@
     "keySaveFailed": "Impossibile aggiornare la chiave",
     "keyRemoveFailed": "Impossibile rimuovere la chiave",
     "languagesTab": "Lingue di traduzione",
-    "launcherCommandsHint": "Comandi che si eseguono con un solo tasto della mano sinistra nella finestra dei comandi rapidi: Q–T, A–G e Z–B. Trascina le schede per cambiarne i tasti. Ogni pagina ha la propria scorciatoia globale nella scheda Scorciatoie.",
-    "launcherCommandsTab": "Comandi rapidi",
-    "launcherPage": "Comandi rapidi: pagina {page}",
-    "launcherPageTakesText": "Prendi il testo selezionato",
-    "launcherPageTakesTextInfo": "Disattiva per le pagine i cui comandi non elaborano testo: il launcher si aprirà senza catturare il testo evidenziato, così le selezioni precedenti non finiscono nei comandi.",
     "llmConnections": "Connessioni",
     "llmConnectionsHint": "Dove Tyco invia le richieste IA: Google, OpenRouter, DeepSeek o qualsiasi server con un’API compatibile con OpenAI, come Ollama o LM Studio in locale. I modelli si aggiungono all’interno della loro connessione. Una chiave salvata va nell’archivio sicuro e non viene più mostrata.",
     "llmTab": "LLM",
@@ -819,8 +797,6 @@
     },
     "mainActionStylingRemoved": "Stile del testo eliminato",
     "mainActionTransformationRemoved": "Trasformazione del testo eliminata",
-    "mainActionsHint": "Azioni del menu principale: ognuna si esegue con il proprio tasto. Trascina le schede per cambiarne i tasti.",
-    "mainActionsTab": "Azioni principali",
     "markdownBullet": "Indicatore di elenco",
     "markdownCleanBlockquoteAngle": "> (mantieni il prefisso di citazione)",
     "markdownCleanBlockquoteIndent": "Stile delle citazioni",
@@ -975,7 +951,6 @@
     "rebindHotkeysError": "Impossibile registrare di nuovo le scorciatoie",
     "rebindHotkeysHint": "Ripristina le scorciatoie rimosse nelle impostazioni di sistema; quelle che hai modificato vengono mantenute. Per eliminare scorciatoie obsolete, rimuovi prima Tyco nelle impostazioni di sistema.",
     "removeKey": "Rimuovi la chiave",
-    "removeLauncherPage": "Elimina pagina",
     "removeModel": "Rimuovi il modello",
     "removeModelConfirm": "Rimuovere questo modello?",
     "removePluginPackage": "Rimuovi il pacchetto",
@@ -1191,7 +1166,14 @@
     "askInProfileChat": "Chiedi in chat: {profile}",
     "mainActionProfileRemoved": "Profilo eliminato",
     "webJinaApiKey": "Chiave API Jina AI",
-    "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi."
+    "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi.",
+    "actionsTab": "Azioni",
+    "actionsHint": "Azioni eseguite con un solo tasto della mano sinistra nella finestra delle azioni: Q–T, A–G e Z–B. Trascina le schede per modificare i tasti. Usa le pagine per organizzare le azioni.",
+    "actionPage": "Pagina {page}",
+    "addActionPage": "Aggiungi pagina",
+    "removeActionPage": "Rimuovi pagina",
+    "actionPageTakesText": "Accetta testo selezionato",
+    "actionPageTakesTextInfo": "Se disabilitato, l'apertura di questa pagina non copia il testo selezionato da altre applicazioni."
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

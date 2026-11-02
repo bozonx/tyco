@@ -307,10 +307,9 @@ const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
 const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 
 /// The entity collections, each with distinct ids.
-const ENTITY_COLLECTIONS: [&str; 7] = [
+const ENTITY_COLLECTIONS: [&str; 6] = [
     "/commands",
     "/variables",
-    "/launcherPages",
     "/transformations/items",
     "/styling/items",
     "/llm/providers",
@@ -385,7 +384,6 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     }
     let models = ids(config, "/llm/models");
     let commands = ids(config, "/commands");
-    let pages = ids(config, "/launcherPages");
     for model in config["llm"]["models"].as_array().into_iter().flatten() {
         if !providers.contains(model["providerId"].as_str().unwrap_or_default()) {
             return Err(invalid_field("llm.models.providerId"));
@@ -401,36 +399,38 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
             return Err(invalid_field("llm.tasks.modelId"));
         }
     }
-    for slot in slot_values(&config["mainActions"]) {
-        match slot["type"].as_str() {
-            Some("command")
-                if !commands.contains(slot["commandId"].as_str().unwrap_or_default()) =>
-            {
-                return Err(invalid_field("mainActions.commandId"))
-            }
-            Some("transformation")
-                if !transformations
-                    .contains(slot["transformationId"].as_str().unwrap_or_default()) =>
-            {
-                return Err(invalid_field("mainActions.transformationId"))
-            }
-            Some("styling")
-                if !stylings.contains(slot["stylingId"].as_str().unwrap_or_default()) =>
-            {
-                return Err(invalid_field("mainActions.stylingId"))
-            }
-            Some("launcherPage")
-                if !pages.contains(slot["pageId"].as_str().unwrap_or_default()) =>
-            {
-                return Err(invalid_field("mainActions.pageId"));
-            }
-            _ => {}
-        }
+    let Some(action_pages) = config["actionPages"].as_array() else {
+        return Err(invalid_field("actionPages"));
+    };
+    if action_pages.is_empty() {
+        return Err(invalid_field("actionPages"));
     }
-    for page in config["launcherPages"].as_array().into_iter().flatten() {
-        for id in slot_values(&page["slots"]).filter_map(Value::as_str) {
-            if !commands.contains(id) {
-                return Err(invalid_field("launcherPages.slots"));
+    if action_pages[0]["inputMode"] != "selection" {
+        return Err(invalid_field("actionPages.0.inputMode"));
+    }
+    for page in action_pages {
+        for slot in slot_values(&page["slots"]) {
+            match slot["type"].as_str() {
+                Some("command")
+                    if !commands.contains(slot["commandId"].as_str().unwrap_or_default()) =>
+                {
+                    return Err(invalid_field("actionPages.commandId"))
+                }
+                Some("transformation")
+                    if !transformations
+                        .contains(slot["transformationId"].as_str().unwrap_or_default()) =>
+                {
+                    return Err(invalid_field("actionPages.transformationId"))
+                }
+                Some("styling")
+                    if !stylings.contains(slot["stylingId"].as_str().unwrap_or_default()) =>
+                {
+                    return Err(invalid_field("actionPages.stylingId"))
+                }
+                Some("launcherPage") => {
+                    return Err(invalid_field("actionPages.launcherPage"));
+                }
+                _ => {}
             }
         }
     }
@@ -623,50 +623,55 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         .into_iter()
         .map(str::to_owned)
         .collect();
-    let page_ids: HashSet<String> = ids(config, "/launcherPages")
-        .into_iter()
-        .map(str::to_owned)
-        .collect();
-    retain_slots(&mut config["mainActions"], |slot| {
-        match slot["type"].as_str() {
-            Some("command") => command_ids.contains(slot["commandId"].as_str().unwrap_or_default()),
-            Some("transformation") => {
-                transformation_ids.contains(slot["transformationId"].as_str().unwrap_or_default())
-            }
-            Some("styling") => styling_ids.contains(slot["stylingId"].as_str().unwrap_or_default()),
-            Some("launcherPage") => page_ids.contains(slot["pageId"].as_str().unwrap_or_default()),
-            _ => true,
+    if let Some(pages) = config.get_mut("actionPages").and_then(Value::as_array_mut) {
+        if pages.is_empty() {
+            pages.push(json!({"inputMode": "selection", "slots": {}}));
         }
-    });
-    for page in config["launcherPages"].as_array_mut().into_iter().flatten() {
-        retain_slots(&mut page["slots"], |id| {
-            command_ids.contains(id.as_str().unwrap_or_default())
-        });
+    } else {
+        let legacy_slots = config
+            .get("mainActions")
+            .cloned()
+            .unwrap_or_else(|| json!({}));
+        config["actionPages"] = json!([{"inputMode": "selection", "slots": legacy_slots}]);
+    }
+    if let Some(obj) = config.as_object_mut() {
+        obj.remove("mainActions");
+        obj.remove("launcherPages");
+    }
+    if let Some(hotkeys) = config.get_mut("hotkeys").and_then(Value::as_object_mut) {
+        hotkeys.remove("launcherPages");
+        if !hotkeys.contains_key("selectionActionsPage2") {
+            hotkeys.insert("selectionActionsPage2".into(), json!(""));
+        }
+        if !hotkeys.contains_key("selectionActionsPage3") {
+            hotkeys.insert("selectionActionsPage3".into(), json!(""));
+        }
+    }
+    if let Some(pages) = config["actionPages"].as_array_mut() {
+        pages[0]["inputMode"] = json!("selection");
+        for page in pages {
+            retain_slots(&mut page["slots"], |slot| match slot["type"].as_str() {
+                Some("command") => {
+                    command_ids.contains(slot["commandId"].as_str().unwrap_or_default())
+                }
+                Some("transformation") => transformation_ids
+                    .contains(slot["transformationId"].as_str().unwrap_or_default()),
+                Some("styling") => {
+                    styling_ids.contains(slot["stylingId"].as_str().unwrap_or_default())
+                }
+                Some("launcherPage") => false,
+                _ => true,
+            });
+        }
     }
     prune_device_references(config);
     *config != original
 }
 
-/// Drops what a device field refers to and the user data no longer has: the
-/// shortcut of a launcher page removed, e.g. on another machine. References
-/// go from the device to the user data only, so this changes the device part
-/// alone. Returns whether something was dropped.
+/// Drops what a device field refers to and the user data no longer has.
+/// Returns whether something was dropped.
 pub fn prune_device_references(config: &mut Value) -> bool {
     let mut is_pruned = false;
-    let page_ids: HashSet<String> = ids(config, "/launcherPages")
-        .into_iter()
-        .map(str::to_owned)
-        .collect();
-    if let Some(shortcuts) = config["hotkeys"]
-        .get_mut("launcherPages")
-        .and_then(Value::as_object_mut)
-    {
-        let before = shortcuts.len();
-        shortcuts.retain(|id, _| {
-            id == "main" || id == "page-2" || id == "page-3" || page_ids.contains(id)
-        });
-        is_pruned |= shortcuts.len() != before;
-    }
     let variable_ids: HashSet<String> = ids(config, "/variables")
         .into_iter()
         .map(str::to_owned)
@@ -911,22 +916,16 @@ fn repair_command_ids(config: &mut Value) {
             renamed(id);
         }
     }
-    if let Some(slots) = config.get_mut("mainActions").and_then(Value::as_object_mut) {
-        for slot in slots.values_mut() {
-            if slot["type"] == "command" {
-                if let Some(id) = slot.get_mut("commandId") {
-                    renamed(id);
-                }
-            }
-        }
-    }
-    if let Some(pages) = config
-        .get_mut("launcherPages")
-        .and_then(Value::as_array_mut)
-    {
+    if let Some(pages) = config.get_mut("actionPages").and_then(Value::as_array_mut) {
         for page in pages {
             if let Some(slots) = page.get_mut("slots").and_then(Value::as_object_mut) {
-                slots.values_mut().for_each(&renamed);
+                for slot in slots.values_mut() {
+                    if slot["type"] == "command" {
+                        if let Some(id) = slot.get_mut("commandId") {
+                            renamed(id);
+                        }
+                    }
+                }
             }
         }
     }
@@ -1035,12 +1034,11 @@ mod tests {
     }
 
     #[test]
-    fn a_shortcut_of_a_removed_page_is_dropped() {
+    fn a_variable_value_of_a_removed_variable_is_dropped() {
         let mut config = crate::services::settings::defaults::default_user_config();
-        config["hotkeys"]["launcherPages"]["gone"] = json!("Ctrl+Alt+9");
+        config["variableValues"]["gone"] = json!("secret");
         assert!(prune_device_references(&mut config));
-        assert!(config["hotkeys"]["launcherPages"].get("gone").is_none());
-        assert!(config["hotkeys"]["launcherPages"].get("main").is_some());
+        assert!(config["variableValues"].get("gone").is_none());
         assert!(!prune_device_references(&mut config));
     }
 
@@ -1055,8 +1053,11 @@ mod tests {
         normalize_user_config(&mut config);
         assert_eq!(config["hotkeys"]["voice"], defaults["hotkeys"]["voice"]);
         assert_eq!(
-            defaults["hotkeys"]["launcherPages"]["main"],
-            json!(crate::services::hotkeys::default_launcher_page_shortcut())
+            defaults["hotkeys"]["selectionActions"],
+            json!(format!(
+                "{}+S",
+                crate::services::platform::hotkeys::DEFAULT_MODIFIERS
+            ))
         );
     }
 
@@ -1084,22 +1085,20 @@ mod tests {
             ("/editor/history/maxItems", json!(0)),
             ("/editor/history/retentionDays", json!(0)),
             ("/transformations/items/0/id", json!("Deep edit")),
-            ("/launcherPages/0/id", json!("Main")),
+            ("/actionPages/0/inputMode", json!("none")),
             ("/llm/models/0/id", json!(" ollama-qwen")),
             ("/stt/providers", json!("bad")),
             ("/stt/provider", json!("missing")),
             ("/commands", json!([{"id":"a"}])),
             (
-                "/mainActions",
+                "/actionPages/0/slots",
                 json!({"q": {"type":"command","commandId":"missing"}}),
             ),
             (
-                "/mainActions",
+                "/actionPages/0/slots",
                 json!({"y": {"type":"standard","actionId":"askInChat"}}),
             ),
-            ("/launcherPages/0/slots", json!([])),
-            ("/launcherPages/0/slots", json!({"q": "missing"})),
-            ("/launcherPages", json!([])),
+            ("/actionPages", json!([])),
             (
                 "/translation/targetLanguages",
                 json!({"q": "en-US", "w": "en-US"}),
@@ -1127,11 +1126,14 @@ mod tests {
         let mut config = crate::services::settings::defaults::default_user_config();
         config["editor"]["history"]["maxItems"] = json!(1.5);
         config["stt"]["isVoiceCorrectionEnabled"] = json!("yes");
-        config["mainActions"] = json!({
-            "q": {"type":"command","commandId":"missing"},
-            "w": {"type":"standard","actionId":"askInChat"},
-            "y": {"type":"standard","actionId":"askInChat"},
-        });
+        config["actionPages"] = json!([{
+            "inputMode": "selection",
+            "slots": {
+                "q": {"type":"command","commandId":"missing"},
+                "w": {"type":"standard","actionId":"askInChat"},
+                "y": {"type":"standard","actionId":"askInChat"},
+            }
+        }]);
         config["translation"]["targetLanguages"] = json!({"q": "en-US", "w": "en-US", "e": 1});
         config["transformations"]["slots"] =
             json!({"q": "gone", "w": "deep-edit", "e": "deep-edit"});
@@ -1139,7 +1141,7 @@ mod tests {
         validate_user_config(&config).unwrap();
         assert!(!normalize_user_config(&mut config));
         assert_eq!(
-            config["mainActions"],
+            config["actionPages"][0]["slots"],
             json!({"w": {"type":"standard","actionId":"askInChat"}})
         );
         assert_eq!(

@@ -182,42 +182,31 @@ pub fn is_in_development(config: &Value) -> bool {
         .unwrap_or(false)
 }
 
-/// What the command overlay takes as its input, `launcherPages[].inputMode`.
+/// What an action page takes as its input, `actionPages[].inputMode`.
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub enum LauncherInputMode {
+pub enum ActionInputMode {
     #[default]
     Selection,
     None,
 }
 
-/// A page of the command overlay, `launcherPages[]`.
+/// A page of the action menu, `actionPages[]`.
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct LauncherPageConfig {
-    pub id: String,
+pub struct ActionPageConfig {
     #[serde(default)]
-    pub input_mode: LauncherInputMode,
-    /// Empty when the page has no hotkey on this device, see
-    /// `hotkeys.launcherPages`.
-    #[serde(skip)]
-    pub hotkey: String,
+    pub input_mode: ActionInputMode,
 }
 
-/// The pages in their order; one that does not fit is left out, the others
-/// stay. Each carries the shortcut this device opens it with.
-pub fn launcher_pages(config: &Value) -> Vec<LauncherPageConfig> {
-    let shortcuts = &config["hotkeys"]["launcherPages"];
+/// The action pages in their order.
+pub fn action_pages(config: &Value) -> Vec<ActionPageConfig> {
     config
-        .get("launcherPages")
+        .get("actionPages")
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
-        .filter_map(|page| LauncherPageConfig::deserialize(page).ok())
-        .map(|mut page| {
-            page.hotkey = shortcuts[&page.id].as_str().unwrap_or_default().to_owned();
-            page
-        })
+        .filter_map(|page| ActionPageConfig::deserialize(page).ok())
         .collect()
 }
 
@@ -429,26 +418,23 @@ mod tests {
     #[test]
     fn sections_read_their_fields_and_fall_back_to_defaults() {
         let config = json!({
-            "launcherPages": [
-                {"id": "main", "inputMode": "none", "slots": []},
-                {"id": "second", "inputMode": "selection", "slots": []},
+            "actionPages": [
+                {"inputMode": "none", "slots": {}},
+                {"inputMode": "selection", "slots": {}},
             ],
-            "hotkeys": {"launcherPages": {"main": "Ctrl+Alt+M", "gone": "Ctrl+Alt+G"}},
             "externalAccess": {"canAccessSelection": true},
             "aiVault": {"path": "/vault"},
         });
-        let pages = launcher_pages(&config);
-        assert_eq!(pages[0].input_mode, LauncherInputMode::None);
-        assert_eq!(pages[0].hotkey, "Ctrl+Alt+M");
-        assert_eq!(pages[1].input_mode, LauncherInputMode::Selection);
-        assert_eq!(pages[1].hotkey, "");
+        let pages = action_pages(&config);
+        assert_eq!(pages[0].input_mode, ActionInputMode::None);
+        assert_eq!(pages[1].input_mode, ActionInputMode::Selection);
         assert!(external_access(&config).can_access_selection);
         assert_eq!(ai_vault(&config).path, "/vault");
 
-        let partly = json!({"launcherPages": [{"inputMode": "none"}, {"id": "kept"}]});
-        assert_eq!(launcher_pages(&partly).len(), 1);
-        let broken = json!({"launcherPages": "pages", "externalAccess": 1});
-        assert!(launcher_pages(&broken).is_empty());
+        let partly = json!({"actionPages": [{"inputMode": "none"}, {"slots": {}}]});
+        assert_eq!(action_pages(&partly).len(), 2);
+        let broken = json!({"actionPages": "pages", "externalAccess": 1});
+        assert!(action_pages(&broken).is_empty());
         assert!(!external_access(&broken).can_access_selection);
         assert_eq!(ai_vault(&json!({})), AiVaultConfig::default());
         assert!(!is_voice_hold_enabled(&json!({})));

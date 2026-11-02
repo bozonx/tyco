@@ -4,25 +4,19 @@ import type { HotkeyId, UserConfig } from './user-config'
 /** The hotkey id of the in-place correction of the selection, as in `hotkeys` */
 export const INLINE_CORRECTION_HOTKEY_ID = 'selectionCorrection'
 
-/** Hotkey ids of command overlay pages carry this prefix and the page id */
-export const LAUNCHER_PAGE_HOTKEY_PREFIX = 'launcherPage.'
-
-/** The static launcher page ids that are always available for hotkeys */
-export const STATIC_LAUNCHER_PAGE_IDS: readonly string[] = [
-  'main',
-  'page-2',
-  'page-3',
+/** Hotkeys corresponding to action pages by index */
+export const ACTION_PAGE_HOTKEY_IDS: readonly [HotkeyId, HotkeyId, HotkeyId] = [
+  'selectionActions',
+  'selectionActionsPage2',
+  'selectionActionsPage3',
 ]
 
-export const launcherPageHotkeyId = (pageId: string) =>
-  `${LAUNCHER_PAGE_HOTKEY_PREFIX}${pageId}`
-
-/** The activation mode that opens the command overlay on a page */
-export const launcherPageMode = (pageId: string) => `commandLauncher:${pageId}`
+export const actionPageHotkeyId = (pageIndex: number): HotkeyId | undefined =>
+  ACTION_PAGE_HOTKEY_IDS[pageIndex]
 
 /** The shortcut saved for a hotkey id; empty when there is none */
 export function configuredHotkey(
-  config: Pick<UserConfig, 'hotkeys' | 'launcherPages'>,
+  config: Pick<UserConfig, 'hotkeys'>,
   id: string
 ): string {
   const target = resolveHotkeyTarget(config, id)
@@ -30,26 +24,10 @@ export function configuredHotkey(
 }
 
 export function resolveHotkeyTarget(
-  config: Pick<UserConfig, 'hotkeys' | 'launcherPages'>,
+  config: Pick<UserConfig, 'hotkeys'>,
   id: string
 ): { get: () => string; set: (shortcut: string) => void } | null {
-  if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
-    const pageId = id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
-    if (
-      !STATIC_LAUNCHER_PAGE_IDS.includes(pageId) &&
-      !config.launcherPages.some((item) => item.id === pageId)
-    )
-      return null
-    return {
-      get: () => config.hotkeys.launcherPages[pageId] ?? '',
-      set: (value) => {
-        // the shortcuts are kept on this device, apart from the pages
-        if (value) config.hotkeys.launcherPages[pageId] = value
-        else delete config.hotkeys.launcherPages[pageId]
-      },
-    }
-  }
-  if (id === 'launcherPages' || !Object.hasOwn(config.hotkeys, id)) return null
+  if (!Object.hasOwn(config.hotkeys, id)) return null
   const key = id as HotkeyId
   return {
     get: () => config.hotkeys[key],

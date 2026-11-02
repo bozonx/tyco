@@ -1,6 +1,45 @@
 <template>
-  <SettingsSection :description="t('settings.mainActionsHint')" bare>
+  <SettingsSection :description="t('settings.actionsHint')" bare>
+    <div class="flex flex-wrap items-center gap-2 mb-3">
+      <Button
+        v-for="(_, index) in actionPages"
+        :key="index"
+        size="sm"
+        :variant="page === index ? 'primary' : 'neutral'"
+        class="min-w-8"
+        :title="t('settings.actionPage', { page: index + 1 })"
+        :aria-label="t('settings.actionPage', { page: index + 1 })"
+        @click="page = index"
+      >
+        {{ index + 1 }}
+      </Button>
+      <Button size="sm" @click="addPage">
+        {{ t('settings.addActionPage') }}
+      </Button>
+    </div>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-3">
+      <div class="flex items-center gap-2">
+        <FieldSwitch
+          :key="page"
+          :model-value="takesText"
+          :disabled="page === 0"
+          :label="t('settings.actionPageTakesText')"
+          @update:model-value="setTakesText"
+        />
+        <InfoTooltip :text="t('settings.actionPageTakesTextInfo')" />
+      </div>
+      <Button
+        variant="ghost"
+        class="ml-auto"
+        :disabled="pagesCount <= 1"
+        size="sm"
+        icon="mdi:trash-can-outline"
+        @click="removePage"
+        >{{ t('settings.removeActionPage') }}</Button
+      >
+    </div>
     <ShortcutSlots
+      :key="page"
       :items="visibleActionSlots"
       @move="moveAction"
       @add="addAction"
@@ -29,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -60,12 +99,15 @@ import { useActionMenuStore } from '../../stores/action-menu'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import { useToolsStore } from '../../stores/tools'
+import Button from '../common/Button.vue'
 import FieldSelect from '../common/FieldSelect.vue'
+import FieldSwitch from '../common/FieldSwitch.vue'
 import IconButton from '../common/IconButton.vue'
+import InfoTooltip from '../common/InfoTooltip.vue'
 import SettingsSection from './SettingsSection.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
-import { STATIC_LAUNCHER_PAGE_IDS } from '@tyco/shared'
 import {
+  type ActionPageConfig,
   type CommandConfig,
   type MainActionConfig,
   STANDARD_ACTION_IDS,
@@ -75,13 +117,57 @@ import {
 const { pluginFactories } = usePluginRuntimeStore()
 
 const { t, locale } = useI18n()
-const { draft: userConfig, editCommand } = useSettingsContext()
+const { draft: userConfig, operations, editCommand } = useSettingsContext()
 const actionMenuStore = useActionMenuStore()
 const aiProfilesStore = useAiProfilesStore()
 const toolsStore = useToolsStore()
 
+const page = ref(0)
+const actionPages = computed(() => userConfig.value.actionPages ?? [])
+const pagesCount = computed(() => actionPages.value.length)
+
+watch(pagesCount, (count) => {
+  if (page.value >= count) {
+    page.value = Math.max(0, count - 1)
+  }
+})
+
+function addPage() {
+  const pages: ActionPageConfig[] = [
+    ...actionPages.value,
+    { inputMode: 'selection', slots: {} },
+  ]
+  operations.updateActionPages(pages)
+  page.value = pages.length - 1
+}
+
+function removePage() {
+  if (pagesCount.value <= 1) return
+  operations.updateActionPages(
+    actionPages.value.filter((_, index) => index !== page.value)
+  )
+  page.value = Math.max(0, page.value - 1)
+}
+
+const takesText = computed(
+  () => page.value === 0 || actionPages.value[page.value]?.inputMode !== 'none'
+)
+
+function setTakesText(value: boolean) {
+  if (page.value === 0) return
+  const pages = actionPages.value.map((item, index) =>
+    index === page.value
+      ? {
+          ...item,
+          inputMode: value ? ('selection' as const) : ('none' as const),
+        }
+      : item
+  )
+  operations.updateActionPages(pages)
+}
+
 const actionSlots = computed(() =>
-  normalizeMainActions(userConfig.value.mainActions)
+  normalizeMainActions(actionPages.value[page.value]?.slots)
 )
 
 const isVisible = (action: MainActionConfig) =>
@@ -139,22 +225,7 @@ const OPENS_DIALOG = new Set<StandardActionId>([
   'voiceTransformation',
 ])
 
-const launcherPageChoices = computed(() => {
-  const pages = [...userConfig.value.launcherPages]
-  for (const staticId of STATIC_LAUNCHER_PAGE_IDS) {
-    if (!pages.some((page) => page.id === staticId)) {
-      pages.push({ id: staticId, slots: {}, inputMode: 'none' })
-    }
-  }
-  return pages.map((page, index) => ({
-    config: { type: 'launcherPage' as const, pageId: page.id },
-    name: t('settings.launcherPage', { page: index + 1 }),
-    group: { kind: 'basic' as const },
-  }))
-})
-
 const availableActions = computed((): MainActionChoice[] => [
-  ...launcherPageChoices.value,
   ...aiProfilesStore.profiles.map((profile) => ({
     config: { type: 'profileChat' as const, profileId: profile.id },
     name: t('settings.askInProfileChat', { profile: profile.name }),
@@ -249,18 +320,6 @@ function groupLabel(group: MainActionGroup): string {
 
 /** The name of a slot whose action is not on offer, e.g. a disabled command */
 function unavailableName(slot: MainActionConfig): string {
-  if (slot.type === 'launcherPage') {
-    const pageIndex = userConfig.value.launcherPages.findIndex(
-      (page) => page.id === slot.pageId
-    )
-    const pageNumber =
-      pageIndex >= 0
-        ? pageIndex + 1
-        : STATIC_LAUNCHER_PAGE_IDS.includes(slot.pageId)
-          ? STATIC_LAUNCHER_PAGE_IDS.indexOf(slot.pageId) + 1
-          : 1
-    return t('settings.launcherPage', { page: pageNumber })
-  }
   if (slot.type === 'profileChat') {
     const profile = aiProfilesStore.getProfile(slot.profileId)
     return profile
@@ -289,16 +348,21 @@ const actionOptions = computed(() =>
   })
 )
 
-function moveAction(from: number, to: number) {
-  userConfig.value.mainActions = slotsFromList(
-    moveShortcutSlot(actionSlots.value, from, to)
+function updatePageSlots(slots: (MainActionConfig | null)[]) {
+  const pages = actionPages.value.map((item, index) =>
+    index === page.value ? { ...item, slots: slotsFromList(slots) } : item
   )
+  operations.updateActionPages(pages)
+}
+
+function moveAction(from: number, to: number) {
+  updatePageSlots(moveShortcutSlot(actionSlots.value, from, to))
 }
 
 function setSlot(index: number, value: MainActionConfig | null) {
   const slots = [...actionSlots.value]
   slots[index] = value
-  userConfig.value.mainActions = slotsFromList(slots)
+  updatePageSlots(slots)
 }
 
 function addAction(index: number) {

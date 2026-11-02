@@ -84,3 +84,41 @@ describe('settings drafts on exit', () => {
     expect(profile).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('settings autosave race condition', () => {
+  it('does not show conflict toast when user clicks multiple times during autosave', async () => {
+    let finishSave!: () => void
+    let callCount = 0
+    desktop.backend.handle('save_user_config', ({ userConfig }) => {
+      desktop.backend.userConfig = userConfig
+      desktop.backend.touch()
+      callCount++
+      if (callCount === 1) {
+        return new Promise((resolve) => {
+          finishSave = () => resolve(desktop.backend.snapshot())
+        })
+      }
+      return desktop.backend.snapshot()
+    })
+
+    const session = useSettingsSessionStore()
+    session.draft.appearance.theme = 'dark'
+    const firstPersist = session.persist()
+    await Promise.resolve()
+
+    session.draft.appearance.theme = 'light'
+
+    finishSave()
+    await firstPersist
+
+    expect(mocks.toastText).not.toHaveBeenCalledWith(
+      'settings.saveConflictToast',
+      'warn'
+    )
+    expect(session.conflicts).toEqual([])
+    expect(session.draft.appearance.theme).toBe('light')
+    expect(session.isSaved()).toBe(true)
+    expect(desktop.backend.userConfig.appearance.theme).toBe('light')
+    expect(callCount).toBe(2)
+  })
+})

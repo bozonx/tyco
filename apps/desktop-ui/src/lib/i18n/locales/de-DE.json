@@ -173,26 +173,6 @@
       "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle."
     }
   },
-  "commandLauncher": {
-    "aiStep": "„{name}“: führe „{step}“ aus…",
-    "allCommands": "Alle Befehle",
-    "commandMissing": "Der Befehl {id} ist nicht in der Bibliothek.",
-    "dropSelection": "Ausgewählten Text nicht verwenden",
-    "hintAskAi": "KI fragen",
-    "hintNewLine": "Neue Zeile",
-    "hintRun": "Ausführen",
-    "hintSavePrompt": "Als KI-Befehl speichern",
-    "nothingFound": "Keine Befehle gefunden",
-    "pages": "Seiten:",
-    "promptSaved": "Als KI-Befehl gespeichert",
-    "promptSavedAlready": "Ein KI-Befehl mit diesem Prompt existiert bereits",
-    "running": "„{name}“ wird ausgeführt…",
-    "searchPlaceholder": "Befehle suchen…",
-    "selection": "Ausgewählter Text: {count} Zeichen",
-    "targetHint": "Was ausgeführt wird: der Shell-Befehl oder die Methode und URL des Webhooks",
-    "textPlaceholder": "Text für den Befehl",
-    "title": "Befehle"
-  },
   "commands": {
     "advanced": "Erweitert",
     "afterRunCopy": "In die Zwischenablage",
@@ -295,7 +275,9 @@
     "platforms": "Plattformen",
     "platformsInfo": "Der Befehl läuft nur auf den markierten Plattformen; ist keine markiert, auf allen. Auf einer anderen Plattform bleibt er in den Listen, wird aber nicht ausgeführt.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "„{name}“ wird ausgeführt…",
+    "commandMissing": "Der Befehl {id} ist nicht in der Bibliothek."
   },
   "common": {
     "add": "Hinzufügen",
@@ -647,7 +629,6 @@
     "actionWorkingDirPlaceholder": "Home-Verzeichnis",
     "actionsCategory": "Aktionen",
     "addConnection": "Verbindung hinzufügen",
-    "addLauncherPage": "Seite hinzufügen",
     "addModel": "Modell hinzufügen",
     "aiCategory": "KI",
     "aiEntityGeneral": "Allgemein",
@@ -760,7 +741,7 @@
       "editor": "Ausgewählten Text im Editor öffnen",
       "history": "Verlauf",
       "quickInput": "Schnelle Texteingabe",
-      "selectionActions": "Aktionen für die Auswahl",
+      "selectionActions": "Aktionen (Seite 1)",
       "selectionCorrection": "Ausgewählten Text direkt korrigieren",
       "styling": "Textstilisierung",
       "transformation": "Texttransformation",
@@ -768,7 +749,9 @@
       "voice": "Spracheingabe",
       "voiceChat": "Sprachfrage zum ausgewählten Text im KI-Chat",
       "voiceCommands": "Sprachbefehle",
-      "voiceTransformation": "Sprach-Texttransformation"
+      "voiceTransformation": "Sprach-Texttransformation",
+      "selectionActionsPage2": "Aktionen: Seite 2",
+      "selectionActionsPage3": "Aktionen: Seite 3"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",
@@ -799,11 +782,6 @@
     "keySaveFailed": "Der Schlüssel konnte nicht aktualisiert werden",
     "keyRemoveFailed": "Der Schlüssel konnte nicht entfernt werden",
     "languagesTab": "Übersetzungssprachen",
-    "launcherCommandsHint": "Befehle, die im Fenster der Schnellbefehle mit einer einzigen Taste der linken Hand laufen: Q–T, A–G und Z–B. Ziehen Sie die Karten, um ihre Tasten zu ändern. Jede Seite erhält ihr eigenes globales Kürzel auf dem Tab „Tastenkürzel“.",
-    "launcherCommandsTab": "Schnellbefehle",
-    "launcherPage": "Schnellbefehle: Seite {page}",
-    "launcherPageTakesText": "Ausgewählten Text übernehmen",
-    "launcherPageTakesTextInfo": "Für Seiten deaktivieren, deren Befehle keinen Text verarbeiten: Der Starter öffnet sich dann, ohne markierten Text zu erfassen, sodass frühere Auswahlen nicht in Befehle gelangen.",
     "llmConnections": "Verbindungen",
     "llmConnectionsHint": "Wohin Tyco KI-Anfragen sendet: Google, OpenRouter, DeepSeek oder ein beliebiger Server mit OpenAI-kompatibler API, etwa ein lokales Ollama oder LM Studio. Modelle werden innerhalb ihrer Verbindung hinzugefügt. Ein gespeicherter Schlüssel kommt in den sicheren Speicher und wird nie wieder angezeigt.",
     "llmTab": "LLM",
@@ -819,8 +797,6 @@
     },
     "mainActionStylingRemoved": "Gelöschter Textstil",
     "mainActionTransformationRemoved": "Gelöschte Texttransformation",
-    "mainActionsHint": "Aktionen des Hauptmenüs: Jede läuft mit ihrer eigenen Taste. Ziehen Sie die Karten, um ihre Tasten zu ändern.",
-    "mainActionsTab": "Hauptaktionen",
     "markdownBullet": "Listenzeichen",
     "markdownCleanBlockquoteAngle": "> (Zitatpräfix beibehalten)",
     "markdownCleanBlockquoteIndent": "Stil der Zitate",
@@ -975,7 +951,6 @@
     "rebindHotkeysError": "Die Tastenkürzel konnten nicht erneut registriert werden",
     "rebindHotkeysHint": "Holt die in den Systemeinstellungen entfernten Tastenkürzel zurück; von Ihnen geänderte Kürzel bleiben erhalten. Um veraltete Kürzel loszuwerden, entfernen Sie Tyco zuerst in den Systemeinstellungen.",
     "removeKey": "Schlüssel entfernen",
-    "removeLauncherPage": "Seite löschen",
     "removeModel": "Modell entfernen",
     "removeModelConfirm": "Dieses Modell entfernen?",
     "removePluginPackage": "Paket entfernen",
@@ -1191,7 +1166,14 @@
     "askInProfileChat": "Im Chat fragen: {profile}",
     "mainActionProfileRemoved": "Gelöschtes Profil",
     "webJinaApiKey": "Jina AI-API-Schlüssel",
-    "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits."
+    "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",
+    "actionsTab": "Aktionen",
+    "actionsHint": "Aktionen, die im Aktionen-Fenster mit einer einzigen Taste der linken Hand ausgeführt werden: Q–T, A–G und Z–B. Ziehen Sie Karten, um Tasten zu ändern. Verwenden Sie Seiten, um Aktionen zu ordnen.",
+    "actionPage": "Seite {page}",
+    "addActionPage": "Seite hinzufügen",
+    "removeActionPage": "Seite entfernen",
+    "actionPageTakesText": "Ausgewählten Text annehmen",
+    "actionPageTakesTextInfo": "Wenn deaktiviert, wird beim Öffnen dieser Seite kein ausgewählter Text aus anderen Anwendungen kopiert."
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

@@ -9,6 +9,8 @@
 import type { BooleanControlProps } from '../../lib/ui/boolean-control'
 import BooleanControl from './BooleanControl.vue'
 
-const props = defineProps<BooleanControlProps>()
+const props = withDefaults(defineProps<BooleanControlProps>(), {
+  disabled: false,
+})
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 </script>

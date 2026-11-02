@@ -173,26 +173,6 @@
       "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben."
     }
   },
-  "commandLauncher": {
-    "aiStep": "„{name}”: „{step}” futtatása…",
-    "allCommands": "Minden parancs",
-    "commandMissing": "A(z) {id} parancs nincs a könyvtárban.",
-    "dropSelection": "Ne használja a kijelölt szöveget",
-    "hintAskAi": "Kérdezd az MI-t",
-    "hintNewLine": "Új sor",
-    "hintRun": "Futtatás",
-    "hintSavePrompt": "Mentés MI-parancsként",
-    "nothingFound": "Nincs találat a parancsok között",
-    "pages": "Oldalak:",
-    "promptSaved": "Mentve MI-parancsként",
-    "promptSavedAlready": "Már létezik MI-parancs ezzel a prompttal",
-    "running": "„{name}” futtatása…",
-    "searchPlaceholder": "Parancsok keresése…",
-    "selection": "Kijelölt szöveg: {count} karakter",
-    "targetHint": "Mi fut le: a shellparancs, vagy a webhook metódusa és URL-je",
-    "textPlaceholder": "Szöveg a parancshoz",
-    "title": "Parancsok"
-  },
   "commands": {
     "advanced": "Speciális",
     "afterRunCopy": "A vágólapra",
@@ -295,7 +275,9 @@
     "platforms": "Platformok",
     "platformsInfo": "A parancs csak a bejelölt platformokon fut; ha egyik sincs bejelölve, mindegyiken. Más platformon a listákban marad, de nem fut.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "„{name}” futtatása…",
+    "commandMissing": "A(z) {id} parancs nincs a könyvtárban."
   },
   "common": {
     "add": "Hozzáadás",
@@ -644,7 +626,6 @@
     "actionWorkingDirPlaceholder": "Saját könyvtár",
     "actionsCategory": "Műveletek",
     "addConnection": "Kapcsolat hozzáadása",
-    "addLauncherPage": "Oldal hozzáadása",
     "addModel": "Modell hozzáadása",
     "aiCategory": "MI",
     "aiEntityGeneral": "Általános",
@@ -757,7 +738,7 @@
       "editor": "Kijelölt szöveg megnyitása a szerkesztőben",
       "history": "Előzmények",
       "quickInput": "Gyors szövegbevitel",
-      "selectionActions": "Műveletek a kijelöléssel",
+      "selectionActions": "Műveletek (1. oldal)",
       "selectionCorrection": "Kijelölt szöveg helyben javítása",
       "styling": "Szövegstilizálás",
       "transformation": "Szövegátalakítás",
@@ -765,7 +746,9 @@
       "voice": "Hangbevitel",
       "voiceChat": "Hangos kérdés a kijelölt szövegről az MI-csevegésben",
       "voiceCommands": "Hangparancsok",
-      "voiceTransformation": "Hangalapú szövegátalakítás"
+      "voiceTransformation": "Hangalapú szövegátalakítás",
+      "selectionActionsPage2": "Műveletek: 2. oldal",
+      "selectionActionsPage3": "Műveletek: 3. oldal"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",
@@ -796,11 +779,6 @@
     "keySaveFailed": "A kulcsot nem sikerült frissíteni",
     "keyRemoveFailed": "Nem sikerült eltávolítani a kulcsot",
     "languagesTab": "Fordítási nyelvek",
-    "launcherCommandsHint": "Parancsok, amelyek a gyorsparancsablakban egyetlen bal kezes billentyűvel futnak: Q–T, A–G és Z–B. Húzza a kártyákat a billentyűik módosításához. Minden oldal saját globális billentyűparancsot kap a Billentyűparancsok lapon.",
-    "launcherCommandsTab": "Gyorsparancsok",
-    "launcherPage": "Gyorsparancsok: {page}. oldal",
-    "launcherPageTakesText": "Kijelölt szöveg átvétele",
-    "launcherPageTakesTextInfo": "Kapcsolja ki azoknál az oldalaknál, amelyek parancsai nem dolgoznak fel szöveget: az indító a kijelölt szöveg átvétele nélkül nyílik meg, így a korábbi kijelölések nem kerülnek a parancsokba.",
     "llmConnections": "Kapcsolatok",
     "llmConnectionsHint": "Hova küldi a Tyco az MI-kéréseket: Google, OpenRouter, DeepSeek vagy bármely OpenAI-kompatibilis API-val rendelkező szerver, például helyi Ollama vagy LM Studio. A modelleket a saját kapcsolatukon belül kell hozzáadni. A mentett kulcs a biztonságos tárolóba kerül, és soha többé nem jelenik meg.",
     "llmTab": "LLM",
@@ -816,8 +794,6 @@
     },
     "mainActionStylingRemoved": "Törölt szövegstílus",
     "mainActionTransformationRemoved": "Törölt szövegátalakítás",
-    "mainActionsHint": "A főmenü műveletei: mindegyik saját billentyűvel fut. Húzza a kártyákat a billentyűik módosításához.",
-    "mainActionsTab": "Fő műveletek",
     "markdownBullet": "Listajel",
     "markdownCleanBlockquoteAngle": "> (idézet-előtag megtartása)",
     "markdownCleanBlockquoteIndent": "Idézetek stílusa",
@@ -972,7 +948,6 @@
     "rebindHotkeysError": "A billentyűparancsokat nem sikerült újraregisztrálni",
     "rebindHotkeysHint": "Visszaállítja a rendszerbeállításokban eltávolított billentyűparancsokat; az Ön által módosítottak megmaradnak. Az elavult billentyűparancsok megszüntetéséhez először távolítsa el a Tycót a rendszerbeállításokban.",
     "removeKey": "Kulcs eltávolítása",
-    "removeLauncherPage": "Oldal törlése",
     "removeModel": "Modell eltávolítása",
     "removeModelConfirm": "Eltávolítja ezt a modellt?",
     "removePluginPackage": "Csomag eltávolítása",
@@ -1188,7 +1163,14 @@
     "askInProfileChat": "Kérdezés a csevegésben: {profile}",
     "mainActionProfileRemoved": "Törölt profil",
     "webJinaApiKey": "Jina AI API-kulcs",
-    "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal."
+    "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal.",
+    "actionsTab": "Műveletek",
+    "actionsHint": "Műveletek, amelyek a műveleti ablakban egyetlen bal kezes billentyűvel futnak: Q–T, A–G és Z–B. Húzza a kártyákat a billentyűk módosításához. Használjon oldalakat a műveletek rendezéséhez.",
+    "actionPage": "{page}. oldal",
+    "addActionPage": "Oldal hozzáadása",
+    "removeActionPage": "Oldal eltávolítása",
+    "actionPageTakesText": "Kijelölt szöveg fogadása",
+    "actionPageTakesTextInfo": "Ha ki van kapcsolva, az oldal megnyitása nem másolja a kijelölt szöveget más alkalmazásokból."
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

@@ -223,16 +223,15 @@ mod tests {
     }
 
     #[test]
-    fn no_text_launcher_and_failed_activation_do_not_schedule_capture() {
+    fn no_text_action_page_and_failed_activation_do_not_schedule_capture() {
         let coordinator = ActivationCoordinator::default();
         let host = Host {
-            config: serde_json::json!({"launcherPages": [{"id":"main","inputMode":"none"}]}),
+            config: serde_json::json!({"actionPages": [{"inputMode":"selection"}, {"inputMode":"none"}]}),
             ..Host::default()
         };
-        assert!(coordinator
-            .begin(&host, activation(ActivationMode::CommandLauncher))
-            .unwrap()
-            .is_none());
+        let mut act = activation(ActivationMode::SelectionActions);
+        act.action_page_index = Some(1);
+        assert!(coordinator.begin(&host, act).unwrap().is_none());
         let old = coordinator
             .begin(&host, activation(ActivationMode::Chat))
             .unwrap()

@@ -39,7 +39,7 @@ pub fn open_main_editor(
 pub fn activate_mode(
     app: AppHandle,
     mode: ActivationMode,
-    launcher_page_id: Option<String>,
+    action_page_index: Option<usize>,
     text: Option<String>,
 ) -> Result<(), AppError> {
     if !ActivationMode::PUBLIC_MODES.contains(&mode) {
@@ -49,11 +49,11 @@ pub fn activate_mode(
         )));
     }
     let mut activation = Activation::new(mode, ActivationSource::Ui);
-    if let Some(page_id) = launcher_page_id {
-        if mode != ActivationMode::CommandLauncher || page_id.trim().is_empty() {
-            return Err(AppError::InvalidInput("Invalid command page".into()));
+    if let Some(index) = action_page_index {
+        if mode != ActivationMode::SelectionActions {
+            return Err(AppError::InvalidInput("Invalid action page".into()));
         }
-        activation.launcher_page_id = Some(page_id);
+        activation.action_page_index = Some(index);
     }
     activation.selected_text = text;
     runtime::activate(&app, activation)

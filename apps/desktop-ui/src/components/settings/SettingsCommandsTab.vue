@@ -198,26 +198,30 @@ const nameConflicts = computed(() =>
   externalCommandNameConflicts(commands.value, toolsStore)
 )
 
-/** The first slot of the action menu that holds each command */
+/** The first slot of the action menu that holds each command (page 0) */
 const menuSlots = computed(() => {
   const slots = new Map<string, number>()
-  slotList(userConfig.value.mainActions).forEach((slot, index) => {
-    if (slot?.type === 'command' && !slots.has(slot.commandId)) {
-      slots.set(slot.commandId, index)
-    }
-  })
+  const firstPage = userConfig.value.actionPages?.[0]
+  if (firstPage?.slots) {
+    slotList(firstPage.slots).forEach((slot, index) => {
+      if (slot?.type === 'command' && !slots.has(slot.commandId)) {
+        slots.set(slot.commandId, index)
+      }
+    })
+  }
   return slots
 })
 
-/** Every quick-command page and key assigned to each command. */
+/** Every action page (> 0) and key assigned to each command. */
 const launcherSlots = computed(() => {
   const slots = new Map<string, { page: number; index: number }[]>()
-  const pages = userConfig.value.launcherPages.map((page) => page.slots)
-  pages.forEach((commands, page) => {
-    slotList(commands).forEach((id, index) => {
-      if (!id) return
+  const pages = (userConfig.value.actionPages ?? []).slice(1)
+  pages.forEach((pageConfig, pageIndex) => {
+    slotList(pageConfig.slots).forEach((slot, index) => {
+      if (slot?.type !== 'command') return
+      const id = slot.commandId
       const placements = slots.get(id) ?? []
-      placements.push({ page, index })
+      placements.push({ page: pageIndex + 1, index })
       slots.set(id, placements)
     })
   })
@@ -316,14 +320,10 @@ const settingsSession = useSettingsSessionStore()
 const { removed, removeCommand, undoRemove, finishRemoval } =
   createCommandRemovalModel({
     getCommands: () => commands.value,
-    getMainActions: () => userConfig.value.mainActions ?? {},
-    getLauncherPages: () => userConfig.value.launcherPages ?? [],
+    getActionPages: () => userConfig.value.actionPages ?? [],
     updateCommands: setCommands,
-    updateMainActions: (actions) => {
-      userConfig.value.mainActions = actions
-    },
-    updateLauncherPages: (pages) => {
-      userConfig.value.launcherPages = pages
+    updateActionPages: (pages) => {
+      userConfig.value.actionPages = pages
     },
     removeSecret: (id) => secretsStore.removeSecret(id),
     persist: settingsSession.persist,

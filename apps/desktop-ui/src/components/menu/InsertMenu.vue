@@ -11,7 +11,10 @@
     </template>
 
     <template #preview>
-      <div class="preview-area">
+      <div
+        v-if="actionMenuStore.takesText && (props.oldText || props.text)"
+        class="preview-area"
+      >
         <Diff
           v-if="props.oldText"
           :old-text="props.oldText"
@@ -30,7 +33,25 @@
     </template>
 
     <template #actions>
+      <div v-if="actionMenuStore.pageCount > 1" class="action-pages-bar">
+        <button
+          v-for="index in actionMenuStore.pageCount"
+          :key="index"
+          type="button"
+          class="action-page-button"
+          :class="{ 'is-active': actionMenuStore.pageIndex === index - 1 }"
+          :aria-pressed="actionMenuStore.pageIndex === index - 1"
+          @click="actionMenuStore.setPage(index - 1)"
+        >
+          <KeyboardKey v-if="index <= 10">{{
+            index === 10 ? 0 : index
+          }}</KeyboardKey>
+          <span>{{ t('settings.actionPage', { page: index }) }}</span>
+        </button>
+      </div>
+
       <ShortcutList
+        :key="actionMenuStore.pageIndex"
         :text="activeActionText"
         :source-text="activeSourceText"
         :editor-button-label="editorButtonLabel"
@@ -48,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
@@ -62,6 +83,7 @@ import { useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
 import CopyButton from '../common/CopyButton.vue'
 import Diff from '../common/Diff.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutList from '../overlay/ShortcutList.vue'
@@ -137,9 +159,10 @@ const isShowingOriginal = computed(
   () => diffMode.value === 'original' && Boolean(props.oldText)
 )
 
-const activeActionText = computed(() =>
-  isShowingOriginal.value ? props.oldText : props.text
-)
+const activeActionText = computed(() => {
+  if (!actionMenuStore.takesText) return ''
+  return isShowingOriginal.value ? props.oldText : props.text
+})
 
 const activeSourceText = computed(() =>
   isShowingOriginal.value ? undefined : props.oldText
@@ -212,9 +235,70 @@ const primaryAction = computed<ActionItem | undefined>(() => {
 
   return { ...insertAction, disabled, hint }
 })
+
+function onKeyDown(event: KeyboardEvent) {
+  if (props.shortcutsDisabled || actionMenuStore.pageCount <= 1) return
+  if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing) {
+    return
+  }
+  if (event.key === 'PageDown') {
+    event.preventDefault()
+    actionMenuStore.nextPage()
+  } else if (event.key === 'PageUp') {
+    event.preventDefault()
+    actionMenuStore.prevPage()
+  } else if (/^[1-9]$/.test(event.key) || event.key === '0') {
+    const target = event.key === '0' ? 9 : Number(event.key) - 1
+    if (target < actionMenuStore.pageCount) {
+      event.preventDefault()
+      actionMenuStore.setPage(target)
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeyDown)
+})
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeyDown)
+})
 </script>
 
 <style scoped>
+.action-pages-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+
+.action-page-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+  background: var(--app-surface-sunken);
+  border: 1px solid var(--app-border-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.action-page-button:hover {
+  background: var(--app-hover);
+  color: var(--color-base-content);
+}
+
+.action-page-button.is-active {
+  color: var(--color-primary);
+  background-color: var(--app-surface-raised);
+  border-color: var(--color-primary);
+  font-weight: 500;
+}
+
 .correction-status {
   display: inline-flex;
   align-items: center;

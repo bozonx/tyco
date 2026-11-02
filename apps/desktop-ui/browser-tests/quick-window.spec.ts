@@ -78,10 +78,10 @@ test.describe('quick input', () => {
   })
 })
 
-test.describe('command launcher', () => {
-  test.use({ startMode: ActivationMode.COMMAND_LAUNCHER })
+test.describe('action menu', () => {
+  test.use({ startMode: ActivationMode.SELECTION_ACTIONS })
 
-  test('runs a command from the quick launcher and shows its result', async ({
+  test('runs a command from the action menu and shows its result', async ({
     page,
     desktop,
   }) => {
@@ -103,7 +103,10 @@ test.describe('command launcher', () => {
         externalTimeoutSec: 120,
       },
     ]
-    desktop.userConfig.launcherPages[0]!.slots.q = 'browser-command'
+    desktop.userConfig.actionPages[0]!.slots.q = {
+      type: 'command',
+      commandId: 'browser-command',
+    }
     desktop.handle('log_command_run', () => undefined)
     desktop.handle('execute_script_action', () => ({
       success: true,
@@ -126,7 +129,7 @@ test.describe('command launcher', () => {
 test.describe('command configuration', () => {
   test.use({ windowLabel: 'main', startMode: ActivationMode.EDITOR })
 
-  test('creates a command, assigns a launcher slot and executes it', async ({
+  test('creates a command, assigns an action slot and executes it', async ({
     page,
     desktop,
   }) => {
@@ -163,9 +166,7 @@ test.describe('command configuration', () => {
     await command
       .getByRole('combobox', { name: 'Action', exact: true })
       .selectOption({ label: 'Show result' })
-    await page
-      .getByRole('button', { name: 'Quick commands', exact: true })
-      .click()
+    await page.getByRole('button', { name: 'Actions', exact: true }).click()
     const slot = page.locator('.shortcut-slot').first()
     await slot.getByRole('button', { name: 'Add', exact: true }).click()
     await expect
@@ -182,10 +183,10 @@ test.describe('command configuration', () => {
       .getByRole('combobox')
       .selectOption({ label: 'Configured command' })
     await expect
-      .poll(() => desktop.userConfig.launcherPages[0]?.slots.q)
-      .toBe(commandId)
+      .poll(() => desktop.userConfig.actionPages[0]?.slots.q)
+      .toEqual({ type: 'command', commandId })
     const launcherDesktop = new FakeDesktop({
-      mode: ActivationMode.COMMAND_LAUNCHER,
+      mode: ActivationMode.SELECTION_ACTIONS,
       userConfig: desktop.userConfig,
     })
     installQuickWindow(launcherDesktop)

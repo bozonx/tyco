@@ -55,7 +55,6 @@ export function mainActionOptionId(
   item: MainActionConfig | null | undefined
 ): string {
   if (!item) return ''
-  if (item.type === 'launcherPage') return `launcherPage:${item.pageId}`
   if (item.type === 'profileChat') return `profileChat:${item.profileId}`
   if (item.type === 'command') return `command:${item.commandId}`
   if (item.type === 'transformation')

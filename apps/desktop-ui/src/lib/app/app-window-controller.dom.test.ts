@@ -74,7 +74,6 @@ function fixture(overrides: Partial<AppWindowControllerDependencies> = {}) {
     cancelSelection: vi.fn(),
     runCommand: vi.fn(async () => {}),
     cancelCommand: vi.fn(),
-    cancelLauncher: vi.fn(),
     closeModals: vi.fn(),
     goToChat: vi.fn(async () => {}),
     startChat: vi.fn(async () => {}),
@@ -176,7 +175,6 @@ describe('application window events', () => {
     expect(quick.handlers.has(DESKTOP_EVENTS.OPEN_MAIN_EDITOR)).toBe(false)
     await quick.deliver(DESKTOP_EVENTS.EXTERNAL_JOB_CANCEL, 'job')
     expect(quick.deps.cancelCommand).toHaveBeenCalledWith('job')
-    expect(quick.deps.cancelLauncher).toHaveBeenCalledWith('job')
     await quick.deliver(DESKTOP_EVENTS.SELECTION_CANCEL, { runId: 3 })
     expect(quick.deps.cancelSelection).toHaveBeenCalledWith(3)
     expect(main.deps.startMetrics).not.toHaveBeenCalled()

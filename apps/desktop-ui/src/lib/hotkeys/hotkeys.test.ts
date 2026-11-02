@@ -13,23 +13,23 @@ describe('hotkeys', () => {
       ...Object.values(ActivationMode).filter(
         (mode) =>
           mode !== ActivationMode.CONFIG &&
-          mode !== ActivationMode.EXTERNAL_ACCESS &&
-          mode !== ActivationMode.COMMAND_LAUNCHER
+          mode !== ActivationMode.EXTERNAL_ACCESS
       ),
+      'selectionActionsPage2',
+      'selectionActionsPage3',
       'selectionCorrection',
-      'launcherPages',
     ]
     expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(
       expectedModes.sort()
     )
   })
 
-  it('keeps the hotkeys of the command pages on the device, by page', () => {
-    expect(DEFAULT_USER_CONFIG.hotkeys.launcherPages).toEqual({
-      main: 'Ctrl+Alt+Shift+Q',
-      'page-2': '',
-      'page-3': '',
-    })
+  it('keeps the hotkeys of the action pages on the device', () => {
+    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActions).toBe(
+      'Ctrl+Alt+Shift+S'
+    )
+    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage2).toBe('')
+    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage3).toBe('')
   })
 
   it('normalizes aliases and modifier order', () => {

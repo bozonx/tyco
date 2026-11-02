@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_USER_CONFIG,
   INLINE_CORRECTION_HOTKEY_ID,
-  launcherPageHotkeyId,
+  type ActionPageConfig,
 } from '@tyco/shared'
 import type { PluginFactory } from '../../types/plugins'
 import { createSettingsOperations } from './settings-operations'
@@ -71,45 +71,18 @@ describe('settings operations', () => {
     expect(f.deps.removeSecret).toHaveBeenCalledTimes(1)
   })
 
-  it('repairs page references after removing a launcher page', () => {
+  it('updates action pages and enforces selection input mode on the first page', () => {
     const f = fixture()
-    const pages = ['a', 'b', 'c'].map((id) => ({
-      id,
-      inputMode: 'selection' as const,
-      hotkey: '',
-      slots: {},
-    }))
-    f.config.launcherPages = pages
-    f.config.mainActions = {
-      q: { type: 'launcherPage', pageId: 'a' },
-      w: { type: 'launcherPage', pageId: 'b' },
-      e: { type: 'launcherPage', pageId: 'c' },
-    }
-    f.model.updateLauncherPages([pages[0], pages[2]])
-    expect(f.config.mainActions).toEqual({
-      q: { type: 'launcherPage', pageId: 'a' },
-      e: { type: 'launcherPage', pageId: 'c' },
-    })
-  })
-
-  it('keeps stable references when pages are reordered', () => {
-    const f = fixture()
-    const pages = ['a', 'b'].map((id) => ({
-      id,
-      inputMode: 'selection' as const,
-      hotkey: '',
-      slots: {},
-    }))
-    f.config.launcherPages = pages
-    f.config.mainActions = { q: { type: 'launcherPage', pageId: 'a' } }
-    f.model.updateLauncherPages([pages[1], pages[0]])
-    expect(f.config.mainActions).toEqual({
-      q: { type: 'launcherPage', pageId: 'a' },
-    })
-    expect(() => f.model.updateLauncherPages([])).toThrow(
-      'At least one launcher page is required'
+    const pages: ActionPageConfig[] = [
+      { inputMode: 'none', slots: {} },
+      { inputMode: 'none', slots: {} },
+    ]
+    f.model.updateActionPages(pages)
+    expect(f.config.actionPages[0].inputMode).toBe('selection')
+    expect(f.config.actionPages[1].inputMode).toBe('none')
+    expect(() => f.model.updateActionPages([])).toThrow(
+      'At least one action page is required'
     )
-    expect(f.config.launcherPages).toEqual([pages[1], pages[0]])
   })
 
   it('stores each hotkey id where it belongs', () => {
@@ -118,18 +91,17 @@ describe('settings operations', () => {
     f.model.updateHotkey('styling', 'Ctrl+Alt+Shift+T')
     f.model.updateHotkey('transformation', 'Ctrl+Alt+Shift+M')
     f.model.updateHotkey(INLINE_CORRECTION_HOTKEY_ID, 'Ctrl+Alt+F')
-    f.model.updateHotkey(launcherPageHotkeyId('main'), 'Ctrl+Alt+1')
-    f.model.updateHotkey(launcherPageHotkeyId('missing'), 'Ctrl+Alt+2')
-    f.model.updateHotkey('unknown', 'Ctrl+Alt+3')
+    f.model.updateHotkey('selectionActions', 'Ctrl+Alt+S')
+    f.model.updateHotkey('selectionActionsPage2', 'Ctrl+Alt+2')
+    f.model.updateHotkey('selectionActionsPage3', 'Ctrl+Alt+3')
+    f.model.updateHotkey('unknown', 'Ctrl+Alt+4')
     expect(f.config.hotkeys.voice).toBe('Ctrl+Alt+V')
     expect(f.config.hotkeys.styling).toBe('Ctrl+Alt+Shift+T')
     expect(f.config.hotkeys.transformation).toBe('Ctrl+Alt+Shift+M')
     expect(f.config.hotkeys.selectionCorrection).toBe('Ctrl+Alt+F')
-    expect(f.config.hotkeys.launcherPages).toEqual({
-      main: 'Ctrl+Alt+1',
-      'page-2': '',
-      'page-3': '',
-    })
+    expect(f.config.hotkeys.selectionActions).toBe('Ctrl+Alt+S')
+    expect(f.config.hotkeys.selectionActionsPage2).toBe('Ctrl+Alt+2')
+    expect(f.config.hotkeys.selectionActionsPage3).toBe('Ctrl+Alt+3')
     expect(f.config.hotkeys).not.toHaveProperty('unknown')
   })
 

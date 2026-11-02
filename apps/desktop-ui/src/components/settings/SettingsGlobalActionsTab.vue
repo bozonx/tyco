@@ -168,10 +168,7 @@ import {
   DEFAULT_USER_CONFIG,
   type HotkeyId,
   INLINE_CORRECTION_HOTKEY_ID,
-  STATIC_LAUNCHER_PAGE_IDS,
   type SubmitKey,
-  launcherPageHotkeyId,
-  launcherPageMode,
 } from '@tyco/shared'
 
 const { t } = useI18n()
@@ -191,6 +188,8 @@ const MODE_ORDER: HotkeyId[] = [
   'voiceChat',
   'voiceCommands',
   'selectionActions',
+  'selectionActionsPage2',
+  'selectionActionsPage3',
   'correction',
   'translation',
   'styling',
@@ -225,12 +224,8 @@ const globalInfo = computed(() =>
     .join('\n\n')
 )
 
-const modes = Object.keys(DEFAULT_USER_CONFIG.hotkeys)
-  // the pages have rows of their own, below
-  .filter(
-    (id): id is HotkeyId =>
-      id !== 'selectionCorrection' && id !== 'launcherPages'
-  )
+const modes = (Object.keys(DEFAULT_USER_CONFIG.hotkeys) as HotkeyId[])
+  .filter((id) => id !== 'selectionCorrection')
   .sort(
     (a, b) =>
       (MODE_ORDER.indexOf(a) + 1 || Infinity) -
@@ -238,39 +233,14 @@ const modes = Object.keys(DEFAULT_USER_CONFIG.hotkeys)
   )
 const inlineId = INLINE_CORRECTION_HOTKEY_ID
 
-const launcherPageRows = computed<HotkeyRow[]>(() => {
-  const pages = userConfig.value.launcherPages
-  const staticIds = STATIC_LAUNCHER_PAGE_IDS
-  const totalCount = Math.max(staticIds.length, pages.length)
-  const result: HotkeyRow[] = []
-
-  for (let index = 0; index < totalCount; index++) {
-    const page = pages[index]
-    const pageId = page?.id ?? staticIds[index] ?? `page-${index + 1}`
-    const id = launcherPageHotkeyId(pageId)
-    result.push({
-      id,
-      label: t('settings.launcherPage', { page: index + 1 }),
-      value: displayedShortcut(
-        providerState,
-        id,
-        userConfig.value.hotkeys.launcherPages?.[pageId] ?? ''
-      ),
-      defaultValue: defaultShortcut(
-        providerState,
-        id,
-        DEFAULT_USER_CONFIG.hotkeys.launcherPages[pageId] ?? ''
-      ),
-      command: activationCommand(
-        providerState,
-        id,
-        `tyco --mode=${launcherPageMode(pageId)}`
-      ),
-      externalHint: t('settings.externalMethodsHint'),
-    })
-  }
-  return result
-})
+const openCommandForMode = (mode: string) => {
+  if (mode === 'selectionActions') return 'tyco-ctl open selectionActions:0'
+  if (mode === 'selectionActionsPage2')
+    return 'tyco-ctl open selectionActions:1'
+  if (mode === 'selectionActionsPage3')
+    return 'tyco-ctl open selectionActions:2'
+  return `tyco-ctl open ${mode}`
+}
 
 const allRows = computed<HotkeyRow[]>(() => [
   ...modes.map((mode) => ({
@@ -286,7 +256,7 @@ const allRows = computed<HotkeyRow[]>(() => [
       mode,
       DEFAULT_USER_CONFIG.hotkeys[mode]
     ),
-    command: activationCommand(providerState, mode, `tyco-ctl open ${mode}`),
+    command: activationCommand(providerState, mode, openCommandForMode(mode)),
     externalHint: t('settings.externalMethodsHint'),
   })),
   {
@@ -310,7 +280,6 @@ const allRows = computed<HotkeyRow[]>(() => [
     externalHint: t('settings.inlineCorrectionExternalHint'),
     description: t('settings.inlineCorrectionHint'),
   },
-  ...launcherPageRows.value,
 ])
 
 const rows = computed(() =>

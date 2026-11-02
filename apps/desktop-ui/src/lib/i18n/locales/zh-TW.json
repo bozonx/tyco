@@ -173,26 +173,6 @@
       "noCommandsHint": "請先在設定 → 命令中建立命令。"
     }
   },
-  "commandLauncher": {
-    "aiStep": "「{name}」：正在執行「{step}」…",
-    "allCommands": "所有命令",
-    "commandMissing": "命令庫中沒有命令 {id}。",
-    "dropSelection": "不使用選取的文字",
-    "hintAskAi": "問 AI",
-    "hintNewLine": "換行",
-    "hintRun": "執行",
-    "hintSavePrompt": "儲存為 AI 指令",
-    "nothingFound": "找不到命令",
-    "pages": "分頁：",
-    "promptSaved": "已儲存為 AI 指令",
-    "promptSavedAlready": "已有使用此提示詞的 AI 指令",
-    "running": "正在執行「{name}」…",
-    "searchPlaceholder": "搜尋命令…",
-    "selection": "選取的文字：{count} 個字元",
-    "targetHint": "將要執行的內容：Shell 命令，或 Webhook 方法與 URL",
-    "textPlaceholder": "傳給命令的文字",
-    "title": "命令"
-  },
   "commands": {
     "advanced": "進階",
     "afterRunCopy": "複製到剪貼簿",
@@ -295,7 +275,9 @@
     "platforms": "平台",
     "platformsInfo": "命令只在勾選的平台上執行；都不勾選則在所有平台上執行。在其他平台上，它仍保留在清單中，但不會執行。",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "正在執行「{name}」…",
+    "commandMissing": "命令庫中沒有命令 {id}。"
   },
   "common": {
     "add": "新增",
@@ -641,7 +623,6 @@
     "actionWorkingDirPlaceholder": "家目錄",
     "actionsCategory": "動作",
     "addConnection": "新增連線",
-    "addLauncherPage": "新增分頁",
     "addModel": "新增模型",
     "aiCategory": "AI",
     "aiEntityGeneral": "一般",
@@ -754,7 +735,7 @@
       "editor": "在編輯器中開啟選取的文字",
       "history": "歷史記錄",
       "quickInput": "快速文字輸入",
-      "selectionActions": "選取文字動作",
+      "selectionActions": "操作（第 1 頁）",
       "selectionCorrection": "在原地校對選取的文字",
       "styling": "文字風格化",
       "transformation": "文字轉換",
@@ -762,7 +743,9 @@
       "voice": "語音輸入",
       "voiceChat": "在 AI 聊天中針對選取的文字進行語音提問",
       "voiceCommands": "語音命令",
-      "voiceTransformation": "文字語音轉換"
+      "voiceTransformation": "文字語音轉換",
+      "selectionActionsPage2": "操作：第 2 頁",
+      "selectionActionsPage3": "操作：第 3 頁"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -793,11 +776,6 @@
     "keySaveFailed": "更新金鑰失敗",
     "keyRemoveFailed": "無法移除金鑰",
     "languagesTab": "翻譯語言",
-    "launcherCommandsHint": "在快速命令視窗中可透過單個左手按鍵執行的命令：Q–T、A–G 與 Z–B。拖曳卡片以變更其按鍵。每個分頁都在「快捷鍵」分頁中擁有各自的全域快捷鍵。",
-    "launcherCommandsTab": "快速命令",
-    "launcherPage": "快速命令：第 {page} 頁",
-    "launcherPageTakesText": "擷取選取的文字",
-    "launcherPageTakesTextInfo": "針對命令不處理文字的分頁停用此項：啟動器開啟時將不會擷取反白文字，以防止先前選取的內容洩漏至命令中。",
     "llmConnections": "連線",
     "llmConnectionsHint": "Tyco 發送 AI 請求的端點：Google、OpenRouter、DeepSeek 或任何具有 OpenAI 相容 API 的伺服器，例如本機的 Ollama 或 LM Studio。模型會在各連線內部新增。儲存的金鑰將存入安全存放區，不再顯示。",
     "llmTab": "LLM",
@@ -813,8 +791,6 @@
     },
     "mainActionStylingRemoved": "已刪除的文字風格",
     "mainActionTransformationRemoved": "已刪除的文字轉換",
-    "mainActionsHint": "主選單動作：各動作均由專屬按鍵執行。拖曳卡片以變更其按鍵。",
-    "mainActionsTab": "主動作",
     "markdownBullet": "清單符號",
     "markdownCleanBlockquoteAngle": ">（保留引言前綴）",
     "markdownCleanBlockquoteIndent": "區塊引言樣式",
@@ -969,7 +945,6 @@
     "rebindHotkeysError": "無法重新註冊快捷鍵",
     "rebindHotkeysHint": "還原在系統設定中被移除的快捷鍵；已自訂的快捷鍵將予以保留。若要捨棄過時的快捷鍵，請先在系統設定中移除 Tyco。",
     "removeKey": "移除金鑰",
-    "removeLauncherPage": "刪除分頁",
     "removeModel": "移除模型",
     "removeModelConfirm": "要移除此模型嗎？",
     "removePluginPackage": "移除套件",
@@ -1185,7 +1160,14 @@
     "askInProfileChat": "在聊天中詢問：{profile}",
     "mainActionProfileRemoved": "已刪除的設定檔",
     "webJinaApiKey": "Jina AI API 金鑰",
-    "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。"
+    "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。",
+    "actionsTab": "操作",
+    "actionsHint": "在操作視窗中透過單個左手按鍵執行的操作：Q–T、A–G 與 Z–B。拖曳卡片以變更按鍵。使用分頁組織操作。",
+    "actionPage": "第 {page} 頁",
+    "addActionPage": "新增分頁",
+    "removeActionPage": "移除分頁",
+    "actionPageTakesText": "接收選取文字",
+    "actionPageTakesTextInfo": "停用後，開啟此分頁不會從其他應用程式複製選取文字。"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

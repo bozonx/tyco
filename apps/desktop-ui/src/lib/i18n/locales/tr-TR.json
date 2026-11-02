@@ -173,26 +173,6 @@
       "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun."
     }
   },
-  "commandLauncher": {
-    "aiStep": "“{name}”: “{step}” çalıştırılıyor…",
-    "allCommands": "Tüm komutlar",
-    "commandMissing": "{id} komutu kitaplıkta yok.",
-    "dropSelection": "Seçili metni kullanma",
-    "hintAskAi": "Yapay zekâya sor",
-    "hintNewLine": "Yeni satır",
-    "hintRun": "Çalıştır",
-    "hintSavePrompt": "Yapay zekâ komutu olarak kaydet",
-    "nothingFound": "Komut bulunamadı",
-    "pages": "Sayfalar:",
-    "promptSaved": "Yapay zekâ komutu olarak kaydedildi",
-    "promptSavedAlready": "Bu isteme sahip bir yapay zekâ komutu zaten var",
-    "running": "«{name}» çalıştırılıyor…",
-    "searchPlaceholder": "Komut ara…",
-    "selection": "Seçili metin: {count} karakter",
-    "targetHint": "Çalıştırılacak olan: kabuk komutu ya da webhook yöntemi ve adresi",
-    "textPlaceholder": "Komut için metin",
-    "title": "Komutlar"
-  },
   "commands": {
     "advanced": "Gelişmiş",
     "afterRunCopy": "Panoya",
@@ -295,7 +275,9 @@
     "platforms": "Platformlar",
     "platformsInfo": "Komut yalnızca işaretli platformlarda çalışır; hiçbiri işaretli değilse hepsinde. Başka bir platformda listelerde kalır ama çalışmaz.",
     "platformLinux": "Linux",
-    "platformWindows": "Windows"
+    "platformWindows": "Windows",
+    "running": "«{name}» çalıştırılıyor…",
+    "commandMissing": "{id} komutu kitaplıkta yok."
   },
   "common": {
     "add": "Ekle",
@@ -644,7 +626,6 @@
     "actionWorkingDirPlaceholder": "Ana klasör",
     "actionsCategory": "Eylemler",
     "addConnection": "Bağlantı ekle",
-    "addLauncherPage": "Sayfa ekle",
     "addModel": "Model ekle",
     "aiCategory": "Yapay Zekâ",
     "aiEntityGeneral": "Genel",
@@ -757,7 +738,7 @@
       "editor": "Seçili metni düzenleyicide aç",
       "history": "Geçmiş",
       "quickInput": "Hızlı metin girişi",
-      "selectionActions": "Seçim eylemleri",
+      "selectionActions": "Eylemler (sayfa 1)",
       "selectionCorrection": "Seçili metni yerinde düzelt",
       "styling": "Metin stillendirme",
       "transformation": "Metin dönüştürme",
@@ -765,7 +746,9 @@
       "voice": "Sesli giriş",
       "voiceChat": "Seçili metin hakkında yapay zekâ sohbetinde sesli soru",
       "voiceCommands": "Sesli komutlar",
-      "voiceTransformation": "Sesli metin dönüştürme"
+      "voiceTransformation": "Sesli metin dönüştürme",
+      "selectionActionsPage2": "Eylemler: sayfa 2",
+      "selectionActionsPage3": "Eylemler: sayfa 3"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",
@@ -796,11 +779,6 @@
     "keySaveFailed": "Anahtar güncellenemedi",
     "keyRemoveFailed": "Anahtar kaldırılamadı",
     "languagesTab": "Çeviri dilleri",
-    "launcherCommandsHint": "Hızlı komutlar penceresinde sol eldeki tek bir tuşla çalışan komutlar: Q–T, A–G ve Z–B. Tuşlarını değiştirmek için kartları sürükleyin. Her sayfanın Kısayollar sekmesinde kendi genel kısayolu vardır.",
-    "launcherCommandsTab": "Hızlı komutlar",
-    "launcherPage": "Hızlı komutlar: sayfa {page}",
-    "launcherPageTakesText": "Seçili metni al",
-    "launcherPageTakesTextInfo": "Komutları metin işlemeyen sayfalar için kapatın: başlatıcı seçili metni yakalamadan açılır ve önceki seçimlerin yanlışlıkla komutlara iletilmesini önler.",
     "llmConnections": "Bağlantılar",
     "llmConnectionsHint": "Tyco’nun yapay zekâ isteklerini gönderdiği yer: Google, OpenRouter, DeepSeek ya da yerel Ollama veya LM Studio gibi OpenAI uyumlu API’ye sahip herhangi bir sunucu. Modeller kendi bağlantılarının içine eklenir. Kaydedilen anahtar güvenli depolamaya alınır ve bir daha gösterilmez.",
     "llmTab": "LLM",
@@ -816,8 +794,6 @@
     },
     "mainActionStylingRemoved": "Silinen metin stili",
     "mainActionTransformationRemoved": "Silinen metin dönüştürmesi",
-    "mainActionsHint": "Ana menü eylemleri: her biri kendi tuşuyla çalışır. Tuşları değiştirmek için kartları sürükleyin.",
-    "mainActionsTab": "Ana eylemler",
     "markdownBullet": "Liste işareti",
     "markdownCleanBlockquoteAngle": "> (alıntı önekini koru)",
     "markdownCleanBlockquoteIndent": "Alıntı biçimlendirmesi",
@@ -972,7 +948,6 @@
     "rebindHotkeysError": "Kısayollar yeniden kaydedilemedi",
     "rebindHotkeysHint": "Sistem ayarlarında silinen kısayolları geri getirir; değiştirdiğiniz kısayollar korunur. Eski kısayolları kaldırmak için önce sistem ayarlarında Tyco’yu silin.",
     "removeKey": "Anahtarı kaldır",
-    "removeLauncherPage": "Sayfayı sil",
     "removeModel": "Modeli sil",
     "removeModelConfirm": "Bu model kaldırılsın mı?",
     "removePluginPackage": "Paketi kaldır",
@@ -1188,7 +1163,14 @@
     "askInProfileChat": "Sohbette sor: {profile}",
     "mainActionProfileRemoved": "Silinen profil",
     "webJinaApiKey": "Jina AI API anahtarı",
-    "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır."
+    "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır.",
+    "actionsTab": "Eylemler",
+    "actionsHint": "Eylemler penceresinde sol eldeki tek bir tuşla çalışan eylemler: Q–T, A–G ve Z–B. Tuşları değiştirmek için kartları sürükleyin. Eylemleri düzenlemek için sayfaları kullanın.",
+    "actionPage": "Sayfa {page}",
+    "addActionPage": "Sayfa ekle",
+    "removeActionPage": "Sayfayı kaldır",
+    "actionPageTakesText": "Seçili metni kabul et",
+    "actionPageTakesTextInfo": "Devre dışı bırakıldığında, bu sayfanın açılması diğer uygulamalardan seçilen metni kopyalamaz."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

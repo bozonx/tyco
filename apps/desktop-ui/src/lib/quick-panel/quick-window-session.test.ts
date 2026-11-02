@@ -6,7 +6,6 @@ function setup(state: Partial<Record<string, unknown>> = {}) {
   const current = {
     mode: 'quickInput',
     isWindowShown: true,
-    isLauncherPastList: false,
     hasModal: false,
     hasPendingModal: false,
     isHideOnBlurEnabled: true,
@@ -16,7 +15,6 @@ function setup(state: Partial<Record<string, unknown>> = {}) {
   const deps = {
     mode: () => current.mode as string,
     isWindowShown: () => current.isWindowShown as boolean,
-    isLauncherPastList: () => current.isLauncherPastList as boolean,
     hasModal: () => current.hasModal as boolean,
     hasPendingModal: () => current.hasPendingModal as boolean,
     isHideOnBlurEnabled: () => current.isHideOnBlurEnabled as boolean,
@@ -39,19 +37,10 @@ describe('quick window session', () => {
     expect(setup({ mode: 'voice' }).session.keepsOnFocusLoss()).toBe(true)
     // a correction on its way is past the first step
     expect(setup({ mode: 'correction' }).session.keepsOnFocusLoss()).toBe(true)
-    expect(setup({ mode: 'commandLauncher' }).session.keepsOnFocusLoss()).toBe(
-      false
-    )
     expect(setup({ mode: 'styling' }).session.keepsOnFocusLoss()).toBe(false)
     expect(setup({ mode: 'transformation' }).session.keepsOnFocusLoss()).toBe(
       false
     )
-    expect(
-      setup({
-        mode: 'commandLauncher',
-        isLauncherPastList: true,
-      }).session.keepsOnFocusLoss()
-    ).toBe(true)
   })
 
   it('stays while hidden, held or set to stay', () => {
