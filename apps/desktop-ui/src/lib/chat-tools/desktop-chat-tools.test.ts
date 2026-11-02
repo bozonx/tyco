@@ -87,4 +87,25 @@ describe('desktop-chat-tools', () => {
     expect(toolNames).toContain('memory_read')
     expect(toolNames).toContain('memory_add')
   })
+
+  it('resolves web tools for a profile with web group enabled', async () => {
+    const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
+
+    const chatTools = createDesktopChatTools({
+      profileId: 'researcher',
+      invoke,
+      canUseTools: () => true,
+      warn: vi.fn(),
+      isDebugEnabled: () => false,
+    })
+
+    const result = await chatTools.turnTools('gpt-4', 5000, {
+      groups: { web: { isEnabled: true, access: 'allow' } },
+    })
+
+    expect(result.canUseTools).toBe(true)
+    const toolNames = Object.keys(result.tools!.tools!.tools)
+    expect(toolNames).toContain('web_search')
+    expect(toolNames).toContain('web_fetch')
+  })
 })

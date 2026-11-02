@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 27c3d745d9fa694132180bd79e93f3265ef90b27a93a7dec11a10bd6f42ccdb2
+// Source hash: 624f2b8b368bde060b4053033ec6044ec69083a5d54b6f3995078f205b825080
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -188,6 +188,14 @@ export type AiUploadMeta = {
   /** The name of the dropped file. */
   name: string
 }
+
+export type AiWebToolOutput =
+  | { operation: 'search'; results: Array<WebSearchResultItem> }
+  | { operation: 'fetch'; url: string; title?: string; content: string }
+
+export type AiWebToolRequest =
+  | { operation: 'search'; query: string; count?: number }
+  | { operation: 'fetch'; url: string }
 
 export type Chat = {
   id: string
@@ -835,6 +843,13 @@ export type VoiceCaptureInfo = {
   sampleRate: number
   /** What `stop_capture` takes to stop this capture and no other. */
   sessionId: number
+}
+
+export type WebSearchResultItem = {
+  title: string
+  url: string
+  description: string
+  content?: string
 }
 
 /**

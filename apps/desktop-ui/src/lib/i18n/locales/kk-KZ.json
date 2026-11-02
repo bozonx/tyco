@@ -158,6 +158,12 @@
       "undo": "Болдырмау",
       "undoSuccess": "Жады өзгерісі болдырылмады",
       "undone": "Болдырылмады"
+    },
+    "web": {
+      "fetchLabel": "Веб-бетті оқу",
+      "group": "Интернеттен іздеу",
+      "groupHint": "Jina AI арқылы интернеттен іздеу және веб-беттерді жүктеу. «Сұрау» әрбір шақыру алдында растауды сұрайды.",
+      "searchLabel": "Интернеттен іздеу"
     }
   },
   "commandLauncher": {
@@ -1173,7 +1179,9 @@
     "projectsWithoutFolder": "Бұл құрылғыда қалтасыз сыртқы жобалар: {count}",
     "variablesTab": "Айнымалылар",
     "askInProfileChat": "Чатта сұрау: {profile}",
-    "mainActionProfileRemoved": "Жойылған профиль"
+    "mainActionProfileRemoved": "Жойылған профиль",
+    "webJinaApiKey": "Jina AI API кілті",
+    "webJinaApiKeyHint": "Міндетті емес. Кілті жоқ сұраулар ортақ лимиттері бар тегін тарифті пайдаланады."
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

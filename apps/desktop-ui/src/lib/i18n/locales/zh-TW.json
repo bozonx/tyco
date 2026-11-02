@@ -158,6 +158,12 @@
       "undo": "復原",
       "undoSuccess": "已復原記憶變更",
       "undone": "已復原"
+    },
+    "web": {
+      "fetchLabel": "閱讀網頁",
+      "group": "網頁搜尋",
+      "groupHint": "使用 Jina AI 進行網頁搜尋並獲取網頁內容。「詢問」將在每次呼叫前請求確認。",
+      "searchLabel": "網頁搜尋"
     }
   },
   "commandLauncher": {
@@ -1170,7 +1176,9 @@
     "projectsWithoutFolder": "此裝置上沒有資料夾的外部專案：{count}",
     "variablesTab": "變數",
     "askInProfileChat": "在聊天中詢問：{profile}",
-    "mainActionProfileRemoved": "已刪除的設定檔"
+    "mainActionProfileRemoved": "已刪除的設定檔",
+    "webJinaApiKey": "Jina AI API 金鑰",
+    "webJinaApiKeyHint": "選填。未配置金鑰時，請求將使用具有共用速率限制的免費層級。"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

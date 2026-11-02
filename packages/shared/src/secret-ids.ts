@@ -14,5 +14,7 @@ export const TRANSLATION_SECRET_IDS = {
 
 export const sttSecretId = (provider: SttProvider): string => `stt.${provider}`
 
+export const WEB_SECRET_IDS = { jina: 'web.jina' } as const
+
 /** A webhook authorization key, made anew each time it is entered */
 export const WEBHOOK_AUTH_SECRET_PREFIX = 'webhook.auth.'

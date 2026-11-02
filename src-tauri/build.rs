@@ -129,6 +129,7 @@ fn main() {
             "restore_previous_plugin_package",
             "rewrite_ai_profile_memory",
             "run_ai_file_tool",
+            "run_ai_web_tool",
             "save_ai_profile",
             "save_ai_project",
             "save_ai_upload",

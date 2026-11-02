@@ -158,6 +158,12 @@
       "undo": "元に戻す",
       "undoSuccess": "メモリの変更を元に戻しました",
       "undone": "元に戻しました"
+    },
+    "web": {
+      "fetchLabel": "ウェブページを読み取る",
+      "group": "ウェブ検索",
+      "groupHint": "Jina AI を使用してウェブを検索し、ウェブページを取得します。「確認」は呼び出しごとに確認を求めます。",
+      "searchLabel": "ウェブ検索"
     }
   },
   "commandLauncher": {
@@ -1173,7 +1179,9 @@
     "projectsWithoutFolder": "このデバイスでフォルダーがない外部プロジェクト: {count}",
     "variablesTab": "変数",
     "askInProfileChat": "チャットで質問: {profile}",
-    "mainActionProfileRemoved": "削除されたプロファイル"
+    "mainActionProfileRemoved": "削除されたプロファイル",
+    "webJinaApiKey": "Jina AI API キー",
+    "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

@@ -158,6 +158,12 @@
       "undo": "Αναίρεση",
       "undoSuccess": "Η αλλαγή μνήμης αναιρέθηκε",
       "undone": "Αναιρέθηκε"
+    },
+    "web": {
+      "fetchLabel": "Ανάγνωση ιστοσελίδας",
+      "group": "Αναζήτηση στον ιστό",
+      "groupHint": "Αναζητήστε στον ιστό και ανακτήστε ιστοσελίδες χρησιμοποιώντας το Jina AI. Το «Ερώτηση» ζητά επιβεβαίωση πριν από κάθε κλήση.",
+      "searchLabel": "Αναζήτηση στον ιστό"
     }
   },
   "commandLauncher": {
@@ -1173,7 +1179,9 @@
     "projectsWithoutFolder": "Εξωτερικά έργα χωρίς φάκελο σε αυτή τη συσκευή: {count}",
     "variablesTab": "Μεταβλητές",
     "askInProfileChat": "Ερώτηση στη συνομιλία: {profile}",
-    "mainActionProfileRemoved": "Διαγραμμένο προφίλ"
+    "mainActionProfileRemoved": "Διαγραμμένο προφίλ",
+    "webJinaApiKey": "Κλειδί API Jina AI",
+    "webJinaApiKeyHint": "Προαιρετικό. Χωρίς κλειδί, τα αιτήματα χρησιμοποιούν το δωρεάν πρόγραμμα με κοινά όρια."
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {

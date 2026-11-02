@@ -5,6 +5,7 @@ import {
   type ProfileToolSettings,
   type ProjectAccessMode,
   type ToolGroupSettings,
+  WEB_TOOL_GROUP_ID,
 } from '@tyco/shared'
 
 import {
@@ -22,7 +23,7 @@ export interface ChatToolGroup {
   defaultAccess: ProjectAccessMode
 }
 
-export { FILES_TOOL_GROUP_ID } from '@tyco/shared'
+export { FILES_TOOL_GROUP_ID, WEB_TOOL_GROUP_ID } from '@tyco/shared'
 
 /** The groups the profile settings offer */
 export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
@@ -32,6 +33,13 @@ export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
     descriptionKey: 'chatTools.files.groupHint',
     icon: 'mdi:folder-outline',
     // the permissions of each project decide; `ask` asks before every call
+    defaultAccess: 'allow',
+  },
+  {
+    id: WEB_TOOL_GROUP_ID,
+    labelKey: 'chatTools.web.group',
+    descriptionKey: 'chatTools.web.groupHint',
+    icon: 'mdi:search-web',
     defaultAccess: 'allow',
   },
 ]

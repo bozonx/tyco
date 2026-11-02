@@ -158,6 +158,12 @@
       "undo": "Скасувати",
       "undoSuccess": "Зміну памʼяті скасовано",
       "undone": "Скасовано"
+    },
+    "web": {
+      "fetchLabel": "Читати веб-сторінку",
+      "group": "Пошук в інтернеті",
+      "groupHint": "Пошук в інтернеті та завантаження веб-сторінок через Jina AI. «Запитувати» запитує підтвердження перед кожним викликом.",
+      "searchLabel": "Пошук в інтернеті"
     }
   },
   "commandLauncher": {
@@ -1173,7 +1179,9 @@
     "projectsWithoutFolder": "Зовнішніх проєктів без теки на цьому пристрої: {count}",
     "variablesTab": "Змінні",
     "askInProfileChat": "Запитати в чаті: {profile}",
-    "mainActionProfileRemoved": "Видалений профіль"
+    "mainActionProfileRemoved": "Видалений профіль",
+    "webJinaApiKey": "API-ключ Jina AI",
+    "webJinaApiKeyHint": "Необов'язково. Без ключа запити працюють через безкоштовний тариф зі спільними лімітами."
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

@@ -11,6 +11,8 @@ import type {
   AiProfile,
   AiProject,
   AiUploadMeta,
+  AiWebToolOutput,
+  AiWebToolRequest,
   Chat,
   ChatAttachment,
   ChatImage,
@@ -296,6 +298,10 @@ export interface DesktopCommands {
   run_ai_file_tool: {
     args: { profileId: string; request: AiFileToolRequest }
     result: AiFileToolOutput
+  }
+  run_ai_web_tool: {
+    args: { profileId?: string | null; request: AiWebToolRequest }
+    result: AiWebToolOutput
   }
   save_ai_profile: { args: { profile: AiProfile }; result: void }
   save_ai_project: { args: { project: AiProject }; result: void }

@@ -158,6 +158,12 @@
       "undo": "Vrátit zpět",
       "undoSuccess": "Změna paměti byla vrácena",
       "undone": "Vráceno"
+    },
+    "web": {
+      "fetchLabel": "Přečíst webovou stránku",
+      "group": "Webové vyhledávání",
+      "groupHint": "Hledejte na webu a stahujte webové stránky pomocí Jina AI. „Ptát se“ vyžaduje potvrzení před každým voláním.",
+      "searchLabel": "Webové vyhledávání"
     }
   },
   "commandLauncher": {
@@ -1170,7 +1176,9 @@
     "projectsWithoutFolder": "Externí projekty bez složky na tomto zařízení: {count}",
     "variablesTab": "Proměnné",
     "askInProfileChat": "Zeptat se v chatu: {profile}",
-    "mainActionProfileRemoved": "Smazaný profil"
+    "mainActionProfileRemoved": "Smazaný profil",
+    "webJinaApiKey": "Klíč API Jina AI",
+    "webJinaApiKeyHint": "Volitelné. Bez klíče požadavky využívají bezplatný tarif se sdílenými limity."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

@@ -158,6 +158,12 @@
       "undo": "撤销",
       "undoSuccess": "已撤销记忆更改",
       "undone": "已撤销"
+    },
+    "web": {
+      "fetchLabel": "阅读网页",
+      "group": "网页搜索",
+      "groupHint": "使用 Jina AI 进行网页搜索并获取网页内容。“询问”将在每次调用前请求确认。",
+      "searchLabel": "网页搜索"
     }
   },
   "commandLauncher": {
@@ -1170,7 +1176,9 @@
     "projectsWithoutFolder": "此设备上没有文件夹的外部项目：{count}",
     "variablesTab": "变量",
     "askInProfileChat": "在聊天中询问：{profile}",
-    "mainActionProfileRemoved": "已删除的配置文件"
+    "mainActionProfileRemoved": "已删除的配置文件",
+    "webJinaApiKey": "Jina AI API 密钥",
+    "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

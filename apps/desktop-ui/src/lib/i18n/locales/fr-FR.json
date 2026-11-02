@@ -158,6 +158,12 @@
       "undo": "Annuler",
       "undoSuccess": "Modification de mémoire annulée",
       "undone": "Annulé"
+    },
+    "web": {
+      "fetchLabel": "Lire la page Web",
+      "group": "Recherche Web",
+      "groupHint": "Recherchez sur le Web et récupérez des pages Web à l’aide de Jina AI. « Demander » demande confirmation avant chaque appel.",
+      "searchLabel": "Recherche Web"
     }
   },
   "commandLauncher": {
@@ -1176,7 +1182,9 @@
     "projectsWithoutFolder": "Projets externes sans dossier sur cet appareil : {count}",
     "variablesTab": "Variables",
     "askInProfileChat": "Demander dans le chat : {profile}",
-    "mainActionProfileRemoved": "Profil supprimé"
+    "mainActionProfileRemoved": "Profil supprimé",
+    "webJinaApiKey": "Clé API Jina AI",
+    "webJinaApiKeyHint": "Facultatif. Sans clé, les requêtes utilisent le niveau gratuit avec des limites partagées."
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {

@@ -87,6 +87,9 @@ fn visit_command_types(visitor: &mut impl TypeVisitor) {
     visitor.visit::<services::ai_tools::files::AiFileRoot>();
     visitor.visit::<services::ai_tools::files::AiFileToolOutput>();
     visitor.visit::<services::ai_tools::files::AiFileToolRequest>();
+    visitor.visit::<services::ai_tools::web::AiWebToolOutput>();
+    visitor.visit::<services::ai_tools::web::AiWebToolRequest>();
+    visitor.visit::<services::ai_tools::web::WebSearchResultItem>();
     visitor.visit::<services::ai_vault::AiProfile>();
     visitor.visit::<services::ai_vault::AiProject>();
     visitor.visit::<services::ai_vault::ProfileMemoryChange>();

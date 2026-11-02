@@ -12,4 +12,5 @@ export const {
   MAX_CHAT_FILE_BYTES,
   MAX_VAULT_ID_LENGTH,
   FILES_TOOL_GROUP_ID,
+  WEB_TOOL_GROUP_ID,
 } = limits

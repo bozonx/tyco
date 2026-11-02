@@ -158,6 +158,12 @@
       "undo": "Desfazer",
       "undoSuccess": "Alteração na memória desfeita",
       "undone": "Desfeito"
+    },
+    "web": {
+      "fetchLabel": "Ler página da Web",
+      "group": "Pesquisa na Web",
+      "groupHint": "Pesquise na Web e obtenha páginas Web usando o Jina AI. “Perguntar” pede confirmação antes de cada chamada.",
+      "searchLabel": "Pesquisa na Web"
     }
   },
   "commandLauncher": {
@@ -1176,7 +1182,9 @@
     "projectsWithoutFolder": "Projetos externos sem pasta neste dispositivo: {count}",
     "variablesTab": "Variáveis",
     "askInProfileChat": "Perguntar no chat: {profile}",
-    "mainActionProfileRemoved": "Perfil excluído"
+    "mainActionProfileRemoved": "Perfil excluído",
+    "webJinaApiKey": "Chave de API do Jina AI",
+    "webJinaApiKeyHint": "Opcional. Sem uma chave, as solicitações usam o nível gratuito com limites compartilhados."
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

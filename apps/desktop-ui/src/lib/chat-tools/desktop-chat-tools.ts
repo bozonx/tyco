@@ -3,6 +3,8 @@ import {
   type AiFileRoot,
   type AiFileToolOutput,
   type AiFileToolRequest,
+  type AiWebToolOutput,
+  type AiWebToolRequest,
   type ProfileMemoryChange,
   type ProfileMemoryMode,
   type ProfileMemorySearchResult,
@@ -18,6 +20,7 @@ import {
 import { readDocumentText } from './file-document-text'
 import { createFileToolProvider } from './file-tools'
 import { createMemoryToolProvider } from './memory-tools'
+import { createWebToolProvider } from './web-tools'
 
 export interface DesktopChatToolsInvoke {
   (
@@ -76,6 +79,10 @@ export interface DesktopChatToolsInvoke {
     command: 'list_ai_profile_memory_topics',
     args: { profileId: string }
   ): Promise<ProfileMemoryTopic[]>
+  (
+    command: 'run_ai_web_tool',
+    args: { profileId?: string | null; request: AiWebToolRequest }
+  ): Promise<AiWebToolOutput>
 }
 
 export interface DesktopChatToolsDependencies {
@@ -144,11 +151,17 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
     getChatId: deps.getChatId,
     warn: deps.warn,
   })
+  const webToolProvider = createWebToolProvider({
+    run: (profileId, request) =>
+      deps.invoke('run_ai_web_tool', { profileId, request }),
+    warn: deps.warn,
+  })
 
   const session = createChatToolsSession({
     providers: () => [
       fileToolProvider,
       memoryToolProvider,
+      webToolProvider,
       ...(checkDebug() ? [debugToolProvider] : []),
     ],
     isDebugEnabled: () => checkDebug(),

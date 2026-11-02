@@ -158,6 +158,12 @@
       "undo": "Cofnij",
       "undoSuccess": "Cofnięto zmianę w pamięci",
       "undone": "Cofnięto"
+    },
+    "web": {
+      "fetchLabel": "Czytaj stronę",
+      "group": "Wyszukiwanie w internecie",
+      "groupHint": "Wyszukuj w internecie i pobieraj strony internetowe za pomocą Jina AI. „Pytaj” pyta o potwierdzenie przed każdym wywołaniem.",
+      "searchLabel": "Wyszukiwanie w internecie"
     }
   },
   "commandLauncher": {
@@ -1176,7 +1182,9 @@
     "projectsWithoutFolder": "Projekty zewnętrzne bez folderu na tym urządzeniu: {count}",
     "variablesTab": "Zmienne",
     "askInProfileChat": "Zapytaj na czacie: {profile}",
-    "mainActionProfileRemoved": "Usunięty profil"
+    "mainActionProfileRemoved": "Usunięty profil",
+    "webJinaApiKey": "Klucz API Jina AI",
+    "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami."
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

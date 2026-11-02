@@ -158,6 +158,12 @@
       "undo": "실행 취소",
       "undoSuccess": "메모리 변경이 실행 취소되었습니다",
       "undone": "실행 취소됨"
+    },
+    "web": {
+      "fetchLabel": "웹 페이지 읽기",
+      "group": "웹 검색",
+      "groupHint": "Jina AI를 사용하여 웹을 검색하고 웹 페이지를 가져옵니다. \"확인\"은 각 호출 전에 확인을 요청합니다.",
+      "searchLabel": "웹 검색"
     }
   },
   "commandLauncher": {
@@ -1170,7 +1176,9 @@
     "projectsWithoutFolder": "이 기기에 폴더가 없는 외부 프로젝트: {count}",
     "variablesTab": "변수",
     "askInProfileChat": "채팅에서 질문: {profile}",
-    "mainActionProfileRemoved": "삭제된 프로필"
+    "mainActionProfileRemoved": "삭제된 프로필",
+    "webJinaApiKey": "Jina AI API 키",
+    "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다."
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

@@ -158,6 +158,12 @@
       "undo": "Poništi",
       "undoSuccess": "Promjena memorije poništena",
       "undone": "Poništeno"
+    },
+    "web": {
+      "fetchLabel": "Pročitaj web-stranicu",
+      "group": "Web pretraživanje",
+      "groupHint": "Pretražujte web i dohvaćajte web-stranice pomoću Jina AI. „Pitaj” traži potvrdu prije svakog poziva.",
+      "searchLabel": "Web pretraživanje"
     }
   },
   "commandLauncher": {
@@ -1176,7 +1182,9 @@
     "projectsWithoutFolder": "Vanjski projekti bez mape na ovom uređaju: {count}",
     "variablesTab": "Varijable",
     "askInProfileChat": "Pitaj u chatu: {profile}",
-    "mainActionProfileRemoved": "Izbrisani profil"
+    "mainActionProfileRemoved": "Izbrisani profil",
+    "webJinaApiKey": "Jina AI API ključ",
+    "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima."
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

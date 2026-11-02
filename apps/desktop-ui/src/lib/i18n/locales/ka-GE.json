@@ -158,6 +158,12 @@
       "undo": "გაუქმება",
       "undoSuccess": "მეხსიერების ცვლილება გაუქმდა",
       "undone": "გაუქმებულია"
+    },
+    "web": {
+      "fetchLabel": "ვებ-გვერდის წაკითხვა",
+      "group": "ვებ-ძიება",
+      "groupHint": "მოიძიეთ ინტერნეტში და ჩამოტვირთეთ ვებ-გვერდები Jina AI-ს გამოყენებით. „შეკითხვა“ ითხოვს დადასტურებას ყოველი გამოძახების წინ.",
+      "searchLabel": "ვებ-ძიება"
     }
   },
   "commandLauncher": {
@@ -1173,7 +1179,9 @@
     "projectsWithoutFolder": "გარე პროექტები საქაღალდის გარეშე ამ მოწყობილობაზე: {count}",
     "variablesTab": "ცვლადები",
     "askInProfileChat": "კითხვა ჩატში: {profile}",
-    "mainActionProfileRemoved": "წაშლილი პროფილი"
+    "mainActionProfileRemoved": "წაშლილი პროფილი",
+    "webJinaApiKey": "Jina AI API გასაღები",
+    "webJinaApiKeyHint": "არასავალდებულო. გასაღების გარეშე, მოთხოვნები იყენებს უფასო ტარიფს საერთო ლიმიტებით."
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {

@@ -25,6 +25,7 @@ const BUILTIN_ORIGINS: &[(&str, &[&str])] = &[
         &["https://api.deepl.com", "https://api-free.deepl.com"],
     ),
     ("stt.deepgram", &["https://api.deepgram.com"]),
+    ("web.jina", &["https://s.jina.ai", "https://r.jina.ai"]),
 ];
 
 /// The trimmed value and the normalized origins of a secret to store.

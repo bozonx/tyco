@@ -3,6 +3,7 @@
 
 pub mod file_search;
 pub mod files;
+pub mod web;
 
 #[cfg(test)]
 mod tests;

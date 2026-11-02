@@ -158,6 +158,12 @@
       "undo": "Visszavonás",
       "undoSuccess": "Memóriaváltoztatás visszavonva",
       "undone": "Visszavonva"
+    },
+    "web": {
+      "fetchLabel": "Weboldal olvasása",
+      "group": "Webes keresés",
+      "groupHint": "Keresés a weben és weboldalak letöltése a Jina AI segítségével. A „Kérdezzen” minden hívás előtt megerősítést kér.",
+      "searchLabel": "Webes keresés"
     }
   },
   "commandLauncher": {
@@ -1173,7 +1179,9 @@
     "projectsWithoutFolder": "Mappa nélküli külső projektek ezen az eszközön: {count}",
     "variablesTab": "Változók",
     "askInProfileChat": "Kérdezés a csevegésben: {profile}",
-    "mainActionProfileRemoved": "Törölt profil"
+    "mainActionProfileRemoved": "Törölt profil",
+    "webJinaApiKey": "Jina AI API-kulcs",
+    "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal."
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

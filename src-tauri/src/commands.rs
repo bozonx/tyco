@@ -4,6 +4,7 @@ pub mod action_logs;
 pub mod activation;
 pub mod ai_files;
 pub mod ai_vault;
+pub mod ai_web;
 pub mod chat_images;
 pub mod chats;
 pub mod desktop_state;

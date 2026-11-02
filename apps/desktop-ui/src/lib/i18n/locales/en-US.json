@@ -158,6 +158,12 @@
       "undo": "Undo",
       "undoSuccess": "Memory change undone",
       "undone": "Undone"
+    },
+    "web": {
+      "fetchLabel": "Read webpage",
+      "group": "Web Search",
+      "groupHint": "Search the web and fetch web pages using Jina AI. “Ask” asks before every call.",
+      "searchLabel": "Web search"
     }
   },
   "commandLauncher": {
@@ -1176,7 +1182,9 @@
     "projectsWithoutFolder": "External projects without a folder on this device: {count}",
     "variablesTab": "Variables",
     "askInProfileChat": "Ask in chat: {profile}",
-    "mainActionProfileRemoved": "Deleted profile"
+    "mainActionProfileRemoved": "Deleted profile",
+    "webJinaApiKey": "Jina AI API key",
+    "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

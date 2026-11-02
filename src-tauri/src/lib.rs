@@ -225,6 +225,7 @@ pub fn run() {
             commands::ai_files::read_ai_file_bytes,
             commands::ai_files::run_ai_file_tool,
             commands::ai_files::save_ai_upload,
+            commands::ai_web::run_ai_web_tool,
             commands::ai_vault::add_ai_profile_memory_fact,
             commands::ai_vault::clear_ai_profile_memory,
             commands::ai_vault::create_ai_profile,

@@ -158,6 +158,12 @@
       "undo": "Отменить",
       "undoSuccess": "Изменение памяти отменено",
       "undone": "Отменено"
+    },
+    "web": {
+      "fetchLabel": "Чтение веб-страницы",
+      "group": "Поиск в интернете",
+      "groupHint": "Поиск в интернете и загрузка веб-страниц через Jina AI. «Спрашивать» запрашивает подтверждение перед каждым вызовом.",
+      "searchLabel": "Поиск в интернете"
     }
   },
   "commandLauncher": {
@@ -1173,7 +1179,9 @@
     "projectsWithoutFolder": "Внешних проектов без папки на этом устройстве: {count}",
     "variablesTab": "Переменные",
     "askInProfileChat": "Спросить в чате: {profile}",
-    "mainActionProfileRemoved": "Удалённый профиль"
+    "mainActionProfileRemoved": "Удалённый профиль",
+    "webJinaApiKey": "API-ключ Jina AI",
+    "webJinaApiKeyHint": "Необязательно. Без ключа запросы работают через бесплатный тариф с общими лимитами."
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

@@ -158,6 +158,12 @@
       "undo": "Geri al",
       "undoSuccess": "Bellek değişikliği geri alındı",
       "undone": "Geri alındı"
+    },
+    "web": {
+      "fetchLabel": "Web sayfasını oku",
+      "group": "Web Araması",
+      "groupHint": "Jina AI kullanarak web’de arama yapın ve web sayfalarını getirin. \"Sor\", her çağrıdan önce onay ister.",
+      "searchLabel": "Web araması"
     }
   },
   "commandLauncher": {
@@ -1173,7 +1179,9 @@
     "projectsWithoutFolder": "Bu cihazda klasörü olmayan harici projeler: {count}",
     "variablesTab": "Değişkenler",
     "askInProfileChat": "Sohbette sor: {profile}",
-    "mainActionProfileRemoved": "Silinen profil"
+    "mainActionProfileRemoved": "Silinen profil",
+    "webJinaApiKey": "Jina AI API anahtarı",
+    "webJinaApiKeyHint": "İsteğe bağlı. Anahtar olmadan istekler paylaşılan hız sınırlarına sahip ücretsiz katmanı kullanır."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

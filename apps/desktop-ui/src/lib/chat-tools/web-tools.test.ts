@@ -1,0 +1,145 @@
+import { describe, expect, it, vi } from 'vitest'
+
+import type { AiWebToolOutput } from '@tyco/shared'
+
+import {
+  createWebToolProvider,
+  formatFetchedPage,
+  formatSearchResults,
+} from './web-tools'
+
+describe('web-tools', () => {
+  it('formats search results cleanly', () => {
+    const formatted = formatSearchResults([
+      {
+        title: 'Jina AI',
+        url: 'https://jina.ai',
+        description: 'Search Foundation',
+        content: 'Markdown content snippet',
+      },
+    ])
+
+    expect(formatted).toContain('### 1. [Jina AI](https://jina.ai)')
+    expect(formatted).toContain('Search Foundation')
+    expect(formatted).toContain('Markdown content snippet')
+  })
+
+  it('formats empty search results', () => {
+    expect(formatSearchResults([])).toBe('No results found.')
+  })
+
+  it('formats fetched webpage', () => {
+    const formatted = formatFetchedPage({
+      url: 'https://example.com',
+      title: 'Example Domain',
+      content: 'This domain is for use in illustrative examples.',
+    })
+
+    expect(formatted).toContain('# Example Domain')
+    expect(formatted).toContain('Source: https://example.com')
+    expect(formatted).toContain(
+      'This domain is for use in illustrative examples.'
+    )
+  })
+
+  it('executes web_search tool correctly', async () => {
+    const run = vi
+      .fn()
+      .mockResolvedValue({
+        operation: 'search',
+        results: [
+          {
+            title: 'Test Title',
+            url: 'https://test.com',
+            description: 'A test result',
+          },
+        ],
+      } satisfies AiWebToolOutput)
+
+    const provider = createWebToolProvider({ run })
+    const tools = await provider.tools({
+      profileId: 'prof-1',
+      modelId: 'gemini',
+      settings: undefined,
+    })
+
+    const searchTool = tools.find((t) => t.name === 'web_search')
+    expect(searchTool).toBeDefined()
+
+    const result = await searchTool!.execute(
+      { query: 'test query', count: 3 },
+      {
+        signal: new AbortController().signal,
+        toolCallId: 'call-1',
+        outputLimitCharacters: 5000,
+      }
+    )
+
+    expect(run).toHaveBeenCalledWith('prof-1', {
+      operation: 'search',
+      query: 'test query',
+      count: 3,
+    })
+    expect(result).toContain('[Test Title](https://test.com)')
+  })
+
+  it('executes web_fetch tool correctly', async () => {
+    const run = vi
+      .fn()
+      .mockResolvedValue({
+        operation: 'fetch',
+        url: 'https://example.com/page',
+        title: 'Page Title',
+        content: 'Page content here.',
+      } satisfies AiWebToolOutput)
+
+    const provider = createWebToolProvider({ run })
+    const tools = await provider.tools({
+      profileId: 'prof-1',
+      modelId: 'gemini',
+      settings: undefined,
+    })
+
+    const fetchTool = tools.find((t) => t.name === 'web_fetch')
+    expect(fetchTool).toBeDefined()
+
+    const result = await fetchTool!.execute(
+      { url: 'https://example.com/page' },
+      {
+        signal: new AbortController().signal,
+        toolCallId: 'call-2',
+        outputLimitCharacters: 5000,
+      }
+    )
+
+    expect(run).toHaveBeenCalledWith('prof-1', {
+      operation: 'fetch',
+      url: 'https://example.com/page',
+    })
+    expect(result).toContain('# Page Title')
+    expect(result).toContain('Source: https://example.com/page')
+    expect(result).toContain('Page content here.')
+  })
+
+  it('rejects empty query in web_search', async () => {
+    const run = vi.fn()
+    const provider = createWebToolProvider({ run })
+    const tools = await provider.tools({
+      profileId: null,
+      modelId: 'gemini',
+      settings: undefined,
+    })
+
+    const searchTool = tools.find((t) => t.name === 'web_search')!
+    await expect(
+      searchTool.execute(
+        { query: '   ' },
+        {
+          signal: new AbortController().signal,
+          toolCallId: 'call-3',
+          outputLimitCharacters: 1000,
+        }
+      )
+    ).rejects.toThrow('Search query cannot be empty')
+  })
+})

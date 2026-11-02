@@ -158,6 +158,12 @@
       "undo": "Rückgängig",
       "undoSuccess": "Speicheränderung rückgängig gemacht",
       "undone": "Rückgängig gemacht"
+    },
+    "web": {
+      "fetchLabel": "Webseite lesen",
+      "group": "Websuche",
+      "groupHint": "Im Web suchen und Webseiten mit Jina AI abrufen. „Fragen“ fragt vor jedem Aufruf nach.",
+      "searchLabel": "Websuche"
     }
   },
   "commandLauncher": {
@@ -1176,7 +1182,9 @@
     "projectsWithoutFolder": "Externe Projekte ohne Ordner auf diesem Gerät: {count}",
     "variablesTab": "Variablen",
     "askInProfileChat": "Im Chat fragen: {profile}",
-    "mainActionProfileRemoved": "Gelöschtes Profil"
+    "mainActionProfileRemoved": "Gelöschtes Profil",
+    "webJinaApiKey": "Jina AI-API-Schlüssel",
+    "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits."
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

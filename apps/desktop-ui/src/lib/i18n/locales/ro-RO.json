@@ -158,6 +158,12 @@
       "undo": "Anulare",
       "undoSuccess": "Modificare a memoriei anulată",
       "undone": "Anulat"
+    },
+    "web": {
+      "fetchLabel": "Citește pagina web",
+      "group": "Căutare web",
+      "groupHint": "Căutați pe web și descărcați pagini web folosind Jina AI. „Întreabă” solicită confirmare înainte de fiecare apel.",
+      "searchLabel": "Căutare web"
     }
   },
   "commandLauncher": {
@@ -1176,7 +1182,9 @@
     "projectsWithoutFolder": "Proiecte externe fără dosar pe acest dispozitiv: {count}",
     "variablesTab": "Variabile",
     "askInProfileChat": "Întreabă în chat: {profile}",
-    "mainActionProfileRemoved": "Profil șters"
+    "mainActionProfileRemoved": "Profil șters",
+    "webJinaApiKey": "Cheie API Jina AI",
+    "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
