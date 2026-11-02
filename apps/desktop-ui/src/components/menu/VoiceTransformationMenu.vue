@@ -1,5 +1,8 @@
 <template>
-  <ActionOverlayLayout :title="t('action.voiceTransformation')" :on-esc="close">
+  <ActionOverlayLayout
+    :title="t('action.voiceTransformation')"
+    :on-esc="handleClose"
+  >
     <template #preview>
       <TextPreview :text="props.text" />
       <div class="voice-transcription-box">
@@ -30,11 +33,11 @@
         <ShortcutButton
           variant="ghost"
           :keys="['Esc']"
-          icon="mdi:close"
+          :icon="resolvedEscMode === 'back' ? 'mdi:arrow-left' : 'mdi:close'"
           :disabled="isFinishing"
-          @click="close"
+          @click="handleClose"
         >
-          {{ t('common.cancel') }}
+          {{ escLabel }}
         </ShortcutButton>
       </div>
     </template>
@@ -45,8 +48,10 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useDictationActions } from '../../composables/use-dictation-actions'
+import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
+import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
@@ -58,7 +63,6 @@ import { describeDictationError } from '../../lib/stt/dictation-error'
 import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import { useWindowStore } from '../../stores/window'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import ShortcutButton from '../overlay/ShortcutButton.vue'
@@ -74,11 +78,15 @@ const props = withDefaults(defineProps<VoiceTransformationMenuParams>(), {
 const menuModalsStore = useMenuModalsStore()
 const desktopStore = useDesktopStore()
 const invocations = useInvocationsStore()
-const windowStore = useWindowStore()
 const { toastKey, toastText } = useToast()
 const runStep = useMenuStepRun()
 const { t } = useI18n()
 const dictation = useDictationActions()
+const {
+  resolvedEscMode,
+  escLabel,
+  handleEsc: defaultHandleEsc,
+} = useOverlayNav()
 
 const isQuickWindow = isInQuickWindow()
 const isListening = ref(false)
@@ -112,15 +120,26 @@ const rememberPrompt = (value: string) => {
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (
-    (event.key === 'Enter' || event.key === ' ') &&
-    !event.isComposing &&
-    !isFinishing.value
-  ) {
+  if (props.shortcutsDisabled || isFinishing.value) return
+  if ((event.key === 'Enter' || event.key === ' ') && !event.isComposing) {
     event.preventDefault()
     void finish()
+  } else if (event.key === 'Escape' && !event.isComposing) {
+    event.preventDefault()
+    void handleClose()
   }
 }
+
+useDismissibleLayer({
+  isOpen: () => !props.shortcutsDisabled,
+  elements: () => [],
+  canDismissOutside: false,
+  dismiss: () => {
+    if (!isFinishing.value) {
+      void handleClose()
+    }
+  },
+})
 
 onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown)
@@ -149,23 +168,19 @@ onUnmounted(() => {
   }
 })
 
-async function close() {
+async function handleClose() {
   if (isListening.value) {
     await dictation.cancelDictation().catch(() => undefined)
     isListening.value = false
   }
-  if (isQuickWindow) {
-    void windowStore.hide()
-  } else {
-    menuModalsStore.closeAll()
-  }
+  defaultHandleEsc()
 }
 
 async function finish() {
   if (isFinishing.value) return
   isFinishing.value = true
   try {
-    const text = await dictation.finishDictation()
+    const text = isListening.value ? await dictation.finishDictation() : ''
     isListening.value = false
     const prompt =
       (
@@ -176,7 +191,6 @@ async function finish() {
 
     if (!prompt) {
       toastKey('toast.noTextToProcess', 'warn')
-      isFinishing.value = false
       return
     }
 
@@ -185,13 +199,11 @@ async function finish() {
     const trimmedText = props.text.trim()
     if (!trimmedText) {
       toastKey('toast.noTextToProcess', 'warn')
-      isFinishing.value = false
       return
     }
 
     if (trimmedText.length < APP_CONFIG.minTransformationLength) {
       toastKey('toast.textTooShortToProcess', 'warn')
-      isFinishing.value = false
       return
     }
 
@@ -214,6 +226,7 @@ async function finish() {
     })
   } catch (error) {
     toastText(describeError(error, t), 'error')
+  } finally {
     isFinishing.value = false
   }
 }

@@ -63,14 +63,25 @@ describe('createOverlayNavModel', () => {
   })
 
   it('resolves to back for intermediate modals even without breadcrumbs', () => {
-    const deps = createDeps({
-      canGoBack: () => false,
-      currentModal: () => MenuModals.TRANSLATE,
-    })
-    const nav = createOverlayNavModel(deps)
+    const intermediateModals = [
+      MenuModals.TRANSLATE,
+      MenuModals.ACTION_SELECT,
+      MenuModals.VOICE_TRANSFORMATION,
+      MenuModals.CUSTOM_TRANSFORMATION,
+      MenuModals.TRANSFORMATION,
+      MenuModals.STYLING,
+    ]
 
-    expect(nav.resolvedEscMode.value).toBe('back')
-    expect(nav.escLabel.value).toBe('common.back')
+    for (const modal of intermediateModals) {
+      const deps = createDeps({
+        canGoBack: () => false,
+        currentModal: () => modal,
+      })
+      const nav = createOverlayNavModel(deps)
+
+      expect(nav.resolvedEscMode.value).toBe('back')
+      expect(nav.escLabel.value).toBe('common.back')
+    }
   })
 
   it('respects explicit escMode option', () => {

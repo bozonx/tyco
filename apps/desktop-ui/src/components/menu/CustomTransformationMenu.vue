@@ -28,6 +28,7 @@ import { computed, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
+import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
@@ -38,7 +39,6 @@ import { useChatInputStore } from '../../stores/chat-input'
 import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
-import { useWindowStore } from '../../stores/window'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
 import QueryPanel, {
@@ -56,12 +56,12 @@ const props = withDefaults(defineProps<CustomTransformationMenuParams>(), {
 const menuModalsStore = useMenuModalsStore()
 const desktopStore = useDesktopStore()
 const invocations = useInvocationsStore()
-const windowStore = useWindowStore()
 const { toastKey, toastText } = useToast()
 const runStep = useMenuStepRun()
 const { t } = useI18n()
 const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
+const { escLabel, handleEsc } = useOverlayNav()
 
 const prompt = ref('')
 const isQuickWindow = isInQuickWindow()
@@ -97,7 +97,7 @@ const promptHints = computed<QueryPanelHint[]>(() => [
         },
       ]
     : []),
-  { keys: ['Esc'], label: t('common.back'), action: close },
+  { keys: ['Esc'], label: escLabel.value, action: close },
 ])
 
 const rememberPrompt = (value: string) => {
@@ -107,11 +107,7 @@ const rememberPrompt = (value: string) => {
 }
 
 function close() {
-  if (isQuickWindow) {
-    void windowStore.hide()
-  } else {
-    menuModalsStore.closeAll()
-  }
+  handleEsc()
 }
 
 async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {

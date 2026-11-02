@@ -21,7 +21,8 @@ describe('CustomTransformationMenu', () => {
   let desktop: TestDesktop
 
   beforeEach(() => {
-    desktop = installFakeDesktop()
+    desktop = installFakeDesktop({}, 'quick')
+    desktop.backend.handle('hide_window', () => undefined)
     invokeCall.mockReset()
     invokeCall.mockResolvedValue({
       ok: true,
@@ -88,5 +89,61 @@ describe('CustomTransformationMenu', () => {
 
     const modalsStore = useMenuModalsStore()
     expect(modalsStore.currentModal).toBe(MenuModals.DIFF)
+  })
+
+  it('hides window on Escape when opened directly', async () => {
+    const wrapper = mount(CustomTransformationMenu, {
+      props: { text: 'Some sample text' },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          TextPreview: true,
+          ActionOverlayLayout: {
+            props: ['onEsc'],
+            template:
+              '<div class="layout"><button class="esc-btn" @click="onEsc">Esc</button><slot name="preview" /><slot name="actions" /></div>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    const queryPanel = wrapper.findComponent(QueryPanel)
+    queryPanel.vm.$emit('back')
+    await flushPromises()
+
+    expect(
+      desktop.backend.calls.some((call) => call.command === 'hide_window')
+    ).toBe(true)
+  })
+
+  it('goes back on Escape when entered from another menu', async () => {
+    const modalsStore = useMenuModalsStore()
+    modalsStore.nextModal(MenuModals.INSERT, { text: 'Initial' })
+    modalsStore.nextModal(MenuModals.CUSTOM_TRANSFORMATION, {
+      text: 'Some sample text',
+    })
+
+    const wrapper = mount(CustomTransformationMenu, {
+      props: { text: 'Some sample text' },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          TextPreview: true,
+          ActionOverlayLayout: {
+            props: ['onEsc'],
+            template:
+              '<div class="layout"><button class="esc-btn" @click="onEsc">Esc</button><slot name="preview" /><slot name="actions" /></div>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    const queryPanel = wrapper.findComponent(QueryPanel)
+    queryPanel.vm.$emit('back')
+    await flushPromises()
+
+    expect(modalsStore.currentModal).toBe(MenuModals.INSERT)
   })
 })
