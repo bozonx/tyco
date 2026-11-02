@@ -12,6 +12,7 @@ mod paths;
 pub mod user_data;
 pub mod user_data_relocation;
 pub mod user_files;
+pub mod watcher;
 
 pub use history_store::*;
 pub use paths::{app_log_dir, get_storage_info, storage_dir};

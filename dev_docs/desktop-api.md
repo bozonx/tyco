@@ -150,6 +150,13 @@ device: the built-in variable `TYCO_DEVICE_ID` and the platform a command's
 `platforms` are checked against. `pick_file` lets the user choose a file and
 returns its path, e.g. for the value of a variable.
 
+`app://storage-changed` carries an array of changed relative paths, with `/`
+separators. Paths of the active vault use the `ai-vault/` prefix, including
+when that vault is external. It refreshes profile lists and saved idle chats;
+settings still arrive through the existing desktop snapshot publication.
+Editor history and plugin updates retain their dedicated events. Local vault
+writes also publish storage changes so other windows refresh immediately.
+
 ## Verification
 
 Run `pnpm validate:all` after changing the cross-language API. Contract tests cover

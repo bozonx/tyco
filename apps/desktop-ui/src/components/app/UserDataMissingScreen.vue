@@ -11,6 +11,13 @@
       <code class="user-data-missing-path">{{ userData.path }}</code>
 
       <InlineNotice
+        v-if="isAvailable"
+        density="compact"
+        kind="info"
+        announcement="polite"
+        :message="t('settings.userData.restartNotice')"
+      />
+      <InlineNotice
         v-if="isConfirmingDefault"
         density="compact"
         appearance="surface"
@@ -62,10 +69,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useId } from 'vue'
+import { computed, onScopeDispose, ref, useId } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useUserDataFolder } from '../../composables/use-user-data-folder'
+import { desktopClient } from '../../lib/desktop/client'
 import { describeError } from '../../lib/errors/describe-error'
 import { translate } from '../../lib/i18n'
 import { useUserDataStore } from '../../stores/user-data'
@@ -73,6 +81,7 @@ import AppIcon from '../common/AppIcon.vue'
 import Button from '../common/Button.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import UserDataRelocationModal from '../settings/UserDataRelocationModal.vue'
+import { DESKTOP_EVENTS } from '@tyco/shared'
 
 const { t } = useI18n()
 const titleId = useId()
@@ -82,6 +91,27 @@ const userData = computed(() => store.state())
 const folder = useUserDataFolder(() => Promise.resolve(true))
 const isConfirmingDefault = ref(false)
 const errorMessage = ref('')
+
+const isAvailable = ref(false)
+let disposed = false
+let stopListening: (() => void) | undefined
+if (desktopClient.isAvailable()) {
+  void desktopClient
+    .listen(DESKTOP_EVENTS.STORAGE_CHANGED, (paths) => {
+      if (paths.includes('tyco-user.json')) {
+        isAvailable.value = true
+      }
+    })
+    .then((stop) => {
+      if (disposed) stop()
+      else stopListening = stop
+    })
+    .catch(() => {})
+}
+onScopeDispose(() => {
+  disposed = true
+  stopListening?.()
+})
 
 async function run(action: () => Promise<void>) {
   errorMessage.value = ''

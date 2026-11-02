@@ -337,6 +337,53 @@ impl ConfigFiles {
         })
     }
 
+    /// Accepts an external revision without rewriting the shared file. The base
+    /// is the disk revision, so unsaved local changes remain local changes.
+    pub fn accept_external(
+        &self,
+        device: &DeviceStore,
+        notes: NotesFields,
+        config: &Value,
+        apply: impl FnOnce(&mut SavedUserConfig) -> Result<(), AppError>,
+    ) -> Result<SavedUserConfig, AppError> {
+        let path = self
+            .user_path
+            .as_deref()
+            .ok_or_else(|| AppError::UserDataUnavailable(self.unavailable.clone()))?;
+        let raw = fs::read(path)?;
+        let disk: Value = serde_json::from_slice(&raw)?;
+        if !disk.is_object() {
+            return Err(AppError::InvalidInput("Config must be an object".into()));
+        }
+        let unknown = self.device_unknown.locked().clone();
+        let mut parts = Parts::of(config, &unknown, notes);
+        parts.keep_device_paths(&device.snapshot(), false);
+        let merged = if self.read_base().is_some() {
+            self.merge_with_disk(path, Some(&raw), &parts, &unknown, notes, config, true)?
+        } else {
+            if version::is_newer_than_supported(&disk) {
+                return Err(newer_config_error());
+            }
+            let user = normalized_user_part(&disk, &parts.device, &unknown, notes);
+            let (mut value, _) = join_scopes(&user, &parts.device);
+            put_note_paths(&mut value, &parts.as_device_file(), notes);
+            schema::normalize_user_config(&mut value);
+            Merged {
+                disk: Some(disk.clone()),
+                user,
+                value,
+                conflicts: Vec::new(),
+            }
+        };
+        let mut saved = SavedUserConfig {
+            value: merged.value,
+            conflicts: merged.conflicts,
+        };
+        apply(&mut saved)?;
+        self.write_base(&disk);
+        Ok(saved)
+    }
+
     /// Merges `config`, split into `parts`, with `raw`, the bytes of
     /// `config.json`, three ways with the base. `keeps_copies` keeps an
     /// unreadable file, and the version of the disk that lost a conflict, in

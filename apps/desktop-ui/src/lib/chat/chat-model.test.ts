@@ -1032,3 +1032,52 @@ it('does not navigate when disposed during session-state persistence', async () 
   expect(await opening).toBe(false)
   expect(deps.navigateTo).not.toHaveBeenCalled()
 })
+
+it('reloads an idle chat and preserves edits started during an external read', async () => {
+  const chat = {
+    id: 'shared',
+    title: 'Remote title',
+    lastMessageAt: 1,
+    messages: [{ role: 'user' as const, content: 'Remote message' }],
+  }
+  const deps = createDeps({ loadChat: vi.fn(async () => chat) })
+  const model = createChatModel(deps)
+  model.currentChatParams.value = { id: 'shared' }
+  await model.reloadExternal()
+  expect(model.messages.value).toEqual(chat.messages)
+  expect(model.currentChatParams.value.title).toBe('Remote title')
+
+  let resolveRead!: (value: typeof chat) => void
+  deps.loadChat = vi.fn(
+    () =>
+      new Promise<typeof chat>((resolve) => {
+        resolveRead = resolve
+      })
+  )
+  const loading = model.reloadExternal()
+  model.currentChatParams.value.title = 'Local title'
+  resolveRead({ ...chat, title: 'Stale remote title' })
+  await loading
+  expect(model.currentChatParams.value.title).toBe('Local title')
+  model.dispose()
+})
+
+it('does not reload a generating chat or a conversation with a failed write', async () => {
+  const deps = createDeps({
+    saveChat: vi.fn(async () => {
+      throw new Error('Disk unavailable')
+    }),
+  })
+  const model = createChatModel(deps)
+  model.currentChatParams.value = { id: 'shared' }
+  model.isGenerating.value = true
+  await model.reloadExternal()
+  expect(deps.loadChat).not.toHaveBeenCalled()
+  model.isGenerating.value = false
+  await model.sendMessage('Keep my unsaved message')
+  await model.whenSaved()
+  await model.reloadExternal()
+  expect(deps.loadChat).not.toHaveBeenCalled()
+  expect(model.messages.value[0]?.content).toBe('Keep my unsaved message')
+  model.dispose()
+})

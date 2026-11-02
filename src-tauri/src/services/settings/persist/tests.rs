@@ -603,3 +603,90 @@ fn two_devices_on_one_folder_keep_each_others_changes() {
     assert_eq!(desktop.snapshot().config["hotkeys"]["voice"], "Ctrl+Alt+D");
     assert_eq!(on_laptop["hotkeys"]["voice"], "Ctrl+Alt+L");
 }
+
+#[test]
+fn external_revision_merges_unsaved_changes_without_rewriting_shared_config() {
+    let setup = Setup::new("external-config-merge");
+    let mut current = setup.load().value;
+    current["language"]["ui"] = json!("ru-RU");
+    let mut disk = setup.user_file();
+    disk["appearance"]["theme"] = json!("dark");
+    fs::write(setup.user_path(), serde_json::to_vec(&disk).unwrap()).unwrap();
+    let raw = fs::read(setup.user_path()).unwrap();
+    let merged = setup
+        .files
+        .accept_external(&setup.device, &no_notes, &current, |merged| {
+            assert_eq!(merged.value["appearance"]["theme"], "dark");
+            assert_eq!(merged.value["language"]["ui"], "ru-RU");
+            Ok(())
+        })
+        .unwrap();
+    assert_eq!(fs::read(setup.user_path()).unwrap(), raw);
+    assert_eq!(setup.files.read_base(), Some(disk));
+    let saved = setup.save(&merged.value);
+    assert_eq!(saved.value["language"]["ui"], "ru-RU");
+    assert_eq!(saved.value["appearance"]["theme"], "dark");
+}
+
+#[test]
+fn failed_external_application_keeps_the_base_for_retry_and_rejects_bad_input() {
+    let setup = Setup::new("external-config-retry");
+    let current = setup.load().value;
+    let base = setup.files.read_base();
+    let mut disk = setup.user_file();
+    disk["appearance"]["theme"] = json!("dark");
+    fs::write(setup.user_path(), serde_json::to_vec(&disk).unwrap()).unwrap();
+    assert!(setup
+        .files
+        .accept_external(&setup.device, &no_notes, &current, |_| {
+            Err(AppError::Failed("History unavailable".into()))
+        })
+        .is_err());
+    assert_eq!(setup.files.read_base(), base);
+    for raw in ["{partial", "[]", r#"{"configVersion":999}"#] {
+        fs::write(setup.user_path(), raw).unwrap();
+        assert!(setup
+            .files
+            .accept_external(&setup.device, &no_notes, &current, |_| panic!(
+                "Invalid config must not be applied"
+            ))
+            .is_err());
+        assert_eq!(setup.files.read_base(), base);
+        assert_eq!(fs::read_to_string(setup.user_path()).unwrap(), raw);
+    }
+}
+
+#[test]
+fn external_conflict_keeps_local_edits_and_preserves_the_losing_disk_revision() {
+    let setup = Setup::new("external-config-conflict");
+    let mut current = setup.load().value;
+    current["appearance"]["theme"] = json!("light");
+    let mut disk = setup.user_file();
+    disk["appearance"]["theme"] = json!("dark");
+    fs::write(setup.user_path(), serde_json::to_vec(&disk).unwrap()).unwrap();
+    let merged = setup
+        .files
+        .accept_external(&setup.device, &no_notes, &current, |_| Ok(()))
+        .unwrap();
+    assert_eq!(merged.value["appearance"]["theme"], "light");
+    assert!(!merged.conflicts.is_empty());
+    assert_eq!(setup.user_file(), disk);
+    assert_eq!(setup.files.read_base(), Some(disk));
+}
+
+#[test]
+fn an_external_revision_without_a_cached_base_takes_the_disk_and_keeps_device_fields() {
+    let setup = Setup::new("external-config-no-base");
+    let current = setup.load().value;
+    fs::remove_file(&setup.files.base_path).unwrap();
+    let mut disk = setup.user_file();
+    disk["appearance"]["theme"] = json!("dark");
+    fs::write(setup.user_path(), serde_json::to_vec(&disk).unwrap()).unwrap();
+    let merged = setup
+        .files
+        .accept_external(&setup.device, &no_notes, &current, |_| Ok(()))
+        .unwrap();
+    assert_eq!(merged.value["appearance"]["theme"], "dark");
+    assert_eq!(merged.value["hotkeys"], current["hotkeys"]);
+    assert_eq!(setup.user_file(), disk);
+}

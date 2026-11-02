@@ -188,7 +188,7 @@ pub fn delete_profile(
     let dir = profile_dir(vault_root, id)?;
     if dir.exists() {
         versions.clear_profile(id);
-        fs::remove_dir_all(&dir)?;
+        crate::services::storage::watcher::remove_tree(&dir)?;
     }
     Ok(())
 }
@@ -464,7 +464,7 @@ pub fn save_project(
 pub fn delete_project(vault_root: &Path, paths: &ProjectPaths, id: &str) -> Result<(), AppError> {
     let dir = project_dir(vault_root, id)?;
     if dir.exists() {
-        fs::remove_dir_all(&dir)?;
+        crate::services::storage::watcher::remove_tree(&dir)?;
     }
     paths.set(id, None)?;
 

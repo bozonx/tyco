@@ -79,6 +79,9 @@ export interface ChatStoreRuntimeDependencies {
   /** Waits before each retry of a failed chat write */
   saveRetryDelaysMs?: readonly number[]
   /** Hears every change of a chat history, from any window */
+  listenStorageChanged?: (
+    handler: (paths: string[]) => void
+  ) => Promise<() => void>
   listenChatsChanged?: (
     handler: (event: ChatsChangedEvent) => void
   ) => Promise<() => void>
@@ -426,6 +429,32 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
       (openId !== undefined && event.removedChatIds.includes(openId))
     if (isOpenRemoved) model.abandonChat()
   }
+  let stopStorageListening: (() => void) | undefined
+  void deps
+    .listenStorageChanged?.((paths) => {
+      if (disposed) return
+      const prefix = profileId
+        ? `ai-vault/profiles/${profileId}/chats/`
+        : 'chats/'
+      if (!paths.some((path) => path.startsWith(prefix))) return
+      void history.loadChatHistory().catch((error) => warn(String(error)))
+      const id = model.currentChatParams.value.id
+      if (
+        id &&
+        paths.some(
+          (path) =>
+            path === `${prefix}${id}.json` ||
+            path.startsWith(`${prefix}images/`)
+        )
+      ) {
+        void model.reloadExternal().catch((error) => warn(String(error)))
+      }
+    })
+    .then((stop) => {
+      if (disposed) stop()
+      else stopStorageListening = stop
+    })
+    .catch((error) => warn(String(error)))
   let stopListening: (() => void) | undefined
   void deps
     .listenChatsChanged?.(onChatsChanged)
@@ -441,6 +470,7 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     if (disposed) return
     disposed = true
     stopListening?.()
+    stopStorageListening?.()
     void chatRemoval.dispose()
     controller.dispose()
     chatTools.dispose()

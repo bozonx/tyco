@@ -335,7 +335,8 @@ impl PluginStore {
             ));
         }
         atomic_file::write_private(&root.join(format!("{key}.json")), &raw)?;
-        fs::remove_file(previous)?;
+        fs::remove_file(&previous)?;
+        super::storage::watcher::deleted(&previous);
         Ok(())
     }
     pub fn remove(&self, id: &str) -> Result<(), AppError> {
@@ -351,11 +352,15 @@ impl PluginStore {
         let root = self.writable_dir()?;
         let previous = root.join(format!("{}.previous", storage_key(id)));
         if previous.exists() {
-            fs::remove_file(previous)?;
+            fs::remove_file(&previous)?;
+            super::storage::watcher::deleted(&previous);
         }
         let path = root.join(format!("{}.json", storage_key(id)));
-        match fs::remove_file(path) {
-            Ok(()) => Ok(()),
+        match fs::remove_file(&path) {
+            Ok(()) => {
+                super::storage::watcher::deleted(&path);
+                Ok(())
+            }
             Err(reason) if reason.kind() == std::io::ErrorKind::NotFound => Ok(()),
             Err(reason) => Err(reason.into()),
         }

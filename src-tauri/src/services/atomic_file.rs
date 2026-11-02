@@ -126,7 +126,9 @@ fn write_atomic(
     file.sync_all()?;
     drop(file);
     rename_retrying(&temporary.0, path)?;
-    sync_parent(path)
+    sync_parent(path)?;
+    crate::services::storage::watcher::written(path, raw);
+    Ok(())
 }
 
 /// How long a rename is retried while another program holds the file.

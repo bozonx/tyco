@@ -14,6 +14,7 @@ export function createChatPersistenceQueue(
   // chat params carry the new title, so the map is dropped
   const renamedTitles = new Map<string, string>()
   let pendingWriteCount = 0
+  let failedChatId: string | undefined
   const settle = () => {
     pendingWriteCount -= 1
     if (pendingWriteCount === 0) renamedTitles.clear()
@@ -60,7 +61,10 @@ export function createChatPersistenceQueue(
     const write = lastWrite.then(async () => {
       try {
         entry.title = renamedTitles.get(id) ?? entry.title
-        return await saveWithRetry(entry, writeNumber)
+        const saved = await saveWithRetry(entry, writeNumber)
+        if (writeNumber === writeCount)
+          failedChatId = saved ? undefined : entry.id
+        return saved
       } finally {
         for (const image of held) {
           const index = savingImages.value.indexOf(image)
@@ -99,6 +103,10 @@ export function createChatPersistenceQueue(
     persist,
     renameChat,
     savingImages,
+    hasPendingWrites: () =>
+      pendingWriteCount > 0 ||
+      (failedChatId !== undefined &&
+        failedChatId === currentChatParams.value.id),
     whenSaved: () => lastWrite.then(() => undefined),
   }
 }

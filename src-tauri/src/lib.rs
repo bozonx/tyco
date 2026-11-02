@@ -187,6 +187,7 @@ pub fn run() {
             app.manage(services::net::NetState::new()?);
             services::hotkeys::setup(app)?;
             runtime::setup(app)?;
+            storage::watcher::setup(app.handle())?;
             services::activation::metrics::setup(app)?;
             // the activation below needs the window tracker to know the
             // window Tyco was launched from

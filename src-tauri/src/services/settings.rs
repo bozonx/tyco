@@ -164,6 +164,54 @@ pub fn update_user_config(
     save_user_config(app, next, base)
 }
 
+/// Applies a synchronized config through the same history and publication path
+/// as a save, without rewriting the shared file or collecting device secrets.
+pub fn reload_external_config(app: &AppHandle) -> Result<(), AppError> {
+    let state = app.state::<AppState>();
+    let _vault = state.read_vault();
+    let _settings = state.lock_settings_update();
+    ensure_running(&state)?;
+    let previous = state.user_config();
+    let files = app.state::<persist::ConfigFiles>();
+    let device = app.state::<storage::device::DeviceStore>();
+    let plugins = app.state::<super::plugins::PluginStore>();
+    let merged = files.accept_external(
+        &device,
+        &|id| plugins.notes_directory_field(id).ok(),
+        &previous,
+        |merged| {
+            if merged.value == *previous {
+                return Ok(());
+            }
+            hotkeys::with_config_changes(app, &previous, &mut merged.value, |next| {
+                state.history.commit_settings(
+                    app,
+                    HistorySettings::from_config(&previous),
+                    HistorySettings::from_config(next),
+                    || {
+                        state.update_snapshot(|snapshot| {
+                            snapshot.settings.user_config = std::sync::Arc::new(next.clone())
+                        });
+                        Ok(())
+                    },
+                )
+            })
+        },
+    )?;
+    if merged.value != *previous {
+        runtime::publish_state(app, &state);
+    }
+    if !merged.conflicts.is_empty() {
+        crate::events::emit::<crate::events::SettingsConflict, _>(
+            app,
+            crate::models::SettingsConflictEvent {
+                paths: merged.conflicts,
+            },
+        )?;
+    }
+    Ok(())
+}
+
 pub fn patch_session_state(
     app: &AppHandle,
     patch: serde_json::Map<String, Value>,

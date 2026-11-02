@@ -31,6 +31,37 @@ export function createChatModel(deps: ChatModelDependencies) {
   return {
     ...state,
     savingImages: persistence.savingImages,
+    /**
+     * Reload only an idle, saved conversation; preserve work started during
+     * I/O.
+     */
+    reloadExternal: async () => {
+      const id = currentChatParams.value.id
+      if (!id || state.isGenerating.value || persistence.hasPendingWrites())
+        return
+      const before = JSON.stringify([
+        state.messages.value,
+        currentChatParams.value,
+      ])
+      const chat = await deps.loadChat(id)
+      if (
+        disposed ||
+        state.isGenerating.value ||
+        persistence.hasPendingWrites() ||
+        before !==
+          JSON.stringify([state.messages.value, currentChatParams.value])
+      )
+        return
+      if (!chat) {
+        session.abandonChat()
+        return
+      }
+      state.messages.value = chat.messages
+      currentChatParams.value = {
+        ...currentChatParams.value,
+        title: chat.title,
+      }
+    },
     renameChat: (id: string, newTitle: string) => {
       if (disposed) return Promise.resolve()
       if (currentChatParams.value.id === id) title.cancel()

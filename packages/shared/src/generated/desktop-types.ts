@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 90af43d71a1ab9905188a94fa27e4bdc54ca900936450f55d1223a450d57ec18
+// Source hash: eaf57af2c8afce29477c77296ec206ec17e25fadf2007e0574ac710cc2299936
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -869,6 +869,7 @@ export const DESKTOP_ERROR_CODES = [
 export interface DesktopEventPayloads {
   'app://quit-requested': number
   'app://quit-cancelled': null
+  'app://storage-changed': Array<string>
   'app://plugins-changed': null
   'app://state-changed': DesktopSnapshot
   'app://hotkeys-changed': null

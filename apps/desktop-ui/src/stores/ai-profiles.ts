@@ -1,8 +1,9 @@
-import type { VaultTarget } from '@tyco/shared'
+import { DESKTOP_EVENTS, type VaultTarget } from '@tyco/shared'
 
 import { clientLogger } from '../lib/logger'
 import { defineStore } from 'pinia'
-import { readonly, ref, watch } from 'vue'
+import { onScopeDispose, readonly, ref, watch } from 'vue'
+import { desktopClient } from '../lib/desktop/client'
 
 import { describeError } from '../lib/errors/describe-error'
 import { translate } from '../lib/i18n'
@@ -95,6 +96,31 @@ export const useAiProfilesStore = defineStore('ai-profiles', () => {
       if (request === loadRequest) isLoaded.value = true
     }
   }
+
+  let disposed = false
+  let stopStorageListening: (() => void) | undefined
+  if (desktopClient.isAvailable()) {
+    void desktopClient
+      .listen(DESKTOP_EVENTS.STORAGE_CHANGED, (paths) => {
+        if (paths.some((path) => path.startsWith('ai-vault/'))) void loadAll()
+      })
+      .then((stop) => {
+        if (disposed) stop()
+        else stopStorageListening = stop
+      })
+      .catch((error) =>
+        clientLogger.error(
+          'Could not follow vault changes',
+          error,
+          'ai-profiles'
+        )
+      )
+  }
+  onScopeDispose(() => {
+    disposed = true
+    stopStorageListening?.()
+    loadRequest += 1
+  })
 
   // the vault moves once the settings with its new path are stored
   watch(

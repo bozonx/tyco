@@ -499,12 +499,16 @@ pub fn undo_profile_memory(
     if absent_file.exists() {
         let before = if target_path.exists() {
             let current = fs::read_to_string(&target_path)?;
-            let _ = fs::remove_file(&target_path);
+            if fs::remove_file(&target_path).is_ok() {
+                crate::services::storage::watcher::deleted(&target_path);
+            }
             Some(current)
         } else {
             None
         };
-        let _ = fs::remove_file(&absent_file);
+        if fs::remove_file(&absent_file).is_ok() {
+            crate::services::storage::watcher::deleted(&absent_file);
+        }
         versions.forget(profile_id, &normalized);
         return Ok(ProfileMemoryChange {
             file: normalized,
@@ -522,7 +526,9 @@ pub fn undo_profile_memory(
         let restored = fs::read_to_string(&snapshot_file)?;
         write_private(&target_path, &restored)?;
         versions.record(profile_id, &normalized, &restored);
-        let _ = fs::remove_file(&snapshot_file);
+        if fs::remove_file(&snapshot_file).is_ok() {
+            crate::services::storage::watcher::deleted(&snapshot_file);
+        }
         return Ok(ProfileMemoryChange {
             file: normalized,
             before,
@@ -670,13 +676,13 @@ pub fn clear_profile_memory(
     let memory_dir = profile_memory_dir(vault_root, profile_id)?;
     let topics_dir = memory_dir.join(MEMORY_TOPICS_DIR);
     if topics_dir.is_dir() {
-        fs::remove_dir_all(&topics_dir)?;
+        crate::services::storage::watcher::remove_tree(&topics_dir)?;
     }
     create_private_dir(&topics_dir)?;
 
     let snapshots_dir = memory_dir.join(MEMORY_SNAPSHOTS_DIR);
     if snapshots_dir.is_dir() {
-        let _ = fs::remove_dir_all(&snapshots_dir);
+        let _ = crate::services::storage::watcher::remove_tree(&snapshots_dir);
     }
 
     write_private(&memory_dir.join(MEMORY_CORE_FILE), DEFAULT_MEMORY_CORE)?;

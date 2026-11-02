@@ -4,6 +4,8 @@ export const DESKTOP_EVENTS = {
   QUIT_REQUESTED: 'app://quit-requested',
   QUIT_CANCELLED: 'app://quit-cancelled',
   PLUGINS_CHANGED: 'app://plugins-changed',
+  /** Relative paths changed by synchronization, or local vault writes */
+  STORAGE_CHANGED: 'app://storage-changed',
   STATE_CHANGED: 'app://state-changed',
   HOTKEYS_CHANGED: 'app://hotkeys-changed',
   OPEN_MAIN_CHAT: 'app://open-main-chat',

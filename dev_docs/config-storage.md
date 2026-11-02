@@ -255,8 +255,10 @@ wins, the version of the disk is kept in the recovery folder, and the windows
 get `app://settings-conflict`. The merge comes first in a save, before the
 hotkeys, the history settings and the keys are committed, so that they follow
 the merged config; the write compares with the disk once more. Without a base, e.g. after connecting another
-folder, the disk is taken as it is. Without a watcher a synced change is taken
-in at the next save or start. A startup repair writes a file only when the
+folder, the disk is taken as it is. The storage watcher applies external revisions without rewriting the shared
+file. It updates the base only after the runtime accepts the merged settings,
+so local edits stay pending and a failed application can be retried. Invalid
+or newer files leave the current settings and base intact. A startup repair writes a file only when the
 repair changed a value, not when it only filled missing fields, so that two
 builds of different versions do not rewrite the shared file in turns.
 
@@ -418,3 +420,25 @@ set aside as broken, or has a conflicting copy of a sync tool next to it, as
 uncertain references keep the keys. A failed vault-only deletion keeps its metadata for a later retry.
 The system vault holds the key values; `secrets.json` holds only their ids and
 origins.
+
+## Live storage updates
+
+`storage::watcher` uses `notify` with a 250 ms debounce, plus a content scan
+every 30 seconds on every filesystem (including network mounts). Window focus
+requests another scan. SHA-256 revisions detect equal-size edits even when a
+synchronizer preserves timestamps. Scans skip symlinks, workspace trees,
+temporary files and conflict copies using `storage::user_files`; conflict
+resolution is a separate feature. Images are hashed as streams.
+
+Atomic writes and entity removals publish `StorageEvent` revisions through an
+internal broadcast bus. Only registered user/vault roots enter it; device
+files and secrets do not. Matching disk echoes are suppressed, and consumed
+local revisions are retired so a later external restoration is detected.
+Local vault changes reach other windows without waiting for disk debounce.
+
+The watcher invalidates chat indexes, publishes editor history and plugin
+updates, and sends relative paths in `app://storage-changed`. Idle, saved open
+chats reload with a guard against changes made during I/O. A configured external
+vault is observed separately; missing roots recover through polling without
+being created. A reappearing user-folder marker offers a restart on the missing
+folder screen; it never connects the folder in the running process.

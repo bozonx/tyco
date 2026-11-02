@@ -107,6 +107,8 @@ function createChatStoreSetup(profileId: string | null) {
       toastText,
       toastKey,
       warn: (message) => clientLogger.warn(message, 'chat'),
+      listenStorageChanged: (handler) =>
+        desktopClient.listen(DESKTOP_EVENTS.STORAGE_CHANGED, handler),
       listenChatsChanged: (handler) =>
         desktopClient.listen(DESKTOP_EVENTS.CHATS_CHANGED, handler),
     })

@@ -54,7 +54,10 @@ pub(super) fn write_jsonl<T: Serialize>(path: &Path, items: &[T]) -> Result<(), 
 
 pub(super) fn remove_file_if_exists(path: &Path) -> Result<(), AppError> {
     match fs::remove_file(path) {
-        Ok(()) => Ok(()),
+        Ok(()) => {
+            super::watcher::deleted(path);
+            Ok(())
+        }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
         Err(error) => Err(error.into()),
     }
