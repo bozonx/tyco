@@ -801,7 +801,8 @@
       "styling": "Stilizzazione del testo",
       "transformation": "Trasformazioni del testo",
       "translation": "Traduzione",
-      "unavailable": "Non disponibili"
+      "unavailable": "Non disponibili",
+      "profiles": "Profili"
     },
     "mainActionStylingRemoved": "Stile del testo eliminato",
     "mainActionTransformationRemoved": "Trasformazione del testo eliminata",
@@ -1173,7 +1174,9 @@
     "projectFolderNotSetOnDevice": "Cartella non impostata su questo dispositivo",
     "projectSetFolder": "Imposta cartella",
     "projectsWithoutFolder": "Progetti esterni senza cartella su questo dispositivo: {count}",
-    "variablesTab": "Variabili"
+    "variablesTab": "Variabili",
+    "askInProfileChat": "Chiedi in chat: {profile}",
+    "mainActionProfileRemoved": "Profilo eliminato"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

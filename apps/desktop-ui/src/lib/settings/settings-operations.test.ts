@@ -125,7 +125,11 @@ describe('settings operations', () => {
     expect(f.config.hotkeys.styling).toBe('Ctrl+Alt+Shift+T')
     expect(f.config.hotkeys.transformation).toBe('Ctrl+Alt+Shift+M')
     expect(f.config.hotkeys.selectionCorrection).toBe('Ctrl+Alt+F')
-    expect(f.config.hotkeys.launcherPages).toEqual({ main: 'Ctrl+Alt+1' })
+    expect(f.config.hotkeys.launcherPages).toEqual({
+      main: 'Ctrl+Alt+1',
+      'page-2': '',
+      'page-3': '',
+    })
     expect(f.config.hotkeys).not.toHaveProperty('unknown')
   })
 

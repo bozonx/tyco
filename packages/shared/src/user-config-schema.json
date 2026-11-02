@@ -421,6 +421,14 @@
               "pageId": { "type": "string", "minLength": 1 }
             },
             "required": ["type", "pageId"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "enum": ["profileChat"] },
+              "profileId": { "type": "string", "minLength": 1 }
+            },
+            "required": ["type", "profileId"]
           }
         ]
       },

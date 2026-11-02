@@ -801,7 +801,8 @@
       "styling": "Stiliziranje teksta",
       "transformation": "Transformacije teksta",
       "translation": "Prijevod",
-      "unavailable": "Nedostupne"
+      "unavailable": "Nedostupne",
+      "profiles": "Profili"
     },
     "mainActionStylingRemoved": "Izbrisan stil teksta",
     "mainActionTransformationRemoved": "Izbrisana transformacija teksta",
@@ -1173,7 +1174,9 @@
     "projectFolderNotSetOnDevice": "Mapa nije postavljena na ovom uređaju",
     "projectSetFolder": "Postavi mapu",
     "projectsWithoutFolder": "Vanjski projekti bez mape na ovom uređaju: {count}",
-    "variablesTab": "Varijable"
+    "variablesTab": "Varijable",
+    "askInProfileChat": "Pitaj u chatu: {profile}",
+    "mainActionProfileRemoved": "Izbrisani profil"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

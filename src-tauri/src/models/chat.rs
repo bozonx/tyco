@@ -8,6 +8,9 @@ pub struct OpenMainChatEvent {
     pub attachment: Option<ChatAttachment>,
     pub question: Option<String>,
     pub auto_send: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub profile_id: Option<String>,
 }
 
 /// A chat history changed: every window reloads its list, and a window

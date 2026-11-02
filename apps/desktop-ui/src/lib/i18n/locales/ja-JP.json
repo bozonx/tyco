@@ -798,7 +798,8 @@
       "styling": "テキストスタイリング",
       "transformation": "テキスト変換",
       "translation": "翻訳",
-      "unavailable": "利用不可"
+      "unavailable": "利用不可",
+      "profiles": "プロファイル"
     },
     "mainActionStylingRemoved": "削除されたテキストスタイル",
     "mainActionTransformationRemoved": "削除されたテキスト変換",
@@ -1170,7 +1171,9 @@
     "projectFolderNotSetOnDevice": "このデバイスではフォルダーが未設定です",
     "projectSetFolder": "フォルダーを設定",
     "projectsWithoutFolder": "このデバイスでフォルダーがない外部プロジェクト: {count}",
-    "variablesTab": "変数"
+    "variablesTab": "変数",
+    "askInProfileChat": "チャットで質問: {profile}",
+    "mainActionProfileRemoved": "削除されたプロファイル"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

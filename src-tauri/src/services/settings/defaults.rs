@@ -25,10 +25,20 @@ pub fn portable_user_config() -> Value {
 pub fn default_user_config() -> Value {
     let mut config = portable_user_config();
     config["hotkeys"] = hotkeys::default_hotkeys_config();
-    if let Some(page_id) = config["launcherPages"][0]["id"].as_str().map(str::to_owned) {
-        config["hotkeys"]["launcherPages"] =
-            json!({ page_id: hotkeys::default_launcher_page_shortcut() });
+    let mut launcher_hotkeys = Map::new();
+    if let Some(pages) = config["launcherPages"].as_array() {
+        for (index, page) in pages.iter().enumerate() {
+            if let Some(page_id) = page["id"].as_str() {
+                let shortcut = if index == 0 {
+                    hotkeys::default_launcher_page_shortcut()
+                } else {
+                    String::new()
+                };
+                launcher_hotkeys.insert(page_id.to_owned(), json!(shortcut));
+            }
+        }
     }
+    config["hotkeys"]["launcherPages"] = Value::Object(launcher_hotkeys);
     config
 }
 

@@ -10,6 +10,11 @@
         :keys="['Space', 'Enter']"
         :icon="props.spaceKey.icon"
         :disabled="props.spaceKey.disabled"
+        :title="
+          props.spaceKey.hint
+            ? `${getActionLabel(props.spaceKey)} (${props.spaceKey.hint})`
+            : getActionLabel(props.spaceKey)
+        "
         variant="primary"
         @click="props.spaceKey.action(props.text || '')"
       >
@@ -20,6 +25,7 @@
         v-if="props.isEditorButtonVisible"
         :keys="['Tab']"
         icon="mdi:pencil-outline"
+        :title="props.editorButtonLabel ?? t('shortcuts.insertIntoEditor')"
         @click="goToEditor"
       >
         {{ props.editorButtonLabel ?? t('shortcuts.insertIntoEditor') }}
@@ -35,7 +41,11 @@
           :keys="[slot.key.toUpperCase()]"
           :icon="slot.action.icon"
           :disabled="slot.action.disabled"
-          :title="slot.action.hint"
+          :title="
+            slot.action.hint
+              ? `${slot.label} (${slot.action.hint})`
+              : slot.label
+          "
           @click="slot.action.action(props.text || '')"
         >
           {{ slot.label }}

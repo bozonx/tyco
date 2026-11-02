@@ -801,7 +801,8 @@
       "styling": "Stilizare text",
       "transformation": "Transformări text",
       "translation": "Traducere",
-      "unavailable": "Indisponibile"
+      "unavailable": "Indisponibile",
+      "profiles": "Profiluri"
     },
     "mainActionStylingRemoved": "Stil de text șters",
     "mainActionTransformationRemoved": "Transformare text ștearsă",
@@ -1173,7 +1174,9 @@
     "projectFolderNotSetOnDevice": "Dosar nesetat pe acest dispozitiv",
     "projectSetFolder": "Setează dosarul",
     "projectsWithoutFolder": "Proiecte externe fără dosar pe acest dispozitiv: {count}",
-    "variablesTab": "Variabile"
+    "variablesTab": "Variabile",
+    "askInProfileChat": "Întreabă în chat: {profile}",
+    "mainActionProfileRemoved": "Profil șters"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

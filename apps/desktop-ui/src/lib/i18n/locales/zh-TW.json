@@ -795,7 +795,8 @@
       "styling": "文字風格化",
       "transformation": "文字轉換",
       "translation": "翻譯",
-      "unavailable": "無法使用"
+      "unavailable": "無法使用",
+      "profiles": "設定檔"
     },
     "mainActionStylingRemoved": "已刪除的文字風格",
     "mainActionTransformationRemoved": "已刪除的文字轉換",
@@ -1167,7 +1168,9 @@
     "projectFolderNotSetOnDevice": "此裝置上未設定資料夾",
     "projectSetFolder": "設定資料夾",
     "projectsWithoutFolder": "此裝置上沒有資料夾的外部專案：{count}",
-    "variablesTab": "變數"
+    "variablesTab": "變數",
+    "askInProfileChat": "在聊天中詢問：{profile}",
+    "mainActionProfileRemoved": "已刪除的設定檔"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

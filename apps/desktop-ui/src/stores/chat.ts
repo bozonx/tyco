@@ -90,7 +90,10 @@ function createChatStoreSetup(profileId: string | null) {
       externalSelection: () => desktopStore.desktopState.selectedText,
       windowLabel: getDesktopWindowLabel,
       openMainChat: (attachment) =>
-        ipcStore.callOrNotify('open_main_chat', { attachment }),
+        ipcStore.callOrNotify('open_main_chat', {
+          attachment,
+          profileId: profileId ?? undefined,
+        }),
       closeModals: menuModalsStore.closeAll,
       afterRender: nextTick,
       navigateTo: async (path) => {

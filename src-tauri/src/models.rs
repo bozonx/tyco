@@ -76,6 +76,7 @@ mod desktop_contract_tests {
             }),
             question: Some("Explain this text".into()),
             auto_send: true,
+            profile_id: None,
         };
         assert_eq!(
             serde_json::to_value(payload).unwrap(),

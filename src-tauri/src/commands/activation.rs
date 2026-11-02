@@ -10,9 +10,17 @@ pub fn open_main_chat(
     attachment: Option<crate::models::ChatAttachment>,
     question: Option<String>,
     auto_send: Option<bool>,
+    profile_id: Option<String>,
     activation_id: u64,
 ) -> Result<(), AppError> {
-    runtime::open_main_chat(&app, attachment, question, auto_send, activation_id)
+    runtime::open_main_chat(
+        &app,
+        attachment,
+        question,
+        auto_send,
+        profile_id,
+        activation_id,
+    )
 }
 
 #[tauri::command]

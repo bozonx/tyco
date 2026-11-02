@@ -798,7 +798,8 @@
       "styling": "Мәтінді стильдеу",
       "transformation": "Мәтінді түрлендіру",
       "translation": "Аударма",
-      "unavailable": "Қолжетімсіз"
+      "unavailable": "Қолжетімсіз",
+      "profiles": "Профильдер"
     },
     "mainActionStylingRemoved": "Жойылған мәтін стилі",
     "mainActionTransformationRemoved": "Жойылған мәтінді түрлендіру",
@@ -1170,7 +1171,9 @@
     "projectFolderNotSetOnDevice": "Бұл құрылғыда қалта көрсетілмеген",
     "projectSetFolder": "Қалтаны көрсету",
     "projectsWithoutFolder": "Бұл құрылғыда қалтасыз сыртқы жобалар: {count}",
-    "variablesTab": "Айнымалылар"
+    "variablesTab": "Айнымалылар",
+    "askInProfileChat": "Чатта сұрау: {profile}",
+    "mainActionProfileRemoved": "Жойылған профиль"
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
   "theme": {

@@ -38,6 +38,14 @@ export interface AppWindowControllerDependencies {
   cancelLauncher: (id: string) => void
   closeModals: () => void
   goToChat: () => Promise<void>
+  goToProfileChat?: (profileId: string) => Promise<void>
+  profileChat?: (profileId: string) => {
+    startChat: (params: ChatParams) => Promise<void>
+    openLastChat: () => Promise<void>
+    setChatInput: (text: string) => void
+    sendChatInput: () => Promise<unknown>
+    focusChatInput: () => void
+  }
   startChat: (params: ChatParams) => Promise<void>
   openLastChat: () => Promise<void>
   afterRender: () => Promise<void>
@@ -63,26 +71,40 @@ export function createAppWindowController(
     const request = ++chatRequest
     const isCurrent = () => !scope.stopped && request === chatRequest
     deps.closeModals()
-    await deps.goToChat()
+    if (payload.profileId && deps.goToProfileChat) {
+      await deps.goToProfileChat(payload.profileId)
+    } else {
+      await deps.goToChat()
+    }
     if (!isCurrent()) return
     const { attachment, question, autoSend } = payload
     const trimmedText = attachment?.text?.trim()
     const trimmedQuestion = question?.trim()
+    const profile =
+      payload.profileId && deps.profileChat
+        ? deps.profileChat(payload.profileId)
+        : null
+    const startChat = profile ? profile.startChat : deps.startChat
+    const openLastChat = profile ? profile.openLastChat : deps.openLastChat
     if (attachment && trimmedText) {
-      await deps.startChat({
-        attachments: [{ ...attachment, text: trimmedText }],
-      })
+      await startChat({ attachments: [{ ...attachment, text: trimmedText }] })
     } else if (trimmedQuestion) {
-      await deps.startChat({})
+      await startChat({})
     } else {
-      await deps.openLastChat()
+      await openLastChat()
     }
     if (!isCurrent()) return
     await deps.afterRender()
     if (!isCurrent() || !trimmedQuestion) return
-    deps.setChatInput(trimmedQuestion)
-    if (autoSend) await deps.sendChatInput()
-    else deps.focusChatInput()
+    if (profile) profile.setChatInput(trimmedQuestion)
+    else deps.setChatInput(trimmedQuestion)
+    if (autoSend) {
+      if (profile) await profile.sendChatInput()
+      else await deps.sendChatInput()
+    } else {
+      if (profile) profile.focusChatInput()
+      else deps.focusChatInput()
+    }
   }
 
   function start(): Promise<void> {

@@ -9,18 +9,10 @@ export function normalizeMainActions(
   return slotList(normalizeConfigField('mainActions', value))
 }
 
-/** Development actions stay saved while their UI slots are hidden. */
+/** All configured actions are visible in the settings and action menu. */
 export function isMainActionVisible(
-  action: MainActionConfig,
-  isInDevelopment: boolean | undefined
+  _action: MainActionConfig,
+  _isInDevelopment?: boolean | undefined
 ): boolean {
-  return (
-    Boolean(isInDevelopment) ||
-    (action.type !== 'command' &&
-      action.type !== 'launcherPage' &&
-      !(
-        action.type === 'standard' &&
-        (action.actionId === 'askInChat' || action.actionId === 'correction')
-      ))
-  )
+  return true
 }

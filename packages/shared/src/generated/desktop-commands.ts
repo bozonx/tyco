@@ -200,6 +200,7 @@ export interface DesktopCommands {
       attachment?: ChatAttachment | null
       question?: string | null
       autoSend?: boolean | null
+      profileId?: string | null
       activationId: number
     }
     result: void

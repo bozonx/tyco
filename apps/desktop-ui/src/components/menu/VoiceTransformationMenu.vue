@@ -96,7 +96,9 @@ const finishHotkey = useVoiceFinishSignal(
 )
 
 const primaryKeys = computed(() =>
-  finishHotkey.value ? [finishHotkey.value, 'Enter'] : ['Enter']
+  finishHotkey.value
+    ? ['Space', 'Enter', finishHotkey.value]
+    : ['Space', 'Enter']
 )
 
 const recentPrompts = computed(
@@ -110,7 +112,11 @@ const rememberPrompt = (value: string) => {
 }
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (event.key === 'Enter' && !event.isComposing && !isFinishing.value) {
+  if (
+    (event.key === 'Enter' || event.key === ' ') &&
+    !event.isComposing &&
+    !isFinishing.value
+  ) {
     event.preventDefault()
     void finish()
   }

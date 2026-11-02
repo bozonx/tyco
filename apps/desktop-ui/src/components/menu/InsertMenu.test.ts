@@ -138,6 +138,19 @@ describe('InsertMenu correction step', () => {
     const copyButton = wrapper.findComponent(CopyButton)
     expect(copyButton.props('value')).toBe('Original text')
   })
+
+  it('keeps insertIntoWindow as primary space action even when first action slot is different', () => {
+    mocks.editorPage = false
+    const wrapper = mountMenu({
+      text: 'Result text',
+      actions: [
+        { id: 'copyToClipboard', action: vi.fn() },
+        { id: 'insertIntoWindow', action: vi.fn() },
+      ],
+    })
+    const list = wrapper.findComponent(ShortcutList)
+    expect(list.props('spaceKey')?.id).toBe('insertIntoWindow')
+  })
 })
 
 afterEach(() => {

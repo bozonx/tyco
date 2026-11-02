@@ -300,17 +300,14 @@ const rows = computed(() =>
   allRows.value.filter(
     (row) =>
       userConfig.value.isInDevelopment ||
-      (![
+      ![
         'chat',
         'voiceChat',
         'voiceCommands',
         'correction',
         'history',
         inlineId,
-      ].includes(row.id) &&
-        !userConfig.value.launcherPages.some(
-          (page) => launcherPageHotkeyId(page.id) === row.id
-        ))
+      ].includes(row.id)
   )
 )
 

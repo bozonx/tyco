@@ -798,7 +798,8 @@
       "styling": "Стилизация текста",
       "transformation": "Трансформация текста",
       "translation": "Перевод",
-      "unavailable": "Недоступные"
+      "unavailable": "Недоступные",
+      "profiles": "Профили"
     },
     "mainActionStylingRemoved": "Удалённый стиль текста",
     "mainActionTransformationRemoved": "Удалённая трансформация текста",
@@ -1170,7 +1171,9 @@
     "projectFolderNotSetOnDevice": "Папка не указана на этом устройстве",
     "projectSetFolder": "Указать папку",
     "projectsWithoutFolder": "Внешних проектов без папки на этом устройстве: {count}",
-    "variablesTab": "Переменные"
+    "variablesTab": "Переменные",
+    "askInProfileChat": "Спросить в чате: {profile}",
+    "mainActionProfileRemoved": "Удалённый профиль"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

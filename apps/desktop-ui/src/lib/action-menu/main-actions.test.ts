@@ -53,17 +53,11 @@ describe('isMainActionVisible', () => {
     { type: 'launcherPage', pageId: 'page' },
     { type: 'standard', actionId: 'askInChat' },
     { type: 'standard', actionId: 'correction' },
-  ])('shows development action %j only with the flag', (action) => {
-    expect(isMainActionVisible(action, undefined)).toBe(false)
-    expect(isMainActionVisible(action, false)).toBe(false)
+    { type: 'profileChat', profileId: 'assistant' },
+    { type: 'standard', actionId: 'copyToClipboard' },
+  ])('keeps action %j visible', (action) => {
+    expect(isMainActionVisible(action, undefined)).toBe(true)
+    expect(isMainActionVisible(action, false)).toBe(true)
     expect(isMainActionVisible(action, true)).toBe(true)
-  })
-  it('keeps regular actions visible', () => {
-    expect(
-      isMainActionVisible(
-        { type: 'standard', actionId: 'copyToClipboard' },
-        false
-      )
-    ).toBe(true)
   })
 })

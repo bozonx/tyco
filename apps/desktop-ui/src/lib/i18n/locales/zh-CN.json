@@ -795,7 +795,8 @@
       "styling": "文本风格化",
       "transformation": "文本转换",
       "translation": "翻译",
-      "unavailable": "不可用"
+      "unavailable": "不可用",
+      "profiles": "配置文件"
     },
     "mainActionStylingRemoved": "已删除的文本风格",
     "mainActionTransformationRemoved": "已删除的文本转换",
@@ -1167,7 +1168,9 @@
     "projectFolderNotSetOnDevice": "此设备上未设置文件夹",
     "projectSetFolder": "设置文件夹",
     "projectsWithoutFolder": "此设备上没有文件夹的外部项目：{count}",
-    "variablesTab": "变量"
+    "variablesTab": "变量",
+    "askInProfileChat": "在聊天中询问：{profile}",
+    "mainActionProfileRemoved": "已删除的配置文件"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

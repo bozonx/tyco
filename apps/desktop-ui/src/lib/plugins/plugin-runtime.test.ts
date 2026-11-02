@@ -39,10 +39,10 @@ describe('application plugin runtime', () => {
   it('deactivates development plugins and restores them without changing their configuration', async () => {
     const config = structuredClone(DEFAULT_USER_CONFIG)
     config.isInDevelopment = true
-    config.plugins.FastNote = { isEnabled: true, settings: {} }
+    config.plugins.Diacritics = { isEnabled: true, settings: {} }
     const init = vi.fn()
     const { runtime, deps } = setup({
-      builtinPlugins: [() => ({ ...index('FastNote')(), init })],
+      builtinPlugins: [() => ({ ...index('Diacritics')(), init })],
       getConfig: () => config,
     })
     try {
@@ -50,9 +50,9 @@ describe('application plugin runtime', () => {
       expect(init).toHaveBeenCalledOnce()
       delete config.isInDevelopment
       await runtime.reloadPlugins()
-      expect(deps.unregisterPlugin).toHaveBeenCalledWith('FastNote')
-      expect(runtime.pluginRuntimeStates.FastNote.status).toBe('disabled')
-      expect(config.plugins.FastNote.isEnabled).toBe(true)
+      expect(deps.unregisterPlugin).toHaveBeenCalledWith('Diacritics')
+      expect(runtime.pluginRuntimeStates.Diacritics.status).toBe('disabled')
+      expect(config.plugins.Diacritics.isEnabled).toBe(true)
       config.isInDevelopment = true
       await runtime.reloadPlugins()
       expect(init).toHaveBeenCalledTimes(2)

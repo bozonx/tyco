@@ -798,7 +798,8 @@
       "styling": "Metin stillendirme",
       "transformation": "Metin dönüştürmeleri",
       "translation": "Çeviri",
-      "unavailable": "Kullanılamayanlar"
+      "unavailable": "Kullanılamayanlar",
+      "profiles": "Profiller"
     },
     "mainActionStylingRemoved": "Silinen metin stili",
     "mainActionTransformationRemoved": "Silinen metin dönüştürmesi",
@@ -1170,7 +1171,9 @@
     "projectFolderNotSetOnDevice": "Klasör bu cihazda ayarlanmamış",
     "projectSetFolder": "Klasör ayarla",
     "projectsWithoutFolder": "Bu cihazda klasörü olmayan harici projeler: {count}",
-    "variablesTab": "Değişkenler"
+    "variablesTab": "Değişkenler",
+    "askInProfileChat": "Sohbette sor: {profile}",
+    "mainActionProfileRemoved": "Silinen profil"
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

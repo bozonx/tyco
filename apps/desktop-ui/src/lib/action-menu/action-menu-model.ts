@@ -49,6 +49,8 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   commands?: () => readonly CommandConfig[] | undefined
   transformations?: () => readonly { id: string; name: string }[] | undefined
   styling?: () => readonly { id: string; name: string }[] | undefined
+  profiles?: () => readonly { id: string; name: string }[] | undefined
+  openProfileChat?: (profileId: string, text: string) => Promise<void> | void
 }
 
 export function createActionMenuModel(deps: ActionMenuDependencies) {
@@ -141,6 +143,19 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     icon: 'mdi:translate',
     action: withText((text) => deps.openTranslateModal(text, language)),
   })
+
+  const createProfileChatActionItem = (
+    profileId: string
+  ): ActionItem | undefined => {
+    const profile = deps.profiles?.()?.find((p) => p.id === profileId)
+    if (!profile) return undefined
+    return {
+      id: `profileChat:${profileId}`,
+      name: translate('settings.askInProfileChat', { profile: profile.name }),
+      icon: 'mdi:account-outline',
+      action: withText((text) => deps.openProfileChat?.(profileId, text)),
+    }
+  }
 
   /** Corrects `text` on a step of its own, unless it is empty or too short. */
   const correct = async (
@@ -317,6 +332,9 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
       }
       if (item.type === 'translation') {
         return createTranslationActionItem(item.language)
+      }
+      if (item.type === 'profileChat') {
+        return createProfileChatActionItem(item.profileId)
       }
       return undefined
     })

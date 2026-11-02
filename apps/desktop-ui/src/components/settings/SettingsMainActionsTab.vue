@@ -57,6 +57,7 @@ import {
 } from '../../lib/shortcut-slots/shortcut-slots'
 import { translationLanguageLabel } from '../../lib/translation/translation-languages'
 import { useActionMenuStore } from '../../stores/action-menu'
+import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { usePluginRuntimeStore } from '../../stores/plugin-runtime'
 import { useToolsStore } from '../../stores/tools'
 import FieldSelect from '../common/FieldSelect.vue'
@@ -75,6 +76,7 @@ const { pluginFactories } = usePluginRuntimeStore()
 const { t, locale } = useI18n()
 const { draft: userConfig, editCommand } = useSettingsContext()
 const actionMenuStore = useActionMenuStore()
+const aiProfilesStore = useAiProfilesStore()
 const toolsStore = useToolsStore()
 
 const actionSlots = computed(() =>
@@ -140,7 +142,12 @@ const availableActions = computed((): MainActionChoice[] => [
   ...userConfig.value.launcherPages.map((page, index) => ({
     config: { type: 'launcherPage' as const, pageId: page.id },
     name: t('settings.launcherPage', { page: index + 1 }),
-    group: { kind: 'commands' as const },
+    group: { kind: 'basic' as const },
+  })),
+  ...aiProfilesStore.profiles.map((profile) => ({
+    config: { type: 'profileChat' as const, profileId: profile.id },
+    name: t('settings.askInProfileChat', { profile: profile.name }),
+    group: { kind: 'profiles' as const },
   })),
   ...STANDARD_ACTION_IDS.map((actionId) => ({
     config: { type: 'standard' as const, actionId },
@@ -210,6 +217,8 @@ function groupLabel(group: MainActionGroup): string {
   switch (group.kind) {
     case 'basic':
       return t('settings.mainActionGroups.basic')
+    case 'profiles':
+      return t('settings.mainActionGroups.profiles')
     case 'translation':
       return t('settings.mainActionGroups.translation')
     case 'aiCommands':
@@ -236,6 +245,12 @@ function unavailableName(slot: MainActionConfig): string {
           (page) => page.id === slot.pageId
         ) + 1,
     })
+  if (slot.type === 'profileChat') {
+    const profile = aiProfilesStore.getProfile(slot.profileId)
+    return profile
+      ? t('settings.askInProfileChat', { profile: profile.name })
+      : t('settings.mainActionProfileRemoved')
+  }
   if (slot.type === 'transformation')
     return t('settings.mainActionTransformationRemoved')
   if (slot.type === 'styling') return t('settings.mainActionStylingRemoved')

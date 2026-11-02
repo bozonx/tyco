@@ -24,6 +24,7 @@
           size="sm"
           :keys="[slot.key.toUpperCase()]"
           :disabled="isFinishing"
+          :title="slot.item.name"
           @click="finishWithStyle?.(slot.item.rule)"
         >
           {{ slot.item.name }}

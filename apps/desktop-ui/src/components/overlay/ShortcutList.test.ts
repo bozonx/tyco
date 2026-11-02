@@ -119,6 +119,9 @@ describe('ShortcutList', () => {
     expect(buttonTexts.some((t) => t.includes('Action Q'))).toBe(true)
     expect(buttonTexts.some((t) => t.includes('Action A'))).toBe(true)
 
+    const qBtn = buttons.find((b) => b.text().includes('Action Q'))
+    expect(qBtn?.attributes('title')).toBe('Action Q')
+
     // Empty slots exist to preserve grid coordinates
     const emptySlots = wrapper.findAll('.shortcut-empty-slot')
     expect(emptySlots.length).toBe(13) // 15 - 2 filled = 13 empty slots

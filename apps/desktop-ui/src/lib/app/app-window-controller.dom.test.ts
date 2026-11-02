@@ -117,6 +117,36 @@ describe('application window events', () => {
     f.controller.stop()
   })
 
+  it('opens and routes chat to profile when profileId is present', async () => {
+    const profileChatInstance = {
+      startChat: vi.fn(async () => {}),
+      openLastChat: vi.fn(async () => {}),
+      setChatInput: vi.fn(),
+      sendChatInput: vi.fn(async () => {}),
+      focusChatInput: vi.fn(),
+    }
+    const goToProfileChat = vi.fn(async () => {})
+    const profileChat = vi.fn(() => profileChatInstance)
+    const f = fixture({ goToProfileChat, profileChat })
+    await f.controller.start()
+    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, {
+      profileId: 'assistant',
+      attachment: { text: 'Profile text', source: 'selection' },
+      question: 'Question for assistant',
+      autoSend: true,
+    })
+    expect(goToProfileChat).toHaveBeenCalledWith('assistant')
+    expect(f.deps.goToChat).not.toHaveBeenCalled()
+    expect(profileChatInstance.startChat).toHaveBeenCalledWith({
+      attachments: [{ text: 'Profile text', source: 'selection' }],
+    })
+    expect(profileChatInstance.setChatInput).toHaveBeenCalledWith(
+      'Question for assistant'
+    )
+    expect(profileChatInstance.sendChatInput).toHaveBeenCalledOnce()
+    f.controller.stop()
+  })
+
   it('opens the last chat for an empty payload and focuses an unsent question', async () => {
     const f = fixture()
     await f.controller.start()

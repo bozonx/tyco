@@ -16,6 +16,7 @@ export type MainActionGroup =
   | {
       kind:
         | 'basic'
+        | 'profiles'
         | 'translation'
         | 'aiCommands'
         | 'transformation'
@@ -40,6 +41,7 @@ export interface MainActionOption {
 
 const GROUP_ORDER: MainActionGroup['kind'][] = [
   'basic',
+  'profiles',
   'translation',
   'aiCommands',
   'transformation',
@@ -54,6 +56,7 @@ export function mainActionOptionId(
 ): string {
   if (!item) return ''
   if (item.type === 'launcherPage') return `launcherPage:${item.pageId}`
+  if (item.type === 'profileChat') return `profileChat:${item.profileId}`
   if (item.type === 'command') return `command:${item.commandId}`
   if (item.type === 'transformation')
     return `transformation:${item.transformationId}`

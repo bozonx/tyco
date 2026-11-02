@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 7b05269344ed8478179036bba20fdab1bf73e14f1bfe7baf91560e1d68490c81
+// Source hash: 27c3d745d9fa694132180bd79e93f3265ef90b27a93a7dec11a10bd6f42ccdb2
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -522,6 +522,7 @@ export type OpenMainChatEvent = {
   attachment?: ChatAttachment | null
   question?: string | null
   autoSend: boolean
+  profileId?: string
 }
 
 /** What a picked package would install, for the user to confirm. */

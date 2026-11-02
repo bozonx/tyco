@@ -131,4 +131,46 @@ describe('VoiceTransformationMenu', () => {
     const modalsStore = useMenuModalsStore()
     expect(modalsStore.currentModal).toBe(MenuModals.DIFF)
   })
+
+  it('finishes dictation on Space key press', async () => {
+    let capturedOnText: any
+    dictationMocks.startDictation.mockImplementationOnce(
+      async ({ onText }: any) => {
+        capturedOnText = onText
+      }
+    )
+
+    mount(VoiceTransformationMenu, {
+      props: { text: 'Some long verbose text' },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          TextPreview: true,
+          ActionOverlayLayout: {
+            template:
+              '<div class="layout"><slot name="preview" /><slot name="actions" /></div>',
+          },
+          AudioWaveform: true,
+          LiveTranscript: {
+            props: ['committed', 'draft'],
+            template: '<div class="live-transcript">{{ committed }}</div>',
+          },
+          ShortcutButton: true,
+        },
+      },
+    })
+    await flushPromises()
+
+    capturedOnText?.({ committed: 'make it shorter', draft: '' })
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }))
+    await flushPromises()
+
+    expect(dictationMocks.finishDictation).toHaveBeenCalled()
+    expect(invokeCall).toHaveBeenCalledWith(
+      'core.transformation',
+      'Some long verbose text',
+      expect.objectContaining({ toolConfig: { prompt: 'make it shorter' } })
+    )
+  })
 })

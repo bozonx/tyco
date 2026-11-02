@@ -798,7 +798,8 @@
       "styling": "Διαμόρφωση στυλ κειμένου",
       "transformation": "Μετασχηματισμοί κειμένου",
       "translation": "Μετάφραση",
-      "unavailable": "Μη διαθέσιμες"
+      "unavailable": "Μη διαθέσιμες",
+      "profiles": "Προφίλ"
     },
     "mainActionStylingRemoved": "Διαγραμμένο στυλ κειμένου",
     "mainActionTransformationRemoved": "Διαγραμμένος μετασχηματισμός κειμένου",
@@ -1170,7 +1171,9 @@
     "projectFolderNotSetOnDevice": "Ο φάκελος δεν έχει οριστεί σε αυτή τη συσκευή",
     "projectSetFolder": "Ορισμός φακέλου",
     "projectsWithoutFolder": "Εξωτερικά έργα χωρίς φάκελο σε αυτή τη συσκευή: {count}",
-    "variablesTab": "Μεταβλητές"
+    "variablesTab": "Μεταβλητές",
+    "askInProfileChat": "Ερώτηση στη συνομιλία: {profile}",
+    "mainActionProfileRemoved": "Διαγραμμένο προφίλ"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {

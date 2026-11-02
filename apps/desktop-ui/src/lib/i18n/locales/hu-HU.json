@@ -798,7 +798,8 @@
       "styling": "Szövegstilizálás",
       "transformation": "Szövegátalakítás",
       "translation": "Fordítás",
-      "unavailable": "Nem érhető el"
+      "unavailable": "Nem érhető el",
+      "profiles": "Profilok"
     },
     "mainActionStylingRemoved": "Törölt szövegstílus",
     "mainActionTransformationRemoved": "Törölt szövegátalakítás",
@@ -1170,7 +1171,9 @@
     "projectFolderNotSetOnDevice": "A mappa nincs beállítva ezen az eszközön",
     "projectSetFolder": "Mappa beállítása",
     "projectsWithoutFolder": "Mappa nélküli külső projektek ezen az eszközön: {count}",
-    "variablesTab": "Változók"
+    "variablesTab": "Változók",
+    "askInProfileChat": "Kérdezés a csevegésben: {profile}",
+    "mainActionProfileRemoved": "Törölt profil"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

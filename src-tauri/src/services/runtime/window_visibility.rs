@@ -59,6 +59,7 @@ pub fn open_main_chat(
     attachment: Option<crate::models::ChatAttachment>,
     question: Option<String>,
     auto_send: Option<bool>,
+    profile_id: Option<String>,
     activation_id: u64,
 ) -> Result<(), AppError> {
     show_main_with::<events::OpenMainChat>(
@@ -68,6 +69,7 @@ pub fn open_main_chat(
             attachment,
             question,
             auto_send: auto_send.unwrap_or(false),
+            profile_id,
         },
         activation_id,
     )

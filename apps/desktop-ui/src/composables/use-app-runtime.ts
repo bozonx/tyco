@@ -18,8 +18,11 @@ import { clientLogger } from '../lib/logger'
 import { appNavigation } from '../navigation'
 import { APP_ROUTES, isQuickWindowMode } from '../lib/navigation/routes'
 import { createSettingsShutdown } from '../lib/settings/settings-shutdown'
-import { useChatStore } from '../stores/chat'
-import { useChatInputStore } from '../stores/chat-input'
+import { useChatStore, useProfileChatStore } from '../stores/chat'
+import {
+  useChatInputStore,
+  useProfileChatInputStore,
+} from '../stores/chat-input'
 import { useCommandLauncherStore } from '../stores/command-launcher'
 import { useEditorInputStore } from '../stores/editor-input'
 import { useExternalCommandsStore } from '../stores/external-commands'
@@ -210,6 +213,18 @@ export function useAppRuntime() {
     cancelLauncher: (id) => useCommandLauncherStore().cancelExternal(id),
     closeModals: menuModalsStore.closeAll,
     goToChat: appNavigation.goToChat,
+    goToProfileChat: appNavigation.goToProfileChat,
+    profileChat: (profileId: string) => {
+      const store = useProfileChatStore(profileId)
+      const input = useProfileChatInputStore(profileId)
+      return {
+        startChat: store.startChat,
+        openLastChat: store.openLastOrNewChat,
+        setChatInput: input.setValue,
+        sendChatInput: store.sendInput,
+        focusChatInput: input.requestFocus,
+      }
+    },
     startChat: chatStore.startChat,
     openLastChat: chatStore.openLastOrNewChat,
     afterRender: nextTick,

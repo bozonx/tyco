@@ -795,7 +795,8 @@
       "styling": "Stylizace textu",
       "transformation": "Transformace textu",
       "translation": "Překlad",
-      "unavailable": "Nedostupné"
+      "unavailable": "Nedostupné",
+      "profiles": "Profily"
     },
     "mainActionStylingRemoved": "Smazaný styl textu",
     "mainActionTransformationRemoved": "Smazaná transformace textu",
@@ -1167,7 +1168,9 @@
     "projectFolderNotSetOnDevice": "Složka na tomto zařízení není nastavena",
     "projectSetFolder": "Nastavit složku",
     "projectsWithoutFolder": "Externí projekty bez složky na tomto zařízení: {count}",
-    "variablesTab": "Proměnné"
+    "variablesTab": "Proměnné",
+    "askInProfileChat": "Zeptat se v chatu: {profile}",
+    "mainActionProfileRemoved": "Smazaný profil"
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

@@ -27,6 +27,8 @@ describe('hotkeys', () => {
   it('keeps the hotkeys of the command pages on the device, by page', () => {
     expect(DEFAULT_USER_CONFIG.hotkeys.launcherPages).toEqual({
       main: 'Ctrl+Alt+Shift+Q',
+      'page-2': '',
+      'page-3': '',
     })
   })
 

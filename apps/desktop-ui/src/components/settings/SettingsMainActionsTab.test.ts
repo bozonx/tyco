@@ -23,6 +23,13 @@ vi.mock('../../stores/action-menu', () => ({
 vi.mock('../../stores/plugin-runtime', () => ({
   usePluginRuntimeStore: () => ({ pluginFactories: [] }),
 }))
+vi.mock('../../stores/ai-profiles', () => ({
+  useAiProfilesStore: () => ({
+    profiles: [{ id: 'assistant', name: 'Assistant' }],
+    getProfile: (id: string) =>
+      id === 'assistant' ? { id: 'assistant', name: 'Assistant' } : undefined,
+  }),
+}))
 vi.mock('../../stores/tools', async () => {
   const { testTools } = await import('../../lib/tools/testing')
   const tools = testTools()
@@ -72,26 +79,11 @@ describe('SettingsMainActionsTab.vue', () => {
   const optionTexts = (wrapper: ReturnType<typeof mountTab>) =>
     wrapper.findAll('option').map((option) => option.text())
 
-  it('hides development choices and keeps saved actions', () => {
-    configure({
-      isInDevelopment: false,
-      mainActions: {
-        q: { type: 'standard', actionId: 'askInChat' },
-        w: { type: 'standard', actionId: 'correction' },
-      },
-    })
-    const wrapper = mountTab()
-    expect(optionTexts(wrapper)).not.toContain('action.askInChat')
-    expect(optionTexts(wrapper)).not.toContain('action.correction')
-    expect(context.draft.value.mainActions.q).toEqual({
-      type: 'standard',
-      actionId: 'askInChat',
-    })
-  })
-
-  it('offers standard actions, named transformations and plugin actions', () => {
+  it('offers standard actions, profiles, named transformations and plugin actions', () => {
     const texts = optionTexts(mountTab())
     expect(texts).toContain('action.correction')
+    expect(texts).toContain('action.askInChat')
+    expect(texts).toContain('settings.askInProfileChat:{"profile":"Assistant"}')
     expect(texts).toContain('action.transformationMenu…')
     expect(texts).toContain('Shorten')
     expect(texts).toContain('Shout')

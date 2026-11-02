@@ -59,7 +59,7 @@
     "history": "",
     "voiceCommands": "Ctrl+Alt+Shift+X",
     "selectionCorrection": "Ctrl+Alt+Shift+F",
-    "launcherPages": { "main": "Ctrl+Alt+Shift+Q" }
+    "launcherPages": { "main": "Ctrl+Alt+Shift+Q", "page-2": "", "page-3": "" }
   },
   "externalAccess": { "canAccessSelection": false },
   "windowInsertion": {
@@ -78,14 +78,23 @@
     "viewMode": "split"
   },
   "mainActions": {
-    "q": { "type": "standard", "actionId": "insertIntoWindow" },
-    "w": { "type": "standard", "actionId": "copyToClipboard" },
-    "e": { "type": "launcherPage", "pageId": "main" },
-    "r": { "type": "standard", "actionId": "correction" },
+    "q": { "type": "standard", "actionId": "copyToClipboard" },
+    "w": { "type": "plugin", "actionId": "FastNote:write" },
+    "e": { "type": "plugin", "actionId": "SearchInInternet:search" },
+    "r": { "type": "launcherPage", "pageId": "main" },
     "t": { "type": "standard", "actionId": "translationMenu" },
-    "a": { "type": "standard", "actionId": "askInChat" }
+    "a": { "type": "standard", "actionId": "askInChat" },
+    "s": { "type": "standard", "actionId": "stylingMenu" },
+    "d": { "type": "standard", "actionId": "correction" },
+    "f": { "type": "standard", "actionId": "transformationMenu" },
+    "g": { "type": "standard", "actionId": "customTransformation" },
+    "v": { "type": "standard", "actionId": "voiceTransformation" }
   },
-  "launcherPages": [{ "id": "main", "inputMode": "selection", "slots": {} }],
+  "launcherPages": [
+    { "id": "main", "inputMode": "selection", "slots": {} },
+    { "id": "page-2", "inputMode": "selection", "slots": {} },
+    { "id": "page-3", "inputMode": "selection", "slots": {} }
+  ],
   "commands": [],
   "variables": [],
   "variableValues": {},
@@ -191,7 +200,10 @@
       "hasTaskCheckboxes": true
     }
   },
-  "plugins": {},
+  "plugins": {
+    "FastNote": { "isEnabled": true, "settings": {} },
+    "SearchInInternet": { "isEnabled": true, "settings": {} }
+  },
   "chat": { "history": { "storage": "disk" } },
   "stt": {
     "provider": "deepgram",

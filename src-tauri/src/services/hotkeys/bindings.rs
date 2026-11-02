@@ -262,9 +262,17 @@ pub fn default_launcher_page_shortcut() -> String {
 
 pub(super) fn default_bindings() -> Vec<HotkeyBinding> {
     bindings_from_config(&serde_json::json!({
-        "launcherPages": [{ "id": DEFAULT_LAUNCHER_PAGE_ID }],
+        "launcherPages": [
+            { "id": DEFAULT_LAUNCHER_PAGE_ID },
+            { "id": "page-2" },
+            { "id": "page-3" },
+        ],
         "hotkeys": {
-            "launcherPages": { DEFAULT_LAUNCHER_PAGE_ID: default_launcher_page_shortcut() }
+            "launcherPages": {
+                DEFAULT_LAUNCHER_PAGE_ID: default_launcher_page_shortcut(),
+                "page-2": "",
+                "page-3": "",
+            }
         }
     }))
 }
@@ -368,9 +376,11 @@ mod tests {
             .into_iter()
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 2);
+        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 3);
         assert!(defaults.contains(&String::from("selectionCorrection")));
         assert!(defaults.contains(&String::from("launcherPage.main")));
+        assert!(defaults.contains(&String::from("launcherPage.page-2")));
+        assert!(defaults.contains(&String::from("launcherPage.page-3")));
     }
 
     #[test]

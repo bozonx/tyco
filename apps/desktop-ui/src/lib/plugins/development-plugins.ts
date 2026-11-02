@@ -4,7 +4,6 @@ const DEVELOPMENT_PLUGIN_IDS = new Set([
   'Diacritics',
   'TextCase',
   'WebFormatter',
-  'FastNote',
 ])
 
 export function isPluginVisible(

@@ -798,7 +798,8 @@
       "styling": "Стилізація тексту",
       "transformation": "Трансформація тексту",
       "translation": "Переклад",
-      "unavailable": "Недоступні"
+      "unavailable": "Недоступні",
+      "profiles": "Профілі"
     },
     "mainActionStylingRemoved": "Видалений стиль тексту",
     "mainActionTransformationRemoved": "Видалена трансформація тексту",
@@ -1170,7 +1171,9 @@
     "projectFolderNotSetOnDevice": "Теку не вказано на цьому пристрої",
     "projectSetFolder": "Вказати теку",
     "projectsWithoutFolder": "Зовнішніх проєктів без теки на цьому пристрої: {count}",
-    "variablesTab": "Змінні"
+    "variablesTab": "Змінні",
+    "askInProfileChat": "Запитати в чаті: {profile}",
+    "mainActionProfileRemoved": "Видалений профіль"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

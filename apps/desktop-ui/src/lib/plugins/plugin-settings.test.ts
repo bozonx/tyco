@@ -53,7 +53,7 @@ describe('plugin-settings', () => {
     }))
     expect(
       resolveInstalledPlugins(factories).map((item) => item.pluginId)
-    ).toEqual(['SearchInInternet'])
+    ).toEqual(['FastNote', 'SearchInInternet'])
     expect(
       resolveInstalledPlugins(factories, { isInDevelopment: true }).map(
         (item) => item.pluginId

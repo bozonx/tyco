@@ -3,12 +3,7 @@ import { DEFAULT_USER_CONFIG } from '@tyco/shared'
 
 import { isPluginVisible, runtimePluginConfig } from './development-plugins'
 
-const DEVELOPMENT_PLUGIN_IDS = [
-  'Diacritics',
-  'TextCase',
-  'WebFormatter',
-  'FastNote',
-]
+const DEVELOPMENT_PLUGIN_IDS = ['Diacritics', 'TextCase', 'WebFormatter']
 
 describe('development plugins', () => {
   it.each(DEVELOPMENT_PLUGIN_IDS)(
@@ -22,12 +17,13 @@ describe('development plugins', () => {
 
   it('keeps other plugins visible', () => {
     expect(isPluginVisible('SearchInInternet')).toBe(true)
+    expect(isPluginVisible('FastNote')).toBe(true)
     expect(isPluginVisible('Installed')).toBe(true)
   })
 
   it('suppresses hidden plugins without changing saved preferences', () => {
     const config = structuredClone(DEFAULT_USER_CONFIG)
-    config.plugins.FastNote = {
+    config.plugins.Diacritics = {
       isEnabled: true,
       settings: { folder: '/notes' },
     }
@@ -35,10 +31,10 @@ describe('development plugins', () => {
     const effective = runtimePluginConfig(config)
     for (const id of DEVELOPMENT_PLUGIN_IDS)
       expect(effective.plugins[id].isEnabled).toBe(false)
-    expect(effective.plugins.FastNote.settings).toEqual({ folder: '/notes' })
+    expect(effective.plugins.Diacritics.settings).toEqual({ folder: '/notes' })
     expect(config).toEqual(original)
     config.isInDevelopment = true
     expect(runtimePluginConfig(config)).toBe(config)
-    expect(config.plugins.FastNote.isEnabled).toBe(true)
+    expect(config.plugins.Diacritics.isEnabled).toBe(true)
   })
 })

@@ -266,7 +266,7 @@ describe('createActionMenuModel', () => {
       }),
     })
     const slots = computed(() => store.getShortcutActions())
-    expect(slots.value).toHaveLength(6)
+    expect(slots.value).toHaveLength(10)
     const original = { id: 'Search:search', action: vi.fn() }
     const replacement = { ...original, action: vi.fn() }
     store.registerActionsItems([original])
@@ -277,13 +277,13 @@ describe('createActionMenuModel', () => {
     expect(original.action).not.toHaveBeenCalled()
     expect(store.getRegisteredActions()).toHaveLength(1)
     dispose()
-    expect(slots.value).toHaveLength(6)
+    expect(slots.value).toHaveLength(10)
   })
 
   it('places plugin actions only where the menu holds them', () => {
     const { store } = setup()
     store.registerActionsItems([{ id: 'Search:search', action: vi.fn() }])
-    expect(store.getShortcutActions()).toHaveLength(6)
+    expect(store.getShortcutActions()).toHaveLength(14)
   })
 
   it('restores saved plugin positions after disabling and re-enabling', () => {
@@ -447,5 +447,20 @@ describe('createActionMenuModel', () => {
       'toast.textNotSelected',
       'error'
     )
+  })
+
+  it('opens profile chat with text for profileChat action', async () => {
+    const openProfileChat = vi.fn()
+    const { deps } = setup()
+    const store = createActionMenuModel({
+      ...deps,
+      profiles: () => [{ id: 'writer', name: 'Writer' }],
+      openProfileChat,
+      mainActions: () => ({ q: { type: 'profileChat', profileId: 'writer' } }),
+    })
+    const [action] = store.getShortcutActions()
+    expect(action?.name).toBe('Ask in chat: Writer')
+    await action?.action('text for writer')
+    expect(openProfileChat).toHaveBeenCalledWith('writer', 'text for writer')
   })
 })

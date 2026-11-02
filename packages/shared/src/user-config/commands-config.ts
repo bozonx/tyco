@@ -208,6 +208,12 @@ export interface TranslationMainAction {
   language: string
 }
 
+/** Ask in the chat of an AI profile */
+export interface ProfileChatMainAction {
+  type: 'profileChat'
+  profileId: string
+}
+
 export type MainActionConfig =
   | { type: 'launcherPage'; pageId: string }
   | StandardMainAction
@@ -216,6 +222,7 @@ export type MainActionConfig =
   | TransformationMainAction
   | StylingMainAction
   | TranslationMainAction
+  | ProfileChatMainAction
 
 export const DEFAULT_MAIN_ACTIONS =
   configDefaults.mainActions as ShortcutSlots<MainActionConfig>

@@ -194,19 +194,23 @@ const leftLetterKeys = computed<(ActionItem | undefined)[]>(() =>
 const primaryAction = computed<ActionItem | undefined>(() => {
   if (editorTarget.value) return applyToEditorAction
   if (!props.allowInsertButton) return undefined
-  const [firstItem] = actionsMenu.value
+  const insertAction =
+    actionsMenu.value.find((item) => item?.id === 'insertIntoWindow') ??
+    actionMenuStore
+      .getDefaultActions()
+      .find((action) => action.id === 'insertIntoWindow')
 
-  if (!firstItem) {
+  if (!insertAction) {
     return undefined
   }
 
-  const disabled = firstItem.disabled || shouldDisableAction(firstItem)
+  const disabled = insertAction.disabled || shouldDisableAction(insertAction)
   const hint =
-    firstItem.id === 'insertIntoWindow' && !desktopStore.canInsertIntoWindow
+    insertAction.id === 'insertIntoWindow' && !desktopStore.canInsertIntoWindow
       ? t('selection.noTarget')
-      : firstItem.hint
+      : insertAction.hint
 
-  return { ...firstItem, disabled, hint }
+  return { ...insertAction, disabled, hint }
 })
 </script>
 

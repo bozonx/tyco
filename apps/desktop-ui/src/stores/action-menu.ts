@@ -12,6 +12,8 @@ import { useHistoryStore } from './history'
 import { useDesktopStore } from './desktop'
 import { useIpcStore } from './ipc'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
+import { useAiProfilesStore } from './ai-profiles'
+import { useProfileChatStore } from './chat'
 
 export type { ActionItem }
 
@@ -21,6 +23,7 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
   const menuModalsStore = useMenuModalsStore()
   const historyStore = useHistoryStore()
   const correctionWorkflowStore = useCorrectionWorkflowStore()
+  const aiProfilesStore = useAiProfilesStore()
 
   return createActionMenuModel({
     saveOutput: async (text: string) => {
@@ -65,6 +68,11 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
     commands: () => desktopStore.userConfig.commands,
     transformations: () => desktopStore.userConfig.transformations?.items,
     styling: () => desktopStore.userConfig.styling?.items,
+    profiles: () => aiProfilesStore.profiles,
+    openProfileChat: async (profileId, text) => {
+      const profileChat = useProfileChatStore(profileId)
+      await profileChat.attachToChat(text)
+    },
     ...useInvocationRunnerDependencies(),
   })
 })

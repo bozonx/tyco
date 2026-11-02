@@ -795,7 +795,8 @@
       "styling": "텍스트 스타일 지정",
       "transformation": "텍스트 변환",
       "translation": "번역",
-      "unavailable": "사용 불가"
+      "unavailable": "사용 불가",
+      "profiles": "프로필"
     },
     "mainActionStylingRemoved": "삭제된 텍스트 스타일",
     "mainActionTransformationRemoved": "삭제된 텍스트 변환",
@@ -1167,7 +1168,9 @@
     "projectFolderNotSetOnDevice": "이 기기에 폴더가 설정되지 않음",
     "projectSetFolder": "폴더 지정",
     "projectsWithoutFolder": "이 기기에 폴더가 없는 외부 프로젝트: {count}",
-    "variablesTab": "변수"
+    "variablesTab": "변수",
+    "askInProfileChat": "채팅에서 질문: {profile}",
+    "mainActionProfileRemoved": "삭제된 프로필"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {
