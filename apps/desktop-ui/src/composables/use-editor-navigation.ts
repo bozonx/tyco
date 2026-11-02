@@ -52,14 +52,21 @@ export function useEditorNavigation() {
     return true
   }
 
-  function toEditor(text?: string, sourceText?: string) {
+  function toEditor(text?: string, _sourceText?: string) {
     if (isQuickWindow()) {
       menuModalsStore.closeAll()
-      void ipcStore.callOrNotify('open_main_editor', { text, sourceText })
+      // Intentionally insert into the editor with replacement:
+      // We do not pass sourceText so that the editor replaces its entire text
+      // rather than showing a diff comparison between previous content and new text.
+      void ipcStore.callOrNotify('open_main_editor', { text })
       return
     }
 
-    if (!applyEditorTransfer(text, sourceText)) return
+    // Intentionally insert into the editor with replacement:
+    // Replaces current editor content directly without showing a diff comparison modal.
+    if (typeof text !== 'undefined') {
+      editorInputStore.replaceValue(text)
+    }
     menuModalsStore.closeAll()
     void appNavigation.goToEditor()
   }

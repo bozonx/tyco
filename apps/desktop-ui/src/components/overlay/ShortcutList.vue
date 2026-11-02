@@ -212,7 +212,9 @@ function handleShortcutKeyUp(event: KeyboardEvent) {
 }
 
 function goToEditor() {
-  editorNavigation.toEditor(props.text, props.sourceText)
+  // Intentionally insert into the editor with replacement: replaces current editor content
+  // directly without showing a diff comparison between existing text and new text.
+  editorNavigation.toEditor(props.text)
 }
 
 function getActionLabel(item?: ActionItem) {

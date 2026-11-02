@@ -146,4 +146,40 @@ describe('CustomTransformationMenu', () => {
 
     expect(modalsStore.currentModal).toBe(MenuModals.INSERT)
   })
+
+  it('inserts into editor with replacement on Tab', async () => {
+    desktop.backend.handle('open_main_editor', () => undefined)
+
+    const wrapper = mount(CustomTransformationMenu, {
+      props: { text: 'Some sample text' },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          TextPreview: true,
+          ActionOverlayLayout: {
+            template:
+              '<div class="layout"><slot name="preview" /><slot name="actions" /></div>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    const queryPanel = wrapper.findComponent(QueryPanel)
+    const hints = queryPanel.props('hints') as Array<{
+      keys: string[]
+      label: string
+      action?: () => void
+    }>
+    const tabHint = hints.find((h) => h.keys.includes('Tab'))
+    expect(tabHint).toBeDefined()
+    expect(tabHint?.label).toBe('shortcuts.insertIntoEditor')
+
+    tabHint?.action?.()
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('open_main_editor')).toEqual([
+      { text: 'Some sample text', activationId: 0 },
+    ])
+  })
 })

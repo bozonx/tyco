@@ -24,8 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
@@ -62,9 +63,11 @@ const { t } = useI18n()
 const chatStore = useChatStore()
 const chatInputStore = useChatInputStore()
 const { escLabel, handleEsc } = useOverlayNav()
+const editorNavigation = useEditorNavigation()
 
 const prompt = ref('')
 const isQuickWindow = isInQuickWindow()
+const isEditorButtonVisible = computed(() => !editorNavigation.isEditorPage())
 
 const recentPrompts = computed(
   () => desktopStore.sessionState?.recentAiPrompts ?? []
@@ -97,8 +100,46 @@ const promptHints = computed<QueryPanelHint[]>(() => [
         },
       ]
     : []),
+  ...(isEditorButtonVisible.value
+    ? [
+        {
+          keys: ['Tab'],
+          label: t('shortcuts.insertIntoEditor'),
+          action: goToEditor,
+        },
+      ]
+    : []),
   { keys: ['Esc'], label: escLabel.value, action: close },
 ])
+
+function goToEditor() {
+  // Intentionally insert with replacement: replaces current editor content
+  // directly without showing a diff comparison between existing text and new text.
+  editorNavigation.toEditor(props.text)
+}
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (props.shortcutsDisabled) return
+  if (
+    event.key === 'Tab' &&
+    !event.shiftKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    isEditorButtonVisible.value
+  ) {
+    event.preventDefault()
+    goToEditor()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 
 const rememberPrompt = (value: string) => {
   void desktopStore.patchSessionState({

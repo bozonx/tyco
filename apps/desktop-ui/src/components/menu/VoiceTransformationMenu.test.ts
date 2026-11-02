@@ -313,4 +313,44 @@ describe('VoiceTransformationMenu', () => {
     expect(primaryBtn.attributes('disabled')).toBeUndefined()
     expect(wrapper.find('.live-transcript').text()).toBe('make it concise')
   })
+
+  it('inserts into editor with replacement on Tab', async () => {
+    desktop.backend.handle('open_main_editor', () => undefined)
+
+    const wrapper = mount(VoiceTransformationMenu, {
+      props: { text: 'Some long verbose text' },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          TextPreview: true,
+          ActionOverlayLayout: {
+            template:
+              '<div class="layout"><slot name="preview" /><slot name="actions" /></div>',
+          },
+          AudioWaveform: true,
+          LiveTranscript: {
+            props: ['committed', 'draft'],
+            template: '<div class="live-transcript">{{ committed }}</div>',
+          },
+          ShortcutButton: {
+            props: ['keys', 'disabled'],
+            emits: ['click'],
+            template:
+              '<button class="shortcut-btn" :data-keys="keys?.join(\'+\')" @click="$emit(\'click\')"><slot /></button>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    const tabBtn = wrapper.find('.shortcut-btn[data-keys="Tab"]')
+    expect(tabBtn.exists()).toBe(true)
+    await tabBtn.trigger('click')
+    await flushPromises()
+
+    expect(dictationMocks.cancelDictation).toHaveBeenCalled()
+    expect(desktop.backend.callsOf('open_main_editor')).toEqual([
+      { text: 'Some long verbose text', activationId: 0 },
+    ])
+  })
 })

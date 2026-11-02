@@ -1,6 +1,6 @@
 <template>
   <div class="split-preview-container">
-    <div class="split-panes">
+    <div class="split-panes" @wheel.passive="handleContainerWheel">
       <div class="split-column">
         <div class="column-header">
           <span class="column-title">{{ leftTitle }}</span>
@@ -9,6 +9,7 @@
           ref="leftPane"
           class="column-body"
           :class="{ 'is-flush': flushLeft }"
+          @pointerenter="activeSide = 'left'"
           @scroll.capture="syncScroll($event, 'left')"
         >
           <slot name="left" />
@@ -22,6 +23,7 @@
           ref="rightPane"
           class="column-body"
           :class="{ 'is-flush': flushRight }"
+          @pointerenter="activeSide = 'right'"
           @scroll.capture="syncScroll($event, 'right')"
         >
           <slot name="right" />
@@ -41,20 +43,53 @@ defineProps<{
 }>()
 const leftPane = ref<HTMLElement | null>(null)
 const rightPane = ref<HTMLElement | null>(null)
-let frame: number | undefined
+
+let activeSide: 'left' | 'right' | null = null
+let syncTimeout: ReturnType<typeof setTimeout> | undefined
+
 function syncScroll(event: Event, side: 'left' | 'right') {
-  if (frame !== undefined) return
+  if (activeSide !== null && activeSide !== side) return
+
+  activeSide = side
+  if (syncTimeout !== undefined) clearTimeout(syncTimeout)
+  syncTimeout = setTimeout(() => {
+    activeSide = null
+  }, 100)
+
   const targetPane = side === 'left' ? rightPane.value : leftPane.value
   const source = event.target as HTMLElement
   const target = targetPane?.querySelector('textarea') ?? targetPane
-  if (!target || target.scrollTop === source.scrollTop) return
-  target.scrollTop = source.scrollTop
-  frame = requestAnimationFrame(() => {
-    frame = undefined
-  })
+  if (!target) return
+
+  const sourceMax = source.scrollHeight - source.clientHeight
+  const targetMax = target.scrollHeight - target.clientHeight
+
+  let nextScrollTop: number
+  if (sourceMax <= 0 || targetMax <= 0 || Math.abs(sourceMax - targetMax) < 5) {
+    nextScrollTop = source.scrollTop
+  } else {
+    const ratio = source.scrollTop / sourceMax
+    nextScrollTop = Math.round(ratio * targetMax)
+  }
+
+  if (target.scrollTop !== nextScrollTop) {
+    target.scrollTop = nextScrollTop
+  }
 }
+
+function handleContainerWheel(event: WheelEvent) {
+  if (event.ctrlKey || event.altKey) return
+  const target = event.target as HTMLElement | null
+  if (target?.closest('.column-body')) return
+
+  const delta = event.deltaMode === 1 ? event.deltaY * 24 : event.deltaY
+  if (leftPane.value) {
+    leftPane.value.scrollTop += delta
+  }
+}
+
 onUnmounted(() => {
-  if (frame !== undefined) cancelAnimationFrame(frame)
+  if (syncTimeout !== undefined) clearTimeout(syncTimeout)
 })
 </script>
 <style scoped>

@@ -52,10 +52,19 @@ describe('editor navigation', () => {
     useEditorNavigation().toEditor('new', 'old')
     await flushPromises()
     expect(desktop.backend.callsOf('open_main_editor')).toEqual([
-      { text: 'new', sourceText: 'old', activationId: 0 },
+      { text: 'new', activationId: 0 },
     ])
     expect(useEditorInputStore().value).toBe('')
     expect(appNavigation.goToEditor).not.toHaveBeenCalled()
+  })
+
+  it('inserts into editor with replacement directly without showing diff review', () => {
+    const editor = useEditorInputStore()
+    editor.setValue('unsaved document')
+    useEditorNavigation().toEditor('new text')
+    expect(editor.value).toBe('new text')
+    expect(useMenuModalsStore().hasOpenModal).toBe(false)
+    expect(appNavigation.goToEditor).toHaveBeenCalledOnce()
   })
 })
 
@@ -66,7 +75,7 @@ it('retains the result dialog and unsaved editor text on a transfer conflict', (
   editor.captureResultSource('old')
   editor.setSelection('', 0, 0)
   const close = vi.spyOn(useMenuModalsStore(), 'closeAll')
-  useEditorNavigation().toEditor('new', 'old')
+  useEditorNavigation().applyEditorTransfer('new', 'old')
   expect(editor.value).toBe('before old after')
   expect(close).not.toHaveBeenCalled()
   expect(appNavigation.goToEditor).not.toHaveBeenCalled()
@@ -75,7 +84,7 @@ it('retains the result dialog and unsaved editor text on a transfer conflict', (
 it('offers explicit document replacement after reviewing a transfer conflict', () => {
   const editor = useEditorInputStore()
   editor.setValue('unsaved document')
-  useEditorNavigation().toEditor('foreign result', 'foreign source')
+  useEditorNavigation().applyEditorTransfer('foreign result', 'foreign source')
   const modals = useMenuModalsStore()
   const step = modals.currentStep
   expect(step?.modal).toBe(MenuModals.DIFF)
@@ -93,7 +102,7 @@ it('offers explicit document replacement after reviewing a transfer conflict', (
 it('refreshes the transfer review instead of overwriting edits made during review', () => {
   const editor = useEditorInputStore()
   editor.setValue('unsaved document')
-  useEditorNavigation().toEditor('result', 'source')
+  useEditorNavigation().applyEditorTransfer('result', 'source')
   const modals = useMenuModalsStore()
   const step = modals.currentStep
   if (step?.modal !== MenuModals.DIFF)

@@ -151,9 +151,9 @@ describe('ShortcutList', () => {
     window.dispatchEvent(tabEvent)
     expect(tabEvent.defaultPrevented).toBe(true)
 
-    // Keyup Tab should navigate to editor
+    // Keyup Tab should navigate to editor with replacement
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Tab' }))
-    expect(mocks.toEditor).toHaveBeenCalledWith('test text', 'source text')
+    expect(mocks.toEditor).toHaveBeenCalledWith('test text')
 
     // Keyup Space should trigger primary space action
     press('Space')

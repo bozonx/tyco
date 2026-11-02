@@ -31,6 +31,16 @@
           {{ isFinishing ? t('common.inProgress') : t('menu.aiPromptRun') }}
         </ShortcutButton>
         <ShortcutButton
+          v-if="isEditorButtonVisible"
+          :keys="['Tab']"
+          icon="mdi:pencil-outline"
+          :title="t('shortcuts.insertIntoEditor')"
+          :disabled="isFinishing"
+          @click="goToEditor"
+        >
+          {{ t('shortcuts.insertIntoEditor') }}
+        </ShortcutButton>
+        <ShortcutButton
           variant="ghost"
           :keys="['Esc']"
           :icon="resolvedEscMode === 'back' ? 'mdi:arrow-left' : 'mdi:close'"
@@ -49,6 +59,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useDictationActions } from '../../composables/use-dictation-actions'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { useMenuStepRun } from '../../composables/use-menu-step-run'
 import { useOverlayNav } from '../../composables/use-overlay-nav'
@@ -82,6 +93,7 @@ const { toastKey, toastText } = useToast()
 const runStep = useMenuStepRun()
 const { t } = useI18n()
 const dictation = useDictationActions()
+const editorNavigation = useEditorNavigation()
 const {
   resolvedEscMode,
   escLabel,
@@ -89,6 +101,7 @@ const {
 } = useOverlayNav()
 
 const isQuickWindow = isInQuickWindow()
+const isEditorButtonVisible = computed(() => !editorNavigation.isEditorPage())
 const isListening = ref(false)
 const isFinishing = ref(false)
 const liveTranscript = ref({ committed: '', draft: '' })
@@ -124,10 +137,31 @@ const handleKeyDown = (event: KeyboardEvent) => {
   if ((event.key === 'Enter' || event.key === ' ') && !event.isComposing) {
     event.preventDefault()
     void finish()
+  } else if (
+    event.key === 'Tab' &&
+    !event.shiftKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.metaKey &&
+    !event.isComposing &&
+    isEditorButtonVisible.value
+  ) {
+    event.preventDefault()
+    void goToEditor()
   } else if (event.key === 'Escape' && !event.isComposing) {
     event.preventDefault()
     void handleClose()
   }
+}
+
+async function goToEditor() {
+  if (isListening.value) {
+    await dictation.cancelDictation().catch(() => undefined)
+    isListening.value = false
+  }
+  // Intentionally insert with replacement: replaces current editor content
+  // directly without showing a diff comparison between existing text and new text.
+  editorNavigation.toEditor(props.text)
 }
 
 useDismissibleLayer({
