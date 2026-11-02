@@ -164,6 +164,13 @@
       "group": "Web pretraživanje",
       "groupHint": "Pretražujte web i dohvaćajte web-stranice pomoću Jina AI. „Pitaj” traži potvrdu prije svakog poziva.",
       "searchLabel": "Web pretraživanje"
+    },
+    "commands": {
+      "group": "Naredbe",
+      "groupHint": "Dopustite modelu pokretanje odabranih prilagođenih naredbi i alata dodataka. „Pitaj” traži potvrdu prije svakog poziva.",
+      "needsDescription": "Potreban je opis u postavkama naredbe",
+      "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
+      "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe."
     }
   },
   "commandLauncher": {

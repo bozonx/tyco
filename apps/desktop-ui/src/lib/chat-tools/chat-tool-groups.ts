@@ -1,4 +1,5 @@
 import {
+  COMMANDS_TOOL_GROUP_ID,
   DEFAULT_TOOL_STEP_COUNT,
   FILES_TOOL_GROUP_ID,
   MAX_TOOL_STEP_COUNT,
@@ -23,7 +24,11 @@ export interface ChatToolGroup {
   defaultAccess: ProjectAccessMode
 }
 
-export { FILES_TOOL_GROUP_ID, WEB_TOOL_GROUP_ID } from '@tyco/shared'
+export {
+  COMMANDS_TOOL_GROUP_ID,
+  FILES_TOOL_GROUP_ID,
+  WEB_TOOL_GROUP_ID,
+} from '@tyco/shared'
 
 /** The groups the profile settings offer */
 export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
@@ -42,19 +47,40 @@ export const CHAT_TOOL_GROUPS: readonly ChatToolGroup[] = [
     icon: 'mdi:search-web',
     defaultAccess: 'allow',
   },
+  {
+    id: COMMANDS_TOOL_GROUP_ID,
+    labelKey: 'chatTools.commands.group',
+    descriptionKey: 'chatTools.commands.groupHint',
+    icon: 'mdi:console-line',
+    defaultAccess: 'ask',
+  },
 ]
+
+export interface ProfileToolSettingsLike {
+  readonly groups?: {
+    readonly [key: string]: {
+      readonly isEnabled: boolean
+      readonly access: ProjectAccessMode
+      readonly commandIds?: readonly string[]
+    }
+  }
+  readonly maxStepCount?: number
+}
 
 /** A group's settings in a profile; off when the profile never set them */
 export function toolGroupSettings(
-  settings: ProfileToolSettings | undefined,
+  settings: ProfileToolSettings | ProfileToolSettingsLike | undefined,
   group: Pick<ChatToolGroup, 'id' | 'defaultAccess'>
 ): ToolGroupSettings {
-  return (
-    settings?.groups[group.id] ?? {
-      isEnabled: false,
-      access: group.defaultAccess,
-    }
-  )
+  const current = settings?.groups?.[group.id]
+  if (!current) {
+    return { isEnabled: false, access: group.defaultAccess }
+  }
+  return {
+    isEnabled: current.isEnabled,
+    access: current.access,
+    ...(current.commandIds ? { commandIds: [...current.commandIds] } : {}),
+  }
 }
 
 /** The settings with one group changed */

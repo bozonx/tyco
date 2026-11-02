@@ -164,6 +164,13 @@
       "group": "Búsqueda web",
       "groupHint": "Busque en la web y obtenga páginas web mediante Jina AI. «Preguntar» pide confirmación antes de cada llamada.",
       "searchLabel": "Búsqueda web"
+    },
+    "commands": {
+      "group": "Comandos",
+      "groupHint": "Permitir que el modelo ejecute los comandos personalizados y las herramientas de complementos seleccionados. «Preguntar» pide confirmación antes de cada llamada.",
+      "needsDescription": "Requiere una descripción en la configuración del comando",
+      "noCommands": "Aún no se han configurado comandos personalizados.",
+      "noCommandsHint": "Cree comandos primero en Configuración → Comandos."
     }
   },
   "commandLauncher": {

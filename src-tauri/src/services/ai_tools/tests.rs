@@ -597,6 +597,7 @@ fn a_profile_reaches_its_workspace_and_permitted_projects() {
             ToolGroupSettings {
                 is_enabled: true,
                 access: Allow,
+                command_ids: None,
             },
         )]),
         max_step_count: None,
@@ -651,6 +652,7 @@ fn an_external_project_without_its_folder_here_is_named_and_refused() {
             ToolGroupSettings {
                 is_enabled: true,
                 access: Allow,
+                command_ids: None,
             },
         )]),
         max_step_count: None,

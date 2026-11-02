@@ -108,4 +108,59 @@ describe('desktop-chat-tools', () => {
     expect(toolNames).toContain('web_search')
     expect(toolNames).toContain('web_fetch')
   })
+
+  it('resolves user commands when commands group is enabled with selected command IDs', async () => {
+    const invoke = vi.fn(async () => []) as unknown as DesktopChatToolsInvoke
+
+    const chatTools = createDesktopChatTools({
+      profileId: 'coder',
+      invoke,
+      canUseTools: () => true,
+      warn: vi.fn(),
+      isDebugEnabled: () => false,
+      commands: () => [
+        {
+          id: 'custom-cmd',
+          name: 'Run Script',
+          description: 'A custom command for tests',
+          phrases: [],
+          isVoiceEnabled: false,
+          toolId: 'script',
+          toolConfig: { command: 'echo 1' },
+          isLlmArgumentParsingEnabled: false,
+          outputAction: 'none',
+          isOutputLogged: false,
+          isAvailableExternally: false,
+          externalTimeoutSec: 60,
+          isEnabled: true,
+        },
+      ],
+      tools: {
+        get: (id) =>
+          id === 'script'
+            ? {
+                id: 'script',
+                owner: { kind: 'core' },
+                description: 'Script runner',
+                inputSchema: { type: 'object', properties: {} },
+                run: vi.fn(async () => ({ ok: true, content: 'out' })),
+              }
+            : undefined,
+      },
+    })
+
+    const result = await chatTools.turnTools('gpt-4', 5000, {
+      groups: {
+        commands: {
+          isEnabled: true,
+          access: 'ask',
+          commandIds: ['custom-cmd'],
+        },
+      },
+    })
+
+    expect(result.canUseTools).toBe(true)
+    const toolNames = Object.keys(result.tools!.tools!.tools)
+    expect(toolNames).toContain(await chatToolName('custom-cmd'))
+  })
 })

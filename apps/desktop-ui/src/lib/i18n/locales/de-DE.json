@@ -164,6 +164,13 @@
       "group": "Websuche",
       "groupHint": "Im Web suchen und Webseiten mit Jina AI abrufen. „Fragen“ fragt vor jedem Aufruf nach.",
       "searchLabel": "Websuche"
+    },
+    "commands": {
+      "group": "Befehle",
+      "groupHint": "Dem Modell erlauben, ausgewählte benutzerdefinierte Befehle und Plugin-Tools auszuführen. „Fragen“ fragt vor jedem Aufruf nach.",
+      "needsDescription": "Erfordert eine Beschreibung in den Befehlseinstellungen",
+      "noCommands": "Noch keine benutzerdefinierten Befehle konfiguriert.",
+      "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle."
     }
   },
   "commandLauncher": {

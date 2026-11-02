@@ -164,6 +164,13 @@
       "group": "Web Search",
       "groupHint": "Search the web and fetch web pages using Jina AI. “Ask” asks before every call.",
       "searchLabel": "Web search"
+    },
+    "commands": {
+      "group": "Commands",
+      "groupHint": "Allow the model to run selected custom commands and plugin tools. “Ask” asks before every call.",
+      "needsDescription": "Requires a description in command settings",
+      "noCommands": "No custom commands configured yet.",
+      "noCommandsHint": "Create commands in Settings → Commands first."
     }
   },
   "commandLauncher": {

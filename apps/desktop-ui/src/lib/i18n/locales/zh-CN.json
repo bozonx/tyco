@@ -164,6 +164,13 @@
       "group": "网页搜索",
       "groupHint": "使用 Jina AI 进行网页搜索并获取网页内容。“询问”将在每次调用前请求确认。",
       "searchLabel": "网页搜索"
+    },
+    "commands": {
+      "group": "命令",
+      "groupHint": "允许模型运行选定的自定义命令和插件工具。“询问”在每次调用前确认。",
+      "needsDescription": "需要在命令设置中填写描述",
+      "noCommands": "尚未配置自定义命令。",
+      "noCommandsHint": "请先在设置 → 命令中创建命令。"
     }
   },
   "commandLauncher": {

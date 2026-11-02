@@ -278,6 +278,7 @@ mod tests {
             ToolGroupSettings {
                 is_enabled: true,
                 access: ProjectAccessMode::Allow,
+                command_ids: None,
             },
         );
         let profile = AiProfile {
@@ -321,6 +322,7 @@ mod tests {
             ToolGroupSettings {
                 is_enabled: false,
                 access: ProjectAccessMode::Allow,
+                command_ids: None,
             },
         );
         let profile_disabled = AiProfile {

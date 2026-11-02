@@ -5,6 +5,7 @@ import {
   type AiFileToolRequest,
   type AiWebToolOutput,
   type AiWebToolRequest,
+  type CommandConfig,
   type ProfileMemoryChange,
   type ProfileMemoryMode,
   type ProfileMemorySearchResult,
@@ -12,7 +13,10 @@ import {
   type ProfileToolSettings,
 } from '@tyco/shared'
 
+import type { ToolLookup } from '../tools/tool-types'
+import type { CommandEnvironment } from '../variables/command-variables'
 import { createChatToolsSession } from './chat-tools-session'
+import { createCommandToolProvider } from './command-tools'
 import {
   createDebugChatToolProvider,
   isDebugChatToolsEnabled,
@@ -94,6 +98,9 @@ export interface DesktopChatToolsDependencies {
   warn: (message: string) => void
   extractDocumentText?: typeof readDocumentText
   isDebugEnabled?: () => boolean
+  commands?: () => readonly CommandConfig[]
+  tools?: ToolLookup
+  environment?: () => CommandEnvironment
 }
 
 /**
@@ -156,12 +163,22 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
       deps.invoke('run_ai_web_tool', { profileId, request }),
     warn: deps.warn,
   })
+  const commandToolProvider =
+    deps.commands && deps.tools
+      ? createCommandToolProvider({
+          commands: deps.commands,
+          tools: deps.tools,
+          environment: deps.environment,
+          warn: deps.warn,
+        })
+      : undefined
 
   const session = createChatToolsSession({
     providers: () => [
       fileToolProvider,
       memoryToolProvider,
       webToolProvider,
+      ...(commandToolProvider ? [commandToolProvider] : []),
       ...(checkDebug() ? [debugToolProvider] : []),
     ],
     isDebugEnabled: () => checkDebug(),

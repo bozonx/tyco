@@ -164,6 +164,13 @@
       "group": "Web Araması",
       "groupHint": "Jina AI kullanarak web’de arama yapın ve web sayfalarını getirin. \"Sor\", her çağrıdan önce onay ister.",
       "searchLabel": "Web araması"
+    },
+    "commands": {
+      "group": "Komutlar",
+      "groupHint": "Modelin seçilen özel komutları ve eklenti araçlarını çalıştırmasına izin verin. \"Sor\", her çağrıdan önce onay ister.",
+      "needsDescription": "Komut ayarlarında bir açıklama gereklidir",
+      "noCommands": "Henüz özel komut yapılandırılmadı.",
+      "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun."
     }
   },
   "commandLauncher": {

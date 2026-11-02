@@ -164,6 +164,13 @@
       "group": "Ricerca web",
       "groupHint": "Cerca sul Web e recupera pagine Web utilizzando Jina AI. «Chiedi» richiede conferma prima di ogni chiamata.",
       "searchLabel": "Ricerca web"
+    },
+    "commands": {
+      "group": "Comandi",
+      "groupHint": "Consenti al modello di eseguire comandi personalizzati e strumenti di plugin selezionati. \"Chiedi\" richiede conferma prima di ogni chiamata.",
+      "needsDescription": "Richiede una descrizione nelle impostazioni del comando",
+      "noCommands": "Nessun comando personalizzato ancora configurato.",
+      "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi."
     }
   },
   "commandLauncher": {

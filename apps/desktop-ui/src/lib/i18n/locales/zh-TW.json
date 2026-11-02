@@ -164,6 +164,13 @@
       "group": "網頁搜尋",
       "groupHint": "使用 Jina AI 進行網頁搜尋並獲取網頁內容。「詢問」將在每次呼叫前請求確認。",
       "searchLabel": "網頁搜尋"
+    },
+    "commands": {
+      "group": "命令",
+      "groupHint": "允許模型執行選定的自訂命令與外掛程式工具。「詢問」會在每次呼叫前確認。",
+      "needsDescription": "需要在命令設定中填寫描述",
+      "noCommands": "尚未設定自訂命令。",
+      "noCommandsHint": "請先在設定 → 命令中建立命令。"
     }
   },
   "commandLauncher": {

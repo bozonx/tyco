@@ -12,7 +12,13 @@ const web = { id: 'web', defaultAccess: 'allow' as const }
 
 describe('chat-tool-groups', () => {
   it('offers the tool groups', () => {
-    expect(CHAT_TOOL_GROUPS.map((group) => group.id)).toEqual(['files', 'web'])
+    expect(CHAT_TOOL_GROUPS.map((group) => group.id)).toEqual([
+      'files',
+      'web',
+      'commands',
+    ])
+    const commands = CHAT_TOOL_GROUPS.find((g) => g.id === 'commands')
+    expect(commands?.defaultAccess).toBe('ask')
   })
 
   it('reads a group as off until the profile sets it', () => {

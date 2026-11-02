@@ -23,6 +23,10 @@ pub struct ToolGroupSettings {
     pub is_enabled: bool,
     /// `ask` waits for the user before each call; with no UI it means `deny`.
     pub access: ProjectAccessMode,
+    /// Commands selected for this group, when the group offers them (e.g. `commands`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub command_ids: Option<Vec<String>>,
 }
 
 /// The tools a profile's chat may use.

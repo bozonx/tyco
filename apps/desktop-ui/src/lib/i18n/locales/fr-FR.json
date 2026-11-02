@@ -164,6 +164,13 @@
       "group": "Recherche Web",
       "groupHint": "Recherchez sur le Web et récupérez des pages Web à l’aide de Jina AI. « Demander » demande confirmation avant chaque appel.",
       "searchLabel": "Recherche Web"
+    },
+    "commands": {
+      "group": "Commandes",
+      "groupHint": "Autoriser le modèle à exécuter les commandes personnalisées et les outils de plugins sélectionnés. « Demander » demande confirmation avant chaque appel.",
+      "needsDescription": "Nécessite une description dans les paramètres de la commande",
+      "noCommands": "Aucune commande personnalisée configurée pour le moment.",
+      "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes."
     }
   },
   "commandLauncher": {

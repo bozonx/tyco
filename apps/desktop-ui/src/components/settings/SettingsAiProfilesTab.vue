@@ -193,6 +193,7 @@ import useToast from '../../composables/use-toast'
 import { projectAccessLevelOf } from '../../lib/ai-profiles/project-access'
 import {
   CHAT_TOOL_GROUPS,
+  type ProfileToolSettingsLike,
   toolGroupSettings,
 } from '../../lib/chat-tools/chat-tool-groups'
 import { profileTab, projectTab } from '../../lib/settings/settings-navigation'
@@ -207,7 +208,7 @@ import SettingsCreateEntityModal from './SettingsCreateEntityModal.vue'
 import SettingsEntityItem from './SettingsEntityItem.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsVaultLocationModal from './SettingsVaultLocationModal.vue'
-import type { AiProfile, AiProject } from '@tyco/shared'
+import type { AiProject } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig, navigate } = useSettingsContext()
@@ -243,7 +244,9 @@ async function useDefaultVault() {
 }
 
 /** The tools a profile may use, in one line */
-function describeProfile(profile: AiProfile): string {
+function describeProfile(profile: {
+  tools?: ProfileToolSettingsLike | undefined
+}): string {
   const tools = CHAT_TOOL_GROUPS.filter(
     (group) => toolGroupSettings(profile.tools, group).isEnabled
   ).map((group) => t(group.labelKey))
@@ -270,7 +273,10 @@ onMounted(() => {
 // Actions menu for profile
 // ---------------------------------------------------------------------------
 
-function profileMenuItems(profile: AiProfile): DropdownMenuItem[] {
+function profileMenuItems(profile: {
+  readonly id: string
+  readonly name: string
+}): DropdownMenuItem[] {
   return [
     {
       label: t('settings.duplicateProfile'),
@@ -286,9 +292,9 @@ function profileMenuItems(profile: AiProfile): DropdownMenuItem[] {
 }
 
 const showDuplicateProfileConfirm = ref(false)
-const profileToDuplicate = ref<AiProfile | null>(null)
+const profileToDuplicate = ref<{ id: string; name: string } | null>(null)
 
-function askDuplicateProfile(profile: AiProfile) {
+function askDuplicateProfile(profile: { id: string; name: string }) {
   profileToDuplicate.value = profile
   showDuplicateProfileConfirm.value = true
 }
@@ -311,7 +317,7 @@ async function handleDuplicateProfile() {
 }
 
 const showDeleteProfileConfirm = ref(false)
-const profileToDelete = ref<AiProfile | null>(null)
+const profileToDelete = ref<{ id: string; name: string } | null>(null)
 const chatCount = ref<number | null>(null)
 
 const deleteProfileMessage = computed(() => {
@@ -324,7 +330,7 @@ const deleteProfileMessage = computed(() => {
       })
 })
 
-async function askDeleteProfile(profile: AiProfile) {
+async function askDeleteProfile(profile: { id: string; name: string }) {
   profileToDelete.value = profile
   chatCount.value = await aiProfilesStore
     .countChats(profile.id)

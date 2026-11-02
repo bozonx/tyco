@@ -19,6 +19,8 @@ import { normalizeLlmConfig } from '../llm/llm-config'
 import { describeError } from '../errors/describe-error'
 import { formatLlmError } from '../llm/llm-errors'
 import type { AppRoutePath } from '../navigation/routes'
+import type { ToolLookup } from '../tools/tool-types'
+import type { CommandEnvironment } from '../variables/command-variables'
 import {
   createChatController,
   type ChatControllerDependencies,
@@ -76,6 +78,10 @@ export interface ChatStoreRuntimeDependencies {
   toastText: (message: string, kind: 'error' | 'warn') => void
   toastKey: (key: string, kind: 'error' | 'warn') => void
   warn: (message: string) => void
+  /** Tool registry to look up tools for custom commands in chat */
+  tools?: ToolLookup
+  /** The platform and variable values of this device */
+  environment?: () => CommandEnvironment
   /** Waits before each retry of a failed chat write */
   saveRetryDelaysMs?: readonly number[]
   /** Hears every change of a chat history, from any window */
@@ -149,6 +155,9 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     getMemoryMode: () => profile.value?.memoryMode,
     getChatId: () => model.currentChatParams.value.id,
     warn,
+    commands: () => deps.getUserConfig()?.commands ?? [],
+    tools: deps.tools,
+    environment: deps.environment,
   })
 
   /** What differs between "Ask AI" and a profile chat */

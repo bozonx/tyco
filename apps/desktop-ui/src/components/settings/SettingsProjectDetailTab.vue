@@ -160,7 +160,7 @@ import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
 import SettingsSection from './SettingsSection.vue'
 import VaultFolderField from './VaultFolderField.vue'
-import type { AiProfile } from '@tyco/shared'
+import type { ProjectPermission } from '@tyco/shared'
 
 const props = defineProps<{ projectId: string }>()
 const formId = useId()
@@ -225,7 +225,10 @@ function changeType(external: boolean) {
 /** The access a new project gives on creation, by profile */
 const pendingAccess = ref<Record<string, ProjectAccessLevel>>({})
 
-function accessLevelOf(profile: AiProfile): ProjectAccessLevel | undefined {
+function accessLevelOf(profile: {
+  id: string
+  projectPermissions: Record<string, ProjectPermission>
+}): ProjectAccessLevel | undefined {
   return isNew.value
     ? pendingAccess.value[profile.id]
     : projectAccessLevelOf(profile.projectPermissions[props.projectId])

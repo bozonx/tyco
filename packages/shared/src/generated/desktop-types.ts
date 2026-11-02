@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 624f2b8b368bde060b4053033ec6044ec69083a5d54b6f3995078f205b825080
+// Source hash: 3f2a9456006f2ead06fe065a76b8421de17dd146b4000d03532109a5fbeaa0fc
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -764,6 +764,11 @@ export type ToolGroupSettings = {
   isEnabled: boolean
   /** `ask` waits for the user before each call; with no UI it means `deny`. */
   access: ProjectAccessMode
+  /**
+   * Commands selected for this group, when the group offers them (e.g.
+   * `commands`).
+   */
+  commandIds?: Array<string>
 }
 
 /**

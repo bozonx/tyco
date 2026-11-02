@@ -115,6 +115,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     description:
       'Types the text into the window the user was working in, as if pasted',
     inputSchema: TEXT_INPUT_SCHEMA,
+    canRunFromChat: false,
     run: async (call) => {
       const text = textOf(call)
       if (!text.trim()) return noText
@@ -131,6 +132,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     icon: 'mdi:content-copy',
     description: 'Puts the text into the clipboard',
     inputSchema: TEXT_INPUT_SCHEMA,
+    canRunFromChat: false,
     run: async (call) => {
       const text = textOf(call)
       if (!text.trim()) return noText
@@ -150,6 +152,7 @@ export function createCoreTools(deps: CoreToolDependencies): ToolDefinition[] {
     icon: 'mdi:chat-question-outline',
     description: 'Opens the chat of the app with the text attached',
     inputSchema: TEXT_INPUT_SCHEMA,
+    canRunFromChat: false,
     run: async (call) => {
       const text = textOf(call)
       if (!text.trim()) return noText

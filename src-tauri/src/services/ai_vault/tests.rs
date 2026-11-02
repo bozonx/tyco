@@ -227,6 +227,7 @@ fn profile_tool_settings_round_trip_and_the_step_count_is_bounded() {
             ToolGroupSettings {
                 is_enabled: true,
                 access: ProjectAccessMode::Ask,
+                command_ids: None,
             },
         )]),
         max_step_count: Some(8),

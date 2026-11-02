@@ -13,4 +13,5 @@ export const {
   MAX_VAULT_ID_LENGTH,
   FILES_TOOL_GROUP_ID,
   WEB_TOOL_GROUP_ID,
+  COMMANDS_TOOL_GROUP_ID,
 } = limits

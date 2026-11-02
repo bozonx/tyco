@@ -164,6 +164,13 @@
       "group": "Căutare web",
       "groupHint": "Căutați pe web și descărcați pagini web folosind Jina AI. „Întreabă” solicită confirmare înainte de fiecare apel.",
       "searchLabel": "Căutare web"
+    },
+    "commands": {
+      "group": "Comenzi",
+      "groupHint": "Permiteți modelului să execute comenzile personalizate și instrumentele de plugin selectate. „Întreabă” cere confirmare înainte de fiecare apel.",
+      "needsDescription": "Necesită o descriere în setările comenzii",
+      "noCommands": "Nu există încă comenzi personalizate configurate.",
+      "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi."
     }
   },
   "commandLauncher": {

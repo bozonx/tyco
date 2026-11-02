@@ -132,10 +132,22 @@ export interface ToolDefinition {
   icon?: string
   /** Shown in the tool picker of a new command */
   descriptionKey?: string
-  /** Shown to the LLM, in English, like an MCP tool description */
+  /**
+   * Shown to the LLM, in English, like an MCP tool description. Used by the
+   * chat and AI commands to understand what the tool does.
+   */
   description: string
-  /** JSON Schema of the per-call input, as in MCP */
+  /**
+   * JSON Schema of the per-call input, as in MCP. Used by the chat and AI
+   * commands to validate arguments.
+   */
   inputSchema: JsonSchema
+  /**
+   * Whether the tool may be offered to an LLM chat as a tool. Defaults to true
+   * for text transformations. When false, the tool cannot be called directly by
+   * the chat model.
+   */
+  canRunFromChat?: boolean
   /**
    * Turns the text from voice, the editor or an external call into an input
    * that matches `inputSchema`; needed only for a structured schema

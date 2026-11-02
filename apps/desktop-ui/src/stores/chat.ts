@@ -43,6 +43,7 @@ function createChatStoreSetup(profileId: string | null) {
     const llmStore = useLlmStore()
     const secretsStore = useSecretsStore()
     const aiProfilesStore = useAiProfilesStore()
+    const toolsStore = useToolsStore()
     if (profileId) {
       const pinia = getActivePinia()
       // Keep drafts and generation intact if removing the profile fails.
@@ -83,6 +84,8 @@ function createChatStoreSetup(profileId: string | null) {
       updateProfileModel: (id, modelId) =>
         aiProfilesStore.updateProfile(id, { modelId }),
       getUserConfig: () => desktopStore.userConfig,
+      tools: toolsStore,
+      environment: toolsStore.environment,
       getSessionState: () => desktopStore.sessionState,
       saveSessionState: desktopStore.patchSessionState,
       hasSecret: (providerId) =>

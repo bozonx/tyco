@@ -122,6 +122,15 @@
               />
             </FieldRow>
           </div>
+          <div v-else-if="group.id === COMMANDS_TOOL_GROUP_ID" class="pt-2">
+            <SettingsProfileCommandTools
+              :commands="commands"
+              :selected-ids="settings.commandIds ?? []"
+              @toggle="
+                (id, enabled) => toggleProfileCommand(group, id, enabled)
+              "
+            />
+          </div>
         </template>
       </SettingsProfileToolsSection>
 
@@ -210,8 +219,12 @@ import {
 import { createVaultFolderField } from '../../lib/ai-profiles/vault-folder-field'
 import {
   CHAT_TOOL_GROUPS,
+  COMMANDS_TOOL_GROUP_ID,
+  type ChatToolGroup,
   FILES_TOOL_GROUP_ID,
   WEB_TOOL_GROUP_ID,
+  toolGroupSettings,
+  withToolGroup,
 } from '../../lib/chat-tools/chat-tool-groups'
 import { createSecretKeyEditor } from '../../lib/settings/secret-key-editor'
 import {
@@ -220,6 +233,7 @@ import {
   projectTab,
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
+import { useDesktopStore } from '../../stores/desktop'
 import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
@@ -232,6 +246,7 @@ import SecretKeyField from './SecretKeyField.vue'
 import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
+import SettingsProfileCommandTools from './SettingsProfileCommandTools.vue'
 import SettingsProfileMemorySection from './SettingsProfileMemorySection.vue'
 import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
@@ -246,6 +261,24 @@ const { t } = useI18n()
 const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
 const secretsStore = useSecretsStore()
+const desktopStore = useDesktopStore()
+
+const commands = computed(() => desktopStore.userConfig?.commands ?? [])
+
+function toggleProfileCommand(
+  group: ChatToolGroup,
+  commandId: string,
+  enabled: boolean
+) {
+  const current =
+    toolGroupSettings(profile.value?.tools, group).commandIds ?? []
+  const next = enabled
+    ? [...new Set([...current, commandId])]
+    : current.filter((id) => id !== commandId)
+  void changeSettings({
+    tools: withToolGroup(profile.value?.tools, group, { commandIds: next }),
+  })
+}
 
 const jinaKeyDraft = ref('')
 const hasJinaKey = computed(() =>

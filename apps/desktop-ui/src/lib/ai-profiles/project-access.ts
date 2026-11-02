@@ -1,8 +1,9 @@
-import type { AiProfile, ProjectPermission } from '@tyco/shared'
+import type { ProjectPermission } from '@tyco/shared'
 
 import {
   CHAT_TOOL_GROUPS,
   FILES_TOOL_GROUP_ID,
+  type ProfileToolSettingsLike,
   toolGroupSettings,
 } from '../chat-tools/chat-tool-groups'
 
@@ -51,7 +52,9 @@ export function projectAccessLevelOf(
 }
 
 /** The profile's file tools are off, so its project access does nothing */
-export function hasFileToolsOff(profile: Pick<AiProfile, 'tools'>): boolean {
+export function hasFileToolsOff(profile: {
+  tools?: ProfileToolSettingsLike | undefined
+}): boolean {
   const group = CHAT_TOOL_GROUPS.find(({ id }) => id === FILES_TOOL_GROUP_ID)
   return !group || !toolGroupSettings(profile.tools, group).isEnabled
 }

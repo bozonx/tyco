@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod bindings;
 mod commands;
+#[allow(dead_code)]
 mod desktop_contract {
     include!(concat!(env!("OUT_DIR"), "/desktop_contract.rs"));
 }

@@ -164,6 +164,13 @@
       "group": "Wyszukiwanie w internecie",
       "groupHint": "Wyszukuj w internecie i pobieraj strony internetowe za pomocą Jina AI. „Pytaj” pyta o potwierdzenie przed każdym wywołaniem.",
       "searchLabel": "Wyszukiwanie w internecie"
+    },
+    "commands": {
+      "group": "Polecenia",
+      "groupHint": "Zezwól modelowi na uruchamianie wybranych poleceń użytkownika i narzędzi wtyczek. „Pytaj” wymaga potwierdzenia przed każdym wywołaniem.",
+      "needsDescription": "Wymaga opisu w ustawieniach polecenia",
+      "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
+      "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
     }
   },
   "commandLauncher": {

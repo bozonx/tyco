@@ -164,6 +164,13 @@
       "group": "Webes keresés",
       "groupHint": "Keresés a weben és weboldalak letöltése a Jina AI segítségével. A „Kérdezzen” minden hívás előtt megerősítést kér.",
       "searchLabel": "Webes keresés"
+    },
+    "commands": {
+      "group": "Parancsok",
+      "groupHint": "A modell futtathatja a kiválasztott egyéni parancsokat és beépülő modulok eszközeit. A „Kérdezés” minden hívás előtt megerősítést kér.",
+      "needsDescription": "Leírás szükséges a parancs beállításaiban",
+      "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
+      "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben."
     }
   },
   "commandLauncher": {

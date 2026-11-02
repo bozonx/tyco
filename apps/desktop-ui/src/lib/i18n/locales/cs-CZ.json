@@ -164,6 +164,13 @@
       "group": "Webové vyhledávání",
       "groupHint": "Hledejte na webu a stahujte webové stránky pomocí Jina AI. „Ptát se“ vyžaduje potvrzení před každým voláním.",
       "searchLabel": "Webové vyhledávání"
+    },
+    "commands": {
+      "group": "Příkazy",
+      "groupHint": "Povolit modelu spouštět vybrané uživatelské příkazy a nástroje doplňků. „Zeptat se“ se zeptá před každým voláním.",
+      "needsDescription": "Vyžaduje popis v nastavení příkazu",
+      "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
+      "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy."
     }
   },
   "commandLauncher": {

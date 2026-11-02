@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import type { CommandConfig } from '@tyco/shared'
 import type { RegisteredTool } from '../tools/tool-types'
 import {
   CURRENT_TIME_TOOL,
@@ -8,6 +9,7 @@ import {
   withDebugToolGroup,
 } from './debug-chat-tools'
 import {
+  adaptCommand,
   adaptRegisteredTool,
   chatToolName,
   toolResultForModel,
@@ -85,6 +87,59 @@ describe('registered-tool-adapter', () => {
       signal,
       isOutputRequested: true,
     })
+  })
+
+  it('adapts a user command with custom metadata and timeout', async () => {
+    const run = vi.fn<RegisteredTool['run']>(async () => ({
+      ok: true,
+      content: 'RESULT',
+    }))
+    const tool: RegisteredTool = {
+      id: 'script',
+      owner: { kind: 'core' },
+      description: 'Script tool',
+      inputSchema: { type: 'object', properties: { text: { type: 'string' } } },
+      run,
+    }
+    const command: CommandConfig = {
+      id: 'cmd-1',
+      name: 'My Custom Script',
+      description: 'Performs useful work',
+      phrases: [],
+      isVoiceEnabled: false,
+      toolId: 'script',
+      toolConfig: { command: 'echo 123' },
+      isLlmArgumentParsingEnabled: false,
+      outputAction: 'none',
+      isOutputLogged: true,
+      isAvailableExternally: false,
+      externalTimeoutSec: 60,
+      isEnabled: true,
+    }
+
+    const definition = await adaptCommand(command, tool, {
+      groupId: 'commands',
+    })
+    expect(definition.name).toBe(await chatToolName('cmd-1'))
+    expect(definition.label).toBe('My Custom Script')
+    expect(definition.description).toBe('Performs useful work')
+
+    const output = await definition.execute(
+      { text: 'in' },
+      { signal, toolCallId: 'c1', outputLimitCharacters: 20_000 }
+    )
+    expect(output).toBe('RESULT')
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        command: {
+          id: 'cmd-1',
+          name: 'My Custom Script',
+          isOutputLogged: true,
+        },
+        source: 'chat',
+        isOutputRequested: true,
+      })
+    )
   })
 })
 
