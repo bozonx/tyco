@@ -9,6 +9,7 @@ import {
   type MainActionConfig,
   type ShortcutSlots,
   type StandardActionId,
+  STATIC_LAUNCHER_PAGE_IDS,
 } from '@tyco/shared'
 
 import {
@@ -302,19 +303,24 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
     )
     const slots = resolveMainActions().map((item) => {
       if (!item) return undefined
-      if (item.type === 'launcherPage')
+      if (item.type === 'launcherPage') {
+        const pageIndex = (deps.launcherPages?.() ?? []).findIndex(
+          (page) => page.id === item.pageId
+        )
+        const pageNumber =
+          pageIndex >= 0
+            ? pageIndex + 1
+            : STATIC_LAUNCHER_PAGE_IDS.includes(item.pageId)
+              ? STATIC_LAUNCHER_PAGE_IDS.indexOf(item.pageId) + 1
+              : 1
         return {
-          name: translate('settings.launcherPage', {
-            page:
-              (deps.launcherPages?.() ?? []).findIndex(
-                (page) => page.id === item.pageId
-              ) + 1,
-          }),
+          name: translate('settings.launcherPage', { page: pageNumber }),
           icon: 'mdi:view-grid-outline',
           action: async (text: string) => {
             await deps.openLauncherPage?.(item.pageId, text)
           },
         }
+      }
       if (item.type === 'standard') return defaults.get(item.actionId)
       if (item.type === 'plugin') return plugins.get(item.actionId)
       if (item.type === 'command') {

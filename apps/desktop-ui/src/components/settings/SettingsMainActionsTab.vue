@@ -64,6 +64,7 @@ import FieldSelect from '../common/FieldSelect.vue'
 import IconButton from '../common/IconButton.vue'
 import SettingsSection from './SettingsSection.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
+import { STATIC_LAUNCHER_PAGE_IDS } from '@tyco/shared'
 import {
   type CommandConfig,
   type MainActionConfig,
@@ -138,12 +139,22 @@ const OPENS_DIALOG = new Set<StandardActionId>([
   'voiceTransformation',
 ])
 
-const availableActions = computed((): MainActionChoice[] => [
-  ...userConfig.value.launcherPages.map((page, index) => ({
+const launcherPageChoices = computed(() => {
+  const pages = [...userConfig.value.launcherPages]
+  for (const staticId of STATIC_LAUNCHER_PAGE_IDS) {
+    if (!pages.some((page) => page.id === staticId)) {
+      pages.push({ id: staticId, slots: {}, inputMode: 'none' })
+    }
+  }
+  return pages.map((page, index) => ({
     config: { type: 'launcherPage' as const, pageId: page.id },
     name: t('settings.launcherPage', { page: index + 1 }),
     group: { kind: 'basic' as const },
-  })),
+  }))
+})
+
+const availableActions = computed((): MainActionChoice[] => [
+  ...launcherPageChoices.value,
   ...aiProfilesStore.profiles.map((profile) => ({
     config: { type: 'profileChat' as const, profileId: profile.id },
     name: t('settings.askInProfileChat', { profile: profile.name }),
@@ -238,13 +249,18 @@ function groupLabel(group: MainActionGroup): string {
 
 /** The name of a slot whose action is not on offer, e.g. a disabled command */
 function unavailableName(slot: MainActionConfig): string {
-  if (slot.type === 'launcherPage')
-    return t('settings.launcherPage', {
-      page:
-        userConfig.value.launcherPages.findIndex(
-          (page) => page.id === slot.pageId
-        ) + 1,
-    })
+  if (slot.type === 'launcherPage') {
+    const pageIndex = userConfig.value.launcherPages.findIndex(
+      (page) => page.id === slot.pageId
+    )
+    const pageNumber =
+      pageIndex >= 0
+        ? pageIndex + 1
+        : STATIC_LAUNCHER_PAGE_IDS.includes(slot.pageId)
+          ? STATIC_LAUNCHER_PAGE_IDS.indexOf(slot.pageId) + 1
+          : 1
+    return t('settings.launcherPage', { page: pageNumber })
+  }
   if (slot.type === 'profileChat') {
     const profile = aiProfilesStore.getProfile(slot.profileId)
     return profile

@@ -12,6 +12,7 @@ import {
   type UserConfigInput,
 } from './user-config'
 import { BUILTIN_VARIABLE_PREFIX } from './variables'
+import { STATIC_LAUNCHER_PAGE_IDS } from './hotkeys'
 
 interface Schema {
   minItems?: number
@@ -464,10 +465,10 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   for (const page of config.launcherPages)
     page.slots = filterSlots(page.slots, (id) => commands.has(id))
   config.variables = normalizeVariables(config.variables)
-  // a device refers to the pages it has shortcuts for; one gone is dropped
+  // a device refers to the pages it has shortcuts for; one gone is dropped, but static pages stay
   config.hotkeys.launcherPages = Object.fromEntries(
-    Object.entries(config.hotkeys.launcherPages).filter(([id]) =>
-      pageIds.has(id)
+    Object.entries(config.hotkeys.launcherPages).filter(
+      ([id]) => STATIC_LAUNCHER_PAGE_IDS.includes(id) || pageIds.has(id)
     )
   )
   const variableIds = new Set(config.variables.map((variable) => variable.id))

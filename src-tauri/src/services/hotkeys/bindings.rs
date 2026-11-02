@@ -134,12 +134,29 @@ pub(crate) fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
         ),
         description: mode_description(mode).to_owned(),
     });
-    let pages = crate::models::user_config::launcher_pages(config)
+    let configured_pages = crate::models::user_config::launcher_pages(config);
+    let mut page_targets: Vec<(String, String)> = Vec::new();
+    let static_page_ids = [DEFAULT_LAUNCHER_PAGE_ID, "page-2", "page-3"];
+    let shortcuts = &config["hotkeys"]["launcherPages"];
+    for (index, static_id) in static_page_ids.into_iter().enumerate() {
+        if let Some(page) = configured_pages.get(index) {
+            page_targets.push((page.id.clone(), page.hotkey.clone()));
+        } else {
+            let hotkey = shortcuts[static_id].as_str().unwrap_or_default().to_owned();
+            page_targets.push((static_id.to_owned(), hotkey));
+        }
+    }
+    if configured_pages.len() > static_page_ids.len() {
+        for page in &configured_pages[static_page_ids.len()..] {
+            page_targets.push((page.id.clone(), page.hotkey.clone()));
+        }
+    }
+    let pages = page_targets
         .into_iter()
         .enumerate()
-        .map(|(index, page)| HotkeyBinding {
-            target: HotkeyTarget::LauncherPage(page.id),
-            shortcut: Some(page.hotkey.trim().to_owned()).filter(|hotkey| !hotkey.is_empty()),
+        .map(|(index, (page_id, hotkey))| HotkeyBinding {
+            target: HotkeyTarget::LauncherPage(page_id),
+            shortcut: Some(hotkey.trim().to_owned()).filter(|hotkey| !hotkey.is_empty()),
             description: format!("Quick commands: page {}", index + 1),
         });
     modes
@@ -399,7 +416,7 @@ mod tests {
                 .find(|binding| binding.target.id() == id)
                 .and_then(|binding| binding.shortcut.clone())
         };
-        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 3);
+        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 3);
         assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
         assert_eq!(shortcut("launcherPage.main"), None);
         assert_eq!(shortcut("launcherPage.work").as_deref(), Some("Ctrl+Alt+2"));

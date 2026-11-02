@@ -662,7 +662,9 @@ pub fn prune_device_references(config: &mut Value) -> bool {
         .and_then(Value::as_object_mut)
     {
         let before = shortcuts.len();
-        shortcuts.retain(|id, _| page_ids.contains(id));
+        shortcuts.retain(|id, _| {
+            id == "main" || id == "page-2" || id == "page-3" || page_ids.contains(id)
+        });
         is_pruned |= shortcuts.len() != before;
     }
     let variable_ids: HashSet<String> = ids(config, "/variables")

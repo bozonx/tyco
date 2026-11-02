@@ -7,6 +7,13 @@ export const INLINE_CORRECTION_HOTKEY_ID = 'selectionCorrection'
 /** Hotkey ids of command overlay pages carry this prefix and the page id */
 export const LAUNCHER_PAGE_HOTKEY_PREFIX = 'launcherPage.'
 
+/** The static launcher page ids that are always available for hotkeys */
+export const STATIC_LAUNCHER_PAGE_IDS: readonly string[] = [
+  'main',
+  'page-2',
+  'page-3',
+]
+
 export const launcherPageHotkeyId = (pageId: string) =>
   `${LAUNCHER_PAGE_HOTKEY_PREFIX}${pageId}`
 
@@ -28,7 +35,11 @@ export function resolveHotkeyTarget(
 ): { get: () => string; set: (shortcut: string) => void } | null {
   if (id.startsWith(LAUNCHER_PAGE_HOTKEY_PREFIX)) {
     const pageId = id.slice(LAUNCHER_PAGE_HOTKEY_PREFIX.length)
-    if (!config.launcherPages.some((item) => item.id === pageId)) return null
+    if (
+      !STATIC_LAUNCHER_PAGE_IDS.includes(pageId) &&
+      !config.launcherPages.some((item) => item.id === pageId)
+    )
+      return null
     return {
       get: () => config.hotkeys.launcherPages[pageId] ?? '',
       set: (value) => {

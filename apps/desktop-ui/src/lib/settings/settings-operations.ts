@@ -1,6 +1,7 @@
 import {
   llmSecretId,
   resolveHotkeyTarget,
+  STATIC_LAUNCHER_PAGE_IDS,
   type LauncherPageConfig,
   type UserConfig,
 } from '@tyco/shared'
@@ -45,9 +46,11 @@ export function createSettingsOperations(deps: {
         ([, item]) => item.type !== 'launcherPage' || ids.has(item.pageId)
       )
     )
-    // the shortcut of a removed page goes with it
+    // the shortcut of a removed page goes with it, but static pages stay
     config.hotkeys.launcherPages = Object.fromEntries(
-      Object.entries(config.hotkeys.launcherPages).filter(([id]) => ids.has(id))
+      Object.entries(config.hotkeys.launcherPages).filter(
+        ([id]) => STATIC_LAUNCHER_PAGE_IDS.includes(id) || ids.has(id)
+      )
     )
     config.launcherPages = pages
   }

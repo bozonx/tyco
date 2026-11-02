@@ -168,6 +168,7 @@ import {
   DEFAULT_USER_CONFIG,
   type HotkeyId,
   INLINE_CORRECTION_HOTKEY_ID,
+  STATIC_LAUNCHER_PAGE_IDS,
   type SubmitKey,
   launcherPageHotkeyId,
   launcherPageMode,
@@ -237,6 +238,40 @@ const modes = Object.keys(DEFAULT_USER_CONFIG.hotkeys)
   )
 const inlineId = INLINE_CORRECTION_HOTKEY_ID
 
+const launcherPageRows = computed<HotkeyRow[]>(() => {
+  const pages = userConfig.value.launcherPages
+  const staticIds = STATIC_LAUNCHER_PAGE_IDS
+  const totalCount = Math.max(staticIds.length, pages.length)
+  const result: HotkeyRow[] = []
+
+  for (let index = 0; index < totalCount; index++) {
+    const page = pages[index]
+    const pageId = page?.id ?? staticIds[index] ?? `page-${index + 1}`
+    const id = launcherPageHotkeyId(pageId)
+    result.push({
+      id,
+      label: t('settings.launcherPage', { page: index + 1 }),
+      value: displayedShortcut(
+        providerState,
+        id,
+        userConfig.value.hotkeys.launcherPages?.[pageId] ?? ''
+      ),
+      defaultValue: defaultShortcut(
+        providerState,
+        id,
+        DEFAULT_USER_CONFIG.hotkeys.launcherPages[pageId] ?? ''
+      ),
+      command: activationCommand(
+        providerState,
+        id,
+        `tyco --mode=${launcherPageMode(pageId)}`
+      ),
+      externalHint: t('settings.externalMethodsHint'),
+    })
+  }
+  return result
+})
+
 const allRows = computed<HotkeyRow[]>(() => [
   ...modes.map((mode) => ({
     id: mode,
@@ -275,25 +310,7 @@ const allRows = computed<HotkeyRow[]>(() => [
     externalHint: t('settings.inlineCorrectionExternalHint'),
     description: t('settings.inlineCorrectionHint'),
   },
-  ...userConfig.value.launcherPages.map((page, index) => {
-    const id = launcherPageHotkeyId(page.id)
-    return {
-      id,
-      label: t('settings.launcherPage', { page: index + 1 }),
-      value: displayedShortcut(
-        providerState,
-        id,
-        userConfig.value.hotkeys.launcherPages[page.id] ?? ''
-      ),
-      defaultValue: defaultShortcut(providerState, id, ''),
-      command: activationCommand(
-        providerState,
-        id,
-        `tyco --mode=${launcherPageMode(page.id)}`
-      ),
-      externalHint: t('settings.externalMethodsHint'),
-    }
-  }),
+  ...launcherPageRows.value,
 ])
 
 const rows = computed(() =>

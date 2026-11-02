@@ -260,4 +260,21 @@ describe('SettingsGlobalActionsTab.vue', () => {
     const holdRow = wrapper.find('[data-label="settings.voiceHoldToRecord"]')
     expect(holdRow.exists()).toBe(false)
   })
+
+  it('renders at least 3 launcher page rows even when launcherPages has only 1 page', () => {
+    delete context.draft.value.isInDevelopment
+    context.draft.value.launcherPages = [
+      { id: 'main', inputMode: 'selection', slots: {} },
+    ]
+
+    const wrapper = mount(SettingsGlobalActionsTab, {
+      global: { provide: context.provide, stubs: globalStubs },
+    })
+
+    const rows = wrapper.findAll('.field-row-stub')
+    const pageRows = rows.filter(
+      (r) => r.attributes('data-label') === 'settings.launcherPage'
+    )
+    expect(pageRows.length).toBe(3)
+  })
 })

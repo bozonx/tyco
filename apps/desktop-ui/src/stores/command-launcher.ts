@@ -86,14 +86,28 @@ export const useCommandLauncherStore = defineStore('commandLauncher', () => {
       else {
         model.reset()
         const pageId = desktopStore.desktopState.launcherPageId
-        model.setPage(
-          Math.max(
-            0,
-            desktopStore.userConfig.launcherPages.findIndex(
-              (page) => page.id === pageId
-            )
-          )
+        let pageIdx = desktopStore.userConfig.launcherPages.findIndex(
+          (page) => page.id === pageId
         )
+        if (pageIdx < 0 && pageId) {
+          if (pageId === 'page-2') pageIdx = 1
+          else if (pageId === 'page-3') pageIdx = 2
+          if (pageIdx >= desktopStore.userConfig.launcherPages.length) {
+            const pages = [...desktopStore.userConfig.launcherPages]
+            while (pages.length <= pageIdx) {
+              const idx = pages.length
+              const id =
+                idx === 1
+                  ? 'page-2'
+                  : idx === 2
+                    ? 'page-3'
+                    : crypto.randomUUID()
+              pages.push({ id, inputMode: 'selection', slots: {} })
+            }
+            void desktopStore.updateUserConfig({ launcherPages: pages })
+          }
+        }
+        model.setPage(Math.max(0, pageIdx))
       }
     }
   )
