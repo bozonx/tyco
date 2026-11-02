@@ -557,3 +557,18 @@ fn conflicting_copies_of_a_journal_are_not_read_as_devices() {
     );
     assert_eq!(texts(&location), ["mine"]);
 }
+
+#[test]
+fn read_only_history_remains_readable_and_cannot_be_changed() {
+    let dir = TestDir::new("history-read-only");
+    let location = HistoryLocation::at(&dir, LAPTOP);
+    write_items(&own(&location), &[recent("saved", "text")]);
+    let user = dir.join("user");
+    fs::write(user.join("tyco-user.json"), r#"{"formatVersion":2}"#).unwrap();
+    let data = super::super::user_data::UserData::resolve(&user, "");
+    super::super::user_data::register_write_guard(&data);
+    assert_eq!(texts(&location), ["text"]);
+    let mut history = session(&location, policy());
+    assert!(save_editor_history_entry(&mut history, entry("new")).is_err());
+    assert_eq!(texts(&location), ["text"]);
+}

@@ -45,6 +45,11 @@ pub struct HistoryStorageCoordinator {
 }
 
 impl HistoryStorageCoordinator {
+    pub(crate) fn invalidate_chat_search(&self, path: &Path) {
+        let _chats = self.lock_chat_history();
+        self.chat_search.invalidate(path);
+    }
+
     fn lock_editor_history(&self) -> MutexGuard<'_, Vec<EditorHistoryItem>> {
         self.editor_history.locked()
     }
@@ -226,6 +231,7 @@ fn enforce_chat_history_policies(
     app: &AppHandle,
     settings: &HistorySettings,
 ) -> Result<(), AppError> {
+    super::user_data::user_dir(app)?;
     let ask_ai = chats::app_chat_dirs(app)
         .and_then(|dirs| chats::enforce_chat_history_policy(&dirs, settings.chat))
         .map(|removed| notify_chats_removed(app, &ChatScope::AskAi, removed));
@@ -401,6 +407,9 @@ fn with_chats_in_vault<T>(
     let state = app.state::<AppState>();
     let _guard = state.history.lock_chat_history();
     let dirs = scope_chat_dirs(app, &state, scope, access)?;
+    if access == ChatAccess::Write {
+        super::user_data::ensure_write_allowed(&dirs.chats)?;
+    }
     operation(&state, &dirs)
 }
 

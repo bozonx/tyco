@@ -52,7 +52,7 @@ const ORPHAN_IMAGES_FILE: &str = "orphan-images.json";
 pub fn app_chat_dirs(app: &AppHandle) -> Result<ChatDirs, AppError> {
     let index_dir = super::paths::state_sub_dir(app, INDEX_DIR)?;
     Ok(ChatDirs {
-        chats: super::user_data::user_sub_dir(app, "chats")?,
+        chats: super::user_data::user_dir_for(app, super::UserDirAccess::Read)?.join("chats"),
         index: index_dir.join(CHAT_INDEX_FILE),
         orphans: index_dir.join(ORPHAN_IMAGES_FILE),
     })
@@ -179,7 +179,9 @@ fn load_chat_index(dirs: &ChatDirs) -> Result<Vec<ChatSummary>, AppError> {
             }
             Err(error) => {
                 log::warn!("Chat file {} is unreadable: {error}", path.display());
-                crate::services::atomic_file::quarantine(&path)?;
+                if super::user_data::ensure_write_allowed(&path).is_ok() {
+                    crate::services::atomic_file::quarantine(&path)?;
+                }
             }
         }
     }
@@ -245,6 +247,7 @@ pub fn save_chat(
     // a rename keeps; a stored title is always one a rename could give
     chat.title = clamp_chat_title(&chat.title);
 
+    crate::services::atomic_file::create_private_dir(&dirs.chats)?;
     let path = chat_path(&dirs.chats, &chat.id)?;
     let mut history = list_chats(dirs)?;
 
@@ -337,6 +340,9 @@ pub(super) fn open_chat(dirs: &ChatDirs, id: String) -> Result<Option<Chat>, App
     match parse_stored_chat(&path, &raw) {
         Ok(chat) => Ok(Some(chat)),
         Err(error) => {
+            if super::user_data::ensure_write_allowed(&path).is_err() {
+                return Err(error);
+            }
             let copy = crate::services::atomic_file::quarantine(&path)?;
             log::warn!(
                 "Chat file {} is unreadable ({error}); moved it to {}",
@@ -470,6 +476,10 @@ struct CachedText {
 }
 
 impl ChatSearchCache {
+    pub(super) fn invalidate(&self, path: &Path) {
+        self.state.locked().remove(path);
+    }
+
     fn with_max_bytes(max_bytes: usize) -> Self {
         Self {
             state: Mutex::default(),
@@ -658,6 +668,7 @@ pub(super) fn enforce_chat_history_policy(
     dirs: &ChatDirs,
     policy: ChatHistoryPolicy,
 ) -> Result<Vec<String>, AppError> {
+    super::user_data::ensure_write_allowed(&dirs.chats)?;
     let mut history = list_chats(dirs)?;
     let removed = policy.drop_expired(&mut history, now_ms());
     remove_chat_files(&dirs.chats, &removed)?;
@@ -667,6 +678,7 @@ pub(super) fn enforce_chat_history_policy(
 
 /// Removes the chat files, the images and the index.
 pub fn clear_chats(dirs: &ChatDirs) -> Result<(), AppError> {
+    super::user_data::ensure_write_allowed(&dirs.chats)?;
     let images_dir = dirs.images();
     if images_dir.exists() {
         fs::remove_dir_all(images_dir)?;

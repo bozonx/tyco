@@ -96,6 +96,10 @@ struct ConfigBase {
     config: Value,
 }
 
+struct PreparedDisk {
+    bytes: Option<Vec<u8>>,
+}
+
 /// The config files of this process.
 pub struct ConfigFiles {
     /// `config.json`; `None` while the user data folder is not connected.
@@ -107,6 +111,8 @@ pub struct ConfigFiles {
     base_path: PathBuf,
     /// The unknown fields `device.json` brought: a save writes them back there.
     device_unknown: Mutex<HashSet<ConfigPath>>,
+    /// Disk revision used to prepare runtime effects for the next save.
+    prepared_disk: Mutex<Option<PreparedDisk>>,
 }
 
 impl ConfigFiles {
@@ -123,6 +129,7 @@ impl ConfigFiles {
             unavailable,
             base_path: state_dir.join(CONFIG_BASE_FILE_NAME),
             device_unknown: Mutex::default(),
+            prepared_disk: Mutex::default(),
         }
     }
 
@@ -134,6 +141,7 @@ impl ConfigFiles {
             unavailable: String::from("The data folder is not connected"),
             base_path,
             device_unknown: Mutex::default(),
+            prepared_disk: Mutex::default(),
         }
     }
 
@@ -159,7 +167,7 @@ impl ConfigFiles {
         let mut is_complete = self.is_writable;
         let (user_raw, user_file) = match &self.user_path {
             None => (json!({}), UserFile::Unavailable),
-            Some(path) => match read_config_file(path)? {
+            Some(path) => match read_config_file(path, self.is_writable)? {
                 ReadFile::Value(value) => (value, UserFile::Read),
                 ReadFile::Missing => (json!({}), UserFile::Missing),
                 ReadFile::Broken => {
@@ -226,12 +234,13 @@ impl ConfigFiles {
 
         let mut base = (user_file == UserFile::Read).then(|| user_raw.clone());
         if let (Some(path), true, true) = (&self.user_path, rewrites_user, device_stored) {
-            if user_file == UserFile::Read {
-                keep_before_repair(path, &user_raw);
-            }
-            match write_user_file(path, &parts.user) {
-                Ok(()) => base = Some(parts.user.clone()),
-                Err(error) => {
+            let preserved = user_file != UserFile::Read || keep_before_repair(path, &user_raw);
+            match preserved.then(|| write_user_file(path, &parts.user)) {
+                None => {
+                    is_on_disk = false;
+                }
+                Some(Ok(())) => base = Some(parts.user.clone()),
+                Some(Err(error)) => {
                     log::error!("Could not save the updated config: {error}");
                     is_on_disk = false;
                 }
@@ -265,7 +274,16 @@ impl ConfigFiles {
         let unknown = self.device_unknown.locked().clone();
         let mut parts = Parts::of(config, &unknown, notes);
         parts.keep_device_paths(&device.snapshot(), false);
+        crate::services::storage::user_data::ensure_write_allowed(path)?;
         let previous_bytes = read_bytes(path)?;
+        if let Some(expected) = self.prepared_disk.locked().take() {
+            if previous_bytes != expected.bytes {
+                return Err(AppError::Stale(
+                    "Synchronized settings changed while preparing the save; retry the save".into(),
+                )
+                .into());
+            }
+        }
         let Merged {
             disk,
             user,
@@ -331,6 +349,9 @@ impl ConfigFiles {
             config,
             false,
         )?;
+        *self.prepared_disk.locked() = Some(PreparedDisk {
+            bytes: previous_bytes,
+        });
         Ok(SavedUserConfig {
             value: merged.value,
             conflicts: merged.conflicts,
@@ -436,16 +457,12 @@ impl ConfigFiles {
             let (user, lost) = merge::merge_preferring_next(&disk_part, &base_part, &merged.user)?;
             if keeps_copies && !lost.is_empty() {
                 if let Some(raw) = raw {
-                    match preserve_copy(path, DISK_COPY_MARKER, raw) {
-                        Ok(copy) => log::warn!(
-                            "Settings changed on another device too ({}); kept its version at {}",
-                            lost.join(", "),
-                            copy.display()
-                        ),
-                        Err(error) => {
-                            log::error!("Could not keep the config of the disk: {error}")
-                        }
-                    }
+                    let copy = preserve_copy(path, DISK_COPY_MARKER, raw)?;
+                    log::warn!(
+                        "Settings changed on another device too ({}); kept its version at {}",
+                        lost.join(", "),
+                        copy.display()
+                    );
                 }
             }
             merged.conflicts = lost;
@@ -505,23 +522,19 @@ enum ReadFile {
 }
 
 /// Reads a config file; a broken one is set aside.
-fn read_config_file(path: &Path) -> Result<ReadFile, AppError> {
-    let existed = path.exists();
-    let value = crate::services::atomic_file::read_or_quarantine(path, |raw| {
-        let value: Value = serde_json::from_str(raw)?;
-        if value.is_object() {
-            Ok(value)
-        } else {
-            Err(AppError::InvalidData(String::from(
-                "the config is not a mapping",
-            )))
+fn read_config_file(path: &Path, can_repair: bool) -> Result<ReadFile, AppError> {
+    let Some(raw) = read_bytes(path)? else {
+        return Ok(ReadFile::Missing);
+    };
+    match serde_json::from_slice::<Value>(&raw) {
+        Ok(value) if value.is_object() => Ok(ReadFile::Value(value)),
+        _ => {
+            if can_repair {
+                crate::services::atomic_file::quarantine(path)?;
+            }
+            Ok(ReadFile::Broken)
         }
-    })?;
-    Ok(match value {
-        Some(value) => ReadFile::Value(value),
-        None if existed => ReadFile::Broken,
-        None => ReadFile::Missing,
-    })
+    }
 }
 
 fn read_bytes(path: &Path) -> Result<Option<Vec<u8>>, AppError> {
@@ -542,16 +555,22 @@ fn remove_if_exists(path: &Path) -> Result<(), AppError> {
 
 /// A repair that drops or replaces a value keeps the file it read, so that a
 /// bug in the repair never loses the settings for good.
-fn keep_before_repair(path: &Path, original: &Value) {
+fn keep_before_repair(path: &Path, original: &Value) -> bool {
     match serde_json::to_string_pretty(original)
         .map_err(AppError::from)
         .and_then(|raw| preserve_copy(path, REPAIRED_COPY_MARKER, raw.as_bytes()))
     {
-        Ok(copy) => log::warn!(
-            "Repaired the config; kept the previous one at {}",
-            copy.display()
-        ),
-        Err(error) => log::error!("Could not keep the config before a repair: {error}"),
+        Ok(copy) => {
+            log::warn!(
+                "Repaired the config; kept the previous one at {}",
+                copy.display()
+            );
+            true
+        }
+        Err(error) => {
+            log::error!("Could not keep the config before a repair: {error}");
+            false
+        }
     }
 }
 

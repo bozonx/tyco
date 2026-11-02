@@ -249,6 +249,21 @@ fn save_with(
     base: Value,
 ) -> Result<DesktopSnapshot, AppError> {
     let _guard = state.lock_settings_update();
+    for attempt in 0..3 {
+        match save_attempt(state, host, next.clone(), base.clone()) {
+            Err(AppError::Stale(_)) if attempt < 2 => continue,
+            result => return result,
+        }
+    }
+    unreachable!("the final save attempt returns")
+}
+
+fn save_attempt(
+    state: &AppState,
+    host: &impl SettingsHost,
+    next: Value,
+    base: Value,
+) -> Result<DesktopSnapshot, AppError> {
     ensure_running(state)?;
     let previous = Value::clone(&state.user_config());
     if version::is_newer_than_supported(&previous) {
@@ -310,6 +325,7 @@ mod tests {
         calls: RefCell<Vec<&'static str>>,
         disk: RefCell<Value>,
         fail_save: bool,
+        stale_writes: RefCell<usize>,
         conflict: bool,
         fail_history: bool,
         /// What another device saved meanwhile, by JSON pointer.
@@ -335,6 +351,10 @@ mod tests {
             config: &Value,
         ) -> Result<persist::SavedUserConfig, persist::SaveFailure> {
             self.calls.borrow_mut().push("write");
+            if *self.stale_writes.borrow() > 0 {
+                *self.stale_writes.borrow_mut() -= 1;
+                return Err(AppError::Stale("Injected external revision".into()).into());
+            }
             if self.fail_save {
                 return Err(AppError::Io(std::io::Error::other("Disk unavailable")).into());
             }
@@ -470,6 +490,46 @@ mod tests {
             *host.calls.borrow(),
             ["prepare", "write", "cleanup", "publish", "conflicts"]
         );
+    }
+
+    #[test]
+    fn stale_disk_preparation_retries_without_cleanup_or_publication() {
+        let state = state();
+        let base = Value::clone(&state.user_config());
+        let host = Host {
+            stale_writes: RefCell::new(1),
+            ..Host::default()
+        };
+        let saved = save_with(&state, &host, changed(&base), base).unwrap();
+        assert_eq!(saved.revision, 1);
+        assert_eq!(
+            *host.calls.borrow(),
+            ["prepare", "write", "prepare", "write", "cleanup", "publish"]
+        );
+    }
+
+    #[test]
+    fn continuously_changing_disk_fails_after_bounded_retries() {
+        let state = state();
+        let base = Value::clone(&state.user_config());
+        let host = Host {
+            stale_writes: RefCell::new(4),
+            ..Host::default()
+        };
+        assert!(matches!(
+            save_with(&state, &host, changed(&base), base),
+            Err(AppError::Stale(_))
+        ));
+        assert_eq!(state.snapshot().revision, 0);
+        assert_eq!(
+            host.calls
+                .borrow()
+                .iter()
+                .filter(|call| **call == "write")
+                .count(),
+            3
+        );
+        assert!(!host.calls.borrow().contains(&"cleanup"));
     }
 
     #[test]

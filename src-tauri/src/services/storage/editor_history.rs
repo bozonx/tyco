@@ -38,7 +38,7 @@ pub(super) struct HistoryLocation {
 
 impl HistoryLocation {
     pub(super) fn of_app(app: &AppHandle) -> Result<Self, AppError> {
-        let shared_dir = super::user_data::user_dir(app)
+        let shared_dir = super::user_data::user_dir_for(app, super::UserDirAccess::Read)
             .map(|dir| dir.join(SHARED_JOURNALS_DIR))
             .map_err(|error| error.to_string());
         let device_id = app

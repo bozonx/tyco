@@ -50,6 +50,7 @@ pub fn written(path: &Path, bytes: &[u8]) {
 }
 /// Captures entity removals before deleting a profile or a project tree.
 pub fn remove_tree(path: &Path) -> Result<(), AppError> {
+    super::user_data::ensure_write_allowed(path)?;
     let mut files = Snapshot::new();
     scan_with(path, &mut files, |_| Ok(String::new()))?;
     std::fs::remove_dir_all(path)?;
@@ -79,7 +80,12 @@ fn publish(event: StorageEvent) {
     if !bus.roots.iter().any(|root| path.starts_with(root)) {
         return;
     }
-    bus.own.insert(path.clone(), hash);
+    let fingerprint = if hash.is_some() && is_image(path) {
+        storage_fingerprint(path).ok().or(hash)
+    } else {
+        hash
+    };
+    bus.own.insert(path.clone(), fingerprint);
     bus.subscribers.retain(|sender| sender.receiver_count() > 0);
     for sender in &bus.subscribers {
         let _ = sender.send(event.clone());
@@ -93,19 +99,23 @@ pub fn subscribe() -> tokio::sync::broadcast::Receiver<StorageEvent> {
 
 #[derive(Default)]
 pub struct StorageWatcher {
-    check: Mutex<Option<mpsc::Sender<()>>>,
+    check: Mutex<Option<mpsc::SyncSender<()>>>,
 }
 pub fn check_now(app: &AppHandle) {
     if let Some(watcher) = app.try_state::<StorageWatcher>() {
         if let Some(sender) = watcher.check.locked().as_ref() {
-            let _ = sender.send(());
+            let _ = sender.try_send(());
         }
     }
 }
 
 type Snapshot = BTreeMap<PathBuf, String>;
 fn scan(root: &Path, files: &mut Snapshot) -> std::io::Result<()> {
-    scan_with(root, files, hash_file)
+    scan_storage(root, files, &Snapshot::new())
+}
+
+fn scan_storage(root: &Path, files: &mut Snapshot, previous: &Snapshot) -> std::io::Result<()> {
+    scan_tree(root, root, files, previous, storage_fingerprint, true)
 }
 
 fn scan_with(
@@ -113,37 +123,163 @@ fn scan_with(
     files: &mut Snapshot,
     fingerprint: fn(&Path) -> std::io::Result<String>,
 ) -> std::io::Result<()> {
-    let entries = match std::fs::read_dir(root) {
-        Ok(entries) => entries.collect::<Result<Vec<_>, _>>()?,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(error) => return Err(error),
+    scan_tree(root, root, files, &Snapshot::new(), fingerprint, false)
+}
+
+fn is_storage_entry(relative: &Path) -> bool {
+    let mut parts = relative.iter();
+    let Some(first) = parts.next().and_then(|name| name.to_str()) else {
+        return false;
     };
+    match first {
+        "config.json" | "tyco-user.json" | "tyco-vault.json" => parts.next().is_none(),
+        "history" => parts.next().is_none_or(|name| name == "editor"),
+        "chats" | "plugins" | "profiles" | "projects" => true,
+        "ai-vault" => {
+            let rest: PathBuf = parts.collect();
+            rest.as_os_str().is_empty() || is_storage_entry(&rest)
+        }
+        _ => false,
+    }
+}
+
+fn retain_unreadable(
+    path: &Path,
+    files: &mut Snapshot,
+    previous: &Snapshot,
+    error: &std::io::Error,
+) {
+    log::warn!(
+        "Could not scan {}: {error}; retaining its last revision",
+        path.display()
+    );
+    files.extend(
+        previous
+            .iter()
+            .filter(|(known, _)| known.starts_with(path))
+            .map(|(path, hash)| (path.clone(), hash.clone())),
+    );
+}
+
+fn scan_tree(
+    root: &Path,
+    directory: &Path,
+    files: &mut Snapshot,
+    previous: &Snapshot,
+    fingerprint: fn(&Path) -> std::io::Result<String>,
+    scoped: bool,
+) -> std::io::Result<()> {
+    let listing = match std::fs::read_dir(directory) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => {
+            if !scoped {
+                return Err(error);
+            }
+            retain_unreadable(directory, files, previous, &error);
+            return Ok(());
+        }
+    };
+    let mut entries = Vec::new();
+    for entry in listing {
+        match entry {
+            Ok(entry) => entries.push(entry),
+            Err(error) => {
+                if !scoped {
+                    return Err(error);
+                }
+                retain_unreadable(directory, files, previous, &error);
+                // An incomplete listing cannot prove any deletion in this directory.
+                return Ok(());
+            }
+        }
+    }
     let names: HashSet<_> = entries
         .iter()
         .filter_map(|entry| entry.file_name().into_string().ok())
         .collect();
     for entry in entries {
+        let path = entry.path();
         let name = entry.file_name().to_string_lossy().into_owned();
         if is_temporary_name(&name)
             || conflict_original(&name, &names).is_some()
-            || name == "workspace"
+            || matches!(name.as_str(), "workspace" | ".git")
+            || (scoped && !is_storage_entry(path.strip_prefix(root).unwrap_or(&path)))
         {
             continue;
         }
-        let kind = entry.file_type()?;
-        if kind.is_dir() {
-            scan_with(&entry.path(), files, fingerprint)?;
-        } else if kind.is_file() {
-            match fingerprint(&entry.path()) {
+        match entry.file_type() {
+            Ok(kind) if kind.is_dir() => {
+                scan_tree(root, &path, files, previous, fingerprint, scoped)?
+            }
+            Ok(kind) if kind.is_file() => match fingerprint(&path) {
                 Ok(hash) => {
-                    files.insert(entry.path(), hash);
+                    files.insert(path, hash);
                 }
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-                Err(error) => return Err(error),
+                Err(error) => {
+                    if !scoped {
+                        return Err(error);
+                    }
+                    retain_unreadable(&path, files, previous, &error);
+                }
+            },
+            Ok(_) => {}
+            Err(error) => {
+                if !scoped {
+                    return Err(error);
+                }
+                retain_unreadable(&path, files, previous, &error);
             }
         }
     }
     Ok(())
+}
+
+// Images are immutable and content-addressed. Detect arrivals/removals through
+// metadata without hydrating cloud-only image files on every poll. Mutable
+// entities still use hashes, even when a synchronizer preserves size and mtime.
+fn is_image(path: &Path) -> bool {
+    path.parent()
+        .and_then(Path::file_name)
+        .is_some_and(|name| name == "images")
+}
+
+fn storage_fingerprint(path: &Path) -> std::io::Result<String> {
+    if is_image(path) {
+        let metadata = std::fs::metadata(path)?;
+        return Ok(format!(
+            "image:{}:{:?}",
+            metadata.len(),
+            metadata.modified()?
+        ));
+    }
+    hash_file(path)
+}
+
+const POLL_INTERVAL: Duration = Duration::from_secs(30);
+const DEBOUNCE: Duration = Duration::from_millis(250);
+
+struct ScanSchedule {
+    poll: Instant,
+    debounce: Option<Instant>,
+}
+impl ScanSchedule {
+    fn new(now: Instant) -> Self {
+        Self {
+            poll: now + POLL_INTERVAL,
+            debounce: None,
+        }
+    }
+    fn notify(&mut self, now: Instant) {
+        self.debounce = Some(now + DEBOUNCE);
+    }
+    fn is_due(&self, now: Instant) -> bool {
+        now >= self.poll || self.debounce.is_some_and(|deadline| now >= deadline)
+    }
+    fn scanned(&mut self, now: Instant) {
+        *self = Self::new(now);
+    }
 }
 
 fn hash_file(path: &Path) -> std::io::Result<String> {
@@ -192,7 +328,7 @@ fn vault_root(app: &AppHandle, user: &UserData) -> PathBuf {
 
 pub fn setup(app: &AppHandle) -> Result<(), AppError> {
     let user = app.state::<UserData>().inner().clone();
-    let (sender, receiver) = mpsc::channel();
+    let (sender, receiver) = mpsc::sync_channel(1);
     app.manage(StorageWatcher {
         check: Mutex::new(Some(sender.clone())),
     });
@@ -208,13 +344,13 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
                         .as_ref()
                         .is_ok_and(|event| !matches!(event.kind, notify::EventKind::Access(_)))
                     {
-                        let _ = wake.send(());
+                        let _ = wake.try_send(());
                     }
                 })
                 .map_err(|error| log::warn!("Native storage watcher unavailable; polling: {error}"))
                 .ok();
             let mut local = subscribe();
-            let mut next_scan = Instant::now();
+            let mut schedule = ScanSchedule::new(Instant::now());
             let mut pending_config = false;
             while !stop.is_stopped() {
                 let vault = vault_root(&handle, &user);
@@ -243,7 +379,7 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
                     for root in &watched {
                         let _ = scan(root, &mut previous);
                     }
-                    next_scan = Instant::now() + Duration::from_secs(30);
+                    schedule.scanned(Instant::now());
                     let _ = announce(
                         &handle,
                         &user,
@@ -265,13 +401,21 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
                     }
                 }
                 if receiver.try_recv().is_ok() {
-                    next_scan = Instant::now() + Duration::from_millis(250);
-                    while receiver.try_recv().is_ok() {}
+                    schedule.notify(Instant::now());
                 }
-                if Instant::now() >= next_scan {
+                if schedule.is_due(Instant::now()) {
+                    let state = handle.state::<AppState>();
+                    let current_user = user.state();
+                    if state.snapshot().settings.user_data != current_user {
+                        state
+                            .update_snapshot(|snapshot| snapshot.settings.user_data = current_user);
+                        crate::services::runtime::publish_state(&handle, &state);
+                    }
                     let own = bus().locked().own.clone();
                     let mut current = Snapshot::new();
-                    let result = watched.iter().try_for_each(|root| scan(root, &mut current));
+                    let result = watched
+                        .iter()
+                        .try_for_each(|root| scan_storage(root, &mut current, &previous));
                     match result {
                         Ok(()) => {
                             let mut changed = differences(&previous, &current, &own);
@@ -288,7 +432,7 @@ pub fn setup(app: &AppHandle) -> Result<(), AppError> {
                         }
                         Err(error) => log::warn!("Could not scan storage: {error}"),
                     }
-                    next_scan = Instant::now() + Duration::from_secs(30);
+                    schedule.scanned(Instant::now());
                 }
                 if stop.wait(Duration::from_millis(50)) {
                     break;
@@ -328,8 +472,9 @@ fn announce(app: &AppHandle, user: &UserData, vault: &Path, paths: &[PathBuf]) -
             }
         })
         .collect();
-    // Derived indexes must be rebuilt even if a synchronizer preserved mtime.
+    // Derived indexes and search text must ignore preserved timestamps.
     for path in paths {
+        app.state::<AppState>().history.invalidate_chat_search(path);
         if path.starts_with(user.dir.join("chats")) {
             if let Ok(dirs) = super::chat_history::app_chat_dirs(app) {
                 let _ = std::fs::remove_file(dirs.index);
@@ -419,6 +564,90 @@ mod tests {
         let mut removed = Snapshot::new();
         scan(&root, &mut removed).unwrap();
         assert_eq!(differences(&after, &removed, &BTreeMap::new()), vec![path]);
+    }
+
+    #[test]
+    fn a_busy_event_stream_cannot_postpone_the_periodic_scan() {
+        let start = Instant::now();
+        let mut schedule = ScanSchedule::new(start);
+        for tick in 0..300 {
+            let now = start + Duration::from_millis(tick * 100);
+            schedule.notify(now);
+            assert!(!schedule.is_due(now));
+        }
+        let deadline = start + POLL_INTERVAL;
+        schedule.notify(deadline);
+        assert!(schedule.is_due(deadline));
+        schedule.scanned(deadline);
+        assert!(!schedule.is_due(deadline));
+        schedule.notify(deadline);
+        assert!(schedule.is_due(deadline + DEBOUNCE));
+    }
+
+    #[test]
+    fn scans_skip_unrelated_trees_and_do_not_open_images() {
+        let dir = TestDir::new("storage-scan-scope");
+        for folder in [
+            ".git/objects",
+            "unrelated",
+            "ai-vault/.git",
+            "ai-vault/profiles/p/workspace",
+            "chats/images",
+        ] {
+            std::fs::create_dir_all(dir.join(folder)).unwrap();
+            std::fs::write(dir.join(folder).join("payload"), b"skip").unwrap();
+        }
+        let mut files = Snapshot::new();
+        scan(&dir.join(""), &mut files).unwrap();
+        assert_eq!(files.len(), 1);
+        let image = dir.join("chats/images/payload");
+        assert!(files[&image].starts_with("image:"));
+        assert_ne!(files[&image], content_hash(b"skip"));
+    }
+
+    #[test]
+    fn one_unreadable_file_retains_its_revision_without_hiding_other_changes() {
+        fn fingerprint(path: &Path) -> std::io::Result<String> {
+            if path.file_name().is_some_and(|name| name == "config.json") {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::PermissionDenied,
+                    "Injected read failure",
+                ))
+            } else {
+                hash_file(path)
+            }
+        }
+        let dir = TestDir::new("storage-partial-scan");
+        std::fs::write(dir.join("config.json"), b"unreadable").unwrap();
+        std::fs::write(dir.join("tyco-user.json"), b"new marker").unwrap();
+        let previous = BTreeMap::from([(dir.join("config.json"), "last good revision".into())]);
+        let mut files = Snapshot::new();
+        scan_tree(&dir, &dir, &mut files, &previous, fingerprint, true).unwrap();
+        assert_eq!(files[&dir.join("config.json")], "last good revision");
+        assert_eq!(
+            differences(&previous, &files, &BTreeMap::new()),
+            [dir.join("tyco-user.json")]
+        );
+    }
+
+    #[test]
+    fn polling_detects_mutable_entities_even_with_preserved_metadata() {
+        let dir = TestDir::new("storage-preserved-metadata");
+        let path = dir.join("config.json");
+        std::fs::write(&path, b"old").unwrap();
+        let modified = std::fs::metadata(&path).unwrap().modified().unwrap();
+        let mut before = Snapshot::new();
+        scan(&dir, &mut before).unwrap();
+        std::fs::write(&path, b"new").unwrap();
+        std::fs::File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_times(std::fs::FileTimes::new().set_modified(modified))
+            .unwrap();
+        let mut after = Snapshot::new();
+        scan_storage(&dir, &mut after, &before).unwrap();
+        assert_eq!(differences(&before, &after, &BTreeMap::new()), [path]);
     }
 
     #[test]

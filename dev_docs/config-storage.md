@@ -254,7 +254,11 @@ meanwhile survives; where both changed one field, the change just made here
 wins, the version of the disk is kept in the recovery folder, and the windows
 get `app://settings-conflict`. The merge comes first in a save, before the
 hotkeys, the history settings and the keys are committed, so that they follow
-the merged config; the write compares with the disk once more. Without a base, e.g. after connecting another
+the merged config; the write compares with the disk once more. A changed disk revision aborts
+that attempt before committing; runtime reconciliation is retried at most three
+times. Failure to preserve a losing conflict revision aborts the save. A startup
+repair also leaves the original file untouched if its recovery copy cannot be
+written. Without a base, e.g. after connecting another
 folder, the disk is taken as it is. The storage watcher applies external revisions without rewriting the shared
 file. It updates the base only after the runtime accepts the merged settings,
 so local edits stay pending and a failed application can be retried. Invalid
@@ -299,7 +303,11 @@ nothing is created or written there, every write fails with
 `userDataUnavailable`, and the main window offers to retry, to connect another
 folder or to use the default one, since an empty set of data a sync tool spread
 would wipe out the real one. A folder of a newer layout is read and never
-written. The settings warn when other users may write into the chosen folder
+written, including quarantine and directory creation. Cached paths are guarded
+before mutations too. Losing the folder or its marker during a session blocks
+further writes and requires a restart after the data returns. The watcher
+publishes the disconnected state. Reading chats, journals and the default vault
+needs no write access. The settings warn when other users may write into the chosen folder
 (Linux): its commands run on this machine.
 
 The folder is changed by `relocate_user_data` only (`desktop-api.md`), never by
@@ -319,6 +327,10 @@ writes stay next to their file, named `.tyco-tmp-*`, so that a sync tool can
 skip them. Every reader of the user data folder takes only names of its own
 format and skips the conflicting copies and temporary files of sync tools
 (`storage::user_files`); resolving the copies is left to a later version.
+Three-way merging preserves already delivered independent edits; atomic rename
+alone cannot prevent two machines writing the same base revision concurrently.
+Keep synchronizer conflict copies for manual recovery until conflict resolution
+is implemented. See `docs/data-folder.md` for setup and recovery.
 
 The editor history is a journal per device: a device writes
 `history/editor/<device id>.jsonl` only, reads the journals of every device and
@@ -425,10 +437,14 @@ origins.
 
 `storage::watcher` uses `notify` with a 250 ms debounce, plus a content scan
 every 30 seconds on every filesystem (including network mounts). Window focus
-requests another scan. SHA-256 revisions detect equal-size edits even when a
-synchronizer preserves timestamps. Scans skip symlinks, workspace trees,
-temporary files and conflict copies using `storage::user_files`; conflict
-resolution is a separate feature. Images are hashed as streams.
+requests another scan. The polling deadline is independent of debounce, and a
+bounded signal queue coalesces busy event streams. SHA-256 revisions of mutable
+entities detect equal-size edits even when a synchronizer preserves timestamps.
+Scans cover TyCo data areas and skip unrelated root directories, `.git`, symlinks,
+workspace trees, temporary files and conflict copies. Unreadable files retain
+their previous revision without blocking changes to other files. Immutable,
+content-addressed images use metadata fingerprints; polling does not open or
+hydrate their content. Conflict resolution is a separate feature.
 
 Atomic writes and entity removals publish `StorageEvent` revisions through an
 internal broadcast bus. Only registered user/vault roots enter it; device
@@ -436,9 +452,10 @@ files and secrets do not. Matching disk echoes are suppressed, and consumed
 local revisions are retired so a later external restoration is detected.
 Local vault changes reach other windows without waiting for disk debounce.
 
-The watcher invalidates chat indexes, publishes editor history and plugin
+The watcher invalidates chat indexes and cached search text, publishes editor history and plugin
 updates, and sends relative paths in `app://storage-changed`. Idle, saved open
-chats reload with a guard against changes made during I/O. A configured external
+chats reload with a guard against changes made during I/O. Missing image previews
+retry when their image file arrives, including profile images. A configured external
 vault is observed separately; missing roots recover through polling without
 being created. A reappearing user-folder marker offers a restart on the missing
 folder screen; it never connects the folder in the running process.

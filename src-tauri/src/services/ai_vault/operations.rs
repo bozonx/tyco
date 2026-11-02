@@ -38,6 +38,10 @@ pub fn validate_id(id: &str) -> Result<(), AppError> {
 /// The root may be a folder of the user's own: only the vault's own
 /// subfolders are closed to other users.
 pub fn ensure_vault_dirs(vault_root: &Path) -> Result<(), AppError> {
+    if crate::services::storage::user_data::ensure_write_allowed(vault_root).is_err() {
+        crate::services::storage::user_data::ensure_read_allowed(vault_root)?;
+        return Ok(());
+    }
     fs::create_dir_all(vault_root)?;
     create_private_dir(&vault_root.join("profiles"))?;
     create_private_dir(&vault_root.join("projects"))?;
@@ -55,7 +59,12 @@ fn read_entries<T: serde::de::DeserializeOwned>(
     file: &str,
 ) -> Result<Vec<T>, AppError> {
     let mut entries = Vec::new();
-    for entry in fs::read_dir(dir)? {
+    let listing = match fs::read_dir(dir) {
+        Ok(listing) => listing,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(entries),
+        Err(error) => return Err(error.into()),
+    };
+    for entry in listing {
         let path = entry?.path().join(file);
         if !path.is_file() {
             continue;

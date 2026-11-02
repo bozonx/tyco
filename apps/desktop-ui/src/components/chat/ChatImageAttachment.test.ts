@@ -1,8 +1,17 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ChatImageAttachment from './ChatImageAttachment.vue'
+import { DESKTOP_EVENTS } from '@tyco/shared'
 
-const mocks = vi.hoisted(() => ({ get: vi.fn() }))
+import { installFakeDesktop } from '../../test/install-fake-desktop'
+
+const mocks = vi.hoisted(() => ({
+  get: vi.fn(),
+  profileId: undefined as string | undefined,
+}))
+vi.mock('../../composables/use-chat-scope', () => ({
+  useChatScopeProfileId: () => mocks.profileId,
+}))
 vi.mock('../../lib/chat/chat-image-storage', () => ({
   getChatImage: mocks.get,
 }))
@@ -20,6 +29,7 @@ const image = {
 describe('image attachment preview', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.profileId = undefined
     URL.createObjectURL = vi.fn(() => 'blob:preview')
     URL.revokeObjectURL = vi.fn()
   })
@@ -59,6 +69,42 @@ describe('image attachment preview', () => {
     expect(blob.type).toBe('image/webp')
     wrapper.unmount()
   })
+  it.each([undefined, 'profile-1'])(
+    'retries a missing image when its file arrives (profile: %s)',
+    async (profileId) => {
+      mocks.profileId = profileId
+      const prefix = profileId
+        ? `ai-vault/profiles/${profileId}/chats/images/`
+        : 'chats/images/'
+      const desktop = installFakeDesktop()
+      mocks.get
+        .mockRejectedValueOnce(new Error('Missing image'))
+        .mockResolvedValueOnce(new Uint8Array([1]))
+      const wrapper = mount(ChatImageAttachment, { props: { image } })
+      try {
+        await flushPromises()
+        expect(wrapper.text()).toContain('chat.imageUnavailable')
+        await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, [
+          `${prefix}another.webp`,
+        ])
+        await flushPromises()
+        expect(mocks.get).toHaveBeenCalledTimes(1)
+        await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, [
+          `${prefix}image.webp`,
+        ])
+        await flushPromises()
+        expect(wrapper.get('img').attributes('src')).toBe('blob:preview')
+        await desktop.emit(DESKTOP_EVENTS.STORAGE_CHANGED, [
+          `${prefix}image.webp`,
+        ])
+        await flushPromises()
+        expect(mocks.get).toHaveBeenCalledTimes(2)
+      } finally {
+        wrapper.unmount()
+        desktop.dispose()
+      }
+    }
+  )
   it('does not allocate an object URL after disposal', async () => {
     let finish!: (bytes: Uint8Array) => void
     mocks.get.mockReturnValue(

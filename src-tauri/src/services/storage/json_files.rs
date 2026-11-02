@@ -53,6 +53,7 @@ pub(super) fn write_jsonl<T: Serialize>(path: &Path, items: &[T]) -> Result<(), 
 }
 
 pub(super) fn remove_file_if_exists(path: &Path) -> Result<(), AppError> {
+    super::user_data::ensure_write_allowed(path)?;
     match fs::remove_file(path) {
         Ok(()) => {
             super::watcher::deleted(path);

@@ -321,7 +321,7 @@ impl ChatImageStore {
                 }
                 let extension = extension(canonical.media_type.as_str())
                     .ok_or_else(|| AppError::InvalidInput("Unsupported chat image type".into()))?;
-                fs::create_dir_all(directory)?;
+                crate::services::atomic_file::create_private_dir(directory)?;
                 let path = directory.join(format!("{}.{extension}", image.id));
                 if !path.exists() {
                     write_private_bytes(&path, &bytes)?;
@@ -350,6 +350,7 @@ pub fn remove_orphan_images(
     orphans_path: &Path,
     now_ms: u64,
 ) -> Result<(), AppError> {
+    crate::services::storage::user_data::ensure_write_allowed(chats_dir)?;
     let directory = chats_dir.join("images");
     let mut record: OrphanRecord = fs::read(orphans_path)
         .ok()

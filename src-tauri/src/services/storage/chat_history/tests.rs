@@ -659,3 +659,53 @@ fn every_vault_keeps_its_indexes_apart() {
     assert_eq!(one, vault_index_dir(&index, &dir.join("one/../one")));
     assert!(one.starts_with(index.join("ai-vault")));
 }
+
+#[test]
+fn read_only_chats_are_listed_without_quarantining_broken_files() {
+    let dir = TestDir::new("chat-read-only");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    save_chat(&dirs, enabled_policy(), &images, chat_item("valid")).unwrap();
+    let broken = dirs.chats.join("broken.json");
+    fs::write(&broken, "{broken").unwrap();
+    fs::write(dir.join("tyco-user.json"), r#"{"formatVersion":2}"#).unwrap();
+    let data = super::super::user_data::UserData::resolve(&dir, "");
+    super::super::user_data::register_write_guard(&data);
+    assert_eq!(ids(&dirs), ["valid"]);
+    assert!(open_chat(&dirs, "valid".into()).unwrap().is_some());
+    assert!(open_chat(&dirs, "broken".into()).is_err());
+    assert_eq!(fs::read_to_string(broken).unwrap(), "{broken");
+    assert!(save_chat(&dirs, enabled_policy(), &images, chat_item("new")).is_err());
+    assert!(!dirs.chats.join("new.json").exists());
+}
+
+#[test]
+fn invalidation_refreshes_search_even_when_size_and_mtime_are_preserved() {
+    let dir = TestDir::new("chat-search-preserved-mtime");
+    let dirs = dirs(&dir);
+    let images = Mutex::new(ChatImageStore::default());
+    let cache = ChatSearchCache::default();
+    let mut chat = chat_item("doc");
+    chat.title = "before".into();
+    save_chat(&dirs, enabled_policy(), &images, chat.clone()).unwrap();
+    let history = list_chats(&dirs).unwrap();
+    assert_eq!(
+        search_chats(&dirs.chats, history.clone(), "before".into(), &cache).unwrap(),
+        ["doc"]
+    );
+    let path = dirs.chats.join("doc.json");
+    let modified = fs::metadata(&path).unwrap().modified().unwrap();
+    chat.title = "after!".into();
+    write_json(&path, &chat).unwrap();
+    fs::File::options()
+        .write(true)
+        .open(&path)
+        .unwrap()
+        .set_times(fs::FileTimes::new().set_modified(modified))
+        .unwrap();
+    cache.invalidate(&path);
+    assert_eq!(
+        search_chats(&dirs.chats, history, "after!".into(), &cache).unwrap(),
+        ["doc"]
+    );
+}

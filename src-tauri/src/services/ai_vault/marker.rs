@@ -75,6 +75,9 @@ fn is_unmarked_vault(dir: &Path) -> bool {
 /// The vault in the default place, `dir`, which the caller has created: it
 /// gets its marker when it has none.
 pub fn open_default(dir: &Path) -> Result<Vault, AppError> {
+    if crate::services::storage::user_data::ensure_write_allowed(dir).is_err() {
+        return open_read_only(dir);
+    }
     fs::create_dir_all(dir)?;
     let marker = match read_marker(dir)? {
         Some(marker) => marker,
@@ -82,6 +85,18 @@ pub fn open_default(dir: &Path) -> Result<Vault, AppError> {
     };
     Ok(Vault {
         root: dir.to_path_buf(),
+        id: marker.vault_id,
+    })
+}
+
+/// Opens existing vault data without creating directories or a marker.
+pub fn open_read_only(dir: &Path) -> Result<Vault, AppError> {
+    crate::services::storage::user_data::ensure_read_allowed(dir)?;
+    let marker = read_marker(dir)?.ok_or_else(|| {
+        AppError::VaultUnavailable(format!("The AI vault is not connected: {}", dir.display()))
+    })?;
+    Ok(Vault {
+        root: dir.to_owned(),
         id: marker.vault_id,
     })
 }
@@ -153,6 +168,19 @@ mod tests {
         let vault = open_default(&root).unwrap();
         assert!(root.join(VAULT_MARKER_FILE).is_file());
         assert_eq!(open_default(&root).unwrap(), vault);
+    }
+
+    #[test]
+    fn a_read_only_default_vault_is_opened_without_creating_anything() {
+        let dir = TestDir::new("vault-read-only");
+        let vault = open_default(&dir.join("ai-vault")).unwrap();
+        fs::write(dir.join("tyco-user.json"), r#"{"formatVersion":2}"#).unwrap();
+        let data = crate::services::storage::user_data::UserData::resolve(&dir, "");
+        crate::services::storage::user_data::register_write_guard(&data);
+        assert_eq!(open_default(&vault.root).unwrap(), vault);
+        assert!(!vault.root.join("profiles").exists());
+        assert!(open_default(&dir.join("missing")).is_err());
+        assert!(!dir.join("missing").exists());
     }
 
     #[test]

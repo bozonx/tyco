@@ -46,8 +46,11 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { useChatScopeProfileId } from '../../composables/use-chat-scope'
 import { useI18n } from '../../composables/use-i18n'
 import { getChatImage } from '../../lib/chat/chat-image-storage'
+import { desktopClient } from '../../lib/desktop/client'
+import { clientLogger } from '../../lib/logger'
 import BaseDialog from '../common/BaseDialog.vue'
 import IconButton from '../common/IconButton.vue'
+import { DESKTOP_EVENTS } from '@tyco/shared'
 import type { ChatImage } from '@tyco/shared'
 
 const props = defineProps<{
@@ -82,7 +85,32 @@ async function load() {
   }
 }
 watch(() => props.image.id, load, { immediate: true })
+let disposed = false
+let stopListening: (() => void) | undefined
+if (desktopClient.isAvailable()) {
+  const prefix = profileId
+    ? `ai-vault/profiles/${profileId}/chats/images/`
+    : 'chats/images/'
+  void desktopClient
+    .listen(DESKTOP_EVENTS.STORAGE_CHANGED, (paths) => {
+      if (
+        !disposed &&
+        !url.value &&
+        paths.some((path) => path.startsWith(`${prefix}${props.image.id}.`))
+      )
+        void load()
+    })
+    .then((stop) => {
+      if (disposed) stop()
+      else stopListening = stop
+    })
+    .catch((error) =>
+      clientLogger.error('Could not follow chat images', error, 'chat')
+    )
+}
 onBeforeUnmount(() => {
+  disposed = true
+  stopListening?.()
   version++
   release()
 })

@@ -690,3 +690,94 @@ fn an_external_revision_without_a_cached_base_takes_the_disk_and_keeps_device_fi
     assert_eq!(merged.value["hotkeys"], current["hotkeys"]);
     assert_eq!(setup.user_file(), disk);
 }
+
+#[test]
+fn a_broken_read_only_config_is_left_in_place() {
+    let setup = Setup::new("config-read-only-broken");
+    let raw = b"{broken";
+    fs::write(setup.user_path(), raw).unwrap();
+    let files = ConfigFiles::at(
+        Some(setup.user_path()),
+        false,
+        setup.dir.join("state/base.json"),
+    );
+    let loaded = files.load(&setup.device, &no_notes).unwrap();
+    assert!(!loaded.is_complete);
+    assert_eq!(fs::read(setup.user_path()).unwrap(), raw);
+    assert_eq!(fs::read_dir(setup.dir.join("user")).unwrap().count(), 1);
+}
+
+#[test]
+fn a_conflict_is_not_overwritten_when_recovery_cannot_be_written() {
+    let setup = Setup::new("config-conflict-recovery-failure");
+    let mut local = setup.load().value;
+    local["appearance"]["theme"] = json!("dark");
+    let mut disk = setup.user_file();
+    disk["appearance"]["theme"] = json!("light");
+    let raw = serde_json::to_vec(&disk).unwrap();
+    fs::write(setup.user_path(), &raw).unwrap();
+    let recovery = setup.dir.join("recovery-blocked");
+    fs::write(&recovery, "not a directory").unwrap();
+    crate::services::atomic_file::register_recovery_root(&setup.dir.join("user"), &recovery);
+    let device = setup.device.snapshot();
+    assert!(setup.files.save(&setup.device, &no_notes, &local).is_err());
+    assert_eq!(fs::read(setup.user_path()).unwrap(), raw);
+    assert_eq!(setup.device.snapshot(), device);
+}
+
+#[test]
+fn a_disk_change_after_preparation_requires_runtime_reconciliation_again() {
+    let setup = Setup::new("config-prepared-race");
+    let config = setup.load().value;
+    let prepared = setup
+        .files
+        .with_disk_changes(&setup.device, &no_notes, &config)
+        .unwrap();
+    let mut disk = setup.user_file();
+    disk["editor"]["history"]["retentionDays"] = json!(7);
+    let raw = serde_json::to_vec(&disk).unwrap();
+    fs::write(setup.user_path(), &raw).unwrap();
+    let failure = setup
+        .files
+        .save(&setup.device, &no_notes, &prepared.value)
+        .err()
+        .unwrap();
+    assert!(matches!(failure.error, AppError::Stale(_)));
+    assert_eq!(fs::read(setup.user_path()).unwrap(), raw);
+    let prepared = setup
+        .files
+        .with_disk_changes(&setup.device, &no_notes, &config)
+        .unwrap();
+    assert_eq!(prepared.value["editor"]["history"]["retentionDays"], 7);
+    assert_eq!(setup.save(&prepared.value).value, prepared.value);
+}
+
+#[test]
+fn cached_config_files_do_not_write_after_the_root_disappears() {
+    let dir = TestDir::new("cached-config-disconnect");
+    let root = dir.join("user");
+    fs::create_dir(&root).unwrap();
+    crate::services::storage::user_data::write_marker(&root).unwrap();
+    let data = crate::services::storage::user_data::UserData::resolve(&root, "");
+    crate::services::storage::user_data::register_write_guard(&data);
+    let files = ConfigFiles::new(&data, &dir.join("state"));
+    let device = DeviceStore::in_memory(DeviceFile::default());
+    let config = files.load(&device, &no_notes).unwrap().value;
+    fs::rename(&root, dir.join("unmounted")).unwrap();
+    assert!(files.save(&device, &no_notes, &config).is_err());
+    assert!(!root.exists());
+}
+
+#[test]
+fn a_lossy_repair_does_not_overwrite_a_file_when_recovery_is_unavailable() {
+    let setup = Setup::new("config-repair-recovery-failure");
+    let raw = br#"{"appearance":{"theme":"invalid"}}"#;
+    fs::write(setup.user_path(), raw).unwrap();
+    let recovery = setup.dir.join("blocked-recovery");
+    fs::write(&recovery, "not a directory").unwrap();
+    crate::services::atomic_file::register_recovery_root(&setup.dir.join("user"), &recovery);
+    let loaded = setup.load();
+    assert!(!loaded.is_complete);
+    assert_eq!(loaded.value["appearance"]["theme"], "auto");
+    assert_eq!(fs::read(setup.user_path()).unwrap(), raw);
+}

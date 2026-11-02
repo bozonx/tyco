@@ -9,6 +9,10 @@
 //! the real one. A folder laid out by a newer Tyco is read and never written.
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, RwLock};
+
+use crate::locks::RwLockExt;
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -86,6 +90,7 @@ pub struct UserData {
     pub is_writable_by_others: bool,
     /// The id of this device, set once the device file is read.
     pub device_id: String,
+    disconnected: Arc<AtomicBool>,
 }
 
 impl UserData {
@@ -110,6 +115,7 @@ impl UserData {
             status,
             is_writable_by_others,
             device_id: String::new(),
+            disconnected: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -122,7 +128,7 @@ impl UserData {
             path: self.dir.to_string_lossy().into_owned(),
             default_path: self.default_dir.to_string_lossy().into_owned(),
             is_default: self.is_default(),
-            status: self.status,
+            status: self.current_status(),
             is_writable_by_others: self.is_writable_by_others,
             device_id: self.device_id.clone(),
             platform: crate::services::platform::hotkeys::platform_name().to_owned(),
@@ -131,7 +137,7 @@ impl UserData {
 
     /// The folder, when it allows `access`.
     pub fn dir_for(&self, access: UserDirAccess) -> Result<&Path, AppError> {
-        match (self.status, access) {
+        match (self.current_status(), access) {
             (UserDataStatus::Connected, _) | (UserDataStatus::NewerFormat, UserDirAccess::Read) => {
                 Ok(&self.dir)
             }
@@ -149,14 +155,64 @@ impl UserData {
     }
 
     pub fn is_writable(&self) -> bool {
-        self.status == UserDataStatus::Connected
+        self.dir_for(UserDirAccess::Write).is_ok()
     }
+
+    fn current_status(&self) -> UserDataStatus {
+        // Once disconnected, resuming requires a restart, including when a
+        // mounted folder returns. Cached services must not reconnect silently.
+        if self.status == UserDataStatus::NotConnected || self.disconnected.load(Ordering::SeqCst) {
+            return UserDataStatus::NotConnected;
+        }
+        let current = chosen_dir_status(&self.dir);
+        if current == UserDataStatus::NotConnected {
+            self.disconnected.store(true, Ordering::SeqCst);
+        }
+        if current == UserDataStatus::Connected && self.status == UserDataStatus::NewerFormat {
+            UserDataStatus::NewerFormat
+        } else {
+            current
+        }
+    }
+}
+
+// Guard cached paths too: plugins, config files and history retain paths beyond
+// the call that resolved them. Recheck before creating or mutating their files.
+static USER_ROOTS: RwLock<Vec<UserData>> = RwLock::new(Vec::new());
+
+pub(crate) fn register_write_guard(data: &UserData) {
+    let mut roots = USER_ROOTS.write_locked();
+    roots.retain(|root| root.dir != data.dir);
+    roots.push(data.clone());
+}
+
+pub(crate) fn ensure_write_allowed(path: &Path) -> Result<(), AppError> {
+    ensure_access_allowed(path, UserDirAccess::Write)
+}
+
+pub(crate) fn ensure_read_allowed(path: &Path) -> Result<(), AppError> {
+    ensure_access_allowed(path, UserDirAccess::Read)
+}
+
+fn ensure_access_allowed(path: &Path, access: UserDirAccess) -> Result<(), AppError> {
+    let roots = USER_ROOTS.read_locked();
+    if let Some(root) = roots
+        .iter()
+        .filter(|root| path.starts_with(&root.dir))
+        .max_by_key(|root| root.dir.components().count())
+    {
+        root.dir_for(access)?;
+    }
+    Ok(())
 }
 
 /// The default folder is not chosen by the user and never counts as synced:
 /// it is created, and marked, when it is not there. What it holds already,
 /// e.g. data of an earlier installation, is used as it is.
 fn open_default_dir(dir: &Path) -> UserDataStatus {
+    if matches!(read_marker(dir), Marker::Version(version) if version > USER_FORMAT_VERSION) {
+        return UserDataStatus::NewerFormat;
+    }
     if let Err(error) = create_private_dir(dir) {
         log::error!(
             "Could not create the data folder {}: {error}",
@@ -241,6 +297,7 @@ pub fn open_user_data(app: &tauri::App) -> Result<UserData, AppError> {
     )?;
     let mut data = UserData::resolve(&paths.data_dir, &device.snapshot().user_data_path);
     data.device_id = device.device_id();
+    register_write_guard(&data);
     match data.status {
         UserDataStatus::Connected => {
             register_recovery_root(&data.dir, &recovery.join("user"));
@@ -394,6 +451,37 @@ mod tests {
         assert!(data.dir_for(UserDirAccess::Write).is_err());
         let default = UserData::resolve(&chosen, "");
         assert_eq!(default.status, UserDataStatus::NewerFormat);
+    }
+
+    #[test]
+    fn cached_writers_do_not_recreate_a_disconnected_root() {
+        let dir = TestDir::new("user-data-disconnect");
+        let root = dir.join("chosen");
+        fs::create_dir(&root).unwrap();
+        write_marker(&root).unwrap();
+        let data = UserData::resolve(&dir.join("default"), root.to_str().unwrap());
+        register_write_guard(&data);
+        fs::rename(&root, dir.join("unmounted")).unwrap();
+        assert!(create_private_dir(&root.join("history/editor")).is_err());
+        assert!(!root.exists());
+        assert_eq!(data.state().status, UserDataStatus::NotConnected);
+        fs::rename(dir.join("unmounted"), &root).unwrap();
+        assert!(
+            data.dir_for(UserDirAccess::Write).is_err(),
+            "a restart is required"
+        );
+    }
+
+    #[test]
+    fn a_marker_changed_to_a_newer_layout_blocks_cached_writers() {
+        let dir = TestDir::new("user-data-newer-live");
+        write_marker(&dir).unwrap();
+        let data = UserData::resolve(&dir.join("default"), dir.to_str().unwrap());
+        register_write_guard(&data);
+        fs::write(dir.join(USER_MARKER_FILE), r#"{"formatVersion":2}"#).unwrap();
+        assert!(data.dir_for(UserDirAccess::Read).is_ok());
+        assert!(write_private(&dir.join("config.json"), "{}").is_err());
+        assert!(!dir.join("config.json").exists());
     }
 
     #[cfg(unix)]

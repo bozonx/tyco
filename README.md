@@ -112,3 +112,6 @@ hotkeys retain their own behavior; they are independent of external access.
 
 See [External control API](docs/external-control.md) for the complete CLI,
 D-Bus contract, permissions, exit codes, and platform behavior.
+
+See [Moving and synchronizing your data](docs/data-folder.md) for folder setup,
+second-computer configuration, offline availability, and conflict recovery.

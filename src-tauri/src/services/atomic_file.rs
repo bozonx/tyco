@@ -101,6 +101,7 @@ fn write_atomic(
     #[cfg_attr(not(unix), allow(unused_variables))] mode: u32,
     permissions: Option<fs::Permissions>,
 ) -> Result<(), AppError> {
+    crate::services::storage::user_data::ensure_write_allowed(path)?;
     let (temporary, mut file) = loop {
         let mut name = std::ffi::OsString::from(TEMPORARY_FILE_PREFIX);
         name.push(path.file_name().unwrap_or_default());
@@ -125,6 +126,7 @@ fn write_atomic(
     }
     file.sync_all()?;
     drop(file);
+    crate::services::storage::user_data::ensure_write_allowed(path)?;
     rename_retrying(&temporary.0, path)?;
     sync_parent(path)?;
     crate::services::storage::watcher::written(path, raw);
@@ -194,6 +196,7 @@ pub(super) fn sync_parent(path: &Path) -> Result<(), AppError> {
 /// a file system without them, is used as it is: the app must start either
 /// way.
 pub fn create_private_dir(path: &Path) -> Result<(), AppError> {
+    crate::services::storage::user_data::ensure_write_allowed(path)?;
     fs::create_dir_all(path)?;
     #[cfg(unix)]
     {
@@ -212,6 +215,7 @@ pub fn create_private_dir(path: &Path) -> Result<(), AppError> {
 /// defaults, keeping the original for the user to recover. Returns where it
 /// went.
 pub fn quarantine(path: &Path) -> Result<PathBuf, AppError> {
+    crate::services::storage::user_data::ensure_write_allowed(path)?;
     let stamp = crate::services::clock::now_ns();
     let target = loop {
         let target = copy_path(

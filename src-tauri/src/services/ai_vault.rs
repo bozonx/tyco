@@ -48,9 +48,18 @@ pub fn resolve_vault(app: &AppHandle, user_config: &Value) -> Result<Vault, AppE
         crate::services::storage::UserDirAccess::Read,
     )
     .ok();
-    open_vault(Some(&configured), user_dir.as_deref(), || {
-        user_sub_dir(app, VAULT_DIR_NAME)
-    })
+    if configured.trim().is_empty() {
+        let root = user_dir
+            .ok_or_else(|| {
+                AppError::UserDataUnavailable("The data folder is not connected".into())
+            })?
+            .join(VAULT_DIR_NAME);
+        marker::open_default(&root)
+    } else {
+        open_vault(Some(&configured), user_dir.as_deref(), || {
+            user_sub_dir(app, VAULT_DIR_NAME)
+        })
+    }
 }
 
 /// The folder of the default vault inside the user data folder.

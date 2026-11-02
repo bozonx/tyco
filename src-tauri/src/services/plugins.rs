@@ -190,6 +190,7 @@ impl PluginStore {
 
     fn writable_dir(&self) -> Result<&Path, AppError> {
         let dir = self.dir()?;
+        super::storage::user_data::ensure_write_allowed(dir)?;
         if !self.is_writable {
             return Err(AppError::UserDataUnavailable(
                 "The data folder is read only".into(),
