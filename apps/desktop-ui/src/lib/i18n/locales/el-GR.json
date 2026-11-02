@@ -4,11 +4,13 @@
     "copy": "Αντιγραφή",
     "copyToClipboard": "Αντιγραφή και κλείσιμο",
     "correction": "Διόρθωση",
+    "customTransformation": "Ελεύθερος μετασχηματισμός",
     "insertIntoWindow": "Εισαγωγή στο παράθυρο",
     "script": "Σενάριο / Εντολή",
     "stylingMenu": "Διαμόρφωση στυλ κειμένου",
     "transformationMenu": "Μετασχηματισμός κειμένου",
     "translationMenu": "Μετάφραση",
+    "voiceTransformation": "Φωνητικός μετασχηματισμός",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Ενέργειες",
-    "aiCustomPrompt": "Δικό σας αίτημα",
     "aiPromptPlaceholder": "Τι να γίνει με το κείμενο;",
     "aiPromptRun": "Εκτέλεση",
     "aiPromptSave": "Αποθήκευση ως εργασία",
@@ -739,6 +740,7 @@
     "hotkeyActions": {
       "chat": "Χρήση του επιλεγμένου κειμένου ως πλαισίου στη συνομιλία ΤΝ",
       "correction": "Διόρθωση με προεπισκόπηση",
+      "customTransformation": "Ελεύθερος μετασχηματισμός κειμένου",
       "editor": "Άνοιγμα του επιλεγμένου κειμένου στον επεξεργαστή",
       "history": "Ιστορικό",
       "quickInput": "Γρήγορη εισαγωγή κειμένου",
@@ -749,7 +751,8 @@
       "translation": "Μετάφραση του επιλεγμένου κειμένου",
       "voice": "Φωνητική εισαγωγή",
       "voiceChat": "Φωνητική ερώτηση για το επιλεγμένο κείμενο στη συνομιλία ΤΝ",
-      "voiceCommands": "Φωνητικές εντολές"
+      "voiceCommands": "Φωνητικές εντολές",
+      "voiceTransformation": "Φωνητικός μετασχηματισμός κειμένου"
     },
     "hotkeyInput": {
       "cancelHint": "Esc για ακύρωση",

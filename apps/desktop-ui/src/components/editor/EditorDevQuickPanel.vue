@@ -87,6 +87,18 @@ const QUICK_MODES: ReadonlyArray<{
     title: 'Open Quick Transform',
     icon: 'mdi:auto-fix',
   },
+  {
+    mode: ActivationMode.CUSTOM_TRANSFORMATION,
+    label: 'Custom Transform',
+    title: 'Open Quick Custom Transform',
+    icon: 'mdi:pencil-outline',
+  },
+  {
+    mode: ActivationMode.VOICE_TRANSFORMATION,
+    label: 'Voice Transform',
+    title: 'Open Quick Voice Transform',
+    icon: 'mdi:microphone-outline',
+  },
 ]
 
 const editorInputStore = useEditorInputStore()

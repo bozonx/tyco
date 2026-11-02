@@ -218,6 +218,16 @@ describe('SettingsGlobalActionsTab.vue', () => {
       '[data-label="settings.hotkeyActions.transformation"]'
     )
     expect(transformationRow.exists()).toBe(true)
+
+    const customTransformationRow = wrapper.find(
+      '[data-label="settings.hotkeyActions.customTransformation"]'
+    )
+    expect(customTransformationRow.exists()).toBe(true)
+
+    const voiceTransformationRow = wrapper.find(
+      '[data-label="settings.hotkeyActions.voiceTransformation"]'
+    )
+    expect(voiceTransformationRow.exists()).toBe(true)
   })
 
   it('renders voice hold-to-record toggle when provider supports hold and updates config', async () => {

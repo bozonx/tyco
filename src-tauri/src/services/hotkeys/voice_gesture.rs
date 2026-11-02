@@ -100,7 +100,10 @@ fn is_voice_hold_enabled(app: &AppHandle) -> bool {
 
 pub(crate) fn pressed(app: &AppHandle, target: &HotkeyTarget, id: &str) -> Result<(), AppError> {
     let HotkeyTarget::Mode(
-        mode @ (ActivationMode::Voice | ActivationMode::VoiceChat | ActivationMode::VoiceCommands),
+        mode @ (ActivationMode::Voice
+        | ActivationMode::VoiceChat
+        | ActivationMode::VoiceCommands
+        | ActivationMode::VoiceTransformation),
     ) = target
     else {
         return target.trigger(app, id);

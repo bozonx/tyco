@@ -1,0 +1,92 @@
+import { mount, flushPromises } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
+import {
+  installFakeDesktop,
+  type TestDesktop,
+} from '../../test/install-fake-desktop'
+import CustomTransformationMenu from './CustomTransformationMenu.vue'
+import QueryPanel from './QueryPanel.vue'
+
+vi.mock('../../composables/use-i18n', () => ({
+  useI18n: () => ({ t: (key: string) => key }),
+}))
+
+const invokeCall = vi.hoisted(() => vi.fn())
+vi.mock('../../stores/invocations', () => ({
+  useInvocationsStore: () => ({ call: invokeCall }),
+}))
+
+describe('CustomTransformationMenu', () => {
+  let desktop: TestDesktop
+
+  beforeEach(() => {
+    desktop = installFakeDesktop()
+    invokeCall.mockReset()
+    invokeCall.mockResolvedValue({
+      ok: true,
+      content: 'Transformed result',
+      meta: { provider: 'llm', kind: 'llm' },
+    })
+  })
+
+  afterEach(() => {
+    desktop.dispose()
+  })
+
+  it('renders TextPreview and QueryPanel with placeholder', () => {
+    const wrapper = mount(CustomTransformationMenu, {
+      props: { text: 'Some sample text' },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          TextPreview: {
+            props: ['text'],
+            template: '<div class="text-preview">{{ text }}</div>',
+          },
+          ActionOverlayLayout: {
+            template:
+              '<div class="layout"><slot name="preview" /><slot name="actions" /></div>',
+          },
+        },
+      },
+    })
+
+    expect(wrapper.find('.text-preview').text()).toBe('Some sample text')
+    const queryPanel = wrapper.findComponent(QueryPanel)
+    expect(queryPanel.exists()).toBe(true)
+    expect(queryPanel.props('placeholder')).toBe('menu.aiPromptPlaceholder')
+  })
+
+  it('submits prompt and triggers core.transformation and diff modal', async () => {
+    const wrapper = mount(CustomTransformationMenu, {
+      props: { text: 'Some sample text' },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          TextPreview: true,
+          ActionOverlayLayout: {
+            template:
+              '<div class="layout"><slot name="preview" /><slot name="actions" /></div>',
+          },
+        },
+      },
+    })
+
+    const queryPanel = wrapper.findComponent(QueryPanel)
+    queryPanel.vm.$emit('submit', {
+      option: { label: 'Make it better' },
+      ctrl: false,
+    })
+    await flushPromises()
+
+    expect(invokeCall).toHaveBeenCalledWith(
+      'core.transformation',
+      'Some sample text',
+      expect.objectContaining({ toolConfig: { prompt: 'Make it better' } })
+    )
+
+    const modalsStore = useMenuModalsStore()
+    expect(modalsStore.currentModal).toBe(MenuModals.DIFF)
+  })
+})

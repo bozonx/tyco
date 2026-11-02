@@ -96,6 +96,12 @@ vi.mock('../../views/StylingView.vue', () => ({
 vi.mock('../../views/TransformationView.vue', () => ({
   default: { template: '<div class="transformation-view" />' },
 }))
+vi.mock('../../views/CustomTransformationView.vue', () => ({
+  default: { template: '<div class="custom-transformation-view" />' },
+}))
+vi.mock('../../views/VoiceTransformationView.vue', () => ({
+  default: { template: '<div class="voice-transformation-view" />' },
+}))
 vi.mock('../../views/VoiceView.vue', () => ({
   default: defineComponent({
     setup() {

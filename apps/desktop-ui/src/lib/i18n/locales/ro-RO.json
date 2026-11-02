@@ -4,11 +4,13 @@
     "copy": "Copiază",
     "copyToClipboard": "Copiază și închide",
     "correction": "Corectare",
+    "customTransformation": "Transformare liberă",
     "insertIntoWindow": "Inserează în fereastră",
     "script": "Script / Comandă",
     "stylingMenu": "Stilizare text",
     "transformationMenu": "Transformare text",
     "translationMenu": "Traducere",
+    "voiceTransformation": "Transformare vocală",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Acțiuni",
-    "aiCustomPrompt": "Cerere proprie",
     "aiPromptPlaceholder": "Ce să fac cu textul?",
     "aiPromptRun": "Rulează",
     "aiPromptSave": "Salvează ca sarcină",
@@ -742,6 +743,7 @@
     "hotkeyActions": {
       "chat": "Folosește textul selectat ca context în chatul AI",
       "correction": "Corectare cu previzualizare",
+      "customTransformation": "Transformare liberă a textului",
       "editor": "Deschide textul selectat în editor",
       "history": "Istoric",
       "quickInput": "Introducere rapidă de text",
@@ -752,7 +754,8 @@
       "translation": "Tradu textul selectat",
       "voice": "Introducere vocală",
       "voiceChat": "Întrebare vocală despre textul selectat în chatul AI",
-      "voiceCommands": "Comenzi vocale"
+      "voiceCommands": "Comenzi vocale",
+      "voiceTransformation": "Transformare vocală a textului"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",

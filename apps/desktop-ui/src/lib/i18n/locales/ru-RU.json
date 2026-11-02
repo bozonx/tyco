@@ -4,11 +4,13 @@
     "copy": "Скопировать",
     "copyToClipboard": "Скопировать и закрыть",
     "correction": "Коррекция",
+    "customTransformation": "Свободная трансформация",
     "insertIntoWindow": "В окно",
     "script": "Скрипт / Команда",
     "stylingMenu": "Стилизация текста",
     "transformationMenu": "Трансформация текста",
     "translationMenu": "Перевод",
+    "voiceTransformation": "Голосовая трансформация",
     "webhook": "Вебхук"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Действия",
-    "aiCustomPrompt": "Свой запрос",
     "aiPromptPlaceholder": "Что сделать с текстом?",
     "aiPromptRun": "Выполнить",
     "aiPromptSave": "Сохранить как задание",
@@ -739,6 +740,7 @@
     "hotkeyActions": {
       "chat": "Использовать выделенный текст как контекст в чате с ИИ",
       "correction": "Коррекция с предпросмотром",
+      "customTransformation": "Свободная трансформация",
       "editor": "Открыть выделенный текст в редакторе",
       "history": "История",
       "quickInput": "Режим быстрого текстового ввода",
@@ -749,7 +751,8 @@
       "translation": "Перевод выделенного текста",
       "voice": "Голосовой ввод",
       "voiceChat": "Голосовой вопрос по выделенному тексту в чате с ИИ",
-      "voiceCommands": "Голосовые команды"
+      "voiceCommands": "Голосовые команды",
+      "voiceTransformation": "Голосовая трансформация"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — отмена",

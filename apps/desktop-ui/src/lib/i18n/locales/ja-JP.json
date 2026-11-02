@@ -4,11 +4,13 @@
     "copy": "コピー",
     "copyToClipboard": "コピーして閉じる",
     "correction": "校正",
+    "customTransformation": "自由変換",
     "insertIntoWindow": "ウィンドウに挿入",
     "script": "スクリプト / コマンド",
     "stylingMenu": "テキストスタイリング",
     "transformationMenu": "テキスト変換",
     "translationMenu": "翻訳",
+    "voiceTransformation": "音声変換",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "アクション",
-    "aiCustomPrompt": "カスタムリクエスト",
     "aiPromptPlaceholder": "テキストに対して何をしますか？",
     "aiPromptRun": "実行",
     "aiPromptSave": "タスクとして保存",
@@ -739,6 +740,7 @@
     "hotkeyActions": {
       "chat": "選択テキストをAIチャットのコンテキストとして使用",
       "correction": "プレビュー付き校正",
+      "customTransformation": "テキストの自由変換",
       "editor": "選択テキストをエディターで開く",
       "history": "履歴",
       "quickInput": "クイックテキスト入力",
@@ -749,7 +751,8 @@
       "translation": "選択テキストを翻訳",
       "voice": "音声入力",
       "voiceChat": "選択テキストについてAIチャットで音声質問",
-      "voiceCommands": "音声コマンド"
+      "voiceCommands": "音声コマンド",
+      "voiceTransformation": "テキストの音声変換"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",

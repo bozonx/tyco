@@ -194,6 +194,8 @@ const MODE_ORDER: HotkeyId[] = [
   'translation',
   'styling',
   'transformation',
+  'customTransformation',
+  'voiceTransformation',
   'history',
 ]
 

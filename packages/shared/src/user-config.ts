@@ -144,6 +144,8 @@ export interface HotkeysConfig {
   translation: string
   styling: string
   transformation: string
+  customTransformation: string
+  voiceTransformation: string
   history: string
   voiceCommands: string
   selectionCorrection: string

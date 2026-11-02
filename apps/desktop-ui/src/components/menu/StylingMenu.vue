@@ -10,7 +10,6 @@
 <script setup lang="ts">
 import type { StylingMenuParams } from '../../lib/modals/menu-modal-params'
 import type { RuleLibraryMenuKind } from '../../lib/modals/rule-library-menu'
-import { addStylingFromPrompt } from '../../lib/styling/styling-prompt'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import RuleLibraryMenu from './RuleLibraryMenu.vue'
 import { APP_CONFIG } from '@tyco/shared'
@@ -29,8 +28,6 @@ const kind: RuleLibraryMenuKind = {
   minTextLength: APP_CONFIG.minStylingLength,
   pending: { styling: true },
   getLibrary: (config) => config?.styling,
-  patchLibrary: (library) => ({ styling: library }),
-  savePrompt: addStylingFromPrompt,
   clearStartupItem: (stepId) =>
     menuModalsStore.updateStep(stepId, MenuModals.STYLING, {
       stylingId: undefined,

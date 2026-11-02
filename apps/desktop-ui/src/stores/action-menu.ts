@@ -32,6 +32,12 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         transformationId,
       })
     },
+    openCustomTransformationModal: (text: string) => {
+      menuModalsStore.nextModal(MenuModals.CUSTOM_TRANSFORMATION, { text })
+    },
+    openVoiceTransformationModal: (text: string) => {
+      menuModalsStore.nextModal(MenuModals.VOICE_TRANSFORMATION, { text })
+    },
     openStylingModal: (text: string, stylingId?: string) => {
       menuModalsStore.nextModal(MenuModals.STYLING, { text, stylingId })
     },

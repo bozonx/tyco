@@ -4,11 +4,13 @@
     "copy": "კოპირება",
     "copyToClipboard": "კოპირება და დახურვა",
     "correction": "შესწორება",
+    "customTransformation": "თავისუფალი ტრანსფორმაცია",
     "insertIntoWindow": "ფანჯარაში ჩასმა",
     "script": "სკრიპტი / ბრძანება",
     "stylingMenu": "ტექსტის სტილიზაცია",
     "transformationMenu": "ტექსტის ტრანსფორმაცია",
     "translationMenu": "თარგმანი",
+    "voiceTransformation": "ხმოვანი ტრანსფორმაცია",
     "webhook": "ვებჰუკი"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "მოქმედებები",
-    "aiCustomPrompt": "საკუთარი მოთხოვნა",
     "aiPromptPlaceholder": "რა ვუყოთ ტექსტს?",
     "aiPromptRun": "გაშვება",
     "aiPromptSave": "დავალებად შენახვა",
@@ -739,6 +740,7 @@
     "hotkeyActions": {
       "chat": "მონიშნული ტექსტის კონტექსტად გამოყენება AI ჩატში",
       "correction": "შესწორება გადახედვით",
+      "customTransformation": "ტექსტის თავისუფალი ტრანსფორმაცია",
       "editor": "მონიშნული ტექსტის რედაქტორში გახსნა",
       "history": "ისტორია",
       "quickInput": "ტექსტის სწრაფი შეყვანა",
@@ -749,7 +751,8 @@
       "translation": "მონიშნული ტექსტის თარგმნა",
       "voice": "ხმოვანი შეყვანა",
       "voiceChat": "ხმოვანი კითხვა მონიშნულ ტექსტზე AI ჩატში",
-      "voiceCommands": "ხმოვანი ბრძანებები"
+      "voiceCommands": "ხმოვანი ბრძანებები",
+      "voiceTransformation": "ტექსტის ხმოვანი ტრანსფორმაცია"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — გაუქმება",

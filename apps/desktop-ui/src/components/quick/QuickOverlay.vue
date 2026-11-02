@@ -70,6 +70,24 @@
           :key="activationId"
         />
       </div>
+      <div
+        v-show="currentMode === 'customTransformation'"
+        class="quick-mode-layer"
+      >
+        <CustomTransformationView
+          v-if="currentMode === 'customTransformation'"
+          :key="activationId"
+        />
+      </div>
+      <div
+        v-show="currentMode === 'voiceTransformation'"
+        class="quick-mode-layer"
+      >
+        <VoiceTransformationView
+          v-if="currentMode === 'voiceTransformation'"
+          :key="activationId"
+        />
+      </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView
           v-if="
@@ -114,6 +132,7 @@ import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
 import CommandLauncherView from '../../views/CommandLauncherView.vue'
 import CorrectionView from '../../views/CorrectionView.vue'
+import CustomTransformationView from '../../views/CustomTransformationView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import SelectionView from '../../views/SelectionView.vue'
 import StylingView from '../../views/StylingView.vue'
@@ -121,6 +140,7 @@ import TransformationView from '../../views/TransformationView.vue'
 import TranslateView from '../../views/TranslateView.vue'
 import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
+import VoiceTransformationView from '../../views/VoiceTransformationView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteView from '../../views/WriteView.vue'
 

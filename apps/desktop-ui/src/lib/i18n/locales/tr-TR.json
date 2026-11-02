@@ -4,11 +4,13 @@
     "copy": "Kopyala",
     "copyToClipboard": "Kopyala ve kapat",
     "correction": "Düzeltme",
+    "customTransformation": "Serbest dönüştürme",
     "insertIntoWindow": "Pencereye ekle",
     "script": "Betik / Komut",
     "stylingMenu": "Metin stillendirme",
     "transformationMenu": "Metin dönüştürme",
     "translationMenu": "Çeviri",
+    "voiceTransformation": "Sesli dönüştürme",
     "webhook": "Web kancası"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Eylemler",
-    "aiCustomPrompt": "Kendi isteğin",
     "aiPromptPlaceholder": "Metinle ne yapılsın?",
     "aiPromptRun": "Çalıştır",
     "aiPromptSave": "Görev olarak kaydet",
@@ -739,6 +740,7 @@
     "hotkeyActions": {
       "chat": "Seçili metni yapay zekâ sohbetinde bağlam olarak kullan",
       "correction": "Önizlemeli düzeltme",
+      "customTransformation": "Serbest metin dönüştürme",
       "editor": "Seçili metni düzenleyicide aç",
       "history": "Geçmiş",
       "quickInput": "Hızlı metin girişi",
@@ -749,7 +751,8 @@
       "translation": "Seçili metni çevir",
       "voice": "Sesli giriş",
       "voiceChat": "Seçili metin hakkında yapay zekâ sohbetinde sesli soru",
-      "voiceCommands": "Sesli komutlar"
+      "voiceCommands": "Sesli komutlar",
+      "voiceTransformation": "Sesli metin dönüştürme"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",

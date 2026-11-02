@@ -104,7 +104,7 @@ pub(crate) struct HotkeyBinding {
 }
 
 /// The command overlay opens by the hotkeys of its pages, see `launcherPages`.
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 12] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 14] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
@@ -116,6 +116,8 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 12] = [
     ActivationMode::Translation,
     ActivationMode::Styling,
     ActivationMode::Transformation,
+    ActivationMode::CustomTransformation,
+    ActivationMode::VoiceTransformation,
     ActivationMode::History,
 ];
 
@@ -236,6 +238,8 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         | ActivationMode::Translation
         | ActivationMode::Styling
         | ActivationMode::Transformation
+        | ActivationMode::CustomTransformation
+        | ActivationMode::VoiceTransformation
         | ActivationMode::History
         | ActivationMode::Config
         | ActivationMode::ExternalAccess => None,
@@ -298,6 +302,8 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::Translation => "Translate selected text",
         ActivationMode::Styling => "Open text styling",
         ActivationMode::Transformation => "Open text transformation",
+        ActivationMode::CustomTransformation => "Custom text transformation",
+        ActivationMode::VoiceTransformation => "Voice text transformation",
         ActivationMode::History => "Open history",
         ActivationMode::Config => "Open settings",
         ActivationMode::ExternalAccess => "Answer a request for the selection",

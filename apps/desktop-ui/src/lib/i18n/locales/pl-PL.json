@@ -4,11 +4,13 @@
     "copy": "Kopiuj",
     "copyToClipboard": "Kopiuj i zamknij",
     "correction": "Korekta",
+    "customTransformation": "Swobodna transformacja",
     "insertIntoWindow": "Wstaw do okna",
     "script": "Skrypt / Polecenie",
     "stylingMenu": "Stylizacja tekstu",
     "transformationMenu": "Transformacja tekstu",
     "translationMenu": "Tłumaczenie",
+    "voiceTransformation": "Transformacja głosowa",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Akcje",
-    "aiCustomPrompt": "Własne zapytanie",
     "aiPromptPlaceholder": "Co zrobić z tekstem?",
     "aiPromptRun": "Uruchom",
     "aiPromptSave": "Zapisz jako zadanie",
@@ -742,6 +743,7 @@
     "hotkeyActions": {
       "chat": "Użyj zaznaczonego tekstu jako kontekstu w czacie AI",
       "correction": "Korekta z podglądem",
+      "customTransformation": "Swobodna transformacja tekstu",
       "editor": "Otwórz zaznaczony tekst w edytorze",
       "history": "Historia",
       "quickInput": "Szybkie wprowadzanie tekstu",
@@ -752,7 +754,8 @@
       "translation": "Przetłumacz zaznaczony tekst",
       "voice": "Wprowadzanie głosowe",
       "voiceChat": "Pytanie głosowe o zaznaczony tekst w czacie AI",
-      "voiceCommands": "Polecenia głosowe"
+      "voiceCommands": "Polecenia głosowe",
+      "voiceTransformation": "Głosowa transformacja tekstu"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",

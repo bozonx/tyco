@@ -4,11 +4,13 @@
     "copy": "Копіювати",
     "copyToClipboard": "Копіювати й закрити",
     "correction": "Виправлення",
+    "customTransformation": "Вільна трансформація",
     "insertIntoWindow": "Вставити у вікно",
     "script": "Скрипт / Команда",
     "stylingMenu": "Стилізація тексту",
     "transformationMenu": "Трансформація тексту",
     "translationMenu": "Переклад",
+    "voiceTransformation": "Голосова трансформація",
     "webhook": "Вебхук"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Дії",
-    "aiCustomPrompt": "Власний запит",
     "aiPromptPlaceholder": "Що зробити з текстом?",
     "aiPromptRun": "Виконати",
     "aiPromptSave": "Зберегти як завдання",
@@ -739,6 +740,7 @@
     "hotkeyActions": {
       "chat": "Використати виділений текст як контекст у ШІ-чаті",
       "correction": "Виправлення з попереднім переглядом",
+      "customTransformation": "Вільна трансформація тексту",
       "editor": "Відкрити виділений текст у редакторі",
       "history": "Історія",
       "quickInput": "Швидке введення тексту",
@@ -749,7 +751,8 @@
       "translation": "Перекласти виділений текст",
       "voice": "Голосове введення",
       "voiceChat": "Голосове запитання про виділений текст у ШІ-чаті",
-      "voiceCommands": "Голосові команди"
+      "voiceCommands": "Голосові команди",
+      "voiceTransformation": "Голосова трансформація тексту"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — скасувати",

@@ -19,6 +19,8 @@ pub enum ActivationMode {
     Translation,
     Styling,
     Transformation,
+    CustomTransformation,
+    VoiceTransformation,
     History,
     Config,
     /// Asks the user whether an external call may use the selection; Tyco
@@ -28,7 +30,7 @@ pub enum ActivationMode {
 
 impl ActivationMode {
     /// The modes a caller may name: every one but `ExternalAccess`.
-    pub const PUBLIC_MODES: [Self; 14] = [
+    pub const PUBLIC_MODES: [Self; 16] = [
         Self::Editor,
         Self::QuickInput,
         Self::Chat,
@@ -41,6 +43,8 @@ impl ActivationMode {
         Self::Translation,
         Self::Styling,
         Self::Transformation,
+        Self::CustomTransformation,
+        Self::VoiceTransformation,
         Self::History,
         Self::Config,
     ];
@@ -68,6 +72,8 @@ impl ActivationMode {
             Self::Translation => "translation",
             Self::Styling => "styling",
             Self::Transformation => "transformation",
+            Self::CustomTransformation => "customTransformation",
+            Self::VoiceTransformation => "voiceTransformation",
             Self::History => "history",
             Self::Config => "config",
             Self::ExternalAccess => "externalAccess",

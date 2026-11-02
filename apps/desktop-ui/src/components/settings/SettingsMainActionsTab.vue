@@ -132,6 +132,8 @@ const OPENS_DIALOG = new Set<StandardActionId>([
   'translationMenu',
   'transformationMenu',
   'stylingMenu',
+  'customTransformation',
+  'voiceTransformation',
 ])
 
 const availableActions = computed((): MainActionChoice[] => [

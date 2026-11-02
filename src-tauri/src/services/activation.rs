@@ -238,6 +238,8 @@ mod tests {
             ActivationMode::Translation,
             ActivationMode::Styling,
             ActivationMode::Transformation,
+            ActivationMode::CustomTransformation,
+            ActivationMode::VoiceTransformation,
             ActivationMode::Chat,
             ActivationMode::VoiceChat,
             ActivationMode::History,

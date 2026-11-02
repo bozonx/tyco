@@ -4,11 +4,13 @@
     "copy": "Kopiraj",
     "copyToClipboard": "Kopiraj i zatvori",
     "correction": "Ispravak",
+    "customTransformation": "Slobodna transformacija",
     "insertIntoWindow": "Umetni u prozor",
     "script": "Skripta / Naredba",
     "stylingMenu": "Stiliziranje teksta",
     "transformationMenu": "Transformacija teksta",
     "translationMenu": "Prijevod",
+    "voiceTransformation": "Glasovna transformacija",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Radnje",
-    "aiCustomPrompt": "Vlastiti zahtjev",
     "aiPromptPlaceholder": "Što učiniti s tekstom?",
     "aiPromptRun": "Pokreni",
     "aiPromptSave": "Spremi kao zadatak",
@@ -742,6 +743,7 @@
     "hotkeyActions": {
       "chat": "Koristi odabrani tekst kao kontekst u AI chatu",
       "correction": "Ispravak s pregledom",
+      "customTransformation": "Slobodna transformacija teksta",
       "editor": "Otvori odabrani tekst u uređivaču",
       "history": "Povijest",
       "quickInput": "Brzi unos teksta",
@@ -752,7 +754,8 @@
       "translation": "Prevedi odabrani tekst",
       "voice": "Glasovni unos",
       "voiceChat": "Glasovno pitanje o odabranom tekstu u AI chatu",
-      "voiceCommands": "Glasovne naredbe"
+      "voiceCommands": "Glasovne naredbe",
+      "voiceTransformation": "Glasovna transformacija teksta"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",

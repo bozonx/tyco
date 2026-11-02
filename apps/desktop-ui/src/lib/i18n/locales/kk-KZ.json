@@ -4,11 +4,13 @@
     "copy": "Көшіру",
     "copyToClipboard": "Көшіріп, жабу",
     "correction": "Түзету",
+    "customTransformation": "Еркін түрлендіру",
     "insertIntoWindow": "Терезеге кірістіру",
     "script": "Скрипт / Команда",
     "stylingMenu": "Мәтінді стильдеу",
     "transformationMenu": "Мәтінді түрлендіру",
     "translationMenu": "Аударма",
+    "voiceTransformation": "Дауыспен түрлендіру",
     "webhook": "Вебхук"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Әрекеттер",
-    "aiCustomPrompt": "Өз сұрауыңыз",
     "aiPromptPlaceholder": "Мәтінмен не істеу керек?",
     "aiPromptRun": "Іске қосу",
     "aiPromptSave": "Тапсырма ретінде сақтау",
@@ -739,6 +740,7 @@
     "hotkeyActions": {
       "chat": "Белгіленген мәтінді ЖИ чатында контекст ретінде пайдалану",
       "correction": "Алдын ала қараумен түзету",
+      "customTransformation": "Мәтінді еркін түрлендіру",
       "editor": "Белгіленген мәтінді редакторда ашу",
       "history": "Тарих",
       "quickInput": "Мәтінді жылдам енгізу",
@@ -749,7 +751,8 @@
       "translation": "Белгіленген мәтінді аудару",
       "voice": "Дауыспен енгізу",
       "voiceChat": "ЖИ чатында белгіленген мәтін туралы дауыстық сұрақ",
-      "voiceCommands": "Дауыстық командалар"
+      "voiceCommands": "Дауыстық командалар",
+      "voiceTransformation": "Мәтінді дауыспен түрлендіру"
     },
     "hotkeyInput": {
       "cancelHint": "Болдырмау үшін Esc",

@@ -43,6 +43,18 @@ describe('EditorDevQuickPanel.vue', () => {
     const transformBtn = wrapper.find('button[title="Open Quick Transform"]')
     expect(transformBtn.exists()).toBe(true)
     expect(transformBtn.text()).toContain('Transform')
+
+    const customTransformBtn = wrapper.find(
+      'button[title="Open Quick Custom Transform"]'
+    )
+    expect(customTransformBtn.exists()).toBe(true)
+    expect(customTransformBtn.text()).toContain('Custom Transform')
+
+    const voiceTransformBtn = wrapper.find(
+      'button[title="Open Quick Voice Transform"]'
+    )
+    expect(voiceTransformBtn.exists()).toBe(true)
+    expect(voiceTransformBtn.text()).toContain('Voice Transform')
   })
 
   it('activates styling mode on click', async () => {
@@ -92,6 +104,60 @@ describe('EditorDevQuickPanel.vue', () => {
 
     expect(desktop.backend.callsOf('activate_mode')).toEqual([
       { mode: ActivationMode.TRANSFORMATION, text: 'sample text' },
+    ])
+  })
+
+  it('activates custom transformation mode on click', async () => {
+    const wrapper = mount(EditorDevQuickPanel, {
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          AppIcon: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="dev-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    const customTransformBtn = wrapper.find(
+      'button[title="Open Quick Custom Transform"]'
+    )
+    await customTransformBtn.trigger('click')
+
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('activate_mode')).toEqual([
+      { mode: ActivationMode.CUSTOM_TRANSFORMATION, text: 'sample text' },
+    ])
+  })
+
+  it('activates voice transformation mode on click', async () => {
+    const wrapper = mount(EditorDevQuickPanel, {
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          AppIcon: true,
+          Button: {
+            props: ['title'],
+            template:
+              '<button class="dev-btn" :title="title" @click="$attrs.onClick"><slot /></button>',
+          },
+        },
+      },
+    })
+
+    const voiceTransformBtn = wrapper.find(
+      'button[title="Open Quick Voice Transform"]'
+    )
+    await voiceTransformBtn.trigger('click')
+
+    await flushPromises()
+
+    expect(desktop.backend.callsOf('activate_mode')).toEqual([
+      { mode: ActivationMode.VOICE_TRANSFORMATION, text: 'sample text' },
     ])
   })
 })

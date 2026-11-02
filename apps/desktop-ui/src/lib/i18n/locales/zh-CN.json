@@ -4,11 +4,13 @@
     "copy": "复制",
     "copyToClipboard": "复制并关闭",
     "correction": "文本纠错",
+    "customTransformation": "自由转换",
     "insertIntoWindow": "插入到窗口",
     "script": "脚本 / 命令",
     "stylingMenu": "文本风格化",
     "transformationMenu": "文本转换",
     "translationMenu": "翻译",
+    "voiceTransformation": "语音转换",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "操作",
-    "aiCustomPrompt": "自定义请求",
     "aiPromptPlaceholder": "对此文本做什么处理？",
     "aiPromptRun": "运行",
     "aiPromptSave": "保存为任务",
@@ -736,6 +737,7 @@
     "hotkeyActions": {
       "chat": "将选中文本作为上下文用于 AI 对话",
       "correction": "带预览的文本纠错",
+      "customTransformation": "文本自由转换",
       "editor": "在编辑器中打开选中文本",
       "history": "历史记录",
       "quickInput": "快捷文本输入",
@@ -746,7 +748,8 @@
       "translation": "翻译选中文本",
       "voice": "语音输入",
       "voiceChat": "在 AI 对话中针对选中文本进行语音提问",
-      "voiceCommands": "语音命令"
+      "voiceCommands": "语音命令",
+      "voiceTransformation": "文本语音转换"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",

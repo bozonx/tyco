@@ -190,17 +190,17 @@
         },
         "shortcuts": {
           "bold": "Alt+B",
+          "heading1": "",
+          "heading6": "",
           "italic": "Ctrl+I",
           "link": "Ctrl+K",
           "code": "Ctrl+E",
           "strikethrough": "Ctrl+Shift+X",
           "normalText": "Ctrl+0",
-          "heading1": "",
           "heading2": "Ctrl+2",
           "heading3": "Ctrl+3",
           "heading4": "",
           "heading5": "",
-          "heading6": "",
           "bulletList": "Ctrl+Shift+8",
           "orderedList": "Ctrl+Shift+7",
           "taskList": "Ctrl+Shift+9",
@@ -227,6 +227,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "launcherPages": {}
@@ -258,8 +260,6 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -362,6 +362,8 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "variables": [],
+      "variableValues": {},
       "transformations": {
         "items": [
           {
@@ -611,6 +613,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "launcherPages": {}
@@ -642,8 +646,6 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -742,6 +744,8 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "variables": [],
+      "variableValues": {},
       "transformations": {
         "items": [
           {
@@ -978,6 +982,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "launcherPages": {}
@@ -1001,8 +1007,6 @@
       "mainActions": {},
       "launcherPages": [{ "id": "main", "slots": {}, "inputMode": "none" }],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -1105,6 +1109,8 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "variables": [],
+      "variableValues": {},
       "transformations": {
         "items": [
           {
@@ -1348,6 +1354,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "launcherPages": {}
@@ -1379,8 +1387,6 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -1488,6 +1494,8 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "variables": [],
+      "variableValues": {},
       "transformations": {
         "items": [
           {
@@ -1721,6 +1729,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "launcherPages": {}
@@ -1752,8 +1762,6 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -1849,6 +1857,8 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "variables": [],
+      "variableValues": {},
       "transformations": {
         "items": [
           {
@@ -2087,9 +2097,11 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "launcherPages": { "alpha": "Ctrl+Alt+1" },
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
-        "voiceCommands": "Ctrl+Alt+Shift+X",
-        "launcherPages": { "alpha": "Ctrl+Alt+1" }
+        "voiceCommands": "Ctrl+Alt+Shift+X"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2113,8 +2125,6 @@
         { "id": "beta", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -2217,6 +2227,8 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "variables": [],
+      "variableValues": {},
       "transformations": {
         "items": [
           {
@@ -2457,6 +2469,8 @@
         "transformation": "",
         "unknownAction": "Ctrl+Alt+U",
         "selectionCorrection": "Ctrl+Alt+F",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "launcherPages": {}
@@ -2488,8 +2502,6 @@
         { "id": "main", "slots": {}, "inputMode": "selection" }
       ],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -2592,6 +2604,8 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "variables": [],
+      "variableValues": {},
       "transformations": {
         "items": [
           {
@@ -2849,6 +2863,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "launcherPages": {}
       },
@@ -2875,8 +2891,6 @@
         { "id": "main", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -2984,6 +2998,8 @@
         "items": [{ "id": "a", "name": "A", "rule": "x" }],
         "slots": { "q": "a" }
       },
+      "variables": [],
+      "variableValues": {},
       "styling": { "items": [], "slots": {} },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -3228,6 +3244,8 @@
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
         "voiceCommands": "",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "launcherPages": {}
       },
@@ -3261,8 +3279,6 @@
         { "id": "main", "inputMode": "selection", "slots": {} }
       ],
       "commands": [],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -3370,6 +3386,8 @@
         "items": [{ "id": "a", "name": "A", "rule": "x" }],
         "slots": { "q": "a" }
       },
+      "variables": [],
+      "variableValues": {},
       "styling": { "items": [], "slots": {} },
       "aiProfiles": { "chatHistory": { "storage": "disk" } }
     }
@@ -3629,6 +3647,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "launcherPages": {}
@@ -3730,8 +3750,6 @@
           "isVoiceEnabled": false
         }
       ],
-      "variables": [],
-      "variableValues": {},
       "llm": {
         "providers": [
           { "id": "google", "type": "google", "name": "Google Gemini" },
@@ -3834,6 +3852,8 @@
         "isStylingBarEnabled": false,
         "isStylingBarDirectInsertEnabled": false
       },
+      "variables": [],
+      "variableValues": {},
       "transformations": {
         "items": [
           {
@@ -4120,6 +4140,8 @@
         "styling": "",
         "transformation": "",
         "selectionCorrection": "Ctrl+Alt+F",
+        "customTransformation": "",
+        "voiceTransformation": "",
         "history": "",
         "voiceCommands": "Ctrl+Alt+Shift+X",
         "launcherPages": {}
@@ -4157,6 +4179,7 @@
           "name": "Notes",
           "toolId": "script",
           "toolConfig": { "command": "true" },
+          "platforms": ["linux"],
           "description": "",
           "phrases": [],
           "isLlmArgumentParsingEnabled": false,
@@ -4167,8 +4190,7 @@
           "isAvailableExternally": false,
           "externalTimeoutSec": 120,
           "isEnabled": true,
-          "isVoiceEnabled": false,
-          "platforms": ["linux"]
+          "isVoiceEnabled": false
         },
         {
           "id": "mycmd",

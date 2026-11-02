@@ -14,6 +14,20 @@
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
+    <CustomTransformationMenu
+      v-else-if="
+        menuModalsStore.currentStep?.modal === MenuModals.CUSTOM_TRANSFORMATION
+      "
+      :key="menuModalsStore.currentStepId"
+      v-bind="menuModalsStore.currentStep.params"
+    />
+    <VoiceTransformationMenu
+      v-else-if="
+        menuModalsStore.currentStep?.modal === MenuModals.VOICE_TRANSFORMATION
+      "
+      :key="menuModalsStore.currentStepId"
+      v-bind="menuModalsStore.currentStep.params"
+    />
     <StylingMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.STYLING"
       :key="menuModalsStore.currentStepId"
@@ -63,6 +77,7 @@ import { computed } from 'vue'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import Overlay from '../overlay/Overlay.vue'
 import ActionSelectModal from './ActionSelectModal.vue'
+import CustomTransformationMenu from './CustomTransformationMenu.vue'
 import DiffMenu from './DiffMenu.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import InsertMenu from './InsertMenu.vue'
@@ -71,6 +86,7 @@ import StylingMenu from './StylingMenu.vue'
 import TransformationMenu from './TransformationMenu.vue'
 import TranslateMenu from './TranslateMenu.vue'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
+import VoiceTransformationMenu from './VoiceTransformationMenu.vue'
 
 const menuModalsStore = useMenuModalsStore()
 

@@ -21,6 +21,8 @@ export const ActivationMode = {
   TRANSLATION: 'translation',
   STYLING: 'styling',
   TRANSFORMATION: 'transformation',
+  CUSTOM_TRANSFORMATION: 'customTransformation',
+  VOICE_TRANSFORMATION: 'voiceTransformation',
   EDITOR: 'editor',
   QUICK_INPUT: 'quickInput',
   CHAT: 'chat',

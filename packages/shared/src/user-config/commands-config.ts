@@ -13,6 +13,8 @@ export const STANDARD_ACTION_IDS = [
   'translationMenu',
   'transformationMenu',
   'stylingMenu',
+  'customTransformation',
+  'voiceTransformation',
 ] as const
 
 export type StandardActionId = (typeof STANDARD_ACTION_IDS)[number]

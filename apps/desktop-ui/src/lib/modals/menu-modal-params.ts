@@ -9,6 +9,8 @@ import type { TranslationMeta } from '../translation/translation-meta'
 export enum MenuModals {
   INSERT = 'insert',
   TRANSFORMATION = 'transformation',
+  CUSTOM_TRANSFORMATION = 'custom-transformation',
+  VOICE_TRANSFORMATION = 'voice-transformation',
   STYLING = 'styling',
   DIFF = 'diff',
   VOICE_RECOGNITION = 'voice-recognition',
@@ -39,6 +41,14 @@ export interface TransformationMenuParams {
   shortcutsDisabled?: boolean
   /** Runs this transformation immediately when the dialog opens. */
   transformationId?: string
+}
+export interface CustomTransformationMenuParams {
+  text?: string
+  shortcutsDisabled?: boolean
+}
+export interface VoiceTransformationMenuParams {
+  text?: string
+  shortcutsDisabled?: boolean
 }
 export interface StylingMenuParams {
   text?: string
@@ -113,6 +123,8 @@ export interface PendingModalParams {
 interface MenuModalParams {
   [MenuModals.INSERT]: InsertMenuParams
   [MenuModals.TRANSFORMATION]: TransformationMenuParams
+  [MenuModals.CUSTOM_TRANSFORMATION]: CustomTransformationMenuParams
+  [MenuModals.VOICE_TRANSFORMATION]: VoiceTransformationMenuParams
   [MenuModals.STYLING]: StylingMenuParams
   [MenuModals.DIFF]: DiffMenuParams
   [MenuModals.VOICE_RECOGNITION]: VoiceMenuParams

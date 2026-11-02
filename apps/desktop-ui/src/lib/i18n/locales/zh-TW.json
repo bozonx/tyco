@@ -4,11 +4,13 @@
     "copy": "複製",
     "copyToClipboard": "複製並關閉",
     "correction": "校對",
+    "customTransformation": "自由轉換",
     "insertIntoWindow": "插入至視窗",
     "script": "指令碼 / 命令",
     "stylingMenu": "文字風格化",
     "transformationMenu": "文字轉換",
     "translationMenu": "翻譯",
+    "voiceTransformation": "語音轉換",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "動作",
-    "aiCustomPrompt": "自訂提示詞",
     "aiPromptPlaceholder": "要對文字做什麼處理？",
     "aiPromptRun": "執行",
     "aiPromptSave": "另存為任務",
@@ -736,6 +737,7 @@
     "hotkeyActions": {
       "chat": "在 AI 聊天中將選取的文字作為上下文",
       "correction": "帶預覽的校對",
+      "customTransformation": "文字自由轉換",
       "editor": "在編輯器中開啟選取的文字",
       "history": "歷史記錄",
       "quickInput": "快速文字輸入",
@@ -746,7 +748,8 @@
       "translation": "翻譯選取的文字",
       "voice": "語音輸入",
       "voiceChat": "在 AI 聊天中針對選取的文字進行語音提問",
-      "voiceCommands": "語音命令"
+      "voiceCommands": "語音命令",
+      "voiceTransformation": "文字語音轉換"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",

@@ -4,11 +4,13 @@
     "copy": "Másolás",
     "copyToClipboard": "Másolás és bezárás",
     "correction": "Javítás",
+    "customTransformation": "Egyéni átalakítás",
     "insertIntoWindow": "Beillesztés az ablakba",
     "script": "Szkript / Parancs",
     "stylingMenu": "Szövegstilizálás",
     "transformationMenu": "Szövegátalakítás",
     "translationMenu": "Fordítás",
+    "voiceTransformation": "Hangalapú átalakítás",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Műveletek",
-    "aiCustomPrompt": "Saját kérés",
     "aiPromptPlaceholder": "Mit tegyen a szöveggel?",
     "aiPromptRun": "Futtatás",
     "aiPromptSave": "Mentés feladatként",
@@ -739,6 +740,7 @@
     "hotkeyActions": {
       "chat": "Kijelölt szöveg kontextusként az MI-csevegésben",
       "correction": "Javítás előnézettel",
+      "customTransformation": "Egyéni szövegátalakítás",
       "editor": "Kijelölt szöveg megnyitása a szerkesztőben",
       "history": "Előzmények",
       "quickInput": "Gyors szövegbevitel",
@@ -749,7 +751,8 @@
       "translation": "Kijelölt szöveg fordítása",
       "voice": "Hangbevitel",
       "voiceChat": "Hangos kérdés a kijelölt szövegről az MI-csevegésben",
-      "voiceCommands": "Hangparancsok"
+      "voiceCommands": "Hangparancsok",
+      "voiceTransformation": "Hangalapú szövegátalakítás"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",

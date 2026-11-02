@@ -18,8 +18,8 @@ export interface RuleLibraryMenuKind {
   pending: Omit<PendingModalParams, 'onCancel'>
   getLibrary: (config: UserConfig | undefined) => Library | undefined
   /** The config patch that stores the library */
-  patchLibrary: (library: Library) => Partial<UserConfig>
-  savePrompt: (
+  patchLibrary?: (library: Library) => Partial<UserConfig>
+  savePrompt?: (
     library: Library,
     prompt: string
   ) => SavePromptResult<Library> | null

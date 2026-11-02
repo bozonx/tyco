@@ -10,7 +10,6 @@
 <script setup lang="ts">
 import type { TransformationMenuParams } from '../../lib/modals/menu-modal-params'
 import type { RuleLibraryMenuKind } from '../../lib/modals/rule-library-menu'
-import { addTransformationFromPrompt } from '../../lib/transformations/transformation-prompt'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import RuleLibraryMenu from './RuleLibraryMenu.vue'
 import { APP_CONFIG } from '@tyco/shared'
@@ -29,8 +28,6 @@ const kind: RuleLibraryMenuKind = {
   minTextLength: APP_CONFIG.minTransformationLength,
   pending: { transformation: true },
   getLibrary: (config) => config?.transformations,
-  patchLibrary: (library) => ({ transformations: library }),
-  savePrompt: addTransformationFromPrompt,
   clearStartupItem: (stepId) =>
     menuModalsStore.updateStep(stepId, MenuModals.TRANSFORMATION, {
       transformationId: undefined,

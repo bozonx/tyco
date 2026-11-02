@@ -4,11 +4,13 @@
     "copy": "복사",
     "copyToClipboard": "복사 후 닫기",
     "correction": "교정",
+    "customTransformation": "자유 변환",
     "insertIntoWindow": "창에 삽입",
     "script": "스크립트 / 명령",
     "stylingMenu": "텍스트 스타일 지정",
     "transformationMenu": "텍스트 변환",
     "translationMenu": "번역",
+    "voiceTransformation": "음성 변환",
     "webhook": "웹후크"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "작업",
-    "aiCustomPrompt": "사용자 정의 요청",
     "aiPromptPlaceholder": "텍스트로 무엇을 할까요?",
     "aiPromptRun": "실행",
     "aiPromptSave": "작업으로 저장",
@@ -736,6 +737,7 @@
     "hotkeyActions": {
       "chat": "선택한 텍스트를 AI 채팅의 컨텍스트로 사용",
       "correction": "미리보기가 포함된 교정",
+      "customTransformation": "텍스트 자유 변환",
       "editor": "선택한 텍스트를 편집기에서 열기",
       "history": "기록",
       "quickInput": "빠른 텍스트 입력",
@@ -746,7 +748,8 @@
       "translation": "선택한 텍스트 번역",
       "voice": "음성 입력",
       "voiceChat": "선택한 텍스트에 대해 AI 채팅에 음성으로 질문",
-      "voiceCommands": "음성 명령"
+      "voiceCommands": "음성 명령",
+      "voiceTransformation": "텍스트 음성 변환"
     },
     "hotkeyInput": {
       "cancelHint": "취소하려면 Esc",

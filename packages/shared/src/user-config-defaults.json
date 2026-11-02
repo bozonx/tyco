@@ -54,6 +54,8 @@
     "translation": "",
     "styling": "",
     "transformation": "",
+    "customTransformation": "",
+    "voiceTransformation": "",
     "history": "",
     "voiceCommands": "Ctrl+Alt+Shift+X",
     "selectionCorrection": "Ctrl+Alt+Shift+F",

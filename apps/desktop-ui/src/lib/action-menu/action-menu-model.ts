@@ -33,6 +33,8 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
   openTransformationModal?: (text: string, transformationId?: string) => void
+  openCustomTransformationModal?: (text: string) => void
+  openVoiceTransformationModal?: (text: string) => void
   openStylingModal?: (text: string, stylingId?: string) => void
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
@@ -189,6 +191,30 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               return
             }
             deps.openTransformationModal?.(text)
+          },
+        },
+        {
+          id: 'customTransformation',
+          labelKey: 'action.customTransformation',
+          icon: 'mdi:pencil-outline',
+          action: async (text: string) => {
+            if (!text?.trim()) {
+              deps.showToast('toast.textNotSelected', 'error')
+              return
+            }
+            deps.openCustomTransformationModal?.(text)
+          },
+        },
+        {
+          id: 'voiceTransformation',
+          labelKey: 'action.voiceTransformation',
+          icon: 'mdi:microphone-outline',
+          action: async (text: string) => {
+            if (!text?.trim()) {
+              deps.showToast('toast.textNotSelected', 'error')
+              return
+            }
+            deps.openVoiceTransformationModal?.(text)
           },
         },
         {

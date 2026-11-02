@@ -168,6 +168,8 @@
         "translation": { "type": "string", "default": "" },
         "styling": { "type": "string", "default": "" },
         "transformation": { "type": "string", "default": "" },
+        "customTransformation": { "type": "string", "default": "" },
+        "voiceTransformation": { "type": "string", "default": "" },
         "history": { "type": "string", "default": "" },
         "voiceCommands": { "type": "string", "default": "Ctrl+Alt+Shift+X" },
         "selectionCorrection": {
@@ -195,6 +197,8 @@
         "translation",
         "styling",
         "transformation",
+        "customTransformation",
+        "voiceTransformation",
         "history",
         "voiceCommands",
         "selectionCorrection",
@@ -358,7 +362,9 @@
                   "stylingMenu",
                   "correction",
                   "translationMenu",
-                  "askInChat"
+                  "askInChat",
+                  "customTransformation",
+                  "voiceTransformation"
                 ]
               }
             },

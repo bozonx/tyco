@@ -4,11 +4,13 @@
     "copy": "Kopírovat",
     "copyToClipboard": "Kopírovat a zavřít",
     "correction": "Oprava",
+    "customTransformation": "Volná transformace",
     "insertIntoWindow": "Vložit do okna",
     "script": "Skript / Příkaz",
     "stylingMenu": "Stylizace textu",
     "transformationMenu": "Transformace textu",
     "translationMenu": "Překlad",
+    "voiceTransformation": "Hlasová transformace",
     "webhook": "Webhook"
   },
   "app": { "title": "TyCo" },
@@ -516,7 +518,6 @@
   },
   "menu": {
     "actions": "Akce",
-    "aiCustomPrompt": "Vlastní požadavek",
     "aiPromptPlaceholder": "Co udělat s textem?",
     "aiPromptRun": "Spustit",
     "aiPromptSave": "Uložit jako úlohu",
@@ -736,6 +737,7 @@
     "hotkeyActions": {
       "chat": "Použít vybraný text jako kontext v chatu AI",
       "correction": "Oprava s náhledem",
+      "customTransformation": "Volná transformace textu",
       "editor": "Otevřít vybraný text v editoru",
       "history": "Historie",
       "quickInput": "Rychlé zadání textu",
@@ -746,7 +748,8 @@
       "translation": "Přeložit vybraný text",
       "voice": "Hlasové zadávání",
       "voiceChat": "Hlasová otázka k vybranému textu v chatu AI",
-      "voiceCommands": "Hlasové příkazy"
+      "voiceCommands": "Hlasové příkazy",
+      "voiceTransformation": "Hlasová transformace textu"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pro zrušení",
