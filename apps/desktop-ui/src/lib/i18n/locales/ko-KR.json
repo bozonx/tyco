@@ -11,7 +11,8 @@
     "transformationMenu": "텍스트 변환",
     "translationMenu": "번역",
     "voiceTransformation": "음성 변환",
-    "webhook": "웹후크"
+    "webhook": "웹후크",
+    "chatPromptsMenu": "채팅 프롬프트 사전 설정"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "녹음 취소 (Esc)",
     "voiceContext": "이 텍스트에 대한 질문이 됩니다",
     "voiceInput": "음성 입력",
-    "voiceSendHint": "바로 보내기 (Ctrl+Enter)"
+    "voiceSendHint": "바로 보내기 (Ctrl+Enter)",
+    "promptPresets": "프롬프트 사전 설정",
+    "noPromptsConfigured": "구성된 프롬프트 사전 설정이 없습니다"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "건너뛰기",
     "aiPromptSaved": "메뉴에 저장했습니다",
     "aiPromptAlreadySaved": "이 요청은 이미 메뉴에 있습니다",
-    "ruleNotFound": "이 규칙은 더 이상 존재하지 않습니다"
+    "ruleNotFound": "이 규칙은 더 이상 존재하지 않습니다",
+    "chatPrompts": "채팅 프롬프트 사전 설정"
   },
   "nav": {
     "aiChat": "AI에게 질문",
@@ -767,7 +771,8 @@
       "voiceCommands": "음성 명령",
       "voiceTransformation": "텍스트 음성 변환",
       "selectionActionsPage2": "작업: 페이지 2",
-      "selectionActionsPage3": "작업: 페이지 3"
+      "selectionActionsPage3": "작업: 페이지 3",
+      "chatPrompts": "선택한 텍스트에 대한 채팅 프롬프트 사전 설정"
     },
     "hotkeyInput": {
       "cancelHint": "취소하려면 Esc",
@@ -1170,7 +1175,11 @@
     "voiceHoldToRecordHint": "기본적으로 음성 입력은 한 번 눌러 켜고 끕니다. 활성화하면 단축키를 누르고 있는 동안에만 녹음됩니다.",
     "voiceTextCorrection": "음성 텍스트 교정",
     "webJinaApiKey": "Jina AI API 키",
-    "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다."
+    "webJinaApiKeyHint": "선택 사항입니다. 키가 없으면 공유 속도 제한이 있는 무료 요금제가 사용됩니다.",
+    "chatPromptsTab": "채팅 프롬프트 사전 설정",
+    "chatPromptsNavTab": "채팅 프롬프트",
+    "chatPromptsHint": "채팅으로 전송할 사전 설정 프롬프트입니다. 채팅 프롬프트 메뉴에서 각 프롬프트는 고유한 키로 실행됩니다. 카드를 드래그하여 키를 변경하세요.",
+    "prompt": "프롬프트"
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
   "theme": {

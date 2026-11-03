@@ -11,7 +11,8 @@
     "transformationMenu": "Texttransformation",
     "translationMenu": "Übersetzung",
     "voiceTransformation": "Sprachtransformation",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Chat-Prompt-Vorlagen"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Aufnahme abbrechen (Esc)",
     "voiceContext": "Die Frage bezieht sich auf diesen Text",
     "voiceInput": "Spracheingabe",
-    "voiceSendHint": "Sofort senden (Strg+Enter)"
+    "voiceSendHint": "Sofort senden (Strg+Enter)",
+    "promptPresets": "Prompt-Vorlagen",
+    "noPromptsConfigured": "Keine Prompt-Vorlagen konfiguriert"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Überspringen",
     "aiPromptSaved": "Im Menü gespeichert",
     "aiPromptAlreadySaved": "Diese Anfrage ist bereits im Menü",
-    "ruleNotFound": "Diese Regel existiert nicht mehr"
+    "ruleNotFound": "Diese Regel existiert nicht mehr",
+    "chatPrompts": "Chat-Prompt-Vorlagen"
   },
   "nav": {
     "aiChat": "KI fragen",
@@ -773,7 +777,8 @@
       "voiceCommands": "Sprachbefehle",
       "voiceTransformation": "Sprach-Texttransformation",
       "selectionActionsPage2": "Aktionen: Seite 2",
-      "selectionActionsPage3": "Aktionen: Seite 3"
+      "selectionActionsPage3": "Aktionen: Seite 3",
+      "chatPrompts": "Chat-Prompt-Vorlagen für ausgewählten Text"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",
@@ -1176,7 +1181,11 @@
     "voiceHoldToRecordHint": "Standardmäßig wird die Spracheingabe durch einmaliges Drücken ein- und ausgeschaltet. Aktivieren, um nur bei gehaltener Tastenkombination aufzunehmen.",
     "voiceTextCorrection": "Korrektur von Sprachtext",
     "webJinaApiKey": "Jina AI-API-Schlüssel",
-    "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits."
+    "webJinaApiKeyHint": "Optional. Ohne Schlüssel nutzen Anfragen das kostenlose Kontingent mit geteilten Limits.",
+    "chatPromptsTab": "Chat-Prompt-Vorlagen",
+    "chatPromptsNavTab": "Chat-Prompts",
+    "chatPromptsHint": "Vorbereitete Prompts zum Senden an den Chat. Im Chat-Prompt-Menü wird jeder mit einer eigenen Taste ausgeführt; ziehen Sie die Karten, um ihre Tasten zu ändern.",
+    "prompt": "Prompt"
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

@@ -307,11 +307,12 @@ const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
 const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 
 /// The entity collections, each with distinct ids.
-const ENTITY_COLLECTIONS: [&str; 6] = [
+const ENTITY_COLLECTIONS: [&str; 7] = [
     "/commands",
     "/variables",
     "/transformations/items",
     "/styling/items",
+    "/chatPrompts/items",
     "/llm/providers",
     "/llm/models",
 ];
@@ -347,9 +348,11 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     }
     let transformations = ids(config, "/transformations/items");
     let stylings = ids(config, "/styling/items");
+    let chat_prompts = ids(config, "/chatPrompts/items");
     for (slots, key) in [
         (&config["transformations"]["slots"], "transformations.slots"),
         (&config["styling"]["slots"], "styling.slots"),
+        (&config["chatPrompts"]["slots"], "chatPrompts.slots"),
         (
             &config["translation"]["targetLanguages"],
             "translation.targetLanguages",
@@ -370,6 +373,11 @@ fn validate_references(config: &Value) -> Result<(), AppError> {
     for id in slot_values(&config["styling"]["slots"]).filter_map(Value::as_str) {
         if !stylings.contains(id) {
             return Err(invalid_field("styling.slots"));
+        }
+    }
+    for id in slot_values(&config["chatPrompts"]["slots"]).filter_map(Value::as_str) {
+        if !chat_prompts.contains(id) {
+            return Err(invalid_field("chatPrompts.slots"));
         }
     }
     let providers = ids(config, "/llm/providers");
@@ -580,6 +588,15 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
     retain_slots(&mut config["styling"]["slots"], |id| {
         let id = id.as_str().unwrap_or_default();
         styling_ids.contains(id) && slotted_stylings.insert(id.to_owned())
+    });
+    let chat_prompt_ids: HashSet<String> = ids(config, "/chatPrompts/items")
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
+    let mut slotted_chat_prompts = HashSet::new();
+    retain_slots(&mut config["chatPrompts"]["slots"], |id| {
+        let id = id.as_str().unwrap_or_default();
+        chat_prompt_ids.contains(id) && slotted_chat_prompts.insert(id.to_owned())
     });
     let provider_ids: HashSet<String> = ids(config, "/llm/providers")
         .into_iter()

@@ -70,6 +70,23 @@
         :label="t('chat.addFile')"
         icon="mdi:paperclip"
       />
+      <div ref="promptButtonAnchorRef" class="relative inline-block">
+        <IconButton
+          size="sm"
+          variant="ghost"
+          :active="isPromptPickerOpen"
+          :disabled="chatStore.isGenerating"
+          :label="t('chat.promptPresets')"
+          icon="mdi:lightning-bolt-outline"
+          @click="togglePromptPicker"
+        />
+        <ChatPromptsKeypad
+          :is-open="isPromptPickerOpen"
+          :anchor="promptButtonAnchorRef"
+          @close="isPromptPickerOpen = false"
+          @select="handlePromptSelect"
+        />
+      </div>
       <DropdownMenu
         size="xs"
         class="model-picker"
@@ -129,13 +146,25 @@ import IconButton from '../common/IconButton.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import ChatContextList from './ChatContextList.vue'
 import ChatInput from './ChatInput.vue'
+import ChatPromptsKeypad from './ChatPromptsKeypad.vue'
 
 defineProps<{ canSend: boolean; draggingFiles: boolean }>()
 const emit = defineEmits<{ send: [] }>()
-const { chat: chatStore } = useChatScope()
+const { chat: chatStore, input: chatInputStore } = useChatScope()
 const desktopStore = useDesktopStore()
 const { t } = useI18n()
 const { openChatVoiceInput } = useChatVoiceInput()
+const promptButtonAnchorRef = ref<HTMLElement | null>(null)
+const isPromptPickerOpen = ref(false)
+
+function togglePromptPicker() {
+  isPromptPickerOpen.value = !isPromptPickerOpen.value
+}
+
+function handlePromptSelect(rule: string) {
+  chatInputStore.insertText(rule)
+  isPromptPickerOpen.value = false
+}
 function openModelSettings() {
   void appNavigation.goToConfig('llm')
 }

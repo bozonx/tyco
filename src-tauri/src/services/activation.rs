@@ -239,6 +239,7 @@ mod tests {
             ActivationMode::Transformation,
             ActivationMode::CustomTransformation,
             ActivationMode::VoiceTransformation,
+            ActivationMode::ChatPrompts,
             ActivationMode::Chat,
             ActivationMode::VoiceChat,
             ActivationMode::History,

@@ -147,6 +147,7 @@ export interface HotkeysConfig {
   transformation: string
   customTransformation: string
   voiceTransformation: string
+  chatPrompts: string
   history: string
   voiceCommands: string
   selectionCorrection: string
@@ -187,6 +188,20 @@ export interface StylingsConfig {
   /** The styling library, in the order the settings list it */
   items: StylingConfig[]
   /** The styling menu: styling ids by shortcut key */
+  slots: ShortcutSlots<string>
+}
+
+/** A named prompt preset of the chat prompts library */
+export interface ChatPromptConfig {
+  id: string
+  name: string
+  rule: string
+}
+
+export interface ChatPromptsConfig {
+  /** The chat prompts library, in the order the settings list it */
+  items: ChatPromptConfig[]
+  /** The chat prompts menu: prompt ids by shortcut key */
   slots: ShortcutSlots<string>
 }
 
@@ -234,6 +249,7 @@ export interface UserConfig {
   llm: LlmConfig
   transformations: TransformationsConfig
   styling: StylingsConfig
+  chatPrompts: ChatPromptsConfig
   aiVault: AiVaultLocationConfig
   aiProfiles: AiProfilesConfig
   markdown: MarkdownConfig

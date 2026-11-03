@@ -11,7 +11,8 @@
     "transformationMenu": "Transformação de texto",
     "translationMenu": "Tradução",
     "voiceTransformation": "Transformação por voz",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Predefinições de prompts de chat"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Cancelar gravação (Esc)",
     "voiceContext": "A pergunta será sobre este texto",
     "voiceInput": "Entrada de voz",
-    "voiceSendHint": "Enviar imediatamente (Ctrl+Enter)"
+    "voiceSendHint": "Enviar imediatamente (Ctrl+Enter)",
+    "promptPresets": "Predefinições de prompts",
+    "noPromptsConfigured": "Nenhuma predefinição de prompt configurada"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Pular",
     "aiPromptSaved": "Salvo no menu",
     "aiPromptAlreadySaved": "Esta solicitação já está no menu",
-    "ruleNotFound": "Esta regra não existe mais"
+    "ruleNotFound": "Esta regra não existe mais",
+    "chatPrompts": "Predefinições de prompts de chat"
   },
   "nav": {
     "aiChat": "Perguntar à IA",
@@ -773,7 +777,8 @@
       "voiceCommands": "Comandos de voz",
       "voiceTransformation": "Transformação de texto por voz",
       "selectionActionsPage2": "Ações: página 2",
-      "selectionActionsPage3": "Ações: página 3"
+      "selectionActionsPage3": "Ações: página 3",
+      "chatPrompts": "Predefinições de prompts de chat para texto selecionado"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -1176,7 +1181,11 @@
     "voiceHoldToRecordHint": "Por padrão, a entrada de voz é ativada com um único toque. Ative para gravar apenas enquanto o atalho estiver pressionado.",
     "voiceTextCorrection": "Correção do texto ditado",
     "webJinaApiKey": "Chave de API do Jina AI",
-    "webJinaApiKeyHint": "Opcional. Sem uma chave, as solicitações usam o nível gratuito com limites compartilhados."
+    "webJinaApiKeyHint": "Opcional. Sem uma chave, as solicitações usam o nível gratuito com limites compartilhados.",
+    "chatPromptsTab": "Predefinições de prompts de chat",
+    "chatPromptsNavTab": "Prompts de chat",
+    "chatPromptsHint": "Prompts predefinidos para enviar ao chat. No menu de prompts do chat, cada um é executado com sua própria tecla; arraste os cartões para alterar suas teclas.",
+    "prompt": "Prompt"
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {

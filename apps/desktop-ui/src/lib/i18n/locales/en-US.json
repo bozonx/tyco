@@ -11,7 +11,8 @@
     "transformationMenu": "Text transformation",
     "translationMenu": "Translation",
     "voiceTransformation": "Voice transformation",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Chat prompt presets"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Cancel recording (Esc)",
     "voiceContext": "The question will be about this text",
     "voiceInput": "Voice input",
-    "voiceSendHint": "Send right away (Ctrl+Enter)"
+    "voiceSendHint": "Send right away (Ctrl+Enter)",
+    "promptPresets": "Prompt presets",
+    "noPromptsConfigured": "No prompt presets configured"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Skip",
     "aiPromptSaved": "Saved to the menu",
     "aiPromptAlreadySaved": "This request is already in the menu",
-    "ruleNotFound": "This rule no longer exists"
+    "ruleNotFound": "This rule no longer exists",
+    "chatPrompts": "Chat prompt presets"
   },
   "nav": {
     "aiChat": "Ask AI",
@@ -773,7 +777,8 @@
       "voiceCommands": "Voice commands",
       "voiceTransformation": "Voice text transformation",
       "selectionActionsPage2": "Actions: page 2",
-      "selectionActionsPage3": "Actions: page 3"
+      "selectionActionsPage3": "Actions: page 3",
+      "chatPrompts": "Chat prompt presets for selected text"
     },
     "hotkeyInput": {
       "cancelHint": "Esc to cancel",
@@ -1176,7 +1181,11 @@
     "voiceHoldToRecordHint": "By default, voice input toggles with a single press. Enable to record only while the hotkey is held down.",
     "voiceTextCorrection": "Voice text correction",
     "webJinaApiKey": "Jina AI API key",
-    "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits."
+    "webJinaApiKeyHint": "Optional. Without a key, requests use the free tier with shared rate limits.",
+    "chatPromptsTab": "Chat prompt presets",
+    "chatPromptsNavTab": "Chat prompts",
+    "chatPromptsHint": "Preset prompts to send to chat. In the chat prompts menu each one runs with its own key; drag the cards to change their keys.",
+    "prompt": "Prompt"
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

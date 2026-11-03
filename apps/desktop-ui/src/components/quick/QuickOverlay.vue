@@ -82,6 +82,12 @@
           :key="activationId"
         />
       </div>
+      <div v-show="currentMode === 'chatPrompts'" class="quick-mode-layer">
+        <ChatPromptsView
+          v-if="currentMode === 'chatPrompts'"
+          :key="activationId"
+        />
+      </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView
           v-if="
@@ -124,6 +130,7 @@ import { useDesktopStore } from '../../stores/desktop'
 import { useIpcStore } from '../../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
+import ChatPromptsView from '../../views/ChatPromptsView.vue'
 import CorrectionView from '../../views/CorrectionView.vue'
 import CustomTransformationView from '../../views/CustomTransformationView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'

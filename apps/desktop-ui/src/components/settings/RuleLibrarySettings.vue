@@ -1,10 +1,11 @@
 <template>
   <div class="settings-stack">
     <SettingsSection
+      v-if="props.task || props.titleKey || props.hintKey"
       :title="props.titleKey ? t(props.titleKey) : undefined"
       :info="props.hintKey ? t(props.hintKey) : undefined"
     >
-      <SettingsTaskModel :task="props.task" />
+      <SettingsTaskModel v-if="props.task" :task="props.task" />
     </SettingsSection>
     <SettingsSection bare>
       <ShortcutSlots
@@ -24,8 +25,8 @@
             />
             <FieldTextArea
               :model-value="item.rule"
-              :placeholder="t('settings.rule')"
-              :aria-label="t('settings.rule')"
+              :placeholder="t(props.promptPlaceholderKey ?? 'settings.rule')"
+              :aria-label="t(props.promptPlaceholderKey ?? 'settings.rule')"
               @update:model-value="updateItem(index, 'rule', $event)"
             />
           </div>
@@ -67,15 +68,16 @@ type MainAction = MainActionConfig
 
 /** The settings of a rule library: the styles or the transformations */
 const props = defineProps<{
-  task: LlmTask
+  task?: LlmTask
   titleKey?: string
   hintKey: string
   /** The config key of the library */
-  libraryKey: 'styling' | 'transformations'
+  libraryKey: 'styling' | 'transformations' | 'chatPrompts'
   /** The start of a new item id */
   idPrefix: string
+  promptPlaceholderKey?: string
   /** Whether a main action runs the item `id` */
-  isMainActionOf: (action: MainAction, id: string) => boolean
+  isMainActionOf?: (action: MainAction, id: string) => boolean
 }>()
 
 const { t } = useI18n()
@@ -90,13 +92,18 @@ function setLibrary(next: Library) {
 
 /** Main actions of removed items would point nowhere */
 function dropMainActions(removedIds: readonly string[]) {
-  if (!removedIds.length || !userConfig.value.actionPages) return
+  if (
+    !removedIds.length ||
+    !userConfig.value.actionPages ||
+    !props.isMainActionOf
+  )
+    return
   for (const page of userConfig.value.actionPages) {
     if (!page.slots) continue
     page.slots = Object.fromEntries(
       Object.entries(page.slots).filter(
         ([, action]) =>
-          !action || !removedIds.some((id) => props.isMainActionOf(action, id))
+          !action || !removedIds.some((id) => props.isMainActionOf!(action, id))
       )
     )
   }

@@ -170,6 +170,7 @@
         "transformation": { "type": "string", "default": "" },
         "customTransformation": { "type": "string", "default": "" },
         "voiceTransformation": { "type": "string", "default": "" },
+        "chatPrompts": { "type": "string", "default": "" },
         "history": { "type": "string", "default": "" },
         "voiceCommands": { "type": "string", "default": "Ctrl+Alt+Shift+X" },
         "selectionCorrection": {
@@ -194,6 +195,7 @@
         "transformation",
         "customTransformation",
         "voiceTransformation",
+        "chatPrompts",
         "history",
         "voiceCommands",
         "selectionCorrection"
@@ -364,6 +366,7 @@
                         "copyToClipboard",
                         "transformationMenu",
                         "stylingMenu",
+                        "chatPromptsMenu",
                         "correction",
                         "translationMenu",
                         "askInChat",
@@ -817,6 +820,56 @@
       "required": ["items", "slots"],
       "defaultPath": "styling"
     },
+    "chatPrompts": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "default": "",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+              },
+              "name": { "type": "string", "default": "" },
+              "rule": { "type": "string", "default": "" }
+            },
+            "required": ["id", "name", "rule"]
+          },
+          "default": []
+        },
+        "slots": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "q",
+              "w",
+              "e",
+              "r",
+              "t",
+              "a",
+              "s",
+              "d",
+              "f",
+              "g",
+              "z",
+              "x",
+              "c",
+              "v",
+              "b"
+            ]
+          },
+          "additionalProperties": { "type": "string", "minLength": 1 },
+          "default": {}
+        }
+      },
+      "required": ["items", "slots"],
+      "defaultPath": "chatPrompts"
+    },
     "aiVault": {
       "type": "object",
       "properties": {
@@ -1060,6 +1113,7 @@
     "llm",
     "transformations",
     "styling",
+    "chatPrompts",
     "markdown",
     "plugins",
     "chat",

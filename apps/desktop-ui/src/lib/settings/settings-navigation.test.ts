@@ -100,6 +100,7 @@ describe('settings navigation', () => {
           'main-actions',
           'transformations',
           'styling',
+          'chat-prompts',
           'languages',
           'commands',
           'variables',

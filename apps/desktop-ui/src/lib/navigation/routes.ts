@@ -16,6 +16,7 @@ const APP_ROUTE_NAMES = {
   TRANSFORMATION: 'transformation',
   CUSTOM_TRANSFORMATION: 'customTransformation',
   VOICE_TRANSFORMATION: 'voiceTransformation',
+  CHAT_PROMPTS: 'chatPrompts',
 } as const
 
 export const APP_ROUTES = {
@@ -46,6 +47,7 @@ export const APP_ROUTES = {
     name: APP_ROUTE_NAMES.VOICE_TRANSFORMATION,
     path: '/voiceTransformation',
   },
+  CHAT_PROMPTS: { name: APP_ROUTE_NAMES.CHAT_PROMPTS, path: '/chatPrompts' },
 } as const
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES]['path']
@@ -60,6 +62,7 @@ export const MODE_ROUTE_MAP: Record<ActivationMode, AppRoutePath> = {
   [ActivationMode.TRANSFORMATION]: APP_ROUTES.TRANSFORMATION.path,
   [ActivationMode.CUSTOM_TRANSFORMATION]: APP_ROUTES.CUSTOM_TRANSFORMATION.path,
   [ActivationMode.VOICE_TRANSFORMATION]: APP_ROUTES.VOICE_TRANSFORMATION.path,
+  [ActivationMode.CHAT_PROMPTS]: APP_ROUTES.CHAT_PROMPTS.path,
   [ActivationMode.EDITOR]: APP_ROUTES.EDITOR.path,
   [ActivationMode.QUICK_INPUT]: APP_ROUTES.WRITE.path,
   [ActivationMode.CHAT]: APP_ROUTES.CHAT.path,
@@ -86,6 +89,7 @@ const QUICK_WINDOW_MODES: ReadonlySet<ActivationMode> = new Set([
   ActivationMode.TRANSFORMATION,
   ActivationMode.CUSTOM_TRANSFORMATION,
   ActivationMode.VOICE_TRANSFORMATION,
+  ActivationMode.CHAT_PROMPTS,
   ActivationMode.EXTERNAL_ACCESS,
 ])
 

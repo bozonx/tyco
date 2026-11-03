@@ -11,7 +11,8 @@
     "transformationMenu": "テキスト変換",
     "translationMenu": "翻訳",
     "voiceTransformation": "音声変換",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "チャットプロンプトのプリセット"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "録音をキャンセル (Esc)",
     "voiceContext": "このテキストに関する質問になります",
     "voiceInput": "音声入力",
-    "voiceSendHint": "すぐに送信 (Ctrl+Enter)"
+    "voiceSendHint": "すぐに送信 (Ctrl+Enter)",
+    "promptPresets": "プロンプトプリセット",
+    "noPromptsConfigured": "設定されたプロンプトプリセットはありません"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "スキップ",
     "aiPromptSaved": "メニューに保存しました",
     "aiPromptAlreadySaved": "このリクエストはすでにメニューにあります",
-    "ruleNotFound": "このルールはもう存在しません"
+    "ruleNotFound": "このルールはもう存在しません",
+    "chatPrompts": "チャットプロンプトのプリセット"
   },
   "nav": {
     "aiChat": "AIに質問",
@@ -770,7 +774,8 @@
       "voiceCommands": "音声コマンド",
       "voiceTransformation": "テキストの音声変換",
       "selectionActionsPage2": "アクション: ページ 2",
-      "selectionActionsPage3": "アクション: ページ 3"
+      "selectionActionsPage3": "アクション: ページ 3",
+      "chatPrompts": "選択テキストのチャットプロンプトプリセット"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",
@@ -1173,7 +1178,11 @@
     "voiceHoldToRecordHint": "デフォルトでは、音声入力は1回のキー押下で切り替わります。有効にすると、キーを押している間だけ録音されます。",
     "voiceTextCorrection": "音声テキストの校正",
     "webJinaApiKey": "Jina AI API キー",
-    "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。"
+    "webJinaApiKeyHint": "省略可能。キーがない場合、リクエストは共有レート制限のある無料枠を使用します。",
+    "chatPromptsTab": "チャットプロンプトのプリセット",
+    "chatPromptsNavTab": "チャットプロンプト",
+    "chatPromptsHint": "チャットに送信するプリセットプロンプト。チャットプロンプトメニューでは各項目が固有のキーで実行されます。カードをドラッグしてキーを変更できます。",
+    "prompt": "プロンプト"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

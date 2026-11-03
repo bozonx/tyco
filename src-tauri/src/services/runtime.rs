@@ -281,6 +281,7 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::Transformation
         | ActivationMode::CustomTransformation
         | ActivationMode::VoiceTransformation
+        | ActivationMode::ChatPrompts
         | ActivationMode::ExternalAccess => QUICK_WINDOW_LABEL,
         ActivationMode::Editor
         | ActivationMode::Chat
@@ -313,6 +314,7 @@ mod tests {
             ActivationMode::Transformation,
             ActivationMode::CustomTransformation,
             ActivationMode::VoiceTransformation,
+            ActivationMode::ChatPrompts,
             ActivationMode::ExternalAccess,
         ] {
             assert_eq!(window_label_for_mode(mode), QUICK_WINDOW_LABEL);

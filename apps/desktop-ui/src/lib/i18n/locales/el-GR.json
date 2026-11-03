@@ -11,7 +11,8 @@
     "transformationMenu": "Μετασχηματισμός κειμένου",
     "translationMenu": "Μετάφραση",
     "voiceTransformation": "Φωνητικός μετασχηματισμός",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Προεπιλογές προτροπών συνομιλίας"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Ακύρωση εγγραφής (Esc)",
     "voiceContext": "Η ερώτηση θα αφορά αυτό το κείμενο",
     "voiceInput": "Φωνητική εισαγωγή",
-    "voiceSendHint": "Άμεση αποστολή (Ctrl+Enter)"
+    "voiceSendHint": "Άμεση αποστολή (Ctrl+Enter)",
+    "promptPresets": "Προεπιλογές προτροπών",
+    "noPromptsConfigured": "Δεν έχουν ρυθμιστεί προεπιλογές προτροπών"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Παράλειψη",
     "aiPromptSaved": "Αποθηκεύτηκε στο μενού",
     "aiPromptAlreadySaved": "Αυτό το αίτημα υπάρχει ήδη στο μενού",
-    "ruleNotFound": "Αυτός ο κανόνας δεν υπάρχει πλέον"
+    "ruleNotFound": "Αυτός ο κανόνας δεν υπάρχει πλέον",
+    "chatPrompts": "Προεπιλογές προτροπών συνομιλίας"
   },
   "nav": {
     "aiChat": "Ρωτήστε την ΤΝ",
@@ -770,7 +774,8 @@
       "voiceCommands": "Φωνητικές εντολές",
       "voiceTransformation": "Φωνητικός μετασχηματισμός κειμένου",
       "selectionActionsPage2": "Ενέργειες: σελίδα 2",
-      "selectionActionsPage3": "Ενέργειες: σελίδα 3"
+      "selectionActionsPage3": "Ενέργειες: σελίδα 3",
+      "chatPrompts": "Προεπιλογές προτροπών συνομιλίας για επιλεγμένο κείμενο"
     },
     "hotkeyInput": {
       "cancelHint": "Esc για ακύρωση",
@@ -1173,7 +1178,11 @@
     "voiceHoldToRecordHint": "Από προεπιλογή, η φωνητική εισαγωγή εναλλάσσεται με ένα μόνο πάτημα. Ενεργοποιήστε για εγγραφή μόνο όσο κρατάτε πατημένο το πλήκτρο.",
     "voiceTextCorrection": "Διόρθωση υπαγορευμένου κειμένου",
     "webJinaApiKey": "Κλειδί API Jina AI",
-    "webJinaApiKeyHint": "Προαιρετικό. Χωρίς κλειδί, τα αιτήματα χρησιμοποιούν το δωρεάν πρόγραμμα με κοινά όρια."
+    "webJinaApiKeyHint": "Προαιρετικό. Χωρίς κλειδί, τα αιτήματα χρησιμοποιούν το δωρεάν πρόγραμμα με κοινά όρια.",
+    "chatPromptsTab": "Προεπιλογές προτροπών συνομιλίας",
+    "chatPromptsNavTab": "Προτροπές συνομιλίας",
+    "chatPromptsHint": "Προκαθορισμένες προτροπές για αποστολή στη συνομιλία. Στο μενού προτροπών συνομιλίας κάθε μία εκτελείται με δικό της πλήκτρο· σύρετε τις κάρτες για να αλλάξετε τα πλήκτρα.",
+    "prompt": "Προτροπή"
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
   "theme": {

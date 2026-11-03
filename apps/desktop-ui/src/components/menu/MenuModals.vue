@@ -33,6 +33,11 @@
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
+    <ChatPromptsMenu
+      v-else-if="menuModalsStore.currentStep?.modal === MenuModals.CHAT_PROMPTS"
+      :key="menuModalsStore.currentStepId"
+      v-bind="menuModalsStore.currentStep.params"
+    />
     <DiffMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.DIFF"
       :key="menuModalsStore.currentStepId"
@@ -77,6 +82,7 @@ import { computed } from 'vue'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import Overlay from '../overlay/Overlay.vue'
 import ActionSelectModal from './ActionSelectModal.vue'
+import ChatPromptsMenu from './ChatPromptsMenu.vue'
 import CustomTransformationMenu from './CustomTransformationMenu.vue'
 import DiffMenu from './DiffMenu.vue'
 import InProgressMessage from './InProgressMessage.vue'

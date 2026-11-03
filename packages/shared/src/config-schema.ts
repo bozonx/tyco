@@ -443,6 +443,11 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   config.styling.slots = distinctSlots(
     filterSlots(config.styling.slots, (id) => stylingIds.has(id))
   )
+  config.chatPrompts.items = deduplicate(config.chatPrompts.items)
+  const chatPromptIds = new Set(config.chatPrompts.items.map((item) => item.id))
+  config.chatPrompts.slots = distinctSlots(
+    filterSlots(config.chatPrompts.slots, (id) => chatPromptIds.has(id))
+  )
   const commands = new Set(config.commands.map((command) => command.id))
   if (!Array.isArray(config.actionPages) || config.actionPages.length === 0) {
     config.actionPages = DEFAULT_ACTION_PAGES

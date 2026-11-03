@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 6712cb2cfa487f87c778a47c5608f742cca6a8dbd32588221accd524e1a40ae4
+// Source hash: b02b5e46044d706af1e29dc1609a40a428f252d2ef5eb7db3941706af3b24f40
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -35,6 +35,7 @@ export type ActivationMode =
   | 'transformation'
   | 'customTransformation'
   | 'voiceTransformation'
+  | 'chatPrompts'
   | 'history'
   | 'config'
   | 'externalAccess'

@@ -11,7 +11,8 @@
     "transformationMenu": "Transformacja tekstu",
     "translationMenu": "Tłumaczenie",
     "voiceTransformation": "Transformacja głosowa",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Zestawy promptów czatu"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Anuluj nagrywanie (Esc)",
     "voiceContext": "Pytanie będzie dotyczyć tego tekstu",
     "voiceInput": "Wprowadzanie głosowe",
-    "voiceSendHint": "Wyślij od razu (Ctrl+Enter)"
+    "voiceSendHint": "Wyślij od razu (Ctrl+Enter)",
+    "promptPresets": "Zestawy promptów",
+    "noPromptsConfigured": "Brak skonfigurowanych promptów"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Pomiń",
     "aiPromptSaved": "Zapisano w menu",
     "aiPromptAlreadySaved": "To polecenie jest już w menu",
-    "ruleNotFound": "Ta reguła już nie istnieje"
+    "ruleNotFound": "Ta reguła już nie istnieje",
+    "chatPrompts": "Zestawy promptów czatu"
   },
   "nav": {
     "aiChat": "Zapytaj AI",
@@ -773,7 +777,8 @@
       "voiceCommands": "Polecenia głosowe",
       "voiceTransformation": "Głosowa transformacja tekstu",
       "selectionActionsPage2": "Działania: strona 2",
-      "selectionActionsPage3": "Działania: strona 3"
+      "selectionActionsPage3": "Działania: strona 3",
+      "chatPrompts": "Zestawy promptów czatu dla zaznaczonego tekstu"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",
@@ -1176,7 +1181,11 @@
     "voiceHoldToRecordHint": "Domyślnie wprowadzanie głosowe jest przełączane pojedynczym naciśnięciem. Włącz, aby nagrywać tylko podczas przytrzymywania skrótu.",
     "voiceTextCorrection": "Korekta tekstu z dyktowania",
     "webJinaApiKey": "Klucz API Jina AI",
-    "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami."
+    "webJinaApiKeyHint": "Opcjonalnie. Bez klucza żądania korzystają z bezpłatnego planu ze wspólnymi limitami.",
+    "chatPromptsTab": "Zestawy promptów czatu",
+    "chatPromptsNavTab": "Prompty czatu",
+    "chatPromptsHint": "Wstępnie przygotowane prompty do wysłania na czat. W menu promptów czatu każdy uruchamia się własnym klawiszem; przeciągaj karty, aby zmienić klawisze.",
+    "prompt": "Prompt"
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

@@ -11,7 +11,8 @@
     "transformationMenu": "Трансформация текста",
     "translationMenu": "Перевод",
     "voiceTransformation": "Голосовая трансформация",
-    "webhook": "Вебхук"
+    "webhook": "Вебхук",
+    "chatPromptsMenu": "Быстрые промпты для чата"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Отменить запись (Esc)",
     "voiceContext": "Вопрос будет задан об этом тексте",
     "voiceInput": "Голосовой ввод",
-    "voiceSendHint": "Отправить сразу (Ctrl+Enter)"
+    "voiceSendHint": "Отправить сразу (Ctrl+Enter)",
+    "promptPresets": "Заготовленные промпты",
+    "noPromptsConfigured": "Заготовленные промпты не настроены"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Пропустить",
     "aiPromptSaved": "Сохранено в меню",
     "aiPromptAlreadySaved": "Этот запрос уже есть в меню",
-    "ruleNotFound": "Это правило больше не существует"
+    "ruleNotFound": "Это правило больше не существует",
+    "chatPrompts": "Быстрые промпты для чата"
   },
   "nav": {
     "aiChat": "Спросить ИИ",
@@ -770,7 +774,8 @@
       "voiceCommands": "Голосовые команды",
       "voiceTransformation": "Голосовая трансформация",
       "selectionActionsPage2": "Действия: страница 2",
-      "selectionActionsPage3": "Действия: страница 3"
+      "selectionActionsPage3": "Действия: страница 3",
+      "chatPrompts": "Быстрые промпты для чата с ИИ"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — отмена",
@@ -1173,7 +1178,11 @@
     "voiceHoldToRecordHint": "По умолчанию голосовой ввод переключается одиночным нажатием. Включите, чтобы запись шла только пока зажат хоткей.",
     "voiceTextCorrection": "Исправление распознанного текста",
     "webJinaApiKey": "API-ключ Jina AI",
-    "webJinaApiKeyHint": "Необязательно. Без ключа запросы работают через бесплатный тариф с общими лимитами."
+    "webJinaApiKeyHint": "Необязательно. Без ключа запросы работают через бесплатный тариф с общими лимитами.",
+    "chatPromptsTab": "Быстрые промпты для чата",
+    "chatPromptsNavTab": "Промпты для чата",
+    "chatPromptsHint": "Заготовленные промпты для отправки в чат. В меню быстрых промптов каждый запускается своей клавишей; перетаскивайте карточки для смены клавиш.",
+    "prompt": "Промпт"
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {

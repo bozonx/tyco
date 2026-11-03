@@ -42,7 +42,8 @@ export function createOverlayNavModel(
       modal === MenuModals.VOICE_TRANSFORMATION ||
       modal === MenuModals.CUSTOM_TRANSFORMATION ||
       modal === MenuModals.TRANSFORMATION ||
-      modal === MenuModals.STYLING
+      modal === MenuModals.STYLING ||
+      modal === MenuModals.CHAT_PROMPTS
     ) {
       return 'back'
     }

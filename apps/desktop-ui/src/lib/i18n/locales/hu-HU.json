@@ -11,7 +11,8 @@
     "transformationMenu": "Szövegátalakítás",
     "translationMenu": "Fordítás",
     "voiceTransformation": "Hangalapú átalakítás",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Csevegési prompt-sablonok"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Felvétel megszakítása (Esc)",
     "voiceContext": "A kérdés erre a szövegre vonatkozik",
     "voiceInput": "Hangbevitel",
-    "voiceSendHint": "Azonnali küldés (Ctrl+Enter)"
+    "voiceSendHint": "Azonnali küldés (Ctrl+Enter)",
+    "promptPresets": "Prompt-sablonok",
+    "noPromptsConfigured": "Nincsenek beállítva prompt-sablonok"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Kihagyás",
     "aiPromptSaved": "Mentve a menübe",
     "aiPromptAlreadySaved": "Ez a kérés már szerepel a menüben",
-    "ruleNotFound": "Ez a szabály már nem létezik"
+    "ruleNotFound": "Ez a szabály már nem létezik",
+    "chatPrompts": "Csevegési prompt-sablonok"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",
@@ -770,7 +774,8 @@
       "voiceCommands": "Hangparancsok",
       "voiceTransformation": "Hangalapú szövegátalakítás",
       "selectionActionsPage2": "Műveletek: 2. oldal",
-      "selectionActionsPage3": "Műveletek: 3. oldal"
+      "selectionActionsPage3": "Műveletek: 3. oldal",
+      "chatPrompts": "Csevegési prompt-sablonok a kijelölt szöveghez"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",
@@ -1173,7 +1178,11 @@
     "voiceHoldToRecordHint": "Alapértelmezés szerint a hangbevitel egyetlen gombnyomással kapcsolható be és ki. Engedélyezze, ha csak a billentyű nyomva tartása alatt szeretne rögzíteni.",
     "voiceTextCorrection": "Diktált szöveg javítása",
     "webJinaApiKey": "Jina AI API-kulcs",
-    "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal."
+    "webJinaApiKeyHint": "Opcionális. Kulcs nélkül a kérések az ingyenes szintet használják megosztott korlátokkal.",
+    "chatPromptsTab": "Csevegési prompt-sablonok",
+    "chatPromptsNavTab": "Csevegési promptek",
+    "chatPromptsHint": "Előre összeállított promptek a csevegésbe küldéshez. A csevegési promptek menüjében mindegyik saját billentyűvel fut; a kártyák húzásával módosíthatja a billentyűket.",
+    "prompt": "Prompt"
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

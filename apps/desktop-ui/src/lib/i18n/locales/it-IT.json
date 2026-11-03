@@ -11,7 +11,8 @@
     "transformationMenu": "Trasformazione del testo",
     "translationMenu": "Traduzione",
     "voiceTransformation": "Trasformazione vocale",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Preset di prompt per la chat"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Annulla la registrazione (Esc)",
     "voiceContext": "La domanda riguarderà questo testo",
     "voiceInput": "Input vocale",
-    "voiceSendHint": "Invia subito (Ctrl+Invio)"
+    "voiceSendHint": "Invia subito (Ctrl+Invio)",
+    "promptPresets": "Preset di prompt",
+    "noPromptsConfigured": "Nessun preset di prompt configurato"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Salta",
     "aiPromptSaved": "Salvato nel menu",
     "aiPromptAlreadySaved": "Questa richiesta è già nel menu",
-    "ruleNotFound": "Questa regola non esiste più"
+    "ruleNotFound": "Questa regola non esiste più",
+    "chatPrompts": "Preset di prompt per la chat"
   },
   "nav": {
     "aiChat": "Chiedi all’IA",
@@ -773,7 +777,8 @@
       "voiceCommands": "Comandi vocali",
       "voiceTransformation": "Trasformazione vocale del testo",
       "selectionActionsPage2": "Azioni: pagina 2",
-      "selectionActionsPage3": "Azioni: pagina 3"
+      "selectionActionsPage3": "Azioni: pagina 3",
+      "chatPrompts": "Preset di prompt della chat per il testo selezionato"
     },
     "hotkeyInput": {
       "cancelHint": "Esc per annullare",
@@ -1176,7 +1181,11 @@
     "voiceHoldToRecordHint": "Per impostazione predefinita, l'input vocale si attiva e disattiva con una singola pressione. Abilita per registrare solo mentre la scorciatoia è premuta.",
     "voiceTextCorrection": "Correzione del testo dettato",
     "webJinaApiKey": "Chiave API Jina AI",
-    "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi."
+    "webJinaApiKeyHint": "Facoltativo. Senza chiave, le richieste utilizzano il piano gratuito con limiti condivisi.",
+    "chatPromptsTab": "Preset di prompt per la chat",
+    "chatPromptsNavTab": "Prompt della chat",
+    "chatPromptsHint": "Prompt preimpostati da inviare alla chat. Nel menu dei prompt della chat, ciascuno viene eseguito con il proprio tasto; trascina le schede per modificare i tasti.",
+    "prompt": "Prompt"
   },
   "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
   "theme": {

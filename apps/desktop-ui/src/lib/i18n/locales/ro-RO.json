@@ -11,7 +11,8 @@
     "transformationMenu": "Transformare text",
     "translationMenu": "Traducere",
     "voiceTransformation": "Transformare vocală",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Presetări prompturi chat"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Anulează înregistrarea (Esc)",
     "voiceContext": "Întrebarea se va referi la acest text",
     "voiceInput": "Introducere vocală",
-    "voiceSendHint": "Trimite imediat (Ctrl+Enter)"
+    "voiceSendHint": "Trimite imediat (Ctrl+Enter)",
+    "promptPresets": "Presetări prompturi",
+    "noPromptsConfigured": "Nicio presetare de prompt configurată"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Omite",
     "aiPromptSaved": "Salvat în meniu",
     "aiPromptAlreadySaved": "Această cerere este deja în meniu",
-    "ruleNotFound": "Această regulă nu mai există"
+    "ruleNotFound": "Această regulă nu mai există",
+    "chatPrompts": "Presetări prompturi chat"
   },
   "nav": {
     "aiChat": "Întreabă AI",
@@ -773,7 +777,8 @@
       "voiceCommands": "Comenzi vocale",
       "voiceTransformation": "Transformare vocală a textului",
       "selectionActionsPage2": "Acțiuni: pagina 2",
-      "selectionActionsPage3": "Acțiuni: pagina 3"
+      "selectionActionsPage3": "Acțiuni: pagina 3",
+      "chatPrompts": "Presetări prompturi chat pentru textul selectat"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",
@@ -1176,7 +1181,11 @@
     "voiceHoldToRecordHint": "În mod prestabilit, introducerea vocală se comută printr-o singură apăsare. Activați pentru a înregistra doar cât timp comanda rapidă este apăsată.",
     "voiceTextCorrection": "Corectarea textului dictat",
     "webJinaApiKey": "Cheie API Jina AI",
-    "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate."
+    "webJinaApiKeyHint": "Opțional. Fără cheie, cererile folosesc nivelul gratuit cu limite partajate.",
+    "chatPromptsTab": "Presetări prompturi chat",
+    "chatPromptsNavTab": "Prompturi chat",
+    "chatPromptsHint": "Prompturi prestabilite de trimis în chat. În meniul de prompturi chat, fiecare rulează cu propria tastă; trageți cardurile pentru a schimba tastele.",
+    "prompt": "Prompt"
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

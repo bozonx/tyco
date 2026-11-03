@@ -12,6 +12,7 @@ export enum MenuModals {
   CUSTOM_TRANSFORMATION = 'custom-transformation',
   VOICE_TRANSFORMATION = 'voice-transformation',
   STYLING = 'styling',
+  CHAT_PROMPTS = 'chat-prompts',
   DIFF = 'diff',
   VOICE_RECOGNITION = 'voice-recognition',
   TRANSLATE = 'translate',
@@ -55,6 +56,12 @@ export interface StylingMenuParams {
   shortcutsDisabled?: boolean
   /** Runs this style immediately when the dialog opens. */
   stylingId?: string
+}
+export interface ChatPromptsMenuParams {
+  text?: string
+  shortcutsDisabled?: boolean
+  /** Runs this prompt immediately when the dialog opens. */
+  promptId?: string
 }
 export interface TranslateMenuParams {
   text?: string
@@ -126,6 +133,7 @@ interface MenuModalParams {
   [MenuModals.CUSTOM_TRANSFORMATION]: CustomTransformationMenuParams
   [MenuModals.VOICE_TRANSFORMATION]: VoiceTransformationMenuParams
   [MenuModals.STYLING]: StylingMenuParams
+  [MenuModals.CHAT_PROMPTS]: ChatPromptsMenuParams
   [MenuModals.DIFF]: DiffMenuParams
   [MenuModals.VOICE_RECOGNITION]: VoiceMenuParams
   [MenuModals.TRANSLATE]: TranslateMenuParams

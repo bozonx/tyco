@@ -40,6 +40,7 @@ describe('createActionMenuModel', () => {
       openCustomTransformationModal: vi.fn(),
       openVoiceTransformationModal: vi.fn(),
       openStylingModal: vi.fn(),
+      openChatPromptsModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
       hideWindow: vi.fn(),
@@ -174,6 +175,12 @@ describe('createActionMenuModel', () => {
     const styling = actions.find((a) => a.id === 'stylingMenu')
     await styling?.action('some text to restyle')
     expect(deps.openStylingModal).toHaveBeenCalledWith('some text to restyle')
+
+    const chatPrompts = actions.find((a) => a.id === 'chatPromptsMenu')
+    await chatPrompts?.action('some text for chat prompt')
+    expect(deps.openChatPromptsModal).toHaveBeenCalledWith(
+      'some text for chat prompt'
+    )
   })
 
   it('saves the text to history before it leaves the app', async () => {

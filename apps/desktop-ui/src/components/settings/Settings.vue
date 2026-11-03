@@ -112,6 +112,7 @@ import { useSettingsSessionStore } from '../../stores/settings-session'
 import NavigationList from '../common/NavigationList.vue'
 import SettingsAccessibilityTab from './SettingsAccessibilityTab.vue'
 import SettingsAiProfilesTab from './SettingsAiProfilesTab.vue'
+import SettingsChatPromptsTab from './SettingsChatPromptsTab.vue'
 import SettingsChatTab from './SettingsChatTab.vue'
 import SettingsCommandsTab from './SettingsCommandsTab.vue'
 import SettingsCorrectionTab from './SettingsCorrectionTab.vue'
@@ -151,6 +152,7 @@ const SECTION_TABS: Record<
   'main-actions': SettingsMainActionsTab,
   transformations: SettingsTransformationsTab,
   styling: SettingsStylingTab,
+  'chat-prompts': SettingsChatPromptsTab,
   languages: SettingsLanguagesTab,
 }
 

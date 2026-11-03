@@ -11,7 +11,8 @@
     "transformationMenu": "Transformación de texto",
     "translationMenu": "Traducción",
     "voiceTransformation": "Transformación por voz",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Ajustes predefinidos de prompts de chat"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Cancelar la grabación (Esc)",
     "voiceContext": "La pregunta será sobre este texto",
     "voiceInput": "Entrada de voz",
-    "voiceSendHint": "Enviar de inmediato (Ctrl+Enter)"
+    "voiceSendHint": "Enviar de inmediato (Ctrl+Enter)",
+    "promptPresets": "Prompts predefinidos",
+    "noPromptsConfigured": "No hay prompts predefinidos configurados"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Omitir",
     "aiPromptSaved": "Guardado en el menú",
     "aiPromptAlreadySaved": "Esta solicitud ya está en el menú",
-    "ruleNotFound": "Esta regla ya no existe"
+    "ruleNotFound": "Esta regla ya no existe",
+    "chatPrompts": "Ajustes predefinidos de prompts de chat"
   },
   "nav": {
     "aiChat": "Preguntar a la IA",
@@ -773,7 +777,8 @@
       "voiceCommands": "Comandos de voz",
       "voiceTransformation": "Transformación de texto por voz",
       "selectionActionsPage2": "Acciones: página 2",
-      "selectionActionsPage3": "Acciones: página 3"
+      "selectionActionsPage3": "Acciones: página 3",
+      "chatPrompts": "Prompts de chat predefinidos para texto seleccionado"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -1176,7 +1181,11 @@
     "voiceHoldToRecordHint": "Por defecto, la entrada de voz se activa y desactiva con una sola pulsación. Activa para grabar solo mientras se mantiene pulsado el atajo.",
     "voiceTextCorrection": "Corrección del texto dictado",
     "webJinaApiKey": "Clave de API de Jina AI",
-    "webJinaApiKeyHint": "Opcional. Sin una clave, las solicitudes usan el nivel gratuito con límites compartidos."
+    "webJinaApiKeyHint": "Opcional. Sin una clave, las solicitudes usan el nivel gratuito con límites compartidos.",
+    "chatPromptsTab": "Ajustes predefinidos de prompts de chat",
+    "chatPromptsNavTab": "Prompts de chat",
+    "chatPromptsHint": "Prompts predefinidos para enviar al chat. En el menú de prompts de chat, cada uno se ejecuta con su propia tecla; arrastra las tarjetas para cambiar sus teclas.",
+    "prompt": "Prompt"
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

@@ -81,6 +81,12 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         icon: 'mdi:palette-outline',
       },
       {
+        id: 'chat-prompts',
+        labelKey: 'settings.chatPromptsTab',
+        navigationLabelKey: 'settings.chatPromptsNavTab',
+        icon: 'mdi:lightning-bolt-outline',
+      },
+      {
         id: 'languages',
         labelKey: 'settings.languagesTab',
         icon: 'mdi:translate-variant',
@@ -377,6 +383,7 @@ const CONFIG_SECTION_TABS: Record<string, SettingsSectionId> = {
   llm: 'llm',
   transformations: 'transformations',
   styling: 'styling',
+  chatPrompts: 'chat-prompts',
   aiVault: 'ai-profiles',
   aiProfiles: 'ai-profiles',
   plugins: 'plugins',

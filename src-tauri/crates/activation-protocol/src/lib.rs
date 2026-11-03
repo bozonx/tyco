@@ -19,6 +19,7 @@ pub const START_MODES: &[&str] = &[
     "transformation",
     "customTransformation",
     "voiceTransformation",
+    "chatPrompts",
     "history",
     "config",
 ];
@@ -31,6 +32,7 @@ pub fn canonical_mode(value: &str) -> &str {
         "voice-chat" => "voiceChat",
         "custom-transformation" => "customTransformation",
         "voice-transformation" => "voiceTransformation",
+        "chat-prompts" => "chatPrompts",
         "settings" => "config",
         _ => value,
     }
@@ -46,6 +48,7 @@ pub fn cli_mode(mode: &str) -> &str {
         "voiceChat" => "voice-chat",
         "customTransformation" => "custom-transformation",
         "voiceTransformation" => "voice-transformation",
+        "chatPrompts" => "chat-prompts",
         "config" => "settings",
         _ => mode,
     }

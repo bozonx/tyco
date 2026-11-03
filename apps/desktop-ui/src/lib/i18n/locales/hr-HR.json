@@ -11,7 +11,8 @@
     "transformationMenu": "Transformacija teksta",
     "translationMenu": "Prijevod",
     "voiceTransformation": "Glasovna transformacija",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "Unaprijed postavljeni upiti za chat"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Prekini snimanje (Esc)",
     "voiceContext": "Pitanje će se odnositi na ovaj tekst",
     "voiceInput": "Glasovni unos",
-    "voiceSendHint": "Pošalji odmah (Ctrl+Enter)"
+    "voiceSendHint": "Pošalji odmah (Ctrl+Enter)",
+    "promptPresets": "Unaprijed postavljeni upiti",
+    "noPromptsConfigured": "Nema konfiguriranih upita"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Preskoči",
     "aiPromptSaved": "Spremljeno u izbornik",
     "aiPromptAlreadySaved": "Ovaj zahtjev već je u izborniku",
-    "ruleNotFound": "Ovo pravilo više ne postoji"
+    "ruleNotFound": "Ovo pravilo više ne postoji",
+    "chatPrompts": "Unaprijed postavljeni upiti za chat"
   },
   "nav": {
     "aiChat": "Pitaj AI",
@@ -773,7 +777,8 @@
       "voiceCommands": "Glasovne naredbe",
       "voiceTransformation": "Glasovna transformacija teksta",
       "selectionActionsPage2": "Radnje: stranica 2",
-      "selectionActionsPage3": "Radnje: stranica 3"
+      "selectionActionsPage3": "Radnje: stranica 3",
+      "chatPrompts": "Unaprijed postavljeni upiti za chat za odabrani tekst"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",
@@ -1176,7 +1181,11 @@
     "voiceHoldToRecordHint": "Prema zadanim postavkama, glasovni unos se uključuje jednim pritiskom. Uključite za snimanje samo dok držite pritisnut prečac.",
     "voiceTextCorrection": "Ispravak izdiktiranog teksta",
     "webJinaApiKey": "Jina AI API ključ",
-    "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima."
+    "webJinaApiKeyHint": "Neobavezno. Bez ključa, zahtjevi koriste besplatnu razinu sa zajedničkim ograničenjima.",
+    "chatPromptsTab": "Unaprijed postavljeni upiti za chat",
+    "chatPromptsNavTab": "Upiti za chat",
+    "chatPromptsHint": "Unaprijed pripremljeni upiti za slanje u chat. U izborniku upita za chat svaki se pokreće vlastitom tipkom; povucite kartice da promijenite tipke.",
+    "prompt": "Upit"
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

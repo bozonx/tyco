@@ -11,7 +11,8 @@
     "transformationMenu": "Трансформація тексту",
     "translationMenu": "Переклад",
     "voiceTransformation": "Голосова трансформація",
-    "webhook": "Вебхук"
+    "webhook": "Вебхук",
+    "chatPromptsMenu": "Швидкі промпти для чату"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "Скасувати запис (Esc)",
     "voiceContext": "Запитання стосуватиметься цього тексту",
     "voiceInput": "Голосове введення",
-    "voiceSendHint": "Надіслати одразу (Ctrl+Enter)"
+    "voiceSendHint": "Надіслати одразу (Ctrl+Enter)",
+    "promptPresets": "Заготовлені промпти",
+    "noPromptsConfigured": "Заготовлені промпти не налаштовані"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "Пропустити",
     "aiPromptSaved": "Збережено в меню",
     "aiPromptAlreadySaved": "Цей запит уже є в меню",
-    "ruleNotFound": "Цього правила більше не існує"
+    "ruleNotFound": "Цього правила більше не існує",
+    "chatPrompts": "Швидкі промпти для чату"
   },
   "nav": {
     "aiChat": "Запитати ШІ",
@@ -770,7 +774,8 @@
       "voiceCommands": "Голосові команди",
       "voiceTransformation": "Голосова трансформація тексту",
       "selectionActionsPage2": "Дії: сторінка 2",
-      "selectionActionsPage3": "Дії: сторінка 3"
+      "selectionActionsPage3": "Дії: сторінка 3",
+      "chatPrompts": "Швидкі промпти для чату з ШІ"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — скасувати",
@@ -1173,7 +1178,11 @@
     "voiceHoldToRecordHint": "За замовчуванням голосове введення перемикається одним натисканням. Увімкніть, щоб запис тривав лише поки затиснуто хоткей.",
     "voiceTextCorrection": "Виправлення надиктованого тексту",
     "webJinaApiKey": "API-ключ Jina AI",
-    "webJinaApiKeyHint": "Необов'язково. Без ключа запити працюють через безкоштовний тариф зі спільними лімітами."
+    "webJinaApiKeyHint": "Необов'язково. Без ключа запити працюють через безкоштовний тариф зі спільними лімітами.",
+    "chatPromptsTab": "Швидкі промпти для чату",
+    "chatPromptsNavTab": "Промпти для чату",
+    "chatPromptsHint": "Заготовлені промпти для надсилання в чат. У меню швидких промптів кожен запускається своєю клавішею; перетягуйте картки для зміни клавіш.",
+    "prompt": "Промпт"
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {

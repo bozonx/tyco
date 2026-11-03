@@ -11,7 +11,8 @@
     "transformationMenu": "ტექსტის ტრანსფორმაცია",
     "translationMenu": "თარგმანი",
     "voiceTransformation": "ხმოვანი ტრანსფორმაცია",
-    "webhook": "ვებჰუკი"
+    "webhook": "ვებჰუკი",
+    "chatPromptsMenu": "ჩატის პრომპტების წინასწარი პარამეტრები"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "ჩაწერის გაუქმება (Esc)",
     "voiceContext": "კითხვა ამ ტექსტს შეეხება",
     "voiceInput": "ხმოვანი შეყვანა",
-    "voiceSendHint": "დაუყოვნებლივ გაგზავნა (Ctrl+Enter)"
+    "voiceSendHint": "დაუყოვნებლივ გაგზავნა (Ctrl+Enter)",
+    "promptPresets": "პრომპტების წინასწარი პარამეტრები",
+    "noPromptsConfigured": "პრომპტების წინასწარი პარამეტრები არ არის კონფიგურირებული"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "გამოტოვება",
     "aiPromptSaved": "შენახულია მენიუში",
     "aiPromptAlreadySaved": "ეს მოთხოვნა უკვე მენიუშია",
-    "ruleNotFound": "ეს წესი აღარ არსებობს"
+    "ruleNotFound": "ეს წესი აღარ არსებობს",
+    "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",
@@ -770,7 +774,8 @@
       "voiceCommands": "ხმოვანი ბრძანებები",
       "voiceTransformation": "ტექსტის ხმოვანი ტრანსფორმაცია",
       "selectionActionsPage2": "მოქმედებები: გვერდი 2",
-      "selectionActionsPage3": "მოქმედებები: გვერდი 3"
+      "selectionActionsPage3": "მოქმედებები: გვერდი 3",
+      "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები მონიშნული ტექსტისთვის"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — გაუქმება",
@@ -1173,7 +1178,11 @@
     "voiceHoldToRecordHint": "ნაგულისხმევად, ხმოვანი შეყვანა გადაირთვება ერთი დაჭერით. ჩართეთ, რათა ჩაწერა მოხდეს მხოლოდ კლავიშის დაჭერისას.",
     "voiceTextCorrection": "ნაკარნახევი ტექსტის შესწორება",
     "webJinaApiKey": "Jina AI API გასაღები",
-    "webJinaApiKeyHint": "არასავალდებულო. გასაღების გარეშე, მოთხოვნები იყენებს უფასო ტარიფს საერთო ლიმიტებით."
+    "webJinaApiKeyHint": "არასავალდებულო. გასაღების გარეშე, მოთხოვნები იყენებს უფასო ტარიფს საერთო ლიმიტებით.",
+    "chatPromptsTab": "ჩატის პრომპტების წინასწარი პარამეტრები",
+    "chatPromptsNavTab": "ჩატის პრომპტები",
+    "chatPromptsHint": "წინასწარ მომზადებული პრომპტები ჩატში გასაგზავნად. ჩატის პრომპტების მენიუში თითოეული საკუთარი ღილაკით ეშვება; გადაათრიეთ ბარათები ღილაკების შესაცვლელად.",
+    "prompt": "პრომპტი"
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {

@@ -11,7 +11,8 @@
     "transformationMenu": "文本转换",
     "translationMenu": "翻译",
     "voiceTransformation": "语音转换",
-    "webhook": "Webhook"
+    "webhook": "Webhook",
+    "chatPromptsMenu": "聊天提示词预设"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -129,7 +130,9 @@
     "voiceCancelHint": "取消录音 (Esc)",
     "voiceContext": "提问将针对此文本",
     "voiceInput": "语音输入",
-    "voiceSendHint": "立即发送 (Ctrl+Enter)"
+    "voiceSendHint": "立即发送 (Ctrl+Enter)",
+    "promptPresets": "提示词预设",
+    "noPromptsConfigured": "未配置提示词预设"
   },
   "chatTools": {
     "files": {
@@ -562,7 +565,8 @@
     "skipProcessing": "跳过",
     "aiPromptSaved": "已保存到菜单",
     "aiPromptAlreadySaved": "此请求已在菜单中",
-    "ruleNotFound": "此规则已不存在"
+    "ruleNotFound": "此规则已不存在",
+    "chatPrompts": "聊天提示词预设"
   },
   "nav": {
     "aiChat": "询问 AI",
@@ -767,7 +771,8 @@
       "voiceCommands": "语音命令",
       "voiceTransformation": "文本语音转换",
       "selectionActionsPage2": "操作：第 2 页",
-      "selectionActionsPage3": "操作：第 3 页"
+      "selectionActionsPage3": "操作：第 3 页",
+      "chatPrompts": "针对所选文本的聊天提示词预设"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -1170,7 +1175,11 @@
     "voiceHoldToRecordHint": "默认情况下，按一次快捷键即可开启或关闭语音输入。启用后仅在按住快捷键时录音。",
     "voiceTextCorrection": "语音文本纠错",
     "webJinaApiKey": "Jina AI API 密钥",
-    "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。"
+    "webJinaApiKeyHint": "可选。未配置密钥时，请求将使用具有共享速率限制的免费层级。",
+    "chatPromptsTab": "聊天提示词预设",
+    "chatPromptsNavTab": "聊天提示词",
+    "chatPromptsHint": "发送到聊天的预设提示词。在聊天提示词菜单中，每个提示词都有对应的快捷键；拖动卡片可更改对应按键。",
+    "prompt": "提示词"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

@@ -13,6 +13,7 @@ export const STANDARD_ACTION_IDS = [
   'translationMenu',
   'transformationMenu',
   'stylingMenu',
+  'chatPromptsMenu',
   'customTransformation',
   'voiceTransformation',
 ] as const
