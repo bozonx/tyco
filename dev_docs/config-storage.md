@@ -64,12 +64,11 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `language`        | `ui` (interface locale or `auto`)                                                                                           |
 | `editor`          | `submitKey`, `diffViewMode`, `history` (`storage`, `maxItems`, `retentionDays`, `isSecretSanitizingEnabled`, `isLocalOnly`) |
 | `quickWindow`     | `isHiddenOnBlur`, `isCorrectionPrefetchEnabled`                                                                             |
-| `hotkeys`         | one shortcut per activation mode a hotkey opens, named as the mode, `selectionCorrection` and `launcherPages`               |
+| `hotkeys`         | one shortcut per activation mode a hotkey opens, named as the mode, `selectionCorrection`                                   |
 | `externalAccess`  | `canAccessSelection`; each command allows external calls with `isAvailableExternally`                                       |
 | `windowInsertion` | `linux`: `pasteShortcut`, `terminalPasteShortcut`; `terminalApps`: extra window classes treated as terminals                |
 | `translation`     | `provider`, `providers.deepl.endpoint`, `qualityGate`, `glossary`, `targetLanguages` (a shortcut grid), `viewMode`          |
-| `mainActions`     | the action menu (a shortcut grid)                                                                                           |
-| `launcherPages`   | `id`, `inputMode`, `slots` (a shortcut grid of command ids)                                                                 |
+| `actionPages`     | pages of the action menu: each has `inputMode` (`selection` or `none`) and `slots` (a shortcut grid)                        |
 | `commands`        | the commands of the user: `toolId`, `toolConfig`, `outputAction`, `isEnabled`, `isOutputLogged`, `platforms`, …             |
 | `variables`       | the variables commands refer to as `{{var:NAME}}`: `id`, `name`, `description`                                              |
 | `variableValues`  | the value of each variable on this device, by variable id (device)                                                          |
@@ -84,13 +83,10 @@ is untrusted `UserConfigInput` and must pass through normalization before use.
 | `stt`             | `provider`, `isVoiceCorrectionEnabled`, `providers.deepgram`, `providers.sherpaOnnx`                                        |
 
 The hotkeys of `hotkeys` are named as the activation modes they open
-(`quickInput`, `selectionActions`, `translation`, …); the name is also the
-hotkey id the UI and the system portal use. `selectionCorrection` corrects the
-selection in place, and `hotkeys.launcherPages` maps a launcher page id to the
-shortcut that opens it, with the hotkey id `launcherPage.<page id>`. The
-shortcut is kept with the other hotkeys of the device, not in the page: a
-device field never lives inside an entity of the user. A shortcut of a page
-that is gone is dropped.
+(`quickInput`, `selectionActions`, `selectionActionsPage2`..`selectionActionsPage5`,
+`translation`, …); the name is also the hotkey id the UI and the system portal use.
+`selectionCorrection` corrects the selection in place. All five action page hotkeys
+are configurable regardless of how many action pages currently exist.
 
 The glossary is one for every target language: `{ "term", "translation" }`,
 where a term kept as it is has itself as its translation. ai-kit's
@@ -104,11 +100,9 @@ of a custom endpoint starts without tools.
 
 A shortcut grid is an object keyed by the keys of `SHORTCUT_SLOT_KEYS`
 (`q`…`b`, row by row); an empty slot is absent. A grid lays out entities kept
-elsewhere and refers to them by id; only `mainActions` and `targetLanguages`
-hold the items themselves. Launcher pages have stable ids: main actions refer
-to them through `pageId`, and a page opens with the activation mode
-`commandLauncher:<page id>`. The overlay itself opens on its first page; a
-hotkey belongs to the page that it opens. At least one page is required.
+elsewhere and refers to them by id; `actionPages` and `targetLanguages`
+hold the items themselves. Action pages are addressed by 1-based index
+(`selectionActions` or `selectionActions:1` for page 1, `selectionActions:2` for page 2, etc.).
 
 `llm.tasks` holds what each LLM task needs: `chat` (`rule`; the chat runs on
 the model picked in it), `correction`, `voiceCorrection` (`modelId`,

@@ -5,10 +5,18 @@ import type { HotkeyId, UserConfig } from './user-config'
 export const INLINE_CORRECTION_HOTKEY_ID = 'selectionCorrection'
 
 /** Hotkeys corresponding to action pages by index */
-export const ACTION_PAGE_HOTKEY_IDS: readonly [HotkeyId, HotkeyId, HotkeyId] = [
+export const ACTION_PAGE_HOTKEY_IDS: readonly [
+  HotkeyId,
+  HotkeyId,
+  HotkeyId,
+  HotkeyId,
+  HotkeyId,
+] = [
   'selectionActions',
   'selectionActionsPage2',
   'selectionActionsPage3',
+  'selectionActionsPage4',
+  'selectionActionsPage5',
 ]
 
 export const actionPageHotkeyId = (pageIndex: number): HotkeyId | undefined =>

@@ -12,7 +12,7 @@ use serde_json::json;
 use tauri::{AppHandle, Manager};
 use tyco_activation_protocol::{ErrorCode, Request, Response, API_VERSION};
 
-use crate::services::activation::{Activation, ActivationMode, ActivationSource};
+use crate::services::activation::{Activation, ActivationSource};
 use crate::services::external::command_library;
 use crate::services::external::jobs::ExternalJobs;
 use crate::services::{runtime, selection_replace};
@@ -28,8 +28,6 @@ fn open(
     selection: bool,
     source: ActivationSource,
 ) -> ApiResult<()> {
-    let mode = ActivationMode::parse(mode)
-        .map_err(|error| Response::coded_error(ErrorCode::InvalidInput, error.to_string()))?;
     if selection && text.is_some() {
         return Err(Box::new(Response::coded_error(
             ErrorCode::InvalidInput,
@@ -40,7 +38,8 @@ fn open(
     if selection {
         ensure_selection_access_allowed(&config)?;
     }
-    let mut activation = Activation::new(mode, source);
+    let mut activation = Activation::from_mode(mode, source)
+        .map_err(|error| Response::coded_error(ErrorCode::InvalidInput, error.to_string()))?;
     activation.selected_text = if selection {
         Some(selection_replace::read_external(app).map_err(|error| {
             Response::coded_error(ErrorCode::SelectionFailed, error.to_string())

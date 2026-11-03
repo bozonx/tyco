@@ -182,7 +182,7 @@
     "afterRunInsert": "Pencereye ekle",
     "afterRunNoneScriptHint": "“Hiçbir şey” seçilen hızlı komut çalıştırmalarında betik çıktısı gerekmez: betik yalnızca 3 sn beklenir ve sonra arka planda devam edebilir. Ana eylem menüsü ve dış çağrılar çıktıyı her zaman bekler.",
     "afterRunShowResult": "Sonucu göster",
-    "badgeInLauncher": "Komutlar: sayfa {page} ({key})",
+    "badgeInLauncher": "Eylemler: sayfa {page} ({key})",
     "badgeInMenu": "Eylemler ({key})",
     "badgeIssuesHint": "Komut tam olarak yapılandırılmamış: gerekli alanları kontrol edin",
     "badgeNoText": "metinsiz",
@@ -219,7 +219,7 @@
     "languageLabel": "Şu dile çevir",
     "languagePlaceholder": "Bir dil seçin",
     "launcherResult": "Eylem",
-    "launcherResultGroup": "Hızlı komut sonucu",
+    "launcherResultGroup": "Komut sonucu",
     "launcherSelectionHint": "“Pencereye ekle”, sonucu etkin pencerede imlecin bulunduğu yere yapıştırır. Orada seçili metin varsa sonuç onun yerini alır.",
     "logEmpty": "Henüz günlüğe kaydedilmiş komut yok",
     "moreActions": "Diğer",
@@ -775,7 +775,9 @@
       "voiceTransformation": "Sesli metin dönüştürme",
       "selectionActionsPage2": "Eylemler: sayfa 2",
       "selectionActionsPage3": "Eylemler: sayfa 3",
-      "chatPrompts": "Seçili metin için sohbet istemi önayarları"
+      "chatPrompts": "Seçili metin için sohbet istemi önayarları",
+      "selectionActionsPage4": "Eylemler: sayfa 4",
+      "selectionActionsPage5": "Eylemler: sayfa 5"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",

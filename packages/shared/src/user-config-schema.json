@@ -178,7 +178,9 @@
           "default": "Ctrl+Alt+Shift+F"
         },
         "selectionActionsPage2": { "type": "string", "default": "" },
-        "selectionActionsPage3": { "type": "string", "default": "" }
+        "selectionActionsPage3": { "type": "string", "default": "" },
+        "selectionActionsPage4": { "type": "string", "default": "" },
+        "selectionActionsPage5": { "type": "string", "default": "" }
       },
       "required": [
         "editor",
@@ -189,6 +191,8 @@
         "selectionActions",
         "selectionActionsPage2",
         "selectionActionsPage3",
+        "selectionActionsPage4",
+        "selectionActionsPage5",
         "correction",
         "translation",
         "styling",

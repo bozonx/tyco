@@ -663,6 +663,12 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
         if !hotkeys.contains_key("selectionActionsPage3") {
             hotkeys.insert("selectionActionsPage3".into(), json!(""));
         }
+        if !hotkeys.contains_key("selectionActionsPage4") {
+            hotkeys.insert("selectionActionsPage4".into(), json!(""));
+        }
+        if !hotkeys.contains_key("selectionActionsPage5") {
+            hotkeys.insert("selectionActionsPage5".into(), json!(""));
+        }
     }
     if let Some(pages) = config["actionPages"].as_array_mut() {
         pages[0]["inputMode"] = json!("selection");

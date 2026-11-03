@@ -29,7 +29,6 @@ import {
   externalTimeoutOf,
   createCommand,
   normalizeCommands,
-  normalizeLauncherCommands,
   scriptToolConfigOf,
   toolConfigText,
 } from './command-config'
@@ -420,29 +419,6 @@ describe('commands of the core tools', () => {
   })
 })
 
-describe('normalizeLauncherCommands', () => {
-  it('lists the 15 slots and drops missing command ids', () => {
-    const cmd1 = createCommand('script', 'cmd1')
-    const slots = normalizeLauncherCommands({ q: 'cmd1', w: 'missing' }, [cmd1])
-    expect(slots).toHaveLength(15)
-    expect(slots[0]).toBe('cmd1')
-    expect(slots[1]).toBeNull()
-    expect(slots[2]).toBeNull()
-    expect(slots[14]).toBeNull()
-  })
-
-  it('leaves missing slots empty instead of reading removed launcher flags', () => {
-    const configuredCommand = {
-      ...createCommand('script', 'leg1'),
-      availableIn: { launcher: true, external: true, chat: false },
-    }
-    const slots = normalizeLauncherCommands(undefined, [configuredCommand])
-    expect(slots).toHaveLength(15)
-    expect(slots.every((slot) => slot === null)).toBe(true)
-    expect(slots[1]).toBeNull()
-  })
-})
-
 describe('command removal', () => {
   const a = createCommand('script', 'a')
   const b = createCommand('script', 'b')
@@ -503,13 +479,13 @@ describe('commandCliCall', () => {
 })
 
 describe('commandAfterRun', () => {
-  it('uses quick-command settings only in their matching context', () => {
+  it('uses command output settings in the action menu, launcher and externally', () => {
     const command = {
       ...createCommand('script'),
       outputAction: 'insertIntoWindow' as const,
     }
     expect(commandAfterRun(command, 'launcher')).toBe('insertIntoWindow')
-    expect(commandAfterRun(command, 'menu')).toBe('showMenu')
+    expect(commandAfterRun(command, 'menu')).toBe('insertIntoWindow')
     expect(commandAfterRun(command, 'external')).toBe('return')
   })
 })

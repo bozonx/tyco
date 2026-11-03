@@ -17,6 +17,8 @@ describe('hotkeys', () => {
       ),
       'selectionActionsPage2',
       'selectionActionsPage3',
+      'selectionActionsPage4',
+      'selectionActionsPage5',
       'selectionCorrection',
     ]
     expect(Object.keys(DEFAULT_USER_CONFIG.hotkeys).sort()).toEqual(
@@ -30,6 +32,8 @@ describe('hotkeys', () => {
     )
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage2).toBe('')
     expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage3).toBe('')
+    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage4).toBe('')
+    expect(DEFAULT_USER_CONFIG.hotkeys.selectionActionsPage5).toBe('')
   })
 
   it('normalizes aliases and modifier order', () => {

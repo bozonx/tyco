@@ -190,6 +190,8 @@ const MODE_ORDER: HotkeyId[] = [
   'selectionActions',
   'selectionActionsPage2',
   'selectionActionsPage3',
+  'selectionActionsPage4',
+  'selectionActionsPage5',
   'correction',
   'translation',
   'styling',
@@ -235,11 +237,15 @@ const modes = (Object.keys(DEFAULT_USER_CONFIG.hotkeys) as HotkeyId[])
 const inlineId = INLINE_CORRECTION_HOTKEY_ID
 
 const openCommandForMode = (mode: string) => {
-  if (mode === 'selectionActions') return 'tyco-ctl open selectionActions:0'
+  if (mode === 'selectionActions') return 'tyco-ctl open selection-actions'
   if (mode === 'selectionActionsPage2')
-    return 'tyco-ctl open selectionActions:1'
+    return 'tyco-ctl open selection-actions:2'
   if (mode === 'selectionActionsPage3')
-    return 'tyco-ctl open selectionActions:2'
+    return 'tyco-ctl open selection-actions:3'
+  if (mode === 'selectionActionsPage4')
+    return 'tyco-ctl open selection-actions:4'
+  if (mode === 'selectionActionsPage5')
+    return 'tyco-ctl open selection-actions:5'
   return `tyco-ctl open ${mode}`
 }
 

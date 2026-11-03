@@ -182,7 +182,7 @@
     "afterRunInsert": "插入至視窗",
     "afterRunNoneScriptHint": "設定為「無」的快速命令執行不需要指令碼輸出：僅等待指令碼 3 秒，之後可在背景繼續執行。主動作選單與外部呼叫一律會等待輸出。",
     "afterRunShowResult": "顯示結果",
-    "badgeInLauncher": "命令：第 {page} 頁 ({key})",
+    "badgeInLauncher": "操作：第 {page} 頁 ({key})",
     "badgeInMenu": "動作 ({key})",
     "badgeIssuesHint": "命令尚未完整設定：請檢查必填欄位",
     "badgeNoText": "無文字",
@@ -219,7 +219,7 @@
     "languageLabel": "翻譯為",
     "languagePlaceholder": "選擇語言",
     "launcherResult": "動作",
-    "launcherResultGroup": "快速命令結果",
+    "launcherResultGroup": "命令結果",
     "launcherSelectionHint": "「插入至視窗」會將結果貼在現用視窗的游標所在位置。若該處已選取文字，結果將取代該文字。",
     "logEmpty": "尚無任何命令記錄",
     "moreActions": "更多",
@@ -772,7 +772,9 @@
       "voiceTransformation": "文字語音轉換",
       "selectionActionsPage2": "操作：第 2 頁",
       "selectionActionsPage3": "操作：第 3 頁",
-      "chatPrompts": "針對所選文字的聊天提示詞預設"
+      "chatPrompts": "針對所選文字的聊天提示詞預設",
+      "selectionActionsPage4": "操作：第 4 頁",
+      "selectionActionsPage5": "操作：第 5 頁"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",

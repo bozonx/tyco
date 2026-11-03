@@ -34,7 +34,7 @@ pub fn open_main_editor(
 }
 
 /// Opens `mode` as the user would with a hotkey, with `text` in place of the
-/// selection. `launcher_page_id` picks a page of the command overlay.
+/// selection. `action_page_index` picks a page of the action menu.
 #[tauri::command]
 pub fn activate_mode(
     app: AppHandle,

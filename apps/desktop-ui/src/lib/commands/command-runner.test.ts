@@ -471,13 +471,13 @@ describe('the output of a command', () => {
   })
 
   it.each(['none', 'copyToClipboard', 'insertIntoWindow'] as const)(
-    'shows menu results regardless of quick-command setting %s',
+    'shows toolbar results in the menu regardless of command setting %s',
     async (setting) => {
       const tool = echo('result')
       const copyText = vi.fn(async () => {})
       const { deps, runner } = setup({ copyText }, [tool])
       expect(
-        await runner.run(command(setting), 'source', { source: 'menu' })
+        await runner.run(command(setting), 'source', { source: 'toolbar' })
       ).toEqual({ success: true, result: undefined })
       expect(deps.showResultMenu).toHaveBeenCalledWith('result', 'source')
       expect(copyText).not.toHaveBeenCalled()
@@ -487,6 +487,18 @@ describe('the output of a command', () => {
       )
     }
   )
+
+  it('follows the output action when run from the action menu', async () => {
+    const tool = echo('result')
+    const copyText = vi.fn(async () => {})
+    const { deps, runner } = setup({ copyText }, [tool])
+    expect(
+      await runner.run(command('copyToClipboard'), 'source', { source: 'menu' })
+    ).toEqual({ success: true, result: undefined })
+    expect(deps.showResultMenu).not.toHaveBeenCalled()
+    expect(copyText).toHaveBeenCalledWith('result')
+    expect(deps.hideWindow).toHaveBeenCalled()
+  })
 
   it.each(['none', 'copyToClipboard', 'showMenu', 'insertIntoWindow'] as const)(
     'returns external output without UI or clipboard actions for %s',

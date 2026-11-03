@@ -182,7 +182,7 @@
     "afterRunInsert": "Wstaw do okna",
     "afterRunNoneScriptHint": "Szybkie polecenia ustawione na „Nic” nie potrzebują wyniku skryptu: na skrypt czeka się tylko 3 s, a potem może on działać dalej w tle. Główne menu akcji i wywołania zewnętrzne zawsze czekają na wynik.",
     "afterRunShowResult": "Pokaż wynik",
-    "badgeInLauncher": "Polecenia: strona {page} ({key})",
+    "badgeInLauncher": "Działania: strona {page} ({key})",
     "badgeInMenu": "Akcje ({key})",
     "badgeIssuesHint": "Polecenie nie jest w pełni skonfigurowane: sprawdź wymagane pola",
     "badgeNoText": "bez tekstu",
@@ -219,7 +219,7 @@
     "languageLabel": "Tłumacz na",
     "languagePlaceholder": "Wybierz język",
     "launcherResult": "Akcja",
-    "launcherResultGroup": "Wynik szybkiego polecenia",
+    "launcherResultGroup": "Wynik polecenia",
     "launcherSelectionHint": "„Wstaw do okna” wkleja wynik w miejscu kursora w aktywnym oknie. Jeśli jest tam zaznaczony tekst, wynik go zastępuje.",
     "logEmpty": "Żadne polecenie nie zostało jeszcze zapisane w dzienniku",
     "moreActions": "Więcej",
@@ -778,7 +778,9 @@
       "voiceTransformation": "Głosowa transformacja tekstu",
       "selectionActionsPage2": "Działania: strona 2",
       "selectionActionsPage3": "Działania: strona 3",
-      "chatPrompts": "Zestawy promptów czatu dla zaznaczonego tekstu"
+      "chatPrompts": "Zestawy promptów czatu dla zaznaczonego tekstu",
+      "selectionActionsPage4": "Działania: strona 4",
+      "selectionActionsPage5": "Działania: strona 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",

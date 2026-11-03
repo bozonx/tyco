@@ -182,7 +182,7 @@
     "afterRunInsert": "插入到窗口",
     "afterRunNoneScriptHint": "设置为“无”的快捷命令运行不需要脚本输出：仅等待脚本 3 秒，之后可在后台继续运行。主操作菜单和外部调用始终会等待输出。",
     "afterRunShowResult": "显示结果",
-    "badgeInLauncher": "命令：第 {page} 页 ({key})",
+    "badgeInLauncher": "操作：第 {page} 页 ({key})",
     "badgeInMenu": "操作 ({key})",
     "badgeIssuesHint": "命令未完全配置：请检查必填字段",
     "badgeNoText": "无文本",
@@ -219,7 +219,7 @@
     "languageLabel": "翻译为",
     "languagePlaceholder": "选择语言",
     "launcherResult": "操作",
-    "launcherResultGroup": "快捷命令结果",
+    "launcherResultGroup": "命令结果",
     "launcherSelectionHint": "“插入到窗口”会将结果粘贴到活动窗口的光标位置。如果光标处选有文本，结果将替换该选中文本。",
     "logEmpty": "尚无命令日志",
     "moreActions": "更多",
@@ -772,7 +772,9 @@
       "voiceTransformation": "文本语音转换",
       "selectionActionsPage2": "操作：第 2 页",
       "selectionActionsPage3": "操作：第 3 页",
-      "chatPrompts": "针对所选文本的聊天提示词预设"
+      "chatPrompts": "针对所选文本的聊天提示词预设",
+      "selectionActionsPage4": "操作：第 4 页",
+      "selectionActionsPage5": "操作：第 5 页"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",

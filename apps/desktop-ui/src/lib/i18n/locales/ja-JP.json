@@ -182,7 +182,7 @@
     "afterRunInsert": "ウィンドウに挿入",
     "afterRunNoneScriptHint": "「何もしない」に設定されたクイックコマンドの実行では、スクリプトの出力を待つ必要がありません。スクリプトは3秒間のみ待機され、その後バックグラウンドで実行を継続できます。メインのアクションメニューや外部呼び出しでは、常に出力を待機します。",
     "afterRunShowResult": "結果を表示",
-    "badgeInLauncher": "コマンド: ページ {page} ({key})",
+    "badgeInLauncher": "アクション: ページ {page} ({key})",
     "badgeInMenu": "アクション ({key})",
     "badgeIssuesHint": "コマンドの設定が不完全です。必須項目を確認してください",
     "badgeNoText": "テキストなし",
@@ -219,7 +219,7 @@
     "languageLabel": "翻訳先言語",
     "languagePlaceholder": "言語を選択",
     "launcherResult": "アクション",
-    "launcherResultGroup": "クイックコマンドの結果",
+    "launcherResultGroup": "コマンドの結果",
     "launcherSelectionHint": "「ウィンドウに挿入」は、アクティブウィンドウのカーソル位置に結果を貼り付けます。テキストが選択されている場合は、結果で置き換えます。",
     "logEmpty": "記録されたコマンドはまだありません",
     "moreActions": "その他",
@@ -775,7 +775,9 @@
       "voiceTransformation": "テキストの音声変換",
       "selectionActionsPage2": "アクション: ページ 2",
       "selectionActionsPage3": "アクション: ページ 3",
-      "chatPrompts": "選択テキストのチャットプロンプトプリセット"
+      "chatPrompts": "選択テキストのチャットプロンプトプリセット",
+      "selectionActionsPage4": "アクション: ページ 4",
+      "selectionActionsPage5": "アクション: ページ 5"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",

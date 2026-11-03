@@ -182,7 +182,7 @@
     "afterRunInsert": "Insertar en la ventana",
     "afterRunNoneScriptHint": "Las ejecuciones de comandos rápidos configuradas como «Nada» no necesitan la salida del script: se espera al script solo 3 s y después puede seguir en segundo plano. El menú principal de acciones y las llamadas externas siempre esperan la salida.",
     "afterRunShowResult": "Mostrar el resultado",
-    "badgeInLauncher": "Comandos: página {page} ({key})",
+    "badgeInLauncher": "Acciones: página {page} ({key})",
     "badgeInMenu": "Acciones ({key})",
     "badgeIssuesHint": "El comando no está configurado por completo: revisa los campos obligatorios",
     "badgeNoText": "sin texto",
@@ -219,7 +219,7 @@
     "languageLabel": "Traducir a",
     "languagePlaceholder": "Elige un idioma",
     "launcherResult": "Acción",
-    "launcherResultGroup": "Resultado del comando rápido",
+    "launcherResultGroup": "Resultado del comando",
     "launcherSelectionHint": "«Insertar en la ventana» pega el resultado donde está el cursor en la ventana activa. Si allí hay texto seleccionado, el resultado lo reemplaza.",
     "logEmpty": "Todavía no se ha registrado ningún comando",
     "moreActions": "Más",
@@ -778,7 +778,9 @@
       "voiceTransformation": "Transformación de texto por voz",
       "selectionActionsPage2": "Acciones: página 2",
       "selectionActionsPage3": "Acciones: página 3",
-      "chatPrompts": "Prompts de chat predefinidos para texto seleccionado"
+      "chatPrompts": "Prompts de chat predefinidos para texto seleccionado",
+      "selectionActionsPage4": "Acciones: página 4",
+      "selectionActionsPage5": "Acciones: página 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",

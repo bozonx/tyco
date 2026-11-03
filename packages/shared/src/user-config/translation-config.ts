@@ -126,7 +126,7 @@ export function glossaryTranslationFor(
 }
 
 /**
- * The keys of the shortcut grids (menu, launcher pages, AI tasks, translation
+ * The keys of the shortcut grids (action pages, AI tasks, translation
  * languages), row by row; a grid is stored by key, empty slots are absent
  */
 export const SHORTCUT_SLOT_KEYS = [

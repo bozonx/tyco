@@ -55,7 +55,16 @@ pub fn cli_mode(mode: &str) -> &str {
 }
 
 pub fn is_start_mode(value: &str) -> bool {
-    START_MODES.contains(&canonical_mode(value))
+    if START_MODES.contains(&canonical_mode(value)) {
+        return true;
+    }
+    let rest = value
+        .strip_prefix("selectionActions:")
+        .or_else(|| value.strip_prefix("selection-actions:"));
+    if let Some(rest) = rest {
+        return rest.parse::<usize>().is_ok_and(|p| p > 0);
+    }
+    false
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]

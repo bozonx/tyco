@@ -182,7 +182,7 @@
     "afterRunInsert": "Вставити у вікно",
     "afterRunNoneScriptHint": "Швидким командам із параметром «Нічого» не потрібен вивід скрипту: скрипт очікується лише 3 с, а далі може працювати у фоні. Головне меню дій і зовнішні виклики завжди чекають на вивід.",
     "afterRunShowResult": "Показати результат",
-    "badgeInLauncher": "Команди: сторінка {page} ({key})",
+    "badgeInLauncher": "Дії: сторінка {page} ({key})",
     "badgeInMenu": "Дії ({key})",
     "badgeIssuesHint": "Команду налаштовано не повністю: перевірте обов’язкові поля",
     "badgeNoText": "без тексту",
@@ -219,7 +219,7 @@
     "languageLabel": "Перекладати на",
     "languagePlaceholder": "Виберіть мову",
     "launcherResult": "Дія",
-    "launcherResultGroup": "Результат швидкої команди",
+    "launcherResultGroup": "Результат команди",
     "launcherSelectionHint": "«Вставити у вікно» вставляє результат у місце курсора в активному вікні. Якщо там виділено текст, результат замінює його.",
     "logEmpty": "Жодну команду ще не записано в журнал",
     "moreActions": "Більше",
@@ -775,7 +775,9 @@
       "voiceTransformation": "Голосова трансформація тексту",
       "selectionActionsPage2": "Дії: сторінка 2",
       "selectionActionsPage3": "Дії: сторінка 3",
-      "chatPrompts": "Швидкі промпти для чату з ШІ"
+      "chatPrompts": "Швидкі промпти для чату з ШІ",
+      "selectionActionsPage4": "Дії: сторінка 4",
+      "selectionActionsPage5": "Дії: сторінка 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — скасувати",

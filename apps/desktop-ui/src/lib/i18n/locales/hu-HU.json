@@ -182,7 +182,7 @@
     "afterRunInsert": "Beillesztés az ablakba",
     "afterRunNoneScriptHint": "A „Semmi” beállítású gyorsparancs-futtatásoknak nincs szükségük a szkript kimenetére: a szkriptre csak 3 mp-ig vár a program, utána a háttérben futhat tovább. A fő műveletmenü és a külső hívások mindig megvárják a kimenetet.",
     "afterRunShowResult": "Eredmény megjelenítése",
-    "badgeInLauncher": "Parancsok: {page}. oldal ({key})",
+    "badgeInLauncher": "Műveletek: {page}. oldal ({key})",
     "badgeInMenu": "Műveletek ({key})",
     "badgeIssuesHint": "A parancs nincs teljesen beállítva: ellenőrizze a kötelező mezőket",
     "badgeNoText": "szöveg nélkül",
@@ -219,7 +219,7 @@
     "languageLabel": "Fordítás erre:",
     "languagePlaceholder": "Válasszon nyelvet",
     "launcherResult": "Művelet",
-    "launcherResultGroup": "A gyorsparancs eredménye",
+    "launcherResultGroup": "A parancs eredménye",
     "launcherSelectionHint": "A „Beillesztés az ablakba” az aktív ablakban a kurzor helyére illeszti az eredményt. Ha ott szöveg van kijelölve, az eredmény lecseréli.",
     "logEmpty": "Még egyetlen parancs sem került naplózásra",
     "moreActions": "Továbbiak",
@@ -775,7 +775,9 @@
       "voiceTransformation": "Hangalapú szövegátalakítás",
       "selectionActionsPage2": "Műveletek: 2. oldal",
       "selectionActionsPage3": "Műveletek: 3. oldal",
-      "chatPrompts": "Csevegési prompt-sablonok a kijelölt szöveghez"
+      "chatPrompts": "Csevegési prompt-sablonok a kijelölt szöveghez",
+      "selectionActionsPage4": "Műveletek: 4. oldal",
+      "selectionActionsPage5": "Műveletek: 5. oldal"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",

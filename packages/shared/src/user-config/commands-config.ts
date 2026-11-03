@@ -139,8 +139,8 @@ export const webhookTakesText = (
 
 /**
  * A user command of the command library: a tool with its settings, invoked from
- * the action menu, the command launcher, voice, external calls and the chat.
- * See `dev_docs/design-voice-commands.md`
+ * the action menu, voice, external calls and the chat. See
+ * `dev_docs/design-voice-commands.md`
  */
 export interface CommandConfig {
   /** Stable */
@@ -168,8 +168,8 @@ export interface CommandConfig {
   /** Prompt for the LLM pre-transformation */
   llmPreTransformPrompt?: string
   /**
-   * What the command launcher does with the returned text; the other places a
-   * command runs from handle it their own way
+   * What the action menu or external invocation does with the returned text;
+   * the other places a command runs from handle it their own way
    */
   outputAction: CommandOutputAction
   isOutputLogged: boolean

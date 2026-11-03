@@ -161,6 +161,8 @@ const DYNAMIC_KEYS = new Set([
     'selectionActions',
     'selectionActionsPage2',
     'selectionActionsPage3',
+    'selectionActionsPage4',
+    'selectionActionsPage5',
     'selectionCorrection',
     'correction',
     'translation',

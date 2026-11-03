@@ -7,7 +7,6 @@ import {
   EXTERNAL_TIMEOUT_DEFAULT_SEC,
   EXTERNAL_TIMEOUT_MAX_SEC,
   normalizeCommands,
-  SHORTCUT_SLOT_KEYS,
   type ScriptToolConfig,
   type WebhookToolConfig,
 } from '@tyco/shared'
@@ -85,22 +84,6 @@ export const webhookToolConfig = (
 ): ResolvedWebhookToolConfig => webhookToolConfigOf(command.toolConfig)
 
 export { normalizeCommands }
-
-/**
- * The command ids of a launcher page in key order; a missing command leaves its
- * slot empty
- */
-export function normalizeLauncherCommands(
-  value: unknown,
-  commands: readonly CommandConfig[] = []
-): (string | null)[] {
-  const source: Record<string, unknown> = isRecord(value) ? value : {}
-  const existingIds = new Set(commands.map((c) => c.id))
-  return SHORTCUT_SLOT_KEYS.map((key) => {
-    const id = source[key]
-    return typeof id === 'string' && existingIds.has(id) ? id : null
-  })
-}
 
 function newCommandId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID)

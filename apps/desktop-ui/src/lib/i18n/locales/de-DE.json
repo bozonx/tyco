@@ -182,7 +182,7 @@
     "afterRunInsert": "In Fenster einfügen",
     "afterRunNoneScriptHint": "Schnellbefehle mit der Einstellung „Nichts“ brauchen keine Skriptausgabe: Auf das Skript wird nur 3 s gewartet, danach kann es im Hintergrund weiterlaufen. Das Hauptaktionsmenü und externe Aufrufe warten immer auf die Ausgabe.",
     "afterRunShowResult": "Ergebnis anzeigen",
-    "badgeInLauncher": "Befehle: Seite {page} ({key})",
+    "badgeInLauncher": "Aktionen: Seite {page} ({key})",
     "badgeInMenu": "Aktionen ({key})",
     "badgeIssuesHint": "Der Befehl ist nicht vollständig eingerichtet: Prüfen Sie die Pflichtfelder",
     "badgeNoText": "kein Text",
@@ -219,7 +219,7 @@
     "languageLabel": "Übersetzen in",
     "languagePlaceholder": "Sprache wählen",
     "launcherResult": "Aktion",
-    "launcherResultGroup": "Ergebnis des Schnellbefehls",
+    "launcherResultGroup": "Befehlsergebnis",
     "launcherSelectionHint": "„In Fenster einfügen“ fügt das Ergebnis an der Cursorposition im aktiven Fenster ein. Ist dort Text ausgewählt, wird er durch das Ergebnis ersetzt.",
     "logEmpty": "Es wurde noch kein Befehl protokolliert",
     "moreActions": "Mehr",
@@ -778,7 +778,9 @@
       "voiceTransformation": "Sprach-Texttransformation",
       "selectionActionsPage2": "Aktionen: Seite 2",
       "selectionActionsPage3": "Aktionen: Seite 3",
-      "chatPrompts": "Chat-Prompt-Vorlagen für ausgewählten Text"
+      "chatPrompts": "Chat-Prompt-Vorlagen für ausgewählten Text",
+      "selectionActionsPage4": "Aktionen: Seite 4",
+      "selectionActionsPage5": "Aktionen: Seite 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",

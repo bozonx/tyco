@@ -182,7 +182,7 @@
     "afterRunInsert": "Umetni u prozor",
     "afterRunNoneScriptHint": "Brze naredbe postavljene na „Ništa” ne trebaju izlaz skripte: na skriptu se čeka samo 3 s, a zatim može nastaviti u pozadini. Glavni izbornik radnji i vanjski pozivi uvijek čekaju izlaz.",
     "afterRunShowResult": "Prikaži rezultat",
-    "badgeInLauncher": "Naredbe: stranica {page} ({key})",
+    "badgeInLauncher": "Radnje: stranica {page} ({key})",
     "badgeInMenu": "Radnje ({key})",
     "badgeIssuesHint": "Naredba nije u potpunosti postavljena: provjerite obavezna polja",
     "badgeNoText": "bez teksta",
@@ -219,7 +219,7 @@
     "languageLabel": "Prevedi na",
     "languagePlaceholder": "Odaberite jezik",
     "launcherResult": "Radnja",
-    "launcherResultGroup": "Rezultat brze naredbe",
+    "launcherResultGroup": "Rezultat naredbe",
     "launcherSelectionHint": "„Umetni u prozor” lijepi rezultat na mjesto pokazivača u aktivnom prozoru. Ako je ondje odabran tekst, rezultat ga zamjenjuje.",
     "logEmpty": "Još nijedna naredba nije zapisana",
     "moreActions": "Više",
@@ -778,7 +778,9 @@
       "voiceTransformation": "Glasovna transformacija teksta",
       "selectionActionsPage2": "Radnje: stranica 2",
       "selectionActionsPage3": "Radnje: stranica 3",
-      "chatPrompts": "Unaprijed postavljeni upiti za chat za odabrani tekst"
+      "chatPrompts": "Unaprijed postavljeni upiti za chat za odabrani tekst",
+      "selectionActionsPage4": "Radnje: stranica 4",
+      "selectionActionsPage5": "Radnje: stranica 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",

@@ -63,8 +63,10 @@ impl Activation {
 
     /// A mode, or `selectionActions:<page 1-based index>` for an action page.
     pub fn from_mode(value: &str, source: ActivationSource) -> Result<Self, AppError> {
-        let canonical = tyco_activation_protocol::canonical_mode(value);
-        if let Some(rest) = canonical.strip_prefix(SELECTION_ACTIONS_MODE_PREFIX) {
+        let rest = value
+            .strip_prefix(SELECTION_ACTIONS_MODE_PREFIX)
+            .or_else(|| value.strip_prefix("selection-actions:"));
+        if let Some(rest) = rest {
             if let Ok(page_num) = rest.parse::<usize>() {
                 let page_index = if page_num > 0 { page_num - 1 } else { 0 };
                 return Ok(Self::selection_actions(page_index, source));

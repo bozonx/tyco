@@ -15,21 +15,26 @@ describe('resolveSink', () => {
     expect(resolveSink({ outputAction }, { source: 'external' })).toBe('return')
   })
 
-  it('shows the output in the menu outside quick commands', () => {
-    expect(resolveSink({ outputAction })).toBe('showMenu')
+  it('shows the output in the menu for toolbar or actions with no output action', () => {
+    expect(resolveSink({})).toBe('showMenu')
     expect(resolveSink({ outputAction }, { source: 'toolbar' })).toBe(
       'showMenu'
     )
   })
 
-  it('follows the action of quick commands', () => {
+  it('follows the action of commands in the menu and launcher', () => {
+    expect(resolveSink({ outputAction })).toBe('copyToClipboard')
+    expect(resolveSink({ outputAction }, { source: 'menu' })).toBe(
+      'copyToClipboard'
+    )
     expect(resolveSink({ outputAction }, { source: 'launcher' })).toBe(
       'copyToClipboard'
     )
   })
 
-  it('shows the output in the menu for a quick run with no preference', () => {
+  it('shows the output in the menu for runs with no output action preference', () => {
     expect(resolveSink({}, { source: 'launcher' })).toBe('showMenu')
+    expect(resolveSink({}, { source: 'menu' })).toBe('showMenu')
   })
 })
 

@@ -141,6 +141,8 @@ export interface HotkeysConfig {
   selectionActions: string
   selectionActionsPage2: string
   selectionActionsPage3: string
+  selectionActionsPage4: string
+  selectionActionsPage5: string
   correction: string
   translation: string
   styling: string

@@ -42,7 +42,11 @@ const DEFAULT_JOB_WAIT_TIMEOUT_SECS: u64 = 300;
 const MAX_JOB_WAIT_TIMEOUT_SECS: u64 = 3600;
 
 fn canonical_activation_mode(value: &str) -> String {
-    tyco_activation_protocol::canonical_mode(value).into()
+    if let Some(rest) = value.strip_prefix("selection-actions:") {
+        format!("selectionActions:{rest}")
+    } else {
+        tyco_activation_protocol::canonical_mode(value).into()
+    }
 }
 
 fn parse_cli_invocation(args: &[String]) -> Result<CliInvocation, String> {
@@ -509,6 +513,10 @@ mod tests {
         assert!(command(&["run", "test", "text"]).is_err());
         assert!(command(&["run", "test", "-"]).is_err());
         assert!(command(&["open", "selection-actions", "--selection"]).is_ok());
+        assert!(command(&["open", "selection-actions:2"]).is_ok());
+        assert!(command(&["open", "selectionActions:3"]).is_ok());
+        assert!(command(&["open", "selection-actions:0"]).is_err());
+        assert!(command(&["open", "selection-actions:abc"]).is_err());
         assert!(command(&["replace", "command:test"]).is_err());
         assert!(command(&["replace", "correction"]).is_ok());
         assert!(command(&["replace", "correction", "--selection"]).is_err());

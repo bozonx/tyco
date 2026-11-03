@@ -105,7 +105,7 @@ impl TycoDbus {
         .await
     }
 
-    /// Runs the library command `id` as the command launcher does: it asks
+    /// Runs the library command `id` interactively: it asks
     /// for input or confirmation when needed and returns the result to the caller.
     async fn run_command(&self, id: String) -> Result<(), ApiError> {
         self.run(RunRequest {

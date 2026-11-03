@@ -182,7 +182,7 @@
     "afterRunInsert": "Inserează în fereastră",
     "afterRunNoneScriptHint": "Rulările de comenzi rapide setate pe „Nimic” nu au nevoie de ieșirea scriptului: scriptul este așteptat doar 3 s, apoi poate continua în fundal. Meniul principal de acțiuni și apelurile externe așteaptă întotdeauna ieșirea.",
     "afterRunShowResult": "Afișează rezultatul",
-    "badgeInLauncher": "Comenzi: pagina {page} ({key})",
+    "badgeInLauncher": "Acțiuni: pagina {page} ({key})",
     "badgeInMenu": "Acțiuni ({key})",
     "badgeIssuesHint": "Comanda nu este configurată complet: verificați câmpurile obligatorii",
     "badgeNoText": "fără text",
@@ -219,7 +219,7 @@
     "languageLabel": "Tradu în",
     "languagePlaceholder": "Alegeți o limbă",
     "launcherResult": "Acțiune",
-    "launcherResultGroup": "Rezultatul comenzii rapide",
+    "launcherResultGroup": "Rezultatul comenzii",
     "launcherSelectionHint": "„Inserează în fereastră” lipește rezultatul la poziția cursorului din fereastra activă. Dacă acolo este selectat text, rezultatul îl înlocuiește.",
     "logEmpty": "Nicio comandă nu a fost încă înregistrată în jurnal",
     "moreActions": "Mai multe",
@@ -778,7 +778,9 @@
       "voiceTransformation": "Transformare vocală a textului",
       "selectionActionsPage2": "Acțiuni: pagina 2",
       "selectionActionsPage3": "Acțiuni: pagina 3",
-      "chatPrompts": "Presetări prompturi chat pentru textul selectat"
+      "chatPrompts": "Presetări prompturi chat pentru textul selectat",
+      "selectionActionsPage4": "Acțiuni: pagina 4",
+      "selectionActionsPage5": "Acțiuni: pagina 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",

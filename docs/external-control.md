@@ -55,9 +55,7 @@ There is no per-script identity or per-client grant system.
 
 ## Open the text action chooser
 
-Use `selection-actions` to open the action menu for text. Use `command-launcher` for the
-searchable library command chooser. Both accept explicit text or the current
-selection; opening either without input does not capture the selection.
+Use `selection-actions` (or `selection-actions:1`) to open the action menu for text. Additional action pages open with `selection-actions:<page>`, e.g. `selection-actions:2`, `selection-actions:3`. Action pages accept explicit text or the current selection; opening either without input does not capture the selection.
 
 ```sh
 # Open the text action menu for the current selection.
@@ -66,14 +64,11 @@ tyco-ctl open selection-actions --selection
 # Open the text action menu with supplied text.
 tyco-ctl open selection-actions --text 'Please improve this text.'
 
-# Open the searchable command chooser for the current selection.
-tyco-ctl open command-launcher --selection
+# Open action page 2 for the current selection.
+tyco-ctl open selection-actions:2 --selection
 ```
 
-The chooser opens on its first page. A page of its own opens with
-`tyco --mode=commandLauncher:<page id>`; Settings → Hotkeys shows that line for
-each page, and the hotkey of a page is stored on the page itself
-(`launcherPages[].hotkey`).
+The action chooser opens on its first page by default. Specific pages (1 to 5) open with `selection-actions:<page>`. Settings → Hotkeys shows the CLI command for each page.
 
 On Linux the same windows can be opened through the session bus:
 
@@ -86,9 +81,9 @@ busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
 busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
   OpenWithText ss selection-actions 'Please improve this text.'
 
-# Open the searchable command chooser for the current selection.
+# Open action page 2 for the current selection.
 busctl --user call org.tyco.Service /org/tyco/Object org.tyco.Interface \
-  OpenWithSelection s command-launcher
+  OpenWithSelection s selection-actions:2
 ```
 
 Selection capture requires **Allow external selection capture and replacement**.
@@ -205,8 +200,8 @@ tyco-ctl open chat --text 'Explain this paragraph'
 tyco-ctl open editor --selection
 ```
 
-Modes: `editor`, `quick-input`, `chat`, `voice-chat`, `voice-commands`, `voice`, `selection-actions`,
-`command-launcher`, `correction`, `translation`, `history`, `settings`.
+Modes: `editor`, `quick-input`, `chat`, `voice-chat`, `voice-commands`, `voice`, `selection-actions`
+(optionally with `:page`, e.g. `selection-actions:2`), `correction`, `translation`, `history`, `settings`.
 The old camelCase spellings and `config` remain valid aliases.
 
 Opening UI does not implicitly capture a selection. `--selection` captures

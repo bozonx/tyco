@@ -73,9 +73,6 @@ vi.mock('../../views/WriteView.vue', () => ({
 vi.mock('../../views/SelectionView.vue', () => ({
   default: { template: '<div />' },
 }))
-vi.mock('../../views/CommandLauncherView.vue', () => ({
-  default: { template: '<div />' },
-}))
 vi.mock('../../views/CorrectionView.vue', () => ({
   default: { template: '<div />' },
 }))

@@ -182,7 +182,7 @@
     "afterRunInsert": "Vložit do okna",
     "afterRunNoneScriptHint": "Rychlé příkazy nastavené na „Nic“ nepotřebují výstup skriptu: na skript se čeká jen 3 s a pak může běžet dál na pozadí. Hlavní nabídka akcí a externí volání na výstup čekají vždy.",
     "afterRunShowResult": "Zobrazit výsledek",
-    "badgeInLauncher": "Příkazy: stránka {page} ({key})",
+    "badgeInLauncher": "Akce: stránka {page} ({key})",
     "badgeInMenu": "Akce ({key})",
     "badgeIssuesHint": "Příkaz není plně nastaven: zkontrolujte povinná pole",
     "badgeNoText": "bez textu",
@@ -219,7 +219,7 @@
     "languageLabel": "Překládat do",
     "languagePlaceholder": "Vyberte jazyk",
     "launcherResult": "Akce",
-    "launcherResultGroup": "Výsledek rychlého příkazu",
+    "launcherResultGroup": "Výsledek příkazu",
     "launcherSelectionHint": "„Vložit do okna“ vloží výsledek na místo kurzoru v aktivním okně. Pokud je tam vybraný text, výsledek ho nahradí.",
     "logEmpty": "Zatím nebyl zaprotokolován žádný příkaz",
     "moreActions": "Více",
@@ -772,7 +772,9 @@
       "voiceTransformation": "Hlasová transformace textu",
       "selectionActionsPage2": "Akce: stránka 2",
       "selectionActionsPage3": "Akce: stránka 3",
-      "chatPrompts": "Předvolby promptů chatu pro vybraný text"
+      "chatPrompts": "Předvolby promptů chatu pro vybraný text",
+      "selectionActionsPage4": "Akce: stránka 4",
+      "selectionActionsPage5": "Akce: stránka 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pro zrušení",

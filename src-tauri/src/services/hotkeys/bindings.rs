@@ -13,6 +13,8 @@ const SELECTION_CORRECTION_CONFIG_KEY: &str = "selectionCorrection";
 const SELECTION_ACTIONS_KEY: &str = "selectionActions";
 const SELECTION_ACTIONS_PAGE_2_KEY: &str = "selectionActionsPage2";
 const SELECTION_ACTIONS_PAGE_3_KEY: &str = "selectionActionsPage3";
+const SELECTION_ACTIONS_PAGE_4_KEY: &str = "selectionActionsPage4";
+const SELECTION_ACTIONS_PAGE_5_KEY: &str = "selectionActionsPage5";
 
 pub(super) use crate::services::selection_replace::CORRECTION_ACTION;
 const DEFAULT_CORRECTION_KEY: &str = "F";
@@ -46,6 +48,12 @@ impl HotkeyTarget {
         if id == SELECTION_ACTIONS_PAGE_3_KEY {
             return Ok(Self::ActionPage(2));
         }
+        if id == SELECTION_ACTIONS_PAGE_4_KEY {
+            return Ok(Self::ActionPage(3));
+        }
+        if id == SELECTION_ACTIONS_PAGE_5_KEY {
+            return Ok(Self::ActionPage(4));
+        }
         ActivationMode::parse(id).map(Self::Mode)
     }
 
@@ -54,6 +62,8 @@ impl HotkeyTarget {
             Self::ActionPage(0) => SELECTION_ACTIONS_KEY.to_owned(),
             Self::ActionPage(1) => SELECTION_ACTIONS_PAGE_2_KEY.to_owned(),
             Self::ActionPage(2) => SELECTION_ACTIONS_PAGE_3_KEY.to_owned(),
+            Self::ActionPage(3) => SELECTION_ACTIONS_PAGE_4_KEY.to_owned(),
+            Self::ActionPage(4) => SELECTION_ACTIONS_PAGE_5_KEY.to_owned(),
             Self::ActionPage(index) => format!("selectionActionsPage{}", index + 1),
             Self::Mode(mode) => mode.as_str().to_owned(),
             Self::InlineCorrection => SELECTION_CORRECTION_CONFIG_KEY.to_owned(),
@@ -154,6 +164,18 @@ pub(crate) fn bindings_from_config(config: &Value) -> Vec<HotkeyBinding> {
             SELECTION_ACTIONS_PAGE_3_KEY,
             None,
             "Show action menu: page 3",
+        ),
+        (
+            HotkeyTarget::ActionPage(3),
+            SELECTION_ACTIONS_PAGE_4_KEY,
+            None,
+            "Show action menu: page 4",
+        ),
+        (
+            HotkeyTarget::ActionPage(4),
+            SELECTION_ACTIONS_PAGE_5_KEY,
+            None,
+            "Show action menu: page 5",
         ),
     ]
     .into_iter()
@@ -286,6 +308,14 @@ pub fn default_hotkeys_config() -> Value {
         Value::String(String::new()),
     );
     hotkeys.insert(
+        SELECTION_ACTIONS_PAGE_4_KEY.to_owned(),
+        Value::String(String::new()),
+    );
+    hotkeys.insert(
+        SELECTION_ACTIONS_PAGE_5_KEY.to_owned(),
+        Value::String(String::new()),
+    );
+    hotkeys.insert(
         SELECTION_CORRECTION_CONFIG_KEY.to_owned(),
         Value::String(default_correction_shortcut().unwrap_or_default()),
     );
@@ -366,11 +396,13 @@ mod tests {
             .into_iter()
             .map(|binding| binding.target.id())
             .collect::<Vec<_>>();
-        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 3);
+        assert_eq!(defaults.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 5);
         assert!(defaults.contains(&String::from("selectionCorrection")));
         assert!(defaults.contains(&String::from("selectionActions")));
         assert!(defaults.contains(&String::from("selectionActionsPage2")));
         assert!(defaults.contains(&String::from("selectionActionsPage3")));
+        assert!(defaults.contains(&String::from("selectionActionsPage4")));
+        assert!(defaults.contains(&String::from("selectionActionsPage5")));
     }
 
     #[test]
@@ -389,7 +421,7 @@ mod tests {
                 .find(|binding| binding.target.id() == id)
                 .and_then(|binding| binding.shortcut.clone())
         };
-        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 3);
+        assert_eq!(bindings.len(), GLOBAL_HOTKEY_MODES.len() + 1 + 5);
         assert_eq!(shortcut("editor").as_deref(), Some("Super+Space"));
         assert_eq!(shortcut("selectionActions"), None);
         assert_eq!(

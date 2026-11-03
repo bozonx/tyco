@@ -182,7 +182,7 @@
     "afterRunInsert": "Inserisci nella finestra",
     "afterRunNoneScriptHint": "I comandi rapidi impostati su «Niente» non richiedono l’output dello script: lo script viene atteso solo 3 s e poi può continuare in background. Il menu azioni principale e le chiamate esterne attendono sempre l’output.",
     "afterRunShowResult": "Mostra il risultato",
-    "badgeInLauncher": "Comandi: pagina {page} ({key})",
+    "badgeInLauncher": "Azioni: pagina {page} ({key})",
     "badgeInMenu": "Azioni ({key})",
     "badgeIssuesHint": "Il comando non è configurato del tutto: controlla i campi obbligatori",
     "badgeNoText": "senza testo",
@@ -219,7 +219,7 @@
     "languageLabel": "Traduci in",
     "languagePlaceholder": "Scegli una lingua",
     "launcherResult": "Azione",
-    "launcherResultGroup": "Risultato del comando rapido",
+    "launcherResultGroup": "Risultato del comando",
     "launcherSelectionHint": "«Inserisci nella finestra» incolla il risultato nel punto del cursore nella finestra attiva. Se lì c’è del testo selezionato, il risultato lo sostituisce.",
     "logEmpty": "Nessun comando è stato ancora registrato",
     "moreActions": "Altro",
@@ -778,7 +778,9 @@
       "voiceTransformation": "Trasformazione vocale del testo",
       "selectionActionsPage2": "Azioni: pagina 2",
       "selectionActionsPage3": "Azioni: pagina 3",
-      "chatPrompts": "Preset di prompt della chat per il testo selezionato"
+      "chatPrompts": "Preset di prompt della chat per il testo selezionato",
+      "selectionActionsPage4": "Azioni: pagina 4",
+      "selectionActionsPage5": "Azioni: pagina 5"
     },
     "hotkeyInput": {
       "cancelHint": "Esc per annullare",

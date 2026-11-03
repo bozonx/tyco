@@ -182,7 +182,7 @@
     "afterRunInsert": "Insérer dans la fenêtre",
     "afterRunNoneScriptHint": "Les commandes rapides réglées sur « Rien » n’ont pas besoin de la sortie du script : le script n’est attendu que 3 s, puis peut continuer en arrière-plan. Le menu d’actions principal et les appels externes attendent toujours la sortie.",
     "afterRunShowResult": "Afficher le résultat",
-    "badgeInLauncher": "Commandes : page {page} ({key})",
+    "badgeInLauncher": "Actions : page {page} ({key})",
     "badgeInMenu": "Actions ({key})",
     "badgeIssuesHint": "La commande n’est pas entièrement configurée : vérifiez les champs obligatoires",
     "badgeNoText": "sans texte",
@@ -219,7 +219,7 @@
     "languageLabel": "Traduire en",
     "languagePlaceholder": "Choisissez une langue",
     "launcherResult": "Action",
-    "launcherResultGroup": "Résultat de la commande rapide",
+    "launcherResultGroup": "Résultat de la commande",
     "launcherSelectionHint": "« Insérer dans la fenêtre » colle le résultat à l’emplacement du curseur dans la fenêtre active. Si du texte y est sélectionné, le résultat le remplace.",
     "logEmpty": "Aucune commande n’a encore été journalisée",
     "moreActions": "Plus",
@@ -778,7 +778,9 @@
       "voiceTransformation": "Transformation textuelle vocale",
       "selectionActionsPage2": "Actions : page 2",
       "selectionActionsPage3": "Actions : page 3",
-      "chatPrompts": "Préréglages de prompts pour le texte sélectionné"
+      "chatPrompts": "Préréglages de prompts pour le texte sélectionné",
+      "selectionActionsPage4": "Actions : page 4",
+      "selectionActionsPage5": "Actions : page 5"
     },
     "hotkeyInput": {
       "cancelHint": "Échap pour annuler",

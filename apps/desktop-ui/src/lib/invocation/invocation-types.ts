@@ -17,7 +17,7 @@ export interface Invocation {
   isLlmArgumentParsingEnabled?: boolean
   /** The tool writes its output to the action log */
   isOutputLogged?: boolean
-  /** Where the command launcher sends the output, see `resolveSink` */
+  /** Where the command runner sends the output, see `resolveSink` */
   outputAction?: CommandOutputAction
   /** The platforms the command runs on; absent or empty for every one */
   platforms?: readonly string[]
