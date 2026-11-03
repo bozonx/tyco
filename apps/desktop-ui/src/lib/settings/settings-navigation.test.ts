@@ -102,10 +102,9 @@ describe('settings navigation', () => {
           'styling',
           'chat-prompts',
           'languages',
-          'commands',
-          'variables',
         ],
       ],
+      ['settings.automationCategory', ['commands', 'variables']],
       ['settings.pluginsTab', ['plugins', 'plugin:case']],
     ])
     const [allPlugins, plugin] = groups.at(-1)!.items

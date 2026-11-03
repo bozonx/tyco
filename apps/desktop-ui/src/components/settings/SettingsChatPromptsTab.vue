@@ -3,7 +3,7 @@
     title-key="settings.chatPromptsTab"
     hint-key="settings.chatPromptsHint"
     library-key="chatPrompts"
-    id-prefix="chatPrompt"
+    id-prefix="chat-prompt"
     prompt-placeholder-key="settings.prompt"
   />
 </template>

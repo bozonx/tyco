@@ -255,6 +255,7 @@ describe('Settings.vue', () => {
     ).toEqual([
       'settings.aiCategory',
       'settings.actionsCategory',
+      'settings.automationCategory',
       'settings.pluginsTab',
     ])
     expect(
@@ -272,9 +273,8 @@ describe('Settings.vue', () => {
         'styling',
         'chat-prompts',
         'languages',
-        'commands',
-        'variables',
       ],
+      ['commands', 'variables'],
       ['plugins', 'plugin:PluginA', 'plugin:PluginB'],
     ])
   })

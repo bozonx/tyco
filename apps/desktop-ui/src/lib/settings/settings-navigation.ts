@@ -91,6 +91,12 @@ export const SETTINGS_NAVIGATION_GROUPS = [
         labelKey: 'settings.languagesTab',
         icon: 'mdi:translate-variant',
       },
+    ],
+  },
+  {
+    id: 'automation',
+    labelKey: 'settings.automationCategory',
+    sections: [
       {
         id: 'commands',
         labelKey: 'settings.commandsTab',

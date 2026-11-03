@@ -654,6 +654,7 @@
     "appLanguage": "ინტერფეისის ენა",
     "appLanguageSystem": "სისტემის მიხედვით",
     "askInProfileChat": "კითხვა ჩატში: {profile}",
+    "automationCategory": "ავტომატიზაცია",
     "autosaveFailed": "არ შეინახა",
     "backToPlugins": "დანამატებზე დაბრუნება",
     "baseUrl": "საბაზო URL",

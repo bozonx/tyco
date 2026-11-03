@@ -651,6 +651,7 @@
     "appLanguage": "介面語言",
     "appLanguageSystem": "跟隨系統",
     "askInProfileChat": "在聊天中詢問：{profile}",
+    "automationCategory": "自動化",
     "autosaveFailed": "未儲存",
     "backToPlugins": "返回外掛程式",
     "baseUrl": "基礎 URL",

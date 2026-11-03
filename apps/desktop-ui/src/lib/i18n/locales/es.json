@@ -657,6 +657,7 @@
     "appLanguage": "Idioma de la interfaz",
     "appLanguageSystem": "Como en el sistema",
     "askInProfileChat": "Preguntar en el chat: {profile}",
+    "automationCategory": "Automatización",
     "autosaveFailed": "No guardado",
     "backToPlugins": "Volver a los plugins",
     "baseUrl": "URL base",

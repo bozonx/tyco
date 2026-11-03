@@ -48,5 +48,7 @@ describe('RuleLibrary tabs', () => {
     const section = wrapper.findComponent({ name: 'SettingsSection' })
     expect(section.props('title')).toBe('settings.chatPromptsTab')
     expect(section.props('info')).toBe('settings.chatPromptsHint')
+    const ruleLibrary = wrapper.findComponent({ name: 'RuleLibrarySettings' })
+    expect(ruleLibrary.props('idPrefix')).toMatch(/^[a-z0-9][a-z0-9._-]{0,63}$/)
   })
 })
