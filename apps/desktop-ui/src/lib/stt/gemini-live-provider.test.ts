@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createAsyncQueue } from '../net/async-queue'
 import {
   createGeminiLiveProvider,
   parseGeminiLiveMessage,
@@ -6,6 +7,115 @@ import {
 } from './gemini-live-provider'
 
 describe('gemini-live-provider', () => {
+  it('finishes after the last turn without waiting for the socket to close', async () => {
+    const messages = createAsyncQueue<string>()
+    const audio = createAsyncQueue<{ data: Uint8Array }>()
+    const close = vi.fn()
+    let endSent!: () => void
+    const ended = new Promise<void>((resolve) => {
+      endSent = resolve
+    })
+    const provider = createGeminiLiveProvider()({
+      apiKey: 'test-key',
+      openSocket: async () => ({
+        messages: messages.values,
+        close,
+        send: (raw) => {
+          if (JSON.parse(raw as string).realtimeInput?.audioStreamEnd) endSent()
+        },
+      }),
+    })
+    const events = await provider.transcribeStream!({
+      modelId: 'gemini-3.5-transcribe-live',
+      options: {},
+      sampleRate: 16000,
+      signal: new AbortController().signal,
+      audio: audio.values,
+    })
+    const collected: unknown[] = []
+    const reading = (async () => {
+      for await (const event of events) {
+        collected.push(event)
+        // A completed turn while recording must not stop the microphone stream.
+        if (event.type === 'final' && event.segment.text === 'First')
+          audio.end()
+      }
+    })()
+    messages.push(JSON.stringify({ setupComplete: {} }))
+    messages.push(
+      JSON.stringify({
+        serverContent: {
+          inputTranscription: { text: 'First' },
+          turnComplete: true,
+        },
+      })
+    )
+    await ended
+    messages.push(
+      JSON.stringify({
+        serverContent: {
+          inputTranscription: { text: 'Last' },
+          turnComplete: true,
+        },
+      })
+    )
+    await reading
+    expect(collected).toHaveLength(2)
+    expect(close).toHaveBeenCalledOnce()
+  })
+
+  it.each(['audio', 'send', 'setup', 'abort'] as const)(
+    'reports %s failures even when the receive socket stays open',
+    async (source) => {
+      const messages = createAsyncQueue<string>()
+      const controller = new AbortController()
+      const close = vi.fn()
+      const provider = createGeminiLiveProvider()({
+        apiKey: 'test-key',
+        openSocket: async () => ({
+          messages: messages.values,
+          close,
+          send: (raw) => {
+            const frame = JSON.parse(raw as string)
+            if (
+              (source === 'send' && frame.realtimeInput) ||
+              (source === 'setup' && frame.setup)
+            )
+              throw new Error('Send failed')
+          },
+        }),
+      })
+      const events = await provider.transcribeStream!({
+        modelId: 'gemini-3.5-transcribe-live',
+        options: {},
+        sampleRate: 16000,
+        signal: controller.signal,
+        audio: {
+          async *[Symbol.asyncIterator]() {
+            if (source === 'audio') throw new Error('Microphone failed')
+            yield { data: new Uint8Array([1, 2]) }
+          },
+        },
+      })
+      const reading = (async () => {
+        for await (const _ of events) {
+          /* consume */
+        }
+      })()
+      const assertion = expect(reading).rejects.toThrow(
+        source === 'audio'
+          ? 'Microphone failed'
+          : source === 'abort'
+            ? 'Aborted'
+            : 'Send failed'
+      )
+      if (source === 'abort') controller.abort()
+      else messages.push(JSON.stringify({ setupComplete: {} }))
+      await assertion
+      expect(close).toHaveBeenCalledOnce()
+    }
+  )
+
   it('converts uint8array to base64', () => {
     const bytes = new Uint8Array([72, 101, 108, 108, 111])
     expect(uint8ArrayToBase64(bytes)).toBe('SGVsbG8=')

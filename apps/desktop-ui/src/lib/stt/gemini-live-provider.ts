@@ -119,8 +119,6 @@ export const createGeminiLiveProvider =
           }
         }
 
-        session.send(JSON.stringify(setupPayload))
-
         let resolveSetup: () => void = () => {}
         let rejectSetup: (error: unknown) => void = () => {}
         const setupCompletePromise = new Promise<void>((resolve, reject) => {
@@ -128,22 +126,35 @@ export const createGeminiLiveProvider =
           rejectSetup = reject
         })
 
+        void setupCompletePromise.catch(() => undefined)
+
+        let audioEnded = false
+        let closed = false
+        let rejectFailure: (error: unknown) => void = () => {}
+        const failure = new Promise<never>((_, reject) => {
+          rejectFailure = reject
+        })
+        // The consumer may not have started reading yet.
+        void failure.catch(() => undefined)
+        const onAbort = () => {
+          const error = new Error('Aborted')
+          rejectSetup(error)
+          rejectFailure(error)
+        }
+
         if (request.signal.aborted) {
-          rejectSetup(new Error('Aborted'))
+          onAbort()
         } else {
-          request.signal.addEventListener(
-            'abort',
-            () => rejectSetup(new Error('Aborted')),
-            { once: true }
-          )
+          request.signal.addEventListener('abort', onAbort, { once: true })
         }
 
         // Pump microphone audio chunks into the socket once setup completes
         void (async () => {
           try {
+            session.send(JSON.stringify(setupPayload))
             await setupCompletePromise
             for await (const chunk of request.audio) {
-              if (request.signal.aborted) break
+              if (request.signal.aborted || closed) break
               const base64 = uint8ArrayToBase64(chunk.data)
               session.send(
                 JSON.stringify({
@@ -158,13 +169,14 @@ export const createGeminiLiveProvider =
                 })
               )
             }
-            if (!request.signal.aborted) {
+            if (!request.signal.aborted && !closed) {
+              audioEnded = true
               session.send(
                 JSON.stringify({ realtimeInput: { audioStreamEnd: true } })
               )
             }
-          } catch {
-            // Socket or session closed
+          } catch (error) {
+            if (!closed) rejectFailure(error)
           }
         })()
 
@@ -174,7 +186,11 @@ export const createGeminiLiveProvider =
             let accumulatedTurnText = ''
 
             try {
-              for await (const raw of session.messages) {
+              const messages = session.messages[Symbol.asyncIterator]()
+              for (;;) {
+                const next = await Promise.race([messages.next(), failure])
+                if (next.done) break
+                const raw = next.value
                 const message = parseGeminiLiveMessage(raw)
                 if (message.error) {
                   const error = new AiError(
@@ -193,6 +209,7 @@ export const createGeminiLiveProvider =
 
                 const content = message.serverContent
                 if (!content) continue
+                const isLastTurn = audioEnded && content.turnComplete
 
                 // If server sends content without explicit setupComplete, release pump
                 resolveSetup()
@@ -246,6 +263,8 @@ export const createGeminiLiveProvider =
                     accumulatedTurnText = ''
                     startMs += 1000
                   }
+                  // Turns during recording must not terminate the session.
+                  if (isLastTurn) return
                 }
               }
 
@@ -261,6 +280,8 @@ export const createGeminiLiveProvider =
                 }
               }
             } finally {
+              closed = true
+              request.signal.removeEventListener('abort', onAbort)
               rejectSetup(new Error('Session closed'))
               session.close()
             }
