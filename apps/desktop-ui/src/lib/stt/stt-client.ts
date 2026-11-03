@@ -11,6 +11,7 @@ import { sttSecretId, type SttProvider } from '@tyco/shared'
 
 import { secretRef } from '../net/secrets'
 import { createDeepgramProvider } from './deepgram-provider'
+import { createGeminiLiveProvider } from './gemini-live-provider'
 import { createSherpaProvider } from './sherpa-provider'
 import type { SttModel } from './stt-config'
 
@@ -40,6 +41,7 @@ const KEYLESS_STT_PROVIDERS: readonly SttProvider[] = ['sherpaOnnx']
 const KIT_PROVIDERS: Record<SttProvider, string> = {
   deepgram: 'deepgram',
   sherpaOnnx: 'sherpa-onnx',
+  geminiLive: 'gemini-live',
 }
 
 /** Whether dictation with this provider needs an API key */
@@ -124,6 +126,7 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
       provider: model.provider,
       model: model.modelId,
       baseUrl: model.baseUrl,
+      systemInstruction: model.systemInstruction,
     })
     const cached = kits.get(key)
     if (cached) return cached
@@ -135,6 +138,9 @@ export function createSttClient(deps: SttClientDependencies): SttClient {
       sttProviders: {
         [KIT_PROVIDERS.deepgram]: createDeepgramProvider,
         [KIT_PROVIDERS.sherpaOnnx]: createSherpaProvider,
+        [KIT_PROVIDERS.geminiLive]: createGeminiLiveProvider(
+          model.systemInstruction
+        ),
       },
       retry: { totalTimeoutMs: CONNECT_TIMEOUT_MS },
     })

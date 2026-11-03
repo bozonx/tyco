@@ -33,6 +33,7 @@ describe('SettingsVoiceTab.vue', () => {
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
+          geminiLive: { modelId: 'gemini-2.0-flash', systemInstruction: '' },
         },
       },
       ...overrides,
@@ -119,6 +120,25 @@ describe('SettingsVoiceTab.vue', () => {
     expect(labels).toContain('settings.model')
     expect(labels).toContain('settings.sttLanguage')
     expect(labels).not.toContain('settings.sttServerUrl')
+    expect(labels).not.toContain('settings.geminiLivePrompt')
+  })
+
+  it('renders API key, model, and dictation prompt when provider is geminiLive', async () => {
+    const config = createConfig()
+    config.stt.provider = 'geminiLive'
+    const wrapper = mountTab(config)
+
+    const labels = wrapper
+      .findAll('.field-row-stub')
+      .map((f) => f.attributes('data-label'))
+    expect(labels).toContain('settings.apiKey')
+    expect(labels).toContain('settings.model')
+    expect(labels).toContain('settings.geminiLivePrompt')
+    expect(labels).not.toContain('settings.sttLanguage')
+    expect(labels).not.toContain('settings.sttServerUrl')
+
+    const promptTextarea = wrapper.find('.field-textarea-stub')
+    expect(promptTextarea.exists()).toBe(true)
   })
 
   it('toggles the LLM formatting to reveal the rules field', async () => {
@@ -172,6 +192,7 @@ describe('SettingsVoiceTab.vue', () => {
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: '' },
+          geminiLive: { modelId: 'gemini-2.0-flash', systemInstruction: '' },
         },
       },
     })
@@ -185,5 +206,19 @@ describe('SettingsVoiceTab.vue', () => {
     const removeBtn = wrapper.find('.remove-key-btn')
     await removeBtn.trigger('click')
     expect(removeSecretSpy).toHaveBeenCalled()
+  })
+
+  it('saves API key under llm.google when provider is geminiLive', async () => {
+    const secretsStore = useSecretsStore()
+    const setSecretSpy = vi.spyOn(secretsStore, 'setSecret').mockResolvedValue()
+
+    const config = createConfig()
+    config.stt.provider = 'geminiLive'
+    const wrapper = mountTab(config)
+
+    await wrapper.get('.secret-draft').setValue(' gemini-key ')
+    const saveBtn = wrapper.find('.save-key-btn')
+    await saveBtn.trigger('click')
+    expect(setSecretSpy).toHaveBeenCalledWith('llm.google', 'gemini-key')
   })
 })

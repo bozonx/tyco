@@ -46,6 +46,21 @@ describe('STT key readiness', () => {
     ).toThrow('toast.voiceKeyUnavailable: Deepgram')
   })
 
+  it('accepts stored llm.google key for geminiLive', () => {
+    expect(() =>
+      assertSttKeyAvailable(
+        {
+          'llm.google': {
+            origins: ['https://generativelanguage.googleapis.com'],
+            available: true,
+          },
+        },
+        'geminiLive',
+        translate
+      )
+    ).not.toThrow()
+  })
+
   it('does not accept inherited properties as saved keys', () => {
     expect(() =>
       assertSttKeyAvailable({}, 'toString' as SttProvider, translate)

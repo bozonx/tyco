@@ -6,6 +6,7 @@ import { isSecretUsable, type SecretsStatus } from '../net/secrets'
 const STT_PROVIDER_LABELS: Record<SttProvider, string> = {
   deepgram: 'Deepgram',
   sherpaOnnx: 'sherpa-onnx',
+  geminiLive: 'Gemini Live',
 }
 
 /** Checks credentials before opening the microphone or contacting the provider. */

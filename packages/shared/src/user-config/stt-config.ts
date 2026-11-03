@@ -1,8 +1,8 @@
 /**
- * Dictation is live only: Deepgram in the cloud, or a sherpa-onnx streaming
- * server the user runs themselves
+ * Dictation is live only: Deepgram in the cloud, Gemini Live over WebSockets,
+ * or a sherpa-onnx streaming server the user runs themselves
  */
-export const STT_PROVIDERS = ['deepgram', 'sherpaOnnx'] as const
+export const STT_PROVIDERS = ['deepgram', 'sherpaOnnx', 'geminiLive'] as const
 
 export type SttProvider = (typeof STT_PROVIDERS)[number]
 
@@ -19,6 +19,13 @@ export interface DeepgramSttSettings {
 export interface SherpaOnnxSttSettings {
   /** The server, e.g. `ws://localhost:6006` */
   baseUrl: string
+}
+
+export interface GeminiLiveSttSettings {
+  /** The Gemini model, e.g. `gemini-2.0-flash` */
+  modelId: string
+  /** System instruction prompt guiding speech recognition and text formatting */
+  systemInstruction: string
 }
 
 export interface SttConfig {
@@ -38,5 +45,6 @@ export interface SttConfig {
   providers: {
     deepgram: DeepgramSttSettings
     sherpaOnnx: SherpaOnnxSttSettings
+    geminiLive: GeminiLiveSttSettings
   }
 }

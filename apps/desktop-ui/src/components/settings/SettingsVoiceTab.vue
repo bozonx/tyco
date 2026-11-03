@@ -24,7 +24,10 @@
           @update:model-value="setSttServerUrl"
         />
       </FieldRow>
-      <FieldRow v-if="sttNeedsKey" :label="t('settings.model')">
+      <FieldRow
+        v-if="userConfig.stt.provider === 'deepgram'"
+        :label="t('settings.model')"
+      >
         <FieldInput
           :model-value="userConfig.stt.providers.deepgram.modelId"
           placeholder="nova-3"
@@ -32,7 +35,7 @@
         />
       </FieldRow>
       <FieldRow
-        v-if="sttNeedsKey"
+        v-if="userConfig.stt.provider === 'deepgram'"
         :label="t('settings.sttLanguage')"
         :info="t('settings.sttLanguageHint')"
       >
@@ -45,6 +48,31 @@
           "
           :options="sttLanguageOptions"
           @update:model-value="setSttLanguage"
+        />
+      </FieldRow>
+      <FieldRow
+        v-if="userConfig.stt.provider === 'geminiLive'"
+        :label="t('settings.model')"
+      >
+        <FieldInput
+          :model-value="
+            userConfig.stt.providers.geminiLive?.modelId ?? 'gemini-2.0-flash'
+          "
+          placeholder="gemini-2.0-flash"
+          @update:model-value="setGeminiLiveModelName"
+        />
+      </FieldRow>
+      <FieldRow
+        v-if="userConfig.stt.provider === 'geminiLive'"
+        :label="t('settings.geminiLivePrompt')"
+        :info="t('settings.geminiLivePromptInfo')"
+        vertical
+      >
+        <FieldTextArea
+          :model-value="
+            userConfig.stt.providers.geminiLive?.systemInstruction ?? ''
+          "
+          @update:model-value="setGeminiLiveSystemInstruction"
         />
       </FieldRow>
       <FieldRow v-if="sttNeedsKey" :label="t('settings.apiKey')">
@@ -133,6 +161,7 @@ const sttNeedsKey = computed(() =>
 
 const sttProviderOptions = computed(() => [
   { id: 'deepgram', name: 'Deepgram' },
+  { id: 'geminiLive', name: t('settings.sttProviderGeminiLive') },
   { id: 'sherpaOnnx', name: t('settings.sttProviderSherpaOnnx') },
 ])
 
@@ -155,6 +184,24 @@ const setSttServerUrl = (value: string) => {
 
 const setSttModelName = (value: string) => {
   userConfig.value.stt.providers.deepgram.modelId = value
+}
+
+const ensureGeminiLiveConfig = () => {
+  if (!userConfig.value.stt.providers.geminiLive) {
+    userConfig.value.stt.providers.geminiLive = {
+      modelId: 'gemini-2.0-flash',
+      systemInstruction: '',
+    }
+  }
+  return userConfig.value.stt.providers.geminiLive
+}
+
+const setGeminiLiveModelName = (value: string) => {
+  ensureGeminiLiveConfig().modelId = value
+}
+
+const setGeminiLiveSystemInstruction = (value: string) => {
+  ensureGeminiLiveConfig().systemInstruction = value
 }
 
 const hasSttKey = computed(() =>

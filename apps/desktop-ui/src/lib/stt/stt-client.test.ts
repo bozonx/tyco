@@ -259,4 +259,51 @@ describe('createSttClient', () => {
     ])
     expect(parts.at(-1)).toMatchObject({ type: 'finish' })
   })
+
+  it('connects to Gemini Live and passes the secret and system prompt', async () => {
+    let openedUrl = ''
+    const openSocket: SocketOpener = async (url) => {
+      openedUrl = url
+      const messages = createAsyncQueue<string>()
+      return {
+        messages: messages.values,
+        send: () => {
+          messages.push(
+            JSON.stringify({
+              serverContent: {
+                modelTurn: { parts: [{ text: 'Code transcribed' }] },
+                turnComplete: true,
+              },
+            })
+          )
+          messages.end()
+        },
+        close: () => messages.end(),
+      }
+    }
+
+    const client = createSttClient({
+      transport: { fetch: vi.fn(), openSocket },
+    })
+
+    const geminiModel = {
+      provider: 'geminiLive' as const,
+      modelId: 'gemini-2.0-flash',
+      systemInstruction: 'Format as TypeScript',
+    }
+
+    const parts = await collect(
+      client.transcribeLive({
+        model: geminiModel,
+        audio: audio([1, 2]),
+        sampleRate: 16_000,
+        hasApiKey: true,
+      })
+    )
+
+    expect(openedUrl).toContain('key=tyco-secret:llm.google')
+    expect(parts.filter((part) => part.type === 'final')).toMatchObject([
+      { segment: { text: 'Code transcribed' } },
+    ])
+  })
 })

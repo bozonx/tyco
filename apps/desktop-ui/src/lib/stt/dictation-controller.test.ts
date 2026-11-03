@@ -96,6 +96,7 @@ describe('dictation controller', () => {
       providers: {
         deepgram: { modelId: 'nova-3', language: 'tr-TR' },
         sherpaOnnx: { baseUrl: 'ws://speech.lan:6006' },
+        geminiLive: { modelId: 'gemini-2.0-flash', systemInstruction: '' },
       },
     })
     await controller.startDictation(handlers)
@@ -132,6 +133,7 @@ describe('dictation controller', () => {
       providers: {
         deepgram: { modelId: '', language: 'auto' },
         sherpaOnnx: { baseUrl: '' },
+        geminiLive: { modelId: '', systemInstruction: '' },
       },
     })
     await expect(controller.startDictation(handlers)).rejects.toThrow(

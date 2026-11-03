@@ -20,5 +20,11 @@ describe('activeSttModel', () => {
       modelId: 'sherpa-onnx',
       baseUrl: 'ws://speech.lan:6006',
     })
+    config.provider = 'geminiLive'
+    expect(activeSttModel(config)).toEqual({
+      provider: 'geminiLive',
+      modelId: 'gemini-2.0-flash',
+      systemInstruction: config.providers.geminiLive.systemInstruction,
+    })
   })
 })

@@ -14,6 +14,7 @@ export function installVoice(desktop: FakeDesktop) {
     providers: {
       deepgram: { modelId: 'nova-3', language: 'auto' },
       sherpaOnnx: { baseUrl: 'ws://speech.invalid:6006' },
+      geminiLive: { modelId: 'gemini-2.0-flash', systemInstruction: '' },
     },
   }
   let audio: DesktopChannel | undefined

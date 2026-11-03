@@ -12,7 +12,8 @@ export const TRANSLATION_SECRET_IDS = {
   google: 'translation.google',
 } as const
 
-export const sttSecretId = (provider: SttProvider): string => `stt.${provider}`
+export const sttSecretId = (provider: SttProvider): string =>
+  provider === 'geminiLive' ? 'llm.google' : `stt.${provider}`
 
 export const WEB_SECRET_IDS = { jina: 'web.jina' } as const
 
