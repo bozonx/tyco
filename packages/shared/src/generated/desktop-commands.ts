@@ -300,7 +300,7 @@ export interface DesktopCommands {
     result: AiFileToolOutput
   }
   run_ai_web_tool: {
-    args: { profileId?: string | null; request: AiWebToolRequest }
+    args: { profileId: string; request: AiWebToolRequest }
     result: AiWebToolOutput
   }
   save_ai_profile: { args: { profile: AiProfile }; result: void }

@@ -78,8 +78,6 @@ struct JinaSearchItem {
     url: Option<String>,
     #[serde(default)]
     description: Option<String>,
-    #[serde(default)]
-    content: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -182,7 +180,7 @@ pub async fn run(
                             title: item.title.unwrap_or_default(),
                             url: item.url.unwrap_or_default(),
                             description: item.description.unwrap_or_default(),
-                            content: item.content,
+                            content: None,
                         })
                         .collect();
                     return Ok(AiWebToolOutput::Search { results });
@@ -200,19 +198,21 @@ pub async fn run(
                     title: format!("Search: {trimmed}"),
                     url: target_url,
                     description: trimmed.to_string(),
-                    content: Some(body_text),
+                    content: None,
                 }],
             })
         }
         AiWebToolRequest::Fetch { url } => {
             let trimmed = url.trim();
-            if !trimmed.starts_with("http://") && !trimmed.starts_with("https://") {
+            let parsed = url::Url::parse(trimmed)
+                .map_err(|e| AppError::InvalidInput(format!("Invalid URL: {e}")))?;
+            if parsed.scheme() != "http" && parsed.scheme() != "https" {
                 return Err(AppError::InvalidInput(
                     "URL must start with http:// or https://".into(),
                 ));
             }
 
-            let target_url = format!("https://r.jina.ai/{trimmed}");
+            let target_url = format!("https://r.jina.ai/{}", parsed.as_str());
             let mut req = client
                 .get(&target_url)
                 .header("Accept", "application/json")

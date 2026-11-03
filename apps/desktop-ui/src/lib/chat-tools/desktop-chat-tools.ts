@@ -85,7 +85,7 @@ export interface DesktopChatToolsInvoke {
   ): Promise<ProfileMemoryTopic[]>
   (
     command: 'run_ai_web_tool',
-    args: { profileId?: string | null; request: AiWebToolRequest }
+    args: { profileId: string; request: AiWebToolRequest }
   ): Promise<AiWebToolOutput>
 }
 

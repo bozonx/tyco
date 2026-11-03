@@ -12,15 +12,18 @@ use crate::{
 #[tauri::command]
 pub async fn run_ai_web_tool(
     app: AppHandle,
-    profile_id: Option<String>,
+    profile_id: String,
     request: AiWebToolRequest,
 ) -> Result<AiWebToolOutput, AppError> {
-    if let Some(profile_id) = &profile_id {
-        ai_vault::with_projects(&app, |dir, _| {
-            let profile = ai_vault::get_profile(dir, profile_id)?;
-            web::ensure_web_enabled(&profile)
-        })?;
+    let trimmed_id = profile_id.trim();
+    if trimmed_id.is_empty() {
+        return Err(AppError::InvalidInput("Profile ID cannot be empty".into()));
     }
+
+    ai_vault::with_projects(&app, |dir, _| {
+        let profile = ai_vault::get_profile(dir, trimmed_id)?;
+        web::ensure_web_enabled(&profile)
+    })?;
 
     let secret = with_store(&app, |store: &SecretStore| {
         store.snapshot().get("web.jina").map(|e| e.value.clone())

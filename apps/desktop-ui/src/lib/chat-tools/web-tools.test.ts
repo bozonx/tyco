@@ -9,7 +9,7 @@ import {
 } from './web-tools'
 
 describe('web-tools', () => {
-  it('formats search results cleanly', () => {
+  it('formats search results cleanly without full page content', () => {
     const formatted = formatSearchResults([
       {
         title: 'Jina AI',
@@ -21,11 +21,22 @@ describe('web-tools', () => {
 
     expect(formatted).toContain('### 1. [Jina AI](https://jina.ai)')
     expect(formatted).toContain('Search Foundation')
-    expect(formatted).toContain('Markdown content snippet')
+    expect(formatted).not.toContain('Markdown content snippet')
   })
 
   it('formats empty search results', () => {
     expect(formatSearchResults([])).toBe('No results found.')
+  })
+
+  it('returns no tools when profileId is null', async () => {
+    const run = vi.fn()
+    const provider = createWebToolProvider({ run })
+    const tools = await provider.tools({
+      profileId: null,
+      modelId: 'gemini',
+      settings: undefined,
+    })
+    expect(tools).toEqual([])
   })
 
   it('formats fetched webpage', () => {
@@ -125,7 +136,7 @@ describe('web-tools', () => {
     const run = vi.fn()
     const provider = createWebToolProvider({ run })
     const tools = await provider.tools({
-      profileId: null,
+      profileId: 'prof-1',
       modelId: 'gemini',
       settings: undefined,
     })
@@ -141,5 +152,33 @@ describe('web-tools', () => {
         }
       )
     ).rejects.toThrow('Search query cannot be empty')
+  })
+
+  it('rejects when execution is aborted', async () => {
+    const controller = new AbortController()
+    const run = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(resolve, 500)
+        })
+    )
+    const provider = createWebToolProvider({ run })
+    const tools = await provider.tools({
+      profileId: 'prof-1',
+      modelId: 'gemini',
+      settings: undefined,
+    })
+
+    const searchTool = tools.find((t) => t.name === 'web_search')!
+    const promise = searchTool.execute(
+      { query: 'test' },
+      {
+        signal: controller.signal,
+        toolCallId: 'call-4',
+        outputLimitCharacters: 1000,
+      }
+    )
+    controller.abort()
+    await expect(promise).rejects.toThrow('The tool call was cancelled')
   })
 })

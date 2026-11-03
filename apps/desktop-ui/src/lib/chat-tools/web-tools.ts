@@ -15,7 +15,7 @@ import type {
 
 export interface WebToolsDependencies {
   run: (
-    profileId: string | null,
+    profileId: string,
     request: AiWebToolRequest
   ) => Promise<AiWebToolOutput>
   warn?: (message: string) => void
@@ -31,6 +31,29 @@ const asInput = (input: unknown): Input =>
 const text = (value: unknown) => (typeof value === 'string' ? value : '')
 const count = (value: unknown) =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined
+
+const withAbort = async <T>(
+  promise: Promise<T>,
+  signal: AbortSignal
+): Promise<T> => {
+  if (signal.aborted) {
+    throw new Error('The tool call was cancelled')
+  }
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new Error('The tool call was cancelled'))
+    signal.addEventListener('abort', onAbort, { once: true })
+    promise.then(
+      (val) => {
+        signal.removeEventListener('abort', onAbort)
+        resolve(val)
+      },
+      (err) => {
+        signal.removeEventListener('abort', onAbort)
+        reject(err)
+      }
+    )
+  })
+}
 
 const QUERY: JsonSchema = {
   type: 'string',
@@ -63,9 +86,6 @@ export function formatSearchResults(
       if (item.description) {
         parts.push(item.description)
       }
-      if (item.content) {
-        parts.push(item.content)
-      }
       return parts.join('\n\n')
     })
     .join('\n\n---\n\n')
@@ -92,69 +112,79 @@ export function createWebToolProvider(
 ): ChatToolProvider {
   return {
     id: WEB_TOOL_GROUP_ID,
-    tools: (_context: ChatToolContext): ChatToolDefinition[] => [
-      {
-        name: 'web_search',
-        groupId: WEB_TOOL_GROUP_ID,
-        labelKey: 'chatTools.web.searchLabel',
-        icon: 'mdi:search-web',
-        description:
-          'Searches the web for up-to-date information, documentation, news, or articles using Jina AI. Returns search results with titles, URLs, and summaries.',
-        inputSchema: {
-          type: 'object',
-          properties: { query: QUERY, count: COUNT },
-          required: ['query'],
+    tools: (_context: ChatToolContext): ChatToolDefinition[] => {
+      const profileId = _context.profileId
+      if (!profileId) {
+        return []
+      }
+
+      return [
+        {
+          name: 'web_search',
+          groupId: WEB_TOOL_GROUP_ID,
+          labelKey: 'chatTools.web.searchLabel',
+          icon: 'mdi:search-web',
+          description:
+            'Searches the web for up-to-date information, documentation, news, or articles using Jina AI. Returns search results with titles, URLs, and summaries.',
+          inputSchema: {
+            type: 'object',
+            properties: { query: QUERY, count: COUNT },
+            required: ['query'],
+          },
+          execute: async (input: unknown, options: ChatToolExecuteOptions) => {
+            const args = asInput(input)
+            const query = text(args.query).trim()
+            if (!query) throw new Error('Search query cannot be empty')
+            const resultCount = count(args.count)
+
+            const response = await withAbort(
+              deps.run(profileId, {
+                operation: 'search',
+                query,
+                count: resultCount,
+              }),
+              options.signal
+            )
+
+            if (response.operation !== 'search') {
+              throw new Error('Unexpected response operation from web search')
+            }
+
+            const formatted = formatSearchResults(response.results)
+            return formatted
+          },
         },
-        execute: async (input: unknown, _options: ChatToolExecuteOptions) => {
-          const args = asInput(input)
-          const query = text(args.query).trim()
-          if (!query) throw new Error('Search query cannot be empty')
-          const resultCount = count(args.count)
+        {
+          name: 'web_fetch',
+          groupId: WEB_TOOL_GROUP_ID,
+          labelKey: 'chatTools.web.fetchLabel',
+          icon: 'mdi:web',
+          description:
+            'Fetches and converts the full content of a web page into clean Markdown using Jina Reader. Use this to read the details of a specific URL found in search results.',
+          inputSchema: {
+            type: 'object',
+            properties: { url: URL },
+            required: ['url'],
+          },
+          execute: async (input: unknown, options: ChatToolExecuteOptions) => {
+            const args = asInput(input)
+            const url = text(args.url).trim()
+            if (!url) throw new Error('URL cannot be empty')
 
-          const response = await deps.run(_context.profileId, {
-            operation: 'search',
-            query,
-            count: resultCount,
-          })
+            const response = await withAbort(
+              deps.run(profileId, { operation: 'fetch', url }),
+              options.signal
+            )
 
-          if (response.operation !== 'search') {
-            throw new Error('Unexpected response operation from web search')
-          }
+            if (response.operation !== 'fetch') {
+              throw new Error('Unexpected response operation from web fetch')
+            }
 
-          const formatted = formatSearchResults(response.results)
-          return formatted
+            const formatted = formatFetchedPage(response)
+            return formatted
+          },
         },
-      },
-      {
-        name: 'web_fetch',
-        groupId: WEB_TOOL_GROUP_ID,
-        labelKey: 'chatTools.web.fetchLabel',
-        icon: 'mdi:web',
-        description:
-          'Fetches and converts the full content of a web page into clean Markdown using Jina Reader. Use this to read the details of a specific URL found in search results.',
-        inputSchema: {
-          type: 'object',
-          properties: { url: URL },
-          required: ['url'],
-        },
-        execute: async (input: unknown, _options: ChatToolExecuteOptions) => {
-          const args = asInput(input)
-          const url = text(args.url).trim()
-          if (!url) throw new Error('URL cannot be empty')
-
-          const response = await deps.run(_context.profileId, {
-            operation: 'fetch',
-            url,
-          })
-
-          if (response.operation !== 'fetch') {
-            throw new Error('Unexpected response operation from web fetch')
-          }
-
-          const formatted = formatFetchedPage(response)
-          return formatted
-        },
-      },
-    ],
+      ]
+    },
   }
 }

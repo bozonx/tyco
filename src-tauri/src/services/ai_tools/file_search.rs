@@ -24,15 +24,15 @@ const MAX_SEARCH_FILE_BYTES: u64 = 2 * 1024 * 1024;
 const MAX_MATCH_LINE_CHARACTERS: usize = 300;
 
 fn glob(pattern: &str) -> Result<GlobMatcher, AppError> {
-    Glob::new(pattern)
+    Glob::new(&pattern.replace('\\', "/"))
         .map(|glob| glob.compile_matcher())
         .map_err(|error| AppError::InvalidInput(format!("Invalid pattern {pattern}: {error}")))
 }
 
 /// Whether a file matches a name pattern: by its name, or by its path inside
-/// the folder for a pattern with `/`.
+/// the folder for a pattern with `/` or `\`.
 fn matches_name(matcher: &GlobMatcher, pattern: &str, entry: &WalkEntry, base: &Path) -> bool {
-    if pattern.contains('/') {
+    if pattern.contains('/') || pattern.contains('\\') {
         entry
             .path()
             .strip_prefix(base)
