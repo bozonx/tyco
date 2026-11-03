@@ -518,8 +518,6 @@
     "actions": "Radnje",
     "aiPromptPlaceholder": "Što učiniti s tekstom?",
     "aiPromptRun": "Pokreni",
-    "aiPromptSave": "Spremi kao zadatak",
-    "aiPromptSlotsFull": "Sve tipke zadataka su zauzete: oslobodite jednu u postavkama",
     "aiRequest": "AI zahtjev",
     "cancelIntentHint": "Esc za odustajanje",
     "compareResult": "Usporedi rezultat",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Kopirat će se po završetku",
     "willInsertOnFinish": "Umetnut će se po završetku",
     "skipProcessing": "Preskoči",
-    "aiPromptSaved": "Spremljeno u izbornik",
-    "aiPromptAlreadySaved": "Ovaj zahtjev već je u izborniku",
     "ruleNotFound": "Ovo pravilo više ne postoji",
     "chatPrompts": "Unaprijed postavljeni upiti za chat"
   },

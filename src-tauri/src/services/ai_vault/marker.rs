@@ -16,8 +16,6 @@ use crate::services::atomic_file::write_private;
 pub const VAULT_MARKER_FILE: &str = "tyco-vault.json";
 /// The layout of the vault this build knows.
 pub const VAULT_FORMAT_VERSION: u32 = 1;
-/// The folders a vault made before its marker holds.
-const VAULT_DIRS: [&str; 2] = ["profiles", "projects"];
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -67,11 +65,6 @@ fn write_marker(dir: &Path) -> Result<Marker, AppError> {
     Ok(marker)
 }
 
-/// Whether `dir` holds a vault made before the marker: its folders are there.
-fn is_unmarked_vault(dir: &Path) -> bool {
-    VAULT_DIRS.iter().any(|name| dir.join(name).is_dir())
-}
-
 /// The vault in the default place, `dir`, which the caller has created: it
 /// gets its marker when it has none.
 pub fn open_default(dir: &Path) -> Result<Vault, AppError> {
@@ -101,9 +94,7 @@ pub fn open_read_only(dir: &Path) -> Result<Vault, AppError> {
     })
 }
 
-/// The vault the user chose at `path`. It is used when its marker is there,
-/// or when it holds a vault made before the marker, which then gets one; a
-/// missing or empty folder is not connected, and nothing is made in it.
+/// Opens the chosen vault only when its marker exists, without creating files.
 pub fn open_external(path: &Path, user_dir: Option<&Path>) -> Result<Vault, AppError> {
     check_external_path(path, user_dir)?;
     let not_connected = || {
@@ -117,7 +108,6 @@ pub fn open_external(path: &Path, user_dir: Option<&Path>) -> Result<Vault, AppE
     }
     let marker = match read_marker(path)? {
         Some(marker) => marker,
-        None if is_unmarked_vault(path) => write_marker(path)?,
         None => return Err(not_connected()),
     };
     Ok(Vault {
@@ -202,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn a_chosen_vault_is_known_by_its_marker_or_its_folders() {
+    fn a_chosen_vault_requires_its_marker() {
         let dir = TestDir::new("vault-external");
         let marked = dir.join("marked");
         fs::create_dir(&marked).unwrap();
@@ -212,9 +202,11 @@ mod tests {
 
         let earlier = dir.join("earlier");
         fs::create_dir_all(earlier.join("profiles")).unwrap();
-        let vault = open_external(&earlier, None).unwrap();
-        assert!(earlier.join(VAULT_MARKER_FILE).is_file());
-        assert_eq!(open_external(&earlier, None).unwrap().id, vault.id);
+        assert!(matches!(
+            open_external(&earlier, None),
+            Err(AppError::VaultUnavailable(_))
+        ));
+        assert!(!earlier.join(VAULT_MARKER_FILE).exists());
     }
 
     #[test]
@@ -233,6 +225,7 @@ mod tests {
         ));
         // a folder next to the data folder is fine
         fs::create_dir_all(dir.join("user-vault/profiles")).unwrap();
+        ensure_marker(&dir.join("user-vault")).unwrap();
         assert!(open_external(&dir.join("user-vault"), Some(&user)).is_ok());
     }
 

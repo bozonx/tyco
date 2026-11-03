@@ -518,8 +518,6 @@
     "actions": "Дії",
     "aiPromptPlaceholder": "Що зробити з текстом?",
     "aiPromptRun": "Виконати",
-    "aiPromptSave": "Зберегти як завдання",
-    "aiPromptSlotsFull": "Усі клавіші завдань зайняті: звільніть одну в налаштуваннях",
     "aiRequest": "Запит до ШІ",
     "cancelIntentHint": "Esc для скасування",
     "compareResult": "Порівняти результат",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Скопіюється після завершення",
     "willInsertOnFinish": "Вставиться після завершення",
     "skipProcessing": "Пропустити",
-    "aiPromptSaved": "Збережено в меню",
-    "aiPromptAlreadySaved": "Цей запит уже є в меню",
     "ruleNotFound": "Цього правила більше не існує",
     "chatPrompts": "Швидкі промпти для чату"
   },

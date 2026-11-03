@@ -518,8 +518,6 @@
     "actions": "Akcje",
     "aiPromptPlaceholder": "Co zrobić z tekstem?",
     "aiPromptRun": "Uruchom",
-    "aiPromptSave": "Zapisz jako zadanie",
-    "aiPromptSlotsFull": "Wszystkie klawisze zadań są zajęte: zwolnij któryś w ustawieniach",
     "aiRequest": "Zapytanie AI",
     "cancelIntentHint": "Esc, aby anulować",
     "compareResult": "Porównaj wynik",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Zostanie skopiowane po ukończeniu",
     "willInsertOnFinish": "Zostanie wstawione po ukończeniu",
     "skipProcessing": "Pomiń",
-    "aiPromptSaved": "Zapisano w menu",
-    "aiPromptAlreadySaved": "To polecenie jest już w menu",
     "ruleNotFound": "Ta reguła już nie istnieje",
     "chatPrompts": "Zestawy promptów czatu"
   },

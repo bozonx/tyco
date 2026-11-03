@@ -541,11 +541,10 @@ fn projects_need_a_name_and_an_absolute_existing_external_folder() {
 }
 
 #[test]
-fn memory_directories_and_core_are_created_with_profile_and_lazily_for_existing() {
+fn memory_directories_and_core_are_created_with_profile() {
     let test_dir = TestDir::new("ai_vault_memory_init");
     let vault_root = test_dir.join("vault");
 
-    // 1. New profile gets memory/ and core.md
     create_profile(&vault_root, profile("assistant", 1000), "soul instruction").unwrap();
     let memory_dir = vault_root.join("profiles/assistant/memory");
     let core_file = memory_dir.join("core.md");
@@ -555,27 +554,23 @@ fn memory_directories_and_core_are_created_with_profile_and_lazily_for_existing(
     assert!(topics_dir.is_dir());
     assert!(core_file.is_file());
     assert_eq!(fs::read_to_string(&core_file).unwrap(), DEFAULT_MEMORY_CORE);
+}
 
-    // 2. Existing profile without memory directory gets it lazily on get_profile / profile_memory_dir
-    let legacy_profile_dir = vault_root.join("profiles/legacy");
-    fs::create_dir_all(&legacy_profile_dir).unwrap();
-    // Legacy profile.json without memoryMode field
-    fs::write(
-        legacy_profile_dir.join("profile.json"),
-        r#"{"id":"legacy","name":"Legacy","projectPermissions":{},"createdAt":500,"updatedAt":500}"#,
-    )
-    .unwrap();
-    fs::write(legacy_profile_dir.join("SOUL.md"), "legacy soul").unwrap();
+#[test]
+fn reading_profile_does_not_recreate_missing_memory() {
+    let test_dir = TestDir::new("ai_vault_memory_read");
+    let vault_root = test_dir.join("vault");
+    let saved = profile("assistant", 1000);
+    create_profile(&vault_root, saved.clone(), "soul instruction").unwrap();
+    let memory_dir = vault_root.join("profiles/assistant/memory");
+    fs::remove_dir_all(&memory_dir).unwrap();
 
-    let legacy = get_profile(&vault_root, "legacy").unwrap();
-    assert_eq!(legacy.memory_mode, ProfileMemoryMode::Auto);
-
-    let legacy_mem = profile_memory_dir(&vault_root, "legacy").unwrap();
-    assert!(legacy_mem.join("core.md").is_file());
+    assert_eq!(get_profile(&vault_root, "assistant").unwrap(), saved);
     assert_eq!(
-        fs::read_to_string(legacy_mem.join("core.md")).unwrap(),
-        DEFAULT_MEMORY_CORE
+        profile_memory_dir(&vault_root, "assistant").unwrap(),
+        memory_dir
     );
+    assert!(!memory_dir.exists());
 }
 
 #[test]

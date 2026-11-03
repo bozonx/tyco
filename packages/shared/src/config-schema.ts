@@ -452,12 +452,6 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   if (!Array.isArray(config.actionPages) || config.actionPages.length === 0) {
     config.actionPages = DEFAULT_ACTION_PAGES
   }
-  const raw = config as unknown as Record<string, unknown>
-  delete raw.mainActions
-  delete raw.launcherPages
-  if (isRecord(config.hotkeys)) {
-    delete (config.hotkeys as Record<string, unknown>).launcherPages
-  }
   config.actionPages[0].inputMode = 'selection'
   for (const page of config.actionPages) {
     page.slots = filterSlots(page.slots, (slot) => {

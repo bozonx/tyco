@@ -518,8 +518,6 @@
     "actions": "Acciones",
     "aiPromptPlaceholder": "¿Qué hacer con el texto?",
     "aiPromptRun": "Ejecutar",
-    "aiPromptSave": "Guardar como tarea",
-    "aiPromptSlotsFull": "Todas las teclas de tareas están ocupadas: libera una en la configuración",
     "aiRequest": "Solicitud a la IA",
     "cancelIntentHint": "Esc para cancelar",
     "compareResult": "Comparar el resultado",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Se copiará al terminar",
     "willInsertOnFinish": "Se insertará al terminar",
     "skipProcessing": "Omitir",
-    "aiPromptSaved": "Guardado en el menú",
-    "aiPromptAlreadySaved": "Esta solicitud ya está en el menú",
     "ruleNotFound": "Esta regla ya no existe",
     "chatPrompts": "Ajustes predefinidos de prompts de chat"
   },

@@ -518,8 +518,6 @@
     "actions": "Әрекеттер",
     "aiPromptPlaceholder": "Мәтінмен не істеу керек?",
     "aiPromptRun": "Іске қосу",
-    "aiPromptSave": "Тапсырма ретінде сақтау",
-    "aiPromptSlotsFull": "Тапсырмалардың барлық пернелері бос емес: параметрлерде біреуін босатыңыз",
     "aiRequest": "ЖИ сұрауы",
     "cancelIntentHint": "Бас тарту үшін Esc",
     "compareResult": "Нәтижені салыстыру",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Аяқталған соң көшіріледі",
     "willInsertOnFinish": "Аяқталған соң кірістіріледі",
     "skipProcessing": "Өткізіп жіберу",
-    "aiPromptSaved": "Мәзірге сақталды",
-    "aiPromptAlreadySaved": "Бұл сұрау мәзірде бар",
     "ruleNotFound": "Бұл ереже енді жоқ",
     "chatPrompts": "Чат промпттерінің алдын ала орнатулары"
   },

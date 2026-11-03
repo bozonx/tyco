@@ -518,8 +518,6 @@
     "actions": "動作",
     "aiPromptPlaceholder": "要對文字做什麼處理？",
     "aiPromptRun": "執行",
-    "aiPromptSave": "另存為任務",
-    "aiPromptSlotsFull": "所有任務快捷鍵皆已占用：請在設定中釋放一個",
     "aiRequest": "AI 請求",
     "cancelIntentHint": "按 Esc 取消",
     "compareResult": "比較結果",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "完成後將複製",
     "willInsertOnFinish": "完成後將插入",
     "skipProcessing": "略過",
-    "aiPromptSaved": "已儲存到選單",
-    "aiPromptAlreadySaved": "此請求已在選單中",
     "ruleNotFound": "此規則已不存在",
     "chatPrompts": "聊天提示詞預設"
   },

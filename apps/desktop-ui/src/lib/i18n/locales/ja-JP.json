@@ -518,8 +518,6 @@
     "actions": "アクション",
     "aiPromptPlaceholder": "テキストに対して何をしますか？",
     "aiPromptRun": "実行",
-    "aiPromptSave": "タスクとして保存",
-    "aiPromptSlotsFull": "すべてのタスクキーが使用されています。設定で空きを作成してください",
     "aiRequest": "AIリクエスト",
     "cancelIntentHint": "Esc でキャンセル",
     "compareResult": "結果を比較",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "完了時にコピーされます",
     "willInsertOnFinish": "完了時に挿入されます",
     "skipProcessing": "スキップ",
-    "aiPromptSaved": "メニューに保存しました",
-    "aiPromptAlreadySaved": "このリクエストはすでにメニューにあります",
     "ruleNotFound": "このルールはもう存在しません",
     "chatPrompts": "チャットプロンプトのプリセット"
   },

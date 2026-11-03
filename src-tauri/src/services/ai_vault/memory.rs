@@ -130,10 +130,9 @@ pub fn ensure_memory_dir_initialized(memory_dir: &Path) -> Result<(), AppError> 
     Ok(())
 }
 
-/// Returns the profile's memory directory, creating it lazily if needed.
+/// Returns the memory directory of an existing profile.
 pub fn profile_memory_dir(vault_root: &Path, id: &str) -> Result<PathBuf, AppError> {
     let dir = existing_profile_dir(vault_root, id)?.join(PROFILE_MEMORY_DIR);
-    ensure_memory_dir_initialized(&dir)?;
     Ok(dir)
 }
 

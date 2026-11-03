@@ -518,8 +518,6 @@
     "actions": "მოქმედებები",
     "aiPromptPlaceholder": "რა ვუყოთ ტექსტს?",
     "aiPromptRun": "გაშვება",
-    "aiPromptSave": "დავალებად შენახვა",
-    "aiPromptSlotsFull": "დავალებების ყველა კლავიში დაკავებულია: გაათავისუფლეთ ერთი პარამეტრებში",
     "aiRequest": "AI მოთხოვნა",
     "cancelIntentHint": "Esc გაუქმებისთვის",
     "compareResult": "შედეგის შედარება",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "დაკოპირდება დასრულებისთანავე",
     "willInsertOnFinish": "ჩაისმება დასრულებისთანავე",
     "skipProcessing": "გამოტოვება",
-    "aiPromptSaved": "შენახულია მენიუში",
-    "aiPromptAlreadySaved": "ეს მოთხოვნა უკვე მენიუშია",
     "ruleNotFound": "ეს წესი აღარ არსებობს",
     "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები"
   },

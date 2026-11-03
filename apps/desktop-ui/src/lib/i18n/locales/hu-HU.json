@@ -518,8 +518,6 @@
     "actions": "Műveletek",
     "aiPromptPlaceholder": "Mit tegyen a szöveggel?",
     "aiPromptRun": "Futtatás",
-    "aiPromptSave": "Mentés feladatként",
-    "aiPromptSlotsFull": "Minden feladatbillentyű foglalt: szabadítson fel egyet a beállításokban",
     "aiRequest": "MI-kérés",
     "cancelIntentHint": "Esc a törléshez",
     "compareResult": "Eredmény összehasonlítása",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Befejezés után másolásra kerül",
     "willInsertOnFinish": "Befejezés után beillesztésre kerül",
     "skipProcessing": "Kihagyás",
-    "aiPromptSaved": "Mentve a menübe",
-    "aiPromptAlreadySaved": "Ez a kérés már szerepel a menüben",
     "ruleNotFound": "Ez a szabály már nem létezik",
     "chatPrompts": "Csevegési prompt-sablonok"
   },

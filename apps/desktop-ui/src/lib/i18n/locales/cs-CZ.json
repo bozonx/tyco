@@ -518,8 +518,6 @@
     "actions": "Akce",
     "aiPromptPlaceholder": "Co udělat s textem?",
     "aiPromptRun": "Spustit",
-    "aiPromptSave": "Uložit jako úlohu",
-    "aiPromptSlotsFull": "Všechny klávesy úloh jsou obsazené: uvolněte některou v nastavení",
     "aiRequest": "Požadavek na AI",
     "cancelIntentHint": "Esc pro zrušení",
     "compareResult": "Porovnat výsledek",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Zkopíruje se po dokončení",
     "willInsertOnFinish": "Vloží se po dokončení",
     "skipProcessing": "Přeskočit",
-    "aiPromptSaved": "Uloženo do nabídky",
-    "aiPromptAlreadySaved": "Tento požadavek už v nabídce je",
     "ruleNotFound": "Toto pravidlo již neexistuje",
     "chatPrompts": "Předvolby promptů chatu"
   },

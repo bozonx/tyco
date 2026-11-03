@@ -518,8 +518,6 @@
     "actions": "Ενέργειες",
     "aiPromptPlaceholder": "Τι να γίνει με το κείμενο;",
     "aiPromptRun": "Εκτέλεση",
-    "aiPromptSave": "Αποθήκευση ως εργασία",
-    "aiPromptSlotsFull": "Όλα τα πλήκτρα εργασιών είναι κατειλημμένα: ελευθερώστε ένα στις ρυθμίσεις",
     "aiRequest": "Αίτημα ΤΝ",
     "cancelIntentHint": "Esc για ακύρωση",
     "compareResult": "Σύγκριση αποτελέσματος",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Θα αντιγραφεί μετά την ολοκλήρωση",
     "willInsertOnFinish": "Θα εισαχθεί μετά την ολοκλήρωση",
     "skipProcessing": "Παράλειψη",
-    "aiPromptSaved": "Αποθηκεύτηκε στο μενού",
-    "aiPromptAlreadySaved": "Αυτό το αίτημα υπάρχει ήδη στο μενού",
     "ruleNotFound": "Αυτός ο κανόνας δεν υπάρχει πλέον",
     "chatPrompts": "Προεπιλογές προτροπών συνομιλίας"
   },

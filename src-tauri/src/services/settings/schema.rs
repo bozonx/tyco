@@ -645,30 +645,7 @@ fn normalize_with_defaults(config: &mut Value, defaults: &Value) -> bool {
             pages.push(json!({"inputMode": "selection", "slots": {}}));
         }
     } else {
-        let legacy_slots = config
-            .get("mainActions")
-            .cloned()
-            .unwrap_or_else(|| json!({}));
-        config["actionPages"] = json!([{"inputMode": "selection", "slots": legacy_slots}]);
-    }
-    if let Some(obj) = config.as_object_mut() {
-        obj.remove("mainActions");
-        obj.remove("launcherPages");
-    }
-    if let Some(hotkeys) = config.get_mut("hotkeys").and_then(Value::as_object_mut) {
-        hotkeys.remove("launcherPages");
-        if !hotkeys.contains_key("selectionActionsPage2") {
-            hotkeys.insert("selectionActionsPage2".into(), json!(""));
-        }
-        if !hotkeys.contains_key("selectionActionsPage3") {
-            hotkeys.insert("selectionActionsPage3".into(), json!(""));
-        }
-        if !hotkeys.contains_key("selectionActionsPage4") {
-            hotkeys.insert("selectionActionsPage4".into(), json!(""));
-        }
-        if !hotkeys.contains_key("selectionActionsPage5") {
-            hotkeys.insert("selectionActionsPage5".into(), json!(""));
-        }
+        config["actionPages"] = json!([{"inputMode": "selection", "slots": {}}]);
     }
     if let Some(pages) = config["actionPages"].as_array_mut() {
         pages[0]["inputMode"] = json!("selection");
@@ -1098,6 +1075,16 @@ mod tests {
     #[test]
     fn defaults_satisfy_the_shared_schema() {
         validate_user_config(&crate::services::settings::defaults::default_user_config()).unwrap();
+    }
+
+    #[test]
+    fn preserves_unknown_fields_without_converting_them_into_action_pages() {
+        let defaults = crate::services::settings::defaults::default_user_config();
+        let slots = json!({"q": {"type": "standard", "actionId": "copyToClipboard"}});
+        let mut config = json!({"mainActions": slots});
+        normalize_user_config(&mut config);
+        assert_eq!(config["actionPages"], defaults["actionPages"]);
+        assert_eq!(config["mainActions"], slots);
     }
 
     #[test]

@@ -518,8 +518,6 @@
     "actions": "Aktionen",
     "aiPromptPlaceholder": "Was soll mit dem Text geschehen?",
     "aiPromptRun": "Ausführen",
-    "aiPromptSave": "Als Aufgabe speichern",
-    "aiPromptSlotsFull": "Alle Aufgabentasten sind belegt: Geben Sie eine in den Einstellungen frei",
     "aiRequest": "KI-Anfrage",
     "cancelIntentHint": "Esc zum Abbrechen",
     "compareResult": "Ergebnis vergleichen",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Wird nach Fertigstellung kopiert",
     "willInsertOnFinish": "Wird nach Fertigstellung eingefügt",
     "skipProcessing": "Überspringen",
-    "aiPromptSaved": "Im Menü gespeichert",
-    "aiPromptAlreadySaved": "Diese Anfrage ist bereits im Menü",
     "ruleNotFound": "Diese Regel existiert nicht mehr",
     "chatPrompts": "Chat-Prompt-Vorlagen"
   },

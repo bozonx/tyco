@@ -518,8 +518,6 @@
     "actions": "Actions",
     "aiPromptPlaceholder": "What to do with the text?",
     "aiPromptRun": "Run",
-    "aiPromptSave": "Save as task",
-    "aiPromptSlotsFull": "All task keys are taken: free one in the settings",
     "aiRequest": "AI request",
     "cancelIntentHint": "Esc to cancel",
     "compareResult": "Compare the result",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Will copy on completion",
     "willInsertOnFinish": "Will insert on completion",
     "skipProcessing": "Skip",
-    "aiPromptSaved": "Saved to the menu",
-    "aiPromptAlreadySaved": "This request is already in the menu",
     "ruleNotFound": "This rule no longer exists",
     "chatPrompts": "Chat prompt presets"
   },

@@ -518,8 +518,6 @@
     "actions": "Eylemler",
     "aiPromptPlaceholder": "Metinle ne yapılsın?",
     "aiPromptRun": "Çalıştır",
-    "aiPromptSave": "Görev olarak kaydet",
-    "aiPromptSlotsFull": "Tüm görev tuşları dolu: ayarlardan birini boşaltın",
     "aiRequest": "AI isteği",
     "cancelIntentHint": "İptal için Esc",
     "compareResult": "Sonucu karşılaştırın",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Tamamlandığında kopyalanacak",
     "willInsertOnFinish": "Tamamlandığında eklenecek",
     "skipProcessing": "Atla",
-    "aiPromptSaved": "Menüye kaydedildi",
-    "aiPromptAlreadySaved": "Bu istek zaten menüde",
     "ruleNotFound": "Bu kural artık mevcut değil",
     "chatPrompts": "Sohbet istemi önayarları"
   },

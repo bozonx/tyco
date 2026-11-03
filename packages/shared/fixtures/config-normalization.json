@@ -60,16 +60,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -450,16 +440,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -848,14 +828,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "command", "commandId": "missing" },
-        "w": { "type": "transformation", "transformationId": "missing" },
-        "e": { "type": "launcherPage", "pageId": "page-2" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": { "q": "missing" }, "inputMode": "none" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -1237,16 +1209,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -1638,16 +1600,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -1998,8 +1950,7 @@
         "translation": "",
         "styling": "",
         "transformation": "",
-        "selectionCorrection": "Ctrl+Alt+F",
-        "launcherPages": { "alpha": "Ctrl+Alt+1", "removed-page": "Ctrl+Alt+2" }
+        "selectionCorrection": "Ctrl+Alt+F"
       },
       "externalAccess": { "canAccessSelection": false },
       "windowInsertion": {
@@ -2018,15 +1969,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "launcherPage", "pageId": "beta" },
-        "w": { "type": "launcherPage", "pageId": "missing" }
-      },
-      "launcherPages": [
-        { "id": "alpha", "inputMode": "none", "slots": {} },
-        { "id": "beta", "inputMode": "selection", "slots": {} },
-        { "id": "alpha", "inputMode": "selection", "slots": {} }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -2409,16 +2351,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "w": { "type": "standard", "actionId": "copyToClipboard" },
-        "r": { "type": "standard", "actionId": "correction" },
-        "t": { "type": "standard", "actionId": "translationMenu" },
-        "a": { "type": "standard", "actionId": "askInChat" }
-      },
-      "launcherPages": [
-        { "id": "main", "slots": {}, "inputMode": "selection" }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -2807,19 +2739,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" },
-        "y": { "type": "standard", "actionId": "askInChat" },
-        "w": { "type": "bogus" },
-        "e": null
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "inputMode": "selection",
-          "slots": { "1": "x", "q": "missing" }
-        }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -3219,12 +3138,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "standard", "actionId": "insertIntoWindow" }
-      },
-      "launcherPages": [
-        { "id": "main", "inputMode": "selection", "slots": {} }
-      ],
       "commands": [],
       "llm": {
         "providers": [
@@ -3612,17 +3525,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "command", "commandId": "MyCmd" },
-        "w": { "type": "command", "commandId": " Notes " }
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": { "q": "Мой скрипт", "w": "notes" },
-          "inputMode": "none"
-        }
-      ],
       "commands": [
         {
           "id": "notes",
@@ -4104,17 +4006,6 @@
         "viewMode": "split",
         "providers": { "deepl": { "endpoint": "free" } }
       },
-      "mainActions": {
-        "q": { "type": "command", "commandId": "MyCmd" },
-        "w": { "type": "command", "commandId": " Notes " }
-      },
-      "launcherPages": [
-        {
-          "id": "main",
-          "slots": { "q": "Мой скрипт", "w": "notes" },
-          "inputMode": "none"
-        }
-      ],
       "commands": [
         {
           "id": "notes",

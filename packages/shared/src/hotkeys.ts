@@ -19,9 +19,6 @@ export const ACTION_PAGE_HOTKEY_IDS: readonly [
   'selectionActionsPage5',
 ]
 
-export const actionPageHotkeyId = (pageIndex: number): HotkeyId | undefined =>
-  ACTION_PAGE_HOTKEY_IDS[pageIndex]
-
 /** The shortcut saved for a hotkey id; empty when there is none */
 export function configuredHotkey(
   config: Pick<UserConfig, 'hotkeys'>,

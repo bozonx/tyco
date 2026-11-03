@@ -1,7 +1,6 @@
 import type { CoreToolId, UserConfig } from '@tyco/shared'
 
 import type {
-  SavePromptOutcome,
   SavePromptResult,
   SlotLibrary,
   SlotLibraryItem,
@@ -25,15 +24,4 @@ export interface RuleLibraryMenuKind {
   ) => SavePromptResult<Library> | null
   /** Forgets the rule the step was opened to run, so it runs once */
   clearStartupItem: (stepId: number) => void
-}
-
-/** What the menu tells after saving an own request */
-export const SAVE_PROMPT_MESSAGES: Record<
-  SavePromptOutcome,
-  { key: string; level: 'success' | 'info' | 'warn' }
-> = {
-  added: { key: 'menu.aiPromptSaved', level: 'success' },
-  placed: { key: 'menu.aiPromptSaved', level: 'success' },
-  exists: { key: 'menu.aiPromptAlreadySaved', level: 'info' },
-  full: { key: 'menu.aiPromptSlotsFull', level: 'warn' },
 }

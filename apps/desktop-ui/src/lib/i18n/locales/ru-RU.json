@@ -518,8 +518,6 @@
     "actions": "Действия",
     "aiPromptPlaceholder": "Что сделать с текстом?",
     "aiPromptRun": "Выполнить",
-    "aiPromptSave": "Сохранить как задание",
-    "aiPromptSlotsFull": "Все клавиши заданий заняты: освободите одну в настройках",
     "aiRequest": "Запрос к AI",
     "cancelIntentHint": "Esc для отмены",
     "compareResult": "Сравните результат",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Скопируется по завершении",
     "willInsertOnFinish": "Вставится по завершении",
     "skipProcessing": "Пропустить",
-    "aiPromptSaved": "Сохранено в меню",
-    "aiPromptAlreadySaved": "Этот запрос уже есть в меню",
     "ruleNotFound": "Это правило больше не существует",
     "chatPrompts": "Быстрые промпты для чата"
   },

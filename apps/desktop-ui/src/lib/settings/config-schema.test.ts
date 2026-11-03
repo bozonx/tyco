@@ -31,6 +31,15 @@ describe('portable user config schema', () => {
     )
   })
 
+  it('preserves unknown fields without converting them into action pages', () => {
+    const slots = { q: { type: 'standard', actionId: 'copyToClipboard' } }
+    const config = normalizeUserConfig({ mainActions: slots })
+    expect(config.actionPages).toEqual(DEFAULT_USER_CONFIG.actionPages)
+    expect((config as unknown as Record<string, unknown>).mainActions).toEqual(
+      slots
+    )
+  })
+
   it('adds terminal paste defaults to older configs and preserves explicit choices', () => {
     const config = structuredClone(DEFAULT_USER_CONFIG)
     const linux: Record<string, unknown> = config.windowInsertion.linux

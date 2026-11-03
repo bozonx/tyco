@@ -21,7 +21,8 @@ there: the cached appearance and the plugin defaults.
 The backend repairs malformed known settings on startup. Normalization fills
 missing fields and stamps the current version. Only the current field names and
 structure are supported: there are no migrations or aliases for earlier
-development formats.
+development formats. Unknown fields are preserved as opaque data; their names
+do not trigger conversion into current settings.
 
 ### Versions and compatibility
 
@@ -346,15 +347,16 @@ A profile of the AI vault keeps `profile.json`, `SOUL.md`, its chats in `chats/`
 (laid out as the app's own `chats/`) and its files in `workspace/`. Profile and
 project folders are named by their ids, made once from the name (transliterated
 to Latin) and never changed by a rename: chats, project permissions and the
-`projects/<id>/` paths the model sees refer to them.
+`projects/<id>/` paths the model sees refer to them. Its `memory/` structure is
+created with the profile; reading a profile does not recreate missing memory.
 
 The vault is known by its marker `tyco-vault.json` (`formatVersion`, a
 `vaultId` made once). The default vault, `ai-vault/` of the user data folder,
 is made with its marker when it is not there. `aiVault.path` of a device is a
 folder of its own, e.g. for git, Obsidian or a sync of its own; it may not lie
 inside the user data folder. Such a folder is used only when it is there with
-its marker, or holds `profiles/` or `projects/` of a vault made before the
-marker, which then gets one. A missing or empty folder is not connected:
+its marker. Folders without a marker are not adopted automatically. A missing
+or empty folder is not connected:
 nothing is made in its place, vault operations fail with `vaultUnavailable`,
 and the profiles offer to pick a folder or the default one.
 

@@ -518,8 +518,6 @@
     "actions": "작업",
     "aiPromptPlaceholder": "텍스트로 무엇을 할까요?",
     "aiPromptRun": "실행",
-    "aiPromptSave": "작업으로 저장",
-    "aiPromptSlotsFull": "모든 작업 단축키가 사용 중입니다. 설정에서 하나를 비우세요",
     "aiRequest": "AI 요청",
     "cancelIntentHint": "Esc 키로 취소",
     "compareResult": "결과 비교",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "완료 시 복사됩니다",
     "willInsertOnFinish": "완료 시 삽입됩니다",
     "skipProcessing": "건너뛰기",
-    "aiPromptSaved": "메뉴에 저장했습니다",
-    "aiPromptAlreadySaved": "이 요청은 이미 메뉴에 있습니다",
     "ruleNotFound": "이 규칙은 더 이상 존재하지 않습니다",
     "chatPrompts": "채팅 프롬프트 사전 설정"
   },

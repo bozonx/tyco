@@ -518,8 +518,6 @@
     "actions": "Acțiuni",
     "aiPromptPlaceholder": "Ce să fac cu textul?",
     "aiPromptRun": "Rulează",
-    "aiPromptSave": "Salvează ca sarcină",
-    "aiPromptSlotsFull": "Toate tastele de sarcini sunt ocupate: eliberați una în setări",
     "aiRequest": "Cerere AI",
     "cancelIntentHint": "Esc pentru anulare",
     "compareResult": "Compară rezultatul",
@@ -563,8 +561,6 @@
     "willCopyOnFinish": "Se va copia la finalizare",
     "willInsertOnFinish": "Se va introduce la finalizare",
     "skipProcessing": "Omite",
-    "aiPromptSaved": "Salvat în meniu",
-    "aiPromptAlreadySaved": "Această cerere este deja în meniu",
     "ruleNotFound": "Această regulă nu mai există",
     "chatPrompts": "Presetări prompturi chat"
   },
