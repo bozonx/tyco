@@ -1,44 +1,34 @@
 import { describe, expect, it } from 'vitest'
 
-import { DRAFT_RESTORE_MS } from './draft-restore'
 import { createQuickInputSession } from './quick-input-session'
 
 function setup() {
-  let time = 1000
-  const session = createQuickInputSession(() => time)
-  const advance = (ms: number) => {
-    time += ms
-  }
-
-  return { session, advance }
+  return { session: createQuickInputSession() }
 }
 
 describe('createQuickInputSession', () => {
   it('keeps the text of a recent dismissal', () => {
-    const { session, advance } = setup()
+    const { session } = setup()
 
     session.markDismissed()
-    advance(DRAFT_RESTORE_MS)
 
     expect(session.start('draft')).toBe(true)
   })
 
-  it('clears an old dismissed text and keeps it recallable', () => {
-    const { session, advance } = setup()
+  it('keeps unfinished text without an expiry', () => {
+    const { session } = setup()
 
     session.markDismissed()
-    advance(DRAFT_RESTORE_MS + 1)
 
-    expect(session.start('draft')).toBe(false)
-    expect(session.recallText).toBe('draft')
+    expect(session.start('draft')).toBe(true)
   })
 
-  it('keeps a text only for the opening right after the dismissal', () => {
+  it('keeps unfinished text across repeated openings', () => {
     const { session } = setup()
 
     session.markDismissed()
     expect(session.start('draft')).toBe(true)
-    expect(session.start('draft')).toBe(false)
+    expect(session.start('draft')).toBe(true)
   })
 
   it('makes a cancelled text recallable in memory', () => {

@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "纠错前",
     "kindBeforeTranslate": "翻译前",
     "kindCorrection": "纠错",
-    "kindDraft": "草稿",
+    "kindDraft": "未完成的输入",
     "kindOutput": "已发送",
     "kindSource": "原始文本",
     "kindTranslate": "翻译",
@@ -560,7 +560,6 @@
     "voiceToInput": "插入到输入框",
     "willCopyOnFinish": "完成后将复制",
     "willInsertOnFinish": "完成后将插入",
-    "skipProcessing": "跳过",
     "ruleNotFound": "此规则已不存在",
     "chatPrompts": "聊天提示词预设"
   },

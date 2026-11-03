@@ -38,7 +38,10 @@ pub(super) fn push_editor_history(
     if item.kind != EditorHistoryKind::Source {
         if let Some(index) = history.iter().position(|existing| {
             existing.kind == EditorHistoryKind::Source
-                && existing.result.as_deref().map(str::trim) == Some(text)
+                && (existing.result.as_deref().map(str::trim) == Some(text)
+                    || (item.kind == EditorHistoryKind::Output
+                        && existing.result.is_none()
+                        && existing.text.trim() == text))
         }) {
             let mut source = history.remove(index);
             source.is_result_applied |= item.kind == EditorHistoryKind::Output;
@@ -378,5 +381,25 @@ mod tests {
 
         assert!(!insert_restored_item(&mut history, removed, 1));
         assert_eq!(history_texts(&history), vec!["newer"]);
+    }
+}
+
+#[cfg(test)]
+mod input_completion_tests {
+    use super::*;
+    use crate::services::storage::test_support::history_item;
+
+    #[test]
+    fn output_without_ai_changes_marks_the_transcript_instead_of_duplicating_it() {
+        let source = history_item("voice", "raw speech", EditorHistoryKind::Source);
+        let mut items = vec![source];
+        let id = push_editor_history(
+            &mut items,
+            history_item("sent", "raw speech", EditorHistoryKind::Output),
+            100,
+        );
+        assert_eq!(id, "voice");
+        assert_eq!(items.len(), 1);
+        assert!(items[0].is_result_applied);
     }
 }

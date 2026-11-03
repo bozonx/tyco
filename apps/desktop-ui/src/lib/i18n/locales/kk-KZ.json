@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Түзетуге дейін",
     "kindBeforeTranslate": "Аудармаға дейін",
     "kindCorrection": "Түзету",
-    "kindDraft": "Жоба",
+    "kindDraft": "Аяқталмаған енгізу",
     "kindOutput": "Жіберілді",
     "kindSource": "Бастапқы мәтін",
     "kindTranslate": "Аударма",
@@ -560,7 +560,6 @@
     "voiceToInput": "Енгізу өрісіне кірістіру",
     "willCopyOnFinish": "Аяқталған соң көшіріледі",
     "willInsertOnFinish": "Аяқталған соң кірістіріледі",
-    "skipProcessing": "Өткізіп жіберу",
     "ruleNotFound": "Бұл ереже енді жоқ",
     "chatPrompts": "Чат промпттерінің алдын ала орнатулары"
   },

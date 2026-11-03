@@ -1,6 +1,5 @@
 /** Modes whose first step (the input, the action menu) has nothing to lose. */
 const DISMISSIBLE_MODES = new Set([
-  'quickInput',
   'selectionActions',
   'translation',
   'styling',

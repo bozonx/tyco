@@ -1,5 +1,6 @@
 export interface MainWindowResetDependencies {
   closeAllModals: () => void
+  hasActiveInput?: () => boolean
   goToEditor: () => Promise<void>
 }
 
@@ -12,6 +13,7 @@ export interface MainWindowResetDependencies {
 export function createMainWindowReset(deps: MainWindowResetDependencies) {
   return {
     async reset(): Promise<void> {
+      if (deps.hasActiveInput?.()) return
       deps.closeAllModals()
       await deps.goToEditor()
     },

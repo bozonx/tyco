@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Prije ispravka",
     "kindBeforeTranslate": "Prije prijevoda",
     "kindCorrection": "Ispravak",
-    "kindDraft": "Skica",
+    "kindDraft": "Nedovršeni unos",
     "kindOutput": "Poslano",
     "kindSource": "Izvorni tekst",
     "kindTranslate": "Prijevod",
@@ -560,7 +560,6 @@
     "voiceToInput": "Umetni u polje za unos",
     "willCopyOnFinish": "Kopirat će se po završetku",
     "willInsertOnFinish": "Umetnut će se po završetku",
-    "skipProcessing": "Preskoči",
     "ruleNotFound": "Ovo pravilo više ne postoji",
     "chatPrompts": "Unaprijed postavljeni upiti za chat"
   },

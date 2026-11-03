@@ -38,6 +38,7 @@ describe('SettingsEditorTab.vue', () => {
       global: {
         provide: createTestSettingsContext(userConfig).provide,
         stubs: {
+          SettingsEditorHistorySection: true,
           SettingsSection: {
             props: ['title', 'description', 'info'],
             template:
@@ -129,6 +130,7 @@ describe('SettingsEditorTab.vue', () => {
       global: {
         provide: createTestSettingsContext(userConfig).provide,
         stubs: {
+          SettingsEditorHistorySection: true,
           SettingsSection: true,
           FieldRow: true,
           FieldSelect: true,
@@ -143,7 +145,7 @@ describe('SettingsEditorTab.vue', () => {
     expect(userConfig.markdown.strip.hasThematicBreaks).toBe(true)
   })
 
-  it('shows the editor history only in development mode', () => {
+  it('shows editor history settings in every mode', () => {
     const mountTab = (isInDevelopment: boolean) =>
       mount(SettingsEditorTab, {
         global: {
@@ -158,6 +160,6 @@ describe('SettingsEditorTab.vue', () => {
       })
 
     expect(mountTab(true).find('.editor-history-stub').exists()).toBe(true)
-    expect(mountTab(false).find('.editor-history-stub').exists()).toBe(false)
+    expect(mountTab(false).find('.editor-history-stub').exists()).toBe(true)
   })
 })

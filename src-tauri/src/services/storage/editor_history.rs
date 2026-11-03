@@ -122,6 +122,16 @@ fn append_records(path: &Path, records: Vec<HistoryRecord>) -> Result<(), AppErr
         return Ok(());
     }
     let mut stored = read_records(path)?;
+    // A checkpoint replaces its prior text, including in the own journal:
+    // a long dictation must not retain a full copy for every ten seconds.
+    stored.retain(|known| {
+        !records.iter().any(|next| match (known, next) {
+            (HistoryRecord::Item(known), HistoryRecord::Item(next)) => {
+                known.id == next.id && known.created_at_ms <= next.created_at_ms
+            }
+            _ => false,
+        })
+    });
     stored.extend(records);
     write_records(path, &stored)
 }
@@ -204,7 +214,6 @@ fn is_in_memory(policy: &EditorHistoryPolicy, memory: &[EditorHistoryItem]) -> b
 struct EditorHistorySession<'a> {
     store: EditorHistoryTarget<'a>,
     policy: EditorHistoryPolicy,
-    is_in_development: bool,
 }
 
 impl<'a> EditorHistorySession<'a> {
@@ -222,17 +231,10 @@ impl<'a> EditorHistorySession<'a> {
             EditorHistoryTarget::Journals { location, own }
         };
 
-        Ok(Self {
-            store,
-            policy,
-            is_in_development: crate::models::user_config::is_in_development(user_config),
-        })
+        Ok(Self { store, policy })
     }
 
     fn load(&self) -> Result<Vec<EditorHistoryItem>, AppError> {
-        if !self.is_in_development {
-            return Ok(Vec::new());
-        }
         let mut items = self.store.read()?;
         self.policy.enforce(&mut items, now_ms());
         Ok(items)
@@ -243,9 +245,6 @@ impl<'a> EditorHistorySession<'a> {
         before: &[EditorHistoryItem],
         after: Vec<EditorHistoryItem>,
     ) -> Result<(), AppError> {
-        if !self.is_in_development {
-            return Ok(());
-        }
         self.store.write(before, after)
     }
 
@@ -290,11 +289,7 @@ fn save_editor_history_entry(
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
 
-    if !history.is_in_development
-        || !policy.is_recording
-        || entry.text.trim().is_empty()
-        || policy.max_entries == 0
-    {
+    if !policy.is_recording || entry.text.trim().is_empty() || policy.max_entries == 0 {
         return Ok(None);
     }
 
@@ -303,8 +298,28 @@ fn save_editor_history_entry(
     let before = history.load()?;
     let mut items = before.clone();
     let created_at_ms = now_ms();
+    let id = match entry.id {
+        Some(id) => {
+            // A live input may update its own unfinished record, never an AI
+            // source or an output that has already been finalized.
+            if items
+                .iter()
+                .any(|item| item.id == id && item.kind != crate::models::EditorHistoryKind::Draft)
+            {
+                return Ok(Some(id));
+            }
+            // Explicit deletion/clearing wins over an in-flight checkpoint.
+            if !items.iter().any(|item| item.id == id) {
+                return Ok(None);
+            }
+            items.retain(|item| item.id != id);
+            id
+        }
+        None => new_history_id(created_at_ms),
+    };
+    let is_checkpoint = entry.kind == crate::models::EditorHistoryKind::Draft;
     let item = EditorHistoryItem {
-        id: new_history_id(created_at_ms),
+        id,
         text: entry.text,
         kind: entry.kind,
         operation: entry.operation,
@@ -313,7 +328,14 @@ fn save_editor_history_entry(
         is_result_applied: false,
     };
 
-    let id = push_editor_history(&mut items, item, history.limit());
+    let id = if is_checkpoint {
+        let id = item.id.clone();
+        items.insert(0, item);
+        items.truncate(history.limit());
+        id
+    } else {
+        push_editor_history(&mut items, item, history.limit())
+    };
     history.save(&before, items)?;
 
     Ok(Some(id))
@@ -362,7 +384,7 @@ fn restore_item(
 
     // an undo puts back what the user removed, also while nothing new is
     // recorded
-    if !history.is_in_development || policy.max_entries == 0 {
+    if policy.max_entries == 0 {
         return Ok(());
     }
 

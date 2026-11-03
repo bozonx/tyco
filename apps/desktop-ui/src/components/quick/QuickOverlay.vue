@@ -19,9 +19,7 @@
       </div>
       <div v-show="currentMode === 'voice'" class="quick-mode-layer">
         <VoiceView
-          v-if="
-            currentMode === 'voice' && desktopStore.desktopState.isWindowShown
-          "
+          v-if="currentMode === 'voice'"
           bar
           @result-shown="voiceResultShown = $event"
         />
@@ -89,13 +87,7 @@
         />
       </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
-        <VoiceChatView
-          v-if="
-            currentMode === 'voiceChat' &&
-            desktopStore.desktopState.isWindowShown
-          "
-          :key="activationId"
-        />
+        <VoiceChatView v-if="currentMode === 'voiceChat'" />
       </div>
       <!-- gone with the window: a prompt hidden without an answer denies -->
       <div v-show="currentMode === 'externalAccess'" class="quick-mode-layer">

@@ -66,7 +66,7 @@ export function getEditorHistoryView(
   const meta = getEditorHistoryMeta(item)
 
   if (item.kind !== 'source' || !item.result) {
-    return { ...meta, text: item.text, isResultApplied: false }
+    return { ...meta, text: item.text, isResultApplied: !!item.isResultApplied }
   }
 
   return {

@@ -189,8 +189,14 @@ export class FakeDesktopBackend {
 
     this.handle('get_editor_history', () => structuredClone(this.history))
     this.handle('add_editor_history_item', ({ entry }) => {
-      const { operation, ...rest } = entry
-      const id = this.generateId('history')
+      if (entry.id) {
+        const existing = this.history.find((item) => item.id === entry.id)
+        if (!existing) return null
+        if (existing.kind !== 'draft') return existing.id
+        this.history = this.history.filter((item) => item.id !== entry.id)
+      }
+      const { operation, id: inputId, ...rest } = entry
+      const id = inputId ?? this.generateId('history')
       this.history.unshift({
         ...rest,
         ...(operation ? { operation } : {}),

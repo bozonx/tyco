@@ -107,6 +107,7 @@ const model = createVoiceRecognition({
     desktopStore.userConfig.stt?.isStylingBarDirectInsertEnabled ?? false,
   voiceCorrection,
   voiceStyling: (text, rule, signal) => stylingPrompt(rule, text, { signal }),
+  saveCheckpoint: historyStore.saveEditorHistory,
   saveSource: (text, action) => historyStore.saveSource(text, action),
   saveSourceResult: (id, text) => historyStore.saveSourceResult(id, text),
   setPendingModal: (options) => menuModalsStore.setPendingModal(options),
@@ -127,6 +128,10 @@ const model = createVoiceRecognition({
   t,
   toastKey,
   toastText,
+})
+const unregisterHistoryFlush = historyStore.registerInputFlush(async () => {
+  await model.flushHistory()
+  return true
 })
 const {
   transcript,
@@ -293,41 +298,31 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-/** The recording must not go on in a window the user no longer sees */
-function stopUnseenRecording() {
-  if ((isStarted.value || model.isStarting()) && !isFinishing.value) {
-    void cancel()
-  }
-}
-
+// A hidden window still owns its recording. Reopening it adopts the new
+// activation without restarting the microphone or discarding recognized words.
 watch(
   () => desktopStore.desktopState.activationId,
-  async (activationId) => {
-    if (!isOwnWindowShown()) {
-      stopUnseenRecording()
-      return
-    }
-    // only an activation of this voice input starts it over; any other one
-    // took the user elsewhere
+  (activationId) => {
+    if (!isOwnWindowShown() || isFinishing.value) return
     if (
       props.activationMode &&
       desktopStore.desktopState.mode !== props.activationMode
-    ) {
-      stopUnseenRecording()
+    )
       return
-    }
     sessionActivationId = activationId
-    await model.restartSession()
+    void startSession()
   }
 )
 
 watch(isOwnWindowShown, (isShown) => {
-  if (isShown) {
-    sessionActivationId = desktopStore.desktopState.activationId
-    void startSession()
-  } else {
-    stopUnseenRecording()
+  if (!isShown) {
+    void model
+      .flushHistory()
+      .catch(() => toastKey('history.operationFailed', 'error'))
+    return
   }
+  sessionActivationId = desktopStore.desktopState.activationId
+  void startSession()
 })
 
 onMounted(async () => {
@@ -347,6 +342,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  unregisterHistoryFlush()
   releaseDismissHold()
   model.dispose()
 

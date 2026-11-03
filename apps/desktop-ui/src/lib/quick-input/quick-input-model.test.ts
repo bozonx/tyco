@@ -1,31 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
-import { DRAFT_RESTORE_MS } from './draft-restore'
 import { createQuickInputModel } from './quick-input-model'
 
 function setup() {
-  let now = 100
-  const model = createQuickInputModel({ now: () => now })
-  return {
-    model,
-    advance: (ms: number) => {
-      now += ms
-    },
-  }
+  return { model: createQuickInputModel() }
 }
 
 describe('writer input model', () => {
-  it('keeps a recently dismissed draft, then clears an expired draft', () => {
-    const { model, advance } = setup()
+  it('keeps unfinished text across repeated activations', () => {
+    const { model } = setup()
     model.setValue('draft')
     model.markDismissed()
     expect(model.startSession()).toBe(true)
     expect(model.value.value).toBe('draft')
     model.markDismissed()
-    advance(DRAFT_RESTORE_MS + 1)
-    expect(model.startSession()).toBe(false)
-    expect(model.value.value).toBe('')
-    expect(model.recallText.value).toBe('draft')
+    expect(model.startSession()).toBe(true)
+    expect(model.value.value).toBe('draft')
   })
 
   it('keeps cleared and discarded inputs recallable in memory', () => {

@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Javítás előtt",
     "kindBeforeTranslate": "Fordítás előtt",
     "kindCorrection": "Javítás",
-    "kindDraft": "Piszkozat",
+    "kindDraft": "Befejezetlen bevitel",
     "kindOutput": "Elküldve",
     "kindSource": "Eredeti szöveg",
     "kindTranslate": "Fordítás",
@@ -560,7 +560,6 @@
     "voiceToInput": "Beillesztés a beviteli mezőbe",
     "willCopyOnFinish": "Befejezés után másolásra kerül",
     "willInsertOnFinish": "Befejezés után beillesztésre kerül",
-    "skipProcessing": "Kihagyás",
     "ruleNotFound": "Ez a szabály már nem létezik",
     "chatPrompts": "Csevegési prompt-sablonok"
   },

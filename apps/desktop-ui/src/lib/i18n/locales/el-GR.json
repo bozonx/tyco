@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Πριν από τη διόρθωση",
     "kindBeforeTranslate": "Πριν από τη μετάφραση",
     "kindCorrection": "Διόρθωση",
-    "kindDraft": "Πρόχειρο",
+    "kindDraft": "Ημιτελής εισαγωγή",
     "kindOutput": "Στάλθηκε",
     "kindSource": "Αρχικό κείμενο",
     "kindTranslate": "Μετάφραση",
@@ -560,7 +560,6 @@
     "voiceToInput": "Εισαγωγή στο πεδίο εισόδου",
     "willCopyOnFinish": "Θα αντιγραφεί μετά την ολοκλήρωση",
     "willInsertOnFinish": "Θα εισαχθεί μετά την ολοκλήρωση",
-    "skipProcessing": "Παράλειψη",
     "ruleNotFound": "Αυτός ο κανόνας δεν υπάρχει πλέον",
     "chatPrompts": "Προεπιλογές προτροπών συνομιλίας"
   },

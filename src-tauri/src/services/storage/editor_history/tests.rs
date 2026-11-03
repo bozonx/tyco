@@ -62,7 +62,6 @@ fn session<'a>(
             own: location.own_path(policy.is_local_only).unwrap(),
         },
         policy,
-        is_in_development: true,
     }
 }
 
@@ -143,39 +142,6 @@ fn failed_config_commit_restores_memory_after_prepared_disk_write() {
 }
 
 #[test]
-fn development_mode_blocks_disk_and_memory_writes_without_removing_existing_history() {
-    let dir = TestDir::new("development-disabled");
-    let location = HistoryLocation::at(&dir, LAPTOP);
-    let path = own(&location);
-    let existing = vec![recent("existing", "saved")];
-    write_items(&path, &existing);
-    let original = fs::read(&path).unwrap();
-    let mut memory = existing.clone();
-    let stores = [
-        EditorHistoryTarget::Journals {
-            location: location.clone(),
-            own: path.clone(),
-        },
-        EditorHistoryTarget::Memory(&mut memory),
-    ];
-    for store in stores {
-        let mut history = EditorHistorySession {
-            store,
-            policy: policy(),
-            is_in_development: false,
-        };
-        assert_eq!(
-            save_editor_history_entry(&mut history, entry("new")).unwrap(),
-            None
-        );
-        assert!(history.load().unwrap().is_empty());
-        history.save(&existing, Vec::new()).unwrap();
-    }
-    assert_eq!(fs::read(&path).unwrap(), original);
-    assert_eq!(memory, existing);
-}
-
-#[test]
 fn save_editor_history_entry_masks_secrets_when_enabled() {
     let dir = TestDir::new("save-secrets");
     let location = HistoryLocation::at(&dir, LAPTOP);
@@ -222,7 +188,6 @@ fn the_memory_store_never_touches_the_disk() {
     let dir = TestDir::new("memory-store");
     let mut memory = Vec::new();
     let mut history = EditorHistorySession {
-        is_in_development: true,
         store: EditorHistoryTarget::Memory(&mut memory),
         policy: memory_only(),
     };
@@ -571,4 +536,72 @@ fn read_only_history_remains_readable_and_cannot_be_changed() {
     let mut history = session(&location, policy());
     assert!(save_editor_history_entry(&mut history, entry("new")).is_err());
     assert_eq!(texts(&location), ["text"]);
+}
+
+#[test]
+fn input_checkpoints_replace_one_record_and_promote_it_without_a_duplicate() {
+    let mut memory = Vec::new();
+    let mut history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory(&mut memory),
+        policy: memory_only(),
+    };
+    let id = save_editor_history_entry(&mut history, entry("first words"))
+        .unwrap()
+        .unwrap();
+    let checkpoint =
+        serde_json::from_value(json!({"id": id, "text": "more words", "kind": "draft"})).unwrap();
+    assert_eq!(
+        save_editor_history_entry(&mut history, checkpoint).unwrap(),
+        Some(id.clone())
+    );
+    let items = history.load().unwrap();
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0].text, "more words");
+    let source = serde_json::from_value(
+        json!({"id": id, "text": "final words", "kind": "source", "operation": "voiceCorrection"}),
+    )
+    .unwrap();
+    save_editor_history_entry(&mut history, source).unwrap();
+    let late =
+        serde_json::from_value(json!({"id": id, "text": "late partial", "kind": "draft"})).unwrap();
+    save_editor_history_entry(&mut history, late).unwrap();
+    let items = history.load().unwrap();
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0].id, id);
+    assert_eq!(items[0].text, "final words");
+    assert_eq!(items[0].kind, EditorHistoryKind::Source);
+}
+
+#[test]
+fn checkpoint_updates_do_not_resurrect_deleted_records() {
+    let mut memory = Vec::new();
+    let mut history = EditorHistorySession {
+        store: EditorHistoryTarget::Memory(&mut memory),
+        policy: memory_only(),
+    };
+    let checkpoint =
+        serde_json::from_value(json!({"id": "deleted", "text": "late partial", "kind": "draft"}))
+            .unwrap();
+    assert_eq!(
+        save_editor_history_entry(&mut history, checkpoint).unwrap(),
+        None
+    );
+    assert!(history.load().unwrap().is_empty());
+}
+
+#[test]
+fn disk_checkpoints_keep_only_the_latest_text_in_the_own_journal() {
+    let dir = TestDir::new("input-checkpoints");
+    let location = HistoryLocation::at(&dir, LAPTOP);
+    let mut history = session(&location, policy());
+    let id = save_editor_history_entry(&mut history, entry("first"))
+        .unwrap()
+        .unwrap();
+    for text in ["second", "third", "final"] {
+        let checkpoint =
+            serde_json::from_value(json!({"id": id, "text": text, "kind": "draft"})).unwrap();
+        save_editor_history_entry(&mut history, checkpoint).unwrap();
+    }
+    assert_eq!(read_records(&own(&location)).unwrap().len(), 1);
+    assert_eq!(history.load().unwrap()[0].text, "final");
 }

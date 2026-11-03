@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: dbd250a14d7d14aa8f665c65671d7a0e24f41ded18aa01e93335ad49a92e2a23
+// Source hash: 41679f158f2d0bf8c86eeb2bbe2f93f2cbcba95a1837cf4ff5f26e64a6617c95
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -377,6 +377,8 @@ export type DesktopWindowState = {
 
 /** What the UI sends to add a text; id and time are assigned by the backend. */
 export type EditorHistoryEntry = {
+  /** Stable identity of a live input; only unfinished entries may be replaced. */
+  id?: string | null
   text: string
   kind: EditorHistoryKind
   operation?: EditorHistoryOperation | null

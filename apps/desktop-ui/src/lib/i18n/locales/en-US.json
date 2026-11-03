@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Before correction",
     "kindBeforeTranslate": "Before translation",
     "kindCorrection": "Correction",
-    "kindDraft": "Draft",
+    "kindDraft": "Unfinished input",
     "kindOutput": "Sent",
     "kindSource": "Original text",
     "kindTranslate": "Translation",
@@ -560,7 +560,6 @@
     "voiceToInput": "Insert into input",
     "willCopyOnFinish": "Will copy on completion",
     "willInsertOnFinish": "Will insert on completion",
-    "skipProcessing": "Skip",
     "ruleNotFound": "This rule no longer exists",
     "chatPrompts": "Chat prompt presets"
   },

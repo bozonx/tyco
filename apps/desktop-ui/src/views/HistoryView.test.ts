@@ -33,11 +33,11 @@ describe('HistoryView.vue', () => {
 
   afterEach(() => desktop.dispose())
 
-  it('redirects to the editor when development mode is disabled', () => {
+  it('keeps history accessible when development mode is disabled', () => {
     desktop.setUserConfig({ isInDevelopment: undefined })
     vi.spyOn(useHistoryStore(), 'loadEditorHistory').mockResolvedValue()
     mount(HistoryView, { global: { stubs: { HistoryList: true } } })
-    expect(mockToEditor).toHaveBeenCalledOnce()
+    expect(mockToEditor).not.toHaveBeenCalled()
   })
 
   it('loads editor history on mount and displays items', async () => {

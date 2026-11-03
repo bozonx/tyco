@@ -173,15 +173,6 @@ pub fn terminal_apps(config: &Value) -> Vec<String> {
         .collect()
 }
 
-/// `isInDevelopment`: unlocks the features still in development, such as the
-/// development plugins and the editor history.
-pub fn is_in_development(config: &Value) -> bool {
-    config
-        .get("isInDevelopment")
-        .and_then(Value::as_bool)
-        .unwrap_or(false)
-}
-
 /// What an action page takes as its input, `actionPages[].inputMode`.
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]

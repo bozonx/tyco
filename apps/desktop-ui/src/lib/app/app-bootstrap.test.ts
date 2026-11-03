@@ -299,3 +299,24 @@ it('resynchronizes snapshots on focus and disposes the focus listener', async ()
   bootstrap.stop()
   expect(remove).toHaveBeenCalledOnce()
 })
+
+it('keeps an active voice modal when reopening the same mode', async () => {
+  const { deps } = createDeps({ hasActiveInput: () => true })
+  const bootstrap = createAppBootstrap(deps)
+  const params = {
+    ...DEFAULT_DESKTOP_VIEW_STATE,
+    mode: ActivationMode.VOICE,
+    activationId: 1,
+  }
+  await bootstrap.applyParams(params)
+  vi.mocked(deps.closeAllModals).mockClear()
+  await bootstrap.applyParams({ ...params, revision: 2, activationId: 2 })
+  expect(deps.closeAllModals).not.toHaveBeenCalled()
+  await bootstrap.applyParams({
+    ...params,
+    revision: 3,
+    mode: ActivationMode.EDITOR,
+    activationId: 3,
+  })
+  expect(deps.closeAllModals).toHaveBeenCalledOnce()
+})

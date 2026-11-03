@@ -42,12 +42,12 @@ describe('editor history failure semantics', () => {
   })
 })
 
-it('does not record editor history or results outside development mode', async () => {
+it('does not record editor history or results when recording is disabled', async () => {
   const call = vi
     .fn<DesktopCall>()
     .mockResolvedValue({ success: true, result: 'saved' })
-  let isInDevelopment = false
-  const model = createEditorHistoryModel({ call }, () => isInDevelopment)
+  let canRecord = false
+  const model = createEditorHistoryModel({ call }, () => canRecord)
   expect(await model.saveOutput('Output')).toBeNull()
   expect(await model.saveSource('Source', 'correction')).toBeNull()
   await model.saveSourceResult('existing', 'Result')
@@ -60,9 +60,9 @@ it('does not record editor history or results outside development mode', async (
     })
   ).rejects.toThrow()
   expect(call).not.toHaveBeenCalled()
-  isInDevelopment = true
+  canRecord = true
   expect(await model.saveOutput('Output')).toBe('saved')
-  isInDevelopment = false
+  canRecord = false
   await model.saveSourceResult('saved', 'Late result')
   expect(call).toHaveBeenCalledTimes(1)
 })

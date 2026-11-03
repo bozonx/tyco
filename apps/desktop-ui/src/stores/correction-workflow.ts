@@ -14,6 +14,7 @@ import { createQuickInsert } from '../lib/quick-input/quick-insert'
 import { useBufferedIntent } from '../composables/use-buffered-intent'
 import { useTextCorrectionStore } from './text-correction'
 import { useHistoryStore } from './history'
+import { useQuickInputStore } from './quick-input'
 import { useInvocationsStore } from './invocations'
 import { MenuModals, useMenuModalsStore } from './menu-modals'
 
@@ -23,6 +24,7 @@ export const useCorrectionWorkflowStore = defineStore(
     const { toastKey, toastText } = useToastStore()
     const menuModalsStore = useMenuModalsStore()
     const historyStore = useHistoryStore()
+    const quickInput = useQuickInputStore()
 
     const runBufferedIntent = useBufferedIntent()
 
@@ -78,7 +80,8 @@ export const useCorrectionWorkflowStore = defineStore(
         corrector.cancelLive()
       },
       saveOutput: historyStore.saveOutput,
-      saveSource: (text) => historyStore.saveSource(text, 'correction'),
+      saveSource: (text) => quickInput.saveSource(text, 'correction'),
+      saveDraft: () => quickInput.flushHistory(),
       saveSourceResult: historyStore.saveSourceResult,
       reportHistoryError: () => toastKey('history.operationFailed', 'error'),
       // a failed insertion is reported by the tool: the window may be gone

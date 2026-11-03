@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Avant la correction",
     "kindBeforeTranslate": "Avant la traduction",
     "kindCorrection": "Correction",
-    "kindDraft": "Brouillon",
+    "kindDraft": "Saisie inachevée",
     "kindOutput": "Envoyé",
     "kindSource": "Texte original",
     "kindTranslate": "Traduction",
@@ -560,7 +560,6 @@
     "voiceToInput": "Insérer dans la saisie",
     "willCopyOnFinish": "Sera copié une fois terminé",
     "willInsertOnFinish": "Sera inséré une fois terminé",
-    "skipProcessing": "Ignorer",
     "ruleNotFound": "Cette règle n'existe plus",
     "chatPrompts": "Préréglages de prompts pour le chat"
   },

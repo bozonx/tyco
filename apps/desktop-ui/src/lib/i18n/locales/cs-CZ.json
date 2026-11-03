@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Před opravou",
     "kindBeforeTranslate": "Před překladem",
     "kindCorrection": "Oprava",
-    "kindDraft": "Koncept",
+    "kindDraft": "Nedokončený vstup",
     "kindOutput": "Odesláno",
     "kindSource": "Původní text",
     "kindTranslate": "Překlad",
@@ -560,7 +560,6 @@
     "voiceToInput": "Vložit do vstupního pole",
     "willCopyOnFinish": "Zkopíruje se po dokončení",
     "willInsertOnFinish": "Vloží se po dokončení",
-    "skipProcessing": "Přeskočit",
     "ruleNotFound": "Toto pravidlo již neexistuje",
     "chatPrompts": "Předvolby promptů chatu"
   },

@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Przed korektą",
     "kindBeforeTranslate": "Przed tłumaczeniem",
     "kindCorrection": "Korekta",
-    "kindDraft": "Szkic",
+    "kindDraft": "Niedokończony tekst",
     "kindOutput": "Wysłano",
     "kindSource": "Tekst oryginalny",
     "kindTranslate": "Tłumaczenie",
@@ -560,7 +560,6 @@
     "voiceToInput": "Wstaw do pola wprowadzania",
     "willCopyOnFinish": "Zostanie skopiowane po ukończeniu",
     "willInsertOnFinish": "Zostanie wstawione po ukończeniu",
-    "skipProcessing": "Pomiń",
     "ruleNotFound": "Ta reguła już nie istnieje",
     "chatPrompts": "Zestawy promptów czatu"
   },

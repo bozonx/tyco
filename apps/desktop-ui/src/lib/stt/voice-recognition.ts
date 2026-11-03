@@ -1,4 +1,6 @@
 import { computed, ref } from 'vue'
+import type { EditorHistoryEntry } from '@tyco/shared'
+import { createInputHistorySession } from '../history/input-history-session'
 import {
   type TimerDependencies,
   createSingleTimer,
@@ -53,6 +55,7 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
     rule: string,
     signal?: AbortSignal
   ) => Promise<string>
+  saveCheckpoint?: (entry: EditorHistoryEntry) => Promise<string | null>
   saveSource: (
     text: string,
     action: 'voiceCorrection'
@@ -112,6 +115,12 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   /** Set once a dictation started; it stays finishable after a failure */
   let hasSession = false
   let lastTranscriptText = ''
+  const historySession = deps.saveCheckpoint
+    ? createInputHistorySession({
+        save: deps.saveCheckpoint,
+        reportError: () => toastKey('history.operationFailed', 'error'),
+      })
+    : undefined
   const autoStopWarning = ref<AutoStopWarning>()
 
   const voiceSession = createVoiceSession({
@@ -153,6 +162,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     notifyCancellation ||= notify
     if (cancelling) return cancelling
     isCancelling.value = true
+    historySession?.end()
     sessionGeneration += 1
     hasSession = false
     voiceSession.abort()
@@ -237,7 +247,13 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       // same way twice
       let sourceId: string | null = null
       try {
-        sourceId = await deps.saveSource(recognizedText, 'voiceCorrection')
+        sourceId = historySession
+          ? await historySession.complete(
+              recognizedText,
+              'source',
+              'voiceCorrection'
+            )
+          : await deps.saveSource(recognizedText, 'voiceCorrection')
       } catch {
         // the text is still here; only its copy in the history is missing
         toastKey('history.operationFailed', 'error')
@@ -262,15 +278,17 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
             : null
 
       if (postProcess) {
-        // cancelling the post-processing keeps the recognized text as it is
+        // Explicit cancellation stops delivery; the source is already in history.
         const controller = new AbortController()
         const abortPostProcess = () => controller.abort()
         signal?.addEventListener('abort', abortPostProcess)
         const owner = deps.setPendingModal({
           ...postProcess.pending,
-          cancelLabel: t('menu.skipProcessing'),
+          cancelLabel: t('common.cancel'),
           allowBufferedIntent: intent === 'next',
-          onCancel: abortPostProcess,
+          onCancel: () => {
+            void cancel()
+          },
         })
         // a dead connection must not hold the dictated text for minutes
         let isTimedOut = false
@@ -341,6 +359,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   function handleSessionError(error: Error) {
     if (voiceSession.signal?.aborted) return
     voiceSession.stopTimer()
+    historySession?.checkpoint()
     isStarted.value = false
 
     if (!hasText.value) {
@@ -375,6 +394,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       starting
     )
       return
+    historySession?.end()
+    historySession?.update('')
     transcript.value = createLiveTranscriptState()
     lastTranscriptText = ''
     const generation = ++sessionGeneration
@@ -384,6 +405,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           onText: (state) => {
             if (generation !== sessionGeneration) return
             transcript.value = state
+            historySession?.update(liveTranscriptText(state))
             // empty results come in silence too: only new words are speech
             const text = liveTranscriptText(state)
             if (text !== lastTranscriptText) {
@@ -420,6 +442,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   }
 
   function dispose() {
+    historySession?.dispose()
     disposed = true
     restartGeneration += 1
     sessionGeneration += 1
@@ -447,6 +470,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   }
 
   return {
+    flushHistory: () => historySession?.flush() ?? Promise.resolve(null),
     transcript,
     autoStopWarning,
     isFinishing,

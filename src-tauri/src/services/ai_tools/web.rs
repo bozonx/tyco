@@ -231,12 +231,14 @@ pub async fn run(
                         .take(count)
                         .map(|item| {
                             let description = item.description.unwrap_or_default();
-                            let truncated_desc = if description.chars().count() > MAX_SEARCH_SNIPPET_LEN {
-                                let t: String = description.chars().take(MAX_SEARCH_SNIPPET_LEN).collect();
-                                format!("{t}...")
-                            } else {
-                                description
-                            };
+                            let truncated_desc =
+                                if description.chars().count() > MAX_SEARCH_SNIPPET_LEN {
+                                    let t: String =
+                                        description.chars().take(MAX_SEARCH_SNIPPET_LEN).collect();
+                                    format!("{t}...")
+                                } else {
+                                    description
+                                };
                             WebSearchResultItem {
                                 title: item.title.unwrap_or_default(),
                                 url: item.url.unwrap_or_default(),
@@ -248,9 +250,7 @@ pub async fn run(
                     return Ok(AiWebToolOutput::Search { results });
                 }
                 if let Some(msg) = envelope.message {
-                    return Err(AppError::Failed(format!(
-                        "Jina search error: {msg}"
-                    )));
+                    return Err(AppError::Failed(format!("Jina search error: {msg}")));
                 }
             }
 
@@ -316,9 +316,7 @@ pub async fn run(
                     });
                 }
                 if let Some(msg) = envelope.message {
-                    return Err(AppError::Failed(format!(
-                        "Jina reader error: {msg}"
-                    )));
+                    return Err(AppError::Failed(format!("Jina reader error: {msg}")));
                 }
             }
 
@@ -328,7 +326,8 @@ pub async fn run(
                 || trimmed_body.to_ascii_lowercase().starts_with("<html");
             if is_html {
                 return Err(AppError::Failed(
-                    "Jina reader returned an unexpected HTML page instead of article content".into(),
+                    "Jina reader returned an unexpected HTML page instead of article content"
+                        .into(),
                 ));
             }
 
@@ -490,7 +489,9 @@ mod tests {
             "unauthorized",
             true,
         );
-        assert!(err_401.to_string().contains("authentication failed (HTTP 401)"));
+        assert!(err_401
+            .to_string()
+            .contains("authentication failed (HTTP 401)"));
 
         let err_html = format_jina_http_error(
             "Jina search",

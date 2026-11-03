@@ -6,8 +6,7 @@ use serde::{Deserialize, Serialize};
 pub enum EditorHistoryKind {
     /// Inserted into a window or copied to the clipboard.
     Output,
-    /// Unsent text. Nothing records drafts now; entries of older versions
-    /// are still read.
+    /// Unfinished or cancelled user input, periodically checkpointed.
     Draft,
     /// Snapshot taken right before an AI transformation.
     Source,
@@ -49,6 +48,9 @@ pub struct EditorHistoryItem {
 #[serde(rename_all = "camelCase")]
 #[ts(optional_fields = nullable)]
 pub struct EditorHistoryEntry {
+    /// Stable identity of a live input; only unfinished entries may be replaced.
+    #[serde(default)]
+    pub id: Option<String>,
     pub text: String,
     pub kind: EditorHistoryKind,
     #[serde(default)]

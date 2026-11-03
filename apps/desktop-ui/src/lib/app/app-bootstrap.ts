@@ -15,6 +15,7 @@ export interface AppBootstrapDependencies {
   loadDesktopState: () => Promise<DesktopViewState>
   applyViewState: (params: DesktopViewState) => void
   closeAllModals: () => void
+  hasActiveInput?: () => boolean
   navigateTo: (path: AppRoutePath) => Promise<void>
   /**
    * Whether this window shows the mode. Both windows get every activation, and
@@ -59,7 +60,7 @@ export function createAppBootstrap(deps: AppBootstrapDependencies) {
     lastAppliedMode = params.mode
     lastActivationId = params.activationId
 
-    if (shouldNavigate || activationChanged) {
+    if (shouldNavigate || (activationChanged && !deps.hasActiveInput?.())) {
       deps.closeAllModals()
     }
     if (shouldNavigate) {

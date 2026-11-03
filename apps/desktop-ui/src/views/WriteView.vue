@@ -209,10 +209,8 @@ watch(
       menuModalsStore.cancelPending()
       menuModalsStore.closeAll()
       resetNav()
-      // a kept text comes back selected: typing replaces it
-      if (quickInputStore.startSession())
-        quickInputStore.requestFocusAndSelectAll()
-      else quickInputStore.requestFocus()
+      quickInputStore.startSession()
+      quickInputStore.requestFocus()
     }
   },
   { immediate: true }
@@ -263,7 +261,7 @@ function cancelAndClose() {
   correctionWorkflowStore.cancelInsert()
   correctionWorkflowStore.cancelPrecorrection()
   textCorrectionStore.resetLive()
-  // Esc drops the text from the history; ArrowUp still brings it back
+  // Escape and the cancel button both retain the input in history.
   quickInputStore.discard()
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
@@ -286,6 +284,7 @@ function nextFromHint() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
   const text = quickInputStore.value
   if (!text.trim()) return
+  void quickInputStore.flushHistory().catch(() => {})
   quickInputStore.rememberSubmitted(text)
   if (isLiveMode.value) {
     void correctionWorkflowStore.nextLive(text)
@@ -384,6 +383,7 @@ onUnmounted(() => {
 function submit() {
   const text = quickInputStore.value
   if (!text.trim()) return
+  void quickInputStore.flushHistory().catch(() => {})
   quickInputStore.rememberSubmitted(text)
   if (isOffMode.value) {
     void correctionWorkflowStore.insertDirect(text)

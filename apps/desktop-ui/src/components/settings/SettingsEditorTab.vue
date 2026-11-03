@@ -68,7 +68,7 @@
       </FieldRow>
     </SettingsSection>
 
-    <SettingsEditorHistorySection v-if="draft.isInDevelopment" />
+    <SettingsEditorHistorySection />
   </div>
 </template>
 

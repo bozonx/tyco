@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "校正前",
     "kindBeforeTranslate": "翻訳前",
     "kindCorrection": "校正",
-    "kindDraft": "下書き",
+    "kindDraft": "未完了の入力",
     "kindOutput": "送信済み",
     "kindSource": "元のテキスト",
     "kindTranslate": "翻訳",
@@ -560,7 +560,6 @@
     "voiceToInput": "入力欄に挿入",
     "willCopyOnFinish": "完了時にコピーされます",
     "willInsertOnFinish": "完了時に挿入されます",
-    "skipProcessing": "スキップ",
     "ruleNotFound": "このルールはもう存在しません",
     "chatPrompts": "チャットプロンプトのプリセット"
   },

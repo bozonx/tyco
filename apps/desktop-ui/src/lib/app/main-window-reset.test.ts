@@ -17,3 +17,15 @@ describe('createMainWindowReset', () => {
     expect(calls).toEqual(['close', 'editor'])
   })
 })
+
+it('keeps a hidden active dictation mounted', async () => {
+  const closeAllModals = vi.fn()
+  const goToEditor = vi.fn()
+  await createMainWindowReset({
+    closeAllModals,
+    goToEditor,
+    hasActiveInput: () => true,
+  }).reset()
+  expect(closeAllModals).not.toHaveBeenCalled()
+  expect(goToEditor).not.toHaveBeenCalled()
+})

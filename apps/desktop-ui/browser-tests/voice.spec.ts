@@ -24,7 +24,7 @@ test('shows live speech and inserts the final transcript into the editor', async
   )
 })
 
-test('cancels recording without changing the editor', async ({
+test('cancels recording without changing the editor and preserves speech in history', async ({
   page,
   desktop,
 }) => {
@@ -39,6 +39,13 @@ test('cancels recording without changing the editor', async ({
   ).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(editor).toHaveText('Keep this text')
+  await expect
+    .poll(() =>
+      desktop.history.some(
+        (item) => item.kind === 'draft' && item.text === 'Discard this speech'
+      )
+    )
+    .toBe(true)
   await expect
     .poll(() => desktop.callsOf('stop_voice_capture'))
     .toContainEqual({ sessionId: 7 })

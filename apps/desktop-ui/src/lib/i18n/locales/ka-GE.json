@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "შესწორებამდე",
     "kindBeforeTranslate": "თარგმნამდე",
     "kindCorrection": "შესწორება",
-    "kindDraft": "მონახაზი",
+    "kindDraft": "დაუსრულებელი შეყვანა",
     "kindOutput": "გაგზავნილი",
     "kindSource": "საწყისი ტექსტი",
     "kindTranslate": "თარგმანი",
@@ -560,7 +560,6 @@
     "voiceToInput": "შეყვანის ველში ჩასმა",
     "willCopyOnFinish": "დაკოპირდება დასრულებისთანავე",
     "willInsertOnFinish": "ჩაისმება დასრულებისთანავე",
-    "skipProcessing": "გამოტოვება",
     "ruleNotFound": "ეს წესი აღარ არსებობს",
     "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები"
   },

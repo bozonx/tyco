@@ -54,6 +54,13 @@ test.describe('quick input', () => {
     await expect
       .poll(() => desktop.callsOf('hide_window').length)
       .toBeGreaterThan(0)
+    await expect
+      .poll(() =>
+        desktop.history.some(
+          (item) => item.kind === 'draft' && item.text === 'A draft to recall'
+        )
+      )
+      .toBe(true)
     await quick.reopen()
     await expect(input).toHaveValue('')
     await input.focus()
@@ -61,7 +68,7 @@ test.describe('quick input', () => {
     await expect(input).toHaveValue('A draft to recall')
   })
 
-  test('restores a draft after focus loss and a new activation', async ({
+  test('keeps quick input open after focus loss and a new activation', async ({
     page,
     desktop,
   }) => {
@@ -71,8 +78,8 @@ test.describe('quick input', () => {
     await input.fill('Keep the dismissed draft')
     await desktop.setWindowFocus(false)
     await expect
-      .poll(() => desktop.callsOf('hide_quick_window_on_blur').length)
-      .toBeGreaterThan(0)
+      .poll(() => desktop.callsOf('hide_quick_window_on_blur'))
+      .toEqual([])
     await quick.reopen()
     await expect(input).toHaveValue('Keep the dismissed draft')
   })

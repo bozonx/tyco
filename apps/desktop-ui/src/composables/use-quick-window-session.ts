@@ -40,14 +40,17 @@ export function useQuickWindowSession(
   watch(
     () => desktopStore.desktopState.isWindowShown,
     (isShown) => {
-      if (!isShown) session.endActivation()
+      if (!isShown) {
+        void quickInputStore.flushHistory().catch(() => {})
+        if (!quickDismissStore.isHeld) session.endActivation()
+      }
     }
   )
   watch(
     () => desktopStore.desktopState.activationId,
     () => {
       resetDismissibleKeyboardState()
-      session.endActivation()
+      if (!quickDismissStore.isHeld) session.endActivation()
       options.onActivation?.()
     },
     { flush: 'sync' }

@@ -336,8 +336,9 @@ The default config save handler supports single-writer saves only and rejects a
 stale `baseConfig`. It does not implement Rust normalization, validation, secret
 protection or concurrent merges. Test those in Rust and the native desktop smoke;
 use an explicit handler when a UI scenario needs a particular backend response.
-Draft recall in the quick window is in-memory across activations, not durable
-across a webview reload. Persistence tests reload settings and saved chats instead.
+Draft recall in the quick window is in-memory across activations. Input recovery
+checkpoints use the configured editor history storage; disk history survives
+restart, session history and recall do not.
 
 ## Choosing integration tests without virtual machines
 

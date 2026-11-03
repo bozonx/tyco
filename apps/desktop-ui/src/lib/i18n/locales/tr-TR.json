@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Düzeltmeden önce",
     "kindBeforeTranslate": "Çeviriden önce",
     "kindCorrection": "Düzeltme",
-    "kindDraft": "Taslak",
+    "kindDraft": "Tamamlanmamış giriş",
     "kindOutput": "Gönderildi",
     "kindSource": "Orijinal metin",
     "kindTranslate": "Çeviri",
@@ -560,7 +560,6 @@
     "voiceToInput": "Giriş alanına ekle",
     "willCopyOnFinish": "Tamamlandığında kopyalanacak",
     "willInsertOnFinish": "Tamamlandığında eklenecek",
-    "skipProcessing": "Atla",
     "ruleNotFound": "Bu kural artık mevcut değil",
     "chatPrompts": "Sohbet istemi önayarları"
   },

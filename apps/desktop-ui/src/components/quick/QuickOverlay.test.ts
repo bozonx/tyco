@@ -34,6 +34,7 @@ vi.mock('../../composables/use-i18n', () => ({
 
 vi.mock('../../stores/quick-input', () => ({
   useQuickInputStore: () => ({
+    flushHistory: vi.fn().mockResolvedValue(null),
     requestFocus: mocks.focus,
     markDismissed: mocks.markDismissed,
   }),
@@ -194,7 +195,7 @@ describe('quick overlay keyboard ownership', () => {
     }
   })
 
-  it('dismisses quick window when clicking outside the card', async () => {
+  it('keeps quick input when clicking outside the card', async () => {
     vi.stubGlobal(
       'ResizeObserver',
       class {
@@ -209,8 +210,8 @@ describe('quick overlay keyboard ownership', () => {
     })
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
-      expect(await sent('hide_window')).not.toEqual([])
-      expect(mocks.markDismissed).toHaveBeenCalledOnce()
+      expect(await sent('hide_window')).toEqual([])
+      expect(mocks.markDismissed).not.toHaveBeenCalled()
     } finally {
       wrapper.unmount()
     }

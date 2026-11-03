@@ -378,7 +378,7 @@ describe('voice recognition failures', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it('keeps the recognized text when the user cancels its correction', async () => {
+  it('keeps the source in history without delivering cancelled correction', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup({
       voiceCorrection: vi.fn(
@@ -395,13 +395,9 @@ describe('voice recognition failures', () => {
     await vi.waitFor(() => expect(deps.setPendingModal).toHaveBeenCalled())
     vi.mocked(deps.setPendingModal).mock.calls[0]![0].onCancel()
     await finishing
-    expect(deps.onCorrected).toHaveBeenCalledWith(
-      'Raw words',
-      'Raw words',
-      undefined,
-      'insert'
-    )
-    expect(deps.onCancelled).not.toHaveBeenCalled()
+    await vi.waitFor(() => expect(deps.onCancelled).toHaveBeenCalledOnce())
+    expect(deps.saveSource).toHaveBeenCalledWith('Raw words', 'voiceCorrection')
+    expect(deps.onCorrected).not.toHaveBeenCalled()
   })
 
   it('submits chat input that is only after the caret', async () => {
@@ -597,7 +593,7 @@ describe('voice recognition failures', () => {
     model.dispose()
   })
 
-  it('passes skip label to pending modal during post-processing', async () => {
+  it('uses the same cancel action during post-processing', async () => {
     vi.useFakeTimers()
     const { deps, model } = setup()
     await model.startSession()
@@ -605,7 +601,7 @@ describe('voice recognition failures', () => {
     expect(deps.setPendingModal).toHaveBeenCalledWith(
       expect.objectContaining({
         correction: true,
-        cancelLabel: 'menu.skipProcessing',
+        cancelLabel: 'common.cancel',
       })
     )
     model.dispose()
@@ -634,4 +630,37 @@ describe('voice recognition failures', () => {
     expect(deps.clearPendingModal).toHaveBeenCalledWith(7)
     model.dispose()
   })
+})
+
+it('checkpoints live speech and preserves cancellation in the same history record', async () => {
+  vi.useFakeTimers()
+  let handlers!: Pick<LiveDictationStart, 'onText' | 'onError'>
+  const saveCheckpoint = vi.fn().mockResolvedValue('voice-draft')
+  const { model, deps } = setup({
+    saveCheckpoint,
+    startDictation: async (next) => {
+      handlers = next
+    },
+  })
+  await model.startSession()
+  handlers.onText({ committed: 'Long dictation', draft: 'in progress' })
+  await vi.advanceTimersByTimeAsync(10000)
+  expect(saveCheckpoint).toHaveBeenLastCalledWith({
+    id: undefined,
+    text: 'Long dictation in progress',
+    kind: 'draft',
+    operation: undefined,
+  })
+  handlers.onText({ committed: 'Long dictation', draft: 'last words' })
+  await model.cancel()
+  await model.flushHistory()
+  expect(saveCheckpoint).toHaveBeenLastCalledWith({
+    id: 'voice-draft',
+    text: 'Long dictation last words',
+    kind: 'draft',
+    operation: undefined,
+  })
+  expect(deps.onCorrected).not.toHaveBeenCalled()
+  expect(deps.onCancelled).toHaveBeenCalledOnce()
+  model.dispose()
 })

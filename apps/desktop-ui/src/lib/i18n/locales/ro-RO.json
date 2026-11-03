@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Înainte de corectare",
     "kindBeforeTranslate": "Înainte de traducere",
     "kindCorrection": "Corectare",
-    "kindDraft": "Ciornă",
+    "kindDraft": "Introducere neterminată",
     "kindOutput": "Trimis",
     "kindSource": "Text original",
     "kindTranslate": "Traducere",
@@ -560,7 +560,6 @@
     "voiceToInput": "Inserează în câmpul de introducere",
     "willCopyOnFinish": "Se va copia la finalizare",
     "willInsertOnFinish": "Se va introduce la finalizare",
-    "skipProcessing": "Omite",
     "ruleNotFound": "Această regulă nu mai există",
     "chatPrompts": "Presetări prompturi chat"
   },

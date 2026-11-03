@@ -1,15 +1,12 @@
-import { shouldRestoreDraft } from './draft-restore'
-
 /**
  * Keeps the text of the quick input from being lost by accident.
  *
- * - A focus loss (a stray click) hides the window: the text comes back on the
- *   next opening for a while, then is cleared.
+ * - Unfinished input survives window hiding and reactivation without expiry.
  * - Esc clears the text on purpose, but ArrowUp in the empty input still brings
  *   it back, as it brings back the last sent text
  */
-export function createQuickInputSession(now: () => number = Date.now) {
-  let dismissedAt: number | null = null
+export function createQuickInputSession() {
+  let isSubmitted = false
   let recallText = ''
 
   const remember = (text: string): void => {
@@ -28,7 +25,7 @@ export function createQuickInputSession(now: () => number = Date.now) {
 
     /** The window lost focus with this text in the input. */
     markDismissed(): void {
-      dismissedAt = now()
+      isSubmitted = false
     },
 
     /**
@@ -36,8 +33,8 @@ export function createQuickInputSession(now: () => number = Date.now) {
      * otherwise the input is emptied and the text stays recallable
      */
     start(text: string): boolean {
-      const restore = shouldRestoreDraft(text, dismissedAt, now())
-      dismissedAt = null
+      const restore = !isSubmitted && Boolean(text.trim())
+      isSubmitted = false
       if (restore) return true
       end(text)
       return false
@@ -45,19 +42,20 @@ export function createQuickInputSession(now: () => number = Date.now) {
 
     /** The text leaves the input but stays recallable. */
     end(text: string): void {
-      dismissedAt = null
+      isSubmitted = true
       end(text)
     },
 
     /** The text was sent on to the next step. */
     submitted(text: string): void {
+      isSubmitted = true
       remember(text)
     },
 
     /** Esc: the text is cleared, but stays recallable. */
     discard(text: string): void {
       remember(text)
-      dismissedAt = null
+      isSubmitted = true
     },
   }
 }

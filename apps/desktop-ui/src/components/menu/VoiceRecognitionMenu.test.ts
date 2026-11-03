@@ -326,7 +326,7 @@ describe('VoiceRecognitionMenu', () => {
       },
     })
 
-  it('restarts recording when the same voice mode is activated again', async () => {
+  it('keeps recording when the same voice mode is activated again', async () => {
     const wrapper = mountChat()
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledOnce()
@@ -334,12 +334,12 @@ describe('VoiceRecognitionMenu', () => {
       activationId: desktop.backend.activation.activationId + 1,
     })
     await flushPromises()
-    expect(mocks.startDictation).toHaveBeenCalledTimes(2)
+    expect(mocks.startDictation).toHaveBeenCalledOnce()
     expect(wrapper.emitted('cancelled')).toBeUndefined()
     wrapper.unmount()
   })
 
-  it('stops recording when an activation of the other window hides this one', async () => {
+  it('keeps recording when an activation of the other window hides this one', async () => {
     const wrapper = mountChat()
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledOnce()
@@ -351,7 +351,7 @@ describe('VoiceRecognitionMenu', () => {
     })
     await flushPromises()
     expect(mocks.startDictation).toHaveBeenCalledOnce()
-    expect(mocks.cancelDictation).toHaveBeenCalled()
+    expect(mocks.cancelDictation).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -415,9 +415,8 @@ describe('VoiceRecognitionMenu', () => {
     resolve('Partial correction')
     await flushPromises()
     expect(save).not.toHaveBeenCalled()
-    expect(wrapper.emitted('corrected')).toHaveLength(1)
-    expect(wrapper.emitted('corrected')![0]![2]).toBeUndefined()
-    expect(wrapper.emitted('cancelled')).toBeUndefined()
+    expect(wrapper.emitted('corrected')).toBeUndefined()
+    expect(wrapper.emitted('cancelled')).toHaveLength(1)
     expect(menu.pendingModal).toEqual({ label: 'New operation' })
     wrapper.unmount()
   })

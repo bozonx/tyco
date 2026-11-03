@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "До коррекции",
     "kindBeforeTranslate": "До перевода",
     "kindCorrection": "Коррекция",
-    "kindDraft": "Черновик",
+    "kindDraft": "Незавершённый ввод",
     "kindOutput": "Отправлено",
     "kindSource": "Исходный текст",
     "kindTranslate": "Перевод",
@@ -560,7 +560,6 @@
     "voiceToInput": "Вставить в поле ввода",
     "willCopyOnFinish": "Скопируется по завершении",
     "willInsertOnFinish": "Вставится по завершении",
-    "skipProcessing": "Пропустить",
     "ruleNotFound": "Это правило больше не существует",
     "chatPrompts": "Быстрые промпты для чата"
   },

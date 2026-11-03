@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "교정 전",
     "kindBeforeTranslate": "번역 전",
     "kindCorrection": "교정",
-    "kindDraft": "임시 저장",
+    "kindDraft": "완료되지 않은 입력",
     "kindOutput": "전송됨",
     "kindSource": "원본 텍스트",
     "kindTranslate": "번역",
@@ -560,7 +560,6 @@
     "voiceToInput": "입력창에 삽입",
     "willCopyOnFinish": "완료 시 복사됩니다",
     "willInsertOnFinish": "완료 시 삽입됩니다",
-    "skipProcessing": "건너뛰기",
     "ruleNotFound": "이 규칙은 더 이상 존재하지 않습니다",
     "chatPrompts": "채팅 프롬프트 사전 설정"
   },

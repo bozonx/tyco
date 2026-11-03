@@ -2,18 +2,14 @@ import { ref } from 'vue'
 
 import { createQuickInputSession } from './quick-input-session'
 
-export interface QuickInputDependencies {
-  now?: () => number
-}
-
-export function createQuickInputModel(deps: QuickInputDependencies = {}) {
+export function createQuickInputModel() {
   const value = ref<string>('')
   const focusRequestCount = ref<number>(0)
   const selectAllRequestCount = ref<number>(0)
   /** The last text sent on or cancelled, offered again on ArrowUp. */
   const recallText = ref<string>('')
 
-  const session = createQuickInputSession(deps.now)
+  const session = createQuickInputSession()
   const syncRecall = (): void => {
     recallText.value = session.recallText
   }
@@ -46,8 +42,8 @@ export function createQuickInputModel(deps: QuickInputDependencies = {}) {
   }
 
   /**
-   * Prepares the input for a new opening: keeps the text of a recent dismissal,
-   * clears anything else. Returns whether the text was kept
+   * Prepares the input for a new opening: keeps unfinished text, clears
+   * submitted or cancelled text. Returns whether the text was kept
    */
   const startSession = (): boolean => {
     const kept = session.start(value.value)

@@ -145,3 +145,20 @@ Voice input uses `finishBehavior` (`submitToChat`, `insertIntoTarget`, or
 `confirm`) to select its primary completion action and available shortcuts.
 `VoiceFinishIntent` describes the action the user actually chose: insert,
 submit, or continue to the action menu.
+
+## Input recovery through history
+
+Quick writing and dictation keep unfinished input in memory without an expiry.
+Focus loss does not dismiss either input. Hiding the quick window retains its
+voice view and microphone session; reopening adopts the activation without
+restarting recognition. Explicit cancellation (Escape or the cancel button)
+stops input and keeps its text in history.
+
+Each live input checkpoints changed text every ten seconds into one `draft`
+history record. Checkpoints are serialized; submission promotes that same record
+to an AI source or collapses it into the output. Finalized records cannot be
+replaced by late checkpoints. Cancellation, disposal, hiding and orderly shutdown
+flush the current text. The history storage mode, retention and secret redaction
+apply to checkpoints too; no separate recovery file is used. Disk mode protects
+only the last successful checkpoint across a crash. Session mode lasts until exit,
+and off mode records nothing. Audio is streamed, not archived for replay.

@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "До виправлення",
     "kindBeforeTranslate": "До перекладу",
     "kindCorrection": "Виправлення",
-    "kindDraft": "Чернетка",
+    "kindDraft": "Незавершене введення",
     "kindOutput": "Надіслано",
     "kindSource": "Вихідний текст",
     "kindTranslate": "Переклад",
@@ -560,7 +560,6 @@
     "voiceToInput": "Вставити в поле введення",
     "willCopyOnFinish": "Скопіюється після завершення",
     "willInsertOnFinish": "Вставиться після завершення",
-    "skipProcessing": "Пропустити",
     "ruleNotFound": "Цього правила більше не існує",
     "chatPrompts": "Швидкі промпти для чату"
   },

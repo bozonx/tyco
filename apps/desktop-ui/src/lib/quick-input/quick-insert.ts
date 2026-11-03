@@ -8,6 +8,7 @@ export interface QuickInsertDependencies {
   correct: (text: string) => Promise<string>
   cancelCorrection: () => void
   saveOutput: (text: string) => Promise<unknown>
+  saveDraft?: () => Promise<unknown>
   /** Keeps the typed text in the history before the model sees it */
   saveSource?: (text: string) => Promise<string | null>
   saveSourceResult?: (
@@ -150,6 +151,12 @@ export function createQuickInsert(deps: QuickInsertDependencies) {
     active = run
     run.owner = deps.setPending(cancel)
     try {
+      try {
+        await deps.saveDraft?.()
+      } catch (error) {
+        deps.reportHistoryError?.(error)
+      }
+      if (active !== run) return
       await deps.insert(text)
       void saveOutput(text)
     } catch (error) {

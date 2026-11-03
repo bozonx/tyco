@@ -435,7 +435,7 @@
     "kindBeforeCorrection": "Vor der Korrektur",
     "kindBeforeTranslate": "Vor der Übersetzung",
     "kindCorrection": "Korrektur",
-    "kindDraft": "Entwurf",
+    "kindDraft": "Unfertige Eingabe",
     "kindOutput": "Gesendet",
     "kindSource": "Originaltext",
     "kindTranslate": "Übersetzung",
@@ -560,7 +560,6 @@
     "voiceToInput": "In die Eingabe einfügen",
     "willCopyOnFinish": "Wird nach Fertigstellung kopiert",
     "willInsertOnFinish": "Wird nach Fertigstellung eingefügt",
-    "skipProcessing": "Überspringen",
     "ruleNotFound": "Diese Regel existiert nicht mehr",
     "chatPrompts": "Chat-Prompt-Vorlagen"
   },

@@ -29,7 +29,7 @@ function setup(state: Partial<Record<string, unknown>> = {}) {
 
 describe('quick window session', () => {
   it('lets only the first step go on a focus loss', () => {
-    expect(setup().session.canDismissOnFocusLoss()).toBe(true)
+    expect(setup().session.canDismissOnFocusLoss()).toBe(false)
     expect(setup({ hasModal: true }).session.keepsOnFocusLoss()).toBe(true)
     expect(setup({ hasPendingModal: true }).session.keepsOnFocusLoss()).toBe(
       true

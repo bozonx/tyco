@@ -27,10 +27,12 @@ import { useEditorInputStore } from '../stores/editor-input'
 import { useExternalCommandsStore } from '../stores/external-commands'
 import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
+import { useHistoryStore } from '../stores/history'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { usePluginRuntimeStore } from '../stores/plugin-runtime'
 import { useQuickInputStore } from '../stores/quick-input'
+import { useQuickDismissStore } from '../stores/quick-dismiss'
 import { useSelectionReplaceStore } from '../stores/selection-replace'
 import { useSettingsSessionStore } from '../stores/settings-session'
 import { useThemeStore } from '../stores/theme'
@@ -64,10 +66,15 @@ export function useAppRuntime() {
   const editorNavigation = useEditorNavigation()
   const route = useRoute()
   const { toastKey } = useToast()
+  const historyStore = useHistoryStore()
   const settingsShutdown = createSettingsShutdown({
     flush: async () => {
       // every draft: the config and those kept apart, e.g. of an AI profile
-      return await useSettingsSessionStore().flushAll()
+      const results = await Promise.all([
+        useSettingsSessionStore().flushAll(),
+        historyStore.flushInputs(),
+      ])
+      return results.every(Boolean)
     },
     acknowledge: async (requestId, saved) => {
       const result = await desktopClient.invoke(
@@ -114,11 +121,14 @@ export function useAppRuntime() {
       ? DESKTOP_WINDOW_LABELS.QUICK
       : DESKTOP_WINDOW_LABELS.MAIN
   }
+  const quickDismiss = useQuickDismissStore()
   const mainWindowReset = createMainWindowReset({
+    hasActiveInput: () => quickDismiss.isHeld,
     closeAllModals: () => menuModalsStore.cancelAndCloseAll(),
     goToEditor: () => appNavigation.goToEditor(),
   })
   const bootstrap = createAppBootstrap({
+    hasActiveInput: () => quickDismiss.isHeld,
     loadDesktopState: () => desktopStore.loadDesktopState(),
     onError: (error) =>
       clientLogger.error('Could not refresh desktop state', error, 'bootstrap'),
