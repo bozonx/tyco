@@ -22,7 +22,7 @@ export interface SherpaOnnxSttSettings {
 }
 
 export interface GeminiLiveSttSettings {
-  /** The Gemini model, e.g. `gemini-2.0-flash` */
+  /** The Gemini model, e.g. `gemini-3.5-transcribe-live` */
   modelId: string
   /** System instruction prompt guiding speech recognition and text formatting */
   systemInstruction: string

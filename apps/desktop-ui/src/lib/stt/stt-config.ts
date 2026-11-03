@@ -27,7 +27,8 @@ export function activeSttModel(config: SttConfig): SttModel {
   if (config.provider === 'geminiLive')
     return {
       provider: 'geminiLive',
-      modelId: config.providers.geminiLive?.modelId || 'gemini-2.0-flash',
+      modelId:
+        config.providers.geminiLive?.modelId || 'gemini-3.5-transcribe-live',
       systemInstruction: config.providers.geminiLive?.systemInstruction,
     }
   return {

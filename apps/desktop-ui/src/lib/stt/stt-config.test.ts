@@ -23,7 +23,7 @@ describe('activeSttModel', () => {
     config.provider = 'geminiLive'
     expect(activeSttModel(config)).toEqual({
       provider: 'geminiLive',
-      modelId: 'gemini-2.0-flash',
+      modelId: 'gemini-3.5-transcribe-live',
       systemInstruction: config.providers.geminiLive.systemInstruction,
     })
   })

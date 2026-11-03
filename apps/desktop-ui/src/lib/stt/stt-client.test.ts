@@ -288,7 +288,7 @@ describe('createSttClient', () => {
 
     const geminiModel = {
       provider: 'geminiLive' as const,
-      modelId: 'gemini-2.0-flash',
+      modelId: 'gemini-3.5-transcribe-live',
       systemInstruction: 'Format as TypeScript',
     }
 

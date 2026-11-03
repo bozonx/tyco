@@ -33,7 +33,10 @@ describe('SettingsVoiceTab.vue', () => {
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: 'ws://localhost:6006' },
-          geminiLive: { modelId: 'gemini-2.0-flash', systemInstruction: '' },
+          geminiLive: {
+            modelId: 'gemini-3.5-transcribe-live',
+            systemInstruction: '',
+          },
         },
       },
       ...overrides,
@@ -192,7 +195,10 @@ describe('SettingsVoiceTab.vue', () => {
         providers: {
           deepgram: { modelId: 'nova-3', language: 'auto' },
           sherpaOnnx: { baseUrl: '' },
-          geminiLive: { modelId: 'gemini-2.0-flash', systemInstruction: '' },
+          geminiLive: {
+            modelId: 'gemini-3.5-transcribe-live',
+            systemInstruction: '',
+          },
         },
       },
     })

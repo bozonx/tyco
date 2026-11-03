@@ -9,6 +9,11 @@ import type {
 export const DEFAULT_GEMINI_LIVE_URL =
   'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent'
 
+export const DEFAULT_GEMINI_LIVE_MODEL = 'gemini-3.5-transcribe-live'
+
+export const DEFAULT_STT_FALLBACK_INSTRUCTION =
+  "You are an expert real-time speech-to-text dictation engine. Transcribe the user's speech accurately into written text.\n- Correct slip-ups, stutters, and filler words.\n- Intelligently format code, variable names, and CLI commands.\n- Transcribe technical and programming terms accurately in English.\n- Insert proper punctuation and natural capitalization.\n- Output ONLY the transcribed text without any conversational preamble or notes."
+
 export function uint8ArrayToBase64(bytes: Uint8Array): string {
   const nodeBuffer = (
     globalThis as unknown as {
@@ -81,30 +86,62 @@ export const createGeminiLiveProvider =
           headers: { 'x-goog-api-key': init.apiKey },
         })
 
-        const rawModelId = request.modelId.trim() || 'gemini-2.0-flash'
+        const rawModelId = request.modelId.trim() || DEFAULT_GEMINI_LIVE_MODEL
         const modelName = rawModelId.startsWith('models/')
           ? rawModelId
           : `models/${rawModelId}`
+
+        const language = request.options?.language?.trim()
+        const isAuto = !language || language === 'auto' || language === 'multi'
+
+        const transcriptionConfig: Record<string, unknown> = {
+          mode: 'smart',
+          ...(isAuto ? {} : { languageCodes: [language] }),
+        }
 
         const setupPayload: Record<string, unknown> = {
           setup: {
             model: modelName,
             generationConfig: { responseModalities: ['TEXT'] },
-            inputAudioTranscription: { mode: 'smart' },
+            inputAudioTranscription: transcriptionConfig,
           },
         }
 
-        if (systemInstruction?.trim()) {
+        const effectiveInstruction =
+          systemInstruction?.trim() ||
+          (rawModelId.includes('transcribe')
+            ? undefined
+            : DEFAULT_STT_FALLBACK_INSTRUCTION)
+
+        if (effectiveInstruction) {
           ;(setupPayload.setup as Record<string, unknown>).systemInstruction = {
-            parts: [{ text: systemInstruction.trim() }],
+            parts: [{ text: effectiveInstruction }],
           }
         }
 
         session.send(JSON.stringify(setupPayload))
 
-        // Pump microphone audio chunks into the socket in the background
+        let resolveSetup: () => void = () => {}
+        let rejectSetup: (error: unknown) => void = () => {}
+        const setupCompletePromise = new Promise<void>((resolve, reject) => {
+          resolveSetup = resolve
+          rejectSetup = reject
+        })
+
+        if (request.signal.aborted) {
+          rejectSetup(new Error('Aborted'))
+        } else {
+          request.signal.addEventListener(
+            'abort',
+            () => rejectSetup(new Error('Aborted')),
+            { once: true }
+          )
+        }
+
+        // Pump microphone audio chunks into the socket once setup completes
         void (async () => {
           try {
+            await setupCompletePromise
             for await (const chunk of request.audio) {
               if (request.signal.aborted) break
               const base64 = uint8ArrayToBase64(chunk.data)
@@ -140,15 +177,30 @@ export const createGeminiLiveProvider =
               for await (const raw of session.messages) {
                 const message = parseGeminiLiveMessage(raw)
                 if (message.error) {
-                  throw new AiError(
+                  const error = new AiError(
                     'provider_unavailable',
                     message.error.message ?? 'Gemini Live returned an error',
                     { provider: 'geminiLive' }
                   )
+                  rejectSetup(error)
+                  throw error
+                }
+
+                if (message.setupComplete) {
+                  resolveSetup()
+                  continue
                 }
 
                 const content = message.serverContent
                 if (!content) continue
+
+                // If server sends content without explicit setupComplete, release pump
+                resolveSetup()
+
+                if (content.interrupted) {
+                  accumulatedTurnText = ''
+                  continue
+                }
 
                 // 1. Transcription streams (dedicated speech models)
                 if (content.interimInputTranscription?.text) {
@@ -209,6 +261,7 @@ export const createGeminiLiveProvider =
                 }
               }
             } finally {
+              rejectSetup(new Error('Session closed'))
               session.close()
             }
           },

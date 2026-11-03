@@ -217,7 +217,7 @@
       "deepgram": { "modelId": "nova-3", "language": "auto" },
       "sherpaOnnx": { "baseUrl": "ws://localhost:6006" },
       "geminiLive": {
-        "modelId": "gemini-2.0-flash",
+        "modelId": "gemini-3.5-transcribe-live",
         "systemInstruction": "You are an expert real-time speech-to-text dictation engine. Transcribe the user's speech accurately into written text.\n- Correct slip-ups, stutters, and filler words.\n- Intelligently format code, variable names, and CLI commands.\n- Transcribe technical and programming terms accurately in English.\n- Insert proper punctuation and natural capitalization.\n- Output ONLY the transcribed text without any conversational preamble or notes."
       }
     }

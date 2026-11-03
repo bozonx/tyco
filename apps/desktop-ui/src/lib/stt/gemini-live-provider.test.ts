@@ -30,6 +30,7 @@ describe('gemini-live-provider', () => {
       openSocket: async () => ({
         messages: {
           async *[Symbol.asyncIterator]() {
+            yield JSON.stringify({ setupComplete: {} })
             yield JSON.stringify({
               serverContent: { modelTurn: { parts: [{ text: 'Hello' }] } },
             })
@@ -48,7 +49,7 @@ describe('gemini-live-provider', () => {
 
     const audioChunk = new Uint8Array([1, 2, 3, 4])
     const events = await provider.transcribeStream!({
-      modelId: 'gemini-2.0-flash',
+      modelId: 'gemini-3.5-transcribe-live',
       options: {},
       sampleRate: 16000,
       signal: new AbortController().signal,
@@ -69,7 +70,7 @@ describe('gemini-live-provider', () => {
     const setup = JSON.parse(sent[0])
     expect(setup).toEqual({
       setup: {
-        model: 'models/gemini-2.0-flash',
+        model: 'models/gemini-3.5-transcribe-live',
         generationConfig: { responseModalities: ['TEXT'] },
         inputAudioTranscription: { mode: 'smart' },
         systemInstruction: { parts: [{ text: 'Custom prompt rules' }] },
@@ -99,6 +100,93 @@ describe('gemini-live-provider', () => {
       },
     ])
     expect(close).toHaveBeenCalled()
+  })
+
+  it('passes language codes and uses default transcribe model', async () => {
+    const sent: string[] = []
+    const send = vi.fn((data: string) => sent.push(data))
+
+    const provider = createGeminiLiveProvider()({
+      apiKey: 'test-key',
+      openSocket: async () => ({
+        messages: {
+          async *[Symbol.asyncIterator]() {
+            yield JSON.stringify({ setupComplete: {} })
+          },
+        },
+        send,
+        close: vi.fn(),
+      }),
+    })
+
+    const events = await provider.transcribeStream!({
+      modelId: '',
+      options: { language: 'ru' },
+      sampleRate: 16000,
+      signal: new AbortController().signal,
+      audio: { async *[Symbol.asyncIterator]() {} },
+    })
+
+    for await (const _ of events) {
+      // consume
+    }
+
+    expect(sent.length).toBeGreaterThanOrEqual(1)
+    const setup = JSON.parse(sent[0])
+    expect(setup.setup.model).toBe('models/gemini-3.5-transcribe-live')
+    expect(setup.setup.inputAudioTranscription).toEqual({
+      mode: 'smart',
+      languageCodes: ['ru'],
+    })
+  })
+
+  it('resets accumulated turn text on interrupted', async () => {
+    const provider = createGeminiLiveProvider()({
+      apiKey: 'test-key',
+      openSocket: async () => ({
+        messages: {
+          async *[Symbol.asyncIterator]() {
+            yield JSON.stringify({ setupComplete: {} })
+            yield JSON.stringify({
+              serverContent: {
+                modelTurn: { parts: [{ text: 'Interrupted draft' }] },
+              },
+            })
+            yield JSON.stringify({ serverContent: { interrupted: true } })
+            yield JSON.stringify({
+              serverContent: {
+                modelTurn: { parts: [{ text: 'Fresh start' }] },
+                turnComplete: true,
+              },
+            })
+          },
+        },
+        send: vi.fn(),
+        close: vi.fn(),
+      }),
+    })
+
+    const events = await provider.transcribeStream!({
+      modelId: 'gemini-3.8-live',
+      options: {},
+      sampleRate: 16000,
+      signal: new AbortController().signal,
+      audio: { async *[Symbol.asyncIterator]() {} },
+    })
+
+    const collected: unknown[] = []
+    for await (const event of events) {
+      collected.push(event)
+    }
+
+    expect(collected).toEqual([
+      { type: 'partial', text: 'Interrupted draft', startMs: 0 },
+      { type: 'partial', text: 'Fresh start', startMs: 0 },
+      {
+        type: 'final',
+        segment: { startMs: 0, endMs: 1000, text: 'Fresh start' },
+      },
+    ])
   })
 
   it('yields inputTranscription as final and interimInputTranscription as partial', async () => {

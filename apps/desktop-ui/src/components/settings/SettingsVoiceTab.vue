@@ -56,9 +56,10 @@
       >
         <FieldInput
           :model-value="
-            userConfig.stt.providers.geminiLive?.modelId ?? 'gemini-2.0-flash'
+            userConfig.stt.providers.geminiLive?.modelId ??
+            'gemini-3.5-transcribe-live'
           "
-          placeholder="gemini-2.0-flash"
+          placeholder="gemini-3.5-transcribe-live"
           @update:model-value="setGeminiLiveModelName"
         />
       </FieldRow>
@@ -189,7 +190,7 @@ const setSttModelName = (value: string) => {
 const ensureGeminiLiveConfig = () => {
   if (!userConfig.value.stt.providers.geminiLive) {
     userConfig.value.stt.providers.geminiLive = {
-      modelId: 'gemini-2.0-flash',
+      modelId: 'gemini-3.5-transcribe-live',
       systemInstruction: '',
     }
   }
