@@ -1181,7 +1181,13 @@
     "chatPromptsTab": "聊天提示詞預設",
     "chatPromptsNavTab": "聊天提示詞",
     "chatPromptsHint": "發送到聊天的預設提示詞。在聊天提示詞選單中，每個提示詞都有對應的快捷鍵；拖曳卡片可變更對應按鍵。",
-    "prompt": "提示詞"
+    "prompt": "提示詞",
+    "sectionWebSearch": "代理網頁搜尋",
+    "webSearchSectionHint": "AI 模型與設定檔使用的網頁搜尋與頁面讀取工具設定。",
+    "webFetchMaxCharacters": "頁面大小限制",
+    "webFetchMaxCharactersHint": "從單一網頁擷取的最大字元數（1,000 至 100,000）。有助於節省上下文視窗。",
+    "webFetchMaxCharactersError": "請輸入 1,000 至 100,000 之間的數字",
+    "profileWebSearchLlmNotice": "API 金鑰和頁面大小限制在 LLM 設定中進行全域設定。"
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
   "theme": {

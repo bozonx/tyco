@@ -1187,7 +1187,13 @@
     "chatPromptsTab": "Unaprijed postavljeni upiti za chat",
     "chatPromptsNavTab": "Upiti za chat",
     "chatPromptsHint": "Unaprijed pripremljeni upiti za slanje u chat. U izborniku upita za chat svaki se pokreće vlastitom tipkom; povucite kartice da promijenite tipke.",
-    "prompt": "Upit"
+    "prompt": "Upit",
+    "sectionWebSearch": "Pretraživanje weba za agente",
+    "webSearchSectionHint": "Postavke za alate za pretraživanje weba i čitanje stranica koje koriste AI modeli i profili.",
+    "webFetchMaxCharacters": "Ograničenje veličine stranice",
+    "webFetchMaxCharactersHint": "Maksimalni broj znakova dohvaćenih s jedne web stranice (1.000 do 100.000). Štedi kontekstualni prozor.",
+    "webFetchMaxCharactersError": "Unesite broj od 1.000 do 100.000",
+    "profileWebSearchLlmNotice": "API ključ i ograničenja veličine stranice konfiguriraju se globalno u postavkama LLM-a."
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {

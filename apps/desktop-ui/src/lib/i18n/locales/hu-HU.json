@@ -1184,7 +1184,13 @@
     "chatPromptsTab": "Csevegési prompt-sablonok",
     "chatPromptsNavTab": "Csevegési promptek",
     "chatPromptsHint": "Előre összeállított promptek a csevegésbe küldéshez. A csevegési promptek menüjében mindegyik saját billentyűvel fut; a kártyák húzásával módosíthatja a billentyűket.",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "sectionWebSearch": "Webes keresés ágenseknek",
+    "webSearchSectionHint": "Az AI modellek és profilok által használt webes keresési és oldalolvasási eszközök beállításai.",
+    "webFetchMaxCharacters": "Oldalméret korlátja",
+    "webFetchMaxCharactersHint": "Egyetlen weboldalról beolvasott karakterek maximális száma (1 000 és 100 000 között). Kíméli a kontextusablakot.",
+    "webFetchMaxCharactersError": "Adjon meg egy számot 1 000 és 100 000 között",
+    "profileWebSearchLlmNotice": "Az API-kulcs és az oldalméret-korlátok globálisan, az LLM beállításaiban konfigurálhatók."
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {

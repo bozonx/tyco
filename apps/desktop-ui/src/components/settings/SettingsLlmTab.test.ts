@@ -375,7 +375,11 @@ describe('SettingsLlmTab.vue', () => {
       wrapper
         .findAll('.field-row-stub')
         .map((row) => row.attributes('data-label'))
-    ).toEqual(['settings.chatImageQuality'])
+    ).toEqual([
+      'settings.chatImageQuality',
+      'settings.webJinaApiKey',
+      'settings.webFetchMaxCharacters',
+    ])
 
     const modeControl = wrapper.findComponent({ name: 'SegmentedControl' })
     modeControl.vm.$emit('update:modelValue', 'perTask')
@@ -393,6 +397,8 @@ describe('SettingsLlmTab.vue', () => {
       'settings.transformationsTab',
       'settings.stylingTab',
       'settings.chatImageQuality',
+      'settings.webJinaApiKey',
+      'settings.webFetchMaxCharacters',
     ])
   })
 })

@@ -18,6 +18,7 @@ export interface WebToolsDependencies {
     profileId: string,
     request: AiWebToolRequest
   ) => Promise<AiWebToolOutput>
+  getMaxCharacters?: () => number | undefined
   warn?: (message: string) => void
 }
 
@@ -171,8 +172,14 @@ export function createWebToolProvider(
             const url = text(args.url).trim()
             if (!url) throw new Error('URL cannot be empty')
 
+            const maxCharacters = deps.getMaxCharacters?.()
+
             const response = await withAbort(
-              deps.run(profileId, { operation: 'fetch', url }),
+              deps.run(profileId, {
+                operation: 'fetch',
+                url,
+                ...(maxCharacters !== undefined ? { maxCharacters } : {}),
+              }),
               options.signal
             )
 

@@ -1187,7 +1187,13 @@
     "chatPromptsTab": "Ajustes predefinidos de prompts de chat",
     "chatPromptsNavTab": "Prompts de chat",
     "chatPromptsHint": "Prompts predefinidos para enviar al chat. En el menú de prompts de chat, cada uno se ejecuta con su propia tecla; arrastra las tarjetas para cambiar sus teclas.",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "sectionWebSearch": "Búsqueda web para agentes",
+    "webSearchSectionHint": "Configuración para la búsqueda web y lectura de páginas usadas por los modelos y perfiles de IA.",
+    "webFetchMaxCharacters": "Límite de tamaño de página",
+    "webFetchMaxCharactersHint": "Número máximo de caracteres extraídos de una sola página web (1.000 a 100.000). Ahorra ventana de contexto.",
+    "webFetchMaxCharactersError": "Introduce un número entre 1.000 y 100.000",
+    "profileWebSearchLlmNotice": "La clave de API y el límite de tamaño de página se configuran globalmente en los ajustes de LLM."
   },
   "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
   "theme": {

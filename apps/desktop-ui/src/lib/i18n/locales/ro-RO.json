@@ -1187,7 +1187,13 @@
     "chatPromptsTab": "Presetări prompturi chat",
     "chatPromptsNavTab": "Prompturi chat",
     "chatPromptsHint": "Prompturi prestabilite de trimis în chat. În meniul de prompturi chat, fiecare rulează cu propria tastă; trageți cardurile pentru a schimba tastele.",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "sectionWebSearch": "Căutare web pentru agenți",
+    "webSearchSectionHint": "Setări pentru instrumentele de căutare web și citire a paginilor utilizate de modelele și profilurile AI.",
+    "webFetchMaxCharacters": "Limită dimensiune pagină",
+    "webFetchMaxCharactersHint": "Numărul maxim de caractere preluate de pe o singură pagină web (1.000 până la 100.000). Economisește fereastra de context.",
+    "webFetchMaxCharactersError": "Introduceți un număr între 1.000 și 100.000",
+    "profileWebSearchLlmNotice": "Cheia API și limitele de dimensiune a paginii sunt configurate global în setările LLM."
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {

@@ -1184,7 +1184,13 @@
     "chatPromptsTab": "チャットプロンプトのプリセット",
     "chatPromptsNavTab": "チャットプロンプト",
     "chatPromptsHint": "チャットに送信するプリセットプロンプト。チャットプロンプトメニューでは各項目が固有のキーで実行されます。カードをドラッグしてキーを変更できます。",
-    "prompt": "プロンプト"
+    "prompt": "プロンプト",
+    "sectionWebSearch": "エージェント用ウェブ検索",
+    "webSearchSectionHint": "AIモデルやプロファイルが使用するウェブ検索およびページ読み取りツールの設定。",
+    "webFetchMaxCharacters": "ページサイズ制限",
+    "webFetchMaxCharactersHint": "1つのウェブページから取得する最大文字数（1,000〜100,000）。コンテキストウィンドウの節約に役立ちます。",
+    "webFetchMaxCharactersError": "1,000から100,000までの数値を入力してください",
+    "profileWebSearchLlmNotice": "APIキーとページサイズ制限は、LLM設定でグローバルに構成されます。"
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
   "theme": {

@@ -1187,7 +1187,13 @@
     "chatPromptsTab": "Zestawy promptów czatu",
     "chatPromptsNavTab": "Prompty czatu",
     "chatPromptsHint": "Wstępnie przygotowane prompty do wysłania na czat. W menu promptów czatu każdy uruchamia się własnym klawiszem; przeciągaj karty, aby zmienić klawisze.",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "sectionWebSearch": "Wyszukiwanie w sieci dla agentów",
+    "webSearchSectionHint": "Ustawienia wyszukiwania w sieci i czytania stron używanych przez modele i profile AI.",
+    "webFetchMaxCharacters": "Limit rozmiaru strony",
+    "webFetchMaxCharactersHint": "Maksymalna liczba znaków pobierana z pojedynczej strony internetowej (od 1 000 do 100 000). Oszczędza okno kontekstu.",
+    "webFetchMaxCharactersError": "Wpisz liczbę od 1 000 do 100 000",
+    "profileWebSearchLlmNotice": "Klucz API oraz limity rozmiaru stron są konfigurowane globalnie w ustawieniach LLM."
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {

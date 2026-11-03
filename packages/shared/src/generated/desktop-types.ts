@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: b02b5e46044d706af1e29dc1609a40a428f252d2ef5eb7db3941706af3b24f40
+// Source hash: dbd250a14d7d14aa8f665c65671d7a0e24f41ded18aa01e93335ad49a92e2a23
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -195,7 +195,7 @@ export type AiWebToolOutput =
 
 export type AiWebToolRequest =
   | { operation: 'search'; query: string; count?: number }
-  | { operation: 'fetch'; url: string }
+  | { operation: 'fetch'; url: string; maxCharacters?: number }
 
 export type Chat = {
   id: string

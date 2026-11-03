@@ -95,6 +95,7 @@ export interface DesktopChatToolsDependencies {
   canUseTools: () => boolean
   getMemoryMode?: () => ProfileMemoryMode | undefined
   getChatId?: () => string | null | undefined
+  getFetchMaxCharacters?: () => number | undefined
   warn: (message: string) => void
   extractDocumentText?: typeof readDocumentText
   isDebugEnabled?: () => boolean
@@ -161,6 +162,7 @@ export function createDesktopChatTools(deps: DesktopChatToolsDependencies) {
   const webToolProvider = createWebToolProvider({
     run: (profileId, request) =>
       deps.invoke('run_ai_web_tool', { profileId, request }),
+    getMaxCharacters: deps.getFetchMaxCharacters,
     warn: deps.warn,
   })
   const commandToolProvider =

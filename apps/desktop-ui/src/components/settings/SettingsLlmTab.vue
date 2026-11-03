@@ -80,6 +80,45 @@
       </FieldRow>
     </SettingsSection>
 
+    <SettingsSection
+      :title="t('settings.sectionWebSearch')"
+      :description="t('settings.webSearchSectionHint')"
+    >
+      <FieldRow
+        :label="t('settings.webJinaApiKey')"
+        :hint="t('settings.webJinaApiKeyHint')"
+        vertical
+      >
+        <SecretKeyField
+          :key="WEB_SECRET_IDS.jina"
+          v-model:model-value="jinaKeyDraft"
+          :has-key="hasJinaKey"
+          :save="saveJinaKey"
+          :remove="removeJinaKey"
+        />
+      </FieldRow>
+      <FieldRow
+        :label="t('settings.webFetchMaxCharacters')"
+        :hint="t('settings.webFetchMaxCharactersHint')"
+        :error="
+          webFetchMaxCharsError
+            ? t('settings.webFetchMaxCharactersError')
+            : undefined
+        "
+      >
+        <FieldNumber
+          min="1000"
+          max="100000"
+          step="1000"
+          :model-value="fetchMaxCharsText"
+          :placeholder="String(DEFAULT_WEB_FETCH_MAX_CHARACTERS)"
+          :aria-invalid="webFetchMaxCharsError || undefined"
+          @update:model-value="setFetchMaxChars"
+          @invalid-input="webFetchMaxCharsError = true"
+        />
+      </FieldRow>
+    </SettingsSection>
+
     <ConfirmModal
       :open="pendingProviderId !== null"
       :title="t('common.delete')"
@@ -104,21 +143,28 @@ import { createLlmConnectionChecker } from '../../lib/llm/llm-connection'
 import { createLlmSettingsModel } from '../../lib/llm/llm-settings-model'
 import { httpOrigin } from '../../lib/net/secrets'
 import { createTauriTransport, tauriNetIpc } from '../../lib/net/tauri-net'
+import { createSecretKeyEditor } from '../../lib/settings/secret-key-editor'
 import { providerBaseUrl } from '../../lib/variables/command-variables'
 import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import ConfirmModal from '../common/ConfirmModal.vue'
+import FieldNumber from '../common/FieldNumber.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import SegmentedControl from '../common/SegmentedControl.vue'
 import LlmConnectionCard from './LlmConnectionCard.vue'
+import SecretKeyField from './SecretKeyField.vue'
 import SecretStorageNotice from './SecretStorageNotice.vue'
 import SettingsSection from './SettingsSection.vue'
 import {
+  DEFAULT_WEB_FETCH_MAX_CHARACTERS,
   LLM_TASKS,
   type LlmImageQuality,
   type LlmModelMode,
   type LlmProvider,
+  MAX_WEB_FETCH_MAX_CHARACTERS,
+  MIN_WEB_FETCH_MAX_CHARACTERS,
+  WEB_SECRET_IDS,
   llmSecretId,
 } from '@tyco/shared'
 
@@ -295,6 +341,58 @@ function providerName(id: string) {
 function hasKey(providerId: string) {
   return Object.hasOwn(secretsStore.secrets, llmSecretId(providerId))
 }
+
+const jinaKeyDraft = ref('')
+const hasJinaKey = computed(() =>
+  Boolean(Object.hasOwn(secretsStore.secrets, WEB_SECRET_IDS.jina))
+)
+const jinaKeyEditor = createSecretKeyEditor({
+  getSecretId: () => WEB_SECRET_IDS.jina,
+  getDraft: () => jinaKeyDraft.value,
+  setDraft: (value) => {
+    jinaKeyDraft.value = value
+  },
+  setSecret: secretsStore.setSecret,
+  removeSecret: secretsStore.removeSecret,
+  reportError: (error) => toastError(error, 'settings.keySaveFailed'),
+})
+const saveJinaKey = () => jinaKeyEditor.save()
+const removeJinaKey = jinaKeyEditor.remove
+
+const webFetchMaxCharsError = ref(false)
+const fetchMaxCharsText = ref(
+  String(
+    userConfig.value.llm.webSearch?.fetchMaxCharacters ??
+      DEFAULT_WEB_FETCH_MAX_CHARACTERS
+  )
+)
+function setFetchMaxChars(text: string) {
+  fetchMaxCharsText.value = text
+  const trimmed = text.trim()
+  if (!trimmed) {
+    webFetchMaxCharsError.value = false
+    if (userConfig.value.llm.webSearch) {
+      delete userConfig.value.llm.webSearch.fetchMaxCharacters
+    }
+    return
+  }
+  const num = Number(trimmed)
+  if (
+    Number.isInteger(num) &&
+    num >= MIN_WEB_FETCH_MAX_CHARACTERS &&
+    num <= MAX_WEB_FETCH_MAX_CHARACTERS
+  ) {
+    webFetchMaxCharsError.value = false
+    if (!userConfig.value.llm.webSearch) {
+      userConfig.value.llm.webSearch = { fetchMaxCharacters: num }
+    } else {
+      userConfig.value.llm.webSearch.fetchMaxCharacters = num
+    }
+  } else {
+    webFetchMaxCharsError.value = true
+  }
+}
+
 onMounted(() => {
   secretsStore.refreshSecrets().catch((error: unknown) => {
     toastError(error, 'settings.keySaveFailed')

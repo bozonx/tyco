@@ -132,6 +132,43 @@ describe('web-tools', () => {
     expect(result).toContain('Page content here.')
   })
 
+  it('passes maxCharacters to web_fetch when configured', async () => {
+    const run = vi
+      .fn()
+      .mockResolvedValue({
+        operation: 'fetch',
+        url: 'https://example.com/page',
+        title: 'Page Title',
+        content: 'Truncated page content.',
+      } satisfies AiWebToolOutput)
+
+    const provider = createWebToolProvider({
+      run,
+      getMaxCharacters: () => 8000,
+    })
+    const tools = await provider.tools({
+      profileId: 'prof-1',
+      modelId: 'gemini',
+      settings: undefined,
+    })
+
+    const fetchTool = tools.find((t) => t.name === 'web_fetch')!
+    await fetchTool.execute(
+      { url: 'https://example.com/page' },
+      {
+        signal: new AbortController().signal,
+        toolCallId: 'call-2',
+        outputLimitCharacters: 5000,
+      }
+    )
+
+    expect(run).toHaveBeenCalledWith('prof-1', {
+      operation: 'fetch',
+      url: 'https://example.com/page',
+      maxCharacters: 8000,
+    })
+  })
+
   it('rejects empty query in web_search', async () => {
     const run = vi.fn()
     const provider = createWebToolProvider({ run })

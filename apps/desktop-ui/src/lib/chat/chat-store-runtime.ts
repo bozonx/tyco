@@ -154,6 +154,8 @@ export function createChatStoreRuntime(deps: ChatStoreRuntimeDependencies) {
     canUseTools: () => selectedModel.value?.canUseTools ?? false,
     getMemoryMode: () => profile.value?.memoryMode,
     getChatId: () => model.currentChatParams.value.id,
+    getFetchMaxCharacters: () =>
+      deps.getUserConfig()?.llm?.webSearch?.fetchMaxCharacters,
     warn,
     commands: () => deps.getUserConfig()?.commands ?? [],
     tools: deps.tools,

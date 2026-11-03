@@ -1187,7 +1187,13 @@
     "chatPromptsTab": "Chat-Prompt-Vorlagen",
     "chatPromptsNavTab": "Chat-Prompts",
     "chatPromptsHint": "Vorbereitete Prompts zum Senden an den Chat. Im Chat-Prompt-Menü wird jeder mit einer eigenen Taste ausgeführt; ziehen Sie die Karten, um ihre Tasten zu ändern.",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "sectionWebSearch": "Websuche für Agenten",
+    "webSearchSectionHint": "Einstellungen für Websuche und das Abrufen von Webseiten durch KI-Modelle und Profile.",
+    "webFetchMaxCharacters": "Seiteninhaltslimit",
+    "webFetchMaxCharactersHint": "Maximale Zeichenanzahl, die von einer einzelnen Webseite abgerufen wird (1.000 bis 100.000). Schont das Kontextfenster.",
+    "webFetchMaxCharactersError": "Geben Sie eine Zahl von 1.000 bis 100.000 ein",
+    "profileWebSearchLlmNotice": "API-Schlüssel und Seitenlimits werden global in den LLM-Einstellungen konfiguriert."
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {

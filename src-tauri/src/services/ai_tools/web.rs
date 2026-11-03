@@ -14,6 +14,11 @@ const MAX_SEARCH_COUNT: usize = 20;
 const MAX_QUERY_LEN: usize = 1000;
 const WEB_TIMEOUT: Duration = Duration::from_secs(30);
 
+pub const DEFAULT_FETCH_MAX_CHARS: usize = 15_000;
+pub const MAX_FETCH_CHARS: usize = 100_000;
+pub const MIN_FETCH_CHARS: usize = 1_000;
+const MAX_SEARCH_SNIPPET_LEN: usize = 1000;
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, ts_rs::TS)]
 #[serde(
     tag = "operation",
@@ -29,6 +34,9 @@ pub enum AiWebToolRequest {
     },
     Fetch {
         url: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        max_characters: Option<usize>,
     },
 }
 
@@ -116,6 +124,48 @@ pub fn ensure_web_enabled(profile: &AiProfile) -> Result<(), AppError> {
     }
 }
 
+fn format_jina_http_error(
+    service: &str,
+    status: reqwest::StatusCode,
+    body_text: &str,
+    secret_present: bool,
+) -> AppError {
+    let code = status.as_u16();
+    if code == 429 {
+        let hint = if secret_present {
+            "Please check your Jina AI plan or quota limits, or try again later."
+        } else {
+            "Rate limit exceeded on the shared free tier. Please add a Jina API key in LLM settings or try again later."
+        };
+        AppError::Failed(format!("{service} rate limit exceeded (HTTP 429). {hint}"))
+    } else if code == 401 || code == 403 {
+        AppError::Failed(format!(
+            "{service} authentication failed (HTTP {code}). Please check your Jina API key in LLM settings."
+        ))
+    } else if code == 404 {
+        AppError::Failed(format!("{service} resource not found (HTTP 404)."))
+    } else {
+        let trimmed = body_text.trim();
+        let is_html = trimmed.to_ascii_lowercase().starts_with("<!doctype")
+            || trimmed.to_ascii_lowercase().starts_with("<html");
+        if is_html || trimmed.is_empty() {
+            AppError::Failed(format!("{service} failed with HTTP {code}"))
+        } else {
+            let snippet: String = trimmed.chars().take(200).collect();
+            AppError::Failed(format!("{service} failed with HTTP {code}: {snippet}"))
+        }
+    }
+}
+
+pub(crate) fn truncate_with_note(content: &str, limit: usize) -> String {
+    let char_count = content.chars().count();
+    if char_count <= limit {
+        return content.to_string();
+    }
+    let truncated: String = content.chars().take(limit).collect();
+    format!("{truncated}\n\n[Content truncated: showing first {limit} of {char_count} characters]")
+}
+
 pub async fn run(
     secret: Option<&str>,
     request: AiWebToolRequest,
@@ -166,9 +216,12 @@ pub async fn run(
             })?;
 
             if !status.is_success() {
-                return Err(AppError::Failed(format!(
-                    "Jina search failed with HTTP {status}: {body_text}"
-                )));
+                return Err(format_jina_http_error(
+                    "Jina search",
+                    status,
+                    &body_text,
+                    secret.is_some(),
+                ));
             }
 
             if let Ok(envelope) = serde_json::from_str::<JinaSearchEnvelope>(&body_text) {
@@ -176,33 +229,39 @@ pub async fn run(
                     let results = items
                         .into_iter()
                         .take(count)
-                        .map(|item| WebSearchResultItem {
-                            title: item.title.unwrap_or_default(),
-                            url: item.url.unwrap_or_default(),
-                            description: item.description.unwrap_or_default(),
-                            content: None,
+                        .map(|item| {
+                            let description = item.description.unwrap_or_default();
+                            let truncated_desc = if description.chars().count() > MAX_SEARCH_SNIPPET_LEN {
+                                let t: String = description.chars().take(MAX_SEARCH_SNIPPET_LEN).collect();
+                                format!("{t}...")
+                            } else {
+                                description
+                            };
+                            WebSearchResultItem {
+                                title: item.title.unwrap_or_default(),
+                                url: item.url.unwrap_or_default(),
+                                description: truncated_desc,
+                                content: None,
+                            }
                         })
                         .collect();
                     return Ok(AiWebToolOutput::Search { results });
                 }
                 if let Some(msg) = envelope.message {
                     return Err(AppError::Failed(format!(
-                        "Jina search returned error: {msg}"
+                        "Jina search error: {msg}"
                     )));
                 }
             }
 
-            // Fallback if not standard JSON envelope: return plain markdown result as a single item
-            Ok(AiWebToolOutput::Search {
-                results: vec![WebSearchResultItem {
-                    title: format!("Search: {trimmed}"),
-                    url: target_url,
-                    description: trimmed.to_string(),
-                    content: None,
-                }],
-            })
+            Err(AppError::Failed(
+                "Failed to parse search response from Jina AI".into(),
+            ))
         }
-        AiWebToolRequest::Fetch { url } => {
+        AiWebToolRequest::Fetch {
+            url,
+            max_characters,
+        } => {
             let trimmed = url.trim();
             let parsed = url::Url::parse(trimmed)
                 .map_err(|e| AppError::InvalidInput(format!("Invalid URL: {e}")))?;
@@ -234,31 +293,50 @@ pub async fn run(
             })?;
 
             if !status.is_success() {
-                return Err(AppError::Failed(format!(
-                    "Jina reader failed with HTTP {status}: {body_text}"
-                )));
+                return Err(format_jina_http_error(
+                    "Jina reader",
+                    status,
+                    &body_text,
+                    secret.is_some(),
+                ));
             }
+
+            let limit = max_characters
+                .unwrap_or(DEFAULT_FETCH_MAX_CHARS)
+                .clamp(MIN_FETCH_CHARS, MAX_FETCH_CHARS);
 
             if let Ok(envelope) = serde_json::from_str::<JinaReaderEnvelope>(&body_text) {
                 if let Some(data) = envelope.data {
+                    let content = data.content.unwrap_or_default();
+                    let truncated_content = truncate_with_note(&content, limit);
                     return Ok(AiWebToolOutput::Fetch {
                         url: data.url.unwrap_or_else(|| trimmed.to_string()),
                         title: data.title,
-                        content: data.content.unwrap_or_default(),
+                        content: truncated_content,
                     });
                 }
                 if let Some(msg) = envelope.message {
                     return Err(AppError::Failed(format!(
-                        "Jina reader returned error: {msg}"
+                        "Jina reader error: {msg}"
                     )));
                 }
             }
 
-            // Fallback: return raw markdown body
+            // Fallback for direct markdown response: check if it looks like HTML error
+            let trimmed_body = body_text.trim();
+            let is_html = trimmed_body.to_ascii_lowercase().starts_with("<!doctype")
+                || trimmed_body.to_ascii_lowercase().starts_with("<html");
+            if is_html {
+                return Err(AppError::Failed(
+                    "Jina reader returned an unexpected HTML page instead of article content".into(),
+                ));
+            }
+
+            let truncated_content = truncate_with_note(trimmed_body, limit);
             Ok(AiWebToolOutput::Fetch {
                 url: trimmed.to_string(),
                 title: None,
-                content: body_text,
+                content: truncated_content,
             })
         }
     }
@@ -375,5 +453,51 @@ mod tests {
             data.content.as_deref(),
             Some("# Hello World\n\nThis is a test.")
         );
+    }
+
+    #[test]
+    fn test_truncate_with_note() {
+        let short = "Hello World";
+        assert_eq!(truncate_with_note(short, 20), "Hello World");
+
+        let long = "Привет, это длинный текст для проверки обрезки страниц.";
+        let truncated = truncate_with_note(long, 10);
+        assert!(truncated.starts_with("Привет, эт"));
+        assert!(truncated.contains("[Content truncated: showing first 10 of "));
+    }
+
+    #[test]
+    fn test_format_jina_http_error() {
+        let err_429_free = format_jina_http_error(
+            "Jina search",
+            reqwest::StatusCode::TOO_MANY_REQUESTS,
+            "rate limit",
+            false,
+        );
+        assert!(err_429_free.to_string().contains("shared free tier"));
+
+        let err_429_paid = format_jina_http_error(
+            "Jina search",
+            reqwest::StatusCode::TOO_MANY_REQUESTS,
+            "rate limit",
+            true,
+        );
+        assert!(err_429_paid.to_string().contains("quota limits"));
+
+        let err_401 = format_jina_http_error(
+            "Jina reader",
+            reqwest::StatusCode::UNAUTHORIZED,
+            "unauthorized",
+            true,
+        );
+        assert!(err_401.to_string().contains("authentication failed (HTTP 401)"));
+
+        let err_html = format_jina_http_error(
+            "Jina search",
+            reqwest::StatusCode::BAD_GATEWAY,
+            "<!DOCTYPE html><html><body>Error</body></html>",
+            false,
+        );
+        assert_eq!(err_html.to_string(), "Jina search failed with HTTP 502");
     }
 }

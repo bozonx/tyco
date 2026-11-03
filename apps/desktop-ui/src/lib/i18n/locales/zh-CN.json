@@ -1181,7 +1181,13 @@
     "chatPromptsTab": "聊天提示词预设",
     "chatPromptsNavTab": "聊天提示词",
     "chatPromptsHint": "发送到聊天的预设提示词。在聊天提示词菜单中，每个提示词都有对应的快捷键；拖动卡片可更改对应按键。",
-    "prompt": "提示词"
+    "prompt": "提示词",
+    "sectionWebSearch": "智能体网页搜索",
+    "webSearchSectionHint": "AI 模型和配置文件使用的网页搜索与页面读取工具的设置。",
+    "webFetchMaxCharacters": "页面大小限制",
+    "webFetchMaxCharactersHint": "从单个网页获取的最大字符数（1,000 到 100,000）。有助于节省上下文窗口。",
+    "webFetchMaxCharactersError": "请输入 1,000 到 100,000 之间的数字",
+    "profileWebSearchLlmNotice": "API 密钥和页面大小限制在 LLM 设置中进行全局配置。"
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {

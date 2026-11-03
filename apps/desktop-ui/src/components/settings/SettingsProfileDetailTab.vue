@@ -108,19 +108,13 @@
             icon="mdi:information-outline"
             :message="t('settings.profileFilesAskAll')"
           />
-          <div v-else-if="group.id === WEB_TOOL_GROUP_ID" class="pt-3">
-            <FieldRow
-              :label="t('settings.webJinaApiKey')"
-              :hint="t('settings.webJinaApiKeyHint')"
-            >
-              <SecretKeyField
-                :key="WEB_SECRET_IDS.jina"
-                v-model:model-value="jinaKeyDraft"
-                :has-key="hasJinaKey"
-                :save="saveJinaKey"
-                :remove="removeJinaKey"
-              />
-            </FieldRow>
+          <div v-else-if="group.id === WEB_TOOL_GROUP_ID" class="pt-2">
+            <InlineNotice
+              density="compact"
+              kind="info"
+              icon="mdi:information-outline"
+              :message="t('settings.profileWebSearchLlmNotice')"
+            />
           </div>
           <div v-else-if="group.id === COMMANDS_TOOL_GROUP_ID" class="pt-2">
             <SettingsProfileCommandTools
@@ -226,7 +220,6 @@ import {
   toolGroupSettings,
   withToolGroup,
 } from '../../lib/chat-tools/chat-tool-groups'
-import { createSecretKeyEditor } from '../../lib/settings/secret-key-editor'
 import {
   AI_OVERVIEW_TAB,
   NEW_ENTITY_ID,
@@ -234,7 +227,6 @@ import {
 } from '../../lib/settings/settings-navigation'
 import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
-import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldRow from '../common/FieldRow.vue'
@@ -242,7 +234,6 @@ import FieldTextArea from '../common/FieldTextArea.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import ModelNumberField from './ModelNumberField.vue'
-import SecretKeyField from './SecretKeyField.vue'
 import SettingsAdvancedFields from './SettingsAdvancedFields.vue'
 import SettingsAutosaveStatus from './SettingsAutosaveStatus.vue'
 import SettingsDetailHeader from './SettingsDetailHeader.vue'
@@ -252,7 +243,6 @@ import SettingsProfileProjectAccess from './SettingsProfileProjectAccess.vue'
 import SettingsProfileToolsSection from './SettingsProfileToolsSection.vue'
 import SettingsSection from './SettingsSection.vue'
 import VaultFolderField from './VaultFolderField.vue'
-import { WEB_SECRET_IDS } from '@tyco/shared'
 
 const props = defineProps<{ profileId: string }>()
 const { navigate } = useSettingsContext()
@@ -260,7 +250,6 @@ const { navigate } = useSettingsContext()
 const { t } = useI18n()
 const { toastError } = useToast()
 const aiProfilesStore = useAiProfilesStore()
-const secretsStore = useSecretsStore()
 const desktopStore = useDesktopStore()
 
 const commands = computed(() => desktopStore.userConfig?.commands ?? [])
@@ -279,23 +268,6 @@ function toggleProfileCommand(
     tools: withToolGroup(profile.value?.tools, group, { commandIds: next }),
   })
 }
-
-const jinaKeyDraft = ref('')
-const hasJinaKey = computed(() =>
-  Boolean(Object.hasOwn(secretsStore.secrets, WEB_SECRET_IDS.jina))
-)
-const jinaKeyEditor = createSecretKeyEditor({
-  getSecretId: () => WEB_SECRET_IDS.jina,
-  getDraft: () => jinaKeyDraft.value,
-  setDraft: (value) => {
-    jinaKeyDraft.value = value
-  },
-  setSecret: secretsStore.setSecret,
-  removeSecret: secretsStore.removeSecret,
-  reportError: (error) => toastError(error, 'settings.keySaveFailed'),
-})
-const saveJinaKey = () => jinaKeyEditor.save()
-const removeJinaKey = jinaKeyEditor.remove
 
 const isNew = computed(() => props.profileId === NEW_ENTITY_ID)
 const profile = computed(() => aiProfilesStore.getProfile(props.profileId))

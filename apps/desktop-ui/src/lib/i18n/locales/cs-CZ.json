@@ -1181,7 +1181,13 @@
     "chatPromptsTab": "Předvolby promptů chatu",
     "chatPromptsNavTab": "Prompty chatu",
     "chatPromptsHint": "Předem připravené prompty pro odeslání do chatu. V nabídce promptů chatu se každý spouští vlastní klávesou; přetažením karet změníte jejich klávesy.",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "sectionWebSearch": "Vyhledávání na webu pro agenty",
+    "webSearchSectionHint": "Nastavení nástrojů pro vyhledávání na webu a čtení stránek používaných modely a profily AI.",
+    "webFetchMaxCharacters": "Limit velikosti stránky",
+    "webFetchMaxCharactersHint": "Maximální počet znaků načtených z jedné webové stránky (1 000 až 100 000). Pomáhá šetřit kontextové okno.",
+    "webFetchMaxCharactersError": "Zadejte číslo od 1 000 do 100 000",
+    "profileWebSearchLlmNotice": "Klíč API a limity velikosti stránek se konfigurují globálně v nastavení LLM."
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {

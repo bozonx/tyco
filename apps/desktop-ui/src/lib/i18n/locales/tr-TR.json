@@ -1184,7 +1184,13 @@
     "chatPromptsTab": "Sohbet istemi önayarları",
     "chatPromptsNavTab": "Sohbet istemleri",
     "chatPromptsHint": "Sohbete gönderilecek hazır istemler. Sohbet istemleri menüsünde her biri kendi tuşuyla çalışır; tuşlarını değiştirmek için kartları sürükleyin.",
-    "prompt": "İstem"
+    "prompt": "İstem",
+    "sectionWebSearch": "Ajanlar için web araması",
+    "webSearchSectionHint": "Yapay zeka modelleri ve profilleri tarafından kullanılan web araması ve sayfa okuma araçları için ayarlar.",
+    "webFetchMaxCharacters": "Sayfa boyutu sınırı",
+    "webFetchMaxCharactersHint": "Tek bir web sayfasından alınacak maksimum karakter sayısı (1.000 - 100.000). Bağlam penceresinden tasarruf sağlar.",
+    "webFetchMaxCharactersError": "1.000 ile 100.000 arasında bir sayı girin",
+    "profileWebSearchLlmNotice": "API anahtarı ve sayfa boyutu sınırları, LLM ayarlarında genel olarak yapılandırılır."
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
   "theme": {

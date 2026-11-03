@@ -95,6 +95,18 @@ export type LlmImageQuality = 'economy' | 'balanced' | 'original'
 
 export type LlmModelMode = 'all' | 'perTask'
 
+export const DEFAULT_WEB_FETCH_MAX_CHARACTERS = 15_000
+export const MIN_WEB_FETCH_MAX_CHARACTERS = 1_000
+export const MAX_WEB_FETCH_MAX_CHARACTERS = 100_000
+
+export interface WebSearchConfig {
+  /**
+   * Maximum number of characters fetched from a single web page (1,000 to
+   * 100,000)
+   */
+  fetchMaxCharacters?: number
+}
+
 export interface LlmConfig {
   providers: LlmProvider[]
   models: LlmModel[]
@@ -104,6 +116,8 @@ export interface LlmConfig {
   tasks: LlmTasksConfig
   /** Applies to every chat, the profile chats included */
   imageQuality: LlmImageQuality
+  /** Web search and page fetch settings for AI agents */
+  webSearch?: WebSearchConfig
 }
 
 export const DEFAULT_LLM_CONFIG = configDefaults.llm as LlmConfig

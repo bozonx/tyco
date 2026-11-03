@@ -1187,7 +1187,13 @@
     "chatPromptsTab": "Chat prompt presets",
     "chatPromptsNavTab": "Chat prompts",
     "chatPromptsHint": "Preset prompts to send to chat. In the chat prompts menu each one runs with its own key; drag the cards to change their keys.",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "sectionWebSearch": "Web search for agents",
+    "webSearchSectionHint": "Settings for web search and page reading tools used by AI models and profiles.",
+    "webFetchMaxCharacters": "Page size limit",
+    "webFetchMaxCharactersHint": "Maximum number of characters fetched from a single web page (1,000 to 100,000). Helps save context window.",
+    "webFetchMaxCharactersError": "Enter a number from 1,000 to 100,000",
+    "profileWebSearchLlmNotice": "API key and page size limits are configured globally in LLM settings."
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {

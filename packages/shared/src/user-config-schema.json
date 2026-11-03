@@ -719,6 +719,16 @@
         "imageQuality": {
           "enum": ["economy", "balanced", "original"],
           "default": "balanced"
+        },
+        "webSearch": {
+          "type": "object",
+          "properties": {
+            "fetchMaxCharacters": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 100000
+            }
+          }
         }
       },
       "required": ["providers", "models", "tasks", "imageQuality"],
