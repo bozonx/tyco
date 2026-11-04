@@ -78,6 +78,7 @@ function fixture(overrides: Partial<AppWindowControllerDependencies> = {}) {
     goToChat: vi.fn(async () => {}),
     startChat: vi.fn(async () => {}),
     openLastChat: vi.fn(async () => {}),
+    openChat: vi.fn(async () => {}),
     afterRender: vi.fn(async () => {}),
     setChatInput: vi.fn(),
     sendChatInput: vi.fn(async () => {}),
@@ -120,6 +121,7 @@ describe('application window events', () => {
     const profileChatInstance = {
       startChat: vi.fn(async () => {}),
       openLastChat: vi.fn(async () => {}),
+      openChat: vi.fn(async () => {}),
       setChatInput: vi.fn(),
       sendChatInput: vi.fn(async () => {}),
       focusChatInput: vi.fn(),
@@ -143,6 +145,19 @@ describe('application window events', () => {
       'Question for assistant'
     )
     expect(profileChatInstance.sendChatInput).toHaveBeenCalledOnce()
+    f.controller.stop()
+  })
+
+  it('opens an existing chat by chatId when present', async () => {
+    const f = fixture()
+    await f.controller.start()
+    await f.deliver(DESKTOP_EVENTS.OPEN_MAIN_CHAT, {
+      chatId: 'existing-chat-99',
+      autoSend: false,
+    })
+    expect(f.deps.openChat).toHaveBeenCalledWith('existing-chat-99')
+    expect(f.deps.startChat).not.toHaveBeenCalled()
+    expect(f.deps.openLastChat).not.toHaveBeenCalled()
     f.controller.stop()
   })
 

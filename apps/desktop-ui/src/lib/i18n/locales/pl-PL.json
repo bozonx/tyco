@@ -4,21 +4,23 @@
     "copy": "Kopiuj",
     "copyToClipboard": "Kopiuj i zamknij",
     "correction": "Korekta",
-    "customTransformation": "Swobodna transformacja",
     "insertIntoWindow": "Wstaw do okna",
     "script": "Skrypt / Polecenie",
     "stylingMenu": "Stylizacja tekstu",
     "transformationMenu": "Transformacja tekstu",
     "translationMenu": "Tłumaczenie",
-    "voiceTransformation": "Transformacja głosowa",
     "webhook": "Webhook",
     "chatPromptsMenu": "Zestawy promptów czatu",
     "voiceCommands": "Polecenia głosowe",
     "snippetsMenu": "Wstawki tekstu",
     "saveAsSnippet": "Zapisz jako wstawkę",
-    "savedAsSnippet": "Zapisano jako wstawkę"
+    "savedAsSnippet": "Zapisano jako wstawkę",
+    "quickAiRequest": "Szybkie zapytanie do SI",
+    "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dołącz plik",
     "alertCaution": "Ostrożnie",
@@ -178,6 +180,9 @@
       "needsDescription": "Wymaga opisu w ustawieniach polecenia",
       "noCommands": "Nie skonfigurowano jeszcze poleceń użytkownika.",
       "noCommandsHint": "Najpierw utwórz polecenia w Ustawienia → Polecenia."
+    },
+    "replyBlocks": {
+      "toolLabel": "Warianty odpowiedzi"
     }
   },
   "commands": {
@@ -776,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Użyj zaznaczonego tekstu jako kontekstu w czacie AI",
       "correction": "Korekta z podglądem",
-      "customTransformation": "Swobodna transformacja tekstu",
       "editor": "Otwórz zaznaczony tekst w edytorze",
       "history": "Historia",
       "quickInput": "Szybkie wprowadzanie tekstu",
@@ -788,13 +792,14 @@
       "voice": "Wprowadzanie głosowe",
       "voiceChat": "Pytanie głosowe o zaznaczony tekst w czacie AI",
       "voiceCommands": "Polecenia głosowe",
-      "voiceTransformation": "Głosowa transformacja tekstu",
       "selectionActionsPage2": "Działania: strona 2",
       "selectionActionsPage3": "Działania: strona 3",
       "chatPrompts": "Zestawy promptów czatu dla zaznaczonego tekstu",
       "selectionActionsPage4": "Działania: strona 4",
       "selectionActionsPage5": "Działania: strona 5",
-      "snippets": "Wstawki tekstu"
+      "snippets": "Wstawki tekstu",
+      "quickAiRequest": "Szybkie zapytanie do SI",
+      "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",
@@ -1217,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Szukaj wstawek…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
+  "shortcuts": {
+    "insertIntoEditor": "Wstaw do edytora"
+  },
   "theme": {
     "auto": "Jak w systemie",
     "dark": "Ciemny",
@@ -1356,7 +1363,9 @@
     "missingSelection": "Wymagany jest zaznaczony tekst."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zapytaj na czacie" },
+    "actions": {
+      "askInChat": "zapytaj na czacie"
+    },
     "languages": {
       "cs-CZ": "Czeski",
       "de-DE": "niemiecki",
@@ -1386,7 +1395,9 @@
     },
     "translate": "przetłumacz na"
   },
-  "window": { "clickToFocus": "Kliknij, aby kontynuować" },
+  "window": {
+    "clickToFocus": "Kliknij, aby kontynuować"
+  },
   "write": {
     "alreadyCorrected": "Tekst jest już poprawiony",
     "cancel": "Anuluj",
@@ -1436,5 +1447,18 @@
     "valueNotSet": "Nieustawiona na tym urządzeniu: polecenia, które jej używają, nie działają",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "snippets": { "noMatches": "Brak pasujących wstawek" }
+  "snippets": {
+    "noMatches": "Brak pasujących wstawek"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Wstaw do okna",
+    "insertIntoEditor": "Do edytora",
+    "showDiff": "Pokaż zmiany",
+    "hideDiff": "Ukryj zmiany"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Wybierz profil",
+    "profileLocked": "Profil zablokowany podczas sesji",
+    "defaultProfile": "Pytanie do AI"
+  }
 }

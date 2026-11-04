@@ -9,8 +9,7 @@ import type { TranslationMeta } from '../translation/translation-meta'
 export enum MenuModals {
   INSERT = 'insert',
   TRANSFORMATION = 'transformation',
-  CUSTOM_TRANSFORMATION = 'custom-transformation',
-  VOICE_TRANSFORMATION = 'voice-transformation',
+  QUICK_AI_REQUEST = 'quick-ai-request',
   VOICE_COMMANDS = 'voice-commands',
   STYLING = 'styling',
   CHAT_PROMPTS = 'chat-prompts',
@@ -45,13 +44,11 @@ export interface TransformationMenuParams {
   /** Runs this transformation immediately when the dialog opens. */
   transformationId?: string
 }
-export interface CustomTransformationMenuParams {
+export interface QuickAiRequestMenuParams {
   text?: string
   shortcutsDisabled?: boolean
-}
-export interface VoiceTransformationMenuParams {
-  text?: string
-  shortcutsDisabled?: boolean
+  inputMode?: 'text' | 'voice'
+  profileId?: string | null
 }
 export interface VoiceCommandsMenuParams {
   text?: string
@@ -139,8 +136,7 @@ export interface PendingModalParams {
 interface MenuModalParams {
   [MenuModals.INSERT]: InsertMenuParams
   [MenuModals.TRANSFORMATION]: TransformationMenuParams
-  [MenuModals.CUSTOM_TRANSFORMATION]: CustomTransformationMenuParams
-  [MenuModals.VOICE_TRANSFORMATION]: VoiceTransformationMenuParams
+  [MenuModals.QUICK_AI_REQUEST]: QuickAiRequestMenuParams
   [MenuModals.VOICE_COMMANDS]: VoiceCommandsMenuParams
   [MenuModals.STYLING]: StylingMenuParams
   [MenuModals.CHAT_PROMPTS]: ChatPromptsMenuParams

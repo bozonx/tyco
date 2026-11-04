@@ -300,6 +300,14 @@ fn save_editor_history_entry(
     if let Some(instruction) = &mut entry.instruction {
         instruction.text = policy.redact(instruction.text.clone());
     }
+    if let Some(turns) = &mut entry.turns {
+        for turn in turns {
+            turn.prompt = policy.redact(turn.prompt.clone());
+            if let Some(result) = &mut turn.result {
+                *result = policy.redact(result.clone());
+            }
+        }
+    }
 
     let before = history.load()?;
     let mut items = before.clone();
@@ -331,6 +339,8 @@ fn save_editor_history_entry(
         operation: entry.operation,
         origin: entry.origin,
         instruction: entry.instruction,
+        profile_id: entry.profile_id,
+        turns: entry.turns,
         created_at_ms,
         result: None,
         is_result_applied: false,
@@ -365,6 +375,38 @@ pub fn set_editor_history_result(
 
     if !apply_editor_history_result(&mut items, &id, result) {
         return Ok(());
+    }
+
+    history.save(&before, items)
+}
+
+/// Updates the turns and final result of an active multi-turn AI session entry.
+pub fn update_editor_history_session(
+    app: &AppHandle,
+    user_config: &Value,
+    memory: &mut Vec<EditorHistoryItem>,
+    id: String,
+    turns: Vec<crate::models::EditorHistoryTurn>,
+    result: Option<String>,
+) -> Result<(), AppError> {
+    let mut history =
+        EditorHistorySession::open(HistoryLocation::of_app(app)?, user_config, memory)?;
+    let before = history.load()?;
+    let mut items = before.clone();
+    let Some(item) = items.iter_mut().find(|item| item.id == id) else {
+        return Ok(());
+    };
+
+    let mut redacted_turns = turns;
+    for turn in &mut redacted_turns {
+        turn.prompt = history.policy.redact(turn.prompt.clone());
+        if let Some(res) = &mut turn.result {
+            *res = history.policy.redact(res.clone());
+        }
+    }
+    item.turns = Some(redacted_turns);
+    if let Some(res) = result {
+        item.result = (!res.trim().is_empty()).then_some(history.policy.redact(res));
     }
 
     history.save(&before, items)

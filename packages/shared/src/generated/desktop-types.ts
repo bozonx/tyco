@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 36eec0dd4153495486cf48f7f940c9c358110293afeacf7b2d72913201d2e06c
+// Source hash: dd4d85fe06c569538e02217d182a1af827ff73b2f660532a1510ed4a76d29094
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -33,8 +33,8 @@ export type ActivationMode =
   | 'translation'
   | 'styling'
   | 'transformation'
-  | 'customTransformation'
-  | 'voiceTransformation'
+  | 'quickAiRequest'
+  | 'voiceQuickAiRequest'
   | 'chatPrompts'
   | 'snippets'
   | 'history'
@@ -387,6 +387,8 @@ export type EditorHistoryEntry = {
   operation?: EditorHistoryOperation | null
   origin?: EditorHistoryOrigin | null
   instruction?: EditorHistoryInstruction | null
+  profileId?: string | null
+  turns?: Array<EditorHistoryTurn> | null
 }
 
 /** The input modality of an AI prompt. */
@@ -407,6 +409,10 @@ export type EditorHistoryItem = {
   origin?: EditorHistoryOrigin
   /** The prompt or instruction of a transformation. */
   instruction?: EditorHistoryInstruction
+  /** Profile this operation ran under, if any. */
+  profileId?: string
+  /** All turns of a multi-turn session. */
+  turns?: Array<EditorHistoryTurn>
   /** Unix time in milliseconds. */
   createdAt: number
   /** What the AI turned a `Source` entry into. */
@@ -420,10 +426,17 @@ export type EditorHistoryKind = 'output' | 'draft' | 'source'
 
 /** The AI transformation a `Source` entry was taken before. */
 export type EditorHistoryOperation =
-  'aiTask' | 'translation' | 'correction' | 'voiceCorrection'
+  'aiTask' | 'translation' | 'correction' | 'voiceCorrection' | 'quickAiRequest'
 
 /** Where the user typed or dictated the text. */
 export type EditorHistoryOrigin = 'quickInput' | 'voice'
+
+/** One turn of a multi-turn quick AI request session. */
+export type EditorHistoryTurn = {
+  prompt: string
+  result?: string
+  inputKind: EditorHistoryInputKind
+}
 
 /** A text handed over to the editor of the main window. */
 export type EditorTransfer = {
@@ -544,6 +557,7 @@ export type OpenMainChatEvent = {
   question?: string | null
   autoSend: boolean
   profileId?: string
+  chatId?: string
 }
 
 /** What a picked package would install, for the user to confirm. */

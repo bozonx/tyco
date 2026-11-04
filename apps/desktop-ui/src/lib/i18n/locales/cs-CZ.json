@@ -4,21 +4,23 @@
     "copy": "Kopírovat",
     "copyToClipboard": "Kopírovat a zavřít",
     "correction": "Oprava",
-    "customTransformation": "Volná transformace",
     "insertIntoWindow": "Vložit do okna",
     "script": "Skript / Příkaz",
     "stylingMenu": "Stylizace textu",
     "transformationMenu": "Transformace textu",
     "translationMenu": "Překlad",
-    "voiceTransformation": "Hlasová transformace",
     "webhook": "Webhook",
     "chatPromptsMenu": "Předvolby promptů chatu",
     "voiceCommands": "Hlasové příkazy",
     "snippetsMenu": "Úryvky",
     "saveAsSnippet": "Uložit jako úryvek",
-    "savedAsSnippet": "Uloženo jako úryvek"
+    "savedAsSnippet": "Uloženo jako úryvek",
+    "quickAiRequest": "Rychlý dotaz na AI",
+    "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Přiložit soubor",
     "alertCaution": "Pozor",
@@ -178,6 +180,9 @@
       "needsDescription": "Vyžaduje popis v nastavení příkazu",
       "noCommands": "Zatím nejsou nakonfigurovány žádné uživatelské příkazy.",
       "noCommandsHint": "Nejprve vytvořte příkazy v Nastavení → Příkazy."
+    },
+    "replyBlocks": {
+      "toolLabel": "Varianty odpovědí"
     }
   },
   "commands": {
@@ -591,7 +596,10 @@
     "cancelled": "Zrušeno",
     "done": "Hotovo",
     "emptyResult": "Model vrátil prázdný výsledek",
-    "failed": { "command": "Příkaz selhal", "correction": "Oprava selhala" },
+    "failed": {
+      "command": "Příkaz selhal",
+      "correction": "Oprava selhala"
+    },
     "focusChanged": "Mezitím se změnilo okno, proto byl výsledek zkopírován do schránky",
     "noSelection": "Nic není vybráno",
     "noTarget": "Žádné okno aplikace nemá fokus",
@@ -602,7 +610,10 @@
       "command": "Příkaz ponechal text beze změny",
       "correction": "Nenalezeny žádné chyby"
     },
-    "working": { "command": "Spouští se příkaz…", "correction": "Opravuje se…" }
+    "working": {
+      "command": "Spouští se příkaz…",
+      "correction": "Opravuje se…"
+    }
   },
   "settings": {
     "accessAllow": "Povolit",
@@ -770,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Použít vybraný text jako kontext v chatu AI",
       "correction": "Oprava s náhledem",
-      "customTransformation": "Volná transformace textu",
       "editor": "Otevřít vybraný text v editoru",
       "history": "Historie",
       "quickInput": "Rychlé zadání textu",
@@ -782,13 +792,14 @@
       "voice": "Hlasové zadávání",
       "voiceChat": "Hlasová otázka k vybranému textu v chatu AI",
       "voiceCommands": "Hlasové příkazy",
-      "voiceTransformation": "Hlasová transformace textu",
       "selectionActionsPage2": "Akce: stránka 2",
       "selectionActionsPage3": "Akce: stránka 3",
       "chatPrompts": "Předvolby promptů chatu pro vybraný text",
       "selectionActionsPage4": "Akce: stránka 4",
       "selectionActionsPage5": "Akce: stránka 5",
-      "snippets": "Úryvky"
+      "snippets": "Úryvky",
+      "quickAiRequest": "Rychlý dotaz na AI",
+      "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pro zrušení",
@@ -1211,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Hledat úryvky…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
+  "shortcuts": {
+    "insertIntoEditor": "Vložit do editoru"
+  },
   "theme": {
     "auto": "Podle systému",
     "dark": "Tmavý",
@@ -1350,7 +1363,9 @@
     "missingSelection": "Je vyžadován výběr textu."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "zeptej se v chatu" },
+    "actions": {
+      "askInChat": "zeptej se v chatu"
+    },
     "languages": {
       "cs-CZ": "Czech",
       "de-DE": "němčiny",
@@ -1380,7 +1395,9 @@
     },
     "translate": "přelož do"
   },
-  "window": { "clickToFocus": "Klikněte pro pokračování" },
+  "window": {
+    "clickToFocus": "Klikněte pro pokračování"
+  },
   "write": {
     "alreadyCorrected": "Text je již opraven",
     "cancel": "Zrušit",
@@ -1430,5 +1447,18 @@
     "valueNotSet": "Na tomto zařízení není nastavena: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "snippets": { "noMatches": "Žádné odpovídající úryvky" }
+  "snippets": {
+    "noMatches": "Žádné odpovídající úryvky"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Vložit do okna",
+    "insertIntoEditor": "Do editoru",
+    "showDiff": "Zobrazit změny",
+    "hideDiff": "Skrýt změny"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Vybrat profil",
+    "profileLocked": "Profil je během relace uzamčen",
+    "defaultProfile": "Dotaz na AI"
+  }
 }

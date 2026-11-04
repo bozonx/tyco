@@ -4,21 +4,23 @@
     "copy": "Αντιγραφή",
     "copyToClipboard": "Αντιγραφή και κλείσιμο",
     "correction": "Διόρθωση",
-    "customTransformation": "Ελεύθερος μετασχηματισμός",
     "insertIntoWindow": "Εισαγωγή στο παράθυρο",
     "script": "Σενάριο / Εντολή",
     "stylingMenu": "Διαμόρφωση στυλ κειμένου",
     "transformationMenu": "Μετασχηματισμός κειμένου",
     "translationMenu": "Μετάφραση",
-    "voiceTransformation": "Φωνητικός μετασχηματισμός",
     "webhook": "Webhook",
     "chatPromptsMenu": "Προεπιλογές προτροπών συνομιλίας",
     "voiceCommands": "Φωνητικές εντολές",
     "snippetsMenu": "Αποσπάσματα",
     "saveAsSnippet": "Αποθήκευση ως απόσπασμα",
-    "savedAsSnippet": "Αποθηκεύτηκε στα αποσπάσματα"
+    "savedAsSnippet": "Αποθηκεύτηκε στα αποσπάσματα",
+    "quickAiRequest": "Γρήγορο αίτημα AI",
+    "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Επισύναψη αρχείου",
     "alertCaution": "Προσοχή",
@@ -178,6 +180,9 @@
       "needsDescription": "Απαιτείται περιγραφή στις ρυθμίσεις εντολής",
       "noCommands": "Δεν έχουν ρυθμιστεί ακόμη προσαρμοσμένες εντολές.",
       "noCommandsHint": "Δημιουργήστε πρώτα εντολές στις Ρυθμίσεις → Εντολές."
+    },
+    "replyBlocks": {
+      "toolLabel": "Μπλοκ απαντήσεων"
     }
   },
   "commands": {
@@ -605,7 +610,10 @@
       "command": "Η εντολή άφησε το κείμενο αμετάβλητο",
       "correction": "Δεν βρέθηκαν λάθη"
     },
-    "working": { "command": "Εκτέλεση εντολής…", "correction": "Διόρθωση…" }
+    "working": {
+      "command": "Εκτέλεση εντολής…",
+      "correction": "Διόρθωση…"
+    }
   },
   "settings": {
     "accessAllow": "Να επιτρέπεται",
@@ -773,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Χρήση του επιλεγμένου κειμένου ως πλαισίου στη συνομιλία ΤΝ",
       "correction": "Διόρθωση με προεπισκόπηση",
-      "customTransformation": "Ελεύθερος μετασχηματισμός κειμένου",
       "editor": "Άνοιγμα του επιλεγμένου κειμένου στον επεξεργαστή",
       "history": "Ιστορικό",
       "quickInput": "Γρήγορη εισαγωγή κειμένου",
@@ -785,13 +792,14 @@
       "voice": "Φωνητική εισαγωγή",
       "voiceChat": "Φωνητική ερώτηση για το επιλεγμένο κείμενο στη συνομιλία ΤΝ",
       "voiceCommands": "Φωνητικές εντολές",
-      "voiceTransformation": "Φωνητικός μετασχηματισμός κειμένου",
       "selectionActionsPage2": "Ενέργειες: σελίδα 2",
       "selectionActionsPage3": "Ενέργειες: σελίδα 3",
       "chatPrompts": "Προεπιλογές προτροπών συνομιλίας για επιλεγμένο κείμενο",
       "selectionActionsPage4": "Ενέργειες: σελίδα 4",
       "selectionActionsPage5": "Ενέργειες: σελίδα 5",
-      "snippets": "Αποσπάσματα"
+      "snippets": "Αποσπάσματα",
+      "quickAiRequest": "Γρήγορο αίτημα AI",
+      "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI"
     },
     "hotkeyInput": {
       "cancelHint": "Esc για ακύρωση",
@@ -1214,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Αναζήτηση αποσπασμάτων…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
+  "shortcuts": {
+    "insertIntoEditor": "Εισαγωγή στον επεξεργαστή"
+  },
   "theme": {
     "auto": "Όπως στο σύστημα",
     "dark": "Σκούρο",
@@ -1353,7 +1363,9 @@
     "missingSelection": "Απαιτείται επιλεγμένο κείμενο."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "ρώτα στη συνομιλία" },
+    "actions": {
+      "askInChat": "ρώτα στη συνομιλία"
+    },
     "languages": {
       "cs-CZ": "Τσεχικά",
       "de-DE": "γερμανικά",
@@ -1383,7 +1395,9 @@
     },
     "translate": "μετάφρασε στα"
   },
-  "window": { "clickToFocus": "Κάντε κλικ για να συνεχίσετε" },
+  "window": {
+    "clickToFocus": "Κάντε κλικ για να συνεχίσετε"
+  },
   "write": {
     "alreadyCorrected": "Το κείμενο είναι ήδη διορθωμένο",
     "cancel": "Ακύρωση",
@@ -1433,5 +1447,18 @@
     "valueNotSet": "Δεν έχει οριστεί σε αυτή τη συσκευή: οι εντολές που τη χρησιμοποιούν δεν εκτελούνται",
     "valuePlaceholder": "Μια διαδρομή, μια διεύθυνση ή άλλο κείμενο"
   },
-  "snippets": { "noMatches": "Δεν βρέθηκαν αποσπάσματα" }
+  "snippets": {
+    "noMatches": "Δεν βρέθηκαν αποσπάσματα"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Εισαγωγή στο παράθυρο",
+    "insertIntoEditor": "Στον επεξεργαστή",
+    "showDiff": "Εμφάνιση αλλαγών",
+    "hideDiff": "Απόκρυψη αλλαγών"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Επιλογή προφίλ",
+    "profileLocked": "Το προφίλ είναι κλειδωμένο κατά τη συνεδρία",
+    "defaultProfile": "Ερώτηση στο AI"
+  }
 }

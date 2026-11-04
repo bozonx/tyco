@@ -147,8 +147,8 @@ export interface HotkeysConfig {
   translation: string
   styling: string
   transformation: string
-  customTransformation: string
-  voiceTransformation: string
+  quickAiRequest: string
+  voiceQuickAiRequest: string
   chatPrompts: string
   snippets: string
   history: string

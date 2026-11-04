@@ -4,21 +4,23 @@
     "copy": "Kopieren",
     "copyToClipboard": "Kopieren und schließen",
     "correction": "Korrektur",
-    "customTransformation": "Freie Transformation",
     "insertIntoWindow": "In Fenster einfügen",
     "script": "Skript / Befehl",
     "stylingMenu": "Textstilisierung",
     "transformationMenu": "Texttransformation",
     "translationMenu": "Übersetzung",
-    "voiceTransformation": "Sprachtransformation",
     "webhook": "Webhook",
     "chatPromptsMenu": "Chat-Prompt-Vorlagen",
     "voiceCommands": "Sprachbefehle",
     "snippetsMenu": "Textbausteine",
     "saveAsSnippet": "Als Textbaustein speichern",
-    "savedAsSnippet": "Als Textbaustein gespeichert"
+    "savedAsSnippet": "Als Textbaustein gespeichert",
+    "quickAiRequest": "Schnelle KI-Anfrage",
+    "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Datei anhängen",
     "alertCaution": "Vorsicht",
@@ -178,6 +180,9 @@
       "needsDescription": "Erfordert eine Beschreibung in den Befehlseinstellungen",
       "noCommands": "Noch keine benutzerdefinierten Befehle konfiguriert.",
       "noCommandsHint": "Erstellen Sie zuerst Befehle unter Einstellungen → Befehle."
+    },
+    "replyBlocks": {
+      "toolLabel": "Antwortblöcke"
     }
   },
   "commands": {
@@ -776,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Ausgewählten Text als Kontext im KI-Chat verwenden",
       "correction": "Korrektur mit Vorschau",
-      "customTransformation": "Freie Texttransformation",
       "editor": "Ausgewählten Text im Editor öffnen",
       "history": "Verlauf",
       "quickInput": "Schnelle Texteingabe",
@@ -788,13 +792,14 @@
       "voice": "Spracheingabe",
       "voiceChat": "Sprachfrage zum ausgewählten Text im KI-Chat",
       "voiceCommands": "Sprachbefehle",
-      "voiceTransformation": "Sprach-Texttransformation",
       "selectionActionsPage2": "Aktionen: Seite 2",
       "selectionActionsPage3": "Aktionen: Seite 3",
       "chatPrompts": "Chat-Prompt-Vorlagen für ausgewählten Text",
       "selectionActionsPage4": "Aktionen: Seite 4",
       "selectionActionsPage5": "Aktionen: Seite 5",
-      "snippets": "Textbausteine"
+      "snippets": "Textbausteine",
+      "quickAiRequest": "Schnelle KI-Anfrage",
+      "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",
@@ -1217,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Textbausteine suchen…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
+  "shortcuts": {
+    "insertIntoEditor": "In den Editor einfügen"
+  },
   "theme": {
     "auto": "Wie im System",
     "dark": "Dunkel",
@@ -1356,7 +1363,9 @@
     "missingSelection": "Ausgewählter Text erforderlich."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "frage im chat" },
+    "actions": {
+      "askInChat": "frage im chat"
+    },
     "languages": {
       "cs-CZ": "Tschechisch",
       "de-DE": "Deutsch",
@@ -1386,7 +1395,9 @@
     },
     "translate": "übersetze auf"
   },
-  "window": { "clickToFocus": "Zum Fortfahren klicken" },
+  "window": {
+    "clickToFocus": "Zum Fortfahren klicken"
+  },
   "write": {
     "alreadyCorrected": "Der Text ist bereits korrigiert",
     "cancel": "Abbrechen",
@@ -1436,5 +1447,18 @@
     "valueNotSet": "Auf diesem Gerät nicht festgelegt: Befehle damit werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
-  "snippets": { "noMatches": "Keine passenden Textbausteine" }
+  "snippets": {
+    "noMatches": "Keine passenden Textbausteine"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "In Fenster einfügen",
+    "insertIntoEditor": "In Editor",
+    "showDiff": "Änderungen anzeigen",
+    "hideDiff": "Änderungen ausblenden"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Profil auswählen",
+    "profileLocked": "Profil während der Sitzung gesperrt",
+    "defaultProfile": "Frage an die KI"
+  }
 }

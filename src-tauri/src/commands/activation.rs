@@ -11,6 +11,7 @@ pub fn open_main_chat(
     question: Option<String>,
     auto_send: Option<bool>,
     profile_id: Option<String>,
+    chat_id: Option<String>,
     activation_id: u64,
 ) -> Result<(), AppError> {
     runtime::open_main_chat(
@@ -19,6 +20,7 @@ pub fn open_main_chat(
         question,
         auto_send,
         profile_id,
+        chat_id,
         activation_id,
     )
 }

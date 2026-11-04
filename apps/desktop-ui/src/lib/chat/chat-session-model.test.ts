@@ -52,6 +52,27 @@ describe('createChatSessionModel', () => {
     })
   })
 
+  describe('createChatFromMessages', () => {
+    it('persists initial messages, updates state, and navigates to chat', async () => {
+      const { model, state, deps, persist } = setup()
+      const msgs = [
+        { role: 'user' as const, content: 'User question' },
+        { role: 'assistant' as const, content: 'AI answer' },
+      ]
+
+      const success = await model.createChatFromMessages(msgs, { title: 'Transferred Chat' })
+
+      expect(success).toBe(true)
+      expect(persist).toHaveBeenCalledWith(msgs, {
+        id: 'chat-1',
+        title: 'Transferred Chat',
+      })
+      expect(state.messages.value).toEqual(msgs)
+      expect(deps.saveSessionState).toHaveBeenCalledWith({ lastChatId: 'chat-1' })
+      expect(deps.navigateTo).toHaveBeenCalledWith(APP_ROUTES.CHAT.path)
+    })
+  })
+
   describe('branchChat', () => {
     it('returns false for invalid index', async () => {
       const { model, state } = setup()

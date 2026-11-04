@@ -4,21 +4,23 @@
     "copy": "Көшіру",
     "copyToClipboard": "Көшіріп, жабу",
     "correction": "Түзету",
-    "customTransformation": "Еркін түрлендіру",
     "insertIntoWindow": "Терезеге кірістіру",
     "script": "Скрипт / Команда",
     "stylingMenu": "Мәтінді стильдеу",
     "transformationMenu": "Мәтінді түрлендіру",
     "translationMenu": "Аударма",
-    "voiceTransformation": "Дауыспен түрлендіру",
     "webhook": "Вебхук",
     "chatPromptsMenu": "Чат промпттерінің алдын ала орнатулары",
     "voiceCommands": "Дауыстық командалар",
     "snippetsMenu": "Сниппеттер",
     "saveAsSnippet": "Сниппет ретінде сақтау",
-    "savedAsSnippet": "Сниппеттерге сақталды"
+    "savedAsSnippet": "Сниппеттерге сақталды",
+    "quickAiRequest": "ЖИ жылдам сұрауы",
+    "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Файл тіркеу",
     "alertCaution": "Абайлаңыз",
@@ -178,6 +180,9 @@
       "needsDescription": "Пәрмен баптауларында сипаттама қажет",
       "noCommands": "Әзірше пайдаланушы пәрмендері конфигурацияланбаған.",
       "noCommandsHint": "Алдымен Баптаулар → Пәрмендер бөлімінде пәрмендер жасаңыз."
+    },
+    "replyBlocks": {
+      "toolLabel": "Жауап нұсқалары"
     }
   },
   "commands": {
@@ -605,7 +610,10 @@
       "command": "Команда мәтінді өзгертпей қалдырды",
       "correction": "Қате табылмады"
     },
-    "working": { "command": "Команда орындалуда…", "correction": "Түзетілуде…" }
+    "working": {
+      "command": "Команда орындалуда…",
+      "correction": "Түзетілуде…"
+    }
   },
   "settings": {
     "accessAllow": "Рұқсат ету",
@@ -773,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Белгіленген мәтінді ЖИ чатында контекст ретінде пайдалану",
       "correction": "Алдын ала қараумен түзету",
-      "customTransformation": "Мәтінді еркін түрлендіру",
       "editor": "Белгіленген мәтінді редакторда ашу",
       "history": "Тарих",
       "quickInput": "Мәтінді жылдам енгізу",
@@ -785,13 +792,14 @@
       "voice": "Дауыспен енгізу",
       "voiceChat": "ЖИ чатында белгіленген мәтін туралы дауыстық сұрақ",
       "voiceCommands": "Дауыстық командалар",
-      "voiceTransformation": "Мәтінді дауыспен түрлендіру",
       "selectionActionsPage2": "Әрекеттер: 2-бет",
       "selectionActionsPage3": "Әрекеттер: 3-бет",
       "chatPrompts": "Таңдалған мәтінге арналған чат промпттерінің алдын ала орнатулары",
       "selectionActionsPage4": "Әрекеттер: 4-бет",
       "selectionActionsPage5": "Әрекеттер: 5-бет",
-      "snippets": "Сниппеттер"
+      "snippets": "Сниппеттер",
+      "quickAiRequest": "ЖИ жылдам сұрауы",
+      "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы"
     },
     "hotkeyInput": {
       "cancelHint": "Болдырмау үшін Esc",
@@ -1214,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Сниппеттерді іздеу…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
+  "shortcuts": {
+    "insertIntoEditor": "Редакторға кірістіру"
+  },
   "theme": {
     "auto": "Жүйедегідей",
     "dark": "Қараңғы",
@@ -1353,7 +1363,9 @@
     "missingSelection": "Бөліп көрсетілген мәтін қажет."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "чатта сұра" },
+    "actions": {
+      "askInChat": "чатта сұра"
+    },
     "languages": {
       "cs-CZ": "Чех;чех тілі",
       "de-DE": "неміс тіліне;немісше",
@@ -1383,7 +1395,9 @@
     },
     "translate": "{language} аудар;аудар"
   },
-  "window": { "clickToFocus": "Жалғастыру үшін басыңыз" },
+  "window": {
+    "clickToFocus": "Жалғастыру үшін басыңыз"
+  },
   "write": {
     "alreadyCorrected": "Мәтін бұрыннан түзетілген",
     "cancel": "Бас тарту",
@@ -1433,5 +1447,18 @@
     "valueNotSet": "Бұл құрылғыда орнатылмаған: оны қолданатын командалар орындалмайды",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "snippets": { "noMatches": "Сәйкес сниппеттер табылмады" }
+  "snippets": {
+    "noMatches": "Сәйкес сниппеттер табылмады"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Терезеге кірістіру",
+    "insertIntoEditor": "Редакторға",
+    "showDiff": "Өзгерістерді көрсету",
+    "hideDiff": "Өзгерістерді жасыру"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Профильді таңдау",
+    "profileLocked": "Сессия кезінде профиль бұғатталған",
+    "defaultProfile": "ЖИ-ға сұрақ"
+  }
 }

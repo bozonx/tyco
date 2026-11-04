@@ -20,6 +20,7 @@ pub enum EditorHistoryOperation {
     Translation,
     Correction,
     VoiceCorrection,
+    QuickAiRequest,
 }
 
 /// Where the user typed or dictated the text.
@@ -46,6 +47,17 @@ pub struct EditorHistoryInstruction {
     pub input_kind: EditorHistoryInputKind,
 }
 
+/// One turn of a multi-turn quick AI request session.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct EditorHistoryTurn {
+    pub prompt: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub result: Option<String>,
+    pub input_kind: EditorHistoryInputKind,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorHistoryItem {
@@ -63,6 +75,14 @@ pub struct EditorHistoryItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub instruction: Option<EditorHistoryInstruction>,
+    /// Profile this operation ran under, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub profile_id: Option<String>,
+    /// All turns of a multi-turn session.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub turns: Option<Vec<EditorHistoryTurn>>,
     /// Unix time in milliseconds.
     #[serde(rename = "createdAt")]
     pub created_at_ms: u64,
@@ -91,6 +111,10 @@ pub struct EditorHistoryEntry {
     pub origin: Option<EditorHistoryOrigin>,
     #[serde(default)]
     pub instruction: Option<EditorHistoryInstruction>,
+    #[serde(default)]
+    pub profile_id: Option<String>,
+    #[serde(default)]
+    pub turns: Option<Vec<EditorHistoryTurn>>,
 }
 
 #[cfg(test)]

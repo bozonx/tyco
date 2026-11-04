@@ -82,15 +82,15 @@ const QUICK_MODES: ReadonlyArray<{
     icon: 'mdi:auto-fix',
   },
   {
-    mode: ActivationMode.CUSTOM_TRANSFORMATION,
-    label: 'Custom Transform',
-    title: 'Open Quick Custom Transform',
+    mode: ActivationMode.QUICK_AI_REQUEST,
+    label: 'Quick AI',
+    title: 'Open Quick AI Request',
     icon: 'mdi:pencil-outline',
   },
   {
-    mode: ActivationMode.VOICE_TRANSFORMATION,
-    label: 'Voice Transform',
-    title: 'Open Quick Voice Transform',
+    mode: ActivationMode.VOICE_QUICK_AI_REQUEST,
+    label: 'Voice Quick AI',
+    title: 'Open Voice Quick AI Request',
     icon: 'mdi:microphone-outline',
   },
 ]

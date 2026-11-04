@@ -11,10 +11,9 @@ import SelectionView from '../views/SelectionView.vue'
 import ChatPromptsView from '../views/ChatPromptsView.vue'
 import SnippetsView from '../views/SnippetsView.vue'
 import SettingsView from '../views/SettingsView.vue'
-import CustomTransformationView from '../views/CustomTransformationView.vue'
+import QuickAiRequestView from '../views/QuickAiRequestView.vue'
 import StylingView from '../views/StylingView.vue'
 import TransformationView from '../views/TransformationView.vue'
-import VoiceTransformationView from '../views/VoiceTransformationView.vue'
 import TranslateView from '../views/TranslateView.vue'
 import VoiceCommandsView from '../views/VoiceCommandsView.vue'
 import VoiceView from '../views/VoiceView.vue'
@@ -85,14 +84,16 @@ const router = createRouter({
       component: TransformationView,
     },
     {
-      path: APP_ROUTES.CUSTOM_TRANSFORMATION.path,
-      name: APP_ROUTES.CUSTOM_TRANSFORMATION.name,
-      component: CustomTransformationView,
+      path: APP_ROUTES.QUICK_AI_REQUEST.path,
+      name: APP_ROUTES.QUICK_AI_REQUEST.name,
+      component: QuickAiRequestView,
+      props: { inputMode: 'text' },
     },
     {
-      path: APP_ROUTES.VOICE_TRANSFORMATION.path,
-      name: APP_ROUTES.VOICE_TRANSFORMATION.name,
-      component: VoiceTransformationView,
+      path: APP_ROUTES.VOICE_QUICK_AI_REQUEST.path,
+      name: APP_ROUTES.VOICE_QUICK_AI_REQUEST.name,
+      component: QuickAiRequestView,
+      props: { inputMode: 'voice' },
     },
     {
       path: APP_ROUTES.CHAT_PROMPTS.path,

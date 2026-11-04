@@ -4,21 +4,23 @@
     "copy": "Copiar",
     "copyToClipboard": "Copiar y cerrar",
     "correction": "Corrección",
-    "customTransformation": "Transformación libre",
     "insertIntoWindow": "Insertar en la ventana",
     "script": "Script / Comando",
     "stylingMenu": "Estilización de texto",
     "transformationMenu": "Transformación de texto",
     "translationMenu": "Traducción",
-    "voiceTransformation": "Transformación por voz",
     "webhook": "Webhook",
     "chatPromptsMenu": "Ajustes predefinidos de prompts de chat",
     "voiceCommands": "Comandos de voz",
     "snippetsMenu": "Fragmentos",
     "saveAsSnippet": "Guardar como fragmento",
-    "savedAsSnippet": "Guardado como fragmento"
+    "savedAsSnippet": "Guardado como fragmento",
+    "quickAiRequest": "Petición rápida a la IA",
+    "voiceQuickAiRequest": "Petición rápida por voz a la IA"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Adjuntar archivo",
     "alertCaution": "Precaución",
@@ -178,6 +180,9 @@
       "needsDescription": "Requiere una descripción en la configuración del comando",
       "noCommands": "Aún no se han configurado comandos personalizados.",
       "noCommandsHint": "Cree comandos primero en Configuración → Comandos."
+    },
+    "replyBlocks": {
+      "toolLabel": "Bloques de respuesta"
     }
   },
   "commands": {
@@ -776,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Usar el texto seleccionado como contexto en el chat de IA",
       "correction": "Corrección con vista previa",
-      "customTransformation": "Transformación libre de texto",
       "editor": "Abrir el texto seleccionado en el editor",
       "history": "Historial",
       "quickInput": "Entrada rápida de texto",
@@ -788,13 +792,14 @@
       "voice": "Entrada de voz",
       "voiceChat": "Pregunta por voz sobre el texto seleccionado en el chat de IA",
       "voiceCommands": "Comandos de voz",
-      "voiceTransformation": "Transformación de texto por voz",
       "selectionActionsPage2": "Acciones: página 2",
       "selectionActionsPage3": "Acciones: página 3",
       "chatPrompts": "Prompts de chat predefinidos para texto seleccionado",
       "selectionActionsPage4": "Acciones: página 4",
       "selectionActionsPage5": "Acciones: página 5",
-      "snippets": "Fragmentos"
+      "snippets": "Fragmentos",
+      "quickAiRequest": "Petición rápida a la IA",
+      "voiceQuickAiRequest": "Petición rápida por voz a la IA"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -1217,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Buscar fragmentos…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Insertar en el editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Insertar en el editor"
+  },
   "theme": {
     "auto": "Como en el sistema",
     "dark": "Oscuro",
@@ -1356,7 +1363,9 @@
     "missingSelection": "Se necesita texto seleccionado."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pregunta en el chat" },
+    "actions": {
+      "askInChat": "pregunta en el chat"
+    },
     "languages": {
       "cs-CZ": "Checo",
       "de-DE": "alemán",
@@ -1386,7 +1395,9 @@
     },
     "translate": "traduce al"
   },
-  "window": { "clickToFocus": "Haz clic para continuar" },
+  "window": {
+    "clickToFocus": "Haz clic para continuar"
+  },
   "write": {
     "alreadyCorrected": "El texto ya está corregido",
     "cancel": "Cancelar",
@@ -1436,5 +1447,18 @@
     "valueNotSet": "Sin definir en este dispositivo: los comandos que la usan no se ejecutan",
     "valuePlaceholder": "Una ruta, una dirección u otro texto"
   },
-  "snippets": { "noMatches": "No se encontraron fragmentos" }
+  "snippets": {
+    "noMatches": "No se encontraron fragmentos"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Insertar en la ventana",
+    "insertIntoEditor": "Al editor",
+    "showDiff": "Mostrar cambios",
+    "hideDiff": "Ocultar cambios"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Seleccionar perfil",
+    "profileLocked": "Perfil bloqueado durante la sesión",
+    "defaultProfile": "Pregunta a la IA"
+  }
 }

@@ -63,21 +63,23 @@
         />
       </div>
       <div
-        v-show="currentMode === 'customTransformation'"
+        v-show="currentMode === 'quickAiRequest'"
         class="quick-mode-layer"
       >
-        <CustomTransformationView
-          v-if="currentMode === 'customTransformation'"
+        <QuickAiRequestView
+          v-if="currentMode === 'quickAiRequest'"
           :key="activationId"
+          input-mode="text"
         />
       </div>
       <div
-        v-show="currentMode === 'voiceTransformation'"
+        v-show="currentMode === 'voiceQuickAiRequest'"
         class="quick-mode-layer"
       >
-        <VoiceTransformationView
-          v-if="currentMode === 'voiceTransformation'"
+        <QuickAiRequestView
+          v-if="currentMode === 'voiceQuickAiRequest'"
           :key="activationId"
+          input-mode="voice"
         />
       </div>
       <div v-show="currentMode === 'chatPrompts'" class="quick-mode-layer">
@@ -127,8 +129,8 @@ import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import { useQuickInputStore } from '../../stores/quick-input'
 import ChatPromptsView from '../../views/ChatPromptsView.vue'
 import CorrectionView from '../../views/CorrectionView.vue'
-import CustomTransformationView from '../../views/CustomTransformationView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
+import QuickAiRequestView from '../../views/QuickAiRequestView.vue'
 import SelectionView from '../../views/SelectionView.vue'
 import SnippetsView from '../../views/SnippetsView.vue'
 import StylingView from '../../views/StylingView.vue'
@@ -136,7 +138,6 @@ import TransformationView from '../../views/TransformationView.vue'
 import TranslateView from '../../views/TranslateView.vue'
 import VoiceChatView from '../../views/VoiceChatView.vue'
 import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
-import VoiceTransformationView from '../../views/VoiceTransformationView.vue'
 import VoiceView from '../../views/VoiceView.vue'
 import WriteView from '../../views/WriteView.vue'
 

@@ -29,6 +29,8 @@
           @copy-markdown-to-point="copyMarkdownToPoint(index)"
           @content-resized="handleContentResized"
           @tool-approval="chatStore.answerToolApproval"
+          @insert-reply-block="handleInsertReplyBlock"
+          @insert-editor-reply-block="handleInsertEditorReplyBlock"
         />
 
         <div
@@ -135,10 +137,12 @@ import { useChatScope } from '../../composables/use-chat-scope'
 import { useChatScroll } from '../../composables/use-chat-scroll'
 import { useCopyValue } from '../../composables/use-copy-value'
 import { useI18n } from '../../composables/use-i18n'
+import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useInlineVoiceStep } from '../../composables/use-inline-voice-step'
 import useToast from '../../composables/use-toast'
 import { formatChatToMarkdown } from '../../lib/chat/chat-export'
 import { appNavigation } from '../../navigation'
+import { useInvocationsStore } from '../../stores/invocations'
 import { useMenuModalsStore } from '../../stores/menu-modals'
 import { useSecretsStore } from '../../stores/secrets'
 import AppIcon from '../common/AppIcon.vue'
@@ -258,6 +262,17 @@ async function copyMarkdownToPoint(index: number) {
   const title = chatStore.currentChatParams.title || ''
   const md = formatChatToMarkdown(slice, title ? { title } : undefined)
   if (await copyValue.copy(md)) toastKey('chat.markdownCopied', 'info')
+}
+
+const invocations = useInvocationsStore()
+const editorNavigation = useEditorNavigation()
+
+function handleInsertReplyBlock(text: string) {
+  void invocations.call('core.insert', text).catch(() => undefined)
+}
+
+function handleInsertEditorReplyBlock(text: string) {
+  editorNavigation.toEditor(text)
 }
 
 const { dropZoneRef, draggingFiles } = useChatFileDrop({

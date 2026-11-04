@@ -4,21 +4,23 @@
     "copy": "Copiază",
     "copyToClipboard": "Copiază și închide",
     "correction": "Corectare",
-    "customTransformation": "Transformare liberă",
     "insertIntoWindow": "Inserează în fereastră",
     "script": "Script / Comandă",
     "stylingMenu": "Stilizare text",
     "transformationMenu": "Transformare text",
     "translationMenu": "Traducere",
-    "voiceTransformation": "Transformare vocală",
     "webhook": "Webhook",
     "chatPromptsMenu": "Presetări prompturi chat",
     "voiceCommands": "Comenzi vocale",
     "snippetsMenu": "Fragmente de text",
     "saveAsSnippet": "Salvează ca fragment",
-    "savedAsSnippet": "Salvat ca fragment"
+    "savedAsSnippet": "Salvat ca fragment",
+    "quickAiRequest": "Solicitare rapidă IA",
+    "voiceQuickAiRequest": "Solicitare vocală rapidă IA"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Atașează un fișier",
     "alertCaution": "Atenție",
@@ -178,6 +180,9 @@
       "needsDescription": "Necesită o descriere în setările comenzii",
       "noCommands": "Nu există încă comenzi personalizate configurate.",
       "noCommandsHint": "Creați mai întâi comenzi în Setări → Comenzi."
+    },
+    "replyBlocks": {
+      "toolLabel": "Blocuri de răspuns"
     }
   },
   "commands": {
@@ -776,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Folosește textul selectat ca context în chatul AI",
       "correction": "Corectare cu previzualizare",
-      "customTransformation": "Transformare liberă a textului",
       "editor": "Deschide textul selectat în editor",
       "history": "Istoric",
       "quickInput": "Introducere rapidă de text",
@@ -788,13 +792,14 @@
       "voice": "Introducere vocală",
       "voiceChat": "Întrebare vocală despre textul selectat în chatul AI",
       "voiceCommands": "Comenzi vocale",
-      "voiceTransformation": "Transformare vocală a textului",
       "selectionActionsPage2": "Acțiuni: pagina 2",
       "selectionActionsPage3": "Acțiuni: pagina 3",
       "chatPrompts": "Presetări prompturi chat pentru textul selectat",
       "selectionActionsPage4": "Acțiuni: pagina 4",
       "selectionActionsPage5": "Acțiuni: pagina 5",
-      "snippets": "Fragmente de text"
+      "snippets": "Fragmente de text",
+      "quickAiRequest": "Solicitare rapidă IA",
+      "voiceQuickAiRequest": "Solicitare vocală rapidă IA"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",
@@ -1217,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Căutați fragmente…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Inserează în editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserează în editor"
+  },
   "theme": {
     "auto": "Ca în sistem",
     "dark": "Întunecată",
@@ -1356,7 +1363,9 @@
     "missingSelection": "Este necesar textul selectat."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "întreabă în chat" },
+    "actions": {
+      "askInChat": "întreabă în chat"
+    },
     "languages": {
       "cs-CZ": "Cehă",
       "de-DE": "germană",
@@ -1386,7 +1395,9 @@
     },
     "translate": "tradu în"
   },
-  "window": { "clickToFocus": "Faceți clic pentru a continua" },
+  "window": {
+    "clickToFocus": "Faceți clic pentru a continua"
+  },
   "write": {
     "alreadyCorrected": "Textul este deja corectat",
     "cancel": "Anulează",
@@ -1436,5 +1447,18 @@
     "valueNotSet": "Nesetată pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "snippets": { "noMatches": "Niciun fragment găsit" }
+  "snippets": {
+    "noMatches": "Niciun fragment găsit"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Inserează în fereastră",
+    "insertIntoEditor": "În editor",
+    "showDiff": "Arată modificările",
+    "hideDiff": "Ascunde modificările"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Selectează profilul",
+    "profileLocked": "Profil blocat în timpul sesiunii",
+    "defaultProfile": "Întrebare pentru AI"
+  }
 }

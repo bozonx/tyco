@@ -4,21 +4,23 @@
     "copy": "Скопировать",
     "copyToClipboard": "Скопировать и закрыть",
     "correction": "Коррекция",
-    "customTransformation": "Свободная трансформация",
     "insertIntoWindow": "В окно",
     "script": "Скрипт / Команда",
     "stylingMenu": "Стилизация текста",
     "transformationMenu": "Трансформация текста",
     "translationMenu": "Перевод",
-    "voiceTransformation": "Голосовая трансформация",
     "webhook": "Вебхук",
     "chatPromptsMenu": "Быстрые промпты для чата",
     "voiceCommands": "Голосовые команды",
     "snippetsMenu": "Сниппеты",
     "saveAsSnippet": "Сохранить как сниппет",
-    "savedAsSnippet": "Сохранено в сниппеты"
+    "savedAsSnippet": "Сохранено в сниппеты",
+    "quickAiRequest": "Быстрый запрос к ИИ",
+    "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикрепить файл",
     "alertCaution": "Осторожно",
@@ -178,6 +180,9 @@
       "needsDescription": "Требуется описание в настройках команды",
       "noCommands": "Пользовательские команды пока не настроены.",
       "noCommandsHint": "Сначала создайте команды в Настройки → Команды."
+    },
+    "replyBlocks": {
+      "toolLabel": "Варианты ответа"
     }
   },
   "commands": {
@@ -605,7 +610,10 @@
       "command": "Команда оставила текст без изменений",
       "correction": "Ошибок не найдено"
     },
-    "working": { "command": "Выполняю команду…", "correction": "Исправляю…" }
+    "working": {
+      "command": "Выполняю команду…",
+      "correction": "Исправляю…"
+    }
   },
   "settings": {
     "accessAllow": "Разрешено",
@@ -773,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Использовать выделенный текст как контекст в чате с ИИ",
       "correction": "Коррекция с предпросмотром",
-      "customTransformation": "Свободная трансформация",
       "editor": "Открыть выделенный текст в редакторе",
       "history": "История",
       "quickInput": "Режим быстрого текстового ввода",
@@ -785,13 +792,14 @@
       "voice": "Голосовой ввод",
       "voiceChat": "Голосовой вопрос по выделенному тексту в чате с ИИ",
       "voiceCommands": "Голосовые команды",
-      "voiceTransformation": "Голосовая трансформация",
       "selectionActionsPage2": "Действия: страница 2",
       "selectionActionsPage3": "Действия: страница 3",
       "chatPrompts": "Быстрые промпты для чата с ИИ",
       "selectionActionsPage4": "Действия: страница 4",
       "selectionActionsPage5": "Действия: страница 5",
-      "snippets": "Сниппеты"
+      "snippets": "Сниппеты",
+      "quickAiRequest": "Быстрый запрос к ИИ",
+      "voiceQuickAiRequest": "Голосовой быстрый запрос к ИИ"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — отмена",
@@ -1214,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Поиск сниппетов…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставить в редактор"
+  },
   "theme": {
     "auto": "Как в системе",
     "dark": "Темная",
@@ -1353,7 +1363,9 @@
     "missingSelection": "Нужен выделенный текст."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "спроси в чате" },
+    "actions": {
+      "askInChat": "спроси в чате"
+    },
     "languages": {
       "cs-CZ": "Чешский",
       "de-DE": "немецкий",
@@ -1383,7 +1395,9 @@
     },
     "translate": "переведи на"
   },
-  "window": { "clickToFocus": "Нажмите, чтобы продолжить" },
+  "window": {
+    "clickToFocus": "Нажмите, чтобы продолжить"
+  },
   "write": {
     "alreadyCorrected": "Текст уже корректирован",
     "cancel": "Отмена",
@@ -1433,5 +1447,18 @@
     "valueNotSet": "Не задано на этом устройстве: команды с этой переменной не выполняются",
     "valuePlaceholder": "Путь, адрес или другой текст"
   },
-  "snippets": { "noMatches": "Ничего не найдено" }
+  "snippets": {
+    "noMatches": "Ничего не найдено"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Вставить в окно",
+    "insertIntoEditor": "В редактор",
+    "showDiff": "Показать изменения",
+    "hideDiff": "Скрыть изменения"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Выбрать профиль",
+    "profileLocked": "Профиль заблокирован во время сессии",
+    "defaultProfile": "Вопрос к ИИ"
+  }
 }

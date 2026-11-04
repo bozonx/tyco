@@ -13,6 +13,54 @@ export interface ChatProfileRuntimeDependencies {
   warn: (message: string) => void
 }
 
+export interface ProfileInstructionsContext {
+  refreshProfile?: (profileId: string) => Promise<AiProfile | undefined>
+  readSoul: (profileId: string) => Promise<string>
+  readCoreMemory?: (profileId: string) => Promise<string>
+  listMemoryTopics?: (profileId: string) => Promise<ProfileMemoryTopic[]>
+  warn?: (message: string) => void
+}
+
+/**
+ * Resolves the full instructions (SOUL.md + memory block) for a profile
+ * without requiring the full chat runtime or chat history loading.
+ */
+export async function resolveProfileInstructions(
+  profileId: string,
+  deps: ProfileInstructionsContext
+): Promise<string> {
+  const [stored, soul] = await Promise.all([
+    deps.refreshProfile
+      ? deps.refreshProfile(profileId).catch(() => undefined)
+      : Promise.resolve(undefined),
+    deps.readSoul(profileId).catch(() => ''),
+  ])
+
+  let memoryBlock = ''
+  if (
+    stored?.memoryMode &&
+    stored.memoryMode !== 'off' &&
+    deps.readCoreMemory
+  ) {
+    try {
+      const [coreText, topics] = await Promise.all([
+        deps.readCoreMemory(profileId),
+        deps.listMemoryTopics
+          ? deps.listMemoryTopics(profileId)
+          : Promise.resolve([]),
+      ])
+      const memoryContext = buildProfileMemoryBlock({ coreText, topics })
+      memoryBlock = memoryContext.block
+    } catch (error) {
+      deps.warn?.(
+        `Could not read profile memory for ${profileId}: ${String(error)}`
+      )
+    }
+  }
+
+  return [soul, memoryBlock].filter(Boolean).join('\n\n')
+}
+
 /**
  * Coordinates the runtime state of a profile chat (`SOUL.md`, memory, last
  * opened chat, and initial history/profile preparation). No-ops when

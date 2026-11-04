@@ -40,8 +40,7 @@ export function createOverlayNavModel(
     if (
       modal === MenuModals.TRANSLATE ||
       modal === MenuModals.ACTION_SELECT ||
-      modal === MenuModals.VOICE_TRANSFORMATION ||
-      modal === MenuModals.CUSTOM_TRANSFORMATION ||
+      modal === MenuModals.QUICK_AI_REQUEST ||
       modal === MenuModals.TRANSFORMATION ||
       modal === MenuModals.STYLING ||
       modal === MenuModals.CHAT_PROMPTS

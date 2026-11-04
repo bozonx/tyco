@@ -200,6 +200,26 @@ export function createChatSessionModel(
     }
     await startChat({})
   }
+
+  const createChatFromMessages = async (
+    initialMessages: ChatMessage[],
+    chatParams: ChatParams = {}
+  ): Promise<boolean> => {
+    if (disposed) return false
+    const request = ++openRequest
+    stopGeneration()
+    const id = chatParams.id ?? deps.createId()
+    const params = { ...chatParams, id }
+    if (!(await persist(initialMessages, params))) return false
+    if (!isCurrent(request)) return false
+    reset(params)
+    messages.value = [...initialMessages]
+    await deps.saveSessionState({ lastChatId: id })
+    if (!isCurrent(request)) return false
+    await deps.navigateTo(APP_ROUTES.CHAT.path)
+    return isCurrent(request)
+  }
+
   const dispose = () => {
     if (disposed) return
     disposed = true
@@ -210,6 +230,7 @@ export function createChatSessionModel(
     dispose,
     branchChat,
     startChat,
+    createChatFromMessages,
     openChat,
     clearChat,
     abandonChat,

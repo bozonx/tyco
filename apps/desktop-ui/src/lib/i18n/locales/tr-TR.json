@@ -4,21 +4,23 @@
     "copy": "Kopyala",
     "copyToClipboard": "Kopyala ve kapat",
     "correction": "Düzeltme",
-    "customTransformation": "Serbest dönüştürme",
     "insertIntoWindow": "Pencereye ekle",
     "script": "Betik / Komut",
     "stylingMenu": "Metin stillendirme",
     "transformationMenu": "Metin dönüştürme",
     "translationMenu": "Çeviri",
-    "voiceTransformation": "Sesli dönüştürme",
     "webhook": "Web kancası",
     "chatPromptsMenu": "Sohbet istemi önayarları",
     "voiceCommands": "Sesli komutlar",
     "snippetsMenu": "Metin Parçacıkları",
     "saveAsSnippet": "Parçacık olarak kaydet",
-    "savedAsSnippet": "Parçacık olarak kaydedildi"
+    "savedAsSnippet": "Parçacık olarak kaydedildi",
+    "quickAiRequest": "Hızlı YZ isteği",
+    "voiceQuickAiRequest": "Sesli hızlı YZ isteği"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Dosya ekle",
     "alertCaution": "Dikkat",
@@ -178,6 +180,9 @@
       "needsDescription": "Komut ayarlarında bir açıklama gereklidir",
       "noCommands": "Henüz özel komut yapılandırılmadı.",
       "noCommandsHint": "Önce Ayarlar → Komutlar bölümünde komut oluşturun."
+    },
+    "replyBlocks": {
+      "toolLabel": "Yanıt blokları"
     }
   },
   "commands": {
@@ -605,7 +610,10 @@
       "command": "Komut metni olduğu gibi bıraktı",
       "correction": "Hata bulunamadı"
     },
-    "working": { "command": "Komut çalışıyor…", "correction": "Düzeltiliyor…" }
+    "working": {
+      "command": "Komut çalışıyor…",
+      "correction": "Düzeltiliyor…"
+    }
   },
   "settings": {
     "accessAllow": "İzin Ver",
@@ -773,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Seçili metni yapay zekâ sohbetinde bağlam olarak kullan",
       "correction": "Önizlemeli düzeltme",
-      "customTransformation": "Serbest metin dönüştürme",
       "editor": "Seçili metni düzenleyicide aç",
       "history": "Geçmiş",
       "quickInput": "Hızlı metin girişi",
@@ -785,13 +792,14 @@
       "voice": "Sesli giriş",
       "voiceChat": "Seçili metin hakkında yapay zekâ sohbetinde sesli soru",
       "voiceCommands": "Sesli komutlar",
-      "voiceTransformation": "Sesli metin dönüştürme",
       "selectionActionsPage2": "Eylemler: sayfa 2",
       "selectionActionsPage3": "Eylemler: sayfa 3",
       "chatPrompts": "Seçili metin için sohbet istemi önayarları",
       "selectionActionsPage4": "Eylemler: sayfa 4",
       "selectionActionsPage5": "Eylemler: sayfa 5",
-      "snippets": "Metin Parçacıkları"
+      "snippets": "Metin Parçacıkları",
+      "quickAiRequest": "Hızlı YZ isteği",
+      "voiceQuickAiRequest": "Sesli hızlı YZ isteği"
     },
     "hotkeyInput": {
       "cancelHint": "İptal için Esc",
@@ -1214,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Parçacıkları ara…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Editöre ekle" },
+  "shortcuts": {
+    "insertIntoEditor": "Editöre ekle"
+  },
   "theme": {
     "auto": "Sistem dili",
     "dark": "Koyu",
@@ -1353,7 +1363,9 @@
     "missingSelection": "Seçili metin gerekli."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "sohbette sor" },
+    "actions": {
+      "askInChat": "sohbette sor"
+    },
     "languages": {
       "cs-CZ": "Çekçe;Çekçeye",
       "de-DE": "Almancaya;Almanca",
@@ -1383,7 +1395,9 @@
     },
     "translate": "{language} çevir;{language}ye çevir;{language}e çevir;çevir"
   },
-  "window": { "clickToFocus": "Devam etmek için tıklayın" },
+  "window": {
+    "clickToFocus": "Devam etmek için tıklayın"
+  },
   "write": {
     "alreadyCorrected": "Metin zaten düzeltildi",
     "cancel": "İptal",
@@ -1433,5 +1447,18 @@
     "valueNotSet": "Bu cihazda ayarlanmamış: onu kullanan komutlar çalışmaz",
     "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   },
-  "snippets": { "noMatches": "Eşleşen parçacık yok" }
+  "snippets": {
+    "noMatches": "Eşleşen parçacık yok"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Pencereye ekle",
+    "insertIntoEditor": "Düzenleyiciye",
+    "showDiff": "Değişiklikleri göster",
+    "hideDiff": "Değişiklikleri gizle"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Profil seç",
+    "profileLocked": "Oturum sırasında profil kilitlendi",
+    "defaultProfile": "Yapay Zekaya Soru"
+  }
 }

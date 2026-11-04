@@ -37,8 +37,7 @@ describe('createActionMenuModel', () => {
       saveOutput: vi.fn().mockResolvedValue(undefined),
       openTranslateModal: vi.fn(),
       openTransformationModal: vi.fn(),
-      openCustomTransformationModal: vi.fn(),
-      openVoiceTransformationModal: vi.fn(),
+      openQuickAiRequestModal: vi.fn(),
       openStylingModal: vi.fn(),
       openChatPromptsModal: vi.fn(),
       openSnippetsModal: vi.fn(),
@@ -158,19 +157,21 @@ describe('createActionMenuModel', () => {
     )
 
     const customTransformation = actions.find(
-      (a) => a.id === 'customTransformation'
+      (a) => a.id === 'quickAiRequest'
     )
     await customTransformation?.action('some text for custom query')
-    expect(deps.openCustomTransformationModal).toHaveBeenCalledWith(
-      'some text for custom query'
+    expect(deps.openQuickAiRequestModal).toHaveBeenCalledWith(
+      'some text for custom query',
+      'text'
     )
 
     const voiceTransformation = actions.find(
-      (a) => a.id === 'voiceTransformation'
+      (a) => a.id === 'voiceQuickAiRequest'
     )
     await voiceTransformation?.action('some text for voice query')
-    expect(deps.openVoiceTransformationModal).toHaveBeenCalledWith(
-      'some text for voice query'
+    expect(deps.openQuickAiRequestModal).toHaveBeenCalledWith(
+      'some text for voice query',
+      'voice'
     )
 
     const styling = actions.find((a) => a.id === 'stylingMenu')

@@ -10,19 +10,19 @@ describe('routes', () => {
     expect(resolveModeRoute(ActivationMode.TRANSFORMATION)).toBe(
       APP_ROUTES.TRANSFORMATION.path
     )
-    expect(resolveModeRoute(ActivationMode.CUSTOM_TRANSFORMATION)).toBe(
-      APP_ROUTES.CUSTOM_TRANSFORMATION.path
+    expect(resolveModeRoute(ActivationMode.QUICK_AI_REQUEST)).toBe(
+      APP_ROUTES.QUICK_AI_REQUEST.path
     )
-    expect(resolveModeRoute(ActivationMode.VOICE_TRANSFORMATION)).toBe(
-      APP_ROUTES.VOICE_TRANSFORMATION.path
+    expect(resolveModeRoute(ActivationMode.VOICE_QUICK_AI_REQUEST)).toBe(
+      APP_ROUTES.VOICE_QUICK_AI_REQUEST.path
     )
   })
 
   it('identifies styling and transformation as quick window modes', () => {
     expect(isQuickWindowMode(ActivationMode.STYLING)).toBe(true)
     expect(isQuickWindowMode(ActivationMode.TRANSFORMATION)).toBe(true)
-    expect(isQuickWindowMode(ActivationMode.CUSTOM_TRANSFORMATION)).toBe(true)
-    expect(isQuickWindowMode(ActivationMode.VOICE_TRANSFORMATION)).toBe(true)
+    expect(isQuickWindowMode(ActivationMode.QUICK_AI_REQUEST)).toBe(true)
+    expect(isQuickWindowMode(ActivationMode.VOICE_QUICK_AI_REQUEST)).toBe(true)
   })
 
   it('falls back to home route when mode is null', () => {

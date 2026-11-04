@@ -14,16 +14,9 @@
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
-    <CustomTransformationMenu
+    <QuickAiRequestMenu
       v-else-if="
-        menuModalsStore.currentStep?.modal === MenuModals.CUSTOM_TRANSFORMATION
-      "
-      :key="menuModalsStore.currentStepId"
-      v-bind="menuModalsStore.currentStep.params"
-    />
-    <VoiceTransformationMenu
-      v-else-if="
-        menuModalsStore.currentStep?.modal === MenuModals.VOICE_TRANSFORMATION
+        menuModalsStore.currentStep?.modal === MenuModals.QUICK_AI_REQUEST
       "
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
@@ -96,17 +89,16 @@ import VoiceCommandsView from '../../views/VoiceCommandsView.vue'
 import Overlay from '../overlay/Overlay.vue'
 import ActionSelectModal from './ActionSelectModal.vue'
 import ChatPromptsMenu from './ChatPromptsMenu.vue'
-import CustomTransformationMenu from './CustomTransformationMenu.vue'
 import DiffMenu from './DiffMenu.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import InsertMenu from './InsertMenu.vue'
 import PreviewMenu from './PreviewMenu.vue'
+import QuickAiRequestMenu from './QuickAiRequestMenu.vue'
 import SnippetsMenu from './SnippetsMenu.vue'
 import StylingMenu from './StylingMenu.vue'
 import TransformationMenu from './TransformationMenu.vue'
 import TranslateMenu from './TranslateMenu.vue'
 import VoiceRecognitionMenu from './VoiceRecognitionMenu.vue'
-import VoiceTransformationMenu from './VoiceTransformationMenu.vue'
 
 const menuModalsStore = useMenuModalsStore()
 

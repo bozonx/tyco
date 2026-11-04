@@ -4,21 +4,23 @@
     "copy": "Másolás",
     "copyToClipboard": "Másolás és bezárás",
     "correction": "Javítás",
-    "customTransformation": "Egyéni átalakítás",
     "insertIntoWindow": "Beillesztés az ablakba",
     "script": "Szkript / Parancs",
     "stylingMenu": "Szövegstilizálás",
     "transformationMenu": "Szövegátalakítás",
     "translationMenu": "Fordítás",
-    "voiceTransformation": "Hangalapú átalakítás",
     "webhook": "Webhook",
     "chatPromptsMenu": "Csevegési prompt-sablonok",
     "voiceCommands": "Hangparancsok",
     "snippetsMenu": "Szövegrészletek",
     "saveAsSnippet": "Mentés szövegrészletként",
-    "savedAsSnippet": "Mentve szövegrészletként"
+    "savedAsSnippet": "Mentve szövegrészletként",
+    "quickAiRequest": "Gyors MI kérés",
+    "voiceQuickAiRequest": "Hangalapú gyors MI kérés"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Fájl csatolása",
     "alertCaution": "Vigyázat",
@@ -178,6 +180,9 @@
       "needsDescription": "Leírás szükséges a parancs beállításaiban",
       "noCommands": "Még nincsenek egyéni parancsok konfigurálva.",
       "noCommandsHint": "Először hozzon létre parancsokat a Beállítások → Parancsok menüben."
+    },
+    "replyBlocks": {
+      "toolLabel": "Válaszblokkok"
     }
   },
   "commands": {
@@ -605,7 +610,10 @@
       "command": "A parancs változatlanul hagyta a szöveget",
       "correction": "Nem található hiba"
     },
-    "working": { "command": "A parancs fut…", "correction": "Javítás…" }
+    "working": {
+      "command": "A parancs fut…",
+      "correction": "Javítás…"
+    }
   },
   "settings": {
     "accessAllow": "Engedélyezés",
@@ -773,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Kijelölt szöveg kontextusként az MI-csevegésben",
       "correction": "Javítás előnézettel",
-      "customTransformation": "Egyéni szövegátalakítás",
       "editor": "Kijelölt szöveg megnyitása a szerkesztőben",
       "history": "Előzmények",
       "quickInput": "Gyors szövegbevitel",
@@ -785,13 +792,14 @@
       "voice": "Hangbevitel",
       "voiceChat": "Hangos kérdés a kijelölt szövegről az MI-csevegésben",
       "voiceCommands": "Hangparancsok",
-      "voiceTransformation": "Hangalapú szövegátalakítás",
       "selectionActionsPage2": "Műveletek: 2. oldal",
       "selectionActionsPage3": "Műveletek: 3. oldal",
       "chatPrompts": "Csevegési prompt-sablonok a kijelölt szöveghez",
       "selectionActionsPage4": "Műveletek: 4. oldal",
       "selectionActionsPage5": "Műveletek: 5. oldal",
-      "snippets": "Szövegrészletek"
+      "snippets": "Szövegrészletek",
+      "quickAiRequest": "Gyors MI kérés",
+      "voiceQuickAiRequest": "Hangalapú gyors MI kérés"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",
@@ -1214,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Szövegrészletek keresése…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
+  "shortcuts": {
+    "insertIntoEditor": "Beillesztés a szerkesztőbe"
+  },
   "theme": {
     "auto": "Rendszer szerint",
     "dark": "Sötét",
@@ -1353,7 +1363,9 @@
     "missingSelection": "Kijelölt szöveg szükséges."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "kérdezd meg a csevegésben" },
+    "actions": {
+      "askInChat": "kérdezd meg a csevegésben"
+    },
     "languages": {
       "cs-CZ": "Cseh",
       "de-DE": "németre",
@@ -1383,7 +1395,9 @@
     },
     "translate": "fordítsd le"
   },
-  "window": { "clickToFocus": "Kattintson a folytatáshoz" },
+  "window": {
+    "clickToFocus": "Kattintson a folytatáshoz"
+  },
   "write": {
     "alreadyCorrected": "A szöveg már javítva van",
     "cancel": "Mégse",
@@ -1433,5 +1447,18 @@
     "valueNotSet": "Nincs megadva ezen az eszközön: az ezt használó parancsok nem futnak",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
-  "snippets": { "noMatches": "Nincs egyező szövegrészlet" }
+  "snippets": {
+    "noMatches": "Nincs egyező szövegrészlet"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Beszúrás az ablakba",
+    "insertIntoEditor": "A szerkesztőbe",
+    "showDiff": "Módosítások megjelenítése",
+    "hideDiff": "Módosítások elrejtése"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Profil kiválasztása",
+    "profileLocked": "A profil a munkamenet során zárolva van",
+    "defaultProfile": "Kérdés az AI-hoz"
+  }
 }

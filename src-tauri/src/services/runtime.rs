@@ -280,8 +280,8 @@ fn window_label_for_mode(mode: ActivationMode) -> &'static str {
         | ActivationMode::Translation
         | ActivationMode::Styling
         | ActivationMode::Transformation
-        | ActivationMode::CustomTransformation
-        | ActivationMode::VoiceTransformation
+        | ActivationMode::QuickAiRequest
+        | ActivationMode::VoiceQuickAiRequest
         | ActivationMode::ChatPrompts
         | ActivationMode::Snippets
         | ActivationMode::ExternalAccess => QUICK_WINDOW_LABEL,
@@ -314,8 +314,8 @@ mod tests {
             ActivationMode::Translation,
             ActivationMode::Styling,
             ActivationMode::Transformation,
-            ActivationMode::CustomTransformation,
-            ActivationMode::VoiceTransformation,
+            ActivationMode::QuickAiRequest,
+            ActivationMode::VoiceQuickAiRequest,
             ActivationMode::ChatPrompts,
             ActivationMode::Snippets,
             ActivationMode::ExternalAccess,

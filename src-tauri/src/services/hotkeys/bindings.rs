@@ -126,8 +126,8 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 15] = [
     ActivationMode::Translation,
     ActivationMode::Styling,
     ActivationMode::Transformation,
-    ActivationMode::CustomTransformation,
-    ActivationMode::VoiceTransformation,
+    ActivationMode::QuickAiRequest,
+    ActivationMode::VoiceQuickAiRequest,
     ActivationMode::ChatPrompts,
     ActivationMode::Snippets,
     ActivationMode::History,
@@ -262,8 +262,8 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         | ActivationMode::Translation
         | ActivationMode::Styling
         | ActivationMode::Transformation
-        | ActivationMode::CustomTransformation
-        | ActivationMode::VoiceTransformation
+        | ActivationMode::QuickAiRequest
+        | ActivationMode::VoiceQuickAiRequest
         | ActivationMode::ChatPrompts
         | ActivationMode::Snippets
         | ActivationMode::History
@@ -337,8 +337,8 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::Translation => "Translate selected text",
         ActivationMode::Styling => "Open text styling",
         ActivationMode::Transformation => "Open text transformation",
-        ActivationMode::CustomTransformation => "Custom text transformation",
-        ActivationMode::VoiceTransformation => "Voice text transformation",
+        ActivationMode::QuickAiRequest => "Quick AI request",
+        ActivationMode::VoiceQuickAiRequest => "Voice quick AI request",
         ActivationMode::ChatPrompts => "Open chat prompt presets",
         ActivationMode::Snippets => "Open snippets",
         ActivationMode::History => "Open history",

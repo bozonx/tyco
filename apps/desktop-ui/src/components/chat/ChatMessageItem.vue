@@ -29,6 +29,19 @@
             @copy-code="copyText"
             @content-resized="emit('content-resized')"
           />
+          <div
+            v-else-if="step.call.toolName === REPLY_BLOCKS_TOOL_NAME"
+            class="reply-blocks-container"
+          >
+            <ReplyBlock
+              v-for="(block, bIndex) in extractReplyBlocks(step.call.input)"
+              :key="bIndex"
+              :block="block"
+              :index="bIndex"
+              @insert="emit('insert-reply-block', $event)"
+              @insert-editor="emit('insert-editor-reply-block', $event)"
+            />
+          </div>
           <ChatToolCall
             v-else
             :call="step.call"
@@ -87,12 +100,17 @@ import { useI18n } from '../../composables/use-i18n'
 import { messageSteps } from '../../lib/chat-tools/chat-message-steps'
 import type { ChatToolApprovalRequest } from '../../lib/chat-tools/chat-tool-loop'
 import type { ChatToolDecision } from '../../lib/chat-tools/chat-tool-policy'
+import {
+  extractReplyBlocks,
+  REPLY_BLOCKS_TOOL_NAME,
+} from '../../lib/reply-blocks/reply-blocks-tool'
 import DropdownMenu, { type DropdownMenuItem } from '../common/DropdownMenu.vue'
 import IconButton from '../common/IconButton.vue'
 import ChatAttachment from './ChatAttachment.vue'
 import ChatImageAttachment from './ChatImageAttachment.vue'
 import ChatMarkdown from './ChatMarkdown.vue'
 import ChatToolCall from './ChatToolCall.vue'
+import ReplyBlock from './ReplyBlock.vue'
 import type { ChatMessage, ChatMessagePart } from '@tyco/shared'
 
 const props = defineProps<{
@@ -108,6 +126,8 @@ const emit = defineEmits<{
   (e: 'copy-markdown-to-point'): void
   (e: 'content-resized'): void
   (e: 'tool-approval', approvalId: string, decision: ChatToolDecision): void
+  (e: 'insert-reply-block', text: string): void
+  (e: 'insert-editor-reply-block', text: string): void
 }>()
 
 /** The request a call of the answer waits on, if it waits now */
@@ -218,6 +238,13 @@ function copyMessage() {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+.reply-blocks-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
   margin-bottom: var(--space-xs);
 }
 @media (hover: none) {

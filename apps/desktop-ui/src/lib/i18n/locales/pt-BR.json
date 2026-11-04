@@ -4,21 +4,23 @@
     "copy": "Copiar",
     "copyToClipboard": "Copiar e fechar",
     "correction": "Correção",
-    "customTransformation": "Transformação livre",
     "insertIntoWindow": "Inserir na janela",
     "script": "Script / Comando",
     "stylingMenu": "Estilização de texto",
     "transformationMenu": "Transformação de texto",
     "translationMenu": "Tradução",
-    "voiceTransformation": "Transformação por voz",
     "webhook": "Webhook",
     "chatPromptsMenu": "Predefinições de prompts de chat",
     "voiceCommands": "Comandos de voz",
     "snippetsMenu": "Snippets",
     "saveAsSnippet": "Salvar como snippet",
-    "savedAsSnippet": "Salvo como snippet"
+    "savedAsSnippet": "Salvo como snippet",
+    "quickAiRequest": "Requisição rápida de IA",
+    "voiceQuickAiRequest": "Requisição rápida de IA por voz"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Anexar arquivo",
     "alertCaution": "Cuidado",
@@ -178,6 +180,9 @@
       "needsDescription": "Requer uma descrição nas configurações do comando",
       "noCommands": "Nenhum comando personalizado configurado ainda.",
       "noCommandsHint": "Crie comandos primeiro em Configurações → Comandos."
+    },
+    "replyBlocks": {
+      "toolLabel": "Blocos de resposta"
     }
   },
   "commands": {
@@ -776,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Usar o texto selecionado como contexto no chat de IA",
       "correction": "Correção com pré-visualização",
-      "customTransformation": "Transformação livre de texto",
       "editor": "Abrir o texto selecionado no editor",
       "history": "Histórico",
       "quickInput": "Entrada rápida de texto",
@@ -788,13 +792,14 @@
       "voice": "Entrada de voz",
       "voiceChat": "Pergunta por voz sobre o texto selecionado no chat de IA",
       "voiceCommands": "Comandos de voz",
-      "voiceTransformation": "Transformação de texto por voz",
       "selectionActionsPage2": "Ações: página 2",
       "selectionActionsPage3": "Ações: página 3",
       "chatPrompts": "Predefinições de prompts de chat para texto selecionado",
       "selectionActionsPage4": "Ações: página 4",
       "selectionActionsPage5": "Ações: página 5",
-      "snippets": "Snippets"
+      "snippets": "Snippets",
+      "quickAiRequest": "Requisição rápida de IA",
+      "voiceQuickAiRequest": "Requisição rápida de IA por voz"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -1217,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Buscar snippets…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Inserir no editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserir no editor"
+  },
   "theme": {
     "auto": "Seguir o sistema",
     "dark": "Escuro",
@@ -1356,7 +1363,9 @@
     "missingSelection": "É necessário texto selecionado."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pergunte no chat" },
+    "actions": {
+      "askInChat": "pergunte no chat"
+    },
     "languages": {
       "cs-CZ": "Tcheco",
       "de-DE": "alemão",
@@ -1386,7 +1395,9 @@
     },
     "translate": "traduza para"
   },
-  "window": { "clickToFocus": "Clique para continuar" },
+  "window": {
+    "clickToFocus": "Clique para continuar"
+  },
   "write": {
     "alreadyCorrected": "O texto já está corrigido",
     "cancel": "Cancelar",
@@ -1436,5 +1447,18 @@
     "valueNotSet": "Não definida neste dispositivo: os comandos que a usam não são executados",
     "valuePlaceholder": "Um caminho, um endereço ou outro texto"
   },
-  "snippets": { "noMatches": "Nenhum snippet correspondente" }
+  "snippets": {
+    "noMatches": "Nenhum snippet correspondente"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Inserir na janela",
+    "insertIntoEditor": "No editor",
+    "showDiff": "Mostrar alterações",
+    "hideDiff": "Ocultar alterações"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Selecionar perfil",
+    "profileLocked": "Perfil bloqueado durante a sessão",
+    "defaultProfile": "Pergunta à IA"
+  }
 }

@@ -19,6 +19,7 @@ const OPERATION_ICONS: Record<EditorHistoryOperation, string> = {
   translation: 'mdi:translate',
   correction: 'mdi:spellcheck',
   voiceCorrection: 'mdi:microphone-outline',
+  quickAiRequest: 'mdi:auto-fix',
 }
 
 /** Label of an entry that holds the AI result. */
@@ -27,6 +28,7 @@ const RESULT_LABELS: Record<EditorHistoryOperation, string> = {
   translation: 'history.kindTranslate',
   correction: 'history.kindCorrection',
   voiceCorrection: 'history.kindVoiceInput',
+  quickAiRequest: 'history.kindQuickAiRequest',
 }
 
 /** Label of a source the AI produced nothing from (failed or cancelled). */
@@ -35,6 +37,7 @@ const SOURCE_LABELS: Record<EditorHistoryOperation, string> = {
   translation: 'history.kindBeforeTranslate',
   correction: 'history.kindBeforeCorrection',
   voiceCorrection: 'history.kindVoiceTranscript',
+  quickAiRequest: 'history.kindBeforeQuickAiRequest',
 }
 
 /** Icon and label that tell the user why the text is in the history. */

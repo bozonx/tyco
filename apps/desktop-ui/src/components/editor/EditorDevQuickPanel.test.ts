@@ -130,11 +130,11 @@ describe('EditorDevQuickPanel.vue', () => {
     await flushPromises()
 
     expect(desktop.backend.callsOf('activate_mode')).toEqual([
-      { mode: ActivationMode.CUSTOM_TRANSFORMATION, text: 'sample text' },
+      { mode: ActivationMode.QUICK_AI_REQUEST, text: 'sample text' },
     ])
   })
 
-  it('activates voice transformation mode on click', async () => {
+  it('activates voice quick AI request mode on click', async () => {
     const wrapper = mount(EditorDevQuickPanel, {
       global: {
         plugins: [desktop.pinia],
@@ -150,14 +150,14 @@ describe('EditorDevQuickPanel.vue', () => {
     })
 
     const voiceTransformBtn = wrapper.find(
-      'button[title="Open Quick Voice Transform"]'
+      'button[title="Open Voice Quick AI Request"]'
     )
     await voiceTransformBtn.trigger('click')
 
     await flushPromises()
 
     expect(desktop.backend.callsOf('activate_mode')).toEqual([
-      { mode: ActivationMode.VOICE_TRANSFORMATION, text: 'sample text' },
+      { mode: ActivationMode.VOICE_QUICK_AI_REQUEST, text: 'sample text' },
     ])
   })
 })

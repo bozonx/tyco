@@ -35,8 +35,10 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   /** Records a text that leaves the app; runs before the window closes. */
   saveOutput: (text: string) => Promise<void>
   openTransformationModal?: (text: string, transformationId?: string) => void
-  openCustomTransformationModal?: (text: string) => void
-  openVoiceTransformationModal?: (text: string) => void
+  openQuickAiRequestModal?: (
+    text: string,
+    inputMode?: 'text' | 'voice'
+  ) => void
   openVoiceCommandsModal?: (text: string) => void
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string, promptId?: string) => void
@@ -214,8 +216,8 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
           },
         },
         {
-          id: 'customTransformation',
-          labelKey: 'action.customTransformation',
+          id: 'quickAiRequest',
+          labelKey: 'action.quickAiRequest',
           icon: 'mdi:pencil-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
@@ -223,12 +225,12 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               deps.showToast('toast.textNotSelected', 'error')
               return
             }
-            deps.openCustomTransformationModal?.(text)
+            deps.openQuickAiRequestModal?.(text, 'text')
           },
         },
         {
-          id: 'voiceTransformation',
-          labelKey: 'action.voiceTransformation',
+          id: 'voiceQuickAiRequest',
+          labelKey: 'action.voiceQuickAiRequest',
           icon: 'mdi:microphone-outline',
           trailingIcon: 'mdi:chevron-right',
           action: async (text: string) => {
@@ -236,7 +238,7 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               deps.showToast('toast.textNotSelected', 'error')
               return
             }
-            deps.openVoiceTransformationModal?.(text)
+            deps.openQuickAiRequestModal?.(text, 'voice')
           },
         },
         {

@@ -47,6 +47,8 @@ pub(super) fn push_editor_history(
             source.is_result_applied |= item.kind == EditorHistoryKind::Output;
             source.origin = source.origin.or(item.origin);
             source.instruction = source.instruction.or(item.instruction);
+            source.profile_id = source.profile_id.or(item.profile_id);
+            source.turns = source.turns.or(item.turns);
             source.created_at_ms = item.created_at_ms;
             history.retain(|existing| {
                 existing.kind == EditorHistoryKind::Source || existing.text.trim() != text
@@ -94,6 +96,16 @@ pub(super) fn push_editor_history(
         item.instruction = duplicates
             .iter()
             .find_map(|existing| existing.instruction.clone());
+    }
+    if item.profile_id.is_none() {
+        item.profile_id = duplicates
+            .iter()
+            .find_map(|existing| existing.profile_id.clone());
+    }
+    if item.turns.is_none() {
+        item.turns = duplicates
+            .iter()
+            .find_map(|existing| existing.turns.clone());
     }
 
     let id = item.id.clone();

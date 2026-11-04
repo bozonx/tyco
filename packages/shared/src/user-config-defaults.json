@@ -58,8 +58,8 @@
     "translation": "",
     "styling": "",
     "transformation": "",
-    "customTransformation": "",
-    "voiceTransformation": "",
+    "quickAiRequest": "",
+    "voiceQuickAiRequest": "",
     "chatPrompts": "",
     "snippets": "",
     "history": "",
@@ -94,8 +94,8 @@
         "s": { "type": "standard", "actionId": "stylingMenu" },
         "d": { "type": "standard", "actionId": "correction" },
         "f": { "type": "standard", "actionId": "transformationMenu" },
-        "g": { "type": "standard", "actionId": "customTransformation" },
-        "v": { "type": "standard", "actionId": "voiceTransformation" }
+        "g": { "type": "standard", "actionId": "quickAiRequest" },
+        "v": { "type": "standard", "actionId": "voiceQuickAiRequest" }
       }
     }
   ],
@@ -168,7 +168,8 @@
       "voiceCorrection": { "modelId": "ollama-qwen", "rule": "" },
       "aiTask": { "modelId": "ollama-qwen" },
       "transformation": { "modelId": "ollama-qwen" },
-      "styling": { "modelId": "ollama-qwen" }
+      "styling": { "modelId": "ollama-qwen" },
+      "quickRequest": { "modelId": "ollama-qwen", "rule": "" }
     },
     "imageQuality": "balanced"
   },

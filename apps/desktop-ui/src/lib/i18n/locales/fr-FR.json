@@ -4,21 +4,23 @@
     "copy": "Copier",
     "copyToClipboard": "Copier et fermer",
     "correction": "Correction",
-    "customTransformation": "Transformation libre",
     "insertIntoWindow": "Insérer dans la fenêtre",
     "script": "Script / Commande",
     "stylingMenu": "Stylisation de texte",
     "transformationMenu": "Transformation de texte",
     "translationMenu": "Traduction",
-    "voiceTransformation": "Transformation vocale",
     "webhook": "Webhook",
     "chatPromptsMenu": "Préréglages de prompts pour le chat",
     "voiceCommands": "Commandes vocales",
     "snippetsMenu": "Extraits",
     "saveAsSnippet": "Enregistrer comme extrait",
-    "savedAsSnippet": "Enregistré dans les extraits"
+    "savedAsSnippet": "Enregistré dans les extraits",
+    "quickAiRequest": "Requête IA rapide",
+    "voiceQuickAiRequest": "Requête vocale IA rapide"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Joindre un fichier",
     "alertCaution": "Attention",
@@ -178,6 +180,9 @@
       "needsDescription": "Nécessite une description dans les paramètres de la commande",
       "noCommands": "Aucune commande personnalisée configurée pour le moment.",
       "noCommandsHint": "Créez d'abord des commandes dans Paramètres → Commandes."
+    },
+    "replyBlocks": {
+      "toolLabel": "Blocs de réponse"
     }
   },
   "commands": {
@@ -776,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Utiliser le texte sélectionné comme contexte dans le chat IA",
       "correction": "Correction avec aperçu",
-      "customTransformation": "Transformation libre de texte",
       "editor": "Ouvrir le texte sélectionné dans l’éditeur",
       "history": "Historique",
       "quickInput": "Saisie rapide de texte",
@@ -788,13 +792,14 @@
       "voice": "Saisie vocale",
       "voiceChat": "Question vocale sur le texte sélectionné dans le chat IA",
       "voiceCommands": "Commandes vocales",
-      "voiceTransformation": "Transformation textuelle vocale",
       "selectionActionsPage2": "Actions : page 2",
       "selectionActionsPage3": "Actions : page 3",
       "chatPrompts": "Préréglages de prompts pour le texte sélectionné",
       "selectionActionsPage4": "Actions : page 4",
       "selectionActionsPage5": "Actions : page 5",
-      "snippets": "Extraits"
+      "snippets": "Extraits",
+      "quickAiRequest": "Requête IA rapide",
+      "voiceQuickAiRequest": "Requête vocale IA rapide"
     },
     "hotkeyInput": {
       "cancelHint": "Échap pour annuler",
@@ -1217,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Rechercher des extraits…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
+  "shortcuts": {
+    "insertIntoEditor": "Insérer dans l’éditeur"
+  },
   "theme": {
     "auto": "Comme le système",
     "dark": "Sombre",
@@ -1356,7 +1363,9 @@
     "missingSelection": "Un texte sélectionné est nécessaire."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "demande dans le chat" },
+    "actions": {
+      "askInChat": "demande dans le chat"
+    },
     "languages": {
       "cs-CZ": "Tchèque",
       "de-DE": "allemand",
@@ -1386,7 +1395,9 @@
     },
     "translate": "traduis en"
   },
-  "window": { "clickToFocus": "Cliquez pour continuer" },
+  "window": {
+    "clickToFocus": "Cliquez pour continuer"
+  },
   "write": {
     "alreadyCorrected": "Le texte est déjà corrigé",
     "cancel": "Annuler",
@@ -1436,5 +1447,18 @@
     "valueNotSet": "Non définie sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
   },
-  "snippets": { "noMatches": "Aucun extrait correspondant" }
+  "snippets": {
+    "noMatches": "Aucun extrait correspondant"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Insérer dans la fenêtre",
+    "insertIntoEditor": "Vers l'éditeur",
+    "showDiff": "Afficher les modifications",
+    "hideDiff": "Masquer les modifications"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Sélectionner un profil",
+    "profileLocked": "Profil verrouillé pendant la session",
+    "defaultProfile": "Question à l'IA"
+  }
 }

@@ -66,8 +66,7 @@ describe('createOverlayNavModel', () => {
     const intermediateModals = [
       MenuModals.TRANSLATE,
       MenuModals.ACTION_SELECT,
-      MenuModals.VOICE_TRANSFORMATION,
-      MenuModals.CUSTOM_TRANSFORMATION,
+      MenuModals.QUICK_AI_REQUEST,
       MenuModals.TRANSFORMATION,
       MenuModals.STYLING,
     ]

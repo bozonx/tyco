@@ -11,6 +11,9 @@ pub struct OpenMainChatEvent {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub profile_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub chat_id: Option<String>,
 }
 
 /// A chat history changed: every window reloads its list, and a window

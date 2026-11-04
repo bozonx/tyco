@@ -237,6 +237,7 @@ export function useAppRuntime() {
       return {
         startChat: store.startChat,
         openLastChat: store.openLastOrNewChat,
+        openChat: store.openChat,
         setChatInput: input.setValue,
         sendChatInput: store.sendInput,
         focusChatInput: input.requestFocus,
@@ -244,6 +245,7 @@ export function useAppRuntime() {
     },
     startChat: chatStore.startChat,
     openLastChat: chatStore.openLastOrNewChat,
+    openChat: chatStore.openChat,
     afterRender: nextTick,
     setChatInput: chatInputStore.setValue,
     sendChatInput: chatStore.sendInput,

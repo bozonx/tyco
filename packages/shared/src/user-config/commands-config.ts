@@ -14,8 +14,8 @@ export const STANDARD_ACTION_IDS = [
   'transformationMenu',
   'stylingMenu',
   'chatPromptsMenu',
-  'customTransformation',
-  'voiceTransformation',
+  'quickAiRequest',
+  'voiceQuickAiRequest',
   'voiceCommands',
   'snippetsMenu',
 ] as const

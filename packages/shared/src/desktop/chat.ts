@@ -74,12 +74,17 @@ export function parseOpenMainChatEvent(value: unknown): OpenMainChatEvent {
   if (
     !record(value) ||
     Object.keys(value).some(
-      (key) => !['attachment', 'question', 'autoSend'].includes(key)
+      (key) =>
+        !['attachment', 'question', 'autoSend', 'profileId', 'chatId'].includes(
+          key
+        )
     )
   )
     throw new Error('Invalid main chat event')
   if (value.question != null && typeof value.question !== 'string')
     throw new Error('Invalid chat question')
+  if (value.chatId != null && typeof value.chatId !== 'string')
+    throw new Error('Invalid chat id')
   if (value.autoSend !== undefined && typeof value.autoSend !== 'boolean')
     throw new Error('Invalid chat submit flag')
   if (value.attachment != null) {

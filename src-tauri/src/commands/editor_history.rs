@@ -30,6 +30,17 @@ pub async fn set_editor_history_item_result(
     run_blocking(move || storage::set_editor_history_result(&app, id, result)).await?
 }
 
+/// Updates the turns and final result of an active multi-turn AI session entry.
+#[tauri::command]
+pub async fn update_editor_history_item_session(
+    app: AppHandle,
+    id: String,
+    turns: Vec<crate::models::EditorHistoryTurn>,
+    result: Option<String>,
+) -> Result<(), AppError> {
+    run_blocking(move || storage::update_editor_history_session(&app, id, turns, result)).await?
+}
+
 /// Puts back an item deleted with `delete_editor_history_item`.
 #[tauri::command]
 pub async fn restore_editor_history_item(

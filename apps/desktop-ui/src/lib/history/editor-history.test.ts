@@ -161,4 +161,72 @@ describe('listRecentInstructions', () => {
 
     expect(model.listRecentInstructions(5)).toEqual([])
   })
+
+  it('filters recent instructions by profileId and includes turns', () => {
+    const call = vi.fn<DesktopCall>()
+    const model = createEditorHistoryModel({ call }, () => true)
+    model.editorHistory.value = [
+      {
+        id: '1',
+        text: 'Text 1',
+        kind: 'source',
+        operation: 'quickAiRequest',
+        profileId: 'writer',
+        turns: [
+          { prompt: 'First turn', inputKind: 'typed' },
+          { prompt: 'Second turn follow-up', inputKind: 'typed' },
+        ],
+        createdAt: 20,
+      },
+      {
+        id: '2',
+        text: 'Text 2',
+        kind: 'source',
+        operation: 'quickAiRequest',
+        profileId: 'coder',
+        instruction: { text: 'Write a python script', inputKind: 'typed' },
+        createdAt: 15,
+      },
+      {
+        id: '3',
+        text: 'Text 3',
+        kind: 'source',
+        operation: 'quickAiRequest',
+        profileId: 'writer',
+        instruction: { text: 'Old writer prompt', inputKind: 'typed' },
+        createdAt: 10,
+      },
+    ]
+
+    expect(model.listRecentInstructions(5, 'writer')).toEqual([
+      'Second turn follow-up',
+      'First turn',
+      'Old writer prompt',
+    ])
+    expect(model.listRecentInstructions(5, 'coder')).toEqual([
+      'Write a python script',
+    ])
+    expect(model.listRecentInstructions(5, 'unknown')).toEqual([])
+  })
+
+  it('updates session turns and result', async () => {
+    const call = vi
+      .fn<DesktopCall>()
+      .mockResolvedValue({ success: true, result: undefined })
+    const model = createEditorHistoryModel(
+      { call: call as DesktopCall },
+      () => true
+    )
+
+    await model.updateSession(
+      'sess-1',
+      [{ prompt: 'Test', inputKind: 'typed' }],
+      'Result'
+    )
+    expect(call).toHaveBeenCalledWith('update_editor_history_item_session', {
+      id: 'sess-1',
+      turns: [{ prompt: 'Test', inputKind: 'typed' }],
+      result: 'Result',
+    })
+  })
 })

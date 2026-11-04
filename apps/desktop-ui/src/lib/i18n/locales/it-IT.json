@@ -4,21 +4,23 @@
     "copy": "Copia",
     "copyToClipboard": "Copia e chiudi",
     "correction": "Correzione",
-    "customTransformation": "Trasformazione libera",
     "insertIntoWindow": "Inserisci nella finestra",
     "script": "Script / Comando",
     "stylingMenu": "Stilizzazione del testo",
     "transformationMenu": "Trasformazione del testo",
     "translationMenu": "Traduzione",
-    "voiceTransformation": "Trasformazione vocale",
     "webhook": "Webhook",
     "chatPromptsMenu": "Preset di prompt per la chat",
     "voiceCommands": "Comandi vocali",
     "snippetsMenu": "Snippet",
     "saveAsSnippet": "Salva come snippet",
-    "savedAsSnippet": "Salvato come snippet"
+    "savedAsSnippet": "Salvato come snippet",
+    "quickAiRequest": "Richiesta rapida IA",
+    "voiceQuickAiRequest": "Richiesta vocale rapida IA"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Allega file",
     "alertCaution": "Attenzione",
@@ -178,6 +180,9 @@
       "needsDescription": "Richiede una descrizione nelle impostazioni del comando",
       "noCommands": "Nessun comando personalizzato ancora configurato.",
       "noCommandsHint": "Crea prima i comandi in Impostazioni → Comandi."
+    },
+    "replyBlocks": {
+      "toolLabel": "Blocchi di risposta"
     }
   },
   "commands": {
@@ -776,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Usa il testo selezionato come contesto nella chat IA",
       "correction": "Correzione con anteprima",
-      "customTransformation": "Trasformazione libera del testo",
       "editor": "Apri il testo selezionato nell’editor",
       "history": "Cronologia",
       "quickInput": "Inserimento rapido di testo",
@@ -788,13 +792,14 @@
       "voice": "Input vocale",
       "voiceChat": "Domanda vocale sul testo selezionato nella chat IA",
       "voiceCommands": "Comandi vocali",
-      "voiceTransformation": "Trasformazione vocale del testo",
       "selectionActionsPage2": "Azioni: pagina 2",
       "selectionActionsPage3": "Azioni: pagina 3",
       "chatPrompts": "Preset di prompt della chat per il testo selezionato",
       "selectionActionsPage4": "Azioni: pagina 4",
       "selectionActionsPage5": "Azioni: pagina 5",
-      "snippets": "Snippet"
+      "snippets": "Snippet",
+      "quickAiRequest": "Richiesta rapida IA",
+      "voiceQuickAiRequest": "Richiesta vocale rapida IA"
     },
     "hotkeyInput": {
       "cancelHint": "Esc per annullare",
@@ -1217,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Cerca snippet…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Inserisci nell’editor" },
+  "shortcuts": {
+    "insertIntoEditor": "Inserisci nell’editor"
+  },
   "theme": {
     "auto": "Come nel sistema",
     "dark": "Scuro",
@@ -1356,7 +1363,9 @@
     "missingSelection": "Il testo selezionato è obbligatorio."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "chiedi nella chat" },
+    "actions": {
+      "askInChat": "chiedi nella chat"
+    },
     "languages": {
       "cs-CZ": "Ceco",
       "de-DE": "tedesco",
@@ -1386,7 +1395,9 @@
     },
     "translate": "traduci in"
   },
-  "window": { "clickToFocus": "Fai clic per continuare" },
+  "window": {
+    "clickToFocus": "Fai clic per continuare"
+  },
   "write": {
     "alreadyCorrected": "Il testo è già corretto",
     "cancel": "Annulla",
@@ -1436,5 +1447,18 @@
     "valueNotSet": "Non impostata su questo dispositivo: i comandi che la usano non vengono eseguiti",
     "valuePlaceholder": "Un percorso, un indirizzo o altro testo"
   },
-  "snippets": { "noMatches": "Nessuno snippet corrispondente" }
+  "snippets": {
+    "noMatches": "Nessuno snippet corrispondente"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Inserisci nella finestra",
+    "insertIntoEditor": "Nell'editor",
+    "showDiff": "Mostra modifiche",
+    "hideDiff": "Nascondi modifiche"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Seleziona profilo",
+    "profileLocked": "Profilo bloccato durante la sessione",
+    "defaultProfile": "Domanda all'IA"
+  }
 }

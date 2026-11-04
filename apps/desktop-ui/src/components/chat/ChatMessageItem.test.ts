@@ -89,3 +89,44 @@ it('shows an answer with tool calls step by step and passes the decision on', as
   ).toBe(false)
   wrapper.unmount()
 })
+
+it('renders propose_replies as ReplyBlock components and emits block actions', () => {
+  const wrapper = shallowMount(ChatMessageItem, {
+    props: {
+      message: {
+        role: 'assistant',
+        content: '',
+        parts: [
+          {
+            type: 'tool-call',
+            toolCallId: 'pr1',
+            toolName: 'propose_replies',
+            input: {
+              blocks: [
+                { title: 'Option 1', text: 'First answer' },
+                { title: 'Option 2', text: 'Second answer' },
+              ],
+            },
+            state: 'done',
+          },
+        ],
+      },
+    },
+  })
+
+  const blocks = wrapper.findAllComponents({ name: 'ReplyBlock' })
+  expect(blocks).toHaveLength(2)
+  expect(blocks[0].props('block')).toEqual({
+    title: 'Option 1',
+    text: 'First answer',
+  })
+
+  blocks[0].vm.$emit('insert', 'First answer')
+  expect(wrapper.emitted('insert-reply-block')).toEqual([['First answer']])
+
+  blocks[1].vm.$emit('insertEditor', 'Second answer')
+  expect(wrapper.emitted('insert-editor-reply-block')).toEqual([
+    ['Second answer'],
+  ])
+  wrapper.unmount()
+})

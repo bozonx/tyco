@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { createChatProfileRuntime } from './chat-profile-runtime'
+import {
+  createChatProfileRuntime,
+  resolveProfileInstructions,
+} from './chat-profile-runtime'
 
 describe('createChatProfileRuntime', () => {
   it('loads chat history and soul once during preparation and retries after a failure', async () => {
@@ -147,5 +150,32 @@ describe('createChatProfileRuntime', () => {
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('Could not read profile memory')
     )
+  })
+
+  describe('resolveProfileInstructions', () => {
+    it('combines soul and memory block for profile without full runtime', async () => {
+      const profile = {
+        id: 'p1',
+        name: 'Profile 1',
+        memoryMode: 'auto' as const,
+        createdAt: 1,
+        updatedAt: 1,
+        projectPermissions: {},
+      }
+      const readSoul = vi.fn(async () => 'Profile soul instruction')
+      const readCoreMemory = vi.fn(async () => '# Core Memory')
+      const listMemoryTopics = vi.fn(async () => [])
+
+      const instructions = await resolveProfileInstructions('p1', {
+        refreshProfile: async () => profile,
+        readSoul,
+        readCoreMemory,
+        listMemoryTopics,
+      })
+
+      expect(instructions).toContain('Profile soul instruction')
+      expect(instructions).toContain('<profile_memory>')
+      expect(instructions).toContain('# Core Memory')
+    })
   })
 })

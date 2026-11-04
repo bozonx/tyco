@@ -4,21 +4,23 @@
     "copy": "複製",
     "copyToClipboard": "複製並關閉",
     "correction": "校對",
-    "customTransformation": "自由轉換",
     "insertIntoWindow": "插入至視窗",
     "script": "指令碼 / 命令",
     "stylingMenu": "文字風格化",
     "transformationMenu": "文字轉換",
     "translationMenu": "翻譯",
-    "voiceTransformation": "語音轉換",
     "webhook": "Webhook",
     "chatPromptsMenu": "聊天提示詞預設",
     "voiceCommands": "語音命令",
     "snippetsMenu": "片段",
     "saveAsSnippet": "另存為片段",
-    "savedAsSnippet": "已儲存至片段"
+    "savedAsSnippet": "已儲存至片段",
+    "quickAiRequest": "AI 快速請求",
+    "voiceQuickAiRequest": "語音 AI 快速請求"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "附加檔案",
     "alertCaution": "注意",
@@ -178,6 +180,9 @@
       "needsDescription": "需要在命令設定中填寫描述",
       "noCommands": "尚未設定自訂命令。",
       "noCommandsHint": "請先在設定 → 命令中建立命令。"
+    },
+    "replyBlocks": {
+      "toolLabel": "回覆區塊"
     }
   },
   "commands": {
@@ -591,7 +596,10 @@
     "cancelled": "已取消",
     "done": "完成",
     "emptyResult": "模型傳回了空白結果",
-    "failed": { "command": "命令執行失敗", "correction": "校對失敗" },
+    "failed": {
+      "command": "命令執行失敗",
+      "correction": "校對失敗"
+    },
     "focusChanged": "視窗在此期間已切換，因此結果已複製到剪貼簿",
     "noSelection": "未選取任何內容",
     "noTarget": "沒有任何應用程式視窗取得焦點",
@@ -602,7 +610,10 @@
       "command": "命令未對文字進行任何變更",
       "correction": "未發現任何錯誤"
     },
-    "working": { "command": "正在執行命令…", "correction": "正在校對…" }
+    "working": {
+      "command": "正在執行命令…",
+      "correction": "正在校對…"
+    }
   },
   "settings": {
     "accessAllow": "允許",
@@ -770,7 +781,6 @@
     "hotkeyActions": {
       "chat": "在 AI 聊天中將選取的文字作為上下文",
       "correction": "帶預覽的校對",
-      "customTransformation": "文字自由轉換",
       "editor": "在編輯器中開啟選取的文字",
       "history": "歷史記錄",
       "quickInput": "快速文字輸入",
@@ -782,13 +792,14 @@
       "voice": "語音輸入",
       "voiceChat": "在 AI 聊天中針對選取的文字進行語音提問",
       "voiceCommands": "語音命令",
-      "voiceTransformation": "文字語音轉換",
       "selectionActionsPage2": "操作：第 2 頁",
       "selectionActionsPage3": "操作：第 3 頁",
       "chatPrompts": "針對所選文字的聊天提示詞預設",
       "selectionActionsPage4": "操作：第 4 頁",
       "selectionActionsPage5": "操作：第 5 頁",
-      "snippets": "片段"
+      "snippets": "片段",
+      "quickAiRequest": "AI 快速請求",
+      "voiceQuickAiRequest": "語音 AI 快速請求"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -1211,7 +1222,9 @@
     "searchSnippetsPlaceholder": "搜尋片段…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "插入至編輯器" },
+  "shortcuts": {
+    "insertIntoEditor": "插入至編輯器"
+  },
   "theme": {
     "auto": "跟隨系統",
     "dark": "深色",
@@ -1350,7 +1363,9 @@
     "missingSelection": "必須提供選取的文字。"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "在聊天中提問;在對話中提問" },
+    "actions": {
+      "askInChat": "在聊天中提問;在對話中提問"
+    },
     "languages": {
       "cs-CZ": "捷克語",
       "de-DE": "德文;德語",
@@ -1380,7 +1395,9 @@
     },
     "translate": "翻譯成;翻譯為;翻譯到"
   },
-  "window": { "clickToFocus": "按一下以繼續" },
+  "window": {
+    "clickToFocus": "按一下以繼續"
+  },
   "write": {
     "alreadyCorrected": "文字已經過校對",
     "cancel": "取消",
@@ -1430,5 +1447,18 @@
     "valueNotSet": "此裝置上未設定：使用它的命令不會執行",
     "valuePlaceholder": "路徑、位址或其他文字"
   },
-  "snippets": { "noMatches": "未找到相符的片段" }
+  "snippets": {
+    "noMatches": "未找到相符的片段"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "插入至視窗",
+    "insertIntoEditor": "至編輯器",
+    "showDiff": "顯示變更",
+    "hideDiff": "隱藏變更"
+  },
+  "quickAiRequest": {
+    "selectProfile": "選取設定檔",
+    "profileLocked": "工作階段期間設定檔已鎖定",
+    "defaultProfile": "向 AI 提問"
+  }
 }

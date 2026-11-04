@@ -58,6 +58,7 @@ export const LLM_TASKS = [
   'aiTask',
   'transformation',
   'styling',
+  'quickRequest',
 ] as const
 
 export type LlmTask = (typeof LLM_TASKS)[number]
@@ -88,6 +89,8 @@ export interface LlmTasksConfig {
   transformation: Pick<LlmTaskConfig, 'modelId'>
   /** Each styling preset has its own rule, see `StylingConfig` */
   styling: Pick<LlmTaskConfig, 'modelId'>
+  /** Single quick AI request overlay */
+  quickRequest: LlmTaskConfig
 }
 
 /** How much attached images are scaled down before a request */

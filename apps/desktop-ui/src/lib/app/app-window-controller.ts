@@ -41,12 +41,14 @@ export interface AppWindowControllerDependencies {
   profileChat?: (profileId: string) => {
     startChat: (params: ChatParams) => Promise<void>
     openLastChat: () => Promise<void>
+    openChat: (id: string) => Promise<boolean | void>
     setChatInput: (text: string) => void
     sendChatInput: () => Promise<unknown>
     focusChatInput: () => void
   }
   startChat: (params: ChatParams) => Promise<void>
   openLastChat: () => Promise<void>
+  openChat: (id: string) => Promise<boolean | void>
   afterRender: () => Promise<void>
   setChatInput: (text: string) => void
   sendChatInput: () => Promise<unknown>
@@ -85,7 +87,10 @@ export function createAppWindowController(
         : null
     const startChat = profile ? profile.startChat : deps.startChat
     const openLastChat = profile ? profile.openLastChat : deps.openLastChat
-    if (attachment && trimmedText) {
+    if (payload.chatId) {
+      if (profile) await profile.openChat(payload.chatId)
+      else await deps.openChat(payload.chatId)
+    } else if (attachment && trimmedText) {
       await startChat({ attachments: [{ ...attachment, text: trimmedText }] })
     } else if (trimmedQuestion) {
       await startChat({})

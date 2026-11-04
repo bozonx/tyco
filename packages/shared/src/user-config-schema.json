@@ -168,8 +168,8 @@
         "translation": { "type": "string", "default": "" },
         "styling": { "type": "string", "default": "" },
         "transformation": { "type": "string", "default": "" },
-        "customTransformation": { "type": "string", "default": "" },
-        "voiceTransformation": { "type": "string", "default": "" },
+        "quickAiRequest": { "type": "string", "default": "" },
+        "voiceQuickAiRequest": { "type": "string", "default": "" },
         "chatPrompts": { "type": "string", "default": "" },
         "snippets": { "type": "string", "default": "" },
         "history": { "type": "string", "default": "" },
@@ -198,8 +198,8 @@
         "translation",
         "styling",
         "transformation",
-        "customTransformation",
-        "voiceTransformation",
+        "quickAiRequest",
+        "voiceQuickAiRequest",
         "chatPrompts",
         "snippets",
         "history",
@@ -377,8 +377,8 @@
                         "correction",
                         "translationMenu",
                         "askInChat",
-                        "customTransformation",
-                        "voiceTransformation"
+                        "quickAiRequest",
+                        "voiceQuickAiRequest"
                       ]
                     }
                   },
@@ -707,6 +707,15 @@
               "properties": { "modelId": { "type": "string", "default": "" } },
               "required": ["modelId"],
               "default": { "modelId": "" }
+            },
+            "quickRequest": {
+              "type": "object",
+              "properties": {
+                "modelId": { "type": "string", "default": "" },
+                "rule": { "type": "string", "default": "" }
+              },
+              "required": ["modelId", "rule"],
+              "default": { "modelId": "", "rule": "" }
             }
           },
           "required": [
@@ -716,7 +725,8 @@
             "voiceCorrection",
             "aiTask",
             "transformation",
-            "styling"
+            "styling",
+            "quickRequest"
           ]
         },
         "imageQuality": {

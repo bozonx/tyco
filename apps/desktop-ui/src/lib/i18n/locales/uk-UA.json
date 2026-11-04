@@ -4,21 +4,23 @@
     "copy": "Копіювати",
     "copyToClipboard": "Копіювати й закрити",
     "correction": "Виправлення",
-    "customTransformation": "Вільна трансформація",
     "insertIntoWindow": "Вставити у вікно",
     "script": "Скрипт / Команда",
     "stylingMenu": "Стилізація тексту",
     "transformationMenu": "Трансформація тексту",
     "translationMenu": "Переклад",
-    "voiceTransformation": "Голосова трансформація",
     "webhook": "Вебхук",
     "chatPromptsMenu": "Швидкі промпти для чату",
     "voiceCommands": "Голосові команди",
     "snippetsMenu": "Сніпети",
     "saveAsSnippet": "Зберегти як сніпет",
-    "savedAsSnippet": "Збережено в сніпети"
+    "savedAsSnippet": "Збережено в сніпети",
+    "quickAiRequest": "Швидкий запит до ШІ",
+    "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Прикріпити файл",
     "alertCaution": "Обережно",
@@ -178,6 +180,9 @@
       "needsDescription": "Потрібен опис у налаштуваннях команди",
       "noCommands": "Користувацькі команди ще не налаштовано.",
       "noCommandsHint": "Спочатку створіть команди в Налаштування → Команди."
+    },
+    "replyBlocks": {
+      "toolLabel": "Варіанти відповіді"
     }
   },
   "commands": {
@@ -605,7 +610,10 @@
       "command": "Команда залишила текст без змін",
       "correction": "Помилок не знайдено"
     },
-    "working": { "command": "Виконання команди…", "correction": "Виправлення…" }
+    "working": {
+      "command": "Виконання команди…",
+      "correction": "Виправлення…"
+    }
   },
   "settings": {
     "accessAllow": "Дозволити",
@@ -773,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Використати виділений текст як контекст у ШІ-чаті",
       "correction": "Виправлення з попереднім переглядом",
-      "customTransformation": "Вільна трансформація тексту",
       "editor": "Відкрити виділений текст у редакторі",
       "history": "Історія",
       "quickInput": "Швидке введення тексту",
@@ -785,13 +792,14 @@
       "voice": "Голосове введення",
       "voiceChat": "Голосове запитання про виділений текст у ШІ-чаті",
       "voiceCommands": "Голосові команди",
-      "voiceTransformation": "Голосова трансформація тексту",
       "selectionActionsPage2": "Дії: сторінка 2",
       "selectionActionsPage3": "Дії: сторінка 3",
       "chatPrompts": "Швидкі промпти для чату з ШІ",
       "selectionActionsPage4": "Дії: сторінка 4",
       "selectionActionsPage5": "Дії: сторінка 5",
-      "snippets": "Сніпети"
+      "snippets": "Сніпети",
+      "quickAiRequest": "Швидкий запит до ШІ",
+      "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — скасувати",
@@ -1214,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Пошук сніпетів…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
+  "shortcuts": {
+    "insertIntoEditor": "Вставити в редактор"
+  },
   "theme": {
     "auto": "Як у системі",
     "dark": "Темна",
@@ -1353,7 +1363,9 @@
     "missingSelection": "Потрібен виділений текст."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "запитай у чаті" },
+    "actions": {
+      "askInChat": "запитай у чаті"
+    },
     "languages": {
       "cs-CZ": "Чеська",
       "de-DE": "німецькою",
@@ -1383,7 +1395,9 @@
     },
     "translate": "переклади"
   },
-  "window": { "clickToFocus": "Клацніть, щоб продовжити" },
+  "window": {
+    "clickToFocus": "Клацніть, щоб продовжити"
+  },
   "write": {
     "alreadyCorrected": "Текст уже виправлено",
     "cancel": "Скасувати",
@@ -1433,5 +1447,18 @@
     "valueNotSet": "Не задано на цьому пристрої: команди з цією змінною не виконуються",
     "valuePlaceholder": "Шлях, адреса або інший текст"
   },
-  "snippets": { "noMatches": "Нічого не знайдено" }
+  "snippets": {
+    "noMatches": "Нічого не знайдено"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Вставити у вікно",
+    "insertIntoEditor": "В редактор",
+    "showDiff": "Показати зміни",
+    "hideDiff": "Сховати зміни"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Вибрати профіль",
+    "profileLocked": "Профіль заблоковано під час сесії",
+    "defaultProfile": "Запитання до ШІ"
+  }
 }

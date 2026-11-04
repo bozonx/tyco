@@ -4,21 +4,23 @@
     "copy": "Kopiraj",
     "copyToClipboard": "Kopiraj i zatvori",
     "correction": "Ispravak",
-    "customTransformation": "Slobodna transformacija",
     "insertIntoWindow": "Umetni u prozor",
     "script": "Skripta / Naredba",
     "stylingMenu": "Stiliziranje teksta",
     "transformationMenu": "Transformacija teksta",
     "translationMenu": "Prijevod",
-    "voiceTransformation": "Glasovna transformacija",
     "webhook": "Webhook",
     "chatPromptsMenu": "Unaprijed postavljeni upiti za chat",
     "voiceCommands": "Glasovne naredbe",
     "snippetsMenu": "Isječci teksta",
     "saveAsSnippet": "Spremi kao isječak",
-    "savedAsSnippet": "Spremljeno kao isječak"
+    "savedAsSnippet": "Spremljeno kao isječak",
+    "quickAiRequest": "Brzi upit za UI",
+    "voiceQuickAiRequest": "Glasovni brzi upit za UI"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "Priloži datoteku",
     "alertCaution": "Oprez",
@@ -178,6 +180,9 @@
       "needsDescription": "Potreban je opis u postavkama naredbe",
       "noCommands": "Još nema konfiguriranih prilagođenih naredbi.",
       "noCommandsHint": "Prvo stvorite naredbe u Postavke → Naredbe."
+    },
+    "replyBlocks": {
+      "toolLabel": "Blokovi odgovora"
     }
   },
   "commands": {
@@ -776,7 +781,6 @@
     "hotkeyActions": {
       "chat": "Koristi odabrani tekst kao kontekst u AI chatu",
       "correction": "Ispravak s pregledom",
-      "customTransformation": "Slobodna transformacija teksta",
       "editor": "Otvori odabrani tekst u uređivaču",
       "history": "Povijest",
       "quickInput": "Brzi unos teksta",
@@ -788,13 +792,14 @@
       "voice": "Glasovni unos",
       "voiceChat": "Glasovno pitanje o odabranom tekstu u AI chatu",
       "voiceCommands": "Glasovne naredbe",
-      "voiceTransformation": "Glasovna transformacija teksta",
       "selectionActionsPage2": "Radnje: stranica 2",
       "selectionActionsPage3": "Radnje: stranica 3",
       "chatPrompts": "Unaprijed postavljeni upiti za chat za odabrani tekst",
       "selectionActionsPage4": "Radnje: stranica 4",
       "selectionActionsPage5": "Radnje: stranica 5",
-      "snippets": "Isječci teksta"
+      "snippets": "Isječci teksta",
+      "quickAiRequest": "Brzi upit za UI",
+      "voiceQuickAiRequest": "Glasovni brzi upit za UI"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",
@@ -1217,7 +1222,9 @@
     "searchSnippetsPlaceholder": "Pretraži isječke…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
+  "shortcuts": {
+    "insertIntoEditor": "Umetni u uređivač"
+  },
   "theme": {
     "auto": "Kao u sustavu",
     "dark": "Tamna",
@@ -1356,7 +1363,9 @@
     "missingSelection": "Potreban je odabrani tekst."
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "pitaj u chatu" },
+    "actions": {
+      "askInChat": "pitaj u chatu"
+    },
     "languages": {
       "cs-CZ": "Češki",
       "de-DE": "njemački",
@@ -1386,7 +1395,9 @@
     },
     "translate": "prevedi na"
   },
-  "window": { "clickToFocus": "Kliknite za nastavak" },
+  "window": {
+    "clickToFocus": "Kliknite za nastavak"
+  },
   "write": {
     "alreadyCorrected": "Tekst je već ispravljen",
     "cancel": "Odustani",
@@ -1436,5 +1447,18 @@
     "valueNotSet": "Nije postavljena na ovom uređaju: naredbe koje je koriste ne pokreću se",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
-  "snippets": { "noMatches": "Nema podudarnih isječaka" }
+  "snippets": {
+    "noMatches": "Nema podudarnih isječaka"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "Umetni u prozor",
+    "insertIntoEditor": "U uređivač",
+    "showDiff": "Prikaži promjene",
+    "hideDiff": "Sakrij promjene"
+  },
+  "quickAiRequest": {
+    "selectProfile": "Odaberite profil",
+    "profileLocked": "Profil je zaključan tijekom sesije",
+    "defaultProfile": "Pitanje za AI"
+  }
 }

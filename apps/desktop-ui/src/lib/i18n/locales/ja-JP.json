@@ -4,21 +4,23 @@
     "copy": "コピー",
     "copyToClipboard": "コピーして閉じる",
     "correction": "校正",
-    "customTransformation": "自由変換",
     "insertIntoWindow": "ウィンドウに挿入",
     "script": "スクリプト / コマンド",
     "stylingMenu": "テキストスタイリング",
     "transformationMenu": "テキスト変換",
     "translationMenu": "翻訳",
-    "voiceTransformation": "音声変換",
     "webhook": "Webhook",
     "chatPromptsMenu": "チャットプロンプトのプリセット",
     "voiceCommands": "音声コマンド",
     "snippetsMenu": "スニペット",
     "saveAsSnippet": "スニペットとして保存",
-    "savedAsSnippet": "スニペットに保存しました"
+    "savedAsSnippet": "スニペットに保存しました",
+    "quickAiRequest": "AIクイックリクエスト",
+    "voiceQuickAiRequest": "音声AIクイックリクエスト"
   },
-  "app": { "title": "TyCo" },
+  "app": {
+    "title": "TyCo"
+  },
   "chat": {
     "addFile": "ファイルを添付",
     "alertCaution": "注意",
@@ -178,6 +180,9 @@
       "needsDescription": "コマンド設定で説明が必要です",
       "noCommands": "カスタムコマンドはまだ設定されていません。",
       "noCommandsHint": "最初に「設定 → コマンド」でコマンドを作成してください。"
+    },
+    "replyBlocks": {
+      "toolLabel": "返答ブロック"
     }
   },
   "commands": {
@@ -605,7 +610,10 @@
       "command": "コマンドによるテキストの変更はありませんでした",
       "correction": "修正箇所は見つかりませんでした"
     },
-    "working": { "command": "コマンドを実行中…", "correction": "校正中…" }
+    "working": {
+      "command": "コマンドを実行中…",
+      "correction": "校正中…"
+    }
   },
   "settings": {
     "accessAllow": "許可",
@@ -773,7 +781,6 @@
     "hotkeyActions": {
       "chat": "選択テキストをAIチャットのコンテキストとして使用",
       "correction": "プレビュー付き校正",
-      "customTransformation": "テキストの自由変換",
       "editor": "選択テキストをエディターで開く",
       "history": "履歴",
       "quickInput": "クイックテキスト入力",
@@ -785,13 +792,14 @@
       "voice": "音声入力",
       "voiceChat": "選択テキストについてAIチャットで音声質問",
       "voiceCommands": "音声コマンド",
-      "voiceTransformation": "テキストの音声変換",
       "selectionActionsPage2": "アクション: ページ 2",
       "selectionActionsPage3": "アクション: ページ 3",
       "chatPrompts": "選択テキストのチャットプロンプトプリセット",
       "selectionActionsPage4": "アクション: ページ 4",
       "selectionActionsPage5": "アクション: ページ 5",
-      "snippets": "スニペット"
+      "snippets": "スニペット",
+      "quickAiRequest": "AIクイックリクエスト",
+      "voiceQuickAiRequest": "音声AIクイックリクエスト"
     },
     "hotkeyInput": {
       "cancelHint": "Escでキャンセル",
@@ -1214,7 +1222,9 @@
     "searchSnippetsPlaceholder": "スニペットを検索…",
     "hotkeyDescriptions": {}
   },
-  "shortcuts": { "insertIntoEditor": "エディターに挿入" },
+  "shortcuts": {
+    "insertIntoEditor": "エディターに挿入"
+  },
   "theme": {
     "auto": "システム設定に従う",
     "dark": "ダーク",
@@ -1353,7 +1363,9 @@
     "missingSelection": "選択されたテキストが必要です。"
   },
   "voiceGrammar": {
-    "actions": { "askInChat": "チャットで質問" },
+    "actions": {
+      "askInChat": "チャットで質問"
+    },
     "languages": {
       "cs-CZ": "チェコ語",
       "de-DE": "ドイツ語",
@@ -1383,7 +1395,9 @@
     },
     "translate": "{language}に翻訳して;{language}に翻訳;翻訳"
   },
-  "window": { "clickToFocus": "クリックして続行" },
+  "window": {
+    "clickToFocus": "クリックして続行"
+  },
   "write": {
     "alreadyCorrected": "テキストはすでに修正済みです",
     "cancel": "キャンセル",
@@ -1433,5 +1447,18 @@
     "valueNotSet": "このデバイスでは未設定: これを使うコマンドは実行されません",
     "valuePlaceholder": "パス、アドレス、その他のテキスト"
   },
-  "snippets": { "noMatches": "一致するスニペットがありません" }
+  "snippets": {
+    "noMatches": "一致するスニペットがありません"
+  },
+  "replyBlocks": {
+    "insertIntoWindow": "ウィンドウに挿入",
+    "insertIntoEditor": "エディタへ",
+    "showDiff": "変更を表示",
+    "hideDiff": "変更を非表示"
+  },
+  "quickAiRequest": {
+    "selectProfile": "プロファイルを選択",
+    "profileLocked": "セッション中はプロファイルがロックされます",
+    "defaultProfile": "AIへの質問"
+  }
 }

@@ -449,6 +449,17 @@ pub fn set_editor_history_result(
     })
 }
 
+pub fn update_editor_history_session(
+    app: &AppHandle,
+    id: String,
+    turns: Vec<crate::models::EditorHistoryTurn>,
+    result: Option<String>,
+) -> Result<(), AppError> {
+    change_editor(app, |config, memory| {
+        editor::update_editor_history_session(app, config, memory, id, turns, result)
+    })
+}
+
 pub fn restore_editor_history_item(
     app: &AppHandle,
     item: EditorHistoryItem,
@@ -688,6 +699,8 @@ mod tests {
                         operation: None,
                         origin: None,
                         instruction: None,
+                        profile_id: None,
+                        turns: None,
                         created_at_ms: 1,
                         result: None,
                         is_result_applied: false,

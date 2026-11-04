@@ -175,6 +175,7 @@ const TASK_LABEL_KEYS = {
   aiTask: 'settings.aiCommands',
   transformation: 'settings.transformationsTab',
   styling: 'settings.stylingTab',
+  quickRequest: 'action.quickAiRequest',
 } as const
 
 const { t } = useI18n()

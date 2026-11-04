@@ -220,12 +220,12 @@ describe('SettingsGlobalActionsTab.vue', () => {
     expect(transformationRow.exists()).toBe(true)
 
     const customTransformationRow = wrapper.find(
-      '[data-label="settings.hotkeyActions.customTransformation"]'
+      '[data-label="settings.hotkeyActions.quickAiRequest"]'
     )
     expect(customTransformationRow.exists()).toBe(true)
 
     const voiceTransformationRow = wrapper.find(
-      '[data-label="settings.hotkeyActions.voiceTransformation"]'
+      '[data-label="settings.hotkeyActions.voiceQuickAiRequest"]'
     )
     expect(voiceTransformationRow.exists()).toBe(true)
   })

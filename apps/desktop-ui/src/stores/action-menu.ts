@@ -34,11 +34,14 @@ export const useActionMenuStore = defineStore('actionMenu', () => {
         transformationId,
       })
     },
-    openCustomTransformationModal: (text: string) => {
-      menuModalsStore.nextModal(MenuModals.CUSTOM_TRANSFORMATION, { text })
-    },
-    openVoiceTransformationModal: (text: string) => {
-      menuModalsStore.nextModal(MenuModals.VOICE_TRANSFORMATION, { text })
+    openQuickAiRequestModal: (
+      text: string,
+      inputMode: 'text' | 'voice' = 'text'
+    ) => {
+      menuModalsStore.nextModal(MenuModals.QUICK_AI_REQUEST, {
+        text,
+        inputMode,
+      })
     },
     openVoiceCommandsModal: (text: string) => {
       menuModalsStore.nextModal(MenuModals.VOICE_COMMANDS, { text })

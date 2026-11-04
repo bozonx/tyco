@@ -24,6 +24,7 @@ import type {
   EditorHistoryEntry,
   EditorHistoryItem,
   EditorHistoryOrigin,
+  EditorHistoryTurn,
   ExternalJob,
   FetchRequest,
   HotkeyApplyRequest,
@@ -205,6 +206,7 @@ export interface DesktopCommands {
       question?: string | null
       autoSend?: boolean | null
       profileId?: string | null
+      chatId?: string | null
       activationId: number
     }
     result: void
@@ -376,6 +378,14 @@ export interface DesktopCommands {
     result: ProfileMemoryChange
   }
   uninstall_plugin_package: { args: { id: string }; result: void }
+  update_editor_history_item_session: {
+    args: {
+      id: string
+      turns: Array<EditorHistoryTurn>
+      result?: string | null
+    }
+    result: void
+  }
   write_ai_profile_soul: { args: { id: string; content: string }; result: void }
   write_plugin_note: {
     args: {
