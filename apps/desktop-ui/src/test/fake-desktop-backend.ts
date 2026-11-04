@@ -196,12 +196,13 @@ export class FakeDesktopBackend {
         if (existing.kind !== 'draft') return existing.id
         this.history = this.history.filter((item) => item.id !== entry.id)
       }
-      const { operation, origin, id: inputId, ...rest } = entry
+      const { operation, origin, instruction, id: inputId, ...rest } = entry
       const id = inputId ?? this.generateId('history')
       this.history.unshift({
         ...rest,
         ...(operation ? { operation } : {}),
         ...(origin ? { origin } : {}),
+        ...(instruction ? { instruction } : {}),
         id,
         createdAt: Date.now(),
       })

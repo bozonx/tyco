@@ -687,6 +687,7 @@ mod tests {
                         kind: crate::models::EditorHistoryKind::Draft,
                         operation: None,
                         origin: None,
+                        instruction: None,
                         created_at_ms: 1,
                         result: None,
                         is_result_applied: false,

@@ -156,7 +156,7 @@ mod tests {
         let state = create_state();
         state.update_snapshot(|snapshot| {
             snapshot.settings.session_state.last_chat_id = Some("chat".into());
-            snapshot.settings.session_state.recent_ai_prompts = vec!["Private prompt".into()];
+            snapshot.settings.session_state.recent_translate_languages = vec!["it".into()];
         });
         assert_eq!(
             state
@@ -173,7 +173,7 @@ mod tests {
         assert!(restarted
             .settings
             .session_state
-            .recent_ai_prompts
+            .recent_translate_languages
             .is_empty());
         assert_eq!(*restarted.settings.user_config, config);
     }

@@ -49,7 +49,6 @@ export const DEFAULT_SESSION_STATE: SessionState = {
   lastMode: null,
   lastChatModelId: null,
   lastProfileChatIds: {},
-  recentAiPrompts: [],
   recentTranslateLanguages: [],
 }
 

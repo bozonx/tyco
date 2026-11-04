@@ -30,6 +30,22 @@ pub enum EditorHistoryOrigin {
     Voice,
 }
 
+/// The input modality of an AI prompt.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub enum EditorHistoryInputKind {
+    Typed,
+    Voice,
+}
+
+/// The prompt or instruction for an AI transformation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub struct EditorHistoryInstruction {
+    pub text: String,
+    pub input_kind: EditorHistoryInputKind,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorHistoryItem {
@@ -43,6 +59,10 @@ pub struct EditorHistoryItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub origin: Option<EditorHistoryOrigin>,
+    /// The prompt or instruction of a transformation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub instruction: Option<EditorHistoryInstruction>,
     /// Unix time in milliseconds.
     #[serde(rename = "createdAt")]
     pub created_at_ms: u64,
@@ -69,16 +89,25 @@ pub struct EditorHistoryEntry {
     pub operation: Option<EditorHistoryOperation>,
     #[serde(default)]
     pub origin: Option<EditorHistoryOrigin>,
+    #[serde(default)]
+    pub instruction: Option<EditorHistoryInstruction>,
 }
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn persisted_records_preserve_timestamp_and_applied_result_wire_names() {
-        let value = serde_json::json!({"id":"record", "text":"source", "kind":"source", "createdAt":123, "result":"output", "isResultApplied":true});
+        let value = serde_json::json!({"id":"record", "text":"source", "kind":"source", "createdAt":123, "result":"output", "isResultApplied":true, "instruction":{"text":"make it shorter","inputKind":"typed"}});
         let record: super::EditorHistoryItem = serde_json::from_value(value.clone()).unwrap();
         assert_eq!(record.created_at_ms, 123);
         assert!(record.is_result_applied);
+        assert_eq!(
+            record.instruction,
+            Some(super::EditorHistoryInstruction {
+                text: "make it shorter".to_string(),
+                input_kind: super::EditorHistoryInputKind::Typed,
+            })
+        );
         assert_eq!(serde_json::to_value(record).unwrap(), value);
     }
 }

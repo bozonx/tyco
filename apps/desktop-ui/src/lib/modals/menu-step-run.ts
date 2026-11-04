@@ -1,5 +1,9 @@
 import { errorMessage } from '@tyco/shared/value-guards'
-import type { EditorHistoryOperation } from '@tyco/shared'
+import type {
+  EditorHistoryInstruction,
+  EditorHistoryOperation,
+  EditorHistoryOrigin,
+} from '@tyco/shared'
 
 import type { ToolResult } from '../tools/tool-types'
 import type {
@@ -15,7 +19,9 @@ export interface MenuStepRunDependencies {
   clearPending: (owner: number) => void
   saveSource: (
     text: string,
-    operation: EditorHistoryOperation
+    operation: EditorHistoryOperation,
+    origin?: EditorHistoryOrigin,
+    instruction?: EditorHistoryInstruction
   ) => Promise<string | null>
   saveSourceResult: (id: string | null, result: string) => Promise<void>
   /** The result was made but could not be kept in the history */
@@ -40,6 +46,8 @@ export interface MenuStepRunRequest {
    */
   sourceText?: string
   operation: EditorHistoryOperation
+  origin?: EditorHistoryOrigin
+  instruction?: EditorHistoryInstruction
   /** What the pending screen shows while the tool runs */
   pending: Omit<PendingModalParams, 'onCancel'>
   /**
@@ -84,12 +92,19 @@ export function createMenuStepRun(deps: MenuStepRunDependencies) {
     }
     try {
       // the history is a convenience: a failed write must not stop the tool
-      const sourceId = await deps
-        .saveSource(request.text, request.operation)
-        .catch(() => {
-          deps.reportHistoryError()
-          return null
-        })
+      const saveSourceArgs = [
+        request.text,
+        request.operation,
+        ...(request.origin || request.instruction
+          ? [request.origin, request.instruction]
+          : []),
+      ] as const
+      const sourceId = await (
+        deps.saveSource as (...args: unknown[]) => Promise<string | null>
+      )(...saveSourceArgs).catch(() => {
+        deps.reportHistoryError()
+        return null
+      })
       if (controller.signal.aborted) return
       const result = await request.invoke(controller.signal, updatePending)
       if (result.cancelled || controller.signal.aborted) return

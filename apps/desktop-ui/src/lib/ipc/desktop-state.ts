@@ -95,8 +95,6 @@ export function createDesktopStateModel(deps: DesktopStateDependencies) {
   const patchSessionState = (patch: Partial<SessionState>) => {
     if (!loaded) return Promise.resolve(notLoaded())
     const queuedPatch = { ...patch }
-    if (patch.recentAiPrompts)
-      queuedPatch.recentAiPrompts = [...patch.recentAiPrompts]
     if (patch.recentTranslateLanguages)
       queuedPatch.recentTranslateLanguages = [...patch.recentTranslateLanguages]
     const write = sessionStateWrites.then(async () => {

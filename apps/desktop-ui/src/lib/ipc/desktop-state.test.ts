@@ -184,14 +184,16 @@ describe('desktop state revision ordering', () => {
         sessionState: {
           ...DEFAULT_SESSION_STATE,
           lastChatId: 'chat',
-          recentAiPrompts: ['original'],
+          recentTranslateLanguages: ['original'],
         },
       })
     )
     const first = model.patchSessionState({ lastChatId: 'chat' })
-    const prompts = ['original']
-    const second = model.patchSessionState({ recentAiPrompts: prompts })
-    prompts.push('later')
+    const languages = ['original']
+    const second = model.patchSessionState({
+      recentTranslateLanguages: languages,
+    })
+    languages.push('later')
     await Promise.resolve()
     expect(call).toHaveBeenCalledTimes(1)
     finish(
@@ -201,12 +203,12 @@ describe('desktop state revision ordering', () => {
     )
     await Promise.all([first, second])
     expect(call).toHaveBeenLastCalledWith('patch_session_state', {
-      patch: { recentAiPrompts: ['original'] },
+      patch: { recentTranslateLanguages: ['original'] },
     })
     expect(model.desktopState.value.sessionState).toEqual({
       ...DEFAULT_SESSION_STATE,
       lastChatId: 'chat',
-      recentAiPrompts: ['original'],
+      recentTranslateLanguages: ['original'],
     })
   })
 

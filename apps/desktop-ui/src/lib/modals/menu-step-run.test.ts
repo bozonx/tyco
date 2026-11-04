@@ -54,6 +54,22 @@ describe('menu step run', () => {
     expect(menu.pendingModal.value).toBeNull()
   })
 
+  it('passes origin and instruction to saveSource when provided', async () => {
+    const { deps, run } = setup()
+    await run(
+      request({
+        instruction: { text: 'custom instruction', inputKind: 'typed' },
+      })
+    )
+
+    expect(deps.saveSource).toHaveBeenCalledWith(
+      'source',
+      'translation',
+      undefined,
+      { text: 'custom instruction', inputKind: 'typed' }
+    )
+  })
+
   it('shows the pending screen while the tool runs and updates it', async () => {
     const { run, menu } = setup()
     const answer = deferred<ToolResult>()

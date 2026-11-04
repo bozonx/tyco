@@ -69,10 +69,8 @@ import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
-import { pushRecent } from '../../lib/menu-query/menu-query'
 import type { VoiceTransformationMenuParams } from '../../lib/modals/menu-modal-params'
 import { describeDictationError } from '../../lib/stt/dictation-error'
-import { useDesktopStore } from '../../stores/desktop'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import TextPreview from '../common/TextPreview.vue'
@@ -88,7 +86,6 @@ const props = withDefaults(defineProps<VoiceTransformationMenuParams>(), {
 })
 
 const menuModalsStore = useMenuModalsStore()
-const desktopStore = useDesktopStore()
 const invocations = useInvocationsStore()
 const { toastKey, toastText } = useToast()
 const runStep = useMenuStepRun()
@@ -123,16 +120,6 @@ const primaryKeys = computed(() =>
     ? ['Space', 'Enter', finishHotkey.value]
     : ['Space', 'Enter']
 )
-
-const recentPrompts = computed(
-  () => desktopStore.sessionState?.recentAiPrompts ?? []
-)
-
-const rememberPrompt = (value: string) => {
-  void desktopStore.patchSessionState({
-    recentAiPrompts: pushRecent(recentPrompts.value, value),
-  })
-}
 
 const handleKeyDown = (event: KeyboardEvent) => {
   if (props.shortcutsDisabled || isFinishing.value) return
@@ -230,8 +217,6 @@ async function finish() {
       return
     }
 
-    rememberPrompt(prompt)
-
     const trimmedText = props.text.trim()
     if (!trimmedText) {
       toastKey('toast.noTextToProcess', 'warn')
@@ -247,6 +232,7 @@ async function finish() {
       text: trimmedText,
       sourceText: props.text,
       operation: 'aiTask',
+      instruction: { text: prompt, inputKind: 'voice' },
       pending: { transformation: true },
       invoke: (signal) =>
         invocations.call('core.transformation', trimmedText, {

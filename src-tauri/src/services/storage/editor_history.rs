@@ -297,6 +297,9 @@ fn save_editor_history_entry(
     }
 
     entry.text = policy.redact(entry.text);
+    if let Some(instruction) = &mut entry.instruction {
+        instruction.text = policy.redact(instruction.text.clone());
+    }
 
     let before = history.load()?;
     let mut items = before.clone();
@@ -327,6 +330,7 @@ fn save_editor_history_entry(
         kind: entry.kind,
         operation: entry.operation,
         origin: entry.origin,
+        instruction: entry.instruction,
         created_at_ms,
         result: None,
         is_result_applied: false,

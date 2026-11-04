@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 604a1e241805620d64374b741d7085442b2d53dd9270125bec75628a4be5e84f
+// Source hash: 0bdbe5dfa9afb69d526ce8bf9c7ce08eaf68ea2cb76f6b53456c12786093bd9a
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -385,6 +385,16 @@ export type EditorHistoryEntry = {
   kind: EditorHistoryKind
   operation?: EditorHistoryOperation | null
   origin?: EditorHistoryOrigin | null
+  instruction?: EditorHistoryInstruction | null
+}
+
+/** The input modality of an AI prompt. */
+export type EditorHistoryInputKind = 'typed' | 'voice'
+
+/** The prompt or instruction for an AI transformation. */
+export type EditorHistoryInstruction = {
+  text: string
+  inputKind: EditorHistoryInputKind
 }
 
 export type EditorHistoryItem = {
@@ -394,6 +404,8 @@ export type EditorHistoryItem = {
   operation?: EditorHistoryOperation
   /** Missing in entries written before the origin was recorded. */
   origin?: EditorHistoryOrigin
+  /** The prompt or instruction of a transformation. */
+  instruction?: EditorHistoryInstruction
   /** Unix time in milliseconds. */
   createdAt: number
   /** What the AI turned a `Source` entry into. */
@@ -649,8 +661,6 @@ export type SessionState = {
   lastChatModelId: string | null
   /** The chat last opened in each profile, by profile id. */
   lastProfileChatIds: { [key in string]: string }
-  /** Own AI requests typed in the AI task menu, the newest first. */
-  recentAiPrompts: Array<string>
   /** Languages picked from the full list in the translate menu, newest first. */
   recentTranslateLanguages: Array<string>
 }

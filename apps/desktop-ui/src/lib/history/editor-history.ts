@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import type {
   EditorHistoryEntry,
+  EditorHistoryInstruction,
   EditorHistoryItem,
   EditorHistoryOperation,
   EditorHistoryOrigin,
@@ -82,13 +83,15 @@ export function createEditorHistoryModel(
   const saveSource = (
     text: string,
     operation: EditorHistoryOperation,
-    origin?: EditorHistoryOrigin
+    origin?: EditorHistoryOrigin,
+    instruction?: EditorHistoryInstruction
   ) =>
     saveEditorHistory({
       text,
       kind: 'source',
       operation,
       ...(origin && { origin }),
+      ...(instruction && { instruction }),
     })
 
   /** Remembers what the AI made of the `source` entry `id`. */
@@ -128,6 +131,30 @@ export function createEditorHistoryModel(
     editorListVersion += 1
     editorHistory.value = []
   }
+
+  /**
+   * Recent instructions from history from newest to oldest, without duplicates
+   * (comparing after trim). Empty when recording is disabled.
+   */
+  const listRecentInstructions = (limit = 5): string[] => {
+    if (!canRecord() || limit <= 0) return []
+
+    const result: string[] = []
+    const seen = new Set<string>()
+
+    for (const item of editorHistory.value) {
+      const instructionText = item.instruction?.text.trim()
+      if (!instructionText) continue
+      if (seen.has(instructionText)) continue
+
+      seen.add(instructionText)
+      result.push(instructionText)
+      if (result.length >= limit) break
+    }
+
+    return result
+  }
+
   return {
     editorHistory,
     loadEditorHistory,
@@ -139,5 +166,6 @@ export function createEditorHistoryModel(
     removeFromEditorHistory,
     restoreEditorItem,
     clearEditorHistory,
+    listRecentInstructions,
   }
 }

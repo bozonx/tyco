@@ -13,9 +13,6 @@ pub struct SessionState {
     /// The chat last opened in each profile, by profile id.
     #[serde(default)]
     pub last_profile_chat_ids: HashMap<String, String>,
-    /// Own AI requests typed in the AI task menu, the newest first.
-    #[serde(default)]
-    pub recent_ai_prompts: Vec<String>,
     /// Languages picked from the full list in the translate menu, newest first.
     #[serde(default)]
     pub recent_translate_languages: Vec<String>,

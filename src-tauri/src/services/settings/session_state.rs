@@ -6,7 +6,6 @@ pub const VALID_SESSION_STATE_KEYS: &[&str] = &[
     "lastMode",
     "lastChatModelId",
     "lastProfileChatIds",
-    "recentAiPrompts",
     "recentTranslateLanguages",
 ];
 
@@ -69,19 +68,18 @@ mod tests {
     fn session_state_without_the_menu_history_reads_with_defaults() {
         let state: SessionState = serde_json::from_value(json!({ "lastChatId": "chat" })).unwrap();
 
-        assert!(state.recent_ai_prompts.is_empty());
         assert!(state.recent_translate_languages.is_empty());
 
         let merged = merge_session_state(
             &state,
-            json!({ "recentAiPrompts": ["shorter"] })
+            json!({ "recentTranslateLanguages": ["it"] })
                 .as_object()
                 .unwrap()
                 .clone(),
         )
         .unwrap();
 
-        assert_eq!(merged.recent_ai_prompts, vec![String::from("shorter")]);
+        assert_eq!(merged.recent_translate_languages, vec![String::from("it")]);
         assert_eq!(merged.last_chat_id.as_deref(), Some("chat"));
     }
 

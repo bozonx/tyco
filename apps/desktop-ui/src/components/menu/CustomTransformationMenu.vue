@@ -33,11 +33,12 @@ import { useOverlayNav } from '../../composables/use-overlay-nav'
 import useToast from '../../composables/use-toast'
 import { isQuickWindow as isInQuickWindow } from '../../lib/desktop/window'
 import { describeError } from '../../lib/errors/describe-error'
-import { filterOptions, pushRecent } from '../../lib/menu-query/menu-query'
+import { filterOptions } from '../../lib/menu-query/menu-query'
 import type { CustomTransformationMenuParams } from '../../lib/modals/menu-modal-params'
 import { useChatStore } from '../../stores/chat'
 import { useChatInputStore } from '../../stores/chat-input'
 import { useDesktopStore } from '../../stores/desktop'
+import { useHistoryStore } from '../../stores/history'
 import { useInvocationsStore } from '../../stores/invocations'
 import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 import TextPreview from '../common/TextPreview.vue'
@@ -56,6 +57,7 @@ const props = withDefaults(defineProps<CustomTransformationMenuParams>(), {
 
 const menuModalsStore = useMenuModalsStore()
 const desktopStore = useDesktopStore()
+const historyStore = useHistoryStore()
 const invocations = useInvocationsStore()
 const { toastKey, toastText } = useToast()
 const runStep = useMenuStepRun()
@@ -69,9 +71,7 @@ const prompt = ref('')
 const isQuickWindow = isInQuickWindow()
 const isEditorButtonVisible = computed(() => !editorNavigation.isEditorPage())
 
-const recentPrompts = computed(
-  () => desktopStore.sessionState?.recentAiPrompts ?? []
-)
+const recentPrompts = computed(() => historyStore.listRecentInstructions(5))
 
 const recentOptions = computed<QueryPanelOption[]>(() =>
   filterOptions(
@@ -140,17 +140,12 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
+  void historyStore.loadEditorHistory().catch(() => undefined)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
 })
-
-const rememberPrompt = (value: string) => {
-  void desktopStore.patchSessionState({
-    recentAiPrompts: pushRecent(recentPrompts.value, value),
-  })
-}
 
 function close() {
   handleEsc()
@@ -159,8 +154,6 @@ function close() {
 async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {
   const value = (option?.label ?? prompt.value).trim()
   if (!value) return
-
-  rememberPrompt(value)
 
   if (ctrl && canAskInChat()) {
     menuModalsStore.closeAll()
@@ -190,6 +183,7 @@ async function submitPrompt({ option, ctrl }: QueryPanelSubmit) {
     text: trimmedText,
     sourceText: props.text,
     operation: 'aiTask',
+    instruction: { text: value, inputKind: 'typed' },
     pending: { transformation: true },
     invoke: (signal) =>
       invocations.call('core.transformation', trimmedText, {

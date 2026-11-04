@@ -46,6 +46,7 @@ pub(super) fn push_editor_history(
             let mut source = history.remove(index);
             source.is_result_applied |= item.kind == EditorHistoryKind::Output;
             source.origin = source.origin.or(item.origin);
+            source.instruction = source.instruction.or(item.instruction);
             source.created_at_ms = item.created_at_ms;
             history.retain(|existing| {
                 existing.kind == EditorHistoryKind::Source || existing.text.trim() != text
@@ -88,6 +89,11 @@ pub(super) fn push_editor_history(
     // a draft collapsed into its output still tells where it was typed
     if item.origin.is_none() {
         item.origin = duplicates.iter().find_map(|existing| existing.origin);
+    }
+    if item.instruction.is_none() {
+        item.instruction = duplicates
+            .iter()
+            .find_map(|existing| existing.instruction.clone());
     }
 
     let id = item.id.clone();

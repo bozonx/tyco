@@ -91,6 +91,48 @@ describe('CustomTransformationMenu', () => {
     expect(modalsStore.currentModal).toBe(MenuModals.DIFF)
   })
 
+  it('displays recent instructions from editor history in options', async () => {
+    desktop.backend.handle('get_editor_history', () => [
+      {
+        id: '1',
+        text: 'Some sample text',
+        kind: 'source',
+        operation: 'aiTask',
+        instruction: { text: 'Make it better', inputKind: 'typed' },
+        createdAt: 1000,
+      },
+      {
+        id: '2',
+        text: 'Other sample text',
+        kind: 'source',
+        operation: 'aiTask',
+        instruction: { text: 'Translate to French', inputKind: 'voice' },
+        createdAt: 900,
+      },
+    ])
+
+    const wrapper = mount(CustomTransformationMenu, {
+      props: { text: 'Some sample text' },
+      global: {
+        plugins: [desktop.pinia],
+        stubs: {
+          TextPreview: true,
+          ActionOverlayLayout: {
+            template:
+              '<div class="layout"><slot name="preview" /><slot name="actions" /></div>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    const queryPanel = wrapper.findComponent(QueryPanel)
+    expect(queryPanel.props('options')).toEqual([
+      { id: 'Make it better', label: 'Make it better' },
+      { id: 'Translate to French', label: 'Translate to French' },
+    ])
+  })
+
   it('hides window on Escape when opened directly', async () => {
     const wrapper = mount(CustomTransformationMenu, {
       props: { text: 'Some sample text' },

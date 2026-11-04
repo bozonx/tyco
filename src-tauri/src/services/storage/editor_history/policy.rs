@@ -78,6 +78,9 @@ impl EditorHistoryPolicy {
         if self.should_redact_secrets {
             item.text = redact_secrets(&item.text);
             item.result = item.result.take().map(|result| redact_secrets(&result));
+            if let Some(instruction) = &mut item.instruction {
+                instruction.text = redact_secrets(&instruction.text);
+            }
         }
     }
 
@@ -116,6 +119,7 @@ mod tests {
             kind,
             operation: None,
             origin: None,
+            instruction: None,
             created_at_ms: 1,
             result: None,
             is_result_applied: false,
