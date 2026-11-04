@@ -13,7 +13,10 @@
     "voiceTransformation": "Голосова трансформація",
     "webhook": "Вебхук",
     "chatPromptsMenu": "Швидкі промпти для чату",
-    "voiceCommands": "Голосові команди"
+    "voiceCommands": "Голосові команди",
+    "snippetsMenu": "Сніпети",
+    "saveAsSnippet": "Зберегти як сніпет",
+    "savedAsSnippet": "Збережено в сніпети"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Скопіюється після завершення",
     "willInsertOnFinish": "Вставиться після завершення",
     "ruleNotFound": "Цього правила більше не існує",
-    "chatPrompts": "Швидкі промпти для чату"
+    "chatPrompts": "Швидкі промпти для чату",
+    "snippets": "Сніпети"
   },
   "nav": {
     "aiChat": "Запитати ШІ",
@@ -786,7 +790,8 @@
       "selectionActionsPage3": "Дії: сторінка 3",
       "chatPrompts": "Швидкі промпти для чату з ШІ",
       "selectionActionsPage4": "Дії: сторінка 4",
-      "selectionActionsPage5": "Дії: сторінка 5"
+      "selectionActionsPage5": "Дії: сторінка 5",
+      "snippets": "Сніпети"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — скасувати",
@@ -1199,7 +1204,15 @@
     "webFetchMaxCharacters": "Ліміт обсягу веб-сторінок",
     "webFetchMaxCharactersHint": "Максимальна кількість символів, що завантажується з однієї веб-сторінки (від 1 000 до 100 000). Допомагає економити контекстне вікно.",
     "webFetchMaxCharactersError": "Введіть число від 1 000 до 100 000",
-    "profileWebSearchLlmNotice": "API-ключ та ліміти обсягу сторінок налаштовуються глобально у налаштуваннях LLM."
+    "profileWebSearchLlmNotice": "API-ключ та ліміти обсягу сторінок налаштовуються глобально у налаштуваннях LLM.",
+    "snippetsTab": "Сніпети",
+    "snippetsNavTab": "Сніпети",
+    "snippetsHint": "Збережені фрагменти тексту для швидкого доступу та вставки. Перетягуйте картки для зміни порядку.",
+    "addSnippet": "Додати сніпет",
+    "noSnippets": "Сніпетів поки немає",
+    "snippetTextPlaceholder": "Введіть текст сніпета…",
+    "searchSnippetsPlaceholder": "Пошук сніпетів…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
   "theme": {
@@ -1255,7 +1268,8 @@
     "voicePostProcessTimeout": "Обробка мовлення тривала занадто довго; збережено початковий текст",
     "variablesNotSet": "Змінні не задано на цьому пристрої; задайте їх у «Налаштування → Змінні»",
     "dictationResultReady": "Диктування готове, але вікно вже зайняте іншим. Скопіюйте текст, щоб не втратити його.",
-    "dictationResultInHistory": "Його також збережено в історії."
+    "dictationResultInHistory": "Його також збережено в історії.",
+    "snippetAlreadyExists": "Сніпет із таким текстом уже існує"
   },
   "tools": {
     "aiTask": "ШІ-команда",
@@ -1418,5 +1432,6 @@
     "value": "Значення",
     "valueNotSet": "Не задано на цьому пристрої: команди з цією змінною не виконуються",
     "valuePlaceholder": "Шлях, адреса або інший текст"
-  }
+  },
+  "snippets": { "noMatches": "Нічого не знайдено" }
 }

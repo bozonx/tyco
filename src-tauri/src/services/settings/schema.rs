@@ -307,12 +307,13 @@ const BUILTIN_LLM_PROVIDERS: [&str; 3] = ["google", "openrouter", "deepseek"];
 const CUSTOM_LLM_PROVIDER_TYPE: &str = "openaiCompatible";
 
 /// The entity collections, each with distinct ids.
-const ENTITY_COLLECTIONS: [&str; 7] = [
+const ENTITY_COLLECTIONS: [&str; 8] = [
     "/commands",
     "/variables",
     "/transformations/items",
     "/styling/items",
     "/chatPrompts/items",
+    "/snippets/items",
     "/llm/providers",
     "/llm/models",
 ];

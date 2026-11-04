@@ -14,6 +14,7 @@ export enum MenuModals {
   VOICE_COMMANDS = 'voice-commands',
   STYLING = 'styling',
   CHAT_PROMPTS = 'chat-prompts',
+  SNIPPETS = 'snippets',
   DIFF = 'diff',
   VOICE_RECOGNITION = 'voice-recognition',
   TRANSLATE = 'translate',
@@ -67,6 +68,9 @@ export interface ChatPromptsMenuParams {
   shortcutsDisabled?: boolean
   /** Runs this prompt immediately when the dialog opens. */
   promptId?: string
+}
+export interface SnippetsMenuParams {
+  shortcutsDisabled?: boolean
 }
 export interface TranslateMenuParams {
   text?: string
@@ -140,6 +144,7 @@ interface MenuModalParams {
   [MenuModals.VOICE_COMMANDS]: VoiceCommandsMenuParams
   [MenuModals.STYLING]: StylingMenuParams
   [MenuModals.CHAT_PROMPTS]: ChatPromptsMenuParams
+  [MenuModals.SNIPPETS]: SnippetsMenuParams
   [MenuModals.DIFF]: DiffMenuParams
   [MenuModals.VOICE_RECOGNITION]: VoiceMenuParams
   [MenuModals.TRANSLATE]: TranslateMenuParams

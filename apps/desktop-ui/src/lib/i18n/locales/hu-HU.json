@@ -13,7 +13,10 @@
     "voiceTransformation": "Hangalapú átalakítás",
     "webhook": "Webhook",
     "chatPromptsMenu": "Csevegési prompt-sablonok",
-    "voiceCommands": "Hangparancsok"
+    "voiceCommands": "Hangparancsok",
+    "snippetsMenu": "Szövegrészletek",
+    "saveAsSnippet": "Mentés szövegrészletként",
+    "savedAsSnippet": "Mentve szövegrészletként"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Befejezés után másolásra kerül",
     "willInsertOnFinish": "Befejezés után beillesztésre kerül",
     "ruleNotFound": "Ez a szabály már nem létezik",
-    "chatPrompts": "Csevegési prompt-sablonok"
+    "chatPrompts": "Csevegési prompt-sablonok",
+    "snippets": "Szövegrészletek"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",
@@ -786,7 +790,8 @@
       "selectionActionsPage3": "Műveletek: 3. oldal",
       "chatPrompts": "Csevegési prompt-sablonok a kijelölt szöveghez",
       "selectionActionsPage4": "Műveletek: 4. oldal",
-      "selectionActionsPage5": "Műveletek: 5. oldal"
+      "selectionActionsPage5": "Műveletek: 5. oldal",
+      "snippets": "Szövegrészletek"
     },
     "hotkeyInput": {
       "cancelHint": "Esc: megszakítás",
@@ -1199,7 +1204,15 @@
     "webFetchMaxCharacters": "Oldalméret korlátja",
     "webFetchMaxCharactersHint": "Egyetlen weboldalról beolvasott karakterek maximális száma (1 000 és 100 000 között). Kíméli a kontextusablakot.",
     "webFetchMaxCharactersError": "Adjon meg egy számot 1 000 és 100 000 között",
-    "profileWebSearchLlmNotice": "Az API-kulcs és az oldalméret-korlátok globálisan, az LLM beállításaiban konfigurálhatók."
+    "profileWebSearchLlmNotice": "Az API-kulcs és az oldalméret-korlátok globálisan, az LLM beállításaiban konfigurálhatók.",
+    "snippetsTab": "Szövegrészletek",
+    "snippetsNavTab": "Szövegrészletek",
+    "snippetsHint": "Mentett szövegrészletek a gyors eléréshez és beillesztéshez. Húzza a kártyákat az átrendezéshez.",
+    "addSnippet": "Szövegrészlet hozzáadása",
+    "noSnippets": "Még nincsenek mentett szövegrészletek",
+    "snippetTextPlaceholder": "Írja be a szövegrészletet…",
+    "searchSnippetsPlaceholder": "Szövegrészletek keresése…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
   "theme": {
@@ -1255,7 +1268,8 @@
     "voicePostProcessTimeout": "A hangfeldolgozás túl sokáig tartott; az eredeti szöveg megmaradt",
     "variablesNotSet": "Egyes változóknak nincs értéke ezen az eszközön; állítsa be őket: Beállítások → Változók",
     "dictationResultReady": "A diktálás kész, de az ablak már mást mutat. Másolja ki, hogy ne vesszen el.",
-    "dictationResultInHistory": "Az előzményekben is megtalálható."
+    "dictationResultInHistory": "Az előzményekben is megtalálható.",
+    "snippetAlreadyExists": "Már létezik ilyen szövegrészlet"
   },
   "tools": {
     "aiTask": "MI-parancs",
@@ -1418,5 +1432,6 @@
     "value": "Érték",
     "valueNotSet": "Nincs megadva ezen az eszközön: az ezt használó parancsok nem futnak",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
-  }
+  },
+  "snippets": { "noMatches": "Nincs egyező szövegrészlet" }
 }

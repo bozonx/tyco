@@ -86,6 +86,9 @@
           :key="activationId"
         />
       </div>
+      <div v-show="currentMode === 'snippets'" class="quick-mode-layer">
+        <SnippetsView v-if="currentMode === 'snippets'" :key="activationId" />
+      </div>
       <div v-show="currentMode === 'voiceChat'" class="quick-mode-layer">
         <VoiceChatView v-if="currentMode === 'voiceChat'" />
       </div>
@@ -127,6 +130,7 @@ import CorrectionView from '../../views/CorrectionView.vue'
 import CustomTransformationView from '../../views/CustomTransformationView.vue'
 import ExternalAccessView from '../../views/ExternalAccessView.vue'
 import SelectionView from '../../views/SelectionView.vue'
+import SnippetsView from '../../views/SnippetsView.vue'
 import StylingView from '../../views/StylingView.vue'
 import TransformationView from '../../views/TransformationView.vue'
 import TranslateView from '../../views/TranslateView.vue'

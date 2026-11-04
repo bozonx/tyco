@@ -13,7 +13,10 @@
     "voiceTransformation": "Transformacja głosowa",
     "webhook": "Webhook",
     "chatPromptsMenu": "Zestawy promptów czatu",
-    "voiceCommands": "Polecenia głosowe"
+    "voiceCommands": "Polecenia głosowe",
+    "snippetsMenu": "Wstawki tekstu",
+    "saveAsSnippet": "Zapisz jako wstawkę",
+    "savedAsSnippet": "Zapisano jako wstawkę"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Zostanie skopiowane po ukończeniu",
     "willInsertOnFinish": "Zostanie wstawione po ukończeniu",
     "ruleNotFound": "Ta reguła już nie istnieje",
-    "chatPrompts": "Zestawy promptów czatu"
+    "chatPrompts": "Zestawy promptów czatu",
+    "snippets": "Wstawki tekstu"
   },
   "nav": {
     "aiChat": "Zapytaj AI",
@@ -789,7 +793,8 @@
       "selectionActionsPage3": "Działania: strona 3",
       "chatPrompts": "Zestawy promptów czatu dla zaznaczonego tekstu",
       "selectionActionsPage4": "Działania: strona 4",
-      "selectionActionsPage5": "Działania: strona 5"
+      "selectionActionsPage5": "Działania: strona 5",
+      "snippets": "Wstawki tekstu"
     },
     "hotkeyInput": {
       "cancelHint": "Esc, aby anulować",
@@ -1202,7 +1207,15 @@
     "webFetchMaxCharacters": "Limit rozmiaru strony",
     "webFetchMaxCharactersHint": "Maksymalna liczba znaków pobierana z pojedynczej strony internetowej (od 1 000 do 100 000). Oszczędza okno kontekstu.",
     "webFetchMaxCharactersError": "Wpisz liczbę od 1 000 do 100 000",
-    "profileWebSearchLlmNotice": "Klucz API oraz limity rozmiaru stron są konfigurowane globalnie w ustawieniach LLM."
+    "profileWebSearchLlmNotice": "Klucz API oraz limity rozmiaru stron są konfigurowane globalnie w ustawieniach LLM.",
+    "snippetsTab": "Wstawki tekstu",
+    "snippetsNavTab": "Wstawki",
+    "snippetsHint": "Zapisane fragmenty tekstu do szybkiego dostępu i wstawiania. Przeciągaj karty, aby zmienić kolejność.",
+    "addSnippet": "Dodaj wstawkę",
+    "noSnippets": "Brak zapisanych wstawek",
+    "snippetTextPlaceholder": "Wpisz tekst wstawki…",
+    "searchSnippetsPlaceholder": "Szukaj wstawek…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
   "theme": {
@@ -1258,7 +1271,8 @@
     "voicePostProcessTimeout": "Przetwarzanie głosu trwało zbyt długo; zachowano oryginalny tekst",
     "variablesNotSet": "Zmienne nie mają wartości na tym urządzeniu; ustaw je w Ustawienia → Zmienne",
     "dictationResultReady": "Dyktowanie jest gotowe, ale okno pokazuje już coś innego. Skopiuj tekst, aby go nie stracić.",
-    "dictationResultInHistory": "Jest też zapisany w historii."
+    "dictationResultInHistory": "Jest też zapisany w historii.",
+    "snippetAlreadyExists": "Wstawka o takiej treści już istnieje"
   },
   "tools": {
     "aiTask": "Polecenie AI",
@@ -1421,5 +1435,6 @@
     "value": "Wartość",
     "valueNotSet": "Nieustawiona na tym urządzeniu: polecenia, które jej używają, nie działają",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
-  }
+  },
+  "snippets": { "noMatches": "Brak pasujących wstawek" }
 }

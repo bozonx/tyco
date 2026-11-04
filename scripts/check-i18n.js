@@ -222,6 +222,7 @@ const DYNAMIC_KEYS = new Set([
     'customTransformation',
     'voiceTransformation',
     'chatPrompts',
+    'snippets',
     'history',
   ].map((mode) => `settings.hotkeyActions.${mode}`),
   ...['editor', 'browser', 'notes', 'none'].map(

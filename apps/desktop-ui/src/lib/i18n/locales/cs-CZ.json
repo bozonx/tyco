@@ -13,7 +13,10 @@
     "voiceTransformation": "Hlasová transformace",
     "webhook": "Webhook",
     "chatPromptsMenu": "Předvolby promptů chatu",
-    "voiceCommands": "Hlasové příkazy"
+    "voiceCommands": "Hlasové příkazy",
+    "snippetsMenu": "Úryvky",
+    "saveAsSnippet": "Uložit jako úryvek",
+    "savedAsSnippet": "Uloženo jako úryvek"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Zkopíruje se po dokončení",
     "willInsertOnFinish": "Vloží se po dokončení",
     "ruleNotFound": "Toto pravidlo již neexistuje",
-    "chatPrompts": "Předvolby promptů chatu"
+    "chatPrompts": "Předvolby promptů chatu",
+    "snippets": "Úryvky"
   },
   "nav": {
     "aiChat": "Zeptat se AI",
@@ -783,7 +787,8 @@
       "selectionActionsPage3": "Akce: stránka 3",
       "chatPrompts": "Předvolby promptů chatu pro vybraný text",
       "selectionActionsPage4": "Akce: stránka 4",
-      "selectionActionsPage5": "Akce: stránka 5"
+      "selectionActionsPage5": "Akce: stránka 5",
+      "snippets": "Úryvky"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pro zrušení",
@@ -1196,7 +1201,15 @@
     "webFetchMaxCharacters": "Limit velikosti stránky",
     "webFetchMaxCharactersHint": "Maximální počet znaků načtených z jedné webové stránky (1 000 až 100 000). Pomáhá šetřit kontextové okno.",
     "webFetchMaxCharactersError": "Zadejte číslo od 1 000 do 100 000",
-    "profileWebSearchLlmNotice": "Klíč API a limity velikosti stránek se konfigurují globálně v nastavení LLM."
+    "profileWebSearchLlmNotice": "Klíč API a limity velikosti stránek se konfigurují globálně v nastavení LLM.",
+    "snippetsTab": "Úryvky",
+    "snippetsNavTab": "Úryvky",
+    "snippetsHint": "Uložené textové fragmenty pro rychlý přístup a vložení. Přetažením karet změníte pořadí.",
+    "addSnippet": "Přidat úryvek",
+    "noSnippets": "Zatím žádné uložené úryvky",
+    "snippetTextPlaceholder": "Zadejte text úryvku…",
+    "searchSnippetsPlaceholder": "Hledat úryvky…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
   "theme": {
@@ -1252,7 +1265,8 @@
     "voicePostProcessTimeout": "Zpracování hlasu trvalo příliš dlouho; byl zachován původní text",
     "variablesNotSet": "Proměnné nemají na tomto zařízení hodnotu; nastavte je v Nastavení → Proměnné",
     "dictationResultReady": "Diktát je hotový, ale okno už ukazuje něco jiného. Zkopírujte ho, ať o něj nepřijdete.",
-    "dictationResultInHistory": "Je také uložen v historii."
+    "dictationResultInHistory": "Je také uložen v historii.",
+    "snippetAlreadyExists": "Úryvek s tímto textem již existuje"
   },
   "tools": {
     "aiTask": "AI příkaz",
@@ -1415,5 +1429,6 @@
     "value": "Hodnota",
     "valueNotSet": "Na tomto zařízení není nastavena: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
-  }
+  },
+  "snippets": { "noMatches": "Žádné odpovídající úryvky" }
 }

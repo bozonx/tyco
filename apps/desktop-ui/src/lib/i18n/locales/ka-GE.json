@@ -13,7 +13,10 @@
     "voiceTransformation": "ხმოვანი ტრანსფორმაცია",
     "webhook": "ვებჰუკი",
     "chatPromptsMenu": "ჩატის პრომპტების წინასწარი პარამეტრები",
-    "voiceCommands": "ხმოვანი ბრძანებები"
+    "voiceCommands": "ხმოვანი ბრძანებები",
+    "snippetsMenu": "სნიპეტები",
+    "saveAsSnippet": "შენახვა სნიპეტად",
+    "savedAsSnippet": "შენახულია სნიპეტებში"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "დაკოპირდება დასრულებისთანავე",
     "willInsertOnFinish": "ჩაისმება დასრულებისთანავე",
     "ruleNotFound": "ეს წესი აღარ არსებობს",
-    "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები"
+    "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები",
+    "snippets": "სნიპეტები"
   },
   "nav": {
     "aiChat": "ჰკითხეთ AI-ს",
@@ -786,7 +790,8 @@
       "selectionActionsPage3": "მოქმედებები: გვერდი 3",
       "chatPrompts": "ჩატის პრომპტების წინასწარი პარამეტრები მონიშნული ტექსტისთვის",
       "selectionActionsPage4": "მოქმედებები: გვერდი 4",
-      "selectionActionsPage5": "მოქმედებები: გვერდი 5"
+      "selectionActionsPage5": "მოქმედებები: გვერდი 5",
+      "snippets": "სნიპეტები"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — გაუქმება",
@@ -1199,7 +1204,15 @@
     "webFetchMaxCharacters": "გვერდის ზომის ლიმიტი",
     "webFetchMaxCharactersHint": "ერთი ვებ-გვერდიდან ამოღებული სიმბოლოების მაქსიმალური რაოდენობა (1 000-დან 100 000-მდე). ზოგავს კონტექსტის ფანჯარას.",
     "webFetchMaxCharactersError": "შეიყვანეთ რიცხვი 1 000-დან 100 000-მდე",
-    "profileWebSearchLlmNotice": "API გასაღები და გვერდის ზომის ლიმიტები გლობალურად კონფიგურირდება LLM პარამეტრებში."
+    "profileWebSearchLlmNotice": "API გასაღები და გვერდის ზომის ლიმიტები გლობალურად კონფიგურირდება LLM პარამეტრებში.",
+    "snippetsTab": "სნიპეტები",
+    "snippetsNavTab": "სნიპეტები",
+    "snippetsHint": "შენახული ტექსტური ფრაგმენტები სწრაფი წვდომისა და ჩასმისთვის. გადაათრიეთ ბარათები რიგის შესაცვლელად.",
+    "addSnippet": "სნიპეტის დამატება",
+    "noSnippets": "სნიპეტები ჯერ არ არის შენახული",
+    "snippetTextPlaceholder": "შეიყვანეთ სნიპეტის ტექსტი…",
+    "searchSnippetsPlaceholder": "სნიპეტების ძიება…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "რედაქტორში ჩასმა" },
   "theme": {
@@ -1255,7 +1268,8 @@
     "voicePostProcessTimeout": "ხმის დამუშავებას ძალიან დიდი დრო დასჭირდა; შენარჩუნებულია საწყისი ტექსტი",
     "variablesNotSet": "ზოგ ცვლადს ამ მოწყობილობაზე მნიშვნელობა არ აქვს; მიუთითეთ: პარამეტრები → ცვლადები",
     "dictationResultReady": "კარნახი მზადაა, მაგრამ ფანჯარა უკვე სხვა რამეს აჩვენებს. დააკოპირეთ, რომ არ დაიკარგოს.",
-    "dictationResultInHistory": "ის ისტორიაშიც შენახულია."
+    "dictationResultInHistory": "ის ისტორიაშიც შენახულია.",
+    "snippetAlreadyExists": "სნიპეტი ამ ტექსტით უკვე არსებობს"
   },
   "tools": {
     "aiTask": "AI ბრძანება",
@@ -1418,5 +1432,6 @@
     "value": "მნიშვნელობა",
     "valueNotSet": "ამ მოწყობილობაზე მითითებული არ არის: მისი გამომყენებელი ბრძანებები არ სრულდება",
     "valuePlaceholder": "გზა, მისამართი ან სხვა ტექსტი"
-  }
+  },
+  "snippets": { "noMatches": "სნიპეტები არ მოიძებნა" }
 }

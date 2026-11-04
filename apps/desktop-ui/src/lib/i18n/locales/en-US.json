@@ -13,7 +13,10 @@
     "voiceTransformation": "Voice transformation",
     "webhook": "Webhook",
     "chatPromptsMenu": "Chat prompt presets",
-    "voiceCommands": "Voice commands"
+    "voiceCommands": "Voice commands",
+    "snippetsMenu": "Snippets",
+    "saveAsSnippet": "Save as snippet",
+    "savedAsSnippet": "Saved as snippet"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Will copy on completion",
     "willInsertOnFinish": "Will insert on completion",
     "ruleNotFound": "This rule no longer exists",
-    "chatPrompts": "Chat prompt presets"
+    "chatPrompts": "Chat prompt presets",
+    "snippets": "Snippets"
   },
   "nav": {
     "aiChat": "Ask AI",
@@ -789,7 +793,8 @@
       "selectionActionsPage3": "Actions: page 3",
       "chatPrompts": "Chat prompt presets for selected text",
       "selectionActionsPage4": "Actions: page 4",
-      "selectionActionsPage5": "Actions: page 5"
+      "selectionActionsPage5": "Actions: page 5",
+      "snippets": "Snippets"
     },
     "hotkeyInput": {
       "cancelHint": "Esc to cancel",
@@ -1202,7 +1207,15 @@
     "webFetchMaxCharacters": "Page size limit",
     "webFetchMaxCharactersHint": "Maximum number of characters fetched from a single web page (1,000 to 100,000). Helps save context window.",
     "webFetchMaxCharactersError": "Enter a number from 1,000 to 100,000",
-    "profileWebSearchLlmNotice": "API key and page size limits are configured globally in LLM settings."
+    "profileWebSearchLlmNotice": "API key and page size limits are configured globally in LLM settings.",
+    "snippetsTab": "Snippets",
+    "snippetsNavTab": "Snippets",
+    "snippetsHint": "Saved text fragments for quick access and insertion. Drag cards to reorder.",
+    "addSnippet": "Add snippet",
+    "noSnippets": "No snippets saved yet",
+    "snippetTextPlaceholder": "Enter snippet text…",
+    "searchSnippetsPlaceholder": "Search snippets…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Insert into editor" },
   "theme": {
@@ -1258,7 +1271,8 @@
     "voicePostProcessTimeout": "Voice processing took too long; original text kept",
     "variablesNotSet": "Variables have no value on this device; set them in Settings → Variables",
     "dictationResultReady": "Dictation is ready, but the window has moved on. Copy it so it is not lost.",
-    "dictationResultInHistory": "It is also saved in the history."
+    "dictationResultInHistory": "It is also saved in the history.",
+    "snippetAlreadyExists": "A snippet with this text already exists"
   },
   "tools": {
     "aiTask": "AI command",
@@ -1421,5 +1435,6 @@
     "value": "Value",
     "valueNotSet": "Not set on this device: commands that use it do not run",
     "valuePlaceholder": "A path, an address or other text"
-  }
+  },
+  "snippets": { "noMatches": "No matching snippets" }
 }

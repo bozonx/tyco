@@ -13,7 +13,10 @@
     "voiceTransformation": "语音转换",
     "webhook": "Webhook",
     "chatPromptsMenu": "聊天提示词预设",
-    "voiceCommands": "语音命令"
+    "voiceCommands": "语音命令",
+    "snippetsMenu": "片段",
+    "saveAsSnippet": "另存为片段",
+    "savedAsSnippet": "已保存至片段"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "完成后将复制",
     "willInsertOnFinish": "完成后将插入",
     "ruleNotFound": "此规则已不存在",
-    "chatPrompts": "聊天提示词预设"
+    "chatPrompts": "聊天提示词预设",
+    "snippets": "片段"
   },
   "nav": {
     "aiChat": "询问 AI",
@@ -783,7 +787,8 @@
       "selectionActionsPage3": "操作：第 3 页",
       "chatPrompts": "针对所选文本的聊天提示词预设",
       "selectionActionsPage4": "操作：第 4 页",
-      "selectionActionsPage5": "操作：第 5 页"
+      "selectionActionsPage5": "操作：第 5 页",
+      "snippets": "片段"
     },
     "hotkeyInput": {
       "cancelHint": "按 Esc 取消",
@@ -1196,7 +1201,15 @@
     "webFetchMaxCharacters": "页面大小限制",
     "webFetchMaxCharactersHint": "从单个网页获取的最大字符数（1,000 到 100,000）。有助于节省上下文窗口。",
     "webFetchMaxCharactersError": "请输入 1,000 到 100,000 之间的数字",
-    "profileWebSearchLlmNotice": "API 密钥和页面大小限制在 LLM 设置中进行全局配置。"
+    "profileWebSearchLlmNotice": "API 密钥和页面大小限制在 LLM 设置中进行全局配置。",
+    "snippetsTab": "片段",
+    "snippetsNavTab": "片段",
+    "snippetsHint": "保存的文本片段，用于快速访问和插入。拖动卡片可重新排序。",
+    "addSnippet": "添加片段",
+    "noSnippets": "暂无已保存的片段",
+    "snippetTextPlaceholder": "输入片段内容…",
+    "searchSnippetsPlaceholder": "搜索片段…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
   "theme": {
@@ -1252,7 +1265,8 @@
     "voicePostProcessTimeout": "语音处理耗时过长；已保留原始文本",
     "variablesNotSet": "部分变量在此设备上没有值；请在“设置 → 变量”中设置",
     "dictationResultReady": "听写已完成，但窗口已切换到其他内容。请复制以免丢失。",
-    "dictationResultInHistory": "它也已保存在历史记录中。"
+    "dictationResultInHistory": "它也已保存在历史记录中。",
+    "snippetAlreadyExists": "已存在具有相同文本的片段"
   },
   "tools": {
     "aiTask": "AI 命令",
@@ -1415,5 +1429,6 @@
     "value": "值",
     "valueNotSet": "此设备上未设置：使用它的命令不会运行",
     "valuePlaceholder": "路径、地址或其他文本"
-  }
+  },
+  "snippets": { "noMatches": "未找到匹配的片段" }
 }

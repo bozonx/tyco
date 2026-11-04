@@ -13,7 +13,10 @@
     "voiceTransformation": "Голосовая трансформация",
     "webhook": "Вебхук",
     "chatPromptsMenu": "Быстрые промпты для чата",
-    "voiceCommands": "Голосовые команды"
+    "voiceCommands": "Голосовые команды",
+    "snippetsMenu": "Сниппеты",
+    "saveAsSnippet": "Сохранить как сниппет",
+    "savedAsSnippet": "Сохранено в сниппеты"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Скопируется по завершении",
     "willInsertOnFinish": "Вставится по завершении",
     "ruleNotFound": "Это правило больше не существует",
-    "chatPrompts": "Быстрые промпты для чата"
+    "chatPrompts": "Быстрые промпты для чата",
+    "snippets": "Сниппеты"
   },
   "nav": {
     "aiChat": "Спросить ИИ",
@@ -786,7 +790,8 @@
       "selectionActionsPage3": "Действия: страница 3",
       "chatPrompts": "Быстрые промпты для чата с ИИ",
       "selectionActionsPage4": "Действия: страница 4",
-      "selectionActionsPage5": "Действия: страница 5"
+      "selectionActionsPage5": "Действия: страница 5",
+      "snippets": "Сниппеты"
     },
     "hotkeyInput": {
       "cancelHint": "Esc — отмена",
@@ -1199,7 +1204,15 @@
     "webFetchMaxCharacters": "Лимит объёма веб-страниц",
     "webFetchMaxCharactersHint": "Максимальное количество символов, загружаемых с одной веб-страницы (от 1 000 до 100 000). Помогает экономить контекстное окно.",
     "webFetchMaxCharactersError": "Введите число от 1 000 до 100 000",
-    "profileWebSearchLlmNotice": "API-ключ и лимиты объёма страниц настраиваются глобально в настройках LLM."
+    "profileWebSearchLlmNotice": "API-ключ и лимиты объёма страниц настраиваются глобально в настройках LLM.",
+    "snippetsTab": "Сниппеты",
+    "snippetsNavTab": "Сниппеты",
+    "snippetsHint": "Сохраненные фрагменты текста для быстрого доступа и вставки. Перетаскивайте карточки для изменения порядка.",
+    "addSnippet": "Добавить сниппет",
+    "noSnippets": "Сниппетов пока нет",
+    "snippetTextPlaceholder": "Введите текст сниппета…",
+    "searchSnippetsPlaceholder": "Поиск сниппетов…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Вставить в редактор" },
   "theme": {
@@ -1255,7 +1268,8 @@
     "voicePostProcessTimeout": "Обработка речи заняла слишком много времени; сохранён исходный текст",
     "variablesNotSet": "Переменные не заданы на этом устройстве; задайте их в «Настройки → Переменные»",
     "dictationResultReady": "Диктовка готова, но окно уже занято другим. Скопируйте текст, чтобы не потерять его.",
-    "dictationResultInHistory": "Он также сохранён в истории."
+    "dictationResultInHistory": "Он также сохранён в истории.",
+    "snippetAlreadyExists": "Сниппет с таким текстом уже существует"
   },
   "tools": {
     "aiTask": "ИИ-команда",
@@ -1418,5 +1432,6 @@
     "value": "Значение",
     "valueNotSet": "Не задано на этом устройстве: команды с этой переменной не выполняются",
     "valuePlaceholder": "Путь, адрес или другой текст"
-  }
+  },
+  "snippets": { "noMatches": "Ничего не найдено" }
 }

@@ -41,6 +41,7 @@ describe('createActionMenuModel', () => {
       openVoiceTransformationModal: vi.fn(),
       openStylingModal: vi.fn(),
       openChatPromptsModal: vi.fn(),
+      openSnippetsModal: vi.fn(),
       startCorrection: vi.fn().mockResolvedValue(undefined),
       showToast: vi.fn(),
       hideWindow: vi.fn(),
@@ -181,6 +182,10 @@ describe('createActionMenuModel', () => {
     expect(deps.openChatPromptsModal).toHaveBeenCalledWith(
       'some text for chat prompt'
     )
+
+    const snippets = actions.find((a) => a.id === 'snippetsMenu')
+    await snippets?.action('')
+    expect(deps.openSnippetsModal).toHaveBeenCalled()
   })
 
   it('saves the text to history before it leaves the app', async () => {

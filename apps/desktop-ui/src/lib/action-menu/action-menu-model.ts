@@ -40,6 +40,7 @@ export interface ActionMenuDependencies extends InvocationRunnerDependencies {
   openVoiceCommandsModal?: (text: string) => void
   openStylingModal?: (text: string, stylingId?: string) => void
   openChatPromptsModal?: (text: string, promptId?: string) => void
+  openSnippetsModal?: () => void
   /** With `language` the dialog translates into it at once */
   openTranslateModal: (text: string, language?: string) => void
   /** `extra` goes to the params of the correction step, see `InsertMenu` */
@@ -271,6 +272,15 @@ export function createActionMenuModel(deps: ActionMenuDependencies) {
               return
             }
             deps.openChatPromptsModal?.(text)
+          },
+        },
+        {
+          id: 'snippetsMenu',
+          labelKey: 'action.snippetsMenu',
+          icon: 'mdi:card-text-outline',
+          trailingIcon: 'mdi:chevron-right',
+          action: async () => {
+            deps.openSnippetsModal?.()
           },
         },
         {

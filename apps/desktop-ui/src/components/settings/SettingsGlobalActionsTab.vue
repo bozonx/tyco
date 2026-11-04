@@ -199,6 +199,7 @@ const MODE_ORDER: HotkeyId[] = [
   'customTransformation',
   'voiceTransformation',
   'chatPrompts',
+  'snippets',
   'history',
 ]
 

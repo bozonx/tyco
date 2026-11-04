@@ -448,6 +448,9 @@ export function normalizeUserConfig(value: UserConfigInput): UserConfig {
   config.chatPrompts.slots = distinctSlots(
     filterSlots(config.chatPrompts.slots, (id) => chatPromptIds.has(id))
   )
+  if (config.snippets?.items) {
+    config.snippets.items = deduplicate(config.snippets.items)
+  }
   const commands = new Set(config.commands.map((command) => command.id))
   if (!Array.isArray(config.actionPages) || config.actionPages.length === 0) {
     config.actionPages = DEFAULT_ACTION_PAGES

@@ -13,7 +13,10 @@
     "voiceTransformation": "Sprachtransformation",
     "webhook": "Webhook",
     "chatPromptsMenu": "Chat-Prompt-Vorlagen",
-    "voiceCommands": "Sprachbefehle"
+    "voiceCommands": "Sprachbefehle",
+    "snippetsMenu": "Textbausteine",
+    "saveAsSnippet": "Als Textbaustein speichern",
+    "savedAsSnippet": "Als Textbaustein gespeichert"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Wird nach Fertigstellung kopiert",
     "willInsertOnFinish": "Wird nach Fertigstellung eingefügt",
     "ruleNotFound": "Diese Regel existiert nicht mehr",
-    "chatPrompts": "Chat-Prompt-Vorlagen"
+    "chatPrompts": "Chat-Prompt-Vorlagen",
+    "snippets": "Textbausteine"
   },
   "nav": {
     "aiChat": "KI fragen",
@@ -789,7 +793,8 @@
       "selectionActionsPage3": "Aktionen: Seite 3",
       "chatPrompts": "Chat-Prompt-Vorlagen für ausgewählten Text",
       "selectionActionsPage4": "Aktionen: Seite 4",
-      "selectionActionsPage5": "Aktionen: Seite 5"
+      "selectionActionsPage5": "Aktionen: Seite 5",
+      "snippets": "Textbausteine"
     },
     "hotkeyInput": {
       "cancelHint": "Esc zum Abbrechen",
@@ -1202,7 +1207,15 @@
     "webFetchMaxCharacters": "Seiteninhaltslimit",
     "webFetchMaxCharactersHint": "Maximale Zeichenanzahl, die von einer einzelnen Webseite abgerufen wird (1.000 bis 100.000). Schont das Kontextfenster.",
     "webFetchMaxCharactersError": "Geben Sie eine Zahl von 1.000 bis 100.000 ein",
-    "profileWebSearchLlmNotice": "API-Schlüssel und Seitenlimits werden global in den LLM-Einstellungen konfiguriert."
+    "profileWebSearchLlmNotice": "API-Schlüssel und Seitenlimits werden global in den LLM-Einstellungen konfiguriert.",
+    "snippetsTab": "Textbausteine",
+    "snippetsNavTab": "Textbausteine",
+    "snippetsHint": "Gespeicherte Textfragmente für schnellen Zugriff und Einfügen. Ziehen Sie Karten, um sie neu anzuordnen.",
+    "addSnippet": "Textbaustein hinzufügen",
+    "noSnippets": "Noch keine Textbausteine gespeichert",
+    "snippetTextPlaceholder": "Textbaustein eingeben…",
+    "searchSnippetsPlaceholder": "Textbausteine suchen…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
   "theme": {
@@ -1258,7 +1271,8 @@
     "voicePostProcessTimeout": "Sprachverarbeitung dauerte zu lange; Originaltext beibehalten",
     "variablesNotSet": "Variablen haben auf diesem Gerät keinen Wert; legen Sie ihn unter Einstellungen → Variablen fest",
     "dictationResultReady": "Das Diktat ist fertig, aber das Fenster zeigt schon etwas anderes. Kopieren Sie es, damit es nicht verloren geht.",
-    "dictationResultInHistory": "Es ist auch im Verlauf gespeichert."
+    "dictationResultInHistory": "Es ist auch im Verlauf gespeichert.",
+    "snippetAlreadyExists": "Ein Textbaustein mit diesem Text existiert bereits"
   },
   "tools": {
     "aiTask": "KI-Befehl",
@@ -1421,5 +1435,6 @@
     "value": "Wert",
     "valueNotSet": "Auf diesem Gerät nicht festgelegt: Befehle damit werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
-  }
+  },
+  "snippets": { "noMatches": "Keine passenden Textbausteine" }
 }

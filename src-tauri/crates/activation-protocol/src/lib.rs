@@ -20,6 +20,7 @@ pub const START_MODES: &[&str] = &[
     "customTransformation",
     "voiceTransformation",
     "chatPrompts",
+    "snippets",
     "history",
     "config",
 ];

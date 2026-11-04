@@ -23,6 +23,7 @@ export const ActivationMode = {
   CUSTOM_TRANSFORMATION: 'customTransformation',
   VOICE_TRANSFORMATION: 'voiceTransformation',
   CHAT_PROMPTS: 'chatPrompts',
+  SNIPPETS: 'snippets',
   EDITOR: 'editor',
   QUICK_INPUT: 'quickInput',
   CHAT: 'chat',

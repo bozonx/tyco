@@ -13,7 +13,10 @@
     "voiceTransformation": "Transformation vocale",
     "webhook": "Webhook",
     "chatPromptsMenu": "Préréglages de prompts pour le chat",
-    "voiceCommands": "Commandes vocales"
+    "voiceCommands": "Commandes vocales",
+    "snippetsMenu": "Extraits",
+    "saveAsSnippet": "Enregistrer comme extrait",
+    "savedAsSnippet": "Enregistré dans les extraits"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Sera copié une fois terminé",
     "willInsertOnFinish": "Sera inséré une fois terminé",
     "ruleNotFound": "Cette règle n'existe plus",
-    "chatPrompts": "Préréglages de prompts pour le chat"
+    "chatPrompts": "Préréglages de prompts pour le chat",
+    "snippets": "Extraits"
   },
   "nav": {
     "aiChat": "Demander à l’IA",
@@ -789,7 +793,8 @@
       "selectionActionsPage3": "Actions : page 3",
       "chatPrompts": "Préréglages de prompts pour le texte sélectionné",
       "selectionActionsPage4": "Actions : page 4",
-      "selectionActionsPage5": "Actions : page 5"
+      "selectionActionsPage5": "Actions : page 5",
+      "snippets": "Extraits"
     },
     "hotkeyInput": {
       "cancelHint": "Échap pour annuler",
@@ -1202,7 +1207,15 @@
     "webFetchMaxCharacters": "Limite de taille de page",
     "webFetchMaxCharactersHint": "Nombre maximal de caractères récupérés d’une seule page Web (1 000 à 100 000). Économise la fenêtre de contexte.",
     "webFetchMaxCharactersError": "Entrez un nombre entre 1 000 et 100 000",
-    "profileWebSearchLlmNotice": "La clé API et la limite de taille des pages sont configurées globalement dans les paramètres LLM."
+    "profileWebSearchLlmNotice": "La clé API et la limite de taille des pages sont configurées globalement dans les paramètres LLM.",
+    "snippetsTab": "Extraits",
+    "snippetsNavTab": "Extraits",
+    "snippetsHint": "Fragments de texte enregistrés pour un accès et une insertion rapides. Faites glisser les cartes pour réorganiser.",
+    "addSnippet": "Ajouter un extrait",
+    "noSnippets": "Aucun extrait enregistré pour le moment",
+    "snippetTextPlaceholder": "Entrez le texte de l’extrait…",
+    "searchSnippetsPlaceholder": "Rechercher des extraits…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Insérer dans l’éditeur" },
   "theme": {
@@ -1258,7 +1271,8 @@
     "voicePostProcessTimeout": "Le traitement vocal a pris trop de temps ; texte d’origine conservé",
     "variablesNotSet": "Des variables n’ont pas de valeur sur cet appareil ; définissez-les dans Paramètres → Variables",
     "dictationResultReady": "La dictée est prête, mais la fenêtre est passée à autre chose. Copiez-la pour ne pas la perdre.",
-    "dictationResultInHistory": "Elle est aussi enregistrée dans l’historique."
+    "dictationResultInHistory": "Elle est aussi enregistrée dans l’historique.",
+    "snippetAlreadyExists": "Un extrait avec ce texte existe déjà"
   },
   "tools": {
     "aiTask": "Commande IA",
@@ -1421,5 +1435,6 @@
     "value": "Valeur",
     "valueNotSet": "Non définie sur cet appareil : les commandes qui l’utilisent ne s’exécutent pas",
     "valuePlaceholder": "Un chemin, une adresse ou un autre texte"
-  }
+  },
+  "snippets": { "noMatches": "Aucun extrait correspondant" }
 }

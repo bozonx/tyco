@@ -222,6 +222,7 @@ const OPENS_DIALOG = new Set<StandardActionId>([
   'transformationMenu',
   'stylingMenu',
   'chatPromptsMenu',
+  'snippetsMenu',
   'customTransformation',
   'voiceTransformation',
   'voiceCommands',

@@ -17,6 +17,7 @@ export const STANDARD_ACTION_IDS = [
   'customTransformation',
   'voiceTransformation',
   'voiceCommands',
+  'snippetsMenu',
 ] as const
 
 export type StandardActionId = (typeof STANDARD_ACTION_IDS)[number]

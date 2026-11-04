@@ -22,13 +22,25 @@
           :mode="diffMode"
         />
         <TextPreview v-else :text="props.text" />
-        <CopyButton
-          v-if="activeActionText"
-          class="preview-copy-btn"
-          :value="activeActionText"
-          :label="t('action.copy')"
-          size="sm"
-        />
+        <div v-if="activeActionText" class="preview-actions">
+          <IconButton
+            class="preview-action-btn"
+            size="sm"
+            :label="
+              isSavedAsSnippet
+                ? t('action.savedAsSnippet')
+                : t('action.saveAsSnippet')
+            "
+            :icon="isSavedAsSnippet ? 'mdi:check' : 'mdi:bookmark-plus-outline'"
+            @click="saveAsSnippet"
+          />
+          <CopyButton
+            class="preview-action-btn"
+            :value="activeActionText"
+            :label="t('action.copy')"
+            size="sm"
+          />
+        </div>
       </div>
     </template>
 
@@ -69,13 +81,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useEditorNavigation } from '../../composables/use-editor-navigation'
 import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
+import useToast from '../../composables/use-toast'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
 import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
+import {
+  addSnippet,
+  isDuplicateSnippet,
+} from '../../lib/snippets/snippets-model'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'
@@ -83,6 +100,7 @@ import { useMenuModalsStore } from '../../stores/menu-modals'
 import AppIcon from '../common/AppIcon.vue'
 import CopyButton from '../common/CopyButton.vue'
 import Diff from '../common/Diff.vue'
+import IconButton from '../common/IconButton.vue'
 import KeyboardKey from '../common/KeyboardKey.vue'
 import TextPreview from '../common/TextPreview.vue'
 import ActionOverlayLayout from '../overlay/ActionOverlayLayout.vue'
@@ -91,6 +109,35 @@ import ResultViewModeToggle from './ResultViewModeToggle.vue'
 import { APP_CONFIG } from '@tyco/shared'
 
 const editorNavigation = useEditorNavigation()
+const { toastKey } = useToast()
+
+const isSavedAsSnippet = ref(false)
+let savedTimer: ReturnType<typeof setTimeout> | null = null
+
+async function saveAsSnippet() {
+  const text = activeActionText.value.trim()
+  if (!text) return
+
+  const currentSnippets = desktopStore.userConfig.snippets?.items ?? []
+  if (isDuplicateSnippet(currentSnippets, text)) {
+    toastKey('toast.snippetAlreadyExists', 'warn')
+    return
+  }
+
+  const result = addSnippet(currentSnippets, text)
+  if (result.success) {
+    await desktopStore.updateUserConfig({ snippets: { items: result.items } })
+    isSavedAsSnippet.value = true
+    if (savedTimer) clearTimeout(savedTimer)
+    savedTimer = setTimeout(() => {
+      isSavedAsSnippet.value = false
+    }, 1500)
+  }
+}
+
+onUnmounted(() => {
+  if (savedTimer) clearTimeout(savedTimer)
+})
 
 const props = withDefaults(defineProps<InsertMenuParams>(), {
   text: '',
@@ -328,11 +375,17 @@ onUnmounted(() => {
   min-height: 0;
 }
 
-.preview-copy-btn {
+.preview-actions {
   position: absolute;
   top: var(--space-xs);
   right: var(--space-xs);
   z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.preview-action-btn {
   background-color: var(--app-surface-raised);
   border: 1px solid var(--app-border-subtle);
   border-radius: var(--radius-md);
@@ -343,7 +396,7 @@ onUnmounted(() => {
     background-color var(--transition-fast);
 }
 
-.preview-copy-btn:hover {
+.preview-action-btn:hover {
   opacity: 1;
 }
 </style>

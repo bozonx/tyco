@@ -13,7 +13,10 @@
     "voiceTransformation": "Transformare vocală",
     "webhook": "Webhook",
     "chatPromptsMenu": "Presetări prompturi chat",
-    "voiceCommands": "Comenzi vocale"
+    "voiceCommands": "Comenzi vocale",
+    "snippetsMenu": "Fragmente de text",
+    "saveAsSnippet": "Salvează ca fragment",
+    "savedAsSnippet": "Salvat ca fragment"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Se va copia la finalizare",
     "willInsertOnFinish": "Se va introduce la finalizare",
     "ruleNotFound": "Această regulă nu mai există",
-    "chatPrompts": "Presetări prompturi chat"
+    "chatPrompts": "Presetări prompturi chat",
+    "snippets": "Fragmente de text"
   },
   "nav": {
     "aiChat": "Întreabă AI",
@@ -789,7 +793,8 @@
       "selectionActionsPage3": "Acțiuni: pagina 3",
       "chatPrompts": "Presetări prompturi chat pentru textul selectat",
       "selectionActionsPage4": "Acțiuni: pagina 4",
-      "selectionActionsPage5": "Acțiuni: pagina 5"
+      "selectionActionsPage5": "Acțiuni: pagina 5",
+      "snippets": "Fragmente de text"
     },
     "hotkeyInput": {
       "cancelHint": "Esc pentru anulare",
@@ -1202,7 +1207,15 @@
     "webFetchMaxCharacters": "Limită dimensiune pagină",
     "webFetchMaxCharactersHint": "Numărul maxim de caractere preluate de pe o singură pagină web (1.000 până la 100.000). Economisește fereastra de context.",
     "webFetchMaxCharactersError": "Introduceți un număr între 1.000 și 100.000",
-    "profileWebSearchLlmNotice": "Cheia API și limitele de dimensiune a paginii sunt configurate global în setările LLM."
+    "profileWebSearchLlmNotice": "Cheia API și limitele de dimensiune a paginii sunt configurate global în setările LLM.",
+    "snippetsTab": "Fragmente de text",
+    "snippetsNavTab": "Fragmente",
+    "snippetsHint": "Fragmente de text salvate pentru acces și inserare rapidă. Trageți cardurile pentru a le reordona.",
+    "addSnippet": "Adaugă fragment",
+    "noSnippets": "Niciun fragment salvat încă",
+    "snippetTextPlaceholder": "Introduceți textul fragmentului…",
+    "searchSnippetsPlaceholder": "Căutați fragmente…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
   "theme": {
@@ -1258,7 +1271,8 @@
     "voicePostProcessTimeout": "Procesarea vocală a durat prea mult; s-a păstrat textul original",
     "variablesNotSet": "Unele variabile nu au valoare pe acest dispozitiv; setați-le în Setări → Variabile",
     "dictationResultReady": "Dictarea este gata, dar fereastra arată deja altceva. Copiați-o ca să nu o pierdeți.",
-    "dictationResultInHistory": "Este salvată și în istoric."
+    "dictationResultInHistory": "Este salvată și în istoric.",
+    "snippetAlreadyExists": "Un fragment cu acest text există deja"
   },
   "tools": {
     "aiTask": "Comandă AI",
@@ -1421,5 +1435,6 @@
     "value": "Valoare",
     "valueNotSet": "Nesetată pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
-  }
+  },
+  "snippets": { "noMatches": "Niciun fragment găsit" }
 }

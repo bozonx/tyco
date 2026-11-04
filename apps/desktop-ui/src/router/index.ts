@@ -9,6 +9,7 @@ import HistoryView from '../views/HistoryView.vue'
 import HomeView from '../views/HomeView.vue'
 import SelectionView from '../views/SelectionView.vue'
 import ChatPromptsView from '../views/ChatPromptsView.vue'
+import SnippetsView from '../views/SnippetsView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import CustomTransformationView from '../views/CustomTransformationView.vue'
 import StylingView from '../views/StylingView.vue'
@@ -97,6 +98,11 @@ const router = createRouter({
       path: APP_ROUTES.CHAT_PROMPTS.path,
       name: APP_ROUTES.CHAT_PROMPTS.name,
       component: ChatPromptsView,
+    },
+    {
+      path: APP_ROUTES.SNIPPETS.path,
+      name: APP_ROUTES.SNIPPETS.name,
+      component: SnippetsView,
     },
     {
       path: APP_ROUTES.SELECT.path,

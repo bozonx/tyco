@@ -13,7 +13,10 @@
     "voiceTransformation": "Glasovna transformacija",
     "webhook": "Webhook",
     "chatPromptsMenu": "Unaprijed postavljeni upiti za chat",
-    "voiceCommands": "Glasovne naredbe"
+    "voiceCommands": "Glasovne naredbe",
+    "snippetsMenu": "Isječci teksta",
+    "saveAsSnippet": "Spremi kao isječak",
+    "savedAsSnippet": "Spremljeno kao isječak"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Kopirat će se po završetku",
     "willInsertOnFinish": "Umetnut će se po završetku",
     "ruleNotFound": "Ovo pravilo više ne postoji",
-    "chatPrompts": "Unaprijed postavljeni upiti za chat"
+    "chatPrompts": "Unaprijed postavljeni upiti za chat",
+    "snippets": "Isječci teksta"
   },
   "nav": {
     "aiChat": "Pitaj AI",
@@ -789,7 +793,8 @@
       "selectionActionsPage3": "Radnje: stranica 3",
       "chatPrompts": "Unaprijed postavljeni upiti za chat za odabrani tekst",
       "selectionActionsPage4": "Radnje: stranica 4",
-      "selectionActionsPage5": "Radnje: stranica 5"
+      "selectionActionsPage5": "Radnje: stranica 5",
+      "snippets": "Isječci teksta"
     },
     "hotkeyInput": {
       "cancelHint": "Esc za odustajanje",
@@ -1202,7 +1207,15 @@
     "webFetchMaxCharacters": "Ograničenje veličine stranice",
     "webFetchMaxCharactersHint": "Maksimalni broj znakova dohvaćenih s jedne web stranice (1.000 do 100.000). Štedi kontekstualni prozor.",
     "webFetchMaxCharactersError": "Unesite broj od 1.000 do 100.000",
-    "profileWebSearchLlmNotice": "API ključ i ograničenja veličine stranice konfiguriraju se globalno u postavkama LLM-a."
+    "profileWebSearchLlmNotice": "API ključ i ograničenja veličine stranice konfiguriraju se globalno u postavkama LLM-a.",
+    "snippetsTab": "Isječci teksta",
+    "snippetsNavTab": "Isječci",
+    "snippetsHint": "Spremljeni fragmenti teksta za brzi pristup i umetanje. Povucite kartice za promjenu redoslijeda.",
+    "addSnippet": "Dodaj isječak",
+    "noSnippets": "Još nema spremljenih isječaka",
+    "snippetTextPlaceholder": "Unesite tekst isječka…",
+    "searchSnippetsPlaceholder": "Pretraži isječke…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
   "theme": {
@@ -1258,7 +1271,8 @@
     "voicePostProcessTimeout": "Obrada glasa trajala je predugo; izvorni tekst je zadržan",
     "variablesNotSet": "Varijable nemaju vrijednost na ovom uređaju; postavite ih u Postavke → Varijable",
     "dictationResultReady": "Diktat je spreman, ali prozor već prikazuje nešto drugo. Kopirajte ga da ga ne izgubite.",
-    "dictationResultInHistory": "Spremljen je i u povijesti."
+    "dictationResultInHistory": "Spremljen je i u povijesti.",
+    "snippetAlreadyExists": "Isječak s ovim tekstom već postoji"
   },
   "tools": {
     "aiTask": "AI naredba",
@@ -1421,5 +1435,6 @@
     "value": "Vrijednost",
     "valueNotSet": "Nije postavljena na ovom uređaju: naredbe koje je koriste ne pokreću se",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
-  }
+  },
+  "snippets": { "noMatches": "Nema podudarnih isječaka" }
 }

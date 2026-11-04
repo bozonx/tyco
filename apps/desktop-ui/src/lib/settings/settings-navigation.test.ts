@@ -101,6 +101,7 @@ describe('settings navigation', () => {
           'transformations',
           'styling',
           'chat-prompts',
+          'snippets',
           'languages',
         ],
       ],

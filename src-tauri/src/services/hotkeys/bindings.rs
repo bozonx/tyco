@@ -115,7 +115,7 @@ pub(crate) struct HotkeyBinding {
     pub(crate) description: String,
 }
 
-pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 14] = [
+pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 15] = [
     ActivationMode::Editor,
     ActivationMode::QuickInput,
     ActivationMode::Chat,
@@ -129,6 +129,7 @@ pub(crate) const GLOBAL_HOTKEY_MODES: [ActivationMode; 14] = [
     ActivationMode::CustomTransformation,
     ActivationMode::VoiceTransformation,
     ActivationMode::ChatPrompts,
+    ActivationMode::Snippets,
     ActivationMode::History,
 ];
 
@@ -264,6 +265,7 @@ fn default_key(mode: ActivationMode) -> Option<&'static str> {
         | ActivationMode::CustomTransformation
         | ActivationMode::VoiceTransformation
         | ActivationMode::ChatPrompts
+        | ActivationMode::Snippets
         | ActivationMode::History
         | ActivationMode::Config
         | ActivationMode::ExternalAccess => None,
@@ -338,6 +340,7 @@ fn mode_description(mode: ActivationMode) -> &'static str {
         ActivationMode::CustomTransformation => "Custom text transformation",
         ActivationMode::VoiceTransformation => "Voice text transformation",
         ActivationMode::ChatPrompts => "Open chat prompt presets",
+        ActivationMode::Snippets => "Open snippets",
         ActivationMode::History => "Open history",
         ActivationMode::Config => "Open settings",
         ActivationMode::ExternalAccess => "Answer a request for the selection",

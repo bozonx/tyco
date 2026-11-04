@@ -13,7 +13,10 @@
     "voiceTransformation": "Transformação por voz",
     "webhook": "Webhook",
     "chatPromptsMenu": "Predefinições de prompts de chat",
-    "voiceCommands": "Comandos de voz"
+    "voiceCommands": "Comandos de voz",
+    "snippetsMenu": "Snippets",
+    "saveAsSnippet": "Salvar como snippet",
+    "savedAsSnippet": "Salvo como snippet"
   },
   "app": { "title": "TyCo" },
   "chat": {
@@ -574,7 +577,8 @@
     "willCopyOnFinish": "Será copiado ao concluir",
     "willInsertOnFinish": "Será inserido ao concluir",
     "ruleNotFound": "Esta regra não existe mais",
-    "chatPrompts": "Predefinições de prompts de chat"
+    "chatPrompts": "Predefinições de prompts de chat",
+    "snippets": "Snippets"
   },
   "nav": {
     "aiChat": "Perguntar à IA",
@@ -789,7 +793,8 @@
       "selectionActionsPage3": "Ações: página 3",
       "chatPrompts": "Predefinições de prompts de chat para texto selecionado",
       "selectionActionsPage4": "Ações: página 4",
-      "selectionActionsPage5": "Ações: página 5"
+      "selectionActionsPage5": "Ações: página 5",
+      "snippets": "Snippets"
     },
     "hotkeyInput": {
       "cancelHint": "Esc para cancelar",
@@ -1202,7 +1207,15 @@
     "webFetchMaxCharacters": "Limite de tamanho da página",
     "webFetchMaxCharactersHint": "Número máximo de caracteres obtidos de uma única página da Web (1.000 a 100.000). Ajuda a economizar a janela de contexto.",
     "webFetchMaxCharactersError": "Insira um número de 1.000 a 100.000",
-    "profileWebSearchLlmNotice": "A chave de API e os limites de tamanho de página são configurados globalmente nas configurações de LLM."
+    "profileWebSearchLlmNotice": "A chave de API e os limites de tamanho de página são configurados globalmente nas configurações de LLM.",
+    "snippetsTab": "Snippets",
+    "snippetsNavTab": "Snippets",
+    "snippetsHint": "Fragmentos de texto salvos para acesso e inserção rápidos. Arraste os cartões para reordenar.",
+    "addSnippet": "Adicionar snippet",
+    "noSnippets": "Nenhum snippet salvo ainda",
+    "snippetTextPlaceholder": "Digite o texto do snippet…",
+    "searchSnippetsPlaceholder": "Buscar snippets…",
+    "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
   "theme": {
@@ -1258,7 +1271,8 @@
     "voicePostProcessTimeout": "O processamento de voz demorou muito; texto original mantido",
     "variablesNotSet": "Há variáveis sem valor neste dispositivo; defina-as em Configurações → Variáveis",
     "dictationResultReady": "O ditado está pronto, mas a janela já mudou. Copie-o para não perdê-lo.",
-    "dictationResultInHistory": "Ele também está salvo no histórico."
+    "dictationResultInHistory": "Ele também está salvo no histórico.",
+    "snippetAlreadyExists": "Já existe um snippet com este texto"
   },
   "tools": {
     "aiTask": "Comando de IA",
@@ -1421,5 +1435,6 @@
     "value": "Valor",
     "valueNotSet": "Não definida neste dispositivo: os comandos que a usam não são executados",
     "valuePlaceholder": "Um caminho, um endereço ou outro texto"
-  }
+  },
+  "snippets": { "noMatches": "Nenhum snippet correspondente" }
 }

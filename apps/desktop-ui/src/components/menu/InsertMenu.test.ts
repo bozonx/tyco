@@ -193,6 +193,34 @@ describe('InsertMenu correction step', () => {
     await wrapper.vm.$nextTick()
     expect(actionMenuStore.pageIndex).toBe(0)
   })
+
+  it('saves text as a snippet when save button is clicked', async () => {
+    desktop.setUserConfig({ snippets: { items: [] } })
+    const wrapper = mountMenu({ text: 'Sample text to save' })
+    const saveBtn = wrapper.find('button[aria-label="action.saveAsSnippet"]')
+    expect(saveBtn.exists()).toBe(true)
+    await saveBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(desktop.backend.userConfig.snippets.items).toEqual([
+      { id: 'snippet-1', text: 'Sample text to save' },
+    ])
+  })
+
+  it('shows warning toast when saving exact duplicate snippet', async () => {
+    desktop.setUserConfig({
+      snippets: { items: [{ id: 'snippet-1', text: 'Existing text' }] },
+    })
+    const toast = (await import('../../stores/toast')).useToastStore()
+    const toastSpy = vi.spyOn(toast, 'toastKey')
+
+    const wrapper = mountMenu({ text: 'Existing text' })
+    const saveBtn = wrapper.find('button[aria-label="action.saveAsSnippet"]')
+    await saveBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(toastSpy).toHaveBeenCalledWith('toast.snippetAlreadyExists', 'warn')
+    expect(desktop.backend.userConfig.snippets.items).toHaveLength(1)
+  })
 })
 
 afterEach(() => {

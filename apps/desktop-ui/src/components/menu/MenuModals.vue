@@ -45,6 +45,11 @@
       :key="menuModalsStore.currentStepId"
       v-bind="menuModalsStore.currentStep.params"
     />
+    <SnippetsMenu
+      v-else-if="menuModalsStore.currentStep?.modal === MenuModals.SNIPPETS"
+      :key="menuModalsStore.currentStepId"
+      v-bind="menuModalsStore.currentStep.params"
+    />
     <DiffMenu
       v-else-if="menuModalsStore.currentStep?.modal === MenuModals.DIFF"
       :key="menuModalsStore.currentStepId"
@@ -96,6 +101,7 @@ import DiffMenu from './DiffMenu.vue'
 import InProgressMessage from './InProgressMessage.vue'
 import InsertMenu from './InsertMenu.vue'
 import PreviewMenu from './PreviewMenu.vue'
+import SnippetsMenu from './SnippetsMenu.vue'
 import StylingMenu from './StylingMenu.vue'
 import TransformationMenu from './TransformationMenu.vue'
 import TranslateMenu from './TranslateMenu.vue'
