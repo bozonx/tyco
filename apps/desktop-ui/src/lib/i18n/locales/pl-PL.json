@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Zestawy promptów czatu",
     "voiceCommands": "Polecenia głosowe",
-    "favoritesMenu": "Wstawki tekstu",
-    "saveAsFavorite": "Zapisz jako wstawkę",
-    "savedAsFavorite": "Zapisano jako wstawkę",
+    "favoritesMenu": "Ulubione",
+    "saveAsFavorite": "Zapisz w ulubionych",
+    "savedAsFavorite": "Zapisano w ulubionych",
     "quickAiRequest": "Szybkie zapytanie do SI",
     "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Zostanie wstawione po ukończeniu",
     "ruleNotFound": "Ta reguła już nie istnieje",
     "chatPrompts": "Zestawy promptów czatu",
-    "favorites": "Wstawki tekstu"
+    "favorites": "Ulubione"
   },
   "nav": {
     "aiChat": "Zapytaj AI",
@@ -793,7 +793,7 @@
       "chatPrompts": "Zestawy promptów czatu dla zaznaczonego tekstu",
       "selectionActionsPage4": "Działania: strona 4",
       "selectionActionsPage5": "Działania: strona 5",
-      "favorites": "Wstawki tekstu",
+      "favorites": "Ulubione",
       "quickAiRequest": "Szybkie zapytanie do SI",
       "voiceQuickAiRequest": "Głosowe szybkie zapytanie do SI"
     },
@@ -1209,14 +1209,14 @@
     "webFetchMaxCharactersHint": "Maksymalna liczba znaków pobierana z pojedynczej strony internetowej (od 1 000 do 100 000). Oszczędza okno kontekstu.",
     "webFetchMaxCharactersError": "Wpisz liczbę od 1 000 do 100 000",
     "profileWebSearchLlmNotice": "Klucz API oraz limity rozmiaru stron są konfigurowane globalnie w ustawieniach LLM.",
-    "favoritesTab": "Wstawki tekstu",
-    "favoritesNavTab": "Wstawki",
+    "favoritesTab": "Ulubione",
+    "favoritesNavTab": "Ulubione",
     "favoritesHint": "Zapisane fragmenty tekstu do szybkiego dostępu i wstawiania. Przeciągaj karty, aby zmienić kolejność.",
-    "addFavorite": "Dodaj wstawkę",
-    "noFavorites": "Brak zapisanych wstawek",
+    "addFavorite": "Dodaj do ulubionych",
+    "noFavorites": "Nie masz jeszcze ulubionych",
     "favoriteNamePlaceholder": "Nazwa (opcjonalnie)",
-    "favoriteTextPlaceholder": "Wpisz tekst wstawki…",
-    "searchFavoritesPlaceholder": "Szukaj wstawek…",
+    "favoriteTextPlaceholder": "Wpisz tekst...",
+    "searchFavoritesPlaceholder": "Wyszukaj ulubione…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Wstaw do edytora" },
@@ -1274,7 +1274,7 @@
     "variablesNotSet": "Zmienne nie mają wartości na tym urządzeniu; ustaw je w Ustawienia → Zmienne",
     "dictationResultReady": "Dyktowanie jest gotowe, ale okno pokazuje już coś innego. Skopiuj tekst, aby go nie stracić.",
     "dictationResultInHistory": "Jest też zapisany w historii.",
-    "favoriteAlreadyExists": "Wstawka o takiej treści już istnieje"
+    "favoriteAlreadyExists": "Ten tekst jest już w ulubionych"
   },
   "tools": {
     "aiTask": "Polecenie AI",
@@ -1438,7 +1438,7 @@
     "valueNotSet": "Nieustawiona na tym urządzeniu: polecenia, które jej używają, nie działają",
     "valuePlaceholder": "Ścieżka, adres lub inny tekst"
   },
-  "favorites": { "noMatches": "Brak pasujących wstawek" },
+  "favorites": { "noMatches": "Brak pasujących ulubionych" },
   "replyBlocks": {
     "insertIntoWindow": "Wstaw do okna",
     "insertIntoEditor": "Do edytora",

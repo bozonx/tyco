@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "聊天提示词预设",
     "voiceCommands": "语音命令",
-    "favoritesMenu": "片段",
-    "saveAsFavorite": "另存为片段",
-    "savedAsFavorite": "已保存至片段",
+    "favoritesMenu": "收藏夹",
+    "saveAsFavorite": "保存到收藏夹",
+    "savedAsFavorite": "已保存到收藏夹",
     "quickAiRequest": "AI 快速请求",
     "voiceQuickAiRequest": "语音 AI 快速请求"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "完成后将插入",
     "ruleNotFound": "此规则已不存在",
     "chatPrompts": "聊天提示词预设",
-    "favorites": "片段"
+    "favorites": "收藏夹"
   },
   "nav": {
     "aiChat": "询问 AI",
@@ -787,7 +787,7 @@
       "chatPrompts": "针对所选文本的聊天提示词预设",
       "selectionActionsPage4": "操作：第 4 页",
       "selectionActionsPage5": "操作：第 5 页",
-      "favorites": "片段",
+      "favorites": "收藏夹",
       "quickAiRequest": "AI 快速请求",
       "voiceQuickAiRequest": "语音 AI 快速请求"
     },
@@ -1203,14 +1203,14 @@
     "webFetchMaxCharactersHint": "从单个网页获取的最大字符数（1,000 到 100,000）。有助于节省上下文窗口。",
     "webFetchMaxCharactersError": "请输入 1,000 到 100,000 之间的数字",
     "profileWebSearchLlmNotice": "API 密钥和页面大小限制在 LLM 设置中进行全局配置。",
-    "favoritesTab": "片段",
-    "favoritesNavTab": "片段",
+    "favoritesTab": "收藏夹",
+    "favoritesNavTab": "收藏夹",
     "favoritesHint": "保存的文本片段，用于快速访问和插入。拖动卡片可重新排序。",
-    "addFavorite": "添加片段",
-    "noFavorites": "暂无已保存的片段",
+    "addFavorite": "添加收藏夹",
+    "noFavorites": "尚无收藏夹",
     "favoriteNamePlaceholder": "名称（可选）",
-    "favoriteTextPlaceholder": "输入片段内容…",
-    "searchFavoritesPlaceholder": "搜索片段…",
+    "favoriteTextPlaceholder": "输入文字…",
+    "searchFavoritesPlaceholder": "搜索收藏夹…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "插入到编辑器" },
@@ -1268,7 +1268,7 @@
     "variablesNotSet": "部分变量在此设备上没有值；请在“设置 → 变量”中设置",
     "dictationResultReady": "听写已完成，但窗口已切换到其他内容。请复制以免丢失。",
     "dictationResultInHistory": "它也已保存在历史记录中。",
-    "favoriteAlreadyExists": "已存在具有相同文本的片段"
+    "favoriteAlreadyExists": "此文本已在收藏夹中"
   },
   "tools": {
     "aiTask": "AI 命令",
@@ -1432,7 +1432,7 @@
     "valueNotSet": "此设备上未设置：使用它的命令不会运行",
     "valuePlaceholder": "路径、地址或其他文本"
   },
-  "favorites": { "noMatches": "未找到匹配的片段" },
+  "favorites": { "noMatches": "没有匹配的收藏夹" },
   "replyBlocks": {
     "insertIntoWindow": "插入到窗口",
     "insertIntoEditor": "到编辑器",

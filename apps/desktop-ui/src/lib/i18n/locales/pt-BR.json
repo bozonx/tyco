@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Predefinições de prompts de chat",
     "voiceCommands": "Comandos de voz",
-    "favoritesMenu": "Snippets",
-    "saveAsFavorite": "Salvar como snippet",
-    "savedAsFavorite": "Salvo como snippet",
+    "favoritesMenu": "Favoritos",
+    "saveAsFavorite": "Guardar nos favoritos",
+    "savedAsFavorite": "Guardado nos favoritos",
     "quickAiRequest": "Requisição rápida de IA",
     "voiceQuickAiRequest": "Requisição rápida de IA por voz"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Será inserido ao concluir",
     "ruleNotFound": "Esta regra não existe mais",
     "chatPrompts": "Predefinições de prompts de chat",
-    "favorites": "Snippets"
+    "favorites": "Favoritos"
   },
   "nav": {
     "aiChat": "Perguntar à IA",
@@ -793,7 +793,7 @@
       "chatPrompts": "Predefinições de prompts de chat para texto selecionado",
       "selectionActionsPage4": "Ações: página 4",
       "selectionActionsPage5": "Ações: página 5",
-      "favorites": "Snippets",
+      "favorites": "Favoritos",
       "quickAiRequest": "Requisição rápida de IA",
       "voiceQuickAiRequest": "Requisição rápida de IA por voz"
     },
@@ -1209,14 +1209,14 @@
     "webFetchMaxCharactersHint": "Número máximo de caracteres obtidos de uma única página da Web (1.000 a 100.000). Ajuda a economizar a janela de contexto.",
     "webFetchMaxCharactersError": "Insira um número de 1.000 a 100.000",
     "profileWebSearchLlmNotice": "A chave de API e os limites de tamanho de página são configurados globalmente nas configurações de LLM.",
-    "favoritesTab": "Snippets",
-    "favoritesNavTab": "Snippets",
+    "favoritesTab": "Favoritos",
+    "favoritesNavTab": "Favoritos",
     "favoritesHint": "Fragmentos de texto salvos para acesso e inserção rápidos. Arraste os cartões para reordenar.",
-    "addFavorite": "Adicionar snippet",
-    "noFavorites": "Nenhum snippet salvo ainda",
+    "addFavorite": "Adicionar favorito",
+    "noFavorites": "Ainda não há favoritos",
     "favoriteNamePlaceholder": "Nome (opcional)",
-    "favoriteTextPlaceholder": "Digite o texto do snippet…",
-    "searchFavoritesPlaceholder": "Buscar snippets…",
+    "favoriteTextPlaceholder": "Introduza o texto...",
+    "searchFavoritesPlaceholder": "Pesquisar favoritos...",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Inserir no editor" },
@@ -1274,7 +1274,7 @@
     "variablesNotSet": "Há variáveis sem valor neste dispositivo; defina-as em Configurações → Variáveis",
     "dictationResultReady": "O ditado está pronto, mas a janela já mudou. Copie-o para não perdê-lo.",
     "dictationResultInHistory": "Ele também está salvo no histórico.",
-    "favoriteAlreadyExists": "Já existe um snippet com este texto"
+    "favoriteAlreadyExists": "Este texto já está nos favoritos"
   },
   "tools": {
     "aiTask": "Comando de IA",
@@ -1438,7 +1438,7 @@
     "valueNotSet": "Não definida neste dispositivo: os comandos que a usam não são executados",
     "valuePlaceholder": "Um caminho, um endereço ou outro texto"
   },
-  "favorites": { "noMatches": "Nenhum snippet correspondente" },
+  "favorites": { "noMatches": "Não há favoritos correspondentes" },
   "replyBlocks": {
     "insertIntoWindow": "Inserir na janela",
     "insertIntoEditor": "No editor",

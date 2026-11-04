@@ -12,9 +12,9 @@
     "webhook": "Вебхук",
     "chatPromptsMenu": "Швидкі промпти для чату",
     "voiceCommands": "Голосові команди",
-    "favoritesMenu": "Сніпети",
-    "saveAsFavorite": "Зберегти як сніпет",
-    "savedAsFavorite": "Збережено в сніпети",
+    "favoritesMenu": "Улюблене",
+    "saveAsFavorite": "Зберегти у вибране",
+    "savedAsFavorite": "Збережено у вибране",
     "quickAiRequest": "Швидкий запит до ШІ",
     "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Вставиться після завершення",
     "ruleNotFound": "Цього правила більше не існує",
     "chatPrompts": "Швидкі промпти для чату",
-    "favorites": "Сніпети"
+    "favorites": "Улюблене"
   },
   "nav": {
     "aiChat": "Запитати ШІ",
@@ -790,7 +790,7 @@
       "chatPrompts": "Швидкі промпти для чату з ШІ",
       "selectionActionsPage4": "Дії: сторінка 4",
       "selectionActionsPage5": "Дії: сторінка 5",
-      "favorites": "Сніпети",
+      "favorites": "Улюблене",
       "quickAiRequest": "Швидкий запит до ШІ",
       "voiceQuickAiRequest": "Голосовий швидкий запит до ШІ"
     },
@@ -1206,14 +1206,14 @@
     "webFetchMaxCharactersHint": "Максимальна кількість символів, що завантажується з однієї веб-сторінки (від 1 000 до 100 000). Допомагає економити контекстне вікно.",
     "webFetchMaxCharactersError": "Введіть число від 1 000 до 100 000",
     "profileWebSearchLlmNotice": "API-ключ та ліміти обсягу сторінок налаштовуються глобально у налаштуваннях LLM.",
-    "favoritesTab": "Сніпети",
-    "favoritesNavTab": "Сніпети",
+    "favoritesTab": "Улюблене",
+    "favoritesNavTab": "Улюблене",
     "favoritesHint": "Збережені фрагменти тексту для швидкого доступу та вставки. Перетягуйте картки для зміни порядку.",
-    "addFavorite": "Додати сніпет",
-    "noFavorites": "Сніпетів поки немає",
+    "addFavorite": "Додати улюблене",
+    "noFavorites": "Поки що немає вподобань",
     "favoriteNamePlaceholder": "Назва (необов’язково)",
-    "favoriteTextPlaceholder": "Введіть текст сніпета…",
-    "searchFavoritesPlaceholder": "Пошук сніпетів…",
+    "favoriteTextPlaceholder": "Введіть текст…",
+    "searchFavoritesPlaceholder": "Шукати вподобання…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Вставити в редактор" },
@@ -1271,7 +1271,7 @@
     "variablesNotSet": "Змінні не задано на цьому пристрої; задайте їх у «Налаштування → Змінні»",
     "dictationResultReady": "Диктування готове, але вікно вже зайняте іншим. Скопіюйте текст, щоб не втратити його.",
     "dictationResultInHistory": "Його також збережено в історії.",
-    "favoriteAlreadyExists": "Сніпет із таким текстом уже існує"
+    "favoriteAlreadyExists": "Цей текст уже у вибраному"
   },
   "tools": {
     "aiTask": "ШІ-команда",
@@ -1435,7 +1435,7 @@
     "valueNotSet": "Не задано на цьому пристрої: команди з цією змінною не виконуються",
     "valuePlaceholder": "Шлях, адреса або інший текст"
   },
-  "favorites": { "noMatches": "Нічого не знайдено" },
+  "favorites": { "noMatches": "Немає відповідних елементів вибраного" },
   "replyBlocks": {
     "insertIntoWindow": "Вставити у вікно",
     "insertIntoEditor": "В редактор",

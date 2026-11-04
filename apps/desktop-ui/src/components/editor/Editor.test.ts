@@ -67,6 +67,7 @@ describe('Editor.vue toolbar', () => {
     const rightButtons = rightColumn.findAll('.btn-stub')
     const titles = rightButtons.map((btn) => btn.attributes('title'))
     expect(titles).toEqual([
+      'action.saveAsFavorite',
       'editor.askAi',
       'action.stylingMenu',
       'action.transformationMenu',
@@ -163,6 +164,7 @@ describe('Editor.vue toolbar', () => {
       rightColumn.findAll('.btn-stub').map((btn) => btn.attributes('title'))
     ).toEqual([
       'tool.right',
+      'action.saveAsFavorite',
       'editor.askAi',
       'action.stylingMenu',
       'action.transformationMenu',

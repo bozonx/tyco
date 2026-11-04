@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Προεπιλογές προτροπών συνομιλίας",
     "voiceCommands": "Φωνητικές εντολές",
-    "favoritesMenu": "Αποσπάσματα",
-    "saveAsFavorite": "Αποθήκευση ως απόσπασμα",
-    "savedAsFavorite": "Αποθηκεύτηκε στα αποσπάσματα",
+    "favoritesMenu": "Αγαπημένα",
+    "saveAsFavorite": "Αποθήκευση στα αγαπημένα",
+    "savedAsFavorite": "Αποθηκεύτηκε στα αγαπημένα",
     "quickAiRequest": "Γρήγορο αίτημα AI",
     "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Θα εισαχθεί μετά την ολοκλήρωση",
     "ruleNotFound": "Αυτός ο κανόνας δεν υπάρχει πλέον",
     "chatPrompts": "Προεπιλογές προτροπών συνομιλίας",
-    "favorites": "Αποσπάσματα"
+    "favorites": "Αγαπημένα"
   },
   "nav": {
     "aiChat": "Ρωτήστε την ΤΝ",
@@ -790,7 +790,7 @@
       "chatPrompts": "Προεπιλογές προτροπών συνομιλίας για επιλεγμένο κείμενο",
       "selectionActionsPage4": "Ενέργειες: σελίδα 4",
       "selectionActionsPage5": "Ενέργειες: σελίδα 5",
-      "favorites": "Αποσπάσματα",
+      "favorites": "Αγαπημένα",
       "quickAiRequest": "Γρήγορο αίτημα AI",
       "voiceQuickAiRequest": "Φωνητικό γρήγορο αίτημα AI"
     },
@@ -1206,14 +1206,14 @@
     "webFetchMaxCharactersHint": "Μέγιστος αριθμός χαρακτήρων που ανακτώνται από μία ιστοσελίδα (1.000 έως 100.000). Εξοικονομεί παράθυρο περιβάλλοντος.",
     "webFetchMaxCharactersError": "Εισαγάγετε έναν αριθμό από 1.000 έως 100.000",
     "profileWebSearchLlmNotice": "Το κλειδί API και τα όρια μεγέθους σελίδας διαμορφώνονται καθολικά στις ρυθμίσεις LLM.",
-    "favoritesTab": "Αποσπάσματα",
-    "favoritesNavTab": "Αποσπάσματα",
+    "favoritesTab": "Αγαπημένα",
+    "favoritesNavTab": "Αγαπημένα",
     "favoritesHint": "Αποθηκευμένα αποσπάσματα κειμένου για γρήγορη πρόσβαση και εισαγωγή. Σύρετε τις κάρτες για αναδιάταξη.",
-    "addFavorite": "Προσθήκη αποσπάσματος",
-    "noFavorites": "Δεν υπάρχουν ακόμη αποθηκευμένα αποσπάσματα",
+    "addFavorite": "Προσθήκη αγαπημένου",
+    "noFavorites": "Δεν υπάρχουν αγαπημένα",
     "favoriteNamePlaceholder": "Όνομα (προαιρετικό)",
-    "favoriteTextPlaceholder": "Εισαγάγετε κείμενο αποσπάσματος…",
-    "searchFavoritesPlaceholder": "Αναζήτηση αποσπασμάτων…",
+    "favoriteTextPlaceholder": "Εισάγετε κείμενο…",
+    "searchFavoritesPlaceholder": "Αναζήτηση αγαπημένων…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Εισαγωγή στον επεξεργαστή" },
@@ -1271,7 +1271,7 @@
     "variablesNotSet": "Κάποιες μεταβλητές δεν έχουν τιμή σε αυτή τη συσκευή· ορίστε τες στις Ρυθμίσεις → Μεταβλητές",
     "dictationResultReady": "Η υπαγόρευση είναι έτοιμη, αλλά το παράθυρο δείχνει ήδη κάτι άλλο. Αντιγράψτε την για να μη χαθεί.",
     "dictationResultInHistory": "Έχει επίσης αποθηκευτεί στο ιστορικό.",
-    "favoriteAlreadyExists": "Υπάρχει ήδη απόσπασμα με αυτό το κείμενο"
+    "favoriteAlreadyExists": "Αυτό το κείμενο είναι ήδη στα αγαπημένα"
   },
   "tools": {
     "aiTask": "Εντολή AI",
@@ -1435,7 +1435,7 @@
     "valueNotSet": "Δεν έχει οριστεί σε αυτή τη συσκευή: οι εντολές που τη χρησιμοποιούν δεν εκτελούνται",
     "valuePlaceholder": "Μια διαδρομή, μια διεύθυνση ή άλλο κείμενο"
   },
-  "favorites": { "noMatches": "Δεν βρέθηκαν αποσπάσματα" },
+  "favorites": { "noMatches": "Δεν υπάρχουν αγαπημένα που να ταιριάζουν" },
   "replyBlocks": {
     "insertIntoWindow": "Εισαγωγή στο παράθυρο",
     "insertIntoEditor": "Στον επεξεργαστή",

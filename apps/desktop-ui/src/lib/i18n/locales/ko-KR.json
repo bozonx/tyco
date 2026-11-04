@@ -12,9 +12,9 @@
     "webhook": "웹후크",
     "chatPromptsMenu": "채팅 프롬프트 사전 설정",
     "voiceCommands": "음성 명령",
-    "favoritesMenu": "스니펫",
-    "saveAsFavorite": "스니펫으로 저장",
-    "savedAsFavorite": "스니펫에 저장됨",
+    "favoritesMenu": "즐겨찾기",
+    "saveAsFavorite": "즐겨찾기에 저장",
+    "savedAsFavorite": "즐겨찾기에 저장됨",
     "quickAiRequest": "AI 빠른 요청",
     "voiceQuickAiRequest": "음성 AI 빠른 요청"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "완료 시 삽입됩니다",
     "ruleNotFound": "이 규칙은 더 이상 존재하지 않습니다",
     "chatPrompts": "채팅 프롬프트 사전 설정",
-    "favorites": "스니펫"
+    "favorites": "즐겨찾기"
   },
   "nav": {
     "aiChat": "AI에게 질문",
@@ -787,7 +787,7 @@
       "chatPrompts": "선택한 텍스트에 대한 채팅 프롬프트 사전 설정",
       "selectionActionsPage4": "작업: 페이지 4",
       "selectionActionsPage5": "작업: 페이지 5",
-      "favorites": "스니펫",
+      "favorites": "즐겨찾기",
       "quickAiRequest": "AI 빠른 요청",
       "voiceQuickAiRequest": "음성 AI 빠른 요청"
     },
@@ -1203,14 +1203,14 @@
     "webFetchMaxCharactersHint": "단일 웹 페이지에서 가져오는 최대 문자 수(1,000~100,000). 컨텍스트 창을 절약하는 데 도움이 됩니다.",
     "webFetchMaxCharactersError": "1,000에서 100,000 사이의 숫자를 입력하세요",
     "profileWebSearchLlmNotice": "API 키와 페이지 크기 제한은 LLM 설정에서 전역으로 구성됩니다.",
-    "favoritesTab": "스니펫",
-    "favoritesNavTab": "스니펫",
+    "favoritesTab": "즐겨찾기",
+    "favoritesNavTab": "즐겨찾기",
     "favoritesHint": "빠른 액세스 및 삽입을 위한 저장된 텍스트 조각입니다. 카드를 드래그하여 순서를 변경하세요.",
-    "addFavorite": "스니펫 추가",
-    "noFavorites": "아직 저장된 스니펫이 없습니다",
+    "addFavorite": "즐겨찾기 추가",
+    "noFavorites": "아직 즐겨찾기 없음",
     "favoriteNamePlaceholder": "이름 (선택 사항)",
-    "favoriteTextPlaceholder": "스니펫 텍스트 입력…",
-    "searchFavoritesPlaceholder": "스니펫 검색…",
+    "favoriteTextPlaceholder": "텍스트 입력...",
+    "searchFavoritesPlaceholder": "즐겨찾기 검색...",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "편집기에 삽입" },
@@ -1268,7 +1268,7 @@
     "variablesNotSet": "이 기기에 값이 없는 변수가 있습니다. 설정 → 변수에서 지정하세요",
     "dictationResultReady": "받아쓰기가 끝났지만 창이 이미 다른 화면으로 바뀌었습니다. 잃지 않도록 복사하세요.",
     "dictationResultInHistory": "기록에도 저장되어 있습니다.",
-    "favoriteAlreadyExists": "이 텍스트의 스니펫이 이미 존재합니다"
+    "favoriteAlreadyExists": "이 텍스트는 이미 즐겨찾기에 있습니다"
   },
   "tools": {
     "aiTask": "AI 명령",
@@ -1432,7 +1432,7 @@
     "valueNotSet": "이 기기에 설정되지 않음: 이 변수를 쓰는 명령은 실행되지 않습니다",
     "valuePlaceholder": "경로, 주소 또는 다른 텍스트"
   },
-  "favorites": { "noMatches": "일치하는 스니펫이 없습니다" },
+  "favorites": { "noMatches": "일치하는 즐겨찾기 없음" },
   "replyBlocks": {
     "insertIntoWindow": "창에 삽입",
     "insertIntoEditor": "편집기로",

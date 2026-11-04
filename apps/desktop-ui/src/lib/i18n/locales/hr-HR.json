@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Unaprijed postavljeni upiti za chat",
     "voiceCommands": "Glasovne naredbe",
-    "favoritesMenu": "Isječci teksta",
-    "saveAsFavorite": "Spremi kao isječak",
-    "savedAsFavorite": "Spremljeno kao isječak",
+    "favoritesMenu": "Favoriti",
+    "saveAsFavorite": "Spremi u favorite",
+    "savedAsFavorite": "Spremljeno u favorite",
     "quickAiRequest": "Brzi upit za UI",
     "voiceQuickAiRequest": "Glasovni brzi upit za UI"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Umetnut će se po završetku",
     "ruleNotFound": "Ovo pravilo više ne postoji",
     "chatPrompts": "Unaprijed postavljeni upiti za chat",
-    "favorites": "Isječci teksta"
+    "favorites": "Favoriti"
   },
   "nav": {
     "aiChat": "Pitaj AI",
@@ -793,7 +793,7 @@
       "chatPrompts": "Unaprijed postavljeni upiti za chat za odabrani tekst",
       "selectionActionsPage4": "Radnje: stranica 4",
       "selectionActionsPage5": "Radnje: stranica 5",
-      "favorites": "Isječci teksta",
+      "favorites": "Favoriti",
       "quickAiRequest": "Brzi upit za UI",
       "voiceQuickAiRequest": "Glasovni brzi upit za UI"
     },
@@ -1209,14 +1209,14 @@
     "webFetchMaxCharactersHint": "Maksimalni broj znakova dohvaćenih s jedne web stranice (1.000 do 100.000). Štedi kontekstualni prozor.",
     "webFetchMaxCharactersError": "Unesite broj od 1.000 do 100.000",
     "profileWebSearchLlmNotice": "API ključ i ograničenja veličine stranice konfiguriraju se globalno u postavkama LLM-a.",
-    "favoritesTab": "Isječci teksta",
-    "favoritesNavTab": "Isječci",
+    "favoritesTab": "Favoriti",
+    "favoritesNavTab": "Favoriti",
     "favoritesHint": "Spremljeni fragmenti teksta za brzi pristup i umetanje. Povucite kartice za promjenu redoslijeda.",
-    "addFavorite": "Dodaj isječak",
-    "noFavorites": "Još nema spremljenih isječaka",
+    "addFavorite": "Dodaj omiljeno",
+    "noFavorites": "Još nema omiljenih",
     "favoriteNamePlaceholder": "Naziv (neobavezno)",
-    "favoriteTextPlaceholder": "Unesite tekst isječka…",
-    "searchFavoritesPlaceholder": "Pretraži isječke…",
+    "favoriteTextPlaceholder": "Unesite tekst…",
+    "searchFavoritesPlaceholder": "Pretraži favorite…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Umetni u uređivač" },
@@ -1274,7 +1274,7 @@
     "variablesNotSet": "Varijable nemaju vrijednost na ovom uređaju; postavite ih u Postavke → Varijable",
     "dictationResultReady": "Diktat je spreman, ali prozor već prikazuje nešto drugo. Kopirajte ga da ga ne izgubite.",
     "dictationResultInHistory": "Spremljen je i u povijesti.",
-    "favoriteAlreadyExists": "Isječak s ovim tekstom već postoji"
+    "favoriteAlreadyExists": "Ovaj je tekst već u favoritima"
   },
   "tools": {
     "aiTask": "AI naredba",
@@ -1438,7 +1438,7 @@
     "valueNotSet": "Nije postavljena na ovom uređaju: naredbe koje je koriste ne pokreću se",
     "valuePlaceholder": "Putanja, adresa ili drugi tekst"
   },
-  "favorites": { "noMatches": "Nema podudarnih isječaka" },
+  "favorites": { "noMatches": "Nema podudarnih favorita" },
   "replyBlocks": {
     "insertIntoWindow": "Umetni u prozor",
     "insertIntoEditor": "U uređivač",

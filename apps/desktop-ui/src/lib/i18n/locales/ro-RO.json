@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Presetări prompturi chat",
     "voiceCommands": "Comenzi vocale",
-    "favoritesMenu": "Fragmente de text",
-    "saveAsFavorite": "Salvează ca fragment",
-    "savedAsFavorite": "Salvat ca fragment",
+    "favoritesMenu": "Favorite",
+    "saveAsFavorite": "Salvează în favorite",
+    "savedAsFavorite": "Salvat în favorite",
     "quickAiRequest": "Solicitare rapidă IA",
     "voiceQuickAiRequest": "Solicitare vocală rapidă IA"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Se va introduce la finalizare",
     "ruleNotFound": "Această regulă nu mai există",
     "chatPrompts": "Presetări prompturi chat",
-    "favorites": "Fragmente de text"
+    "favorites": "Favorite"
   },
   "nav": {
     "aiChat": "Întreabă AI",
@@ -793,7 +793,7 @@
       "chatPrompts": "Presetări prompturi chat pentru textul selectat",
       "selectionActionsPage4": "Acțiuni: pagina 4",
       "selectionActionsPage5": "Acțiuni: pagina 5",
-      "favorites": "Fragmente de text",
+      "favorites": "Favorite",
       "quickAiRequest": "Solicitare rapidă IA",
       "voiceQuickAiRequest": "Solicitare vocală rapidă IA"
     },
@@ -1209,14 +1209,14 @@
     "webFetchMaxCharactersHint": "Numărul maxim de caractere preluate de pe o singură pagină web (1.000 până la 100.000). Economisește fereastra de context.",
     "webFetchMaxCharactersError": "Introduceți un număr între 1.000 și 100.000",
     "profileWebSearchLlmNotice": "Cheia API și limitele de dimensiune a paginii sunt configurate global în setările LLM.",
-    "favoritesTab": "Fragmente de text",
-    "favoritesNavTab": "Fragmente",
+    "favoritesTab": "Favorite",
+    "favoritesNavTab": "Favorite",
     "favoritesHint": "Fragmente de text salvate pentru acces și inserare rapidă. Trageți cardurile pentru a le reordona.",
-    "addFavorite": "Adaugă fragment",
-    "noFavorites": "Niciun fragment salvat încă",
+    "addFavorite": "Adaugă favorit",
+    "noFavorites": "Încă nu există favorite",
     "favoriteNamePlaceholder": "Nume (opțional)",
-    "favoriteTextPlaceholder": "Introduceți textul fragmentului…",
-    "searchFavoritesPlaceholder": "Căutați fragmente…",
+    "favoriteTextPlaceholder": "Introdu textul…",
+    "searchFavoritesPlaceholder": "Caută favorite…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Inserează în editor" },
@@ -1274,7 +1274,7 @@
     "variablesNotSet": "Unele variabile nu au valoare pe acest dispozitiv; setați-le în Setări → Variabile",
     "dictationResultReady": "Dictarea este gata, dar fereastra arată deja altceva. Copiați-o ca să nu o pierdeți.",
     "dictationResultInHistory": "Este salvată și în istoric.",
-    "favoriteAlreadyExists": "Un fragment cu acest text există deja"
+    "favoriteAlreadyExists": "Acest text este deja în favorite"
   },
   "tools": {
     "aiTask": "Comandă AI",
@@ -1438,7 +1438,7 @@
     "valueNotSet": "Nesetată pe acest dispozitiv: comenzile care o folosesc nu rulează",
     "valuePlaceholder": "O cale, o adresă sau alt text"
   },
-  "favorites": { "noMatches": "Niciun fragment găsit" },
+  "favorites": { "noMatches": "Nu există favorite care să se potrivească" },
   "replyBlocks": {
     "insertIntoWindow": "Inserează în fereastră",
     "insertIntoEditor": "În editor",

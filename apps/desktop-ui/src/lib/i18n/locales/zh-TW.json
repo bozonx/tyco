@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "聊天提示詞預設",
     "voiceCommands": "語音命令",
-    "favoritesMenu": "片段",
-    "saveAsFavorite": "另存為片段",
-    "savedAsFavorite": "已儲存至片段",
+    "favoritesMenu": "我的最愛",
+    "saveAsFavorite": "儲存至我的最愛",
+    "savedAsFavorite": "已儲存至我的最愛",
     "quickAiRequest": "AI 快速請求",
     "voiceQuickAiRequest": "語音 AI 快速請求"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "完成後將插入",
     "ruleNotFound": "此規則已不存在",
     "chatPrompts": "聊天提示詞預設",
-    "favorites": "片段"
+    "favorites": "我的最愛"
   },
   "nav": {
     "aiChat": "詢問 AI",
@@ -787,7 +787,7 @@
       "chatPrompts": "針對所選文字的聊天提示詞預設",
       "selectionActionsPage4": "操作：第 4 頁",
       "selectionActionsPage5": "操作：第 5 頁",
-      "favorites": "片段",
+      "favorites": "我的最愛",
       "quickAiRequest": "AI 快速請求",
       "voiceQuickAiRequest": "語音 AI 快速請求"
     },
@@ -1203,14 +1203,14 @@
     "webFetchMaxCharactersHint": "從單一網頁擷取的最大字元數（1,000 至 100,000）。有助於節省上下文視窗。",
     "webFetchMaxCharactersError": "請輸入 1,000 至 100,000 之間的數字",
     "profileWebSearchLlmNotice": "API 金鑰和頁面大小限制在 LLM 設定中進行全域設定。",
-    "favoritesTab": "片段",
-    "favoritesNavTab": "片段",
+    "favoritesTab": "我的最愛",
+    "favoritesNavTab": "我的最愛",
     "favoritesHint": "儲存的文字片段，用於快速存取與插入。拖動卡片可重新排序。",
-    "addFavorite": "新增片段",
-    "noFavorites": "暫無已儲存的片段",
+    "addFavorite": "新增我的最愛",
+    "noFavorites": "尚無我的最愛",
     "favoriteNamePlaceholder": "名稱（選填）",
-    "favoriteTextPlaceholder": "輸入片段內容…",
-    "searchFavoritesPlaceholder": "搜尋片段…",
+    "favoriteTextPlaceholder": "輸入文字…",
+    "searchFavoritesPlaceholder": "搜尋我的最愛…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "插入至編輯器" },
@@ -1268,7 +1268,7 @@
     "variablesNotSet": "部分變數在此裝置上沒有值；請在「設定 → 變數」中設定",
     "dictationResultReady": "聽寫已完成，但視窗已切換到其他內容。請複製以免遺失。",
     "dictationResultInHistory": "它也已儲存在歷史記錄中。",
-    "favoriteAlreadyExists": "已存在具有相同文字的片段"
+    "favoriteAlreadyExists": "此文字已在我的最愛中"
   },
   "tools": {
     "aiTask": "AI 指令",
@@ -1432,7 +1432,7 @@
     "valueNotSet": "此裝置上未設定：使用它的命令不會執行",
     "valuePlaceholder": "路徑、位址或其他文字"
   },
-  "favorites": { "noMatches": "未找到相符的片段" },
+  "favorites": { "noMatches": "沒有相符的收藏" },
   "replyBlocks": {
     "insertIntoWindow": "插入至視窗",
     "insertIntoEditor": "至編輯器",

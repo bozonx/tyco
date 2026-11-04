@@ -12,9 +12,9 @@
     "webhook": "Web kancası",
     "chatPromptsMenu": "Sohbet istemi önayarları",
     "voiceCommands": "Sesli komutlar",
-    "favoritesMenu": "Metin Parçacıkları",
-    "saveAsFavorite": "Parçacık olarak kaydet",
-    "savedAsFavorite": "Parçacık olarak kaydedildi",
+    "favoritesMenu": "Favoriler",
+    "saveAsFavorite": "Favorilere kaydet",
+    "savedAsFavorite": "Favorilere kaydedildi",
     "quickAiRequest": "Hızlı YZ isteği",
     "voiceQuickAiRequest": "Sesli hızlı YZ isteği"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Tamamlandığında eklenecek",
     "ruleNotFound": "Bu kural artık mevcut değil",
     "chatPrompts": "Sohbet istemi önayarları",
-    "favorites": "Metin Parçacıkları"
+    "favorites": "Favoriler"
   },
   "nav": {
     "aiChat": "Yapay Zekâya Sor",
@@ -790,7 +790,7 @@
       "chatPrompts": "Seçili metin için sohbet istemi önayarları",
       "selectionActionsPage4": "Eylemler: sayfa 4",
       "selectionActionsPage5": "Eylemler: sayfa 5",
-      "favorites": "Metin Parçacıkları",
+      "favorites": "Favoriler",
       "quickAiRequest": "Hızlı YZ isteği",
       "voiceQuickAiRequest": "Sesli hızlı YZ isteği"
     },
@@ -1206,14 +1206,14 @@
     "webFetchMaxCharactersHint": "Tek bir web sayfasından alınacak maksimum karakter sayısı (1.000 - 100.000). Bağlam penceresinden tasarruf sağlar.",
     "webFetchMaxCharactersError": "1.000 ile 100.000 arasında bir sayı girin",
     "profileWebSearchLlmNotice": "API anahtarı ve sayfa boyutu sınırları, LLM ayarlarında genel olarak yapılandırılır.",
-    "favoritesTab": "Metin Parçacıkları",
-    "favoritesNavTab": "Parçacıklar",
+    "favoritesTab": "Favoriler",
+    "favoritesNavTab": "Favoriler",
     "favoritesHint": "Hızlı erişim ve ekleme için kaydedilmiş metin parçacıkları. Sıralamayı değiştirmek için kartları sürükleyin.",
-    "addFavorite": "Parçacık ekle",
-    "noFavorites": "Henüz kaydedilmiş parçacık yok",
+    "addFavorite": "Favori ekle",
+    "noFavorites": "Henüz favori yok",
     "favoriteNamePlaceholder": "Ad (isteğe bağlı)",
-    "favoriteTextPlaceholder": "Parçacık metnini girin…",
-    "searchFavoritesPlaceholder": "Parçacıkları ara…",
+    "favoriteTextPlaceholder": "Metin girin…",
+    "searchFavoritesPlaceholder": "Favorileri ara…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Editöre ekle" },
@@ -1271,7 +1271,7 @@
     "variablesNotSet": "Bazı değişkenlerin bu cihazda değeri yok; Ayarlar → Değişkenler bölümünden ayarlayın",
     "dictationResultReady": "Dikte hazır, ancak pencere artık başka bir şey gösteriyor. Kaybolmaması için kopyalayın.",
     "dictationResultInHistory": "Ayrıca geçmişe kaydedildi.",
-    "favoriteAlreadyExists": "Bu metne sahip bir parçacık zaten var"
+    "favoriteAlreadyExists": "Bu metin zaten sık kullanılanlarda"
   },
   "tools": {
     "aiTask": "Yapay zekâ komutu",
@@ -1435,7 +1435,7 @@
     "valueNotSet": "Bu cihazda ayarlanmamış: onu kullanan komutlar çalışmaz",
     "valuePlaceholder": "Bir yol, adres veya başka bir metin"
   },
-  "favorites": { "noMatches": "Eşleşen parçacık yok" },
+  "favorites": { "noMatches": "Eşleşen favori yok" },
   "replyBlocks": {
     "insertIntoWindow": "Pencereye ekle",
     "insertIntoEditor": "Düzenleyiciye",

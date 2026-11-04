@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "チャットプロンプトのプリセット",
     "voiceCommands": "音声コマンド",
-    "favoritesMenu": "スニペット",
-    "saveAsFavorite": "スニペットとして保存",
-    "savedAsFavorite": "スニペットに保存しました",
+    "favoritesMenu": "お気に入り",
+    "saveAsFavorite": "お気に入りに保存",
+    "savedAsFavorite": "お気に入りに保存しました",
     "quickAiRequest": "AIクイックリクエスト",
     "voiceQuickAiRequest": "音声AIクイックリクエスト"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "完了時に挿入されます",
     "ruleNotFound": "このルールはもう存在しません",
     "chatPrompts": "チャットプロンプトのプリセット",
-    "favorites": "スニペット"
+    "favorites": "お気に入り"
   },
   "nav": {
     "aiChat": "AIに質問",
@@ -790,7 +790,7 @@
       "chatPrompts": "選択テキストのチャットプロンプトプリセット",
       "selectionActionsPage4": "アクション: ページ 4",
       "selectionActionsPage5": "アクション: ページ 5",
-      "favorites": "スニペット",
+      "favorites": "お気に入り",
       "quickAiRequest": "AIクイックリクエスト",
       "voiceQuickAiRequest": "音声AIクイックリクエスト"
     },
@@ -1206,14 +1206,14 @@
     "webFetchMaxCharactersHint": "1つのウェブページから取得する最大文字数（1,000〜100,000）。コンテキストウィンドウの節約に役立ちます。",
     "webFetchMaxCharactersError": "1,000から100,000までの数値を入力してください",
     "profileWebSearchLlmNotice": "APIキーとページサイズ制限は、LLM設定でグローバルに構成されます。",
-    "favoritesTab": "スニペット",
-    "favoritesNavTab": "スニペット",
+    "favoritesTab": "お気に入り",
+    "favoritesNavTab": "お気に入り",
     "favoritesHint": "すばやくアクセスして挿入するための保存されたテキスト。カードをドラッグして並べ替えます。",
-    "addFavorite": "スニペットを追加",
-    "noFavorites": "保存されたスニペットはまだありません",
+    "addFavorite": "お気に入りを追加",
+    "noFavorites": "まだお気に入りはありません",
     "favoriteNamePlaceholder": "名前（任意）",
-    "favoriteTextPlaceholder": "スニペットのテキストを入力…",
-    "searchFavoritesPlaceholder": "スニペットを検索…",
+    "favoriteTextPlaceholder": "テキストを入力…",
+    "searchFavoritesPlaceholder": "お気に入りを検索…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "エディターに挿入" },
@@ -1271,7 +1271,7 @@
     "variablesNotSet": "このデバイスで値のない変数があります。設定 → 変数 で設定してください",
     "dictationResultReady": "音声入力が完了しましたが、ウィンドウはすでに別の画面です。失わないようにコピーしてください。",
     "dictationResultInHistory": "履歴にも保存されています。",
-    "favoriteAlreadyExists": "このテキストのスニペットは既に存在します"
+    "favoriteAlreadyExists": "このテキストはすでにお気に入りに登録されています"
   },
   "tools": {
     "aiTask": "AI コマンド",
@@ -1435,7 +1435,7 @@
     "valueNotSet": "このデバイスでは未設定: これを使うコマンドは実行されません",
     "valuePlaceholder": "パス、アドレス、その他のテキスト"
   },
-  "favorites": { "noMatches": "一致するスニペットがありません" },
+  "favorites": { "noMatches": "一致するお気に入りがありません" },
   "replyBlocks": {
     "insertIntoWindow": "ウィンドウに挿入",
     "insertIntoEditor": "エディタへ",

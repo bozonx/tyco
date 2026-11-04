@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Csevegési prompt-sablonok",
     "voiceCommands": "Hangparancsok",
-    "favoritesMenu": "Szövegrészletek",
-    "saveAsFavorite": "Mentés szövegrészletként",
-    "savedAsFavorite": "Mentve szövegrészletként",
+    "favoritesMenu": "Kedvencek",
+    "saveAsFavorite": "Mentés a kedvencek közé",
+    "savedAsFavorite": "Mentve a kedvencek közé",
     "quickAiRequest": "Gyors MI kérés",
     "voiceQuickAiRequest": "Hangalapú gyors MI kérés"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Befejezés után beillesztésre kerül",
     "ruleNotFound": "Ez a szabály már nem létezik",
     "chatPrompts": "Csevegési prompt-sablonok",
-    "favorites": "Szövegrészletek"
+    "favorites": "Kedvencek"
   },
   "nav": {
     "aiChat": "Kérdezze az MI-t",
@@ -790,7 +790,7 @@
       "chatPrompts": "Csevegési prompt-sablonok a kijelölt szöveghez",
       "selectionActionsPage4": "Műveletek: 4. oldal",
       "selectionActionsPage5": "Műveletek: 5. oldal",
-      "favorites": "Szövegrészletek",
+      "favorites": "Kedvencek",
       "quickAiRequest": "Gyors MI kérés",
       "voiceQuickAiRequest": "Hangalapú gyors MI kérés"
     },
@@ -1206,14 +1206,14 @@
     "webFetchMaxCharactersHint": "Egyetlen weboldalról beolvasott karakterek maximális száma (1 000 és 100 000 között). Kíméli a kontextusablakot.",
     "webFetchMaxCharactersError": "Adjon meg egy számot 1 000 és 100 000 között",
     "profileWebSearchLlmNotice": "Az API-kulcs és az oldalméret-korlátok globálisan, az LLM beállításaiban konfigurálhatók.",
-    "favoritesTab": "Szövegrészletek",
-    "favoritesNavTab": "Szövegrészletek",
+    "favoritesTab": "Kedvencek",
+    "favoritesNavTab": "Kedvencek",
     "favoritesHint": "Mentett szövegrészletek a gyors eléréshez és beillesztéshez. Húzza a kártyákat az átrendezéshez.",
-    "addFavorite": "Szövegrészlet hozzáadása",
-    "noFavorites": "Még nincsenek mentett szövegrészletek",
+    "addFavorite": "Kedvenc hozzáadása",
+    "noFavorites": "Még nincsenek kedvencek",
     "favoriteNamePlaceholder": "Név (nem kötelező)",
-    "favoriteTextPlaceholder": "Írja be a szövegrészletet…",
-    "searchFavoritesPlaceholder": "Szövegrészletek keresése…",
+    "favoriteTextPlaceholder": "Írd be a szöveget…",
+    "searchFavoritesPlaceholder": "Kedvencek keresése…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Beillesztés a szerkesztőbe" },
@@ -1271,7 +1271,7 @@
     "variablesNotSet": "Egyes változóknak nincs értéke ezen az eszközön; állítsa be őket: Beállítások → Változók",
     "dictationResultReady": "A diktálás kész, de az ablak már mást mutat. Másolja ki, hogy ne vesszen el.",
     "dictationResultInHistory": "Az előzményekben is megtalálható.",
-    "favoriteAlreadyExists": "Már létezik ilyen szövegrészlet"
+    "favoriteAlreadyExists": "Ez a szöveg már a kedvencek között van"
   },
   "tools": {
     "aiTask": "MI-parancs",
@@ -1435,7 +1435,7 @@
     "valueNotSet": "Nincs megadva ezen az eszközön: az ezt használó parancsok nem futnak",
     "valuePlaceholder": "Útvonal, cím vagy más szöveg"
   },
-  "favorites": { "noMatches": "Nincs egyező szövegrészlet" },
+  "favorites": { "noMatches": "Nincsenek egyező kedvencek" },
   "replyBlocks": {
     "insertIntoWindow": "Beszúrás az ablakba",
     "insertIntoEditor": "A szerkesztőbe",

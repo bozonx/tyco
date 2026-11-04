@@ -12,9 +12,9 @@
     "webhook": "Вебхук",
     "chatPromptsMenu": "Чат промпттерінің алдын ала орнатулары",
     "voiceCommands": "Дауыстық командалар",
-    "favoritesMenu": "Сниппеттер",
-    "saveAsFavorite": "Сниппет ретінде сақтау",
-    "savedAsFavorite": "Сниппеттерге сақталды",
+    "favoritesMenu": "Сүйіктілер",
+    "saveAsFavorite": "Сүйіктілерге сақтаңыз",
+    "savedAsFavorite": "Сүйіктілерге сақталды",
     "quickAiRequest": "ЖИ жылдам сұрауы",
     "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Аяқталған соң кірістіріледі",
     "ruleNotFound": "Бұл ереже енді жоқ",
     "chatPrompts": "Чат промпттерінің алдын ала орнатулары",
-    "favorites": "Сниппеттер"
+    "favorites": "Сүйіктілер"
   },
   "nav": {
     "aiChat": "ЖИ-ден сұрау",
@@ -790,7 +790,7 @@
       "chatPrompts": "Таңдалған мәтінге арналған чат промпттерінің алдын ала орнатулары",
       "selectionActionsPage4": "Әрекеттер: 4-бет",
       "selectionActionsPage5": "Әрекеттер: 5-бет",
-      "favorites": "Сниппеттер",
+      "favorites": "Сүйіктілер",
       "quickAiRequest": "ЖИ жылдам сұрауы",
       "voiceQuickAiRequest": "Дауыстық ЖИ жылдам сұрауы"
     },
@@ -1206,14 +1206,14 @@
     "webFetchMaxCharactersHint": "Бір веб-беттен жүктелетін таңбалардың максималды саны (1 000-нан 100 000-ға дейін). Мәнмәтін терезесін үнемдейді.",
     "webFetchMaxCharactersError": "1 000 мен 100 000 арасындағы санды енгізіңіз",
     "profileWebSearchLlmNotice": "API кілті және бет көлемінің шектеулері LLM параметрлерінде жалпы түрде бапталады.",
-    "favoritesTab": "Сниппеттер",
-    "favoritesNavTab": "Сниппеттер",
+    "favoritesTab": "Сүйіктілер",
+    "favoritesNavTab": "Сүйіктілер",
     "favoritesHint": "Жылдам қол жеткізу және кірістіру үшін сақталған мәтін үзінділері. Ретін өзгерту үшін карточкаларды сүйреңіз.",
-    "addFavorite": "Сниппет қосу",
-    "noFavorites": "Әзірше сақталған сниппеттер жоқ",
+    "addFavorite": "Сүйікті қосу",
+    "noFavorites": "Әзірге фавориттер жоқ",
     "favoriteNamePlaceholder": "Атауы (міндетті емес)",
-    "favoriteTextPlaceholder": "Сниппет мәтінін енгізіңіз…",
-    "searchFavoritesPlaceholder": "Сниппеттерді іздеу…",
+    "favoriteTextPlaceholder": "Мәтінді енгізу…",
+    "searchFavoritesPlaceholder": "Сүйіктілерді іздеу…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Редакторға кірістіру" },
@@ -1271,7 +1271,7 @@
     "variablesNotSet": "Кейбір айнымалылардың бұл құрылғыда мәні жоқ; оларды «Баптаулар → Айнымалылар» бөлімінде орнатыңыз",
     "dictationResultReady": "Диктовка дайын, бірақ терезе басқа нәрсені көрсетіп тұр. Жоғалмас үшін оны көшіріңіз.",
     "dictationResultInHistory": "Ол тарихта да сақталған.",
-    "favoriteAlreadyExists": "Бұл мәтінмен сниппет бұрыннан бар"
+    "favoriteAlreadyExists": "Бұл мәтін қазірдің өзінде сүйікті"
   },
   "tools": {
     "aiTask": "ЖИ командасы",
@@ -1435,7 +1435,7 @@
     "valueNotSet": "Бұл құрылғыда орнатылмаған: оны қолданатын командалар орындалмайды",
     "valuePlaceholder": "Жол, мекенжай немесе басқа мәтін"
   },
-  "favorites": { "noMatches": "Сәйкес сниппеттер табылмады" },
+  "favorites": { "noMatches": "Сәйкес келетін фавориттер жоқ" },
   "replyBlocks": {
     "insertIntoWindow": "Терезеге кірістіру",
     "insertIntoEditor": "Редакторға",

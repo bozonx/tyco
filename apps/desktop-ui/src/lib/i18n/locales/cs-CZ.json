@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Předvolby promptů chatu",
     "voiceCommands": "Hlasové příkazy",
-    "favoritesMenu": "Úryvky",
-    "saveAsFavorite": "Uložit jako úryvek",
-    "savedAsFavorite": "Uloženo jako úryvek",
+    "favoritesMenu": "Oblíbené",
+    "saveAsFavorite": "Uložit do oblíbených",
+    "savedAsFavorite": "Uloženo do oblíbených",
     "quickAiRequest": "Rychlý dotaz na AI",
     "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Vloží se po dokončení",
     "ruleNotFound": "Toto pravidlo již neexistuje",
     "chatPrompts": "Předvolby promptů chatu",
-    "favorites": "Úryvky"
+    "favorites": "Oblíbené"
   },
   "nav": {
     "aiChat": "Zeptat se AI",
@@ -787,7 +787,7 @@
       "chatPrompts": "Předvolby promptů chatu pro vybraný text",
       "selectionActionsPage4": "Akce: stránka 4",
       "selectionActionsPage5": "Akce: stránka 5",
-      "favorites": "Úryvky",
+      "favorites": "Oblíbené",
       "quickAiRequest": "Rychlý dotaz na AI",
       "voiceQuickAiRequest": "Hlasový rychlý dotaz na AI"
     },
@@ -1203,14 +1203,14 @@
     "webFetchMaxCharactersHint": "Maximální počet znaků načtených z jedné webové stránky (1 000 až 100 000). Pomáhá šetřit kontextové okno.",
     "webFetchMaxCharactersError": "Zadejte číslo od 1 000 do 100 000",
     "profileWebSearchLlmNotice": "Klíč API a limity velikosti stránek se konfigurují globálně v nastavení LLM.",
-    "favoritesTab": "Úryvky",
-    "favoritesNavTab": "Úryvky",
+    "favoritesTab": "Oblíbené",
+    "favoritesNavTab": "Oblíbené",
     "favoritesHint": "Uložené textové fragmenty pro rychlý přístup a vložení. Přetažením karet změníte pořadí.",
-    "addFavorite": "Přidat úryvek",
-    "noFavorites": "Zatím žádné uložené úryvky",
+    "addFavorite": "Přidat do oblíbených",
+    "noFavorites": "Zatím žádné oblíbené",
     "favoriteNamePlaceholder": "Název (volitelné)",
-    "favoriteTextPlaceholder": "Zadejte text úryvku…",
-    "searchFavoritesPlaceholder": "Hledat úryvky…",
+    "favoriteTextPlaceholder": "Zadejte text…",
+    "searchFavoritesPlaceholder": "Hledat v oblíbených...",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "Vložit do editoru" },
@@ -1268,7 +1268,7 @@
     "variablesNotSet": "Proměnné nemají na tomto zařízení hodnotu; nastavte je v Nastavení → Proměnné",
     "dictationResultReady": "Diktát je hotový, ale okno už ukazuje něco jiného. Zkopírujte ho, ať o něj nepřijdete.",
     "dictationResultInHistory": "Je také uložen v historii.",
-    "favoriteAlreadyExists": "Úryvek s tímto textem již existuje"
+    "favoriteAlreadyExists": "Tento text je již v oblíbených"
   },
   "tools": {
     "aiTask": "AI příkaz",
@@ -1432,7 +1432,7 @@
     "valueNotSet": "Na tomto zařízení není nastavena: příkazy, které ji používají, se nespustí",
     "valuePlaceholder": "Cesta, adresa nebo jiný text"
   },
-  "favorites": { "noMatches": "Žádné odpovídající úryvky" },
+  "favorites": { "noMatches": "Žádné odpovídající oblíbené" },
   "replyBlocks": {
     "insertIntoWindow": "Vložit do okna",
     "insertIntoEditor": "Do editoru",

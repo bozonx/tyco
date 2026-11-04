@@ -12,9 +12,9 @@
     "webhook": "Webhook",
     "chatPromptsMenu": "Chat-Prompt-Vorlagen",
     "voiceCommands": "Sprachbefehle",
-    "favoritesMenu": "Textbausteine",
-    "saveAsFavorite": "Als Textbaustein speichern",
-    "savedAsFavorite": "Als Textbaustein gespeichert",
+    "favoritesMenu": "Favoriten",
+    "saveAsFavorite": "In Favoriten speichern",
+    "savedAsFavorite": "In Favoriten gespeichert",
     "quickAiRequest": "Schnelle KI-Anfrage",
     "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI"
   },
@@ -579,7 +579,7 @@
     "willInsertOnFinish": "Wird nach Fertigstellung eingefügt",
     "ruleNotFound": "Diese Regel existiert nicht mehr",
     "chatPrompts": "Chat-Prompt-Vorlagen",
-    "favorites": "Textbausteine"
+    "favorites": "Favoriten"
   },
   "nav": {
     "aiChat": "KI fragen",
@@ -793,7 +793,7 @@
       "chatPrompts": "Chat-Prompt-Vorlagen für ausgewählten Text",
       "selectionActionsPage4": "Aktionen: Seite 4",
       "selectionActionsPage5": "Aktionen: Seite 5",
-      "favorites": "Textbausteine",
+      "favorites": "Favoriten",
       "quickAiRequest": "Schnelle KI-Anfrage",
       "voiceQuickAiRequest": "Sprach-Schnellanfrage an KI"
     },
@@ -1209,14 +1209,14 @@
     "webFetchMaxCharactersHint": "Maximale Zeichenanzahl, die von einer einzelnen Webseite abgerufen wird (1.000 bis 100.000). Schont das Kontextfenster.",
     "webFetchMaxCharactersError": "Geben Sie eine Zahl von 1.000 bis 100.000 ein",
     "profileWebSearchLlmNotice": "API-Schlüssel und Seitenlimits werden global in den LLM-Einstellungen konfiguriert.",
-    "favoritesTab": "Textbausteine",
-    "favoritesNavTab": "Textbausteine",
+    "favoritesTab": "Favoriten",
+    "favoritesNavTab": "Favoriten",
     "favoritesHint": "Gespeicherte Textfragmente für schnellen Zugriff und Einfügen. Ziehen Sie Karten, um sie neu anzuordnen.",
-    "addFavorite": "Textbaustein hinzufügen",
-    "noFavorites": "Noch keine Textbausteine gespeichert",
+    "addFavorite": "Favorit hinzufügen",
+    "noFavorites": "Noch keine Favoriten",
     "favoriteNamePlaceholder": "Name (optional)",
-    "favoriteTextPlaceholder": "Textbaustein eingeben…",
-    "searchFavoritesPlaceholder": "Textbausteine suchen…",
+    "favoriteTextPlaceholder": "Text eingeben...",
+    "searchFavoritesPlaceholder": "Favoriten suchen…",
     "hotkeyDescriptions": {}
   },
   "shortcuts": { "insertIntoEditor": "In den Editor einfügen" },
@@ -1274,7 +1274,7 @@
     "variablesNotSet": "Variablen haben auf diesem Gerät keinen Wert; legen Sie ihn unter Einstellungen → Variablen fest",
     "dictationResultReady": "Das Diktat ist fertig, aber das Fenster zeigt schon etwas anderes. Kopieren Sie es, damit es nicht verloren geht.",
     "dictationResultInHistory": "Es ist auch im Verlauf gespeichert.",
-    "favoriteAlreadyExists": "Ein Textbaustein mit diesem Text existiert bereits"
+    "favoriteAlreadyExists": "Dieser Text ist bereits in den Favoriten"
   },
   "tools": {
     "aiTask": "KI-Befehl",
@@ -1438,7 +1438,7 @@
     "valueNotSet": "Auf diesem Gerät nicht festgelegt: Befehle damit werden nicht ausgeführt",
     "valuePlaceholder": "Ein Pfad, eine Adresse oder anderer Text"
   },
-  "favorites": { "noMatches": "Keine passenden Textbausteine" },
+  "favorites": { "noMatches": "Keine passenden Favoriten" },
   "replyBlocks": {
     "insertIntoWindow": "In Fenster einfügen",
     "insertIntoEditor": "In Editor",
