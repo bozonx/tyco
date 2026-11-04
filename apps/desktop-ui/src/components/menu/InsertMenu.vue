@@ -31,7 +31,9 @@
                 ? t('action.savedAsFavorite')
                 : t('action.saveAsFavorite')
             "
-            :icon="isSavedAsFavorite ? 'mdi:check' : 'mdi:bookmark-plus-outline'"
+            :icon="
+              isSavedAsFavorite ? 'mdi:check' : 'mdi:bookmark-plus-outline'
+            "
             @click="saveAsFavorite"
           />
           <CopyButton
@@ -88,11 +90,11 @@ import { useI18n } from '../../composables/use-i18n'
 import { usePersistedDiffMode } from '../../composables/use-persisted-view-mode'
 import useToast from '../../composables/use-toast'
 import { useViewModeArrowKeys } from '../../composables/use-view-mode-arrow-keys'
-import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import {
   addFavorite,
   isDuplicateFavorite,
 } from '../../lib/favorites/favorites-model'
+import type { InsertMenuParams } from '../../lib/modals/menu-modal-params'
 import { type ActionItem, useActionMenuStore } from '../../stores/action-menu'
 import { useDesktopStore } from '../../stores/desktop'
 import { useEditorInputStore } from '../../stores/editor-input'

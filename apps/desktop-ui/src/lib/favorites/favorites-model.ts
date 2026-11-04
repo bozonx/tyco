@@ -31,9 +31,10 @@ export function filterFavorites(
   if (!normalizedQuery) {
     return [...favorites]
   }
-  return favorites.filter((item) =>
-    item.text.toLowerCase().includes(normalizedQuery) ||
-    (item.name ?? '').toLowerCase().includes(normalizedQuery)
+  return favorites.filter(
+    (item) =>
+      item.text.toLowerCase().includes(normalizedQuery) ||
+      (item.name ?? '').toLowerCase().includes(normalizedQuery)
   )
 }
 

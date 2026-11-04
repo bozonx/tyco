@@ -63,11 +63,19 @@ describe('favorites-model', () => {
       expect(filterFavorites(sampleFavorites, 'multiline')).toEqual([
         sampleFavorites[1],
       ])
-      expect(filterFavorites(sampleFavorites, 'GIT')).toEqual([sampleFavorites[2]])
+      expect(filterFavorites(sampleFavorites, 'GIT')).toEqual([
+        sampleFavorites[2],
+      ])
     })
 
     it('returns empty array when nothing matches', () => {
       expect(filterFavorites(sampleFavorites, 'nonexistent')).toEqual([])
+    })
+
+    it('matches names independently of text, ignoring case', () => {
+      const named = { id: 'named', name: 'Greeting', text: 'Hello' }
+      expect(filterFavorites([named], 'GREET')).toEqual([named])
+      expect(filterFavorites([named], 'hello')).toEqual([named])
     })
   })
 
@@ -100,7 +108,11 @@ describe('favorites-model', () => {
 
   describe('updateFavorite', () => {
     it('updates text of matching id', () => {
-      const updated = updateFavorite(sampleFavorites, 'favorite-2', 'Updated text')
+      const updated = updateFavorite(
+        sampleFavorites,
+        'favorite-2',
+        'Updated text'
+      )
       expect(updated.find((s) => s.id === 'favorite-2')?.text).toBe(
         'Updated text'
       )

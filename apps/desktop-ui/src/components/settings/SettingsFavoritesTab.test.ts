@@ -112,7 +112,9 @@ describe('SettingsFavoritesTab', () => {
     await textarea.setValue('Modified content')
     await nextTick()
 
-    expect(context.draft.value.favorites.items[0]?.text).toBe('Modified content')
+    expect(context.draft.value.favorites.items[0]?.text).toBe(
+      'Modified content'
+    )
   })
 
   it('deletes a favorite when delete button is clicked', async () => {
