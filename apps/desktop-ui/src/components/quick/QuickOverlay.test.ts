@@ -19,7 +19,6 @@ import QuickOverlay from './QuickOverlay.vue'
 const mocks = vi.hoisted(() => ({
   focus: vi.fn(),
   hideWindow: vi.fn(),
-  markDismissed: vi.fn(),
   modals: { currentModal: 'none', pendingModal: null as string | null },
   windowFocused: true,
   focusHandlers: [] as ((event: { payload: boolean }) => void)[],
@@ -36,7 +35,6 @@ vi.mock('../../stores/quick-input', () => ({
   useQuickInputStore: () => ({
     flushHistory: vi.fn().mockResolvedValue(null),
     requestFocus: mocks.focus,
-    markDismissed: mocks.markDismissed,
   }),
 }))
 vi.mock('../../stores/menu-modals', () => ({
@@ -211,7 +209,6 @@ describe('quick overlay keyboard ownership', () => {
     try {
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
       expect(await sent('hide_window')).toEqual([])
-      expect(mocks.markDismissed).not.toHaveBeenCalled()
     } finally {
       wrapper.unmount()
     }
@@ -239,7 +236,6 @@ describe('quick overlay keyboard ownership', () => {
       await nextTick()
       await wrapper.find('.quick-overlay-root').trigger('pointerdown')
       expect(await sent('hide_quick_window_on_blur')).toEqual([])
-      expect(mocks.markDismissed).not.toHaveBeenCalled()
     } finally {
       wrapper.unmount()
       modals.currentModal = 'none'

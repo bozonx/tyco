@@ -459,7 +459,13 @@
     "textsDisabled": "Spremanje tekstova isključeno je u postavkama (ograničenje 0).",
     "today": "Danas",
     "undo": "Poništi",
-    "yesterday": "Jučer"
+    "yesterday": "Jučer",
+    "filterOrigin": "Izvor",
+    "filterAll": "Sve",
+    "filterQuickInput": "Brzi unos",
+    "filterVoice": "Glas",
+    "filterUnsent": "Neposlano",
+    "filterUnsentHint": "Samo tekstovi koji nikad nisu umetnuti ni kopirani"
   },
   "input": {
     "historySearchPlaceholder": "Pretraži povijest...",
@@ -1248,7 +1254,9 @@
     "webhookSuccess": "Webhook je uspješno poslan",
     "voiceContextualCorrectionFailed": "Kontekstualni ispravak nije uspio; dostupni tekst je sačuvan",
     "voicePostProcessTimeout": "Obrada glasa trajala je predugo; izvorni tekst je zadržan",
-    "variablesNotSet": "Varijable nemaju vrijednost na ovom uređaju; postavite ih u Postavke → Varijable"
+    "variablesNotSet": "Varijable nemaju vrijednost na ovom uređaju; postavite ih u Postavke → Varijable",
+    "dictationResultReady": "Diktat je spreman, ali prozor već prikazuje nešto drugo. Kopirajte ga da ga ne izgubite.",
+    "dictationResultInHistory": "Spremljen je i u povijesti."
   },
   "tools": {
     "aiTask": "AI naredba",
@@ -1377,7 +1385,8 @@
     "livePreview": "Ispravak uživo",
     "clickToApply": "Kliknite za primjenu",
     "liveCorrectionFailed": "Ispravak uživo nije uspio",
-    "liveCorrectionFailedHint": "Model nije odgovorio. Tekst će biti umetnut kako je upisan."
+    "liveCorrectionFailedHint": "Model nije odgovorio. Tekst će biti umetnut kako je upisan.",
+    "openHistory": "Povijest brzog unosa"
   },
   "variables": {
     "add": "Dodaj",

@@ -459,7 +459,13 @@
     "textsDisabled": "Das Speichern von Texten ist in den Einstellungen deaktiviert (Limit 0).",
     "today": "Heute",
     "undo": "Rückgängig",
-    "yesterday": "Gestern"
+    "yesterday": "Gestern",
+    "filterOrigin": "Quelle",
+    "filterAll": "Alle",
+    "filterQuickInput": "Schnelleingabe",
+    "filterVoice": "Sprache",
+    "filterUnsent": "Nicht gesendet",
+    "filterUnsentHint": "Nur Texte, die nie eingefügt oder kopiert wurden"
   },
   "input": {
     "historySearchPlaceholder": "Verlauf durchsuchen...",
@@ -1248,7 +1254,9 @@
     "webhookSuccess": "Webhook erfolgreich gesendet",
     "voiceContextualCorrectionFailed": "Die kontextbezogene Korrektur ist fehlgeschlagen; der vorhandene Text wurde beibehalten",
     "voicePostProcessTimeout": "Sprachverarbeitung dauerte zu lange; Originaltext beibehalten",
-    "variablesNotSet": "Variablen haben auf diesem Gerät keinen Wert; legen Sie ihn unter Einstellungen → Variablen fest"
+    "variablesNotSet": "Variablen haben auf diesem Gerät keinen Wert; legen Sie ihn unter Einstellungen → Variablen fest",
+    "dictationResultReady": "Das Diktat ist fertig, aber das Fenster zeigt schon etwas anderes. Kopieren Sie es, damit es nicht verloren geht.",
+    "dictationResultInHistory": "Es ist auch im Verlauf gespeichert."
   },
   "tools": {
     "aiTask": "KI-Befehl",
@@ -1377,7 +1385,8 @@
     "livePreview": "Live-Korrektur",
     "clickToApply": "Klicken zum Übernehmen",
     "liveCorrectionFailed": "Live-Korrektur fehlgeschlagen",
-    "liveCorrectionFailedHint": "Das Modell hat nicht geantwortet. Der Text wird wie eingegeben eingefügt."
+    "liveCorrectionFailedHint": "Das Modell hat nicht geantwortet. Der Text wird wie eingegeben eingefügt.",
+    "openHistory": "Verlauf der Schnelleingabe"
   },
   "variables": {
     "add": "Hinzufügen",

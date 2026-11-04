@@ -1,6 +1,6 @@
 // Generated from src-tauri by scripts/generate-desktop-commands.mjs.
 // Do not edit: run pnpm generate:desktop.
-// Source hash: 41679f158f2d0bf8c86eeb2bbe2f93f2cbcba95a1837cf4ff5f26e64a6617c95
+// Source hash: 604a1e241805620d64374b741d7085442b2d53dd9270125bec75628a4be5e84f
 import type { PluginManifest } from '@tyco/plugin-sdk'
 import type { ChatMessagePart } from '../desktop/chat'
 import type { UserConfig } from '../user-config'
@@ -325,6 +325,8 @@ export type DesktopActivationState = {
    * first one.
    */
   actionPageIndex: number | null
+  /** The source the history opens filtered by, e.g. from the quick input. */
+  historyOrigin: EditorHistoryOrigin | null
   accessRequest: AccessRequest | null
 }
 
@@ -382,6 +384,7 @@ export type EditorHistoryEntry = {
   text: string
   kind: EditorHistoryKind
   operation?: EditorHistoryOperation | null
+  origin?: EditorHistoryOrigin | null
 }
 
 export type EditorHistoryItem = {
@@ -389,6 +392,8 @@ export type EditorHistoryItem = {
   text: string
   kind: EditorHistoryKind
   operation?: EditorHistoryOperation
+  /** Missing in entries written before the origin was recorded. */
+  origin?: EditorHistoryOrigin
   /** Unix time in milliseconds. */
   createdAt: number
   /** What the AI turned a `Source` entry into. */
@@ -403,6 +408,9 @@ export type EditorHistoryKind = 'output' | 'draft' | 'source'
 /** The AI transformation a `Source` entry was taken before. */
 export type EditorHistoryOperation =
   'aiTask' | 'translation' | 'correction' | 'voiceCorrection'
+
+/** Where the user typed or dictated the text. */
+export type EditorHistoryOrigin = 'quickInput' | 'voice'
 
 /** A text handed over to the editor of the main window. */
 export type EditorTransfer = {

@@ -30,7 +30,6 @@ export function useQuickWindowSession(
     isHideOnBlurEnabled: () =>
       desktopStore.userConfig?.quickWindow?.isHiddenOnBlur !== false,
     isDismissHeld: () => quickDismissStore.isHeld,
-    markInputDismissed: quickInputStore.markDismissed,
     cancelAndCloseModals: menuModalsStore.cancelAndCloseAll,
     // a failed dismissal leaves the window shown, which tells enough
     dismissWindow: () => void ipcStore.call('hide_window'),

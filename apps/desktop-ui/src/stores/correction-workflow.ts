@@ -79,7 +79,7 @@ export const useCorrectionWorkflowStore = defineStore(
         insertCorrection?.abort()
         corrector.cancelLive()
       },
-      saveOutput: historyStore.saveOutput,
+      saveOutput: (text) => historyStore.saveOutput(text, 'quickInput'),
       saveSource: (text) => quickInput.saveSource(text, 'correction'),
       saveDraft: () => quickInput.flushHistory(),
       saveSourceResult: historyStore.saveSourceResult,

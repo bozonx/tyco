@@ -256,6 +256,7 @@ fn activate_on_main_thread(
         snapshot.activation.target_window_id = activation.target_window_id;
         snapshot.activation.selected_text = activation.selected_text;
         snapshot.activation.action_page_index = activation.action_page_index;
+        snapshot.activation.history_origin = activation.history_origin;
         snapshot.activation.access_request = activation.access_request;
         snapshot.window.is_window_shown = true;
         snapshot.window.window_profile = activation.mode.profile();

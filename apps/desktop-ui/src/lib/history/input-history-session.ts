@@ -1,6 +1,14 @@
-import type { EditorHistoryEntry, EditorHistoryOperation } from '@tyco/shared'
+import type {
+  EditorHistoryEntry,
+  EditorHistoryOperation,
+  EditorHistoryOrigin,
+} from '@tyco/shared'
 
-export const INPUT_HISTORY_INTERVAL_MS = 10_000
+/**
+ * How often unfinished input reaches the history: a crash loses at most this
+ * much of it. Dictated text cannot be repeated the same way, so it is short
+ */
+export const INPUT_HISTORY_INTERVAL_MS = 5_000
 
 interface InputRecord {
   id?: string
@@ -14,9 +22,18 @@ interface InputRecord {
   ended: boolean
 }
 
-/** Keeps failed records until they are saved, independently of input lifetime. */
+/**
+ * Keeps failed records until they are saved, independently of input lifetime.
+ *
+ * Intentional: this is the only place user input is kept outside the input
+ * itself. With the history turned off `save` stores nothing, and the input is
+ * not kept anywhere else either, on disk or in memory: the user chose not to
+ * keep it. Do not add a parallel draft store or a recall of the last input
+ */
 export function createInputHistorySession(deps: {
   save: (entry: EditorHistoryEntry) => Promise<string | null>
+  /** Where the input is typed or dictated, for the history filter */
+  origin?: EditorHistoryOrigin
   reportError: (error: unknown) => void
   onDrained?: () => void
 }) {
@@ -67,7 +84,13 @@ export function createInputHistorySession(deps: {
           )
             continue
           try {
-            const id = await deps.save({ id: record.id, text, kind, operation })
+            const id = await deps.save({
+              id: record.id,
+              text,
+              kind,
+              operation,
+              ...(deps.origin && { origin: deps.origin }),
+            })
             // null is intentional: history is disabled or the record was deleted.
             if (id) record.id = id
             record.savedId = id

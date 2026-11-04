@@ -459,7 +459,13 @@
     "textsDisabled": "Il salvataggio dei testi è disattivato nelle impostazioni (limite 0).",
     "today": "Oggi",
     "undo": "Annulla",
-    "yesterday": "Ieri"
+    "yesterday": "Ieri",
+    "filterOrigin": "Origine",
+    "filterAll": "Tutti",
+    "filterQuickInput": "Inserimento rapido",
+    "filterVoice": "Voce",
+    "filterUnsent": "Non inviati",
+    "filterUnsentHint": "Solo i testi mai inseriti né copiati"
   },
   "input": {
     "historySearchPlaceholder": "Cerca nella cronologia...",
@@ -1248,7 +1254,9 @@
     "webhookSuccess": "Webhook inviato correttamente",
     "voiceContextualCorrectionFailed": "Correzione contestuale non riuscita; il testo disponibile è stato mantenuto",
     "voicePostProcessTimeout": "L'elaborazione vocale ha richiesto troppo tempo; mantenuto il testo originale",
-    "variablesNotSet": "Alcune variabili non hanno un valore su questo dispositivo; impostale in Impostazioni → Variabili"
+    "variablesNotSet": "Alcune variabili non hanno un valore su questo dispositivo; impostale in Impostazioni → Variabili",
+    "dictationResultReady": "La dettatura è pronta, ma la finestra è passata ad altro. Copiala per non perderla.",
+    "dictationResultInHistory": "È anche salvata nella cronologia."
   },
   "tools": {
     "aiTask": "Comando IA",
@@ -1377,7 +1385,8 @@
     "livePreview": "Correzione in tempo reale",
     "clickToApply": "Fai clic per applicare",
     "liveCorrectionFailed": "Correzione in tempo reale non riuscita",
-    "liveCorrectionFailedHint": "Il modello non ha risposto. Il testo verrà inserito così com'è stato digitato."
+    "liveCorrectionFailedHint": "Il modello non ha risposto. Il testo verrà inserito così com'è stato digitato.",
+    "openHistory": "Cronologia dell’inserimento rapido"
   },
   "variables": {
     "add": "Aggiungi",

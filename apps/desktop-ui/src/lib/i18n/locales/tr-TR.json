@@ -459,7 +459,13 @@
     "textsDisabled": "Metin kaydetme ayarlarda kapalı (sınır 0).",
     "today": "Bugün",
     "undo": "Geri al",
-    "yesterday": "Dün"
+    "yesterday": "Dün",
+    "filterOrigin": "Kaynak",
+    "filterAll": "Tümü",
+    "filterQuickInput": "Hızlı giriş",
+    "filterVoice": "Ses",
+    "filterUnsent": "Gönderilmemiş",
+    "filterUnsentHint": "Yalnızca hiç eklenmemiş veya kopyalanmamış metinler"
   },
   "input": {
     "historySearchPlaceholder": "Geçmişte ara...",
@@ -1245,7 +1251,9 @@
     "webhookSuccess": "Web kancası başarıyla gönderildi",
     "voiceContextualCorrectionFailed": "Bağlama göre düzeltme başarısız oldu; mevcut metin korundu",
     "voicePostProcessTimeout": "Ses işleme çok uzun sürdü; orijinal metin korundu",
-    "variablesNotSet": "Bazı değişkenlerin bu cihazda değeri yok; Ayarlar → Değişkenler bölümünden ayarlayın"
+    "variablesNotSet": "Bazı değişkenlerin bu cihazda değeri yok; Ayarlar → Değişkenler bölümünden ayarlayın",
+    "dictationResultReady": "Dikte hazır, ancak pencere artık başka bir şey gösteriyor. Kaybolmaması için kopyalayın.",
+    "dictationResultInHistory": "Ayrıca geçmişe kaydedildi."
   },
   "tools": {
     "aiTask": "Yapay zekâ komutu",
@@ -1374,7 +1382,8 @@
     "livePreview": "Canlı düzeltme",
     "clickToApply": "Uygulamak için tıklayın",
     "liveCorrectionFailed": "Canlı düzeltme başarısız oldu",
-    "liveCorrectionFailedHint": "Model yanıt vermedi. Metin yazıldığı gibi eklenecektir."
+    "liveCorrectionFailedHint": "Model yanıt vermedi. Metin yazıldığı gibi eklenecektir.",
+    "openHistory": "Hızlı giriş geçmişi"
   },
   "variables": {
     "add": "Ekle",

@@ -459,7 +459,13 @@
     "textsDisabled": "Salvarea textelor este dezactivată în setări (limita 0).",
     "today": "Astăzi",
     "undo": "Anulează",
-    "yesterday": "Ieri"
+    "yesterday": "Ieri",
+    "filterOrigin": "Sursă",
+    "filterAll": "Toate",
+    "filterQuickInput": "Introducere rapidă",
+    "filterVoice": "Voce",
+    "filterUnsent": "Netrimise",
+    "filterUnsentHint": "Doar textele care nu au fost niciodată inserate sau copiate"
   },
   "input": {
     "historySearchPlaceholder": "Caută în istoric...",
@@ -1248,7 +1254,9 @@
     "webhookSuccess": "Webhook trimis cu succes",
     "voiceContextualCorrectionFailed": "Corectarea contextuală a eșuat; textul disponibil a fost păstrat",
     "voicePostProcessTimeout": "Procesarea vocală a durat prea mult; s-a păstrat textul original",
-    "variablesNotSet": "Unele variabile nu au valoare pe acest dispozitiv; setați-le în Setări → Variabile"
+    "variablesNotSet": "Unele variabile nu au valoare pe acest dispozitiv; setați-le în Setări → Variabile",
+    "dictationResultReady": "Dictarea este gata, dar fereastra arată deja altceva. Copiați-o ca să nu o pierdeți.",
+    "dictationResultInHistory": "Este salvată și în istoric."
   },
   "tools": {
     "aiTask": "Comandă AI",
@@ -1377,7 +1385,8 @@
     "livePreview": "Corectare în direct",
     "clickToApply": "Faceți clic pentru a aplica",
     "liveCorrectionFailed": "Corectarea în timp real a eșuat",
-    "liveCorrectionFailedHint": "Modelul nu a răspuns. Textul va fi inserat așa cum a fost tastat."
+    "liveCorrectionFailedHint": "Modelul nu a răspuns. Textul va fi inserat așa cum a fost tastat.",
+    "openHistory": "Istoricul introducerii rapide"
   },
   "variables": {
     "add": "Adaugă",

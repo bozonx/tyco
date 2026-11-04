@@ -25,6 +25,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, watch } from 'vue'
 
+import { useCopyText } from '../../composables/use-copy-text'
 import { useDictationActions } from '../../composables/use-dictation-actions'
 import { useDismissibleLayer } from '../../composables/use-dismissible-layer'
 import { useI18n } from '../../composables/use-i18n'
@@ -32,6 +33,7 @@ import useToast from '../../composables/use-toast'
 import { useVoiceFinishSignal } from '../../composables/use-voice-finish-signal'
 import { useVoiceRecordingMeter } from '../../composables/use-voice-recording-meter'
 import { hasSeparateQuickWindow, isQuickWindow } from '../../lib/desktop/window'
+import { isEditorHistoryOff } from '../../lib/history/editor-history-storage'
 import type { VoiceMenuParams } from '../../lib/modals/menu-modal-params'
 import { isModeOfWindow } from '../../lib/navigation/routes'
 import { resolveDictationTarget } from '../../lib/stt/dictation-target'
@@ -98,6 +100,30 @@ function invokeCallback<Args extends unknown[]>(
   if (typeof callback === 'function') callback(...args)
   else if (Array.isArray(callback)) callback.forEach((fn) => fn(...args))
 }
+const copyText = useCopyText({ saveOutput: true })
+/** How long the user has to take a dictation the window moved on from */
+const ORPHANED_RESULT_TOAST_MS = 30_000
+
+/**
+ * A dictation nobody cancelled, whose screen has moved on (another activation,
+ * another mode): it cannot be dictated the same way twice, so it is offered for
+ * copying instead of dropped. Only the toast holds it, and only for a while: no
+ * other store of the input is added, and with the history turned off nothing is
+ * kept once the toast is gone
+ */
+function offerOrphanedResult(text: string) {
+  const isInHistory = !isEditorHistoryOff(desktopStore.userConfig)
+  toastText(
+    isInHistory
+      ? `${t('toast.dictationResultReady')}\n${t('toast.dictationResultInHistory')}`
+      : t('toast.dictationResultReady'),
+    'info',
+    {
+      durationMs: ORPHANED_RESULT_TOAST_MS,
+      action: { label: t('action.copy'), run: () => void copyText(text) },
+    }
+  )
+}
 const dictationTarget = computed(() => resolveDictationTarget(props))
 const model = createVoiceRecognition({
   startDictation,
@@ -112,10 +138,11 @@ const model = createVoiceRecognition({
   contextualVoiceCorrection,
   voiceStyling: (text, rule, signal) => stylingPrompt(rule, text, { signal }),
   createHistorySession: () =>
-    historyStore.createInputSession(() =>
-      toastKey('history.operationFailed', 'error')
+    historyStore.createInputSession(
+      () => toastKey('history.operationFailed', 'error'),
+      'voice'
     ),
-  saveSource: (text, action) => historyStore.saveSource(text, action),
+  saveSource: (text, action) => historyStore.saveSource(text, action, 'voice'),
   saveSourceResult: (id, text) => historyStore.saveSourceResult(id, text),
   setPendingModal: (options) => menuModalsStore.setPendingModal(options),
   clearPendingModal: (owner) => menuModalsStore.clearPendingModal(owner),
@@ -131,7 +158,10 @@ const model = createVoiceRecognition({
   onCorrected: (result, recognized, corrected, intent) => {
     if (isSameActivation())
       emit('corrected', result, recognized, corrected, intent)
+    // inserting into a window the user has left would hit the wrong target
+    else offerOrphanedResult(result)
   },
+  onAbandoned: offerOrphanedResult,
   t,
   toastKey,
   toastText,

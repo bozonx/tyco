@@ -289,6 +289,9 @@ fn save_editor_history_entry(
 ) -> Result<Option<String>, AppError> {
     let policy = history.policy;
 
+    // Intentional: with the history turned off the user chose not to keep
+    // their input, so nothing is stored here or anywhere else. The history is
+    // the only store of user input; there is no fallback draft storage.
     if !policy.is_recording || entry.text.trim().is_empty() || policy.max_entries == 0 {
         return Ok(None);
     }
@@ -323,6 +326,7 @@ fn save_editor_history_entry(
         text: entry.text,
         kind: entry.kind,
         operation: entry.operation,
+        origin: entry.origin,
         created_at_ms,
         result: None,
         is_result_applied: false,

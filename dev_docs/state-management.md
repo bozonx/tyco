@@ -16,7 +16,7 @@ schema, file inventory, migration, recovery and credential lifetimes.
 | ---------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | Desktop configuration and window context | ipc                                               | Backend snapshots, typed desktop calls, configuration saves, serialized session-state patches |
 | Editor document and selection            | editor-input                                      | Document, selection, edit source, draft persistence and focus requests                        |
-| Quick writing input                      | quick-input                                       | Draft lifetime, dismissal restoration, recall and focus requests                              |
+| Quick writing input                      | quick-input                                       | Draft lifetime until the text leaves the app, and focus requests                              |
 | Chat input                               | chat-input                                        | Input text, remembered selection and one-shot caret restoration                               |
 | Chat session                             | chat                                              | Conversation, generation, context, attachments and file ownership                             |
 | Microphone session                       | dictation                                         | One live dictation per application instance; cancellation on disposal                         |
@@ -148,13 +148,18 @@ submit, or continue to the action menu.
 
 ## Input recovery through history
 
-Quick writing and dictation keep unfinished input in memory without an expiry.
+Quick writing and dictation keep unfinished input on screen without an expiry:
+the quick input keeps its text until it is inserted or copied (a failed or
+cancelled insertion leaves it in place), and the quick window keeps an untaken
+voice result in `useVoiceResultStore` until it leaves the app or Escape drops
+it. A dictation whose screen moved on before it was delivered is offered in a
+toast for copying.
 Focus loss does not dismiss either input. Hiding the quick window retains its
 voice view and microphone session; reopening adopts the activation without
 restarting recognition. Explicit cancellation (Escape or the cancel button)
 stops input and keeps its text in history.
 
-Each live input checkpoints changed text every ten seconds into one `draft`
+Each live input checkpoints changed text every five seconds into one `draft`
 history record. Checkpoints are serialized; submission promotes that same record
 to an AI source or collapses it into the output. Finalized records cannot be
 replaced by late checkpoints. Failed records retain their text, kind and identity
@@ -166,3 +171,11 @@ flush the current text. The history storage mode, retention and secret redaction
 apply to checkpoints too; no separate recovery file is used. Disk mode protects
 only the last successful checkpoint across a crash. Session mode lasts until exit,
 and off mode records nothing. Audio is streamed, not archived for replay.
+
+The history is the only store of user input, by design. With the history off
+nothing the user typed or dictated is kept once its input is done with, neither
+on disk nor in memory: no draft file, no recall of the last input (the quick
+input once restored it on ArrowUp; that was removed). Do not add a parallel
+store. Entries record their `origin` (`quickInput`, `voice`), which the history
+view filters by; the quick input opens it filtered through `activate_mode` with
+`historyOrigin`.

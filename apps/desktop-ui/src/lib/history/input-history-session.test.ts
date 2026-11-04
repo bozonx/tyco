@@ -14,10 +14,10 @@ function setup() {
 afterEach(() => vi.useRealTimers())
 
 describe('input history checkpoints', () => {
-  it('saves changing input every ten seconds under the same identity', async () => {
+  it('saves changing input every five seconds under the same identity', async () => {
     const { save, session } = setup()
     session.update('First')
-    await vi.advanceTimersByTimeAsync(9999)
+    await vi.advanceTimersByTimeAsync(4999)
     expect(save).not.toHaveBeenCalled()
     session.update('First words')
     await vi.advanceTimersByTimeAsync(1)
@@ -28,7 +28,7 @@ describe('input history checkpoints', () => {
       operation: undefined,
     })
     session.update('First words continued')
-    await vi.advanceTimersByTimeAsync(10000)
+    await vi.advanceTimersByTimeAsync(5000)
     expect(save).toHaveBeenLastCalledWith({
       id: 'input-id',
       text: 'First words continued',
@@ -92,7 +92,7 @@ describe('input history checkpoints', () => {
     expect(save).not.toHaveBeenCalled()
     save.mockRejectedValueOnce(new Error('Disk full'))
     session.update('Recoverable')
-    await vi.advanceTimersByTimeAsync(10000)
+    await vi.advanceTimersByTimeAsync(5000)
     expect(reportError).toHaveBeenCalledOnce()
     await session.flush()
     expect(save).toHaveBeenCalledTimes(2)

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { APP_ROUTES } from '../lib/navigation/routes'
+import { useHistoryStore } from '../stores/history'
 import { loadFakeDesktop, type TestDesktop } from '../test/install-fake-desktop'
 import VoiceView from './VoiceView.vue'
 
@@ -259,7 +260,33 @@ describe('VoiceView.vue', () => {
     expect(mocks.navigationPush).not.toHaveBeenCalled()
   })
 
-  it('clears insert menu and text when window hides or activationId changes', async () => {
+  it('keeps an untaken result in the quick window until it leaves the app', async () => {
+    const wrapper = mount(VoiceView, { props: { bar: false } })
+    const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
+    const insertMenu = () => wrapper.findComponent({ name: 'InsertMenu' })
+
+    voiceMenu.vm.$emit('corrected', 'Text', 'Text', undefined, 'next')
+    await flushPromises()
+    expect(insertMenu().exists()).toBe(true)
+
+    desktop.setState({ isWindowShown: false })
+    await nextTick()
+    desktop.setState({ activationId: 2, isWindowShown: true })
+    await flushPromises()
+    expect(insertMenu().exists()).toBe(true)
+    wrapper.unmount()
+
+    // a switch to another mode and back still finds it
+    const reopened = mount(VoiceView, { props: { bar: false } })
+    expect(reopened.findComponent({ name: 'InsertMenu' }).exists()).toBe(true)
+
+    await useHistoryStore().saveOutput('Text')
+    await flushPromises()
+    expect(reopened.findComponent({ name: 'InsertMenu' }).exists()).toBe(false)
+  })
+
+  it('clears the result when the main window hides or activationId changes', async () => {
+    await openWindow('main')
     const wrapper = mount(VoiceView, { props: { bar: false } })
     const voiceMenu = wrapper.findComponent({ name: 'VoiceRecognitionMenu' })
 

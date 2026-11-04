@@ -9,6 +9,7 @@ import { useDesktopStore } from '../stores/desktop'
 import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useQuickInputStore } from '../stores/quick-input'
+import { useVoiceResultStore } from '../stores/voice-result'
 import { useI18n } from './use-i18n'
 
 export function useOverlayNav(options?: () => OverlayNavOptions) {
@@ -16,6 +17,7 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
   const ipcStore = useIpcStore()
   const desktopStore = useDesktopStore()
   const quickInputStore = useQuickInputStore()
+  const voiceResultStore = useVoiceResultStore()
   const { t } = useI18n()
 
   const goBack = () => {
@@ -29,9 +31,10 @@ export function useOverlayNav(options?: () => OverlayNavOptions) {
     menuModalsStore.closeAll()
     try {
       if (isQuickWindow()) {
-        if (desktopStore.desktopState?.mode === 'quickInput') {
-          quickInputStore.discard()
-        }
+        // Esc drops the text on purpose; it stays only in the history
+        const mode = desktopStore.desktopState?.mode
+        if (mode === 'quickInput') quickInputStore.discard()
+        if (mode === 'voice') voiceResultStore.step.resetResult()
         void ipcStore.callOrNotify('hide_window')
       } else {
         void appNavigation.goToEditor()

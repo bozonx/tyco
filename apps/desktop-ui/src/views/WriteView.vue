@@ -86,6 +86,19 @@
         />
         <span>{{ correctionModeLabel }}</span>
       </button>
+      <template v-if="isHistoryOn">
+        <span class="text-faint">•</span>
+        <button
+          type="button"
+          class="write-hint-action write-history-action"
+          :title="t('write.openHistory')"
+          :aria-label="t('write.openHistory')"
+          @mousedown.prevent
+          @click="openHistory"
+        >
+          <AppIcon icon="mdi:history" size="xs" />
+        </button>
+      </template>
     </p>
   </div>
 </template>
@@ -99,6 +112,7 @@ import WriteLivePreview from '../components/quick/WriteLivePreview.vue'
 import WriteModeInput from '../components/quick/WriteModeInput.vue'
 import { useDismissibleLayer } from '../composables/use-dismissible-layer'
 import { useI18n } from '../composables/use-i18n'
+import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
 import {
   newlineShortcut,
   resolveInputKeyAction,
@@ -108,6 +122,7 @@ import {
 import { maxInputHeight } from '../lib/quick-panel/input-height'
 import { useCorrectionWorkflowStore } from '../stores/correction-workflow'
 import { useDesktopStore } from '../stores/desktop'
+import { useIpcStore } from '../stores/ipc'
 import { MenuModals, useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
 import { useQuickInputStore } from '../stores/quick-input'
@@ -122,6 +137,22 @@ const desktopStore = useDesktopStore()
 const menuModalsStore = useMenuModalsStore()
 const correctionWorkflowStore = useCorrectionWorkflowStore()
 const textCorrectionStore = useTextCorrectionStore()
+const ipcStore = useIpcStore()
+
+// with the history off there is nothing to look back at: nothing typed is kept
+const isHistoryOn = computed(() => !isEditorHistoryOff(desktopStore.userConfig))
+
+/**
+ * Opens the history of the quick input in the main window; the text being typed
+ * is saved first so that it is in the list. It also stays in the input
+ */
+async function openHistory() {
+  await quickInputStore.flushHistory().catch(() => {})
+  await ipcStore.callOrNotify('activate_mode', {
+    mode: 'history',
+    historyOrigin: 'quickInput',
+  })
+}
 const { t } = useI18n()
 const submitKey = computed(() =>
   resolveSubmitKey(desktopStore.userConfig?.editor?.submitKey)
@@ -261,7 +292,8 @@ function cancelAndClose() {
   correctionWorkflowStore.cancelInsert()
   correctionWorkflowStore.cancelPrecorrection()
   textCorrectionStore.resetLive()
-  // Escape and the cancel button both retain the input in history.
+  // Escape and the cancel button drop the text on purpose; it stays only in
+  // the history, when the history is on
   quickInputStore.discard()
   menuModalsStore.cancelPending()
   menuModalsStore.closeAll()
@@ -284,8 +316,9 @@ function nextFromHint() {
   if (!acceptsInput() || menuModalsStore.pendingModal) return
   const text = quickInputStore.value
   if (!text.trim()) return
+  // the text stays in the input until it leaves the app: a failed or
+  // cancelled insertion keeps it, see `useQuickInputStore`
   void quickInputStore.flushHistory().catch(() => {})
-  quickInputStore.rememberSubmitted(text)
   if (isLiveMode.value) {
     void correctionWorkflowStore.nextLive(text)
     return
@@ -353,15 +386,6 @@ function handleKeyDown(event: KeyboardEvent) {
   }
   // the unused Enter variant neither sends nor breaks the line
   if (event.code === 'Enter' && !event.isComposing) event.preventDefault()
-
-  if (
-    event.code === 'ArrowUp' &&
-    !quickInputStore.value &&
-    quickInputStore.recallText
-  ) {
-    event.preventDefault()
-    quickInputStore.setValue(quickInputStore.recallText)
-  }
 }
 
 onMounted(() => {
@@ -383,8 +407,8 @@ onUnmounted(() => {
 function submit() {
   const text = quickInputStore.value
   if (!text.trim()) return
+  // the text stays in the input until it leaves the app
   void quickInputStore.flushHistory().catch(() => {})
-  quickInputStore.rememberSubmitted(text)
   if (isOffMode.value) {
     void correctionWorkflowStore.insertDirect(text)
   } else if (isLiveMode.value) {
@@ -443,6 +467,10 @@ function submit() {
   font-size: var(--text-caption);
   color: var(--app-text-muted);
   flex-shrink: 0;
+}
+
+.write-hint-action.write-history-action {
+  padding: 0.125rem;
 }
 
 .write-hint-action {

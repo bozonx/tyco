@@ -99,7 +99,7 @@ describe('useCorrectionWorkflowStore', () => {
       'raw input',
       expect.any(Object)
     )
-    expect(saveOutputSpy).toHaveBeenCalledWith('quick corrected')
+    expect(saveOutputSpy).toHaveBeenCalledWith('quick corrected', 'quickInput')
     expect(invocations.call).toHaveBeenCalledWith(
       'core.insert',
       'quick corrected'
@@ -124,7 +124,7 @@ describe('useCorrectionWorkflowStore', () => {
       expect.anything(),
       expect.anything()
     )
-    expect(saveOutputSpy).toHaveBeenCalledWith('direct raw input')
+    expect(saveOutputSpy).toHaveBeenCalledWith('direct raw input', 'quickInput')
     expect(invocations.call).toHaveBeenCalledWith(
       'core.insert',
       'direct raw input'

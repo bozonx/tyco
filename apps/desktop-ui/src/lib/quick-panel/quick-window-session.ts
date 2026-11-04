@@ -15,7 +15,6 @@ export interface QuickWindowSessionDependencies {
   isHideOnBlurEnabled: () => boolean
   /** A screen holds the window open, e.g. a dictation in progress */
   isDismissHeld: () => boolean
-  markInputDismissed: () => void
   cancelAndCloseModals: () => void
   dismissWindow: () => void
   dismissWindowOnBlur: () => void
@@ -45,7 +44,6 @@ export function createQuickWindowSession(deps: QuickWindowSessionDependencies) {
 
   /** The user clicked elsewhere: drop what is in progress, keep the text. */
   const dismissWith = (hide: () => void): void => {
-    if (deps.mode() === 'quickInput') deps.markInputDismissed()
     deps.cancelAndCloseModals()
     hide()
   }

@@ -88,6 +88,7 @@ export class FakeDesktopBackend {
       selectedText: null,
       mode: options.mode ?? ActivationMode.EDITOR,
       actionPageIndex: null,
+      historyOrigin: null,
       accessRequest: null,
       ...structuredClone(options.activation),
     }
@@ -195,11 +196,12 @@ export class FakeDesktopBackend {
         if (existing.kind !== 'draft') return existing.id
         this.history = this.history.filter((item) => item.id !== entry.id)
       }
-      const { operation, id: inputId, ...rest } = entry
+      const { operation, origin, id: inputId, ...rest } = entry
       const id = inputId ?? this.generateId('history')
       this.history.unshift({
         ...rest,
         ...(operation ? { operation } : {}),
+        ...(origin ? { origin } : {}),
         id,
         createdAt: Date.now(),
       })

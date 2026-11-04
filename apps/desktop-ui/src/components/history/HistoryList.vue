@@ -14,9 +14,9 @@
     <StateMessage
       v-if="filtered.length === 0"
       class="history-empty"
-      :icon="searchQuery ? 'mdi:text-search' : 'mdi:history'"
-      :title="searchQuery ? t('history.nothingFound') : t('history.empty')"
-      :message="!searchQuery ? emptyHint : undefined"
+      :icon="isNarrowed ? 'mdi:text-search' : 'mdi:history'"
+      :title="isNarrowed ? t('history.nothingFound') : t('history.empty')"
+      :message="!isNarrowed ? emptyHint : undefined"
     />
 
     <template v-else>
@@ -83,6 +83,8 @@ const props = withDefaults(
     emptyHint?: string
     /** Number affected by clearing; may be larger than a filtered list. */
     totalCount?: number
+    /** `items` are narrowed by a filter of the caller */
+    isFiltered?: boolean
   }>(),
   {
     searchQuery: '',
@@ -91,7 +93,11 @@ const props = withDefaults(
     originalActions: () => [],
     emptyHint: '',
     totalCount: 0,
+    isFiltered: false,
   }
+)
+const isNarrowed = computed(
+  () => Boolean(props.searchQuery?.trim()) || props.isFiltered
 )
 
 const scroller = ref<HTMLElement | null>(null)

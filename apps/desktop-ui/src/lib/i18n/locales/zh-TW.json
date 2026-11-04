@@ -459,7 +459,13 @@
     "textsDisabled": "已在設定中停用儲存文字功能（限制為 0）。",
     "today": "今天",
     "undo": "復原",
-    "yesterday": "昨天"
+    "yesterday": "昨天",
+    "filterOrigin": "來源",
+    "filterAll": "全部",
+    "filterQuickInput": "快速輸入",
+    "filterVoice": "語音",
+    "filterUnsent": "未傳送",
+    "filterUnsentHint": "僅顯示從未插入或複製的文字"
   },
   "input": {
     "historySearchPlaceholder": "搜尋歷史記錄...",
@@ -1242,7 +1248,9 @@
     "webhookSuccess": "Webhook 發送成功",
     "voiceContextualCorrectionFailed": "上下文校正失敗；已保留現有轉錄文字",
     "voicePostProcessTimeout": "語音處理耗時過長；已保留原始文字",
-    "variablesNotSet": "部分變數在此裝置上沒有值；請在「設定 → 變數」中設定"
+    "variablesNotSet": "部分變數在此裝置上沒有值；請在「設定 → 變數」中設定",
+    "dictationResultReady": "聽寫已完成，但視窗已切換到其他內容。請複製以免遺失。",
+    "dictationResultInHistory": "它也已儲存在歷史記錄中。"
   },
   "tools": {
     "aiTask": "AI 指令",
@@ -1371,7 +1379,8 @@
     "livePreview": "即時修正",
     "clickToApply": "點擊套用",
     "liveCorrectionFailed": "即時校正失敗",
-    "liveCorrectionFailedHint": "模型沒有回應。文字將按鍵入的內容插入。"
+    "liveCorrectionFailedHint": "模型沒有回應。文字將按鍵入的內容插入。",
+    "openHistory": "快速輸入歷史"
   },
   "variables": {
     "add": "新增",

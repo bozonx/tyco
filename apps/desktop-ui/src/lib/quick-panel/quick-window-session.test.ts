@@ -19,7 +19,6 @@ function setup(state: Partial<Record<string, unknown>> = {}) {
     hasPendingModal: () => current.hasPendingModal as boolean,
     isHideOnBlurEnabled: () => current.isHideOnBlurEnabled as boolean,
     isDismissHeld: () => current.isDismissHeld as boolean,
-    markInputDismissed: vi.fn(),
     cancelAndCloseModals: vi.fn(),
     dismissWindow: vi.fn(),
     dismissWindowOnBlur: vi.fn(),
@@ -55,16 +54,11 @@ describe('quick window session', () => {
     ).toBe(false)
   })
 
-  it('keeps the typed text of a dismissed input for the next opening', () => {
+  it('drops the work in progress of a dismissed window', () => {
     const { deps, session } = setup()
     session.dismiss()
-    expect(deps.markInputDismissed).toHaveBeenCalledOnce()
     expect(deps.cancelAndCloseModals).toHaveBeenCalledOnce()
     expect(deps.dismissWindow).toHaveBeenCalledOnce()
-
-    const menu = setup({ mode: 'selectionActions' })
-    menu.session.dismiss()
-    expect(menu.deps.markInputDismissed).not.toHaveBeenCalled()
   })
 
   it('routes focus loss separately from an explicit dismissal', () => {
@@ -72,7 +66,6 @@ describe('quick window session', () => {
     session.dismissOnBlur()
     expect(deps.dismissWindowOnBlur).toHaveBeenCalledOnce()
     expect(deps.dismissWindow).not.toHaveBeenCalled()
-    expect(deps.markInputDismissed).toHaveBeenCalledOnce()
     expect(deps.cancelAndCloseModals).toHaveBeenCalledOnce()
   })
 

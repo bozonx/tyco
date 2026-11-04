@@ -39,6 +39,8 @@ pub struct Activation {
     pub selected_text: Option<String>,
     /// The page of `actionPages` the action menu opens on; `None` or 0 for the first one.
     pub action_page_index: Option<usize>,
+    /// The source the history opens filtered by; only for `History`.
+    pub history_origin: Option<crate::models::EditorHistoryOrigin>,
     /// What the access prompt asks about, see `services::external::access`.
     pub access_request: Option<AccessRequest>,
 }
@@ -51,6 +53,7 @@ impl Activation {
             target_window_id: None,
             selected_text: None,
             action_page_index: None,
+            history_origin: None,
             access_request: None,
         }
     }

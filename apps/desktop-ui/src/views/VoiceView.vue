@@ -44,6 +44,7 @@ import { useActionMenuStore } from '../stores/action-menu'
 import { useDesktopStore } from '../stores/desktop'
 import { useMenuModalsStore } from '../stores/menu-modals'
 import { useNavPanelStore } from '../stores/nav-panel'
+import { useVoiceResultStore } from '../stores/voice-result'
 import { useWindowStore } from '../stores/window'
 
 const props = withDefaults(
@@ -75,7 +76,11 @@ const {
   dictationOldText,
   showResult,
   resetResult,
-} = useVoiceResultStep(() => activationMode)
+} = useVoiceResultStep(
+  () => activationMode,
+  // the quick window keeps the result until the user takes or drops it
+  isQuickWindow() ? useVoiceResultStore().step : undefined
+)
 
 watch(isInsertMenuVisible, (shown) => emit('result-shown', shown), {
   immediate: true,
@@ -88,6 +93,8 @@ watch(
     desktopStore.desktopState.activationId,
   ],
   ([isShown, mode, activationId], previous) => {
+    // the quick window keeps an untaken result, see `useVoiceResultStore`
+    if (isQuickWindow()) return
     if (!isShown || mode !== 'voice' || activationId !== previous?.[2]) {
       resetResult()
     }

@@ -459,7 +459,13 @@
     "textsDisabled": "Ukládání textů je v nastavení vypnuto (limit 0).",
     "today": "Dnes",
     "undo": "Zpět",
-    "yesterday": "Včera"
+    "yesterday": "Včera",
+    "filterOrigin": "Zdroj",
+    "filterAll": "Vše",
+    "filterQuickInput": "Rychlé zadávání",
+    "filterVoice": "Hlas",
+    "filterUnsent": "Neodeslané",
+    "filterUnsentHint": "Jen texty, které nebyly vloženy ani zkopírovány"
   },
   "input": {
     "historySearchPlaceholder": "Hledat v historii...",
@@ -1242,7 +1248,9 @@
     "webhookSuccess": "Webhook byl úspěšně odeslán",
     "voiceContextualCorrectionFailed": "Kontextová oprava se nezdařila; dostupný text byl zachován",
     "voicePostProcessTimeout": "Zpracování hlasu trvalo příliš dlouho; byl zachován původní text",
-    "variablesNotSet": "Proměnné nemají na tomto zařízení hodnotu; nastavte je v Nastavení → Proměnné"
+    "variablesNotSet": "Proměnné nemají na tomto zařízení hodnotu; nastavte je v Nastavení → Proměnné",
+    "dictationResultReady": "Diktát je hotový, ale okno už ukazuje něco jiného. Zkopírujte ho, ať o něj nepřijdete.",
+    "dictationResultInHistory": "Je také uložen v historii."
   },
   "tools": {
     "aiTask": "AI příkaz",
@@ -1371,7 +1379,8 @@
     "livePreview": "Živá oprava",
     "clickToApply": "Kliknutím použijete",
     "liveCorrectionFailed": "Živá oprava selhala",
-    "liveCorrectionFailedHint": "Model neodpověděl. Text bude vložen v původní podobě."
+    "liveCorrectionFailedHint": "Model neodpověděl. Text bude vložen v původní podobě.",
+    "openHistory": "Historie rychlého zadávání"
   },
   "variables": {
     "add": "Přidat",

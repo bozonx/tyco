@@ -18,6 +18,7 @@
       "selectedText": "Captured text",
       "mode": "editor",
       "actionPageIndex": null,
+      "historyOrigin": null,
       "accessRequest": null
     },
     "window": { "isWindowShown": true, "windowProfile": "sheet" },

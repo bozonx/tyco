@@ -459,7 +459,13 @@
     "textsDisabled": "A szövegek mentése ki van kapcsolva a beállításokban (korlát: 0).",
     "today": "Ma",
     "undo": "Visszavonás",
-    "yesterday": "Tegnap"
+    "yesterday": "Tegnap",
+    "filterOrigin": "Forrás",
+    "filterAll": "Összes",
+    "filterQuickInput": "Gyors bevitel",
+    "filterVoice": "Hang",
+    "filterUnsent": "Nem elküldött",
+    "filterUnsentHint": "Csak a soha be nem illesztett vagy ki nem másolt szövegek"
   },
   "input": {
     "historySearchPlaceholder": "Keresés az előzményekben...",
@@ -1245,7 +1251,9 @@
     "webhookSuccess": "A webhook sikeresen elküldve",
     "voiceContextualCorrectionFailed": "A szövegkörnyezet alapján végzett javítás sikertelen; a rendelkezésre álló szöveg megmaradt",
     "voicePostProcessTimeout": "A hangfeldolgozás túl sokáig tartott; az eredeti szöveg megmaradt",
-    "variablesNotSet": "Egyes változóknak nincs értéke ezen az eszközön; állítsa be őket: Beállítások → Változók"
+    "variablesNotSet": "Egyes változóknak nincs értéke ezen az eszközön; állítsa be őket: Beállítások → Változók",
+    "dictationResultReady": "A diktálás kész, de az ablak már mást mutat. Másolja ki, hogy ne vesszen el.",
+    "dictationResultInHistory": "Az előzményekben is megtalálható."
   },
   "tools": {
     "aiTask": "MI-parancs",
@@ -1374,7 +1382,8 @@
     "livePreview": "Élő javítás",
     "clickToApply": "Kattintson az alkalmazáshoz",
     "liveCorrectionFailed": "Az élő javítás sikertelen",
-    "liveCorrectionFailedHint": "A modell nem válaszolt. A szöveg úgy lesz beillesztve, ahogy beírta."
+    "liveCorrectionFailedHint": "A modell nem válaszolt. A szöveg úgy lesz beillesztve, ahogy beírta.",
+    "openHistory": "Gyors bevitel előzményei"
   },
   "variables": {
     "add": "Hozzáadás",

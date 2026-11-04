@@ -3,6 +3,7 @@ import type {
   EditorHistoryEntry,
   EditorHistoryItem,
   EditorHistoryOperation,
+  EditorHistoryOrigin,
 } from '@tyco/shared'
 import type { HistoryApi } from './history-call'
 import { createHistoryCall } from './history-call'
@@ -40,6 +41,9 @@ export function createEditorHistoryModel(
   const saveEditorHistory = async (
     entry: EditorHistoryEntry
   ): Promise<string | null> => {
+    // Intentional: with the history turned off nothing the user typed or
+    // dictated is kept, here or anywhere else; it is the user's choice. The
+    // backend checks the same setting again
     if (!canRecord() || !entry.text.trim()) return null
 
     const saved = await track(call('add_editor_history_item', { entry }))
@@ -47,13 +51,45 @@ export function createEditorHistoryModel(
     return typeof saved === 'string' ? saved : null
   }
 
-  /** The text is leaving the app: inserted into a window or copied. */
-  const saveOutput = (text: string) =>
-    saveEditorHistory({ text, kind: 'output' })
+  const outputListeners = new Set<(text: string) => void>()
+
+  /**
+   * The text is leaving the app: inserted into a window or copied. Listeners
+   * hear of it whether the history is on or off: e.g. the quick input then
+   * counts its text as finished
+   */
+  const saveOutput = (text: string, origin?: EditorHistoryOrigin) => {
+    for (const listener of outputListeners) listener(text)
+    return saveEditorHistory({
+      text,
+      kind: 'output',
+      ...(origin && { origin }),
+    })
+  }
+
+  /**
+   * Calls `listener` with every text that leaves the app; returns an
+   * unsubscribe
+   */
+  const onOutput = (listener: (text: string) => void) => {
+    outputListeners.add(listener)
+    return () => {
+      outputListeners.delete(listener)
+    }
+  }
 
   /** The text is about to be replaced by the result of an AI operation. */
-  const saveSource = (text: string, operation: EditorHistoryOperation) =>
-    saveEditorHistory({ text, kind: 'source', operation })
+  const saveSource = (
+    text: string,
+    operation: EditorHistoryOperation,
+    origin?: EditorHistoryOrigin
+  ) =>
+    saveEditorHistory({
+      text,
+      kind: 'source',
+      operation,
+      ...(origin && { origin }),
+    })
 
   /** Remembers what the AI made of the `source` entry `id`. */
   const saveSourceResult = async (
@@ -97,6 +133,7 @@ export function createEditorHistoryModel(
     loadEditorHistory,
     saveEditorHistory,
     saveOutput,
+    onOutput,
     saveSource,
     saveSourceResult,
     removeFromEditorHistory,

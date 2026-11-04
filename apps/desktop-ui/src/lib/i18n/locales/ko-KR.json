@@ -459,7 +459,13 @@
     "textsDisabled": "설정에서 텍스트 저장이 꺼져 있습니다 (제한 0).",
     "today": "오늘",
     "undo": "실행 취소",
-    "yesterday": "어제"
+    "yesterday": "어제",
+    "filterOrigin": "출처",
+    "filterAll": "전체",
+    "filterQuickInput": "빠른 입력",
+    "filterVoice": "음성",
+    "filterUnsent": "보내지 않음",
+    "filterUnsentHint": "삽입하거나 복사한 적이 없는 텍스트만"
   },
   "input": {
     "historySearchPlaceholder": "기록 검색...",
@@ -1242,7 +1248,9 @@
     "webhookSuccess": "웹후크가 성공적으로 전송되었습니다",
     "voiceContextualCorrectionFailed": "문맥에 따른 수정에 실패했습니다. 인식된 텍스트는 유지되었습니다",
     "voicePostProcessTimeout": "음성 처리에 시간이 너무 오래 걸렸습니다. 원본 텍스트가 유지되었습니다",
-    "variablesNotSet": "이 기기에 값이 없는 변수가 있습니다. 설정 → 변수에서 지정하세요"
+    "variablesNotSet": "이 기기에 값이 없는 변수가 있습니다. 설정 → 변수에서 지정하세요",
+    "dictationResultReady": "받아쓰기가 끝났지만 창이 이미 다른 화면으로 바뀌었습니다. 잃지 않도록 복사하세요.",
+    "dictationResultInHistory": "기록에도 저장되어 있습니다."
   },
   "tools": {
     "aiTask": "AI 명령",
@@ -1371,7 +1379,8 @@
     "livePreview": "실시간 교정",
     "clickToApply": "클릭하여 적용",
     "liveCorrectionFailed": "실시간 교정 실패",
-    "liveCorrectionFailedHint": "모델이 응답하지 않았습니다. 입력한 텍스트 그대로 삽입됩니다."
+    "liveCorrectionFailedHint": "모델이 응답하지 않았습니다. 입력한 텍스트 그대로 삽입됩니다.",
+    "openHistory": "빠른 입력 기록"
   },
   "variables": {
     "add": "추가",

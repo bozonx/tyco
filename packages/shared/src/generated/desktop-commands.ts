@@ -23,6 +23,7 @@ import type {
   DesktopSnapshot,
   EditorHistoryEntry,
   EditorHistoryItem,
+  EditorHistoryOrigin,
   ExternalJob,
   FetchRequest,
   HotkeyApplyRequest,
@@ -80,6 +81,7 @@ export interface DesktopCommands {
     args: {
       mode: ActivationMode
       actionPageIndex?: number | null
+      historyOrigin?: EditorHistoryOrigin | null
       text?: string | null
     }
     result: void

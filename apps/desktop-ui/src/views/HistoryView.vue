@@ -8,16 +8,32 @@
       :original-actions="originalActions"
       :empty-hint="t('history.emptyHint')"
       :total-count="historyStore.editorHistory.length"
+      :is-filtered="isFiltered"
       @open="toEditor"
       @action="onEditorAction"
       @clear="clearEditorHistory"
     >
       <template #search>
-        <SearchInput
-          ref="searchInput"
-          v-model="searchQuery"
-          :placeholder="t('input.historySearchPlaceholder')"
-        />
+        <div class="history-search">
+          <SearchInput
+            ref="searchInput"
+            v-model="searchQuery"
+            :placeholder="t('input.historySearchPlaceholder')"
+          />
+          <div class="history-filters">
+            <SegmentedControl
+              v-model="filter.origin"
+              size="sm"
+              :label="t('history.filterOrigin')"
+              :options="originOptions"
+            />
+            <FieldCheckbox
+              v-model="filter.isUnsentOnly"
+              :label="t('history.filterUnsent')"
+              :title="t('history.filterUnsentHint')"
+            />
+          </div>
+        </div>
       </template>
 
       <template #notice>
@@ -70,11 +86,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import Button from '../components/common/Button.vue'
+import FieldCheckbox from '../components/common/FieldCheckbox.vue'
 import InlineNotice from '../components/common/InlineNotice.vue'
 import SearchInput from '../components/common/SearchInput.vue'
+import SegmentedControl from '../components/common/SegmentedControl.vue'
 import HistoryList, {
   type HistoryListAction,
   type HistoryListItem,
@@ -86,6 +104,13 @@ import { useI18n } from '../composables/use-i18n'
 import useToast from '../composables/use-toast'
 import { getEditorHistoryView } from '../lib/history/editor-history-meta'
 import { isEditorHistoryOff } from '../lib/history/editor-history-storage'
+import {
+  DEFAULT_HISTORY_FILTER,
+  HISTORY_ORIGIN_FILTERS,
+  type HistoryFilter,
+  type HistoryOriginFilter,
+  filterEditorHistory,
+} from '../lib/history/history-filter'
 import { createRemovalUndo } from '../lib/history/removal-undo'
 import { clientLogger } from '../lib/logger'
 import { useDesktopStore } from '../stores/desktop'
@@ -124,8 +149,41 @@ const isEditorHistoryDisabled = computed(() =>
 const searchQuery = ref<string>('')
 const searchInput = ref<HTMLInputElement | null>(null)
 
+const ORIGIN_FILTER_LABELS: Record<HistoryOriginFilter, string> = {
+  all: 'history.filterAll',
+  quickInput: 'history.filterQuickInput',
+  voice: 'history.filterVoice',
+}
+const originOptions = computed(() =>
+  HISTORY_ORIGIN_FILTERS.map((id) => ({
+    id,
+    name: t(ORIGIN_FILTER_LABELS[id]),
+  }))
+)
+
+const filter = reactive<HistoryFilter>({ ...DEFAULT_HISTORY_FILTER })
+const isFiltered = computed(
+  () =>
+    filter.origin !== DEFAULT_HISTORY_FILTER.origin ||
+    filter.isUnsentOnly !== DEFAULT_HISTORY_FILTER.isUnsentOnly
+)
+// an activation may open the history filtered, e.g. from the quick input
+watch(
+  () =>
+    desktopStore.desktopState.mode === 'history'
+      ? desktopStore.desktopState.activationId
+      : undefined,
+  (activationId) => {
+    if (activationId === undefined) return
+    Object.assign(filter, DEFAULT_HISTORY_FILTER, {
+      origin: desktopStore.desktopState.historyOrigin ?? 'all',
+    })
+  },
+  { immediate: true }
+)
+
 const editorItems = computed<HistoryListItem[]>(() =>
-  historyStore.editorHistory.map((item) => {
+  filterEditorHistory(historyStore.editorHistory, filter).map((item) => {
     const view = getEditorHistoryView(item)
     const label = t(view.labelKey)
 
@@ -227,6 +285,19 @@ const toEditor = (item: HistoryListItem) => {
 </script>
 
 <style scoped>
+.history-search {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+}
+
 .history-page {
   display: flex;
   flex-direction: column;

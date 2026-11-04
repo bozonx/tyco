@@ -459,7 +459,13 @@
     "textsDisabled": "設定でテキストの保存が無効になっています（上限0）。",
     "today": "今日",
     "undo": "元に戻す",
-    "yesterday": "昨日"
+    "yesterday": "昨日",
+    "filterOrigin": "ソース",
+    "filterAll": "すべて",
+    "filterQuickInput": "クイック入力",
+    "filterVoice": "音声",
+    "filterUnsent": "未送信",
+    "filterUnsentHint": "挿入もコピーもされていないテキストのみ"
   },
   "input": {
     "historySearchPlaceholder": "履歴を検索...",
@@ -1245,7 +1251,9 @@
     "webhookSuccess": "Webhookが正常に送信されました",
     "voiceContextualCorrectionFailed": "文脈に基づく修正に失敗しました。認識済みのテキストは保持されました",
     "voicePostProcessTimeout": "音声処理に時間がかかりすぎました。元のテキストを保持しました",
-    "variablesNotSet": "このデバイスで値のない変数があります。設定 → 変数 で設定してください"
+    "variablesNotSet": "このデバイスで値のない変数があります。設定 → 変数 で設定してください",
+    "dictationResultReady": "音声入力が完了しましたが、ウィンドウはすでに別の画面です。失わないようにコピーしてください。",
+    "dictationResultInHistory": "履歴にも保存されています。"
   },
   "tools": {
     "aiTask": "AI コマンド",
@@ -1374,7 +1382,8 @@
     "livePreview": "リアルタイム校正",
     "clickToApply": "クリックして適用",
     "liveCorrectionFailed": "リアルタイム校正に失敗しました",
-    "liveCorrectionFailedHint": "モデルが応答しませんでした。入力されたテキストがそのまま挿入されます。"
+    "liveCorrectionFailedHint": "モデルが応答しませんでした。入力されたテキストがそのまま挿入されます。",
+    "openHistory": "クイック入力の履歴"
   },
   "variables": {
     "add": "追加",

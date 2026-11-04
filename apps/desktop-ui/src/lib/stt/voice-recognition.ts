@@ -89,6 +89,12 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
     intent: VoiceFinishIntent
   ) => void
   onCancelled: () => void
+  /**
+   * The dictation was going on or being finished when the recognition was
+   * disposed, e.g. the window switched to another mode: the text so far, so
+   * that the user can still take it. Not called after a cancellation
+   */
+  onAbandoned?: (text: string) => void
   t: (key: string) => string
   toastKey: (key: string, kind: 'warn' | 'error') => void
   toastText: (text: string, kind: 'error') => void
@@ -122,6 +128,8 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   /** Set once a dictation started; it stays finishable after a failure */
   let hasSession = false
   let lastTranscriptText = ''
+  /** The best text of the dictation being finished: raw, then processed */
+  let finishingText = ''
   let contextual: ReturnType<typeof createContextualCorrectionModel> | undefined
   const historySession =
     deps.createHistorySession?.() ??
@@ -237,6 +245,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       if (!isCurrent()) return
       isStarted.value = false
       isTranscribing.value = false
+      finishingText = recognizedText
 
       if (!recognizedText.trim()) {
         const { chat, prefix = '', suffix = '' } = deps.options()
@@ -340,6 +349,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
           if (!controller.signal.aborted && processedText.trim()) {
             resultText = processedText
             correctedText = processedText
+            finishingText = processedText
             await deps.saveSourceResult(sourceId, processedText).catch(() => {
               toastKey('history.operationFailed', 'error')
             })
@@ -371,6 +381,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
       if (buffered && intent === 'next' && !postProcessAborted) {
         intent = buffered
       }
+      finishingText = ''
       deps.onCorrected(resultText, recognizedText, correctedText, intent)
     } catch (error) {
       if (!isCurrent()) return
@@ -437,6 +448,7 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
     historySession?.update('')
     transcript.value = createLiveTranscriptState()
     lastTranscriptText = ''
+    finishingText = ''
     const generation = ++sessionGeneration
     let hasReportedContextualError = false
     contextual?.cancel()
@@ -508,6 +520,16 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   }
 
   function dispose() {
+    // a dictation nobody cancelled is not dropped silently; a cancelled or
+    // delivered one has no session and no text in finishing
+    const abandonedText = isFinishing.value
+      ? finishingText || liveTranscriptText(transcript.value)
+      : hasSession
+        ? liveTranscriptText(transcript.value)
+        : ''
+    finishingText = ''
+    if (abandonedText.trim() && !isCancelling.value)
+      deps.onAbandoned?.(abandonedText)
     historySession?.dispose()
     disposed = true
     restartGeneration += 1

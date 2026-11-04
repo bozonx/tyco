@@ -203,4 +203,53 @@ describe('HistoryView.vue', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('history.textsDisabled')
   })
+
+  it('opens filtered by the origin of the activation', async () => {
+    const historyStore = useHistoryStore()
+    vi.spyOn(historyStore, 'loadEditorHistory').mockImplementation(async () => {
+      historyStore.editorHistory = [
+        {
+          id: 'a',
+          kind: 'draft',
+          text: 'Typed',
+          createdAt: 1,
+          origin: 'quickInput',
+        },
+        {
+          id: 'b',
+          kind: 'draft',
+          text: 'Dictated',
+          createdAt: 1,
+          origin: 'voice',
+        },
+      ]
+    })
+    desktop.setState({
+      mode: 'history',
+      activationId: 5,
+      historyOrigin: 'quickInput',
+    })
+    const wrapper = mount(HistoryView, {
+      global: {
+        stubs: {
+          SearchInput: true,
+          HistoryList: {
+            props: ['items', 'isFiltered'],
+            template:
+              '<div><div v-for="item in items" :key="item.id" class="item">{{ item.value }}</div><span class="filtered">{{ isFiltered }}</span></div>',
+          },
+        },
+      },
+    })
+    await flushPromises()
+    expect(wrapper.findAll('.item').map((item) => item.text())).toEqual([
+      'Typed',
+    ])
+    expect(wrapper.find('.filtered').text()).toBe('true')
+
+    desktop.setState({ activationId: 6, historyOrigin: null })
+    await flushPromises()
+    expect(wrapper.findAll('.item')).toHaveLength(2)
+    expect(wrapper.find('.filtered').text()).toBe('false')
+  })
 })

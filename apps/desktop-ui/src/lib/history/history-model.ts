@@ -1,3 +1,5 @@
+import type { EditorHistoryOrigin } from '@tyco/shared'
+
 import { createInputHistorySession } from './input-history-session'
 import type { HistoryApi } from './history-call'
 import { createEditorHistoryModel } from './editor-history'
@@ -13,9 +15,13 @@ export function createHistoryModel(
   const editor = createEditorHistoryModel(historyApi, canRecordEditorHistory)
   const sessions = new Set<ReturnType<typeof createInputHistorySession>>()
   return {
-    createInputSession: (reportSaveError: (error: unknown) => void) => {
+    createInputSession: (
+      reportSaveError: (error: unknown) => void,
+      origin?: EditorHistoryOrigin
+    ) => {
       const session = createInputHistorySession({
         save: editor.saveEditorHistory,
+        origin,
         reportError: reportSaveError,
         onDrained: () => {
           sessions.delete(session)

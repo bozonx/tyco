@@ -558,7 +558,7 @@ fn input_checkpoints_replace_one_record_and_promote_it_without_a_duplicate() {
     assert_eq!(items.len(), 1);
     assert_eq!(items[0].text, "more words");
     let source = serde_json::from_value(
-        json!({"id": id, "text": "final words", "kind": "source", "operation": "voiceCorrection"}),
+        json!({"id": id, "text": "final words", "kind": "source", "operation": "voiceCorrection", "origin": "voice"}),
     )
     .unwrap();
     save_editor_history_entry(&mut history, source).unwrap();
@@ -570,6 +570,10 @@ fn input_checkpoints_replace_one_record_and_promote_it_without_a_duplicate() {
     assert_eq!(items[0].id, id);
     assert_eq!(items[0].text, "final words");
     assert_eq!(items[0].kind, EditorHistoryKind::Source);
+    assert_eq!(
+        items[0].origin,
+        Some(crate::models::EditorHistoryOrigin::Voice)
+    );
 }
 
 #[test]

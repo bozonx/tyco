@@ -810,7 +810,7 @@ it('checkpoints live speech and preserves cancellation in the same history recor
   })
   await model.startSession()
   handlers.onText({ committed: 'Long dictation', draft: 'in progress' })
-  await vi.advanceTimersByTimeAsync(10000)
+  await vi.advanceTimersByTimeAsync(5000)
   expect(saveCheckpoint).toHaveBeenLastCalledWith({
     id: undefined,
     text: 'Long dictation in progress',
@@ -829,4 +829,63 @@ it('checkpoints live speech and preserves cancellation in the same history recor
   expect(deps.onCorrected).not.toHaveBeenCalled()
   expect(deps.onCancelled).toHaveBeenCalledOnce()
   model.dispose()
+})
+
+describe('abandoned dictation', () => {
+  it('hands over the text of a dictation disposed while recording', async () => {
+    let handlers!: Pick<LiveDictationStart, 'onText' | 'onError'>
+    const onAbandoned = vi.fn()
+    const { model } = setup({
+      onAbandoned,
+      startDictation: async (next) => {
+        handlers = next
+      },
+    })
+    await model.startSession()
+    handlers.onText({ committed: 'Spoken words', draft: '' })
+    model.dispose()
+    expect(onAbandoned).toHaveBeenCalledWith('Spoken words')
+  })
+
+  it('hands over the recognized text of a dictation disposed while finishing', async () => {
+    const onAbandoned = vi.fn()
+    let correct!: (text: string) => void
+    const { deps, model } = setup({
+      onAbandoned,
+      voiceCorrection: () =>
+        new Promise<string>((resolve) => {
+          correct = resolve
+        }),
+    })
+    await model.startSession()
+    const finishing = model.finish()
+    await vi.waitFor(() => expect(correct).toBeTypeOf('function'))
+    model.dispose()
+    correct('Too late.')
+    await finishing
+    expect(onAbandoned).toHaveBeenCalledWith('Raw words')
+    expect(deps.onCorrected).not.toHaveBeenCalled()
+  })
+
+  it('hands over nothing after a cancellation or a delivery', async () => {
+    let handlers!: Pick<LiveDictationStart, 'onText' | 'onError'>
+    const onAbandoned = vi.fn()
+    const { model } = setup({
+      onAbandoned,
+      startDictation: async (next) => {
+        handlers = next
+      },
+    })
+    await model.startSession()
+    handlers.onText({ committed: 'Dropped on purpose', draft: '' })
+    await model.cancel()
+    model.dispose()
+
+    const delivered = setup({ onAbandoned })
+    await delivered.model.startSession()
+    await delivered.model.finish()
+    expect(delivered.deps.onCorrected).toHaveBeenCalledOnce()
+    delivered.model.dispose()
+    expect(onAbandoned).not.toHaveBeenCalled()
+  })
 })

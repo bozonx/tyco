@@ -235,7 +235,7 @@ failure. For a stability check, use `--repeat-each=3`.
 - `voice.spec.ts` covers live and final transcription, cancellation and a broken
   speech connection, including microphone cleanup.
 - `quick-window.spec.ts` uses the quick window identity and activation mode to
-  cover draft recall, restoration after focus loss, correction followed by native insertion IPC, and command execution. A command configuration scenario creates a script command and assigns its launcher slot through settings before opening a separate quick webview fixture.
+  cover a discarded draft kept only in the history, restoration after focus loss, correction followed by native insertion IPC, and command execution. A command configuration scenario creates a script command and assigns its launcher slot through settings before opening a separate quick webview fixture.
 
 Both Chromium and WebKit run functional scenarios. The real clipboard test is
 tagged `@chromium` because WebKit cannot grant `clipboard-write`. Visual comparisons run only in
@@ -336,9 +336,9 @@ The default config save handler supports single-writer saves only and rejects a
 stale `baseConfig`. It does not implement Rust normalization, validation, secret
 protection or concurrent merges. Test those in Rust and the native desktop smoke;
 use an explicit handler when a UI scenario needs a particular backend response.
-Draft recall in the quick window is in-memory across activations. Input recovery
+Unfinished quick input stays in the input across activations. Input recovery
 checkpoints use the configured editor history storage; disk history survives
-restart, session history and recall do not.
+restart, session history does not, and off mode keeps nothing.
 
 ## Choosing integration tests without virtual machines
 

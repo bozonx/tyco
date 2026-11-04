@@ -40,6 +40,7 @@ pub fn default_desktop_snapshot(
             selected_text: None,
             mode: session_state.last_mode.or(Some(ActivationMode::Editor)),
             action_page_index: None,
+            history_origin: None,
             access_request: None,
         },
         window: WindowSnapshot {

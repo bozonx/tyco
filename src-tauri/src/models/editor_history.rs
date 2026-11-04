@@ -22,6 +22,14 @@ pub enum EditorHistoryOperation {
     VoiceCorrection,
 }
 
+/// Where the user typed or dictated the text.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+pub enum EditorHistoryOrigin {
+    QuickInput,
+    Voice,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorHistoryItem {
@@ -31,6 +39,10 @@ pub struct EditorHistoryItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub operation: Option<EditorHistoryOperation>,
+    /// Missing in entries written before the origin was recorded.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub origin: Option<EditorHistoryOrigin>,
     /// Unix time in milliseconds.
     #[serde(rename = "createdAt")]
     pub created_at_ms: u64,
@@ -55,6 +67,8 @@ pub struct EditorHistoryEntry {
     pub kind: EditorHistoryKind,
     #[serde(default)]
     pub operation: Option<EditorHistoryOperation>,
+    #[serde(default)]
+    pub origin: Option<EditorHistoryOrigin>,
 }
 
 #[cfg(test)]

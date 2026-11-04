@@ -459,7 +459,13 @@
     "textsDisabled": "Saving texts is turned off in the settings (limit 0).",
     "today": "Today",
     "undo": "Undo",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "filterOrigin": "Source",
+    "filterAll": "All",
+    "filterQuickInput": "Quick input",
+    "filterVoice": "Voice",
+    "filterUnsent": "Not sent",
+    "filterUnsentHint": "Only texts that were never inserted or copied"
   },
   "input": {
     "historySearchPlaceholder": "Search history...",
@@ -1248,7 +1254,9 @@
     "webhookSuccess": "Webhook sent successfully",
     "voiceContextualCorrectionFailed": "Contextual correction failed; the available transcript was kept",
     "voicePostProcessTimeout": "Voice processing took too long; original text kept",
-    "variablesNotSet": "Variables have no value on this device; set them in Settings → Variables"
+    "variablesNotSet": "Variables have no value on this device; set them in Settings → Variables",
+    "dictationResultReady": "Dictation is ready, but the window has moved on. Copy it so it is not lost.",
+    "dictationResultInHistory": "It is also saved in the history."
   },
   "tools": {
     "aiTask": "AI command",
@@ -1377,7 +1385,8 @@
     "livePreview": "Live correction",
     "clickToApply": "Click to apply",
     "liveCorrectionFailed": "Live correction failed",
-    "liveCorrectionFailedHint": "The model did not respond. The text will be inserted as typed."
+    "liveCorrectionFailedHint": "The model did not respond. The text will be inserted as typed.",
+    "openHistory": "Quick input history"
   },
   "variables": {
     "add": "Add",

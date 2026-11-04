@@ -42,14 +42,14 @@ test.describe('quick input', () => {
     await expect(input).toHaveValue('')
   })
 
-  test('recalls a discarded draft when the quick window opens again', async ({
+  test('keeps a discarded draft only in the history', async ({
     page,
     desktop,
   }) => {
     const quick = installQuickWindow(desktop)
     await page.goto('/')
     const input = page.getByRole('textbox', { name: 'Enter text...' })
-    await input.fill('A draft to recall')
+    await input.fill('A discarded draft')
     await page.keyboard.press('Escape')
     await expect
       .poll(() => desktop.callsOf('hide_window').length)
@@ -57,15 +57,16 @@ test.describe('quick input', () => {
     await expect
       .poll(() =>
         desktop.history.some(
-          (item) => item.kind === 'draft' && item.text === 'A draft to recall'
+          (item) => item.kind === 'draft' && item.text === 'A discarded draft'
         )
       )
       .toBe(true)
     await quick.reopen()
     await expect(input).toHaveValue('')
     await input.focus()
+    // no recall of earlier input: the history is its only store
     await page.keyboard.press('ArrowUp')
-    await expect(input).toHaveValue('A draft to recall')
+    await expect(input).toHaveValue('')
   })
 
   test('keeps quick input open after focus loss and a new activation', async ({

@@ -8,13 +8,10 @@ import WriteView from './WriteView.vue'
 const mocks = vi.hoisted(() => ({
   writer: {
     value: 'Original text',
-    recallText: '',
     flushHistory: vi.fn().mockResolvedValue(null),
     requestFocus: vi.fn(),
     requestFocusAndSelectAll: vi.fn(),
     startSession: vi.fn(),
-    rememberSubmitted: vi.fn(),
-    markDismissed: vi.fn(),
     discard: vi.fn(),
     clear: vi.fn(),
     setValue: vi.fn(),
@@ -133,6 +130,30 @@ afterEach(() => {
 })
 
 describe('quick input screen', () => {
+  it('opens the quick input history with the typed text saved first', async () => {
+    desktop.backend.handle('activate_mode', () => undefined)
+    await wrapper.find('.write-history-action').trigger('click')
+    await flushPromises()
+    expect(mocks.writer.flushHistory).toHaveBeenCalledOnce()
+    expect(desktop.backend.callsOf('activate_mode')).toEqual([
+      { mode: 'history', historyOrigin: 'quickInput' },
+    ])
+  })
+
+  it('offers no history with the history turned off', async () => {
+    desktop.setUserConfig({
+      editor: {
+        ...desktop.backend.userConfig.editor,
+        history: {
+          ...desktop.backend.userConfig.editor.history,
+          storage: 'off',
+        },
+      },
+    })
+    await flushPromises()
+    expect(wrapper.find('.write-history-action').exists()).toBe(false)
+  })
+
   it('corrects and inserts on Enter without opening the next step', () => {
     press('Enter')
     expect(mocks.correction.insert).toHaveBeenCalledWith('Original text')
@@ -213,14 +234,12 @@ describe('quick input screen', () => {
     expect(mocks.writer.requestFocus).toHaveBeenCalledTimes(2)
   })
 
-  it('brings back the recallable text on ArrowUp in an empty input', () => {
+  it('brings back no earlier text on ArrowUp in an empty input', () => {
     const writer = reactive(mocks.writer)
     writer.value = ''
-    writer.recallText = 'cancelled text'
     press('ArrowUp')
-    expect(mocks.writer.setValue).toHaveBeenCalledWith('cancelled text')
+    expect(mocks.writer.setValue).not.toHaveBeenCalled()
     writer.value = 'Original text'
-    writer.recallText = ''
   })
 
   it('handles live correction mode and submits via insertLive', async () => {

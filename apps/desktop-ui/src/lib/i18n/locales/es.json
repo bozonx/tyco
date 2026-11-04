@@ -459,7 +459,13 @@
     "textsDisabled": "El guardado de textos está desactivado en la configuración (límite 0).",
     "today": "Hoy",
     "undo": "Deshacer",
-    "yesterday": "Ayer"
+    "yesterday": "Ayer",
+    "filterOrigin": "Origen",
+    "filterAll": "Todo",
+    "filterQuickInput": "Entrada rápida",
+    "filterVoice": "Voz",
+    "filterUnsent": "No enviados",
+    "filterUnsentHint": "Solo los textos que nunca se insertaron ni copiaron"
   },
   "input": {
     "historySearchPlaceholder": "Buscar en el historial...",
@@ -1248,7 +1254,9 @@
     "webhookSuccess": "Webhook enviado correctamente",
     "voiceContextualCorrectionFailed": "No se pudo corregir la transcripción según el contexto; se conservó el texto disponible",
     "voicePostProcessTimeout": "El procesamiento de voz tardó demasiado; se mantuvo el texto original",
-    "variablesNotSet": "Hay variables sin valor en este dispositivo; defínelas en Ajustes → Variables"
+    "variablesNotSet": "Hay variables sin valor en este dispositivo; defínelas en Ajustes → Variables",
+    "dictationResultReady": "El dictado está listo, pero la ventana ya muestra otra cosa. Cópialo para no perderlo.",
+    "dictationResultInHistory": "También está guardado en el historial."
   },
   "tools": {
     "aiTask": "Comando de IA",
@@ -1377,7 +1385,8 @@
     "livePreview": "Corrección en vivo",
     "clickToApply": "Clic para aplicar",
     "liveCorrectionFailed": "Error en la corrección en vivo",
-    "liveCorrectionFailedHint": "El modelo no respondió. El texto se insertará tal como se escribió."
+    "liveCorrectionFailedHint": "El modelo no respondió. El texto se insertará tal como se escribió.",
+    "openHistory": "Historial de la entrada rápida"
   },
   "variables": {
     "add": "Añadir",

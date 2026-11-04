@@ -45,6 +45,7 @@ pub(super) fn push_editor_history(
         }) {
             let mut source = history.remove(index);
             source.is_result_applied |= item.kind == EditorHistoryKind::Output;
+            source.origin = source.origin.or(item.origin);
             source.created_at_ms = item.created_at_ms;
             history.retain(|existing| {
                 existing.kind == EditorHistoryKind::Source || existing.text.trim() != text
@@ -80,7 +81,13 @@ pub(super) fn push_editor_history(
 
     // what the AI made of the text stays comparable whatever happens to it next
     if item.result.is_none() {
-        item.result = duplicates.into_iter().find_map(|existing| existing.result);
+        item.result = duplicates
+            .iter()
+            .find_map(|existing| existing.result.clone());
+    }
+    // a draft collapsed into its output still tells where it was typed
+    if item.origin.is_none() {
+        item.origin = duplicates.iter().find_map(|existing| existing.origin);
     }
 
     let id = item.id.clone();
@@ -137,7 +144,7 @@ pub(super) fn insert_restored_item(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::EditorHistoryOperation;
+    use crate::models::{EditorHistoryOperation, EditorHistoryOrigin};
     use crate::services::storage::test_support::{history_item, history_texts};
 
     #[test]
@@ -156,6 +163,41 @@ mod tests {
         assert_eq!(history_texts(&history), vec!["  first\n", "second"]);
         assert_eq!(history[0].id, "c");
         assert_eq!(history[0].kind, EditorHistoryKind::Source);
+    }
+
+    #[test]
+    fn push_editor_history_keeps_the_origin_of_a_draft_collapsed_into_its_output() {
+        let mut draft = history_item("a", "text", EditorHistoryKind::Draft);
+        draft.origin = Some(EditorHistoryOrigin::QuickInput);
+        let mut history = vec![draft];
+
+        push_editor_history(
+            &mut history,
+            history_item("b", "text", EditorHistoryKind::Output),
+            10,
+        );
+
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].kind, EditorHistoryKind::Output);
+        assert_eq!(history[0].origin, Some(EditorHistoryOrigin::QuickInput));
+    }
+
+    #[test]
+    fn push_editor_history_keeps_the_origin_of_a_source_marked_as_sent() {
+        let mut source = history_item("a", "text", EditorHistoryKind::Source);
+        source.result = Some(String::from("Text."));
+        source.origin = Some(EditorHistoryOrigin::Voice);
+        let mut history = vec![source];
+
+        push_editor_history(
+            &mut history,
+            history_item("b", "Text.", EditorHistoryKind::Output),
+            10,
+        );
+
+        assert_eq!(history.len(), 1);
+        assert!(history[0].is_result_applied);
+        assert_eq!(history[0].origin, Some(EditorHistoryOrigin::Voice));
     }
 
     #[test]

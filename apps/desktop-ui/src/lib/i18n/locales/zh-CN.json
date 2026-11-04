@@ -459,7 +459,13 @@
     "textsDisabled": "设置中已关闭文本保存功能（上限为 0）。",
     "today": "今天",
     "undo": "撤消",
-    "yesterday": "昨天"
+    "yesterday": "昨天",
+    "filterOrigin": "来源",
+    "filterAll": "全部",
+    "filterQuickInput": "快速输入",
+    "filterVoice": "语音",
+    "filterUnsent": "未发送",
+    "filterUnsentHint": "仅显示从未插入或复制的文本"
   },
   "input": {
     "historySearchPlaceholder": "搜索历史记录…",
@@ -1242,7 +1248,9 @@
     "webhookSuccess": "Webhook 发送成功",
     "voiceContextualCorrectionFailed": "上下文校正失败；已保留现有转录文本",
     "voicePostProcessTimeout": "语音处理耗时过长；已保留原始文本",
-    "variablesNotSet": "部分变量在此设备上没有值；请在“设置 → 变量”中设置"
+    "variablesNotSet": "部分变量在此设备上没有值；请在“设置 → 变量”中设置",
+    "dictationResultReady": "听写已完成，但窗口已切换到其他内容。请复制以免丢失。",
+    "dictationResultInHistory": "它也已保存在历史记录中。"
   },
   "tools": {
     "aiTask": "AI 命令",
@@ -1371,7 +1379,8 @@
     "livePreview": "实时修正",
     "clickToApply": "点击应用",
     "liveCorrectionFailed": "实时纠错失败",
-    "liveCorrectionFailedHint": "模型未响应。文本将按键入的内容插入。"
+    "liveCorrectionFailedHint": "模型未响应。文本将按键入的内容插入。",
+    "openHistory": "快速输入历史"
   },
   "variables": {
     "add": "添加",

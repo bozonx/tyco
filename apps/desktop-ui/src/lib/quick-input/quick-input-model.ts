@@ -1,61 +1,54 @@
 import { ref } from 'vue'
 
-import { createQuickInputSession } from './quick-input-session'
-
+/**
+ * The text of the quick input.
+ *
+ * - Unfinished text survives window hiding and reactivation: a failed or
+ *   cancelled insertion, or a closed actions step, leaves it in the input.
+ * - Text that left the app (inserted or copied) and text cleared with Esc are
+ *   gone from the input on the next opening.
+ *
+ * Intentional: the input keeps no copy of earlier text, e.g. to bring it back
+ * on ArrowUp. The history is the only store of user input, and with the history
+ * turned off nothing the user typed is kept once the input is done with it
+ */
 export function createQuickInputModel() {
   const value = ref<string>('')
   const focusRequestCount = ref<number>(0)
   const selectAllRequestCount = ref<number>(0)
-  /** The last text sent on or cancelled, offered again on ArrowUp. */
-  const recallText = ref<string>('')
-
-  const session = createQuickInputSession()
-  const syncRecall = (): void => {
-    recallText.value = session.recallText
-  }
+  /** The text left the app; the next opening starts empty */
+  let isFinished = false
 
   // replace value
   const setValue = (newText: string): void => {
     value.value = newText
   }
 
-  /** Empties the input; the text stays recallable in memory. */
+  /** Empties the input. */
   const clear = (): void => {
-    session.end(value.value)
-    syncRecall()
     value.value = ''
   }
 
-  /** Clears a cancelled input (Esc); ArrowUp brings it back. */
+  /** Esc: the user dropped the text on purpose. */
   const discard = (): void => {
-    session.discard(value.value)
-    syncRecall()
     value.value = ''
   }
 
-  /**
-   * The window lost requestFocus: its text is offered again on the next
-   * opening.
-   */
-  const markDismissed = (): void => {
-    session.markDismissed()
+  /** The text was inserted or copied: the next opening starts empty. */
+  const finish = (): void => {
+    isFinished = true
   }
 
   /**
    * Prepares the input for a new opening: keeps unfinished text, clears
-   * submitted or cancelled text. Returns whether the text was kept
+   * finished text. Returns whether the text was kept
    */
   const startSession = (): boolean => {
-    const kept = session.start(value.value)
-    syncRecall()
+    const kept = !isFinished && Boolean(value.value.trim())
+    isFinished = false
     if (!kept) value.value = ''
 
     return kept
-  }
-
-  const rememberSubmitted = (text: string): void => {
-    session.submitted(text)
-    syncRecall()
   }
 
   const requestFocus = (): void => {
@@ -70,13 +63,11 @@ export function createQuickInputModel() {
     value,
     focusRequestCount,
     selectAllRequestCount,
-    recallText,
     setValue,
     clear,
     discard,
-    markDismissed,
+    finish,
     startSession,
-    rememberSubmitted,
     requestFocus,
     requestFocusAndSelectAll,
   }

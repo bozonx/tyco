@@ -459,7 +459,13 @@
     "textsDisabled": "Zapisywanie tekstów jest wyłączone w ustawieniach (limit 0).",
     "today": "Dzisiaj",
     "undo": "Cofnij",
-    "yesterday": "Wczoraj"
+    "yesterday": "Wczoraj",
+    "filterOrigin": "Źródło",
+    "filterAll": "Wszystkie",
+    "filterQuickInput": "Szybkie wprowadzanie",
+    "filterVoice": "Głos",
+    "filterUnsent": "Niewysłane",
+    "filterUnsentHint": "Tylko teksty, które nigdy nie zostały wstawione ani skopiowane"
   },
   "input": {
     "historySearchPlaceholder": "Szukaj w historii...",
@@ -1248,7 +1254,9 @@
     "webhookSuccess": "Webhook wysłany pomyślnie",
     "voiceContextualCorrectionFailed": "Korekta kontekstowa nie powiodła się; zachowano dostępny tekst",
     "voicePostProcessTimeout": "Przetwarzanie głosu trwało zbyt długo; zachowano oryginalny tekst",
-    "variablesNotSet": "Zmienne nie mają wartości na tym urządzeniu; ustaw je w Ustawienia → Zmienne"
+    "variablesNotSet": "Zmienne nie mają wartości na tym urządzeniu; ustaw je w Ustawienia → Zmienne",
+    "dictationResultReady": "Dyktowanie jest gotowe, ale okno pokazuje już coś innego. Skopiuj tekst, aby go nie stracić.",
+    "dictationResultInHistory": "Jest też zapisany w historii."
   },
   "tools": {
     "aiTask": "Polecenie AI",
@@ -1377,7 +1385,8 @@
     "livePreview": "Korekta na żywo",
     "clickToApply": "Kliknij, aby zastosować",
     "liveCorrectionFailed": "Korekta na żywo nie powiodła się",
-    "liveCorrectionFailedHint": "Model nie odpowiedział. Tekst zostanie wstawiony w wpisanej postaci."
+    "liveCorrectionFailedHint": "Model nie odpowiedział. Tekst zostanie wstawiony w wpisanej postaci.",
+    "openHistory": "Historia szybkiego wprowadzania"
   },
   "variables": {
     "add": "Dodaj",
