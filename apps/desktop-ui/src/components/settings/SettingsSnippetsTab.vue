@@ -32,11 +32,18 @@
             :class="{
               'is-sorting': isSorting,
               'is-dragged': draggedIndex === index,
+              'is-empty': !snippet.text?.trim(),
             }"
             :style="itemStyle(index)"
           >
             <div class="snippet-card-drag">
               <DragHandle @drag="startDrag(index, $event)" />
+            </div>
+            <div class="snippet-card-key">
+              <KeyboardKey v-if="index < 15" class="snippet-slot-key">
+                {{ SHORTCUT_SLOT_KEYS[index]?.toUpperCase() }}
+              </KeyboardKey>
+              <span v-else class="snippet-slot-index">#{{ index + 1 }}</span>
             </div>
             <div class="snippet-card-content">
               <FieldPromptTextArea
@@ -64,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { type CSSProperties, computed, ref } from 'vue'
+import { type CSSProperties, computed, nextTick, ref } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
@@ -77,9 +84,10 @@ import Button from '../common/Button.vue'
 import DragHandle from '../common/DragHandle.vue'
 import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import IconButton from '../common/IconButton.vue'
+import KeyboardKey from '../common/KeyboardKey.vue'
 import StateMessage from '../common/StateMessage.vue'
 import SettingsSection from './SettingsSection.vue'
-import type { SnippetConfig } from '@tyco/shared'
+import { SHORTCUT_SLOT_KEYS, type SnippetConfig } from '@tyco/shared'
 
 const { t } = useI18n()
 const { draft: userConfig } = useSettingsContext()
@@ -107,8 +115,17 @@ const itemStyle = (index: number): CSSProperties | undefined => {
 function addNewSnippet() {
   const nextId = nextSnippetId(snippets.value)
   userConfig.value.snippets = {
-    items: [{ id: nextId, text: '' }, ...snippets.value],
+    items: [...snippets.value, { id: nextId, text: '' }],
   }
+  void nextTick(() => {
+    const cards = listRef.value?.querySelectorAll('.snippet-card')
+    const lastCard = cards?.[cards.length - 1] as HTMLElement | undefined
+    if (lastCard) {
+      lastCard.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' })
+      const textarea = lastCard.querySelector('textarea')
+      textarea?.focus()
+    }
+  })
 }
 
 function updateSnippetText(index: number, text: string) {
@@ -168,9 +185,34 @@ function deleteSnippet(index: number) {
   transition: none;
 }
 
+.snippet-card.is-empty {
+  border-color: color-mix(in oklab, var(--color-primary) 70%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in oklab, var(--color-primary) 25%, transparent);
+}
+
 .snippet-card-drag {
   padding-top: var(--space-xs);
   flex-shrink: 0;
+}
+
+.snippet-card-key {
+  padding-top: var(--space-xs);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+}
+
+.snippet-slot-key {
+  --key-size: 1.5rem;
+}
+
+.snippet-slot-index {
+  font-size: var(--text-caption);
+  color: var(--app-text-muted);
+  user-select: none;
 }
 
 .snippet-card-content {

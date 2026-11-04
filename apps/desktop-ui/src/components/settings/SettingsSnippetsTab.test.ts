@@ -72,7 +72,7 @@ describe('SettingsSnippetsTab', () => {
     expect(cards).toHaveLength(2)
   })
 
-  it('adds a new snippet when Add button is clicked', async () => {
+  it('adds a new snippet to the bottom when Add button is clicked', async () => {
     const { wrapper, context } = mountTab({
       snippets: { items: [{ id: 'snippet-1', text: 'Existing' }] },
     })
@@ -83,8 +83,24 @@ describe('SettingsSnippetsTab', () => {
 
     const items = context.draft.value.snippets.items
     expect(items).toHaveLength(2)
-    expect(items[0]?.text).toBe('')
-    expect(items[0]?.id).toBe('snippet-2')
+    expect(items[0]?.id).toBe('snippet-1')
+    expect(items[1]?.text).toBe('')
+    expect(items[1]?.id).toBe('snippet-2')
+  })
+
+  it('highlights empty snippets with is-empty class', () => {
+    const { wrapper } = mountTab({
+      snippets: {
+        items: [
+          { id: 'snippet-1', text: 'Has text' },
+          { id: 'snippet-2', text: '   ' },
+        ],
+      },
+    })
+
+    const cards = wrapper.findAll('.snippet-card')
+    expect(cards[0]?.classes()).not.toContain('is-empty')
+    expect(cards[1]?.classes()).toContain('is-empty')
   })
 
   it('updates snippet text on textarea input', async () => {
