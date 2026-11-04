@@ -81,6 +81,13 @@ describe('FieldPromptTextArea', () => {
     )
     expect(modalTextarea).not.toBeNull()
     expect(modalTextarea?.value).toBe('Line 1\nLine 2')
+    expect(modalTextarea?.hasAttribute('autofocus')).toBe(true)
+
+    // No redundant cross button, only Done button
+    const closeBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.getAttribute('aria-label') === 'Close'
+    )
+    expect(closeBtn).toBeUndefined()
 
     // Check stats (2 lines, 13 characters)
     const stats = document.querySelector('.field-prompt-modal-stats')

@@ -101,13 +101,18 @@ onBeforeUnmount(() => {
   background: var(--app-surface);
 }
 .app-dialog--full {
-  width: calc(100vw - 2 * var(--space-md));
-  height: calc(100dvh - 2 * var(--space-md));
-  max-width: none;
-  max-height: none;
-  padding: var(--space-md);
+  width: 100vw;
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100dvh;
+  inset: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  padding: var(--space-md) var(--space-lg);
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 .app-dialog::backdrop {
   background: var(--app-overlay-bg);

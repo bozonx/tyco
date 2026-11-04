@@ -51,19 +51,13 @@
             <Button size="sm" variant="primary" @click="closeModal">
               {{ t('common.done') }}
             </Button>
-            <IconButton
-              size="sm"
-              variant="ghost"
-              icon="mdi:close"
-              :label="t('common.close')"
-              @click="closeModal"
-            />
           </div>
         </header>
 
         <div class="field-prompt-modal-body">
           <textarea
             ref="modalTextareaRef"
+            autofocus
             class="field-prompt-modal-textarea textarea"
             :placeholder="placeholder"
             :value="modelValue ?? ''"
@@ -139,6 +133,7 @@ const lineCount = computed(() => {
 async function openModal() {
   if (props.disabled) return
   isModalOpen.value = true
+  await nextTick()
   await nextTick()
   modalTextareaRef.value?.focus()
 }
@@ -235,10 +230,10 @@ defineExpose({
   resize: none;
   font-family: var(--font-mono);
   font-size: var(--text-body);
-  line-height: 1.5;
+  line-height: 1.6;
   tab-size: 2;
   padding: var(--space-md);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   box-sizing: border-box;
 }
 
