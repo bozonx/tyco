@@ -6,7 +6,7 @@
         type="button"
         class="favorites-esc"
         :title="escTitle"
-        @click="handleEsc"
+        @click="onEscClick"
       >
         <KeyboardKey>Esc</KeyboardKey>
         <span>{{ escLabel }}</span>
@@ -119,6 +119,11 @@ const gridRef = ref<HTMLDivElement | null>(null)
 const itemRefs = ref<(HTMLElement | null)[]>([])
 
 const { escLabel, escTitle, handleEsc, handleCloseAll } = useOverlayNav()
+
+function onEscClick(event: MouseEvent) {
+  if (event.shiftKey) handleCloseAll()
+  else handleEsc()
+}
 
 const setItemRef = (index: number, el: unknown) => {
   itemRefs.value[index] = el as HTMLElement | null

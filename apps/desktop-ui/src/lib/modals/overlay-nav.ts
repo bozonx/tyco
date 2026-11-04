@@ -43,6 +43,7 @@ export function createOverlayNavModel(
       modal === MenuModals.QUICK_AI_REQUEST ||
       modal === MenuModals.TRANSFORMATION ||
       modal === MenuModals.STYLING ||
+      modal === MenuModals.FAVORITES ||
       modal === MenuModals.CHAT_PROMPTS
     ) {
       return 'back'

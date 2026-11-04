@@ -69,6 +69,7 @@ describe('createOverlayNavModel', () => {
       MenuModals.QUICK_AI_REQUEST,
       MenuModals.TRANSFORMATION,
       MenuModals.STYLING,
+      MenuModals.FAVORITES,
     ]
 
     for (const modal of intermediateModals) {

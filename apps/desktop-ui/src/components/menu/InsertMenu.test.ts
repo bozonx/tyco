@@ -1,4 +1,4 @@
-import { config, mount } from '@vue/test-utils'
+import { config, flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEditorInputStore } from '../../stores/editor-input'
@@ -204,6 +204,21 @@ describe('InsertMenu correction step', () => {
     expect(desktop.backend.userConfig.favorites.items).toEqual([
       { id: 'favorite-1', text: 'Sample text to save' },
     ])
+  })
+
+  it('does not show a saved state when the config write fails', async () => {
+    desktop.backend.handle('save_user_config', () => {
+      throw new Error('Disk full')
+    })
+    const wrapper = mountMenu({ text: 'Sample text to save' })
+    await wrapper
+      .find('button[aria-label="action.saveAsFavorite"]')
+      .trigger('click')
+    await flushPromises()
+    expect(
+      wrapper.find('button[aria-label="action.savedAsFavorite"]').exists()
+    ).toBe(false)
+    expect(desktop.backend.userConfig.favorites.items).toHaveLength(0)
   })
 
   it('shows warning toast when saving exact duplicate favorite', async () => {

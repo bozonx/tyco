@@ -112,7 +112,7 @@ const editMenuStore = useEditMenuStore()
 const toolbarStore = useToolbarStore()
 const desktopStore = useDesktopStore()
 const { t } = useI18n()
-const { toastKey } = useToast()
+const { toastKey, toastError } = useToast()
 
 async function saveFavorite() {
   const result = addFavorite(
@@ -124,7 +124,10 @@ async function saveFavorite() {
       toastKey('toast.favoriteAlreadyExists', 'warn')
     return
   }
-  await desktopStore.updateUserConfig({ favorites: { items: result.items } })
+  const response = await desktopStore.updateUserConfig({
+    favorites: { items: result.items },
+  })
+  if (!response.success) toastError(response.error)
 }
 const { getLabel, doEdit } = useEditorActions()
 const { isMarkupShown, toggleShowMarkup } = useMarkupMode()

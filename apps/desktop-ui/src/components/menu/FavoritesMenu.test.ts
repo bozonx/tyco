@@ -5,6 +5,7 @@ import {
   type TestDesktop,
 } from '../../test/install-fake-desktop'
 import FavoritesMenu from './FavoritesMenu.vue'
+import { MenuModals, useMenuModalsStore } from '../../stores/menu-modals'
 
 vi.mock('../../composables/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -55,6 +56,25 @@ describe('FavoritesMenu', () => {
     expect(items[0]?.find('.favorite-slot-key').text()).toBe('Q')
     expect(items[1]?.find('.favorite-slot-key').text()).toBe('W')
     expect(items[2]?.find('.favorite-slot-key').text()).toBe('E')
+  })
+
+  it('returns to the underlying menu on Escape and closes the window on Shift-click', async () => {
+    const hidden = vi.fn()
+    desktop.backend.handle('hide_window', hidden)
+    const menus = useMenuModalsStore(desktop.pinia)
+    menus.nextModal(MenuModals.FAVORITES, {})
+    const wrapper = mountMenu()
+    await wrapper
+      .find('.favorites-search-input')
+      .trigger('keydown', { key: 'Escape' })
+    expect(menus.currentModal).toBe(MenuModals.NONE)
+    expect(hidden).not.toHaveBeenCalled()
+    menus.nextModal(MenuModals.STYLING, { text: '' })
+    menus.nextModal(MenuModals.FAVORITES, {})
+    await wrapper.find('.favorites-esc').trigger('click', { shiftKey: true })
+    await flushPromises()
+    expect(hidden).toHaveBeenCalled()
+    wrapper.unmount()
   })
 
   it('filters favorites by query in search input', async () => {

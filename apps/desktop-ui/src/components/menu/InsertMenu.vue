@@ -111,7 +111,7 @@ import ResultViewModeToggle from './ResultViewModeToggle.vue'
 import { APP_CONFIG } from '@tyco/shared'
 
 const editorNavigation = useEditorNavigation()
-const { toastKey } = useToast()
+const { toastKey, toastError } = useToast()
 
 const isSavedAsFavorite = ref(false)
 let savedTimer: ReturnType<typeof setTimeout> | null = null
@@ -128,7 +128,13 @@ async function saveAsFavorite() {
 
   const result = addFavorite(currentFavorites, text)
   if (result.success) {
-    await desktopStore.updateUserConfig({ favorites: { items: result.items } })
+    const response = await desktopStore.updateUserConfig({
+      favorites: { items: result.items },
+    })
+    if (!response.success) {
+      toastError(response.error)
+      return
+    }
     isSavedAsFavorite.value = true
     if (savedTimer) clearTimeout(savedTimer)
     savedTimer = setTimeout(() => {
