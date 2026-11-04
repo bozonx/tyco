@@ -1,10 +1,10 @@
 <template>
   <div :class="$attrs.class" :style="$attrs.style" class="template-field">
-    <FieldTextArea
+    <FieldPromptTextArea
       v-bind="fieldAttrs()"
       v-if="multiline"
       ref="fieldRef"
-      class="textarea template-field-control"
+      class="template-field-control"
       :rows="3"
       :model-value="modelValue"
       :placeholder="placeholder"
@@ -56,7 +56,7 @@ import { nextTick, ref, useAttrs } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import type { TextControl } from '../../lib/ui/text-control'
 import FieldInput from '../common/FieldInput.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import IconButton from '../common/IconButton.vue'
 import InfoTooltip from '../common/InfoTooltip.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'

@@ -297,7 +297,12 @@
     "notifications": "Értesítések",
     "remove": "Eltávolítás",
     "retry": "Újra",
-    "save": "Mentés"
+    "save": "Mentés",
+    "expandInEditor": "Megnyitás a teljes szerkesztőben",
+    "editorModalTitle": "Szövegszerkesztő",
+    "linesCount": "Sorok: {count}",
+    "charsCount": "Karakterek: {count}",
+    "done": "Kész"
   },
   "desktopErrors": {
     "busy": "Egy másik művelet fut, próbálja később",

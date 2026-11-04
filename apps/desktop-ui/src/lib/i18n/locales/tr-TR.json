@@ -297,7 +297,12 @@
     "notifications": "Bildirimler",
     "remove": "Kaldır",
     "retry": "Yeniden dene",
-    "save": "Kaydet"
+    "save": "Kaydet",
+    "expandInEditor": "Tam düzenleyicide aç",
+    "editorModalTitle": "Metin düzenleyici",
+    "linesCount": "Satır: {count}",
+    "charsCount": "Karakter: {count}",
+    "done": "Bitti"
   },
   "desktopErrors": {
     "busy": "Başka bir işlem sürüyor, daha sonra tekrar deneyin",

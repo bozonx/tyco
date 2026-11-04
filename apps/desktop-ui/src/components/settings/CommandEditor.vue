@@ -218,10 +218,11 @@
           :label="t('commands.llmPreTransformPromptLabel')"
           :warning="preTransformWarnings"
         >
-          <FieldTextArea
+          <FieldPromptTextArea
             class="command-llm-pre-transform-prompt"
             :model-value="command.llmPreTransformPrompt ?? ''"
             :placeholder="t('commands.llmPreTransformPromptPlaceholder')"
+            :modal-title="t('commands.llmPreTransformPromptLabel')"
             auto-resize
             @update:model-value="update({ llmPreTransformPrompt: $event })"
           />
@@ -263,6 +264,7 @@ import DisclosureHeader from '../common/DisclosureHeader.vue'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldInput from '../common/FieldInput.vue'
 import FieldNumber from '../common/FieldNumber.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'

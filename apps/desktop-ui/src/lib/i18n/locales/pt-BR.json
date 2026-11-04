@@ -297,7 +297,12 @@
     "notifications": "Notificações",
     "remove": "Remover",
     "retry": "Tentar de novo",
-    "save": "Salvar"
+    "save": "Salvar",
+    "expandInEditor": "Abrir no editor completo",
+    "editorModalTitle": "Editor de texto",
+    "linesCount": "Linhas: {count}",
+    "charsCount": "Caracteres: {count}",
+    "done": "Concluído"
   },
   "desktopErrors": {
     "busy": "Outra operação está em andamento, tente mais tarde",

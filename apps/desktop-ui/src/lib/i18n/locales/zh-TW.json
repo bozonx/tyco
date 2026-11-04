@@ -297,7 +297,12 @@
     "notifications": "通知",
     "remove": "移除",
     "retry": "重試",
-    "save": "儲存"
+    "save": "儲存",
+    "expandInEditor": "在完整編輯器中開啟",
+    "editorModalTitle": "文字編輯器",
+    "linesCount": "行數: {count}",
+    "charsCount": "字元數: {count}",
+    "done": "完成"
   },
   "desktopErrors": {
     "busy": "另一項操作正在進行，請稍後重試",

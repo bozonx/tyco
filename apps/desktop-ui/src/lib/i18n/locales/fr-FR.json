@@ -297,7 +297,12 @@
     "notifications": "Notifications",
     "remove": "Retirer",
     "retry": "Réessayer",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "expandInEditor": "Ouvrir dans l’éditeur plein écran",
+    "editorModalTitle": "Éditeur de texte",
+    "linesCount": "Lignes : {count}",
+    "charsCount": "Caractères : {count}",
+    "done": "Terminé"
   },
   "desktopErrors": {
     "busy": "Une autre opération est en cours, réessayez plus tard",

@@ -297,7 +297,12 @@
     "notifications": "通知",
     "remove": "削除",
     "retry": "再試行",
-    "save": "保存"
+    "save": "保存",
+    "expandInEditor": "フルエディターで開く",
+    "editorModalTitle": "テキストエディター",
+    "linesCount": "行数: {count}",
+    "charsCount": "文字数: {count}",
+    "done": "完了"
   },
   "desktopErrors": {
     "busy": "別の操作を実行中です。後でもう一度お試しください",

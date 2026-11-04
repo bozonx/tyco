@@ -6,7 +6,10 @@
         :info="t('settings.chatPromptInfo')"
         vertical
       >
-        <FieldTextArea v-model="userConfig.llm.tasks.chat.rule" />
+        <FieldPromptTextArea
+          v-model="userConfig.llm.tasks.chat.rule"
+          :modal-title="t('settings.chatPrompt')"
+        />
       </FieldRow>
     </SettingsSection>
 
@@ -17,8 +20,8 @@
 <script setup lang="ts">
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
 import SettingsChatHistorySection from './SettingsChatHistorySection.vue'
 import SettingsSection from './SettingsSection.vue'
 

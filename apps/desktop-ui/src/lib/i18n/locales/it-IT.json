@@ -297,7 +297,12 @@
     "notifications": "Notifiche",
     "remove": "Rimuovi",
     "retry": "Riprova",
-    "save": "Salva"
+    "save": "Salva",
+    "expandInEditor": "Apri nell’editor a schermo intero",
+    "editorModalTitle": "Editor di testo",
+    "linesCount": "Righe: {count}",
+    "charsCount": "Caratteri: {count}",
+    "done": "Fine"
   },
   "desktopErrors": {
     "busy": "È in corso un’altra operazione, riprova più tardi",

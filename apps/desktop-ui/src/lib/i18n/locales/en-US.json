@@ -297,7 +297,12 @@
     "notifications": "Notifications",
     "remove": "Remove",
     "retry": "Retry",
-    "save": "Save"
+    "save": "Save",
+    "expandInEditor": "Open in full editor",
+    "editorModalTitle": "Text editor",
+    "linesCount": "Lines: {count}",
+    "charsCount": "Characters: {count}",
+    "done": "Done"
   },
   "desktopErrors": {
     "busy": "Busy with another operation, try again later",

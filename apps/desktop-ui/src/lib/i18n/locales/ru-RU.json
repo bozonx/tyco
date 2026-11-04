@@ -297,7 +297,12 @@
     "notifications": "Уведомления",
     "remove": "Удалить",
     "retry": "Повторить",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "expandInEditor": "Открыть в полном редакторе",
+    "editorModalTitle": "Редактор текста",
+    "linesCount": "Строк: {count}",
+    "charsCount": "Символов: {count}",
+    "done": "Готово"
   },
   "desktopErrors": {
     "busy": "Выполняется другая операция, попробуйте позже",

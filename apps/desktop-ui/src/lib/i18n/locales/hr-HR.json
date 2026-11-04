@@ -297,7 +297,12 @@
     "notifications": "Obavijesti",
     "remove": "Ukloni",
     "retry": "Pokušaj ponovno",
-    "save": "Spremi"
+    "save": "Spremi",
+    "expandInEditor": "Otvori u punom uređivaču",
+    "editorModalTitle": "Uređivač teksta",
+    "linesCount": "Redaka: {count}",
+    "charsCount": "Znakova: {count}",
+    "done": "Gotovo"
   },
   "desktopErrors": {
     "busy": "U tijeku je druga operacija, pokušajte kasnije",

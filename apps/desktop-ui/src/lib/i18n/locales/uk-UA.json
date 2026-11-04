@@ -297,7 +297,12 @@
     "notifications": "Сповіщення",
     "remove": "Прибрати",
     "retry": "Повторити",
-    "save": "Зберегти"
+    "save": "Зберегти",
+    "expandInEditor": "Відкрити в повному редакторі",
+    "editorModalTitle": "Текстовий редактор",
+    "linesCount": "Рядків: {count}",
+    "charsCount": "Символів: {count}",
+    "done": "Готово"
   },
   "desktopErrors": {
     "busy": "Виконується інша операція, спробуйте пізніше",

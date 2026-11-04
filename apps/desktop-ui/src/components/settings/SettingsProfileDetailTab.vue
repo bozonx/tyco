@@ -154,13 +154,14 @@
         :info="t('settings.profileSoulPromptHint')"
       >
         <div class="settings-section-content">
-          <FieldTextArea
+          <FieldPromptTextArea
             v-model="soulPrompt"
             :disabled="!editor.isSoulLoaded.value"
             :rows="8"
             auto-resize
             :max-auto-height="400"
             :aria-label="t('settings.profileSoulPrompt')"
+            :modal-title="t('settings.profileSoulPrompt')"
             @update:model-value="changeSoul"
           />
           <div v-if="editor.soulLoadError.value" class="profile-form-actions">
@@ -229,8 +230,8 @@ import { useAiProfilesStore } from '../../stores/ai-profiles'
 import { useDesktopStore } from '../../stores/desktop'
 import Button from '../common/Button.vue'
 import FieldInput from '../common/FieldInput.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
 import InlineNotice from '../common/InlineNotice.vue'
 import StateMessage from '../common/StateMessage.vue'
 import ModelNumberField from './ModelNumberField.vue'

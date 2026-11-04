@@ -42,7 +42,10 @@
           :info="t('settings.translationRulesInfo')"
           vertical
         >
-          <FieldTextArea v-model="userConfig.llm.tasks.translation.rule" />
+          <FieldPromptTextArea
+            v-model="userConfig.llm.tasks.translation.rule"
+            :modal-title="t('settings.translationRules')"
+          />
         </FieldRow>
       </template>
 
@@ -82,8 +85,9 @@
         :info="t('settings.translationCorrectionPromptInfo')"
         vertical
       >
-        <FieldTextArea
+        <FieldPromptTextArea
           v-model="userConfig.llm.tasks.translation.qualityGateRule"
+          :modal-title="t('settings.translationCorrectionPrompt')"
         />
       </FieldRow>
     </SettingsSection>
@@ -112,6 +116,7 @@ import useToast from '../../composables/use-toast'
 import { createTranslationSettingsModel } from '../../lib/translation/translation-settings-model'
 import { useSecretsStore } from '../../stores/secrets'
 import Button from '../common/Button.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldTextArea from '../common/FieldTextArea.vue'

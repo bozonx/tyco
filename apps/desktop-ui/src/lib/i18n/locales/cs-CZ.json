@@ -297,7 +297,12 @@
     "notifications": "Oznámení",
     "remove": "Odebrat",
     "retry": "Zkusit znovu",
-    "save": "Uložit"
+    "save": "Uložit",
+    "expandInEditor": "Otevřít v plném editoru",
+    "editorModalTitle": "Textový editor",
+    "linesCount": "Řádky: {count}",
+    "charsCount": "Znaky: {count}",
+    "done": "Hotovo"
   },
   "desktopErrors": {
     "busy": "Probíhá jiná operace, zkuste to později",

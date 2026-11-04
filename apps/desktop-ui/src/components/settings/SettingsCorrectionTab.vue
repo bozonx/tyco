@@ -17,9 +17,10 @@
         :info="t('settings.correctionPromptInfo')"
         vertical
       >
-        <FieldTextArea
+        <FieldPromptTextArea
           v-model="userConfig.llm.tasks.correction.rule"
           :placeholder="t('settings.correctionPromptPlaceholder')"
+          :modal-title="t('settings.correctionPrompt')"
         />
       </FieldRow>
 
@@ -44,9 +45,9 @@ import { computed } from 'vue'
 import { useI18n } from '../../composables/use-i18n'
 import { useSettingsContext } from '../../composables/use-settings-context'
 import type { ControlOption } from '../../lib/ui/control-option'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
 import I18nText from '../common/I18nText.vue'
 import InlineAction from '../common/InlineAction.vue'
 import SettingsSection from './SettingsSection.vue'

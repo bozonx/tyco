@@ -297,7 +297,12 @@
     "notifications": "Хабарландырулар",
     "remove": "Алып тастау",
     "retry": "Қайталау",
-    "save": "Сақтау"
+    "save": "Сақтау",
+    "expandInEditor": "Толық редакторда ашу",
+    "editorModalTitle": "Мәтін редакторы",
+    "linesCount": "Жолдар: {count}",
+    "charsCount": "Таңбалар: {count}",
+    "done": "Дайын"
   },
   "desktopErrors": {
     "busy": "Басқа операция орындалуда, кейінірек қайталаңыз",

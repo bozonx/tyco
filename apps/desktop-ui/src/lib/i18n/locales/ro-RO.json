@@ -297,7 +297,12 @@
     "notifications": "Notificări",
     "remove": "Elimină",
     "retry": "Reîncearcă",
-    "save": "Salvează"
+    "save": "Salvează",
+    "expandInEditor": "Deschide în editorul complet",
+    "editorModalTitle": "Editor de text",
+    "linesCount": "Linii: {count}",
+    "charsCount": "Caractere: {count}",
+    "done": "Gata"
   },
   "desktopErrors": {
     "busy": "Altă operație este în curs, încercați mai târziu",

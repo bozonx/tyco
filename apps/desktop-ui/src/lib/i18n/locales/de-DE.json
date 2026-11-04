@@ -297,7 +297,12 @@
     "notifications": "Benachrichtigungen",
     "remove": "Entfernen",
     "retry": "Erneut versuchen",
-    "save": "Speichern"
+    "save": "Speichern",
+    "expandInEditor": "Im Vollbild-Editor öffnen",
+    "editorModalTitle": "Texteditor",
+    "linesCount": "Zeilen: {count}",
+    "charsCount": "Zeichen: {count}",
+    "done": "Fertig"
   },
   "desktopErrors": {
     "busy": "Ein anderer Vorgang läuft, bitte später erneut versuchen",

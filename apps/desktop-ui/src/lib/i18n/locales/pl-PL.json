@@ -297,7 +297,12 @@
     "notifications": "Powiadomienia",
     "remove": "Usuń",
     "retry": "Ponów",
-    "save": "Zapisz"
+    "save": "Zapisz",
+    "expandInEditor": "Otwórz w pełnym edytorze",
+    "editorModalTitle": "Edytor tekstu",
+    "linesCount": "Wiersze: {count}",
+    "charsCount": "Znaki: {count}",
+    "done": "Gotowe"
   },
   "desktopErrors": {
     "busy": "Trwa inna operacja, spróbuj później",

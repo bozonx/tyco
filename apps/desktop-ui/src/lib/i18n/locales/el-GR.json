@@ -297,7 +297,12 @@
     "notifications": "Ειδοποιήσεις",
     "remove": "Αφαίρεση",
     "retry": "Επανάληψη",
-    "save": "Αποθήκευση"
+    "save": "Αποθήκευση",
+    "expandInEditor": "Άνοιγμα σε πλήρη επεξεργαστή",
+    "editorModalTitle": "Επεξεργαστής κειμένου",
+    "linesCount": "Γραμμές: {count}",
+    "charsCount": "Χαρακτήρες: {count}",
+    "done": "Τέλος"
   },
   "desktopErrors": {
     "busy": "Εκτελείται άλλη λειτουργία, δοκιμάστε αργότερα",

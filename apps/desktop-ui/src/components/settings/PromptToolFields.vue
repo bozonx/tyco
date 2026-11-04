@@ -6,9 +6,10 @@
     :info="t('commands.promptInfo')"
     :warning="warnings"
   >
-    <FieldTextArea
+    <FieldPromptTextArea
       :model-value="prompt"
       :placeholder="t('commands.promptPlaceholder')"
+      :modal-title="t('commands.promptLabel')"
       auto-resize
       @update:model-value="emit('update', 'prompt', $event)"
     />
@@ -34,9 +35,9 @@ import { computed } from 'vue'
 
 import { useI18n } from '../../composables/use-i18n'
 import { toolConfigText } from '../../lib/commands/command-config'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
 import type { CommandConfig, UserConfig } from '@tyco/shared'
 
 const props = defineProps<{

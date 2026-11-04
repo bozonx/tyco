@@ -69,10 +69,11 @@
         :info="t('settings.geminiLivePromptInfo')"
         vertical
       >
-        <FieldTextArea
+        <FieldPromptTextArea
           :model-value="
             userConfig.stt.providers.geminiLive?.systemInstruction ?? ''
           "
+          :modal-title="t('settings.geminiLivePrompt')"
           @update:model-value="setGeminiLiveSystemInstruction"
         />
       </FieldRow>
@@ -112,7 +113,10 @@
         :info="t('settings.sttLlmRulesInfo')"
         vertical
       >
-        <FieldTextArea v-model="userConfig.llm.tasks.voiceCorrection.rule" />
+        <FieldPromptTextArea
+          v-model="userConfig.llm.tasks.voiceCorrection.rule"
+          :modal-title="t('settings.sttLlmRules')"
+        />
       </FieldRow>
       <FieldRow
         :label="t('settings.showStylingBar')"
@@ -150,10 +154,10 @@ import {
 import { activeSttModel } from '../../lib/stt/stt-config'
 import { useSecretsStore } from '../../stores/secrets'
 import FieldInput from '../common/FieldInput.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
 import FieldSelect from '../common/FieldSelect.vue'
 import FieldSwitch from '../common/FieldSwitch.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
 import DeviceScopeBadge from './DeviceScopeBadge.vue'
 import SecretKeyField from './SecretKeyField.vue'
 import SettingsSection from './SettingsSection.vue'

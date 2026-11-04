@@ -5,7 +5,10 @@
       @keydown.stop
       ref="dialog"
       class="app-dialog"
-      :class="{ 'app-dialog--content': size === 'content' }"
+      :class="{
+        'app-dialog--content': size === 'content',
+        'app-dialog--full': size === 'full',
+      }"
       :aria-labelledby="labelledby"
       :aria-describedby="describedby"
       :aria-label="label"
@@ -23,7 +26,7 @@ import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 defineOptions({ inheritAttrs: false })
 const props = defineProps<{
   open: boolean
-  size?: 'sm' | 'content'
+  size?: 'sm' | 'content' | 'full'
   label?: string
   labelledby?: string
   describedby?: string
@@ -96,6 +99,15 @@ onBeforeUnmount(() => {
   max-width: calc(100vw - 2 * var(--space-lg));
   padding: var(--space-md);
   background: var(--app-surface);
+}
+.app-dialog--full {
+  width: calc(100vw - 2 * var(--space-md));
+  height: calc(100dvh - 2 * var(--space-md));
+  max-width: none;
+  max-height: none;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
 }
 .app-dialog::backdrop {
   background: var(--app-overlay-bg);

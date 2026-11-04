@@ -297,7 +297,12 @@
     "notifications": "შეტყობინებები",
     "remove": "მოცილება",
     "retry": "ხელახლა ცდა",
-    "save": "შენახვა"
+    "save": "შენახვა",
+    "expandInEditor": "სრულ რედაქტორში გახსნა",
+    "editorModalTitle": "ტექსტის რედაქტორი",
+    "linesCount": "ხაზები: {count}",
+    "charsCount": "სიმბოლოები: {count}",
+    "done": "მზადაა"
   },
   "desktopErrors": {
     "busy": "მიმდინარეობს სხვა ოპერაცია, სცადეთ მოგვიანებით",

@@ -7,10 +7,11 @@
     :warning="warnings"
   >
     <div class="flex items-start gap-1">
-      <FieldTextArea
+      <FieldPromptTextArea
         class="flex-1"
         :model-value="config.prompt"
         :placeholder="t('commands.aiPromptPlaceholder')"
+        :modal-title="t('commands.aiPromptLabel')"
         auto-resize
         @update:model-value="emit('update', 'prompt', $event)"
       />
@@ -64,8 +65,8 @@ import { normalizeCommands } from '../../lib/commands/command-config'
 import { commandLabel } from '../../lib/commands/command-runtime'
 import FieldCheckbox from '../common/FieldCheckbox.vue'
 import FieldNumber from '../common/FieldNumber.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import FieldRow from '../common/FieldRow.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
 import VariableInsertMenu from './VariableInsertMenu.vue'
 import VariableReferenceHints from './VariableReferenceHints.vue'
 import {

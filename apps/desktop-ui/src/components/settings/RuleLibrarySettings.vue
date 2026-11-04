@@ -23,10 +23,13 @@
               class="font-medium"
               @update:model-value="updateItem(index, 'name', $event)"
             />
-            <FieldTextArea
+            <FieldPromptTextArea
               :model-value="item.rule"
               :placeholder="t(props.promptPlaceholderKey ?? 'settings.rule')"
               :aria-label="t(props.promptPlaceholderKey ?? 'settings.rule')"
+              :modal-title="
+                item.name || t(props.promptPlaceholderKey ?? 'settings.rule')
+              "
               @update:model-value="updateItem(index, 'rule', $event)"
             />
           </div>
@@ -53,7 +56,7 @@ import {
 } from '../../lib/shortcut-slots/slot-library'
 import { nextNumberedId } from '../../lib/shortcut-slots/slot-prompt'
 import FieldInput from '../common/FieldInput.vue'
-import FieldTextArea from '../common/FieldTextArea.vue'
+import FieldPromptTextArea from '../common/FieldPromptTextArea.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsTaskModel from './SettingsTaskModel.vue'
 import ShortcutSlots from './ShortcutSlots.vue'
