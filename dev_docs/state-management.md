@@ -157,7 +157,11 @@ stops input and keeps its text in history.
 Each live input checkpoints changed text every ten seconds into one `draft`
 history record. Checkpoints are serialized; submission promotes that same record
 to an AI source or collapses it into the output. Finalized records cannot be
-replaced by late checkpoints. Cancellation, disposal, hiding and orderly shutdown
+replaced by late checkpoints. Failed records retain their text, kind and identity
+across input sessions. They retry with exponential backoff from one to thirty
+seconds; an explicit flush retries immediately. The history model owns input
+sessions until disposed inputs have drained, so unmounting a voice component
+does not drop a failed write. Store disposal stops retry timers. Cancellation, disposal, hiding and orderly shutdown
 flush the current text. The history storage mode, retention and secret redaction
 apply to checkpoints too; no separate recovery file is used. Disk mode protects
 only the last successful checkpoint across a crash. Session mode lasts until exit,

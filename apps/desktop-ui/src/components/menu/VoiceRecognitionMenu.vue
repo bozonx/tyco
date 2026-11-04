@@ -111,7 +111,10 @@ const model = createVoiceRecognition({
   shouldCorrectContextually,
   contextualVoiceCorrection,
   voiceStyling: (text, rule, signal) => stylingPrompt(rule, text, { signal }),
-  saveCheckpoint: historyStore.saveEditorHistory,
+  createHistorySession: () =>
+    historyStore.createInputSession(() =>
+      toastKey('history.operationFailed', 'error')
+    ),
   saveSource: (text, action) => historyStore.saveSource(text, action),
   saveSourceResult: (id, text) => historyStore.saveSourceResult(id, text),
   setPendingModal: (options) => menuModalsStore.setPendingModal(options),
@@ -132,10 +135,6 @@ const model = createVoiceRecognition({
   t,
   toastKey,
   toastText,
-})
-const unregisterHistoryFlush = historyStore.registerInputFlush(async () => {
-  await model.flushHistory()
-  return true
 })
 const {
   transcript,
@@ -346,7 +345,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  unregisterHistoryFlush()
   releaseDismissHold()
   model.dispose()
 

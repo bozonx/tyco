@@ -2,59 +2,118 @@ import type { EditorHistoryEntry, EditorHistoryOperation } from '@tyco/shared'
 
 export const INPUT_HISTORY_INTERVAL_MS = 10_000
 
-/** Serializes checkpoints and promotes the same record when input is submitted. */
+interface InputRecord {
+  id?: string
+  text: string
+  kind: EditorHistoryEntry['kind']
+  operation?: EditorHistoryOperation
+  savedId: string | null
+  savedText: string
+  savedKind?: EditorHistoryEntry['kind']
+  savedOperation?: EditorHistoryOperation
+  ended: boolean
+}
+
+/** Keeps failed records until they are saved, independently of input lifetime. */
 export function createInputHistorySession(deps: {
   save: (entry: EditorHistoryEntry) => Promise<string | null>
   reportError: (error: unknown) => void
+  onDrained?: () => void
 }) {
-  let current = {
-    id: undefined as string | undefined,
+  const createRecord = (): InputRecord => ({
     text: '',
-    saved: '',
+    kind: 'draft',
+    savedId: null,
+    savedText: '',
     ended: false,
-  }
+  })
+  let current = createRecord()
+  const records = new Set<InputRecord>()
   let pending = Promise.resolve<string | null>(null)
   let timer: ReturnType<typeof setTimeout> | undefined
+  let retryTimer: ReturnType<typeof setTimeout> | undefined
+  let retryDelayMs = 1000
+  let disposed = false
+  let stopped = false
 
   const stopTimer = () => {
     clearTimeout(timer)
     timer = undefined
   }
-  const write = (
-    kind: EditorHistoryEntry['kind'],
-    operation?: EditorHistoryOperation
-  ) => {
-    const session = current
-    const text = session.text
+  const isDirty = (record: InputRecord) =>
+    Boolean(record.text.trim()) &&
+    (record.text !== record.savedText ||
+      record.kind !== record.savedKind ||
+      record.operation !== record.savedOperation)
+
+  const write = () => {
+    const target = current
+    const snapshots = [...records].map((record) => ({
+      record,
+      text: record.text,
+      kind: record.kind,
+      operation: record.operation,
+    }))
     const next = pending
       .catch(() => null)
       .then(async () => {
-        if (!text.trim() || (kind === 'draft' && text === session.saved))
-          return session.id ?? null
-        const id = await deps.save({ id: session.id, text, kind, operation })
-        if (id) {
-          session.id = id
-          session.saved = text
+        const failures: unknown[] = []
+        for (const { record, text, kind, operation } of snapshots) {
+          if (
+            !text.trim() ||
+            (text === record.savedText &&
+              kind === record.savedKind &&
+              operation === record.savedOperation)
+          )
+            continue
+          try {
+            const id = await deps.save({ id: record.id, text, kind, operation })
+            // null is intentional: history is disabled or the record was deleted.
+            if (id) record.id = id
+            record.savedId = id
+            record.savedText = text
+            record.savedKind = kind
+            record.savedOperation = operation
+          } catch (error) {
+            failures.push(error)
+          }
         }
-        return id
+        for (const record of records) {
+          if (record.ended && !isDirty(record)) records.delete(record)
+        }
+        if (failures.length) {
+          if (!stopped && !retryTimer) {
+            retryTimer = setTimeout(() => {
+              retryTimer = undefined
+              void write().catch(deps.reportError)
+            }, retryDelayMs)
+            retryDelayMs = Math.min(retryDelayMs * 2, 30_000)
+          }
+          throw failures[0]
+        }
+        clearTimeout(retryTimer)
+        retryTimer = undefined
+        retryDelayMs = 1000
+        if (disposed && records.size === 0) deps.onDrained?.()
+        return target.savedId
       })
     pending = next
     return next
   }
   const flush = () => {
     stopTimer()
-    return current.ended ? pending : write('draft')
+    return write()
   }
   const checkpoint = () => {
     void flush().catch(deps.reportError)
   }
   const update = (text: string) => {
-    if (current.ended)
-      current = { id: undefined, text: '', saved: '', ended: false }
+    if (disposed) return
+    if (current.ended) current = createRecord()
     current.text = text
-    if (!timer && text !== current.saved) {
+    records.add(current)
+    if (!timer && isDirty(current))
       timer = setTimeout(checkpoint, INPUT_HISTORY_INTERVAL_MS)
-    }
   }
   const complete = (
     text: string,
@@ -63,17 +122,26 @@ export function createInputHistorySession(deps: {
   ) => {
     stopTimer()
     current.text = text
-    const result = write(kind, operation)
+    current.kind = kind
+    current.operation = operation
     current.ended = true
-    return result
+    records.add(current)
+    return write()
   }
   const end = () => {
-    checkpoint()
     current.ended = true
+    checkpoint()
   }
   const dispose = () => {
+    if (disposed) return
+    disposed = true
     end()
-    stopTimer()
   }
-  return { update, flush, checkpoint, complete, end, dispose }
+  const stop = () => {
+    stopped = true
+    stopTimer()
+    clearTimeout(retryTimer)
+    retryTimer = undefined
+  }
+  return { update, flush, checkpoint, complete, end, dispose, stop }
 }

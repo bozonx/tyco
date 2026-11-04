@@ -61,6 +61,7 @@ export interface VoiceRecognitionDependencies extends TimerDependencies {
     rule: string,
     signal?: AbortSignal
   ) => Promise<string>
+  createHistorySession?: () => ReturnType<typeof createInputHistorySession>
   saveCheckpoint?: (entry: EditorHistoryEntry) => Promise<string | null>
   saveSource: (
     text: string,
@@ -122,12 +123,14 @@ export function createVoiceRecognition(deps: VoiceRecognitionDependencies) {
   let hasSession = false
   let lastTranscriptText = ''
   let contextual: ReturnType<typeof createContextualCorrectionModel> | undefined
-  const historySession = deps.saveCheckpoint
-    ? createInputHistorySession({
-        save: deps.saveCheckpoint,
-        reportError: () => toastKey('history.operationFailed', 'error'),
-      })
-    : undefined
+  const historySession =
+    deps.createHistorySession?.() ??
+    (deps.saveCheckpoint
+      ? createInputHistorySession({
+          save: deps.saveCheckpoint,
+          reportError: () => toastKey('history.operationFailed', 'error'),
+        })
+      : undefined)
   const autoStopWarning = ref<AutoStopWarning>()
 
   const voiceSession = createVoiceSession({

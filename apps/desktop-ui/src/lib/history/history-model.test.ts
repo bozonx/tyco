@@ -3,13 +3,15 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createHistoryModel, type HistoryApi } from './history-model'
 
+type HistoryResponse = { result?: unknown; success?: boolean; error?: string }
+
 function editorItem(id: string, text: string): EditorHistoryItem {
   return { id, text, kind: 'draft', createdAt: 1 }
 }
 
 function createApi() {
   return {
-    call: vi.fn(async (functionName: string): Promise<{ result?: unknown }> => {
+    call: vi.fn(async (functionName: string): Promise<HistoryResponse> => {
       if (functionName === 'add_editor_history_item') {
         return { result: 'new-id' }
       }
@@ -347,4 +349,47 @@ describe('editor history response ordering', () => {
       )
     }
   )
+})
+
+it('flushes failed input after its component has been disposed', async () => {
+  vi.useFakeTimers()
+  const api = createApi()
+  api.call.mockResolvedValueOnce({ success: false, error: 'Temporary failure' })
+  const model = createHistoryModel(api as unknown as HistoryApi, vi.fn())
+  const session = model.createInputSession(vi.fn())
+  try {
+    session.update('Speech before unmount')
+    session.dispose()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(api.call).toHaveBeenCalledOnce()
+    expect(await model.flushInputs()).toBe(true)
+    expect(api.call).toHaveBeenCalledTimes(2)
+    expect(await model.flushInputs()).toBe(true)
+    expect(api.call).toHaveBeenCalledTimes(2)
+    expect(vi.getTimerCount()).toBe(0)
+  } finally {
+    model.dispose()
+    vi.useRealTimers()
+  }
+})
+
+it('stops recovery timers when the history owner is disposed', async () => {
+  vi.useFakeTimers()
+  const api = createApi()
+  api.call.mockResolvedValue({ success: false, error: 'Storage unavailable' })
+  const model = createHistoryModel(api as unknown as HistoryApi, vi.fn())
+  try {
+    const session = model.createInputSession(vi.fn())
+    session.update('Unsaved input')
+    session.dispose()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(vi.getTimerCount()).toBe(1)
+    model.dispose()
+    expect(vi.getTimerCount()).toBe(0)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(api.call).toHaveBeenCalledOnce()
+  } finally {
+    model.dispose()
+    vi.useRealTimers()
+  }
 })

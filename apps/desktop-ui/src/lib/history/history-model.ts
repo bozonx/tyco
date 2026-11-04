@@ -1,3 +1,4 @@
+import { createInputHistorySession } from './input-history-session'
 import type { HistoryApi } from './history-call'
 import { createEditorHistoryModel } from './editor-history'
 import { createChatHistoryModel } from './chat-history'
@@ -9,7 +10,28 @@ export function createHistoryModel(
   canRecordEditorHistory?: () => boolean
 ) {
   const inputFlushes = new Set<() => Promise<unknown>>()
+  const editor = createEditorHistoryModel(historyApi, canRecordEditorHistory)
+  const sessions = new Set<ReturnType<typeof createInputHistorySession>>()
   return {
+    createInputSession: (reportSaveError: (error: unknown) => void) => {
+      const session = createInputHistorySession({
+        save: editor.saveEditorHistory,
+        reportError: reportSaveError,
+        onDrained: () => {
+          sessions.delete(session)
+          inputFlushes.delete(session.flush)
+          session.stop()
+        },
+      })
+      sessions.add(session)
+      inputFlushes.add(session.flush)
+      return session
+    },
+    dispose: () => {
+      for (const session of sessions) session.stop()
+      sessions.clear()
+      inputFlushes.clear()
+    },
     registerInputFlush: (flush: () => Promise<unknown>) => {
       inputFlushes.add(flush)
       return () => {
@@ -22,7 +44,7 @@ export function createHistoryModel(
       )
       return results.every((result) => result.status === 'fulfilled')
     },
-    ...createEditorHistoryModel(historyApi, canRecordEditorHistory),
+    ...editor,
     ...createChatHistoryModel(historyApi, reportError),
   }
 }
